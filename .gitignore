@@ -1,0 +1,5 @@
+*.o
+/bin/
+/etc/mediasoup.cfg
+/etc/*.pem
+/mediasoup-tester.sh
