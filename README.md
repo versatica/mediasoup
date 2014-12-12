@@ -87,4 +87,6 @@ NOTE: Just certain options in the configuration file are reloaded (currently jus
 
 ## License
 
+[ISC](./LICENSE)
+
 Not decided yet. For now "All Rights Reserved" (will be changed when ready).
