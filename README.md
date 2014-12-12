@@ -1,3 +1,5 @@
+[![mediasoup](https://raw.githubusercontent.com/ibc/mediasoup/master/art/MediaSoup-logo.png)]
+
 # MediaSoup
 
 Flexible and powerful multi-stream media server ready for [WebRTC](http://www.webrtc.org/) and other RTP based technologies.
@@ -88,5 +90,3 @@ NOTE: Just certain options in the configuration file are reloaded (currently jus
 ## License
 
 [ISC](./LICENSE)
-
-Not decided yet. For now "All Rights Reserved" (will be changed when ready).
