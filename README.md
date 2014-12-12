@@ -1,4 +1,4 @@
-[![mediasoup](https://raw.githubusercontent.com/ibc/mediasoup/master/art/MediaSoup-logo.png)]
+![mediasoup](https://raw.githubusercontent.com/ibc/mediasoup/master/art/MediaSoup-logo.png)
 
 # MediaSoup
 
