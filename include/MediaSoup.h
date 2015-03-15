@@ -2,10 +2,18 @@
 #define	MS_MEDIASOUP_H
 
 
+/*
+ * MediaSoup top class.
+ *
+ * Entry point of the application.
+ */
 class MediaSoup {
 public:
+	// Set the process.
 	static void SetProcess();
+	// Run MediaSoup.
 	static void Run();
+	// Stop MediaSoup.
 	static void End();
 
 private:

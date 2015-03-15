@@ -52,6 +52,9 @@ program_OTHER_LIBRARIES := pthread
 # All the .cpp files.
 program_CXX_SRCS := $(wildcard src/*.cpp src/*/*.cpp src/*/*/*.cpp src/*/*/*/*.cpp src/*/*/*/*/*.cpp)
 
+# All the .h files.
+program_CXX_INCLUDES := $(wildcard include/*.h include/*/*.h include/*/*/*.h include/*/*/*/*.h include/*/*/*/*/*.h)
+
 # C++ object files to build.
 program_CXX_OBJS := ${program_CXX_SRCS:.cpp=.o}
 
@@ -116,3 +119,9 @@ check_pkg_libraries:
 clean:
 	@- $(RM) $(program_NAME)
 	@- $(RM) $(program_all_CXX_OBJS)
+
+# doc: check_pkg_libraries $(program_CXX_OBJS)
+	# cldoc generate $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) --output cldoc $(program_CXX_SRCS)
+
+doc: check_pkg_libraries $(program_CXX_OBJS)
+	cldoc generate $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -- --output cldoc $(program_CXX_SRCS) $(program_CXX_INCLUDES)
