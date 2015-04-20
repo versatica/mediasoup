@@ -89,7 +89,7 @@ NOTE: Just certain options in the configuration file are reloaded (currently jus
 
 ## Author
 
-Iñaki Baz Castillo ([https://github.com/ibc/](@ibc) at Github)
+Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
 
 
 ## License
