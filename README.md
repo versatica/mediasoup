@@ -87,6 +87,11 @@ NOTE: Just certain options in the configuration file are reloaded (currently jus
 [MediaSoup Documentation](docs/index.md) is placed in the `docs/` folder.
 
 
+## Author
+
+Iñaki Baz Castillo ([https://github.com/ibc/](@ibc) at Github)
+
+
 ## License
 
 [ISC](./LICENSE)
