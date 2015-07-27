@@ -37,7 +37,7 @@ program_BIN_DIR := ./bin
 program_INCLUDE_DIRS := ./include
 
 # External libraries with pkg-config support.
-program_PKG_LIBRARIES = libuv >= 1.0.2, libconfig++ >= 1.4.8, openssl >= 1.0.1, libsrtp >= 1.5.1
+program_PKG_LIBRARIES = libuv >= 1.0.2, libconfig++ >= 1.4.8, openssl >= 1.0.1, libsrtp >= 1.5.2
 
 # Other libraries to link with (don't put here those libs having pkg-config file).
 program_OTHER_LIBRARIES := pthread
