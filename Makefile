@@ -43,14 +43,14 @@ APP_HEADERS := $(shell find $(APP_HEADERS_DIR) -name "*.h")
 APP_BIN_DIR := ./bin
 
 # System libraries to link with.
-SYSTEM_LIBRARIES := pthread
+SYSTEM_LIBS := pthread
 
 # External libraries with pkg-config support.
-PKG_LIBRARIES :=
-PKG_LIBRARIES += libuv >= 1.6.1
-PKG_LIBRARIES += libconfig++ >= 1.4.8
-PKG_LIBRARIES += openssl >= 1.0.1
-PKG_LIBRARIES += libsrtp >= 1.5.2
+PKG_LIBS :=
+PKG_LIBS += libuv >= 1.6.1
+PKG_LIBS += libconfig++ >= 1.4.8
+PKG_LIBS += openssl >= 1.0.1
+PKG_LIBS += libsrtp >= 1.5.2
 
 # Dependencies source files.
 DEP_SOURCES :=
@@ -61,16 +61,16 @@ DEP_HEADERS_DIRS :=
 DEP_HEADERS_DIRS += ./deps/jsoncpp/dist
 
 # Dependencies static libraries to link with.
-DEP_LIBRARIES :=
+DEP_LIBS :=
 
 # Object files to build.
-ALL_OBJS = ${APP_SOURCES:.cpp=.o} ${DEP_SOURCES:.cpp=.o}
+ALL_OBJS := ${APP_SOURCES:.cpp=.o} ${DEP_SOURCES:.cpp=.o}
 
 # CPPFLAGS is the C preprocessor flags, so anything that compiles a C or C++ source
 # file into an object file will use this flag.
 CPPFLAGS += -I$(APP_HEADERS_DIR)
 CPPFLAGS += $(foreach dir, $(DEP_HEADERS_DIRS), -I$(dir))
-CPPFLAGS += $(shell pkg-config --cflags "$(PKG_LIBRARIES)")
+CPPFLAGS += $(shell pkg-config --cflags "$(PKG_LIBS)")
 
 # CXXFLAGS gives a list of flags that should be passed to the C++ compiler (use
 # this, for example, to set the version of the C++ language, to specify the
@@ -79,18 +79,18 @@ CXXFLAGS += -std=c++11 -Wall $(DEV_FLAGS)
 
 # LDFLAGS are used when linking, this will cause the appropriate flags to
 # be passed to the linker.
-LDFLAGS += $(foreach library, $(SYSTEM_LIBRARIES), -l$(library))
-LDFLAGS += $(shell pkg-config --libs "$(PKG_LIBRARIES)")
+LDFLAGS += $(foreach lib, $(SYSTEM_LIBS), -l$(lib))
+LDFLAGS += $(shell pkg-config --libs "$(PKG_LIBS)")
 
 
 #
 # Targets
 #
 
-# This indicates that "all", APP_NAME, "check_pkg_libraries" and "clean" are
+# This indicates that "all", APP_NAME, "check_pkg_libs" and "clean" are
 # "phony targets". Therefore calling "make XXXX" should execute the content of its
 # build rules, even if a newer file named "XXXX" exists.
-.PHONY: all $(APP_NAME) check_pkg_libraries clean deps
+.PHONY: all $(APP_NAME) check_pkg_libs clean deps
 
 # This is first build rule in the Makefile, and so executing "make" and executing
 # "make all" are the same. The target simply depends on $(APP_NAME).
@@ -102,13 +102,13 @@ all: $(APP_NAME)
 # the same name as the app. Note that LINK.cc makes use of CXX, CXXFLAGS,
 # LFLAGS, etc. LINK.cc is usually defined as: $(CXX) $(CXXFLAGS) $(CPPFLAGS)
 # $(LDFLAGS) $(TARGET_ARCH).
-$(APP_NAME): check_pkg_libraries $(ALL_OBJS)
-	@ mkdir -p $(APP_BIN_DIR)
-	$(LINK.cc) $(ALL_OBJS) $(DEP_LIBRARIES) -o $(APP_BIN_DIR)/$(APP_NAME)
+$(APP_NAME): check_pkg_libs $(ALL_OBJS)
+	@mkdir -p $(APP_BIN_DIR)
+	$(LINK.cc) $(ALL_OBJS) $(DEP_LIBS) -o $(APP_BIN_DIR)/$(APP_NAME)
 
-# Check the required libraries with pkg-support.
-check_pkg_libraries:
-	pkg-config --exists --print-errors "$(PKG_LIBRARIES)"
+# Check required libraries with pkg-support.
+check_pkg_libs:
+	pkg-config --exists --print-errors "$(PKG_LIBS)"
 
 # This target removes the built app and the generated object files. The @ symbol
 # indicates that the line should be run silently, and the - symbol indicates that
@@ -118,11 +118,11 @@ clean:
 	$(RM) $(ALL_OBJS)
 
 deps:
-	# Retrieve Git data for dependencies.
-	# $(shell git submodule init)
-	# $(shell git submodule update)
-	# jsoncpp stuff.
-	$(shell cd ./deps/jsoncpp && python amalgamate.py >/dev/null)
+	@echo "INFO: retrieving Git submodules..."
+	git submodule init
+	git submodule update
+	@echo "INFO: building jsoncpp stuff..."
+	cd ./deps/jsoncpp && python amalgamate.py >/dev/null
 
 doc:
 	cldoc generate $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -- --output cldoc $(APP_SOURCES) $(APP_HEADERS)
