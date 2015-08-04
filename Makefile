@@ -2,14 +2,14 @@ APP_NAME := mediasoup
 
 
 #
-# Compiler
+# Compiler.
 #
 # CXX := g++-4.8
 # CXX := g++-4.9 -fdiagnostics-color=auto
 # CXX := clang++
 
 #
-# Development flags
+# Development flags.
 # Comment/uncomment them during development.
 #
 DO_DEBUG_SYMBOLS := -g
@@ -20,7 +20,7 @@ DO_DEBUG_SYMBOLS := -g
 DEV_FLAGS := $(DO_DEBUG_SYMBOLS) $(DO_SANITIZE) $(DO_OPTIMIZE) $(DO_PEDANTIC)
 
 #
-# Custom macros
+# Custom macros.
 # Added to the CXXFLAGS exported variable (before running make).
 #
 # -DMS_DEVEL enables MS_TRACE().
@@ -84,13 +84,13 @@ LDFLAGS += $(shell pkg-config --libs "$(PKG_LIBS)")
 
 
 #
-# Targets
+# Targets.
 #
 
 # This indicates that "all", APP_NAME, "check_pkg_libs" and "clean" are
 # "phony targets". Therefore calling "make XXXX" should execute the content of its
 # build rules, even if a newer file named "XXXX" exists.
-.PHONY: all $(APP_NAME) check_pkg_libs clean deps
+.PHONY: all $(APP_NAME) check_pkg_libs echo_all_objs clean deps doc
 
 # This is first build rule in the Makefile, and so executing "make" and executing
 # "make all" are the same. The target simply depends on $(APP_NAME).
@@ -102,27 +102,35 @@ all: $(APP_NAME)
 # the same name as the app. Note that LINK.cc makes use of CXX, CXXFLAGS,
 # LFLAGS, etc. LINK.cc is usually defined as: $(CXX) $(CXXFLAGS) $(CPPFLAGS)
 # $(LDFLAGS) $(TARGET_ARCH).
-$(APP_NAME): check_pkg_libs $(ALL_OBJS)
+$(APP_NAME): check_pkg_libs echo_all_objs $(ALL_OBJS)
 	@mkdir -p $(APP_BIN_DIR)
+	@echo "INFO: linking .o objects and libraries into $(APP_BIN_DIR)/$(APP_NAME) ..."
 	$(LINK.cc) $(ALL_OBJS) $(DEP_LIBS) -o $(APP_BIN_DIR)/$(APP_NAME)
 
 # Check required libraries with pkg-support.
 check_pkg_libs:
-	pkg-config --exists --print-errors "$(PKG_LIBS)"
+	@echo "INFO: checking required PKG libraries ..."
+	@pkg-config --exists --print-errors "$(PKG_LIBS)"
+
+echo_all_objs:
+	@echo "INFO: compiling source files into .o object files ..."
 
 # This target removes the built app and the generated object files. The @ symbol
 # indicates that the line should be run silently, and the - symbol indicates that
 # errors should be ignored (i.e., the file doesn't exist).
 clean:
-	$(RM) -rf $(APP_BIN_DIR)
-	$(RM) $(ALL_OBJS)
+	@echo "INFO: deleting $(APP_BIN_DIR) folder ..."
+	@$(RM) -rf $(APP_BIN_DIR)
+	@echo "INFO: deleting .o object files ..."
+	@$(RM) $(ALL_OBJS)
 
 deps:
-	@echo "INFO: retrieving Git submodules..."
+	@echo "INFO: retrieving Git submodules ..."
 	git submodule init
 	git submodule update
-	@echo "INFO: building jsoncpp stuff..."
+	@echo "INFO: building jsoncpp stuff ..."
 	cd ./deps/jsoncpp && python amalgamate.py >/dev/null
 
 doc:
+	@echo "INFO: generating documentation ..."
 	cldoc generate $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -- --output cldoc $(APP_SOURCES) $(APP_HEADERS)
