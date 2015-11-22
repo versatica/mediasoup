@@ -74,7 +74,7 @@ void MediaSoup::Run()
 	// A vector for holding the workerId value for each thread.
 	std::vector<int> worker_ids;
 
-	for (int workerId=1; workerId <= Settings::configuration.numWorkers; workerId++)
+	for (int workerId = 1; workerId <= Settings::configuration.numWorkers; workerId++)
 	{
 		worker_ids.push_back(workerId);
 		Worker::SetWorker(workerId, nullptr);
@@ -105,7 +105,7 @@ void MediaSoup::Run()
 	waiting.tv_sec = 0;
 	waiting.tv_nsec = 10000000;  // 10 ms.
 
-	for (int i=1; i<=300; i++)
+	for (int i = 1; i <= 300; i++)
 	{
 		if (Worker::AreAllWorkersRunning())
 		{

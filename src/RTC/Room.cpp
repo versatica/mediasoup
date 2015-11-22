@@ -25,6 +25,7 @@ namespace RTC
 		{
 			RTC::Peer* peer = new RTC::Peer(this);
 
+			// TODO: this is not being freed
 			int* data = new int(i);
 			peer->SetUserData((void*)data);
 

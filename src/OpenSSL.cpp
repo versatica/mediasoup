@@ -32,7 +32,7 @@ void OpenSSL::ClassInit()
 
 	OpenSSL::numMutexes = CRYPTO_num_locks();
 
-	for (int i=0; i<OpenSSL::numMutexes; i++)
+	for (int i = 0; i < OpenSSL::numMutexes; i++)
 	{
 		int err = pthread_mutex_init(&OpenSSL::mutexes[i], nullptr);
 		if (err)
@@ -70,7 +70,7 @@ void OpenSSL::ClassDestroy()
 	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 
 	// Free mutexes.
-	for (int i=0; i<OpenSSL::numMutexes; i++)
+	for (int i = 0; i < OpenSSL::numMutexes; i++)
 	{
 		int err = pthread_mutex_destroy(&OpenSSL::mutexes[i]);
 		if (err)

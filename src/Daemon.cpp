@@ -138,7 +138,7 @@ void Daemon::Daemonize()
 
 	// Close all the possible fds inherited from the ancestor process (all but
 	// the write side of the pipe as the daemonized process must use it).
-	for (int fd=3; fd<32; fd++)
+	for (int fd = 3; fd < 32; fd++)
 	{
 		if (fd != Daemon::statusPipe[1])
 		close(fd);

@@ -5,7 +5,7 @@ namespace RTC
 {
 	enum class SRTPProfile
 	{
-		NONE = 0,
+		NONE                    = 0,
 		AES_CM_128_HMAC_SHA1_80 = 1,
 		AES_CM_128_HMAC_SHA1_32
 	};

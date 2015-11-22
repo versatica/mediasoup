@@ -571,7 +571,7 @@ void Settings::SetDefaultRTClistenIP(int requested_family)
 	if (err)
 		MS_ABORT("uv_interface_addresses() failed: %s", uv_strerror(err));
 
-	for (int i=0; i<num_addresses; i++)
+	for (int i = 0; i < num_addresses; i++)
 	{
 		uv_interface_address_t address = addresses[i];
 

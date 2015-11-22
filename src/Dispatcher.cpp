@@ -54,7 +54,7 @@ Dispatcher::Dispatcher()
 	// since the first entry will be in position 1.
 	this->controlProtocolUnixStreamSockets.push_back(nullptr);
 
-	for (int workerId=1; workerId <= num_workers; workerId++)
+	for (int workerId = 1; workerId <= num_workers; workerId++)
 	{
 		int fd = Worker::GetControlProtocolRemoteSocket(workerId);
 		ControlProtocol::UnixStreamSocket* controlProtocolUnixStreamSocket;
@@ -128,7 +128,7 @@ void Dispatcher::Close()
 
 	// Close the ControlProtocol UnixStream sockets.
 	int num_workers = Worker::CountWorkers();
-	for (int workerId=1; workerId <= num_workers; workerId++)
+	for (int workerId = 1; workerId <= num_workers; workerId++)
 		this->controlProtocolUnixStreamSockets[workerId]->Close();
 }
 
@@ -216,7 +216,7 @@ void Dispatcher::onControlProtocolMessage(ControlProtocol::TCPConnection* connec
 	if (relayToAllWorkers)
 	{
 		int num_workers = Worker::CountWorkers();
-		for (int workerId=1; workerId <= num_workers; workerId++)
+		for (int workerId = 1; workerId <= num_workers; workerId++)
 		{
 			ControlProtocol::UnixStreamSocket* controlProtocolUnixStreamSocket = controlProtocolUnixStreamSockets[workerId];
 

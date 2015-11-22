@@ -4,7 +4,7 @@
 namespace RTC {
 	enum class DTLSRole
 	{
-		NONE = 0,
+		NONE   = 0,
 		SERVER = 1,
 		CLIENT
 	};
