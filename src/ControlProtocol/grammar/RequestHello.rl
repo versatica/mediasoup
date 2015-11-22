@@ -1,7 +1,8 @@
 %%{
 	machine RequestHello;
 
-	action on_request_type_Hello {
+	action on_request_type_Hello
+	{
 		this->msg = new ControlProtocol::RequestHello();
 	}
 

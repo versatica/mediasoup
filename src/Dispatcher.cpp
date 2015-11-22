@@ -13,21 +13,23 @@
 #include <csignal>  // sigaction(), pthread_sigmask()
 #include <cerrno>
 
-
 /* Instance methods. */
 
-Dispatcher::Dispatcher() {
+Dispatcher::Dispatcher()
+{
 	MS_TRACE();
 
 	// Set the signals handler.
-	try {
+	try
+	{
 		this->signalsHandler = new SignalsHandler(this);
 		// Add signals to handle.
 		this->signalsHandler->AddSignal(SIGUSR1, "USR1");
 		this->signalsHandler->AddSignal(SIGINT, "INT");
 		this->signalsHandler->AddSignal(SIGTERM, "TERM");
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("error creating the SignalsHandler: %s", error.what());
 	}
 	MS_DEBUG("SignalsHandler ready");
@@ -35,10 +37,12 @@ Dispatcher::Dispatcher() {
 	// Create a ControlProtocol TCP server.
 	std::string ip = Settings::configuration.ControlProtocol.listenIP;
 	MS_PORT port = Settings::configuration.ControlProtocol.listenPort;
-	try {
+	try
+	{
 		this->controlProtocolTCPServer = new ControlProtocol::TCPServer(this, this, ip, port);
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("error creating a ControlProtocol TCP server in %s : %d: %s", ip.c_str(), port, error.what());
 	}
 	MS_DEBUG("ControlProtocol TCP server listening into %s : %d", this->controlProtocolTCPServer->GetLocalIP().c_str(), this->controlProtocolTCPServer->GetLocalPort());
@@ -50,18 +54,21 @@ Dispatcher::Dispatcher() {
 	// since the first entry will be in position 1.
 	this->controlProtocolUnixStreamSockets.push_back(nullptr);
 
-	for (int workerId=1; workerId <= num_workers; workerId++) {
+	for (int workerId=1; workerId <= num_workers; workerId++)
+	{
 		int fd = Worker::GetControlProtocolRemoteSocket(workerId);
 		ControlProtocol::UnixStreamSocket* controlProtocolUnixStreamSocket;
 
-		try {
+		try
+		{
 			controlProtocolUnixStreamSocket = new ControlProtocol::UnixStreamSocket(this, fd);
 
 			// Attach the workerId as user data.
 			int* data = new int(workerId);
 			controlProtocolUnixStreamSocket->SetUserData((void*)data);
 		}
-		catch (const MediaSoupError &error) {
+		catch (const MediaSoupError &error)
+		{
 			MS_THROW_ERROR("error creating a ControlProtocol Unix socket for Worker %d: %s", workerId, error.what());
 		}
 
@@ -84,16 +91,17 @@ Dispatcher::Dispatcher() {
 	MS_DEBUG("libuv loop ends");
 }
 
-
-Dispatcher::~Dispatcher() {
+Dispatcher::~Dispatcher()
+{
 	MS_TRACE();
 }
 
-
-void Dispatcher::Close() {
+void Dispatcher::Close()
+{
 	MS_TRACE();
 
-	if (this->closed) {
+	if (this->closed)
+	{
 		MS_ERROR("already closed");
 		return;
 	}
@@ -120,20 +128,21 @@ void Dispatcher::Close() {
 
 	// Close the ControlProtocol UnixStream sockets.
 	int num_workers = Worker::CountWorkers();
-	for (int workerId=1; workerId <= num_workers; workerId++) {
+	for (int workerId=1; workerId <= num_workers; workerId++)
 		this->controlProtocolUnixStreamSockets[workerId]->Close();
-	}
 }
 
-
-void Dispatcher::onSignal(SignalsHandler* signalsHandler, int signum) {
+void Dispatcher::onSignal(SignalsHandler* signalsHandler, int signum)
+{
 	MS_TRACE();
 
-	switch(signum) {
+	switch (signum)
+	{
 		// SIGUSR1 means configuration reload.
 		case SIGUSR1:
 			MS_NOTICE("signal USR1 received, reloading configuration");
-			if (Settings::ReloadConfigurationFile()) {
+			if (Settings::ReloadConfigurationFile())
+			{
 				// Print new configuration.
 				Settings::PrintConfiguration();
 			}
@@ -154,13 +163,13 @@ void Dispatcher::onSignal(SignalsHandler* signalsHandler, int signum) {
 	}
 }
 
-
-void Dispatcher::onSignalsHandlerClosed(SignalsHandler* signalsHandler) {
+void Dispatcher::onSignalsHandlerClosed(SignalsHandler* signalsHandler)
+{
 	MS_TRACE();
 }
 
-
-void Dispatcher::onControlProtocolNewTCPConnection(ControlProtocol::TCPServer* tcpServer, ControlProtocol::TCPConnection* connection) {
+void Dispatcher::onControlProtocolNewTCPConnection(ControlProtocol::TCPServer* tcpServer, ControlProtocol::TCPConnection* connection)
+{
 	MS_TRACE();
 
 	MS_DEBUG("new ControlProtocol TCP connection:");
@@ -168,8 +177,8 @@ void Dispatcher::onControlProtocolNewTCPConnection(ControlProtocol::TCPServer* t
 	connection->Dump();
 }
 
-
-void Dispatcher::onControlProtocolTCPConnectionClosed(ControlProtocol::TCPServer* tcpServer, ControlProtocol::TCPConnection* connection, bool is_closed_by_peer) {
+void Dispatcher::onControlProtocolTCPConnectionClosed(ControlProtocol::TCPServer* tcpServer, ControlProtocol::TCPConnection* connection, bool is_closed_by_peer)
+{
 	MS_TRACE();
 
 	if (is_closed_by_peer)
@@ -180,8 +189,8 @@ void Dispatcher::onControlProtocolTCPConnectionClosed(ControlProtocol::TCPServer
 	tcpServer->Dump();
 }
 
-
-void Dispatcher::onControlProtocolMessage(ControlProtocol::TCPConnection* connection, ControlProtocol::Message* msg, const MS_BYTE* raw, size_t len) {
+void Dispatcher::onControlProtocolMessage(ControlProtocol::TCPConnection* connection, ControlProtocol::Message* msg, const MS_BYTE* raw, size_t len)
+{
 	MS_TRACE();
 
 	MS_DEBUG("ControlProtocol message received from TCP %s : %u", connection->GetPeerIP().c_str(), (unsigned int)connection->GetPeerPort());
@@ -193,8 +202,8 @@ void Dispatcher::onControlProtocolMessage(ControlProtocol::TCPConnection* connec
 	bool relayToAllWorkers = false;
 	bool replyOK = true;
 
-
-	if (relayToRandomWorker) {
+	if (relayToRandomWorker)
+	{
 		int workerId = (int)Utils::Crypto::GetRandomUInt(1, (unsigned int)Worker::CountWorkers());
 
 		MS_INFO("relaying ControlProtocol message to Worker #%d ...", workerId);
@@ -204,10 +213,11 @@ void Dispatcher::onControlProtocolMessage(ControlProtocol::TCPConnection* connec
 		controlProtocolUnixStreamSocket->Write(raw, len);
 	}
 
-
-	if (relayToAllWorkers) {
+	if (relayToAllWorkers)
+	{
 		int num_workers = Worker::CountWorkers();
-		for (int workerId=1; workerId <= num_workers; workerId++) {
+		for (int workerId=1; workerId <= num_workers; workerId++)
+		{
 			ControlProtocol::UnixStreamSocket* controlProtocolUnixStreamSocket = controlProtocolUnixStreamSockets[workerId];
 
 			MS_INFO("relaying ControlProtocol message to Worker #%d ...", workerId);
@@ -215,8 +225,8 @@ void Dispatcher::onControlProtocolMessage(ControlProtocol::TCPConnection* connec
 		}
 	}
 
-
-	if (replyOK) {
+	if (replyOK)
+	{
 		MS_INFO("replying 'OK, message received' via TCP ...");
 
 		// TEST: Write(std::string &data)
@@ -240,8 +250,8 @@ void Dispatcher::onControlProtocolMessage(ControlProtocol::TCPConnection* connec
 	}
 }
 
-
-void Dispatcher::onControlProtocolMessage(ControlProtocol::UnixStreamSocket* unixSocket, ControlProtocol::Message* msg, const MS_BYTE* raw, size_t len) {
+void Dispatcher::onControlProtocolMessage(ControlProtocol::UnixStreamSocket* unixSocket, ControlProtocol::Message* msg, const MS_BYTE* raw, size_t len)
+{
 	MS_TRACE();
 
 	// Get the workerId associated to this socket.
@@ -256,8 +266,8 @@ void Dispatcher::onControlProtocolMessage(ControlProtocol::UnixStreamSocket* uni
 	// TODO: process the ControlProtocol::Message.
 }
 
-
-void Dispatcher::onControlProtocolUnixStreamSocketClosed(ControlProtocol::UnixStreamSocket* unixSocket, bool is_closed_by_peer) {
+void Dispatcher::onControlProtocolUnixStreamSocketClosed(ControlProtocol::UnixStreamSocket* unixSocket, bool is_closed_by_peer)
+{
 	MS_TRACE();
 
 	// Get the workerId associated to this socket.

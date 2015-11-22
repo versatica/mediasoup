@@ -10,17 +10,16 @@
 #include <csignal>  // sigaction(), pthread_sigmask()
 #include <cerrno>
 
-
 /* Static variables. */
 
 Worker::Workers Worker::workers;
 int Worker::numWorkers = 0;
 std::atomic<int> Worker::numWorkersRunning {0};
 
-
 /* Static methods. */
 
-void Worker::ThreadInit(int workerId) {
+void Worker::ThreadInit(int workerId)
+{
 	Logger::ThreadInit("worker #" + std::to_string(workerId));
 	MS_TRACE();
 
@@ -29,8 +28,8 @@ void Worker::ThreadInit(int workerId) {
 	Utils::Crypto::ThreadInit();
 }
 
-
-void Worker::ThreadDestroy() {
+void Worker::ThreadDestroy()
+{
 	MS_TRACE();
 
 	LibUV::ThreadDestroy();
@@ -38,22 +37,23 @@ void Worker::ThreadDestroy() {
 	Utils::Crypto::ThreadDestroy();
 }
 
-
-void Worker::SetWorker(int workerId, Worker* worker) {
+void Worker::SetWorker(int workerId, Worker* worker)
+{
 	MS_TRACE();
 
 	// Main thread calls this method with nullptr as worker. In that case the
 	// workerId entry MUST NOT already exit.
-	if (! worker) {
+	if (!worker)
+	{
 		if (Worker::workers.find(workerId) != Worker::workers.end())
 			MS_ABORT("entry with key %d already in the map", workerId);
 
 		Worker::workers[workerId] = nullptr;
 	}
-
 	// Each Worker (in its own thread) calls this method to insert itself in
 	// the map. In that case the key MUST exist.
-	else {
+	else
+	{
 		if (Worker::workers.find(workerId) == Worker::workers.end())
 			MS_ABORT("entry with key %d not present in the map", workerId);
 
@@ -61,19 +61,20 @@ void Worker::SetWorker(int workerId, Worker* worker) {
 	}
 }
 
-
-int Worker::CountWorkers() {
+int Worker::CountWorkers()
+{
 	MS_TRACE();
 
-	if (! Worker::numWorkers) {
+	if (!Worker::numWorkers)
+	{
 		Worker::numWorkers = workers.size();
 	}
 
 	return Worker::numWorkers;
 }
 
-
-bool Worker::AreAllWorkersRunning() {
+bool Worker::AreAllWorkersRunning()
+{
 	MS_TRACE();
 
 	if (Worker::numWorkersRunning.load(std::memory_order_relaxed) == Worker::CountWorkers())
@@ -82,8 +83,8 @@ bool Worker::AreAllWorkersRunning() {
 		return false;
 }
 
-
-int Worker::GetControlProtocolRemoteSocket(int workerId) {
+int Worker::GetControlProtocolRemoteSocket(int workerId)
+{
 	MS_TRACE();
 
 	Workers::iterator it = Worker::workers.find(workerId);
@@ -96,7 +97,6 @@ int Worker::GetControlProtocolRemoteSocket(int workerId) {
 
 	return worker->GetControlProtocolRemoteSocket();
 }
-
 
 /* Instance methods. */
 
@@ -115,30 +115,37 @@ Worker::Worker(int workerId) :
 
 	// Build a pair of connected UnixSocket in stream mode.
 	int fds[2] {-1,-1};
-	try {
+	try
+	{
 		Utils::Socket::BuildSocketPair(AF_UNIX, SOCK_STREAM, fds);
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("error building a socket pair for the ControlProtocol Unix socket: %s", error.what());
 	}
 
 	// Store the first paired socket for Dispatcher's usage.
 	this->controlProtocolRemoteSocket = fds[0];
 
-	try {
+	try
+	{
 		this->controlProtocolUnixStreamSocket = new ControlProtocol::UnixStreamSocket(this, fds[1]);
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("error creating a ControlProtocol Unix socket for Dispatcher: %s", error.what());
 	}
 	MS_DEBUG("ControlProtocol Unix socket for Dispatcher ready");
 
 	// TODO: TMP
-	if (this->workerId == 1) {
-		try {
+	if (this->workerId == 1)
+	{
+		try
+		{
 			this->room = new RTC::Room();
 		}
-		catch (const MediaSoupError &error) {
+		catch (const MediaSoupError &error)
+		{
 			MS_ERROR("---- TEST: error creating a RTC Room: %s", error.what());
 		}
 	}
@@ -154,13 +161,13 @@ Worker::Worker(int workerId) :
 	MS_DEBUG("libuv loop ends");
 }
 
-
-Worker::~Worker() {
+Worker::~Worker()
+{
 	MS_TRACE();
 }
 
-
-void Worker::Close() {
+void Worker::Close()
+{
 	MS_TRACE();
 
 	// TMP: close RTC::Room.
@@ -168,13 +175,13 @@ void Worker::Close() {
 		this->room->Close();
 }
 
-
-int Worker::GetControlProtocolRemoteSocket() {
+int Worker::GetControlProtocolRemoteSocket()
+{
 	return this->controlProtocolRemoteSocket;
 }
 
-
-void Worker::BlockSignals() {
+void Worker::BlockSignals()
+{
 	MS_TRACE();
 
 	int err;
@@ -192,15 +199,15 @@ void Worker::BlockSignals() {
 		MS_ABORT("pthread_sigmask() failed: %s", std::strerror(errno));
 }
 
-
-void Worker::onControlProtocolMessage(ControlProtocol::UnixStreamSocket* unixSocket, ControlProtocol::Message* msg, const MS_BYTE* raw, size_t len) {
+void Worker::onControlProtocolMessage(ControlProtocol::UnixStreamSocket* unixSocket, ControlProtocol::Message* msg, const MS_BYTE* raw, size_t len)
+{
 	MS_TRACE();
 
 	MS_DEBUG("ControlProtocol message received from Dispatcher");
 	msg->Dump();
 
 
-	// TMP
+// TMP
 	bool sendBackToDispatcher = false;
 
 	if (sendBackToDispatcher) {
@@ -208,12 +215,11 @@ void Worker::onControlProtocolMessage(ControlProtocol::UnixStreamSocket* unixSoc
 		unixSocket->Write(raw, len);
 	}
 
-
 	// TODO: process the ControlProtocol::Message.
 }
 
-
-void Worker::onControlProtocolUnixStreamSocketClosed(ControlProtocol::UnixStreamSocket* unixSocket, bool is_closed_by_peer) {
+void Worker::onControlProtocolUnixStreamSocketClosed(ControlProtocol::UnixStreamSocket* unixSocket, bool is_closed_by_peer)
+{
 	MS_TRACE();
 
 	if (is_closed_by_peer)

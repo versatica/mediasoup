@@ -4,10 +4,10 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 
-
 /* Static variables. */
 
-std::vector<const char*> LibSRTP::errors = {
+std::vector<const char*> LibSRTP::errors =
+{
 	// From 0 (err_status_ok) to 24 (err_status_pfkey_err).
 	"nothing to report (err_status_ok)",
 	"unspecified failure (err_status_fail)",
@@ -36,10 +36,10 @@ std::vector<const char*> LibSRTP::errors = {
 	"error while using pfkey (err_status_pfkey_err)"
 };
 
-
 /* Static methods. */
 
-void LibSRTP::ClassInit() {
+void LibSRTP::ClassInit()
+{
 	MS_TRACE();
 
 	err_status_t err;
@@ -51,8 +51,8 @@ void LibSRTP::ClassInit() {
 		MS_THROW_ERROR("srtp_init() failed: %s", LibSRTP::GetErrorString(err));
 }
 
-
-void LibSRTP::ClassDestroy() {
+void LibSRTP::ClassDestroy()
+{
 	MS_TRACE();
 
 	err_status_t err;

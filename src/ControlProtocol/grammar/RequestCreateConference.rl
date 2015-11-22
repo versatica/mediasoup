@@ -1,7 +1,8 @@
 %%{
 	machine RequestCreateConference;
 
-	action on_request_type_CreateConference {
+	action on_request_type_CreateConference
+	{
 		this->msg = new ControlProtocol::RequestCreateConference();
 	}
 

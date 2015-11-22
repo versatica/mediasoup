@@ -1,22 +1,23 @@
 #ifndef MS_TCP_CONNECTION_H
 #define MS_TCP_CONNECTION_H
 
-
 #include "common.h"
 #include <string>
 #include <uv.h>
 
-
-class TCPConnection {
+class TCPConnection
+{
 public:
-	class Listener {
+	class Listener
+	{
 	public:
 		virtual void onTCPConnectionClosed(TCPConnection* connection, bool is_closed_by_peer) = 0;
 	};
 
 public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
-	typedef struct UvWriteData {
+	typedef struct UvWriteData
+	{
 		TCPConnection*  connection;
 		uv_write_t      req;
 		MS_BYTE         store[1];
@@ -82,61 +83,60 @@ protected:
 	MS_PORT peerPort = 0;
 };
 
-
 /* Inline methods. */
 
 inline
-uv_tcp_t* TCPConnection::GetUvHandle() {
+uv_tcp_t* TCPConnection::GetUvHandle()
+{
 	return this->uvHandle;
 }
 
-
 inline
-void TCPConnection::Write(const std::string &data) {
+void TCPConnection::Write(const std::string &data)
+{
 	Write((const MS_BYTE*)data.c_str(), data.size());
 }
 
-
 inline
-const std::string& TCPConnection::GetLocalIP() {
+const std::string& TCPConnection::GetLocalIP()
+{
 	return this->localIP;
 }
 
-
 inline
-MS_PORT TCPConnection::GetLocalPort() {
+MS_PORT TCPConnection::GetLocalPort()
+{
 	return this->localPort;
 }
 
-
 inline
-const struct sockaddr* TCPConnection::GetPeerAddress() {
+const struct sockaddr* TCPConnection::GetPeerAddress()
+{
 	return (const struct sockaddr*)&this->peerAddr;
 }
 
-
 inline
-const std::string& TCPConnection::GetPeerIP() {
+const std::string& TCPConnection::GetPeerIP()
+{
 	return this->peerIP;
 }
 
-
 inline
-MS_PORT TCPConnection::GetPeerPort() {
+MS_PORT TCPConnection::GetPeerPort()
+{
 	return this->peerPort;
 }
 
-
 inline
-void TCPConnection::SetUserData(void* userData) {
+void TCPConnection::SetUserData(void* userData)
+{
 	this->userData = userData;
 }
 
-
 inline
-void* TCPConnection::GetUserData() {
+void* TCPConnection::GetUserData()
+{
 	return this->userData;
 }
-
 
 #endif

@@ -1,16 +1,16 @@
 #ifndef MS_UNIX_STREAM_SOCKET_H
 #define MS_UNIX_STREAM_SOCKET_H
 
-
 #include "common.h"
 #include <string>
 #include <uv.h>
 
-
-class UnixStreamSocket {
+class UnixStreamSocket
+{
 public:
 	/* Struct for the data field of uv_req_t when writing data. */
-	typedef struct UvWriteData {
+	typedef struct UvWriteData
+	{
 		UnixStreamSocket*  socket;
 		uv_write_t         req;
 		MS_BYTE            store[1];
@@ -59,25 +59,24 @@ protected:
 	size_t bufferDataLen = 0;
 };
 
-
 /* Inline methods. */
 
 inline
-void UnixStreamSocket::Write(const std::string &data) {
+void UnixStreamSocket::Write(const std::string &data)
+{
 	Write((const MS_BYTE*)data.c_str(), data.size());
 }
 
-
 inline
-void UnixStreamSocket::SetUserData(void* userData) {
+void UnixStreamSocket::SetUserData(void* userData)
+{
 	this->userData = userData;
 }
 
-
 inline
-void* UnixStreamSocket::GetUserData() {
+void* UnixStreamSocket::GetUserData()
+{
 	return this->userData;
 }
-
 
 #endif

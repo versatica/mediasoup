@@ -1,8 +1,8 @@
 #ifndef MS_DAEMON_H
 #define	MS_DAEMON_H
 
-
-class Daemon {
+class Daemon
+{
 public:
 	static void Daemonize();
 	static void SendOKStatusToAncestor();
@@ -21,6 +21,5 @@ private:
 	static bool isDaemonized;
 	static bool hasWrittenPIDFile;
 };
-
 
 #endif

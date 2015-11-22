@@ -1,12 +1,11 @@
 #ifndef MS_LIBUV_H
 #define	MS_LIBUV_H
 
-
 #include "common.h"
 #include <uv.h>
 
-
-class LibUV {
+class LibUV
+{
 public:
 	static void ClassInit();
 	static void ThreadInit();
@@ -18,13 +17,12 @@ private:
 	static __thread uv_loop_t* loop;
 };
 
-
 /* Inline static methods. */
 
 inline
-uv_loop_t* LibUV::GetLoop() {
+uv_loop_t* LibUV::GetLoop()
+{
 	return LibUV::loop;
 }
-
 
 #endif

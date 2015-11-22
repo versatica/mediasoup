@@ -1,7 +1,6 @@
 #ifndef MS_DISPATCHER_H
 #define	MS_DISPATCHER_H
 
-
 #include "common.h"
 #include "handles/SignalsHandler.h"
 #include "ControlProtocol/TCPServer.h"
@@ -9,7 +8,6 @@
 #include "ControlProtocol/UnixStreamSocket.h"
 #include "ControlProtocol/Message.h"
 #include <vector>
-
 
 class Dispatcher :
 	public SignalsHandler::Listener,
@@ -51,6 +49,5 @@ private:
 	// Others:
 	bool closed = false;
 };
-
 
 #endif

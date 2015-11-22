@@ -1,16 +1,16 @@
 #ifndef MS_UDP_SOCKET_H
 #define MS_UDP_SOCKET_H
 
-
 #include "common.h"
 #include <string>
 #include <uv.h>
 
-
-class UDPSocket {
+class UDPSocket
+{
 public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
-	typedef struct UvSendData {
+	typedef struct UvSendData
+	{
 		UDPSocket*      socket;
 		uv_udp_send_t   req;
 		MS_BYTE         store[1];
@@ -68,49 +68,48 @@ protected:
 	MS_PORT localPort = 0;
 };
 
-
 /* Inline methods. */
 
 inline
-void UDPSocket::Send(const std::string &data, const struct sockaddr* addr) {
+void UDPSocket::Send(const std::string &data, const struct sockaddr* addr)
+{
 	Send((const MS_BYTE*)data.c_str(), data.size(), addr);
 }
 
-
 inline
-void UDPSocket::Send(const std::string &data, const std::string &ip, MS_PORT port) {
+void UDPSocket::Send(const std::string &data, const std::string &ip, MS_PORT port)
+{
 	Send((const MS_BYTE*)data.c_str(), data.size(), ip, port);
 }
 
-
 inline
-const struct sockaddr* UDPSocket::GetLocalAddress() {
+const struct sockaddr* UDPSocket::GetLocalAddress()
+{
 	return (const struct sockaddr*)&this->localAddr;
 }
 
-
 inline
-const std::string& UDPSocket::GetLocalIP() {
+const std::string& UDPSocket::GetLocalIP()
+{
 	return this->localIP;
 }
 
-
 inline
-MS_PORT UDPSocket::GetLocalPort() {
+MS_PORT UDPSocket::GetLocalPort()
+{
 	return this->localPort;
 }
 
-
 inline
-void UDPSocket::SetUserData(void* userData) {
+void UDPSocket::SetUserData(void* userData)
+{
 	this->userData = userData;
 }
 
-
 inline
-void* UDPSocket::GetUserData() {
+void* UDPSocket::GetUserData()
+{
 	return this->userData;
 }
-
 
 #endif

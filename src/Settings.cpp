@@ -13,31 +13,34 @@
 #include <cerrno>
 #include <unistd.h>  // close()
 #include <uv.h>
-extern "C" {
+extern "C"
+{
 	#include <getopt.h>
 	#include <syslog.h>
 }
-
 
 /* Static variables. */
 
 struct Settings::Arguments Settings::arguments;
 struct Settings::Configuration Settings::configuration;
-std::map<std::string, unsigned int> Settings::string2LogLevel = {
+std::map<std::string, unsigned int> Settings::string2LogLevel =
+{
 	{ "debug",  LOG_DEBUG   },
 	{ "info",   LOG_INFO    },
 	{ "notice", LOG_NOTICE  },
 	{ "warn",   LOG_WARNING },
 	{ "error",  LOG_ERR     }
 };
-std::map<unsigned int, std::string> Settings::logLevel2String = {
+std::map<unsigned int, std::string> Settings::logLevel2String =
+{
 	{ LOG_DEBUG,   "debug"  },
 	{ LOG_INFO,    "info"   },
 	{ LOG_NOTICE,  "notice" },
 	{ LOG_WARNING, "warn"   },
 	{ LOG_ERR,     "error"  }
 };
-std::map<std::string, unsigned int> Settings::string2SyslogFacility = {
+std::map<std::string, unsigned int> Settings::string2SyslogFacility =
+{
 	{ "user",   LOG_USER   },
 	{ "local0", LOG_LOCAL0 },
 	{ "local1", LOG_LOCAL1 },
@@ -48,7 +51,8 @@ std::map<std::string, unsigned int> Settings::string2SyslogFacility = {
 	{ "local6", LOG_LOCAL6 },
 	{ "local7", LOG_LOCAL7 }
 };
-std::map<unsigned int, std::string> Settings::syslogFacility2String = {
+std::map<unsigned int, std::string> Settings::syslogFacility2String =
+{
 	{ LOG_USER,   "user"   },
 	{ LOG_LOCAL0, "local0" },
 	{ LOG_LOCAL1, "local1" },
@@ -60,10 +64,10 @@ std::map<unsigned int, std::string> Settings::syslogFacility2String = {
 	{ LOG_LOCAL7, "local7" }
 };
 
-
 /* Static methods. */
 
-void Settings::ReadArguments(int argc, char* argv[]) {
+void Settings::ReadArguments(int argc, char* argv[])
+{
 	MS_TRACE();
 
 	/* Variables for getopt. */
@@ -78,7 +82,8 @@ void Settings::ReadArguments(int argc, char* argv[]) {
 	std::string short_options = ":c:dp:u:g:vh";
 
 	// For getopt_long().
-	struct option long_options[] = {
+	struct option long_options[] =
+	{
 		{ "configfile", required_argument, nullptr, 'c' },
 		{ "daemonize",  no_argument,       nullptr, 'd' },
 		{ "pidfile",    required_argument, nullptr, 'p' },
@@ -90,7 +95,8 @@ void Settings::ReadArguments(int argc, char* argv[]) {
 	};
 
 	// A map for associating short and long option names.
-	std::map<char, std::string> long_option_names = {
+	std::map<char, std::string> long_option_names =
+	{
 		{ 'c', "configfile" },
 		{ 'd', "daemonize"  },
 		{ 'p', "pidfile"    },
@@ -103,8 +109,10 @@ void Settings::ReadArguments(int argc, char* argv[]) {
 	/* Parse command line options. */
 
 	opterr = 0;  // Don't allow getopt to print error messages.
-	while ((c = getopt_long(argc, argv, short_options.c_str(), long_options, &option_index)) != -1) {
-		switch(c) {
+	while ((c = getopt_long(argc, argv, short_options.c_str(), long_options, &option_index)) != -1)
+	{
+		switch (c)
+		{
 			case 'c':
 				Settings::arguments.configFile = optarg;
 				break;
@@ -138,12 +146,14 @@ void Settings::ReadArguments(int argc, char* argv[]) {
 
 			// Invalid option.
 			case '?':
-				if (isprint(optopt)) {
+				if (isprint(optopt))
+				{
 					MS_ERROR("invalid option '-%c'", (char)optopt);
 					Settings::PrintHelp(true);
 					std::_Exit(EXIT_FAILURE);
 				}
-				else {
+				else
+				{
 					MS_ERROR("unknown long option given as argument");
 					Settings::PrintHelp(true);
 					std::_Exit(EXIT_FAILURE);
@@ -167,12 +177,12 @@ void Settings::ReadArguments(int argc, char* argv[]) {
 		MS_EXIT_FAILURE("there are remaining arguments after parsing command line options");
 
 	// Ensure that PID file is not given when in foreground mode.
-	if (! Settings::arguments.pidFile.empty() && ! Settings::arguments.daemonize)
+	if (!Settings::arguments.pidFile.empty() && !Settings::arguments.daemonize)
 		MS_EXIT_FAILURE("PID file option requires daemon mode");
 }
 
-
-void Settings::PrintHelp(bool error) {
+void Settings::PrintHelp(bool error)
+{
 	MS_TRACE();
 
 	std::string help;
@@ -197,16 +207,16 @@ void Settings::PrintHelp(bool error) {
 		std::fprintf(stdout, "%s", help.c_str());
 }
 
-
-void Settings::PrintVersion() {
+void Settings::PrintVersion()
+{
 	MS_TRACE();
 
 	std::fprintf(stdout, "%s\n", Version::GetNameAndVersion().c_str());
 	std::fprintf(stdout, "%s\n", Version::copyright.c_str());
 }
 
-
-void Settings::SetDefaultConfiguration() {
+void Settings::SetDefaultConfiguration()
+{
 	MS_TRACE();
 
 	SetDefaultNumWorkers();
@@ -214,8 +224,8 @@ void Settings::SetDefaultConfiguration() {
 	SetDefaultRTClistenIP(AF_INET6);
 }
 
-
-void Settings::ReadConfigurationFile() {
+void Settings::ReadConfigurationFile()
+{
 	MS_TRACE();
 
 	if (Settings::arguments.configFile.empty())
@@ -223,10 +233,12 @@ void Settings::ReadConfigurationFile() {
 
 	libconfig::Config* config;
 
-	try {
+	try
+	{
 		config = ParseConfigFile();
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_EXIT_FAILURE("%s", error.what());
 	}
 
@@ -237,7 +249,8 @@ void Settings::ReadConfigurationFile() {
 	bool bool_value;
 	std::string empty_string;
 
-	try {
+	try
+	{
 		/* First level settings. */
 
 		if (config->lookupValue("logLevel", str_value))
@@ -275,7 +288,8 @@ void Settings::ReadConfigurationFile() {
 		if (config->lookupValue("RTC.dtlsCertificateFile", str_value) && config->lookupValue("RTC.dtlsPrivateKeyFile", str_value2))
 			SetDtlsCertificateAndPrivateKeyFiles(str_value, str_value2);
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		delete config;
 		MS_EXIT_FAILURE("error in configuration file: %s", error.what());
 	}
@@ -283,21 +297,24 @@ void Settings::ReadConfigurationFile() {
 	delete config;
 }
 
-
-bool Settings::ReloadConfigurationFile() {
+bool Settings::ReloadConfigurationFile()
+{
 	MS_TRACE();
 
-	if (Settings::arguments.configFile.empty()) {
+	if (Settings::arguments.configFile.empty())
+	{
 		MS_ERROR("no configuration file was given in command line options");
 		return false;
 	}
 
 	libconfig::Config* config;
 
-	try {
+	try
+	{
 		config = ParseConfigFile();
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_ERROR("%s", error.what());
 		return false;
 	}
@@ -306,7 +323,8 @@ bool Settings::ReloadConfigurationFile() {
 
 	// Just some configuration settings can be reloaded.
 
-	try {
+	try
+	{
 		/* First level settings. */
 
 		if (config->lookupValue("logLevel", str_value))
@@ -314,7 +332,8 @@ bool Settings::ReloadConfigurationFile() {
 		else
 			Settings::configuration.logLevel = LOG_DEBUG;
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_ERROR("error in configuration file: %s", error.what());
 		delete config;
 		return false;
@@ -324,8 +343,8 @@ bool Settings::ReloadConfigurationFile() {
 	return true;
 }
 
-
-void Settings::PrintConfiguration() {
+void Settings::PrintConfiguration()
+{
 	MS_TRACE();
 
 	MS_INFO("[configuration]");
@@ -349,7 +368,8 @@ void Settings::PrintConfiguration() {
 		MS_INFO("  - listenIPv6: (unavailable)");
 	MS_INFO("  - minPort: %d", Settings::configuration.RTC.minPort);
 	MS_INFO("  - maxPort: %d", Settings::configuration.RTC.maxPort);
-	if (! Settings::configuration.RTC.dtlsCertificateFile.empty()) {
+	if (!Settings::configuration.RTC.dtlsCertificateFile.empty())
+	{
 		MS_INFO("  - dtlsCertificateFile: \"%s\"", Settings::configuration.RTC.dtlsCertificateFile.c_str());
 		MS_INFO("  - dtlsPrivateKeyFile: \"%s\"", Settings::configuration.RTC.dtlsPrivateKeyFile.c_str());
 	}
@@ -357,33 +377,39 @@ void Settings::PrintConfiguration() {
 	MS_INFO("[/configuration]");
 }
 
-
-libconfig::Config* Settings::ParseConfigFile() {
+libconfig::Config* Settings::ParseConfigFile()
+{
 	MS_TRACE();
 
 	const char* config_file = Settings::arguments.configFile.c_str();
 
-	try {
+	try
+	{
 		Utils::File::CheckFile(config_file);
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("error reading configuration file: %s", error.what());
 	}
 
 	libconfig::Config* config = new libconfig::Config();
 
-	try {
+	try
+	{
 		config->readFile(config_file);
 	}
-	catch (const libconfig::ParseException &error) {
+	catch (const libconfig::ParseException &error)
+	{
 		delete config;
 		MS_THROW_ERROR("parsing error in configuration file '%s': %s in line %d", config_file, error.getError(), error.getLine());
 	}
-	catch (const libconfig::FileIOException &error) {
+	catch (const libconfig::FileIOException &error)
+	{
 		delete config;
 		MS_THROW_ERROR("cannot read configuration file '%s'", config_file);
 	}
-	catch (const libconfig::ConfigException &error) {
+	catch (const libconfig::ConfigException &error)
+	{
 		delete config;
 		MS_THROW_ERROR("error reading configuration file '%s': %s", config_file, error.what());
 	}
@@ -391,8 +417,8 @@ libconfig::Config* Settings::ParseConfigFile() {
 	return config;
 }
 
-
-void Settings::SetLogLevel(std::string &level) {
+void Settings::SetLogLevel(std::string &level)
+{
 	MS_TRACE();
 
 	// Downcase given level.
@@ -404,8 +430,8 @@ void Settings::SetLogLevel(std::string &level) {
 	Settings::configuration.logLevel = Settings::string2LogLevel[level];
 }
 
-
-void Settings::SetSyslogFacility(std::string &facility) {
+void Settings::SetSyslogFacility(std::string &facility)
+{
 	MS_TRACE();
 
 	// Downcase given facility.
@@ -417,8 +443,8 @@ void Settings::SetSyslogFacility(std::string &facility) {
 	Settings::configuration.syslogFacility = Settings::string2SyslogFacility[facility];
 }
 
-
-void Settings::SetNumWorkers(int numWorkers) {
+void Settings::SetNumWorkers(int numWorkers)
+{
 	MS_TRACE();
 
 	if (numWorkers < 0)
@@ -430,8 +456,8 @@ void Settings::SetNumWorkers(int numWorkers) {
 	Settings::configuration.numWorkers = numWorkers;
 }
 
-
-void Settings::SetDefaultNumWorkers() {
+void Settings::SetDefaultNumWorkers()
+{
 	MS_TRACE();
 
 	int err;
@@ -448,11 +474,12 @@ void Settings::SetDefaultNumWorkers() {
 	Settings::configuration.numWorkers = num_cpus;
 }
 
-
-void Settings::SetControlProtocolListenIP(const std::string &ip) {
+void Settings::SetControlProtocolListenIP(const std::string &ip)
+{
 	MS_TRACE();
 
-	switch (Utils::IP::GetFamily(ip)) {
+	switch (Utils::IP::GetFamily(ip))
+	{
 		case AF_INET:
 		case AF_INET6:
 			Settings::configuration.ControlProtocol.listenIP = ip;
@@ -462,24 +489,26 @@ void Settings::SetControlProtocolListenIP(const std::string &ip) {
 	}
 }
 
-
-void Settings::SetControlProtocolListenPort(MS_PORT port) {
+void Settings::SetControlProtocolListenPort(MS_PORT port)
+{
 	MS_TRACE();
 
 	Settings::configuration.ControlProtocol.listenPort = port;
 }
 
-
-void Settings::SetRTClistenIPv4(const std::string &ip) {
+void Settings::SetRTClistenIPv4(const std::string &ip)
+{
 	MS_TRACE();
 
-	if (ip.empty()) {
+	if (ip.empty())
+	{
 		Settings::configuration.RTC.listenIPv4.clear();
 		Settings::configuration.RTC.hasIPv4 = false;
 		return;
 	}
 
-	switch (Utils::IP::GetFamily(ip)) {
+	switch (Utils::IP::GetFamily(ip))
+	{
 		case AF_INET:
 			if (ip == "0.0.0.0")
 				MS_THROW_ERROR("RTC.listenIPv4 cannot be '0.0.0.0'");
@@ -493,21 +522,23 @@ void Settings::SetRTClistenIPv4(const std::string &ip) {
 	}
 
 	int _bind_err;
-	if (! IsBindableIP(ip, AF_INET, &_bind_err))
+	if (!IsBindableIP(ip, AF_INET, &_bind_err))
 		MS_THROW_ERROR("cannot bind on '%s' for RTC.listenIPv4: %s", ip.c_str(), std::strerror(_bind_err));
 }
 
-
-void Settings::SetRTClistenIPv6(const std::string &ip) {
+void Settings::SetRTClistenIPv6(const std::string &ip)
+{
 	MS_TRACE();
 
-	if (ip.empty()) {
+	if (ip.empty())
+	{
 		Settings::configuration.RTC.listenIPv6.clear();
 		Settings::configuration.RTC.hasIPv6 = false;
 		return;
 	}
 
-	switch (Utils::IP::GetFamily(ip)) {
+	switch (Utils::IP::GetFamily(ip))
+	{
 		case AF_INET6:
 			if (ip == "::")
 				MS_THROW_ERROR("RTC.listenIPv6 cannot be '::'");
@@ -521,12 +552,12 @@ void Settings::SetRTClistenIPv6(const std::string &ip) {
 	}
 
 	int _bind_err;
-	if (! IsBindableIP(ip, AF_INET6, &_bind_err))
+	if (!IsBindableIP(ip, AF_INET6, &_bind_err))
 		MS_THROW_ERROR("cannot bind on '%s' for RTC.listenIPv6: %s", ip.c_str(), std::strerror(_bind_err));
 }
 
-
-void Settings::SetDefaultRTClistenIP(int requested_family) {
+void Settings::SetDefaultRTClistenIP(int requested_family)
+{
 	MS_TRACE();
 
 	int err;
@@ -540,7 +571,8 @@ void Settings::SetDefaultRTClistenIP(int requested_family) {
 	if (err)
 		MS_ABORT("uv_interface_addresses() failed: %s", uv_strerror(err));
 
-	for (int i=0; i<num_addresses; i++) {
+	for (int i=0; i<num_addresses; i++)
+	{
 		uv_interface_address_t address = addresses[i];
 
 		// Ignore internal addresses.
@@ -555,14 +587,16 @@ void Settings::SetDefaultRTClistenIP(int requested_family) {
 		if (family != requested_family)
 			continue;
 
-		switch(family) {
+		switch (family)
+		{
 			case AF_INET:
 				// Ignore if already got an IPv4.
-				if (! ipv4.empty())
+				if (!ipv4.empty())
 					continue;
 
 				// Check if it is bindable.
-				if (! IsBindableIP(ip, AF_INET, &_bind_err)) {
+				if (!IsBindableIP(ip, AF_INET, &_bind_err))
+				{
 					MS_DEBUG("ignoring '%s' for RTC.listenIPv4: %s", ip.c_str(), std::strerror(errno));
 					continue;
 				}
@@ -573,11 +607,12 @@ void Settings::SetDefaultRTClistenIP(int requested_family) {
 
 			case AF_INET6:
 				// Ignore if already got an IPv6.
-				if (! ipv6.empty())
+				if (!ipv6.empty())
 					continue;
 
 				// Check if it is bindable.
-				if (! IsBindableIP(ip, AF_INET6, &_bind_err)) {
+				if (!IsBindableIP(ip, AF_INET6, &_bind_err))
+				{
 					MS_DEBUG("ignoring '%s' for RTC.listenIPv6: %s", ip.c_str(), std::strerror(errno));
 					continue;
 				}
@@ -588,12 +623,14 @@ void Settings::SetDefaultRTClistenIP(int requested_family) {
 		}
 	}
 
-	if (! ipv4.empty()) {
+	if (!ipv4.empty())
+	{
 		Settings::configuration.RTC.listenIPv4 = ipv4;
 		Settings::configuration.RTC.hasIPv4 = true;
 	}
 
-	if (! ipv6.empty()) {
+	if (!ipv6.empty())
+	{
 		Settings::configuration.RTC.listenIPv6 = ipv6;
 		Settings::configuration.RTC.hasIPv6 = true;
 	}
@@ -601,8 +638,8 @@ void Settings::SetDefaultRTClistenIP(int requested_family) {
 	uv_free_interface_addresses(addresses, num_addresses);
 }
 
-
-bool Settings::IsBindableIP(const std::string &ip, int family, int* _bind_err) {
+bool Settings::IsBindableIP(const std::string &ip, int family, int* _bind_err)
+{
 	MS_TRACE();
 
 	struct sockaddr_storage bind_addr;
@@ -610,7 +647,8 @@ bool Settings::IsBindableIP(const std::string &ip, int family, int* _bind_err) {
 	int err = 0;
 	bool bind_ok;
 
-	switch (family) {
+	switch (family)
+	{
 		case AF_INET:
 			err = uv_ip4_addr(ip.c_str(), 0, (struct sockaddr_in*)&bind_addr);
 			if (err)
@@ -638,10 +676,12 @@ bool Settings::IsBindableIP(const std::string &ip, int family, int* _bind_err) {
 			MS_ABORT("unknown family");
 	}
 
-	if (err == 0) {
+	if (err == 0)
+	{
 		bind_ok = true;
 	}
-	else {
+	else
+	{
 		bind_ok = false;
 		*_bind_err = errno;
 	}
@@ -653,8 +693,8 @@ bool Settings::IsBindableIP(const std::string &ip, int family, int* _bind_err) {
 	return bind_ok;
 }
 
-
-void Settings::SetRTCports(MS_PORT minPort, MS_PORT maxPort) {
+void Settings::SetRTCports(MS_PORT minPort, MS_PORT maxPort)
+{
 	MS_TRACE();
 
 	if (minPort < 1024)
@@ -677,21 +717,25 @@ void Settings::SetRTCports(MS_PORT minPort, MS_PORT maxPort) {
 	Settings::configuration.RTC.maxPort = maxPort;
 }
 
-
-void Settings::SetDtlsCertificateAndPrivateKeyFiles(std::string& dtlsCertificateFile, std::string& dtlsPrivateKeyFile) {
+void Settings::SetDtlsCertificateAndPrivateKeyFiles(std::string& dtlsCertificateFile, std::string& dtlsPrivateKeyFile)
+{
 	MS_TRACE();
 
-	try {
+	try
+	{
 		Utils::File::CheckFile(dtlsCertificateFile.c_str());
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("RTC.dtlsCertificateFile: %s", error.what());
 	}
 
-	try {
+	try
+	{
 		Utils::File::CheckFile(dtlsPrivateKeyFile.c_str());
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("RTC.dtlsPrivateKeyFile: %s", error.what());
 	}
 
@@ -699,11 +743,11 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles(std::string& dtlsCertificate
 	Settings::configuration.RTC.dtlsPrivateKeyFile = dtlsPrivateKeyFile;
 }
 
-
-void Settings::ConfigurationPostCheck() {
+void Settings::ConfigurationPostCheck()
+{
 	MS_TRACE();
 
 	// RTC must have at least 'listenIPv4' or 'listenIPv6'.
-	if (! Settings::configuration.RTC.hasIPv4 && ! Settings::configuration.RTC.hasIPv6)
+	if (!Settings::configuration.RTC.hasIPv4 && !Settings::configuration.RTC.hasIPv6)
 		MS_EXIT_FAILURE("at least RTC.listenIPv4 or RTC.listenIPv6 must be enabled");
 }

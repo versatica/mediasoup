@@ -1,21 +1,22 @@
 #ifndef MS_SETTINGS_H
 #define	MS_SETTINGS_H
 
-
 #include "common.h"
 #include <map>
 #include <string>
 #include <vector>
 #include <libconfig.h++>
-extern "C" {
+extern "C"
+{
 	#include <syslog.h>
 }
 
-
-class Settings {
+class Settings
+{
 public:
 	// Struct holding command line arguments.
-	struct Arguments {
+	struct Arguments
+	{
 		std::string         configFile;
 		bool                daemonize       { false };
 		std::string         pidFile;
@@ -24,17 +25,20 @@ public:
 	};
 
 	// Struct holding the configuration (can be overriden by a config file).
-	struct Configuration {
+	struct Configuration
+	{
 		unsigned int        logLevel        { LOG_DEBUG };
 		unsigned int        syslogFacility  { LOG_USER };
 		int                 numWorkers      { 0 };
 
-		struct {
+		struct
+		{
 			std::string     listenIP        { "127.0.0.1" };
 			MS_PORT         listenPort      { 4080 };
 		} ControlProtocol;
 
-		struct {
+		struct
+		{
 			std::string     listenIPv4;
 			std::string     listenIPv6;
 			MS_PORT         minPort         { 10000 };
@@ -82,6 +86,5 @@ private:
 	static std::map<std::string, unsigned int> string2SyslogFacility;
 	static std::map<unsigned int, std::string> syslogFacility2String;
 };
-
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef MS_WORKER_H
 #define	MS_WORKER_H
 
-
 #include "common.h"
 #include "ControlProtocol/UnixStreamSocket.h"
 #include "ControlProtocol/Message.h"
@@ -9,7 +8,6 @@
 #include <atomic>
 // TMP
 #include "RTC/Room.h"
-
 
 class Worker :
 	public ControlProtocol::UnixStreamSocket::Listener
@@ -52,6 +50,5 @@ private:
 	// TMP
 	RTC::Room* room = nullptr;
 };
-
 
 #endif

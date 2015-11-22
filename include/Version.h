@@ -1,11 +1,10 @@
 #ifndef MS_VERSION_H
 #define	MS_VERSION_H
 
-
 #include <string>
 
-
-class Version {
+class Version
+{
 public:
 	static const std::string GetVersion();
 	static const std::string GetNameAndVersion();
@@ -18,6 +17,5 @@ public:
 	static const std::string command;
 	static const std::string copyright;
 };
-
 
 #endif

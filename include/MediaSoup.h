@@ -1,13 +1,13 @@
 #ifndef MS_MEDIASOUP_H
 #define	MS_MEDIASOUP_H
 
-
 /*
  * MediaSoup top class.
  *
  * Entry point of the application.
  */
-class MediaSoup {
+class MediaSoup
+{
 public:
 	// Set the process.
 	static void SetProcess();
@@ -26,6 +26,5 @@ private:
 	static void ClassDestroy();
 	static void RunWorkerThread(void* data);
 };
-
 
 #endif

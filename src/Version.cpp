@@ -3,7 +3,6 @@
 #include "Version.h"
 #include "Logger.h"
 
-
 /* Static variables. */
 
 const int Version::versionMajor = 0;
@@ -14,10 +13,10 @@ const std::string Version::name = "MediaSoup";
 const std::string Version::command = "mediasoup";
 const std::string Version::copyright = "Copyright (c) 2014 Iñaki Baz Castillo | https://github.com/ibc";
 
-
 /* Static methods .*/
 
-const std::string Version::GetVersion() {
+const std::string Version::GetVersion()
+{
 	MS_TRACE();
 
 	std::string version;
@@ -31,8 +30,8 @@ const std::string Version::GetVersion() {
 	return version;
 }
 
-
-const std::string Version::GetNameAndVersion() {
+const std::string Version::GetNameAndVersion()
+{
 	MS_TRACE();
 
 	std::string name_and_version;

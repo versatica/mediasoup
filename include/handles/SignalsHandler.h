@@ -1,15 +1,15 @@
 #ifndef MS_SIGNALS_HANDLER_H
 #define	MS_SIGNALS_HANDLER_H
 
-
 #include <vector>
 #include <string>
 #include <uv.h>
 
-
-class SignalsHandler {
+class SignalsHandler
+{
 public:
-	class Listener {
+	class Listener
+	{
 	public:
 		virtual void onSignal(SignalsHandler* signalsHandler, int signum) = 0;
 		virtual void onSignalsHandlerClosed(SignalsHandler* signalsHandler) = 0;
@@ -32,6 +32,5 @@ private:
 	// Passed by argument:
 	Listener* listener = nullptr;
 };
-
 
 #endif

@@ -1,15 +1,14 @@
 #ifndef MS_TCP_SERVER_H
 #define MS_TCP_SERVER_H
 
-
 #include "common.h"
 #include "handles/TCPConnection.h"
 #include <string>
 #include <unordered_set>
 #include <uv.h>
 
-
-class TCPServer : public TCPConnection::Listener {
+class TCPServer : public TCPConnection::Listener
+{
 public:
 	TCPServer(const std::string &ip, MS_PORT port, int backlog);
 	/**
@@ -63,31 +62,30 @@ protected:
 	MS_PORT localPort = 0;
 };
 
-
 /* Inline methods. */
 
 inline
-void TCPServer::SetUserData(void* userData) {
+void TCPServer::SetUserData(void* userData)
+{
 	this->userData = userData;
 }
 
-
 inline
-void* TCPServer::GetUserData() {
+void* TCPServer::GetUserData()
+{
 	return this->userData;
 }
 
-
 inline
-size_t TCPServer::GetNumConnections() {
+size_t TCPServer::GetNumConnections()
+{
 	return this->connections.size();
 }
 
-
 inline
-bool TCPServer::IsClosing() {
+bool TCPServer::IsClosing()
+{
 	return this->isClosing;
 }
-
 
 #endif

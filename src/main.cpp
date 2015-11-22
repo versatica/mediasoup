@@ -9,8 +9,8 @@
 #include <string>
 #include <cstdlib>  // std::_Exit()
 
-
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	// Set this thread as main thread.
 	Logger::ThreadInit("main");
 
@@ -23,7 +23,8 @@ int main(int argc, char* argv[]) {
 	Settings::SetDefaultConfiguration();
 
 	// Read configuration file (if given).
-	if (! Settings::arguments.configFile.empty()) {
+	if (!Settings::arguments.configFile.empty())
+	{
 		MS_INFO("reading configuration file '%s'", Settings::arguments.configFile.c_str());
 		Settings::ReadConfigurationFile();
 	}
@@ -33,13 +34,15 @@ int main(int argc, char* argv[]) {
 
 	// Verify final configuration.
 	Settings::ConfigurationPostCheck();
-	
+
 	// Set process stuff.
 	MediaSoup::SetProcess();
-	
-	try {
+
+	try
+	{
 		// Daemonize if requested.
-		if (Settings::arguments.daemonize) {
+		if (Settings::arguments.daemonize)
+		{
 			MS_NOTICE("daemonizing %s", Version::name.c_str());
 			Daemon::Daemonize();
 		}
@@ -52,13 +55,15 @@ int main(int argc, char* argv[]) {
 
 		MS_EXIT_SUCCESS("%s ends", Version::name.c_str());
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		// End.
 		MediaSoup::End();
 
 		// If this is the daemonized process don't log FAILURE EXIT as the
 		// ancestor process will do it.
-		if (Daemon::IsDaemonized()) {
+		if (Daemon::IsDaemonized())
+		{
 			MS_CRIT("%s", error.what());
 			// Notify the ancestor process that the daemonized process failed.
 			Daemon::SendErrorStatusToAncestor();
@@ -66,7 +71,8 @@ int main(int argc, char* argv[]) {
 			std::_Exit(EXIT_FAILURE);
 		}
 		// Otherwise this is the ancestor process so log FAILURE EXIT.
-		else {
+		else
+		{
 			MS_EXIT_FAILURE("%s", error.what());
 		}
 	}

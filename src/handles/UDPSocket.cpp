@@ -9,26 +9,29 @@
 
 #define MS_READ_BUFFER_SIZE  65536
 #define RETURN_IF_CLOSING()  \
-	if (this->isClosing) {  \
+	if (this->isClosing)  \
+	{  \
 		MS_DEBUG("in closing state, doing nothing");  \
 		return;  \
 	}
 
-
 /* Static methods for UV callbacks. */
 
 static inline
-void on_alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+void on_alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
+{
 	static_cast<UDPSocket*>(handle->data)->onUvRecvAlloc(suggested_size, buf);
 }
 
 static inline
-void on_recv(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags) {
+void on_recv(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
+{
 	static_cast<UDPSocket*>(handle->data)->onUvRecv(nread, buf, addr, flags);
 }
 
 static inline
-void on_send(uv_udp_send_t* req, int status) {
+void on_send(uv_udp_send_t* req, int status)
+{
 	UDPSocket::UvSendData* send_data = static_cast<UDPSocket::UvSendData*>(req->data);
 	UDPSocket* socket = send_data->socket;
 
@@ -41,24 +44,25 @@ void on_send(uv_udp_send_t* req, int status) {
 }
 
 static inline
-void on_close(uv_handle_t* handle) {
+void on_close(uv_handle_t* handle)
+{
 	static_cast<UDPSocket*>(handle->data)->onUvClosed();
 }
 
 static inline
-void on_error_close(uv_handle_t* handle) {
+void on_error_close(uv_handle_t* handle)
+{
 	delete handle;
 }
-
 
 /* Static variables. */
 
 __thread MS_BYTE UDPSocket::readBuffer[MS_READ_BUFFER_SIZE];
 
-
 /* Instance methods. */
 
-UDPSocket::UDPSocket(const std::string &ip, MS_PORT port) {
+UDPSocket::UDPSocket(const std::string &ip, MS_PORT port)
+{
 	MS_TRACE();
 
 	int err;
@@ -68,7 +72,8 @@ UDPSocket::UDPSocket(const std::string &ip, MS_PORT port) {
 	this->uvHandle->data = (void*)this;
 
 	err = uv_udp_init(LibUV::GetLoop(), this->uvHandle);
-	if (err) {
+	if (err)
+	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
 		MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
@@ -76,7 +81,8 @@ UDPSocket::UDPSocket(const std::string &ip, MS_PORT port) {
 
 	struct sockaddr_storage bind_addr;
 
-	switch (Utils::IP::GetFamily(ip)) {
+	switch (Utils::IP::GetFamily(ip))
+	{
 		case AF_INET:
 			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bind_addr);
 			if (err)
@@ -98,24 +104,26 @@ UDPSocket::UDPSocket(const std::string &ip, MS_PORT port) {
 	}
 
 	err = uv_udp_bind(this->uvHandle, (const struct sockaddr*)&bind_addr, flags);
-	if (err) {
+	if (err)
+	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
 		MS_THROW_ERROR("uv_udp_bind() failed: %s", uv_strerror(err));
 	}
 
 	err = uv_udp_recv_start(this->uvHandle, (uv_alloc_cb)on_alloc, (uv_udp_recv_cb)on_recv);
-	if (err) {
+	if (err)
+	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
-	if (! SetLocalAddress()) {
+	if (!SetLocalAddress())
+	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
-
 
 UDPSocket::UDPSocket(uv_udp_t* uvHandle) :
 	uvHandle(uvHandle)
@@ -127,33 +135,36 @@ UDPSocket::UDPSocket(uv_udp_t* uvHandle) :
 	this->uvHandle->data = (void*)this;
 
 	err = uv_udp_recv_start(this->uvHandle, (uv_alloc_cb)on_alloc, (uv_udp_recv_cb)on_recv);
-	if (err) {
+	if (err)
+	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
-	if (! SetLocalAddress()) {
+	if (!SetLocalAddress())
+	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
 
-
-UDPSocket::~UDPSocket() {
+UDPSocket::~UDPSocket()
+{
 	MS_TRACE();
 
 	if (this->uvHandle)
 		delete this->uvHandle;
 }
 
-
-void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* addr) {
+void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* addr)
+{
 	MS_TRACE();
 
 	RETURN_IF_CLOSING();
 
-	if (len == 0) {
+	if (len == 0)
+	{
 		MS_DEBUG("ignoring 0 length data");
 		return;
 	}
@@ -169,15 +180,18 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* add
 	sent = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
 
 	// Entire datagram was sent. Done.
-	if (sent == (int)len) {
+	if (sent == (int)len)
+	{
 		return;
 	}
-	else if (sent >= 0) {
+	else if (sent >= 0)
+	{
 		MS_WARN("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 		return;
 	}
 	// Error,
-	else if (sent != UV_EAGAIN) {
+	else if (sent != UV_EAGAIN)
+	{
 		MS_ERROR("uv_udp_try_send() failed: %s", uv_strerror(sent));
 		return;
 	}
@@ -196,7 +210,8 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* add
 	buffer = uv_buf_init((char*)send_data->store, len);
 
 	err = uv_udp_send(&send_data->req, this->uvHandle, &buffer, 1, addr, (uv_udp_send_cb)on_send);
-	if (err) {
+	if (err)
+	{
 		// NOTE: uv_udp_send() returns error if a wrong INET family is given
 		// (IPv6 destination on a IPv4 binded socket), so be ready.
 		MS_ERROR("uv_udp_send() failed: %s", uv_strerror(err));
@@ -206,22 +221,24 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* add
 	}
 }
 
-
-void UDPSocket::Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_PORT port) {
+void UDPSocket::Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_PORT port)
+{
 	MS_TRACE();
 
 	RETURN_IF_CLOSING();
 
 	int err;
 
-	if (len == 0) {
+	if (len == 0)
+	{
 		MS_DEBUG("ignoring 0 length data");
 		return;
 	}
 
 	struct sockaddr_storage addr;
 
-	switch (Utils::IP::GetFamily(ip)) {
+	switch (Utils::IP::GetFamily(ip))
+	{
 		case AF_INET:
 			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&addr);
 			if (err)
@@ -242,8 +259,8 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_
 	Send(data, len, (struct sockaddr*)&addr);
 }
 
-
-void UDPSocket::Close() {
+void UDPSocket::Close()
+{
 	MS_TRACE();
 
 	RETURN_IF_CLOSING();
@@ -260,22 +277,23 @@ void UDPSocket::Close() {
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
 }
 
-
-void UDPSocket::Dump() {
+void UDPSocket::Dump()
+{
 	MS_DEBUG("[UDP | local address: %s : %u | status: %s]",
 		this->localIP.c_str(), (unsigned int)this->localPort,
-		(! this->isClosing) ? "open" : "closed");
+		(!this->isClosing) ? "open" : "closed");
 }
 
-
-bool UDPSocket::SetLocalAddress() {
+bool UDPSocket::SetLocalAddress()
+{
 	MS_TRACE();
 
 	int err;
 	int len = sizeof(this->localAddr);
 
 	err = uv_udp_getsockname(this->uvHandle, (struct sockaddr*)&this->localAddr, &len);
-	if (err) {
+	if (err)
+	{
 		MS_ERROR("uv_udp_getsockname() failed: %s", uv_strerror(err));
 		return false;
 	}
@@ -286,9 +304,9 @@ bool UDPSocket::SetLocalAddress() {
 	return true;
 }
 
-
 inline
-void UDPSocket::onUvRecvAlloc(size_t suggested_size, uv_buf_t* buf) {
+void UDPSocket::onUvRecvAlloc(size_t suggested_size, uv_buf_t* buf)
+{
 	MS_TRACE();
 
 	// Tell UV to write into the per thread buffer.
@@ -297,9 +315,9 @@ void UDPSocket::onUvRecvAlloc(size_t suggested_size, uv_buf_t* buf) {
 	buf->len = MS_READ_BUFFER_SIZE;
 }
 
-
 inline
-void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags) {
+void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
+{
 	MS_TRACE();
 
 	RETURN_IF_CLOSING();
@@ -310,26 +328,29 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 		return;
 
 	// Check flags.
-	if (flags & UV_UDP_PARTIAL) {
+	if (flags & UV_UDP_PARTIAL)
+	{
 		MS_ERROR("received datagram was truncated due to insufficient buffer, ignoring it");
 		return;
 	}
 
 	// Data received.
-	if (nread > 0) {
+	if (nread > 0)
+	{
 		// Notify the subclass.
 		userOnUDPDatagramRecv((MS_BYTE*)buf->base, nread, addr);
 	}
 
 	// Some error.
-	else {
+	else
+	{
 		MS_NOTICE("read error: %s", uv_strerror(nread));
 	}
 }
 
-
 inline
-void UDPSocket::onUvSendError(int error) {
+void UDPSocket::onUvSendError(int error)
+{
 	MS_TRACE();
 
 	if (this->isClosing)
@@ -338,9 +359,9 @@ void UDPSocket::onUvSendError(int error) {
 	MS_NOTICE("send error: %s", uv_strerror(error));
 }
 
-
 inline
-void UDPSocket::onUvClosed() {
+void UDPSocket::onUvClosed()
+{
 	MS_TRACE();
 
 	// Notify the subclass.

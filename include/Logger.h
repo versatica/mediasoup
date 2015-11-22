@@ -1,7 +1,6 @@
 #ifndef MS_LOGGER_H
 #define	MS_LOGGER_H
 
-
 #include "common.h"
 #include "Settings.h"
 #include <string>
@@ -9,10 +8,10 @@
 #include <cstring>
 #include <cstdlib>  // std::_Exit(), std::abort()
 #include <uv.h>
-extern "C" {
+extern "C"
+{
 	#include <syslog.h>
 }
-
 
 /*
  * Logger facility for MediaSoup.
@@ -55,8 +54,8 @@ extern "C" {
  */
 #define MS_GET_LOG_LEVEL  Settings::configuration.logLevel
 
-
-class Logger {
+class Logger
+{
 public:
 	static void ThreadInit(const std::string name);
 	static const char* GetThreadName();
@@ -73,26 +72,25 @@ private:
 	static bool isSyslogEnabled;
 };
 
-
 /* Inline static methods. */
 
 inline
-const char* Logger::GetThreadName() {
+const char* Logger::GetThreadName()
+{
 	return Logger::threadNamePtr;
 }
 
-
 inline
-bool Logger::IsSyslogEnabled() {
+bool Logger::IsSyslogEnabled()
+{
 	return Logger::isSyslogEnabled;
 }
 
-
 inline
-bool Logger::HasDebugLevel() {
+bool Logger::HasDebugLevel()
+{
 	return (LOG_DEBUG == MS_GET_LOG_LEVEL);
 }
-
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
 
@@ -108,19 +106,22 @@ bool Logger::HasDebugLevel() {
 #endif
 
 #define _MS_TO_STDOUT(prefix)  \
-	if (! Logger::IsSyslogEnabled()) {  \
+	if (!Logger::IsSyslogEnabled())  \
+	{  \
 		std::fprintf(stdout, prefix _MS_LOG_STR "\n", _MS_LOG_ARG);  \
 		fflush(stdout);  \
 	}
 
 #define _MS_TO_STDOUT_DESC(prefix, desc, ...)  \
-	if (! Logger::IsSyslogEnabled()) {  \
+	if (!Logger::IsSyslogEnabled())  \
+	{  \
 		std::fprintf(stdout, prefix _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
 		fflush(stdout);  \
 	}
 
 #define _MS_TO_STDERR_DESC(prefix, desc, ...)  \
-	if (! Logger::IsSyslogEnabled()) {  \
+	if (!Logger::IsSyslogEnabled())  \
+	{  \
 		std::fprintf(stderr, prefix _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
 		fflush(stderr);  \
 	}
@@ -132,7 +133,6 @@ bool Logger::HasDebugLevel() {
 #define _MS_TO_SYSLOG_DESC(severity, prefix, desc, ...)  \
 	if (Logger::IsSyslogEnabled())  \
 		syslog(severity, prefix _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);
-
 
 /*
  * Log levels in syslog.h:
@@ -150,80 +150,104 @@ bool Logger::HasDebugLevel() {
 
 #ifdef MS_DEVEL
 #define MS_TRACE()  \
-	do {  \
+	do  \
+	{  \
 		_MS_TO_STDOUT("TRACE:  ");  \
 		_MS_TO_SYSLOG(LOG_DEBUG, "TRACE:  ");  \
-	} while(0)
+	}  \
+	while (0)
 #else
 #define MS_TRACE()
 #endif
 
 #define MS_DEBUG(desc, ...)  \
-	do {  \
-		if (LOG_DEBUG == MS_GET_LOG_LEVEL) {  \
+	do  \
+	{  \
+		if (LOG_DEBUG == MS_GET_LOG_LEVEL)  \
+		{  \
 			_MS_TO_STDOUT_DESC("DEBUG:  ", desc, ##__VA_ARGS__);  \
 			_MS_TO_SYSLOG_DESC(LOG_DEBUG, "DEBUG:  ", desc, ##__VA_ARGS__);  \
 		}  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_INFO(desc, ...)  \
-	do {  \
-		if (LOG_INFO <= MS_GET_LOG_LEVEL) {  \
+	do  \
+	{  \
+		if (LOG_INFO <= MS_GET_LOG_LEVEL)  \
+		{  \
 			_MS_TO_STDOUT_DESC("INFO:   ", desc, ##__VA_ARGS__);  \
 			_MS_TO_SYSLOG_DESC(LOG_INFO, "INFO:   ", desc, ##__VA_ARGS__);  \
 		}  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_NOTICE(desc, ...)  \
-	do {  \
-		if (LOG_NOTICE <= MS_GET_LOG_LEVEL) {  \
+	do  \
+	{  \
+		if (LOG_NOTICE <= MS_GET_LOG_LEVEL)  \
+		{  \
 			_MS_TO_STDOUT_DESC("NOTICE: ", desc, ##__VA_ARGS__);  \
 			_MS_TO_SYSLOG_DESC(LOG_NOTICE, "NOTICE: ", desc, ##__VA_ARGS__);  \
 		}  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_WARN(desc, ...)  \
-	do {  \
-		if (LOG_WARNING <= MS_GET_LOG_LEVEL) {  \
+	do  \
+	{  \
+		if (LOG_WARNING <= MS_GET_LOG_LEVEL)  \
+		{  \
 			_MS_TO_STDERR_DESC("WARN:   ", desc, ##__VA_ARGS__);  \
 			_MS_TO_SYSLOG_DESC(LOG_WARNING, "WARN:   ", desc, ##__VA_ARGS__);  \
 		}  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_ERROR(desc, ...)  \
-	do {  \
+	do  \
+	{  \
 		_MS_TO_STDERR_DESC("ERROR:  ", desc, ##__VA_ARGS__);  \
 		_MS_TO_SYSLOG_DESC(LOG_ERR, "ERROR:  ", desc, ##__VA_ARGS__);  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_CRIT(desc, ...)  \
-	do {  \
+	do  \
+	{  \
 		_MS_TO_STDERR_DESC("CRIT:   ", desc, ##__VA_ARGS__);  \
 		_MS_TO_SYSLOG_DESC(LOG_ERR, "CRIT:   ", desc, ##__VA_ARGS__);  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_EXIT_SUCCESS(desc, ...)  \
-	do {  \
+	do  \
+	{  \
 		MS_NOTICE("SUCCESS EXIT | " desc, ##__VA_ARGS__);  \
 		std::_Exit(EXIT_SUCCESS);  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_EXIT_FAILURE(desc, ...)  \
-	do {  \
+	do  \
+	{  \
 		MS_CRIT("FAILURE EXIT | " desc, ##__VA_ARGS__);  \
 		std::_Exit(EXIT_FAILURE);  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_ABORT(desc, ...)  \
-	do {  \
+	do  \
+	{  \
 		MS_CRIT("ABORT | " desc, ##__VA_ARGS__);  \
 		std::abort();  \
-	} while(0)
+	}  \
+	while (0)
 
 #define MS_ASSERT(condition, desc, ...)  \
-	if (! (condition)) {  \
+	if (!(condition))  \
+	{  \
 		MS_ABORT("failed assertion `%s': " desc, #condition, ##__VA_ARGS__);  \
 	}
-
 
 #endif

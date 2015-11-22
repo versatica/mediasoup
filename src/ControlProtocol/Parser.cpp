@@ -14,25 +14,22 @@
 #define PTR_TO(F) (buffer + (F))
 #define PTR_TO_MARK (const char*)(buffer + this->mark)
 
-
-namespace ControlProtocol {
-
-
-/**
- * Ragel: machine definition
- */
-
-#line 56 "src/ControlProtocol/Parser.rl"
+namespace ControlProtocol
+{
+	/**
+	 * Ragel: machine definition
+	 */
+	
+#line 57 "src/ControlProtocol/Parser.rl"
 
 
-
-/**
- * Ragel: %%write data
- * This generates Ragel's static variables such as:
- *   static const int MessageParser_start
- */
-
-#line 36 "src/ControlProtocol/Parser.cpp"
+	/**
+	 * Ragel: %%write data
+	 * This generates Ragel's static variables such as:
+	 *   static const int MessageParser_start
+	 */
+	
+#line 33 "src/ControlProtocol/Parser.cpp"
 static const int MessageParser_start = 1;
 static const int MessageParser_first_final = 90;
 static const int MessageParser_error = 0;
@@ -42,39 +39,39 @@ static const int MessageParser_error = 0;
 
 #line 65 "src/ControlProtocol/Parser.rl"
 
+	Parser::Parser()
+	{
+		MS_TRACE();
 
-Parser::Parser() {
-	MS_TRACE();
+		Reset();
+	}
 
-	Reset();
-}
+	Parser::~Parser()
+	{
+		MS_TRACE();
+	}
 
+	Message* Parser::Parse(const MS_BYTE* buffer, size_t len)
+	{
+		MS_TRACE();
 
-Parser::~Parser() {
-	MS_TRACE();
-}
+		// Used by Ragel:
+		const unsigned char* p;
+		const unsigned char* pe;
+		// const unsigned char* eof;
 
+		MS_ASSERT(this->parsedLen <= len, "parsedLen pasts end of buffer");
 
-Message* Parser::Parse(const MS_BYTE* buffer, size_t len) {
-	MS_TRACE();
+		p = (const unsigned char*)buffer + this->parsedLen;
+		pe = (const unsigned char*)buffer + len;
+		// eof = nullptr;  // Ragel manual pag 36 (eof variable).
 
-	// Used by Ragel:
-	const unsigned char* p;
-	const unsigned char* pe;
-	// const unsigned char* eof;
-
-	MS_ASSERT(this->parsedLen <= len, "parsedLen pasts end of buffer");
-
-	p = (const unsigned char*)buffer + this->parsedLen;
-	pe = (const unsigned char*)buffer + len;
-	// eof = nullptr;  // Ragel manual pag 36 (eof variable).
-
-	/**
-	 * Ragel: %%write exec
-	 * This updates cs variable needed by Ragel (so this->cs at the end) and p.
-	 */
-	
-#line 78 "src/ControlProtocol/Parser.cpp"
+		/**
+		 * Ragel: %%write exec
+		 * This updates cs variable needed by Ragel (so this->cs at the end) and p.
+		 */
+		
+#line 75 "src/ControlProtocol/Parser.cpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -245,20 +242,20 @@ case 23:
 		goto tr25;
 	goto st0;
 tr25:
-#line 4 "src/ControlProtocol/grammar/RequestAuthenticate.rl"
+#line 5 "src/ControlProtocol/grammar/RequestAuthenticate.rl"
 	{
 		this->msg = new ControlProtocol::RequestAuthenticate();
 	}
-#line 27 "src/ControlProtocol/Parser.rl"
+#line 26 "src/ControlProtocol/Parser.rl"
 	{
-		MARK(this->mark, p);
-	}
+			MARK(this->mark, p);
+		}
 	goto st24;
 st24:
 	if ( ++p == pe )
 		goto _test_eof24;
 case 24:
-#line 262 "src/ControlProtocol/Parser.cpp"
+#line 259 "src/ControlProtocol/Parser.cpp"
 	if ( (*p) == 13u )
 		goto tr26;
 	if ( 48u <= (*p) && (*p) <= 57u )
@@ -267,15 +264,15 @@ case 24:
 tr26:
 #line 31 "src/ControlProtocol/Parser.rl"
 	{
-		int32_t transaction = std::atol(PTR_TO_MARK);
-		this->msg->SetTransaction(transaction);
-	}
+			int32_t transaction = std::atol(PTR_TO_MARK);
+			this->msg->SetTransaction(transaction);
+		}
 	goto st25;
 st25:
 	if ( ++p == pe )
 		goto _test_eof25;
 case 25:
-#line 279 "src/ControlProtocol/Parser.cpp"
+#line 276 "src/ControlProtocol/Parser.cpp"
 	if ( (*p) == 10u )
 		goto st26;
 	goto st0;
@@ -346,16 +343,16 @@ case 32:
 		goto tr35;
 	goto st0;
 tr35:
-#line 27 "src/ControlProtocol/Parser.rl"
+#line 26 "src/ControlProtocol/Parser.rl"
 	{
-		MARK(this->mark, p);
-	}
+			MARK(this->mark, p);
+		}
 	goto st33;
 st33:
 	if ( ++p == pe )
 		goto _test_eof33;
 case 33:
-#line 359 "src/ControlProtocol/Parser.cpp"
+#line 356 "src/ControlProtocol/Parser.cpp"
 	switch( (*p) ) {
 		case 13u: goto tr36;
 		case 33u: goto st33;
@@ -379,7 +376,7 @@ case 33:
 		goto st33;
 	goto st0;
 tr36:
-#line 8 "src/ControlProtocol/grammar/RequestAuthenticate.rl"
+#line 10 "src/ControlProtocol/grammar/RequestAuthenticate.rl"
 	{
 		static_cast<RequestAuthenticate*>(this->msg)->SetUser(PTR_TO_MARK, LEN_FROM_MARK);
 	}
@@ -388,7 +385,7 @@ st34:
 	if ( ++p == pe )
 		goto _test_eof34;
 case 34:
-#line 392 "src/ControlProtocol/Parser.cpp"
+#line 389 "src/ControlProtocol/Parser.cpp"
 	if ( (*p) == 10u )
 		goto st35;
 	goto st0;
@@ -473,16 +470,16 @@ case 43:
 		goto tr47;
 	goto st0;
 tr47:
-#line 27 "src/ControlProtocol/Parser.rl"
+#line 26 "src/ControlProtocol/Parser.rl"
 	{
-		MARK(this->mark, p);
-	}
+			MARK(this->mark, p);
+		}
 	goto st44;
 st44:
 	if ( ++p == pe )
 		goto _test_eof44;
 case 44:
-#line 486 "src/ControlProtocol/Parser.cpp"
+#line 483 "src/ControlProtocol/Parser.cpp"
 	switch( (*p) ) {
 		case 13u: goto tr48;
 		case 33u: goto st44;
@@ -508,12 +505,12 @@ case 44:
 tr78:
 #line 31 "src/ControlProtocol/Parser.rl"
 	{
-		int32_t transaction = std::atol(PTR_TO_MARK);
-		this->msg->SetTransaction(transaction);
-	}
+			int32_t transaction = std::atol(PTR_TO_MARK);
+			this->msg->SetTransaction(transaction);
+		}
 	goto st45;
 tr48:
-#line 12 "src/ControlProtocol/grammar/RequestAuthenticate.rl"
+#line 15 "src/ControlProtocol/grammar/RequestAuthenticate.rl"
 	{
 		static_cast<RequestAuthenticate*>(this->msg)->SetPasswd(PTR_TO_MARK, LEN_FROM_MARK);
 	}
@@ -522,7 +519,7 @@ st45:
 	if ( ++p == pe )
 		goto _test_eof45;
 case 45:
-#line 526 "src/ControlProtocol/Parser.cpp"
+#line 523 "src/ControlProtocol/Parser.cpp"
 	if ( (*p) == 10u )
 		goto st46;
 	goto st0;
@@ -541,16 +538,16 @@ case 47:
 		goto tr52;
 	goto st0;
 tr52:
-#line 36 "src/ControlProtocol/Parser.rl"
+#line 37 "src/ControlProtocol/Parser.rl"
 	{
-		{p++; cs = 90; goto _out;}
-	}
+			{p++; cs = 90; goto _out;}
+		}
 	goto st90;
 st90:
 	if ( ++p == pe )
 		goto _test_eof90;
 case 90:
-#line 554 "src/ControlProtocol/Parser.cpp"
+#line 551 "src/ControlProtocol/Parser.cpp"
 	goto st0;
 st48:
 	if ( ++p == pe )
@@ -749,30 +746,30 @@ case 73:
 		goto tr77;
 	goto st0;
 tr77:
-#line 4 "src/ControlProtocol/grammar/RequestCreateConference.rl"
+#line 5 "src/ControlProtocol/grammar/RequestCreateConference.rl"
 	{
 		this->msg = new ControlProtocol::RequestCreateConference();
 	}
-#line 27 "src/ControlProtocol/Parser.rl"
+#line 26 "src/ControlProtocol/Parser.rl"
 	{
-		MARK(this->mark, p);
-	}
+			MARK(this->mark, p);
+		}
 	goto st74;
 tr93:
-#line 4 "src/ControlProtocol/grammar/RequestHello.rl"
+#line 5 "src/ControlProtocol/grammar/RequestHello.rl"
 	{
 		this->msg = new ControlProtocol::RequestHello();
 	}
-#line 27 "src/ControlProtocol/Parser.rl"
+#line 26 "src/ControlProtocol/Parser.rl"
 	{
-		MARK(this->mark, p);
-	}
+			MARK(this->mark, p);
+		}
 	goto st74;
 st74:
 	if ( ++p == pe )
 		goto _test_eof74;
 case 74:
-#line 776 "src/ControlProtocol/Parser.cpp"
+#line 773 "src/ControlProtocol/Parser.cpp"
 	if ( (*p) == 13u )
 		goto tr78;
 	if ( 48u <= (*p) && (*p) <= 57u )
@@ -994,92 +991,95 @@ case 89:
 
 #line 98 "src/ControlProtocol/Parser.rl"
 
-	this->parsedLen = p - (const unsigned char*)buffer;
+		this->parsedLen = p - (const unsigned char*)buffer;
 
-	MS_ASSERT(p <= pe, "buffer overflow after parsing execute");
-	MS_ASSERT(this->parsedLen <= len, "parsedLen longer than length");
-	MS_ASSERT(this->mark < len, "mark is after buffer end");
+		MS_ASSERT(p <= pe, "buffer overflow after parsing execute");
+		MS_ASSERT(this->parsedLen <= len, "parsedLen longer than length");
+		MS_ASSERT(this->mark < len, "mark is after buffer end");
 
-	// Parsing succedded.
-	if (this->cs == (size_t)MessageParser_first_final) {
-		MS_DEBUG("parsing finished OK");
+		// Parsing succedded.
+		if (this->cs == (size_t)MessageParser_first_final)
+		{
+			MS_DEBUG("parsing finished OK");
 
-		MS_ASSERT(this->msg != nullptr, "parsing OK but msg is NULL");
+			MS_ASSERT(this->msg != nullptr, "parsing OK but msg is NULL");
 
-		// Check the message semantics.
-		if(! this->msg->IsValid()) {
-			MS_ERROR("invalid message");
-			delete this->msg;
-			return (this->msg = nullptr);
+			// Check the message semantics.
+			if (!this->msg->IsValid())
+			{
+				MS_ERROR("invalid message");
+				delete this->msg;
+				return (this->msg = nullptr);
+			}
+
+			return this->msg;
 		}
 
-		return this->msg;
-	}
+		// Parsing error.
+		else if (this->cs == (size_t)MessageParser_error)
+		{
+			MS_ERROR("parsing error at position %zd", this->parsedLen);
 
-	// Parsing error.
-	else if (this->cs == (size_t)MessageParser_error) {
-		MS_ERROR("parsing error at position %zd", this->parsedLen);
+			// Delete this->msg if it exists.
+			if (this->msg)
+			{
+				delete this->msg;
+				this->msg = nullptr;
+			}
 
-		// Delete this->msg if it exists.
-		if (this->msg) {
-			delete this->msg;
-			this->msg = nullptr;
+			return nullptr;
 		}
 
-		return nullptr;
+		// Parsing not finished.
+		else
+		{
+			MS_DEBUG("parsing not finished");
+
+			return nullptr;
+		}
 	}
 
-	// Parsing not finished.
-	else {
-		MS_DEBUG("parsing not finished");
+	bool Parser::HasError()
+	{
+		MS_TRACE();
 
-		return nullptr;
+		return (this->cs == (size_t)MessageParser_error);
 	}
-}
 
+	size_t Parser::GetParsedLen()
+	{
+		MS_TRACE();
 
-bool Parser::HasError() {
-	MS_TRACE();
+		return this->parsedLen;
+	}
 
-	return (this->cs == (size_t)MessageParser_error);
-}
+	void Parser::Reset()
+	{
+		MS_TRACE();
 
+		this->parsedLen = 0;
+		this->msg = nullptr;
+		this->cs = 0;
+		this->mark = 0;
 
-size_t Parser::GetParsedLen() {
-	MS_TRACE();
-
-	return this->parsedLen;
-}
-
-
-void Parser::Reset() {
-	MS_TRACE();
-
-	this->parsedLen = 0;
-	this->msg = nullptr;
-	this->cs = 0;
-	this->mark = 0;
-
-	/**
-	 * Ragel: %%write init
-	 * This sets cs variable needed by Ragel (so this->cs at the end).
-	 */
-	
-#line 1069 "src/ControlProtocol/Parser.cpp"
+		/**
+		 * Ragel: %%write init
+		 * This sets cs variable needed by Ragel (so this->cs at the end).
+		 */
+		
+#line 1071 "src/ControlProtocol/Parser.cpp"
 	{
 	cs = MessageParser_start;
 	}
 
-#line 170 "src/ControlProtocol/Parser.rl"
-}
+#line 175 "src/ControlProtocol/Parser.rl"
+	}
 
-
-void Parser::Dump() {
-	MS_DEBUG("[cs: %zu | parsedLen: %zu | mark: %zu | error?: %s | finished?: %s]",
-		this->cs, this->parsedLen, this->mark,
-		HasError() ? "true" : "false",
-		(this->cs >= (size_t)MessageParser_first_final) ? "true" : "false");
-}
-
-
+	void Parser::Dump()
+	{
+		MS_DEBUG("[cs: %zu | parsedLen: %zu | mark: %zu | error?: %s | finished?: %s]",
+			this->cs, this->parsedLen, this->mark,
+			HasError() ? "true" : "false",
+			(this->cs >= (size_t)MessageParser_first_final) ? "true" : "false");
+	}
 }  // namespace ControlProtocol

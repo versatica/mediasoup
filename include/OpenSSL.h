@@ -1,19 +1,18 @@
 #ifndef MS_OPENSSL_H
 #define	MS_OPENSSL_H
 
-
 #include "common.h"
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
 
-
 /* OpenSSL doc: struct CRYPTO_dynlock_value has to be defined by the application. */
-struct CRYPTO_dynlock_value {
+struct CRYPTO_dynlock_value
+{
  	pthread_mutex_t mutex;
 };
 
-
-class OpenSSL {
+class OpenSSL
+{
 public:
 	static void ClassInit();
 	static void ClassDestroy();
@@ -29,6 +28,5 @@ private:
 	static pthread_mutex_t* mutexes;
 	static int numMutexes;
 };
-
 
 #endif

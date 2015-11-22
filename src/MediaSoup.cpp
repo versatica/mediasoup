@@ -29,15 +29,14 @@
 #include <grp.h>
 #include <uv.h>
 
-
 #ifndef MS_RECOMMENDED_NOFILE
 #define MS_RECOMMENDED_NOFILE  131072
 #endif
 
-
 /* Static methods. */
 
-void MediaSoup::SetProcess() {
+void MediaSoup::SetProcess()
+{
 	MS_TRACE();
 
 	#if defined(MS_LITTLE_ENDIAN)
@@ -60,8 +59,8 @@ void MediaSoup::SetProcess() {
 	SetUserGroup();
 }
 
-
-void MediaSoup::Run() {
+void MediaSoup::Run()
+{
 	MS_TRACE();
 
 	// Init main thread stuff.
@@ -75,7 +74,8 @@ void MediaSoup::Run() {
 	// A vector for holding the workerId value for each thread.
 	std::vector<int> worker_ids;
 
-	for(int workerId=1; workerId <= Settings::configuration.numWorkers; workerId++) {
+	for (int workerId=1; workerId <= Settings::configuration.numWorkers; workerId++)
+	{
 		worker_ids.push_back(workerId);
 		Worker::SetWorker(workerId, nullptr);
 	}
@@ -84,7 +84,8 @@ void MediaSoup::Run() {
 	std::vector<uv_thread_t> worker_threads;
 
 	// Build the Worker threads.
-	for(int i = 0; i < Settings::configuration.numWorkers; i++) {
+	for (int i = 0; i < Settings::configuration.numWorkers; i++)
+	{
 		MS_DEBUG("running a thread for Worker #%d", worker_ids[i]);
 		uv_thread_t thread;
 
@@ -104,8 +105,10 @@ void MediaSoup::Run() {
 	waiting.tv_sec = 0;
 	waiting.tv_nsec = 10000000;  // 10 ms.
 
-	for(int i=1; i<=300; i++) {
-		if (Worker::AreAllWorkersRunning()) {
+	for (int i=1; i<=300; i++)
+	{
+		if (Worker::AreAllWorkersRunning())
+		{
 			all_workers_running = true;
 			break;
 		}
@@ -115,21 +118,24 @@ void MediaSoup::Run() {
 			MS_THROW_ERROR("nanosleep() failed: %s", uv_strerror(err));
 	}
 
-	if (! all_workers_running)
+	if (!all_workers_running)
 		MS_THROW_ERROR("some Worker(s) could not start or died");
 
 	MS_DEBUG("all the Workers running, let's run the Dispatcher");
 
-	try {
+	try
+	{
 		Dispatcher dispatcher;
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_THROW_ERROR("%s", error.what());
 	}
 
 	MS_DEBUG("Dispatcher ends, waiting for Workers to end");
 
-	for (auto thread : worker_threads) {
+	for (auto thread : worker_threads)
+	{
 		err = uv_thread_join(&thread);
 		if (err)
 			MS_THROW_ERROR("uv_thread_join() failed: %s", uv_strerror(err));
@@ -138,8 +144,8 @@ void MediaSoup::Run() {
 	MS_DEBUG("all the Workers have ended");
 }
 
-
-void MediaSoup::End() {
+void MediaSoup::End()
+{
 	MS_TRACE();
 
 	// Tell the Daemon class to cleanup its resources if needed.
@@ -153,15 +159,16 @@ void MediaSoup::End() {
 	MediaSoup::ThreadDestroy();
 }
 
-
-void MediaSoup::IgnoreSignals() {
+void MediaSoup::IgnoreSignals()
+{
 	MS_TRACE();
 
 	int err;
 	struct sigaction act;
 	// NOTE: Here we ignore also signals that will be later handled by the Dispatcher
 	// (as the libuv signal handler overrides it).
-	std::map<std::string, int> ignored_signals = {
+	std::map<std::string, int> ignored_signals =
+	{
 		{ "INT",  SIGINT  },
 		{ "TERM", SIGTERM },
 		{ "HUP",  SIGHUP  },
@@ -176,7 +183,8 @@ void MediaSoup::IgnoreSignals() {
 	if (err)
 		MS_EXIT_FAILURE("sigfillset() failed: %s", std::strerror(errno));
 
-	for(auto it = ignored_signals.begin(); it != ignored_signals.end(); ++it) {
+	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); ++it)
+	{
 		std::string sig_name = it->first;
 		int sig_id = it->second;
 
@@ -186,8 +194,8 @@ void MediaSoup::IgnoreSignals() {
 	}
 }
 
-
-void MediaSoup::SetKernelLimits() {
+void MediaSoup::SetKernelLimits()
+{
 	MS_TRACE();
 
 	struct rlimit current_limit;
@@ -198,7 +206,8 @@ void MediaSoup::SetKernelLimits() {
 
 	// Get current NOFILE limits.
 	err = getrlimit(RLIMIT_NOFILE, &current_limit);
-	if (err) {
+	if (err)
+	{
 		MS_EXIT_FAILURE("getrlimit(RLIMIT_NOFILE) failed: %s", std::strerror(errno));
 		return;
 	}
@@ -213,23 +222,26 @@ void MediaSoup::SetKernelLimits() {
 	// be able to set the soft limit to recommended_NOFILE.
 	// NOTE: This is not true on OSX in which hard limit is infinity but it does
 	// not let the user chaning its soft limit.
-	if (current_limit.rlim_max >= recommended_NOFILE) {
+	if (current_limit.rlim_max >= recommended_NOFILE)
+	{
 		new_limit.rlim_cur = recommended_NOFILE;
 		new_limit.rlim_max = current_limit.rlim_max;
 
 		err = setrlimit(RLIMIT_NOFILE, &new_limit);
 		if (err) {
-			if (errno == EINVAL) {
+			if (errno == EINVAL)
+			{
 				MS_DEBUG("setrlimit(RLIMIT_NOFILE) failed for limits [soft:%llu, hard:%llu]: %s", (unsigned long long)new_limit.rlim_cur, (unsigned long long)new_limit.rlim_max, std::strerror(errno));
 			}
-			else {
+			else
+			{
 				MS_WARN("setrlimit(RLIMIT_NOFILE) failed for limits [soft:%llu, hard:%llu]: %s", (unsigned long long)new_limit.rlim_cur, (unsigned long long)new_limit.rlim_max, std::strerror(errno));
 			}
 		}
 	}
-
 	// Otherwise try to set both hard and soft limits to recommended_NOFILE.
-	else {
+	else
+	{
 		new_limit.rlim_cur = recommended_NOFILE;
 		new_limit.rlim_max = recommended_NOFILE;
 
@@ -238,52 +250,57 @@ void MediaSoup::SetKernelLimits() {
 			MS_WARN("setrlimit(RLIMIT_NOFILE) failed for limits [soft:%llu, hard:%llu]: %s", (unsigned long long)new_limit.rlim_cur, (unsigned long long)new_limit.rlim_max, std::strerror(errno));
 	}
 
-
 end:
 	// Get the resulting NOFILE limits.
 	err = getrlimit(RLIMIT_NOFILE, &current_limit);
-	if (err) {
+	if (err)
+	{
 		MS_EXIT_FAILURE("getrlimit(RLIMIT_NOFILE) failed: %s", std::strerror(errno));
 		return;
 	}
 
 	// If the soft limit is equal or bigger than recommended_NOFILE then ok.
-	if (current_limit.rlim_cur >= recommended_NOFILE) {
+	if (current_limit.rlim_cur >= recommended_NOFILE)
+	{
 		MS_DEBUG("RLIMIT_NOFILE soft limit (max open files) set to %llu", (unsigned long long)current_limit.rlim_cur);
 	}
 	// Otherwise warn the user.
-	else {
+	else
+	{
 		MS_WARN("RLIMIT_recommended_NOFILE soft limit (max open files) set to %llu, less than the recommended value (%llu)", (unsigned long long)current_limit.rlim_cur, (unsigned long long)recommended_NOFILE);
 	}
 }
 
-
-void MediaSoup::SetUserGroup() {
+void MediaSoup::SetUserGroup()
+{
 	MS_TRACE();
 
 	struct group *grp = nullptr;
 	struct passwd *pwd = nullptr;
 
 	// Set the group if requested.
-	if (! Settings::arguments.group.empty()) {
+	if (!Settings::arguments.group.empty())
+	{
 		char *endptr;
 		const char* group = Settings::arguments.group.c_str();
 		gid_t g, gid;
 
 		// Allow passing a numeric string representing the user's gid.
 		g = std::strtol(group, &endptr, 10);
-		if (*endptr == '\0') {
+		if (*endptr == '\0')
+		{
 			gid = (gid_t)g;
 			grp = getgrgid(gid);
-			if (! grp)
+			if (!grp)
 				MS_EXIT_FAILURE("cannot get information for group with gid '%d': %s", (int)gid, std::strerror(errno));
 		}
 		// Otherwise convert from name to gid.
-		else {
+		else
+		{
 			grp = getgrnam(group);
-			if (! grp) {
+			if (!grp)
 				MS_EXIT_FAILURE("group '%s' does not exist", group);
-			}
+
 			gid = grp->gr_gid;
 		}
 
@@ -294,23 +311,27 @@ void MediaSoup::SetUserGroup() {
 	}
 
 	// Set the user if requested.
-	if (! Settings::arguments.user.empty()) {
+	if (!Settings::arguments.user.empty())
+	{
 		char *endptr;
 		const char* user = Settings::arguments.user.c_str();
 		uid_t u, uid;
 
 		// Allow passing a numeric string representing the group's uid.
 		u = std::strtol(user, &endptr, 10);
-		if (*endptr == '\0') {
+		if (*endptr == '\0')
+		{
 			uid = (uid_t)u;
 			pwd = getpwuid(uid);
-			if (! pwd)
+			if (!pwd)
 				MS_EXIT_FAILURE("cannot get information for user with uid '%d': %s", (int)uid, std::strerror(errno));
 		}
 		// Otherwise convert from name to uid.
-		else {
+		else
+		{
 			pwd = getpwnam(user);
-			if (! pwd) {
+			if (!pwd)
+			{
 				MS_EXIT_FAILURE("user '%s' does not exist", user);
 			}
 			uid = pwd->pw_uid;
@@ -329,8 +350,8 @@ void MediaSoup::SetUserGroup() {
 	}
 }
 
-
-void MediaSoup::ThreadInit() {
+void MediaSoup::ThreadInit()
+{
 	MS_TRACE();
 
 	// Set (again, don't worry) this thread as main thread.
@@ -343,8 +364,8 @@ void MediaSoup::ThreadInit() {
 	Utils::Crypto::ThreadInit();
 }
 
-
-void MediaSoup::ThreadDestroy() {
+void MediaSoup::ThreadDestroy()
+{
 	MS_TRACE();
 
 	LibUV::ThreadDestroy();
@@ -352,8 +373,8 @@ void MediaSoup::ThreadDestroy() {
 	Utils::Crypto::ThreadDestroy();
 }
 
-
-void MediaSoup::ClassInit() {
+void MediaSoup::ClassInit()
+{
 	MS_TRACE();
 
 	// Initialize static stuff.
@@ -366,8 +387,8 @@ void MediaSoup::ClassInit() {
 	RTC::SRTPSession::ClassInit();
 }
 
-
-void MediaSoup::ClassDestroy() {
+void MediaSoup::ClassDestroy()
+{
 	MS_TRACE();
 
 	// Free static stuff.
@@ -376,20 +397,22 @@ void MediaSoup::ClassDestroy() {
 	LibSRTP::ClassDestroy();
 }
 
-
 /* This method is called within a new thread and creates a Worker. */
-void MediaSoup::RunWorkerThread(void* data) {
+void MediaSoup::RunWorkerThread(void* data)
+{
 	int workerId = *(int*)data;
 
 	// Init thread stuff.
 	Worker::ThreadInit(workerId);
 
-	try {
+	try
+	{
 		MS_DEBUG("initializing Worker #%d", workerId);
 		Worker worker(workerId);
 		MS_DEBUG("Worker #%d exits", workerId);
 	}
-	catch (const MediaSoupError &error) {
+	catch (const MediaSoupError &error)
+	{
 		MS_CRIT("error happened in Worker #%d: %s | Worker ended", workerId, error.what());
 
 		Worker::ThreadDestroy();

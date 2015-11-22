@@ -5,19 +5,19 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 
-
 /* Static methods for UV callbacks. */
 
 static inline
-void on_signal(uv_signal_t* handle, int signum) {
+void on_signal(uv_signal_t* handle, int signum)
+{
 	static_cast<SignalsHandler*>(handle->data)->onUvSignal(signum);
 }
 
 static inline
-void on_close(uv_handle_t* handle) {
+void on_close(uv_handle_t* handle)
+{
 	delete handle;
 }
-
 
 /* Instance methods. */
 
@@ -27,8 +27,8 @@ SignalsHandler::SignalsHandler(Listener* listener) :
 	MS_TRACE();
 }
 
-
-void SignalsHandler::AddSignal(int signum, std::string name) {
+void SignalsHandler::AddSignal(int signum, std::string name)
+{
 	MS_TRACE();
 
 	int err;
@@ -37,7 +37,8 @@ void SignalsHandler::AddSignal(int signum, std::string name) {
 	uvHandle->data = (void*)this;
 
 	err = uv_signal_init(LibUV::GetLoop(), uvHandle);
-	if (err) {
+	if (err)
+	{
 		delete uvHandle;
 		MS_THROW_ERROR("uv_signal_init() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 	}
@@ -52,11 +53,12 @@ void SignalsHandler::AddSignal(int signum, std::string name) {
 	MS_DEBUG("signal %s added", name.c_str());
 }
 
-
-void SignalsHandler::Close() {
+void SignalsHandler::Close()
+{
 	MS_TRACE();
 
-	for (auto uvHandle : uvHandles) {
+	for (auto uvHandle : uvHandles)
+	{
 		uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_close);
 	}
 
@@ -67,9 +69,9 @@ void SignalsHandler::Close() {
 	delete this;
 }
 
-
 inline
-void SignalsHandler::onUvSignal(int signum) {
+void SignalsHandler::onUvSignal(int signum)
+{
 	MS_TRACE();
 
 	// Notify the listener.
