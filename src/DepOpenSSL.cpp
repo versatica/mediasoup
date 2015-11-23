@@ -1,6 +1,6 @@
-#define MS_CLASS "OpenSSL"
+#define MS_CLASS "DepOpenSSL"
 
-#include "OpenSSL.h"
+#include "DepOpenSSL.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <openssl/err.h>
@@ -9,12 +9,12 @@
 /* Static attributes. */
 
 // This array will store all of the mutex available for OpenSSL.
-pthread_mutex_t* OpenSSL::mutexes = nullptr;
-int OpenSSL::numMutexes = 0;
+pthread_mutex_t* DepOpenSSL::mutexes = nullptr;
+int DepOpenSSL::numMutexes = 0;
 
 /* Static methods. */
 
-void OpenSSL::ClassInit()
+void DepOpenSSL::ClassInit()
 {
 	MS_TRACE();
 
@@ -26,31 +26,29 @@ void OpenSSL::ClassInit()
 	RAND_poll();
 
 	// Make OpenSSL thread-safe.
-	OpenSSL::mutexes = new pthread_mutex_t[CRYPTO_num_locks()];
-	if (!OpenSSL::mutexes)
+	DepOpenSSL::mutexes = new pthread_mutex_t[CRYPTO_num_locks()];
+	if (!DepOpenSSL::mutexes)
 		MS_THROW_ERROR("allocation of mutexes failed");
 
-	OpenSSL::numMutexes = CRYPTO_num_locks();
+	DepOpenSSL::numMutexes = CRYPTO_num_locks();
 
-	for (int i = 0; i < OpenSSL::numMutexes; i++)
+	for (int i = 0; i < DepOpenSSL::numMutexes; i++)
 	{
-		int err = pthread_mutex_init(&OpenSSL::mutexes[i], nullptr);
+		int err = pthread_mutex_init(&DepOpenSSL::mutexes[i], nullptr);
 		if (err)
 			MS_THROW_ERROR("pthread_mutex_init() failed with return code %d\n", err);
 	}
 
-	CRYPTO_THREADID_set_callback(OpenSSL::SetThreadId);
-	CRYPTO_set_locking_callback(OpenSSL::LockingFunction);
-	CRYPTO_set_dynlock_create_callback(OpenSSL::DynCreateFunction);
-	CRYPTO_set_dynlock_lock_callback(OpenSSL::DynLockFunction);
-	CRYPTO_set_dynlock_destroy_callback(OpenSSL::DynDestroyFunction);
+	CRYPTO_THREADID_set_callback(DepOpenSSL::SetThreadId);
+	CRYPTO_set_locking_callback(DepOpenSSL::LockingFunction);
+	CRYPTO_set_dynlock_create_callback(DepOpenSSL::DynCreateFunction);
+	CRYPTO_set_dynlock_lock_callback(DepOpenSSL::DynLockFunction);
+	CRYPTO_set_dynlock_destroy_callback(DepOpenSSL::DynDestroyFunction);
 }
 
-void OpenSSL::ClassDestroy()
+void DepOpenSSL::ClassDestroy()
 {
 	MS_TRACE();
-
-	MS_DEBUG("unloading openssl");
 
 	// FAQ: https://www.openssl.org/support/faq.html#PROG13
 
@@ -70,14 +68,14 @@ void OpenSSL::ClassDestroy()
 	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 
 	// Free mutexes.
-	for (int i = 0; i < OpenSSL::numMutexes; i++)
+	for (int i = 0; i < DepOpenSSL::numMutexes; i++)
 	{
-		int err = pthread_mutex_destroy(&OpenSSL::mutexes[i]);
+		int err = pthread_mutex_destroy(&DepOpenSSL::mutexes[i]);
 		if (err)
 			MS_ERROR("pthread_mutex_destroy() failed with return code %d\n", err);
 	}
-	if (OpenSSL::mutexes)
-		delete[] OpenSSL::mutexes;
+	if (DepOpenSSL::mutexes)
+		delete[] DepOpenSSL::mutexes;
 
 	// Reset callbacks.
 	CRYPTO_THREADID_set_callback(nullptr);
@@ -87,14 +85,14 @@ void OpenSSL::ClassDestroy()
 	CRYPTO_set_dynlock_destroy_callback(nullptr);
 }
 
-void OpenSSL::SetThreadId(CRYPTO_THREADID* id)
+void DepOpenSSL::SetThreadId(CRYPTO_THREADID* id)
 {
 	// MS_TRACE();
 
 	CRYPTO_THREADID_set_numeric(id, (unsigned long)pthread_self());
 }
 
-void OpenSSL::LockingFunction(int mode, int n, const char *file, int line)
+void DepOpenSSL::LockingFunction(int mode, int n, const char *file, int line)
 {
 	// MS_TRACE();
 
@@ -112,12 +110,12 @@ void OpenSSL::LockingFunction(int mode, int n, const char *file, int line)
 	// MS_DEBUG("[mode: %s+%s, mutex id: %d, file: %s, line: %d]", mode & CRYPTO_LOCK ? "LOCK" : "UNLOCK", mode & CRYPTO_READ ? "READ" : "WRITE", n, file, line);
 
 	if (mode & CRYPTO_LOCK)
-		pthread_mutex_lock(&OpenSSL::mutexes[n]);
+		pthread_mutex_lock(&DepOpenSSL::mutexes[n]);
 	else
-		pthread_mutex_unlock(&OpenSSL::mutexes[n]);
+		pthread_mutex_unlock(&DepOpenSSL::mutexes[n]);
 }
 
-CRYPTO_dynlock_value* OpenSSL::DynCreateFunction(const char* file, int line)
+CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* file, int line)
 {
 	// MS_TRACE();
 
@@ -132,7 +130,7 @@ CRYPTO_dynlock_value* OpenSSL::DynCreateFunction(const char* file, int line)
 	return value;
 }
 
-void OpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* file, int line)
+void DepOpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* file, int line)
 {
 	// MS_TRACE();
 
@@ -142,7 +140,7 @@ void OpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* fil
 		pthread_mutex_unlock(&v->mutex);
 }
 
-void OpenSSL::DynDestroyFunction(CRYPTO_dynlock_value* v, const char* file, int line)
+void DepOpenSSL::DynDestroyFunction(CRYPTO_dynlock_value* v, const char* file, int line)
 {
 	// MS_TRACE();
 

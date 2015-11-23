@@ -1,10 +1,10 @@
-#ifndef MS_LIBUV_H
-#define	MS_LIBUV_H
+#ifndef MS_DEP_LIBUV_H
+#define	MS_DEP_LIBUV_H
 
 #include "common.h"
 #include <uv.h>
 
-class LibUV
+class DepLibUV
 {
 public:
 	static void ClassInit();
@@ -20,9 +20,9 @@ private:
 /* Inline static methods. */
 
 inline
-uv_loop_t* LibUV::GetLoop()
+uv_loop_t* DepLibUV::GetLoop()
 {
-	return LibUV::loop;
+	return DepLibUV::loop;
 }
 
 #endif

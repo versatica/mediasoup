@@ -6,7 +6,7 @@
 #include "RTC/DTLSHandler.h"
 #include "Settings.h"
 #include "Utils.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <string>
@@ -232,7 +232,7 @@ namespace RTC
 
 			uvHandles[0] = new uv_tcp_t();
 
-			err = uv_tcp_init(LibUV::GetLoop(), uvHandles[0]);
+			err = uv_tcp_init(DepLibUV::GetLoop(), uvHandles[0]);
 			if (err)
 			{
 				delete uvHandles[0];
@@ -272,7 +272,7 @@ namespace RTC
 			{
 				uvHandles[1] = new uv_tcp_t();
 
-				err = uv_tcp_init(LibUV::GetLoop(), uvHandles[1]);
+				err = uv_tcp_init(DepLibUV::GetLoop(), uvHandles[1]);
 				if (err)
 				{
 					uv_close((uv_handle_t*)uvHandles[0], (uv_close_cb)on_error_close);

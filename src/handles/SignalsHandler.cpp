@@ -1,7 +1,7 @@
 #define MS_CLASS "SignalsHandler"
 
 #include "handles/SignalsHandler.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -36,7 +36,7 @@ void SignalsHandler::AddSignal(int signum, std::string name)
 	uv_signal_t* uvHandle = new uv_signal_t;
 	uvHandle->data = (void*)this;
 
-	err = uv_signal_init(LibUV::GetLoop(), uvHandle);
+	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
 	if (err)
 	{
 		delete uvHandle;

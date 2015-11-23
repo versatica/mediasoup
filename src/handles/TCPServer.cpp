@@ -2,7 +2,7 @@
 
 #include "handles/TCPServer.h"
 #include "Utils.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -45,7 +45,7 @@ TCPServer::TCPServer(const std::string &ip, MS_PORT port, int backlog)
 	this->uvHandle = new uv_tcp_t;
 	this->uvHandle->data = (void*)this;
 
-	err = uv_tcp_init(LibUV::GetLoop(), this->uvHandle);
+	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
 	if (err)
 	{
 		delete this->uvHandle;

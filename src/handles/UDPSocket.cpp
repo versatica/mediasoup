@@ -2,7 +2,7 @@
 
 #include "handles/UDPSocket.h"
 #include "Utils.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -71,7 +71,7 @@ UDPSocket::UDPSocket(const std::string &ip, MS_PORT port)
 	this->uvHandle = new uv_udp_t;
 	this->uvHandle->data = (void*)this;
 
-	err = uv_udp_init(LibUV::GetLoop(), this->uvHandle);
+	err = uv_udp_init(DepLibUV::GetLoop(), this->uvHandle);
 	if (err)
 	{
 		delete this->uvHandle;

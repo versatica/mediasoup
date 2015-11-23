@@ -5,7 +5,7 @@
 #include "Daemon.h"
 #include "Worker.h"
 #include "Utils.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "ControlProtocol/messages.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
@@ -86,7 +86,7 @@ Dispatcher::Dispatcher()
 		Daemon::SendOKStatusToAncestor();
 
 	// Run the loop.
-	LibUV::RunLoop();
+	DepLibUV::RunLoop();
 
 	MS_DEBUG("libuv loop ends");
 }

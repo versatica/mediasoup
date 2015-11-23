@@ -2,7 +2,7 @@
 #define MS_RTC_SRTP_SESSION_H
 
 #include "common.h"
-#include "LibSRTP.h"
+#include "DepLibSRTP.h"
 #include "RTC/SRTPProfile.h"
 #include <srtp/srtp.h>
 
@@ -51,7 +51,7 @@ namespace RTC
 	{
 		const char* error_string;
 
-		error_string = LibSRTP::GetErrorString(this->lastError);
+		error_string = DepLibSRTP::GetErrorString(this->lastError);
 		this->lastError = (err_status_t)0;  // Reset it.
 
 		return error_string;

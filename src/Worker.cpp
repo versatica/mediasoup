@@ -2,7 +2,7 @@
 
 #include "Worker.h"
 #include "Utils.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "ControlProtocol/messages.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
@@ -23,7 +23,7 @@ void Worker::ThreadInit(int workerId)
 	Logger::ThreadInit("worker #" + std::to_string(workerId));
 	MS_TRACE();
 
-	LibUV::ThreadInit();
+	DepLibUV::ThreadInit();
 
 	Utils::Crypto::ThreadInit();
 }
@@ -32,7 +32,7 @@ void Worker::ThreadDestroy()
 {
 	MS_TRACE();
 
-	LibUV::ThreadDestroy();
+	DepLibUV::ThreadDestroy();
 
 	Utils::Crypto::ThreadDestroy();
 }
@@ -156,7 +156,7 @@ Worker::Worker(int workerId) :
     Worker::numWorkersRunning++;
 
 	// Run the loop.
-	LibUV::RunLoop();
+	DepLibUV::RunLoop();
 
 	MS_DEBUG("libuv loop ends");
 }

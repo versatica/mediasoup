@@ -1,7 +1,7 @@
 #define MS_CLASS "UnixStreamSocket"
 
 #include "handles/UnixStreamSocket.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <cstring>  // std::memcpy()
@@ -72,7 +72,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) :
 	this->uvHandle = new uv_pipe_t;
 	this->uvHandle->data = (void*)this;
 
-	err = uv_pipe_init(LibUV::GetLoop(), this->uvHandle, 0);
+	err = uv_pipe_init(DepLibUV::GetLoop(), this->uvHandle, 0);
 	if (err)
 	{
 		delete this->uvHandle;

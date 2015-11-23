@@ -2,7 +2,7 @@
 
 #include "handles/Timer.h"
 #include "MediaSoupError.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "Logger.h"
 
 /* Static methods for UV callbacks. */
@@ -31,7 +31,7 @@ Timer::Timer(Listener* listener) :
 	this->uvHandle = new uv_timer_t;
 	uvHandle->data = (void*)this;
 
-	err = uv_timer_init(LibUV::GetLoop(), this->uvHandle);
+	err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
 	if (err)
 	{
 		delete this->uvHandle;

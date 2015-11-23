@@ -23,9 +23,9 @@ namespace RTC
 		err_status_t err;
 
 		err = srtp_install_event_handler((srtp_event_handler_func_t*)onSRTPEvent);
-		if (LibSRTP::IsError(err))
+		if (DepLibSRTP::IsError(err))
 		{
-			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", LibSRTP::GetErrorString(err));
+			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
 		}
 	}
 
@@ -101,9 +101,9 @@ namespace RTC
 
 		// Set the SRTP session.
 		err = srtp_create(&this->session, &policy);
-		if (LibSRTP::IsError(err))
+		if (DepLibSRTP::IsError(err))
 		{
-			MS_THROW_ERROR("srtp_create() failed: %s", LibSRTP::GetErrorString(err));
+			MS_THROW_ERROR("srtp_create() failed: %s", DepLibSRTP::GetErrorString(err));
 		}
 	}
 
@@ -116,9 +116,9 @@ namespace RTC
 			err_status_t err;
 
 			err = srtp_dealloc(this->session);
-			if (LibSRTP::IsError(err))
+			if (DepLibSRTP::IsError(err))
 			{
-				MS_ABORT("srtp_dealloc() failed: %s", LibSRTP::GetErrorString(err));
+				MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
 			}
 		}
 	}
@@ -140,9 +140,9 @@ namespace RTC
 		std::memcpy(SRTPSession::encryptBuffer, *data, *len);
 
 		this->lastError = srtp_protect(this->session, (void*)SRTPSession::encryptBuffer, (int*)len);
-		if (LibSRTP::IsError(this->lastError))
+		if (DepLibSRTP::IsError(this->lastError))
 		{
-			MS_DEBUG("srtp_protect() failed: %s", LibSRTP::GetErrorString(this->lastError));
+			MS_DEBUG("srtp_protect() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
 			return false;
 		}
 
@@ -157,9 +157,9 @@ namespace RTC
 		MS_TRACE();
 
 		this->lastError = srtp_unprotect(this->session, (void*)data, (int*)len);
-		if (LibSRTP::IsError(this->lastError))
+		if (DepLibSRTP::IsError(this->lastError))
 		{
-			MS_DEBUG("srtp_unprotect() failed: %s", LibSRTP::GetErrorString(this->lastError));
+			MS_DEBUG("srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
 			return false;
 		}
 
@@ -181,9 +181,9 @@ namespace RTC
 		std::memcpy(SRTPSession::encryptBuffer, *data, *len);
 
 		this->lastError = srtp_protect_rtcp(this->session, (void*)SRTPSession::encryptBuffer, (int*)len);
-		if (LibSRTP::IsError(this->lastError))
+		if (DepLibSRTP::IsError(this->lastError))
 		{
-			MS_DEBUG("srtp_protect_rtcp() failed: %s", LibSRTP::GetErrorString(this->lastError));
+			MS_DEBUG("srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
 			return false;
 		}
 
@@ -198,9 +198,9 @@ namespace RTC
 		MS_TRACE();
 
 		this->lastError = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
-		if (LibSRTP::IsError(this->lastError))
+		if (DepLibSRTP::IsError(this->lastError))
 		{
-			MS_DEBUG("srtp_unprotect_rtcp() failed: %s", LibSRTP::GetErrorString(this->lastError));
+			MS_DEBUG("srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
 			return false;
 		}
 

@@ -1,10 +1,10 @@
-#ifndef MS_LIBSRTP_H
-#define	MS_LIBSRTP_H
+#ifndef MS_DEP_LIBSRTP_H
+#define	MS_DEP_LIBSRTP_H
 
 #include <vector>
 #include <srtp/srtp.h>
 
-class LibSRTP
+class DepLibSRTP
 {
 public:
 	static void ClassInit();
@@ -19,16 +19,16 @@ private:
 /* Inline static methods. */
 
 inline
-bool LibSRTP::IsError(err_status_t code)
+bool DepLibSRTP::IsError(err_status_t code)
 {
 	return (code != err_status_ok);
 }
 
 inline
-const char* LibSRTP::GetErrorString(err_status_t code)
+const char* DepLibSRTP::GetErrorString(err_status_t code)
 {
 	// This throws out_of_range if the given index is not in the vector.
-	return LibSRTP::errors.at(code);
+	return DepLibSRTP::errors.at(code);
 }
 
 #endif

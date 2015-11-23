@@ -2,7 +2,7 @@
 
 #include "handles/TCPConnection.h"
 #include "Utils.h"
-#include "LibUV.h"
+#include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <cstring>  // std::memcpy()
@@ -85,7 +85,7 @@ void TCPConnection::Setup(Listener* listener, const std::string &localIP, MS_POR
 	int err;
 
 	// Set the UV handle.
-	err = uv_tcp_init(LibUV::GetLoop(), this->uvHandle);
+	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
 	if (err)
 	{
 		delete this->uvHandle;

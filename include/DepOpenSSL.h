@@ -1,5 +1,5 @@
-#ifndef MS_OPENSSL_H
-#define	MS_OPENSSL_H
+#ifndef MS_DEP_OPENSSL_H
+#define	MS_DEP_OPENSSL_H
 
 #include "common.h"
 #include <openssl/ssl.h>
@@ -11,7 +11,7 @@ struct CRYPTO_dynlock_value
  	pthread_mutex_t mutex;
 };
 
-class OpenSSL
+class DepOpenSSL
 {
 public:
 	static void ClassInit();

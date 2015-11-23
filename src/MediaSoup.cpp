@@ -5,9 +5,10 @@
 #include "Daemon.h"
 #include "Dispatcher.h"
 #include "Worker.h"
-#include "LibUV.h"
-#include "OpenSSL.h"
-#include "LibSRTP.h"
+#include "DepLibUV.h"
+#include "DepOpenSSL.h"
+#include "DepLibSRTP.h"
+#include "DepUsrSCTP.h"
 #include "Utils.h"
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
@@ -358,7 +359,7 @@ void MediaSoup::ThreadInit()
 	Logger::ThreadInit("main");
 
 	// Load libuv stuff.
-	LibUV::ThreadInit();
+	DepLibUV::ThreadInit();
 
 	// Load the crypto utils.
 	Utils::Crypto::ThreadInit();
@@ -368,7 +369,7 @@ void MediaSoup::ThreadDestroy()
 {
 	MS_TRACE();
 
-	LibUV::ThreadDestroy();
+	DepLibUV::ThreadDestroy();
 
 	Utils::Crypto::ThreadDestroy();
 }
@@ -378,9 +379,10 @@ void MediaSoup::ClassInit()
 	MS_TRACE();
 
 	// Initialize static stuff.
-	LibUV::ClassInit();
-	OpenSSL::ClassInit();
-	LibSRTP::ClassInit();
+	DepLibUV::ClassInit();
+	DepOpenSSL::ClassInit();
+	DepLibSRTP::ClassInit();
+	DepUsrSCTP::ClassInit();
 	RTC::UDPSocket::ClassInit();
 	RTC::TCPServer::ClassInit();
 	RTC::DTLSHandler::ClassInit();
@@ -393,8 +395,9 @@ void MediaSoup::ClassDestroy()
 
 	// Free static stuff.
 	RTC::DTLSHandler::ClassDestroy();
-	OpenSSL::ClassDestroy();
-	LibSRTP::ClassDestroy();
+	DepOpenSSL::ClassDestroy();
+	DepLibSRTP::ClassDestroy();
+	DepUsrSCTP::ClassDestroy();
 }
 
 /* This method is called within a new thread and creates a Worker. */
