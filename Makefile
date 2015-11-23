@@ -59,9 +59,11 @@ DEP_SOURCES += ./deps/jsoncpp/dist/jsoncpp.cpp
 # Dependencies header directories.
 DEP_HEADERS_DIRS :=
 DEP_HEADERS_DIRS += ./deps/jsoncpp/dist
+DEP_HEADERS_DIRS += ./deps/usrsctp/usrsctplib
 
 # Dependencies static libraries to link with.
 DEP_LIBS :=
+DEP_LIBS += ./deps/usrsctp/usrsctplib/.libs/libusrsctp.a
 
 # Object files to build.
 ALL_OBJS := ${APP_SOURCES:.cpp=.o} ${DEP_SOURCES:.cpp=.o}
@@ -129,8 +131,10 @@ deps:
 	@ echo "INFO: retrieving Git submodules ..."
 	git submodule init
 	git submodule update
-	@ echo "INFO: building jsoncpp stuff ..."
+	@ echo "INFO: building jsoncpp lib ..."
 	cd ./deps/jsoncpp && python amalgamate.py >/dev/null
+	@ echo "INFO: building usrsctp lib ..."
+	cd ./deps/usrsctp && ./bootstrap && autoconf && ./configure && make
 
 doc:
 	@ echo "INFO: generating documentation ..."
