@@ -2,7 +2,6 @@
 
 #include "RTC/DTLSHandler.h"
 #include "Settings.h"
-#include "Version.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
@@ -16,12 +15,12 @@
 #include <openssl/rsa.h>
 #include <openssl/asn1.h>
 
-#define MS_SSL_READ_BUFFER_SIZE  65536
+#define MS_SSL_READ_BUFFER_SIZE 65536
 // NOTE: Those values are hardcoded as we just use AES_CM_128_HMAC_SHA1_80 and
 // AES_CM_128_HMAC_SHA1_32 which share same length values for key and salt.
-#define MS_SRTP_MASTER_KEY_LENGTH  16
-#define MS_SRTP_MASTER_SALT_LENGTH  14
-#define MS_SRTP_MASTER_LENGTH  (MS_SRTP_MASTER_KEY_LENGTH + MS_SRTP_MASTER_SALT_LENGTH)
+#define MS_SRTP_MASTER_KEY_LENGTH 16
+#define MS_SRTP_MASTER_SALT_LENGTH 14
+#define MS_SRTP_MASTER_LENGTH (MS_SRTP_MASTER_KEY_LENGTH + MS_SRTP_MASTER_SALT_LENGTH)
 #define LOG_OPENSSL_ERROR(desc)  \
 	do  \
 	{  \
@@ -84,8 +83,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Generate a X509 certificate and private key (unless PEM files are privided).
-		if (Settings::configuration.RTC.dtlsCertificateFile.empty())
+		// Generate a X509 certificate and private key (unless PEM files are provided).
+		if (Settings::configuration.RTC.dtlsCertificateFile.empty() || Settings::configuration.RTC.dtlsPrivateKeyFile.empty())
 			GenerateCertificateAndPrivateKey();
 		else
 			ReadCertificateAndPrivateKeyFromFiles();
@@ -208,8 +207,8 @@ namespace RTC
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
 		}
-		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)Version::GetNameAndVersion().c_str(), -1, -1, 0);
-		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)Version::name.c_str(), -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)"Mediasoup", -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)"Mediasoup", -1, -1, 0);
 
 		// It is self signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DTLSHandler::certificate, cert_name);
@@ -1176,4 +1175,4 @@ namespace RTC
 		SendPendingOutgoingDTLSData();
 		SetTimeout();
 	}
-}  // namespace RTC
+}

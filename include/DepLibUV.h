@@ -1,20 +1,18 @@
 #ifndef MS_DEP_LIBUV_H
 #define	MS_DEP_LIBUV_H
 
-#include "common.h"
 #include <uv.h>
 
 class DepLibUV
 {
 public:
 	static void ClassInit();
-	static void ThreadInit();
-	static void ThreadDestroy();
-	static uv_loop_t* GetLoop();
+	static void ClassDestroy();
 	static void RunLoop();
+	static uv_loop_t* GetLoop();
 
 private:
-	static __thread uv_loop_t* loop;
+	static uv_loop_t* loop;
 };
 
 /* Inline static methods. */

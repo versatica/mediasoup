@@ -36,7 +36,6 @@ namespace Utils
 			        IPv6address @on_ipv6;
 		}%%
 
-
 		/**
 		 * Ragel: %%write data
 		 * This generates Ragel's static variables.
@@ -97,4 +96,4 @@ namespace Utils
 		*family = addr->sa_family;
 		ip.assign(_ip);
 	}
-}  // namespace Utils
+}

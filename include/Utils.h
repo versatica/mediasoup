@@ -217,17 +217,17 @@ namespace Utils
 	class Crypto
 	{
 	public:
-		static void ThreadInit();
-		static void ThreadDestroy();
+		static void ClassInit();
+		static void ClassDestroy();
 		static unsigned int GetRandomUInt(unsigned int min, unsigned int max);
 		static const char* GetRandomHexString(char* str, size_t len);
-		static MS_4BYTES CRC32(const MS_BYTE* data, size_t size);
-		static const MS_BYTE* HMAC_SHA1(const std::string &key, const MS_BYTE* data, size_t len);
+		static MS_4BYTES GetCRC32(const MS_BYTE* data, size_t size);
+		static const MS_BYTE* GetHMAC_SHA1(const std::string &key, const MS_BYTE* data, size_t len);
 
 	private:
-		static __thread unsigned int seed;
-		static __thread HMAC_CTX hmacSha1Ctx;
-		static __thread MS_BYTE hmacSha1Buffer[];
+		static unsigned int seed;
+		static HMAC_CTX hmacSha1Ctx;
+		static MS_BYTE hmacSha1Buffer[];
 		static const MS_4BYTES crc32Table[256];
 	};
 
@@ -262,7 +262,7 @@ namespace Utils
 	}
 
 	inline
-	MS_4BYTES Crypto::CRC32(const MS_BYTE* data, size_t size)
+	MS_4BYTES Crypto::GetCRC32(const MS_BYTE* data, size_t size)
 	{
 		MS_4BYTES crc = 0xFFFFFFFF;
 		const MS_BYTE* p = data;
@@ -272,6 +272,6 @@ namespace Utils
 
 		return crc ^ ~0U;
 	}
-}  // namespace Utils
+}
 
 #endif

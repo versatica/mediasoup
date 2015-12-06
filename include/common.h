@@ -6,13 +6,12 @@
 #include <sys/socket.h>  // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #include <netinet/in.h>  // sockaddr_in, sockaddr_in6
 #include <arpa/inet.h>  // htonl(), htons(), ntohl(), ntohs()
-#include <pthread.h>  // __thread
 
-#define MS_BYTE    uint8_t
-#define MS_2BYTES  uint16_t
-#define MS_4BYTES  uint32_t
-#define MS_8BYTES  uint64_t
-#define MS_PORT    uint16_t
+#define MS_BYTE   uint8_t
+#define MS_2BYTES uint16_t
+#define MS_4BYTES uint32_t
+#define MS_8BYTES uint64_t
+#define MS_PORT   uint16_t
 
 // Detect Little-Endian or Big-Endian CPU.
 // NOTE: If the macro MS_LITTLE_ENDIAN or MS_BIG_ENDIAN is already defined

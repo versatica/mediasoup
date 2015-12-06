@@ -179,7 +179,7 @@ namespace RTC
 		{
 			// Compute the CRC32 of the received message up to (but excluding) the
 			// FINGERPRINT attribute and XOR it with 0x5354554e.
-			MS_4BYTES computed_fingerprint = Utils::Crypto::CRC32(data, fingerprint_attr_pos) ^ 0x5354554e;
+			MS_4BYTES computed_fingerprint = Utils::Crypto::GetCRC32(data, fingerprint_attr_pos) ^ 0x5354554e;
 
 			// Compare with the FINGERPRINT value in the message.
 			if (fingerprint != computed_fingerprint)
@@ -254,7 +254,7 @@ namespace RTC
 			Utils::Byte::Set2Bytes(this->raw, 2, (MS_2BYTES)(this->length - 20 - 8));
 
 		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-		const MS_BYTE* computed_message_integrity = Utils::Crypto::HMAC_SHA1(local_password, this->raw, (this->messageIntegrity - 4) - this->raw);
+		const MS_BYTE* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(local_password, this->raw, (this->messageIntegrity - 4) - this->raw);
 
 		Authentication result;
 
@@ -525,7 +525,7 @@ namespace RTC
 				Utils::Byte::Set2Bytes(this->raw, 2, (MS_2BYTES)(this->length - 20 - 8));
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-			const MS_BYTE* computed_message_integrity = Utils::Crypto::HMAC_SHA1(this->password, this->raw, pos);
+			const MS_BYTE* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(this->password, this->raw, pos);
 
 			Utils::Byte::Set2Bytes(this->raw, pos, (MS_2BYTES)Attribute::MessageIntegrity);
 			Utils::Byte::Set2Bytes(this->raw, pos + 2, 20);
@@ -550,7 +550,7 @@ namespace RTC
 		{
 			// Compute the CRC32 of the message up to (but excluding) the FINGERPRINT
 			// attribute and XOR it with 0x5354554e.
-			MS_4BYTES computed_fingerprint = Utils::Crypto::CRC32(this->raw, pos) ^ 0x5354554e;
+			MS_4BYTES computed_fingerprint = Utils::Crypto::GetCRC32(this->raw, pos) ^ 0x5354554e;
 
 			Utils::Byte::Set2Bytes(this->raw, pos, (MS_2BYTES)Attribute::Fingerprint);
 			Utils::Byte::Set2Bytes(this->raw, pos + 2, 4);

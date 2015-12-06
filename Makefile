@@ -48,7 +48,6 @@ SYSTEM_LIBS := pthread
 # External libraries with pkg-config support.
 PKG_LIBS :=
 PKG_LIBS += libuv >= 1.6.1
-PKG_LIBS += libconfig++ >= 1.4.8
 PKG_LIBS += openssl >= 1.0.1
 PKG_LIBS += libsrtp >= 1.5.2
 

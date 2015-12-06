@@ -50,34 +50,30 @@ extern "C"
 
 /*
  * This macro must point to a unsigned int function, method or variable that
- * returns Syslog logging level.
+ * returns the Syslog logging level.
  */
-#define MS_GET_LOG_LEVEL  Settings::configuration.logLevel
+#define MS_GET_LOG_LEVEL Settings::configuration.logLevel
 
 class Logger
 {
 public:
-	static void ThreadInit(const std::string name);
-	static const char* GetThreadName();
+	static void Init(const std::string name);
+	static const char* GetProcessName();
 	static void EnableSyslog();
 	static bool IsSyslogEnabled();
 	static bool HasDebugLevel();
 
 private:
-	// NOTE:
-	//  __thread implemented in GCC >= 4.7 and Clang.
-	//  local_thread implemented in GCC >= 4.8.
-	static __thread std::string* threadName;
-	static __thread const char* threadNamePtr;
+	static std::string processName;
 	static bool isSyslogEnabled;
 };
 
 /* Inline static methods. */
 
 inline
-const char* Logger::GetThreadName()
+const char* Logger::GetProcessName()
 {
-	return Logger::threadNamePtr;
+	return Logger::processName.c_str();
 }
 
 inline
@@ -95,14 +91,14 @@ bool Logger::HasDebugLevel()
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
 
 #ifdef MS_DEVEL
-	#define _MS_LOG_STR  "[%s] %s:%d | %s::%s()"
-	#define _MS_LOG_STR_DESC  _MS_LOG_STR " | "
-	#define _MS_FILE  (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
-	#define _MS_LOG_ARG  Logger::GetThreadName(), _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
+	#define _MS_LOG_STR "[%s] %s:%d | %s::%s()"
+	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
+	#define _MS_FILE (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
+	#define _MS_LOG_ARG Logger::GetProcessName(), _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
 #else
-	#define _MS_LOG_STR  "[%s] %s::%s()"
-	#define _MS_LOG_STR_DESC  _MS_LOG_STR " | "
-	#define _MS_LOG_ARG  Logger::GetThreadName(), MS_CLASS, __FUNCTION__
+	#define _MS_LOG_STR "[%s] %s::%s()"
+	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
+	#define _MS_LOG_ARG Logger::GetProcessName(), MS_CLASS, __FUNCTION__
 #endif
 
 #define _MS_TO_STDOUT(prefix)  \

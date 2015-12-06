@@ -85,4 +85,4 @@ namespace Utils
 
 		return true;
 	}
-}  // namespace Utils
+}

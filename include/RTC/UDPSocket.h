@@ -8,7 +8,8 @@
 
 namespace RTC
 {
-	class UDPSocket : public ::UDPSocket
+	class UDPSocket :
+		public ::UDPSocket
 	{
 	public:
 		class Listener

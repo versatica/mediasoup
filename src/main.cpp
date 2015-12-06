@@ -1,79 +1,141 @@
 #define MS_CLASS "main"
 
-#include "MediaSoup.h"
+#include "common.h"
 #include "Settings.h"
-#include "Version.h"
-#include "Daemon.h"
+#include "DepLibUV.h"
+#include "DepOpenSSL.h"
+#include "DepLibSRTP.h"
+#include "DepUsrSCTP.h"
+#include "Utils.h"
+#include "RTC/UDPSocket.h"
+#include "RTC/TCPServer.h"
+#include "RTC/DTLSHandler.h"
+#include "RTC/SRTPSession.h"
+#include "Loop.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
+#include <map>
 #include <string>
-#include <cstdlib>  // std::_Exit()
+#include <csignal>  // sigaction()
+#include <cerrno>
+#include <cstdint>  // uint8_t, etc  // TODO: remove?
+
+static void init();
+static void ignoreSignals();
+static void destroy();
 
 int main(int argc, char* argv[])
 {
-	// Set this thread as main thread.
-	Logger::ThreadInit("main");
+	// TODO: set the process name/id.
+	Logger::Init("main");
 
-	// Read command line arguments.
-	Settings::ReadArguments(argc, argv);
+	#if defined(MS_LITTLE_ENDIAN)
+		MS_DEBUG("detected Little-Endian CPU");
+	#elif defined(MS_BIG_ENDIAN)
+		MS_DEBUG("detected Big-Endian CPU");
+	#endif
 
-	MS_NOTICE("starting %s", Version::GetNameAndVersion().c_str());
+	#if defined(INTPTR_MAX) && defined(INT32_MAX) && (INTPTR_MAX == INT32_MAX)
+		MS_DEBUG("detected 32 bits architecture");
+	#elif defined(INTPTR_MAX) && defined(INT64_MAX) && (INTPTR_MAX == INT64_MAX)
+		MS_DEBUG("detected 64 bits architecture");
+	#else
+		MS_NOTICE("cannot determine whether the architecture is 32 or 64 bits");
+	#endif
 
-	// Set default settings.
-	Settings::SetDefaultConfiguration();
-
-	// Read configuration file (if given).
-	if (!Settings::arguments.configFile.empty())
+	try
 	{
-		MS_INFO("reading configuration file '%s'", Settings::arguments.configFile.c_str());
-		Settings::ReadConfigurationFile();
+		Settings::SetConfiguration(argc, argv);
 	}
+	catch (const MediaSoupError &error)
+	{
+		MS_EXIT_FAILURE("%s", error.what());
+	}
+
+	MS_NOTICE("starting MediaSoup");
 
 	// Print configuration.
 	Settings::PrintConfiguration();
 
-	// Verify final configuration.
-	Settings::ConfigurationPostCheck();
-
-	// Set process stuff.
-	MediaSoup::SetProcess();
-
 	try
 	{
-		// Daemonize if requested.
-		if (Settings::arguments.daemonize)
-		{
-			MS_NOTICE("daemonizing %s", Version::name.c_str());
-			Daemon::Daemonize();
-		}
+		init();
 
-		// Run MediaSoup.
-		MediaSoup::Run();
-
-		// End.
-		MediaSoup::End();
-
-		MS_EXIT_SUCCESS("%s ends", Version::name.c_str());
+		// Run the Loop.
+		Loop loop;
 	}
 	catch (const MediaSoupError &error)
 	{
-		// End.
-		MediaSoup::End();
-
-		// If this is the daemonized process don't log FAILURE EXIT as the
-		// ancestor process will do it.
-		if (Daemon::IsDaemonized())
-		{
-			MS_CRIT("%s", error.what());
-			// Notify the ancestor process that the daemonized process failed.
-			Daemon::SendErrorStatusToAncestor();
-			// And silently die.
-			std::_Exit(EXIT_FAILURE);
-		}
-		// Otherwise this is the ancestor process so log FAILURE EXIT.
-		else
-		{
-			MS_EXIT_FAILURE("%s", error.what());
-		}
+		destroy();
+		MS_EXIT_FAILURE("%s", error.what());
 	}
+
+	destroy();
+	MS_EXIT_SUCCESS("MediaSoup ends");
+}
+
+void init()
+{
+	MS_TRACE();
+
+	ignoreSignals();
+
+	// Initialize static stuff.
+	DepLibUV::ClassInit();
+	DepOpenSSL::ClassInit();
+	DepLibSRTP::ClassInit();
+	DepUsrSCTP::ClassInit();
+	RTC::UDPSocket::ClassInit();
+	RTC::TCPServer::ClassInit();
+	RTC::DTLSHandler::ClassInit();
+	RTC::SRTPSession::ClassInit();
+	Utils::Crypto::ClassInit();
+}
+
+void ignoreSignals()
+{
+	MS_TRACE();
+
+	int err;
+	struct sigaction act;
+	// NOTE: Here we ignore also signals that will be later handled in Loop
+	// (the libuv signal handler overrides it).
+	std::map<std::string, int> ignored_signals =
+	{
+		{ "INT",  SIGINT  },
+		{ "TERM", SIGTERM },
+		{ "HUP",  SIGHUP  },
+		{ "ALRM", SIGALRM },
+		{ "USR1", SIGUSR2 },
+		{ "USR2", SIGUSR1 }
+	};
+
+	act.sa_handler = SIG_IGN;
+	act.sa_flags = 0;
+	err = sigfillset(&act.sa_mask);
+	if (err)
+		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
+
+	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); ++it)
+	{
+		std::string sig_name = it->first;
+		int sig_id = it->second;
+
+		err = sigaction(sig_id, &act, nullptr);
+		if (err)
+			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sig_name.c_str(), std::strerror(errno));
+	}
+}
+
+void destroy()
+{
+	MS_TRACE();
+
+	// Free static stuff.
+	DepLibUV::ClassDestroy();
+	DepOpenSSL::ClassDestroy();
+	DepLibSRTP::ClassDestroy();
+	DepUsrSCTP::ClassDestroy();
+	RTC::DTLSHandler::ClassDestroy();
+	Utils::Crypto::ClassDestroy();
 }
