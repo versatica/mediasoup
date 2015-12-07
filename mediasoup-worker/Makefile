@@ -53,16 +53,16 @@ PKG_LIBS += libsrtp >= 1.5.2
 
 # Dependencies source files.
 DEP_SOURCES :=
-DEP_SOURCES += ./deps/jsoncpp/dist/jsoncpp.cpp
+DEP_SOURCES += ./submodules/jsoncpp/dist/jsoncpp.cpp
 
 # Dependencies header directories.
 DEP_HEADERS_DIRS :=
-DEP_HEADERS_DIRS += ./deps/jsoncpp/dist
-DEP_HEADERS_DIRS += ./deps/usrsctp/usrsctplib
+DEP_HEADERS_DIRS += ./submodules/jsoncpp/dist
+DEP_HEADERS_DIRS += ./submodules/usrsctp/usrsctplib
 
 # Dependencies static libraries to link with.
 DEP_LIBS :=
-DEP_LIBS += ./deps/usrsctp/usrsctplib/.libs/libusrsctp.a
+DEP_LIBS += ./submodules/usrsctp/usrsctplib/.libs/libusrsctp.a
 
 # Object files to build.
 ALL_OBJS := ${APP_SOURCES:.cpp=.o} ${DEP_SOURCES:.cpp=.o}
@@ -91,7 +91,7 @@ LDFLAGS += $(shell pkg-config --libs "$(PKG_LIBS)")
 # This indicates that "all", APP_NAME, "check_pkg_libs" and "clean" are
 # "phony targets". Therefore calling "make XXXX" should execute the content of its
 # build rules, even if a newer file named "XXXX" exists.
-.PHONY: all $(APP_NAME) check_pkg_libs echo_all_objs clean deps doc
+.PHONY: all $(APP_NAME) check_pkg_libs echo_all_objs clean submodules doc
 
 # This is first build rule in the Makefile, and so executing "make" and executing
 # "make all" are the same. The target simply depends on $(APP_NAME).
@@ -126,14 +126,14 @@ clean:
 	@ echo "INFO: deleting .o object files ..."
 	@ $(RM) $(ALL_OBJS)
 
-deps:
+submodules:
 	@ echo "INFO: retrieving Git submodules ..."
 	git submodule init
 	git submodule update
 	@ echo "INFO: building jsoncpp lib ..."
-	cd ./deps/jsoncpp && python amalgamate.py >/dev/null
+	cd ./submodules/jsoncpp && python amalgamate.py >/dev/null
 	@ echo "INFO: building usrsctp lib ..."
-	cd ./deps/usrsctp && ./bootstrap && autoconf && ./configure && make
+	cd ./submodules/usrsctp && ./bootstrap && autoconf && ./configure && make
 
 doc:
 	@ echo "INFO: generating documentation ..."

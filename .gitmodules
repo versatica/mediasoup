@@ -1,6 +1,6 @@
-[submodule "deps/jsoncpp"]
-	path = deps/jsoncpp
-	url = https://github.com/open-source-parsers/jsoncpp.git
-[submodule "deps/usrsctp"]
-	path = deps/usrsctp
+[submodule "mediasoup-worker/submodules/usrsctp"]
+	path = mediasoup-worker/submodules/usrsctp
 	url = https://github.com/sctplab/usrsctp.git
+[submodule "mediasoup-worker/submodules/jsoncpp"]
+	path = mediasoup-worker/submodules/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git

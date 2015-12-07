@@ -1,7 +1,5 @@
-*.o
-/bin/
-/etc/mediasoup.cfg
-/etc/*.pem
-/mediasoup-tester.sh
-/cldoc/
+/mediasoup-worker/**/*.o
+/mediasoup-worker/bin/
+/mediasoup-worker/mediasoup-tester.sh
+/mediasoup-worker/cldoc/
 /TODO
