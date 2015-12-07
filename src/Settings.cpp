@@ -88,6 +88,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	struct option options[] =
 	{
 		{ "logLevel",            optional_argument, nullptr, 'l' },
+		{ "useSyslog",           optional_argument, nullptr, 's' },
 		{ "syslogFacility",      optional_argument, nullptr, 'f' },
 		{ "rtcListenIPv4",       optional_argument, nullptr, '4' },
 		{ "rtcListenIPv6",       optional_argument, nullptr, '6' },
@@ -111,6 +112,12 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			case 'l':
 				value_string = std::string(optarg);
 				SetLogLevel(value_string);
+				break;
+
+			case 's':
+				value_string = std::string(optarg);
+				if (value_string.compare("true") == 0)
+					Settings::configuration.useSyslog = true;
 				break;
 
 			case 'f':
@@ -174,6 +181,10 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	// Set DTLS certificate files (if provided),
 	Settings::SetDtlsCertificateAndPrivateKeyFiles();
+
+	// Use syslog if requested.
+	if (Settings::configuration.useSyslog)
+		Logger::EnableSyslog();
 }
 
 void Settings::PrintConfiguration()
@@ -183,6 +194,7 @@ void Settings::PrintConfiguration()
 	MS_DEBUG("[configuration]");
 
 	MS_DEBUG("- logLevel: \"%s\"", Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	MS_DEBUG("- useSyslog: \"%s\"", Settings::configuration.useSyslog ? "true" : "false");
 	MS_DEBUG("- syslogFacility: \"%s\"", Settings::syslogFacility2String[Settings::configuration.syslogFacility].c_str());
 
 	MS_DEBUG("- RTC:");
@@ -309,7 +321,7 @@ void Settings::SetRtcListenIPv4(const std::string &ip)
 {
 	MS_TRACE();
 
-	if (ip.empty())
+	if (ip.empty() || ip.compare("false") == 0)
 	{
 		Settings::configuration.RTC.listenIPv4.clear();
 		Settings::configuration.RTC.hasIPv4 = false;
@@ -339,7 +351,7 @@ void Settings::SetRtcListenIPv6(const std::string &ip)
 {
 	MS_TRACE();
 
-	if (ip.empty())
+	if (ip.empty() || ip.compare("false") == 0)
 	{
 		Settings::configuration.RTC.listenIPv6.clear();
 		Settings::configuration.RTC.hasIPv6 = false;

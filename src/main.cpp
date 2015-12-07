@@ -18,7 +18,6 @@
 #include <string>
 #include <csignal>  // sigaction()
 #include <cerrno>
-#include <cstdint>  // uint8_t, etc  // TODO: remove?
 
 static void init();
 static void ignoreSignals();
@@ -31,9 +30,11 @@ int main(int argc, char* argv[])
 	if (argc == 1)
 		MS_EXIT_FAILURE("process id must be given as first argument");
 
-	id = std::string(argv[1]);
+	id = MS_PROCESS_NAME "#" + std::string(argv[1]);
 
 	Logger::Init(id);
+
+	MS_INFO("starting " MS_PROCESS_NAME);
 
 	#if defined(MS_LITTLE_ENDIAN)
 		MS_DEBUG("detected Little-Endian CPU");
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
 	#elif defined(INTPTR_MAX) && defined(INT64_MAX) && (INTPTR_MAX == INT64_MAX)
 		MS_DEBUG("detected 64 bits architecture");
 	#else
-		MS_NOTICE("cannot determine whether the architecture is 32 or 64 bits");
+		MS_WARN("cannot determine whether the architecture is 32 or 64 bits");
 	#endif
 
 	try
@@ -57,8 +58,6 @@ int main(int argc, char* argv[])
 	{
 		MS_EXIT_FAILURE("%s", error.what());
 	}
-
-	MS_NOTICE("starting MediaSoup");
 
 	// Print configuration.
 	Settings::PrintConfiguration();
@@ -77,7 +76,7 @@ int main(int argc, char* argv[])
 	}
 
 	destroy();
-	MS_EXIT_SUCCESS("MediaSoup ends");
+	MS_EXIT_SUCCESS(MS_PROCESS_NAME " ends");
 }
 
 void init()

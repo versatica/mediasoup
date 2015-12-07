@@ -35,7 +35,6 @@ namespace RTC
 
 	/* Static methods. */
 
-	// NOTE: Must be called from MediaSoup::Init().
 	void TCPServer::ClassInit()
 	{
 		MS_TRACE();
@@ -95,11 +94,6 @@ namespace RTC
 		servers[1] = new RTC::TCPServer(uvHandles[1]);
 	}
 
-	/*
-	 * By calling this method, two different workers (threads) can access to the
-	 * static map of available ports. No problem since the map keys are not modified,
-	 * and values are a MS_PORT (uint16_t) which is atomic.
-	 */
 	void TCPServer::RandomizePort(int address_family, uv_tcp_t* uvHandles[], bool pair)
 	{
 		MS_TRACE();

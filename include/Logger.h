@@ -14,7 +14,7 @@ extern "C"
 }
 
 /*
- * Logger facility for MediaSoup.
+ * Logger facility.
  *
  *   If the macro MS_DEVEL is set (see below) the output is even more verbose
  *   (it shows the file number in each log and enables the MS_TRACE() call).

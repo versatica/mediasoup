@@ -64,9 +64,8 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		// TODO: refactor comment
-		// Init the seed of each thread with a random number taken from the address
-		// of the seed variable itself (which is different for each thread).
+		// Init the vrypto seed with a random number taken from the address
+		// of the seed variable itself (which is random).
 		Crypto::seed = (unsigned int)(unsigned long)&Crypto::seed;
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.

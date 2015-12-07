@@ -57,7 +57,7 @@ void on_error_close(uv_handle_t* handle)
 
 /* Static variables. */
 
-__thread MS_BYTE UDPSocket::readBuffer[MS_READ_BUFFER_SIZE];
+MS_BYTE UDPSocket::readBuffer[MS_READ_BUFFER_SIZE];
 
 /* Instance methods. */
 
@@ -309,7 +309,7 @@ void UDPSocket::onUvRecvAlloc(size_t suggested_size, uv_buf_t* buf)
 {
 	MS_TRACE();
 
-	// Tell UV to write into the per thread buffer.
+	// Tell UV to write into the static buffer.
 	buf->base = (char *)UDPSocket::readBuffer;
 	// Give UV all the buffer space.
 	buf->len = MS_READ_BUFFER_SIZE;

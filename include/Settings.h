@@ -16,6 +16,7 @@ public:
 	struct Configuration
 	{
 		unsigned int logLevel             { LOG_DEBUG };
+		bool         useSyslog            { false };
 		unsigned int syslogFacility       { LOG_USER };
 
 		struct
@@ -26,6 +27,7 @@ public:
 			MS_PORT     maxPort             { 59999 };
 			std::string dtlsCertificateFile;
 			std::string dtlsPrivateKeyFile;
+
 			// Private fields.
 			bool        hasIPv4             { false };
 			bool        hasIPv6             { false };

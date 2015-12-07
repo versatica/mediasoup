@@ -75,7 +75,7 @@ namespace RTC
 		{ RTC::SRTPProfile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
 		{ RTC::SRTPProfile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
-	__thread MS_BYTE DTLSHandler::sslReadBuffer[MS_SSL_READ_BUFFER_SIZE];
+	MS_BYTE DTLSHandler::sslReadBuffer[MS_SSL_READ_BUFFER_SIZE];
 
 	/* Static methods. */
 
@@ -207,8 +207,8 @@ namespace RTC
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
 		}
-		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)"Mediasoup", -1, -1, 0);
-		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)"Mediasoup", -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)MS_PROCESS_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)MS_PROCESS_NAME, -1, -1, 0);
 
 		// It is self signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DTLSHandler::certificate, cert_name);

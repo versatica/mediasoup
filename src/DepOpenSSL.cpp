@@ -20,12 +20,12 @@ void DepOpenSSL::ClassInit()
 
 	MS_DEBUG("loaded openssl version: %s", SSLeay_version(SSLEAY_VERSION));
 
-	// First initialize OpenSSL stuff.
+	// Initialize OpenSSL stuff.
 	SSL_load_error_strings();
 	SSL_library_init();
 	RAND_poll();
 
-	// Make OpenSSL thread-safe.
+	// Make OpenSSL thread-safe (even if we are single thread).
 	DepOpenSSL::mutexes = new pthread_mutex_t[CRYPTO_num_locks()];
 	if (!DepOpenSSL::mutexes)
 		MS_THROW_ERROR("allocation of mutexes failed");

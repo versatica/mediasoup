@@ -60,7 +60,7 @@ namespace RTC
 		static Fingerprints fingerprints;
 		typedef std::vector<SrtpProfileMapEntry> SRTPProfiles;
 		static SRTPProfiles srtpProfiles;
-		static __thread MS_BYTE sslReadBuffer[];
+		static MS_BYTE sslReadBuffer[];
 
 	public:
 		DTLSHandler(Listener* listener);

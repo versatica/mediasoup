@@ -24,7 +24,7 @@ namespace RTC
 		static void onSRTPEvent(srtp_event_data_t* data);
 
 	private:
-		static __thread MS_BYTE encryptBuffer[];
+		static MS_BYTE encryptBuffer[];
 
 	public:
 		SRTPSession(Type type, RTC::SRTPProfile profile, MS_BYTE* key, size_t key_len);

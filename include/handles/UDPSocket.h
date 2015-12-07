@@ -17,7 +17,7 @@ public:
 	} UvSendData;
 
 private:
-	static __thread MS_BYTE readBuffer[];
+	static MS_BYTE readBuffer[];
 
 public:
 	UDPSocket(const std::string &ip, MS_PORT port);

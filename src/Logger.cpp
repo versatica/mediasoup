@@ -20,8 +20,9 @@ void Logger::EnableSyslog()
 {
 	MS_TRACE();
 
-	// TODO: Set the process name/id as well.
-	openlog("MediaSoup", (LOG_PID), Settings::configuration.syslogFacility);
+	MS_DEBUG("logging to Syslog");
+
+	openlog(MS_PROCESS_NAME, (LOG_PID), Settings::configuration.syslogFacility);
 
 	Logger::isSyslogEnabled = true;
 }
