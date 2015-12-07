@@ -15,18 +15,11 @@ Loop::Loop()
 	MS_TRACE();
 
 	// Set the signals handler.
-	try
-	{
-		this->signalsHandler = new SignalsHandler(this);
-		// Add signals to handle.
-		this->signalsHandler->AddSignal(SIGINT, "INT");
-		this->signalsHandler->AddSignal(SIGTERM, "TERM");
-	}
-	catch (const MediaSoupError &error)
-	{
-		MS_THROW_ERROR("error creating the SignalsHandler: %s", error.what());
-	}
-	MS_DEBUG("SignalsHandler ready");
+	this->signalsHandler = new SignalsHandler(this);
+
+	// Add signals to handle.
+	this->signalsHandler->AddSignal(SIGINT, "INT");
+	this->signalsHandler->AddSignal(SIGTERM, "TERM");
 
 	MS_DEBUG("starting libuv loop");
 	DepLibUV::RunLoop();

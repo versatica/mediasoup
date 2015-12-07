@@ -163,10 +163,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		}
 	}
 
-	// Ensure there are no more command line arguments after parsed options.
-	if (optind != argc)
-		MS_THROW_ERROR("there are remaining arguments after parsing command line options");
-
 	/* Post configuration. */
 
 	// RTC must have at least 'listenIPv4' or 'listenIPv6'.

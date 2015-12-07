@@ -26,8 +26,14 @@ static void destroy();
 
 int main(int argc, char* argv[])
 {
-	// TODO: set the process name/id.
-	Logger::Init("main");
+	std::string id;
+
+	if (argc == 1)
+		MS_EXIT_FAILURE("process id must be given as first argument");
+
+	id = std::string(argv[1]);
+
+	Logger::Init(id);
 
 	#if defined(MS_LITTLE_ENDIAN)
 		MS_DEBUG("detected Little-Endian CPU");
