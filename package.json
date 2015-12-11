@@ -1,0 +1,32 @@
+{
+  "name": "mediasoup",
+  "version": "0.0.1",
+  "description": "Node/C++ multiconference media server ready for WebRTC",
+  "main": "mediasoup-hub/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ibc/mediasoup.git"
+  },
+  "author": "Iñaki Baz Castillo <ibc@aliax.net>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ibc/mediasoup/issues"
+  },
+  "homepage": "https://github.com/ibc/mediasoup/",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.0.6",
+    "check-types": "^5.1.0",
+    "debug": "^2.2.0",
+    "random-string": "^0.1.2"
+  },
+  "devDependencies": {
+    "gulp": "git://github.com/gulpjs/gulp.git#4.0",
+    "gulp-jscs": "^3.0.2",
+    "gulp-jscs-stylish": "^1.2.1",
+    "gulp-jshint": "^2.0.0",
+    "jshint-stylish": "^2.0.1"
+  }
+}

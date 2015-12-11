@@ -1,3 +1,4 @@
+/node_modules/
 /mediasoup-worker/**/*.o
 /mediasoup-worker/bin/
 /mediasoup-worker/mediasoup-tester.sh
