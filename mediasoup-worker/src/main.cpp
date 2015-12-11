@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 	if (argc == 1)
 		MS_EXIT_FAILURE("process id must be given as first argument");
 
-	id = MS_PROCESS_NAME "#" + std::string(argv[1]);
+	id = std::string(argv[1]);
 
 	Logger::Init(id);
 

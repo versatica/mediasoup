@@ -3,7 +3,6 @@
 
 	CRLF                          = "\r\n";
 	SP                            = 0x20;  # Space.
-
 	DIGIT                         = "0".."9";
 	ALPHA                         = "a".."z" | "A".."Z";
 	alphanum                      = ALPHA | DIGIT;
@@ -17,7 +16,7 @@
 	                                ( "25" 0x30..0x35 );  # 0-255.
 
 	token                         = ( 0x21 | 0x23..0x27 | 0x2A..0x2B | 0x2D..0x2E | 0x30..0x39 | 0x41..0x5A |
-		                            0x5E..0x7E )+;
+		                              0x5E..0x7E )+;
 	byte_string                   = ( 0x01..0x09 | 0x0B..0x0C | 0x0E..0xFF )+;  # Any byte except NULL, CR or LF.
 	non_ws_string                 = ( VCHAR | 0x80..0xFF )+;  # String of visible characters.
 	text                          = byte_string;
@@ -51,5 +50,4 @@
 
 	unicast_address               = IPv4address | IPv6address | FQDN;  # NOTE: let's remove non_ws_string.
 	multicast_address             = IPv4address_multicast | IPv6address_multicast | FQDN;  # NOTE: let's remove non_ws_string.
-
 }%%

@@ -15,7 +15,7 @@ public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		unsigned int logLevel             { LOG_DEBUG };
+		unsigned int logLevel             { LOG_INFO };
 		bool         useSyslog            { false };
 		unsigned int syslogFacility       { LOG_USER };
 

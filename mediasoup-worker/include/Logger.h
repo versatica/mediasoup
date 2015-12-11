@@ -36,12 +36,7 @@ extern "C"
  *
  * 	  - MS_TRACE();
  * 	  - MS_DEBUG("starting worker %d", num);
- *
- *     Output:
- *       TRACE:  [worker #1] Worker.cpp:93 | void Worker::Run()
- *       DEBUG:  [worker #1] Worker.cpp:94 | void Worker::Run() | starting worker 1
  */
-
 
 /*
  * Call the compiler with -DMS_DEVEL for more verbose logs.
@@ -57,14 +52,16 @@ extern "C"
 class Logger
 {
 public:
-	static void Init(const std::string name);
+	static void Init(const std::string id);
 	static const char* GetProcessName();
+	static const char* GetProcessMinName();
 	static void EnableSyslog();
 	static bool IsSyslogEnabled();
 	static bool HasDebugLevel();
 
 private:
 	static std::string processName;
+	static std::string processMinName;
 	static bool isSyslogEnabled;
 };
 
@@ -74,6 +71,12 @@ inline
 const char* Logger::GetProcessName()
 {
 	return Logger::processName.c_str();
+}
+
+inline
+const char* Logger::GetProcessMinName()
+{
+	return Logger::processMinName.c_str();
 }
 
 inline
@@ -98,27 +101,27 @@ bool Logger::HasDebugLevel()
 #else
 	#define _MS_LOG_STR "[%s] %s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
-	#define _MS_LOG_ARG Logger::GetProcessName(), MS_CLASS, __FUNCTION__
+	#define _MS_LOG_ARG Logger::GetProcessMinName(), MS_CLASS, __FUNCTION__
 #endif
 
-#define _MS_TO_STDOUT(prefix)  \
+#define _MS_TO_STDOUT()  \
 	if (!Logger::IsSyslogEnabled())  \
 	{  \
-		std::fprintf(stdout, prefix _MS_LOG_STR "\n", _MS_LOG_ARG);  \
+		std::fprintf(stdout, _MS_LOG_STR "\n", _MS_LOG_ARG);  \
 		fflush(stdout);  \
 	}
 
-#define _MS_TO_STDOUT_DESC(prefix, desc, ...)  \
+#define _MS_TO_STDOUT_DESC(desc, ...)  \
 	if (!Logger::IsSyslogEnabled())  \
 	{  \
-		std::fprintf(stdout, prefix _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
+		std::fprintf(stdout, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
 		fflush(stdout);  \
 	}
 
-#define _MS_TO_STDERR_DESC(prefix, desc, ...)  \
+#define _MS_TO_STDERR_DESC(desc, ...)  \
 	if (!Logger::IsSyslogEnabled())  \
 	{  \
-		std::fprintf(stderr, prefix _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
+		std::fprintf(stderr, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
 		fflush(stderr);  \
 	}
 
@@ -143,13 +146,12 @@ bool Logger::HasDebugLevel()
  * LOG_DEBUG       7       debug-level messages
  */
 
-
 #ifdef MS_DEVEL
 #define MS_TRACE()  \
 	do  \
 	{  \
-		_MS_TO_STDOUT("TRACE:  ");  \
-		_MS_TO_SYSLOG(LOG_DEBUG, "TRACE:  ");  \
+		_MS_TO_STDOUT();  \
+		_MS_TO_SYSLOG(LOG_DEBUG, "TRACE ");  \
 	}  \
 	while (0)
 #else
@@ -161,8 +163,8 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (LOG_DEBUG == MS_GET_LOG_LEVEL)  \
 		{  \
-			_MS_TO_STDOUT_DESC("DEBUG:  ", desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_DEBUG, "DEBUG:  ", desc, ##__VA_ARGS__);  \
+			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
+			_MS_TO_SYSLOG_DESC(LOG_DEBUG, "DEBUG ", desc, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -172,8 +174,8 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (LOG_INFO <= MS_GET_LOG_LEVEL)  \
 		{  \
-			_MS_TO_STDOUT_DESC("INFO:   ", desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_INFO, "INFO:   ", desc, ##__VA_ARGS__);  \
+			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
+			_MS_TO_SYSLOG_DESC(LOG_INFO, "INFO ", desc, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -183,8 +185,8 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (LOG_NOTICE <= MS_GET_LOG_LEVEL)  \
 		{  \
-			_MS_TO_STDOUT_DESC("NOTICE: ", desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_NOTICE, "NOTICE: ", desc, ##__VA_ARGS__);  \
+			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
+			_MS_TO_SYSLOG_DESC(LOG_NOTICE, "NOTICE ", desc, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -194,8 +196,8 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (LOG_WARNING <= MS_GET_LOG_LEVEL)  \
 		{  \
-			_MS_TO_STDERR_DESC("WARN:   ", desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_WARNING, "WARN:   ", desc, ##__VA_ARGS__);  \
+			_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
+			_MS_TO_SYSLOG_DESC(LOG_WARNING, "WARN ", desc, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -203,16 +205,16 @@ bool Logger::HasDebugLevel()
 #define MS_ERROR(desc, ...)  \
 	do  \
 	{  \
-		_MS_TO_STDERR_DESC("ERROR:  ", desc, ##__VA_ARGS__);  \
-		_MS_TO_SYSLOG_DESC(LOG_ERR, "ERROR:  ", desc, ##__VA_ARGS__);  \
+		_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
+		_MS_TO_SYSLOG_DESC(LOG_ERR, "ERROR ", desc, ##__VA_ARGS__);  \
 	}  \
 	while (0)
 
 #define MS_CRIT(desc, ...)  \
 	do  \
 	{  \
-		_MS_TO_STDERR_DESC("CRIT:   ", desc, ##__VA_ARGS__);  \
-		_MS_TO_SYSLOG_DESC(LOG_ERR, "CRIT:   ", desc, ##__VA_ARGS__);  \
+		_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
+		_MS_TO_SYSLOG_DESC(LOG_ERR, "CRIT ", desc, ##__VA_ARGS__);  \
 	}  \
 	while (0)
 

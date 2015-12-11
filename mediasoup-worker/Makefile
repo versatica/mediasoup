@@ -1,5 +1,4 @@
-APP_NAME := mediasoup
-
+APP_NAME := mediasoup-worker
 
 #
 # Compiler.
@@ -24,7 +23,6 @@ DEV_FLAGS := $(DO_DEBUG_SYMBOLS) $(DO_SANITIZE) $(DO_OPTIMIZE) $(DO_PEDANTIC)
 # Added to the CXXFLAGS exported variable (before running make).
 #
 # -DMS_DEVEL enables MS_TRACE().
-
 
 #
 # Settings.
@@ -83,19 +81,18 @@ CXXFLAGS += -std=c++11 -Wall $(DEV_FLAGS)
 LDFLAGS += $(foreach lib, $(SYSTEM_LIBS), -l$(lib))
 LDFLAGS += $(shell pkg-config --libs "$(PKG_LIBS)")
 
-
 #
 # Targets.
 #
 
-# This indicates that "all", APP_NAME, "check_pkg_libs" and "clean" are
-# "phony targets". Therefore calling "make XXXX" should execute the content of its
-# build rules, even if a newer file named "XXXX" exists.
-.PHONY: all $(APP_NAME) check_pkg_libs echo_all_objs clean submodules doc
+# This indicates that those names are "phony targets". Therefore calling
+# "make XXXX" should execute the content of its build rules, even if a newer
+# file named "XXXX" exists.
+.PHONY: default $(APP_NAME) check_pkg_libs echo_compiling_all_objs clean submodules doc
 
 # This is first build rule in the Makefile, and so executing "make" and executing
-# "make all" are the same. The target simply depends on $(APP_NAME).
-all: $(APP_NAME)
+# "make default" are the same. The target simply depends on $(APP_NAME).
+default: $(APP_NAME)
 
 # The app depends on the object files (which are automatically built using the
 # predefined build rules, nothing needs to be given explicitly for them).
@@ -103,7 +100,7 @@ all: $(APP_NAME)
 # the same name as the app. Note that LINK.cc makes use of CXX, CXXFLAGS,
 # LFLAGS, etc. LINK.cc is usually defined as: $(CXX) $(CXXFLAGS) $(CPPFLAGS)
 # $(LDFLAGS) $(TARGET_ARCH).
-$(APP_NAME): check_pkg_libs echo_all_objs $(ALL_OBJS)
+$(APP_NAME): check_pkg_libs echo_compiling_all_objs $(ALL_OBJS)
 	@ mkdir -p $(APP_BIN_DIR)
 	@ echo "INFO: linking .o objects and libraries into $(APP_BIN_DIR)/$(APP_NAME) ..."
 	$(LINK.cc) $(ALL_OBJS) $(DEP_LIBS) -o $(APP_BIN_DIR)/$(APP_NAME)
@@ -114,7 +111,7 @@ check_pkg_libs:
 	@ echo "INFO: checking required PKG libraries ($(strip $(PKG_LIBS))) ..."
 	@ pkg-config --exists --print-errors "$(PKG_LIBS)"
 
-echo_all_objs:
+echo_compiling_all_objs:
 	@ echo "INFO: compiling source files into .o object files ..."
 
 # This target removes the built app and the generated object files. The @ symbol

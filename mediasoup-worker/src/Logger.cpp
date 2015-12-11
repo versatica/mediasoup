@@ -5,13 +5,15 @@
 /* Static variables. */
 
 std::string Logger::processName;
+std::string Logger::processMinName;
 bool Logger::isSyslogEnabled = false;
 
 /* Static methods. */
 
-void Logger::Init(const std::string name)
+void Logger::Init(const std::string id)
 {
-	Logger::processName = name;
+	Logger::processName = MS_PROCESS_NAME "@" + id;
+	Logger::processMinName = MS_PROCESS_MIN_NAME "@" + id;
 
 	MS_TRACE();
 }
