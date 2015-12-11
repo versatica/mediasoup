@@ -20,6 +20,7 @@
     "bluebird": "^3.0.6",
     "check-types": "^5.1.0",
     "debug": "^2.2.0",
+    "merge": "^1.2.0",
     "random-string": "^0.1.2"
   },
   "devDependencies": {
