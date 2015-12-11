@@ -12,27 +12,14 @@ debugerror.log = console.error.bind(console);
 
 const check = require('check-types');
 const randomString = require('random-string');
-const merge = require('merge');
 
 const WORKER_BIN_PATH = path.join(__dirname, '..', '..', 'mediasoup-worker', 'bin', 'mediasoup-worker');
 const DEFAULT_NUM_WORKERS = Object.keys(os.cpus()).length;
-const DEFAULT_OPTIONS =
-{
-	logLevel            : 'info',
-	useSyslog           : false,
-	syslogFacility      : 'user',
-	rtcListenIPv4       : true,
-	rtcListenIPv6       : true,
-	rtcMinPort          : 10000,
-	rtcMaxPort          : 59999,
-	dtlsCertificateFile : null,
-	dtlsPrivateKeyFile  : null
-};
-const VALID_OPTIONS =
-{
-	logLevel       : [ 'debug', 'info', 'notice', 'warn', 'error' ],
-	syslogFacility : [ 'user', 'local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', 'local7' ]
-};
+const VALID_PARAMETERS =
+[
+	'logLevel', 'useSyslog', 'syslogFacility', 'rtcListenIPv4', 'rtcListenIPv6',
+	'rtcMinPort', 'rtcMaxPort', 'dtlsCertificateFile', 'dtlsPrivateKeyFile'
+];
 
 var servers = new Set();
 
@@ -52,61 +39,35 @@ class Server
 
 		let serverId = randomString({ numeric: false, length: 6 }).toLowerCase();
 		let numWorkers = DEFAULT_NUM_WORKERS;
+		let parameters = [];
 
-		options = merge(true, DEFAULT_OPTIONS, options);
+		options = options || {};
 
 		if (check.integer(options.numWorkers) && check.positive(options.numWorkers))
 		{
 			numWorkers = options.numWorkers;
 		}
 
-		if (!check.includes(VALID_OPTIONS.logLevel, options.logLevel))
-		{
-			throw new Error(`invalid option value [logLevel:${options.logLevel}]`);
-		}
-
-		if (!check.boolean(options.useSyslog))
-		{
-			throw new Error(`invalid option value [useSyslog:${options.useSyslog}]`);
-		}
-
-		if (!check.includes(VALID_OPTIONS.syslogFacility, options.syslogFacility))
-		{
-			throw new Error(`invalid option value [syslogFacility:${options.syslogFacility}]`);
-		}
-
-		if (!check.integer(options.rtcMinPort) || !check.positive(options.rtcMinPort))
-		{
-			throw new Error(`invalid option value [rtcMinPort:${options.rtcMinPort}]`);
-		}
-
-		if (!check.integer(options.rtcMaxPort) || !check.positive(options.rtcMaxPort))
-		{
-			throw new Error(`invalid option value [rtcMaxPort:${options.rtcMaxPort}]`);
-		}
-
 		// Map of mediasoup-worker child processes
 		this._workers = new Map();
+
+		for (let key of Object.keys(options))
+		{
+			if (check.includes(VALID_PARAMETERS, key))
+			{
+				parameters.push(`--${key}=${String(options[key])}`);
+			}
+		}
+
+		debug('constructor() | [worker parameters:"%s"]', parameters.join(' '));
 
 		// Create mediasoup-worker child processes
 		for (let i = 1; i <= numWorkers; i++)
 		{
 			let workerId = serverId + '#' + i;
 			let worker;
-			let workerOptions = merge(true, options);
-			let parameters = [];
 
-			for (let key of Object.keys(workerOptions))
-			{
-				if (DEFAULT_OPTIONS.hasOwnProperty(key))
-				{
-					let value = String(workerOptions[key]);
-
-					parameters.push(`--${key}=${value}`);
-				}
-			}
-
-			debug('constructor() creating worker [workerId:%s, parameters:"%s"]', workerId, parameters.join(' '));
+			debug('constructor() | creating worker [workerId:%s]', workerId);
 
 			worker = spawn(WORKER_BIN_PATH, [ workerId ].concat(parameters));
 

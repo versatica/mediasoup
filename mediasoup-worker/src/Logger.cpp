@@ -12,8 +12,8 @@ bool Logger::isSyslogEnabled = false;
 
 void Logger::Init(const std::string id)
 {
-	Logger::processName = MS_PROCESS_NAME "@" + id;
-	Logger::processMinName = MS_PROCESS_MIN_NAME "@" + id;
+	Logger::processName = MS_PROCESS_NAME ":" + id;
+	Logger::processMinName = MS_PROCESS_MIN_NAME ":" + id;
 
 	MS_TRACE();
 }

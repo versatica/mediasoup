@@ -174,7 +174,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	// RTC must have at least 'listenIPv4' or 'listenIPv6'.
 	if (!Settings::configuration.RTC.hasIPv4 && !Settings::configuration.RTC.hasIPv6)
-		MS_THROW_ERROR("at least RTC.listenIPv4 or RTC.listenIPv6 must be enabled");
+		MS_THROW_ERROR("at least rtcListenIPv4 or rtcListenIPv6 must be enabled");
 
 	// Validate RTC ports.
 	Settings::SetRtcPorts();
@@ -299,7 +299,7 @@ void Settings::SetLogLevel(std::string &level)
 	std::transform(level.begin(), level.end(), level.begin(), ::tolower);
 
 	if (Settings::string2LogLevel.find(level) == Settings::string2LogLevel.end())
-		MS_THROW_ERROR("invalid value '%s' for Logging.level", level.c_str());
+		MS_THROW_ERROR("invalid value '%s' for logLevel", level.c_str());
 
 	Settings::configuration.logLevel = Settings::string2LogLevel[level];
 }
@@ -312,7 +312,7 @@ void Settings::SetSyslogFacility(std::string &facility)
 	std::transform(facility.begin(), facility.end(), facility.begin(), ::tolower);
 
 	if (Settings::string2SyslogFacility.find(facility) == Settings::string2SyslogFacility.end())
-		MS_THROW_ERROR("invalid value '%s' for Logging.syslogFacility", facility.c_str());
+		MS_THROW_ERROR("invalid value '%s' for syslogFacility", facility.c_str());
 
 	Settings::configuration.syslogFacility = Settings::string2SyslogFacility[facility];
 }
@@ -320,6 +320,9 @@ void Settings::SetSyslogFacility(std::string &facility)
 void Settings::SetRtcListenIPv4(const std::string &ip)
 {
 	MS_TRACE();
+
+	if (ip.compare("true") == 0)
+		return;
 
 	if (ip.empty() || ip.compare("false") == 0)
 	{
@@ -332,24 +335,27 @@ void Settings::SetRtcListenIPv4(const std::string &ip)
 	{
 		case AF_INET:
 			if (ip == "0.0.0.0")
-				MS_THROW_ERROR("RTC.listenIPv4 cannot be '0.0.0.0'");
+				MS_THROW_ERROR("rtcListenIPv4 cannot be '0.0.0.0'");
 			Settings::configuration.RTC.listenIPv4 = ip;
 			Settings::configuration.RTC.hasIPv4 = true;
 			break;
 		case AF_INET6:
-			MS_THROW_ERROR("invalid IPv6 '%s' for RTC.listenIPv4", ip.c_str());
+			MS_THROW_ERROR("invalid IPv6 '%s' for rtcListenIPv4", ip.c_str());
 		default:
-			MS_THROW_ERROR("invalid value '%s' for RTC.listenIPv4", ip.c_str());
+			MS_THROW_ERROR("invalid value '%s' for rtcListenIPv4", ip.c_str());
 	}
 
 	int bind_errno;
 	if (!IsBindableIP(ip, AF_INET, &bind_errno))
-		MS_THROW_ERROR("cannot bind on '%s' for RTC.listenIPv4: %s", ip.c_str(), std::strerror(bind_errno));
+		MS_THROW_ERROR("cannot bind on '%s' for rtcListenIPv4: %s", ip.c_str(), std::strerror(bind_errno));
 }
 
 void Settings::SetRtcListenIPv6(const std::string &ip)
 {
 	MS_TRACE();
+
+	if (ip.compare("true") == 0)
+		return;
 
 	if (ip.empty() || ip.compare("false") == 0)
 	{
@@ -362,19 +368,19 @@ void Settings::SetRtcListenIPv6(const std::string &ip)
 	{
 		case AF_INET6:
 			if (ip == "::")
-				MS_THROW_ERROR("RTC.listenIPv6 cannot be '::'");
+				MS_THROW_ERROR("rtcListenIPv6 cannot be '::'");
 			Settings::configuration.RTC.listenIPv6 = ip;
 			Settings::configuration.RTC.hasIPv6 = true;
 			break;
 		case AF_INET:
-			MS_THROW_ERROR("invalid IPv4 '%s' for RTC.listenIPv6", ip.c_str());
+			MS_THROW_ERROR("invalid IPv4 '%s' for rtcListenIPv6", ip.c_str());
 		default:
-			MS_THROW_ERROR("invalid value '%s' for RTC.listenIPv6", ip.c_str());
+			MS_THROW_ERROR("invalid value '%s' for rtcListenIPv6", ip.c_str());
 	}
 
 	int bind_errno;
 	if (!IsBindableIP(ip, AF_INET6, &bind_errno))
-		MS_THROW_ERROR("cannot bind on '%s' for RTC.listenIPv6: %s", ip.c_str(), std::strerror(bind_errno));
+		MS_THROW_ERROR("cannot bind on '%s' for rtcListenIPv6: %s", ip.c_str(), std::strerror(bind_errno));
 }
 
 void Settings::SetRtcPorts()
@@ -385,10 +391,10 @@ void Settings::SetRtcPorts()
 	MS_PORT maxPort = Settings::configuration.RTC.maxPort;
 
 	if (minPort < 1024)
-		MS_THROW_ERROR("RTC.minPort must be greater or equal than 1024");
+		MS_THROW_ERROR("rtcMinPort must be greater or equal than 1024");
 
 	if (maxPort == 0)
-		MS_THROW_ERROR("RTC.maxPort can not be 0");
+		MS_THROW_ERROR("rtcMaxPort can not be 0");
 
 	// Make minPort even.
 	minPort &= ~1;
@@ -398,7 +404,7 @@ void Settings::SetRtcPorts()
 		maxPort--;
 
 	if ((maxPort - minPort) < 99)
-		MS_THROW_ERROR("RTC.maxPort must be at least 99 ports higher than RTC.minPort");
+		MS_THROW_ERROR("rtcMaxPort must be at least 99 ports higher than rtcMinPort");
 
 	Settings::configuration.RTC.minPort = minPort;
 	Settings::configuration.RTC.maxPort = maxPort;
@@ -424,7 +430,7 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	}
 	catch (const MediaSoupError &error)
 	{
-		MS_THROW_ERROR("RTC.dtlsCertificateFile: %s", error.what());
+		MS_THROW_ERROR("dtlsCertificateFile: %s", error.what());
 	}
 
 	try
@@ -433,7 +439,7 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	}
 	catch (const MediaSoupError &error)
 	{
-		MS_THROW_ERROR("RTC.dtlsPrivateKeyFile: %s", error.what());
+		MS_THROW_ERROR("dtlsPrivateKeyFile: %s", error.what());
 	}
 
 	Settings::configuration.RTC.dtlsCertificateFile = dtlsCertificateFile;

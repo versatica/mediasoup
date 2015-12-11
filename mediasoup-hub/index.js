@@ -11,7 +11,7 @@ module.exports =
 {
 	createServer : function(options)
 	{
-		debug('createServer() [options:%o]', options);
+		debug('createServer()');
 
 		return new Server(options);
 	}
