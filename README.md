@@ -21,6 +21,15 @@ Flexible and powerful Node.js library handling a  C++ multi-stream media server 
 * Extremely powerful. MediaSoup is coded in C++ on top of the awesome [libuv](https://github.com/libuv/libuv) asychronous I/O library. MediaSoup is a single process application with multiple *Worker* threads for media handling. MediaSoup takes full advantage of your CPU capabilities.
 
 
+## Worker Building
+
+```bash
+$ cd worker
+$ make submodules
+$ make
+```
+
+
 ## Author
 
 Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
