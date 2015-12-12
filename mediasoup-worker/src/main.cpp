@@ -18,6 +18,7 @@
 #include <string>
 #include <csignal>  // sigaction()
 #include <cerrno>
+#include <unistd.h>  // getpid()
 
 static void init();
 static void ignoreSignals();
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
 	// Print configuration.
 	Settings::PrintConfiguration();
 
-	MS_INFO("starting " MS_PROCESS_NAME);
+	MS_INFO("starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
 
 	#if defined(MS_LITTLE_ENDIAN)
 		MS_DEBUG("detected Little-Endian CPU");
