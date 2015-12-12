@@ -47,28 +47,13 @@ class Logger
 {
 public:
 	static void Init(const std::string id);
-	static const char* GetProcessName();
-	static const char* GetProcessMinName();
 	static bool HasDebugLevel();
 
-private:
-	static std::string processName;
-	static std::string processMinName;
+public:
+	static std::string id;
 };
 
 /* Inline static methods. */
-
-inline
-const char* Logger::GetProcessName()
-{
-	return Logger::processName.c_str();
-}
-
-inline
-const char* Logger::GetProcessMinName()
-{
-	return Logger::processMinName.c_str();
-}
 
 inline
 bool Logger::HasDebugLevel()
@@ -82,11 +67,11 @@ bool Logger::HasDebugLevel()
 	#define _MS_LOG_STR "[%s] %s:%d | %s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
 	#define _MS_FILE (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
-	#define _MS_LOG_ARG Logger::GetProcessName(), _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
+	#define _MS_LOG_ARG ("id:" + Logger::id).c_str(), _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
 #else
 	#define _MS_LOG_STR "[%s] %s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
-	#define _MS_LOG_ARG Logger::GetProcessMinName(), MS_CLASS, __FUNCTION__
+	#define _MS_LOG_ARG ("id:" + Logger::id).c_str(), MS_CLASS, __FUNCTION__
 #endif
 
 #define _MS_TO_STDOUT()  \

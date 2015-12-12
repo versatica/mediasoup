@@ -9,7 +9,6 @@
 
 #define MS_APP_NAME "mediasoup"
 #define MS_PROCESS_NAME "mediasoup-worker"
-#define MS_PROCESS_MIN_NAME "worker"
 
 #define MS_LOG_LEVEL_DEBUG 3
 #define MS_LOG_LEVEL_INFO  2
