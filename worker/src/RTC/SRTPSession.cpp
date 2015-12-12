@@ -51,7 +51,7 @@ namespace RTC
 				break;
 		}
 
-		MS_NOTICE("SSRC %llu: %s", (unsigned long long)data->stream->ssrc, event_desc);
+		MS_WARN("SSRC %llu: %s", (unsigned long long)data->stream->ssrc, event_desc);
 	}
 
 	/* Instance methods. */

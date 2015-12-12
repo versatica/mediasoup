@@ -57,5 +57,5 @@ void DepLibSRTP::ClassDestroy()
 
 	err = srtp_shutdown();
 	if (DepLibSRTP::IsError(err))
-		MS_CRIT("srtp_shutdown() failed: %s", DepLibSRTP::GetErrorString(err));
+		MS_ERROR("srtp_shutdown() failed: %s", DepLibSRTP::GetErrorString(err));
 }

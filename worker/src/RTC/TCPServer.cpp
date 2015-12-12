@@ -41,22 +41,22 @@ namespace RTC
 
 		int err;
 
-		if (!Settings::configuration.RTC.listenIPv4.empty())
+		if (!Settings::configuration.rtcListenIPv4.empty())
 		{
-			err = uv_ip4_addr(Settings::configuration.RTC.listenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::TCPServer::sockaddrStorageIPv4);
+			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::TCPServer::sockaddrStorageIPv4);
 			if (err)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
-		if (!Settings::configuration.RTC.listenIPv6.empty())
+		if (!Settings::configuration.rtcListenIPv6.empty())
 		{
-			err = uv_ip6_addr(Settings::configuration.RTC.listenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::TCPServer::sockaddrStorageIPv6);
+			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::TCPServer::sockaddrStorageIPv6);
 			if (err)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
-		TCPServer::minPort = Settings::configuration.RTC.minPort;
-		TCPServer::maxPort = Settings::configuration.RTC.maxPort;
+		TCPServer::minPort = Settings::configuration.rtcMinPort;
+		TCPServer::maxPort = Settings::configuration.rtcMaxPort;
 
 		MS_PORT i = RTC::TCPServer::minPort;
 		do
@@ -98,9 +98,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (address_family == AF_INET && !Settings::configuration.RTC.hasIPv4)
+		if (address_family == AF_INET && !Settings::configuration.hasIPv4)
 			MS_THROW_ERROR("IPv4 family not available for RTC");
-		else if (address_family == AF_INET6 && !Settings::configuration.RTC.hasIPv6)
+		else if (address_family == AF_INET6 && !Settings::configuration.hasIPv6)
 			MS_THROW_ERROR("IPv6 family not available for RTC");
 
 		int err;
@@ -121,14 +121,14 @@ namespace RTC
 				available_ports = &RTC::TCPServer::availableIPv4Ports;
 				first_bind_addr = RTC::TCPServer::sockaddrStorageIPv4;
 				second_bind_addr = RTC::TCPServer::sockaddrStorageIPv4;
-				listenIP = Settings::configuration.RTC.listenIPv4.c_str();
+				listenIP = Settings::configuration.rtcListenIPv4.c_str();
 				break;
 
 			case AF_INET6:
 				available_ports = &RTC::TCPServer::availableIPv6Ports;
 				first_bind_addr = RTC::TCPServer::sockaddrStorageIPv6;
 				second_bind_addr = RTC::TCPServer::sockaddrStorageIPv6;
-				listenIP = Settings::configuration.RTC.listenIPv6.c_str();
+				listenIP = Settings::configuration.rtcListenIPv6.c_str();
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_TCP_IPV6ONLY;
 				break;

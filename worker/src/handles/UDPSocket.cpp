@@ -192,7 +192,7 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* add
 	// Error,
 	else if (sent != UV_EAGAIN)
 	{
-		MS_ERROR("uv_udp_try_send() failed: %s", uv_strerror(sent));
+		MS_WARN("uv_udp_try_send() failed: %s", uv_strerror(sent));
 		return;
 	}
 	// Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
@@ -214,7 +214,7 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* add
 	{
 		// NOTE: uv_udp_send() returns error if a wrong INET family is given
 		// (IPv6 destination on a IPv4 binded socket), so be ready.
-		MS_ERROR("uv_udp_send() failed: %s", uv_strerror(err));
+		MS_WARN("uv_udp_send() failed: %s", uv_strerror(err));
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(send_data);
@@ -344,7 +344,7 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 	// Some error.
 	else
 	{
-		MS_NOTICE("read error: %s", uv_strerror(nread));
+		MS_INFO("read error: %s", uv_strerror(nread));
 	}
 }
 
@@ -356,7 +356,7 @@ void UDPSocket::onUvSendError(int error)
 	if (this->isClosing)
 		return;
 
-	MS_NOTICE("send error: %s", uv_strerror(error));
+	MS_INFO("send error: %s", uv_strerror(error));
 }
 
 inline

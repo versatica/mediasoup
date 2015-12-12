@@ -7,8 +7,14 @@
 #include <netinet/in.h>  // sockaddr_in, sockaddr_in6
 #include <arpa/inet.h>  // htonl(), htons(), ntohl(), ntohs()
 
+#define MS_APP_NAME "mediasoup"
 #define MS_PROCESS_NAME "mediasoup-worker"
 #define MS_PROCESS_MIN_NAME "worker"
+
+#define MS_LOG_LEVEL_DEBUG 3
+#define MS_LOG_LEVEL_INFO  2
+#define MS_LOG_LEVEL_WARN  1
+#define MS_LOG_LEVEL_ERROR 0
 
 #define MS_BYTE   uint8_t
 #define MS_2BYTES uint16_t

@@ -14,7 +14,6 @@
 extern "C"
 {
 	#include <getopt.h>
-	#include <syslog.h>
 }
 
 /* Helpers declaration. */
@@ -27,43 +26,17 @@ bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 struct Settings::Configuration Settings::configuration;
 std::map<std::string, unsigned int> Settings::string2LogLevel =
 {
-	{ "debug",  LOG_DEBUG   },
-	{ "info",   LOG_INFO    },
-	{ "notice", LOG_NOTICE  },
-	{ "warn",   LOG_WARNING },
-	{ "error",  LOG_ERR     }
+	{ "debug", MS_LOG_LEVEL_DEBUG },
+	{ "info",  MS_LOG_LEVEL_INFO  },
+	{ "warn",  MS_LOG_LEVEL_WARN  },
+	{ "error", MS_LOG_LEVEL_ERROR }
 };
 std::map<unsigned int, std::string> Settings::logLevel2String =
 {
-	{ LOG_DEBUG,   "debug"  },
-	{ LOG_INFO,    "info"   },
-	{ LOG_NOTICE,  "notice" },
-	{ LOG_WARNING, "warn"   },
-	{ LOG_ERR,     "error"  }
-};
-std::map<std::string, unsigned int> Settings::string2SyslogFacility =
-{
-	{ "user",   LOG_USER   },
-	{ "local0", LOG_LOCAL0 },
-	{ "local1", LOG_LOCAL1 },
-	{ "local2", LOG_LOCAL2 },
-	{ "local3", LOG_LOCAL3 },
-	{ "local4", LOG_LOCAL4 },
-	{ "local5", LOG_LOCAL5 },
-	{ "local6", LOG_LOCAL6 },
-	{ "local7", LOG_LOCAL7 }
-};
-std::map<unsigned int, std::string> Settings::syslogFacility2String =
-{
-	{ LOG_USER,   "user"   },
-	{ LOG_LOCAL0, "local0" },
-	{ LOG_LOCAL1, "local1" },
-	{ LOG_LOCAL2, "local2" },
-	{ LOG_LOCAL3, "local3" },
-	{ LOG_LOCAL4, "local4" },
-	{ LOG_LOCAL5, "local5" },
-	{ LOG_LOCAL6, "local6" },
-	{ LOG_LOCAL7, "local7" }
+	{ MS_LOG_LEVEL_DEBUG, "debug" },
+	{ MS_LOG_LEVEL_INFO,  "info"  },
+	{ MS_LOG_LEVEL_WARN,  "warn"  },
+	{ MS_LOG_LEVEL_ERROR, "error" }
 };
 
 /* Static methods. */
@@ -88,8 +61,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	struct option options[] =
 	{
 		{ "logLevel",            optional_argument, nullptr, 'l' },
-		{ "useSyslog",           optional_argument, nullptr, 's' },
-		{ "syslogFacility",      optional_argument, nullptr, 'f' },
 		{ "rtcListenIPv4",       optional_argument, nullptr, '4' },
 		{ "rtcListenIPv6",       optional_argument, nullptr, '6' },
 		{ "rtcMinPort",          optional_argument, nullptr, 'm' },
@@ -114,17 +85,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				SetLogLevel(value_string);
 				break;
 
-			case 's':
-				value_string = std::string(optarg);
-				if (value_string.compare("true") == 0)
-					Settings::configuration.useSyslog = true;
-				break;
-
-			case 'f':
-				value_string = std::string(optarg);
-				SetSyslogFacility(value_string);
-				break;
-
 			case '4':
 				value_string = std::string(optarg);
 				SetRtcListenIPv4(value_string);
@@ -136,21 +96,21 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				break;
 
 			case 'm':
-				Settings::configuration.RTC.minPort = std::stoi(optarg);
+				Settings::configuration.rtcMinPort = std::stoi(optarg);
 				break;
 
 			case 'M':
-				Settings::configuration.RTC.maxPort = std::stoi(optarg);
+				Settings::configuration.rtcMaxPort = std::stoi(optarg);
 				break;
 
 			case 'c':
 				value_string = std::string(optarg);
-				Settings::configuration.RTC.dtlsCertificateFile = value_string;
+				Settings::configuration.dtlsCertificateFile = value_string;
 				break;
 
 			case 'p':
 				value_string = std::string(optarg);
-				Settings::configuration.RTC.dtlsPrivateKeyFile = value_string;
+				Settings::configuration.dtlsPrivateKeyFile = value_string;
 				break;
 
 			// Invalid option.
@@ -173,7 +133,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Post configuration. */
 
 	// RTC must have at least 'listenIPv4' or 'listenIPv6'.
-	if (!Settings::configuration.RTC.hasIPv4 && !Settings::configuration.RTC.hasIPv6)
+	if (!Settings::configuration.hasIPv4 && !Settings::configuration.hasIPv6)
 		MS_THROW_ERROR("at least rtcListenIPv4 or rtcListenIPv6 must be enabled");
 
 	// Validate RTC ports.
@@ -181,10 +141,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	// Set DTLS certificate files (if provided),
 	Settings::SetDtlsCertificateAndPrivateKeyFiles();
-
-	// Use syslog if requested.
-	if (Settings::configuration.useSyslog)
-		Logger::EnableSyslog();
 }
 
 void Settings::PrintConfiguration()
@@ -194,24 +150,20 @@ void Settings::PrintConfiguration()
 	MS_DEBUG("[configuration]");
 
 	MS_DEBUG("- logLevel: \"%s\"", Settings::logLevel2String[Settings::configuration.logLevel].c_str());
-	MS_DEBUG("- useSyslog: \"%s\"", Settings::configuration.useSyslog ? "true" : "false");
-	MS_DEBUG("- syslogFacility: \"%s\"", Settings::syslogFacility2String[Settings::configuration.syslogFacility].c_str());
-
-	MS_DEBUG("- RTC:");
-	if (Settings::configuration.RTC.hasIPv4)
-		MS_DEBUG("  - listenIPv4: \"%s\"", Settings::configuration.RTC.listenIPv4.c_str());
+	if (Settings::configuration.hasIPv4)
+		MS_DEBUG("- rtcListenIPv4: \"%s\"", Settings::configuration.rtcListenIPv4.c_str());
 	else
-		MS_DEBUG("  - listenIPv4: (unavailable)");
-	if (Settings::configuration.RTC.hasIPv6)
-		MS_DEBUG("  - listenIPv6: \"%s\"", Settings::configuration.RTC.listenIPv6.c_str());
+		MS_DEBUG("- rtcListenIPv4: (unavailable)");
+	if (Settings::configuration.hasIPv6)
+		MS_DEBUG("- rtcListenIPv6: \"%s\"", Settings::configuration.rtcListenIPv6.c_str());
 	else
-		MS_DEBUG("  - listenIPv6: (unavailable)");
-	MS_DEBUG("  - minPort: %d", Settings::configuration.RTC.minPort);
-	MS_DEBUG("  - maxPort: %d", Settings::configuration.RTC.maxPort);
-	if (!Settings::configuration.RTC.dtlsCertificateFile.empty())
+		MS_DEBUG("- rtcListenIPv6: (unavailable)");
+	MS_DEBUG("- rtcMinPort: %d", Settings::configuration.rtcMinPort);
+	MS_DEBUG("- rtcMaxPort: %d", Settings::configuration.rtcMaxPort);
+	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
-		MS_DEBUG("  - dtlsCertificateFile: \"%s\"", Settings::configuration.RTC.dtlsCertificateFile.c_str());
-		MS_DEBUG("  - dtlsPrivateKeyFile: \"%s\"", Settings::configuration.RTC.dtlsPrivateKeyFile.c_str());
+		MS_DEBUG("- dtlsCertificateFile: \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG("- dtlsPrivateKeyFile: \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
 	MS_DEBUG("[/configuration]");
@@ -278,14 +230,14 @@ void Settings::SetDefaultRtcListenIP(int requested_family)
 
 	if (!ipv4.empty())
 	{
-		Settings::configuration.RTC.listenIPv4 = ipv4;
-		Settings::configuration.RTC.hasIPv4 = true;
+		Settings::configuration.rtcListenIPv4 = ipv4;
+		Settings::configuration.hasIPv4 = true;
 	}
 
 	if (!ipv6.empty())
 	{
-		Settings::configuration.RTC.listenIPv6 = ipv6;
-		Settings::configuration.RTC.hasIPv6 = true;
+		Settings::configuration.rtcListenIPv6 = ipv6;
+		Settings::configuration.hasIPv6 = true;
 	}
 
 	uv_free_interface_addresses(addresses, num_addresses);
@@ -304,19 +256,6 @@ void Settings::SetLogLevel(std::string &level)
 	Settings::configuration.logLevel = Settings::string2LogLevel[level];
 }
 
-void Settings::SetSyslogFacility(std::string &facility)
-{
-	MS_TRACE();
-
-	// Downcase given facility.
-	std::transform(facility.begin(), facility.end(), facility.begin(), ::tolower);
-
-	if (Settings::string2SyslogFacility.find(facility) == Settings::string2SyslogFacility.end())
-		MS_THROW_ERROR("invalid value '%s' for syslogFacility", facility.c_str());
-
-	Settings::configuration.syslogFacility = Settings::string2SyslogFacility[facility];
-}
-
 void Settings::SetRtcListenIPv4(const std::string &ip)
 {
 	MS_TRACE();
@@ -326,8 +265,8 @@ void Settings::SetRtcListenIPv4(const std::string &ip)
 
 	if (ip.empty() || ip.compare("false") == 0)
 	{
-		Settings::configuration.RTC.listenIPv4.clear();
-		Settings::configuration.RTC.hasIPv4 = false;
+		Settings::configuration.rtcListenIPv4.clear();
+		Settings::configuration.hasIPv4 = false;
 		return;
 	}
 
@@ -336,8 +275,8 @@ void Settings::SetRtcListenIPv4(const std::string &ip)
 		case AF_INET:
 			if (ip == "0.0.0.0")
 				MS_THROW_ERROR("rtcListenIPv4 cannot be '0.0.0.0'");
-			Settings::configuration.RTC.listenIPv4 = ip;
-			Settings::configuration.RTC.hasIPv4 = true;
+			Settings::configuration.rtcListenIPv4 = ip;
+			Settings::configuration.hasIPv4 = true;
 			break;
 		case AF_INET6:
 			MS_THROW_ERROR("invalid IPv6 '%s' for rtcListenIPv4", ip.c_str());
@@ -359,8 +298,8 @@ void Settings::SetRtcListenIPv6(const std::string &ip)
 
 	if (ip.empty() || ip.compare("false") == 0)
 	{
-		Settings::configuration.RTC.listenIPv6.clear();
-		Settings::configuration.RTC.hasIPv6 = false;
+		Settings::configuration.rtcListenIPv6.clear();
+		Settings::configuration.hasIPv6 = false;
 		return;
 	}
 
@@ -369,8 +308,8 @@ void Settings::SetRtcListenIPv6(const std::string &ip)
 		case AF_INET6:
 			if (ip == "::")
 				MS_THROW_ERROR("rtcListenIPv6 cannot be '::'");
-			Settings::configuration.RTC.listenIPv6 = ip;
-			Settings::configuration.RTC.hasIPv6 = true;
+			Settings::configuration.rtcListenIPv6 = ip;
+			Settings::configuration.hasIPv6 = true;
 			break;
 		case AF_INET:
 			MS_THROW_ERROR("invalid IPv4 '%s' for rtcListenIPv6", ip.c_str());
@@ -387,8 +326,8 @@ void Settings::SetRtcPorts()
 {
 	MS_TRACE();
 
-	MS_PORT minPort = Settings::configuration.RTC.minPort;
-	MS_PORT maxPort = Settings::configuration.RTC.maxPort;
+	MS_PORT minPort = Settings::configuration.rtcMinPort;
+	MS_PORT maxPort = Settings::configuration.rtcMaxPort;
 
 	if (minPort < 1024)
 		MS_THROW_ERROR("rtcMinPort must be greater or equal than 1024");
@@ -406,23 +345,23 @@ void Settings::SetRtcPorts()
 	if ((maxPort - minPort) < 99)
 		MS_THROW_ERROR("rtcMaxPort must be at least 99 ports higher than rtcMinPort");
 
-	Settings::configuration.RTC.minPort = minPort;
-	Settings::configuration.RTC.maxPort = maxPort;
+	Settings::configuration.rtcMinPort = minPort;
+	Settings::configuration.rtcMaxPort = maxPort;
 }
 
 void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 {
 	MS_TRACE();
 
-	if (Settings::configuration.RTC.dtlsCertificateFile.empty() || Settings::configuration.RTC.dtlsPrivateKeyFile.empty())
+	if (Settings::configuration.dtlsCertificateFile.empty() || Settings::configuration.dtlsPrivateKeyFile.empty())
 	{
-		Settings::configuration.RTC.dtlsCertificateFile = "";
-		Settings::configuration.RTC.dtlsPrivateKeyFile = "";
+		Settings::configuration.dtlsCertificateFile = "";
+		Settings::configuration.dtlsPrivateKeyFile = "";
 		return;
 	}
 
-	std::string dtlsCertificateFile = Settings::configuration.RTC.dtlsCertificateFile;
-	std::string dtlsPrivateKeyFile = Settings::configuration.RTC.dtlsPrivateKeyFile;
+	std::string dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
+	std::string dtlsPrivateKeyFile = Settings::configuration.dtlsPrivateKeyFile;
 
 	try
 	{
@@ -442,8 +381,8 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 		MS_THROW_ERROR("dtlsPrivateKeyFile: %s", error.what());
 	}
 
-	Settings::configuration.RTC.dtlsCertificateFile = dtlsCertificateFile;
-	Settings::configuration.RTC.dtlsPrivateKeyFile = dtlsPrivateKeyFile;
+	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
+	Settings::configuration.dtlsPrivateKeyFile = dtlsPrivateKeyFile;
 }
 
 /* Helpers. */

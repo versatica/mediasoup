@@ -25,5 +25,5 @@ void DepUsrSCTP::ClassDestroy()
 	// Free usrsctp.
 	err = usrsctp_finish();
 	if (err)
-		MS_CRIT("usrsctp_finish() failed");
+		MS_ERROR("usrsctp_finish() failed");
 }

@@ -41,22 +41,22 @@ namespace RTC
 
 		int err;
 
-		if (Settings::configuration.RTC.hasIPv4)
+		if (Settings::configuration.hasIPv4)
 		{
-			err = uv_ip4_addr(Settings::configuration.RTC.listenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::UDPSocket::sockaddrStorageIPv4);
+			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::UDPSocket::sockaddrStorageIPv4);
 			if (err)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
-		if (Settings::configuration.RTC.hasIPv6)
+		if (Settings::configuration.hasIPv6)
 		{
-			err = uv_ip6_addr(Settings::configuration.RTC.listenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::UDPSocket::sockaddrStorageIPv6);
+			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::UDPSocket::sockaddrStorageIPv6);
 			if (err)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
-		UDPSocket::minPort = Settings::configuration.RTC.minPort;
-		UDPSocket::maxPort = Settings::configuration.RTC.maxPort;
+		UDPSocket::minPort = Settings::configuration.rtcMinPort;
+		UDPSocket::maxPort = Settings::configuration.rtcMaxPort;
 
 		MS_PORT i = RTC::UDPSocket::minPort;
 		do
@@ -98,9 +98,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (address_family == AF_INET && !Settings::configuration.RTC.hasIPv4)
+		if (address_family == AF_INET && !Settings::configuration.hasIPv4)
 			MS_THROW_ERROR("IPv4 family not available for RTC");
-		else if (address_family == AF_INET6 && !Settings::configuration.RTC.hasIPv6)
+		else if (address_family == AF_INET6 && !Settings::configuration.hasIPv6)
 			MS_THROW_ERROR("IPv6 family not available for RTC");
 
 		int err;
@@ -121,14 +121,14 @@ namespace RTC
 				available_ports = &RTC::UDPSocket::availableIPv4Ports;
 				first_bind_addr = RTC::UDPSocket::sockaddrStorageIPv4;
 				second_bind_addr = RTC::UDPSocket::sockaddrStorageIPv4;
-				listenIP = Settings::configuration.RTC.listenIPv4.c_str();
+				listenIP = Settings::configuration.rtcListenIPv4.c_str();
 				break;
 
 			case AF_INET6:
 				available_ports = &RTC::UDPSocket::availableIPv6Ports;
 				first_bind_addr = RTC::UDPSocket::sockaddrStorageIPv6;
 				second_bind_addr = RTC::UDPSocket::sockaddrStorageIPv6;
-				listenIP = Settings::configuration.RTC.listenIPv6.c_str();
+				listenIP = Settings::configuration.rtcListenIPv6.c_str();
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
 				break;

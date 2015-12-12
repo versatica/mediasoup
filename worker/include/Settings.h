@@ -4,10 +4,6 @@
 #include "common.h"
 #include <map>
 #include <string>
-extern "C"
-{
-	#include <syslog.h>
-}
 
 class Settings
 {
@@ -15,23 +11,16 @@ public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		unsigned int logLevel             { LOG_DEBUG };
-		bool         useSyslog            { false };
-		unsigned int syslogFacility       { LOG_USER };
-
-		struct
-		{
-			std::string listenIPv4;
-			std::string listenIPv6;
-			MS_PORT     minPort             { 10000 };
-			MS_PORT     maxPort             { 59999 };
-			std::string dtlsCertificateFile;
-			std::string dtlsPrivateKeyFile;
-
-			// Private fields.
-			bool        hasIPv4             { false };
-			bool        hasIPv6             { false };
-		} RTC;
+		unsigned int logLevel            { MS_LOG_LEVEL_DEBUG };
+		std::string rtcListenIPv4;
+		std::string rtcListenIPv6;
+		MS_PORT     rtcMinPort           { 10000 };
+		MS_PORT     rtcMaxPort           { 59999 };
+		std::string dtlsCertificateFile;
+		std::string dtlsPrivateKeyFile;
+		// Private fields.
+		bool        hasIPv4              { false };
+		bool        hasIPv6              { false };
 	};
 
 public:
@@ -41,7 +30,6 @@ public:
 private:
 	static void SetDefaultRtcListenIP(int requested_family);
 	static void SetLogLevel(std::string &level);
-	static void SetSyslogFacility(std::string &facility);
 	static void SetRtcListenIPv4(const std::string &ip);
 	static void SetRtcListenIPv6(const std::string &ip);
 	static void SetRtcPorts();
@@ -53,8 +41,6 @@ public:
 private:
 	static std::map<std::string, unsigned int> string2LogLevel;
 	static std::map<unsigned int, std::string> logLevel2String;
-	static std::map<std::string, unsigned int> string2SyslogFacility;
-	static std::map<unsigned int, std::string> syslogFacility2String;
 };
 
 #endif

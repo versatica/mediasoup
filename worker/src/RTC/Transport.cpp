@@ -427,7 +427,7 @@ namespace RTC
 		RTC::RTPPacket* packet = RTC::RTPPacket::Parse(data, len);
 		if (!packet)
 		{
-			MS_NOTICE("data received via %s is not a valid RTP packet", TRANSPORT_NAME(source));
+			MS_DEBUG("data received via %s is not a valid RTP packet", TRANSPORT_NAME(source));
 			return;
 		}
 		// MS_DEBUG("valid RTP packet received via %s [ssrc: %llu | payload: %hu | size: %zu]",
@@ -460,7 +460,7 @@ namespace RTC
 
 			if (!this->srtpRecvSession->DecryptSRTCP(data, &len))
 			{
-				MS_WARN("error decrypting SRTCP packet received via %s: %s", TRANSPORT_NAME(source), this->srtpRecvSession->GetLastErrorDesc());
+				MS_DEBUG("error decrypting SRTCP packet received via %s: %s", TRANSPORT_NAME(source), this->srtpRecvSession->GetLastErrorDesc());
 				return;
 			}
 		}
@@ -468,7 +468,7 @@ namespace RTC
 		RTC::RTCPPacket* packet = RTC::RTCPPacket::Parse(data, len);
 		if (!packet)
 		{
-			MS_NOTICE("data received via %s is not a valid RTCP packet", TRANSPORT_NAME(source));
+			MS_DEBUG("data received via %s is not a valid RTCP packet", TRANSPORT_NAME(source));
 			return;
 		}
 		// MS_DEBUG("valid RTCP packet received via %s", TRANSPORT_NAME(source));
@@ -598,7 +598,7 @@ namespace RTC
 
 		if (!this->sendingSource)
 		{
-			MS_ERROR("no sending address set, cannot send DTLS packet");
+			MS_WARN("no sending address set, cannot send DTLS packet");
 			return;
 		}
 
@@ -630,7 +630,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_NOTICE("DTLS failed");
+		MS_DEBUG("DTLS failed");
 
 		Reset();
 		Dump();

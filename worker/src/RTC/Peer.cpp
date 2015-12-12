@@ -36,7 +36,7 @@ namespace RTC
 		{
 			RTC::UDPSocket* socket = RTC::UDPSocket::New(AF_INET);
 			this->transport->AddUDPSocket(socket);
-			MS_NOTICE("---- TEST: transport listens in IPv4 UDP '%s' : %u", socket->GetLocalIP().c_str(), socket->GetLocalPort());
+			MS_INFO("---- TEST: transport listens in IPv4 UDP '%s' : %u", socket->GetLocalIP().c_str(), socket->GetLocalPort());
 		}
 		catch (const MediaSoupError &error)
 		{
@@ -47,7 +47,7 @@ namespace RTC
 		{
 			RTC::TCPServer* server = RTC::TCPServer::New(AF_INET);
 			this->transport->AddTCPServer(server);
-			MS_NOTICE("---- TEST: transport listens in IPv4 TCP '%s' : %u", server->GetLocalIP().c_str(), server->GetLocalPort());
+			MS_INFO("---- TEST: transport listens in IPv4 TCP '%s' : %u", server->GetLocalIP().c_str(), server->GetLocalPort());
 		}
 		catch (const MediaSoupError &error)
 		{
@@ -112,4 +112,4 @@ namespace RTC
 
 		this->listener->onRTCPPacket(this, packet);
 	}
-}  // namespace RTC
+}

@@ -126,7 +126,7 @@ namespace RTC
 				// The remote peer must be ICE controlling.
 				if (msg->GetIceControlled())
 				{
-					MS_NOTICE("peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
+					MS_DEBUG("peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
 
 					// Reply 487 (Role Conflict).
 					RTC::STUNMessage* response = msg->CreateErrorResponse(487);

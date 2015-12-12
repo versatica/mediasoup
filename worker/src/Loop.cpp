@@ -62,17 +62,17 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 	switch (signum)
 	{
 		case SIGINT:
-			MS_NOTICE("signal INT received, exiting");
+			MS_DEBUG("signal INT received, exiting");
 			Close();
 			break;
 
 		case SIGTERM:
-			MS_NOTICE("signal TERM received, exiting");
+			MS_DEBUG("signal TERM received, exiting");
 			Close();
 			break;
 
 		default:
-			MS_ERROR("received a signal (with signum %d) for which there is no handling code", signum);
+			MS_WARN("received a signal (with signum %d) for which there is no handling code", signum);
 	}
 }
 

@@ -8,10 +8,6 @@
 #include <cstring>
 #include <cstdlib>  // std::_Exit(), std::abort()
 #include <uv.h>
-extern "C"
-{
-	#include <syslog.h>
-}
 
 /*
  * Logger facility.
@@ -24,10 +20,8 @@ extern "C"
  * 	  - MS_TRACE()     Shows current file/line/class/function.
  * 	  - MS_DEBUG(...)
  * 	  - MS_INFO(...)
- * 	  - MS_NOTICE(...)
  * 	  - MS_WARN(...)
  * 	  - MS_ERROR(...)
- * 	  - MS_CRIT(...)
  * 	  - MS_ABORT(...)
  *
  * 	  Arguments to those macros (except MS_TRACE) have the same format as printf.
@@ -45,7 +39,7 @@ extern "C"
 
 /*
  * This macro must point to a unsigned int function, method or variable that
- * returns the Syslog logging level.
+ * returns the logging level.
  */
 #define MS_GET_LOG_LEVEL Settings::configuration.logLevel
 
@@ -55,14 +49,11 @@ public:
 	static void Init(const std::string id);
 	static const char* GetProcessName();
 	static const char* GetProcessMinName();
-	static void EnableSyslog();
-	static bool IsSyslogEnabled();
 	static bool HasDebugLevel();
 
 private:
 	static std::string processName;
 	static std::string processMinName;
-	static bool isSyslogEnabled;
 };
 
 /* Inline static methods. */
@@ -80,15 +71,9 @@ const char* Logger::GetProcessMinName()
 }
 
 inline
-bool Logger::IsSyslogEnabled()
-{
-	return Logger::isSyslogEnabled;
-}
-
-inline
 bool Logger::HasDebugLevel()
 {
-	return (LOG_DEBUG == MS_GET_LOG_LEVEL);
+	return (MS_LOG_LEVEL_DEBUG == MS_GET_LOG_LEVEL);
 }
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
@@ -105,53 +90,22 @@ bool Logger::HasDebugLevel()
 #endif
 
 #define _MS_TO_STDOUT()  \
-	if (!Logger::IsSyslogEnabled())  \
-	{  \
-		std::fprintf(stdout, _MS_LOG_STR "\n", _MS_LOG_ARG);  \
-		fflush(stdout);  \
-	}
+	std::fprintf(stdout, _MS_LOG_STR "\n", _MS_LOG_ARG);  \
+	fflush(stdout);
 
 #define _MS_TO_STDOUT_DESC(desc, ...)  \
-	if (!Logger::IsSyslogEnabled())  \
-	{  \
-		std::fprintf(stdout, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
-		fflush(stdout);  \
-	}
+	std::fprintf(stdout, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
+	fflush(stdout);  \
 
 #define _MS_TO_STDERR_DESC(desc, ...)  \
-	if (!Logger::IsSyslogEnabled())  \
-	{  \
-		std::fprintf(stderr, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
-		fflush(stderr);  \
-	}
-
-#define _MS_TO_SYSLOG(severity, prefix)  \
-	if (Logger::IsSyslogEnabled())  \
-		syslog(severity, prefix _MS_LOG_STR, _MS_LOG_ARG);
-
-#define _MS_TO_SYSLOG_DESC(severity, prefix, desc, ...)  \
-	if (Logger::IsSyslogEnabled())  \
-		syslog(severity, prefix _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);
-
-/*
- * Log levels in syslog.h:
- *
- * LOG_EMERG       0       system is unusable
- * LOG_ALERT       1       action must be taken immediately
- * LOG_CRIT        2       critical conditions
- * LOG_ERR         3       error conditions
- * LOG_WARNING     4       warning conditions
- * LOG_NOTICE      5       normal but significant condition
- * LOG_INFO        6       informational
- * LOG_DEBUG       7       debug-level messages
- */
+	std::fprintf(stderr, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
+	fflush(stderr);  \
 
 #ifdef MS_DEVEL
 #define MS_TRACE()  \
 	do  \
 	{  \
 		_MS_TO_STDOUT();  \
-		_MS_TO_SYSLOG(LOG_DEBUG, "TRACE ");  \
 	}  \
 	while (0)
 #else
@@ -161,10 +115,9 @@ bool Logger::HasDebugLevel()
 #define MS_DEBUG(desc, ...)  \
 	do  \
 	{  \
-		if (LOG_DEBUG == MS_GET_LOG_LEVEL)  \
+		if (MS_LOG_LEVEL_DEBUG == MS_GET_LOG_LEVEL)  \
 		{  \
 			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_DEBUG, "DEBUG ", desc, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -172,21 +125,9 @@ bool Logger::HasDebugLevel()
 #define MS_INFO(desc, ...)  \
 	do  \
 	{  \
-		if (LOG_INFO <= MS_GET_LOG_LEVEL)  \
+		if (MS_LOG_LEVEL_INFO <= MS_GET_LOG_LEVEL)  \
 		{  \
 			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_INFO, "INFO ", desc, ##__VA_ARGS__);  \
-		}  \
-	}  \
-	while (0)
-
-#define MS_NOTICE(desc, ...)  \
-	do  \
-	{  \
-		if (LOG_NOTICE <= MS_GET_LOG_LEVEL)  \
-		{  \
-			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_NOTICE, "NOTICE ", desc, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -194,10 +135,9 @@ bool Logger::HasDebugLevel()
 #define MS_WARN(desc, ...)  \
 	do  \
 	{  \
-		if (LOG_WARNING <= MS_GET_LOG_LEVEL)  \
+		if (MS_LOG_LEVEL_WARN <= MS_GET_LOG_LEVEL)  \
 		{  \
 			_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
-			_MS_TO_SYSLOG_DESC(LOG_WARNING, "WARN ", desc, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -206,22 +146,13 @@ bool Logger::HasDebugLevel()
 	do  \
 	{  \
 		_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
-		_MS_TO_SYSLOG_DESC(LOG_ERR, "ERROR ", desc, ##__VA_ARGS__);  \
-	}  \
-	while (0)
-
-#define MS_CRIT(desc, ...)  \
-	do  \
-	{  \
-		_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
-		_MS_TO_SYSLOG_DESC(LOG_ERR, "CRIT ", desc, ##__VA_ARGS__);  \
 	}  \
 	while (0)
 
 #define MS_EXIT_SUCCESS(desc, ...)  \
 	do  \
 	{  \
-		MS_NOTICE("SUCCESS EXIT | " desc, ##__VA_ARGS__);  \
+		MS_INFO("SUCCESS EXIT | " desc, ##__VA_ARGS__);  \
 		std::_Exit(EXIT_SUCCESS);  \
 	}  \
 	while (0)
@@ -229,7 +160,7 @@ bool Logger::HasDebugLevel()
 #define MS_EXIT_FAILURE(desc, ...)  \
 	do  \
 	{  \
-		MS_CRIT("FAILURE EXIT | " desc, ##__VA_ARGS__);  \
+		MS_ERROR("FAILURE EXIT | " desc, ##__VA_ARGS__);  \
 		std::_Exit(EXIT_FAILURE);  \
 	}  \
 	while (0)
@@ -237,7 +168,7 @@ bool Logger::HasDebugLevel()
 #define MS_ABORT(desc, ...)  \
 	do  \
 	{  \
-		MS_CRIT("ABORT | " desc, ##__VA_ARGS__);  \
+		MS_ERROR("ABORT | " desc, ##__VA_ARGS__);  \
 		std::abort();  \
 	}  \
 	while (0)

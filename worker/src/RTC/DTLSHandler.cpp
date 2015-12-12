@@ -84,7 +84,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Generate a X509 certificate and private key (unless PEM files are provided).
-		if (Settings::configuration.RTC.dtlsCertificateFile.empty() || Settings::configuration.RTC.dtlsPrivateKeyFile.empty())
+		if (Settings::configuration.dtlsCertificateFile.empty() || Settings::configuration.dtlsPrivateKeyFile.empty())
 			GenerateCertificateAndPrivateKey();
 		else
 			ReadCertificateAndPrivateKeyFromFiles();
@@ -207,8 +207,8 @@ namespace RTC
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
 		}
-		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)MS_PROCESS_NAME, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)MS_PROCESS_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)MS_APP_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)MS_APP_NAME, -1, -1, 0);
 
 		// It is self signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DTLSHandler::certificate, cert_name);
@@ -249,7 +249,7 @@ namespace RTC
 
 		FILE* file = nullptr;
 
-		file = fopen(Settings::configuration.RTC.dtlsCertificateFile.c_str(), "r");
+		file = fopen(Settings::configuration.dtlsCertificateFile.c_str(), "r");
 		if (!file)
 		{
 			MS_ERROR("error reading DTLS certificate file: %s", std::strerror(errno));
@@ -263,7 +263,7 @@ namespace RTC
 		}
 		fclose(file);
 
-		file = fopen(Settings::configuration.RTC.dtlsPrivateKeyFile.c_str(), "r");
+		file = fopen(Settings::configuration.dtlsPrivateKeyFile.c_str(), "r");
 		if (!file)
 		{
 			MS_ERROR("error reading DTLS private key file: %s", std::strerror(errno));
@@ -694,7 +694,7 @@ namespace RTC
 		{
 			if (!this->isConnected)
 			{
-				MS_NOTICE("ignoring application data received while DTLS not fully connected");
+				MS_DEBUG("ignoring application data received while DTLS not fully connected");
 				return;
 			}
 
@@ -760,33 +760,28 @@ namespace RTC
 		switch (err)
 		{
 			case SSL_ERROR_NONE:
-				// MS_DEBUG("SSL status: SSL_ERROR_NONE");
 				break;
 			case SSL_ERROR_SSL:
-				// MS_NOTICE("SSL status: SSL_ERROR_SSL");
 				LOG_OPENSSL_ERROR("SSL status: SSL_ERROR_SSL");
 				break;
 			case SSL_ERROR_WANT_READ:
-				// MS_DEBUG("SSL status: SSL_ERROR_WANT_READ");
 				break;
 			case SSL_ERROR_WANT_WRITE:
 				MS_DEBUG("SSL status: SSL_ERROR_WANT_WRITE");
 				break;
 			case SSL_ERROR_WANT_X509_LOOKUP:
-				MS_NOTICE("SSL status: SSL_ERROR_WANT_X509_LOOKUP");
+				MS_DEBUG("SSL status: SSL_ERROR_WANT_X509_LOOKUP");
 				break;
 			case SSL_ERROR_SYSCALL:
-				// MS_WARN("SSL status: SSL_ERROR_SYSCALL");
 				LOG_OPENSSL_ERROR("SSL status: SSL_ERROR_SYSCALL");
 				break;
 			case SSL_ERROR_ZERO_RETURN:
-				// MS_DEBUG("SSL status: SSL_ERROR_ZERO_RETURN");
 				break;
 			case SSL_ERROR_WANT_CONNECT:
-				MS_WARN("SSL status: SSL_ERROR_WANT_CONNECT");
+				MS_DEBUG("SSL status: SSL_ERROR_WANT_CONNECT");
 				break;
 			case SSL_ERROR_WANT_ACCEPT:
-				MS_WARN("SSL status: SSL_ERROR_WANT_ACCEPT");
+				MS_DEBUG("SSL status: SSL_ERROR_WANT_ACCEPT");
 				break;
 		}
 
@@ -822,7 +817,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_NOTICE("DTLS connection failed");
+				MS_DEBUG("DTLS connection failed");
 
 				// Notify to the listener.
 				this->listener->onDTLSFailed(this);
@@ -949,7 +944,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_NOTICE("SRTP profile not negotiated");
+			MS_DEBUG("SRTP profile not negotiated");
 		}
 	}
 
@@ -1021,7 +1016,7 @@ namespace RTC
 
 		if (this->remoteFingerprint.compare(hex_fingerprint) != 0)
 		{
-			MS_NOTICE("fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.c_str());
+			MS_DEBUG("fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.c_str());
 			return false;
 		}
 
@@ -1145,7 +1140,7 @@ namespace RTC
 		else if (where & SSL_CB_EXIT)
 		{
 			if (ret == 0)
-				MS_NOTICE("role: %s | failed in: %s", role, SSL_state_string_long(this->ssl));
+				MS_DEBUG("role: %s | failed in: %s", role, SSL_state_string_long(this->ssl));
 			else if (ret < 0)
 				MS_DEBUG("role: %s | waiting for: %s", role, SSL_state_string_long(this->ssl));
 		}
