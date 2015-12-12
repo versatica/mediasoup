@@ -1,6 +1,7 @@
 /node_modules/
-/mediasoup-worker/**/*.o
-/mediasoup-worker/bin/
-/mediasoup-worker/mediasoup-tester.sh
-/mediasoup-worker/cldoc/
+/worker/submodules/
+/worker/**/*.o
+/worker/bin/
+/worker/cldoc/
+/worker/mediasoup-tester.sh
 /TODO

@@ -1,6 +1,6 @@
-[submodule "mediasoup-worker/submodules/usrsctp"]
-	path = mediasoup-worker/submodules/usrsctp
+[submodule "worker/submodules/usrsctp"]
+	path = worker/submodules/usrsctp
 	url = https://github.com/sctplab/usrsctp.git
-[submodule "mediasoup-worker/submodules/jsoncpp"]
-	path = mediasoup-worker/submodules/jsoncpp
+[submodule "worker/submodules/jsoncpp"]
+	path = worker/submodules/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git

@@ -2,7 +2,7 @@
   "name": "mediasoup",
   "version": "0.0.1",
   "description": "Node/C++ multiconference media server ready for WebRTC",
-  "main": "mediasoup-hub/index.js",
+  "main": "lib/mediasoup.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/ibc/mediasoup.git"
