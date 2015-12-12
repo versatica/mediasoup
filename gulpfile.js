@@ -7,7 +7,7 @@ const stylish = require('gulp-jscs-stylish');
 
 gulp.task('lint', () =>
 {
-	let src = ['gulpfile.js', 'mediasoup-hub/index.js', 'mediasoup-hub/lib/**/*.js'];
+	let src = [ 'gulpfile.js', 'lib/**/*.js' ];
 
 	return gulp.src(src)
 		.pipe(jshint('.jshintrc'))
