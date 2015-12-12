@@ -61,6 +61,9 @@ class Server
 
 		debug('constructor() | [worker parameters:"%s"]', parameters.join(' '));
 
+		// Add the server to the set
+		servers.add(this);
+
 		// Create mediasoup-worker child processes
 		for (let i = 1; i <= numWorkers; i++)
 		{
@@ -96,9 +99,9 @@ class Server
 				});
 			});
 
-			worker.on('exit', (code) =>
+			worker.on('exit', (code, signal) =>
 			{
-				debug('worker process closed [workerId:%s, code:%s]', worker.workerId, code);
+				debug('worker process closed [workerId:%s, code:%s, signal:%s]', worker.workerId, code, signal);
 			});
 
 			worker.on('error', (error) =>
@@ -109,9 +112,6 @@ class Server
 			// Add the worker to the map
 			this._workers.set(workerId, worker);
 		}
-
-		// Add the server to the set
-		servers.add(this);
 	}
 
 	close()

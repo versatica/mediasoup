@@ -34,6 +34,18 @@ int main(int argc, char* argv[])
 
 	Logger::Init(id);
 
+	try
+	{
+		Settings::SetConfiguration(argc, argv);
+	}
+	catch (const MediaSoupError &error)
+	{
+		MS_EXIT_FAILURE("%s", error.what());
+	}
+
+	// Print configuration.
+	Settings::PrintConfiguration();
+
 	MS_INFO("starting " MS_PROCESS_NAME);
 
 	#if defined(MS_LITTLE_ENDIAN)
@@ -49,18 +61,6 @@ int main(int argc, char* argv[])
 	#else
 		MS_WARN("cannot determine whether the architecture is 32 or 64 bits");
 	#endif
-
-	try
-	{
-		Settings::SetConfiguration(argc, argv);
-	}
-	catch (const MediaSoupError &error)
-	{
-		MS_EXIT_FAILURE("%s", error.what());
-	}
-
-	// Print configuration.
-	Settings::PrintConfiguration();
 
 	try
 	{
@@ -103,12 +103,9 @@ void ignoreSignals()
 
 	int err;
 	struct sigaction act;
-	// NOTE: Here we ignore also signals that will be later handled in Loop
-	// (the libuv signal handler overrides it).
 	std::map<std::string, int> ignored_signals =
 	{
-		{ "INT",  SIGINT  },
-		{ "TERM", SIGTERM },
+		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },
 		{ "ALRM", SIGALRM },
 		{ "USR1", SIGUSR2 },
