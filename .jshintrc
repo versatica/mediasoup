@@ -1,6 +1,6 @@
 {
 	"esnext": true,
-	"bitwise": true,
+	"bitwise": false,
 	"curly": true,
 	"eqeqeq": true,
 	"forin": false,
