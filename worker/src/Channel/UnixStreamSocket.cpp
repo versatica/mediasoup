@@ -1,12 +1,12 @@
-#define MS_CLASS "Control::UnixStreamSocket"
+#define MS_CLASS "Channel::UnixStreamSocket"
 
-#include "Control/UnixStreamSocket.h"
+#include "Channel/UnixStreamSocket.h"
 #include "Logger.h"
 #include <json/json.h>
 
 #define MESSAGE_MAX_SIZE 65536  // TODO: set proper buffer size
 
-namespace Control
+namespace Channel
 {
 	/* Instance methods. */
 
@@ -64,6 +64,6 @@ namespace Control
 		MS_TRACE();
 
 		// Notify the listener.
-		// this->listener->onControlUnixStreamSocketClosed(this, is_closed_by_peer);
+		// this->listener->onChannelUnixStreamSocketClosed(this, is_closed_by_peer);
 	}
-}  // namespace ControlProtocol
+}

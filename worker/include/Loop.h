@@ -3,11 +3,11 @@
 
 #include "common.h"
 #include "handles/SignalsHandler.h"
-#include "Control/UnixStreamSocket.h"
+#include "Channel/UnixStreamSocket.h"
 
 class Loop :
 	public SignalsHandler::Listener,
-	public Control::UnixStreamSocket::Listener
+	public Channel::UnixStreamSocket::Listener
 {
 public:
 	Loop();
@@ -24,7 +24,7 @@ public:
 private:
 	// Allocated by this.
 	SignalsHandler* signalsHandler = nullptr;
-	Control::UnixStreamSocket* controlSocket = nullptr;
+	Channel::UnixStreamSocket* channel = nullptr;
 	// Others.
 	bool closed = false;
 };

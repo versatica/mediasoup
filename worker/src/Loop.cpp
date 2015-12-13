@@ -15,7 +15,7 @@ Loop::Loop()
 {
 	MS_TRACE();
 
-	int controlFD = std::stoi(std::getenv("MEDIASOUP_CONTROL_FD"));
+	int channelFd = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
 
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
@@ -24,8 +24,8 @@ Loop::Loop()
 	this->signalsHandler->AddSignal(SIGINT, "INT");
 	this->signalsHandler->AddSignal(SIGTERM, "TERM");
 
-	// Set the Control socket.
-	this->controlSocket = new Control::UnixStreamSocket(this, controlFD);
+	// Set the Channel socket.
+	this->channel = new Channel::UnixStreamSocket(this, channelFd);
 
 	MS_DEBUG("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -60,8 +60,8 @@ void Loop::Close()
 	// Close the SignalsHandler.
 	this->signalsHandler->Close();
 
-	// Close the Control socket
-	this->controlSocket->Close();
+	// Close the Channel socket
+	this->channel->Close();
 }
 
 void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
