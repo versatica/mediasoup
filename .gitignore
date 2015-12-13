@@ -1,6 +1,6 @@
 /node_modules/
-/worker/submodules/
 /worker/**/*.o
+/worker/submodules/
 /worker/bin/
 /worker/cldoc/
 /worker/mediasoup-tester.sh

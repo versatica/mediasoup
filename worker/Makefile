@@ -57,6 +57,7 @@ DEP_SOURCES += ./submodules/jsoncpp/dist/jsoncpp.cpp
 DEP_HEADERS_DIRS :=
 DEP_HEADERS_DIRS += ./submodules/jsoncpp/dist
 DEP_HEADERS_DIRS += ./submodules/usrsctp/usrsctplib
+DEP_HEADERS_DIRS += ./submodules/picojson
 
 # Dependencies static libraries to link with.
 DEP_LIBS :=

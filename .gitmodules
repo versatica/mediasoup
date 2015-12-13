@@ -4,3 +4,6 @@
 [submodule "worker/submodules/jsoncpp"]
 	path = worker/submodules/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "worker/submodules/picojson"]
+	path = worker/submodules/picojson
+	url = https://github.com/eluck/picojson.git
