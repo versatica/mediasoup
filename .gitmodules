@@ -1,6 +1,6 @@
-[submodule "worker/submodules/usrsctp"]
-	path = worker/submodules/usrsctp
-	url = https://github.com/sctplab/usrsctp.git
-[submodule "worker/submodules/jsoncpp"]
-	path = worker/submodules/jsoncpp
+[submodule "submodules/jsoncpp"]
+	path = submodules/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "submodules/usrsctp"]
+	path = submodules/usrsctp
+	url = https://github.com/sctplab/usrsctp.git
