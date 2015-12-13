@@ -20,11 +20,9 @@ Flexible and powerful Node.js library handling a  C++ multi-stream media server 
 * SDP unaware. Really, MediaSoup will not parse a SDP for you.
 * Extremely powerful. MediaSoup is coded in C++ on top of the awesome [libuv](https://github.com/libuv/libuv) asychronous I/O library. MediaSoup is a single process application with multiple *Worker* threads for media handling. MediaSoup takes full advantage of your CPU capabilities.
 
-
-## Worker Building
+## Building mediasoup-worker
 
 ```bash
-$ cd worker
 $ make submodules
 $ make
 ```
