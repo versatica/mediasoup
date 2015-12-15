@@ -4,3 +4,6 @@
 [submodule "submodules/usrsctp"]
 	path = submodules/usrsctp
 	url = https://github.com/sctplab/usrsctp.git
+[submodule "submodules/netstring-c"]
+	path = submodules/netstring-c
+	url = https://github.com/PeterScott/netstring-c.git
