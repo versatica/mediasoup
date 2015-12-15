@@ -52,12 +52,14 @@ PKG_LIBS += libsrtp >= 1.5.2
 # Dependencies source files.
 DEP_SOURCES :=
 DEP_SOURCES += ./submodules/jsoncpp/dist/jsoncpp.cpp
+DEP_SOURCES += ./deps/netstring-c/netstring.cpp
 
 # Dependencies header directories.
 DEP_HEADERS_DIRS :=
 DEP_HEADERS_DIRS += ./submodules/jsoncpp/dist
 DEP_HEADERS_DIRS += ./submodules/usrsctp/usrsctplib
 DEP_HEADERS_DIRS += ./submodules/picojson
+DEP_HEADERS_DIRS += ./deps/netstring-c
 
 # Dependencies static libraries to link with.
 DEP_LIBS :=

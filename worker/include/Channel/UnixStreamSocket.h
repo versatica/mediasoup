@@ -20,6 +20,9 @@ namespace Channel
 		UnixStreamSocket(Listener* listener, int fd);
 		virtual ~UnixStreamSocket();
 
+	private:
+		void Reset();
+
 	/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		virtual void userOnUnixStreamRead(const MS_BYTE* data, size_t len) override;

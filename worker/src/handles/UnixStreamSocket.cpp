@@ -144,13 +144,10 @@ void UnixStreamSocket::Write(const MS_BYTE* data, size_t len)
 	// Error. Should not happen.
 	else if (written < 0)
 	{
-		MS_WARN("uv_try_write() failed: %s | closing the connection", uv_strerror(written));
+		MS_WARN("uv_try_write() failed: %s | closing the socket", uv_strerror(written));
 		Close();
 		return;
 	}
-
-	// TMP: remove this.
-	MS_DEBUG("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, len);
 
 	size_t pending_len = len - written;
 
