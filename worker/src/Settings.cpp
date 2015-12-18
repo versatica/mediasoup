@@ -27,14 +27,12 @@ struct Settings::Configuration Settings::configuration;
 std::map<std::string, unsigned int> Settings::string2LogLevel =
 {
 	{ "debug", MS_LOG_LEVEL_DEBUG },
-	{ "info",  MS_LOG_LEVEL_INFO  },
 	{ "warn",  MS_LOG_LEVEL_WARN  },
 	{ "error", MS_LOG_LEVEL_ERROR }
 };
 std::map<unsigned int, std::string> Settings::logLevel2String =
 {
 	{ MS_LOG_LEVEL_DEBUG, "debug" },
-	{ MS_LOG_LEVEL_INFO,  "info"  },
 	{ MS_LOG_LEVEL_WARN,  "warn"  },
 	{ MS_LOG_LEVEL_ERROR, "error" }
 };

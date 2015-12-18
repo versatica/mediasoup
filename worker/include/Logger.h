@@ -4,9 +4,9 @@
 #include "common.h"
 #include "Settings.h"
 #include <string>
-#include <cstdio>  // stdout, stderr, fflush()
+#include <cstdio>  // stdout, stderr, dprintf()
 #include <cstring>
-#include <cstdlib>  // std::_Exit(), std::abort()
+#include <cstdlib>  // std::_Exit(), std::abort(), std::genenv()
 #include <uv.h>
 
 /*
@@ -19,7 +19,6 @@
  *
  * 	  - MS_TRACE()     Shows current file/line/class/function.
  * 	  - MS_DEBUG(...)
- * 	  - MS_INFO(...)
  * 	  - MS_WARN(...)
  * 	  - MS_ERROR(...)
  * 	  - MS_ABORT(...)
@@ -51,6 +50,7 @@ public:
 
 public:
 	static std::string id;
+	static int fd;
 };
 
 /* Inline static methods. */
@@ -63,6 +63,8 @@ bool Logger::HasDebugLevel()
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
 
+#define _MS_LOG_SEPARATOR_CHAR "\f"
+
 #ifdef MS_DEVEL
 	#define _MS_LOG_STR "[%s] %s:%d | %s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
@@ -74,23 +76,11 @@ bool Logger::HasDebugLevel()
 	#define _MS_LOG_ARG ("id:" + Logger::id).c_str(), MS_CLASS, __FUNCTION__
 #endif
 
-#define _MS_TO_STDOUT()  \
-	std::fprintf(stdout, _MS_LOG_STR "\n", _MS_LOG_ARG);  \
-	fflush(stdout);
-
-#define _MS_TO_STDOUT_DESC(desc, ...)  \
-	std::fprintf(stdout, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
-	fflush(stdout);  \
-
-#define _MS_TO_STDERR_DESC(desc, ...)  \
-	std::fprintf(stderr, _MS_LOG_STR_DESC desc "\n", _MS_LOG_ARG, ##__VA_ARGS__);  \
-	fflush(stderr);  \
-
 #ifdef MS_DEVEL
 #define MS_TRACE()  \
 	do  \
 	{  \
-		_MS_TO_STDOUT();  \
+		dprintf(Logger::fd, "D" _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG);  \
 	}  \
 	while (0)
 #else
@@ -102,17 +92,7 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (MS_LOG_LEVEL_DEBUG == MS_GET_LOG_LEVEL)  \
 		{  \
-			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
-		}  \
-	}  \
-	while (0)
-
-#define MS_INFO(desc, ...)  \
-	do  \
-	{  \
-		if (MS_LOG_LEVEL_INFO <= MS_GET_LOG_LEVEL)  \
-		{  \
-			_MS_TO_STDOUT_DESC(desc, ##__VA_ARGS__);  \
+			dprintf(Logger::fd, "D" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -122,7 +102,7 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (MS_LOG_LEVEL_WARN <= MS_GET_LOG_LEVEL)  \
 		{  \
-			_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
+			dprintf(Logger::fd, "W" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
 		}  \
 	}  \
 	while (0)
@@ -130,14 +110,14 @@ bool Logger::HasDebugLevel()
 #define MS_ERROR(desc, ...)  \
 	do  \
 	{  \
-		_MS_TO_STDERR_DESC(desc, ##__VA_ARGS__);  \
+		dprintf(Logger::fd, "E" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
 	}  \
 	while (0)
 
 #define MS_EXIT_SUCCESS(desc, ...)  \
 	do  \
 	{  \
-		MS_INFO("SUCCESS EXIT | " desc, ##__VA_ARGS__);  \
+		MS_DEBUG("SUCCESS EXIT | " desc, ##__VA_ARGS__);  \
 		std::_Exit(EXIT_SUCCESS);  \
 	}  \
 	while (0)

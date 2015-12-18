@@ -56,7 +56,7 @@ public:
 
 /* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnTCPConnectionRead(const MS_BYTE* data, size_t len) = 0;
+	virtual void userOnTCPConnectionRead() = 0;
 
 private:
 	// Allocated by this:

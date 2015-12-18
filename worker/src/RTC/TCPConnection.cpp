@@ -25,12 +25,13 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void TCPConnection::userOnTCPConnectionRead(const MS_BYTE* data, size_t len)
+	void TCPConnection::userOnTCPConnectionRead()
 	{
 		MS_TRACE();
 
-		MS_DEBUG("%zu bytes received [local: %s : %u | remote: %s : %u]", len,
-			GetLocalIP().c_str(), (unsigned int)GetLocalPort(), GetPeerIP().c_str(), (unsigned int)GetPeerPort());
+		MS_DEBUG("data received [local: %s : %u | remote: %s : %u]",
+			GetLocalIP().c_str(), (unsigned int)GetLocalPort(),
+			GetPeerIP().c_str(), (unsigned int)GetPeerPort());
 
 		/*
 		 * Framing RFC 4571

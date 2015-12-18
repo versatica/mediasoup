@@ -20,17 +20,16 @@ namespace Channel
 		UnixStreamSocket(Listener* listener, int fd);
 		virtual ~UnixStreamSocket();
 
-	private:
-		void Reset();
-
 	/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
-		virtual void userOnUnixStreamRead(const MS_BYTE* data, size_t len) override;
+		virtual void userOnUnixStreamRead() override;
 		virtual void userOnUnixStreamSocketClosed(bool is_closed_by_peer) override;
 
 	private:
 		// Passed by argument:
 		Listener* listener = nullptr;
+		// Others:
+		size_t msgStart = 0;  // Where the latest message starts.
 	};
 }
 

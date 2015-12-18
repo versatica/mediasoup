@@ -53,7 +53,7 @@ int main(int argc, char* argv[], char** envp)
 	// Print configuration.
 	Settings::PrintConfiguration();
 
-	MS_INFO("starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
+	MS_DEBUG("starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
 
 	#if defined(MS_LITTLE_ENDIAN)
 		MS_DEBUG("detected Little-Endian CPU");

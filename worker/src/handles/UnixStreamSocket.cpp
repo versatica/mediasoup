@@ -240,7 +240,7 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 		this->bufferDataLen += (size_t)nread;
 
 		// Notify the subclass.
-		userOnUnixStreamRead((MS_BYTE*)buf->base, nread);
+		userOnUnixStreamRead();
 	}
 	// Peer disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
@@ -254,7 +254,7 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Some error.
 	else
 	{
-		MS_INFO("read error: %s | closing the pipe", uv_strerror(nread));
+		MS_DEBUG("read error: %s | closing the pipe", uv_strerror(nread));
 		this->hasError = true;
 
 		// Close the socket.
@@ -277,7 +277,7 @@ void UnixStreamSocket::onUvWriteError(int error)
 	}
 	else
 	{
-		MS_INFO("write error: %s | closing the pipe", uv_strerror(error));
+		MS_DEBUG("write error: %s | closing the pipe", uv_strerror(error));
 		this->hasError = true;
 	}
 
@@ -294,7 +294,7 @@ void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 	if (status == UV_EPIPE || status == UV_ENOTCONN || status == UV_ECANCELED)
 		MS_DEBUG("shutdown error: %s", uv_strerror(status));
 	else if (status)
-		MS_INFO("shutdown error: %s", uv_strerror(status));
+		MS_DEBUG("shutdown error: %s", uv_strerror(status));
 
 	// Now do close the handle.
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);

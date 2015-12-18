@@ -344,7 +344,7 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 	// Some error.
 	else
 	{
-		MS_INFO("read error: %s", uv_strerror(nread));
+		MS_DEBUG("read error: %s", uv_strerror(nread));
 	}
 }
 
@@ -356,7 +356,7 @@ void UDPSocket::onUvSendError(int error)
 	if (this->isClosing)
 		return;
 
-	MS_INFO("send error: %s", uv_strerror(error));
+	MS_DEBUG("send error: %s", uv_strerror(error));
 }
 
 inline

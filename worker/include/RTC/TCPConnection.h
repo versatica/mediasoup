@@ -26,7 +26,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from ::TCPConnection. */
 	public:
-		virtual void userOnTCPConnectionRead(const MS_BYTE* data, size_t len) override;
+		virtual void userOnTCPConnectionRead() override;
 
 	private:
 		// Passed by argument:
