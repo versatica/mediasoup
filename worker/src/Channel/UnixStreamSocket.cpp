@@ -13,10 +13,6 @@
 
 namespace Channel
 {
-	/* Singletons. */
-
-	UnixStreamSocket* channel = nullptr;
-
 	/* Static variables. */
 
 	MS_BYTE UnixStreamSocket::writeBuffer[MESSAGE_MAX_SIZE];
@@ -28,10 +24,6 @@ namespace Channel
 		listener(listener)
 	{
 		MS_TRACE();
-
-		// Store a singleton.
-		MS_ASSERT(Channel::channel == nullptr, "Channel singleton already set");
-		Channel::channel = this;
 	}
 
 	UnixStreamSocket::~UnixStreamSocket()
@@ -163,7 +155,7 @@ namespace Channel
 				MS_THROW_ERROR("invalid JSON");
 			}
 
-			Channel::Request* request = Request::Factory(json);
+			Channel::Request* request = Request::Factory(this, json);
 
 			if (request)
 			{
@@ -181,6 +173,7 @@ namespace Channel
 					request->Reply(500);
 				}
 
+				// Delete the Request.
 				delete request;
 			}
 			else

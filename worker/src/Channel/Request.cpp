@@ -1,14 +1,13 @@
 #define MS_CLASS "Channel::Request"
 
 #include "Channel/Request.h"
-#include "Channel/UnixStreamSocket.h"
 #include "Logger.h"
 
 namespace Channel
 {
 	/* Static methods. */
 
-	Channel::Request* Request::Factory(Json::Value& msg)
+	Channel::Request* Request::Factory(Channel::UnixStreamSocket* channel, Json::Value& msg)
 	{
 		MS_TRACE();
 
@@ -23,12 +22,13 @@ namespace Channel
 		std::string id = msg["id"].asString();
 		std::string method = msg["method"].asString();
 
-		return new Request(id, method, msg["data"]);
+		return new Request(channel, id, method, msg["data"]);
 	}
 
 	/* Instance methods. */
 
-	Request::Request(std::string& id, std::string& method, Json::Value& data) :
+	Request::Request(Channel::UnixStreamSocket* channel, std::string& id, std::string& method, Json::Value& data) :
+		channel(channel),
 		id(id),
 		method(method),
 		data(data)
@@ -45,11 +45,19 @@ namespace Channel
 	{
 		MS_TRACE();
 
+		if (this->replied)
+		{
+			MS_ERROR("already replied");
+
+			return;
+		}
+		this->replied = true;
+
 		Json::Value json;
 
 		json["id"] = this->id;
 		json["status"] = status;
 
-		Channel::channel->Send(json);
+		this->channel->Send(json);
 	}
 }

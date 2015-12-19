@@ -37,9 +37,6 @@ namespace Channel
 		// Others:
 		size_t msgStart = 0;  // Where the latest message starts.
 	};
-
-	// Channel singleton.
-	extern UnixStreamSocket* channel;
 }
 
 #endif
