@@ -21,6 +21,7 @@
     "check-types": "^5.1.0",
     "debug": "^2.2.0",
     "netstring": "^0.3.0",
+    "random-number": "0.0.6",
     "random-string": "^0.1.2"
   },
   "devDependencies": {
@@ -28,6 +29,7 @@
     "gulp-jscs": "^3.0.2",
     "gulp-jscs-stylish": "^1.2.1",
     "gulp-jshint": "^2.0.0",
+    "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1"
   }
 }
