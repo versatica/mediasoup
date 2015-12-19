@@ -4,6 +4,7 @@
 #include "common.h"
 #include "handles/SignalsHandler.h"
 #include "Channel/UnixStreamSocket.h"
+#include "Channel/Request.h"
 
 class Loop :
 	public SignalsHandler::Listener,
@@ -23,7 +24,8 @@ public:
 
 /* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
-	virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* unixSocket) override;
+	virtual void onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
+	virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
 
 private:
 	// Allocated by this.

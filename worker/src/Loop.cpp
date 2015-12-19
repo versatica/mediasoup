@@ -90,7 +90,24 @@ void Loop::onSignalsHandlerClosed(SignalsHandler* signalsHandler)
 	MS_TRACE();
 }
 
-void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* unixSocket)
+void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request)
+{
+	MS_TRACE();
+
+	char ch = request->id.back();
+
+	if (ch > 'm')
+	{
+		// jsonResponse["data"] = "🐮🐷🐣😡";
+		request->Reply(200);
+	}
+	else
+	{
+		request->Reply(500);
+	}
+}
+
+void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* socket)
 {
 	MS_TRACE();
 

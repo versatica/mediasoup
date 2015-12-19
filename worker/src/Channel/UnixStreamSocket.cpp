@@ -1,7 +1,6 @@
 #define MS_CLASS "Channel::UnixStreamSocket"
 
 #include "Channel/UnixStreamSocket.h"
-#include "Channel/Request.h"
 #include "Logger.h"
 #include "MediaSoupError.h"
 #include <netstring.h>
@@ -159,19 +158,8 @@ namespace Channel
 
 			if (request)
 			{
-				// TODO: JEJE
-
-				char ch = request->id.back();
-
-				if (ch > 'm')
-				{
-					// jsonResponse["data"] = "🐮🐷🐣😡";
-					request->Reply(200);
-				}
-				else
-				{
-					request->Reply(500);
-				}
+				// Notify the listener.
+				this->listener->onChannelRequest(this, request);
 
 				// Delete the Request.
 				delete request;

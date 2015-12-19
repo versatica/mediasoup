@@ -3,18 +3,22 @@
 
 #include "common.h"
 #include "handles/UnixStreamSocket.h"
+#include "Channel/Request.h"
 #include <json/json.h>
 
 namespace Channel
 {
+	// Avoid cyclic #include problem.
+	class Request;
+
 	class UnixStreamSocket : public ::UnixStreamSocket
 	{
 	public:
 		class Listener
 		{
 		public:
-			// virtual void onControlMessage(Channel::UnixStreamSocket* unixSocket, const MS_BYTE* raw, size_t len) = 0;
-			virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* unixSocket) = 0;
+			virtual void onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
+			virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
 		};
 
 	private:

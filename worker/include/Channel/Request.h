@@ -7,6 +7,9 @@
 
 namespace Channel
 {
+	// Avoid cyclic #include problem.
+	class UnixStreamSocket;
+
 	class Request
 	{
 	public:
