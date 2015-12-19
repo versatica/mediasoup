@@ -32,7 +32,7 @@
  */
 int netstring_read(char *buffer, size_t buffer_length,
 		   char **netstring_start, size_t *netstring_length) {
-  int i;
+  size_t i;
   size_t len = 0;
 
   /* Write default values for outputs */

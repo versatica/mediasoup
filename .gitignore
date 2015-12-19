@@ -1,5 +1,5 @@
 /node_modules/
-/worker/**/*.o
+*.o
 /worker/bin/
 /worker/cldoc/
 /worker/mediasoup-tester.sh

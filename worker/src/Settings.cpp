@@ -51,7 +51,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Variables for getopt. */
 
 	extern char *optarg;
-	extern int optind, opterr, optopt;
+	extern int opterr, optopt;
 	int c;
 	int option_index = 0;
 	std::string value_string;
