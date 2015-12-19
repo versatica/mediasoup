@@ -94,16 +94,26 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 {
 	MS_TRACE();
 
-	char ch = request->id.back();
-
-	if (ch > 'm')
+	if (request->id < 25000)
 	{
-		// jsonResponse["data"] = "🐮🐷🐣😡";
-		request->Reply(200);
+		request->Accept();
+	}
+	else if (request->id < 50000)
+	{
+		Json::Value data;
+
+		data["jojojo"] = "🐮🐷🐣😡";
+		request->Accept(data);
+	}
+	else if (request->id < 75000)
+	{
+		std::string reason = "this is a std::string reason";
+
+		request->Reject(400, reason);
 	}
 	else
 	{
-		request->Reply(500);
+		request->Reject(500, "this is a char* reason");
 	}
 }
 
