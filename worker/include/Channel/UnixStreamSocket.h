@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "handles/UnixStreamSocket.h"
+#include <json/json.h>
 
 namespace Channel
 {
@@ -16,9 +17,14 @@ namespace Channel
 			// virtual void onControlUnixStreamSocketClosed(Channel::UnixStreamSocket* unixSocket, bool is_closed_by_peer) = 0;
 		};
 
+	private:
+		static MS_BYTE writeBuffer[];
+
 	public:
 		UnixStreamSocket(Listener* listener, int fd);
 		virtual ~UnixStreamSocket();
+
+		void Send(Json::Value &json);
 
 	/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:

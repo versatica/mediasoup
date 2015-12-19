@@ -2,14 +2,19 @@
 
 #include "Channel/UnixStreamSocket.h"
 #include "Logger.h"
-#include <json/json.h>
 #include <netstring.h>
 #include <cstring>  // std::memmove()
-#
-#define MESSAGE_MAX_SIZE 65536  // TODO: set proper buffer size
+#include <cmath>  // std::ceil()
+#include <cstdio>  // sprintf()
+
+#define MESSAGE_MAX_SIZE 65536
 
 namespace Channel
 {
+	/* Static variables. */
+
+	MS_BYTE UnixStreamSocket::writeBuffer[MESSAGE_MAX_SIZE];
+
 	/* Instance methods. */
 
 	UnixStreamSocket::UnixStreamSocket(Listener* listener, int fd) :
@@ -22,6 +27,43 @@ namespace Channel
 	UnixStreamSocket::~UnixStreamSocket()
 	{
 		MS_TRACE();
+	}
+
+	void UnixStreamSocket::Send(Json::Value &json)
+	{
+		MS_TRACE();
+
+		Json::FastWriter fastWriter;
+
+		fastWriter.dropNullPlaceholders();
+		fastWriter.omitEndingLineFeed();
+
+		// Write("VALID JSON MAN !!!!:");
+		// Write(std::string("---BEGIN---").append(fastWriter.write(json)).append("---JEJE---"));
+
+		size_t ns_num_len;
+		std::string ns_payload = fastWriter.write(json);
+		size_t ns_payload_len = ns_payload.length();
+		size_t ns_len;
+
+		if (ns_payload_len == 0)
+		{
+			ns_num_len = 1;
+			UnixStreamSocket::writeBuffer[0] = '0';
+			UnixStreamSocket::writeBuffer[1] = ':';
+			UnixStreamSocket::writeBuffer[2] = ',';
+		}
+		else
+		{
+		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
+		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%lu:", (unsigned long)ns_payload_len);
+		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload.c_str(), ns_payload_len);
+		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+		}
+
+		ns_len = ns_num_len + ns_payload_len + 2;
+
+		Write(UnixStreamSocket::writeBuffer, ns_len);
 	}
 
 	void UnixStreamSocket::userOnUnixStreamRead()
@@ -50,8 +92,8 @@ namespace Channel
 						// Check if the buffer is full.
 						if (this->bufferDataLen == this->bufferSize)
 						{
-							// First case: the uncomplete message does not begin at position 0 of
-							// the buffer, so move the uncomplete message to the position 0.
+							// First case: the incomplete message does not begin at position 0 of
+							// the buffer, so move the incomplete message to the position 0.
 							if (this->msgStart != 0)
 							{
 								MS_ERROR("no more space in the buffer, moving parsed bytes to the beginning of the buffer and waiting for more data");
@@ -60,7 +102,7 @@ namespace Channel
 								this->msgStart = 0;
 								this->bufferDataLen = read_len;
 							}
-							// Second case: the uncomplete message begins at position 0 of the buffer.
+							// Second case: the incomplete message begins at position 0 of the buffer.
 							// The message is too big, so discard it.
 							else
 							{
@@ -114,9 +156,26 @@ namespace Channel
 			{
 				MS_DEBUG("jsoncpp: IT IS VALID JSON:\n%s", json.toStyledString().c_str());
 
-				Write("VALID JSON MAN !!!!:");
-				Write(json.toStyledString());
+				Json::Value jsonResponse;
 
+				jsonResponse["id"] = json["id"];
+
+				char ch = json["id"].asString().back();
+
+				if (ch > 'm')
+				{
+					jsonResponse["status"] = 200;
+					jsonResponse["reason"] = "OK";
+					jsonResponse["data"] = "🐮🐷🐣😡";
+				}
+				else
+				{
+					jsonResponse["status"] = 500;
+					jsonResponse["reason"] = "ERROR";
+					jsonResponse["data"] = "ERROR JODER !!!!!!";
+				}
+
+				Send(jsonResponse);
 
 				// TODO: process it
 			}

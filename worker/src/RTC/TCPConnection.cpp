@@ -134,7 +134,7 @@ namespace RTC
 				// Check if the buffer is full.
 				if (this->bufferDataLen == this->bufferSize)
 				{
-					// First case: the uncomplete frame does not begin at position 0 of
+					// First case: the incomplete frame does not begin at position 0 of
 					// the buffer, so move the frame to the position 0.
 					if (this->frameStart != 0)
 					{
@@ -144,7 +144,7 @@ namespace RTC
 						this->bufferDataLen = this->bufferSize - this->frameStart;
 						this->frameStart = 0;
 					}
-					// Second case: the uncomplete frame begins at position 0 of the buffer.
+					// Second case: the incomplete frame begins at position 0 of the buffer.
 					// The frame is too big, so close the connection.
 					else
 					{
