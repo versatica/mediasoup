@@ -58,7 +58,6 @@ DEP_SOURCES += ./deps/netstring-c/netstring.cpp
 DEP_HEADERS_DIRS :=
 DEP_HEADERS_DIRS += ./submodules/jsoncpp/dist
 DEP_HEADERS_DIRS += ./submodules/usrsctp/usrsctplib
-DEP_HEADERS_DIRS += ./submodules/picojson
 DEP_HEADERS_DIRS += ./deps/netstring-c
 
 # Dependencies static libraries to link with.
@@ -77,7 +76,7 @@ CPPFLAGS += $(shell pkg-config --cflags "$(PKG_LIBS)")
 # CXXFLAGS gives a list of flags that should be passed to the C++ compiler (use
 # this, for example, to set the version of the C++ language, to specify the
 # warning settings, or for other options specific to the C++ compiler).
-CXXFLAGS += -std=c++11 -Wall $(DEV_FLAGS)
+CXXFLAGS += -std=c++14 -Wall $(DEV_FLAGS)
 
 # LDFLAGS are used when linking, this will cause the appropriate flags to
 # be passed to the linker.
