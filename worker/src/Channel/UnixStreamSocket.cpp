@@ -79,8 +79,8 @@ namespace Channel
 			int ns_ret = netstring_read((char*)(this->buffer + this->msgStart), read_len,
 				&json_start, &json_len);
 
-			std::string kk1((const char*)(this->buffer + this->msgStart), read_len);
-			MS_WARN("* loop data: <%s>", kk1.c_str());
+			// std::string kk1((const char*)(this->buffer + this->msgStart), read_len);
+			// MS_WARN("* loop data: <%s>", kk1.c_str());
 
 			if (ns_ret != 0)
 			{
@@ -154,7 +154,12 @@ namespace Channel
 
 			if (reader.parse((const char*)json_start, (const char*)json_start + json_len, json))
 			{
-				MS_DEBUG("jsoncpp: IT IS VALID JSON:\n%s", json.toStyledString().c_str());
+				Json::FastWriter fastWriter;
+
+				fastWriter.dropNullPlaceholders();
+				fastWriter.omitEndingLineFeed();
+
+				MS_DEBUG("jsoncpp VALID JSON: %s", fastWriter.write(json).c_str());
 
 				Json::Value jsonResponse;
 
