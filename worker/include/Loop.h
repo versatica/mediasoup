@@ -21,6 +21,10 @@ public:
 	virtual void onSignal(SignalsHandler* signalsHandler, int signum) override;
 	virtual void onSignalsHandlerClosed(SignalsHandler* signalsHandler) override;
 
+/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
+public:
+	virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* unixSocket) override;
+
 private:
 	// Allocated by this.
 	SignalsHandler* signalsHandler = nullptr;

@@ -1,7 +1,9 @@
 #define MS_CLASS "Channel::UnixStreamSocket"
 
 #include "Channel/UnixStreamSocket.h"
+#include "Channel/Request.h"
 #include "Logger.h"
+#include "MediaSoupError.h"
 #include <netstring.h>
 #include <cstring>  // std::memmove()
 #include <cmath>  // std::ceil()
@@ -11,6 +13,10 @@
 
 namespace Channel
 {
+	/* Singletons. */
+
+	UnixStreamSocket* channel = nullptr;
+
 	/* Static variables. */
 
 	MS_BYTE UnixStreamSocket::writeBuffer[MESSAGE_MAX_SIZE];
@@ -22,6 +28,10 @@ namespace Channel
 		listener(listener)
 	{
 		MS_TRACE();
+
+		// Store a singleton.
+		MS_ASSERT(Channel::channel == nullptr, "Channel singleton already set");
+		Channel::channel = this;
 	}
 
 	UnixStreamSocket::~UnixStreamSocket()
@@ -29,20 +39,19 @@ namespace Channel
 		MS_TRACE();
 	}
 
-	void UnixStreamSocket::Send(Json::Value &json)
+	void UnixStreamSocket::Send(Json::Value &msg)
 	{
 		MS_TRACE();
+
+		// TODO: check MESSAGE_MAX_SIZE.
 
 		Json::FastWriter fastWriter;
 
 		fastWriter.dropNullPlaceholders();
 		fastWriter.omitEndingLineFeed();
 
-		// Write("VALID JSON MAN !!!!:");
-		// Write(std::string("---BEGIN---").append(fastWriter.write(json)).append("---JEJE---"));
-
 		size_t ns_num_len;
-		std::string ns_payload = fastWriter.write(json);
+		std::string ns_payload = fastWriter.write(msg);
 		size_t ns_payload_len = ns_payload.length();
 		size_t ns_len;
 
@@ -79,15 +88,12 @@ namespace Channel
 			int ns_ret = netstring_read((char*)(this->buffer + this->msgStart), read_len,
 				&json_start, &json_len);
 
-			// std::string kk1((const char*)(this->buffer + this->msgStart), read_len);
-			// MS_WARN("* loop data: <%s>", kk1.c_str());
-
 			if (ns_ret != 0)
 			{
 				switch (ns_ret)
 				{
 					case NETSTRING_ERROR_TOO_SHORT:
-						MS_ERROR("received netstring is too short, need more data");
+						MS_DEBUG("received netstring is too short, need more data");
 
 						// Check if the buffer is full.
 						if (this->bufferDataLen == this->bufferSize)
@@ -96,7 +102,7 @@ namespace Channel
 							// the buffer, so move the incomplete message to the position 0.
 							if (this->msgStart != 0)
 							{
-								MS_ERROR("no more space in the buffer, moving parsed bytes to the beginning of the buffer and waiting for more data");
+								MS_DEBUG("no more space in the buffer, moving parsed bytes to the beginning of the buffer and waiting for more data");
 
 								std::memmove(this->buffer, this->buffer + this->msgStart, read_len);
 								this->msgStart = 0;
@@ -118,23 +124,23 @@ namespace Channel
 						return;
 
 					case NETSTRING_ERROR_TOO_LONG:
-						MS_ERROR("NETSTRING_ERROR_TOO_LONG");
+						MS_THROW_ERROR("NETSTRING_ERROR_TOO_LONG");
 						break;
 
 					case NETSTRING_ERROR_NO_COLON:
-						MS_ERROR("NETSTRING_ERROR_NO_COLON");
+						MS_THROW_ERROR("NETSTRING_ERROR_NO_COLON");
 						break;
 
 					case NETSTRING_ERROR_NO_COMMA:
-						MS_ERROR("NETSTRING_ERROR_NO_COMMA");
+						MS_THROW_ERROR("NETSTRING_ERROR_NO_COMMA");
 						break;
 
 					case NETSTRING_ERROR_LEADING_ZERO:
-						MS_ERROR("NETSTRING_ERROR_LEADING_ZERO");
+						MS_THROW_ERROR("NETSTRING_ERROR_LEADING_ZERO");
 						break;
 
 					case NETSTRING_ERROR_NO_LENGTH:
-						MS_ERROR("NETSTRING_ERROR_NO_LENGTH");
+						MS_THROW_ERROR("NETSTRING_ERROR_NO_LENGTH");
 						break;
 				}
 
@@ -152,50 +158,42 @@ namespace Channel
 			Json::Value json;
 			Json::Reader reader;
 
-			if (reader.parse((const char*)json_start, (const char*)json_start + json_len, json))
+			if (!reader.parse((const char*)json_start, (const char*)json_start + json_len, json))
 			{
-				Json::FastWriter fastWriter;
+				MS_THROW_ERROR("invalid JSON");
+			}
 
-				fastWriter.dropNullPlaceholders();
-				fastWriter.omitEndingLineFeed();
+			Channel::Request* request = Request::Factory(json);
 
-				MS_DEBUG("jsoncpp VALID JSON: %s", fastWriter.write(json).c_str());
+			if (request)
+			{
+				// TODO: JEJE
 
-				Json::Value jsonResponse;
-
-				jsonResponse["id"] = json["id"];
-
-				char ch = json["id"].asString().back();
+				char ch = request->id.back();
 
 				if (ch > 'm')
 				{
-					jsonResponse["status"] = 200;
-					jsonResponse["reason"] = "OK";
-					jsonResponse["data"] = "🐮🐷🐣😡";
+					// jsonResponse["data"] = "🐮🐷🐣😡";
+					request->Reply(200);
 				}
 				else
 				{
-					jsonResponse["status"] = 500;
-					jsonResponse["reason"] = "ERROR";
-					jsonResponse["data"] = "ERROR JODER !!!!!!";
+					request->Reply(500);
 				}
 
-				Send(jsonResponse);
-
-				// TODO: process it
+				delete request;
 			}
 			else
 			{
-				MS_ERROR("jsoncpp: INVALID JSON !!!!");
-
-				MS_ASSERT(1 != 2, "--------- INVALID JSON !!!");
+				// TODO: throw?
+				MS_ERROR("discarding wrong Channel request");
 			}
 
 			// If there is no more space available in the buffer and that is because
 			// the latest parsed message filled it, then empty the full buffer.
 			if ((this->msgStart + read_len) == this->bufferSize)
 			{
-				MS_ERROR("no more space in the buffer, emptying the buffer data");
+				MS_DEBUG("no more space in the buffer, emptying the buffer data");
 
 				this->msgStart = 0;
 				this->bufferDataLen = 0;
@@ -211,7 +209,7 @@ namespace Channel
 			// then parse again. Otherwise break here and wait for more data.
 			if (this->bufferDataLen > this->msgStart)
 			{
-				MS_ERROR("there is more data after the parsed message, continue parsing");
+				MS_DEBUG("there is more data after the parsed message, continue parsing");
 				continue;
 			}
 			else
@@ -225,7 +223,10 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		// Notify the listener.
-		// this->listener->onChannelUnixStreamSocketClosed(this, is_closed_by_peer);
+		if (is_closed_by_peer)
+		{
+			// Notify the listener.
+			this->listener->onChannelUnixStreamSocketRemotelyClosed(this);
+		}
 	}
 }

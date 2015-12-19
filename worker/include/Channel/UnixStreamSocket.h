@@ -14,7 +14,7 @@ namespace Channel
 		{
 		public:
 			// virtual void onControlMessage(Channel::UnixStreamSocket* unixSocket, const MS_BYTE* raw, size_t len) = 0;
-			// virtual void onControlUnixStreamSocketClosed(Channel::UnixStreamSocket* unixSocket, bool is_closed_by_peer) = 0;
+			virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* unixSocket) = 0;
 		};
 
 	private:
@@ -37,6 +37,9 @@ namespace Channel
 		// Others:
 		size_t msgStart = 0;  // Where the latest message starts.
 	};
+
+	// Channel singleton.
+	extern UnixStreamSocket* channel;
 }
 
 #endif

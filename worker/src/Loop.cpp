@@ -89,3 +89,16 @@ void Loop::onSignalsHandlerClosed(SignalsHandler* signalsHandler)
 {
 	MS_TRACE();
 }
+
+void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* unixSocket)
+{
+	MS_TRACE();
+
+	// When mediasoup Node process ends it sends a SIGTERM to us so we close this
+	// pipe. If the pipe is remotely closed it means that mediasoup Node process
+	// abrutly died so we must die.
+
+	MS_ERROR("Channel remotely closed, killing myself");
+
+	Close();
+}
