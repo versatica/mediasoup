@@ -8,7 +8,7 @@
 
 namespace RTC
 {
-	class Peer : RTC::Transport::Listener
+	class Peer : public RTC::Transport::Listener
 	{
 	public:
 		class Listener
@@ -34,10 +34,10 @@ namespace RTC
 		virtual void onRTCPPacket(RTC::Transport* transport, RTC::RTCPPacket* packet) override;
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Listener* listener = nullptr;
 		void* userData = nullptr;
-		// Others:
+		// Others.
 		RTC::Transport* transport = nullptr;
 	};
 
@@ -54,6 +54,6 @@ namespace RTC
 	{
 		return this->userData;
 	}
-}  // namespace RTC
+}
 
 #endif

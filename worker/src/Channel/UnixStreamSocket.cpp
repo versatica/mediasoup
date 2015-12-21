@@ -8,7 +8,8 @@
 #include <cmath>  // std::ceil()
 #include <cstdio>  // sprintf()
 
-#define MESSAGE_MAX_SIZE 65536
+// netstring length for a 65536 bytes payload
+#define MESSAGE_MAX_SIZE 65543
 
 namespace Channel
 {
@@ -23,6 +24,8 @@ namespace Channel
 		listener(listener)
 	{
 		MS_TRACE();
+
+		MS_ERROR("---- MAX NS: %lu", netstring_buffer_size(MESSAGE_MAX_SIZE));
 	}
 
 	UnixStreamSocket::~UnixStreamSocket()
@@ -115,23 +118,23 @@ namespace Channel
 						return;
 
 					case NETSTRING_ERROR_TOO_LONG:
-						MS_THROW_ERROR("NETSTRING_ERROR_TOO_LONG");
+						MS_ERROR("NETSTRING_ERROR_TOO_LONG");
 						break;
 
 					case NETSTRING_ERROR_NO_COLON:
-						MS_THROW_ERROR("NETSTRING_ERROR_NO_COLON");
+						MS_ERROR("NETSTRING_ERROR_NO_COLON");
 						break;
 
 					case NETSTRING_ERROR_NO_COMMA:
-						MS_THROW_ERROR("NETSTRING_ERROR_NO_COMMA");
+						MS_ERROR("NETSTRING_ERROR_NO_COMMA");
 						break;
 
 					case NETSTRING_ERROR_LEADING_ZERO:
-						MS_THROW_ERROR("NETSTRING_ERROR_LEADING_ZERO");
+						MS_ERROR("NETSTRING_ERROR_LEADING_ZERO");
 						break;
 
 					case NETSTRING_ERROR_NO_LENGTH:
-						MS_THROW_ERROR("NETSTRING_ERROR_NO_LENGTH");
+						MS_ERROR("NETSTRING_ERROR_NO_LENGTH");
 						break;
 				}
 
@@ -149,25 +152,26 @@ namespace Channel
 			Json::Value json;
 			Json::Reader reader;
 
-			if (!reader.parse((const char*)json_start, (const char*)json_start + json_len, json))
+			if (reader.parse((const char*)json_start, (const char*)json_start + json_len, json))
 			{
-				MS_THROW_ERROR("invalid JSON");
-			}
+				Channel::Request* request = Request::Factory(this, json);
 
-			Channel::Request* request = Request::Factory(this, json);
+				if (request)
+				{
+					// Notify the listener.
+					this->listener->onChannelRequest(this, request);
 
-			if (request)
-			{
-				// Notify the listener.
-				this->listener->onChannelRequest(this, request);
-
-				// Delete the Request.
-				delete request;
+					// Delete the Request.
+					delete request;
+				}
+				else
+				{
+					MS_ERROR("discarding wrong Channel request");
+				}
 			}
 			else
 			{
-				// TODO: throw?
-				MS_ERROR("discarding wrong Channel request");
+				MS_ERROR("invalid JSON");
 			}
 
 			// If there is no more space available in the buffer and that is because

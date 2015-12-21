@@ -20,17 +20,16 @@ namespace RTC
 		MS_TRACE();
 
 		// TMP
+		// for (int i = 1; i <= NUM_PEERS; i++)
+		// {
+		// 	RTC::Peer* peer = new RTC::Peer(this);
 
-		for (int i = 1; i <= NUM_PEERS; i++)
-		{
-			RTC::Peer* peer = new RTC::Peer(this);
+		// 	// TODO: this is not being freed
+		// 	int* data = new int(i);
+		// 	peer->SetUserData((void*)data);
 
-			// TODO: this is not being freed
-			int* data = new int(i);
-			peer->SetUserData((void*)data);
-
-			this->peers.push_back(peer);
-		}
+		// 	this->peers.push_back(peer);
+		// }
 	}
 
 	Room::~Room()
@@ -42,6 +41,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Close all the Peers.
 		for (auto peer : this->peers)
 			peer->Close();
 
@@ -114,4 +114,4 @@ namespace RTC
 			// dst_peer->SendRTCPPacket(packet);
 		// }
 	}
-}  // namespace RTC
+}

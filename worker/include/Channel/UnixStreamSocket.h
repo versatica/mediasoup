@@ -36,9 +36,9 @@ namespace Channel
 		virtual void userOnUnixStreamSocketClosed(bool is_closed_by_peer) override;
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Listener* listener = nullptr;
-		// Others:
+		// Others.
 		size_t msgStart = 0;  // Where the latest message starts.
 	};
 }

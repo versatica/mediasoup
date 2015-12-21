@@ -38,7 +38,7 @@ namespace RTC
 		void Close();
 
 	private:
-		// Allocated by this:
+		// Allocated by this.
 		srtp_t session = nullptr;
 		// Others:
 		err_status_t lastError = (err_status_t)0;
@@ -56,6 +56,6 @@ namespace RTC
 
 		return error_string;
 	}
-}  // namespace RTC
+}
 
 #endif

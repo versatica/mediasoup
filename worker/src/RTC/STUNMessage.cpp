@@ -629,4 +629,4 @@ namespace RTC
 			MS_DEBUG("- has Fingerprint");
 		MS_DEBUG("[/STUNMessage]");
 	}
-}  // namespace RTC
+}

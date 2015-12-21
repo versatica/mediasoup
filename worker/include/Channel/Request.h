@@ -26,12 +26,12 @@ namespace Channel
 		void Reject(unsigned int status, const char* reason = nullptr);
 
 	public:
-		// Passed by argument:
+		// Passed by argument.
 		Channel::UnixStreamSocket* channel = nullptr;
 		unsigned int id;
 		std::string method;
 		Json::Value data;
-		// Others:
+		// Others.
 		bool replied = false;
 	};
 }

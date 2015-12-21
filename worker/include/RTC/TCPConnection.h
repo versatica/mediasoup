@@ -29,11 +29,11 @@ namespace RTC
 		virtual void userOnTCPConnectionRead() override;
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Reader* reader = nullptr;
-		// Others:
+		// Others.
 		size_t frameStart = 0;  // Where the latest frame starts.
 	};
-}  // namespace RTC
+}
 
 #endif

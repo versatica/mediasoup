@@ -47,11 +47,11 @@ public:
 	virtual void onTCPConnectionClosed(TCPConnection* connection, bool is_closed_by_peer);
 
 private:
-	// Allocated by this (may be passed by argument):
+	// Allocated by this (may be passed by argument).
 	uv_tcp_t* uvHandle = nullptr;
-	// Passed by argument:
+	// Passed by argument.
 	void* userData = nullptr;
-	// Others:
+	// Others.
 	typedef std::unordered_set<TCPConnection*> TCPConnections;
 	TCPConnections connections;
 	bool isClosing = false;

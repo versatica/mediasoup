@@ -36,7 +36,7 @@ namespace RTC
 		size_t GetLength();
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		CommonHeader* header = nullptr;
 		MS_BYTE* raw = nullptr;
 		size_t length = 0;
@@ -75,6 +75,6 @@ namespace RTC
 	{
 		return this->length;
 	}
-}  // namespace RTC
+}
 
 #endif

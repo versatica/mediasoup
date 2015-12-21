@@ -70,9 +70,9 @@ private:
 	bool hasError = false;
 
 protected:
-	// Allocated by this:
+	// Allocated by this.
 	MS_BYTE* buffer = nullptr;
-	// Passed by argument:
+	// Passed by argument.
 	size_t bufferSize = 0;
 	// Others.
 	size_t bufferDataLen = 0;

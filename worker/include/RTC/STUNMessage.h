@@ -93,13 +93,13 @@ namespace RTC
 		void Dump();
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Class klass;  // 2 bytes.
 		Method method;  // 2 bytes.
 		const MS_BYTE* transactionId = nullptr;  // 12 bytes.
 		MS_BYTE* raw = nullptr;  // Allocated when Serialize().
 		size_t length = 0;  // The full message size (including header).
-		// Others:
+		// Others.
 		bool isSerialized = false;
 		// STUN attributes.
 		std::string username;  // Less than 513 bytes.
@@ -269,6 +269,6 @@ namespace RTC
 	{
 		return this->hasFingerprint;
 	}
-}  // namespace RTC
+}
 
 #endif

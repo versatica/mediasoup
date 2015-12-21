@@ -35,10 +35,10 @@ namespace RTC
 		void Close();
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Listener* listener = nullptr;
 		void* userData = nullptr;
-		// Others:
+		// Others.
 		std::string localUsername;
 		std::string localPassword;
 	};
@@ -68,6 +68,6 @@ namespace RTC
 	{
 		return this->userData;
 	}
-}  // namespace RTC
+}
 
 #endif

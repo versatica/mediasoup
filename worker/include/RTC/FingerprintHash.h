@@ -12,6 +12,6 @@ namespace RTC
 		SHA384,
 		SHA512
 	};
-}  // namespace RTC
+}
 
 #endif

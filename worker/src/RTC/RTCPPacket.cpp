@@ -36,4 +36,4 @@ namespace RTC
 	{
 		MS_TRACE();
 	}
-}  // namespace RTC
+}

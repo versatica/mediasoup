@@ -386,4 +386,4 @@ namespace RTC
 		else if (this->localAddr.ss_family == AF_INET6)
 			RTC::UDPSocket::availableIPv6Ports[this->localPort] = true;
 	}
-}  // namespace RTC
+}

@@ -233,4 +233,4 @@ namespace RTC
 		MS_DEBUG("- Payload size: %zu bytes", GetPayloadLength());
 		MS_DEBUG("[/RTPPacket]");
 	}
-}  // namespace RTC
+}

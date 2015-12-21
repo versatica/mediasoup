@@ -60,8 +60,16 @@ void Loop::Close()
 	// Close the SignalsHandler.
 	this->signalsHandler->Close();
 
-	// Close the Channel socket
+	// Close the Channel socket.
 	this->channel->Close();
+
+	// Close all the Rooms.
+	for (auto& kv : this->rooms)
+	{
+		RTC::Room* room = kv.second;
+
+		room->Close();
+	}
 }
 
 void Loop::onSignal(SignalsHandler* signalsHandler, int signum)

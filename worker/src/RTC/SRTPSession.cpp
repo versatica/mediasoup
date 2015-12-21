@@ -213,4 +213,4 @@ namespace RTC
 
 		delete this;
 	}
-}  // namespace RTC
+}

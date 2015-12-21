@@ -32,12 +32,12 @@ namespace RTC
 		void Dump();
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		RTC::UDPSocket* udpSocket = nullptr;
 		struct sockaddr* udpRemoteAddr = nullptr;
 		sockaddr_storage udpRemoteAddrStorage;
 		RTC::TCPConnection* tcpConnection = nullptr;
-		// Others:
+		// Others.
 		Type type;
 	};
 
@@ -118,6 +118,6 @@ namespace RTC
 		if (this->type == Type::TCP)
 			this->tcpConnection->Close();
 	}
-}  // namespace RTC
+}
 
 #endif

@@ -49,7 +49,7 @@ namespace RTC
 		virtual void userOnTCPServerClosed() override;
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Listener* listener = nullptr;
 		RTC::TCPConnection::Reader* reader = nullptr;
 	};
@@ -62,6 +62,6 @@ namespace RTC
 		this->listener = listener;
 		this->reader = reader;
 	}
-}  // namespace RTC
+}
 
 #endif

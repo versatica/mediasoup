@@ -66,7 +66,7 @@ namespace RTC
 		void Dump();
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Header* header = nullptr;
 		MS_BYTE* csrcList = nullptr;
 		ExtensionHeader* extensionHeader = nullptr;
@@ -75,7 +75,7 @@ namespace RTC
 		MS_BYTE payloadPadding = 0;
 		MS_BYTE* raw = nullptr;  // Allocated when Serialize().
 		size_t length = 0;
-		// Others:
+		// Others.
 		bool isSerialized = false;
 	};
 
@@ -195,6 +195,6 @@ namespace RTC
 	{
 		return this->payloadLength;
 	}
-}  // namespace RTC
+}
 
 #endif

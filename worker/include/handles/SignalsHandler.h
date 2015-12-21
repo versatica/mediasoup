@@ -26,10 +26,10 @@ public:
 	void onUvSignal(int signum);
 
 private:
-	// Allocated by this:
+	// Allocated by this.
 	typedef std::vector<uv_signal_t*> UvHandles;
 	UvHandles uvHandles;
-	// Passed by argument:
+	// Passed by argument.
 	Listener* listener = nullptr;
 };
 

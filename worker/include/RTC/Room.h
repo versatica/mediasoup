@@ -8,7 +8,7 @@
 
 namespace RTC
 {
-	class Room : RTC::Peer::Listener
+	class Room : public RTC::Peer::Listener
 	{
 	public:
 		Room();
@@ -22,10 +22,10 @@ namespace RTC
 		virtual void onRTCPPacket(RTC::Peer* peer, RTC::RTCPPacket* packet) override;
 
 	private:
-		// Others:
+		// Others.
 		typedef std::vector<RTC::Peer*> Peers;
 		Peers peers;
 	};
-}  // namespace RTC
+}
 
 #endif

@@ -163,7 +163,7 @@ namespace RTC
 				// Exit the parsing loop.
 				break;
 			}
-		}  // while()
+		}
 	}
 
 	void TCPConnection::Send(const MS_BYTE* data, size_t len)
@@ -178,4 +178,4 @@ namespace RTC
 
 		Write(frame_len, 2, data, len);
 	}
-}  // namespace RTC
+}

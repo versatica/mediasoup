@@ -49,7 +49,7 @@ namespace RTC
 		virtual void userOnUDPSocketClosed() override;
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Listener* listener = nullptr;
 	};
 
@@ -60,6 +60,6 @@ namespace RTC
 	{
 		this->listener = listener;
 	}
-}  // namespace RTC
+}
 
 #endif

@@ -9,6 +9,6 @@ namespace RTC
 		AES_CM_128_HMAC_SHA1_80 = 1,
 		AES_CM_128_HMAC_SHA1_32
 	};
-}  // namespace RTC
+}
 
 #endif

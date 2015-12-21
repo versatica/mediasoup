@@ -94,14 +94,14 @@ namespace RTC
 		virtual void onTimer(Timer* timer) override;
 
 	private:
-		// Passed by argument:
+		// Passed by argument.
 		Listener* listener = nullptr;
-		// Allocated by this:
+		// Allocated by this.
 		SSL* ssl = nullptr;
-		BIO* sslBioFromNetwork = nullptr;   // The BIO from which ssl reads.
+		BIO* sslBioFromNetwork = nullptr;  // The BIO from which ssl reads.
 		BIO* sslBioToNetwork = nullptr;  // The BIO in which ssl writes.
 		Timer* timer = nullptr;
-		// Others:
+		// Others.
 		RTC::DTLSRole role;
 		RTC::FingerprintHash remoteFingerprintHash = RTC::FingerprintHash::NONE;
 		std::string remoteFingerprint;
@@ -140,6 +140,6 @@ namespace RTC
 	{
 		return this->isRunning;
 	}
-}  // namespace RTC
+}
 
 #endif

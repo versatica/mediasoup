@@ -141,17 +141,17 @@ namespace RTC
 		virtual void onDTLSApplicationData(RTC::DTLSHandler* dtlsHandler, const MS_BYTE* data, size_t len) override;
 
 	private:
-		// Allocated by this:
+		// Allocated by this.
 		RTC::ICEServer* iceServer = nullptr;
 		RTC::DTLSHandler* dtlsHandler = nullptr;
 		RTC::SRTPSession* srtpRecvSession = nullptr;
 		RTC::SRTPSession* srtpSendSession = nullptr;
-		// Passed by argument:
+		// Passed by argument.
 		Listener* listener = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		void* userData = nullptr;
-		// Others:
+		// Others.
 		int flags = 0;
 		std::list<RTC::TransportSource> sources;
 		RTC::TransportSource* sendingSource = nullptr;
@@ -326,6 +326,6 @@ namespace RTC
 
 		return false;
 	}
-}  // namespace RTC
+}
 
 #endif

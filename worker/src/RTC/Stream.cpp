@@ -21,7 +21,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: sure I want this?
 		delete this;
 	}
-}  // namespace RTC
+}

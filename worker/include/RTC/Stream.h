@@ -20,6 +20,6 @@ namespace RTC
 		MS_4BYTES ssrc = 0;
 		std::unordered_set<MS_BYTE> payloads;
 	};
-}  // namespace RTC
+}
 
 #endif

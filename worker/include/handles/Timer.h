@@ -25,9 +25,9 @@ public:
 	void onUvTimer();
 
 private:
-	// Allocated by this:
+	// Allocated by this.
 	uv_timer_t* uvHandle = nullptr;
-	// Passed by argument:
+	// Passed by argument.
 	Listener* listener = nullptr;
 };
 

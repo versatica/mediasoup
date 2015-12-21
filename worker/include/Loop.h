@@ -5,6 +5,8 @@
 #include "handles/SignalsHandler.h"
 #include "Channel/UnixStreamSocket.h"
 #include "Channel/Request.h"
+#include "RTC/Room.h"
+#include <unordered_map>
 
 class Loop :
 	public SignalsHandler::Listener,
@@ -14,7 +16,7 @@ public:
 	Loop();
 	~Loop();
 
-	// TODO: IMHO this can be private.
+private:
 	void Close();
 
 /* Methods inherited from SignalsHandler::Listener. */
@@ -33,6 +35,8 @@ private:
 	Channel::UnixStreamSocket* channel = nullptr;
 	// Others.
 	bool closed = false;
+	typedef std::unordered_map<unsigned int, RTC::Room*> Rooms;
+	Rooms rooms;
 };
 
 #endif

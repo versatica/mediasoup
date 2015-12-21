@@ -55,11 +55,11 @@ protected:
 	virtual void userOnUDPSocketClosed() = 0;
 
 private:
-	// Allocated by this (may be passed by argument):
+	// Allocated by this (may be passed by argument).
 	uv_udp_t* uvHandle = nullptr;
-	// Passed by argument:
+	// Passed by argument.
 	void* userData = nullptr;
-	// Others:
+	// Others.
 	bool isClosing = false;
 
 protected:
