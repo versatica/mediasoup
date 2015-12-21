@@ -19,6 +19,7 @@
   "dependencies": {
     "bluebird": "^3.0.6",
     "check-types": "^5.1.0",
+    "clone": "^1.0.2",
     "debug": "^2.2.0",
     "netstring": "^0.3.0",
     "random-number": "0.0.6",
