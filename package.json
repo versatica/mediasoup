@@ -17,7 +17,6 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
-    "bluebird": "^3.0.6",
     "check-types": "^5.1.0",
     "clone": "^1.0.2",
     "debug": "^2.2.0",
@@ -30,7 +29,9 @@
     "gulp-jscs": "^3.0.2",
     "gulp-jscs-stylish": "^1.2.1",
     "gulp-jshint": "^2.0.0",
+    "gulp-shell": "^0.5.1",
     "jshint": "^2.8.0",
-    "jshint-stylish": "^2.0.1"
+    "jshint-stylish": "^2.0.1",
+    "tap": "^2.3.3"
   }
 }

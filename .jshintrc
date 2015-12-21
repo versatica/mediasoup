@@ -13,7 +13,7 @@
 	"undef": true,
 	"unused": true,
 	"strict": true,
-	"maxparams": 5,
+	"maxparams": 6,
 	"maxdepth": 4,
 	"maxstatements": false,
 	"maxlen": 200,
@@ -23,7 +23,7 @@
 	"browserify": false,
 	"devel": false,
 	"jquery": false,
-	"mocha": true,
+	"mocha": false,
 	"node": true,
 	"shelljs": false,
 	"worker": false
