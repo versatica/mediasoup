@@ -5,6 +5,8 @@
 
 namespace Channel
 {
+	static Json::Value empty_data(Json::objectValue);
+
 	/* Static methods. */
 
 	Channel::Request* Request::Factory(Channel::UnixStreamSocket* channel, Json::Value& json)
@@ -73,21 +75,14 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static Json::Value no_data(Json::nullValue);
-
-		Accept(no_data);
+		Accept(empty_data);
 	}
 
 	void Request::Accept(Json::Value &data)
 	{
 		MS_TRACE();
 
-		if (this->replied)
-		{
-			MS_ERROR("already replied");
-
-			return;
-		}
+		MS_ASSERT(!this->replied, "Request already replied");
 		this->replied = true;
 
 		Json::Value json;
@@ -97,6 +92,8 @@ namespace Channel
 
 		if (data.isObject())
 			json["data"] = data;
+		else
+			json["data"] = empty_data;
 
 		this->channel->Send(json);
 	}
@@ -108,17 +105,19 @@ namespace Channel
 		Reject(status, reason.c_str());
 	}
 
+	/**
+	 * Reject the Request.
+	 * @param status  4XX means normal rejection, 5XX means error.
+	 * @param reason  Description string.
+	 */
 	void Request::Reject(unsigned int status, const char* reason)
 	{
 		MS_TRACE();
 
-		if (this->replied)
-		{
-			MS_ERROR("already replied");
-
-			return;
-		}
+		MS_ASSERT(!this->replied, "Request already replied");
 		this->replied = true;
+
+		MS_ASSERT(status >= 400 && status <= 599, "status must be between 400 and 500");
 
 		Json::Value json;
 

@@ -80,7 +80,7 @@ bool Logger::HasDebugLevel()
 #define MS_TRACE()  \
 	do  \
 	{  \
-		dprintf(Logger::fd, "D" _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG);  \
+		dprintf(Logger::fd, "D(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG);  \
 	}  \
 	while (0)
 #else
