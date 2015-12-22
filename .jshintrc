@@ -1,7 +1,7 @@
 {
 	"esnext": true,
 	"bitwise": false,
-	"curly": true,
+	"curly": false,
 	"eqeqeq": true,
 	"forin": false,
 	"freeze": true,
