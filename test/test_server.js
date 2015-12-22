@@ -33,6 +33,45 @@ tap.test('server.updateSettings() with invalid options must fail', { timeout: 10
 	t.tearDown(() => server.close());
 
 	server.updateSettings({ logLevel: 'WRONG_LOG_LEVEL' })
-		.then(()  => t.fail('should not fail'))
-		.catch(() =>  t.end());
+		.then(()  => t.fail('should not succeed'))
+		.catch(() => t.end());
+});
+
+tap.test('server.updateSettings() in a closed Server must fail', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	server.on('close', () =>
+	{
+		server.updateSettings({ logLevel: 'error' })
+			.then(()  => t.fail('should not succeed'))
+			.catch(() => t.end());
+	});
+
+	server.close();
+});
+
+tap.test('server.createRoom() with no options must succeed', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	server.createRoom()
+		.then(()  => t.end())
+		.catch(() => t.fail('should not fail'));
+});
+
+tap.test('server.createRoom() in a closed Server must fail', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	server.on('close', () =>
+	{
+		server.createRoom()
+			.then(()  => t.fail('should not succeed'))
+			.catch(() => t.end());
+	});
+
+	server.close();
 });

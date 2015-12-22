@@ -29,12 +29,6 @@ namespace Channel
 		MethodId methodId;
 		Json::Value data;
 
-		// TODO: TMP
-		Json::FastWriter fastWriter;
-		fastWriter.dropNullPlaceholders();
-		fastWriter.omitEndingLineFeed();
-		MS_DEBUG("JSON msg: %s", fastWriter.write(json).c_str());
-
 		// Check fields.
 
 		if (json["id"].isUInt())
