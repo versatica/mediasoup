@@ -15,16 +15,19 @@ namespace RTC
 {
 	/* Class methods. */
 
-	RTC::Room* Room::Factory(Json::Value& data)
+	RTC::Room* Room::Factory(unsigned int roomId, Json::Value& data)
 	{
 		MS_TRACE();
 
-		return new Room();
+		// TODO: Check and use data for something.
+
+		return new Room(roomId);
 	}
 
 	/* Instance methods. */
 
-	Room::Room()
+	Room::Room(unsigned int roomId) :
+		roomId(roomId)
 	{
 		MS_TRACE();
 

@@ -12,10 +12,10 @@ namespace RTC
 	class Room : public RTC::Peer::Listener
 	{
 	public:
-		static RTC::Room* Factory(Json::Value& data);
+		static RTC::Room* Factory(unsigned int roomId, Json::Value& data);
 
 	public:
-		Room();
+		Room(unsigned int roomId);
 		virtual ~Room();
 
 		void Close();
@@ -26,6 +26,8 @@ namespace RTC
 		virtual void onRTCPPacket(RTC::Peer* peer, RTC::RTCPPacket* packet) override;
 
 	private:
+		// Passed by argument.
+		unsigned int roomId;
 		// Others.
 		typedef std::unordered_map<unsigned int, RTC::Peer*> Peers;
 		Peers peers;

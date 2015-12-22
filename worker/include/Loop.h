@@ -17,6 +17,7 @@ public:
 	~Loop();
 
 private:
+	void HandleCreateRoomRequest(Channel::Request* request);
 	void Close();
 
 /* Methods inherited from SignalsHandler::Listener. */

@@ -4,9 +4,9 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-tap.test('mediasoup.createServer() with no options must succeed', { timeout: 1000 }, (t) =>
+tap.test('mediasoup.Server() with no options must succeed', { timeout: 1000 }, (t) =>
 {
-	let server = mediasoup.createServer();
+	let server = mediasoup.Server();
 
 	server.on('close', (error) =>
 	{
@@ -19,9 +19,9 @@ tap.test('mediasoup.createServer() with no options must succeed', { timeout: 100
 	setTimeout(() => server.close(), 100);
 });
 
-tap.test('mediasoup.createServer() with valid options must succeed', { timeout: 1000 }, (t) =>
+tap.test('mediasoup.Server() with valid options must succeed', { timeout: 1000 }, (t) =>
 {
-	let server = mediasoup.createServer(
+	let server = mediasoup.Server(
 		{
 			numWorkers : 1,
 			logLevel   : 'warn'
@@ -38,9 +38,9 @@ tap.test('mediasoup.createServer() with valid options must succeed', { timeout: 
 	setTimeout(() => server.close(), 100);
 });
 
-tap.test('mediasoup.createServer() with wrong options must fail', { timeout: 1000 }, (t) =>
+tap.test('mediasoup.Server() with wrong options must fail', { timeout: 1000 }, (t) =>
 {
-	let server = mediasoup.createServer({ logLevel: 'WRONG_VALUE' });
+	let server = mediasoup.Server({ logLevel: 'WRONG_VALUE' });
 
 	server.on('close', (error) =>
 	{

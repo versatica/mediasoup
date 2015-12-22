@@ -6,6 +6,7 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <string>
+#include <utility>  // std::pair()
 #include <csignal>  // sigfillset, pthread_sigmask()
 #include <cstdlib>  // std::genenv()
 #include <cerrno>
@@ -36,6 +37,46 @@ Loop::Loop()
 Loop::~Loop()
 {
 	MS_TRACE();
+}
+
+void Loop::HandleCreateRoomRequest(Channel::Request* request)
+{
+	MS_TRACE();
+
+	auto jsonRoomId = request->data["roomId"];
+
+	if (!jsonRoomId.isUInt())
+	{
+		MS_ERROR("Request has no numeric .roomId field");
+
+		request->Reject(500, "Request has no numeric .roomId field");
+		return;
+	}
+
+	unsigned int roomId = jsonRoomId.asUInt();
+	auto it = this->rooms.find(roomId);
+	RTC::Room* room;
+
+	if (it != this->rooms.end())
+	{
+		MS_ERROR("Room with roomId '%u' already exists", roomId);
+
+		request->Reject(500, "Room already exists");
+		return;
+	}
+
+	room = RTC::Room::Factory(roomId, request->data);
+
+	if (!room)
+	{
+		MS_ERROR("failed to create a Room");
+
+		request->Reject(500, "failed to create a Room");
+		return;
+	}
+
+	this->rooms[roomId] = room;
+	request->Accept();
 }
 
 void Loop::Close()
@@ -117,10 +158,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		{
 			MS_DEBUG("'createRoom' method");
 
-			Json::Value data;
-
-			data["jojojo"] = "🐮🐷🐣😡";
-			request->Accept(data);
+			this->HandleCreateRoomRequest(request);
 			break;
 		}
 

@@ -59,10 +59,11 @@ namespace Channel
 			return nullptr;
 		}
 
-		auto methodIterator = Request::string2MethodId.find(method);
-		if (methodIterator != Request::string2MethodId.end())
+		auto it = Request::string2MethodId.find(method);
+
+		if (it != Request::string2MethodId.end())
 		{
-			methodId = methodIterator->second;
+			methodId = it->second;
 		}
 		else
 		{

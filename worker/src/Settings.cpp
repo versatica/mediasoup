@@ -171,12 +171,14 @@ void Settings::HandleUpdateRequest(Channel::Request* request)
 {
 	MS_TRACE();
 
+	auto jsonLogLevel = request->data["logLevel"];
+
 	try
 	{
 		// Update logLevel if requested.
-		if (request->data["logLevel"].isString())
+		if (jsonLogLevel.isString())
 		{
-			std::string logLevel = request->data["logLevel"].asString();
+			std::string logLevel = jsonLogLevel.asString();
 
 			Settings::SetLogLevel(logLevel);
 		}
