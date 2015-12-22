@@ -13,8 +13,9 @@ namespace Channel
 
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
-		{ "createRoom", Request::MethodId::createRoom },
-		{ "createPeer", Request::MethodId::createPeer }
+		{ "updateSettings", Request::MethodId::updateSettings },
+		{ "createRoom",     Request::MethodId::createRoom     },
+		{ "createPeer",     Request::MethodId::createPeer     }
 	};
 
 	/* Class methods. */

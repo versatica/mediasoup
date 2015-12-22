@@ -4,12 +4,16 @@
 #include "RTC/Peer.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
-#include <vector>
+#include <unordered_map>
+#include <json/json.h>
 
 namespace RTC
 {
 	class Room : public RTC::Peer::Listener
 	{
+	public:
+		static RTC::Room* Factory(Json::Value& data);
+
 	public:
 		Room();
 		virtual ~Room();
@@ -23,7 +27,7 @@ namespace RTC
 
 	private:
 		// Others.
-		typedef std::vector<RTC::Peer*> Peers;
+		typedef std::unordered_map<unsigned int, RTC::Peer*> Peers;
 		Peers peers;
 	};
 }

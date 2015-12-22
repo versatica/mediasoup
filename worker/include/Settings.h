@@ -2,8 +2,10 @@
 #define	MS_SETTINGS_H
 
 #include "common.h"
+#include "Channel/Request.h"
 #include <map>
 #include <string>
+
 
 class Settings
 {
@@ -26,6 +28,7 @@ public:
 public:
 	static void SetConfiguration(int argc, char* argv[]);
 	static void PrintConfiguration();
+	static void HandleUpdateRequest(Channel::Request* request);
 
 private:
 	static void SetDefaultRtcListenIP(int requested_family);

@@ -2,6 +2,7 @@
 
 #include "Loop.h"
 #include "DepLibUV.h"
+#include "Settings.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <string>
@@ -104,15 +105,30 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 	switch (request->methodId)
 	{
+		case Channel::Request::MethodId::updateSettings:
+		{
+			MS_DEBUG("'updateSettings' method");
+
+			Settings::HandleUpdateRequest(request);
+			break;
+		}
+
 		case Channel::Request::MethodId::createRoom:
 		{
 			MS_DEBUG("'createRoom' method");
+
+			Json::Value data;
+
+			data["jojojo"] = "🐮🐷🐣😡";
+			request->Accept(data);
 			break;
 		}
 
 		case Channel::Request::MethodId::createPeer:
 		{
 			MS_DEBUG("'createPeer' method");
+
+			request->Reject(500, "lalalala failed to create a Peer because yes!");
 			break;
 		}
 
@@ -120,34 +136,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		{
 			MS_ABORT("unexpected methodId");
 		}
-	}
-
-
-
-
-
-	// TODO: TMP jeje
-
-	if (request->id < 25000)
-	{
-		request->Accept();
-	}
-	else if (request->id < 50000)
-	{
-		Json::Value data;
-
-		data["jojojo"] = "🐮🐷🐣😡";
-		request->Accept(data);
-	}
-	else if (request->id < 75000)
-	{
-		std::string reason = "this is a std::string reason";
-
-		request->Reject(400, reason);
-	}
-	else
-	{
-		request->Reject(500, "this is a char* reason");
 	}
 }
 

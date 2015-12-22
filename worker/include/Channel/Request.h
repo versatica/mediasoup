@@ -16,7 +16,8 @@ namespace Channel
 	public:
 		enum class MethodId
 		{
-			createRoom = 1,
+			updateSettings = 1,
+			createRoom,
 			createPeer
 		};
 

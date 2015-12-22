@@ -167,6 +167,35 @@ void Settings::PrintConfiguration()
 	MS_DEBUG("[/configuration]");
 }
 
+void Settings::HandleUpdateRequest(Channel::Request* request)
+{
+	MS_TRACE();
+
+	try
+	{
+		// Update logLevel if requested.
+		if (request->data["logLevel"].isString())
+		{
+			std::string logLevel = request->data["logLevel"].asString();
+
+			Settings::SetLogLevel(logLevel);
+		}
+	}
+	catch (const MediaSoupError &error)
+	{
+		request->Reject(500, error.what());
+
+		return;
+	}
+
+	MS_DEBUG("updated settings:");
+
+	// Print configuration.
+	Settings::PrintConfiguration();
+
+	request->Accept();
+}
+
 void Settings::SetDefaultRtcListenIP(int requested_family)
 {
 	MS_TRACE();
