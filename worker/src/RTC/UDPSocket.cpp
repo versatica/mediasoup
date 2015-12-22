@@ -24,7 +24,7 @@ void on_error_close(uv_handle_t* handle)
 
 namespace RTC
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	struct sockaddr_storage UDPSocket::sockaddrStorageIPv4;
 	struct sockaddr_storage UDPSocket::sockaddrStorageIPv6;
@@ -33,7 +33,7 @@ namespace RTC
 	UDPSocket::AvailablePorts UDPSocket::availableIPv4Ports;
 	UDPSocket::AvailablePorts UDPSocket::availableIPv6Ports;
 
-	/* Static methods. */
+	/* Class methods. */
 
 	void UDPSocket::ClassInit()
 	{

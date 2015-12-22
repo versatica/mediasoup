@@ -24,7 +24,7 @@ void on_error_close(uv_handle_t* handle)
 
 namespace RTC
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	struct sockaddr_storage TCPServer::sockaddrStorageIPv4;
 	struct sockaddr_storage TCPServer::sockaddrStorageIPv6;
@@ -33,7 +33,7 @@ namespace RTC
 	TCPServer::AvailablePorts TCPServer::availableIPv4Ports;
 	TCPServer::AvailablePorts TCPServer::availableIPv6Ports;
 
-	/* Static methods. */
+	/* Class methods. */
 
 	void TCPServer::ClassInit()
 	{

@@ -21,7 +21,7 @@ extern "C"
 static
 bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 
-/* Static variables. */
+/* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
 std::map<std::string, unsigned int> Settings::string2LogLevel =
@@ -37,7 +37,7 @@ std::map<unsigned int, std::string> Settings::logLevel2String =
 	{ MS_LOG_LEVEL_ERROR, "error" }
 };
 
-/* Static methods. */
+/* Class methods. */
 
 void Settings::SetConfiguration(int argc, char* argv[])
 {

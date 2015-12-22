@@ -10,11 +10,11 @@
 
 namespace RTC
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	MS_BYTE SRTPSession::encryptBuffer[MS_ENCRYPT_BUFFER_SIZE];
 
-	/* Static methods. */
+	/* Class methods. */
 
 	void SRTPSession::ClassInit()
 	{

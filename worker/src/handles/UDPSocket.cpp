@@ -55,7 +55,7 @@ void on_error_close(uv_handle_t* handle)
 	delete handle;
 }
 
-/* Static variables. */
+/* Class variables. */
 
 MS_BYTE UDPSocket::readBuffer[MS_READ_BUFFER_SIZE];
 

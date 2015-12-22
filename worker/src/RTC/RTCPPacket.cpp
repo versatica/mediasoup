@@ -5,7 +5,7 @@
 
 namespace RTC
 {
-	/* Static methods. */
+	/* Class methods. */
 
 	RTCPPacket* RTCPPacket::Parse(const MS_BYTE* data, size_t len)
 	{

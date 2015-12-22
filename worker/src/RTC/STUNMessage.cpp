@@ -8,11 +8,11 @@
 
 namespace RTC
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	const MS_BYTE STUNMessage::magicCookie[] = {0x21, 0x12, 0xA4, 0x42};
 
-	/* Static methods. */
+	/* Class methods. */
 
 	STUNMessage* STUNMessage::Parse(const MS_BYTE* data, size_t len)
 	{

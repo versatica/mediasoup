@@ -11,11 +11,11 @@
 
 namespace RTC
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	size_t Transport::maxSources = 8;
 
-	/* Static methods. */
+	/* Class methods. */
 
 	Transport* Transport::NewWebRTC(Listener* listener)
 	{

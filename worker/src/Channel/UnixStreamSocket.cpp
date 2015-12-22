@@ -13,7 +13,7 @@
 
 namespace Channel
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	MS_BYTE UnixStreamSocket::writeBuffer[MESSAGE_MAX_SIZE];
 
@@ -24,8 +24,6 @@ namespace Channel
 		listener(listener)
 	{
 		MS_TRACE();
-
-		MS_ERROR("---- MAX NS: %lu", netstring_buffer_size(MESSAGE_MAX_SIZE));
 	}
 
 	UnixStreamSocket::~UnixStreamSocket()

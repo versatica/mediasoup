@@ -102,6 +102,32 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 {
 	MS_TRACE();
 
+	switch (request->methodId)
+	{
+		case Channel::Request::MethodId::createRoom:
+		{
+			MS_DEBUG("'createRoom' method");
+			break;
+		}
+
+		case Channel::Request::MethodId::createPeer:
+		{
+			MS_DEBUG("'createPeer' method");
+			break;
+		}
+
+		default:
+		{
+			MS_ABORT("unexpected methodId");
+		}
+	}
+
+
+
+
+
+	// TODO: TMP jeje
+
 	if (request->id < 25000)
 	{
 		request->Accept();

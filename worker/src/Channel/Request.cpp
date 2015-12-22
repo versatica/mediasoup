@@ -5,9 +5,19 @@
 
 namespace Channel
 {
+	/* Static variables. */
+
 	static Json::Value empty_data(Json::objectValue);
 
-	/* Static methods. */
+	/* Class variables. */
+
+	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
+	{
+		{ "createRoom", Request::MethodId::createRoom },
+		{ "createPeer", Request::MethodId::createPeer }
+	};
+
+	/* Class methods. */
 
 	Channel::Request* Request::Factory(Channel::UnixStreamSocket* channel, Json::Value& json)
 	{
@@ -15,6 +25,7 @@ namespace Channel
 
 		unsigned int id;
 		std::string method;
+		MethodId methodId;
 		Json::Value data;
 
 		// TODO: TMP
@@ -47,20 +58,33 @@ namespace Channel
 			return nullptr;
 		}
 
+		auto methodIterator = Request::string2MethodId.find(method);
+		if (methodIterator != Request::string2MethodId.end())
+		{
+			methodId = methodIterator->second;
+		}
+		else
+		{
+			MS_ERROR("unknwon .method '%s'", method.c_str());
+
+			return nullptr;
+		}
+
 		if (json["data"].isObject())
 			data = json["data"];
 		else
 			data = Json::Value(Json::objectValue);
 
-		return new Request(channel, id, method, data);
+		return new Request(channel, id, method, methodId, data);
 	}
 
 	/* Instance methods. */
 
-	Request::Request(Channel::UnixStreamSocket* channel, unsigned int id, std::string& method, Json::Value& data) :
+	Request::Request(Channel::UnixStreamSocket* channel, unsigned int id, std::string& method, MethodId methodId, Json::Value& data) :
 		channel(channel),
 		id(id),
 		method(method),
+		methodId(methodId),
 		data(data)
 	{
 		MS_TRACE();

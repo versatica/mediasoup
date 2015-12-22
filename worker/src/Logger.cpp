@@ -2,12 +2,12 @@
 
 #include "Logger.h"
 
-/* Static variables. */
+/* Class variables. */
 
 std::string Logger::id;
 int Logger::fd;
 
-/* Static methods. */
+/* Class methods. */
 
 void Logger::Init(const std::string id)
 {

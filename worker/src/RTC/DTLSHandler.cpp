@@ -57,7 +57,7 @@ void on_ssl_info(const SSL* ssl, int where, int ret)
 
 namespace RTC
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	X509* DTLSHandler::certificate = nullptr;
 	EVP_PKEY* DTLSHandler::privateKey = nullptr;
@@ -77,7 +77,7 @@ namespace RTC
 	};
 	MS_BYTE DTLSHandler::sslReadBuffer[MS_SSL_READ_BUFFER_SIZE];
 
-	/* Static methods. */
+	/* Class methods. */
 
 	void DTLSHandler::ClassInit()
 	{
