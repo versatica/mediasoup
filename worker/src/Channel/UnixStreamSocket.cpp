@@ -9,18 +9,19 @@
 #include <cstdio>  // sprintf()
 
 // netstring length for a 65536 bytes payload
-#define MESSAGE_MAX_SIZE 65543
+#define NS_MAX_SIZE      65543
+#define MESSAGE_MAX_SIZE 65536
 
 namespace Channel
 {
 	/* Class variables. */
 
-	MS_BYTE UnixStreamSocket::writeBuffer[MESSAGE_MAX_SIZE];
+	MS_BYTE UnixStreamSocket::writeBuffer[NS_MAX_SIZE];
 
 	/* Instance methods. */
 
 	UnixStreamSocket::UnixStreamSocket(Listener* listener, int fd) :
-		::UnixStreamSocket::UnixStreamSocket(fd, MESSAGE_MAX_SIZE),
+		::UnixStreamSocket::UnixStreamSocket(fd, NS_MAX_SIZE),
 		listener(listener)
 	{
 		MS_TRACE();
@@ -35,8 +36,6 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		// TODO: check MESSAGE_MAX_SIZE.
-
 		Json::FastWriter fastWriter;
 
 		fastWriter.dropNullPlaceholders();
@@ -46,6 +45,13 @@ namespace Channel
 		std::string ns_payload = fastWriter.write(msg);
 		size_t ns_payload_len = ns_payload.length();
 		size_t ns_len;
+
+		if (ns_payload_len > MESSAGE_MAX_SIZE)
+		{
+			MS_ERROR("mesage too big");
+
+			return;
+		}
 
 		if (ns_payload_len == 0)
 		{
