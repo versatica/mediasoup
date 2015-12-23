@@ -5,6 +5,7 @@
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
 #include "Channel/Request.h"
+#include <string>
 #include <unordered_map>
 #include <json/json.h>
 
@@ -20,8 +21,10 @@ namespace RTC
 		virtual ~Room();
 
 		void HandleCreatePeerRequest(Channel::Request* request);
-
 		void Close();
+
+	private:
+		RTC::Peer* GetPeerFromRequest(Channel::Request* request, std::string* peerId);
 
 	/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
@@ -32,7 +35,7 @@ namespace RTC
 		// Passed by argument.
 		unsigned int roomId;
 		// Others.
-		typedef std::unordered_map<unsigned int, RTC::Peer*> Peers;
+		typedef std::unordered_map<std::string, RTC::Peer*> Peers;
 		Peers peers;
 	};
 }

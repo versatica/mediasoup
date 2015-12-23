@@ -21,7 +21,7 @@ namespace RTC
 
 		// TODO: Check and use data for something.
 
-		return new Room(roomId);
+		return new RTC::Room(roomId);
 	}
 
 	/* Instance methods. */
@@ -53,7 +53,41 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: jeje
+		RTC::Peer* peer;
+		std::string peerId;
+
+		try
+		{
+			peer = GetPeerFromRequest(request, &peerId);
+		}
+		catch (const MediaSoupError &error)
+		{
+			request->Reject(500, error.what());
+
+			return;
+		}
+
+		if (peer)
+		{
+			MS_ERROR("Peer already exists");
+
+			request->Reject(500, "Peer already exists");
+
+			return;
+		}
+
+		peer = RTC::Peer::Factory(this, peerId, request->data);
+
+		if (!peer)
+		{
+			MS_ERROR("failed to create Peer");
+
+			request->Reject(500, "failed to create Peer");
+
+			return;
+		}
+
+		this->peers[peerId] = peer;
 		request->Accept();
 	}
 
@@ -70,6 +104,33 @@ namespace RTC
 		}
 
 		delete this;
+	}
+
+	RTC::Peer* Room::GetPeerFromRequest(Channel::Request* request, std::string* peerId = nullptr)
+	{
+		MS_TRACE();
+
+		auto jsonPeerId = request->data["peerId"];
+
+		if (!jsonPeerId.isString())
+			MS_THROW_ERROR("Request has no string .peerId field");
+
+		// If given, fill peerId.
+		if (peerId)
+			*peerId = jsonPeerId.asString();
+
+		auto it = this->peers.find(jsonPeerId.asString());
+
+		if (it != this->peers.end())
+		{
+			RTC::Peer* peer = it->second;
+
+			return peer;
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 
 	void Room::onRTPPacket(RTC::Peer* peer, RTC::RTPPacket* packet)

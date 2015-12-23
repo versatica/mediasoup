@@ -20,8 +20,6 @@ public:
 	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
 	MS_PORT GetLocalPort();
-	void SetUserData(void* userData);
-	void* GetUserData();
 	size_t GetNumConnections();
 	void Close();
 	bool IsClosing();
@@ -49,8 +47,6 @@ public:
 private:
 	// Allocated by this (may be passed by argument).
 	uv_tcp_t* uvHandle = nullptr;
-	// Passed by argument.
-	void* userData = nullptr;
 	// Others.
 	typedef std::unordered_set<TCPConnection*> TCPConnections;
 	TCPConnections connections;
@@ -63,18 +59,6 @@ protected:
 };
 
 /* Inline methods. */
-
-inline
-void TCPServer::SetUserData(void* userData)
-{
-	this->userData = userData;
-}
-
-inline
-void* TCPServer::GetUserData()
-{
-	return this->userData;
-}
 
 inline
 size_t TCPServer::GetNumConnections()

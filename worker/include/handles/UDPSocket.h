@@ -34,8 +34,6 @@ public:
 	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
 	MS_PORT GetLocalPort();
-	void SetUserData(void* userData);
-	void* GetUserData();
 	void Close();
 	virtual void Dump();
 
@@ -57,8 +55,6 @@ protected:
 private:
 	// Allocated by this (may be passed by argument).
 	uv_udp_t* uvHandle = nullptr;
-	// Passed by argument.
-	void* userData = nullptr;
 	// Others.
 	bool isClosing = false;
 
@@ -98,18 +94,6 @@ inline
 MS_PORT UDPSocket::GetLocalPort()
 {
 	return this->localPort;
-}
-
-inline
-void UDPSocket::SetUserData(void* userData)
-{
-	this->userData = userData;
-}
-
-inline
-void* UDPSocket::GetUserData()
-{
-	return this->userData;
 }
 
 #endif

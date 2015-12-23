@@ -4,7 +4,8 @@
 #include "RTC/Transport.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
-#include <vector>
+#include <string>
+#include <json/json.h>
 
 namespace RTC
 {
@@ -19,13 +20,14 @@ namespace RTC
 		};
 
 	public:
-		Peer(Listener* listener);
+		static RTC::Peer* Factory(Listener* listener, std::string& peerId, Json::Value& data);
+
+	public:
+		Peer(Listener* listener, std::string& peerId);
 		virtual ~Peer();
 
 		void SendRTPPacket(RTC::RTPPacket* packet);
 		void SendRTCPPacket(RTC::RTCPPacket* packet);
-		void SetUserData(void* userData);
-		void* GetUserData();
 		void Close();
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
@@ -36,24 +38,10 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
-		void* userData = nullptr;
+		std::string peerId;
 		// Others.
 		RTC::Transport* transport = nullptr;
 	};
-
-	/* Inline methods. */
-
-	inline
-	void Peer::SetUserData(void* userData)
-	{
-		this->userData = userData;
-	}
-
-	inline
-	void* Peer::GetUserData()
-	{
-		return this->userData;
-	}
 }
 
 #endif

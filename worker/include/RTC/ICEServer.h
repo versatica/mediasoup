@@ -30,14 +30,11 @@ namespace RTC
 		void ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source);
 		std::string& GetLocalUsername();
 		std::string& GetLocalPassword();
-		void SetUserData(void* userData);
-		void* GetUserData();
 		void Close();
 
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
-		void* userData = nullptr;
 		// Others.
 		std::string localUsername;
 		std::string localPassword;
@@ -55,18 +52,6 @@ namespace RTC
 	std::string& ICEServer::GetLocalPassword()
 	{
 		return this->localPassword;
-	}
-
-	inline
-	void ICEServer::SetUserData(void* userData)
-	{
-		this->userData = userData;
-	}
-
-	inline
-	void* ICEServer::GetUserData()
-	{
-		return this->userData;
 	}
 }
 

@@ -7,14 +7,25 @@
 // TMP
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
-#include <string>
 
 namespace RTC
 {
+	/* Class methods. */
+
+	RTC::Peer* Peer::Factory(Listener* listener, std::string& peerId, Json::Value& data)
+	{
+		MS_TRACE();
+
+		// TODO: Check and use data for something.
+
+		return new RTC::Peer(listener, peerId);
+	}
+
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener) :
-		listener(listener)
+	Peer::Peer(Listener* listener, std::string& peerId) :
+		listener(listener),
+		peerId(peerId)
 	{
 		MS_TRACE();
 

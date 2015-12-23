@@ -22,8 +22,6 @@ public:
 
 	void Write(const MS_BYTE* data, size_t len);
 	void Write(const std::string &data);
-	void SetUserData(void* userData);
-	void* GetUserData();
 	void Close();
 	virtual void Dump();
 
@@ -41,11 +39,9 @@ protected:
 	virtual void userOnUnixStreamSocketClosed(bool is_closed_by_peer) = 0;
 
 private:
-	// Allocated by this:
+	// Allocated by this.
 	uv_pipe_t* uvHandle = nullptr;
-	// Passed by argument:
-	void* userData = nullptr;
-	// Others:
+	// Others.
 	bool isClosing = false;
 	bool isClosedByPeer = false;
 	bool hasError = false;
@@ -65,18 +61,6 @@ inline
 void UnixStreamSocket::Write(const std::string &data)
 {
 	Write((const MS_BYTE*)data.c_str(), data.size());
-}
-
-inline
-void UnixStreamSocket::SetUserData(void* userData)
-{
-	this->userData = userData;
-}
-
-inline
-void* UnixStreamSocket::GetUserData()
-{
-	return this->userData;
 }
 
 #endif

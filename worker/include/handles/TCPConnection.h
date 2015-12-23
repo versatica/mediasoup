@@ -38,8 +38,6 @@ public:
 	const struct sockaddr* GetPeerAddress();
 	const std::string& GetPeerIP();
 	MS_PORT GetPeerPort();
-	void SetUserData(void* userData);
-	void* GetUserData();
 	void Close();
 	virtual void Dump();
 
@@ -59,11 +57,10 @@ protected:
 	virtual void userOnTCPConnectionRead() = 0;
 
 private:
-	// Allocated by this:
+	// Allocated by this.
 	uv_tcp_t* uvHandle = nullptr;
-	// Passed by argument:
+	// Passed by argument.
 	Listener* listener = nullptr;
-	void* userData = nullptr;
 	// Others.
 	bool isClosing = false;
 	bool isClosedByPeer = false;
@@ -125,18 +122,6 @@ inline
 MS_PORT TCPConnection::GetPeerPort()
 {
 	return this->peerPort;
-}
-
-inline
-void TCPConnection::SetUserData(void* userData)
-{
-	this->userData = userData;
-}
-
-inline
-void* TCPConnection::GetUserData()
-{
-	return this->userData;
 }
 
 #endif

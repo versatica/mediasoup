@@ -79,8 +79,6 @@ namespace RTC
 
 		void AddUDPSocket(RTC::UDPSocket* socket);
 		void AddTCPServer(RTC::TCPServer* server);
-		void SetUserData(void* userData);
-		void* GetUserData();
 		void Reset();
 		void Close();
 		void SetLocalDTLSRole(RTC::DTLSRole role);
@@ -150,7 +148,6 @@ namespace RTC
 		Listener* listener = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
-		void* userData = nullptr;
 		// Others.
 		int flags = 0;
 		std::list<RTC::TransportSource> sources;
@@ -190,18 +187,6 @@ namespace RTC
 	bool Transport::HasFlagSRTP()
 	{
 		return this->flags & Flag::SRTP;
-	}
-
-	inline
-	void Transport::SetUserData(void* userData)
-	{
-		this->userData = userData;
-	}
-
-	inline
-	void* Transport::GetUserData()
-	{
-		return this->userData;
 	}
 
 	/**

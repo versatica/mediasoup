@@ -172,9 +172,9 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			if (!room)
 			{
-				MS_ERROR("failed to create a Room");
+				MS_ERROR("failed to create Room");
 
-				request->Reject(500, "failed to create a Room");
+				request->Reject(500, "failed to create Room");
 
 				return;
 			}
