@@ -14,10 +14,7 @@ namespace RTC
 	class Room : public RTC::Peer::Listener
 	{
 	public:
-		static RTC::Room* Factory(unsigned int roomId, Json::Value& data);
-
-	public:
-		Room(unsigned int roomId);
+		Room(unsigned int roomId, Json::Value& data);
 		virtual ~Room();
 
 		void HandleCreatePeerRequest(Channel::Request* request);

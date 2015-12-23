@@ -167,13 +167,13 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 				return;
 			}
 
-			room = RTC::Room::Factory(roomId, request->data);
-
-			if (!room)
+			try
 			{
-				MS_ERROR("failed to create Room");
-
-				request->Reject(500, "failed to create Room");
+				room = new RTC::Room(roomId, request->data);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
 				return;
 			}
 

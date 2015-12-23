@@ -10,60 +10,15 @@
 
 namespace RTC
 {
-	/* Class methods. */
-
-	RTC::Peer* Peer::Factory(Listener* listener, std::string& peerId, Json::Value& data)
-	{
-		MS_TRACE();
-
-		// TODO: Check and use data for something.
-
-		return new RTC::Peer(listener, peerId);
-	}
-
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, std::string& peerId) :
+	Peer::Peer(Listener* listener, std::string& peerId, Json::Value& data) :
 		listener(listener),
 		peerId(peerId)
 	{
 		MS_TRACE();
 
-		// TMP
-
-		this->transport = RTC::Transport::NewWebRTC(this);
-
-		// Local DTLS role.
-		RTC::DTLSRole local_dtls_role = RTC::DTLSRole::SERVER;
-
-		// Chrome's fingerprint.
-		std::string remote_fingerprint = "74:24:E1:0A:30:48:FB:F2:72:6E:2C:70:FA:96:FD:06:81:AA:F8:1F:65:2E:D4:81:3E:93:0C:0F:E1:D0:FE:19";
-
-		this->transport->SetLocalDTLSRole(local_dtls_role);
-
-		this->transport->SetRemoteDTLSFingerprint(RTC::FingerprintHash::SHA256, remote_fingerprint);
-
-		try
-		{
-			RTC::UDPSocket* socket = RTC::UDPSocket::New(AF_INET);
-			this->transport->AddUDPSocket(socket);
-			MS_WARN("---- TEST: transport listens in IPv4 UDP '%s' : %u", socket->GetLocalIP().c_str(), socket->GetLocalPort());
-		}
-		catch (const MediaSoupError &error)
-		{
-			MS_ERROR("---- TEST: error adding IPv4 UDP to transport: %s", error.what());
-		}
-
-		try
-		{
-			RTC::TCPServer* server = RTC::TCPServer::New(AF_INET);
-			this->transport->AddTCPServer(server);
-			MS_WARN("---- TEST: transport listens in IPv4 TCP '%s' : %u", server->GetLocalIP().c_str(), server->GetLocalPort());
-		}
-		catch (const MediaSoupError &error)
-		{
-			MS_ERROR("---- TEST: error adding IPv4 TCP to transport: %s", error.what());
-		}
+		// TODO: do something wit data and throw if incorrect.
 	}
 
 	Peer::~Peer()

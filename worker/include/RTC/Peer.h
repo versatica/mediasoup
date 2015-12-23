@@ -20,10 +20,7 @@ namespace RTC
 		};
 
 	public:
-		static RTC::Peer* Factory(Listener* listener, std::string& peerId, Json::Value& data);
-
-	public:
-		Peer(Listener* listener, std::string& peerId);
+		Peer(Listener* listener, std::string& peerId, Json::Value& data);
 		virtual ~Peer();
 
 		void SendRTPPacket(RTC::RTPPacket* packet);

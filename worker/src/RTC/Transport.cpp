@@ -291,7 +291,6 @@ namespace RTC
 		this->sendingSource->Send(data, len);
 	}
 
-	// TODO: do it
 	void Transport::Dump()
 	{
 		MS_DEBUG("%zu valid sources:", this->sources.size());

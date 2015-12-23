@@ -13,35 +13,14 @@
 
 namespace RTC
 {
-	/* Class methods. */
-
-	RTC::Room* Room::Factory(unsigned int roomId, Json::Value& data)
-	{
-		MS_TRACE();
-
-		// TODO: Check and use data for something.
-
-		return new RTC::Room(roomId);
-	}
-
 	/* Instance methods. */
 
-	Room::Room(unsigned int roomId) :
+	Room::Room(unsigned int roomId, Json::Value& data) :
 		roomId(roomId)
 	{
 		MS_TRACE();
 
-		// TMP
-		// for (int i = 1; i <= NUM_PEERS; i++)
-		// {
-		// 	RTC::Peer* peer = new RTC::Peer(this);
-
-		// 	// TODO: this is not being freed
-		// 	int* data = new int(i);
-		// 	peer->SetUserData((void*)data);
-
-		// 	this->peers.push_back(peer);
-		// }
+		// TODO: do something wit data and throw if incorrect.
 	}
 
 	Room::~Room()
@@ -76,14 +55,13 @@ namespace RTC
 			return;
 		}
 
-		peer = RTC::Peer::Factory(this, peerId, request->data);
-
-		if (!peer)
+		try
 		{
-			MS_ERROR("failed to create Peer");
-
-			request->Reject(500, "failed to create Peer");
-
+			peer = new RTC::Peer(this, peerId, request->data);
+		}
+		catch (const MediaSoupError &error)
+		{
+			request->Reject(500, error.what());
 			return;
 		}
 
