@@ -158,7 +158,16 @@ namespace Channel
 
 			if (reader.parse((const char*)json_start, (const char*)json_start + json_len, json))
 			{
-				Channel::Request* request = Request::Factory(this, json);
+				Channel::Request* request = nullptr;
+
+				try
+				{
+					request = new Channel::Request(this, json);
+				}
+				catch (const MediaSoupError &error)
+				{
+					MS_ERROR("discarding wrong Channel request");
+				}
 
 				if (request)
 				{
@@ -167,10 +176,6 @@ namespace Channel
 
 					// Delete the Request.
 					delete request;
-				}
-				else
-				{
-					MS_ERROR("discarding wrong Channel request");
 				}
 			}
 			else

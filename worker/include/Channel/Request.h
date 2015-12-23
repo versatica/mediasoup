@@ -23,17 +23,13 @@ namespace Channel
 			closePeer
 		};
 
-	public:
-		static Channel::Request* Factory(Channel::UnixStreamSocket* channel, Json::Value& json);
-
 	private:
 		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
-		Request(Channel::UnixStreamSocket* channel, unsigned int id, std::string& method, MethodId methodId, Json::Value& data);
+		Request(Channel::UnixStreamSocket* channel, Json::Value& json);
 		virtual ~Request();
 
-		// void Accept(Json::Value data = Json::Value(Json::nullValue));
 		void Accept();
 		void Accept(Json::Value &data);
 		void Reject(unsigned int status, std::string& reason);

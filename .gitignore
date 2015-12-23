@@ -4,4 +4,5 @@
 /worker/cldoc/
 /worker/mediasoup-tester.sh
 /TODO
+/make-trace.sh
 /run.js

@@ -42,7 +42,6 @@ namespace RTC
 		catch (const MediaSoupError &error)
 		{
 			request->Reject(500, error.what());
-
 			return;
 		}
 
@@ -51,7 +50,6 @@ namespace RTC
 			MS_ERROR("Peer already exists");
 
 			request->Reject(500, "Peer already exists");
-
 			return;
 		}
 

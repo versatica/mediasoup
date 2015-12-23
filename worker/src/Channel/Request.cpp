@@ -1,6 +1,7 @@
 #define MS_CLASS "Channel::Request"
 
 #include "Channel/Request.h"
+#include "MediaSoupError.h"
 #include "Logger.h"
 
 namespace Channel
@@ -20,72 +21,34 @@ namespace Channel
 		{ "closePeer",      Request::MethodId::closePeer      }
 	};
 
-	/* Class methods. */
+	/* Instance methods. */
 
-	Channel::Request* Request::Factory(Channel::UnixStreamSocket* channel, Json::Value& json)
+	Request::Request(Channel::UnixStreamSocket* channel, Json::Value& json) :
+		channel(channel)
 	{
 		MS_TRACE();
 
-		unsigned int id;
-		std::string method;
-		MethodId methodId;
-		Json::Value data;
-
-		// Check fields.
-
 		if (json["id"].isUInt())
-		{
 			id = json["id"].asUInt();
-		}
 		else
-		{
-			MS_ERROR("json has no numeric .id field");
-
-			return nullptr;
-		}
+			MS_THROW_ERROR("json has no numeric .id field");
 
 		if (json["method"].isString())
-		{
 			method = json["method"].asString();
-		}
 		else
-		{
-			MS_ERROR("json has no string .method field");
-
-			return nullptr;
-		}
+			MS_THROW_ERROR("json has no string .method field");
 
 		auto it = Request::string2MethodId.find(method);
 
 		if (it != Request::string2MethodId.end())
-		{
-			methodId = it->second;
-		}
+			this->methodId = it->second;
 		else
-		{
-			MS_ERROR("unknwon .method '%s'", method.c_str());
-
-			return nullptr;
-		}
+			MS_THROW_ERROR("unknwon .method '%s'", method.c_str());
 
 		if (json["data"].isObject())
-			data = json["data"];
+			this->data = json["data"];
 		else
-			data = Json::Value(Json::objectValue);
-
-		return new Request(channel, id, method, methodId, data);
-	}
-
-	/* Instance methods. */
-
-	Request::Request(Channel::UnixStreamSocket* channel, unsigned int id, std::string& method, MethodId methodId, Json::Value& data) :
-		channel(channel),
-		id(id),
-		method(method),
-		methodId(methodId),
-		data(data)
-	{
-		MS_TRACE();
+			this->data = Json::Value(Json::objectValue);
 	}
 
 	Request::~Request()

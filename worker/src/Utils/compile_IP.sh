@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 
-
 ROOT_DIR="../../"
 RAGEL_FILE="src/Utils/IP.rl"
 RAGEL_COMPILE_TYPE="-G2"
 PRODUCTION=false
 
-
 set -e
-
 
 which ragel >/dev/null
 if [ $? -ne 0 ] ; then
@@ -18,9 +15,7 @@ else
 	ragel -v
 fi
 
-
 cd $ROOT_DIR
-
 
 cpp_file="${RAGEL_FILE%.rl}.cpp"
 
