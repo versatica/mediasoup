@@ -11,8 +11,8 @@ tap.test('server.updateSettings() with no options must succeed', { timeout: 1000
 	t.tearDown(() => server.close());
 
 	server.updateSettings()
-		.then(()  => t.end())
-		.catch(() => t.fail('should not fail'));
+		.then(() => t.end())
+		.catch((error) => t.fail(`should not fail: ${error}`));
 });
 
 tap.test('server.updateSettings() with valid options must succeed', { timeout: 1000 }, (t) =>
@@ -22,8 +22,8 @@ tap.test('server.updateSettings() with valid options must succeed', { timeout: 1
 	t.tearDown(() => server.close());
 
 	server.updateSettings({ logLevel: 'warn' })
-		.then(()  => t.end())
-		.catch(() => t.fail('should not fail'));
+		.then(() => t.end())
+		.catch((error) => t.fail(`should not fail: ${error}`));
 });
 
 tap.test('server.updateSettings() with invalid options must fail', { timeout: 1000 }, (t) =>
@@ -59,7 +59,7 @@ tap.test('server.createRoom() with no options must succeed', { timeout: 1000 }, 
 
 	server.createRoom()
 		.then(()  => t.end())
-		.catch(() => t.fail('should not fail'));
+		.catch((error) => t.fail(`should not fail: ${error}`));
 });
 
 tap.test('server.createRoom() in a closed Server must fail', { timeout: 1000 }, (t) =>

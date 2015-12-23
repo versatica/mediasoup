@@ -13,7 +13,7 @@ tap.test('mediasoup.Server() with no options must succeed', { timeout: 1000 }, (
 		if (!error)
 			t.end();
 		else
-			t.fail('should not be closed with error');
+			t.fail(`should not be closed with error: ${error}`);
 	});
 
 	setTimeout(() => server.close(), 100);
@@ -32,7 +32,7 @@ tap.test('mediasoup.Server() with valid options must succeed', { timeout: 1000 }
 		if (!error)
 			t.end();
 		else
-			t.fail('should not be closed with error');
+			t.fail(`should not be closed with error: ${error}`);
 	});
 
 	setTimeout(() => server.close(), 100);
