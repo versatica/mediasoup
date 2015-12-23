@@ -49,6 +49,14 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	void Room::HandleCreatePeerRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		// TODO: jeje
+		request->Accept();
+	}
+
 	void Room::Close()
 	{
 		MS_TRACE();

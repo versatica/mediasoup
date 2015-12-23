@@ -4,6 +4,7 @@
 #include "RTC/Peer.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
+#include "Channel/Request.h"
 #include <unordered_map>
 #include <json/json.h>
 
@@ -17,6 +18,8 @@ namespace RTC
 	public:
 		Room(unsigned int roomId);
 		virtual ~Room();
+
+		void HandleCreatePeerRequest(Channel::Request* request);
 
 		void Close();
 

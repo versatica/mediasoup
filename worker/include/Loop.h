@@ -17,7 +17,7 @@ public:
 	~Loop();
 
 private:
-	void HandleCreateRoomRequest(Channel::Request* request);
+	RTC::Room* GetRoomFromRequest(Channel::Request* request, unsigned int* roomId);
 	void Close();
 
 /* Methods inherited from SignalsHandler::Listener. */

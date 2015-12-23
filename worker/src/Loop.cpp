@@ -39,44 +39,31 @@ Loop::~Loop()
 	MS_TRACE();
 }
 
-void Loop::HandleCreateRoomRequest(Channel::Request* request)
+RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roomId = nullptr)
 {
 	MS_TRACE();
 
 	auto jsonRoomId = request->data["roomId"];
 
 	if (!jsonRoomId.isUInt())
-	{
-		MS_ERROR("Request has no numeric .roomId field");
+		MS_THROW_ERROR("Request has no numeric .roomId field");
 
-		request->Reject(500, "Request has no numeric .roomId field");
-		return;
-	}
+	// If given, fill roomId.
+	if (roomId)
+		*roomId = jsonRoomId.asUInt();
 
-	unsigned int roomId = jsonRoomId.asUInt();
-	auto it = this->rooms.find(roomId);
-	RTC::Room* room;
+	auto it = this->rooms.find(jsonRoomId.asUInt());
 
 	if (it != this->rooms.end())
 	{
-		MS_ERROR("Room with roomId '%u' already exists", roomId);
+		RTC::Room* room = it->second;
 
-		request->Reject(500, "Room already exists");
-		return;
+		return room;
 	}
-
-	room = RTC::Room::Factory(roomId, request->data);
-
-	if (!room)
+	else
 	{
-		MS_ERROR("failed to create a Room");
-
-		request->Reject(500, "failed to create a Room");
-		return;
+		return nullptr;
 	}
-
-	this->rooms[roomId] = room;
-	request->Accept();
 }
 
 void Loop::Close()
@@ -158,7 +145,43 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		{
 			MS_DEBUG("'createRoom' method");
 
-			this->HandleCreateRoomRequest(request);
+			RTC::Room* room;
+			unsigned int roomId;
+
+			try
+			{
+				room = GetRoomFromRequest(request, &roomId);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+
+				return;
+			}
+
+			if (room)
+			{
+				MS_ERROR("Room already exists");
+
+				request->Reject(500, "Room already exists");
+
+				return;
+			}
+
+			room = RTC::Room::Factory(roomId, request->data);
+
+			if (!room)
+			{
+				MS_ERROR("failed to create a Room");
+
+				request->Reject(500, "failed to create a Room");
+
+				return;
+			}
+
+			this->rooms[roomId] = room;
+			request->Accept();
+
 			break;
 		}
 
@@ -166,7 +189,30 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		{
 			MS_DEBUG("'createPeer' method");
 
-			request->Reject(500, "lalalala failed to create a Peer because yes!");
+			RTC::Room* room;
+
+			try
+			{
+				room = GetRoomFromRequest(request);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+
+				return;
+			}
+
+			if (!room)
+			{
+				MS_ERROR("Room does not exist");
+
+				request->Reject(500, "Room does not exist");
+
+				return;
+			}
+
+			room->HandleCreatePeerRequest(request);
+
 			break;
 		}
 
