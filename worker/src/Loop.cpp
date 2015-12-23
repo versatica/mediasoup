@@ -76,6 +76,7 @@ void Loop::Close()
 	if (this->closed)
 	{
 		MS_ERROR("already closed");
+
 		return;
 	}
 	this->closed = true;
@@ -155,7 +156,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			catch (const MediaSoupError &error)
 			{
 				request->Reject(500, error.what());
-
 				return;
 			}
 
@@ -164,7 +164,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 				MS_ERROR("Room already exists");
 
 				request->Reject(500, "Room already exists");
-
 				return;
 			}
 
@@ -175,11 +174,48 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 				MS_ERROR("failed to create Room");
 
 				request->Reject(500, "failed to create Room");
-
 				return;
 			}
 
 			this->rooms[roomId] = room;
+
+			MS_DEBUG("Room created [roomId:%u]", roomId);
+			request->Accept();
+
+			break;
+		}
+
+		case Channel::Request::MethodId::closeRoom:
+		{
+			MS_DEBUG("'closeRoom' method");
+
+			RTC::Room* room;
+			unsigned int roomId;
+
+			try
+			{
+				room = GetRoomFromRequest(request, &roomId);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+				return;
+			}
+
+			if (!room)
+			{
+				MS_ERROR("Room does not exist");
+
+				request->Reject(500, "Room does not exist");
+				return;
+			}
+
+			room->Close();
+
+			// TODO: Instead of this, the Room should fire an onRoomClosed() here.
+			this->rooms.erase(roomId);
+
+			MS_DEBUG("Room closed [roomId:%u]", roomId);
 			request->Accept();
 
 			break;
@@ -198,7 +234,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			catch (const MediaSoupError &error)
 			{
 				request->Reject(500, error.what());
-
 				return;
 			}
 
@@ -207,11 +242,39 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 				MS_ERROR("Room does not exist");
 
 				request->Reject(500, "Room does not exist");
-
 				return;
 			}
 
 			room->HandleCreatePeerRequest(request);
+
+			break;
+		}
+
+		case Channel::Request::MethodId::closePeer:
+		{
+			MS_DEBUG("'closePeer' method");
+
+			RTC::Room* room;
+
+			try
+			{
+				room = GetRoomFromRequest(request);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+				return;
+			}
+
+			if (!room)
+			{
+				MS_ERROR("Room does not exist");
+
+				request->Reject(500, "Room does not exist");
+				return;
+			}
+
+			room->HandleClosePeerRequest(request);
 
 			break;
 		}

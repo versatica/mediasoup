@@ -56,3 +56,26 @@ tap.test('room.createPeer() with same `peerId` must fail', { timeout: 1000 }, (t
 		})
 		.catch((error) => t.fail(`should not fail: ${error}`));
 });
+
+tap.test('room.createPeer() with same `peerId` must succeed if previous peer is closed before', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	server.createRoom()
+		.then((room) =>
+		{
+			room.createPeer('alice')
+				.then((peer) =>
+				{
+					peer.close();
+
+					room.createPeer('alice')
+						.then(() => t.end())
+						.catch((error) => t.fail(`should not fail: ${error}`));
+				})
+				.catch((error) => t.fail(`should not fail: ${error}`));
+		})
+		.catch((error) => t.fail(`should not fail: ${error}`));
+});

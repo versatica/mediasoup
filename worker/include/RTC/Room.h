@@ -21,6 +21,7 @@ namespace RTC
 		virtual ~Room();
 
 		void HandleCreatePeerRequest(Channel::Request* request);
+		void HandleClosePeerRequest(Channel::Request* request);
 		void Close();
 
 	private:

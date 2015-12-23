@@ -186,7 +186,6 @@ void Settings::HandleUpdateRequest(Channel::Request* request)
 	catch (const MediaSoupError &error)
 	{
 		request->Reject(500, error.what());
-
 		return;
 	}
 

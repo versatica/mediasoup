@@ -88,6 +88,42 @@ namespace RTC
 		}
 
 		this->peers[peerId] = peer;
+
+		MS_DEBUG("Peer created [peerId:%s]", peerId.c_str());
+		request->Accept();
+	}
+
+	void Room::HandleClosePeerRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		RTC::Peer* peer;
+		std::string peerId;
+
+		try
+		{
+			peer = GetPeerFromRequest(request, &peerId);
+		}
+		catch (const MediaSoupError &error)
+		{
+			request->Reject(500, error.what());
+			return;
+		}
+
+		if (!peer)
+		{
+			MS_ERROR("Peer does not exist");
+
+			request->Reject(500, "Peer does not exist");
+			return;
+		}
+
+		peer->Close();
+
+		// TODO: Instead of this, the Peer should fire an onPeerClosed() here.
+		this->peers.erase(peerId);
+
+		MS_DEBUG("Peer closed [peerId:%s]", peerId.c_str());
 		request->Accept();
 	}
 

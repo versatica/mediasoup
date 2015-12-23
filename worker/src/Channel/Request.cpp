@@ -15,7 +15,9 @@ namespace Channel
 	{
 		{ "updateSettings", Request::MethodId::updateSettings },
 		{ "createRoom",     Request::MethodId::createRoom     },
-		{ "createPeer",     Request::MethodId::createPeer     }
+		{ "closeRoom",      Request::MethodId::closeRoom      },
+		{ "createPeer",     Request::MethodId::createPeer     },
+		{ "closePeer",      Request::MethodId::closePeer      }
 	};
 
 	/* Class methods. */

@@ -18,7 +18,9 @@ namespace Channel
 		{
 			updateSettings = 1,
 			createRoom,
-			createPeer
+			closeRoom,
+			createPeer,
+			closePeer
 		};
 
 	public:
