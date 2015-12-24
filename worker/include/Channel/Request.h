@@ -16,11 +16,14 @@ namespace Channel
 	public:
 		enum class MethodId
 		{
-			updateSettings = 1,
+			dumpWorker = 1,
+			updateSettings,
 			createRoom,
 			closeRoom,
+			dumpRoom,
 			createPeer,
-			closePeer
+			closePeer,
+			dumpPeer
 		};
 
 	private:

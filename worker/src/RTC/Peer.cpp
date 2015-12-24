@@ -46,6 +46,18 @@ namespace RTC
 			this->transport->SendRTCPPacket(packet);
 	}
 
+	Json::Value Peer::Dump()
+	{
+		MS_TRACE();
+
+		Json::Value json(Json::objectValue);
+
+		// TODO: TMP
+		json["foo"] = "bar";
+
+		return json;
+	}
+
 	void Peer::Close()
 	{
 		MS_TRACE();

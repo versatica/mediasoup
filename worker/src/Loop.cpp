@@ -10,6 +10,7 @@
 #include <csignal>  // sigfillset, pthread_sigmask()
 #include <cstdlib>  // std::genenv()
 #include <cerrno>
+#include <json/json.h>
 
 /* Instance methods. */
 
@@ -134,6 +135,29 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 	switch (request->methodId)
 	{
+		case Channel::Request::MethodId::dumpWorker:
+		{
+			MS_DEBUG("'dumpWorker' method");
+
+			Json::Value json(Json::objectValue);
+			Json::Value jsonWorker(Json::objectValue);
+			Json::Value jsonRooms(Json::objectValue);
+
+			for (auto& kv : this->rooms)
+			{
+				auto room = kv.second;
+
+				jsonRooms[std::to_string(room->roomId)] = room->Dump();
+			}
+
+			jsonWorker["rooms"] = jsonRooms;
+			json[Logger::id] = jsonWorker;
+
+			request->Accept(json);
+
+			break;
+		}
+
 		case Channel::Request::MethodId::updateSettings:
 		{
 			MS_DEBUG("'updateSettings' method");
@@ -221,6 +245,38 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			break;
 		}
 
+		case Channel::Request::MethodId::dumpRoom:
+		{
+			MS_DEBUG("'dumpRoom' method");
+
+			RTC::Room* room;
+			unsigned int roomId;
+
+			try
+			{
+				room = GetRoomFromRequest(request, &roomId);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+				return;
+			}
+
+			if (!room)
+			{
+				MS_ERROR("Room does not exist");
+
+				request->Reject(500, "Room does not exist");
+				return;
+			}
+
+			Json::Value jsonRoom = room->Dump();
+
+			request->Accept(jsonRoom);
+
+			break;
+		}
+
 		case Channel::Request::MethodId::createPeer:
 		{
 			MS_DEBUG("'createPeer' method");
@@ -275,6 +331,35 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			}
 
 			room->HandleClosePeerRequest(request);
+
+			break;
+		}
+
+		case Channel::Request::MethodId::dumpPeer:
+		{
+			MS_DEBUG("'dumpPeer' method");
+
+			RTC::Room* room;
+
+			try
+			{
+				room = GetRoomFromRequest(request);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+				return;
+			}
+
+			if (!room)
+			{
+				MS_ERROR("Room does not exist");
+
+				request->Reject(500, "Room does not exist");
+				return;
+			}
+
+			room->HandleDumpPeerRequest(request);
 
 			break;
 		}

@@ -25,11 +25,23 @@ namespace Channel
 		listener(listener)
 	{
 		MS_TRACE();
+
+		Json::CharReaderBuilder builder;
+		Json::Value settings = Json::nullValue;
+		Json::Value invalid_settings;
+
+		builder.strictMode(&settings);
+
+		MS_ASSERT(builder.validate(&invalid_settings), "invalid Json::CharReaderBuilder");
+
+		this->jsonReader = builder.newCharReader();
 	}
 
 	UnixStreamSocket::~UnixStreamSocket()
 	{
 		MS_TRACE();
+
+		delete this->jsonReader;
 	}
 
 	void UnixStreamSocket::Send(Json::Value &msg)
@@ -154,9 +166,9 @@ namespace Channel
 			read_len = (const MS_BYTE*)json_start - (this->buffer + this->msgStart) + json_len + 1;
 
 			Json::Value json;
-			Json::Reader reader;
+			std::string json_parse_error;
 
-			if (reader.parse((const char*)json_start, (const char*)json_start + json_len, json))
+			if (this->jsonReader->parse((const char*)json_start, (const char*)json_start + json_len, &json, &json_parse_error))
 			{
 				Channel::Request* request = nullptr;
 
@@ -180,7 +192,7 @@ namespace Channel
 			}
 			else
 			{
-				MS_ERROR("invalid JSON");
+				MS_ERROR("JSON parsing error: %s", json_parse_error.c_str());
 			}
 
 			// If there is no more space available in the buffer and that is because

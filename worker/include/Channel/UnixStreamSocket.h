@@ -39,6 +39,7 @@ namespace Channel
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
+		Json::CharReader* jsonReader = nullptr;
 		size_t msgStart = 0;  // Where the latest message starts.
 	};
 }

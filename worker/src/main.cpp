@@ -26,18 +26,10 @@ static void destroy();
 
 int main(int argc, char* argv[], char** envp)
 {
-	char** env;
-	for (env = envp; *env != 0; env++)
-	{
-	  // printf("%s\n", *env);
-	}
-
-	std::string id;
-
 	if (argc == 1)
 		MS_EXIT_FAILURE("process id must be given as first argument");
 
-	id = std::string(argv[1]);
+	std::string id = std::string(argv[1]);
 
 	Logger::Init(id);
 

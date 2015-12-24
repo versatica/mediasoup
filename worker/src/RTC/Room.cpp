@@ -103,6 +103,55 @@ namespace RTC
 		request->Accept();
 	}
 
+	void Room::HandleDumpPeerRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		RTC::Peer* peer;
+		std::string peerId;
+
+		try
+		{
+			peer = GetPeerFromRequest(request, &peerId);
+		}
+		catch (const MediaSoupError &error)
+		{
+			request->Reject(500, error.what());
+			return;
+		}
+
+		if (!peer)
+		{
+			MS_ERROR("Peer does not exist");
+
+			request->Reject(500, "Peer does not exist");
+			return;
+		}
+
+		Json::Value jsonPeer = peer->Dump();
+
+		request->Accept(jsonPeer);
+	}
+
+	Json::Value Room::Dump()
+	{
+		MS_TRACE();
+
+		Json::Value json(Json::objectValue);
+		Json::Value jsonPeers(Json::objectValue);
+
+		for (auto& kv : this->peers)
+		{
+			auto peer = kv.second;
+
+			jsonPeers[peer->peerId] = peer->Dump();
+		}
+
+		json["peers"] = jsonPeers;
+
+		return json;
+	}
+
 	void Room::Close()
 	{
 		MS_TRACE();

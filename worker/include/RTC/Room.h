@@ -19,6 +19,8 @@ namespace RTC
 
 		void HandleCreatePeerRequest(Channel::Request* request);
 		void HandleClosePeerRequest(Channel::Request* request);
+		void HandleDumpPeerRequest(Channel::Request* request);
+		Json::Value Dump();
 		void Close();
 
 	private:
@@ -29,9 +31,11 @@ namespace RTC
 		virtual void onRTPPacket(RTC::Peer* peer, RTC::RTPPacket* packet) override;
 		virtual void onRTCPPacket(RTC::Peer* peer, RTC::RTCPPacket* packet) override;
 
-	private:
+	public:
 		// Passed by argument.
 		unsigned int roomId;
+
+	private:
 		// Others.
 		typedef std::unordered_map<std::string, RTC::Peer*> Peers;
 		Peers peers;

@@ -25,6 +25,7 @@ namespace RTC
 
 		void SendRTPPacket(RTC::RTPPacket* packet);
 		void SendRTCPPacket(RTC::RTCPPacket* packet);
+		Json::Value Dump();
 		void Close();
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
@@ -32,10 +33,13 @@ namespace RTC
 		virtual void onRTPPacket(RTC::Transport* transport, RTC::RTPPacket* packet) override;
 		virtual void onRTCPPacket(RTC::Transport* transport, RTC::RTCPPacket* packet) override;
 
+	public:
+		// Passed by argument.
+		std::string peerId;
+
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
-		std::string peerId;
 		// Others.
 		RTC::Transport* transport = nullptr;
 	};

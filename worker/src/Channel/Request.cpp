@@ -14,11 +14,14 @@ namespace Channel
 
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
+		{ "dumpWorker",     Request::MethodId::dumpWorker     },
 		{ "updateSettings", Request::MethodId::updateSettings },
 		{ "createRoom",     Request::MethodId::createRoom     },
 		{ "closeRoom",      Request::MethodId::closeRoom      },
+		{ "dumpRoom",       Request::MethodId::dumpRoom       },
 		{ "createPeer",     Request::MethodId::createPeer     },
-		{ "closePeer",      Request::MethodId::closePeer      }
+		{ "closePeer",      Request::MethodId::closePeer      },
+		{ "dumpPeer",       Request::MethodId::dumpPeer       }
 	};
 
 	/* Instance methods. */

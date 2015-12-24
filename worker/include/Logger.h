@@ -40,7 +40,7 @@
  * This macro must point to a unsigned int function, method or variable that
  * returns the logging level.
  */
-#define MS_GET_LOG_LEVEL Settings::configuration.logLevel
+#define MS_CURRENT_LOG_LEVEL Settings::configuration.logLevel
 
 class Logger
 {
@@ -58,7 +58,7 @@ public:
 inline
 bool Logger::HasDebugLevel()
 {
-	return (MS_LOG_LEVEL_DEBUG == MS_GET_LOG_LEVEL);
+	return (MS_LOG_LEVEL_DEBUG == MS_CURRENT_LOG_LEVEL);
 }
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
@@ -90,7 +90,7 @@ bool Logger::HasDebugLevel()
 #define MS_DEBUG(desc, ...)  \
 	do  \
 	{  \
-		if (MS_LOG_LEVEL_DEBUG == MS_GET_LOG_LEVEL)  \
+		if (MS_LOG_LEVEL_DEBUG == MS_CURRENT_LOG_LEVEL)  \
 		{  \
 			dprintf(Logger::fd, "D" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
 		}  \
@@ -100,7 +100,7 @@ bool Logger::HasDebugLevel()
 #define MS_WARN(desc, ...)  \
 	do  \
 	{  \
-		if (MS_LOG_LEVEL_WARN <= MS_GET_LOG_LEVEL)  \
+		if (MS_LOG_LEVEL_WARN <= MS_CURRENT_LOG_LEVEL)  \
 		{  \
 			dprintf(Logger::fd, "W" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
 		}  \
