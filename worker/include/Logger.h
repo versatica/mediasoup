@@ -4,7 +4,7 @@
 #include "common.h"
 #include "Settings.h"
 #include <string>
-#include <cstdio>  // stdout, stderr, dprintf()
+#include <cstdio>  // dprintf()
 #include <cstring>
 #include <cstdlib>  // std::_Exit(), std::abort(), std::genenv()
 #include <uv.h>

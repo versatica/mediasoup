@@ -3,10 +3,11 @@
 #include "Channel/UnixStreamSocket.h"
 #include "Logger.h"
 #include "MediaSoupError.h"
-#include <netstring.h>
+#include <sstream>  // std::ostringstream
 #include <cstring>  // std::memmove()
 #include <cmath>  // std::ceil()
 #include <cstdio>  // sprintf()
+#include <netstring.h>
 
 // netstring length for a 65536 bytes payload
 #define NS_MAX_SIZE      65543
@@ -26,15 +27,33 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		Json::CharReaderBuilder builder;
-		Json::Value settings = Json::nullValue;
-		Json::Value invalid_settings;
+		// Create the JSON reader.
+		{
+			Json::CharReaderBuilder builder;
+			Json::Value settings = Json::nullValue;
+			Json::Value invalid_settings;
 
-		builder.strictMode(&settings);
+			builder.strictMode(&settings);
 
-		MS_ASSERT(builder.validate(&invalid_settings), "invalid Json::CharReaderBuilder");
+			MS_ASSERT(builder.validate(&invalid_settings), "invalid Json::CharReaderBuilder");
 
-		this->jsonReader = builder.newCharReader();
+			this->jsonReader = builder.newCharReader();
+		}
+
+		// Create the JSON writer.
+		{
+			Json::StreamWriterBuilder builder;
+			Json::Value invalid_settings;
+
+			builder["commentStyle"] = "None";
+			builder["indentation"] = "";
+			builder["enableYAMLCompatibility"] = false;
+			builder["dropNullPlaceholders"] = false;
+
+			MS_ASSERT(builder.validate(&invalid_settings), "invalid Json::StreamWriterBuilder");
+
+			this->jsonWriter = builder.newStreamWriter();
+		}
 	}
 
 	UnixStreamSocket::~UnixStreamSocket()
@@ -42,21 +61,22 @@ namespace Channel
 		MS_TRACE();
 
 		delete this->jsonReader;
+		delete this->jsonWriter;
 	}
 
 	void UnixStreamSocket::Send(Json::Value &msg)
 	{
 		MS_TRACE();
 
-		Json::FastWriter fastWriter;
-
-		fastWriter.dropNullPlaceholders();
-		fastWriter.omitEndingLineFeed();
-
+		std::ostringstream stream;
+		std::string ns_payload;
+		size_t ns_payload_len;
 		size_t ns_num_len;
-		std::string ns_payload = fastWriter.write(msg);
-		size_t ns_payload_len = ns_payload.length();
 		size_t ns_len;
+
+		this->jsonWriter->write(msg, &stream);
+		ns_payload = stream.str();
+		ns_payload_len = ns_payload.length();
 
 		if (ns_payload_len > MESSAGE_MAX_SIZE)
 		{
