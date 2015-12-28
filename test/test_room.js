@@ -69,10 +69,18 @@ tap.test('room.createPeer() with same `peerId` must succeed if previous peer is 
 			room.createPeer('alice')
 				.then((peer) =>
 				{
+					let alice1 = peer;
+
 					peer.close();
 
 					room.createPeer('alice')
-						.then(() => t.end())
+						.then((peer) =>
+						{
+							t.notEqual(alice1, peer, 'should be a different "alice"');
+							t.equal(room.getPeer('alice'), peer, 'room.getPeer() retrieves the new "alice"');
+							t.equal(room.getPeers().length, 1, 'room.getPeers() returns 1 peer');
+							t.end();
+						})
 						.catch((error) => t.fail(`should not fail: ${error}`));
 				})
 				.catch((error) => t.fail(`should not fail: ${error}`));

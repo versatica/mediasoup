@@ -13,17 +13,17 @@ void DepUsrSCTP::ClassInit()
 	// Initialize usrsctp.
 	// TODO: second argment must be a function to get outgoing SCTP data
 	// (to be sent on top of DTLS)
-	usrsctp_init(0, nullptr, nullptr);
+	// usrsctp_init(0, nullptr, nullptr);
 }
 
 void DepUsrSCTP::ClassDestroy()
 {
 	MS_TRACE();
 
-	int err;
+	// int err;
 
 	// Free usrsctp.
-	err = usrsctp_finish();
-	if (err)
-		MS_ERROR("usrsctp_finish() failed");
+	// err = usrsctp_finish();
+	// if (err)
+		// MS_ERROR("usrsctp_finish() failed");
 }
