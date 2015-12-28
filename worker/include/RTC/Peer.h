@@ -1,37 +1,36 @@
 #ifndef MS_RTC_PEER_H
 #define MS_RTC_PEER_H
 
-#include "RTC/Transport.h"
+#include "RTC/ICETransport.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
+#include "Channel/Request.h"
 #include <string>
 #include <json/json.h>
 
 namespace RTC
 {
-	class Peer : public RTC::Transport::Listener
+	class Peer :
+		public RTC::ICETransport::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void onRTPPacket(RTC::Peer* peer, RTC::RTPPacket* packet) = 0;
-			virtual void onRTCPPacket(RTC::Peer* peer, RTC::RTCPPacket* packet) = 0;
+			virtual void onPeerClosed(RTC::Peer* peer) = 0;
 		};
 
 	public:
 		Peer(Listener* listener, std::string& peerId, Json::Value& data);
 		virtual ~Peer();
 
-		void SendRTPPacket(RTC::RTPPacket* packet);
-		void SendRTCPPacket(RTC::RTCPPacket* packet);
-		Json::Value Dump();
 		void Close();
+		Json::Value Dump();
+		void HandleRequest(Channel::Request* request);
 
-	/* Pure virtual methods inherited from RTC::Transport::Listener. */
+	/* Pure virtual methods inherited from RTC::ICETransport::Listener. */
 	public:
-		virtual void onRTPPacket(RTC::Transport* transport, RTC::RTPPacket* packet) override;
-		virtual void onRTCPPacket(RTC::Transport* transport, RTC::RTCPPacket* packet) override;
+		// TODO
 
 	public:
 		// Passed by argument.
@@ -41,7 +40,8 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		RTC::Transport* transport = nullptr;
+		// TODO: it must be a unordered_map.
+		RTC::ICETransport* iceTransport = nullptr;
 	};
 }
 

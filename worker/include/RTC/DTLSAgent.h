@@ -1,5 +1,5 @@
-#ifndef MS_RTC_DTLS_HANDLER_H
-#define MS_RTC_DTLS_HANDLER_H
+#ifndef MS_RTC_DTLS_AGENT_H
+#define MS_RTC_DTLS_AGENT_H
 
 #include "common.h"
 #include "handles/Timer.h"
@@ -15,7 +15,7 @@
 
 namespace RTC
 {
-	class DTLSHandler :	public Timer::Listener
+	class DTLSAgent :	public Timer::Listener
 	{
 	private:
 		struct SrtpProfileMapEntry
@@ -30,14 +30,14 @@ namespace RTC
 		public:
 			// NOTE: The caller MUST NOT call Reset() or Close() during the
 			// onOutgoingDTLSData() callback.
-			virtual void onOutgoingDTLSData(DTLSHandler* dtlsHandler, const MS_BYTE* data, size_t len) = 0;
+			virtual void onOutgoingDTLSData(DTLSAgent* dtlsAgent, const MS_BYTE* data, size_t len) = 0;
 			// NOTE: The caller MUST NOT call any method during the onDTLSConnected,
 			// onDTLSDisconnected or onDTLSFailed callbacks.
-			virtual void onDTLSConnected(DTLSHandler* dtlsHandler) = 0;
-			virtual void onDTLSDisconnected(DTLSHandler* dtlsHandler) = 0;
-			virtual void onDTLSFailed(DTLSHandler* dtlsHandler) = 0;
-			virtual void onSRTPKeyMaterial(DTLSHandler* dtlsHandler, RTC::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
-			virtual void onDTLSApplicationData(DTLSHandler* dtlsHandler, const MS_BYTE* data, size_t len) = 0;
+			virtual void onDTLSConnected(DTLSAgent* dtlsAgent) = 0;
+			virtual void onDTLSDisconnected(DTLSAgent* dtlsAgent) = 0;
+			virtual void onDTLSFailed(DTLSAgent* dtlsAgent) = 0;
+			virtual void onSRTPKeyMaterial(DTLSAgent* dtlsAgent, RTC::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			virtual void onDTLSApplicationData(DTLSAgent* dtlsAgent, const MS_BYTE* data, size_t len) = 0;
 		};
 
 	public:
@@ -63,8 +63,8 @@ namespace RTC
 		static MS_BYTE sslReadBuffer[];
 
 	public:
-		DTLSHandler(Listener* listener);
-		virtual ~DTLSHandler();
+		DTLSAgent(Listener* listener);
+		virtual ~DTLSAgent();
 
 		void Run(RTC::DTLSRole role);
 		void SetRemoteFingerprint(RTC::FingerprintHash hash, std::string& fingerprint);
@@ -117,7 +117,7 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	bool DTLSHandler::IsDTLS(const MS_BYTE* data, size_t len)
+	bool DTLSAgent::IsDTLS(const MS_BYTE* data, size_t len)
 	{
 		return (
 			// Minimum DTLS record length is 13 bytes.
@@ -130,13 +130,13 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool DTLSHandler::IsConnected()
+	bool DTLSAgent::IsConnected()
 	{
 		return this->isConnected;
 	}
 
 	inline
-	bool DTLSHandler::IsRunning()
+	bool DTLSAgent::IsRunning()
 	{
 		return this->isRunning;
 	}

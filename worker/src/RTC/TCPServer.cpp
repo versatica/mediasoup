@@ -3,7 +3,6 @@
 #include "RTC/TCPServer.h"
 #include "RTC/STUNMessage.h"
 #include "RTC/RTPPacket.h"
-#include "RTC/DTLSHandler.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "DepLibUV.h"
@@ -67,7 +66,7 @@ namespace RTC
 		while (i++ != RTC::TCPServer::maxPort);
 	}
 
-	RTC::TCPServer* TCPServer::New(int address_family)
+	RTC::TCPServer* TCPServer::Factory(Listener* listener, RTC::TCPConnection::Reader* reader, int address_family)
 	{
 		MS_TRACE();
 
@@ -77,10 +76,10 @@ namespace RTC
 		// or there are no available ports.
 		RandomizePort(address_family, uvHandles, false);
 
-		return new RTC::TCPServer(uvHandles[0]);
+		return new RTC::TCPServer(listener, reader, uvHandles[0]);
 	}
 
-	void TCPServer::NewPair(int address_family, RTC::TCPServer* servers[])
+	void TCPServer::PairFactory(Listener* listener, RTC::TCPConnection::Reader* reader, int address_family, RTC::TCPServer* servers[])
 	{
 		MS_TRACE();
 
@@ -90,8 +89,8 @@ namespace RTC
 		// or there are no available ports.
 		RandomizePort(address_family, uvHandles, true);
 
-		servers[0] = new RTC::TCPServer(uvHandles[0]);
-		servers[1] = new RTC::TCPServer(uvHandles[1]);
+		servers[0] = new RTC::TCPServer(listener, reader, uvHandles[0]);
+		servers[1] = new RTC::TCPServer(listener, reader, uvHandles[1]);
 	}
 
 	void TCPServer::RandomizePort(int address_family, uv_tcp_t* uvHandles[], bool pair)
@@ -322,8 +321,10 @@ namespace RTC
 
 	/* Instance methods. */
 
-	TCPServer::TCPServer(uv_tcp_t* uvHandle) :
-		::TCPServer::TCPServer(uvHandle, 256)
+	TCPServer::TCPServer(Listener* listener, RTC::TCPConnection::Reader* reader, uv_tcp_t* uvHandle) :
+		::TCPServer::TCPServer(uvHandle, 256),
+		listener(listener),
+		reader(reader)
 	{
 		MS_TRACE();
 	}

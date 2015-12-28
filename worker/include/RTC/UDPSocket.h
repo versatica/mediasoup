@@ -23,8 +23,8 @@ namespace RTC
 
 	public:
 		static void ClassInit();
-		static RTC::UDPSocket* New(int address_family);
-		static void NewPair(int address_family, RTC::UDPSocket* sockets[]);
+		static RTC::UDPSocket* Factory(Listener* listener, int address_family);
+		static void PairFactory(Listener* listener, int address_family, RTC::UDPSocket* sockets[]);
 
 	private:
 		static void RandomizePort(int address_family, uv_udp_t* uvHandles[], bool pair);
@@ -39,9 +39,7 @@ namespace RTC
 		static AvailablePorts availableIPv6Ports;
 
 	public:
-		UDPSocket(uv_udp_t* uvHandle);
-
-		void SetListener(Listener* listener);
+		UDPSocket(Listener* listener, uv_udp_t* uvHandle);
 
 	/* Pure virtual methods inherited from ::UDPSocket. */
 	public:
@@ -52,14 +50,6 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 	};
-
-	/* Inline methods. */
-
-	inline
-	void UDPSocket::SetListener(Listener* listener)
-	{
-		this->listener = listener;
-	}
 }
 
 #endif

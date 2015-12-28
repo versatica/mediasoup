@@ -23,7 +23,10 @@ namespace Channel
 			dumpRoom,
 			createPeer,
 			closePeer,
-			dumpPeer
+			dumpPeer,
+			createTransport,
+			closeTransport,
+			dumpTransport
 		};
 
 	private:

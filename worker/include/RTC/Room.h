@@ -2,8 +2,6 @@
 #define MS_RTC_ROOM_H
 
 #include "RTC/Peer.h"
-#include "RTC/RTPPacket.h"
-#include "RTC/RTCPPacket.h"
 #include "Channel/Request.h"
 #include <string>
 #include <unordered_map>
@@ -17,19 +15,16 @@ namespace RTC
 		Room(unsigned int roomId, Json::Value& data);
 		virtual ~Room();
 
-		void HandleCreatePeerRequest(Channel::Request* request);
-		void HandleClosePeerRequest(Channel::Request* request);
-		void HandleDumpPeerRequest(Channel::Request* request);
-		Json::Value Dump();
 		void Close();
+		Json::Value Dump();
+		void HandleRequest(Channel::Request* request);
 
 	private:
-		RTC::Peer* GetPeerFromRequest(Channel::Request* request, std::string* peerId);
+		RTC::Peer* GetPeerFromRequest(Channel::Request* request, std::string* peerId = nullptr);
 
 	/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
-		virtual void onRTPPacket(RTC::Peer* peer, RTC::RTPPacket* packet) override;
-		virtual void onRTCPPacket(RTC::Peer* peer, RTC::RTCPPacket* packet) override;
+		virtual void onPeerClosed(RTC::Peer* peer) override;
 
 	public:
 		// Passed by argument.

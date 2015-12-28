@@ -2,7 +2,7 @@
 
 #include "RTC/UDPSocket.h"
 #include "RTC/STUNMessage.h"
-#include "RTC/DTLSHandler.h"
+#include "RTC/DTLSAgent.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
 #include "Settings.h"
@@ -67,7 +67,7 @@ namespace RTC
 		while (i++ != RTC::UDPSocket::maxPort);
 	}
 
-	RTC::UDPSocket* UDPSocket::New(int address_family)
+	RTC::UDPSocket* UDPSocket::Factory(Listener* listener, int address_family)
 	{
 		MS_TRACE();
 
@@ -77,10 +77,10 @@ namespace RTC
 		// or there are no available ports.
 		RandomizePort(address_family, uvHandles, false);
 
-		return new RTC::UDPSocket(uvHandles[0]);
+		return new RTC::UDPSocket(listener, uvHandles[0]);
 	}
 
-	void UDPSocket::NewPair(int address_family, RTC::UDPSocket* sockets[])
+	void UDPSocket::PairFactory(Listener* listener, int address_family, RTC::UDPSocket* sockets[])
 	{
 		MS_TRACE();
 
@@ -90,8 +90,8 @@ namespace RTC
 		// or there are no available ports.
 		RandomizePort(address_family, uvHandles, true);
 
-		sockets[0] = new RTC::UDPSocket(uvHandles[0]);
-		sockets[1] = new RTC::UDPSocket(uvHandles[1]);
+		sockets[0] = new RTC::UDPSocket(listener, uvHandles[0]);
+		sockets[1] = new RTC::UDPSocket(listener, uvHandles[1]);
 	}
 
 	void UDPSocket::RandomizePort(int address_family, uv_udp_t* uvHandles[], bool pair)
@@ -320,8 +320,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	UDPSocket::UDPSocket(uv_udp_t* uvHandle) :
-		::UDPSocket::UDPSocket(uvHandle)
+	UDPSocket::UDPSocket(Listener* listener, uv_udp_t* uvHandle) :
+		::UDPSocket::UDPSocket(uvHandle),
+		listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -367,7 +368,7 @@ namespace RTC
 		}
 
 		// Check if it's DTLS.
-		if (DTLSHandler::IsDTLS(data, len))
+		if (DTLSAgent::IsDTLS(data, len))
 		{
 			this->listener->onDTLSDataRecv(this, data, len, addr);
 			return;

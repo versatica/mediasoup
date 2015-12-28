@@ -2,7 +2,7 @@
 
 #include "RTC/TCPConnection.h"
 #include "RTC/STUNMessage.h"
-#include "RTC/DTLSHandler.h"
+#include "RTC/DTLSAgent.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
 #include "Utils.h"
@@ -84,7 +84,7 @@ namespace RTC
 					this->reader->onRTPDataRecv(this, packet, packet_len);
 				}
 				// Check if it's DTLS.
-				else if (DTLSHandler::IsDTLS(packet, packet_len))
+				else if (DTLSAgent::IsDTLS(packet, packet_len))
 				{
 					this->reader->onDTLSDataRecv(this, packet, packet_len);
 				}

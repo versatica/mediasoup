@@ -13,8 +13,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Peer::Peer(Listener* listener, std::string& peerId, Json::Value& data) :
-		listener(listener),
-		peerId(peerId)
+		peerId(peerId),
+		listener(listener)
 	{
 		MS_TRACE();
 
@@ -26,24 +26,17 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void Peer::SendRTPPacket(RTC::RTPPacket* packet)
+	void Peer::Close()
 	{
 		MS_TRACE();
 
 		// TMP
+		if (this->iceTransport)
+			this->iceTransport->Close();
 
-		if (this->transport->IsReadyForMedia())
-			this->transport->SendRTPPacket(packet);
-	}
+		this->listener->onPeerClosed(this);
 
-	void Peer::SendRTCPPacket(RTC::RTCPPacket* packet)
-	{
-		MS_TRACE();
-
-		// TMP
-
-		if (this->transport->IsReadyForMedia())
-			this->transport->SendRTCPPacket(packet);
+		delete this;
 	}
 
 	Json::Value Peer::Dump()
@@ -52,42 +45,50 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		// TODO: TMP
-		json["foo"] = "bar";
+		// TODO
 
 		return json;
 	}
 
-	void Peer::Close()
+	void Peer::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
-		// TMP
-		if (this->transport)
-			this->transport->Close();
+		switch (request->methodId)
+		{
+			case Channel::Request::MethodId::createTransport:
+			{
+				try
+				{
+					this->iceTransport = new RTC::ICETransport(this, request->data);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(500, error.what());
+					return;
+				}
 
-		delete this;
-	}
+				auto data = this->iceTransport->toJson();
 
-	void Peer::onRTPPacket(RTC::Transport* transport, RTC::RTPPacket* packet)
-	{
-		MS_TRACE();
+				request->Accept(data);
 
-		// MS_DEBUG("RTP packet received");  // TODO: TMP
+				break;
+			}
 
-		// TMP
+			case Channel::Request::MethodId::closeTransport:
+			case Channel::Request::MethodId::dumpTransport:
+			{
+				// TODO
 
-		this->listener->onRTPPacket(this, packet);
-	}
+				request->Accept();
 
-	void Peer::onRTCPPacket(RTC::Transport* transport, RTC::RTCPPacket* packet)
-	{
-		MS_TRACE();
+				break;
+			}
 
-		// MS_DEBUG("RTCP packet received");  // TODO: TMP
-
-		// TMP
-
-		this->listener->onRTCPPacket(this, packet);
+			default:
+			{
+				MS_ABORT("unknown method");
+			}
+		}
 	}
 }

@@ -40,7 +40,7 @@ Loop::~Loop()
 	MS_TRACE();
 }
 
-RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roomId = nullptr)
+RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roomId)
 {
 	MS_TRACE();
 
@@ -133,12 +133,12 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 {
 	MS_TRACE();
 
+	MS_DEBUG("'%s' request", request->method.c_str());
+
 	switch (request->methodId)
 	{
 		case Channel::Request::MethodId::dumpWorker:
 		{
-			MS_DEBUG("'dumpWorker' method");
-
 			Json::Value json(Json::objectValue);
 			Json::Value jsonWorker(Json::objectValue);
 			Json::Value jsonRooms(Json::objectValue);
@@ -160,16 +160,12 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 		case Channel::Request::MethodId::updateSettings:
 		{
-			MS_DEBUG("'updateSettings' method");
-
 			Settings::HandleUpdateRequest(request);
 			break;
 		}
 
 		case Channel::Request::MethodId::createRoom:
 		{
-			MS_DEBUG("'createRoom' method");
-
 			RTC::Room* room;
 			unsigned int roomId;
 
@@ -211,8 +207,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 		case Channel::Request::MethodId::closeRoom:
 		{
-			MS_DEBUG("'closeRoom' method");
-
 			RTC::Room* room;
 			unsigned int roomId;
 
@@ -247,14 +241,11 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 		case Channel::Request::MethodId::dumpRoom:
 		{
-			MS_DEBUG("'dumpRoom' method");
-
 			RTC::Room* room;
-			unsigned int roomId;
 
 			try
 			{
-				room = GetRoomFromRequest(request, &roomId);
+				room = GetRoomFromRequest(request);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -278,67 +269,12 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		}
 
 		case Channel::Request::MethodId::createPeer:
-		{
-			MS_DEBUG("'createPeer' method");
-
-			RTC::Room* room;
-
-			try
-			{
-				room = GetRoomFromRequest(request);
-			}
-			catch (const MediaSoupError &error)
-			{
-				request->Reject(500, error.what());
-				return;
-			}
-
-			if (!room)
-			{
-				MS_ERROR("Room does not exist");
-
-				request->Reject(500, "Room does not exist");
-				return;
-			}
-
-			room->HandleCreatePeerRequest(request);
-
-			break;
-		}
-
 		case Channel::Request::MethodId::closePeer:
-		{
-			MS_DEBUG("'closePeer' method");
-
-			RTC::Room* room;
-
-			try
-			{
-				room = GetRoomFromRequest(request);
-			}
-			catch (const MediaSoupError &error)
-			{
-				request->Reject(500, error.what());
-				return;
-			}
-
-			if (!room)
-			{
-				MS_ERROR("Room does not exist");
-
-				request->Reject(500, "Room does not exist");
-				return;
-			}
-
-			room->HandleClosePeerRequest(request);
-
-			break;
-		}
-
 		case Channel::Request::MethodId::dumpPeer:
+		case Channel::Request::MethodId::createTransport:
+		case Channel::Request::MethodId::closeTransport:
+		case Channel::Request::MethodId::dumpTransport:
 		{
-			MS_DEBUG("'dumpPeer' method");
-
 			RTC::Room* room;
 
 			try
@@ -359,14 +295,14 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 				return;
 			}
 
-			room->HandleDumpPeerRequest(request);
+			room->HandleRequest(request);
 
 			break;
 		}
 
 		default:
 		{
-			MS_ABORT("unexpected methodId");
+			MS_ABORT("unknown method");
 		}
 	}
 }

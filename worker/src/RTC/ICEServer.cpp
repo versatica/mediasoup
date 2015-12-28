@@ -1,29 +1,27 @@
 #define MS_CLASS "RTC::ICEServer"
 
 #include "RTC/ICEServer.h"
-#include "Utils.h"
 #include "Logger.h"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	ICEServer::ICEServer(Listener* listener) :
-		listener(listener)
+	ICEServer::ICEServer(Listener* listener, std::string& usernameFragment, std::string password) :
+		listener(listener),
+		usernameFragment(usernameFragment),
+		password(password)
 	{
 		MS_TRACE();
 
-		char local_username[16];
-		char local_password[16];
+		MS_DEBUG("[usernameFragment:%s, password:%s]", this->usernameFragment.c_str(), this->password.c_str());
+	}
 
-		this->localUsername = std::string(Utils::Crypto::GetRandomHexString(local_username, 16), 16);
-		this->localPassword = std::string(Utils::Crypto::GetRandomHexString(local_password, 32), 32);
+	void ICEServer::Close()
+	{
+		MS_TRACE();
 
-		MS_DEBUG("local username: %s | local password: %s", this->localUsername.c_str(), this->localPassword.c_str());
-
-		// TODO: TMP for testing
-		this->localUsername = "7D5B3AA55DC2CE83";
-		this->localPassword = "75C96DDDFC38D194FEDF75986CF962A2D56F3B65F1F7";
+		delete this;
 	}
 
 	void ICEServer::ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source)
@@ -91,7 +89,7 @@ namespace RTC
 				}
 
 				// Check authentication.
-				switch (msg->CheckAuthentication(this->localUsername, this->localPassword))
+				switch (msg->CheckAuthentication(this->usernameFragment, this->password))
 				{
 					case RTC::STUNMessage::Authentication::OK:
 						break;
@@ -146,7 +144,7 @@ namespace RTC
 				response->SetXorMappedAddress(source->GetRemoteAddress());
 
 				// Authenticate the response.
-				response->Authenticate(this->localPassword);
+				response->Authenticate(this->password);
 
 				// Send back.
 				response->Serialize();
@@ -177,12 +175,5 @@ namespace RTC
 				break;
 			}
 		}
-	}
-
-	void ICEServer::Close()
-	{
-		MS_TRACE();
-
-		delete this;
 	}
 }

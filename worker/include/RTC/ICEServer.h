@@ -25,33 +25,33 @@ namespace RTC
 		};
 
 	public:
-		ICEServer(Listener* listener);
+		ICEServer(Listener* listener, std::string& usernameFragment, std::string password);
 
-		void ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source);
-		std::string& GetLocalUsername();
-		std::string& GetLocalPassword();
 		void Close();
+		void ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source);
+		std::string& GetUsernameFragment();
+		std::string& GetPassword();
 
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		std::string localUsername;
-		std::string localPassword;
+		std::string usernameFragment;
+		std::string password;
 	};
 
 	/* Inline methods. */
 
 	inline
-	std::string& ICEServer::GetLocalUsername()
+	std::string& ICEServer::GetUsernameFragment()
 	{
-		return this->localUsername;
+		return this->usernameFragment;
 	}
 
 	inline
-	std::string& ICEServer::GetLocalPassword()
+	std::string& ICEServer::GetPassword()
 	{
-		return this->localPassword;
+		return this->password;
 	}
 }
 

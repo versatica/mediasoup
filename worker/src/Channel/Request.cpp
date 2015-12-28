@@ -14,14 +14,17 @@ namespace Channel
 
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
-		{ "dumpWorker",     Request::MethodId::dumpWorker     },
-		{ "updateSettings", Request::MethodId::updateSettings },
-		{ "createRoom",     Request::MethodId::createRoom     },
-		{ "closeRoom",      Request::MethodId::closeRoom      },
-		{ "dumpRoom",       Request::MethodId::dumpRoom       },
-		{ "createPeer",     Request::MethodId::createPeer     },
-		{ "closePeer",      Request::MethodId::closePeer      },
-		{ "dumpPeer",       Request::MethodId::dumpPeer       }
+		{ "dumpWorker",      Request::MethodId::dumpWorker      },
+		{ "updateSettings",  Request::MethodId::updateSettings  },
+		{ "createRoom",      Request::MethodId::createRoom      },
+		{ "closeRoom",       Request::MethodId::closeRoom       },
+		{ "dumpRoom",        Request::MethodId::dumpRoom        },
+		{ "createPeer",      Request::MethodId::createPeer      },
+		{ "closePeer",       Request::MethodId::closePeer       },
+		{ "dumpPeer",        Request::MethodId::dumpPeer        },
+		{ "createTransport", Request::MethodId::createTransport },
+		{ "closeTransport",  Request::MethodId::closeTransport  },
+		{ "dumpTransport",   Request::MethodId::dumpTransport   }
 	};
 
 	/* Instance methods. */
@@ -32,21 +35,27 @@ namespace Channel
 		MS_TRACE();
 
 		if (json["id"].isUInt())
-			id = json["id"].asUInt();
+			this->id = json["id"].asUInt();
 		else
 			MS_THROW_ERROR("json has no numeric .id field");
 
 		if (json["method"].isString())
-			method = json["method"].asString();
+			this->method = json["method"].asString();
 		else
 			MS_THROW_ERROR("json has no string .method field");
 
 		auto it = Request::string2MethodId.find(method);
 
 		if (it != Request::string2MethodId.end())
+		{
 			this->methodId = it->second;
+		}
 		else
-			MS_THROW_ERROR("unknwon .method '%s'", method.c_str());
+		{
+			Reject(405, "method not allowed");
+
+			MS_THROW_ERROR("unknown .method '%s'", method.c_str());
+		}
 
 		if (json["data"].isObject())
 			this->data = json["data"];
