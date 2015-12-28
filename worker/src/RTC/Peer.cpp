@@ -60,7 +60,7 @@ namespace RTC
 			{
 				try
 				{
-					this->iceTransport = new RTC::ICETransport(this, request->data);
+					this->iceTransport = new RTC::IceTransport(this, request->data);
 				}
 				catch (const MediaSoupError &error)
 				{

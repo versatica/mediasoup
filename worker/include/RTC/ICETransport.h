@@ -15,7 +15,7 @@
 
 namespace RTC
 {
-	class ICETransport :
+	class IceTransport :
 		public RTC::ICEServer::Listener,
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
@@ -43,15 +43,13 @@ namespace RTC
 		} IceParameters;
 
 	public:
-		ICETransport(Listener* listener, Json::Value& data);
-		virtual ~ICETransport();
+		IceTransport(Listener* listener, Json::Value& data);
+		virtual ~IceTransport();
 
 		void Close();
 		Json::Value toJson();
-		IceComponent GetIceComponent();  // TODO: needed?
-		IceParameters* GetIceLocalParameters();    // TODO: needed?
 		std::vector<IceCandidate>& GetIceLocalCandidates();
-		// ICETransport* CreateAssociatedGatherer();  // TODO: let's see.
+		// IceTransport* CreateAssociatedGatherer();  // TODO: let's see.
 
 	/* Pure virtual methods inherited from RTC::ICEServer::Listener. */
 	public:
@@ -95,14 +93,6 @@ namespace RTC
 		IceParameters iceLocalParameters;
 		std::vector<IceCandidate> iceLocalCandidates;
 	};
-
-	/* Inline methods. */
-
-	inline
-	ICETransport::IceParameters* ICETransport::GetIceLocalParameters()
-	{
-		return &(this->iceLocalParameters);
-	}
 }
 
 #endif

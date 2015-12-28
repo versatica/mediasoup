@@ -12,34 +12,27 @@ namespace RTC
 	class IceCandidate
 	{
 	public:
-		enum class IceComponent
-		{
-			RTP  = 1,
-			RTCP = 2
-		};
-
-	public:
-		enum class IceProtocol
+		enum class Protocol
 		{
 			UDP = 1,
 			TCP
 		};
 
 	public:
-		enum class IceCandidateType
+		enum class CandidateType
 		{
 			HOST = 1
 		};
 
 	public:
-		enum class IceTcpCandidateType
+		enum class TcpCandidateType
 		{
 			PASSIVE = 1
 		};
 
 	public:
-		IceCandidate(RTC::UDPSocket* udpSocket);
-		IceCandidate(RTC::TCPServer* tcpServer);
+		IceCandidate(RTC::UDPSocket* udpSocket, unsigned long priority);
+		IceCandidate(RTC::TCPServer* tcpServer, unsigned long priority);
 
 		Json::Value toJson();
 
@@ -48,59 +41,11 @@ namespace RTC
 		std::string foundation;
 		unsigned long priority;
 		std::string ip;
-		IceProtocol protocol;
+		Protocol protocol;
 		MS_PORT port;
-		IceCandidateType type;
-		IceTcpCandidateType tcpType;
+		CandidateType type;
+		TcpCandidateType tcpType;
 	};
-
-	/* Inline methods. */
-
-	inline
-	IceCandidate::IceCandidate(RTC::UDPSocket* udpSocket) :
-		foundation("udpcandidate"),
-		ip(udpSocket->GetLocalIP()),
-		protocol(IceProtocol::UDP),
-		port(udpSocket->GetLocalPort()),
-		type(IceCandidateType::HOST)
-	{}
-
-	inline
-	IceCandidate::IceCandidate(RTC::TCPServer* tcpServer) :
-		foundation("tcpcandidate"),
-		ip(tcpServer->GetLocalIP()),
-		protocol(IceProtocol::TCP),
-		port(tcpServer->GetLocalPort()),
-		type(IceCandidateType::HOST),
-		tcpType(IceTcpCandidateType::PASSIVE)
-	{}
-
-	inline
-	Json::Value IceCandidate::toJson()
-	{
-		Json::Value data;
-
-		data["foundation"] = this->foundation;
-		data["priority"] = (unsigned int)this->priority;
-		data["ip"] = this->ip;
-		data["port"] = this->port;
-
-		if (this->protocol == IceProtocol::UDP)
-			data["protocol"] = "udp";
-		else
-			data["protocol"] = "tcp";
-
-		if (this->type == IceCandidateType::HOST)
-			data["type"] = "host";
-
-		if (this->protocol == IceProtocol::TCP)
-		{
-			if (this->tcpType == IceTcpCandidateType::PASSIVE)
-				data["tcpType"] = "passive";
-		}
-
-		return data;
-	}
 }
 
 #endif

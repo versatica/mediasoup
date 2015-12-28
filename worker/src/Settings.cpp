@@ -153,15 +153,15 @@ void Settings::PrintConfiguration()
 	else
 		MS_DEBUG("rtcListenIPv4: (unavailable)");
 	if (Settings::configuration.hasIPv6)
-		MS_DEBUG("- rtcListenIPv6: \"%s\"", Settings::configuration.rtcListenIPv6.c_str());
+		MS_DEBUG("rtcListenIPv6: \"%s\"", Settings::configuration.rtcListenIPv6.c_str());
 	else
 		MS_DEBUG("rtcListenIPv6: (unavailable)");
 	MS_DEBUG("rtcMinPort: %d", Settings::configuration.rtcMinPort);
 	MS_DEBUG("rtcMaxPort: %d", Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
-		MS_DEBUG("- dtlsCertificateFile: \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG("- dtlsPrivateKeyFile: \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
+		MS_DEBUG("dtlsCertificateFile: \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG("dtlsPrivateKeyFile: \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
 	MS_DEBUG("</configuration>");

@@ -1,16 +1,26 @@
-#define MS_CLASS "RTC::Transport"
+#define MS_CLASS "RTC::IceTransport"
 
-#include "RTC/ICETransport.h"
+#include "RTC/IceTransport.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
+#include <cmath>  // std::pow()
+
+#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 30000)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 40000)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 30000)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 40000)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 30000)) + (256 - 2)
+#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 40000)) + (256 - 2)
+#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 30000)) + (256 - 2)
+#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 40000)) + (256 - 2)
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	ICETransport::ICETransport(Listener* listener, Json::Value& data) :
+	IceTransport::IceTransport(Listener* listener, Json::Value& data) :
 		listener(listener)
 	{
 		MS_TRACE();
@@ -45,13 +55,15 @@ namespace RTC
 		this->iceLocalParameters.usernameFragment = this->iceServer->GetUsernameFragment();
 		this->iceLocalParameters.password = this->iceServer->GetPassword();
 
+		// TODO: We must check whether iceComponent is RTP or RTCP
+
 		// Open a IPv4 UDP socket.
 		if (option_udp && Settings::configuration.hasIPv4)
 		{
 			try
 			{
 				RTC::UDPSocket* udpSocket = RTC::UDPSocket::Factory(this, AF_INET);
-				RTC::IceCandidate iceCandidate(udpSocket);
+				RTC::IceCandidate iceCandidate(udpSocket, ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP);
 
 				this->udpSockets.push_back(udpSocket);
 				this->iceLocalCandidates.push_back(iceCandidate);
@@ -68,7 +80,7 @@ namespace RTC
 			try
 			{
 				RTC::UDPSocket* udpSocket = RTC::UDPSocket::Factory(this, AF_INET6);
-				RTC::IceCandidate iceCandidate(udpSocket);
+				RTC::IceCandidate iceCandidate(udpSocket, ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP);
 
 				this->udpSockets.push_back(udpSocket);
 				this->iceLocalCandidates.push_back(iceCandidate);
@@ -85,7 +97,7 @@ namespace RTC
 			try
 			{
 				RTC::TCPServer* tcpServer = RTC::TCPServer::Factory(this, this, AF_INET);
-				RTC::IceCandidate iceCandidate(tcpServer);
+				RTC::IceCandidate iceCandidate(tcpServer, ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP);
 
 				this->tcpServers.push_back(tcpServer);
 				this->iceLocalCandidates.push_back(iceCandidate);
@@ -102,7 +114,7 @@ namespace RTC
 			try
 			{
 				RTC::TCPServer* tcpServer = RTC::TCPServer::Factory(this, this, AF_INET6);
-				RTC::IceCandidate iceCandidate(tcpServer);
+				RTC::IceCandidate iceCandidate(tcpServer, ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP);
 
 				this->tcpServers.push_back(tcpServer);
 				this->iceLocalCandidates.push_back(iceCandidate);
@@ -114,12 +126,12 @@ namespace RTC
 		}
 	}
 
-	ICETransport::~ICETransport()
+	IceTransport::~IceTransport()
 	{
 		MS_TRACE();
 	}
 
-	void ICETransport::Close()
+	void IceTransport::Close()
 	{
 		MS_TRACE();
 
@@ -144,17 +156,17 @@ namespace RTC
 		delete this;
 	}
 
-	Json::Value ICETransport::toJson()
+	Json::Value IceTransport::toJson()
 	{
 		MS_TRACE();
 
 
 		static const Json::StaticString iceLocalParameters("iceLocalParameters");
-		static const Json::StaticString iceCandidates("iceCandidates");
+		static const Json::StaticString iceLocalCandidates("iceLocalCandidates");
 
 		Json::Value data;
 
-		if (this->iceComponent == ICETransport::IceComponent::RTP)
+		if (this->iceComponent == IceTransport::IceComponent::RTP)
 			data["iceComponent"] = "RTP";
 		else
 			data["iceComponent"] = "RTCP";
@@ -162,32 +174,24 @@ namespace RTC
 		data[iceLocalParameters]["usernameFragment"] = this->iceLocalParameters.usernameFragment;
 		data[iceLocalParameters]["password"] = this->iceLocalParameters.password;
 
-		data[iceCandidates] = Json::arrayValue;
+		data[iceLocalCandidates] = Json::arrayValue;
 
 		for (auto iceCandidate : this->iceLocalCandidates)
 		{
-			data[iceCandidates].append(iceCandidate.toJson());
+			data[iceLocalCandidates].append(iceCandidate.toJson());
 		}
 
 		return data;
 	}
 
-	void ICETransport::onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
+	void IceTransport::onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	void ICETransport::onICEValidPair(RTC::ICEServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
-	{
-		MS_TRACE();
-
-		// TODO
-	}
-
-	inline
-	void ICETransport::onSTUNDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void IceTransport::onICEValidPair(RTC::ICEServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
 	{
 		MS_TRACE();
 
@@ -195,7 +199,7 @@ namespace RTC
 	}
 
 	inline
-	void ICETransport::onDTLSDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void IceTransport::onSTUNDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -203,7 +207,7 @@ namespace RTC
 	}
 
 	inline
-	void ICETransport::onRTPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void IceTransport::onDTLSDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -211,14 +215,22 @@ namespace RTC
 	}
 
 	inline
-	void ICETransport::onRTCPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void IceTransport::onRTPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	void ICETransport::onSTUNDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	inline
+	void IceTransport::onRTCPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void IceTransport::onSTUNDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -226,7 +238,7 @@ namespace RTC
 		onSTUNDataRecv(&source, data, len);
 	}
 
-	void ICETransport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void IceTransport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -234,7 +246,7 @@ namespace RTC
 		onDTLSDataRecv(&source, data, len);
 	}
 
-	void ICETransport::onRTPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void IceTransport::onRTPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -242,7 +254,7 @@ namespace RTC
 		onRTPDataRecv(&source, data, len);
 	}
 
-	void ICETransport::onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void IceTransport::onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -250,7 +262,7 @@ namespace RTC
 		onRTCPDataRecv(&source, data, len);
 	}
 
-	void ICETransport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
+	void IceTransport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
 	{
 		MS_TRACE();
 
@@ -263,7 +275,7 @@ namespace RTC
 		// }
 	}
 
-	void ICETransport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void IceTransport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -271,7 +283,7 @@ namespace RTC
 		onSTUNDataRecv(&source, data, len);
 	}
 
-	void ICETransport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void IceTransport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -279,7 +291,7 @@ namespace RTC
 		onDTLSDataRecv(&source, data, len);
 	}
 
-	void ICETransport::onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void IceTransport::onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -287,7 +299,7 @@ namespace RTC
 		onRTPDataRecv(&source, data, len);
 	}
 
-	void ICETransport::onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void IceTransport::onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
