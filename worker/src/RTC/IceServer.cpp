@@ -7,7 +7,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	IceServer::IceServer(Listener* listener, std::string& usernameFragment, std::string password) :
+	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string password) :
 		listener(listener),
 		usernameFragment(usernameFragment),
 		password(password)

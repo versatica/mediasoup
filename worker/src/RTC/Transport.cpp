@@ -1,6 +1,6 @@
-#define MS_CLASS "RTC::IceTransport"
+#define MS_CLASS "RTC::Transport"
 
-#include "RTC/IceTransport.h"
+#include "RTC/Transport.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
@@ -20,53 +20,72 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	IceTransport::IceTransport(Listener* listener, Json::Value& data) :
-		listener(listener)
+	Transport::Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport) :
+		listener(listener),
+		transportId(transportId)
 	{
 		MS_TRACE();
-
-		// Check options.
 
 		static const Json::StaticString udp("udp");
 		static const Json::StaticString tcp("tcp");
 
-		bool option_udp = true;
-		bool option_tcp = true;
+		bool try_IPv4_udp = false;
+		bool try_IPv6_udp = false;
+		bool try_IPv4_tcp = false;
+		bool try_IPv6_tcp = false;
 
-		if (data[udp].isBool())
-			option_udp = data[udp].asBool();
+		// RTP transport.
+		if (!rtpTransport)
+		{
+			this->iceComponent = IceComponent::RTP;
 
-		if (data[tcp].isBool())
-			option_tcp = data[tcp].asBool();
+			this->iceServer = new RTC::IceServer(this,
+				Utils::Crypto::GetRandomString(16),
+				Utils::Crypto::GetRandomString(32));
 
-		MS_DEBUG("[udp:%s, tcp:%s]",
-			option_udp ? "true" : "false", option_tcp ? "true" : "false");
+			if (data[udp].isBool())
+				try_IPv4_udp = try_IPv6_udp = data[udp].asBool();
 
-		// Create an IceServer.
-		char _username_fragment[16];
-		char _password[16];
+			if (data[tcp].isBool())
+				try_IPv4_tcp = try_IPv6_tcp = data[tcp].asBool();
+		}
+		// RTCP transport associated to a given RTP transport.
+		else
+		{
+			this->iceComponent = IceComponent::RTCP;
 
-		std::string usernameFragment = std::string(Utils::Crypto::GetRandomHexString(_username_fragment, 16), 16);
-		std::string password = std::string(Utils::Crypto::GetRandomHexString(_password, 32), 32);
+			this->iceServer = new RTC::IceServer(this,
+				rtpTransport->GetIceUsernameFragment(),
+				rtpTransport->GetIcePassword());
 
-		this->iceServer = new RTC::IceServer(this, usernameFragment, password);
+			try_IPv4_udp = rtpTransport->hasIPv4udp;
+			try_IPv6_udp = rtpTransport->hasIPv6udp;
+			try_IPv4_tcp = rtpTransport->hasIPv4tcp;
+			try_IPv6_tcp = rtpTransport->hasIPv6tcp;
+		}
 
 		// Fill IceParameters.
 		this->iceLocalParameters.usernameFragment = this->iceServer->GetUsernameFragment();
 		this->iceLocalParameters.password = this->iceServer->GetPassword();
 
-		// TODO: We must check whether iceComponent is RTP or RTCP
-
 		// Open a IPv4 UDP socket.
-		if (option_udp && Settings::configuration.hasIPv4)
+		if (try_IPv4_udp && Settings::configuration.hasIPv4)
 		{
+			unsigned long priority;
+
+			if (this->iceComponent == IceComponent::RTP)
+				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP;
+			else
+				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP;
+
 			try
 			{
 				RTC::UDPSocket* udpSocket = RTC::UDPSocket::Factory(this, AF_INET);
-				RTC::IceCandidate iceCandidate(udpSocket, ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP);
+				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
 				this->iceLocalCandidates.push_back(iceCandidate);
+				this->hasIPv4udp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -75,15 +94,23 @@ namespace RTC
 		}
 
 		// Open a IPv6 UDP socket.
-		if (option_udp && Settings::configuration.hasIPv6)
+		if (try_IPv6_udp && Settings::configuration.hasIPv6)
 		{
+			unsigned long priority;
+
+			if (this->iceComponent == IceComponent::RTP)
+				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP;
+			else
+				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP;
+
 			try
 			{
 				RTC::UDPSocket* udpSocket = RTC::UDPSocket::Factory(this, AF_INET6);
-				RTC::IceCandidate iceCandidate(udpSocket, ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP);
+				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
 				this->iceLocalCandidates.push_back(iceCandidate);
+				this->hasIPv6udp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -92,15 +119,23 @@ namespace RTC
 		}
 
 		// Open a IPv4 TCP server.
-		if (option_tcp && Settings::configuration.hasIPv4)
+		if (try_IPv4_tcp && Settings::configuration.hasIPv4)
 		{
+			unsigned long priority;
+
+			if (this->iceComponent == IceComponent::RTP)
+				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP;
+			else
+				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP;
+
 			try
 			{
 				RTC::TCPServer* tcpServer = RTC::TCPServer::Factory(this, this, AF_INET);
-				RTC::IceCandidate iceCandidate(tcpServer, ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP);
+				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
 				this->iceLocalCandidates.push_back(iceCandidate);
+				this->hasIPv4tcp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -109,29 +144,48 @@ namespace RTC
 		}
 
 		// Open a IPv6 TCP server.
-		if (option_tcp && Settings::configuration.hasIPv6)
+		if (try_IPv6_tcp && Settings::configuration.hasIPv6)
 		{
+			unsigned long priority;
+
+			if (this->iceComponent == IceComponent::RTP)
+				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP;
+			else
+				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP;
+
 			try
 			{
 				RTC::TCPServer* tcpServer = RTC::TCPServer::Factory(this, this, AF_INET6);
-				RTC::IceCandidate iceCandidate(tcpServer, ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP);
+				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
 				this->iceLocalCandidates.push_back(iceCandidate);
+				this->hasIPv6tcp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
 				MS_ERROR("error adding IPv6 TCP server: %s", error.what());
 			}
 		}
+
+		// Ensure there is at least one IP:port binding.
+		if (!this->udpSockets.size() && !this->tcpServers.size())
+		{
+			Close();
+
+			MS_THROW_ERROR("could not open any IP:port");
+		}
+
+		// Hack to avoid that Close() above attempts to delete this.
+		this->allocated = true;
 	}
 
-	IceTransport::~IceTransport()
+	Transport::~Transport()
 	{
 		MS_TRACE();
 	}
 
-	void IceTransport::Close()
+	void Transport::Close()
 	{
 		MS_TRACE();
 
@@ -153,10 +207,11 @@ namespace RTC
 		for (auto server : this->tcpServers)
 			server->Close();
 
-		delete this;
+		if (this->allocated)
+			delete this;
 	}
 
-	Json::Value IceTransport::toJson()
+	Json::Value Transport::toJson()
 	{
 		MS_TRACE();
 
@@ -166,7 +221,7 @@ namespace RTC
 
 		Json::Value data;
 
-		if (this->iceComponent == IceTransport::IceComponent::RTP)
+		if (this->iceComponent == IceComponent::RTP)
 			data["iceComponent"] = "RTP";
 		else
 			data["iceComponent"] = "RTCP";
@@ -184,38 +239,26 @@ namespace RTC
 		return data;
 	}
 
-	void IceTransport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
+	Transport* Transport::CreateAssociatedTransport(unsigned int transportId)
+	{
+		MS_TRACE();
+
+		static Json::Value nullData(Json::nullValue);
+
+		if (this->iceComponent != IceComponent::RTP)
+			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
+
+		return new RTC::Transport(this->listener, transportId, nullData, this);
+	}
+
+	void Transport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	void IceTransport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
-	{
-		MS_TRACE();
-
-		// TODO
-	}
-
-	inline
-	void IceTransport::onSTUNDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
-	{
-		MS_TRACE();
-
-		// TODO
-	}
-
-	inline
-	void IceTransport::onDTLSDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
-	{
-		MS_TRACE();
-
-		// TODO
-	}
-
-	inline
-	void IceTransport::onRTPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void Transport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
 	{
 		MS_TRACE();
 
@@ -223,14 +266,38 @@ namespace RTC
 	}
 
 	inline
-	void IceTransport::onRTCPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void Transport::onSTUNDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	void IceTransport::onSTUNDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	inline
+	void Transport::onDTLSDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	inline
+	void Transport::onRTPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	inline
+	void Transport::onRTCPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::onSTUNDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -238,7 +305,7 @@ namespace RTC
 		onSTUNDataRecv(&source, data, len);
 	}
 
-	void IceTransport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void Transport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -246,7 +313,7 @@ namespace RTC
 		onDTLSDataRecv(&source, data, len);
 	}
 
-	void IceTransport::onRTPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void Transport::onRTPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -254,7 +321,7 @@ namespace RTC
 		onRTPDataRecv(&source, data, len);
 	}
 
-	void IceTransport::onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void Transport::onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -262,7 +329,7 @@ namespace RTC
 		onRTCPDataRecv(&source, data, len);
 	}
 
-	void IceTransport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
+	void Transport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
 	{
 		MS_TRACE();
 
@@ -275,7 +342,7 @@ namespace RTC
 		// }
 	}
 
-	void IceTransport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void Transport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -283,7 +350,7 @@ namespace RTC
 		onSTUNDataRecv(&source, data, len);
 	}
 
-	void IceTransport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void Transport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -291,7 +358,7 @@ namespace RTC
 		onDTLSDataRecv(&source, data, len);
 	}
 
-	void IceTransport::onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void Transport::onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -299,7 +366,7 @@ namespace RTC
 		onRTPDataRecv(&source, data, len);
 	}
 
-	void IceTransport::onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void Transport::onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 

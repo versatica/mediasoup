@@ -47,7 +47,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roo
 	auto jsonRoomId = request->data["roomId"];
 
 	if (!jsonRoomId.isUInt())
-		MS_THROW_ERROR("Request has no numeric .roomId field");
+		MS_THROW_ERROR("Request has not numeric .roomId field");
 
 	// If given, fill roomId.
 	if (roomId)
@@ -239,41 +239,11 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			break;
 		}
 
-		case Channel::Request::MethodId::dumpRoom:
-		{
-			RTC::Room* room;
-
-			try
-			{
-				room = GetRoomFromRequest(request);
-			}
-			catch (const MediaSoupError &error)
-			{
-				request->Reject(500, error.what());
-				return;
-			}
-
-			if (!room)
-			{
-				MS_ERROR("Room does not exist");
-
-				request->Reject(500, "Room does not exist");
-				return;
-			}
-
-			Json::Value jsonRoom = room->Dump();
-
-			request->Accept(jsonRoom);
-
-			break;
-		}
-
 		case Channel::Request::MethodId::createPeer:
 		case Channel::Request::MethodId::closePeer:
-		case Channel::Request::MethodId::dumpPeer:
 		case Channel::Request::MethodId::createTransport:
+		case Channel::Request::MethodId::createAssociatedTransport:
 		case Channel::Request::MethodId::closeTransport:
-		case Channel::Request::MethodId::dumpTransport:
 		{
 			RTC::Room* room;
 

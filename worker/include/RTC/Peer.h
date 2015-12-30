@@ -1,17 +1,16 @@
 #ifndef MS_RTC_PEER_H
 #define MS_RTC_PEER_H
 
-#include "RTC/IceTransport.h"
-#include "RTC/RTPPacket.h"
-#include "RTC/RTCPPacket.h"
+#include "RTC/Transport.h"
 #include "Channel/Request.h"
 #include <string>
+#include <unordered_map>
 #include <json/json.h>
 
 namespace RTC
 {
 	class Peer :
-		public RTC::IceTransport::Listener
+		public RTC::Transport::Listener
 	{
 	public:
 		class Listener
@@ -28,7 +27,10 @@ namespace RTC
 		Json::Value Dump();
 		void HandleRequest(Channel::Request* request);
 
-	/* Pure virtual methods inherited from RTC::IceTransport::Listener. */
+	private:
+		RTC::Transport* GetTransportFromRequest(Channel::Request* request, unsigned int* iceTransportId = nullptr);
+
+	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
 		// TODO
 
@@ -40,8 +42,8 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		// TODO: it must be a unordered_map.
-		RTC::IceTransport* iceTransport = nullptr;
+		typedef std::unordered_map<unsigned int, RTC::Transport*> Transports;
+		Transports transports;
 	};
 }
 

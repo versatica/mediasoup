@@ -1,5 +1,5 @@
-#ifndef MS_RTC_ICE_TRANSPORT_H
-#define MS_RTC_ICE_TRANSPORT_H
+#ifndef MS_RTC_TRANSPORT_H
+#define MS_RTC_TRANSPORT_H
 
 #include "common.h"
 #include "RTC/IceCandidate.h"
@@ -15,7 +15,7 @@
 
 namespace RTC
 {
-	class IceTransport :
+	class Transport :
 		public RTC::IceServer::Listener,
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
@@ -43,13 +43,14 @@ namespace RTC
 		} IceParameters;
 
 	public:
-		IceTransport(Listener* listener, Json::Value& data);
-		virtual ~IceTransport();
+		Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport = nullptr);
+		virtual ~Transport();
 
 		void Close();
 		Json::Value toJson();
-		std::vector<IceCandidate>& GetIceLocalCandidates();
-		// IceTransport* CreateAssociatedGatherer();  // TODO: let's see.
+		std::string& GetIceUsernameFragment();
+		std::string& GetIcePassword();
+		Transport* CreateAssociatedTransport(unsigned int transportId);
 
 	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
@@ -81,18 +82,40 @@ namespace RTC
 		virtual void onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 		virtual void onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 
+	public:
+		bool hasIPv4udp = false;
+		bool hasIPv6udp = false;
+		bool hasIPv4tcp = false;
+		bool hasIPv6tcp = false;
+
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
+		unsigned int transportId;
+		RTC::Transport::IceComponent iceComponent;
 		// Allocated by this.
 		RTC::IceServer* iceServer = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		// Others.
-		IceComponent iceComponent = IceComponent::RTP;
 		IceParameters iceLocalParameters;
 		std::vector<IceCandidate> iceLocalCandidates;
+		bool allocated = false;
 	};
+
+	/* Inline methods. */
+
+	inline
+	std::string& Transport::GetIceUsernameFragment()
+	{
+		return this->iceServer->GetUsernameFragment();
+	}
+
+	inline
+	std::string& Transport::GetIcePassword()
+	{
+		return this->iceServer->GetPassword();
+	}
 }
 
 #endif

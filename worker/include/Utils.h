@@ -220,7 +220,8 @@ namespace Utils
 		static void ClassInit();
 		static void ClassDestroy();
 		static unsigned int GetRandomUInt(unsigned int min, unsigned int max);
-		static const char* GetRandomHexString(char* str, size_t len);
+		static const std::string GetRandomString(size_t len);
+		// static const char* GetRandomHexString(char* str, size_t len);
 		static MS_4BYTES GetCRC32(const MS_BYTE* data, size_t size);
 		static const MS_BYTE* GetHMAC_SHA1(const std::string &key, const MS_BYTE* data, size_t len);
 
@@ -246,20 +247,42 @@ namespace Utils
 	}
 
 	inline
-	const char* Crypto::GetRandomHexString(char* buffer, size_t len)
+	const std::string Crypto::GetRandomString(size_t len)
 	{
-		static const char hex_chars[] =	{
+		static char buffer[64];
+		static const char chars[] =
+		{
 			'0','1','2','3','4','5','6','7','8','9',
-			'A','B','C','D','E','F','G','H','I','J',
-			'K','L','M','N','O','P','Q','R','S','T',
-			'U','V','W','X','Y','Z'
+			'a','b','c','d','e','f','g','h','i','j',
+			'k','l','m','n','o','p','q','r','s','t',
+			'u','v','w','x','y','z'
 		};
 
-		for (size_t i = 0; i < len; ++i)
-			buffer[i] = hex_chars[GetRandomUInt(0, sizeof(hex_chars) - 1)];
+		if (len > 64)
+			len = 64;
 
-		return buffer;
+		for (size_t i = 0; i < len; ++i)
+			buffer[i] = chars[GetRandomUInt(0, sizeof(chars) - 1)];
+
+		return std::string(buffer, len);
 	}
+
+	// inline
+	// const char* Crypto::GetRandomHexString(char* buffer, size_t len)
+	// {
+	// 	static const char hex_chars[] =
+	// 	{
+	// 		'0','1','2','3','4','5','6','7','8','9',
+	// 		'A','B','C','D','E','F','G','H','I','J',
+	// 		'K','L','M','N','O','P','Q','R','S','T',
+	// 		'U','V','W','X','Y','Z'
+	// 	};
+
+	// 	for (size_t i = 0; i < len; ++i)
+	// 		buffer[i] = hex_chars[GetRandomUInt(0, sizeof(hex_chars) - 1)];
+
+	// 	return buffer;
+	// }
 
 	inline
 	MS_4BYTES Crypto::GetCRC32(const MS_BYTE* data, size_t size)

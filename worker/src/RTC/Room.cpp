@@ -135,38 +135,9 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::dumpPeer:
-			{
-				RTC::Peer* peer;
-
-				try
-				{
-					peer = GetPeerFromRequest(request);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(500, error.what());
-					return;
-				}
-
-				if (!peer)
-				{
-					MS_ERROR("Peer does not exist");
-
-					request->Reject(500, "Peer does not exist");
-					return;
-				}
-
-				Json::Value jsonPeer = peer->Dump();
-
-				request->Accept(jsonPeer);
-
-				break;
-			}
-
 			case Channel::Request::MethodId::createTransport:
+			case Channel::Request::MethodId::createAssociatedTransport:
 			case Channel::Request::MethodId::closeTransport:
-			case Channel::Request::MethodId::dumpTransport:
 			{
 				RTC::Peer* peer;
 
@@ -207,7 +178,7 @@ namespace RTC
 		auto jsonPeerId = request->data["peerId"];
 
 		if (!jsonPeerId.isString())
-			MS_THROW_ERROR("Request has no string .peerId field");
+			MS_THROW_ERROR("Request has not string .peerId field");
 
 		// If given, fill peerId.
 		if (peerId)

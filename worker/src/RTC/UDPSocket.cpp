@@ -12,7 +12,7 @@
 #include "Logger.h"
 #include <string>
 
-#define MAX_BIND_ATTEMPTS  10
+#define MAX_BIND_ATTEMPTS 1000  // TODO: hack
 
 /* Static methods for UV callbacks. */
 
