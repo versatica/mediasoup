@@ -1,13 +1,13 @@
-#define MS_CLASS "RTC::ICEServer"
+#define MS_CLASS "RTC::IceServer"
 
-#include "RTC/ICEServer.h"
+#include "RTC/IceServer.h"
 #include "Logger.h"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	ICEServer::ICEServer(Listener* listener, std::string& usernameFragment, std::string password) :
+	IceServer::IceServer(Listener* listener, std::string& usernameFragment, std::string password) :
 		listener(listener),
 		usernameFragment(usernameFragment),
 		password(password)
@@ -17,14 +17,14 @@ namespace RTC
 		MS_DEBUG("[usernameFragment:%s, password:%s]", this->usernameFragment.c_str(), this->password.c_str());
 	}
 
-	void ICEServer::Close()
+	void IceServer::Close()
 	{
 		MS_TRACE();
 
 		delete this;
 	}
 
-	void ICEServer::ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source)
+	void IceServer::ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source)
 	{
 		MS_TRACE();
 

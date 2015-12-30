@@ -42,14 +42,14 @@ namespace RTC
 		MS_DEBUG("[udp:%s, tcp:%s]",
 			option_udp ? "true" : "false", option_tcp ? "true" : "false");
 
-		// Create an ICEServer.
+		// Create an IceServer.
 		char _username_fragment[16];
 		char _password[16];
 
 		std::string usernameFragment = std::string(Utils::Crypto::GetRandomHexString(_username_fragment, 16), 16);
 		std::string password = std::string(Utils::Crypto::GetRandomHexString(_password, 32), 32);
 
-		this->iceServer = new RTC::ICEServer(this, usernameFragment, password);
+		this->iceServer = new RTC::IceServer(this, usernameFragment, password);
 
 		// Fill IceParameters.
 		this->iceLocalParameters.usernameFragment = this->iceServer->GetUsernameFragment();
@@ -184,14 +184,14 @@ namespace RTC
 		return data;
 	}
 
-	void IceTransport::onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
+	void IceTransport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	void IceTransport::onICEValidPair(RTC::ICEServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
+	void IceTransport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
 	{
 		MS_TRACE();
 

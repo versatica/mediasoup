@@ -10,7 +10,7 @@
 
 namespace RTC
 {
-	class ICEServer
+	class IceServer
 	{
 	public:
 		class Listener
@@ -20,12 +20,12 @@ namespace RTC
 			 * These callbacks are guaranteed to be called before ProcessSTUNMessage()
 			 * returns, so the given pointers are still usable.
 			 */
-			virtual void onOutgoingSTUNMessage(ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source) = 0;
-			virtual void onICEValidPair(ICEServer* iceServer, RTC::TransportSource* source, bool has_use_candidate) = 0;
+			virtual void onOutgoingSTUNMessage(IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source) = 0;
+			virtual void onICEValidPair(IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate) = 0;
 		};
 
 	public:
-		ICEServer(Listener* listener, std::string& usernameFragment, std::string password);
+		IceServer(Listener* listener, std::string& usernameFragment, std::string password);
 
 		void Close();
 		void ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source);
@@ -43,13 +43,13 @@ namespace RTC
 	/* Inline methods. */
 
 	inline
-	std::string& ICEServer::GetUsernameFragment()
+	std::string& IceServer::GetUsernameFragment()
 	{
 		return this->usernameFragment;
 	}
 
 	inline
-	std::string& ICEServer::GetPassword()
+	std::string& IceServer::GetPassword()
 	{
 		return this->password;
 	}

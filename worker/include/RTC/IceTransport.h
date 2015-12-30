@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "RTC/IceCandidate.h"
-#include "RTC/ICEServer.h"
+#include "RTC/IceServer.h"
 #include "RTC/STUNMessage.h"
 #include "RTC/TransportSource.h"
 #include "RTC/UDPSocket.h"
@@ -16,7 +16,7 @@
 namespace RTC
 {
 	class IceTransport :
-		public RTC::ICEServer::Listener,
+		public RTC::IceServer::Listener,
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
 		public RTC::TCPConnection::Reader
@@ -51,10 +51,10 @@ namespace RTC
 		std::vector<IceCandidate>& GetIceLocalCandidates();
 		// IceTransport* CreateAssociatedGatherer();  // TODO: let's see.
 
-	/* Pure virtual methods inherited from RTC::ICEServer::Listener. */
+	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
-		virtual void onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source) override;
-		virtual void onICEValidPair(RTC::ICEServer* iceServer, RTC::TransportSource* source, bool has_use_candidate) override;
+		virtual void onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source) override;
+		virtual void onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate) override;
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -85,7 +85,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Allocated by this.
-		RTC::ICEServer* iceServer = nullptr;
+		RTC::IceServer* iceServer = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		// Others.
