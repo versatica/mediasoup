@@ -13,7 +13,7 @@ class Loop :
 	public Channel::UnixStreamSocket::Listener
 {
 public:
-	Loop();
+	Loop(Channel::UnixStreamSocket* channel);
 	~Loop();
 
 private:
@@ -31,9 +31,10 @@ public:
 	virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
 
 private:
+	// Passed by argument.
+	Channel::UnixStreamSocket* channel = nullptr;
 	// Allocated by this.
 	SignalsHandler* signalsHandler = nullptr;
-	Channel::UnixStreamSocket* channel = nullptr;
 	// Others.
 	bool closed = false;
 	typedef std::unordered_map<unsigned int, RTC::Room*> Rooms;

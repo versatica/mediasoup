@@ -25,10 +25,12 @@ namespace Channel
 		static MS_BYTE writeBuffer[];
 
 	public:
-		UnixStreamSocket(Listener* listener, int fd);
+		UnixStreamSocket(int fd);
 		virtual ~UnixStreamSocket();
 
+		void SetListener(Listener* listener);
 		void Send(Json::Value &json);
+		void SendLog(char* ns_payload, int ns_payload_len);
 
 	/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
@@ -42,6 +44,7 @@ namespace Channel
 		Json::CharReader* jsonReader = nullptr;
 		Json::StreamWriter* jsonWriter = nullptr;
 		size_t msgStart = 0;  // Where the latest message starts.
+		bool closed = false;
 	};
 }
 

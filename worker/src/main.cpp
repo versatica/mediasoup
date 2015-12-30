@@ -7,6 +7,7 @@
 #include "DepLibSRTP.h"
 #include "DepUsrSCTP.h"
 #include "Utils.h"
+#include "Channel/UnixStreamSocket.h"
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
 #include "RTC/DTLSAgent.h"
@@ -16,9 +17,12 @@
 #include "Logger.h"
 #include <map>
 #include <string>
+#include <iostream>  //  std::cout, std::cerr
+#include <cstdlib>  // std::_Exit(), std::genenv()
 #include <csignal>  // sigaction()
 #include <cerrno>
 #include <unistd.h>  // getpid()
+#include <uv.h>
 
 static void init();
 static void ignoreSignals();
@@ -26,12 +30,20 @@ static void destroy();
 
 int main(int argc, char* argv[], char** envp)
 {
-	if (argc == 1)
-		MS_EXIT_FAILURE("process id must be given as first argument");
+	// Initialize libuv stuff (we need it for the Channel).
+	DepLibUV::ClassInit();
+
+	int channelFd = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
+
+	// Set the Channel socket (this will be handled and deleted by the Loop).
+	Channel::UnixStreamSocket* channel = new Channel::UnixStreamSocket(channelFd);
 
 	std::string id = std::string(argv[1]);
 
-	Logger::Init(id);
+	Logger::Init(id, channel);
+
+	// Print libuv version.
+	MS_DEBUG("loaded libuv version: %s", uv_version_string());
 
 	try
 	{
@@ -39,7 +51,8 @@ int main(int argc, char* argv[], char** envp)
 	}
 	catch (const MediaSoupError &error)
 	{
-		MS_EXIT_FAILURE("%s", error.what());
+		std::cerr << "failure exit: " << error.what() << std::endl;
+		std::_Exit(EXIT_FAILURE);
 	}
 
 	// Print configuration.
@@ -66,16 +79,18 @@ int main(int argc, char* argv[], char** envp)
 		init();
 
 		// Run the Loop.
-		Loop loop;
+		Loop loop(channel);
+
+		destroy();
+		std::cout << "success exit" << std::endl;
+		std::_Exit(EXIT_SUCCESS);
 	}
 	catch (const MediaSoupError &error)
 	{
 		destroy();
-		MS_EXIT_FAILURE("%s", error.what());
+		std::cerr << "failure exit: " << error.what() << std::endl;
+		std::_Exit(EXIT_FAILURE);
 	}
-
-	destroy();
-	MS_EXIT_SUCCESS(MS_PROCESS_NAME " ends");
 }
 
 void init()
@@ -85,7 +100,6 @@ void init()
 	ignoreSignals();
 
 	// Initialize static stuff.
-	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
 	DepLibSRTP::ClassInit();
 	DepUsrSCTP::ClassInit();

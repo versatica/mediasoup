@@ -5,14 +5,15 @@
 /* Class variables. */
 
 std::string Logger::id;
-int Logger::fd;
+Channel::UnixStreamSocket* Logger::channel = nullptr;
+char Logger::buffer[MS_LOGGER_BUFFER_SIZE];
 
 /* Class methods. */
 
-void Logger::Init(const std::string id)
+void Logger::Init(const std::string id, Channel::UnixStreamSocket* channel)
 {
 	Logger::id = id;
-	Logger::fd = std::stoi(std::getenv("MEDIASOUP_LOGGER_FD"));
+	Logger::channel = channel;
 
 	MS_TRACE();
 }

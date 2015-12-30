@@ -3,11 +3,14 @@
 
 #include "common.h"
 #include "Settings.h"
+#include "handles/UnixStreamSocket.h"
+#include "Channel/UnixStreamSocket.h"
 #include <string>
-#include <cstdio>  // dprintf()
+#include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstring>
-#include <cstdlib>  // std::_Exit(), std::abort(), std::genenv()
-#include <uv.h>
+#include <cstdlib>  // std::abort()
+
+#define MS_LOGGER_BUFFER_SIZE 10000
 
 /*
  * Logger facility.
@@ -45,12 +48,13 @@
 class Logger
 {
 public:
-	static void Init(const std::string id);
+	static void Init(const std::string id, Channel::UnixStreamSocket* channel);
 	static bool HasDebugLevel();
 
 public:
 	static std::string id;
-	static int fd;
+	static Channel::UnixStreamSocket* channel;
+	static char buffer[];
 };
 
 /* Inline static methods. */
@@ -63,7 +67,7 @@ bool Logger::HasDebugLevel()
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
 
-#define _MS_LOG_SEPARATOR_CHAR "\f"
+#define _MS_LOG_SEPARATOR_CHAR_STD "\f"
 
 #ifdef MS_DEVEL
 	#define _MS_LOG_STR "[%s] %s:%d | %s::%s()"
@@ -80,11 +84,20 @@ bool Logger::HasDebugLevel()
 #define MS_TRACE()  \
 	do  \
 	{  \
-		dprintf(Logger::fd, "D(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG);  \
+		int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D(trace) " _MS_LOG_STR, _MS_LOG_ARG);  \
+		Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
+	}  \
+	while (0)
+#define MS_TRACE_STD()  \
+	do  \
+	{  \
+		std::fprintf(stdout, "(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG);  \
+		std::fflush(stdout);  \
 	}  \
 	while (0)
 #else
 #define MS_TRACE()
+#define MS_TRACE_STD()
 #endif
 
 #define MS_DEBUG(desc, ...)  \
@@ -92,7 +105,19 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (MS_LOG_LEVEL_DEBUG == MS_CURRENT_LOG_LEVEL)  \
 		{  \
-			dprintf(Logger::fd, "D" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
+			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
+			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
+		}  \
+	}  \
+	while (0)
+
+#define MS_DEBUG_STD(desc, ...)  \
+	do  \
+	{  \
+		if (MS_LOG_LEVEL_DEBUG == MS_CURRENT_LOG_LEVEL)  \
+		{  \
+			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
+			std::fflush(stdout);  \
 		}  \
 	}  \
 	while (0)
@@ -102,7 +127,8 @@ bool Logger::HasDebugLevel()
 	{  \
 		if (MS_LOG_LEVEL_WARN <= MS_CURRENT_LOG_LEVEL)  \
 		{  \
-			dprintf(Logger::fd, "W" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
+			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
+			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
 		}  \
 	}  \
 	while (0)
@@ -110,30 +136,24 @@ bool Logger::HasDebugLevel()
 #define MS_ERROR(desc, ...)  \
 	do  \
 	{  \
-		dprintf(Logger::fd, "E" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR, _MS_LOG_ARG, ##__VA_ARGS__);  \
+		int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
+		Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
 	}  \
 	while (0)
 
-#define MS_EXIT_SUCCESS(desc, ...)  \
+#define MS_ERROR_STD(desc, ...)  \
 	do  \
 	{  \
-		MS_DEBUG("SUCCESS EXIT | " desc, ##__VA_ARGS__);  \
-		std::_Exit(EXIT_SUCCESS);  \
-	}  \
-	while (0)
-
-#define MS_EXIT_FAILURE(desc, ...)  \
-	do  \
-	{  \
-		MS_ERROR("FAILURE EXIT | " desc, ##__VA_ARGS__);  \
-		std::_Exit(EXIT_FAILURE);  \
+		std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
+		std::fflush(stderr);  \
 	}  \
 	while (0)
 
 #define MS_ABORT(desc, ...)  \
 	do  \
 	{  \
-		MS_ERROR("ABORT | " desc, ##__VA_ARGS__);  \
+		std::fprintf(stderr, "ABORT | " desc, ##__VA_ARGS__);  \
+		std::fflush(stderr);  \
 		std::abort();  \
 	}  \
 	while (0)

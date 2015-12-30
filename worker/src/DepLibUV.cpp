@@ -2,6 +2,7 @@
 
 #include "DepLibUV.h"
 #include "Logger.h"
+#include <cstdlib>  // std::abort()
 
 /* Static variables. */
 
@@ -11,17 +12,14 @@ uv_loop_t* DepLibUV::loop = nullptr;
 
 void DepLibUV::ClassInit()
 {
-	MS_TRACE();
+	// NOTE: Logger depends on this so we cannot log anything here.
 
 	int err;
-
-	// Print libuv version.
-	MS_DEBUG("loaded libuv version: %s", uv_version_string());
 
 	DepLibUV::loop = new uv_loop_t;
 	err = uv_loop_init(DepLibUV::loop);
 	if (err)
-		MS_ABORT("uv_loop_init() failed: %s", uv_strerror(err));
+		std::abort();
 }
 
 void DepLibUV::ClassDestroy()

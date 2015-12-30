@@ -10,7 +10,7 @@
 #define RETURN_IF_CLOSING()  \
 	if (this->isClosing)  \
 	{  \
-		MS_DEBUG("in closing state, doing nothing");  \
+		MS_DEBUG_STD("in closing state, doing nothing");  \
 		return;  \
 	}
 
@@ -65,7 +65,7 @@ void on_error_close(uv_handle_t* handle)
 UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) :
 	bufferSize(bufferSize)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	int err;
 
@@ -77,14 +77,14 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) :
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
-		MS_THROW_ERROR("uv_pipe_init() failed: %s", uv_strerror(err));
+		MS_THROW_ERROR_STD("uv_pipe_init() failed: %s", uv_strerror(err));
 	}
 
 	err = uv_pipe_open(this->uvHandle, fd);
 	if (err)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
-		MS_THROW_ERROR("uv_pipe_open() failed: %s", uv_strerror(err));
+		MS_THROW_ERROR_STD("uv_pipe_open() failed: %s", uv_strerror(err));
 	}
 
 	// Start reading.
@@ -92,7 +92,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) :
 	if (err)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
-		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
+		MS_THROW_ERROR_STD("uv_read_start() failed: %s", uv_strerror(err));
 	}
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
@@ -100,7 +100,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) :
 
 UnixStreamSocket::~UnixStreamSocket()
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	if (this->uvHandle)
 		delete this->uvHandle;
@@ -110,13 +110,13 @@ UnixStreamSocket::~UnixStreamSocket()
 
 void UnixStreamSocket::Write(const MS_BYTE* data, size_t len)
 {
-	MS_TRACE();
+	// MS_TRACE_STD();
 
 	RETURN_IF_CLOSING();
 
 	if (len == 0)
 	{
-		MS_DEBUG("ignoring 0 length data");
+		MS_DEBUG_STD("ignoring 0 length data");
 		return;
 	}
 
@@ -144,7 +144,7 @@ void UnixStreamSocket::Write(const MS_BYTE* data, size_t len)
 	// Error. Should not happen.
 	else if (written < 0)
 	{
-		MS_WARN("uv_try_write() failed: %s | closing the socket", uv_strerror(written));
+		MS_ERROR_STD("uv_try_write() failed: %s | closing the socket", uv_strerror(written));
 		Close();
 		return;
 	}
@@ -167,7 +167,7 @@ void UnixStreamSocket::Write(const MS_BYTE* data, size_t len)
 
 void UnixStreamSocket::Close()
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	RETURN_IF_CLOSING();
 
@@ -198,13 +198,13 @@ void UnixStreamSocket::Close()
 
 void UnixStreamSocket::Dump()
 {
-	MS_DEBUG("[status: %s]", (!this->isClosing) ? "open" : "closed");
+	MS_DEBUG_STD("[status: %s]", (!this->isClosing) ? "open" : "closed");
 }
 
 inline
 void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
 	if (!this->buffer)
@@ -216,19 +216,19 @@ void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 	if (this->bufferSize > this->bufferDataLen)
 	{
 		buf->len = this->bufferSize - this->bufferDataLen;
-		MS_DEBUG("available space in the buffer: %zu", buf->len);
+		// MS_DEBUG_STD("available space in the buffer: %zu", buf->len);
 	}
 	else
 	{
 		buf->len = 0;
-		MS_WARN("no available space in the buffer");
+		MS_ERROR_STD("no available space in the buffer");
 	}
 }
 
 inline
 void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	if (nread == 0)
 		return;
@@ -245,7 +245,6 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Peer disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
 	{
-		MS_DEBUG("pipe closed by peer | closing local side");
 		this->isClosedByPeer = true;
 
 		// Close local side of the pipe.
@@ -254,7 +253,7 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Some error.
 	else
 	{
-		MS_DEBUG("read error: %s | closing the pipe", uv_strerror(nread));
+		MS_ERROR_STD("read error: %s | closing the pipe", uv_strerror(nread));
 		this->hasError = true;
 
 		// Close the socket.
@@ -266,18 +265,18 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 inline
 void UnixStreamSocket::onUvWriteError(int error)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	if (this->isClosing)
 		return;
 
 	if (error == UV_EPIPE || error == UV_ENOTCONN)
 	{
-		MS_DEBUG("write error: %s | closing the pipe", uv_strerror(error));
+		MS_DEBUG_STD("write error: %s | closing the pipe", uv_strerror(error));
 	}
 	else
 	{
-		MS_DEBUG("write error: %s | closing the pipe", uv_strerror(error));
+		MS_DEBUG_STD("write error: %s | closing the pipe", uv_strerror(error));
 		this->hasError = true;
 	}
 
@@ -287,14 +286,14 @@ void UnixStreamSocket::onUvWriteError(int error)
 inline
 void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	delete req;
 
 	if (status == UV_EPIPE || status == UV_ENOTCONN || status == UV_ECANCELED)
-		MS_DEBUG("shutdown error: %s", uv_strerror(status));
+		MS_DEBUG_STD("shutdown error: %s", uv_strerror(status));
 	else if (status)
-		MS_DEBUG("shutdown error: %s", uv_strerror(status));
+		MS_DEBUG_STD("shutdown error: %s", uv_strerror(status));
 
 	// Now do close the handle.
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
@@ -303,7 +302,7 @@ void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 inline
 void UnixStreamSocket::onUvClosed()
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	// Notify the subclass.
 	userOnUnixStreamSocketClosed(this->isClosedByPeer);

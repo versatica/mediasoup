@@ -6,7 +6,6 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 
-
 #define MS_READ_BUFFER_SIZE  65536
 #define RETURN_IF_CLOSING()  \
 	if (this->isClosing)  \

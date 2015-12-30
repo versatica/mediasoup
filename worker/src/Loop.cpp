@@ -8,17 +8,19 @@
 #include <string>
 #include <utility>  // std::pair()
 #include <csignal>  // sigfillset, pthread_sigmask()
-#include <cstdlib>  // std::genenv()
 #include <cerrno>
+#include <iostream>  //  std::cout, std::cerr
 #include <json/json.h>
 
 /* Instance methods. */
 
-Loop::Loop()
+Loop::Loop(Channel::UnixStreamSocket* channel) :
+	channel(channel)
 {
 	MS_TRACE();
 
-	int channelFd = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
+	// Set us as Channel's listener.
+	this->channel->SetListener(this);
 
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
@@ -26,9 +28,6 @@ Loop::Loop()
 	// Add signals to handle.
 	this->signalsHandler->AddSignal(SIGINT, "INT");
 	this->signalsHandler->AddSignal(SIGTERM, "TERM");
-
-	// Set the Channel socket.
-	this->channel = new Channel::UnixStreamSocket(this, channelFd);
 
 	MS_DEBUG("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -89,10 +88,8 @@ void Loop::Close()
 		MS_ERROR("pthread_sigmask() failed: %s", std::strerror(errno));
 
 	// Close the SignalsHandler.
-	this->signalsHandler->Close();
-
-	// Close the Channel socket.
-	this->channel->Close();
+	if (this->signalsHandler)
+		this->signalsHandler->Close();
 
 	// Close all the Rooms.
 	for (auto& kv : this->rooms)
@@ -101,6 +98,10 @@ void Loop::Close()
 
 		room->Close();
 	}
+
+	// Close the Channel socket.
+	if (this->channel)
+		this->channel->Close();
 }
 
 void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
@@ -127,6 +128,8 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 void Loop::onSignalsHandlerClosed(SignalsHandler* signalsHandler)
 {
 	MS_TRACE();
+
+	this->signalsHandler = nullptr;
 }
 
 void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request)
@@ -279,14 +282,16 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* socket)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	// When mediasoup Node process ends it sends a SIGTERM to us so we close this
 	// pipe and then exit.
 	// If the pipe is remotely closed it means that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 
-	MS_ERROR("Channel remotely closed, killing myself");
+	MS_ERROR_STD("Channel remotely closed, killing myself");
+
+	this->channel = nullptr;
 
 	Close();
 }
