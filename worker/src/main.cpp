@@ -17,11 +17,10 @@
 #include "Logger.h"
 #include <map>
 #include <string>
-#include <iostream>  //  std::cout, std::cerr
 #include <cstdlib>  // std::_Exit(), std::genenv()
 #include <csignal>  // sigaction()
 #include <cerrno>
-#include <unistd.h>  // getpid()
+#include <unistd.h>  // getpid(), usleep()
 #include <uv.h>
 
 static void init();
@@ -51,7 +50,8 @@ int main(int argc, char* argv[], char** envp)
 	}
 	catch (const MediaSoupError &error)
 	{
-		std::cerr << "failure exit: " << error.what() << std::endl;
+		MS_ERROR("failed to start: %s", error.what());
+		usleep(100000);
 		std::_Exit(EXIT_FAILURE);
 	}
 
@@ -82,13 +82,14 @@ int main(int argc, char* argv[], char** envp)
 		Loop loop(channel);
 
 		destroy();
-		std::cout << "success exit" << std::endl;
+		MS_DEBUG_STD("success exit");
 		std::_Exit(EXIT_SUCCESS);
 	}
 	catch (const MediaSoupError &error)
 	{
 		destroy();
-		std::cerr << "failure exit: " << error.what() << std::endl;
+		MS_ERROR_STD("failure exit: %s", error.what());
+		usleep(100000);
 		std::_Exit(EXIT_FAILURE);
 	}
 }

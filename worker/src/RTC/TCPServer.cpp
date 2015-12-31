@@ -10,7 +10,7 @@
 #include "Logger.h"
 #include <string>
 
-#define MAX_BIND_ATTEMPTS 1000  // TODO: hack
+#define MAX_BIND_ATTEMPTS 20
 #define MAX_TCP_CONNECTIONS_PER_SERVER 10
 
 /* Static methods for UV callbacks. */
