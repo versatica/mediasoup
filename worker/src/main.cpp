@@ -26,33 +26,42 @@
 static void init();
 static void ignoreSignals();
 static void destroy();
+static void exitSuccess();
+static void exitWithError();
 
-int main(int argc, char* argv[], char** envp)
+int main(int argc, char* argv[])
 {
+	// Ensure we are called by our Node library.
+	if (argc == 1 || !std::getenv("MEDIASOUP_CHANNEL_FD"))
+	{
+		fprintf(stderr, "YOU ARE NOT MY REAL FATHER\n");
+		std::_Exit(EXIT_FAILURE);
+	}
+
+	std::string id = std::string(argv[1]);
+	int channelFd = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
+
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
-
-	int channelFd = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
 
 	// Set the Channel socket (this will be handled and deleted by the Loop).
 	Channel::UnixStreamSocket* channel = new Channel::UnixStreamSocket(channelFd);
 
-	std::string id = std::string(argv[1]);
-
+	// Initialize the Logger.
 	Logger::Init(id, channel);
 
+	// Setup the configuration.
 	try
 	{
 		Settings::SetConfiguration(argc, argv);
 	}
 	catch (const MediaSoupError &error)
 	{
-		MS_ERROR("failed to start: %s", error.what());
-		usleep(100000);
-		std::_Exit(EXIT_FAILURE);
+		MS_ERROR("configuration error: %s", error.what());
+		exitWithError();
 	}
 
-	// Print configuration.
+	// Print the effective configuration.
 	Settings::PrintConfiguration();
 
 	MS_DEBUG("starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
@@ -80,14 +89,13 @@ int main(int argc, char* argv[], char** envp)
 
 		destroy();
 		MS_DEBUG_STD("success exit");
-		std::_Exit(EXIT_SUCCESS);
+		exitSuccess();
 	}
 	catch (const MediaSoupError &error)
 	{
 		destroy();
 		MS_ERROR_STD("failure exit: %s", error.what());
-		usleep(100000);
-		std::_Exit(EXIT_FAILURE);
+		exitWithError();
 	}
 }
 
@@ -153,4 +161,22 @@ void destroy()
 	DepUsrSCTP::ClassDestroy();
 	RTC::DTLSAgent::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
+}
+
+void exitSuccess()
+{
+	// Wait a bit so peding messages to stdout/Channel arrive to the main process.
+	usleep(100000);
+
+	// And exit with success status.
+	std::_Exit(EXIT_SUCCESS);
+}
+
+void exitWithError()
+{
+	// Wait a bit so peding messages to stderr arrive to the main process.
+	usleep(100000);
+
+	// And exit with error status.
+	std::_Exit(EXIT_FAILURE);
 }

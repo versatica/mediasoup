@@ -67,7 +67,7 @@ bool Logger::HasDebugLevel()
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
 
-#define _MS_LOG_SEPARATOR_CHAR_STD "\f"
+#define _MS_LOG_SEPARATOR_CHAR_STD "\n"
 
 #ifdef MS_DEVEL
 	#define _MS_LOG_STR "[%s] %s:%d | %s::%s()"

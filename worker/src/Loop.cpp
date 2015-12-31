@@ -292,9 +292,7 @@ void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* so
 	// pipe and then exit.
 	// If the pipe is remotely closed it means that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
-
 	MS_ERROR_STD("Channel remotely closed, killing myself");
-
 	this->channel = nullptr;
 
 	Close();
