@@ -43,7 +43,9 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roo
 {
 	MS_TRACE();
 
-	auto jsonRoomId = request->data["roomId"];
+	static const Json::StaticString k_roomId("roomId");
+
+	auto jsonRoomId = request->data[k_roomId];
 
 	if (!jsonRoomId.isUInt())
 		MS_THROW_ERROR("Request has not numeric .roomId field");
@@ -92,10 +94,14 @@ void Loop::Close()
 		this->signalsHandler->Close();
 
 	// Close all the Rooms.
-	for (auto& kv : this->rooms)
+	// NOTE: Upon Room closure the onRoomClosed() method is called which
+	// removes it from the map, so this is the safe way to iterate the mao
+	// and remove elements.
+	for (auto it = this->rooms.begin(); it != this->rooms.end();)
 	{
-		RTC::Room* room = kv.second;
+		RTC::Room* room = it->second;
 
+		it = this->rooms.erase(it);
 		room->Close();
 	}
 
@@ -142,19 +148,20 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 	{
 		case Channel::Request::MethodId::dumpWorker:
 		{
+			static const Json::StaticString k_rooms("rooms");
+
 			Json::Value json(Json::objectValue);
-			Json::Value jsonWorker(Json::objectValue);
-			Json::Value jsonRooms(Json::objectValue);
+			Json::Value json_worker(Json::objectValue);
+			Json::Value json_rooms(Json::objectValue);
 
 			for (auto& kv : this->rooms)
 			{
 				auto room = kv.second;
 
-				jsonRooms[std::to_string(room->roomId)] = room->Dump();
+				json_rooms[std::to_string(room->roomId)] = room->Dump();
 			}
-
-			jsonWorker["rooms"] = jsonRooms;
-			json[Logger::id] = jsonWorker;
+			json_worker[k_rooms] = json_rooms;
+			json[Logger::id] = json_worker;
 
 			request->Accept(json);
 
@@ -192,7 +199,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			try
 			{
-				room = new RTC::Room(roomId, request->data);
+				room = new RTC::Room(this, roomId, request->data);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -232,9 +239,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			}
 
 			room->Close();
-
-			// TODO: Instead of this, the Room should fire an onRoomClosed() here.
-			this->rooms.erase(roomId);
 
 			MS_DEBUG("Room closed [roomId:%u]", roomId);
 			request->Accept();
@@ -294,4 +298,11 @@ void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* so
 	this->channel = nullptr;
 
 	Close();
+}
+
+void Loop::onRoomClosed(RTC::Room* room)
+{
+	MS_TRACE();
+
+	this->rooms.erase(room->roomId);
 }

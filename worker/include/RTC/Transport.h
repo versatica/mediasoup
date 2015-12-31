@@ -25,7 +25,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			// TODO
+			virtual void onTransportClosed(RTC::Transport* transport) = 0;
 		};
 
 	public:
@@ -36,17 +36,11 @@ namespace RTC
 		};
 
 	public:
-		typedef struct IceParameters
-		{
-			std::string usernameFragment;
-			std::string password;
-		} IceParameters;
-
-	public:
 		Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport = nullptr);
 		virtual ~Transport();
 
 		void Close();
+		Json::Value Dump();
 		Json::Value toJson();
 		std::string& GetIceUsernameFragment();
 		std::string& GetIcePassword();
@@ -88,17 +82,19 @@ namespace RTC
 		bool hasIPv4tcp = false;
 		bool hasIPv6tcp = false;
 
+	public:
+		// Passed by argument.
+		unsigned int transportId;
+
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
-		unsigned int transportId;
 		RTC::Transport::IceComponent iceComponent;
 		// Allocated by this.
 		RTC::IceServer* iceServer = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		// Others.
-		IceParameters iceLocalParameters;
 		std::vector<IceCandidate> iceLocalCandidates;
 		bool allocated = false;
 	};

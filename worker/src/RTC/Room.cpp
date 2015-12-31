@@ -8,8 +8,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Room::Room(unsigned int roomId, Json::Value& data) :
-		roomId(roomId)
+	Room::Room(Listener* listener, unsigned int roomId, Json::Value& data) :
+		roomId(roomId),
+		listener(listener)
 	{
 		MS_TRACE();
 
@@ -31,11 +32,14 @@ namespace RTC
 		// and remove elements.
 		for (auto it = this->peers.begin(); it != this->peers.end();)
 		{
-			auto peer = it->second;
+			RTC::Peer* peer = it->second;
 
 			it = this->peers.erase(it);
 			peer->Close();
 		}
+
+		// Notify the listener.
+		this->listener->onRoomClosed(this);
 
 		delete this;
 	}
@@ -44,17 +48,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_peers("peers");
+
 		Json::Value json(Json::objectValue);
-		Json::Value jsonPeers(Json::objectValue);
+		Json::Value json_peers(Json::objectValue);
 
 		for (auto& kv : this->peers)
 		{
-			auto peer = kv.second;
+			RTC::Peer* peer = kv.second;
 
-			jsonPeers[peer->peerId] = peer->Dump();
+			json_peers[peer->peerId] = peer->Dump();
 		}
-
-		json["peers"] = jsonPeers;
+		json[k_peers] = json_peers;
 
 		return json;
 	}
@@ -175,7 +180,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto jsonPeerId = request->data["peerId"];
+		static const Json::StaticString k_peerId("peerId");
+
+		auto jsonPeerId = request->data[k_peerId];
 
 		if (!jsonPeerId.isString())
 			MS_THROW_ERROR("Request has not string .peerId field");

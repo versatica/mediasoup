@@ -41,9 +41,6 @@ int main(int argc, char* argv[], char** envp)
 
 	Logger::Init(id, channel);
 
-	// Print libuv version.
-	MS_DEBUG("loaded libuv version: %s", uv_version_string());
-
 	try
 	{
 		Settings::SetConfiguration(argc, argv);
@@ -99,6 +96,8 @@ void init()
 	MS_TRACE();
 
 	ignoreSignals();
+
+	DepLibUV::PrintVersion();
 
 	// Initialize static stuff.
 	DepOpenSSL::ClassInit();

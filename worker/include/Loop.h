@@ -10,7 +10,8 @@
 
 class Loop :
 	public SignalsHandler::Listener,
-	public Channel::UnixStreamSocket::Listener
+	public Channel::UnixStreamSocket::Listener,
+	public RTC::Room::Listener
 {
 public:
 	Loop(Channel::UnixStreamSocket* channel);
@@ -29,6 +30,10 @@ public:
 public:
 	virtual void onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
 	virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
+
+/* Methods inherited from RTC::Room::Listener. */
+public:
+	virtual void onRoomClosed(RTC::Room* room) override;
 
 private:
 	// Passed by argument.

@@ -21,13 +21,13 @@ namespace RTC
 	/* Instance methods. */
 
 	Transport::Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport) :
-		listener(listener),
-		transportId(transportId)
+		transportId(transportId),
+		listener(listener)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString udp("udp");
-		static const Json::StaticString tcp("tcp");
+		static const Json::StaticString k_udp("udp");
+		static const Json::StaticString k_tcp("tcp");
 
 		bool try_IPv4_udp = false;
 		bool try_IPv6_udp = false;
@@ -43,11 +43,11 @@ namespace RTC
 				Utils::Crypto::GetRandomString(16),
 				Utils::Crypto::GetRandomString(32));
 
-			if (data[udp].isBool())
-				try_IPv4_udp = try_IPv6_udp = data[udp].asBool();
+			if (data[k_udp].isBool())
+				try_IPv4_udp = try_IPv6_udp = data[k_udp].asBool();
 
-			if (data[tcp].isBool())
-				try_IPv4_tcp = try_IPv6_tcp = data[tcp].asBool();
+			if (data[k_tcp].isBool())
+				try_IPv4_tcp = try_IPv6_tcp = data[k_tcp].asBool();
 		}
 		// RTCP transport associated to a given RTP transport.
 		else
@@ -63,10 +63,6 @@ namespace RTC
 			try_IPv4_tcp = rtpTransport->hasIPv4tcp;
 			try_IPv6_tcp = rtpTransport->hasIPv6tcp;
 		}
-
-		// Fill IceParameters.
-		this->iceLocalParameters.usernameFragment = this->iceServer->GetUsernameFragment();
-		this->iceLocalParameters.password = this->iceServer->GetPassword();
 
 		// Open a IPv4 UDP socket.
 		if (try_IPv4_udp && Settings::configuration.hasIPv4)
@@ -208,32 +204,48 @@ namespace RTC
 			server->Close();
 
 		if (this->allocated)
+		{
+			// Notify the listener.
+			this->listener->onTransportClosed(this);
+
 			delete this;
+		}
+	}
+
+	Json::Value Transport::Dump()
+	{
+		MS_TRACE();
+
+		return toJson();
 	}
 
 	Json::Value Transport::toJson()
 	{
 		MS_TRACE();
 
-
-		static const Json::StaticString iceLocalParameters("iceLocalParameters");
-		static const Json::StaticString iceLocalCandidates("iceLocalCandidates");
+		static const Json::StaticString k_iceComponent("iceComponent");
+		static const Json::StaticString k_iceLocalParameters("iceLocalParameters");
+		static const Json::StaticString k_usernameFragment("usernameFragment");
+		static const Json::StaticString k_password("password");
+		static const Json::StaticString k_iceLocalCandidates("iceLocalCandidates");
+		static const Json::StaticString v_RTP("RTP");
+		static const Json::StaticString v_RTCP("RTCP");
 
 		Json::Value data;
 
 		if (this->iceComponent == IceComponent::RTP)
-			data["iceComponent"] = "RTP";
+			data[k_iceComponent] = v_RTP;
 		else
-			data["iceComponent"] = "RTCP";
+			data[k_iceComponent] = v_RTCP;
 
-		data[iceLocalParameters]["usernameFragment"] = this->iceLocalParameters.usernameFragment;
-		data[iceLocalParameters]["password"] = this->iceLocalParameters.password;
+		data[k_iceLocalParameters][k_usernameFragment] = this->iceServer->GetUsernameFragment();
+		data[k_iceLocalParameters][k_password] = this->iceServer->GetPassword();
 
-		data[iceLocalCandidates] = Json::arrayValue;
+		data[k_iceLocalCandidates] = Json::arrayValue;
 
 		for (auto iceCandidate : this->iceLocalCandidates)
 		{
-			data[iceLocalCandidates].append(iceCandidate.toJson());
+			data[k_iceLocalCandidates].append(iceCandidate.toJson());
 		}
 
 		return data;

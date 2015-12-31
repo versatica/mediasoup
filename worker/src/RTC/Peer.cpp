@@ -28,10 +28,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Close all the Transports.
-		for (auto& kv : this->transports)
+		// NOTE: Upon Transport closure the onTransportClosed() method is called which
+		// removes it from the map, so this is the safe way to iterate the mao
+		// and remove elements.
+		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
-			RTC::Transport* transport = kv.second;
+			RTC::Transport* transport = it->second;
 
+			it = this->transports.erase(it);
 			transport->Close();
 		}
 
@@ -45,9 +49,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		Json::Value json(Json::objectValue);
+		static const Json::StaticString k_transports("transports");
 
-		// TODO
+		Json::Value json(Json::objectValue);
+		Json::Value json_transports(Json::objectValue);
+
+		for (auto& kv : this->transports)
+		{
+			RTC::Transport* transport = kv.second;
+
+			json_transports[std::to_string(transport->transportId)] = transport->Dump();
+		}
+		json[k_transports] = json_transports;
 
 		return json;
 	}
@@ -125,7 +138,9 @@ namespace RTC
 					return;
 				}
 
-				auto jsonRtpTransportId = request->data["rtpTransportId"];
+				static const Json::StaticString k_rtpTransportId("rtpTransportId");
+
+				auto jsonRtpTransportId = request->data[k_rtpTransportId];
 
 				if (!jsonRtpTransportId.isUInt())
 				{
@@ -170,8 +185,30 @@ namespace RTC
 
 			case Channel::Request::MethodId::closeTransport:
 			{
-				// TODO
+				RTC::Transport* transport;
+				unsigned int transportId;
 
+				try
+				{
+					transport = GetTransportFromRequest(request, &transportId);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(500, error.what());
+					return;
+				}
+
+				if (!transport)
+				{
+					MS_ERROR("Transport does not exist");
+
+					request->Reject(500, "Transport does not exist");
+					return;
+				}
+
+				transport->Close();
+
+				MS_DEBUG("Transport closed [transportId:%u]", transportId);
 				request->Accept();
 
 				break;
@@ -188,7 +225,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto jsonTransportId = request->data["transportId"];
+		static const Json::StaticString k_transportId("transportId");
+
+		auto jsonTransportId = request->data[k_transportId];
 
 		if (!jsonTransportId.isUInt())
 			MS_THROW_ERROR("Request has not numeric .transportId field");
@@ -209,5 +248,12 @@ namespace RTC
 		{
 			return nullptr;
 		}
+	}
+
+	void Peer::onTransportClosed(RTC::Transport* transport)
+	{
+		MS_TRACE();
+
+		this->transports.erase(transport->transportId);
 	}
 }

@@ -34,6 +34,13 @@ void DepLibUV::ClassDestroy()
 	delete DepLibUV::loop;
 }
 
+void DepLibUV::PrintVersion()
+{
+	MS_TRACE();
+
+	MS_DEBUG("loaded libuv version: %s", uv_version_string());
+}
+
 void DepLibUV::RunLoop()
 {
 	MS_TRACE();

@@ -32,17 +32,21 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		if (json["id"].isUInt())
-			this->id = json["id"].asUInt();
+		static const Json::StaticString k_id("id");
+		static const Json::StaticString k_method("method");
+		static const Json::StaticString k_data("data");
+
+		if (json[k_id].isUInt())
+			this->id = json[k_id].asUInt();
 		else
 			MS_THROW_ERROR("json has no numeric .id field");
 
-		if (json["method"].isString())
-			this->method = json["method"].asString();
+		if (json[k_method].isString())
+			this->method = json[k_method].asString();
 		else
 			MS_THROW_ERROR("json has no string .method field");
 
-		auto it = Request::string2MethodId.find(method);
+		auto it = Request::string2MethodId.find(this->method);
 
 		if (it != Request::string2MethodId.end())
 		{
@@ -52,11 +56,11 @@ namespace Channel
 		{
 			Reject(405, "method not allowed");
 
-			MS_THROW_ERROR("unknown .method '%s'", method.c_str());
+			MS_THROW_ERROR("unknown .method '%s'", this->method.c_str());
 		}
 
-		if (json["data"].isObject())
-			this->data = json["data"];
+		if (json[k_data].isObject())
+			this->data = json[k_data];
 		else
 			this->data = Json::Value(Json::objectValue);
 	}
@@ -80,15 +84,19 @@ namespace Channel
 		MS_ASSERT(!this->replied, "Request already replied");
 		this->replied = true;
 
+		static const Json::StaticString k_id("id");
+		static const Json::StaticString k_status("status");
+		static const Json::StaticString k_data("data");
+
 		Json::Value json;
 
-		json["id"] = this->id;
-		json["status"] = 200;
+		json[k_id] = this->id;
+		json[k_status] = 200;
 
 		if (data.isObject())
-			json["data"] = data;
+			json[k_data] = data;
 		else
-			json["data"] = empty_data;
+			json[k_data] = empty_data;
 
 		this->channel->Send(json);
 	}
@@ -114,13 +122,17 @@ namespace Channel
 
 		MS_ASSERT(status >= 400 && status <= 599, "status must be between 400 and 500");
 
+		static const Json::StaticString k_id("id");
+		static const Json::StaticString k_status("status");
+		static const Json::StaticString k_reason("reason");
+
 		Json::Value json;
 
-		json["id"] = this->id;
-		json["status"] = status;
+		json[k_id] = this->id;
+		json[k_status] = status;
 
 		if (reason)
-			json["reason"] = reason;
+			json[k_reason] = reason;
 
 		this->channel->Send(json);
 	}

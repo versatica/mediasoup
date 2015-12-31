@@ -9,10 +9,18 @@
 
 namespace RTC
 {
-	class Room : public RTC::Peer::Listener
+	class Room :
+		public RTC::Peer::Listener
 	{
 	public:
-		Room(unsigned int roomId, Json::Value& data);
+		class Listener
+		{
+		public:
+			virtual void onRoomClosed(RTC::Room* room) = 0;
+		};
+
+	public:
+		Room(Listener* listener, unsigned int roomId, Json::Value& data);
 		virtual ~Room();
 
 		void Close();
@@ -31,6 +39,8 @@ namespace RTC
 		unsigned int roomId;
 
 	private:
+		// Passed by argument.
+		Listener* listener = nullptr;
 		// Others.
 		typedef std::unordered_map<std::string, RTC::Peer*> Peers;
 		Peers peers;

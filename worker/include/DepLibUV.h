@@ -8,6 +8,7 @@ class DepLibUV
 public:
 	static void ClassInit();
 	static void ClassDestroy();
+	static void PrintVersion();
 	static void RunLoop();
 	static uv_loop_t* GetLoop();
 

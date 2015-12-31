@@ -32,7 +32,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		// TODO
+		virtual void onTransportClosed(RTC::Transport* transport) override;
 
 	public:
 		// Passed by argument.

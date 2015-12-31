@@ -49,8 +49,6 @@ void SignalsHandler::AddSignal(int signum, std::string name)
 
 	// Enter the UV handle into the vector.
 	this->uvHandles.push_back(uvHandle);
-
-	MS_DEBUG("signal %s added", name.c_str());
 }
 
 void SignalsHandler::Close()
