@@ -39,35 +39,6 @@ Loop::~Loop()
 	MS_TRACE();
 }
 
-RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roomId)
-{
-	MS_TRACE();
-
-	static const Json::StaticString k_roomId("roomId");
-
-	auto jsonRoomId = request->data[k_roomId];
-
-	if (!jsonRoomId.isUInt())
-		MS_THROW_ERROR("Request has not numeric .roomId field");
-
-	// If given, fill roomId.
-	if (roomId)
-		*roomId = jsonRoomId.asUInt();
-
-	auto it = this->rooms.find(jsonRoomId.asUInt());
-
-	if (it != this->rooms.end())
-	{
-		RTC::Room* room = it->second;
-
-		return room;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
 void Loop::Close()
 {
 	MS_TRACE();
@@ -110,6 +81,35 @@ void Loop::Close()
 		this->channel->Close();
 }
 
+RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roomId)
+{
+	MS_TRACE();
+
+	static const Json::StaticString k_roomId("roomId");
+
+	auto jsonRoomId = request->data[k_roomId];
+
+	if (!jsonRoomId.isUInt())
+		MS_THROW_ERROR("Request has not numeric .roomId field");
+
+	// If given, fill roomId.
+	if (roomId)
+		*roomId = jsonRoomId.asUInt();
+
+	auto it = this->rooms.find(jsonRoomId.asUInt());
+
+	if (it != this->rooms.end())
+	{
+		RTC::Room* room = it->second;
+
+		return room;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
 void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 {
 	MS_TRACE();
@@ -129,13 +129,6 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 		default:
 			MS_WARN("received a signal (with signum %d) for which there is no handling code", signum);
 	}
-}
-
-void Loop::onSignalsHandlerClosed(SignalsHandler* signalsHandler)
-{
-	MS_TRACE();
-
-	this->signalsHandler = nullptr;
 }
 
 void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request)

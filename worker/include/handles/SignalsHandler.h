@@ -12,7 +12,6 @@ public:
 	{
 	public:
 		virtual void onSignal(SignalsHandler* signalsHandler, int signum) = 0;
-		virtual void onSignalsHandlerClosed(SignalsHandler* signalsHandler) = 0;
 	};
 
 public:

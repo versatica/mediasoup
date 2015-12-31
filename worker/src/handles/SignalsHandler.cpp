@@ -60,9 +60,6 @@ void SignalsHandler::Close()
 		uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_close);
 	}
 
-	// Notify the listener.
-	this->listener->onSignalsHandlerClosed(this);
-
 	// And delete this.
 	delete this;
 }

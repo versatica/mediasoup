@@ -18,13 +18,12 @@ public:
 	~Loop();
 
 private:
-	RTC::Room* GetRoomFromRequest(Channel::Request* request, unsigned int* roomId = nullptr);
 	void Close();
+	RTC::Room* GetRoomFromRequest(Channel::Request* request, unsigned int* roomId = nullptr);
 
 /* Methods inherited from SignalsHandler::Listener. */
 public:
 	virtual void onSignal(SignalsHandler* signalsHandler, int signum) override;
-	virtual void onSignalsHandlerClosed(SignalsHandler* signalsHandler) override;
 
 /* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
