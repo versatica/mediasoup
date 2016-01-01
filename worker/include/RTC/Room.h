@@ -20,7 +20,7 @@ namespace RTC
 		};
 
 	public:
-		Room(Listener* listener, unsigned int roomId, Json::Value& data);
+		Room(Listener* listener, unsigned int roomId);
 		virtual ~Room();
 
 		void Close();

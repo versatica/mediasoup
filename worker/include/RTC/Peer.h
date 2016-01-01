@@ -20,7 +20,7 @@ namespace RTC
 		};
 
 	public:
-		Peer(Listener* listener, std::string& peerId, Json::Value& data);
+		Peer(Listener* listener, std::string& peerId);
 		virtual ~Peer();
 
 		void Close();

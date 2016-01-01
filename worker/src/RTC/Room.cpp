@@ -8,13 +8,11 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Room::Room(Listener* listener, unsigned int roomId, Json::Value& data) :
+	Room::Room(Listener* listener, unsigned int roomId) :
 		roomId(roomId),
 		listener(listener)
 	{
 		MS_TRACE();
-
-		// TODO: do something with data and throw if incorrect.
 	}
 
 	Room::~Room()
@@ -95,7 +93,7 @@ namespace RTC
 
 				try
 				{
-					peer = new RTC::Peer(this, peerId, request->data);
+					peer = new RTC::Peer(this, peerId);
 				}
 				catch (const MediaSoupError &error)
 				{

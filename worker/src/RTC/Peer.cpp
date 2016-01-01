@@ -9,13 +9,11 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, std::string& peerId, Json::Value& data) :
+	Peer::Peer(Listener* listener, std::string& peerId) :
 		peerId(peerId),
 		listener(listener)
 	{
 		MS_TRACE();
-
-		// TODO: do something wit data and throw if incorrect.
 	}
 
 	Peer::~Peer()
