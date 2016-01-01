@@ -41,6 +41,8 @@ tap.test('server.updateSettings() in a closed Server must fail', { timeout: 1000
 {
 	let server = mediasoup.Server();
 
+	t.tearDown(() => server.close());
+
 	server.on('close', () =>
 	{
 		server.updateSettings({ logLevel: 'error' })
@@ -51,26 +53,36 @@ tap.test('server.updateSettings() in a closed Server must fail', { timeout: 1000
 	server.close();
 });
 
-tap.test('server.createRoom() with no options must succeed', { timeout: 1000 }, (t) =>
+tap.test('server.Room() must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
-	server.createRoom()
-		.then(() => t.end())
-		.catch((error) => t.fail(`should not fail: ${error}`));
+	let room = server.Room();
+
+	room.on('close', (error) =>
+	{
+		t.error(error, `should not close with error: ${error}`);
+		t.end();
+	});
+
+	setTimeout(() => room.close(), 100);
 });
 
-tap.test('server.createRoom() in a closed Server must fail', { timeout: 1000 }, (t) =>
+tap.test('server.Room() in a closed Server must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
+	t.tearDown(() => server.close());
+
 	server.on('close', () =>
 	{
-		server.createRoom()
-			.then(() => t.fail('should not succeed'))
-			.catch(() => t.end());
+		t.throws(() =>
+		{
+			server.Room();
+		}, 'should throw error');
+		t.end();
 	});
 
 	server.close();
@@ -80,18 +92,13 @@ tap.test('server.dump() must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server({ numWorkers: 1 });
 
-	server.on('close', () =>
-	{
-		server.createRoom()
-			.then(() => t.fail('should not succeed'))
-			.catch(() => t.end());
-	});
+	t.tearDown(() => server.close());
 
 	server.dump()
 		.then((data) =>
 		{
 			t.equal(Object.keys(data.workers).length, 1, 'server.dump() should retrieve one worker');
-			server.close();
+			t.end();
 		})
 		.catch((error) => t.fail(`should not fail: ${error}`));
 });

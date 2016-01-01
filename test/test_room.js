@@ -4,101 +4,103 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-tap.test('room.createPeer() with no options must succeed', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() with `peerId` must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
-	server.createRoom()
-		.then((room) =>
-		{
-			room.createPeer('alice')
-				.then(() => t.end())
-				.catch((error) => t.fail(`should not fail: ${error}`));
-		})
-		.catch((error) => t.fail(`should not fail: ${error}`));
+	let room = server.Room();
+	let peer = room.Peer('alice');
+
+	peer.on('close', (error) =>
+	{
+		t.error(error, `should not close with error: ${error}`);
+		t.end();
+	});
+
+	setTimeout(() => peer.close(), 100);
 });
 
-tap.test('room.createPeer() without peerId must fail', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() without `peerId` must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
-	server.createRoom()
-		.then((room) =>
-		{
-			room.createPeer()
-				.then(() => t.fail('should not succeed'))
-				.catch(() => t.end());
-		})
-		.catch((error) => t.fail(`should not fail: ${error}`));
+	let room = server.Room();
+
+	t.throws(() =>
+	{
+		room.Peer();
+	}, 'should throw error');
+	t.end();
 });
 
-tap.test('room.createPeer() with same `peerId` must fail', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() with same `peerId` must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
-	server.createRoom()
-		.then((room) =>
-		{
-			room.createPeer('alice')
-				.then(() =>
-				{
-					room.createPeer('alice')
-						.then(() => t.fail('should not succeed'))
-						.catch(() => t.end());
-				})
-				.catch((error) => t.fail(`should not fail: ${error}`));
-		})
-		.catch((error) => t.fail(`should not fail: ${error}`));
+	let room = server.Room();
+
+	room.Peer('alice');
+
+	t.throws(() =>
+	{
+		room.Peer('alice');
+	}, 'should throw error');
+	t.end();
 });
 
-tap.test('room.createPeer() with same `peerId` must succeed if previous peer is closed before', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() with same `peerId` must succeed if previous peer was closed before', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
-	server.createRoom()
-		.then((room) =>
+	let room = server.Room();
+	let peer1 = room.Peer('alice');
+
+	t.equal(room.getPeer('alice'), peer1, 'room.getPeer() retrieves the first "alice"');
+	t.equal(room.getPeers().length, 1, 'room.getPeers() returns one peer');
+
+	peer1.close();
+
+	t.notOk(room.getPeer('alice'), 'room.getPeer() retrieves nothing');
+	t.equal(room.getPeers().length, 0, 'room.getPeers() returns zero peers');
+
+	let peer2 = room.Peer('alice');
+
+	t.equal(room.getPeer('alice'), peer2, 'room.getPeer() retrieves the new "alice"');
+	t.equal(room.getPeers().length, 1, 'room.getPeers() returns one peer');
+
+	peer2.on('close', (error) =>
+	{
+		t.error(error, `should not close with error: ${error}`);
+		t.end();
+	});
+
+	setTimeout(() => peer2.close(), 100);
+});
+
+tap.test('room.dump() must succeed', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	let room = server.Room();
+
+	room.Peer('alice');
+	room.Peer('bob');
+
+	room.dump()
+		.then((data) =>
 		{
-			room.createPeer('alice')
-				.then((peer) =>
-				{
-					let alice1 = peer;
-
-					peer.close();
-
-					room.dump()
-						.then((data) =>
-						{
-							t.equal(Object.keys(data.peers).length, 0, 'room.dump() should retrieve zero peers');
-						})
-						.catch((error) => t.fail(`should not fail: ${error}`));
-
-					room.createPeer('alice')
-						.then((peer) =>
-						{
-							t.notEqual(alice1, peer, 'new peer should be a different "alice"');
-							t.equal(room.getPeer('alice'), peer, 'room.getPeer() retrieves the new "alice"');
-							t.equal(room.getPeers().length, 1, 'room.getPeers() returns one peer');
-							t.end();
-						})
-						.catch((error) => t.fail(`should not fail: ${error}`));
-
-					room.dump()
-						.then((data) =>
-						{
-							t.equal(Object.keys(data.peers).length, 1, 'room.dump() should retrieve one peer');
-							t.equal(Object.keys(data.peers)[0], 'alice', 'room.dump() should retrieve ane peer with key "alice"');
-						})
-						.catch((error) => t.fail(`should not fail: ${error}`));
-				})
-				.catch((error) => t.fail(`should not fail: ${error}`));
+			t.strictSame(Object.keys(data.peers), ['alice', 'bob'], 'room.dump() should retrieve two peers');
+			t.end();
 		})
 		.catch((error) => t.fail(`should not fail: ${error}`));
 });
