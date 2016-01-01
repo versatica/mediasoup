@@ -20,11 +20,14 @@ namespace Channel
 			updateSettings,
 			createRoom,
 			closeRoom,
+			dumpRoom,
 			createPeer,
 			closePeer,
+			dumpPeer,
 			createTransport,
 			createAssociatedTransport,
-			closeTransport
+			closeTransport,
+			dumpTransport
 		};
 
 	private:

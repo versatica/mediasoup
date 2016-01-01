@@ -40,7 +40,6 @@ namespace RTC
 		virtual ~Transport();
 
 		void Close();
-		Json::Value Dump();
 		Json::Value toJson();
 		std::string& GetIceUsernameFragment();
 		std::string& GetIcePassword();
@@ -77,14 +76,13 @@ namespace RTC
 		virtual void onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 
 	public:
+		// Passed by argument.
+		unsigned int transportId;
+		// Others.
 		bool hasIPv4udp = false;
 		bool hasIPv6udp = false;
 		bool hasIPv4tcp = false;
 		bool hasIPv6tcp = false;
-
-	public:
-		// Passed by argument.
-		unsigned int transportId;
 
 	private:
 		// Passed by argument.

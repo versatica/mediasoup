@@ -22,14 +22,14 @@ namespace RTC
 		TransportSource(RTC::UDPSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
 		TransportSource(RTC::TCPConnection* tcpConnection);
 
+		void Close();
+		void Dump();
 		void StoreUdpRemoteAddress();
 		bool IsUDP();
 		bool IsTCP();
 		bool Compare(TransportSource* source);
 		void Send(const MS_BYTE* data, size_t len);
 		const struct sockaddr* GetRemoteAddress();
-		void Close();
-		void Dump();
 
 	private:
 		// Passed by argument.
@@ -42,6 +42,13 @@ namespace RTC
 	};
 
 	/* Inline methods. */
+
+	inline
+	void TransportSource::Close()
+	{
+		if (this->type == Type::TCP)
+			this->tcpConnection->Close();
+	}
 
 	inline
 	TransportSource::TransportSource(RTC::UDPSocket* udpSocket, const struct sockaddr* udpRemoteAddr) :
@@ -110,13 +117,6 @@ namespace RTC
 			return (const struct sockaddr*)this->udpRemoteAddr;
 		else
 			return this->tcpConnection->GetPeerAddress();
-	}
-
-	inline
-	void TransportSource::Close()
-	{
-		if (this->type == Type::TCP)
-			this->tcpConnection->Close();
 	}
 }
 

@@ -18,11 +18,14 @@ namespace Channel
 		{ "updateSettings",            Request::MethodId::updateSettings            },
 		{ "createRoom",                Request::MethodId::createRoom                },
 		{ "closeRoom",                 Request::MethodId::closeRoom                 },
+		{ "dumpRoom",                  Request::MethodId::dumpRoom                  },
 		{ "createPeer",                Request::MethodId::createPeer                },
 		{ "closePeer",                 Request::MethodId::closePeer                 },
+		{ "dumpPeer",                  Request::MethodId::dumpPeer                  },
 		{ "createTransport",           Request::MethodId::createTransport           },
 		{ "createAssociatedTransport", Request::MethodId::createAssociatedTransport },
-		{ "closeTransport",            Request::MethodId::closeTransport            }
+		{ "closeTransport",            Request::MethodId::closeTransport            },
+		{ "dumpTransport",             Request::MethodId::dumpTransport             }
 	};
 
 	/* Instance methods. */

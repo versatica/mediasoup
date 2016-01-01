@@ -151,7 +151,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				auto room = kv.second;
 
-				json_rooms[std::to_string(room->roomId)] = room->Dump();
+				json_rooms[std::to_string(room->roomId)] = room->toJson();
 			}
 			json_worker[k_rooms] = json_rooms;
 			json[Logger::id] = json_worker;
@@ -239,11 +239,43 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			break;
 		}
 
+		case Channel::Request::MethodId::dumpRoom:
+		{
+			RTC::Room* room;
+			Json::Value json;
+
+			try
+			{
+				room = GetRoomFromRequest(request);
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+				return;
+			}
+
+			if (!room)
+			{
+				MS_ERROR("Room does not exist");
+
+				request->Reject(500, "Room does not exist");
+				return;
+			}
+
+			json = room->toJson();
+
+			request->Accept(json);
+
+			break;
+		}
+
 		case Channel::Request::MethodId::createPeer:
 		case Channel::Request::MethodId::closePeer:
+		case Channel::Request::MethodId::dumpPeer:
 		case Channel::Request::MethodId::createTransport:
 		case Channel::Request::MethodId::createAssociatedTransport:
 		case Channel::Request::MethodId::closeTransport:
+		case Channel::Request::MethodId::dumpTransport:
 		{
 			RTC::Room* room;
 

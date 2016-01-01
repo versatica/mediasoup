@@ -6,7 +6,8 @@
 
 namespace RTC
 {
-	class TCPConnection : public ::TCPConnection
+	class TCPConnection :
+		public ::TCPConnection
 	{
 	public:
 		class Reader

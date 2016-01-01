@@ -11,7 +11,8 @@ namespace Channel
 	// Avoid cyclic #include problem.
 	class Request;
 
-	class UnixStreamSocket : public ::UnixStreamSocket
+	class UnixStreamSocket :
+		public ::UnixStreamSocket
 	{
 	public:
 		class Listener

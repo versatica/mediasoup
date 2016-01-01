@@ -7,14 +7,22 @@
 #include "Logger.h"
 #include <cmath>  // std::pow()
 
-#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 30000)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 40000)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 30000)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP  (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 40000)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 30000)) + (256 - 2)
-#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) * (10000 + 40000)) + (256 - 2)
-#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 30000)) + (256 - 2)
-#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP (std::pow(2, 24) * 64) + (std::pow(2, 8) *  (5000 + 40000)) + (256 - 2)
+#define ICE_CANDIDATE_PRIORITY_IPV4 20000
+#define ICE_CANDIDATE_PRIORITY_IPV6 20000
+#define ICE_CANDIDATE_PRIORITY_UDP  10000
+#define ICE_CANDIDATE_PRIORITY_TCP   5000
+#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP  \
+	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV4 + ICE_CANDIDATE_PRIORITY_UDP)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP  \
+	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV6 + ICE_CANDIDATE_PRIORITY_UDP)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP  \
+	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV4 + ICE_CANDIDATE_PRIORITY_TCP)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP  \
+	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV6 + ICE_CANDIDATE_PRIORITY_TCP)) + (256 - 1)
+#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP - 1
+#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP - 1
+#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP - 1
+#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP - 1
 
 namespace RTC
 {
@@ -29,10 +37,10 @@ namespace RTC
 		static const Json::StaticString k_udp("udp");
 		static const Json::StaticString k_tcp("tcp");
 
-		bool try_IPv4_udp = false;
-		bool try_IPv6_udp = false;
-		bool try_IPv4_tcp = false;
-		bool try_IPv6_tcp = false;
+		bool try_IPv4_udp = true;
+		bool try_IPv6_udp = true;
+		bool try_IPv4_tcp = true;
+		bool try_IPv6_tcp = true;
 
 		// RTP transport.
 		if (!rtpTransport)
@@ -210,13 +218,6 @@ namespace RTC
 
 			delete this;
 		}
-	}
-
-	Json::Value Transport::Dump()
-	{
-		MS_TRACE();
-
-		return toJson();
 	}
 
 	Json::Value Transport::toJson()

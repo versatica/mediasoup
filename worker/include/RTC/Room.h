@@ -24,7 +24,7 @@ namespace RTC
 		virtual ~Room();
 
 		void Close();
-		Json::Value Dump();
+		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
 
 	private:

@@ -45,7 +45,7 @@ namespace RTC
 		delete this;
 	}
 
-	Json::Value Peer::Dump()
+	Json::Value Peer::toJson()
 	{
 		MS_TRACE();
 
@@ -58,7 +58,7 @@ namespace RTC
 		{
 			RTC::Transport* transport = kv.second;
 
-			json_transports[std::to_string(transport->transportId)] = transport->Dump();
+			json_transports[std::to_string(transport->transportId)] = transport->toJson();
 		}
 		json[k_transports] = json_transports;
 
@@ -210,6 +210,36 @@ namespace RTC
 
 				MS_DEBUG("Transport closed [transportId:%u]", transportId);
 				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::dumpTransport:
+			{
+				Json::Value json;
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(500, error.what());
+					return;
+				}
+
+				if (!transport)
+				{
+					MS_ERROR("Transport does not exist");
+
+					request->Reject(500, "Transport does not exist");
+					return;
+				}
+
+				json = transport->toJson();
+
+				request->Accept(json);
 
 				break;
 			}

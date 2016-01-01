@@ -73,13 +73,28 @@ tap.test('room.createPeer() with same `peerId` must succeed if previous peer is 
 
 					peer.close();
 
+					room.dump()
+						.then((data) =>
+						{
+							t.equal(Object.keys(data.peers).length, 0, 'room.dump() should retrieve zero peers');
+						})
+						.catch((error) => t.fail(`should not fail: ${error}`));
+
 					room.createPeer('alice')
 						.then((peer) =>
 						{
-							t.notEqual(alice1, peer, 'should be a different "alice"');
+							t.notEqual(alice1, peer, 'new peer should be a different "alice"');
 							t.equal(room.getPeer('alice'), peer, 'room.getPeer() retrieves the new "alice"');
-							t.equal(room.getPeers().length, 1, 'room.getPeers() returns 1 peer');
+							t.equal(room.getPeers().length, 1, 'room.getPeers() returns one peer');
 							t.end();
+						})
+						.catch((error) => t.fail(`should not fail: ${error}`));
+
+					room.dump()
+						.then((data) =>
+						{
+							t.equal(Object.keys(data.peers).length, 1, 'room.dump() should retrieve one peer');
+							t.equal(Object.keys(data.peers)[0], 'alice', 'room.dump() should retrieve ane peer with key "alice"');
 						})
 						.catch((error) => t.fail(`should not fail: ${error}`));
 				})

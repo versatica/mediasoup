@@ -75,3 +75,23 @@ tap.test('server.createRoom() in a closed Server must fail', { timeout: 1000 }, 
 
 	server.close();
 });
+
+tap.test('server.dump() must succeed', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server({ numWorkers: 1 });
+
+	server.on('close', () =>
+	{
+		server.createRoom()
+			.then(() => t.fail('should not succeed'))
+			.catch(() => t.end());
+	});
+
+	server.dump()
+		.then((data) =>
+		{
+			t.equal(Object.keys(data.workers).length, 1, 'server.dump() should retrieve one worker');
+			server.close();
+		})
+		.catch((error) => t.fail(`should not fail: ${error}`));
+});

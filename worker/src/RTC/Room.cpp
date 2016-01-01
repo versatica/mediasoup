@@ -44,7 +44,7 @@ namespace RTC
 		delete this;
 	}
 
-	Json::Value Room::Dump()
+	Json::Value Room::toJson()
 	{
 		MS_TRACE();
 
@@ -57,7 +57,7 @@ namespace RTC
 		{
 			RTC::Peer* peer = kv.second;
 
-			json_peers[peer->peerId] = peer->Dump();
+			json_peers[peer->peerId] = peer->toJson();
 		}
 		json[k_peers] = json_peers;
 
@@ -135,7 +135,39 @@ namespace RTC
 				}
 
 				peer->Close();
+
+				MS_DEBUG("Peer closed [peerId:%s]", peerId.c_str());
 				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::dumpPeer:
+			{
+				RTC::Peer* peer;
+				Json::Value json;
+
+				try
+				{
+					peer = GetPeerFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(500, error.what());
+					return;
+				}
+
+				if (!peer)
+				{
+					MS_ERROR("Peer does not exist");
+
+					request->Reject(500, "Peer does not exist");
+					return;
+				}
+
+				json = peer->toJson();
+
+				request->Accept(json);
 
 				break;
 			}
@@ -143,6 +175,7 @@ namespace RTC
 			case Channel::Request::MethodId::createTransport:
 			case Channel::Request::MethodId::createAssociatedTransport:
 			case Channel::Request::MethodId::closeTransport:
+			case Channel::Request::MethodId::dumpTransport:
 			{
 				RTC::Peer* peer;
 

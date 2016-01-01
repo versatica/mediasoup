@@ -15,7 +15,8 @@
 
 namespace RTC
 {
-	class DTLSAgent :	public Timer::Listener
+	class DTLSAgent :
+		public Timer::Listener
 	{
 	private:
 		struct SrtpProfileMapEntry

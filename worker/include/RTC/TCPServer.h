@@ -10,7 +10,8 @@
 
 namespace RTC
 {
-	class TCPServer : public ::TCPServer
+	class TCPServer :
+		public ::TCPServer
 	{
 	public:
 		class Listener
