@@ -26,3 +26,17 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 1000 
 		})
 		.catch((error) => t.fail(`should not fail: ${error}`));
 });
+
+tap.test('peer.createTransport() with no `udp` nor `tcp` must fail', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	let room = server.Room();
+	let peer = room.Peer('alice');
+
+	peer.createTransport({ udp: false, tcp: false })
+		.then(() => t.fail('should fail'))
+		.catch(() => t.end());
+});
