@@ -5,5 +5,6 @@
 /worker/mediasoup-tester.sh
 /art/
 /TODO
+/tester/
 /make-trace.sh
 /run.js

@@ -1,7 +1,7 @@
 {
   "name": "mediasoup",
-  "version": "0.0.1",
-  "description": "Node/C++ multiconference media server ready for WebRTC",
+  "version": "0.0.1-alpha.1",
+  "description": "Powerful WebRTC SFU (\"Selective Forwarding Unit\") server built on Node and C++",
   "main": "lib/mediasoup.js",
   "repository": {
     "type": "git",
@@ -32,6 +32,6 @@
     "gulp-shell": "^0.5.1",
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
-    "tap": "^2.3.3"
+    "tap": "^4.0.0"
   }
 }
