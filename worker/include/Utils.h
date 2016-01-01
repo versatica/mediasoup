@@ -73,26 +73,6 @@ namespace Utils
 		return copied_addr;
 	}
 
-	class Socket
-	{
-	public:
-		/**
-		 * Builds a pair of connected sockets. The sockets are created in non-blocking
-		 * mode and with close-exec (so they are closed after fork()).
-		 *
-		 * @param  family  Socket family (AF_UNIX...).
-		 * @param  type    Socket type (SOCK_DGRAM...) + flags.
-		 * @param  fds     Array with two integers.
-		 *
-		 * In case of error throws a MediaSoupError exception.
-		 */
-		static void BuildSocketPair(int family, int type, int* fds);
-
-	private:
-		static bool SetNonBlock(int fd);
-		static bool SetCloExec(int fd);
-	};
-
 	class File
 	{
 	public:
