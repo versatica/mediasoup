@@ -69,6 +69,7 @@ app.on('online', (peer) =>
 {
 	debug('peer online: %s', peer);
 
+	// Create a mediasoup Peer instance
 	let mediaPeer = room.Peer(peer.username);
 
 	mediaPeer.on('close', (error) =>
@@ -79,6 +80,7 @@ app.on('online', (peer) =>
 			peer.close();
 	});
 
+	// Store the mediasoup Peer instance within the protoo peer
 	peer.data.mediaPeer = mediaPeer;
 });
 
@@ -94,6 +96,7 @@ app.on('offline', (peer) =>
 // Handle PUT requests to /test-transport
 app.put('/test-transport', function(req)
 {
+	// Retrieve the mediasoup Peer associated to the protoo peer who sent the request
 	let mediaPeer = req.peer.data.mediaPeer;
 	let sdpOffer = req.data.sdp;
 	let offer = sdpTransform.parse(sdpOffer);
