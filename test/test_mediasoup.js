@@ -10,10 +10,8 @@ tap.test('mediasoup.Server() with no options must succeed', { timeout: 1000 }, (
 
 	server.on('close', (error) =>
 	{
-		if (!error)
-			t.end();
-		else
-			t.fail(`should not be closed with error: ${error}`);
+		t.error(error, 'server should close cleanly');
+		t.end();
 	});
 
 	setTimeout(() => server.close(), 100);
@@ -29,10 +27,8 @@ tap.test('mediasoup.Server() with valid options must succeed', { timeout: 1000 }
 
 	server.on('close', (error) =>
 	{
-		if (!error)
-			t.end();
-		else
-			t.fail(`should not be closed with error: ${error}`);
+		t.error(error, 'server should close cleanly');
+		t.end();
 	});
 
 	setTimeout(() => server.close(), 100);
@@ -44,9 +40,7 @@ tap.test('mediasoup.Server() with wrong options must fail', { timeout: 1000 }, (
 
 	server.on('close', (error) =>
 	{
-		if (error)
-			t.end();
-		else
-			t.fail('should be closed with error');
+		t.type(error, Error, 'server should close with error');
+		t.end();
 	});
 });

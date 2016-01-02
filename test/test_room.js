@@ -15,7 +15,7 @@ tap.test('room.Peer() with `peerId` must succeed', { timeout: 1000 }, (t) =>
 
 	peer.on('close', (error) =>
 	{
-		t.error(error, `should not close with error: ${error}`);
+		t.error(error, 'peer should close cleanly');
 		t.end();
 	});
 
@@ -33,7 +33,7 @@ tap.test('room.Peer() without `peerId` must fail', { timeout: 1000 }, (t) =>
 	t.throws(() =>
 	{
 		room.Peer();
-	}, 'should throw error');
+	}, 'room.Peer() should throw error');
 	t.end();
 });
 
@@ -50,7 +50,7 @@ tap.test('room.Peer() with same `peerId` must fail', { timeout: 1000 }, (t) =>
 	t.throws(() =>
 	{
 		room.Peer('alice');
-	}, 'should throw error');
+	}, 'room.Peer() should throw error');
 	t.end();
 });
 
@@ -78,7 +78,7 @@ tap.test('room.Peer() with same `peerId` must succeed if previous peer was close
 
 	peer2.on('close', (error) =>
 	{
-		t.error(error, `should not close with error: ${error}`);
+		t.error(error, 'peer should close cleanly');
 		t.end();
 	});
 
@@ -99,8 +99,9 @@ tap.test('room.dump() must succeed', { timeout: 1000 }, (t) =>
 	room.dump()
 		.then((data) =>
 		{
+			t.pass('room.dump() succeeded');
 			t.strictSame(Object.keys(data.peers), ['alice', 'bob'], 'room.dump() should retrieve two peers');
 			t.end();
 		})
-		.catch((error) => t.fail(`should not fail: ${error}`));
+		.catch((error) => t.fail(`room.dump() failed: ${error}`));
 });
