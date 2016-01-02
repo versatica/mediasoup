@@ -22,8 +22,9 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 			transport.iceLocalCandidates.forEach((candidate) =>
 			{
 				if (candidate.protocol !== 'udp')
-					t.fail('there should be just "udp" candidates');
+					t.fail('transport contains unexpected "tcp" candidates');
 			});
+			t.pass('transport just contains "udp" candidates');
 
 			transport.createAssociatedTransport()
 				.then((associatedTransport) =>
@@ -33,8 +34,10 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 
 					associatedTransport.iceLocalCandidates.forEach((candidate) =>
 					{
-						t.equal(candidate.protocol, 'udp', 'there should be just "udp" candidates');
+						if (candidate.protocol !== 'udp')
+							t.fail('associated transport contains unexpected "tcp" candidates');
 					});
+					t.pass('associated transport just contains "udp" candidates');
 
 					peer.dump()
 						.then((data) =>
