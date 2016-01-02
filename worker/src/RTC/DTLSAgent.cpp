@@ -62,18 +62,11 @@ namespace RTC
 	X509* DTLSAgent::certificate = nullptr;
 	EVP_PKEY* DTLSAgent::privateKey = nullptr;
 	SSL_CTX* DTLSAgent::sslCtx = nullptr;
-	DTLSAgent::Fingerprints DTLSAgent::fingerprints
-	{
-		{ RTC::FingerprintHash::SHA1,   "" },
-		{ RTC::FingerprintHash::SHA224, "" },
-		{ RTC::FingerprintHash::SHA256, "" },
-		{ RTC::FingerprintHash::SHA384, "" },
-		{ RTC::FingerprintHash::SHA512, "" }
-	};
+	Json::Value DTLSAgent::localFingerprints = Json::Value(Json::arrayValue);
 	DTLSAgent::SRTPProfiles DTLSAgent::srtpProfiles =
 	{
-		{ RTC::SRTPProfile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
-		{ RTC::SRTPProfile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
+		{ RTC::SRTPSession::SRTPProfile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
+		{ RTC::SRTPSession::SRTPProfile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
 	MS_BYTE DTLSAgent::sslReadBuffer[MS_SSL_READ_BUFFER_SIZE];
 
@@ -108,12 +101,11 @@ namespace RTC
 			SSL_CTX_free(DTLSAgent::sslCtx);
 	}
 
-	const std::string& DTLSAgent::GetFingerprint(RTC::FingerprintHash hash)
+	Json::Value& DTLSAgent::GetLocalFingerprints()
 	{
 		MS_TRACE();
 
-		// NOTE: Don't check if the given hash is supported (should give a compilation error).
-		return DTLSAgent::fingerprints.at(hash);
+		return DTLSAgent::localFingerprints;
 	}
 
 	void DTLSAgent::GenerateCertificateAndPrivateKey()
@@ -415,37 +407,47 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = DTLSAgent::fingerprints.begin(); it != DTLSAgent::fingerprints.end(); ++it)
+		static const std::vector<FingerprintHash> hashes =
 		{
-			RTC::FingerprintHash hash = it->first;
+			FingerprintHash::SHA1,
+			FingerprintHash::SHA224,
+			FingerprintHash::SHA256,
+			FingerprintHash::SHA384,
+			FingerprintHash::SHA512
+		};
+
+		for (auto hash : hashes)
+		{
 			std::string hash_str;
 			unsigned char binary_fingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size = 0;
-			char hex_fingerprint[(EVP_MAX_MD_SIZE * 3) + 1];
+			char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
+			char hex_fingerprint_sdp[(EVP_MAX_MD_SIZE * 3) + 1];
 			const EVP_MD* hash_function;
 			int ret;
+			Json::Value jsonFingerprint;
 
 			switch (hash)
 			{
-				case RTC::FingerprintHash::SHA1:
+				case FingerprintHash::SHA1:
 					hash_function = EVP_sha1();
-					hash_str = "SHA-1";
+					hash_str = "sha-1";
 					break;
-				case RTC::FingerprintHash::SHA224:
+				case FingerprintHash::SHA224:
 					hash_function = EVP_sha224();
-					hash_str = "SHA-224";
+					hash_str = "sha-224";
 					break;
-				case RTC::FingerprintHash::SHA256:
+				case FingerprintHash::SHA256:
 					hash_function = EVP_sha256();
-					hash_str = "SHA-256";
+					hash_str = "sha-256";
 					break;
-				case RTC::FingerprintHash::SHA384:
+				case FingerprintHash::SHA384:
 					hash_function = EVP_sha384();
-					hash_str = "SHA-384";
+					hash_str = "sha-384";
 					break;
-				case RTC::FingerprintHash::SHA512:
+				case FingerprintHash::SHA512:
 					hash_function = EVP_sha512();
-					hash_str = "SHA-512";
+					hash_str = "sha-512";
 					break;
 				default:
 					MS_ABORT("unknown hash");
@@ -458,18 +460,28 @@ namespace RTC
 				MS_THROW_ERROR("Fingerprints generation failed");
 			}
 
-			// Convert to hexadecimal format (NOTE: %.2X uses uppercase letters).
+			// Convert to hexadecimal format in lowecase without colons.
 			for (unsigned int i = 0; i < size; i++)
 			{
-				std::sprintf(hex_fingerprint + (i * 3), "%.2X:", binary_fingerprint[i]);
+				std::sprintf(hex_fingerprint + (i * 2), "%.2x", binary_fingerprint[i]);
 			}
-			// NOTE: The -1 removes the last ":".
-			hex_fingerprint[(size * 3) - 1] = '\0';
+			hex_fingerprint[size * 2] = '\0';
 
 			MS_DEBUG("%-7s fingerprint: %s", hash_str.c_str(), hex_fingerprint);
 
-			// Store in the map.
-			DTLSAgent::fingerprints[hash].assign(hex_fingerprint);
+			// Convert to hexadecimal SDP format in uppercase with colons.
+			for (unsigned int i = 0; i < size; i++)
+			{
+				std::sprintf(hex_fingerprint_sdp + (i * 3), "%.2X:", binary_fingerprint[i]);
+			}
+			// NOTE: The -1 removes the last ":".
+			hex_fingerprint_sdp[(size * 3) - 1] = '\0';
+
+			// Store in the JSON.
+			jsonFingerprint["algorithm"] = hash_str;
+			jsonFingerprint["value"] = hex_fingerprint;
+			jsonFingerprint["valueForSDP"] = hex_fingerprint_sdp;
+			DTLSAgent::localFingerprints.append(jsonFingerprint);
 		}
 	}
 
@@ -545,7 +557,7 @@ namespace RTC
 		}
 	}
 
-	void DTLSAgent::Run(RTC::DTLSRole role)
+	void DTLSAgent::Run(DTLSRole role)
 	{
 		MS_TRACE();
 
@@ -557,27 +569,27 @@ namespace RTC
 
 		switch (this->role)
 		{
-			case RTC::DTLSRole::SERVER:
+			case DTLSRole::SERVER:
 				SSL_set_accept_state(this->ssl);
 				SSL_do_handshake(this->ssl);
 				break;
-			case RTC::DTLSRole::CLIENT:
+			case DTLSRole::CLIENT:
 				SSL_set_connect_state(this->ssl);
 				SSL_do_handshake(this->ssl);
 				SendPendingOutgoingDTLSData();
 				SetTimeout();
 				break;
-			case RTC::DTLSRole::NONE:
+			case DTLSRole::NONE:
 				MS_ABORT("no valid DTLS role given");
 				break;
 		}
 	}
 
-	void DTLSAgent::SetRemoteFingerprint(RTC::FingerprintHash hash, std::string& fingerprint)
+	void DTLSAgent::SetRemoteFingerprint(FingerprintHash hash, std::string& fingerprint)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(hash != RTC::FingerprintHash::NONE, "no fingerprint hash provided");
+		MS_ASSERT(hash != FingerprintHash::NONE, "no fingerprint hash provided");
 
 		this->remoteFingerprintHash = hash;
 		this->remoteFingerprint = fingerprint;
@@ -620,7 +632,7 @@ namespace RTC
 		SSL_shutdown(this->ssl);
 		SendPendingOutgoingDTLSData();
 
-		this->role = RTC::DTLSRole::NONE;
+		this->role = DTLSRole::NONE;
 		this->isRunning = false;
 		this->isHandshakeDone = false;
 		this->isHandshakeDoneNow = false;
@@ -740,7 +752,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DEBUG("[role: %s | running: %s | handshake done: %s | connected: %s]",
-			(this->role == RTC::DTLSRole::SERVER ? "server" : (this->role == RTC::DTLSRole::CLIENT ? "client" : "none")),
+			(this->role == DTLSRole::SERVER ? "server" : (this->role == DTLSRole::CLIENT ? "client" : "none")),
 			this->isRunning ? "yes" : "no",
 			this->isHandshakeDone ? "yes" : "no",
 			this->isConnected ? "yes" : "no");
@@ -802,7 +814,7 @@ namespace RTC
 		{
 			bool was_connected = this->isConnected;
 
-			this->role = RTC::DTLSRole::NONE;
+			this->role = DTLSRole::NONE;
 			this->isRunning = false;
 			this->isHandshakeDone = false;
 			this->isHandshakeDoneNow = false;
@@ -910,23 +922,22 @@ namespace RTC
 
 		// If the remote fingerprint is not yet set then do nothing (this method
 		// will be called when the fingerprint is set).
-		if (this->remoteFingerprintHash == RTC::FingerprintHash::NONE)
+		if (this->remoteFingerprintHash == FingerprintHash::NONE)
 		{
 			MS_DEBUG("remote fingerprint not yet set, waiting for it");
 			return;
 		}
 
 		// Validate the remote fingerprint.
-		// TODO: uncomment!!!
-		// if (!CheckRemoteFingerprint())
-		// {
-		// 	// Notify to the listener.
-		// 	this->listener->onDTLSFailed(this);
+		if (!CheckRemoteFingerprint())
+		{
+			// Notify to the listener.
+			this->listener->onDTLSFailed(this);
 
-		// 	// Reset DTLS.
-		// 	Reset();
-		// 	return;
-		// }
+			// Reset DTLS.
+			Reset();
+			return;
+		}
 
 		this->isConnected = true;
 
@@ -934,10 +945,10 @@ namespace RTC
 		this->listener->onDTLSConnected(this);
 
 		// Get the negotiated SRTP profile.
-		RTC::SRTPProfile srtp_profile;
+		RTC::SRTPSession::SRTPProfile srtp_profile;
 		srtp_profile = GetNegotiatedSRTPProfile();
 
-		if (srtp_profile != RTC::SRTPProfile::NONE)
+		if (srtp_profile != RTC::SRTPSession::SRTPProfile::NONE)
 		{
 			// Extract the SRTP keys (will notify the listener with them).
 			ExtractSRTPKeys(srtp_profile);
@@ -953,7 +964,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->remoteFingerprintHash != RTC::FingerprintHash::NONE, "remote fingerprint not set");
+		MS_ASSERT(this->remoteFingerprintHash != FingerprintHash::NONE, "remote fingerprint not set");
 
 		X509* certificate;
 		std::string hash_str;
@@ -972,25 +983,25 @@ namespace RTC
 
 		switch (this->remoteFingerprintHash)
 		{
-			case RTC::FingerprintHash::SHA1:
+			case FingerprintHash::SHA1:
 				hash_function = EVP_sha1();
-				hash_str = "SHA-1";
+				hash_str = "sha-1";
 				break;
-			case RTC::FingerprintHash::SHA224:
+			case FingerprintHash::SHA224:
 				hash_function = EVP_sha224();
-				hash_str = "SHA-224";
+				hash_str = "sha-224";
 				break;
-			case RTC::FingerprintHash::SHA256:
+			case FingerprintHash::SHA256:
 				hash_function = EVP_sha256();
-				hash_str = "SHA-256";
+				hash_str = "sha-256";
 				break;
-			case RTC::FingerprintHash::SHA384:
+			case FingerprintHash::SHA384:
 				hash_function = EVP_sha384();
-				hash_str = "SHA-384";
+				hash_str = "sha-384";
 				break;
-			case RTC::FingerprintHash::SHA512:
+			case FingerprintHash::SHA512:
 				hash_function = EVP_sha512();
-				hash_str = "SHA-512";
+				hash_str = "sha-512";
 				break;
 			default:
 				MS_ABORT("unknown hash");
@@ -1025,11 +1036,11 @@ namespace RTC
 	}
 
 	inline
-	RTC::SRTPProfile DTLSAgent::GetNegotiatedSRTPProfile()
+	RTC::SRTPSession::SRTPProfile DTLSAgent::GetNegotiatedSRTPProfile()
 	{
 		MS_TRACE();
 
-		RTC::SRTPProfile negotiated_srtp_profile = RTC::SRTPProfile::NONE;
+		RTC::SRTPSession::SRTPProfile negotiated_srtp_profile = RTC::SRTPSession::SRTPProfile::NONE;
 
 		// Ensure that the SRTP profile has been negotiated.
 		SRTP_PROTECTION_PROFILE* ssl_srtp_profile = SSL_get_selected_srtp_profile(this->ssl);
@@ -1049,13 +1060,13 @@ namespace RTC
 				negotiated_srtp_profile = profile_entry->profile;
 			}
 		}
-		MS_ASSERT(negotiated_srtp_profile != RTC::SRTPProfile::NONE, "chosen SRTP profile is not an available one");
+		MS_ASSERT(negotiated_srtp_profile != RTC::SRTPSession::SRTPProfile::NONE, "chosen SRTP profile is not an available one");
 
 		return negotiated_srtp_profile;
 	}
 
 	inline
-	void DTLSAgent::ExtractSRTPKeys(RTC::SRTPProfile srtp_profile)
+	void DTLSAgent::ExtractSRTPKeys(RTC::SRTPSession::SRTPProfile srtp_profile)
 	{
 		MS_TRACE();
 
@@ -1073,19 +1084,19 @@ namespace RTC
 
 		switch (this->role)
 		{
-			case RTC::DTLSRole::SERVER:
+			case DTLSRole::SERVER:
 				srtp_remote_key = srtp_material;
 				srtp_local_key = srtp_remote_key + MS_SRTP_MASTER_KEY_LENGTH;
 				srtp_remote_salt = srtp_local_key + MS_SRTP_MASTER_KEY_LENGTH;
 				srtp_local_salt = srtp_remote_salt + MS_SRTP_MASTER_SALT_LENGTH;
 				break;
-			case RTC::DTLSRole::CLIENT:
+			case DTLSRole::CLIENT:
 				srtp_local_key = srtp_material;
 				srtp_remote_key = srtp_local_key + MS_SRTP_MASTER_KEY_LENGTH;
 				srtp_local_salt = srtp_remote_key + MS_SRTP_MASTER_KEY_LENGTH;
 				srtp_remote_salt = srtp_local_salt + MS_SRTP_MASTER_SALT_LENGTH;
 				break;
-			case RTC::DTLSRole::NONE:
+			case DTLSRole::NONE:
 				MS_ABORT("no DTLS role set");
 				break;
 		}
