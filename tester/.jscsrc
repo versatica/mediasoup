@@ -1,0 +1,53 @@
+{
+	"disallowDanglingUnderscores": null,
+	"disallowMixedSpacesAndTabs": true,
+	"disallowMultipleLineBreaks": true,
+	"disallowMultipleSpaces": null,
+	"disallowNamedUnassignedFunctions": true,
+	"disallowOperatorBeforeLineBreak": null,
+	"disallowSpaceBeforeSemicolon": true,
+	"disallowSpacesInFunction":
+	{
+		"beforeOpeningRoundBrace": true
+	},
+	"disallowSpacesInCallExpression": true,
+	"disallowSpacesInsideParentheses": true,
+	"disallowSpacesInsideParenthesizedExpression": true,
+	"disallowTrailingComma": true,
+	"disallowTrailingWhitespace": true,
+	"disallowYodaConditions": true,
+	"requireAlignedMultilineParams": "firstParam",
+	"requireCamelCaseOrUpperCaseIdentifiers": true,
+	"requireCommaBeforeLineBreak": true,
+	"requireFunctionDeclarations": true,
+	"requireNewlineBeforeBlockStatements": false,
+	"requirePaddingNewLineAfterVariableDeclaration": true,
+	"requireSemicolons": true,
+	"requireSpaceAfterBinaryOperators": true,
+	"requireSpaceAfterComma": true,
+	"requireSpaceAfterKeywords":
+	[
+		"do",
+		"for",
+		"if",
+		"else",
+		"switch",
+		"case",
+		"try",
+		"void",
+		"while",
+		"with",
+		"return",
+		"typeof"
+	],
+	"requireSpaceBeforeBinaryOperators": true,
+	"requireSpaceBeforeBlockStatements": true,
+	"requireSpaceBetweenArguments": true,
+	"requireSpacesInConditionalExpression": true,
+	"requireSpacesInForStatement": true,
+	"requireSpacesInsideObjectBrackets": "allButNested",
+	"requireVarDeclFirst": null,
+	"validateIndentation": "\t",
+	"validateParameterSeparator": ", ",
+	"validateQuoteMarks": "'"
+}
