@@ -49,7 +49,7 @@ tap.test('server.updateSettings() with invalid options must fail', { timeout: 10
 		});
 });
 
-tap.test('server.updateSettings() in a closed Server must fail', { timeout: 1000 }, (t) =>
+tap.test('server.updateSettings() in a closed server must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -86,7 +86,7 @@ tap.test('server.Room() must succeed', { timeout: 1000 }, (t) =>
 	setTimeout(() => room.close(), 100);
 });
 
-tap.test('server.Room() in a closed Server must fail', { timeout: 1000 }, (t) =>
+tap.test('server.Room() in a closed server must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 

@@ -11,6 +11,7 @@
 #include "RTC/TCPConnection.h"
 #include <string>
 #include <vector>
+#include <list>
 #include <json/json.h>
 
 namespace RTC
@@ -35,6 +36,9 @@ namespace RTC
 			RTCP = 2
 		};
 
+	private:
+		static size_t maxSources;
+
 	public:
 		Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport = nullptr);
 		virtual ~Transport();
@@ -44,6 +48,11 @@ namespace RTC
 		std::string& GetIceUsernameFragment();
 		std::string& GetIcePassword();
 		Transport* CreateAssociatedTransport(unsigned int transportId);
+
+	private:
+		bool SetSendingSource(RTC::TransportSource* source);
+		bool IsValidSource(RTC::TransportSource* source);
+		bool RemoveSource(RTC::TransportSource* source);
 
 	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
@@ -93,8 +102,12 @@ namespace RTC
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		// Others.
-		std::vector<IceCandidate> iceLocalCandidates;
 		bool allocated = false;
+		std::vector<IceCandidate> iceLocalCandidates;
+		std::list<RTC::TransportSource> sources;
+		RTC::TransportSource* sendingSource = nullptr;
+		bool icePaired = false;
+		bool icePairedWithUseCandidate = false;
 	};
 
 	/* Inline methods. */
@@ -109,6 +122,126 @@ namespace RTC
 	std::string& Transport::GetIcePassword()
 	{
 		return this->iceServer->GetPassword();
+	}
+
+	/**
+	 * Set the given source as a valid one and mark it as the sending source for
+	 * outgoing data.
+	 *
+	 * @param source: A RTC::TransportSource (which is a UDP tuple or TCP connection).
+	 * @return:       true if the given source was not an already valid source,
+	 *                false otherwise.
+	 */
+	inline
+	bool Transport::SetSendingSource(RTC::TransportSource* source)
+	{
+		// If the give source is already a valid one return.
+		// NOTE: The IsValidSource() method will also mark it as sending source.
+		if (IsValidSource(source))
+			return false;
+
+		// If there are Transport::maxSources sources then close and remove the last one.
+		if (this->sources.size() == Transport::maxSources)
+		{
+			RTC::TransportSource* last_source = &(*this->sources.end());
+
+			last_source->Close();
+			this->sources.pop_back();
+		}
+
+		// Add the new source at the beginning.
+		this->sources.push_front(*source);
+
+		// Set it as sending source (make it point to the first source in the list).
+		this->sendingSource = &(*this->sources.begin());
+
+		// If it is UDP then we must store the remote address (until now it is
+		// just a pointer that will be freed soon).
+		if (this->sendingSource->IsUDP())
+			this->sendingSource->StoreUdpRemoteAddress();
+
+		return true;
+	}
+
+	/**
+	 * Check whether the given source is contained in the list of valid sources for
+	 * this transport. In case it is, the given source is also marked as sending
+	 * source for the outgoing data.
+	 *
+	 * @param source:  The RTC::TransportSource to check.
+	 * @return:        true if it is a valid source, false otherwise.
+	 */
+	inline
+	bool Transport::IsValidSource(RTC::TransportSource* source)
+	{
+		// If there is no sending source yet then we know that the sources list
+		// is empty, so return false.
+		if (!this->sendingSource)
+			return false;
+
+		// First check the current sending source. If it matches then return true.
+		if (this->sendingSource->Compare(source))
+			return true;
+
+		// Otherwise check other valid source in the sources list.
+		for (auto it = this->sources.begin(); it != this->sources.end(); ++it)
+		{
+			RTC::TransportSource* valid_source = &(*it);
+
+			// If found set it as sending source.
+			if (valid_source->Compare(source))
+			{
+				this->sendingSource = valid_source;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Remove the given source from the list of valid sources. Also update the
+	 * sending source if the given source was the sending source and make it point
+	 * to the next valid source (if any).
+	 *
+	 * @param source:  The RTC::TransportSource to remove.
+	 * @return:        true if the given source was present in the list of valid
+	 *                 sources, false otherwise.
+	 */
+	inline
+	bool Transport::RemoveSource(RTC::TransportSource* source)
+	{
+		for (auto it = this->sources.begin(); it != this->sources.end(); ++it)
+		{
+			RTC::TransportSource* valid_source = &(*it);
+
+			// If the source was a valid source then remove it.
+			if (valid_source->Compare(source))
+			{
+				this->sources.erase(it);
+
+				// If it was the sending source then unset it and set the sending
+				// source to the first valid source (if any).
+				if (this->sendingSource == valid_source)
+				{
+					if (this->sources.begin() != this->sources.end())
+					{
+						this->sendingSource = &(*this->sources.begin());
+					}
+					else
+					{
+						this->sendingSource = nullptr;
+						// This is just useful is there are just TCP sources.
+						this->icePaired = false;
+						this->icePairedWithUseCandidate = false;
+					}
+				}
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
 

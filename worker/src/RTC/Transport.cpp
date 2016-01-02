@@ -26,6 +26,10 @@
 
 namespace RTC
 {
+	/* Class variables. */
+
+	size_t Transport::maxSources = 8;
+
 	/* Instance methods. */
 
 	Transport::Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport) :
@@ -268,14 +272,28 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// Send the STUN response over the same transport source.
+		source->Send(msg->GetRaw(), msg->GetLength());
 	}
 
 	void Transport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
 	{
 		MS_TRACE();
 
-		// TODO
+		this->icePaired = true;
+		if (has_use_candidate)
+			this->icePairedWithUseCandidate = true;
+
+		/*
+		 * RFC 5245 section 11.2 "Receiving Media":
+		 *
+		 * ICE implementations MUST be prepared to receive media on each component
+		 * on any candidates provided for that component.
+		 */
+		if (SetSendingSource(source))
+			MS_DEBUG("got an ICE valid pair [UseCandidate:%s]", has_use_candidate ? "true" : "false");
+
+		// TODO: more
 	}
 
 	inline
@@ -283,13 +301,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		RTC::STUNMessage* msg = RTC::STUNMessage::Parse(data, len);
+		if (!msg)
+		{
+			MS_DEBUG("ignoring wrong STUN message received");
+			return;
+		}
+
+		// Pass it to the IceServer.
+		this->iceServer->ProcessSTUNMessage(msg, source);
+
+		delete msg;
 	}
 
 	inline
 	void Transport::onDTLSDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
+
+		if (!IsValidSource(source))
+		{
+			MS_DEBUG("ignoring DTLS data coming from an invalid source");
+
+			return;
+		}
+
+		// TODO: remove
+		MS_DEBUG("received DTLS data");
 
 		// TODO
 	}
