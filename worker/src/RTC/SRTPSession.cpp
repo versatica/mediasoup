@@ -56,7 +56,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SRTPSession::SRTPSession(Type type, RTC::SRTPProfile profile, MS_BYTE* key, size_t key_len)
+	SRTPSession::SRTPSession(Type type, SRTPProfile profile, MS_BYTE* key, size_t key_len)
 	{
 		MS_TRACE();
 
@@ -68,11 +68,11 @@ namespace RTC
 
 		switch (profile)
 		{
-			case RTC::SRTPProfile::AES_CM_128_HMAC_SHA1_80:
+			case SRTPProfile::AES_CM_128_HMAC_SHA1_80:
 				crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
 				crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
 				break;
-			case RTC::SRTPProfile::AES_CM_128_HMAC_SHA1_32:
+			case SRTPProfile::AES_CM_128_HMAC_SHA1_32:
 				crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
 				crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);  // NOTE: Must be 80 for RTCP!.
 				break;

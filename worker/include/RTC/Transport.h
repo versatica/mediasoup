@@ -4,6 +4,7 @@
 #include "common.h"
 #include "RTC/IceCandidate.h"
 #include "RTC/IceServer.h"
+#include "RTC/DTLSAgent.h"
 #include "RTC/STUNMessage.h"
 #include "RTC/TransportSource.h"
 #include "RTC/UDPSocket.h"

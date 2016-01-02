@@ -235,23 +235,29 @@ namespace RTC
 		static const Json::StaticString k_iceLocalCandidates("iceLocalCandidates");
 		static const Json::StaticString v_RTP("RTP");
 		static const Json::StaticString v_RTCP("RTCP");
+		static const Json::StaticString k_dtlsLocalFingerprints("dtlsLocalFingerprints");
 
 		Json::Value data;
 
+		// Add `iceComponent`.
 		if (this->iceComponent == IceComponent::RTP)
 			data[k_iceComponent] = v_RTP;
 		else
 			data[k_iceComponent] = v_RTCP;
 
+		// Add `iceLocalParameters`.
 		data[k_iceLocalParameters][k_usernameFragment] = this->iceServer->GetUsernameFragment();
 		data[k_iceLocalParameters][k_password] = this->iceServer->GetPassword();
 
+		// Add `iceLocalCandidates`.
 		data[k_iceLocalCandidates] = Json::arrayValue;
-
 		for (auto iceCandidate : this->iceLocalCandidates)
 		{
 			data[k_iceLocalCandidates].append(iceCandidate.toJson());
 		}
+
+		// Add `dtlsLocalFingerprints`.
+		data[k_dtlsLocalFingerprints] = RTC::DTLSAgent::GetLocalFingerprints();
 
 		return data;
 	}

@@ -3,13 +3,20 @@
 
 #include "common.h"
 #include "DepLibSRTP.h"
-#include "RTC/SRTPProfile.h"
 #include <srtp/srtp.h>
 
 namespace RTC
 {
 	class SRTPSession
 	{
+	public:
+		enum class SRTPProfile
+		{
+			NONE                    = 0,
+			AES_CM_128_HMAC_SHA1_80 = 1,
+			AES_CM_128_HMAC_SHA1_32
+		};
+
 	public:
 		enum class Type
 		{
@@ -27,7 +34,7 @@ namespace RTC
 		static MS_BYTE encryptBuffer[];
 
 	public:
-		SRTPSession(Type type, RTC::SRTPProfile profile, MS_BYTE* key, size_t key_len);
+		SRTPSession(Type type, SRTPProfile profile, MS_BYTE* key, size_t key_len);
 		~SRTPSession();
 
 		bool EncryptRTP(const MS_BYTE** data, size_t* len);

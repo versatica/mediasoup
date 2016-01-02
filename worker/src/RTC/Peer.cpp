@@ -1,7 +1,6 @@
 #define MS_CLASS "RTC::Peer"
 
 #include "RTC/Peer.h"
-#include "RTC/DTLSRole.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
