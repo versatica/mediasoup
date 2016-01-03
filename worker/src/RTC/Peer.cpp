@@ -203,6 +203,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::transport_close:
 			case Channel::Request::MethodId::transport_dump:
+			case Channel::Request::MethodId::transport_start:
 			{
 				RTC::Transport* transport;
 

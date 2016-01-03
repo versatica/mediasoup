@@ -16,7 +16,7 @@
 	"maxparams": 6,
 	"maxdepth": 4,
 	"maxstatements": false,
-	"maxlen": 200,
+	"maxlen": 300,
 	"proto": true,
 	"sub": false,
 	"browser": false,

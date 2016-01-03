@@ -289,6 +289,13 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::transport_start:
+			{
+				// TODO
+
+				break;
+			}
+
 			default:
 			{
 				MS_ABORT("unknown method");

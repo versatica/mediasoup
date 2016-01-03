@@ -144,11 +144,10 @@ app.put('/test-transport', function(req)
 					am.candidates.push(ac);
 				});
 
-				// TODO: get it from transport
 				am.fingerprint =
 				{
-					hash : '00:56:63:99:13:26:02:50:DA:F4:46:79:F7:9D:66:82:5A:90:A8:B2:35:9F:19:14:8D:6C:D4:7C:17:C7:BF:70',
-					type : 'sha-256'
+					type : 'sha-256',
+					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalFingerprints['sha-256'])
 				};
 				am.setup = 'passive';
 				am.type = om.type;

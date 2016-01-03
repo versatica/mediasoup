@@ -119,6 +119,7 @@ namespace RTC
 		BIO* sslBioToNetwork = nullptr;  // The BIO in which ssl writes.
 		Timer* timer = nullptr;
 		// Others.
+		// TODO: rename to localRole
 		DTLSRole role = DTLSRole::NONE;
 		FingerprintHash remoteFingerprintHash = FingerprintHash::NONE;
 		std::string remoteFingerprint;

@@ -63,7 +63,7 @@ namespace RTC
 	X509* DTLSAgent::certificate = nullptr;
 	EVP_PKEY* DTLSAgent::privateKey = nullptr;
 	SSL_CTX* DTLSAgent::sslCtx = nullptr;
-	Json::Value DTLSAgent::localFingerprints = Json::Value(Json::arrayValue);
+	Json::Value DTLSAgent::localFingerprints = Json::Value(Json::objectValue);
 	DTLSAgent::SRTPProfiles DTLSAgent::srtpProfiles =
 	{
 		{ RTC::SRTPSession::SRTPProfile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
@@ -423,10 +423,8 @@ namespace RTC
 			unsigned char binary_fingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size = 0;
 			char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
-			char hex_fingerprint_sdp[(EVP_MAX_MD_SIZE * 3) + 1];
 			const EVP_MD* hash_function;
 			int ret;
-			Json::Value jsonFingerprint;
 
 			switch (hash)
 			{
@@ -470,19 +468,8 @@ namespace RTC
 
 			MS_DEBUG("%-7s fingerprint: %s", hash_str.c_str(), hex_fingerprint);
 
-			// Convert to hexadecimal SDP format in uppercase with colons.
-			for (unsigned int i = 0; i < size; i++)
-			{
-				std::sprintf(hex_fingerprint_sdp + (i * 3), "%.2X:", binary_fingerprint[i]);
-			}
-			// NOTE: The -1 removes the last ":".
-			hex_fingerprint_sdp[(size * 3) - 1] = '\0';
-
 			// Store in the JSON.
-			jsonFingerprint["algorithm"] = hash_str;
-			jsonFingerprint["value"] = hex_fingerprint;
-			jsonFingerprint["valueForSDP"] = hex_fingerprint_sdp;
-			DTLSAgent::localFingerprints.append(jsonFingerprint);
+			DTLSAgent::localFingerprints[hash_str] = hex_fingerprint;
 		}
 	}
 
@@ -974,7 +961,6 @@ namespace RTC
 		MS_ASSERT(this->remoteFingerprintHash != FingerprintHash::NONE, "remote fingerprint not set");
 
 		X509* certificate;
-		std::string hash_str;
 		unsigned char binary_fingerprint[EVP_MAX_MD_SIZE];
 		unsigned int size = 0;
 		char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
@@ -992,23 +978,18 @@ namespace RTC
 		{
 			case FingerprintHash::SHA1:
 				hash_function = EVP_sha1();
-				hash_str = "sha-1";
 				break;
 			case FingerprintHash::SHA224:
 				hash_function = EVP_sha224();
-				hash_str = "sha-224";
 				break;
 			case FingerprintHash::SHA256:
 				hash_function = EVP_sha256();
-				hash_str = "sha-256";
 				break;
 			case FingerprintHash::SHA384:
 				hash_function = EVP_sha384();
-				hash_str = "sha-384";
 				break;
 			case FingerprintHash::SHA512:
 				hash_function = EVP_sha512();
-				hash_str = "sha-512";
 				break;
 			default:
 				MS_ABORT("unknown hash");
@@ -1038,7 +1019,8 @@ namespace RTC
 		}
 
 		// TODO: remove
-		MS_DEBUG("valid remote %-7s fingerprint: %s", hash_str.c_str(), hex_fingerprint);
+		MS_DEBUG("valid remote fingerprint");
+
 		return true;
 	}
 

@@ -4,7 +4,7 @@
 
 /* Class variables. */
 
-std::string Logger::id;
+std::string Logger::id = "undefined";
 Channel::UnixStreamSocket* Logger::channel = nullptr;
 char Logger::buffer[MS_LOGGER_BUFFER_SIZE];
 
