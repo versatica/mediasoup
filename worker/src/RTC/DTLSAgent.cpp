@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
+#include <algorithm>  // std::remove
 #include <cstdio>  // std::sprintf(), std::fopen()
 #include <cstring>  // std::memcpy(), std::strcmp()
 #include <ctime>  // struct timeval
@@ -591,6 +592,12 @@ namespace RTC
 
 		MS_ASSERT(hash != FingerprintHash::NONE, "no fingerprint hash provided");
 
+		// Lowcase fingerprint and remove colons.
+		fingerprint.erase(std::remove(fingerprint.begin(), fingerprint.end(), ':'), fingerprint.end());
+		std::transform(fingerprint.begin(), fingerprint.end(), fingerprint.begin(), ::tolower);
+
+		// Ensure
+
 		this->remoteFingerprintHash = hash;
 		this->remoteFingerprint = fingerprint;
 
@@ -970,7 +977,7 @@ namespace RTC
 		std::string hash_str;
 		unsigned char binary_fingerprint[EVP_MAX_MD_SIZE];
 		unsigned int size = 0;
-		char hex_fingerprint[(EVP_MAX_MD_SIZE * 3) + 1];
+		char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
 		const EVP_MD* hash_function;
 		int ret;
 
@@ -1008,29 +1015,29 @@ namespace RTC
 		}
 
 		ret = X509_digest(certificate, hash_function, binary_fingerprint, &size);
+		X509_free(certificate);
 		if (ret == 0)
 		{
 			MS_ERROR("X509_digest() failed");
 
-			X509_free(certificate);
 			return false;
 		}
-		X509_free(certificate);
 
-		// Convert to hexadecimal format.
+		// Convert to hexadecimal format in lowecase without colons.
 		for (unsigned int i = 0; i < size; i++)
 		{
-			std::sprintf(hex_fingerprint + (i * 3), "%.2X:", binary_fingerprint[i]);
+			std::sprintf(hex_fingerprint + (i * 2), "%.2x", binary_fingerprint[i]);
 		}
-		// NOTE: The -1 removes the last ":".
-		hex_fingerprint[(size * 3) - 1] = '\0';
+		hex_fingerprint[size * 2] = '\0';
 
 		if (this->remoteFingerprint.compare(hex_fingerprint) != 0)
 		{
 			MS_DEBUG("fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.c_str());
+
 			return false;
 		}
 
+		// TODO: remove
 		MS_DEBUG("valid remote %-7s fingerprint: %s", hash_str.c_str(), hex_fingerprint);
 		return true;
 	}

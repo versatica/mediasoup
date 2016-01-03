@@ -46,6 +46,7 @@ namespace RTC
 
 		void Close();
 		Json::Value toJson();
+		void HandleRequest(Channel::Request* request);
 		std::string& GetIceUsernameFragment();
 		std::string& GetIcePassword();
 		Transport* CreateAssociatedTransport(unsigned int transportId);

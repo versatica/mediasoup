@@ -14,18 +14,19 @@ namespace Channel
 
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
-		{ "dumpWorker",                Request::MethodId::dumpWorker                },
-		{ "updateSettings",            Request::MethodId::updateSettings            },
-		{ "createRoom",                Request::MethodId::createRoom                },
-		{ "closeRoom",                 Request::MethodId::closeRoom                 },
-		{ "dumpRoom",                  Request::MethodId::dumpRoom                  },
-		{ "createPeer",                Request::MethodId::createPeer                },
-		{ "closePeer",                 Request::MethodId::closePeer                 },
-		{ "dumpPeer",                  Request::MethodId::dumpPeer                  },
-		{ "createTransport",           Request::MethodId::createTransport           },
-		{ "createAssociatedTransport", Request::MethodId::createAssociatedTransport },
-		{ "closeTransport",            Request::MethodId::closeTransport            },
-		{ "dumpTransport",             Request::MethodId::dumpTransport             }
+		{ "worker.dump",                    Request::MethodId::worker_dump                    },
+		{ "worker.updateSettings",          Request::MethodId::worker_updateSettings          },
+		{ "worker.createRoom",              Request::MethodId::worker_createRoom              },
+		{ "room.close",                     Request::MethodId::room_close                     },
+		{ "room.dump",                      Request::MethodId::room_dump                      },
+		{ "room.createPeer",                Request::MethodId::room_createPeer                },
+		{ "peer.close",                     Request::MethodId::peer_close                     },
+		{ "peer.dump",                      Request::MethodId::peer_dump                      },
+		{ "peer.createTransport",           Request::MethodId::peer_createTransport           },
+		{ "peer.createAssociatedTransport", Request::MethodId::peer_createAssociatedTransport },
+		{ "transport.close",                Request::MethodId::transport_close                },
+		{ "transport.dump",                 Request::MethodId::transport_dump                 },
+		{ "transport.start",                Request::MethodId::transport_start                }
 	};
 
 	/* Instance methods. */

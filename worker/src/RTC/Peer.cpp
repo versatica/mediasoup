@@ -68,7 +68,28 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::createTransport:
+			case Channel::Request::MethodId::peer_close:
+			{
+				std::string peerId = this->peerId;
+
+				Close();
+
+				MS_DEBUG("Peer closed [peerId:%s]", peerId.c_str());
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::peer_dump:
+			{
+				Json::Value json = toJson();
+
+				request->Accept(json);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::peer_createTransport:
 			{
 				RTC::Transport* transport;
 				unsigned int transportId;
@@ -112,7 +133,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::createAssociatedTransport:
+			case Channel::Request::MethodId::peer_createAssociatedTransport:
 			{
 				RTC::Transport* transport;
 				unsigned int transportId;
@@ -180,40 +201,9 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::closeTransport:
+			case Channel::Request::MethodId::transport_close:
+			case Channel::Request::MethodId::transport_dump:
 			{
-				RTC::Transport* transport;
-				unsigned int transportId;
-
-				try
-				{
-					transport = GetTransportFromRequest(request, &transportId);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(500, error.what());
-					return;
-				}
-
-				if (!transport)
-				{
-					MS_ERROR("Transport does not exist");
-
-					request->Reject(500, "Transport does not exist");
-					return;
-				}
-
-				transport->Close();
-
-				MS_DEBUG("Transport closed [transportId:%u]", transportId);
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::dumpTransport:
-			{
-				Json::Value json;
 				RTC::Transport* transport;
 
 				try
@@ -234,9 +224,7 @@ namespace RTC
 					return;
 				}
 
-				json = transport->toJson();
-
-				request->Accept(json);
+				transport->HandleRequest(request);
 
 				break;
 			}

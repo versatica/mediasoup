@@ -4,6 +4,7 @@
 #include "common.h"
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPConnection.h"
+#include "Channel/Request.h"
 #include "Utils.h"
 #include <string>
 

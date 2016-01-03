@@ -139,7 +139,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::dumpWorker:
+		case Channel::Request::MethodId::worker_dump:
 		{
 			static const Json::StaticString k_rooms("rooms");
 
@@ -161,13 +161,13 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			break;
 		}
 
-		case Channel::Request::MethodId::updateSettings:
+		case Channel::Request::MethodId::worker_updateSettings:
 		{
 			Settings::HandleUpdateRequest(request);
 			break;
 		}
 
-		case Channel::Request::MethodId::createRoom:
+		case Channel::Request::MethodId::worker_createRoom:
 		{
 			RTC::Room* room;
 			unsigned int roomId;
@@ -208,74 +208,16 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			break;
 		}
 
-		case Channel::Request::MethodId::closeRoom:
-		{
-			RTC::Room* room;
-			unsigned int roomId;
-
-			try
-			{
-				room = GetRoomFromRequest(request, &roomId);
-			}
-			catch (const MediaSoupError &error)
-			{
-				request->Reject(500, error.what());
-				return;
-			}
-
-			if (!room)
-			{
-				MS_ERROR("Room does not exist");
-
-				request->Reject(500, "Room does not exist");
-				return;
-			}
-
-			room->Close();
-
-			MS_DEBUG("Room closed [roomId:%u]", roomId);
-			request->Accept();
-
-			break;
-		}
-
-		case Channel::Request::MethodId::dumpRoom:
-		{
-			RTC::Room* room;
-			Json::Value json;
-
-			try
-			{
-				room = GetRoomFromRequest(request);
-			}
-			catch (const MediaSoupError &error)
-			{
-				request->Reject(500, error.what());
-				return;
-			}
-
-			if (!room)
-			{
-				MS_ERROR("Room does not exist");
-
-				request->Reject(500, "Room does not exist");
-				return;
-			}
-
-			json = room->toJson();
-
-			request->Accept(json);
-
-			break;
-		}
-
-		case Channel::Request::MethodId::createPeer:
-		case Channel::Request::MethodId::closePeer:
-		case Channel::Request::MethodId::dumpPeer:
-		case Channel::Request::MethodId::createTransport:
-		case Channel::Request::MethodId::createAssociatedTransport:
-		case Channel::Request::MethodId::closeTransport:
-		case Channel::Request::MethodId::dumpTransport:
+		case Channel::Request::MethodId::room_close:
+		case Channel::Request::MethodId::room_dump:
+		case Channel::Request::MethodId::room_createPeer:
+		case Channel::Request::MethodId::peer_close:
+		case Channel::Request::MethodId::peer_dump:
+		case Channel::Request::MethodId::peer_createTransport:
+		case Channel::Request::MethodId::peer_createAssociatedTransport:
+		case Channel::Request::MethodId::transport_close:
+		case Channel::Request::MethodId::transport_dump:
+		case Channel::Request::MethodId::transport_start:
 		{
 			RTC::Room* room;
 

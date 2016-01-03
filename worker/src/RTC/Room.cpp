@@ -68,7 +68,28 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::createPeer:
+			case Channel::Request::MethodId::room_close:
+			{
+				unsigned int roomId = this->roomId;
+
+				Close();
+
+				MS_DEBUG("Room closed [roomId:%u]", roomId);
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::room_dump:
+			{
+				Json::Value json = toJson();
+
+				request->Accept(json);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::room_createPeer:
 			{
 				RTC::Peer* peer;
 				std::string peerId;
@@ -109,71 +130,13 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::closePeer:
-			{
-				RTC::Peer* peer;
-				std::string peerId;
-
-				try
-				{
-					peer = GetPeerFromRequest(request, &peerId);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(500, error.what());
-					return;
-				}
-
-				if (!peer)
-				{
-					MS_ERROR("Peer does not exist");
-
-					request->Reject(500, "Peer does not exist");
-					return;
-				}
-
-				peer->Close();
-
-				MS_DEBUG("Peer closed [peerId:%s]", peerId.c_str());
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::dumpPeer:
-			{
-				RTC::Peer* peer;
-				Json::Value json;
-
-				try
-				{
-					peer = GetPeerFromRequest(request);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(500, error.what());
-					return;
-				}
-
-				if (!peer)
-				{
-					MS_ERROR("Peer does not exist");
-
-					request->Reject(500, "Peer does not exist");
-					return;
-				}
-
-				json = peer->toJson();
-
-				request->Accept(json);
-
-				break;
-			}
-
-			case Channel::Request::MethodId::createTransport:
-			case Channel::Request::MethodId::createAssociatedTransport:
-			case Channel::Request::MethodId::closeTransport:
-			case Channel::Request::MethodId::dumpTransport:
+			case Channel::Request::MethodId::peer_close:
+			case Channel::Request::MethodId::peer_dump:
+			case Channel::Request::MethodId::peer_createTransport:
+			case Channel::Request::MethodId::peer_createAssociatedTransport:
+			case Channel::Request::MethodId::transport_close:
+			case Channel::Request::MethodId::transport_dump:
+			case Channel::Request::MethodId::transport_start:
 			{
 				RTC::Peer* peer;
 

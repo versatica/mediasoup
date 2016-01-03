@@ -262,6 +262,40 @@ namespace RTC
 		return data;
 	}
 
+	void Transport::HandleRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+			case Channel::Request::MethodId::transport_close:
+			{
+				unsigned int transportId = this->transportId;
+
+				Close();
+
+				MS_DEBUG("Transport closed [transportId:%u]", transportId);
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::transport_dump:
+			{
+				Json::Value json = toJson();
+
+				request->Accept(json);
+
+				break;
+			}
+
+			default:
+			{
+				MS_ABORT("unknown method");
+			}
+		}
+	}
+
 	Transport* Transport::CreateAssociatedTransport(unsigned int transportId)
 	{
 		MS_TRACE();
