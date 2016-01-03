@@ -2,13 +2,13 @@
 
 'use strict';
 
-process.env.DEBUG = '*ERROR* *WARN* mediasoup* protoo*';
+process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
 
 const http = require('http');
 const url = require('url');
 
-const debug = require('debug')('webfighter');
-const debugerror = require('debug')('webfighter:ERROR');
+const debug = require('debug')('mediasoup-tester');
+const debugerror = require('debug')('mediasoup-tester:ERROR');
 const mediasoup = require('../../');
 const protoo = require('protoo');
 const sdpTransform = require('sdp-transform');
@@ -177,3 +177,10 @@ app.put('/test-transport', function(req)
 			return;
 		});
 });
+
+setInterval(() =>
+{
+	room.dump()
+		.then((data) => debug('ROOM DUMP:\n%s', JSON.stringify(data, null, '\t')))
+		.catch((error) => debugerror('SERVER DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
+}, 7000);
