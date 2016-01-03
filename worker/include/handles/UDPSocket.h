@@ -9,12 +9,12 @@ class UDPSocket
 {
 public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
-	typedef struct UvSendData
+	struct UvSendData
 	{
-		UDPSocket*      socket;
-		uv_udp_send_t   req;
-		MS_BYTE         store[1];
-	} UvSendData;
+		UDPSocket*    socket;
+		uv_udp_send_t req;
+		MS_BYTE       store[1];
+	};
 
 private:
 	static MS_BYTE readBuffer[];

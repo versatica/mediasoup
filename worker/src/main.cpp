@@ -10,7 +10,7 @@
 #include "Channel/UnixStreamSocket.h"
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
-#include "RTC/DTLSAgent.h"
+#include "RTC/DTLSTransport.h"
 #include "RTC/SRTPSession.h"
 #include "Loop.h"
 #include "MediaSoupError.h"
@@ -113,7 +113,7 @@ void init()
 	DepUsrSCTP::ClassInit();
 	RTC::UDPSocket::ClassInit();
 	RTC::TCPServer::ClassInit();
-	RTC::DTLSAgent::ClassInit();
+	RTC::DTLSTransport::ClassInit();
 	RTC::SRTPSession::ClassInit();
 	Utils::Crypto::ClassInit();
 }
@@ -159,7 +159,7 @@ void destroy()
 	DepOpenSSL::ClassDestroy();
 	DepLibSRTP::ClassDestroy();
 	DepUsrSCTP::ClassDestroy();
-	RTC::DTLSAgent::ClassDestroy();
+	RTC::DTLSTransport::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
 }
 

@@ -51,6 +51,7 @@ namespace RTC
 		{
 			this->iceComponent = IceComponent::RTP;
 
+			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(this,
 				Utils::Crypto::GetRandomString(16),
 				Utils::Crypto::GetRandomString(32));
@@ -66,6 +67,7 @@ namespace RTC
 		{
 			this->iceComponent = IceComponent::RTCP;
 
+			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(this,
 				rtpTransport->GetIceUsernameFragment(),
 				rtpTransport->GetIcePassword());
@@ -184,6 +186,9 @@ namespace RTC
 			MS_THROW_ERROR("could not open any IP:port");
 		}
 
+		// Create a DTLS agent.
+		this->dtlsTransport = new RTC::DTLSTransport(this);
+
 		// Hack to avoid that Close() above attempts to delete this.
 		this->allocated = true;
 	}
@@ -200,8 +205,8 @@ namespace RTC
 		if (this->iceServer)
 			this->iceServer->Close();
 
-		// if (this->dtlsAgent)
-			// this->dtlsAgent->Close();
+		if (this->dtlsTransport)
+			this->dtlsTransport->Close();
 
 		// if (this->srtpRecvSession)
 			// this->srtpRecvSession->Close();
@@ -257,7 +262,7 @@ namespace RTC
 		}
 
 		// Add `dtlsLocalFingerprints`.
-		data[k_dtlsLocalFingerprints] = RTC::DTLSAgent::GetLocalFingerprints();
+		data[k_dtlsLocalFingerprints] = RTC::DTLSTransport::GetLocalFingerprints();
 
 		return data;
 	}
@@ -291,7 +296,72 @@ namespace RTC
 
 			case Channel::Request::MethodId::transport_start:
 			{
-				// TODO
+				static const Json::StaticString k_role("role");
+				static const Json::StaticString v_auto("auto");
+				static const Json::StaticString v_client("client");
+				static const Json::StaticString v_server("server");
+				static const Json::StaticString k_fingerprint("fingerprint");
+				static const Json::StaticString k_algorithm("algorithm");
+				static const Json::StaticString k_value("value");
+
+				RTC::DTLSTransport::FingerprintAlgorithm fingerprint_algorithm;
+				std::string fingerprint_value;
+				RTC::DTLSTransport::Role role = RTC::DTLSTransport::Role::AUTO;  // Default value.
+
+				// Ensure this method is not called twice.
+				if (this->started)
+				{
+					MS_ERROR("method already called");
+
+					request->Reject(500, "method already called");
+					return;
+				}
+				this->started = true;
+
+				// Validate request data.
+
+				if (!request->data[k_fingerprint].isObject())
+				{
+					MS_ERROR("missing .fingerprint");
+
+					request->Reject(500, "missing .fingerprint");
+					return;
+				}
+
+				if (!request->data[k_fingerprint][k_algorithm].isString() ||
+					  !request->data[k_fingerprint][k_value].isString())
+				{
+					MS_ERROR("missing .fingerprint.algorithm and/or .fingerprint.value");
+
+					request->Reject(500, "missing .fingerprint.algorithm and/or .fingerprint.value");
+					return;
+				}
+
+				fingerprint_algorithm = RTC::DTLSTransport::GetFingerprintAlgorithm(request->data[k_fingerprint][k_algorithm].asString());
+
+				if (fingerprint_algorithm == RTC::DTLSTransport::FingerprintAlgorithm::NONE)
+				{
+					MS_ERROR("unsupported .fingerprint.algorithm");
+
+					request->Reject(500, "unsupported .fingerprint.algorithm");
+					return;
+				}
+
+				fingerprint_value = request->data[k_fingerprint][k_value].asString();
+
+				if (request->data[k_role].isString())
+				{
+					role = RTC::DTLSTransport::GetRole(request->data[k_role].asString());
+
+					if (role == RTC::DTLSTransport::Role::NONE)
+					{
+						MS_ERROR("invalid .role");
+
+						request->Reject(500, "invalid .role");
+						return;
+					}
+				}
+
 
 				break;
 			}
@@ -315,32 +385,12 @@ namespace RTC
 		return new RTC::Transport(this->listener, transportId, nullData, this);
 	}
 
-	void Transport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
+	inline
+	void Transport::RunDTLSTransportIfReady()
 	{
 		MS_TRACE();
 
-		// Send the STUN response over the same transport source.
-		source->Send(msg->GetRaw(), msg->GetLength());
-	}
-
-	void Transport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
-	{
-		MS_TRACE();
-
-		this->icePaired = true;
-		if (has_use_candidate)
-			this->icePairedWithUseCandidate = true;
-
-		/*
-		 * RFC 5245 section 11.2 "Receiving Media":
-		 *
-		 * ICE implementations MUST be prepared to receive media on each component
-		 * on any candidates provided for that component.
-		 */
-		if (SetSendingSource(source))
-			MS_DEBUG("got an ICE valid pair [UseCandidate:%s]", has_use_candidate ? "true" : "false");
-
-		// TODO: more
+		// TODO
 	}
 
 	inline
@@ -431,13 +481,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// RTC::TransportSource source(connection);
+		RTC::TransportSource source(connection);
 
-		// if (RemoveSource(&source))
-		// {
-		// 	MS_DEBUG("valid source %s:", is_closed_by_peer ? "closed by peer" : "locally closed");
-		// 	source.Dump();
-		// }
+		if (RemoveSource(&source))
+		{
+			MS_DEBUG("valid source %s:", is_closed_by_peer ? "closed by peer" : "locally closed");
+		}
 	}
 
 	void Transport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
@@ -470,5 +519,114 @@ namespace RTC
 
 		RTC::TransportSource source(connection);
 		onRTCPDataRecv(&source, data, len);
+	}
+
+	void Transport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
+	{
+		MS_TRACE();
+
+		// Send the STUN response over the same transport source.
+		source->Send(msg->GetRaw(), msg->GetLength());
+	}
+
+	void Transport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
+	{
+		MS_TRACE();
+
+		/*
+		 * RFC 5245 section 11.2 "Receiving Media":
+		 *
+		 * ICE implementations MUST be prepared to receive media on each component
+		 * on any candidates provided for that component.
+		 */
+
+		this->icePaired = true;
+		if (has_use_candidate)
+			this->icePairedWithUseCandidate = true;
+
+		switch (SetSendingSource(source))
+		{
+			// This is a new source.
+			case 0:
+				MS_DEBUG("got a new ICE valid pair [UseCandidate:%s]", has_use_candidate ? "true" : "false");
+				break;
+
+			// This is already the sending source.
+			case 1:
+				break;
+
+			// This is another valid source.
+			case 2:
+				MS_DEBUG("got a previous ICE valid pair [UseCandidate:%s]", has_use_candidate ? "true" : "false");
+				break;
+		}
+
+		// If ready, run the DTLS handler.
+		RunDTLSTransportIfReady();
+	}
+
+	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!this->sendingSource)
+		{
+			MS_DEBUG("no sending address set, cannot send DTLS packet");
+			return;
+		}
+
+		// TODO: remove
+		MS_DEBUG("sending DTLS data to to:");
+		this->sendingSource->Dump();
+
+		this->sendingSource->Send(data, len);
+	}
+
+	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS connected");
+	}
+
+	void Transport::onDTLSDisconnected(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS disconnected");
+
+		// TODO
+		// Reset();
+	}
+
+	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS failed");
+
+		// TODO
+		// Reset();
+	}
+
+	void Transport::onSRTPKeyMaterial(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("got SRTP key material");
+
+		// TODO
+		// SetLocalSRTPKey(srtp_profile, srtp_local_key, srtp_local_key_len);
+		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
+	}
+
+	void Transport::onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS application data received [size:%zu]", len);
+
+		// TMP
+		MS_DEBUG("data: %s", std::string((char*)data, len).c_str());
 	}
 }

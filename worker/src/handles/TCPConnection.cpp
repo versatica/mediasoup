@@ -326,7 +326,7 @@ void TCPConnection::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 	if (this->bufferSize > this->bufferDataLen)
 	{
 		buf->len = this->bufferSize - this->bufferDataLen;
-		MS_DEBUG("available space in the buffer: %zu", buf->len);
+		// MS_DEBUG("available space in the buffer: %zu", buf->len);
 	}
 	else
 	{

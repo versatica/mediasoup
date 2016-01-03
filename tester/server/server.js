@@ -177,7 +177,7 @@ app.put('/test-transport', function(req)
 		});
 });
 
-setInterval(() =>
+setTimeout(() =>
 {
 	room.dump()
 		.then((data) => debug('ROOM DUMP:\n%s', JSON.stringify(data, null, '\t')))

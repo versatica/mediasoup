@@ -16,12 +16,12 @@ public:
 
 public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
-	typedef struct UvWriteData
+	struct UvWriteData
 	{
-		TCPConnection*  connection;
-		uv_write_t      req;
-		MS_BYTE         store[1];
-	} UvWriteData;
+		TCPConnection* connection;
+		uv_write_t     req;
+		MS_BYTE        store[1];
+	};
 
 public:
 	TCPConnection(size_t bufferSize);

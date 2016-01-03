@@ -1,10 +1,11 @@
-#ifndef MS_RTC_DTLS_AGENT_H
-#define MS_RTC_DTLS_AGENT_H
+#ifndef MS_RTC_DTLS_TRANSPORT_H
+#define MS_RTC_DTLS_TRANSPORT_H
 
 #include "common.h"
 #include "RTC/SRTPSession.h"
 #include "handles/Timer.h"
 #include <string>
+#include <map>
 #include <vector>
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
@@ -13,26 +14,34 @@
 
 namespace RTC
 {
-	class DTLSAgent :
+	class DTLSTransport :
 		public Timer::Listener
 	{
 	public:
-		enum class DTLSRole
+		enum class Role
 		{
 			NONE   = 0,
-			SERVER = 1,
-			CLIENT
+			AUTO   = 1,
+			CLIENT,
+			SERVER
 		};
 
 	public:
-		enum class FingerprintHash
+		enum class FingerprintAlgorithm
 		{
-			NONE   = 0,
-			SHA1   = 1,
+			NONE    = 0,
+			SHA1    = 1,
 			SHA224,
 			SHA256,
 			SHA384,
 			SHA512
+		};
+
+	public:
+		struct Fingerprint
+		{
+			FingerprintAlgorithm algorithm;
+			std::string          value;
 		};
 
 	private:
@@ -48,20 +57,22 @@ namespace RTC
 		public:
 			// NOTE: The caller MUST NOT call Reset() or Close() during the
 			// onOutgoingDTLSData() callback.
-			virtual void onOutgoingDTLSData(DTLSAgent* dtlsAgent, const MS_BYTE* data, size_t len) = 0;
+			virtual void onOutgoingDTLSData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
 			// NOTE: The caller MUST NOT call any method during the onDTLSConnected,
 			// onDTLSDisconnected or onDTLSFailed callbacks.
-			virtual void onDTLSConnected(DTLSAgent* dtlsAgent) = 0;
-			virtual void onDTLSDisconnected(DTLSAgent* dtlsAgent) = 0;
-			virtual void onDTLSFailed(DTLSAgent* dtlsAgent) = 0;
-			virtual void onSRTPKeyMaterial(DTLSAgent* dtlsAgent, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
-			virtual void onDTLSApplicationData(DTLSAgent* dtlsAgent, const MS_BYTE* data, size_t len) = 0;
+			virtual void onDTLSConnected(DTLSTransport* dtlsTransport) = 0;
+			virtual void onDTLSDisconnected(DTLSTransport* dtlsTransport) = 0;
+			virtual void onDTLSFailed(DTLSTransport* dtlsTransport) = 0;
+			virtual void onSRTPKeyMaterial(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			virtual void onDTLSApplicationData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
 		};
 
 	public:
 		static void ClassInit();
 		static void ClassDestroy();
 		static Json::Value& GetLocalFingerprints();
+		static Role GetRole(std::string role);
+		static FingerprintAlgorithm GetFingerprintAlgorithm(std::string fingerprint);
 		static bool IsDTLS(const MS_BYTE* data, size_t len);
 
 	private:
@@ -74,21 +85,22 @@ namespace RTC
 		static X509* certificate;
 		static EVP_PKEY* privateKey;
 		static SSL_CTX* sslCtx;
-		static Json::Value localFingerprints;
-		typedef std::vector<SrtpProfileMapEntry> SRTPProfiles;
-		static SRTPProfiles srtpProfiles;
 		static MS_BYTE sslReadBuffer[];
+		static std::map<std::string, Role> string2Role;
+		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
+		static Json::Value localFingerprints;
+		static std::vector<SrtpProfileMapEntry> srtpProfiles;
 
 	public:
-		DTLSAgent(Listener* listener);
-		virtual ~DTLSAgent();
+		DTLSTransport(Listener* listener);
+		virtual ~DTLSTransport();
 
-		void Run(DTLSRole role);
-		void SetRemoteFingerprint(FingerprintHash hash, std::string& fingerprint);
+		void Start(Role role);
+		void SetRemoteFingerprint(Fingerprint fingerprint);
 		void Reset();
 		void Close();
 		void ProcessDTLSData(const MS_BYTE* data, size_t len);
-		bool IsRunning();
+		bool IsStarted();
 		bool IsConnected();
 		void SendApplicationData(const MS_BYTE* data, size_t len);
 		void Dump();
@@ -119,15 +131,13 @@ namespace RTC
 		BIO* sslBioToNetwork = nullptr;  // The BIO in which ssl writes.
 		Timer* timer = nullptr;
 		// Others.
-		// TODO: rename to localRole
-		DTLSRole role = DTLSRole::NONE;
-		FingerprintHash remoteFingerprintHash = FingerprintHash::NONE;
-		std::string remoteFingerprint;
-		bool isRunning = false;
-		bool isHandshakeDone = false;
-		bool isHandshakeDoneNow = false;
-		bool isConnected = false;
-		bool isCheckingStatus = false;
+		Role localRole = Role::NONE;
+		Fingerprint remoteFingerprint = { FingerprintAlgorithm::NONE, "" };
+		bool started = false;
+		bool handshakeDone = false;
+		bool handshakeDoneNow = false;
+		bool connected = false;
+		bool checkingStatus = false;
 		bool doReset = false;
 		bool doClose = false;
 	};
@@ -135,7 +145,35 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	bool DTLSAgent::IsDTLS(const MS_BYTE* data, size_t len)
+	Json::Value& DTLSTransport::GetLocalFingerprints()
+	{
+		return DTLSTransport::localFingerprints;
+	}
+
+	inline
+	DTLSTransport::Role DTLSTransport::GetRole(std::string role)
+	{
+		auto it = DTLSTransport::string2Role.find(role);
+
+		if (it != DTLSTransport::string2Role.end())
+			return it->second;
+		else
+			return DTLSTransport::Role::NONE;
+	}
+
+	inline
+	DTLSTransport::FingerprintAlgorithm DTLSTransport::GetFingerprintAlgorithm(std::string fingerprint)
+	{
+		auto it = DTLSTransport::string2FingerprintAlgorithm.find(fingerprint);
+
+		if (it != DTLSTransport::string2FingerprintAlgorithm.end())
+			return it->second;
+		else
+			return DTLSTransport::FingerprintAlgorithm::NONE;
+	}
+
+	inline
+	bool DTLSTransport::IsDTLS(const MS_BYTE* data, size_t len)
 	{
 		return (
 			// Minimum DTLS record length is 13 bytes.
@@ -148,15 +186,15 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool DTLSAgent::IsConnected()
+	bool DTLSTransport::IsConnected()
 	{
-		return this->isConnected;
+		return this->connected;
 	}
 
 	inline
-	bool DTLSAgent::IsRunning()
+	bool DTLSTransport::IsStarted()
 	{
-		return this->isRunning;
+		return this->started;
 	}
 }
 

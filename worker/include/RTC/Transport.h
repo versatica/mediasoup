@@ -4,7 +4,7 @@
 #include "common.h"
 #include "RTC/IceCandidate.h"
 #include "RTC/IceServer.h"
-#include "RTC/DTLSAgent.h"
+#include "RTC/DTLSTransport.h"
 #include "RTC/STUNMessage.h"
 #include "RTC/TransportSource.h"
 #include "RTC/UDPSocket.h"
@@ -18,10 +18,11 @@
 namespace RTC
 {
 	class Transport :
-		public RTC::IceServer::Listener,
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
-		public RTC::TCPConnection::Reader
+		public RTC::TCPConnection::Reader,
+		public RTC::IceServer::Listener,
+		public RTC::DTLSTransport::Listener
 	{
 	public:
 		class Listener
@@ -52,14 +53,10 @@ namespace RTC
 		Transport* CreateAssociatedTransport(unsigned int transportId);
 
 	private:
-		bool SetSendingSource(RTC::TransportSource* source);
-		bool IsValidSource(RTC::TransportSource* source);
+		int SetSendingSource(RTC::TransportSource* source);
+		int IsValidSource(RTC::TransportSource* source);
 		bool RemoveSource(RTC::TransportSource* source);
-
-	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
-	public:
-		virtual void onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source) override;
-		virtual void onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate) override;
+		void RunDTLSTransportIfReady();
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -86,6 +83,20 @@ namespace RTC
 		virtual void onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 		virtual void onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 
+	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
+	public:
+		virtual void onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source) override;
+		virtual void onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate) override;
+
+	/* Pure virtual methods inherited from RTC::DTLSTransport::Listener. */
+	public:
+		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
+		virtual void onDTLSConnected(RTC::DTLSTransport* dtlsTransport) override;
+		virtual void onDTLSDisconnected(RTC::DTLSTransport* dtlsTransport) override;
+		virtual void onDTLSFailed(RTC::DTLSTransport* dtlsTransport) override;
+		virtual void onSRTPKeyMaterial(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) override;
+		virtual void onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
+
 	public:
 		// Passed by argument.
 		unsigned int transportId;
@@ -103,13 +114,18 @@ namespace RTC
 		RTC::IceServer* iceServer = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
+		RTC::DTLSTransport* dtlsTransport = nullptr;
 		// Others.
 		bool allocated = false;
+		// Others (ICE).
 		std::vector<IceCandidate> iceLocalCandidates;
 		std::list<RTC::TransportSource> sources;
 		RTC::TransportSource* sendingSource = nullptr;
 		bool icePaired = false;
 		bool icePairedWithUseCandidate = false;
+		// Others (DTLS).
+		bool started = false;
+		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
 	};
 
 	/* Inline methods. */
@@ -133,14 +149,23 @@ namespace RTC
 	 * @param source: A RTC::TransportSource (which is a UDP tuple or TCP connection).
 	 * @return:       true if the given source was not an already valid source,
 	 *                false otherwise.
+	 * @return:       1 if it's the current sending source, 2 if it's another
+	 *                valid source, 0 if it's not a valid source.
 	 */
 	inline
-	bool Transport::SetSendingSource(RTC::TransportSource* source)
+	int Transport::SetSendingSource(RTC::TransportSource* source)
 	{
-		// If the give source is already a valid one return.
+		// Check whether this is already a valid source.
 		// NOTE: The IsValidSource() method will also mark it as sending source.
-		if (IsValidSource(source))
-			return false;
+		switch (IsValidSource(source))
+		{
+			// This is already the sending source.
+			case 1:
+				return 1;
+			// This is another valid source.
+			case 2:
+				return 2;
+		}
 
 		// If there are Transport::maxSources sources then close and remove the last one.
 		if (this->sources.size() == Transport::maxSources)
@@ -162,7 +187,7 @@ namespace RTC
 		if (this->sendingSource->IsUDP())
 			this->sendingSource->StoreUdpRemoteAddress();
 
-		return true;
+		return 0;
 	}
 
 	/**
@@ -171,34 +196,36 @@ namespace RTC
 	 * source for the outgoing data.
 	 *
 	 * @param source:  The RTC::TransportSource to check.
-	 * @return:        true if it is a valid source, false otherwise.
+	 * @return:        1 if it's the current sending source, 2 if it's another
+	 *                 valid source, 0 if it's not a valid source.
 	 */
 	inline
-	bool Transport::IsValidSource(RTC::TransportSource* source)
+	int Transport::IsValidSource(RTC::TransportSource* source)
 	{
 		// If there is no sending source yet then we know that the sources list
-		// is empty, so return false.
+		// is empty, so return 0.
 		if (!this->sendingSource)
-			return false;
+			return 0;
 
-		// First check the current sending source. If it matches then return true.
+		// First check the current sending source. If it matches then return 1.
 		if (this->sendingSource->Compare(source))
-			return true;
+			return 1;
 
 		// Otherwise check other valid source in the sources list.
 		for (auto it = this->sources.begin(); it != this->sources.end(); ++it)
 		{
 			RTC::TransportSource* valid_source = &(*it);
 
-			// If found set it as sending source.
+			// If found set it as sending source and return 2.
 			if (valid_source->Compare(source))
 			{
 				this->sendingSource = valid_source;
-				return true;
+				return 2;
 			}
 		}
 
-		return false;
+		// Otherwise it is not a valid source so return 0.
+		return 0;
 	}
 
 	/**
@@ -236,6 +263,8 @@ namespace RTC
 						// This is just useful is there are just TCP sources.
 						this->icePaired = false;
 						this->icePairedWithUseCandidate = false;
+
+						// TODO: This should fire a 'icefailed' event.
 					}
 				}
 

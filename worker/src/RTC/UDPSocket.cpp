@@ -2,7 +2,7 @@
 
 #include "RTC/UDPSocket.h"
 #include "RTC/STUNMessage.h"
-#include "RTC/DTLSAgent.h"
+#include "RTC/DTLSTransport.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
 #include "Settings.h"
@@ -368,7 +368,7 @@ namespace RTC
 		}
 
 		// Check if it's DTLS.
-		if (DTLSAgent::IsDTLS(data, len))
+		if (DTLSTransport::IsDTLS(data, len))
 		{
 			this->listener->onDTLSDataRecv(this, data, len, addr);
 			return;

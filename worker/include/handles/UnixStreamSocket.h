@@ -9,12 +9,12 @@ class UnixStreamSocket
 {
 public:
 	/* Struct for the data field of uv_req_t when writing data. */
-	typedef struct UvWriteData
+	struct UvWriteData
 	{
-		UnixStreamSocket*  socket;
-		uv_write_t         req;
-		MS_BYTE            store[1];
-	} UvWriteData;
+		UnixStreamSocket* socket;
+		uv_write_t        req;
+		MS_BYTE           store[1];
+	};
 
 public:
 	UnixStreamSocket(int fd, size_t bufferSize);
