@@ -21,6 +21,8 @@ let app = protoo();
 
 // mediasoup server
 let server = mediasoup.Server({ numWorkers: 1 });
+
+// Create a single mediasoup Room
 let room = server.Room();
 
 // Node-WebSocket server options
