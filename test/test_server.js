@@ -11,12 +11,12 @@ tap.test('server.updateSettings() with no options must succeed', { timeout: 1000
 	t.tearDown(() => server.close());
 
 	server.updateSettings()
-		.catch((error) => t.fail(`server.updateSettings() failed: ${error}`))
 		.then(() =>
 		{
 			t.pass('server.updateSettings() succeeded');
 			t.end();
-		});
+		})
+		.catch((error) => t.fail(`server.updateSettings() failed: ${error}`));
 });
 
 tap.test('server.updateSettings() with valid options must succeed', { timeout: 1000 }, (t) =>
@@ -26,12 +26,12 @@ tap.test('server.updateSettings() with valid options must succeed', { timeout: 1
 	t.tearDown(() => server.close());
 
 	server.updateSettings({ logLevel: 'warn' })
-		.catch((error) => t.fail(`server.updateSettings() failed: ${error}`))
 		.then(() =>
 		{
 			t.pass('server.updateSettings() succeeded');
 			t.end();
-		});
+		})
+		.catch((error) => t.fail(`server.updateSettings() failed: ${error}`));
 });
 
 tap.test('server.updateSettings() with invalid options must fail', { timeout: 1000 }, (t) =>
@@ -41,12 +41,12 @@ tap.test('server.updateSettings() with invalid options must fail', { timeout: 10
 	t.tearDown(() => server.close());
 
 	server.updateSettings({ logLevel: 'WRONG_LOG_LEVEL' })
+		.then(() => t.fail('server.updateSettings() succeeded'))
 		.catch((error) =>
 		{
 			t.pass(`server.updateSettings() failed: ${error}`);
 			t.end();
-		})
-		.then(() => t.fail('server.updateSettings() succeeded'));
+		});
 });
 
 tap.test('server.updateSettings() in a closed server must fail', { timeout: 1000 }, (t) =>
@@ -58,18 +58,18 @@ tap.test('server.updateSettings() in a closed server must fail', { timeout: 1000
 	server.on('close', () =>
 	{
 		server.updateSettings({ logLevel: 'error' })
+			.then(() => t.fail('server.updateSettings() succeeded'))
 			.catch((error) =>
 			{
 				t.pass(`server.updateSettings() failed: ${error}`);
 				t.end();
-			})
-			.then(() => t.fail('server.updateSettings() succeeded'));
+			});
 	});
 
 	server.close();
 });
 
-tap.test('server.Room() must succeed', { timeout: 1000 }, (t) =>
+tap.test('server.Room() must succeed', { _timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -111,11 +111,11 @@ tap.test('server.dump() must succeed', { timeout: 1000 }, (t) =>
 	t.tearDown(() => server.close());
 
 	server.dump()
-		.catch((error) => t.fail(`server.dump() failed: ${error}`))
 		.then((data) =>
 		{
 			t.pass('server.dump() succeeded');
 			t.equal(Object.keys(data.workers).length, 2, 'server.dump() should retrieve two workers');
 			t.end();
-		});
+		})
+		.catch((error) => t.fail(`server.dump() failed: ${error}`));
 });

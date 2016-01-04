@@ -97,11 +97,11 @@ tap.test('room.dump() must succeed', { timeout: 1000 }, (t) =>
 	room.Peer('bob');
 
 	room.dump()
-		.catch((error) => t.fail(`room.dump() failed: ${error}`))
 		.then((data) =>
 		{
 			t.pass('room.dump() succeeded');
 			t.strictSame(Object.keys(data.peers), ['alice', 'bob'], 'room.dump() should retrieve two peers');
 			t.end();
-		});
+		})
+		.catch((error) => t.fail(`room.dump() failed: ${error}`));
 });

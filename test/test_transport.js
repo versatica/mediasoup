@@ -14,7 +14,6 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`))
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
@@ -28,7 +27,6 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 			t.pass('transport just contains "udp" candidates');
 
 			transport.createAssociatedTransport()
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`))
 				.then((associatedTransport) =>
 				{
 					t.pass('transport.createAssociatedTransport() succeeded');
@@ -42,15 +40,17 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 					t.pass('associated transport just contains "udp" candidates');
 
 					peer.dump()
-						.catch((error) => t.fail(`peer.dump() failed: ${error}`))
 						.then((data) =>
 						{
 							t.pass('peer.dump() succeeded');
 							t.equal(Object.keys(data.transports).length, 2, 'peer.dump() should retrieve two transports');
 							t.end();
-						});
-				});
-		});
+						})
+						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
+				})
+				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
+		})
+		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
 tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
@@ -63,7 +63,6 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
-		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`))
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
@@ -73,17 +72,18 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 				t.error(error, 'transport should close cleanly');
 
 				peer.dump()
-					.catch((error) => t.fail(`peer.dump() failed: ${error}`))
 					.then((data) =>
 					{
 						t.pass('peer.dump() succeeded');
 						t.equal(Object.keys(data.transports).length, 0, 'peer.dump() should retrieve zero transports');
 						t.end();
-					});
+					})
+					.catch((error) => t.fail(`peer.dump() failed: ${error}`));
 			});
 
 			setTimeout(() => transport.close(), 100);
-		});
+		})
+		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
 tap.test('transport.setRemoteDtlsParameters() with "server" `role` must succeed', { timeout: 1000 }, (t) =>
@@ -96,7 +96,6 @@ tap.test('transport.setRemoteDtlsParameters() with "server" `role` must succeed'
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`))
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
@@ -111,22 +110,23 @@ tap.test('transport.setRemoteDtlsParameters() with "server" `role` must succeed'
 						value     : '751b8193b7ed277e42bed6c48ef7043a49ce3faa'
 					}
 				})
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`))
 				.then(() =>
 				{
 					t.pass('transport.setRemoteDtlsParameters() succeeded');
 					t.equal(transport.dtlsLocalParameters.role, 'client', 'new local DTLS `role` must be "client"');
 
 					transport.dump()
-						.catch((error) => t.fail(`peer.dump() failed: ${error}`))
 						.then((data) =>
 						{
 							t.pass('transport.dump() succeeded');
 							t.equal(data.dtlsLocalParameters.role, 'client', 'local DTLS `role` must be "client"');
 							t.end();
-						});
-				});
-		});
+						})
+						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
+				})
+				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
+		})
+		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
 tap.test('transport.setRemoteDtlsParameters() with "server" `auto` must succeed', { timeout: 1000 }, (t) =>
@@ -139,7 +139,6 @@ tap.test('transport.setRemoteDtlsParameters() with "server" `auto` must succeed'
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`))
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
@@ -153,22 +152,23 @@ tap.test('transport.setRemoteDtlsParameters() with "server" `auto` must succeed'
 						value     : '751b8193b7ed277e42bed6c48ef7043a49ce3faa'
 					}
 				})
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`))
 				.then(() =>
 				{
 					t.pass('transport.setRemoteDtlsParameters() succeeded');
 					t.equal(transport.dtlsLocalParameters.role, 'client', 'new local DTLS `role` must be "client"');
 
 					transport.dump()
-						.catch((error) => t.fail(`peer.dump() failed: ${error}`))
 						.then((data) =>
 						{
 							t.pass('transport.dump() succeeded');
 							t.equal(data.dtlsLocalParameters.role, 'client', 'local DTLS `role` must be "client"');
 							t.end();
-						});
-				});
-		});
+						})
+						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
+				})
+				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
+		})
+		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
 tap.test('transport.setRemoteDtlsParameters() with no `role` must succeed', { timeout: 1000 }, (t) =>
@@ -181,7 +181,6 @@ tap.test('transport.setRemoteDtlsParameters() with no `role` must succeed', { ti
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`))
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
@@ -194,22 +193,23 @@ tap.test('transport.setRemoteDtlsParameters() with no `role` must succeed', { ti
 						value     : '751b8193b7ed277e42bed6c48ef7043a49ce3faa'
 					}
 				})
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`))
 				.then(() =>
 				{
 					t.pass('transport.setRemoteDtlsParameters() succeeded');
 					t.equal(transport.dtlsLocalParameters.role, 'client', 'new local DTLS `role` must be "client"');
 
 					transport.dump()
-						.catch((error) => t.fail(`peer.dump() failed: ${error}`))
 						.then((data) =>
 						{
 							t.pass('transport.dump() succeeded');
 							t.equal(data.dtlsLocalParameters.role, 'client', 'local DTLS `role` must be "client"');
 							t.end();
-						});
-				});
-		});
+						})
+						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
+				})
+				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
+		})
+		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
 tap.test('transport.setRemoteDtlsParameters() with invalid `role` must fail', { timeout: 1000 }, (t) =>
@@ -222,7 +222,6 @@ tap.test('transport.setRemoteDtlsParameters() with invalid `role` must fail', { 
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`))
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
@@ -236,14 +235,15 @@ tap.test('transport.setRemoteDtlsParameters() with invalid `role` must fail', { 
 						value     : '751b8193b7ed277e42bed6c48ef7043a49ce3faa'
 					}
 				})
+				.then(() => t.fail('transport.setRemoteDtlsParameters() succeeded'))
 				.catch((error) =>
 				{
 					t.pass(`transport.createAssociatedTransport() failed: ${error}`);
 					t.equal(transport.dtlsLocalParameters.role, 'server', 'local DTLS `role` must be "server"');
 					t.end();
-				})
-				.then(() => t.fail('transport.setRemoteDtlsParameters() succeeded'));
-		});
+				});
+		})
+		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
 tap.test('transport.setRemoteDtlsParameters() without `fingerprint` must fail', { timeout: 1000 }, (t) =>
@@ -256,7 +256,6 @@ tap.test('transport.setRemoteDtlsParameters() without `fingerprint` must fail', 
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`))
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
@@ -265,12 +264,13 @@ tap.test('transport.setRemoteDtlsParameters() without `fingerprint` must fail', 
 				{
 					role        : 'server'
 				})
+				.then(() => t.fail('transport.setRemoteDtlsParameters() succeeded'))
 				.catch((error) =>
 				{
 					t.pass(`transport.createAssociatedTransport() failed: ${error}`);
 					t.equal(transport.dtlsLocalParameters.role, 'server', 'local DTLS `role` must be "server"');
 					t.end();
-				})
-				.then(() => t.fail('transport.setRemoteDtlsParameters() succeeded'));
-		});
+				});
+		})
+		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
