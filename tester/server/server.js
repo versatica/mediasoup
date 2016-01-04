@@ -96,11 +96,15 @@ app.on('offline', (peer) =>
 // Handle PUT requests to /test-transport
 app.put('/test-transport', function(req)
 {
+	debug('/test-transport started');
+
 	// Retrieve the mediasoup Peer associated to the protoo peer who sent the request
 	let mediaPeer = req.peer.data.mediaPeer;
 	let sdpOffer = req.data.sdp;
 	let offer = sdpTransform.parse(sdpOffer);
 	let answer = {};
+	let numTransports = 0;
+	let transportPromises = [];
 
 	answer.version = 0;
 	answer.origin = offer.origin;
@@ -111,16 +115,57 @@ app.put('/test-transport', function(req)
 	answer.icelite = 'ice-lite';
 	answer.media = [];
 
-	mediaPeer.createTransport({ udp: true, tcp: false })
-		.then((transport) =>
+	// Initially assume as many transports as m= lines
+	// NOTE: We assume rtcpmux, PERIOD
+	numTransports = offer.media.length;
+
+	// If bundle is used, decrease the number of required transports
+	if (offer.groups && offer.groups.length > 0)
+	{
+		// Assume "bundle" is for all the transports
+		if (offer.groups[0].type === 'BUNDLE')
+			numTransports = 1;
+	}
+
+	debug('/test-transport [numTransports:%d]', numTransports);
+
+	// Create transports promises
+	for (let i = 0; i < numTransports ; i++)
+	{
+		let promise = mediaPeer.createTransport({ udp: true, tcp: false });
+
+		// Add the transport promise to the array of promises
+		transportPromises.push(promise);
+	}
+
+	// Once all the transports are created, continue
+	Promise.all(transportPromises)
+		.catch((error) =>
 		{
-			offer.media.forEach((om) =>
+			req.reply(400, error.message);
+			return;
+		})
+		.then((transports) =>
+		{
+			// Here we need to call setRemoteDtlsParameters() for each local transport, so will collect
+			// those promises and return a single one (via Promise.all) to handle it in the next .then()
+			let dtlsPromises = [];
+
+			// Inspect each m= section in the SDP offer and create a m= section for the SDP response
+			offer.media.forEach((om, i) =>
 			{
 				let am = {};
+				let transport;
+
+				// Take the corresponding transport
+				if (numTransports === 1)
+					transport = transports[0];
+				else
+					transport = transports[i];
 
 				am.mid = om.mid;
-				am.connection = { ip: '1.2.3.4', version: 4 };
-				am.port = 12345;
+				am.connection = { ip: '1.2.3.4', version: 4 };  // TODO: fuck you SDP
+				am.port = 12345;  // TODO: fuck you SDP
 				am.protocol = om.protocol;
 				am.iceUfrag = transport.iceLocalParameters.usernameFragment;
 				am.icePwd = transport.iceLocalParameters.password;
@@ -137,10 +182,8 @@ app.put('/test-transport', function(req)
 					ac.priority = candidate.priority;
 					ac.transport = candidate.protocol;
 					ac.type = candidate.type;
-
 					if (candidate.tcpType)
 						ac.tcpType = candidate.tcpType;
-
 					am.candidates.push(ac);
 				});
 
@@ -149,48 +192,61 @@ app.put('/test-transport', function(req)
 					type : 'sha-256',
 					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalParameters.fingerprints['sha-256'])
 				};
-				// SDP offer is always 'a=setup:actpass'
-				am.setup = 'passive';
+
 				am.type = om.type;
-				am.rtcpMux = 'rtcp-mux';
-				am.rtcp = om.rtcp;
-				am.rtcpFb = om.rtcpFb;
 				am.rtp = om.rtp;
 				am.fmtp = om.fmtp;
 				am.direction = om.direction === 'recvonly' ? 'sendonly' : 'sendrecv';
 				am.payloads = om.payloads;
+				am.rtcpMux = 'rtcp-mux';
+				am.rtcp = om.rtcp;
+				am.rtcpFb = om.rtcpFb;
 
-				// Update the transport with the remote DTLS parameters
-				setTimeout(() =>
+				// Add the m= section to the SDP answer
+				answer.media.push(am);
+
+				// Set remote DTLS parameters into the transport
+				// NOTE: Don't do twice for the same transport!
+				if (transports[i])
 				{
-					transport.setRemoteDtlsParameters(
+					let promise = transport.setRemoteDtlsParameters(
 						{
-							role        : 'client',
+							role        : 'client',  // SDP offer MUST always have a=setup:actpass
 							fingerprint :
 							{
 								algorithm : om.fingerprint.type,
 								value     : mediasoup.extra.dtlsFingerprintFromSDP(om.fingerprint.hash)
 							}
 						})
-						.then((data) => debug('transport.start() success [data:%o]', data))
-						.catch((error) => debugerror('transport.start() failed: %o', error));
-				}, 0);
+						.then(() =>
+						{
+							// Set the a=setup attribute for the SDP response
+							am.setup = transport.dtlsLocalParameters.role === 'client' ? 'active' : 'passive';
+						});
 
-				answer.media.push(am);
+					// Add the promise to the array of promises
+					dtlsPromises.push(promise);
+				}
 			});
 
-			let data =
-			{
-				type : 'answer',
-				sdp  : sdpTransform.write(answer)
-			};
+			// Return a new promise for the next then()
+			return Promise.all(dtlsPromises);
+		})
+		.then(() =>
+		{
+			debug('/test-transport succeeded, replying 200 with SDP answer');
 
-			req.reply(200, 'OK', data);
+			req.reply(200, 'OK',
+				{
+					type : 'answer',
+					sdp  : sdpTransform.write(answer)
+				});
 		})
 		.catch((error) =>
 		{
-			req.reply(400, error.message);
-			return;
+			debugerror('/test-transport failed: %s', error);
+
+			req.reply(500, error.message);
 		});
 });
 
@@ -199,4 +255,4 @@ setTimeout(() =>
 	room.dump()
 		.then((data) => debug('ROOM DUMP:\n%s', JSON.stringify(data, null, '\t')))
 		.catch((error) => debugerror('SERVER DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
-}, 7000);
+}, 10000);

@@ -68,7 +68,7 @@ class Peer extends EventEmitter
 			// errback
 			(error) => { throw new Error(error); },
 			// options
-			{ offerToReceiveAudio: false, offerToReceiveVideo: true }
+			{ offerToReceiveAudio: true, offerToReceiveVideo: true }
 		);
 
 		function sendRequest()
