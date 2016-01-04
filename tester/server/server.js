@@ -71,8 +71,20 @@ app.on('online', (peer) =>
 {
 	debug('peer online: %s', peer);
 
+	let mediaPeer;
+
 	// Create a mediasoup Peer instance
-	let mediaPeer = room.Peer(peer.username);
+	try
+	{
+		mediaPeer = room.Peer(peer.username);
+	}
+	catch (error)
+	{
+		debugerror('error adding a new peer to the room [username:%s, error:%s]', peer.username, error);
+
+		peer.close();
+		return;
+	}
 
 	mediaPeer.on('close', (error) =>
 	{
@@ -92,7 +104,8 @@ app.on('offline', (peer) =>
 	debug('peer offline: %s', peer);
 
 	// Remove from the room
-	peer.data.mediaPeer.close();
+	if (peer.data.mediaPeer)
+		peer.data.mediaPeer.close();
 });
 
 // Handle PUT requests to /test-transport
@@ -102,6 +115,19 @@ app.put('/test-transport', function(req)
 
 	// Retrieve the mediasoup Peer associated to the protoo peer who sent the request
 	let mediaPeer = req.peer.data.mediaPeer;
+
+	// TODO: not sure why this happens (when connecting with same username:uuid in other tab)
+	// NOTE: This may be a protoo bug. It seems that upon reconnection the peer.data is not "cloned".
+	if (!mediaPeer)
+	{
+		debugerror('/test-transport error due to non existing mediasoup Peer for this peer [username:%s]', req.peer.username);
+
+		req.reply(500, 'no mediasoup Peer for this peer');
+
+		req.peer.close();
+		return;
+	}
+
 	let sdpOffer = req.data.sdp;
 	let offer = sdpTransform.parse(sdpOffer);
 	let answer = {};

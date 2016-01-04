@@ -44,3 +44,25 @@ tap.test('mediasoup.Server() with wrong options must fail', { timeout: 1000 }, (
 		t.end();
 	});
 });
+
+tap.test('mediasoup.Server() with non existing `rtcListenIPv4` must fail', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server({ rtcListenIPv4: '1.2.3.4' });
+
+	server.on('close', (error) =>
+	{
+		t.type(error, Error, 'server should close with error');
+		t.end();
+	});
+});
+
+tap.test('mediasoup.Server() with too narrow RTC ports range must fail', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server({ rtcMinPort: 2000, rtcMaxPort: 2050 });
+
+	server.on('close', (error) =>
+	{
+		t.type(error, Error, 'server should close with error');
+		t.end();
+	});
+});
