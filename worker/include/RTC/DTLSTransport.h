@@ -95,15 +95,15 @@ namespace RTC
 		DTLSTransport(Listener* listener);
 		virtual ~DTLSTransport();
 
-		void Start(Role role);
-		void SetRemoteFingerprint(Fingerprint fingerprint);
-		void Reset();
 		void Close();
+		void Reset();
+		void Dump();
+		void Run(Role localRole);
+		void SetRemoteFingerprint(Fingerprint fingerprint);
 		void ProcessDTLSData(const MS_BYTE* data, size_t len);
-		bool IsStarted();
+		bool IsRunning();
 		bool IsConnected();
 		void SendApplicationData(const MS_BYTE* data, size_t len);
-		void Dump();
 
 	private:
 		bool CheckStatus(int return_code);
@@ -133,7 +133,7 @@ namespace RTC
 		// Others.
 		Role localRole = Role::NONE;
 		Fingerprint remoteFingerprint = { FingerprintAlgorithm::NONE, "" };
-		bool started = false;
+		bool running = false;
 		bool handshakeDone = false;
 		bool handshakeDoneNow = false;
 		bool connected = false;
@@ -186,15 +186,15 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool DTLSTransport::IsConnected()
+	bool DTLSTransport::IsRunning()
 	{
-		return this->connected;
+		return this->running;
 	}
 
 	inline
-	bool DTLSTransport::IsStarted()
+	bool DTLSTransport::IsConnected()
 	{
-		return this->started;
+		return this->connected;
 	}
 }
 

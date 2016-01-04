@@ -149,6 +149,7 @@ app.put('/test-transport', function(req)
 					type : 'sha-256',
 					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalFingerprints['sha-256'])
 				};
+				// SDP offer is always 'a=setup:actpass'
 				am.setup = 'passive';
 				am.type = om.type;
 				am.rtcpMux = 'rtcp-mux';
@@ -158,6 +159,22 @@ app.put('/test-transport', function(req)
 				am.fmtp = om.fmtp;
 				am.direction = om.direction === 'recvonly' ? 'sendonly' : 'sendrecv';
 				am.payloads = om.payloads;
+
+				// Update the transport with the remote DTLS parameters
+				setTimeout(() =>
+				{
+					transport.start(
+						{
+							role        : 'client',
+							fingerprint :
+							{
+								algorithm : om.fingerprint.type,
+								value     : mediasoup.extra.dtlsFingerprintFromSDP(om.fingerprint.hash)
+							}
+						})
+						.then((data) => debug('transport.start() success [data:%o]', data))
+						.catch((error) => debugerror('transport.start() failed: %o', error));
+				}, 0);
 
 				answer.media.push(am);
 			});

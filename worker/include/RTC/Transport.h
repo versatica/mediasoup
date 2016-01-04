@@ -125,7 +125,7 @@ namespace RTC
 		bool icePairedWithUseCandidate = false;
 		// Others (DTLS).
 		bool started = false;
-		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
+		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::AUTO;
 	};
 
 	/* Inline methods. */

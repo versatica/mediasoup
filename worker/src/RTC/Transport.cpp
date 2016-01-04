@@ -304,9 +304,8 @@ namespace RTC
 				static const Json::StaticString k_algorithm("algorithm");
 				static const Json::StaticString k_value("value");
 
-				RTC::DTLSTransport::FingerprintAlgorithm fingerprint_algorithm;
-				std::string fingerprint_value;
-				RTC::DTLSTransport::Role role = RTC::DTLSTransport::Role::AUTO;  // Default value.
+				RTC::DTLSTransport::Fingerprint remoteFingerprint;
+				RTC::DTLSTransport::Role remoteRole = RTC::DTLSTransport::Role::AUTO;  // Default value if missing.
 
 				// Ensure this method is not called twice.
 				if (this->started)
@@ -337,9 +336,9 @@ namespace RTC
 					return;
 				}
 
-				fingerprint_algorithm = RTC::DTLSTransport::GetFingerprintAlgorithm(request->data[k_fingerprint][k_algorithm].asString());
+				remoteFingerprint.algorithm = RTC::DTLSTransport::GetFingerprintAlgorithm(request->data[k_fingerprint][k_algorithm].asString());
 
-				if (fingerprint_algorithm == RTC::DTLSTransport::FingerprintAlgorithm::NONE)
+				if (remoteFingerprint.algorithm == RTC::DTLSTransport::FingerprintAlgorithm::NONE)
 				{
 					MS_ERROR("unsupported .fingerprint.algorithm");
 
@@ -347,21 +346,52 @@ namespace RTC
 					return;
 				}
 
-				fingerprint_value = request->data[k_fingerprint][k_value].asString();
+				remoteFingerprint.value = request->data[k_fingerprint][k_value].asString();
 
 				if (request->data[k_role].isString())
-				{
-					role = RTC::DTLSTransport::GetRole(request->data[k_role].asString());
+					remoteRole = RTC::DTLSTransport::GetRole(request->data[k_role].asString());
 
-					if (role == RTC::DTLSTransport::Role::NONE)
-					{
+				// Set local DTLS role.
+				switch (remoteRole)
+				{
+					case RTC::DTLSTransport::Role::CLIENT:
+						this->dtlsLocalRole = RTC::DTLSTransport::Role::SERVER;
+						break;
+					case RTC::DTLSTransport::Role::SERVER:
+						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
+						break;
+					case RTC::DTLSTransport::Role::AUTO:
+						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
+						break;
+					case RTC::DTLSTransport::Role::NONE:
 						MS_ERROR("invalid .role");
 
 						request->Reject(500, "invalid .role");
 						return;
-					}
 				}
 
+				// TODO: Provide the local DTLS role in the response so the JS can expose it.
+				Json::Value data;
+
+				switch (this->dtlsLocalRole)
+				{
+					case RTC::DTLSTransport::Role::CLIENT:
+						data["localDtlsRole"] = "client";
+						break;
+					case RTC::DTLSTransport::Role::SERVER:
+						data["localDtlsRole"] = "server";
+						break;
+					default:
+						MS_ABORT("KAKAKAKAKAKA");  // TODO jeje
+				}
+
+				request->Accept(data);
+
+				// Pass the remote fingerprint to the DTLS transport.
+				this->dtlsTransport->SetRemoteFingerprint(remoteFingerprint);
+
+				// Run the DTLS transport if ready.
+				RunDTLSTransportIfReady();
 
 				break;
 			}
@@ -390,7 +420,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		switch (this->dtlsLocalRole)
+		{
+			// If 'client' then wait for the first Binding with USE-CANDIDATE.
+			// If 'auto' then behave as 'client' since we are always ICE controlled.
+			case RTC::DTLSTransport::Role::CLIENT:
+			case RTC::DTLSTransport::Role::AUTO:
+				if (this->icePairedWithUseCandidate)
+				{
+					MS_DEBUG("running DTLS transport in 'client' role");
+
+					this->dtlsTransport->Run(RTC::DTLSTransport::Role::CLIENT);
+				}
+				break;
+
+			// If 'server' then run the DTLS handler upon first valid ICE pair.
+			case RTC::DTLSTransport::Role::SERVER:
+				if (this->icePaired)
+				{
+					MS_DEBUG("running DTLS transport in 'server' role");
+
+					this->dtlsTransport->Run(RTC::DTLSTransport::Role::SERVER);
+				}
+				break;
+
+			case RTC::DTLSTransport::Role::NONE:
+				MS_ABORT("local DTLS role cannot be none");
+		}
 	}
 
 	inline
@@ -423,10 +479,18 @@ namespace RTC
 			return;
 		}
 
-		// TODO: remove
-		MS_DEBUG("received DTLS data");
+		if (this->dtlsTransport->IsRunning())
+		{
+			MS_DEBUG("DTLS data received, passing it to the DTLS transport");
 
-		// TODO
+			this->dtlsTransport->ProcessDTLSData(data, len);
+		}
+		else
+		{
+			MS_DEBUG("DTLSTransport is not running, ignoring received DTLS data");
+
+			return;
+		}
 	}
 
 	inline

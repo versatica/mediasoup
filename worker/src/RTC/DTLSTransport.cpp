@@ -538,51 +538,26 @@ namespace RTC
 		}
 	}
 
-	// TODO: en realidad esto debería juntarse con el SetRemoteFingerprint.
-	void DTLSTransport::Start(Role role)
+	void DTLSTransport::Close()
 	{
 		MS_TRACE();
 
-		if (this->started)
+		if (this->checkingStatus)
+		{
+			this->doClose = true;
 			return;
-
-		this->started = true;
-		this->localRole = role;
-
-		switch (this->localRole)
-		{
-			case Role::SERVER:
-				SSL_set_accept_state(this->ssl);
-				SSL_do_handshake(this->ssl);
-				break;
-			case Role::CLIENT:
-				SSL_set_connect_state(this->ssl);
-				SSL_do_handshake(this->ssl);
-				SendPendingOutgoingDTLSData();
-				SetTimeout();
-				break;
-			case Role::NONE:
-				MS_ABORT("no valid DTLS role given");
-				break;
 		}
-	}
 
-	// TODO: replace with start()
-	void DTLSTransport::SetRemoteFingerprint(Fingerprint fingerprint)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(fingerprint.algorithm != FingerprintAlgorithm::NONE, "no fingerprint algorithm provided");
-
-		this->remoteFingerprint = fingerprint;
-
-		// The remote fingerpring may have been set after DTLS handshake was done,
-		// so we may need to process it now.
-		if (this->handshakeDone && !this->connected)
+		if (this->running)
 		{
-			MS_DEBUG("handshake already done, processing it right now");
-			ProcessHandshake();
+			// Send close alert to the peer.
+			SSL_shutdown(this->ssl);
+			SendPendingOutgoingDTLSData();
 		}
+
+		this->timer->Close();
+
+		delete this;
 	}
 
 	void DTLSTransport::Reset()
@@ -593,7 +568,7 @@ namespace RTC
 
 		this->doReset = false;
 
-		if (!this->started)
+		if (!this->running)
 			return;
 
 		if (this->checkingStatus)
@@ -612,7 +587,7 @@ namespace RTC
 		SendPendingOutgoingDTLSData();
 
 		this->localRole = Role::NONE;
-		this->started = false;
+		this->running = false;
 		this->handshakeDone = false;
 		this->handshakeDoneNow = false;
 		this->connected = false;
@@ -627,26 +602,79 @@ namespace RTC
 			LOG_OPENSSL_ERROR("SSL_clear() failed");
 	}
 
-	void DTLSTransport::Close()
+	void DTLSTransport::Dump()
 	{
 		MS_TRACE();
 
-		if (this->checkingStatus)
+		MS_DEBUG("[role: %s | running: %s | handshake done: %s | connected: %s]",
+			(this->localRole == Role::SERVER ? "server" : (this->localRole == Role::CLIENT ? "client" : "none")),
+			this->running ? "yes" : "no",
+			this->handshakeDone ? "yes" : "no",
+			this->connected ? "yes" : "no");
+	}
+
+	void DTLSTransport::Run(Role localRole)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(localRole == Role::CLIENT || localRole == Role::SERVER, "local DTLS role must be 'client' or 'server'");
+
+		Role previousLocalRole = this->localRole;
+
+		if (localRole == previousLocalRole)
 		{
-			this->doClose = true;
+			MS_DEBUG("same local DTLS role provided, doing nothing");
+
 			return;
 		}
 
-		if (this->started)
+		// If the previous local DTLS role was 'client' or 'server' do reset.
+		if (previousLocalRole == Role::CLIENT || previousLocalRole == Role::SERVER)
 		{
-			// Send close alert to the peer.
-			SSL_shutdown(this->ssl);
-			SendPendingOutgoingDTLSData();
+			MS_DEBUG("resetting due to local DTLS role change");
+
+			Reset();
 		}
 
-		this->timer->Close();
+		// Update local role.
+		this->localRole = localRole;
+		// Set running flag.
+		this->running = true;
 
-		delete this;
+		switch (this->localRole)
+		{
+			case Role::CLIENT:
+				SSL_set_connect_state(this->ssl);
+				SSL_do_handshake(this->ssl);
+				SendPendingOutgoingDTLSData();
+				SetTimeout();
+				break;
+			case Role::SERVER:
+				SSL_set_accept_state(this->ssl);
+				SSL_do_handshake(this->ssl);
+				break;
+			default:
+				MS_ABORT("invalid local DTLS role");
+				break;
+		}
+	}
+
+	void DTLSTransport::SetRemoteFingerprint(Fingerprint fingerprint)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(fingerprint.algorithm != FingerprintAlgorithm::NONE, "no fingerprint algorithm provided");
+
+		this->remoteFingerprint = fingerprint;
+
+		// The remote fingerpring may have been set after DTLS handshake was done,
+		// so we may need to process it now.
+		if (this->handshakeDone && !this->connected)
+		{
+			MS_DEBUG("handshake already done, processing it right now");
+
+			ProcessHandshake();
+		}
 	}
 
 	void DTLSTransport::ProcessDTLSData(const MS_BYTE* data, size_t len)
@@ -656,9 +684,10 @@ namespace RTC
 		int written;
 		int read;
 
-		if (!this->started)
+		if (!this->running)
 		{
-			MS_ERROR("cannot process data while not started");
+			MS_ERROR("cannot process data while not running");
+
 			return;
 		}
 
@@ -699,7 +728,7 @@ namespace RTC
 
 		if (!this->connected)
 		{
-			MS_ERROR("cannot send application data while DTLS is not connected");
+			MS_ERROR("cannot send application data while DTLS is not fully connected");
 			return;
 		}
 
@@ -724,17 +753,6 @@ namespace RTC
 
 		// Send data.
 		SendPendingOutgoingDTLSData();
-	}
-
-	void DTLSTransport::Dump()
-	{
-		MS_TRACE();
-
-		MS_DEBUG("[role: %s | started: %s | handshake done: %s | connected: %s]",
-			(this->localRole == Role::SERVER ? "server" : (this->localRole == Role::CLIENT ? "client" : "none")),
-			this->started ? "yes" : "no",
-			this->handshakeDone ? "yes" : "no",
-			this->connected ? "yes" : "no");
 	}
 
 	inline
@@ -794,7 +812,7 @@ namespace RTC
 			bool was_connected = this->connected;
 
 			this->localRole = Role::NONE;
-			this->started = false;
+			this->running = false;
 			this->handshakeDone = false;
 			this->handshakeDoneNow = false;
 			this->connected = false;
@@ -904,6 +922,7 @@ namespace RTC
 		if (this->remoteFingerprint.algorithm == FingerprintAlgorithm::NONE)
 		{
 			MS_DEBUG("remote fingerprint not yet set, waiting for it");
+
 			return;
 		}
 
@@ -915,6 +934,7 @@ namespace RTC
 
 			// Reset DTLS.
 			Reset();
+
 			return;
 		}
 
@@ -1070,7 +1090,7 @@ namespace RTC
 				srtp_local_salt = srtp_remote_key + MS_SRTP_MASTER_KEY_LENGTH;
 				srtp_remote_salt = srtp_local_salt + MS_SRTP_MASTER_SALT_LENGTH;
 				break;
-			case Role::NONE:
+			default:
 				MS_ABORT("no DTLS role set");
 				break;
 		}
@@ -1102,7 +1122,6 @@ namespace RTC
 		{
 			MS_DEBUG("role: %s | action: %s", role, SSL_state_string_long(this->ssl));
 		}
-
 		else if (where & SSL_CB_ALERT)
 		{
 			const char* alert_type;
@@ -1121,7 +1140,6 @@ namespace RTC
 			else
 				MS_DEBUG("DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
 		}
-
 		else if (where & SSL_CB_EXIT)
 		{
 			if (ret == 0)
@@ -1129,7 +1147,6 @@ namespace RTC
 			else if (ret < 0)
 				MS_DEBUG("role: %s | waiting for: %s", role, SSL_state_string_long(this->ssl));
 		}
-
 		else if (where & SSL_CB_HANDSHAKE_START)
 		{
 			MS_DEBUG("DTLS handshake start");
@@ -1138,6 +1155,7 @@ namespace RTC
 		else if (where & SSL_CB_HANDSHAKE_DONE)
 		{
 			MS_DEBUG("DTLS handshake done");
+
 			this->handshakeDoneNow = true;
 		}
 
