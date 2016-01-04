@@ -158,7 +158,7 @@ namespace RTC
 
 				static const Json::StaticString k_rtpTransportId("rtpTransportId");
 
-				auto jsonRtpTransportId = request->data[k_rtpTransportId];
+				auto jsonRtpTransportId = request->internal[k_rtpTransportId];
 
 				if (!jsonRtpTransportId.isUInt())
 				{
@@ -203,7 +203,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::transport_close:
 			case Channel::Request::MethodId::transport_dump:
-			case Channel::Request::MethodId::transport_start:
+			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 			{
 				RTC::Transport* transport;
 
@@ -243,7 +243,7 @@ namespace RTC
 
 		static const Json::StaticString k_transportId("transportId");
 
-		auto jsonTransportId = request->data[k_transportId];
+		auto jsonTransportId = request->internal[k_transportId];
 
 		if (!jsonTransportId.isUInt())
 			MS_THROW_ERROR("Request has not numeric .transportId field");

@@ -167,34 +167,49 @@ void Settings::PrintConfiguration()
 	MS_DEBUG("</configuration>");
 }
 
-void Settings::HandleUpdateRequest(Channel::Request* request)
+void Settings::HandleRequest(Channel::Request* request)
 {
 	MS_TRACE();
 
-	auto jsonLogLevel = request->data["logLevel"];
-
-	try
+	switch (request->methodId)
 	{
-		// Update logLevel if requested.
-		if (jsonLogLevel.isString())
+		case Channel::Request::MethodId::worker_updateSettings:
 		{
-			std::string logLevel = jsonLogLevel.asString();
+			static const Json::StaticString k_logLevel("logLevel");
 
-			Settings::SetLogLevel(logLevel);
+			Json::Value jsonLogLevel = request->data[k_logLevel];
+
+			try
+			{
+				// Update logLevel if requested.
+				if (jsonLogLevel.isString())
+				{
+					std::string logLevel = jsonLogLevel.asString();
+
+					Settings::SetLogLevel(logLevel);
+				}
+			}
+			catch (const MediaSoupError &error)
+			{
+				request->Reject(500, error.what());
+				return;
+			}
+
+			MS_DEBUG("updated settings:");
+
+			// Print configuration.
+			Settings::PrintConfiguration();
+
+			request->Accept();
+
+			break;
+		}
+
+		default:
+		{
+			MS_ABORT("unknown method");
 		}
 	}
-	catch (const MediaSoupError &error)
-	{
-		request->Reject(500, error.what());
-		return;
-	}
-
-	MS_DEBUG("updated settings:");
-
-	// Print configuration.
-	Settings::PrintConfiguration();
-
-	request->Accept();
 }
 
 void Settings::SetDefaultRtcListenIP(int requested_family)

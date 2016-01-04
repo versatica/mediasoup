@@ -87,7 +87,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roo
 
 	static const Json::StaticString k_roomId("roomId");
 
-	auto jsonRoomId = request->data[k_roomId];
+	auto jsonRoomId = request->internal[k_roomId];
 
 	if (!jsonRoomId.isUInt())
 		MS_THROW_ERROR("Request has not numeric .roomId field");
@@ -163,7 +163,8 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 		case Channel::Request::MethodId::worker_updateSettings:
 		{
-			Settings::HandleUpdateRequest(request);
+			Settings::HandleRequest(request);
+
 			break;
 		}
 
@@ -217,7 +218,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::peer_createAssociatedTransport:
 		case Channel::Request::MethodId::transport_close:
 		case Channel::Request::MethodId::transport_dump:
-		case Channel::Request::MethodId::transport_start:
+		case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 		{
 			RTC::Room* room;
 

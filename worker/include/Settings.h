@@ -28,7 +28,7 @@ public:
 public:
 	static void SetConfiguration(int argc, char* argv[]);
 	static void PrintConfiguration();
-	static void HandleUpdateRequest(Channel::Request* request);
+	static void HandleRequest(Channel::Request* request);
 
 private:
 	static void SetDefaultRtcListenIP(int requested_family);

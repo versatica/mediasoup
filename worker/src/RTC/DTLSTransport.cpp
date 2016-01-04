@@ -954,6 +954,8 @@ namespace RTC
 		}
 		else
 		{
+			// TODO: this is not an error?
+
 			MS_DEBUG("SRTP profile not negotiated");
 		}
 	}

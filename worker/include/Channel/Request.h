@@ -28,7 +28,7 @@ namespace Channel
 			peer_createAssociatedTransport,
 			transport_close,
 			transport_dump,
-			transport_start
+			transport_setRemoteDtlsParameters
 		};
 
 	private:
@@ -49,6 +49,7 @@ namespace Channel
 		unsigned int id;
 		std::string method;
 		MethodId methodId;
+		Json::Value internal;
 		Json::Value data;
 		// Others.
 		bool replied = false;

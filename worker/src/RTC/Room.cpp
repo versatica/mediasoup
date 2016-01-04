@@ -136,7 +136,7 @@ namespace RTC
 			case Channel::Request::MethodId::peer_createAssociatedTransport:
 			case Channel::Request::MethodId::transport_close:
 			case Channel::Request::MethodId::transport_dump:
-			case Channel::Request::MethodId::transport_start:
+			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 			{
 				RTC::Peer* peer;
 
@@ -176,7 +176,7 @@ namespace RTC
 
 		static const Json::StaticString k_peerId("peerId");
 
-		auto jsonPeerId = request->data[k_peerId];
+		auto jsonPeerId = request->internal[k_peerId];
 
 		if (!jsonPeerId.isString())
 			MS_THROW_ERROR("Request has not string .peerId field");

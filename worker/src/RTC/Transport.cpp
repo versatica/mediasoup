@@ -294,7 +294,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::transport_start:
+			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 			{
 				static const Json::StaticString k_role("role");
 				static const Json::StaticString v_auto("auto");
@@ -308,14 +308,14 @@ namespace RTC
 				RTC::DTLSTransport::Role remoteRole = RTC::DTLSTransport::Role::AUTO;  // Default value if missing.
 
 				// Ensure this method is not called twice.
-				if (this->started)
+				if (this->remoteDtlsParametersGiven)
 				{
 					MS_ERROR("method already called");
 
 					request->Reject(500, "method already called");
 					return;
 				}
-				this->started = true;
+				this->remoteDtlsParametersGiven = true;
 
 				// Validate request data.
 

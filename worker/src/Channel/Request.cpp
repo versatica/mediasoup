@@ -14,19 +14,19 @@ namespace Channel
 
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
-		{ "worker.dump",                    Request::MethodId::worker_dump                    },
-		{ "worker.updateSettings",          Request::MethodId::worker_updateSettings          },
-		{ "worker.createRoom",              Request::MethodId::worker_createRoom              },
-		{ "room.close",                     Request::MethodId::room_close                     },
-		{ "room.dump",                      Request::MethodId::room_dump                      },
-		{ "room.createPeer",                Request::MethodId::room_createPeer                },
-		{ "peer.close",                     Request::MethodId::peer_close                     },
-		{ "peer.dump",                      Request::MethodId::peer_dump                      },
-		{ "peer.createTransport",           Request::MethodId::peer_createTransport           },
-		{ "peer.createAssociatedTransport", Request::MethodId::peer_createAssociatedTransport },
-		{ "transport.close",                Request::MethodId::transport_close                },
-		{ "transport.dump",                 Request::MethodId::transport_dump                 },
-		{ "transport.start",                Request::MethodId::transport_start                }
+		{ "worker.dump",                       Request::MethodId::worker_dump                       },
+		{ "worker.updateSettings",             Request::MethodId::worker_updateSettings             },
+		{ "worker.createRoom",                 Request::MethodId::worker_createRoom                 },
+		{ "room.close",                        Request::MethodId::room_close                        },
+		{ "room.dump",                         Request::MethodId::room_dump                         },
+		{ "room.createPeer",                   Request::MethodId::room_createPeer                   },
+		{ "peer.close",                        Request::MethodId::peer_close                        },
+		{ "peer.dump",                         Request::MethodId::peer_dump                         },
+		{ "peer.createTransport",              Request::MethodId::peer_createTransport              },
+		{ "peer.createAssociatedTransport",    Request::MethodId::peer_createAssociatedTransport    },
+		{ "transport.close",                   Request::MethodId::transport_close                   },
+		{ "transport.dump",                    Request::MethodId::transport_dump                    },
+		{ "transport.setRemoteDtlsParameters", Request::MethodId::transport_setRemoteDtlsParameters }
 	};
 
 	/* Instance methods. */
@@ -38,6 +38,7 @@ namespace Channel
 
 		static const Json::StaticString k_id("id");
 		static const Json::StaticString k_method("method");
+		static const Json::StaticString k_internal("internal");
 		static const Json::StaticString k_data("data");
 
 		if (json[k_id].isUInt())
@@ -62,6 +63,11 @@ namespace Channel
 
 			MS_THROW_ERROR("unknown .method '%s'", this->method.c_str());
 		}
+
+		if (json[k_internal].isObject())
+			this->internal = json[k_internal];
+		else
+			this->internal = Json::Value(Json::objectValue);
 
 		if (json[k_data].isObject())
 			this->data = json[k_data];
