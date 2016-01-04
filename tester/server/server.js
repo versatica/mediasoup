@@ -209,13 +209,17 @@ app.put('/test-transport', function(req)
 				// NOTE: Don't do twice for the same transport!
 				if (transports[i])
 				{
+					// NOTE: Firefox uses global fingerprint attribute
+					let remoteFingerprint = om.fingerprint || offer.fingerprint;
+
+					// Create a promise
 					let promise = transport.setRemoteDtlsParameters(
 						{
-							role        : 'client',  // SDP offer MUST always have a=setup:actpass
+							role        : 'auto',  // SDP offer MUST always have a=setup:actpass so we can choose whatever we want
 							fingerprint :
 							{
-								algorithm : om.fingerprint.type,
-								value     : mediasoup.extra.dtlsFingerprintFromSDP(om.fingerprint.hash)
+								algorithm : remoteFingerprint.type,
+								value     : mediasoup.extra.dtlsFingerprintFromSDP(remoteFingerprint.hash)
 							}
 						})
 						.then(() =>
@@ -245,6 +249,7 @@ app.put('/test-transport', function(req)
 		.catch((error) =>
 		{
 			debugerror('/test-transport failed: %s', error);
+			debugerror('stack:\n' + error.stack);
 
 			req.reply(500, error.message);
 		});
