@@ -19,7 +19,8 @@ tap.test('room.Peer() with `peerId` must succeed', { timeout: 1000 }, (t) =>
 		t.end();
 	});
 
-	setTimeout(() => peer.close(), 100);
+	// Wait a bit so Channel requests receive response
+	setTimeout(() => peer.close(), 50);
 });
 
 tap.test('room.Peer() without `peerId` must fail', { timeout: 1000 }, (t) =>
@@ -34,7 +35,9 @@ tap.test('room.Peer() without `peerId` must fail', { timeout: 1000 }, (t) =>
 	{
 		room.Peer();
 	}, 'room.Peer() should throw error');
-	t.end();
+
+	// Wait a bit so Channel requests receive response
+	setTimeout(() => t.end(), 50);
 });
 
 tap.test('room.Peer() with same `peerId` must fail', { timeout: 1000 }, (t) =>
@@ -51,7 +54,9 @@ tap.test('room.Peer() with same `peerId` must fail', { timeout: 1000 }, (t) =>
 	{
 		room.Peer('alice');
 	}, 'room.Peer() should throw error');
-	t.end();
+
+	// Wait a bit so Channel requests receive response
+	setTimeout(() => t.end(), 50);
 });
 
 tap.test('room.Peer() with same `peerId` must succeed if previous peer was closed before', { timeout: 1000 }, (t) =>
@@ -82,7 +87,8 @@ tap.test('room.Peer() with same `peerId` must succeed if previous peer was close
 		t.end();
 	});
 
-	setTimeout(() => peer2.close(), 100);
+	// Wait a bit so Channel requests receive response
+	setTimeout(() => peer2.close(), 50);
 });
 
 tap.test('room.dump() must succeed', { timeout: 1000 }, (t) =>

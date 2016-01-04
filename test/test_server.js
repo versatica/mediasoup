@@ -66,7 +66,8 @@ tap.test('server.updateSettings() in a closed server must fail', { timeout: 1000
 			});
 	});
 
-	server.close();
+	// Wait a bit for workers to be created
+	setTimeout(() => server.close(), 100);
 });
 
 tap.test('server.Room() must succeed', { _timeout: 1000 }, (t) =>
@@ -83,7 +84,8 @@ tap.test('server.Room() must succeed', { _timeout: 1000 }, (t) =>
 		t.end();
 	});
 
-	setTimeout(() => room.close(), 100);
+	// Wait a bit so Channel requests receive response
+	setTimeout(() => room.close(), 50);
 });
 
 tap.test('server.Room() in a closed server must fail', { timeout: 1000 }, (t) =>
@@ -101,7 +103,8 @@ tap.test('server.Room() in a closed server must fail', { timeout: 1000 }, (t) =>
 		t.end();
 	});
 
-	server.close();
+	// Wait a bit for workers to be created
+	setTimeout(() => server.close(), 100);
 });
 
 tap.test('server.dump() must succeed', { timeout: 1000 }, (t) =>
