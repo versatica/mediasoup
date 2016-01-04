@@ -240,7 +240,11 @@ namespace RTC
 		static const Json::StaticString k_iceLocalCandidates("iceLocalCandidates");
 		static const Json::StaticString v_RTP("RTP");
 		static const Json::StaticString v_RTCP("RTCP");
-		static const Json::StaticString k_dtlsLocalFingerprints("dtlsLocalFingerprints");
+		static const Json::StaticString k_dtlsLocalParameters("dtlsLocalParameters");
+		static const Json::StaticString k_fingerprints("fingerprints");
+		static const Json::StaticString k_role("role");
+		static const Json::StaticString v_client("client");
+		static const Json::StaticString v_server("server");
 
 		Json::Value data;
 
@@ -261,8 +265,21 @@ namespace RTC
 			data[k_iceLocalCandidates].append(iceCandidate.toJson());
 		}
 
-		// Add `dtlsLocalFingerprints`.
-		data[k_dtlsLocalFingerprints] = RTC::DTLSTransport::GetLocalFingerprints();
+		// Add `dtlsLocalParameters.fingerprints`.
+		data[k_dtlsLocalParameters][k_fingerprints] = RTC::DTLSTransport::GetLocalFingerprints();
+
+		// Add `dtlsLocalParameters.role`.
+		switch (this->dtlsLocalRole)
+		{
+			case RTC::DTLSTransport::Role::CLIENT:
+				data[k_dtlsLocalParameters][k_role] = v_client;
+				break;
+			case RTC::DTLSTransport::Role::SERVER:
+				data[k_dtlsLocalParameters][k_role] = v_server;
+				break;
+			default:
+				MS_ABORT("invalid local DTLS role");
+		}
 
 		return data;
 	}
@@ -360,6 +377,8 @@ namespace RTC
 					case RTC::DTLSTransport::Role::SERVER:
 						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
 						break;
+					// If the peer has "auto" role let us become "client" so DTLS
+					// happens faster.
 					case RTC::DTLSTransport::Role::AUTO:
 						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
 						break;
@@ -370,19 +389,18 @@ namespace RTC
 						return;
 				}
 
-				// TODO: Provide the local DTLS role in the response so the JS can expose it.
 				Json::Value data;
 
 				switch (this->dtlsLocalRole)
 				{
 					case RTC::DTLSTransport::Role::CLIENT:
-						data["localDtlsRole"] = "client";
+						data[k_role] = v_client;
 						break;
 					case RTC::DTLSTransport::Role::SERVER:
-						data["localDtlsRole"] = "server";
+						data[k_role] = v_server;
 						break;
 					default:
-						MS_ABORT("KAKAKAKAKAKA");  // TODO jeje
+						MS_ABORT("invalid local DTLS role");
 				}
 
 				request->Accept(data);
@@ -423,9 +441,7 @@ namespace RTC
 		switch (this->dtlsLocalRole)
 		{
 			// If 'client' then wait for the first Binding with USE-CANDIDATE.
-			// If 'auto' then behave as 'client' since we are always ICE controlled.
 			case RTC::DTLSTransport::Role::CLIENT:
-			case RTC::DTLSTransport::Role::AUTO:
 				if (this->icePairedWithUseCandidate)
 				{
 					MS_DEBUG("running DTLS transport in 'client' role");
@@ -444,8 +460,11 @@ namespace RTC
 				}
 				break;
 
+			case RTC::DTLSTransport::Role::AUTO:
+				MS_ABORT("local DTLS role cannot be 'auto'");
+
 			case RTC::DTLSTransport::Role::NONE:
-				MS_ABORT("local DTLS role cannot be none");
+				MS_ABORT("local DTLS role not set");
 		}
 	}
 

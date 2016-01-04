@@ -147,7 +147,7 @@ app.put('/test-transport', function(req)
 				am.fingerprint =
 				{
 					type : 'sha-256',
-					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalFingerprints['sha-256'])
+					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalParameters.fingerprints['sha-256'])
 				};
 				// SDP offer is always 'a=setup:actpass'
 				am.setup = 'passive';
@@ -163,7 +163,7 @@ app.put('/test-transport', function(req)
 				// Update the transport with the remote DTLS parameters
 				setTimeout(() =>
 				{
-					transport.start(
+					transport.setRemoteDtlsParameters(
 						{
 							role        : 'client',
 							fingerprint :
