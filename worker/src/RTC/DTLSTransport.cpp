@@ -25,13 +25,13 @@
 	do  \
 	{  \
 		if (ERR_peek_error() == 0)  \
-			MS_ERROR("OpenSSL error | " desc);  \
+			MS_ERROR("OpenSSL error [desc:'%s']", desc);  \
 		else  \
 		{  \
 			unsigned long err;  \
 			while ((err = ERR_get_error()) != 0)  \
 			{  \
-				MS_ERROR("OpenSSL error | " desc ": %s", ERR_error_string(err, nullptr));  \
+				MS_ERROR("OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr));  \
 			}  \
 			ERR_clear_error();  \
 		}  \
@@ -45,7 +45,7 @@ int on_ssl_certificate_verify(int preverify_ok, X509_STORE_CTX* ctx)
 {
 	MS_TRACE();
 
-	// Always valid.
+	// Always valid since DTLS certificates are self-signed.
 	return 1;
 }
 
@@ -209,7 +209,7 @@ namespace RTC
 		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)MS_APP_NAME, -1, -1, 0);
 		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)MS_APP_NAME, -1, -1, 0);
 
-		// It is self signed so set the issuer name to be the same as the subject.
+		// It is self-signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DTLSTransport::certificate, cert_name);
 		if (ret == 0)
 		{
@@ -542,12 +542,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->checkingStatus)
-		{
-			this->doClose = true;
-			return;
-		}
-
 		if (this->running)
 		{
 			// Send close alert to the peer.
@@ -555,58 +549,20 @@ namespace RTC
 			SendPendingOutgoingDTLSData();
 		}
 
+		// Close the DTLS timer.
 		this->timer->Close();
 
+		// Notify the listener.
+		this->listener->onDTLSClosed(this);
+
 		delete this;
-	}
-
-	void DTLSTransport::Reset()
-	{
-		MS_TRACE();
-
-		int ret;
-
-		this->doReset = false;
-
-		if (!this->running)
-			return;
-
-		if (this->checkingStatus)
-		{
-			this->doReset = true;
-			return;
-		}
-
-		MS_DEBUG("resetting DTLS status");
-
-		// Stop the DTLS timer.
-		this->timer->Stop();
-
-		// Send close alert to the peer.
-		SSL_shutdown(this->ssl);
-		SendPendingOutgoingDTLSData();
-
-		this->localRole = Role::NONE;
-		this->running = false;
-		this->handshakeDone = false;
-		this->handshakeDoneNow = false;
-		this->connected = false;
-		this->doClose = false;
-		this->checkingStatus = false;
-
-		// Reset SSL status.
-		// NOTE: For this to properly work, SSL_shutdown() must be called before.
-		// NOTE: This may fail if not enough DTLS handshake data has been received.
-		ret = SSL_clear(this->ssl);
-		if (ret == 0)
-			LOG_OPENSSL_ERROR("SSL_clear() failed");
 	}
 
 	void DTLSTransport::Dump()
 	{
 		MS_TRACE();
 
-		MS_DEBUG("[role: %s | running: %s | handshake done: %s | connected: %s]",
+		MS_DEBUG("[role:%s, running:%s, handshake done:%s, connected:%s]",
 			(this->localRole == Role::SERVER ? "server" : (this->localRole == Role::CLIENT ? "client" : "none")),
 			this->running ? "yes" : "no",
 			this->handshakeDone ? "yes" : "no",
@@ -623,7 +579,7 @@ namespace RTC
 
 		if (localRole == previousLocalRole)
 		{
-			MS_DEBUG("same local DTLS role provided, doing nothing");
+			MS_ERROR("same local DTLS role provided, doing nothing");
 
 			return;
 		}
@@ -631,7 +587,7 @@ namespace RTC
 		// If the previous local DTLS role was 'client' or 'server' do reset.
 		if (previousLocalRole == Role::CLIENT || previousLocalRole == Role::SERVER)
 		{
-			MS_DEBUG("resetting due to local DTLS role change");
+			MS_DEBUG("resetting DTLS due to local role change");
 
 			Reset();
 		}
@@ -641,15 +597,22 @@ namespace RTC
 		// Set running flag.
 		this->running = true;
 
+		// Notify the listener.
+		this->listener->onDTLSConnecting(this);
+
 		switch (this->localRole)
 		{
 			case Role::CLIENT:
+				MS_DEBUG("running [role:client]");
+
 				SSL_set_connect_state(this->ssl);
 				SSL_do_handshake(this->ssl);
 				SendPendingOutgoingDTLSData();
 				SetTimeout();
 				break;
 			case Role::SERVER:
+				MS_DEBUG("running [role:server]");
+
 				SSL_set_accept_state(this->ssl);
 				SSL_do_handshake(this->ssl);
 				break;
@@ -707,17 +670,21 @@ namespace RTC
 			return;
 
 		// Set/update the DTLS timeout.
-		SetTimeout();
+		if (!SetTimeout())
+			return;
 
 		// Application data received. Notify to the listener.
 		if (read > 0)
 		{
-			if (!this->connected)
+			// It is allowed to receive DTLS data even before validating remote fingerprint.
+			if (!this->handshakeDone)
 			{
-				MS_DEBUG("ignoring application data received while DTLS not fully connected");
+				MS_DEBUG("ignoring application data received while DTLS handshake not done");
+
 				return;
 			}
 
+			// Notify the listener.
 			this->listener->onDTLSApplicationData(this, (MS_BYTE*)DTLSTransport::sslReadBuffer, (size_t)read);
 		}
 	}
@@ -726,15 +693,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// We cannot send data to the peer if its remote fingerprint is not validated.
 		if (!this->connected)
 		{
 			MS_ERROR("cannot send application data while DTLS is not fully connected");
+
 			return;
 		}
 
 		if (len == 0)
 		{
 			MS_DEBUG("ignoring 0 length data");
+
 			return;
 		}
 
@@ -744,15 +714,50 @@ namespace RTC
 		if (written < 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_write() failed");
+
 			CheckStatus(written);
 		}
 		else if (written != (int)len)
 		{
-			MS_ERROR("OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
+			MS_WARN("OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
 		}
 
 		// Send data.
 		SendPendingOutgoingDTLSData();
+	}
+
+	void DTLSTransport::Reset()
+	{
+		MS_TRACE();
+
+		int ret;
+
+		if (!this->running)
+			return;
+
+		MS_DEBUG("resetting DTLS transport");
+
+		// Stop the DTLS timer.
+		this->timer->Stop();
+
+		// We need to reset the SSL instance so we need to "shutdown" it, but we don't
+		// want to send a Close Alert to the peer, so just don't call to
+		// SendPendingOutgoingDTLSData().
+		SSL_shutdown(this->ssl);
+
+		this->localRole = Role::NONE;
+		this->running = false;
+		this->handshakeDone = false;
+		this->handshakeDoneNow = false;
+		this->connected = false;
+
+		// Reset SSL status.
+		// NOTE: For this to properly work, SSL_shutdown() must be called before.
+		// NOTE: This may fail if not enough DTLS handshake data has been received,
+		// but we don't care so just clear the error queue.
+		ret = SSL_clear(this->ssl);
+		if (ret == 0)
+			ERR_clear_error();
 	}
 
 	inline
@@ -761,9 +766,6 @@ namespace RTC
 		MS_TRACE();
 
 		int err;
-
-		// Set a flag to avoid certain methods to be called while in this method.
-		this->checkingStatus = true;
 
 		err = SSL_get_error(this->ssl, return_code);
 		switch (err)
@@ -819,35 +821,23 @@ namespace RTC
 
 			if (was_connected)
 			{
-				MS_DEBUG("DTLS connection disconnected");
+				MS_DEBUG("DTLS disconnected");
+
+				Reset();
 
 				// Notify to the listener.
-				this->listener->onDTLSDisconnected(this);
+				this->listener->onDTLSFailed(this);
 			}
 			else
 			{
 				MS_DEBUG("DTLS connection failed");
 
+				Reset();
+
 				// Notify to the listener.
 				this->listener->onDTLSFailed(this);
 			}
 
-			// Set Reset flag.
-			this->doReset = true;
-		}
-
-		// Unset the safe flag.
-		this->checkingStatus = false;
-
-		// Check reset/close flags (note that they may have been set in user callbacks).
-		if (this->doClose)
-		{
-			Close();
-			return false;
-		}
-		else if (this->doReset)
-		{
-			Reset();
 			return false;
 		}
 
@@ -869,7 +859,7 @@ namespace RTC
 
 		MS_DEBUG("%ld bytes of DTLS data ready to sent to the peer", read);
 
-		// NOTE: The caller MUST NOT call Reset() or Close() in this callback.
+		// Notify the listener.
 		this->listener->onOutgoingDTLSData(this, (MS_BYTE*)data, (size_t)read);
 
 		// Clear the BIO buffer.
@@ -878,7 +868,7 @@ namespace RTC
 	}
 
 	inline
-	void DTLSTransport::SetTimeout()
+	bool DTLSTransport::SetTimeout()
 	{
 		MS_TRACE();
 
@@ -890,23 +880,32 @@ namespace RTC
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
 		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtls_timeout);
 		if (ret == 0)
-			return;
+			return true;
 
 		timeout_ms = (dtls_timeout.tv_sec * (MS_8BYTES)1000) + (dtls_timeout.tv_usec / 1000);
 		if (timeout_ms == 0)
 		{
-			return;
+			return true;
 		}
 		else if (timeout_ms < 30000)
 		{
 			MS_DEBUG("DTLS timer set in %llu ms", (unsigned long long)timeout_ms);
+
 			this->timer->Start(timeout_ms);
+
+			return true;
 		}
 		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
 		else
 		{
-			MS_DEBUG("DTLS timeout too high (%llu ms), resetting DTLS status", (unsigned long long)timeout_ms);
+			MS_DEBUG("DTLS timeout too high (%llu ms), resetting DLTS", (unsigned long long)timeout_ms);
+
 			Reset();
+
+			// Notify to the listener.
+			this->listener->onDTLSFailed(this);
+
+			return false;
 		}
 	}
 
@@ -929,19 +928,15 @@ namespace RTC
 		// Validate the remote fingerprint.
 		if (!CheckRemoteFingerprint())
 		{
+			Reset();
+
 			// Notify to the listener.
 			this->listener->onDTLSFailed(this);
-
-			// Reset DTLS.
-			Reset();
 
 			return;
 		}
 
 		this->connected = true;
-
-		// Notify the listener.
-		this->listener->onDTLSConnected(this);
 
 		// Get the negotiated SRTP profile.
 		RTC::SRTPSession::SRTPProfile srtp_profile;
@@ -954,9 +949,14 @@ namespace RTC
 		}
 		else
 		{
-			// TODO: this is not an error?
+			// NOTE: We assume that "use_srtp" DTLS extension is required even if
+			// there is no audio/video.
+			MS_WARN("SRTP profile not negotiated");
 
-			MS_DEBUG("SRTP profile not negotiated");
+			Reset();
+
+			// Notify to the listener.
+			this->listener->onDTLSFailed(this);
 		}
 	}
 
@@ -977,7 +977,8 @@ namespace RTC
 		certificate = SSL_get_peer_certificate(this->ssl);
 		if (!certificate)
 		{
-			MS_ERROR("no certificate was provided by the peer");
+			MS_WARN("no certificate was provided by the peer");
+
 			return false;
 		}
 
@@ -1020,45 +1021,14 @@ namespace RTC
 
 		if (this->remoteFingerprint.value.compare(hex_fingerprint) != 0)
 		{
-			MS_DEBUG("fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.value.c_str());
+			MS_WARN("fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.value.c_str());
 
 			return false;
 		}
 
-		// TODO: remove
 		MS_DEBUG("valid remote fingerprint");
 
 		return true;
-	}
-
-	inline
-	RTC::SRTPSession::SRTPProfile DTLSTransport::GetNegotiatedSRTPProfile()
-	{
-		MS_TRACE();
-
-		RTC::SRTPSession::SRTPProfile negotiated_srtp_profile = RTC::SRTPSession::SRTPProfile::NONE;
-
-		// Ensure that the SRTP profile has been negotiated.
-		SRTP_PROTECTION_PROFILE* ssl_srtp_profile = SSL_get_selected_srtp_profile(this->ssl);
-		if (!ssl_srtp_profile)
-		{
-			return negotiated_srtp_profile;
-		}
-
-		// Get the negotiated SRTP profile.
-		for (auto it = DTLSTransport::srtpProfiles.begin(); it != DTLSTransport::srtpProfiles.end(); ++it)
-		{
-			SrtpProfileMapEntry* profile_entry = &(*it);
-
-			if (std::strcmp(ssl_srtp_profile->name, profile_entry->name) == 0)
-			{
-				MS_DEBUG("chosen SRTP profile: %s", profile_entry->name);
-				negotiated_srtp_profile = profile_entry->profile;
-			}
-		}
-		MS_ASSERT(negotiated_srtp_profile != RTC::SRTPSession::SRTPProfile::NONE, "chosen SRTP profile is not an available one");
-
-		return negotiated_srtp_profile;
 	}
 
 	inline
@@ -1105,7 +1075,39 @@ namespace RTC
 		std::memcpy(srtp_remote_master_key + MS_SRTP_MASTER_KEY_LENGTH, srtp_remote_salt, MS_SRTP_MASTER_SALT_LENGTH);
 
 		// Notify the listener with the SRTP key material.
-		this->listener->onSRTPKeyMaterial(this, srtp_profile, srtp_local_master_key, MS_SRTP_MASTER_LENGTH, srtp_remote_master_key, MS_SRTP_MASTER_LENGTH);
+		this->listener->onDTLSConnected(this, srtp_profile, srtp_local_master_key, MS_SRTP_MASTER_LENGTH, srtp_remote_master_key, MS_SRTP_MASTER_LENGTH);
+	}
+
+	inline
+	RTC::SRTPSession::SRTPProfile DTLSTransport::GetNegotiatedSRTPProfile()
+	{
+		MS_TRACE();
+
+		RTC::SRTPSession::SRTPProfile negotiated_srtp_profile = RTC::SRTPSession::SRTPProfile::NONE;
+
+		// Ensure that the SRTP profile has been negotiated.
+		SRTP_PROTECTION_PROFILE* ssl_srtp_profile = SSL_get_selected_srtp_profile(this->ssl);
+		if (!ssl_srtp_profile)
+		{
+			return negotiated_srtp_profile;
+		}
+
+		// Get the negotiated SRTP profile.
+		for (auto it = DTLSTransport::srtpProfiles.begin(); it != DTLSTransport::srtpProfiles.end(); ++it)
+		{
+			SrtpProfileMapEntry* profile_entry = &(*it);
+
+			if (std::strcmp(ssl_srtp_profile->name, profile_entry->name) == 0)
+			{
+				MS_DEBUG("chosen SRTP profile: %s", profile_entry->name);
+
+				negotiated_srtp_profile = profile_entry->profile;
+			}
+		}
+
+		MS_ASSERT(negotiated_srtp_profile != RTC::SRTPSession::SRTPProfile::NONE, "chosen SRTP profile is not an available one");
+
+		return negotiated_srtp_profile;
 	}
 
 	inline
@@ -1116,13 +1118,13 @@ namespace RTC
 		int w = where & -SSL_ST_MASK;
 		const char* role;
 
-		if (w & SSL_ST_CONNECT)      role = "client";
-		else if (w & SSL_ST_ACCEPT)  role = "server";
-		else                         role = "undefined";
+		if (w & SSL_ST_CONNECT)     role = "client";
+		else if (w & SSL_ST_ACCEPT) role = "server";
+		else                        role = "undefined";
 
 		if (where & SSL_CB_LOOP)
 		{
-			MS_DEBUG("role: %s | action: %s", role, SSL_state_string_long(this->ssl));
+			MS_DEBUG("[role:%s, action:'%s']", role, SSL_state_string_long(this->ssl));
 		}
 		else if (where & SSL_CB_ALERT)
 		{
@@ -1145,15 +1147,14 @@ namespace RTC
 		else if (where & SSL_CB_EXIT)
 		{
 			if (ret == 0)
-				MS_DEBUG("role: %s | failed in: %s", role, SSL_state_string_long(this->ssl));
+				MS_DEBUG("[role:%s, failed:'%s']", role, SSL_state_string_long(this->ssl));
 			else if (ret < 0)
-				MS_DEBUG("role: %s | waiting for: %s", role, SSL_state_string_long(this->ssl));
+				MS_DEBUG("role: %s, waiting:'%s']", role, SSL_state_string_long(this->ssl));
 		}
 		else if (where & SSL_CB_HANDSHAKE_START)
 		{
 			MS_DEBUG("DTLS handshake start");
 		}
-
 		else if (where & SSL_CB_HANDSHAKE_DONE)
 		{
 			MS_DEBUG("DTLS handshake done");
@@ -1172,7 +1173,10 @@ namespace RTC
 
 		DTLSv1_handle_timeout(this->ssl);
 
+		// If required, send DTLS data.
 		SendPendingOutgoingDTLSData();
+
+		// Set the DTLS timer again.
 		SetTimeout();
 	}
 }

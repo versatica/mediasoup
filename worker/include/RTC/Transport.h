@@ -39,6 +39,16 @@ namespace RTC
 		};
 
 	private:
+		enum class DtlsTransportState
+		{
+			NEW = 1,
+			CONNECTING,
+			CONNECTED,
+			CLOSED,
+			FAILED
+		};
+
+	private:
 		static size_t maxSources;
 
 	public:
@@ -53,10 +63,12 @@ namespace RTC
 		Transport* CreateAssociatedTransport(unsigned int transportId);
 
 	private:
+		void Terminate();
+		bool IsAlive();
 		int SetSendingSource(RTC::TransportSource* source);
 		int IsValidSource(RTC::TransportSource* source);
 		bool RemoveSource(RTC::TransportSource* source);
-		void RunDTLSTransportIfReady();
+		void MayRunDTLSTransport();
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -90,16 +102,18 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::DTLSTransport::Listener. */
 	public:
+		virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) override;
+		virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) override;
+		virtual void onDTLSClosed(DTLSTransport* dtlsTransport) override;
+		virtual void onDTLSFailed(DTLSTransport* dtlsTransport) override;
 		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
-		virtual void onDTLSConnected(RTC::DTLSTransport* dtlsTransport) override;
-		virtual void onDTLSDisconnected(RTC::DTLSTransport* dtlsTransport) override;
-		virtual void onDTLSFailed(RTC::DTLSTransport* dtlsTransport) override;
-		virtual void onSRTPKeyMaterial(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) override;
 		virtual void onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
 
 	public:
 		// Passed by argument.
 		unsigned int transportId;
+
+	protected:
 		// Others.
 		bool hasIPv4udp = false;
 		bool hasIPv6udp = false;
@@ -124,11 +138,24 @@ namespace RTC
 		bool icePaired = false;
 		bool icePairedWithUseCandidate = false;
 		// Others (DTLS).
+		DtlsTransportState dtlsState = DtlsTransportState::NEW;
 		bool remoteDtlsParametersGiven = false;
-		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::SERVER;
+		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::AUTO;
 	};
 
 	/* Inline methods. */
+
+	inline
+	bool Transport::IsAlive()
+	{
+		if (this->dtlsState == DtlsTransportState::CLOSED ||
+			  this->dtlsState == DtlsTransportState::FAILED)
+		{
+			return false;
+		}
+
+		return true;
+	}
 
 	inline
 	std::string& Transport::GetIceUsernameFragment()

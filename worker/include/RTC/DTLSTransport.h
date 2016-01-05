@@ -55,15 +55,26 @@ namespace RTC
 		class Listener
 		{
 		public:
-			// NOTE: The caller MUST NOT call Reset() or Close() during the
-			// onOutgoingDTLSData() callback.
-			virtual void onOutgoingDTLSData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
-			// NOTE: The caller MUST NOT call any method during the onDTLSConnected,
-			// onDTLSDisconnected or onDTLSFailed callbacks.
-			virtual void onDTLSConnected(DTLSTransport* dtlsTransport) = 0;
-			virtual void onDTLSDisconnected(DTLSTransport* dtlsTransport) = 0;
+			// DTLS is in the process of negotiating a secure connection. Incoming
+			// media can flow through.
+			// NOTE: The caller MUST NOT call any method during this callback.
+			virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) = 0;
+			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
+			// and remote fingerprint verification). Outgoing media can now flow through.
+			// NOTE: TODO
+			virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			// The DTLS connection has been closed intentionally via Close().
+			// NOTE: The caller MUST NOT call any method during this callback.
+			virtual void onDTLSClosed(DTLSTransport* dtlsTransport) = 0;
+			// The DTLS connection has been closed as the result of an error (such as a
+			// DTLS alert or a failure to validate the remote fingerprint).
+			// NOTE: The caller MUST NOT call Close() during this callback.
 			virtual void onDTLSFailed(DTLSTransport* dtlsTransport) = 0;
-			virtual void onSRTPKeyMaterial(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			// Need to send DTLS data to the peer.
+			// NOTE: The caller MUST NOT call Close() during this callback.
+			virtual void onOutgoingDTLSData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
+			// DTLS application data received.
+			// NOTE: The caller MUST NOT call Close() during this callback.
 			virtual void onDTLSApplicationData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
 		};
 
@@ -71,7 +82,7 @@ namespace RTC
 		static void ClassInit();
 		static void ClassDestroy();
 		static Json::Value& GetLocalFingerprints();
-		static Role GetRole(std::string role);
+		static Role StringToRole(std::string role);
 		static FingerprintAlgorithm GetFingerprintAlgorithm(std::string fingerprint);
 		static bool IsDTLS(const MS_BYTE* data, size_t len);
 
@@ -96,23 +107,22 @@ namespace RTC
 		virtual ~DTLSTransport();
 
 		void Close();
-		void Reset();
 		void Dump();
 		void Run(Role localRole);
 		void SetRemoteFingerprint(Fingerprint fingerprint);
 		void ProcessDTLSData(const MS_BYTE* data, size_t len);
-		bool IsRunning();
-		bool IsConnected();
+		Role GetLocalRole();
 		void SendApplicationData(const MS_BYTE* data, size_t len);
 
 	private:
+		void Reset();
 		bool CheckStatus(int return_code);
 		void SendPendingOutgoingDTLSData();
-		void SetTimeout();
+		bool SetTimeout();
 		void ProcessHandshake();
 		bool CheckRemoteFingerprint();
-		RTC::SRTPSession::SRTPProfile GetNegotiatedSRTPProfile();
 		void ExtractSRTPKeys(RTC::SRTPSession::SRTPProfile srtp_profile);
+		RTC::SRTPSession::SRTPProfile GetNegotiatedSRTPProfile();
 
 	/* Callbacks fired by OpenSSL events. */
 	public:
@@ -137,9 +147,6 @@ namespace RTC
 		bool handshakeDone = false;
 		bool handshakeDoneNow = false;
 		bool connected = false;
-		bool checkingStatus = false;
-		bool doReset = false;
-		bool doClose = false;
 	};
 
 	/* Inline static methods. */
@@ -151,7 +158,7 @@ namespace RTC
 	}
 
 	inline
-	DTLSTransport::Role DTLSTransport::GetRole(std::string role)
+	DTLSTransport::Role DTLSTransport::StringToRole(std::string role)
 	{
 		auto it = DTLSTransport::string2Role.find(role);
 
@@ -186,15 +193,9 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool DTLSTransport::IsRunning()
+	DTLSTransport::Role DTLSTransport::GetLocalRole()
 	{
-		return this->running;
-	}
-
-	inline
-	bool DTLSTransport::IsConnected()
-	{
-		return this->connected;
+		return this->localRole;
 	}
 }
 

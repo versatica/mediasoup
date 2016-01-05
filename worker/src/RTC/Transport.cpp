@@ -202,24 +202,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->iceServer)
-			this->iceServer->Close();
+		// Close all the servers.
+		Terminate();
 
+		// And also close the DTLSTransport.
 		if (this->dtlsTransport)
+		{
 			this->dtlsTransport->Close();
+			this->dtlsTransport = nullptr;
+		}
 
-		// if (this->srtpRecvSession)
-			// this->srtpRecvSession->Close();
-
-		// if (this->srtpSendSession)
-			// this->srtpSendSession->Close();
-
-		for (auto socket : this->udpSockets)
-			socket->Close();
-
-		for (auto server : this->tcpServers)
-			server->Close();
-
+		// If this was allocated (it did not throw in the constructor) notify the
+		// listener and delete it.
 		if (this->allocated)
 		{
 			// Notify the listener.
@@ -243,8 +237,15 @@ namespace RTC
 		static const Json::StaticString k_dtlsLocalParameters("dtlsLocalParameters");
 		static const Json::StaticString k_fingerprints("fingerprints");
 		static const Json::StaticString k_role("role");
+		static const Json::StaticString v_auto("auto");
 		static const Json::StaticString v_client("client");
 		static const Json::StaticString v_server("server");
+		static const Json::StaticString k_dtlsState("dtlsState");
+		static const Json::StaticString v_new("new");
+		static const Json::StaticString v_connecting("connecting");
+		static const Json::StaticString v_connected("connected");
+		static const Json::StaticString v_closed("closed");
+		static const Json::StaticString v_failed("failed");
 
 		Json::Value data;
 
@@ -271,6 +272,9 @@ namespace RTC
 		// Add `dtlsLocalParameters.role`.
 		switch (this->dtlsLocalRole)
 		{
+			case RTC::DTLSTransport::Role::AUTO:
+				data[k_dtlsLocalParameters][k_role] = v_auto;
+				break;
 			case RTC::DTLSTransport::Role::CLIENT:
 				data[k_dtlsLocalParameters][k_role] = v_client;
 				break;
@@ -279,6 +283,26 @@ namespace RTC
 				break;
 			default:
 				MS_ABORT("invalid local DTLS role");
+		}
+
+		// Add `dtlsState`.
+		switch (this->dtlsState)
+		{
+			case DtlsTransportState::NEW:
+				data[k_dtlsState] = v_new;
+				break;
+			case DtlsTransportState::CONNECTING:
+				data[k_dtlsState] = v_connecting;
+				break;
+			case DtlsTransportState::CONNECTED:
+				data[k_dtlsState] = v_connected;
+				break;
+			case DtlsTransportState::CLOSED:
+				data[k_dtlsState] = v_closed;
+				break;
+			case DtlsTransportState::FAILED:
+				data[k_dtlsState] = v_failed;
+				break;
 		}
 
 		return data;
@@ -324,6 +348,14 @@ namespace RTC
 				RTC::DTLSTransport::Fingerprint remoteFingerprint;
 				RTC::DTLSTransport::Role remoteRole = RTC::DTLSTransport::Role::AUTO;  // Default value if missing.
 
+				if (!IsAlive())
+				{
+					MS_ERROR("Transport not alive");
+
+					request->Reject(500, "Transport not alive");
+					return;
+				}
+
 				// Ensure this method is not called twice.
 				if (this->remoteDtlsParametersGiven)
 				{
@@ -366,7 +398,7 @@ namespace RTC
 				remoteFingerprint.value = request->data[k_fingerprint][k_value].asString();
 
 				if (request->data[k_role].isString())
-					remoteRole = RTC::DTLSTransport::GetRole(request->data[k_role].asString());
+					remoteRole = RTC::DTLSTransport::StringToRole(request->data[k_role].asString());
 
 				// Set local DTLS role.
 				switch (remoteRole)
@@ -377,8 +409,7 @@ namespace RTC
 					case RTC::DTLSTransport::Role::SERVER:
 						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
 						break;
-					// If the peer has "auto" role let us become "client" so DTLS
-					// happens faster.
+					// If the peer has "auto" we become "client" since we are ICE controlled.
 					case RTC::DTLSTransport::Role::AUTO:
 						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
 						break;
@@ -405,11 +436,11 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Pass the remote fingerprint to the DTLS transport.
+				// Pass the remote fingerprint to the DTLS transport-
 				this->dtlsTransport->SetRemoteFingerprint(remoteFingerprint);
 
 				// Run the DTLS transport if ready.
-				RunDTLSTransportIfReady();
+				MayRunDTLSTransport();
 
 				break;
 			}
@@ -421,11 +452,46 @@ namespace RTC
 		}
 	}
 
+	// This closes all the server but not the DTLSTransport.
+	void Transport::Terminate()
+	{
+		MS_TRACE();
+
+		if (this->iceServer)
+		{
+			this->iceServer->Close();
+			this->iceServer = nullptr;
+		}
+
+		// if (this->srtpRecvSession)
+		// {
+		// 	this->srtpRecvSession->Close();
+		// 	this->srtpRecvSession = nullptr;
+		// }
+
+		// if (this->srtpSendSession)
+		// {
+		// 	this->srtpSendSession->Close();
+		// 	this->srtpSendSession = nullptr;
+		// }
+
+		for (auto socket : this->udpSockets)
+			socket->Close();
+		this->udpSockets.clear();
+
+		for (auto server : this->tcpServers)
+			server->Close();
+		this->tcpServers.clear();
+	}
+
 	Transport* Transport::CreateAssociatedTransport(unsigned int transportId)
 	{
 		MS_TRACE();
 
 		static Json::Value nullData(Json::nullValue);
+
+		if (!IsAlive())
+			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a non alive Transport");
 
 		if (this->iceComponent != IceComponent::RTP)
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
@@ -434,12 +500,32 @@ namespace RTC
 	}
 
 	inline
-	void Transport::RunDTLSTransportIfReady()
+	void Transport::MayRunDTLSTransport()
 	{
 		MS_TRACE();
 
+		// Do nothing if we have the same local DTLS role as the DTLS transport.
+		// NOTE: local role in DTLS transport can be NONE, but not ours.
+		if (this->dtlsTransport->GetLocalRole() == this->dtlsLocalRole)
+			return;
+
+		// Check our local DTLS role.
 		switch (this->dtlsLocalRole)
 		{
+			// If still 'auto' then transition to 'server' if ICE is complete (with or
+			// without UseCandidate).
+			case RTC::DTLSTransport::Role::AUTO:
+				if (this->icePaired)
+				{
+					MS_DEBUG("transition from local 'auto' role to 'server' and running DTLS transport");
+
+					this->dtlsLocalRole = RTC::DTLSTransport::Role::SERVER;
+					this->dtlsTransport->Run(RTC::DTLSTransport::Role::SERVER);
+				}
+				break;
+
+			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
+			// received with remote DTLS role 'server'.
 			// If 'client' then wait for the first Binding with USE-CANDIDATE.
 			case RTC::DTLSTransport::Role::CLIENT:
 				if (this->icePairedWithUseCandidate)
@@ -459,9 +545,6 @@ namespace RTC
 					this->dtlsTransport->Run(RTC::DTLSTransport::Role::SERVER);
 				}
 				break;
-
-			case RTC::DTLSTransport::Role::AUTO:
-				MS_ABORT("local DTLS role cannot be 'auto'");
 
 			case RTC::DTLSTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
@@ -498,7 +581,9 @@ namespace RTC
 			return;
 		}
 
-		if (this->dtlsTransport->IsRunning())
+		// Check that DTLS status is 'connecting' or 'connected'.
+		if (this->dtlsState == DtlsTransportState::CONNECTING ||
+		    this->dtlsState == DtlsTransportState::CONNECTED)
 		{
 			MS_DEBUG("DTLS data received, passing it to the DTLS transport");
 
@@ -506,7 +591,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_DEBUG("DTLSTransport is not running, ignoring received DTLS data");
+			MS_DEBUG("DTLSTransport is not connecting or conneted, ignoring received DTLS data");
 
 			return;
 		}
@@ -532,6 +617,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsAlive())
+			return;
+
 		RTC::TransportSource source(socket, remote_addr);
 		onSTUNDataRecv(&source, data, len);
 	}
@@ -539,6 +627,9 @@ namespace RTC
 	void Transport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
+
+		if (!IsAlive())
+			return;
 
 		RTC::TransportSource source(socket, remote_addr);
 		onDTLSDataRecv(&source, data, len);
@@ -548,6 +639,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsAlive())
+			return;
+
 		RTC::TransportSource source(socket, remote_addr);
 		onRTPDataRecv(&source, data, len);
 	}
@@ -556,6 +650,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsAlive())
+			return;
+
 		RTC::TransportSource source(socket, remote_addr);
 		onRTCPDataRecv(&source, data, len);
 	}
@@ -563,6 +660,9 @@ namespace RTC
 	void Transport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
 	{
 		MS_TRACE();
+
+		if (!IsAlive())
+			return;
 
 		RTC::TransportSource source(connection);
 
@@ -576,6 +676,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsAlive())
+			return;
+
 		RTC::TransportSource source(connection);
 		onSTUNDataRecv(&source, data, len);
 	}
@@ -583,6 +686,9 @@ namespace RTC
 	void Transport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
+
+		if (!IsAlive())
+			return;
 
 		RTC::TransportSource source(connection);
 		onDTLSDataRecv(&source, data, len);
@@ -600,6 +706,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsAlive())
+			return;
+
 		RTC::TransportSource source(connection);
 		onRTCPDataRecv(&source, data, len);
 	}
@@ -608,6 +717,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsAlive())
+			return;
+
 		// Send the STUN response over the same transport source.
 		source->Send(msg->GetRaw(), msg->GetLength());
 	}
@@ -615,6 +727,9 @@ namespace RTC
 	void Transport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
 	{
 		MS_TRACE();
+
+		if (!IsAlive())
+			return;
 
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
@@ -645,7 +760,53 @@ namespace RTC
 		}
 
 		// If ready, run the DTLS handler.
-		RunDTLSTransportIfReady();
+		MayRunDTLSTransport();
+	}
+
+	void Transport::onDTLSConnecting(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS connecting");
+
+		this->dtlsState = DtlsTransportState::CONNECTING;
+	}
+
+	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS connected");
+
+		this->dtlsState = DtlsTransportState::CONNECTED;
+
+		// TODO
+		// SetLocalSRTPKey(srtp_profile, srtp_local_key, srtp_local_key_len);
+		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
+	}
+
+	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS closed");
+
+		this->dtlsState = DtlsTransportState::CLOSED;
+
+		// NOTE: This is just called when calling Close() so don't call
+		// Terminate() here (not needed).
+	}
+
+	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS failed");
+
+		this->dtlsState = DtlsTransportState::FAILED;
+
+		// Call Terminate() so all the servers are closed.
+		Terminate();
 	}
 
 	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)
@@ -663,44 +824,6 @@ namespace RTC
 		this->sendingSource->Dump();
 
 		this->sendingSource->Send(data, len);
-	}
-
-	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport)
-	{
-		MS_TRACE();
-
-		MS_DEBUG("DTLS connected");
-	}
-
-	void Transport::onDTLSDisconnected(RTC::DTLSTransport* dtlsTransport)
-	{
-		MS_TRACE();
-
-		MS_DEBUG("DTLS disconnected");
-
-		// TODO
-		// Reset();
-	}
-
-	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
-	{
-		MS_TRACE();
-
-		MS_DEBUG("DTLS failed");
-
-		// TODO
-		// Reset();
-	}
-
-	void Transport::onSRTPKeyMaterial(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len)
-	{
-		MS_TRACE();
-
-		MS_DEBUG("got SRTP key material");
-
-		// TODO
-		// SetLocalSRTPKey(srtp_profile, srtp_local_key, srtp_local_key_len);
-		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
 	}
 
 	void Transport::onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)

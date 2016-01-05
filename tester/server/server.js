@@ -135,7 +135,15 @@ app.put('/test-transport', function(req)
 	let transportPromises = [];
 
 	answer.version = 0;
-	answer.origin = offer.origin;
+	answer.origin =
+	{
+		address        : '0.0.0.0',
+		ipVer          : offer.origin.ipVer,
+		netType        : offer.origin.netType,
+		sessionId      : offer.origin.sessionId,
+		sessionVersion : offer.origin.sessionVersion,
+		username       : 'mediasoup'
+	};
 	answer.name = 'mediasoup';
 	answer.timing = { start: 0, stop: 0 };
 	answer.groups = offer.groups;
@@ -158,7 +166,7 @@ app.put('/test-transport', function(req)
 	debug('/test-transport [numTransports:%d]', numTransports);
 
 	// Create transports promises
-	for (let i = 0; i < numTransports ; i++)
+	for (let i = 0; i < numTransports; i++)
 	{
 		let promise = mediaPeer.createTransport({ udp: true, tcp: false });
 
@@ -212,6 +220,7 @@ app.put('/test-transport', function(req)
 					ac.type = candidate.type;
 					if (candidate.tcpType)
 						ac.tcpType = candidate.tcpType;
+
 					am.candidates.push(ac);
 				});
 
@@ -243,7 +252,7 @@ app.put('/test-transport', function(req)
 					// Create a promise
 					let promise = transport.setRemoteDtlsParameters(
 						{
-							role        : 'auto',  // SDP offer MUST always have a=setup:actpass so we can choose whatever we want
+							role        : 'client',  // SDP offer MUST always have a=setup:actpass so we can choose whatever we want
 							fingerprint :
 							{
 								algorithm : remoteFingerprint.type,
@@ -283,9 +292,9 @@ app.put('/test-transport', function(req)
 		});
 });
 
-setTimeout(() =>
+setInterval(() =>
 {
 	room.dump()
 		.then((data) => debug('ROOM DUMP:\n%s', JSON.stringify(data, null, '\t')))
 		.catch((error) => debugerror('SERVER DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
-}, 10000);
+}, 20000);
