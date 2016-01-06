@@ -22,6 +22,9 @@ Loop::Loop(Channel::UnixStreamSocket* channel) :
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
 
+	// Create the Notifier instance.
+	this->notifier = new Channel::Notifier(this->channel);
+
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
 
@@ -75,6 +78,9 @@ void Loop::Close()
 		it = this->rooms.erase(it);
 		room->Close();
 	}
+
+	// Close the Notifier.
+	this->notifier->Close();
 
 	// Close the Channel socket.
 	if (this->channel)
@@ -205,6 +211,9 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			MS_DEBUG("Room created [roomId:%u]", roomId);
 			request->Accept();
+
+			// TODO: TESTING
+			this->notifier->Emit(roomId, "created");
 
 			break;
 		}

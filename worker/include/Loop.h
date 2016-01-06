@@ -5,6 +5,7 @@
 #include "handles/SignalsHandler.h"
 #include "Channel/UnixStreamSocket.h"
 #include "Channel/Request.h"
+#include "Channel/Notifier.h"
 #include "RTC/Room.h"
 #include <unordered_map>
 
@@ -41,6 +42,7 @@ private:
 	SignalsHandler* signalsHandler = nullptr;
 	// Others.
 	bool closed = false;
+	Channel::Notifier* notifier = nullptr;
 	typedef std::unordered_map<unsigned int, RTC::Room*> Rooms;
 	Rooms rooms;
 };
