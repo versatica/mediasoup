@@ -3,6 +3,7 @@
 #include "RTC/Room.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
+#include <string>
 
 namespace RTC
 {
@@ -55,7 +56,7 @@ namespace RTC
 		{
 			RTC::Peer* peer = kv.second;
 
-			json_peers[peer->peerId] = peer->toJson();
+			json_peers[std::to_string(peer->peerId)] = peer->toJson();
 		}
 		json[k_peers] = json_peers;
 
@@ -91,8 +92,11 @@ namespace RTC
 
 			case Channel::Request::MethodId::room_createPeer:
 			{
+				static const Json::StaticString k_peerName("peerName");
+
 				RTC::Peer* peer;
-				std::string peerId;
+				unsigned int peerId;
+				std::string peerName;
 
 				try
 				{
@@ -112,9 +116,19 @@ namespace RTC
 					return;
 				}
 
+				if (!request->internal[k_peerName].isString())
+				{
+					MS_ERROR("Request has not string `internal.peerName`");
+
+					request->Reject(500, "Request has not string `internal.peerName`");
+					return;
+				}
+
+				peerName = request->internal[k_peerName].asString();
+
 				try
 				{
-					peer = new RTC::Peer(this, peerId);
+					peer = new RTC::Peer(this, peerId, peerName);
 				}
 				catch (const MediaSoupError &error)
 				{
@@ -124,7 +138,7 @@ namespace RTC
 
 				this->peers[peerId] = peer;
 
-				MS_DEBUG("Peer created [peerId:%s]", peerId.c_str());
+				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
 				request->Accept();
 
 				break;
@@ -170,7 +184,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Peer* Room::GetPeerFromRequest(Channel::Request* request, std::string* peerId)
+	RTC::Peer* Room::GetPeerFromRequest(Channel::Request* request, unsigned int* peerId)
 	{
 		MS_TRACE();
 
@@ -178,14 +192,14 @@ namespace RTC
 
 		auto jsonPeerId = request->internal[k_peerId];
 
-		if (!jsonPeerId.isString())
-			MS_THROW_ERROR("Request has not string .peerId field");
+		if (!jsonPeerId.isUInt())
+			MS_THROW_ERROR("Request has not numeric .peerId field");
 
 		// If given, fill peerId.
 		if (peerId)
-			*peerId = jsonPeerId.asString();
+			*peerId = jsonPeerId.asUInt();
 
-		auto it = this->peers.find(jsonPeerId.asString());
+		auto it = this->peers.find(jsonPeerId.asUInt());
 
 		if (it != this->peers.end())
 		{

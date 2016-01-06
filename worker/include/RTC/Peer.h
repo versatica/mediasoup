@@ -20,7 +20,7 @@ namespace RTC
 		};
 
 	public:
-		Peer(Listener* listener, std::string& peerId);
+		Peer(Listener* listener, unsigned int peerId, std::string& peerName);
 		virtual ~Peer();
 
 		void Close();
@@ -36,14 +36,14 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string peerId;
+		unsigned int peerId;
+		std::string peerName;
 
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		typedef std::unordered_map<unsigned int, RTC::Transport*> Transports;
-		Transports transports;
+		std::unordered_map<unsigned int, RTC::Transport*> transports;
 	};
 }
 

@@ -370,18 +370,18 @@ namespace RTC
 
 				if (!request->data[k_fingerprint].isObject())
 				{
-					MS_ERROR("missing .fingerprint");
+					MS_ERROR("missing `data.fingerprint`");
 
-					request->Reject(500, "missing .fingerprint");
+					request->Reject(500, "missing `data.fingerprint`");
 					return;
 				}
 
 				if (!request->data[k_fingerprint][k_algorithm].isString() ||
 					  !request->data[k_fingerprint][k_value].isString())
 				{
-					MS_ERROR("missing .fingerprint.algorithm and/or .fingerprint.value");
+					MS_ERROR("missing `data.fingerprint.algorithm` and/or `data.fingerprint.value`");
 
-					request->Reject(500, "missing .fingerprint.algorithm and/or .fingerprint.value");
+					request->Reject(500, "missing `data.fingerprint.algorithm` and/or `data.fingerprint.value`");
 					return;
 				}
 
@@ -389,9 +389,9 @@ namespace RTC
 
 				if (remoteFingerprint.algorithm == RTC::DTLSTransport::FingerprintAlgorithm::NONE)
 				{
-					MS_ERROR("unsupported .fingerprint.algorithm");
+					MS_ERROR("unsupported `data.fingerprint.algorithm`");
 
-					request->Reject(500, "unsupported .fingerprint.algorithm");
+					request->Reject(500, "unsupported `data.fingerprint.algorithm`");
 					return;
 				}
 
@@ -416,7 +416,7 @@ namespace RTC
 					case RTC::DTLSTransport::Role::NONE:
 						MS_ERROR("invalid .role");
 
-						request->Reject(500, "invalid .role");
+						request->Reject(500, "invalid `data.role`");
 						return;
 				}
 
@@ -560,6 +560,7 @@ namespace RTC
 		if (!msg)
 		{
 			MS_DEBUG("ignoring wrong STUN message received");
+
 			return;
 		}
 

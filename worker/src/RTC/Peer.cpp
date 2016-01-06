@@ -8,8 +8,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, std::string& peerId) :
+	Peer::Peer(Listener* listener, unsigned int peerId, std::string& peerName) :
 		peerId(peerId),
+		peerName(peerName),
 		listener(listener)
 	{
 		MS_TRACE();
@@ -46,10 +47,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_peerName("peerName");
 		static const Json::StaticString k_transports("transports");
 
 		Json::Value json(Json::objectValue);
 		Json::Value json_transports(Json::objectValue);
+
+		json[k_peerName] = this->peerName;
 
 		for (auto& kv : this->transports)
 		{
@@ -70,11 +74,11 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::peer_close:
 			{
-				std::string peerId = this->peerId;
+				unsigned int peerId = this->peerId;
 
 				Close();
 
-				MS_DEBUG("Peer closed [peerId:%s]", peerId.c_str());
+				MS_DEBUG("Peer closed [peerId:%u]", peerId);
 				request->Accept();
 
 				break;
@@ -162,9 +166,9 @@ namespace RTC
 
 				if (!jsonRtpTransportId.isUInt())
 				{
-					MS_ERROR("Request has not numeric .rtpTransportId field");
+					MS_ERROR("Request has not numeric `internal.rtpTransportId`");
 
-					request->Reject(500, "Request has not numeric .rtpTransportId field");
+					request->Reject(500, "Request has not numeric `internal.rtpTransportId`");
 					return;
 				}
 
@@ -246,7 +250,7 @@ namespace RTC
 		auto jsonTransportId = request->internal[k_transportId];
 
 		if (!jsonTransportId.isUInt())
-			MS_THROW_ERROR("Request has not numeric .transportId field");
+			MS_THROW_ERROR("Request has not numeric `internal.transportId`");
 
 		// If given, fill roomId.
 		if (transportId)

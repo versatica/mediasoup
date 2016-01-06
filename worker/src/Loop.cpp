@@ -96,7 +96,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roo
 	auto jsonRoomId = request->internal[k_roomId];
 
 	if (!jsonRoomId.isUInt())
-		MS_THROW_ERROR("Request has not numeric .roomId field");
+		MS_THROW_ERROR("Request has not numeric `internal.roomId`");
 
 	// If given, fill roomId.
 	if (roomId)

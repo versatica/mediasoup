@@ -43,8 +43,7 @@ private:
 	// Others.
 	bool closed = false;
 	Channel::Notifier* notifier = nullptr;
-	typedef std::unordered_map<unsigned int, RTC::Room*> Rooms;
-	Rooms rooms;
+	std::unordered_map<unsigned int, RTC::Room*> rooms;
 };
 
 #endif
