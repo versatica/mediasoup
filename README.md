@@ -1,6 +1,6 @@
 # mediasoup
 
-Powerful [WebRTC](http://www.webrtc.org/) SFU ("Selective Forwarding Unit") server built on Node and C++.
+Powerful WebRTC SFU ("Selective Forwarding Unit") server built on Node and C++.
 
 
 ## IMPORTANT!
@@ -10,8 +10,8 @@ Powerful [WebRTC](http://www.webrtc.org/) SFU ("Selective Forwarding Unit") serv
 
 ## Features
 
-* Not a boring standalone server, but a Node library exposing a pure JavaScript API. This is: `var mediasoup = require('mediasoup');`
-* Modern design: Designed with [ORTC](http://ortc.org) in mind, but also valid for WebRTC.
+* Not a boring standalone server, but a Node library exposing a pure JavaScript API.
+* Modern design: Designed with [ORTC](http://ortc.org) in mind, but also valid for [WebRTC](http://www.webrtc.org).
 * "Selective Forwarding Unit" architecture as defined in [draft-ietf-avtcore-rtp-topologies-update](https://tools.ietf.org/html/draft-ietf-avtcore-rtp-topologies-update).
 * ICE/DTLS/RTP/RTCP/DataChannel over UDP and TCP, IPv4 and IPv6.
 * Signaling agnostic: **mediasoup** does not deal with SIP or other signaling protocols. In the other hand, it can deal with *any* signaling protocol.
