@@ -10,6 +10,7 @@
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
 #include "RTC/TCPConnection.h"
+#include "Channel/Notifier.h"
 #include <string>
 #include <vector>
 #include <list>
@@ -52,7 +53,7 @@ namespace RTC
 		static size_t maxSources;
 
 	public:
-		Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport = nullptr);
+		Transport(Listener* listener, Channel::Notifier* notifier, unsigned int transportId, Json::Value& data, Transport* rtpTransport = nullptr);
 		virtual ~Transport();
 
 		void Close();
@@ -124,7 +125,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
-		RTC::Transport::IceComponent iceComponent;
+		Channel::Notifier* notifier = nullptr;
 		// Allocated by this.
 		RTC::IceServer* iceServer = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
@@ -133,6 +134,7 @@ namespace RTC
 		// Others.
 		bool allocated = false;
 		// Others (ICE).
+		RTC::Transport::IceComponent iceComponent;
 		std::vector<IceCandidate> iceLocalCandidates;
 		std::list<RTC::TransportSource> sources;
 		RTC::TransportSource* sendingSource = nullptr;

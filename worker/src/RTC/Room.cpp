@@ -9,9 +9,10 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Room::Room(Listener* listener, unsigned int roomId) :
+	Room::Room(Listener* listener, Channel::Notifier* notifier, unsigned int roomId) :
 		roomId(roomId),
-		listener(listener)
+		listener(listener),
+		notifier(notifier)
 	{
 		MS_TRACE();
 	}
@@ -128,7 +129,7 @@ namespace RTC
 
 				try
 				{
-					peer = new RTC::Peer(this, peerId, peerName);
+					peer = new RTC::Peer(this, this->notifier, peerId, peerName);
 				}
 				catch (const MediaSoupError &error)
 				{

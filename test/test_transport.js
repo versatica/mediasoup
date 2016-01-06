@@ -69,6 +69,7 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
+	t.plan(7);
 	t.tearDown(() => server.close());
 
 	let room = server.Room();
@@ -79,6 +80,13 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 		{
 			t.pass('peer.createTransport() succeeded');
 
+			transport.on('dtlsstatechange', (data) =>
+			{
+				t.pass('event "dtlsstatechange" fired');
+				t.equal(data.dtlsState, 'closed', 'event `data.dtlsState` must be "closed"');
+				t.equal(transport.dtlsState, 'closed', '`transport.dtlsState` must be "closed"');
+			});
+
 			transport.on('close', (error) =>
 			{
 				t.error(error, 'transport should close cleanly');
@@ -88,7 +96,6 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 					{
 						t.pass('peer.dump() succeeded');
 						t.equal(Object.keys(data.transports).length, 0, 'peer.dump() should retrieve zero transports');
-						t.end();
 					})
 					.catch((error) => t.fail(`peer.dump() failed: ${error}`));
 			});

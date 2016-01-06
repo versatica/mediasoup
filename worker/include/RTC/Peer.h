@@ -3,6 +3,7 @@
 
 #include "RTC/Transport.h"
 #include "Channel/Request.h"
+#include "Channel/Notifier.h"
 #include <string>
 #include <unordered_map>
 #include <json/json.h>
@@ -20,7 +21,7 @@ namespace RTC
 		};
 
 	public:
-		Peer(Listener* listener, unsigned int peerId, std::string& peerName);
+		Peer(Listener* listener, Channel::Notifier* notifier, unsigned int peerId, std::string& peerName);
 		virtual ~Peer();
 
 		void Close();
@@ -42,6 +43,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
+		Channel::Notifier* notifier = nullptr;
 		// Others.
 		std::unordered_map<unsigned int, RTC::Transport*> transports;
 	};

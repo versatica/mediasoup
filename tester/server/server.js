@@ -2,7 +2,8 @@
 
 'use strict';
 
-process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
+// process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
+process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester* -mediasoup:mediasoup-worker*';
 
 const http = require('http');
 const url = require('url');
@@ -169,6 +170,20 @@ app.put('/test-transport', function(req)
 	for (let i = 0; i < numTransports; i++)
 	{
 		let promise = mediaPeer.createTransport({ udp: true, tcp: false });
+
+		// Set transport event listeners
+		promise.then((transport) =>
+		{
+			transport.on('close', () =>
+			{
+				debug('transport "close" event');
+			});
+
+			transport.on('dtlsstatechange', (data) =>
+			{
+				debug('transport "dtlsstatechange" event [data.dtlsState:%s, transport.dtlsState:%s]', data.dtlsState, transport.dtlsState);
+			});
+		})
 
 		// Add the transport promise to the array of promises
 		transportPromises.push(promise);

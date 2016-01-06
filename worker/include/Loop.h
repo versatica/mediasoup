@@ -39,10 +39,10 @@ private:
 	// Passed by argument.
 	Channel::UnixStreamSocket* channel = nullptr;
 	// Allocated by this.
+	Channel::Notifier* notifier = nullptr;
 	SignalsHandler* signalsHandler = nullptr;
 	// Others.
 	bool closed = false;
-	Channel::Notifier* notifier = nullptr;
 	std::unordered_map<unsigned int, RTC::Room*> rooms;
 };
 

@@ -821,7 +821,7 @@ namespace RTC
 
 			if (was_connected)
 			{
-				MS_DEBUG("DTLS disconnected");
+				MS_DEBUG("disconnected");
 
 				Reset();
 
@@ -830,7 +830,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_DEBUG("DTLS connection failed");
+				MS_DEBUG("connection failed");
 
 				Reset();
 

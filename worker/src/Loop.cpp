@@ -199,7 +199,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			try
 			{
-				room = new RTC::Room(this, roomId);
+				room = new RTC::Room(this, this->notifier, roomId);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -211,9 +211,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			MS_DEBUG("Room created [roomId:%u]", roomId);
 			request->Accept();
-
-			// TODO: TESTING
-			this->notifier->Emit(roomId, "created");
 
 			break;
 		}

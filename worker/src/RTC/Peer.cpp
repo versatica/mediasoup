@@ -8,10 +8,11 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, unsigned int peerId, std::string& peerName) :
+	Peer::Peer(Listener* listener, Channel::Notifier* notifier, unsigned int peerId, std::string& peerName) :
 		peerId(peerId),
 		peerName(peerName),
-		listener(listener)
+		listener(listener),
+		notifier(notifier)
 	{
 		MS_TRACE();
 	}
@@ -118,7 +119,7 @@ namespace RTC
 
 				try
 				{
-					transport = new RTC::Transport(this, transportId, request->data);
+					transport = new RTC::Transport(this, this->notifier, transportId, request->data);
 				}
 				catch (const MediaSoupError &error)
 				{

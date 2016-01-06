@@ -32,9 +32,10 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Transport::Transport(Listener* listener, unsigned int transportId, Json::Value& data, Transport* rtpTransport) :
+	Transport::Transport(Listener* listener, Channel::Notifier* notifier, unsigned int transportId, Json::Value& data, Transport* rtpTransport) :
 		transportId(transportId),
-		listener(listener)
+		listener(listener),
+		notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -496,7 +497,7 @@ namespace RTC
 		if (this->iceComponent != IceComponent::RTP)
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
 
-		return new RTC::Transport(this->listener, transportId, nullData, this);
+		return new RTC::Transport(this->listener, this->notifier, transportId, nullData, this);
 	}
 
 	inline
@@ -768,16 +769,28 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_dtlsState("dtlsState");
+		static const Json::StaticString v_connecting("connecting");
+
+		Json::Value eventData;
+
 		MS_DEBUG("DTLS connecting");
 
 		this->dtlsState = DtlsTransportState::CONNECTING;
 
-		// TODO: notify 'connecting'.
+		// Notify.
+		eventData[k_dtlsState] = v_connecting;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
 	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len)
 	{
 		MS_TRACE();
+
+		static const Json::StaticString k_dtlsState("dtlsState");
+		static const Json::StaticString v_connected("connected");
+
+		Json::Value eventData;
 
 		MS_DEBUG("DTLS connected");
 
@@ -787,12 +800,20 @@ namespace RTC
 		// SetLocalSRTPKey(srtp_profile, srtp_local_key, srtp_local_key_len);
 		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
 
-		// TODO: notify 'connected'.
+		// Notify.
+		eventData[k_dtlsState] = v_connected;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
 	void Transport::onDTLSDisconnected(RTC::DTLSTransport* dtlsTransport)
 	{
 		MS_TRACE();
+
+		static const Json::StaticString k_dtlsState("dtlsState");
+		static const Json::StaticString v_closed("closed");
+
+		DtlsTransportState previousDtlsState = this->dtlsState;
+		Json::Value eventData;
 
 		MS_DEBUG("DTLS remotely disconnected");
 
@@ -801,12 +822,22 @@ namespace RTC
 		// Call Terminate() so all the servers are closed.
 		Terminate();
 
-		// TODO: notify 'closed' if not already 'closed'.
+		// Notify.
+		if (previousDtlsState != DtlsTransportState::CLOSED)
+		{
+			eventData[k_dtlsState] = v_closed;
+			this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		}
 	}
 
 	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
 	{
 		MS_TRACE();
+
+		static const Json::StaticString k_dtlsState("dtlsState");
+		static const Json::StaticString v_failed("failed");
+
+		Json::Value eventData;
 
 		MS_DEBUG("DTLS failed");
 
@@ -815,12 +846,20 @@ namespace RTC
 		// Call Terminate() so all the servers are closed.
 		Terminate();
 
-		// TODO: notify 'failed'.
+		// Notify.
+		eventData[k_dtlsState] = v_failed;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
 	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
 	{
 		MS_TRACE();
+
+		static const Json::StaticString k_dtlsState("dtlsState");
+		static const Json::StaticString v_closed("closed");
+
+		DtlsTransportState previousDtlsState = this->dtlsState;
+		Json::Value eventData;
 
 		MS_DEBUG("DTLS closed");
 
@@ -829,7 +868,12 @@ namespace RTC
 		// NOTE: This is just called when calling Close() so don't call
 		// Terminate() here (not needed).
 
-		// TODO: notify 'closed' if not already 'closed'.
+		// Notify.
+		if (previousDtlsState != DtlsTransportState::CLOSED)
+		{
+			eventData[k_dtlsState] = v_closed;
+			this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		}
 	}
 
 	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)
