@@ -25,26 +25,67 @@ Powerful [WebRTC](http://www.webrtc.org/) SFU ("Selective Forwarding Unit") serv
 ```javascript
 var mediasoup = require('mediasoup');
 
-// Create a server with 4 worker subprocesses:
+// Create a server with 4 worker subprocesses.
 var server = mediasoup.Server({ numWorkers: 4 });
 
-// Create a conference room:
+// Create a conference room.
 var room = server.Room();
 
-// Add a participant into the room:
-var peer1 = room.Peer();
+// Our custom signaling server.
+var signalingServer = [...];
 
-// Create a single transport ("bundle") for sending/receiving both audio and video:
-peer1.createTransport({ udp: true, tcp: true })
+signalingServer.on('invite', (request) =>
+{
+  // Add a participant into the room.
+  var peer = room.Peer(request.username);
+
+  // Our signaling response.
+  var response =
+  {
+    candidates: []
+  };
+
+  // After inspecting `requests.transports` we need to create a single
+  // transport for sending/receiving both audio and video.
+  peer.createTransport({ udp: true, tcp: true })
     .then((transport) =>
     {
-        transport.iceLocalCandidates.forEach((candidate) =>
+      // Log DTLS state changes.
+      transport.on('dtlsstatechange', (data) => {
+        console.log('transport "dtlsstatechange" event [data.dtlsState:%s]', data.dtlsState);
+      });
+
+      // Append our local ICE candidates into the response.
+      transport.iceLocalCandidates.forEach((candidate) =>
+      {
+        response.candidates.push(candidate);
+      });
+
+      // Set remote DTLS parameters.
+      transport.setRemoteDtlsParameters(
         {
-            console.log('local ICE candidate: %o', candidate);
+          role        : request.dtlsRole,
+          fingerprint :
+          {
+            algorithm : request.remoteFingerprint.type,
+            value     : request.remoteFingerprint.hash
+          }
+        })
+        .then(() =>
+        {
+          // Set our DTLS parameters into the response.
+          response.dtlsRole = transport.dtlsLocalParameters.role;
+          response.fingerprint =
+          {
+            type : 'sha-512',
+            hash : transport.dtlsLocalParameters.fingerprints['sha-512']
+          };
+
+          // And send the response.
+          signalingServer.send(response);
         });
     });
-
-// TODO: more stuff coming soon
+});
 ```
 
 Until the API is documented, the output of the included test units may help a bit understanding how the API will look like:
