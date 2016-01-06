@@ -226,8 +226,8 @@ app.put('/test-transport', function(req)
 
 				am.fingerprint =
 				{
-					type : 'sha-256',
-					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalParameters.fingerprints['sha-256'])
+					type : 'sha-224',
+					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalParameters.fingerprints['sha-224'])
 				};
 
 				am.type = om.type;
