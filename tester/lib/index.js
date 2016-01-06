@@ -7,6 +7,7 @@ debugerror.log = console.error.bind(console);
 
 const domready = require('domready');
 const rtcninja = require('rtcninja');
+// const randomString = require('random-string');
 const Peer = require('./Peer');
 
 let protooWsUrl;
@@ -32,9 +33,18 @@ function run()
 {
 	debug('run()');
 
-	// Create peers
-	let alice = new Peer(protooWsUrl, 'alice', 'aaaa');
+	// let username = randomString();
+	// let uuid = randomString();
+	let username = 'alice';
+	let uuid = 'aaaa';
+
+	let peer = new Peer(protooWsUrl, username, uuid);
 
 	// Call the 'test-transport' service
-	alice.once('online', () => alice.testTransport());
+	peer.once('online', () =>
+	{
+		peer.testTransport();
+	});
+
+	global.document.addEventListener('click', () => peer.close());
 }

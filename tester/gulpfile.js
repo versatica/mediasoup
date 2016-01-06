@@ -126,7 +126,7 @@ gulp.task('live:watch', (done) =>
 	));
 
 	gulp.watch(['lib/**/*.js'], gulp.series(
-		'build:js:browserify', 'live:reload'
+		'lint:js', 'build:js:browserify', 'live:reload'
 	));
 
 	done();

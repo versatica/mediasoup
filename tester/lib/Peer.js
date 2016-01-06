@@ -29,16 +29,19 @@ class Peer extends EventEmitter
 
 		// PeerConnection instance
 		this._pc = new rtcninja.RTCPeerConnection({ iceServers: [] });
+	}
 
-		// TODO: TMP
-		global.PROTOO = this._protoo;
-		global.PC = this._pc;
-		global.close = () =>
+	close()
+	{
+		this._debug('close()');
+
+		this._protoo.close();
+		try
 		{
-			this._protoo.close();
 			this._pc.close();
-		};
-		document.addEventListener('click', () => global.close());
+		}
+		catch (error)
+		{}
 	}
 
 	testTransport()
