@@ -770,6 +770,8 @@ namespace RTC
 		MS_DEBUG("DTLS connecting");
 
 		this->dtlsState = DtlsTransportState::CONNECTING;
+
+		// TODO: notify 'connecting'.
 	}
 
 	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len)
@@ -783,18 +785,22 @@ namespace RTC
 		// TODO
 		// SetLocalSRTPKey(srtp_profile, srtp_local_key, srtp_local_key_len);
 		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
+
+		// TODO: notify 'connected'.
 	}
 
-	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
+	void Transport::onDTLSDisconnected(RTC::DTLSTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
-		MS_DEBUG("DTLS closed");
+		MS_DEBUG("DTLS remotely disconnected");
 
 		this->dtlsState = DtlsTransportState::CLOSED;
 
-		// NOTE: This is just called when calling Close() so don't call
-		// Terminate() here (not needed).
+		// Call Terminate() so all the servers are closed.
+		Terminate();
+
+		// TODO: notify 'closed' if not already 'closed'.
 	}
 
 	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
@@ -807,6 +813,22 @@ namespace RTC
 
 		// Call Terminate() so all the servers are closed.
 		Terminate();
+
+		// TODO: notify 'failed'.
+	}
+
+	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("DTLS closed");
+
+		this->dtlsState = DtlsTransportState::CLOSED;
+
+		// NOTE: This is just called when calling Close() so don't call
+		// Terminate() here (not needed).
+
+		// TODO: notify 'closed' if not already 'closed'.
 	}
 
 	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)

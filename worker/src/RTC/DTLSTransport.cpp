@@ -826,7 +826,7 @@ namespace RTC
 				Reset();
 
 				// Notify to the listener.
-				this->listener->onDTLSFailed(this);
+				this->listener->onDTLSDisconnected(this);
 			}
 			else
 			{

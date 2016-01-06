@@ -104,8 +104,9 @@ namespace RTC
 	public:
 		virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) override;
 		virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) override;
-		virtual void onDTLSClosed(DTLSTransport* dtlsTransport) override;
+		virtual void onDTLSDisconnected(DTLSTransport* dtlsTransport) override;
 		virtual void onDTLSFailed(DTLSTransport* dtlsTransport) override;
+		virtual void onDTLSClosed(DTLSTransport* dtlsTransport) override;
 		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
 		virtual void onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
 

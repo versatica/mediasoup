@@ -61,15 +61,18 @@ namespace RTC
 			virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) = 0;
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
-			// NOTE: TODO
-			virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
-			// The DTLS connection has been closed intentionally via Close().
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDTLSClosed(DTLSTransport* dtlsTransport) = 0;
+			virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			// The DTLS connection has been closed due to receipt of a close_notify alert.
+			// NOTE: The caller MUST NOT call Close() during this callback.
+			virtual void onDTLSDisconnected(DTLSTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Close() during this callback.
 			virtual void onDTLSFailed(DTLSTransport* dtlsTransport) = 0;
+			// The DTLS connection has been closed intentionally via Close().
+			// NOTE: The caller MUST NOT call any method during this callback.
+			virtual void onDTLSClosed(DTLSTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Close() during this callback.
 			virtual void onOutgoingDTLSData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
