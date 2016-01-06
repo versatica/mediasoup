@@ -10,14 +10,12 @@ Powerful [WebRTC](http://www.webrtc.org/) SFU ("Selective Forwarding Unit") serv
 
 ## Features
 
-* Not a boring standalone server, but a Node library exposing a pure JavaScript API.
-* Supports *WebRTC* media requirements ([ICE-Lite](http://tools.ietf.org/html/rfc5245), [DTLS-SRTP](http://tools.ietf.org/html/rfc5764), [rtcp-mux](http://tools.ietf.org/html/rfc5761), [bundle](http://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation)) along with classic VoIP technologies ([SDES-SRTP](http://tools.ietf.org/html/rfc4568), plain [RTP/RTCP](http://tools.ietf.org/html/rfc3550)).
-* ICE/DTLS/RTP/RTCP over UDP and TCP.
-* Multi participant real-time sessions.
-* IPv6 ready.
-* Signaling agnostic. **mediasoup** does not deal with SIP or other signaling protocols. In the other side, it can deal with *any* signaling protocol.
-* SDP unaware. Really, **mediasoup** will not parse a SDP for you.
-* Extremely powerful. Media handler subprocess (*mediasoup-worker*) is coded in C++ on top of the awesome [libuv](https://github.com/libuv/libuv) asychronous I/O library. **mediasoup** takes full advantage of your CPU capabilities by launching as many workers as needed.
+* Not a boring standalone server, but a Node library exposing a pure JavaScript API. This is: `var mediasoup = require('mediasoup');`
+* Modern design: Designed with [ORTC](http://ortc.org) in mind, but also valid for WebRTC.
+* "Selective Forwarding Unit" architecture as defined in [draft-ietf-avtcore-rtp-topologies-update](https://tools.ietf.org/html/draft-ietf-avtcore-rtp-topologies-update).
+* ICE/DTLS/RTP/RTCP/DataChannel over UDP and TCP, IPv4 and IPv6.
+* Signaling agnostic: **mediasoup** does not deal with SIP or other signaling protocols. In the other hand, it can deal with *any* signaling protocol.
+* Extremely powerful: Media handler subprocess (*mediasoup-worker*) is coded in C++ on top of the awesome [libuv](https://github.com/libuv/libuv) asychronous I/O library. **mediasoup** takes full advantage of your CPU capabilities by launching as many workers as needed.
 
 
 ## Usage
@@ -25,8 +23,8 @@ Powerful [WebRTC](http://www.webrtc.org/) SFU ("Selective Forwarding Unit") serv
 ```javascript
 var mediasoup = require('mediasoup');
 
-// Create a server with 4 worker subprocesses.
-var server = mediasoup.Server({ numWorkers: 4 });
+// Create a mediasoup server.
+var server = mediasoup.Server();
 
 // Create a conference room.
 var room = server.Room();
@@ -62,7 +60,10 @@ signalingServer.on('invite', (request) =>
       });
 
       // Set remote DTLS parameters.
-      transport.setRemoteDtlsParameters(
+      // `transport.setRemoteDtlsParameters()` returns a Promise that resolves
+      // with `transport` itself so it can be handled in the next `then()`
+      // handler.
+      return transport.setRemoteDtlsParameters(
         {
           role        : request.dtlsRole,
           fingerprint :
@@ -70,20 +71,20 @@ signalingServer.on('invite', (request) =>
             algorithm : request.remoteFingerprint.type,
             value     : request.remoteFingerprint.hash
           }
-        })
-        .then(() =>
-        {
-          // Set our DTLS parameters into the response.
-          response.dtlsRole = transport.dtlsLocalParameters.role;
-          response.fingerprint =
-          {
-            type : 'sha-512',
-            hash : transport.dtlsLocalParameters.fingerprints['sha-512']
-          };
-
-          // And send the response.
-          signalingServer.send(response);
         });
+    })
+    .then((transport) =>
+    {
+      // Set our DTLS parameters into the response.
+      response.dtlsRole = transport.dtlsLocalParameters.role;
+      response.fingerprint =
+      {
+        type : 'sha-512',
+        hash : transport.dtlsLocalParameters.fingerprints['sha-512']
+      };
+
+      // And send the response.
+      signalingServer.send(response);
     });
 });
 ```
