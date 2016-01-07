@@ -1,13 +1,14 @@
-#define MS_CLASS "RTC::TransportSource"
+#define MS_CLASS "RTC::TransportTuple"
 
-#include "RTC/TransportSource.h"
+#include "RTC/TransportTuple.h"
 #include "Logger.h"
+#include <string>
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	void TransportSource::Dump()
+	void TransportTuple::Dump()
 	{
 		MS_TRACE();
 

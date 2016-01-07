@@ -2,8 +2,8 @@
 
 'use strict';
 
-// process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
-process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester* -mediasoup:mediasoup-worker*';
+process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
+// process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester* -mediasoup:mediasoup-worker*';
 
 const http = require('http');
 const url = require('url');
@@ -169,7 +169,7 @@ app.put('/test-transport', function(req)
 	// Create transports promises
 	for (let i = 0; i < numTransports; i++)
 	{
-		let promise = mediaPeer.createTransport({ udp: true, tcp: false });
+		let promise = mediaPeer.createTransport({ udp: true, tcp: true });
 
 		// Set transport event listeners
 		promise.then((transport) =>
@@ -183,7 +183,7 @@ app.put('/test-transport', function(req)
 			{
 				debug('transport "dtlsstatechange" event [data.dtlsState:%s, transport.dtlsState:%s]', data.dtlsState, transport.dtlsState);
 			});
-		})
+		});
 
 		// Add the transport promise to the array of promises
 		transportPromises.push(promise);
@@ -267,7 +267,7 @@ app.put('/test-transport', function(req)
 					// Create a promise
 					let promise = transport.setRemoteDtlsParameters(
 						{
-							role        : 'client',  // SDP offer MUST always have a=setup:actpass so we can choose whatever we want
+							role        : 'auto',  // SDP offer MUST always have a=setup:actpass so we can choose whatever we want
 							fingerprint :
 							{
 								algorithm : remoteFingerprint.type,

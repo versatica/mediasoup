@@ -24,7 +24,7 @@ namespace RTC
 		delete this;
 	}
 
-	void IceServer::ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportSource* source)
+	void IceServer::ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -38,7 +38,7 @@ namespace RTC
 				// Reply 400.
 				RTC::STUNMessage* response = msg->CreateErrorResponse(400);
 				response->Serialize();
-				this->listener->onOutgoingSTUNMessage(this, response, source);
+				this->listener->onOutgoingSTUNMessage(this, response, tuple);
 				delete response;
 			}
 			else
@@ -59,7 +59,7 @@ namespace RTC
 				// Reply 400.
 				RTC::STUNMessage* response = msg->CreateErrorResponse(400);
 				response->Serialize();
-				this->listener->onOutgoingSTUNMessage(this, response, source);
+				this->listener->onOutgoingSTUNMessage(this, response, tuple);
 				delete response;
 			}
 			else
@@ -82,7 +82,7 @@ namespace RTC
 					// Reply 400.
 					RTC::STUNMessage* response = msg->CreateErrorResponse(400);
 					response->Serialize();
-					this->listener->onOutgoingSTUNMessage(this, response, source);
+					this->listener->onOutgoingSTUNMessage(this, response, tuple);
 					delete response;
 
 					return;
@@ -101,7 +101,7 @@ namespace RTC
 						// Reply 401.
 						RTC::STUNMessage* response = msg->CreateErrorResponse(401);
 						response->Serialize();
-						this->listener->onOutgoingSTUNMessage(this, response, source);
+						this->listener->onOutgoingSTUNMessage(this, response, tuple);
 						delete response;
 
 						return;
@@ -114,7 +114,7 @@ namespace RTC
 						// Reply 400.
 						RTC::STUNMessage* response = msg->CreateErrorResponse(400);
 						response->Serialize();
-						this->listener->onOutgoingSTUNMessage(this, response, source);
+						this->listener->onOutgoingSTUNMessage(this, response, tuple);
 						delete response;
 
 						return;
@@ -129,7 +129,7 @@ namespace RTC
 					// Reply 487 (Role Conflict).
 					RTC::STUNMessage* response = msg->CreateErrorResponse(487);
 					response->Serialize();
-					this->listener->onOutgoingSTUNMessage(this, response, source);
+					this->listener->onOutgoingSTUNMessage(this, response, tuple);
 					delete response;
 
 					return;
@@ -141,18 +141,18 @@ namespace RTC
 				RTC::STUNMessage* response = msg->CreateSuccessResponse();
 
 				// Add XOR-MAPPED-ADDRESS.
-				response->SetXorMappedAddress(source->GetRemoteAddress());
+				response->SetXorMappedAddress(tuple->GetRemoteAddress());
 
 				// Authenticate the response.
 				response->Authenticate(this->password);
 
 				// Send back.
 				response->Serialize();
-				this->listener->onOutgoingSTUNMessage(this, response, source);
+				this->listener->onOutgoingSTUNMessage(this, response, tuple);
 				delete response;
 
-				// Notify the listener with the valid pair.
-				this->listener->onICEValidPair(this, source, msg->HasUseCandidate());
+				// Handle the tuple.
+				HandleTuple(tuple, msg->HasUseCandidate());
 
 				break;
 			}
@@ -160,20 +160,245 @@ namespace RTC
 			case RTC::STUNMessage::Class::Indication:
 			{
 				MS_DEBUG("STUN Binding Indication processed");
+
 				break;
 			}
 
 			case RTC::STUNMessage::Class::SuccessResponse:
 			{
 				MS_DEBUG("STUN Binding Success Response processed");
+
 				break;
 			}
 
 			case RTC::STUNMessage::Class::ErrorResponse:
 			{
 				MS_DEBUG("STUN Binding Error Response processed");
+
 				break;
 			}
 		}
 	}
+
+	bool IceServer::IsValidTuple(RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		if (HasTuple(tuple))
+			return true;
+		else
+			return false;
+	}
+
+	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate)
+	{
+		MS_TRACE();
+
+		switch (this->state)
+		{
+			case IceState::NEW:
+			{
+				// There should be no tuples.
+				MS_ASSERT(this->tuples.size() == 0, "state is 'new' but there are %zu tuples", this->tuples.size());
+
+				// There shouldn't be a selected tuple.
+				MS_ASSERT(this->selectedTuple == nullptr, "state is 'new' but there is selected tuple");
+
+				if (!has_use_candidate)
+				{
+					MS_DEBUG("transition from state 'new' to 'connected'");
+
+					// Store the tuple.
+					auto stored_tuple = AddTuple(tuple);
+
+					// Mark it as selected tuple.
+					SetSelectedTuple(stored_tuple);
+
+					// Update state.
+					this->state = IceState::CONNECTED;
+
+					// Notify the listener.
+					this->listener->onICESelectedTuple(this, stored_tuple);
+					this->listener->onICEConnected(this);
+				}
+				else
+				{
+					MS_DEBUG("transition from state 'new' to 'completed'");
+
+					// Store the tuple.
+					auto stored_tuple = AddTuple(tuple);
+
+					// Mark it as selected tuple.
+					SetSelectedTuple(stored_tuple);
+
+					// Update state.
+					this->state = IceState::COMPLETED;
+
+					// Notify the listener.
+					this->listener->onICESelectedTuple(this, stored_tuple);
+					this->listener->onICECompleted(this);
+				}
+
+				break;
+			}
+
+			case IceState::CONNECTED:
+			{
+				// There should be some tuples.
+				MS_ASSERT(this->tuples.size() > 0, "state is 'connected' but there are no tuples");
+
+				// There should be a selected tuple.
+				MS_ASSERT(this->selectedTuple != nullptr, "state is 'connected' but there is not selected tuple");
+
+				if (!has_use_candidate)
+				{
+					// If a new tuple store it.
+					if (!HasTuple(tuple))
+						AddTuple(tuple);
+				}
+				else
+				{
+					MS_DEBUG("transition from state 'connected' to 'completed'");
+
+					auto stored_tuple = HasTuple(tuple);
+
+					// If a new tuple store it.
+					if (!stored_tuple)
+						stored_tuple = AddTuple(tuple);
+
+					// Mark it as selected tuple.
+					SetSelectedTuple(stored_tuple);
+
+					// Update state.
+					this->state = IceState::COMPLETED;
+
+					// Notify the listener.
+					this->listener->onICESelectedTuple(this, stored_tuple);
+					this->listener->onICECompleted(this);
+				}
+
+				break;
+			}
+
+			case IceState::COMPLETED:
+			{
+				// There should be some tuples.
+				MS_ASSERT(this->tuples.size() > 0, "state is 'completed' but there are no tuples");
+
+				// There should be a selected tuple.
+				MS_ASSERT(this->selectedTuple != nullptr, "state is 'completed' but there is not selected tuple");
+
+				if (!has_use_candidate)
+				{
+					// If a new tuple store it.
+					if (!HasTuple(tuple))
+						AddTuple(tuple);
+				}
+				else
+				{
+					auto stored_tuple = HasTuple(tuple);
+
+					// If a new tuple store it.
+					if (!stored_tuple)
+						stored_tuple = AddTuple(tuple);
+
+					// Mark it as selected tuple.
+					SetSelectedTuple(stored_tuple);
+
+					// Notify the listener.
+					this->listener->onICESelectedTuple(this, stored_tuple);
+				}
+
+				break;
+			}
+		}
+	}
+
+	RTC::TransportTuple* IceServer::AddTuple(RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		// Add the new tuple at the beginning of the list.
+		this->tuples.push_front(*tuple);
+
+		auto stored_tuple = &(*this->tuples.begin());
+
+		// If it is UDP then we must store the remote address (until now it is
+		// just a pointer that will be freed soon).
+		if (stored_tuple->IsUDP())
+			stored_tuple->StoreUdpRemoteAddress();
+
+		// Return the address of the inserted tuple.
+		return stored_tuple;
+	}
+
+	RTC::TransportTuple* IceServer::HasTuple(RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		// If there is no selected tuple yet then we know that the tuples list
+		// is empty.
+		if (!this->selectedTuple)
+			return nullptr;
+
+		// Check the current selected tuple.
+		if (this->selectedTuple->Compare(tuple))
+			return this->selectedTuple;
+
+		// Otherwise check other stored tuples.
+		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
+		{
+			RTC::TransportTuple* stored_tuple = &(*it);
+
+			if (stored_tuple->Compare(tuple))
+				return stored_tuple;
+		}
+
+		return nullptr;
+	}
+
+	void IceServer::SetSelectedTuple(RTC::TransportTuple* stored_tuple)
+	{
+		MS_TRACE();
+
+		this->selectedTuple = stored_tuple;
+	}
+
+	// TODO
+	// bool Transport::RemoveTuple(RTC::TransportTuple* tuple)
+	// {
+	// 	for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
+	// 	{
+	// 		RTC::TransportTuple* valid_tuple = &(*it);
+
+	// 		// If the tuple was a valid tuple then remove it.
+	// 		if (valid_tuple->Compare(tuple))
+	// 		{
+	// 			this->tuples.erase(it);
+
+	// 			// If it was the media tuple then unset it and set the media
+	// 			// tuple to the first valid tuple (if any).
+	// 			if (this->mediaTuple == valid_tuple)
+	// 			{
+	// 				if (this->tuples.begin() != this->tuples.end())
+	// 				{
+	// 					this->mediaTuple = &(*this->tuples.begin());
+	// 				}
+	// 				else
+	// 				{
+	// 					this->mediaTuple = nullptr;
+	// 					// This is just useful is there are just TCP tuples.
+	// 					this->icePaired = false;
+	// 					this->icePairedWithUseCandidate = false;
+
+	// 					// TODO: This should fire a 'icefailed' event.
+	// 				}
+	// 			}
+
+	// 			return true;
+	// 		}
+	// 	}
+
+	// 	return false;
+	// }
 }

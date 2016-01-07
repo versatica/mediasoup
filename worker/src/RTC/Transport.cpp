@@ -28,7 +28,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	size_t Transport::maxSources = 8;
+	size_t Transport::maxTuples = 8;
 
 	/* Instance methods. */
 
@@ -513,10 +513,11 @@ namespace RTC
 		// Check our local DTLS role.
 		switch (this->dtlsLocalRole)
 		{
-			// If still 'auto' then transition to 'server' if ICE is complete (with or
-			// without UseCandidate).
+			// If still 'auto' then transition to 'server' if ICE is 'connected' or
+			// 'completed'.
 			case RTC::DTLSTransport::Role::AUTO:
-				if (this->icePaired)
+				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("transition from local 'auto' role to 'server' and running DTLS transport");
 
@@ -527,9 +528,9 @@ namespace RTC
 
 			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
 			// received with remote DTLS role 'server'.
-			// If 'client' then wait for the first Binding with USE-CANDIDATE.
+			// If 'client' then wait for ICE to be 'completed'.
 			case RTC::DTLSTransport::Role::CLIENT:
-				if (this->icePairedWithUseCandidate)
+				if (this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("running DTLS transport in 'client' role");
 
@@ -537,9 +538,11 @@ namespace RTC
 				}
 				break;
 
-			// If 'server' then run the DTLS handler upon first valid ICE pair.
+			// If 'server' then run the DTLS handler if ICE is 'connected' or
+			// 'completed'.
 			case RTC::DTLSTransport::Role::SERVER:
-				if (this->icePaired)
+				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("running DTLS transport in 'server' role");
 
@@ -553,7 +556,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onSTUNDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void Transport::onSTUNDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -566,19 +569,19 @@ namespace RTC
 		}
 
 		// Pass it to the IceServer.
-		this->iceServer->ProcessSTUNMessage(msg, source);
+		this->iceServer->ProcessSTUNMessage(msg, tuple);
 
 		delete msg;
 	}
 
 	inline
-	void Transport::onDTLSDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void Transport::onDTLSDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
-		if (!IsValidSource(source))
+		if (!this->iceServer->IsValidTuple(tuple))
 		{
-			MS_DEBUG("ignoring DTLS data coming from an invalid source");
+			MS_DEBUG("ignoring DTLS data coming from an invalid tuple");
 
 			return;
 		}
@@ -600,7 +603,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onRTPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void Transport::onRTPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -608,7 +611,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onRTCPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len)
+	void Transport::onRTCPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -622,8 +625,8 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(socket, remote_addr);
-		onSTUNDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(socket, remote_addr);
+		onSTUNDataRecv(&tuple, data, len);
 	}
 
 	void Transport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
@@ -633,8 +636,8 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(socket, remote_addr);
-		onDTLSDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(socket, remote_addr);
+		onDTLSDataRecv(&tuple, data, len);
 	}
 
 	void Transport::onRTPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
@@ -644,8 +647,8 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(socket, remote_addr);
-		onRTPDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(socket, remote_addr);
+		onRTPDataRecv(&tuple, data, len);
 	}
 
 	void Transport::onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
@@ -655,8 +658,8 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(socket, remote_addr);
-		onRTCPDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(socket, remote_addr);
+		onRTCPDataRecv(&tuple, data, len);
 	}
 
 	void Transport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
@@ -666,12 +669,14 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(connection);
+		// TODO
 
-		if (RemoveSource(&source))
-		{
-			MS_DEBUG("valid source %s:", is_closed_by_peer ? "closed by peer" : "locally closed");
-		}
+		// RTC::TransportTuple tuple(connection);
+
+		// if (RemoveTuple(&tuple))
+		// {
+		// 	MS_DEBUG("valid tuple %s:", is_closed_by_peer ? "closed by peer" : "locally closed");
+		// }
 	}
 
 	void Transport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
@@ -681,8 +686,8 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(connection);
-		onSTUNDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(connection);
+		onSTUNDataRecv(&tuple, data, len);
 	}
 
 	void Transport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
@@ -692,16 +697,16 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(connection);
-		onDTLSDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(connection);
+		onDTLSDataRecv(&tuple, data, len);
 	}
 
 	void Transport::onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
-		RTC::TransportSource source(connection);
-		onRTPDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(connection);
+		onRTPDataRecv(&tuple, data, len);
 	}
 
 	void Transport::onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
@@ -711,27 +716,29 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		RTC::TransportSource source(connection);
-		onRTCPDataRecv(&source, data, len);
+		RTC::TransportTuple tuple(connection);
+		onRTCPDataRecv(&tuple, data, len);
 	}
 
-	void Transport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source)
+	void Transport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
 		if (!IsAlive())
 			return;
 
-		// Send the STUN response over the same transport source.
-		source->Send(msg->GetRaw(), msg->GetLength());
+		// Send the STUN response over the same transport tuple.
+		tuple->Send(msg->GetRaw(), msg->GetLength());
 	}
 
-	void Transport::onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate)
+	void Transport::onICESelectedTuple(RTC::IceServer* iceServer, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
 		if (!IsAlive())
 			return;
+
+		this->selectedTuple = tuple;
 
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
@@ -740,29 +747,22 @@ namespace RTC
 		 * on any candidates provided for that component.
 		 */
 
-		this->icePaired = true;
-		if (has_use_candidate)
-			this->icePairedWithUseCandidate = true;
-
-		switch (SetSendingSource(source))
-		{
-			// This is a new source.
-			case 0:
-				MS_DEBUG("got a new ICE valid pair [UseCandidate:%s]", has_use_candidate ? "true" : "false");
-				break;
-
-			// This is already the sending source.
-			case 1:
-				break;
-
-			// This is another valid source.
-			case 2:
-				MS_DEBUG("got a previous ICE valid pair [UseCandidate:%s]", has_use_candidate ? "true" : "false");
-				break;
-		}
-
 		// If ready, run the DTLS handler.
 		MayRunDTLSTransport();
+	}
+
+	void Transport::onICEConnected(RTC::IceServer* iceServer)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("ICE connected");
+	}
+
+	void Transport::onICECompleted(RTC::IceServer* iceServer)
+	{
+		MS_TRACE();
+
+		MS_DEBUG("ICE completed");
 	}
 
 	void Transport::onDTLSConnecting(RTC::DTLSTransport* dtlsTransport)
@@ -880,17 +880,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->sendingSource)
+		if (!this->selectedTuple)
 		{
-			MS_DEBUG("no sending address set, cannot send DTLS packet");
+			MS_DEBUG("no media address set, cannot send DTLS packet");
 			return;
 		}
 
 		// TODO: remove
-		MS_DEBUG("sending DTLS data to to:");
-		this->sendingSource->Dump();
+		MS_DEBUG("media DTLS data to to:");
+		this->selectedTuple->Dump();
 
-		this->sendingSource->Send(data, len);
+		this->selectedTuple->Send(data, len);
 	}
 
 	void Transport::onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)

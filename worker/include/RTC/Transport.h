@@ -2,18 +2,17 @@
 #define MS_RTC_TRANSPORT_H
 
 #include "common.h"
-#include "RTC/IceCandidate.h"
-#include "RTC/IceServer.h"
-#include "RTC/DTLSTransport.h"
-#include "RTC/STUNMessage.h"
-#include "RTC/TransportSource.h"
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
 #include "RTC/TCPConnection.h"
+#include "RTC/IceCandidate.h"
+#include "RTC/IceServer.h"
+#include "RTC/STUNMessage.h"
+#include "RTC/TransportTuple.h"
+#include "RTC/DTLSTransport.h"
 #include "Channel/Notifier.h"
 #include <string>
 #include <vector>
-#include <list>
 #include <json/json.h>
 
 namespace RTC
@@ -25,13 +24,6 @@ namespace RTC
 		public RTC::IceServer::Listener,
 		public RTC::DTLSTransport::Listener
 	{
-	public:
-		class Listener
-		{
-		public:
-			virtual void onTransportClosed(RTC::Transport* transport) = 0;
-		};
-
 	public:
 		enum class IceComponent
 		{
@@ -49,8 +41,15 @@ namespace RTC
 			FAILED
 		};
 
+	public:
+		class Listener
+		{
+		public:
+			virtual void onTransportClosed(RTC::Transport* transport) = 0;
+		};
+
 	private:
-		static size_t maxSources;
+		static size_t maxTuples;
 
 	public:
 		Transport(Listener* listener, Channel::Notifier* notifier, unsigned int transportId, Json::Value& data, Transport* rtpTransport = nullptr);
@@ -66,17 +65,14 @@ namespace RTC
 	private:
 		void Terminate();
 		bool IsAlive();
-		int SetSendingSource(RTC::TransportSource* source);
-		int IsValidSource(RTC::TransportSource* source);
-		bool RemoveSource(RTC::TransportSource* source);
 		void MayRunDTLSTransport();
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
-		void onSTUNDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len);
-		void onDTLSDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len);
-		void onRTPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len);
-		void onRTCPDataRecv(RTC::TransportSource* source, const MS_BYTE* data, size_t len);
+		void onSTUNDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
+		void onDTLSDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
+		void onRTPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
+		void onRTCPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
 
 	/* Pure virtual methods inherited from RTC::UDPSocket::Listener. */
 	public:
@@ -98,8 +94,10 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
-		virtual void onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportSource* source) override;
-		virtual void onICEValidPair(RTC::IceServer* iceServer, RTC::TransportSource* source, bool has_use_candidate) override;
+		virtual void onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple) override;
+		virtual void onICESelectedTuple(IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		virtual void onICEConnected(IceServer* iceServer) override;
+		virtual void onICECompleted(IceServer* iceServer) override;
 
 	/* Pure virtual methods inherited from RTC::DTLSTransport::Listener. */
 	public:
@@ -136,10 +134,7 @@ namespace RTC
 		// Others (ICE).
 		RTC::Transport::IceComponent iceComponent;
 		std::vector<IceCandidate> iceLocalCandidates;
-		std::list<RTC::TransportSource> sources;
-		RTC::TransportSource* sendingSource = nullptr;
-		bool icePaired = false;
-		bool icePairedWithUseCandidate = false;
+		RTC::TransportTuple* selectedTuple = nullptr;
 		// Others (DTLS).
 		DtlsTransportState dtlsState = DtlsTransportState::NEW;
 		bool remoteDtlsParametersGiven = false;
@@ -170,139 +165,6 @@ namespace RTC
 	std::string& Transport::GetIcePassword()
 	{
 		return this->iceServer->GetPassword();
-	}
-
-	/**
-	 * Set the given source as a valid one and mark it as the sending source for
-	 * outgoing data.
-	 *
-	 * @param source: A RTC::TransportSource (which is a UDP tuple or TCP connection).
-	 * @return:       true if the given source was not an already valid source,
-	 *                false otherwise.
-	 * @return:       1 if it's the current sending source, 2 if it's another
-	 *                valid source, 0 if it's not a valid source.
-	 */
-	inline
-	int Transport::SetSendingSource(RTC::TransportSource* source)
-	{
-		// Check whether this is already a valid source.
-		// NOTE: The IsValidSource() method will also mark it as sending source.
-		switch (IsValidSource(source))
-		{
-			// This is already the sending source.
-			case 1:
-				return 1;
-			// This is another valid source.
-			case 2:
-				return 2;
-		}
-
-		// If there are Transport::maxSources sources then close and remove the last one.
-		if (this->sources.size() == Transport::maxSources)
-		{
-			RTC::TransportSource* last_source = &(*this->sources.end());
-
-			last_source->Close();
-			this->sources.pop_back();
-		}
-
-		// Add the new source at the beginning.
-		this->sources.push_front(*source);
-
-		// Set it as sending source (make it point to the first source in the list).
-		this->sendingSource = &(*this->sources.begin());
-
-		// If it is UDP then we must store the remote address (until now it is
-		// just a pointer that will be freed soon).
-		if (this->sendingSource->IsUDP())
-			this->sendingSource->StoreUdpRemoteAddress();
-
-		return 0;
-	}
-
-	/**
-	 * Check whether the given source is contained in the list of valid sources for
-	 * this transport. In case it is, the given source is also marked as sending
-	 * source for the outgoing data.
-	 *
-	 * @param source:  The RTC::TransportSource to check.
-	 * @return:        1 if it's the current sending source, 2 if it's another
-	 *                 valid source, 0 if it's not a valid source.
-	 */
-	inline
-	int Transport::IsValidSource(RTC::TransportSource* source)
-	{
-		// If there is no sending source yet then we know that the sources list
-		// is empty, so return 0.
-		if (!this->sendingSource)
-			return 0;
-
-		// First check the current sending source. If it matches then return 1.
-		if (this->sendingSource->Compare(source))
-			return 1;
-
-		// Otherwise check other valid source in the sources list.
-		for (auto it = this->sources.begin(); it != this->sources.end(); ++it)
-		{
-			RTC::TransportSource* valid_source = &(*it);
-
-			// If found set it as sending source and return 2.
-			if (valid_source->Compare(source))
-			{
-				this->sendingSource = valid_source;
-				return 2;
-			}
-		}
-
-		// Otherwise it is not a valid source so return 0.
-		return 0;
-	}
-
-	/**
-	 * Remove the given source from the list of valid sources. Also update the
-	 * sending source if the given source was the sending source and make it point
-	 * to the next valid source (if any).
-	 *
-	 * @param source:  The RTC::TransportSource to remove.
-	 * @return:        true if the given source was present in the list of valid
-	 *                 sources, false otherwise.
-	 */
-	inline
-	bool Transport::RemoveSource(RTC::TransportSource* source)
-	{
-		for (auto it = this->sources.begin(); it != this->sources.end(); ++it)
-		{
-			RTC::TransportSource* valid_source = &(*it);
-
-			// If the source was a valid source then remove it.
-			if (valid_source->Compare(source))
-			{
-				this->sources.erase(it);
-
-				// If it was the sending source then unset it and set the sending
-				// source to the first valid source (if any).
-				if (this->sendingSource == valid_source)
-				{
-					if (this->sources.begin() != this->sources.end())
-					{
-						this->sendingSource = &(*this->sources.begin());
-					}
-					else
-					{
-						this->sendingSource = nullptr;
-						// This is just useful is there are just TCP sources.
-						this->icePaired = false;
-						this->icePairedWithUseCandidate = false;
-
-						// TODO: This should fire a 'icefailed' event.
-					}
-				}
-
-				return true;
-			}
-		}
-
-		return false;
 	}
 }
 
