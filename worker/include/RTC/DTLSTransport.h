@@ -18,6 +18,16 @@ namespace RTC
 		public Timer::Listener
 	{
 	public:
+		enum class DtlsState
+		{
+			NEW = 1,
+			CONNECTING,
+			CONNECTED,
+			FAILED,
+			CLOSED
+		};
+
+	public:
 		enum class Role
 		{
 			NONE   = 0,
@@ -63,15 +73,12 @@ namespace RTC
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
 			virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
-			// The DTLS connection has been closed due to receipt of a close_notify alert.
-			// NOTE: The caller MUST NOT call Close() during this callback.
-			virtual void onDTLSDisconnected(DTLSTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Close() during this callback.
 			virtual void onDTLSFailed(DTLSTransport* dtlsTransport) = 0;
-			// The DTLS connection has been closed intentionally via Close().
-			// NOTE: The caller MUST NOT call any method during this callback.
+			// The DTLS connection has been closed due to receipt of a close_notify alert.
+			// NOTE: The caller MUST NOT call Close() during this callback.
 			virtual void onDTLSClosed(DTLSTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Close() during this callback.
@@ -114,10 +121,12 @@ namespace RTC
 		void Run(Role localRole);
 		void SetRemoteFingerprint(Fingerprint fingerprint);
 		void ProcessDTLSData(const MS_BYTE* data, size_t len);
+		DtlsState GetState();
 		Role GetLocalRole();
 		void SendApplicationData(const MS_BYTE* data, size_t len);
 
 	private:
+		bool IsRunning();
 		void Reset();
 		bool CheckStatus(int return_code);
 		void SendPendingOutgoingDTLSData();
@@ -144,12 +153,11 @@ namespace RTC
 		BIO* sslBioToNetwork = nullptr;  // The BIO in which ssl writes.
 		Timer* timer = nullptr;
 		// Others.
+		DtlsState state = DtlsState::NEW;
 		Role localRole = Role::NONE;
 		Fingerprint remoteFingerprint = { FingerprintAlgorithm::NONE, "" };
-		bool running = false;
 		bool handshakeDone = false;
 		bool handshakeDoneNow = false;
-		bool connected = false;
 	};
 
 	/* Inline static methods. */
@@ -194,6 +202,28 @@ namespace RTC
 	}
 
 	/* Inline instance methods. */
+
+	inline
+	bool DTLSTransport::IsRunning()
+	{
+		switch (this->state)
+		{
+			case DtlsState::NEW:
+				return false;
+			case DtlsState::CONNECTING:
+			case DtlsState::CONNECTED:
+				return true;
+			case DtlsState::FAILED:
+			case DtlsState::CLOSED:
+				return false;
+		}
+	}
+
+	inline
+	DTLSTransport::DtlsState DTLSTransport::GetState()
+	{
+		return this->state;
+	}
 
 	inline
 	DTLSTransport::Role DTLSTransport::GetLocalRole()

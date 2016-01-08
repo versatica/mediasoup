@@ -25,23 +25,6 @@ namespace RTC
 		public RTC::DTLSTransport::Listener
 	{
 	public:
-		enum class IceComponent
-		{
-			RTP  = 1,
-			RTCP = 2
-		};
-
-	private:
-		enum class DtlsTransportState
-		{
-			NEW = 1,
-			CONNECTING,
-			CONNECTED,
-			CLOSED,
-			FAILED
-		};
-
-	public:
 		class Listener
 		{
 		public:
@@ -63,7 +46,7 @@ namespace RTC
 		Transport* CreateAssociatedTransport(unsigned int transportId);
 
 	private:
-		void Terminate();
+		void ClosePorts();
 		bool IsAlive();
 		void MayRunDTLSTransport();
 
@@ -103,7 +86,6 @@ namespace RTC
 	public:
 		virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) override;
 		virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) override;
-		virtual void onDTLSDisconnected(DTLSTransport* dtlsTransport) override;
 		virtual void onDTLSFailed(DTLSTransport* dtlsTransport) override;
 		virtual void onDTLSClosed(DTLSTransport* dtlsTransport) override;
 		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
@@ -132,11 +114,9 @@ namespace RTC
 		// Others.
 		bool allocated = false;
 		// Others (ICE).
-		RTC::Transport::IceComponent iceComponent;
 		std::vector<IceCandidate> iceLocalCandidates;
 		RTC::TransportTuple* selectedTuple = nullptr;
 		// Others (DTLS).
-		DtlsTransportState dtlsState = DtlsTransportState::NEW;
 		bool remoteDtlsParametersGiven = false;
 		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::AUTO;
 	};
@@ -146,8 +126,8 @@ namespace RTC
 	inline
 	bool Transport::IsAlive()
 	{
-		if (this->dtlsState == DtlsTransportState::CLOSED ||
-			  this->dtlsState == DtlsTransportState::FAILED)
+		if (this->dtlsTransport->GetState() == DTLSTransport::DtlsState::FAILED ||
+		    this->dtlsTransport->GetState() == DTLSTransport::DtlsState::CLOSED)
 		{
 			return false;
 		}

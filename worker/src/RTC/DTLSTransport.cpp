@@ -542,7 +542,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->running)
+		if (IsRunning())
 		{
 			// Send close alert to the peer.
 			SSL_shutdown(this->ssl);
@@ -551,9 +551,6 @@ namespace RTC
 
 		// Close the DTLS timer.
 		this->timer->Close();
-
-		// Notify the listener.
-		this->listener->onDTLSClosed(this);
 
 		delete this;
 	}
@@ -564,9 +561,9 @@ namespace RTC
 
 		MS_DEBUG("[role:%s, running:%s, handshake done:%s, connected:%s]",
 			(this->localRole == Role::SERVER ? "server" : (this->localRole == Role::CLIENT ? "client" : "none")),
-			this->running ? "yes" : "no",
+			IsRunning() ? "yes" : "no",
 			this->handshakeDone ? "yes" : "no",
-			this->connected ? "yes" : "no");
+			this->state == DtlsState::CONNECTED ? "yes" : "no");
 	}
 
 	void DTLSTransport::Run(Role localRole)
@@ -594,10 +591,9 @@ namespace RTC
 
 		// Update local role.
 		this->localRole = localRole;
-		// Set running flag.
-		this->running = true;
 
-		// Notify the listener.
+		// Set state and notify the listener.
+		this->state = DtlsState::CONNECTING;
 		this->listener->onDTLSConnecting(this);
 
 		switch (this->localRole)
@@ -632,7 +628,7 @@ namespace RTC
 
 		// The remote fingerpring may have been set after DTLS handshake was done,
 		// so we may need to process it now.
-		if (this->handshakeDone && !this->connected)
+		if (this->handshakeDone && this->state != DtlsState::CONNECTED)
 		{
 			MS_DEBUG("handshake already done, processing it right now");
 
@@ -647,7 +643,7 @@ namespace RTC
 		int written;
 		int read;
 
-		if (!this->running)
+		if (!IsRunning())
 		{
 			MS_ERROR("cannot process data while not running");
 
@@ -694,7 +690,7 @@ namespace RTC
 		MS_TRACE();
 
 		// We cannot send data to the peer if its remote fingerprint is not validated.
-		if (!this->connected)
+		if (this->state != DtlsState::CONNECTED)
 		{
 			MS_ERROR("cannot send application data while DTLS is not fully connected");
 
@@ -732,7 +728,7 @@ namespace RTC
 
 		int ret;
 
-		if (!this->running)
+		if (!IsRunning())
 			return;
 
 		MS_DEBUG("resetting DTLS transport");
@@ -746,10 +742,9 @@ namespace RTC
 		SSL_shutdown(this->ssl);
 
 		this->localRole = Role::NONE;
-		this->running = false;
+		this->state = DtlsState::NEW;
 		this->handshakeDone = false;
 		this->handshakeDoneNow = false;
-		this->connected = false;
 
 		// Reset SSL status.
 		// NOTE: For this to properly work, SSL_shutdown() must be called before.
@@ -766,6 +761,7 @@ namespace RTC
 		MS_TRACE();
 
 		int err;
+		bool was_handshake_done = this->handshakeDone;
 
 		err = SSL_get_error(this->ssl, return_code);
 		switch (err)
@@ -805,28 +801,22 @@ namespace RTC
 			// Stop the timer.
 			this->timer->Stop();
 
-			// Process the handshake.
-			ProcessHandshake();
+			// Process the handshake just once (ignore if DTLS renegotiation).
+			if (!was_handshake_done)
+				ProcessHandshake();
 		}
 		// Check if the peer sent close alert or a fatal error happened.
 		else if ((SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN) || err == SSL_ERROR_SSL || err == SSL_ERROR_SYSCALL)
 		{
-			bool was_connected = this->connected;
-
-			this->localRole = Role::NONE;
-			this->running = false;
-			this->handshakeDone = false;
-			this->handshakeDoneNow = false;
-			this->connected = false;
-
-			if (was_connected)
+			if (this->state == DtlsState::CONNECTED)
 			{
 				MS_DEBUG("disconnected");
 
 				Reset();
 
-				// Notify to the listener.
-				this->listener->onDTLSDisconnected(this);
+				// Set state and notify the listener.
+				this->state = DtlsState::CLOSED;
+				this->listener->onDTLSClosed(this);
 			}
 			else
 			{
@@ -834,7 +824,8 @@ namespace RTC
 
 				Reset();
 
-				// Notify to the listener.
+				// Set state and notify the listener.
+				this->state = DtlsState::FAILED;
 				this->listener->onDTLSFailed(this);
 			}
 
@@ -902,7 +893,8 @@ namespace RTC
 
 			Reset();
 
-			// Notify to the listener.
+			// Set state and notify the listener.
+			this->state = DtlsState::FAILED;
 			this->listener->onDTLSFailed(this);
 
 			return false;
@@ -930,13 +922,12 @@ namespace RTC
 		{
 			Reset();
 
-			// Notify to the listener.
+			// Set state and notify the listener.
+			this->state = DtlsState::FAILED;
 			this->listener->onDTLSFailed(this);
 
 			return;
 		}
-
-		this->connected = true;
 
 		// Get the negotiated SRTP profile.
 		RTC::SRTPSession::SRTPProfile srtp_profile;
@@ -955,7 +946,8 @@ namespace RTC
 
 			Reset();
 
-			// Notify to the listener.
+			// Set state and notify the listener.
+			this->state = DtlsState::FAILED;
 			this->listener->onDTLSFailed(this);
 		}
 	}
@@ -1074,7 +1066,8 @@ namespace RTC
 		std::memcpy(srtp_remote_master_key, srtp_remote_key, MS_SRTP_MASTER_KEY_LENGTH);
 		std::memcpy(srtp_remote_master_key + MS_SRTP_MASTER_KEY_LENGTH, srtp_remote_salt, MS_SRTP_MASTER_SALT_LENGTH);
 
-		// Notify the listener with the SRTP key material.
+		// Set state and notify the listener.
+		this->state = DtlsState::CONNECTED;
 		this->listener->onDTLSConnected(this, srtp_profile, srtp_local_master_key, MS_SRTP_MASTER_LENGTH, srtp_remote_master_key, MS_SRTP_MASTER_LENGTH);
 	}
 

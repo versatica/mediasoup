@@ -50,10 +50,9 @@ namespace RTC
 		// RTP transport.
 		if (!rtpTransport)
 		{
-			this->iceComponent = IceComponent::RTP;
-
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(this,
+				IceServer::IceComponent::RTP,
 				Utils::Crypto::GetRandomString(16),
 				Utils::Crypto::GetRandomString(32));
 
@@ -66,10 +65,9 @@ namespace RTC
 		// RTCP transport associated to a given RTP transport.
 		else
 		{
-			this->iceComponent = IceComponent::RTCP;
-
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(this,
+				IceServer::IceComponent::RTCP,
 				rtpTransport->GetIceUsernameFragment(),
 				rtpTransport->GetIcePassword());
 
@@ -84,7 +82,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceComponent == IceComponent::RTP)
+			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP;
@@ -109,7 +107,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceComponent == IceComponent::RTP)
+			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP;
@@ -134,7 +132,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceComponent == IceComponent::RTP)
+			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP;
@@ -159,7 +157,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceComponent == IceComponent::RTP)
+			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP;
@@ -203,15 +201,31 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Close all the servers.
-		Terminate();
+		if (this->iceServer)
+		{
+			this->iceServer->Close();
+			this->iceServer = nullptr;
+		}
 
-		// And also close the DTLSTransport.
 		if (this->dtlsTransport)
 		{
 			this->dtlsTransport->Close();
 			this->dtlsTransport = nullptr;
 		}
+
+		ClosePorts();
+
+		// if (this->srtpRecvSession)
+		// {
+		// 	this->srtpRecvSession->Close();
+		// 	this->srtpRecvSession = nullptr;
+		// }
+
+		// if (this->srtpSendSession)
+		// {
+		// 	this->srtpSendSession->Close();
+		// 	this->srtpSendSession = nullptr;
+		// }
 
 		// If this was allocated (it did not throw in the constructor) notify the
 		// listener and delete it.
@@ -229,12 +243,12 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_iceComponent("iceComponent");
+		static const Json::StaticString v_RTP("RTP");
+		static const Json::StaticString v_RTCP("RTCP");
 		static const Json::StaticString k_iceLocalParameters("iceLocalParameters");
 		static const Json::StaticString k_usernameFragment("usernameFragment");
 		static const Json::StaticString k_password("password");
 		static const Json::StaticString k_iceLocalCandidates("iceLocalCandidates");
-		static const Json::StaticString v_RTP("RTP");
-		static const Json::StaticString v_RTCP("RTCP");
 		static const Json::StaticString k_dtlsLocalParameters("dtlsLocalParameters");
 		static const Json::StaticString k_fingerprints("fingerprints");
 		static const Json::StaticString k_role("role");
@@ -251,7 +265,7 @@ namespace RTC
 		Json::Value data;
 
 		// Add `iceComponent`.
-		if (this->iceComponent == IceComponent::RTP)
+		if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
 			data[k_iceComponent] = v_RTP;
 		else
 			data[k_iceComponent] = v_RTCP;
@@ -287,22 +301,22 @@ namespace RTC
 		}
 
 		// Add `dtlsState`.
-		switch (this->dtlsState)
+		switch (this->dtlsTransport->GetState())
 		{
-			case DtlsTransportState::NEW:
+			case DTLSTransport::DtlsState::NEW:
 				data[k_dtlsState] = v_new;
 				break;
-			case DtlsTransportState::CONNECTING:
+			case DTLSTransport::DtlsState::CONNECTING:
 				data[k_dtlsState] = v_connecting;
 				break;
-			case DtlsTransportState::CONNECTED:
+			case DTLSTransport::DtlsState::CONNECTED:
 				data[k_dtlsState] = v_connected;
 				break;
-			case DtlsTransportState::CLOSED:
-				data[k_dtlsState] = v_closed;
-				break;
-			case DtlsTransportState::FAILED:
+			case DTLSTransport::DtlsState::FAILED:
 				data[k_dtlsState] = v_failed;
+				break;
+			case DTLSTransport::DtlsState::CLOSED:
+				data[k_dtlsState] = v_closed;
 				break;
 		}
 
@@ -453,28 +467,10 @@ namespace RTC
 		}
 	}
 
-	// This closes all the server but not the DTLSTransport.
-	void Transport::Terminate()
+	// This closes all the UDP/TCP servers.
+	void Transport::ClosePorts()
 	{
 		MS_TRACE();
-
-		if (this->iceServer)
-		{
-			this->iceServer->Close();
-			this->iceServer = nullptr;
-		}
-
-		// if (this->srtpRecvSession)
-		// {
-		// 	this->srtpRecvSession->Close();
-		// 	this->srtpRecvSession = nullptr;
-		// }
-
-		// if (this->srtpSendSession)
-		// {
-		// 	this->srtpSendSession->Close();
-		// 	this->srtpSendSession = nullptr;
-		// }
 
 		for (auto socket : this->udpSockets)
 			socket->Close();
@@ -494,7 +490,7 @@ namespace RTC
 		if (!IsAlive())
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a non alive Transport");
 
-		if (this->iceComponent != IceComponent::RTP)
+		if (this->iceServer->GetComponent() != IceServer::IceComponent::RTP)
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
 
 		return new RTC::Transport(this->listener, this->notifier, transportId, nullData, this);
@@ -586,9 +582,12 @@ namespace RTC
 			return;
 		}
 
+		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
+		this->iceServer->ForceSelectedTuple(tuple);
+
 		// Check that DTLS status is 'connecting' or 'connected'.
-		if (this->dtlsState == DtlsTransportState::CONNECTING ||
-		    this->dtlsState == DtlsTransportState::CONNECTED)
+		if (this->dtlsTransport->GetState() == DTLSTransport::DtlsState::CONNECTING ||
+		    this->dtlsTransport->GetState() == DTLSTransport::DtlsState::CONNECTED)
 		{
 			MS_DEBUG("DTLS data received, passing it to the DTLS transport");
 
@@ -596,7 +595,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_DEBUG("DTLSTransport is not connecting or conneted, ignoring received DTLS data");
+			MS_DEBUG("DTLSTransport is not 'connecting' or 'conneted', ignoring received DTLS data");
 
 			return;
 		}
@@ -607,6 +606,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!this->iceServer->IsValidTuple(tuple))
+		{
+			MS_DEBUG("ignoring RTP data coming from an invalid tuple");
+
+			return;
+		}
+
+		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
+		this->iceServer->ForceSelectedTuple(tuple);
+
 		// TODO
 	}
 
@@ -614,6 +623,16 @@ namespace RTC
 	void Transport::onRTCPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
+
+		if (!this->iceServer->IsValidTuple(tuple))
+		{
+			MS_DEBUG("ignoring RTCP data coming from an invalid tuple");
+
+			return;
+		}
+
+		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
+		this->iceServer->ForceSelectedTuple(tuple);
 
 		// TODO
 	}
@@ -776,8 +795,6 @@ namespace RTC
 
 		MS_DEBUG("DTLS connecting");
 
-		this->dtlsState = DtlsTransportState::CONNECTING;
-
 		// Notify.
 		eventData[k_dtlsState] = v_connecting;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
@@ -794,8 +811,6 @@ namespace RTC
 
 		MS_DEBUG("DTLS connected");
 
-		this->dtlsState = DtlsTransportState::CONNECTED;
-
 		// TODO
 		// SetLocalSRTPKey(srtp_profile, srtp_local_key, srtp_local_key_len);
 		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
@@ -805,29 +820,22 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
-	void Transport::onDTLSDisconnected(RTC::DTLSTransport* dtlsTransport)
+	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_closed("closed");
 
-		DtlsTransportState previousDtlsState = this->dtlsState;
 		Json::Value eventData;
 
 		MS_DEBUG("DTLS remotely disconnected");
 
-		this->dtlsState = DtlsTransportState::CLOSED;
-
-		// Call Terminate() so all the servers are closed.
-		Terminate();
+		ClosePorts();
 
 		// Notify.
-		if (previousDtlsState != DtlsTransportState::CLOSED)
-		{
-			eventData[k_dtlsState] = v_closed;
-			this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
-		}
+		eventData[k_dtlsState] = v_closed;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
 	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
@@ -841,39 +849,11 @@ namespace RTC
 
 		MS_DEBUG("DTLS failed");
 
-		this->dtlsState = DtlsTransportState::FAILED;
-
-		// Call Terminate() so all the servers are closed.
-		Terminate();
+		ClosePorts();
 
 		// Notify.
 		eventData[k_dtlsState] = v_failed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
-	}
-
-	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
-	{
-		MS_TRACE();
-
-		static const Json::StaticString k_dtlsState("dtlsState");
-		static const Json::StaticString v_closed("closed");
-
-		DtlsTransportState previousDtlsState = this->dtlsState;
-		Json::Value eventData;
-
-		MS_DEBUG("DTLS closed");
-
-		this->dtlsState = DtlsTransportState::CLOSED;
-
-		// NOTE: This is just called when calling Close() so don't call
-		// Terminate() here (not needed).
-
-		// Notify.
-		if (previousDtlsState != DtlsTransportState::CLOSED)
-		{
-			eventData[k_dtlsState] = v_closed;
-			this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
-		}
 	}
 
 	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)

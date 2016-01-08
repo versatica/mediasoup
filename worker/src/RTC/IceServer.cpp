@@ -7,8 +7,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string password) :
+	IceServer::IceServer(Listener* listener, IceServer::IceComponent iceComponent, const std::string& usernameFragment, const std::string password) :
 		listener(listener),
+		iceComponent(iceComponent),
 		usernameFragment(usernameFragment),
 		password(password)
 	{
@@ -190,6 +191,30 @@ namespace RTC
 			return false;
 	}
 
+	void IceServer::ForceSelectedTuple(RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->state != IceState::NEW, "cannot force the selected tuple if not in 'connecting' or 'connected' state is 'new' but there is selected tuple");
+
+		// TODO: Remove as this assert is reduntant.
+		MS_ASSERT(this->selectedTuple != nullptr, "cannot force the selected tuple if there was not a selected tuple");
+
+		auto stored_tuple = HasTuple(tuple);
+
+		MS_ASSERT(stored_tuple, "cannot force the selected tuple if the given tuple was not already a valid tuple");
+
+		// If the given tuple was already the selected tuple do nothing.
+		if (stored_tuple == this->selectedTuple)
+			return;
+
+		// Mark it as selected tuple.
+		SetSelectedTuple(stored_tuple);
+
+		// Notify the listener.
+		this->listener->onICESelectedTuple(this, stored_tuple);
+	}
+
 	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate)
 	{
 		MS_TRACE();
@@ -314,6 +339,7 @@ namespace RTC
 		}
 	}
 
+	inline
 	RTC::TransportTuple* IceServer::AddTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
@@ -332,6 +358,7 @@ namespace RTC
 		return stored_tuple;
 	}
 
+	inline
 	RTC::TransportTuple* IceServer::HasTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
@@ -357,6 +384,7 @@ namespace RTC
 		return nullptr;
 	}
 
+	inline
 	void IceServer::SetSelectedTuple(RTC::TransportTuple* stored_tuple)
 	{
 		MS_TRACE();

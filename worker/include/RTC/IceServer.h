@@ -12,6 +12,13 @@ namespace RTC
 	class IceServer
 	{
 	public:
+		enum class IceComponent
+		{
+			RTP  = 1,
+			RTCP = 2
+		};
+
+	public:
 		enum class IceState
 		{
 			NEW = 1,
@@ -34,14 +41,18 @@ namespace RTC
 		};
 
 	public:
-		IceServer(Listener* listener, const std::string& usernameFragment, const std::string password);
+		IceServer(Listener* listener, IceServer::IceComponent iceComponent, const std::string& usernameFragment, const std::string password);
 
 		void Close();
 		void ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportTuple* tuple);
+		IceComponent GetComponent();
 		std::string& GetUsernameFragment();
 		std::string& GetPassword();
 		IceState GetState();
 		bool IsValidTuple(RTC::TransportTuple* tuple);
+		// This should be just called in 'connected' or completed' state
+		// and the given tuple must be an already valid tuple.
+		void ForceSelectedTuple(RTC::TransportTuple* tuple);
 
 	private:
 		void HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate);
@@ -63,6 +74,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
+		IceComponent iceComponent;
 		std::string usernameFragment;
 		std::string password;
 		IceState state = IceState::NEW;
@@ -71,6 +83,12 @@ namespace RTC
 	};
 
 	/* Inline methods. */
+
+	inline
+	IceServer::IceComponent IceServer::GetComponent()
+	{
+		return this->iceComponent;
+	}
 
 	inline
 	std::string& IceServer::GetUsernameFragment()
