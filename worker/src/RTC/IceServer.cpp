@@ -195,7 +195,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->state != IceState::NEW, "cannot force the selected tuple if not in 'connecting' or 'connected' state is 'new' but there is selected tuple");
+		MS_ASSERT(this->state != IceState::NEW, "cannot force the selected tuple if not in 'connecting' or 'connected' state");
 
 		// TODO: Remove as this assert is reduntant.
 		MS_ASSERT(this->selectedTuple != nullptr, "cannot force the selected tuple if there was not a selected tuple");
