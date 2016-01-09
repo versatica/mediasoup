@@ -7,7 +7,7 @@ debugerror.log = console.error.bind(console);
 
 const domready = require('domready');
 const rtcninja = require('rtcninja');
-// const randomString = require('random-string');
+const randomString = require('random-string');
 const Peer = require('./Peer');
 
 let protooWsUrl;
@@ -33,10 +33,10 @@ function run()
 {
 	debug('run()');
 
-	// let username = randomString();
-	// let uuid = randomString();
-	let username = 'alice';
-	let uuid = 'aaaa';
+	let username = randomString();
+	let uuid = randomString();
+	// let username = 'alice';
+	// let uuid = 'aaaa';
 
 	let peer = new Peer(protooWsUrl, username, uuid);
 

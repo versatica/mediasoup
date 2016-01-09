@@ -23,7 +23,8 @@ namespace RTC
 		{
 			NEW = 1,
 			CONNECTED,
-			COMPLETED
+			COMPLETED,
+			DISCONNECTED
 		};
 
 	public:
@@ -38,6 +39,7 @@ namespace RTC
 			virtual void onICESelectedTuple(ICEServer* iceServer, RTC::TransportTuple* tuple) = 0;
 			virtual void onICEConnected(ICEServer* iceServer) = 0;
 			virtual void onICECompleted(ICEServer* iceServer) = 0;
+			virtual void onICEDisconnected(ICEServer* iceServer) = 0;
 		};
 
 	public:
@@ -50,6 +52,7 @@ namespace RTC
 		std::string& GetPassword();
 		IceState GetState();
 		bool IsValidTuple(RTC::TransportTuple* tuple);
+		void RemoveTuple(RTC::TransportTuple* tuple);
 		// This should be just called in 'connected' or completed' state
 		// and the given tuple must be an already valid tuple.
 		void ForceSelectedTuple(RTC::TransportTuple* tuple);

@@ -206,8 +206,8 @@ namespace RTC
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
 		}
-		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (unsigned char *)MS_APP_NAME, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (unsigned char *)MS_APP_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
 
 		// It is self-signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DTLSTransport::certificate, cert_name);
@@ -418,7 +418,7 @@ namespace RTC
 		{
 			std::string algorithm_str = it->first;
 			FingerprintAlgorithm algorithm = it->second;
-			unsigned char binary_fingerprint[EVP_MAX_MD_SIZE];
+			uint8_t binary_fingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size = 0;
 			char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
 			const EVP_MD* hash_function;
@@ -960,7 +960,7 @@ namespace RTC
 		MS_ASSERT(this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE, "remote fingerprint not set");
 
 		X509* certificate;
-		unsigned char binary_fingerprint[EVP_MAX_MD_SIZE];
+		uint8_t binary_fingerprint[EVP_MAX_MD_SIZE];
 		unsigned int size = 0;
 		char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
 		const EVP_MD* hash_function;

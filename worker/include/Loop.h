@@ -20,7 +20,7 @@ public:
 
 private:
 	void Close();
-	RTC::Room* GetRoomFromRequest(Channel::Request* request, unsigned int* roomId = nullptr);
+	RTC::Room* GetRoomFromRequest(Channel::Request* request, uint32_t* roomId = nullptr);
 
 /* Methods inherited from SignalsHandler::Listener. */
 public:
@@ -43,7 +43,7 @@ private:
 	SignalsHandler* signalsHandler = nullptr;
 	// Others.
 	bool closed = false;
-	std::unordered_map<unsigned int, RTC::Room*> rooms;
+	std::unordered_map<uint32_t, RTC::Room*> rooms;
 };
 
 #endif

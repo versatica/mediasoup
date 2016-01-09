@@ -87,7 +87,7 @@ void Loop::Close()
 		this->channel->Close();
 }
 
-RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, unsigned int* roomId)
+RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 {
 	MS_TRACE();
 
@@ -177,7 +177,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::worker_createRoom:
 		{
 			RTC::Room* room;
-			unsigned int roomId;
+			uint32_t roomId;
 
 			try
 			{
@@ -209,7 +209,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			this->rooms[roomId] = room;
 
-			MS_DEBUG("Room created [roomId:%u]", roomId);
+			MS_DEBUG("Room created [roomId:%" PRIu32 "]", roomId);
 			request->Accept();
 
 			break;

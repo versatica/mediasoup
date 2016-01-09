@@ -14,7 +14,7 @@
 /* Static helpers. */
 
 static inline
-uint64_t generateIceCandidatePriority(uint16_t local_preference, RTC::ICEServer::IceComponent component)
+uint32_t generateIceCandidatePriority(uint16_t local_preference, RTC::ICEServer::IceComponent component)
 {
 	MS_TRACE();
 
@@ -29,13 +29,9 @@ uint64_t generateIceCandidatePriority(uint16_t local_preference, RTC::ICEServer:
 
 namespace RTC
 {
-	/* Class variables. */
-
-	size_t Transport::maxTuples = 8;
-
 	/* Instance methods. */
 
-	Transport::Transport(Listener* listener, Channel::Notifier* notifier, unsigned int transportId, Json::Value& data, Transport* rtpTransport) :
+	Transport::Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data, Transport* rtpTransport) :
 		transportId(transportId),
 		listener(listener),
 		notifier(notifier)
@@ -108,7 +104,7 @@ namespace RTC
 			if (preferUdp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -135,7 +131,7 @@ namespace RTC
 			if (preferUdp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -162,7 +158,7 @@ namespace RTC
 			if (preferTcp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -189,7 +185,7 @@ namespace RTC
 			if (preferTcp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -283,6 +279,7 @@ namespace RTC
 		static const Json::StaticString v_new("new");
 		static const Json::StaticString v_connected("connected");
 		static const Json::StaticString v_completed("completed");
+		static const Json::StaticString v_disconnected("disconnected");
 		static const Json::StaticString k_dtlsLocalParameters("dtlsLocalParameters");
 		static const Json::StaticString k_fingerprints("fingerprints");
 		static const Json::StaticString k_role("role");
@@ -328,6 +325,9 @@ namespace RTC
 				break;
 			case RTC::ICEServer::IceState::COMPLETED:
 				data[k_iceState] = v_completed;
+				break;
+			case RTC::ICEServer::IceState::DISCONNECTED:
+				data[k_iceState] = v_disconnected;
 				break;
 		}
 
@@ -381,11 +381,11 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::transport_close:
 			{
-				unsigned int transportId = this->transportId;
+				uint32_t transportId = this->transportId;
 
 				Close();
 
-				MS_DEBUG("Transport closed [transportId:%u]", transportId);
+				MS_DEBUG("Transport closed [transportId:%" PRIu32 "]", transportId);
 				request->Accept();
 
 				break;
@@ -522,6 +522,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->selectedTuple = nullptr;
+
 		for (auto socket : this->udpSockets)
 			socket->Close();
 		this->udpSockets.clear();
@@ -531,7 +533,7 @@ namespace RTC
 		this->tcpServers.clear();
 	}
 
-	Transport* Transport::CreateAssociatedTransport(unsigned int transportId)
+	Transport* Transport::CreateAssociatedTransport(uint32_t transportId)
 	{
 		MS_TRACE();
 
@@ -738,14 +740,9 @@ namespace RTC
 		if (!IsAlive())
 			return;
 
-		// TODO
+		RTC::TransportTuple tuple(connection);
 
-		// RTC::TransportTuple tuple(connection);
-
-		// if (RemoveTuple(&tuple))
-		// {
-		// 	MS_DEBUG("valid tuple %s:", is_closed_by_peer ? "closed by peer" : "locally closed");
-		// }
+		this->iceServer->RemoveTuple(&tuple);
 	}
 
 	void Transport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
@@ -820,11 +817,12 @@ namespace RTC
 
 		this->selectedTuple = tuple;
 
-		// Notify.
-		eventData[k_iceSelectedTuple] = tuple->toJson();
-
-		// Notify.
-		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
+		// Notify if tuple is given.
+		if (tuple)
+		{
+			eventData[k_iceSelectedTuple] = tuple->toJson();
+			this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
+		}
 	}
 
 	void Transport::onICEConnected(RTC::ICEServer* iceServer)
@@ -865,6 +863,24 @@ namespace RTC
 		MayRunDTLSTransport();
 	}
 
+	void Transport::onICEDisconnected(RTC::ICEServer* iceServer)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_iceState("iceState");
+		static const Json::StaticString v_disconnected("disconnected");
+
+		Json::Value eventData;
+
+		MS_DEBUG("ICE disconnected");
+
+		// Unset the
+
+		// Notify.
+		eventData[k_iceState] = v_disconnected;
+		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+	}
+
 	void Transport::onDTLSConnecting(RTC::DTLSTransport* dtlsTransport)
 	{
 		MS_TRACE();
@@ -901,24 +917,6 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
-	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
-	{
-		MS_TRACE();
-
-		static const Json::StaticString k_dtlsState("dtlsState");
-		static const Json::StaticString v_closed("closed");
-
-		Json::Value eventData;
-
-		MS_DEBUG("DTLS remotely disconnected");
-
-		ClosePorts();
-
-		// Notify.
-		eventData[k_dtlsState] = v_closed;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
-	}
-
 	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
 	{
 		MS_TRACE();
@@ -937,13 +935,31 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
+	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_dtlsState("dtlsState");
+		static const Json::StaticString v_closed("closed");
+
+		Json::Value eventData;
+
+		MS_DEBUG("DTLS remotely disconnected");
+
+		ClosePorts();
+
+		// Notify.
+		eventData[k_dtlsState] = v_closed;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+	}
+
 	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
 		if (!this->selectedTuple)
 		{
-			MS_DEBUG("no media address set, cannot send DTLS packet");
+			MS_DEBUG("no selected tuple set, cannot send DTLS packet");
 			return;
 		}
 

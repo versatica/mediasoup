@@ -8,7 +8,7 @@ namespace Utils
 {
 	/* Static variables. */
 
-	unsigned int Crypto::seed;
+	uint32_t Crypto::seed;
 	HMAC_CTX Crypto::hmacSha1Ctx;
 	MS_BYTE Crypto::hmacSha1Buffer[20];  // SHA-1 result is 20 bytes long.
 	const MS_4BYTES Crypto::crc32Table[] =
@@ -66,7 +66,7 @@ namespace Utils
 
 		// Init the vrypto seed with a random number taken from the address
 		// of the seed variable itself (which is random).
-		Crypto::seed = (unsigned int)(unsigned long)&Crypto::seed;
+		Crypto::seed = (uint32_t)(unsigned long)&Crypto::seed;
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
 		HMAC_CTX_init(&Crypto::hmacSha1Ctx);
@@ -88,11 +88,11 @@ namespace Utils
 		ret = HMAC_Init_ex(&Crypto::hmacSha1Ctx, key.c_str(), key.length(), EVP_sha1(), nullptr);
 		MS_ASSERT(ret == 1, "OpenSSL HMAC_Init_ex() failed with key '%s'", key.c_str());
 
-		ret = HMAC_Update(&Crypto::hmacSha1Ctx, (const unsigned char*)data, (int)len);
+		ret = HMAC_Update(&Crypto::hmacSha1Ctx, (const uint8_t*)data, (int)len);
 		MS_ASSERT(ret == 1, "OpenSSL HMAC_Update() failed with key '%s' and data length %zu bytes", key.c_str(), len);
 
-		unsigned int result_len;
-		ret = HMAC_Final(&Crypto::hmacSha1Ctx, (unsigned char *)Crypto::hmacSha1Buffer, &result_len);
+		uint32_t result_len;
+		ret = HMAC_Final(&Crypto::hmacSha1Ctx, (uint8_t *)Crypto::hmacSha1Buffer, &result_len);
 		MS_ASSERT(ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key.c_str(), len);
 		MS_ASSERT(result_len == 20, "OpenSSL HMAC_Final() result_len is %u instead of 20", result_len);
 

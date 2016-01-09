@@ -6,7 +6,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	IceCandidate::IceCandidate(RTC::UDPSocket* udpSocket, uint64_t priority) :
+	IceCandidate::IceCandidate(RTC::UDPSocket* udpSocket, uint32_t priority) :
 		foundation("udpcandidate"),
 		priority(priority),
 		ip(udpSocket->GetLocalIP()),
@@ -15,7 +15,7 @@ namespace RTC
 		type(CandidateType::HOST)
 	{}
 
-	IceCandidate::IceCandidate(RTC::TCPServer* tcpServer, uint64_t priority) :
+	IceCandidate::IceCandidate(RTC::TCPServer* tcpServer, uint32_t priority) :
 		foundation("tcpcandidate"),
 		priority(priority),
 		ip(tcpServer->GetLocalIP()),
@@ -42,7 +42,7 @@ namespace RTC
 		Json::Value data;
 
 		data[k_foundation] = this->foundation;
-		data[k_priority] = (unsigned int)this->priority;
+		data[k_priority] = this->priority;
 		data[k_ip] = this->ip;
 		data[k_port] = this->port;
 

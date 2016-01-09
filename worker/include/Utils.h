@@ -199,14 +199,13 @@ namespace Utils
 	public:
 		static void ClassInit();
 		static void ClassDestroy();
-		static unsigned int GetRandomUInt(unsigned int min, unsigned int max);
+		static uint32_t GetRandomUInt(uint32_t min, uint32_t max);
 		static const std::string GetRandomString(size_t len);
-		// static const char* GetRandomHexString(char* str, size_t len);
 		static MS_4BYTES GetCRC32(const MS_BYTE* data, size_t size);
 		static const MS_BYTE* GetHMAC_SHA1(const std::string &key, const MS_BYTE* data, size_t len);
 
 	private:
-		static unsigned int seed;
+		static uint32_t seed;
 		static HMAC_CTX hmacSha1Ctx;
 		static MS_BYTE hmacSha1Buffer[];
 		static const MS_4BYTES crc32Table[256];
@@ -215,14 +214,14 @@ namespace Utils
 	/* Inline static methods. */
 
 	inline
-	unsigned int Crypto::GetRandomUInt(unsigned int min, unsigned int max)
+	uint32_t Crypto::GetRandomUInt(uint32_t min, uint32_t max)
 	{
 		// NOTE: This is the original, but produces very small values.
 		// Crypto::seed = (214013 * Crypto::seed) + 2531011;
 		// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
 
 		// This seems to produce better results.
-		Crypto::seed = (unsigned int)((214013 * Crypto::seed) + 2531011);
+		Crypto::seed = (uint32_t)((214013 * Crypto::seed) + 2531011);
 		return (((Crypto::seed>>4)&0x7FFF7FFF) % (max - min + 1)) + min;
 	}
 
@@ -246,23 +245,6 @@ namespace Utils
 
 		return std::string(buffer, len);
 	}
-
-	// inline
-	// const char* Crypto::GetRandomHexString(char* buffer, size_t len)
-	// {
-	// 	static const char hex_chars[] =
-	// 	{
-	// 		'0','1','2','3','4','5','6','7','8','9',
-	// 		'A','B','C','D','E','F','G','H','I','J',
-	// 		'K','L','M','N','O','P','Q','R','S','T',
-	// 		'U','V','W','X','Y','Z'
-	// 	};
-
-	// 	for (size_t i = 0; i < len; ++i)
-	// 		buffer[i] = hex_chars[GetRandomUInt(0, sizeof(hex_chars) - 1)];
-
-	// 	return buffer;
-	// }
 
 	inline
 	MS_4BYTES Crypto::GetCRC32(const MS_BYTE* data, size_t size)

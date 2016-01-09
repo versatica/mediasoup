@@ -1,6 +1,7 @@
 #ifndef MS_RTC_PEER_H
 #define MS_RTC_PEER_H
 
+#include "common.h"
 #include "RTC/Transport.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
@@ -21,7 +22,7 @@ namespace RTC
 		};
 
 	public:
-		Peer(Listener* listener, Channel::Notifier* notifier, unsigned int peerId, std::string& peerName);
+		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName);
 		virtual ~Peer();
 
 		void Close();
@@ -29,7 +30,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 
 	private:
-		RTC::Transport* GetTransportFromRequest(Channel::Request* request, unsigned int* iceTransportId = nullptr);
+		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* iceTransportId = nullptr);
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -37,7 +38,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		unsigned int peerId;
+		uint32_t peerId;
 		std::string peerName;
 
 	private:
@@ -45,7 +46,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Others.
-		std::unordered_map<unsigned int, RTC::Transport*> transports;
+		std::unordered_map<uint32_t, RTC::Transport*> transports;
 	};
 }
 

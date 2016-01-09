@@ -31,11 +31,8 @@ namespace RTC
 			virtual void onTransportClosed(RTC::Transport* transport) = 0;
 		};
 
-	private:
-		static size_t maxTuples;
-
 	public:
-		Transport(Listener* listener, Channel::Notifier* notifier, unsigned int transportId, Json::Value& data, Transport* rtpTransport = nullptr);
+		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data, Transport* rtpTransport = nullptr);
 		virtual ~Transport();
 
 		void Close();
@@ -43,7 +40,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		std::string& GetIceUsernameFragment();
 		std::string& GetIcePassword();
-		Transport* CreateAssociatedTransport(unsigned int transportId);
+		Transport* CreateAssociatedTransport(uint32_t transportId);
 
 	private:
 		void ClosePorts();
@@ -81,6 +78,7 @@ namespace RTC
 		virtual void onICESelectedTuple(ICEServer* iceServer, RTC::TransportTuple* tuple) override;
 		virtual void onICEConnected(ICEServer* iceServer) override;
 		virtual void onICECompleted(ICEServer* iceServer) override;
+		virtual void onICEDisconnected(ICEServer* iceServer) override;
 
 	/* Pure virtual methods inherited from RTC::DTLSTransport::Listener. */
 	public:
@@ -93,7 +91,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		unsigned int transportId;
+		uint32_t transportId;
 
 	protected:
 		// Others.

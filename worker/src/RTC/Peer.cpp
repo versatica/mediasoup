@@ -8,7 +8,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, Channel::Notifier* notifier, unsigned int peerId, std::string& peerName) :
+	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName) :
 		peerId(peerId),
 		peerName(peerName),
 		listener(listener),
@@ -75,11 +75,11 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::peer_close:
 			{
-				unsigned int peerId = this->peerId;
+				uint32_t peerId = this->peerId;
 
 				Close();
 
-				MS_DEBUG("Peer closed [peerId:%u]", peerId);
+				MS_DEBUG("Peer closed [peerId:%" PRIu32 "]", peerId);
 				request->Accept();
 
 				break;
@@ -97,7 +97,7 @@ namespace RTC
 			case Channel::Request::MethodId::peer_createTransport:
 			{
 				RTC::Transport* transport;
-				unsigned int transportId;
+				uint32_t transportId;
 
 				try
 				{
@@ -129,7 +129,7 @@ namespace RTC
 
 				this->transports[transportId] = transport;
 
-				MS_DEBUG("Transport created [transportId:%u]", transportId);
+				MS_DEBUG("Transport created [transportId:%" PRIu32 "]", transportId);
 
 				auto data = transport->toJson();
 
@@ -141,7 +141,7 @@ namespace RTC
 			case Channel::Request::MethodId::peer_createAssociatedTransport:
 			{
 				RTC::Transport* transport;
-				unsigned int transportId;
+				uint32_t transportId;
 
 				try
 				{
@@ -197,7 +197,7 @@ namespace RTC
 
 				this->transports[transportId] = transport;
 
-				MS_DEBUG("Associated Transport created [transportId:%u]", transportId);
+				MS_DEBUG("Associated Transport created [transportId:%" PRIu32 "]", transportId);
 
 				auto data = transport->toJson();
 
@@ -242,7 +242,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, unsigned int* transportId)
+	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId)
 	{
 		MS_TRACE();
 

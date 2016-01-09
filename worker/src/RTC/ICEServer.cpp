@@ -136,7 +136,7 @@ namespace RTC
 					return;
 				}
 
-				MS_DEBUG("processing STUN Binding Request [Priority:%u, UseCandidate:%s]", (unsigned int)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
+				MS_DEBUG("processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]", (uint32_t)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
 				RTC::STUNMessage* response = msg->CreateSuccessResponse();
@@ -191,13 +191,63 @@ namespace RTC
 			return false;
 	}
 
+
+	void ICEServer::RemoveTuple(RTC::TransportTuple* tuple)
+	{
+		auto it = this->tuples.begin();
+		RTC::TransportTuple* removed_tuple = nullptr;
+
+		// Find the removed tuple.
+		for (; it != this->tuples.end(); ++it)
+		{
+			RTC::TransportTuple* stored_tuple = &(*it);
+
+			if (stored_tuple->Compare(tuple))
+			{
+				removed_tuple = stored_tuple;
+				break;
+			}
+		}
+
+		// If not found, ignore.
+		if (!removed_tuple)
+			return;
+
+		// If this is not the selected tuple just remove it.
+		if (removed_tuple != this->selectedTuple)
+		{
+			this->tuples.erase(it);
+
+			return;
+		}
+		// Otherwise this was the selected tuple.
+		else
+		{
+			this->tuples.erase(it);
+			this->selectedTuple = nullptr;
+
+			// Mark the first tuple as selected tuple (if any).
+			if (this->tuples.begin() != this->tuples.end())
+			{
+				SetSelectedTuple(&(*this->tuples.begin()));
+			}
+			// Or just emit 'disconnected' and the null selected tuple..
+			else
+			{
+				// Update state.
+				this->state = IceState::DISCONNECTED;
+
+				// Notify the listener.
+				this->listener->onICESelectedTuple(this, nullptr);
+				this->listener->onICEDisconnected(this);
+			}
+		}
+	}
+
 	void ICEServer::ForceSelectedTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->state != IceState::NEW, "cannot force the selected tuple if not in 'connecting' or 'connected' state");
-
-		// TODO: Remove as this assert is reduntant.
 		MS_ASSERT(this->selectedTuple != nullptr, "cannot force the selected tuple if there was not a selected tuple");
 
 		auto stored_tuple = HasTuple(tuple);
@@ -241,6 +291,50 @@ namespace RTC
 				else
 				{
 					MS_DEBUG("transition from state 'new' to 'completed'");
+
+					// Store the tuple.
+					auto stored_tuple = AddTuple(tuple);
+
+					// Mark it as selected tuple.
+					SetSelectedTuple(stored_tuple);
+
+					// Update state.
+					this->state = IceState::COMPLETED;
+
+					// Notify the listener.
+					this->listener->onICECompleted(this);
+				}
+
+				break;
+			}
+
+			case IceState::DISCONNECTED:
+			{
+				// There should be no tuples.
+				MS_ASSERT(this->tuples.size() == 0, "state is 'disconnected' but there are %zu tuples", this->tuples.size());
+
+				// There shouldn't be a selected tuple.
+				MS_ASSERT(this->selectedTuple == nullptr, "state is 'disconnected' but there is selected tuple");
+
+				if (!has_use_candidate)
+				{
+					MS_DEBUG("transition from state 'disconnected' to 'connected'");
+
+					// Store the tuple.
+					auto stored_tuple = AddTuple(tuple);
+
+					// Mark it as selected tuple.
+					SetSelectedTuple(stored_tuple);
+
+					// Update state.
+					this->state = IceState::CONNECTED;
+
+					// Notify the listener.
+					this->listener->onICEConnected(this);
+				}
+				else
+				{
+					MS_DEBUG("transition from state 'disconnected' to 'completed'");
 
 					// Store the tuple.
 					auto stored_tuple = AddTuple(tuple);
@@ -385,42 +479,4 @@ namespace RTC
 		// Notify the listener.
 		this->listener->onICESelectedTuple(this, this->selectedTuple);
 	}
-
-	// TODO
-	// bool Transport::RemoveTuple(RTC::TransportTuple* tuple)
-	// {
-	// 	for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
-	// 	{
-	// 		RTC::TransportTuple* valid_tuple = &(*it);
-
-	// 		// If the tuple was a valid tuple then remove it.
-	// 		if (valid_tuple->Compare(tuple))
-	// 		{
-	// 			this->tuples.erase(it);
-
-	// 			// If it was the media tuple then unset it and set the media
-	// 			// tuple to the first valid tuple (if any).
-	// 			if (this->mediaTuple == valid_tuple)
-	// 			{
-	// 				if (this->tuples.begin() != this->tuples.end())
-	// 				{
-	// 					this->mediaTuple = &(*this->tuples.begin());
-	// 				}
-	// 				else
-	// 				{
-	// 					this->mediaTuple = nullptr;
-	// 					// This is just useful is there are just TCP tuples.
-	// 					this->icePaired = false;
-	// 					this->icePairedWithUseCandidate = false;
-
-	// 					// TODO: This should fire a 'icefailed' event.
-	// 				}
-	// 			}
-
-	// 			return true;
-	// 		}
-	// 	}
-
-	// 	return false;
-	// }
 }

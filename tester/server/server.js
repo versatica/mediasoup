@@ -171,7 +171,7 @@ app.put('/test-transport', function(req)
 	{
 		let promise = mediaPeer.createTransport(
 			{
-				udp        : true,
+				udp        : false,
 				tcp        : true,
 				preferIPv4 : true,
 				preferUdp  : true

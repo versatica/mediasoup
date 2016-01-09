@@ -3,6 +3,7 @@
 
 #include <cstddef>  // size_t
 #include <cstdint>  // uint8_t, etc
+#include <cinttypes>  // PRIu64, etc
 #include <sys/socket.h>  // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #include <netinet/in.h>  // sockaddr_in, sockaddr_in6
 #include <arpa/inet.h>  // htonl(), htons(), ntohl(), ntohs()
