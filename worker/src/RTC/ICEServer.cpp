@@ -1,13 +1,13 @@
-#define MS_CLASS "RTC::IceServer"
+#define MS_CLASS "RTC::ICEServer"
 
-#include "RTC/IceServer.h"
+#include "RTC/ICEServer.h"
 #include "Logger.h"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	IceServer::IceServer(Listener* listener, IceServer::IceComponent iceComponent, const std::string& usernameFragment, const std::string password) :
+	ICEServer::ICEServer(Listener* listener, ICEServer::IceComponent iceComponent, const std::string& usernameFragment, const std::string password) :
 		listener(listener),
 		iceComponent(iceComponent),
 		usernameFragment(usernameFragment),
@@ -18,14 +18,14 @@ namespace RTC
 		MS_DEBUG("[usernameFragment:%s, password:%s]", this->usernameFragment.c_str(), this->password.c_str());
 	}
 
-	void IceServer::Close()
+	void ICEServer::Close()
 	{
 		MS_TRACE();
 
 		delete this;
 	}
 
-	void IceServer::ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
+	void ICEServer::ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -181,7 +181,7 @@ namespace RTC
 		}
 	}
 
-	bool IceServer::IsValidTuple(RTC::TransportTuple* tuple)
+	bool ICEServer::IsValidTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -191,7 +191,7 @@ namespace RTC
 			return false;
 	}
 
-	void IceServer::ForceSelectedTuple(RTC::TransportTuple* tuple)
+	void ICEServer::ForceSelectedTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -208,7 +208,7 @@ namespace RTC
 		SetSelectedTuple(stored_tuple);
 	}
 
-	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate)
+	void ICEServer::HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate)
 	{
 		MS_TRACE();
 
@@ -327,7 +327,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::TransportTuple* IceServer::AddTuple(RTC::TransportTuple* tuple)
+	RTC::TransportTuple* ICEServer::AddTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -346,7 +346,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::TransportTuple* IceServer::HasTuple(RTC::TransportTuple* tuple)
+	RTC::TransportTuple* ICEServer::HasTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -372,7 +372,7 @@ namespace RTC
 	}
 
 	inline
-	void IceServer::SetSelectedTuple(RTC::TransportTuple* stored_tuple)
+	void ICEServer::SetSelectedTuple(RTC::TransportTuple* stored_tuple)
 	{
 		MS_TRACE();
 

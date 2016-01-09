@@ -6,7 +6,7 @@
 #include "RTC/TCPServer.h"
 #include "RTC/TCPConnection.h"
 #include "RTC/IceCandidate.h"
-#include "RTC/IceServer.h"
+#include "RTC/ICEServer.h"
 #include "RTC/STUNMessage.h"
 #include "RTC/TransportTuple.h"
 #include "RTC/DTLSTransport.h"
@@ -21,7 +21,7 @@ namespace RTC
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
 		public RTC::TCPConnection::Reader,
-		public RTC::IceServer::Listener,
+		public RTC::ICEServer::Listener,
 		public RTC::DTLSTransport::Listener
 	{
 	public:
@@ -75,12 +75,12 @@ namespace RTC
 		virtual void onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 		virtual void onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 
-	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
+	/* Pure virtual methods inherited from RTC::ICEServer::Listener. */
 	public:
-		virtual void onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple) override;
-		virtual void onICESelectedTuple(IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		virtual void onICEConnected(IceServer* iceServer) override;
-		virtual void onICECompleted(IceServer* iceServer) override;
+		virtual void onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple) override;
+		virtual void onICESelectedTuple(ICEServer* iceServer, RTC::TransportTuple* tuple) override;
+		virtual void onICEConnected(ICEServer* iceServer) override;
+		virtual void onICECompleted(ICEServer* iceServer) override;
 
 	/* Pure virtual methods inherited from RTC::DTLSTransport::Listener. */
 	public:
@@ -107,7 +107,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Allocated by this.
-		RTC::IceServer* iceServer = nullptr;
+		RTC::ICEServer* iceServer = nullptr;
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		RTC::DTLSTransport* dtlsTransport = nullptr;

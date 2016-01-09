@@ -51,8 +51,8 @@ namespace RTC
 		if (!rtpTransport)
 		{
 			// Create a ICE server.
-			this->iceServer = new RTC::IceServer(this,
-				IceServer::IceComponent::RTP,
+			this->iceServer = new RTC::ICEServer(this,
+				ICEServer::IceComponent::RTP,
 				Utils::Crypto::GetRandomString(16),
 				Utils::Crypto::GetRandomString(32));
 
@@ -66,8 +66,8 @@ namespace RTC
 		else
 		{
 			// Create a ICE server.
-			this->iceServer = new RTC::IceServer(this,
-				IceServer::IceComponent::RTCP,
+			this->iceServer = new RTC::ICEServer(this,
+				ICEServer::IceComponent::RTCP,
 				rtpTransport->GetIceUsernameFragment(),
 				rtpTransport->GetIcePassword());
 
@@ -82,7 +82,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
+			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP;
@@ -107,7 +107,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
+			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP;
@@ -132,7 +132,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
+			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP;
@@ -157,7 +157,7 @@ namespace RTC
 		{
 			unsigned long priority;
 
-			if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
+			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP;
 			else
 				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP;
@@ -268,7 +268,7 @@ namespace RTC
 		Json::Value data;
 
 		// Add `iceComponent`.
-		if (this->iceServer->GetComponent() == IceServer::IceComponent::RTP)
+		if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
 			data[k_iceComponent] = v_RTP;
 		else
 			data[k_iceComponent] = v_RTCP;
@@ -291,13 +291,13 @@ namespace RTC
 		// Add `iceState`.
 		switch (this->iceServer->GetState())
 		{
-			case RTC::IceServer::IceState::NEW:
+			case RTC::ICEServer::IceState::NEW:
 				data[k_iceState] = v_new;
 				break;
-			case RTC::IceServer::IceState::CONNECTED:
+			case RTC::ICEServer::IceState::CONNECTED:
 				data[k_iceState] = v_connected;
 				break;
-			case RTC::IceServer::IceState::COMPLETED:
+			case RTC::ICEServer::IceState::COMPLETED:
 				data[k_iceState] = v_completed;
 				break;
 		}
@@ -511,7 +511,7 @@ namespace RTC
 		if (!IsAlive())
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a non alive Transport");
 
-		if (this->iceServer->GetComponent() != IceServer::IceComponent::RTP)
+		if (this->iceServer->GetComponent() != ICEServer::IceComponent::RTP)
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
 
 		return new RTC::Transport(this->listener, this->notifier, transportId, nullData, this);
@@ -533,8 +533,8 @@ namespace RTC
 			// If still 'auto' then transition to 'server' if ICE is 'connected' or
 			// 'completed'.
 			case RTC::DTLSTransport::Role::AUTO:
-				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				if (this->iceServer->GetState() == RTC::ICEServer::IceState::CONNECTED ||
+				    this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("transition from local 'auto' role to 'server' and running DTLS transport");
 
@@ -547,7 +547,7 @@ namespace RTC
 			// received with remote DTLS role 'server'.
 			// If 'client' then wait for ICE to be 'completed'.
 			case RTC::DTLSTransport::Role::CLIENT:
-				if (this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				if (this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("running DTLS transport in 'client' role");
 
@@ -558,8 +558,8 @@ namespace RTC
 			// If 'server' then run the DTLS handler if ICE is 'connected' or
 			// 'completed'.
 			case RTC::DTLSTransport::Role::SERVER:
-				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				if (this->iceServer->GetState() == RTC::ICEServer::IceState::CONNECTED ||
+				    this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("running DTLS transport in 'server' role");
 
@@ -585,7 +585,7 @@ namespace RTC
 			return;
 		}
 
-		// Pass it to the IceServer.
+		// Pass it to the ICEServer.
 		this->iceServer->ProcessSTUNMessage(msg, tuple);
 
 		delete msg;
@@ -760,7 +760,7 @@ namespace RTC
 		onRTCPDataRecv(&tuple, data, len);
 	}
 
-	void Transport::onOutgoingSTUNMessage(RTC::IceServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
+	void Transport::onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -771,7 +771,7 @@ namespace RTC
 		tuple->Send(msg->GetRaw(), msg->GetLength());
 	}
 
-	void Transport::onICESelectedTuple(RTC::IceServer* iceServer, RTC::TransportTuple* tuple)
+	void Transport::onICESelectedTuple(RTC::ICEServer* iceServer, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -791,9 +791,6 @@ namespace RTC
 
 		this->selectedTuple = tuple;
 
-		// If ready, run the DTLS handler.
-		MayRunDTLSTransport();
-
 		// Notify.
 		eventData[k_iceSelectedTuple] = tuple->toJson();
 
@@ -801,7 +798,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
 	}
 
-	void Transport::onICEConnected(RTC::IceServer* iceServer)
+	void Transport::onICEConnected(RTC::ICEServer* iceServer)
 	{
 		MS_TRACE();
 
@@ -815,9 +812,12 @@ namespace RTC
 		// Notify.
 		eventData[k_iceState] = v_connected;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+
+		// If ready, run the DTLS handler.
+		MayRunDTLSTransport();
 	}
 
-	void Transport::onICECompleted(RTC::IceServer* iceServer)
+	void Transport::onICECompleted(RTC::ICEServer* iceServer)
 	{
 		MS_TRACE();
 
@@ -831,6 +831,9 @@ namespace RTC
 		// Notify.
 		eventData[k_iceState] = v_completed;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+
+		// If ready, run the DTLS handler.
+		MayRunDTLSTransport();
 	}
 
 	void Transport::onDTLSConnecting(RTC::DTLSTransport* dtlsTransport)
