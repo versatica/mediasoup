@@ -217,6 +217,9 @@ namespace RTC
 			case DtlsState::CLOSED:
 				return false;
 		}
+
+		// Make GCC 4.9 happy.
+		return false;
 	}
 
 	inline

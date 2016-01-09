@@ -169,7 +169,13 @@ app.put('/test-transport', function(req)
 	// Create transports promises
 	for (let i = 0; i < numTransports; i++)
 	{
-		let promise = mediaPeer.createTransport({ udp: true, tcp: false });
+		let promise = mediaPeer.createTransport(
+			{
+				udp        : true,
+				tcp        : true,
+				preferIPv4 : true,
+				preferUdp  : true
+			});
 
 		// Set transport event listeners
 		promise.then((transport) =>
@@ -307,6 +313,10 @@ app.put('/test-transport', function(req)
 					type : 'answer',
 					sdp  : sdpTransform.write(answer)
 				});
+
+			mediaPeer.dump()
+				.then((data) => debug('PEER DUMP:\n%s', JSON.stringify(data, null, '\t')))
+				.catch((error) => debugerror('PEER DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
 		})
 		.catch((error) =>
 		{
@@ -321,5 +331,5 @@ setInterval(() =>
 {
 	room.dump()
 		.then((data) => debug('ROOM DUMP:\n%s', JSON.stringify(data, null, '\t')))
-		.catch((error) => debugerror('SERVER DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
+		.catch((error) => debugerror('ROOM DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
 }, 20000);

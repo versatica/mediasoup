@@ -6,7 +6,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	IceCandidate::IceCandidate(RTC::UDPSocket* udpSocket, unsigned long priority) :
+	IceCandidate::IceCandidate(RTC::UDPSocket* udpSocket, uint64_t priority) :
 		foundation("udpcandidate"),
 		priority(priority),
 		ip(udpSocket->GetLocalIP()),
@@ -15,7 +15,7 @@ namespace RTC
 		type(CandidateType::HOST)
 	{}
 
-	IceCandidate::IceCandidate(RTC::TCPServer* tcpServer, unsigned long priority) :
+	IceCandidate::IceCandidate(RTC::TCPServer* tcpServer, uint64_t priority) :
 		foundation("tcpcandidate"),
 		priority(priority),
 		ip(tcpServer->GetLocalIP()),

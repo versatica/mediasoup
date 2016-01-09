@@ -31,15 +31,15 @@ namespace RTC
 		};
 
 	public:
-		IceCandidate(RTC::UDPSocket* udpSocket, unsigned long priority);
-		IceCandidate(RTC::TCPServer* tcpServer, unsigned long priority);
+		IceCandidate(RTC::UDPSocket* udpSocket, uint64_t priority);
+		IceCandidate(RTC::TCPServer* tcpServer, uint64_t priority);
 
 		Json::Value toJson();
 
 	private:
 		// Others.
 		std::string foundation;
-		unsigned long priority;
+		uint64_t priority;
 		std::string ip;
 		Protocol protocol;
 		MS_PORT port;

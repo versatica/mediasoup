@@ -7,22 +7,25 @@
 #include "Logger.h"
 #include <cmath>  // std::pow()
 
-#define ICE_CANDIDATE_PRIORITY_IPV4 20000
-#define ICE_CANDIDATE_PRIORITY_IPV6 20000
-#define ICE_CANDIDATE_PRIORITY_UDP  10000
-#define ICE_CANDIDATE_PRIORITY_TCP   5000
-#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP  \
-	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV4 + ICE_CANDIDATE_PRIORITY_UDP)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP  \
-	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV6 + ICE_CANDIDATE_PRIORITY_UDP)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP  \
-	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV4 + ICE_CANDIDATE_PRIORITY_TCP)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP  \
-	(std::pow(2, 24) * 64) + (std::pow(2, 8) * (ICE_CANDIDATE_PRIORITY_IPV6 + ICE_CANDIDATE_PRIORITY_TCP)) + (256 - 1)
-#define ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP - 1
-#define ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP - 1
-#define ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP - 1
-#define ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP - 1
+#define ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY 20000
+#define ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_FAMILY_INCREMENT 10000
+#define ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT 5000
+
+/* Static helpers. */
+
+static inline
+uint64_t generateIceCandidatePriority(uint16_t local_preference, RTC::ICEServer::IceComponent component)
+{
+	MS_TRACE();
+
+	// We just provide 'host' candidates so `type preference` is fixed.
+	static uint16_t type_preference = 64;
+
+	return
+		std::pow(2, 24) * type_preference  +
+		std::pow(2,  8) * local_preference +
+		std::pow(2,  0) * (256 - (uint16_t)component);
+}
 
 namespace RTC
 {
@@ -41,11 +44,29 @@ namespace RTC
 
 		static const Json::StaticString k_udp("udp");
 		static const Json::StaticString k_tcp("tcp");
+		static const Json::StaticString k_preferIPv4("preferIPv4");
+		static const Json::StaticString k_preferIPv6("preferIPv6");
+		static const Json::StaticString k_preferUdp("preferUdp");
+		static const Json::StaticString k_preferTcp("preferTcp");
 
 		bool try_IPv4_udp = true;
 		bool try_IPv6_udp = true;
 		bool try_IPv4_tcp = true;
 		bool try_IPv6_tcp = true;
+
+		bool preferIPv4 = false;
+		bool preferIPv6 = false;
+		bool preferUdp = false;
+		bool preferTcp = false;
+
+		if (data[k_preferIPv4].isBool())
+			preferIPv4 = data[k_preferIPv4].asBool();
+		if (data[k_preferIPv6].isBool())
+			preferIPv6 = data[k_preferIPv6].asBool();
+		if (data[k_preferUdp].isBool())
+			preferUdp = data[k_preferUdp].asBool();
+		if (data[k_preferTcp].isBool())
+			preferTcp = data[k_preferTcp].asBool();
 
 		// RTP transport.
 		if (!rtpTransport)
@@ -80,12 +101,14 @@ namespace RTC
 		// Open a IPv4 UDP socket.
 		if (try_IPv4_udp && Settings::configuration.hasIPv4)
 		{
-			unsigned long priority;
+			uint16_t local_preference = ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY;
 
-			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
-				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTP;
-			else
-				priority = ICE_CANDIDATE_PRIORITY_IPV4_UDP_RTCP;
+			if (preferIPv4)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_FAMILY_INCREMENT;
+			if (preferUdp)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
+
+			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -105,12 +128,14 @@ namespace RTC
 		// Open a IPv6 UDP socket.
 		if (try_IPv6_udp && Settings::configuration.hasIPv6)
 		{
-			unsigned long priority;
+			uint16_t local_preference = ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY;
 
-			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
-				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTP;
-			else
-				priority = ICE_CANDIDATE_PRIORITY_IPV6_UDP_RTCP;
+			if (preferIPv6)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_FAMILY_INCREMENT;
+			if (preferUdp)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
+
+			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -130,12 +155,14 @@ namespace RTC
 		// Open a IPv4 TCP server.
 		if (try_IPv4_tcp && Settings::configuration.hasIPv4)
 		{
-			unsigned long priority;
+			uint16_t local_preference = ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY;
 
-			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
-				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTP;
-			else
-				priority = ICE_CANDIDATE_PRIORITY_IPV4_TCP_RTCP;
+			if (preferIPv4)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_FAMILY_INCREMENT;
+			if (preferTcp)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
+
+			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -155,12 +182,14 @@ namespace RTC
 		// Open a IPv6 TCP server.
 		if (try_IPv6_tcp && Settings::configuration.hasIPv6)
 		{
-			unsigned long priority;
+			uint16_t local_preference = ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY;
 
-			if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
-				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTP;
-			else
-				priority = ICE_CANDIDATE_PRIORITY_IPV6_TCP_RTCP;
+			if (preferIPv6)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_FAMILY_INCREMENT;
+			if (preferTcp)
+				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
+
+			uint64_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
 
 			try
 			{
@@ -536,7 +565,7 @@ namespace RTC
 				if (this->iceServer->GetState() == RTC::ICEServer::IceState::CONNECTED ||
 				    this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
 				{
-					MS_DEBUG("transition from local 'auto' role to 'server' and running DTLS transport");
+					MS_DEBUG("transition from DTLS local role 'auto' to 'server' and running DTLS transport");
 
 					this->dtlsLocalRole = RTC::DTLSTransport::Role::SERVER;
 					this->dtlsTransport->Run(RTC::DTLSTransport::Role::SERVER);
@@ -549,7 +578,7 @@ namespace RTC
 			case RTC::DTLSTransport::Role::CLIENT:
 				if (this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
 				{
-					MS_DEBUG("running DTLS transport in 'client' role");
+					MS_DEBUG("running DTLS transport in local role 'client'");
 
 					this->dtlsTransport->Run(RTC::DTLSTransport::Role::CLIENT);
 				}
@@ -561,7 +590,7 @@ namespace RTC
 				if (this->iceServer->GetState() == RTC::ICEServer::IceState::CONNECTED ||
 				    this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
 				{
-					MS_DEBUG("running DTLS transport in 'server' role");
+					MS_DEBUG("running DTLS transport in local role 'server'");
 
 					this->dtlsTransport->Run(RTC::DTLSTransport::Role::SERVER);
 				}
