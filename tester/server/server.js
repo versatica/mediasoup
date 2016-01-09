@@ -169,7 +169,7 @@ app.put('/test-transport', function(req)
 	// Create transports promises
 	for (let i = 0; i < numTransports; i++)
 	{
-		let promise = mediaPeer.createTransport({ udp: true, tcp: true });
+		let promise = mediaPeer.createTransport({ udp: true, tcp: false });
 
 		// Set transport event listeners
 		promise.then((transport) =>
@@ -177,6 +177,16 @@ app.put('/test-transport', function(req)
 			transport.on('close', () =>
 			{
 				debug('transport "close" event');
+			});
+
+			transport.on('iceselectedtuplechange', (data) =>
+			{
+				debug('transport "iceselectedtuplechange" event [data.iceSelectedTuple:%o, transport.iceSelectedTuple:%o]', data.iceSelectedTuple, transport.iceSelectedTuple);
+			});
+
+			transport.on('icestatechange', (data) =>
+			{
+				debug('transport "icestatechange" event [data.iceState:%s, transport.iceState:%s]', data.iceState, transport.iceState);
 			});
 
 			transport.on('dtlsstatechange', (data) =>

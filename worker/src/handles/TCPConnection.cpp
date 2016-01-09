@@ -78,7 +78,7 @@ TCPConnection::~TCPConnection()
 		delete[] this->buffer;
 }
 
-void TCPConnection::Setup(Listener* listener, const std::string &localIP, MS_PORT localPort)
+void TCPConnection::Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, MS_PORT localPort)
 {
 	MS_TRACE();
 
@@ -97,6 +97,7 @@ void TCPConnection::Setup(Listener* listener, const std::string &localIP, MS_POR
 	this->listener = listener;
 
 	// Set the local address.
+	this->localAddr = localAddr;
 	this->localIP = localIP;
 	this->localPort = localPort;
 }

@@ -27,12 +27,13 @@ public:
 	TCPConnection(size_t bufferSize);
 	virtual ~TCPConnection();
 
-	void Setup(Listener* listener, const std::string &localIP, MS_PORT localPort);
+	void Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, MS_PORT localPort);
 	uv_tcp_t* GetUvHandle();
 	void Start();
 	void Write(const MS_BYTE* data, size_t len);
 	void Write(const MS_BYTE* data1, size_t len1, const MS_BYTE* data2, size_t len2);
 	void Write(const std::string &data);
+	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
 	MS_PORT GetLocalPort();
 	const struct sockaddr* GetPeerAddress();
@@ -62,6 +63,7 @@ private:
 	// Passed by argument.
 	Listener* listener = nullptr;
 	// Others.
+	struct sockaddr_storage* localAddr = nullptr;
 	bool isClosing = false;
 	bool isClosedByPeer = false;
 	bool hasError = false;
@@ -92,6 +94,12 @@ inline
 void TCPConnection::Write(const std::string &data)
 {
 	Write((const MS_BYTE*)data.c_str(), data.size());
+}
+
+inline
+const struct sockaddr* TCPConnection::GetLocalAddress()
+{
+	return (const struct sockaddr*)this->localAddr;
 }
 
 inline

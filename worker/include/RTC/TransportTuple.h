@@ -5,13 +5,14 @@
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPConnection.h"
 #include "Utils.h"
+#include <json/json.h>
 
 namespace RTC
 {
 	class TransportTuple
 	{
 	public:
-		enum class Type
+		enum class Protocol
 		{
 			UDP = 1,
 			TCP
@@ -22,12 +23,13 @@ namespace RTC
 		TransportTuple(RTC::TCPConnection* tcpConnection);
 
 		void Close();
+		Json::Value toJson();
 		void Dump();
 		void StoreUdpRemoteAddress();
-		bool IsUDP();
-		bool IsTCP();
 		bool Compare(TransportTuple* tuple);
 		void Send(const MS_BYTE* data, size_t len);
+		Protocol GetProtocol();
+		const struct sockaddr* GetLocalAddress();
 		const struct sockaddr* GetRemoteAddress();
 
 	private:
@@ -37,7 +39,7 @@ namespace RTC
 		sockaddr_storage udpRemoteAddrStorage;
 		RTC::TCPConnection* tcpConnection = nullptr;
 		// Others.
-		Type type;
+		Protocol protocol;
 	};
 
 	/* Inline methods. */
@@ -45,7 +47,7 @@ namespace RTC
 	inline
 	void TransportTuple::Close()
 	{
-		if (this->type == Type::TCP)
+		if (this->protocol == Protocol::TCP)
 			this->tcpConnection->Close();
 	}
 
@@ -53,13 +55,13 @@ namespace RTC
 	TransportTuple::TransportTuple(RTC::UDPSocket* udpSocket, const struct sockaddr* udpRemoteAddr) :
 		udpSocket(udpSocket),
 		udpRemoteAddr((struct sockaddr*)udpRemoteAddr),
-		type(Type::UDP)
+		protocol(Protocol::UDP)
 	{}
 
 	inline
 	TransportTuple::TransportTuple(RTC::TCPConnection* tcpConnection) :
 		tcpConnection(tcpConnection),
-		type(Type::TCP)
+		protocol(Protocol::TCP)
 	{}
 
 	inline
@@ -72,25 +74,19 @@ namespace RTC
 	}
 
 	inline
-	bool TransportTuple::IsUDP()
+	TransportTuple::Protocol TransportTuple::GetProtocol()
 	{
-		return (this->type == Type::UDP);
-	}
-
-	inline
-	bool TransportTuple::IsTCP()
-	{
-		return (this->type == Type::TCP);
+		return this->protocol;
 	}
 
 	inline
 	bool TransportTuple::Compare(TransportTuple* tuple)
 	{
-		if (this->type == Type::UDP && tuple->IsUDP())
+		if (this->protocol == Protocol::UDP && tuple->GetProtocol() == Protocol::UDP)
 		{
 			return (this->udpSocket == tuple->udpSocket && Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
 		}
-		else if (this->type == Type::TCP && tuple->IsTCP())
+		else if (this->protocol == Protocol::TCP && tuple->GetProtocol() == Protocol::TCP)
 		{
 			return (this->tcpConnection == tuple->tcpConnection);
 		}
@@ -103,16 +99,25 @@ namespace RTC
 	inline
 	void TransportTuple::Send(const MS_BYTE* data, size_t len)
 	{
-		if (this->type == Type::UDP)
+		if (this->protocol == Protocol::UDP)
 			this->udpSocket->Send(data, len, this->udpRemoteAddr);
 		else
 			this->tcpConnection->Send(data, len);
 	}
 
 	inline
+	const struct sockaddr* TransportTuple::GetLocalAddress()
+	{
+		if (this->protocol == Protocol::UDP)
+			return this->udpSocket->GetLocalAddress();
+		else
+			return this->tcpConnection->GetLocalAddress();
+	}
+
+	inline
 	const struct sockaddr* TransportTuple::GetRemoteAddress()
 	{
-		if (this->type == Type::UDP)
+		if (this->protocol == Protocol::UDP)
 			return (const struct sockaddr*)this->udpRemoteAddr;
 		else
 			return this->tcpConnection->GetPeerAddress();

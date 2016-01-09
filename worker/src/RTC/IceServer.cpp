@@ -204,15 +204,8 @@ namespace RTC
 
 		MS_ASSERT(stored_tuple, "cannot force the selected tuple if the given tuple was not already a valid tuple");
 
-		// If the given tuple was already the selected tuple do nothing.
-		if (stored_tuple == this->selectedTuple)
-			return;
-
 		// Mark it as selected tuple.
 		SetSelectedTuple(stored_tuple);
-
-		// Notify the listener.
-		this->listener->onICESelectedTuple(this, stored_tuple);
 	}
 
 	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate)
@@ -243,7 +236,6 @@ namespace RTC
 					this->state = IceState::CONNECTED;
 
 					// Notify the listener.
-					this->listener->onICESelectedTuple(this, stored_tuple);
 					this->listener->onICEConnected(this);
 				}
 				else
@@ -260,7 +252,6 @@ namespace RTC
 					this->state = IceState::COMPLETED;
 
 					// Notify the listener.
-					this->listener->onICESelectedTuple(this, stored_tuple);
 					this->listener->onICECompleted(this);
 				}
 
@@ -298,7 +289,6 @@ namespace RTC
 					this->state = IceState::COMPLETED;
 
 					// Notify the listener.
-					this->listener->onICESelectedTuple(this, stored_tuple);
 					this->listener->onICECompleted(this);
 				}
 
@@ -329,9 +319,6 @@ namespace RTC
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(stored_tuple);
-
-					// Notify the listener.
-					this->listener->onICESelectedTuple(this, stored_tuple);
 				}
 
 				break;
@@ -351,7 +338,7 @@ namespace RTC
 
 		// If it is UDP then we must store the remote address (until now it is
 		// just a pointer that will be freed soon).
-		if (stored_tuple->IsUDP())
+		if (stored_tuple->GetProtocol() == TransportTuple::Protocol::UDP)
 			stored_tuple->StoreUdpRemoteAddress();
 
 		// Return the address of the inserted tuple.
@@ -389,7 +376,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// If already the selected tuple do nothing.
+		if (stored_tuple == this->selectedTuple)
+			return;
+
 		this->selectedTuple = stored_tuple;
+
+		// Notify the listener.
+		this->listener->onICESelectedTuple(this, this->selectedTuple);
 	}
 
 	// TODO

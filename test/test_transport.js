@@ -18,6 +18,8 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 		{
 			t.pass('peer.createTransport() succeeded');
 			t.equal(transport.iceComponent, 'RTP', 'transport must have "RTP" `iceComponent`');
+			t.notOk(transport.iceSelectedTuple, 'transport must not have `iceSelectedTuple`');
+			t.equal(transport.iceState, 'new', 'transport must have "new" `iceState`');
 			t.equal(transport.dtlsState, 'new', 'transport must have "new" `dtlsState`');
 
 			transport.iceLocalCandidates.forEach((candidate) =>
@@ -69,7 +71,7 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
-	t.plan(7);
+	t.plan(10);
 	t.tearDown(() => server.close());
 
 	let room = server.Room();
@@ -79,6 +81,13 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
+
+			transport.on('icestatechange', (data) =>
+			{
+				t.pass('event "icestatechange" fired');
+				t.equal(data.iceState, 'closed', 'event `data.iceState` must be "closed"');
+				t.equal(transport.iceState, 'closed', '`transport.iceState` must be "closed"');
+			});
 
 			transport.on('dtlsstatechange', (data) =>
 			{

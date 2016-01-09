@@ -249,6 +249,11 @@ namespace RTC
 		static const Json::StaticString k_usernameFragment("usernameFragment");
 		static const Json::StaticString k_password("password");
 		static const Json::StaticString k_iceLocalCandidates("iceLocalCandidates");
+		static const Json::StaticString k_iceSelectedTuple("iceSelectedTuple");
+		static const Json::StaticString k_iceState("iceState");
+		static const Json::StaticString v_new("new");
+		static const Json::StaticString v_connected("connected");
+		static const Json::StaticString v_completed("completed");
 		static const Json::StaticString k_dtlsLocalParameters("dtlsLocalParameters");
 		static const Json::StaticString k_fingerprints("fingerprints");
 		static const Json::StaticString k_role("role");
@@ -256,9 +261,7 @@ namespace RTC
 		static const Json::StaticString v_client("client");
 		static const Json::StaticString v_server("server");
 		static const Json::StaticString k_dtlsState("dtlsState");
-		static const Json::StaticString v_new("new");
 		static const Json::StaticString v_connecting("connecting");
-		static const Json::StaticString v_connected("connected");
 		static const Json::StaticString v_closed("closed");
 		static const Json::StaticString v_failed("failed");
 
@@ -279,6 +282,24 @@ namespace RTC
 		for (auto iceCandidate : this->iceLocalCandidates)
 		{
 			data[k_iceLocalCandidates].append(iceCandidate.toJson());
+		}
+
+		// Add `iceSelectedTuple`.
+		if (this->selectedTuple)
+			data[k_iceSelectedTuple] = this->selectedTuple->toJson();
+
+		// Add `iceState`.
+		switch (this->iceServer->GetState())
+		{
+			case RTC::IceServer::IceState::NEW:
+				data[k_iceState] = v_new;
+				break;
+			case RTC::IceServer::IceState::CONNECTED:
+				data[k_iceState] = v_connected;
+				break;
+			case RTC::IceServer::IceState::COMPLETED:
+				data[k_iceState] = v_completed;
+				break;
 		}
 
 		// Add `dtlsLocalParameters.fingerprints`.
@@ -754,10 +775,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_iceSelectedTuple("iceSelectedTuple");
+
+		Json::Value eventData;
+
 		if (!IsAlive())
 			return;
-
-		this->selectedTuple = tuple;
 
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
@@ -766,22 +789,48 @@ namespace RTC
 		 * on any candidates provided for that component.
 		 */
 
+		this->selectedTuple = tuple;
+
 		// If ready, run the DTLS handler.
 		MayRunDTLSTransport();
+
+		// Notify.
+		eventData[k_iceSelectedTuple] = tuple->toJson();
+
+		// Notify.
+		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
 	}
 
 	void Transport::onICEConnected(RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_iceState("iceState");
+		static const Json::StaticString v_connected("connected");
+
+		Json::Value eventData;
+
 		MS_DEBUG("ICE connected");
+
+		// Notify.
+		eventData[k_iceState] = v_connected;
+		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 	}
 
 	void Transport::onICECompleted(RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_iceState("iceState");
+		static const Json::StaticString v_completed("completed");
+
+		Json::Value eventData;
+
 		MS_DEBUG("ICE completed");
+
+		// Notify.
+		eventData[k_iceState] = v_completed;
+		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 	}
 
 	void Transport::onDTLSConnecting(RTC::DTLSTransport* dtlsTransport)

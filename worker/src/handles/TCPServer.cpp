@@ -228,7 +228,7 @@ void TCPServer::onUvConnection(int status)
 
 	try
 	{
-		connection->Setup(this, this->localIP, this->localPort);
+		connection->Setup(this, &(this->localAddr), this->localIP, this->localPort);
 	}
 	catch (const MediaSoupError &error)
 	{
