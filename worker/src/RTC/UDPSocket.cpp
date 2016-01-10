@@ -343,7 +343,7 @@ namespace RTC
 			MS_PORT port;
 			std::string ip;
 			Utils::IP::GetAddressInfo(addr, &family, ip, &port);
-			MS_DEBUG("%zu bytes datagram received [local: %s : %u | remote: %s : %u]", len, GetLocalIP().c_str(), (unsigned int)GetLocalPort(), ip.c_str(), (unsigned int)port);
+			MS_DEBUG("%zu bytes datagram received [local: %s : %u, remote: %s : %u]", len, GetLocalIP().c_str(), (unsigned int)GetLocalPort(), ip.c_str(), (unsigned int)port);
 		}
 
 		// Check if it's STUN.

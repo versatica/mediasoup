@@ -238,7 +238,6 @@ namespace RTC
 				this->state = IceState::DISCONNECTED;
 
 				// Notify the listener.
-				this->listener->onICESelectedTuple(this, nullptr);
 				this->listener->onICEDisconnected(this);
 			}
 		}

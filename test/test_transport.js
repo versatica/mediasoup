@@ -71,7 +71,7 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
-	t.plan(10);
+	t.plan(6);
 	t.tearDown(() => server.close());
 
 	let room = server.Room();
@@ -82,23 +82,11 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 		{
 			t.pass('peer.createTransport() succeeded');
 
-			transport.on('icestatechange', (data) =>
-			{
-				t.pass('event "icestatechange" fired');
-				t.equal(data.iceState, 'closed', 'event `data.iceState` must be "closed"');
-				t.equal(transport.iceState, 'closed', '`transport.iceState` must be "closed"');
-			});
-
-			transport.on('dtlsstatechange', (data) =>
-			{
-				t.pass('event "dtlsstatechange" fired');
-				t.equal(data.dtlsState, 'closed', 'event `data.dtlsState` must be "closed"');
-				t.equal(transport.dtlsState, 'closed', '`transport.dtlsState` must be "closed"');
-			});
-
 			transport.on('close', (error) =>
 			{
 				t.error(error, 'transport should close cleanly');
+				t.equal(transport.iceState, 'closed', '`transport.iceState` must be "closed"');
+				t.equal(transport.dtlsState, 'closed', '`transport.dtlsState` must be "closed"');
 
 				peer.dump()
 					.then((data) =>

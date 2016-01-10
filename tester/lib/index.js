@@ -46,5 +46,8 @@ function run()
 		peer.testTransport();
 	});
 
-	global.document.addEventListener('click', () => peer.close());
+	// global.document.addEventListener('click', () => peer.close());
+
+	document.querySelector('.click2closeProtoo').addEventListener('click', () => peer.closeProtoo());
+	document.querySelector('.click2closePeerConnection').addEventListener('click', () => peer.closePeerConnection());
 }

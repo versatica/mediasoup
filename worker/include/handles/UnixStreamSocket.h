@@ -23,6 +23,7 @@ public:
 	void Write(const MS_BYTE* data, size_t len);
 	void Write(const std::string &data);
 	void Close();
+	bool IsClosing();
 	virtual void Dump();
 
 /* Callbacks fired by UV events. */
@@ -62,5 +63,12 @@ void UnixStreamSocket::Write(const std::string &data)
 {
 	Write((const MS_BYTE*)data.c_str(), data.size());
 }
+
+inline
+bool UnixStreamSocket::IsClosing()
+{
+	return this->isClosing;
+}
+
 
 #endif

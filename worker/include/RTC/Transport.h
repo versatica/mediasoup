@@ -43,8 +43,6 @@ namespace RTC
 		Transport* CreateAssociatedTransport(uint32_t transportId);
 
 	private:
-		void ClosePorts();
-		bool IsAlive();
 		void MayRunDTLSTransport();
 
 	/* Private methods to unify UDP and TCP behavior. */
@@ -120,18 +118,6 @@ namespace RTC
 	};
 
 	/* Inline methods. */
-
-	inline
-	bool Transport::IsAlive()
-	{
-		if (this->dtlsTransport->GetState() == DTLSTransport::DtlsState::FAILED ||
-		    this->dtlsTransport->GetState() == DTLSTransport::DtlsState::CLOSED)
-		{
-			return false;
-		}
-
-		return true;
-	}
 
 	inline
 	std::string& Transport::GetIceUsernameFragment()

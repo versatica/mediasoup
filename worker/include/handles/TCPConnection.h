@@ -40,6 +40,7 @@ public:
 	const std::string& GetPeerIP();
 	MS_PORT GetPeerPort();
 	void Close();
+	bool IsClosing();
 	virtual void Dump();
 
 private:
@@ -130,6 +131,12 @@ inline
 MS_PORT TCPConnection::GetPeerPort()
 {
 	return this->peerPort;
+}
+
+inline
+bool TCPConnection::IsClosing()
+{
+	return this->isClosing;
 }
 
 #endif

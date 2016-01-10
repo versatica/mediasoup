@@ -29,7 +29,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG("data received [local: %s : %u | remote: %s : %u]",
+		MS_DEBUG("data received [local: %s : %u, remote: %s : %u]",
 			GetLocalIP().c_str(), (unsigned int)GetLocalPort(),
 			GetPeerIP().c_str(), (unsigned int)GetPeerPort());
 
@@ -52,6 +52,12 @@ namespace RTC
 		// Be ready to parse more than a single frame in a single TCP chunk.
 		while (true)
 		{
+			// We may receive multiple packets in the same TCP chunk. If onw of them is
+			// a DTLS Close Alert this would be closed (Close() called) so we cannot call
+			// our listeners anymore.
+			if (IsClosing())
+				return;
+
 			size_t data_len = this->bufferDataLen - this->frameStart;
 			size_t packet_len;
 

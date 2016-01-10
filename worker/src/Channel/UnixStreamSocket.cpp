@@ -158,6 +158,9 @@ namespace Channel
 		// Be ready to parse more than a single message in a single TCP chunk.
 		while (true)
 		{
+			if (IsClosing())
+				return;
+
 			size_t read_len = this->bufferDataLen - this->msgStart;
 			char* json_start = nullptr;
 			size_t json_len;

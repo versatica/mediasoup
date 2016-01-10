@@ -44,6 +44,25 @@ class Peer extends EventEmitter
 		{}
 	}
 
+	closeProtoo()
+	{
+		this._debug('closeProtoo()');
+
+		this._protoo.close();
+	}
+
+	closePeerConnection()
+	{
+		this._debug('closePeerConnection()');
+
+		try
+		{
+			this._pc.close();
+		}
+		catch (error)
+		{}
+	}
+
 	testTransport()
 	{
 		this._debug('testTransport()');

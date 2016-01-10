@@ -226,20 +226,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->iceServer)
-		{
-			this->iceServer->Close();
-			this->iceServer = nullptr;
-		}
-
-		if (this->dtlsTransport)
-		{
-			this->dtlsTransport->Close();
-			this->dtlsTransport = nullptr;
-		}
-
-		ClosePorts();
-
 		// if (this->srtpRecvSession)
 		// {
 		// 	this->srtpRecvSession->Close();
@@ -251,6 +237,25 @@ namespace RTC
 		// 	this->srtpSendSession->Close();
 		// 	this->srtpSendSession = nullptr;
 		// }
+
+		if (this->dtlsTransport)
+			this->dtlsTransport->Close();
+
+		if (this->iceServer)
+			this->iceServer->Close();
+
+		for (auto socket : this->udpSockets)
+			socket->Close();
+		this->udpSockets.clear();
+
+		for (auto server : this->tcpServers)
+			server->Close();
+		this->tcpServers.clear();
+
+		this->selectedTuple = nullptr;
+
+		// Notify.
+		this->notifier->Emit(this->transportId, "close");
 
 		// If this was allocated (it did not throw in the constructor) notify the
 		// listener and delete it.
@@ -413,14 +418,6 @@ namespace RTC
 				RTC::DTLSTransport::Fingerprint remoteFingerprint;
 				RTC::DTLSTransport::Role remoteRole = RTC::DTLSTransport::Role::AUTO;  // Default value if missing.
 
-				if (!IsAlive())
-				{
-					MS_ERROR("Transport not alive");
-
-					request->Reject(500, "Transport not alive");
-					return;
-				}
-
 				// Ensure this method is not called twice.
 				if (this->remoteDtlsParametersGiven)
 				{
@@ -517,30 +514,11 @@ namespace RTC
 		}
 	}
 
-	// This closes all the UDP/TCP servers.
-	void Transport::ClosePorts()
-	{
-		MS_TRACE();
-
-		this->selectedTuple = nullptr;
-
-		for (auto socket : this->udpSockets)
-			socket->Close();
-		this->udpSockets.clear();
-
-		for (auto server : this->tcpServers)
-			server->Close();
-		this->tcpServers.clear();
-	}
-
 	Transport* Transport::CreateAssociatedTransport(uint32_t transportId)
 	{
 		MS_TRACE();
 
 		static Json::Value nullData(Json::nullValue);
-
-		if (!IsAlive())
-			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a non alive Transport");
 
 		if (this->iceServer->GetComponent() != ICEServer::IceComponent::RTP)
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
@@ -693,9 +671,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsAlive())
-			return;
-
 		RTC::TransportTuple tuple(socket, remote_addr);
 		onSTUNDataRecv(&tuple, data, len);
 	}
@@ -703,9 +678,6 @@ namespace RTC
 	void Transport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
-
-		if (!IsAlive())
-			return;
 
 		RTC::TransportTuple tuple(socket, remote_addr);
 		onDTLSDataRecv(&tuple, data, len);
@@ -715,9 +687,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsAlive())
-			return;
-
 		RTC::TransportTuple tuple(socket, remote_addr);
 		onRTPDataRecv(&tuple, data, len);
 	}
@@ -725,9 +694,6 @@ namespace RTC
 	void Transport::onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
-
-		if (!IsAlive())
-			return;
 
 		RTC::TransportTuple tuple(socket, remote_addr);
 		onRTCPDataRecv(&tuple, data, len);
@@ -737,20 +703,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsAlive())
-			return;
-
 		RTC::TransportTuple tuple(connection);
 
-		this->iceServer->RemoveTuple(&tuple);
+		if (is_closed_by_peer)
+			this->iceServer->RemoveTuple(&tuple);
 	}
 
 	void Transport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
-
-		if (!IsAlive())
-			return;
 
 		RTC::TransportTuple tuple(connection);
 		onSTUNDataRecv(&tuple, data, len);
@@ -759,9 +720,6 @@ namespace RTC
 	void Transport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
-
-		if (!IsAlive())
-			return;
 
 		RTC::TransportTuple tuple(connection);
 		onDTLSDataRecv(&tuple, data, len);
@@ -779,9 +737,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsAlive())
-			return;
-
 		RTC::TransportTuple tuple(connection);
 		onRTCPDataRecv(&tuple, data, len);
 	}
@@ -789,9 +744,6 @@ namespace RTC
 	void Transport::onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
-
-		if (!IsAlive())
-			return;
 
 		// Send the STUN response over the same transport tuple.
 		tuple->Send(msg->GetRaw(), msg->GetLength());
@@ -805,9 +757,6 @@ namespace RTC
 
 		Json::Value eventData;
 
-		if (!IsAlive())
-			return;
-
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
 		 *
@@ -815,14 +764,12 @@ namespace RTC
 		 * on any candidates provided for that component.
 		 */
 
+		// Update the selected tuple.
 		this->selectedTuple = tuple;
 
-		// Notify if tuple is given.
-		if (tuple)
-		{
-			eventData[k_iceSelectedTuple] = tuple->toJson();
-			this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
-		}
+		// Notify.
+		eventData[k_iceSelectedTuple] = tuple->toJson();
+		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
 	}
 
 	void Transport::onICEConnected(RTC::ICEServer* iceServer)
@@ -874,11 +821,15 @@ namespace RTC
 
 		MS_DEBUG("ICE disconnected");
 
-		// Unset the
+		// Unset the selected tuple.
+		this->selectedTuple = nullptr;
 
 		// Notify.
 		eventData[k_iceState] = v_disconnected;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+
+		// This is a fatal error so close the transport.
+		Close();
 	}
 
 	void Transport::onDTLSConnecting(RTC::DTLSTransport* dtlsTransport)
@@ -928,11 +879,12 @@ namespace RTC
 
 		MS_DEBUG("DTLS failed");
 
-		ClosePorts();
-
 		// Notify.
 		eventData[k_dtlsState] = v_failed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+
+		// This is a fatal error so close the transport.
+		Close();
 	}
 
 	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
@@ -944,13 +896,14 @@ namespace RTC
 
 		Json::Value eventData;
 
-		MS_DEBUG("DTLS remotely disconnected");
-
-		ClosePorts();
+		MS_DEBUG("DTLS remotely closed");
 
 		// Notify.
 		eventData[k_dtlsState] = v_closed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+
+		// This is a fatal error so close the transport.
+		Close();
 	}
 
 	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)

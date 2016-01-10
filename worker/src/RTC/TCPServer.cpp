@@ -352,6 +352,7 @@ namespace RTC
 
 		// Notify the listener.
 		// NOTE: Don't do it if closing (since at this point the listener is already freed).
+		// At the end, this is just called if the connection was remotely closed.
 		if (!IsClosing())
 			this->listener->onRTCTCPConnectionClosed(this, static_cast<RTC::TCPConnection*>(connection), is_closed_by_peer);
 	}
