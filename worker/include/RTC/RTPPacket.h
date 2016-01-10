@@ -9,7 +9,7 @@ namespace RTC
 	{
 	public:
 		/* Struct for RTP header. */
-		typedef struct Header
+		struct Header
 		{
 			#if defined(MS_LITTLE_ENDIAN)
 				MS_BYTE csrc_count:4;
@@ -29,15 +29,15 @@ namespace RTC
 			MS_2BYTES sequence_number;
 			MS_4BYTES timestamp;
 			MS_4BYTES ssrc;
-		} Header;
+		};
 
 		/* Struct for RTP header extension. */
-		typedef struct ExtensionHeader
+		struct ExtensionHeader
 		{
 			MS_2BYTES id;
 			MS_2BYTES length;  // Size of value in multiples of 4 bytes.
 			MS_BYTE* value;
-		} ExtensionHeader;
+		};
 
 	public:
 		static bool IsRTP(const MS_BYTE* data, size_t len);

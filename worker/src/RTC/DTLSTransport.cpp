@@ -847,6 +847,8 @@ namespace RTC
 		char* data = nullptr;
 
 		read = BIO_get_mem_data(this->sslBioToNetwork, &data);
+		if (read <= 0)
+			return;
 
 		MS_DEBUG("%ld bytes of DTLS data ready to sent to the peer", read);
 

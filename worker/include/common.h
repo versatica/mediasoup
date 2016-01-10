@@ -30,7 +30,7 @@
 	#elif defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	    #define MS_BIG_ENDIAN
 	#else
-		#error "cannot determine whether the processor is Little-Endian or Big-Endian"
+		#error "cannot determine whether the CPU is Little-Endian or Big-Endian"
 	#endif
 #endif
 

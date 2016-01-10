@@ -33,9 +33,8 @@ namespace RTC
 		static struct sockaddr_storage sockaddrStorageIPv6;
 		static MS_PORT minPort;
 		static MS_PORT maxPort;
-		typedef std::unordered_map<MS_PORT, bool> AvailablePorts;
-		static AvailablePorts availableIPv4Ports;
-		static AvailablePorts availableIPv6Ports;
+		static std::unordered_map<MS_PORT, bool> availableIPv4Ports;
+		static std::unordered_map<MS_PORT, bool> availableIPv6Ports;
 
 	public:
 		TCPServer(Listener* listener, RTC::TCPConnection::Reader* reader, uv_tcp_t* uvHandle);

@@ -48,8 +48,7 @@ private:
 	// Allocated by this (may be passed by argument).
 	uv_tcp_t* uvHandle = nullptr;
 	// Others.
-	typedef std::unordered_set<TCPConnection*> TCPConnections;
-	TCPConnections connections;
+	std::unordered_set<TCPConnection*> connections;
 	bool isClosing = false;
 
 protected:

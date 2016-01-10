@@ -10,6 +10,7 @@
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
+#include <openssl/bio.h>
 #include <json/json.h>
 
 namespace RTC

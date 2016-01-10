@@ -17,6 +17,9 @@ class Peer extends EventEmitter
 		this._debugerror = debug(`mediasoup-tester:ERROR:Peer:${username}`);
 		this._debugerror.log = console.error.bind(console);
 
+		this._connected = false;
+		this._stream = null;
+
 		this._debug('new()');
 
 		// protoo-client instance
@@ -25,23 +28,53 @@ class Peer extends EventEmitter
 				url : `${wsUrl}/?username=${username}&uuid=${uuid}`
 			});
 
-		this._protoo.on('online', () => this.emit('online'));
+		this._protoo.on('online', () =>
+		{
+			this._debug('protoo online');
+
+			this._connected = true;
+			mayRun.call(this);
+		});
 
 		// PeerConnection instance
 		this._pc = new rtcninja.RTCPeerConnection({ iceServers: [] });
+
+		rtcninja.getUserMedia(
+			{ audio: true, video: false },
+			// callback
+			((stream) =>
+			{
+				this._debug('got local stream');
+
+				this._stream = stream;
+				mayRun.call(this);
+			}),
+			// errback
+			((error) =>
+			{
+				throw new Error(error);
+			})
+		);
+
+		function mayRun()
+		{
+			if (this._connected && this._stream)
+			{
+				this._debug('emitting "ready" event');
+
+				this._pc.addStream(this._stream);
+
+				this.emit('ready');
+			}
+		}
 	}
 
 	close()
 	{
 		this._debug('close()');
 
-		this._protoo.close();
-		try
-		{
-			this._pc.close();
-		}
-		catch (error)
-		{}
+		this.closeProtoo();
+		this.closePeerConnection();
 	}
 
 	closeProtoo()
@@ -58,6 +91,13 @@ class Peer extends EventEmitter
 		try
 		{
 			this._pc.close();
+		}
+		catch (error)
+		{}
+
+		try
+		{
+			this._stream.getTracks().forEach((track) => track.stop());
 		}
 		catch (error)
 		{}

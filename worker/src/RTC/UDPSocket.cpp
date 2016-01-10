@@ -30,8 +30,8 @@ namespace RTC
 	struct sockaddr_storage UDPSocket::sockaddrStorageIPv6;
 	MS_PORT UDPSocket::minPort;
 	MS_PORT UDPSocket::maxPort;
-	UDPSocket::AvailablePorts UDPSocket::availableIPv4Ports;
-	UDPSocket::AvailablePorts UDPSocket::availableIPv6Ports;
+	std::unordered_map<MS_PORT, bool> UDPSocket::availableIPv4Ports;
+	std::unordered_map<MS_PORT, bool> UDPSocket::availableIPv6Ports;
 
 	/* Class methods. */
 
@@ -113,7 +113,7 @@ namespace RTC
 		uint16_t attempt = 0;
 		uint16_t bindAttempt = 0;
 		int flags = 0;
-		AvailablePorts* available_ports;
+		std::unordered_map<MS_PORT, bool>* available_ports;
 
 		switch (address_family)
 		{

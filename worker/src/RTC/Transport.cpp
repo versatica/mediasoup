@@ -647,6 +647,17 @@ namespace RTC
 		this->iceServer->ForceSelectedTuple(tuple);
 
 		// TODO
+		MS_DEBUG("received RTP data");
+
+		RTC::RTPPacket* packet = RTC::RTPPacket::Parse(data, len);
+		if (!packet)
+		{
+			MS_DEBUG("data received is not a valid RTP packet");
+
+			return;
+		}
+		packet->Dump();
+		delete packet;
 	}
 
 	inline
@@ -665,6 +676,7 @@ namespace RTC
 		this->iceServer->ForceSelectedTuple(tuple);
 
 		// TODO
+		MS_DEBUG("received RTCP data");
 	}
 
 	void Transport::onSTUNDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)

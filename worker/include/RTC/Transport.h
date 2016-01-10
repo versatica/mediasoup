@@ -10,6 +10,8 @@
 #include "RTC/STUNMessage.h"
 #include "RTC/TransportTuple.h"
 #include "RTC/DTLSTransport.h"
+#include "RTC/RTPPacket.h"
+#include "RTC/RTCPPacket.h"
 #include "Channel/Notifier.h"
 #include <string>
 #include <vector>

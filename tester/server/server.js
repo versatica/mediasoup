@@ -171,7 +171,7 @@ app.put('/test-transport', function(req)
 	{
 		let promise = mediaPeer.createTransport(
 			{
-				udp        : false,
+				udp        : true,
 				tcp        : true,
 				preferIPv4 : true,
 				preferUdp  : true
@@ -283,7 +283,7 @@ app.put('/test-transport', function(req)
 					// Create a promise
 					let promise = transport.setRemoteDtlsParameters(
 						{
-							role        : 'auto',  // SDP offer MUST always have a=setup:actpass so we can choose whatever we want
+							role        : 'client',  // SDP offer MUST always have a=setup:actpass so we can choose whatever we want
 							fingerprint :
 							{
 								algorithm : remoteFingerprint.type,

@@ -9,7 +9,7 @@ namespace RTC
 	{
 	public:
 		/* Struct for RTCP common header. */
-		typedef struct CommonHeader
+		struct CommonHeader
 		{
 			#if defined(MS_LITTLE_ENDIAN)
 				MS_BYTE count:5;
@@ -22,7 +22,7 @@ namespace RTC
 			#endif
 			MS_BYTE packet_type:8;
 			MS_2BYTES length:16;
-		} CommonHeader;
+		};
 
 	public:
 		static bool IsRTCP(const MS_BYTE* data, size_t len);

@@ -41,7 +41,7 @@ function run()
 	let peer = new Peer(protooWsUrl, username, uuid);
 
 	// Call the 'test-transport' service
-	peer.once('online', () =>
+	peer.once('ready', () =>
 	{
 		peer.testTransport();
 	});
