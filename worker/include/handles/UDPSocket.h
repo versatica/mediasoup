@@ -27,6 +27,8 @@ public:
 	UDPSocket(uv_udp_t* uvHandle);
 	virtual ~UDPSocket();
 
+	void Close();
+	virtual void Dump();
 	void Send(const MS_BYTE* data, size_t len, const struct sockaddr* addr);
 	void Send(const std::string &data, const struct sockaddr* addr);
 	void Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_PORT port);
@@ -34,8 +36,6 @@ public:
 	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
 	MS_PORT GetLocalPort();
-	void Close();
-	virtual void Dump();
 
 private:
 	bool SetLocalAddress();

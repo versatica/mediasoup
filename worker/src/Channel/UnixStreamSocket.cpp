@@ -104,7 +104,7 @@ namespace Channel
 		else
 		{
 		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%lu:", (unsigned long)ns_payload_len);
+		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
 		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload.c_str(), ns_payload_len);
 		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
 		}
@@ -114,7 +114,7 @@ namespace Channel
 		Write(UnixStreamSocket::writeBuffer, ns_len);
 	}
 
-	void UnixStreamSocket::SendLog(char* ns_payload, int ns_payload_len)
+	void UnixStreamSocket::SendLog(char* ns_payload, size_t ns_payload_len)
 	{
 		if (this->closed)
 			return;
@@ -141,7 +141,7 @@ namespace Channel
 		else
 		{
 		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%lu:", (unsigned long)ns_payload_len);
+		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
 		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
 		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
 		}

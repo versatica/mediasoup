@@ -49,7 +49,8 @@ namespace RTC
 		// length field must be total size minus header's 20 bytes, and must be multiple of 4 Bytes.
 		if (((size_t)msg_length != len - 20) || (msg_length & 0x03))
 		{
-			MS_DEBUG("length field + 20 does not match total size (or it is not multiple of 4 bytes) | message discarded");
+			MS_DEBUG("length field + 20 does not match total size (or it is not multiple of 4 bytes), message discarded");
+
 			return nullptr;
 		}
 
@@ -101,7 +102,8 @@ namespace RTC
 			// Ensure the attribute length is not greater than the remaining size.
 			if ((pos + 4 + attr_length) > len)
 			{
-				MS_DEBUG("the attribute length exceeds the remaining size | message discarded");
+				MS_DEBUG("the attribute length exceeds the remaining size, message discarded");
+
 				delete msg;
 				return nullptr;
 			}
@@ -109,7 +111,8 @@ namespace RTC
 			// FINGERPRINT must be the last attribute.
 			if (has_fingerprint)
 			{
-				MS_DEBUG("attribute after FINGERPRINT is not allowed | message discarded");
+				MS_DEBUG("attribute after FINGERPRINT is not allowed, message discarded");
+
 				delete msg;
 				return nullptr;
 			}
@@ -117,7 +120,8 @@ namespace RTC
 			// After a MESSAGE-INTEGRITY attribute just FINGERPRINT is allowed.
 			if (has_message_integrity && attr_type != Attribute::Fingerprint)
 			{
-				MS_DEBUG("attribute after MESSAGE_INTEGRITY other than FINGERPRINT is not allowed | message discarded");
+				MS_DEBUG("attribute after MESSAGE_INTEGRITY other than FINGERPRINT is not allowed, message discarded");
+
 				delete msg;
 				return nullptr;
 			}
@@ -169,7 +173,8 @@ namespace RTC
 		// Ensure current position matches the total length.
 		if (pos != len)
 		{
-			MS_DEBUG("computed message size does not match total size | message discarded");
+			MS_DEBUG("computed message size does not match total size, message discarded");
+
 			delete msg;
 			return nullptr;
 		}
@@ -184,7 +189,8 @@ namespace RTC
 			// Compare with the FINGERPRINT value in the message.
 			if (fingerprint != computed_fingerprint)
 			{
-				MS_DEBUG("computed FINGERPRINT value does not match the value in the message | message discarded");
+				MS_DEBUG("computed FINGERPRINT value does not match the value in the message,| message discarded");
+
 				delete msg;
 				return nullptr;
 			}
@@ -211,6 +217,69 @@ namespace RTC
 
 		if (this->isSerialized)
 			delete this->raw;
+	}
+
+	void STUNMessage::Dump()
+	{
+		MS_TRACE();
+
+		if (!Logger::HasDebugLevel())
+			return;
+
+		MS_DEBUG("<STUNMessage>");
+		std::string klass;
+		switch (this->klass)
+		{
+			case Class::Request:         klass = "Request";         break;
+			case Class::Indication:      klass = "Indication";      break;
+			case Class::SuccessResponse: klass = "SuccessResponse"; break;
+			case Class::ErrorResponse:   klass = "ErrorResponse";   break;
+		}
+		if (this->method == Method::Binding)
+			MS_DEBUG("Binding %s", klass.c_str());
+		else
+			// This prints the unknown method number. Example: TURN Allocate => 0x003.
+			MS_DEBUG("%s with unknown method %#.3x", klass.c_str(), (uint16_t)this->method);
+		MS_DEBUG("length (with header): %zu bytes", this->length);
+		char transaction_id[25];
+		for (int i=0; i<12; i++)
+		{
+			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
+			std::snprintf(transaction_id+(i*2), 3, "%.2x", this->transactionId[i]);
+		}
+		MS_DEBUG("transactionId: %s", transaction_id);
+		if (this->errorCode)
+			MS_DEBUG("errorCode: %" PRIu16, this->errorCode);
+		if (!this->username.empty())
+			MS_DEBUG("username: %s", this->username.c_str());
+		if (this->priority)
+			MS_DEBUG("priority: %" PRIu32, this->priority);
+		if (this->iceControlling)
+			MS_DEBUG("iceControlling: %" PRIu64, this->iceControlling);
+		if (this->iceControlled)
+			MS_DEBUG("iceControlled: %" PRIu64, this->iceControlled);
+		if (this->hasUseCandidate)
+			MS_DEBUG("useCandidate");
+		if (this->xorMappedAddress)
+		{
+			int family;
+			MS_PORT port;
+			std::string ip;
+			Utils::IP::GetAddressInfo(this->xorMappedAddress, &family, ip, &port);
+			MS_DEBUG("xorMappedAddress: %s : %" PRIu16, ip.c_str(), port);
+		}
+		if (this->messageIntegrity)
+		{
+			char message_integrity[41];
+			for (int i=0; i<20; i++)
+			{
+				std::snprintf(message_integrity+(i*2), 3, "%.2x", this->messageIntegrity[i]);
+			}
+			MS_DEBUG("messageIntegrity: %s", message_integrity);
+		}
+		if (this->hasFingerprint)
+			MS_DEBUG("fingerprint");
+		MS_DEBUG("</STUNMessage>");
 	}
 
 	STUNMessage::Authentication STUNMessage::CheckAuthentication(const std::string &local_username, const std::string &local_password)
@@ -243,6 +312,7 @@ namespace RTC
 			case Class::ErrorResponse:
 			{
 				MS_ERROR("cannot check authentication for a STUN response");
+
 				return Authentication::BadRequest;
 			}
 		}
@@ -299,6 +369,7 @@ namespace RTC
 		if (this->klass == Class::ErrorResponse)
 		{
 			MS_ERROR("cannot set password for ErrorResponse messages");
+
 			return;
 		}
 
@@ -356,6 +427,7 @@ namespace RTC
 					break;
 				default:
 					MS_ERROR("invalid inet family in XOR-MAPPED-ADDRESS attribute");
+
 					add_xor_mapped_address = false;
 					break;
 			}
@@ -565,68 +637,5 @@ namespace RTC
 		}
 
 		MS_ASSERT(pos == this->length, "pos != this->length");
-	}
-
-	void STUNMessage::Dump()
-	{
-		MS_TRACE();
-
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_DEBUG("[STUNMessage]");
-		std::string klass;
-		switch (this->klass)
-		{
-			case Class::Request:         klass = "Request";         break;
-			case Class::Indication:      klass = "Indication";      break;
-			case Class::SuccessResponse: klass = "SuccessResponse"; break;
-			case Class::ErrorResponse:   klass = "ErrorResponse";   break;
-		}
-		if (this->method == Method::Binding)
-			MS_DEBUG("- Binding %s", klass.c_str());
-		else
-			// This prints the unknown method number. Example: TURN Allocate => 0x003.
-			MS_DEBUG("- %s with unknown method %#.3x", klass.c_str(), (unsigned int)this->method);
-		MS_DEBUG("- Length (with header): %zu bytes", this->length);
-		char transaction_id[25];
-		for (int i=0; i<12; i++)
-		{
-			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
-			std::snprintf(transaction_id+(i*2), 3, "%.2x", this->transactionId[i]);
-		}
-		MS_DEBUG("- TransactionId: %s", transaction_id);
-		if (this->errorCode)
-			MS_DEBUG("- ErrorCode: %u", (unsigned int)this->errorCode);
-		if (!this->username.empty())
-			MS_DEBUG("- Username: %s", this->username.c_str());
-		if (this->priority)
-			MS_DEBUG("- Priority: %llu", (unsigned long long)this->priority);
-		if (this->iceControlling)
-			MS_DEBUG("- IceControlling: %llu", (unsigned long long)this->iceControlling);
-		if (this->iceControlled)
-			MS_DEBUG("- IceControlled: %llu", (unsigned long long)this->iceControlled);
-		if (this->hasUseCandidate)
-			MS_DEBUG("- has UseCandidate");
-		if (this->xorMappedAddress)
-		{
-			int family;
-			MS_PORT port;
-			std::string ip;
-			Utils::IP::GetAddressInfo(this->xorMappedAddress, &family, ip, &port);
-			MS_DEBUG("- XorMappedAddress: %s : %u", ip.c_str(), (unsigned int)port);
-		}
-		if (this->messageIntegrity)
-		{
-			char message_integrity[41];
-			for (int i=0; i<20; i++)
-			{
-				std::snprintf(message_integrity+(i*2), 3, "%.2x", this->messageIntegrity[i]);
-			}
-			MS_DEBUG("- MessageIntegrity: %s", message_integrity);
-		}
-		if (this->hasFingerprint)
-			MS_DEBUG("- has Fingerprint");
-		MS_DEBUG("[/STUNMessage]");
 	}
 }

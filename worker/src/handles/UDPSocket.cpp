@@ -7,12 +7,6 @@
 #include "Logger.h"
 
 #define MS_READ_BUFFER_SIZE  65536
-#define RETURN_IF_CLOSING()  \
-	if (this->isClosing)  \
-	{  \
-		MS_DEBUG("in closing state, doing nothing");  \
-		return;  \
-	}
 
 /* Static methods for UV callbacks. */
 
@@ -156,17 +150,41 @@ UDPSocket::~UDPSocket()
 		delete this->uvHandle;
 }
 
+void UDPSocket::Close()
+{
+	MS_TRACE();
+
+	if (this->isClosing)
+		return;
+
+	int err;
+
+	this->isClosing = true;
+
+	// Don't read more.
+	err = uv_udp_recv_stop(this->uvHandle);
+	if (err)
+		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
+
+	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
+}
+
+void UDPSocket::Dump()
+{
+	MS_DEBUG("[UDP, local:%s :%" PRIu16 ", status:%s]",
+		this->localIP.c_str(), (uint16_t)this->localPort,
+		(!this->isClosing) ? "open" : "closed");
+}
+
 void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* addr)
 {
 	MS_TRACE();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	if (len == 0)
-	{
-		MS_DEBUG("ignoring 0 length data");
 		return;
-	}
 
 	uv_buf_t buffer;
 	int sent;
@@ -186,18 +204,19 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* add
 	else if (sent >= 0)
 	{
 		MS_WARN("datagram truncated (just %d of %zu bytes were sent)", sent, len);
+
 		return;
 	}
 	// Error,
 	else if (sent != UV_EAGAIN)
 	{
 		MS_WARN("uv_udp_try_send() failed: %s", uv_strerror(sent));
+
 		return;
 	}
 	// Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
 
-	// TMP: remove this.
-	MS_DEBUG("could not send the datagram at first time, using uv_udp_send() now");
+	// MS_DEBUG("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.
 	UvSendData* send_data = (UvSendData*)std::malloc(sizeof(UvSendData) + len);
@@ -224,15 +243,13 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_
 {
 	MS_TRACE();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	int err;
 
 	if (len == 0)
-	{
-		MS_DEBUG("ignoring 0 length data");
 		return;
-	}
 
 	struct sockaddr_storage addr;
 
@@ -252,35 +269,11 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_
 
 		default:
 			MS_ERROR("invalid destination IP '%s'", ip.c_str());
+
 			return;
 	}
 
 	Send(data, len, (struct sockaddr*)&addr);
-}
-
-void UDPSocket::Close()
-{
-	MS_TRACE();
-
-	RETURN_IF_CLOSING();
-
-	int err;
-
-	this->isClosing = true;
-
-	// Don't read more.
-	err = uv_udp_recv_stop(this->uvHandle);
-	if (err)
-		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
-
-	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
-}
-
-void UDPSocket::Dump()
-{
-	MS_DEBUG("[UDP | local address: %s : %u | status: %s]",
-		this->localIP.c_str(), (unsigned int)this->localPort,
-		(!this->isClosing) ? "open" : "closed");
 }
 
 bool UDPSocket::SetLocalAddress()
@@ -294,6 +287,7 @@ bool UDPSocket::SetLocalAddress()
 	if (err)
 	{
 		MS_ERROR("uv_udp_getsockname() failed: %s", uv_strerror(err));
+
 		return false;
 	}
 
@@ -319,7 +313,8 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 {
 	MS_TRACE();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	// NOTE: libuv calls twice to alloc & recv when a datagram is received, the
 	// second one with nread = 0 and addr = NULL. Ignore it.
@@ -330,6 +325,7 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 	if (flags & UV_UDP_PARTIAL)
 	{
 		MS_ERROR("received datagram was truncated due to insufficient buffer, ignoring it");
+
 		return;
 	}
 

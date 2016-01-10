@@ -26,7 +26,7 @@ private:
 
 private:
 	static pthread_mutex_t* mutexes;
-	static int numMutexes;
+	static uint32_t numMutexes;
 };
 
 #endif

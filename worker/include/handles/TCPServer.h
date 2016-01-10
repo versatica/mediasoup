@@ -17,13 +17,13 @@ public:
 	TCPServer(uv_tcp_t* uvHandle, int backlog);
 	virtual ~TCPServer();
 
+	void Close();
+	virtual void Dump();
+	bool IsClosing();
 	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
 	MS_PORT GetLocalPort();
 	size_t GetNumConnections();
-	void Close();
-	bool IsClosing();
-	virtual void Dump();
 
 private:
 	bool SetLocalAddress();
@@ -61,15 +61,15 @@ protected:
 /* Inline methods. */
 
 inline
-size_t TCPServer::GetNumConnections()
-{
-	return this->connections.size();
-}
-
-inline
 bool TCPServer::IsClosing()
 {
 	return this->isClosing;
+}
+
+inline
+size_t TCPServer::GetNumConnections()
+{
+	return this->connections.size();
 }
 
 #endif

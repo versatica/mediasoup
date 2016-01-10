@@ -8,13 +8,6 @@
 #include <cstring>  // std::memcpy()
 #include <cstdlib>  // std::malloc(), std::free()
 
-#define RETURN_IF_CLOSING()  \
-	if (this->isClosing)  \
-	{  \
-		MS_DEBUG("in closing state, doing nothing");  \
-		return;  \
-	}
-
 /* Static methods for UV callbacks. */
 
 static inline
@@ -102,160 +95,12 @@ void TCPConnection::Setup(Listener* listener, struct sockaddr_storage* localAddr
 	this->localPort = localPort;
 }
 
-void TCPConnection::Start()
-{
-	MS_TRACE();
-
-	RETURN_IF_CLOSING();
-
-	int err;
-
-	err = uv_read_start((uv_stream_t*)this->uvHandle, (uv_alloc_cb)on_alloc, (uv_read_cb)on_read);
-	if (err)
-		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
-
-	// Get the peer address.
-	if (!SetPeerAddress())
-		MS_THROW_ERROR("error setting peer IP and port");
-}
-
-void TCPConnection::Write(const MS_BYTE* data, size_t len)
-{
-	MS_TRACE();
-
-	RETURN_IF_CLOSING();
-
-	if (len == 0)
-	{
-		MS_DEBUG("ignoring 0 length data");
-		return;
-	}
-
-	uv_buf_t buffer;
-	int written;
-	int err;
-
-	// First try uv_try_write(). In case it can not directly write all the given
-	// data then build a uv_req_t and use uv_write().
-
-	buffer = uv_buf_init((char*)data, len);
-	written = uv_try_write((uv_stream_t*)this->uvHandle, &buffer, 1);
-
-	// All the data was written. Done.
-	if (written == (int)len)
-	{
-		return;
-	}
-	// Cannot write any data at first time. Use uv_write().
-	else if (written == UV_EAGAIN || written == UV_ENOSYS)
-	{
-		// Set written to 0 so pending_len can be properly calculated.
-		written = 0;
-	}
-	// Error. Should not happen.
-	else if (written < 0)
-	{
-		MS_WARN("uv_try_write() failed: %s | closing the connection", uv_strerror(written));
-		Close();
-		return;
-	}
-
-	// TMP: remove this.
-	MS_DEBUG("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, len);
-
-	size_t pending_len = len - written;
-
-	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
-
-	write_data->connection = this;
-	std::memcpy(write_data->store, data + written, pending_len);
-	write_data->req.data = (void*)write_data;
-
-	buffer = uv_buf_init((char*)write_data->store, pending_len);
-
-	err = uv_write(&write_data->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)on_write);
-	if (err)
-		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
-}
-
-void TCPConnection::Write(const MS_BYTE* data1, size_t len1, const MS_BYTE* data2, size_t len2)
-{
-	MS_TRACE();
-
-	RETURN_IF_CLOSING();
-
-	if (len1 == 0 && len2 == 0)
-	{
-		MS_DEBUG("ignoring 0 length data1 and data2");
-		return;
-	}
-
-	size_t total_len = len1 + len2;
-	uv_buf_t buffers[2];
-	int written;
-	int err;
-
-	// First try uv_try_write(). In case it can not directly write all the given
-	// data then build a uv_req_t and use uv_write().
-
-	buffers[0] = uv_buf_init((char*)data1, len1);
-	buffers[1] = uv_buf_init((char*)data2, len2);
-	written = uv_try_write((uv_stream_t*)this->uvHandle, buffers, 2);
-
-	// All the data was written. Done.
-	if (written == (int)total_len)
-	{
-		return;
-	}
-	// Cannot write any data at first time. Use uv_write().
-	else if (written == UV_EAGAIN || written == UV_ENOSYS)
-	{
-		// Set written to 0 so pending_len can be properly calculated.
-		written = 0;
-	}
-	// Error. Should not happen.
-	else if (written < 0)
-	{
-		MS_WARN("uv_try_write() failed: %s | closing the connection", uv_strerror(written));
-		Close();
-		return;
-	}
-
-	// TMP: remove this.
-	MS_DEBUG("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, total_len);
-
-	size_t pending_len = total_len - written;
-
-	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
-
-	write_data->connection = this;
-	// If the first buffer was not entirely written then splice it.
-	if ((size_t)written < len1)
-	{
-		std::memcpy(write_data->store, data1 + (size_t)written, len1 - (size_t)written);
-		std::memcpy(write_data->store + (len1 - (size_t)written), data2, len2);
-	}
-	// Otherwise just take the pending data in the second buffer.
-	else
-	{
-		std::memcpy(write_data->store, data2 + ((size_t)written - len1), len2 - ((size_t)written - len1));
-	}
-	write_data->req.data = (void*)write_data;
-
-	uv_buf_t buffer = uv_buf_init((char*)write_data->store, pending_len);
-
-	err = uv_write(&write_data->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)on_write);
-	if (err)
-		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
-}
-
 void TCPConnection::Close()
 {
 	MS_TRACE();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	int err;
 
@@ -286,10 +131,156 @@ void TCPConnection::Close()
 
 void TCPConnection::Dump()
 {
-	MS_DEBUG("[TCP | local address: %s : %u | peer address: %s : %u | status: %s]",
-		this->localIP.c_str(), (unsigned int)this->localPort,
-		this->peerIP.c_str(), (unsigned int)this->peerPort,
+	MS_DEBUG("[TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
+		this->localIP.c_str(), (uint16_t)this->localPort,
+		this->peerIP.c_str(), (uint16_t)this->peerPort,
 		(!this->isClosing) ? "open" : "closed");
+}
+
+void TCPConnection::Start()
+{
+	MS_TRACE();
+
+	if (this->isClosing)
+		return;
+
+	int err;
+
+	err = uv_read_start((uv_stream_t*)this->uvHandle, (uv_alloc_cb)on_alloc, (uv_read_cb)on_read);
+	if (err)
+		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
+
+	// Get the peer address.
+	if (!SetPeerAddress())
+		MS_THROW_ERROR("error setting peer IP and port");
+}
+
+void TCPConnection::Write(const MS_BYTE* data, size_t len)
+{
+	MS_TRACE();
+
+	if (this->isClosing)
+		return;
+
+	if (len == 0)
+		return;
+
+	uv_buf_t buffer;
+	int written;
+	int err;
+
+	// First try uv_try_write(). In case it can not directly write all the given
+	// data then build a uv_req_t and use uv_write().
+
+	buffer = uv_buf_init((char*)data, len);
+	written = uv_try_write((uv_stream_t*)this->uvHandle, &buffer, 1);
+
+	// All the data was written. Done.
+	if (written == (int)len)
+	{
+		return;
+	}
+	// Cannot write any data at first time. Use uv_write().
+	else if (written == UV_EAGAIN || written == UV_ENOSYS)
+	{
+		// Set written to 0 so pending_len can be properly calculated.
+		written = 0;
+	}
+	// Error. Should not happen.
+	else if (written < 0)
+	{
+		MS_WARN("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+
+		Close();
+		return;
+	}
+
+	// MS_DEBUG("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, len);
+
+	size_t pending_len = len - written;
+
+	// Allocate a special UvWriteData struct pointer.
+	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
+
+	write_data->connection = this;
+	std::memcpy(write_data->store, data + written, pending_len);
+	write_data->req.data = (void*)write_data;
+
+	buffer = uv_buf_init((char*)write_data->store, pending_len);
+
+	err = uv_write(&write_data->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)on_write);
+	if (err)
+		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
+}
+
+void TCPConnection::Write(const MS_BYTE* data1, size_t len1, const MS_BYTE* data2, size_t len2)
+{
+	MS_TRACE();
+
+	if (this->isClosing)
+		return;
+
+	if (len1 == 0 && len2 == 0)
+		return;
+
+	size_t total_len = len1 + len2;
+	uv_buf_t buffers[2];
+	int written;
+	int err;
+
+	// First try uv_try_write(). In case it can not directly write all the given
+	// data then build a uv_req_t and use uv_write().
+
+	buffers[0] = uv_buf_init((char*)data1, len1);
+	buffers[1] = uv_buf_init((char*)data2, len2);
+	written = uv_try_write((uv_stream_t*)this->uvHandle, buffers, 2);
+
+	// All the data was written. Done.
+	if (written == (int)total_len)
+	{
+		return;
+	}
+	// Cannot write any data at first time. Use uv_write().
+	else if (written == UV_EAGAIN || written == UV_ENOSYS)
+	{
+		// Set written to 0 so pending_len can be properly calculated.
+		written = 0;
+	}
+	// Error. Should not happen.
+	else if (written < 0)
+	{
+		MS_WARN("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+
+		Close();
+		return;
+	}
+
+	// MS_DEBUG("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, total_len);
+
+	size_t pending_len = total_len - written;
+
+	// Allocate a special UvWriteData struct pointer.
+	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
+
+	write_data->connection = this;
+	// If the first buffer was not entirely written then splice it.
+	if ((size_t)written < len1)
+	{
+		std::memcpy(write_data->store, data1 + (size_t)written, len1 - (size_t)written);
+		std::memcpy(write_data->store + (len1 - (size_t)written), data2, len2);
+	}
+	// Otherwise just take the pending data in the second buffer.
+	else
+	{
+		std::memcpy(write_data->store, data2 + ((size_t)written - len1), len2 - ((size_t)written - len1));
+	}
+	write_data->req.data = (void*)write_data;
+
+	uv_buf_t buffer = uv_buf_init((char*)write_data->store, pending_len);
+
+	err = uv_write(&write_data->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)on_write);
+	if (err)
+		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
 bool TCPConnection::SetPeerAddress()
@@ -303,6 +294,7 @@ bool TCPConnection::SetPeerAddress()
 	if (err)
 	{
 		MS_ERROR("uv_tcp_getpeername() failed: %s", uv_strerror(err));
+
 		return false;
 	}
 
@@ -327,11 +319,11 @@ void TCPConnection::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 	if (this->bufferSize > this->bufferDataLen)
 	{
 		buf->len = this->bufferSize - this->bufferDataLen;
-		// MS_DEBUG("available space in the buffer: %zu", buf->len);
 	}
 	else
 	{
 		buf->len = 0;
+
 		MS_WARN("no available space in the buffer");
 	}
 }
@@ -341,7 +333,8 @@ void TCPConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
 {
 	MS_TRACE();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	if (nread == 0)
 		return;
@@ -358,7 +351,8 @@ void TCPConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Client disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
 	{
-		MS_DEBUG("connection closed by client | closing server side");
+		MS_DEBUG("connection closed by peer, closing server side");
+
 		this->isClosedByPeer = true;
 
 		// Close server side of the connection.
@@ -367,11 +361,11 @@ void TCPConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Some error.
 	else
 	{
-		MS_DEBUG("read error: %s | closing the connection", uv_strerror(nread));
+		MS_DEBUG("read error, closing the connection: %s", uv_strerror(nread));
+
 		this->hasError = true;
 
 		// Close server side of the connection.
-		// NOTE: calling uv_read_stop() upon EOF is a MUST.
 		Close();
 	}
 }
@@ -386,11 +380,12 @@ void TCPConnection::onUvWriteError(int error)
 
 	if (error == UV_EPIPE || error == UV_ENOTCONN)
 	{
-		MS_DEBUG("write error: %s | closing the connection", uv_strerror(error));
+		MS_DEBUG("write error, closing the connection: %s", uv_strerror(error));
 	}
 	else
 	{
-		MS_DEBUG("write error: %s | closing the connection", uv_strerror(error));
+		MS_DEBUG("write error, closing the connection: %s", uv_strerror(error));
+
 		this->hasError = true;
 	}
 

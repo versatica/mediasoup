@@ -29,14 +29,14 @@ namespace Channel
 		delete this;
 	}
 
-	void Notifier::Emit(unsigned int targetId, std::string eventName)
+	void Notifier::Emit(uint32_t targetId, std::string eventName)
 	{
 		MS_TRACE();
 
 		Emit(targetId, eventName, empty_data);
 	}
 
-	void Notifier::Emit(unsigned int targetId, std::string eventName, Json::Value &eventData)
+	void Notifier::Emit(uint32_t targetId, std::string eventName, Json::Value &eventData)
 	{
 		MS_TRACE();
 

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_ROOM_H
 #define MS_RTC_ROOM_H
 
+#include "common.h"
 #include "RTC/Peer.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
@@ -20,7 +21,7 @@ namespace RTC
 		};
 
 	public:
-		Room(Listener* listener, Channel::Notifier* notifier, unsigned int roomId);
+		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId);
 		virtual ~Room();
 
 		void Close();
@@ -28,7 +29,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 
 	private:
-		RTC::Peer* GetPeerFromRequest(Channel::Request* request, unsigned int* peerId = nullptr);
+		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr);
 
 	/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
@@ -36,14 +37,14 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		unsigned int roomId;
+		uint32_t roomId;
 
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Others.
-		std::unordered_map<unsigned int, RTC::Peer*> peers;
+		std::unordered_map<uint32_t, RTC::Peer*> peers;
 	};
 }
 

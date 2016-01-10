@@ -24,13 +24,13 @@ bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
-std::map<std::string, unsigned int> Settings::string2LogLevel =
+std::map<std::string, uint8_t> Settings::string2LogLevel =
 {
 	{ "debug", MS_LOG_LEVEL_DEBUG },
 	{ "warn",  MS_LOG_LEVEL_WARN  },
 	{ "error", MS_LOG_LEVEL_ERROR }
 };
-std::map<unsigned int, std::string> Settings::logLevel2String =
+std::map<uint8_t, std::string> Settings::logLevel2String =
 {
 	{ MS_LOG_LEVEL_DEBUG, "debug" },
 	{ MS_LOG_LEVEL_WARN,  "warn"  },
@@ -156,8 +156,8 @@ void Settings::PrintConfiguration()
 		MS_DEBUG("rtcListenIPv6: \"%s\"", Settings::configuration.rtcListenIPv6.c_str());
 	else
 		MS_DEBUG("rtcListenIPv6: (unavailable)");
-	MS_DEBUG("rtcMinPort: %d", Settings::configuration.rtcMinPort);
-	MS_DEBUG("rtcMaxPort: %d", Settings::configuration.rtcMaxPort);
+	MS_DEBUG("rtcMinPort: %" PRIu16, Settings::configuration.rtcMinPort);
+	MS_DEBUG("rtcMaxPort: %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
 		MS_DEBUG("dtlsCertificateFile: \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());

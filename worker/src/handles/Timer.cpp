@@ -40,6 +40,16 @@ Timer::Timer(Listener* listener) :
 	}
 }
 
+void Timer::Close()
+{
+	MS_TRACE();
+
+	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
+
+	// Delete this.
+	delete this;
+}
+
 void Timer::Start(MS_8BYTES timeout)
 {
 	MS_TRACE();
@@ -60,16 +70,6 @@ void Timer::Stop()
 	err = uv_timer_stop(this->uvHandle);
 	if (err)
 		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
-}
-
-void Timer::Close()
-{
-	MS_TRACE();
-
-	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
-
-	// Delete this.
-	delete this;
 }
 
 inline

@@ -27,7 +27,10 @@ public:
 	TCPConnection(size_t bufferSize);
 	virtual ~TCPConnection();
 
+	void Close();
+	virtual void Dump();
 	void Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, MS_PORT localPort);
+	bool IsClosing();
 	uv_tcp_t* GetUvHandle();
 	void Start();
 	void Write(const MS_BYTE* data, size_t len);
@@ -39,9 +42,6 @@ public:
 	const struct sockaddr* GetPeerAddress();
 	const std::string& GetPeerIP();
 	MS_PORT GetPeerPort();
-	void Close();
-	bool IsClosing();
-	virtual void Dump();
 
 private:
 	bool SetPeerAddress();
@@ -59,10 +59,10 @@ protected:
 	virtual void userOnTCPConnectionRead() = 0;
 
 private:
-	// Allocated by this.
-	uv_tcp_t* uvHandle = nullptr;
 	// Passed by argument.
 	Listener* listener = nullptr;
+	// Allocated by this.
+	uv_tcp_t* uvHandle = nullptr;
 	// Others.
 	struct sockaddr_storage* localAddr = nullptr;
 	bool isClosing = false;
@@ -70,10 +70,10 @@ private:
 	bool hasError = false;
 
 protected:
-	// Allocated by this.
-	MS_BYTE* buffer = nullptr;
 	// Passed by argument.
 	size_t bufferSize = 0;
+	// Allocated by this.
+	MS_BYTE* buffer = nullptr;
 	// Others.
 	size_t bufferDataLen = 0;
 	std::string localIP;
@@ -84,6 +84,12 @@ protected:
 };
 
 /* Inline methods. */
+
+inline
+bool TCPConnection::IsClosing()
+{
+	return this->isClosing;
+}
 
 inline
 uv_tcp_t* TCPConnection::GetUvHandle()
@@ -131,12 +137,6 @@ inline
 MS_PORT TCPConnection::GetPeerPort()
 {
 	return this->peerPort;
-}
-
-inline
-bool TCPConnection::IsClosing()
-{
-	return this->isClosing;
 }
 
 #endif

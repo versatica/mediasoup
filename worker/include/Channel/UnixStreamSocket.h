@@ -31,7 +31,7 @@ namespace Channel
 
 		void SetListener(Listener* listener);
 		void Send(Json::Value &json);
-		void SendLog(char* ns_payload, int ns_payload_len);
+		void SendLog(char* ns_payload, size_t ns_payload_len);
 
 	/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:

@@ -63,6 +63,7 @@ namespace RTC
 		STUNMessage(Class klass, Method method, const MS_BYTE* transactionId, const MS_BYTE* raw, size_t length);
 		~STUNMessage();
 
+		void Dump();
 		Class GetClass();
 		Method GetMethod();
 		const MS_BYTE* GetRaw();
@@ -90,7 +91,6 @@ namespace RTC
 		STUNMessage* CreateErrorResponse(MS_2BYTES errorCode);
 		void Authenticate(const std::string &password);
 		void Serialize();
-		void Dump();
 
 	private:
 		// Passed by argument.

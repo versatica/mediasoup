@@ -111,7 +111,7 @@ namespace Channel
 		this->channel->Send(json);
 	}
 
-	void Request::Reject(unsigned int status, std::string& reason)
+	void Request::Reject(uint16_t status, std::string& reason)
 	{
 		MS_TRACE();
 
@@ -123,7 +123,7 @@ namespace Channel
 	 * @param status  4XX means normal rejection, 5XX means error.
 	 * @param reason  Description string.
 	 */
-	void Request::Reject(unsigned int status, const char* reason)
+	void Request::Reject(uint16_t status, const char* reason)
 	{
 		MS_TRACE();
 

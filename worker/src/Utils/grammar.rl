@@ -1,5 +1,5 @@
 %%{
-	machine core_grammar;
+	machine grammar;
 
 	CRLF                          = "\r\n";
 	SP                            = 0x20;  # Space.

@@ -9,7 +9,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Room::Room(Listener* listener, Channel::Notifier* notifier, unsigned int roomId) :
+	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId) :
 		roomId(roomId),
 		listener(listener),
 		notifier(notifier)
@@ -72,11 +72,11 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::room_close:
 			{
-				unsigned int roomId = this->roomId;
+				uint32_t roomId = this->roomId;
 
 				Close();
 
-				MS_DEBUG("Room closed [roomId:%u]", roomId);
+				MS_DEBUG("Room closed [roomId:%" PRIu32 "]", roomId);
 				request->Accept();
 
 				break;
@@ -96,7 +96,7 @@ namespace RTC
 				static const Json::StaticString k_peerName("peerName");
 
 				RTC::Peer* peer;
-				unsigned int peerId;
+				uint32_t peerId;
 				std::string peerName;
 
 				try
@@ -185,7 +185,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Peer* Room::GetPeerFromRequest(Channel::Request* request, unsigned int* peerId)
+	RTC::Peer* Room::GetPeerFromRequest(Channel::Request* request, uint32_t* peerId)
 	{
 		MS_TRACE();
 

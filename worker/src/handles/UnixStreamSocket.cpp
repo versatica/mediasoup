@@ -1,3 +1,8 @@
+/**
+ * NOTE: This code cannot use MS_DEBUG, MS_WARN, MS_ERROR since this is the base
+ * code of the intercommunication Channel.
+ */
+
 #define MS_CLASS "UnixStreamSocket"
 
 #include "handles/UnixStreamSocket.h"
@@ -6,13 +11,6 @@
 #include "Logger.h"
 #include <cstring>  // std::memcpy()
 #include <cstdlib>  // std::malloc(), std::free()
-
-#define RETURN_IF_CLOSING()  \
-	if (this->isClosing)  \
-	{  \
-		MS_DEBUG_STD("in closing state, doing nothing");  \
-		return;  \
-	}
 
 /* Static methods for UV callbacks. */
 
@@ -108,68 +106,12 @@ UnixStreamSocket::~UnixStreamSocket()
 		delete[] this->buffer;
 }
 
-void UnixStreamSocket::Write(const MS_BYTE* data, size_t len)
-{
-	// MS_TRACE_STD();
-
-	RETURN_IF_CLOSING();
-
-	if (len == 0)
-	{
-		MS_DEBUG_STD("ignoring 0 length data");
-		return;
-	}
-
-	uv_buf_t buffer;
-	int written;
-	int err;
-
-	// First try uv_try_write(). In case it can not directly send all the given data
-	// then build a uv_req_t and use uv_write().
-
-	buffer = uv_buf_init((char*)data, len);
-	written = uv_try_write((uv_stream_t*)this->uvHandle, &buffer, 1);
-
-	// All the data was written. Done.
-	if (written == (int)len)
-	{
-		return;
-	}
-	// Cannot write any data at first time. Use uv_write().
-	else if (written == UV_EAGAIN || written == UV_ENOSYS)
-	{
-		// Set written to 0 so pending_len can be properly calculated.
-		written = 0;
-	}
-	// Error. Should not happen.
-	else if (written < 0)
-	{
-		MS_ERROR_STD("uv_try_write() failed: %s | closing the socket", uv_strerror(written));
-		Close();
-		return;
-	}
-
-	size_t pending_len = len - written;
-
-	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
-
-	write_data->socket = this;
-	std::memcpy(write_data->store, data + written, pending_len);
-	write_data->req.data = (void*)write_data;
-
-	buffer = uv_buf_init((char*)write_data->store, pending_len);
-
-	err = uv_write(&write_data->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)on_write);
-	if (err)
-		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
-}
-
 void UnixStreamSocket::Close()
 {
 	MS_TRACE_STD();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	int err;
 
@@ -196,9 +138,57 @@ void UnixStreamSocket::Close()
 	}
 }
 
-void UnixStreamSocket::Dump()
+void UnixStreamSocket::Write(const MS_BYTE* data, size_t len)
 {
-	MS_DEBUG_STD("[status: %s]", (!this->isClosing) ? "open" : "closed");
+	if (this->isClosing)
+		return;
+
+	if (len == 0)
+		return;
+
+	uv_buf_t buffer;
+	int written;
+	int err;
+
+	// First try uv_try_write(). In case it can not directly send all the given data
+	// then build a uv_req_t and use uv_write().
+
+	buffer = uv_buf_init((char*)data, len);
+	written = uv_try_write((uv_stream_t*)this->uvHandle, &buffer, 1);
+
+	// All the data was written. Done.
+	if (written == (int)len)
+	{
+		return;
+	}
+	// Cannot write any data at first time. Use uv_write().
+	else if (written == UV_EAGAIN || written == UV_ENOSYS)
+	{
+		// Set written to 0 so pending_len can be properly calculated.
+		written = 0;
+	}
+	// Error. Should not happen.
+	else if (written < 0)
+	{
+		MS_ERROR_STD("uv_try_write() failed, closing the socket: %s", uv_strerror(written));
+		Close();
+		return;
+	}
+
+	size_t pending_len = len - written;
+
+	// Allocate a special UvWriteData struct pointer.
+	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
+
+	write_data->socket = this;
+	std::memcpy(write_data->store, data + written, pending_len);
+	write_data->req.data = (void*)write_data;
+
+	buffer = uv_buf_init((char*)write_data->store, pending_len);
+
+	err = uv_write(&write_data->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)on_write);
+	if (err)
+		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
 inline
@@ -221,6 +211,7 @@ void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 	else
 	{
 		buf->len = 0;
+
 		MS_ERROR_STD("no available space in the buffer");
 	}
 }
@@ -245,6 +236,8 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Peer disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
 	{
+		MS_DEBUG("connection closed by peer, closing server side");
+
 		this->isClosedByPeer = true;
 
 		// Close local side of the pipe.
@@ -253,11 +246,11 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Some error.
 	else
 	{
-		MS_ERROR_STD("read error: %s | closing the pipe", uv_strerror(nread));
+		MS_ERROR_STD("read error, closing the pipe: %s", uv_strerror(nread));
+
 		this->hasError = true;
 
 		// Close the socket.
-		// NOTE: calling uv_read_stop() upon EOF is a MUST.
 		Close();
 	}
 }
@@ -272,11 +265,12 @@ void UnixStreamSocket::onUvWriteError(int error)
 
 	if (error == UV_EPIPE || error == UV_ENOTCONN)
 	{
-		MS_DEBUG_STD("write error: %s | closing the pipe", uv_strerror(error));
+		MS_DEBUG_STD("write error, closing the pipe: %s", uv_strerror(error));
 	}
 	else
 	{
-		MS_DEBUG_STD("write error: %s | closing the pipe", uv_strerror(error));
+		MS_DEBUG_STD("write error, closing the pipe: %s", uv_strerror(error));
+
 		this->hasError = true;
 	}
 

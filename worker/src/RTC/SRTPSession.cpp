@@ -51,7 +51,8 @@ namespace RTC
 				break;
 		}
 
-		MS_WARN("SSRC %llu: %s", (unsigned long long)data->stream->ssrc, event_desc);
+		// TODO: u64?
+		MS_WARN("SSRC %" PRIu64 ": %s", (uint64_t)data->stream->ssrc, event_desc);
 	}
 
 	/* Instance methods. */

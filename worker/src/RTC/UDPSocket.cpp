@@ -139,7 +139,7 @@ namespace RTC
 		}
 
 		// Choose a random first port to start from.
-		random_first_port = (MS_PORT)Utils::Crypto::GetRandomUInt((unsigned int)RTC::UDPSocket::minPort, (unsigned int)RTC::UDPSocket::maxPort);
+		random_first_port = (MS_PORT)Utils::Crypto::GetRandomUInt((uint32_t)RTC::UDPSocket::minPort, (uint32_t)RTC::UDPSocket::maxPort);
 		// Make it even if pair is requested.
 		if (pair)
 			random_first_port &= ~1;
@@ -170,15 +170,10 @@ namespace RTC
 				iterate_second_port = iterate_first_port + 1;
 			}
 
-			if (!pair)
-				MS_DEBUG("attempt: %u | trying port %u" , (unsigned int)attempt, (unsigned int)iterate_first_port);
-			else
-				MS_DEBUG("attempt: %u | trying ports %u and %u" , (unsigned int)attempt, (unsigned int)iterate_first_port, (unsigned int)iterate_second_port);
-
 			// Check whether the chosen port is available.
 			if (!(*available_ports)[iterate_first_port])
 			{
-				MS_DEBUG("attempt: %u | port %u is in use, try again", (unsigned int)attempt, (unsigned int)iterate_first_port);
+				MS_DEBUG("port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterate_first_port, attempt);
 
 				// If we have tried all the ports in the range raise an error.
 				if (iterate_first_port == random_first_port) {
@@ -191,7 +186,7 @@ namespace RTC
 			// Check also the odd port (if requested).
 			if (pair && !(*available_ports)[iterate_second_port])
 			{
-				MS_DEBUG("attempt: %u | odd port %u is in use, try again", (unsigned int)attempt, (unsigned int)iterate_second_port);
+				MS_DEBUG("odd port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterate_second_port, attempt);
 
 				// If we have tried all the ports in the range raise an error.
 				if (iterate_first_port == random_first_port) {
@@ -228,26 +223,26 @@ namespace RTC
 			if (err)
 			{
 				delete uvHandles[0];
-				MS_THROW_ERROR("attempt: %u | uv_udp_init() failed: %s", (unsigned int)attempt, uv_strerror(err));
+				MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
 			}
 
 			err = uv_udp_bind(uvHandles[0], (const struct sockaddr*)&first_bind_addr, flags);
 			if (err)
 			{
-				MS_WARN("attempt: %u | uv_udp_bind() failed for port %u: %s", (unsigned int)attempt, (unsigned int)iterate_first_port, uv_strerror(err));
+				MS_WARN("uv_udp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s", attempt, iterate_first_port, uv_strerror(err));
 
 				uv_close((uv_handle_t*)uvHandles[0], (uv_close_cb)on_error_close);
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
 				{
-					MS_THROW_ERROR("bind() fails due to many open files");
+					MS_THROW_ERROR("uv_udp_bind() fails due to many open files");
 				}
 
 				// If bind() fails for more that MAX_BIND_ATTEMPTS then raise an error.
 				if (bindAttempt > MAX_BIND_ATTEMPTS)
 				{
-					MS_THROW_ERROR("bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listenIP);
+					MS_THROW_ERROR("uv_udp_bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listenIP);
 				}
 
 				// If we have tried all the ports in the range raise an error.
@@ -269,13 +264,13 @@ namespace RTC
 				{
 					uv_close((uv_handle_t*)uvHandles[0], (uv_close_cb)on_error_close);
 					delete uvHandles[1];
-					MS_THROW_ERROR("attempt: %u | uv_udp_init() failed: %s", (unsigned int)attempt, uv_strerror(err));
+					MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
 				}
 
 				err = uv_udp_bind(uvHandles[1], (const struct sockaddr*)&second_bind_addr, flags);
 				if (err)
 				{
-					MS_WARN("attempt: %u | uv_udp_bind() failed for odd port %u: %s", (unsigned int)attempt, (unsigned int)iterate_second_port, uv_strerror(err));
+					MS_WARN("uv_udp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s", attempt, iterate_second_port, uv_strerror(err));
 
 					uv_close((uv_handle_t*)uvHandles[0], (uv_close_cb)on_error_close);
 					uv_close((uv_handle_t*)uvHandles[1], (uv_close_cb)on_error_close);
@@ -283,13 +278,13 @@ namespace RTC
 					// If bind() fails due to "too many open files" stop here.
 					if (err == UV_EMFILE)
 					{
-						MS_THROW_ERROR("bind() fails due to many open files");
+						MS_THROW_ERROR("uvp_udp_bind() fails due to many open files");
 					}
 
 					// If bind() fails for more that MAX_BIND_ATTEMPTS then raise an error.
 					if (bindAttempt > MAX_BIND_ATTEMPTS)
 					{
-						MS_THROW_ERROR("bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listenIP);
+						MS_THROW_ERROR("uvp_udp_bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listenIP);
 					}
 
 					// If we have tried all the ports in the range raise an error.
@@ -310,9 +305,11 @@ namespace RTC
 				(*available_ports)[iterate_second_port] = false;
 
 			if (!pair)
-				MS_DEBUG("attempt: %u | available port for IP '%s': %u" , (unsigned int)attempt, listenIP, (unsigned int)iterate_first_port);
+				MS_DEBUG("bind success [ip:%s, port:%" PRIu16 ", attempt:%" PRIu16 "]",
+					listenIP, iterate_first_port, attempt);
 			else
-				MS_DEBUG("attempt: %u | available ports for IP '%s': %u and %u" , (unsigned int)attempt, listenIP, (unsigned int)iterate_first_port, (unsigned int)iterate_second_port);
+				MS_DEBUG("bind success [ip:%s, ports:%" PRIu16 "|%" PRIu16 ", attempt:%" PRIu16 "]",
+					listenIP, iterate_first_port, iterate_second_port, attempt);
 
 			return;
 		};
@@ -334,6 +331,7 @@ namespace RTC
 		if (!this->listener)
 		{
 			MS_ERROR("no listener set");
+
 			return;
 		}
 
@@ -343,13 +341,16 @@ namespace RTC
 			MS_PORT port;
 			std::string ip;
 			Utils::IP::GetAddressInfo(addr, &family, ip, &port);
-			MS_DEBUG("%zu bytes datagram received [local: %s : %u, remote: %s : %u]", len, GetLocalIP().c_str(), (unsigned int)GetLocalPort(), ip.c_str(), (unsigned int)port);
+
+			MS_DEBUG("datagram received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", len:%zu]",
+				GetLocalIP().c_str(), GetLocalPort(), ip.c_str(), port, len);
 		}
 
 		// Check if it's STUN.
 		if (STUNMessage::IsSTUN(data, len))
 		{
 			this->listener->onSTUNDataRecv(this, data, len, addr);
+
 			return;
 		}
 
@@ -357,6 +358,7 @@ namespace RTC
 		if (RTCPPacket::IsRTCP(data, len))
 		{
 			this->listener->onRTCPDataRecv(this, data, len, addr);
+
 			return;
 		}
 
@@ -364,6 +366,7 @@ namespace RTC
 		if (RTPPacket::IsRTP(data, len))
 		{
 			this->listener->onRTPDataRecv(this, data, len, addr);
+
 			return;
 		}
 
@@ -371,6 +374,7 @@ namespace RTC
 		if (DTLSTransport::IsDTLS(data, len))
 		{
 			this->listener->onDTLSDataRecv(this, data, len, addr);
+
 			return;
 		}
 

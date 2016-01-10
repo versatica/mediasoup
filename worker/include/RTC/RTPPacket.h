@@ -47,6 +47,7 @@ namespace RTC
 		RTPPacket(Header* header, ExtensionHeader* extensionHeader, const MS_BYTE* payload, size_t payloadLen, MS_BYTE payloadPadding, const MS_BYTE* raw, size_t length);
 		~RTPPacket();
 
+		void Dump();
 		const MS_BYTE* GetRaw();
 		size_t GetLength();
 		MS_BYTE GetPayloadType();
@@ -63,7 +64,6 @@ namespace RTC
 		MS_BYTE* GetPayload();
 		size_t GetPayloadLength();
 		void Serialize();
-		void Dump();
 
 	private:
 		// Passed by argument.

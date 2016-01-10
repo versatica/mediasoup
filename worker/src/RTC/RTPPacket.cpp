@@ -24,6 +24,7 @@ namespace RTC
 
 		// Check CSRC list.
 		size_t csrc_list_size = 0;
+
 		if (header->csrc_count)
 		{
 			csrc_list_size = header->csrc_count * sizeof(header->ssrc);
@@ -31,7 +32,8 @@ namespace RTC
 			// Packet size must be >= header size + CSRC list.
 			if (len < pos + csrc_list_size)
 			{
-				MS_DEBUG("not enough space for the announced CSRC list | packet discarded");
+				MS_DEBUG("not enough space for the announced CSRC list, packet discarded");
+
 				return nullptr;
 			}
 			pos += csrc_list_size;
@@ -40,12 +42,13 @@ namespace RTC
 		// Check header extension.
 		ExtensionHeader* extensionHeader = nullptr;
 		size_t extension_value_size = 0;
+
 		if (header->extension)
 		{
 			// The extension header is at least 4 bytes.
 			if (len < pos + 4)
 			{
-				MS_DEBUG("not enough space for the announced extension header | packet discarded");
+				MS_DEBUG("not enough space for the announced extension header, packet discarded");
 				return nullptr;
 			}
 
@@ -59,7 +62,8 @@ namespace RTC
 			// Packet size must be >= header size + CSRC list + header extension size.
 			if (len < pos + 4 + extension_value_size)
 			{
-				MS_DEBUG("not enough space for the announced header extension value | packet discarded");
+				MS_DEBUG("not enough space for the announced header extension value, packet discarded");
+
 				return nullptr;
 			}
 			pos += 4 + extension_value_size;
@@ -78,7 +82,8 @@ namespace RTC
 			// Must be at least a single payload byte.
 			if (payloadLength == 0)
 			{
-				MS_DEBUG("padding bit is set but no space for a padding byte | packet discarded");
+				MS_DEBUG("padding bit is set but no space for a padding byte, packet discarded");
+
 				return nullptr;
 			}
 
@@ -86,12 +91,14 @@ namespace RTC
 			if (payloadPadding == 0)
 			{
 				MS_DEBUG("padding byte cannot be 0  packet discarded");
+
 				return nullptr;
 			}
 
 			if (payloadLength < (size_t)payloadPadding)
 			{
-				MS_DEBUG("number of padding octets is greater than available space for payload | packet discarded");
+				MS_DEBUG("number of padding octets is greater than available space for payload, packet discarded");
+
 				return nullptr;
 			}
 			payloadLength -= (size_t)payloadPadding;
@@ -128,6 +135,31 @@ namespace RTC
 
 		if (this->isSerialized)
 			delete this->raw;
+	}
+
+	void RTPPacket::Dump()
+	{
+		MS_TRACE();
+
+		if (!Logger::HasDebugLevel())
+			return;
+
+		MS_DEBUG("<RTPPacket>");
+		MS_DEBUG("padding: %s", this->header->padding ? "true" : "false");
+		MS_DEBUG("extension: %s", HasExtensionHeader() ? "true" : "false");
+		if (HasExtensionHeader())
+		{
+			MS_DEBUG("extension ID: %" PRIu16, GetExtensionHeaderId());
+			MS_DEBUG("extension length: %zu bytes", GetExtensionHeaderLength());
+		}
+		MS_DEBUG("CSRC count: %" PRIu8, this->header->csrc_count);  // TODO: method?
+		MS_DEBUG("marker: %s", HasMarker() ? "true" : "false");
+		MS_DEBUG("payload type: %" PRIu8, GetPayloadType());
+		MS_DEBUG("sequence number: %" PRIu16, GetSequenceNumber());
+		MS_DEBUG("timestamp: %" PRIu32, GetTimestamp());
+		MS_DEBUG("SSRC: %" PRIu32, GetSSRC());
+		MS_DEBUG("payload size: %zu bytes", GetPayloadLength());
+		MS_DEBUG("</RTPPacket>");
 	}
 
 	void RTPPacket::Serialize()
@@ -207,30 +239,5 @@ namespace RTC
 		}
 
 		MS_ASSERT(pos == this->length, "pos != this->length");
-	}
-
-	void RTPPacket::Dump()
-	{
-		MS_TRACE();
-
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_DEBUG("[RTPPacket]");
-		MS_DEBUG("- Padding: %s", this->header->padding ? "true" : "false");
-		MS_DEBUG("- Extension: %s", HasExtensionHeader() ? "true" : "false");
-		if (HasExtensionHeader())
-		{
-			MS_DEBUG("- Extension ID: %u", (unsigned int)GetExtensionHeaderId());
-			MS_DEBUG("- Extension length: %zu bytes", GetExtensionHeaderLength());
-		}
-		MS_DEBUG("- CSRC count: %u", (unsigned int)this->header->csrc_count);  // TODO: method?
-		MS_DEBUG("- Marker: %s", HasMarker() ? "true" : "false");
-		MS_DEBUG("- Payload type: %u", (unsigned int)GetPayloadType());
-		MS_DEBUG("- Sequence number: %u", (unsigned int)GetSequenceNumber());
-		MS_DEBUG("- Timestamp: %lu", (unsigned long)GetTimestamp());
-		MS_DEBUG("- SSRC: %lu", (unsigned long)GetSSRC());
-		MS_DEBUG("- Payload size: %zu bytes", GetPayloadLength());
-		MS_DEBUG("[/RTPPacket]");
 	}
 }

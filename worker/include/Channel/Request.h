@@ -1,6 +1,7 @@
 #ifndef MS_CHANNEL_REQUEST_H
 #define MS_CHANNEL_REQUEST_H
 
+#include "common.h"
 #include "Channel/UnixStreamSocket.h"
 #include <string>
 #include <unordered_map>
@@ -40,13 +41,13 @@ namespace Channel
 
 		void Accept();
 		void Accept(Json::Value &data);
-		void Reject(unsigned int status, std::string& reason);
-		void Reject(unsigned int status, const char* reason = nullptr);
+		void Reject(uint16_t status, std::string& reason);
+		void Reject(uint16_t status, const char* reason = nullptr);
 
 	public:
 		// Passed by argument.
 		Channel::UnixStreamSocket* channel = nullptr;
-		unsigned int id;
+		uint32_t id;
 		std::string method;
 		MethodId methodId;
 		Json::Value internal;

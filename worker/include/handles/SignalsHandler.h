@@ -17,19 +17,18 @@ public:
 public:
 	SignalsHandler(Listener* listener);
 
-	void AddSignal(int signum, std::string name);
 	void Close();
+	void AddSignal(int signum, std::string name);
 
 /* Callbacks fired by UV events. */
 public:
 	void onUvSignal(int signum);
 
 private:
-	// Allocated by this.
-	typedef std::vector<uv_signal_t*> UvHandles;
-	UvHandles uvHandles;
 	// Passed by argument.
 	Listener* listener = nullptr;
+	// Allocated by this.
+	std::vector<uv_signal_t*> uvHandles;
 };
 
 #endif

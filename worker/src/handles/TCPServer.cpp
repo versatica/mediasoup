@@ -6,13 +6,6 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 
-#define RETURN_IF_CLOSING()  \
-	if (this->isClosing)  \
-	{  \
-		MS_DEBUG("in closing state, doing nothing");  \
-		return;  \
-	}
-
 /* Static methods for UV callbacks. */
 
 static inline
@@ -131,32 +124,12 @@ TCPServer::~TCPServer()
 		delete this->uvHandle;
 }
 
-const struct sockaddr* TCPServer::GetLocalAddress()
-{
-	MS_TRACE();
-
-	return (const struct sockaddr*)&this->localAddr;
-}
-
-const std::string& TCPServer::GetLocalIP()
-{
-	MS_TRACE();
-
-	return this->localIP;
-}
-
-MS_PORT TCPServer::GetLocalPort()
-{
-	MS_TRACE();
-
-	return this->localPort;
-}
-
 void TCPServer::Close()
 {
 	MS_TRACE();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	this->isClosing = true;
 
@@ -180,10 +153,31 @@ void TCPServer::Close()
 
 void TCPServer::Dump()
 {
-	MS_DEBUG("[TCP | local address: %s : %u | status: %s | num connections: %zu]",
-		this->localIP.c_str(), (unsigned int)this->localPort,
+	MS_DEBUG("[TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
+		this->localIP.c_str(), (uint16_t)this->localPort,
 		(!this->isClosing) ? "open" : "closed",
 		this->connections.size());
+}
+
+const struct sockaddr* TCPServer::GetLocalAddress()
+{
+	MS_TRACE();
+
+	return (const struct sockaddr*)&this->localAddr;
+}
+
+const std::string& TCPServer::GetLocalIP()
+{
+	MS_TRACE();
+
+	return this->localIP;
+}
+
+MS_PORT TCPServer::GetLocalPort()
+{
+	MS_TRACE();
+
+	return this->localPort;
 }
 
 bool TCPServer::SetLocalAddress()
@@ -197,6 +191,7 @@ bool TCPServer::SetLocalAddress()
 	if (err)
 	{
 		MS_ERROR("uv_tcp_getsockname() failed: %s", uv_strerror(err));
+
 		return false;
 	}
 
@@ -211,13 +206,15 @@ void TCPServer::onUvConnection(int status)
 {
 	MS_TRACE();
 
-	RETURN_IF_CLOSING();
+	if (this->isClosing)
+		return;
 
 	int err;
 
 	if (status)
 	{
 		MS_ERROR("error while receiving a new TCP connection: %s", uv_strerror(status));
+
 		return;
 	}
 
@@ -251,7 +248,7 @@ void TCPServer::onUvConnection(int status)
 	}
 	catch (const MediaSoupError &error)
 	{
-		MS_ERROR("cannot run the TCP connection: %s | closing the connection", error.what());
+		MS_ERROR("cannot run the TCP connection, closing the connection: %s", error.what());
 		connection->Close();
 		// NOTE: Don't return here so the user won't be notified about a "onclose" for a TCP connection
 		// for which there was not a previous "onnew" event.
@@ -293,9 +290,5 @@ void TCPServer::onTCPConnectionClosed(TCPConnection* connection, bool is_closed_
 	// Check if the server is closing connections and if this is the last
 	// connection then close the server now.
 	if (this->isClosing && this->connections.empty())
-	{
-		MS_DEBUG("last active connection closed");
-
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
-	}
 }

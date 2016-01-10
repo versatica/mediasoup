@@ -10,7 +10,7 @@
 
 // This array will store all of the mutex available for OpenSSL.
 pthread_mutex_t* DepOpenSSL::mutexes = nullptr;
-int DepOpenSSL::numMutexes = 0;
+uint32_t DepOpenSSL::numMutexes = 0;
 
 /* Static methods. */
 
@@ -32,7 +32,7 @@ void DepOpenSSL::ClassInit()
 
 	DepOpenSSL::numMutexes = CRYPTO_num_locks();
 
-	for (int i = 0; i < DepOpenSSL::numMutexes; i++)
+	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; i++)
 	{
 		int err = pthread_mutex_init(&DepOpenSSL::mutexes[i], nullptr);
 		if (err)
@@ -68,7 +68,7 @@ void DepOpenSSL::ClassDestroy()
 	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 
 	// Free mutexes.
-	for (int i = 0; i < DepOpenSSL::numMutexes; i++)
+	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; i++)
 	{
 		int err = pthread_mutex_destroy(&DepOpenSSL::mutexes[i]);
 		if (err)
@@ -123,6 +123,7 @@ CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* file, int line)
 	if (!value)
 	{
 		MS_ABORT("new CRYPTO_dynlock_value failed");
+
 		return nullptr;
 	}
 

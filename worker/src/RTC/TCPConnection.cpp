@@ -29,9 +29,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG("data received [local: %s : %u, remote: %s : %u]",
-			GetLocalIP().c_str(), (unsigned int)GetLocalPort(),
-			GetPeerIP().c_str(), (unsigned int)GetPeerPort());
+		MS_DEBUG("data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+			GetLocalIP().c_str(), GetLocalPort(),
+			GetPeerIP().c_str(), GetPeerPort());
 
 		/*
 		 * Framing RFC 4571
@@ -96,13 +96,7 @@ namespace RTC
 				}
 				else
 				{
-					MS_DEBUG("packet of unknown type received, closing the connection");
-
-					// Close the connection.
-					Close();
-
-					// Exit the parsing loop.
-					break;
+					MS_DEBUG("ignoring received packet of unknown type");
 				}
 
 				// If there is no more space available in the buffer and that is because
@@ -125,7 +119,8 @@ namespace RTC
 				// parse again. Otherwise break here and wait for more data.
 				if (this->bufferDataLen > this->frameStart)
 				{
-					MS_DEBUG("there is more data after the parsed frame, continue parsing");
+					// MS_DEBUG("there is more data after the parsed frame, continue parsing");
+
 					continue;
 				}
 				else
@@ -144,7 +139,7 @@ namespace RTC
 					// the buffer, so move the frame to the position 0.
 					if (this->frameStart != 0)
 					{
-						MS_DEBUG("no more space in the buffer, moving parsed bytes to the beginning of the buffer and wait for more data");
+						// MS_DEBUG("no more space in the buffer, moving parsed bytes to the beginning of the buffer and wait for more data");
 
 						std::memmove(this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
 						this->bufferDataLen = this->bufferSize - this->frameStart;
@@ -154,7 +149,7 @@ namespace RTC
 					// The frame is too big, so close the connection.
 					else
 					{
-						MS_ERROR("no more space in the buffer for the unfinished frame being parsed, closing the connection");
+						MS_WARN("no more space in the buffer for the unfinished frame being parsed, closing the connection");
 
 						// Close the socket.
 						Close();

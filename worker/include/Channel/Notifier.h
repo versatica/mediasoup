@@ -1,6 +1,7 @@
 #ifndef MS_CHANNEL_NOTIFIER_H
 #define MS_CHANNEL_NOTIFIER_H
 
+#include "common.h"
 #include "Channel/UnixStreamSocket.h"
 #include <string>
 #include <json/json.h>
@@ -15,8 +16,8 @@ namespace Channel
 
 		void Close();
 
-		void Emit(unsigned int targetId, std::string eventName);
-		void Emit(unsigned int targetId, std::string eventName, Json::Value& eventData);
+		void Emit(uint32_t targetId, std::string eventName);
+		void Emit(uint32_t targetId, std::string eventName, Json::Value& eventData);
 
 	public:
 		// Passed by argument.

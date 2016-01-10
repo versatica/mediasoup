@@ -16,19 +16,19 @@ public:
 public:
 	Timer(Listener* listener);
 
+	void Close();
 	void Start(MS_8BYTES timeout);
 	void Stop();
-	void Close();
 
 /* Callbacks fired by UV events. */
 public:
 	void onUvTimer();
 
 private:
-	// Allocated by this.
-	uv_timer_t* uvHandle = nullptr;
 	// Passed by argument.
 	Listener* listener = nullptr;
+	// Allocated by this.
+	uv_timer_t* uvHandle = nullptr;
 };
 
 #endif

@@ -17,6 +17,7 @@
 #include "Logger.h"
 #include <map>
 #include <string>
+#include <iostream>  // std::cerr, std::endl
 #include <cstdlib>  // std::_Exit(), std::genenv()
 #include <csignal>  // sigaction()
 #include <cerrno>
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
 	// Ensure we are called by our Node library.
 	if (argc == 1 || !std::getenv("MEDIASOUP_CHANNEL_FD"))
 	{
-		fprintf(stderr, "YOU ARE NOT MY REAL FATHER\n");
+		std::cerr << "ERROR: you don't seem to be my real father" << std::endl;
 		std::_Exit(EXIT_FAILURE);
 	}
 
@@ -58,6 +59,7 @@ int main(int argc, char* argv[])
 	catch (const MediaSoupError &error)
 	{
 		MS_ERROR("configuration error: %s", error.what());
+
 		exitWithError();
 	}
 
@@ -88,12 +90,14 @@ int main(int argc, char* argv[])
 		Loop loop(channel);
 
 		destroy();
+
 		MS_DEBUG_STD("success exit");
 		exitSuccess();
 	}
 	catch (const MediaSoupError &error)
 	{
 		destroy();
+
 		MS_ERROR_STD("failure exit: %s", error.what());
 		exitWithError();
 	}

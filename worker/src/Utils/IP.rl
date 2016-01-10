@@ -30,7 +30,7 @@ namespace Utils
 				ip_family = AF_INET6;
 			}
 
-			include core_grammar "../core_grammar.rl";
+			include grammar "grammar.rl";
 
 			main := IPv4address @on_ipv4 |
 			        IPv6address @on_ipv6;

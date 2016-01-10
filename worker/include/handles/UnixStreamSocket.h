@@ -20,11 +20,10 @@ public:
 	UnixStreamSocket(int fd, size_t bufferSize);
 	virtual ~UnixStreamSocket();
 
-	void Write(const MS_BYTE* data, size_t len);
-	void Write(const std::string &data);
 	void Close();
 	bool IsClosing();
-	virtual void Dump();
+	void Write(const MS_BYTE* data, size_t len);
+	void Write(const std::string &data);
 
 /* Callbacks fired by UV events. */
 public:
@@ -48,10 +47,10 @@ private:
 	bool hasError = false;
 
 protected:
-	// Allocated by this.
-	MS_BYTE* buffer = nullptr;
 	// Passed by argument.
 	size_t bufferSize = 0;
+	// Allocated by this.
+	MS_BYTE* buffer = nullptr;
 	// Others.
 	size_t bufferDataLen = 0;
 };
@@ -59,16 +58,15 @@ protected:
 /* Inline methods. */
 
 inline
-void UnixStreamSocket::Write(const std::string &data)
-{
-	Write((const MS_BYTE*)data.c_str(), data.size());
-}
-
-inline
 bool UnixStreamSocket::IsClosing()
 {
 	return this->isClosing;
 }
 
+inline
+void UnixStreamSocket::Write(const std::string &data)
+{
+	Write((const MS_BYTE*)data.c_str(), data.size());
+}
 
 #endif

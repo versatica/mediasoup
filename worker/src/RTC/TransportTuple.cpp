@@ -67,17 +67,17 @@ namespace RTC
 
 				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remote_family, remote_ip, &remote_port);
 
-				MS_DEBUG("[UDP | local: %s : %u | remote: %s : %u]",
-					this->udpSocket->GetLocalIP().c_str(), (unsigned int)this->udpSocket->GetLocalPort(),
+				MS_DEBUG("[UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+					this->udpSocket->GetLocalIP().c_str(), this->udpSocket->GetLocalPort(),
 					remote_ip.c_str(), remote_port);
 				break;
 			}
 
 			case Protocol::TCP:
 			{
-				MS_DEBUG("[TCP | local: %s : %u | remote: %s : %u]",
-					this->tcpConnection->GetLocalIP().c_str(), (unsigned int)this->tcpConnection->GetLocalPort(),
-					this->tcpConnection->GetPeerIP().c_str(), (unsigned int)this->tcpConnection->GetPeerPort());
+				MS_DEBUG("[TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+					this->tcpConnection->GetLocalIP().c_str(), this->tcpConnection->GetLocalPort(),
+					this->tcpConnection->GetPeerIP().c_str(), this->tcpConnection->GetPeerPort());
 				break;
 			}
 		}

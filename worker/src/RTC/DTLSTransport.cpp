@@ -880,7 +880,7 @@ namespace RTC
 		}
 		else if (timeout_ms < 30000)
 		{
-			MS_DEBUG("DTLS timer set in %llu ms", (unsigned long long)timeout_ms);
+			MS_DEBUG("DTLS timer set in %" PRIu64 "ms", timeout_ms);
 
 			this->timer->Start(timeout_ms);
 
@@ -889,7 +889,7 @@ namespace RTC
 		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
 		else
 		{
-			MS_DEBUG("DTLS timeout too high (%llu ms), resetting DLTS", (unsigned long long)timeout_ms);
+			MS_WARN("DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeout_ms);
 
 			Reset();
 

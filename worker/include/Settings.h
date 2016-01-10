@@ -13,7 +13,7 @@ public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		unsigned int logLevel            { MS_LOG_LEVEL_DEBUG };
+		uint8_t     logLevel            { MS_LOG_LEVEL_DEBUG };
 		std::string rtcListenIPv4;
 		std::string rtcListenIPv6;
 		MS_PORT     rtcMinPort           { 10000 };
@@ -42,8 +42,8 @@ public:
 	static struct Configuration configuration;
 
 private:
-	static std::map<std::string, unsigned int> string2LogLevel;
-	static std::map<unsigned int, std::string> logLevel2String;
+	static std::map<std::string, uint8_t> string2LogLevel;
+	static std::map<uint8_t, std::string> logLevel2String;
 };
 
 #endif
