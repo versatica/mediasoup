@@ -62,6 +62,7 @@ tap.test('server.updateSettings() in a closed server must fail', { timeout: 1000
 			.catch((error) =>
 			{
 				t.pass(`server.updateSettings() failed: ${error}`);
+				t.type(error, mediasoup.errors.InvalidStateError, 'server.updateSettings() error must be InvalidStateError');
 				t.end();
 			});
 	});
@@ -95,11 +96,18 @@ tap.test('server.Room() in a closed server must fail', { timeout: 1000 }, (t) =>
 
 	server.on('close', () =>
 	{
-		t.throws(() =>
+		try
 		{
 			server.Room();
-		}, 'server.Room() should throw error');
-		t.end();
+
+			t.fail('server.Room() succeeded');
+		}
+		catch (error)
+		{
+			t.ok(error instanceof mediasoup.errors.InvalidStateError,
+				'server.Room() should throw InvalidStateError');
+			t.end();
+		}
 	});
 
 	server.close();

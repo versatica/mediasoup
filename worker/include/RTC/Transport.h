@@ -12,6 +12,7 @@
 #include "RTC/DTLSTransport.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
+#include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
 #include <vector>

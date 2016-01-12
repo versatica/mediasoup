@@ -27,9 +27,12 @@ namespace Channel
 			peer_dump,
 			peer_createTransport,
 			peer_createAssociatedTransport,
+			peer_createRtpReceiver,
 			transport_close,
 			transport_dump,
-			transport_setRemoteDtlsParameters
+			transport_setRemoteDtlsParameters,
+			rtpReceiver_close,
+			rtpReceiver_dump
 		};
 
 	private:
@@ -41,8 +44,8 @@ namespace Channel
 
 		void Accept();
 		void Accept(Json::Value &data);
-		void Reject(uint16_t status, std::string& reason);
-		void Reject(uint16_t status, const char* reason = nullptr);
+		void Reject(std::string& reason);
+		void Reject(const char* reason = nullptr);
 
 	public:
 		// Passed by argument.

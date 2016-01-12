@@ -31,12 +31,18 @@ tap.test('room.Peer() without `peerName` must fail', { timeout: 1000 }, (t) =>
 
 	let room = server.Room();
 
-	t.throws(() =>
+	try
 	{
 		room.Peer();
-	}, 'room.Peer() should throw error');
 
-	t.end();
+		t.fail('room.Peer() succeeded');
+	}
+	catch (error)
+	{
+		t.ok(error instanceof TypeError,
+			'room.Peer()) should throw TypeError');
+		t.end();
+	}
 });
 
 tap.test('room.Peer() with same `peerName` must fail', { timeout: 1000 }, (t) =>
@@ -49,12 +55,18 @@ tap.test('room.Peer() with same `peerName` must fail', { timeout: 1000 }, (t) =>
 
 	room.Peer('alice');
 
-	t.throws(() =>
+	try
 	{
 		room.Peer('alice');
-	}, 'room.Peer() should throw error');
 
-	t.end();
+		t.fail('room.Peer() succeeded');
+	}
+	catch (error)
+	{
+		t.ok(error instanceof Error,
+			'room.Peer()) should throw InvalidStateError');
+		t.end();
+	}
 });
 
 tap.test('room.Peer() with same `peerName` must succeed if previous peer was closed before', { timeout: 1000 }, (t) =>

@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "RTC/Transport.h"
+#include "RTC/RtpReceiver.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -12,7 +13,8 @@
 namespace RTC
 {
 	class Peer :
-		public RTC::Transport::Listener
+		public RTC::Transport::Listener,
+		public RTC::RtpReceiver::Listener
 	{
 	public:
 		class Listener
@@ -30,11 +32,16 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 
 	private:
-		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* iceTransportId = nullptr);
+		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
+		RTC::RtpReceiver* GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId = nullptr);
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
 		virtual void onTransportClosed(RTC::Transport* transport) override;
+
+	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
+	public:
+		virtual void onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver) override;
 
 	public:
 		// Passed by argument.
@@ -47,6 +54,7 @@ namespace RTC
 		Channel::Notifier* notifier = nullptr;
 		// Others.
 		std::unordered_map<uint32_t, RTC::Transport*> transports;
+		std::unordered_map<uint32_t, RTC::RtpReceiver*> rtpReceivers;
 	};
 }
 

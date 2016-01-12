@@ -105,7 +105,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -113,7 +113,7 @@ namespace RTC
 				{
 					MS_ERROR("Peer already exists");
 
-					request->Reject(500, "Peer already exists");
+					request->Reject("Peer already exists");
 					return;
 				}
 
@@ -121,7 +121,7 @@ namespace RTC
 				{
 					MS_ERROR("Request has not string `internal.peerName`");
 
-					request->Reject(500, "Request has not string `internal.peerName`");
+					request->Reject("Request has not string `internal.peerName`");
 					return;
 				}
 
@@ -133,7 +133,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -149,9 +149,12 @@ namespace RTC
 			case Channel::Request::MethodId::peer_dump:
 			case Channel::Request::MethodId::peer_createTransport:
 			case Channel::Request::MethodId::peer_createAssociatedTransport:
+			case Channel::Request::MethodId::peer_createRtpReceiver:
 			case Channel::Request::MethodId::transport_close:
 			case Channel::Request::MethodId::transport_dump:
 			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
+			case Channel::Request::MethodId::rtpReceiver_close:
+			case Channel::Request::MethodId::rtpReceiver_dump:
 			{
 				RTC::Peer* peer;
 
@@ -161,7 +164,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -169,7 +172,7 @@ namespace RTC
 				{
 					MS_ERROR("Peer does not exist");
 
-					request->Reject(500, "Peer does not exist");
+					request->Reject("Peer does not exist");
 					return;
 				}
 
@@ -180,7 +183,9 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("unknown method");
+				MS_ERROR("unknown method");
+
+				request->Reject("unknown method");
 			}
 		}
 	}

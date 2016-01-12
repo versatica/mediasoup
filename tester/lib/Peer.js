@@ -62,7 +62,7 @@ class Peer extends EventEmitter
 			{
 				this._debug('emitting "ready" event');
 
-				this._pc.addStream(this._stream);
+				// this._pc.addStream(this._stream);
 
 				this.emit('ready');
 			}

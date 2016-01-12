@@ -17,6 +17,7 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 		.then((transport) =>
 		{
 			t.pass('peer.createTransport() succeeded');
+			t.equal(transport.iceRole, 'controlled', 'transport must have "controlled" `iceRole`');
 			t.equal(transport.iceComponent, 'RTP', 'transport must have "RTP" `iceComponent`');
 			t.notOk(transport.iceSelectedTuple, 'transport must not have `iceSelectedTuple`');
 			t.equal(transport.iceState, 'new', 'transport must have "new" `iceState`');

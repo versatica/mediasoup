@@ -272,6 +272,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_iceRole("iceRole");
+		static const Json::StaticString v_controlled("controlled");
 		static const Json::StaticString k_iceComponent("iceComponent");
 		static const Json::StaticString v_RTP("RTP");
 		static const Json::StaticString v_RTCP("RTCP");
@@ -297,6 +299,9 @@ namespace RTC
 		static const Json::StaticString v_failed("failed");
 
 		Json::Value data;
+
+		// Add `iceRole` (we are always "controlled").
+		data[k_iceRole] = v_controlled;
 
 		// Add `iceComponent`.
 		if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
@@ -423,7 +428,7 @@ namespace RTC
 				{
 					MS_ERROR("method already called");
 
-					request->Reject(500, "method already called");
+					request->Reject("method already called");
 					return;
 				}
 				this->remoteDtlsParametersGiven = true;
@@ -434,7 +439,7 @@ namespace RTC
 				{
 					MS_ERROR("missing `data.fingerprint`");
 
-					request->Reject(500, "missing `data.fingerprint`");
+					request->Reject("missing `data.fingerprint`");
 					return;
 				}
 
@@ -443,7 +448,7 @@ namespace RTC
 				{
 					MS_ERROR("missing `data.fingerprint.algorithm` and/or `data.fingerprint.value`");
 
-					request->Reject(500, "missing `data.fingerprint.algorithm` and/or `data.fingerprint.value`");
+					request->Reject("missing `data.fingerprint.algorithm` and/or `data.fingerprint.value`");
 					return;
 				}
 
@@ -453,7 +458,7 @@ namespace RTC
 				{
 					MS_ERROR("unsupported `data.fingerprint.algorithm`");
 
-					request->Reject(500, "unsupported `data.fingerprint.algorithm`");
+					request->Reject("unsupported `data.fingerprint.algorithm`");
 					return;
 				}
 
@@ -478,7 +483,7 @@ namespace RTC
 					case RTC::DTLSTransport::Role::NONE:
 						MS_ERROR("invalid .role");
 
-						request->Reject(500, "invalid `data.role`");
+						request->Reject("invalid `data.role`");
 						return;
 				}
 
@@ -509,7 +514,9 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("unknown method");
+				MS_ERROR("unknown method");
+
+				request->Reject("unknown method");
 			}
 		}
 	}

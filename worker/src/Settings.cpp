@@ -191,7 +191,7 @@ void Settings::HandleRequest(Channel::Request* request)
 			}
 			catch (const MediaSoupError &error)
 			{
-				request->Reject(500, error.what());
+				request->Reject(error.what());
 				return;
 			}
 
@@ -207,7 +207,9 @@ void Settings::HandleRequest(Channel::Request* request)
 
 		default:
 		{
-			MS_ABORT("unknown method");
+			MS_ERROR("unknown method");
+
+			request->Reject("unknown method");
 		}
 	}
 }

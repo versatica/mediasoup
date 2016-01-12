@@ -175,10 +175,8 @@ app.put('/test-transport', function(req)
 				tcp        : true,
 				preferIPv4 : true,
 				preferUdp  : true
-			});
-
-		// Set transport event listeners
-		promise.then((transport) =>
+			})
+		.then((transport) =>
 		{
 			transport.on('close', () =>
 			{
@@ -199,7 +197,22 @@ app.put('/test-transport', function(req)
 			{
 				debug('transport "dtlsstatechange" event [data.dtlsState:%s, transport.dtlsState:%s]', data.dtlsState, transport.dtlsState);
 			});
-		});
+
+			// TODO: TEST
+			let rtpReceiver = mediaPeer.RtpReceiver(transport);
+
+			rtpReceiver.on('close', () =>
+			{
+				debug('rtpReceiver "close" event');
+			});
+
+			rtpReceiver.dump()
+				.then((data) => debug('RTP_RECEIVER DUMP:\n%s', JSON.stringify(data, null, '\t')))
+				.catch((error) => debugerror('RTP_RECEIVER DUMP ERROR: %s', error));
+
+			return transport;
+		})
+		.catch((error) => debugerror('SOMETHING FAILED: %s]', error));
 
 		// Add the transport promise to the array of promises
 		transportPromises.push(promise);
@@ -316,7 +329,7 @@ app.put('/test-transport', function(req)
 
 			mediaPeer.dump()
 				.then((data) => debug('PEER DUMP:\n%s', JSON.stringify(data, null, '\t')))
-				.catch((error) => debugerror('PEER DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
+				.catch((error) => debugerror('PEER DUMP ERROR: %s', error));
 		})
 		.catch((error) =>
 		{
@@ -331,5 +344,5 @@ setInterval(() =>
 {
 	room.dump()
 		.then((data) => debug('ROOM DUMP:\n%s', JSON.stringify(data, null, '\t')))
-		.catch((error) => debugerror('ROOM DUMP ERROR: [status:%s, error:"%s"]', error.status, error));
+		.catch((error) => debugerror('ROOM DUMP ERROR: %s', error));
 }, 20000);

@@ -38,6 +38,15 @@ namespace RTC
 			transport->Close();
 		}
 
+		// Close all the RtpReceivers.
+		for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end();)
+		{
+			RTC::RtpReceiver* rtpReceiver = it->second;
+
+			it = this->rtpReceivers.erase(it);
+			rtpReceiver->Close();
+		}
+
 		// Notify the listener.
 		this->listener->onPeerClosed(this);
 
@@ -50,9 +59,11 @@ namespace RTC
 
 		static const Json::StaticString k_peerName("peerName");
 		static const Json::StaticString k_transports("transports");
+		static const Json::StaticString k_rtpReceivers("rtpReceivers");
 
 		Json::Value json(Json::objectValue);
 		Json::Value json_transports(Json::objectValue);
+		Json::Value json_rtpReceivers(Json::objectValue);
 
 		json[k_peerName] = this->peerName;
 
@@ -63,6 +74,14 @@ namespace RTC
 			json_transports[std::to_string(transport->transportId)] = transport->toJson();
 		}
 		json[k_transports] = json_transports;
+
+		for (auto& kv : this->rtpReceivers)
+		{
+			RTC::RtpReceiver* rtpReceiver = kv.second;
+
+			json_rtpReceivers[std::to_string(rtpReceiver->rtpReceiverId)] = rtpReceiver->toJson();
+		}
+		json[k_rtpReceivers] = json_rtpReceivers;
 
 		return json;
 	}
@@ -105,7 +124,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -113,7 +132,7 @@ namespace RTC
 				{
 					MS_ERROR("Transport already exists");
 
-					request->Reject(500, "Transport already exists");
+					request->Reject("Transport already exists");
 					return;
 				}
 
@@ -123,7 +142,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -149,7 +168,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -157,7 +176,7 @@ namespace RTC
 				{
 					MS_ERROR("Transport already exists");
 
-					request->Reject(500, "Transport already exists");
+					request->Reject("Transport already exists");
 					return;
 				}
 
@@ -169,7 +188,7 @@ namespace RTC
 				{
 					MS_ERROR("Request has not numeric `internal.rtpTransportId`");
 
-					request->Reject(500, "Request has not numeric `internal.rtpTransportId`");
+					request->Reject("Request has not numeric `internal.rtpTransportId`");
 					return;
 				}
 
@@ -179,7 +198,7 @@ namespace RTC
 				{
 					MS_ERROR("RTP Transport does not exist");
 
-					request->Reject(500, "RTP Transport does not exist");
+					request->Reject("RTP Transport does not exist");
 					return;
 				}
 
@@ -191,7 +210,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -200,6 +219,101 @@ namespace RTC
 				MS_DEBUG("Associated Transport created [transportId:%" PRIu32 "]", transportId);
 
 				auto data = transport->toJson();
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::peer_createRtpReceiver:
+			{
+				RTC::RtpReceiver* rtpReceiver;
+				uint32_t rtpReceiverId;
+				RTC::Transport* transport = nullptr;
+				RTC::Transport* rtcpTransport = nullptr;
+
+				try
+				{
+					rtpReceiver = GetRtpReceiverFromRequest(request, &rtpReceiverId);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				if (rtpReceiver)
+				{
+					MS_ERROR("RtpReceiver already exists");
+
+					request->Reject("RtpReceiver already exists");
+					return;
+				}
+
+				static const Json::StaticString k_transportId("transportId");
+
+				auto jsonTransportId = request->internal[k_transportId];
+
+				if (!jsonTransportId.isUInt())
+				{
+					MS_ERROR("Request has not numeric `internal.transportId`");
+
+					request->Reject("Request has not numeric `internal.transportId`");
+					return;
+				}
+
+				auto it = this->transports.find(jsonTransportId.asUInt());
+
+				if (it == this->transports.end())
+				{
+					MS_ERROR("Transport does not exist");
+
+					request->Reject("Transport does not exist");
+					return;
+				}
+
+				transport = it->second;
+
+				static const Json::StaticString k_rtcpTransportId("rtcpTransportId");
+
+				auto jsonRtcpTransportId = request->internal[k_rtcpTransportId];
+
+				// `rtcpTransport` is optional.
+				if (jsonRtcpTransportId.isUInt())
+				{
+					auto it = this->transports.find(jsonRtcpTransportId.asUInt());
+
+					if (it == this->transports.end())
+					{
+						MS_ERROR("RTCP Transport does not exist");
+
+						request->Reject("RTCP Transport does not exist");
+						return;
+					}
+
+					rtcpTransport = it->second;
+				}
+				// If not set use the RTP transport.
+				else
+				{
+					rtcpTransport = transport;
+				}
+
+				try
+				{
+					rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId, transport, rtcpTransport);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				this->rtpReceivers[rtpReceiverId] = rtpReceiver;
+
+				MS_DEBUG("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
+
+				auto data = rtpReceiver->toJson();
 
 				request->Accept(data);
 
@@ -218,7 +332,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError &error)
 				{
-					request->Reject(500, error.what());
+					request->Reject(error.what());
 					return;
 				}
 
@@ -226,7 +340,7 @@ namespace RTC
 				{
 					MS_ERROR("Transport does not exist");
 
-					request->Reject(500, "Transport does not exist");
+					request->Reject("Transport does not exist");
 					return;
 				}
 
@@ -235,9 +349,39 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::rtpReceiver_close:
+			case Channel::Request::MethodId::rtpReceiver_dump:
+			{
+				RTC::RtpReceiver* rtpReceiver;
+
+				try
+				{
+					rtpReceiver = GetRtpReceiverFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				if (!rtpReceiver)
+				{
+					MS_ERROR("RtpReceiver does not exist");
+
+					request->Reject("RtpReceiver does not exist");
+					return;
+				}
+
+				rtpReceiver->HandleRequest(request);
+
+				break;
+			}
+
 			default:
 			{
-				MS_ABORT("unknown method");
+				MS_ERROR("unknown method");
+
+				request->Reject("unknown method");
 			}
 		}
 	}
@@ -253,7 +397,6 @@ namespace RTC
 		if (!jsonTransportId.isUInt())
 			MS_THROW_ERROR("Request has not numeric `internal.transportId`");
 
-		// If given, fill roomId.
 		if (transportId)
 			*transportId = jsonTransportId.asUInt();
 
@@ -271,10 +414,45 @@ namespace RTC
 		}
 	}
 
+	RTC::RtpReceiver* Peer::GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
+
+		auto jsonRtpReceiverId = request->internal[k_rtpReceiverId];
+
+		if (!jsonRtpReceiverId.isUInt())
+			MS_THROW_ERROR("Request has not numeric `internal.rtpReceiverId`");
+
+		if (rtpReceiverId)
+			*rtpReceiverId = jsonRtpReceiverId.asUInt();
+
+		auto it = this->rtpReceivers.find(jsonRtpReceiverId.asUInt());
+
+		if (it != this->rtpReceivers.end())
+		{
+			RTC::RtpReceiver* rtpReceiver = it->second;
+
+			return rtpReceiver;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
 	void Peer::onTransportClosed(RTC::Transport* transport)
 	{
 		MS_TRACE();
 
 		this->transports.erase(transport->transportId);
+	}
+
+	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		this->rtpReceivers.erase(rtpReceiver->rtpReceiverId);
 	}
 }

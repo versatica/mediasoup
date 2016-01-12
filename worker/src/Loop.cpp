@@ -185,7 +185,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			}
 			catch (const MediaSoupError &error)
 			{
-				request->Reject(500, error.what());
+				request->Reject(error.what());
 				return;
 			}
 
@@ -193,7 +193,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				MS_ERROR("Room already exists");
 
-				request->Reject(500, "Room already exists");
+				request->Reject("Room already exists");
 				return;
 			}
 
@@ -203,7 +203,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			}
 			catch (const MediaSoupError &error)
 			{
-				request->Reject(500, error.what());
+				request->Reject(error.what());
 				return;
 			}
 
@@ -222,9 +222,12 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::peer_dump:
 		case Channel::Request::MethodId::peer_createTransport:
 		case Channel::Request::MethodId::peer_createAssociatedTransport:
+		case Channel::Request::MethodId::peer_createRtpReceiver:
 		case Channel::Request::MethodId::transport_close:
 		case Channel::Request::MethodId::transport_dump:
 		case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
+		case Channel::Request::MethodId::rtpReceiver_close:
+		case Channel::Request::MethodId::rtpReceiver_dump:
 		{
 			RTC::Room* room;
 
@@ -234,7 +237,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			}
 			catch (const MediaSoupError &error)
 			{
-				request->Reject(500, error.what());
+				request->Reject(error.what());
 				return;
 			}
 
@@ -242,7 +245,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				MS_ERROR("Room does not exist");
 
-				request->Reject(500, "Room does not exist");
+				request->Reject("Room does not exist");
 				return;
 			}
 
@@ -253,7 +256,9 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 		default:
 		{
-			MS_ABORT("unknown method");
+			MS_ERROR("unknown method");
+
+			request->Reject("unknown method");
 		}
 	}
 }

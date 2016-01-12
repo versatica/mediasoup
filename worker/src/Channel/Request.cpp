@@ -24,9 +24,12 @@ namespace Channel
 		{ "peer.dump",                         Request::MethodId::peer_dump                         },
 		{ "peer.createTransport",              Request::MethodId::peer_createTransport              },
 		{ "peer.createAssociatedTransport",    Request::MethodId::peer_createAssociatedTransport    },
+		{ "peer.createRtpReceiver",            Request::MethodId::peer_createRtpReceiver            },
 		{ "transport.close",                   Request::MethodId::transport_close                   },
 		{ "transport.dump",                    Request::MethodId::transport_dump                    },
-		{ "transport.setRemoteDtlsParameters", Request::MethodId::transport_setRemoteDtlsParameters }
+		{ "transport.setRemoteDtlsParameters", Request::MethodId::transport_setRemoteDtlsParameters },
+		{ "rtpReceiver.close",                 Request::MethodId::rtpReceiver_close                 },
+		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  }
 	};
 
 	/* Instance methods. */
@@ -59,7 +62,7 @@ namespace Channel
 		}
 		else
 		{
-			Reject(405, "method not allowed");
+			Reject("method not allowed");
 
 			MS_THROW_ERROR("unknown .method '%s'", this->method.c_str());
 		}
@@ -95,13 +98,13 @@ namespace Channel
 		this->replied = true;
 
 		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_status("status");
+		static const Json::StaticString k_accepted("accepted");
 		static const Json::StaticString k_data("data");
 
 		Json::Value json;
 
 		json[k_id] = this->id;
-		json[k_status] = 200;
+		json[k_accepted] = true;
 
 		if (data.isObject())
 			json[k_data] = data;
@@ -111,35 +114,32 @@ namespace Channel
 		this->channel->Send(json);
 	}
 
-	void Request::Reject(uint16_t status, std::string& reason)
+	void Request::Reject(std::string& reason)
 	{
 		MS_TRACE();
 
-		Reject(status, reason.c_str());
+		Reject(reason.c_str());
 	}
 
 	/**
 	 * Reject the Request.
-	 * @param status  4XX means normal rejection, 5XX means error.
 	 * @param reason  Description string.
 	 */
-	void Request::Reject(uint16_t status, const char* reason)
+	void Request::Reject(const char* reason)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(!this->replied, "Request already replied");
 		this->replied = true;
 
-		MS_ASSERT(status >= 400 && status <= 599, "status must be between 400 and 500");
-
 		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_status("status");
+		static const Json::StaticString k_rejected("rejected");
 		static const Json::StaticString k_reason("reason");
 
 		Json::Value json;
 
 		json[k_id] = this->id;
-		json[k_status] = status;
+		json[k_rejected] = true;
 
 		if (reason)
 			json[k_reason] = reason;
