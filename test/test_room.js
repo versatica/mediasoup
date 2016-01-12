@@ -64,7 +64,7 @@ tap.test('room.Peer() with same `peerName` must fail', { timeout: 1000 }, (t) =>
 	catch (error)
 	{
 		t.ok(error instanceof Error,
-			'room.Peer()) should throw InvalidStateError');
+			'room.Peer() should throw InvalidStateError');
 		t.end();
 	}
 });

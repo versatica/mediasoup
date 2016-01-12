@@ -109,7 +109,7 @@ tap.test('peer.RtpReceiver() with a closed `transport` must fail', { timeout: 10
 			catch (error)
 			{
 				t.ok(error instanceof mediasoup.errors.InvalidStateError,
-					'peer.RtpReceiver()) should throw InvalidStateError');
+					'peer.RtpReceiver() should throw InvalidStateError');
 				t.end();
 			}
 		})

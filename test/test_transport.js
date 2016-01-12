@@ -146,7 +146,7 @@ tap.test('transport.setRemoteDtlsParameters() with "server" `role` must succeed'
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
-tap.test('transport.setRemoteDtlsParameters() with "server" `auto` must succeed', { timeout: 1000 }, (t) =>
+tap.test('transport.setRemoteDtlsParameters() with "auto" `role` must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
