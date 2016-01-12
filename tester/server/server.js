@@ -271,7 +271,7 @@ app.put('/test-transport', function(req)
 				am.fingerprint =
 				{
 					type : 'sha-224',
-					hash : mediasoup.extra.dtlsFingerprintToSDP(transport.dtlsLocalParameters.fingerprints['sha-224'])
+					hash : mediasoup.extra.fingerprintToSDP(transport.dtlsLocalParameters.fingerprints['sha-224'])
 				};
 
 				am.type = om.type;
@@ -300,7 +300,7 @@ app.put('/test-transport', function(req)
 							fingerprint :
 							{
 								algorithm : remoteFingerprint.type,
-								value     : mediasoup.extra.dtlsFingerprintFromSDP(remoteFingerprint.hash)
+								value     : mediasoup.extra.fingerprintFromSDP(remoteFingerprint.hash)
 							}
 						})
 						.then(() =>

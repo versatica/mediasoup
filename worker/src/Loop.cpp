@@ -228,6 +228,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 		case Channel::Request::MethodId::rtpReceiver_close:
 		case Channel::Request::MethodId::rtpReceiver_dump:
+		case Channel::Request::MethodId::rtpReceiver_receive:
 		{
 			RTC::Room* room;
 

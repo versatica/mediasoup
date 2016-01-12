@@ -74,6 +74,16 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::rtpReceiver_receive:
+			{
+				// TODO
+				Json::Value json = 1234;
+
+				request->Accept(json);
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");

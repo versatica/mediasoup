@@ -6,6 +6,17 @@ const jscs = require('gulp-jscs');
 const stylish = require('gulp-jscs-stylish');
 const shell = require('gulp-shell');
 
+let tests =
+[
+	'test/test_mediasoup.js',
+	'test/test_Server.js',
+	'test/test_Room.js',
+	'test/test_Peer.js',
+	'test/test_Transport.js',
+	'test/test_RtpReceiver.js',
+	'test/test_extra.js'
+];
+
 gulp.task('lint', () =>
 {
 	let src = [ 'gulpfile.js', 'lib/**/*.js', 'test/**/*.js' ];
@@ -19,11 +30,11 @@ gulp.task('lint', () =>
 });
 
 gulp.task('test', shell.task(
-	[ 'node_modules/.bin/tap --bail --color --reporter=spec test/test_*.js' ]
+	[ `node_modules/.bin/tap --bail --color --reporter=spec ${tests.join(' ')}` ]
 ));
 
 gulp.task('test-debug', shell.task(
-	[ 'node_modules/.bin/tap --bail --reporter=tap test/test_*.js' ],
+	[ `node_modules/.bin/tap --bail --reporter=tap ${tests.join(' ')}` ],
 	{
 		env     : { DEBUG: '*ERROR* *WARN*' },
 		verbose : true

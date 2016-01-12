@@ -29,7 +29,8 @@ namespace Channel
 		{ "transport.dump",                    Request::MethodId::transport_dump                    },
 		{ "transport.setRemoteDtlsParameters", Request::MethodId::transport_setRemoteDtlsParameters },
 		{ "rtpReceiver.close",                 Request::MethodId::rtpReceiver_close                 },
-		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  }
+		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  },
+		{ "rtpReceiver.receive",               Request::MethodId::rtpReceiver_receive                }
 	};
 
 	/* Instance methods. */

@@ -32,7 +32,8 @@ namespace Channel
 			transport_dump,
 			transport_setRemoteDtlsParameters,
 			rtpReceiver_close,
-			rtpReceiver_dump
+			rtpReceiver_dump,
+			rtpReceiver_receive
 		};
 
 	private:

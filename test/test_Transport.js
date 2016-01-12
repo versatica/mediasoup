@@ -127,9 +127,10 @@ tap.test('transport.setRemoteDtlsParameters() with "server" `role` must succeed'
 						value     : '751b8193b7ed277e42bed6c48ef7043a49ce3faa'
 					}
 				})
-				.then(() =>
+				.then((resolvedTransport) =>
 				{
 					t.pass('transport.setRemoteDtlsParameters() succeeded');
+					t.same(resolvedTransport, transport, 'transport.setRemoteDtlsParameters() must resolve to the own transport');
 					t.equal(transport.dtlsLocalParameters.role, 'client', 'new local DTLS `role` must be "client"');
 
 					transport.dump()
