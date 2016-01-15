@@ -278,6 +278,19 @@ void TCPServer::onTCPConnectionClosed(TCPConnection* connection, bool is_closed_
 {
 	MS_TRACE();
 
+	// NOTE:
+	// Worst scenario is that in which this is the latest connection,
+	// which is remotely closed (no TCPServer.Close() was called) and the user
+	// call TCPServer.Close() on userOnTCPConnectionClosed() callback, so Close()
+	// is called with zero connections and calls uv_close(), but then
+	// onTCPConnectionClosed() continues and finds that isClosing is true and
+	// there are zero connections, so calls uv_close() again and get a crash.
+	//
+	// SOLUTION:
+	// Check isClosing value *before* onTCPConnectionClosed() callback.
+
+	bool wasClosing = this->isClosing;
+
 	MS_DEBUG("TCP connection closed:");
 	connection->Dump();
 
@@ -287,8 +300,11 @@ void TCPServer::onTCPConnectionClosed(TCPConnection* connection, bool is_closed_
 	// Notify the subclass.
 	userOnTCPConnectionClosed(connection, is_closed_by_peer);
 
-	// Check if the server is closing connections and if this is the last
+	// TODO: CRASH: in userOnTCPConnectionClosed callback the app can call Close()
+	// on this TCPServer so we end calling uv_close() twice and crash!
+
+	// Check if the server was closing connections, and if this is the last
 	// connection then close the server now.
-	if (this->isClosing && this->connections.empty())
+	if (wasClosing && this->connections.empty())
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
 }
