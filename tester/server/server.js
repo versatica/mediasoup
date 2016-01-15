@@ -10,6 +10,10 @@ const url = require('url');
 
 const debug = require('debug')('mediasoup-tester');
 const debugerror = require('debug')('mediasoup-tester:ERROR');
+
+debug.log = console.info.bind(console);
+debugerror.log = console.error.bind(console);
+
 const mediasoup = require('../../');
 const protoo = require('protoo');
 const sdpTransform = require('sdp-transform');
@@ -171,7 +175,7 @@ app.put('/test-transport', function(req)
 	{
 		let promise = mediaPeer.createTransport(
 			{
-				udp        : true,
+				udp        : false,
 				tcp        : true,
 				preferIPv4 : true,
 				preferUdp  : true

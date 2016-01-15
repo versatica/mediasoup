@@ -8,12 +8,10 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Transport* transport, RTC::Transport* rtcpTransport) :
+	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId) :
 		rtpReceiverId(rtpReceiverId),
 		listener(listener),
-		notifier(notifier),
-		transport(transport),
-		rtcpTransport(rtcpTransport)
+		notifier(notifier)
 	{
 		MS_TRACE();
 	}
@@ -26,6 +24,9 @@ namespace RTC
 	void RtpReceiver::Close()
 	{
 		MS_TRACE();
+
+		if (this->rtpParameters)
+			delete this->rtpParameters;
 
 		// Notify.
 		this->notifier->Emit(this->rtpReceiverId, "close");
@@ -41,6 +42,8 @@ namespace RTC
 		MS_TRACE();
 
 		Json::Value data;
+
+		// TODO
 
 		data = Json::nullValue;
 
@@ -77,9 +80,10 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			{
 				// TODO
-				Json::Value json = 1234;
 
-				request->Accept(json);
+				this->rtpParameters = new RTC::RtpParameters();
+
+				request->Accept();
 
 				break;
 			}

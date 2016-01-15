@@ -12,6 +12,8 @@
 #include "RTC/DTLSTransport.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
+#include "RTC/RtpReceiver.h"
+#include "RTC/RtpListener.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -23,7 +25,7 @@ namespace RTC
 	class Transport :
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
-		public RTC::TCPConnection::Reader,
+		public RTC::TCPConnection::Listener,
 		public RTC::ICEServer::Listener,
 		public RTC::DTLSTransport::Listener
 	{
@@ -44,12 +46,14 @@ namespace RTC
 		std::string& GetIceUsernameFragment();
 		std::string& GetIcePassword();
 		Transport* CreateAssociatedTransport(uint32_t transportId);
+		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 
 	private:
 		void MayRunDTLSTransport();
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
+		void onPacketRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
 		void onSTUNDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
 		void onDTLSDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
 		void onRTPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
@@ -57,10 +61,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::UDPSocket::Listener. */
 	public:
-		virtual void onSTUNDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr) override;
-		virtual void onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr) override;
-		virtual void onRTPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr) override;
-		virtual void onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr) override;
+		virtual void onPacketRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr) override;
 
 	/* Pure virtual methods inherited from RTC::TCPServer::Listener. */
 	public:
@@ -68,10 +69,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::TCPConnection::Listener. */
 	public:
-		virtual void onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
-		virtual void onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
-		virtual void onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
-		virtual void onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
+		virtual void onPacketRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
 
 	/* Pure virtual methods inherited from RTC::ICEServer::Listener. */
 	public:
@@ -110,6 +108,7 @@ namespace RTC
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		RTC::DTLSTransport* dtlsTransport = nullptr;
+		RTC::RtpListener* rtpListener = nullptr;
 		// Others.
 		bool allocated = false;
 		// Others (ICE).

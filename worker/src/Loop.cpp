@@ -103,7 +103,6 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 		*roomId = jsonRoomId.asUInt();
 
 	auto it = this->rooms.find(jsonRoomId.asUInt());
-
 	if (it != this->rooms.end())
 	{
 		RTC::Room* room = it->second;

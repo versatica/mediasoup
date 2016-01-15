@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_RECEIVER_H
 
 #include "common.h"
-#include "RTC/Transport.h"
+#include "RTC/RtpParameters.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -20,7 +20,7 @@ namespace RTC
 		};
 
 	public:
-		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Transport* transport, RTC::Transport* rtcpTransport);
+		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId);
 		virtual ~RtpReceiver();
 
 		void Close();
@@ -35,8 +35,8 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
-		RTC::Transport* transport = nullptr;
-		RTC::Transport* rtcpTransport = nullptr;
+		// Allocated by this.
+		RTC::RtpParameters* rtpParameters = nullptr;
 	};
 }
 

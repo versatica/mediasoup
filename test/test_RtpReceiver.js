@@ -20,10 +20,9 @@ tap.test('rtpReceiver.receive() must succeed', { timeout: 1000 }, (t) =>
 			let rtpReceiver = peer.RtpReceiver(transport);
 
 			rtpReceiver.receive()
-				.then((resolvedRtpReceiver) =>
+				.then(() =>
 				{
 					t.pass('rtpReceiver.receive() succeeded');
-					t.same(resolvedRtpReceiver, rtpReceiver, 'rtpReceiver.receive() must resolve to the same rtpReceiver');
 					t.end();
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));

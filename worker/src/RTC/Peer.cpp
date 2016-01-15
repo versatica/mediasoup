@@ -193,7 +193,6 @@ namespace RTC
 				}
 
 				auto it = this->transports.find(jsonRtpTransportId.asUInt());
-
 				if (it == this->transports.end())
 				{
 					MS_ERROR("RTP Transport does not exist");
@@ -229,6 +228,8 @@ namespace RTC
 			{
 				RTC::RtpReceiver* rtpReceiver;
 				uint32_t rtpReceiverId;
+				uint32_t transportId;
+				uint32_t rtcpTransportId;
 				RTC::Transport* transport = nullptr;
 				RTC::Transport* rtcpTransport = nullptr;
 
@@ -262,8 +263,9 @@ namespace RTC
 					return;
 				}
 
-				auto it = this->transports.find(jsonTransportId.asUInt());
+				transportId = jsonTransportId.asUInt();
 
+				auto it = this->transports.find(transportId);
 				if (it == this->transports.end())
 				{
 					MS_ERROR("Transport does not exist");
@@ -278,44 +280,40 @@ namespace RTC
 
 				auto jsonRtcpTransportId = request->internal[k_rtcpTransportId];
 
-				// `rtcpTransport` is optional.
-				if (jsonRtcpTransportId.isUInt())
+				if (!jsonRtcpTransportId.isUInt())
 				{
-					auto it = this->transports.find(jsonRtcpTransportId.asUInt());
+					MS_ERROR("Request has not numeric `internal.rtcpTransportId`");
 
-					if (it == this->transports.end())
-					{
-						MS_ERROR("RTCP Transport does not exist");
-
-						request->Reject("RTCP Transport does not exist");
-						return;
-					}
-
-					rtcpTransport = it->second;
-				}
-				// If not set use the RTP transport.
-				else
-				{
-					rtcpTransport = transport;
-				}
-
-				try
-				{
-					rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId, transport, rtcpTransport);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(error.what());
+					request->Reject("Request has not numeric `internal.rtcpTransportId`");
 					return;
 				}
+
+				rtcpTransportId = jsonRtcpTransportId.asUInt();
+
+				it = this->transports.find(rtcpTransportId);
+				if (it == this->transports.end())
+				{
+					MS_ERROR("RTCP Transport does not exist");
+
+					request->Reject("RTCP Transport does not exist");
+					return;
+				}
+
+				rtcpTransport = it->second;
+
+				// Create a RtpReceiver instance.
+				rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId);
 
 				this->rtpReceivers[rtpReceiverId] = rtpReceiver;
 
 				MS_DEBUG("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
 
-				auto data = rtpReceiver->toJson();
+				// Provide the Transports with the RtpReceiver.
+				transport->AddRtpReceiver(rtpReceiver);
+				if (rtcpTransportId != transportId)
+					rtcpTransport->AddRtpReceiver(rtpReceiver);
 
-				request->Accept(data);
+				request->Accept();
 
 				break;
 			}
@@ -402,7 +400,6 @@ namespace RTC
 			*transportId = jsonTransportId.asUInt();
 
 		auto it = this->transports.find(jsonTransportId.asUInt());
-
 		if (it != this->transports.end())
 		{
 			RTC::Transport* transport = it->second;
@@ -430,7 +427,6 @@ namespace RTC
 			*rtpReceiverId = jsonRtpReceiverId.asUInt();
 
 		auto it = this->rtpReceivers.find(jsonRtpReceiverId.asUInt());
-
 		if (it != this->rtpReceivers.end())
 		{
 			RTC::RtpReceiver* rtpReceiver = it->second;

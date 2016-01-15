@@ -213,6 +213,9 @@ namespace RTC
 		// Create a DTLS agent.
 		this->dtlsTransport = new RTC::DTLSTransport(this);
 
+		// Create a RtpListener.
+		this->rtpListener = new RTC::RtpListener();
+
 		// Hack to avoid that Close() above attempts to delete this.
 		this->allocated = true;
 	}
@@ -226,17 +229,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->rtpListener)
+			this->rtpListener->Close();
+
 		// if (this->srtpRecvSession)
-		// {
 		// 	this->srtpRecvSession->Close();
-		// 	this->srtpRecvSession = nullptr;
-		// }
 
 		// if (this->srtpSendSession)
-		// {
 		// 	this->srtpSendSession->Close();
-		// 	this->srtpSendSession = nullptr;
-		// }
 
 		if (this->dtlsTransport)
 			this->dtlsTransport->Close();
@@ -533,6 +533,15 @@ namespace RTC
 		return new RTC::Transport(this->listener, this->notifier, transportId, nullData, this);
 	}
 
+	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		// TODO: somebody should ensure that it is not a duplicated RtpReceiver.
+
+		this->rtpListener->AddRtpReceiver(rtpReceiver);
+	}
+
 	inline
 	void Transport::MayRunDTLSTransport()
 	{
@@ -585,6 +594,38 @@ namespace RTC
 
 			case RTC::DTLSTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
+		}
+	}
+
+	inline
+	void Transport::onPacketRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
+	{
+		MS_TRACE();
+
+		// Check if it's STUN.
+		if (STUNMessage::IsSTUN(data, len))
+		{
+			onSTUNDataRecv(tuple, data, len);
+		}
+		// Check if it's RTCP.
+		else if (RTCPPacket::IsRTCP(data, len))
+		{
+			onRTCPDataRecv(tuple, data, len);
+		}
+		// Check if it's RTP.
+		else if (RTPPacket::IsRTP(data, len))
+		{
+			onRTPDataRecv(tuple, data, len);
+		}
+		// Check if it's DTLS.
+		else if (DTLSTransport::IsDTLS(data, len))
+		{
+			onDTLSDataRecv(tuple, data, len);
+		}
+		else
+		{
+			// TODO: should not debug all the unknown packets.
+			MS_DEBUG("ignoring received packet of unknown type");
 		}
 	}
 
@@ -686,36 +727,13 @@ namespace RTC
 		MS_DEBUG("received RTCP data");
 	}
 
-	void Transport::onSTUNDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void Transport::onPacketRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remote_addr);
-		onSTUNDataRecv(&tuple, data, len);
-	}
 
-	void Transport::onDTLSDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
-	{
-		MS_TRACE();
-
-		RTC::TransportTuple tuple(socket, remote_addr);
-		onDTLSDataRecv(&tuple, data, len);
-	}
-
-	void Transport::onRTPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
-	{
-		MS_TRACE();
-
-		RTC::TransportTuple tuple(socket, remote_addr);
-		onRTPDataRecv(&tuple, data, len);
-	}
-
-	void Transport::onRTCPDataRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
-	{
-		MS_TRACE();
-
-		RTC::TransportTuple tuple(socket, remote_addr);
-		onRTCPDataRecv(&tuple, data, len);
+		onPacketRecv(&tuple, data, len);
 	}
 
 	void Transport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
@@ -728,36 +746,13 @@ namespace RTC
 			this->iceServer->RemoveTuple(&tuple);
 	}
 
-	void Transport::onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void Transport::onPacketRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
-		onSTUNDataRecv(&tuple, data, len);
-	}
 
-	void Transport::onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
-	{
-		MS_TRACE();
-
-		RTC::TransportTuple tuple(connection);
-		onDTLSDataRecv(&tuple, data, len);
-	}
-
-	void Transport::onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
-	{
-		MS_TRACE();
-
-		RTC::TransportTuple tuple(connection);
-		onRTPDataRecv(&tuple, data, len);
-	}
-
-	void Transport::onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
-	{
-		MS_TRACE();
-
-		RTC::TransportTuple tuple(connection);
-		onRTCPDataRecv(&tuple, data, len);
+		onPacketRecv(&tuple, data, len);
 	}
 
 	void Transport::onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple)

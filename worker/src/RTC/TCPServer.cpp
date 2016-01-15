@@ -66,7 +66,7 @@ namespace RTC
 		while (i++ != RTC::TCPServer::maxPort);
 	}
 
-	RTC::TCPServer* TCPServer::Factory(Listener* listener, RTC::TCPConnection::Reader* reader, int address_family)
+	RTC::TCPServer* TCPServer::Factory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family)
 	{
 		MS_TRACE();
 
@@ -76,10 +76,10 @@ namespace RTC
 		// or there are no available ports.
 		RandomizePort(address_family, uvHandles, false);
 
-		return new RTC::TCPServer(listener, reader, uvHandles[0]);
+		return new RTC::TCPServer(listener, connListener, uvHandles[0]);
 	}
 
-	void TCPServer::PairFactory(Listener* listener, RTC::TCPConnection::Reader* reader, int address_family, RTC::TCPServer* servers[])
+	void TCPServer::PairFactory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family, RTC::TCPServer* servers[])
 	{
 		MS_TRACE();
 
@@ -89,8 +89,8 @@ namespace RTC
 		// or there are no available ports.
 		RandomizePort(address_family, uvHandles, true);
 
-		servers[0] = new RTC::TCPServer(listener, reader, uvHandles[0]);
-		servers[1] = new RTC::TCPServer(listener, reader, uvHandles[1]);
+		servers[0] = new RTC::TCPServer(listener, connListener, uvHandles[0]);
+		servers[1] = new RTC::TCPServer(listener, connListener, uvHandles[1]);
 	}
 
 	void TCPServer::RandomizePort(int address_family, uv_tcp_t* uvHandles[], bool pair)
@@ -318,10 +318,10 @@ namespace RTC
 
 	/* Instance methods. */
 
-	TCPServer::TCPServer(Listener* listener, RTC::TCPConnection::Reader* reader, uv_tcp_t* uvHandle) :
+	TCPServer::TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, uv_tcp_t* uvHandle) :
 		::TCPServer::TCPServer(uvHandle, 256),
 		listener(listener),
-		reader(reader)
+		connListener(connListener)
 	{
 		MS_TRACE();
 	}
@@ -331,7 +331,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Allocate a new RTC::TCPConnection for the TCPServer to handle it.
-		*connection = new RTC::TCPConnection(this->reader, 65536);
+		*connection = new RTC::TCPConnection(this->connListener, 65536);
 	}
 
 	void TCPServer::userOnNewTCPConnection(::TCPConnection* connection)

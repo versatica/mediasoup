@@ -64,6 +64,9 @@ tap.test('peer.RtpReceiver() with valid `transport` must succeed', { timeout: 10
 
 			let rtpReceiver = peer.RtpReceiver(transport);
 
+			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
+			t.equal(rtpReceiver.rtcpTransport, transport, 'rtpReceiver.rtcpTransport must retrieve the given `transport`');
+
 			peer.dump()
 				.then((data) =>
 				{
@@ -80,6 +83,36 @@ tap.test('peer.RtpReceiver() with valid `transport` must succeed', { timeout: 10
 					setTimeout(() => rtpReceiver.close(), 50);
 				})
 				.catch((error) => t.fail(`peer.dump() failed: ${error}`));
+		})
+		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
+});
+
+tap.test('peer.RtpReceiver() with valid `transport` and `rtcpTransport` must succeed', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	let room = server.Room();
+	let peer = room.Peer('alice');
+
+	peer.createTransport({ tcp: false })
+		.then((transport) =>
+		{
+			t.pass('peer.createTransport() succeeded');
+
+			transport.createAssociatedTransport()
+				.then((rtcpTransport) =>
+				{
+					t.pass('transport.createAssociatedTransport() succeeded');
+
+					let rtpReceiver = peer.RtpReceiver(transport, rtcpTransport);
+
+					t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
+					t.equal(rtpReceiver.rtcpTransport, rtcpTransport, 'rtpReceiver.rtcpTransport must retrieve the given `rtcpTransport`');
+					t.end();
+				})
+				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
 		})
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });

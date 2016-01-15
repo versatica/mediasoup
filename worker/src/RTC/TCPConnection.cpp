@@ -1,10 +1,6 @@
 #define MS_CLASS "RTC::TCPConnection"
 
 #include "RTC/TCPConnection.h"
-#include "RTC/STUNMessage.h"
-#include "RTC/DTLSTransport.h"
-#include "RTC/RTPPacket.h"
-#include "RTC/RTCPPacket.h"
 #include "Utils.h"
 #include "Logger.h"
 #include <cstring>  // std::memmove()
@@ -13,9 +9,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	TCPConnection::TCPConnection(Reader* reader, size_t bufferSize) :
+	TCPConnection::TCPConnection(Listener* listener, size_t bufferSize) :
 		::TCPConnection(bufferSize),
-		reader(reader)
+		listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -69,34 +65,10 @@ namespace RTC
 			{
 				const MS_BYTE* packet = this->buffer + this->frameStart + 2;
 
-				// Ignore if zero-length.
-				if (packet_len == 0)
+				// Notify the listener.
+				if (packet_len != 0)
 				{
-					MS_DEBUG("ignoring 0 length received frame");
-				}
-				// Check if it's STUN.
-				else if (STUNMessage::IsSTUN(packet, packet_len))
-				{
-					this->reader->onSTUNDataRecv(this, packet, packet_len);
-				}
-				// Check if it's RTCP.
-				else if (RTCPPacket::IsRTCP(packet, packet_len))
-				{
-					this->reader->onRTCPDataRecv(this, packet, packet_len);
-				}
-				// Check if it's RTP.
-				else if (RTPPacket::IsRTP(packet, packet_len))
-				{
-					this->reader->onRTPDataRecv(this, packet, packet_len);
-				}
-				// Check if it's DTLS.
-				else if (DTLSTransport::IsDTLS(packet, packet_len))
-				{
-					this->reader->onDTLSDataRecv(this, packet, packet_len);
-				}
-				else
-				{
-					MS_DEBUG("ignoring received packet of unknown type");
+					this->listener->onPacketRecv(this, packet, packet_len);
 				}
 
 				// If there is no more space available in the buffer and that is because

@@ -10,17 +10,14 @@ namespace RTC
 		public ::TCPConnection
 	{
 	public:
-		class Reader
+		class Listener
 		{
 		public:
-			virtual void onSTUNDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) = 0;
-			virtual void onDTLSDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) = 0;
-			virtual void onRTPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) = 0;
-			virtual void onRTCPDataRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) = 0;
+			virtual void onPacketRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) = 0;
 		};
 
 	public:
-		TCPConnection(Reader* reader, size_t bufferSize);
+		TCPConnection(Listener* listener, size_t bufferSize);
 		virtual ~TCPConnection();
 
 		void Send(const MS_BYTE* data, size_t len);
@@ -31,7 +28,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Reader* reader = nullptr;
+		Listener* listener = nullptr;
 		// Others.
 		size_t frameStart = 0;  // Where the latest frame starts.
 	};

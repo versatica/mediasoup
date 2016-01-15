@@ -1,10 +1,6 @@
 #define MS_CLASS "RTC::UDPSocket"
 
 #include "RTC/UDPSocket.h"
-#include "RTC/STUNMessage.h"
-#include "RTC/DTLSTransport.h"
-#include "RTC/RTPPacket.h"
-#include "RTC/RTCPPacket.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "DepLibUV.h"
@@ -346,39 +342,8 @@ namespace RTC
 				GetLocalIP().c_str(), GetLocalPort(), ip.c_str(), port, len);
 		}
 
-		// Check if it's STUN.
-		if (STUNMessage::IsSTUN(data, len))
-		{
-			this->listener->onSTUNDataRecv(this, data, len, addr);
-
-			return;
-		}
-
-		// Check if it's RTCP.
-		if (RTCPPacket::IsRTCP(data, len))
-		{
-			this->listener->onRTCPDataRecv(this, data, len, addr);
-
-			return;
-		}
-
-		// Check if it's RTP.
-		if (RTPPacket::IsRTP(data, len))
-		{
-			this->listener->onRTPDataRecv(this, data, len, addr);
-
-			return;
-		}
-
-		// Check if it's DTLS.
-		if (DTLSTransport::IsDTLS(data, len))
-		{
-			this->listener->onDTLSDataRecv(this, data, len, addr);
-
-			return;
-		}
-
-		MS_DEBUG("ignoring received datagram of unknown type");
+		// Notify the reader.
+		this->listener->onPacketRecv(this, data, len, addr);
 	}
 
 	void UDPSocket::userOnUDPSocketClosed()

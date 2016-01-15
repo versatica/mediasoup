@@ -22,8 +22,8 @@ namespace RTC
 
 	public:
 		static void ClassInit();
-		static RTC::TCPServer* Factory(Listener* listener, RTC::TCPConnection::Reader* reader, int address_family);
-		static void PairFactory(Listener* listener, RTC::TCPConnection::Reader* reader, int address_family, RTC::TCPServer* servers[]);
+		static RTC::TCPServer* Factory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family);
+		static void PairFactory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family, RTC::TCPServer* servers[]);
 
 	private:
 		static void RandomizePort(int address_family, uv_tcp_t* uvHandles[], bool pair);
@@ -37,7 +37,7 @@ namespace RTC
 		static std::unordered_map<MS_PORT, bool> availableIPv6Ports;
 
 	public:
-		TCPServer(Listener* listener, RTC::TCPConnection::Reader* reader, uv_tcp_t* uvHandle);
+		TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, uv_tcp_t* uvHandle);
 
 	/* Pure virtual methods inherited from ::TCPServer. */
 	public:
@@ -49,7 +49,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
-		RTC::TCPConnection::Reader* reader = nullptr;
+		RTC::TCPConnection::Listener* connListener = nullptr;
 	};
 }
 

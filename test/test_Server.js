@@ -40,7 +40,7 @@ tap.test('server.updateSettings() with invalid options must fail', { timeout: 10
 
 	t.tearDown(() => server.close());
 
-	server.updateSettings({ logLevel: 'WRONG_LOG_LEVEL' })
+	server.updateSettings({ logLevel: 'chicken' })
 		.then(() => t.fail('server.updateSettings() succeeded'))
 		.catch((error) =>
 		{

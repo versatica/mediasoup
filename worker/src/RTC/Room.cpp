@@ -207,7 +207,6 @@ namespace RTC
 			*peerId = jsonPeerId.asUInt();
 
 		auto it = this->peers.find(jsonPeerId.asUInt());
-
 		if (it != this->peers.end())
 		{
 			RTC::Peer* peer = it->second;
