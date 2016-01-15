@@ -300,9 +300,6 @@ void TCPServer::onTCPConnectionClosed(TCPConnection* connection, bool is_closed_
 	// Notify the subclass.
 	userOnTCPConnectionClosed(connection, is_closed_by_peer);
 
-	// TODO: CRASH: in userOnTCPConnectionClosed callback the app can call Close()
-	// on this TCPServer so we end calling uv_close() twice and crash!
-
 	// Check if the server was closing connections, and if this is the last
 	// connection then close the server now.
 	if (wasClosing && this->connections.empty())
