@@ -2,6 +2,7 @@
 
 #include "RTC/ICEServer.h"
 #include "Logger.h"
+#include <memory>  // std::addressof()
 
 namespace RTC
 {
@@ -200,7 +201,7 @@ namespace RTC
 		// Find the removed tuple.
 		for (; it != this->tuples.end(); ++it)
 		{
-			RTC::TransportTuple* stored_tuple = &(*it);
+			RTC::TransportTuple* stored_tuple = std::addressof(*it);
 
 			if (stored_tuple->Compare(tuple))
 			{
@@ -229,7 +230,7 @@ namespace RTC
 			// Mark the first tuple as selected tuple (if any).
 			if (this->tuples.begin() != this->tuples.end())
 			{
-				SetSelectedTuple(&(*this->tuples.begin()));
+				SetSelectedTuple(std::addressof(*this->tuples.begin()));
 			}
 			// Or just emit 'disconnected' and the null selected tuple..
 			else
@@ -427,7 +428,7 @@ namespace RTC
 		// Add the new tuple at the beginning of the list.
 		this->tuples.push_front(*tuple);
 
-		auto stored_tuple = &(*this->tuples.begin());
+		auto stored_tuple = std::addressof(*this->tuples.begin());
 
 		// If it is UDP then we must store the remote address (until now it is
 		// just a pointer that will be freed soon).
@@ -455,7 +456,7 @@ namespace RTC
 		// Otherwise check other stored tuples.
 		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
 		{
-			RTC::TransportTuple* stored_tuple = &(*it);
+			RTC::TransportTuple* stored_tuple = std::addressof(*it);
 
 			if (stored_tuple->Compare(tuple))
 				return stored_tuple;

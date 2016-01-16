@@ -48,6 +48,15 @@ function run()
 
 	// global.document.addEventListener('click', () => peer.close());
 
-	document.querySelector('.click2closeProtoo').addEventListener('click', () => peer.closeProtoo());
-	document.querySelector('.click2closePeerConnection').addEventListener('click', () => peer.closePeerConnection());
+	document.querySelector('.click2closeProtoo').addEventListener('click', () =>
+		{
+			debug('closing protoo-client');
+			peer.closeProtoo();
+		});
+
+	document.querySelector('.click2closePeerConnection').addEventListener('click', () =>
+		{
+			debug('closing RTCPeerConnection');
+			peer.closePeerConnection();
+		});
 }

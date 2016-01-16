@@ -39,12 +39,24 @@ class Peer extends EventEmitter
 		// PeerConnection instance
 		this._pc = new rtcninja.RTCPeerConnection({ iceServers: [] });
 
+		this._pc.onsignalingstatechange = () =>
+		{
+			if (this._pc.signalingState === 'closed')
+				this.closeLocalStream();
+		};
+
+		this._pc.oniceconnectionstatechange = () =>
+		{
+			if ([ 'closed', 'failed' ].indexOf(this._pc.iceConnectionState) !== -1)
+				this.closeLocalStream();
+		};
+
 		rtcninja.getUserMedia(
-			{ audio: true, video: false },
+			{ audio: true, video: true },
 			// callback
 			((stream) =>
 			{
-				this._debug('got local stream');
+				this._debug('got local stream: %o', stream);
 
 				this._stream = stream;
 				mayRun.call(this);
@@ -62,7 +74,7 @@ class Peer extends EventEmitter
 			{
 				this._debug('emitting "ready" event');
 
-				// this._pc.addStream(this._stream);
+				this._pc.addStream(this._stream);
 
 				this.emit('ready');
 			}
@@ -94,7 +106,10 @@ class Peer extends EventEmitter
 		}
 		catch (error)
 		{}
+	}
 
+	closeLocalStream()
+	{
 		try
 		{
 			this._stream.getTracks().forEach((track) => track.stop());

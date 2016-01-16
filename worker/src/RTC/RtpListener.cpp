@@ -29,6 +29,7 @@ namespace RTC
 		MS_TRACE();
 
 		auto it = this->rtpReceivers.find(rtpReceiver->rtpReceiverId);
+		// TODO: not sure, may be it is legal
 		MS_ASSERT(it == this->rtpReceivers.end(), "given RtpReceiver already exists");
 
 		this->rtpReceivers[rtpReceiver->rtpReceiverId] = rtpReceiver;

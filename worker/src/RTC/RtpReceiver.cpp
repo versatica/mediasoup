@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::RtpReceiver"
 
 #include "RTC/RtpReceiver.h"
-// #include "MediaSoupError.h"
+#include "MediaSoupError.h"
 #include "Logger.h"
 
 namespace RTC
@@ -41,11 +41,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		Json::Value data;
+		static const Json::StaticString k_rtpParameters("rtpParameters");
+
+		Json::Value data(Json::objectValue);
 
 		// TODO
 
-		data = Json::nullValue;
+		if (this->rtpParameters)
+			data[k_rtpParameters] = this->rtpParameters->toJson();
 
 		return data;
 	}
@@ -79,9 +82,22 @@ namespace RTC
 
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			{
-				// TODO
+				// If rtpParameteres was already set, delete it.
+				if (this->rtpParameters)
+				{
+					delete this->rtpParameters;
+					this->rtpParameters = nullptr;
+				}
 
-				this->rtpParameters = new RTC::RtpParameters();
+				try
+				{
+					this->rtpParameters = new RTC::RtpParameters(request->data);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
 
 				request->Accept();
 

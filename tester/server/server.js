@@ -2,8 +2,8 @@
 
 'use strict';
 
-process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
-// process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester* -mediasoup:mediasoup-worker*';
+// process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
+process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester* -mediasoup:mediasoup-worker*';
 
 const http = require('http');
 const url = require('url');
@@ -25,7 +25,11 @@ const LISTEN_PORT = 8080;
 let app = protoo();
 
 // mediasoup server
-let server = mediasoup.Server({ numWorkers: 1 });
+let server = mediasoup.Server(
+	{
+		numWorkers : 1,
+		logLevel   : 'debug'
+	});
 
 // Create a single mediasoup Room
 let room = server.Room();
@@ -175,10 +179,10 @@ app.put('/test-transport', function(req)
 	{
 		let promise = mediaPeer.createTransport(
 			{
-				udp        : false,
+				udp        : true,
 				tcp        : true,
-				preferIPv4 : true,
-				preferUdp  : true
+				preferIPv6 : true,
+				preferTcp  : true
 			})
 		.then((transport) =>
 		{
@@ -202,18 +206,6 @@ app.put('/test-transport', function(req)
 				debug('transport "dtlsstatechange" event [data.dtlsState:%s, transport.dtlsState:%s]', data.dtlsState, transport.dtlsState);
 			});
 
-			// TODO: TEST
-			let rtpReceiver = mediaPeer.RtpReceiver(transport);
-
-			rtpReceiver.on('close', () =>
-			{
-				debug('rtpReceiver "close" event');
-			});
-
-			rtpReceiver.dump()
-				.then((data) => debug('RTP_RECEIVER DUMP:\n%s', JSON.stringify(data, null, '\t')))
-				.catch((error) => debugerror('RTP_RECEIVER DUMP ERROR: %s', error));
-
 			return transport;
 		})
 		.catch((error) => debugerror('SOMETHING FAILED: %s]', error));
@@ -236,6 +228,7 @@ app.put('/test-transport', function(req)
 			let dtlsPromises = [];
 
 			// Inspect each m= section in the SDP offer and create a m= section for the SDP response
+			// Also create a RtpReceiver for each m= section
 			offer.media.forEach((om, i) =>
 			{
 				let am = {};
@@ -277,6 +270,65 @@ app.put('/test-transport', function(req)
 					type : 'sha-224',
 					hash : mediasoup.extra.fingerprintToSDP(transport.dtlsLocalParameters.fingerprints['sha-224'])
 				};
+
+				// TODO: TEST
+				let rtpReceiver = mediaPeer.RtpReceiver(transport);
+
+				rtpReceiver.on('close', () =>
+				{
+					debug('rtpReceiver "close" event');
+				});
+
+				let codecs = [];
+
+				om.rtp.forEach((rtp) =>
+				{
+					let codecName = rtp.codec;
+					let codecPayloadType = rtp.payload;
+					let codecClockRate = rtp.rate || null;
+					let codecParameters = {};
+
+					if (Array.isArray(om.fmtp))
+					{
+						om.fmtp.filter((fmtp) => fmtp.payload === codecPayloadType).forEach((fmtp) =>
+						{
+							let params = sdpTransform.parseFmtpConfig(fmtp.config);
+
+							for (let k in params)
+								codecParameters[k] = params[k];
+						});
+					}
+
+					codecs.push(
+						{
+							name        : codecName,
+							payloadType : codecPayloadType,
+							clockRate   : codecClockRate,
+							parameters  : codecParameters
+						});
+				});
+
+				let encodings = [];
+
+				if (Array.isArray(om.ssrcs))
+				{
+					let ssrc = om.ssrcs[0].id;
+
+					encodings.push(
+						{
+							ssrc : ssrc
+						});
+				}
+
+				rtpReceiver.receive(
+					{
+						codecs    : codecs,
+						encodings : encodings
+					});
+
+				// rtpReceiver.dump()
+				// 	.then((data) => debug('RTP_RECEIVER DUMP:\n%s', JSON.stringify(data, null, '\t')))
+				// 	.catch((error) => debugerror('RTP_RECEIVER DUMP ERROR: %s', error));
 
 				am.type = om.type;
 				am.rtp = om.rtp;
