@@ -27,7 +27,7 @@ namespace RTC
 		{
 			auto json_codecs = data[k_codecs];
 
-			for (int i = 0; i < json_codecs.size(); i++)
+			for (Json::UInt i = 0; i < json_codecs.size(); i++)
 				AddCodec(json_codecs[i]);
 		}
 
@@ -35,7 +35,7 @@ namespace RTC
 		{
 			auto json_encodings = data[k_encodings];
 
-			for (int i = 0; i < json_encodings.size(); i++)
+			for (Json::UInt i = 0; i < json_encodings.size(); i++)
 				AddEncoding(json_encodings[i]);
 		}
 	}
@@ -57,13 +57,13 @@ namespace RTC
 		static const Json::StaticString k_encodings("encodings");
 		static const Json::StaticString k_ssrc("ssrc");
 
-		Json::Value data;
+		Json::Value json;
 
 		// Add `muxId`.
-		data[k_muxId] = this->muxId;
+		json[k_muxId] = this->muxId;
 
 		// Add `codecs`.
-		data[k_codecs] = Json::arrayValue;
+		json[k_codecs] = Json::arrayValue;
 		for (auto it = this->codecs.begin(); it != this->codecs.end(); ++it)
 		{
 			CodecParameters* codec = std::addressof(*it);
@@ -76,11 +76,11 @@ namespace RTC
 			if (codec->clockRate)
 				json_codec[k_clockRate] = (Json::UInt)codec->clockRate;
 
-			data[k_codecs].append(json_codec);
+			json[k_codecs].append(json_codec);
 		}
 
 		// Add `encodings`.
-		data[k_encodings] = Json::arrayValue;
+		json[k_encodings] = Json::arrayValue;
 		for (auto it = this->encodings.begin(); it != this->encodings.end(); ++it)
 		{
 			EncodingParameters* encoding = std::addressof(*it);
@@ -88,10 +88,10 @@ namespace RTC
 
 			json_encoding[k_ssrc] = (Json::UInt)encoding->ssrc;
 
-			data[k_encodings].append(json_encoding);
+			json[k_encodings].append(json_encoding);
 		}
 
-		return data;
+		return json;
 	}
 
 	void RtpParameters::AddCodec(Json::Value& data)
@@ -111,6 +111,9 @@ namespace RTC
 			MS_THROW_ERROR("missing `name`");
 
 		codec.name = data[k_name].asString();
+
+		if (codec.name.empty())
+			MS_THROW_ERROR("empty `name`");
 
 		if (!data[k_payloadType].isUInt())
 			MS_THROW_ERROR("missing `payloadType`");

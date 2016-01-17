@@ -47,7 +47,7 @@ class Peer extends EventEmitter
 
 		this._pc.oniceconnectionstatechange = () =>
 		{
-			if ([ 'closed', 'failed' ].indexOf(this._pc.iceConnectionState) !== -1)
+			if ([ 'closed', 'disconnected', 'failed' ].indexOf(this._pc.iceConnectionState) !== -1)
 				this.closeLocalStream();
 		};
 
@@ -152,7 +152,7 @@ class Peer extends EventEmitter
 			// errback
 			(error) => { throw new Error(error); },
 			// options
-			{ offerToReceiveAudio: true, offerToReceiveVideo: true }
+			{ offerToReceiveAudio: 2, offerToReceiveVideo: 2 }
 		);
 
 		function sendRequest()

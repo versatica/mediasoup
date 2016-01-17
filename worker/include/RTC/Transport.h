@@ -13,11 +13,11 @@
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
 #include "RTC/RtpReceiver.h"
-#include "RTC/RtpListener.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <json/json.h>
 
 namespace RTC
@@ -27,13 +27,25 @@ namespace RTC
 		public RTC::TCPServer::Listener,
 		public RTC::TCPConnection::Listener,
 		public RTC::ICEServer::Listener,
-		public RTC::DTLSTransport::Listener
+		public RTC::DTLSTransport::Listener,
+		public RTC::RtpReceiver::RtpListener
 	{
 	public:
 		class Listener
 		{
 		public:
 			virtual void onTransportClosed(RTC::Transport* transport) = 0;
+		};
+
+	private:
+		struct RtpListener
+		{
+			// - Table of SSRC / RtpReceiver pairs.
+			std::unordered_map<uint32_t, RTC::RtpReceiver*> ssrcTable;
+			// - Table of MID RTP header extension / RtpReceiver pairs.
+			// std::unordered_map<MS_2BYTES, RTC::RtpReceiver*> midTable;
+			// - Table of RTP payload type / RtpReceiver pairs.
+			std::unordered_map<uint8_t, RTC::RtpReceiver*> ptTable;
 		};
 
 	public:
@@ -46,10 +58,10 @@ namespace RTC
 		std::string& GetIceUsernameFragment();
 		std::string& GetIcePassword();
 		Transport* CreateAssociatedTransport(uint32_t transportId);
-		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 
 	private:
 		void MayRunDTLSTransport();
+		void RemoveRtpReceiverFromRtpListener(RTC::RtpReceiver* rtpReceiver);
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -88,6 +100,10 @@ namespace RTC
 		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
 		virtual void onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
 
+	/* Pure virtual methods inherited from RTC::RtpReceiver::RtpListener. */
+	virtual void onRtpListenerParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) override;
+	virtual void onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver) override;
+
 	public:
 		// Passed by argument.
 		uint32_t transportId;
@@ -108,7 +124,6 @@ namespace RTC
 		std::vector<RTC::UDPSocket*> udpSockets;
 		std::vector<RTC::TCPServer*> tcpServers;
 		RTC::DTLSTransport* dtlsTransport = nullptr;
-		RTC::RtpListener* rtpListener = nullptr;
 		// Others.
 		bool allocated = false;
 		// Others (ICE).
@@ -117,6 +132,8 @@ namespace RTC
 		// Others (DTLS).
 		bool remoteDtlsParametersGiven = false;
 		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::AUTO;
+		// Others (RTP listener).
+		RtpListener rtpListener;
 	};
 
 	/* Inline methods. */

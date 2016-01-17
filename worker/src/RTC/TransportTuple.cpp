@@ -21,35 +21,36 @@ namespace RTC
 		static const Json::StaticString v_udp("udp");
 		static const Json::StaticString v_tcp("tcp");
 
-		Json::Value data;
-		Json::Value localTuple;
-		Json::Value remoteTuple;
+		Json::Value json;
+		Json::Value json_local;
+		Json::Value json_remote;
 		int ip_family;
 		std::string ip;
 		MS_PORT port;
 
 		Utils::IP::GetAddressInfo(this->GetLocalAddress(), &ip_family, ip, &port);
-		localTuple[k_ip] = ip;
-		localTuple[k_port] = port;
+		json_local[k_ip] = ip;
+		json_local[k_port] = port;
 		if (this->GetProtocol() == RTC::TransportTuple::Protocol::UDP)
-			localTuple[k_protocol] = v_udp;
+			json_local[k_protocol] = v_udp;
 		else
-			localTuple[k_protocol] = v_tcp;
+			json_local[k_protocol] = v_tcp;
 
 		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ip_family, ip, &port);
-		remoteTuple[k_ip] = ip;
-		remoteTuple[k_port] = port;
+		json_remote[k_ip] = ip;
+		json_remote[k_port] = port;
 		if (this->GetProtocol() == RTC::TransportTuple::Protocol::UDP)
-			remoteTuple[k_protocol] = v_udp;
+			json_remote[k_protocol] = v_udp;
 		else
-			remoteTuple[k_protocol] = v_tcp;
+			json_remote[k_protocol] = v_tcp;
 
-		data[k_local] = localTuple;
-		data[k_remote] = remoteTuple;
+		json[k_local] = json_local;
+		json[k_remote] = json_remote;
 
-		return data;
+		return json;
 	}
 
+	// TODO: TMP
 	void TransportTuple::Dump()
 	{
 		MS_TRACE();

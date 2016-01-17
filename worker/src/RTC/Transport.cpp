@@ -213,9 +213,6 @@ namespace RTC
 		// Create a DTLS agent.
 		this->dtlsTransport = new RTC::DTLSTransport(this);
 
-		// Create a RtpListener.
-		this->rtpListener = new RTC::RtpListener();
-
 		// Hack to avoid that Close() above attempts to delete this.
 		this->allocated = true;
 	}
@@ -228,9 +225,6 @@ namespace RTC
 	void Transport::Close()
 	{
 		MS_TRACE();
-
-		if (this->rtpListener)
-			this->rtpListener->Close();
 
 		// if (this->srtpRecvSession)
 		// 	this->srtpRecvSession->Close();
@@ -297,64 +291,68 @@ namespace RTC
 		static const Json::StaticString v_connecting("connecting");
 		static const Json::StaticString v_closed("closed");
 		static const Json::StaticString v_failed("failed");
+		static const Json::StaticString k_rtpListener("rtpListener");
+		static const Json::StaticString k_ssrcTable("ssrcTable");
+		// static const Json::StaticString k_midTable("midTable");  // TODO
+		static const Json::StaticString k_ptTable("ptTable");
 
-		Json::Value data;
+		Json::Value json;
 
 		// Add `iceRole` (we are always "controlled").
-		data[k_iceRole] = v_controlled;
+		json[k_iceRole] = v_controlled;
 
 		// Add `iceComponent`.
 		if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
-			data[k_iceComponent] = v_RTP;
+			json[k_iceComponent] = v_RTP;
 		else
-			data[k_iceComponent] = v_RTCP;
+			json[k_iceComponent] = v_RTCP;
 
 		// Add `iceLocalParameters`.
-		data[k_iceLocalParameters][k_usernameFragment] = this->iceServer->GetUsernameFragment();
-		data[k_iceLocalParameters][k_password] = this->iceServer->GetPassword();
+		json[k_iceLocalParameters][k_usernameFragment] = this->iceServer->GetUsernameFragment();
+		json[k_iceLocalParameters][k_password] = this->iceServer->GetPassword();
 
 		// Add `iceLocalCandidates`.
-		data[k_iceLocalCandidates] = Json::arrayValue;
+		json[k_iceLocalCandidates] = Json::arrayValue;
 		for (auto iceCandidate : this->iceLocalCandidates)
 		{
-			data[k_iceLocalCandidates].append(iceCandidate.toJson());
+			json[k_iceLocalCandidates].append(iceCandidate.toJson());
 		}
 
 		// Add `iceSelectedTuple`.
 		if (this->selectedTuple)
-			data[k_iceSelectedTuple] = this->selectedTuple->toJson();
+			json[k_iceSelectedTuple] = this->selectedTuple->toJson();
 
 		// Add `iceState`.
 		switch (this->iceServer->GetState())
 		{
 			case RTC::ICEServer::IceState::NEW:
-				data[k_iceState] = v_new;
+				json[k_iceState] = v_new;
 				break;
 			case RTC::ICEServer::IceState::CONNECTED:
-				data[k_iceState] = v_connected;
+				json[k_iceState] = v_connected;
 				break;
 			case RTC::ICEServer::IceState::COMPLETED:
-				data[k_iceState] = v_completed;
+				json[k_iceState] = v_completed;
 				break;
 			case RTC::ICEServer::IceState::DISCONNECTED:
-				data[k_iceState] = v_disconnected;
+				json[k_iceState] = v_disconnected;
 				break;
 		}
 
 		// Add `dtlsLocalParameters.fingerprints`.
-		data[k_dtlsLocalParameters][k_fingerprints] = RTC::DTLSTransport::GetLocalFingerprints();
+		json[k_dtlsLocalParameters][k_fingerprints] = RTC::DTLSTransport::GetLocalFingerprints();
 
 		// Add `dtlsLocalParameters.role`.
 		switch (this->dtlsLocalRole)
 		{
 			case RTC::DTLSTransport::Role::AUTO:
-				data[k_dtlsLocalParameters][k_role] = v_auto;
+				json[k_dtlsLocalParameters][k_role] = v_auto;
 				break;
 			case RTC::DTLSTransport::Role::CLIENT:
-				data[k_dtlsLocalParameters][k_role] = v_client;
+				json[k_dtlsLocalParameters][k_role] = v_client;
 				break;
 			case RTC::DTLSTransport::Role::SERVER:
-				data[k_dtlsLocalParameters][k_role] = v_server;
+				json[k_dtlsLocalParameters][k_role] = v_server;
 				break;
 			default:
 				MS_ABORT("invalid local DTLS role");
@@ -364,23 +362,49 @@ namespace RTC
 		switch (this->dtlsTransport->GetState())
 		{
 			case DTLSTransport::DtlsState::NEW:
-				data[k_dtlsState] = v_new;
+				json[k_dtlsState] = v_new;
 				break;
 			case DTLSTransport::DtlsState::CONNECTING:
-				data[k_dtlsState] = v_connecting;
+				json[k_dtlsState] = v_connecting;
 				break;
 			case DTLSTransport::DtlsState::CONNECTED:
-				data[k_dtlsState] = v_connected;
+				json[k_dtlsState] = v_connected;
 				break;
 			case DTLSTransport::DtlsState::FAILED:
-				data[k_dtlsState] = v_failed;
+				json[k_dtlsState] = v_failed;
 				break;
 			case DTLSTransport::DtlsState::CLOSED:
-				data[k_dtlsState] = v_closed;
+				json[k_dtlsState] = v_closed;
 				break;
 		}
 
-		return data;
+		// Add `rtpListener.ssrcTable`.
+		Json::Value json_ssrcTable(Json::objectValue);
+
+		for (auto& kv : this->rtpListener.ssrcTable)
+		{
+			auto ssrc = kv.first;
+			auto rtpReceiver = kv.second;
+
+			json_ssrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
+		}
+		json[k_rtpListener][k_ssrcTable] = json_ssrcTable;
+
+		// TODO: Add `midTable`.
+
+		// Add `rtpListener.ptTable`.
+		Json::Value json_ptTable(Json::objectValue);
+
+		for (auto& kv : this->rtpListener.ptTable)
+		{
+			auto payloadType = kv.first;
+			auto rtpReceiver = kv.second;
+
+			json_ptTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
+		}
+		json[k_rtpListener][k_ptTable] = json_ptTable;
+
+		return json;
 	}
 
 	void Transport::HandleRequest(Channel::Request* request)
@@ -533,15 +557,6 @@ namespace RTC
 		return new RTC::Transport(this->listener, this->notifier, transportId, nullData, this);
 	}
 
-	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver)
-	{
-		MS_TRACE();
-
-		// TODO: somebody should ensure that it is not a duplicated RtpReceiver.
-
-		this->rtpListener->AddRtpReceiver(rtpReceiver);
-	}
-
 	inline
 	void Transport::MayRunDTLSTransport()
 	{
@@ -594,6 +609,30 @@ namespace RTC
 
 			case RTC::DTLSTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
+		}
+	}
+
+	inline
+	void Transport::RemoveRtpReceiverFromRtpListener(RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		for (auto it = this->rtpListener.ssrcTable.begin(); it != this->rtpListener.ssrcTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				it = this->rtpListener.ssrcTable.erase(it);
+			else
+				it++;
+		}
+
+		// TODO: midTable
+
+		for (auto it = this->rtpListener.ptTable.begin(); it != this->rtpListener.ptTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				it = this->rtpListener.ptTable.erase(it);
+			else
+				it++;
 		}
 	}
 
@@ -945,5 +984,36 @@ namespace RTC
 
 		// TMP
 		MS_DEBUG("data: %s", std::string((char*)data, len).c_str());
+	}
+
+	void Transport::onRtpListenerParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
+	{
+		MS_TRACE();
+
+		// First remove from the rtpListener all the entries pointing to the given rtpReceiver.
+		RemoveRtpReceiverFromRtpListener(rtpReceiver);
+
+		// Add entries into rtpListener.ssrcTable.
+		for (auto& encoding : rtpParameters->encodings)
+		{
+			if (encoding.ssrc)
+				this->rtpListener.ssrcTable[encoding.ssrc] = rtpReceiver;
+		}
+
+		// TODO: // Add entries into rtpListener.midTable.
+
+		// Add entries into rtpListener.ptTable.
+		for (auto& codec : rtpParameters->codecs)
+		{
+			this->rtpListener.ptTable[codec.payloadType] = rtpReceiver;
+		}
+	}
+
+	void Transport::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		// Remove from the rtpListener all the entries pointing to the given rtpReceiver.
+		RemoveRtpReceiverFromRtpListener(rtpReceiver);
 	}
 }

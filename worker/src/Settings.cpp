@@ -177,14 +177,14 @@ void Settings::HandleRequest(Channel::Request* request)
 		{
 			static const Json::StaticString k_logLevel("logLevel");
 
-			Json::Value jsonLogLevel = request->data[k_logLevel];
+			Json::Value json_logLevel = request->data[k_logLevel];
 
 			try
 			{
 				// Update logLevel if requested.
-				if (jsonLogLevel.isString())
+				if (json_logLevel.isString())
 				{
-					std::string logLevel = jsonLogLevel.asString();
+					std::string logLevel = json_logLevel.asString();
 
 					Settings::SetLogLevel(logLevel);
 				}

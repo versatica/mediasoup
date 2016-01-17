@@ -40,7 +40,7 @@ namespace RTC
 		void AddCodec(Json::Value& data);
 		void AddEncoding(Json::Value& data);
 
-	private:
+	public:
 		// TODO: not sure if 1 or 2 bytes or what...
 		std::string muxId;
 		std::vector<CodecParameters> codecs;

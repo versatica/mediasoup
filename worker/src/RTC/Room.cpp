@@ -197,16 +197,16 @@ namespace RTC
 
 		static const Json::StaticString k_peerId("peerId");
 
-		auto jsonPeerId = request->internal[k_peerId];
+		auto json_peerId = request->internal[k_peerId];
 
-		if (!jsonPeerId.isUInt())
+		if (!json_peerId.isUInt())
 			MS_THROW_ERROR("Request has not numeric .peerId field");
 
 		// If given, fill peerId.
 		if (peerId)
-			*peerId = jsonPeerId.asUInt();
+			*peerId = json_peerId.asUInt();
 
-		auto it = this->peers.find(jsonPeerId.asUInt());
+		auto it = this->peers.find(json_peerId.asUInt());
 		if (it != this->peers.end())
 		{
 			RTC::Peer* peer = it->second;

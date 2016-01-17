@@ -33,6 +33,7 @@ namespace RTC
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
+		RTC::Transport* GetRtcpTransportFromRequest(Channel::Request* request, uint32_t* rtcpTransportId = nullptr);
 		RTC::RtpReceiver* GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId = nullptr);
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */

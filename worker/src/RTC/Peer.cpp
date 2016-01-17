@@ -26,18 +26,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Close all the Transports.
-		// NOTE: Upon Transport closure the onTransportClosed() method is called which
-		// removes it from the map, so this is the safe way to iterate the mao
-		// and remove elements.
-		for (auto it = this->transports.begin(); it != this->transports.end();)
-		{
-			RTC::Transport* transport = it->second;
-
-			it = this->transports.erase(it);
-			transport->Close();
-		}
-
 		// Close all the RtpReceivers.
 		for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end();)
 		{
@@ -45,6 +33,17 @@ namespace RTC
 
 			it = this->rtpReceivers.erase(it);
 			rtpReceiver->Close();
+		}
+
+		// Close all the Transports.
+		// NOTE: It is critical to close Transports after RtpReceivers because
+		// RtcReceiver.Close() fires an event in the Transport.
+		for (auto it = this->transports.begin(); it != this->transports.end();)
+		{
+			RTC::Transport* transport = it->second;
+
+			it = this->transports.erase(it);
+			transport->Close();
 		}
 
 		// Notify the listener.
@@ -160,6 +159,7 @@ namespace RTC
 			case Channel::Request::MethodId::peer_createAssociatedTransport:
 			{
 				RTC::Transport* transport;
+				RTC::Transport* rtpTransport;
 				uint32_t transportId;
 
 				try
@@ -182,9 +182,9 @@ namespace RTC
 
 				static const Json::StaticString k_rtpTransportId("rtpTransportId");
 
-				auto jsonRtpTransportId = request->internal[k_rtpTransportId];
+				auto json_rtpTransportId = request->internal[k_rtpTransportId];
 
-				if (!jsonRtpTransportId.isUInt())
+				if (!json_rtpTransportId.isUInt())
 				{
 					MS_ERROR("Request has not numeric `internal.rtpTransportId`");
 
@@ -192,7 +192,7 @@ namespace RTC
 					return;
 				}
 
-				auto it = this->transports.find(jsonRtpTransportId.asUInt());
+				auto it = this->transports.find(json_rtpTransportId.asUInt());
 				if (it == this->transports.end())
 				{
 					MS_ERROR("RTP Transport does not exist");
@@ -201,7 +201,7 @@ namespace RTC
 					return;
 				}
 
-				RTC::Transport* rtpTransport = it->second;
+				rtpTransport = it->second;
 
 				try
 				{
@@ -227,11 +227,9 @@ namespace RTC
 			case Channel::Request::MethodId::peer_createRtpReceiver:
 			{
 				RTC::RtpReceiver* rtpReceiver;
-				uint32_t rtpReceiverId;
-				uint32_t transportId;
-				uint32_t rtcpTransportId;
 				RTC::Transport* transport = nullptr;
 				RTC::Transport* rtcpTransport = nullptr;
+				uint32_t rtpReceiverId;
 
 				try
 				{
@@ -251,22 +249,17 @@ namespace RTC
 					return;
 				}
 
-				static const Json::StaticString k_transportId("transportId");
-
-				auto jsonTransportId = request->internal[k_transportId];
-
-				if (!jsonTransportId.isUInt())
+				try
 				{
-					MS_ERROR("Request has not numeric `internal.transportId`");
-
-					request->Reject("Request has not numeric `internal.transportId`");
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
 					return;
 				}
 
-				transportId = jsonTransportId.asUInt();
-
-				auto it = this->transports.find(transportId);
-				if (it == this->transports.end())
+				if (!transport)
 				{
 					MS_ERROR("Transport does not exist");
 
@@ -274,32 +267,23 @@ namespace RTC
 					return;
 				}
 
-				transport = it->second;
-
-				static const Json::StaticString k_rtcpTransportId("rtcpTransportId");
-
-				auto jsonRtcpTransportId = request->internal[k_rtcpTransportId];
-
-				if (!jsonRtcpTransportId.isUInt())
+				try
 				{
-					MS_ERROR("Request has not numeric `internal.rtcpTransportId`");
-
-					request->Reject("Request has not numeric `internal.rtcpTransportId`");
+					rtcpTransport = GetRtcpTransportFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
 					return;
 				}
 
-				rtcpTransportId = jsonRtcpTransportId.asUInt();
-
-				it = this->transports.find(rtcpTransportId);
-				if (it == this->transports.end())
+				if (!rtcpTransport)
 				{
 					MS_ERROR("RTCP Transport does not exist");
 
 					request->Reject("RTCP Transport does not exist");
 					return;
 				}
-
-				rtcpTransport = it->second;
 
 				// Create a RtpReceiver instance.
 				rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId);
@@ -308,10 +292,10 @@ namespace RTC
 
 				MS_DEBUG("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
 
-				// Provide the Transports with the RtpReceiver.
-				transport->AddRtpReceiver(rtpReceiver);
-				if (rtcpTransportId != transportId)
-					rtcpTransport->AddRtpReceiver(rtpReceiver);
+				// Set the transports as RTP and RTCP listeners.
+				rtpReceiver->SetRtpListener(transport);
+				if (rtcpTransport != transport)
+					rtpReceiver->SetRtpListenerForRtcp(rtcpTransport);
 
 				request->Accept();
 
@@ -391,20 +375,47 @@ namespace RTC
 
 		static const Json::StaticString k_transportId("transportId");
 
-		auto jsonTransportId = request->internal[k_transportId];
+		auto json_transportId = request->internal[k_transportId];
 
-		if (!jsonTransportId.isUInt())
+		if (!json_transportId.isUInt())
 			MS_THROW_ERROR("Request has not numeric `internal.transportId`");
 
 		if (transportId)
-			*transportId = jsonTransportId.asUInt();
+			*transportId = json_transportId.asUInt();
 
-		auto it = this->transports.find(jsonTransportId.asUInt());
+		auto it = this->transports.find(json_transportId.asUInt());
 		if (it != this->transports.end())
 		{
 			RTC::Transport* transport = it->second;
 
 			return transport;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
+	RTC::Transport* Peer::GetRtcpTransportFromRequest(Channel::Request* request, uint32_t* rtcpTransportId)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_rtcpTransportId("rtcpTransportId");
+
+		auto json_rtcpTransportId = request->internal[k_rtcpTransportId];
+
+		if (!json_rtcpTransportId.isUInt())
+			MS_THROW_ERROR("Request has not numeric `internal.rtcpTransportId`");
+
+		if (rtcpTransportId)
+			*rtcpTransportId = json_rtcpTransportId.asUInt();
+
+		auto it = this->transports.find(json_rtcpTransportId.asUInt());
+		if (it != this->transports.end())
+		{
+			RTC::Transport* rtcpTransport = it->second;
+
+			return rtcpTransport;
 		}
 		else
 		{
@@ -418,15 +429,15 @@ namespace RTC
 
 		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
 
-		auto jsonRtpReceiverId = request->internal[k_rtpReceiverId];
+		auto json_rtpReceiverId = request->internal[k_rtpReceiverId];
 
-		if (!jsonRtpReceiverId.isUInt())
+		if (!json_rtpReceiverId.isUInt())
 			MS_THROW_ERROR("Request has not numeric `internal.rtpReceiverId`");
 
 		if (rtpReceiverId)
-			*rtpReceiverId = jsonRtpReceiverId.asUInt();
+			*rtpReceiverId = json_rtpReceiverId.asUInt();
 
-		auto it = this->rtpReceivers.find(jsonRtpReceiverId.asUInt());
+		auto it = this->rtpReceivers.find(json_rtpReceiverId.asUInt());
 		if (it != this->rtpReceivers.end())
 		{
 			RTC::RtpReceiver* rtpReceiver = it->second;
@@ -442,6 +453,15 @@ namespace RTC
 	void Peer::onTransportClosed(RTC::Transport* transport)
 	{
 		MS_TRACE();
+
+		// If a Transport is closed we need to inform all the RtpReceivers of the
+		// Peer since a RtpReceiver has one or two listeners which are Transports.
+		for (auto& kv : this->rtpReceivers)
+		{
+			RTC::RtpReceiver* rtpReceiver = kv.second;
+
+			rtpReceiver->RemoveRtpListener(transport);
+		}
 
 		this->transports.erase(transport->transportId);
 	}

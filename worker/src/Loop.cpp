@@ -93,16 +93,16 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 
 	static const Json::StaticString k_roomId("roomId");
 
-	auto jsonRoomId = request->internal[k_roomId];
+	auto json_roomId = request->internal[k_roomId];
 
-	if (!jsonRoomId.isUInt())
+	if (!json_roomId.isUInt())
 		MS_THROW_ERROR("Request has not numeric `internal.roomId`");
 
 	// If given, fill roomId.
 	if (roomId)
-		*roomId = jsonRoomId.asUInt();
+		*roomId = json_roomId.asUInt();
 
-	auto it = this->rooms.find(jsonRoomId.asUInt());
+	auto it = this->rooms.find(json_roomId.asUInt());
 	if (it != this->rooms.end())
 	{
 		RTC::Room* room = it->second;

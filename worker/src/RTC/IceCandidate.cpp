@@ -39,36 +39,36 @@ namespace RTC
 		static const Json::StaticString k_tcpType("tcpType");
 		static const Json::StaticString v_passive("passive");
 
-		Json::Value data;
+		Json::Value json;
 
-		data[k_foundation] = this->foundation;
-		data[k_priority] = this->priority;
-		data[k_ip] = this->ip;
-		data[k_port] = this->port;
+		json[k_foundation] = this->foundation;
+		json[k_priority] = this->priority;
+		json[k_ip] = this->ip;
+		json[k_port] = this->port;
 
 		switch (this->type)
 		{
 			case CandidateType::HOST:
-				data[k_type] = v_host;
+				json[k_type] = v_host;
 				break;
 		}
 
 		switch (this->protocol)
 		{
 			case Protocol::UDP:
-				data[k_protocol] = v_udp;
+				json[k_protocol] = v_udp;
 				break;
 			case Protocol::TCP:
-				data[k_protocol] = v_tcp;
+				json[k_protocol] = v_tcp;
 				switch (this->tcpType)
 				{
 					case TcpCandidateType::PASSIVE:
-						data[k_tcpType] = v_passive;
+						json[k_tcpType] = v_passive;
 						break;
 				}
 				break;
 		}
 
-		return data;
+		return json;
 	}
 }

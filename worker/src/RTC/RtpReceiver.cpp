@@ -31,8 +31,12 @@ namespace RTC
 		// Notify.
 		this->notifier->Emit(this->rtpReceiverId, "close");
 
-		// Notify the listener.
+		// Notify the listener and also the rtpListener and rtcpListener.
 		this->listener->onRtpReceiverClosed(this);
+		if (this->rtpListener)
+			this->rtpListener->onRtpReceiverClosed(this);
+		if (this->rtcpListener)
+			this->rtcpListener->onRtpReceiverClosed(this);
 
 		delete this;
 	}
@@ -43,14 +47,14 @@ namespace RTC
 
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 
-		Json::Value data(Json::objectValue);
-
-		// TODO
+		Json::Value json;
 
 		if (this->rtpParameters)
-			data[k_rtpParameters] = this->rtpParameters->toJson();
+			json[k_rtpParameters] = this->rtpParameters->toJson();
+		else
+			json[k_rtpParameters] = Json::nullValue;
 
-		return data;
+		return json;
 	}
 
 	void RtpReceiver::HandleRequest(Channel::Request* request)
@@ -82,12 +86,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			{
-				// If rtpParameteres was already set, delete it.
-				if (this->rtpParameters)
-				{
-					delete this->rtpParameters;
-					this->rtpParameters = nullptr;
-				}
+				// Keep a reference to the previous rtpParameters.
+				auto previousRtpParameters = this->rtpParameters;
 
 				try
 				{
@@ -99,7 +99,16 @@ namespace RTC
 					return;
 				}
 
+				// Free the previous rtpParameters.
+				delete previousRtpParameters;
+
 				request->Accept();
+
+				// Notify the rtpListener and rtcpListener.
+				if (this->rtpListener)
+					this->rtpListener->onRtpListenerParameters(this, this->rtpParameters);
+				if (this->rtcpListener)
+					this->rtcpListener->onRtpListenerParameters(this, this->rtpParameters);
 
 				break;
 			}
