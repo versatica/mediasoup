@@ -1,7 +1,7 @@
 #ifndef MS_LOGGER_H
 #define	MS_LOGGER_H
 
-#include "common.h"
+#include "LogLevel.h"
 #include "Settings.h"
 #include "handles/UnixStreamSocket.h"
 #include "Channel/UnixStreamSocket.h"
@@ -39,12 +39,6 @@
  */
 // #define MS_DEVEL
 
-/*
- * This macro must point to a unsigned int function, method or variable that
- * returns the logging level.
- */
-#define MS_CURRENT_LOG_LEVEL Settings::configuration.logLevel
-
 class Logger
 {
 public:
@@ -62,7 +56,7 @@ public:
 inline
 bool Logger::HasDebugLevel()
 {
-	return (MS_LOG_LEVEL_DEBUG == MS_CURRENT_LOG_LEVEL);
+	return (LogLevel::DEBUG == Settings::configuration.logLevel);
 }
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
@@ -103,7 +97,7 @@ bool Logger::HasDebugLevel()
 #define MS_DEBUG(desc, ...)  \
 	do  \
 	{  \
-		if (MS_LOG_LEVEL_DEBUG == MS_CURRENT_LOG_LEVEL)  \
+		if (LogLevel::DEBUG == Settings::configuration.logLevel)  \
 		{  \
 			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
 			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
@@ -114,7 +108,7 @@ bool Logger::HasDebugLevel()
 #define MS_DEBUG_STD(desc, ...)  \
 	do  \
 	{  \
-		if (MS_LOG_LEVEL_DEBUG == MS_CURRENT_LOG_LEVEL)  \
+		if (LogLevel::DEBUG == Settings::configuration.logLevel)  \
 		{  \
 			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
 			std::fflush(stdout);  \
@@ -125,7 +119,7 @@ bool Logger::HasDebugLevel()
 #define MS_WARN(desc, ...)  \
 	do  \
 	{  \
-		if (MS_LOG_LEVEL_WARN <= MS_CURRENT_LOG_LEVEL)  \
+		if (LogLevel::WARN <= Settings::configuration.logLevel)  \
 		{  \
 			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
 			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \

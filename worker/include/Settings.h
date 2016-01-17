@@ -2,6 +2,7 @@
 #define	MS_SETTINGS_H
 
 #include "common.h"
+#include "logLevel.h"
 #include "Channel/Request.h"
 #include <map>
 #include <string>
@@ -13,11 +14,11 @@ public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		uint8_t     logLevel            { MS_LOG_LEVEL_DEBUG };
+		LogLevel    logLevel             { LogLevel::DEBUG };
 		std::string rtcListenIPv4;
 		std::string rtcListenIPv6;
-		uint16_t     rtcMinPort           { 10000 };
-		uint16_t     rtcMaxPort           { 59999 };
+		uint16_t    rtcMinPort          { 10000 };
+		uint16_t    rtcMaxPort          { 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
 		// Private fields.
@@ -42,8 +43,8 @@ public:
 	static struct Configuration configuration;
 
 private:
-	static std::map<std::string, uint8_t> string2LogLevel;
-	static std::map<uint8_t, std::string> logLevel2String;
+	static std::map<std::string, LogLevel> string2LogLevel;
+	static std::map<LogLevel, std::string> logLevel2String;
 };
 
 #endif

@@ -24,17 +24,17 @@ bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
-std::map<std::string, uint8_t> Settings::string2LogLevel =
+std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
-	{ "debug", MS_LOG_LEVEL_DEBUG },
-	{ "warn",  MS_LOG_LEVEL_WARN  },
-	{ "error", MS_LOG_LEVEL_ERROR }
+	{ "debug", LogLevel::DEBUG },
+	{ "warn",  LogLevel::WARN  },
+	{ "error", LogLevel::ERROR }
 };
-std::map<uint8_t, std::string> Settings::logLevel2String =
+std::map<LogLevel, std::string> Settings::logLevel2String =
 {
-	{ MS_LOG_LEVEL_DEBUG, "debug" },
-	{ MS_LOG_LEVEL_WARN,  "warn"  },
-	{ MS_LOG_LEVEL_ERROR, "error" }
+	{ LogLevel::DEBUG, "debug" },
+	{ LogLevel::WARN,  "warn"  },
+	{ LogLevel::ERROR, "error" }
 };
 
 /* Class methods. */
