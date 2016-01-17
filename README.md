@@ -94,17 +94,8 @@ Until the API is documented, the output of the included test units may help a bi
 ```bash
 ibc in ~/src/mediasoup $ gulp test
 
-[15:10:29] Using gulpfile ~/src/mediasoup/gulpfile.js
-[15:10:29] Starting 'test'...
-
-test/test_extra.js
-  extra.dtlsFingerprintFromSDP()
-    ✓ should be equal
-    ✓ should be equal
-
-  extra.dtlsFingerprintToSDP()
-    ✓ should be equal
-    ✓ should be equal
+Using gulpfile ~/src/mediasoup/gulpfile.js
+Starting 'test'...
 
 test/test_mediasoup.js
   mediasoup.Server() with no options must succeed
@@ -116,13 +107,13 @@ test/test_mediasoup.js
   mediasoup.Server() with wrong options must fail
     ✓ server should close with error
 
-  mediasoup.Server() with non existing `rtcListenIPv4` must fail
+  mediasoup.Server() with non existing `rtcListenIPv4` IP must fail
     ✓ server should close with error
 
   mediasoup.Server() with too narrow RTC ports range must fail
     ✓ server should close with error
 
-test/test_server.js
+test/test_Server.js
   server.updateSettings() with no options must succeed
     ✓ server.updateSettings() succeeded
 
@@ -130,30 +121,31 @@ test/test_server.js
     ✓ server.updateSettings() succeeded
 
   server.updateSettings() with invalid options must fail
-    ✓ server.updateSettings() failed: Error: invalid value 'wrong_log_level' for logLevel
+    ✓ server.updateSettings() failed: Error: invalid value 'chicken' for logLevel
 
   server.updateSettings() in a closed server must fail
-    ✓ server.updateSettings() failed: Error: server closed
+    ✓ server.updateSettings() failed: InvalidStateError: Server closed
+    ✓ server.updateSettings() error must be InvalidStateError
 
   server.Room() must succeed
     ✓ room should close cleanly
 
   server.Room() in a closed server must fail
-    ✓ server.Room() should throw error
+    ✓ server.Room() should throw InvalidStateError
 
   server.dump() must succeed
     ✓ server.dump() succeeded
     ✓ server.dump() should retrieve two workers
 
-test/test_room.js
+test/test_Room.js
   room.Peer() with `peerName` must succeed
     ✓ peer should close cleanly
 
   room.Peer() without `peerName` must fail
-    ✓ room.Peer() should throw error
+    ✓ room.Peer()) should throw TypeError
 
   room.Peer() with same `peerName` must fail
-    ✓ room.Peer() should throw error
+    ✓ room.Peer() should throw InvalidStateError
 
   room.Peer() with same `peerName` must succeed if previous peer was closed before
     ✓ room.getPeer() retrieves the first "alice"
@@ -168,7 +160,7 @@ test/test_room.js
     ✓ room.dump() succeeded
     ✓ room.dump() should retrieve two peers
 
-test/test_peer.js
+test/test_Peer.js
   peer.createTransport() with no options must succeed
     ✓ peer.createTransport() succeeded
     ✓ peer.dump() succeeded
@@ -177,10 +169,31 @@ test/test_peer.js
   peer.createTransport() with no `udp` nor `tcp` must fail
     ✓ peer.createTransport() failed
 
-test/test_transport.js
+  peer.RtpReceiver() with valid `transport` must succeed
+    ✓ peer.createTransport() succeeded
+    ✓ rtpReceiver.transport must retrieve the given `transport`
+    ✓ rtpReceiver.rtcpTransport must retrieve the given `transport`
+    ✓ peer.dump() succeeded
+    ✓ peer.dump() should retrieve one rtpReceiver
+    ✓ rtpReceiver should close cleanly
+
+  peer.RtpReceiver() with valid `transport` and `rtcpTransport` must succeed
+    ✓ peer.createTransport() succeeded
+    ✓ transport.createAssociatedTransport() succeeded
+    ✓ rtpReceiver.transport must retrieve the given `transport`
+    ✓ rtpReceiver.rtcpTransport must retrieve the given `rtcpTransport`
+
+  peer.RtpReceiver() with a closed `transport` must fail
+    ✓ peer.createTransport() succeeded
+    ✓ peer.RtpReceiver() should throw InvalidStateError
+
+test/test_Transport.js
   transport.createAssociatedTransport() must succeed
     ✓ peer.createTransport() succeeded
+    ✓ transport must have "controlled" `iceRole`
     ✓ transport must have "RTP" `iceComponent`
+    ✓ transport must not have `iceSelectedTuple`
+    ✓ transport must have "new" `iceState`
     ✓ transport must have "new" `dtlsState`
     ✓ transport just contains "udp" candidates
     ✓ transport.createAssociatedTransport() succeeded
@@ -194,6 +207,8 @@ test/test_transport.js
   transport.close() must succeed
     ✓ peer.createTransport() succeeded
     ✓ transport should close cleanly
+    ✓ `transport.iceState` must be "closed"
+    ✓ `transport.dtlsState` must be "closed"
     ✓ peer.dump() succeeded
     ✓ peer.dump() should retrieve zero transports
 
@@ -205,7 +220,7 @@ test/test_transport.js
     ✓ transport.dump() succeeded
     ✓ local DTLS `role` must be "client"
 
-  transport.setRemoteDtlsParameters() with "server" `auto` must succeed
+  transport.setRemoteDtlsParameters() with "auto" `role` must succeed
     ✓ peer.createTransport() succeeded
     ✓ transport.setRemoteDtlsParameters() succeeded
     ✓ new local DTLS `role` must be "client"
@@ -229,9 +244,25 @@ test/test_transport.js
     ✓ transport.createAssociatedTransport() failed: Error: missing `data.fingerprint`
     ✓ local DTLS `role` must be "auto"
 
+test/test_RtpReceiver.js
+  rtpReceiver.receive() must succeed
+    ✓ rtpReceiver.receive() succeeded
 
-  70 passing (7s)
-[15:10:36] Finished 'test' after 7.01 s
+  rtpReceiver.close() must succeed
+    ✓ rtpReceiver should close cleanly
+    ✓ peer.dump() succeeded
+    ✓ peer.dump() should retrieve zero rtpReceivers
+
+test/test_extra.js
+  extra.fingerprintFromSDP()
+    ✓ should be equal
+    ✓ should be equal
+
+  extra.fingerprintToSDP()
+    ✓ should be equal
+    ✓ should be equal
+
+  92 passing (7s
 ```
 
 
