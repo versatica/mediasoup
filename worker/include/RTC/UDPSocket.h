@@ -15,7 +15,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onPacketRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr) = 0;
+			virtual void onPacketRecv(RTC::UDPSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr) = 0;
 		};
 
 	public:
@@ -29,17 +29,17 @@ namespace RTC
 	private:
 		static struct sockaddr_storage sockaddrStorageIPv4;
 		static struct sockaddr_storage sockaddrStorageIPv6;
-		static MS_PORT minPort;
-		static MS_PORT maxPort;
-		static std::unordered_map<MS_PORT, bool> availableIPv4Ports;
-		static std::unordered_map<MS_PORT, bool> availableIPv6Ports;
+		static uint16_t minPort;
+		static uint16_t maxPort;
+		static std::unordered_map<uint16_t, bool> availableIPv4Ports;
+		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
 
 	public:
 		UDPSocket(Listener* listener, uv_udp_t* uvHandle);
 
 	/* Pure virtual methods inherited from ::UDPSocket. */
 	public:
-		virtual void userOnUDPDatagramRecv(const MS_BYTE* data, size_t len, const struct sockaddr* addr) override;
+		virtual void userOnUDPDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
 		virtual void userOnUDPSocketClosed() override;
 
 	private:

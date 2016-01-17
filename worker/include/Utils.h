@@ -13,7 +13,7 @@ namespace Utils
 	public:
 		static int GetFamily(const char *ip, size_t ip_len);
 		static int GetFamily(const std::string &ip);
-		static void GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, MS_PORT* port);
+		static void GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, uint16_t* port);
 		static bool CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2);
 		static struct sockaddr_storage CopyAddress(const struct sockaddr* addr);
 	};
@@ -85,97 +85,97 @@ namespace Utils
 		/**
 		 * All these functions get and set bytes in Network Byte Order (Big Endian).
 		 */
-		static MS_BYTE Get1Byte(const MS_BYTE* data, size_t i);
-		static MS_2BYTES Get2Bytes(const MS_BYTE* data, size_t i);
-		static MS_4BYTES Get3Bytes(const MS_BYTE* data, size_t i);
-		static MS_4BYTES Get4Bytes(const MS_BYTE* data, size_t i);
-		static MS_8BYTES Get8Bytes(const MS_BYTE* data, size_t i);
-		static void Set1Byte(MS_BYTE* data, size_t i, MS_BYTE value);
-		static void Set2Bytes(MS_BYTE* data, size_t i, MS_2BYTES value);
-		static void Set3Bytes(MS_BYTE* data, size_t i, MS_4BYTES value);
-		static void Set4Bytes(MS_BYTE* data, size_t i, MS_4BYTES value);
-		static void Set8Bytes(MS_BYTE* data, size_t i, MS_8BYTES value);
-		static MS_2BYTES PadTo4Bytes(MS_2BYTES size);
-		static MS_4BYTES PadTo4Bytes(MS_4BYTES size);
+		static uint8_t Get1Byte(const uint8_t* data, size_t i);
+		static uint16_t Get2Bytes(const uint8_t* data, size_t i);
+		static uint32_t Get3Bytes(const uint8_t* data, size_t i);
+		static uint32_t Get4Bytes(const uint8_t* data, size_t i);
+		static uint64_t Get8Bytes(const uint8_t* data, size_t i);
+		static void Set1Byte(uint8_t* data, size_t i, uint8_t value);
+		static void Set2Bytes(uint8_t* data, size_t i, uint16_t value);
+		static void Set3Bytes(uint8_t* data, size_t i, uint32_t value);
+		static void Set4Bytes(uint8_t* data, size_t i, uint32_t value);
+		static void Set8Bytes(uint8_t* data, size_t i, uint64_t value);
+		static uint16_t PadTo4Bytes(uint16_t size);
+		static uint32_t PadTo4Bytes(uint32_t size);
 	};
 
 	/* Inline static methods. */
 
 	inline
-	MS_BYTE Byte::Get1Byte(const MS_BYTE* data, size_t i)
+	uint8_t Byte::Get1Byte(const uint8_t* data, size_t i)
 	{
 		return data[i];
 	}
 
 	inline
-	MS_2BYTES Byte::Get2Bytes(const MS_BYTE* data, size_t i)
+	uint16_t Byte::Get2Bytes(const uint8_t* data, size_t i)
 	{
-		return (MS_2BYTES)(data[i+1]) | ((MS_2BYTES)(data[i]))<<8;
+		return (uint16_t)(data[i+1]) | ((uint16_t)(data[i]))<<8;
 	}
 
 	inline
-	MS_4BYTES Byte::Get3Bytes(const MS_BYTE* data, size_t i)
+	uint32_t Byte::Get3Bytes(const uint8_t* data, size_t i)
 	{
-		return (MS_4BYTES)(data[i+2]) | ((MS_4BYTES)(data[i+1]))<<8 | ((MS_4BYTES)(data[i]))<<16;
+		return (uint32_t)(data[i+2]) | ((uint32_t)(data[i+1]))<<8 | ((uint32_t)(data[i]))<<16;
 	}
 
 	inline
-	MS_4BYTES Byte::Get4Bytes(const MS_BYTE* data, size_t i)
+	uint32_t Byte::Get4Bytes(const uint8_t* data, size_t i)
 	{
-		return (MS_4BYTES)(data[i+3]) | ((MS_4BYTES)(data[i+2]))<<8 | ((MS_4BYTES)(data[i+1]))<<16 | ((MS_4BYTES)(data[i]))<<24;
+		return (uint32_t)(data[i+3]) | ((uint32_t)(data[i+2]))<<8 | ((uint32_t)(data[i+1]))<<16 | ((uint32_t)(data[i]))<<24;
 	}
 
 	inline
-	MS_8BYTES Byte::Get8Bytes(const MS_BYTE* data, size_t i)
+	uint64_t Byte::Get8Bytes(const uint8_t* data, size_t i)
 	{
-		return ((MS_8BYTES)Byte::Get4Bytes(data,i))<<32 | Byte::Get4Bytes(data,i+4);
+		return ((uint64_t)Byte::Get4Bytes(data,i))<<32 | Byte::Get4Bytes(data,i+4);
 	}
 
 	inline
-	void Byte::Set1Byte(MS_BYTE* data, size_t i, MS_BYTE value)
+	void Byte::Set1Byte(uint8_t* data, size_t i, uint8_t value)
 	{
 		data[i] = value;
 	}
 
 	inline
-	void Byte::Set2Bytes(MS_BYTE* data, size_t i, MS_2BYTES value)
+	void Byte::Set2Bytes(uint8_t* data, size_t i, uint16_t value)
 	{
-		data[i+1] = (MS_BYTE)(value);
-		data[i]   = (MS_BYTE)(value>>8);
+		data[i+1] = (uint8_t)(value);
+		data[i]   = (uint8_t)(value>>8);
 	}
 
 	inline
-	void Byte::Set3Bytes(MS_BYTE* data, size_t i, MS_4BYTES value)
+	void Byte::Set3Bytes(uint8_t* data, size_t i, uint32_t value)
 	{
-		data[i+2] = (MS_BYTE)(value);
-		data[i+1] = (MS_BYTE)(value>>8);
-		data[i]   = (MS_BYTE)(value>>16);
+		data[i+2] = (uint8_t)(value);
+		data[i+1] = (uint8_t)(value>>8);
+		data[i]   = (uint8_t)(value>>16);
 	}
 
 	inline
-	void Byte::Set4Bytes(MS_BYTE* data, size_t i, MS_4BYTES value)
+	void Byte::Set4Bytes(uint8_t* data, size_t i, uint32_t value)
 	{
-		data[i+3] = (MS_BYTE)(value);
-		data[i+2] = (MS_BYTE)(value>>8);
-		data[i+1] = (MS_BYTE)(value>>16);
-		data[i]   = (MS_BYTE)(value>>24);
+		data[i+3] = (uint8_t)(value);
+		data[i+2] = (uint8_t)(value>>8);
+		data[i+1] = (uint8_t)(value>>16);
+		data[i]   = (uint8_t)(value>>24);
 	}
 
 	inline
-	void Byte::Set8Bytes(MS_BYTE* data, size_t i, MS_8BYTES value)
+	void Byte::Set8Bytes(uint8_t* data, size_t i, uint64_t value)
 	{
-		data[i+7] = (MS_BYTE)(value);
-		data[i+6] = (MS_BYTE)(value>>8);
-		data[i+5] = (MS_BYTE)(value>>16);
-		data[i+4] = (MS_BYTE)(value>>24);
-		data[i+3] = (MS_BYTE)(value>>32);
-		data[i+2] = (MS_BYTE)(value>>40);
-		data[i+1] = (MS_BYTE)(value>>48);
-		data[i]   = (MS_BYTE)(value>>56);
+		data[i+7] = (uint8_t)(value);
+		data[i+6] = (uint8_t)(value>>8);
+		data[i+5] = (uint8_t)(value>>16);
+		data[i+4] = (uint8_t)(value>>24);
+		data[i+3] = (uint8_t)(value>>32);
+		data[i+2] = (uint8_t)(value>>40);
+		data[i+1] = (uint8_t)(value>>48);
+		data[i]   = (uint8_t)(value>>56);
 	}
 
 	inline
-	MS_2BYTES Byte::PadTo4Bytes(MS_2BYTES size)
+	uint16_t Byte::PadTo4Bytes(uint16_t size)
 	{
 		// If size is not multiple of 32 bits then pad it.
 		if (size & 0x03)
@@ -185,7 +185,7 @@ namespace Utils
 	}
 
 	inline
-	MS_4BYTES Byte::PadTo4Bytes(MS_4BYTES size)
+	uint32_t Byte::PadTo4Bytes(uint32_t size)
 	{
 		// If size is not multiple of 32 bits then pad it.
 		if (size & 0x03)
@@ -201,14 +201,14 @@ namespace Utils
 		static void ClassDestroy();
 		static uint32_t GetRandomUInt(uint32_t min, uint32_t max);
 		static const std::string GetRandomString(size_t len);
-		static MS_4BYTES GetCRC32(const MS_BYTE* data, size_t size);
-		static const MS_BYTE* GetHMAC_SHA1(const std::string &key, const MS_BYTE* data, size_t len);
+		static uint32_t GetCRC32(const uint8_t* data, size_t size);
+		static const uint8_t* GetHMAC_SHA1(const std::string &key, const uint8_t* data, size_t len);
 
 	private:
 		static uint32_t seed;
 		static HMAC_CTX hmacSha1Ctx;
-		static MS_BYTE hmacSha1Buffer[];
-		static const MS_4BYTES crc32Table[256];
+		static uint8_t hmacSha1Buffer[];
+		static const uint32_t crc32Table[256];
 	};
 
 	/* Inline static methods. */
@@ -247,10 +247,10 @@ namespace Utils
 	}
 
 	inline
-	MS_4BYTES Crypto::GetCRC32(const MS_BYTE* data, size_t size)
+	uint32_t Crypto::GetCRC32(const uint8_t* data, size_t size)
 	{
-		MS_4BYTES crc = 0xFFFFFFFF;
-		const MS_BYTE* p = data;
+		uint32_t crc = 0xFFFFFFFF;
+		const uint8_t* p = data;
 
 		while (size--)
 			crc = Crypto::crc32Table[(crc ^ *p++) & 0xFF] ^ (crc >> 8);

@@ -12,7 +12,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	MS_BYTE SRTPSession::encryptBuffer[MS_ENCRYPT_BUFFER_SIZE];
+	uint8_t SRTPSession::encryptBuffer[MS_ENCRYPT_BUFFER_SIZE];
 
 	/* Class methods. */
 
@@ -57,7 +57,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SRTPSession::SRTPSession(Type type, SRTPProfile profile, MS_BYTE* key, size_t key_len)
+	SRTPSession::SRTPSession(Type type, SRTPProfile profile, uint8_t* key, size_t key_len)
 	{
 		MS_TRACE();
 
@@ -126,7 +126,7 @@ namespace RTC
 
 	// TODO: It must not memcpy it but instead the provided packet must already be
 	// allocated into a buffer.
-	bool SRTPSession::EncryptRTP(const MS_BYTE** data, size_t* len)
+	bool SRTPSession::EncryptRTP(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -148,12 +148,12 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const MS_BYTE*)SRTPSession::encryptBuffer;
+		*data = (const uint8_t*)SRTPSession::encryptBuffer;
 
 		return true;
 	}
 
-	bool SRTPSession::DecryptSRTP(const MS_BYTE* data, size_t* len)
+	bool SRTPSession::DecryptSRTP(const uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -167,7 +167,7 @@ namespace RTC
 		return true;
 	}
 
-	bool SRTPSession::EncryptRTCP(const MS_BYTE** data, size_t* len)
+	bool SRTPSession::EncryptRTCP(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -189,12 +189,12 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const MS_BYTE*)SRTPSession::encryptBuffer;
+		*data = (const uint8_t*)SRTPSession::encryptBuffer;
 
 		return true;
 	}
 
-	bool SRTPSession::DecryptSRTCP(const MS_BYTE* data, size_t* len)
+	bool SRTPSession::DecryptSRTCP(const uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 

@@ -23,7 +23,7 @@ namespace Channel
 		};
 
 	private:
-		static MS_BYTE writeBuffer[];
+		static uint8_t writeBuffer[];
 
 	public:
 		UnixStreamSocket(int fd);

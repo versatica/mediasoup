@@ -16,8 +16,8 @@ public:
 		uint8_t     logLevel            { MS_LOG_LEVEL_DEBUG };
 		std::string rtcListenIPv4;
 		std::string rtcListenIPv6;
-		MS_PORT     rtcMinPort           { 10000 };
-		MS_PORT     rtcMaxPort           { 59999 };
+		uint16_t     rtcMinPort           { 10000 };
+		uint16_t     rtcMaxPort           { 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
 		// Private fields.

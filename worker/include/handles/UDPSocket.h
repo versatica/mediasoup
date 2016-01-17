@@ -13,14 +13,14 @@ public:
 	{
 		UDPSocket*    socket;
 		uv_udp_send_t req;
-		MS_BYTE       store[1];
+		uint8_t       store[1];
 	};
 
 private:
-	static MS_BYTE readBuffer[];
+	static uint8_t readBuffer[];
 
 public:
-	UDPSocket(const std::string &ip, MS_PORT port);
+	UDPSocket(const std::string &ip, uint16_t port);
 	/**
 	 * uvHandle must be an already initialized and binded uv_udp_t pointer.
 	 */
@@ -29,13 +29,13 @@ public:
 
 	void Close();
 	virtual void Dump();
-	void Send(const MS_BYTE* data, size_t len, const struct sockaddr* addr);
+	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
 	void Send(const std::string &data, const struct sockaddr* addr);
-	void Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_PORT port);
-	void Send(const std::string &data, const std::string &ip, MS_PORT port);
+	void Send(const uint8_t* data, size_t len, const std::string &ip, uint16_t port);
+	void Send(const std::string &data, const std::string &ip, uint16_t port);
 	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
-	MS_PORT GetLocalPort();
+	uint16_t GetLocalPort();
 
 private:
 	bool SetLocalAddress();
@@ -49,7 +49,7 @@ public:
 
 /* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnUDPDatagramRecv(const MS_BYTE* data, size_t len, const struct sockaddr* addr) = 0;
+	virtual void userOnUDPDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
 	virtual void userOnUDPSocketClosed() = 0;
 
 private:
@@ -61,7 +61,7 @@ private:
 protected:
 	struct sockaddr_storage localAddr;
 	std::string localIP;
-	MS_PORT localPort = 0;
+	uint16_t localPort = 0;
 };
 
 /* Inline methods. */
@@ -69,13 +69,13 @@ protected:
 inline
 void UDPSocket::Send(const std::string &data, const struct sockaddr* addr)
 {
-	Send((const MS_BYTE*)data.c_str(), data.size(), addr);
+	Send((const uint8_t*)data.c_str(), data.size(), addr);
 }
 
 inline
-void UDPSocket::Send(const std::string &data, const std::string &ip, MS_PORT port)
+void UDPSocket::Send(const std::string &data, const std::string &ip, uint16_t port)
 {
-	Send((const MS_BYTE*)data.c_str(), data.size(), ip, port);
+	Send((const uint8_t*)data.c_str(), data.size(), ip, port);
 }
 
 inline
@@ -91,7 +91,7 @@ const std::string& UDPSocket::GetLocalIP()
 }
 
 inline
-MS_PORT UDPSocket::GetLocalPort()
+uint16_t UDPSocket::GetLocalPort()
 {
 	return this->localPort;
 }

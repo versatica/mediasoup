@@ -31,16 +31,16 @@ namespace RTC
 		static void onSRTPEvent(srtp_event_data_t* data);
 
 	private:
-		static MS_BYTE encryptBuffer[];
+		static uint8_t encryptBuffer[];
 
 	public:
-		SRTPSession(Type type, SRTPProfile profile, MS_BYTE* key, size_t key_len);
+		SRTPSession(Type type, SRTPProfile profile, uint8_t* key, size_t key_len);
 		~SRTPSession();
 
-		bool EncryptRTP(const MS_BYTE** data, size_t* len);
-		bool DecryptSRTP(const MS_BYTE* data, size_t* len);
-		bool EncryptRTCP(const MS_BYTE** data, size_t* len);
-		bool DecryptSRTCP(const MS_BYTE* data, size_t* len);
+		bool EncryptRTP(const uint8_t** data, size_t* len);
+		bool DecryptSRTP(const uint8_t* data, size_t* len);
+		bool EncryptRTCP(const uint8_t** data, size_t* len);
+		bool DecryptSRTCP(const uint8_t* data, size_t* len);
 		const char* GetLastErrorDesc();
 		void Close();
 

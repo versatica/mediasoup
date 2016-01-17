@@ -31,10 +31,10 @@ namespace RTC
 	private:
 		static struct sockaddr_storage sockaddrStorageIPv4;
 		static struct sockaddr_storage sockaddrStorageIPv6;
-		static MS_PORT minPort;
-		static MS_PORT maxPort;
-		static std::unordered_map<MS_PORT, bool> availableIPv4Ports;
-		static std::unordered_map<MS_PORT, bool> availableIPv6Ports;
+		static uint16_t minPort;
+		static uint16_t maxPort;
+		static std::unordered_map<uint16_t, bool> availableIPv4Ports;
+		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
 
 	public:
 		TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, uv_tcp_t* uvHandle);

@@ -9,7 +9,7 @@ namespace RTC
 {
 	/* Class methods. */
 
-	RTPPacket* RTPPacket::Parse(const MS_BYTE* data, size_t len)
+	RTPPacket* RTPPacket::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -70,9 +70,9 @@ namespace RTC
 		}
 
 		// Get payload.
-		MS_BYTE* payload = (MS_BYTE*)data + pos;
+		uint8_t* payload = (uint8_t*)data + pos;
 		size_t payloadLength = len - pos;
-		MS_BYTE payloadPadding = 0;
+		uint8_t payloadPadding = 0;
 
 		MS_ASSERT(len >= pos, "payload has negative size");
 
@@ -114,19 +114,19 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RTPPacket::RTPPacket(Header* header, ExtensionHeader* extensionHeader, const MS_BYTE* payload, size_t payloadLength, MS_BYTE payloadPadding, const MS_BYTE* raw, size_t length) :
+	RTPPacket::RTPPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLength, uint8_t payloadPadding, const uint8_t* raw, size_t length) :
 		header(header),
 		extensionHeader(extensionHeader),
-		payload((MS_BYTE*)payload),
+		payload((uint8_t*)payload),
 		payloadLength(payloadLength),
 		payloadPadding(payloadPadding),
-		raw((MS_BYTE*)raw),
+		raw((uint8_t*)raw),
 		length(length)
 	{
 		MS_TRACE();
 
 		if (this->header->csrc_count)
-			this->csrcList = (MS_BYTE*)raw + sizeof(Header);
+			this->csrcList = (uint8_t*)raw + sizeof(Header);
 	}
 
 	RTPPacket::~RTPPacket()
@@ -192,7 +192,7 @@ namespace RTC
 		this->length += (size_t)this->payloadPadding;
 
 		// Allocate it.
-		this->raw = new MS_BYTE[this->length];
+		this->raw = new uint8_t[this->length];
 
 		// Add minimun header.
 		std::memcpy(this->raw, this->header, sizeof(Header));

@@ -10,7 +10,7 @@
 class TCPServer : public TCPConnection::Listener
 {
 public:
-	TCPServer(const std::string &ip, MS_PORT port, int backlog);
+	TCPServer(const std::string &ip, uint16_t port, int backlog);
 	/**
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */
@@ -22,7 +22,7 @@ public:
 	bool IsClosing();
 	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
-	MS_PORT GetLocalPort();
+	uint16_t GetLocalPort();
 	size_t GetNumConnections();
 
 private:
@@ -54,7 +54,7 @@ private:
 protected:
 	struct sockaddr_storage localAddr;
 	std::string localIP;
-	MS_PORT localPort = 0;
+	uint16_t localPort = 0;
 };
 
 /* Inline methods. */

@@ -13,7 +13,7 @@ public:
 	{
 		UnixStreamSocket* socket;
 		uv_write_t        req;
-		MS_BYTE           store[1];
+		uint8_t           store[1];
 	};
 
 public:
@@ -22,7 +22,7 @@ public:
 
 	void Close();
 	bool IsClosing();
-	void Write(const MS_BYTE* data, size_t len);
+	void Write(const uint8_t* data, size_t len);
 	void Write(const std::string &data);
 
 /* Callbacks fired by UV events. */
@@ -50,7 +50,7 @@ protected:
 	// Passed by argument.
 	size_t bufferSize = 0;
 	// Allocated by this.
-	MS_BYTE* buffer = nullptr;
+	uint8_t* buffer = nullptr;
 	// Others.
 	size_t bufferDataLen = 0;
 };
@@ -66,7 +66,7 @@ bool UnixStreamSocket::IsClosing()
 inline
 void UnixStreamSocket::Write(const std::string &data)
 {
-	Write((const MS_BYTE*)data.c_str(), data.size());
+	Write((const uint8_t*)data.c_str(), data.size());
 }
 
 #endif

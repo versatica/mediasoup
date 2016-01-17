@@ -17,7 +17,7 @@ namespace Channel
 {
 	/* Class variables. */
 
-	MS_BYTE UnixStreamSocket::writeBuffer[NS_MAX_SIZE];
+	uint8_t UnixStreamSocket::writeBuffer[NS_MAX_SIZE];
 
 	/* Instance methods. */
 
@@ -232,7 +232,7 @@ namespace Channel
 
 			// If here it means that json_start points to the beginning of a JSON string
 			// with json_len bytes length, so recalculate read_len.
-			read_len = (const MS_BYTE*)json_start - (this->buffer + this->msgStart) + json_len + 1;
+			read_len = (const uint8_t*)json_start - (this->buffer + this->msgStart) + json_len + 1;
 
 			Json::Value json;
 			std::string json_parse_error;

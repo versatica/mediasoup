@@ -63,12 +63,20 @@ namespace RTC
 	void RtpReceiver::SetRtpListener(RtpListener* rtpListener)
 	{
 		this->rtpListener = rtpListener;
+
+		// If we already had rtpParameters then provide the new listener with them.
+		if (this->rtpParameters)
+			this->rtpListener->onRtpListenerParameters(this, this->rtpParameters);
 	}
 
 	inline
 	void RtpReceiver::SetRtpListenerForRtcp(RtpListener* rtcpListener)
 	{
 		this->rtcpListener = rtcpListener;
+
+		// If we already had rtpParameters then provide the new listener with them.
+		if (this->rtpParameters)
+			this->rtcpListener->onRtpListenerParameters(this, this->rtpParameters);
 	}
 
 	inline

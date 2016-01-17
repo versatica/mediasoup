@@ -13,14 +13,14 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onPacketRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) = 0;
+			virtual void onPacketRecv(RTC::TCPConnection *connection, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
 		TCPConnection(Listener* listener, size_t bufferSize);
 		virtual ~TCPConnection();
 
-		void Send(const MS_BYTE* data, size_t len);
+		void Send(const uint8_t* data, size_t len);
 
 	/* Pure virtual methods inherited from ::TCPConnection. */
 	public:

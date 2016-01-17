@@ -15,12 +15,6 @@
 #define MS_LOG_LEVEL_WARN  1
 #define MS_LOG_LEVEL_ERROR 0
 
-#define MS_BYTE   uint8_t
-#define MS_2BYTES uint16_t
-#define MS_4BYTES uint32_t
-#define MS_8BYTES uint64_t
-#define MS_PORT   uint16_t
-
 // Detect Little-Endian or Big-Endian CPU.
 // NOTE: If the macro MS_LITTLE_ENDIAN or MS_BIG_ENDIAN is already defined
 // then don't autodetect it.

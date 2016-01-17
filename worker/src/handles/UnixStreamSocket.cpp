@@ -138,7 +138,7 @@ void UnixStreamSocket::Close()
 	}
 }
 
-void UnixStreamSocket::Write(const MS_BYTE* data, size_t len)
+void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 {
 	if (this->isClosing)
 		return;
@@ -198,7 +198,7 @@ void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
 	if (!this->buffer)
-		this->buffer = new MS_BYTE[this->bufferSize];
+		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.
 	buf->base = (char *)(this->buffer + this->bufferDataLen);

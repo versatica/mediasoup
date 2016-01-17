@@ -50,7 +50,7 @@ void Timer::Close()
 	delete this;
 }
 
-void Timer::Start(MS_8BYTES timeout)
+void Timer::Start(uint64_t timeout)
 {
 	MS_TRACE();
 

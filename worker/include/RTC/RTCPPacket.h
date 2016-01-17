@@ -12,40 +12,40 @@ namespace RTC
 		struct CommonHeader
 		{
 			#if defined(MS_LITTLE_ENDIAN)
-				MS_BYTE count:5;
-				MS_BYTE padding:1;
-				MS_BYTE version:2;
+				uint8_t count:5;
+				uint8_t padding:1;
+				uint8_t version:2;
 			#elif defined(MS_BIG_ENDIAN)
-				MS_BYTE version:2;
-				MS_BYTE padding:1;
-				MS_BYTE count:5;
+				uint8_t version:2;
+				uint8_t padding:1;
+				uint8_t count:5;
 			#endif
-			MS_BYTE packet_type:8;
-			MS_2BYTES length:16;
+			uint8_t packet_type:8;
+			uint16_t length:16;
 		};
 
 	public:
-		static bool IsRTCP(const MS_BYTE* data, size_t len);
-		static RTCPPacket* Parse(const MS_BYTE* data, size_t len);
+		static bool IsRTCP(const uint8_t* data, size_t len);
+		static RTCPPacket* Parse(const uint8_t* data, size_t len);
 
 	public:
-		RTCPPacket(CommonHeader* header, const MS_BYTE* raw, size_t length);
+		RTCPPacket(CommonHeader* header, const uint8_t* raw, size_t length);
 		~RTCPPacket();
 
-		const MS_BYTE* GetRaw();
+		const uint8_t* GetRaw();
 		size_t GetLength();
 
 	private:
 		// Passed by argument.
 		CommonHeader* header = nullptr;
-		MS_BYTE* raw = nullptr;
+		uint8_t* raw = nullptr;
 		size_t length = 0;
 	};
 
 	/* Inline static methods. */
 
 	inline
-	bool RTCPPacket::IsRTCP(const MS_BYTE* data, size_t len)
+	bool RTCPPacket::IsRTCP(const uint8_t* data, size_t len)
 	{
 		CommonHeader* header = (CommonHeader*)data;
 
@@ -65,7 +65,7 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	const MS_BYTE* RTCPPacket::GetRaw()
+	const uint8_t* RTCPPacket::GetRaw()
 	{
 		return this->raw;
 	}

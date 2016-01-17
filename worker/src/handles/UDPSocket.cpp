@@ -50,11 +50,11 @@ void on_error_close(uv_handle_t* handle)
 
 /* Class variables. */
 
-MS_BYTE UDPSocket::readBuffer[MS_READ_BUFFER_SIZE];
+uint8_t UDPSocket::readBuffer[MS_READ_BUFFER_SIZE];
 
 /* Instance methods. */
 
-UDPSocket::UDPSocket(const std::string &ip, MS_PORT port)
+UDPSocket::UDPSocket(const std::string &ip, uint16_t port)
 {
 	MS_TRACE();
 
@@ -176,7 +176,7 @@ void UDPSocket::Dump()
 		(!this->isClosing) ? "open" : "closed");
 }
 
-void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* addr)
+void UDPSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr)
 {
 	MS_TRACE();
 
@@ -239,7 +239,7 @@ void UDPSocket::Send(const MS_BYTE* data, size_t len, const struct sockaddr* add
 	}
 }
 
-void UDPSocket::Send(const MS_BYTE* data, size_t len, const std::string &ip, MS_PORT port)
+void UDPSocket::Send(const uint8_t* data, size_t len, const std::string &ip, uint16_t port)
 {
 	MS_TRACE();
 
@@ -333,7 +333,7 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 	if (nread > 0)
 	{
 		// Notify the subclass.
-		userOnUDPDatagramRecv((MS_BYTE*)buf->base, nread, addr);
+		userOnUDPDatagramRecv((uint8_t*)buf->base, nread, addr);
 	}
 
 	// Some error.

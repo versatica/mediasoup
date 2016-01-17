@@ -63,7 +63,7 @@ namespace RTC
 			// We have packet_len bytes.
 			if (data_len >= 2 && data_len >= 2 + packet_len)
 			{
-				const MS_BYTE* packet = this->buffer + this->frameStart + 2;
+				const uint8_t* packet = this->buffer + this->frameStart + 2;
 
 				// Notify the listener.
 				if (packet_len != 0)
@@ -139,13 +139,13 @@ namespace RTC
 		}
 	}
 
-	void TCPConnection::Send(const MS_BYTE* data, size_t len)
+	void TCPConnection::Send(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
 		// Write according to Framing RFC 4571.
 
-		MS_BYTE frame_len[2];
+		uint8_t frame_len[2];
 
 		Utils::Byte::Set2Bytes(frame_len, 0, len);
 

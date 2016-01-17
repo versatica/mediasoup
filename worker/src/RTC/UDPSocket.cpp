@@ -24,10 +24,10 @@ namespace RTC
 
 	struct sockaddr_storage UDPSocket::sockaddrStorageIPv4;
 	struct sockaddr_storage UDPSocket::sockaddrStorageIPv6;
-	MS_PORT UDPSocket::minPort;
-	MS_PORT UDPSocket::maxPort;
-	std::unordered_map<MS_PORT, bool> UDPSocket::availableIPv4Ports;
-	std::unordered_map<MS_PORT, bool> UDPSocket::availableIPv6Ports;
+	uint16_t UDPSocket::minPort;
+	uint16_t UDPSocket::maxPort;
+	std::unordered_map<uint16_t, bool> UDPSocket::availableIPv4Ports;
+	std::unordered_map<uint16_t, bool> UDPSocket::availableIPv6Ports;
 
 	/* Class methods. */
 
@@ -54,7 +54,7 @@ namespace RTC
 		UDPSocket::minPort = Settings::configuration.rtcMinPort;
 		UDPSocket::maxPort = Settings::configuration.rtcMaxPort;
 
-		MS_PORT i = RTC::UDPSocket::minPort;
+		uint16_t i = RTC::UDPSocket::minPort;
 		do
 		{
 			RTC::UDPSocket::availableIPv4Ports[i] = true;
@@ -103,13 +103,13 @@ namespace RTC
 		struct sockaddr_storage first_bind_addr;
 		struct sockaddr_storage second_bind_addr;
 		const char* listenIP;
-		MS_PORT random_first_port;
-		MS_PORT iterate_first_port;
-		MS_PORT iterate_second_port;
+		uint16_t random_first_port;
+		uint16_t iterate_first_port;
+		uint16_t iterate_second_port;
 		uint16_t attempt = 0;
 		uint16_t bindAttempt = 0;
 		int flags = 0;
-		std::unordered_map<MS_PORT, bool>* available_ports;
+		std::unordered_map<uint16_t, bool>* available_ports;
 
 		switch (address_family)
 		{
@@ -135,7 +135,7 @@ namespace RTC
 		}
 
 		// Choose a random first port to start from.
-		random_first_port = (MS_PORT)Utils::Crypto::GetRandomUInt((uint32_t)RTC::UDPSocket::minPort, (uint32_t)RTC::UDPSocket::maxPort);
+		random_first_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::UDPSocket::minPort, (uint32_t)RTC::UDPSocket::maxPort);
 		// Make it even if pair is requested.
 		if (pair)
 			random_first_port &= ~1;
@@ -320,7 +320,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void UDPSocket::userOnUDPDatagramRecv(const MS_BYTE* data, size_t len, const struct sockaddr* addr)
+	void UDPSocket::userOnUDPDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
 	{
 		MS_TRACE();
 
@@ -334,7 +334,7 @@ namespace RTC
 		if (Logger::HasDebugLevel())
 		{
 			int family;
-			MS_PORT port;
+			uint16_t port;
 			std::string ip;
 			Utils::IP::GetAddressInfo(addr, &family, ip, &port);
 

@@ -10,7 +10,7 @@ namespace RTC
 	{
 	public:
 		// STUN message class.
-		enum class Class : MS_2BYTES
+		enum class Class : uint16_t
 		{
 			Request         = 0,
 			Indication      = 1,
@@ -19,13 +19,13 @@ namespace RTC
 		};
 
 		// STUN message method.
-		enum class Method : MS_2BYTES
+		enum class Method : uint16_t
 		{
 			Binding = 1
 		};
 
 		// Attribute type.
-		enum class Attribute : MS_2BYTES
+		enum class Attribute : uint16_t
 		{
 			MappedAddress     = 0x0001,
 			Username          = 0x0006,
@@ -53,42 +53,42 @@ namespace RTC
 		};
 
 	public:
-		static bool IsSTUN(const MS_BYTE* data, size_t len);
-		static STUNMessage* Parse(const MS_BYTE* data, size_t len);
+		static bool IsSTUN(const uint8_t* data, size_t len);
+		static STUNMessage* Parse(const uint8_t* data, size_t len);
 
 	private:
-		static const MS_BYTE magicCookie[];
+		static const uint8_t magicCookie[];
 
 	public:
-		STUNMessage(Class klass, Method method, const MS_BYTE* transactionId, const MS_BYTE* raw, size_t length);
+		STUNMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* raw, size_t length);
 		~STUNMessage();
 
 		void Dump();
 		Class GetClass();
 		Method GetMethod();
-		const MS_BYTE* GetRaw();
+		const uint8_t* GetRaw();
 		void SetLength(size_t length);
 		size_t GetLength();
 		void SetUsername(const char* username, size_t len);
-		void SetPriority(const MS_4BYTES priority);
-		void SetIceControlling(const MS_8BYTES iceControlling);
-		void SetIceControlled(const MS_8BYTES iceControlled);
+		void SetPriority(const uint32_t priority);
+		void SetIceControlling(const uint64_t iceControlling);
+		void SetIceControlled(const uint64_t iceControlled);
 		void SetUseCandidate();
 		void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
-		void SetErrorCode(MS_2BYTES errorCode);
-		void SetMessageIntegrity(const MS_BYTE* messageIntegrity);
+		void SetErrorCode(uint16_t errorCode);
+		void SetMessageIntegrity(const uint8_t* messageIntegrity);
 		void SetFingerprint();
 		const std::string& GetUsername();
-		const MS_4BYTES GetPriority();
-		const MS_8BYTES GetIceControlling();
-		const MS_8BYTES GetIceControlled();
+		const uint32_t GetPriority();
+		const uint64_t GetIceControlling();
+		const uint64_t GetIceControlled();
 		bool HasUseCandidate();
-		MS_2BYTES GetErrorCode();
+		uint16_t GetErrorCode();
 		bool HasMessageIntegrity();
 		bool HasFingerprint();
 		Authentication CheckAuthentication(const std::string &local_username, const std::string &local_password);
 		STUNMessage* CreateSuccessResponse();
-		STUNMessage* CreateErrorResponse(MS_2BYTES errorCode);
+		STUNMessage* CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string &password);
 		void Serialize();
 
@@ -96,28 +96,28 @@ namespace RTC
 		// Passed by argument.
 		Class klass;  // 2 bytes.
 		Method method;  // 2 bytes.
-		const MS_BYTE* transactionId = nullptr;  // 12 bytes.
-		MS_BYTE* raw = nullptr;  // Allocated when Serialize().
+		const uint8_t* transactionId = nullptr;  // 12 bytes.
+		uint8_t* raw = nullptr;  // Allocated when Serialize().
 		size_t length = 0;  // The full message size (including header).
 		// Others.
 		bool isSerialized = false;
 		// STUN attributes.
 		std::string username;  // Less than 513 bytes.
-		MS_4BYTES priority = 0;  // 4 bytes unsigned integer.
-		MS_8BYTES iceControlling = 0;  // 8 bytes unsigned integer.
-		MS_8BYTES iceControlled = 0;  // 8 bytes unsigned integer.
+		uint32_t priority = 0;  // 4 bytes unsigned integer.
+		uint64_t iceControlling = 0;  // 8 bytes unsigned integer.
+		uint64_t iceControlled = 0;  // 8 bytes unsigned integer.
 		bool hasUseCandidate = false;  // 0 bytes.
-		const MS_BYTE* messageIntegrity = nullptr;  // 20 bytes.
+		const uint8_t* messageIntegrity = nullptr;  // 20 bytes.
 		bool hasFingerprint = false;  // 4 bytes.
 		const struct sockaddr* xorMappedAddress = nullptr;  // 8 or 20 bytes.
-		MS_2BYTES errorCode = 0;  // 4 bytes (no reason phrase).
+		uint16_t errorCode = 0;  // 4 bytes (no reason phrase).
 		std::string password;
 	};
 
 	/* Inline methods. */
 
 	inline
-	bool STUNMessage::IsSTUN(const MS_BYTE* data, size_t len)
+	bool STUNMessage::IsSTUN(const uint8_t* data, size_t len)
 	{
 		return (
 			// STUN headers are 20 bytes.
@@ -145,7 +145,7 @@ namespace RTC
 	}
 
 	inline
-	const MS_BYTE* STUNMessage::GetRaw()
+	const uint8_t* STUNMessage::GetRaw()
 	{
 		return this->raw;
 	}
@@ -170,21 +170,21 @@ namespace RTC
 	}
 
 	inline
-	void STUNMessage::SetPriority(const MS_4BYTES priority)
+	void STUNMessage::SetPriority(const uint32_t priority)
 	{
 		if (!this->priority)
 			this->priority = priority;
 	}
 
 	inline
-	void STUNMessage::SetIceControlling(const MS_8BYTES iceControlling)
+	void STUNMessage::SetIceControlling(const uint64_t iceControlling)
 	{
 		if (!this->iceControlling)
 			this->iceControlling = iceControlling;
 	}
 
 	inline
-	void STUNMessage::SetIceControlled(const MS_8BYTES iceControlled)
+	void STUNMessage::SetIceControlled(const uint64_t iceControlled)
 	{
 		if (!this->iceControlled)
 			this->iceControlled = iceControlled;
@@ -204,13 +204,13 @@ namespace RTC
 	}
 
 	inline
-	void STUNMessage::SetErrorCode(MS_2BYTES errorCode)
+	void STUNMessage::SetErrorCode(uint16_t errorCode)
 	{
 		this->errorCode = errorCode;
 	}
 
 	inline
-	void STUNMessage::SetMessageIntegrity(const MS_BYTE* messageIntegrity)
+	void STUNMessage::SetMessageIntegrity(const uint8_t* messageIntegrity)
 	{
 		if (!this->messageIntegrity)
 			this->messageIntegrity = messageIntegrity;
@@ -229,19 +229,19 @@ namespace RTC
 	}
 
 	inline
-	const MS_4BYTES STUNMessage::GetPriority()
+	const uint32_t STUNMessage::GetPriority()
 	{
 		return this->priority;
 	}
 
 	inline
-	const MS_8BYTES STUNMessage::GetIceControlling()
+	const uint64_t STUNMessage::GetIceControlling()
 	{
 		return this->iceControlling;
 	}
 
 	inline
-	const MS_8BYTES STUNMessage::GetIceControlled()
+	const uint64_t STUNMessage::GetIceControlled()
 	{
 		return this->iceControlled;
 	}
@@ -253,7 +253,7 @@ namespace RTC
 	}
 
 	inline
-	MS_2BYTES STUNMessage::GetErrorCode()
+	uint16_t STUNMessage::GetErrorCode()
 	{
 		return this->errorCode;
 	}

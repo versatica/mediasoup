@@ -68,7 +68,7 @@ namespace Utils
 			return AF_UNSPEC;
 	}
 
-	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, MS_PORT* port)
+	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, uint16_t* port)
 	{
 		MS_TRACE();
 
@@ -81,13 +81,13 @@ namespace Utils
 				err = uv_inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, _ip, INET_ADDRSTRLEN);
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
-				*port = (MS_PORT)ntohs(((struct sockaddr_in*)addr)->sin_port);
+				*port = (uint16_t)ntohs(((struct sockaddr_in*)addr)->sin_port);
 				break;
 			case AF_INET6:
 				err = uv_inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, _ip, INET6_ADDRSTRLEN);
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
-				*port = (MS_PORT)ntohs(((struct sockaddr_in6*)addr)->sin6_port);
+				*port = (uint16_t)ntohs(((struct sockaddr_in6*)addr)->sin6_port);
 				break;
 			default:
 				MS_ABORT("unknown network family: %d", (int)addr->sa_family);

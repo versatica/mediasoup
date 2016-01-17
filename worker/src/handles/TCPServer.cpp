@@ -28,7 +28,7 @@ void on_error_close(uv_handle_t* handle)
 
 /* Instance methods. */
 
-TCPServer::TCPServer(const std::string &ip, MS_PORT port, int backlog)
+TCPServer::TCPServer(const std::string &ip, uint16_t port, int backlog)
 {
 	MS_TRACE();
 
@@ -173,7 +173,7 @@ const std::string& TCPServer::GetLocalIP()
 	return this->localIP;
 }
 
-MS_PORT TCPServer::GetLocalPort()
+uint16_t TCPServer::GetLocalPort()
 {
 	MS_TRACE();
 

@@ -42,7 +42,7 @@ namespace RTC
 		uint32_t priority;
 		std::string ip;
 		Protocol protocol;
-		MS_PORT port;
+		uint16_t port;
 		CandidateType type;
 		TcpCandidateType tcpType;
 	};

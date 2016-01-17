@@ -7,7 +7,7 @@ namespace RTC
 {
 	/* Class methods. */
 
-	RTCPPacket* RTCPPacket::Parse(const MS_BYTE* data, size_t len)
+	RTCPPacket* RTCPPacket::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -24,9 +24,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RTCPPacket::RTCPPacket(CommonHeader* header, const MS_BYTE* raw, size_t length) :
+	RTCPPacket::RTCPPacket(CommonHeader* header, const uint8_t* raw, size_t length) :
 		header(header),
-		raw((MS_BYTE*)raw),
+		raw((uint8_t*)raw),
 		length(length)
 	{
 		MS_TRACE();

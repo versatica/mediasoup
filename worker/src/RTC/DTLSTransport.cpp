@@ -62,7 +62,7 @@ namespace RTC
 	X509* DTLSTransport::certificate = nullptr;
 	EVP_PKEY* DTLSTransport::privateKey = nullptr;
 	SSL_CTX* DTLSTransport::sslCtx = nullptr;
-	MS_BYTE DTLSTransport::sslReadBuffer[MS_SSL_READ_BUFFER_SIZE];
+	uint8_t DTLSTransport::sslReadBuffer[MS_SSL_READ_BUFFER_SIZE];
 	std::map<std::string, DTLSTransport::FingerprintAlgorithm> DTLSTransport::string2FingerprintAlgorithm =
 	{
 		{ "sha-1",   DTLSTransport::FingerprintAlgorithm::SHA1   },
@@ -636,7 +636,7 @@ namespace RTC
 		}
 	}
 
-	void DTLSTransport::ProcessDTLSData(const MS_BYTE* data, size_t len)
+	void DTLSTransport::ProcessDTLSData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -681,11 +681,11 @@ namespace RTC
 			}
 
 			// Notify the listener.
-			this->listener->onDTLSApplicationData(this, (MS_BYTE*)DTLSTransport::sslReadBuffer, (size_t)read);
+			this->listener->onDTLSApplicationData(this, (uint8_t*)DTLSTransport::sslReadBuffer, (size_t)read);
 		}
 	}
 
-	void DTLSTransport::SendApplicationData(const MS_BYTE* data, size_t len)
+	void DTLSTransport::SendApplicationData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -853,7 +853,7 @@ namespace RTC
 		MS_DEBUG("%ld bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
-		this->listener->onOutgoingDTLSData(this, (MS_BYTE*)data, (size_t)read);
+		this->listener->onOutgoingDTLSData(this, (uint8_t*)data, (size_t)read);
 
 		// Clear the BIO buffer.
 		// NOTE: the (void) avoids the -Wunused-value warning.
@@ -867,7 +867,7 @@ namespace RTC
 
 		long int ret;
 		struct timeval dtls_timeout;
-		MS_8BYTES timeout_ms;
+		uint64_t timeout_ms;
 
 		// NOTE: If ret == 0 then ignore the value in dtls_timeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
@@ -875,7 +875,7 @@ namespace RTC
 		if (ret == 0)
 			return true;
 
-		timeout_ms = (dtls_timeout.tv_sec * (MS_8BYTES)1000) + (dtls_timeout.tv_usec / 1000);
+		timeout_ms = (dtls_timeout.tv_sec * (uint64_t)1000) + (dtls_timeout.tv_usec / 1000);
 		if (timeout_ms == 0)
 		{
 			return true;
@@ -1030,13 +1030,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_BYTE srtp_material[MS_SRTP_MASTER_LENGTH * 2];
-		MS_BYTE* srtp_local_key;
-		MS_BYTE* srtp_local_salt;
-		MS_BYTE* srtp_remote_key;
-		MS_BYTE* srtp_remote_salt;
-		MS_BYTE srtp_local_master_key[MS_SRTP_MASTER_LENGTH];
-		MS_BYTE srtp_remote_master_key[MS_SRTP_MASTER_LENGTH];
+		uint8_t srtp_material[MS_SRTP_MASTER_LENGTH * 2];
+		uint8_t* srtp_local_key;
+		uint8_t* srtp_local_salt;
+		uint8_t* srtp_remote_key;
+		uint8_t* srtp_remote_salt;
+		uint8_t srtp_local_master_key[MS_SRTP_MASTER_LENGTH];
+		uint8_t srtp_remote_master_key[MS_SRTP_MASTER_LENGTH];
 		int ret;
 
 		ret = SSL_export_keying_material(this->ssl, srtp_material, MS_SRTP_MASTER_LENGTH * 2, "EXTRACTOR-dtls_srtp", 19, nullptr, 0, 0);

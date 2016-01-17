@@ -26,7 +26,7 @@ namespace RTC
 		Json::Value json_remote;
 		int ip_family;
 		std::string ip;
-		MS_PORT port;
+		uint16_t port;
 
 		Utils::IP::GetAddressInfo(this->GetLocalAddress(), &ip_family, ip, &port);
 		json_local[k_ip] = ip;
@@ -64,7 +64,7 @@ namespace RTC
 			{
 				int remote_family;
 				std::string remote_ip;
-				MS_PORT remote_port;
+				uint16_t remote_port;
 
 				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remote_family, remote_ip, &remote_port);
 

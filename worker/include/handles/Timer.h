@@ -17,7 +17,7 @@ public:
 	Timer(Listener* listener);
 
 	void Close();
-	void Start(MS_8BYTES timeout);
+	void Start(uint64_t timeout);
 	void Stop();
 
 /* Callbacks fired by UV events. */

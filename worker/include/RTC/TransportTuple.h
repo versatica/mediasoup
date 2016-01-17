@@ -27,7 +27,7 @@ namespace RTC
 		void Dump();
 		void StoreUdpRemoteAddress();
 		bool Compare(TransportTuple* tuple);
-		void Send(const MS_BYTE* data, size_t len);
+		void Send(const uint8_t* data, size_t len);
 		Protocol GetProtocol();
 		const struct sockaddr* GetLocalAddress();
 		const struct sockaddr* GetRemoteAddress();
@@ -97,7 +97,7 @@ namespace RTC
 	}
 
 	inline
-	void TransportTuple::Send(const MS_BYTE* data, size_t len)
+	void TransportTuple::Send(const uint8_t* data, size_t len)
 	{
 		if (this->protocol == Protocol::UDP)
 			this->udpSocket->Send(data, len, this->udpRemoteAddr);

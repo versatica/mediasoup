@@ -12,68 +12,68 @@ namespace RTC
 		struct Header
 		{
 			#if defined(MS_LITTLE_ENDIAN)
-				MS_BYTE csrc_count:4;
-				MS_BYTE extension:1;
-				MS_BYTE padding:1;
-				MS_BYTE version:2;
-				MS_BYTE payload_type:7;
-				MS_BYTE marker:1;
+				uint8_t csrc_count:4;
+				uint8_t extension:1;
+				uint8_t padding:1;
+				uint8_t version:2;
+				uint8_t payload_type:7;
+				uint8_t marker:1;
 			#elif defined(MS_BIG_ENDIAN)
-				MS_BYTE version:2;
-				MS_BYTE padding:1;
-				MS_BYTE extension:1;
-				MS_BYTE csrc_count:4;
-				MS_BYTE marker:1;
-				MS_BYTE payload_type:7;
+				uint8_t version:2;
+				uint8_t padding:1;
+				uint8_t extension:1;
+				uint8_t csrc_count:4;
+				uint8_t marker:1;
+				uint8_t payload_type:7;
 			#endif
-			MS_2BYTES sequence_number;
-			MS_4BYTES timestamp;
-			MS_4BYTES ssrc;
+			uint16_t sequence_number;
+			uint32_t timestamp;
+			uint32_t ssrc;
 		};
 
 		/* Struct for RTP header extension. */
 		struct ExtensionHeader
 		{
-			MS_2BYTES id;
-			MS_2BYTES length;  // Size of value in multiples of 4 bytes.
-			MS_BYTE* value;
+			uint16_t id;
+			uint16_t length;  // Size of value in multiples of 4 bytes.
+			uint8_t* value;
 		};
 
 	public:
-		static bool IsRTP(const MS_BYTE* data, size_t len);
-		static RTPPacket* Parse(const MS_BYTE* data, size_t len);
+		static bool IsRTP(const uint8_t* data, size_t len);
+		static RTPPacket* Parse(const uint8_t* data, size_t len);
 
 	public:
-		RTPPacket(Header* header, ExtensionHeader* extensionHeader, const MS_BYTE* payload, size_t payloadLen, MS_BYTE payloadPadding, const MS_BYTE* raw, size_t length);
+		RTPPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLen, uint8_t payloadPadding, const uint8_t* raw, size_t length);
 		~RTPPacket();
 
 		void Dump();
-		const MS_BYTE* GetRaw();
+		const uint8_t* GetRaw();
 		size_t GetLength();
-		MS_BYTE GetPayloadType();
-		void SetPayloadType(MS_BYTE payload_type);
+		uint8_t GetPayloadType();
+		void SetPayloadType(uint8_t payload_type);
 		bool HasMarker();
 		void SetMarker(bool marker);
-		MS_2BYTES GetSequenceNumber();
-		MS_4BYTES GetTimestamp();
-		MS_4BYTES GetSSRC();
-		void SetSSRC(MS_4BYTES ssrc);
+		uint16_t GetSequenceNumber();
+		uint32_t GetTimestamp();
+		uint32_t GetSSRC();
+		void SetSSRC(uint32_t ssrc);
 		bool HasExtensionHeader();
-		MS_2BYTES GetExtensionHeaderId();
+		uint16_t GetExtensionHeaderId();
 		size_t GetExtensionHeaderLength();
-		MS_BYTE* GetPayload();
+		uint8_t* GetPayload();
 		size_t GetPayloadLength();
 		void Serialize();
 
 	private:
 		// Passed by argument.
 		Header* header = nullptr;
-		MS_BYTE* csrcList = nullptr;
+		uint8_t* csrcList = nullptr;
 		ExtensionHeader* extensionHeader = nullptr;
-		MS_BYTE* payload = nullptr;
+		uint8_t* payload = nullptr;
 		size_t payloadLength = 0;
-		MS_BYTE payloadPadding = 0;
-		MS_BYTE* raw = nullptr;  // Allocated when Serialize().
+		uint8_t payloadPadding = 0;
+		uint8_t* raw = nullptr;  // Allocated when Serialize().
 		size_t length = 0;
 		// Others.
 		bool isSerialized = false;
@@ -82,7 +82,7 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	bool RTPPacket::IsRTP(const MS_BYTE* data, size_t len)
+	bool RTPPacket::IsRTP(const uint8_t* data, size_t len)
 	{
 		// NOTE: RTCPPacket::IsRTCP() must always be called before this method.
 
@@ -100,7 +100,7 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	const MS_BYTE* RTPPacket::GetRaw()
+	const uint8_t* RTPPacket::GetRaw()
 	{
 		return this->raw;
 	}
@@ -112,13 +112,13 @@ namespace RTC
 	}
 
 	inline
-	MS_BYTE RTPPacket::GetPayloadType()
+	uint8_t RTPPacket::GetPayloadType()
 	{
 		return this->header->payload_type;
 	}
 
 	inline
-	void RTPPacket::SetPayloadType(MS_BYTE payload_type)
+	void RTPPacket::SetPayloadType(uint8_t payload_type)
 	{
 		this->header->payload_type = payload_type;
 	}
@@ -136,26 +136,26 @@ namespace RTC
 	}
 
 	inline
-	MS_2BYTES RTPPacket::GetSequenceNumber()
+	uint16_t RTPPacket::GetSequenceNumber()
 	{
 		return ntohs(this->header->sequence_number);
 	}
 
 	inline
-	MS_4BYTES RTPPacket::GetTimestamp()
+	uint32_t RTPPacket::GetTimestamp()
 	{
 		return ntohl(this->header->timestamp);
 	}
 
 	inline
-	MS_4BYTES RTPPacket::GetSSRC()
+	uint32_t RTPPacket::GetSSRC()
 	{
 		return ntohl(this->header->ssrc);
 	}
 
 	// TODO temp
 	inline
-	void RTPPacket::SetSSRC(MS_4BYTES ssrc)
+	void RTPPacket::SetSSRC(uint32_t ssrc)
 	{
 		this->header->ssrc = htonl(ssrc);
 	}
@@ -167,10 +167,10 @@ namespace RTC
 	}
 
 	inline
-	MS_2BYTES RTPPacket::GetExtensionHeaderId()
+	uint16_t RTPPacket::GetExtensionHeaderId()
 	{
 		if (this->extensionHeader)
-			return MS_2BYTES(ntohs(this->extensionHeader->id));
+			return uint16_t(ntohs(this->extensionHeader->id));
 		else
 			return 0;
 	}
@@ -185,7 +185,7 @@ namespace RTC
 	}
 
 	inline
-	MS_BYTE* RTPPacket::GetPayload()
+	uint8_t* RTPPacket::GetPayload()
 	{
 		return this->payload;
 	}

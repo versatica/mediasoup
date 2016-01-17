@@ -71,7 +71,7 @@ TCPConnection::~TCPConnection()
 		delete[] this->buffer;
 }
 
-void TCPConnection::Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, MS_PORT localPort)
+void TCPConnection::Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, uint16_t localPort)
 {
 	MS_TRACE();
 
@@ -155,7 +155,7 @@ void TCPConnection::Start()
 		MS_THROW_ERROR("error setting peer IP and port");
 }
 
-void TCPConnection::Write(const MS_BYTE* data, size_t len)
+void TCPConnection::Write(const uint8_t* data, size_t len)
 {
 	MS_TRACE();
 
@@ -213,7 +213,7 @@ void TCPConnection::Write(const MS_BYTE* data, size_t len)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
-void TCPConnection::Write(const MS_BYTE* data1, size_t len1, const MS_BYTE* data2, size_t len2)
+void TCPConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2)
 {
 	MS_TRACE();
 
@@ -311,7 +311,7 @@ void TCPConnection::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
 	if (!this->buffer)
-		this->buffer = new MS_BYTE[this->bufferSize];
+		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.
 	buf->base = (char *)(this->buffer + this->bufferDataLen);

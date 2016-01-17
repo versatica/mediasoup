@@ -27,10 +27,10 @@ namespace RTC
 
 	struct sockaddr_storage TCPServer::sockaddrStorageIPv4;
 	struct sockaddr_storage TCPServer::sockaddrStorageIPv6;
-	MS_PORT TCPServer::minPort;
-	MS_PORT TCPServer::maxPort;
-	std::unordered_map<MS_PORT, bool> TCPServer::availableIPv4Ports;
-	std::unordered_map<MS_PORT, bool> TCPServer::availableIPv6Ports;
+	uint16_t TCPServer::minPort;
+	uint16_t TCPServer::maxPort;
+	std::unordered_map<uint16_t, bool> TCPServer::availableIPv4Ports;
+	std::unordered_map<uint16_t, bool> TCPServer::availableIPv6Ports;
 
 	/* Class methods. */
 
@@ -57,7 +57,7 @@ namespace RTC
 		TCPServer::minPort = Settings::configuration.rtcMinPort;
 		TCPServer::maxPort = Settings::configuration.rtcMaxPort;
 
-		MS_PORT i = RTC::TCPServer::minPort;
+		uint16_t i = RTC::TCPServer::minPort;
 		do
 		{
 			RTC::TCPServer::availableIPv4Ports[i] = true;
@@ -106,13 +106,13 @@ namespace RTC
 		struct sockaddr_storage first_bind_addr;
 		struct sockaddr_storage second_bind_addr;
 		const char* listenIP;
-		MS_PORT random_first_port;
-		MS_PORT iterate_first_port;
-		MS_PORT iterate_second_port;
+		uint16_t random_first_port;
+		uint16_t iterate_first_port;
+		uint16_t iterate_second_port;
 		uint16_t attempt = 0;
 		uint16_t bindAttempt = 0;
 		int flags = 0;
-		std::unordered_map<MS_PORT, bool>* available_ports;
+		std::unordered_map<uint16_t, bool>* available_ports;
 
 		switch (address_family)
 		{
@@ -138,7 +138,7 @@ namespace RTC
 		}
 
 		// Choose a random first port to start from.
-		random_first_port = (MS_PORT)Utils::Crypto::GetRandomUInt((uint32_t)RTC::TCPServer::minPort, (uint32_t)RTC::TCPServer::maxPort);
+		random_first_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::TCPServer::minPort, (uint32_t)RTC::TCPServer::maxPort);
 		// Make it even if pair is requested.
 		if (pair)
 			random_first_port &= ~1;

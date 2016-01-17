@@ -238,7 +238,7 @@ void Settings::SetDefaultRtcListenIP(int requested_family)
 			continue;
 
 		int family;
-		MS_PORT port;
+		uint16_t port;
 		std::string ip;
 		Utils::IP::GetAddressInfo((struct sockaddr*)(&address.address.address4), &family, ip, &port);
 
@@ -371,8 +371,8 @@ void Settings::SetRtcPorts()
 {
 	MS_TRACE();
 
-	MS_PORT minPort = Settings::configuration.rtcMinPort;
-	MS_PORT maxPort = Settings::configuration.rtcMaxPort;
+	uint16_t minPort = Settings::configuration.rtcMinPort;
+	uint16_t maxPort = Settings::configuration.rtcMaxPort;
 
 	if (minPort < 1024)
 		MS_THROW_ERROR("rtcMinPort must be greater or equal than 1024");

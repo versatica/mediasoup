@@ -73,7 +73,7 @@ namespace RTC
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Close() during this callback.
@@ -83,10 +83,10 @@ namespace RTC
 			virtual void onDTLSClosed(DTLSTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Close() during this callback.
-			virtual void onOutgoingDTLSData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
+			virtual void onOutgoingDTLSData(DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			// NOTE: The caller MUST NOT call Close() during this callback.
-			virtual void onDTLSApplicationData(DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) = 0;
+			virtual void onDTLSApplicationData(DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
@@ -95,7 +95,7 @@ namespace RTC
 		static Json::Value& GetLocalFingerprints();
 		static Role StringToRole(std::string role);
 		static FingerprintAlgorithm GetFingerprintAlgorithm(std::string fingerprint);
-		static bool IsDTLS(const MS_BYTE* data, size_t len);
+		static bool IsDTLS(const uint8_t* data, size_t len);
 
 	private:
 		static void GenerateCertificateAndPrivateKey();
@@ -107,7 +107,7 @@ namespace RTC
 		static X509* certificate;
 		static EVP_PKEY* privateKey;
 		static SSL_CTX* sslCtx;
-		static MS_BYTE sslReadBuffer[];
+		static uint8_t sslReadBuffer[];
 		static std::map<std::string, Role> string2Role;
 		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
 		static Json::Value localFingerprints;
@@ -121,10 +121,10 @@ namespace RTC
 		void Dump();
 		void Run(Role localRole);
 		void SetRemoteFingerprint(Fingerprint fingerprint);
-		void ProcessDTLSData(const MS_BYTE* data, size_t len);
+		void ProcessDTLSData(const uint8_t* data, size_t len);
 		DtlsState GetState();
 		Role GetLocalRole();
-		void SendApplicationData(const MS_BYTE* data, size_t len);
+		void SendApplicationData(const uint8_t* data, size_t len);
 
 	private:
 		bool IsRunning();
@@ -192,7 +192,7 @@ namespace RTC
 	}
 
 	inline
-	bool DTLSTransport::IsDTLS(const MS_BYTE* data, size_t len)
+	bool DTLSTransport::IsDTLS(const uint8_t* data, size_t len)
 	{
 		return (
 			// Minimum DTLS record length is 13 bytes.

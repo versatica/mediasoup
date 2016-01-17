@@ -43,7 +43,7 @@ namespace RTC
 			// - Table of SSRC / RtpReceiver pairs.
 			std::unordered_map<uint32_t, RTC::RtpReceiver*> ssrcTable;
 			// - Table of MID RTP header extension / RtpReceiver pairs.
-			// std::unordered_map<MS_2BYTES, RTC::RtpReceiver*> midTable;
+			// std::unordered_map<uint16_t, RTC::RtpReceiver*> midTable;
 			// - Table of RTP payload type / RtpReceiver pairs.
 			std::unordered_map<uint8_t, RTC::RtpReceiver*> ptTable;
 		};
@@ -65,15 +65,15 @@ namespace RTC
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
-		void onPacketRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
-		void onSTUNDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
-		void onDTLSDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
-		void onRTPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
-		void onRTCPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len);
+		void onPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void onSTUNDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void onDTLSDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void onRTPDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void onRTCPDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 	/* Pure virtual methods inherited from RTC::UDPSocket::Listener. */
 	public:
-		virtual void onPacketRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr) override;
+		virtual void onPacketRecv(RTC::UDPSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr) override;
 
 	/* Pure virtual methods inherited from RTC::TCPServer::Listener. */
 	public:
@@ -81,7 +81,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::TCPConnection::Listener. */
 	public:
-		virtual void onPacketRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len) override;
+		virtual void onPacketRecv(RTC::TCPConnection *connection, const uint8_t* data, size_t len) override;
 
 	/* Pure virtual methods inherited from RTC::ICEServer::Listener. */
 	public:
@@ -94,11 +94,11 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::DTLSTransport::Listener. */
 	public:
 		virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) override;
-		virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len) override;
+		virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) override;
 		virtual void onDTLSFailed(DTLSTransport* dtlsTransport) override;
 		virtual void onDTLSClosed(DTLSTransport* dtlsTransport) override;
-		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
-		virtual void onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len) override;
+		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		virtual void onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
 	/* Pure virtual methods inherited from RTC::RtpReceiver::RtpListener. */
 	virtual void onRtpListenerParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) override;

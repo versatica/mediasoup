@@ -20,7 +20,7 @@ public:
 	{
 		TCPConnection* connection;
 		uv_write_t     req;
-		MS_BYTE        store[1];
+		uint8_t        store[1];
 	};
 
 public:
@@ -29,19 +29,19 @@ public:
 
 	void Close();
 	virtual void Dump();
-	void Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, MS_PORT localPort);
+	void Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, uint16_t localPort);
 	bool IsClosing();
 	uv_tcp_t* GetUvHandle();
 	void Start();
-	void Write(const MS_BYTE* data, size_t len);
-	void Write(const MS_BYTE* data1, size_t len1, const MS_BYTE* data2, size_t len2);
+	void Write(const uint8_t* data, size_t len);
+	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2);
 	void Write(const std::string &data);
 	const struct sockaddr* GetLocalAddress();
 	const std::string& GetLocalIP();
-	MS_PORT GetLocalPort();
+	uint16_t GetLocalPort();
 	const struct sockaddr* GetPeerAddress();
 	const std::string& GetPeerIP();
-	MS_PORT GetPeerPort();
+	uint16_t GetPeerPort();
 
 private:
 	bool SetPeerAddress();
@@ -73,14 +73,14 @@ protected:
 	// Passed by argument.
 	size_t bufferSize = 0;
 	// Allocated by this.
-	MS_BYTE* buffer = nullptr;
+	uint8_t* buffer = nullptr;
 	// Others.
 	size_t bufferDataLen = 0;
 	std::string localIP;
-	MS_PORT localPort = 0;
+	uint16_t localPort = 0;
 	struct sockaddr_storage peerAddr;
 	std::string peerIP;
-	MS_PORT peerPort = 0;
+	uint16_t peerPort = 0;
 };
 
 /* Inline methods. */
@@ -100,7 +100,7 @@ uv_tcp_t* TCPConnection::GetUvHandle()
 inline
 void TCPConnection::Write(const std::string &data)
 {
-	Write((const MS_BYTE*)data.c_str(), data.size());
+	Write((const uint8_t*)data.c_str(), data.size());
 }
 
 inline
@@ -116,7 +116,7 @@ const std::string& TCPConnection::GetLocalIP()
 }
 
 inline
-MS_PORT TCPConnection::GetLocalPort()
+uint16_t TCPConnection::GetLocalPort()
 {
 	return this->localPort;
 }
@@ -134,7 +134,7 @@ const std::string& TCPConnection::GetPeerIP()
 }
 
 inline
-MS_PORT TCPConnection::GetPeerPort()
+uint16_t TCPConnection::GetPeerPort()
 {
 	return this->peerPort;
 }

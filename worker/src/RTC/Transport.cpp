@@ -637,7 +637,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onPacketRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
+	void Transport::onPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -669,7 +669,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onSTUNDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
+	void Transport::onSTUNDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -688,7 +688,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onDTLSDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
+	void Transport::onDTLSDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -719,7 +719,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onRTPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
+	void Transport::onRTPDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -748,7 +748,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onRTCPDataRecv(RTC::TransportTuple* tuple, const MS_BYTE* data, size_t len)
+	void Transport::onRTCPDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -766,7 +766,7 @@ namespace RTC
 		MS_DEBUG("received RTCP data");
 	}
 
-	void Transport::onPacketRecv(RTC::UDPSocket *socket, const MS_BYTE* data, size_t len, const struct sockaddr* remote_addr)
+	void Transport::onPacketRecv(RTC::UDPSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -785,7 +785,7 @@ namespace RTC
 			this->iceServer->RemoveTuple(&tuple);
 	}
 
-	void Transport::onPacketRecv(RTC::TCPConnection *connection, const MS_BYTE* data, size_t len)
+	void Transport::onPacketRecv(RTC::TCPConnection *connection, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -901,7 +901,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
-	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, MS_BYTE* srtp_local_key, size_t srtp_local_key_len, MS_BYTE* srtp_remote_key, size_t srtp_remote_key_len)
+	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len)
 	{
 		MS_TRACE();
 
@@ -959,7 +959,7 @@ namespace RTC
 		Close();
 	}
 
-	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)
+	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -976,7 +976,7 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
-	void Transport::onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const MS_BYTE* data, size_t len)
+	void Transport::onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
