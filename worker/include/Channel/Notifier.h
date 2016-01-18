@@ -16,8 +16,8 @@ namespace Channel
 
 		void Close();
 
-		void Emit(uint32_t targetId, std::string eventName);
-		void Emit(uint32_t targetId, std::string eventName, Json::Value& eventData);
+		void Emit(uint32_t targetId, std::string event);
+		void Emit(uint32_t targetId, std::string event, Json::Value& data);
 
 	public:
 		// Passed by argument.

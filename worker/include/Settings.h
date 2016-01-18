@@ -2,7 +2,7 @@
 #define	MS_SETTINGS_H
 
 #include "common.h"
-#include "logLevel.h"
+#include "LogLevel.h"
 #include "Channel/Request.h"
 #include <map>
 #include <string>

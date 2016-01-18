@@ -5,10 +5,6 @@
 
 namespace Channel
 {
-	/* Static variables. */
-
-	static Json::Value empty_data(Json::objectValue);
-
 	/* Instance methods. */
 
 	Notifier::Notifier(Channel::UnixStreamSocket* channel) :
@@ -29,30 +25,33 @@ namespace Channel
 		delete this;
 	}
 
-	void Notifier::Emit(uint32_t targetId, std::string eventName)
+	void Notifier::Emit(uint32_t targetId, std::string event)
 	{
 		MS_TRACE();
 
-		Emit(targetId, eventName, empty_data);
+		static Json::Value empty_data(Json::objectValue);
+
+		Emit(targetId, event, empty_data);
 	}
 
-	void Notifier::Emit(uint32_t targetId, std::string eventName, Json::Value &eventData)
+	void Notifier::Emit(uint32_t targetId, std::string event, Json::Value &data)
 	{
 		MS_TRACE();
 
+		static Json::Value empty_data(Json::objectValue);
 		static const Json::StaticString k_targetId("targetId");
-		static const Json::StaticString k_eventName("eventName");
-		static const Json::StaticString k_eventData("eventData");
+		static const Json::StaticString k_event("event");
+		static const Json::StaticString k_data("data");
 
-		Json::Value json;
+		Json::Value json(Json::objectValue);
 
-		json[k_targetId] = targetId;
-		json[k_eventName] = eventName;
+		json[k_targetId] = (Json::UInt)targetId;
+		json[k_event] = event;
 
-		if (eventData.isObject())
-			json[k_eventData] = eventData;
+		if (data.isObject())
+			json[k_data] = data;
 		else
-			json[k_eventData] = empty_data;
+			json[k_data] = empty_data;
 
 		this->channel->Send(json);
 	}

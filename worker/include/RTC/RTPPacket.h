@@ -57,7 +57,7 @@ namespace RTC
 		uint16_t GetSequenceNumber();
 		uint32_t GetTimestamp();
 		uint32_t GetSSRC();
-		void SetSSRC(uint32_t ssrc);
+		void SetSSRC(uint32_t ssrc);  // TODO: yes?
 		bool HasExtensionHeader();
 		uint16_t GetExtensionHeaderId();
 		size_t GetExtensionHeaderLength();
@@ -138,19 +138,19 @@ namespace RTC
 	inline
 	uint16_t RTPPacket::GetSequenceNumber()
 	{
-		return ntohs(this->header->sequence_number);
+		return (uint16_t)ntohs(this->header->sequence_number);
 	}
 
 	inline
 	uint32_t RTPPacket::GetTimestamp()
 	{
-		return ntohl(this->header->timestamp);
+		return (uint32_t)ntohl(this->header->timestamp);
 	}
 
 	inline
 	uint32_t RTPPacket::GetSSRC()
 	{
-		return ntohl(this->header->ssrc);
+		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
 	// TODO temp

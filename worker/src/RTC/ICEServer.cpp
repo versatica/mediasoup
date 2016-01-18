@@ -2,7 +2,6 @@
 
 #include "RTC/ICEServer.h"
 #include "Logger.h"
-#include <memory>  // std::addressof()
 
 namespace RTC
 {

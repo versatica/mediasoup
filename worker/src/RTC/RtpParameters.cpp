@@ -4,7 +4,6 @@
 // #include "Utils.h"  // TODO: let's see
 #include "MediaSoupError.h"
 #include "Logger.h"
-#include <memory>  // std::addressof()
 
 namespace RTC
 {
@@ -57,7 +56,7 @@ namespace RTC
 		static const Json::StaticString k_encodings("encodings");
 		static const Json::StaticString k_ssrc("ssrc");
 
-		Json::Value json;
+		Json::Value json(Json::objectValue);
 
 		// Add `muxId`.
 		json[k_muxId] = this->muxId;

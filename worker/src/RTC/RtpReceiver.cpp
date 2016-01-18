@@ -45,14 +45,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static Json::Value null_data(Json::nullValue);
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 
-		Json::Value json;
+		Json::Value json(Json::objectValue);
 
 		if (this->rtpParameters)
 			json[k_rtpParameters] = this->rtpParameters->toJson();
 		else
-			json[k_rtpParameters] = Json::nullValue;
+			json[k_rtpParameters] = null_data;
 
 		return json;
 	}

@@ -292,11 +292,8 @@ namespace RTC
 		static const Json::StaticString v_closed("closed");
 		static const Json::StaticString v_failed("failed");
 		static const Json::StaticString k_rtpListener("rtpListener");
-		static const Json::StaticString k_ssrcTable("ssrcTable");
-		// static const Json::StaticString k_midTable("midTable");  // TODO
-		static const Json::StaticString k_ptTable("ptTable");
 
-		Json::Value json;
+		Json::Value json(Json::objectValue);
 
 		// Add `iceRole` (we are always "controlled").
 		json[k_iceRole] = v_controlled;
@@ -378,31 +375,8 @@ namespace RTC
 				break;
 		}
 
-		// Add `rtpListener.ssrcTable`.
-		Json::Value json_ssrcTable(Json::objectValue);
-
-		for (auto& kv : this->rtpListener.ssrcTable)
-		{
-			auto ssrc = kv.first;
-			auto rtpReceiver = kv.second;
-
-			json_ssrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
-		}
-		json[k_rtpListener][k_ssrcTable] = json_ssrcTable;
-
-		// TODO: Add `midTable`.
-
-		// Add `rtpListener.ptTable`.
-		Json::Value json_ptTable(Json::objectValue);
-
-		for (auto& kv : this->rtpListener.ptTable)
-		{
-			auto payloadType = kv.first;
-			auto rtpReceiver = kv.second;
-
-			json_ptTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
-		}
-		json[k_rtpListener][k_ptTable] = json_ptTable;
+		// Add `rtpListener`.
+		json[k_rtpListener] = RTC::RtpListener::toJson();
 
 		return json;
 	}
@@ -511,7 +485,7 @@ namespace RTC
 						return;
 				}
 
-				Json::Value data;
+				Json::Value data(Json::objectValue);
 
 				switch (this->dtlsLocalRole)
 				{
@@ -549,12 +523,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static Json::Value nullData(Json::nullValue);
+		static Json::Value null_data(Json::nullValue);
 
 		if (this->iceServer->GetComponent() != ICEServer::IceComponent::RTP)
 			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
 
-		return new RTC::Transport(this->listener, this->notifier, transportId, nullData, this);
+		return new RTC::Transport(this->listener, this->notifier, transportId, null_data, this);
 	}
 
 	inline
@@ -609,30 +583,6 @@ namespace RTC
 
 			case RTC::DTLSTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
-		}
-	}
-
-	inline
-	void Transport::RemoveRtpReceiverFromRtpListener(RTC::RtpReceiver* rtpReceiver)
-	{
-		MS_TRACE();
-
-		for (auto it = this->rtpListener.ssrcTable.begin(); it != this->rtpListener.ssrcTable.end();)
-		{
-			if (it->second == rtpReceiver)
-				it = this->rtpListener.ssrcTable.erase(it);
-			else
-				it++;
-		}
-
-		// TODO: midTable
-
-		for (auto it = this->rtpListener.ptTable.begin(); it != this->rtpListener.ptTable.end();)
-		{
-			if (it->second == rtpReceiver)
-				it = this->rtpListener.ptTable.erase(it);
-			else
-				it++;
 		}
 	}
 
@@ -731,6 +681,7 @@ namespace RTC
 		}
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
+		// TODO: Do this just after validating SRTP and so on.
 		this->iceServer->ForceSelectedTuple(tuple);
 
 		// TODO
@@ -744,6 +695,16 @@ namespace RTC
 			return;
 		}
 		packet->Dump();
+
+		// Check the rtpListener tables.
+
+		// auto it = this->rtpListener.ssrcTable.find(packet->GetSSRC());
+
+		// if (it == this->rtpListener.ssrcTable.end())
+		// {
+		// 	MS_WARN("received RTP packet does not belong to the SSRC table");
+		// }
+
 		delete packet;
 	}
 
@@ -808,7 +769,7 @@ namespace RTC
 
 		static const Json::StaticString k_iceSelectedTuple("iceSelectedTuple");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
@@ -821,8 +782,8 @@ namespace RTC
 		this->selectedTuple = tuple;
 
 		// Notify.
-		eventData[k_iceSelectedTuple] = tuple->toJson();
-		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
+		event_data[k_iceSelectedTuple] = tuple->toJson();
+		this->notifier->Emit(this->transportId, "iceselectedtuplechange", event_data);
 	}
 
 	void Transport::onICEConnected(RTC::ICEServer* iceServer)
@@ -832,13 +793,13 @@ namespace RTC
 		static const Json::StaticString k_iceState("iceState");
 		static const Json::StaticString v_connected("connected");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		MS_DEBUG("ICE connected");
 
 		// Notify.
-		eventData[k_iceState] = v_connected;
-		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+		event_data[k_iceState] = v_connected;
+		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
 		// If ready, run the DTLS handler.
 		MayRunDTLSTransport();
@@ -851,13 +812,13 @@ namespace RTC
 		static const Json::StaticString k_iceState("iceState");
 		static const Json::StaticString v_completed("completed");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		MS_DEBUG("ICE completed");
 
 		// Notify.
-		eventData[k_iceState] = v_completed;
-		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+		event_data[k_iceState] = v_completed;
+		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
 		// If ready, run the DTLS handler.
 		MayRunDTLSTransport();
@@ -870,7 +831,7 @@ namespace RTC
 		static const Json::StaticString k_iceState("iceState");
 		static const Json::StaticString v_disconnected("disconnected");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		MS_DEBUG("ICE disconnected");
 
@@ -878,8 +839,8 @@ namespace RTC
 		this->selectedTuple = nullptr;
 
 		// Notify.
-		eventData[k_iceState] = v_disconnected;
-		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+		event_data[k_iceState] = v_disconnected;
+		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
 		// This is a fatal error so close the transport.
 		Close();
@@ -892,13 +853,13 @@ namespace RTC
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_connecting("connecting");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		MS_DEBUG("DTLS connecting");
 
 		// Notify.
-		eventData[k_dtlsState] = v_connecting;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		event_data[k_dtlsState] = v_connecting;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 
 	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len)
@@ -908,7 +869,7 @@ namespace RTC
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_connected("connected");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		MS_DEBUG("DTLS connected");
 
@@ -917,8 +878,8 @@ namespace RTC
 		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
 
 		// Notify.
-		eventData[k_dtlsState] = v_connected;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		event_data[k_dtlsState] = v_connected;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 
 	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
@@ -928,13 +889,13 @@ namespace RTC
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_failed("failed");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		MS_DEBUG("DTLS failed");
 
 		// Notify.
-		eventData[k_dtlsState] = v_failed;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		event_data[k_dtlsState] = v_failed;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 
 		// This is a fatal error so close the transport.
 		Close();
@@ -947,13 +908,13 @@ namespace RTC
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_closed("closed");
 
-		Json::Value eventData;
+		Json::Value event_data(Json::objectValue);
 
 		MS_DEBUG("DTLS remotely closed");
 
 		// Notify.
-		eventData[k_dtlsState] = v_closed;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		event_data[k_dtlsState] = v_closed;
+		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 
 		// This is a fatal error so close the transport.
 		Close();
@@ -984,36 +945,5 @@ namespace RTC
 
 		// TMP
 		MS_DEBUG("data: %s", std::string((char*)data, len).c_str());
-	}
-
-	void Transport::onRtpListenerParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
-	{
-		MS_TRACE();
-
-		// First remove from the rtpListener all the entries pointing to the given rtpReceiver.
-		RemoveRtpReceiverFromRtpListener(rtpReceiver);
-
-		// Add entries into rtpListener.ssrcTable.
-		for (auto& encoding : rtpParameters->encodings)
-		{
-			if (encoding.ssrc)
-				this->rtpListener.ssrcTable[encoding.ssrc] = rtpReceiver;
-		}
-
-		// TODO: // Add entries into rtpListener.midTable.
-
-		// Add entries into rtpListener.ptTable.
-		for (auto& codec : rtpParameters->codecs)
-		{
-			this->rtpListener.ptTable[codec.payloadType] = rtpReceiver;
-		}
-	}
-
-	void Transport::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
-	{
-		MS_TRACE();
-
-		// Remove from the rtpListener all the entries pointing to the given rtpReceiver.
-		RemoveRtpReceiverFromRtpListener(rtpReceiver);
 	}
 }

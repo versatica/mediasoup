@@ -1,6 +1,7 @@
 #ifndef MS_COMMON_H
 #define MS_COMMON_H
 
+#include <memory>  // std::addressof()
 #include <cstddef>  // size_t
 #include <cstdint>  // uint8_t, etc
 #include <cinttypes>  // PRIu64, etc

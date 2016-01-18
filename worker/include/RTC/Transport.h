@@ -2,6 +2,7 @@
 #define MS_RTC_TRANSPORT_H
 
 #include "common.h"
+#include "RTC/RtpListener.h"
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
 #include "RTC/TCPConnection.h"
@@ -23,29 +24,18 @@
 namespace RTC
 {
 	class Transport :
+		public RTC::RtpListener,
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
 		public RTC::TCPConnection::Listener,
 		public RTC::ICEServer::Listener,
-		public RTC::DTLSTransport::Listener,
-		public RTC::RtpReceiver::RtpListener
+		public RTC::DTLSTransport::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
 			virtual void onTransportClosed(RTC::Transport* transport) = 0;
-		};
-
-	private:
-		struct RtpListener
-		{
-			// - Table of SSRC / RtpReceiver pairs.
-			std::unordered_map<uint32_t, RTC::RtpReceiver*> ssrcTable;
-			// - Table of MID RTP header extension / RtpReceiver pairs.
-			// std::unordered_map<uint16_t, RTC::RtpReceiver*> midTable;
-			// - Table of RTP payload type / RtpReceiver pairs.
-			std::unordered_map<uint8_t, RTC::RtpReceiver*> ptTable;
 		};
 
 	public:
@@ -61,7 +51,6 @@ namespace RTC
 
 	private:
 		void MayRunDTLSTransport();
-		void RemoveRtpReceiverFromRtpListener(RTC::RtpReceiver* rtpReceiver);
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -100,10 +89,6 @@ namespace RTC
 		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		virtual void onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
-	/* Pure virtual methods inherited from RTC::RtpReceiver::RtpListener. */
-	virtual void onRtpListenerParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) override;
-	virtual void onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver) override;
-
 	public:
 		// Passed by argument.
 		uint32_t transportId;
@@ -132,8 +117,6 @@ namespace RTC
 		// Others (DTLS).
 		bool remoteDtlsParametersGiven = false;
 		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::AUTO;
-		// Others (RTP listener).
-		RtpListener rtpListener;
 	};
 
 	/* Inline methods. */

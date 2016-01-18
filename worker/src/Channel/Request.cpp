@@ -6,10 +6,6 @@
 
 namespace Channel
 {
-	/* Static variables. */
-
-	static Json::Value empty_data(Json::objectValue);
-
 	/* Class variables. */
 
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
@@ -88,6 +84,8 @@ namespace Channel
 	{
 		MS_TRACE();
 
+		static Json::Value empty_data(Json::objectValue);
+
 		Accept(empty_data);
 	}
 
@@ -95,16 +93,17 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(!this->replied, "Request already replied");
-		this->replied = true;
-
+		static Json::Value empty_data(Json::objectValue);
 		static const Json::StaticString k_id("id");
 		static const Json::StaticString k_accepted("accepted");
 		static const Json::StaticString k_data("data");
 
-		Json::Value json;
+		MS_ASSERT(!this->replied, "Request already replied");
+		this->replied = true;
 
-		json[k_id] = this->id;
+		Json::Value json(Json::objectValue);
+
+		json[k_id] = (Json::UInt)this->id;
 		json[k_accepted] = true;
 
 		if (data.isObject())
@@ -130,16 +129,16 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(!this->replied, "Request already replied");
-		this->replied = true;
-
 		static const Json::StaticString k_id("id");
 		static const Json::StaticString k_rejected("rejected");
 		static const Json::StaticString k_reason("reason");
 
-		Json::Value json;
+		MS_ASSERT(!this->replied, "Request already replied");
+		this->replied = true;
 
-		json[k_id] = this->id;
+		Json::Value json(Json::objectValue);
+
+		json[k_id] = (Json::UInt)this->id;
 		json[k_rejected] = true;
 
 		if (reason)

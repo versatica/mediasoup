@@ -184,31 +184,31 @@ app.put('/test-transport', function(req)
 				preferIPv6 : true,
 				preferTcp  : true
 			})
-		.then((transport) =>
-		{
-			transport.on('close', () =>
+			.then((transport) =>
 			{
-				debug('transport "close" event');
-			});
+				transport.on('close', () =>
+				{
+					debug('transport "close" event');
+				});
 
-			transport.on('iceselectedtuplechange', (data) =>
-			{
-				debug('transport "iceselectedtuplechange" event [data.iceSelectedTuple:%o, transport.iceSelectedTuple:%o]', data.iceSelectedTuple, transport.iceSelectedTuple);
-			});
+				transport.on('iceselectedtuplechange', (data) =>
+				{
+					debug('transport "iceselectedtuplechange" event [data.iceSelectedTuple:%o, transport.iceSelectedTuple:%o]', data.iceSelectedTuple, transport.iceSelectedTuple);
+				});
 
-			transport.on('icestatechange', (data) =>
-			{
-				debug('transport "icestatechange" event [data.iceState:%s, transport.iceState:%s]', data.iceState, transport.iceState);
-			});
+				transport.on('icestatechange', (data) =>
+				{
+					debug('transport "icestatechange" event [data.iceState:%s, transport.iceState:%s]', data.iceState, transport.iceState);
+				});
 
-			transport.on('dtlsstatechange', (data) =>
-			{
-				debug('transport "dtlsstatechange" event [data.dtlsState:%s, transport.dtlsState:%s]', data.dtlsState, transport.dtlsState);
-			});
+				transport.on('dtlsstatechange', (data) =>
+				{
+					debug('transport "dtlsstatechange" event [data.dtlsState:%s, transport.dtlsState:%s]', data.dtlsState, transport.dtlsState);
+				});
 
-			return transport;
-		})
-		.catch((error) => debugerror('SOMETHING FAILED: %s]', error));
+				return transport;
+			})
+			.catch((error) => debugerror('SOMETHING FAILED: %s]', error));
 
 		// Add the transport promise to the array of promises
 		transportPromises.push(promise);

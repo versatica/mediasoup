@@ -39,12 +39,12 @@ namespace RTC
 		static const Json::StaticString k_tcpType("tcpType");
 		static const Json::StaticString v_passive("passive");
 
-		Json::Value json;
+		Json::Value json(Json::objectValue);
 
 		json[k_foundation] = this->foundation;
-		json[k_priority] = this->priority;
+		json[k_priority] = (Json::UInt)this->priority;
 		json[k_ip] = this->ip;
-		json[k_port] = this->port;
+		json[k_port] = (Json::UInt)this->port;
 
 		switch (this->type)
 		{

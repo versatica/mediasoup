@@ -60,9 +60,6 @@ signalingServer.on('invite', (request) =>
       });
 
       // Set remote DTLS parameters.
-      // `transport.setRemoteDtlsParameters()` returns a Promise that resolves
-      // with `transport` itself so it can be handled in the next `then()`
-      // handler.
       return transport.setRemoteDtlsParameters(
         {
           role        : request.dtlsRole,
@@ -71,20 +68,20 @@ signalingServer.on('invite', (request) =>
             algorithm : request.remoteFingerprint.type,
             value     : request.remoteFingerprint.hash
           }
-        });
-    })
-    .then((transport) =>
-    {
-      // Set our DTLS parameters into the response.
-      response.dtlsRole = transport.dtlsLocalParameters.role;
-      response.fingerprint =
-      {
-        type : 'sha-512',
-        hash : transport.dtlsLocalParameters.fingerprints['sha-512']
-      };
+        })
+        .then(() =>
+        {
+          // Set our DTLS parameters into the response.
+          response.dtlsRole = transport.dtlsLocalParameters.role;
+          response.fingerprint =
+          {
+            type : 'sha-512',
+            hash : transport.dtlsLocalParameters.fingerprints['sha-512']
+          };
 
-      // And send the response.
-      signalingServer.send(response);
+          // And send the response.
+          signalingServer.send(response);
+        });
     });
 });
 ```
