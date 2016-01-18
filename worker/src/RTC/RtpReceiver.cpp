@@ -31,12 +31,8 @@ namespace RTC
 		// Notify.
 		this->notifier->Emit(this->rtpReceiverId, "close");
 
-		// Notify the listener and also the rtpListener and rtcpListener.
+		// Notify the listener.
 		this->listener->onRtpReceiverClosed(this);
-		if (this->rtpListener)
-			this->rtpListener->onRtpReceiverClosed(this);
-		if (this->rtcpListener)
-			this->rtcpListener->onRtpReceiverClosed(this);
 
 		delete this;
 	}
@@ -103,13 +99,11 @@ namespace RTC
 				// Free the previous rtpParameters.
 				delete previousRtpParameters;
 
-				request->Accept();
+				// TODO: may this callback throw if the new parameters are invalid
+				// for the Transport(s)?
+				this->listener->onRtpReceiverParameters(this, this->rtpParameters);
 
-				// Notify the rtpListener and rtcpListener.
-				if (this->rtpListener)
-					this->rtpListener->onRtpListenerParameters(this, this->rtpParameters);
-				if (this->rtcpListener)
-					this->rtcpListener->onRtpListenerParameters(this, this->rtpParameters);
+				request->Accept();
 
 				break;
 			}

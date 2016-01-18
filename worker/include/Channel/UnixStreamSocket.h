@@ -8,9 +8,6 @@
 
 namespace Channel
 {
-	// Avoid cyclic #include problem.
-	class Request;
-
 	class UnixStreamSocket :
 		public ::UnixStreamSocket
 	{

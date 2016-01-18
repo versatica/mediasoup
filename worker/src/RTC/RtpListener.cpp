@@ -57,36 +57,13 @@ namespace RTC
 		return json;
 	}
 
-	inline
-	void RtpListener::RemoveRtpReceiverFromRtpListener(RTC::RtpReceiver* rtpReceiver)
-	{
-		MS_TRACE();
-
-		for (auto it = this->ssrcTable.begin(); it != this->ssrcTable.end();)
-		{
-			if (it->second == rtpReceiver)
-				it = this->ssrcTable.erase(it);
-			else
-				it++;
-		}
-
-		// TODO: midTable
-
-		for (auto it = this->ptTable.begin(); it != this->ptTable.end();)
-		{
-			if (it->second == rtpReceiver)
-				it = this->ptTable.erase(it);
-			else
-				it++;
-		}
-	}
-
-	void RtpListener::onRtpListenerParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
+	void RtpListener::SetRtpReceiver(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
 		// First remove from the rtpListener all the entries pointing to the given rtpReceiver.
-		RemoveRtpReceiverFromRtpListener(rtpReceiver);
+		// TODO
+		RemoveRtpReceiver(rtpReceiver);
 
 		// Add entries into ssrcTable.
 		for (auto& encoding : rtpParameters->encodings)
@@ -107,11 +84,28 @@ namespace RTC
 		}
 	}
 
-	void RtpListener::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
+	void RtpListener::RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
-		// Remove from the rtpListener all the entries pointing to the given rtpReceiver.
-		RemoveRtpReceiverFromRtpListener(rtpReceiver);
+		// Remove from the RtpListener all the entries pointing to the given RtpReceiver.
+
+		for (auto it = this->ssrcTable.begin(); it != this->ssrcTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				it = this->ssrcTable.erase(it);
+			else
+				it++;
+		}
+
+		// TODO: midTable
+
+		for (auto it = this->ptTable.begin(); it != this->ptTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				it = this->ptTable.erase(it);
+			else
+				it++;
+		}
 	}
 }

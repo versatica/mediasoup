@@ -2,14 +2,14 @@
 #define MS_CHANNEL_REQUEST_H
 
 #include "common.h"
-#include "Channel/UnixStreamSocket.h"
 #include <string>
 #include <unordered_map>
 #include <json/json.h>
 
 namespace Channel
 {
-	// Avoid cyclic #include problem.
+	// Avoid cyclic #include problem by declaring classes instead of including
+	// the corresponding header files.
 	class UnixStreamSocket;
 
 	class Request

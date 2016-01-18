@@ -2,7 +2,6 @@
 #define MS_RTC_TRANSPORT_H
 
 #include "common.h"
-#include "RTC/RtpListener.h"
 #include "RTC/UDPSocket.h"
 #include "RTC/TCPServer.h"
 #include "RTC/TCPConnection.h"
@@ -13,7 +12,7 @@
 #include "RTC/DTLSTransport.h"
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
-#include "RTC/RtpReceiver.h"
+#include "RTC/RtpListener.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -24,12 +23,13 @@
 namespace RTC
 {
 	class Transport :
-		public RTC::RtpListener,
 		public RTC::UDPSocket::Listener,
 		public RTC::TCPServer::Listener,
 		public RTC::TCPConnection::Listener,
 		public RTC::ICEServer::Listener,
-		public RTC::DTLSTransport::Listener
+		public RTC::DTLSTransport::Listener,
+		// Transport is also a RtpListener.
+		public RTC::RtpListener
 	{
 	public:
 		class Listener

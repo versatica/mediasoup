@@ -292,10 +292,15 @@ namespace RTC
 
 				MS_DEBUG("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
 
-				// Set the transports as RTP and RTCP listeners.
-				rtpReceiver->SetRtpListener(transport);
-				if (rtcpTransport != transport)
-					rtpReceiver->SetRtpListenerForRtcp(rtcpTransport);
+				// RTC::Transport inherits from RTC::RtpListener, but the API of
+				// RTC:RtpReceiver requires RTP::RtpListener.
+				RTC::RtpListener* rtpListener = transport;
+				RTC::RtpListener* rtcpListener = rtcpTransport;
+
+				// Set the RtpListeners.
+				rtpReceiver->SetRtpListener(rtpListener);
+				if (rtcpListener != rtpListener)
+					rtpReceiver->SetRtcpListener(rtcpListener);
 
 				request->Accept();
 
@@ -454,21 +459,48 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// If a Transport is closed we need to inform all the RtpReceivers of the
-		// Peer since a RtpReceiver has one or two listeners which are Transports.
+		RTC::RtpListener* rtpListener = transport;
+
+		// We must remove the closed Transport (so RtpListener) from the
+		// RtpReceivers holding it.
 		for (auto& kv : this->rtpReceivers)
 		{
 			RTC::RtpReceiver* rtpReceiver = kv.second;
 
-			rtpReceiver->RemoveRtpListener(transport);
+			rtpReceiver->RemoveRtpListener(rtpListener);
 		}
 
 		this->transports.erase(transport->transportId);
 	}
 
+	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
+	{
+		MS_TRACE();
+
+		auto rtpListener = rtpReceiver->GetRtpListener();
+		auto rtcpListener = rtpReceiver->GetRtcpListener();
+
+		// TODO: This amy throw, so no idea how to revert the
+		// first rtpListener->SetRtpReceiverParameters() if the second one throws.
+
+		if (rtpListener)
+			rtpListener->SetRtpReceiver(rtpReceiver, rtpParameters);
+
+		// TODO: Let's see what to do for the optional rtcpListener.
+		// if (rtcpListener)
+	}
+
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
+
+		// We must remove the closed RtpReceiver from the RtpListeners holding it.
+		for (auto& kv : this->transports)
+		{
+			RTC::RtpListener* rtpListener = kv.second;
+
+			rtpListener->RemoveRtpReceiver(rtpReceiver);
+		}
 
 		this->rtpReceivers.erase(rtpReceiver->rtpReceiverId);
 	}

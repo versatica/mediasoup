@@ -2,29 +2,26 @@
 #define MS_RTC_RTP_LISTENER_H
 
 #include "common.h"
-#include "RTC/RTPPacket.h"
 #include "RTC/RtpReceiver.h"
+#include "RTC/RtpParameters.h"
+// #include "RTC/RTPPacket.h"  // TODO: yes? let's see
 #include <unordered_map>
 #include <json/json.h>
 
 namespace RTC
 {
-	class RtpListener :
-		public RTC::RtpReceiver::RtpListener
+	class RtpListener
 	{
 	public:
 		RtpListener();
 		~RtpListener();
 
 		Json::Value toJson();
+		void SetRtpReceiver(RTC::RtpReceiver *rtpReceiver, RTC::RtpParameters* rtpParameters);
+		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 
-	private:
-		void RemoveRtpReceiverFromRtpListener(RTC::RtpReceiver* rtpReceiver);
-
-	public:
-		/* Pure virtual methods inherited from RTC::RtpReceiver::RtpListener. */
-		virtual void onRtpListenerParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) override;
-		virtual void onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver) override;
+	// private:
+		// void RemoveRtpReceiverFromRtpListener(RTC::RtpReceiver* rtpReceiver);
 
 	private:
 		// Others.
