@@ -62,7 +62,7 @@ tap.test('server.updateSettings() in a closed server must fail', { timeout: 1000
 			.catch((error) =>
 			{
 				t.pass(`server.updateSettings() failed: ${error}`);
-				t.type(error, mediasoup.errors.InvalidStateError, 'server.updateSettings() error must be InvalidStateError');
+				t.type(error, mediasoup.errors.InvalidStateError, 'server.updateSettings() must reject with InvalidStateError');
 				t.end();
 			});
 	});
@@ -80,7 +80,7 @@ tap.test('server.Room() must succeed', { _timeout: 1000 }, (t) =>
 
 	room.on('close', (error) =>
 	{
-		t.error(error, 'room should close cleanly');
+		t.error(error, 'room must close cleanly');
 		t.end();
 	});
 
@@ -105,7 +105,7 @@ tap.test('server.Room() in a closed server must fail', { timeout: 1000 }, (t) =>
 		catch (error)
 		{
 			t.ok(error instanceof mediasoup.errors.InvalidStateError,
-				'server.Room() should throw InvalidStateError');
+				'server.Room() must throw InvalidStateError');
 			t.end();
 		}
 	});
@@ -123,7 +123,7 @@ tap.test('server.dump() must succeed', { timeout: 1000 }, (t) =>
 		.then((data) =>
 		{
 			t.pass('server.dump() succeeded');
-			t.equal(Object.keys(data.workers).length, 2, 'server.dump() should retrieve two workers');
+			t.equal(Object.keys(data.workers).length, 2, 'server.dump() must retrieve two workers');
 			t.end();
 		})
 		.catch((error) => t.fail(`server.dump() failed: ${error}`));

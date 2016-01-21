@@ -277,14 +277,6 @@ namespace RTC
 					return;
 				}
 
-				if (!rtcpTransport)
-				{
-					MS_ERROR("RTCP Transport does not exist");
-
-					request->Reject("RTCP Transport does not exist");
-					return;
-				}
-
 				// Create a RtpReceiver instance.
 				rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId);
 
@@ -297,9 +289,12 @@ namespace RTC
 				RTC::RtpListener* rtpListener = transport;
 				RTC::RtpListener* rtcpListener = rtcpTransport;
 
-				// Set the RtpListeners.
+				// Set the RtpListener.
 				rtpReceiver->SetRtpListener(rtpListener);
-				if (rtcpListener != rtpListener)
+
+				// Set the RtcpListener (just if given and it does not match the
+				// RtpListener).
+				if (rtcpListener && rtcpListener != rtpListener)
 					rtpReceiver->SetRtcpListener(rtcpListener);
 
 				request->Accept();
@@ -401,7 +396,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Peer::GetRtcpTransportFromRequest(Channel::Request* request, uint32_t* rtcpTransportId)
+	RTC::Transport* Peer::GetRtcpTransportFromRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
@@ -410,10 +405,7 @@ namespace RTC
 		auto json_rtcpTransportId = request->internal[k_rtcpTransportId];
 
 		if (!json_rtcpTransportId.isUInt())
-			MS_THROW_ERROR("Request has not numeric `internal.rtcpTransportId`");
-
-		if (rtcpTransportId)
-			*rtcpTransportId = json_rtcpTransportId.asUInt();
+			return nullptr;
 
 		auto it = this->transports.find(json_rtcpTransportId.asUInt());
 		if (it != this->transports.end())
@@ -424,8 +416,11 @@ namespace RTC
 		}
 		else
 		{
-			return nullptr;
+			MS_ERROR("RTCP Transport does not exist");
 		}
+
+		// Make compiler happy.
+		return nullptr;
 	}
 
 	RTC::RtpReceiver* Peer::GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId)
@@ -484,7 +479,7 @@ namespace RTC
 		// first rtpListener->SetRtpReceiverParameters() if the second one throws.
 
 		if (rtpListener)
-			rtpListener->SetRtpReceiver(rtpReceiver, rtpParameters);
+			rtpListener->AddRtpReceiver(rtpReceiver, rtpParameters);
 
 		// TODO: Let's see what to do for the optional rtcpListener.
 		// if (rtcpListener)

@@ -22,7 +22,7 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 1000 
 				.then((data) =>
 				{
 					t.pass('peer.dump() succeeded');
-					t.equal(Object.keys(data.transports).length, 1, 'peer.dump() should retrieve one transport');
+					t.equal(Object.keys(data.transports).length, 1, 'peer.dump() must retrieve one transport');
 					t.end();
 				})
 				.catch((error) => t.fail(`peer.dump() failed: ${error}`));
@@ -41,9 +41,9 @@ tap.test('peer.createTransport() with no `udp` nor `tcp` must fail', { timeout: 
 
 	peer.createTransport({ udp: false, tcp: false })
 		.then(() => t.fail('peer.createTransport() succeeded'))
-		.catch(() =>
+		.catch((error) =>
 		{
-			t.pass('peer.createTransport() failed');
+			t.pass(`peer.createTransport() failed: ${error}`);
 			t.end();
 		});
 });
@@ -65,17 +65,17 @@ tap.test('peer.RtpReceiver() with valid `transport` must succeed', { timeout: 10
 			let rtpReceiver = peer.RtpReceiver(transport);
 
 			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
-			t.equal(rtpReceiver.rtcpTransport, transport, 'rtpReceiver.rtcpTransport must retrieve the given `transport`');
+			t.equal(rtpReceiver.rtcpTransport, null, 'rtpReceiver.rtcpTransport must retrieve `null`');
 
 			peer.dump()
 				.then((data) =>
 				{
 					t.pass('peer.dump() succeeded');
-					t.equal(Object.keys(data.rtpReceivers).length, 1, 'peer.dump() should retrieve one rtpReceiver');
+					t.equal(Object.keys(data.rtpReceivers).length, 1, 'peer.dump() must retrieve one rtpReceiver');
 
 					rtpReceiver.on('close', (error) =>
 					{
-						t.error(error, 'rtpReceiver should close cleanly');
+						t.error(error, 'rtpReceiver must close cleanly');
 						t.end();
 					});
 
@@ -142,7 +142,7 @@ tap.test('peer.RtpReceiver() with a closed `transport` must fail', { timeout: 10
 			catch (error)
 			{
 				t.ok(error instanceof mediasoup.errors.InvalidStateError,
-					'peer.RtpReceiver() should throw InvalidStateError');
+					'peer.RtpReceiver() must throw InvalidStateError');
 				t.end();
 			}
 		})

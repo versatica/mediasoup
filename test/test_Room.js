@@ -15,7 +15,7 @@ tap.test('room.Peer() with `peerName` must succeed', { timeout: 1000 }, (t) =>
 
 	peer.on('close', (error) =>
 	{
-		t.error(error, 'peer should close cleanly');
+		t.error(error, 'peer must close cleanly');
 		t.end();
 	});
 
@@ -40,7 +40,7 @@ tap.test('room.Peer() without `peerName` must fail', { timeout: 1000 }, (t) =>
 	catch (error)
 	{
 		t.ok(error instanceof TypeError,
-			'room.Peer()) should throw TypeError');
+			'room.Peer()) must throw TypeError');
 		t.end();
 	}
 });
@@ -64,7 +64,7 @@ tap.test('room.Peer() with same `peerName` must fail', { timeout: 1000 }, (t) =>
 	catch (error)
 	{
 		t.ok(error instanceof Error,
-			'room.Peer() should throw InvalidStateError');
+			'room.Peer() must throw InvalidStateError');
 		t.end();
 	}
 });
@@ -78,22 +78,22 @@ tap.test('room.Peer() with same `peerName` must succeed if previous peer was clo
 	let room = server.Room();
 	let peer1 = room.Peer('alice');
 
-	t.equal(room.getPeer('alice'), peer1, 'room.getPeer() retrieves the first "alice"');
-	t.equal(room.getPeers().length, 1, 'room.getPeers() returns one peer');
+	t.equal(room.getPeer('alice'), peer1, 'room.getPeer() must retrieve the first "alice"');
+	t.equal(room.getPeers().length, 1, 'room.getPeers() must retrieve one peer');
 
 	peer1.close();
 
-	t.notOk(room.getPeer('alice'), 'room.getPeer() retrieves nothing');
-	t.equal(room.getPeers().length, 0, 'room.getPeers() returns zero peers');
+	t.notOk(room.getPeer('alice'), 'room.getPeer() must retrieve nothing');
+	t.equal(room.getPeers().length, 0, 'room.getPeers() must retrieve zero peers');
 
 	let peer2 = room.Peer('alice');
 
-	t.equal(room.getPeer('alice'), peer2, 'room.getPeer() retrieves the new "alice"');
-	t.equal(room.getPeers().length, 1, 'room.getPeers() returns one peer');
+	t.equal(room.getPeer('alice'), peer2, 'room.getPeer() must retrieve the new "alice"');
+	t.equal(room.getPeers().length, 1, 'room.getPeers() must retrieve one peer');
 
 	peer2.on('close', (error) =>
 	{
-		t.error(error, 'peer should close cleanly');
+		t.error(error, 'peer must close cleanly');
 		t.end();
 	});
 
@@ -116,7 +116,7 @@ tap.test('room.dump() must succeed', { timeout: 1000 }, (t) =>
 		.then((data) =>
 		{
 			t.pass('room.dump() succeeded');
-			t.equal(Object.keys(data.peers).length, 2, 'room.dump() should retrieve two peers');
+			t.equal(Object.keys(data.peers).length, 2, 'room.dump() must retrieve two peers');
 			t.end();
 		})
 		.catch((error) => t.fail(`room.dump() failed: ${error}`));

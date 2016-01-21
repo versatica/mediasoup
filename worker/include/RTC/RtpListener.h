@@ -17,7 +17,7 @@ namespace RTC
 		~RtpListener();
 
 		Json::Value toJson();
-		void SetRtpReceiver(RTC::RtpReceiver *rtpReceiver, RTC::RtpParameters* rtpParameters);
+		void AddRtpReceiver(RTC::RtpReceiver *rtpReceiver, RTC::RtpParameters* rtpParameters);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 
 	// private:

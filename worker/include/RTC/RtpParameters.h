@@ -11,9 +11,18 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
+		enum class Kind
+		{
+			BOTH  = 0,
+			AUDIO = 1,
+			VIDEO = 2
+		};
+
+	public:
 		struct CodecParameters
 		{
 			std::string name;
+			Kind        kind = Kind::BOTH;
 			uint8_t     payloadType;
 			uint32_t    clockRate = 0;
 			uint32_t    maxptime = 0;
@@ -42,9 +51,10 @@ namespace RTC
 
 	public:
 		// TODO: not sure if 1 or 2 bytes or what...
-		std::string muxId;
+		std::string muxId = "";
 		std::vector<CodecParameters> codecs;
 		std::vector<EncodingParameters> encodings;
+		// TODO: more fields missing
 	};
 }
 

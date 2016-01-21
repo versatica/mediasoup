@@ -57,7 +57,7 @@ tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }
 								.then((data) =>
 								{
 									t.pass('peer.dump() succeeded');
-									t.equal(Object.keys(data.transports).length, 2, 'peer.dump() should retrieve two transports');
+									t.equal(Object.keys(data.transports).length, 2, 'peer.dump() must retrieve two transports');
 									t.end();
 								})
 								.catch((error) => t.fail(`peer.dump() failed: ${error}`));
@@ -85,7 +85,7 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 
 			transport.on('close', (error) =>
 			{
-				t.error(error, 'transport should close cleanly');
+				t.error(error, 'transport must close cleanly');
 				t.equal(transport.iceState, 'closed', '`transport.iceState` must be "closed"');
 				t.equal(transport.dtlsState, 'closed', '`transport.dtlsState` must be "closed"');
 
@@ -93,7 +93,7 @@ tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
 					.then((data) =>
 					{
 						t.pass('peer.dump() succeeded');
-						t.equal(Object.keys(data.transports).length, 0, 'peer.dump() should retrieve zero transports');
+						t.equal(Object.keys(data.transports).length, 0, 'peer.dump() must retrieve zero transports');
 					})
 					.catch((error) => t.fail(`peer.dump() failed: ${error}`));
 			});

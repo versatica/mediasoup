@@ -57,12 +57,11 @@ namespace RTC
 		return json;
 	}
 
-	void RtpListener::SetRtpReceiver(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
+	void RtpListener::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
-		// First remove from the rtpListener all the entries pointing to the given rtpReceiver.
-		// TODO
+		// First remove from the tables all the entries pointing to the given RtpReceiver (reset them).
 		RemoveRtpReceiver(rtpReceiver);
 
 		// Add entries into ssrcTable.

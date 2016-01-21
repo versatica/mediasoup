@@ -10,7 +10,7 @@ tap.test('mediasoup.Server() with no options must succeed', { timeout: 1000 }, (
 
 	server.on('close', (error) =>
 	{
-		t.error(error, 'server should close cleanly');
+		t.error(error, 'server must close cleanly');
 		t.end();
 	});
 
@@ -27,7 +27,7 @@ tap.test('mediasoup.Server() with valid options must succeed', { timeout: 1000 }
 
 	server.on('close', (error) =>
 	{
-		t.error(error, 'server should close cleanly');
+		t.error(error, 'server must close cleanly');
 		t.end();
 	});
 
@@ -40,7 +40,7 @@ tap.test('mediasoup.Server() with wrong options must fail', { timeout: 1000 }, (
 
 	server.on('close', (error) =>
 	{
-		t.type(error, Error, 'server should close with error');
+		t.type(error, Error, 'server must close with error');
 		t.end();
 	});
 });
@@ -51,7 +51,7 @@ tap.test('mediasoup.Server() with non existing `rtcListenIPv4` IP must fail', { 
 
 	server.on('close', (error) =>
 	{
-		t.type(error, Error, 'server should close with error');
+		t.type(error, Error, 'server must close with error');
 		t.end();
 	});
 });
@@ -62,7 +62,7 @@ tap.test('mediasoup.Server() with too narrow RTC ports range must fail', { timeo
 
 	server.on('close', (error) =>
 	{
-		t.type(error, Error, 'server should close with error');
+		t.type(error, Error, 'server must close with error');
 		t.end();
 	});
 });
