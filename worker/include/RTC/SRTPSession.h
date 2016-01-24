@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "DepLibSRTP.h"
-#include <srtp/srtp.h>
+#include <srtp2/srtp.h>
 
 namespace RTC
 {
@@ -27,8 +27,8 @@ namespace RTC
 	public:
 		static void ClassInit();
 
-	private:
-		static void onSRTPEvent(srtp_event_data_t* data);
+	// private:
+		// static void onSRTPEvent(srtp_event_data_t* data);
 
 	private:
 		static uint8_t encryptBuffer[];
@@ -48,7 +48,7 @@ namespace RTC
 		// Allocated by this.
 		srtp_t session = nullptr;
 		// Others.
-		err_status_t lastError = (err_status_t)0;
+		srtp_err_status_t lastError = (srtp_err_status_t)0;
 	};
 
 	/* Inline instance methods. */
@@ -59,7 +59,7 @@ namespace RTC
 		const char* error_string;
 
 		error_string = DepLibSRTP::GetErrorString(this->lastError);
-		this->lastError = (err_status_t)0;  // Reset it.
+		this->lastError = (srtp_err_status_t)0;  // Reset it.
 
 		return error_string;
 	}

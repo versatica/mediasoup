@@ -42,7 +42,7 @@ void DepLibSRTP::ClassInit()
 {
 	MS_TRACE();
 
-	err_status_t err;
+	srtp_err_status_t err;
 
 	err = srtp_init();
 	if (DepLibSRTP::IsError(err))
@@ -53,7 +53,7 @@ void DepLibSRTP::ClassDestroy()
 {
 	MS_TRACE();
 
-	err_status_t err;
+	srtp_err_status_t err;
 
 	err = srtp_shutdown();
 	if (DepLibSRTP::IsError(err))

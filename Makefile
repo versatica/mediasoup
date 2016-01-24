@@ -47,7 +47,7 @@ SYSTEM_LIBS := pthread
 PKG_LIBS :=
 PKG_LIBS += libuv >= 1.6.1
 PKG_LIBS += openssl >= 1.0.1
-PKG_LIBS += libsrtp >= 1.5.2
+PKG_LIBS += libsrtp2 >= 2.0.0
 
 # Dependencies source files.
 DEP_SOURCES :=

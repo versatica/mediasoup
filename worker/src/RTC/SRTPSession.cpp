@@ -4,7 +4,7 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <cstring>  // std::memset(), std::memcpy()
-#include <srtp/srtp_priv.h>  // TODO: This allows data->stream->ssrc, but it is not public. Wait ofr libsrtp new API.
+// #include <srtp2/srtp_priv.h>  // TODO: This allows data->stream->ssrc, but it is not public. Wait ofr libsrtp new API.
 
 #define MS_ENCRYPT_BUFFER_SIZE  65536
 
@@ -20,40 +20,40 @@ namespace RTC
 	{
 		/* Set libsrtp event handler. */
 
-		err_status_t err;
+		// srtp_err_status_t err;
 
-		err = srtp_install_event_handler((srtp_event_handler_func_t*)onSRTPEvent);
-		if (DepLibSRTP::IsError(err))
-		{
-			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
-		}
+		// err = srtp_install_event_handler((srtp_event_handler_func_t*)onSRTPEvent);
+		// if (DepLibSRTP::IsError(err))
+		// {
+			// MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
+		// }
 	}
 
-	void SRTPSession::onSRTPEvent(srtp_event_data_t* data)
-	{
-		MS_TRACE();
+	// void SRTPSession::onSRTPEvent(srtp_event_data_t* data)
+	// {
+	// 	MS_TRACE();
 
-		const char* event_desc = "";
+	// 	const char* event_desc = "";
 
-		switch (data->event)
-		{
-			case event_ssrc_collision:
-				event_desc = "collision occurred";
-				break;
-			case event_key_soft_limit:
-				event_desc = "stream reached the soft key usage limit and will expire soon";
-				break;
-			case event_key_hard_limit:
-				event_desc = "stream reached the hard key usage limit and has expired";
-				break;
-			case event_packet_index_limit:
-				event_desc = "stream reached the hard packet limit (2^48 packets)";
-				break;
-		}
+	// 	switch (data->event)
+	// 	{
+	// 		case event_ssrc_collision:
+	// 			event_desc = "collision occurred";
+	// 			break;
+	// 		case event_key_soft_limit:
+	// 			event_desc = "stream reached the soft key usage limit and will expire soon";
+	// 			break;
+	// 		case event_key_hard_limit:
+	// 			event_desc = "stream reached the hard key usage limit and has expired";
+	// 			break;
+	// 		case event_packet_index_limit:
+	// 			event_desc = "stream reached the hard packet limit (2^48 packets)";
+	// 			break;
+	// 	}
 
-		// TODO: u64?
-		MS_WARN("SSRC %" PRIu64 ": %s", (uint64_t)data->stream->ssrc, event_desc);
-	}
+	// 	// TODO: u64?
+	// 	MS_WARN("SSRC %" PRIu64 ": %s", (uint64_t)data->stream->ssrc, event_desc);
+	// }
 
 	/* Instance methods. */
 
@@ -61,7 +61,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		err_status_t err;
+		srtp_err_status_t err;
 		srtp_policy_t policy;
 
 		// Set all policy fields to 0.
@@ -70,12 +70,12 @@ namespace RTC
 		switch (profile)
 		{
 			case SRTPProfile::AES_CM_128_HMAC_SHA1_80:
-				crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
-				crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
+				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
+				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
 				break;
 			case SRTPProfile::AES_CM_128_HMAC_SHA1_32:
-				crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-				crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);  // NOTE: Must be 80 for RTCP!.
+				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
+				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);  // NOTE: Must be 80 for RTCP!.
 				break;
 			default:
 				MS_ABORT("unknown SRTP suite");
@@ -114,7 +114,7 @@ namespace RTC
 
 		if (this->session)
 		{
-			err_status_t err;
+			srtp_err_status_t err;
 
 			err = srtp_dealloc(this->session);
 			if (DepLibSRTP::IsError(err))
@@ -134,7 +134,7 @@ namespace RTC
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
 		{
 			MS_WARN("cannot encrypt RTP packet, size too big (%zu bytes)", *len);
-			this->lastError = err_status_fail;
+			this->lastError = srtp_err_status_fail;
 			return false;
 		}
 
@@ -175,7 +175,7 @@ namespace RTC
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
 		{
 			MS_WARN("cannot encrypt RTCP packet, size too big (%zu bytes)", *len);
-			this->lastError = err_status_fail;
+			this->lastError = srtp_err_status_fail;
 			return false;
 		}
 
