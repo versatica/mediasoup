@@ -47,7 +47,7 @@ namespace RTC
 	private:
 		// Allocated by this.
 		srtp_t session = nullptr;
-		// Others:
+		// Others.
 		err_status_t lastError = (err_status_t)0;
 	};
 

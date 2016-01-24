@@ -20,8 +20,8 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 			let rtpReceiver = peer.RtpReceiver(transport);
 			let rtpParameters =
 			{
-				muxId     : 'abcd',
-				codecs    :
+				muxId  : 'abcd',
+				codecs :
 				[
 					{
 						name        : 'opus',
@@ -45,8 +45,8 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 			};
 			let expectedRtpParameters =
 			{
-				muxId     : 'abcd',
-				codecs    :
+				muxId  : 'abcd',
+				codecs :
 				[
 					{
 						name        : 'opus',

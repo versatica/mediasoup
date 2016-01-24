@@ -2,8 +2,8 @@
 
 'use strict';
 
-// process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
-process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester* -mediasoup:mediasoup-worker*';
+process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester*';
+// process.env.DEBUG = '*ERROR* *WARN* mediasoup* mediasoup-tester* -mediasoup:mediasoup-worker*';
 
 const http = require('http');
 const url = require('url');
@@ -302,6 +302,7 @@ app.put('/test-transport', function(req)
 					codecs.push(
 						{
 							name        : codecName,
+							kind        : om.type,
 							payloadType : codecPayloadType,
 							clockRate   : codecClockRate,
 							parameters  : codecParameters
