@@ -19,7 +19,6 @@ namespace Channel
 		{ "peer.close",                        Request::MethodId::peer_close                        },
 		{ "peer.dump",                         Request::MethodId::peer_dump                         },
 		{ "peer.createTransport",              Request::MethodId::peer_createTransport              },
-		{ "peer.createAssociatedTransport",    Request::MethodId::peer_createAssociatedTransport    },
 		{ "peer.createRtpReceiver",            Request::MethodId::peer_createRtpReceiver            },
 		{ "transport.close",                   Request::MethodId::transport_close                   },
 		{ "transport.dump",                    Request::MethodId::transport_dump                    },

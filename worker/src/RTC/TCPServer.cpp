@@ -66,34 +66,7 @@ namespace RTC
 		while (i++ != RTC::TCPServer::maxPort);
 	}
 
-	RTC::TCPServer* TCPServer::Factory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family)
-	{
-		MS_TRACE();
-
-		uv_tcp_t* uvHandles[1];
-
-		// NOTE: This call may throw a MediaSoupError exception if the address family is not available
-		// or there are no available ports.
-		RandomizePort(address_family, uvHandles, false);
-
-		return new RTC::TCPServer(listener, connListener, uvHandles[0]);
-	}
-
-	void TCPServer::PairFactory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family, RTC::TCPServer* servers[])
-	{
-		MS_TRACE();
-
-		uv_tcp_t* uvHandles[2];
-
-		// NOTE: This call may throw a MediaSoupError exception if the address family is not available
-		// or there are no available ports.
-		RandomizePort(address_family, uvHandles, true);
-
-		servers[0] = new RTC::TCPServer(listener, connListener, uvHandles[0]);
-		servers[1] = new RTC::TCPServer(listener, connListener, uvHandles[1]);
-	}
-
-	void TCPServer::RandomizePort(int address_family, uv_tcp_t* uvHandles[], bool pair)
+	uv_tcp_t* TCPServer::GetRandomPort(int address_family)
 	{
 		MS_TRACE();
 
@@ -103,14 +76,13 @@ namespace RTC
 			MS_THROW_ERROR("IPv6 family not available for RTC");
 
 		int err;
-		struct sockaddr_storage first_bind_addr;
-		struct sockaddr_storage second_bind_addr;
-		const char* listenIP;
-		uint16_t random_first_port;
-		uint16_t iterate_first_port;
-		uint16_t iterate_second_port;
+		uv_tcp_t* uvHandle = nullptr;
+		struct sockaddr_storage bind_addr;
+		const char* listen_ip;
+		uint16_t initial_port;
+		uint16_t iterating_port;
 		uint16_t attempt = 0;
-		uint16_t bindAttempt = 0;
+		uint16_t bind_attempt = 0;
 		int flags = 0;
 		std::unordered_map<uint16_t, bool>* available_ports;
 
@@ -118,16 +90,14 @@ namespace RTC
 		{
 			case AF_INET:
 				available_ports = &RTC::TCPServer::availableIPv4Ports;
-				first_bind_addr = RTC::TCPServer::sockaddrStorageIPv4;
-				second_bind_addr = RTC::TCPServer::sockaddrStorageIPv4;
-				listenIP = Settings::configuration.rtcListenIPv4.c_str();
+				bind_addr = RTC::TCPServer::sockaddrStorageIPv4;
+				listen_ip = Settings::configuration.rtcListenIPv4.c_str();
 				break;
 
 			case AF_INET6:
 				available_ports = &RTC::TCPServer::availableIPv6Ports;
-				first_bind_addr = RTC::TCPServer::sockaddrStorageIPv6;
-				second_bind_addr = RTC::TCPServer::sockaddrStorageIPv6;
-				listenIP = Settings::configuration.rtcListenIPv6.c_str();
+				bind_addr = RTC::TCPServer::sockaddrStorageIPv6;
+				listen_ip = Settings::configuration.rtcListenIPv6.c_str();
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_TCP_IPV6ONLY;
 				break;
@@ -138,101 +108,68 @@ namespace RTC
 		}
 
 		// Choose a random first port to start from.
-		random_first_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::TCPServer::minPort, (uint32_t)RTC::TCPServer::maxPort);
-		// Make it even if pair is requested.
-		if (pair)
-			random_first_port &= ~1;
+		initial_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::TCPServer::minPort, (uint32_t)RTC::TCPServer::maxPort);
 
-		// Set iterate_xxxx_port.
-		iterate_first_port = random_first_port;
+		iterating_port = initial_port;
 
-		// Iterate the RTC TCP ports until get one (or two) available (or fail if not).
-		// Fail also after bind() fails N times in theorically available RTC TCP ports.
+		// Iterate the RTC TCP ports until getting one available.
+		// Fail also after bind() fails N times in theorically available ports.
 		while (true)
 		{
 			attempt++;
 
-			// Increase the iterate port(s) within the range of RTC TCP ports.
-			if (!pair)
-			{
-				if (iterate_first_port < RTC::TCPServer::maxPort)
-					iterate_first_port += 1;
-				else
-					iterate_first_port = RTC::TCPServer::minPort;
-			}
+			// Increase the iterate port) within the range of RTC TCP ports.
+			if (iterating_port < RTC::TCPServer::maxPort)
+				iterating_port += 1;
 			else
-			{
-				if (iterate_first_port < RTC::TCPServer::maxPort - 1)
-					iterate_first_port += 2;
-				else
-					iterate_first_port = RTC::TCPServer::minPort;
-				iterate_second_port = iterate_first_port + 1;
-			}
+				iterating_port = RTC::TCPServer::minPort;
 
 			// Check whether the chosen port is available.
-			if (!(*available_ports)[iterate_first_port])
+			if (!(*available_ports)[iterating_port])
 			{
-				MS_DEBUG("port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterate_first_port, attempt);
+				MS_DEBUG("port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterating_port, attempt);
 
 				// If we have tried all the ports in the range raise an error.
-				if (iterate_first_port == random_first_port)
+				if (iterating_port == initial_port)
 				{
-					MS_THROW_ERROR("no more available ports for IP '%s'", listenIP);
+					MS_THROW_ERROR("no more available ports for IP '%s'", listen_ip);
 				}
 
 				continue;
 			}
 
-			// Check also the odd port (if requested).
-			if (pair && !(*available_ports)[iterate_second_port])
-			{
-				MS_DEBUG("odd port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterate_second_port, attempt);
+			// Here we already have a theorically available port.
+			// Now let's check whether no other process is listening into it.
 
-				// If we have tried all the ports in the range raise an error.
-				if (iterate_first_port == random_first_port)
-				{
-					MS_THROW_ERROR("no more available ports for IP '%s'", listenIP);
-				}
-
-				continue;
-			}
-
-			// Here we already have a theorically available one of two ports.
-			// Now let's check whether no other process is listening into them.
-
-			// Set the chosen port(s) into the sockaddr struct(s).
+			// Set the chosen port into the sockaddr struct(s).
 			switch (address_family)
 			{
 				case AF_INET:
-					((struct sockaddr_in*)&first_bind_addr)->sin_port = htons(iterate_first_port);
-					if (pair)
-						((struct sockaddr_in*)&second_bind_addr)->sin_port = htons(iterate_second_port);
+					((struct sockaddr_in*)&bind_addr)->sin_port = htons(iterating_port);
 					break;
 				case AF_INET6:
-					((struct sockaddr_in6*)&first_bind_addr)->sin6_port = htons(iterate_first_port);
-					if (pair)
-						((struct sockaddr_in6*)&second_bind_addr)->sin6_port = htons(iterate_second_port);
+					((struct sockaddr_in6*)&bind_addr)->sin6_port = htons(iterating_port);
 					break;
 			}
 
-			// Try to bind on the even address (it may be taken by other process).
-			bindAttempt++;
+			// Try to bind on it.
+			bind_attempt++;
 
-			uvHandles[0] = new uv_tcp_t();
+			uvHandle = new uv_tcp_t();
 
-			err = uv_tcp_init(DepLibUV::GetLoop(), uvHandles[0]);
+			err = uv_tcp_init(DepLibUV::GetLoop(), uvHandle);
 			if (err)
 			{
-				delete uvHandles[0];
+				delete uvHandle;
 				MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 			}
 
-			err = uv_tcp_bind(uvHandles[0], (const struct sockaddr*)&first_bind_addr, flags);
+			err = uv_tcp_bind(uvHandle, (const struct sockaddr*)&bind_addr, flags);
 			if (err)
 			{
-				MS_WARN("uv_tcp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s", attempt, iterate_first_port, uv_strerror(err));
+				MS_WARN("uv_tcp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s", attempt, iterating_port, uv_strerror(err));
 
-				uv_close((uv_handle_t*)uvHandles[0], (uv_close_cb)on_error_close);
+				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_error_close);
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
@@ -241,85 +178,37 @@ namespace RTC
 				}
 
 				// If bind() fails for more that MAX_BIND_ATTEMPTS then raise an error.
-				if (bindAttempt > MAX_BIND_ATTEMPTS)
+				if (bind_attempt > MAX_BIND_ATTEMPTS)
 				{
-					MS_THROW_ERROR("uv_tcp_bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listenIP);
+					MS_THROW_ERROR("uv_tcp_bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listen_ip);
 				}
 
 				// If we have tried all the ports in the range raise an error.
-				if (iterate_first_port == random_first_port)
+				if (iterating_port == initial_port)
 				{
-					MS_THROW_ERROR("no more available ports for IP '%s'", listenIP);
+					MS_THROW_ERROR("no more available ports for IP '%s'", listen_ip);
 				}
 
 				continue;
 			}
 
-			// If requested, try to bind also on the odd address.
-			if (pair)
-			{
-				uvHandles[1] = new uv_tcp_t();
+			// Set the port as unavailable.
+			(*available_ports)[iterating_port] = false;
 
-				err = uv_tcp_init(DepLibUV::GetLoop(), uvHandles[1]);
-				if (err)
-				{
-					uv_close((uv_handle_t*)uvHandles[0], (uv_close_cb)on_error_close);
-					delete uvHandles[1];
-					MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
-				}
+			MS_DEBUG("bind success [ip:%s, port:%" PRIu16 ", attempt:%" PRIu16 "]",
+					listen_ip, iterating_port, attempt);
 
-				err = uv_tcp_bind(uvHandles[1], (const struct sockaddr*)&second_bind_addr, flags);
-				if (err)
-				{
-					MS_WARN("uv_tcp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s", attempt, iterate_second_port, uv_strerror(err));
-
-					uv_close((uv_handle_t*)uvHandles[0], (uv_close_cb)on_error_close);
-					uv_close((uv_handle_t*)uvHandles[1], (uv_close_cb)on_error_close);
-
-					// If bind() fails due to "too many open files" stop here.
-					if (err == UV_EMFILE)
-					{
-						MS_THROW_ERROR("uv_tcp_bind() fails due to many open files");
-					}
-
-					// If bind() fails for more that MAX_BIND_ATTEMPTS then raise an error.
-					if (bindAttempt > MAX_BIND_ATTEMPTS)
-					{
-						MS_THROW_ERROR("uv_tcp_bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listenIP);
-					}
-
-					// If we have tried all the ports in the range raise an error.
-					if (iterate_first_port == random_first_port)
-					{
-						MS_THROW_ERROR("no more available ports for IP '%s'", listenIP);
-					}
-
-					continue;
-				}
-			}
-
-			// Success!
-
-			// Set the port(s) as unavailable.
-			(*available_ports)[iterate_first_port] = false;
-			if (pair)
-				(*available_ports)[iterate_second_port] = false;
-
-			if (!pair)
-				MS_DEBUG("bind success [ip:%s, port:%" PRIu16 ", attempt:%" PRIu16 "]",
-					listenIP, iterate_first_port, attempt);
-			else
-				MS_DEBUG("bind success [ip:%s, ports:%" PRIu16 "|%" PRIu16 ", attempt:%" PRIu16 "]",
-					listenIP, iterate_first_port, iterate_second_port, attempt);
-
-			return;
+			return uvHandle;
 		};
 	}
 
 	/* Instance methods. */
 
-	TCPServer::TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, uv_tcp_t* uvHandle) :
-		::TCPServer::TCPServer(uvHandle, 256),
+	TCPServer::TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family) :
+		// Provide the parent class constructor with a UDP uv handle.
+		// NOTE: This may throw a MediaSoupError exception if the address family is not available
+		// or there are no available ports.
+		::TCPServer::TCPServer(GetRandomPort(address_family), 256),
 		listener(listener),
 		connListener(connListener)
 	{

@@ -20,11 +20,9 @@ namespace RTC
 
 	public:
 		static void ClassInit();
-		static RTC::UDPSocket* Factory(Listener* listener, int address_family);
-		static void PairFactory(Listener* listener, int address_family, RTC::UDPSocket* sockets[]);
 
 	private:
-		static void RandomizePort(int address_family, uv_udp_t* uvHandles[], bool pair);
+		static uv_udp_t* GetRandomPort(int address_family);
 
 	private:
 		static struct sockaddr_storage sockaddrStorageIPv4;
@@ -35,7 +33,7 @@ namespace RTC
 		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
 
 	public:
-		UDPSocket(Listener* listener, uv_udp_t* uvHandle);
+		UDPSocket(Listener* listener, int address_family);
 
 	/* Pure virtual methods inherited from ::UDPSocket. */
 	public:

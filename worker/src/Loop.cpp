@@ -220,7 +220,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::peer_close:
 		case Channel::Request::MethodId::peer_dump:
 		case Channel::Request::MethodId::peer_createTransport:
-		case Channel::Request::MethodId::peer_createAssociatedTransport:
 		case Channel::Request::MethodId::peer_createRtpReceiver:
 		case Channel::Request::MethodId::transport_close:
 		case Channel::Request::MethodId::transport_dump:

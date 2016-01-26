@@ -22,11 +22,9 @@ namespace RTC
 
 	public:
 		static void ClassInit();
-		static RTC::TCPServer* Factory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family);
-		static void PairFactory(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family, RTC::TCPServer* servers[]);
 
 	private:
-		static void RandomizePort(int address_family, uv_tcp_t* uvHandles[], bool pair);
+		static uv_tcp_t* GetRandomPort(int address_family);
 
 	private:
 		static struct sockaddr_storage sockaddrStorageIPv4;
@@ -37,7 +35,7 @@ namespace RTC
 		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
 
 	public:
-		TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, uv_tcp_t* uvHandle);
+		TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family);
 
 	/* Pure virtual methods inherited from ::TCPServer. */
 	public:

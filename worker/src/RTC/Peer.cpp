@@ -156,79 +156,10 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::peer_createAssociatedTransport:
-			{
-				RTC::Transport* transport;
-				RTC::Transport* rtpTransport;
-				uint32_t transportId;
-
-				try
-				{
-					transport = GetTransportFromRequest(request, &transportId);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(error.what());
-					return;
-				}
-
-				if (transport)
-				{
-					MS_ERROR("Transport already exists");
-
-					request->Reject("Transport already exists");
-					return;
-				}
-
-				static const Json::StaticString k_rtpTransportId("rtpTransportId");
-
-				auto json_rtpTransportId = request->internal[k_rtpTransportId];
-
-				if (!json_rtpTransportId.isUInt())
-				{
-					MS_ERROR("Request has not numeric `internal.rtpTransportId`");
-
-					request->Reject("Request has not numeric `internal.rtpTransportId`");
-					return;
-				}
-
-				auto it = this->transports.find(json_rtpTransportId.asUInt());
-				if (it == this->transports.end())
-				{
-					MS_ERROR("RTP Transport does not exist");
-
-					request->Reject("RTP Transport does not exist");
-					return;
-				}
-
-				rtpTransport = it->second;
-
-				try
-				{
-					transport = rtpTransport->CreateAssociatedTransport(transportId);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(error.what());
-					return;
-				}
-
-				this->transports[transportId] = transport;
-
-				MS_DEBUG("Associated Transport created [transportId:%" PRIu32 "]", transportId);
-
-				auto data = transport->toJson();
-
-				request->Accept(data);
-
-				break;
-			}
-
 			case Channel::Request::MethodId::peer_createRtpReceiver:
 			{
 				RTC::RtpReceiver* rtpReceiver;
 				RTC::Transport* transport = nullptr;
-				RTC::Transport* rtcpTransport = nullptr;
 				uint32_t rtpReceiverId;
 
 				try
@@ -267,16 +198,6 @@ namespace RTC
 					return;
 				}
 
-				try
-				{
-					rtcpTransport = GetRtcpTransportFromRequest(request);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(error.what());
-					return;
-				}
-
 				// Create a RtpReceiver instance.
 				rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId);
 
@@ -287,15 +208,9 @@ namespace RTC
 				// RTC::Transport inherits from RTC::RtpListener, but the API of
 				// RTC:RtpReceiver requires RTP::RtpListener.
 				RTC::RtpListener* rtpListener = transport;
-				RTC::RtpListener* rtcpListener = rtcpTransport;
 
 				// Set the RtpListener.
 				rtpReceiver->SetRtpListener(rtpListener);
-
-				// Set the RtcpListener (just if given and it does not match the
-				// RtpListener).
-				if (rtcpListener && rtcpListener != rtpListener)
-					rtpReceiver->SetRtcpListener(rtcpListener);
 
 				request->Accept();
 
@@ -396,33 +311,6 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Peer::GetRtcpTransportFromRequest(Channel::Request* request)
-	{
-		MS_TRACE();
-
-		static const Json::StaticString k_rtcpTransportId("rtcpTransportId");
-
-		auto json_rtcpTransportId = request->internal[k_rtcpTransportId];
-
-		if (!json_rtcpTransportId.isUInt())
-			return nullptr;
-
-		auto it = this->transports.find(json_rtcpTransportId.asUInt());
-		if (it != this->transports.end())
-		{
-			RTC::Transport* rtcpTransport = it->second;
-
-			return rtcpTransport;
-		}
-		else
-		{
-			MS_ERROR("RTCP Transport does not exist");
-		}
-
-		// Make compiler happy.
-		return nullptr;
-	}
-
 	RTC::RtpReceiver* Peer::GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId)
 	{
 		MS_TRACE();
@@ -473,16 +361,11 @@ namespace RTC
 		MS_TRACE();
 
 		auto rtpListener = rtpReceiver->GetRtpListener();
-		auto rtcpListener = rtpReceiver->GetRtcpListener();
 
-		// TODO: This amy throw, so no idea how to revert the
-		// first rtpListener->SetRtpReceiverParameters() if the second one throws.
+		// TODO: This may throw
 
 		if (rtpListener)
 			rtpListener->AddRtpReceiver(rtpReceiver, rtpParameters);
-
-		// TODO: Let's see what to do for the optional rtcpListener.
-		// if (rtcpListener)
 	}
 
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)

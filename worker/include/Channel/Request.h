@@ -26,7 +26,6 @@ namespace Channel
 			peer_close,
 			peer_dump,
 			peer_createTransport,
-			peer_createAssociatedTransport,
 			peer_createRtpReceiver,
 			transport_close,
 			transport_dump,

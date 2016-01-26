@@ -13,6 +13,7 @@
 #include "RTC/RTPPacket.h"
 #include "RTC/RTCPPacket.h"
 #include "RTC/RtpListener.h"
+#include "RTC/RtpReceiver.h"  // TODO: let's see if needed here or not
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -39,15 +40,12 @@ namespace RTC
 		};
 
 	public:
-		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data, Transport* rtpTransport = nullptr);
+		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data);
 		virtual ~Transport();
 
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
-		std::string& GetIceUsernameFragment();
-		std::string& GetIcePassword();
-		Transport* CreateAssociatedTransport(uint32_t transportId);
 
 	private:
 		void MayRunDTLSTransport();
@@ -83,7 +81,7 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::DTLSTransport::Listener. */
 	public:
 		virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) override;
-		virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) override;
+		virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) override;
 		virtual void onDTLSFailed(DTLSTransport* dtlsTransport) override;
 		virtual void onDTLSClosed(DTLSTransport* dtlsTransport) override;
 		virtual void onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) override;
@@ -92,13 +90,6 @@ namespace RTC
 	public:
 		// Passed by argument.
 		uint32_t transportId;
-
-	protected:
-		// Others.
-		bool hasIPv4udp = false;
-		bool hasIPv6udp = false;
-		bool hasIPv4tcp = false;
-		bool hasIPv6tcp = false;
 
 	private:
 		// Passed by argument.
@@ -118,20 +109,6 @@ namespace RTC
 		bool remoteDtlsParametersGiven = false;
 		RTC::DTLSTransport::Role dtlsLocalRole = RTC::DTLSTransport::Role::AUTO;
 	};
-
-	/* Inline methods. */
-
-	inline
-	std::string& Transport::GetIceUsernameFragment()
-	{
-		return this->iceServer->GetUsernameFragment();
-	}
-
-	inline
-	std::string& Transport::GetIcePassword()
-	{
-		return this->iceServer->GetPassword();
-	}
 }
 
 #endif

@@ -12,13 +12,6 @@ namespace RTC
 	class ICEServer
 	{
 	public:
-		enum class IceComponent
-		{
-			RTP  = 1,
-			RTCP = 2
-		};
-
-	public:
 		enum class IceState
 		{
 			NEW = 1,
@@ -43,11 +36,10 @@ namespace RTC
 		};
 
 	public:
-		ICEServer(Listener* listener, ICEServer::IceComponent iceComponent, const std::string& usernameFragment, const std::string password);
+		ICEServer(Listener* listener, const std::string& usernameFragment, const std::string password);
 
 		void Close();
 		void ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportTuple* tuple);
-		IceComponent GetComponent();
 		std::string& GetUsernameFragment();
 		std::string& GetPassword();
 		IceState GetState();
@@ -77,7 +69,6 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		IceComponent iceComponent;
 		std::string usernameFragment;
 		std::string password;
 		IceState state = IceState::NEW;
@@ -86,12 +77,6 @@ namespace RTC
 	};
 
 	/* Inline methods. */
-
-	inline
-	ICEServer::IceComponent ICEServer::GetComponent()
-	{
-		return this->iceComponent;
-	}
 
 	inline
 	std::string& ICEServer::GetUsernameFragment()

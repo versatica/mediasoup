@@ -33,9 +33,6 @@ namespace RTC
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
-		// This does not throw if the request has no numeric `rtcpTransportId`, but
-		// throws if `rtcpTransportId`is given and Peer has not such a Transport.
-		RTC::Transport* GetRtcpTransportFromRequest(Channel::Request* request);
 		RTC::RtpReceiver* GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId = nullptr);
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */

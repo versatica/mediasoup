@@ -4,105 +4,6 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-tap.test('transport.createAssociatedTransport() must succeed', { timeout: 1000 }, (t) =>
-{
-	let server = mediasoup.Server();
-
-	t.tearDown(() => server.close());
-
-	let room = server.Room();
-	let peer = room.Peer('alice');
-
-	peer.createTransport({ tcp: false })
-		.then((transport) =>
-		{
-			t.pass('peer.createTransport() succeeded');
-			t.equal(transport.iceRole, 'controlled', 'transport must have "controlled" `iceRole`');
-			t.equal(transport.iceComponent, 'RTP', 'transport must have "RTP" `iceComponent`');
-			t.notOk(transport.iceSelectedTuple, 'transport must not have `iceSelectedTuple`');
-			t.equal(transport.iceState, 'new', 'transport must have "new" `iceState`');
-			t.equal(transport.dtlsState, 'new', 'transport must have "new" `dtlsState`');
-
-			transport.iceLocalCandidates.forEach((candidate) =>
-			{
-				if (candidate.protocol !== 'udp')
-					t.fail('transport contains unexpected "tcp" candidates');
-			});
-			t.pass('transport just contains "udp" candidates');
-
-			transport.createAssociatedTransport()
-				.then((associatedTransport) =>
-				{
-					t.pass('transport.createAssociatedTransport() succeeded');
-					t.equal(associatedTransport.iceComponent, 'RTCP', 'associated transport must have "RTCP" `iceComponent`');
-					t.equal(associatedTransport.dtlsState, 'new', 'associated transport must have "new" `dtlsState`');
-
-					associatedTransport.iceLocalCandidates.forEach((candidate) =>
-					{
-						if (candidate.protocol !== 'udp')
-							t.fail('associated transport contains unexpected "tcp" candidates');
-					});
-					t.pass('associated transport just contains "udp" candidates');
-
-					associatedTransport.createAssociatedTransport()
-						.then(() =>
-						{
-							t.fail('associatedTransport.createAssociatedTransport() succeeded');
-						})
-						.catch((error) =>
-						{
-							t.pass(`associatedTransport.createAssociatedTransport() failed: ${error}`);
-
-							peer.dump()
-								.then((data) =>
-								{
-									t.pass('peer.dump() succeeded');
-									t.equal(Object.keys(data.transports).length, 2, 'peer.dump() must retrieve two transports');
-									t.end();
-								})
-								.catch((error) => t.fail(`peer.dump() failed: ${error}`));
-						});
-				})
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
-		})
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
-});
-
-tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
-{
-	let server = mediasoup.Server();
-
-	t.plan(6);
-	t.tearDown(() => server.close());
-
-	let room = server.Room();
-	let peer = room.Peer('alice');
-
-	peer.createTransport({ tcp: false })
-		.then((transport) =>
-		{
-			t.pass('peer.createTransport() succeeded');
-
-			transport.on('close', (error) =>
-			{
-				t.error(error, 'transport must close cleanly');
-				t.equal(transport.iceState, 'closed', '`transport.iceState` must be "closed"');
-				t.equal(transport.dtlsState, 'closed', '`transport.dtlsState` must be "closed"');
-
-				peer.dump()
-					.then((data) =>
-					{
-						t.pass('peer.dump() succeeded');
-						t.equal(Object.keys(data.transports).length, 0, 'peer.dump() must retrieve zero transports');
-					})
-					.catch((error) => t.fail(`peer.dump() failed: ${error}`));
-			});
-
-			setTimeout(() => transport.close(), 100);
-		})
-		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
-});
-
 tap.test('transport.setRemoteDtlsParameters() with "server" `role` must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
@@ -141,7 +42,7 @@ tap.test('transport.setRemoteDtlsParameters() with "server" `role` must succeed'
 						})
 						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
 				})
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
+				.catch((error) => t.fail(`transport.setRemoteDtlsParameters() failed: ${error}`));
 		})
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
@@ -183,7 +84,7 @@ tap.test('transport.setRemoteDtlsParameters() with "auto" `role` must succeed', 
 						})
 						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
 				})
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
+				.catch((error) => t.fail(`transport.setRemoteDtlsParameters() failed: ${error}`));
 		})
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
@@ -224,7 +125,7 @@ tap.test('transport.setRemoteDtlsParameters() with no `role` must succeed', { ti
 						})
 						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
 				})
-				.catch((error) => t.fail(`transport.createAssociatedTransport() failed: ${error}`));
+				.catch((error) => t.fail(`transport.setRemoteDtlsParameters() failed: ${error}`));
 		})
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
@@ -255,7 +156,7 @@ tap.test('transport.setRemoteDtlsParameters() with invalid `role` must fail', { 
 				.then(() => t.fail('transport.setRemoteDtlsParameters() succeeded'))
 				.catch((error) =>
 				{
-					t.pass(`transport.createAssociatedTransport() failed: ${error}`);
+					t.pass(`transport.setRemoteDtlsParameters() failed: ${error}`);
 					t.equal(transport.dtlsLocalParameters.role, 'auto', 'local DTLS `role` must be "auto"');
 					t.end();
 				});
@@ -284,10 +185,45 @@ tap.test('transport.setRemoteDtlsParameters() without `fingerprint` must fail', 
 				.then(() => t.fail('transport.setRemoteDtlsParameters() succeeded'))
 				.catch((error) =>
 				{
-					t.pass(`transport.createAssociatedTransport() failed: ${error}`);
+					t.pass(`transport.setRemoteDtlsParameters() failed: ${error}`);
 					t.equal(transport.dtlsLocalParameters.role, 'auto', 'local DTLS `role` must be "auto"');
 					t.end();
 				});
 		})
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
+});
+
+tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.plan(6);
+	t.tearDown(() => server.close());
+
+	let room = server.Room();
+	let peer = room.Peer('alice');
+
+	peer.createTransport({ tcp: false })
+		.then((transport) =>
+		{
+			t.pass('peer.createTransport() succeeded');
+
+			transport.on('close', (error) =>
+			{
+				t.error(error, 'transport must close cleanly');
+				t.equal(transport.iceState, 'closed', '`transport.iceState` must be "closed"');
+				t.equal(transport.dtlsState, 'closed', '`transport.dtlsState` must be "closed"');
+
+				peer.dump()
+					.then((data) =>
+					{
+						t.pass('peer.dump() succeeded');
+						t.equal(Object.keys(data.transports).length, 0, 'peer.dump() must retrieve zero transports');
+					})
+					.catch((error) => t.fail(`peer.dump() failed: ${error}`));
+			});
+
+			setTimeout(() => transport.close(), 100);
+		})
+		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });

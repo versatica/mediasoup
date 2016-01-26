@@ -34,9 +34,7 @@ namespace RTC
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
 		void SetRtpListener(RTC::RtpListener* rtpListener);
-		void SetRtcpListener(RTC::RtpListener* rtcpListener);
 		RTC::RtpListener* GetRtpListener();
-		RTC::RtpListener* GetRtcpListener();
 		void RemoveRtpListener(RTC::RtpListener* rtpListener);
 
 	public:
@@ -48,7 +46,6 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		RTC::RtpListener* rtpListener = nullptr;
-		RTC::RtpListener* rtcpListener = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 	};
@@ -62,21 +59,9 @@ namespace RTC
 	}
 
 	inline
-	void RtpReceiver::SetRtcpListener(RTC::RtpListener* rtcpListener)
-	{
-		this->rtcpListener = rtcpListener;
-	}
-
-	inline
 	RTC::RtpListener* RtpReceiver::GetRtpListener()
 	{
 		return this->rtpListener;
-	}
-
-	inline
-	RTC::RtpListener* RtpReceiver::GetRtcpListener()
-	{
-		return this->rtcpListener;
 	}
 
 	inline
@@ -84,9 +69,6 @@ namespace RTC
 	{
 		if (this->rtpListener == rtpListener)
 			this->rtpListener = nullptr;
-
-		if (this->rtcpListener == rtpListener)
-			this->rtcpListener = nullptr;
 	}
 }
 

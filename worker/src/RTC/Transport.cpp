@@ -14,24 +14,26 @@
 /* Static helpers. */
 
 static inline
-uint32_t generateIceCandidatePriority(uint16_t local_preference, RTC::ICEServer::IceComponent component)
+uint32_t generateIceCandidatePriority(uint16_t local_preference)
 {
 	MS_TRACE();
 
 	// We just provide 'host' candidates so `type preference` is fixed.
 	static uint16_t type_preference = 64;
+	// We do not support non rtcp-mux so `component` is always 1.
+	static uint16_t component = 1;
 
 	return
 		std::pow(2, 24) * type_preference  +
 		std::pow(2,  8) * local_preference +
-		std::pow(2,  0) * (256 - (uint16_t)component);
+		std::pow(2,  0) * (256 - component);
 }
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data, Transport* rtpTransport) :
+	Transport::Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data) :
 		transportId(transportId),
 		listener(listener),
 		notifier(notifier)
@@ -55,6 +57,12 @@ namespace RTC
 		bool preferUdp = false;
 		bool preferTcp = false;
 
+		if (data[k_udp].isBool())
+			try_IPv4_udp = try_IPv6_udp = data[k_udp].asBool();
+
+		if (data[k_tcp].isBool())
+			try_IPv4_tcp = try_IPv6_tcp = data[k_tcp].asBool();
+
 		if (data[k_preferIPv4].isBool())
 			preferIPv4 = data[k_preferIPv4].asBool();
 		if (data[k_preferIPv6].isBool())
@@ -64,35 +72,10 @@ namespace RTC
 		if (data[k_preferTcp].isBool())
 			preferTcp = data[k_preferTcp].asBool();
 
-		// RTP transport.
-		if (!rtpTransport)
-		{
-			// Create a ICE server.
-			this->iceServer = new RTC::ICEServer(this,
-				ICEServer::IceComponent::RTP,
-				Utils::Crypto::GetRandomString(16),
-				Utils::Crypto::GetRandomString(32));
-
-			if (data[k_udp].isBool())
-				try_IPv4_udp = try_IPv6_udp = data[k_udp].asBool();
-
-			if (data[k_tcp].isBool())
-				try_IPv4_tcp = try_IPv6_tcp = data[k_tcp].asBool();
-		}
-		// RTCP transport associated to a given RTP transport.
-		else
-		{
-			// Create a ICE server.
-			this->iceServer = new RTC::ICEServer(this,
-				ICEServer::IceComponent::RTCP,
-				rtpTransport->GetIceUsernameFragment(),
-				rtpTransport->GetIcePassword());
-
-			try_IPv4_udp = rtpTransport->hasIPv4udp;
-			try_IPv6_udp = rtpTransport->hasIPv6udp;
-			try_IPv4_tcp = rtpTransport->hasIPv4tcp;
-			try_IPv6_tcp = rtpTransport->hasIPv6tcp;
-		}
+		// Create a ICE server.
+		this->iceServer = new RTC::ICEServer(this,
+			Utils::Crypto::GetRandomString(16),
+			Utils::Crypto::GetRandomString(32));
 
 		// Open a IPv4 UDP socket.
 		if (try_IPv4_udp && Settings::configuration.hasIPv4)
@@ -104,16 +87,15 @@ namespace RTC
 			if (preferUdp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference);
 
 			try
 			{
-				RTC::UDPSocket* udpSocket = RTC::UDPSocket::Factory(this, AF_INET);
+				RTC::UDPSocket* udpSocket = new RTC::UDPSocket(this, AF_INET);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
 				this->iceLocalCandidates.push_back(iceCandidate);
-				this->hasIPv4udp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -131,16 +113,15 @@ namespace RTC
 			if (preferUdp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference);
 
 			try
 			{
-				RTC::UDPSocket* udpSocket = RTC::UDPSocket::Factory(this, AF_INET6);
+				RTC::UDPSocket* udpSocket = new RTC::UDPSocket(this, AF_INET6);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
 				this->iceLocalCandidates.push_back(iceCandidate);
-				this->hasIPv6udp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -158,16 +139,15 @@ namespace RTC
 			if (preferTcp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference);
 
 			try
 			{
-				RTC::TCPServer* tcpServer = RTC::TCPServer::Factory(this, this, AF_INET);
+				RTC::TCPServer* tcpServer = new RTC::TCPServer(this, this, AF_INET);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
 				this->iceLocalCandidates.push_back(iceCandidate);
-				this->hasIPv4tcp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -185,16 +165,15 @@ namespace RTC
 			if (preferTcp)
 				local_preference += ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_PROTOCOL_INCREMENT;
 
-			uint32_t priority = generateIceCandidatePriority(local_preference, this->iceServer->GetComponent());
+			uint32_t priority = generateIceCandidatePriority(local_preference);
 
 			try
 			{
-				RTC::TCPServer* tcpServer = RTC::TCPServer::Factory(this, this, AF_INET6);
+				RTC::TCPServer* tcpServer = new RTC::TCPServer(this, this, AF_INET6);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
 				this->iceLocalCandidates.push_back(iceCandidate);
-				this->hasIPv6tcp = true;
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -268,9 +247,6 @@ namespace RTC
 
 		static const Json::StaticString k_iceRole("iceRole");
 		static const Json::StaticString v_controlled("controlled");
-		static const Json::StaticString k_iceComponent("iceComponent");
-		static const Json::StaticString v_RTP("RTP");
-		static const Json::StaticString v_RTCP("RTCP");
 		static const Json::StaticString k_iceLocalParameters("iceLocalParameters");
 		static const Json::StaticString k_usernameFragment("usernameFragment");
 		static const Json::StaticString k_password("password");
@@ -297,12 +273,6 @@ namespace RTC
 
 		// Add `iceRole` (we are always "controlled").
 		json[k_iceRole] = v_controlled;
-
-		// Add `iceComponent`.
-		if (this->iceServer->GetComponent() == ICEServer::IceComponent::RTP)
-			json[k_iceComponent] = v_RTP;
-		else
-			json[k_iceComponent] = v_RTCP;
 
 		// Add `iceLocalParameters`.
 		json[k_iceLocalParameters][k_usernameFragment] = this->iceServer->GetUsernameFragment();
@@ -519,18 +489,6 @@ namespace RTC
 		}
 	}
 
-	Transport* Transport::CreateAssociatedTransport(uint32_t transportId)
-	{
-		MS_TRACE();
-
-		static Json::Value null_data(Json::nullValue);
-
-		if (this->iceServer->GetComponent() != ICEServer::IceComponent::RTP)
-			MS_THROW_ERROR("cannot call CreateAssociatedTransport() on a RTCP Transport");
-
-		return new RTC::Transport(this->listener, this->notifier, transportId, null_data, this);
-	}
-
 	inline
 	void Transport::MayRunDTLSTransport()
 	{
@@ -673,6 +631,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		RTC::RtpReceiver* rtpReceiver = nullptr;
+
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
 			MS_DEBUG("ignoring RTP data coming from an invalid tuple");
@@ -694,16 +654,19 @@ namespace RTC
 
 			return;
 		}
-		packet->Dump();
 
-		// Check the rtpListener tables.
+		// Get the associated RtpReceiver.
+		rtpReceiver = RTC::RtpListener::GetRtpReceiver(packet);
 
-		// auto it = this->rtpListener.ssrcTable.find(packet->GetSSRC());
-
-		// if (it == this->rtpListener.ssrcTable.end())
-		// {
-		// 	MS_WARN("received RTP packet does not belong to the SSRC table");
-		// }
+		if (!rtpReceiver)
+		{
+			MS_WARN("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payload:%" PRIu8 "]", packet->GetSSRC(), packet->GetPayloadType());
+		}
+		else
+		{
+			// MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSSRC(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
+			// packet->Dump();
+		}
 
 		delete packet;
 	}
@@ -862,7 +825,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 
-	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::SRTPProfile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len)
+	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len)
 	{
 		MS_TRACE();
 
