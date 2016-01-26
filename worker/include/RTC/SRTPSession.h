@@ -10,7 +10,7 @@ namespace RTC
 	class SRTPSession
 	{
 	public:
-		enum class SRTPProfile
+		enum class Profile
 		{
 			NONE                    = 0,
 			AES_CM_128_HMAC_SHA1_80 = 1,
@@ -34,7 +34,7 @@ namespace RTC
 		static uint8_t encryptBuffer[];
 
 	public:
-		SRTPSession(Type type, SRTPProfile profile, uint8_t* key, size_t key_len);
+		SRTPSession(Type type, Profile profile, uint8_t* key, size_t key_len);
 		~SRTPSession();
 
 		bool EncryptRTP(const uint8_t** data, size_t* len);

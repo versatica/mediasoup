@@ -3,7 +3,7 @@
 /worker/bin/
 /worker/cldoc/
 /worker/mediasoup-tester.sh
-/tester/
+/demo/
 /art/
 /make-trace.sh
 /run.js

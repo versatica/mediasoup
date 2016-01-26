@@ -107,4 +107,23 @@ namespace RTC
 				it++;
 		}
 	}
+	RTC::RtpReceiver* RtpListener::GetRtpReceiver(RTC::RTPPacket* packet)
+	{
+		MS_TRACE();
+
+		// TODO: read the ORTC doc.
+
+		// Check the SSRC table.
+
+		auto it = this->ssrcTable.find(packet->GetSSRC());
+
+		if (it == this->ssrcTable.end())
+		{
+			return nullptr;
+		}
+		else
+		{
+			return it->second;
+		}
+	}
 }

@@ -185,8 +185,11 @@ namespace RTC
 
 		struct EncodingParameters encoding;
 
-		if (data[k_ssrc].isUInt())
-			encoding.ssrc = (uint32_t)data[k_ssrc].asUInt();
+		// `ssrc` is mandatory.
+		if (!data[k_ssrc].isUInt())
+			MS_THROW_ERROR("missing `ssrc`");
+
+		encoding.ssrc = (uint32_t)data[k_ssrc].asUInt();
 
 		// Append to the encodings vector.
 		this->encodings.push_back(encoding);

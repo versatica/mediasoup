@@ -26,12 +26,12 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						name        : 'opus',
 						kind        : 'audio',
-						payloadType : 101
+						payloadType : 111
 					},
 					{
-						name        : 'vp9',
-						kind        : 'video',
-						payloadType : 102,
+						name        : 'PCMA',
+						kind        : 'audio',
+						payloadType : 8,
 						clockRate   : 50
 					},
 					{
@@ -41,6 +41,12 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				],
 				encodings :
 				[
+					{
+						ssrc : 111222330
+					},
+					{
+						ssrc : 111222331
+					}
 				]
 			};
 			let expectedRtpParameters =
@@ -51,13 +57,13 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						name        : 'opus',
 						kind        : 'audio',
-						payloadType : 101,
+						payloadType : 111,
 						clockRate   : null
 					},
 					{
-						name        : 'vp9',
-						kind        : 'video',
-						payloadType : 102,
+						name        : 'PCMA',
+						kind        : 'audio',
+						payloadType : 8,
 						clockRate   : 50
 					},
 					{
@@ -69,6 +75,12 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				],
 				encodings :
 				[
+					{
+						ssrc : 111222330
+					},
+					{
+						ssrc : 111222331
+					}
 				]
 			};
 

@@ -48,7 +48,7 @@ namespace RTC
 		// Be ready to parse more than a single frame in a single TCP chunk.
 		while (true)
 		{
-			// We may receive multiple packets in the same TCP chunk. If onw of them is
+			// We may receive multiple packets in the same TCP chunk. If one of them is
 			// a DTLS Close Alert this would be closed (Close() called) so we cannot call
 			// our listeners anymore.
 			if (IsClosing())

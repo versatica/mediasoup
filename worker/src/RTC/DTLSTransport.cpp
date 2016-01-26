@@ -80,8 +80,8 @@ namespace RTC
 	Json::Value DTLSTransport::localFingerprints = Json::Value(Json::objectValue);
 	std::vector<DTLSTransport::SrtpProfileMapEntry> DTLSTransport::srtpProfiles =
 	{
-		{ RTC::SRTPSession::SRTPProfile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
-		{ RTC::SRTPSession::SRTPProfile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
+		{ RTC::SRTPSession::Profile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
+		{ RTC::SRTPSession::Profile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
 
 	/* Class methods. */
@@ -336,6 +336,8 @@ namespace RTC
 		SSL_CTX_set_session_cache_mode(DTLSTransport::sslCtx, SSL_SESS_CACHE_OFF);
 
 		// Read always as much into the buffer as possible.
+		// NOTE: This is the default for DTLS, but a bug in non latest OpenSSL
+		// versions makes this call required.
 		SSL_CTX_set_read_ahead(DTLSTransport::sslCtx, 1);
 
 		SSL_CTX_set_verify_depth(DTLSTransport::sslCtx, 4);
@@ -932,10 +934,10 @@ namespace RTC
 		}
 
 		// Get the negotiated SRTP profile.
-		RTC::SRTPSession::SRTPProfile srtp_profile;
+		RTC::SRTPSession::Profile srtp_profile;
 		srtp_profile = GetNegotiatedSRTPProfile();
 
-		if (srtp_profile != RTC::SRTPSession::SRTPProfile::NONE)
+		if (srtp_profile != RTC::SRTPSession::Profile::NONE)
 		{
 			// Extract the SRTP keys (will notify the listener with them).
 			ExtractSRTPKeys(srtp_profile);
@@ -1026,7 +1028,7 @@ namespace RTC
 	}
 
 	inline
-	void DTLSTransport::ExtractSRTPKeys(RTC::SRTPSession::SRTPProfile srtp_profile)
+	void DTLSTransport::ExtractSRTPKeys(RTC::SRTPSession::Profile srtp_profile)
 	{
 		MS_TRACE();
 
@@ -1074,11 +1076,11 @@ namespace RTC
 	}
 
 	inline
-	RTC::SRTPSession::SRTPProfile DTLSTransport::GetNegotiatedSRTPProfile()
+	RTC::SRTPSession::Profile DTLSTransport::GetNegotiatedSRTPProfile()
 	{
 		MS_TRACE();
 
-		RTC::SRTPSession::SRTPProfile negotiated_srtp_profile = RTC::SRTPSession::SRTPProfile::NONE;
+		RTC::SRTPSession::Profile negotiated_srtp_profile = RTC::SRTPSession::Profile::NONE;
 
 		// Ensure that the SRTP profile has been negotiated.
 		SRTP_PROTECTION_PROFILE* ssl_srtp_profile = SSL_get_selected_srtp_profile(this->ssl);
@@ -1100,7 +1102,7 @@ namespace RTC
 			}
 		}
 
-		MS_ASSERT(negotiated_srtp_profile != RTC::SRTPSession::SRTPProfile::NONE, "chosen SRTP profile is not an available one");
+		MS_ASSERT(negotiated_srtp_profile != RTC::SRTPSession::Profile::NONE, "chosen SRTP profile is not an available one");
 
 		return negotiated_srtp_profile;
 	}

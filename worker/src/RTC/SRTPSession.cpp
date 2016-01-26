@@ -57,7 +57,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SRTPSession::SRTPSession(Type type, SRTPProfile profile, uint8_t* key, size_t key_len)
+	SRTPSession::SRTPSession(Type type, Profile profile, uint8_t* key, size_t key_len)
 	{
 		MS_TRACE();
 
@@ -69,11 +69,11 @@ namespace RTC
 
 		switch (profile)
 		{
-			case SRTPProfile::AES_CM_128_HMAC_SHA1_80:
+			case Profile::AES_CM_128_HMAC_SHA1_80:
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
 				break;
-			case SRTPProfile::AES_CM_128_HMAC_SHA1_32:
+			case Profile::AES_CM_128_HMAC_SHA1_32:
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);  // NOTE: Must be 80 for RTCP!.
 				break;
@@ -134,6 +134,7 @@ namespace RTC
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
 		{
 			MS_WARN("cannot encrypt RTP packet, size too big (%zu bytes)", *len);
+
 			this->lastError = srtp_err_status_fail;
 			return false;
 		}
@@ -144,6 +145,7 @@ namespace RTC
 		if (DepLibSRTP::IsError(this->lastError))
 		{
 			MS_DEBUG("srtp_protect() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+
 			return false;
 		}
 
@@ -161,6 +163,7 @@ namespace RTC
 		if (DepLibSRTP::IsError(this->lastError))
 		{
 			MS_DEBUG("srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+
 			return false;
 		}
 
@@ -175,6 +178,7 @@ namespace RTC
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
 		{
 			MS_WARN("cannot encrypt RTCP packet, size too big (%zu bytes)", *len);
+
 			this->lastError = srtp_err_status_fail;
 			return false;
 		}
@@ -185,6 +189,7 @@ namespace RTC
 		if (DepLibSRTP::IsError(this->lastError))
 		{
 			MS_DEBUG("srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+
 			return false;
 		}
 
@@ -202,6 +207,7 @@ namespace RTC
 		if (DepLibSRTP::IsError(this->lastError))
 		{
 			MS_DEBUG("srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+
 			return false;
 		}
 

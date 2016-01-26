@@ -8,7 +8,7 @@
 
 std::vector<const char*> DepLibSRTP::errors =
 {
-	// From 0 (err_status_ok) to 24 (err_status_pfkey_err).
+	// From 0 (srtp_err_status_ok) to 24 (srtp_err_status_pfkey_err).
 	"nothing to report (err_status_ok)",
 	"unspecified failure (err_status_fail)",
 	"unsupported parameter (err_status_bad_param)",
