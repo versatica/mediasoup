@@ -645,7 +645,7 @@ namespace RTC
 		this->iceServer->ForceSelectedTuple(tuple);
 
 		// TODO
-		MS_DEBUG("received RTP data");
+		// MS_DEBUG("received RTP data");
 
 		RTC::RTPPacket* packet = RTC::RTPPacket::Parse(data, len);
 		if (!packet)
@@ -664,7 +664,7 @@ namespace RTC
 		}
 		else
 		{
-			// MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSSRC(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
+			MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSSRC(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
 			// packet->Dump();
 		}
 

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTP_RECEIVER_H
-#define MS_RTC_RTP_RECEIVER_H
+#ifndef MS_RTC_RTP_SENDER_H
+#define MS_RTC_RTP_SENDER_H
 
 #include "common.h"
 #include "RTC/RtpParameters.h"
@@ -13,7 +13,7 @@ namespace RTC
 	// the corresponding header files.
 	class RtpListener;
 
-	class RtpReceiver
+	class RtpSender
 	{
 	public:
 		/**
@@ -22,13 +22,13 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) = 0;
-			virtual void onRtpReceiverClosed(RtpReceiver* rtpReceiver) = 0;
+			virtual void onRtpSenderParameters(RtpSender* rtpSender, RTC::RtpParameters* rtpParameters) = 0;
+			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
 
 	public:
-		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId);
-		virtual ~RtpReceiver();
+		RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId);
+		virtual ~RtpSender();
 
 		void Close();
 		Json::Value toJson();
@@ -40,7 +40,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t rtpReceiverId;
+		uint32_t rtpSenderId;
 
 	private:
 		// Passed by argument.
@@ -54,26 +54,26 @@ namespace RTC
 	/* Inline methods. */
 
 	inline
-	void RtpReceiver::SetRtpListener(RTC::RtpListener* rtpListener)
+	void RtpSender::SetRtpListener(RTC::RtpListener* rtpListener)
 	{
 		this->rtpListener = rtpListener;
 	}
 
 	inline
-	RTC::RtpListener* RtpReceiver::GetRtpListener()
+	RTC::RtpListener* RtpSender::GetRtpListener()
 	{
 		return this->rtpListener;
 	}
 
 	inline
-	void RtpReceiver::RemoveRtpListener(RTC::RtpListener* rtpListener)
+	void RtpSender::RemoveRtpListener(RTC::RtpListener* rtpListener)
 	{
 		if (this->rtpListener == rtpListener)
 			this->rtpListener = nullptr;
 	}
 
 	inline
-	RTC::RtpParameters* RtpReceiver::GetRtpParameters()
+	RTC::RtpParameters* RtpSender::GetRtpParameters()
 	{
 		return this->rtpParameters;
 	}

@@ -87,7 +87,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Remove from the RtpListener all the entries pointing to the given RtpReceiver.
+		// Remove from the tables all the entries pointing to the given RtpReceiver.
 
 		for (auto it = this->ssrcTable.begin(); it != this->ssrcTable.end();)
 		{
@@ -107,6 +107,7 @@ namespace RTC
 				it++;
 		}
 	}
+
 	RTC::RtpReceiver* RtpListener::GetRtpReceiver(RTC::RTPPacket* packet)
 	{
 		MS_TRACE();

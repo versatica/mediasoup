@@ -35,9 +35,18 @@ namespace RTC
 			rtpReceiver->Close();
 		}
 
+		// Close all the RtpSenders.
+		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end();)
+		{
+			RTC::RtpSender* rtpSender = it->second;
+
+			it = this->rtpSenders.erase(it);
+			rtpSender->Close();
+		}
+
 		// Close all the Transports.
-		// NOTE: It is critical to close Transports after RtpReceivers because
-		// RtcReceiver.Close() fires an event in the Transport.
+		// NOTE: It is critical to close Transports after RtpReceivers/RtpSenders
+		// because RtcReceiver.Close() fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
 			RTC::Transport* transport = it->second;
@@ -275,6 +284,35 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::rtpSender_close:
+			case Channel::Request::MethodId::rtpSender_dump:
+			case Channel::Request::MethodId::rtpSender_send:
+			{
+				RTC::RtpSender* rtpSender;
+
+				try
+				{
+					rtpSender = GetRtpSenderFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				if (!rtpSender)
+				{
+					MS_ERROR("RtpSender does not exist");
+
+					request->Reject("RtpSender does not exist");
+					return;
+				}
+
+				rtpSender->HandleRequest(request);
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -338,6 +376,33 @@ namespace RTC
 		}
 	}
 
+	RTC::RtpSender* Peer::GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_rtpSenderId("rtpSenderId");
+
+		auto json_rtpSenderId = request->internal[k_rtpSenderId];
+
+		if (!json_rtpSenderId.isUInt())
+			MS_THROW_ERROR("Request has not numeric `internal.rtpSenderId`");
+
+		if (rtpSenderId)
+			*rtpSenderId = json_rtpSenderId.asUInt();
+
+		auto it = this->rtpSenders.find(json_rtpSenderId.asUInt());
+		if (it != this->rtpSenders.end())
+		{
+			RTC::RtpSender* rtpSender = it->second;
+
+			return rtpSender;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
 	void Peer::onTransportClosed(RTC::Transport* transport)
 	{
 		MS_TRACE();
@@ -363,9 +428,13 @@ namespace RTC
 		auto rtpListener = rtpReceiver->GetRtpListener();
 
 		// TODO: This may throw
-
 		if (rtpListener)
 			rtpListener->AddRtpReceiver(rtpReceiver, rtpParameters);
+
+		// NOTE: If it does not throw do this.
+
+		// Notify the listener (Room).
+		this->listener->onPeerRtpReceiverReady(this, rtpReceiver);
 	}
 
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
@@ -380,6 +449,41 @@ namespace RTC
 			rtpListener->RemoveRtpReceiver(rtpReceiver);
 		}
 
+		// TODO: Must notify the listener (Room) so it can remove this RtpReceiver.
+
 		this->rtpReceivers.erase(rtpReceiver->rtpReceiverId);
+	}
+
+	void Peer::onRtpSenderParameters(RTC::RtpSender* rtpSender, RTC::RtpParameters* rtpParameters)
+	{
+		MS_TRACE();
+
+		// auto rtpListener = rtpSender->GetRtpListener();
+
+		// // TODO: This may throw
+		// if (rtpListener)
+		// 	rtpListener->AddRtpSender(rtpSender, rtpParameters);
+
+		// // NOTE: If it does not throw do this.
+
+		// // Notify the listener (Room).
+		// this->listener->onPeerRtpSenderReady(this, rtpSender);
+	}
+
+	void Peer::onRtpSenderClosed(RTC::RtpSender* rtpSender)
+	{
+		MS_TRACE();
+
+		// We must remove the closed RtpSender from the RtpListeners holding it.
+		// for (auto& kv : this->transports)
+		// {
+		// 	RTC::RtpListener* rtpListener = kv.second;
+
+		// 	rtpListener->RemoveRtpSender(rtpSender);
+		// }
+
+		// TODO: Must notify the listener (Room) so it can remove this RtpSender.
+
+		this->rtpSenders.erase(rtpSender->rtpSenderId);
 	}
 }

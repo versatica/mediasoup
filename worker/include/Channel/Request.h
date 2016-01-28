@@ -32,7 +32,12 @@ namespace Channel
 			transport_setRemoteDtlsParameters,
 			rtpReceiver_close,
 			rtpReceiver_dump,
-			rtpReceiver_receive
+			rtpReceiver_receive,
+			rtpSender_close,
+			rtpSender_dump,
+			// TODO: we do really need this? note that this is supposed to be called
+			// internally
+			rtpSender_send
 		};
 
 	private:

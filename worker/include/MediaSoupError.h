@@ -6,7 +6,8 @@
 #include <string>
 #include <cstdio>  // std::snprintf
 
-class MediaSoupError : public std::runtime_error
+class MediaSoupError :
+	public std::runtime_error
 {
 public:
 	MediaSoupError(const char* description);
@@ -15,7 +16,8 @@ public:
 /* Inline methods. */
 
 inline
-MediaSoupError::MediaSoupError(const char* description) :	std::runtime_error(description)
+MediaSoupError::MediaSoupError(const char* description) :
+	std::runtime_error(description)
 {}
 
 #define MS_THROW_ERROR(desc, ...)  \

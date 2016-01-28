@@ -4,6 +4,7 @@
 #include "common.h"
 #include "RTC/Transport.h"
 #include "RTC/RtpReceiver.h"
+#include "RTC/RtpSender.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -14,13 +15,15 @@ namespace RTC
 {
 	class Peer :
 		public RTC::Transport::Listener,
-		public RTC::RtpReceiver::Listener
+		public RTC::RtpReceiver::Listener,
+		public RTC::RtpSender::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
 			virtual void onPeerClosed(RTC::Peer* peer) = 0;
+			virtual void onPeerRtpReceiverReady(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 		};
 
 	public:
@@ -34,6 +37,7 @@ namespace RTC
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
 		RTC::RtpReceiver* GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId = nullptr);
+		RTC::RtpSender* GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId = nullptr);
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -43,6 +47,11 @@ namespace RTC
 	public:
 		virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) override;
 		virtual void onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver) override;
+
+	/* Pure virtual methods inherited from RTC::RtpSender::Listener. */
+	public:
+		virtual void onRtpSenderParameters(RTC::RtpSender* rtpSender, RTC::RtpParameters* rtpParameters) override;
+		virtual void onRtpSenderClosed(RTC::RtpSender* rtpSender) override;
 
 	public:
 		// Passed by argument.
@@ -56,6 +65,7 @@ namespace RTC
 		// Others.
 		std::unordered_map<uint32_t, RTC::Transport*> transports;
 		std::unordered_map<uint32_t, RTC::RtpReceiver*> rtpReceivers;
+		std::unordered_map<uint32_t, RTC::RtpSender*> rtpSenders;
 	};
 }
 

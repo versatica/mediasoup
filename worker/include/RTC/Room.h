@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "RTC/Peer.h"
+#include "RTC/RtpReceiver.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_map>
@@ -34,6 +35,7 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
 		virtual void onPeerClosed(RTC::Peer* peer) override;
+		virtual void onPeerRtpReceiverReady(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
 
 	public:
 		// Passed by argument.

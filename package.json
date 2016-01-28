@@ -17,12 +17,14 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
-    "check-types": "^5.1.0",
+    "check-types": "^6.0.0",
     "clone": "^1.0.2",
     "debug": "^2.2.0",
+    "gulp-shell": "^0.5.2",
     "netstring": "^0.3.0",
     "random-number": "0.0.6",
-    "random-string": "^0.1.2"
+    "random-string": "^0.1.2",
+    "tap": "^5.2.0"
   },
   "devDependencies": {
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",

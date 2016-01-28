@@ -1,6 +1,6 @@
-#define MS_CLASS "RTC::RtpReceiver"
+#define MS_CLASS "RTC::RtpSender"
 
-#include "RTC/RtpReceiver.h"
+#include "RTC/RtpSender.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -8,20 +8,20 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId) :
-		rtpReceiverId(rtpReceiverId),
+	RtpSender::RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId) :
+		rtpSenderId(rtpSenderId),
 		listener(listener),
 		notifier(notifier)
 	{
 		MS_TRACE();
 	}
 
-	RtpReceiver::~RtpReceiver()
+	RtpSender::~RtpSender()
 	{
 		MS_TRACE();
 	}
 
-	void RtpReceiver::Close()
+	void RtpSender::Close()
 	{
 		MS_TRACE();
 
@@ -29,15 +29,15 @@ namespace RTC
 			delete this->rtpParameters;
 
 		// Notify.
-		this->notifier->Emit(this->rtpReceiverId, "close");
+		this->notifier->Emit(this->rtpSenderId, "close");
 
 		// Notify the listener.
-		this->listener->onRtpReceiverClosed(this);
+		this->listener->onRtpSenderClosed(this);
 
 		delete this;
 	}
 
-	Json::Value RtpReceiver::toJson()
+	Json::Value RtpSender::toJson()
 	{
 		MS_TRACE();
 
@@ -54,25 +54,25 @@ namespace RTC
 		return json;
 	}
 
-	void RtpReceiver::HandleRequest(Channel::Request* request)
+	void RtpSender::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::rtpReceiver_close:
+			case Channel::Request::MethodId::rtpSender_close:
 			{
-				uint32_t rtpReceiverId = this->rtpReceiverId;
+				uint32_t rtpSenderId = this->rtpSenderId;
 
 				Close();
 
-				MS_DEBUG("RtpReceiver closed [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
+				MS_DEBUG("RtpSender closed [rtpSenderId:%" PRIu32 "]", rtpSenderId);
 				request->Accept();
 
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpReceiver_dump:
+			case Channel::Request::MethodId::rtpSender_dump:
 			{
 				Json::Value json = toJson();
 
@@ -81,7 +81,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpReceiver_receive:
+			case Channel::Request::MethodId::rtpSender_send:
 			{
 				// Keep a reference to the previous rtpParameters.
 				auto previousRtpParameters = this->rtpParameters;
@@ -102,7 +102,7 @@ namespace RTC
 				// TODO: may this callback throw if the new parameters are invalid
 				// for the Transport(s)?
 				// If so, don't dlete previous parameters and keep them.
-				this->listener->onRtpReceiverParameters(this, this->rtpParameters);
+				this->listener->onRtpSenderParameters(this, this->rtpParameters);
 
 				request->Accept();
 

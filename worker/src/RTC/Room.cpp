@@ -155,6 +155,9 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_close:
 			case Channel::Request::MethodId::rtpReceiver_dump:
 			case Channel::Request::MethodId::rtpReceiver_receive:
+			case Channel::Request::MethodId::rtpSender_close:
+			case Channel::Request::MethodId::rtpSender_dump:
+			case Channel::Request::MethodId::rtpSender_send:
 			{
 				RTC::Peer* peer;
 
@@ -223,5 +226,26 @@ namespace RTC
 		MS_TRACE();
 
 		this->peers.erase(peer->peerId);
+	}
+
+	void Room::onPeerRtpReceiverReady(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_peerName("peerName");
+		static const Json::StaticString k_peerId("peerId");
+		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
+		static const Json::StaticString k_rtpParameters("rtpParameters");
+
+		MS_ASSERT(rtpReceiver->GetRtpParameters(), "rtpReceiver->GetRtpParameters() returns no RtpParameters");
+
+		Json::Value event_data(Json::objectValue);
+
+		event_data[k_peerName] = peer->peerName;
+		event_data[k_peerId] = peer->peerId;
+		event_data[k_rtpReceiverId] = rtpReceiver->rtpReceiverId;
+		event_data[k_rtpParameters] = rtpReceiver->GetRtpParameters()->toJson();
+
+		this->notifier->Emit(this->roomId, "rtpreceiverready", event_data);
 	}
 }
