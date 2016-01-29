@@ -31,11 +31,11 @@ gulp.task('lint', () =>
 });
 
 gulp.task('test', shell.task(
-	[ `node_modules/.bin/tap --bail --color --reporter=spec ${tests.join(' ')}` ]
+	[ `tap --bail --color --reporter=spec ${tests.join(' ')}` ]
 ));
 
 gulp.task('test-debug', shell.task(
-	[ `node_modules/.bin/tap --bail --reporter=tap ${tests.join(' ')}` ],
+	[ `tap --bail --reporter=tap ${tests.join(' ')}` ],
 	{
 		env     : { DEBUG: '*ERROR* *WARN*' },
 		verbose : true
