@@ -37,6 +37,6 @@
     "tap": "^5.1.1"
   },
   "scripts": {
-    "test": "./node_modules/.bin/gulp test"
+    "test": "gulp test"
   }
 }
