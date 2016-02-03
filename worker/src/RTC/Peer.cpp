@@ -26,6 +26,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
+
+		Json::Value event_data(Json::objectValue);
+
 		// Close all the RtpReceivers.
 		for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end();)
 		{
@@ -54,6 +58,10 @@ namespace RTC
 			it = this->transports.erase(it);
 			transport->Close();
 		}
+
+		// Notify.
+		event_data[k_class] = "Peer";
+		this->notifier->Emit(this->peerId, "close", event_data);
 
 		// Notify the listener.
 		this->listener->onPeerClosed(this);
@@ -286,7 +294,6 @@ namespace RTC
 
 			case Channel::Request::MethodId::rtpSender_close:
 			case Channel::Request::MethodId::rtpSender_dump:
-			case Channel::Request::MethodId::rtpSender_send:
 			{
 				RTC::RtpSender* rtpSender;
 
@@ -320,6 +327,13 @@ namespace RTC
 				request->Reject("unknown method");
 			}
 		}
+	}
+
+	void Peer::AddRtpSender(RTC::RtpSender* rtpSender)
+	{
+		MS_TRACE();
+
+		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;
 	}
 
 	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId)
@@ -454,33 +468,9 @@ namespace RTC
 		this->rtpReceivers.erase(rtpReceiver->rtpReceiverId);
 	}
 
-	void Peer::onRtpSenderParameters(RTC::RtpSender* rtpSender, RTC::RtpParameters* rtpParameters)
-	{
-		MS_TRACE();
-
-		// auto rtpListener = rtpSender->GetRtpListener();
-
-		// // TODO: This may throw
-		// if (rtpListener)
-		// 	rtpListener->AddRtpSender(rtpSender, rtpParameters);
-
-		// // NOTE: If it does not throw do this.
-
-		// // Notify the listener (Room).
-		// this->listener->onPeerRtpSenderReady(this, rtpSender);
-	}
-
 	void Peer::onRtpSenderClosed(RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
-
-		// We must remove the closed RtpSender from the RtpListeners holding it.
-		// for (auto& kv : this->transports)
-		// {
-		// 	RTC::RtpListener* rtpListener = kv.second;
-
-		// 	rtpListener->RemoveRtpSender(rtpSender);
-		// }
 
 		// TODO: Must notify the listener (Room) so it can remove this RtpSender.
 

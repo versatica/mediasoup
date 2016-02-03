@@ -22,7 +22,6 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpSenderParameters(RtpSender* rtpSender, RTC::RtpParameters* rtpParameters) = 0;
 			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
 
@@ -33,6 +32,7 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
+		void Send(RTC::RtpParameters* rtpParameters);
 		void SetRtpListener(RTC::RtpListener* rtpListener);
 		RTC::RtpListener* GetRtpListener();
 		void RemoveRtpListener(RTC::RtpListener* rtpListener);
@@ -47,7 +47,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		RTC::RtpListener* rtpListener = nullptr;
-		// Allocated by this.
+		// Externally allocated but handled by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 	};
 

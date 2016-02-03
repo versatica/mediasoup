@@ -20,21 +20,19 @@
     "check-types": "^6.0.0",
     "clone": "^1.0.2",
     "debug": "^2.2.0",
-    "gulp-shell": "^0.5.2",
     "netstring": "^0.3.0",
     "random-number": "0.0.6",
-    "random-string": "^0.1.2",
-    "tap": "^5.2.0"
+    "random-string": "^0.1.2"
   },
   "devDependencies": {
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
     "gulp-jscs": "^3.0.2",
     "gulp-jscs-stylish": "^1.2.1",
     "gulp-jshint": "^2.0.0",
-    "gulp-shell": "^0.5.1",
+    "gulp-shell": "^0.5.2",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.0.1",
-    "tap": "^5.1.1"
+    "tap": "^5.4.2"
   },
   "scripts": {
     "test": "gulp test"

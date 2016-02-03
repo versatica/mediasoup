@@ -4,9 +4,11 @@
 #include "common.h"
 #include "RTC/Peer.h"
 #include "RTC/RtpReceiver.h"
+#include "RTC/RtpSender.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_map>
+#include <unordered_set>
 #include <json/json.h>
 
 namespace RTC
@@ -47,6 +49,7 @@ namespace RTC
 		Channel::Notifier* notifier = nullptr;
 		// Others.
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
+		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapReceiverSenders;
 	};
 }
 

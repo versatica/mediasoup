@@ -27,8 +27,7 @@ namespace Channel
 		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  },
 		{ "rtpReceiver.receive",               Request::MethodId::rtpReceiver_receive               },
 		{ "rtpSender.close",                   Request::MethodId::rtpSender_close                   },
-		{ "rtpSender.dump",                    Request::MethodId::rtpSender_dump                    },
-		{ "rtpSender.send",                    Request::MethodId::rtpSender_send                    }
+		{ "rtpSender.dump",                    Request::MethodId::rtpSender_dump                    }
 	};
 
 	/* Instance methods. */

@@ -25,11 +25,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
+
+		Json::Value event_data(Json::objectValue);
+
 		if (this->rtpParameters)
 			delete this->rtpParameters;
 
 		// Notify.
-		this->notifier->Emit(this->rtpSenderId, "close");
+		event_data[k_class] = "RtpSender";
+		this->notifier->Emit(this->rtpSenderId, "close", event_data);
 
 		// Notify the listener.
 		this->listener->onRtpSenderClosed(this);
@@ -81,34 +86,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpSender_send:
-			{
-				// Keep a reference to the previous rtpParameters.
-				auto previousRtpParameters = this->rtpParameters;
-
-				try
-				{
-					this->rtpParameters = new RTC::RtpParameters(request->data);
-				}
-				catch (const MediaSoupError &error)
-				{
-					request->Reject(error.what());
-					return;
-				}
-
-				// Free the previous rtpParameters.
-				delete previousRtpParameters;
-
-				// TODO: may this callback throw if the new parameters are invalid
-				// for the Transport(s)?
-				// If so, don't dlete previous parameters and keep them.
-				this->listener->onRtpSenderParameters(this, this->rtpParameters);
-
-				request->Accept();
-
-				break;
-			}
-
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -116,5 +93,16 @@ namespace RTC
 				request->Reject("unknown method");
 			}
 		}
+	}
+
+	void RtpSender::Send(RTC::RtpParameters* rtpParameters)
+	{
+		MS_TRACE();
+
+		// Free the previous rtpParameters.
+		if (this->rtpParameters)
+			delete this->rtpParameters;
+
+		this->rtpParameters = rtpParameters;
 	}
 }

@@ -205,6 +205,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
+
+		Json::Value event_data(Json::objectValue);
+
 		// if (this->srtpRecvSession)
 		// 	this->srtpRecvSession->Close();
 
@@ -228,7 +232,8 @@ namespace RTC
 		this->selectedTuple = nullptr;
 
 		// Notify.
-		this->notifier->Emit(this->transportId, "close");
+		event_data[k_class] = "Transport";
+		this->notifier->Emit(this->transportId, "close", event_data);
 
 		// If this was allocated (it did not throw in the constructor) notify the
 		// listener and delete it.
@@ -517,7 +522,7 @@ namespace RTC
 
 			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
 			// received with remote DTLS role 'server'.
-			// If 'client' then wait for ICE to be 'completed'.
+			// If 'client' then wait for ICE to be 'completed' (got USE-CANDIDATE).
 			case RTC::DTLSTransport::Role::CLIENT:
 				if (this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
 				{
@@ -527,8 +532,8 @@ namespace RTC
 				}
 				break;
 
-			// If 'server' then run the DTLS handler if ICE is 'connected' or
-			// 'completed'.
+			// If 'server' then run the DTLS transport if ICE is 'connected' (not yet
+			// USE-CANDIDATE) or 'completed'.
 			case RTC::DTLSTransport::Role::SERVER:
 				if (this->iceServer->GetState() == RTC::ICEServer::IceState::CONNECTED ||
 				    this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
@@ -630,6 +635,8 @@ namespace RTC
 	void Transport::onRTPDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// TODO: Shouldn't we check that DTLS is done???
 
 		RTC::RtpReceiver* rtpReceiver = nullptr;
 

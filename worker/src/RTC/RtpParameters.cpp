@@ -50,6 +50,15 @@ namespace RTC
 		}
 	}
 
+	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
+	{
+		MS_TRACE();
+
+		this->muxId = rtpParameters->muxId;
+		this->codecs = rtpParameters->codecs;
+		this->encodings = rtpParameters->encodings;
+	}
+
 	RtpParameters::~RtpParameters()
 	{
 		MS_TRACE();

@@ -25,11 +25,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
+
+		Json::Value event_data(Json::objectValue);
+
 		if (this->rtpParameters)
 			delete this->rtpParameters;
 
 		// Notify.
-		this->notifier->Emit(this->rtpReceiverId, "close");
+		event_data[k_class] = "RtpReceiver";
+		this->notifier->Emit(this->rtpReceiverId, "close", event_data);
 
 		// Notify the listener.
 		this->listener->onRtpReceiverClosed(this);

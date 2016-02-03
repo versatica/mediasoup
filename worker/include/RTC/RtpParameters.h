@@ -41,6 +41,7 @@ namespace RTC
 
 	public:
 		RtpParameters(Json::Value& data);
+		RtpParameters(const RtpParameters* RtpParameters);
 		virtual ~RtpParameters();
 
 		Json::Value toJson();

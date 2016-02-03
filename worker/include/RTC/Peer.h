@@ -33,6 +33,7 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
+		void AddRtpSender(RTC::RtpSender* rtpSender);
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
@@ -50,7 +51,6 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::RtpSender::Listener. */
 	public:
-		virtual void onRtpSenderParameters(RTC::RtpSender* rtpSender, RTC::RtpParameters* rtpParameters) override;
 		virtual void onRtpSenderClosed(RTC::RtpSender* rtpSender) override;
 
 	public:

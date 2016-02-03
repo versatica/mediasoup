@@ -96,18 +96,14 @@ tap.test('server.Room() in a closed server must fail', { timeout: 1000 }, (t) =>
 
 	server.on('close', () =>
 	{
-		try
+		t.throws(() =>
 		{
 			server.Room();
+		},
+		mediasoup.errors.InvalidStateError,
+		'server.Room() must throw InvalidStateError');
 
-			t.fail('server.Room() succeeded');
-		}
-		catch (error)
-		{
-			t.ok(error instanceof mediasoup.errors.InvalidStateError,
-				'server.Room() must throw InvalidStateError');
-			t.end();
-		}
+		t.end();
 	});
 
 	server.close();

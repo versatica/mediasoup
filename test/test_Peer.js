@@ -102,18 +102,14 @@ tap.test('peer.RtpReceiver() with a closed `transport` must fail', { timeout: 10
 
 			transport.close();
 
-			try
+			t.throws(() =>
 			{
 				peer.RtpReceiver(transport);
+			},
+			mediasoup.errors.InvalidStateError,
+			'peer.RtpReceiver() must throw InvalidStateError');
 
-				t.fail('peer.RtpReceiver() succeeded');
-			}
-			catch (error)
-			{
-				t.ok(error instanceof mediasoup.errors.InvalidStateError,
-					'peer.RtpReceiver() must throw InvalidStateError');
-				t.end();
-			}
+			t.end();
 		})
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });

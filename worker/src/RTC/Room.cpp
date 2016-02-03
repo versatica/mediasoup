@@ -3,6 +3,7 @@
 #include "RTC/Room.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
+#include "Utils.h"
 #include <string>
 
 namespace RTC
@@ -26,6 +27,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
+
+		Json::Value event_data(Json::objectValue);
+
 		// Close all the Peers.
 		// NOTE: Upon Peer closure the onPeerClosed() method is called which
 		// removes it from the map, so this is the safe way to iterate the mao
@@ -37,6 +42,10 @@ namespace RTC
 			it = this->peers.erase(it);
 			peer->Close();
 		}
+
+		// Notify.
+		event_data[k_class] = "Room";
+		this->notifier->Emit(this->roomId, "close", event_data);
 
 		// Notify the listener.
 		this->listener->onRoomClosed(this);
@@ -157,7 +166,6 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			case Channel::Request::MethodId::rtpSender_close:
 			case Channel::Request::MethodId::rtpSender_dump:
-			case Channel::Request::MethodId::rtpSender_send:
 			{
 				RTC::Peer* peer;
 
@@ -232,20 +240,53 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_peerName("peerName");
+		static const Json::StaticString k_sender("sender");
+		static const Json::StaticString k_receiver("receiver");
 		static const Json::StaticString k_peerId("peerId");
+		static const Json::StaticString k_rtpSenderId("rtpSenderId");
 		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 
 		MS_ASSERT(rtpReceiver->GetRtpParameters(), "rtpReceiver->GetRtpParameters() returns no RtpParameters");
 
-		Json::Value event_data(Json::objectValue);
+		for (auto& kv : this->peers)
+		{
+			RTC::Peer* other_peer = kv.second;
 
-		event_data[k_peerName] = peer->peerName;
-		event_data[k_peerId] = peer->peerId;
-		event_data[k_rtpReceiverId] = rtpReceiver->rtpReceiverId;
-		event_data[k_rtpParameters] = rtpReceiver->GetRtpParameters()->toJson();
+			// Skip receiver peer.
+			if (other_peer == peer)
+				continue;
 
-		this->notifier->Emit(this->roomId, "rtpreceiverready", event_data);
+			// Create a RtpSender for each remaining Peer in the Room.
+
+			uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+
+			RTC::RtpSender* rtpSender = new RTC::RtpSender(other_peer, this->notifier, rtpSenderId);
+
+			// Clone receiver RtpParameters.
+			// TODO: Must mangle them (ssrc and so on).
+			RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
+
+			rtpSender->Send(rtpSenderParameters);
+
+			// Attach the RtpSender to other_peer.
+			other_peer->AddRtpSender(rtpSender);
+
+			Json::Value event_data(Json::objectValue);
+			Json::Value event_sender(Json::objectValue);
+			Json::Value event_receiver(Json::objectValue);
+
+			event_sender[k_peerId] = other_peer->peerId;
+			event_sender[k_rtpSenderId] = rtpSender->rtpSenderId;
+			event_sender[k_rtpParameters] = rtpSender->GetRtpParameters()->toJson();
+
+			event_receiver[k_peerId] = peer->peerId;
+			event_receiver[k_rtpReceiverId] = rtpReceiver->rtpReceiverId;
+
+			event_data[k_sender] = event_sender;
+			event_data[k_receiver] = event_receiver;
+
+			this->notifier->Emit(this->roomId, "newrtpsender", event_data);
+		}
 	}
 }
