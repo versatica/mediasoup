@@ -146,6 +146,28 @@ namespace RTC
 					return;
 				}
 
+				// Get all the RtpReceivers of the others Peers in the Room and create
+				// RtpSenders for this new Peer.
+				for (auto& kv : this->peers)
+				{
+					RTC::Peer* other_peer = kv.second;
+
+					for (auto rtpReceiver : other_peer->GetRtpReceivers())
+					{
+						uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+						RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId);
+
+						// Clone receiver RtpParameters.
+						RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
+
+						rtpSender->Send(rtpSenderParameters);
+
+						// Attach the RtpSender to peer.
+						peer->AddRtpSender(rtpSender);
+					}
+				}
+
+				// Store the new Peer.
 				this->peers[peerId] = peer;
 
 				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
@@ -260,11 +282,9 @@ namespace RTC
 			// Create a RtpSender for each remaining Peer in the Room.
 
 			uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-
 			RTC::RtpSender* rtpSender = new RTC::RtpSender(other_peer, this->notifier, rtpSenderId);
 
 			// Clone receiver RtpParameters.
-			// TODO: Must mangle them (ssrc and so on).
 			RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
 
 			rtpSender->Send(rtpSenderParameters);
@@ -288,5 +308,17 @@ namespace RTC
 
 			this->notifier->Emit(this->roomId, "newrtpsender", event_data);
 		}
+	}
+
+	void Room::onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+	}
+
+	void Room::onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender)
+	{
+		MS_TRACE();
+
 	}
 }

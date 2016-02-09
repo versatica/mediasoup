@@ -9,6 +9,7 @@
 #include "Channel/Notifier.h"
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include <json/json.h>
 
 namespace RTC
@@ -24,6 +25,8 @@ namespace RTC
 		public:
 			virtual void onPeerClosed(RTC::Peer* peer) = 0;
 			virtual void onPeerRtpReceiverReady(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
+			virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
+			virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
 		};
 
 	public:
@@ -33,6 +36,7 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
+		std::vector<RTC::RtpReceiver*> GetRtpReceivers();
 		void AddRtpSender(RTC::RtpSender* rtpSender);
 
 	private:
@@ -67,6 +71,21 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::RtpReceiver*> rtpReceivers;
 		std::unordered_map<uint32_t, RTC::RtpSender*> rtpSenders;
 	};
+
+	/* Inline methods. */
+
+	inline
+	std::vector<RTC::RtpReceiver*> Peer::GetRtpReceivers()
+	{
+		std::vector<RTC::RtpReceiver*> rtpReceivers;
+
+		for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
+		{
+			rtpReceivers.push_back(it->second);
+		}
+
+		return rtpReceivers;
+	}
 }
 
 #endif

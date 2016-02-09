@@ -38,6 +38,8 @@ namespace RTC
 	public:
 		virtual void onPeerClosed(RTC::Peer* peer) override;
 		virtual void onPeerRtpReceiverReady(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
+		virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
+		virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 
 	public:
 		// Passed by argument.

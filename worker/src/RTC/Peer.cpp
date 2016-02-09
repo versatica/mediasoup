@@ -76,10 +76,12 @@ namespace RTC
 		static const Json::StaticString k_peerName("peerName");
 		static const Json::StaticString k_transports("transports");
 		static const Json::StaticString k_rtpReceivers("rtpReceivers");
+		static const Json::StaticString k_rtpSenders("rtpSenders");
 
 		Json::Value json(Json::objectValue);
 		Json::Value json_transports(Json::objectValue);
 		Json::Value json_rtpReceivers(Json::objectValue);
+		Json::Value json_rtpSenders(Json::objectValue);
 
 		json[k_peerName] = this->peerName;
 
@@ -98,6 +100,14 @@ namespace RTC
 			json_rtpReceivers[std::to_string(rtpReceiver->rtpReceiverId)] = rtpReceiver->toJson();
 		}
 		json[k_rtpReceivers] = json_rtpReceivers;
+
+		for (auto& kv : this->rtpSenders)
+		{
+			RTC::RtpSender* rtpSender = kv.second;
+
+			json_rtpSenders[std::to_string(rtpSender->rtpSenderId)] = rtpSender->toJson();
+		}
+		json[k_rtpSenders] = json_rtpSenders;
 
 		return json;
 	}
@@ -333,6 +343,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: let's see
+		MS_ASSERT(this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
+			"given RtpSender already exists in this Peer");
+
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;
 	}
 
@@ -430,6 +444,14 @@ namespace RTC
 			RTC::RtpReceiver* rtpReceiver = kv.second;
 
 			rtpReceiver->RemoveRtpListener(rtpListener);
+		}
+
+		// Must also unset this Transport from all the RtpSenders using it.
+		for (auto& kv : this->rtpSenders)
+		{
+			RTC::RtpSender* rtpSender = kv.second;
+
+			rtpSender->RemoveRtpListener(rtpListener);
 		}
 
 		this->transports.erase(transport->transportId);
