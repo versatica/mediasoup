@@ -26,7 +26,6 @@ namespace Channel
 		{ "rtpReceiver.close",                 Request::MethodId::rtpReceiver_close                 },
 		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  },
 		{ "rtpReceiver.receive",               Request::MethodId::rtpReceiver_receive               },
-		{ "rtpSender.close",                   Request::MethodId::rtpSender_close                   },
 		{ "rtpSender.dump",                    Request::MethodId::rtpSender_dump                    }
 	};
 

@@ -302,7 +302,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpSender_close:
 			case Channel::Request::MethodId::rtpSender_dump:
 			{
 				RTC::RtpSender* rtpSender;
@@ -470,7 +469,7 @@ namespace RTC
 		// NOTE: If it does not throw do this.
 
 		// Notify the listener (Room).
-		this->listener->onPeerRtpReceiverReady(this, rtpReceiver);
+		this->listener->onPeerRtpReceiverParameters(this, rtpReceiver);
 	}
 
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)

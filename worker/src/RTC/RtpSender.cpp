@@ -65,18 +65,6 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::rtpSender_close:
-			{
-				uint32_t rtpSenderId = this->rtpSenderId;
-
-				Close();
-
-				MS_DEBUG("RtpSender closed [rtpSenderId:%" PRIu32 "]", rtpSenderId);
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::rtpSender_dump:
 			{
 				Json::Value json = toJson();

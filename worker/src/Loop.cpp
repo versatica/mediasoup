@@ -227,7 +227,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::rtpReceiver_close:
 		case Channel::Request::MethodId::rtpReceiver_dump:
 		case Channel::Request::MethodId::rtpReceiver_receive:
-		case Channel::Request::MethodId::rtpSender_close:
 		case Channel::Request::MethodId::rtpSender_dump:
 		{
 			RTC::Room* room;
