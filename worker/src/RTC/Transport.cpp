@@ -250,6 +250,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_transportId("transportId");
 		static const Json::StaticString k_iceRole("iceRole");
 		static const Json::StaticString v_controlled("controlled");
 		static const Json::StaticString k_iceLocalParameters("iceLocalParameters");
@@ -275,6 +276,8 @@ namespace RTC
 		static const Json::StaticString k_rtpListener("rtpListener");
 
 		Json::Value json(Json::objectValue);
+
+		json[k_transportId] = (Json::UInt)this->transportId;
 
 		// Add `iceRole` (we are always "controlled").
 		json[k_iceRole] = v_controlled;

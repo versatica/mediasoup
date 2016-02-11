@@ -47,9 +47,12 @@ namespace RTC
 		MS_TRACE();
 
 		static Json::Value null_data(Json::nullValue);
+		static const Json::StaticString k_rtpSenderId("rtpSenderId");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 
 		Json::Value json(Json::objectValue);
+
+		json[k_rtpSenderId] = (Json::UInt)this->rtpSenderId;
 
 		if (this->rtpParameters)
 			json[k_rtpParameters] = this->rtpParameters->toJson();
@@ -92,5 +95,16 @@ namespace RTC
 			delete this->rtpParameters;
 
 		this->rtpParameters = rtpParameters;
+	}
+
+	void RtpSender::NotifyParameters()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->rtpParameters, "no RtpParameters set");
+
+		Json::Value event_data = this->rtpParameters->toJson();
+
+		this->notifier->Emit(this->rtpSenderId, "updateparameters", event_data);
 	}
 }

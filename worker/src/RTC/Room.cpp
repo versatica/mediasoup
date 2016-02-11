@@ -57,10 +57,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_roomId("roomId");
 		static const Json::StaticString k_peers("peers");
 
 		Json::Value json(Json::objectValue);
 		Json::Value json_peers(Json::objectValue);
+
+		json[k_roomId] = (Json::UInt)this->roomId;
 
 		for (auto& kv : this->peers)
 		{
@@ -146,14 +149,24 @@ namespace RTC
 					return;
 				}
 
-				// Get all the RtpReceivers of the others Peers in the Room and create
-				// RtpSenders for this new Peer.
+				// Store the new Peer.
+				this->peers[peerId] = peer;
+
+				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
+				request->Accept();
+
+				// Get all the ready RtpReceivers of the others Peers in the Room and
+				// create RtpSenders for this new Peer.
 				for (auto& kv : this->peers)
 				{
-					RTC::Peer* other_peer = kv.second;
+					RTC::Peer* receiver_peer = kv.second;
 
-					for (auto rtpReceiver : other_peer->GetRtpReceivers())
+					for (auto rtpReceiver : receiver_peer->GetRtpReceivers())
 					{
+						// Skip if the RtpReceiver has not parameters.
+						if (!rtpReceiver->GetRtpParameters())
+							continue;
+
 						uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
 						RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId);
 
@@ -163,15 +176,9 @@ namespace RTC
 						rtpSender->Send(rtpSenderParameters);
 
 						// Attach the RtpSender to peer.
-						peer->AddRtpSender(rtpSender);
+						peer->AddRtpSender(rtpSender, receiver_peer->peerName);
 					}
 				}
-
-				// Store the new Peer.
-				this->peers[peerId] = peer;
-
-				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
-				request->Accept();
 
 				break;
 			}
@@ -261,12 +268,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_sender("sender");
-		static const Json::StaticString k_receiver("receiver");
-		static const Json::StaticString k_peerId("peerId");
-		static const Json::StaticString k_rtpSenderId("rtpSenderId");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
-
 		MS_ASSERT(rtpReceiver->GetRtpParameters(), "rtpReceiver->GetRtpParameters() returns no RtpParameters");
 
 		// The RtpReceiver may already be set previously.
@@ -278,15 +279,15 @@ namespace RTC
 		{
 			for (auto& kv : this->peers)
 			{
-				RTC::Peer* other_peer = kv.second;
+				RTC::Peer* sender_peer = kv.second;
 
 				// Skip receiver peer.
-				if (other_peer == peer)
+				if (sender_peer == peer)
 					continue;
 
 				// Create a RtpSender for the other Peer.
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender = new RTC::RtpSender(other_peer, this->notifier, rtpSenderId);
+				RTC::RtpSender* rtpSender = new RTC::RtpSender(sender_peer, this->notifier, rtpSenderId);
 
 				// Store into the map.
 				this->mapReceiverSenders[rtpReceiver].insert(rtpSender);
@@ -297,25 +298,8 @@ namespace RTC
 				// Assign cloned parameters to the RtpSender.
 				rtpSender->Send(rtpSenderParameters);
 
-				// Attach the RtpSender to other_peer.
-				other_peer->AddRtpSender(rtpSender);
-
-				// Notify.
-
-				Json::Value event_data(Json::objectValue);
-				Json::Value event_sender(Json::objectValue);
-				Json::Value event_receiver(Json::objectValue);
-
-				event_sender[k_peerId] = other_peer->peerId;
-				event_sender[k_rtpSenderId] = rtpSender->rtpSenderId;
-				event_sender[k_rtpParameters] = rtpSender->GetRtpParameters()->toJson();
-
-				event_receiver[k_peerId] = peer->peerId;
-
-				event_data[k_sender] = event_sender;
-				event_data[k_receiver] = event_receiver;
-
-				this->notifier->Emit(this->roomId, "newrtpsender", event_data);
+				// Attach the RtpSender to sender_peer.
+				sender_peer->AddRtpSender(rtpSender, peer->peerName);
 			}
 		}
 		// If this is not a new RtpReceiver let's retrieve its updated parameters
@@ -330,11 +314,8 @@ namespace RTC
 				// Assign cloned parameters to the RtpSender.
 				rtpSender->Send(rtpSenderParameters);
 
-				// Notify.
-
-				Json::Value event_data = rtpSender->GetRtpParameters()->toJson();
-
-				this->notifier->Emit(rtpSender->rtpSenderId, "updateparameters", event_data);
+				// Notify updated parameters.
+				rtpSender->NotifyParameters();
 			}
 		}
 	}

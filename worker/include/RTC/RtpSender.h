@@ -37,6 +37,7 @@ namespace RTC
 		RTC::RtpListener* GetRtpListener();
 		void RemoveRtpListener(RTC::RtpListener* rtpListener);
 		RTC::RtpParameters* GetRtpParameters();
+		void NotifyParameters();
 
 	public:
 		// Passed by argument.

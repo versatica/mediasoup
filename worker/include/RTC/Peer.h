@@ -37,7 +37,12 @@ namespace RTC
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
 		std::vector<RTC::RtpReceiver*> GetRtpReceivers();
-		void AddRtpSender(RTC::RtpSender* rtpSender);
+		/**
+		 * Add a new RtpSender to the Peer.
+		 * @param rtpSender     Instance of RtpSender.
+		 * @param peerName      Name of the receiver Peer.
+		 */
+		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName);
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);

@@ -73,6 +73,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_peerId("peerId");
 		static const Json::StaticString k_peerName("peerName");
 		static const Json::StaticString k_transports("transports");
 		static const Json::StaticString k_rtpReceivers("rtpReceivers");
@@ -82,6 +83,8 @@ namespace RTC
 		Json::Value json_transports(Json::objectValue);
 		Json::Value json_rtpReceivers(Json::objectValue);
 		Json::Value json_rtpSenders(Json::objectValue);
+
+		json[k_peerId] = (Json::UInt)this->peerId;
 
 		json[k_peerName] = this->peerName;
 
@@ -338,15 +341,31 @@ namespace RTC
 		}
 	}
 
-	void Peer::AddRtpSender(RTC::RtpSender* rtpSender)
+	void Peer::AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName)
 	{
 		MS_TRACE();
 
-		// TODO: let's see
+		static const Json::StaticString k_rtpSenderId("rtpSenderId");
+		static const Json::StaticString k_rtpParameters("rtpParameters");
+		static const Json::StaticString k_peerName("peerName");
+
 		MS_ASSERT(this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
 			"given RtpSender already exists in this Peer");
 
+		MS_ASSERT(rtpSender->GetRtpParameters(), "given RtpSender does not have RtpParameters");
+
+		// Store it.
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;
+
+		// Notify.
+
+		Json::Value event_data(Json::objectValue);
+
+		event_data[k_rtpSenderId] = (Json::UInt)rtpSender->rtpSenderId;
+		event_data[k_rtpParameters] = rtpSender->GetRtpParameters()->toJson();
+		event_data[k_peerName] = peerName;
+
+		this->notifier->Emit(this->peerId, "newrtpsender", event_data);
 	}
 
 	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId)

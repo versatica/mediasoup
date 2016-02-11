@@ -47,9 +47,12 @@ namespace RTC
 		MS_TRACE();
 
 		static Json::Value null_data(Json::nullValue);
+		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 
 		Json::Value json(Json::objectValue);
+
+		json[k_rtpReceiverId] = (Json::UInt)this->rtpReceiverId;
 
 		if (this->rtpParameters)
 			json[k_rtpParameters] = this->rtpParameters->toJson();
