@@ -503,17 +503,21 @@ namespace RTC
 			rtpListener->RemoveRtpReceiver(rtpReceiver);
 		}
 
-		// TODO: Must notify the listener (Room) so it can remove this RtpReceiver.
-
+		// Remove from the map.
 		this->rtpReceivers.erase(rtpReceiver->rtpReceiverId);
+
+		// Notify the listener (Room) so it can remove this RtpReceiver from its map.
+		this->listener->onPeerRtpReceiverClosed(this, rtpReceiver);
 	}
 
 	void Peer::onRtpSenderClosed(RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
-		// TODO: Must notify the listener (Room) so it can remove this RtpSender.
-
+		// Remove from the map.
 		this->rtpSenders.erase(rtpSender->rtpSenderId);
+
+		// Notify the listener (Room) so it can remove this RtpSender from its map.
+		this->listener->onPeerRtpSenderClosed(this, rtpSender);
 	}
 }

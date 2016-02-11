@@ -69,7 +69,7 @@ void Loop::Close()
 
 	// Close all the Rooms.
 	// NOTE: Upon Room closure the onRoomClosed() method is called which
-	// removes it from the map, so this is the safe way to iterate the mao
+	// removes it from the map, so this is the safe way to iterate the map
 	// and remove elements.
 	for (auto it = this->rooms.begin(); it != this->rooms.end();)
 	{

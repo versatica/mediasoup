@@ -51,7 +51,7 @@ namespace RTC
 		Channel::Notifier* notifier = nullptr;
 		// Others.
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
-		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapReceiverSenders;
+		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 	};
 }
 

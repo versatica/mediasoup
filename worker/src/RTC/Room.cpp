@@ -33,7 +33,7 @@ namespace RTC
 
 		// Close all the Peers.
 		// NOTE: Upon Peer closure the onPeerClosed() method is called which
-		// removes it from the map, so this is the safe way to iterate the mao
+		// removes it from the map, so this is the safe way to iterate the map
 		// and remove elements.
 		for (auto it = this->peers.begin(); it != this->peers.end();)
 		{
@@ -59,9 +59,11 @@ namespace RTC
 
 		static const Json::StaticString k_roomId("roomId");
 		static const Json::StaticString k_peers("peers");
+		static const Json::StaticString k_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
 
 		Json::Value json(Json::objectValue);
 		Json::Value json_peers(Json::objectValue);
+		Json::Value json_mapRtpReceiverRtpSenders(Json::objectValue);
 
 		json[k_roomId] = (Json::UInt)this->roomId;
 
@@ -72,6 +74,22 @@ namespace RTC
 			json_peers[std::to_string(peer->peerId)] = peer->toJson();
 		}
 		json[k_peers] = json_peers;
+
+		for (auto& kv : this->mapRtpReceiverRtpSenders)
+		{
+			auto rtpReceiver = kv.first;
+			auto& rtpSenders = kv.second;
+			Json::Value json_rtpReceivers(Json::arrayValue);
+
+			for (auto& rtpSender : rtpSenders)
+			{
+				json_rtpReceivers.append(std::to_string(rtpSender->rtpSenderId));
+			}
+
+			json_mapRtpReceiverRtpSenders[std::to_string(rtpReceiver->rtpReceiverId)] = json_rtpReceivers;
+		}
+
+		json[k_mapRtpReceiverRtpSenders] = json_mapRtpReceiverRtpSenders;
 
 		return json;
 	}
@@ -149,9 +167,6 @@ namespace RTC
 					return;
 				}
 
-				// Store the new Peer.
-				this->peers[peerId] = peer;
-
 				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
 				request->Accept();
 
@@ -170,6 +185,9 @@ namespace RTC
 						uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
 						RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId);
 
+						// Store into the map.
+						this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
+
 						// Clone receiver RtpParameters.
 						RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
 
@@ -179,6 +197,10 @@ namespace RTC
 						peer->AddRtpSender(rtpSender, receiver_peer->peerName);
 					}
 				}
+
+				// Store the new Peer.
+				// NOTE: Do it after iterating existing Peers.
+				this->peers[peerId] = peer;
 
 				break;
 			}
@@ -271,7 +293,7 @@ namespace RTC
 		MS_ASSERT(rtpReceiver->GetRtpParameters(), "rtpReceiver->GetRtpParameters() returns no RtpParameters");
 
 		// The RtpReceiver may already be set previously.
-		bool is_new_RtpReceiver = this->mapReceiverSenders.find(rtpReceiver) == this->mapReceiverSenders.end();
+		bool is_new_RtpReceiver = this->mapRtpReceiverRtpSenders.find(rtpReceiver) == this->mapRtpReceiverRtpSenders.end();
 
 		// If this is a new RtpReceiver, iterate all the peers but this one and
 		// create a RtpSender associated to this RtpReceiver for each Peer.
@@ -290,7 +312,7 @@ namespace RTC
 				RTC::RtpSender* rtpSender = new RTC::RtpSender(sender_peer, this->notifier, rtpSenderId);
 
 				// Store into the map.
-				this->mapReceiverSenders[rtpReceiver].insert(rtpSender);
+				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
 				// Clone RtpParameters.
 				RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
@@ -306,7 +328,7 @@ namespace RTC
 		// and update with them all the associated RtpSenders.
 		else
 		{
-			for (auto rtpSender : this->mapReceiverSenders[rtpReceiver])
+			for (auto rtpSender : this->mapRtpReceiverRtpSenders[rtpReceiver])
 			{
 				// Clone RtpParameters.
 				RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
@@ -324,11 +346,37 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// If the RtpReceiver is in the map, iterate the map and close all the
+		// RtpSenders associated to the closed RtpReceiver.
+		if (this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end())
+		{
+			// Make a copy of the set of RtpSenders given that Close() will be called
+			// in all of them, producing onPeerRtpSenderClosed() that will remove it
+			// from the map.
+			auto rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+
+			// Safey iterate the copy of the set.
+			for (auto& rtpSender : rtpSenders)
+			{
+				rtpSender->Close();
+			}
+
+			// Finally delete the RtpReceiver entry in the map.
+			this->mapRtpReceiverRtpSenders.erase(rtpReceiver);
+		}
 	}
 
 	void Room::onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
+		// Iterate all the map and remove the closed RtpSender from all the
+		// RtpReceiver entries.
+		for (auto& kv : this->mapRtpReceiverRtpSenders)
+		{
+			auto& rtpSenders = kv.second;
+
+			rtpSenders.erase(rtpSender);
+		}
 	}
 }
