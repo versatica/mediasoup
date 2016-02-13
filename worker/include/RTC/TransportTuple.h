@@ -2,8 +2,8 @@
 #define MS_RTC_TRANSPORT_TUPLE_H
 
 #include "common.h"
-#include "RTC/UDPSocket.h"
-#include "RTC/TCPConnection.h"
+#include "RTC/UdpSocket.h"
+#include "RTC/TcpConnection.h"
 #include "Utils.h"
 #include <json/json.h>
 
@@ -19,8 +19,8 @@ namespace RTC
 		};
 
 	public:
-		TransportTuple(RTC::UDPSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
-		TransportTuple(RTC::TCPConnection* tcpConnection);
+		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
+		TransportTuple(RTC::TcpConnection* tcpConnection);
 
 		void Close();
 		Json::Value toJson();
@@ -34,10 +34,10 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::UDPSocket* udpSocket = nullptr;
+		RTC::UdpSocket* udpSocket = nullptr;
 		struct sockaddr* udpRemoteAddr = nullptr;
 		sockaddr_storage udpRemoteAddrStorage;
-		RTC::TCPConnection* tcpConnection = nullptr;
+		RTC::TcpConnection* tcpConnection = nullptr;
 		// Others.
 		Protocol protocol;
 	};
@@ -52,14 +52,14 @@ namespace RTC
 	}
 
 	inline
-	TransportTuple::TransportTuple(RTC::UDPSocket* udpSocket, const struct sockaddr* udpRemoteAddr) :
+	TransportTuple::TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr) :
 		udpSocket(udpSocket),
 		udpRemoteAddr((struct sockaddr*)udpRemoteAddr),
 		protocol(Protocol::UDP)
 	{}
 
 	inline
-	TransportTuple::TransportTuple(RTC::TCPConnection* tcpConnection) :
+	TransportTuple::TransportTuple(RTC::TcpConnection* tcpConnection) :
 		tcpConnection(tcpConnection),
 		protocol(Protocol::TCP)
 	{}

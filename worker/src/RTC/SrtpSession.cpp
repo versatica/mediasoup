@@ -1,6 +1,6 @@
-#define MS_CLASS "RTC::SRTPSession"
+#define MS_CLASS "RTC::SrtpSession"
 
-#include "RTC/SRTPSession.h"
+#include "RTC/SrtpSession.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <cstring>  // std::memset(), std::memcpy()
@@ -12,24 +12,24 @@ namespace RTC
 {
 	/* Class variables. */
 
-	uint8_t SRTPSession::encryptBuffer[MS_ENCRYPT_BUFFER_SIZE];
+	uint8_t SrtpSession::encryptBuffer[MS_ENCRYPT_BUFFER_SIZE];
 
 	/* Class methods. */
 
-	void SRTPSession::ClassInit()
+	void SrtpSession::ClassInit()
 	{
 		/* Set libsrtp event handler. */
 
 		// srtp_err_status_t err;
 
-		// err = srtp_install_event_handler((srtp_event_handler_func_t*)onSRTPEvent);
+		// err = srtp_install_event_handler((srtp_event_handler_func_t*)onSrtpEvent);
 		// if (DepLibSRTP::IsError(err))
 		// {
 			// MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
 		// }
 	}
 
-	// void SRTPSession::onSRTPEvent(srtp_event_data_t* data)
+	// void SrtpSession::onSrtpEvent(srtp_event_data_t* data)
 	// {
 	// 	MS_TRACE();
 
@@ -57,7 +57,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SRTPSession::SRTPSession(Type type, Profile profile, uint8_t* key, size_t key_len)
+	SrtpSession::SrtpSession(Type type, Profile profile, uint8_t* key, size_t key_len)
 	{
 		MS_TRACE();
 
@@ -92,7 +92,7 @@ namespace RTC
 				policy.ssrc.type = ssrc_any_outbound;
 				break;
 			default:
-				MS_ABORT("unknown SRTPSession::Type");
+				MS_ABORT("unknown SrtpSession::Type");
 		}
 		policy.ssrc.value = 0;
 		policy.key = key;
@@ -108,7 +108,7 @@ namespace RTC
 		}
 	}
 
-	SRTPSession::~SRTPSession()
+	SrtpSession::~SrtpSession()
 	{
 		MS_TRACE();
 
@@ -126,7 +126,7 @@ namespace RTC
 
 	// TODO: It must not memcpy it but instead the provided packet must already be
 	// allocated into a buffer.
-	bool SRTPSession::EncryptRTP(const uint8_t** data, size_t* len)
+	bool SrtpSession::EncryptRtp(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -139,9 +139,9 @@ namespace RTC
 			return false;
 		}
 
-		std::memcpy(SRTPSession::encryptBuffer, *data, *len);
+		std::memcpy(SrtpSession::encryptBuffer, *data, *len);
 
-		this->lastError = srtp_protect(this->session, (void*)SRTPSession::encryptBuffer, (int*)len);
+		this->lastError = srtp_protect(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(this->lastError))
 		{
 			MS_DEBUG("srtp_protect() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
@@ -150,12 +150,12 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const uint8_t*)SRTPSession::encryptBuffer;
+		*data = (const uint8_t*)SrtpSession::encryptBuffer;
 
 		return true;
 	}
 
-	bool SRTPSession::DecryptSRTP(const uint8_t* data, size_t* len)
+	bool SrtpSession::DecryptSrtp(const uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -170,7 +170,7 @@ namespace RTC
 		return true;
 	}
 
-	bool SRTPSession::EncryptRTCP(const uint8_t** data, size_t* len)
+	bool SrtpSession::EncryptRtcp(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -183,9 +183,9 @@ namespace RTC
 			return false;
 		}
 
-		std::memcpy(SRTPSession::encryptBuffer, *data, *len);
+		std::memcpy(SrtpSession::encryptBuffer, *data, *len);
 
-		this->lastError = srtp_protect_rtcp(this->session, (void*)SRTPSession::encryptBuffer, (int*)len);
+		this->lastError = srtp_protect_rtcp(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(this->lastError))
 		{
 			MS_DEBUG("srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
@@ -194,12 +194,12 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const uint8_t*)SRTPSession::encryptBuffer;
+		*data = (const uint8_t*)SrtpSession::encryptBuffer;
 
 		return true;
 	}
 
-	bool SRTPSession::DecryptSRTCP(const uint8_t* data, size_t* len)
+	bool SrtpSession::DecryptSrtcp(const uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -214,7 +214,7 @@ namespace RTC
 		return true;
 	}
 
-	void SRTPSession::Close()
+	void SrtpSession::Close()
 	{
 		MS_TRACE();
 

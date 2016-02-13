@@ -1,6 +1,8 @@
 #define MS_CLASS "RTC::Transport"
 
 #include "RTC/Transport.h"
+#include "RTC/RtpPacket.h"
+#include "RTC/RtcpPacket.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
@@ -73,7 +75,7 @@ namespace RTC
 			preferTcp = data[k_preferTcp].asBool();
 
 		// Create a ICE server.
-		this->iceServer = new RTC::ICEServer(this,
+		this->iceServer = new RTC::IceServer(this,
 			Utils::Crypto::GetRandomString(16),
 			Utils::Crypto::GetRandomString(32));
 
@@ -91,7 +93,7 @@ namespace RTC
 
 			try
 			{
-				RTC::UDPSocket* udpSocket = new RTC::UDPSocket(this, AF_INET);
+				RTC::UdpSocket* udpSocket = new RTC::UdpSocket(this, AF_INET);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
@@ -117,7 +119,7 @@ namespace RTC
 
 			try
 			{
-				RTC::UDPSocket* udpSocket = new RTC::UDPSocket(this, AF_INET6);
+				RTC::UdpSocket* udpSocket = new RTC::UdpSocket(this, AF_INET6);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
@@ -143,7 +145,7 @@ namespace RTC
 
 			try
 			{
-				RTC::TCPServer* tcpServer = new RTC::TCPServer(this, this, AF_INET);
+				RTC::TcpServer* tcpServer = new RTC::TcpServer(this, this, AF_INET);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
@@ -169,7 +171,7 @@ namespace RTC
 
 			try
 			{
-				RTC::TCPServer* tcpServer = new RTC::TCPServer(this, this, AF_INET6);
+				RTC::TcpServer* tcpServer = new RTC::TcpServer(this, this, AF_INET6);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
@@ -190,7 +192,7 @@ namespace RTC
 		}
 
 		// Create a DTLS agent.
-		this->dtlsTransport = new RTC::DTLSTransport(this);
+		this->dtlsTransport = new RTC::DtlsTransport(this);
 
 		// Hack to avoid that Close() above attempts to delete this.
 		this->allocated = true;
@@ -300,33 +302,33 @@ namespace RTC
 		// Add `iceState`.
 		switch (this->iceServer->GetState())
 		{
-			case RTC::ICEServer::IceState::NEW:
+			case RTC::IceServer::IceState::NEW:
 				json[k_iceState] = v_new;
 				break;
-			case RTC::ICEServer::IceState::CONNECTED:
+			case RTC::IceServer::IceState::CONNECTED:
 				json[k_iceState] = v_connected;
 				break;
-			case RTC::ICEServer::IceState::COMPLETED:
+			case RTC::IceServer::IceState::COMPLETED:
 				json[k_iceState] = v_completed;
 				break;
-			case RTC::ICEServer::IceState::DISCONNECTED:
+			case RTC::IceServer::IceState::DISCONNECTED:
 				json[k_iceState] = v_disconnected;
 				break;
 		}
 
 		// Add `dtlsLocalParameters.fingerprints`.
-		json[k_dtlsLocalParameters][k_fingerprints] = RTC::DTLSTransport::GetLocalFingerprints();
+		json[k_dtlsLocalParameters][k_fingerprints] = RTC::DtlsTransport::GetLocalFingerprints();
 
 		// Add `dtlsLocalParameters.role`.
 		switch (this->dtlsLocalRole)
 		{
-			case RTC::DTLSTransport::Role::AUTO:
+			case RTC::DtlsTransport::Role::AUTO:
 				json[k_dtlsLocalParameters][k_role] = v_auto;
 				break;
-			case RTC::DTLSTransport::Role::CLIENT:
+			case RTC::DtlsTransport::Role::CLIENT:
 				json[k_dtlsLocalParameters][k_role] = v_client;
 				break;
-			case RTC::DTLSTransport::Role::SERVER:
+			case RTC::DtlsTransport::Role::SERVER:
 				json[k_dtlsLocalParameters][k_role] = v_server;
 				break;
 			default:
@@ -336,19 +338,19 @@ namespace RTC
 		// Add `dtlsState`.
 		switch (this->dtlsTransport->GetState())
 		{
-			case DTLSTransport::DtlsState::NEW:
+			case DtlsTransport::DtlsState::NEW:
 				json[k_dtlsState] = v_new;
 				break;
-			case DTLSTransport::DtlsState::CONNECTING:
+			case DtlsTransport::DtlsState::CONNECTING:
 				json[k_dtlsState] = v_connecting;
 				break;
-			case DTLSTransport::DtlsState::CONNECTED:
+			case DtlsTransport::DtlsState::CONNECTED:
 				json[k_dtlsState] = v_connected;
 				break;
-			case DTLSTransport::DtlsState::FAILED:
+			case DtlsTransport::DtlsState::FAILED:
 				json[k_dtlsState] = v_failed;
 				break;
-			case DTLSTransport::DtlsState::CLOSED:
+			case DtlsTransport::DtlsState::CLOSED:
 				json[k_dtlsState] = v_closed;
 				break;
 		}
@@ -396,8 +398,8 @@ namespace RTC
 				static const Json::StaticString k_algorithm("algorithm");
 				static const Json::StaticString k_value("value");
 
-				RTC::DTLSTransport::Fingerprint remoteFingerprint;
-				RTC::DTLSTransport::Role remoteRole = RTC::DTLSTransport::Role::AUTO;  // Default value if missing.
+				RTC::DtlsTransport::Fingerprint remoteFingerprint;
+				RTC::DtlsTransport::Role remoteRole = RTC::DtlsTransport::Role::AUTO;  // Default value if missing.
 
 				// Ensure this method is not called twice.
 				if (this->remoteDtlsParametersGiven)
@@ -428,9 +430,9 @@ namespace RTC
 					return;
 				}
 
-				remoteFingerprint.algorithm = RTC::DTLSTransport::GetFingerprintAlgorithm(request->data[k_fingerprint][k_algorithm].asString());
+				remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(request->data[k_fingerprint][k_algorithm].asString());
 
-				if (remoteFingerprint.algorithm == RTC::DTLSTransport::FingerprintAlgorithm::NONE)
+				if (remoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 				{
 					MS_ERROR("unsupported `data.fingerprint.algorithm`");
 
@@ -441,22 +443,22 @@ namespace RTC
 				remoteFingerprint.value = request->data[k_fingerprint][k_value].asString();
 
 				if (request->data[k_role].isString())
-					remoteRole = RTC::DTLSTransport::StringToRole(request->data[k_role].asString());
+					remoteRole = RTC::DtlsTransport::StringToRole(request->data[k_role].asString());
 
 				// Set local DTLS role.
 				switch (remoteRole)
 				{
-					case RTC::DTLSTransport::Role::CLIENT:
-						this->dtlsLocalRole = RTC::DTLSTransport::Role::SERVER;
+					case RTC::DtlsTransport::Role::CLIENT:
+						this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
 						break;
-					case RTC::DTLSTransport::Role::SERVER:
-						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
+					case RTC::DtlsTransport::Role::SERVER:
+						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
 						break;
 					// If the peer has "auto" we become "client" since we are ICE controlled.
-					case RTC::DTLSTransport::Role::AUTO:
-						this->dtlsLocalRole = RTC::DTLSTransport::Role::CLIENT;
+					case RTC::DtlsTransport::Role::AUTO:
+						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
 						break;
-					case RTC::DTLSTransport::Role::NONE:
+					case RTC::DtlsTransport::Role::NONE:
 						MS_ERROR("invalid .role");
 
 						request->Reject("invalid `data.role`");
@@ -467,10 +469,10 @@ namespace RTC
 
 				switch (this->dtlsLocalRole)
 				{
-					case RTC::DTLSTransport::Role::CLIENT:
+					case RTC::DtlsTransport::Role::CLIENT:
 						data[k_role] = v_client;
 						break;
-					case RTC::DTLSTransport::Role::SERVER:
+					case RTC::DtlsTransport::Role::SERVER:
 						data[k_role] = v_server;
 						break;
 					default:
@@ -483,7 +485,7 @@ namespace RTC
 				this->dtlsTransport->SetRemoteFingerprint(remoteFingerprint);
 
 				// Run the DTLS transport if ready.
-				MayRunDTLSTransport();
+				MayRunDtlsTransport();
 
 				break;
 			}
@@ -498,7 +500,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::MayRunDTLSTransport()
+	void Transport::MayRunDtlsTransport()
 	{
 		MS_TRACE();
 
@@ -512,42 +514,42 @@ namespace RTC
 		{
 			// If still 'auto' then transition to 'server' if ICE is 'connected' or
 			// 'completed'.
-			case RTC::DTLSTransport::Role::AUTO:
-				if (this->iceServer->GetState() == RTC::ICEServer::IceState::CONNECTED ||
-				    this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
+			case RTC::DtlsTransport::Role::AUTO:
+				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("transition from DTLS local role 'auto' to 'server' and running DTLS transport");
 
-					this->dtlsLocalRole = RTC::DTLSTransport::Role::SERVER;
-					this->dtlsTransport->Run(RTC::DTLSTransport::Role::SERVER);
+					this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
+					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
 				}
 				break;
 
 			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
 			// received with remote DTLS role 'server'.
 			// If 'client' then wait for ICE to be 'completed' (got USE-CANDIDATE).
-			case RTC::DTLSTransport::Role::CLIENT:
-				if (this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
+			case RTC::DtlsTransport::Role::CLIENT:
+				if (this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("running DTLS transport in local role 'client'");
 
-					this->dtlsTransport->Run(RTC::DTLSTransport::Role::CLIENT);
+					this->dtlsTransport->Run(RTC::DtlsTransport::Role::CLIENT);
 				}
 				break;
 
 			// If 'server' then run the DTLS transport if ICE is 'connected' (not yet
 			// USE-CANDIDATE) or 'completed'.
-			case RTC::DTLSTransport::Role::SERVER:
-				if (this->iceServer->GetState() == RTC::ICEServer::IceState::CONNECTED ||
-				    this->iceServer->GetState() == RTC::ICEServer::IceState::COMPLETED)
+			case RTC::DtlsTransport::Role::SERVER:
+				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG("running DTLS transport in local role 'server'");
 
-					this->dtlsTransport->Run(RTC::DTLSTransport::Role::SERVER);
+					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
 				}
 				break;
 
-			case RTC::DTLSTransport::Role::NONE:
+			case RTC::DtlsTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
 		}
 	}
@@ -558,24 +560,24 @@ namespace RTC
 		MS_TRACE();
 
 		// Check if it's STUN.
-		if (STUNMessage::IsSTUN(data, len))
+		if (StunMessage::IsStun(data, len))
 		{
-			onSTUNDataRecv(tuple, data, len);
+			onStunDataRecv(tuple, data, len);
 		}
 		// Check if it's RTCP.
-		else if (RTCPPacket::IsRTCP(data, len))
+		else if (RtcpPacket::IsRtcp(data, len))
 		{
-			onRTCPDataRecv(tuple, data, len);
+			onRtcpDataRecv(tuple, data, len);
 		}
 		// Check if it's RTP.
-		else if (RTPPacket::IsRTP(data, len))
+		else if (RtpPacket::IsRtp(data, len))
 		{
-			onRTPDataRecv(tuple, data, len);
+			onRtpDataRecv(tuple, data, len);
 		}
 		// Check if it's DTLS.
-		else if (DTLSTransport::IsDTLS(data, len))
+		else if (DtlsTransport::IsDtls(data, len))
 		{
-			onDTLSDataRecv(tuple, data, len);
+			onDtlsDataRecv(tuple, data, len);
 		}
 		else
 		{
@@ -585,11 +587,11 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onSTUNDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	void Transport::onStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		RTC::STUNMessage* msg = RTC::STUNMessage::Parse(data, len);
+		RTC::StunMessage* msg = RTC::StunMessage::Parse(data, len);
 		if (!msg)
 		{
 			MS_DEBUG("ignoring wrong STUN message received");
@@ -597,14 +599,14 @@ namespace RTC
 			return;
 		}
 
-		// Pass it to the ICEServer.
-		this->iceServer->ProcessSTUNMessage(msg, tuple);
+		// Pass it to the IceServer.
+		this->iceServer->ProcessStunMessage(msg, tuple);
 
 		delete msg;
 	}
 
 	inline
-	void Transport::onDTLSDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	void Transport::onDtlsDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -619,23 +621,23 @@ namespace RTC
 		this->iceServer->ForceSelectedTuple(tuple);
 
 		// Check that DTLS status is 'connecting' or 'connected'.
-		if (this->dtlsTransport->GetState() == DTLSTransport::DtlsState::CONNECTING ||
-		    this->dtlsTransport->GetState() == DTLSTransport::DtlsState::CONNECTED)
+		if (this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTING ||
+		    this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTED)
 		{
 			MS_DEBUG("DTLS data received, passing it to the DTLS transport");
 
-			this->dtlsTransport->ProcessDTLSData(data, len);
+			this->dtlsTransport->ProcessDtlsData(data, len);
 		}
 		else
 		{
-			MS_DEBUG("DTLSTransport is not 'connecting' or 'conneted', ignoring received DTLS data");
+			MS_DEBUG("DtlsTransport is not 'connecting' or 'conneted', ignoring received DTLS data");
 
 			return;
 		}
 	}
 
 	inline
-	void Transport::onRTPDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	void Transport::onRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -657,7 +659,7 @@ namespace RTC
 		// TODO
 		// MS_DEBUG("received RTP data");
 
-		RTC::RTPPacket* packet = RTC::RTPPacket::Parse(data, len);
+		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 		if (!packet)
 		{
 			MS_DEBUG("data received is not a valid RTP packet");
@@ -671,11 +673,11 @@ namespace RTC
 		if (!rtpReceiver)
 		{
 			// TODO: let's see
-			MS_WARN("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payload:%" PRIu8 "]", packet->GetSSRC(), packet->GetPayloadType());
+			MS_WARN("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payload:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
 		}
 		else
 		{
-			MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSSRC(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
+			MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
 			// packet->Dump();
 		}
 
@@ -683,7 +685,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onRTCPDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	void Transport::onRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -701,7 +703,7 @@ namespace RTC
 		MS_DEBUG("received RTCP data");
 	}
 
-	void Transport::onPacketRecv(RTC::UDPSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr)
+	void Transport::onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr)
 	{
 		MS_TRACE();
 
@@ -710,7 +712,7 @@ namespace RTC
 		onPacketRecv(&tuple, data, len);
 	}
 
-	void Transport::onRTCTCPConnectionClosed(RTC::TCPServer* tcpServer, RTC::TCPConnection* connection, bool is_closed_by_peer)
+	void Transport::onRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool is_closed_by_peer)
 	{
 		MS_TRACE();
 
@@ -720,7 +722,7 @@ namespace RTC
 			this->iceServer->RemoveTuple(&tuple);
 	}
 
-	void Transport::onPacketRecv(RTC::TCPConnection *connection, const uint8_t* data, size_t len)
+	void Transport::onPacketRecv(RTC::TcpConnection *connection, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -729,7 +731,7 @@ namespace RTC
 		onPacketRecv(&tuple, data, len);
 	}
 
-	void Transport::onOutgoingSTUNMessage(RTC::ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple)
+	void Transport::onOutgoingStunMessage(RTC::IceServer* iceServer, RTC::StunMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -737,7 +739,7 @@ namespace RTC
 		tuple->Send(msg->GetRaw(), msg->GetLength());
 	}
 
-	void Transport::onICESelectedTuple(RTC::ICEServer* iceServer, RTC::TransportTuple* tuple)
+	void Transport::onIceSelectedTuple(RTC::IceServer* iceServer, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -760,7 +762,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "iceselectedtuplechange", event_data);
 	}
 
-	void Transport::onICEConnected(RTC::ICEServer* iceServer)
+	void Transport::onIceConnected(RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 
@@ -776,10 +778,10 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
 		// If ready, run the DTLS handler.
-		MayRunDTLSTransport();
+		MayRunDtlsTransport();
 	}
 
-	void Transport::onICECompleted(RTC::ICEServer* iceServer)
+	void Transport::onIceCompleted(RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 
@@ -795,10 +797,10 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
 		// If ready, run the DTLS handler.
-		MayRunDTLSTransport();
+		MayRunDtlsTransport();
 	}
 
-	void Transport::onICEDisconnected(RTC::ICEServer* iceServer)
+	void Transport::onIceDisconnected(RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 
@@ -820,7 +822,7 @@ namespace RTC
 		Close();
 	}
 
-	void Transport::onDTLSConnecting(RTC::DTLSTransport* dtlsTransport)
+	void Transport::onDtlsConnecting(RTC::DtlsTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
@@ -836,7 +838,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 
-	void Transport::onDTLSConnected(RTC::DTLSTransport* dtlsTransport, RTC::SRTPSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len)
+	void Transport::onDtlsConnected(RTC::DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len)
 	{
 		MS_TRACE();
 
@@ -856,7 +858,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 
-	void Transport::onDTLSFailed(RTC::DTLSTransport* dtlsTransport)
+	void Transport::onDtlsFailed(RTC::DtlsTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
@@ -875,7 +877,7 @@ namespace RTC
 		Close();
 	}
 
-	void Transport::onDTLSClosed(RTC::DTLSTransport* dtlsTransport)
+	void Transport::onDtlsClosed(RTC::DtlsTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
@@ -894,7 +896,7 @@ namespace RTC
 		Close();
 	}
 
-	void Transport::onOutgoingDTLSData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len)
+	void Transport::onOutgoingDtlsData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -911,7 +913,7 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
-	void Transport::onDTLSApplicationData(RTC::DTLSTransport* dtlsTransport, const uint8_t* data, size_t len)
+	void Transport::onDtlsApplicationData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

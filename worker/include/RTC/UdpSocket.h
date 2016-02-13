@@ -2,20 +2,20 @@
 #define MS_RTC_UDP_SOCKET_H
 
 #include "common.h"
-#include "handles/UDPSocket.h"
+#include "handles/UdpSocket.h"
 #include <unordered_map>
 #include <uv.h>
 
 namespace RTC
 {
-	class UDPSocket :
-		public ::UDPSocket
+	class UdpSocket :
+		public ::UdpSocket
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void onPacketRecv(RTC::UDPSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr) = 0;
+			virtual void onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr) = 0;
 		};
 
 	public:
@@ -33,12 +33,12 @@ namespace RTC
 		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
 
 	public:
-		UDPSocket(Listener* listener, int address_family);
+		UdpSocket(Listener* listener, int address_family);
 
-	/* Pure virtual methods inherited from ::UDPSocket. */
+	/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
-		virtual void userOnUDPDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
-		virtual void userOnUDPSocketClosed() override;
+		virtual void userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
+		virtual void userOnUdpSocketClosed() override;
 
 	private:
 		// Passed by argument.

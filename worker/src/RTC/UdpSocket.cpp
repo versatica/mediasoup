@@ -1,6 +1,6 @@
-#define MS_CLASS "RTC::UDPSocket"
+#define MS_CLASS "RTC::UdpSocket"
 
-#include "RTC/UDPSocket.h"
+#include "RTC/UdpSocket.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "DepLibUV.h"
@@ -22,16 +22,16 @@ namespace RTC
 {
 	/* Class variables. */
 
-	struct sockaddr_storage UDPSocket::sockaddrStorageIPv4;
-	struct sockaddr_storage UDPSocket::sockaddrStorageIPv6;
-	uint16_t UDPSocket::minPort;
-	uint16_t UDPSocket::maxPort;
-	std::unordered_map<uint16_t, bool> UDPSocket::availableIPv4Ports;
-	std::unordered_map<uint16_t, bool> UDPSocket::availableIPv6Ports;
+	struct sockaddr_storage UdpSocket::sockaddrStorageIPv4;
+	struct sockaddr_storage UdpSocket::sockaddrStorageIPv6;
+	uint16_t UdpSocket::minPort;
+	uint16_t UdpSocket::maxPort;
+	std::unordered_map<uint16_t, bool> UdpSocket::availableIPv4Ports;
+	std::unordered_map<uint16_t, bool> UdpSocket::availableIPv6Ports;
 
 	/* Class methods. */
 
-	void UDPSocket::ClassInit()
+	void UdpSocket::ClassInit()
 	{
 		MS_TRACE();
 
@@ -39,31 +39,31 @@ namespace RTC
 
 		if (Settings::configuration.hasIPv4)
 		{
-			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::UDPSocket::sockaddrStorageIPv4);
+			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::UdpSocket::sockaddrStorageIPv4);
 			if (err)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
 		if (Settings::configuration.hasIPv6)
 		{
-			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::UDPSocket::sockaddrStorageIPv6);
+			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::UdpSocket::sockaddrStorageIPv6);
 			if (err)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
-		UDPSocket::minPort = Settings::configuration.rtcMinPort;
-		UDPSocket::maxPort = Settings::configuration.rtcMaxPort;
+		UdpSocket::minPort = Settings::configuration.rtcMinPort;
+		UdpSocket::maxPort = Settings::configuration.rtcMaxPort;
 
-		uint16_t i = RTC::UDPSocket::minPort;
+		uint16_t i = RTC::UdpSocket::minPort;
 		do
 		{
-			RTC::UDPSocket::availableIPv4Ports[i] = true;
-			RTC::UDPSocket::availableIPv6Ports[i] = true;
+			RTC::UdpSocket::availableIPv4Ports[i] = true;
+			RTC::UdpSocket::availableIPv6Ports[i] = true;
 		}
-		while (i++ != RTC::UDPSocket::maxPort);
+		while (i++ != RTC::UdpSocket::maxPort);
 	}
 
-	uv_udp_t* UDPSocket::GetRandomPort(int address_family)
+	uv_udp_t* UdpSocket::GetRandomPort(int address_family)
 	{
 		MS_TRACE();
 
@@ -86,14 +86,14 @@ namespace RTC
 		switch (address_family)
 		{
 			case AF_INET:
-				available_ports = &RTC::UDPSocket::availableIPv4Ports;
-				bind_addr = RTC::UDPSocket::sockaddrStorageIPv4;
+				available_ports = &RTC::UdpSocket::availableIPv4Ports;
+				bind_addr = RTC::UdpSocket::sockaddrStorageIPv4;
 				listen_ip = Settings::configuration.rtcListenIPv4.c_str();
 				break;
 
 			case AF_INET6:
-				available_ports = &RTC::UDPSocket::availableIPv6Ports;
-				bind_addr = RTC::UDPSocket::sockaddrStorageIPv6;
+				available_ports = &RTC::UdpSocket::availableIPv6Ports;
+				bind_addr = RTC::UdpSocket::sockaddrStorageIPv6;
 				listen_ip = Settings::configuration.rtcListenIPv6.c_str();
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
@@ -105,7 +105,7 @@ namespace RTC
 		}
 
 		// Choose a random port to start from.
-		initial_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::UDPSocket::minPort, (uint32_t)RTC::UDPSocket::maxPort);
+		initial_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::UdpSocket::minPort, (uint32_t)RTC::UdpSocket::maxPort);
 
 		iterating_port = initial_port;
 
@@ -116,10 +116,10 @@ namespace RTC
 			attempt++;
 
 			// Increase the iterate port within the range of RTC UDP ports.
-			if (iterating_port < RTC::UDPSocket::maxPort)
+			if (iterating_port < RTC::UdpSocket::maxPort)
 				iterating_port++;
 			else
-				iterating_port = RTC::UDPSocket::minPort;
+				iterating_port = RTC::UdpSocket::minPort;
 
 			// Check whether the chosen port is available.
 			if (!(*available_ports)[iterating_port])
@@ -200,17 +200,17 @@ namespace RTC
 
 	/* Instance methods. */
 
-	UDPSocket::UDPSocket(Listener* listener, int address_family) :
+	UdpSocket::UdpSocket(Listener* listener, int address_family) :
 		// Provide the parent class constructor with a UDP uv handle.
 		// NOTE: This may throw a MediaSoupError exception if the address family is not available
 		// or there are no available ports.
-		::UDPSocket::UDPSocket(GetRandomPort(address_family)),
+		::UdpSocket::UdpSocket(GetRandomPort(address_family)),
 		listener(listener)
 	{
 		MS_TRACE();
 	}
 
-	void UDPSocket::userOnUDPDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
+	void UdpSocket::userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
 	{
 		MS_TRACE();
 
@@ -236,14 +236,14 @@ namespace RTC
 		this->listener->onPacketRecv(this, data, len, addr);
 	}
 
-	void UDPSocket::userOnUDPSocketClosed()
+	void UdpSocket::userOnUdpSocketClosed()
 	{
 		MS_TRACE();
 
 		// Mark the port as available again.
 		if (this->localAddr.ss_family == AF_INET)
-			RTC::UDPSocket::availableIPv4Ports[this->localPort] = true;
+			RTC::UdpSocket::availableIPv4Ports[this->localPort] = true;
 		else if (this->localAddr.ss_family == AF_INET6)
-			RTC::UDPSocket::availableIPv6Ports[this->localPort] = true;
+			RTC::UdpSocket::availableIPv6Ports[this->localPort] = true;
 	}
 }

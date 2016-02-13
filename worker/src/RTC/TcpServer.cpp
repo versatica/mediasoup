@@ -1,8 +1,6 @@
-#define MS_CLASS "RTC::TCPServer"
+#define MS_CLASS "RTC::TcpServer"
 
-#include "RTC/TCPServer.h"
-#include "RTC/STUNMessage.h"
-#include "RTC/RTPPacket.h"
+#include "RTC/TcpServer.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "DepLibUV.h"
@@ -25,16 +23,16 @@ namespace RTC
 {
 	/* Class variables. */
 
-	struct sockaddr_storage TCPServer::sockaddrStorageIPv4;
-	struct sockaddr_storage TCPServer::sockaddrStorageIPv6;
-	uint16_t TCPServer::minPort;
-	uint16_t TCPServer::maxPort;
-	std::unordered_map<uint16_t, bool> TCPServer::availableIPv4Ports;
-	std::unordered_map<uint16_t, bool> TCPServer::availableIPv6Ports;
+	struct sockaddr_storage TcpServer::sockaddrStorageIPv4;
+	struct sockaddr_storage TcpServer::sockaddrStorageIPv6;
+	uint16_t TcpServer::minPort;
+	uint16_t TcpServer::maxPort;
+	std::unordered_map<uint16_t, bool> TcpServer::availableIPv4Ports;
+	std::unordered_map<uint16_t, bool> TcpServer::availableIPv6Ports;
 
 	/* Class methods. */
 
-	void TCPServer::ClassInit()
+	void TcpServer::ClassInit()
 	{
 		MS_TRACE();
 
@@ -42,31 +40,31 @@ namespace RTC
 
 		if (!Settings::configuration.rtcListenIPv4.empty())
 		{
-			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::TCPServer::sockaddrStorageIPv4);
+			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::TcpServer::sockaddrStorageIPv4);
 			if (err)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
 		if (!Settings::configuration.rtcListenIPv6.empty())
 		{
-			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::TCPServer::sockaddrStorageIPv6);
+			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::TcpServer::sockaddrStorageIPv6);
 			if (err)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
-		TCPServer::minPort = Settings::configuration.rtcMinPort;
-		TCPServer::maxPort = Settings::configuration.rtcMaxPort;
+		TcpServer::minPort = Settings::configuration.rtcMinPort;
+		TcpServer::maxPort = Settings::configuration.rtcMaxPort;
 
-		uint16_t i = RTC::TCPServer::minPort;
+		uint16_t i = RTC::TcpServer::minPort;
 		do
 		{
-			RTC::TCPServer::availableIPv4Ports[i] = true;
-			RTC::TCPServer::availableIPv6Ports[i] = true;
+			RTC::TcpServer::availableIPv4Ports[i] = true;
+			RTC::TcpServer::availableIPv6Ports[i] = true;
 		}
-		while (i++ != RTC::TCPServer::maxPort);
+		while (i++ != RTC::TcpServer::maxPort);
 	}
 
-	uv_tcp_t* TCPServer::GetRandomPort(int address_family)
+	uv_tcp_t* TcpServer::GetRandomPort(int address_family)
 	{
 		MS_TRACE();
 
@@ -89,14 +87,14 @@ namespace RTC
 		switch (address_family)
 		{
 			case AF_INET:
-				available_ports = &RTC::TCPServer::availableIPv4Ports;
-				bind_addr = RTC::TCPServer::sockaddrStorageIPv4;
+				available_ports = &RTC::TcpServer::availableIPv4Ports;
+				bind_addr = RTC::TcpServer::sockaddrStorageIPv4;
 				listen_ip = Settings::configuration.rtcListenIPv4.c_str();
 				break;
 
 			case AF_INET6:
-				available_ports = &RTC::TCPServer::availableIPv6Ports;
-				bind_addr = RTC::TCPServer::sockaddrStorageIPv6;
+				available_ports = &RTC::TcpServer::availableIPv6Ports;
+				bind_addr = RTC::TcpServer::sockaddrStorageIPv6;
 				listen_ip = Settings::configuration.rtcListenIPv6.c_str();
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_TCP_IPV6ONLY;
@@ -108,7 +106,7 @@ namespace RTC
 		}
 
 		// Choose a random first port to start from.
-		initial_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::TCPServer::minPort, (uint32_t)RTC::TCPServer::maxPort);
+		initial_port = (uint16_t)Utils::Crypto::GetRandomUInt((uint32_t)RTC::TcpServer::minPort, (uint32_t)RTC::TcpServer::maxPort);
 
 		iterating_port = initial_port;
 
@@ -119,10 +117,10 @@ namespace RTC
 			attempt++;
 
 			// Increase the iterate port) within the range of RTC TCP ports.
-			if (iterating_port < RTC::TCPServer::maxPort)
+			if (iterating_port < RTC::TcpServer::maxPort)
 				iterating_port += 1;
 			else
-				iterating_port = RTC::TCPServer::minPort;
+				iterating_port = RTC::TcpServer::minPort;
 
 			// Check whether the chosen port is available.
 			if (!(*available_ports)[iterating_port])
@@ -204,26 +202,26 @@ namespace RTC
 
 	/* Instance methods. */
 
-	TCPServer::TCPServer(Listener* listener, RTC::TCPConnection::Listener* connListener, int address_family) :
+	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int address_family) :
 		// Provide the parent class constructor with a UDP uv handle.
 		// NOTE: This may throw a MediaSoupError exception if the address family is not available
 		// or there are no available ports.
-		::TCPServer::TCPServer(GetRandomPort(address_family), 256),
+		::TcpServer::TcpServer(GetRandomPort(address_family), 256),
 		listener(listener),
 		connListener(connListener)
 	{
 		MS_TRACE();
 	}
 
-	void TCPServer::userOnTCPConnectionAlloc(::TCPConnection** connection)
+	void TcpServer::userOnTcpConnectionAlloc(::TcpConnection** connection)
 	{
 		MS_TRACE();
 
-		// Allocate a new RTC::TCPConnection for the TCPServer to handle it.
-		*connection = new RTC::TCPConnection(this->connListener, 65536);
+		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
+		*connection = new RTC::TcpConnection(this->connListener, 65536);
 	}
 
-	void TCPServer::userOnNewTCPConnection(::TCPConnection* connection)
+	void TcpServer::userOnNewTcpConnection(::TcpConnection* connection)
 	{
 		MS_TRACE();
 
@@ -232,7 +230,7 @@ namespace RTC
 			connection->Close();
 	}
 
-	void TCPServer::userOnTCPConnectionClosed(::TCPConnection* connection, bool is_closed_by_peer)
+	void TcpServer::userOnTcpConnectionClosed(::TcpConnection* connection, bool is_closed_by_peer)
 	{
 		MS_TRACE();
 
@@ -240,17 +238,17 @@ namespace RTC
 		// NOTE: Don't do it if closing (since at this point the listener is already freed).
 		// At the end, this is just called if the connection was remotely closed.
 		if (!IsClosing())
-			this->listener->onRTCTCPConnectionClosed(this, static_cast<RTC::TCPConnection*>(connection), is_closed_by_peer);
+			this->listener->onRtcTcpConnectionClosed(this, static_cast<RTC::TcpConnection*>(connection), is_closed_by_peer);
 	}
 
-	void TCPServer::userOnTCPServerClosed()
+	void TcpServer::userOnTcpServerClosed()
 	{
 		MS_TRACE();
 
 		// Mark the port as available again.
 		if (this->localAddr.ss_family == AF_INET)
-			RTC::TCPServer::availableIPv4Ports[this->localPort] = true;
+			RTC::TcpServer::availableIPv4Ports[this->localPort] = true;
 		else if (this->localAddr.ss_family == AF_INET6)
-			RTC::TCPServer::availableIPv6Ports[this->localPort] = true;
+			RTC::TcpServer::availableIPv6Ports[this->localPort] = true;
 	}
 }

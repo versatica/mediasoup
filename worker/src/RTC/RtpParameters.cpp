@@ -1,7 +1,6 @@
 #define MS_CLASS "RTC::RtpParameters"
 
 #include "RTC/RtpParameters.h"
-// #include "Utils.h"  // TODO: let's see
 #include "MediaSoupError.h"
 #include "Logger.h"
 

@@ -1,6 +1,6 @@
-#define MS_CLASS "RTC::TCPConnection"
+#define MS_CLASS "RTC::TcpConnection"
 
-#include "RTC/TCPConnection.h"
+#include "RTC/TcpConnection.h"
 #include "Utils.h"
 #include "Logger.h"
 #include <cstring>  // std::memmove()
@@ -9,19 +9,19 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	TCPConnection::TCPConnection(Listener* listener, size_t bufferSize) :
-		::TCPConnection(bufferSize),
+	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize) :
+		::TcpConnection(bufferSize),
 		listener(listener)
 	{
 		MS_TRACE();
 	}
 
-	TCPConnection::~TCPConnection()
+	TcpConnection::~TcpConnection()
 	{
 		MS_TRACE();
 	}
 
-	void TCPConnection::userOnTCPConnectionRead()
+	void TcpConnection::userOnTcpConnectionRead()
 	{
 		MS_TRACE();
 
@@ -139,7 +139,7 @@ namespace RTC
 		}
 	}
 
-	void TCPConnection::Send(const uint8_t* data, size_t len)
+	void TcpConnection::Send(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

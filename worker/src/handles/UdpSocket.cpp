@@ -1,6 +1,6 @@
-#define MS_CLASS "UDPSocket"
+#define MS_CLASS "UdpSocket"
 
-#include "handles/UDPSocket.h"
+#include "handles/UdpSocket.h"
 #include "Utils.h"
 #include "DepLibUV.h"
 #include "MediaSoupError.h"
@@ -13,25 +13,25 @@
 static inline
 void on_alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 {
-	static_cast<UDPSocket*>(handle->data)->onUvRecvAlloc(suggested_size, buf);
+	static_cast<UdpSocket*>(handle->data)->onUvRecvAlloc(suggested_size, buf);
 }
 
 static inline
 void on_recv(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
-	static_cast<UDPSocket*>(handle->data)->onUvRecv(nread, buf, addr, flags);
+	static_cast<UdpSocket*>(handle->data)->onUvRecv(nread, buf, addr, flags);
 }
 
 static inline
 void on_send(uv_udp_send_t* req, int status)
 {
-	UDPSocket::UvSendData* send_data = static_cast<UDPSocket::UvSendData*>(req->data);
-	UDPSocket* socket = send_data->socket;
+	UdpSocket::UvSendData* send_data = static_cast<UdpSocket::UvSendData*>(req->data);
+	UdpSocket* socket = send_data->socket;
 
 	// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 	std::free(send_data);
 
-	// Just notify the UDPSocket when error.
+	// Just notify the UdpSocket when error.
 	if (status)
 		socket->onUvSendError(status);
 }
@@ -39,7 +39,7 @@ void on_send(uv_udp_send_t* req, int status)
 static inline
 void on_close(uv_handle_t* handle)
 {
-	static_cast<UDPSocket*>(handle->data)->onUvClosed();
+	static_cast<UdpSocket*>(handle->data)->onUvClosed();
 }
 
 static inline
@@ -50,11 +50,11 @@ void on_error_close(uv_handle_t* handle)
 
 /* Class variables. */
 
-uint8_t UDPSocket::readBuffer[MS_READ_BUFFER_SIZE];
+uint8_t UdpSocket::readBuffer[MS_READ_BUFFER_SIZE];
 
 /* Instance methods. */
 
-UDPSocket::UDPSocket(const std::string &ip, uint16_t port)
+UdpSocket::UdpSocket(const std::string &ip, uint16_t port)
 {
 	MS_TRACE();
 
@@ -118,7 +118,7 @@ UDPSocket::UDPSocket(const std::string &ip, uint16_t port)
 	}
 }
 
-UDPSocket::UDPSocket(uv_udp_t* uvHandle) :
+UdpSocket::UdpSocket(uv_udp_t* uvHandle) :
 	uvHandle(uvHandle)
 {
 	MS_TRACE();
@@ -142,7 +142,7 @@ UDPSocket::UDPSocket(uv_udp_t* uvHandle) :
 	}
 }
 
-UDPSocket::~UDPSocket()
+UdpSocket::~UdpSocket()
 {
 	MS_TRACE();
 
@@ -150,7 +150,7 @@ UDPSocket::~UDPSocket()
 		delete this->uvHandle;
 }
 
-void UDPSocket::Close()
+void UdpSocket::Close()
 {
 	MS_TRACE();
 
@@ -169,14 +169,14 @@ void UDPSocket::Close()
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
 }
 
-void UDPSocket::Dump()
+void UdpSocket::Dump()
 {
 	MS_DEBUG("[UDP, local:%s :%" PRIu16 ", status:%s]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
 		(!this->isClosing) ? "open" : "closed");
 }
 
-void UDPSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr)
+void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr)
 {
 	MS_TRACE();
 
@@ -239,7 +239,7 @@ void UDPSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	}
 }
 
-void UDPSocket::Send(const uint8_t* data, size_t len, const std::string &ip, uint16_t port)
+void UdpSocket::Send(const uint8_t* data, size_t len, const std::string &ip, uint16_t port)
 {
 	MS_TRACE();
 
@@ -276,7 +276,7 @@ void UDPSocket::Send(const uint8_t* data, size_t len, const std::string &ip, uin
 	Send(data, len, (struct sockaddr*)&addr);
 }
 
-bool UDPSocket::SetLocalAddress()
+bool UdpSocket::SetLocalAddress()
 {
 	MS_TRACE();
 
@@ -298,18 +298,18 @@ bool UDPSocket::SetLocalAddress()
 }
 
 inline
-void UDPSocket::onUvRecvAlloc(size_t suggested_size, uv_buf_t* buf)
+void UdpSocket::onUvRecvAlloc(size_t suggested_size, uv_buf_t* buf)
 {
 	MS_TRACE();
 
 	// Tell UV to write into the static buffer.
-	buf->base = (char *)UDPSocket::readBuffer;
+	buf->base = (char *)UdpSocket::readBuffer;
 	// Give UV all the buffer space.
 	buf->len = MS_READ_BUFFER_SIZE;
 }
 
 inline
-void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
+void UdpSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
 	MS_TRACE();
 
@@ -333,7 +333,7 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 	if (nread > 0)
 	{
 		// Notify the subclass.
-		userOnUDPDatagramRecv((uint8_t*)buf->base, nread, addr);
+		userOnUdpDatagramRecv((uint8_t*)buf->base, nread, addr);
 	}
 
 	// Some error.
@@ -344,7 +344,7 @@ void UDPSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 }
 
 inline
-void UDPSocket::onUvSendError(int error)
+void UdpSocket::onUvSendError(int error)
 {
 	MS_TRACE();
 
@@ -355,12 +355,12 @@ void UDPSocket::onUvSendError(int error)
 }
 
 inline
-void UDPSocket::onUvClosed()
+void UdpSocket::onUvClosed()
 {
 	MS_TRACE();
 
 	// Notify the subclass.
-	userOnUDPSocketClosed();
+	userOnUdpSocketClosed();
 
 	// And delete this.
 	delete this;

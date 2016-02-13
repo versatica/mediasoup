@@ -1,6 +1,6 @@
-#define MS_CLASS "RTC::RTPPacket"
+#define MS_CLASS "RTC::RtpPacket"
 
-#include "RTC/RTPPacket.h"
+#include "RTC/RtpPacket.h"
 #include "Utils.h"
 #include "Logger.h"
 #include <cstring>  // std::memcmp(), std::memcpy()
@@ -9,11 +9,11 @@ namespace RTC
 {
 	/* Class methods. */
 
-	RTPPacket* RTPPacket::Parse(const uint8_t* data, size_t len)
+	RtpPacket* RtpPacket::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		if (!RTPPacket::IsRTP(data, len))
+		if (!RtpPacket::IsRtp(data, len))
 			return nullptr;
 
 		// Get the header.
@@ -109,12 +109,12 @@ namespace RTC
 
 		MS_ASSERT(len == sizeof(Header) + csrc_list_size + (extensionHeader ? 4 + extension_value_size : 0) + payloadLength + (size_t)payloadPadding, "packet's computed length does not match received length");
 
-		return new RTPPacket(header, extensionHeader, payload, payloadLength, payloadPadding, data, len);
+		return new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, data, len);
 	}
 
 	/* Instance methods. */
 
-	RTPPacket::RTPPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLength, uint8_t payloadPadding, const uint8_t* raw, size_t length) :
+	RtpPacket::RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLength, uint8_t payloadPadding, const uint8_t* raw, size_t length) :
 		header(header),
 		extensionHeader(extensionHeader),
 		payload((uint8_t*)payload),
@@ -129,7 +129,7 @@ namespace RTC
 			this->csrcList = (uint8_t*)raw + sizeof(Header);
 	}
 
-	RTPPacket::~RTPPacket()
+	RtpPacket::~RtpPacket()
 	{
 		MS_TRACE();
 
@@ -137,14 +137,14 @@ namespace RTC
 			delete this->raw;
 	}
 
-	void RTPPacket::Dump()
+	void RtpPacket::Dump()
 	{
 		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
 
-		MS_DEBUG("<RTPPacket>");
+		MS_DEBUG("<RtpPacket>");
 		MS_DEBUG("padding: %s", this->header->padding ? "true" : "false");
 		MS_DEBUG("extension: %s", HasExtensionHeader() ? "true" : "false");
 		if (HasExtensionHeader())
@@ -157,12 +157,12 @@ namespace RTC
 		MS_DEBUG("payload type: %" PRIu8, GetPayloadType());
 		MS_DEBUG("sequence number: %" PRIu16, GetSequenceNumber());
 		MS_DEBUG("timestamp: %" PRIu32, GetTimestamp());
-		MS_DEBUG("SSRC: %" PRIu32, GetSSRC());
+		MS_DEBUG("SSRC: %" PRIu32, GetSsrc());
 		MS_DEBUG("payload size: %zu bytes", GetPayloadLength());
-		MS_DEBUG("</RTPPacket>");
+		MS_DEBUG("</RtpPacket>");
 	}
 
-	void RTPPacket::Serialize()
+	void RtpPacket::Serialize()
 	{
 		MS_TRACE();
 

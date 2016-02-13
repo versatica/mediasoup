@@ -4,7 +4,7 @@
 #include "common.h"
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpParameters.h"
-#include "RTC/RTPPacket.h"
+#include "RTC/RtpPacket.h"
 #include <unordered_map>
 #include <json/json.h>
 
@@ -19,7 +19,7 @@ namespace RTC
 		Json::Value toJson();
 		void AddRtpReceiver(RTC::RtpReceiver *rtpReceiver, RTC::RtpParameters* rtpParameters);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
-		RTC::RtpReceiver* GetRtpReceiver(RTC::RTPPacket* packet);
+		RTC::RtpReceiver* GetRtpReceiver(RTC::RtpPacket* packet);
 
 	private:
 		// Others.

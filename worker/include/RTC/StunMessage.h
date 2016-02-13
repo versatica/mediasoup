@@ -6,7 +6,7 @@
 
 namespace RTC
 {
-	class STUNMessage
+	class StunMessage
 	{
 	public:
 		// STUN message class.
@@ -53,15 +53,15 @@ namespace RTC
 		};
 
 	public:
-		static bool IsSTUN(const uint8_t* data, size_t len);
-		static STUNMessage* Parse(const uint8_t* data, size_t len);
+		static bool IsStun(const uint8_t* data, size_t len);
+		static StunMessage* Parse(const uint8_t* data, size_t len);
 
 	private:
 		static const uint8_t magicCookie[];
 
 	public:
-		STUNMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* raw, size_t length);
-		~STUNMessage();
+		StunMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* raw, size_t length);
+		~StunMessage();
 
 		void Dump();
 		Class GetClass();
@@ -87,8 +87,8 @@ namespace RTC
 		bool HasMessageIntegrity();
 		bool HasFingerprint();
 		Authentication CheckAuthentication(const std::string &local_username, const std::string &local_password);
-		STUNMessage* CreateSuccessResponse();
-		STUNMessage* CreateErrorResponse(uint16_t errorCode);
+		StunMessage* CreateSuccessResponse();
+		StunMessage* CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string &password);
 		void Serialize();
 
@@ -117,7 +117,7 @@ namespace RTC
 	/* Inline methods. */
 
 	inline
-	bool STUNMessage::IsSTUN(const uint8_t* data, size_t len)
+	bool StunMessage::IsStun(const uint8_t* data, size_t len)
 	{
 		return (
 			// STUN headers are 20 bytes.
@@ -125,147 +125,147 @@ namespace RTC
 			// DOC: https://tools.ietf.org/html/draft-petithuguenin-avtcore-rfc5764-mux-fixes-00
 			(data[0] < 20) &&
 			// Magic cookie must match.
-			(data[4] == STUNMessage::magicCookie[0]) &&
-			(data[5] == STUNMessage::magicCookie[1]) &&
-			(data[6] == STUNMessage::magicCookie[2]) &&
-			(data[7] == STUNMessage::magicCookie[3])
+			(data[4] == StunMessage::magicCookie[0]) &&
+			(data[5] == StunMessage::magicCookie[1]) &&
+			(data[6] == StunMessage::magicCookie[2]) &&
+			(data[7] == StunMessage::magicCookie[3])
 		);
 	}
 
 	inline
-	STUNMessage::Class STUNMessage::GetClass()
+	StunMessage::Class StunMessage::GetClass()
 	{
 		return this->klass;
 	}
 
 	inline
-	STUNMessage::Method STUNMessage::GetMethod()
+	StunMessage::Method StunMessage::GetMethod()
 	{
 		return this->method;
 	}
 
 	inline
-	const uint8_t* STUNMessage::GetRaw()
+	const uint8_t* StunMessage::GetRaw()
 	{
 		return this->raw;
 	}
 
 	inline
-	void STUNMessage::SetLength(size_t length)
+	void StunMessage::SetLength(size_t length)
 	{
 		this->length = length;
 	}
 
 	inline
-	size_t STUNMessage::GetLength()
+	size_t StunMessage::GetLength()
 	{
 		return this->length;
 	}
 
 	inline
-	void STUNMessage::SetUsername(const char* username, size_t len)
+	void StunMessage::SetUsername(const char* username, size_t len)
 	{
 		if (this->username.empty())
 			this->username = std::string(username, len);
 	}
 
 	inline
-	void STUNMessage::SetPriority(const uint32_t priority)
+	void StunMessage::SetPriority(const uint32_t priority)
 	{
 		if (!this->priority)
 			this->priority = priority;
 	}
 
 	inline
-	void STUNMessage::SetIceControlling(const uint64_t iceControlling)
+	void StunMessage::SetIceControlling(const uint64_t iceControlling)
 	{
 		if (!this->iceControlling)
 			this->iceControlling = iceControlling;
 	}
 
 	inline
-	void STUNMessage::SetIceControlled(const uint64_t iceControlled)
+	void StunMessage::SetIceControlled(const uint64_t iceControlled)
 	{
 		if (!this->iceControlled)
 			this->iceControlled = iceControlled;
 	}
 
 	inline
-	void STUNMessage::SetUseCandidate()
+	void StunMessage::SetUseCandidate()
 	{
 		this->hasUseCandidate = true;
 	}
 
 	inline
-	void STUNMessage::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
+	void StunMessage::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
 	{
 		if (!this->xorMappedAddress)
 			this->xorMappedAddress = xorMappedAddress;
 	}
 
 	inline
-	void STUNMessage::SetErrorCode(uint16_t errorCode)
+	void StunMessage::SetErrorCode(uint16_t errorCode)
 	{
 		this->errorCode = errorCode;
 	}
 
 	inline
-	void STUNMessage::SetMessageIntegrity(const uint8_t* messageIntegrity)
+	void StunMessage::SetMessageIntegrity(const uint8_t* messageIntegrity)
 	{
 		if (!this->messageIntegrity)
 			this->messageIntegrity = messageIntegrity;
 	}
 
 	inline
-	void STUNMessage::SetFingerprint()
+	void StunMessage::SetFingerprint()
 	{
 		this->hasFingerprint = true;
 	}
 
 	inline
-	const std::string& STUNMessage::GetUsername()
+	const std::string& StunMessage::GetUsername()
 	{
 		return this->username;
 	}
 
 	inline
-	const uint32_t STUNMessage::GetPriority()
+	const uint32_t StunMessage::GetPriority()
 	{
 		return this->priority;
 	}
 
 	inline
-	const uint64_t STUNMessage::GetIceControlling()
+	const uint64_t StunMessage::GetIceControlling()
 	{
 		return this->iceControlling;
 	}
 
 	inline
-	const uint64_t STUNMessage::GetIceControlled()
+	const uint64_t StunMessage::GetIceControlled()
 	{
 		return this->iceControlled;
 	}
 
 	inline
-	bool STUNMessage::HasUseCandidate()
+	bool StunMessage::HasUseCandidate()
 	{
 		return this->hasUseCandidate;
 	}
 
 	inline
-	uint16_t STUNMessage::GetErrorCode()
+	uint16_t StunMessage::GetErrorCode()
 	{
 		return this->errorCode;
 	}
 
 	inline
-	bool STUNMessage::HasMessageIntegrity()
+	bool StunMessage::HasMessageIntegrity()
 	{
 		return (this->messageIntegrity ? true : false);
 	}
 
 	inline
-	bool STUNMessage::HasFingerprint()
+	bool StunMessage::HasFingerprint()
 	{
 		return this->hasFingerprint;
 	}

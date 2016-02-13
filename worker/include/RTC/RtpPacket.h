@@ -5,7 +5,7 @@
 
 namespace RTC
 {
-	class RTPPacket
+	class RtpPacket
 	{
 	public:
 		/* Struct for RTP header. */
@@ -40,12 +40,12 @@ namespace RTC
 		};
 
 	public:
-		static bool IsRTP(const uint8_t* data, size_t len);
-		static RTPPacket* Parse(const uint8_t* data, size_t len);
+		static bool IsRtp(const uint8_t* data, size_t len);
+		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
 	public:
-		RTPPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLen, uint8_t payloadPadding, const uint8_t* raw, size_t length);
-		~RTPPacket();
+		RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLen, uint8_t payloadPadding, const uint8_t* raw, size_t length);
+		~RtpPacket();
 
 		void Dump();
 		const uint8_t* GetRaw();
@@ -56,8 +56,8 @@ namespace RTC
 		void SetMarker(bool marker);
 		uint16_t GetSequenceNumber();
 		uint32_t GetTimestamp();
-		uint32_t GetSSRC();
-		void SetSSRC(uint32_t ssrc);  // TODO: yes?
+		uint32_t GetSsrc();
+		void SetSsrc(uint32_t ssrc);  // TODO: yes?
 		bool HasExtensionHeader();
 		uint16_t GetExtensionHeaderId();
 		size_t GetExtensionHeaderLength();
@@ -82,9 +82,9 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	bool RTPPacket::IsRTP(const uint8_t* data, size_t len)
+	bool RtpPacket::IsRtp(const uint8_t* data, size_t len)
 	{
-		// NOTE: RTCPPacket::IsRTCP() must always be called before this method.
+		// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
 
 		Header* header = (Header*)data;
 
@@ -100,74 +100,74 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	const uint8_t* RTPPacket::GetRaw()
+	const uint8_t* RtpPacket::GetRaw()
 	{
 		return this->raw;
 	}
 
 	inline
-	size_t RTPPacket::GetLength()
+	size_t RtpPacket::GetLength()
 	{
 		return this->length;
 	}
 
 	inline
-	uint8_t RTPPacket::GetPayloadType()
+	uint8_t RtpPacket::GetPayloadType()
 	{
 		return this->header->payload_type;
 	}
 
 	inline
-	void RTPPacket::SetPayloadType(uint8_t payload_type)
+	void RtpPacket::SetPayloadType(uint8_t payload_type)
 	{
 		this->header->payload_type = payload_type;
 	}
 
 	inline
-	bool RTPPacket::HasMarker()
+	bool RtpPacket::HasMarker()
 	{
 		return this->header->marker;
 	}
 
 	inline
-	void RTPPacket::SetMarker(bool marker)
+	void RtpPacket::SetMarker(bool marker)
 	{
 		this->header->marker = marker;
 	}
 
 	inline
-	uint16_t RTPPacket::GetSequenceNumber()
+	uint16_t RtpPacket::GetSequenceNumber()
 	{
 		return (uint16_t)ntohs(this->header->sequence_number);
 	}
 
 	inline
-	uint32_t RTPPacket::GetTimestamp()
+	uint32_t RtpPacket::GetTimestamp()
 	{
 		return (uint32_t)ntohl(this->header->timestamp);
 	}
 
 	inline
-	uint32_t RTPPacket::GetSSRC()
+	uint32_t RtpPacket::GetSsrc()
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
 	// TODO temp
 	inline
-	void RTPPacket::SetSSRC(uint32_t ssrc)
+	void RtpPacket::SetSsrc(uint32_t ssrc)
 	{
 		this->header->ssrc = htonl(ssrc);
 	}
 
 	inline
-	bool RTPPacket::HasExtensionHeader()
+	bool RtpPacket::HasExtensionHeader()
 	{
 		return (this->extensionHeader ? true : false);
 	}
 
 	inline
-	uint16_t RTPPacket::GetExtensionHeaderId()
+	uint16_t RtpPacket::GetExtensionHeaderId()
 	{
 		if (this->extensionHeader)
 			return uint16_t(ntohs(this->extensionHeader->id));
@@ -176,7 +176,7 @@ namespace RTC
 	}
 
 	inline
-	size_t RTPPacket::GetExtensionHeaderLength()
+	size_t RtpPacket::GetExtensionHeaderLength()
 	{
 		if (this->extensionHeader)
 			return size_t(ntohs(this->extensionHeader->length) * 4);
@@ -185,13 +185,13 @@ namespace RTC
 	}
 
 	inline
-	uint8_t* RTPPacket::GetPayload()
+	uint8_t* RtpPacket::GetPayload()
 	{
 		return this->payload;
 	}
 
 	inline
-	size_t RTPPacket::GetPayloadLength()
+	size_t RtpPacket::GetPayloadLength()
 	{
 		return this->payloadLength;
 	}

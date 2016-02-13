@@ -2,7 +2,7 @@
 #define MS_RTC_DTLS_TRANSPORT_H
 
 #include "common.h"
-#include "RTC/SRTPSession.h"
+#include "RTC/SrtpSession.h"
 #include "handles/Timer.h"
 #include <string>
 #include <map>
@@ -15,7 +15,7 @@
 
 namespace RTC
 {
-	class DTLSTransport :
+	class DtlsTransport :
 		public Timer::Listener
 	{
 	public:
@@ -58,7 +58,7 @@ namespace RTC
 	private:
 		struct SrtpProfileMapEntry
 		{
-			RTC::SRTPSession::Profile profile;
+			RTC::SrtpSession::Profile profile;
 			const char* name;
 		};
 
@@ -69,24 +69,24 @@ namespace RTC
 			// DTLS is in the process of negotiating a secure connection. Incoming
 			// media can flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDTLSConnecting(DTLSTransport* dtlsTransport) = 0;
+			virtual void onDtlsConnecting(DtlsTransport* dtlsTransport) = 0;
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDTLSConnected(DTLSTransport* dtlsTransport, RTC::SRTPSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			virtual void onDtlsConnected(DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Close() during this callback.
-			virtual void onDTLSFailed(DTLSTransport* dtlsTransport) = 0;
+			virtual void onDtlsFailed(DtlsTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
 			// NOTE: The caller MUST NOT call Close() during this callback.
-			virtual void onDTLSClosed(DTLSTransport* dtlsTransport) = 0;
+			virtual void onDtlsClosed(DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Close() during this callback.
-			virtual void onOutgoingDTLSData(DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			virtual void onOutgoingDtlsData(DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			// NOTE: The caller MUST NOT call Close() during this callback.
-			virtual void onDTLSApplicationData(DTLSTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			virtual void onDtlsApplicationData(DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
@@ -95,7 +95,7 @@ namespace RTC
 		static Json::Value& GetLocalFingerprints();
 		static Role StringToRole(std::string role);
 		static FingerprintAlgorithm GetFingerprintAlgorithm(std::string fingerprint);
-		static bool IsDTLS(const uint8_t* data, size_t len);
+		static bool IsDtls(const uint8_t* data, size_t len);
 
 	private:
 		static void GenerateCertificateAndPrivateKey();
@@ -114,14 +114,14 @@ namespace RTC
 		static std::vector<SrtpProfileMapEntry> srtpProfiles;
 
 	public:
-		DTLSTransport(Listener* listener);
-		virtual ~DTLSTransport();
+		DtlsTransport(Listener* listener);
+		virtual ~DtlsTransport();
 
 		void Close();
 		void Dump();
 		void Run(Role localRole);
 		void SetRemoteFingerprint(Fingerprint fingerprint);
-		void ProcessDTLSData(const uint8_t* data, size_t len);
+		void ProcessDtlsData(const uint8_t* data, size_t len);
 		DtlsState GetState();
 		Role GetLocalRole();
 		void SendApplicationData(const uint8_t* data, size_t len);
@@ -130,12 +130,12 @@ namespace RTC
 		bool IsRunning();
 		void Reset();
 		bool CheckStatus(int return_code);
-		void SendPendingOutgoingDTLSData();
+		void SendPendingOutgoingDtlsData();
 		bool SetTimeout();
 		void ProcessHandshake();
 		bool CheckRemoteFingerprint();
-		void ExtractSRTPKeys(RTC::SRTPSession::Profile srtp_profile);
-		RTC::SRTPSession::Profile GetNegotiatedSRTPProfile();
+		void ExtractSrtpKeys(RTC::SrtpSession::Profile srtp_profile);
+		RTC::SrtpSession::Profile GetNegotiatedSrtpProfile();
 
 	/* Callbacks fired by OpenSSL events. */
 	public:
@@ -164,35 +164,35 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	Json::Value& DTLSTransport::GetLocalFingerprints()
+	Json::Value& DtlsTransport::GetLocalFingerprints()
 	{
-		return DTLSTransport::localFingerprints;
+		return DtlsTransport::localFingerprints;
 	}
 
 	inline
-	DTLSTransport::Role DTLSTransport::StringToRole(std::string role)
+	DtlsTransport::Role DtlsTransport::StringToRole(std::string role)
 	{
-		auto it = DTLSTransport::string2Role.find(role);
+		auto it = DtlsTransport::string2Role.find(role);
 
-		if (it != DTLSTransport::string2Role.end())
+		if (it != DtlsTransport::string2Role.end())
 			return it->second;
 		else
-			return DTLSTransport::Role::NONE;
+			return DtlsTransport::Role::NONE;
 	}
 
 	inline
-	DTLSTransport::FingerprintAlgorithm DTLSTransport::GetFingerprintAlgorithm(std::string fingerprint)
+	DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(std::string fingerprint)
 	{
-		auto it = DTLSTransport::string2FingerprintAlgorithm.find(fingerprint);
+		auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
 
-		if (it != DTLSTransport::string2FingerprintAlgorithm.end())
+		if (it != DtlsTransport::string2FingerprintAlgorithm.end())
 			return it->second;
 		else
-			return DTLSTransport::FingerprintAlgorithm::NONE;
+			return DtlsTransport::FingerprintAlgorithm::NONE;
 	}
 
 	inline
-	bool DTLSTransport::IsDTLS(const uint8_t* data, size_t len)
+	bool DtlsTransport::IsDtls(const uint8_t* data, size_t len)
 	{
 		return (
 			// Minimum DTLS record length is 13 bytes.
@@ -205,7 +205,7 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool DTLSTransport::IsRunning()
+	bool DtlsTransport::IsRunning()
 	{
 		switch (this->state)
 		{
@@ -224,13 +224,13 @@ namespace RTC
 	}
 
 	inline
-	DTLSTransport::DtlsState DTLSTransport::GetState()
+	DtlsTransport::DtlsState DtlsTransport::GetState()
 	{
 		return this->state;
 	}
 
 	inline
-	DTLSTransport::Role DTLSTransport::GetLocalRole()
+	DtlsTransport::Role DtlsTransport::GetLocalRole()
 	{
 		return this->localRole;
 	}

@@ -236,7 +236,7 @@ namespace RTC
 				MS_DEBUG("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
 
 				// RTC::Transport inherits from RTC::RtpListener, but the API of
-				// RTC:RtpReceiver requires RTP::RtpListener.
+				// RTC:RtpReceiver requires RTC::RtpListener.
 				RTC::RtpListener* rtpListener = transport;
 
 				// Set the RtpListener.

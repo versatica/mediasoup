@@ -1,15 +1,15 @@
-#ifndef MS_RTC_ICE_SERVER_H
-#define MS_RTC_ICE_SERVER_H
+#ifndef MS_RTC_Ice_SERVER_H
+#define MS_RTC_Ice_SERVER_H
 
 #include "common.h"
-#include "RTC/STUNMessage.h"
+#include "RTC/StunMessage.h"
 #include "RTC/TransportTuple.h"
 #include <string>
 #include <list>
 
 namespace RTC
 {
-	class ICEServer
+	class IceServer
 	{
 	public:
 		enum class IceState
@@ -25,21 +25,21 @@ namespace RTC
 		{
 		public:
 			/**
-			 * These callbacks are guaranteed to be called before ProcessSTUNMessage()
+			 * These callbacks are guaranteed to be called before ProcessStunMessage()
 			 * returns, so the given pointers are still usable.
 			 */
-			virtual void onOutgoingSTUNMessage(ICEServer* iceServer, RTC::STUNMessage* msg, RTC::TransportTuple* tuple) = 0;
-			virtual void onICESelectedTuple(ICEServer* iceServer, RTC::TransportTuple* tuple) = 0;
-			virtual void onICEConnected(ICEServer* iceServer) = 0;
-			virtual void onICECompleted(ICEServer* iceServer) = 0;
-			virtual void onICEDisconnected(ICEServer* iceServer) = 0;
+			virtual void onOutgoingStunMessage(IceServer* iceServer, RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
+			virtual void onIceSelectedTuple(IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+			virtual void onIceConnected(IceServer* iceServer) = 0;
+			virtual void onIceCompleted(IceServer* iceServer) = 0;
+			virtual void onIceDisconnected(IceServer* iceServer) = 0;
 		};
 
 	public:
-		ICEServer(Listener* listener, const std::string& usernameFragment, const std::string password);
+		IceServer(Listener* listener, const std::string& usernameFragment, const std::string password);
 
 		void Close();
-		void ProcessSTUNMessage(RTC::STUNMessage* msg, RTC::TransportTuple* tuple);
+		void ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple);
 		std::string& GetUsernameFragment();
 		std::string& GetPassword();
 		IceState GetState();
@@ -79,19 +79,19 @@ namespace RTC
 	/* Inline methods. */
 
 	inline
-	std::string& ICEServer::GetUsernameFragment()
+	std::string& IceServer::GetUsernameFragment()
 	{
 		return this->usernameFragment;
 	}
 
 	inline
-	std::string& ICEServer::GetPassword()
+	std::string& IceServer::GetPassword()
 	{
 		return this->password;
 	}
 
 	inline
-	ICEServer::IceState ICEServer::GetState()
+	IceServer::IceState IceServer::GetState()
 	{
 		return this->state;
 	}

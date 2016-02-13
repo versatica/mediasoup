@@ -1,6 +1,6 @@
-#define MS_CLASS "TCPServer"
+#define MS_CLASS "TcpServer"
 
-#include "handles/TCPServer.h"
+#include "handles/TcpServer.h"
 #include "Utils.h"
 #include "DepLibUV.h"
 #include "MediaSoupError.h"
@@ -11,13 +11,13 @@
 static inline
 void on_connection(uv_stream_t* handle, int status)
 {
-	static_cast<TCPServer*>(handle->data)->onUvConnection(status);
+	static_cast<TcpServer*>(handle->data)->onUvConnection(status);
 }
 
 static inline
 void on_close(uv_handle_t* handle)
 {
-	static_cast<TCPServer*>(handle->data)->onUvClosed();
+	static_cast<TcpServer*>(handle->data)->onUvClosed();
 }
 
 static inline
@@ -28,7 +28,7 @@ void on_error_close(uv_handle_t* handle)
 
 /* Instance methods. */
 
-TCPServer::TCPServer(const std::string &ip, uint16_t port, int backlog)
+TcpServer::TcpServer(const std::string &ip, uint16_t port, int backlog)
 {
 	MS_TRACE();
 
@@ -92,7 +92,7 @@ TCPServer::TCPServer(const std::string &ip, uint16_t port, int backlog)
 	}
 }
 
-TCPServer::TCPServer(uv_tcp_t* uvHandle, int backlog) :
+TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) :
 	uvHandle(uvHandle)
 {
 	MS_TRACE();
@@ -116,7 +116,7 @@ TCPServer::TCPServer(uv_tcp_t* uvHandle, int backlog) :
 	}
 }
 
-TCPServer::~TCPServer()
+TcpServer::~TcpServer()
 {
 	MS_TRACE();
 
@@ -124,7 +124,7 @@ TCPServer::~TCPServer()
 		delete this->uvHandle;
 }
 
-void TCPServer::Close()
+void TcpServer::Close()
 {
 	MS_TRACE();
 
@@ -145,13 +145,13 @@ void TCPServer::Close()
 
 		for (auto it = this->connections.begin(); it != this->connections.end(); ++it)
 		{
-			TCPConnection* connection = *it;
+			TcpConnection* connection = *it;
 			connection->Close();
 		}
 	}
 }
 
-void TCPServer::Dump()
+void TcpServer::Dump()
 {
 	MS_DEBUG("[TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
@@ -159,28 +159,28 @@ void TCPServer::Dump()
 		this->connections.size());
 }
 
-const struct sockaddr* TCPServer::GetLocalAddress()
+const struct sockaddr* TcpServer::GetLocalAddress()
 {
 	MS_TRACE();
 
 	return (const struct sockaddr*)&this->localAddr;
 }
 
-const std::string& TCPServer::GetLocalIP()
+const std::string& TcpServer::GetLocalIP()
 {
 	MS_TRACE();
 
 	return this->localIP;
 }
 
-uint16_t TCPServer::GetLocalPort()
+uint16_t TcpServer::GetLocalPort()
 {
 	MS_TRACE();
 
 	return this->localPort;
 }
 
-bool TCPServer::SetLocalAddress()
+bool TcpServer::SetLocalAddress()
 {
 	MS_TRACE();
 
@@ -202,7 +202,7 @@ bool TCPServer::SetLocalAddress()
 }
 
 inline
-void TCPServer::onUvConnection(int status)
+void TcpServer::onUvConnection(int status)
 {
 	MS_TRACE();
 
@@ -219,9 +219,9 @@ void TCPServer::onUvConnection(int status)
 	}
 
 	// Notify the subclass so it provides an allocated derived class of TCPConnection.
-	TCPConnection* connection = nullptr;
-	userOnTCPConnectionAlloc(&connection);
-	MS_ASSERT(connection != nullptr, "TCPConnection pointer was not allocated by the user");
+	TcpConnection* connection = nullptr;
+	userOnTcpConnectionAlloc(&connection);
+	MS_ASSERT(connection != nullptr, "TcpConnection pointer was not allocated by the user");
 
 	try
 	{
@@ -238,7 +238,7 @@ void TCPServer::onUvConnection(int status)
 	if (err)
 		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
 
-	// Insert the TCPConnection in the set.
+	// Insert the TcpConnection in the set.
 	this->connections.insert(connection);
 
 	// Start receiving data.
@@ -249,56 +249,55 @@ void TCPServer::onUvConnection(int status)
 	catch (const MediaSoupError &error)
 	{
 		MS_ERROR("cannot run the TCP connection, closing the connection: %s", error.what());
+
 		connection->Close();
-		// NOTE: Don't return here so the user won't be notified about a "onclose" for a TCP connection
-		// for which there was not a previous "onnew" event.
+
+		// NOTE: Don't return here so the user won't be notified about a TCP connection
+		// closure for which there was not a previous creation event.
 	}
 
-	MS_DEBUG("new TCP connection:");
-	connection->Dump();
-
 	// Notify the subclass.
-	userOnNewTCPConnection(connection);
+	userOnNewTcpConnection(connection);
 }
 
 inline
-void TCPServer::onUvClosed()
+void TcpServer::onUvClosed()
 {
 	MS_TRACE();
 
 	// Motify the subclass.
-	userOnTCPServerClosed();
+	userOnTcpServerClosed();
 
 	// And delete this.
 	delete this;
 }
 
 inline
-void TCPServer::onTCPConnectionClosed(TCPConnection* connection, bool is_closed_by_peer)
+void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool is_closed_by_peer)
 {
 	MS_TRACE();
 
 	// NOTE:
 	// Worst scenario is that in which this is the latest connection,
-	// which is remotely closed (no TCPServer.Close() was called) and the user
-	// call TCPServer.Close() on userOnTCPConnectionClosed() callback, so Close()
+	// which is remotely closed (no TcpServer.Close() was called) and the user
+	// call TcpServer.Close() on userOnTcpConnectionClosed() callback, so Close()
 	// is called with zero connections and calls uv_close(), but then
-	// onTCPConnectionClosed() continues and finds that isClosing is true and
+	// onTcpConnectionClosed() continues and finds that isClosing is true and
 	// there are zero connections, so calls uv_close() again and get a crash.
 	//
 	// SOLUTION:
-	// Check isClosing value *before* onTCPConnectionClosed() callback.
+	// Check isClosing value *before* onTcpConnectionClosed() callback.
 
 	bool wasClosing = this->isClosing;
 
 	MS_DEBUG("TCP connection closed:");
 	connection->Dump();
 
-	// Remove the TCPConnection from the set.
+	// Remove the TcpConnection from the set.
 	this->connections.erase(connection);
 
 	// Notify the subclass.
-	userOnTCPConnectionClosed(connection, is_closed_by_peer);
+	userOnTcpConnectionClosed(connection, is_closed_by_peer);
 
 	// Check if the server was closing connections, and if this is the last
 	// connection then close the server now.

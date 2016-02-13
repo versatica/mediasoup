@@ -1,6 +1,6 @@
-#define MS_CLASS "RTC::STUNMessage"
+#define MS_CLASS "RTC::StunMessage"
 
-#include "RTC/STUNMessage.h"
+#include "RTC/StunMessage.h"
 #include "Utils.h"
 #include "Logger.h"
 #include <cstdio>  // std::snprintf()
@@ -10,15 +10,15 @@ namespace RTC
 {
 	/* Class variables. */
 
-	const uint8_t STUNMessage::magicCookie[] = {0x21, 0x12, 0xA4, 0x42};
+	const uint8_t StunMessage::magicCookie[] = {0x21, 0x12, 0xA4, 0x42};
 
 	/* Class methods. */
 
-	STUNMessage* STUNMessage::Parse(const uint8_t* data, size_t len)
+	StunMessage* StunMessage::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		if (!STUNMessage::IsSTUN(data, len))
+		if (!StunMessage::IsStun(data, len))
 			return nullptr;
 
 		/*
@@ -60,8 +60,8 @@ namespace RTC
 		// Get STUN class.
 		uint16_t msg_class = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
-		// Create a new STUNMessage (data + 8 points to the received TransactionID field).
-		STUNMessage* msg = new STUNMessage((Class)msg_class, (Method)msg_method, data + 8, data, len);
+		// Create a new StunMessage (data + 8 points to the received TransactionID field).
+		StunMessage* msg = new StunMessage((Class)msg_class, (Method)msg_method, data + 8, data, len);
 
 		/*
 		    STUN Attributes
@@ -201,7 +201,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	STUNMessage::STUNMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* raw, size_t length) :
+	StunMessage::StunMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* raw, size_t length) :
 		klass(klass),
 		method(method),
 		transactionId(transactionId),
@@ -211,7 +211,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	STUNMessage::~STUNMessage()
+	StunMessage::~StunMessage()
 	{
 		MS_TRACE();
 
@@ -219,14 +219,14 @@ namespace RTC
 			delete this->raw;
 	}
 
-	void STUNMessage::Dump()
+	void StunMessage::Dump()
 	{
 		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
 
-		MS_DEBUG("<STUNMessage>");
+		MS_DEBUG("<StunMessage>");
 		std::string klass;
 		switch (this->klass)
 		{
@@ -279,10 +279,10 @@ namespace RTC
 		}
 		if (this->hasFingerprint)
 			MS_DEBUG("fingerprint");
-		MS_DEBUG("</STUNMessage>");
+		MS_DEBUG("</StunMessage>");
 	}
 
-	STUNMessage::Authentication STUNMessage::CheckAuthentication(const std::string &local_username, const std::string &local_password)
+	StunMessage::Authentication StunMessage::CheckAuthentication(const std::string &local_username, const std::string &local_password)
 	{
 		MS_TRACE();
 
@@ -341,29 +341,29 @@ namespace RTC
 		return result;
 	}
 
-	STUNMessage* STUNMessage::CreateSuccessResponse()
+	StunMessage* StunMessage::CreateSuccessResponse()
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->klass == Class::Request, "attempt to create a success response for a non Request STUN message");
 
-		return new STUNMessage(Class::SuccessResponse, this->method, this->transactionId, nullptr, 0);
+		return new StunMessage(Class::SuccessResponse, this->method, this->transactionId, nullptr, 0);
 	}
 
-	STUNMessage* STUNMessage::CreateErrorResponse(uint16_t errorCode)
+	StunMessage* StunMessage::CreateErrorResponse(uint16_t errorCode)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->klass == Class::Request, "attempt to create an error response for a non Request STUN message");
 
-		STUNMessage* response = new STUNMessage(Class::ErrorResponse, this->method, this->transactionId, nullptr, 0);
+		StunMessage* response = new StunMessage(Class::ErrorResponse, this->method, this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);
 
 		return response;
 	}
 
-	void STUNMessage::Authenticate(const std::string &password)
+	void StunMessage::Authenticate(const std::string &password)
 	{
 		// Just for Request, Indication and SuccessResponse messages.
 		if (this->klass == Class::ErrorResponse)
@@ -376,7 +376,7 @@ namespace RTC
 		this->password = password;
 	}
 
-	void STUNMessage::Serialize()
+	void StunMessage::Serialize()
 	{
 		MS_TRACE();
 
@@ -389,7 +389,7 @@ namespace RTC
 		// Some useful variables.
 		uint16_t username_padded_len = 0;
 		uint16_t xor_mapped_address_padded_len = 0;
-		bool add_xor_mapped_address = (this->xorMappedAddress && this->method == STUNMessage::Method::Binding && this->klass == Class::SuccessResponse);
+		bool add_xor_mapped_address = (this->xorMappedAddress && this->method == StunMessage::Method::Binding && this->klass == Class::SuccessResponse);
 		bool add_error_code = (this->errorCode && this->klass == Class::ErrorResponse);
 		bool add_message_integrity = (this->klass != Class::ErrorResponse && !this->password.empty());
 		bool add_fingerprint = true;  // Do always.
@@ -459,7 +459,7 @@ namespace RTC
 		Utils::Byte::Set2Bytes(this->raw, 2, (uint16_t)this->length - 20);
 
 		// Set magic cookie.
-		std::memcpy(this->raw + 4, STUNMessage::magicCookie, 4);
+		std::memcpy(this->raw + 4, StunMessage::magicCookie, 4);
 
 		// Set TransactionId field.
 		std::memcpy(this->raw + 8, this->transactionId, 12);
@@ -529,14 +529,14 @@ namespace RTC
 					attr_value[1] = 0x01;
 					// Set port and XOR it.
 					std::memcpy(attr_value + 2, &((const sockaddr_in*)(this->xorMappedAddress))->sin_port, 2);
-					attr_value[2] ^= STUNMessage::magicCookie[0];
-					attr_value[3] ^= STUNMessage::magicCookie[1];
+					attr_value[2] ^= StunMessage::magicCookie[0];
+					attr_value[3] ^= StunMessage::magicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(attr_value + 4, &((const sockaddr_in*)this->xorMappedAddress)->sin_addr.s_addr, 4);
-					attr_value[4] ^= STUNMessage::magicCookie[0];
-					attr_value[5] ^= STUNMessage::magicCookie[1];
-					attr_value[6] ^= STUNMessage::magicCookie[2];
-					attr_value[7] ^= STUNMessage::magicCookie[3];
+					attr_value[4] ^= StunMessage::magicCookie[0];
+					attr_value[5] ^= StunMessage::magicCookie[1];
+					attr_value[6] ^= StunMessage::magicCookie[2];
+					attr_value[7] ^= StunMessage::magicCookie[3];
 
 					pos += 4 + 8;
 					break;
@@ -549,14 +549,14 @@ namespace RTC
 					attr_value[1] = 0x02;
 					// Set port and XOR it.
 					std::memcpy(attr_value + 2, &((const sockaddr_in6*)(this->xorMappedAddress))->sin6_port, 2);
-					attr_value[2] ^= STUNMessage::magicCookie[0];
-					attr_value[3] ^= STUNMessage::magicCookie[1];
+					attr_value[2] ^= StunMessage::magicCookie[0];
+					attr_value[3] ^= StunMessage::magicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(attr_value + 4, &((const sockaddr_in6*)this->xorMappedAddress)->sin6_addr.s6_addr, 16);
-					attr_value[4] ^= STUNMessage::magicCookie[0];
-					attr_value[5] ^= STUNMessage::magicCookie[1];
-					attr_value[6] ^= STUNMessage::magicCookie[2];
-					attr_value[7] ^= STUNMessage::magicCookie[3];
+					attr_value[4] ^= StunMessage::magicCookie[0];
+					attr_value[5] ^= StunMessage::magicCookie[1];
+					attr_value[6] ^= StunMessage::magicCookie[2];
+					attr_value[7] ^= StunMessage::magicCookie[3];
 					attr_value[8] ^= this->transactionId[0];
 					attr_value[9] ^= this->transactionId[1];
 					attr_value[10] ^= this->transactionId[2];

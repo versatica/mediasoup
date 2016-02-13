@@ -5,13 +5,13 @@
 #include <string>
 #include <uv.h>
 
-class UDPSocket
+class UdpSocket
 {
 public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
-		UDPSocket*    socket;
+		UdpSocket*    socket;
 		uv_udp_send_t req;
 		uint8_t       store[1];
 	};
@@ -20,12 +20,12 @@ private:
 	static uint8_t readBuffer[];
 
 public:
-	UDPSocket(const std::string &ip, uint16_t port);
+	UdpSocket(const std::string &ip, uint16_t port);
 	/**
 	 * uvHandle must be an already initialized and binded uv_udp_t pointer.
 	 */
-	UDPSocket(uv_udp_t* uvHandle);
-	virtual ~UDPSocket();
+	UdpSocket(uv_udp_t* uvHandle);
+	virtual ~UdpSocket();
 
 	void Close();
 	virtual void Dump();
@@ -49,8 +49,8 @@ public:
 
 /* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnUDPDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
-	virtual void userOnUDPSocketClosed() = 0;
+	virtual void userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
+	virtual void userOnUdpSocketClosed() = 0;
 
 private:
 	// Allocated by this (may be passed by argument).
@@ -67,31 +67,31 @@ protected:
 /* Inline methods. */
 
 inline
-void UDPSocket::Send(const std::string &data, const struct sockaddr* addr)
+void UdpSocket::Send(const std::string &data, const struct sockaddr* addr)
 {
 	Send((const uint8_t*)data.c_str(), data.size(), addr);
 }
 
 inline
-void UDPSocket::Send(const std::string &data, const std::string &ip, uint16_t port)
+void UdpSocket::Send(const std::string &data, const std::string &ip, uint16_t port)
 {
 	Send((const uint8_t*)data.c_str(), data.size(), ip, port);
 }
 
 inline
-const struct sockaddr* UDPSocket::GetLocalAddress()
+const struct sockaddr* UdpSocket::GetLocalAddress()
 {
 	return (const struct sockaddr*)&this->localAddr;
 }
 
 inline
-const std::string& UDPSocket::GetLocalIP()
+const std::string& UdpSocket::GetLocalIP()
 {
 	return this->localIP;
 }
 
 inline
-uint16_t UDPSocket::GetLocalPort()
+uint16_t UdpSocket::GetLocalPort()
 {
 	return this->localPort;
 }

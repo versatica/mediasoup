@@ -108,7 +108,7 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpReceiver* RtpListener::GetRtpReceiver(RTC::RTPPacket* packet)
+	RTC::RtpReceiver* RtpListener::GetRtpReceiver(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -116,7 +116,7 @@ namespace RTC
 
 		// Check the SSRC table.
 
-		auto it = this->ssrcTable.find(packet->GetSSRC());
+		auto it = this->ssrcTable.find(packet->GetSsrc());
 
 		if (it == this->ssrcTable.end())
 		{

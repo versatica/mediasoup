@@ -7,7 +7,7 @@
 
 namespace RTC
 {
-	class SRTPSession
+	class SrtpSession
 	{
 	public:
 		enum class Profile
@@ -28,19 +28,19 @@ namespace RTC
 		static void ClassInit();
 
 	// private:
-		// static void onSRTPEvent(srtp_event_data_t* data);
+		// static void onSrtpEvent(srtp_event_data_t* data);
 
 	private:
 		static uint8_t encryptBuffer[];
 
 	public:
-		SRTPSession(Type type, Profile profile, uint8_t* key, size_t key_len);
-		~SRTPSession();
+		SrtpSession(Type type, Profile profile, uint8_t* key, size_t key_len);
+		~SrtpSession();
 
-		bool EncryptRTP(const uint8_t** data, size_t* len);
-		bool DecryptSRTP(const uint8_t* data, size_t* len);
-		bool EncryptRTCP(const uint8_t** data, size_t* len);
-		bool DecryptSRTCP(const uint8_t* data, size_t* len);
+		bool EncryptRtp(const uint8_t** data, size_t* len);
+		bool DecryptSrtp(const uint8_t* data, size_t* len);
+		bool EncryptRtcp(const uint8_t** data, size_t* len);
+		bool DecryptSrtcp(const uint8_t* data, size_t* len);
 		const char* GetLastErrorDesc();
 		void Close();
 
@@ -54,7 +54,7 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	const char* SRTPSession::GetLastErrorDesc()
+	const char* SrtpSession::GetLastErrorDesc()
 	{
 		const char* error_string;
 

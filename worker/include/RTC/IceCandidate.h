@@ -2,8 +2,8 @@
 #define MS_RTC_ICE_CANDIDATE_H
 
 #include "common.h"
-#include "RTC/UDPSocket.h"
-#include "RTC/TCPServer.h"
+#include "RTC/UdpSocket.h"
+#include "RTC/TcpServer.h"
 #include <string>
 #include <json/json.h>
 
@@ -31,8 +31,8 @@ namespace RTC
 		};
 
 	public:
-		IceCandidate(RTC::UDPSocket* udpSocket, uint32_t priority);
-		IceCandidate(RTC::TCPServer* tcpServer, uint32_t priority);
+		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority);
+		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority);
 
 		Json::Value toJson();
 
