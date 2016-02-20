@@ -13,6 +13,8 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 1000 
 	let room = server.Room();
 	let peer = room.Peer('alice');
 
+	t.equal(peer.name, 'alice', 'peer.name must be "alice"');
+
 	peer.createTransport()
 		.then(() =>
 		{

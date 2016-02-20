@@ -12,6 +12,11 @@ namespace RTC
 	// Avoid cyclic #include problem by declaring classes instead of including
 	// the corresponding header files.
 	class Transport;
+	// class Transport
+	// {
+	// 	public:
+	// 		uint32_t transportId;
+	// };
 
 	class RtpReceiver
 	{

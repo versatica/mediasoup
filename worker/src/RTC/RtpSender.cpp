@@ -49,6 +49,7 @@ namespace RTC
 		static Json::Value null_data(Json::nullValue);
 		static const Json::StaticString k_rtpSenderId("rtpSenderId");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
+		static const Json::StaticString k_hasTransport("hasTransport");
 
 		Json::Value json(Json::objectValue);
 
@@ -58,6 +59,8 @@ namespace RTC
 			json[k_rtpParameters] = this->rtpParameters->toJson();
 		else
 			json[k_rtpParameters] = null_data;
+
+		json[k_hasTransport] = this->transport ? true : false;
 
 		return json;
 	}

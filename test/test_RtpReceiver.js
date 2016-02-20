@@ -84,23 +84,37 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				]
 			};
 
+			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
+
 			rtpReceiver.receive(rtpParameters)
 				.then(() =>
 				{
 					t.pass('rtpReceiver.receive() succeeded');
 
-					rtpReceiver.dump()
-						.then((data) =>
-						{
-							t.pass('rtpReceiver.dump() succeeded');
-							t.same(data.rtpParameters, expectedRtpParameters, 'rtpReceiver.dump() must provide the expected `rtpParameters`');
-							t.end();
-						})
-						.catch((error) => t.fail(`rtpReceiver.dump() failed: ${error}`));
+					return Promise.all(
+						[
+							transport.dump()
+								.then((data) =>
+								{
+									t.pass('transport.dump() succeeded');
+									t.same(Object.keys(data.rtpListener.ssrcTable).sort(), [ '111222330', '111222331' ].sort(), 'transport.dump() must provide the given ssrc values');
+									t.same(Object.keys(data.rtpListener.ptTable).sort(), [ '111', '8', '103' ].sort(), 'transport.dump() must provide the given payload types');
+								})
+								.catch((error) => t.fail(`transport.dump() failed: ${error}`)),
+
+							rtpReceiver.dump()
+								.then((data) =>
+								{
+									t.pass('rtpReceiver.dump() succeeded');
+									t.same(data.rtpParameters, expectedRtpParameters, 'rtpReceiver.dump() must provide the expected `rtpParameters`');
+								})
+								.catch((error) => t.fail(`rtpReceiver.dump() failed: ${error}`))
+						])
+							.then(() => t.end());
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
 		})
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
+		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
 tap.test('rtpReceiver.receive() with no `rtpParameters` must fail', { timeout: 1000 }, (t) =>

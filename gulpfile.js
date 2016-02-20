@@ -14,9 +14,8 @@ let tests =
 	'test/test_Peer.js',
 	'test/test_Transport.js',
 	'test/test_RtpReceiver.js',
-	'test/test_RtpListener.js',
-	'test/test_extra.js'
-	// 'test_room_with_dynamic_peers.js',
+	'test/test_extra.js',
+	'test/test_scene_1.js'
 ];
 
 gulp.task('lint', () =>
