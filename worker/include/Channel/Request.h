@@ -33,7 +33,8 @@ namespace Channel
 			rtpReceiver_close,
 			rtpReceiver_dump,
 			rtpReceiver_receive,
-			rtpSender_dump
+			rtpSender_dump,
+			rtpSender_setTransport
 		};
 
 	private:

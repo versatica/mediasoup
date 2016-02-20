@@ -2,7 +2,6 @@
 #define MS_RTC_SRTP_SESSION_H
 
 #include "common.h"
-#include "DepLibSRTP.h"
 #include <srtp2/srtp.h>
 
 namespace RTC
@@ -27,8 +26,8 @@ namespace RTC
 	public:
 		static void ClassInit();
 
-	// private:
-		// static void onSrtpEvent(srtp_event_data_t* data);
+	private:
+		static void onSrtpEvent(srtp_event_data_t* data);
 
 	private:
 		static uint8_t encryptBuffer[];
@@ -37,31 +36,24 @@ namespace RTC
 		SrtpSession(Type type, Profile profile, uint8_t* key, size_t key_len);
 		~SrtpSession();
 
+		void Close();
 		bool EncryptRtp(const uint8_t** data, size_t* len);
 		bool DecryptSrtp(const uint8_t* data, size_t* len);
 		bool EncryptRtcp(const uint8_t** data, size_t* len);
 		bool DecryptSrtcp(const uint8_t* data, size_t* len);
-		const char* GetLastErrorDesc();
-		void Close();
+		void RemoveStream(uint32_t ssrc);
 
 	private:
 		// Allocated by this.
 		srtp_t session = nullptr;
-		// Others.
-		srtp_err_status_t lastError = (srtp_err_status_t)0;
 	};
 
 	/* Inline instance methods. */
 
 	inline
-	const char* SrtpSession::GetLastErrorDesc()
+	void SrtpSession::RemoveStream(uint32_t ssrc)
 	{
-		const char* error_string;
-
-		error_string = DepLibSRTP::GetErrorString(this->lastError);
-		this->lastError = (srtp_err_status_t)0;  // Reset it.
-
-		return error_string;
+		srtp_remove_stream(this->session, htonl(ssrc));
 	}
 }
 

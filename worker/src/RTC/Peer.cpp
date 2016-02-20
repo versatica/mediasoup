@@ -235,12 +235,8 @@ namespace RTC
 
 				MS_DEBUG("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
 
-				// RTC::Transport inherits from RTC::RtpListener, but the API of
-				// RTC:RtpReceiver requires RTC::RtpListener.
-				RTC::RtpListener* rtpListener = transport;
-
-				// Set the RtpListener.
-				rtpReceiver->SetRtpListener(rtpListener);
+				// Set the Transport.
+				rtpReceiver->SetTransport(transport);
 
 				request->Accept();
 
@@ -328,6 +324,55 @@ namespace RTC
 				}
 
 				rtpSender->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::rtpSender_setTransport:
+			{
+				RTC::RtpSender* rtpSender;
+
+				try
+				{
+					rtpSender = GetRtpSenderFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				if (!rtpSender)
+				{
+					MS_ERROR("RtpSender does not exist");
+
+					request->Reject("RtpSender does not exist");
+					return;
+				}
+
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				if (!transport)
+				{
+					MS_ERROR("Transport does not exist");
+
+					request->Reject("Transport does not exist");
+					return;
+				}
+
+				rtpSender->SetTransport(transport);
+
+				request->Accept();
 
 				break;
 			}
@@ -453,15 +498,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RtpListener* rtpListener = transport;
-
-		// We must remove the closed Transport (so RtpListener) from the
-		// RtpReceivers holding it.
+		// We must remove the closed Transport from the RtpReceivers holding it.
 		for (auto& kv : this->rtpReceivers)
 		{
 			RTC::RtpReceiver* rtpReceiver = kv.second;
 
-			rtpReceiver->RemoveRtpListener(rtpListener);
+			rtpReceiver->RemoveTransport(transport);
 		}
 
 		// Must also unset this Transport from all the RtpSenders using it.
@@ -469,21 +511,29 @@ namespace RTC
 		{
 			RTC::RtpSender* rtpSender = kv.second;
 
-			rtpSender->RemoveRtpListener(rtpListener);
+			rtpSender->RemoveTransport(transport);
 		}
 
 		this->transports.erase(transport->transportId);
+	}
+
+	void Peer::onRtpPacket(RTC::Transport* transport, RTC::RtpPacket* packet, RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		// Notify the listener.
+		this->listener->onPeerRtpPacket(this, packet, rtpReceiver);
 	}
 
 	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
-		auto rtpListener = rtpReceiver->GetRtpListener();
+		auto transport = rtpReceiver->GetTransport();
 
 		// TODO: This may throw
-		if (rtpListener)
-			rtpListener->AddRtpReceiver(rtpReceiver, rtpParameters);
+		if (transport)
+			transport->AddRtpReceiver(rtpReceiver, rtpParameters);
 
 		// NOTE: If it does not throw do this.
 
@@ -495,12 +545,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// We must remove the closed RtpReceiver from the RtpListeners holding it.
+		// We must remove the closed RtpReceiver from the Transports holding it.
 		for (auto& kv : this->transports)
 		{
-			RTC::RtpListener* rtpListener = kv.second;
+			auto transport = kv.second;
 
-			rtpListener->RemoveRtpReceiver(rtpReceiver);
+			transport->RemoveRtpReceiver(rtpReceiver);
 		}
 
 		// Remove from the map.

@@ -11,7 +11,7 @@ namespace RTC
 {
 	// Avoid cyclic #include problem by declaring classes instead of including
 	// the corresponding header files.
-	class RtpListener;
+	class Transport;
 
 	class RtpReceiver
 	{
@@ -33,9 +33,9 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
-		void SetRtpListener(RTC::RtpListener* rtpListener);
-		RTC::RtpListener* GetRtpListener();
-		void RemoveRtpListener(RTC::RtpListener* rtpListener);
+		void SetTransport(RTC::Transport* transport);
+		RTC::Transport* GetTransport();
+		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetRtpParameters();
 
 	public:
@@ -46,7 +46,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
-		RTC::RtpListener* rtpListener = nullptr;
+		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 	};
@@ -54,22 +54,22 @@ namespace RTC
 	/* Inline methods. */
 
 	inline
-	void RtpReceiver::SetRtpListener(RTC::RtpListener* rtpListener)
+	void RtpReceiver::SetTransport(RTC::Transport* transport)
 	{
-		this->rtpListener = rtpListener;
+		this->transport = transport;
 	}
 
 	inline
-	RTC::RtpListener* RtpReceiver::GetRtpListener()
+	RTC::Transport* RtpReceiver::GetTransport()
 	{
-		return this->rtpListener;
+		return this->transport;
 	}
 
 	inline
-	void RtpReceiver::RemoveRtpListener(RTC::RtpListener* rtpListener)
+	void RtpReceiver::RemoveTransport(RTC::Transport* transport)
 	{
-		if (this->rtpListener == rtpListener)
-			this->rtpListener = nullptr;
+		if (this->transport == transport)
+			this->transport = nullptr;
 	}
 
 	inline

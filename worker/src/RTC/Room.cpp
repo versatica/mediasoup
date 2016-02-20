@@ -216,6 +216,7 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_dump:
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			case Channel::Request::MethodId::rtpSender_dump:
+			case Channel::Request::MethodId::rtpSender_setTransport:
 			{
 				RTC::Peer* peer;
 
@@ -292,13 +293,13 @@ namespace RTC
 
 		MS_ASSERT(rtpReceiver->GetRtpParameters(), "rtpReceiver->GetRtpParameters() returns no RtpParameters");
 
-		// The RtpReceiver may already be set previously.
-		bool is_new_RtpReceiver = this->mapRtpReceiverRtpSenders.find(rtpReceiver) == this->mapRtpReceiverRtpSenders.end();
-
 		// If this is a new RtpReceiver, iterate all the peers but this one and
 		// create a RtpSender associated to this RtpReceiver for each Peer.
-		if (is_new_RtpReceiver)
+		if (this->mapRtpReceiverRtpSenders.find(rtpReceiver) == this->mapRtpReceiverRtpSenders.end())
 		{
+			// Ensure the entry will exist even with an empty array.
+			this->mapRtpReceiverRtpSenders[rtpReceiver];
+
 			for (auto& kv : this->peers)
 			{
 				RTC::Peer* sender_peer = kv.second;
@@ -377,6 +378,22 @@ namespace RTC
 			auto& rtpSenders = kv.second;
 
 			rtpSenders.erase(rtpSender);
+		}
+	}
+
+	void Room::onPeerRtpPacket(RTC::Peer* peer, RTC::RtpPacket* packet, RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+
+		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+
+		// Send the RtpPacket to all the RtpSenders associated to the RtpReceiver
+		// from which it was received.
+		for (auto& rtpSender : rtpSenders)
+		{
+			rtpSender->SendRtpPacket(packet);
 		}
 	}
 }

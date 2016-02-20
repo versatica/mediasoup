@@ -49,6 +49,7 @@ namespace RTC
 			if (len < pos + 4)
 			{
 				MS_DEBUG("not enough space for the announced extension header, packet discarded");
+
 				return nullptr;
 			}
 

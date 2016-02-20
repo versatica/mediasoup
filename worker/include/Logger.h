@@ -146,7 +146,7 @@ bool Logger::HasDebugLevel()
 #define MS_ABORT(desc, ...)  \
 	do  \
 	{  \
-		std::fprintf(stderr, "ABORT | " desc, ##__VA_ARGS__);  \
+		std::fprintf(stderr, "ABORT" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
 		std::fflush(stderr);  \
 		std::abort();  \
 	}  \

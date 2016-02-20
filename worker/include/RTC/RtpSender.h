@@ -2,17 +2,16 @@
 #define MS_RTC_RTP_SENDER_H
 
 #include "common.h"
+#include "RTC/Transport.h"
 #include "RTC/RtpParameters.h"
+#include "RTC/RtpPacket.h"
+#include "RTC/RtcpPacket.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <json/json.h>
 
 namespace RTC
 {
-	// Avoid cyclic #include problem by declaring classes instead of including
-	// the corresponding header files.
-	class RtpListener;
-
 	class RtpSender
 	{
 	public:
@@ -33,10 +32,10 @@ namespace RTC
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
 		void Send(RTC::RtpParameters* rtpParameters);
-		void SetRtpListener(RTC::RtpListener* rtpListener);
-		RTC::RtpListener* GetRtpListener();
-		void RemoveRtpListener(RTC::RtpListener* rtpListener);
+		void SetTransport(RTC::Transport* transport);
+		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetRtpParameters();
+		void SendRtpPacket(RTC::RtpPacket* packet);
 		void NotifyParameters();
 
 	public:
@@ -47,7 +46,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
-		RTC::RtpListener* rtpListener = nullptr;
+		RTC::Transport* transport = nullptr;
 		// Externally allocated but handled by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 	};
@@ -55,28 +54,29 @@ namespace RTC
 	/* Inline methods. */
 
 	inline
-	void RtpSender::SetRtpListener(RTC::RtpListener* rtpListener)
+	void RtpSender::SetTransport(RTC::Transport* transport)
 	{
-		this->rtpListener = rtpListener;
+		this->transport = transport;
 	}
 
 	inline
-	RTC::RtpListener* RtpSender::GetRtpListener()
+	void RtpSender::RemoveTransport(RTC::Transport* transport)
 	{
-		return this->rtpListener;
-	}
-
-	inline
-	void RtpSender::RemoveRtpListener(RTC::RtpListener* rtpListener)
-	{
-		if (this->rtpListener == rtpListener)
-			this->rtpListener = nullptr;
+		if (this->transport == transport)
+			this->transport = nullptr;
 	}
 
 	inline
 	RTC::RtpParameters* RtpSender::GetRtpParameters()
 	{
 		return this->rtpParameters;
+	}
+
+	inline
+	void RtpSender::SendRtpPacket(RTC::RtpPacket* packet)
+	{
+		if (this->transport)
+			this->transport->SendRtpPacket(packet);
 	}
 }
 

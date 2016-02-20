@@ -1,12 +1,12 @@
 #define MS_CLASS "RTC::SrtpSession"
 
 #include "RTC/SrtpSession.h"
+#include "DepLibSRTP.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <cstring>  // std::memset(), std::memcpy()
-// #include <srtp2/srtp_priv.h>  // TODO: This allows data->stream->ssrc, but it is not public. Wait ofr libsrtp new API.
 
-#define MS_ENCRYPT_BUFFER_SIZE  65536
+#define MS_ENCRYPT_BUFFER_SIZE 65536
 
 namespace RTC
 {
@@ -18,42 +18,35 @@ namespace RTC
 
 	void SrtpSession::ClassInit()
 	{
-		/* Set libsrtp event handler. */
+		// Set libsrtp event handler.
 
-		// srtp_err_status_t err;
+		srtp_err_status_t err;
 
-		// err = srtp_install_event_handler((srtp_event_handler_func_t*)onSrtpEvent);
-		// if (DepLibSRTP::IsError(err))
-		// {
-			// MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
-		// }
+		err = srtp_install_event_handler((srtp_event_handler_func_t*)onSrtpEvent);
+		if (DepLibSRTP::IsError(err))
+			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
 	}
 
-	// void SrtpSession::onSrtpEvent(srtp_event_data_t* data)
-	// {
-	// 	MS_TRACE();
+	void SrtpSession::onSrtpEvent(srtp_event_data_t* data)
+	{
+		MS_TRACE();
 
-	// 	const char* event_desc = "";
-
-	// 	switch (data->event)
-	// 	{
-	// 		case event_ssrc_collision:
-	// 			event_desc = "collision occurred";
-	// 			break;
-	// 		case event_key_soft_limit:
-	// 			event_desc = "stream reached the soft key usage limit and will expire soon";
-	// 			break;
-	// 		case event_key_hard_limit:
-	// 			event_desc = "stream reached the hard key usage limit and has expired";
-	// 			break;
-	// 		case event_packet_index_limit:
-	// 			event_desc = "stream reached the hard packet limit (2^48 packets)";
-	// 			break;
-	// 	}
-
-	// 	// TODO: u64?
-	// 	MS_WARN("SSRC %" PRIu64 ": %s", (uint64_t)data->stream->ssrc, event_desc);
-	// }
+		switch (data->event)
+		{
+			case event_ssrc_collision:
+				MS_WARN("SSRC collision occurred");
+				break;
+			case event_key_soft_limit:
+				MS_WARN("stream reached the soft key usage limit and will expire soon");
+				break;
+			case event_key_hard_limit:
+				MS_WARN("stream reached the hard key usage limit and has expired");
+				break;
+			case event_packet_index_limit:
+				MS_WARN("stream reached the hard packet limit (2^48 packets)");
+				break;
+		}
+	}
 
 	/* Instance methods. */
 
@@ -94,6 +87,7 @@ namespace RTC
 			default:
 				MS_ABORT("unknown SrtpSession::Type");
 		}
+
 		policy.ssrc.value = 0;
 		policy.key = key;
 		policy.allow_repeat_tx = 0;
@@ -103,9 +97,7 @@ namespace RTC
 		// Set the SRTP session.
 		err = srtp_create(&this->session, &policy);
 		if (DepLibSRTP::IsError(err))
-		{
 			MS_THROW_ERROR("srtp_create() failed: %s", DepLibSRTP::GetErrorString(err));
-		}
 	}
 
 	SrtpSession::~SrtpSession()
@@ -118,14 +110,17 @@ namespace RTC
 
 			err = srtp_dealloc(this->session);
 			if (DepLibSRTP::IsError(err))
-			{
 				MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
-			}
 		}
 	}
 
-	// TODO: It must not memcpy it but instead the provided packet must already be
-	// allocated into a buffer.
+	void SrtpSession::Close()
+	{
+		MS_TRACE();
+
+		delete this;
+	}
+
 	bool SrtpSession::EncryptRtp(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
@@ -135,16 +130,17 @@ namespace RTC
 		{
 			MS_WARN("cannot encrypt RTP packet, size too big (%zu bytes)", *len);
 
-			this->lastError = srtp_err_status_fail;
 			return false;
 		}
 
 		std::memcpy(SrtpSession::encryptBuffer, *data, *len);
 
-		this->lastError = srtp_protect(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
-		if (DepLibSRTP::IsError(this->lastError))
+		srtp_err_status_t err;
+
+		err = srtp_protect(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
+		if (DepLibSRTP::IsError(err))
 		{
-			MS_DEBUG("srtp_protect() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+			MS_WARN("srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
@@ -159,10 +155,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastError = srtp_unprotect(this->session, (void*)data, (int*)len);
-		if (DepLibSRTP::IsError(this->lastError))
+		srtp_err_status_t err;
+
+		err = srtp_unprotect(this->session, (void*)data, (int*)len);
+		if (DepLibSRTP::IsError(err))
 		{
-			MS_DEBUG("srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+			MS_WARN("srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
@@ -179,16 +177,17 @@ namespace RTC
 		{
 			MS_WARN("cannot encrypt RTCP packet, size too big (%zu bytes)", *len);
 
-			this->lastError = srtp_err_status_fail;
 			return false;
 		}
 
 		std::memcpy(SrtpSession::encryptBuffer, *data, *len);
 
-		this->lastError = srtp_protect_rtcp(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
-		if (DepLibSRTP::IsError(this->lastError))
+		srtp_err_status_t err;
+
+		err = srtp_protect_rtcp(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
+		if (DepLibSRTP::IsError(err))
 		{
-			MS_DEBUG("srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+			MS_WARN("srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
@@ -203,21 +202,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastError = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
-		if (DepLibSRTP::IsError(this->lastError))
+		srtp_err_status_t err;
+
+		err = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
+		if (DepLibSRTP::IsError(err))
 		{
-			MS_DEBUG("srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(this->lastError));
+			MS_WARN("srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
 
 		return true;
-	}
-
-	void SrtpSession::Close()
-	{
-		MS_TRACE();
-
-		delete this;
 	}
 }

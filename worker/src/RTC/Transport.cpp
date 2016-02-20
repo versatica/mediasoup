@@ -1,8 +1,6 @@
 #define MS_CLASS "RTC::Transport"
 
 #include "RTC/Transport.h"
-#include "RTC/RtpPacket.h"
-#include "RTC/RtcpPacket.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
@@ -211,11 +209,11 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		// if (this->srtpRecvSession)
-		// 	this->srtpRecvSession->Close();
+		if (this->srtpRecvSession)
+			this->srtpRecvSession->Close();
 
-		// if (this->srtpSendSession)
-		// 	this->srtpSendSession->Close();
+		if (this->srtpSendSession)
+			this->srtpSendSession->Close();
 
 		if (this->dtlsTransport)
 			this->dtlsTransport->Close();
@@ -276,6 +274,9 @@ namespace RTC
 		static const Json::StaticString v_closed("closed");
 		static const Json::StaticString v_failed("failed");
 		static const Json::StaticString k_rtpListener("rtpListener");
+		static const Json::StaticString k_ssrcTable("ssrcTable");
+		// static const Json::StaticString k_midTable("midTable");  // TODO
+		static const Json::StaticString k_ptTable("ptTable");
 
 		Json::Value json(Json::objectValue);
 
@@ -356,7 +357,32 @@ namespace RTC
 		}
 
 		// Add `rtpListener`.
-		json[k_rtpListener] = RTC::RtpListener::toJson();
+
+		Json::Value json_rtpListener(Json::objectValue);
+		Json::Value json_ssrcTable(Json::objectValue);
+		Json::Value json_ptTable(Json::objectValue);
+
+		for (auto& kv : this->rtpListener.ssrcTable)
+		{
+			auto ssrc = kv.first;
+			auto rtpReceiver = kv.second;
+
+			json_ssrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
+		}
+		json_rtpListener[k_ssrcTable] = json_ssrcTable;
+
+		// TODO: Add `midTable`.
+
+		for (auto& kv : this->rtpListener.ptTable)
+		{
+			auto payloadType = kv.first;
+			auto rtpReceiver = kv.second;
+
+			json_ptTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
+		}
+		json_rtpListener[k_ptTable] = json_ptTable;
+
+		json[k_rtpListener] = json_rtpListener;
 
 		return json;
 	}
@@ -499,6 +525,85 @@ namespace RTC
 		}
 	}
 
+	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
+	{
+		MS_TRACE();
+
+		// First remove from the the listener tables all the entries pointing to
+		// the given RtpReceiver (reset them).
+		RemoveRtpReceiver(rtpReceiver);
+
+		// Add entries into the listener ssrcTable.
+		for (auto& encoding : rtpParameters->encodings)
+		{
+			// TODO: This should throw if the ssrc already exists in the table,
+			// and the receive() should Reject() the Request.
+			if (encoding.ssrc)
+				this->rtpListener.ssrcTable[encoding.ssrc] = rtpReceiver;
+		}
+
+		// TODO: // Add entries into listener midTable.
+
+		// Add entries into listener ptTable.
+		// TODO: This is wrong, pt should not be added if ssrc are added.
+		for (auto& codec : rtpParameters->codecs)
+		{
+			this->rtpListener.ptTable[codec.payloadType] = rtpReceiver;
+		}
+	}
+
+	void Transport::RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		// Remove from the listener tables all the entries pointing to the given
+		// RtpReceiver.
+
+		for (auto it = this->rtpListener.ssrcTable.begin(); it != this->rtpListener.ssrcTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				it = this->rtpListener.ssrcTable.erase(it);
+			else
+				it++;
+		}
+
+		// TODO: midTable
+
+		for (auto it = this->rtpListener.ptTable.begin(); it != this->rtpListener.ptTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				it = this->rtpListener.ptTable.erase(it);
+			else
+				it++;
+		}
+	}
+
+	void Transport::SendRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// If there is no selected tuple do nothing.
+		if (!this->selectedTuple)
+			return;
+
+		// Ensure there is sending SRTP session.
+		if (!this->srtpSendSession)
+		{
+			// TODO: Should not log every packet.
+			MS_WARN("ignoring RTP packet due to non sending SRTP session");
+
+			return;
+		}
+
+		const uint8_t* data = packet->GetRaw();
+		size_t len = packet->GetLength();
+
+		if (!this->srtpSendSession->EncryptRtp(&data, &len))
+			return;
+
+		this->selectedTuple->Send(data, len);
+	}
+
 	inline
 	void Transport::MayRunDtlsTransport()
 	{
@@ -551,6 +656,30 @@ namespace RTC
 
 			case RTC::DtlsTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
+		}
+	}
+
+	RTC::RtpReceiver* Transport::GetRtpReceiver(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// TODO: read the ORTC doc.
+
+		// Check the SSRC table.
+
+		auto it = this->rtpListener.ssrcTable.find(packet->GetSsrc());
+
+		if (it != this->rtpListener.ssrcTable.end())
+		{
+			RTC::RtpReceiver* rtpReceiver = it->second;
+
+			MS_ASSERT(rtpReceiver->GetRtpParameters(), "got a RtpReceiver with no RtpParameters");
+
+			return rtpReceiver;
+		}
+		else
+		{
+			return nullptr;
 		}
 	}
 
@@ -610,6 +739,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
 			MS_DEBUG("ignoring DTLS data coming from an invalid tuple");
@@ -641,45 +771,66 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Shouldn't we check that DTLS is done???
-
-		RTC::RtpReceiver* rtpReceiver = nullptr;
-
-		if (!this->iceServer->IsValidTuple(tuple))
+		// Ensure DTLS is connected.
+		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_DEBUG("ignoring RTP data coming from an invalid tuple");
+			// TODO: Should not log every packet.
+			MS_WARN("ignoring RTP packet while DTLS not connected");
 
 			return;
 		}
 
-		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
-		// TODO: Do this just after validating SRTP and so on.
-		this->iceServer->ForceSelectedTuple(tuple);
+		// Ensure there is receiving SRTP session.
+		if (!this->srtpRecvSession)
+		{
+			// TODO: Should not log every packet.
+			MS_WARN("ignoring RTP packet due to non receiving SRTP session");
 
-		// TODO
-		// MS_DEBUG("received RTP data");
+			return;
+		}
+
+		// Ensure it comes from a valid tuple.
+		if (!this->iceServer->IsValidTuple(tuple))
+		{
+			MS_DEBUG("ignoring RTP packet coming from an invalid tuple");
+
+			return;
+		}
+
+		// Decrypt the SRTP packet.
+		if (!this->srtpRecvSession->DecryptSrtp(data, &len))
+			return;
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 		if (!packet)
 		{
-			MS_DEBUG("data received is not a valid RTP packet");
+			MS_WARN("received data is not a valid RTP packet");
 
 			return;
 		}
 
 		// Get the associated RtpReceiver.
-		rtpReceiver = RTC::RtpListener::GetRtpReceiver(packet);
+		RTC::RtpReceiver* rtpReceiver = GetRtpReceiver(packet);
 
 		if (!rtpReceiver)
 		{
-			// TODO: let's see
-			MS_WARN("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payload:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
+			MS_WARN("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
+
+			// Remove the stream (SSRC) from the SRTP session.
+			this->srtpRecvSession->RemoveStream(packet->GetSsrc());
+
+			delete packet;
+			return;
 		}
-		else
-		{
-			MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
-			// packet->Dump();
-		}
+
+		MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
+		// packet->Dump();
+
+		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
+		this->iceServer->ForceSelectedTuple(tuple);
+
+		// Notify the listener.
+		this->listener->onRtpPacket(this, packet, rtpReceiver);
 
 		delete packet;
 	}
@@ -849,9 +1000,40 @@ namespace RTC
 
 		MS_DEBUG("DTLS connected");
 
-		// TODO
-		// SetLocalSRTPKey(srtp_profile, srtp_local_key, srtp_local_key_len);
-		// SetRemoteSRTPKey(srtp_profile, srtp_remote_key, srtp_remote_key_len);
+		// Close it if it was already set and update it.
+		if (this->srtpSendSession)
+		{
+			this->srtpSendSession->Close();
+			this->srtpSendSession = nullptr;
+		}
+		if (this->srtpRecvSession)
+		{
+			this->srtpRecvSession->Close();
+			this->srtpRecvSession = nullptr;
+		}
+
+		try
+		{
+			this->srtpSendSession = new RTC::SrtpSession(RTC::SrtpSession::Type::OUTBOUND,
+				srtp_profile, srtp_local_key, srtp_local_key_len);
+		}
+		catch (const MediaSoupError &error)
+		{
+			MS_ERROR("error creating SRTP sending session: %s", error.what());
+		}
+
+		try
+		{
+			this->srtpRecvSession = new RTC::SrtpSession(SrtpSession::Type::INBOUND,
+				srtp_profile, srtp_remote_key, srtp_remote_key_len);
+		}
+		catch (const MediaSoupError &error)
+		{
+			MS_ERROR("error creating SRTP receiving session: %s", error.what());
+
+			this->srtpSendSession->Close();
+			this->srtpSendSession = nullptr;
+		}
 
 		// Notify.
 		event_data[k_dtlsState] = v_connected;

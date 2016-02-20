@@ -10,7 +10,11 @@
 #include "RTC/StunMessage.h"
 #include "RTC/TransportTuple.h"
 #include "RTC/DtlsTransport.h"
-#include "RTC/RtpListener.h"
+#include "RTC/SrtpSession.h"
+#include "RTC/RtpReceiver.h"
+#include "RTC/RtpParameters.h"
+#include "RTC/RtpPacket.h"
+#include "RTC/RtcpPacket.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -25,14 +29,25 @@ namespace RTC
 		public RTC::TcpServer::Listener,
 		public RTC::TcpConnection::Listener,
 		public RTC::IceServer::Listener,
-		public RTC::DtlsTransport::Listener,
-		public RTC::RtpListener
+		public RTC::DtlsTransport::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
 			virtual void onTransportClosed(RTC::Transport* transport) = 0;
+			virtual void onRtpPacket(RTC::Transport* transport, RTC::RtpPacket* packet, RTC::RtpReceiver* rtpReceiver) = 0;
+		};
+
+	public:
+		struct RtpListener
+		{
+			// Table of SSRC / RtpReceiver pairs.
+			std::unordered_map<uint32_t, RTC::RtpReceiver*> ssrcTable;
+			//  Table of MID RTP header extension / RtpReceiver pairs.
+			// std::unordered_map<uint16_t, RTC::RtpReceiver*> midTable;
+			// Table of RTP payload type / RtpReceiver pairs.
+			std::unordered_map<uint8_t, RTC::RtpReceiver*> ptTable;
 		};
 
 	public:
@@ -42,9 +57,13 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
+		void AddRtpReceiver(RTC::RtpReceiver *rtpReceiver, RTC::RtpParameters* rtpParameters);
+		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
+		void SendRtpPacket(RTC::RtpPacket* packet);
 
 	private:
 		void MayRunDtlsTransport();
+		RTC::RtpReceiver* GetRtpReceiver(RTC::RtpPacket* packet);
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -96,6 +115,8 @@ namespace RTC
 		std::vector<RTC::UdpSocket*> udpSockets;
 		std::vector<RTC::TcpServer*> tcpServers;
 		RTC::DtlsTransport* dtlsTransport = nullptr;
+		RTC::SrtpSession* srtpRecvSession = nullptr;
+		RTC::SrtpSession* srtpSendSession = nullptr;
 		// Others.
 		bool allocated = false;
 		// Others (ICE).
@@ -104,6 +125,8 @@ namespace RTC
 		// Others (DTLS).
 		bool remoteDtlsParametersGiven = false;
 		RTC::DtlsTransport::Role dtlsLocalRole = RTC::DtlsTransport::Role::AUTO;
+		// Others (RtpListener).
+		RtpListener rtpListener;
 	};
 }
 
