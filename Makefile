@@ -90,7 +90,7 @@ LDFLAGS += $(shell pkg-config --libs "$(PKG_LIBS)")
 # This indicates that those names are "phony targets". Therefore calling
 # "make XXXX" should execute the content of its build rules, even if a newer
 # file named "XXXX" exists.
-.PHONY: default $(APP_NAME) check_pkg_libs echo_compiling_all_objs clean submodules doc
+.PHONY: default $(APP_NAME) check_pkg_libs echo_compiling_all_objs clean submodules
 
 # This is first build rule in the Makefile, and so executing "make" and executing
 # "make default" are the same. The target simply depends on $(APP_NAME).
@@ -133,7 +133,3 @@ submodules:
 	cd ./submodules/jsoncpp && python amalgamate.py >/dev/null
 	@ echo "INFO: building usrsctp lib ..."
 	cd ./submodules/usrsctp && ./bootstrap && autoconf && ./configure && make
-
-doc:
-	@ echo "INFO: generating documentation ..."
-	cldoc generate $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -- --output cldoc $(APP_SOURCES) $(APP_HEADERS)
