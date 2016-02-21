@@ -5,7 +5,7 @@ const tap = require('tap');
 const mediasoup = require('../');
 
 // TODO: waiting for proper RTP parameters definition
-tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2000 }, (t) =>
+tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server({ numWorkers: 1 });
 
@@ -22,6 +22,8 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 	let bob = room.Peer('bob');
 
 	t.pass('bob created');
+
+	let carol;
 
 	let aliceAudioParameters =
 	{
@@ -69,13 +71,13 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 			{
 				name        : 'vp9',
 				kind        : 'video',
-				payloadType : 202,
+				payloadType : 201,
 				clockRate   : null
 			},
 			{
 				name        : 'vp8',
 				kind        : 'video',
-				payloadType : 203,
+				payloadType : 202,
 				clockRate   : null
 			}
 		],
@@ -83,6 +85,44 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 		[
 			{
 				ssrc : 200000002
+			}
+		]
+	};
+	let carolAudioParameters =
+	{
+		muxId  : 'carolmuxid1',
+		codecs :
+		[
+			{
+				name        : 'opus',
+				kind        : 'audio',
+				payloadType : 301,
+				clockRate   : null
+			}
+		],
+		encodings :
+		[
+			{
+				ssrc : 300000001
+			}
+		]
+	};
+	let carolVideoParameters =
+	{
+		muxId  : 'carolmuxid2',
+		codecs :
+		[
+			{
+				name        : 'vp9',
+				kind        : 'video',
+				payloadType : 302,
+				clockRate   : null
+			}
+		],
+		encodings :
+		[
+			{
+				ssrc : 300000002
 			}
 		]
 	};
@@ -98,23 +138,28 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 					t.pass('alice "newrtpsender" event fired');
 					t.equal(receiverPeer, bob, '`receiverPeer` must be bob');
 
-					let transport = alice.getTransports()[0];
+					// NOTE: At this point it may happen that alice receives "newrtpsender"
+					// before she got her Transport, so run a timer to avoid that
+					setTimeout(() =>
+					{
+						let transport = alice.getTransports()[0];
 
-					rtpSender.setTransport(transport)
-						.then(() =>
-						{
-							t.pass('rtpSender.setTransport() succeeded');
-							t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
+						rtpSender.setTransport(transport)
+							.then(() =>
+							{
+								t.pass('rtpSender.setTransport() succeeded');
+								t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
 
-							// We expect a single event
-							if (++numEvents === 1)
-								accept();
-						})
-						.catch((error) =>
-						{
-							t.fail(`rtpSender.setTransport() failed: ${error}`);
-							reject();
-						});
+								// We expect a single event
+								if (++numEvents === 1)
+									accept();
+							})
+							.catch((error) =>
+							{
+								t.fail(`rtpSender.setTransport() failed: ${error}`);
+								reject();
+							});
+					}, 50);
 				});
 			}),
 
@@ -127,23 +172,28 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 					t.pass('bob "newrtpsender" event fired');
 					t.equal(receiverPeer, alice, '`receiverPeer` must be alice');
 
-					let transport = bob.getTransports()[0];
+					// NOTE: At this point it may happen that bob receives "newrtpsender"
+					// before he got his Transport, so run a timer to avoid that
+					setTimeout(() =>
+					{
+						let transport = bob.getTransports()[0];
 
-					rtpSender.setTransport(transport)
-						.then(() =>
-						{
-							t.pass('rtpSender.setTransport() succeeded');
-							t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
+						rtpSender.setTransport(transport)
+							.then(() =>
+							{
+								t.pass('rtpSender.setTransport() succeeded');
+								t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
 
-							// We expect two events
-							if (++numEvents === 2)
-								accept();
-						})
-						.catch((error) =>
-						{
-							t.fail(`rtpSender.setTransport() failed: ${error}`);
-							reject();
-						});
+								// We expect two events
+								if (++numEvents === 2)
+									accept();
+							})
+							.catch((error) =>
+							{
+								t.fail(`rtpSender.setTransport() failed: ${error}`);
+								reject();
+							});
+					}, 50);
 				});
 			}),
 
@@ -153,6 +203,10 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 		])
 		.then(() =>
 		{
+			// Remove listeners
+			alice.removeAllListeners('newrtpsender');
+			bob.removeAllListeners('newrtpsender');
+
 			t.equal(alice.getRtpSenders().length, 1, 'alice.getRtpSenders() must retrieve 1');
 			t.equal(bob.getRtpSenders().length, 2, 'bob.getRtpSenders() must retrieve 2');
 
@@ -244,7 +298,6 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 			{
 				t2.plan(4);
 
-				let aliceVideoReceiver = alice.getRtpReceivers()[0];
 				let aliceVideoSender = alice.getRtpSenders()[0];
 				let bobVideoReceiver = bob.getRtpReceivers()[0];
 				let bobVideoSender = bob.getRtpSenders()[0];
@@ -276,10 +329,51 @@ tap.test('alice and bob create RtpReceivers and expect RtpSenders', { timeout: 2
 							[aliceVideoReceiver._internal.rtpReceiverId] : []
 						},
 						'`data.mapRtpReceiverRtpSenders` match the expected values');
-
-					t.end();
 				})
 				.catch((error) => t.fail(`room.dump() failed: ${error}`));
+		})
+		.then(() =>
+		{
+			carol = room.Peer('carol');
+
+			return createTransportAndRtpReceivers(t, carol, [ carolAudioParameters, carolVideoParameters ])
+		})
+		.then(() =>
+		{
+			let aliceVideoReceiver = alice.getRtpReceivers()[0];
+			let aliceAudioSender = alice.getRtpSenders()[0];
+			let aliceVideoSender = alice.getRtpSenders()[1];
+			let carolAudioReceiver = carol.getRtpReceivers()[0];
+			let carolVideoReceiver = carol.getRtpReceivers()[1];
+			let carolVideoSender = carol.getRtpSenders()[0];
+
+			return room.dump()
+				.then((data) =>
+				{
+					t.pass('room.dump() succeeded');
+
+					t.same(data.mapRtpReceiverRtpSenders,
+						{
+							[aliceVideoReceiver._internal.rtpReceiverId] :
+								[
+									String(carolVideoSender._internal.rtpSenderId)
+								],
+							[carolAudioReceiver._internal.rtpReceiverId] :
+								[
+									String(aliceAudioSender._internal.rtpSenderId)
+								],
+							[carolVideoReceiver._internal.rtpReceiverId] :
+								[
+									String(aliceVideoSender._internal.rtpSenderId)
+								]
+						},
+						'`data.mapRtpReceiverRtpSenders` match the expected values');
+				})
+				.catch((error) => t.fail(`room.dump() failed: ${error}`));
+		})
+		.then(() =>
+		{
+			t.end();
 		});
 });
 
