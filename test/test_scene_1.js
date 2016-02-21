@@ -336,7 +336,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		{
 			carol = room.Peer('carol');
 
-			return createTransportAndRtpReceivers(t, carol, [ carolAudioParameters, carolVideoParameters ])
+			return createTransportAndRtpReceivers(t, carol, [ carolAudioParameters, carolVideoParameters ]);
 		})
 		.then(() =>
 		{
