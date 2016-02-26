@@ -70,17 +70,17 @@ tap.test('room.Peer() with same `peerName` must succeed if previous peer was clo
 	let peer1 = room.Peer('alice');
 
 	t.equal(room.getPeer('alice'), peer1, 'room.getPeer() must retrieve the first "alice"');
-	t.equal(room.getPeers().length, 1, 'room.getPeers() must retrieve one peer');
+	t.equal(room.peers.length, 1, 'room.peers must retrieve one peer');
 
 	peer1.close();
 
 	t.notOk(room.getPeer('alice'), 'room.getPeer() must retrieve nothing');
-	t.equal(room.getPeers().length, 0, 'room.getPeers() must retrieve zero peers');
+	t.equal(room.peers.length, 0, 'room.peers must retrieve zero peers');
 
 	let peer2 = room.Peer('alice');
 
 	t.equal(room.getPeer('alice'), peer2, 'room.getPeer() must retrieve the new "alice"');
-	t.equal(room.getPeers().length, 1, 'room.getPeers() must retrieve one peer');
+	t.equal(room.peers.length, 1, 'room.peers must retrieve one peer');
 
 	peer2.on('close', (error) =>
 	{
