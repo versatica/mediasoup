@@ -18,6 +18,7 @@ namespace Channel
 
 		void Emit(uint32_t targetId, std::string event);
 		void Emit(uint32_t targetId, std::string event, Json::Value& data);
+		void Emit(const uint8_t* data, size_t len);
 
 	public:
 		// Passed by argument.

@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "RTC/RtpParameters.h"
+#include "RTC/RtpPacket.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <json/json.h>
@@ -42,6 +43,7 @@ namespace RTC
 		RTC::Transport* GetTransport();
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetRtpParameters();
+		void GotRtpPacket(RTC::RtpPacket* packet);
 
 	public:
 		// Passed by argument.
@@ -54,6 +56,8 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
+		// Others.
+		bool listenForRtp = false;
 	};
 
 	/* Inline methods. */

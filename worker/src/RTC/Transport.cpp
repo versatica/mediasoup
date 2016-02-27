@@ -823,7 +823,7 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payload:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
+		MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
 		// packet->Dump();
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
@@ -831,6 +831,9 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->onRtpPacket(this, packet, rtpReceiver);
+
+		// Notify the RtpReceiver (so it can notify the RTP packet to the app).
+		rtpReceiver->GotRtpPacket(packet);
 
 		delete packet;
 	}

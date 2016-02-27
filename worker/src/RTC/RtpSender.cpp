@@ -93,21 +93,22 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		bool updated = false;
+
 		// Free the previous rtpParameters.
 		if (this->rtpParameters)
+		{
 			delete this->rtpParameters;
+			updated = true;
+		}
 
 		this->rtpParameters = rtpParameters;
-	}
 
-	void RtpSender::NotifyParameters()
-	{
-		MS_TRACE();
+		if (updated)
+		{
+			Json::Value event_data = this->rtpParameters->toJson();
 
-		MS_ASSERT(this->rtpParameters, "no RtpParameters set");
-
-		Json::Value event_data = this->rtpParameters->toJson();
-
-		this->notifier->Emit(this->rtpSenderId, "updateparameters", event_data);
+			this->notifier->Emit(this->rtpSenderId, "updateparameters", event_data);
+		}
 	}
 }

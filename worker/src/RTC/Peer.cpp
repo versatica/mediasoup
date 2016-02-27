@@ -275,6 +275,7 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_close:
 			case Channel::Request::MethodId::rtpReceiver_dump:
 			case Channel::Request::MethodId::rtpReceiver_receive:
+			case Channel::Request::MethodId::rtpReceiver_listenForRtp:
 			{
 				RTC::RtpReceiver* rtpReceiver;
 

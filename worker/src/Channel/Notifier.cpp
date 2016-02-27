@@ -55,4 +55,11 @@ namespace Channel
 
 		this->channel->Send(json);
 	}
+
+	void Notifier::Emit(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		this->channel->SendBinary(data, len);
+	}
 }

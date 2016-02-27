@@ -36,7 +36,6 @@ namespace RTC
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetRtpParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
-		void NotifyParameters();
 
 	public:
 		// Passed by argument.

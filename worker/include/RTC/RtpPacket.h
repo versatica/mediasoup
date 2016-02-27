@@ -102,7 +102,8 @@ namespace RTC
 	inline
 	const uint8_t* RtpPacket::GetRaw()
 	{
-		return this->raw;
+		// Return pointer to the serialized data or to the original raw data.
+		return this->raw ? this->raw : (const uint8_t*)this->header;
 	}
 
 	inline

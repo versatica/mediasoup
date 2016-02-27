@@ -151,6 +151,41 @@ namespace Channel
 		Write(UnixStreamSocket::writeBuffer, ns_len);
 	}
 
+	void UnixStreamSocket::SendBinary(const uint8_t* ns_payload, size_t ns_payload_len)
+	{
+		if (this->closed)
+			return;
+
+		size_t ns_num_len;
+		size_t ns_len;
+
+		if (ns_payload_len > MESSAGE_MAX_SIZE)
+		{
+			MS_ERROR_STD("mesage too big");
+
+			return;
+		}
+
+		if (ns_payload_len == 0)
+		{
+			ns_num_len = 1;
+			UnixStreamSocket::writeBuffer[0] = '0';
+			UnixStreamSocket::writeBuffer[1] = ':';
+			UnixStreamSocket::writeBuffer[2] = ',';
+		}
+		else
+		{
+		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
+		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
+		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
+		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+		}
+
+		ns_len = ns_num_len + ns_payload_len + 2;
+
+		Write(UnixStreamSocket::writeBuffer, ns_len);
+	}
+
 	void UnixStreamSocket::userOnUnixStreamRead()
 	{
 		MS_TRACE_STD();

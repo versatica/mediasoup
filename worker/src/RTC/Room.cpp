@@ -215,6 +215,7 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_close:
 			case Channel::Request::MethodId::rtpReceiver_dump:
 			case Channel::Request::MethodId::rtpReceiver_receive:
+			case Channel::Request::MethodId::rtpReceiver_listenForRtp:
 			case Channel::Request::MethodId::rtpSender_dump:
 			case Channel::Request::MethodId::rtpSender_setTransport:
 			{
@@ -336,9 +337,6 @@ namespace RTC
 
 				// Assign cloned parameters to the RtpSender.
 				rtpSender->Send(rtpSenderParameters);
-
-				// Notify updated parameters.
-				rtpSender->NotifyParameters();
 			}
 		}
 	}

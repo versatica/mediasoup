@@ -120,12 +120,55 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::rtpReceiver_listenForRtp:
+			{
+				static const Json::StaticString k_enabled("enabled");
+
+				auto json_enabled = request->data[k_enabled];
+
+				if (!json_enabled.isBool())
+				{
+					MS_ERROR("Request has not boolean `data.enabled`");
+
+					request->Reject("Request has not boolean `data.enabled`");
+					return;
+				}
+
+				this->listenForRtp = json_enabled.asBool();
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");
 
 				request->Reject("unknown method");
 			}
+		}
+	}
+
+	void RtpReceiver::GotRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (this->listenForRtp)
+		{
+			// Send a JSON event followed by binary data (the RTP packet).
+
+			static const Json::StaticString k_class("class");
+			static const Json::StaticString k_binary("binary");
+
+			Json::Value event_data(Json::objectValue);
+
+			// Notify binary event.
+			event_data[k_class] = "RtpReceiver";
+			event_data[k_binary] = true;
+			this->notifier->Emit(this->rtpReceiverId, "rtp", event_data);
+
+			this->notifier->Emit(packet->GetRaw(), packet->GetLength());
 		}
 	}
 }
