@@ -51,7 +51,18 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				encodings :
 				[
 					{
-						ssrc : 111222330
+						ssrc             : 111222330,
+						codecPayloadType : 200,
+						fec :
+						{
+							mechanism : 'foo',
+							ssrc      : 222222222
+						},
+						rtx :
+						{
+							payloadType : 201,
+							ssrc        : 333333333
+						}
 					},
 					{
 						ssrc : 111222331
@@ -90,7 +101,18 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				encodings :
 				[
 					{
-						ssrc : 111222330
+						ssrc             : 111222330,
+						codecPayloadType : 200,
+						fec :
+						{
+							mechanism : 'foo',
+							ssrc      : 222222222
+						},
+						rtx :
+						{
+							payloadType : 201,
+							ssrc        : 333333333
+						}
 					},
 					{
 						ssrc : 111222331
