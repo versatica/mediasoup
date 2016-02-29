@@ -115,7 +115,9 @@ namespace RTC
 				// If so, don't dlete previous parameters and keep them.
 				this->listener->onRtpReceiverParameters(this, this->rtpParameters);
 
-				request->Accept();
+				Json::Value data = this->rtpParameters->toJson();
+
+				request->Accept(data);
 
 				break;
 			}
