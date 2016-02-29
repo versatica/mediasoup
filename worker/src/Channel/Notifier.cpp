@@ -30,15 +30,21 @@ namespace Channel
 		MS_TRACE();
 
 		static Json::Value empty_data(Json::objectValue);
+		static const Json::StaticString k_targetId("targetId");
+		static const Json::StaticString k_event("event");
 
-		Emit(targetId, event, empty_data);
+		Json::Value json(Json::objectValue);
+
+		json[k_targetId] = (Json::UInt)targetId;
+		json[k_event] = event;
+
+		this->channel->Send(json);
 	}
 
 	void Notifier::Emit(uint32_t targetId, std::string event, Json::Value &data)
 	{
 		MS_TRACE();
 
-		static Json::Value empty_data(Json::objectValue);
 		static const Json::StaticString k_targetId("targetId");
 		static const Json::StaticString k_event("event");
 		static const Json::StaticString k_data("data");
@@ -47,11 +53,7 @@ namespace Channel
 
 		json[k_targetId] = (Json::UInt)targetId;
 		json[k_event] = event;
-
-		if (data.isObject())
-			json[k_data] = data;
-		else
-			json[k_data] = empty_data;
+		json[k_data] = data;
 
 		this->channel->Send(json);
 	}
