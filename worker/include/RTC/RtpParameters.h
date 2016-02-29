@@ -31,14 +31,6 @@ namespace RTC
 	class RtpCodecParameters
 	{
 	public:
-		enum class Kind
-		{
-			BOTH  = 0,
-			AUDIO = 1,
-			VIDEO = 2
-		};
-
-	public:
 		RtpCodecParameters(Json::Value& data);
 		virtual ~RtpCodecParameters();
 
@@ -46,7 +38,6 @@ namespace RTC
 
 	public:
 		std::string name;
-		Kind        kind = Kind::BOTH;
 		uint8_t     payloadType = 0;
 		uint32_t    clockRate = 0;
 		uint32_t    maxptime = 0;

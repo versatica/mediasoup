@@ -32,7 +32,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		[
 			{
 				name        : 'opus',
-				kind        : 'audio',
 				payloadType : 101,
 				clockRate   : null
 			}
@@ -51,8 +50,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		[
 			{
 				name        : 'vp9',
-				kind        : 'video',
-				payloadType : 102,
+				payloadType : 112,
 				clockRate   : null
 			}
 		],
@@ -70,14 +68,12 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		[
 			{
 				name        : 'vp9',
-				kind        : 'video',
-				payloadType : 201,
+				payloadType : 121,
 				clockRate   : null
 			},
 			{
 				name        : 'vp8',
-				kind        : 'video',
-				payloadType : 202,
+				payloadType : 122,
 				clockRate   : null
 			}
 		],
@@ -95,8 +91,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		[
 			{
 				name        : 'opus',
-				kind        : 'audio',
-				payloadType : 301,
+				payloadType : 131,
 				clockRate   : null
 			}
 		],
@@ -114,8 +109,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		[
 			{
 				name        : 'vp9',
-				kind        : 'video',
-				payloadType : 302,
+				payloadType : 132,
 				clockRate   : null
 			}
 		],

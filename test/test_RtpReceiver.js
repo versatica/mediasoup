@@ -25,14 +25,12 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				[
 					{
 						name        : 'opus',
-						kind        : 'audio',
 						payloadType : 111
 					},
 					{
 						name        : 'PCMA',
-						kind        : 'audio',
 						payloadType : 8,
-						clockRate   : 50
+						clockRate   : 9000
 					},
 					{
 						name        : 'supercodec',
@@ -56,19 +54,16 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				[
 					{
 						name        : 'opus',
-						kind        : 'audio',
 						payloadType : 111,
 						clockRate   : null
 					},
 					{
 						name        : 'PCMA',
-						kind        : 'audio',
 						payloadType : 8,
-						clockRate   : 50
+						clockRate   : 9000
 					},
 					{
 						name        : 'supercodec',
-						kind        : '',
 						payloadType : 103,
 						clockRate   : null
 					}
