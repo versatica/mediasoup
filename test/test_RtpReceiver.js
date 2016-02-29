@@ -25,16 +25,27 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				[
 					{
 						name        : 'opus',
-						payloadType : 111
+						payloadType : 111,
+						clockRate   : null,
+						numChannels : 2
 					},
 					{
 						name        : 'PCMA',
 						payloadType : 8,
-						clockRate   : 9000
+						clockRate   : 4800,
+						maxptime    : 20
 					},
 					{
-						name        : 'supercodec',
-						payloadType : 103
+						name         : 'VP8',
+						payloadType  : 103,
+						clockRate    : 9000,
+						rtcpFeedback :
+						[
+							{ type: 'ccm',         parameter: 'fir' },
+							{ type: 'nack'                          },
+							{ type: 'nack',        parameter: 'pli' },
+							{ type: 'google-remb'                   }
+						]
 					}
 				],
 				encodings :
@@ -55,17 +66,25 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						name        : 'opus',
 						payloadType : 111,
-						clockRate   : null
+						numChannels : 2
 					},
 					{
 						name        : 'PCMA',
 						payloadType : 8,
-						clockRate   : 9000
+						clockRate   : 4800,
+						maxptime    : 20
 					},
 					{
-						name        : 'supercodec',
-						payloadType : 103,
-						clockRate   : null
+						name         : 'VP8',
+						payloadType  : 103,
+						clockRate    : 9000,
+						rtcpFeedback :
+						[
+							{ type: 'ccm',         parameter: 'fir' },
+							{ type: 'nack',        parameter: ''    },
+							{ type: 'nack',        parameter: 'pli' },
+							{ type: 'google-remb', parameter: ''    }
+						]
 					}
 				],
 				encodings :

@@ -10,6 +10,7 @@ namespace RTC
 {
 	// Lazy declarations.
 	class RtpCodecParameters;
+	class RtcpFeedback;
 	class RtpEncodingParameters;
 
 	class RtpParameters
@@ -23,7 +24,7 @@ namespace RTC
 
 	public:
 		// TODO: not sure if 1 or 2 bytes or what.
-		std::string                        muxId = "";
+		std::string                        muxId;
 		std::vector<RtpCodecParameters>    codecs;
 		std::vector<RtpEncodingParameters> encodings;
 	};
@@ -37,11 +38,26 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		std::string name;
-		uint8_t     payloadType = 0;
-		uint32_t    clockRate = 0;
-		uint32_t    maxptime = 0;
-		uint32_t    numChannels = 0;
+		std::string               name;
+		uint8_t                   payloadType = 0;
+		uint32_t                  clockRate = 0;
+		uint32_t                  maxptime = 0;
+		uint32_t                  numChannels = 0;
+		std::vector<RtcpFeedback> rtcpFeedback;
+		// TODO: Dictionary parameters;
+	};
+
+	class RtcpFeedback
+	{
+	public:
+		RtcpFeedback(Json::Value& data);
+		virtual ~RtcpFeedback();
+
+		Json::Value toJson();
+
+	public:
+		std::string type;
+		std::string parameter;
 	};
 
 	class RtpEncodingParameters

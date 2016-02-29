@@ -15,11 +15,11 @@ namespace RTC
 		static const Json::StaticString k_ssrc("ssrc");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("data is not an object");
+			MS_THROW_ERROR("RtpEncodingParameters is not an object");
 
 		// `ssrc` is mandatory.
 		if (!data[k_ssrc].isUInt())
-			MS_THROW_ERROR("missing `encoding.ssrc`");
+			MS_THROW_ERROR("missing `RtpEncodingParameters.ssrc`");
 
 		this->ssrc = (uint32_t)data[k_ssrc].asUInt();
 	}
