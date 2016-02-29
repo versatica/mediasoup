@@ -176,7 +176,7 @@ namespace RTC
 
 		// `clockRate` is optional.
 		if (data[k_clockRate].isUInt())
-			codec.clockRate = (uint8_t)data[k_clockRate].asUInt();
+			codec.clockRate = (uint32_t)data[k_clockRate].asUInt();
 
 		// Append to the codecs vector.
 		this->codecs.push_back(codec);
