@@ -84,6 +84,21 @@ namespace RTC
 		RtpRtxParameters rtx;
 	};
 
+	class RtcpParameters
+	{
+	public:
+		RtcpParameters() {};
+		RtcpParameters(Json::Value& data);
+		virtual ~RtcpParameters();
+
+		Json::Value toJson();
+
+	public:
+		std::string cname;
+		uint32_t    ssrc = 0;
+		bool        reducedSize = false;
+	};
+
 	class RtpParameters
 	{
 	public:
@@ -97,7 +112,12 @@ namespace RTC
 		// TODO: not sure if 1 or 2 bytes or what.
 		std::string                        muxId;
 		std::vector<RtpCodecParameters>    codecs;
+		// TODO:
+		// std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		std::vector<RtpEncodingParameters> encodings;
+		RtcpParameters                     rtcp;
+		// TODO:
+		// DegradationPreference              degradationPreference = "balanced";
 	};
 }
 

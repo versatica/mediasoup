@@ -41,7 +41,13 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				ssrc : 100000001
 			}
-		]
+		],
+		rtcp :
+		{
+			cname       : 'ALICEAUDIO',
+			ssrc        : 50000001,
+			reducedSize : false
+		}
 	};
 	let aliceVideoParameters =
 	{
@@ -59,7 +65,13 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				ssrc : 100000002
 			}
-		]
+		],
+		rtcp :
+		{
+			cname       : 'ALICEVIDEO',
+			ssrc        : 50000002,
+			reducedSize : true
+		}
 	};
 	let bobVideoParameters =
 	{
@@ -82,7 +94,13 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				ssrc : 200000002
 			}
-		]
+		],
+		rtcp :
+		{
+			cname       : 'BOBVIDEO',
+			ssrc        : 50000003,
+			reducedSize : true
+		}
 	};
 	let carolAudioParameters =
 	{
@@ -100,7 +118,13 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				ssrc : 300000001
 			}
-		]
+		],
+		rtcp :
+		{
+			cname       : 'CAROLAUDIO',
+			ssrc        : 50000004,
+			reducedSize : false
+		}
 	};
 	let carolVideoParameters =
 	{
@@ -118,7 +142,13 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				ssrc : 300000002
 			}
-		]
+		],
+		rtcp :
+		{
+			cname       : 'CAROLVIDEO',
+			ssrc        : 50000005,
+			reducedSize : true
+		}
 	};
 
 	Promise.all(

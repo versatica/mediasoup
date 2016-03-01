@@ -67,7 +67,13 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						ssrc : 111222331
 					}
-				]
+				],
+				rtcp :
+				{
+					cname       : 'a7sdihkj3sdsdflqwkejl98ujk',
+					ssrc        : 88888888,
+					reducedSize : true
+				}
 			};
 			let expectedRtpParameters =
 			{
@@ -117,7 +123,13 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						ssrc : 111222331
 					}
-				]
+				],
+				rtcp :
+				{
+					cname       : 'a7sdihkj3sdsdflqwkejl98ujk',
+					ssrc        : 88888888,
+					reducedSize : true
+				}
 			};
 
 			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');

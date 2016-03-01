@@ -15,6 +15,7 @@ namespace RTC
 		static const Json::StaticString k_muxId("muxId");
 		static const Json::StaticString k_codecs("codecs");
 		static const Json::StaticString k_encodings("encodings");
+		static const Json::StaticString k_rtcp("rtcp");
 
 		// `muxId` is optional.
 		if (data[k_muxId].isString())
@@ -57,6 +58,16 @@ namespace RTC
 		{
 			MS_THROW_ERROR("missing `encodings`");
 		}
+
+		// `rtcp` is mandatory.
+		if (data[k_rtcp].isObject())
+		{
+			this->rtcp = RtcpParameters(data[k_rtcp]);
+		}
+		else
+		{
+			MS_THROW_ERROR("missing `rtcp`");
+		}
 	}
 
 	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
@@ -66,6 +77,7 @@ namespace RTC
 		this->muxId = rtpParameters->muxId;
 		this->codecs = rtpParameters->codecs;
 		this->encodings = rtpParameters->encodings;
+		this->rtcp = rtpParameters->rtcp;
 	}
 
 	RtpParameters::~RtpParameters()
@@ -80,6 +92,7 @@ namespace RTC
 		static const Json::StaticString k_muxId("muxId");
 		static const Json::StaticString k_codecs("codecs");
 		static const Json::StaticString k_encodings("encodings");
+		static const Json::StaticString k_rtcp("rtcp");
 
 		Json::Value json(Json::objectValue);
 
@@ -103,6 +116,9 @@ namespace RTC
 
 			json[k_encodings].append(encoding->toJson());
 		}
+
+		// Add `rtcp`.
+		json[k_rtcp] = this->rtcp.toJson();
 
 		return json;
 	}
