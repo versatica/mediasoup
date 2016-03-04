@@ -33,7 +33,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'opus',
 				payloadType : 101,
-				clockRate   : 9000
+				clockRate   : 90000
 			}
 		],
 		encodings :
@@ -57,7 +57,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'vp9',
 				payloadType : 112,
-				clockRate   : 9000
+				clockRate   : 90000
 			}
 		],
 		encodings :
@@ -81,12 +81,12 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'vp9',
 				payloadType : 121,
-				clockRate   : 9000
+				clockRate   : 90000
 			},
 			{
 				name        : 'vp8',
 				payloadType : 122,
-				clockRate   : 9000
+				clockRate   : 90000
 			}
 		],
 		encodings :
@@ -110,7 +110,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'opus',
 				payloadType : 131,
-				clockRate   : 9000
+				clockRate   : 90000
 			}
 		],
 		encodings :
@@ -134,7 +134,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'vp9',
 				payloadType : 132,
-				clockRate   : 9000
+				clockRate   : 90000
 			}
 		],
 		encodings :

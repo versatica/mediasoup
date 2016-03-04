@@ -38,7 +38,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						name         : 'VP8',
 						payloadType  : 103,
-						clockRate    : 9000,
+						clockRate    : 90000,
 						rtcpFeedback :
 						[
 							{ type: 'ccm',         parameter: 'fir' },
@@ -52,7 +52,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				[
 					{
 						ssrc             : 111222330,
-						codecPayloadType : 200,
+						codecPayloadType : 111,
 						fec :
 						{
 							mechanism : 'foo',
@@ -94,7 +94,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						name         : 'VP8',
 						payloadType  : 103,
-						clockRate    : 9000,
+						clockRate    : 90000,
 						rtcpFeedback :
 						[
 							{ type: 'ccm',         parameter: 'fir' },
@@ -108,7 +108,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				[
 					{
 						ssrc             : 111222330,
-						codecPayloadType : 200,
+						codecPayloadType : 111,
 						fec :
 						{
 							mechanism : 'foo',
