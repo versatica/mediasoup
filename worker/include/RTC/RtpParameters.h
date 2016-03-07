@@ -102,6 +102,13 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
+		enum class Kind
+		{
+			AUDIO = 1,
+			VIDEO = 2
+		};
+
+	public:
 		RtpParameters(Json::Value& data);
 		RtpParameters(const RtpParameters* RtpParameters);
 		virtual ~RtpParameters();
@@ -109,6 +116,7 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
+		Kind                               kind;
 		// TODO: not sure if 1 or 2 bytes or what.
 		std::string                        muxId;
 		std::vector<RtpCodecParameters>    codecs;

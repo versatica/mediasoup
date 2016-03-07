@@ -20,63 +20,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 			let rtpReceiver = peer.RtpReceiver(transport);
 			let rtpParameters =
 			{
-				muxId  : 'abcd',
-				codecs :
-				[
-					{
-						name        : 'opus',
-						payloadType : 111,
-						clockRate   : null,
-						numChannels : 2
-					},
-					{
-						name        : 'PCMA',
-						payloadType : 8,
-						clockRate   : 4800,
-						maxptime    : 20
-					},
-					{
-						name         : 'VP8',
-						payloadType  : 103,
-						clockRate    : 90000,
-						rtcpFeedback :
-						[
-							{ type: 'ccm',         parameter: 'fir' },
-							{ type: 'nack'                          },
-							{ type: 'nack',        parameter: 'pli' },
-							{ type: 'google-remb'                   }
-						]
-					}
-				],
-				encodings :
-				[
-					{
-						ssrc             : 111222330,
-						codecPayloadType : 111,
-						fec :
-						{
-							mechanism : 'foo',
-							ssrc      : 222222222
-						},
-						rtx :
-						{
-							payloadType : 201,
-							ssrc        : 333333333
-						}
-					},
-					{
-						ssrc : 111222331
-					}
-				],
-				rtcp :
-				{
-					cname       : 'a7sdihkj3sdsdflqwkejl98ujk',
-					ssrc        : 88888888,
-					reducedSize : true
-				}
-			};
-			let expectedRtpParameters =
-			{
+				kind   : 'audio',
 				muxId  : 'abcd',
 				codecs :
 				[
@@ -121,7 +65,8 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 						}
 					},
 					{
-						ssrc : 111222331
+						ssrc             : 111222331,
+						codecPayloadType : 8
 					}
 				],
 				rtcp :
@@ -154,7 +99,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 								.then((data) =>
 								{
 									t.pass('rtpReceiver.dump() succeeded');
-									t.same(data.rtpParameters, expectedRtpParameters, 'rtpReceiver.dump() must provide the expected `rtpParameters`');
+									t.same(data.rtpParameters, rtpParameters, 'rtpReceiver.dump() must provide the expected `rtpParameters`');
 								})
 								.catch((error) => t.fail(`rtpReceiver.dump() failed: ${error}`))
 						])

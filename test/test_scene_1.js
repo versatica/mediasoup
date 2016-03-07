@@ -27,6 +27,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 
 	let aliceAudioParameters =
 	{
+		kind   : 'audio',
 		muxId  : 'alicemuxid1',
 		codecs :
 		[
@@ -51,6 +52,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let aliceVideoParameters =
 	{
+		kind   : 'video',
 		muxId  : 'alicemuxid2',
 		codecs :
 		[
@@ -75,6 +77,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let bobVideoParameters =
 	{
+		kind   : 'video',
 		muxId  : 'bobmuxid2',
 		codecs :
 		[
@@ -104,6 +107,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let carolAudioParameters =
 	{
+		kind   : 'audio',
 		muxId  : 'carolmuxid1',
 		codecs :
 		[
@@ -128,6 +132,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let carolVideoParameters =
 	{
+		kind   : 'video',
 		muxId  : 'carolmuxid2',
 		codecs :
 		[

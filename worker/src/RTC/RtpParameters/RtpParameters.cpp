@@ -12,10 +12,24 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_muxId("muxId");
 		static const Json::StaticString k_codecs("codecs");
 		static const Json::StaticString k_encodings("encodings");
 		static const Json::StaticString k_rtcp("rtcp");
+
+		// `kind` is mandatory.
+		if (!data[k_kind].isString())
+			MS_THROW_ERROR("missing `kind`");
+
+		std::string kind = data[k_kind].asString();
+
+		if (kind == "audio")
+			this->kind = Kind::AUDIO;
+		else if (kind == "video")
+			this->kind = Kind::VIDEO;
+		else
+			MS_THROW_ERROR("unknown `kind`");
 
 		// `muxId` is optional.
 		if (data[k_muxId].isString())
@@ -74,6 +88,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->kind = rtpParameters->kind;
 		this->muxId = rtpParameters->muxId;
 		this->codecs = rtpParameters->codecs;
 		this->encodings = rtpParameters->encodings;
@@ -89,12 +104,24 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_muxId("muxId");
 		static const Json::StaticString k_codecs("codecs");
 		static const Json::StaticString k_encodings("encodings");
 		static const Json::StaticString k_rtcp("rtcp");
 
 		Json::Value json(Json::objectValue);
+
+		// Add `kind`.
+		switch (this->kind)
+		{
+			case Kind::AUDIO:
+				json[k_kind] = "audio";
+				break;
+			case Kind::VIDEO:
+				json[k_kind] = "video";
+				break;
+		}
 
 		// Add `muxId`.
 		json[k_muxId] = this->muxId;
