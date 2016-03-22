@@ -10,12 +10,18 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId) :
+	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data) :
 		roomId(roomId),
 		listener(listener),
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		static const Json::StaticString k_forceUniquePayloadTypes("forceUniquePayloadTypes");
+
+		// `forceUniquePayloadTypes` is optional.
+		if (data[k_forceUniquePayloadTypes].isBool())
+			this->options.forceUniquePayloadTypes = data[k_forceUniquePayloadTypes].asBool();
 	}
 
 	Room::~Room()
@@ -58,15 +64,25 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_roomId("roomId");
+		static const Json::StaticString k_options("options");
+		static const Json::StaticString k_forceUniquePayloadTypes("forceUniquePayloadTypes");
 		static const Json::StaticString k_peers("peers");
 		static const Json::StaticString k_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
 
 		Json::Value json(Json::objectValue);
+		Json::Value json_options(Json::objectValue);
 		Json::Value json_peers(Json::objectValue);
 		Json::Value json_mapRtpReceiverRtpSenders(Json::objectValue);
 
+		// Add `roomId`.
 		json[k_roomId] = (Json::UInt)this->roomId;
 
+		// Add `options`.
+		json_options[k_forceUniquePayloadTypes] = this->options.forceUniquePayloadTypes;
+
+		json[k_options] = json_options;
+
+		// Add `peers`.
 		for (auto& kv : this->peers)
 		{
 			RTC::Peer* peer = kv.second;
@@ -89,6 +105,7 @@ namespace RTC
 			json_mapRtpReceiverRtpSenders[std::to_string(rtpReceiver->rtpReceiverId)] = json_rtpReceivers;
 		}
 
+		// Add `mapRtpReceiverRtpSenders`.
 		json[k_mapRtpReceiverRtpSenders] = json_mapRtpReceiverRtpSenders;
 
 		return json;

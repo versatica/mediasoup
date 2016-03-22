@@ -25,8 +25,14 @@ namespace RTC
 			virtual void onRoomClosed(RTC::Room* room) = 0;
 		};
 
+	private:
+		struct Options
+		{
+			bool forceUniquePayloadTypes = false;
+		};
+
 	public:
-		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId);
+		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data);
 		virtual ~Room();
 
 		void Close();
@@ -55,6 +61,7 @@ namespace RTC
 		// Others.
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
+		Options options;
 	};
 }
 
