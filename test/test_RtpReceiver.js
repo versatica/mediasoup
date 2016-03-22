@@ -42,17 +42,17 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 						rtcpFeedback :
 						[
 							{ type: 'ccm',         parameter: 'fir' },
-							{ type: 'nack',        parameter: ''    },
+							{ type: 'nack',        parameter: '' },
 							{ type: 'nack',        parameter: 'pli' },
-							{ type: 'google-remb', parameter: ''    }
+							{ type: 'google-remb', parameter: '' }
 						]
 					}
 				],
 				encodings :
 				[
 					{
-						ssrc             : 111222330,
 						codecPayloadType : 111,
+						ssrc             : 111222330,
 						fec :
 						{
 							mechanism : 'foo',
@@ -65,8 +65,8 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 						}
 					},
 					{
-						ssrc             : 111222331,
-						codecPayloadType : 8
+						codecPayloadType : 8,
+						ssrc             : 111222331
 					}
 				],
 				rtcp :

@@ -40,7 +40,8 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		encodings :
 		[
 			{
-				ssrc : 100000001
+				codecPayloadType : 101,
+				ssrc             : 100000001
 			}
 		],
 		rtcp :
@@ -65,7 +66,8 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		encodings :
 		[
 			{
-				ssrc : 100000002
+				codecPayloadType : 112,
+				ssrc             : 100000002
 			}
 		],
 		rtcp :
@@ -95,7 +97,8 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		encodings :
 		[
 			{
-				ssrc : 200000002
+				codecPayloadType : 121,
+				ssrc             : 200000002
 			}
 		],
 		rtcp :
@@ -120,7 +123,8 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		encodings :
 		[
 			{
-				ssrc : 300000001
+				codecPayloadType : 131,
+				ssrc             : 300000001
 			}
 		],
 		rtcp :
@@ -145,7 +149,8 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		encodings :
 		[
 			{
-				ssrc : 300000002
+				codecPayloadType : 132,
+				ssrc             : 300000002
 			}
 		],
 		rtcp :

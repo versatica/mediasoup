@@ -12,23 +12,25 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_codecPayloadType("codecPayloadType");
+		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_fec("fec");
 		static const Json::StaticString k_rtx("rtx");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpEncodingParameters is not an object");
 
+		// `codecPayloadType` is mandatory.
+		if (!data[k_codecPayloadType].isUInt())
+			MS_THROW_ERROR("missing `RtpEncodingParameters.codecPayloadType`");
+
+		this->codecPayloadType = (uint8_t)data[k_codecPayloadType].asUInt();
+
 		// `ssrc` is mandatory.
 		if (!data[k_ssrc].isUInt())
 			MS_THROW_ERROR("missing `RtpEncodingParameters.ssrc`");
 
 		this->ssrc = (uint32_t)data[k_ssrc].asUInt();
-
-		// `codecPayloadType` is optional.
-		if (data[k_codecPayloadType].isUInt())
-			this->codecPayloadType = (uint8_t)data[k_codecPayloadType].asUInt();
 
 		// `fec` is optional.
 		if (data[k_fec].isObject())
@@ -54,19 +56,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_codecPayloadType("codecPayloadType");
+		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_fec("fec");
 		static const Json::StaticString k_rtx("rtx");
 
 		Json::Value json(Json::objectValue);
 
+		// Add `codecPayloadType`.
+		json[k_codecPayloadType] = (Json::UInt)this->codecPayloadType;
+
 		// Add `ssrc`.
 		json[k_ssrc] = (Json::UInt)this->ssrc;
-
-		// Add `codecPayloadType`.
-		if (this->codecPayloadType)
-			json[k_codecPayloadType] = (Json::UInt)this->codecPayloadType;
 
 		// Add `fec`
 		if (this->hasFec)
