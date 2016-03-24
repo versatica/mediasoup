@@ -2,7 +2,7 @@
 #define	MS_DEP_LIBSRTP_H
 
 #include <vector>
-#include <srtp2/srtp.h>
+#include <srtp.h>
 
 class DepLibSRTP
 {

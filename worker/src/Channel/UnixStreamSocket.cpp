@@ -7,7 +7,10 @@
 #include <cstring>  // std::memmove()
 #include <cmath>  // std::ceil()
 #include <cstdio>  // sprintf()
-#include <netstring.h>
+extern "C"
+{
+	#include <netstring.h>
+}
 
 // netstring length for a 65536 bytes payload
 #define NS_MAX_SIZE      65543

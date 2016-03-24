@@ -79,9 +79,9 @@ namespace RTC
 		void SetMessageIntegrity(const uint8_t* messageIntegrity);
 		void SetFingerprint();
 		const std::string& GetUsername();
-		const uint32_t GetPriority();
-		const uint64_t GetIceControlling();
-		const uint64_t GetIceControlled();
+		uint32_t GetPriority();
+		uint64_t GetIceControlling();
+		uint64_t GetIceControlled();
 		bool HasUseCandidate();
 		uint16_t GetErrorCode();
 		bool HasMessageIntegrity();
@@ -229,19 +229,19 @@ namespace RTC
 	}
 
 	inline
-	const uint32_t StunMessage::GetPriority()
+	uint32_t StunMessage::GetPriority()
 	{
 		return this->priority;
 	}
 
 	inline
-	const uint64_t StunMessage::GetIceControlling()
+	uint64_t StunMessage::GetIceControlling()
 	{
 		return this->iceControlling;
 	}
 
 	inline
-	const uint64_t StunMessage::GetIceControlled()
+	uint64_t StunMessage::GetIceControlled()
 	{
 		return this->iceControlled;
 	}

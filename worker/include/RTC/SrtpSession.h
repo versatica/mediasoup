@@ -2,7 +2,7 @@
 #define MS_RTC_SRTP_SESSION_H
 
 #include "common.h"
-#include <srtp2/srtp.h>
+#include <srtp.h>
 
 namespace RTC
 {

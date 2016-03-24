@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "0.0.1-alpha.1",
+  "version": "0.1.0-pre",
   "description": "Powerful WebRTC SFU (\"Selective Forwarding Unit\") server built on Node and C++",
   "main": "lib/mediasoup.js",
   "repository": {
@@ -13,6 +13,7 @@
     "url": "https://github.com/ibc/mediasoup/issues"
   },
   "homepage": "https://github.com/ibc/mediasoup/",
+  "os": [ "!win32" ],
   "engines": {
     "node": ">=4.0.0"
   },
@@ -35,6 +36,7 @@
     "tap": "^5.6.0"
   },
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "postinstall": "cd worker && ./scripts/configure.py && make -C out"
   }
 }

@@ -1,0 +1,11 @@
+sudo: false
+language: c
+compiler:
+  - clang
+  - gcc
+os:
+  - linux
+  - osx
+script:
+  - ./configure && make && make runtest
+  - ./configure --enable-openssl && make && make runtest

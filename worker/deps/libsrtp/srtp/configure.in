@@ -1,0 +1,211 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT([libsrtp2], [2.0.0-pre], [https://github.com/cisco/libsrtp/issues])
+
+dnl Must come before AC_PROG_CC
+if test -z "$CFLAGS"; then
+   dnl Default value for CFLAGS if not specified.
+   CFLAGS="-fPIC -Wall -O4 -fexpensive-optimizations -funroll-loops"
+fi
+
+dnl Checks for programs.
+AM_PROG_AR
+AC_PROG_RANLIB
+AC_PROG_CC
+AC_PROG_INSTALL
+
+dnl Check the byte order
+AC_C_BIGENDIAN
+
+AC_CANONICAL_HOST
+
+dnl check host_cpu type, set defines appropriately
+case $host_cpu in
+     i*86 | x86_64 )
+	AC_DEFINE(CPU_CISC, 1,
+	   [Define if building for a CISC machine (e.g. Intel).])
+        AC_DEFINE(HAVE_X86, 1,
+	   [Define to use X86 inlined assembly code]);; 
+	* )
+	   AC_DEFINE(CPU_RISC, 1,
+	    [Define if building for a RISC machine (assume slow byte access).])
+	;;
+esac	
+
+dnl Check if we are on a Windows platform.
+case $host_os in
+    *cygwin*|*mingw* ) 
+	EXE=.exe
+	HOST_IS_WINDOWS=yes
+	;;
+    * )
+	EXE=""
+	;;
+esac
+AC_SUBST(EXE)   # define executable suffix; this is needed for `make clean'
+
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(stdlib.h)
+AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(byteswap.h)
+AC_CHECK_HEADERS(stdint.h)
+AC_CHECK_HEADERS(sys/uio.h)
+AC_CHECK_HEADERS(inttypes.h)
+AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(machine/types.h)
+AC_CHECK_HEADERS(sys/int_types.h)
+
+dnl socket() and friends
+AC_CHECK_HEADERS(sys/socket.h netinet/in.h arpa/inet.h)
+AC_CHECK_HEADERS(windows.h, [AC_CHECK_HEADERS(winsock2.h)])
+
+AC_CHECK_TYPES([int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,uint64_t])
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(unsigned long long)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS(socket inet_aton usleep sigaction)
+
+dnl Find socket function if not found yet.
+if test "x$ac_cv_func_socket" = "xno"; then
+  AC_CHECK_LIB(socket, socket)
+  AC_MSG_CHECKING([for socket in -lwsock32])
+  SAVELIBS="$LIBS"
+  LIBS="$LIBS -lwsock32"
+  AC_TRY_LINK([
+#include <winsock2.h>
+],[
+socket(0, 0, 0);
+],
+    ac_cv_func_socket=yes
+    AC_MSG_RESULT(yes),
+    LIBS="$SAVELIBS"
+    AC_MSG_RESULT(no))
+fi
+
+AC_MSG_CHECKING(whether to compile in debugging)
+AC_ARG_ENABLE(debug,
+  [AS_HELP_STRING([--disable-debug],
+		  [do not compile in dynamic debugging system])],
+  [], enable_debug=yes)
+if test "$enable_debug" = "yes"; then
+   AC_DEFINE(ENABLE_DEBUGGING, 1,
+      [Define to compile in dynamic debugging system.])
+fi
+AC_MSG_RESULT($enable_debug)
+
+AC_MSG_CHECKING(whether to use ISMAcryp code)
+AC_ARG_ENABLE(generic-aesicm,
+  [AS_HELP_STRING([--enable-generic-aesicm],
+		  [compile in changes for ISMAcryp])],
+  [], enable_generic_aesicm=no)
+if test "$enable_generic_aesicm" = "yes"; then
+   AC_DEFINE(GENERIC_AESICM, 1, [Define this to use ISMAcryp code.])
+fi
+AC_MSG_RESULT($enable_generic_aesicm)
+
+AC_MSG_CHECKING(whether to leverage OpenSSL crypto)
+AC_ARG_ENABLE(openssl,
+  [AS_HELP_STRING([--enable-openssl],
+		  [compile in OpenSSL crypto engine])],
+  [], enable_openssl=no)
+AC_MSG_RESULT($enable_openssl)
+if test "$enable_openssl" = "yes"; then
+   AC_MSG_CHECKING(for user specified OpenSSL directory)
+   AC_ARG_WITH(openssl-dir,
+      [AS_HELP_STRING([--with-openssl-dir], [Location of OpenSSL installation])],
+      [openssl_dir="$withval"], openssl_dir="")
+
+   LDFLAGS="$LDFLAGS -L$openssl_dir/lib $(pkg-config --libs openssl)";
+   CFLAGS="$CFLAGS -I$openssl_dir/include $(pkg-config --cflags openssl)";
+
+   AC_CHECK_LIB([dl], [dlopen], [],
+             [AC_MSG_WARN([can't find libdl])])
+   AC_CHECK_LIB([z], [inflate], [],
+             [AC_MSG_WARN([can't find libz])])
+   AC_CHECK_LIB([crypto], [EVP_EncryptInit], [],
+             [AC_MSG_FAILURE([can't find openssl >1.0.1 crypto lib])])
+   AC_CHECK_LIB([crypto], [EVP_aes_128_ctr], [],
+             [AC_MSG_FAILURE([can't find openssl >1.0.1 crypto lib])])
+   AC_CHECK_LIB([crypto], [EVP_aes_128_gcm], [],
+             [AC_MSG_FAILURE([can't find openssl >1.0.1 crypto lib])])
+   AC_DEFINE(OPENSSL, 1, [Define this to use OpenSSL crypto.])
+   AES_ICM_OBJS="crypto/cipher/aes_icm_ossl.o crypto/cipher/aes_gcm_ossl.o"
+   HMAC_OBJS=crypto/hash/hmac_ossl.o
+   USE_OPENSSL=1
+   AC_SUBST(USE_OPENSSL)
+
+   AC_MSG_CHECKING(whether to leverage OpenSSL KDF algorithm)
+   AC_ARG_ENABLE(openssl-kdf,
+      [AS_HELP_STRING([--enable-openssl-kdf], [Use OpenSSL KDF algorithm])],
+      [], enable_openssl_kdf=no)
+   AC_MSG_RESULT($enable_openssl_kdf)
+   if test "$enable_openssl_kdf" = "yes"; then
+      AC_CHECK_LIB([crypto], [kdf_srtp], [],
+             [AC_MSG_FAILURE([can't find openssl KDF lib])])
+      AC_DEFINE(OPENSSL_KDF, 1, [Define this to use OpenSSL KDF for SRTP.])
+   fi
+else
+   AES_ICM_OBJS="crypto/cipher/aes_icm.o crypto/cipher/aes.o"
+   HMAC_OBJS="crypto/hash/hmac.o crypto/hash/sha1.o"
+fi
+AC_SUBST(AES_ICM_OBJS)                              
+AC_SUBST(HMAC_OBJS)
+
+dnl Checking for PCAP
+AC_CHECK_LIB([pcap],[pcap_create],
+    [PCAP=1
+     LIBS="-lpcap $LIBS"
+     HAVE_PCAP=1
+     AC_DEFINE(HAVE_PCAP, 1, [Define to 1 if you have the `pcap' library (-lpcap)])
+     AC_SUBST(HAVE_PCAP)
+])
+
+AC_MSG_CHECKING(whether to use stdout for error reporting)
+AC_ARG_ENABLE(stdout,
+  [AS_HELP_STRING([--enable-stdout], [use stdout for debug/error reporting])],
+  [], enable_stdout=no)
+if test "$enable_stdout" = "yes"; then
+   AC_DEFINE(ERR_REPORTING_STDOUT, 1, [Define to use logging to stdout.])
+fi
+AC_MSG_RESULT($enable_stdout)
+
+AC_MSG_CHECKING(whether to use /dev/console for error reporting)
+AC_ARG_ENABLE(console,
+  [AS_HELP_STRING([--enable-console], [use /dev/console for error reporting])],
+  [], enable_console=no)
+if test "$enable_console" = "yes"; then
+   AC_DEFINE(USE_ERR_REPORTING_FILE, 1, [Write errors to this file])
+   AC_DEFINE(ERR_REPORTING_FILE, "/dev/console", [Report errors to this file.])
+fi
+AC_MSG_RESULT($enable_console)
+
+AC_CONFIG_HEADER(crypto/include/config.h:config_in.h)
+
+AC_CHECK_PROG(PKG_CONFIG, pkg-config, yes)
+if test "x$PKG_CONFIG" != "x"; then
+    HAVE_PKG_CONFIG=1
+    AC_CONFIG_FILES([libsrtp2.pc])
+else
+    HAVE_PKG_CONFIG=0
+fi
+AC_SUBST(HAVE_PKG_CONFIG)
+AC_CONFIG_FILES([Makefile crypto/Makefile doc/Makefile])
+AC_OUTPUT
+
+# This is needed when building outside the source dir.
+AS_MKDIR_P(crypto/cipher)
+AS_MKDIR_P(crypto/hash)
+AS_MKDIR_P(crypto/kernel)
+AS_MKDIR_P(crypto/math)
+AS_MKDIR_P(crypto/replay)
+AS_MKDIR_P(crypto/test)
+AS_MKDIR_P(doc)
+AS_MKDIR_P(srtp)
+AS_MKDIR_P(test)

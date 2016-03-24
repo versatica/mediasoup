@@ -1,9 +1,9 @@
 /node_modules/
-*.o
-/worker/bin/
-/worker/cldoc/
-/worker/mediasoup-tester.sh
-/demo/
+
+# gyp generated stuff
+/worker/out/
+
+# Others
+/npm-debug.log
+/NO_GIT/
 /art/
-/make-trace.sh
-/run.js
