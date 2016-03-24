@@ -4,6 +4,7 @@
 #include "common.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <json/json.h>
 
 namespace RTC
@@ -24,6 +25,33 @@ namespace RTC
 	class RtpCodecParameters
 	{
 	public:
+		class ParameterValue
+		{
+			public:
+				enum class Type
+				{
+					BOOLEAN = 1,
+					STRING,
+					INTEGER
+				};
+
+			public:
+				ParameterValue() {};
+				ParameterValue(bool booleanValue);
+				ParameterValue(uint32_t integerValue);
+				ParameterValue(std::string& stringValue);
+				virtual ~ParameterValue();
+
+				Json::Value toJson();
+
+			public:
+				Type        type;
+				bool        booleanValue = false;
+				uint32_t    integerValue = 0;
+				std::string stringValue = "";
+		};
+
+	public:
 		RtpCodecParameters(Json::Value& data);
 		virtual ~RtpCodecParameters();
 
@@ -36,7 +64,7 @@ namespace RTC
 		uint32_t                  maxptime = 0;
 		uint32_t                  numChannels = 0;
 		std::vector<RtcpFeedback> rtcpFeedback;
-		// TODO: Dictionary parameters;
+		std::unordered_map<std::string, ParameterValue> parameters;
 	};
 
 	class RtpFecParameters

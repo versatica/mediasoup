@@ -20,24 +20,25 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 			let rtpReceiver = peer.RtpReceiver(transport);
 			let rtpParameters =
 			{
-				kind   : 'audio',
+				kind   : 'video',
 				muxId  : 'abcd',
 				codecs :
 				[
 					{
-						name        : 'opus',
-						payloadType : 111,
-						numChannels : 2
-					},
-					{
-						name        : 'PCMA',
-						payloadType : 8,
-						clockRate   : 4800,
-						maxptime    : 20
+						name        : 'H264',
+						payloadType : 100,
+						numChannels : 2,
+						parameters  :
+						{
+							profileLevelId    : 2,
+							packetizationMode : 1,
+							foo               : 'barœæ€',
+							isGood            : true
+						}
 					},
 					{
 						name         : 'VP8',
-						payloadType  : 103,
+						payloadType  : 101,
 						clockRate    : 90000,
 						rtcpFeedback :
 						[
@@ -45,13 +46,17 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 							{ type: 'nack',        parameter: '' },
 							{ type: 'nack',        parameter: 'pli' },
 							{ type: 'google-remb', parameter: '' }
-						]
+						],
+						parameters   :
+						{
+							maxFr : 20
+						}
 					}
 				],
 				encodings :
 				[
 					{
-						codecPayloadType : 111,
+						codecPayloadType : 100,
 						ssrc             : 111222330,
 						fec :
 						{
@@ -65,8 +70,8 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 						}
 					},
 					{
-						codecPayloadType : 8,
-						ssrc             : 111222331
+						codecPayloadType : 101,
+						ssrc             : 111222330
 					}
 				],
 				rtcp :
@@ -90,8 +95,8 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 								.then((data) =>
 								{
 									t.pass('transport.dump() succeeded');
-									t.same(Object.keys(data.rtpListener.ssrcTable).sort(), [ '111222330', '111222331' ].sort(), 'transport.dump() must provide the given ssrc values');
-									t.same(Object.keys(data.rtpListener.ptTable).sort(), [ '111', '8', '103' ].sort(), 'transport.dump() must provide the given payload types');
+									t.same(Object.keys(data.rtpListener.ssrcTable).sort(), [ '111222330' ].sort(), 'transport.dump() must provide the given ssrc values');
+									t.same(Object.keys(data.rtpListener.ptTable).sort(), [ '100', '101' ].sort(), 'transport.dump() must provide the given payload types');
 								})
 								.catch((error) => t.fail(`transport.dump() failed: ${error}`)),
 

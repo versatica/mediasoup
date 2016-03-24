@@ -104,16 +104,25 @@ namespace RTC
 				catch (const MediaSoupError &error)
 				{
 					request->Reject(error.what());
+
+					return;
+				}
+
+				// NOTE: this may throw. If so keep the current parameters.
+				try
+				{
+					this->listener->onRtpReceiverParameters(this, this->rtpParameters);
+				}
+				catch (const MediaSoupError &error)
+				{
+					this->rtpParameters = previousRtpParameters;
+					request->Reject(error.what());
+
 					return;
 				}
 
 				// Free the previous rtpParameters.
 				delete previousRtpParameters;
-
-				// TODO: may this callback throw if the new parameters are invalid
-				// for the Transport(s)?
-				// If so, don't dlete previous parameters and keep them.
-				this->listener->onRtpReceiverParameters(this, this->rtpParameters);
 
 				Json::Value data = this->rtpParameters->toJson();
 

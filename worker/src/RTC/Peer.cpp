@@ -530,16 +530,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Notify the listener (Room) so it can check provided codecs and,
+		// optionally, normalize them.
+		// NOTE: This may throw.
+		this->listener->onPeerRtpReceiverParameters(this, rtpParameters);
+
 		auto transport = rtpReceiver->GetTransport();
 
-		// TODO: This may throw
+		// NOTE: This may throw.
 		if (transport)
 			transport->AddRtpReceiver(rtpReceiver, rtpParameters);
 
-		// NOTE: If it does not throw do this.
-
 		// Notify the listener (Room).
-		this->listener->onPeerRtpReceiverParameters(this, rtpReceiver);
+		this->listener->onPeerRtpReceiverParametersDone(this, rtpReceiver);
 	}
 
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)

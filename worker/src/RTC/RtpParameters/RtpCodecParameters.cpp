@@ -18,6 +18,7 @@ namespace RTC
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
+		static const Json::StaticString k_parameters("parameters");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
@@ -61,6 +62,52 @@ namespace RTC
 				this->rtcpFeedback.push_back(rtcpFeedback);
 			}
 		}
+
+		// `parameters` is optional.
+		if (data[k_parameters].isObject())
+		{
+			auto& parameters = data[k_parameters];
+
+			for (Json::Value::iterator it = parameters.begin(); it != parameters.end(); ++it)
+			{
+				std::string key = it.key().asString();
+				Json::Value value = (*it);
+
+				switch (value.type())
+				{
+					case Json::booleanValue:
+					{
+						bool booleanValue = value.asBool();
+
+						this->parameters[key] = ParameterValue(booleanValue);
+
+						break;
+					}
+
+					case Json::uintValue:
+					case Json::intValue:
+					{
+						uint32_t integerValue = (uint32_t)value.asUInt();
+
+						this->parameters[key] = ParameterValue(integerValue);
+
+						break;
+					}
+
+					case Json::stringValue:
+					{
+						std::string stringValue = value.asString();
+
+						this->parameters[key] = ParameterValue(stringValue);
+
+						break;
+					}
+
+					default:
+						;  // Just ignore other value types
+				}
+			}
+		}
 	}
 
 	RtpCodecParameters::~RtpCodecParameters()
@@ -78,6 +125,7 @@ namespace RTC
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
+		static const Json::StaticString k_parameters("parameters");
 
 		Json::Value json(Json::objectValue);
 
@@ -111,6 +159,61 @@ namespace RTC
 			}
 		}
 
+		// Add `parameters` (if any).
+		if (this->parameters.size() > 0)
+		{
+			Json::Value json_parameters(Json::objectValue);
+
+			for (auto& kv : this->parameters)
+			{
+				const std::string& key = kv.first;
+				ParameterValue& parameterValue = kv.second;
+
+				switch (parameterValue.type)
+				{
+					case ParameterValue::Type::BOOLEAN:
+						json_parameters[key] = parameterValue.booleanValue;
+						break;
+
+					case ParameterValue::Type::INTEGER:
+						json_parameters[key] = (Json::UInt)parameterValue.integerValue;
+						break;
+
+					case ParameterValue::Type::STRING:
+						json_parameters[key] = parameterValue.stringValue;
+						break;
+				}
+			}
+
+			json[k_parameters] = json_parameters;
+		}
+
 		return json;
+	}
+
+	RtpCodecParameters::ParameterValue::ParameterValue(bool booleanValue) :
+		type(Type::BOOLEAN),
+		booleanValue(booleanValue)
+	{
+		MS_TRACE();
+	}
+
+	RtpCodecParameters::ParameterValue::ParameterValue(uint32_t integerValue) :
+		type(Type::INTEGER),
+		integerValue(integerValue)
+	{
+		MS_TRACE();
+	}
+
+	RtpCodecParameters::ParameterValue::ParameterValue(std::string& stringValue) :
+		type(Type::STRING),
+		stringValue(stringValue)
+	{
+		MS_TRACE();
+	}
+
+	RtpCodecParameters::ParameterValue::~ParameterValue()
+	{
+		MS_TRACE();
 	}
 }
