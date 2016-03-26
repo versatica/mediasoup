@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "0.1.0-pre",
+  "version": "0.1.0-pre2",
   "description": "Powerful WebRTC SFU (\"Selective Forwarding Unit\") server built on Node and C++",
   "main": "lib/mediasoup.js",
   "repository": {
