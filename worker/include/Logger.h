@@ -56,7 +56,7 @@ public:
 inline
 bool Logger::HasDebugLevel()
 {
-	return (LogLevel::DEBUG == Settings::configuration.logLevel);
+	return (LogLevel::LOG_DEBUG == Settings::configuration.logLevel);
 }
 
 // NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
@@ -97,7 +97,7 @@ bool Logger::HasDebugLevel()
 #define MS_DEBUG(desc, ...)  \
 	do  \
 	{  \
-		if (LogLevel::DEBUG == Settings::configuration.logLevel)  \
+		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel)  \
 		{  \
 			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
 			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
@@ -108,7 +108,7 @@ bool Logger::HasDebugLevel()
 #define MS_DEBUG_STD(desc, ...)  \
 	do  \
 	{  \
-		if (LogLevel::DEBUG == Settings::configuration.logLevel)  \
+		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel)  \
 		{  \
 			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
 			std::fflush(stdout);  \
@@ -119,7 +119,7 @@ bool Logger::HasDebugLevel()
 #define MS_WARN(desc, ...)  \
 	do  \
 	{  \
-		if (LogLevel::WARN <= Settings::configuration.logLevel)  \
+		if (LogLevel::LOG_WARN <= Settings::configuration.logLevel)  \
 		{  \
 			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
 			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \

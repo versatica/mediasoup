@@ -5,9 +5,9 @@
 
 enum class LogLevel : uint8_t
 {
-	DEBUG = 2,
-	WARN  = 1,
-	ERROR = 0
+	LOG_DEBUG = 2,
+	LOG_WARN  = 1,
+	LOG_ERROR = 0
 };
 
 #endif

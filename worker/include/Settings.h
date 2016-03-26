@@ -14,7 +14,7 @@ public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		LogLevel    logLevel             { LogLevel::DEBUG };
+		LogLevel    logLevel             { LogLevel::LOG_DEBUG };
 		std::string rtcListenIPv4;
 		std::string rtcListenIPv6;
 		uint16_t    rtcMinPort          { 10000 };

@@ -2,6 +2,7 @@
 
 # gyp generated stuff
 /worker/out/
+/worker/**/*.xcodeproj/
 
 # Others
 /npm-debug.log

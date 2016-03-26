@@ -2,7 +2,6 @@
 
 # File inspired in https://github.com/indutny/bud
 
-import glob
 import platform
 import os
 import subprocess
@@ -54,6 +53,7 @@ if __name__ == '__main__':
   # GYP bug.
   # On msvs it will crash if it gets an absolute path.
   # On Mac/make it will crash if it doesn't get an absolute path.
+  # NOTE ibc: Not sure that it requires absolute path in Mac/make...
   if sys.platform == 'win32':
     args.append(os.path.join(root, 'mediasoup-worker.gyp'))
     common_fn  = os.path.join(root, 'common.gypi')
