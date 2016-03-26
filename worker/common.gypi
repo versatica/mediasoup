@@ -2,7 +2,6 @@
   'variables':
   {
   	# libuv variables:
-    # - Static libuv, but allow override to 'shared_library' for DLL/.so builds
     'uv_library%': 'static_library',
     # openssl variables:
     'library%': 'static_library',
@@ -10,7 +9,8 @@
     'gcc_version%': 'unknown',
     'clang%': 1,
     'openssl_fips%': 'false',
-    'mediasoup_asan%': 'false'
+    'mediasoup_asan%': 'false',
+    'libopenssl': '<(PRODUCT_DIR)/libopenssl.a',
   },
 
   'target_defaults':

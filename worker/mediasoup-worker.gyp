@@ -96,7 +96,7 @@
         [ 'OS in "linux freebsd"', {
           'ldflags':
           [
-            '-Wl,--whole-archive <(LIBOPENSSL) -Wl,--no-whole-archive'
+            '-Wl,--whole-archive <(libopenssl) -Wl,--no-whole-archive'
           ]
         }],
 
