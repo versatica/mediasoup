@@ -1,11 +1,11 @@
 # mediasoup
 
-Powerful WebRTC SFU ("Selective Forwarding Unit") server built on Node and C++.
+Powerful WebRTC SFU (*Selective Forwarding Unit*) for Node.
 
 
-## IMPORTANT!
+## Status
 
-* Not yet ready, working on it.
+Not entirely ready yet (but will be soon). Check the [milestones](https://github.com/ibc/mediasoup/milestones).
 
 
 ## Features
@@ -18,7 +18,18 @@ Powerful WebRTC SFU ("Selective Forwarding Unit") server built on Node and C++.
 * Extremely powerful: Media handler subprocess (*mediasoup-worker*) is coded in C++ on top of the awesome [libuv](https://github.com/libuv/libuv) asychronous I/O library. **mediasoup** takes full advantage of your CPU capabilities by launching as many workers as needed.
 
 
+## Installation
+
+```bash
+$ npm install mediasoup --save
+```
+
+*NOTE*: Currently **mediasoup** just works in POSIX systems (Linux, OSX, etc). In the future it will also run in Windows.
+
+
 ## Usage
+
+*NOTE:* Not updated.
 
 ```javascript
 var mediasoup = require('mediasoup');
@@ -147,11 +158,11 @@ test/test_Room.js
 
   room.Peer() with same `peerName` must succeed if previous peer was closed before
     ✓ room.getPeer() must retrieve the first "alice"
-    ✓ room.getPeers() must retrieve one peer
+    ✓ room.peers must retrieve one peer
     ✓ room.getPeer() must retrieve nothing
-    ✓ room.getPeers() must retrieve zero peers
+    ✓ room.peers must retrieve zero peers
     ✓ room.getPeer() must retrieve the new "alice"
-    ✓ room.getPeers() must retrieve one peer
+    ✓ room.peers must retrieve one peer
     ✓ peer must close cleanly
 
   room.dump() must succeed
@@ -160,6 +171,7 @@ test/test_Room.js
 
 test/test_Peer.js
   peer.createTransport() with no options must succeed
+    ✓ peer.name must be "alice"
     ✓ peer.createTransport() succeeded
     ✓ peer.dump() succeeded
     ✓ peer.dump() must retrieve one transport
@@ -221,26 +233,21 @@ test/test_Transport.js
 
 test/test_RtpReceiver.js
   rtpReceiver.receive() with valid `rtpParameters` must succeed
+    ✓ rtpReceiver.transport must retrieve the given `transport`
     ✓ rtpReceiver.receive() succeeded
+    ✓ transport.dump() succeeded
+    ✓ transport.dump() must provide the given ssrc values
+    ✓ transport.dump() must provide the given payload types
     ✓ rtpReceiver.dump() succeeded
     ✓ rtpReceiver.dump() must provide the expected `rtpParameters`
 
   rtpReceiver.receive() with no `rtpParameters` must fail
-    ✓ rtpReceiver.receive() failed: Error: missing `codecs`
+    ✓ rtpReceiver.receive() failed: Error: missing `kind`
 
   rtpReceiver.close() must succeed
     ✓ rtpReceiver must close cleanly
     ✓ peer.dump() succeeded
     ✓ peer.dump() must retrieve zero rtpReceivers
-
-test/test_RtpListener.js
-  lalala
-    ✓ first rtpReceiver.receive() succeeded
-    ✓ second rtpReceiver.receive() succeeded
-    ✓ both rtpReceiver.receive() succeeded
-    ✓ transport.dump() succeeded
-    ✓ transport.dump() must provide the given payload types
-    ✓ transport.dump() must provide the given ssrc values
 
 test/test_extra.js
   extra.fingerprintFromSDP()
@@ -251,7 +258,58 @@ test/test_extra.js
     ✓ should be equal
     ✓ should be equal
 
-  82 passing (7s)
+test/test_scene_1.js
+  alice, bob and carol create RtpReceivers and expect RtpSenders
+    ✓ room created
+    ✓ alice created
+    ✓ bob created
+    ✓ transport created for alice
+    ✓ transport created for bob
+    ✓ rtpReceiver.receive() succeeded for alice
+    ✓ rtpReceiver.receive() succeeded for alice
+    ✓ alice "newrtpsender" event fired
+    ✓ `rtpSender.associatedPeer` must be bob
+    ✓ rtpReceiver.receive() succeeded for bob
+    ✓ rtpSender retrieved via bob.rtpSenders
+    ✓ `receiverPeer` must be alice
+    ✓ rtpSender retrieved via bob.rtpSenders
+    ✓ `receiverPeer` must be alice
+    ✓ rtpSender.setTransport() succeeded
+    ✓ rtpSender.transport must retrieve the given `transport`
+    ✓ rtpSender.setTransport() succeeded
+    ✓ rtpSender.transport must retrieve the given `transport`
+    ✓ rtpSender.setTransport() succeeded
+    ✓ rtpSender.transport must retrieve the given `transport`
+    ✓ alice.rtpSenders must retrieve 1
+    ✓ bob.rtpSenders must retrieve 2
+    ✓ first RtpSender parameters of alice must match video parameters of bob
+    ✓ first RtpSender parameters of bob must match audio parameters of alice
+    ✓ second RtpSender parameters of bob must match video parameters of alice
+    ✓ room.dump() succeeded
+    ✓ `data.mapRtpReceiverRtpSenders` match the expected values
+    close aliceAudioReceiver
+      ✓ aliceAudioReceiver closed
+      ✓ bobAudioSender closed
+    ✓ room.dump() succeeded
+    ✓ `data.mapRtpReceiverRtpSenders` match the expected values
+    close bob
+      ✓ bobVideoReceiver closed
+      ✓ bobVideoSender closed
+      ✓ bob closed
+      ✓ aliceVideoSender closed
+    ✓ alice.rtpReceivers must retrieve 1
+    ✓ bob.rtpReceivers must retrieve 0
+    ✓ alice.rtpSenders must retrieve 0
+    ✓ bob.rtpSenders must retrieve 0
+    ✓ room.dump() succeeded
+    ✓ `data.mapRtpReceiverRtpSenders` match the expected values
+    ✓ transport created for carol
+    ✓ rtpReceiver.receive() succeeded for carol
+    ✓ rtpReceiver.receive() succeeded for carol
+    ✓ room.dump() succeeded
+    ✓ `data.mapRtpReceiverRtpSenders` match the expected values
+
+  127 passing (7s)
 ```
 
 
