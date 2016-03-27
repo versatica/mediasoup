@@ -100,9 +100,6 @@ if __name__ == '__main__':
 
   args.append('-Dnode_byteorder=' + sys.byteorder)
 
-  # TMP
-  # args.append('--debug=all')
-
   gyp_args = list(args)
   print gyp_args
   run_gyp(gyp_args)

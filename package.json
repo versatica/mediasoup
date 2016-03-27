@@ -37,6 +37,6 @@
   },
   "scripts": {
     "test": "gulp test",
-    "postinstall": "cd worker && ./scripts/configure.py && make -C out"
+    "postinstall": "make Release"
   }
 }

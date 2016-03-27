@@ -8,9 +8,9 @@
     # Others:
     'gcc_version%': 'unknown',
     'clang%': 1,
-    'openssl_fips%': 'false',
     'mediasoup_asan%': 'false',
-    'libopenssl': '<(PRODUCT_DIR)/libopenssl.a',
+    'openssl_fips%': 'false',
+    'libopenssl': '<(PRODUCT_DIR)/libopenssl.a'
   },
 
   'target_defaults':
@@ -19,6 +19,10 @@
 
     'configurations':
     {
+      'Release':
+      {
+      	'cflags': [ '-g' ]
+      },
       'Debug':
       {
         'defines': [ ' MS_DEVEL', 'DEBUG' ],
@@ -27,10 +31,6 @@
         {
           'GCC_OPTIMIZATION_LEVEL': '0'
         }
-      },
-      'Release':
-      {
-      	'cflags': [ '-g' ]
       }
     },
 
