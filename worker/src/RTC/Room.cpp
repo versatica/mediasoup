@@ -17,7 +17,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_audioCodec("audioCodec");
+		static const Json::StaticString k_videoCodec("videoCodec");
 		static const Json::StaticString k_forceUniquePayloadTypes("forceUniquePayloadTypes");
+
+		// `audioCodec` is optional.
+		// if (data[k_audioCodec].isString())
+
+		// `videoCodec` is optional.
+		// if (data[k_videoCodec].isString())
 
 		// `forceUniquePayloadTypes` is optional.
 		if (data[k_forceUniquePayloadTypes].isBool())
@@ -65,6 +73,8 @@ namespace RTC
 
 		static const Json::StaticString k_roomId("roomId");
 		static const Json::StaticString k_options("options");
+		static const Json::StaticString k_audioCodec("audioCodec");
+		static const Json::StaticString k_videoCodec("videoCodec");
 		static const Json::StaticString k_forceUniquePayloadTypes("forceUniquePayloadTypes");
 		static const Json::StaticString k_peers("peers");
 		static const Json::StaticString k_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
@@ -77,7 +87,13 @@ namespace RTC
 		// Add `roomId`.
 		json[k_roomId] = (Json::UInt)this->roomId;
 
-		// Add `options`.
+		// Add `options.audioCodec`.
+		// json_options[k_audioCodec] = // TODO
+
+		// Add `options.videoCodec`.
+		// json_options[k_videoCodec] = // TODO
+
+		// Add `options.forceUniquePayloadTypes`.
 		json_options[k_forceUniquePayloadTypes] = this->options.forceUniquePayloadTypes;
 
 		json[k_options] = json_options;

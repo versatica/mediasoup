@@ -17,7 +17,7 @@ namespace RTC
 		static const Json::StaticString k_reducedSize("reducedSize");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("RtcpParameters is not an object");
+			MS_THROW_ERROR("RtcpPa`rameters` is not an object");
 
 		// `cname` is mandatory.
 		if (!data[k_cname].isString())

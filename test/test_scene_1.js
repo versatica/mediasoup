@@ -28,135 +28,152 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	let aliceAudioParameters =
 	{
 		kind   : 'audio',
-		muxId  : 'alicemuxid1',
+		muxId  : 'alice-audio',
 		codecs :
 		[
 			{
 				name        : 'opus',
 				payloadType : 101,
-				clockRate   : 90000
+				clockRate   : 90000,
 			}
 		],
 		encodings :
 		[
 			{
-				codecPayloadType : 101,
-				ssrc             : 100000001
+				ssrc : 100000011
 			}
 		],
 		rtcp :
 		{
 			cname       : 'ALICEAUDIO',
-			ssrc        : 50000001,
+			ssrc        : 51000011,
 			reducedSize : false
 		}
 	};
 	let aliceVideoParameters =
 	{
 		kind   : 'video',
-		muxId  : 'alicemuxid2',
+		muxId  : 'alice-video',
 		codecs :
 		[
 			{
 				name        : 'vp9',
-				payloadType : 112,
-				clockRate   : 90000
+				payloadType : 102,
+				clockRate   : 90000,
+				rtx :
+				{
+					payloadType : 96,
+					rtxTime     : 1000
+				},
+				fec :
+				[
+					{ mechanism: 'foo', payloadType: 97 }
+				]
 			}
 		],
 		encodings :
 		[
 			{
-				codecPayloadType : 112,
-				ssrc             : 100000002
+				ssrc    : 100000021,
+				rtxSsrc : 100000022,
+				fecSsrc : 100000023
 			}
 		],
 		rtcp :
 		{
 			cname       : 'ALICEVIDEO',
-			ssrc        : 50000002,
+			ssrc        : 51000021,
 			reducedSize : true
 		}
 	};
 	let bobVideoParameters =
 	{
 		kind   : 'video',
-		muxId  : 'bobmuxid2',
+		muxId  : 'bob-video',
 		codecs :
 		[
 			{
 				name        : 'vp9',
-				payloadType : 121,
-				clockRate   : 90000
-			},
-			{
-				name        : 'vp8',
-				payloadType : 122,
-				clockRate   : 90000
+				payloadType : 103,
+				clockRate   : 90000,
+				rtx :
+				{
+					payloadType : 97,
+					rtxTime     : 2000
+				}
 			}
 		],
 		encodings :
 		[
 			{
-				codecPayloadType : 121,
-				ssrc             : 200000002
+				ssrc    : 200000021,
+				rtxSsrc : 200000022
 			}
 		],
 		rtcp :
 		{
 			cname       : 'BOBVIDEO',
-			ssrc        : 50000003,
+			ssrc        : 52000021,
 			reducedSize : true
 		}
 	};
 	let carolAudioParameters =
 	{
 		kind   : 'audio',
-		muxId  : 'carolmuxid1',
+		muxId  : 'carol-audio',
 		codecs :
 		[
 			{
 				name        : 'opus',
-				payloadType : 131,
-				clockRate   : 90000
+				payloadType : 103,
+				clockRate   : 90000,
+				fec :
+				[
+					{ mechanism: 'bar', payloadType: 98 }
+				]
 			}
 		],
 		encodings :
 		[
 			{
-				codecPayloadType : 131,
-				ssrc             : 300000001
+				ssrc    : 300000011,
+				fecSsrc : 300000012
 			}
 		],
 		rtcp :
 		{
 			cname       : 'CAROLAUDIO',
-			ssrc        : 50000004,
-			reducedSize : false
+			ssrc        : 53000011,
+			reducedSize : true
 		}
 	};
 	let carolVideoParameters =
 	{
 		kind   : 'video',
-		muxId  : 'carolmuxid2',
+		muxId  : 'carol-video',
 		codecs :
 		[
 			{
 				name        : 'vp9',
-				payloadType : 132,
-				clockRate   : 90000
+				payloadType : 103,
+				rtx :
+				{
+					payloadType : 97,
+					rtxTime     : 1500
+				}
 			}
 		],
 		encodings :
 		[
 			{
-				codecPayloadType : 132,
-				ssrc             : 300000002
+				ssrc    : 300000021,
+				rtxSsrc : 300000022
 			}
 		],
 		rtcp :
 		{
 			cname       : 'CAROLVIDEO',
-			ssrc        : 50000005,
+			ssrc        : 53000021,
 			reducedSize : true
 		}
 	};

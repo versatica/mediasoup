@@ -43,13 +43,14 @@
         'src/RTC/Transport.cpp',
         'src/RTC/TransportTuple.cpp',
         'src/RTC/UdpSocket.cpp',
+
+        'src/RTC/RtpParameters/FecCodecParameters.cpp',
         'src/RTC/RtpParameters/RtcpFeedback.cpp',
         'src/RTC/RtpParameters/RtcpParameters.cpp',
         'src/RTC/RtpParameters/RtpCodecParameters.cpp',
         'src/RTC/RtpParameters/RtpEncodingParameters.cpp',
-        'src/RTC/RtpParameters/RtpFecParameters.cpp',
         'src/RTC/RtpParameters/RtpParameters.cpp',
-        'src/RTC/RtpParameters/RtpRtxParameters.cpp',
+        'src/RTC/RtpParameters/RtxCodecParameters.cpp',
         'src/Utils/Crypto.cpp',
         'src/Utils/File.cpp',
         'src/Utils/IP.cpp',
@@ -143,7 +144,6 @@
         [ 'OS in "freebsd"', {
           'ldflags': [ '-Wl,--export-dynamic' ]
         }],
-
 
         [ 'OS != "win"', {
           'cflags': [ '-std=c++14', '-Wall', '-Wextra', '-Wno-unused-parameter' ]

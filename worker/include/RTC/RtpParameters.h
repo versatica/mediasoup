@@ -9,6 +9,36 @@
 
 namespace RTC
 {
+	class RtxCodecParameters
+	{
+	public:
+		RtxCodecParameters() {};
+		RtxCodecParameters(Json::Value& data);
+		virtual ~RtxCodecParameters();
+
+		Json::Value toJson();
+
+	public:
+		uint8_t  payloadType = 0;
+		uint32_t rtxTime = 0;
+	};
+
+	class FecCodecParameters
+	{
+	public:
+		FecCodecParameters() {};
+		FecCodecParameters(Json::Value& data);
+		virtual ~FecCodecParameters();
+
+		Json::Value toJson();
+
+	public:
+		std::string mechanism;
+		uint8_t     payloadType = 0;
+		// TODO: optional parameters
+		// https://github.com/openpeer/ortc/issues/444#issuecomment-203560671
+	};
+
 	class RtcpFeedback
 	{
 	public:
@@ -58,41 +88,16 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		std::string               name;
-		uint8_t                   payloadType = 0;
-		uint32_t                  clockRate = 0;
-		uint32_t                  maxptime = 0;
-		uint32_t                  numChannels = 0;
-		std::vector<RtcpFeedback> rtcpFeedback;
+		std::string                     name;
+		uint8_t                         payloadType = 0;
+		uint32_t                        clockRate = 0;
+		uint32_t                        maxptime = 0;
+		uint32_t                        numChannels = 0;
+		bool                            hasRtx = false;
+		RtxCodecParameters              rtx;
+		std::vector<FecCodecParameters> fec;
+		std::vector<RtcpFeedback>       rtcpFeedback;
 		std::unordered_map<std::string, ParameterValue> parameters;
-	};
-
-	class RtpFecParameters
-	{
-	public:
-		RtpFecParameters() {};
-		RtpFecParameters(Json::Value& data);
-		virtual ~RtpFecParameters();
-
-		Json::Value toJson();
-
-	public:
-		std::string mechanism;
-		uint32_t    ssrc = 0;
-	};
-
-	class RtpRtxParameters
-	{
-	public:
-		RtpRtxParameters() {};
-		RtpRtxParameters(Json::Value& data);
-		virtual ~RtpRtxParameters();
-
-		Json::Value toJson();
-
-	public:
-		uint8_t  payloadType = 0;
-		uint32_t ssrc = 0;
 	};
 
 	class RtpEncodingParameters
@@ -104,12 +109,10 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		uint32_t         ssrc = 0;
-		uint8_t          codecPayloadType = 0;
-		bool             hasFec = false;
-		RtpFecParameters fec;
-		bool             hasRtx = false;
-		RtpRtxParameters rtx;
+		uint8_t  codecPayloadType = 0;
+		uint32_t ssrc = 0;
+		uint32_t rtxSsrc = 0;
+		uint32_t fecSsrc = 0;
 	};
 
 	class RtcpParameters

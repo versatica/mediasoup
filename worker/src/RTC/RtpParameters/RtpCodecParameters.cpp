@@ -17,11 +17,13 @@ namespace RTC
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_numChannels("numChannels");
+		static const Json::StaticString k_rtx("rtx");
+		static const Json::StaticString k_fec("fec");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("RtpCodecParameters is not an object");
+			MS_THROW_ERROR("`RtpCodecParameters` is not an object");
 
 		// `name` is mandatory.
 		if (!data[k_name].isString())
@@ -48,6 +50,27 @@ namespace RTC
 		// `numChannels` is optional.
 		if (data[k_numChannels].isUInt())
 			this->numChannels = (uint32_t)data[k_numChannels].asUInt();
+
+		// `rtx` is optional.
+		if (data[k_rtx].isObject())
+		{
+			this->rtx = RtxCodecParameters(data[k_rtx]);
+			this->hasRtx = true;
+		}
+
+		// `fec` is optional.
+		if (data[k_fec].isArray())
+		{
+			auto& json_fec = data[k_fec];
+
+			for (Json::UInt i = 0; i < json_fec.size(); i++)
+			{
+				FecCodecParameters fec(json_fec[i]);
+
+				// Append to the fec vector.
+				this->fec.push_back(fec);
+			}
+		}
 
 		// `rtcpFeedback` is optional.
 		if (data[k_rtcpFeedback].isArray())
@@ -124,6 +147,8 @@ namespace RTC
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_numChannels("numChannels");
+		static const Json::StaticString k_rtx("rtx");
+		static const Json::StaticString k_fec("fec");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
 
@@ -146,6 +171,22 @@ namespace RTC
 		// Add `numChannels`.
 		if (this->numChannels)
 			json[k_numChannels] = (Json::UInt)this->numChannels;
+
+		// Add `rtx`
+		if (this->hasRtx)
+			json[k_rtx] = this->rtx.toJson();
+
+		// Add `fec` (if any).
+		if (!this->fec.empty())
+		{
+			json[k_fec] = Json::arrayValue;
+			for (auto it = this->fec.begin(); it != this->fec.end(); ++it)
+			{
+				FecCodecParameters* fec = std::addressof(*it);
+
+				json[k_fec].append(fec->toJson());
+			}
+		}
 
 		// Add `rtcpFeedback` (if any).
 		if (!this->rtcpFeedback.empty())
