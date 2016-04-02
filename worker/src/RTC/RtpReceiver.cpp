@@ -161,9 +161,14 @@ namespace RTC
 		}
 	}
 
-	void RtpReceiver::GotRtpPacket(RTC::RtpPacket* packet)
+	void RtpReceiver::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
+
+		// TODO: Check if stopped, etc (not yet done)
+
+		// Notify the listener.
+		this->listener->onRtpPacket(this, packet);
 
 		if (this->listenForRtp)
 		{

@@ -36,7 +36,6 @@ namespace RTC
 		{
 		public:
 			virtual void onTransportClosed(RTC::Transport* transport) = 0;
-			virtual void onRtpPacket(RTC::Transport* transport, RTC::RtpPacket* packet, RTC::RtpReceiver* rtpReceiver) = 0;
 		};
 
 	public:

@@ -420,7 +420,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpPacket(RTC::Peer* peer, RTC::RtpPacket* packet, RTC::RtpReceiver* rtpReceiver)
+	void Room::onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 

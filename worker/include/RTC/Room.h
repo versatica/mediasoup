@@ -49,7 +49,7 @@ namespace RTC
 		virtual void onPeerRtpReceiverParametersDone(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
 		virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
 		virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
-		virtual void onPeerRtpPacket(RTC::Peer* peer, RTC::RtpPacket* packet, RTC::RtpReceiver* rtpReceiver) override;
+		virtual void onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
 
 	public:
 		// Passed by argument.

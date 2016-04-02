@@ -829,11 +829,8 @@ namespace RTC
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
 
-		// Notify the listener.
-		this->listener->onRtpPacket(this, packet, rtpReceiver);
-
-		// Notify the RtpReceiver (so it can notify the RTP packet to the app).
-		rtpReceiver->GotRtpPacket(packet);
+		// Pass the RTP packet to the corresponding RtpReceiver.
+		rtpReceiver->ReceiveRtpPacket(packet);
 
 		delete packet;
 	}

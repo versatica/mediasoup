@@ -24,6 +24,7 @@ namespace RTC
 		{
 		public:
 			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) = 0;
+			virtual void onRtpPacket(RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
 			virtual void onRtpReceiverClosed(RtpReceiver* rtpReceiver) = 0;
 		};
 
@@ -38,7 +39,7 @@ namespace RTC
 		RTC::Transport* GetTransport();
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetRtpParameters();
-		void GotRtpPacket(RTC::RtpPacket* packet);
+		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 
 	public:
 		// Passed by argument.

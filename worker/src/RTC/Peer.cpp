@@ -518,14 +518,6 @@ namespace RTC
 		this->transports.erase(transport->transportId);
 	}
 
-	void Peer::onRtpPacket(RTC::Transport* transport, RTC::RtpPacket* packet, RTC::RtpReceiver* rtpReceiver)
-	{
-		MS_TRACE();
-
-		// Notify the listener.
-		this->listener->onPeerRtpPacket(this, packet, rtpReceiver);
-	}
-
 	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
@@ -543,6 +535,14 @@ namespace RTC
 
 		// Notify the listener (Room).
 		this->listener->onPeerRtpReceiverParametersDone(this, rtpReceiver);
+	}
+
+	void Peer::onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// Notify the listener.
+		this->listener->onPeerRtpPacket(this, rtpReceiver, packet);
 	}
 
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
