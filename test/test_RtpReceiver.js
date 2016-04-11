@@ -78,7 +78,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					return Promise.all(
 						[
 							transport.dump()
-								.then((data) =>
+								.then(() =>
 								{
 									t.pass('transport.dump() succeeded');
 									// TODO: Enable when done

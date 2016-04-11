@@ -34,7 +34,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'opus',
 				payloadType : 101,
-				clockRate   : 90000,
+				clockRate   : 90000
 			}
 		],
 		encodings :

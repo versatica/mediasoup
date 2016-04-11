@@ -13,7 +13,9 @@
     "url": "https://github.com/ibc/mediasoup/issues"
   },
   "homepage": "https://github.com/ibc/mediasoup/",
-  "os": [ "!win32" ],
+  "os": [
+    "!win32"
+  ],
   "engines": {
     "node": ">=4.0.0"
   },
@@ -33,7 +35,7 @@
     "gulp-shell": "^0.5.2",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.1.0",
-    "tap": "^5.6.0"
+    "tap": "^5.7.1"
   },
   "scripts": {
     "test": "gulp test",
