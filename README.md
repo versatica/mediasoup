@@ -1,21 +1,19 @@
-# mediasoup
-
-Powerful WebRTC SFU (*Selective Forwarding Unit*) for Node.
-
-
-## Status
-
-Not entirely ready yet (but will be soon). Check the [milestones](https://github.com/ibc/mediasoup/milestones).
+![mediasoup][mediasoup_banner]
 
 
 ## Features
 
 * Not a boring standalone server, but a Node library exposing a pure JavaScript API.
-* Modern design: Designed with [ORTC](http://ortc.org) in mind, but also valid for [WebRTC](http://www.webrtc.org).
 * "Selective Forwarding Unit" architecture as defined in [draft-ietf-avtcore-rtp-topologies-update](https://tools.ietf.org/html/draft-ietf-avtcore-rtp-topologies-update).
+* Modern design: Designed with [ORTC](http://ortc.org) in mind, but also valid for [WebRTC](http://www.webrtc.org).
 * ICE/DTLS/RTP/RTCP/DataChannel over UDP and TCP, IPv4 and IPv6.
 * Signaling agnostic: **mediasoup** does not deal with SIP or other signaling protocols. In the other hand, it can deal with *any* signaling protocol.
 * Extremely powerful: Media handler subprocess (*mediasoup-worker*) is coded in C++ on top of the awesome [libuv](https://github.com/libuv/libuv) asychronous I/O library. **mediasoup** takes full advantage of your CPU capabilities by launching as many workers as needed.
+
+
+## Status
+
+Not entirely ready yet (will be soon). Check the project [milestone](https://github.com/ibc/mediasoup/milestones).
 
 
 ## Installation
@@ -321,3 +319,6 @@ Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
 ## License
 
 [ISC](./LICENSE)
+
+
+[mediasoup_banner]: https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
