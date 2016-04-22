@@ -3,7 +3,7 @@
 
 ## Features
 
-* Not a boring standalone server, but a Node library exposing a pure JavaScript API.
+* Not a boring standalone server, but a Node.js library exposing a pure JavaScript API.
 * "Selective Forwarding Unit" architecture as defined in [draft-ietf-avtcore-rtp-topologies-update](https://tools.ietf.org/html/draft-ietf-avtcore-rtp-topologies-update).
 * Modern design: Designed with [ORTC](http://ortc.org) in mind, but also valid for [WebRTC](http://www.webrtc.org).
 * ICE/DTLS/RTP/RTCP/DataChannel over UDP and TCP, IPv4 and IPv6.
