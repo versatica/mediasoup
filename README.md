@@ -20,13 +20,13 @@
 * ICE / DTLS / RTP / RTCP / DataChannel over UDP and TCP
 * Extremely powerful (media handler subprocess coded in C++ on top of [libuv](http://libuv.org))
 * Can handle RTP packets in JavaScript land
-* "ICE Lite" implementation (**mediasoup** must run in a publicly reachable host)
 
 
 ## Requirements
 
 * Node.js >= `v4.0.0`
 * POSIX based operating system (Windows not yet supported)
+* Must run in a publicly reachable host (ICE "Lite" implementation)
 
 
 ## Installation
