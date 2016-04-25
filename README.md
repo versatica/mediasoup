@@ -1,7 +1,11 @@
-![mediasoup][mediasoup_banner]
-
+[![][mediasoup-banner]][mediasoup-website]
 
 **Status:** Coming soon (check the project [milestones](https://github.com/ibc/mediasoup/milestones)).
+
+
+## Website and Documentation
+
+* http://mediasoup.org
 
 
 ## Design goals
@@ -46,4 +50,5 @@ Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
 [ISC](./LICENSE)
 
 
-[mediasoup_banner]: https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
+[mediasoup-website]: http://mediasoup.org
+[mediasoup-banner]: https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
