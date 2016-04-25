@@ -5,7 +5,7 @@
 
 ## Website and Documentation
 
-* http://mediasoup.org
+* [mediasoup.org][mediasoup-website]
 
 
 ## Design goals
