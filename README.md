@@ -3,7 +3,7 @@
 **Status:** Coming soon (check the project [milestones](https://github.com/ibc/mediasoup/milestones)).
 
 
-## Website and Documentation
+## Website and documentation
 
 * [mediasoup.org][mediasoup-website]
 
