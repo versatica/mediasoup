@@ -1,0 +1,15 @@
+language: node_js
+
+node_js:
+  - 4
+  - 5
+  - 6
+
+install: npm install
+
+notifications:
+  email:
+    recipients:
+      - ibc@aliax.net
+    on_success: change
+    on_failure: always
