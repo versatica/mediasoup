@@ -18,12 +18,12 @@
       'conditions':
       [
         [ 'OS != "win"', {
-          'cflags': [ '-std=c++14', '-Wall', '-Wextra', '-Wno-unused-parameter' ]
+          'cflags': [ '-std=c++11', '-Wall', '-Wextra', '-Wno-unused-parameter' ]
         }],
         [ 'OS == "mac"', {
           'xcode_settings':
           {
-            'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++14' ],
+            'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++11' ],
             'WARNING_CFLAGS': [ '-Wall', '-Wextra', '-Wno-unused-parameter' ],
           }
         }]
