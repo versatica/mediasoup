@@ -8,12 +8,19 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId) :
+	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, std::string& kind) :
 		rtpReceiverId(rtpReceiverId),
 		listener(listener),
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		if (kind == "audio")
+			this->kind = RTC::RtpKind::AUDIO;
+		else if (kind == "video")
+			this->kind = RTC::RtpKind::VIDEO;
+		else
+			MS_THROW_ERROR("unknown `kind`");
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -48,12 +55,25 @@ namespace RTC
 
 		static Json::Value null_data(Json::nullValue);
 		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
+		static const Json::StaticString k_kind("kind");
+		static const Json::StaticString v_audio("audio");
+		static const Json::StaticString v_video("video");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
 
 		Json::Value json(Json::objectValue);
 
 		json[k_rtpReceiverId] = (Json::UInt)this->rtpReceiverId;
+
+		switch (this->kind)
+		{
+			case RTC::RtpKind::AUDIO:
+				json[k_kind] = v_audio;
+				break;
+			case RTC::RtpKind::VIDEO:
+				json[k_kind] = v_video;
+				break;
+		}
 
 		if (this->rtpParameters)
 			json[k_rtpParameters] = this->rtpParameters->toJson();

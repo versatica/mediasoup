@@ -64,7 +64,7 @@ tap.test('peer.RtpReceiver() with valid `transport` must succeed', { timeout: 10
 		{
 			t.pass('peer.createTransport() succeeded');
 
-			let rtpReceiver = peer.RtpReceiver(transport);
+			let rtpReceiver = peer.RtpReceiver('audio', transport);
 
 			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
 
@@ -106,10 +106,36 @@ tap.test('peer.RtpReceiver() with a closed `transport` must fail', { timeout: 10
 
 			t.throws(() =>
 			{
-				peer.RtpReceiver(transport);
+				peer.RtpReceiver('audio', transport);
 			},
 			mediasoup.errors.InvalidStateError,
 			'peer.RtpReceiver() must throw InvalidStateError');
+
+			t.end();
+		})
+		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
+});
+
+tap.test('peer.RtpReceiver() with invalid `kind` must fail', { timeout: 1000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	let room = server.Room();
+	let peer = room.Peer('alice');
+
+	peer.createTransport({ tcp: false })
+		.then((transport) =>
+		{
+			t.pass('peer.createTransport() succeeded');
+
+			t.throws(() =>
+			{
+				peer.RtpReceiver('chicken', transport);
+			},
+			TypeError,
+			'peer.RtpReceiver() must throw TypeError');
 
 			t.end();
 		})

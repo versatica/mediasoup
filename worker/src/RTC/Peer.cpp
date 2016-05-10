@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::Peer"
 
 #include "RTC/Peer.h"
+#include "RTC/RtpKind.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -188,6 +189,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::peer_createRtpReceiver:
 			{
+				static const Json::StaticString k_kind("kind");
+
 				RTC::RtpReceiver* rtpReceiver;
 				RTC::Transport* transport = nullptr;
 				uint32_t rtpReceiverId;
@@ -228,8 +231,23 @@ namespace RTC
 					return;
 				}
 
+				// `kind` is mandatory.
+
+				if (!request->data[k_kind].isString())
+					MS_THROW_ERROR("missing `kind`");
+
+				std::string kind = request->data[k_kind].asString();
+
 				// Create a RtpReceiver instance.
-				rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId);
+				try
+				{
+					rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId, kind);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
 
 				this->rtpReceivers[rtpReceiverId] = rtpReceiver;
 
@@ -392,6 +410,9 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_rtpSenderId("rtpSenderId");
+		static const Json::StaticString k_kind("kind");
+		static const Json::StaticString v_audio("audio");
+		static const Json::StaticString v_video("video");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_peerName("peerName");
 
@@ -408,6 +429,15 @@ namespace RTC
 		Json::Value event_data(Json::objectValue);
 
 		event_data[k_rtpSenderId] = (Json::UInt)rtpSender->rtpSenderId;
+		switch (rtpSender->kind)
+		{
+			case RTC::RtpKind::AUDIO:
+				event_data[k_kind] = v_audio;
+				break;
+			case RTC::RtpKind::VIDEO:
+				event_data[k_kind] = v_video;
+				break;
+		}
 		event_data[k_rtpParameters] = rtpSender->GetRtpParameters()->toJson();
 		event_data[k_peerName] = peerName;
 

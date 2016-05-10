@@ -216,7 +216,7 @@ namespace RTC
 							continue;
 
 						uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-						RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId);
+						RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
 						// Store into the map.
 						this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
@@ -352,7 +352,7 @@ namespace RTC
 
 				// Create a RtpSender for the other Peer.
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender = new RTC::RtpSender(sender_peer, this->notifier, rtpSenderId);
+				RTC::RtpSender* rtpSender = new RTC::RtpSender(sender_peer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
 				// Store into the map.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);

@@ -82,6 +82,7 @@
         'include/RTC/Peer.h',
         'include/RTC/Room.h',
         'include/RTC/RtcpPacket.h',
+        'include/RTC/RtpKind.h',
         'include/RTC/RtpPacket.h',
         'include/RTC/RtpParameters.h',
         'include/RTC/RtpReceiver.h',

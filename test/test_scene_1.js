@@ -27,7 +27,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 
 	let aliceAudioParameters =
 	{
-		kind   : 'audio',
 		muxId  : 'alice-audio',
 		codecs :
 		[
@@ -52,7 +51,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let aliceVideoParameters =
 	{
-		kind   : 'video',
 		muxId  : 'alice-video',
 		codecs :
 		[
@@ -88,7 +86,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let bobVideoParameters =
 	{
-		kind   : 'video',
 		muxId  : 'bob-video',
 		codecs :
 		[
@@ -119,7 +116,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let carolAudioParameters =
 	{
-		kind   : 'audio',
 		muxId  : 'carol-audio',
 		codecs :
 		[
@@ -149,7 +145,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 	};
 	let carolVideoParameters =
 	{
-		kind   : 'video',
 		muxId  : 'carol-video',
 		codecs :
 		[
@@ -180,7 +175,11 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 
 	Promise.all(
 		[
-			createTransportAndRtpReceivers(t, alice, [ aliceAudioParameters, aliceVideoParameters ])
+			createTransportAndRtpReceivers(t, alice,
+				[
+					{ kind: 'audio', rtpParameters: aliceAudioParameters },
+					{ kind: 'video', rtpParameters: aliceVideoParameters }
+				])
 				// Once transport is created let's check the already existing RtpSenders
 				// and listen for 'newrtpsender' if all the expected ones are not yet
 				// present
@@ -263,7 +262,10 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 					return Promise.all([ promise1, promise2 ]);
 				}),
 
-			createTransportAndRtpReceivers(t, bob, [ bobVideoParameters ])
+			createTransportAndRtpReceivers(t, bob,
+				[
+					{ kind: 'video', rtpParameters: bobVideoParameters }
+				])
 				.then(() =>
 				{
 					const EXPECTED_RTPSENDERS = 2;
@@ -481,7 +483,11 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		{
 			carol = room.Peer('carol');
 
-			return createTransportAndRtpReceivers(t, carol, [ carolAudioParameters, carolVideoParameters ]);
+			return createTransportAndRtpReceivers(t, carol,
+				[
+					{ kind: 'audio', rtpParameters: carolAudioParameters },
+					{ kind: 'video', rtpParameters: carolVideoParameters }
+				]);
 		})
 		.then(() =>
 		{
@@ -531,9 +537,11 @@ function createTransportAndRtpReceivers(t, peer, rtpParametersList)
 
 			let promises = [];
 
-			for (let rtpParameters of rtpParametersList)
+			for (let obj of rtpParametersList)
 			{
-				let promise = createRtpReceiver(t, peer, transport, rtpParameters);
+				let kind = obj.kind;
+				let rtpParameters = obj.rtpParameters;
+				let promise = createRtpReceiver(t, peer, kind, transport, rtpParameters);
 
 				promises.push(promise);
 			}
@@ -543,9 +551,9 @@ function createTransportAndRtpReceivers(t, peer, rtpParametersList)
 		.catch((error) => t.fail(`peer.createTransport() failed for ${peer.name}: ${error}`));
 }
 
-function createRtpReceiver(t, peer, transport, rtpParameters)
+function createRtpReceiver(t, peer, kind, transport, rtpParameters)
 {
-	let rtpReceiver = peer.RtpReceiver(transport);
+	let rtpReceiver = peer.RtpReceiver(kind, transport);
 
 	return rtpReceiver.receive(rtpParameters)
 		.then(() =>

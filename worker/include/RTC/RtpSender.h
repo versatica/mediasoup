@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_SENDER_H
 
 #include "common.h"
+#include "RTC/RtpKind.h"
 #include "RTC/Transport.h"
 #include "RTC/RtpParameters.h"
 #include "RTC/RtpPacket.h"
@@ -25,7 +26,7 @@ namespace RTC
 		};
 
 	public:
-		RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId);
+		RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::RtpKind kind);
 		virtual ~RtpSender();
 
 		void Close();
@@ -40,6 +41,7 @@ namespace RTC
 	public:
 		// Passed by argument.
 		uint32_t rtpSenderId;
+		RTC::RtpKind kind;
 
 	private:
 		// Passed by argument.

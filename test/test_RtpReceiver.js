@@ -16,10 +16,9 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
 		{
-			let rtpReceiver = peer.RtpReceiver(transport);
+			let rtpReceiver = peer.RtpReceiver('video', transport);
 			let rtpParameters =
 			{
-				kind   : 'video',
 				muxId  : 'abcd',
 				codecs :
 				[
@@ -114,7 +113,7 @@ tap.test('rtpReceiver.receive() with no `rtpParameters` must fail', { timeout: 1
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
 		{
-			let rtpReceiver = peer.RtpReceiver(transport);
+			let rtpReceiver = peer.RtpReceiver('audio', transport);
 
 			rtpReceiver.receive()
 				.then(() => t.fail('rtpReceiver.receive() succeeded'))
@@ -140,7 +139,7 @@ tap.test('rtpReceiver.close() must succeed', { timeout: 1000 }, (t) =>
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
 		{
-			let rtpReceiver = peer.RtpReceiver(transport);
+			let rtpReceiver = peer.RtpReceiver('video', transport);
 
 			rtpReceiver.on('close', (error) =>
 			{
