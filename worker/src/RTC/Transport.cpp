@@ -989,12 +989,13 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 
-	void Transport::onDtlsConnected(RTC::DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len)
+	void Transport::onDtlsConnected(RTC::DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert)
 	{
 		MS_TRACE();
 
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_connected("connected");
+		static const Json::StaticString k_dtlsRemoteCert("dtlsRemoteCert");
 
 		Json::Value event_data(Json::objectValue);
 
@@ -1037,6 +1038,7 @@ namespace RTC
 
 		// Notify.
 		event_data[k_dtlsState] = v_connected;
+		event_data[k_dtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 

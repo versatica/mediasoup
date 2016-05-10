@@ -73,7 +73,7 @@ namespace RTC
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDtlsConnected(DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) = 0;
+			virtual void onDtlsConnected(DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Close() during this callback.
@@ -159,6 +159,7 @@ namespace RTC
 		Fingerprint remoteFingerprint = { FingerprintAlgorithm::NONE, "" };
 		bool handshakeDone = false;
 		bool handshakeDoneNow = false;
+		std::string remoteCert;
 	};
 
 	/* Inline static methods. */

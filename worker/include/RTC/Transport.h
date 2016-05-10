@@ -95,7 +95,7 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
 		virtual void onDtlsConnecting(DtlsTransport* dtlsTransport) override;
-		virtual void onDtlsConnected(DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len) override;
+		virtual void onDtlsConnected(DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert) override;
 		virtual void onDtlsFailed(DtlsTransport* dtlsTransport) override;
 		virtual void onDtlsClosed(DtlsTransport* dtlsTransport) override;
 		virtual void onOutgoingDtlsData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;

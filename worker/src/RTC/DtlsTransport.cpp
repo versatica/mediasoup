@@ -999,11 +999,14 @@ namespace RTC
 				MS_ABORT("unknown algorithm");
 		}
 
+		// Compare the remote fingerprint with the value given via signaling.
+
 		ret = X509_digest(certificate, hash_function, binary_fingerprint, &size);
-		X509_free(certificate);
 		if (ret == 0)
 		{
 			MS_ERROR("X509_digest() failed");
+
+			X509_free(certificate);
 
 			return false;
 		}
@@ -1019,10 +1022,47 @@ namespace RTC
 		{
 			MS_WARN("fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.value.c_str());
 
+			X509_free(certificate);
+
 			return false;
 		}
 
 		MS_DEBUG("valid remote fingerprint");
+
+		// Get the remote certificate in PEM format.
+
+		BIO* bio = BIO_new(BIO_s_mem());
+		// Ensure the underlying BUF_MEM structure is also freed.
+		BIO_set_close(bio, BIO_CLOSE);
+
+		ret = PEM_write_bio_X509(bio, certificate);
+		if (ret != 1)
+		{
+			LOG_OPENSSL_ERROR("PEM_write_bio_X509() failed");
+
+			X509_free(certificate);
+			BIO_free(bio);
+
+			return false;
+		}
+
+		BUF_MEM* mem;
+
+		BIO_get_mem_ptr(bio, &mem);
+		if (!mem || !mem->data || !mem->length)
+		{
+			LOG_OPENSSL_ERROR("BIO_get_mem_ptr() failed");
+
+			X509_free(certificate);
+			BIO_free(bio);
+
+			return false;
+		}
+
+		this->remoteCert = std::string(mem->data, mem->length);
+
+		X509_free(certificate);
+		BIO_free(bio);
 
 		return true;
 	}
@@ -1072,7 +1112,7 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTED;
-		this->listener->onDtlsConnected(this, srtp_profile, srtp_local_master_key, MS_SRTP_MASTER_LENGTH, srtp_remote_master_key, MS_SRTP_MASTER_LENGTH);
+		this->listener->onDtlsConnected(this, srtp_profile, srtp_local_master_key, MS_SRTP_MASTER_LENGTH, srtp_remote_master_key, MS_SRTP_MASTER_LENGTH, this->remoteCert);
 	}
 
 	inline
