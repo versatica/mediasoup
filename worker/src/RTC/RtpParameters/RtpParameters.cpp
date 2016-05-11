@@ -15,13 +15,12 @@ namespace RTC
 		static const Json::StaticString k_muxId("muxId");
 		static const Json::StaticString k_codecs("codecs");
 		static const Json::StaticString k_encodings("encodings");
+		static const Json::StaticString k_headerExtensions("headerExtensions");
 		static const Json::StaticString k_rtcp("rtcp");
 
 		// `muxId` is optional.
 		if (data[k_muxId].isString())
-		{
 			this->muxId = data[k_muxId].asString();
-		}
 
 		// `codecs` is mandatory.
 		if (data[k_codecs].isArray())
@@ -38,35 +37,42 @@ namespace RTC
 		}
 		else
 		{
-			MS_THROW_ERROR("missing `codecs`");
+			MS_THROW_ERROR("missing `RtpCodecParameters.codecs`");
 		}
 
-		// `encodings` is mandatory.
+		// `encodings` is optional.
 		if (data[k_encodings].isArray())
 		{
-			auto& json_encodings = data[k_encodings];
+			auto& json_array = data[k_encodings];
 
-			for (Json::UInt i = 0; i < json_encodings.size(); i++)
+			for (Json::UInt i = 0; i < json_array.size(); i++)
 			{
-				RtpEncodingParameters encoding(json_encodings[i]);
+				RtpEncodingParameters encoding(json_array[i]);
 
 				// Append to the encodings vector.
 				this->encodings.push_back(encoding);
 			}
 		}
-		else
+
+		// `headerExtensions` is optional.
+		if (data[k_headerExtensions].isArray())
 		{
-			MS_THROW_ERROR("missing `encodings`");
+			auto& json_array = data[k_headerExtensions];
+
+			for (Json::UInt i = 0; i < json_array.size(); i++)
+			{
+				RtpHeaderExtensionParameters headerExtension(json_array[i]);
+
+				// Append to the headerExtensions vector.
+				this->headerExtensions.push_back(headerExtension);
+			}
 		}
 
-		// `rtcp` is mandatory.
+		// `rtcp` is optional.
 		if (data[k_rtcp].isObject())
 		{
 			this->rtcp = RtcpParameters(data[k_rtcp]);
-		}
-		else
-		{
-			MS_THROW_ERROR("missing `rtcp`");
+			this->hasRtcp = true;
 		}
 	}
 
@@ -92,33 +98,51 @@ namespace RTC
 		static const Json::StaticString k_muxId("muxId");
 		static const Json::StaticString k_codecs("codecs");
 		static const Json::StaticString k_encodings("encodings");
+		static const Json::StaticString k_headerExtensions("headerExtensions");
 		static const Json::StaticString k_rtcp("rtcp");
 
 		Json::Value json(Json::objectValue);
 
 		// Add `muxId`.
-		json[k_muxId] = this->muxId;
+		if (!this->muxId.empty())
+			json[k_muxId] = this->muxId;
 
 		// Add `codecs`.
-		json[k_codecs] = Json::arrayValue;
-		for (auto it = this->codecs.begin(); it != this->codecs.end(); ++it)
+		if (!this->codecs.empty())
 		{
-			RtpCodecParameters* codec = std::addressof(*it);
+			json[k_codecs] = Json::arrayValue;
 
-			json[k_codecs].append(codec->toJson());
+			for (auto& entry : this->codecs)
+			{
+				json[k_codecs].append(entry.toJson());
+			}
 		}
 
 		// Add `encodings`.
-		json[k_encodings] = Json::arrayValue;
-		for (auto it = this->encodings.begin(); it != this->encodings.end(); ++it)
+		if (!this->encodings.empty())
 		{
-			RtpEncodingParameters* encoding = std::addressof(*it);
+			json[k_encodings] = Json::arrayValue;
 
-			json[k_encodings].append(encoding->toJson());
+			for (auto& entry : this->encodings)
+			{
+				json[k_encodings].append(entry.toJson());
+			}
+		}
+
+		// Add `headerExtensions`.
+		if (!this->headerExtensions.empty())
+		{
+			json[k_headerExtensions] = Json::arrayValue;
+
+			for (auto& entry : this->headerExtensions)
+			{
+				json[k_headerExtensions].append(entry.toJson());
+			}
 		}
 
 		// Add `rtcp`.
-		json[k_rtcp] = this->rtcp.toJson();
+		if (this->hasRtcp)
+			json[k_rtcp] = this->rtcp.toJson();
 
 		return json;
 	}

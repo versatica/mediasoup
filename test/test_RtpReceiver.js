@@ -23,18 +23,11 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				codecs :
 				[
 					{
-						name        : 'H264',
-						payloadType : 100,
-						numChannels : 2,
-						rtx :
-						{
-							payloadType : 96,
-							rtxTime     : 1000
-						},
-						fec :
-						[
-							{ mechanism: 'foo', payloadType: 97 }
-						],
+						name         : 'H264',
+						payloadType  : 100,
+						maxptime     : 80,
+						ptime        : 60,
+						numChannels  : 2,
 						rtcpFeedback :
 						[
 							{ type: 'ccm',         parameter: 'fir' },
@@ -42,7 +35,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 							{ type: 'nack',        parameter: 'pli' },
 							{ type: 'google-remb', parameter: '' }
 						],
-						parameters  :
+						parameters :
 						{
 							profileLevelId    : 2,
 							packetizationMode : 1,
@@ -54,9 +47,45 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				encodings :
 				[
 					{
-						ssrc    : 100000021,
-						rtxSsrc : 100000022,
-						fecSsrc : 100000023
+						ssrc             : 100000,
+						codecPayloadType : 100,
+						fec :
+						{
+							ssrc      : 200000,
+							mechanism : 'foo'
+						},
+						rtx :
+						{
+							ssrc : 300000
+						},
+						resolutionScale  : 2.2,
+						framerateScale   : 1.5,
+						maxFramerate     : 30,
+						active           : false,
+						encodingId       : 'ENC3',
+						dependencyEncodingIds : [ 'ENC1', 'ENC2' ]
+					}
+				],
+				headerExtensions :
+				[
+					{
+						uri     : 'urn:ietf:params:rtp-hdrext:foo',
+						id      : 1234,
+						encrypt : false
+					},
+					{
+						uri     : 'urn:ietf:params:rtp-hdrext:bar',
+						id      : 5678,
+						encrypt : true
+					},
+					{
+						uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+						id         : 6,
+						encrypt    : false,
+						parameters :
+						{
+							vad : 'on'
+						}
 					}
 				],
 				rtcp :

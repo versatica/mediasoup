@@ -9,35 +9,33 @@
 
 namespace RTC
 {
-	class RtxCodecParameters
+	class CustomParameterValue
 	{
-	public:
-		RtxCodecParameters() {};
-		RtxCodecParameters(Json::Value& data);
-		virtual ~RtxCodecParameters();
+		public:
+			enum class Type
+			{
+				BOOLEAN = 1,
+				STRING,
+				INTEGER
+			};
 
-		Json::Value toJson();
+		public:
+			CustomParameterValue() {};
+			CustomParameterValue(bool booleanValue);
+			CustomParameterValue(uint32_t integerValue);
+			CustomParameterValue(std::string& stringValue);
+			virtual ~CustomParameterValue();
 
-	public:
-		uint8_t  payloadType = 0;
-		uint32_t rtxTime = 0;
+			Json::Value toJson();
+
+		public:
+			Type        type;
+			bool        booleanValue = false;
+			uint32_t    integerValue = 0;
+			std::string stringValue = "";
 	};
 
-	class FecCodecParameters
-	{
-	public:
-		FecCodecParameters() {};
-		FecCodecParameters(Json::Value& data);
-		virtual ~FecCodecParameters();
-
-		Json::Value toJson();
-
-	public:
-		std::string mechanism;
-		uint8_t     payloadType = 0;
-		// TODO: optional parameters
-		// https://github.com/openpeer/ortc/issues/444#issuecomment-203560671
-	};
+	typedef std::unordered_map<std::string, CustomParameterValue> CustomParameters;
 
 	class RtcpFeedback
 	{
@@ -55,49 +53,47 @@ namespace RTC
 	class RtpCodecParameters
 	{
 	public:
-		class ParameterValue
-		{
-			public:
-				enum class Type
-				{
-					BOOLEAN = 1,
-					STRING,
-					INTEGER
-				};
-
-			public:
-				ParameterValue() {};
-				ParameterValue(bool booleanValue);
-				ParameterValue(uint32_t integerValue);
-				ParameterValue(std::string& stringValue);
-				virtual ~ParameterValue();
-
-				Json::Value toJson();
-
-			public:
-				Type        type;
-				bool        booleanValue = false;
-				uint32_t    integerValue = 0;
-				std::string stringValue = "";
-		};
-
-	public:
 		RtpCodecParameters(Json::Value& data);
 		virtual ~RtpCodecParameters();
 
 		Json::Value toJson();
 
 	public:
-		std::string                     name;
-		uint8_t                         payloadType = 0;
-		uint32_t                        clockRate = 0;
-		uint32_t                        maxptime = 0;
-		uint32_t                        numChannels = 0;
-		bool                            hasRtx = false;
-		RtxCodecParameters              rtx;
-		std::vector<FecCodecParameters> fec;
-		std::vector<RtcpFeedback>       rtcpFeedback;
-		std::unordered_map<std::string, ParameterValue> parameters;
+		std::string               name;
+		uint8_t                   payloadType = 0;
+		uint32_t                  clockRate = 0;
+		uint32_t                  maxptime = 0;
+		uint32_t                  ptime = 0;
+		uint32_t                  numChannels = 0;
+		std::vector<RtcpFeedback> rtcpFeedback;
+		CustomParameters          parameters;
+	};
+
+	class RtpFecParameters
+	{
+	public:
+		RtpFecParameters() {};
+		RtpFecParameters(Json::Value& data);
+		virtual ~RtpFecParameters();
+
+		Json::Value toJson();
+
+	public:
+		uint32_t    ssrc = 0;
+		std::string mechanism;
+	};
+
+	class RtpRtxParameters
+	{
+	public:
+		RtpRtxParameters() {};
+		RtpRtxParameters(Json::Value& data);
+		virtual ~RtpRtxParameters();
+
+		Json::Value toJson();
+
+	public:
+		uint32_t ssrc = 0;
 	};
 
 	class RtpEncodingParameters
@@ -109,10 +105,18 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		uint8_t  codecPayloadType = 0;
-		uint32_t ssrc = 0;
-		uint32_t rtxSsrc = 0;
-		uint32_t fecSsrc = 0;
+		uint32_t                 ssrc = 0;
+		uint8_t                  codecPayloadType = 0;
+		RtpFecParameters         fec;
+		bool                     hasFec = false;
+		RtpRtxParameters         rtx;
+		bool                     hasRtx = false;
+		double                   resolutionScale = 1.0;
+		double                   framerateScale = 1.0;
+		uint32_t                 maxFramerate = 0;
+		bool                     active = true;
+		std::string              encodingId;
+		std::vector<std::string> dependencyEncodingIds;
 	};
 
 	class RtcpParameters
@@ -130,6 +134,22 @@ namespace RTC
 		bool        reducedSize = false;
 	};
 
+	class RtpHeaderExtensionParameters
+	{
+	public:
+		RtpHeaderExtensionParameters() {};
+		RtpHeaderExtensionParameters(Json::Value& data);
+		virtual ~RtpHeaderExtensionParameters();
+
+		Json::Value toJson();
+
+	public:
+		std::string      uri;
+		uint16_t         id = 0;
+		bool             encrypt = false;
+		CustomParameters parameters;
+	};
+
 	class RtpParameters
 	{
 	public:
@@ -143,12 +163,10 @@ namespace RTC
 		// TODO: not sure if 1 or 2 bytes or what.
 		std::string                        muxId;
 		std::vector<RtpCodecParameters>    codecs;
-		// TODO:
-		// std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		std::vector<RtpEncodingParameters> encodings;
+		std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		RtcpParameters                     rtcp;
-		// TODO:
-		// DegradationPreference              degradationPreference = "balanced";
+		bool                               hasRtcp = false;
 	};
 }
 

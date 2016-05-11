@@ -16,9 +16,8 @@ namespace RTC
 		static const Json::StaticString k_payloadType("payloadType");
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_maxptime("maxptime");
+		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
-		static const Json::StaticString k_rtx("rtx");
-		static const Json::StaticString k_fec("fec");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
 
@@ -47,30 +46,13 @@ namespace RTC
 		if (data[k_maxptime].isUInt())
 			this->maxptime = (uint32_t)data[k_maxptime].asUInt();
 
+		// `ptime` is optional.
+		if (data[k_ptime].isUInt())
+			this->ptime = (uint32_t)data[k_ptime].asUInt();
+
 		// `numChannels` is optional.
 		if (data[k_numChannels].isUInt())
 			this->numChannels = (uint32_t)data[k_numChannels].asUInt();
-
-		// `rtx` is optional.
-		if (data[k_rtx].isObject())
-		{
-			this->rtx = RtxCodecParameters(data[k_rtx]);
-			this->hasRtx = true;
-		}
-
-		// `fec` is optional.
-		if (data[k_fec].isArray())
-		{
-			auto& json_fec = data[k_fec];
-
-			for (Json::UInt i = 0; i < json_fec.size(); i++)
-			{
-				FecCodecParameters fec(json_fec[i]);
-
-				// Append to the fec vector.
-				this->fec.push_back(fec);
-			}
-		}
 
 		// `rtcpFeedback` is optional.
 		if (data[k_rtcpFeedback].isArray())
@@ -102,7 +84,7 @@ namespace RTC
 					{
 						bool booleanValue = value.asBool();
 
-						this->parameters[key] = ParameterValue(booleanValue);
+						this->parameters[key] = RTC::CustomParameterValue(booleanValue);
 
 						break;
 					}
@@ -112,7 +94,7 @@ namespace RTC
 					{
 						uint32_t integerValue = (uint32_t)value.asUInt();
 
-						this->parameters[key] = ParameterValue(integerValue);
+						this->parameters[key] = RTC::CustomParameterValue(integerValue);
 
 						break;
 					}
@@ -121,7 +103,7 @@ namespace RTC
 					{
 						std::string stringValue = value.asString();
 
-						this->parameters[key] = ParameterValue(stringValue);
+						this->parameters[key] = RTC::CustomParameterValue(stringValue);
 
 						break;
 					}
@@ -146,9 +128,8 @@ namespace RTC
 		static const Json::StaticString k_payloadType("payloadType");
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_maxptime("maxptime");
+		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
-		static const Json::StaticString k_rtx("rtx");
-		static const Json::StaticString k_fec("fec");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
 
@@ -168,35 +149,22 @@ namespace RTC
 		if (this->maxptime)
 			json[k_maxptime] = (Json::UInt)this->maxptime;
 
+		// Add `ptime`.
+		if (this->ptime)
+			json[k_ptime] = (Json::UInt)this->ptime;
+
 		// Add `numChannels`.
 		if (this->numChannels)
 			json[k_numChannels] = (Json::UInt)this->numChannels;
-
-		// Add `rtx`
-		if (this->hasRtx)
-			json[k_rtx] = this->rtx.toJson();
-
-		// Add `fec` (if any).
-		if (!this->fec.empty())
-		{
-			json[k_fec] = Json::arrayValue;
-			for (auto it = this->fec.begin(); it != this->fec.end(); ++it)
-			{
-				FecCodecParameters* fec = std::addressof(*it);
-
-				json[k_fec].append(fec->toJson());
-			}
-		}
 
 		// Add `rtcpFeedback` (if any).
 		if (!this->rtcpFeedback.empty())
 		{
 			json[k_rtcpFeedback] = Json::arrayValue;
-			for (auto it = this->rtcpFeedback.begin(); it != this->rtcpFeedback.end(); ++it)
-			{
-				RtcpFeedback* rtcpFeedback = std::addressof(*it);
 
-				json[k_rtcpFeedback].append(rtcpFeedback->toJson());
+			for (auto& entry : this->rtcpFeedback)
+			{
+				json[k_rtcpFeedback].append(entry.toJson());
 			}
 		}
 
@@ -208,19 +176,19 @@ namespace RTC
 			for (auto& kv : this->parameters)
 			{
 				const std::string& key = kv.first;
-				ParameterValue& parameterValue = kv.second;
+				RTC::CustomParameterValue& parameterValue = kv.second;
 
 				switch (parameterValue.type)
 				{
-					case ParameterValue::Type::BOOLEAN:
+					case RTC::CustomParameterValue::Type::BOOLEAN:
 						json_parameters[key] = parameterValue.booleanValue;
 						break;
 
-					case ParameterValue::Type::INTEGER:
+					case RTC::CustomParameterValue::Type::INTEGER:
 						json_parameters[key] = (Json::UInt)parameterValue.integerValue;
 						break;
 
-					case ParameterValue::Type::STRING:
+					case RTC::CustomParameterValue::Type::STRING:
 						json_parameters[key] = parameterValue.stringValue;
 						break;
 				}
@@ -230,31 +198,5 @@ namespace RTC
 		}
 
 		return json;
-	}
-
-	RtpCodecParameters::ParameterValue::ParameterValue(bool booleanValue) :
-		type(Type::BOOLEAN),
-		booleanValue(booleanValue)
-	{
-		MS_TRACE();
-	}
-
-	RtpCodecParameters::ParameterValue::ParameterValue(uint32_t integerValue) :
-		type(Type::INTEGER),
-		integerValue(integerValue)
-	{
-		MS_TRACE();
-	}
-
-	RtpCodecParameters::ParameterValue::ParameterValue(std::string& stringValue) :
-		type(Type::STRING),
-		stringValue(stringValue)
-	{
-		MS_TRACE();
-	}
-
-	RtpCodecParameters::ParameterValue::~ParameterValue()
-	{
-		MS_TRACE();
 	}
 }
