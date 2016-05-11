@@ -395,7 +395,7 @@ namespace RTC
 			// from the map.
 			auto rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
 
-			// Safey iterate the copy of the set.
+			// Safely iterate the copy of the set.
 			for (auto& rtpSender : rtpSenders)
 			{
 				rtpSender->Close();

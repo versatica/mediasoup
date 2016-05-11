@@ -25,6 +25,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					{
 						name         : 'H264',
 						payloadType  : 100,
+						clockRate    : 90000,
 						maxptime     : 80,
 						ptime        : 60,
 						numChannels  : 2,

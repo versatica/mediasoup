@@ -529,7 +529,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// We must remove the closed Transport from the RtpReceivers holding it.
+		// Must remove the closed Transport from all the RtpReceivers holding it.
 		for (auto& kv : this->rtpReceivers)
 		{
 			RTC::RtpReceiver* rtpReceiver = kv.second;

@@ -39,7 +39,8 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		encodings :
 		[
 			{
-				ssrc : 100000011
+				ssrc   : 100000011,
+				active : true
 			}
 		],
 		rtcp :
@@ -57,24 +58,24 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'vp9',
 				payloadType : 102,
+				clockRate   : 90000
+			},
+			{
+				name        : 'rtx',
+				payloadType : 96,
 				clockRate   : 90000,
-				rtx :
-				{
-					payloadType : 96,
-					rtxTime     : 1000
-				},
-				fec :
-				[
-					{ mechanism: 'foo', payloadType: 97 }
-				]
+				parameters : { apt: 102 }
 			}
 		],
 		encodings :
 		[
 			{
-				ssrc    : 100000021,
-				rtxSsrc : 100000022,
-				fecSsrc : 100000023
+				ssrc   : 100000021,
+				active : true,
+				rtx :
+				{
+					ssrc : 100000022
+				}
 			}
 		],
 		rtcp :
@@ -92,19 +93,24 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			{
 				name        : 'vp9',
 				payloadType : 103,
+				clockRate   : 90000
+			},
+			{
+				name        : 'rtx',
+				payloadType : 97,
 				clockRate   : 90000,
-				rtx :
-				{
-					payloadType : 97,
-					rtxTime     : 2000
-				}
+				parameters : { apt: 103 }
 			}
 		],
 		encodings :
 		[
 			{
-				ssrc    : 200000021,
-				rtxSsrc : 200000022
+				ssrc   : 200000021,
+				active : true,
+				rtx :
+				{
+					ssrc : 200000022
+				}
 			}
 		],
 		rtcp :
@@ -121,19 +127,15 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		[
 			{
 				name        : 'opus',
-				payloadType : 103,
-				clockRate   : 90000,
-				fec :
-				[
-					{ mechanism: 'bar', payloadType: 98 }
-				]
+				payloadType : 101,
+				clockRate   : 90000
 			}
 		],
 		encodings :
 		[
 			{
-				ssrc    : 300000011,
-				fecSsrc : 300000012
+				ssrc   : 300000011,
+				active : true
 			}
 		],
 		rtcp :
@@ -150,19 +152,24 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		[
 			{
 				name        : 'vp9',
-				payloadType : 103,
-				rtx :
-				{
-					payloadType : 97,
-					rtxTime     : 1500
-				}
+				payloadType : 103
+			},
+			{
+				name        : 'rtx',
+				payloadType : 97,
+				clockRate   : 90000,
+				parameters : { apt: 103 }
 			}
 		],
 		encodings :
 		[
 			{
-				ssrc    : 300000021,
-				rtxSsrc : 300000022
+				ssrc   : 300000021,
+				active : true,
+				rtx :
+				{
+					ssrc : 300000022
+				}
 			}
 		],
 		rtcp :

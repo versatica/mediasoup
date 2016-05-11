@@ -1032,8 +1032,11 @@ namespace RTC
 		// Get the remote certificate in PEM format.
 
 		BIO* bio = BIO_new(BIO_s_mem());
+
 		// Ensure the underlying BUF_MEM structure is also freed.
-		BIO_set_close(bio, BIO_CLOSE);
+		// NOTE: Avoid stupid "warning: value computed is not used [-Wunused-value]" since
+		// BIO_set_close() always returns 1.
+		(void) BIO_set_close(bio, BIO_CLOSE);
 
 		ret = PEM_write_bio_X509(bio, certificate);
 		if (ret != 1)

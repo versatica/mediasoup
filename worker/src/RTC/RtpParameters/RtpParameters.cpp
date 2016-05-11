@@ -27,6 +27,9 @@ namespace RTC
 		{
 			auto& json_codecs = data[k_codecs];
 
+			if (json_codecs.size() == 0)
+				MS_THROW_ERROR("empty `RtpCodecParameters.codecs`");
+
 			for (Json::UInt i = 0; i < json_codecs.size(); i++)
 			{
 				RtpCodecParameters codec(json_codecs[i]);
@@ -83,7 +86,9 @@ namespace RTC
 		this->muxId = rtpParameters->muxId;
 		this->codecs = rtpParameters->codecs;
 		this->encodings = rtpParameters->encodings;
+		this->headerExtensions = rtpParameters->headerExtensions;
 		this->rtcp = rtpParameters->rtcp;
+		this->hasRtcp = rtpParameters->hasRtcp;
 	}
 
 	RtpParameters::~RtpParameters()

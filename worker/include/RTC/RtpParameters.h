@@ -32,7 +32,7 @@ namespace RTC
 			Type        type;
 			bool        booleanValue = false;
 			uint32_t    integerValue = 0;
-			std::string stringValue = "";
+			std::string stringValue;
 	};
 
 	typedef std::unordered_map<std::string, CustomParameterValue> CustomParameters;
