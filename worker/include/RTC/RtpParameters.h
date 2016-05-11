@@ -119,21 +119,6 @@ namespace RTC
 		std::vector<std::string> dependencyEncodingIds;
 	};
 
-	class RtcpParameters
-	{
-	public:
-		RtcpParameters() {};
-		RtcpParameters(Json::Value& data);
-		virtual ~RtcpParameters();
-
-		Json::Value toJson();
-
-	public:
-		std::string cname;
-		uint32_t    ssrc = 0;
-		bool        reducedSize = false;
-	};
-
 	class RtpHeaderExtensionParameters
 	{
 	public:
@@ -148,6 +133,21 @@ namespace RTC
 		uint16_t         id = 0;
 		bool             encrypt = false;
 		CustomParameters parameters;
+	};
+
+	class RtcpParameters
+	{
+	public:
+		RtcpParameters() {};
+		RtcpParameters(Json::Value& data);
+		virtual ~RtcpParameters();
+
+		Json::Value toJson();
+
+	public:
+		std::string cname;
+		uint32_t    ssrc = 0;
+		bool        reducedSize = false;
 	};
 
 	class RtpParameters
