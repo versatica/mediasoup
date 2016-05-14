@@ -1,5 +1,9 @@
 [![][mediasoup-banner]][mediasoup-website]
 
+[![][npm-shield-mediasoup]][npm-mediasoup]
+[![][travis-ci-shield-mediasoup]][travis-ci-mediasoup]
+
+
 **Status:** Coming soon (check the project [milestones](https://github.com/ibc/mediasoup/milestones)).
 
 
@@ -50,5 +54,12 @@ Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
 [ISC](./LICENSE)
 
 
-[mediasoup-website]: http://mediasoup.org
-[mediasoup-banner]: https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
+<span class="badge-travisci"><a href="http://travis-ci.org/ibc/mediasoup" title="Check this project's build status on TravisCI"><img src="https://img.shields.io/travis/ibc/mediasoup/master.svg" alt="Travis CI Build Status" /></a></span>
+
+
+[mediasoup-banner]:           https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
+[mediasoup-website]:          http://mediasoup.org
+[travis-ci-shield-mediasoup]: https://img.shields.io/travis/ibc/mediasoup/master.svg
+[travis-ci-mediasoup]:        http://travis-ci.org/ibc/mediasoup
+[npm-shield-mediasoup]:       https://img.shields.io/npm/v/mediasoup.svg
+[npm-mediasoup]:              https://npmjs.org/package/mediasoup
