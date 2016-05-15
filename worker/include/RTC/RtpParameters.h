@@ -79,8 +79,8 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		uint32_t    ssrc = 0;
 		std::string mechanism;
+		uint32_t    ssrc = 0;
 	};
 
 	class RtpRtxParameters

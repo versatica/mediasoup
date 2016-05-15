@@ -12,8 +12,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_mechanism("mechanism");
+		static const Json::StaticString k_ssrc("ssrc");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("`RtpFecParameters is not an object");
@@ -38,8 +38,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_mechanism("mechanism");
+		static const Json::StaticString k_ssrc("ssrc");
 
 		Json::Value json(Json::objectValue);
 
