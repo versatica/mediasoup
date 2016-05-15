@@ -15,14 +15,16 @@ namespace RTC
 			enum class Type
 			{
 				BOOLEAN = 1,
-				STRING,
-				INTEGER
+				INTEGER,
+				DOUBLE,
+				STRING
 			};
 
 		public:
 			CustomParameterValue() {};
 			CustomParameterValue(bool booleanValue);
 			CustomParameterValue(uint32_t integerValue);
+			CustomParameterValue(double doubleValue);
 			CustomParameterValue(std::string& stringValue);
 			virtual ~CustomParameterValue();
 
@@ -32,6 +34,7 @@ namespace RTC
 			Type        type;
 			bool        booleanValue = false;
 			uint32_t    integerValue = 0;
+			double      doubleValue = 0.0;
 			std::string stringValue;
 	};
 
@@ -167,6 +170,7 @@ namespace RTC
 		std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		RtcpParameters                     rtcp;
 		bool                               hasRtcp = false;
+		Json::Value                        userParameters;
 	};
 }
 

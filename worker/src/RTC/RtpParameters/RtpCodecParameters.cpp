@@ -71,9 +71,9 @@ namespace RTC
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
 		{
-			auto& parameters = data[k_parameters];
+			auto& json_parameters = data[k_parameters];
 
-			for (Json::Value::iterator it = parameters.begin(); it != parameters.end(); ++it)
+			for (Json::Value::iterator it = json_parameters.begin(); it != json_parameters.end(); ++it)
 			{
 				std::string key = it.key().asString();
 				Json::Value value = (*it);
@@ -95,6 +95,15 @@ namespace RTC
 						uint32_t integerValue = (uint32_t)value.asUInt();
 
 						this->parameters[key] = RTC::CustomParameterValue(integerValue);
+
+						break;
+					}
+
+					case Json::realValue:
+					{
+						double doubleValue = value.asDouble();
+
+						this->parameters[key] = RTC::CustomParameterValue(doubleValue);
 
 						break;
 					}
@@ -186,6 +195,10 @@ namespace RTC
 
 					case RTC::CustomParameterValue::Type::INTEGER:
 						json_parameters[key] = (Json::UInt)parameterValue.integerValue;
+						break;
+
+					case RTC::CustomParameterValue::Type::DOUBLE:
+						json_parameters[key] = parameterValue.doubleValue;
 						break;
 
 					case RTC::CustomParameterValue::Type::STRING:

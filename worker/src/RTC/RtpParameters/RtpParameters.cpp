@@ -17,6 +17,7 @@ namespace RTC
 		static const Json::StaticString k_encodings("encodings");
 		static const Json::StaticString k_headerExtensions("headerExtensions");
 		static const Json::StaticString k_rtcp("rtcp");
+		static const Json::StaticString k_userParameters("userParameters");
 
 		// `muxId` is optional.
 		if (data[k_muxId].isString())
@@ -77,6 +78,12 @@ namespace RTC
 			this->rtcp = RtcpParameters(data[k_rtcp]);
 			this->hasRtcp = true;
 		}
+
+		// `userParameters` is optional.
+		if (data[k_userParameters].isObject())
+			this->userParameters = data[k_userParameters];
+		else
+			this->userParameters = Json::objectValue;
 	}
 
 	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
@@ -89,6 +96,7 @@ namespace RTC
 		this->headerExtensions = rtpParameters->headerExtensions;
 		this->rtcp = rtpParameters->rtcp;
 		this->hasRtcp = rtpParameters->hasRtcp;
+		this->userParameters = rtpParameters->userParameters;
 	}
 
 	RtpParameters::~RtpParameters()
@@ -105,6 +113,7 @@ namespace RTC
 		static const Json::StaticString k_encodings("encodings");
 		static const Json::StaticString k_headerExtensions("headerExtensions");
 		static const Json::StaticString k_rtcp("rtcp");
+		static const Json::StaticString k_userParameters("userParameters");
 
 		Json::Value json(Json::objectValue);
 
@@ -148,6 +157,9 @@ namespace RTC
 		// Add `rtcp`.
 		if (this->hasRtcp)
 			json[k_rtcp] = this->rtcp.toJson();
+
+		// Add `userParameters`.
+		json[k_userParameters] = this->userParameters;
 
 		return json;
 	}

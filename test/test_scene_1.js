@@ -48,6 +48,10 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			cname       : 'ALICEAUDIO',
 			ssrc        : 51000011,
 			reducedSize : false
+		},
+		userParameters :
+		{
+			msid : 'alice-msid'
 		}
 	};
 	let aliceVideoParameters =
@@ -83,6 +87,10 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			cname       : 'ALICEVIDEO',
 			ssrc        : 51000021,
 			reducedSize : true
+		},
+		userParameters :
+		{
+			msid : 'alice-msid'
 		}
 	};
 	let bobVideoParameters =
@@ -118,6 +126,10 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			cname       : 'BOBVIDEO',
 			ssrc        : 52000021,
 			reducedSize : true
+		},
+		userParameters :
+		{
+			msid : 'bob-msid'
 		}
 	};
 	let carolAudioParameters =
@@ -143,6 +155,10 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			cname       : 'CAROLAUDIO',
 			ssrc        : 53000011,
 			reducedSize : true
+		},
+		userParameters :
+		{
+			msid : 'carol-msid'
 		}
 	};
 	let carolVideoParameters =
@@ -177,6 +193,10 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 			cname       : 'CAROLVIDEO',
 			ssrc        : 53000021,
 			reducedSize : true
+		},
+		userParameters :
+		{
+			msid : 'carol-msid'
 		}
 	};
 
@@ -187,9 +207,9 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 					{ kind: 'audio', rtpParameters: aliceAudioParameters },
 					{ kind: 'video', rtpParameters: aliceVideoParameters }
 				])
-				// Once transport is created let's check the already existing RtpSenders
-				// and listen for 'newrtpsender' if all the expected ones are not yet
-				// present
+				// Once transport and rtpReceivers are created let's check the already
+				// existing RtpSenders and listen for 'newrtpsender' if all the expected
+				// ones are not yet present
 				.then(() =>
 				{
 					const EXPECTED_RTPSENDERS = 1;

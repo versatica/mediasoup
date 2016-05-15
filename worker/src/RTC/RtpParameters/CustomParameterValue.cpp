@@ -20,6 +20,13 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	CustomParameterValue::CustomParameterValue(double doubleValue) :
+		type(Type::DOUBLE),
+		doubleValue(doubleValue)
+	{
+		MS_TRACE();
+	}
+
 	CustomParameterValue::CustomParameterValue(std::string& stringValue) :
 		type(Type::STRING),
 		stringValue(stringValue)

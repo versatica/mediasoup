@@ -94,6 +94,14 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 					cname       : 'a7sdihkj3sdsdflqwkejl98ujk',
 					ssrc        : 88888888,
 					reducedSize : true
+				},
+				userParameters :
+				{
+					foo : 123,
+					bar : 'BAR',
+					baz : true,
+					cas : -123.123,
+					arr : [ 1, '2', 3.3, { qwe: 'QWE', asd: 123, zxc: null } ]
 				}
 			};
 
