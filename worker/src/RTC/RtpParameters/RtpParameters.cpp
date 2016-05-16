@@ -6,9 +6,24 @@
 
 namespace RTC
 {
+	/* Class methods. */
+
+	RtpParameters* RtpParameters::Factory(RTC::RtpKind kind, Json::Value& data)
+	{
+		MS_TRACE();
+
+		// NOTE: This may throw,
+		auto rtpParameters = new RtpParameters(kind, data);
+
+		// TODO: check parameters and, if wrong, free them and throw.
+
+		return rtpParameters;
+	}
+
 	/* Instance methods. */
 
-	RtpParameters::RtpParameters(Json::Value& data)
+	RtpParameters::RtpParameters(RTC::RtpKind kind, Json::Value& data) :
+		kind(kind)
 	{
 		MS_TRACE();
 
@@ -33,7 +48,7 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_codecs.size(); i++)
 			{
-				RtpCodecParameters codec(json_codecs[i]);
+				RtpCodecParameters codec(this->kind, json_codecs[i]);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -97,6 +112,8 @@ namespace RTC
 		this->rtcp = rtpParameters->rtcp;
 		this->hasRtcp = rtpParameters->hasRtcp;
 		this->userParameters = rtpParameters->userParameters;
+
+		this->kind = rtpParameters->kind;
 	}
 
 	RtpParameters::~RtpParameters()

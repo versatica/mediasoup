@@ -6,9 +6,23 @@
 
 namespace RTC
 {
+	static std::unordered_map<std::string, RtpCodecParameters::Subtype> string2Subtype =
+	{
+		{ "rtx",             RtpCodecParameters::Subtype::RTX     },
+		{ "RTX",             RtpCodecParameters::Subtype::RTX     },
+		{ "ulpfec",          RtpCodecParameters::Subtype::ULPFEC  },
+		{ "flexfec",         RtpCodecParameters::Subtype::FLEXFEC },
+		{ "red",             RtpCodecParameters::Subtype::RED     },
+		{ "RED",             RtpCodecParameters::Subtype::RED     },
+		{ "cn",              RtpCodecParameters::Subtype::CN      },
+		{ "CN",              RtpCodecParameters::Subtype::CN      },
+		{ "telephone-event", RtpCodecParameters::Subtype::DTMF    },
+		{ "dtmf",            RtpCodecParameters::Subtype::DTMF    }
+	};
+
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(Json::Value& data)
+	RtpCodecParameters::RtpCodecParameters(RTC::RtpKind kind, Json::Value& data)
 	{
 		MS_TRACE();
 
@@ -29,8 +43,22 @@ namespace RTC
 			MS_THROW_ERROR("missing `RtpCodecParameters.name`");
 
 		this->name = data[k_name].asString();
-		if (this->name.empty())
-			MS_THROW_ERROR("empty `RtpCodecParameters.name`");
+
+		// Get and check name MIME type.
+		if (kind == RTC::RtpKind::AUDIO && this->name.compare(0, 6, "audio/") == 0)
+			this->type = RTC::RtpKind::AUDIO;
+		else if (kind == RTC::RtpKind::VIDEO && this->name.compare(0, 6, "video/") == 0)
+			this->type = RTC::RtpKind::VIDEO;
+		else
+			MS_THROW_ERROR("invalid `RtpCodecParameters.name` MIME type [name:%s", this->name.c_str());
+
+		// Get name MIME subtype.
+		std::string subtype = this->name.substr(6);
+
+		if (string2Subtype.find(subtype) == string2Subtype.end())
+			this->subtype = Subtype::MEDIA;
+		else
+			this->subtype = string2Subtype[subtype];
 
 		// `payloadType` is mandatory.
 		if (!data[k_payloadType].isUInt())

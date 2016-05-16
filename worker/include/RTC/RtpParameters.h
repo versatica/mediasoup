@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_PARAMETERS_H
 
 #include "common.h"
+#include "RTC/RtpKind.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -56,7 +57,19 @@ namespace RTC
 	class RtpCodecParameters
 	{
 	public:
-		RtpCodecParameters(Json::Value& data);
+		enum class Subtype
+		{
+			MEDIA = 1,
+			RTX,
+			ULPFEC,
+			FLEXFEC,
+			RED,
+			CN,
+			DTMF
+		};
+
+	public:
+		RtpCodecParameters(RTC::RtpKind kind, Json::Value& data);
 		virtual ~RtpCodecParameters();
 
 		Json::Value toJson();
@@ -70,6 +83,10 @@ namespace RTC
 		uint32_t                  numChannels = 0;
 		std::vector<RtcpFeedback> rtcpFeedback;
 		CustomParameters          parameters;
+
+	public:
+		RTC::RtpKind              type;
+		Subtype                   subtype;
 	};
 
 	class RtpFecParameters
@@ -156,7 +173,12 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
-		RtpParameters(Json::Value& data);
+		static RtpParameters* Factory(RTC::RtpKind kind, Json::Value& data);
+
+	private:
+		RtpParameters(RTC::RtpKind kind, Json::Value& data);
+
+	public:
 		RtpParameters(const RtpParameters* RtpParameters);
 		virtual ~RtpParameters();
 
@@ -171,6 +193,9 @@ namespace RTC
 		RtcpParameters                     rtcp;
 		bool                               hasRtcp = false;
 		Json::Value                        userParameters;
+
+	public:
+		RTC::RtpKind                       kind;
 	};
 }
 

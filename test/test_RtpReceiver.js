@@ -23,7 +23,7 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				codecs :
 				[
 					{
-						name         : 'H264',
+						name         : 'video/H264',
 						payloadType  : 100,
 						clockRate    : 90000,
 						maxptime     : 80,

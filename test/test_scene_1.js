@@ -31,7 +31,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		codecs :
 		[
 			{
-				name        : 'opus',
+				name        : 'audio/opus',
 				payloadType : 101,
 				clockRate   : 90000
 			}
@@ -60,12 +60,12 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		codecs :
 		[
 			{
-				name        : 'vp9',
+				name        : 'video/vp9',
 				payloadType : 102,
 				clockRate   : 90000
 			},
 			{
-				name        : 'rtx',
+				name        : 'video/rtx',
 				payloadType : 96,
 				clockRate   : 90000,
 				parameters : { apt: 102 }
@@ -99,12 +99,12 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		codecs :
 		[
 			{
-				name        : 'vp9',
+				name        : 'video/vp9',
 				payloadType : 103,
 				clockRate   : 90000
 			},
 			{
-				name        : 'rtx',
+				name        : 'video/rtx',
 				payloadType : 97,
 				clockRate   : 90000,
 				parameters : { apt: 103 }
@@ -138,7 +138,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		codecs :
 		[
 			{
-				name        : 'opus',
+				name        : 'audio/opus',
 				payloadType : 101,
 				clockRate   : 90000
 			}
@@ -167,11 +167,11 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		codecs :
 		[
 			{
-				name        : 'vp9',
+				name        : 'video/vp9',
 				payloadType : 103
 			},
 			{
-				name        : 'rtx',
+				name        : 'video/rtx',
 				payloadType : 97,
 				clockRate   : 90000,
 				parameters : { apt: 103 }
@@ -585,7 +585,7 @@ function createRtpReceiver(t, peer, kind, transport, rtpParameters)
 	return rtpReceiver.receive(rtpParameters)
 		.then(() =>
 		{
-			t.pass(`rtpReceiver.receive() succeeded for ${peer.name}`);
+			t.pass(`rtpReceiver.receive() succeeded for ${peer.name} and kind "${kind}"`);
 		})
-		.catch((error) => t.fail(`rtpReceiver.receive() failed for ${peer.name}: ${error}`));
+		.catch((error) => t.fail(`rtpReceiver.receive() failed for ${peer.name} and kind "${kind}": ${error}`));
 }
