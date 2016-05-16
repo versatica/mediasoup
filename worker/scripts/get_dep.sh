@@ -39,7 +39,7 @@ function get_gyp()
 function get_jsoncpp()
 {
 	GIT_REPO="https://github.com/open-source-parsers/jsoncpp.git"
-	GIT_TAG="1.7.1"
+	GIT_TAG="1.7.2"
 	DEST="deps/jsoncpp/jsoncpp"
 
 	if [ -d "${DEST}" ] ; then
@@ -95,7 +95,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.9.0"
+	GIT_TAG="v1.9.1"
 	DEST="deps/libuv"
 
 	if [ -d "${DEST}" ] ; then
