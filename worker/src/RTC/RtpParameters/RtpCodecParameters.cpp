@@ -6,7 +6,9 @@
 
 namespace RTC
 {
-	static std::unordered_map<std::string, RtpCodecParameters::Subtype> string2Subtype =
+	/* Class variables. */
+
+	std::unordered_map<std::string, RtpCodecParameters::Subtype> RtpCodecParameters::string2Subtype =
 	{
 		{ "rtx",             RtpCodecParameters::Subtype::RTX     },
 		{ "RTX",             RtpCodecParameters::Subtype::RTX     },
@@ -50,15 +52,15 @@ namespace RTC
 		else if (kind == RTC::RtpKind::VIDEO && this->name.compare(0, 6, "video/") == 0)
 			this->type = RTC::RtpKind::VIDEO;
 		else
-			MS_THROW_ERROR("invalid `RtpCodecParameters.name` MIME type [name:%s", this->name.c_str());
+			MS_THROW_ERROR("invalid `RtpCodecParameters.name` MIME type [name:%s]", this->name.c_str());
 
 		// Get name MIME subtype.
 		std::string subtype = this->name.substr(6);
 
-		if (string2Subtype.find(subtype) == string2Subtype.end())
+		if (RtpCodecParameters::string2Subtype.find(subtype) == RtpCodecParameters::string2Subtype.end())
 			this->subtype = Subtype::MEDIA;
 		else
-			this->subtype = string2Subtype[subtype];
+			this->subtype = RtpCodecParameters::string2Subtype[subtype];
 
 		// `payloadType` is mandatory.
 		if (!data[k_payloadType].isUInt())

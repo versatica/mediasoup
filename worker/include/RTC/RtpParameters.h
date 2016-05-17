@@ -68,6 +68,9 @@ namespace RTC
 			DTMF
 		};
 
+	private:
+		static std::unordered_map<std::string, RtpCodecParameters::Subtype> string2Subtype;
+
 	public:
 		RtpCodecParameters(RTC::RtpKind kind, Json::Value& data);
 		virtual ~RtpCodecParameters();

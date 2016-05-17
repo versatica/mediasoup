@@ -195,16 +195,13 @@ namespace RTC
 			// Send a JSON event followed by binary data (the RTP packet).
 
 			static const Json::StaticString k_class("class");
-			static const Json::StaticString k_binary("binary");
 
 			Json::Value event_data(Json::objectValue);
 
 			// Notify binary event.
 			event_data[k_class] = "RtpReceiver";
-			event_data[k_binary] = true;
-			this->notifier->Emit(this->rtpReceiverId, "rtp", event_data);
 
-			this->notifier->Emit(packet->GetRaw(), packet->GetLength());
+			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtp", event_data, packet->GetRaw(), packet->GetLength());
 		}
 	}
 }
