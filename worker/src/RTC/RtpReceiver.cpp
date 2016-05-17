@@ -60,7 +60,7 @@ namespace RTC
 		static const Json::StaticString v_video("video");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
-		static const Json::StaticString k_listenForRtpMode("listenForRtpMode");
+		static const Json::StaticString k_rtpListenMode("rtpListenMode");
 
 		Json::Value json(Json::objectValue);
 
@@ -83,13 +83,13 @@ namespace RTC
 
 		json[k_hasTransport] = this->transport ? true : false;
 
-		switch (this->listenForRtpMode)
+		switch (this->rtpListenMode)
 		{
-			case ListenForRtpMode::RAW:
-				json[k_listenForRtpMode] = "raw";
+			case RtpListenMode::RAW:
+				json[k_rtpListenMode] = "raw";
 				break;
-			case ListenForRtpMode::OBJECT:
-				json[k_listenForRtpMode] = "object";
+			case RtpListenMode::OBJECT:
+				json[k_rtpListenMode] = "object";
 				break;
 			default:
 				;
@@ -164,7 +164,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpReceiver_listenForRtpMode:
+			case Channel::Request::MethodId::rtpReceiver_rtpListenMode:
 			{
 				static const Json::StaticString k_mode("mode");
 
@@ -180,12 +180,12 @@ namespace RTC
 						if (stringValue == "raw")
 						{
 							valid = true;
-							this->listenForRtpMode = ListenForRtpMode::RAW;
+							this->rtpListenMode = RtpListenMode::RAW;
 						}
 						else if (stringValue == "object")
 						{
 							valid = true;
-							this->listenForRtpMode = ListenForRtpMode::OBJECT;
+							this->rtpListenMode = RtpListenMode::OBJECT;
 						}
 
 						break;
@@ -198,7 +198,7 @@ namespace RTC
 						if (booleanValue == false)
 						{
 							valid = true;
-							this->listenForRtpMode = ListenForRtpMode::NONE;
+							this->rtpListenMode = RtpListenMode::NONE;
 						}
 
 						break;
@@ -207,7 +207,7 @@ namespace RTC
 					case Json::nullValue:
 					{
 						valid = true;
-						this->listenForRtpMode = ListenForRtpMode::NONE;
+						this->rtpListenMode = RtpListenMode::NONE;
 
 						break;
 					}
@@ -256,9 +256,9 @@ namespace RTC
 		this->listener->onRtpPacket(this, packet);
 
 		// Emit "rtp" event if requeted.
-		switch (this->listenForRtpMode)
+		switch (this->rtpListenMode)
 		{
-			case ListenForRtpMode::RAW:
+			case RtpListenMode::RAW:
 			{
 				Json::Value event_data(Json::objectValue);
 
@@ -269,7 +269,7 @@ namespace RTC
 				break;
 			}
 
-			case ListenForRtpMode::OBJECT:
+			case RtpListenMode::OBJECT:
 			{
 				Json::Value event_data(Json::objectValue);
 				Json::Value json_object(Json::objectValue);

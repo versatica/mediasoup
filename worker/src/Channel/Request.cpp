@@ -26,7 +26,7 @@ namespace Channel
 		{ "rtpReceiver.close",                 Request::MethodId::rtpReceiver_close                 },
 		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  },
 		{ "rtpReceiver.receive",               Request::MethodId::rtpReceiver_receive               },
-		{ "rtpReceiver.listenForRtpMode",      Request::MethodId::rtpReceiver_listenForRtpMode      },
+		{ "rtpReceiver.rtpListenMode",         Request::MethodId::rtpReceiver_rtpListenMode         },
 		{ "rtpSender.dump",                    Request::MethodId::rtpSender_dump                    },
 		{ "rtpSender.setTransport",            Request::MethodId::rtpSender_setTransport            }
 	};
