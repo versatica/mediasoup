@@ -57,7 +57,7 @@ namespace RTC
 		uint16_t GetSequenceNumber();
 		uint32_t GetTimestamp();
 		uint32_t GetSsrc();
-		void SetSsrc(uint32_t ssrc);  // TODO: yes?
+		void SetSsrc(uint32_t ssrc);
 		bool HasExtensionHeader();
 		uint16_t GetExtensionHeaderId();
 		size_t GetExtensionHeaderLength();
