@@ -16,9 +16,8 @@
 
 * Be a Node.js library: `npm install mediasoup`
 * Be minimalist: just handle the media layer
-* Don't deal with network signaling protocols (SIP, XMPP, etc)
 * Expose a modern ECMAScript 6 [API](/api/) in sync with [ORTC](http://ortc.org/)
-* Work with current WebRTC client implementations
+* Work with current [WebRTC](https://webrtc.org) client implementations
 
 
 ## Features
@@ -34,6 +33,8 @@
 
 * Node.js >= `v4.0.0`
 * POSIX based operating system (Windows not yet supported)
+* `make`
+* `gcc` or `clang` with C++11 support
 * Must run in a publicly reachable host (ICE "Lite" implementation)
 
 
