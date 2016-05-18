@@ -293,7 +293,8 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_close:
 			case Channel::Request::MethodId::rtpReceiver_dump:
 			case Channel::Request::MethodId::rtpReceiver_receive:
-			case Channel::Request::MethodId::rtpReceiver_rtpListenMode:
+			case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
+			case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
 			{
 				RTC::RtpReceiver* rtpReceiver;
 

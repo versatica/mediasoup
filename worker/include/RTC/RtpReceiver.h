@@ -18,14 +18,6 @@ namespace RTC
 
 	class RtpReceiver
 	{
-	private:
-		enum class RtpListenMode
-		{
-			NONE = 0,
-			RAW,
-			OBJECT
-		};
-
 	public:
 		/**
 		 * RTC::Peer is the Listener.
@@ -65,7 +57,8 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 		// Others.
-		RtpListenMode rtpListenMode = RtpListenMode::NONE;
+		bool rtpRawEventEnabled = false;
+		bool rtpObjectEventEnabled = false;
 	};
 
 	/* Inline methods. */

@@ -60,7 +60,8 @@ namespace RTC
 		static const Json::StaticString v_video("video");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
-		static const Json::StaticString k_rtpListenMode("rtpListenMode");
+		static const Json::StaticString k_rtpRawEventEnabled("rtpRawEventEnabled");
+		static const Json::StaticString k_rtpObjectEventEnabled("rtpObjectEventEnabled");
 
 		Json::Value json(Json::objectValue);
 
@@ -83,17 +84,9 @@ namespace RTC
 
 		json[k_hasTransport] = this->transport ? true : false;
 
-		switch (this->rtpListenMode)
-		{
-			case RtpListenMode::RAW:
-				json[k_rtpListenMode] = "raw";
-				break;
-			case RtpListenMode::OBJECT:
-				json[k_rtpListenMode] = "object";
-				break;
-			default:
-				;
-		}
+		json[k_rtpRawEventEnabled] = this->rtpRawEventEnabled;
+
+		json[k_rtpObjectEventEnabled] = this->rtpObjectEventEnabled;
 
 		return json;
 	}
@@ -164,65 +157,38 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpReceiver_rtpListenMode:
+			case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
 			{
-				static const Json::StaticString k_mode("mode");
+				static const Json::StaticString k_enabled("enabled");
 
-				auto json_mode = request->data[k_mode];
-				bool valid = false;
-
-				switch (json_mode.type())
+				if (!request->data[k_enabled].isBool())
 				{
-					case Json::stringValue:
-					{
-						std::string stringValue = json_mode.asString();
+					MS_ERROR("Request has invalid `data.enabled`");
 
-						if (stringValue == "raw")
-						{
-							valid = true;
-							this->rtpListenMode = RtpListenMode::RAW;
-						}
-						else if (stringValue == "object")
-						{
-							valid = true;
-							this->rtpListenMode = RtpListenMode::OBJECT;
-						}
-
-						break;
-					}
-
-					case Json::booleanValue:
-					{
-						bool booleanValue = json_mode.asBool();
-
-						if (booleanValue == false)
-						{
-							valid = true;
-							this->rtpListenMode = RtpListenMode::NONE;
-						}
-
-						break;
-					}
-
-					case Json::nullValue:
-					{
-						valid = true;
-						this->rtpListenMode = RtpListenMode::NONE;
-
-						break;
-					}
-
-					default:
-						;
-				}
-
-				if (!valid)
-				{
-					MS_ERROR("Request has invalid `data.mode`");
-
-					request->Reject("Request has invalid `data.mode`");
+					request->Reject("Request has invalid `data.enabled`");
 					return;
 				}
+
+				this->rtpRawEventEnabled = request->data[k_enabled].asBool();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
+			{
+				static const Json::StaticString k_enabled("enabled");
+
+				if (!request->data[k_enabled].isBool())
+				{
+					MS_ERROR("Request has invalid `data.enabled`");
+
+					request->Reject("Request has invalid `data.enabled`");
+					return;
+				}
+
+				this->rtpObjectEventEnabled = request->data[k_enabled].asBool();
 
 				request->Accept();
 
@@ -255,42 +221,33 @@ namespace RTC
 		// Notify the listener.
 		this->listener->onRtpPacket(this, packet);
 
-		// Emit "rtp" event if requeted.
-		switch (this->rtpListenMode)
+		// Emit "rtpraw" if enabled.
+		if (this->rtpRawEventEnabled)
 		{
-			case RtpListenMode::RAW:
-			{
-				Json::Value event_data(Json::objectValue);
+			Json::Value event_data(Json::objectValue);
 
-				event_data[k_class] = "RtpReceiver";
+			event_data[k_class] = "RtpReceiver";
 
-				this->notifier->EmitWithBinary(this->rtpReceiverId, "rtp", event_data, packet->GetRaw(), packet->GetLength());
+			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpraw", event_data, packet->GetRaw(), packet->GetLength());
+		}
 
-				break;
-			}
+		// Emit "rtpobject" is enabled.
+		if (this->rtpObjectEventEnabled)
+		{
+			Json::Value event_data(Json::objectValue);
+			Json::Value json_object(Json::objectValue);
 
-			case RtpListenMode::OBJECT:
-			{
-				Json::Value event_data(Json::objectValue);
-				Json::Value json_object(Json::objectValue);
+			event_data[k_class] = "RtpReceiver";
 
-				event_data[k_class] = "RtpReceiver";
+			json_object[k_payloadType] = (Json::UInt)packet->GetPayloadType();
+			json_object[k_marker] = packet->HasMarker();
+			json_object[k_sequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
+			json_object[k_timestamp] = (Json::UInt)packet->GetTimestamp();
+			json_object[k_ssrc] = (Json::UInt)packet->GetSsrc();
 
-				json_object[k_payloadType] = (Json::UInt)packet->GetPayloadType();
-				json_object[k_marker] = packet->HasMarker();
-				json_object[k_sequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
-				json_object[k_timestamp] = (Json::UInt)packet->GetTimestamp();
-				json_object[k_ssrc] = (Json::UInt)packet->GetSsrc();
+			event_data[k_object] = json_object;
 
-				event_data[k_object] = json_object;
-
-				this->notifier->EmitWithBinary(this->rtpReceiverId, "rtp", event_data, packet->GetPayload(), packet->GetPayloadLength());
-
-				break;
-			}
-
-			default:
-				;
+			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
 		}
 	}
 }
