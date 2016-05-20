@@ -55,7 +55,6 @@ Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
 [ISC](./LICENSE)
 
 
-<span class="badge-travisci"><a href="http://travis-ci.org/ibc/mediasoup" title="Check this project's build status on TravisCI"><img src="https://img.shields.io/travis/ibc/mediasoup/master.svg" alt="Travis CI Build Status" /></a></span>
 
 
 [mediasoup-banner]:           https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
