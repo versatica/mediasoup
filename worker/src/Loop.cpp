@@ -146,20 +146,21 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 	{
 		case Channel::Request::MethodId::worker_dump:
 		{
+			static const Json::StaticString k_workerId("workerId");
 			static const Json::StaticString k_rooms("rooms");
 
 			Json::Value json(Json::objectValue);
-			Json::Value json_worker(Json::objectValue);
-			Json::Value json_rooms(Json::objectValue);
+			Json::Value json_rooms(Json::arrayValue);
+
+			json[k_workerId] = Logger::id;
 
 			for (auto& kv : this->rooms)
 			{
 				auto room = kv.second;
 
-				json_rooms[std::to_string(room->roomId)] = room->toJson();
+				json_rooms.append(room->toJson());
 			}
-			json_worker[k_rooms] = json_rooms;
-			json[Logger::id] = json_worker;
+			json[k_rooms] = json_rooms;
 
 			request->Accept(json);
 

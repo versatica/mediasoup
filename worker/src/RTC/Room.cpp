@@ -81,7 +81,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 		Json::Value json_options(Json::objectValue);
-		Json::Value json_peers(Json::objectValue);
+		Json::Value json_peers(Json::arrayValue);
 		Json::Value json_mapRtpReceiverRtpSenders(Json::objectValue);
 
 		// Add `roomId`.
@@ -103,7 +103,7 @@ namespace RTC
 		{
 			RTC::Peer* peer = kv.second;
 
-			json_peers[std::to_string(peer->peerId)] = peer->toJson();
+			json_peers.append(peer->toJson());
 		}
 		json[k_peers] = json_peers;
 

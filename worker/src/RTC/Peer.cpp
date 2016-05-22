@@ -81,9 +81,9 @@ namespace RTC
 		static const Json::StaticString k_rtpSenders("rtpSenders");
 
 		Json::Value json(Json::objectValue);
-		Json::Value json_transports(Json::objectValue);
-		Json::Value json_rtpReceivers(Json::objectValue);
-		Json::Value json_rtpSenders(Json::objectValue);
+		Json::Value json_transports(Json::arrayValue);
+		Json::Value json_rtpReceivers(Json::arrayValue);
+		Json::Value json_rtpSenders(Json::arrayValue);
 
 		json[k_peerId] = (Json::UInt)this->peerId;
 
@@ -93,7 +93,7 @@ namespace RTC
 		{
 			RTC::Transport* transport = kv.second;
 
-			json_transports[std::to_string(transport->transportId)] = transport->toJson();
+			json_transports.append(transport->toJson());
 		}
 		json[k_transports] = json_transports;
 
@@ -101,7 +101,7 @@ namespace RTC
 		{
 			RTC::RtpReceiver* rtpReceiver = kv.second;
 
-			json_rtpReceivers[std::to_string(rtpReceiver->rtpReceiverId)] = rtpReceiver->toJson();
+			json_rtpReceivers.append(rtpReceiver->toJson());
 		}
 		json[k_rtpReceivers] = json_rtpReceivers;
 
@@ -109,7 +109,7 @@ namespace RTC
 		{
 			RTC::RtpSender* rtpSender = kv.second;
 
-			json_rtpSenders[std::to_string(rtpSender->rtpSenderId)] = rtpSender->toJson();
+			json_rtpSenders.append(rtpSender->toJson());
 		}
 		json[k_rtpSenders] = json_rtpSenders;
 
