@@ -25,7 +25,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) = 0;
+			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver) = 0;
 			virtual void onRtpPacket(RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
 			virtual void onRtpReceiverClosed(RtpReceiver* rtpReceiver) = 0;
 		};
@@ -41,6 +41,7 @@ namespace RTC
 		RTC::Transport* GetTransport();
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetRtpParameters();
+		RTC::RtpParameters* GetPreviousRtpParameters();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 
 	public:
@@ -56,6 +57,7 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
+		RTC::RtpParameters* previousRtpParameters = nullptr;
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
@@ -86,6 +88,12 @@ namespace RTC
 	RTC::RtpParameters* RtpReceiver::GetRtpParameters()
 	{
 		return this->rtpParameters;
+	}
+
+	inline
+	RTC::RtpParameters* RtpReceiver::GetPreviousRtpParameters()
+	{
+		return this->previousRtpParameters;
 	}
 }
 

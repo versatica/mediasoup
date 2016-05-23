@@ -275,7 +275,7 @@ namespace RTC
 		static const Json::StaticString v_failed("failed");
 		static const Json::StaticString k_rtpListener("rtpListener");
 		static const Json::StaticString k_ssrcTable("ssrcTable");
-		// static const Json::StaticString k_midTable("midTable");  // TODO
+		static const Json::StaticString k_muxIdTable("muxIdTable");
 		static const Json::StaticString k_ptTable("ptTable");
 
 		Json::Value json(Json::objectValue);
@@ -360,8 +360,10 @@ namespace RTC
 
 		Json::Value json_rtpListener(Json::objectValue);
 		Json::Value json_ssrcTable(Json::objectValue);
+		Json::Value json_muxIdTable(Json::objectValue);
 		Json::Value json_ptTable(Json::objectValue);
 
+		// Add `rtpListener.ssrcTable`.
 		for (auto& kv : this->rtpListener.ssrcTable)
 		{
 			auto ssrc = kv.first;
@@ -371,8 +373,17 @@ namespace RTC
 		}
 		json_rtpListener[k_ssrcTable] = json_ssrcTable;
 
-		// TODO: Add `midTable`.
+		// Add `rtpListener.muxIdTable`.
+		for (auto& kv : this->rtpListener.muxIdTable)
+		{
+			auto muxId = kv.first;
+			auto rtpReceiver = kv.second;
 
+			json_muxIdTable[muxId] = std::to_string(rtpReceiver->rtpReceiverId);
+		}
+		json_rtpListener[k_muxIdTable] = json_muxIdTable;
+
+		// Add `rtpListener.ptTable`.
 		for (auto& kv : this->rtpListener.ptTable)
 		{
 			auto payloadType = kv.first;
@@ -525,30 +536,112 @@ namespace RTC
 		}
 	}
 
-	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
+	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver, bool rollback)
 	{
 		MS_TRACE();
+
+		auto rtpParameters = rtpReceiver->GetRtpParameters();
+
+		if (rollback)
+			rtpParameters = rtpReceiver->GetPreviousRtpParameters();
+
+		MS_ASSERT(rtpParameters, "no RtpParameters");
 
 		// First remove from the the listener tables all the entries pointing to
 		// the given RtpReceiver (reset them).
 		RemoveRtpReceiver(rtpReceiver);
 
-		// Add entries into the listener ssrcTable.
+		// Add entries into the ssrcTable.
 		for (auto& encoding : rtpParameters->encodings)
 		{
-			// TODO: This should throw if the ssrc already exists in the table,
-			// and the receive() should Reject() the Request.
-			if (encoding.ssrc)
-				this->rtpListener.ssrcTable[encoding.ssrc] = rtpReceiver;
+			uint32_t ssrc;
+
+			// Check encoding.ssrc.
+
+			ssrc = encoding.ssrc;
+
+			if (ssrc)
+			{
+				if (!this->rtpListener.HasSsrc(ssrc))
+				{
+					this->rtpListener.ssrcTable[ssrc] = rtpReceiver;
+				}
+				else
+				{
+					RemoveRtpReceiver(rtpReceiver);
+					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+				}
+			}
+
+			// Check encoding.rtx.ssrc.
+
+			ssrc = encoding.rtx.ssrc;
+
+			if (ssrc)
+			{
+				if (!this->rtpListener.HasSsrc(ssrc))
+				{
+					this->rtpListener.ssrcTable[ssrc] = rtpReceiver;
+				}
+				else
+				{
+					RemoveRtpReceiver(rtpReceiver);
+					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+				}
+			}
+
+			// Check encoding.fec.ssrc.
+
+			ssrc = encoding.fec.ssrc;
+
+			if (ssrc)
+			{
+				if (!this->rtpListener.HasSsrc(ssrc))
+				{
+					this->rtpListener.ssrcTable[ssrc] = rtpReceiver;
+				}
+				else
+				{
+					RemoveRtpReceiver(rtpReceiver);
+					MS_THROW_ERROR("`ssrc` already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+				}
+			}
 		}
 
-		// TODO: // Add entries into listener midTable.
+		// Add entries into midTable.
+		if (!rtpParameters->muxId.empty())
+		{
+			auto& muxId = rtpParameters->muxId;
 
-		// Add entries into listener ptTable.
-		// TODO: This is wrong, pt should not be added if ssrc are added.
+			if (!this->rtpListener.HasMuxId(muxId))
+			{
+				this->rtpListener.muxIdTable[muxId] = rtpReceiver;
+			}
+			else
+			{
+				RemoveRtpReceiver(rtpReceiver);
+				MS_THROW_ERROR("`muxId` already exists in RTP listener [muxId:'%s']", muxId.c_str());
+			}
+		}
+
+		// Add entries into ptTable.
 		for (auto& codec : rtpParameters->codecs)
 		{
-			this->rtpListener.ptTable[codec.payloadType] = rtpReceiver;
+			uint8_t payloadType;
+
+			// Check encoding.ssrc.
+
+			payloadType = codec.payloadType;
+
+			if (!this->rtpListener.HasPayloadType(payloadType))
+			{
+				this->rtpListener.ptTable[payloadType] = rtpReceiver;
+			}
+			else
+			{
+				RemoveRtpReceiver(rtpReceiver);
+				MS_THROW_ERROR("`payloadType` already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
+			}
 		}
 	}
 
@@ -567,7 +660,13 @@ namespace RTC
 				it++;
 		}
 
-		// TODO: midTable
+		for (auto it = this->rtpListener.muxIdTable.begin(); it != this->rtpListener.muxIdTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				it = this->rtpListener.muxIdTable.erase(it);
+			else
+				it++;
+		}
 
 		for (auto it = this->rtpListener.ptTable.begin(); it != this->rtpListener.ptTable.end();)
 		{

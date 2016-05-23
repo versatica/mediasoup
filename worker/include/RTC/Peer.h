@@ -26,7 +26,7 @@ namespace RTC
 		{
 		public:
 			virtual void onPeerClosed(RTC::Peer* peer) = 0;
-			virtual void onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpParameters* rtpParameters) = 0;
+			virtual void onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onPeerRtpReceiverParametersDone(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
@@ -59,7 +59,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:
-		virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters) override;
+		virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver) override;
 		virtual void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
 		virtual void onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver) override;
 

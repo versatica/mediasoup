@@ -186,6 +186,7 @@ namespace RTC
 		virtual ~RtpParameters();
 
 		Json::Value toJson();
+		void AutoFill();
 
 	public:
 		// TODO: not sure if 1 or 2 bytes or what.

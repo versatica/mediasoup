@@ -549,20 +549,39 @@ namespace RTC
 		this->transports.erase(transport->transportId);
 	}
 
-	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver, RTC::RtpParameters* rtpParameters)
+	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
 		// Notify the listener (Room) so it can check provided codecs and,
 		// optionally, normalize them.
 		// NOTE: This may throw.
-		this->listener->onPeerRtpReceiverParameters(this, rtpParameters);
+		this->listener->onPeerRtpReceiverParameters(this, rtpReceiver);
 
 		auto transport = rtpReceiver->GetTransport();
 
 		// NOTE: This may throw.
 		if (transport)
-			transport->AddRtpReceiver(rtpReceiver, rtpParameters);
+		{
+			try
+			{
+				transport->AddRtpReceiver(rtpReceiver, false);
+			}
+			catch (const MediaSoupError &error)
+			{
+				if (rtpReceiver->GetPreviousRtpParameters())
+				{
+					MS_WARN("rolling back RtpReceiver into Transport");
+
+					transport->AddRtpReceiver(rtpReceiver, true);
+				}
+			}
+		}
+
+		// Auto-fill missing RTP parameters.
+		auto rtpParameters = rtpReceiver->GetRtpParameters();
+
+		rtpParameters->AutoFill();
 
 		// Notify the listener (Room).
 		this->listener->onPeerRtpReceiverParametersDone(this, rtpReceiver);

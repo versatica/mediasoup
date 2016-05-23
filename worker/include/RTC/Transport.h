@@ -12,7 +12,6 @@
 #include "RTC/DtlsTransport.h"
 #include "RTC/SrtpSession.h"
 #include "RTC/RtpReceiver.h"
-#include "RTC/RtpParameters.h"
 #include "RTC/RtpPacket.h"
 #include "RTC/RtcpPacket.h"
 #include "Channel/Request.h"
@@ -39,12 +38,18 @@ namespace RTC
 		};
 
 	public:
-		struct RtpListener
+		class RtpListener
 		{
+		public:
+			bool HasSsrc(uint32_t ssrc);
+			bool HasMuxId(std::string& muxId);
+			bool HasPayloadType(uint8_t payloadType);
+
+		public:
 			// Table of SSRC / RtpReceiver pairs.
 			std::unordered_map<uint32_t, RTC::RtpReceiver*> ssrcTable;
 			//  Table of MID RTP header extension / RtpReceiver pairs.
-			// std::unordered_map<uint16_t, RTC::RtpReceiver*> midTable;
+			std::unordered_map<std::string, RTC::RtpReceiver*> muxIdTable;
 			// Table of RTP payload type / RtpReceiver pairs.
 			std::unordered_map<uint8_t, RTC::RtpReceiver*> ptTable;
 		};
@@ -56,7 +61,7 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
-		void AddRtpReceiver(RTC::RtpReceiver *rtpReceiver, RTC::RtpParameters* rtpParameters);
+		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver, bool rollback);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 
@@ -127,6 +132,26 @@ namespace RTC
 		// Others (RtpListener).
 		RtpListener rtpListener;
 	};
+
+	/* Inline instance methods. */
+
+	inline
+	bool Transport::RtpListener::HasSsrc(uint32_t ssrc)
+	{
+		return this->ssrcTable.find(ssrc) != this->ssrcTable.end();
+	}
+
+	inline
+	bool Transport::RtpListener::HasMuxId(std::string& muxId)
+	{
+		return this->muxIdTable.find(muxId) != this->muxIdTable.end();
+	}
+
+	inline
+	bool Transport::RtpListener::HasPayloadType(uint8_t payloadType)
+	{
+		return this->ptTable.find(payloadType) != this->ptTable.end();
+	}
 }
 
 #endif

@@ -121,7 +121,7 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			{
 				// Keep a reference to the previous rtpParameters.
-				auto previousRtpParameters = this->rtpParameters;
+				this->previousRtpParameters = this->rtpParameters;
 
 				try
 				{
@@ -137,18 +137,20 @@ namespace RTC
 				// NOTE: this may throw. If so keep the current parameters.
 				try
 				{
-					this->listener->onRtpReceiverParameters(this, this->rtpParameters);
+					this->listener->onRtpReceiverParameters(this);
 				}
 				catch (const MediaSoupError &error)
 				{
-					this->rtpParameters = previousRtpParameters;
+					// Rollback previous parameters.
+					this->rtpParameters = this->previousRtpParameters;
+
 					request->Reject(error.what());
 
 					return;
 				}
 
 				// Free the previous rtpParameters.
-				delete previousRtpParameters;
+				delete this->previousRtpParameters;
 
 				Json::Value data = this->rtpParameters->toJson();
 

@@ -180,4 +180,11 @@ namespace RTC
 
 		return json;
 	}
+
+	void RtpParameters::AutoFill()
+	{
+		MS_TRACE();
+
+		// TODO
+	}
 }

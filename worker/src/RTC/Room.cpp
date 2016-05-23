@@ -322,9 +322,11 @@ namespace RTC
 		this->peers.erase(peer->peerId);
 	}
 
-	void Room::onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpParameters* rtpParameters)
+	void Room::onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
+
+		// auto rtpParameters = rtpReceiver->GetRtpParameters();
 
 		// TODO: Check codecs availability and, optionally, uniqueness of PTs.
 		// If it fails throw.
