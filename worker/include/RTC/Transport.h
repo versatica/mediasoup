@@ -41,9 +41,9 @@ namespace RTC
 		class RtpListener
 		{
 		public:
-			bool HasSsrc(uint32_t ssrc);
-			bool HasMuxId(std::string& muxId);
-			bool HasPayloadType(uint8_t payloadType);
+			bool HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver);
+			bool HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver);
+			bool HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver);
 
 		public:
 			// Table of SSRC / RtpReceiver pairs.
@@ -61,13 +61,14 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
-		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver, bool rollback);
+		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 
 	private:
 		void MayRunDtlsTransport();
 		RTC::RtpReceiver* GetRtpReceiver(RTC::RtpPacket* packet);
+		void RollbackRtpReceiver(RTC::RtpReceiver* rtpReceiver, std::vector<uint32_t>& previousSsrcs, std::string& previousMuxId, std::vector<uint8_t>& previousPayloadTypes);
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -136,21 +137,48 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool Transport::RtpListener::HasSsrc(uint32_t ssrc)
+	bool Transport::RtpListener::HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver)
 	{
-		return this->ssrcTable.find(ssrc) != this->ssrcTable.end();
+		auto it = this->ssrcTable.find(ssrc);
+
+		if (it == this->ssrcTable.end())
+		{
+			return false;
+		}
+		else
+		{
+			return (it->second != rtpReceiver);
+		}
 	}
 
 	inline
-	bool Transport::RtpListener::HasMuxId(std::string& muxId)
+	bool Transport::RtpListener::HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver)
 	{
-		return this->muxIdTable.find(muxId) != this->muxIdTable.end();
+		auto it = this->muxIdTable.find(muxId);
+
+		if (it == this->muxIdTable.end())
+		{
+			return false;
+		}
+		else
+		{
+			return (it->second != rtpReceiver);
+		}
 	}
 
 	inline
-	bool Transport::RtpListener::HasPayloadType(uint8_t payloadType)
+	bool Transport::RtpListener::HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver)
 	{
-		return this->ptTable.find(payloadType) != this->ptTable.end();
+		auto it = this->ptTable.find(payloadType);
+
+		if (it == this->ptTable.end())
+		{
+			return false;
+		}
+		else
+		{
+			return (it->second != rtpReceiver);
+		}
 	}
 }
 

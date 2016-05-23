@@ -57,7 +57,6 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
-		RTC::RtpParameters* previousRtpParameters = nullptr;
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
@@ -88,12 +87,6 @@ namespace RTC
 	RTC::RtpParameters* RtpReceiver::GetRtpParameters()
 	{
 		return this->rtpParameters;
-	}
-
-	inline
-	RTC::RtpParameters* RtpReceiver::GetPreviousRtpParameters()
-	{
-		return this->previousRtpParameters;
 	}
 }
 

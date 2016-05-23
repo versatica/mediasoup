@@ -562,21 +562,7 @@ namespace RTC
 
 		// NOTE: This may throw.
 		if (transport)
-		{
-			try
-			{
-				transport->AddRtpReceiver(rtpReceiver, false);
-			}
-			catch (const MediaSoupError &error)
-			{
-				if (rtpReceiver->GetPreviousRtpParameters())
-				{
-					MS_WARN("rolling back RtpReceiver into Transport");
-
-					transport->AddRtpReceiver(rtpReceiver, true);
-				}
-			}
-		}
+			transport->AddRtpReceiver(rtpReceiver);
 
 		// Auto-fill missing RTP parameters.
 		auto rtpParameters = rtpReceiver->GetRtpParameters();

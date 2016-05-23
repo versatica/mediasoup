@@ -536,16 +536,40 @@ namespace RTC
 		}
 	}
 
-	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver, bool rollback)
+	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
 		auto rtpParameters = rtpReceiver->GetRtpParameters();
 
-		if (rollback)
-			rtpParameters = rtpReceiver->GetPreviousRtpParameters();
-
 		MS_ASSERT(rtpParameters, "no RtpParameters");
+
+		// Keep a copy of the previous entries so we can rollback.
+
+		std::vector<uint32_t> previousSsrcs;
+		std::string previousMuxId;
+		std::vector<uint8_t> previousPayloadTypes;
+
+		for (auto it = this->rtpListener.ssrcTable.begin(); it != this->rtpListener.ssrcTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				previousSsrcs.push_back(it->first);
+		}
+
+		for (auto it = this->rtpListener.muxIdTable.begin(); it != this->rtpListener.muxIdTable.end();)
+		{
+			if (it->second == rtpReceiver)
+			{
+				previousMuxId = it->first;
+				break;
+			}
+		}
+
+		for (auto it = this->rtpListener.ptTable.begin(); it != this->rtpListener.ptTable.end();)
+		{
+			if (it->second == rtpReceiver)
+				previousPayloadTypes.push_back(it->first);
+		}
 
 		// First remove from the the listener tables all the entries pointing to
 		// the given RtpReceiver (reset them).
@@ -562,14 +586,16 @@ namespace RTC
 
 			if (ssrc)
 			{
-				if (!this->rtpListener.HasSsrc(ssrc))
+				if (!this->rtpListener.HasSsrc(ssrc, rtpReceiver))
 				{
 					this->rtpListener.ssrcTable[ssrc] = rtpReceiver;
 				}
 				else
 				{
 					RemoveRtpReceiver(rtpReceiver);
-					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
+					MS_THROW_ERROR("`ssrc` already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 				}
 			}
 
@@ -579,14 +605,16 @@ namespace RTC
 
 			if (ssrc)
 			{
-				if (!this->rtpListener.HasSsrc(ssrc))
+				if (!this->rtpListener.HasSsrc(ssrc, rtpReceiver))
 				{
 					this->rtpListener.ssrcTable[ssrc] = rtpReceiver;
 				}
 				else
 				{
 					RemoveRtpReceiver(rtpReceiver);
-					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
+					MS_THROW_ERROR("`ssrc` already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 				}
 			}
 
@@ -596,30 +624,34 @@ namespace RTC
 
 			if (ssrc)
 			{
-				if (!this->rtpListener.HasSsrc(ssrc))
+				if (!this->rtpListener.HasSsrc(ssrc, rtpReceiver))
 				{
 					this->rtpListener.ssrcTable[ssrc] = rtpReceiver;
 				}
 				else
 				{
 					RemoveRtpReceiver(rtpReceiver);
+					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
 					MS_THROW_ERROR("`ssrc` already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 				}
 			}
 		}
 
-		// Add entries into midTable.
+		// Add entries into muxIdTable.
 		if (!rtpParameters->muxId.empty())
 		{
 			auto& muxId = rtpParameters->muxId;
 
-			if (!this->rtpListener.HasMuxId(muxId))
+			if (!this->rtpListener.HasMuxId(muxId, rtpReceiver))
 			{
 				this->rtpListener.muxIdTable[muxId] = rtpReceiver;
 			}
 			else
 			{
 				RemoveRtpReceiver(rtpReceiver);
+				RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
 				MS_THROW_ERROR("`muxId` already exists in RTP listener [muxId:'%s']", muxId.c_str());
 			}
 		}
@@ -633,13 +665,15 @@ namespace RTC
 
 			payloadType = codec.payloadType;
 
-			if (!this->rtpListener.HasPayloadType(payloadType))
+			if (!this->rtpListener.HasPayloadType(payloadType, rtpReceiver))
 			{
 				this->rtpListener.ptTable[payloadType] = rtpReceiver;
 			}
 			else
 			{
 				RemoveRtpReceiver(rtpReceiver);
+				RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
 				MS_THROW_ERROR("`payloadType` already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
 			}
 		}
@@ -779,6 +813,24 @@ namespace RTC
 		else
 		{
 			return nullptr;
+		}
+	}
+
+	void Transport::RollbackRtpReceiver(RTC::RtpReceiver* rtpReceiver, std::vector<uint32_t>& previousSsrcs, std::string& previousMuxId, std::vector<uint8_t>& previousPayloadTypes)
+	{
+		MS_TRACE();
+
+		for (auto& ssrc : previousSsrcs)
+		{
+			this->rtpListener.ssrcTable[ssrc] = rtpReceiver;
+		}
+
+		if (!previousMuxId.empty())
+			this->rtpListener.muxIdTable[previousMuxId] = rtpReceiver;
+
+		for (auto& payloadType : previousPayloadTypes)
+		{
+			this->rtpListener.ptTable[payloadType] = rtpReceiver;
 		}
 	}
 
