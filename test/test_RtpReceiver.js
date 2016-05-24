@@ -4,11 +4,11 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-function init(test)
+function initTest(t)
 {
 	let server = mediasoup.Server();
 
-	test.tearDown(() => server.close());
+	t.tearDown(() => server.close());
 
 	let room = server.Room();
 	let peer = room.Peer('alice');
@@ -22,7 +22,7 @@ function init(test)
 
 tap.test('rtpReceiver.receive() with no `rtpParameters.encodings` must succeed', { timeout: 1000 }, (t) =>
 {
-	return init(t)
+	return initTest(t)
 		.then((data) =>
 		{
 			let peer = data.peer;
@@ -57,7 +57,7 @@ tap.test('rtpReceiver.receive() with no `rtpParameters.encodings` must succeed',
 
 tap.test('rtpReceiver.receive() with one `rtpParameters.encodings` without `codecPayloadType` must succeed', { timeout: 1000 }, (t) =>
 {
-	return init(t)
+	return initTest(t)
 		.then((data) =>
 		{
 			let peer = data.peer;
@@ -95,7 +95,7 @@ tap.test('rtpReceiver.receive() with one `rtpParameters.encodings` without `code
 
 tap.test('rtpReceiver.receive() with full `rtpParameters` must succeed', { timeout: 1000 }, (t) =>
 {
-	return init(t)
+	return initTest(t)
 		.then((data) =>
 		{
 			let peer = data.peer;
@@ -202,7 +202,7 @@ tap.test('rtpReceiver.receive() with full `rtpParameters` must succeed', { timeo
 
 tap.test('rtpReceiver.receive() without `rtpParameters` must fail', { timeout: 1000 }, (t) =>
 {
-	return init(t)
+	return initTest(t)
 		.then((data) =>
 		{
 			let peer = data.peer;
@@ -220,7 +220,7 @@ tap.test('rtpReceiver.receive() without `rtpParameters` must fail', { timeout: 1
 
 tap.test('rtpReceiver.receive() with wrong `codecs` must fail', { timeout: 1000 }, (t) =>
 {
-	return init(t)
+	return initTest(t)
 		.then((data) =>
 		{
 			let peer = data.peer;
@@ -280,7 +280,7 @@ tap.test('rtpReceiver.receive() with wrong `codecs` must fail', { timeout: 1000 
 
 tap.test('rtpReceiver.receive() with wrong `encodings` must fail', { timeout: 1000 }, (t) =>
 {
-	return init(t)
+	return initTest(t)
 		.then((data) =>
 		{
 			let peer = data.peer;
@@ -364,7 +364,7 @@ tap.test('rtpReceiver.receive() with wrong `encodings` must fail', { timeout: 10
 
 tap.test('rtpReceiver.close() must succeed', { timeout: 1000 }, (t) =>
 {
-	return init(t)
+	return initTest(t)
 		.then((data) =>
 		{
 			let peer = data.peer;
