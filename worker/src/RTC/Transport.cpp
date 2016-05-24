@@ -550,25 +550,34 @@ namespace RTC
 		std::string previousMuxId;
 		std::vector<uint8_t> previousPayloadTypes;
 
-		for (auto it = this->rtpListener.ssrcTable.begin(); it != this->rtpListener.ssrcTable.end();)
+		for (auto& kv : this->rtpListener.ssrcTable)
 		{
-			if (it->second == rtpReceiver)
-				previousSsrcs.push_back(it->first);
+			auto& ssrc = kv.first;
+			auto& existingRtpReceiver = kv.second;
+
+			if (existingRtpReceiver == rtpReceiver)
+				previousSsrcs.push_back(ssrc);
 		}
 
-		for (auto it = this->rtpListener.muxIdTable.begin(); it != this->rtpListener.muxIdTable.end();)
+		for (auto& kv : this->rtpListener.muxIdTable)
 		{
-			if (it->second == rtpReceiver)
+			auto& muxId = kv.first;
+			auto& existingRtpReceiver = kv.second;
+
+			if (existingRtpReceiver == rtpReceiver)
 			{
-				previousMuxId = it->first;
+				previousMuxId = muxId;
 				break;
 			}
 		}
 
-		for (auto it = this->rtpListener.ptTable.begin(); it != this->rtpListener.ptTable.end();)
+		for (auto& kv : this->rtpListener.ptTable)
 		{
-			if (it->second == rtpReceiver)
-				previousPayloadTypes.push_back(it->first);
+			auto& payloadType = kv.first;
+			auto& existingRtpReceiver = kv.second;
+
+			if (existingRtpReceiver == rtpReceiver)
+				previousPayloadTypes.push_back(payloadType);
 		}
 
 		// First remove from the the listener tables all the entries pointing to
