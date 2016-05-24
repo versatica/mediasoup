@@ -35,7 +35,7 @@
     "gulp-shell": "^0.5.2",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.2.0",
-    "tap": "^5.7.1"
+    "tap": "^5.7.2"
   },
   "scripts": {
     "test": "gulp test",

@@ -11,7 +11,7 @@
 	"nonew": true,
 	"plusplus": false,
 	"undef": true,
-	"unused": true,
+	"unused": false,
 	"strict": true,
 	"maxparams": 6,
 	"maxdepth": 4,

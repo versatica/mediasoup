@@ -4,18 +4,102 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { timeout: 1000 }, (t) =>
+function init(test)
 {
 	let server = mediasoup.Server();
 
-	t.tearDown(() => server.close());
+	test.tearDown(() => server.close());
 
 	let room = server.Room();
 	let peer = room.Peer('alice');
 
-	peer.createTransport({ tcp: false })
+	return peer.createTransport({ tcp: false })
 		.then((transport) =>
 		{
+			return { peer: peer, transport: transport };
+		});
+}
+
+tap.test('rtpReceiver.receive() with no `rtpParameters.encodings` must succeed', { timeout: 1000 }, (t) =>
+{
+	return init(t)
+		.then((data) =>
+		{
+			let peer = data.peer;
+			let transport = data.transport;
+			let rtpReceiver = peer.RtpReceiver('audio', transport);
+
+			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
+
+			return rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							name         : 'audio/opus',
+							payloadType  : 100
+						}
+					]
+				})
+				.then(() =>
+				{
+					t.pass('rtpReceiver.receive() succeeded');
+
+					let rtpParameters = rtpReceiver.rtpParameters;
+
+					t.assert(rtpParameters.encodings, 'computed `rtpParameters` has `encodings`');
+					t.equal(rtpParameters.encodings.length, 1, '`encodings` has 1 `encoding`');
+					t.equal(rtpParameters.encodings[0].codecPayloadType, 100, '`encoding` has matching `codecPayloadType`');
+				})
+				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
+		});
+});
+
+tap.test('rtpReceiver.receive() with one `rtpParameters.encodings` without `codecPayloadType` must succeed', { timeout: 1000 }, (t) =>
+{
+	return init(t)
+		.then((data) =>
+		{
+			let peer = data.peer;
+			let transport = data.transport;
+			let rtpReceiver = peer.RtpReceiver('video', transport);
+
+			return rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							name         : 'video/H264',
+							payloadType  : 101
+						}
+					],
+					encodings :
+					[
+						{
+							ssrc : 1234
+						}
+					]
+				})
+				.then(() =>
+				{
+					t.pass('rtpReceiver.receive() succeeded');
+
+					let rtpParameters = rtpReceiver.rtpParameters;
+
+					t.equal(rtpParameters.encodings.length, 1, 'computed `rtpParameters` has 1 `encoding`');
+					t.equal(rtpParameters.encodings[0].codecPayloadType, 101, '`encoding` has matching `codecPayloadType`');
+				})
+				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
+		});
+});
+
+tap.test('rtpReceiver.receive() with full `rtpParameters` must succeed', { timeout: 1000 }, (t) =>
+{
+	return init(t)
+		.then((data) =>
+		{
+			let peer = data.peer;
+			let transport = data.transport;
 			let rtpReceiver = peer.RtpReceiver('video', transport);
 			let rtpParameters =
 			{
@@ -59,11 +143,11 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 						{
 							ssrc : 300000
 						},
-						resolutionScale  : 2.2,
-						framerateScale   : 1.5,
-						maxFramerate     : 30,
-						active           : false,
-						encodingId       : 'ENC3',
+						resolutionScale       : 2.2,
+						framerateScale        : 1.5,
+						maxFramerate          : 30,
+						active                : false,
+						encodingId            : 'ENC3',
 						dependencyEncodingIds : [ 'ENC1', 'ENC2' ]
 					}
 				],
@@ -105,94 +189,199 @@ tap.test('rtpReceiver.receive() with valid `rtpParameters` must succeed', { time
 				}
 			};
 
-			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
-
-			rtpReceiver.receive(rtpParameters)
+			return rtpReceiver.receive(rtpParameters)
 				.then(() =>
 				{
 					t.pass('rtpReceiver.receive() succeeded');
 
-					return Promise.all(
-						[
-							transport.dump()
-								.then(() =>
-								{
-									t.pass('transport.dump() succeeded');
-									// TODO: Enable when done
-									// t.same(Object.keys(data.rtpListener.ssrcTable).sort(), [ ... ].sort(), 'transport.dump() must provide the given ssrc values');
-									// t.same(Object.keys(data.rtpListener.ptTable).sort(), [ ... ].sort(), 'transport.dump() must provide the given payload types');
-								})
-								.catch((error) => t.fail(`transport.dump() failed: ${error}`)),
-
-							rtpReceiver.dump()
-								.then((data) =>
-								{
-									t.pass('rtpReceiver.dump() succeeded');
-									t.same(data.rtpParameters, rtpParameters, 'rtpReceiver.dump() must provide the expected `rtpParameters`');
-								})
-								.catch((error) => t.fail(`rtpReceiver.dump() failed: ${error}`))
-						])
-							.then(() => t.end());
+					t.same(rtpReceiver.rtpParameters, rtpParameters, 'computed `rtpParameters` match given ones');
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
-		})
-		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
+		});
 });
 
-tap.test('rtpReceiver.receive() with no `rtpParameters` must fail', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.receive() without `rtpParameters` must fail', { timeout: 1000 }, (t) =>
 {
-	let server = mediasoup.Server();
-
-	t.tearDown(() => server.close());
-
-	let room = server.Room();
-	let peer = room.Peer('alice');
-
-	peer.createTransport({ tcp: false })
-		.then((transport) =>
+	return init(t)
+		.then((data) =>
 		{
+			let peer = data.peer;
+			let transport = data.transport;
 			let rtpReceiver = peer.RtpReceiver('audio', transport);
 
-			rtpReceiver.receive()
+			return rtpReceiver.receive()
 				.then(() => t.fail('rtpReceiver.receive() succeeded'))
 				.catch((error) =>
 				{
 					t.pass(`rtpReceiver.receive() failed: ${error}`);
-					t.end();
 				});
-		})
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
+		});
+});
+
+tap.test('rtpReceiver.receive() with wrong `codecs` must fail', { timeout: 1000 }, (t) =>
+{
+	return init(t)
+		.then((data) =>
+		{
+			let peer = data.peer;
+			let transport = data.transport;
+			let rtpReceiver = peer.RtpReceiver('audio', transport);
+			let promises = [];
+
+			promises.push(rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							name        : 'chicken/FOO',
+							payloadType : 101
+						}
+					]
+				})
+				.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				.catch((error) =>
+				{
+					t.pass(`rtpReceiver.receive() failed: ${error}`);
+				}));
+
+			promises.push(rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							payloadType : 102
+						}
+					]
+				})
+				.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				.catch((error) =>
+				{
+					t.pass(`rtpReceiver.receive() failed: ${error}`);
+				}));
+
+			promises.push(rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							name : 'audio/opus'
+						}
+					]
+				})
+				.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				.catch((error) =>
+				{
+					t.pass(`rtpReceiver.receive() failed: ${error}`);
+				}));
+
+			return Promise.all(promises);
+		});
+});
+
+tap.test('rtpReceiver.receive() with wrong `encodings` must fail', { timeout: 1000 }, (t) =>
+{
+	return init(t)
+		.then((data) =>
+		{
+			let peer = data.peer;
+			let transport = data.transport;
+			let rtpReceiver = peer.RtpReceiver('audio', transport);
+			let promises = [];
+
+			promises.push(rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							name        : 'audio/opus',
+							payloadType : 101
+						}
+					],
+					encodings :
+					[
+						{
+							codecPayloadType : 102
+						}
+					]
+				})
+				.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				.catch((error) =>
+				{
+					t.pass(`rtpReceiver.receive() failed: ${error}`);
+				}));
+
+			promises.push(rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							name        : 'audio/rtx',
+							payloadType : 101
+						}
+					],
+					encodings :
+					[
+						{
+							codecPayloadType : 101
+						}
+					]
+				})
+				.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				.catch((error) =>
+				{
+					t.pass(`rtpReceiver.receive() failed: ${error}`);
+				}));
+
+			promises.push(rtpReceiver.receive(
+				{
+					codecs :
+					[
+						{
+							name        : 'audio/rtx',
+							payloadType : 101
+						},
+						{
+							name        : 'audio/opus',
+							payloadType : 102
+						}
+					],
+					encodings :
+					[
+						{
+							codecPayloadType : 101
+						}
+					]
+				})
+				.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				.catch((error) =>
+				{
+					t.pass(`rtpReceiver.receive() failed: ${error}`);
+				}));
+
+			return Promise.all(promises);
+		});
 });
 
 tap.test('rtpReceiver.close() must succeed', { timeout: 1000 }, (t) =>
 {
-	let server = mediasoup.Server();
-
-	t.plan(3);
-	t.tearDown(() => server.close());
-
-	let room = server.Room();
-	let peer = room.Peer('alice');
-
-	peer.createTransport({ tcp: false })
-		.then((transport) =>
+	return init(t)
+		.then((data) =>
 		{
-			let rtpReceiver = peer.RtpReceiver('video', transport);
-
-			rtpReceiver.on('close', (error) =>
-			{
-				t.error(error, 'rtpReceiver must close cleanly');
-
-				peer.dump()
-					.then((data) =>
-					{
-						t.pass('peer.dump() succeeded');
-						t.equal(Object.keys(data.rtpReceivers).length, 0, 'peer.dump() must retrieve zero rtpReceivers');
-					})
-					.catch((error) => t.fail(`peer.dump() failed: ${error}`));
-			});
+			let peer = data.peer;
+			let transport = data.transport;
+			let rtpReceiver = peer.RtpReceiver('audio', transport);
 
 			setTimeout(() => rtpReceiver.close(), 100);
-		})
-		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
+
+			return new Promise((accept, reject) =>
+			{
+				rtpReceiver.on('close', (error) =>
+				{
+					t.error(error, 'rtpReceiver must close cleanly');
+					t.equal(peer.rtpReceivers.length, 0, 'peer must have 0 rtpReceivers');
+
+					accept();
+				});
+			});
+		});
 });

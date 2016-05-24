@@ -123,6 +123,7 @@ namespace RTC
 	{
 	public:
 		RtpEncodingParameters(Json::Value& data);
+		RtpEncodingParameters();
 		virtual ~RtpEncodingParameters();
 
 		Json::Value toJson();
@@ -130,6 +131,7 @@ namespace RTC
 	public:
 		uint32_t                 ssrc = 0;
 		uint8_t                  codecPayloadType = 0;
+		bool                     hasCodecPayloadType = false;
 		RtpFecParameters         fec;
 		bool                     hasFec = false;
 		RtpRtxParameters         rtx;

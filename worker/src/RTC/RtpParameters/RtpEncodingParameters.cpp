@@ -28,7 +28,10 @@ namespace RTC
 
 		// `codecPayloadType` is optional.
 		if (data[k_codecPayloadType].isUInt())
+		{
 			this->codecPayloadType = (uint8_t)data[k_codecPayloadType].asUInt();
+			this->hasCodecPayloadType = true;
+		}
 
 		// `ssrc` is optional.
 		if (data[k_ssrc].isUInt())
@@ -84,6 +87,11 @@ namespace RTC
 		}
 	}
 
+	RtpEncodingParameters::RtpEncodingParameters()
+	{
+		MS_TRACE();
+	}
+
 	RtpEncodingParameters::~RtpEncodingParameters()
 	{
 		MS_TRACE();
@@ -107,7 +115,7 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		// Add `codecPayloadType`.
-		if (this->codecPayloadType)
+		if (this->hasCodecPayloadType)
 			json[k_codecPayloadType] = (Json::UInt)this->codecPayloadType;
 
 		// Add `ssrc`.

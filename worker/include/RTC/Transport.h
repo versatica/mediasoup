@@ -11,6 +11,7 @@
 #include "RTC/TransportTuple.h"
 #include "RTC/DtlsTransport.h"
 #include "RTC/SrtpSession.h"
+#include "RTC/RtpListener.h"
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpPacket.h"
 #include "RTC/RtcpPacket.h"
@@ -18,7 +19,6 @@
 #include "Channel/Notifier.h"
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include <json/json.h>
 
 namespace RTC
@@ -38,23 +38,6 @@ namespace RTC
 		};
 
 	public:
-		class RtpListener
-		{
-		public:
-			bool HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver);
-			bool HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver);
-			bool HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver);
-
-		public:
-			// Table of SSRC / RtpReceiver pairs.
-			std::unordered_map<uint32_t, RTC::RtpReceiver*> ssrcTable;
-			//  Table of MID RTP header extension / RtpReceiver pairs.
-			std::unordered_map<std::string, RTC::RtpReceiver*> muxIdTable;
-			// Table of RTP payload type / RtpReceiver pairs.
-			std::unordered_map<uint8_t, RTC::RtpReceiver*> ptTable;
-		};
-
-	public:
 		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data);
 		virtual ~Transport();
 
@@ -67,8 +50,6 @@ namespace RTC
 
 	private:
 		void MayRunDtlsTransport();
-		RTC::RtpReceiver* GetRtpReceiver(RTC::RtpPacket* packet);
-		void RollbackRtpReceiver(RTC::RtpReceiver* rtpReceiver, std::vector<uint32_t>& previousSsrcs, std::string& previousMuxId, std::vector<uint8_t>& previousPayloadTypes);
 
 	/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -137,48 +118,15 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool Transport::RtpListener::HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver)
+	void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver)
 	{
-		auto it = this->ssrcTable.find(ssrc);
-
-		if (it == this->ssrcTable.end())
-		{
-			return false;
-		}
-		else
-		{
-			return (it->second != rtpReceiver);
-		}
+		this->rtpListener.AddRtpReceiver(rtpReceiver);
 	}
 
 	inline
-	bool Transport::RtpListener::HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver)
+	void Transport::RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver)
 	{
-		auto it = this->muxIdTable.find(muxId);
-
-		if (it == this->muxIdTable.end())
-		{
-			return false;
-		}
-		else
-		{
-			return (it->second != rtpReceiver);
-		}
-	}
-
-	inline
-	bool Transport::RtpListener::HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver)
-	{
-		auto it = this->ptTable.find(payloadType);
-
-		if (it == this->ptTable.end())
-		{
-			return false;
-		}
-		else
-		{
-			return (it->second != rtpReceiver);
-		}
+		this->rtpListener.RemoveRtpReceiver(rtpReceiver);
 	}
 }
 
