@@ -174,17 +174,13 @@ namespace RTC
 
 				if (peer)
 				{
-					MS_ERROR("Peer already exists");
-
 					request->Reject("Peer already exists");
 					return;
 				}
 
 				if (!request->internal[k_peerName].isString())
 				{
-					MS_ERROR("Request has not string `internal.peerName`");
-
-					request->Reject("Request has not string `internal.peerName`");
+					request->Reject("Request has not string internal.peerName");
 					return;
 				}
 
@@ -267,8 +263,6 @@ namespace RTC
 
 				if (!peer)
 				{
-					MS_ERROR("Peer does not exist");
-
 					request->Reject("Peer does not exist");
 					return;
 				}

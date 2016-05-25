@@ -17,14 +17,14 @@ namespace RTC
 		static const Json::StaticString k_reducedSize("reducedSize");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("`RtcpParameters` is not an object");
+			MS_THROW_ERROR("RtcpParameters is not an object");
 
 		// `cname` is optional.
 		if (data[k_cname].isString())
 		{
 			this->cname = data[k_cname].asString();
 			if (this->cname.empty())
-				MS_THROW_ERROR("empty `RtcpParameters.cname`");
+				MS_THROW_ERROR("empty RtcpParameters.cname");
 		}
 
 		// `ssrc` is optional.

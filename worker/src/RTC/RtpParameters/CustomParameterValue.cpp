@@ -13,7 +13,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	CustomParameterValue::CustomParameterValue(uint32_t integerValue) :
+	CustomParameterValue::CustomParameterValue(int32_t integerValue) :
 		type(Type::INTEGER),
 		integerValue(integerValue)
 	{

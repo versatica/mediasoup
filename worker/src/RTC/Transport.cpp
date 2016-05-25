@@ -402,8 +402,6 @@ namespace RTC
 				// Ensure this method is not called twice.
 				if (this->remoteDtlsParametersGiven)
 				{
-					MS_ERROR("method already called");
-
 					request->Reject("method already called");
 					return;
 				}
@@ -413,18 +411,14 @@ namespace RTC
 
 				if (!request->data[k_fingerprint].isObject())
 				{
-					MS_ERROR("missing `data.fingerprint`");
-
-					request->Reject("missing `data.fingerprint`");
+					request->Reject("missing data.fingerprint");
 					return;
 				}
 
 				if (!request->data[k_fingerprint][k_algorithm].isString() ||
 					  !request->data[k_fingerprint][k_value].isString())
 				{
-					MS_ERROR("missing `data.fingerprint.algorithm` and/or `data.fingerprint.value`");
-
-					request->Reject("missing `data.fingerprint.algorithm` and/or `data.fingerprint.value`");
+					request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
 					return;
 				}
 
@@ -432,9 +426,7 @@ namespace RTC
 
 				if (remoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 				{
-					MS_ERROR("unsupported `data.fingerprint.algorithm`");
-
-					request->Reject("unsupported `data.fingerprint.algorithm`");
+					request->Reject("unsupported data.fingerprint.algorithm");
 					return;
 				}
 
@@ -457,9 +449,7 @@ namespace RTC
 						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
 						break;
 					case RTC::DtlsTransport::Role::NONE:
-						MS_ERROR("invalid .role");
-
-						request->Reject("invalid `data.role`");
+						request->Reject("invalid data.role");
 						return;
 				}
 

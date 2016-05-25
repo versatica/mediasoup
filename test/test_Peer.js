@@ -32,7 +32,7 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 1000 
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
-tap.test('peer.createTransport() with no `udp` nor `tcp` must fail', { timeout: 1000 }, (t) =>
+tap.test('peer.createTransport() with no udp nor tcp must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -50,7 +50,7 @@ tap.test('peer.createTransport() with no `udp` nor `tcp` must fail', { timeout: 
 		});
 });
 
-tap.test('peer.RtpReceiver() with valid `transport` must succeed', { timeout: 1000 }, (t) =>
+tap.test('peer.RtpReceiver() with valid transport must succeed', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -66,7 +66,7 @@ tap.test('peer.RtpReceiver() with valid `transport` must succeed', { timeout: 10
 
 			let rtpReceiver = peer.RtpReceiver('audio', transport);
 
-			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given `transport`');
+			t.equal(rtpReceiver.transport, transport, 'rtpReceiver.transport must retrieve the given transport');
 
 			peer.dump()
 				.then((data) =>
@@ -88,7 +88,7 @@ tap.test('peer.RtpReceiver() with valid `transport` must succeed', { timeout: 10
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
-tap.test('peer.RtpReceiver() with a closed `transport` must fail', { timeout: 1000 }, (t) =>
+tap.test('peer.RtpReceiver() with a closed transport must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -116,7 +116,7 @@ tap.test('peer.RtpReceiver() with a closed `transport` must fail', { timeout: 10
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
-tap.test('peer.RtpReceiver() with invalid `kind` must fail', { timeout: 1000 }, (t) =>
+tap.test('peer.RtpReceiver() with invalid kind must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server();
 

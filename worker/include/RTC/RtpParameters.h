@@ -24,17 +24,21 @@ namespace RTC
 		public:
 			CustomParameterValue() {};
 			CustomParameterValue(bool booleanValue);
-			CustomParameterValue(uint32_t integerValue);
+			CustomParameterValue(int32_t integerValue);
 			CustomParameterValue(double doubleValue);
 			CustomParameterValue(std::string& stringValue);
 			virtual ~CustomParameterValue();
 
 			Json::Value toJson();
+			bool IsBoolean() { return this->type == Type::BOOLEAN; }
+			bool IsInteger() { return this->type == Type::INTEGER; }
+			bool IsDouble()  { return this->type == Type::DOUBLE;  }
+			bool IsString()  { return this->type == Type::STRING;  }
 
 		public:
 			Type        type;
 			bool        booleanValue = false;
-			uint32_t    integerValue = 0;
+			int32_t     integerValue = 0;
 			double      doubleValue = 0.0;
 			std::string stringValue;
 	};
@@ -178,12 +182,10 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
-		static RtpParameters* Factory(RTC::RtpKind kind, Json::Value& data);
-
-	private:
-		RtpParameters(RTC::RtpKind kind, Json::Value& data);
+		static void FillCustomParameters(CustomParameters& parameters, Json::Value& data);
 
 	public:
+		RtpParameters(RTC::RtpKind kind, Json::Value& data);
 		RtpParameters(const RtpParameters* RtpParameters);
 		virtual ~RtpParameters();
 
@@ -191,7 +193,6 @@ namespace RTC
 		void AutoFill();
 
 	public:
-		// TODO: not sure if 1 or 2 bytes or what.
 		std::string                        muxId;
 		std::vector<RtpCodecParameters>    codecs;
 		std::vector<RtpEncodingParameters> encodings;

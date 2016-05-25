@@ -38,11 +38,11 @@ namespace RTC
 		static const Json::StaticString k_parameters("parameters");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("`RtpCodecParameters` is not an object");
+			MS_THROW_ERROR("RtpCodecParameters is not an object");
 
 		// `name` is mandatory.
 		if (!data[k_name].isString())
-			MS_THROW_ERROR("missing `RtpCodecParameters.name`");
+			MS_THROW_ERROR("missing RtpCodecParameters.name");
 
 		this->name = data[k_name].asString();
 
@@ -52,7 +52,7 @@ namespace RTC
 		else if (kind == RTC::RtpKind::VIDEO && this->name.compare(0, 6, "video/") == 0)
 			this->type = RTC::RtpKind::VIDEO;
 		else
-			MS_THROW_ERROR("invalid `RtpCodecParameters.name` MIME type [name:%s]", this->name.c_str());
+			MS_THROW_ERROR("invalid RtpCodecParameters.name MIME type [name:%s]", this->name.c_str());
 
 		// Get name MIME subtype.
 		std::string subtype = this->name.substr(6);
@@ -64,7 +64,7 @@ namespace RTC
 
 		// `payloadType` is mandatory.
 		if (!data[k_payloadType].isUInt())
-			MS_THROW_ERROR("missing `RtpCodecParameters.payloadType`");
+			MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
 
 		this->payloadType = (uint8_t)data[k_payloadType].asUInt();
 
@@ -100,57 +100,27 @@ namespace RTC
 
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
+			RTC::RtpParameters::FillCustomParameters(this->parameters, data[k_parameters]);
+
+		// Validate codec.
+		switch (this->subtype)
 		{
-			auto& json_parameters = data[k_parameters];
-
-			for (Json::Value::iterator it = json_parameters.begin(); it != json_parameters.end(); ++it)
+			// A RTX codec must have 'apt' parameter pointing to a media codec.
+			case Subtype::RTX:
 			{
-				std::string key = it.key().asString();
-				Json::Value value = (*it);
+				auto it = this->parameters.find("apt");
 
-				switch (value.type())
-				{
-					case Json::booleanValue:
-					{
-						bool booleanValue = value.asBool();
+				if (it == this->parameters.end())
+					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
 
-						this->parameters[key] = RTC::CustomParameterValue(booleanValue);
+				auto& apt = it->second;
 
-						break;
-					}
-
-					case Json::uintValue:
-					case Json::intValue:
-					{
-						uint32_t integerValue = (uint32_t)value.asUInt();
-
-						this->parameters[key] = RTC::CustomParameterValue(integerValue);
-
-						break;
-					}
-
-					case Json::realValue:
-					{
-						double doubleValue = value.asDouble();
-
-						this->parameters[key] = RTC::CustomParameterValue(doubleValue);
-
-						break;
-					}
-
-					case Json::stringValue:
-					{
-						std::string stringValue = value.asString();
-
-						this->parameters[key] = RTC::CustomParameterValue(stringValue);
-
-						break;
-					}
-
-					default:
-						;  // Just ignore other value types
-				}
+				if (!apt.IsInteger())
+					MS_THROW_ERROR("invalid apt parameter in RTX RtpCodecParameters");
 			}
+
+			default:
+				;
 		}
 	}
 
@@ -224,7 +194,7 @@ namespace RTC
 						break;
 
 					case RTC::CustomParameterValue::Type::INTEGER:
-						json_parameters[key] = (Json::UInt)parameterValue.integerValue;
+						json_parameters[key] = (Json::Int)parameterValue.integerValue;
 						break;
 
 					case RTC::CustomParameterValue::Type::DOUBLE:

@@ -238,7 +238,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 						function handleRtpSender(rtpSender)
 						{
 							t.pass('rtpSender retrieved via alice.rtpSenders');
-							t.equal(rtpSender.associatedPeer, bob, '`receiverPeer` must be bob');
+							t.equal(rtpSender.associatedPeer, bob, 'receiverPeer must be bob');
 
 							let transport = alice.transports[0];
 
@@ -246,7 +246,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 								.then(() =>
 								{
 									t.pass('rtpSender.setTransport() succeeded');
-									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
+									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given transport');
 
 									if (++handledRtpSenders === EXPECTED_RTPSENDERS)
 										accept();
@@ -270,7 +270,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 						alice.on('newrtpsender', (rtpSender) =>
 						{
 							t.pass('alice "newrtpsender" event fired');
-							t.equal(rtpSender.associatedPeer, bob, '`rtpSender.associatedPeer` must be bob');
+							t.equal(rtpSender.associatedPeer, bob, 'rtpSender.associatedPeer must be bob');
 
 							let transport = alice.transports[0];
 
@@ -278,7 +278,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 								.then(() =>
 								{
 									t.pass('rtpSender.setTransport() succeeded');
-									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
+									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given transport');
 
 									if (++handledRtpSenders === EXPECTED_RTPSENDERS)
 										accept();
@@ -321,7 +321,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 						function handleRtpSender(rtpSender)
 						{
 							t.pass('rtpSender retrieved via bob.rtpSenders');
-							t.equal(rtpSender.associatedPeer, alice, '`receiverPeer` must be alice');
+							t.equal(rtpSender.associatedPeer, alice, 'receiverPeer must be alice');
 
 							let transport = bob.transports[0];
 
@@ -331,7 +331,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 								.then(() =>
 								{
 									t.pass('rtpSender.setTransport() succeeded');
-									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
+									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given transport');
 
 									if (++handledRtpSenders === EXPECTED_RTPSENDERS)
 										accept();
@@ -356,7 +356,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 						bob.on('newrtpsender', (rtpSender) =>
 						{
 							t.pass('bob "newrtpsender" event fired');
-							t.equal(rtpSender.associatedPeer, alice, '`rtpSender.associatedPeer` must be alice');
+							t.equal(rtpSender.associatedPeer, alice, 'rtpSender.associatedPeer must be alice');
 
 							let transport = bob.transports[0];
 
@@ -364,7 +364,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 								.then(() =>
 								{
 									t.pass('rtpSender.setTransport() succeeded');
-									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given `transport`');
+									t.equal(rtpSender.transport, transport, 'rtpSender.transport must retrieve the given transport');
 
 									if (++handledRtpSenders === EXPECTED_RTPSENDERS)
 										accept();
@@ -425,7 +425,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 									String(aliceVideoSender._internal.rtpSenderId)
 								]
 						},
-						'`data.mapRtpReceiverRtpSenders` match the expected values');
+						'data.mapRtpReceiverRtpSenders match the expected values');
 				})
 				.catch((error) => t.fail(`room.dump() failed: ${error}`));
 		})
@@ -467,7 +467,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 									String(aliceVideoSender._internal.rtpSenderId)
 								]
 						},
-						'`data.mapRtpReceiverRtpSenders` match the expected values');
+						'data.mapRtpReceiverRtpSenders match the expected values');
 				})
 				.catch((error) => t.fail(`room.dump() failed: ${error}`));
 		})
@@ -507,7 +507,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 						{
 							[aliceVideoReceiver._internal.rtpReceiverId] : []
 						},
-						'`data.mapRtpReceiverRtpSenders` match the expected values');
+						'data.mapRtpReceiverRtpSenders match the expected values');
 				})
 				.catch((error) => t.fail(`room.dump() failed: ${error}`));
 		})
@@ -550,7 +550,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 									String(aliceVideoSender._internal.rtpSenderId)
 								]
 						},
-						'`data.mapRtpReceiverRtpSenders` match the expected values');
+						'data.mapRtpReceiverRtpSenders match the expected values');
 				})
 				.catch((error) => t.fail(`room.dump() failed: ${error}`));
 		})

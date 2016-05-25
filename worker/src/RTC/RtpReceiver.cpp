@@ -20,7 +20,7 @@ namespace RTC
 		else if (kind == "video")
 			this->kind = RTC::RtpKind::VIDEO;
 		else
-			MS_THROW_ERROR("unknown `kind`");
+			MS_THROW_ERROR("unknown kind");
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -125,7 +125,7 @@ namespace RTC
 
 				try
 				{
-					this->rtpParameters = RTC::RtpParameters::Factory(this->kind, request->data);
+					this->rtpParameters = new RTC::RtpParameters(this->kind, request->data);
 				}
 				catch (const MediaSoupError &error)
 				{
@@ -165,9 +165,7 @@ namespace RTC
 
 				if (!request->data[k_enabled].isBool())
 				{
-					MS_ERROR("Request has invalid `data.enabled`");
-
-					request->Reject("Request has invalid `data.enabled`");
+					request->Reject("Request has invalid data.enabled");
 					return;
 				}
 
@@ -184,9 +182,7 @@ namespace RTC
 
 				if (!request->data[k_enabled].isBool())
 				{
-					MS_ERROR("Request has invalid `data.enabled`");
-
-					request->Reject("Request has invalid `data.enabled`");
+					request->Reject("Request has invalid data.enabled");
 					return;
 				}
 

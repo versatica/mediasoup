@@ -160,8 +160,6 @@ namespace RTC
 
 				if (transport)
 				{
-					MS_ERROR("Transport already exists");
-
 					request->Reject("Transport already exists");
 					return;
 				}
@@ -207,8 +205,6 @@ namespace RTC
 
 				if (rtpReceiver)
 				{
-					MS_ERROR("RtpReceiver already exists");
-
 					request->Reject("RtpReceiver already exists");
 					return;
 				}
@@ -225,8 +221,6 @@ namespace RTC
 
 				if (!transport)
 				{
-					MS_ERROR("Transport does not exist");
-
 					request->Reject("Transport does not exist");
 					return;
 				}
@@ -234,7 +228,7 @@ namespace RTC
 				// `kind` is mandatory.
 
 				if (!request->data[k_kind].isString())
-					MS_THROW_ERROR("missing `kind`");
+					MS_THROW_ERROR("missing kind");
 
 				std::string kind = request->data[k_kind].asString();
 
@@ -279,8 +273,6 @@ namespace RTC
 
 				if (!transport)
 				{
-					MS_ERROR("Transport does not exist");
-
 					request->Reject("Transport does not exist");
 					return;
 				}
@@ -310,8 +302,6 @@ namespace RTC
 
 				if (!rtpReceiver)
 				{
-					MS_ERROR("RtpReceiver does not exist");
-
 					request->Reject("RtpReceiver does not exist");
 					return;
 				}
@@ -337,8 +327,6 @@ namespace RTC
 
 				if (!rtpSender)
 				{
-					MS_ERROR("RtpSender does not exist");
-
 					request->Reject("RtpSender does not exist");
 					return;
 				}
@@ -364,8 +352,6 @@ namespace RTC
 
 				if (!rtpSender)
 				{
-					MS_ERROR("RtpSender does not exist");
-
 					request->Reject("RtpSender does not exist");
 					return;
 				}
@@ -384,8 +370,6 @@ namespace RTC
 
 				if (!transport)
 				{
-					MS_ERROR("Transport does not exist");
-
 					request->Reject("Transport does not exist");
 					return;
 				}
@@ -454,7 +438,7 @@ namespace RTC
 		auto json_transportId = request->internal[k_transportId];
 
 		if (!json_transportId.isUInt())
-			MS_THROW_ERROR("Request has not numeric `internal.transportId`");
+			MS_THROW_ERROR("Request has not numeric internal.transportId");
 
 		if (transportId)
 			*transportId = json_transportId.asUInt();
@@ -481,7 +465,7 @@ namespace RTC
 		auto json_rtpReceiverId = request->internal[k_rtpReceiverId];
 
 		if (!json_rtpReceiverId.isUInt())
-			MS_THROW_ERROR("Request has not numeric `internal.rtpReceiverId`");
+			MS_THROW_ERROR("Request has not numeric internal.rtpReceiverId");
 
 		if (rtpReceiverId)
 			*rtpReceiverId = json_rtpReceiverId.asUInt();
@@ -508,7 +492,7 @@ namespace RTC
 		auto json_rtpSenderId = request->internal[k_rtpSenderId];
 
 		if (!json_rtpSenderId.isUInt())
-			MS_THROW_ERROR("Request has not numeric `internal.rtpSenderId`");
+			MS_THROW_ERROR("Request has not numeric internal.rtpSenderId");
 
 		if (rtpSenderId)
 			*rtpSenderId = json_rtpSenderId.asUInt();

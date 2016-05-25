@@ -18,19 +18,19 @@ namespace RTC
 		static const Json::StaticString k_parameters("parameters");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("`RtpHeaderExtensionParameters` is not an object");
+			MS_THROW_ERROR("RtpHeaderExtensionParameters is not an object");
 
 		// `uri` is mandatory.
 		if (!data[k_uri].isString())
-			MS_THROW_ERROR("missing `RtpHeaderExtensionParameters.uri`");
+			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.uri");
 
 		this->uri = data[k_uri].asString();
 		if (this->uri.empty())
-			MS_THROW_ERROR("empty `RtpHeaderExtensionParameters.uri`");
+			MS_THROW_ERROR("empty RtpHeaderExtensionParameters.uri");
 
 		// `id` is mandatory.
 		if (!data[k_id].asUInt())
-			MS_THROW_ERROR("missing `RtpHeaderExtensionParameters.id`");
+			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.id");
 
 		this->id = (uint16_t)data[k_id].asUInt();
 
@@ -40,58 +40,7 @@ namespace RTC
 
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
-		{
-			auto& json_parameters = data[k_parameters];
-
-			for (Json::Value::iterator it = json_parameters.begin(); it != json_parameters.end(); ++it)
-			{
-				std::string key = it.key().asString();
-				Json::Value value = (*it);
-
-				switch (value.type())
-				{
-					case Json::booleanValue:
-					{
-						bool booleanValue = value.asBool();
-
-						this->parameters[key] = RTC::CustomParameterValue(booleanValue);
-
-						break;
-					}
-
-					case Json::uintValue:
-					case Json::intValue:
-					{
-						uint32_t integerValue = (uint32_t)value.asUInt();
-
-						this->parameters[key] = RTC::CustomParameterValue(integerValue);
-
-						break;
-					}
-
-					case Json::realValue:
-					{
-						double doubleValue = value.asDouble();
-
-						this->parameters[key] = RTC::CustomParameterValue(doubleValue);
-
-						break;
-					}
-
-					case Json::stringValue:
-					{
-						std::string stringValue = value.asString();
-
-						this->parameters[key] = RTC::CustomParameterValue(stringValue);
-
-						break;
-					}
-
-					default:
-						;  // Just ignore other value types
-				}
-			}
-		}
+			RTC::RtpParameters::FillCustomParameters(this->parameters, data[k_parameters]);
 	}
 
 	RtpHeaderExtensionParameters::~RtpHeaderExtensionParameters()
@@ -136,7 +85,7 @@ namespace RTC
 						break;
 
 					case RTC::CustomParameterValue::Type::INTEGER:
-						json_parameters[key] = (Json::UInt)parameterValue.integerValue;
+						json_parameters[key] = (Json::Int)parameterValue.integerValue;
 						break;
 
 					case RTC::CustomParameterValue::Type::DOUBLE:

@@ -16,11 +16,11 @@ namespace RTC
 		static const Json::StaticString k_ssrc("ssrc");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("`RtpFecParameters is not an object");
+			MS_THROW_ERROR("RtpFecParameters is not an object");
 
 		// `mechanism` is mandatory.
 		if (!data[k_mechanism].isString())
-			MS_THROW_ERROR("missing `RtpFecParameters.mechanism`");
+			MS_THROW_ERROR("missing RtpFecParameters.mechanism");
 
 		this->mechanism = data[k_mechanism].asString();
 

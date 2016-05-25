@@ -96,7 +96,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 	auto json_roomId = request->internal[k_roomId];
 
 	if (!json_roomId.isUInt())
-		MS_THROW_ERROR("Request has not numeric `internal.roomId`");
+		MS_THROW_ERROR("Request has not numeric internal.roomId");
 
 	// If given, fill roomId.
 	if (roomId)
@@ -191,8 +191,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			if (room)
 			{
-				MS_ERROR("Room already exists");
-
 				request->Reject("Room already exists");
 				return;
 			}
@@ -247,8 +245,6 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			if (!room)
 			{
-				MS_ERROR("Room does not exist");
-
 				request->Reject("Room does not exist");
 				return;
 			}

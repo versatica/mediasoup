@@ -16,11 +16,11 @@ namespace RTC
 		static const Json::StaticString k_parameter("parameter");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("`RtcpFeedback` is not an object");
+			MS_THROW_ERROR("RtcpFeedback is not an object");
 
 		// `type` is mandatory.
 		if (!data[k_type].isString())
-			MS_THROW_ERROR("missing `RtcpFeedback.type`");
+			MS_THROW_ERROR("missing RtcpFeedback.type");
 
 		this->type = data[k_type].asString();
 

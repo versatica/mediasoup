@@ -103,105 +103,124 @@ namespace RTC
 		RemoveRtpReceiver(rtpReceiver);
 
 		// Add entries into the ssrcTable.
-		for (auto& encoding : rtpParameters->encodings)
 		{
-			uint32_t ssrc;
-
-			// Check encoding.ssrc.
-
-			ssrc = encoding.ssrc;
-
-			if (ssrc)
+			for (auto& encoding : rtpParameters->encodings)
 			{
-				if (!this->HasSsrc(ssrc, rtpReceiver))
+				uint32_t ssrc;
+
+				// Check encoding.ssrc.
+
+				ssrc = encoding.ssrc;
+
+				if (ssrc)
 				{
-					this->ssrcTable[ssrc] = rtpReceiver;
+					if (!this->HasSsrc(ssrc, rtpReceiver))
+					{
+						this->ssrcTable[ssrc] = rtpReceiver;
+					}
+					else
+					{
+						RemoveRtpReceiver(rtpReceiver);
+						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
+						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+					}
 				}
-				else
-				{
-					RemoveRtpReceiver(rtpReceiver);
-					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
 
-					MS_THROW_ERROR("`ssrc` already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+				// Check encoding.rtx.ssrc.
+
+				ssrc = encoding.rtx.ssrc;
+
+				if (ssrc)
+				{
+					if (!this->HasSsrc(ssrc, rtpReceiver))
+					{
+						this->ssrcTable[ssrc] = rtpReceiver;
+					}
+					else
+					{
+						RemoveRtpReceiver(rtpReceiver);
+						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
+						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+					}
 				}
-			}
 
-			// Check encoding.rtx.ssrc.
+				// Check encoding.fec.ssrc.
 
-			ssrc = encoding.rtx.ssrc;
+				ssrc = encoding.fec.ssrc;
 
-			if (ssrc)
-			{
-				if (!this->HasSsrc(ssrc, rtpReceiver))
+				if (ssrc)
 				{
-					this->ssrcTable[ssrc] = rtpReceiver;
-				}
-				else
-				{
-					RemoveRtpReceiver(rtpReceiver);
-					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+					if (!this->HasSsrc(ssrc, rtpReceiver))
+					{
+						this->ssrcTable[ssrc] = rtpReceiver;
+					}
+					else
+					{
+						RemoveRtpReceiver(rtpReceiver);
+						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
 
-					MS_THROW_ERROR("`ssrc` already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
-				}
-			}
-
-			// Check encoding.fec.ssrc.
-
-			ssrc = encoding.fec.ssrc;
-
-			if (ssrc)
-			{
-				if (!this->HasSsrc(ssrc, rtpReceiver))
-				{
-					this->ssrcTable[ssrc] = rtpReceiver;
-				}
-				else
-				{
-					RemoveRtpReceiver(rtpReceiver);
-					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
-
-					MS_THROW_ERROR("`ssrc` already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+					}
 				}
 			}
 		}
 
 		// Add entries into muxIdTable.
-		if (!rtpParameters->muxId.empty())
 		{
-			auto& muxId = rtpParameters->muxId;
-
-			if (!this->HasMuxId(muxId, rtpReceiver))
+			if (!rtpParameters->muxId.empty())
 			{
-				this->muxIdTable[muxId] = rtpReceiver;
-			}
-			else
-			{
-				RemoveRtpReceiver(rtpReceiver);
-				RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+				auto& muxId = rtpParameters->muxId;
 
-				MS_THROW_ERROR("`muxId` already exists in RTP listener [muxId:'%s']", muxId.c_str());
+				if (!this->HasMuxId(muxId, rtpReceiver))
+				{
+					this->muxIdTable[muxId] = rtpReceiver;
+				}
+				else
+				{
+					RemoveRtpReceiver(rtpReceiver);
+					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
+					MS_THROW_ERROR("muxId already exists in RTP listener [muxId:'%s']", muxId.c_str());
+				}
 			}
 		}
 
-		// Add entries into ptTable.
-		for (auto& codec : rtpParameters->codecs)
+		// Add entries into ptTable (just if no encoding.ssrc is given).
 		{
-			uint8_t payloadType;
+			auto it = rtpParameters->encodings.begin();
 
-			// Check encoding.ssrc.
-
-			payloadType = codec.payloadType;
-
-			if (!this->HasPayloadType(payloadType, rtpReceiver))
+			for (; it != rtpParameters->encodings.end(); ++it)
 			{
-				this->ptTable[payloadType] = rtpReceiver;
+				auto encoding = *it;
+
+				if (encoding.ssrc)
+					break;
 			}
-			else
-			{
-				RemoveRtpReceiver(rtpReceiver);
-				RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
 
-				MS_THROW_ERROR("`payloadType` already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
+			if (it == rtpParameters->encodings.end())
+			{
+				for (auto& codec : rtpParameters->codecs)
+				{
+					uint8_t payloadType;
+
+					// Check encoding.ssrc.
+
+					payloadType = codec.payloadType;
+
+					if (!this->HasPayloadType(payloadType, rtpReceiver))
+					{
+						this->ptTable[payloadType] = rtpReceiver;
+					}
+					else
+					{
+						RemoveRtpReceiver(rtpReceiver);
+						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
+						MS_THROW_ERROR("payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
+					}
+				}
 			}
 		}
 	}
@@ -250,9 +269,6 @@ namespace RTC
 			{
 				auto rtpReceiver = it->second;
 				auto rtpParameters = rtpReceiver->GetRtpParameters();
-
-				// TODO: TMP
-				MS_ASSERT(rtpParameters, "got a RtpReceiver with no RtpParameters");
 
 				// Ensure the RTP PT is present in RtpParameters.
 

@@ -15,7 +15,7 @@ namespace RTC
 		static const Json::StaticString k_ssrc("ssrc");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("`RtpRtxParameters is not an object");
+			MS_THROW_ERROR("RtpRtxParameters is not an object");
 
 		// `ssrc` is optional.
 		if (data[k_ssrc].isUInt())

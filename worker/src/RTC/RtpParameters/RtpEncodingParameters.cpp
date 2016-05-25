@@ -24,7 +24,7 @@ namespace RTC
 		static const Json::StaticString k_dependencyEncodingIds("dependencyEncodingIds");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("`RtpEncodingParameters is not an object");
+			MS_THROW_ERROR("RtpEncodingParameters is not an object");
 
 		// `codecPayloadType` is optional.
 		if (data[k_codecPayloadType].isUInt())

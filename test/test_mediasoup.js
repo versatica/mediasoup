@@ -45,7 +45,7 @@ tap.test('mediasoup.Server() with wrong options must fail', { timeout: 1000 }, (
 	});
 });
 
-tap.test('mediasoup.Server() with non existing `rtcListenIPv4` IP must fail', { timeout: 1000 }, (t) =>
+tap.test('mediasoup.Server() with non existing rtcListenIPv4 IP must fail', { timeout: 1000 }, (t) =>
 {
 	let server = mediasoup.Server({ rtcListenIPv4: '1.2.3.4' });
 
