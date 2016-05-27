@@ -4,7 +4,7 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-tap.test('peer.createTransport() with no options must succeed', { timeout: 1000 }, (t) =>
+tap.test('peer.createTransport() with no options must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -32,7 +32,7 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 1000 
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
-tap.test('peer.createTransport() with no udp nor tcp must fail', { timeout: 1000 }, (t) =>
+tap.test('peer.createTransport() with no udp nor tcp must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -50,7 +50,7 @@ tap.test('peer.createTransport() with no udp nor tcp must fail', { timeout: 1000
 		});
 });
 
-tap.test('peer.RtpReceiver() with valid transport must succeed', { timeout: 1000 }, (t) =>
+tap.test('peer.RtpReceiver() with valid transport must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -88,7 +88,7 @@ tap.test('peer.RtpReceiver() with valid transport must succeed', { timeout: 1000
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
-tap.test('peer.RtpReceiver() with a closed transport must fail', { timeout: 1000 }, (t) =>
+tap.test('peer.RtpReceiver() with a closed transport must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -116,7 +116,7 @@ tap.test('peer.RtpReceiver() with a closed transport must fail', { timeout: 1000
 		.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
 });
 
-tap.test('peer.RtpReceiver() with invalid kind must fail', { timeout: 1000 }, (t) =>
+tap.test('peer.RtpReceiver() with invalid kind must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 

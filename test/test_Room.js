@@ -4,7 +4,7 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-tap.test('room.Peer() with peerName must succeed', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() with peerName must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -23,7 +23,7 @@ tap.test('room.Peer() with peerName must succeed', { timeout: 1000 }, (t) =>
 	setTimeout(() => peer.close(), 50);
 });
 
-tap.test('room.Peer() without peerName must fail', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() without peerName must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -41,7 +41,7 @@ tap.test('room.Peer() without peerName must fail', { timeout: 1000 }, (t) =>
 	t.end();
 });
 
-tap.test('room.Peer() with same peerName must fail', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() with same peerName must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -60,7 +60,7 @@ tap.test('room.Peer() with same peerName must fail', { timeout: 1000 }, (t) =>
 	t.end();
 });
 
-tap.test('room.Peer() with same peerName must succeed if previous peer was closed before', { timeout: 1000 }, (t) =>
+tap.test('room.Peer() with same peerName must succeed if previous peer was closed before', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -92,7 +92,7 @@ tap.test('room.Peer() with same peerName must succeed if previous peer was close
 	setTimeout(() => peer2.close(), 50);
 });
 
-tap.test('room.dump() must succeed', { timeout: 1000 }, (t) =>
+tap.test('room.dump() must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 

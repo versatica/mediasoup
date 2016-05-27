@@ -20,7 +20,7 @@ function initTest(t)
 		});
 }
 
-tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -63,7 +63,7 @@ tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 1000
 		});
 });
 
-tap.test('rtpReceiver.receive() with one encoding without codecPayloadType must succeed', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.receive() with one encoding without codecPayloadType must succeed', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -101,7 +101,7 @@ tap.test('rtpReceiver.receive() with one encoding without codecPayloadType must 
 		});
 });
 
-tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -210,7 +210,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 		});
 });
 
-tap.test('two rtpReceiver.receive() over the same transport sharing PT values must succeed if ssrc are given', { timeout: 1000 }, (t) =>
+tap.test('two rtpReceiver.receive() over the same transport sharing PT values must succeed if ssrc are given', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -277,7 +277,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 		});
 });
 
-tap.test('rtpReceiver.receive() without rtpParameters must fail', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.receive() without rtpParameters must fail', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -295,7 +295,7 @@ tap.test('rtpReceiver.receive() without rtpParameters must fail', { timeout: 100
 		});
 });
 
-tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -399,7 +399,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 1000 },
 		});
 });
 
-tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -461,7 +461,7 @@ tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 1000
 		});
 });
 
-tap.test('two rtpReceiver.receive() over the same transport sharing PT values must fail if ssrc are not given', { timeout: 1000 }, (t) =>
+tap.test('two rtpReceiver.receive() over the same transport sharing PT values must fail if ssrc are not given', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -509,7 +509,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 		});
 });
 
-tap.test('rtpReceiver.close() must succeed', { timeout: 1000 }, (t) =>
+tap.test('rtpReceiver.close() must succeed', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>

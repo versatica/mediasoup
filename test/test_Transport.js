@@ -4,7 +4,7 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 
-tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', { timeout: 1000 }, (t) =>
+tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -47,7 +47,7 @@ tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', 
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
-tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { timeout: 1000 }, (t) =>
+tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -89,7 +89,7 @@ tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { 
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
-tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { timeout: 1000 }, (t) =>
+tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -130,7 +130,7 @@ tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { time
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
-tap.test('transport.setRemoteDtlsParameters() with invalid role must fail', { timeout: 1000 }, (t) =>
+tap.test('transport.setRemoteDtlsParameters() with invalid role must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -164,7 +164,7 @@ tap.test('transport.setRemoteDtlsParameters() with invalid role must fail', { ti
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
-tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { timeout: 1000 }, (t) =>
+tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
@@ -193,7 +193,7 @@ tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { 
 		.catch((error) => t.fail(`peer.createTransport failed: ${error}`));
 });
 
-tap.test('transport.close() must succeed', { timeout: 1000 }, (t) =>
+tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
