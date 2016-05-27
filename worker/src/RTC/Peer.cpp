@@ -404,7 +404,7 @@ namespace RTC
 		MS_ASSERT(this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
 			"given RtpSender already exists in this Peer");
 
-		MS_ASSERT(rtpSender->GetRtpParameters(), "given RtpSender does not have RtpParameters");
+		MS_ASSERT(rtpSender->GetParameters(), "given RtpSender does not have RtpParameters");
 
 		// Store it.
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;
@@ -423,7 +423,7 @@ namespace RTC
 				event_data[k_kind] = v_video;
 				break;
 		}
-		event_data[k_rtpParameters] = rtpSender->GetRtpParameters()->toJson();
+		event_data[k_rtpParameters] = rtpSender->GetParameters()->toJson();
 		event_data[k_peerName] = peerName;
 
 		this->notifier->Emit(this->peerId, "newrtpsender", event_data);
@@ -548,10 +548,8 @@ namespace RTC
 		if (transport)
 			transport->AddRtpReceiver(rtpReceiver);
 
-		// Auto-fill missing RTP parameters.
-		auto rtpParameters = rtpReceiver->GetRtpParameters();
-
-		rtpParameters->AutoFill();
+		// TODO
+		rtpReceiver->CreateSenderParameters();
 
 		// Notify the listener (Room).
 		this->listener->onPeerRtpReceiverParametersDone(this, rtpReceiver);

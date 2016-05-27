@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::RtpReceiver"
 
 #include "RTC/RtpReceiver.h"
+#include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -38,6 +39,9 @@ namespace RTC
 
 		if (this->rtpParameters)
 			delete this->rtpParameters;
+
+		if (this->senderRtpParameters)
+			delete this->senderRtpParameters;
 
 		// Notify.
 		event_data[k_class] = "RtpReceiver";
@@ -247,5 +251,26 @@ namespace RTC
 
 			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
 		}
+	}
+
+	void RtpReceiver::SetPayloadMapping()
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void RtpReceiver::CreateSenderParameters()
+	{
+		MS_TRACE();
+
+		// Clone receiver parameters.
+		this->senderRtpParameters = new RTC::RtpParameters(this->rtpParameters);
+
+		// TODO: Must override payloadType/ssrc values in senderRtpParameters and
+		// override muxId, rtcp, etc.
+
+		// Set a random muxId.
+		this->senderRtpParameters->muxId = Utils::Crypto::GetRandomString(8);
 	}
 }

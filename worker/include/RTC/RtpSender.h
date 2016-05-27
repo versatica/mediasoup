@@ -35,7 +35,7 @@ namespace RTC
 		void Send(RTC::RtpParameters* rtpParameters);
 		void SetTransport(RTC::Transport* transport);
 		void RemoveTransport(RTC::Transport* transport);
-		RTC::RtpParameters* GetRtpParameters();
+		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 
 	public:
@@ -48,7 +48,6 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		RTC::Transport* transport = nullptr;
-		// Externally allocated but handled by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 	};
 
@@ -68,7 +67,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::RtpParameters* RtpSender::GetRtpParameters()
+	RTC::RtpParameters* RtpSender::GetParameters()
 	{
 		return this->rtpParameters;
 	}

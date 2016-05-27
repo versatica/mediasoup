@@ -154,11 +154,10 @@ namespace RTC
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
-	// TODO temp
 	inline
 	void RtpPacket::SetSsrc(uint32_t ssrc)
 	{
-		this->header->ssrc = htonl(ssrc);
+		this->header->ssrc = (uint32_t)htonl(ssrc);
 	}
 
 	inline

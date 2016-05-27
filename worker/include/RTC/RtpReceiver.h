@@ -8,6 +8,7 @@
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
+#include <unordered_map>
 #include <json/json.h>
 
 namespace RTC
@@ -40,8 +41,10 @@ namespace RTC
 		void SetTransport(RTC::Transport* transport);
 		RTC::Transport* GetTransport();
 		void RemoveTransport(RTC::Transport* transport);
-		RTC::RtpParameters* GetRtpParameters();
-		RTC::RtpParameters* GetPreviousRtpParameters();
+		RTC::RtpParameters* GetParameters();
+		RTC::RtpParameters* GetSenderParameters();
+		void SetPayloadMapping();  // TODO
+		void CreateSenderParameters();  // TODO
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 
 	public:
@@ -57,9 +60,12 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
+		RTC::RtpParameters* senderRtpParameters = nullptr;
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
+		std::unordered_map<uint8_t, uint8_t> mapPayloadTypes;
+		std::unordered_map<uint32_t, uint32_t> mapSsrcs;
 	};
 
 	/* Inline methods. */
@@ -84,9 +90,15 @@ namespace RTC
 	}
 
 	inline
-	RTC::RtpParameters* RtpReceiver::GetRtpParameters()
+	RTC::RtpParameters* RtpReceiver::GetParameters()
 	{
 		return this->rtpParameters;
+	}
+
+	inline
+	RTC::RtpParameters* RtpReceiver::GetSenderParameters()
+	{
+		return this->senderRtpParameters;
 	}
 }
 

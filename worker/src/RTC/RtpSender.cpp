@@ -30,9 +30,6 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		if (this->rtpParameters)
-			delete this->rtpParameters;
-
 		// Notify.
 		event_data[k_class] = "RtpSender";
 		this->notifier->Emit(this->rtpSenderId, "close", event_data);

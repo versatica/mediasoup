@@ -431,7 +431,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		})
 		.then(() =>
 		{
-			return t.test('close aliceAudioReceiver', { timeout: 1000 }, (t2) =>
+			return t.test('aliceAudioReceiver.close() must also close bobAudioSender', { timeout: 1000 }, (t2) =>
 			{
 				t2.plan(2);
 
@@ -473,7 +473,7 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 		})
 		.then(() =>
 		{
-			return t.test('close bob', { timeout: 1000 }, (t2) =>
+			return t.test('bob.close() must also close aliceVideoSender', { timeout: 1000 }, (t2) =>
 			{
 				t2.plan(4);
 

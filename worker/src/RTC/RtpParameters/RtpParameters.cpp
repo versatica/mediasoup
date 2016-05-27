@@ -145,134 +145,17 @@ namespace RTC
 		else
 			this->userParameters = Json::objectValue;
 
-		// Validate codecs.
-		{
-			// Must be at least one codec.
-			if (this->codecs.size() == 0)
-				MS_THROW_ERROR("empty RtpParameters.codecs");
+		// Validate RTP parameters.
 
-			// Validate each codec.
-
-			for (auto& codec : this->codecs)
-			{
-				switch (codec.subtype)
-				{
-					// A RTX codec must have 'apt' parameter pointing to a media codec.
-					case RtpCodecParameters::Subtype::RTX:
-					{
-						// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
-						auto it = codec.parameters.find("apt");
-						int32_t apt = it->second.integerValue;
-						auto it2 = this->codecs.begin();
-
-						for (; it2 != this->codecs.end(); ++it2)
-						{
-							auto codec = *it2;
-
-							if ((int32_t)codec.payloadType == apt)
-							{
-								if (codec.subtype == RtpCodecParameters::Subtype::MEDIA)
-									break;
-								else
-									MS_THROW_ERROR("apt in RTX codec points to a non media codec");
-							}
-						}
-						if (it2 == this->codecs.end())
-							MS_THROW_ERROR("apt in RTX codec points to a non existing codec");
-					}
-
-					default:
-						;
-				}
-			}
-		}
-
-		// Validate encodings.
-		{
-			// If there are no encodings create one with `codecPayloadType` pointing to
-			// the first media codec.
-			if (this->encodings.size() == 0)
-			{
-				RtpEncodingParameters encoding;
-
-				auto it = this->codecs.begin();
-
-				for (; it != this->codecs.end(); ++it)
-				{
-					auto codec = *it;
-
-					// Must be a media codec.
-					if (codec.subtype == RtpCodecParameters::Subtype::MEDIA)
-					{
-						encoding.codecPayloadType = codec.payloadType;
-						encoding.hasCodecPayloadType = true;
-
-						break;
-					}
-				}
-				if (it == this->codecs.end())
-					MS_THROW_ERROR("no media codecs in RtpParameters.codecs");
-
-				// Insert into the encodings vector.
-				this->encodings.push_back(encoding);
-			}
-			// If there are one encoding and does not have `codecPayloadType` do the same
-			// as above.
-			else if (this->encodings.size() == 1 && !this->encodings[0].hasCodecPayloadType)
-			{
-				auto it = this->codecs.begin();
-
-				for (; it != this->codecs.end(); ++it)
-				{
-					auto codec = *it;
-					auto& encoding = this->encodings[0];
-
-					// Must be a media codec.
-					if (codec.subtype == RtpCodecParameters::Subtype::MEDIA)
-					{
-						encoding.codecPayloadType = codec.payloadType;
-						encoding.hasCodecPayloadType = true;
-
-						break;
-					}
-				}
-				if (it == this->codecs.end())
-					MS_THROW_ERROR("no media codecs in RtpParameters.codecs");
-			}
-			// Otherwise all the encodings must point to a valid media codec.
-			else
-			{
-				for (auto& encoding : this->encodings)
-				{
-					if (!encoding.hasCodecPayloadType)
-						MS_THROW_ERROR("missing RTpEncodingParameters.codecPayloadType");
-
-					auto it = this->codecs.begin();
-
-					for (; it != this->codecs.end(); ++it)
-					{
-						auto codec = *it;
-
-						if (codec.payloadType == encoding.codecPayloadType)
-						{
-							// Must be a media codec.
-							if (codec.subtype == RtpCodecParameters::Subtype::MEDIA)
-								break;
-							else
-								MS_THROW_ERROR("invalid RtpEncodingParameters.codecPayloadType");
-						}
-					}
-					if (it == this->codecs.end())
-						MS_THROW_ERROR("unknown RtpEncodingParameters.codecPayloadType");
-				}
-			}
-		}
+		ValidateCodecs();
+		ValidateEncodings();
 	}
 
 	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
+		this->kind = rtpParameters->kind;
 		this->muxId = rtpParameters->muxId;
 		this->codecs = rtpParameters->codecs;
 		this->encodings = rtpParameters->encodings;
@@ -280,8 +163,6 @@ namespace RTC
 		this->rtcp = rtpParameters->rtcp;
 		this->hasRtcp = rtpParameters->hasRtcp;
 		this->userParameters = rtpParameters->userParameters;
-
-		this->kind = rtpParameters->kind;
 	}
 
 	RtpParameters::~RtpParameters()
@@ -349,10 +230,128 @@ namespace RTC
 		return json;
 	}
 
-	void RtpParameters::AutoFill()
+	void RtpParameters::ValidateCodecs()
 	{
 		MS_TRACE();
 
-		// TODO
+		// Must be at least one codec.
+		if (this->codecs.size() == 0)
+			MS_THROW_ERROR("empty RtpParameters.codecs");
+
+		// Validate each codec.
+
+		for (auto& codec : this->codecs)
+		{
+			switch (codec.subtype)
+			{
+				// A RTX codec must have 'apt' parameter pointing to a non RTX codec.
+				case RtpCodecParameters::Subtype::RTX:
+				{
+					// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
+					auto it = codec.parameters.find("apt");
+					int32_t apt = it->second.integerValue;
+					auto it2 = this->codecs.begin();
+
+					for (; it2 != this->codecs.end(); ++it2)
+					{
+						auto codec = *it2;
+
+						if ((int32_t)codec.payloadType == apt)
+						{
+							if (codec.subtype != RtpCodecParameters::Subtype::RTX)
+								break;
+							else
+								MS_THROW_ERROR("apt in RTX codec points to RTX codec");
+						}
+					}
+					if (it2 == this->codecs.end())
+						MS_THROW_ERROR("apt in RTX codec points to a non existing codec");
+				}
+
+				default:
+					;
+			}
+		}
+	}
+
+	void RtpParameters::ValidateEncodings()
+	{
+		// If there are no encodings create one with `codecPayloadType` pointing to
+		// the first media codec.
+		if (this->encodings.size() == 0)
+		{
+			RtpEncodingParameters encoding;
+
+			auto it = this->codecs.begin();
+
+			for (; it != this->codecs.end(); ++it)
+			{
+				auto codec = *it;
+
+				// Must be a media codec.
+				if (codec.subtype == RtpCodecParameters::Subtype::MEDIA)
+				{
+					encoding.codecPayloadType = codec.payloadType;
+					encoding.hasCodecPayloadType = true;
+
+					break;
+				}
+			}
+			if (it == this->codecs.end())
+				MS_THROW_ERROR("no media codecs in RtpParameters.codecs");
+
+			// Insert into the encodings vector.
+			this->encodings.push_back(encoding);
+		}
+		// If there are one encoding and does not have `codecPayloadType` do the same
+		// as above.
+		else if (this->encodings.size() == 1 && !this->encodings[0].hasCodecPayloadType)
+		{
+			auto it = this->codecs.begin();
+
+			for (; it != this->codecs.end(); ++it)
+			{
+				auto codec = *it;
+				auto& encoding = this->encodings[0];
+
+				// Must be a media codec.
+				if (codec.subtype == RtpCodecParameters::Subtype::MEDIA)
+				{
+					encoding.codecPayloadType = codec.payloadType;
+					encoding.hasCodecPayloadType = true;
+
+					break;
+				}
+			}
+			if (it == this->codecs.end())
+				MS_THROW_ERROR("no media codecs in RtpParameters.codecs");
+		}
+		// Otherwise all the encodings must point to a valid media codec.
+		else
+		{
+			for (auto& encoding : this->encodings)
+			{
+				if (!encoding.hasCodecPayloadType)
+					MS_THROW_ERROR("missing RTpEncodingParameters.codecPayloadType");
+
+				auto it = this->codecs.begin();
+
+				for (; it != this->codecs.end(); ++it)
+				{
+					auto codec = *it;
+
+					if (codec.payloadType == encoding.codecPayloadType)
+					{
+						// Must be a media codec.
+						if (codec.subtype == RtpCodecParameters::Subtype::MEDIA)
+							break;
+						else
+							MS_THROW_ERROR("invalid RtpEncodingParameters.codecPayloadType");
+					}
+				}
+				if (it == this->codecs.end())
+					MS_THROW_ERROR("unknown RtpEncodingParameters.codecPayloadType");
+			}
+		}
 	}
 }

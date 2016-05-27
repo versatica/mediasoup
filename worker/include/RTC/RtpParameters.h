@@ -30,10 +30,25 @@ namespace RTC
 			virtual ~CustomParameterValue();
 
 			Json::Value toJson();
-			bool IsBoolean() { return this->type == Type::BOOLEAN; }
-			bool IsInteger() { return this->type == Type::INTEGER; }
-			bool IsDouble()  { return this->type == Type::DOUBLE;  }
-			bool IsString()  { return this->type == Type::STRING;  }
+			bool IsBoolean()
+			{
+				return this->type == Type::BOOLEAN;
+			}
+			bool IsInteger()
+			{
+				return this->type == Type::INTEGER;
+			}
+			bool IsPositiveInteger()
+			{
+				return this->type == Type::INTEGER && this->integerValue >= 0;
+			}
+			bool IsDouble()
+			{
+				return this->type == Type::DOUBLE;
+			}
+			bool IsString(){
+				return this->type == Type::STRING;
+			}
 
 		public:
 			Type        type;
@@ -185,12 +200,17 @@ namespace RTC
 		static void FillCustomParameters(CustomParameters& parameters, Json::Value& data);
 
 	public:
+		// Constructor for receiver's parameters.
 		RtpParameters(RTC::RtpKind kind, Json::Value& data);
+		// Constructor for sender's parameters.
 		RtpParameters(const RtpParameters* RtpParameters);
 		virtual ~RtpParameters();
 
 		Json::Value toJson();
-		void AutoFill();
+
+	private:
+		void ValidateCodecs();
+		void ValidateEncodings();
 
 	public:
 		std::string                        muxId;
@@ -201,7 +221,7 @@ namespace RTC
 		bool                               hasRtcp = false;
 		Json::Value                        userParameters;
 
-	public:
+	private:
 		RTC::RtpKind                       kind;
 	};
 }

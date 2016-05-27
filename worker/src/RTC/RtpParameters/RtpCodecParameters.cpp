@@ -105,7 +105,7 @@ namespace RTC
 		// Validate codec.
 		switch (this->subtype)
 		{
-			// A RTX codec must have 'apt' parameter pointing to a media codec.
+			// A RTX codec must have 'apt' parameter.
 			case Subtype::RTX:
 			{
 				auto it = this->parameters.find("apt");
@@ -115,7 +115,7 @@ namespace RTC
 
 				auto& apt = it->second;
 
-				if (!apt.IsInteger())
+				if (!apt.IsPositiveInteger())
 					MS_THROW_ERROR("invalid apt parameter in RTX RtpCodecParameters");
 			}
 

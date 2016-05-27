@@ -208,7 +208,7 @@ namespace RTC
 					for (auto rtpReceiver : receiver_peer->GetRtpReceivers())
 					{
 						// Skip if the RtpReceiver has not parameters.
-						if (!rtpReceiver->GetRtpParameters())
+						if (!rtpReceiver->GetParameters())
 							continue;
 
 						uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
@@ -217,10 +217,8 @@ namespace RTC
 						// Store into the map.
 						this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
-						// Clone receiver RtpParameters.
-						RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
-
-						rtpSender->Send(rtpSenderParameters);
+						// Take the sneder parameters of the receiver.
+						rtpSender->Send(rtpReceiver->GetSenderParameters());
 
 						// Attach the RtpSender to peer.
 						peer->AddRtpSender(rtpSender, receiver_peer->peerName);
@@ -320,7 +318,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// auto rtpParameters = rtpReceiver->GetRtpParameters();
+		// auto rtpParameters = rtpReceiver->GetParameters();
 
 		// TODO: Check codecs availability and, optionally, uniqueness of PTs.
 		// If it fails throw.
@@ -330,7 +328,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(rtpReceiver->GetRtpParameters(), "rtpReceiver->GetRtpParameters() returns no RtpParameters");
+		MS_ASSERT(rtpReceiver->GetParameters(), "rtpReceiver->GetParameters() returns no RtpParameters");
 
 		// If this is a new RtpReceiver, iterate all the peers but this one and
 		// create a RtpSender associated to this RtpReceiver for each Peer.
@@ -354,11 +352,8 @@ namespace RTC
 				// Store into the map.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
-				// Clone RtpParameters.
-				RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
-
-				// Assign cloned parameters to the RtpSender.
-				rtpSender->Send(rtpSenderParameters);
+				// Take the sneder parameters of the receiver.
+				rtpSender->Send(rtpReceiver->GetSenderParameters());
 
 				// Attach the RtpSender to sender_peer.
 				sender_peer->AddRtpSender(rtpSender, peer->peerName);
@@ -370,11 +365,8 @@ namespace RTC
 		{
 			for (auto rtpSender : this->mapRtpReceiverRtpSenders[rtpReceiver])
 			{
-				// Clone RtpParameters.
-				RTC::RtpParameters* rtpSenderParameters = new RTC::RtpParameters(rtpReceiver->GetRtpParameters());
-
-				// Assign cloned parameters to the RtpSender.
-				rtpSender->Send(rtpSenderParameters);
+				// Take the sneder parameters of the receiver.
+				rtpSender->Send(rtpReceiver->GetSenderParameters());
 			}
 		}
 	}

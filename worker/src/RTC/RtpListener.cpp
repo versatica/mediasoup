@@ -58,7 +58,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpParameters = rtpReceiver->GetRtpParameters();
+		auto rtpParameters = rtpReceiver->GetParameters();
 
 		MS_ASSERT(rtpParameters, "no RtpParameters");
 
@@ -268,7 +268,7 @@ namespace RTC
 			if (it != this->ssrcTable.end())
 			{
 				auto rtpReceiver = it->second;
-				auto rtpParameters = rtpReceiver->GetRtpParameters();
+				auto rtpParameters = rtpReceiver->GetParameters();
 
 				// Ensure the RTP PT is present in RtpParameters.
 
