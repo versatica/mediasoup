@@ -70,7 +70,7 @@ namespace RTC
 
 		for (auto& kv : this->ssrcTable)
 		{
-			auto& ssrc = kv.first;
+			auto ssrc = kv.first;
 			auto& existingRtpReceiver = kv.second;
 
 			if (existingRtpReceiver == rtpReceiver)
@@ -91,7 +91,7 @@ namespace RTC
 
 		for (auto& kv : this->ptTable)
 		{
-			auto& payloadType = kv.first;
+			auto payloadType = kv.first;
 			auto& existingRtpReceiver = kv.second;
 
 			if (existingRtpReceiver == rtpReceiver)
@@ -313,7 +313,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& ssrc : previousSsrcs)
+		for (auto ssrc : previousSsrcs)
 		{
 			this->ssrcTable[ssrc] = rtpReceiver;
 		}
@@ -321,7 +321,7 @@ namespace RTC
 		if (!previousMuxId.empty())
 			this->muxIdTable[previousMuxId] = rtpReceiver;
 
-		for (auto& payloadType : previousPayloadTypes)
+		for (auto payloadType : previousPayloadTypes)
 		{
 			this->ptTable[payloadType] = rtpReceiver;
 		}

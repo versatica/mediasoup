@@ -46,7 +46,12 @@ namespace RTC
 			{
 				return this->type == Type::DOUBLE;
 			}
-			bool IsString(){
+			bool IsPositiveDouble()
+			{
+				return this->type == Type::DOUBLE && this->doubleValue >= 0;
+			}
+			bool IsString()
+			{
 				return this->type == Type::STRING;
 			}
 
