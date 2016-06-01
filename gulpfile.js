@@ -14,7 +14,7 @@ let tests =
 	'test/test_Peer.js',
 	'test/test_Transport.js',
 	'test/test_RtpReceiver.js',
-	'test/test_extra.js',
+	'test/test_extra.js'
 	// NOTE: Unable his test until fixed
 	// 'test/test_scene_1.js'
 ];
