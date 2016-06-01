@@ -12,6 +12,13 @@
 * [mediasoup.org][mediasoup-website]
 
 
+## Installation
+
+```bash
+$ npm install mediasoup --save
+```
+
+
 ## Design goals
 
 * Be a Node.js module: `npm install mediasoup`
@@ -35,14 +42,6 @@
 * POSIX based operating system (Windows not yet supported)
 * `make`
 * `gcc` or `clang` with C++11 support
-* Must run in a publicly reachable host (ICE "Lite" implementation)
-
-
-## Installation
-
-```bash
-$ npm install mediasoup --save
-```
 
 
 ## Author
