@@ -3,6 +3,7 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
+const promiseSeries = require('./utils/promiseSeries');
 
 function initTest(t)
 {
@@ -57,13 +58,13 @@ tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 2000
 
 					t.assert(rtpParameters.encodings, 'computed rtpParameters has encodings');
 					t.equal(rtpParameters.encodings.length, 1, 'encodings has 1 encoding');
-					t.equal(rtpParameters.encodings[0].codecPayloadType, 100, 'encoding has matching codecPayloadType');
+					t.equal(rtpParameters.encodings[0].codecPayloadType, 100, 'encoding has codecPayloadType 100');
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
 		});
 });
 
-tap.test('rtpReceiver.receive() with one encoding without codecPayloadType must succeed', { timeout: 2000 }, (t) =>
+tap.test('rtpReceiver.receive() with encodings without codecPayloadType must succeed', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -79,12 +80,22 @@ tap.test('rtpReceiver.receive() with one encoding without codecPayloadType must 
 						{
 							name        : 'video/H264',
 							payloadType : 101
+						},
+						{
+							name        : 'video/H265',
+							payloadType : 102
 						}
 					],
 					encodings :
 					[
 						{
-							ssrc : 1234
+							ssrc : 1111
+						},
+						{
+							codecPayloadType : 102
+						},
+						{
+							ssrc : 3333
 						}
 					]
 				})
@@ -94,8 +105,10 @@ tap.test('rtpReceiver.receive() with one encoding without codecPayloadType must 
 
 					let rtpParameters = rtpReceiver.rtpParameters;
 
-					t.equal(rtpParameters.encodings.length, 1, 'computed rtpParameters has 1 encoding');
-					t.equal(rtpParameters.encodings[0].codecPayloadType, 101, 'encoding has matching codecPayloadType');
+					t.equal(rtpParameters.encodings.length, 3, 'computed rtpParameters has 3 encodings');
+					t.equal(rtpParameters.encodings[0].codecPayloadType, 101, 'first encoding has codecPayloadType 101');
+					t.equal(rtpParameters.encodings[1].codecPayloadType, 102, 'second encoding has codecPayloadType 102');
+					t.equal(rtpParameters.encodings[2].codecPayloadType, 101, 'third encoding has codecPayloadType 101');
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
 		});
@@ -303,99 +316,168 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 			let peer = data.peer;
 			let transport = data.transport;
 			let rtpReceiver = peer.RtpReceiver('audio', transport);
-			let promises = [];
+			let funcs = [];
 
-			promises.push(rtpReceiver.receive(
-				{
-					codecs :
-					[
-						{
-							name        : 'chicken/FOO',
-							payloadType : 101
-						}
-					]
-				})
-				.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				.catch((error) =>
-				{
-					t.pass(`rtpReceiver.receive() failed: ${error}`);
-				}));
-
-			promises.push(rtpReceiver.receive(
-				{
-					codecs :
-					[
-						{
-							payloadType : 102
-						}
-					]
-				})
-				.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				.catch((error) =>
-				{
-					t.pass(`rtpReceiver.receive() failed: ${error}`);
-				}));
-
-			promises.push(rtpReceiver.receive(
-				{
-					codecs :
-					[
-						{
-							name : 'audio/opus'
-						}
-					]
-				})
-				.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				.catch((error) =>
-				{
-					t.pass(`rtpReceiver.receive() failed: ${error}`);
-				}));
-
-			promises.push(rtpReceiver.receive(
-				{
-					codecs :
-					[
-						{
-							name        : 'audio/opus',
-							payloadType : 100
-						},
-						{
-							name        : 'audio/rtx',
-							payloadType : 101
-						}
-					]
-				})
-				.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				.catch((error) =>
-				{
-					t.pass(`rtpReceiver.receive() failed: ${error}`);
-				}));
-
-			promises.push(rtpReceiver.receive(
-				{
-					codecs :
-					[
-						{
-							name        : 'audio/opus',
-							payloadType : 100
-						},
-						{
-							name        : 'audio/rtx',
-							payloadType : 101,
-							parameters  :
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
 							{
-								apt : 98
+								name        : 'chicken/FOO',
+								payloadType : 101
 							}
-						}
-					]
-				})
-				.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				.catch((error) =>
-				{
-					t.pass(`rtpReceiver.receive() failed: ${error}`);
-				}));
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with an invalid codec.name failed: ${error}`);
+					});
+			});
 
-			return Promise.all(promises);
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								payloadType : 102
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() without codec.name failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name : 'audio/opus'
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() without codec.payloadType failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 101
+							},
+							{
+								name        : 'audio/opus',
+								payloadType : 101
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with duplicated codec.payloadType failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							},
+							{
+								name        : 'audio/rtx',
+								payloadType : 101
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with incomplete RTX codec failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							},
+							{
+								name        : 'audio/rtx',
+								payloadType : 101,
+								parameters  :
+								{
+									apt : 98
+								}
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with wrong RTX codec failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							},
+							{
+								name        : 'audio/ulpfec',
+								payloadType : 101
+							},
+							{
+								name        : 'audio/rtx',
+								payloadType : 97,
+								parameters  :
+								{
+									apt : 101
+								}
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with RTX codec pointing to a ULPFEC codec failed: ${error}`);
+					});
+			});
+
+			return promiseSeries(funcs);
 		});
 });
 
@@ -407,57 +489,63 @@ tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000
 			let peer = data.peer;
 			let transport = data.transport;
 			let rtpReceiver = peer.RtpReceiver('audio', transport);
-			let promises = [];
+			let funcs = [];
 
-			promises.push(rtpReceiver.receive(
-				{
-					codecs :
-					[
-						{
-							name        : 'audio/opus',
-							payloadType : 101
-						}
-					],
-					encodings :
-					[
-						{
-							codecPayloadType : 102
-						}
-					]
-				})
-				.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				.catch((error) =>
-				{
-					t.pass(`rtpReceiver.receive() failed: ${error}`);
-				}));
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 101
+							}
+						],
+						encodings :
+						[
+							{
+								codecPayloadType : 102
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with unknown encoding.codecPayloadType failed: ${error}`);
+					});
+			});
 
-			promises.push(rtpReceiver.receive(
-				{
-					codecs :
-					[
-						{
-							name        : 'audio/opus',
-							payloadType : 101
-						},
-						{
-							name        : 'audio/CN',
-							payloadType : 102
-						}
-					],
-					encodings :
-					[
-						{
-							codecPayloadType : 102
-						}
-					]
-				})
-				.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				.catch((error) =>
-				{
-					t.pass(`rtpReceiver.receive() failed: ${error}`);
-				}));
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 101
+							},
+							{
+								name        : 'audio/CN',
+								payloadType : 102
+							}
+						],
+						encodings :
+						[
+							{
+								codecPayloadType : 102
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() with invalid encoding.codecPayloadType succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() failed: ${error}`);
+					});
+			});
 
-			return Promise.all(promises);
+			return promiseSeries(funcs);
 		});
 });
 
@@ -506,6 +594,255 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 				}));
 
 			return Promise.all(promises);
+		});
+});
+
+tap.test('rtpReceiver.receive() should produce the expected RTP listener routing tables', { timeout: 2000 }, (t) =>
+{
+	return initTest(t)
+		.then((data) =>
+		{
+			let peer = data.peer;
+			let transport = data.transport;
+			let rtpReceiver = peer.RtpReceiver('audio', transport);
+			let funcs = [];
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							}
+						]
+					})
+					.then(() =>
+					{
+						return transport.dump();
+					})
+					.then((data) =>
+					{
+						let id = rtpReceiver._internal.rtpReceiverId;
+
+						t.same(data.rtpListener,
+							{
+								muxIdTable : {},
+								ptTable    :
+								{
+									100 : id
+								},
+								ssrcTable  : {}
+							},
+							'rtpListener tables match expected ones');
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						muxId  : 'qwerty1234',
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							},
+							{
+								name        : 'audio/ulaw',
+								payloadType : 0
+							}
+						]
+					})
+					.then(() =>
+					{
+						return transport.dump();
+					})
+					.then((data) =>
+					{
+						let id = rtpReceiver._internal.rtpReceiverId;
+
+						t.same(data.rtpListener,
+							{
+								muxIdTable :
+								{
+									'qwerty1234' : id
+								},
+								ptTable    :
+								{
+									100 : id,
+									0   : id
+								},
+								ssrcTable  : {}
+							},
+							'rtpListener tables match expected ones');
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							},
+							{
+								name        : 'audio/ulaw',
+								payloadType : 0
+							}
+						],
+						encodings :
+						[
+							{
+								codecPayloadType : 100,
+								ssrc             : 1111
+							},
+							{
+								codecPayloadType : 0
+							}
+						]
+					})
+					.then(() =>
+					{
+						return transport.dump();
+					})
+					.then((data) =>
+					{
+						let id = rtpReceiver._internal.rtpReceiverId;
+
+						t.same(data.rtpListener,
+							{
+								muxIdTable : {},
+								ptTable    :
+								{
+									100 : id,
+									0   : id
+								},
+								ssrcTable  :
+								{
+									1111 : id
+								}
+							},
+							'rtpListener tables match expected ones');
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							},
+							{
+								name        : 'audio/ulaw',
+								payloadType : 0
+							}
+						],
+						encodings :
+						[
+							{
+								codecPayloadType : 100,
+								ssrc             : 1111
+							},
+							{
+								codecPayloadType : 0,
+								ssrc             : 2222
+							}
+						]
+					})
+					.then(() =>
+					{
+						return transport.dump();
+					})
+					.then((data) =>
+					{
+						let id = rtpReceiver._internal.rtpReceiverId;
+
+						t.same(data.rtpListener,
+							{
+								muxIdTable : {},
+								ptTable    : {},
+								ssrcTable  :
+								{
+									1111 : id,
+									2222 : id
+								}
+							},
+							'rtpListener tables match expected ones');
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
+								payloadType : 100
+							},
+							{
+								name        : 'audio/ulaw',
+								payloadType : 0
+							}
+						],
+						encodings :
+						[
+							{
+								codecPayloadType : 100,
+								ssrc             : 1111,
+								rtx              : {}
+							},
+							{
+								codecPayloadType : 0,
+								ssrc             : 2222,
+								fec              :
+								{
+									mechanism : 'flexfec',
+									ssrc      : 3333
+								}
+							}
+						]
+					})
+					.then(() =>
+					{
+						return transport.dump();
+					})
+					.then((data) =>
+					{
+						let id = rtpReceiver._internal.rtpReceiverId;
+
+						t.same(data.rtpListener,
+							{
+								muxIdTable : {},
+								ptTable    :
+								{
+									100 : id,
+									0   : id
+								},
+								ssrcTable  :
+								{
+									1111 : id,
+									2222 : id,
+									3333 : id
+								}
+							},
+							'rtpListener tables match expected ones');
+					});
+			});
+
+			return promiseSeries(funcs);
 		});
 });
 

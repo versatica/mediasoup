@@ -187,7 +187,10 @@ namespace RTC
 			}
 		}
 
-		// Add entries into ptTable (just if no encoding.ssrc is given).
+		// Add entries into ptTable just if:
+		// - Not all the encoding.ssrc are given, or
+		// - Not all the encoding.rtx.ssrc are given, or
+		// - Not all the encoding.fec.ssrc are given.
 		{
 			auto it = rtpParameters->encodings.begin();
 
@@ -195,19 +198,20 @@ namespace RTC
 			{
 				auto encoding = *it;
 
-				if (encoding.ssrc)
+				if (
+						!encoding.ssrc ||
+						(encoding.hasRtx && !encoding.rtx.ssrc) ||
+						(encoding.hasFec && !encoding.fec.ssrc))
+				{
 					break;
+				}
 			}
 
-			if (it == rtpParameters->encodings.end())
+			if (it != rtpParameters->encodings.end())
 			{
 				for (auto& codec : rtpParameters->codecs)
 				{
-					uint8_t payloadType;
-
-					// Check encoding.ssrc.
-
-					payloadType = codec.payloadType;
+					uint8_t payloadType = codec.payloadType;
 
 					if (!this->HasPayloadType(payloadType, rtpReceiver))
 					{
