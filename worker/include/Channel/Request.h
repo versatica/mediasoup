@@ -23,6 +23,7 @@ namespace Channel
 			room_close,
 			room_dump,
 			room_createPeer,
+			room_getCapabilities,
 			peer_close,
 			peer_dump,
 			peer_createTransport,

@@ -92,6 +92,42 @@ tap.test('room.Peer() with same peerName must succeed if previous peer was close
 	setTimeout(() => peer2.close(), 50);
 });
 
+tap.test('room.peers must retrieve existing peers', { timeout: 2000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	let room = server.Room();
+
+	let alice = room.Peer('alice');
+	let bob = room.Peer('bob');
+	let carol = room.Peer('carol');
+
+	bob.close();
+
+	t.same(room.peers, [ alice, carol ], 'room.peers() must retrieve "alice" and "carol" peers');
+
+	t.end();
+});
+
+tap.test('room.getCapabilities() must retrieve current room capabilities', { timeout: 2000 }, (t) =>
+{
+	let server = mediasoup.Server();
+
+	t.tearDown(() => server.close());
+
+	let room = server.Room();
+
+	room.getCapabilities()
+		.then((capabilities) =>
+		{
+			t.pass('room.getCapabilities() succeeded');
+			t.end();
+		})
+		.catch((error) => t.fail(`room.getCapabilities() failed: ${error}`));
+});
+
 tap.test('room.dump() must succeed', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();

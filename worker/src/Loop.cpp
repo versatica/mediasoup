@@ -197,7 +197,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			try
 			{
-				room = new RTC::Room(this, this->notifier, roomId, request->data);
+				room = new RTC::Room(this, this->notifier, roomId);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -216,6 +216,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::room_close:
 		case Channel::Request::MethodId::room_dump:
 		case Channel::Request::MethodId::room_createPeer:
+		case Channel::Request::MethodId::room_getCapabilities:
 		case Channel::Request::MethodId::peer_close:
 		case Channel::Request::MethodId::peer_dump:
 		case Channel::Request::MethodId::peer_createTransport:

@@ -21,7 +21,7 @@ $ npm install mediasoup --save
 
 ## Design goals
 
-* Be a Node.js module: `npm install mediasoup`
+* Be a Node.js module
 * Be minimalist: just handle the media layer
 * Expose a modern ECMAScript 6 [API](/api/) in sync with [ORTC](http://ortc.org/)
 * Work with current [WebRTC](https://webrtc.org) client implementations
