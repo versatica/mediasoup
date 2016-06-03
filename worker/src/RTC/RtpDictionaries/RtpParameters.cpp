@@ -1,69 +1,12 @@
 #define MS_CLASS "RTC::RtpParameters"
 
-#include "RTC/RtpParameters.h"
+#include "RTC/RtpDictionaries.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <unordered_set>
 
 namespace RTC
 {
-	/* Class methods. */
-
-	void RtpParameters::FillCustomParameters(CustomParameters& parameters, Json::Value& data)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(data.isObject(), "data is not a JSON object");
-
-		for (Json::Value::iterator it = data.begin(); it != data.end(); ++it)
-		{
-			std::string key = it.key().asString();
-			Json::Value value = (*it);
-
-			switch (value.type())
-			{
-				case Json::booleanValue:
-				{
-					bool booleanValue = value.asBool();
-
-					parameters[key] = RTC::CustomParameterValue(booleanValue);
-
-					break;
-				}
-
-				case Json::intValue:
-				{
-					int32_t signedIntegerValue = (int32_t)value.asInt();
-
-					parameters[key] = RTC::CustomParameterValue(signedIntegerValue);
-
-					break;
-				}
-
-				case Json::realValue:
-				{
-					double doubleValue = value.asDouble();
-
-					parameters[key] = RTC::CustomParameterValue(doubleValue);
-
-					break;
-				}
-
-				case Json::stringValue:
-				{
-					std::string stringValue = value.asString();
-
-					parameters[key] = RTC::CustomParameterValue(stringValue);
-
-					break;
-				}
-
-				default:
-					;  // Just ignore other value types.
-			}
-		}
-	}
-
 	/* Instance methods. */
 
 	RtpParameters::RtpParameters(RTC::RtpKind kind, Json::Value& data) :

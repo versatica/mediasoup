@@ -1,6 +1,6 @@
 #define MS_CLASS "RTC::RtpHeaderExtensionParameters"
 
-#include "RTC/RtpParameters.h"
+#include "RTC/RtpDictionaries.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -40,7 +40,7 @@ namespace RTC
 
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
-			RTC::RtpParameters::FillCustomParameters(this->parameters, data[k_parameters]);
+			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
 	}
 
 	RtpHeaderExtensionParameters::~RtpHeaderExtensionParameters()
@@ -76,26 +76,9 @@ namespace RTC
 			for (auto& kv : this->parameters)
 			{
 				const std::string& key = kv.first;
-				RTC::CustomParameterValue& parameterValue = kv.second;
+				auto& parameterValue = kv.second;
 
-				switch (parameterValue.type)
-				{
-					case RTC::CustomParameterValue::Type::BOOLEAN:
-						json_parameters[key] = parameterValue.booleanValue;
-						break;
-
-					case RTC::CustomParameterValue::Type::INTEGER:
-						json_parameters[key] = (Json::Int)parameterValue.integerValue;
-						break;
-
-					case RTC::CustomParameterValue::Type::DOUBLE:
-						json_parameters[key] = parameterValue.doubleValue;
-						break;
-
-					case RTC::CustomParameterValue::Type::STRING:
-						json_parameters[key] = parameterValue.stringValue;
-						break;
-				}
+				json_parameters[key] = parameterValue.toJson();
 			}
 
 			json[k_parameters] = json_parameters;

@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const tap = require('tap');
 
 const mediasoup = require('../');
@@ -23,6 +24,24 @@ tap.test('mediasoup.Server() with valid options must succeed', { timeout: 2000 }
 		{
 			numWorkers : 1,
 			logLevel   : 'warn'
+		});
+
+	server.on('close', (error) =>
+	{
+		t.error(error, 'server must close cleanly');
+		t.end();
+	});
+
+	setTimeout(() => server.close(), 100);
+});
+
+tap.test('mediasoup.Server() with valid DTLS certificate must succeed', { timeout: 2000 }, (t) =>
+{
+	let server = mediasoup.Server(
+		{
+			numWorkers          : 1,
+			dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
+			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem')
 		});
 
 	server.on('close', (error) =>

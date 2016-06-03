@@ -4,7 +4,7 @@
 #include "common.h"
 #include "RTC/RtpKind.h"
 #include "RTC/Transport.h"
-#include "RTC/RtpParameters.h"
+#include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
 #include "RTC/RtcpPacket.h"
 #include "Channel/Request.h"

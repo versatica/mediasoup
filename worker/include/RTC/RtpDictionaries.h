@@ -1,8 +1,9 @@
-#ifndef MS_RTC_RTP_PARAMETERS_H
-#define MS_RTC_RTP_PARAMETERS_H
+#ifndef MS_RTC_RTP_DICTIONARIES_H
+#define MS_RTC_RTP_DICTIONARIES_H
 
 #include "common.h"
 #include "RTC/RtpKind.h"
+#include "RTC/CustomParameters.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -10,61 +11,6 @@
 
 namespace RTC
 {
-	class CustomParameterValue
-	{
-		public:
-			enum class Type
-			{
-				BOOLEAN = 1,
-				INTEGER,
-				DOUBLE,
-				STRING
-			};
-
-		public:
-			CustomParameterValue() {};
-			CustomParameterValue(bool booleanValue);
-			CustomParameterValue(int32_t integerValue);
-			CustomParameterValue(double doubleValue);
-			CustomParameterValue(std::string& stringValue);
-			virtual ~CustomParameterValue();
-
-			Json::Value toJson();
-			bool IsBoolean()
-			{
-				return this->type == Type::BOOLEAN;
-			}
-			bool IsInteger()
-			{
-				return this->type == Type::INTEGER;
-			}
-			bool IsPositiveInteger()
-			{
-				return this->type == Type::INTEGER && this->integerValue >= 0;
-			}
-			bool IsDouble()
-			{
-				return this->type == Type::DOUBLE;
-			}
-			bool IsPositiveDouble()
-			{
-				return this->type == Type::DOUBLE && this->doubleValue >= 0;
-			}
-			bool IsString()
-			{
-				return this->type == Type::STRING;
-			}
-
-		public:
-			Type        type;
-			bool        booleanValue = false;
-			int32_t     integerValue = 0;
-			double      doubleValue = 0.0;
-			std::string stringValue;
-	};
-
-	typedef std::unordered_map<std::string, CustomParameterValue> CustomParameters;
-
 	class RtcpFeedback
 	{
 	public:
@@ -109,7 +55,7 @@ namespace RTC
 		uint32_t                  ptime = 0;
 		uint32_t                  numChannels = 0;
 		std::vector<RtcpFeedback> rtcpFeedback;
-		CustomParameters          parameters;
+		RTC::CustomParameters     parameters;
 
 	public:
 		RTC::RtpKind              type;
@@ -178,10 +124,10 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		std::string      uri;
-		uint16_t         id = 0;
-		bool             encrypt = false;
-		CustomParameters parameters;
+		std::string           uri;
+		uint16_t              id = 0;
+		bool                  encrypt = false;
+		RTC::CustomParameters parameters;
 	};
 
 	class RtcpParameters
@@ -201,9 +147,6 @@ namespace RTC
 
 	class RtpParameters
 	{
-	public:
-		static void FillCustomParameters(CustomParameters& parameters, Json::Value& data);
-
 	public:
 		// Constructor for receiver's parameters.
 		RtpParameters(RTC::RtpKind kind, Json::Value& data);
