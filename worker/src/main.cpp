@@ -69,17 +69,17 @@ int main(int argc, char* argv[])
 	MS_DEBUG("starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
 
 	#if defined(MS_LITTLE_ENDIAN)
-		MS_DEBUG("detected Little-Endian CPU");
+		MS_DEBUG("Little-Endian CPU detected");
 	#elif defined(MS_BIG_ENDIAN)
-		MS_DEBUG("detected Big-Endian CPU");
+		MS_DEBUG("Big-Endian CPU detected");
 	#endif
 
 	#if defined(INTPTR_MAX) && defined(INT32_MAX) && (INTPTR_MAX == INT32_MAX)
-		MS_DEBUG("detected 32 bits architecture");
+		MS_DEBUG("32 bits architecture detected");
 	#elif defined(INTPTR_MAX) && defined(INT64_MAX) && (INTPTR_MAX == INT64_MAX)
-		MS_DEBUG("detected 64 bits architecture");
+		MS_DEBUG("64 bits architecture detected");
 	#else
-		MS_WARN("cannot determine whether the architecture is 32 or 64 bits");
+		MS_WARN("can not determine whether the architecture is 32 or 64 bits");
 	#endif
 
 	try
@@ -145,7 +145,7 @@ void ignoreSignals()
 
 	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); ++it)
 	{
-		std::string sig_name = it->first;
+		auto& sig_name = it->first;
 		int sig_id = it->second;
 
 		err = sigaction(sig_id, &act, nullptr);

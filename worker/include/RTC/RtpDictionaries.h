@@ -2,7 +2,6 @@
 #define MS_RTC_RTP_DICTIONARIES_H
 
 #include "common.h"
-#include "RTC/RtpKind.h"
 #include "RTC/CustomParameters.h"
 #include <string>
 #include <vector>
@@ -42,7 +41,7 @@ namespace RTC
 		static std::unordered_map<std::string, RtpCodecParameters::Subtype> string2Subtype;
 
 	public:
-		RtpCodecParameters(RTC::RtpKind kind, Json::Value& data);
+		RtpCodecParameters(Json::Value& data);
 		virtual ~RtpCodecParameters();
 
 		Json::Value toJson();
@@ -58,7 +57,6 @@ namespace RTC
 		RTC::CustomParameters     parameters;
 
 	public:
-		RTC::RtpKind              type;
 		Subtype                   subtype;
 	};
 
@@ -149,7 +147,7 @@ namespace RTC
 	{
 	public:
 		// Constructor for receiver's parameters.
-		RtpParameters(RTC::RtpKind kind, Json::Value& data);
+		RtpParameters(Json::Value& data);
 		// Constructor for sender's parameters.
 		RtpParameters(const RtpParameters* RtpParameters);
 		virtual ~RtpParameters();
@@ -168,10 +166,25 @@ namespace RTC
 		RtcpParameters                     rtcp;
 		bool                               hasRtcp = false;
 		Json::Value                        userParameters;
-
-	private:
-		RTC::RtpKind                       kind;
 	};
+
+	// class RtpCapabilities
+	// {
+	// public:
+	// 	RtpCapabilities() {};
+	// 	RtpCapabilities(Json::Value& data);
+	// 	virtual ~RtpCapabilities();
+
+	// 	Json::Value toJson();
+
+	// private:
+	// 	void ValidateCodecs();
+
+	// public:
+	// 	std::vector<RtpCodecCapability>           codecs;
+	// 	std::vector<RtpHeaderExtensionCapability> headerExtensions;
+	// 	std::vector<std::string>                  fecMechanisms;
+	// };
 }
 
 #endif

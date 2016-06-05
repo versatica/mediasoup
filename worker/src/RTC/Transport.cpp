@@ -986,7 +986,7 @@ namespace RTC
 
 		MS_DEBUG("DTLS application data received [size:%zu]", len);
 
-		// TMP
+		// TODO: remove
 		MS_DEBUG("data: %s", std::string((char*)data, len).c_str());
 	}
 }

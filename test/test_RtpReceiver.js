@@ -325,7 +325,45 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						codecs :
 						[
 							{
-								name        : 'chicken/FOO',
+								name        : 'opus',
+								payloadType : 101
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with an invalid codec.name failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : '/opus',
+								payloadType : 101
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() with an invalid codec.name failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/',
 								payloadType : 101
 							}
 						]

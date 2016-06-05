@@ -129,7 +129,7 @@ namespace RTC
 
 				try
 				{
-					this->rtpParameters = new RTC::RtpParameters(this->kind, request->data);
+					this->rtpParameters = new RTC::RtpParameters(request->data);
 				}
 				catch (const MediaSoupError &error)
 				{

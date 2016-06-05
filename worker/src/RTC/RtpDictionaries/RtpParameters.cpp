@@ -9,8 +9,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpParameters::RtpParameters(RTC::RtpKind kind, Json::Value& data) :
-		kind(kind)
+	RtpParameters::RtpParameters(Json::Value& data)
 	{
 		MS_TRACE();
 
@@ -37,7 +36,7 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_codecs.size(); i++)
 			{
-				RtpCodecParameters codec(this->kind, json_codecs[i]);
+				RtpCodecParameters codec(json_codecs[i]);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -99,7 +98,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->kind = rtpParameters->kind;
 		this->muxId = rtpParameters->muxId;
 		this->codecs = rtpParameters->codecs;
 		this->encodings = rtpParameters->encodings;

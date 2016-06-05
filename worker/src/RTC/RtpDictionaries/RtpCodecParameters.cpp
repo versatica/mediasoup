@@ -24,7 +24,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(RTC::RtpKind kind, Json::Value& data)
+	RtpCodecParameters::RtpCodecParameters(Json::Value& data)
 	{
 		MS_TRACE();
 
@@ -46,16 +46,14 @@ namespace RTC
 
 		this->name = data[k_name].asString();
 
-		// Get and check name MIME type.
-		if (kind == RTC::RtpKind::AUDIO && this->name.compare(0, 6, "audio/") == 0)
-			this->type = RTC::RtpKind::AUDIO;
-		else if (kind == RTC::RtpKind::VIDEO && this->name.compare(0, 6, "video/") == 0)
-			this->type = RTC::RtpKind::VIDEO;
-		else
-			MS_THROW_ERROR("invalid RtpCodecParameters.name MIME type [name:%s]", this->name.c_str());
-
 		// Get name MIME subtype.
-		std::string subtype = this->name.substr(6);
+
+		auto slash_pos = this->name.find('/');
+
+		if (slash_pos == std::string::npos || slash_pos == 0 || slash_pos == this->name.length() - 1)
+			MS_THROW_ERROR("wrong RtpCodecParameters.name");
+
+		std::string subtype = this->name.substr(slash_pos + 1);
 
 		if (RtpCodecParameters::string2Subtype.find(subtype) == RtpCodecParameters::string2Subtype.end())
 			this->subtype = Subtype::MEDIA;
