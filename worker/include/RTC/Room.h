@@ -2,6 +2,7 @@
 #define MS_RTC_ROOM_H
 
 #include "common.h"
+#include "RTC/RtpDictionaries.h"
 #include "RTC/Peer.h"
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpSender.h"
@@ -24,6 +25,12 @@ namespace RTC
 		public:
 			virtual void onRoomClosed(RTC::Room* room) = 0;
 		};
+
+	public:
+		static void ClassInit();
+
+	private:
+		static RTC::RtpCapabilities defaultRtpCapabilities;
 
 	public:
 		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId);

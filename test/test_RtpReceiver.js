@@ -128,7 +128,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 				codecs :
 				[
 					{
-						name         : 'video/H264',
+						name         : 'video/VP9',
 						payloadType  : 100,
 						clockRate    : 90000,
 						maxptime     : 80,
@@ -145,6 +145,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 						{
 							profileLevelId    : 2,
 							packetizationMode : 1,
+							aaa               : 1.0,
 							foo               : 'barœæ€',
 							bar               : true,
 							baz               : -123,
@@ -166,7 +167,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 						{
 							ssrc : 300000
 						},
-						resolutionScale       : 2.2,
+						resolutionScale       : 2,
 						framerateScale        : 1.5,
 						maxFramerate          : 30,
 						active                : false,
@@ -177,14 +178,16 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 				headerExtensions :
 				[
 					{
-						uri     : 'urn:ietf:params:rtp-hdrext:foo',
-						id      : 1234,
-						encrypt : false
+						uri        : 'urn:ietf:params:rtp-hdrext:foo',
+						id         : 1234,
+						encrypt    : false,
+						parameters : {}
 					},
 					{
-						uri     : 'urn:ietf:params:rtp-hdrext:bar',
-						id      : 5678,
-						encrypt : true
+						uri        : 'urn:ietf:params:rtp-hdrext:bar',
+						id         : 5678,
+						encrypt    : true,
+						parameters : {}
 					},
 					{
 						uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
@@ -619,7 +622,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 					codecs :
 					[
 						{
-							name        : 'audio/ulaw',
+							name        : 'audio/PCMU',
 							payloadType : 101,
 							clockRate   : 90000
 						}
@@ -690,7 +693,7 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 								payloadType : 100
 							},
 							{
-								name        : 'audio/ulaw',
+								name        : 'audio/PCMU',
 								payloadType : 0
 							}
 						]
@@ -731,7 +734,7 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 								payloadType : 100
 							},
 							{
-								name        : 'audio/ulaw',
+								name        : 'audio/PCMU',
 								payloadType : 0
 							}
 						],
@@ -782,7 +785,7 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 								payloadType : 100
 							},
 							{
-								name        : 'audio/ulaw',
+								name        : 'audio/PCMU',
 								payloadType : 0
 							}
 						],
@@ -831,7 +834,7 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 								payloadType : 100
 							},
 							{
-								name        : 'audio/ulaw',
+								name        : 'audio/PCMU',
 								payloadType : 0
 							}
 						],

@@ -4,6 +4,8 @@ const gulp = require('gulp');
 const jshint = require('gulp-jshint');
 const jscs = require('gulp-jscs');
 const stylish = require('gulp-jscs-stylish');
+const replace = require('gulp-replace');
+const touch = require('gulp-touch');
 const shell = require('gulp-shell');
 
 let tests =
@@ -21,7 +23,7 @@ let tests =
 
 gulp.task('lint', () =>
 {
-	let src = [ 'gulpfile.js', 'lib/**/*.js', 'test/**/*.js' ];
+	let src = [ 'gulpfile.js', 'lib/**/*.js', 'data/**/*.js', 'test/**/*.js' ];
 
 	return gulp.src(src)
 		.pipe(jshint('.jshintrc'))
@@ -29,6 +31,16 @@ gulp.task('lint', () =>
 		.pipe(stylish.combineWithHintResults())
 		.pipe(jshint.reporter('jshint-stylish', { verbose: true }))
 		.pipe(jshint.reporter('fail'));
+});
+
+gulp.task('capabilities', () =>
+{
+	let capabilities = require('./data/defaultRtpCapabilities');
+
+	return gulp.src('worker/src/RTC/Room.cpp')
+		.pipe(replace(/(std::string capabilities =).*/, `$1 R"(${JSON.stringify(capabilities)})";`))
+		.pipe(gulp.dest('worker/src/RTC/'))
+		.pipe(touch());
 });
 
 gulp.task('test', shell.task(
@@ -47,4 +59,4 @@ gulp.task('t', gulp.series('test'));
 
 gulp.task('td', gulp.series('test-debug'));
 
-gulp.task('default', gulp.series('lint'));
+gulp.task('default', gulp.series('capabilities', 'lint'));

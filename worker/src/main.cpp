@@ -115,11 +115,13 @@ void init()
 	DepOpenSSL::ClassInit();
 	DepLibSRTP::ClassInit();
 	DepUsrSCTP::ClassInit();
+	Utils::Crypto::ClassInit();
+	Utils::Crypto::ClassInit();
 	RTC::UdpSocket::ClassInit();
 	RTC::TcpServer::ClassInit();
 	RTC::DtlsTransport::ClassInit();
 	RTC::SrtpSession::ClassInit();
-	Utils::Crypto::ClassInit();
+	RTC::Room::ClassInit();
 }
 
 void ignoreSignals()
@@ -159,12 +161,12 @@ void destroy()
 	MS_TRACE();
 
 	// Free static stuff.
+	RTC::DtlsTransport::ClassDestroy();
+	Utils::Crypto::ClassDestroy();
 	DepLibUV::ClassDestroy();
 	DepOpenSSL::ClassDestroy();
 	DepLibSRTP::ClassDestroy();
 	DepUsrSCTP::ClassDestroy();
-	RTC::DtlsTransport::ClassDestroy();
-	Utils::Crypto::ClassDestroy();
 }
 
 void exitSuccess()

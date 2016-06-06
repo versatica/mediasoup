@@ -32,7 +32,9 @@
     "gulp-jscs": "^3.0.2",
     "gulp-jscs-stylish": "^1.3.0",
     "gulp-jshint": "^2.0.1",
+    "gulp-replace": "^0.5.4",
     "gulp-shell": "^0.5.2",
+    "gulp-touch": "^1.0.1",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.2.0",
     "tap": "^5.7.2"

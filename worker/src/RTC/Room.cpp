@@ -8,6 +8,52 @@
 
 namespace RTC
 {
+	/* Class variables. */
+
+	RTC::RtpCapabilities Room::defaultRtpCapabilities;
+
+	/* Class methods. */
+
+	void Room::ClassInit()
+	{
+		MS_TRACE();
+
+		// Parse default RTP capabilities.
+		{
+			Json::CharReaderBuilder builder;
+			Json::Value settings = Json::nullValue;
+			Json::Value invalid_settings;
+
+			builder.strictMode(&settings);
+
+			Json::CharReader* jsonReader = builder.newCharReader();
+
+			// NOTE: This line is auto-generated frmo data/defaultRtpCapabilities.js.
+			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":100,"clockRate":90000,"rtcpFeedback":[{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"},{"type":"google-remb","parameter":""}]}]})";
+
+			Json::Value json;
+			std::string json_parse_error;
+
+			if (!jsonReader->parse(capabilities.c_str(), capabilities.c_str() + capabilities.length(), &json, &json_parse_error))
+			{
+				delete jsonReader;
+
+				MS_THROW_ERROR_STD("JSON parsing error in default RTP capabilities: %s", json_parse_error.c_str());
+			}
+
+			delete jsonReader;
+
+			try
+			{
+				Room::defaultRtpCapabilities = RTC::RtpCapabilities(json);
+			}
+			catch (const MediaSoupError &error)
+			{
+				MS_THROW_ERROR_STD("wrong default RTP capabilities: %s", error.what());
+			}
+		}
+	}
+
 	/* Instance methods. */
 
 	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId) :

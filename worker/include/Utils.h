@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include <string>
+#include <algorithm>  // std::transform()
 #include <cstring>  // std::memcmp(), std::memcpy()
 #include <openssl/hmac.h>
 
@@ -257,6 +258,15 @@ namespace Utils
 
 		return crc ^ ~0U;
 	}
+
+	class String
+	{
+	public:
+		static void ToLowerCase(std::string& str)
+		{
+			std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+		}
+	};
 }
 
 #endif

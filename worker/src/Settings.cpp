@@ -6,7 +6,6 @@
 #include "Logger.h"
 #include <string>
 #include <map>
-#include <algorithm>  // std::transform()
 #include <cctype>  // isprint()
 #include <cerrno>
 #include <unistd.h>  // close()
@@ -292,8 +291,8 @@ void Settings::SetLogLevel(std::string &level)
 {
 	MS_TRACE();
 
-	// Downcase given level.
-	std::transform(level.begin(), level.end(), level.begin(), ::tolower);
+	// Lowcase given level.
+	Utils::String::ToLowerCase(level);
 
 	if (Settings::string2LogLevel.find(level) == Settings::string2LogLevel.end())
 		MS_THROW_ERROR("invalid value '%s' for logLevel", level.c_str());

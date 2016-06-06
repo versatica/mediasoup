@@ -8,7 +8,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpSender::RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::RtpKind kind) :
+	RtpSender::RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind) :
 		rtpSenderId(rtpSenderId),
 		kind(kind),
 		listener(listener),
@@ -47,8 +47,6 @@ namespace RTC
 		static Json::Value null_data(Json::nullValue);
 		static const Json::StaticString k_rtpSenderId("rtpSenderId");
 		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString v_audio("audio");
-		static const Json::StaticString v_video("video");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
 
@@ -56,15 +54,7 @@ namespace RTC
 
 		json[k_rtpSenderId] = (Json::UInt)this->rtpSenderId;
 
-		switch (this->kind)
-		{
-			case RTC::RtpKind::AUDIO:
-				json[k_kind] = v_audio;
-				break;
-			case RTC::RtpKind::VIDEO:
-				json[k_kind] = v_video;
-				break;
-		}
+		json[k_kind] = RTC::Media::GetJsonString(this->kind);
 
 		if (this->rtpParameters)
 			json[k_rtpParameters] = this->rtpParameters->toJson();

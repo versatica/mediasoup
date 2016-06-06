@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::Peer"
 
 #include "RTC/Peer.h"
-#include "RTC/RtpKind.h"
+#include "RTC/RtpDictionaries.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -235,7 +235,7 @@ namespace RTC
 				// Create a RtpReceiver instance.
 				try
 				{
-					rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId, kind);
+					rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId, RTC::Media::GetKind(kind));
 				}
 				catch (const MediaSoupError &error)
 				{
@@ -396,8 +396,6 @@ namespace RTC
 
 		static const Json::StaticString k_rtpSenderId("rtpSenderId");
 		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString v_audio("audio");
-		static const Json::StaticString v_video("video");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_peerName("peerName");
 
@@ -414,15 +412,7 @@ namespace RTC
 		Json::Value event_data(Json::objectValue);
 
 		event_data[k_rtpSenderId] = (Json::UInt)rtpSender->rtpSenderId;
-		switch (rtpSender->kind)
-		{
-			case RTC::RtpKind::AUDIO:
-				event_data[k_kind] = v_audio;
-				break;
-			case RTC::RtpKind::VIDEO:
-				event_data[k_kind] = v_video;
-				break;
-		}
+		event_data[k_kind] = RTC::Media::GetJsonString(rtpSender->kind);
 		event_data[k_rtpParameters] = rtpSender->GetParameters()->toJson();
 		event_data[k_peerName] = peerName;
 

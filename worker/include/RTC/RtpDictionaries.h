@@ -6,10 +6,99 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include <json/json.h>
 
 namespace RTC
 {
+	class Media
+	{
+	public:
+		enum class Kind : uint8_t
+		{
+			AUDIO = 1,
+			VIDEO,
+			DEPTH
+		};
+
+	public:
+		static Kind GetKind(std::string& str);
+		static Json::StaticString& GetJsonString(Kind kind);
+
+	private:
+		static std::unordered_map<std::string, Kind> string2Kind;
+		static std::map<Kind, Json::StaticString> kind2Json;
+	};
+
+	class RtpCodecMime
+	{
+	public:
+		enum class Type : uint8_t
+		{
+			UNSET = 0,
+			AUDIO,
+			VIDEO
+		};
+
+	public:
+		enum class Subtype : uint16_t
+		{
+			UNSET = 0,
+			// Audio codecs:
+			OPUS = 100,
+			PCMA,
+			PCMU,
+			ISAC,
+			G722,
+			// Video codecs:
+			VP8 = 200,
+			VP9,
+			H264,
+			H265,
+			// Feature codecs:
+			RTX = 1000,
+			ULPFEC,
+			FLEXFEC,
+			RED,
+			CN,
+			TELEPHONE_EVENT
+		};
+
+	private:
+		static std::unordered_map<std::string, Type> string2Type;
+		static std::map<Type, std::string> type2String;
+		static std::unordered_map<std::string, Subtype> string2Subtype;
+		static std::map<Subtype, std::string> subtype2String;
+
+	public:
+		RtpCodecMime() {};
+		virtual ~RtpCodecMime();
+
+		void SetName(std::string& name);
+
+		std::string& ToString()
+		{
+			return this->name;
+		}
+
+		bool IsMediaCodec()
+		{
+			return this->subtype >= Subtype::OPUS && this->subtype < Subtype::RTX;
+		}
+
+		bool IsFeatureCodec()
+		{
+			return this->subtype >= Subtype::RTX;
+		}
+
+	public:
+		Type    type = Type::UNSET;
+		Subtype subtype = Subtype::UNSET;
+
+	private:
+		std::string name;
+	};
+
 	class RtcpFeedback
 	{
 	public:
@@ -25,21 +114,6 @@ namespace RTC
 
 	class RtpCodecParameters
 	{
-	public:
-		enum class Subtype
-		{
-			MEDIA = 1,
-			RTX,
-			ULPFEC,
-			FLEXFEC,
-			RED,
-			CN,
-			DTMF
-		};
-
-	private:
-		static std::unordered_map<std::string, RtpCodecParameters::Subtype> string2Subtype;
-
 	public:
 		RtpCodecParameters(Json::Value& data);
 		virtual ~RtpCodecParameters();
@@ -57,7 +131,7 @@ namespace RTC
 		RTC::CustomParameters     parameters;
 
 	public:
-		Subtype                   subtype;
+		RtpCodecMime              mime;
 	};
 
 	class RtpFecParameters
@@ -159,32 +233,73 @@ namespace RTC
 		void ValidateEncodings();
 
 	public:
-		std::string                        muxId;
-		std::vector<RtpCodecParameters>    codecs;
-		std::vector<RtpEncodingParameters> encodings;
+		std::string                               muxId;
+		std::vector<RtpCodecParameters>           codecs;
+		std::vector<RtpEncodingParameters>        encodings;
 		std::vector<RtpHeaderExtensionParameters> headerExtensions;
-		RtcpParameters                     rtcp;
-		bool                               hasRtcp = false;
-		Json::Value                        userParameters;
+		RtcpParameters                            rtcp;
+		bool                                      hasRtcp = false;
+		Json::Value                               userParameters;
 	};
 
-	// class RtpCapabilities
-	// {
-	// public:
-	// 	RtpCapabilities() {};
-	// 	RtpCapabilities(Json::Value& data);
-	// 	virtual ~RtpCapabilities();
+	class RtpCodecCapability
+	{
+	public:
+		RtpCodecCapability(Json::Value& data);
+		virtual ~RtpCodecCapability();
 
-	// 	Json::Value toJson();
+		Json::Value toJson();
 
-	// private:
-	// 	void ValidateCodecs();
+	public:
+		Media::Kind               kind;
+		std::string               name;
+		uint8_t                   preferredPayloadType = 0;
+		uint32_t                  clockRate = 0;
+		uint32_t                  maxptime = 0;
+		uint32_t                  ptime = 0;
+		uint32_t                  numChannels = 0;
+		std::vector<RtcpFeedback> rtcpFeedback;
+		RTC::CustomParameters     parameters;
+		uint16_t                  maxTemporalLayers = 0;
+		uint16_t                  maxSpatialLayers = 0;
+		bool                      svcMultiStreamSupport = false;
 
-	// public:
-	// 	std::vector<RtpCodecCapability>           codecs;
-	// 	std::vector<RtpHeaderExtensionCapability> headerExtensions;
-	// 	std::vector<std::string>                  fecMechanisms;
-	// };
+	public:
+		RtpCodecMime              mime;
+	};
+
+	class RtpHeaderExtension
+	{
+	public:
+		RtpHeaderExtension(Json::Value& data);
+		virtual ~RtpHeaderExtension();
+
+		Json::Value toJson();
+
+	public:
+		Media::Kind kind;
+		std::string uri;
+		uint16_t    preferredId = 0;
+		bool        preferredEncrypt = false;
+	};
+
+	class RtpCapabilities
+	{
+	public:
+		RtpCapabilities() {};
+		RtpCapabilities(Json::Value& data);
+		virtual ~RtpCapabilities();
+
+		Json::Value toJson();
+
+	private:
+		void ValidateCodecs();
+
+	public:
+		std::vector<RtpCodecCapability> codecs;
+		std::vector<RtpHeaderExtension> headerExtensions;
+		std::vector<std::string>        fecMechanisms;
+	};
 }
 
 #endif

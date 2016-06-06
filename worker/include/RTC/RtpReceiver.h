@@ -2,7 +2,6 @@
 #define MS_RTC_RTP_RECEIVER_H
 
 #include "common.h"
-#include "RTC/RtpKind.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
 #include "Channel/Request.h"
@@ -32,7 +31,7 @@ namespace RTC
 		};
 
 	public:
-		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, std::string& kind);
+		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind);
 		virtual ~RtpReceiver();
 
 		void Close();
@@ -50,8 +49,7 @@ namespace RTC
 	public:
 		// Passed by argument.
 		uint32_t rtpReceiverId;
-		// Others.
-		RTC::RtpKind kind;
+		RTC::Media::Kind kind;
 
 	private:
 		// Passed by argument.

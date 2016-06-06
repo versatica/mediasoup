@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RtpCodecParameters"
+#define MS_CLASS "RTC::RtpCodecCapability"
 
 #include "RTC/RtpDictionaries.h"
 #include "MediaSoupError.h"
@@ -8,25 +8,38 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(Json::Value& data)
+	RtpCodecCapability::RtpCodecCapability(Json::Value& data)
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_name("name");
-		static const Json::StaticString k_payloadType("payloadType");
+		static const Json::StaticString k_preferredPayloadType("preferredPayloadType");
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
+		static const Json::StaticString k_maxTemporalLayers("maxTemporalLayers");
+		static const Json::StaticString k_maxSpatialLayers("maxSpatialLayers");
+		static const Json::StaticString k_svcMultiStreamSupport("svcMultiStreamSupport");
 
 		if (!data.isObject())
-			MS_THROW_ERROR("RtpCodecParameters is not an object");
+			MS_THROW_ERROR("RtpCodecCapability is not an object");
+
+		// `kind` is mandatory.
+		if (!data[k_kind].isString())
+			MS_THROW_ERROR("missing RtpCodecCapability.kind");
+
+		std::string kind = data[k_kind].asString();
+
+		// NOTE: This may throw.
+		this->kind = RTC::Media::GetKind(kind);
 
 		// `name` is mandatory.
 		if (!data[k_name].isString())
-			MS_THROW_ERROR("missing RtpCodecParameters.name");
+			MS_THROW_ERROR("missing RtpCodecCapability.name");
 
 		std::string name = data[k_name].asString();
 
@@ -37,11 +50,11 @@ namespace RTC
 		// Override/normalize given `name`.
 		this->name = this->mime.ToString();
 
-		// `payloadType` is mandatory.
-		if (!data[k_payloadType].isUInt())
-			MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
+		// `preferredPayloadType` is mandatory.
+		if (!data[k_preferredPayloadType].isUInt())
+			MS_THROW_ERROR("missing RtpCodecCapability.preferredPayloadType");
 
-		this->payloadType = (uint8_t)data[k_payloadType].asUInt();
+		this->preferredPayloadType = (uint8_t)data[k_preferredPayloadType].asUInt();
 
 		// `clockRate` is optional.
 		if (data[k_clockRate].isUInt())
@@ -77,53 +90,51 @@ namespace RTC
 		if (data[k_parameters].isObject())
 			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
 
-		// Validate codec.
-		switch (this->mime.subtype)
-		{
-			// A RTX codec must have 'apt' parameter.
-			case RTC::RtpCodecMime::Subtype::RTX:
-			{
-				auto it = this->parameters.find("apt");
+		// `maxTemporalLayers` is optional.
+		if (data[k_maxTemporalLayers].isUInt())
+			this->maxTemporalLayers = (uint16_t)data[k_maxTemporalLayers].asUInt();
 
-				if (it == this->parameters.end())
-					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
+		// `maxSpatialLayers` is optional.
+		if (data[k_maxSpatialLayers].isUInt())
+			this->maxSpatialLayers = (uint16_t)data[k_maxSpatialLayers].asUInt();
 
-				auto& apt = it->second;
-
-				if (!apt.IsPositiveInteger())
-					MS_THROW_ERROR("invalid apt parameter in RTX RtpCodecParameters");
-			}
-
-			default:
-				;
-		}
+		// `svcMultiStreamSupport` is optional.
+		if (data[k_svcMultiStreamSupport].isBool())
+			this->svcMultiStreamSupport = data[k_svcMultiStreamSupport].asBool();
 	}
 
-	RtpCodecParameters::~RtpCodecParameters()
+	RtpCodecCapability::~RtpCodecCapability()
 	{
 		MS_TRACE();
 	}
 
-	Json::Value RtpCodecParameters::toJson()
+	Json::Value RtpCodecCapability::toJson()
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_name("name");
-		static const Json::StaticString k_payloadType("payloadType");
+		static const Json::StaticString k_preferredPayloadType("preferredPayloadType");
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
+		static const Json::StaticString k_maxTemporalLayers("maxTemporalLayers");
+		static const Json::StaticString k_maxSpatialLayers("maxSpatialLayers");
+		static const Json::StaticString k_svcMultiStreamSupport("svcMultiStreamSupport");
 
 		Json::Value json(Json::objectValue);
+
+		// Add `kind`.
+		json[k_kind] = RTC::Media::GetJsonString(this->kind);
 
 		// Add `name`.
 		json[k_name] = this->name;
 
-		// Add `payloadType`.
-		json[k_payloadType] = (Json::UInt)this->payloadType;
+		// Add `preferredPayloadType`.
+		json[k_preferredPayloadType] = (Json::UInt)this->preferredPayloadType;
 
 		// Add `clockRate`.
 		if (this->clockRate)
@@ -161,6 +172,18 @@ namespace RTC
 		}
 
 		json[k_parameters] = json_parameters;
+
+		// Add `maxTemporalLayers` (if set).
+		if (this->maxTemporalLayers)
+			json[k_maxTemporalLayers] = (Json::UInt)this->maxTemporalLayers;
+
+		// Add `maxSpatialLayers` (if set).
+		if (this->maxSpatialLayers)
+			json[k_maxSpatialLayers] = (Json::UInt)this->maxSpatialLayers;
+
+		// Add `svcMultiStreamSupport` (if set).
+		if (this->svcMultiStreamSupport)
+			json[k_svcMultiStreamSupport] = true;
 
 		return json;
 	}

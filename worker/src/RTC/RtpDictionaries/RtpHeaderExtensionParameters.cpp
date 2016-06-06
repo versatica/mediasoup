@@ -68,21 +68,18 @@ namespace RTC
 		// Add `encrypt`.
 		json[k_encrypt] = this->encrypt;
 
-		// Add `parameters` (if any).
-		if (this->parameters.size() > 0)
+		// Add `parameters`.
+		Json::Value json_parameters(Json::objectValue);
+
+		for (auto& kv : this->parameters)
 		{
-			Json::Value json_parameters(Json::objectValue);
+			const std::string& key = kv.first;
+			auto& parameterValue = kv.second;
 
-			for (auto& kv : this->parameters)
-			{
-				const std::string& key = kv.first;
-				auto& parameterValue = kv.second;
-
-				json_parameters[key] = parameterValue.toJson();
-			}
-
-			json[k_parameters] = json_parameters;
+			json_parameters[key] = parameterValue.toJson();
 		}
+
+		json[k_parameters] = json_parameters;
 
 		return json;
 	}
