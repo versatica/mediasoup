@@ -30,10 +30,10 @@ namespace RTC
 		static void ClassInit();
 
 	private:
-		static RTC::RtpCapabilities defaultRtpCapabilities;
+		static RTC::RtpCapabilities supportedRtpCapabilities;
 
 	public:
-		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId);
+		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data);
 		virtual ~Room();
 
 		void Close();
@@ -61,6 +61,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Others.
+		RTC::RtpCapabilities rtpCapabilities;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 	};

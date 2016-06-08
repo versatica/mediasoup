@@ -10,7 +10,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	RTC::RtpCapabilities Room::defaultRtpCapabilities;
+	RTC::RtpCapabilities Room::supportedRtpCapabilities;
 
 	/* Class methods. */
 
@@ -18,7 +18,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Parse default RTP capabilities.
+		// Parse all RTP capabilities.
 		{
 			Json::CharReaderBuilder builder;
 			Json::Value settings = Json::nullValue;
@@ -28,7 +28,7 @@ namespace RTC
 
 			Json::CharReader* jsonReader = builder.newCharReader();
 
-			// NOTE: This line is auto-generated frmo data/defaultRtpCapabilities.js.
+			// NOTE: This line is auto-generated frmo data/supportedRtpCapabilities.js.
 			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":100,"clockRate":90000,"rtcpFeedback":[{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"},{"type":"google-remb","parameter":""}]}]})";
 
 			Json::Value json;
@@ -45,7 +45,7 @@ namespace RTC
 
 			try
 			{
-				Room::defaultRtpCapabilities = RTC::RtpCapabilities(json);
+				Room::supportedRtpCapabilities = RTC::RtpCapabilities(json);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -56,12 +56,48 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId) :
+	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data) :
 		roomId(roomId),
 		listener(listener),
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		static const Json::StaticString k_mediaCodecs("mediaCodecs");
+		static const Json::StaticString k_kind("kind");
+		static const Json::StaticString k_name("name");
+
+		// Initialize room RTP capabilities with all the supported ones.
+		this->rtpCapabilities = Room::supportedRtpCapabilities;
+
+		// `mediaCodecs` is mandatory.
+		if (!data[k_mediaCodecs].isArray())
+			MS_THROW_ERROR("missing mediaCodecs");
+
+		auto& json_mediaCodecs = data[k_mediaCodecs];
+
+		if (json_mediaCodecs.size() == 0)
+			MS_THROW_ERROR("empty mediaCodecs");
+
+		for (Json::UInt i = 0; i < json_mediaCodecs.size(); i++)
+		{
+			auto& json_mediaCodec = json_mediaCodecs[i];
+
+			if (!json_mediaCodec[k_kind].isString())
+				MS_THROW_ERROR("missing mediaCodec.kind");
+
+			if (!json_mediaCodec[k_name].isString())
+				MS_THROW_ERROR("missing mediaCodec.name");
+
+			std::string str_kind = json_mediaCodec[k_kind].asString();
+			std::string str_name = json_mediaCodec[k_name].asString();
+			RTC::Media::Kind kind = RTC::Media::GetKind(str_kind);
+			RTC::RtpCodecMime mime;
+
+			mime.SetName(str_name);
+
+			// TODO: more
+		}
 	}
 
 	Room::~Room()

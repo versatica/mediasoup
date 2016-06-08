@@ -45,7 +45,7 @@
 	"requireSpaceBetweenArguments": true,
 	"requireSpacesInConditionalExpression": true,
 	"requireSpacesInForStatement": true,
-	"requireSpacesInsideObjectBrackets": "allButNested",
+	"requireSpacesInsideObjectBrackets": { "allExcept": ['}'] },
 	"requireVarDeclFirst": null,
 	"validateIndentation": "\t",
 	"validateParameterSeparator": ", ",

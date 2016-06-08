@@ -180,50 +180,24 @@ namespace RTC
 		if (this->codecs.size() == 0)
 			MS_THROW_ERROR("empty RtpParameters.codecs");
 
+		// Payload types must be unique.
+
 		std::unordered_set<uint8_t> payloadTypes;
 
-		// Validate each codec.
 		for (auto& codec : this->codecs)
 		{
-			// Payload types must be unique.
 			if (payloadTypes.find(codec.payloadType) != payloadTypes.end())
 				MS_THROW_ERROR("duplicated codec.payloadType");
 			else
 				payloadTypes.insert(codec.payloadType);
+		}
 
-			switch (codec.mime.subtype)
-			{
-				// A RTX codec must have 'apt' parameter pointing to a non RTX codec.
-				case RTC::RtpCodecMime::Subtype::RTX:
-				{
-					// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
-					auto it = codec.parameters.find("apt");
-					int32_t apt = it->second.integerValue;
-					auto it2 = this->codecs.begin();
-
-					for (; it2 != this->codecs.end(); ++it2)
-					{
-						auto codec = *it2;
-
-						if ((int32_t)codec.payloadType == apt)
-						{
-							if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::RTX)
-								MS_THROW_ERROR("apt in RTX codec points to a RTX codec");
-							else if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::ULPFEC)
-								MS_THROW_ERROR("apt in RTX codec points to a ULPFEC codec");
-							else if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::FLEXFEC)
-								MS_THROW_ERROR("apt in RTX codec points to a FLEXFEC codec");
-							else
-								break;
-						}
-					}
-					if (it2 == this->codecs.end())
-						MS_THROW_ERROR("apt in RTX codec points to a non existing codec");
-				}
-
-				default:
-					;
-			}
+		for (auto& codec : this->codecs)
+		{
+			if (codec.hasRtx && payloadTypes.find(codec.rtx.payloadType) != payloadTypes.end())
+				MS_THROW_ERROR("duplicated codec.rtx.payloadType");
+			else
+				payloadTypes.insert(codec.rtx.payloadType);
 		}
 	}
 

@@ -3,6 +3,7 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
+const roomOptions = require('./data/roomOptions');
 
 tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', { timeout: 2000 }, (t) =>
 {
@@ -10,7 +11,7 @@ tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', 
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
@@ -53,7 +54,7 @@ tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { 
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
@@ -95,7 +96,7 @@ tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { time
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
@@ -136,7 +137,7 @@ tap.test('transport.setRemoteDtlsParameters() with invalid role must fail', { ti
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
@@ -170,7 +171,7 @@ tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { 
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })
@@ -200,7 +201,7 @@ tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 	t.plan(6);
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	peer.createTransport({ tcp: false })

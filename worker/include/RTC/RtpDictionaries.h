@@ -56,8 +56,7 @@ namespace RTC
 			H264,
 			H265,
 			// Feature codecs:
-			RTX = 1000,
-			ULPFEC,
+			ULPFEC = 1000,
 			FLEXFEC,
 			RED,
 			CN,
@@ -83,12 +82,12 @@ namespace RTC
 
 		bool IsMediaCodec()
 		{
-			return this->subtype >= Subtype::OPUS && this->subtype < Subtype::RTX;
+			return this->subtype >= Subtype(100) && this->subtype < (Subtype)1000;
 		}
 
 		bool IsFeatureCodec()
 		{
-			return this->subtype >= Subtype::RTX;
+			return this->subtype >= Subtype(1000);
 		}
 
 	public:
@@ -97,6 +96,20 @@ namespace RTC
 
 	private:
 		std::string name;
+	};
+
+	class RTCRtpCodecRtxParameters
+	{
+	public:
+		RTCRtpCodecRtxParameters() {};
+		RTCRtpCodecRtxParameters(Json::Value& data);
+		virtual ~RTCRtpCodecRtxParameters();
+
+		Json::Value toJson();
+
+	public:
+		uint8_t  payloadType = 0;
+		uint32_t rtxTime = 0;
 	};
 
 	class RtcpFeedback
@@ -127,6 +140,8 @@ namespace RTC
 		uint32_t                  maxptime = 0;
 		uint32_t                  ptime = 0;
 		uint32_t                  numChannels = 0;
+		RTCRtpCodecRtxParameters  rtx;
+		bool                      hasRtx = false;
 		std::vector<RtcpFeedback> rtcpFeedback;
 		RTC::CustomParameters     parameters;
 

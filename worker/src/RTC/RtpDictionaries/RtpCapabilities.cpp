@@ -124,6 +124,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// Must be at least one codec.
+		if (this->codecs.size() == 0)
+			MS_THROW_ERROR("empty RtpCapabilities.codecs");
+
+		// Preferred payload types must be unique.
+
+		std::unordered_set<uint8_t> preferredPayloadTypes;
+
+		for (auto& codec : this->codecs)
+		{
+			// Preferred payload types must be unique.
+			if (preferredPayloadTypes.find(codec.preferredPayloadType) != preferredPayloadTypes.end())
+				MS_THROW_ERROR("duplicated codec.preferredPayloadType");
+			else
+				preferredPayloadTypes.insert(codec.preferredPayloadType);
+		}
 	}
 }

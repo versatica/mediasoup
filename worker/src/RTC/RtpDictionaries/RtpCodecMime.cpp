@@ -35,7 +35,6 @@ namespace RTC
 		{ "h264",            RtpCodecMime::Subtype::H264            },
 		{ "h265",            RtpCodecMime::Subtype::H265            },
 		// Feature codecs:
-		{ "rtx",             RtpCodecMime::Subtype::RTX             },
 		{ "ulpfec",          RtpCodecMime::Subtype::ULPFEC          },
 		{ "flexfec",         RtpCodecMime::Subtype::FLEXFEC         },
 		{ "red",             RtpCodecMime::Subtype::RED             },
@@ -57,7 +56,6 @@ namespace RTC
 		{ RtpCodecMime::Subtype::H264,            "H264"            },
 		{ RtpCodecMime::Subtype::H265,            "H265"            },
 		// Feature codecs:
-		{ RtpCodecMime::Subtype::RTX,             "rtx"             },
 		{ RtpCodecMime::Subtype::ULPFEC,          "ulpfec"          },
 		{ RtpCodecMime::Subtype::FLEXFEC,         "flexfec"         },
 		{ RtpCodecMime::Subtype::RED,             "red"             },

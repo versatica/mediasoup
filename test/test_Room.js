@@ -3,6 +3,7 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
+const roomOptions = require('./data/roomOptions');
 
 tap.test('room.Peer() with peerName must succeed', { timeout: 2000 }, (t) =>
 {
@@ -10,7 +11,7 @@ tap.test('room.Peer() with peerName must succeed', { timeout: 2000 }, (t) =>
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	peer.on('close', (error) =>
@@ -29,7 +30,7 @@ tap.test('room.Peer() without peerName must fail', { timeout: 2000 }, (t) =>
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 
 	t.throws(() =>
 	{
@@ -47,7 +48,7 @@ tap.test('room.Peer() with same peerName must fail', { timeout: 2000 }, (t) =>
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 
 	room.Peer('alice');
 
@@ -66,7 +67,7 @@ tap.test('room.Peer() with same peerName must succeed if previous peer was close
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer1 = room.Peer('alice');
 
 	t.equal(room.getPeer('alice'), peer1, 'room.getPeer() must retrieve the first "alice"');
@@ -98,7 +99,7 @@ tap.test('room.peers must retrieve existing peers', { timeout: 2000 }, (t) =>
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 
 	let alice = room.Peer('alice');
 	let bob = room.Peer('bob');
@@ -117,7 +118,7 @@ tap.test('room.getCapabilities() must retrieve current room capabilities', { tim
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 
 	room.getCapabilities()
 		.then((capabilities) =>
@@ -134,7 +135,7 @@ tap.test('room.dump() must succeed', { timeout: 2000 }, (t) =>
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 
 	room.Peer('alice');
 	room.Peer('bob');

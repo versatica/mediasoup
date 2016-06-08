@@ -29,6 +29,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Force lowcase kind.
+		Utils::String::ToLowerCase(str);
+
 		auto it = Media::string2Kind.find(str);
 
 		if (it == Media::string2Kind.end())

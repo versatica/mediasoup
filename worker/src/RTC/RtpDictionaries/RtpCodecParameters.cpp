@@ -18,6 +18,7 @@ namespace RTC
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
+		static const Json::StaticString k_rtx("rtx");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
 
@@ -59,6 +60,13 @@ namespace RTC
 		if (data[k_numChannels].isUInt())
 			this->numChannels = (uint32_t)data[k_numChannels].asUInt();
 
+		// `rtx` is optional.
+		if (data[k_rtx].isObject())
+		{
+			this->rtx = RTCRtpCodecRtxParameters(data[k_rtx]);
+			this->hasRtx = true;
+		}
+
 		// `rtcpFeedback` is optional.
 		if (data[k_rtcpFeedback].isArray())
 		{
@@ -76,27 +84,6 @@ namespace RTC
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
 			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
-
-		// Validate codec.
-		switch (this->mime.subtype)
-		{
-			// A RTX codec must have 'apt' parameter.
-			case RTC::RtpCodecMime::Subtype::RTX:
-			{
-				auto it = this->parameters.find("apt");
-
-				if (it == this->parameters.end())
-					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
-
-				auto& apt = it->second;
-
-				if (!apt.IsPositiveInteger())
-					MS_THROW_ERROR("invalid apt parameter in RTX RtpCodecParameters");
-			}
-
-			default:
-				;
-		}
 	}
 
 	RtpCodecParameters::~RtpCodecParameters()
@@ -114,6 +101,7 @@ namespace RTC
 		static const Json::StaticString k_maxptime("maxptime");
 		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
+		static const Json::StaticString k_rtx("rtx");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
 
@@ -140,6 +128,10 @@ namespace RTC
 		// Add `numChannels`.
 		if (this->numChannels)
 			json[k_numChannels] = (Json::UInt)this->numChannels;
+
+		// Add `rtx`
+		if (this->hasRtx)
+			json[k_rtx] = this->rtx.toJson();
 
 		// Add `rtcpFeedback`.
 		json[k_rtcpFeedback] = Json::arrayValue;

@@ -3,6 +3,7 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
+const roomOptions = require('./data/roomOptions');
 
 tap.test('server.updateSettings() with no options must succeed', { timeout: 2000 }, (t) =>
 {
@@ -76,7 +77,7 @@ tap.test('server.Room() must succeed', { _timeout: 2000 }, (t) =>
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 
 	room.on('close', (error) =>
 	{
@@ -98,7 +99,7 @@ tap.test('server.Room() in a closed server must fail', { timeout: 2000 }, (t) =>
 	{
 		t.throws(() =>
 		{
-			server.Room();
+			server.Room(roomOptions);
 		},
 		mediasoup.errors.InvalidStateError,
 		'server.Room() must throw InvalidStateError');

@@ -3,6 +3,7 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
+const roomOptions = require('./data/roomOptions');
 const promiseSeries = require('./utils/promiseSeries');
 
 function initTest(t)
@@ -11,7 +12,7 @@ function initTest(t)
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room();
+	let room = server.Room(roomOptions);
 	let peer = room.Peer('alice');
 
 	return peer.createTransport({ tcp: false })
@@ -39,14 +40,6 @@ tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 2000
 						{
 							name        : 'audio/opus',
 							payloadType : 100
-						},
-						{
-							name        : 'audio/rtx',
-							payloadType : 98,
-							parameters  :
-							{
-								apt : 100
-							}
 						}
 					]
 				})
@@ -134,6 +127,11 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 						maxptime     : 80,
 						ptime        : 60,
 						numChannels  : 2,
+						rtx :
+						{
+							payloadType : 96,
+							rtxTime     : 500
+						},
 						rtcpFeedback :
 						[
 							{ type: 'ccm',         parameter: 'fir' },
@@ -245,14 +243,6 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 							name        : 'audio/opus',
 							payloadType : 101,
 							clockRate   : 90000
-						},
-						{
-							name        : 'audio/rtx',
-							payloadType : 102,
-							parameters  :
-							{
-								apt : 101
-							}
 						}
 					],
 					encodings :
@@ -422,6 +412,26 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/opus',
+								payloadType : 101,
+								rtx         : {}
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() without codec.rtx.payloadType failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
 								payloadType : 101
 							},
 							{
@@ -445,10 +455,14 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 100
+								payloadType : 100,
+								rtx :
+								{
+									payloadType : 101
+								}
 							},
 							{
-								name        : 'audio/rtx',
+								name        : 'audio/G722',
 								payloadType : 101
 							}
 						]
@@ -456,65 +470,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 					.then(() => t.fail('rtpReceiver.receive() succeeded'))
 					.catch((error) =>
 					{
-						t.pass(`rtpReceiver.receive() with incomplete RTX codec failed: ${error}`);
-					});
-			});
-
-			funcs.push(function()
-			{
-				return rtpReceiver.receive(
-					{
-						codecs :
-						[
-							{
-								name        : 'audio/opus',
-								payloadType : 100
-							},
-							{
-								name        : 'audio/rtx',
-								payloadType : 101,
-								parameters  :
-								{
-									apt : 98
-								}
-							}
-						]
-					})
-					.then(() => t.fail('rtpReceiver.receive() succeeded'))
-					.catch((error) =>
-					{
-						t.pass(`rtpReceiver.receive() with wrong RTX codec failed: ${error}`);
-					});
-			});
-
-			funcs.push(function()
-			{
-				return rtpReceiver.receive(
-					{
-						codecs :
-						[
-							{
-								name        : 'audio/opus',
-								payloadType : 100
-							},
-							{
-								name        : 'audio/ulpfec',
-								payloadType : 101
-							},
-							{
-								name        : 'audio/rtx',
-								payloadType : 97,
-								parameters  :
-								{
-									apt : 101
-								}
-							}
-						]
-					})
-					.then(() => t.fail('rtpReceiver.receive() succeeded'))
-					.catch((error) =>
-					{
-						t.pass(`rtpReceiver.receive() with RTX codec pointing to a ULPFEC codec failed: ${error}`);
+						t.pass(`rtpReceiver.receive() with duplicated RTX payloadType failed: ${error}`);
 					});
 			});
 

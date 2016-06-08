@@ -35,13 +35,17 @@ gulp.task('lint', () =>
 
 gulp.task('capabilities', () =>
 {
-	let capabilities = require('./data/defaultRtpCapabilities');
+	let capabilities = require('./data/supportedRtpCapabilities');
 
 	return gulp.src('worker/src/RTC/Room.cpp')
 		.pipe(replace(/(std::string capabilities =).*/, `$1 R"(${JSON.stringify(capabilities)})";`))
 		.pipe(gulp.dest('worker/src/RTC/'))
 		.pipe(touch());
 });
+
+gulp.task('worker', shell.task(
+	[ `make` ]
+));
 
 gulp.task('test', shell.task(
 	[ `tap --bail --color --reporter=spec ${tests.join(' ')}` ]
@@ -59,4 +63,6 @@ gulp.task('t', gulp.series('test'));
 
 gulp.task('td', gulp.series('test-debug'));
 
-gulp.task('default', gulp.series('capabilities', 'lint'));
+gulp.task('make', gulp.series('capabilities', 'worker'));
+
+gulp.task('default', gulp.series('lint'));

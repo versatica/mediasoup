@@ -20,7 +20,7 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
-    "check-types": "^6.0.0",
+    "check-types": "^7.0.0",
     "clone": "^1.0.2",
     "debug": "^2.2.0",
     "netstring": "^0.3.0",
