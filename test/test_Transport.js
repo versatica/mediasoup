@@ -4,7 +4,7 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
-const peerRtpCapabilities = require('./data/options').peerRtpCapabilities;
+const peerOptions = require('./data/options').peerOptions;
 
 tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', { timeout: 2000 }, (t) =>
 {
@@ -13,7 +13,7 @@ tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', 
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice', peerRtpCapabilities);
+	let peer = room.Peer('alice', peerOptions);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
@@ -56,7 +56,7 @@ tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { 
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice', peerRtpCapabilities);
+	let peer = room.Peer('alice', peerOptions);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
@@ -98,7 +98,7 @@ tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { time
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice', peerRtpCapabilities);
+	let peer = room.Peer('alice', peerOptions);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
@@ -139,7 +139,7 @@ tap.test('transport.setRemoteDtlsParameters() with invalid role must fail', { ti
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice', peerRtpCapabilities);
+	let peer = room.Peer('alice', peerOptions);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
@@ -173,7 +173,7 @@ tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { 
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice', peerRtpCapabilities);
+	let peer = room.Peer('alice', peerOptions);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
@@ -203,7 +203,7 @@ tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice', peerRtpCapabilities);
+	let peer = room.Peer('alice', peerOptions);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>

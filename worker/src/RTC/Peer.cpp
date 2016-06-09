@@ -17,9 +17,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: check data (RtpCapabilities)
+		static const Json::StaticString k_rtpCapabilities("rtpCapabilities");
 
-		RTC::RtpCapabilities rtpCapabilities(data);
+		// `mediaCodecs` is mandatory.
+		if (!data[k_rtpCapabilities].isObject())
+			MS_THROW_ERROR("missing rtpCapabilities");
+
+		auto& json_rtpCapabilities = data[k_rtpCapabilities];
+
+		// TODO: check data (RtpCapabilities)
+		RTC::RtpCapabilities rtpCapabilities(json_rtpCapabilities);
 	}
 
 	Peer::~Peer()

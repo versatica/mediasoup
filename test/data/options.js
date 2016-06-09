@@ -12,22 +12,25 @@ module.exports =
 		]
 	},
 
-	peerRtpCapabilities :
+	peerOptions :
 	{
-		codecs :
-		[
-			{
-				kind                 : 'audio',
-				name                 : 'audio/opus',
-				preferredPayloadType : 100,
-				clockRate            : 90000
-			},
-			{
-				kind                 : 'video',
-				name                 : 'video/vp8',
-				preferredPayloadType : 101,
-				clockRate            : 90000
-			}
-		]
+		rtpCapabilities :
+		{
+			codecs :
+			[
+				{
+					kind                 : 'audio',
+					name                 : 'audio/opus',
+					preferredPayloadType : 100,
+					clockRate            : 90000
+				},
+				{
+					kind                 : 'video',
+					name                 : 'video/vp8',
+					preferredPayloadType : 101,
+					clockRate            : 90000
+				}
+			]
+		}
 	}
 };
