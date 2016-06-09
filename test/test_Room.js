@@ -38,7 +38,7 @@ tap.test('room.Peer() without peerName must fail', { timeout: 2000 }, (t) =>
 		room.Peer();
 	},
 	TypeError,
-	'room.Peer()) must throw TypeError');
+	'room.Peer() must throw TypeError');
 
 	t.end();
 });

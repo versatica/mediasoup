@@ -204,20 +204,18 @@ namespace RTC
 	void RtpParameters::ValidateEncodings()
 	{
 		uint8_t firstMediaPayloadType;
-		bool hasFirstMediaPayloadType = false;
 
 		{
 			auto it = this->codecs.begin();
 
 			for (; it != this->codecs.end(); ++it)
 			{
-				auto codec = *it;
+				auto& codec = *it;
 
 				// Must be a media codec.
 				if (codec.mime.IsMediaCodec())
 				{
 					firstMediaPayloadType = codec.payloadType;
-					hasFirstMediaPayloadType = true;
 
 					break;
 				}
@@ -239,7 +237,7 @@ namespace RTC
 			this->encodings.push_back(encoding);
 		}
 		// Otherwise iterate all the encodings, set the first payloadType in all of them
-		// with codecPayloadType unset, and check that others point to a media codec.
+		// with `codecPayloadType` unset, and check that others point to a media codec.
 		else
 		{
 			for (auto& encoding : this->encodings)

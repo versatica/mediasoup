@@ -196,7 +196,7 @@ namespace RTC
 
 			for (; it != rtpParameters->encodings.end(); ++it)
 			{
-				auto encoding = *it;
+				auto& encoding = *it;
 
 				if (
 						!encoding.ssrc ||
