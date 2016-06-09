@@ -3,7 +3,8 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
-const roomOptions = require('./data/roomOptions');
+const roomOptions = require('./data/options').roomOptions;
+const peerRtpCapabilities = require('./data/options').peerRtpCapabilities;
 
 tap.test('room.Peer() with peerName must succeed', { timeout: 2000 }, (t) =>
 {
@@ -12,7 +13,7 @@ tap.test('room.Peer() with peerName must succeed', { timeout: 2000 }, (t) =>
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice');
+	let peer = room.Peer('alice', peerRtpCapabilities);
 
 	peer.on('close', (error) =>
 	{
@@ -50,11 +51,11 @@ tap.test('room.Peer() with same peerName must fail', { timeout: 2000 }, (t) =>
 
 	let room = server.Room(roomOptions);
 
-	room.Peer('alice');
+	room.Peer('alice', peerRtpCapabilities);
 
 	t.throws(() =>
 	{
-		room.Peer('alice');
+		room.Peer('alice', peerRtpCapabilities);
 	},
 	'room.Peer() must throw');
 
@@ -68,7 +69,7 @@ tap.test('room.Peer() with same peerName must succeed if previous peer was close
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer1 = room.Peer('alice');
+	let peer1 = room.Peer('alice', peerRtpCapabilities);
 
 	t.equal(room.getPeer('alice'), peer1, 'room.getPeer() must retrieve the first "alice"');
 	t.equal(room.peers.length, 1, 'room.peers must retrieve one peer');
@@ -78,7 +79,7 @@ tap.test('room.Peer() with same peerName must succeed if previous peer was close
 	t.notOk(room.getPeer('alice'), 'room.getPeer() must retrieve nothing');
 	t.equal(room.peers.length, 0, 'room.peers must retrieve zero peers');
 
-	let peer2 = room.Peer('alice');
+	let peer2 = room.Peer('alice', peerRtpCapabilities);
 
 	t.equal(room.getPeer('alice'), peer2, 'room.getPeer() must retrieve the new "alice"');
 	t.equal(room.peers.length, 1, 'room.peers must retrieve one peer');
@@ -101,9 +102,9 @@ tap.test('room.peers must retrieve existing peers', { timeout: 2000 }, (t) =>
 
 	let room = server.Room(roomOptions);
 
-	let alice = room.Peer('alice');
-	let bob = room.Peer('bob');
-	let carol = room.Peer('carol');
+	let alice = room.Peer('alice', peerRtpCapabilities);
+	let bob = room.Peer('bob', peerRtpCapabilities);
+	let carol = room.Peer('carol', peerRtpCapabilities);
 
 	bob.close();
 
@@ -137,8 +138,8 @@ tap.test('room.dump() must succeed', { timeout: 2000 }, (t) =>
 
 	let room = server.Room(roomOptions);
 
-	room.Peer('alice');
-	room.Peer('bob');
+	room.Peer('alice', peerRtpCapabilities);
+	room.Peer('bob', peerRtpCapabilities);
 
 	room.dump()
 		.then((data) =>

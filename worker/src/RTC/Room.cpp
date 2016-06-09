@@ -240,7 +240,7 @@ namespace RTC
 
 				try
 				{
-					peer = new RTC::Peer(this, this->notifier, peerId, peerName);
+					peer = new RTC::Peer(this, this->notifier, peerId, peerName, request->data);
 				}
 				catch (const MediaSoupError &error)
 				{
@@ -269,7 +269,7 @@ namespace RTC
 						// Store into the map.
 						this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
-						// Take the sneder parameters of the receiver.
+						// Take the sender parameters of the receiver.
 						rtpSender->Send(rtpReceiver->GetSenderParameters());
 
 						// Attach the RtpSender to peer.
@@ -415,7 +415,7 @@ namespace RTC
 				// Store into the map.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
-				// Take the sneder parameters of the receiver.
+				// Take the sender parameters of the receiver.
 				rtpSender->Send(rtpReceiver->GetSenderParameters());
 
 				// Attach the RtpSender to sender_peer.
@@ -428,7 +428,7 @@ namespace RTC
 		{
 			for (auto rtpSender : this->mapRtpReceiverRtpSenders[rtpReceiver])
 			{
-				// Take the sneder parameters of the receiver.
+				// Take the sender parameters of the receiver.
 				rtpSender->Send(rtpReceiver->GetSenderParameters());
 			}
 		}

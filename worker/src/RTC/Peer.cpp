@@ -9,13 +9,17 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName) :
+	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName, Json::Value& data) :
 		peerId(peerId),
 		peerName(peerName),
 		listener(listener),
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		// TODO: check data (RtpCapabilities)
+
+		RTC::RtpCapabilities rtpCapabilities(data);
 	}
 
 	Peer::~Peer()
@@ -408,7 +412,6 @@ namespace RTC
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;
 
 		// Notify.
-
 		Json::Value event_data(Json::objectValue);
 
 		event_data[k_rtpSenderId] = (Json::UInt)rtpSender->rtpSenderId;

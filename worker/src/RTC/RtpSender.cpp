@@ -30,7 +30,6 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		// Notify.
 		event_data[k_class] = "RtpSender";
 		this->notifier->Emit(this->rtpSenderId, "close", event_data);
 
@@ -49,6 +48,7 @@ namespace RTC
 		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
+		static const Json::StaticString k_available("available");
 
 		Json::Value json(Json::objectValue);
 
@@ -62,6 +62,8 @@ namespace RTC
 			json[k_rtpParameters] = null_data;
 
 		json[k_hasTransport] = this->transport ? true : false;
+
+		json[k_available] = this->available;
 
 		return json;
 	}
@@ -94,22 +96,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		bool updated = false;
-
 		// Free the previous rtpParameters.
 		if (this->rtpParameters)
-		{
 			delete this->rtpParameters;
-			updated = true;
-		}
 
 		this->rtpParameters = rtpParameters;
 
-		if (updated)
-		{
-			Json::Value event_data = this->rtpParameters->toJson();
+		// TODO: Must check new parameters to set this->available, and emit
+		// "enabled"/"disabled" if this->available changed.
+		// For now do it easy:
+		this->available = true;
 
-			this->notifier->Emit(this->rtpSenderId, "updateparameters", event_data);
-		}
+		// Emit "updateparameters".
+
+		Json::Value event_data = this->rtpParameters->toJson();
+
+		this->notifier->Emit(this->rtpSenderId, "updateparameters", event_data);
 	}
 }

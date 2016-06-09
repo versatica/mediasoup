@@ -48,6 +48,8 @@ namespace RTC
 		Channel::Notifier* notifier = nullptr;
 		RTC::Transport* transport = nullptr;
 		RTC::RtpParameters* rtpParameters = nullptr;
+		// Whether this RtpSender is valid according to Peer capabilities.
+		bool available = false;
 	};
 
 	/* Inline methods. */
@@ -74,7 +76,7 @@ namespace RTC
 	inline
 	void RtpSender::SendRtpPacket(RTC::RtpPacket* packet)
 	{
-		if (this->transport)
+		if (this->available && this->transport)
 			this->transport->SendRtpPacket(packet);
 	}
 }

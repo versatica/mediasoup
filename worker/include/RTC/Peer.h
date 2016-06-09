@@ -5,6 +5,7 @@
 #include "RTC/Transport.h"
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpSender.h"
+#include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
 #include "RTC/RtcpPacket.h"
 #include "Channel/Request.h"
@@ -34,7 +35,7 @@ namespace RTC
 		};
 
 	public:
-		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName);
+		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName, Json::Value& data);
 		virtual ~Peer();
 
 		void Close();

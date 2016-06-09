@@ -3,7 +3,8 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
-const roomOptions = require('./data/roomOptions');
+const roomOptions = require('./data/options').roomOptions;
+const peerRtpCapabilities = require('./data/options').peerRtpCapabilities;
 const promiseSeries = require('./utils/promiseSeries');
 
 function initTest(t)
@@ -13,7 +14,7 @@ function initTest(t)
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice');
+	let peer = room.Peer('alice', peerRtpCapabilities);
 
 	return peer.createTransport({ tcp: false })
 		.then((transport) =>

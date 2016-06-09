@@ -225,6 +225,27 @@ namespace RTC
 						MS_THROW_ERROR("payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
 					}
 				}
+
+				// Also for RTX payloads.
+				for (auto& codec : rtpParameters->codecs)
+				{
+					if (!codec.hasRtx)
+						continue;
+
+					uint8_t payloadType = codec.rtx.payloadType;
+
+					if (!this->HasPayloadType(payloadType, rtpReceiver))
+					{
+						this->ptTable[payloadType] = rtpReceiver;
+					}
+					else
+					{
+						RemoveRtpReceiver(rtpReceiver);
+						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+
+						MS_THROW_ERROR("RTX payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
+					}
+				}
 			}
 		}
 	}
@@ -275,11 +296,18 @@ namespace RTC
 				auto rtpParameters = rtpReceiver->GetParameters();
 
 				// Ensure the RTP PT is present in RtpParameters.
-
 				for (auto& codec : rtpParameters->codecs)
 				{
+					// Check codecs.
 					if (codec.payloadType == packet->GetPayloadType())
+					{
 						return rtpReceiver;
+					}
+					// Also check RTX payloads.
+					else if (codec.hasRtx && codec.rtx.payloadType == packet->GetPayloadType())
+					{
+						return rtpReceiver;
+					}
 				}
 
 				// RTP PT not present.

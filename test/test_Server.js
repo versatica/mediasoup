@@ -3,7 +3,7 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
-const roomOptions = require('./data/roomOptions');
+const roomOptions = require('./data/options').roomOptions;
 
 tap.test('server.updateSettings() with no options must succeed', { timeout: 2000 }, (t) =>
 {

@@ -3,7 +3,8 @@
 const tap = require('tap');
 
 const mediasoup = require('../');
-const roomOptions = require('./data/roomOptions');
+const roomOptions = require('./data/options').roomOptions;
+const peerRtpCapabilities = require('./data/options').peerRtpCapabilities;
 
 tap.test('peer.createTransport() with no options must succeed', { timeout: 2000 }, (t) =>
 {
@@ -12,7 +13,7 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 2000 
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice');
+	let peer = room.Peer('alice', peerRtpCapabilities);
 
 	t.equal(peer.name, 'alice', 'peer.name must be "alice"');
 
@@ -40,7 +41,7 @@ tap.test('peer.createTransport() with no udp nor tcp must fail', { timeout: 2000
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice');
+	let peer = room.Peer('alice', peerRtpCapabilities);
 
 	peer.createTransport({ udp: false, tcp: false })
 		.then(() => t.fail('peer.createTransport() succeeded'))
@@ -58,7 +59,7 @@ tap.test('peer.RtpReceiver() with valid transport must succeed', { timeout: 2000
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice');
+	let peer = room.Peer('alice', peerRtpCapabilities);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
@@ -96,7 +97,7 @@ tap.test('peer.RtpReceiver() with a closed transport must fail', { timeout: 2000
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice');
+	let peer = room.Peer('alice', peerRtpCapabilities);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
@@ -124,7 +125,7 @@ tap.test('peer.RtpReceiver() with invalid kind must fail', { timeout: 2000 }, (t
 	t.tearDown(() => server.close());
 
 	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice');
+	let peer = room.Peer('alice', peerRtpCapabilities);
 
 	peer.createTransport({ tcp: false })
 		.then((transport) =>
