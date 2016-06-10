@@ -29,11 +29,6 @@ namespace RTC
 			this->parameter = data[k_parameter].asString();
 	}
 
-	RtcpFeedback::~RtcpFeedback()
-	{
-		MS_TRACE();
-	}
-
 	Json::Value RtcpFeedback::toJson()
 	{
 		MS_TRACE();

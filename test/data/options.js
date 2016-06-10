@@ -22,11 +22,12 @@ module.exports =
 					kind                 : 'audio',
 					name                 : 'audio/opus',
 					preferredPayloadType : 100,
-					clockRate            : 90000
+					clockRate            : 48000,
+					numChannels          : 2
 				},
 				{
 					kind                 : 'video',
-					name                 : 'video/vp8',
+					name                 : 'video/VP8',
 					preferredPayloadType : 101,
 					clockRate            : 90000
 				}

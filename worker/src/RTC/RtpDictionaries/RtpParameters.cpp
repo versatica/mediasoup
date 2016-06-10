@@ -107,11 +107,6 @@ namespace RTC
 		this->userParameters = rtpParameters->userParameters;
 	}
 
-	RtpParameters::~RtpParameters()
-	{
-		MS_TRACE();
-	}
-
 	Json::Value RtpParameters::toJson()
 	{
 		MS_TRACE();

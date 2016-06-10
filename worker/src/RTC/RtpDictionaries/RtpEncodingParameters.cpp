@@ -87,16 +87,6 @@ namespace RTC
 		}
 	}
 
-	RtpEncodingParameters::RtpEncodingParameters()
-	{
-		MS_TRACE();
-	}
-
-	RtpEncodingParameters::~RtpEncodingParameters()
-	{
-		MS_TRACE();
-	}
-
 	Json::Value RtpEncodingParameters::toJson()
 	{
 		MS_TRACE();

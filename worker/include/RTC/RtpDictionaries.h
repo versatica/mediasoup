@@ -71,11 +71,10 @@ namespace RTC
 
 	public:
 		RtpCodecMime() {};
-		virtual ~RtpCodecMime();
 
 		void SetName(std::string& name);
 
-		std::string& ToString()
+		std::string& GetName()
 		{
 			return this->name;
 		}
@@ -103,7 +102,6 @@ namespace RTC
 	public:
 		RTCRtpCodecRtxParameters() {};
 		RTCRtpCodecRtxParameters(Json::Value& data);
-		virtual ~RTCRtpCodecRtxParameters();
 
 		Json::Value toJson();
 
@@ -116,7 +114,6 @@ namespace RTC
 	{
 	public:
 		RtcpFeedback(Json::Value& data);
-		virtual ~RtcpFeedback();
 
 		Json::Value toJson();
 
@@ -129,12 +126,11 @@ namespace RTC
 	{
 	public:
 		RtpCodecParameters(Json::Value& data);
-		virtual ~RtpCodecParameters();
 
 		Json::Value toJson();
 
 	public:
-		std::string               name;
+		RtpCodecMime              mime;
 		uint8_t                   payloadType = 0;
 		uint32_t                  clockRate = 0;
 		uint32_t                  maxptime = 0;
@@ -144,9 +140,6 @@ namespace RTC
 		bool                      hasRtx = false;
 		std::vector<RtcpFeedback> rtcpFeedback;
 		RTC::CustomParameters     parameters;
-
-	public:
-		RtpCodecMime              mime;
 	};
 
 	class RtpFecParameters
@@ -154,7 +147,6 @@ namespace RTC
 	public:
 		RtpFecParameters() {};
 		RtpFecParameters(Json::Value& data);
-		virtual ~RtpFecParameters();
 
 		Json::Value toJson();
 
@@ -168,7 +160,6 @@ namespace RTC
 	public:
 		RtpRtxParameters() {};
 		RtpRtxParameters(Json::Value& data);
-		virtual ~RtpRtxParameters();
 
 		Json::Value toJson();
 
@@ -179,9 +170,8 @@ namespace RTC
 	class RtpEncodingParameters
 	{
 	public:
+		RtpEncodingParameters() {};
 		RtpEncodingParameters(Json::Value& data);
-		RtpEncodingParameters();
-		virtual ~RtpEncodingParameters();
 
 		Json::Value toJson();
 
@@ -204,9 +194,7 @@ namespace RTC
 	class RtpHeaderExtensionParameters
 	{
 	public:
-		RtpHeaderExtensionParameters() {};
 		RtpHeaderExtensionParameters(Json::Value& data);
-		virtual ~RtpHeaderExtensionParameters();
 
 		Json::Value toJson();
 
@@ -222,7 +210,6 @@ namespace RTC
 	public:
 		RtcpParameters() {};
 		RtcpParameters(Json::Value& data);
-		virtual ~RtcpParameters();
 
 		Json::Value toJson();
 
@@ -235,11 +222,8 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
-		// Constructor for receiver's parameters.
 		RtpParameters(Json::Value& data);
-		// Constructor for sender's parameters.
 		RtpParameters(const RtpParameters* RtpParameters);
-		virtual ~RtpParameters();
 
 		Json::Value toJson();
 
@@ -261,13 +245,12 @@ namespace RTC
 	{
 	public:
 		RtpCodecCapability(Json::Value& data);
-		virtual ~RtpCodecCapability();
 
 		Json::Value toJson();
 
 	public:
 		Media::Kind               kind;
-		std::string               name;
+		RtpCodecMime              mime;
 		uint8_t                   preferredPayloadType = 0;
 		uint32_t                  clockRate = 0;
 		uint32_t                  maxptime = 0;
@@ -278,16 +261,12 @@ namespace RTC
 		uint16_t                  maxTemporalLayers = 0;
 		uint16_t                  maxSpatialLayers = 0;
 		bool                      svcMultiStreamSupport = false;
-
-	public:
-		RtpCodecMime              mime;
 	};
 
 	class RtpHeaderExtension
 	{
 	public:
 		RtpHeaderExtension(Json::Value& data);
-		virtual ~RtpHeaderExtension();
 
 		Json::Value toJson();
 
@@ -303,7 +282,6 @@ namespace RTC
 	public:
 		RtpCapabilities() {};
 		RtpCapabilities(Json::Value& data);
-		virtual ~RtpCapabilities();
 
 		Json::Value toJson();
 
@@ -314,6 +292,18 @@ namespace RTC
 		std::vector<RtpCodecCapability> codecs;
 		std::vector<RtpHeaderExtension> headerExtensions;
 		std::vector<std::string>        fecMechanisms;
+	};
+
+	class RtpRoomMediaCodec
+	{
+	public:
+		RtpRoomMediaCodec(Json::Value& data);
+
+	public:
+		Media::Kind               kind;
+		RtpCodecMime              mime;
+		uint32_t                  clockRate = 0;
+		RTC::CustomParameters     parameters;
 	};
 }
 

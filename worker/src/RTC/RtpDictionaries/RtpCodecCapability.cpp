@@ -47,9 +47,6 @@ namespace RTC
 		// NOTE: This may throw.
 		this->mime.SetName(name);
 
-		// Override/normalize given `name`.
-		this->name = this->mime.ToString();
-
 		// `preferredPayloadType` is mandatory.
 		if (!data[k_preferredPayloadType].isUInt())
 			MS_THROW_ERROR("missing RtpCodecCapability.preferredPayloadType");
@@ -103,11 +100,6 @@ namespace RTC
 			this->svcMultiStreamSupport = data[k_svcMultiStreamSupport].asBool();
 	}
 
-	RtpCodecCapability::~RtpCodecCapability()
-	{
-		MS_TRACE();
-	}
-
 	Json::Value RtpCodecCapability::toJson()
 	{
 		MS_TRACE();
@@ -131,7 +123,7 @@ namespace RTC
 		json[k_kind] = RTC::Media::GetJsonString(this->kind);
 
 		// Add `name`.
-		json[k_name] = this->name;
+		json[k_name] = this->mime.GetName();
 
 		// Add `preferredPayloadType`.
 		json[k_preferredPayloadType] = (Json::UInt)this->preferredPayloadType;

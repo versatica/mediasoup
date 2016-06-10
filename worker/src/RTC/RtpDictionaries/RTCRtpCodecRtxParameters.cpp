@@ -29,11 +29,6 @@ namespace RTC
 			this->rtxTime = (uint32_t)data[k_rtxTime].asUInt();
 	}
 
-	RTCRtpCodecRtxParameters::~RTCRtpCodecRtxParameters()
-	{
-		MS_TRACE();
-	}
-
 	Json::Value RTCRtpCodecRtxParameters::toJson()
 	{
 		MS_TRACE();

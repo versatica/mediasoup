@@ -43,11 +43,6 @@ namespace RTC
 			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
 	}
 
-	RtpHeaderExtensionParameters::~RtpHeaderExtensionParameters()
-	{
-		MS_TRACE();
-	}
-
 	Json::Value RtpHeaderExtensionParameters::toJson()
 	{
 		MS_TRACE();

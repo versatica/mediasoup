@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Utils.h"
 #include <string>
+#include <vector>
 
 namespace RTC
 {
@@ -29,7 +30,7 @@ namespace RTC
 			Json::CharReader* jsonReader = builder.newCharReader();
 
 			// NOTE: This line is auto-generated frmo data/supportedRtpCapabilities.js.
-			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":100,"clockRate":90000,"rtcpFeedback":[{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"},{"type":"google-remb","parameter":""}]}]})";
+			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":96,"clockRate":48000,"numChannels":2},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":97,"clockRate":16000},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":98,"clockRate":32000},{"kind":"audio","name":"audio/G722","preferredPayloadType":9,"clockRate":8000},{"kind":"audio","name":"audio/PCMU","preferredPayloadType":0,"clockRate":8000},{"kind":"audio","name":"audio/PCMA","preferredPayloadType":8,"clockRate":8000},{"kind":"video","name":"video/VP8","preferredPayloadType":100,"clockRate":90000},{"kind":"video","name":"video/VP9","preferredPayloadType":101,"clockRate":90000},{"kind":"video","name":"video/H264","preferredPayloadType":102,"clockRate":90000},{"kind":"video","name":"video/H265","preferredPayloadType":103,"clockRate":90000},{"kind":"depth","name":"video/VP8","preferredPayloadType":110,"clockRate":90000}]})";
 
 			Json::Value json;
 			std::string json_parse_error;
@@ -64,8 +65,6 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_mediaCodecs("mediaCodecs");
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_name("name");
 
 		// Initialize room RTP capabilities with all the supported ones.
 		this->rtpCapabilities = Room::supportedRtpCapabilities;
@@ -79,24 +78,15 @@ namespace RTC
 		if (json_mediaCodecs.size() == 0)
 			MS_THROW_ERROR("empty mediaCodecs");
 
+		std::vector<RtpRoomMediaCodec> mediaCodecs;
+
 		for (Json::UInt i = 0; i < json_mediaCodecs.size(); i++)
 		{
-			auto& json_mediaCodec = json_mediaCodecs[i];
+			RTC::RtpRoomMediaCodec mediaCodec(json_mediaCodecs[i]);
 
-			if (!json_mediaCodec[k_kind].isString())
-				MS_THROW_ERROR("missing mediaCodec.kind");
+			mediaCodecs.push_back(mediaCodec);
 
-			if (!json_mediaCodec[k_name].isString())
-				MS_THROW_ERROR("missing mediaCodec.name");
-
-			std::string str_kind = json_mediaCodec[k_kind].asString();
-			std::string str_name = json_mediaCodec[k_name].asString();
-			RTC::Media::Kind kind = RTC::Media::GetKind(str_kind);
-			RTC::RtpCodecMime mime;
-
-			mime.SetName(str_name);
-
-			// TODO: more
+			// TODO: MORE
 		}
 	}
 

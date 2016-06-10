@@ -35,9 +35,6 @@ namespace RTC
 		// NOTE: This may throw.
 		this->mime.SetName(name);
 
-		// Override/normalize given `name`.
-		this->name = this->mime.ToString();
-
 		// `payloadType` is mandatory.
 		if (!data[k_payloadType].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
@@ -86,11 +83,6 @@ namespace RTC
 			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
 	}
 
-	RtpCodecParameters::~RtpCodecParameters()
-	{
-		MS_TRACE();
-	}
-
 	Json::Value RtpCodecParameters::toJson()
 	{
 		MS_TRACE();
@@ -108,7 +100,7 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		// Add `name`.
-		json[k_name] = this->name;
+		json[k_name] = this->mime.GetName();
 
 		// Add `payloadType`.
 		json[k_payloadType] = (Json::UInt)this->payloadType;
