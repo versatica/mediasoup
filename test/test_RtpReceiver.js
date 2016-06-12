@@ -40,7 +40,8 @@ tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 2000
 					[
 						{
 							name        : 'audio/opus',
-							payloadType : 100
+							payloadType : 100,
+							clockRate   : 48000
 						}
 					]
 				})
@@ -73,11 +74,13 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 					[
 						{
 							name        : 'video/H264',
-							payloadType : 101
+							payloadType : 101,
+							clockRate   : 90000
 						},
 						{
 							name        : 'video/H265',
-							payloadType : 102
+							payloadType : 102,
+							clockRate   : 90000
 						}
 					],
 					encodings :
@@ -148,7 +151,8 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 							foo               : 'barœæ€',
 							bar               : true,
 							baz               : -123,
-							lol               : -456.789
+							lol               : -456.789,
+							ids               : [ 123, 2, 3 ]
 						}
 					}
 				],
@@ -243,7 +247,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 						{
 							name        : 'audio/opus',
 							payloadType : 101,
-							clockRate   : 90000
+							clockRate   : 48000
 						}
 					],
 					encodings :
@@ -265,7 +269,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 						{
 							name        : 'audio/opus',
 							payloadType : 101,
-							clockRate   : 90000
+							clockRate   : 48000
 						}
 					],
 					encodings :
@@ -339,7 +343,8 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : '/opus',
-								payloadType : 101
+								payloadType : 101,
+								clockRate   : 48000
 							}
 						]
 					})
@@ -358,7 +363,8 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/',
-								payloadType : 101
+								payloadType : 101,
+								clockRate   : 48000
 							}
 						]
 					})
@@ -376,7 +382,8 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						codecs :
 						[
 							{
-								payloadType : 102
+								payloadType : 102,
+								clockRate   : 90000
 							}
 						]
 					})
@@ -394,7 +401,8 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						codecs :
 						[
 							{
-								name : 'audio/opus'
+								name      : 'audio/opus',
+								clockRate : 48000
 							}
 						]
 					})
@@ -413,7 +421,27 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/opus',
+								payloadType : 102
+							}
+						]
+					})
+					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+					.catch((error) =>
+					{
+						t.pass(`rtpReceiver.receive() without codec.clockRate failed: ${error}`);
+					});
+			});
+
+			funcs.push(function()
+			{
+				return rtpReceiver.receive(
+					{
+						codecs :
+						[
+							{
+								name        : 'audio/opus',
 								payloadType : 101,
+								clockRate   : 48000,
 								rtx         : {}
 							}
 						]
@@ -433,11 +461,13 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 101
+								payloadType : 101,
+								clockRate   : 48000
 							},
 							{
 								name        : 'audio/opus',
-								payloadType : 101
+								payloadType : 101,
+								clockRate   : 48000
 							}
 						]
 					})
@@ -457,6 +487,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 							{
 								name        : 'audio/opus',
 								payloadType : 100,
+								clockRate   : 48000,
 								rtx :
 								{
 									payloadType : 101
@@ -464,7 +495,8 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 							},
 							{
 								name        : 'audio/G722',
-								payloadType : 101
+								payloadType : 101,
+								clockRate   : 8000
 							}
 						]
 					})
@@ -497,7 +529,8 @@ tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 101
+								payloadType : 101,
+								clockRate   : 48000
 							}
 						],
 						encodings :
@@ -522,11 +555,13 @@ tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 101
+								payloadType : 101,
+								clockRate   : 48000
 							},
 							{
 								name        : 'audio/CN',
-								payloadType : 102
+								payloadType : 102,
+								clockRate   : 16000
 							}
 						],
 						encodings :
@@ -565,7 +600,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 						{
 							name        : 'audio/opus',
 							payloadType : 101,
-							clockRate   : 90000
+							clockRate   : 48000
 						}
 					]
 				})
@@ -581,7 +616,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 						{
 							name        : 'audio/PCMU',
 							payloadType : 101,
-							clockRate   : 90000
+							clockRate   : 8000
 						}
 					]
 				})
@@ -613,7 +648,8 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 100
+								payloadType : 100,
+								clockRate   : 48000
 							}
 						]
 					})
@@ -647,11 +683,13 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 100
+								payloadType : 100,
+								clockRate   : 48000
 							},
 							{
 								name        : 'audio/PCMU',
-								payloadType : 0
+								payloadType : 0,
+								clockRate   : 8000
 							}
 						]
 					})
@@ -688,11 +726,13 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 100
+								payloadType : 100,
+								clockRate   : 48000
 							},
 							{
 								name        : 'audio/PCMU',
-								payloadType : 0
+								payloadType : 0,
+								clockRate   : 8000
 							}
 						],
 						encodings :
@@ -739,11 +779,13 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 100
+								payloadType : 100,
+								clockRate   : 48000
 							},
 							{
 								name        : 'audio/PCMU',
-								payloadType : 0
+								payloadType : 0,
+								clockRate   : 8000
 							}
 						],
 						encodings :
@@ -788,11 +830,13 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 100
+								payloadType : 100,
+								clockRate   : 48000
 							},
 							{
 								name        : 'audio/PCMU',
-								payloadType : 0
+								payloadType : 0,
+								clockRate   : 8000
 							}
 						],
 						encodings :

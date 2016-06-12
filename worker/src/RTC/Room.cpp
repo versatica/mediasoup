@@ -30,7 +30,7 @@ namespace RTC
 			Json::CharReader* jsonReader = builder.newCharReader();
 
 			// NOTE: This line is auto-generated frmo data/supportedRtpCapabilities.js.
-			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":96,"clockRate":48000,"numChannels":2},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":97,"clockRate":16000},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":98,"clockRate":32000},{"kind":"audio","name":"audio/G722","preferredPayloadType":9,"clockRate":8000},{"kind":"audio","name":"audio/PCMU","preferredPayloadType":0,"clockRate":8000},{"kind":"audio","name":"audio/PCMA","preferredPayloadType":8,"clockRate":8000},{"kind":"video","name":"video/VP8","preferredPayloadType":100,"clockRate":90000},{"kind":"video","name":"video/VP9","preferredPayloadType":101,"clockRate":90000},{"kind":"video","name":"video/H264","preferredPayloadType":102,"clockRate":90000},{"kind":"video","name":"video/H265","preferredPayloadType":103,"clockRate":90000},{"kind":"depth","name":"video/VP8","preferredPayloadType":110,"clockRate":90000}]})";
+			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":96,"clockRate":48000,"numChannels":2},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":97,"clockRate":16000},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":98,"clockRate":32000},{"kind":"audio","name":"audio/G722","preferredPayloadType":9,"clockRate":8000},{"kind":"audio","name":"audio/PCMU","preferredPayloadType":0,"clockRate":8000},{"kind":"audio","name":"audio/PCMA","preferredPayloadType":8,"clockRate":8000},{"kind":"video","name":"video/VP8","preferredPayloadType":110,"clockRate":90000},{"kind":"video","name":"video/VP9","preferredPayloadType":111,"clockRate":90000},{"kind":"video","name":"video/H264","preferredPayloadType":112,"clockRate":90000},{"kind":"depth","name":"video/VP8","preferredPayloadType":120,"clockRate":90000},{"kind":"audio","name":"audio/CN","preferredPayloadType":77,"clockRate":32000},{"kind":"audio","name":"audio/CN","preferredPayloadType":78,"clockRate":16000},{"kind":"audio","name":"audio/CN","preferredPayloadType":13,"clockRate":8000},{"kind":"audio","name":"audio/telephone-event","preferredPayloadType":79,"clockRate":8000}]})";
 
 			Json::Value json;
 			std::string json_parse_error;
@@ -66,17 +66,11 @@ namespace RTC
 
 		static const Json::StaticString k_mediaCodecs("mediaCodecs");
 
-		// Initialize room RTP capabilities with all the supported ones.
-		this->rtpCapabilities = Room::supportedRtpCapabilities;
-
 		// `mediaCodecs` is mandatory.
 		if (!data[k_mediaCodecs].isArray())
 			MS_THROW_ERROR("missing mediaCodecs");
 
 		auto& json_mediaCodecs = data[k_mediaCodecs];
-
-		if (json_mediaCodecs.size() == 0)
-			MS_THROW_ERROR("empty mediaCodecs");
 
 		std::vector<RtpRoomMediaCodec> mediaCodecs;
 
@@ -85,9 +79,11 @@ namespace RTC
 			RTC::RtpRoomMediaCodec mediaCodec(json_mediaCodecs[i]);
 
 			mediaCodecs.push_back(mediaCodec);
-
-			// TODO: MORE
 		}
+
+		// Set room RTP capabilities.
+		// NOTE: This may throw.
+		SetRtpCapabilities(mediaCodecs);
 	}
 
 	Room::~Room()
@@ -358,6 +354,48 @@ namespace RTC
 		{
 			return nullptr;
 		}
+	}
+
+	void Room::SetRtpCapabilities(std::vector<RTC::RtpRoomMediaCodec>& roomMediaCodecs)
+	{
+		MS_TRACE();
+
+		for (auto& roomMediaCodec : roomMediaCodecs)
+		{
+			auto rtpCodecCapability = GetRtpCodecCapability(roomMediaCodec);
+		}
+	}
+
+	RTC::RtpCodecCapability Room::GetRtpCodecCapability(RTC::RtpRoomMediaCodec& roomMediaCodec)
+	{
+		MS_TRACE();
+
+		RTC::RtpCodecCapability codecCapability;
+
+		// Search the given codec in the list of supported codecs.
+
+		auto it = Room::supportedRtpCapabilities.codecs.begin();
+
+		for (; it != Room::supportedRtpCapabilities.codecs.end(); ++it)
+		{
+			auto& supportedCodecapability = *it;
+
+			if (
+				// Kind must match.
+				(roomMediaCodec.kind == supportedCodecapability.kind) &&
+				// MIME must match.
+				(roomMediaCodec.mime == supportedCodecapability.mime) &&
+				// Clock rate must match.
+				(roomMediaCodec.clockRate == supportedCodecapability.clockRate)
+			)
+			{
+				codecCapability = supportedCodecapability;
+			}
+		}
+		if (it == Room::supportedRtpCapabilities.codecs.end())
+			MS_THROW_ERROR("no matching codec found");
+
+		return codecCapability;
 	}
 
 	void Room::onPeerClosed(RTC::Peer* peer)

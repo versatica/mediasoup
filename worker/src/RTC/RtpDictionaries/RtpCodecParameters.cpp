@@ -41,9 +41,11 @@ namespace RTC
 
 		this->payloadType = (uint8_t)data[k_payloadType].asUInt();
 
-		// `clockRate` is optional.
-		if (data[k_clockRate].isUInt())
-			this->clockRate = (uint32_t)data[k_clockRate].asUInt();
+		// `clockRate` is mandatory.
+		if (!data[k_clockRate].isUInt())
+			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
+
+		this->clockRate = (uint32_t)data[k_clockRate].asUInt();
 
 		// `maxptime` is optional.
 		if (data[k_maxptime].isUInt())
@@ -106,8 +108,7 @@ namespace RTC
 		json[k_payloadType] = (Json::UInt)this->payloadType;
 
 		// Add `clockRate`.
-		if (this->clockRate)
-			json[k_clockRate] = (Json::UInt)this->clockRate;
+		json[k_clockRate] = (Json::UInt)this->clockRate;
 
 		// Add `maxptime`.
 		if (this->maxptime)

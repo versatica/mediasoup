@@ -6,9 +6,21 @@ module.exports =
 	{
 		mediaCodecs :
 		[
-			{ kind: 'audio', name: 'audio/opus' },
-			{ kind: 'video', name: 'video/vp8' },
-			{ kind: 'depth', name: 'audio/opus' }
+			{
+				kind      : 'audio',
+				name      : 'audio/opus',
+				clockRate : 48000
+			},
+			{
+				kind      : 'video',
+				name      : 'video/vp8',
+				clockRate : 90000
+			},
+			{
+				kind      : 'depth',
+				name      : 'video/vp8',
+				clockRate : 90000
+			}
 		]
 	},
 

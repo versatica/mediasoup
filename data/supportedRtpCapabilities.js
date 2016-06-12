@@ -9,7 +9,7 @@ let supportedRtpCapabilities =
 {
 	codecs :
 	[
-		// Audio codecs.
+		// Audio codecs:
 		{
 			kind                 : 'audio',
 			name                 : 'audio/opus',
@@ -47,37 +47,65 @@ let supportedRtpCapabilities =
 			preferredPayloadType : 8,
 			clockRate            : 8000
 		},
-		// Video codecs.
+		// Video codecs:
 		{
 			kind                 : 'video',
 			name                 : 'video/VP8',
-			preferredPayloadType : 100,
+			preferredPayloadType : 110,
 			clockRate            : 90000
 		},
 		{
 			kind                 : 'video',
 			name                 : 'video/VP9',
-			preferredPayloadType : 101,
+			preferredPayloadType : 111,
 			clockRate            : 90000
 		},
 		{
 			kind                 : 'video',
 			name                 : 'video/H264',
-			preferredPayloadType : 102,
+			preferredPayloadType : 112,
 			clockRate            : 90000
 		},
-		{
-			kind                 : 'video',
-			name                 : 'video/H265',
-			preferredPayloadType : 103,
-			clockRate            : 90000
-		},
-		// Depth codecs.
+		// Depth codecs:
 		{
 			kind                 : 'depth',
 			name                 : 'video/VP8',
-			preferredPayloadType : 110,
+			preferredPayloadType : 120,
 			clockRate            : 90000
+		},
+		// Feature codecs:
+		{
+			kind                 : 'audio',
+			name                 : 'audio/CN',
+			preferredPayloadType : 77,
+			clockRate            : 32000
+		},
+		{
+			kind                 : 'audio',
+			name                 : 'audio/CN',
+			preferredPayloadType : 78,
+			clockRate            : 16000
+		},
+		{
+			kind                 : 'audio',
+			name                 : 'audio/CN',
+			preferredPayloadType : 13,
+			clockRate            : 8000
+		},
+		{
+			kind                 : 'audio',
+			name                 : 'audio/telephone-event',
+			preferredPayloadType : 79,
+			clockRate            : 8000
+		}
+	],
+	headerExtensions:
+	[
+		{
+			kind             : '',
+			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			preferredId      : 1,
+			preferredEncrypt : false
 		}
 	]
 };

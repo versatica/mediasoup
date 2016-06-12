@@ -56,6 +56,27 @@ namespace RTC
 					break;
 				}
 
+				case Json::arrayValue:
+				{
+					std::vector<uint32_t> arrayPositiveInteger;
+					bool isValid = true;
+
+					for (Json::UInt i = 0; i < value.size() && isValid; i++)
+					{
+						auto& entry = value[i];
+
+						if (entry.isUInt())
+							arrayPositiveInteger.push_back((uint32_t)entry.asUInt());
+						else
+							isValid = false;
+					}
+
+					if (isValid)
+						parameters[key] = CustomParameterValue(arrayPositiveInteger);
+
+					break;
+				}
+
 				default:
 					;  // Just ignore other value types.
 			}

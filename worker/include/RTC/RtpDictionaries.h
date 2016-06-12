@@ -18,7 +18,8 @@ namespace RTC
 		{
 			AUDIO = 1,
 			VIDEO,
-			DEPTH
+			DEPTH,
+			ALL
 		};
 
 	public:
@@ -71,6 +72,16 @@ namespace RTC
 
 	public:
 		RtpCodecMime() {};
+
+		bool operator==(const RtpCodecMime& other)
+		{
+			return this->type == other.type && this->subtype == other.subtype;
+		}
+
+		bool operator!=(const RtpCodecMime& other)
+		{
+			return !(*this == other);
+		}
 
 		void SetName(std::string& name);
 
@@ -244,6 +255,7 @@ namespace RTC
 	class RtpCodecCapability
 	{
 	public:
+		RtpCodecCapability() {};
 		RtpCodecCapability(Json::Value& data);
 
 		Json::Value toJson();

@@ -13,14 +13,16 @@ namespace RTC
 	{
 		{ "audio", Media::Kind::AUDIO },
 		{ "video", Media::Kind::VIDEO },
-		{ "depth", Media::Kind::DEPTH }
+		{ "depth", Media::Kind::DEPTH },
+		{ "",      Media::Kind::ALL   }
 	};
 
 	std::map<Media::Kind, Json::StaticString> Media::kind2Json =
 	{
 		{ Media::Kind::AUDIO, Json::StaticString("audio") },
 		{ Media::Kind::VIDEO, Json::StaticString("video") },
-		{ Media::Kind::DEPTH, Json::StaticString("depth") }
+		{ Media::Kind::DEPTH, Json::StaticString("depth") },
+		{ Media::Kind::ALL,   Json::StaticString("")      }
 	};
 
 	/* Class methods. */

@@ -39,12 +39,20 @@ namespace RTC
 		// NOTE: This may throw.
 		this->mime.SetName(name);
 
-		// `clockRate` is optional.
-		if (data[k_clockRate].isUInt())
-			this->clockRate = (uint32_t)data[k_clockRate].asUInt();
+		// `clockRate` is mandatory.
+		if (!data[k_clockRate].isUInt())
+			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
+
+		this->clockRate = (uint32_t)data[k_clockRate].asUInt();
 
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
 			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
+
+		// Validate codec.
+
+		// It must not be a feature codec.
+		if (this->mime.IsFeatureCodec())
+			MS_THROW_ERROR("RtpRoomMediaCodec can not be a feature coedc");
 	}
 }
