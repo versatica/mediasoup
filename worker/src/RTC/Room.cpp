@@ -390,6 +390,8 @@ namespace RTC
 			)
 			{
 				codecCapability = supportedCodecapability;
+
+				break;
 			}
 		}
 		if (it == Room::supportedRtpCapabilities.codecs.end())
