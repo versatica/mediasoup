@@ -8,56 +8,21 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(Json::Value& data)
+	RtpCodecParameters::RtpCodecParameters(Json::Value& data) :
+		RtpCodec(data)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_name("name");
 		static const Json::StaticString k_payloadType("payloadType");
-		static const Json::StaticString k_clockRate("clockRate");
-		static const Json::StaticString k_maxptime("maxptime");
-		static const Json::StaticString k_ptime("ptime");
-		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtx("rtx");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 		static const Json::StaticString k_parameters("parameters");
-
-		if (!data.isObject())
-			MS_THROW_ERROR("RtpCodecParameters is not an object");
-
-		// `name` is mandatory.
-		if (!data[k_name].isString())
-			MS_THROW_ERROR("missing RtpCodecParameters.name");
-
-		std::string name = data[k_name].asString();
-
-		// Set MIME field.
-		// NOTE: This may throw.
-		this->mime.SetName(name);
 
 		// `payloadType` is mandatory.
 		if (!data[k_payloadType].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
 
 		this->payloadType = (uint8_t)data[k_payloadType].asUInt();
-
-		// `clockRate` is mandatory.
-		if (!data[k_clockRate].isUInt())
-			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
-
-		this->clockRate = (uint32_t)data[k_clockRate].asUInt();
-
-		// `maxptime` is optional.
-		if (data[k_maxptime].isUInt())
-			this->maxptime = (uint32_t)data[k_maxptime].asUInt();
-
-		// `ptime` is optional.
-		if (data[k_ptime].isUInt())
-			this->ptime = (uint32_t)data[k_ptime].asUInt();
-
-		// `numChannels` is optional.
-		if (data[k_numChannels].isUInt())
-			this->numChannels = (uint32_t)data[k_numChannels].asUInt();
 
 		// `rtx` is optional.
 		if (data[k_rtx].isObject())
@@ -79,10 +44,6 @@ namespace RTC
 				this->rtcpFeedback.push_back(rtcpFeedback);
 			}
 		}
-
-		// `parameters` is optional.
-		if (data[k_parameters].isObject())
-			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
 	}
 
 	Json::Value RtpCodecParameters::toJson()

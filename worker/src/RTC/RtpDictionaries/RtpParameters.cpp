@@ -125,36 +125,27 @@ namespace RTC
 			json[k_muxId] = this->muxId;
 
 		// Add `codecs`.
-		if (!this->codecs.empty())
-		{
-			json[k_codecs] = Json::arrayValue;
+		json[k_codecs] = Json::arrayValue;
 
-			for (auto& entry : this->codecs)
-			{
-				json[k_codecs].append(entry.toJson());
-			}
+		for (auto& entry : this->codecs)
+		{
+			json[k_codecs].append(entry.toJson());
 		}
 
 		// Add `encodings`.
-		if (!this->encodings.empty())
-		{
-			json[k_encodings] = Json::arrayValue;
+		json[k_encodings] = Json::arrayValue;
 
-			for (auto& entry : this->encodings)
-			{
-				json[k_encodings].append(entry.toJson());
-			}
+		for (auto& entry : this->encodings)
+		{
+			json[k_encodings].append(entry.toJson());
 		}
 
 		// Add `headerExtensions`.
-		if (!this->headerExtensions.empty())
-		{
-			json[k_headerExtensions] = Json::arrayValue;
+		json[k_headerExtensions] = Json::arrayValue;
 
-			for (auto& entry : this->headerExtensions)
-			{
-				json[k_headerExtensions].append(entry.toJson());
-			}
+		for (auto& entry : this->headerExtensions)
+		{
+			json[k_headerExtensions].append(entry.toJson());
 		}
 
 		// Add `rtcp`.

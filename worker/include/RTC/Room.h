@@ -39,6 +39,7 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
+		RTC::RtpCapabilities& GetRtpCapabilities();
 
 	private:
 		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr);
@@ -67,6 +68,14 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 	};
+
+	/* Inline static methods. */
+
+	inline
+	RTC::RtpCapabilities& Room::GetRtpCapabilities()
+	{
+		return this->rtpCapabilities;
+	}
 }
 
 #endif

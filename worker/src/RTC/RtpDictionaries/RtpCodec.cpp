@@ -1,0 +1,57 @@
+#define MS_CLASS "RTC::RtpCodec"
+
+#include "RTC/RtpDictionaries.h"
+#include "MediaSoupError.h"
+#include "Logger.h"
+
+namespace RTC
+{
+	/* Instance methods. */
+
+	RtpCodec::RtpCodec(Json::Value& data)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_name("name");
+		static const Json::StaticString k_clockRate("clockRate");
+		static const Json::StaticString k_maxptime("maxptime");
+		static const Json::StaticString k_ptime("ptime");
+		static const Json::StaticString k_numChannels("numChannels");
+		static const Json::StaticString k_parameters("parameters");
+
+		if (!data.isObject())
+			MS_THROW_ERROR("RtpCodec is not an object");
+
+		// `name` is mandatory.
+		if (!data[k_name].isString())
+			MS_THROW_ERROR("missing RtpCodec.name");
+
+		std::string name = data[k_name].asString();
+
+		// Set MIME field.
+		// NOTE: This may throw.
+		this->mime.SetName(name);
+
+		// `clockRate` is mandatory.
+		if (!data[k_clockRate].isUInt())
+			MS_THROW_ERROR("missing RtpCodec.clockRate");
+
+		this->clockRate = (uint32_t)data[k_clockRate].asUInt();
+
+		// `maxptime` is optional.
+		if (data[k_maxptime].isUInt())
+			this->maxptime = (uint32_t)data[k_maxptime].asUInt();
+
+		// `ptime` is optional.
+		if (data[k_ptime].isUInt())
+			this->ptime = (uint32_t)data[k_ptime].asUInt();
+
+		// `numChannels` is optional.
+		if (data[k_numChannels].isUInt())
+			this->numChannels = (uint32_t)data[k_numChannels].asUInt();
+
+		// `parameters` is optional.
+		if (data[k_parameters].isObject())
+			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
+	}
+}

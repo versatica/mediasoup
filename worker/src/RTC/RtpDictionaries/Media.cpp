@@ -11,18 +11,18 @@ namespace RTC
 
 	std::unordered_map<std::string, Media::Kind> Media::string2Kind =
 	{
+		{ "",      Media::Kind::ALL   },
 		{ "audio", Media::Kind::AUDIO },
 		{ "video", Media::Kind::VIDEO },
-		{ "depth", Media::Kind::DEPTH },
-		{ "",      Media::Kind::ALL   }
+		{ "depth", Media::Kind::DEPTH }
 	};
 
 	std::map<Media::Kind, Json::StaticString> Media::kind2Json =
 	{
+		{ Media::Kind::ALL,   Json::StaticString("")      },
 		{ Media::Kind::AUDIO, Json::StaticString("audio") },
 		{ Media::Kind::VIDEO, Json::StaticString("video") },
-		{ Media::Kind::DEPTH, Json::StaticString("depth") },
-		{ Media::Kind::ALL,   Json::StaticString("")      }
+		{ Media::Kind::DEPTH, Json::StaticString("depth") }
 	};
 
 	/* Class methods. */
@@ -37,7 +37,7 @@ namespace RTC
 		auto it = Media::string2Kind.find(str);
 
 		if (it == Media::string2Kind.end())
-			MS_THROW_ERROR("invalid media kind");
+			MS_THROW_ERROR("invalid media kind [kind:%s]", str.c_str());
 
 		return it->second;
 	}
@@ -46,11 +46,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = Media::kind2Json.find(kind);
-
-		if (it == Media::kind2Json.end())
-			MS_THROW_ERROR("invalid media kind");
-
-		return it->second;
+		return Media::kind2Json.at(kind);
 	}
 }

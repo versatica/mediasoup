@@ -71,43 +71,43 @@ tap.test('server.updateSettings() in a closed server must fail', { timeout: 2000
 	server.close();
 });
 
-tap.test('server.Room() must succeed', { _timeout: 2000 }, (t) =>
+tap.test('server.createRoom() must succeed', { _timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room(roomOptions);
+	server.createRoom(roomOptions)
+		.then((room) =>
+		{
+			t.pass('server.createRoom() succeeded');
 
-	room.on('close', (error) =>
-	{
-		t.error(error, 'room must close cleanly');
-		t.end();
-	});
+			room.on('close', (error) =>
+			{
+				t.error(error, 'room must close cleanly');
+				t.end();
+			});
 
-	// Wait a bit so Channel requests receive response
-	setTimeout(() => room.close(), 50);
+			// Wait a bit so Channel requests receive response
+			setTimeout(() => room.close(), 50);
+		})
+		.catch((error) => t.fail(`server.createRoom() failed: ${error}`));
 });
 
-tap.test('server.Room() in a closed server must fail', { timeout: 2000 }, (t) =>
+tap.test('server.createRoom() in a closed server must fail', { timeout: 2000 }, (t) =>
 {
 	let server = mediasoup.Server();
 
-	t.tearDown(() => server.close());
-
-	server.on('close', () =>
-	{
-		t.throws(() =>
-		{
-			server.Room(roomOptions);
-		},
-		mediasoup.errors.InvalidStateError,
-		'server.Room() must throw InvalidStateError');
-
-		t.end();
-	});
-
 	server.close();
+
+	server.createRoom(roomOptions)
+		.then((room) => t.fail('server.createRoom() succeeded'))
+		.catch((error) =>
+		{
+			t.pass(`server.createRoom() failed: ${error}`);
+			t.type(error, mediasoup.errors.InvalidStateError, 'server.createRoom() must reject with InvalidStateError');
+			t.end();
+		});
 });
 
 tap.test('server.dump() must succeed', { timeout: 2000 }, (t) =>

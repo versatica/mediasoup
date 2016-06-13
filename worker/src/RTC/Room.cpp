@@ -30,7 +30,7 @@ namespace RTC
 			Json::CharReader* jsonReader = builder.newCharReader();
 
 			// NOTE: This line is auto-generated frmo data/supportedRtpCapabilities.js.
-			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":96,"clockRate":48000,"numChannels":2},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":97,"clockRate":16000},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":98,"clockRate":32000},{"kind":"audio","name":"audio/G722","preferredPayloadType":9,"clockRate":8000},{"kind":"audio","name":"audio/PCMU","preferredPayloadType":0,"clockRate":8000},{"kind":"audio","name":"audio/PCMA","preferredPayloadType":8,"clockRate":8000},{"kind":"video","name":"video/VP8","preferredPayloadType":110,"clockRate":90000},{"kind":"video","name":"video/VP9","preferredPayloadType":111,"clockRate":90000},{"kind":"video","name":"video/H264","preferredPayloadType":112,"clockRate":90000},{"kind":"depth","name":"video/VP8","preferredPayloadType":120,"clockRate":90000},{"kind":"audio","name":"audio/CN","preferredPayloadType":77,"clockRate":32000},{"kind":"audio","name":"audio/CN","preferredPayloadType":78,"clockRate":16000},{"kind":"audio","name":"audio/CN","preferredPayloadType":13,"clockRate":8000},{"kind":"audio","name":"audio/telephone-event","preferredPayloadType":79,"clockRate":8000}]})";
+			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":96,"clockRate":48000,"numChannels":2},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":97,"clockRate":16000},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":98,"clockRate":32000},{"kind":"audio","name":"audio/G722","preferredPayloadType":9,"clockRate":8000},{"kind":"audio","name":"audio/PCMU","preferredPayloadType":0,"clockRate":8000},{"kind":"audio","name":"audio/PCMA","preferredPayloadType":8,"clockRate":8000},{"kind":"video","name":"video/VP8","preferredPayloadType":110,"clockRate":90000},{"kind":"video","name":"video/VP9","preferredPayloadType":111,"clockRate":90000},{"kind":"video","name":"video/H264","preferredPayloadType":112,"clockRate":90000},{"kind":"depth","name":"video/VP8","preferredPayloadType":120,"clockRate":90000},{"kind":"audio","name":"audio/CN","preferredPayloadType":77,"clockRate":32000},{"kind":"audio","name":"audio/CN","preferredPayloadType":78,"clockRate":16000},{"kind":"audio","name":"audio/CN","preferredPayloadType":13,"clockRate":8000},{"kind":"audio","name":"audio/telephone-event","preferredPayloadType":79,"clockRate":8000}],"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}]})";
 
 			Json::Value json;
 			std::string json_parse_error;
@@ -126,6 +126,7 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_roomId("roomId");
+		static const Json::StaticString k_rtpCapabilities("rtpCapabilities");
 		static const Json::StaticString k_peers("peers");
 		static const Json::StaticString k_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
 
@@ -135,6 +136,9 @@ namespace RTC
 
 		// Add `roomId`.
 		json[k_roomId] = (Json::UInt)this->roomId;
+
+		// Add `rtpCapabilities`.
+		json[k_rtpCapabilities] = this->rtpCapabilities.toJson();
 
 		// Add `peers`.
 		for (auto& kv : this->peers)
@@ -270,17 +274,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::room_getCapabilities:
-			{
-				// TODO
-
-				Json::Value json(Json::objectValue);
-
-				request->Accept(json);
-
-				break;
-			}
-
 			case Channel::Request::MethodId::peer_close:
 			case Channel::Request::MethodId::peer_dump:
 			case Channel::Request::MethodId::peer_createTransport:
@@ -360,10 +353,23 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Check codecs.
+
 		for (auto& roomMediaCodec : roomMediaCodecs)
 		{
 			auto rtpCodecCapability = GetRtpCodecCapability(roomMediaCodec);
+
+			// Append the codec to the room capabilities.
+			this->rtpCapabilities.codecs.push_back(rtpCodecCapability);
 		}
+
+		// TODO: Add feature codecs.
+
+		// Copy supported RTP header extensions.
+		this->rtpCapabilities.headerExtensions = Room::supportedRtpCapabilities.headerExtensions;
+
+		// Copy supported FEC mechanisms.
+		this->rtpCapabilities.fecMechanisms = Room::supportedRtpCapabilities.fecMechanisms;
 	}
 
 	RTC::RtpCodecCapability Room::GetRtpCodecCapability(RTC::RtpRoomMediaCodec& roomMediaCodec)
@@ -378,24 +384,28 @@ namespace RTC
 
 		for (; it != Room::supportedRtpCapabilities.codecs.end(); ++it)
 		{
-			auto& supportedCodecapability = *it;
+			auto& supportedCodecCapability = *it;
 
-			if (
-				// Kind must match.
-				(roomMediaCodec.kind == supportedCodecapability.kind) &&
-				// MIME must match.
-				(roomMediaCodec.mime == supportedCodecapability.mime) &&
-				// Clock rate must match.
-				(roomMediaCodec.clockRate == supportedCodecapability.clockRate)
-			)
+			// Kind must match.
+			if (roomMediaCodec.kind != supportedCodecCapability.kind)
+				continue;
+
+			// Check whether the codec capability matches the given codec.
+			if (supportedCodecCapability.MatchesCodec(roomMediaCodec))
 			{
-				codecCapability = supportedCodecapability;
+				codecCapability = supportedCodecCapability;
 
 				break;
 			}
 		}
 		if (it == Room::supportedRtpCapabilities.codecs.end())
-			MS_THROW_ERROR("no matching codec found");
+			MS_THROW_ERROR("no matching codec capability found");
+
+		// TODO: Reduce the capabilities of the found (and copied) codec (for
+		// example set the H264 packetizationMode parameter to a single value).
+		// NOTE: Maybe a RtpCodecCapability.Reduce(codec) method.
+
+		// Set proper payloadType (it may not be the preferred one in some cases).
 
 		return codecCapability;
 	}

@@ -16,7 +16,6 @@ namespace Channel
 		{ "room.close",                        Request::MethodId::room_close                        },
 		{ "room.dump",                         Request::MethodId::room_dump                         },
 		{ "room.createPeer",                   Request::MethodId::room_createPeer                   },
-		{ "room.getCapabilities",              Request::MethodId::room_getCapabilities              },
 		{ "peer.close",                        Request::MethodId::peer_close                        },
 		{ "peer.dump",                         Request::MethodId::peer_dump                         },
 		{ "peer.createTransport",              Request::MethodId::peer_createTransport              },

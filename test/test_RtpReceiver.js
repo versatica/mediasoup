@@ -10,13 +10,17 @@ const promiseSeries = require('./utils/promiseSeries');
 function initTest(t)
 {
 	let server = mediasoup.Server();
+	let peer;
 
 	t.tearDown(() => server.close());
 
-	let room = server.Room(roomOptions);
-	let peer = room.Peer('alice', peerOptions);
+	return server.createRoom(roomOptions)
+		.then((room) =>
+		{
+			peer = room.Peer('alice', peerOptions);
 
-	return peer.createTransport({ tcp: false })
+			return peer.createTransport({ tcp: false });
+		})
 		.then((transport) =>
 		{
 			return { peer: peer, transport: transport };

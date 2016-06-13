@@ -80,36 +80,27 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		// Add `codecs`.
-		if (!this->codecs.empty())
-		{
-			json[k_codecs] = Json::arrayValue;
+		json[k_codecs] = Json::arrayValue;
 
-			for (auto& entry : this->codecs)
-			{
-				json[k_codecs].append(entry.toJson());
-			}
+		for (auto& entry : this->codecs)
+		{
+			json[k_codecs].append(entry.toJson());
 		}
 
 		// Add `headerExtensions`.
-		if (!this->headerExtensions.empty())
-		{
-			json[k_headerExtensions] = Json::arrayValue;
+		json[k_headerExtensions] = Json::arrayValue;
 
-			for (auto& entry : this->headerExtensions)
-			{
-				json[k_headerExtensions].append(entry.toJson());
-			}
+		for (auto& entry : this->headerExtensions)
+		{
+			json[k_headerExtensions].append(entry.toJson());
 		}
 
 		// Add `fecMechanisms`.
-		if (!this->fecMechanisms.empty())
-		{
-			json[k_fecMechanisms] = Json::arrayValue;
+		json[k_fecMechanisms] = Json::arrayValue;
 
-			for (auto& entry : this->fecMechanisms)
-			{
-				json[k_fecMechanisms].append(entry);
-			}
+		for (auto& entry : this->fecMechanisms)
+		{
+			json[k_fecMechanisms].append(entry);
 		}
 
 		return json;

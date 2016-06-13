@@ -49,6 +49,7 @@
         'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
         'src/RTC/RtpDictionaries/RtcpParameters.cpp',
         'src/RTC/RtpDictionaries/RtpCapabilities.cpp',
+        'src/RTC/RtpDictionaries/RtpCodec.cpp',
         'src/RTC/RtpDictionaries/RtpCodecCapability.cpp',
         'src/RTC/RtpDictionaries/RtpCodecMime.cpp',
         'src/RTC/RtpDictionaries/RtpCodecParameters.cpp',

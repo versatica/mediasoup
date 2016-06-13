@@ -8,25 +8,17 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCodecCapability::RtpCodecCapability(Json::Value& data)
+	RtpCodecCapability::RtpCodecCapability(Json::Value& data) :
+		RtpCodec(data)
 	{
 		MS_TRACE();
 
 		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_name("name");
 		static const Json::StaticString k_preferredPayloadType("preferredPayloadType");
-		static const Json::StaticString k_clockRate("clockRate");
-		static const Json::StaticString k_maxptime("maxptime");
-		static const Json::StaticString k_ptime("ptime");
-		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
-		static const Json::StaticString k_parameters("parameters");
 		static const Json::StaticString k_maxTemporalLayers("maxTemporalLayers");
 		static const Json::StaticString k_maxSpatialLayers("maxSpatialLayers");
 		static const Json::StaticString k_svcMultiStreamSupport("svcMultiStreamSupport");
-
-		if (!data.isObject())
-			MS_THROW_ERROR("RtpCodecCapability is not an object");
 
 		// `kind` is mandatory.
 		if (!data[k_kind].isString())
@@ -37,39 +29,15 @@ namespace RTC
 		// NOTE: This may throw.
 		this->kind = RTC::Media::GetKind(kind);
 
-		// `name` is mandatory.
-		if (!data[k_name].isString())
-			MS_THROW_ERROR("missing RtpCodecCapability.name");
-
-		std::string name = data[k_name].asString();
-
-		// Set MIME field.
-		// NOTE: This may throw.
-		this->mime.SetName(name);
+		// It can not be empty kind (all).
+		if (this->kind == RTC::Media::Kind::ALL)
+			MS_THROW_ERROR("invalid empty RtpCodecCapability.kind");
 
 		// `preferredPayloadType` is mandatory.
 		if (!data[k_preferredPayloadType].isUInt())
 			MS_THROW_ERROR("missing RtpCodecCapability.preferredPayloadType");
 
 		this->preferredPayloadType = (uint8_t)data[k_preferredPayloadType].asUInt();
-
-		// `clockRate` is mandatory.
-		if (!data[k_clockRate].isUInt())
-			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
-
-		this->clockRate = (uint32_t)data[k_clockRate].asUInt();
-
-		// `maxptime` is optional.
-		if (data[k_maxptime].isUInt())
-			this->maxptime = (uint32_t)data[k_maxptime].asUInt();
-
-		// `ptime` is optional.
-		if (data[k_ptime].isUInt())
-			this->ptime = (uint32_t)data[k_ptime].asUInt();
-
-		// `numChannels` is optional.
-		if (data[k_numChannels].isUInt())
-			this->numChannels = (uint32_t)data[k_numChannels].asUInt();
 
 		// `rtcpFeedback` is optional.
 		if (data[k_rtcpFeedback].isArray())
@@ -84,10 +52,6 @@ namespace RTC
 				this->rtcpFeedback.push_back(rtcpFeedback);
 			}
 		}
-
-		// `parameters` is optional.
-		if (data[k_parameters].isObject())
-			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
 
 		// `maxTemporalLayers` is optional.
 		if (data[k_maxTemporalLayers].isUInt())
@@ -179,5 +143,22 @@ namespace RTC
 			json[k_svcMultiStreamSupport] = true;
 
 		return json;
+	}
+
+	bool RtpCodecCapability::MatchesCodec(RtpCodec& codec)
+	{
+		MS_TRACE();
+
+		// MIME must match.
+		if (codec.mime != this->mime)
+			return false;
+
+		// Clock rate must match.
+		if (codec.clockRate != this->clockRate)
+			return false;
+
+		// TODO: Match per codec parameters, ptime, numChannels, etc.
+
+		return true;
 	}
 }
