@@ -1,10 +1,5 @@
 language: node_js
 
-node_js:
-  - 4
-  - 5
-  - 6
-
 # env:
 #   - CXX=g++-4.8
 
@@ -16,12 +11,28 @@ node_js:
 #       - g++-4.8
 
 # Ubuntu 14.04 Trusty support
-# sudo: required
 dist: trusty
 
+# DOC: http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 matrix:
   include:
-    - compiler: gcc
+    - node_js:
+      - 4
+      - 5
+      - 6
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.8
+      env: COMPILER=g++-4.8
+    - node_js:
+      - 4
+      - 5
+      - 6
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -29,7 +40,11 @@ matrix:
           packages:
             - g++-4.9
       env: COMPILER=g++-4.9
-    - compiler: gcc
+    - node_js:
+      - 4
+      - 5
+      - 6
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -37,24 +52,34 @@ matrix:
           packages:
             - g++-5
       env: COMPILER=g++-5
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-          packages:
-            - clang-3.6
-      env: COMPILER=clang++-3.6
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-          packages:
-            - clang-3.7
-      env: COMPILER=clang++-3.7
+    # TODO: This currently fails:
+    # https://github.com/travis-ci/travis-ci/issues/6120#issuecomment-224072540
+    # - node_js:
+    #   - 4
+    #   - 5
+    #   - 6
+    #   compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #         - llvm-toolchain-precise-3.6
+    #       packages:
+    #         - clang-3.6
+    #   env: COMPILER=clang++-3.6
+    # - node_js:
+    #   - 4
+    #   - 5
+    #   - 6
+    #   compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #         - llvm-toolchain-precise-3.7
+    #       packages:
+    #         - clang-3.7
+    #   env: COMPILER=clang++-3.7
 
 install: npm install
 
