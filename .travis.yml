@@ -1,25 +1,12 @@
-language: node_js
-
-# env:
-#   - CXX=g++-4.8
-
-# addons:
-#   apt:
-#     sources:
-#       - ubuntu-toolchain-r-test
-#     packages:
-#       - g++-4.8
-
-# Ubuntu 14.04 Trusty support
+# Use Ubuntu 14.04 Trusty
 dist: trusty
+
+language: node_js
 
 # DOC: http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 matrix:
   include:
-    - node_js:
-      - 4
-      - 5
-      - 6
+    - node_js: [ 4, 5, 6 ]
       compiler: gcc
       addons:
         apt:
@@ -28,10 +15,7 @@ matrix:
           packages:
             - g++-4.8
       env: COMPILER=g++-4.8
-    - node_js:
-      - 4
-      - 5
-      - 6
+    - node_js: [ 4, 5, 6 ]
       compiler: gcc
       addons:
         apt:
@@ -40,10 +24,7 @@ matrix:
           packages:
             - g++-4.9
       env: COMPILER=g++-4.9
-    - node_js:
-      - 4
-      - 5
-      - 6
+    - node_js: [ 4, 5, 6 ]
       compiler: gcc
       addons:
         apt:
@@ -54,10 +35,7 @@ matrix:
       env: COMPILER=g++-5
     # TODO: This currently fails:
     # https://github.com/travis-ci/travis-ci/issues/6120#issuecomment-224072540
-    # - node_js:
-    #   - 4
-    #   - 5
-    #   - 6
+    # - node_js: [ 4, 5, 6 ]
     #   compiler: clang
     #   addons:
     #     apt:
@@ -67,10 +45,7 @@ matrix:
     #       packages:
     #         - clang-3.6
     #   env: COMPILER=clang++-3.6
-    # - node_js:
-    #   - 4
-    #   - 5
-    #   - 6
+    # - node_js: [ 4, 5, 6 ]
     #   compiler: clang
     #   addons:
     #     apt:
