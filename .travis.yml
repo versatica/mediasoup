@@ -5,15 +5,56 @@ node_js:
   - 5
   - 6
 
-env:
-  - CXX=g++-4.8
+# env:
+#   - CXX=g++-4.8
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.8
+# addons:
+#   apt:
+#     sources:
+#       - ubuntu-toolchain-r-test
+#     packages:
+#       - g++-4.8
+
+# Ubuntu 14.04 Trusty support
+# sudo: required
+dist: trusty
+
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env: COMPILER=g++-4.9
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env: COMPILER=g++-5
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
+      env: COMPILER=clang++-3.6
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+      env: COMPILER=clang++-3.7
 
 install: npm install
 
