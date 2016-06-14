@@ -115,12 +115,12 @@ namespace RTC
 		RtpCodec(Json::Value& data);
 
 	public:
-		RtpCodecMime              mime;
-		uint32_t                  clockRate = 0;
-		uint32_t                  maxptime = 0;
-		uint32_t                  ptime = 0;
-		uint32_t                  numChannels = 0;
-		RTC::CustomParameters     parameters;
+		RtpCodecMime          mime;
+		uint32_t              clockRate = 0;
+		uint32_t              maxptime = 0;
+		uint32_t              ptime = 0;
+		uint32_t              numChannels = 1;
+		RTC::CustomParameters parameters;
 	};
 
 	class RTCRtpCodecRtxParameters

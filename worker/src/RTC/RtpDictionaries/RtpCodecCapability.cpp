@@ -106,7 +106,7 @@ namespace RTC
 			json[k_ptime] = (Json::UInt)this->ptime;
 
 		// Add `numChannels`.
-		if (this->numChannels)
+		if (this->numChannels > 1)
 			json[k_numChannels] = (Json::UInt)this->numChannels;
 
 		// Add `rtcpFeedback`.
@@ -150,14 +150,37 @@ namespace RTC
 		MS_TRACE();
 
 		// MIME must match.
-		if (codec.mime != this->mime)
+		if (this->mime != codec.mime)
 			return false;
 
 		// Clock rate must match.
-		if (codec.clockRate != this->clockRate)
+		if (this->clockRate != codec.clockRate)
 			return false;
 
-		// TODO: Match per codec parameters, ptime, numChannels, etc.
+		// Per kind checks.
+		switch (this->kind)
+		{
+			case RTC::Media::Kind::AUDIO:
+			{
+				// Num channels must match
+				if (this->numChannels != codec.numChannels)
+					return false;
+
+				break;
+			}
+
+			case RTC::Media::Kind::VIDEO:
+			{
+				// TODO: check SVC stuff.
+
+				break;
+			}
+
+			default:
+				;
+		}
+
+		// TODO: Match per codec parameters, etc.
 
 		return true;
 	}

@@ -64,7 +64,11 @@ let supportedRtpCapabilities =
 			kind                 : 'video',
 			name                 : 'video/H264',
 			preferredPayloadType : 112,
-			clockRate            : 90000
+			clockRate            : 90000,
+			parameters :
+			{
+				packetizationMode : [ 0, 1, 2 ]
+			}
 		},
 		// Depth codecs:
 		{

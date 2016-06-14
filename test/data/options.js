@@ -7,14 +7,29 @@ module.exports =
 		mediaCodecs :
 		[
 			{
-				kind      : 'audio',
-				name      : 'audio/opus',
-				clockRate : 48000
+				kind        : 'audio',
+				name        : 'audio/opus',
+				clockRate   : 48000,
+				numChannels : 2
+			},
+			{
+				kind        : 'audio',
+				name        : 'audio/PCMU',
+				clockRate   : 8000
 			},
 			{
 				kind      : 'video',
 				name      : 'video/vp8',
 				clockRate : 90000
+			},
+			{
+				kind       : 'video',
+				name       : 'video/h264',
+				clockRate  : 90000,
+				parameters :
+				{
+					packetizationMode : 1
+				}
 			},
 			{
 				kind      : 'depth',

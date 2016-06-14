@@ -80,7 +80,7 @@ namespace RTC
 			json[k_ptime] = (Json::UInt)this->ptime;
 
 		// Add `numChannels`.
-		if (this->numChannels)
+		if (this->numChannels > 1)
 			json[k_numChannels] = (Json::UInt)this->numChannels;
 
 		// Add `rtx`
