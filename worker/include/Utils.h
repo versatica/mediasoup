@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include <string>
-#include <algorithm>  // std::transform()
 #include <cstring>  // std::memcmp(), std::memcpy()
 #include <openssl/hmac.h>
 

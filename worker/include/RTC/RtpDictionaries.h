@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_DICTIONARIES_H
 
 #include "common.h"
-#include "RTC/CustomParameters.h"
+#include "RTC/Parameters.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -115,12 +115,12 @@ namespace RTC
 		RtpCodec(Json::Value& data);
 
 	public:
-		RtpCodecMime          mime;
-		uint32_t              clockRate = 0;
-		uint32_t              maxptime = 0;
-		uint32_t              ptime = 0;
-		uint32_t              numChannels = 1;
-		RTC::CustomParameters parameters;
+		RtpCodecMime    mime;
+		uint32_t        clockRate = 0;
+		uint32_t        maxptime = 0;
+		uint32_t        ptime = 0;
+		uint32_t        numChannels = 1;
+		RTC::Parameters parameters;
 	};
 
 	class RTCRtpCodecRtxParameters
@@ -220,10 +220,10 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		std::string           uri;
-		uint16_t              id = 0;
-		bool                  encrypt = false;
-		RTC::CustomParameters parameters;
+		std::string     uri;
+		uint16_t        id = 0;
+		bool            encrypt = false;
+		RTC::Parameters parameters;
 	};
 
 	class RtcpParameters
@@ -271,6 +271,7 @@ namespace RTC
 
 		Json::Value toJson();
 		bool MatchesCodec(RtpCodec& codec);
+		void Reduce(RtpCodec& codec);
 
 	public:
 		Media::Kind               kind = Media::Kind::ALL;

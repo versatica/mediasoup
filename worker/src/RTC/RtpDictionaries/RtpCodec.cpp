@@ -52,6 +52,8 @@ namespace RTC
 
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
-			RTC::FillCustomParameters(this->parameters, data[k_parameters]);
+			this->parameters.Set(data[k_parameters]);
+
+		// TODO: Check per MIME parameters and set default values.
 	}
 }

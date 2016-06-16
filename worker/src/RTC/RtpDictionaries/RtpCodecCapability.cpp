@@ -64,6 +64,8 @@ namespace RTC
 		// `svcMultiStreamSupport` is optional.
 		if (data[k_svcMultiStreamSupport].isBool())
 			this->svcMultiStreamSupport = data[k_svcMultiStreamSupport].asBool();
+
+		// TODO: Check per MIME parameters and set default values.
 	}
 
 	Json::Value RtpCodecCapability::toJson()
@@ -118,17 +120,7 @@ namespace RTC
 		}
 
 		// Add `parameters`.
-		Json::Value json_parameters(Json::objectValue);
-
-		for (auto& kv : this->parameters)
-		{
-			const std::string& key = kv.first;
-			auto& parameterValue = kv.second;
-
-			json_parameters[key] = parameterValue.toJson();
-		}
-
-		json[k_parameters] = json_parameters;
+		json[k_parameters] = this->parameters.toJson();
 
 		// Add `maxTemporalLayers` (if set).
 		if (this->maxTemporalLayers)
@@ -183,5 +175,30 @@ namespace RTC
 		// TODO: Match per codec parameters, etc.
 
 		return true;
+	}
+
+	// NOTE: This method assumes that MatchesCodec() has been called before
+	// with same codec and returned true.
+	void RtpCodecCapability::Reduce(RtpCodec& codec)
+	{
+		MS_TRACE();
+
+		static std::string k_packetizationMode = "packetizationMode";
+
+		switch (codec.mime.subtype)
+		{
+			case RTC::RtpCodecMime::Subtype::H264:
+			{
+				std::vector<int32_t> packetizationMode;
+
+				packetizationMode.push_back(codec.parameters.GetInteger(k_packetizationMode));
+				this->parameters.SetArrayOfIntegers(k_packetizationMode, packetizationMode);
+
+				break;
+			}
+
+			default:
+				;
+		}
 	}
 }

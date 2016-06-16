@@ -411,9 +411,8 @@ namespace RTC
 				if (it == Room::supportedRtpCapabilities.codecs.end())
 					MS_THROW_ERROR("no matching codec capability found");
 
-				// TODO: Reduce the capabilities of the found (and copied) codec (for
-				// example set the H264 packetizationMode parameter to a single value).
-				// NOTE: Maybe a RtpCodecCapability.Reduce(codec) method.
+				// Reduce the capabilities of the matching capability codec.
+				codecCapability.Reduce(roomMediaCodec);
 
 				// Set unique PT.
 

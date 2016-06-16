@@ -96,17 +96,7 @@ namespace RTC
 		}
 
 		// Add `parameters`.
-		Json::Value json_parameters(Json::objectValue);
-
-		for (auto& kv : this->parameters)
-		{
-			const std::string& key = kv.first;
-			auto& parameterValue = kv.second;
-
-			json_parameters[key] = parameterValue.toJson();
-		}
-
-		json[k_parameters] = json_parameters;
+		json[k_parameters] = this->parameters.toJson();
 
 		return json;
 	}
