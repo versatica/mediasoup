@@ -58,7 +58,6 @@
         'src/RTC/RtpDictionaries/RtpHeaderExtension.cpp',
         'src/RTC/RtpDictionaries/RtpHeaderExtensionParameters.cpp',
         'src/RTC/RtpDictionaries/RtpParameters.cpp',
-        'src/RTC/RtpDictionaries/RtpRoomMediaCodec.cpp',
         'src/RTC/RtpDictionaries/RtpRtxParameters.cpp',
         'src/Utils/Crypto.cpp',
         'src/Utils/File.cpp',

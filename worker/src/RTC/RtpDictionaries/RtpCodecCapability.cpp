@@ -65,7 +65,7 @@ namespace RTC
 		if (data[k_svcMultiStreamSupport].isBool())
 			this->svcMultiStreamSupport = data[k_svcMultiStreamSupport].asBool();
 
-		// TODO: Check per MIME parameters and set default values.
+		// TODO: Check per MIME parameters.
 	}
 
 	Json::Value RtpCodecCapability::toJson()
@@ -73,43 +73,22 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_name("name");
 		static const Json::StaticString k_preferredPayloadType("preferredPayloadType");
-		static const Json::StaticString k_clockRate("clockRate");
-		static const Json::StaticString k_maxptime("maxptime");
-		static const Json::StaticString k_ptime("ptime");
-		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
-		static const Json::StaticString k_parameters("parameters");
 		static const Json::StaticString k_maxTemporalLayers("maxTemporalLayers");
 		static const Json::StaticString k_maxSpatialLayers("maxSpatialLayers");
 		static const Json::StaticString k_svcMultiStreamSupport("svcMultiStreamSupport");
 
 		Json::Value json(Json::objectValue);
 
+		// Call the parent method.
+		RtpCodec::toJson(json);
+
 		// Add `kind`.
 		json[k_kind] = RTC::Media::GetJsonString(this->kind);
 
-		// Add `name`.
-		json[k_name] = this->mime.GetName();
-
 		// Add `preferredPayloadType`.
 		json[k_preferredPayloadType] = (Json::UInt)this->preferredPayloadType;
-
-		// Add `clockRate`.
-		json[k_clockRate] = (Json::UInt)this->clockRate;
-
-		// Add `maxptime`.
-		if (this->maxptime)
-			json[k_maxptime] = (Json::UInt)this->maxptime;
-
-		// Add `ptime`.
-		if (this->ptime)
-			json[k_ptime] = (Json::UInt)this->ptime;
-
-		// Add `numChannels`.
-		if (this->numChannels > 1)
-			json[k_numChannels] = (Json::UInt)this->numChannels;
 
 		// Add `rtcpFeedback`.
 		json[k_rtcpFeedback] = Json::arrayValue;
@@ -118,9 +97,6 @@ namespace RTC
 		{
 			json[k_rtcpFeedback].append(entry.toJson());
 		}
-
-		// Add `parameters`.
-		json[k_parameters] = this->parameters.toJson();
 
 		// Add `maxTemporalLayers` (if set).
 		if (this->maxTemporalLayers)
@@ -137,7 +113,7 @@ namespace RTC
 		return json;
 	}
 
-	bool RtpCodecCapability::MatchesCodec(RtpCodec& codec)
+	bool RtpCodecCapability::MatchesCodec(RtpCodecParameters& codec)
 	{
 		MS_TRACE();
 
@@ -179,7 +155,7 @@ namespace RTC
 
 	// NOTE: This method assumes that MatchesCodec() has been called before
 	// with same codec and returned true.
-	void RtpCodecCapability::Reduce(RtpCodec& codec)
+	void RtpCodecCapability::Reduce(RtpCodecParameters& codec)
 	{
 		MS_TRACE();
 

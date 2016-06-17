@@ -67,24 +67,24 @@ namespace RTC
 
 		static const Json::StaticString k_mediaCodecs("mediaCodecs");
 
-		// `mediaCodecs` is mandatory.
-		if (!data[k_mediaCodecs].isArray())
-			MS_THROW_ERROR("missing mediaCodecs");
-
-		auto& json_mediaCodecs = data[k_mediaCodecs];
-
-		std::vector<RtpRoomMediaCodec> mediaCodecs;
-
-		for (Json::UInt i = 0; i < json_mediaCodecs.size(); i++)
+		// `mediaCodecs` is optional.
+		if (data[k_mediaCodecs].isArray())
 		{
-			RTC::RtpRoomMediaCodec mediaCodec(json_mediaCodecs[i]);
+			auto& json_mediaCodecs = data[k_mediaCodecs];
 
-			mediaCodecs.push_back(mediaCodec);
+			std::vector<RTC::RtpCodecParameters> mediaCodecs;
+
+			for (Json::UInt i = 0; i < json_mediaCodecs.size(); i++)
+			{
+				RTC::RtpCodecParameters mediaCodec(json_mediaCodecs[i], true);
+
+				mediaCodecs.push_back(mediaCodec);
+			}
+
+			// Set room RTP capabilities.
+			// NOTE: This may throw.
+			SetRtpCapabilities(mediaCodecs);
 		}
-
-		// Set room RTP capabilities.
-		// NOTE: This may throw.
-		SetRtpCapabilities(mediaCodecs);
 	}
 
 	Room::~Room()
@@ -350,7 +350,7 @@ namespace RTC
 		}
 	}
 
-	void Room::SetRtpCapabilities(std::vector<RTC::RtpRoomMediaCodec>& roomMediaCodecs)
+	void Room::SetRtpCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs)
 	{
 		MS_TRACE();
 
@@ -380,12 +380,12 @@ namespace RTC
 			std::set<RTC::Media::Kind> roomKinds;
 
 			// Set the given room codecs.
-			for (auto& roomMediaCodec : roomMediaCodecs)
+			for (auto& mediaCodec : mediaCodecs)
 			{
 				RTC::RtpCodecCapability codecCapability;
 
 				// The room has this kind.
-				roomKinds.insert(roomMediaCodec.kind);
+				roomKinds.insert(mediaCodec.kind);
 
 				// Search the given codec in the list of supported codec capabilities.
 
@@ -396,11 +396,11 @@ namespace RTC
 					auto& supportedCodecCapability = *it;
 
 					// Kind must match.
-					if (roomMediaCodec.kind != supportedCodecCapability.kind)
+					if (mediaCodec.kind != supportedCodecCapability.kind)
 						continue;
 
 					// Check whether the codec capability matches the given codec.
-					if (supportedCodecCapability.MatchesCodec(roomMediaCodec))
+					if (supportedCodecCapability.MatchesCodec(mediaCodec))
 					{
 						// Deep copy.
 						codecCapability = supportedCodecCapability;
@@ -412,7 +412,7 @@ namespace RTC
 					MS_THROW_ERROR("no matching codec capability found");
 
 				// Reduce the capabilities of the matching capability codec.
-				codecCapability.Reduce(roomMediaCodec);
+				codecCapability.Reduce(mediaCodec);
 
 				// Set unique PT.
 

@@ -44,7 +44,7 @@ namespace RTC
 
 	private:
 		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr);
-		void SetRtpCapabilities(std::vector<RTC::RtpRoomMediaCodec>& roomMediaCodecs);
+		void SetRtpCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs);
 
 	/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:

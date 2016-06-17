@@ -8,95 +8,106 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(Json::Value& data) :
-		RtpCodec(data)
+	RtpCodecParameters::RtpCodecParameters(Json::Value& data, bool isRoomCodec) :
+		RtpCodec(data),
+		isRoomCodec(isRoomCodec)
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_payloadType("payloadType");
 		static const Json::StaticString k_rtx("rtx");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
-		static const Json::StaticString k_parameters("parameters");
 
-		// `payloadType` is mandatory.
-		if (!data[k_payloadType].isUInt())
-			MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
-
-		this->payloadType = (uint8_t)data[k_payloadType].asUInt();
-
-		// `rtx` is optional.
-		if (data[k_rtx].isObject())
+		// Not a room codec.
+		if (!this->isRoomCodec)
 		{
-			this->rtx = RTCRtpCodecRtxParameters(data[k_rtx]);
-			this->hasRtx = true;
-		}
+			// `payloadType` is mandatory.
+			if (!data[k_payloadType].isUInt())
+				MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
 
-		// `rtcpFeedback` is optional.
-		if (data[k_rtcpFeedback].isArray())
-		{
-			auto& json_rtcpFeedback = data[k_rtcpFeedback];
+			this->payloadType = (uint8_t)data[k_payloadType].asUInt();
 
-			for (Json::UInt i = 0; i < json_rtcpFeedback.size(); i++)
+			// `rtx` is optional.
+			if (data[k_rtx].isObject())
 			{
-				RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
+				this->rtx = RTCRtpCodecRtxParameters(data[k_rtx]);
+				this->hasRtx = true;
+			}
 
-				// Append to the rtcpFeedback vector.
-				this->rtcpFeedback.push_back(rtcpFeedback);
+			// `rtcpFeedback` is optional.
+			if (data[k_rtcpFeedback].isArray())
+			{
+				auto& json_rtcpFeedback = data[k_rtcpFeedback];
+
+				for (Json::UInt i = 0; i < json_rtcpFeedback.size(); i++)
+				{
+					RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
+
+					// Append to the rtcpFeedback vector.
+					this->rtcpFeedback.push_back(rtcpFeedback);
+				}
 			}
 		}
+		// Room codec.
+		else
+		{
+			// `kind` is mandatory.
+			if (!data[k_kind].isString())
+				MS_THROW_ERROR("missing RtpCodecParameters.kind");
+
+			std::string kind = data[k_kind].asString();
+
+			// NOTE: This may throw.
+			this->kind = RTC::Media::GetKind(kind);
+
+			// It must not be a feature codec.
+			if (this->mime.IsFeatureCodec())
+				MS_THROW_ERROR("can not be a feature codec");
+		}
+
+		// TODO: Check per MIME parameters and set default values.
+		// For example, H264 default packetizationMode is 0.
 	}
 
 	Json::Value RtpCodecParameters::toJson()
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_name("name");
+		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_payloadType("payloadType");
-		static const Json::StaticString k_clockRate("clockRate");
-		static const Json::StaticString k_maxptime("maxptime");
-		static const Json::StaticString k_ptime("ptime");
-		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_rtx("rtx");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
-		static const Json::StaticString k_parameters("parameters");
 
 		Json::Value json(Json::objectValue);
 
-		// Add `name`.
-		json[k_name] = this->mime.GetName();
+		// Call the parent method.
+		RtpCodec::toJson(json);
 
-		// Add `payloadType`.
-		json[k_payloadType] = (Json::UInt)this->payloadType;
-
-		// Add `clockRate`.
-		json[k_clockRate] = (Json::UInt)this->clockRate;
-
-		// Add `maxptime`.
-		if (this->maxptime)
-			json[k_maxptime] = (Json::UInt)this->maxptime;
-
-		// Add `ptime`.
-		if (this->ptime)
-			json[k_ptime] = (Json::UInt)this->ptime;
-
-		// Add `numChannels`.
-		if (this->numChannels > 1)
-			json[k_numChannels] = (Json::UInt)this->numChannels;
-
-		// Add `rtx`
-		if (this->hasRtx)
-			json[k_rtx] = this->rtx.toJson();
-
-		// Add `rtcpFeedback`.
-		json[k_rtcpFeedback] = Json::arrayValue;
-
-		for (auto& entry : this->rtcpFeedback)
+		// Not a room codec.
+		if (!this->isRoomCodec)
 		{
-			json[k_rtcpFeedback].append(entry.toJson());
-		}
+			// Add `payloadType`.
+			json[k_payloadType] = (Json::UInt)this->payloadType;
 
-		// Add `parameters`.
-		json[k_parameters] = this->parameters.toJson();
+			// Add `rtx`
+			if (this->hasRtx)
+				json[k_rtx] = this->rtx.toJson();
+
+			// Add `rtcpFeedback`.
+			json[k_rtcpFeedback] = Json::arrayValue;
+
+			for (auto& entry : this->rtcpFeedback)
+			{
+				json[k_rtcpFeedback].append(entry.toJson());
+			}
+		}
+		// Room codec.
+		else
+		{
+			// Add `kind`.
+			json[k_kind] = RTC::Media::GetJsonString(this->kind);
+		}
 
 		return json;
 	}

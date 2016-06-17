@@ -114,6 +114,8 @@ namespace RTC
 		RtpCodec() {};
 		RtpCodec(Json::Value& data);
 
+		void toJson(Json::Value& json);
+
 	public:
 		RtpCodecMime    mime;
 		uint32_t        clockRate = 0;
@@ -152,11 +154,15 @@ namespace RTC
 		public RtpCodec
 	{
 	public:
-		RtpCodecParameters(Json::Value& data);
+		RtpCodecParameters(Json::Value& data, bool isRoomCodec);
 
 		Json::Value toJson();
 
+	private:
+		bool                      isRoomCodec = false;
+
 	public:
+		Media::Kind               kind = Media::Kind::ALL;
 		uint8_t                   payloadType = 0;
 		RTCRtpCodecRtxParameters  rtx;
 		bool                      hasRtx = false;
@@ -270,8 +276,8 @@ namespace RTC
 		RtpCodecCapability(Json::Value& data);
 
 		Json::Value toJson();
-		bool MatchesCodec(RtpCodec& codec);
-		void Reduce(RtpCodec& codec);
+		bool MatchesCodec(RtpCodecParameters& codec);
+		void Reduce(RtpCodecParameters& codec);
 
 	public:
 		Media::Kind               kind = Media::Kind::ALL;
@@ -311,16 +317,6 @@ namespace RTC
 		std::vector<RtpCodecCapability> codecs;
 		std::vector<RtpHeaderExtension> headerExtensions;
 		std::vector<std::string>        fecMechanisms;
-	};
-
-	class RtpRoomMediaCodec :
-		public RtpCodec
-	{
-	public:
-		RtpRoomMediaCodec(Json::Value& data);
-
-	public:
-		Media::Kind kind = Media::Kind::ALL;
 	};
 }
 

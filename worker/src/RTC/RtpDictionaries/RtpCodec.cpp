@@ -53,7 +53,38 @@ namespace RTC
 		// `parameters` is optional.
 		if (data[k_parameters].isObject())
 			this->parameters.Set(data[k_parameters]);
+	}
 
-		// TODO: Check per MIME parameters and set default values.
+	void RtpCodec::toJson(Json::Value& json)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_name("name");
+		static const Json::StaticString k_clockRate("clockRate");
+		static const Json::StaticString k_maxptime("maxptime");
+		static const Json::StaticString k_ptime("ptime");
+		static const Json::StaticString k_numChannels("numChannels");
+		static const Json::StaticString k_parameters("parameters");
+
+		// Add `name`.
+		json[k_name] = this->mime.GetName();
+
+		// Add `clockRate`.
+		json[k_clockRate] = (Json::UInt)this->clockRate;
+
+		// Add `maxptime`.
+		if (this->maxptime)
+			json[k_maxptime] = (Json::UInt)this->maxptime;
+
+		// Add `ptime`.
+		if (this->ptime)
+			json[k_ptime] = (Json::UInt)this->ptime;
+
+		// Add `numChannels`.
+		if (this->numChannels > 1)
+			json[k_numChannels] = (Json::UInt)this->numChannels;
+
+		// Add `parameters`.
+		json[k_parameters] = this->parameters.toJson();
 	}
 }

@@ -36,7 +36,7 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_codecs.size(); i++)
 			{
-				RtpCodecParameters codec(json_codecs[i]);
+				RtpCodecParameters codec(json_codecs[i], false);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
