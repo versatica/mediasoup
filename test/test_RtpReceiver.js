@@ -79,12 +79,20 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 						{
 							name        : 'video/H264',
 							payloadType : 101,
-							clockRate   : 90000
+							clockRate   : 90000,
+							parameters  :
+							{
+								packetizationMode : 0
+							}
 						},
 						{
-							name        : 'video/H265',
+							name        : 'video/H264',
 							payloadType : 102,
-							clockRate   : 90000
+							clockRate   : 90000,
+							parameters  :
+							{
+								packetizationMode : 1
+							}
 						}
 					],
 					encodings :
@@ -129,7 +137,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 				codecs :
 				[
 					{
-						name         : 'video/VP9',
+						name         : 'video/VP8',
 						payloadType  : 100,
 						clockRate    : 90000,
 						maxptime     : 80,

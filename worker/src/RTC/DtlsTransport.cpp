@@ -444,7 +444,7 @@ namespace RTC
 					hash_function = EVP_sha512();
 					break;
 				default:
-					MS_ABORT("unknown algorithm");
+					MS_THROW_ERROR("unknown algorithm");
 			}
 
 			ret = X509_digest(DtlsTransport::certificate, hash_function, binary_fingerprint, &size);

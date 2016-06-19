@@ -19,7 +19,7 @@ void DepLibUV::ClassInit()
 	DepLibUV::loop = new uv_loop_t;
 	err = uv_loop_init(DepLibUV::loop);
 	if (err)
-		std::abort();
+		MS_ABORT("libuv initialization failed");
 }
 
 void DepLibUV::ClassDestroy()

@@ -41,14 +41,14 @@ namespace RTC
 		{
 			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::UdpSocket::sockaddrStorageIPv4);
 			if (err)
-				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
+				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
 		if (Settings::configuration.hasIPv6)
 		{
 			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::UdpSocket::sockaddrStorageIPv6);
 			if (err)
-				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
+				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
 		UdpSocket::minPort = Settings::configuration.rtcMinPort;

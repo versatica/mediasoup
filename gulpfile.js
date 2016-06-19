@@ -48,7 +48,10 @@ gulp.task('worker', shell.task(
 ));
 
 gulp.task('test', shell.task(
-	[ `tap --bail --color --reporter=spec ${tests.join(' ')}` ]
+	[ `tap --bail --color --reporter=spec ${tests.join(' ')}` ],
+	{
+		env : { DEBUG: '*ABORT*' }
+	}
 ));
 
 gulp.task('test-debug', shell.task(

@@ -65,7 +65,8 @@ namespace RTC
 		if (data[k_svcMultiStreamSupport].isBool())
 			this->svcMultiStreamSupport = data[k_svcMultiStreamSupport].asBool();
 
-		// TODO: Check per MIME parameters.
+		// Check codec capability.
+		CheckCodecCapability();
 	}
 
 	Json::Value RtpCodecCapability::toJson()
@@ -117,6 +118,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static std::string k_packetizationMode = "packetizationMode";
+
 		// MIME must match.
 		if (this->mime != codec.mime)
 			return false;
@@ -137,9 +140,20 @@ namespace RTC
 				break;
 			}
 
-			case RTC::Media::Kind::VIDEO:
+			default:
+				;
+		}
+
+		// Per MIME checks.
+		switch (this->mime.subtype)
+		{
+			case RTC::RtpCodecMime::Subtype::H264:
 			{
-				// TODO: check SVC stuff.
+				if (!this->parameters.IncludesInteger(k_packetizationMode,
+					codec.parameters.GetInteger(k_packetizationMode)))
+				{
+					return false;
+				}
 
 				break;
 			}
@@ -147,8 +161,6 @@ namespace RTC
 			default:
 				;
 		}
-
-		// TODO: Match per codec parameters, etc.
 
 		return true;
 	}
@@ -167,8 +179,47 @@ namespace RTC
 			{
 				std::vector<int32_t> packetizationMode;
 
+				// NOTE: `packetizationMode` is set by RtpCodecParameter if not present.
 				packetizationMode.push_back(codec.parameters.GetInteger(k_packetizationMode));
 				this->parameters.SetArrayOfIntegers(k_packetizationMode, packetizationMode);
+
+				break;
+			}
+
+			default:
+				;
+		}
+	}
+
+	inline
+	void RtpCodecCapability::CheckCodecCapability()
+	{
+		MS_TRACE();
+
+		static std::string k_packetizationMode = "packetizationMode";
+
+		// Check per MIME parameters and set default values.
+
+		switch (this->mime.subtype)
+		{
+			case RTC::RtpCodecMime::Subtype::OPUS:
+			{
+				// Opus default numChannels is 2.
+
+				if (this->numChannels < 2)
+					this->numChannels = 2;
+
+				break;
+			}
+
+			case RTC::RtpCodecMime::Subtype::H264:
+			{
+				// H264 default packetizationMode is 0.
+
+				std::vector<int32_t> packetizationMode = { 0 };
+
+				if (!this->parameters.HasArrayOfIntegers(k_packetizationMode))
+					this->parameters.SetArrayOfIntegers(k_packetizationMode, packetizationMode);
 
 				break;
 			}

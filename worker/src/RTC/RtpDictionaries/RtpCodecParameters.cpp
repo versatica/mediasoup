@@ -66,8 +66,8 @@ namespace RTC
 				MS_THROW_ERROR("can not be a feature codec");
 		}
 
-		// TODO: Check per MIME parameters and set default values.
-		// For example, H264 default packetizationMode is 0.
+		// Check codec.
+		CheckCodec();
 	}
 
 	Json::Value RtpCodecParameters::toJson()
@@ -110,5 +110,41 @@ namespace RTC
 		}
 
 		return json;
+	}
+
+	inline
+	void RtpCodecParameters::CheckCodec()
+	{
+		MS_TRACE();
+
+		static std::string k_packetizationMode = "packetizationMode";
+
+		// Check per MIME parameters and set default values.
+
+		switch (this->mime.subtype)
+		{
+			case RTC::RtpCodecMime::Subtype::OPUS:
+			{
+				// Opus default numChannels is 2.
+
+				if (this->numChannels < 2)
+					this->numChannels = 2;
+
+				break;
+			}
+
+			case RTC::RtpCodecMime::Subtype::H264:
+			{
+				// H264 default packetizationMode is 0.
+
+				if (!this->parameters.HasInteger(k_packetizationMode))
+					this->parameters.SetInteger(k_packetizationMode, 0);
+
+				break;
+			}
+
+			default:
+				;
+		}
 	}
 }

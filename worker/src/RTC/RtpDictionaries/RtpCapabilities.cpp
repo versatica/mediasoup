@@ -106,6 +106,7 @@ namespace RTC
 		return json;
 	}
 
+	inline
 	void RtpCapabilities::ValidateCodecs()
 	{
 		MS_TRACE();

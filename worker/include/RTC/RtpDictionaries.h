@@ -159,6 +159,9 @@ namespace RTC
 		Json::Value toJson();
 
 	private:
+		void CheckCodec();
+
+	private:
 		bool                      isRoomCodec = false;
 
 	public:
@@ -278,6 +281,9 @@ namespace RTC
 		Json::Value toJson();
 		bool MatchesCodec(RtpCodecParameters& codec);
 		void Reduce(RtpCodecParameters& codec);
+
+	private:
+		void CheckCodecCapability();
 
 	public:
 		Media::Kind               kind = Media::Kind::ALL;

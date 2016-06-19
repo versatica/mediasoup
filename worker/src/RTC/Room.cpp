@@ -498,10 +498,27 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// auto rtpParameters = rtpReceiver->GetParameters();
+		auto rtpParameters = rtpReceiver->GetParameters();
 
-		// TODO: Check codecs availability and, optionally, uniqueness of PTs.
-		// If it fails throw.
+		// Check codecs availability. If it fails, throw.
+
+		for (auto codec : rtpParameters->codecs)
+		{
+			auto it = this->rtpCapabilities.codecs.begin();
+
+			for (; it != this->rtpCapabilities.codecs.end(); ++it)
+			{
+				auto& codecCapability = *it;
+
+				if (codecCapability.MatchesCodec(codec))
+					break;
+			}
+			if (it == this->rtpCapabilities.codecs.end())
+			{
+				MS_THROW_ERROR("no matching codec capability found [payloadType:%" PRIu8 "]",
+					codec.payloadType);
+			}
+		}
 	}
 
 	void Room::onPeerRtpReceiverParametersDone(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)

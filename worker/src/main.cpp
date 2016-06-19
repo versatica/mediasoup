@@ -116,7 +116,6 @@ void init()
 	DepLibSRTP::ClassInit();
 	DepUsrSCTP::ClassInit();
 	Utils::Crypto::ClassInit();
-	Utils::Crypto::ClassInit();
 	RTC::UdpSocket::ClassInit();
 	RTC::TcpServer::ClassInit();
 	RTC::DtlsTransport::ClassInit();

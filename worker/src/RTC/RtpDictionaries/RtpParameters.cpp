@@ -158,6 +158,7 @@ namespace RTC
 		return json;
 	}
 
+	inline
 	void RtpParameters::ValidateCodecs()
 	{
 		MS_TRACE();
@@ -187,6 +188,7 @@ namespace RTC
 		}
 	}
 
+	inline
 	void RtpParameters::ValidateEncodings()
 	{
 		uint8_t firstMediaPayloadType;

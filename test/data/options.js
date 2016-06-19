@@ -28,6 +28,15 @@ module.exports =
 				clockRate  : 90000,
 				parameters :
 				{
+					packetizationMode : 0
+				}
+			},
+			{
+				kind       : 'video',
+				name       : 'video/h264',
+				clockRate  : 90000,
+				parameters :
+				{
 					packetizationMode : 1
 				}
 			},
