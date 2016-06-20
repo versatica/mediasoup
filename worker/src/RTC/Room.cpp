@@ -260,8 +260,8 @@ namespace RTC
 						// Store into the map.
 						this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
-						// Take the sender parameters of the receiver.
-						rtpSender->Send(rtpReceiver->GetSenderParameters());
+						// Provide the RtpSender with the parameters of the RtpReceiver.
+						rtpSender->Send(rtpReceiver->GetParameters());
 
 						// Attach the RtpSender to peer.
 						peer->AddRtpSender(rtpSender, receiver_peer->peerName);
@@ -499,7 +499,6 @@ namespace RTC
 		MS_TRACE();
 
 		auto rtpParameters = rtpReceiver->GetParameters();
-		std::unordered_map<uint8_t, RTC::RtpCodecParameters*> mapPyloadTypeRtpCodecParameters;
 
 		// Check codecs availability. If it fails, throw.
 
@@ -550,8 +549,8 @@ namespace RTC
 				// Store into the map.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
-				// Take the sender parameters of the receiver.
-				rtpSender->Send(rtpReceiver->GetSenderParameters());
+				// Provide the RtpSender with the parameters of the RtpReceiver.
+				rtpSender->Send(rtpReceiver->GetParameters());
 
 				// Attach the RtpSender to sender_peer.
 				sender_peer->AddRtpSender(rtpSender, peer->peerName);
@@ -563,8 +562,8 @@ namespace RTC
 		{
 			for (auto rtpSender : this->mapRtpReceiverRtpSenders[rtpReceiver])
 			{
-				// Take the sender parameters of the receiver.
-				rtpSender->Send(rtpReceiver->GetSenderParameters());
+				// Provide the RtpSender with the parameters of the RtpReceiver.
+				rtpSender->Send(rtpReceiver->GetParameters());
 			}
 		}
 	}

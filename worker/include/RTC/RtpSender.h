@@ -48,8 +48,10 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		RTC::Transport* transport = nullptr;
-		RTC::RtpParameters* rtpParameters = nullptr;
 		RTC::RtpCapabilities* peerCapabilities = nullptr;
+		// Allocated by this.
+		RTC::RtpParameters* rtpParameters = nullptr;
+		// Others.
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
 	};

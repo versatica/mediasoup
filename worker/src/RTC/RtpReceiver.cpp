@@ -34,9 +34,6 @@ namespace RTC
 		if (this->rtpParameters)
 			delete this->rtpParameters;
 
-		if (this->senderRtpParameters)
-			delete this->senderRtpParameters;
-
 		// Notify.
 		event_data[k_class] = "RtpReceiver";
 		this->notifier->Emit(this->rtpReceiverId, "close", event_data);
@@ -138,11 +135,15 @@ namespace RTC
 				}
 
 				// Free the previous rtpParameters.
-				delete previousRtpParameters;
+				if (previousRtpParameters)
+					delete previousRtpParameters;
 
 				Json::Value data = this->rtpParameters->toJson();
 
 				request->Accept(data);
+
+				// Fill RTP parameters.
+				FillRtpParameters();
 
 				break;
 			}
@@ -237,17 +238,14 @@ namespace RTC
 		}
 	}
 
-	void RtpReceiver::CreateSenderParameters()
+	void RtpReceiver::FillRtpParameters()
 	{
 		MS_TRACE();
 
-		// Clone receiver parameters.
-		this->senderRtpParameters = new RTC::RtpParameters(this->rtpParameters);
-
-		// TODO: Must override payloadType/ssrc values in senderRtpParameters and
-		// override muxId, rtcp, etc.
-
 		// Set a random muxId.
-		this->senderRtpParameters->muxId = Utils::Crypto::GetRandomString(8);
+		this->rtpParameters->muxId = Utils::Crypto::GetRandomString(8);
+
+		// TODO: Fill SSRCs with random values and set some mechanism to replace
+		// SSRC values in received RTP packets to match the chosen random values.
 	}
 }

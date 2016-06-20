@@ -560,9 +560,6 @@ namespace RTC
 		if (transport)
 			transport->AddRtpReceiver(rtpReceiver);
 
-		// TODO
-		rtpReceiver->CreateSenderParameters();
-
 		// Notify the listener (Room).
 		this->listener->onPeerRtpReceiverParametersDone(this, rtpReceiver);
 	}

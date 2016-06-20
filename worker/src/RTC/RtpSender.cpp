@@ -28,6 +28,9 @@ namespace RTC
 
 		static const Json::StaticString k_class("class");
 
+		if (this->rtpParameters)
+			delete this->rtpParameters;
+
 		Json::Value event_data(Json::objectValue);
 
 		event_data[k_class] = "RtpSender";
@@ -106,23 +109,23 @@ namespace RTC
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_available("available");
 
-		bool hadParameters = false;
+		auto previousRtpParameters = this->rtpParameters;
 
 		// Free the previous rtpParameters.
-		if (this->rtpParameters)
-		{
-			hadParameters = true;
+		if (previousRtpParameters)
 			delete this->rtpParameters;
-		}
 
-		this->rtpParameters = rtpParameters;
+		// Clone given RTP parameters so we manage our own sender parameters.
+		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
 
-		// TODO: Must check new parameters to set this->available.
+		// TODO: Must check new parameters and:
+		// - remove unsuported capabilities,
+		// - set this->available if at least there is a capable encoding.
 		// For now make it easy:
 		this->available = true;
 
 		// Emit "updateparameters" if those are new parameters.
-		if (hadParameters)
+		if (previousRtpParameters)
 		{
 			Json::Value event_data(Json::objectValue);
 

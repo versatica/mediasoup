@@ -40,10 +40,10 @@ namespace RTC
 		RTC::Transport* GetTransport();
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
-		RTC::RtpParameters* GetSenderParameters();
-		void SetPayloadMapping();  // TODO
-		void CreateSenderParameters();  // TODO
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
+
+	private:
+		void FillRtpParameters();
 
 	public:
 		// Passed by argument.
@@ -57,7 +57,6 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
-		RTC::RtpParameters* senderRtpParameters = nullptr;
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
@@ -88,12 +87,6 @@ namespace RTC
 	RTC::RtpParameters* RtpReceiver::GetParameters()
 	{
 		return this->rtpParameters;
-	}
-
-	inline
-	RTC::RtpParameters* RtpReceiver::GetSenderParameters()
-	{
-		return this->senderRtpParameters;
 	}
 }
 
