@@ -12,7 +12,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	RTC::RtpCapabilities Room::supportedRtpCapabilities;
+	RTC::RtpCapabilities Room::supportedCapabilities;
 
 	/* Class methods. */
 
@@ -30,7 +30,7 @@ namespace RTC
 
 			Json::CharReader* jsonReader = builder.newCharReader();
 
-			// NOTE: This line is auto-generated frmo data/supportedRtpCapabilities.js.
+			// NOTE: This line is auto-generated from data/supportedCapabilities.js.
 			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":96,"clockRate":48000,"numChannels":2},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":97,"clockRate":16000},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":98,"clockRate":32000},{"kind":"audio","name":"audio/G722","preferredPayloadType":9,"clockRate":8000},{"kind":"audio","name":"audio/PCMU","preferredPayloadType":0,"clockRate":8000},{"kind":"audio","name":"audio/PCMA","preferredPayloadType":8,"clockRate":8000},{"kind":"video","name":"video/VP8","preferredPayloadType":110,"clockRate":90000},{"kind":"video","name":"video/VP9","preferredPayloadType":111,"clockRate":90000},{"kind":"video","name":"video/H264","preferredPayloadType":112,"clockRate":90000,"parameters":{"packetizationMode":[0,1,2]}},{"kind":"depth","name":"video/VP8","preferredPayloadType":120,"clockRate":90000},{"kind":"audio","name":"audio/CN","preferredPayloadType":77,"clockRate":32000},{"kind":"audio","name":"audio/CN","preferredPayloadType":78,"clockRate":16000},{"kind":"audio","name":"audio/CN","preferredPayloadType":13,"clockRate":8000},{"kind":"audio","name":"audio/telephone-event","preferredPayloadType":79,"clockRate":8000}],"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}]})";
 
 			Json::Value json;
@@ -47,7 +47,7 @@ namespace RTC
 
 			try
 			{
-				Room::supportedRtpCapabilities = RTC::RtpCapabilities(json);
+				Room::supportedCapabilities = RTC::RtpCapabilities(json);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -83,7 +83,7 @@ namespace RTC
 
 			// Set room RTP capabilities.
 			// NOTE: This may throw.
-			SetRtpCapabilities(mediaCodecs);
+			SetCapabilities(mediaCodecs);
 		}
 	}
 
@@ -127,7 +127,7 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_roomId("roomId");
-		static const Json::StaticString k_rtpCapabilities("rtpCapabilities");
+		static const Json::StaticString k_capabilities("capabilities");
 		static const Json::StaticString k_peers("peers");
 		static const Json::StaticString k_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
 
@@ -138,8 +138,8 @@ namespace RTC
 		// Add `roomId`.
 		json[k_roomId] = (Json::UInt)this->roomId;
 
-		// Add `rtpCapabilities`.
-		json[k_rtpCapabilities] = this->rtpCapabilities.toJson();
+		// Add `capabilities`.
+		json[k_capabilities] = this->capabilities.toJson();
 
 		// Add `peers`.
 		for (auto& kv : this->peers)
@@ -350,7 +350,7 @@ namespace RTC
 		}
 	}
 
-	void Room::SetRtpCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs)
+	void Room::SetCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs)
 	{
 		MS_TRACE();
 
@@ -389,9 +389,9 @@ namespace RTC
 
 				// Search the given codec in the list of supported codec capabilities.
 
-				auto it = Room::supportedRtpCapabilities.codecs.begin();
+				auto it = Room::supportedCapabilities.codecs.begin();
 
-				for (; it != Room::supportedRtpCapabilities.codecs.end(); ++it)
+				for (; it != Room::supportedCapabilities.codecs.end(); ++it)
 				{
 					auto& supportedCodecCapability = *it;
 
@@ -408,7 +408,7 @@ namespace RTC
 						break;
 					}
 				}
-				if (it == Room::supportedRtpCapabilities.codecs.end())
+				if (it == Room::supportedCapabilities.codecs.end())
 					MS_THROW_ERROR("no matching codec capability found");
 
 				// Reduce the capabilities of the matching capability codec.
@@ -439,11 +439,11 @@ namespace RTC
 				roomPayloadTypes.insert(payloadType);
 
 				// Append the codec to the room capabilities.
-				this->rtpCapabilities.codecs.push_back(codecCapability);
+				this->capabilities.codecs.push_back(codecCapability);
 			}
 
 			// Add feature codec capabilities.
-			for (auto& codecCapability : Room::supportedRtpCapabilities.codecs)
+			for (auto& codecCapability : Room::supportedCapabilities.codecs)
 			{
 				// Just feature codecs.
 				if (!codecCapability.mime.IsFeatureCodec())
@@ -476,15 +476,15 @@ namespace RTC
 				roomPayloadTypes.insert(payloadType);
 
 				// Append the codec to the room capabilities.
-				this->rtpCapabilities.codecs.push_back(codecCapability);
+				this->capabilities.codecs.push_back(codecCapability);
 			}
 		}
 
 		// Copy supported RTP header extensions.
-		this->rtpCapabilities.headerExtensions = Room::supportedRtpCapabilities.headerExtensions;
+		this->capabilities.headerExtensions = Room::supportedCapabilities.headerExtensions;
 
 		// Copy supported FEC mechanisms.
-		this->rtpCapabilities.fecMechanisms = Room::supportedRtpCapabilities.fecMechanisms;
+		this->capabilities.fecMechanisms = Room::supportedCapabilities.fecMechanisms;
 	}
 
 	void Room::onPeerClosed(RTC::Peer* peer)
@@ -499,21 +499,22 @@ namespace RTC
 		MS_TRACE();
 
 		auto rtpParameters = rtpReceiver->GetParameters();
+		std::unordered_map<uint8_t, RTC::RtpCodecParameters*> mapPyloadTypeRtpCodecParameters;
 
 		// Check codecs availability. If it fails, throw.
 
 		for (auto codec : rtpParameters->codecs)
 		{
-			auto it = this->rtpCapabilities.codecs.begin();
+			auto it = this->capabilities.codecs.begin();
 
-			for (; it != this->rtpCapabilities.codecs.end(); ++it)
+			for (; it != this->capabilities.codecs.end(); ++it)
 			{
 				auto& codecCapability = *it;
 
 				if (codecCapability.MatchesCodec(codec))
 					break;
 			}
-			if (it == this->rtpCapabilities.codecs.end())
+			if (it == this->capabilities.codecs.end())
 			{
 				MS_THROW_ERROR("no matching codec capability found [payloadType:%" PRIu8 "]",
 					codec.payloadType);

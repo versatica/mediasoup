@@ -30,7 +30,7 @@ namespace RTC
 		static void ClassInit();
 
 	private:
-		static RTC::RtpCapabilities supportedRtpCapabilities;
+		static RTC::RtpCapabilities supportedCapabilities;
 		static std::vector<uint8_t> availablePayloadTypes;
 
 	public:
@@ -40,11 +40,11 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
-		RTC::RtpCapabilities& GetRtpCapabilities();
+		RTC::RtpCapabilities& GetCapabilities();
 
 	private:
 		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr);
-		void SetRtpCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs);
+		void SetCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs);
 
 	/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
@@ -64,7 +64,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Others.
-		RTC::RtpCapabilities rtpCapabilities;
+		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 	};
@@ -72,9 +72,9 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	RTC::RtpCapabilities& Room::GetRtpCapabilities()
+	RTC::RtpCapabilities& Room::GetCapabilities()
 	{
-		return this->rtpCapabilities;
+		return this->capabilities;
 	}
 }
 

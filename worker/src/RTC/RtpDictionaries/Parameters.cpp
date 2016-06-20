@@ -124,12 +124,17 @@ namespace RTC
 						auto& entry = value[i];
 
 						if (entry.isInt())
+						{
 							arrayOfIntegers.push_back((int32_t)entry.asInt());
+						}
 						else
+						{
 							isValid = false;
+							break;
+						}
 					}
 
-					if (isValid)
+					if (arrayOfIntegers.size() > 0 && isValid)
 						this->mapKeyValues[key] = Value(arrayOfIntegers);
 
 					break;

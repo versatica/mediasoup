@@ -78,6 +78,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Others.
+		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Transport*> transports;
 		std::unordered_map<uint32_t, RTC::RtpReceiver*> rtpReceivers;
 		std::unordered_map<uint32_t, RTC::RtpSender*> rtpSenders;

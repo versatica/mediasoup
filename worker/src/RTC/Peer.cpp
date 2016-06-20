@@ -17,16 +17,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_rtpCapabilities("rtpCapabilities");
+		static const Json::StaticString k_capabilities("capabilities");
 
 		// `mediaCodecs` is mandatory.
-		if (!data[k_rtpCapabilities].isObject())
-			MS_THROW_ERROR("missing rtpCapabilities");
+		if (!data[k_capabilities].isObject())
+			MS_THROW_ERROR("missing capabilities");
 
-		auto& json_rtpCapabilities = data[k_rtpCapabilities];
+		auto& json_capabilities = data[k_capabilities];
 
-		// TODO: check data (RtpCapabilities)
-		RTC::RtpCapabilities rtpCapabilities(json_rtpCapabilities);
+		// Build peer's capabilities.
+		this->capabilities = RTC::RtpCapabilities(json_capabilities);
 	}
 
 	Peer::~Peer()
@@ -87,6 +87,7 @@ namespace RTC
 
 		static const Json::StaticString k_peerId("peerId");
 		static const Json::StaticString k_peerName("peerName");
+		static const Json::StaticString k_capabilities("capabilities");
 		static const Json::StaticString k_transports("transports");
 		static const Json::StaticString k_rtpReceivers("rtpReceivers");
 		static const Json::StaticString k_rtpSenders("rtpSenders");
@@ -96,10 +97,16 @@ namespace RTC
 		Json::Value json_rtpReceivers(Json::arrayValue);
 		Json::Value json_rtpSenders(Json::arrayValue);
 
+		// Add `peerId`.
 		json[k_peerId] = (Json::UInt)this->peerId;
 
+		// Add `peerName`.
 		json[k_peerName] = this->peerName;
 
+		// Add `capabilities`.
+		json[k_capabilities] = this->capabilities.toJson();
+
+		// Add `transports`.
 		for (auto& kv : this->transports)
 		{
 			RTC::Transport* transport = kv.second;
@@ -108,6 +115,7 @@ namespace RTC
 		}
 		json[k_transports] = json_transports;
 
+		// Add `rtpReceivers`.
 		for (auto& kv : this->rtpReceivers)
 		{
 			RTC::RtpReceiver* rtpReceiver = kv.second;
@@ -116,6 +124,7 @@ namespace RTC
 		}
 		json[k_rtpReceivers] = json_rtpReceivers;
 
+		// Add `rtpSenders`.
 		for (auto& kv : this->rtpSenders)
 		{
 			RTC::RtpSender* rtpSender = kv.second;
@@ -414,6 +423,9 @@ namespace RTC
 			"given RtpSender already exists in this Peer");
 
 		MS_ASSERT(rtpSender->GetParameters(), "given RtpSender does not have RtpParameters");
+
+		// Provide the RtpSender with peer's capabilities.
+		rtpSender->SetPeerCapabilities(std::addressof(this->capabilities));
 
 		// Store it.
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;

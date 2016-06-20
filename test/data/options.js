@@ -50,7 +50,7 @@ module.exports =
 
 	peerOptions :
 	{
-		rtpCapabilities :
+		capabilities :
 		{
 			codecs :
 			[

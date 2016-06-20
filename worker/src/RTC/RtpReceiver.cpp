@@ -237,13 +237,6 @@ namespace RTC
 		}
 	}
 
-	void RtpReceiver::SetPayloadMapping()
-	{
-		MS_TRACE();
-
-		// TODO
-	}
-
 	void RtpReceiver::CreateSenderParameters()
 	{
 		MS_TRACE();

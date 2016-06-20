@@ -5,7 +5,7 @@
  * source code once JSONized by gulp.
  */
 
-let supportedRtpCapabilities =
+let supportedCapabilities =
 {
 	codecs :
 	[
@@ -114,4 +114,4 @@ let supportedRtpCapabilities =
 	]
 };
 
-module.exports = supportedRtpCapabilities;
+module.exports = supportedCapabilities;

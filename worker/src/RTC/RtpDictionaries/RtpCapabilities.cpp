@@ -17,7 +17,7 @@ namespace RTC
 		static const Json::StaticString k_headerExtensions("headerExtensions");
 		static const Json::StaticString k_fecMechanisms("fecMechanisms");
 
-		// `codecs` is mandatory.
+		// `codecs` is optional.
 		if (data[k_codecs].isArray())
 		{
 			auto& json_codecs = data[k_codecs];
@@ -29,10 +29,6 @@ namespace RTC
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
 			}
-		}
-		else
-		{
-			MS_THROW_ERROR("missing RtpCapabilities.codecs");
 		}
 
 		// `headerExtensions` is optional.

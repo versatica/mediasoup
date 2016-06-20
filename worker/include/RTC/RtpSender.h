@@ -31,6 +31,7 @@ namespace RTC
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
+		void SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities);
 		void Send(RTC::RtpParameters* rtpParameters);
 		void SetTransport(RTC::Transport* transport);
 		void RemoveTransport(RTC::Transport* transport);
@@ -48,6 +49,7 @@ namespace RTC
 		Channel::Notifier* notifier = nullptr;
 		RTC::Transport* transport = nullptr;
 		RTC::RtpParameters* rtpParameters = nullptr;
+		RTC::RtpCapabilities* peerCapabilities = nullptr;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
 	};

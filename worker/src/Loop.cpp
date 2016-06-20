@@ -176,7 +176,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 		case Channel::Request::MethodId::worker_createRoom:
 		{
-			static const Json::StaticString k_rtpCapabilities("rtpCapabilities");
+			static const Json::StaticString k_capabilities("capabilities");
 
 			RTC::Room* room;
 			uint32_t roomId;
@@ -213,8 +213,8 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			Json::Value data(Json::objectValue);
 
-			// Add `rtpCapabilities`.
-			data[k_rtpCapabilities] = room->GetRtpCapabilities().toJson();
+			// Add `capabilities`.
+			data[k_capabilities] = room->GetCapabilities().toJson();
 
 			request->Accept(data);
 
