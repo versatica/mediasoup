@@ -29,7 +29,6 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static Json::Value empty_data(Json::objectValue);
 		static const Json::StaticString k_targetId("targetId");
 		static const Json::StaticString k_event("event");
 

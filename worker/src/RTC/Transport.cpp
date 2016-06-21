@@ -389,7 +389,6 @@ namespace RTC
 			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 			{
 				static const Json::StaticString k_role("role");
-				static const Json::StaticString v_auto("auto");
 				static const Json::StaticString v_client("client");
 				static const Json::StaticString v_server("server");
 				static const Json::StaticString k_fingerprint("fingerprint");

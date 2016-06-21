@@ -24,7 +24,6 @@ namespace RTC
 		{
 			Json::CharReaderBuilder builder;
 			Json::Value settings = Json::nullValue;
-			Json::Value invalid_settings;
 
 			builder.strictMode(&settings);
 

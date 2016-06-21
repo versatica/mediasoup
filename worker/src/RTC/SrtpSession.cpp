@@ -84,8 +84,6 @@ namespace RTC
 			case Type::OUTBOUND:
 				policy.ssrc.type = ssrc_any_outbound;
 				break;
-			default:
-				MS_ABORT("unknown SrtpSession::Type");
 		}
 
 		policy.ssrc.value = 0;

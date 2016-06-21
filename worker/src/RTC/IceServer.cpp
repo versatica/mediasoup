@@ -184,12 +184,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (HasTuple(tuple))
-			return true;
-		else
-			return false;
+		return HasTuple(tuple) ? true : false;
 	}
-
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
 	{

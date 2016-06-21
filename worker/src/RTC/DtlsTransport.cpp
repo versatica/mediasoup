@@ -608,15 +608,16 @@ namespace RTC
 				SendPendingOutgoingDtlsData();
 				SetTimeout();
 				break;
+
 			case Role::SERVER:
 				MS_DEBUG("running [role:server]");
 
 				SSL_set_accept_state(this->ssl);
 				SSL_do_handshake(this->ssl);
 				break;
+
 			default:
 				MS_ABORT("invalid local DTLS role");
-				break;
 		}
 	}
 
@@ -792,6 +793,8 @@ namespace RTC
 			case SSL_ERROR_WANT_ACCEPT:
 				MS_DEBUG("SSL status: SSL_ERROR_WANT_ACCEPT");
 				break;
+			default:
+				MS_WARN("SSL status: unknown error");
 		}
 
 		// Check if the handshake (or re-handshake) has been done right now.
