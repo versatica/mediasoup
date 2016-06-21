@@ -24,3 +24,23 @@ tap.test('extra.fingerprintToSDP()', { timeout: 1000 }, (t) =>
 
 	t.end();
 });
+
+tap.test('extra.paramFromSDP()', { timeout: 1000 }, (t) =>
+{
+	t.equal(extra.paramFromSDP('profile-level-id'), 'profileLevelId');
+	t.equal(extra.paramFromSDP('Packetization-MODE'), 'packetizationMode');
+	t.equal(extra.paramFromSDP('foo'), 'foo');
+	t.equal(extra.paramFromSDP('wrong-param-'), 'wrongParam');
+
+	t.end();
+});
+
+tap.test('extra.paramToSDP()', { timeout: 1000 }, (t) =>
+{
+	t.equal(extra.paramToSDP('profileLevelId'), 'profile-level-id');
+	t.equal(extra.paramToSDP('packetizationMode'), 'packetization-mode');
+	t.equal(extra.paramToSDP('Foo'), 'foo');
+	t.equal(extra.paramToSDP('WrongParam'), 'wrong-param');
+
+	t.end();
+});
