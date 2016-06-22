@@ -776,6 +776,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_iceSelectedTuple("iceSelectedTuple");
 
 		Json::Value event_data(Json::objectValue);
@@ -791,6 +792,7 @@ namespace RTC
 		this->selectedTuple = tuple;
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_iceSelectedTuple] = tuple->toJson();
 		this->notifier->Emit(this->transportId, "iceselectedtuplechange", event_data);
 	}
@@ -799,6 +801,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_iceState("iceState");
 		static const Json::StaticString v_connected("connected");
 
@@ -807,6 +810,7 @@ namespace RTC
 		MS_DEBUG("ICE connected");
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_iceState] = v_connected;
 		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
@@ -818,6 +822,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_iceState("iceState");
 		static const Json::StaticString v_completed("completed");
 
@@ -826,6 +831,7 @@ namespace RTC
 		MS_DEBUG("ICE completed");
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_iceState] = v_completed;
 		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
@@ -837,6 +843,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_iceState("iceState");
 		static const Json::StaticString v_disconnected("disconnected");
 
@@ -848,6 +855,7 @@ namespace RTC
 		this->selectedTuple = nullptr;
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_iceState] = v_disconnected;
 		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
@@ -859,6 +867,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_connecting("connecting");
 
@@ -867,6 +876,7 @@ namespace RTC
 		MS_DEBUG("DTLS connecting");
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_dtlsState] = v_connecting;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
@@ -875,6 +885,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_connected("connected");
 		static const Json::StaticString k_dtlsRemoteCert("dtlsRemoteCert");
@@ -919,6 +930,7 @@ namespace RTC
 		}
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_dtlsState] = v_connected;
 		event_data[k_dtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
@@ -928,6 +940,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_failed("failed");
 
@@ -936,6 +949,7 @@ namespace RTC
 		MS_DEBUG("DTLS failed");
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_dtlsState] = v_failed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 
@@ -947,6 +961,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_dtlsState("dtlsState");
 		static const Json::StaticString v_closed("closed");
 
@@ -955,6 +970,7 @@ namespace RTC
 		MS_DEBUG("DTLS remotely closed");
 
 		// Notify.
+		event_data[k_class] = "Transport";
 		event_data[k_dtlsState] = v_closed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 

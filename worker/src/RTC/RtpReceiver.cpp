@@ -145,6 +145,9 @@ namespace RTC
 				// Fill RTP parameters.
 				FillRtpParameters();
 
+				// And notify again.
+				this->listener->onRtpReceiverParametersDone(this);
+
 				break;
 			}
 

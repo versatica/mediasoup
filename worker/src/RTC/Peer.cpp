@@ -414,9 +414,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_rtpSenderId("rtpSenderId");
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_peerName("peerName");
 
 		MS_ASSERT(this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
@@ -431,11 +429,9 @@ namespace RTC
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;
 
 		// Notify.
-		Json::Value event_data(Json::objectValue);
+		Json::Value event_data = rtpSender->toJson();
 
-		event_data[k_rtpSenderId] = (Json::UInt)rtpSender->rtpSenderId;
-		event_data[k_kind] = RTC::Media::GetJsonString(rtpSender->kind);
-		event_data[k_rtpParameters] = rtpSender->GetParameters()->toJson();
+		event_data[k_class] = "Peer";
 		event_data[k_peerName] = peerName;
 
 		this->notifier->Emit(this->peerId, "newrtpsender", event_data);
@@ -559,6 +555,11 @@ namespace RTC
 		// NOTE: This may throw.
 		if (transport)
 			transport->AddRtpReceiver(rtpReceiver);
+	}
+
+	void Peer::onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
 
 		// Notify the listener (Room).
 		this->listener->onPeerRtpReceiverParametersDone(this, rtpReceiver);

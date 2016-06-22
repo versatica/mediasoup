@@ -61,6 +61,7 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:
 		virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver) override;
+		virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) override;
 		virtual void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
 		virtual void onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver) override;
 

@@ -106,6 +106,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_available("available");
 
@@ -124,15 +125,16 @@ namespace RTC
 		// For now make it easy:
 		this->available = true;
 
-		// Emit "updateparameters" if those are new parameters.
+		// Emit "parameterschange" if those are new parameters.
 		if (previousRtpParameters)
 		{
 			Json::Value event_data(Json::objectValue);
 
+			event_data[k_class] = "RtpSender";
 			event_data[k_rtpParameters] = this->rtpParameters->toJson();
 			event_data[k_available] = this->available;
 
-			this->notifier->Emit(this->rtpSenderId, "updateparameters", event_data);
+			this->notifier->Emit(this->rtpSenderId, "parameterschange", event_data);
 		}
 	}
 }

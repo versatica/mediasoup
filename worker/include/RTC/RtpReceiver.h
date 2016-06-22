@@ -25,6 +25,7 @@ namespace RTC
 		{
 		public:
 			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver) = 0;
+			virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onRtpPacket(RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
 			virtual void onRtpReceiverClosed(RtpReceiver* rtpReceiver) = 0;
 		};
