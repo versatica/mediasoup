@@ -9,7 +9,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCapabilities::RtpCapabilities(Json::Value& data)
+	RtpCapabilities::RtpCapabilities(Json::Value& data, RTC::Scope scope)
 	{
 		MS_TRACE();
 
@@ -24,7 +24,7 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_codecs.size(); i++)
 			{
-				RtpCodecCapability codec(json_codecs[i]);
+				RtpCodecParameters codec(json_codecs[i], scope);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -62,7 +62,7 @@ namespace RTC
 
 		// Validate RTP capabilities.
 
-		ValidateCodecs();
+		ValidateCodecs(scope);
 	}
 
 	Json::Value RtpCapabilities::toJson()
@@ -103,25 +103,23 @@ namespace RTC
 	}
 
 	inline
-	void RtpCapabilities::ValidateCodecs()
+	void RtpCapabilities::ValidateCodecs(RTC::Scope scope)
 	{
 		MS_TRACE();
 
-		// Must be at least one codec.
-		if (this->codecs.size() == 0)
-			MS_THROW_ERROR("empty RtpCapabilities.codecs");
-
-		// Preferred payload types must be unique.
-
-		std::unordered_set<uint8_t> preferredPayloadTypes;
-
-		for (auto& codec : this->codecs)
+		if (scope == RTC::Scope::PEER_CAPABILITY)
 		{
-			// Preferred payload types must be unique.
-			if (preferredPayloadTypes.find(codec.preferredPayloadType) != preferredPayloadTypes.end())
-				MS_THROW_ERROR("duplicated codec.preferredPayloadType");
-			else
-				preferredPayloadTypes.insert(codec.preferredPayloadType);
+			// Payload types must be unique.
+
+			std::unordered_set<uint8_t> payloadTypes;
+
+			for (auto& codec : this->codecs)
+			{
+				if (payloadTypes.find(codec.payloadType) != payloadTypes.end())
+					MS_THROW_ERROR("duplicated codec.payloadType");
+				else
+					payloadTypes.insert(codec.payloadType);
+			}
 		}
 	}
 }

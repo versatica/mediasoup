@@ -11,6 +11,13 @@
 
 namespace RTC
 {
+	enum class Scope : uint8_t
+	{
+		ROOM_CAPABILITY = 1,
+		PEER_CAPABILITY,
+		RECEIVE
+	};
+
 	class Media
 	{
 	public:
@@ -56,12 +63,13 @@ namespace RTC
 			VP9,
 			H264,
 			H265,
+			// Complementary codecs:
+			CN = 300,
+			TELEPHONE_EVENT,
 			// Feature codecs:
-			ULPFEC = 1000,
+			ULPFEC = 400,
 			FLEXFEC,
-			RED,
-			CN,
-			TELEPHONE_EVENT
+			RED
 		};
 
 	private:
@@ -92,12 +100,17 @@ namespace RTC
 
 		bool IsMediaCodec()
 		{
-			return this->subtype >= Subtype(100) && this->subtype < (Subtype)1000;
+			return this->subtype >= Subtype(100) && this->subtype < (Subtype)300;
+		}
+
+		bool IsComplementaryCodec()
+		{
+			return this->subtype >= Subtype(300) && this->subtype < (Subtype)400;
 		}
 
 		bool IsFeatureCodec()
 		{
-			return this->subtype >= Subtype(1000);
+			return this->subtype >= Subtype(400);
 		}
 
 	public:
@@ -106,23 +119,6 @@ namespace RTC
 
 	private:
 		std::string name;
-	};
-
-	class RtpCodec
-	{
-	public:
-		RtpCodec() {};
-		RtpCodec(Json::Value& data);
-
-		void toJson(Json::Value& json);
-
-	public:
-		RtpCodecMime    mime;
-		uint32_t        clockRate = 0;
-		uint32_t        maxptime = 0;
-		uint32_t        ptime = 0;
-		uint32_t        numChannels = 1;
-		RTC::Parameters parameters;
 	};
 
 	class RTCRtpCodecRtxParameters
@@ -150,23 +146,31 @@ namespace RTC
 		std::string parameter;
 	};
 
-	class RtpCodecParameters :
-		public RtpCodec
+	class RtpCodecParameters
 	{
 	public:
-		RtpCodecParameters(Json::Value& data, bool isRoomCodec);
+		RtpCodecParameters() {};  // TODO: yes?
+		RtpCodecParameters(Json::Value& data, RTC::Scope scope);
 
 		Json::Value toJson();
+		bool Matches(RtpCodecParameters& codec, bool checkPayloadType = false);
 
 	private:
 		void CheckCodec();
 
 	private:
-		bool                      isRoomCodec = false;
+		RTC::Scope                scope = RTC::Scope::ROOM_CAPABILITY;
 
 	public:
 		Media::Kind               kind = Media::Kind::ALL;
+		RtpCodecMime              mime;
 		uint8_t                   payloadType = 0;
+		bool                      hasPayloadType = false;
+		uint32_t                  clockRate = 0;
+		uint32_t                  maxptime = 0;
+		uint32_t                  ptime = 0;
+		uint32_t                  numChannels = 1;
+		RTC::Parameters           parameters;
 		RTCRtpCodecRtxParameters  rtx;
 		bool                      hasRtx = false;
 		std::vector<RtcpFeedback> rtcpFeedback;
@@ -271,29 +275,6 @@ namespace RTC
 		Json::Value                               userParameters;
 	};
 
-	class RtpCodecCapability :
-		public RtpCodec
-	{
-	public:
-		RtpCodecCapability() {};
-		RtpCodecCapability(Json::Value& data);
-
-		Json::Value toJson();
-		bool MatchesCodec(RtpCodecParameters& codec);
-		void Reduce(RtpCodecParameters& codec);
-
-	private:
-		void CheckCodecCapability();
-
-	public:
-		Media::Kind               kind = Media::Kind::ALL;
-		uint8_t                   preferredPayloadType = 0;
-		std::vector<RtcpFeedback> rtcpFeedback;
-		uint16_t                  maxTemporalLayers = 0;
-		uint16_t                  maxSpatialLayers = 0;
-		bool                      svcMultiStreamSupport = false;
-	};
-
 	class RtpHeaderExtension
 	{
 	public:
@@ -312,15 +293,15 @@ namespace RTC
 	{
 	public:
 		RtpCapabilities() {};
-		RtpCapabilities(Json::Value& data);
+		RtpCapabilities(Json::Value& data, RTC::Scope scope);
 
 		Json::Value toJson();
 
 	private:
-		void ValidateCodecs();
+		void ValidateCodecs(RTC::Scope scope);
 
 	public:
-		std::vector<RtpCodecCapability> codecs;
+		std::vector<RtpCodecParameters> codecs;
 		std::vector<RtpHeaderExtension> headerExtensions;
 		std::vector<std::string>        fecMechanisms;
 	};

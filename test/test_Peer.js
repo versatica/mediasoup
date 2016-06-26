@@ -4,7 +4,7 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
-const peerOptions = require('./data/options').peerOptions;
+const peerCapabilities = require('./data/options').peerCapabilities;
 
 function initTest(t)
 {
@@ -16,8 +16,12 @@ function initTest(t)
 	return server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			peer = room.Peer('alice', peerOptions);
+			peer = room.Peer('alice');
 
+			return peer.setCapabilities(peerCapabilities);
+		})
+		.then(() =>
+		{
 			return { peer: peer };
 		});
 }

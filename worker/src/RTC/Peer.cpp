@@ -9,24 +9,13 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName, Json::Value& data) :
+	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName) :
 		peerId(peerId),
 		peerName(peerName),
 		listener(listener),
 		notifier(notifier)
 	{
 		MS_TRACE();
-
-		static const Json::StaticString k_capabilities("capabilities");
-
-		// `mediaCodecs` is mandatory.
-		if (!data[k_capabilities].isObject())
-			MS_THROW_ERROR("missing capabilities");
-
-		auto& json_capabilities = data[k_capabilities];
-
-		// Build peer's capabilities.
-		this->capabilities = RTC::RtpCapabilities(json_capabilities);
 	}
 
 	Peer::~Peer()
@@ -104,7 +93,8 @@ namespace RTC
 		json[k_peerName] = this->peerName;
 
 		// Add `capabilities`.
-		json[k_capabilities] = this->capabilities.toJson();
+		if (this->hasCapabilities)
+			json[k_capabilities] = this->capabilities.toJson();
 
 		// Add `transports`.
 		for (auto& kv : this->transports)
@@ -163,6 +153,37 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::peer_setCapabilities:
+			{
+				// Capabilities must not be set.
+				if (this->hasCapabilities)
+				{
+					request->Reject("peer capabilities already set");
+					return;
+				}
+
+				try
+				{
+					this->capabilities = RTC::RtpCapabilities(request->data, RTC::Scope::PEER_CAPABILITY);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				this->hasCapabilities = true;
+
+				MS_DEBUG("capabilities set");
+
+				request->Accept();
+
+				// Notify the listener.
+				this->listener->onPeerCapabilities(this);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::peer_createTransport:
 			{
 				RTC::Transport* transport;
@@ -212,6 +233,13 @@ namespace RTC
 				RTC::RtpReceiver* rtpReceiver;
 				RTC::Transport* transport = nullptr;
 				uint32_t rtpReceiverId;
+
+				// Capabilities must be set.
+				if (!this->hasCapabilities)
+				{
+					request->Reject("peer capabilities are not yet set");
+					return;
+				}
 
 				try
 				{
@@ -544,6 +572,28 @@ namespace RTC
 	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
+
+		auto rtpParameters = rtpReceiver->GetParameters();
+
+		// Given codecs must be a subset of the capability codecs of the peer.
+
+		for (auto codec : rtpParameters->codecs)
+		{
+			auto it = this->capabilities.codecs.begin();
+
+			for (; it != this->capabilities.codecs.end(); ++it)
+			{
+				auto& codecCapability = *it;
+
+				if (codecCapability.Matches(codec, true))
+					break;
+			}
+			if (it == this->capabilities.codecs.end())
+			{
+				MS_THROW_ERROR("no matching peer codec found [payloadType:%" PRIu8 "]",
+					codec.payloadType);
+			}
+		}
 
 		// Notify the listener (Room) so it can check provided codecs and,
 		// optionally, normalize them.

@@ -25,6 +25,7 @@ namespace Channel
 			room_createPeer,
 			peer_close,
 			peer_dump,
+			peer_setCapabilities,
 			peer_createTransport,
 			peer_createRtpReceiver,
 			transport_close,

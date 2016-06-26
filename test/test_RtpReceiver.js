@@ -4,7 +4,7 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
-const peerOptions = require('./data/options').peerOptions;
+const peerCapabilities = require('./data/options').peerCapabilities;
 const promiseSeries = require('./utils/promiseSeries');
 
 function initTest(t)
@@ -17,8 +17,12 @@ function initTest(t)
 	return server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			peer = room.Peer('alice', peerOptions);
+			peer = room.Peer('alice');
 
+			return peer.setCapabilities(peerCapabilities);
+		})
+		.then(() =>
+		{
 			return peer.createTransport({ tcp: false });
 		})
 		.then((transport) =>
@@ -78,7 +82,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 					[
 						{
 							name        : 'video/H264',
-							payloadType : 101,
+							payloadType : 102,
 							clockRate   : 90000,
 							parameters  :
 							{
@@ -87,7 +91,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 						},
 						{
 							name        : 'video/H264',
-							payloadType : 102,
+							payloadType : 103,
 							clockRate   : 90000,
 							parameters  :
 							{
@@ -101,7 +105,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 							ssrc : 1111
 						},
 						{
-							codecPayloadType : 102
+							codecPayloadType : 103
 						},
 						{
 							ssrc : 3333
@@ -115,9 +119,9 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 					let rtpParameters = rtpReceiver.rtpParameters;
 
 					t.equal(rtpParameters.encodings.length, 3, 'computed rtpParameters has 3 encodings');
-					t.equal(rtpParameters.encodings[0].codecPayloadType, 101, 'first encoding has codecPayloadType 101');
-					t.equal(rtpParameters.encodings[1].codecPayloadType, 102, 'second encoding has codecPayloadType 102');
-					t.equal(rtpParameters.encodings[2].codecPayloadType, 101, 'third encoding has codecPayloadType 101');
+					t.equal(rtpParameters.encodings[0].codecPayloadType, 102, 'first encoding has codecPayloadType 102');
+					t.equal(rtpParameters.encodings[1].codecPayloadType, 103, 'second encoding has codecPayloadType 103');
+					t.equal(rtpParameters.encodings[2].codecPayloadType, 102, 'third encoding has codecPayloadType 102');
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
 		});
@@ -138,7 +142,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 				[
 					{
 						name         : 'video/VP8',
-						payloadType  : 100,
+						payloadType  : 101,
 						clockRate    : 90000,
 						maxptime     : 80,
 						ptime        : 60,
@@ -172,7 +176,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 				[
 					{
 						ssrc             : 100000,
-						codecPayloadType : 100,
+						codecPayloadType : 101,
 						fec :
 						{
 							ssrc      : 200000,
@@ -258,7 +262,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 					[
 						{
 							name        : 'audio/opus',
-							payloadType : 101,
+							payloadType : 100,
 							clockRate   : 48000
 						}
 					],
@@ -280,7 +284,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 					[
 						{
 							name        : 'audio/opus',
-							payloadType : 101,
+							payloadType : 100,
 							clockRate   : 48000
 						}
 					],
@@ -336,7 +340,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'opus',
-								payloadType : 101
+								payloadType : 100
 							}
 						]
 					})
@@ -355,7 +359,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : '/opus',
-								payloadType : 101,
+								payloadType : 100,
 								clockRate   : 48000
 							}
 						]
@@ -375,7 +379,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/',
-								payloadType : 101,
+								payloadType : 100,
 								clockRate   : 48000
 							}
 						]
@@ -433,7 +437,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 102
+								payloadType : 100
 							}
 						]
 					})
@@ -452,7 +456,7 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 101,
+								payloadType : 100,
 								clockRate   : 48000,
 								rtx         : {}
 							}
@@ -473,12 +477,12 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 101,
+								payloadType : 100,
 								clockRate   : 48000
 							},
 							{
 								name        : 'audio/opus',
-								payloadType : 101,
+								payloadType : 100,
 								clockRate   : 48000
 							}
 						]
@@ -502,12 +506,12 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 								clockRate   : 48000,
 								rtx :
 								{
-									payloadType : 101
+									payloadType : 0
 								}
 							},
 							{
-								name        : 'audio/G722',
-								payloadType : 101,
+								name        : 'audio/PCMU',
+								payloadType : 0,
 								clockRate   : 8000
 							}
 						]
@@ -541,7 +545,7 @@ tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000
 						[
 							{
 								name        : 'audio/opus',
-								payloadType : 101,
+								payloadType : 100,
 								clockRate   : 48000
 							}
 						],
@@ -611,7 +615,7 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 					[
 						{
 							name        : 'audio/opus',
-							payloadType : 101,
+							payloadType : 100,
 							clockRate   : 48000
 						}
 					]
@@ -626,9 +630,9 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 					codecs :
 					[
 						{
-							name        : 'audio/PCMU',
-							payloadType : 101,
-							clockRate   : 8000
+							name        : 'audio/opus',
+							payloadType : 100,
+							clockRate   : 48000
 						}
 					]
 				})

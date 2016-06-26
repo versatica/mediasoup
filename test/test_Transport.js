@@ -4,7 +4,6 @@ const tap = require('tap');
 
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
-const peerOptions = require('./data/options').peerOptions;
 
 function initTest(t)
 {
@@ -16,7 +15,7 @@ function initTest(t)
 	return server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			peer = room.Peer('alice', peerOptions);
+			peer = room.Peer('alice');
 
 			return peer.createTransport({ tcp: false });
 		})
@@ -180,7 +179,7 @@ tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 	server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			let peer = room.Peer('alice', peerOptions);
+			let peer = room.Peer('alice');
 
 			peer.createTransport({ tcp: false })
 				.then((transport) =>

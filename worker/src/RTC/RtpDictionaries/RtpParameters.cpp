@@ -36,7 +36,7 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_codecs.size(); i++)
 			{
-				RtpCodecParameters codec(json_codecs[i], false);
+				RTC::RtpCodecParameters codec(json_codecs[i], RTC::Scope::RECEIVE);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -54,7 +54,7 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_array.size(); i++)
 			{
-				RtpEncodingParameters encoding(json_array[i]);
+				RTC::RtpEncodingParameters encoding(json_array[i]);
 
 				// Append to the encodings vector.
 				this->encodings.push_back(encoding);
@@ -68,7 +68,7 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_array.size(); i++)
 			{
-				RtpHeaderExtensionParameters headerExtension(json_array[i]);
+				RTC::RtpHeaderExtensionParameters headerExtension(json_array[i]);
 
 				// Append to the headerExtensions vector.
 				this->headerExtensions.push_back(headerExtension);
@@ -78,7 +78,7 @@ namespace RTC
 		// `rtcp` is optional.
 		if (data[k_rtcp].isObject())
 		{
-			this->rtcp = RtcpParameters(data[k_rtcp]);
+			this->rtcp = RTC::RtcpParameters(data[k_rtcp]);
 			this->hasRtcp = true;
 		}
 
@@ -216,7 +216,7 @@ namespace RTC
 		// the first media codec.
 		if (this->encodings.size() == 0)
 		{
-			RtpEncodingParameters encoding;
+			RTC::RtpEncodingParameters encoding;
 
 			encoding.codecPayloadType = firstMediaPayloadType;
 			encoding.hasCodecPayloadType = true;

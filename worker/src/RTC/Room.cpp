@@ -30,7 +30,7 @@ namespace RTC
 			Json::CharReader* jsonReader = builder.newCharReader();
 
 			// NOTE: This line is auto-generated from data/supportedCapabilities.js.
-			const std::string capabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","preferredPayloadType":96,"clockRate":48000,"numChannels":2},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":97,"clockRate":16000},{"kind":"audio","name":"audio/ISAC","preferredPayloadType":98,"clockRate":32000},{"kind":"audio","name":"audio/G722","preferredPayloadType":9,"clockRate":8000},{"kind":"audio","name":"audio/PCMU","preferredPayloadType":0,"clockRate":8000},{"kind":"audio","name":"audio/PCMA","preferredPayloadType":8,"clockRate":8000},{"kind":"video","name":"video/VP8","preferredPayloadType":110,"clockRate":90000},{"kind":"video","name":"video/VP9","preferredPayloadType":111,"clockRate":90000},{"kind":"video","name":"video/H264","preferredPayloadType":112,"clockRate":90000,"parameters":{"packetizationMode":[0,1,2]}},{"kind":"depth","name":"video/VP8","preferredPayloadType":120,"clockRate":90000},{"kind":"audio","name":"audio/CN","preferredPayloadType":77,"clockRate":32000},{"kind":"audio","name":"audio/CN","preferredPayloadType":78,"clockRate":16000},{"kind":"audio","name":"audio/CN","preferredPayloadType":13,"clockRate":8000},{"kind":"audio","name":"audio/telephone-event","preferredPayloadType":79,"clockRate":8000}],"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}]})";
+			const std::string capabilities = R"({"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}],"fecMechanisms":[]})";
 
 			Json::Value json;
 			std::string json_parse_error;
@@ -46,7 +46,7 @@ namespace RTC
 
 			try
 			{
-				Room::supportedCapabilities = RTC::RtpCapabilities(json);
+				Room::supportedCapabilities = RTC::RtpCapabilities(json, RTC::Scope::ROOM_CAPABILITY);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -75,7 +75,11 @@ namespace RTC
 
 			for (Json::UInt i = 0; i < json_mediaCodecs.size(); i++)
 			{
-				RTC::RtpCodecParameters mediaCodec(json_mediaCodecs[i], true);
+				RTC::RtpCodecParameters mediaCodec(json_mediaCodecs[i], RTC::Scope::ROOM_CAPABILITY);
+
+				// Ignore feature codecs.
+				if (mediaCodec.mime.IsFeatureCodec())
+					continue;
 
 				mediaCodecs.push_back(mediaCodec);
 			}
@@ -230,7 +234,7 @@ namespace RTC
 
 				try
 				{
-					peer = new RTC::Peer(this, this->notifier, peerId, peerName, request->data);
+					peer = new RTC::Peer(this, this->notifier, peerId, peerName);
 				}
 				catch (const MediaSoupError &error)
 				{
@@ -238,44 +242,19 @@ namespace RTC
 					return;
 				}
 
-				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
-				request->Accept();
-
-				// Get all the ready RtpReceivers of the others Peers in the Room and
-				// create RtpSenders for this new Peer.
-				for (auto& kv : this->peers)
-				{
-					RTC::Peer* receiver_peer = kv.second;
-
-					for (auto rtpReceiver : receiver_peer->GetRtpReceivers())
-					{
-						// Skip if the RtpReceiver has not parameters.
-						if (!rtpReceiver->GetParameters())
-							continue;
-
-						uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-						RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId, rtpReceiver->kind);
-
-						// Store into the map.
-						this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
-
-						// Provide the RtpSender with the parameters of the RtpReceiver.
-						rtpSender->Send(rtpReceiver->GetParameters());
-
-						// Attach the RtpSender to peer.
-						peer->AddRtpSender(rtpSender, receiver_peer->peerName);
-					}
-				}
-
 				// Store the new Peer.
-				// NOTE: Do it after iterating existing Peers.
 				this->peers[peerId] = peer;
+
+				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
+
+				request->Accept();
 
 				break;
 			}
 
 			case Channel::Request::MethodId::peer_close:
 			case Channel::Request::MethodId::peer_dump:
+			case Channel::Request::MethodId::peer_setCapabilities:
 			case Channel::Request::MethodId::peer_createTransport:
 			case Channel::Request::MethodId::peer_createRtpReceiver:
 			case Channel::Request::MethodId::transport_close:
@@ -369,8 +348,6 @@ namespace RTC
 				 55,  56,  57,  58,  59,  60,  61,  62,  63,  64,
 				 65,  66,  67,  68,  69,  70,  71
 			};
-			// Maximum static payload type.
-			static const uint8_t maxStaticPayloadType = 34;
 			// Iterator for available dynamic payload types.
 			auto dynamicPayloadTypeIt = dynamicPayloadTypes.begin();
 			// Payload types used by the room.
@@ -381,108 +358,54 @@ namespace RTC
 			// Set the given room codecs.
 			for (auto& mediaCodec : mediaCodecs)
 			{
-				RTC::RtpCodecCapability codecCapability;
-
 				// The room has this kind.
 				roomKinds.insert(mediaCodec.kind);
 
-				// Search the given codec in the list of supported codec capabilities.
+				// Set unique PT.
 
-				auto it = Room::supportedCapabilities.codecs.begin();
-
-				for (; it != Room::supportedCapabilities.codecs.end(); ++it)
+				// If the codec has PT and it's not already used, let it untouched.
+				if (mediaCodec.hasPayloadType &&
+						roomPayloadTypes.find(mediaCodec.payloadType) == roomPayloadTypes.end())
 				{
-					auto& supportedCodecCapability = *it;
+					;
+				}
+				// Otherwise assign an available PT.
+				else
+				{
+					uint8_t payloadType;
 
-					// Kind must match.
-					if (mediaCodec.kind != supportedCodecCapability.kind)
-						continue;
-
-					// Check whether the codec capability matches the given codec.
-					if (supportedCodecCapability.MatchesCodec(mediaCodec))
+					while (dynamicPayloadTypeIt != dynamicPayloadTypes.end())
 					{
-						// Deep copy.
-						codecCapability = supportedCodecCapability;
+						payloadType = *dynamicPayloadTypeIt;
+						dynamicPayloadTypeIt++;
 
-						break;
+						if (roomPayloadTypes.find(payloadType) == roomPayloadTypes.end())
+						{
+							// Assign PT.
+							mediaCodec.payloadType = payloadType;
+							mediaCodec.hasPayloadType = true;
+
+							break;
+						}
 					}
-				}
-				if (it == Room::supportedCapabilities.codecs.end())
-					MS_THROW_ERROR("no matching codec capability found");
 
-				// Reduce the capabilities of the matching capability codec.
-				codecCapability.Reduce(mediaCodec);
-
-				// Set unique PT.
-
-				auto payloadType = codecCapability.preferredPayloadType;
-
-				// If the codec capability has static PT and such a PT is not already used,
-				// let it untouched.
-				if (payloadType > maxStaticPayloadType ||
-						roomPayloadTypes.find(payloadType) != roomPayloadTypes.end())
-				{
-					// If there are no more dynamic PTs throw.
-					if (dynamicPayloadTypeIt == dynamicPayloadTypes.end())
-						MS_THROW_ERROR("not enough available dynamic payload types for given media codecs");
-
-					// Assign preferred PT.
-					payloadType = *dynamicPayloadTypeIt;
-					codecCapability.preferredPayloadType = payloadType;
-
-					// Increment the iterator.
-					dynamicPayloadTypeIt++;
+					// If no one found, throw.
+					if (!mediaCodec.hasPayloadType)
+						MS_THROW_ERROR("no more available dynamic payload types for given media codecs");
 				}
 
 				// Store the selected PT.
-				roomPayloadTypes.insert(payloadType);
+				roomPayloadTypes.insert(mediaCodec.payloadType);
 
 				// Append the codec to the room capabilities.
-				this->capabilities.codecs.push_back(codecCapability);
-			}
-
-			// Add feature codec capabilities.
-			for (auto& codecCapability : Room::supportedCapabilities.codecs)
-			{
-				// Just feature codecs.
-				if (!codecCapability.mime.IsFeatureCodec())
-					continue;
-
-				// Ignore if no media codecs of this kind were given.
-				if (roomKinds.find(codecCapability.kind) == roomKinds.end())
-					continue;
-
-				// Set unique PT.
-
-				auto payloadType = codecCapability.preferredPayloadType;
-
-				if (payloadType > maxStaticPayloadType ||
-						roomPayloadTypes.find(payloadType) != roomPayloadTypes.end())
-				{
-					// If there are no more dynamic PTs throw.
-					if (dynamicPayloadTypeIt == dynamicPayloadTypes.end())
-						MS_THROW_ERROR("not enough available dynamic payload types for feature codecs");
-
-					// Assign preferred PT.
-					payloadType = *dynamicPayloadTypeIt;
-					codecCapability.preferredPayloadType = payloadType;
-
-					// Increment the iterator.
-					dynamicPayloadTypeIt++;
-				}
-
-				// Store the selected PT.
-				roomPayloadTypes.insert(payloadType);
-
-				// Append the codec to the room capabilities.
-				this->capabilities.codecs.push_back(codecCapability);
+				this->capabilities.codecs.push_back(mediaCodec);
 			}
 		}
 
-		// Copy supported RTP header extensions.
+		// Add supported RTP header extensions.
 		this->capabilities.headerExtensions = Room::supportedCapabilities.headerExtensions;
 
-		// Copy supported FEC mechanisms.
+		// Add supported FEC mechanisms.
 		this->capabilities.fecMechanisms = Room::supportedCapabilities.fecMechanisms;
 	}
 
@@ -491,6 +414,37 @@ namespace RTC
 		MS_TRACE();
 
 		this->peers.erase(peer->peerId);
+	}
+
+	void Room::onPeerCapabilities(RTC::Peer* peer)
+	{
+		MS_TRACE();
+
+		// Get all the ready RtpReceivers of the others Peers in the Room and
+		// create RtpSenders for this new Peer.
+		for (auto& kv : this->peers)
+		{
+			RTC::Peer* receiver_peer = kv.second;
+
+			for (auto rtpReceiver : receiver_peer->GetRtpReceivers())
+			{
+				// Skip if the RtpReceiver has not parameters.
+				if (!rtpReceiver->GetParameters())
+					continue;
+
+				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+				RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId, rtpReceiver->kind);
+
+				// Store into the map.
+				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
+
+				// Provide the RtpSender with the parameters of the RtpReceiver.
+				rtpSender->Send(rtpReceiver->GetParameters());
+
+				// Attach the RtpSender to peer.
+				peer->AddRtpSender(rtpSender, receiver_peer->peerName);
+			}
+		}
 	}
 
 	void Room::onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
@@ -509,12 +463,12 @@ namespace RTC
 			{
 				auto& codecCapability = *it;
 
-				if (codecCapability.MatchesCodec(codec))
+				if (codecCapability.Matches(codec))
 					break;
 			}
 			if (it == this->capabilities.codecs.end())
 			{
-				MS_THROW_ERROR("no matching codec capability found [payloadType:%" PRIu8 "]",
+				MS_THROW_ERROR("no matching room codec found [payloadType:%" PRIu8 "]",
 					codec.payloadType);
 			}
 		}
@@ -539,6 +493,10 @@ namespace RTC
 
 				// Skip receiver peer.
 				if (sender_peer == peer)
+					continue;
+
+				// Skip peer with capabilities unset yet.
+				if (!sender_peer->HasCapabilities())
 					continue;
 
 				// Create a RtpSender for the other Peer.

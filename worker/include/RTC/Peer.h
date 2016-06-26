@@ -27,6 +27,7 @@ namespace RTC
 		{
 		public:
 			virtual void onPeerClosed(RTC::Peer* peer) = 0;
+			virtual void onPeerCapabilities(RTC::Peer* peer) = 0;
 			virtual void onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onPeerRtpReceiverParametersDone(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
@@ -35,12 +36,13 @@ namespace RTC
 		};
 
 	public:
-		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName, Json::Value& data);
+		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName);
 		virtual ~Peer();
 
 		void Close();
 		Json::Value toJson();
 		void HandleRequest(Channel::Request* request);
+		bool HasCapabilities();
 		std::vector<RTC::RtpReceiver*> GetRtpReceivers();
 		/**
 		 * Add a new RtpSender to the Peer.
@@ -79,6 +81,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Others.
+		bool hasCapabilities = false;
 		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Transport*> transports;
 		std::unordered_map<uint32_t, RTC::RtpReceiver*> rtpReceivers;
@@ -86,6 +89,12 @@ namespace RTC
 	};
 
 	/* Inline methods. */
+
+	inline
+	bool Peer::HasCapabilities()
+	{
+		return this->hasCapabilities;
+	}
 
 	inline
 	std::vector<RTC::RtpReceiver*> Peer::GetRtpReceivers()
