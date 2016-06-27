@@ -49,7 +49,7 @@ namespace RTC
 		 * @param rtpSender     Instance of RtpSender.
 		 * @param peerName      Name of the receiver Peer.
 		 */
-		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName);
+		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters);
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);

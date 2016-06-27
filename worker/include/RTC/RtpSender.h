@@ -8,6 +8,7 @@
 #include "RTC/RtcpPacket.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
+#include <unordered_map>
 #include <json/json.h>
 
 namespace RTC
@@ -38,6 +39,9 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 
+	private:
+		void SetPayloadTypesMapping();
+
 	public:
 		// Passed by argument.
 		uint32_t rtpSenderId;
@@ -52,6 +56,7 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 		// Others.
+		std::unordered_map<uint8_t, uint8_t> mapPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
 	};
@@ -75,13 +80,6 @@ namespace RTC
 	RTC::RtpParameters* RtpSender::GetParameters()
 	{
 		return this->rtpParameters;
-	}
-
-	inline
-	void RtpSender::SendRtpPacket(RTC::RtpPacket* packet)
-	{
-		if (this->available && this->transport)
-			this->transport->SendRtpPacket(packet);
 	}
 }
 

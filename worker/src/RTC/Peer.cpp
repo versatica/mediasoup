@@ -438,7 +438,7 @@ namespace RTC
 		}
 	}
 
-	void Peer::AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName)
+	void Peer::AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
@@ -448,10 +448,11 @@ namespace RTC
 		MS_ASSERT(this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
 			"given RtpSender already exists in this Peer");
 
-		MS_ASSERT(rtpSender->GetParameters(), "given RtpSender does not have RtpParameters");
-
 		// Provide the RtpSender with peer's capabilities.
 		rtpSender->SetPeerCapabilities(std::addressof(this->capabilities));
+
+		// Provide the RtpSender with the received RTP parameters.
+		rtpSender->Send(rtpParameters);
 
 		// Store it.
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;

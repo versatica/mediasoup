@@ -52,6 +52,8 @@ namespace RTC
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
 		static const Json::StaticString k_available("available");
+		// TODO: TMP
+		static const Json::StaticString k_mapPayloadTypes("mapPayloadTypes");
 
 		Json::Value json(Json::objectValue);
 
@@ -67,6 +69,13 @@ namespace RTC
 		json[k_hasTransport] = this->transport ? true : false;
 
 		json[k_available] = this->available;
+
+		// TODO: TMP
+		json[k_mapPayloadTypes] = Json::objectValue;
+		for (auto& kv : this->mapPayloadTypes)
+		{
+			json[k_mapPayloadTypes][std::to_string(kv.first)] = kv.second;
+		}
 
 		return json;
 	}
@@ -99,6 +108,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(peerCapabilities, "given peerCapabilities are null");
+
 		this->peerCapabilities = peerCapabilities;
 	}
 
@@ -110,6 +121,8 @@ namespace RTC
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_available("available");
 
+		MS_ASSERT(rtpParameters, "no RTP parameters given");
+
 		auto previousRtpParameters = this->rtpParameters;
 
 		// Free the previous rtpParameters.
@@ -118,6 +131,9 @@ namespace RTC
 
 		// Clone given RTP parameters so we manage our own sender parameters.
 		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
+
+		// Build the payload types map.
+		SetPayloadTypesMapping();
 
 		// TODO: Must check new parameters and:
 		// - remove unsuported capabilities,
@@ -135,6 +151,90 @@ namespace RTC
 			event_data[k_available] = this->available;
 
 			this->notifier->Emit(this->rtpSenderId, "parameterschange", event_data);
+		}
+	}
+
+	void RtpSender::SendRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (!this->available || !this->transport)
+			return;
+
+		// Map the payload type.
+
+		uint8_t originalPayloadType = packet->GetPayloadType();
+		uint8_t mappedPayloadType;
+		auto it = this->mapPayloadTypes.find(originalPayloadType);
+
+		// TODO: This should never happen.
+		if (it == this->mapPayloadTypes.end())
+		{
+			MS_ERROR("payload type not mapped [payloadType:%" PRIu8 "]",
+				originalPayloadType);
+
+			return;
+		}
+		mappedPayloadType = this->mapPayloadTypes[originalPayloadType];
+
+		// Map the packet payload type.
+		packet->SetPayloadType(mappedPayloadType);
+
+		// Send the packet.
+		this->transport->SendRtpPacket(packet);
+
+		// Recover the original packet payload type.
+		packet->SetPayloadType(originalPayloadType);
+	}
+
+	void RtpSender::SetPayloadTypesMapping()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->peerCapabilities, "peer RTP capabilities are null");
+
+		this->mapPayloadTypes.clear();
+
+		for (auto& codec : this->rtpParameters->codecs)
+		{
+			auto it = this->peerCapabilities->codecs.begin();
+
+			for (; it != this->peerCapabilities->codecs.end(); ++it)
+			{
+				auto& codecCapability = *it;
+
+				if (codecCapability.Matches(codec))
+				{
+					auto originalPayloadType = codec.payloadType;
+					auto mappedPayloadType = codecCapability.payloadType;
+
+					// Set the mapping.
+					this->mapPayloadTypes[originalPayloadType] = mappedPayloadType;
+
+					// Override the codec payload type.
+					codec.payloadType = mappedPayloadType;
+
+					// Override encoding.codecPayloadType.
+					for (auto& encoding : this->rtpParameters->encodings)
+					{
+						// TODO: remove when confirmed
+						MS_ASSERT(encoding.hasCodecPayloadType, "encoding without codecPayloadType");
+
+						if (encoding.codecPayloadType == originalPayloadType)
+							encoding.codecPayloadType = mappedPayloadType;
+					}
+
+					break;
+				}
+			}
+			if (it == this->peerCapabilities->codecs.end())
+			{
+				// TODO: Let's see. Theoretically unsupported codecs has been
+				// already removed in Send(), but it's not done yet.
+				// Once done, this should be a MS_THROW.
+				MS_ERROR("no matching room codec found [payloadType:%" PRIu8 "]",
+					codec.payloadType);
+			}
 		}
 	}
 }

@@ -438,11 +438,11 @@ namespace RTC
 				// Store into the map.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
+				// Attach the RtpSender to peer.
+				peer->AddRtpSender(rtpSender, receiver_peer->peerName, rtpReceiver->GetParameters());
+
 				// Provide the RtpSender with the parameters of the RtpReceiver.
 				rtpSender->Send(rtpReceiver->GetParameters());
-
-				// Attach the RtpSender to peer.
-				peer->AddRtpSender(rtpSender, receiver_peer->peerName);
 			}
 		}
 	}
@@ -506,11 +506,8 @@ namespace RTC
 				// Store into the map.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 
-				// Provide the RtpSender with the parameters of the RtpReceiver.
-				rtpSender->Send(rtpReceiver->GetParameters());
-
 				// Attach the RtpSender to sender_peer.
-				sender_peer->AddRtpSender(rtpSender, peer->peerName);
+				sender_peer->AddRtpSender(rtpSender, peer->peerName, rtpReceiver->GetParameters());
 			}
 		}
 		// If this is not a new RtpReceiver let's retrieve its updated parameters

@@ -138,6 +138,7 @@ namespace RTC
 		err = srtp_protect(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
+			// TODO
 			MS_WARN("srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
@@ -158,6 +159,7 @@ namespace RTC
 		err = srtp_unprotect(this->session, (void*)data, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
+			// TODO
 			MS_WARN("srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
@@ -185,6 +187,7 @@ namespace RTC
 		err = srtp_protect_rtcp(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
+			// TODO
 			MS_WARN("srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
@@ -205,6 +208,7 @@ namespace RTC
 		err = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
+			// TODO
 			MS_WARN("srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;

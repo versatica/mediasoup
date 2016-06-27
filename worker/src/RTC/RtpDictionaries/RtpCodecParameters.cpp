@@ -85,33 +85,33 @@ namespace RTC
 		if (data[k_parameters].isObject())
 			this->parameters.Set(data[k_parameters]);
 
-		if (this->scope == RTC::Scope::RECEIVE)
-		{
-			// `rtx` is optional.
-			if (data[k_rtx].isObject())
-			{
-				this->rtx = RTC::RTCRtpCodecRtxParameters(data[k_rtx]);
-				this->hasRtx = true;
-			}
-		}
+		// if (this->scope == RTC::Scope::RECEIVE)
+		// {
+		// 	// `rtx` is optional.
+		// 	if (data[k_rtx].isObject())
+		// 	{
+		// 		this->rtx = RTC::RTCRtpCodecRtxParameters(data[k_rtx]);
+		// 		this->hasRtx = true;
+		// 	}
+		// }
 
-		if (this->scope == RTC::Scope::PEER_CAPABILITY ||
-			this->scope == RTC::Scope::RECEIVE)
-		{
-			// `rtcpFeedback` is optional.
-			if (data[k_rtcpFeedback].isArray())
-			{
-				auto& json_rtcpFeedback = data[k_rtcpFeedback];
+		// if (this->scope == RTC::Scope::PEER_CAPABILITY ||
+		// 	this->scope == RTC::Scope::RECEIVE)
+		// {
+		// 	// `rtcpFeedback` is optional.
+		// 	if (data[k_rtcpFeedback].isArray())
+		// 	{
+		// 		auto& json_rtcpFeedback = data[k_rtcpFeedback];
 
-				for (Json::UInt i = 0; i < json_rtcpFeedback.size(); i++)
-				{
-					RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
+		// 		for (Json::UInt i = 0; i < json_rtcpFeedback.size(); i++)
+		// 		{
+		// 			RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
 
-					// Append to the rtcpFeedback vector.
-					this->rtcpFeedback.push_back(rtcpFeedback);
-				}
-			}
-		}
+		// 			// Append to the rtcpFeedback vector.
+		// 			this->rtcpFeedback.push_back(rtcpFeedback);
+		// 		}
+		// 	}
+		// }
 
 		// Check codec.
 		CheckCodec();
