@@ -596,7 +596,7 @@ namespace RTC
 				auto transport = kv.second;
 
 				// MS_WARN("---- sending RTCP [from:%s, to:%s, transportId:%" PRIu32 "]",
-					peer->peerName.c_str(), dst_peer->peerName.c_str(), transport->transportId);
+					// peer->peerName.c_str(), dst_peer->peerName.c_str(), transport->transportId);
 
 				transport->SendRtcpPacket(packet);
 			}
