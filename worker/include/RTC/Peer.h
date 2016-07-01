@@ -33,6 +33,8 @@ namespace RTC
 			virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
 			virtual void onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
+			// TODO: TMP
+			virtual void onPeerRtcpPacket(RTC::Peer* peer, RTC::RtcpPacket* packet) = 0;
 		};
 
 	public:
@@ -50,6 +52,8 @@ namespace RTC
 		 * @param peerName      Name of the receiver Peer.
 		 */
 		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters);
+		// TODO: Temporal stuff to route RTCP everywhere
+		std::unordered_map<uint32_t, RTC::Transport*>& GetTransports();
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
@@ -59,6 +63,8 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
 		virtual void onTransportClosed(RTC::Transport* transport) override;
+		// TODO: TMP
+		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RtcpPacket* packet) override;
 
 	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:
@@ -107,6 +113,13 @@ namespace RTC
 		}
 
 		return rtpReceivers;
+	}
+
+	// TODO: Temporal stuff to route RTCP everywhere
+	inline
+	std::unordered_map<uint32_t, RTC::Transport*>& Peer::GetTransports()
+	{
+		return this->transports;
 	}
 }
 

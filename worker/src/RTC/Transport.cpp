@@ -512,6 +512,32 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
+	void Transport::SendRtcpPacket(RTC::RtcpPacket* packet)
+	{
+		MS_TRACE();
+
+		// If there is no selected tuple do nothing.
+		if (!this->selectedTuple)
+			return;
+
+		// Ensure there is sending SRTP session.
+		if (!this->srtpSendSession)
+		{
+			// TODO: Should not log every packet.
+			MS_WARN("ignoring RTCP packet due to non sending SRTP session");
+
+			return;
+		}
+
+		const uint8_t* data = packet->GetRaw();
+		size_t len = packet->GetLength();
+
+		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
+
+		this->selectedTuple->Send(data, len);
+	}
+
 	inline
 	void Transport::MayRunDtlsTransport()
 	{
@@ -722,18 +748,52 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->iceServer->IsValidTuple(tuple))
+		// Ensure DTLS is connected.
+		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_DEBUG("ignoring RTCP data coming from an invalid tuple");
+			// TODO: Should not log every packet.
+			MS_WARN("ignoring RTCP packet while DTLS not connected");
 
 			return;
 		}
 
-		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
-		this->iceServer->ForceSelectedTuple(tuple);
+		// Ensure there is receiving SRTP session.
+		if (!this->srtpRecvSession)
+		{
+			// TODO: Should not log every packet.
+			MS_WARN("ignoring RTCP packet due to non receiving SRTP session");
 
-		// TODO
-		MS_DEBUG("received RTCP data");
+			return;
+		}
+
+		// Ensure it comes from a valid tuple.
+		if (!this->iceServer->IsValidTuple(tuple))
+		{
+			MS_DEBUG("ignoring RTCP packet coming from an invalid tuple");
+
+			return;
+		}
+
+		// Decrypt the SRTCP packet.
+		if (!this->srtpRecvSession->DecryptSrtcp(data, &len))
+			return;
+
+		RTC::RtcpPacket* packet = RTC::RtcpPacket::Parse(data, len);
+		if (!packet)
+		{
+			MS_WARN("received data is not a valid RTCP packet");
+
+			return;
+		}
+
+		// TODO: implement this properly!
+		// For now let route the received RTCP packet to all our RtpReceivers.
+		this->listener->onTransportRtcpPacket(this, packet);
+
+		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
+		// this->iceServer->ForceSelectedTuple(tuple);
+
+		delete packet;
 	}
 
 	void Transport::onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr)

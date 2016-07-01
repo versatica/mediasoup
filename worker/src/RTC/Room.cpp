@@ -575,4 +575,31 @@ namespace RTC
 			rtpSender->SendRtpPacket(packet);
 		}
 	}
+
+	// TODO: TMP
+	void Room::onPeerRtcpPacket(RTC::Peer* peer, RTC::RtcpPacket* packet)
+	{
+		MS_TRACE();
+
+		// TODO: we are routing RTCP everywhere, this is so wrong.
+
+		for (auto& kv : this->peers)
+		{
+			RTC::Peer* dst_peer = kv.second;
+
+			// Skip RTCP sending peer.
+			if (dst_peer == peer)
+				continue;
+
+			for (auto& kv : dst_peer->GetTransports())
+			{
+				auto transport = kv.second;
+
+				// MS_WARN("---- sending RTCP [from:%s, to:%s, transportId:%" PRIu32 "]",
+					peer->peerName.c_str(), dst_peer->peerName.c_str(), transport->transportId);
+
+				transport->SendRtcpPacket(packet);
+			}
+		}
+	}
 }
