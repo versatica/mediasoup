@@ -95,23 +95,23 @@ namespace RTC
 		// 	}
 		// }
 
-		// if (this->scope == RTC::Scope::PEER_CAPABILITY ||
-		// 	this->scope == RTC::Scope::RECEIVE)
-		// {
-		// 	// `rtcpFeedback` is optional.
-		// 	if (data[k_rtcpFeedback].isArray())
-		// 	{
-		// 		auto& json_rtcpFeedback = data[k_rtcpFeedback];
+		if (this->scope == RTC::Scope::PEER_CAPABILITY ||
+			this->scope == RTC::Scope::RECEIVE)
+		{
+			// `rtcpFeedback` is optional.
+			if (data[k_rtcpFeedback].isArray())
+			{
+				auto& json_rtcpFeedback = data[k_rtcpFeedback];
 
-		// 		for (Json::UInt i = 0; i < json_rtcpFeedback.size(); i++)
-		// 		{
-		// 			RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
+				for (Json::UInt i = 0; i < json_rtcpFeedback.size(); i++)
+				{
+					RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
 
-		// 			// Append to the rtcpFeedback vector.
-		// 			this->rtcpFeedback.push_back(rtcpFeedback);
-		// 		}
-		// 	}
-		// }
+					// Append to the rtcpFeedback vector.
+					this->rtcpFeedback.push_back(rtcpFeedback);
+				}
+			}
+		}
 
 		// Check codec.
 		CheckCodec();
