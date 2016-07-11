@@ -176,10 +176,13 @@ namespace RTC
 
 				MS_DEBUG("capabilities set");
 
-				request->Accept();
+				// Notify the listener (Room) who will remove capabilities to make them
+				// a subset of the room capabilities.
+				this->listener->onPeerCapabilities(this, std::addressof(this->capabilities));
 
-				// Notify the listener.
-				this->listener->onPeerCapabilities(this);
+				Json::Value data = this->capabilities.toJson();
+
+				request->Accept(data);
 
 				break;
 			}
@@ -591,15 +594,10 @@ namespace RTC
 			}
 			if (it == this->capabilities.codecs.end())
 			{
-				MS_THROW_ERROR("no matching peer codec found [payloadType:%" PRIu8 "]",
-					codec.payloadType);
+				MS_THROW_ERROR("no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
+					codec.payloadType, codec.mime.GetName().c_str());
 			}
 		}
-
-		// Notify the listener (Room) so it can check provided codecs and,
-		// optionally, normalize them.
-		// NOTE: This may throw.
-		this->listener->onPeerRtpReceiverParameters(this, rtpReceiver);
 
 		auto transport = rtpReceiver->GetTransport();
 
@@ -613,7 +611,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Notify the listener (Room).
-		this->listener->onPeerRtpReceiverParametersDone(this, rtpReceiver);
+		this->listener->onPeerRtpReceiverParameters(this, rtpReceiver);
 	}
 
 	void Peer::onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)

@@ -416,9 +416,34 @@ namespace RTC
 		this->peers.erase(peer->peerId);
 	}
 
-	void Room::onPeerCapabilities(RTC::Peer* peer)
+	void Room::onPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities)
 	{
 		MS_TRACE();
+
+		// Remove those peer's capabilities not supported by the room.
+
+		// Remove unsupported codecs.
+		for (auto it = capabilities->codecs.begin(); it != capabilities->codecs.end();)
+		{
+			auto& peerCodecCapability = *it;
+			auto it2 = this->capabilities.codecs.begin();
+
+			for (; it2 != this->capabilities.codecs.end(); ++it2)
+			{
+				auto& roomCodecCapability = *it2;
+
+				if (roomCodecCapability.Matches(peerCodecCapability))
+					break;
+			}
+			if (it2 == this->capabilities.codecs.end())
+				it = capabilities->codecs.erase(it);
+			else
+				it++;
+		}
+
+		// TODO: Remove unsupported header extensions.
+
+		// TODO: Remove unsupported fec mechanisms.
 
 		// Get all the ready RtpReceivers of the others Peers in the Room and
 		// create RtpSenders for this new Peer.
@@ -448,33 +473,6 @@ namespace RTC
 	}
 
 	void Room::onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
-	{
-		MS_TRACE();
-
-		auto rtpParameters = rtpReceiver->GetParameters();
-
-		// Check codecs availability. If it fails, throw.
-
-		for (auto codec : rtpParameters->codecs)
-		{
-			auto it = this->capabilities.codecs.begin();
-
-			for (; it != this->capabilities.codecs.end(); ++it)
-			{
-				auto& codecCapability = *it;
-
-				if (codecCapability.Matches(codec))
-					break;
-			}
-			if (it == this->capabilities.codecs.end())
-			{
-				MS_THROW_ERROR("no matching room codec found [payloadType:%" PRIu8 "]",
-					codec.payloadType);
-			}
-		}
-	}
-
-	void Room::onPeerRtpReceiverParametersDone(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
