@@ -3,6 +3,7 @@
 #include "RTC/RtpSender.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
+#include <unordered_set>
 
 namespace RTC
 {
@@ -132,14 +133,63 @@ namespace RTC
 		// Clone given RTP parameters so we manage our own sender parameters.
 		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
 
+		// Remove RTP parameters not supported by this pper.
+
+		std::unordered_set<uint8_t> supportedPayloadTypes;
+
+		// Remove unsupported codecs.
+		for (auto it = this->rtpParameters->codecs.begin(); it != this->rtpParameters->codecs.end();)
+		{
+			auto& codec = *it;
+			auto it2 = this->peerCapabilities->codecs.begin();
+
+			for (; it2 != this->peerCapabilities->codecs.end(); ++it2)
+			{
+				auto& codecCapability = *it2;
+
+				if (codecCapability.Matches(codec))
+					break;
+			}
+
+			if (it2 != this->peerCapabilities->codecs.end())
+			{
+				supportedPayloadTypes.insert(codec.payloadType);
+				it++;
+			}
+			else
+			{
+				it = this->rtpParameters->codecs.erase(it);
+			}
+		}
+
+		// Remove unsupported encodings.
+		for (auto it = this->rtpParameters->encodings.begin(); it != this->rtpParameters->encodings.end();)
+		{
+			auto& encoding = *it;
+
+			if (supportedPayloadTypes.find(encoding.codecPayloadType) != supportedPayloadTypes.end())
+			{
+				it++;
+			}
+			else
+			{
+				it = this->rtpParameters->encodings.erase(it);
+			}
+		}
+
+		// TODO: Remove unsupported header extensions.
+
 		// Build the payload types map.
 		SetPayloadTypesMapping();
 
-		// TODO: Must check new parameters and:
-		// - remove unsuported capabilities,
-		// - set this->available if at least there is a capable encoding.
-		// For now make it easy:
-		this->available = true;
+		// TODO: Must check with PTs and encodings are supported so RTP packets
+		// handling is easy.
+
+		// If there are no encodings set not available.
+		if (this->rtpParameters->encodings.size() > 0)
+			this->available = true;
+		else
+			this->available = false;
 
 		// Emit "parameterschange" if those are new parameters.
 		if (previousRtpParameters)
@@ -227,14 +277,10 @@ namespace RTC
 					break;
 				}
 			}
-			if (it == this->peerCapabilities->codecs.end())
-			{
-				// TODO: Let's see. Theoretically unsupported codecs has been
-				// already removed in Send(), but it's not done yet.
-				// Once done, this should be a MS_THROW.
-				MS_ERROR("no matching room codec found [payloadType:%" PRIu8 "]",
-					codec.payloadType);
-			}
+
+			// This should not happen.
+			MS_ASSERT(it != this->peerCapabilities->codecs.end(),
+				"no matching room codec found [payloadType:%" PRIu8 "]", codec.payloadType);
 		}
 	}
 }

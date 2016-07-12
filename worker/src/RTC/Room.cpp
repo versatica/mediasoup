@@ -435,10 +435,15 @@ namespace RTC
 				if (roomCodecCapability.Matches(peerCodecCapability))
 					break;
 			}
-			if (it2 == this->capabilities.codecs.end())
-				it = capabilities->codecs.erase(it);
-			else
+
+			if (it2 != this->capabilities.codecs.end())
+			{
 				it++;
+			}
+			else
+			{
+				it = capabilities->codecs.erase(it);
+			}
 		}
 
 		// TODO: Remove unsupported header extensions.
