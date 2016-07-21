@@ -778,22 +778,22 @@ namespace RTC
 		if (!this->srtpRecvSession->DecryptSrtcp(data, &len))
 			return;
 
-		RTC::RtcpPacket* packet = RTC::RtcpPacket::Parse(data, len);
-		if (!packet)
+		RTC::RtcpPacket* compoundPacket = RTC::RtcpPacket::Parse(data, len);
+		if (!compoundPacket)
 		{
-			MS_WARN("received data is not a valid RTCP packet");
+			MS_WARN("received data is not a valid RTCP compound or single packet");
 
 			return;
 		}
 
 		// TODO: implement this properly!
 		// For now let route the received RTCP packet to all our RtpReceivers.
-		this->listener->onTransportRtcpPacket(this, packet);
+		this->listener->onTransportRtcpPacket(this, compoundPacket);
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		// this->iceServer->ForceSelectedTuple(tuple);
 
-		delete packet;
+		delete compoundPacket;
 	}
 
 	void Transport::onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr)

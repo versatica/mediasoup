@@ -122,8 +122,8 @@ namespace RTC
 		return (
 			// STUN headers are 20 bytes.
 			(len >= 20) &&
-			// DOC: https://tools.ietf.org/html/draft-petithuguenin-avtcore-rfc5764-mux-fixes-00
-			(data[0] < 20) &&
+			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+			(data[0] < 3) &&
 			// Magic cookie must match.
 			(data[4] == StunMessage::magicCookie[0]) &&
 			(data[5] == StunMessage::magicCookie[1]) &&

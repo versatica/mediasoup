@@ -57,7 +57,6 @@ namespace RTC
 
 			// The header extension contains a 16-bit length field that counts the number of
 			// 32-bit words in the extension, excluding the four-octet extension header.
-			// extension_value_size = (size_t)(Utils::Byte::Get2Bytes(data, pos + 2) * 4);
 			extension_value_size = (size_t)(ntohs(extensionHeader->length) * 4);
 
 			// Packet size must be >= header size + CSRC list + header extension size.
@@ -91,7 +90,7 @@ namespace RTC
 			payloadPadding = data[len - 1];
 			if (payloadPadding == 0)
 			{
-				MS_DEBUG("padding byte cannot be 0  packet discarded");
+				MS_DEBUG("padding byte cannot be 0, packet discarded");
 
 				return nullptr;
 			}
@@ -177,7 +176,7 @@ namespace RTC
 		size_t extension_value_size = 0;
 
 		// First calculate the total required size for the entire message.
-		this->length = sizeof(Header);  // Minimun header.
+		this->length = sizeof(Header);  // Minimum header.
 
 		if (this->csrcList)
 			this->length += this->header->csrc_count * sizeof(header->ssrc);
@@ -195,7 +194,7 @@ namespace RTC
 		// Allocate it.
 		this->raw = new uint8_t[this->length];
 
-		// Add minimun header.
+		// Add minimum header.
 		std::memcpy(this->raw, this->header, sizeof(Header));
 		size_t pos = sizeof(Header);
 
@@ -227,7 +226,7 @@ namespace RTC
 		{
 			std::memcpy(this->raw + pos, this->payload, this->payloadLength);
 
-			// Update the pointer.
+			// Update the payload pointer.
 			this->payload = this->raw + pos;
 			pos += this->payloadLength;
 		}

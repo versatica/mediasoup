@@ -51,7 +51,7 @@ namespace RTC
 
 		return (
 			(len >= sizeof(CommonHeader)) &&
-			// DOC: https://tools.ietf.org/html/draft-petithuguenin-avtcore-rfc5764-mux-fixes-00
+			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
 			(data[0] > 127 && data[0] < 192) &&
 			// RTP Version must be 2.
 			(header->version == 2) &&

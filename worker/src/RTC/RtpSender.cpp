@@ -217,7 +217,9 @@ namespace RTC
 		uint8_t mappedPayloadType;
 		auto it = this->mapPayloadTypes.find(originalPayloadType);
 
-		// TODO: This should never happen.
+		// NOTE: This may happen if this peer supports just some codecs from the
+		// given RtpParameters.
+		// TODO: We should not report an error here but just ignore it.
 		if (it == this->mapPayloadTypes.end())
 		{
 			MS_ERROR("payload type not mapped [payloadType:%" PRIu8 "]",
