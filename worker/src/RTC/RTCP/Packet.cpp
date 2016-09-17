@@ -1,22 +1,24 @@
-#define MS_CLASS "RTC::RtcpPacket"
+#define MS_CLASS "RTC::Packet"
 
 #include "RTC/RtcpPacket.h"
 #include "Logger.h"
 
 namespace RTC
 {
+namespace RTCP
+{
 	/* Class methods. */
 
-	RtcpPacket* RtcpPacket::Parse(const uint8_t* data, size_t len)
+	Packet* Packet::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		if (!RtcpPacket::IsRtcp(data, len))
+		if (!Packet::IsRtcp(data, len))
 			return nullptr;
 
 		// TODO: just for now
 		CommonHeader* header = (CommonHeader*)data;
-		RtcpPacket* compoundPacket = new RtcpPacket(header, data, len);
+		Packet* compoundPacket = new Packet(header, data, len);
 
 		// MS_DEBUG("RTCP compound packet parsing begins");
 
@@ -24,7 +26,7 @@ namespace RTC
 
 		while (more)
 		{
-			if (!RtcpPacket::IsRtcp(data, len))
+			if (!Packet::IsRtcp(data, len))
 			{
 				MS_WARN("data is not a RTCP packet");
 
@@ -77,7 +79,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtcpPacket::RtcpPacket(CommonHeader* header, const uint8_t* raw, size_t length) :
+	Packet::Packet(CommonHeader* header, const uint8_t* raw, size_t length) :
 		header(header),
 		raw((uint8_t*)raw),
 		length(length)
@@ -85,8 +87,9 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	RtcpPacket::~RtcpPacket()
+	Packet::~Packet()
 	{
 		MS_TRACE();
 	}
+}
 }

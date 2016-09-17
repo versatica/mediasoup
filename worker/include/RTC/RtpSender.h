@@ -5,7 +5,7 @@
 #include "RTC/Transport.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RtcpPacket.h"
+#include "RTC/RTCP/Packet.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_map>

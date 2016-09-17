@@ -651,7 +651,7 @@ namespace RTC
 	}
 
 	// TODO: TMP
-	void Peer::onTransportRtcpPacket(RTC::Transport* transport, RTC::RtcpPacket* packet)
+	void Peer::onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 

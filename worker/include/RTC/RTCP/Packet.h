@@ -5,7 +5,9 @@
 
 namespace RTC
 {
-	class RtcpPacket
+namespace RTCP
+{
+	class Packet
 	{
 	public:
 		/* Struct for RTCP common header. */
@@ -26,11 +28,11 @@ namespace RTC
 
 	public:
 		static bool IsRtcp(const uint8_t* data, size_t len);
-		static RtcpPacket* Parse(const uint8_t* data, size_t len);
+		static Packet* Parse(const uint8_t* data, size_t len);
 
 	public:
-		RtcpPacket(CommonHeader* header, const uint8_t* raw, size_t length);
-		~RtcpPacket();
+		Packet(CommonHeader* header, const uint8_t* raw, size_t length);
+		~Packet();
 
 		const uint8_t* GetRaw();
 		size_t GetLength();
@@ -45,7 +47,7 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	bool RtcpPacket::IsRtcp(const uint8_t* data, size_t len)
+	bool Packet::IsRtcp(const uint8_t* data, size_t len)
 	{
 		CommonHeader* header = (CommonHeader*)data;
 
@@ -65,16 +67,17 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	const uint8_t* RtcpPacket::GetRaw()
+	const uint8_t* Packet::GetRaw()
 	{
 		return this->raw;
 	}
 
 	inline
-	size_t RtcpPacket::GetLength()
+	size_t Packet::GetLength()
 	{
 		return this->length;
 	}
+}
 }
 
 #endif

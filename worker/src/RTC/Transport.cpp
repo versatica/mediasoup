@@ -512,7 +512,7 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
-	void Transport::SendRtcpPacket(RTC::RtcpPacket* packet)
+	void Transport::SendRtcpPacket(RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -604,7 +604,7 @@ namespace RTC
 			onStunDataRecv(tuple, data, len);
 		}
 		// Check if it's RTCP.
-		else if (RtcpPacket::IsRtcp(data, len))
+		else if (RTCP::Packet::IsRtcp(data, len))
 		{
 			onRtcpDataRecv(tuple, data, len);
 		}
@@ -779,7 +779,7 @@ namespace RTC
 		if (!this->srtpRecvSession->DecryptSrtcp(data, &len))
 			return;
 
-		RTC::RtcpPacket* compoundPacket = RTC::RtcpPacket::Parse(data, len);
+		RTC::RTCP::Packet* compoundPacket = RTC::RTCP::Packet::Parse(data, len);
 		if (!compoundPacket)
 		{
 			MS_WARN("received data is not a valid RTCP compound or single packet");

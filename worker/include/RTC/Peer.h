@@ -7,7 +7,7 @@
 #include "RTC/RtpSender.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RtcpPacket.h"
+#include "RTC/RTCP/Packet.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -33,7 +33,7 @@ namespace RTC
 			virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
 			virtual void onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
 			// TODO: TMP
-			virtual void onPeerRtcpPacket(RTC::Peer* peer, RTC::RtcpPacket* packet) = 0;
+			virtual void onPeerRtcpPacket(RTC::Peer* peer, RTC::RTCP::Packet* packet) = 0;
 		};
 
 	public:
@@ -64,7 +64,7 @@ namespace RTC
 	public:
 		virtual void onTransportClosed(RTC::Transport* transport) override;
 		// TODO: TMP
-		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RtcpPacket* packet) override;
+		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
 
 	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:

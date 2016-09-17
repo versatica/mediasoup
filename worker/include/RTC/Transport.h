@@ -14,7 +14,7 @@
 #include "RTC/RtpListener.h"
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RtcpPacket.h"
+#include "RTC/RTCP/Packet.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -36,7 +36,7 @@ namespace RTC
 		public:
 			virtual void onTransportClosed(RTC::Transport* transport) = 0;
 			// TODO: TMP
-			virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RtcpPacket* packet) = 0;
+			virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) = 0;
 		};
 
 	public:
@@ -49,7 +49,7 @@ namespace RTC
 		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void SendRtpPacket(RTC::RtpPacket* packet);
-		void SendRtcpPacket(RTC::RtcpPacket* packet);
+		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 
 	private:
 		void MayRunDtlsTransport();

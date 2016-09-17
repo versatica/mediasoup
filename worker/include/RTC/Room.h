@@ -7,7 +7,7 @@
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpSender.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RtcpPacket.h"
+#include "RTC/RTCP/Packet.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_map>
@@ -55,7 +55,7 @@ namespace RTC
 		virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 		virtual void onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
 		// TODO: TMP
-		virtual void onPeerRtcpPacket(RTC::Peer* peer, RTC::RtcpPacket* packet) override;
+		virtual void onPeerRtcpPacket(RTC::Peer* peer, RTC::RTCP::Packet* packet) override;
 
 	public:
 		// Passed by argument.

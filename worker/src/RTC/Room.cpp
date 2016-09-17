@@ -596,7 +596,7 @@ namespace RTC
 	}
 
 	// TODO: TMP
-	void Room::onPeerRtcpPacket(RTC::Peer* peer, RTC::RtcpPacket* packet)
+	void Room::onPeerRtcpPacket(RTC::Peer* peer, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
