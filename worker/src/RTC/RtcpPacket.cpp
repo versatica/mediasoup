@@ -18,7 +18,7 @@ namespace RTC
 		CommonHeader* header = (CommonHeader*)data;
 		RtcpPacket* compoundPacket = new RtcpPacket(header, data, len);
 
-		MS_DEBUG("RTCP compound packet parsing begins");
+		// MS_DEBUG("RTCP compound packet parsing begins");
 
 		bool more = true;
 
@@ -42,26 +42,26 @@ namespace RTC
 			}
 
 			// TODO: test
-			switch (header->packet_type)
-			{
-				case 200:
-					MS_DEBUG("SENDER REPORT packet found");
-					break;
-				case 201:
-					MS_DEBUG("RECEIVER REPORT packet found");
-					break;
-				case 202:
-					MS_DEBUG("SDES packet found");
-					break;
-				case 203:
-					MS_DEBUG("BYE packet found");
-					break;
-				case 204:
-					MS_DEBUG("APPLICATION DEFINED packet found");
-					break;
-				default:
-					MS_WARN("unknown RTCP packet type [packet_type:%" PRIu8 "]", header->packet_type);
-			}
+			// switch (header->packet_type)
+			// {
+			// 	case 200:
+			// 		MS_DEBUG("SENDER REPORT packet found");
+			// 		break;
+			// 	case 201:
+			// 		MS_DEBUG("RECEIVER REPORT packet found");
+			// 		break;
+			// 	case 202:
+			// 		MS_DEBUG("SDES packet found");
+			// 		break;
+			// 	case 203:
+			// 		MS_DEBUG("BYE packet found");
+			// 		break;
+			// 	case 204:
+			// 		MS_DEBUG("APPLICATION DEFINED packet found");
+			// 		break;
+			// 	default:
+			// 		MS_WARN("unknown RTCP packet type [packet_type:%" PRIu8 "]", header->packet_type);
+			// }
 
 			data += packet_len;
 			len -= packet_len;
@@ -70,7 +70,7 @@ namespace RTC
 				more = false;
 		}
 
-		MS_DEBUG("RTCP compound packet parsing done");
+		// MS_DEBUG("RTCP compound packet parsing done");
 
 		return compoundPacket;
 	}

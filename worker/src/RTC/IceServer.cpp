@@ -135,7 +135,8 @@ namespace RTC
 					return;
 				}
 
-				MS_DEBUG("processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]", (uint32_t)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
+				// TODO: yes or no
+				// MS_DEBUG("processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]", (uint32_t)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
 				RTC::StunMessage* response = msg->CreateSuccessResponse();
