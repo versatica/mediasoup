@@ -228,8 +228,9 @@ namespace RTC
 			std::string ip;
 			Utils::IP::GetAddressInfo(addr, &family, ip, &port);
 
-			MS_DEBUG("datagram received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", len:%zu]",
-				GetLocalIP().c_str(), GetLocalPort(), ip.c_str(), port, len);
+			// TODO: REMOVE
+			// MS_DEBUG("datagram received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", len:%zu]",
+				// GetLocalIP().c_str(), GetLocalPort(), ip.c_str(), port, len);
 		}
 
 		// Notify the reader.
