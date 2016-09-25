@@ -2,6 +2,7 @@
 
 #include "RTC/Peer.h"
 #include "RTC/RtpDictionaries.h"
+#include "RTC/RTCP/CompoundPacket.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -497,6 +498,54 @@ namespace RTC
 		return nullptr;
 	}
 
+	void Peer::SendRtcp()
+	{
+		MS_TRACE();
+
+		// For every transport:
+		// - Create a CompoundPacket
+		// - Request every Sender and Receiver of such transport their RTCP data
+		// - Send the CompoundPacket
+
+		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
+		{
+			RTC::RTCP::CompoundPacket packet;
+			RTC::Transport* transport = it->second;
+
+			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+			{
+				RTC::RtpSender* rtpSender = it->second;
+				RTC::RTCP::SenderReport* report = rtpSender->GetRtcpSenderReport();
+
+				// TODO: get next rtpSender data on next SendRtcp() call
+				if (report)
+				{
+					packet.AddSenderReport(report);
+
+					RTC::RTCP::SdesChunk* chunk = rtpSender->GetRtcpSdesChunk();
+					if (chunk)
+						packet.AddSdesChunk(chunk);
+
+					break;
+				}
+			}
+
+			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
+			{
+				RTC::RtpReceiver* rtpReceiver = it->second;
+				RTC::RTCP::ReceiverReport* report = rtpReceiver->GetRtcpReceiverReport();
+
+				if (report)
+					packet.AddReceiverReport(report);
+			}
+
+			if (packet.GetSenderReportCount() || packet.GetReceiverReportCount())
+			{
+				transport->SendRtcpPacket(&packet);
+			}
+		}
+	}
+
 	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId)
 	{
 		MS_TRACE();
@@ -650,13 +699,111 @@ namespace RTC
 		this->listener->onPeerRtpPacket(this, rtpReceiver, packet);
 	}
 
-	// TODO: TMP
 	void Peer::onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
-		// Notify the listener.
-		this->listener->onPeerRtcpPacket(this, packet);
+		while (packet) {
+			switch (packet->GetType())
+			{
+
+				/* RTCP comming from a remote receiver which must be forwarded to the corresponding remote sender */
+
+				case RTCP::Type::RR:
+					{
+						RTCP::ReceiverReportPacket* rr = (RTCP::ReceiverReportPacket*) packet;
+
+						RTCP::ReceiverReportPacket::Iterator it = rr->Begin();
+						for (; it != rr->End(); ++it) {
+
+							auto& report = (*it);
+
+							RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
+
+							if (!rtpSender) {
+								MS_WARN("no RtpSender found for ssrc: %u while procesing a Receiver Report", report->GetSsrc());
+							}
+							else {
+								this->listener->onPeerRtcpReceiverReport(this, rtpSender, report);
+							}
+						}
+					}
+					break;
+
+				case RTCP::Type::RTPFB:
+				case RTCP::Type::PSFB:
+					{
+						RTCP::FeedbackPacket* feedback = (RTCP::FeedbackPacket*) packet;
+
+						RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+
+						if (!rtpSender) {
+							MS_WARN("no RtpSender found for ssrc: %u while procesing a Feedback packet", feedback->GetMediaSsrc());
+						}
+						else {
+							this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+						}
+					}
+					break;
+
+				/* RTCP comming from a remote sender which must be forwarded to the corresponding remote receivers */
+
+				case RTCP::Type::SR:
+					{
+						RTCP::SenderReportPacket* sr = (RTCP::SenderReportPacket*) packet;
+
+						RTCP::SenderReportPacket::Iterator it = sr->Begin();
+						// even if Sender Report packet can only contain one report..
+						for (; it != sr->End(); ++it) {
+
+							auto& report = (*it);
+
+							// get the receiver associated to the SSRC indicated in the report
+							RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
+							if (!rtpReceiver) {
+								MS_WARN("no RtpReceiver found for ssrc: %u while procesing a Sender Report", report->GetSsrc());
+							}
+							else {
+								this->listener->onPeerRtcpSenderReport(this, rtpReceiver, report);
+							}
+						}
+					}
+
+					break;
+
+				case RTCP::Type::SDES:
+					{
+						RTCP::SdesPacket* sdes = (RTCP::SdesPacket*) packet;
+
+						RTCP::SdesPacket::Iterator it = sdes->Begin();
+						for (; it != sdes->End(); ++it) {
+
+							auto& chunk = (*it);
+
+							// get the receiver associated to the SSRC indicated in the chunk
+							RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
+							if (!rtpReceiver) {
+								MS_WARN("no RtpReceiver found for ssrc: %u while procesing a SDES chunk", chunk->GetSsrc());
+							}
+							else {
+								this->listener->onPeerRtcpSdesChunk(this, rtpReceiver, chunk);
+							}
+						}
+					}
+
+					break;
+
+				default:
+					MS_WARN("Unhandled RTCP type received to 'RTC::Peer': %u", (uint8_t)packet->GetType());
+					break;
+			}
+
+		packet = packet->GetNext();
+		}
+
+		// TMP: Notify the listener about an incoming RTCP processing termination.
+		// Used for now as a trigger to relay the processed RTCP data accordingly.
+		this->listener->onPeerRtcpCompleted(this);
 	}
 
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)

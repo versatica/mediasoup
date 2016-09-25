@@ -341,6 +341,21 @@ namespace RTC
 		return nullptr;
 	}
 
+	RTC::RtpReceiver* RtpListener::GetRtpReceiver(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		// Lookup into the SSRC table.
+		auto it = this->ssrcTable.find(ssrc);
+
+		if (it != this->ssrcTable.end())
+		{
+			return it->second;
+		}
+
+		return nullptr;
+	}
+
 	void RtpListener::RollbackRtpReceiver(RTC::RtpReceiver* rtpReceiver, std::vector<uint32_t>& previousSsrcs, std::string& previousMuxId, std::vector<uint8_t>& previousPayloadTypes)
 	{
 		MS_TRACE();

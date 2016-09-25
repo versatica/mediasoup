@@ -15,6 +15,7 @@
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpPacket.h"
 #include "RTC/RTCP/Packet.h"
+#include "RTC/RTCP/CompoundPacket.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -50,6 +51,8 @@ namespace RTC
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
+		void SendRtcpPacket(RTC::RTCP::CompoundPacket* packet);
+		RTC::RtpReceiver*  GetRtpReceiver(uint32_t ssrc);
 
 	private:
 		void MayRunDtlsTransport();
@@ -130,6 +133,12 @@ namespace RTC
 	void Transport::RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver)
 	{
 		this->rtpListener.RemoveRtpReceiver(rtpReceiver);
+	}
+
+	inline
+	RTC::RtpReceiver* Transport::GetRtpReceiver(uint32_t ssrc)
+	{
+		return this->rtpListener.GetRtpReceiver(ssrc);
 	}
 }
 

@@ -595,30 +595,66 @@ namespace RTC
 		}
 	}
 
-	// TODO: TMP
-	void Room::onPeerRtcpPacket(RTC::Peer* peer, RTC::RTCP::Packet* packet)
+	void Room::onPeerRtcpCompleted(RTC::Peer* peer)
 	{
 		MS_TRACE();
 
-		// TODO: we are routing RTCP everywhere, this is so wrong.
-
-		for (auto& kv : this->peers)
+		// Tell all the peers but the one in the argument to generate and send their RTCP
+		for (auto it = this->peers.begin(); it != this->peers.end(); ++it)
 		{
-			RTC::Peer* dst_peer = kv.second;
-
-			// Skip RTCP sending peer.
-			if (dst_peer == peer)
-				continue;
-
-			for (auto& kv : dst_peer->GetTransports())
-			{
-				auto transport = kv.second;
-
-				// MS_WARN("---- sending RTCP [from:%s, to:%s, transportId:%" PRIu32 "]",
-					// peer->peerName.c_str(), dst_peer->peerName.c_str(), transport->transportId);
-
-				transport->SendRtcpPacket(packet);
+			if (it->second != peer) {
+				it->second->SendRtcp();
 			}
+		}
+	}
+
+	void Room::onPeerRtcpReceiverReport(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+
+		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+
+		rtpReceiver->ReceiveRtcpReceiverReport(report);
+	}
+
+	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+
+		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+
+		rtpReceiver->ReceiveRtcpFeedback(packet);
+	}
+
+	void Room::onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+
+		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+
+		for (auto& rtpSender : rtpSenders)
+		{
+			rtpSender->ReceiveRtcpSenderReport(report);
+		}
+	}
+
+	void Room::onPeerRtcpSdesChunk(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SdesChunk* chunk)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+
+		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+
+		for (auto& rtpSender : rtpSenders)
+		{
+			rtpSender->ReceiveRtcpSdesChunk(chunk);
 		}
 	}
 }

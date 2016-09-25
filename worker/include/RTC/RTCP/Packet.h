@@ -7,6 +7,19 @@ namespace RTC
 {
 namespace RTCP
 {
+	enum class Type : uint8_t
+	{
+		FIR  = 192,
+		NACK = 193,
+		SR   = 200,
+		RR   = 201,
+		SDES = 202,
+		BYE  = 203,
+		APP  = 204,
+		RTPFB = 205,
+		PSFB = 206
+	};
+
 	class Packet
 	{
 	public:
@@ -29,19 +42,30 @@ namespace RTCP
 	public:
 		static bool IsRtcp(const uint8_t* data, size_t len);
 		static Packet* Parse(const uint8_t* data, size_t len);
+		static const char* TypeString(Type type);
 
 	public:
-		Packet(CommonHeader* header, const uint8_t* raw, size_t length);
-		~Packet();
+		Packet(Type type);
+		virtual ~Packet();
 
-		const uint8_t* GetRaw();
-		size_t GetLength();
+		void SetNext(Packet* packet);
+		Packet* GetNext();
+		Type GetType();
+
+	public:
+		size_t Serialize();
+		uint8_t* GetRaw();
+
+	public:
+		virtual void Dump() = 0;
+		virtual size_t GetCount();
+		virtual size_t GetSize() = 0;
+		virtual size_t Serialize(uint8_t* data);
 
 	private:
-		// Passed by argument.
-		CommonHeader* header = nullptr;
+		Type type;
+		Packet* next = nullptr;
 		uint8_t* raw = nullptr;
-		size_t length = 0;
 	};
 
 	/* Inline static methods. */
@@ -67,15 +91,45 @@ namespace RTCP
 	/* Inline instance methods. */
 
 	inline
-	const uint8_t* Packet::GetRaw()
+	Packet* Packet::GetNext()
 	{
-		return this->raw;
+		return this->next;
 	}
 
 	inline
-	size_t Packet::GetLength()
+	void Packet::SetNext(Packet* packet)
 	{
-		return this->length;
+		this->next = packet;
+	}
+
+	inline
+	size_t Packet::Serialize()
+	{
+		if (this->raw)
+			delete this->raw;
+
+		size_t size = this->GetSize();
+		this->raw = new uint8_t[size];
+
+		return this->Serialize(this->raw);
+	}
+
+	inline
+	Type Packet::GetType()
+	{
+		return this->type;
+	}
+
+	inline
+	size_t Packet::GetCount()
+	{
+		return 0;
+	}
+
+	inline
+	uint8_t* Packet::GetRaw()
+	{
+		return this->raw;
 	}
 }
 }

@@ -529,8 +529,35 @@ namespace RTC
 			return;
 		}
 
+		size_t len = packet->Serialize();
 		const uint8_t* data = packet->GetRaw();
-		size_t len = packet->GetLength();
+
+		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
+
+		this->selectedTuple->Send(data, len);
+	}
+
+	void Transport::SendRtcpPacket(RTC::RTCP::CompoundPacket* packet)
+	{
+		MS_TRACE();
+
+		// If there is no selected tuple do nothing.
+		if (!this->selectedTuple)
+			return;
+
+		// Ensure there is sending SRTP session.
+		if (!this->srtpSendSession)
+		{
+			// TODO: Should not log every packet.
+			MS_WARN("ignoring RTCP packet due to non sending SRTP session");
+
+			return;
+		}
+
+		packet->Serialize();
+		const uint8_t* data = packet->GetRaw();
+		size_t len = packet->GetSize();
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
@@ -779,8 +806,8 @@ namespace RTC
 		if (!this->srtpRecvSession->DecryptSrtcp(data, &len))
 			return;
 
-		RTC::RTCP::Packet* compoundPacket = RTC::RTCP::Packet::Parse(data, len);
-		if (!compoundPacket)
+		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+		if (!packet)
 		{
 			MS_WARN("received data is not a valid RTCP compound or single packet");
 
@@ -789,12 +816,16 @@ namespace RTC
 
 		// TODO: implement this properly!
 		// For now let route the received RTCP packet to all our RtpReceivers.
-		this->listener->onTransportRtcpPacket(this, compoundPacket);
+		this->listener->onTransportRtcpPacket(this, packet);
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		// this->iceServer->ForceSelectedTuple(tuple);
 
-		delete compoundPacket;
+		while (packet) {
+			RTC::RTCP::Packet* next = packet->GetNext();
+			delete packet;
+			packet = next;
+		}
 	}
 
 	void Transport::onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr)

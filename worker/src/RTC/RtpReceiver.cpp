@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::RtpReceiver"
 
 #include "RTC/RtpReceiver.h"
+#include "RTC/Transport.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
@@ -251,4 +252,19 @@ namespace RTC
 		// TODO: Fill SSRCs with random values and set some mechanism to replace
 		// SSRC values in received RTP packets to match the chosen random values.
 	}
+
+	void RtpReceiver::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	{
+		MS_TRACE();
+
+		this->receiverReport.reset(new RTC::RTCP::ReceiverReport(report));
+		this->receiverReport->Serialize();
+	};
+
+	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPacket* packet)
+	{
+		MS_TRACE();
+
+		this->transport->SendRtcpPacket(packet);
+	};
 }

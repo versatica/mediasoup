@@ -7,7 +7,6 @@
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpSender.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RTCP/Packet.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_map>
@@ -54,8 +53,11 @@ namespace RTC
 		virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
 		virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 		virtual void onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
-		// TODO: TMP
-		virtual void onPeerRtcpPacket(RTC::Peer* peer, RTC::RTCP::Packet* packet) override;
+		virtual void onPeerRtcpReceiverReport(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report) override;
+		virtual void onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) override;
+		virtual void onPeerRtcpSdesChunk(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SdesChunk* chunk) override;
+		virtual void onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPacket* packet) override;
+		virtual void onPeerRtcpCompleted(RTC::Peer* peer) override;
 
 	public:
 		// Passed by argument.
