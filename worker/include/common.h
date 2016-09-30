@@ -13,17 +13,5 @@
 #define MS_APP_NAME "mediasoup"
 #define MS_PROCESS_NAME "mediasoup-worker"
 
-// Detect Little-Endian or Big-Endian CPU.
-// NOTE: If the macro MS_LITTLE_ENDIAN or MS_BIG_ENDIAN is already defined
-// then don't autodetect it.
-#if !defined(MS_LITTLE_ENDIAN) && !defined(MS_BIG_ENDIAN)
-	#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	    #define MS_LITTLE_ENDIAN
-	#elif defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	    #define MS_BIG_ENDIAN
-	#else
-		#error "cannot determine whether the CPU is Little-Endian or Big-Endian"
-	#endif
-#endif
 
 #endif
