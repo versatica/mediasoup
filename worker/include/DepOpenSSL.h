@@ -4,11 +4,12 @@
 #include "common.h"
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
+#include <uv.h>
 
 /* OpenSSL doc: struct CRYPTO_dynlock_value has to be defined by the application. */
 struct CRYPTO_dynlock_value
 {
- 	pthread_mutex_t mutex;
+	uv_mutex_t mutex;
 };
 
 class DepOpenSSL
@@ -25,7 +26,7 @@ private:
 	static void DynDestroyFunction(CRYPTO_dynlock_value* v, const char* file, int line);
 
 private:
-	static pthread_mutex_t* mutexes;
+	static uv_mutex_t* mutexes;
 	static uint32_t numMutexes;
 };
 
