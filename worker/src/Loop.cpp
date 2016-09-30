@@ -7,7 +7,6 @@
 #include "Logger.h"
 #include <string>
 #include <utility>  // std::pair()
-#include <csignal>  // sigfillset, pthread_sigmask()
 #include <cerrno>
 #include <iostream>  //  std::cout, std::cerr
 #include <json/json.h>
@@ -46,9 +45,6 @@ void Loop::Close()
 {
 	MS_TRACE();
 
-	int err;
-	sigset_t signal_mask;
-
 	if (this->closed)
 	{
 		MS_ERROR("already closed");
@@ -56,12 +52,6 @@ void Loop::Close()
 		return;
 	}
 	this->closed = true;
-
-	// First block all the signals to not be interrupted while closing.
-	sigfillset(&signal_mask);
-	err = pthread_sigmask(SIG_BLOCK, &signal_mask, nullptr);
-	if (err)
-		MS_ERROR("pthread_sigmask() failed: %s", std::strerror(errno));
 
 	// Close the SignalsHandler.
 	if (this->signalsHandler)
