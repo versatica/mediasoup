@@ -50,6 +50,7 @@
 
 #include "datatypes.h"
 #include "null_cipher.h"
+#include "err.h"                /* for srtp_debug */
 #include "alloc.h"
 
 /* the null_cipher uses the cipher debug module  */
@@ -96,22 +97,25 @@ static srtp_err_status_t srtp_null_cipher_dealloc (srtp_cipher_t *c)
 
 }
 
-static srtp_err_status_t srtp_null_cipher_init (srtp_null_cipher_ctx_t *ctx, const uint8_t *key)
+static srtp_err_status_t srtp_null_cipher_init (void *cv, const uint8_t *key)
 {
+	/* srtp_null_cipher_ctx_t *c = (srtp_null_cipher_ctx_t *)cv; */
 
     debug_print(srtp_mod_cipher, "initializing null cipher", NULL);
 
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_null_cipher_set_iv (srtp_null_cipher_ctx_t *c, uint8_t *iv, int dir)
+static srtp_err_status_t srtp_null_cipher_set_iv (void *cv, uint8_t *iv, srtp_cipher_direction_t dir)
 {
+	/* srtp_null_cipher_ctx_t *c = (srtp_null_cipher_ctx_t *)cv; */
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_null_cipher_encrypt (srtp_null_cipher_ctx_t *c,
+static srtp_err_status_t srtp_null_cipher_encrypt (void *cv,
                                             unsigned char *buf, unsigned int *bytes_to_encr)
 {
+	/* srtp_null_cipher_ctx_t *c = (srtp_null_cipher_ctx_t *)cv; */
     return srtp_err_status_ok;
 }
 
@@ -137,17 +141,16 @@ static const srtp_cipher_test_case_t srtp_null_cipher_test_0 = {
  */
 
 const srtp_cipher_type_t srtp_null_cipher = {
-    (cipher_alloc_func_t)srtp_null_cipher_alloc,
-    (cipher_dealloc_func_t)srtp_null_cipher_dealloc,
-    (cipher_init_func_t)srtp_null_cipher_init,
-    (cipher_set_aad_func_t)0,
-    (cipher_encrypt_func_t)srtp_null_cipher_encrypt,
-    (cipher_decrypt_func_t)srtp_null_cipher_encrypt,
-    (cipher_set_iv_func_t)srtp_null_cipher_set_iv,
-    (cipher_get_tag_func_t)0,
-    (const char*)srtp_null_cipher_description,
-    (const srtp_cipher_test_case_t*)&srtp_null_cipher_test_0,
-    (srtp_debug_module_t*)NULL,
-    (srtp_cipher_type_id_t)SRTP_NULL_CIPHER
+    srtp_null_cipher_alloc,
+    srtp_null_cipher_dealloc,
+    srtp_null_cipher_init,
+    0,                     /* set_aad */
+    srtp_null_cipher_encrypt,
+    srtp_null_cipher_encrypt,
+    srtp_null_cipher_set_iv,
+    0,                     /* get_tag */
+    srtp_null_cipher_description,
+    &srtp_null_cipher_test_0,
+    SRTP_NULL_CIPHER
 };
 

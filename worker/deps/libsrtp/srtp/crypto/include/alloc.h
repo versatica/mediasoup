@@ -48,8 +48,16 @@
 
 #include "datatypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void * srtp_crypto_alloc(size_t size);
 
 void srtp_crypto_free(void *ptr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CRYPTO_ALLOC_H */

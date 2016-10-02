@@ -48,14 +48,14 @@
 
 #include "cipher.h"
 #include "srtp.h"
+#include "datatypes.h"
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 
 typedef struct {
-    v256_t key;
     int key_size;
     int tag_len;
-    EVP_CIPHER_CTX ctx;
+    EVP_CIPHER_CTX* ctx;
     srtp_cipher_direction_t dir;
 } srtp_aes_gcm_ctx_t;
 

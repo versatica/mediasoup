@@ -47,6 +47,10 @@
 
 #include "datatypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 unsigned char
 v32_weight(v32_t a);
 
@@ -232,6 +236,10 @@ octet_string_is_eq(uint8_t *a, uint8_t *b, int len);
 void
 octet_string_set_to_zero(uint8_t *s, int len);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MATH_H */
 

@@ -52,6 +52,10 @@
 #include "crypto_types.h"
 #include "key.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * crypto_kernel_state_t defines the possible states:
  *
@@ -161,26 +165,6 @@ srtp_err_status_t srtp_crypto_kernel_load_cipher_type(const srtp_cipher_type_t *
 
 srtp_err_status_t srtp_crypto_kernel_load_auth_type(const srtp_auth_type_t *ct, srtp_auth_type_id_t id);
 
-/*
- * srtp_crypto_kernel_replace_cipher_type(ct, id)
- *
- * replaces the crypto kernel's existing cipher for the cipher_type id
- * with a new one passed in externally.  The new cipher must pass all the
- * existing cipher_type's self tests as well as its own.
- */
-srtp_err_status_t srtp_crypto_kernel_replace_cipher_type(const srtp_cipher_type_t *ct, srtp_cipher_type_id_t id);
-
-
-/*
- * srtp_crypto_kernel_replace_auth_type(ct, id)
- *
- * replaces the crypto kernel's existing cipher for the auth_type id
- * with a new one passed in externally.  The new auth type must pass all the
- * existing auth_type's self tests as well as its own.
- */
-srtp_err_status_t srtp_crypto_kernel_replace_auth_type(const srtp_auth_type_t *ct, srtp_auth_type_id_t id);
-
-
 srtp_err_status_t srtp_crypto_kernel_load_debug_module(srtp_debug_module_t *new_dm);
 
 /*
@@ -206,7 +190,7 @@ srtp_err_status_t srtp_crypto_kernel_alloc_cipher(srtp_cipher_type_id_t id, srtp
  *    srtp_err_status_alloc_fail   an allocation failure occured
  *    srtp_err_status_fail         couldn't find auth with identifier 'id'
  */
-srtp_err_status_t srtp_crypto_kernel_alloc_auth(srtp_auth_type_id_t id, auth_pointer_t *ap, int key_len, int tag_len);
+srtp_err_status_t srtp_crypto_kernel_alloc_auth(srtp_auth_type_id_t id, srtp_auth_pointer_t *ap, int key_len, int tag_len);
 
 
 /*
@@ -218,5 +202,9 @@ srtp_err_status_t srtp_crypto_kernel_alloc_auth(srtp_auth_type_id_t id, auth_poi
  * returns srtp_err_status_ok on success, srtp_err_status_fail otherwise
  */
 srtp_err_status_t srtp_crypto_kernel_set_debug_module(char *mod_name, int v);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CRYPTO_KERNEL */

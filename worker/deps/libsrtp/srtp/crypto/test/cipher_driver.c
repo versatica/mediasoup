@@ -386,7 +386,7 @@ cipher_driver_test_buffering(srtp_cipher_t *c) {
     }
     
     /* initialize cipher  */
-    status = srtp_cipher_set_iv(c, (uint8_t*)idx, direction_encrypt);
+    status = srtp_cipher_set_iv(c, (uint8_t*)idx, srtp_direction_encrypt);
     if (status)
       return status;
 
@@ -396,7 +396,7 @@ cipher_driver_test_buffering(srtp_cipher_t *c) {
       return status;
 
     /* re-initialize cipher */
-    status = srtp_cipher_set_iv(c, (uint8_t*)idx, direction_encrypt);
+    status = srtp_cipher_set_iv(c, (uint8_t*)idx, srtp_direction_encrypt);
     if (status)
       return status;
     
@@ -557,7 +557,7 @@ cipher_array_bits_per_second(srtp_cipher_t *cipher_array[], int num_cipher,
     unsigned octets_to_encrypt = octets_in_buffer;
 
     /* encrypt buffer with cipher */
-    srtp_cipher_set_iv(cipher_array[cipher_index], (uint8_t*)&nonce, direction_encrypt);
+    srtp_cipher_set_iv(cipher_array[cipher_index], (uint8_t*)&nonce, srtp_direction_encrypt);
     srtp_cipher_encrypt(cipher_array[cipher_index], enc_buf, &octets_to_encrypt);
 
     /* choose a cipher at random from the array*/

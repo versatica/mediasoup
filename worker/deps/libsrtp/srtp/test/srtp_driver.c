@@ -63,6 +63,11 @@
 srtp_err_status_t
 srtp_validate(void);
 
+#ifdef OPENSSL
+srtp_err_status_t
+srtp_validate_gcm(void);
+#endif
+
 srtp_err_status_t
 srtp_validate_encrypted_extensions_headers(void);
 
@@ -326,15 +331,27 @@ main (int argc, char *argv[])
          * that this test only covers the default policy
          */
         printf("testing srtp_protect and srtp_unprotect against "
-               "reference packets\n");
+               "reference packet\n");
         if (srtp_validate() == srtp_err_status_ok) {
             printf("passed\n\n");
         } else{
             printf("failed\n");
             exit(1);
         }
+
+#ifdef OPENSSL
         printf("testing srtp_protect and srtp_unprotect against "
-               "reference packets with encrypted extensions headers\n");
+               "reference packet using GCM\n");
+        if (srtp_validate_gcm() == srtp_err_status_ok) {
+            printf("passed\n\n");
+        } else{
+            printf("failed\n");
+            exit(1);
+        }
+#endif
+
+        printf("testing srtp_protect and srtp_unprotect against "
+               "reference packet with encrypted extensions headers\n");
         if (srtp_validate_encrypted_extensions_headers() == srtp_err_status_ok)
             printf("passed\n\n");
         else {
@@ -344,7 +361,7 @@ main (int argc, char *argv[])
 
 #ifdef OPENSSL
         printf("testing srtp_protect and srtp_unprotect against "
-               "reference packets with encrypted extension headers (GCM)\n");
+               "reference packet with encrypted extension headers (GCM)\n");
         if (srtp_validate_encrypted_extensions_headers_gcm() == srtp_err_status_ok) {
             printf("passed\n\n");
         } else{
@@ -358,7 +375,7 @@ main (int argc, char *argv[])
          * AES-256
          */
         printf("testing srtp_protect and srtp_unprotect against "
-               "reference packets (AES-256)\n");
+               "reference packet (AES-256)\n");
         if (srtp_validate_aes_256() == srtp_err_status_ok) {
             printf("passed\n\n");
         } else{
@@ -370,7 +387,7 @@ main (int argc, char *argv[])
          * test packets with empty payload
          */
         printf("testing srtp_protect and srtp_unprotect against "
-               "packets with empty payload\n");
+               "packet with empty payload\n");
         if (srtp_test_empty_payload() == srtp_err_status_ok) {
             printf("passed\n");
         } else{
@@ -379,7 +396,7 @@ main (int argc, char *argv[])
         }
 #ifdef OPENSSL
         printf("testing srtp_protect and srtp_unprotect against "
-               "packets with empty payload (GCM)\n");
+               "packet with empty payload (GCM)\n");
         if (srtp_test_empty_payload_gcm() == srtp_err_status_ok) {
             printf("passed\n");
         } else{
@@ -1475,6 +1492,25 @@ srtp_validate ()
         0x94, 0x9d, 0x24, 0x02, 0xb7, 0x8d, 0x6a, 0xcc,
         0x99, 0xea, 0x17, 0x9b, 0x8d, 0xbb
     };
+    uint8_t rtcp_plaintext_ref[24] = {
+        0x81, 0xc8, 0x00, 0x0b, 0xca, 0xfe, 0xba, 0xbe,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+    };
+    uint8_t rtcp_plaintext[38] = {
+        0x81, 0xc8, 0x00, 0x0b, 0xca, 0xfe, 0xba, 0xbe,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    uint8_t srtcp_ciphertext[38] = {
+        0x81, 0xc8, 0x00, 0x0b, 0xca, 0xfe, 0xba, 0xbe,
+        0x71, 0x28, 0x03, 0x5b, 0xe4, 0x87, 0xb9, 0xbd,
+        0xbe, 0xf8, 0x90, 0x41, 0xf9, 0x77, 0xa5, 0xa8,
+        0x80, 0x00, 0x00, 0x01, 0x99, 0x3e, 0x08, 0xcd,
+        0x54, 0xd6, 0xc1, 0x23, 0x07, 0x98
+    };
     srtp_t srtp_snd, srtp_recv;
     srtp_err_status_t status;
     int len;
@@ -1519,6 +1555,24 @@ srtp_validate ()
     }
 
     /*
+     * protect plaintext rtcp, then compare with srtcp ciphertext
+     */
+    len = 24;
+    status = srtp_protect_rtcp(srtp_snd, rtcp_plaintext, &len);
+    if (status || (len != 38)) {
+        return srtp_err_status_fail;
+    }
+
+    debug_print(mod_driver, "srtcp ciphertext:\n  %s",
+                octet_string_hex_string(rtcp_plaintext, len));
+    debug_print(mod_driver, "srtcp ciphertext reference:\n  %s",
+                octet_string_hex_string(srtcp_ciphertext, len));
+
+    if (octet_string_is_eq(rtcp_plaintext, srtcp_ciphertext, len)) {
+        return srtp_err_status_fail;
+    }
+
+    /*
      * create a receiver session context comparable to the one created
      * above - we need to do this so that the replay checking doesn't
      * complain
@@ -1540,6 +1594,19 @@ srtp_validate ()
         return srtp_err_status_fail;
     }
 
+    /*
+     * unprotect srtcp ciphertext, then compare with rtcp plaintext
+     */
+    len = 38;
+    status = srtp_unprotect_rtcp(srtp_recv, srtcp_ciphertext, &len);
+    if (status || (len != 24)) {
+        return status;
+    }
+
+    if (octet_string_is_eq(srtcp_ciphertext, rtcp_plaintext_ref, len)) {
+        return srtp_err_status_fail;
+    }
+
     status = srtp_dealloc(srtp_snd);
     if (status) {
         return status;
@@ -1552,6 +1619,175 @@ srtp_validate ()
 
     return srtp_err_status_ok;
 }
+
+#ifdef OPENSSL
+/*
+ * srtp_validate_gcm() verifies the correctness of libsrtp by comparing
+ * an computed packet against the known ciphertext for the plaintext.
+ */
+srtp_err_status_t
+srtp_validate_gcm ()
+{
+    unsigned char test_key_gcm[28] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7,
+        0xa8, 0xa9, 0xaa, 0xab
+    };
+    uint8_t rtp_plaintext_ref[28] = {
+        0x80, 0x0f, 0x12, 0x34, 0xde, 0xca, 0xfb, 0xad,
+        0xca, 0xfe, 0xba, 0xbe, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab
+    };
+    uint8_t rtp_plaintext[44] = {
+        0x80, 0x0f, 0x12, 0x34, 0xde, 0xca, 0xfb, 0xad,
+        0xca, 0xfe, 0xba, 0xbe, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    };
+    uint8_t srtp_ciphertext[44] = {
+        0x80, 0x0f, 0x12, 0x34, 0xde, 0xca, 0xfb, 0xad,
+        0xca, 0xfe, 0xba, 0xbe, 0xc5, 0x00, 0x2e, 0xde,
+        0x04, 0xcf, 0xdd, 0x2e, 0xb9, 0x11, 0x59, 0xe0,
+        0x88, 0x0a, 0xa0, 0x6e, 0xd2, 0x97, 0x68, 0x26,
+        0xf7, 0x96, 0xb2, 0x01, 0xdf, 0x31, 0x31, 0xa1,
+        0x27, 0xe8, 0xa3, 0x92
+    };
+    uint8_t rtcp_plaintext_ref[24] = {
+        0x81, 0xc8, 0x00, 0x0b, 0xca, 0xfe, 0xba, 0xbe,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+    };
+    uint8_t rtcp_plaintext[44] = {
+        0x81, 0xc8, 0x00, 0x0b, 0xca, 0xfe, 0xba, 0xbe,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    };
+    uint8_t srtcp_ciphertext[44] = {
+        0x81, 0xc8, 0x00, 0x0b, 0xca, 0xfe, 0xba, 0xbe,
+        0xc9, 0x8b, 0x8b, 0x5d, 0xf0, 0x39, 0x2a, 0x55,
+        0x85, 0x2b, 0x6c, 0x21, 0xac, 0x8e, 0x70, 0x25,
+        0xc5, 0x2c, 0x6f, 0xbe, 0xa2, 0xb3, 0xb4, 0x46,
+        0xea, 0x31, 0x12, 0x3b, 0xa8, 0x8c, 0xe6, 0x1e,
+        0x80, 0x00, 0x00, 0x01
+    };
+
+    srtp_t srtp_snd, srtp_recv;
+    srtp_err_status_t status;
+    int len;
+    srtp_policy_t policy;
+
+    /*
+     * create a session with a single stream using the default srtp
+     * policy and with the SSRC value 0xcafebabe
+     */
+    memset(&policy, 0, sizeof(policy));
+    srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
+    srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
+    policy.ssrc.type  = ssrc_specific;
+    policy.ssrc.value = 0xcafebabe;
+    policy.key  = test_key_gcm;
+    policy.ekt = NULL;
+    policy.window_size = 128;
+    policy.allow_repeat_tx = 0;
+    policy.next = NULL;
+
+    status = srtp_create(&srtp_snd, &policy);
+    if (status) {
+        return status;
+    }
+
+    /*
+     * protect plaintext rtp, then compare with srtp ciphertext
+     */
+    len = 28;
+    status = srtp_protect(srtp_snd, rtp_plaintext, &len);
+    if (status || (len != 44)) {
+        return srtp_err_status_fail;
+    }
+
+    debug_print(mod_driver, "srtp ciphertext:\n  %s",
+                octet_string_hex_string(rtp_plaintext, len));
+    debug_print(mod_driver, "srtp ciphertext reference:\n  %s",
+                octet_string_hex_string(srtp_ciphertext, len));
+
+    if (octet_string_is_eq(rtp_plaintext, srtp_ciphertext, len)) {
+        return srtp_err_status_fail;
+    }
+
+    /*
+     * protect plaintext rtcp, then compare with srtcp ciphertext
+     */
+    len = 24;
+    status = srtp_protect_rtcp(srtp_snd, rtcp_plaintext, &len);
+    if (status || (len != 44)) {
+        return srtp_err_status_fail;
+    }
+
+    debug_print(mod_driver, "srtcp ciphertext:\n  %s",
+                octet_string_hex_string(rtcp_plaintext, len));
+    debug_print(mod_driver, "srtcp ciphertext reference:\n  %s",
+                octet_string_hex_string(srtcp_ciphertext, len));
+
+    if (octet_string_is_eq(rtcp_plaintext, srtcp_ciphertext, len)) {
+        return srtp_err_status_fail;
+    }
+
+    /*
+     * create a receiver session context comparable to the one created
+     * above - we need to do this so that the replay checking doesn't
+     * complain
+     */
+    status = srtp_create(&srtp_recv, &policy);
+    if (status) {
+        return status;
+    }
+
+    /*
+     * unprotect srtp ciphertext, then compare with rtp plaintext
+     */
+    len = 44;
+    status = srtp_unprotect(srtp_recv, srtp_ciphertext, &len);
+    if (status || (len != 28)) {
+        return status;
+    }
+
+    if (octet_string_is_eq(srtp_ciphertext, rtp_plaintext_ref, len)) {
+        return srtp_err_status_fail;
+    }
+
+    /*
+     * unprotect srtcp ciphertext, then compare with rtcp plaintext
+     */
+    len = 44;
+    status = srtp_unprotect_rtcp(srtp_recv, srtcp_ciphertext, &len);
+    if (status || (len != 24)) {
+        return status;
+    }
+
+    if (octet_string_is_eq(srtcp_ciphertext, rtcp_plaintext_ref, len)) {
+        return srtp_err_status_fail;
+    }
+
+    status = srtp_dealloc(srtp_snd);
+    if (status) {
+        return status;
+    }
+
+    status = srtp_dealloc(srtp_recv);
+    if (status) {
+        return status;
+    }
+
+    return srtp_err_status_ok;
+}
+#endif
 
 /*
  * Test vectors taken from RFC 6904, Appendix A
@@ -2291,6 +2527,30 @@ srtp_test_update() {
 
   free(msg);
 
+  /* update send ctx with same test_key t verify update works*/
+  policy.ssrc.type = ssrc_any_outbound;
+  policy.key = test_key;
+  status = srtp_update(srtp_snd, &policy);
+  if (status)
+    return status;
+
+  msg = srtp_create_test_packet(msg_len_octets, ssrc);
+  if (msg == NULL)
+    return srtp_err_status_alloc_fail;
+  msg->seq = htons(2);
+
+  protected_msg_len_octets = msg_len_octets;
+  status = srtp_protect(srtp_snd, msg, &protected_msg_len_octets);
+  if (status)
+    return srtp_err_status_fail;
+
+  status = srtp_unprotect(srtp_recv, msg, &protected_msg_len_octets);
+  if (status)
+    return status;
+
+  free(msg);
+
+
   /* update send ctx to use test_alt_key */
   policy.ssrc.type = ssrc_any_outbound;
   policy.key = test_alt_key;
@@ -2302,7 +2562,7 @@ srtp_test_update() {
   msg = srtp_create_test_packet(msg_len_octets, ssrc);
   if (msg == NULL)
     return srtp_err_status_alloc_fail;
-  msg->seq = htons(2);
+  msg->seq = htons(3);
 
   protected_msg_len_octets = msg_len_octets;
   status = srtp_protect(srtp_snd, msg, &protected_msg_len_octets);

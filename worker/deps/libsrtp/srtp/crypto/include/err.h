@@ -50,6 +50,10 @@
 #include <stdarg.h>
 #include "srtp.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @defgroup Error Error Codes
  *
@@ -129,6 +133,10 @@ typedef struct {
 
 #define debug_off(mod)
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* ERR_H */

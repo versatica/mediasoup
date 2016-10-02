@@ -47,6 +47,7 @@
 #define AES_ICM_H
 
 #include "cipher.h"
+#include "datatypes.h"
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 
@@ -68,9 +69,8 @@
 typedef struct {
     v128_t counter;                /* holds the counter value          */
     v128_t offset;                 /* initial offset value             */
-    v256_t key;
     int key_size;
-    EVP_CIPHER_CTX ctx;
+    EVP_CIPHER_CTX* ctx;
 } srtp_aes_icm_ctx_t;
 
 #endif /* AES_ICM_H */

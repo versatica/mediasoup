@@ -45,6 +45,10 @@
 #ifndef GETOPT_S_H
 #define GETOPT_S_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* 
  * getopt_s(), optarg_s, and optind_s are small, locally defined
  * versions of the POSIX standard getopt() interface.
@@ -56,5 +60,9 @@ getopt_s(int argc, char * const argv[], const char *optstring);
 extern char *optarg_s;    /* defined in getopt.c */
 
 extern int optind_s;      /* defined in getopt.c */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* GETOPT_S_H */

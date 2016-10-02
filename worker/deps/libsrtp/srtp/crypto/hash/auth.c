@@ -48,6 +48,8 @@
 #endif
 
 #include "auth.h"
+#include "err.h"                /* for srtp_debug */
+#include "datatypes.h"          /* for octet_string */
 
 /* the debug module for authentiation */
 
@@ -110,25 +112,25 @@ srtp_auth_type_test (const srtp_auth_type_t *at, const srtp_auth_test_case_t *te
         }
 
         /* allocate auth */
-        status = auth_type_alloc(at, &a, test_case->key_length_octets,
+        status = srtp_auth_type_alloc(at, &a, test_case->key_length_octets,
                                  test_case->tag_length_octets);
         if (status) {
             return status;
         }
 
         /* initialize auth */
-        status = auth_init(a, test_case->key);
+        status = srtp_auth_init(a, test_case->key);
         if (status) {
-            auth_dealloc(a);
+            srtp_auth_dealloc(a);
             return status;
         }
 
         /* zeroize tag then compute */
         octet_string_set_to_zero(tag, test_case->tag_length_octets);
-        status = auth_compute(a, test_case->data,
+        status = srtp_auth_compute(a, test_case->data,
                               test_case->data_length_octets, tag);
         if (status) {
-            auth_dealloc(a);
+            srtp_auth_dealloc(a);
             return status;
         }
 
@@ -154,12 +156,12 @@ srtp_auth_type_test (const srtp_auth_type_t *at, const srtp_auth_test_case_t *te
             }
         }
         if (status) {
-            auth_dealloc(a);
+            srtp_auth_dealloc(a);
             return srtp_err_status_algo_fail;
         }
 
         /* deallocate the auth function */
-        status = auth_dealloc(a);
+        status = srtp_auth_dealloc(a);
         if (status) {
             return status;
         }

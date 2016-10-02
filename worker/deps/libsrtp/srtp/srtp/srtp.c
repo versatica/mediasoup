@@ -79,6 +79,9 @@ srtp_debug_module_t mod_srtp = {
 
 static srtp_err_status_t
 srtp_validate_rtp_header(void *rtp_hdr, int *pkt_octet_len) {
+  if (*pkt_octet_len < octets_in_rtp_header)
+    return srtp_err_status_bad_param;
+
   srtp_hdr_t *hdr = (srtp_hdr_t *)rtp_hdr;
 
   /* Check RTP header length */
@@ -151,7 +154,7 @@ srtp_stream_free(srtp_stream_ctx_t *str) {
     srtp_crypto_free(str->enc_xtn_hdr);
   }
   if (str->rtcp_auth) {
-    auth_dealloc(str->rtcp_auth);
+    srtp_auth_dealloc(str->rtcp_auth);
   }
   if (str->rtcp_cipher) {
     srtp_cipher_dealloc(str->rtcp_cipher);
@@ -160,7 +163,7 @@ srtp_stream_free(srtp_stream_ctx_t *str) {
     srtp_crypto_free(str->limit);
   }
   if (str->rtp_auth) {
-    auth_dealloc(str->rtp_auth);
+    srtp_auth_dealloc(str->rtp_auth);
   }
   if (str->rtp_cipher) {
     srtp_cipher_dealloc(str->rtp_cipher);
@@ -318,7 +321,7 @@ srtp_stream_dealloc(srtp_stream_ctx_t *stream, srtp_stream_ctx_t *stream_templat
       && stream->rtp_auth == stream_template->rtp_auth) {
     /* do nothing */
   } else {
-    status = auth_dealloc(stream->rtp_auth);
+    status = srtp_auth_dealloc(stream->rtp_auth);
     if (status)
       return status;
   }
@@ -361,7 +364,7 @@ srtp_stream_dealloc(srtp_stream_ctx_t *stream, srtp_stream_ctx_t *stream_templat
       && stream->rtcp_auth == stream_template->rtcp_auth) {
     /* do nothing */
   } else {
-    status = auth_dealloc(stream->rtcp_auth);
+    status = srtp_auth_dealloc(stream->rtcp_auth);
     if (status)
       return status;
   }
@@ -408,7 +411,7 @@ srtp_stream_clone(const srtp_stream_ctx_t *stream_template,
   srtp_err_status_t status;
   srtp_stream_ctx_t *str;
 
-  debug_print(mod_srtp, "cloning stream (SSRC: 0x%08x)", ssrc);
+  debug_print(mod_srtp, "cloning stream (SSRC: 0x%08x)", ntohl(ssrc));
 
   /* allocate srtp stream and set str_ptr */
   str = (srtp_stream_ctx_t *) srtp_crypto_alloc(sizeof(srtp_stream_ctx_t));
@@ -604,7 +607,7 @@ static srtp_err_status_t srtp_kdf_generate(srtp_kdf_t *kdf, srtp_prf_label label
     v128_set_to_zero(&nonce);
     nonce.v8[7] = label;
  
-    status = srtp_cipher_set_iv(kdf->cipher, (uint8_t*)&nonce, direction_encrypt);
+    status = srtp_cipher_set_iv(kdf->cipher, (uint8_t*)&nonce, srtp_direction_encrypt);
     if (status) return status;
   
     /* generate keystream output */
@@ -846,7 +849,7 @@ srtp_stream_init_keys(srtp_stream_ctx_t *srtp, const void *key) {
 				      srtp_auth_get_key_length(srtp->rtp_auth))); 
 
   /* initialize auth function */
-  stat = auth_init(srtp->rtp_auth, tmp_key);
+  stat = srtp_auth_init(srtp->rtp_auth, tmp_key);
   if (stat) {
     /* zeroize temp buffer */
     octet_string_set_to_zero(tmp_key, MAX_SRTP_KEY_LEN);
@@ -917,7 +920,7 @@ srtp_stream_init_keys(srtp_stream_ctx_t *srtp, const void *key) {
 		     srtp_auth_get_key_length(srtp->rtcp_auth))); 
 
   /* initialize auth function */
-  stat = auth_init(srtp->rtcp_auth, tmp_key);
+  stat = srtp_auth_init(srtp->rtcp_auth, tmp_key);
   if (stat) {
     /* zeroize temp buffer */
     octet_string_set_to_zero(tmp_key, MAX_SRTP_KEY_LEN);
@@ -1345,12 +1348,12 @@ srtp_protect_aead (srtp_ctx_t *ctx, srtp_stream_ctx_t *stream,
     est = be64_to_cpu(est << 16);
 #endif
 
-    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, direction_encrypt);
+    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
     if (!status && stream->rtp_xtn_hdr_cipher) {
       iv.v32[0] = 0;
       iv.v32[1] = hdr->ssrc;
       iv.v64[1] = est;
-      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, direction_encrypt);
+      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
     }
     if (status) {
         return srtp_err_status_cipher_fail;
@@ -1433,7 +1436,7 @@ srtp_unprotect_aead (srtp_ctx_t *ctx, srtp_stream_ctx_t *stream, int delta,
      * AEAD uses a new IV formation method 
      */
     srtp_calc_aead_iv(stream, &iv, &est, hdr);
-    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, direction_decrypt);
+    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
     if (!status && stream->rtp_xtn_hdr_cipher) {
       iv.v32[0] = 0;
       iv.v32[1] = hdr->ssrc;
@@ -1443,7 +1446,7 @@ srtp_unprotect_aead (srtp_ctx_t *ctx, srtp_stream_ctx_t *stream, int delta,
 #else
       iv.v64[1] = be64_to_cpu(est << 16);
 #endif
-      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, direction_encrypt);
+      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
     }
     if (status) {
         return srtp_err_status_cipher_fail;
@@ -1757,9 +1760,9 @@ srtp_unprotect_aead (srtp_ctx_t *ctx, srtp_stream_ctx_t *stream, int delta,
 #else
      iv.v64[1] = be64_to_cpu(est << 16);
 #endif
-     status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, direction_encrypt);
+     status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
      if (!status && stream->rtp_xtn_hdr_cipher) {
-       status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, direction_encrypt);
+       status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
      }
    } else {  
      v128_t iv;
@@ -1772,9 +1775,9 @@ srtp_unprotect_aead (srtp_ctx_t *ctx, srtp_stream_ctx_t *stream, int delta,
      iv.v64[0] = 0;
 #endif
      iv.v64[1] = be64_to_cpu(est);
-     status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, direction_encrypt);
+     status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
      if (!status && stream->rtp_xtn_hdr_cipher) {
-       status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, direction_encrypt);
+       status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
      }
    }
    if (status)
@@ -1830,17 +1833,17 @@ srtp_unprotect_aead (srtp_ctx_t *ctx, srtp_stream_ctx_t *stream, int delta,
   if (auth_start) {        
 
     /* initialize auth func context */
-    status = auth_start(stream->rtp_auth);
+    status = srtp_auth_start(stream->rtp_auth);
     if (status) return status;
 
     /* run auth func over packet */
-    status = auth_update(stream->rtp_auth, 
+    status = srtp_auth_update(stream->rtp_auth,
 			 (uint8_t *)auth_start, *pkt_octet_len);
     if (status) return status;
     
     /* run auth func over ROC, put result into auth_tag */
     debug_print(mod_srtp, "estimated packet index: %016llx", est);
-    status = auth_compute(stream->rtp_auth, (uint8_t *)&est, 4, auth_tag); 
+    status = srtp_auth_compute(stream->rtp_auth, (uint8_t *)&est, 4, auth_tag);
     debug_print(mod_srtp, "srtp auth tag:    %s", 
 		srtp_octet_string_hex_string(auth_tag, tag_len));
     if (status)
@@ -1899,7 +1902,7 @@ srtp_unprotect(srtp_ctx_t *ctx, void *srtp_hdr, int *pkt_octet_len) {
     if (ctx->stream_template != NULL) {
       stream = ctx->stream_template;
       debug_print(mod_srtp, "using provisional stream (SSRC: 0x%08x)",
-		  hdr->ssrc);
+		  ntohl(hdr->ssrc));
       
       /* 
        * set estimated packet index to sequence number from header,
@@ -1965,9 +1968,9 @@ srtp_unprotect(srtp_ctx_t *ctx, void *srtp_hdr, int *pkt_octet_len) {
 #else
     iv.v64[1] = be64_to_cpu(est << 16);
 #endif
-    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, direction_decrypt);
+    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
     if (!status && stream->rtp_xtn_hdr_cipher) {
-      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, direction_decrypt);
+      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
     }
   } else {  
     
@@ -1979,9 +1982,9 @@ srtp_unprotect(srtp_ctx_t *ctx, void *srtp_hdr, int *pkt_octet_len) {
     iv.v64[0] = 0;
 #endif
     iv.v64[1] = be64_to_cpu(est);
-    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, direction_decrypt);
+    status = srtp_cipher_set_iv(stream->rtp_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
     if (!status && stream->rtp_xtn_hdr_cipher) {
-      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, direction_decrypt);
+      status = srtp_cipher_set_iv(stream->rtp_xtn_hdr_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
     }
   }
   if (status)
@@ -2055,15 +2058,15 @@ srtp_unprotect(srtp_ctx_t *ctx, void *srtp_hdr, int *pkt_octet_len) {
     } 
 
     /* initialize auth func context */
-    status = auth_start(stream->rtp_auth);
+    status = srtp_auth_start(stream->rtp_auth);
     if (status) return status;
  
     /* now compute auth function over packet */
-    status = auth_update(stream->rtp_auth, (uint8_t *)auth_start,  
+    status = srtp_auth_update(stream->rtp_auth, (uint8_t *)auth_start,
 			 *pkt_octet_len - tag_len);
 
     /* run auth func over ROC, then write tmp tag */
-    status = auth_compute(stream->rtp_auth, (uint8_t *)&est, 4, tmp_tag);  
+    status = srtp_auth_compute(stream->rtp_auth, (uint8_t *)&est, 4, tmp_tag);
 
     debug_print(mod_srtp, "computed auth tag:    %s", 
 		srtp_octet_string_hex_string(tmp_tag, tag_len));
@@ -2955,7 +2958,7 @@ srtp_protect_rtcp_aead (srtp_t ctx, srtp_stream_ctx_t *stream,
      * Calculating the IV and pass it down to the cipher 
      */
     srtp_calc_aead_iv_srtcp(stream, &iv, seq_num, hdr);
-    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, direction_encrypt);
+    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
     if (status) {
         return srtp_err_status_cipher_fail;
     }
@@ -3100,7 +3103,7 @@ srtp_unprotect_rtcp_aead (srtp_t ctx, srtp_stream_ctx_t *stream,
      * Calculate and set the IV
      */
     srtp_calc_aead_iv_srtcp(stream, &iv, seq_num, hdr);
-    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, direction_decrypt);
+    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
     if (status) {
         return srtp_err_status_cipher_fail;
     }
@@ -3343,7 +3346,7 @@ srtp_protect_rtcp(srtp_t ctx, void *rtcp_hdr, int *pkt_octet_len) {
     iv.v32[1] = hdr->ssrc;  /* still in network order! */
     iv.v32[2] = htonl(seq_num >> 16);
     iv.v32[3] = htonl(seq_num << 16);
-    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, direction_encrypt);
+    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
 
   } else {  
     v128_t iv;
@@ -3353,7 +3356,7 @@ srtp_protect_rtcp(srtp_t ctx, void *rtcp_hdr, int *pkt_octet_len) {
     iv.v32[1] = 0;
     iv.v32[2] = 0;
     iv.v32[3] = htonl(seq_num);
-    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, direction_encrypt);
+    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, srtp_direction_encrypt);
   }
   if (status)
     return srtp_err_status_cipher_fail;
@@ -3386,13 +3389,13 @@ srtp_protect_rtcp(srtp_t ctx, void *rtcp_hdr, int *pkt_octet_len) {
   }
 
   /* initialize auth func context */
-  auth_start(stream->rtcp_auth);
+  srtp_auth_start(stream->rtcp_auth);
 
   /* 
    * run auth func over packet (including trailer), and write the
    * result at auth_tag 
    */
-  status = auth_compute(stream->rtcp_auth, 
+  status = srtp_auth_compute(stream->rtcp_auth,
 			(uint8_t *)auth_start, 
 			(*pkt_octet_len) + sizeof(srtcp_trailer_t), 
 			auth_tag);
@@ -3464,7 +3467,7 @@ srtp_unprotect_rtcp(srtp_t ctx, void *srtcp_hdr, int *pkt_octet_len) {
       }
 
       debug_print(mod_srtp, "srtcp using provisional stream (SSRC: 0x%08x)", 
-		  hdr->ssrc);
+		  ntohl(hdr->ssrc));
     } else {
       /* no template stream, so we return an error */
       return srtp_err_status_no_ctx;
@@ -3564,7 +3567,7 @@ srtp_unprotect_rtcp(srtp_t ctx, void *srtcp_hdr, int *pkt_octet_len) {
     iv.v32[1] = hdr->ssrc; /* still in network order! */
     iv.v32[2] = htonl(seq_num >> 16);
     iv.v32[3] = htonl(seq_num << 16);
-    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, direction_decrypt);
+    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
 
   } else {  
     v128_t iv;
@@ -3574,17 +3577,17 @@ srtp_unprotect_rtcp(srtp_t ctx, void *srtcp_hdr, int *pkt_octet_len) {
     iv.v32[1] = 0;
     iv.v32[2] = 0;
     iv.v32[3] = htonl(seq_num);
-    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, direction_decrypt);
+    status = srtp_cipher_set_iv(stream->rtcp_cipher, (uint8_t*)&iv, srtp_direction_decrypt);
 
   }
   if (status)
     return srtp_err_status_cipher_fail;
 
   /* initialize auth func context */
-  auth_start(stream->rtcp_auth);
+  srtp_auth_start(stream->rtcp_auth);
 
   /* run auth func over packet, put result into tmp_tag */
-  status = auth_compute(stream->rtcp_auth, (uint8_t *)auth_start,  
+  status = srtp_auth_compute(stream->rtcp_auth, (uint8_t *)auth_start,
 			auth_len, tmp_tag);
   debug_print(mod_srtp, "srtcp computed tag:       %s", 
 	      srtp_octet_string_hex_string(tmp_tag, tag_len));

@@ -31,10 +31,22 @@ namespace Json {
 #else
 #define ALIGNAS(byte_alignment)
 #endif
-static const unsigned char ALIGNAS(8) kNull[sizeof(Value)] = { 0 };
-const unsigned char& kNullRef = kNull[0];
-const Value& Value::null = reinterpret_cast<const Value&>(kNullRef);
-const Value& Value::nullRef = null;
+//static const unsigned char ALIGNAS(8) kNull[sizeof(Value)] = { 0 };
+//const unsigned char& kNullRef = kNull[0];
+//const Value& Value::null = reinterpret_cast<const Value&>(kNullRef);
+//const Value& Value::nullRef = null;
+
+// static
+Value const& Value::nullSingleton()
+{
+ static Value const nullStatic;
+ return nullStatic;
+}
+
+// for backwards compatibility, we'll leave these global references around, but DO NOT
+// use them in JSONCPP library code any more!
+Value const& Value::null = Value::nullSingleton();
+Value const& Value::nullRef = Value::nullSingleton();
 
 const Int Value::minInt = Int(~(UInt(-1) / 2));
 const Int Value::maxInt = Int(UInt(-1) / 2);
@@ -157,7 +169,7 @@ static inline void releaseStringValue(char* value, unsigned length) {
 static inline void releasePrefixedStringValue(char* value) {
   free(value);
 }
-static inline void releaseStringValue(char* value, unsigned length) {
+static inline void releaseStringValue(char* value, unsigned) {
   free(value);
 }
 #endif // JSONCPP_USING_SECURE_MEMORY
@@ -331,6 +343,7 @@ bool Value::CZString::isStaticString() const { return storage_.policy_ == noDupl
  * This optimization is used in ValueInternalMap fast allocator.
  */
 Value::Value(ValueType vtype) {
+  static char const empty[] = "";
   initBasic(vtype);
   switch (vtype) {
   case nullValue:
@@ -343,7 +356,8 @@ Value::Value(ValueType vtype) {
     value_.real_ = 0.0;
     break;
   case stringValue:
-    value_.string_ = 0;
+    // allocated_ == false, so this is safe.
+    value_.string_ = const_cast<char*>(static_cast<char const*>(empty));
     break;
   case arrayValue:
   case objectValue:
@@ -488,8 +502,7 @@ Value::~Value() {
     JSON_ASSERT_UNREACHABLE;
   }
 
-  if (comments_)
-    delete[] comments_;
+  delete[] comments_;
 
   value_.uint_ = 0;
 }
@@ -972,7 +985,7 @@ Value& Value::operator[](ArrayIndex index) {
   if (it != value_.map_->end() && (*it).first == key)
     return (*it).second;
 
-  ObjectValues::value_type defaultValue(key, nullRef);
+  ObjectValues::value_type defaultValue(key, nullSingleton());
   it = value_.map_->insert(it, defaultValue);
   return (*it).second;
 }
@@ -989,11 +1002,11 @@ const Value& Value::operator[](ArrayIndex index) const {
       type_ == nullValue || type_ == arrayValue,
       "in Json::Value::operator[](ArrayIndex)const: requires arrayValue");
   if (type_ == nullValue)
-    return nullRef;
+    return nullSingleton();
   CZString key(index);
   ObjectValues::const_iterator it = value_.map_->find(key);
   if (it == value_.map_->end())
-    return nullRef;
+    return nullSingleton();
   return (*it).second;
 }
 
@@ -1027,7 +1040,7 @@ Value& Value::resolveReference(const char* key) {
   if (it != value_.map_->end() && (*it).first == actualKey)
     return (*it).second;
 
-  ObjectValues::value_type defaultValue(actualKey, nullRef);
+  ObjectValues::value_type defaultValue(actualKey, nullSingleton());
   it = value_.map_->insert(it, defaultValue);
   Value& value = (*it).second;
   return value;
@@ -1047,7 +1060,7 @@ Value& Value::resolveReference(char const* key, char const* cend)
   if (it != value_.map_->end() && (*it).first == actualKey)
     return (*it).second;
 
-  ObjectValues::value_type defaultValue(actualKey, nullRef);
+  ObjectValues::value_type defaultValue(actualKey, nullSingleton());
   it = value_.map_->insert(it, defaultValue);
   Value& value = (*it).second;
   return value;
@@ -1055,7 +1068,7 @@ Value& Value::resolveReference(char const* key, char const* cend)
 
 Value Value::get(ArrayIndex index, const Value& defaultValue) const {
   const Value* value = &((*this)[index]);
-  return value == &nullRef ? defaultValue : *value;
+  return value == &nullSingleton() ? defaultValue : *value;
 }
 
 bool Value::isValidIndex(ArrayIndex index) const { return index < size(); }
@@ -1074,13 +1087,13 @@ Value const* Value::find(char const* key, char const* cend) const
 const Value& Value::operator[](const char* key) const
 {
   Value const* found = find(key, key + strlen(key));
-  if (!found) return nullRef;
+  if (!found) return nullSingleton();
   return *found;
 }
 Value const& Value::operator[](JSONCPP_STRING const& key) const
 {
   Value const* found = find(key.data(), key.data() + key.length());
-  if (!found) return nullRef;
+  if (!found) return nullSingleton();
   return *found;
 }
 
@@ -1103,7 +1116,7 @@ Value& Value::operator[](const CppTL::ConstString& key) {
 Value const& Value::operator[](CppTL::ConstString const& key) const
 {
   Value const* found = find(key.c_str(), key.end_c_str());
-  if (!found) return nullRef;
+  if (!found) return nullSingleton();
   return *found;
 }
 #endif
@@ -1151,7 +1164,7 @@ Value Value::removeMember(const char* key)
   JSON_ASSERT_MESSAGE(type_ == nullValue || type_ == objectValue,
                       "in Json::Value::removeMember(): requires objectValue");
   if (type_ == nullValue)
-    return nullRef;
+    return nullSingleton();
 
   Value removed;  // null
   removeMember(key, key + strlen(key), &removed);
@@ -1491,12 +1504,12 @@ void Path::makePath(const JSONCPP_STRING& path, const InArgs& in) {
           index = index * 10 + ArrayIndex(*current - '0');
         args_.push_back(index);
       }
-      if (current == end || *current++ != ']')
+      if (current == end || *++current != ']')
         invalidPath(path, int(current - path.c_str()));
     } else if (*current == '%') {
       addPathInArg(path, in, itInArg, PathArgument::kindKey);
       ++current;
-    } else if (*current == '.') {
+    } else if (*current == '.' || *current == ']') {
       ++current;
     } else {
       const char* beginName = current;
@@ -1516,7 +1529,7 @@ void Path::addPathInArg(const JSONCPP_STRING& /*path*/,
   } else if ((*itInArg)->kind_ != kind) {
     // Error: bad argument type
   } else {
-    args_.push_back(**itInArg);
+    args_.push_back(**itInArg++);
   }
 }
 
@@ -1531,16 +1544,19 @@ const Value& Path::resolve(const Value& root) const {
     if (arg.kind_ == PathArgument::kindIndex) {
       if (!node->isArray() || !node->isValidIndex(arg.index_)) {
         // Error: unable to resolve path (array value expected at position...
+        return Value::null;
       }
       node = &((*node)[arg.index_]);
     } else if (arg.kind_ == PathArgument::kindKey) {
       if (!node->isObject()) {
         // Error: unable to resolve path (object value expected at position...)
+        return Value::null;
       }
       node = &((*node)[arg.key_]);
-      if (node == &Value::nullRef) {
+      if (node == &Value::nullSingleton()) {
         // Error: unable to resolve path (object has no member named '' at
         // position...)
+        return Value::null;
       }
     }
   }
@@ -1559,7 +1575,7 @@ Value Path::resolve(const Value& root, const Value& defaultValue) const {
       if (!node->isObject())
         return defaultValue;
       node = &((*node)[arg.key_]);
-      if (node == &Value::nullRef)
+      if (node == &Value::nullSingleton())
         return defaultValue;
     }
   }

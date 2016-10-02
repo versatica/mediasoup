@@ -22,16 +22,21 @@ IF(NOT WIN32)
     ENDIF()
 ENDIF()
 
+# Enable runtime search path support for dynamic libraries on OSX
+IF(APPLE)
+    SET(CMAKE_MACOSX_RPATH 1)
+ENDIF()
+
 SET(DEBUG_LIBNAME_SUFFIX "" CACHE STRING "Optional suffix to append to the library name for a debug build")
 SET(LIB_SUFFIX "" CACHE STRING "Optional arch-dependent suffix for the library installation directory")
 
 SET(RUNTIME_INSTALL_DIR bin
     CACHE PATH "Install dir for executables and dlls")
-SET(ARCHIVE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}
+SET(ARCHIVE_INSTALL_DIR lib${LIB_SUFFIX}
     CACHE PATH "Install dir for static libraries")
-SET(LIBRARY_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}
+SET(LIBRARY_INSTALL_DIR lib${LIB_SUFFIX}
     CACHE PATH "Install dir for shared libraries")
-SET(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include
+SET(INCLUDE_INSTALL_DIR include
     CACHE PATH "Install dir for headers")
 SET(PACKAGE_INSTALL_DIR lib${LIB_SUFFIX}/cmake
     CACHE PATH "Install dir for cmake package config files")
@@ -64,11 +69,12 @@ ENDMACRO()
 #SET( JSONCPP_VERSION_MAJOR X )
 #SET( JSONCPP_VERSION_MINOR Y )
 #SET( JSONCPP_VERSION_PATCH Z )
-SET( JSONCPP_VERSION 1.7.2 )
+SET( JSONCPP_VERSION 1.7.7 )
 jsoncpp_parse_version( ${JSONCPP_VERSION} JSONCPP_VERSION )
 #IF(NOT JSONCPP_VERSION_FOUND)
 #    MESSAGE(FATAL_ERROR "Failed to parse version string properly. Expect X.Y.Z")
 #ENDIF(NOT JSONCPP_VERSION_FOUND)
+SET( JSONCPP_SOVERSION 11 )
 SET( JSONCPP_USE_SECURE_MEMORY "0" CACHE STRING "-D...=1 to use memory-wiping allocator for STL" )
 
 MESSAGE(STATUS "JsonCpp Version: ${JSONCPP_VERSION_MAJOR}.${JSONCPP_VERSION_MINOR}.${JSONCPP_VERSION_PATCH}")
@@ -107,8 +113,15 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wconversion -Wshadow -Werror=conversion -Werror=sign-compare")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wconversion -Wshadow -Wextra -Werror=conversion")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wconversion -Wshadow -Wextra")
   # not yet ready for -Wsign-conversion
+
+  if (JSONCPP_WITH_STRICT_ISO AND NOT JSONCPP_WITH_WARNING_AS_ERROR)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=conversion -pedantic")
+  endif ()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  # using Intel compiler
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wconversion -Wshadow -Wextra -Werror=conversion")
 
   if (JSONCPP_WITH_STRICT_ISO AND NOT JSONCPP_WITH_WARNING_AS_ERROR)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")

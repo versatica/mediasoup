@@ -46,11 +46,11 @@
 #ifndef SRTP_H
 #define SRTP_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 /**
  * @defgroup SRTP Secure RTP

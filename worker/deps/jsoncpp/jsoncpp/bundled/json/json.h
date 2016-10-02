@@ -87,10 +87,10 @@ license you like.
 #ifndef JSON_VERSION_H_INCLUDED
 # define JSON_VERSION_H_INCLUDED
 
-# define JSONCPP_VERSION_STRING "1.7.2"
+# define JSONCPP_VERSION_STRING "1.7.7"
 # define JSONCPP_VERSION_MAJOR 1
 # define JSONCPP_VERSION_MINOR 7
-# define JSONCPP_VERSION_PATCH 2
+# define JSONCPP_VERSION_PATCH 7
 # define JSONCPP_VERSION_QUALIFIER
 # define JSONCPP_VERSION_HEXA ((JSONCPP_VERSION_MAJOR << 24) | (JSONCPP_VERSION_MINOR << 16) | (JSONCPP_VERSION_PATCH << 8))
 
@@ -113,114 +113,6 @@ license you like.
 
 
 // //////////////////////////////////////////////////////////////////////
-// Beginning of content of file: include/json/allocator.h
-// //////////////////////////////////////////////////////////////////////
-
-// Copyright 2007-2010 Baptiste Lepilleur
-// Distributed under MIT license, or public domain if desired and
-// recognized in your jurisdiction.
-// See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
-
-#ifndef CPPTL_JSON_ALLOCATOR_H_INCLUDED
-#define CPPTL_JSON_ALLOCATOR_H_INCLUDED
-
-#include <cstring>
-#include <memory>
-
-namespace Json {
-template<typename T>
-class SecureAllocator {
-	public:
-		// Type definitions
-		using value_type      = T;
-		using pointer         = T*;
-		using const_pointer   = const T*;
-		using reference       = T&;
-		using const_reference = const T&;
-		using size_type       = std::size_t;
-		using difference_type = std::ptrdiff_t;
-
-		/**
-		 * Allocate memory for N items using the standard allocator.
-		 */
-		pointer allocate(size_type n) {
-			// allocate using "global operator new"
-			return static_cast<pointer>(::operator new(n * sizeof(T)));
-		}
-
-		/**
-		 * Release memory which was allocated for N items at pointer P.
-		 *
-		 * The memory block is filled with zeroes before being released.
-		 * The pointer argument is tagged as "volatile" to prevent the
-		 * compiler optimizing out this critical step.
-		 */
-		void deallocate(volatile pointer p, size_type n) {
-			std::memset(p, 0, n * sizeof(T));
-			// free using "global operator delete"
-			::operator delete(p);
-		}
-
-		/**
-		 * Construct an item in-place at pointer P.
-		 */
-		template<typename... Args>
-		void construct(pointer p, Args&&... args) {
-			// construct using "placement new" and "perfect forwarding"
-			::new (static_cast<void*>(p)) T(std::forward<Args>(args)...);
-		}
-
-		size_type max_size() const {
-			return size_t(-1) / sizeof(T);
-		}
-
-		pointer address( reference x ) const {
-			return std::addressof(x);
-		}
-
-		const_pointer address( const_reference x ) const {
-			return std::addressof(x);
-		}
-
-		/**
-		 * Destroy an item in-place at pointer P.
-		 */
-		void destroy(pointer p) {
-			// destroy using "explicit destructor"
-			p->~T();
-		}
-
-		// Boilerplate
-		SecureAllocator() {}
-		template<typename U> SecureAllocator(const SecureAllocator<U>&) {}
-		template<typename U> struct rebind { using other = SecureAllocator<U>; };
-};
-
-
-template<typename T, typename U>
-bool operator==(const SecureAllocator<T>&, const SecureAllocator<U>&) {
-	return true;
-}
-
-template<typename T, typename U>
-bool operator!=(const SecureAllocator<T>&, const SecureAllocator<U>&) {
-	return false;
-}
-
-} //namespace Json
-
-#endif // CPPTL_JSON_ALLOCATOR_H_INCLUDED
-
-// //////////////////////////////////////////////////////////////////////
-// End of content of file: include/json/allocator.h
-// //////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-// //////////////////////////////////////////////////////////////////////
 // Beginning of content of file: include/json/config.h
 // //////////////////////////////////////////////////////////////////////
 
@@ -232,7 +124,8 @@ bool operator!=(const SecureAllocator<T>&, const SecureAllocator<U>&) {
 #ifndef JSON_CONFIG_H_INCLUDED
 #define JSON_CONFIG_H_INCLUDED
 #include <stddef.h>
-#include <string> //typdef String
+#include <string> //typedef String
+#include <stdint.h> //typedef int64_t, uint64_t
 
 /// If defined, indicates that json library is embedded in CppTL library.
 //# define JSON_IN_CPPTL 1
@@ -303,12 +196,16 @@ bool operator!=(const SecureAllocator<T>&, const SecureAllocator<U>&) {
 
 #endif // defined(_MSC_VER)
 
-#if defined(_MSC_VER) && _MSC_VER <= 1600 // MSVC <= 2010
-# define JSONCPP_OVERRIDE
-#else
+// In c++11 the override keyword allows you to explicity define that a function
+// is intended to override the base-class version.  This makes the code more
+// managable and fixes a set of common hard-to-find bugs.
+#if __cplusplus >= 201103L
 # define JSONCPP_OVERRIDE override
-#endif // MSVC <= 2010
-
+#elif defined(_MSC_VER) && _MSC_VER > 1600
+# define JSONCPP_OVERRIDE override
+#else
+# define JSONCPP_OVERRIDE
+#endif
 
 #ifndef JSON_HAS_RVALUE_REFERENCES
 
@@ -374,8 +271,8 @@ typedef unsigned int LargestUInt;
 typedef __int64 Int64;
 typedef unsigned __int64 UInt64;
 #else                 // if defined(_MSC_VER) // Other platforms, use long long
-typedef long long int Int64;
-typedef unsigned long long int UInt64;
+typedef int64_t Int64;
+typedef uint64_t UInt64;
 #endif // if defined(_MSC_VER)
 typedef Int64 LargestInt;
 typedef UInt64 LargestUInt;
@@ -725,6 +622,8 @@ public:
 
   static const Value& null;  ///< We regret this reference to a global instance; prefer the simpler Value().
   static const Value& nullRef;  ///< just a kludge for binary-compatibility; same as null
+  static Value const& nullSingleton(); ///< Prefer this to null or nullRef.
+
   /// Minimum signed integer value that can be stored in a Json::Value.
   static const LargestInt minLargestInt;
   /// Maximum signed integer value that can be stored in a Json::Value.

@@ -62,11 +62,11 @@
 #ifndef EKT_H
 #define EKT_H
 
+#include "srtp_priv.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "srtp_priv.h"
 
 #define SRTP_EKT_CIPHER_DEFAULT           1
 #define SRTP_EKT_CIPHER_AES_128_ECB       1

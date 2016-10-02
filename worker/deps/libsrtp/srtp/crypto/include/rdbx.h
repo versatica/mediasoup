@@ -50,6 +50,10 @@
 #include "datatypes.h"
 #include "err.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* #define ROC_TEST */
 
 #ifndef ROC_TEST
@@ -182,13 +186,8 @@ void srtp_index_advance(srtp_xtd_seq_num_t *pi, srtp_sequence_number_t s);
 int srtp_index_guess(const srtp_xtd_seq_num_t *local, srtp_xtd_seq_num_t *guess, srtp_sequence_number_t s);
 
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* RDBX_H */
-
-
-
-
-
-
-
-
-

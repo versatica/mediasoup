@@ -61,6 +61,10 @@
 # include <winsock2.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* if DATATYPES_USE_MACROS is defined, then little functions are macros */
 #define DATATYPES_USE_MACROS  
@@ -339,8 +343,10 @@ v128_set_bit_to(v128_t *x, int i, int y);
 #endif /* DATATYPES_USE_MACROS */
 
 /*
- * octet_string_is_eq(a,b, len) returns 1 if the length len strings a
- * and b are not equal, returns 0 otherwise
+ * octet_string_is_eq(a, b, len) returns 1 if the length len strings a
+ * and b are not equal. It returns 0 otherwise. The running time of the
+ * comparison depends only on len, making this safe to use for (e.g.)
+ * verifying authentication tags.
  */
 
 int
@@ -475,5 +481,9 @@ bitvector_left_shift(bitvector_t *x, int index);
 
 char *
 bitvector_bit_string(bitvector_t *x, char* buf, int len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DATATYPES_H */

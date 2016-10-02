@@ -3,6 +3,7 @@
 
 #if (_MSC_VER >= 1400)
 # define HAVE_RAND_S	1
+# define _CRT_RAND_S
 #endif
 
 /* Define if building for a CISC machine (e.g. Intel). */
@@ -10,9 +11,6 @@
 
 /* Define if building for a RISC machine (assume slow byte access). */
 /* #undef CPU_RISC */
-
-/* Path to random device */
-/* #define DEV_URANDOM "/dev/urandom" */
 
 /* Define to compile in dynamic debugging system. */
 #define ENABLE_DEBUGGING 1

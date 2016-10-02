@@ -59,7 +59,7 @@ srtp_debug_module_t srtp_mod_crypto_kernel = {
 };
 
 /*
- * other debug modules that can be included in the kernel
+ * other generic debug modules that can be included in the kernel
  */
 
 extern srtp_debug_module_t srtp_mod_auth;
@@ -82,6 +82,11 @@ extern srtp_cipher_type_t srtp_aes_gcm_128_openssl;
 extern srtp_cipher_type_t srtp_aes_gcm_256_openssl;
 #endif
 
+/* debug modules for cipher types */
+extern srtp_debug_module_t srtp_mod_aes_icm;
+#ifdef OPENSSL
+extern srtp_debug_module_t srtp_mod_aes_gcm;
+#endif
 
 /*
  * auth func types that can be included in the kernel
@@ -89,6 +94,9 @@ extern srtp_cipher_type_t srtp_aes_gcm_256_openssl;
 
 extern srtp_auth_type_t srtp_null_auth;
 extern srtp_auth_type_t srtp_hmac;
+
+/* debug modules for auth types */
+extern srtp_debug_module_t srtp_mod_hmac;
 
 /* crypto_kernel is a global variable, the only one of its datatype */
 
@@ -152,6 +160,10 @@ srtp_err_status_t srtp_crypto_kernel_init ()
     if (status) {
         return status;
     }
+    status = srtp_crypto_kernel_load_debug_module(&srtp_mod_aes_icm);
+    if (status) {
+        return status;
+    }
 #ifdef OPENSSL
 #ifndef SRTP_NO_AES192
     status = srtp_crypto_kernel_load_cipher_type(&srtp_aes_icm_192, SRTP_AES_192_ICM);
@@ -171,6 +183,10 @@ srtp_err_status_t srtp_crypto_kernel_init ()
     if (status) {
         return status;
     }
+    status = srtp_crypto_kernel_load_debug_module(&srtp_mod_aes_gcm);
+    if (status) {
+        return status;
+    }
 #endif
 
     /* load auth func types */
@@ -179,6 +195,10 @@ srtp_err_status_t srtp_crypto_kernel_init ()
         return status;
     }
     status = srtp_crypto_kernel_load_auth_type(&srtp_hmac, SRTP_HMAC_SHA1);
+    if (status) {
+        return status;
+    }
+    status = srtp_crypto_kernel_load_debug_module(&srtp_mod_hmac);
     if (status) {
         return status;
     }
@@ -354,12 +374,6 @@ static inline srtp_err_status_t srtp_crypto_kernel_do_load_cipher_type (const sr
     new_ctype->cipher_type = new_ct;
     new_ctype->id = id;
 
-    /* load debug module, if there is one present */
-    if (new_ct->debug != NULL) {
-        srtp_crypto_kernel_load_debug_module(new_ct->debug);
-    }
-    /* we could check for errors here */
-
     return srtp_err_status_ok;
 }
 
@@ -368,7 +382,7 @@ srtp_err_status_t srtp_crypto_kernel_load_cipher_type (const srtp_cipher_type_t 
     return srtp_crypto_kernel_do_load_cipher_type(new_ct, id, 0);
 }
 
-srtp_err_status_t srtp_crypto_kernel_replace_cipher_type (const srtp_cipher_type_t *new_ct, srtp_cipher_type_id_t id)
+srtp_err_status_t srtp_replace_cipher_type (const srtp_cipher_type_t *new_ct, srtp_cipher_type_id_t id)
 {
     return srtp_crypto_kernel_do_load_cipher_type(new_ct, id, 1);
 }
@@ -429,12 +443,6 @@ srtp_err_status_t srtp_crypto_kernel_do_load_auth_type (const srtp_auth_type_t *
     new_atype->auth_type = new_at;
     new_atype->id = id;
 
-    /* load debug module, if there is one present */
-    if (new_at->debug != NULL) {
-        srtp_crypto_kernel_load_debug_module(new_at->debug);
-    }
-    /* we could check for errors here */
-
     return srtp_err_status_ok;
 
 }
@@ -444,7 +452,7 @@ srtp_err_status_t srtp_crypto_kernel_load_auth_type (const srtp_auth_type_t *new
     return srtp_crypto_kernel_do_load_auth_type(new_at, id, 0);
 }
 
-srtp_err_status_t srtp_crypto_kernel_replace_auth_type (const srtp_auth_type_t *new_at, srtp_auth_type_id_t id)
+srtp_err_status_t srtp_replace_auth_type (const srtp_auth_type_t *new_at, srtp_auth_type_id_t id)
 {
     return srtp_crypto_kernel_do_load_auth_type(new_at, id, 1);
 }
@@ -507,7 +515,7 @@ const srtp_auth_type_t * srtp_crypto_kernel_get_auth_type (srtp_auth_type_id_t i
     return NULL;
 }
 
-srtp_err_status_t srtp_crypto_kernel_alloc_auth (srtp_auth_type_id_t id, auth_pointer_t *ap, int key_len, int tag_len)
+srtp_err_status_t srtp_crypto_kernel_alloc_auth (srtp_auth_type_id_t id, srtp_auth_pointer_t *ap, int key_len, int tag_len)
 {
     const srtp_auth_type_t *at;
 

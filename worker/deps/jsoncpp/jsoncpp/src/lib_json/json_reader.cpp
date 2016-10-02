@@ -401,7 +401,7 @@ Reader::addComment(Location begin, Location end, CommentPlacement placement) {
 }
 
 bool Reader::readCStyleComment() {
-  while (current_ != end_) {
+  while ((current_ + 1) < end_) {
     Char c = getNextChar();
     if (c == '*' && *current_ == '/')
       break;
@@ -430,25 +430,25 @@ void Reader::readNumber() {
   char c = '0'; // stopgap for already consumed character
   // integral part
   while (c >= '0' && c <= '9')
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
   // fractional part
   if (c == '.') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
   // exponential part
   if (c == 'e' || c == 'E') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     if (c == '+' || c == '-')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
 }
 
 bool Reader::readString() {
-  Char c = 0;
+  Char c = '\0';
   while (current_ != end_) {
     c = getNextChar();
     if (c == '\\')
@@ -520,7 +520,7 @@ bool Reader::readArray(Token& tokenStart) {
   currentValue().swapPayload(init);
   currentValue().setOffsetStart(tokenStart.start_ - begin_);
   skipSpaces();
-  if (*current_ == ']') // empty array
+  if (current_ != end_ && *current_ == ']') // empty array
   {
     Token endArray;
     readToken(endArray);
@@ -1068,7 +1068,7 @@ bool OurReader::parse(const char* beginDoc,
   Token token;
   skipCommentTokens(token);
   if (features_.failIfExtra_) {
-    if (token.type_ != tokenError && token.type_ != tokenEndOfStream) {
+    if ((features_.strictRoot_ || token.type_ != tokenError) && token.type_ != tokenEndOfStream) {
       addError("Extra non-whitespace after JSON value.", token);
       return false;
     }
@@ -1361,7 +1361,7 @@ OurReader::addComment(Location begin, Location end, CommentPlacement placement) 
 }
 
 bool OurReader::readCStyleComment() {
-  while (current_ != end_) {
+  while ((current_ + 1) < end_) {
     Char c = getNextChar();
     if (c == '*' && *current_ == '/')
       break;
@@ -1394,20 +1394,20 @@ bool OurReader::readNumber(bool checkInf) {
   char c = '0'; // stopgap for already consumed character
   // integral part
   while (c >= '0' && c <= '9')
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
   // fractional part
   if (c == '.') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
   // exponential part
   if (c == 'e' || c == 'E') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     if (c == '+' || c == '-')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
   return true;
 }
@@ -1503,7 +1503,7 @@ bool OurReader::readArray(Token& tokenStart) {
   currentValue().swapPayload(init);
   currentValue().setOffsetStart(tokenStart.start_ - begin_);
   skipSpaces();
-  if (*current_ == ']') // empty array
+  if (current_ != end_ && *current_ == ']') // empty array
   {
     Token endArray;
     readToken(endArray);
@@ -1619,6 +1619,7 @@ bool OurReader::decodeDouble(Token& token, Value& decoded) {
     Char buffer[bufferSize + 1];
     memcpy(buffer, token.start_, ulength);
     buffer[length] = 0;
+    fixNumericLocaleInput(buffer, buffer + length);
     count = sscanf(buffer, format, &value);
   } else {
     JSONCPP_STRING buffer(token.start_, token.end_);

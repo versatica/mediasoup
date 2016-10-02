@@ -50,10 +50,18 @@
 #include "datatypes.h"       /* for uint8_t                       */
 #include "err.h"             /* for srtp_err_status_t             */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 srtp_err_status_t stat_test_monobit(uint8_t *data);
 
 srtp_err_status_t stat_test_poker(uint8_t *data);
 
 srtp_err_status_t stat_test_runs(uint8_t *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* STAT_H */

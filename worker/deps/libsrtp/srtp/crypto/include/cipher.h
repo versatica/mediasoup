@@ -47,85 +47,82 @@
 #define CIPHER_H
 
 #include "srtp.h"
-#include "datatypes.h"
-#include "rdbx.h"               /* for srtp_xtd_seq_num_t */
-#include "err.h"                /* for error codes  */
 #include "crypto_types.h"       /* for values of cipher_type_id_t */
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
- * cipher_direction_t defines a particular cipher operation.
+ * srtp_cipher_direction_t defines a particular cipher operation.
  *
- * A cipher_direction_t is an enum that describes a particular cipher
+ * A srtp_cipher_direction_t is an enum that describes a particular cipher
  * operation, i.e. encryption or decryption.  For some ciphers, this
  * distinction does not matter, but for others, it is essential.
  */
 typedef enum {
-    direction_encrypt, /**< encryption (convert plaintext to ciphertext) */
-    direction_decrypt, /**< decryption (convert ciphertext to plaintext) */
-    direction_any      /**< encryption or decryption                     */
+    srtp_direction_encrypt, /**< encryption (convert plaintext to ciphertext) */
+    srtp_direction_decrypt, /**< decryption (convert ciphertext to plaintext) */
+    srtp_direction_any      /**< encryption or decryption                     */
 } srtp_cipher_direction_t;
 
 /*
- * the cipher_pointer and cipher_type_pointer definitions are needed
- * as cipher_t and cipher_type_t are not yet defined
+ * the srtp_cipher_pointer_t definition is needed
+ * as srtp_cipher_t is not yet defined
  */
 typedef struct srtp_cipher_t      *srtp_cipher_pointer_t;
 
 /*
- *  a cipher_alloc_func_t allocates (but does not initialize) a cipher_t
+ *  a srtp_cipher_alloc_func_t allocates (but does not initialize) a srtp_cipher_t
  */
-typedef srtp_err_status_t (*cipher_alloc_func_t)
+typedef srtp_err_status_t (*srtp_cipher_alloc_func_t)
     (srtp_cipher_pointer_t *cp, int key_len, int tag_len);
 
 /*
- * a cipher_init_func_t [re-]initializes a cipher_t with a given key
+ * a srtp_cipher_init_func_t [re-]initializes a cipher_t with a given key
  */
-typedef srtp_err_status_t (*cipher_init_func_t)
+typedef srtp_err_status_t (*srtp_cipher_init_func_t)
     (void *state, const uint8_t *key);
 
-/* a cipher_dealloc_func_t de-allocates a cipher_t */
-typedef srtp_err_status_t (*cipher_dealloc_func_t)(srtp_cipher_pointer_t cp);
-
-/* a cipher_set_segment_func_t sets the segment index of a cipher_t */
-typedef srtp_err_status_t (*cipher_set_segment_func_t)
-    (void *state, srtp_xtd_seq_num_t idx);
+/* a srtp_cipher_dealloc_func_t de-allocates a cipher_t */
+typedef srtp_err_status_t (*srtp_cipher_dealloc_func_t)(srtp_cipher_pointer_t cp);
 
 /*
- * a cipher_set_aad_func_t processes the AAD data for AEAD ciphers
+ * a srtp_cipher_set_aad_func_t processes the AAD data for AEAD ciphers
  */
-typedef srtp_err_status_t (*cipher_set_aad_func_t)
+typedef srtp_err_status_t (*srtp_cipher_set_aad_func_t)
     (void *state, const uint8_t *aad, uint32_t aad_len);
 
 
-/* a cipher_encrypt_func_t encrypts data in-place */
-typedef srtp_err_status_t (*cipher_encrypt_func_t)
+/* a srtp_cipher_encrypt_func_t encrypts data in-place */
+typedef srtp_err_status_t (*srtp_cipher_encrypt_func_t)
     (void *state, uint8_t *buffer, unsigned int *octets_to_encrypt);
 
-/* a cipher_decrypt_func_t decrypts data in-place */
-typedef srtp_err_status_t (*cipher_decrypt_func_t)
+/* a srtp_cipher_decrypt_func_t decrypts data in-place */
+typedef srtp_err_status_t (*srtp_cipher_decrypt_func_t)
     (void *state, uint8_t *buffer, unsigned int *octets_to_decrypt);
 
 /*
- * a cipher_set_iv_func_t function sets the current initialization vector
+ * a srtp_cipher_set_iv_func_t function sets the current initialization vector
  */
-typedef srtp_err_status_t (*cipher_set_iv_func_t)
-    (srtp_cipher_pointer_t cp, uint8_t *iv, srtp_cipher_direction_t direction);
+typedef srtp_err_status_t (*srtp_cipher_set_iv_func_t)
+    (void *state, uint8_t *iv, srtp_cipher_direction_t direction);
 
 /*
- * a cipher_get_tag_funct_t function is used to get the authentication
+ * a cipher_get_tag_func_t function is used to get the authentication
  * tag that was calculated by an AEAD cipher.
  */
-typedef srtp_err_status_t (*cipher_get_tag_func_t)
+typedef srtp_err_status_t (*srtp_cipher_get_tag_func_t)
     (void *state, uint8_t *tag, uint32_t *len);
 
 
 /*
- * cipher_test_case_t is a (list of) key, salt, srtp_xtd_seq_num_t,
- * plaintext, and ciphertext values that are known to be correct for a
+ * srtp_cipher_test_case_t is a (list of) key, salt, plaintext, ciphertext,
+ * and aad values that are known to be correct for a
  * particular cipher.  this data can be used to test an implementation
- * in an on-the-fly self test of the correcness of the implementation.
- * (see the cipher_type_self_test() function below)
+ * in an on-the-fly self test of the correctness of the implementation.
+ * (see the srtp_cipher_type_self_test() function below)
  */
 typedef struct srtp_cipher_test_case_t {
     int key_length_octets;                          /* octets in key            */
@@ -141,24 +138,23 @@ typedef struct srtp_cipher_test_case_t {
     const struct srtp_cipher_test_case_t *next_test_case; /* pointer to next testcase */
 } srtp_cipher_test_case_t;
 
-/* cipher_type_t defines the 'metadata' for a particular cipher type */
+/* srtp_cipher_type_t defines the 'metadata' for a particular cipher type */
 typedef struct srtp_cipher_type_t {
-    cipher_alloc_func_t alloc;
-    cipher_dealloc_func_t dealloc;
-    cipher_init_func_t init;
-    cipher_set_aad_func_t set_aad;
-    cipher_encrypt_func_t encrypt;
-    cipher_encrypt_func_t decrypt;
-    cipher_set_iv_func_t set_iv;
-    cipher_get_tag_func_t get_tag;
+    srtp_cipher_alloc_func_t alloc;
+    srtp_cipher_dealloc_func_t dealloc;
+    srtp_cipher_init_func_t init;
+    srtp_cipher_set_aad_func_t set_aad;
+    srtp_cipher_encrypt_func_t encrypt;
+    srtp_cipher_encrypt_func_t decrypt;
+    srtp_cipher_set_iv_func_t set_iv;
+    srtp_cipher_get_tag_func_t get_tag;
     const char                       *description;
     const srtp_cipher_test_case_t         *test_data;
-    srtp_debug_module_t             *debug;
     srtp_cipher_type_id_t id;
 } srtp_cipher_type_t;
 
 /*
- * cipher_t defines an instantiation of a particular cipher, with fixed
+ * srtp_cipher_t defines an instantiation of a particular cipher, with fixed
  * key length, key and salt values
  */
 typedef struct srtp_cipher_t {
@@ -173,7 +169,7 @@ int srtp_cipher_get_key_length(const srtp_cipher_t *c);
 
 
 /*
- * cipher_type_self_test() tests a cipher against test cases provided in
+ * srtp_cipher_type_self_test() tests a cipher against test cases provided in
  * an array of values of key/srtp_xtd_seq_num_t/plaintext/ciphertext
  * that is known to be good
  */
@@ -181,7 +177,7 @@ srtp_err_status_t srtp_cipher_type_self_test(const srtp_cipher_type_t *ct);
 
 
 /*
- * cipher_type_test() tests a cipher against external test cases provided in
+ * srtp_cipher_type_test() tests a cipher against external test cases provided in
  * an array of values of key/srtp_xtd_seq_num_t/plaintext/ciphertext
  * that is known to be good
  */
@@ -189,7 +185,7 @@ srtp_err_status_t srtp_cipher_type_test(const srtp_cipher_type_t *ct, const srtp
 
 
 /*
- * cipher_bits_per_second(c, l, t) computes (and estimate of) the
+ * srtp_cipher_bits_per_second(c, l, t) computes (an estimate of) the
  * number of bits that a cipher implementation can encrypt in a second
  *
  * c is a cipher (which MUST be allocated and initialized already), l
@@ -209,5 +205,18 @@ srtp_err_status_t srtp_cipher_encrypt(srtp_cipher_t *c, uint8_t *buffer, uint32_
 srtp_err_status_t srtp_cipher_decrypt(srtp_cipher_t *c, uint8_t *buffer, uint32_t *num_octets_to_output); 
 srtp_err_status_t srtp_cipher_get_tag(srtp_cipher_t *c, uint8_t *buffer, uint32_t *tag_len);
 srtp_err_status_t srtp_cipher_set_aad(srtp_cipher_t *c, const uint8_t *aad, uint32_t aad_len);
+
+/*
+ * srtp_replace_cipher_type(ct, id)
+ *
+ * replaces srtp's existing cipher implementation for the cipher_type id
+ * with a new one passed in externally.  The new cipher must pass all the
+ * existing cipher_type's self tests as well as its own.
+ */
+srtp_err_status_t srtp_replace_cipher_type(const srtp_cipher_type_t *ct, srtp_cipher_type_id_t id);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CIPHER_H */

@@ -51,6 +51,10 @@
 #include "datatypes.h"        /* for v128_t       */
 #include "err.h"              /* for srtp_err_status_t */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * if the ith least significant bit is one, then the packet index
  * window_end-i is in the database
@@ -117,5 +121,9 @@ srtp_err_status_t srtp_rdb_increment(srtp_rdb_t *rdb);
  */
 uint32_t srtp_rdb_get_value(const srtp_rdb_t *rdb);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REPLAY_DB_H */

@@ -48,6 +48,10 @@
 #include "rdbx.h"   /* for srtp_xtd_seq_num_t */
 #include "err.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct srtp_key_limit_ctx_t *srtp_key_limit_t;
 
 typedef enum {
@@ -74,5 +78,9 @@ typedef struct srtp_key_limit_ctx_t {
     srtp_xtd_seq_num_t num_left;
     srtp_key_state_t state;
 } srtp_key_limit_ctx_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* KEY_H */

@@ -39,7 +39,7 @@ function get_gyp()
 function get_jsoncpp()
 {
 	GIT_REPO="https://github.com/open-source-parsers/jsoncpp.git"
-	GIT_TAG="1.7.2"
+	GIT_TAG="1.7.7"
 	DEST="deps/jsoncpp/jsoncpp"
 
 	if [ -d "${DEST}" ] ; then

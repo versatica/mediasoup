@@ -187,8 +187,9 @@ static srtp_err_status_t srtp_aes_icm_dealloc (srtp_cipher_t *c)
  * randomizes the starting point in the keystream
  */
 
-static srtp_err_status_t srtp_aes_icm_context_init (srtp_aes_icm_ctx_t *c, const uint8_t *key)
+static srtp_err_status_t srtp_aes_icm_context_init (void *cv, const uint8_t *key)
 {
+    srtp_aes_icm_ctx_t *c = (srtp_aes_icm_ctx_t *)cv;
     srtp_err_status_t status;
     int base_key_len, copy_len;
 
@@ -240,8 +241,9 @@ static srtp_err_status_t srtp_aes_icm_context_init (srtp_aes_icm_ctx_t *c, const
  * the offset
  */
 
-static srtp_err_status_t srtp_aes_icm_set_iv (srtp_aes_icm_ctx_t *c, uint8_t *iv, int direction)
+static srtp_err_status_t srtp_aes_icm_set_iv (void *cv, uint8_t *iv, srtp_cipher_direction_t direction)
 {
+    srtp_aes_icm_ctx_t *c = (srtp_aes_icm_ctx_t *)cv;
     v128_t nonce;
 
     /* set nonce (for alignment) */
@@ -419,8 +421,9 @@ static srtp_err_status_t srtp_aes_icm_encrypt_ismacryp (srtp_aes_icm_ctx_t *c,
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_aes_icm_encrypt (srtp_aes_icm_ctx_t *c, unsigned char *buf, unsigned int *enc_len)
+static srtp_err_status_t srtp_aes_icm_encrypt (void *cv, unsigned char *buf, unsigned int *enc_len)
 {
+    srtp_aes_icm_ctx_t *c = (srtp_aes_icm_ctx_t *)cv;
     return srtp_aes_icm_encrypt_ismacryp(c, buf, enc_len, 0);
 }
 
@@ -515,17 +518,16 @@ static const srtp_cipher_test_case_t srtp_aes_icm_test_case_1 = {
  */
 
 const srtp_cipher_type_t srtp_aes_icm = {
-    (cipher_alloc_func_t)srtp_aes_icm_alloc,
-    (cipher_dealloc_func_t)srtp_aes_icm_dealloc,
-    (cipher_init_func_t)srtp_aes_icm_context_init,
-    (cipher_set_aad_func_t)0,
-    (cipher_encrypt_func_t)srtp_aes_icm_encrypt,
-    (cipher_decrypt_func_t)srtp_aes_icm_encrypt,
-    (cipher_set_iv_func_t)srtp_aes_icm_set_iv,
-    (cipher_get_tag_func_t)0,
-    (const char*)srtp_aes_icm_description,
-    (const srtp_cipher_test_case_t*)&srtp_aes_icm_test_case_1,
-    (srtp_debug_module_t*)&srtp_mod_aes_icm,
-    (srtp_cipher_type_id_t)SRTP_AES_ICM
+    srtp_aes_icm_alloc,
+    srtp_aes_icm_dealloc,
+    srtp_aes_icm_context_init,
+    0,                          /* set_aad */
+    srtp_aes_icm_encrypt,
+    srtp_aes_icm_encrypt,
+    srtp_aes_icm_set_iv,
+    0,                          /* get_tag */
+    srtp_aes_icm_description,
+    &srtp_aes_icm_test_case_1,
+    SRTP_AES_ICM
 };
 

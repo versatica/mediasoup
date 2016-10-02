@@ -49,6 +49,10 @@
 #include "datatypes.h"
 #include "err.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* aes internals */
 
 typedef struct {
@@ -69,5 +73,9 @@ srtp_err_status_t srtp_aes_expand_decryption_key(
 void srtp_aes_encrypt(v128_t *plaintext, const srtp_aes_expanded_key_t *exp_key);
 
 void srtp_aes_decrypt(v128_t *plaintext, const srtp_aes_expanded_key_t *exp_key);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _AES_H */

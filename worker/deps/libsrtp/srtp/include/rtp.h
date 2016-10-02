@@ -62,6 +62,11 @@
 
 //#include "srtp_priv.h"
 #include "srtp.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * RTP_HEADER_LEN indicates the size of an RTP header
  */
@@ -158,5 +163,8 @@ void
 rtp_receiver_dealloc(rtp_receiver_t rtp_ctx);
 
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RTP_H */

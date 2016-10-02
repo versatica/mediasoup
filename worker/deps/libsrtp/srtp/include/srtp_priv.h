@@ -56,6 +56,10 @@
 #include "key.h"
 #include "crypto_kernel.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SRTP_VER_STRING	    PACKAGE_STRING
 #define SRTP_VERSION        PACKAGE_VERSION
 
@@ -153,5 +157,8 @@ typedef struct srtp_ctx_t_ {
       srtp_event_handler(&data);                    \
 }   
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SRTP_PRIV_H */

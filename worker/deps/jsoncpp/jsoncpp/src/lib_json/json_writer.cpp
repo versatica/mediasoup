@@ -135,6 +135,7 @@ JSONCPP_STRING valueToString(UInt value) {
 
 #endif // # if defined(JSON_HAS_INT64)
 
+namespace {
 JSONCPP_STRING valueToString(double value, bool useSpecialFloats, unsigned int precision) {
   // Allocate a buffer that is more than large enough to store the 16 digits of
   // precision requested below.
@@ -163,6 +164,7 @@ JSONCPP_STRING valueToString(double value, bool useSpecialFloats, unsigned int p
   assert(len >= 0);
   fixNumericLocale(buffer, buffer + len);
   return buffer;
+}
 }
 
 JSONCPP_STRING valueToString(double value) { return valueToString(value, false, 17); }
@@ -351,7 +353,7 @@ void FastWriter::writeValue(const Value& value) {
     break;
   case stringValue:
   {
-    // Is NULL possible for value.string_?
+    // Is NULL possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -421,7 +423,7 @@ void StyledWriter::writeValue(const Value& value) {
     break;
   case stringValue:
   {
-    // Is NULL possible for value.string_?
+    // Is NULL possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -638,7 +640,7 @@ void StyledStreamWriter::writeValue(const Value& value) {
     break;
   case stringValue:
   {
-    // Is NULL possible for value.string_?
+    // Is NULL possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -919,7 +921,7 @@ void BuiltStyledStreamWriter::writeValue(Value const& value) {
     break;
   case stringValue:
   {
-    // Is NULL is possible for value.string_?
+    // Is NULL is possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -1000,7 +1002,7 @@ void BuiltStyledStreamWriter::writeArrayValue(Value const& value) {
       if (!indentation_.empty()) *sout_ << " ";
       for (unsigned index = 0; index < size; ++index) {
         if (index > 0)
-          *sout_ << ", ";
+          *sout_ << ((!indentation_.empty()) ? ", " : ",");
         *sout_ << childValues_[index];
       }
       if (!indentation_.empty()) *sout_ << " ";

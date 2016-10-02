@@ -244,6 +244,9 @@ install:
 	cp $(srcdir)/include/srtp.h $(DESTDIR)$(includedir)/srtp2  
 	cp $(srcdir)/include/ekt.h $(DESTDIR)$(includedir)/srtp2  
 	cp $(srcdir)/include/rtp.h $(DESTDIR)$(includedir)/srtp2  
+	cp $(srcdir)/crypto/include/cipher.h $(DESTDIR)$(includedir)/srtp2
+	cp $(srcdir)/crypto/include/auth.h $(DESTDIR)$(includedir)/srtp2
+	cp $(srcdir)/crypto/include/crypto_types.h $(DESTDIR)$(includedir)/srtp2
 	if [ -f libsrtp2.a ]; then cp libsrtp2.a $(DESTDIR)$(libdir)/; fi
 	if [ -f libsrtp2.dll.a ]; then cp libsrtp2.dll.a $(DESTDIR)$(libdir)/; fi
 	if [ -f libsrtp2.$(SHAREDLIBSUFFIX) ]; then \

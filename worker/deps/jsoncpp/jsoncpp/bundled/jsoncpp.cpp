@@ -92,6 +92,10 @@ license you like.
 #ifndef LIB_JSONCPP_JSON_TOOL_H_INCLUDED
 #define LIB_JSONCPP_JSON_TOOL_H_INCLUDED
 
+#ifndef NO_LOCALE_SUPPORT
+#include <clocale>
+#endif
+
 /* This header provides common string manipulation support, such as UTF-8,
  * portable conversion from/to string...
  *
@@ -99,6 +103,14 @@ license you like.
  */
 
 namespace Json {
+static char getDecimalPoint() {
+#ifdef NO_LOCALE_SUPPORT
+  return '\0';
+#else
+  struct lconv* lc = localeconv();
+  return lc ? *(lc->decimal_point) : '\0';
+#endif
+}
 
 /// Converts a unicode code-point to UTF-8.
 static inline JSONCPP_STRING codePointToUTF8(unsigned int cp) {
@@ -165,6 +177,18 @@ static inline void fixNumericLocale(char* begin, char* end) {
       *begin = '.';
     }
     ++begin;
+  }
+}
+
+static inline void fixNumericLocaleInput(char* begin, char* end) {
+  char decimalPoint = getDecimalPoint();
+  if (decimalPoint != '\0' && decimalPoint != '.') {
+    while (begin < end) {
+      if (*begin == '.') {
+        *begin = decimalPoint;
+      }
+      ++begin;
+    }
   }
 }
 
@@ -588,7 +612,7 @@ Reader::addComment(Location begin, Location end, CommentPlacement placement) {
 }
 
 bool Reader::readCStyleComment() {
-  while (current_ != end_) {
+  while ((current_ + 1) < end_) {
     Char c = getNextChar();
     if (c == '*' && *current_ == '/')
       break;
@@ -617,25 +641,25 @@ void Reader::readNumber() {
   char c = '0'; // stopgap for already consumed character
   // integral part
   while (c >= '0' && c <= '9')
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
   // fractional part
   if (c == '.') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
   // exponential part
   if (c == 'e' || c == 'E') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     if (c == '+' || c == '-')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
 }
 
 bool Reader::readString() {
-  Char c = 0;
+  Char c = '\0';
   while (current_ != end_) {
     c = getNextChar();
     if (c == '\\')
@@ -707,7 +731,7 @@ bool Reader::readArray(Token& tokenStart) {
   currentValue().swapPayload(init);
   currentValue().setOffsetStart(tokenStart.start_ - begin_);
   skipSpaces();
-  if (*current_ == ']') // empty array
+  if (current_ != end_ && *current_ == ']') // empty array
   {
     Token endArray;
     readToken(endArray);
@@ -1255,7 +1279,7 @@ bool OurReader::parse(const char* beginDoc,
   Token token;
   skipCommentTokens(token);
   if (features_.failIfExtra_) {
-    if (token.type_ != tokenError && token.type_ != tokenEndOfStream) {
+    if ((features_.strictRoot_ || token.type_ != tokenError) && token.type_ != tokenEndOfStream) {
       addError("Extra non-whitespace after JSON value.", token);
       return false;
     }
@@ -1548,7 +1572,7 @@ OurReader::addComment(Location begin, Location end, CommentPlacement placement) 
 }
 
 bool OurReader::readCStyleComment() {
-  while (current_ != end_) {
+  while ((current_ + 1) < end_) {
     Char c = getNextChar();
     if (c == '*' && *current_ == '/')
       break;
@@ -1581,20 +1605,20 @@ bool OurReader::readNumber(bool checkInf) {
   char c = '0'; // stopgap for already consumed character
   // integral part
   while (c >= '0' && c <= '9')
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
   // fractional part
   if (c == '.') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
   // exponential part
   if (c == 'e' || c == 'E') {
-    c = (current_ = p) < end_ ? *p++ : 0;
+    c = (current_ = p) < end_ ? *p++ : '\0';
     if (c == '+' || c == '-')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
     while (c >= '0' && c <= '9')
-      c = (current_ = p) < end_ ? *p++ : 0;
+      c = (current_ = p) < end_ ? *p++ : '\0';
   }
   return true;
 }
@@ -1690,7 +1714,7 @@ bool OurReader::readArray(Token& tokenStart) {
   currentValue().swapPayload(init);
   currentValue().setOffsetStart(tokenStart.start_ - begin_);
   skipSpaces();
-  if (*current_ == ']') // empty array
+  if (current_ != end_ && *current_ == ']') // empty array
   {
     Token endArray;
     readToken(endArray);
@@ -1806,6 +1830,7 @@ bool OurReader::decodeDouble(Token& token, Value& decoded) {
     Char buffer[bufferSize + 1];
     memcpy(buffer, token.start_, ulength);
     buffer[length] = 0;
+    fixNumericLocaleInput(buffer, buffer + length);
     count = sscanf(buffer, format, &value);
   } else {
     JSONCPP_STRING buffer(token.start_, token.end_);
@@ -2451,10 +2476,22 @@ namespace Json {
 #else
 #define ALIGNAS(byte_alignment)
 #endif
-static const unsigned char ALIGNAS(8) kNull[sizeof(Value)] = { 0 };
-const unsigned char& kNullRef = kNull[0];
-const Value& Value::null = reinterpret_cast<const Value&>(kNullRef);
-const Value& Value::nullRef = null;
+//static const unsigned char ALIGNAS(8) kNull[sizeof(Value)] = { 0 };
+//const unsigned char& kNullRef = kNull[0];
+//const Value& Value::null = reinterpret_cast<const Value&>(kNullRef);
+//const Value& Value::nullRef = null;
+
+// static
+Value const& Value::nullSingleton()
+{
+ static Value const nullStatic;
+ return nullStatic;
+}
+
+// for backwards compatibility, we'll leave these global references around, but DO NOT
+// use them in JSONCPP library code any more!
+Value const& Value::null = Value::nullSingleton();
+Value const& Value::nullRef = Value::nullSingleton();
 
 const Int Value::minInt = Int(~(UInt(-1) / 2));
 const Int Value::maxInt = Int(UInt(-1) / 2);
@@ -2577,7 +2614,7 @@ static inline void releaseStringValue(char* value, unsigned length) {
 static inline void releasePrefixedStringValue(char* value) {
   free(value);
 }
-static inline void releaseStringValue(char* value, unsigned length) {
+static inline void releaseStringValue(char* value, unsigned) {
   free(value);
 }
 #endif // JSONCPP_USING_SECURE_MEMORY
@@ -2751,6 +2788,7 @@ bool Value::CZString::isStaticString() const { return storage_.policy_ == noDupl
  * This optimization is used in ValueInternalMap fast allocator.
  */
 Value::Value(ValueType vtype) {
+  static char const empty[] = "";
   initBasic(vtype);
   switch (vtype) {
   case nullValue:
@@ -2763,7 +2801,8 @@ Value::Value(ValueType vtype) {
     value_.real_ = 0.0;
     break;
   case stringValue:
-    value_.string_ = 0;
+    // allocated_ == false, so this is safe.
+    value_.string_ = const_cast<char*>(static_cast<char const*>(empty));
     break;
   case arrayValue:
   case objectValue:
@@ -2908,8 +2947,7 @@ Value::~Value() {
     JSON_ASSERT_UNREACHABLE;
   }
 
-  if (comments_)
-    delete[] comments_;
+  delete[] comments_;
 
   value_.uint_ = 0;
 }
@@ -3392,7 +3430,7 @@ Value& Value::operator[](ArrayIndex index) {
   if (it != value_.map_->end() && (*it).first == key)
     return (*it).second;
 
-  ObjectValues::value_type defaultValue(key, nullRef);
+  ObjectValues::value_type defaultValue(key, nullSingleton());
   it = value_.map_->insert(it, defaultValue);
   return (*it).second;
 }
@@ -3409,11 +3447,11 @@ const Value& Value::operator[](ArrayIndex index) const {
       type_ == nullValue || type_ == arrayValue,
       "in Json::Value::operator[](ArrayIndex)const: requires arrayValue");
   if (type_ == nullValue)
-    return nullRef;
+    return nullSingleton();
   CZString key(index);
   ObjectValues::const_iterator it = value_.map_->find(key);
   if (it == value_.map_->end())
-    return nullRef;
+    return nullSingleton();
   return (*it).second;
 }
 
@@ -3447,7 +3485,7 @@ Value& Value::resolveReference(const char* key) {
   if (it != value_.map_->end() && (*it).first == actualKey)
     return (*it).second;
 
-  ObjectValues::value_type defaultValue(actualKey, nullRef);
+  ObjectValues::value_type defaultValue(actualKey, nullSingleton());
   it = value_.map_->insert(it, defaultValue);
   Value& value = (*it).second;
   return value;
@@ -3467,7 +3505,7 @@ Value& Value::resolveReference(char const* key, char const* cend)
   if (it != value_.map_->end() && (*it).first == actualKey)
     return (*it).second;
 
-  ObjectValues::value_type defaultValue(actualKey, nullRef);
+  ObjectValues::value_type defaultValue(actualKey, nullSingleton());
   it = value_.map_->insert(it, defaultValue);
   Value& value = (*it).second;
   return value;
@@ -3475,7 +3513,7 @@ Value& Value::resolveReference(char const* key, char const* cend)
 
 Value Value::get(ArrayIndex index, const Value& defaultValue) const {
   const Value* value = &((*this)[index]);
-  return value == &nullRef ? defaultValue : *value;
+  return value == &nullSingleton() ? defaultValue : *value;
 }
 
 bool Value::isValidIndex(ArrayIndex index) const { return index < size(); }
@@ -3494,13 +3532,13 @@ Value const* Value::find(char const* key, char const* cend) const
 const Value& Value::operator[](const char* key) const
 {
   Value const* found = find(key, key + strlen(key));
-  if (!found) return nullRef;
+  if (!found) return nullSingleton();
   return *found;
 }
 Value const& Value::operator[](JSONCPP_STRING const& key) const
 {
   Value const* found = find(key.data(), key.data() + key.length());
-  if (!found) return nullRef;
+  if (!found) return nullSingleton();
   return *found;
 }
 
@@ -3523,7 +3561,7 @@ Value& Value::operator[](const CppTL::ConstString& key) {
 Value const& Value::operator[](CppTL::ConstString const& key) const
 {
   Value const* found = find(key.c_str(), key.end_c_str());
-  if (!found) return nullRef;
+  if (!found) return nullSingleton();
   return *found;
 }
 #endif
@@ -3571,7 +3609,7 @@ Value Value::removeMember(const char* key)
   JSON_ASSERT_MESSAGE(type_ == nullValue || type_ == objectValue,
                       "in Json::Value::removeMember(): requires objectValue");
   if (type_ == nullValue)
-    return nullRef;
+    return nullSingleton();
 
   Value removed;  // null
   removeMember(key, key + strlen(key), &removed);
@@ -3911,12 +3949,12 @@ void Path::makePath(const JSONCPP_STRING& path, const InArgs& in) {
           index = index * 10 + ArrayIndex(*current - '0');
         args_.push_back(index);
       }
-      if (current == end || *current++ != ']')
+      if (current == end || *++current != ']')
         invalidPath(path, int(current - path.c_str()));
     } else if (*current == '%') {
       addPathInArg(path, in, itInArg, PathArgument::kindKey);
       ++current;
-    } else if (*current == '.') {
+    } else if (*current == '.' || *current == ']') {
       ++current;
     } else {
       const char* beginName = current;
@@ -3936,7 +3974,7 @@ void Path::addPathInArg(const JSONCPP_STRING& /*path*/,
   } else if ((*itInArg)->kind_ != kind) {
     // Error: bad argument type
   } else {
-    args_.push_back(**itInArg);
+    args_.push_back(**itInArg++);
   }
 }
 
@@ -3951,16 +3989,19 @@ const Value& Path::resolve(const Value& root) const {
     if (arg.kind_ == PathArgument::kindIndex) {
       if (!node->isArray() || !node->isValidIndex(arg.index_)) {
         // Error: unable to resolve path (array value expected at position...
+        return Value::null;
       }
       node = &((*node)[arg.index_]);
     } else if (arg.kind_ == PathArgument::kindKey) {
       if (!node->isObject()) {
         // Error: unable to resolve path (object value expected at position...)
+        return Value::null;
       }
       node = &((*node)[arg.key_]);
-      if (node == &Value::nullRef) {
+      if (node == &Value::nullSingleton()) {
         // Error: unable to resolve path (object has no member named '' at
         // position...)
+        return Value::null;
       }
     }
   }
@@ -3979,7 +4020,7 @@ Value Path::resolve(const Value& root, const Value& defaultValue) const {
       if (!node->isObject())
         return defaultValue;
       node = &((*node)[arg.key_]);
-      if (node == &Value::nullRef)
+      if (node == &Value::nullSingleton())
         return defaultValue;
     }
   }
@@ -4157,6 +4198,7 @@ JSONCPP_STRING valueToString(UInt value) {
 
 #endif // # if defined(JSON_HAS_INT64)
 
+namespace {
 JSONCPP_STRING valueToString(double value, bool useSpecialFloats, unsigned int precision) {
   // Allocate a buffer that is more than large enough to store the 16 digits of
   // precision requested below.
@@ -4185,6 +4227,7 @@ JSONCPP_STRING valueToString(double value, bool useSpecialFloats, unsigned int p
   assert(len >= 0);
   fixNumericLocale(buffer, buffer + len);
   return buffer;
+}
 }
 
 JSONCPP_STRING valueToString(double value) { return valueToString(value, false, 17); }
@@ -4373,7 +4416,7 @@ void FastWriter::writeValue(const Value& value) {
     break;
   case stringValue:
   {
-    // Is NULL possible for value.string_?
+    // Is NULL possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -4443,7 +4486,7 @@ void StyledWriter::writeValue(const Value& value) {
     break;
   case stringValue:
   {
-    // Is NULL possible for value.string_?
+    // Is NULL possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -4660,7 +4703,7 @@ void StyledStreamWriter::writeValue(const Value& value) {
     break;
   case stringValue:
   {
-    // Is NULL possible for value.string_?
+    // Is NULL possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -4941,7 +4984,7 @@ void BuiltStyledStreamWriter::writeValue(Value const& value) {
     break;
   case stringValue:
   {
-    // Is NULL is possible for value.string_?
+    // Is NULL is possible for value.string_? No.
     char const* str;
     char const* end;
     bool ok = value.getString(&str, &end);
@@ -5022,7 +5065,7 @@ void BuiltStyledStreamWriter::writeArrayValue(Value const& value) {
       if (!indentation_.empty()) *sout_ << " ";
       for (unsigned index = 0; index < size; ++index) {
         if (index > 0)
-          *sout_ << ", ";
+          *sout_ << ((!indentation_.empty()) ? ", " : ",");
         *sout_ << childValues_[index];
       }
       if (!indentation_.empty()) *sout_ << " ";

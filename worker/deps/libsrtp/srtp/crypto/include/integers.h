@@ -68,6 +68,10 @@
 # include <machine/types.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Can we do 64 bit integers? */
 #if !defined(HAVE_UINT64_T)
 # if SIZEOF_UNSIGNED_LONG == 8
@@ -134,6 +138,10 @@ extern uint32_t low32(uint64_t value);
 #else
 #define PUT_32(addr,value) *(((uint32_t *) (addr)) = (value)
 #define GET_32(addr) (*(((uint32_t *) (addr)))
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* INTEGERS_H */

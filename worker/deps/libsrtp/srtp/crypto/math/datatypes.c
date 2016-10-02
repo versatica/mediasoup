@@ -440,14 +440,21 @@ bitvector_left_shift(bitvector_t *x, int shift) {
 
 }
 
-
 int
 octet_string_is_eq(uint8_t *a, uint8_t *b, int len) {
   uint8_t *end = b + len;
+  uint8_t accumulator = 0;
+
+  /*
+   * We use this somewhat obscure implementation to try to ensure the running
+   * time only depends on len, even accounting for compiler optimizations.
+   * The accumulator ends up zero iff the strings are equal.
+   */
   while (b < end)
-    if (*a++ != *b++)
-      return 1;
-  return 0;
+    accumulator |= (*a++ ^ *b++);
+
+  /* Return 1 if *not* equal. */
+  return accumulator != 0;
 }
 
 void

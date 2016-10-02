@@ -49,6 +49,7 @@
 #endif
 
 #include "null_auth.h"
+#include "err.h"                /* for srtp_debug */
 #include "alloc.h"
 
 /* null_auth uses the auth debug module */
@@ -94,30 +95,34 @@ static srtp_err_status_t srtp_null_auth_dealloc (srtp_auth_t *a)
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_null_auth_init (srtp_null_auth_ctx_t *state, const uint8_t *key, int key_len)
+static srtp_err_status_t srtp_null_auth_init (void *statev, const uint8_t *key, int key_len)
 {
-
+    /* srtp_null_auth_ctx_t *state = (srtp_null_auth_ctx_t *)statev; */
     /* accept any length of key, and do nothing */
 
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_null_auth_compute (srtp_null_auth_ctx_t *state, const uint8_t *message,
+static srtp_err_status_t srtp_null_auth_compute (void *statev, const uint8_t *message,
                                           int msg_octets, int tag_len, uint8_t *result)
 {
+    /* srtp_null_auth_ctx_t *state = (srtp_null_auth_ctx_t *)statev; */
 
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_null_auth_update (srtp_null_auth_ctx_t *state, const uint8_t *message,
+static srtp_err_status_t srtp_null_auth_update (void *statev, const uint8_t *message,
                                          int msg_octets)
 {
+    /* srtp_null_auth_ctx_t *state = (srtp_null_auth_ctx_t *)statev; */
 
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_null_auth_start (srtp_null_auth_ctx_t *state)
+static srtp_err_status_t srtp_null_auth_start (void *statev)
 {
+    /* srtp_null_auth_ctx_t *state = (srtp_null_auth_ctx_t *)statev; */
+
     return srtp_err_status_ok;
 }
 
@@ -143,15 +148,14 @@ static const srtp_auth_test_case_t srtp_null_auth_test_case_0 = {
 static const char srtp_null_auth_description[] = "null authentication function";
 
 const srtp_auth_type_t srtp_null_auth  = {
-    (auth_alloc_func)srtp_null_auth_alloc,
-    (auth_dealloc_func)srtp_null_auth_dealloc,
-    (auth_init_func)srtp_null_auth_init,
-    (auth_compute_func)srtp_null_auth_compute,
-    (auth_update_func)srtp_null_auth_update,
-    (auth_start_func)srtp_null_auth_start,
-    (const char*)srtp_null_auth_description,
-    (const srtp_auth_test_case_t*)&srtp_null_auth_test_case_0,
-    (srtp_debug_module_t*)NULL,
-    (srtp_auth_type_id_t)SRTP_NULL_AUTH
+    srtp_null_auth_alloc,
+    srtp_null_auth_dealloc,
+    srtp_null_auth_init,
+    srtp_null_auth_compute,
+    srtp_null_auth_update,
+    srtp_null_auth_start,
+    srtp_null_auth_description,
+    &srtp_null_auth_test_case_0,
+    SRTP_NULL_AUTH
 };
 
