@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # File inspired in https://github.com/indutny/bud
 
@@ -6,6 +6,11 @@ import platform
 import os
 import subprocess
 import sys
+
+version = sys.version_info[0]
+
+if version != 2:
+  raise RuntimeError('gyp requires Python 2, but this is Python ' + str(version))
 
 CC = os.environ.get('CC', 'cc')
 script_dir = os.path.dirname(__file__)
@@ -20,7 +25,6 @@ except ImportError:
   print('  ./scripts/get_dep.sh gyp');
   sys.exit(42)
 
-
 def host_arch():
   machine = platform.machine()
   if machine == 'i386': return 'ia32'
@@ -28,7 +32,6 @@ def host_arch():
   if machine.startswith('arm'): return 'arm'
   if machine.startswith('mips'): return 'mips'
   return machine  # Return as-is and hope for the best.
-
 
 def compiler_version():
   proc = subprocess.Popen(CC.split() + ['--version'], stdout=subprocess.PIPE)
@@ -39,13 +42,11 @@ def compiler_version():
   version = tuple(version)
   return (version, is_clang)
 
-
 def run_gyp(args):
   rc = gyp.main(args)
   if rc != 0:
     print 'Error running GYP'
     sys.exit(rc)
-
 
 if __name__ == '__main__':
   args = sys.argv[1:]
