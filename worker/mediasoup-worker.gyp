@@ -118,6 +118,15 @@
           'defines': [ 'BUD_FIPS_ENABLED=1' ]
         }],
 
+        # Endianness
+        [ 'node_byteorder=="big"', {
+            # Define Big Endian
+            'defines': ['MS_BIG_ENDIAN']
+          }, {
+            # Define Little Endian
+            'defines': ['MS_LITTLE_ENDIAN']
+        }],
+
         # Platform-specifics
 
         [ 'OS == "mac" and mediasoup_asan == "true"', {
