@@ -1,7 +1,6 @@
 'use strict';
 
 const tap = require('tap');
-
 const extra = require('../').extra;
 
 const sdpFingerprint1 = '75:1B:81:93:B7:ED:27:7E:42:BE:D6:C4:8E:F7:04:3A:49:CE:3F:EE';

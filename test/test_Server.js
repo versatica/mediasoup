@@ -1,7 +1,6 @@
 'use strict';
 
 const tap = require('tap');
-
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
 
@@ -101,7 +100,7 @@ tap.test('server.createRoom() in a closed server must fail', { timeout: 2000 }, 
 	server.close();
 
 	server.createRoom(roomOptions)
-		.then((room) => t.fail('server.createRoom() succeeded'))
+		.then((room) => t.fail('server.createRoom() succeeded')) // eslint-disable-line no-unused-vars
 		.catch((error) =>
 		{
 			t.pass(`server.createRoom() failed: ${error}`);

@@ -1,9 +1,7 @@
 'use strict';
 
 const gulp = require('gulp');
-const jshint = require('gulp-jshint');
-const jscs = require('gulp-jscs');
-const stylish = require('gulp-jscs-stylish');
+const eslint = require('gulp-eslint');
 const replace = require('gulp-replace');
 const touch = require('gulp-touch');
 const shell = require('gulp-shell');
@@ -23,14 +21,20 @@ let tests =
 
 gulp.task('lint', () =>
 {
-	let src = [ 'gulpfile.js', 'lib/**/*.js', 'data/**/*.js', 'test/**/*.js' ];
+	let src =
+	[
+		'.eslintrc.js',
+		'gulpfile.js',
+		'lib/**/*.js',
+		'data/**/*.js',
+		'test/**/*.js',
+		'!node_modules/**'
+	];
 
 	return gulp.src(src)
-		.pipe(jshint('.jshintrc'))
-		.pipe(jscs('.jscsrc'))
-		.pipe(stylish.combineWithHintResults())
-		.pipe(jshint.reporter('jshint-stylish', { verbose: true }))
-		.pipe(jshint.reporter('fail'));
+		.pipe(eslint())
+		.pipe(eslint.format())
+		.pipe(eslint.failAfterError());
 });
 
 gulp.task('capabilities', () =>
@@ -44,7 +48,7 @@ gulp.task('capabilities', () =>
 });
 
 gulp.task('worker', shell.task(
-	[ `make` ]
+	[ 'make' ]
 ));
 
 gulp.task('test', shell.task(

@@ -1,7 +1,6 @@
 'use strict';
 
 const tap = require('tap');
-
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
 const peerOptions = require('./data/options').peerOptions;

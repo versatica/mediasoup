@@ -1,7 +1,6 @@
 'use strict';
 
 const tap = require('tap');
-
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
 const peerCapabilities = require('./data/options').peerCapabilities;
@@ -919,7 +918,7 @@ tap.test('rtpReceiver.close() must succeed', { timeout: 2000 }, (t) =>
 
 			setTimeout(() => rtpReceiver.close(), 100);
 
-			return new Promise((accept, reject) =>
+			return new Promise((accept, reject) => // eslint-disable-line no-unused-vars
 			{
 				rtpReceiver.on('close', (error) =>
 				{

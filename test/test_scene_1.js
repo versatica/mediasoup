@@ -1,7 +1,6 @@
 'use strict';
 
 const tap = require('tap');
-
 const mediasoup = require('../');
 
 // TODO: waiting for proper RTP parameters definition
@@ -325,8 +324,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 
 							let transport = bob.transports[0];
 
-							// (allow "make functions within a loop")
-							// jshint -W083
 							rtpSender.setTransport(transport)
 								.then(() =>
 								{
@@ -341,7 +338,6 @@ tap.test('alice, bob and carol create RtpReceivers and expect RtpSenders', { tim
 									t.fail(`rtpSender.setTransport() failed: ${error}`);
 									reject(error);
 								});
-							// jshint +W083
 						}
 					});
 

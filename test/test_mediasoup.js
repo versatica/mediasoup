@@ -2,7 +2,6 @@
 
 const path = require('path');
 const tap = require('tap');
-
 const mediasoup = require('../');
 
 tap.test('mediasoup.Server() with no options must succeed', { timeout: 2000 }, (t) =>

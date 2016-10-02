@@ -1,7 +1,6 @@
 'use strict';
 
 const tap = require('tap');
-
 const mediasoup = require('../');
 const roomOptions = require('./data/options').roomOptions;
 
@@ -30,7 +29,6 @@ tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', 
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
 			let transport = data.transport;
 
 			t.equal(transport.dtlsLocalParameters.role, 'auto', 'default local DTLS role must be "auto"');
@@ -64,7 +62,6 @@ tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { 
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
 			let transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
@@ -96,7 +93,6 @@ tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { time
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
 			let transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
@@ -127,7 +123,6 @@ tap.test('transport.setRemoteDtlsParameters() with invalid role must fail', { ti
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
 			let transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
@@ -153,7 +148,6 @@ tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { 
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
 			let transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
