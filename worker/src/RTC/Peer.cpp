@@ -469,6 +469,34 @@ namespace RTC
 		this->notifier->Emit(this->peerId, "newrtpsender", event_data);
 	}
 
+	RTC::RtpSender* Peer::GetRtpSender(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+		{
+			auto rtpSender = it->second;
+			auto rtpParameters = rtpSender->GetParameters();
+
+			if (!rtpParameters)
+				continue;
+
+			for (auto it2 = rtpParameters->encodings.begin(); it2 != rtpParameters->encodings.end(); ++it2)
+			{
+				auto& encoding = *it2;
+
+				if (encoding.ssrc == ssrc)
+					return rtpSender;
+				else if (encoding.hasFec && encoding.fec.ssrc == ssrc)
+					return rtpSender;
+				else if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
+					return rtpSender;
+			}
+		}
+
+		return nullptr;
+	}
+
 	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId)
 	{
 		MS_TRACE();

@@ -51,6 +51,7 @@ namespace RTC
 		 * @param peerName      Name of the receiver Peer.
 		 */
 		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters);
+		RTC::RtpSender* GetRtpSender(uint32_t ssrc);
 		// TODO: Temporal stuff to route RTCP everywhere
 		std::unordered_map<uint32_t, RTC::Transport*>& GetTransports();
 
