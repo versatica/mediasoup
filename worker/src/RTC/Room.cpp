@@ -133,10 +133,12 @@ namespace RTC
 		static const Json::StaticString k_capabilities("capabilities");
 		static const Json::StaticString k_peers("peers");
 		static const Json::StaticString k_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
+		static const Json::StaticString k_mapRtpSenderRtpReceiver("mapRtpSenderRtpReceiver");
 
 		Json::Value json(Json::objectValue);
 		Json::Value json_peers(Json::arrayValue);
 		Json::Value json_mapRtpReceiverRtpSenders(Json::objectValue);
+		Json::Value json_mapRtpSenderRtpReceiver(Json::objectValue);
 
 		// Add `roomId`.
 		json[k_roomId] = (Json::UInt)this->roomId;
@@ -153,6 +155,7 @@ namespace RTC
 		}
 		json[k_peers] = json_peers;
 
+		// Add `mapRtpReceiverRtpSenders`.
 		for (auto& kv : this->mapRtpReceiverRtpSenders)
 		{
 			auto rtpReceiver = kv.first;
@@ -166,9 +169,17 @@ namespace RTC
 
 			json_mapRtpReceiverRtpSenders[std::to_string(rtpReceiver->rtpReceiverId)] = json_rtpReceivers;
 		}
-
-		// Add `mapRtpReceiverRtpSenders`.
 		json[k_mapRtpReceiverRtpSenders] = json_mapRtpReceiverRtpSenders;
+
+		// Add `mapRtpSenderRtpReceiver`.
+		for (auto& kv : this->mapRtpSenderRtpReceiver)
+		{
+			auto rtpSender = kv.first;
+			auto rtpReceiver = kv.second;
+
+			json_mapRtpSenderRtpReceiver[std::to_string(rtpSender->rtpSenderId)] = std::to_string(rtpReceiver->rtpReceiverId);
+		}
+		json[k_mapRtpSenderRtpReceiver] = json_mapRtpSenderRtpReceiver;
 
 		return json;
 	}
@@ -465,8 +476,9 @@ namespace RTC
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
 				RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
-				// Store into the map.
+				// Store into the maps.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
+				this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
 
 				// Attach the RtpSender to peer.
 				peer->AddRtpSender(rtpSender, receiver_peer->peerName, rtpReceiver->GetParameters());
@@ -506,8 +518,9 @@ namespace RTC
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
 				RTC::RtpSender* rtpSender = new RTC::RtpSender(sender_peer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
-				// Store into the map.
+				// Store into the maps.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
+				this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
 
 				// Attach the RtpSender to sender_peer.
 				sender_peer->AddRtpSender(rtpSender, peer->peerName, rtpReceiver->GetParameters());
@@ -553,7 +566,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Iterate all the map and remove the closed RtpSender from all the
+		// Iterate all the receiver/senders map and remove the closed RtpSender from all the
 		// RtpReceiver entries.
 		for (auto& kv : this->mapRtpReceiverRtpSenders)
 		{
@@ -561,6 +574,9 @@ namespace RTC
 
 			rtpSenders.erase(rtpSender);
 		}
+
+		// Also remove the entry from the sender/receiver map.
+		this->mapRtpSenderRtpReceiver.erase(rtpSender);
 	}
 
 	void Room::onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
