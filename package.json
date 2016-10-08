@@ -20,8 +20,8 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
-    "check-types": "^7.0.0",
-    "clone": "^1.0.2",
+    "check-types": "^7.0.1",
+    "clone": "^2.0.0",
     "debug": "^2.2.0",
     "netstring": "^0.3.0",
     "random-number": "0.0.7",
@@ -33,7 +33,7 @@
     "gulp-replace": "^0.5.4",
     "gulp-shell": "^0.5.2",
     "gulp-touch": "^1.0.1",
-    "tap": "^5.7.2"
+    "tap": "^7.1.2"
   },
   "scripts": {
     "test": "gulp test",
