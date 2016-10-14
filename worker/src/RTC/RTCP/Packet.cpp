@@ -91,7 +91,7 @@ namespace RTCP
 			}
 
 			if (!current) {
-				MS_WARN("Error parsing %s Packet", TypeString(RTCP::Type(header->packet_type)));
+				MS_WARN("error parsing %s Packet", TypeString(RTCP::Type(header->packet_type)));
 				return first;
 			}
 

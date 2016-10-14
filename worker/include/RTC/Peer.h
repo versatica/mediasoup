@@ -134,7 +134,6 @@ namespace RTC
 		return rtpSenders;
 	}
 
-	// TODO: Temporal stuff to route RTCP everywhere
 	inline
 	std::unordered_map<uint32_t, RTC::Transport*>& Peer::GetTransports()
 	{

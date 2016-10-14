@@ -165,6 +165,7 @@ namespace RTC { namespace RTCP
 	{
 		this->header->rtp_ts = (uint32_t)htonl(rtp_ts);
 	}
+
 	inline
 
 	uint32_t SenderReport::GetPacketCount()

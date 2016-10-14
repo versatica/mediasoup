@@ -707,7 +707,7 @@ namespace RTC
 			switch (packet->GetType())
 			{
 
-				/* RTCP comming from a remote receiver which must be forwarded to the corresponding remote sender */
+				/* RTCP coming from a remote receiver which must be forwarded to the corresponding remote sender */
 
 				case RTCP::Type::RR:
 					{
@@ -746,7 +746,7 @@ namespace RTC
 					}
 					break;
 
-				/* RTCP comming from a remote sender which must be forwarded to the corresponding remote receivers */
+				/* RTCP coming from a remote sender which must be forwarded to the corresponding remote receivers */
 
 				case RTCP::Type::SR:
 					{

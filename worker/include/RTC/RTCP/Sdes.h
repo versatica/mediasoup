@@ -195,7 +195,7 @@ namespace RTC { namespace RTCP
 	inline
 	size_t SdesChunk::GetSize()
 	{
-		size_t size = 4; // SSRC
+		size_t size = sizeof(this->ssrc);
 
 		for (auto item : this->items) {
 			size += item->GetSize();
