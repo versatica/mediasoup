@@ -10,17 +10,19 @@ namespace RTC
 namespace RTCP
 {
 
-	const char* SdesItem::_TypeString []
+	/* Sdes Item Class variables. */
+
+	std::map<SdesItem::Type, std::string> SdesItem::type2String =
 	{
-		"END",
-		"CNAME",
-		"NAME",
-		"EMAIL",
-		"PHONE",
-		"LOC",
-		"TOOL",
-		"NOTE",
-		"PRIV"
+		{ END,   "END"   },
+		{ CNAME, "CNAME" },
+		{ NAME,  "NAME"  },
+		{ EMAIL, "EMAIL" },
+		{ PHONE, "PHONE" },
+		{ LOC,   "LOC"   },
+		{ TOOL,  "TOOL"  },
+		{ NOTE,  "NOTE"  },
+		{ PRIV,  "PRIV"  },
 	};
 
 	/* SDES Item Class methods. */
@@ -43,13 +45,14 @@ namespace RTCP
 		return new SdesItem(header);
 	}
 
-	const char* SdesItem::TypeString(uint8_t type)
+	const std::string& SdesItem::Type2String(Type type)
 	{
-		if (type < sizeof(_TypeString))
-			return _TypeString[type];
+		static const std::string unknown("UNKNOWN");
 
-		else
-			return "UNKNOWN";
+		if (type2String.find(type) == type2String.end())
+			return unknown;
+
+		return type2String[type];
 	}
 
 	/* SDES Item Instance methods. */
@@ -79,7 +82,7 @@ namespace RTCP
 			return;
 
 		MS_WARN("\t\t<Sdes Item>");
-		MS_WARN("\t\t\ttype: %s", TypeString(this->GetType()));
+		MS_WARN("\t\t\ttype: %s", Type2String(this->GetType()).c_str());
 		MS_WARN("\t\t\tlength: %u", this->header->length);
 		MS_WARN("\t\t\tvalue: %.*s", this->header->length, this->header->value);
 		MS_WARN("\t\t</Sdes Item>");

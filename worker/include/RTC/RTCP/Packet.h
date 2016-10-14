@@ -3,6 +3,9 @@
 
 #include "common.h"
 
+#include "map"
+#include "string"
+
 namespace RTC
 {
 namespace RTCP
@@ -19,6 +22,21 @@ namespace RTCP
 		RTPFB = 205,
 		PSFB = 206
 	};
+
+	static std::map<Type, std::string> type2String =
+	{
+		{ Type::FIR,   "FIR"   },
+		{ Type::NACK,  "NACK"  },
+		{ Type::SR,    "SR"    },
+		{ Type::RR,    "RR"    },
+		{ Type::SDES,  "SDES"  },
+		{ Type::BYE,   "BYE"   },
+		{ Type::APP,   "APP"   },
+		{ Type::RTPFB, "RTPFB" },
+		{ Type::PSFB,  "PSBF"  }
+	};
+
+	const std::string& Type2String(Type type);
 
 	class Packet
 	{
@@ -42,7 +60,7 @@ namespace RTCP
 	public:
 		static bool IsRtcp(const uint8_t* data, size_t len);
 		static Packet* Parse(const uint8_t* data, size_t len);
-		static const char* TypeString(Type type);
+
 
 	public:
 		Packet(Type type);

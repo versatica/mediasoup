@@ -5,6 +5,8 @@
 #include "RTC/RTCP/Packet.h"
 
 #include <vector>
+#include <map>
+#include <string>
 
 namespace RTC { namespace RTCP
 {
@@ -12,8 +14,6 @@ namespace RTC { namespace RTCP
 	/* SDES Item */
 	class SdesItem
 	{
-
-	static const char* _TypeString [];
 
 	public:
 		typedef enum Type : uint8_t
@@ -39,7 +39,7 @@ namespace RTC { namespace RTCP
 
 	public:
 		static SdesItem* Parse(const uint8_t* data, size_t len);
-		static const char* TypeString(uint8_t type);
+		static const std::string& Type2String(Type type);
 
 	public:
 		SdesItem(Header* header);
@@ -60,6 +60,9 @@ namespace RTC { namespace RTCP
 		// Passed by argument.
 		Header* header = nullptr;
 		uint8_t* raw = nullptr;
+
+	private:
+		static std::map<SdesItem::Type, std::string> type2String;
 	};
 
 	class SdesChunk

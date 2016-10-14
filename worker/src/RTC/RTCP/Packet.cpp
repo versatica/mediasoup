@@ -11,6 +11,17 @@ namespace RTC
 {
 namespace RTCP
 {
+	/* Namespace methods */
+	const std::string& Type2String(Type type)
+	{
+		static const std::string unknown("UNKNOWN");
+
+		if (type2String.find(type) == type2String.end())
+			return unknown;
+
+		return type2String[type];
+	}
+
 	/* Class methods. */
 
 	Packet* Packet::Parse(const uint8_t* data, size_t len)
@@ -91,7 +102,7 @@ namespace RTCP
 			}
 
 			if (!current) {
-				MS_WARN("error parsing %s Packet", TypeString(RTCP::Type(header->packet_type)));
+				MS_WARN("error parsing %s Packet", Type2String(Type(header->packet_type)).c_str());
 				return first;
 			}
 
@@ -109,33 +120,6 @@ namespace RTCP
 		}
 
 		return first;
-	}
-
-	const char* Packet::TypeString(Type type)
-	{
-		switch (type)
-		{
-			case Type::FIR:
-				return "FIR";
-			case Type::NACK:
-				return "NACK";
-			case Type::SR:
-				return "SR";
-			case Type::RR:
-				return "RR";
-			case Type::SDES:
-				return "SDES";
-			case Type::BYE:
-				return "BYE";
-			case Type::APP:
-				return "APP";
-			case Type::RTPFB:
-				return "RTPFB";
-			case Type::PSFB:
-				return "PSFB";
-			default:
-				return "UNKNOWN";
-		}
 	}
 
 	/* Instance methods. */
