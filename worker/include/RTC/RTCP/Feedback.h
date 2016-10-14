@@ -1,6 +1,7 @@
 #ifndef MS_RTC_RTCP_FEEDBACK_H
 #define MS_RTC_RTCP_FEEDBACK_H
 
+#include "common.h"
 #include "RTC/RTCP/Packet.h"
 
 namespace RTC { namespace RTCP

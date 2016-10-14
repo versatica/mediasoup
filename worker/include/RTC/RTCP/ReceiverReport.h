@@ -1,8 +1,9 @@
 #ifndef MS_RTC_RTCP_RECEIVER_REPORT_H
 #define MS_RTC_RTCP_RECEIVER_REPORT_H
 
+#include "common.h"
 #include "RTC/RTCP/Packet.h"
-#include "utils.h"
+#include "Utils.h"
 
 #include <vector>
 

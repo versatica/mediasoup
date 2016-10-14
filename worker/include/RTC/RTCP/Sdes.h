@@ -1,6 +1,7 @@
 #ifndef MS_RTC_RTCP_SDES_H
 #define MS_RTC_RTCP_SDES_H
 
+#include "common.h"
 #include "RTC/RTCP/Packet.h"
 
 #include <vector>

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_RTCP_COMPOUND_PACKET_H
 #define MS_RTC_RTCP_COMPOUND_PACKET_H
 
+#include "common.h"
 #include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/Sdes.h"
