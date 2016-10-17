@@ -43,17 +43,24 @@ namespace RTC { namespace RTCP
 	{
 
 	public:
-		enum class MessageType : uint8_t
+		typedef enum MessageType : uint8_t
 		{
 			PLI  = 1,
 			SLI  = 2,
 			RPSI = 3,
+			FIR  = 4,
+			TSTR = 5,
+			TSTN = 6,
+			VBCM = 7,
+			PSLEI = 8,
+			ROI  = 9,
 			AFB  = 15,
 			EXT  = 31
-		};
+		} MessageType;
 
 	public:
 		static FeedbackPsPacket* Parse(const uint8_t* data, size_t len);
+		static const std::string& Type2String(MessageType type);
 
 	public:
 		// Parsed Report. Points to an external data.
@@ -64,6 +71,9 @@ namespace RTC { namespace RTCP
 
 	private:
 		MessageType messageType;
+
+	private:
+		static std::map<FeedbackPsPacket::MessageType, std::string> type2String;
 	};
 
 	class FeedbackRtpPacket
@@ -71,13 +81,22 @@ namespace RTC { namespace RTCP
 	{
 
 	public:
-		enum class MessageType : uint8_t
+		typedef enum MessageType : uint8_t
 		{
-			NACK  = 1
-		};
+			NACK   = 1,
+			TMMBR  = 3,
+			TMMBN  = 4,
+			SR_REQ = 5,
+			RAMS   = 6,
+			TLLEI  = 7,
+			ECN_FB = 8,
+			PS     = 9,
+			EXT    = 31
+		} MessageType;
 
 	public:
 		static FeedbackRtpPacket* Parse(const uint8_t* data, size_t len);
+		static const std::string& Type2String(MessageType type);
 
 	public:
 		// Parsed Report. Points to an external data.
@@ -88,6 +107,9 @@ namespace RTC { namespace RTCP
 
 	private:
 		MessageType messageType;
+
+	private:
+		static std::map<FeedbackRtpPacket::MessageType, std::string> type2String;
 	};
 
 	/* FeedbackPacket inline instance methods. */

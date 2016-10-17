@@ -49,6 +49,22 @@ namespace RTCP
 		MS_WARN("\tmedia_ssrc: %u", ntohl(this->header->m_ssrc));
 	}
 
+	/* FeedbackPsPacket Class variables */
+	std::map<FeedbackPsPacket::MessageType, std::string> FeedbackPsPacket::type2String =
+		{
+			{  PLI,   "PLI"   },
+			{  SLI,   "SLI"   },
+			{  RPSI,  "RPSI"  },
+			{  FIR,   "FIR"   },
+			{  TSTR,  "TSTR"  },
+			{  TSTN,  "TSTN"  },
+			{  VBCM,  "VBCM"  },
+			{  PSLEI, "PSLEI" },
+			{  ROI,   "ROI"   },
+			{  AFB,   "AFB"   },
+			{  EXT,   "EXT"   }
+		};
+
 	/* FeedbackPsPacket Class methods. */
 
 	FeedbackPsPacket* FeedbackPsPacket::Parse(const uint8_t* data, size_t len)
@@ -65,6 +81,16 @@ namespace RTCP
 		std::auto_ptr<FeedbackPsPacket> packet(new FeedbackPsPacket(commonHeader));
 
 		return packet.release();
+	}
+
+	const std::string& FeedbackPsPacket::Type2String(MessageType type)
+	{
+		static const std::string unknown("UNKNOWN");
+
+		if (type2String.find(type) == type2String.end())
+			return unknown;
+
+		return type2String[type];
 	}
 
 	/* FeedbackPsPacket Instance methods. */
@@ -84,9 +110,23 @@ namespace RTCP
 
 		MS_WARN("<FeedbackPsPacket>");
 		FeedbackPacket::Dump();
-		MS_WARN("\tmessageType: %u", (uint8_t)this->messageType);
+		MS_WARN("\tmessageType: %s", Type2String(this->messageType).c_str());
 		MS_WARN("</FeedbackPsPacket>");
 	}
+
+	/* FeedbackRtpPacket Class variables */
+	std::map<FeedbackRtpPacket::MessageType, std::string> FeedbackRtpPacket::type2String =
+		{
+			{ NACK,   "NACK"   },
+			{ TMMBR,  "TMMBR"  },
+			{ TMMBN,  "TMMBN"  },
+			{ SR_REQ, "SR_REQ" },
+			{ RAMS,   "RAMS"   },
+			{ TLLEI,  "TLLEI"  },
+			{ ECN_FB, "ECN_FB" },
+			{ PS,     "PS"     },
+			{ EXT,    "EXT"    }
+		};
 
 	/* FeedbackRtpPacket Class methods. */
 
@@ -104,6 +144,16 @@ namespace RTCP
 		std::auto_ptr<FeedbackRtpPacket> packet(new FeedbackRtpPacket(commonHeader));
 
 		return packet.release();
+	}
+
+	const std::string& FeedbackRtpPacket::Type2String(MessageType type)
+	{
+		static const std::string unknown("UNKNOWN");
+
+		if (type2String.find(type) == type2String.end())
+			return unknown;
+
+		return type2String[type];
 	}
 
 	/* FeedbackRtpPacket Instance methods. */
@@ -125,7 +175,7 @@ namespace RTCP
 
 		MS_WARN("<FeedbackRtpPacket>");
 		FeedbackPacket::Dump();
-		MS_WARN("\tmessageType: %u", (uint8_t)this->messageType);
+		MS_WARN("\tmessageType: %s", Type2String(this->messageType).c_str());
 		MS_WARN("</FeedbackRtpPacket>");
 	}
 }
