@@ -261,7 +261,14 @@ namespace RTC
 		this->receiverReport->Serialize();
 	};
 
-	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPacket* packet)
+	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet)
+	{
+		MS_TRACE();
+
+		this->transport->SendRtcpPacket(packet);
+	};
+
+	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 

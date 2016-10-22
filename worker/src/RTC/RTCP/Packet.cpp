@@ -89,13 +89,16 @@ namespace RTCP
 					current = nullptr;
 					break;
 
-				case Type::RTPFB:
-					current = FeedbackRtpPacket::Parse(data, len);
-					break;
-
 				case Type::PSFB:
 					current = FeedbackPsPacket::Parse(data, len);
+					current->Dump();
 					break;
+
+				case Type::RTPFB:
+					current = FeedbackRtpPacket::Parse(data, len);
+					current->Dump();
+					break;
+
 				default:
 					MS_WARN("unknown RTCP packet type [packet_type:%" PRIu8 "]", header->packet_type);
 					current = nullptr;
@@ -117,6 +120,7 @@ namespace RTCP
 				last->SetNext(current);
 
 			last = current->GetNext() ? current->GetNext() : current;
+
 		}
 
 		return first;

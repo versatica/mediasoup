@@ -1,7 +1,14 @@
 #define MS_CLASS "RTC::RTCP::Feedback"
 
 #include "RTC/RTCP/Feedback.h"
+#include "RTC/RTCP/FeedbackRtpTmmb.h"
+#include "RTC/RTCP/FeedbackPsPli.h"
+#include "RTC/RTCP/FeedbackPsSli.h"
+#include "RTC/RTCP/FeedbackPsRpsi.h"
+#include "RTC/RTCP/FeedbackPsFir.h"
+#include "RTC/RTCP/FeedbackPsTst.h"
 #include "Logger.h"
+
 #include <cstring>  // std::memcmp(), std::memcpy()
 
 namespace RTC
@@ -9,18 +16,51 @@ namespace RTC
 namespace RTCP
 {
 
-	/* FeedbackPacket Instance methods. */
+	/* FeedbackPacket Class methods. */
 
-	FeedbackPacket::FeedbackPacket(CommonHeader* commonHeader):
-		Packet(Type(commonHeader->packet_type)),
-		size((size_t)(ntohs(commonHeader->length) + 1) * 4)
+	template <typename T>
+	const std::string& FeedbackPacket<T>::MessageType2String(typename T::MessageType type)
 	{
-		this->header = (Header*)(commonHeader + 1 /* 1 => sizeof(CommonHeader) */);
+		static const std::string unknown("UNKNOWN");
+
+		if (type2String.find(type) == type2String.end())
+			return unknown;
+
+		return type2String[type];
 	}
 
 	/* FeedbackPacket Instance methods. */
 
-	size_t FeedbackPacket::Serialize(uint8_t* data)
+	template <typename T>
+	FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader):
+		Packet(RTCP::Type(commonHeader->packet_type)),
+		messageType(typename T::MessageType(commonHeader->count))
+	{
+		this->header = (Header*)(commonHeader + 1 /* 1 => sizeof(CommonHeader) */);
+	}
+
+	template <typename T>
+	FeedbackPacket<T>::FeedbackPacket(typename T::MessageType messageType, uint32_t sender_ssrc, uint32_t media_ssrc):
+		Packet(RtcpType),
+		messageType(messageType)
+	{
+		this->raw = new uint8_t[sizeof(Header)];
+		this->header = (Header*) this->raw;
+		this->header->s_ssrc = htonl(sender_ssrc);
+		this->header->m_ssrc = htonl(media_ssrc);
+	}
+
+	template <typename T>
+	FeedbackPacket<T>::~FeedbackPacket<T>()
+	{
+		if (this->raw)
+			delete this->raw;
+	}
+
+	/* FeedbackPacket Instance methods. */
+
+	template <typename T>
+	size_t FeedbackPacket<T>::Serialize(uint8_t* data)
 	{
 		MS_TRACE_STD();
 
@@ -29,45 +69,46 @@ namespace RTCP
 		// Copy the header.
 		std::memcpy(data+offset, this->header, sizeof(Header));
 
-		offset += sizeof(Header);
-
-		// No children serialization yet.
-		std::memcpy(data+offset, this->header+offset, this->size-offset);
-
-		return size;
+		return offset + sizeof(Header);
 	}
 
-	void FeedbackPacket::Dump()
+	template <typename T>
+	void FeedbackPacket<T>::Dump()
 	{
 		MS_TRACE_STD();
 
 		if (!Logger::HasDebugLevel())
 			return;
 
-		MS_WARN("\tsize: %zu", this->size);
+		MS_WARN("\tmessageType: %s", MessageType2String(this->messageType).c_str());
+		MS_WARN("\tsize: %zu", this->GetSize());
 		MS_WARN("\tsender_ssrc: %u", ntohl(this->header->s_ssrc));
 		MS_WARN("\tmedia_ssrc: %u", ntohl(this->header->m_ssrc));
 	}
 
-	/* FeedbackPsPacket Class variables */
-	std::map<FeedbackPsPacket::MessageType, std::string> FeedbackPsPacket::type2String =
+	/* FeedbackPacket specialization for Ps class. */
+
+	template<>
+	Type FeedbackPacket<FeedbackPs>::RtcpType = RTCP::Type::PSFB;
+
+	template<>
+	std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
 		{
-			{  PLI,   "PLI"   },
-			{  SLI,   "SLI"   },
-			{  RPSI,  "RPSI"  },
-			{  FIR,   "FIR"   },
-			{  TSTR,  "TSTR"  },
-			{  TSTN,  "TSTN"  },
-			{  VBCM,  "VBCM"  },
-			{  PSLEI, "PSLEI" },
-			{  ROI,   "ROI"   },
-			{  AFB,   "AFB"   },
-			{  EXT,   "EXT"   }
+			{  FeedbackPs::PLI,   "PLI"   },
+			{  FeedbackPs::SLI,   "SLI"   },
+			{  FeedbackPs::RPSI,  "RPSI"  },
+			{  FeedbackPs::FIR,   "FIR"   },
+			{  FeedbackPs::TSTR,  "TSTR"  },
+			{  FeedbackPs::TSTN,  "TSTN"  },
+			{  FeedbackPs::VBCM,  "VBCM"  },
+			{  FeedbackPs::PSLEI, "PSLEI" },
+			{  FeedbackPs::ROI,   "ROI"   },
+			{  FeedbackPs::AFB,   "AFB"   },
+			{  FeedbackPs::EXT,   "EXT"   }
 		};
 
-	/* FeedbackPsPacket Class methods. */
-
-	FeedbackPsPacket* FeedbackPsPacket::Parse(const uint8_t* data, size_t len)
+	template<>
+	FeedbackPacket<FeedbackPs>* FeedbackPacket<FeedbackPs>::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE_STD();
 
@@ -78,59 +119,82 @@ namespace RTCP
 		}
 
 		CommonHeader* commonHeader = (CommonHeader*)data;
-		std::auto_ptr<FeedbackPsPacket> packet(new FeedbackPsPacket(commonHeader));
+		FeedbackPsPacket* packet = nullptr;
 
-		return packet.release();
-	}
-
-	const std::string& FeedbackPsPacket::Type2String(MessageType type)
-	{
-		static const std::string unknown("UNKNOWN");
-
-		if (type2String.find(type) == type2String.end())
-			return unknown;
-
-		return type2String[type];
-	}
-
-	/* FeedbackPsPacket Instance methods. */
-
-	FeedbackPsPacket::FeedbackPsPacket(CommonHeader* commonHeader):
-		FeedbackPacket(commonHeader),
-		messageType((MessageType)commonHeader->count)
-	{
-	}
-
-	void FeedbackPsPacket::Dump()
-	{
-		MS_TRACE_STD();
-
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("<FeedbackPsPacket>");
-		FeedbackPacket::Dump();
-		MS_WARN("\tmessageType: %s", Type2String(this->messageType).c_str());
-		MS_WARN("</FeedbackPsPacket>");
-	}
-
-	/* FeedbackRtpPacket Class variables */
-	std::map<FeedbackRtpPacket::MessageType, std::string> FeedbackRtpPacket::type2String =
+		switch (FeedbackPs::MessageType(commonHeader->count))
 		{
-			{ NACK,   "NACK"   },
-			{ TMMBR,  "TMMBR"  },
-			{ TMMBN,  "TMMBN"  },
-			{ SR_REQ, "SR_REQ" },
-			{ RAMS,   "RAMS"   },
-			{ TLLEI,  "TLLEI"  },
-			{ ECN_FB, "ECN_FB" },
-			{ PS,     "PS"     },
-			{ EXT,    "EXT"    }
+			case FeedbackPs::PLI:
+				packet = FeedbackPsPliPacket::Parse(data, len);
+				break;
+
+			case FeedbackPs::SLI:
+				packet = FeedbackPsSliPacket::Parse(data, len);
+				break;
+
+			case FeedbackPs::RPSI:
+				packet = FeedbackPsRpsiPacket::Parse(data, len);
+				break;
+
+			case FeedbackPs::FIR:
+				packet = FeedbackPsFirPacket::Parse(data, len);
+				break;
+
+			case FeedbackPs::TSTR:
+				packet = FeedbackPsTstrPacket::Parse(data, len);
+				break;
+
+			case FeedbackPs::TSTN:
+				packet = FeedbackPsTstnPacket::Parse(data, len);
+				break;
+
+			case FeedbackPs::VBCM:
+				break;
+
+			case FeedbackPs::PSLEI:
+				break;
+
+			case FeedbackPs::ROI:
+				break;
+
+			case FeedbackPs::AFB:
+				break;
+
+			case FeedbackPs::EXT:
+				break;
+
+			default:
+			{
+				MS_WARN("unknown RTCP PS Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
+
+			}
+		}
+
+		return packet;
+	}
+
+	/* FeedbackPacket specialization for Rtp class. */
+
+	template<>
+	Type FeedbackPacket<FeedbackRtp>::RtcpType = RTCP::Type::RTPFB;
+
+	template<>
+	std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
+		{
+			{ FeedbackRtp::NACK,   "NACK"   },
+			{ FeedbackRtp::TMMBR,  "TMMBR"  },
+			{ FeedbackRtp::TMMBN,  "TMMBN"  },
+			{ FeedbackRtp::SR_REQ, "SR_REQ" },
+			{ FeedbackRtp::RAMS,   "RAMS"   },
+			{ FeedbackRtp::TLLEI,  "TLLEI"  },
+			{ FeedbackRtp::ECN_FB, "ECN_FB" },
+			{ FeedbackRtp::PS,     "PS"     },
+			{ FeedbackRtp::EXT,    "EXT"    }
 		};
 
 	/* FeedbackRtpPacket Class methods. */
 
-	FeedbackRtpPacket* FeedbackRtpPacket::Parse(const uint8_t* data, size_t len)
+	template<>
+	FeedbackPacket<FeedbackRtp>* FeedbackPacket<FeedbackRtp>::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE_STD();
 
@@ -141,42 +205,51 @@ namespace RTCP
 		}
 
 		CommonHeader* commonHeader = (CommonHeader*)data;
-		std::auto_ptr<FeedbackRtpPacket> packet(new FeedbackRtpPacket(commonHeader));
+		FeedbackRtpPacket* packet = nullptr;
 
-		return packet.release();
+		switch (FeedbackRtp::MessageType(commonHeader->count))
+		{
+			case FeedbackRtp::NACK:
+				break;
+
+			case FeedbackRtp::TMMBR:
+				packet = FeedbackRtpTmmbrPacket::Parse(data, len);
+				break;
+
+			case FeedbackRtp::TMMBN:
+				packet = FeedbackRtpTmmbnPacket::Parse(data, len);
+				break;
+
+			case FeedbackRtp::SR_REQ:
+				break;
+
+			case FeedbackRtp::RAMS:
+				break;
+
+			case FeedbackRtp::TLLEI:
+				break;
+
+			case FeedbackRtp::ECN_FB:
+				break;
+
+			case FeedbackRtp::PS:
+				break;
+
+			case FeedbackRtp::EXT:
+				break;
+
+			default:
+			{
+				MS_WARN("unknown RTCP RTP Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
+
+			}
+		}
+
+		return packet;
 	}
 
-	const std::string& FeedbackRtpPacket::Type2String(MessageType type)
-	{
-		static const std::string unknown("UNKNOWN");
-
-		if (type2String.find(type) == type2String.end())
-			return unknown;
-
-		return type2String[type];
-	}
-
-	/* FeedbackRtpPacket Instance methods. */
-
-	FeedbackRtpPacket::FeedbackRtpPacket(CommonHeader* commonHeader):
-		FeedbackPacket(commonHeader),
-		messageType((MessageType)commonHeader->count)
-	{
-	}
-
-	void FeedbackRtpPacket::Dump()
-	{
-		MS_TRACE_STD();
-
-		if (!Logger::HasDebugLevel())
-			return;
-
-		FeedbackPacket::Dump();
-
-		MS_WARN("<FeedbackRtpPacket>");
-		FeedbackPacket::Dump();
-		MS_WARN("\tmessageType: %s", Type2String(this->messageType).c_str());
-		MS_WARN("</FeedbackRtpPacket>");
-	}
+	// explicit instantiation to have all FeedbackPacket definitions in this file
+	template class FeedbackPacket<FeedbackPs>;
+	template class FeedbackPacket<FeedbackRtp>;
 }
 }

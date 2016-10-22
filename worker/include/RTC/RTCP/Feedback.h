@@ -6,7 +6,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class FeedbackPacket
+	template <typename T> class FeedbackPacket
 		: public Packet
 	{
 	public:
@@ -18,14 +18,22 @@ namespace RTC { namespace RTCP
 		};
 
 	public:
-		// Parsed Report. Points to an external data.
+		static RTCP::Type RtcpType;
+		static FeedbackPacket<T>* Parse(const uint8_t* data, size_t len);
+		static const std::string& MessageType2String(typename T::MessageType type);
+
+	public:
 		FeedbackPacket(CommonHeader* commonHeader);
+		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
+		virtual ~FeedbackPacket();
 
 		// Virtual methods inherited from Packet
-		void Dump() override;
-		virtual size_t GetCount() override = 0;
+		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetCount() override;
 		virtual size_t GetSize() override;
+
+		typename T::MessageType GetMessageType();
 
 		uint32_t GetSenderSsrc();
 		void SetSenderSsrc(uint32_t ssrc);
@@ -34,15 +42,18 @@ namespace RTC { namespace RTCP
 
 	private:
 		Header* header = nullptr;
-		size_t size;
+		uint8_t* raw = nullptr;
+
+		typename T::MessageType messageType;
+
+	private:
+		static std::map<typename T::MessageType, std::string> type2String;
 	};
 
-
-	class FeedbackPsPacket
-		: public FeedbackPacket
+	class FeedbackPs
 	{
-
 	public:
+
 		typedef enum MessageType : uint8_t
 		{
 			PLI  = 1,
@@ -57,30 +68,12 @@ namespace RTC { namespace RTCP
 			AFB  = 15,
 			EXT  = 31
 		} MessageType;
-
-	public:
-		static FeedbackPsPacket* Parse(const uint8_t* data, size_t len);
-		static const std::string& Type2String(MessageType type);
-
-	public:
-		// Parsed Report. Points to an external data.
-		FeedbackPsPacket(CommonHeader* commonHeader);
-
-		void Dump() override;
-		size_t GetCount() override;
-
-	private:
-		MessageType messageType;
-
-	private:
-		static std::map<FeedbackPsPacket::MessageType, std::string> type2String;
 	};
 
-	class FeedbackRtpPacket
-		: public FeedbackPacket
+	class FeedbackRtp
 	{
-
 	public:
+
 		typedef enum MessageType : uint8_t
 		{
 			NACK   = 1,
@@ -93,71 +86,53 @@ namespace RTC { namespace RTCP
 			PS     = 9,
 			EXT    = 31
 		} MessageType;
-
-	public:
-		static FeedbackRtpPacket* Parse(const uint8_t* data, size_t len);
-		static const std::string& Type2String(MessageType type);
-
-	public:
-		// Parsed Report. Points to an external data.
-		FeedbackRtpPacket(CommonHeader* commonHeader);
-
-		void Dump() override;
-		size_t GetCount() override;
-
-	private:
-		MessageType messageType;
-
-	private:
-		static std::map<FeedbackRtpPacket::MessageType, std::string> type2String;
 	};
+
+	typedef FeedbackPacket<FeedbackPs> FeedbackPsPacket ;
+	typedef FeedbackPacket<FeedbackRtp> FeedbackRtpPacket;
 
 	/* FeedbackPacket inline instance methods. */
 
-	inline
-	size_t FeedbackPacket::GetSize()
+	template <typename T>
+	typename T::MessageType FeedbackPacket<T>::GetMessageType()
 	{
-		return this->size;
+		return this->messageType;
 	}
 
-	inline
-	uint32_t FeedbackPacket::GetSenderSsrc()
+	template <typename T>
+	size_t FeedbackPacket<T>::GetCount()
+	{
+		return (size_t)this->GetMessageType();
+	}
+
+	template <typename T>
+	size_t FeedbackPacket<T>::GetSize()
+	{
+		return sizeof(CommonHeader) + sizeof(Header);
+	}
+
+	template <typename T>
+	uint32_t FeedbackPacket<T>::GetSenderSsrc()
 	{
 		return (uint32_t)ntohl(this->header->s_ssrc);
 	}
 
-	inline
-	void FeedbackPacket::SetSenderSsrc(uint32_t ssrc)
+	template <typename T>
+	void FeedbackPacket<T>::SetSenderSsrc(uint32_t ssrc)
 	{
 		this->header->s_ssrc = (uint32_t)htonl(ssrc);
 	}
 
-	inline
-	uint32_t FeedbackPacket::GetMediaSsrc()
+	template <typename T>
+	uint32_t FeedbackPacket<T>::GetMediaSsrc()
 	{
 		return (uint32_t)ntohl(this->header->m_ssrc);
 	}
 
-	inline
-	void FeedbackPacket::SetMediaSsrc(uint32_t ssrc)
+	template <typename T>
+	void FeedbackPacket<T>::SetMediaSsrc(uint32_t ssrc)
 	{
 		this->header->m_ssrc = (uint32_t)htonl(ssrc);
-	}
-
-	/* FeedbackPsPacket inline instance methods. */
-
-	inline
-	size_t FeedbackPsPacket::GetCount()
-	{
-		return (size_t)(uint8_t)this->messageType;
-	}
-
-	/* FeedbackRtpPacket inline instance methods. */
-
-	inline
-	size_t FeedbackRtpPacket::GetCount()
-	{
-		return (size_t)(uint8_t)this->messageType;
 	}
 }
 }

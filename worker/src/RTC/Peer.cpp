@@ -730,10 +730,24 @@ namespace RTC
 					}
 					break;
 
-				case RTCP::Type::RTPFB:
 				case RTCP::Type::PSFB:
 					{
-						RTCP::FeedbackPacket* feedback = (RTCP::FeedbackPacket*) packet;
+						RTCP::FeedbackPsPacket* feedback = (RTCP::FeedbackPsPacket*) packet;
+
+						RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+
+						if (!rtpSender) {
+							MS_WARN("no RtpSender found for ssrc: %u while procesing a Feedback packet", feedback->GetMediaSsrc());
+						}
+						else {
+							this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+						}
+					}
+					break;
+
+				case RTCP::Type::RTPFB:
+					{
+						RTCP::FeedbackRtpPacket* feedback = (RTCP::FeedbackRtpPacket*) packet;
 
 						RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 

@@ -619,7 +619,18 @@ namespace RTC
 		rtpReceiver->ReceiveRtcpReceiverReport(report);
 	}
 
-	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPacket* packet)
+	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+
+		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+
+		rtpReceiver->ReceiveRtcpFeedback(packet);
+	}
+
+	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 

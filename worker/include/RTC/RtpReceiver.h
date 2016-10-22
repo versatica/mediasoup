@@ -47,7 +47,8 @@ namespace RTC
 
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
-		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPacket* packet);
+		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
+		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
 
 	private:
 		void FillRtpParameters();
