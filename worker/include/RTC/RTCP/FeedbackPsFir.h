@@ -2,21 +2,36 @@
 #define MS_RTC_RTCP_FEEDBACK_FIR_H
 
 #include "common.h"
-#include "RTC/RTCP/Feedback.h"
+#include "RTC/RTCP/FeedbackPs.h"
 
-#include <vector>
+
+/* RFC 5104
+ * Full Intra Request (FIR)
+ *
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+0  |                               SSRC                            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+4  | Seq nr.       |
+5                  | Reserved                                      |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
 
 namespace RTC { namespace RTCP
 {
 	class FirItem
+		: public FeedbackItem
 	{
 	private:
 		struct Header
 		{
 			uint32_t ssrc;
-			uint8_t seqnr;
+			uint8_t sequence_number;
 			uint32_t reserved:24;
 		};
+
+	public:
+		static const FeedbackPs::MessageType MessageType = FeedbackPs::FIR;
 
 	public:
 		static FirItem* Parse(const uint8_t* data, size_t len);
@@ -24,46 +39,31 @@ namespace RTC { namespace RTCP
 	public:
 		FirItem(Header* header);
 		FirItem(FirItem* item);
-		FirItem(uint32_t ssrc, uint8_t seqnr);
-		~FirItem();
+		FirItem(uint32_t ssrc, uint8_t sequence_number);
 
-		void Dump();
-		void Serialize();
-		size_t Serialize(uint8_t* data);
-		size_t GetSize();
-
-		uint32_t GetSsrc();
-		uint8_t GetSeqNr();
-
-	private:
-		// Passed by argument.
-		Header* header = nullptr;
-		uint8_t* raw = nullptr;
-	};
-
-	class FeedbackPsFirPacket
-		: public FeedbackPsPacket
-	{
-
-	public:
-		static FeedbackPsFirPacket* Parse(const uint8_t* data, size_t len);
-
-	public:
-		// Parsed Report. Points to an external data.
-		FeedbackPsFirPacket(CommonHeader* commonHeader);
-		FeedbackPsFirPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
-
+		// Virtual methods inherited from FeedbackItem
 		void Dump() override;
 		size_t Serialize(uint8_t* data) override;
 		size_t GetSize() override;
 
-		void AddItem(FirItem* item);
+		uint32_t GetSsrc();
+		uint8_t GetSequenceNumber();
 
 	private:
-		std::vector<FirItem*> items;
+		// Passed by argument.
+		Header* header = nullptr;
 	};
 
+	// Fir packet declaration
+	typedef FeedbackPsItemPacket<FirItem> FeedbackPsFirPacket;
+
 	/* FirItem inline instance methods */
+
+	inline
+	FirItem::FirItem(Header* header):
+		header(header)
+	{
+	}
 
 	inline
 	FirItem::FirItem(FirItem* item) :
@@ -84,33 +84,11 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint8_t FirItem::GetSeqNr()
+	uint8_t FirItem::GetSequenceNumber()
 	{
-		return (uint8_t)this->header->seqnr;
+		return (uint8_t)this->header->sequence_number;
 	}
 
-
-	/* FeedbackPsFirPacket inline instance methods */
-
-	inline
-	size_t FeedbackPsFirPacket::GetSize()
-	{
-		size_t size = FeedbackPsPacket::GetSize();
-
-		for (auto item : this->items) {
-			size += item->GetSize();
-		}
-
-		return size;
-	}
-
-	inline
-	void FeedbackPsFirPacket::AddItem(FirItem* item)
-	{
-		this->items.push_back(item);
-	}
-
-}
-}
+} } // RTP::RTCP
 
 #endif

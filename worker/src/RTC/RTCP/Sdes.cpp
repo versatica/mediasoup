@@ -97,11 +97,7 @@ namespace RTCP
 
 		this->raw = new uint8_t[2 + this->header->length];
 
-		// Add minimum header.
-		std::memcpy(this->raw, this->header, 2);
-
-		// Copy the content.
-		std::memcpy(this->raw+2, this->header->value, this->header->length);
+		this->Serialize(this->raw);
 	}
 
 	size_t SdesItem::Serialize(uint8_t* data)

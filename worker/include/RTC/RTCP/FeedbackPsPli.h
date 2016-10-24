@@ -4,8 +4,6 @@
 #include "common.h"
 #include "RTC/RTCP/Feedback.h"
 
-#include <vector>
-
 namespace RTC { namespace RTCP
 {
 
@@ -24,7 +22,6 @@ namespace RTC { namespace RTCP
 		void Dump() override;
 	};
 
-}
-}
+} } // RTP::RTCP
 
 #endif

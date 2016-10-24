@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "RTC/RTCP/Packet.h"
+#include "RTC/RTCP/FeedbackItem.h"
 
 namespace RTC { namespace RTCP
 {
@@ -23,6 +24,14 @@ namespace RTC { namespace RTCP
 		static const std::string& MessageType2String(typename T::MessageType type);
 
 	public:
+		typename T::MessageType GetMessageType();
+
+		uint32_t GetSenderSsrc();
+		void SetSenderSsrc(uint32_t ssrc);
+		uint32_t GetMediaSsrc();
+		void SetMediaSsrc(uint32_t ssrc);
+
+	protected:
 		FeedbackPacket(CommonHeader* commonHeader);
 		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
 		virtual ~FeedbackPacket();
@@ -32,13 +41,6 @@ namespace RTC { namespace RTCP
 		virtual size_t Serialize(uint8_t* data) override;
 		virtual size_t GetCount() override;
 		virtual size_t GetSize() override;
-
-		typename T::MessageType GetMessageType();
-
-		uint32_t GetSenderSsrc();
-		void SetSenderSsrc(uint32_t ssrc);
-		uint32_t GetMediaSsrc();
-		void SetMediaSsrc(uint32_t ssrc);
 
 	private:
 		Header* header = nullptr;
@@ -88,7 +90,7 @@ namespace RTC { namespace RTCP
 		} MessageType;
 	};
 
-	typedef FeedbackPacket<FeedbackPs> FeedbackPsPacket ;
+	typedef FeedbackPacket<FeedbackPs> FeedbackPsPacket;
 	typedef FeedbackPacket<FeedbackRtp> FeedbackRtpPacket;
 
 	/* FeedbackPacket inline instance methods. */

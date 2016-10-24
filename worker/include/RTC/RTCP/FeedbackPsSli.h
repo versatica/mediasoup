@@ -2,20 +2,30 @@
 #define MS_RTC_RTCP_FEEDBACK_SLI_H
 
 #include "common.h"
-#include "RTC/RTCP/Feedback.h"
+#include "RTC/RTCP/FeedbackPs.h"
 
-#include <vector>
+/* RFC 4585
+ * Slice Loss Indication (SLI)
+ *
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |            First        |        Number           | PictureID |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ */
 
 namespace RTC { namespace RTCP
 {
 	class SliItem
+		: public FeedbackItem
 	{
-
 	private:
 		struct Header
 		{
 			uint32_t compact;
 		};
+
+	public:
+		static const FeedbackPs::MessageType MessageType = FeedbackPs::SLI;
 
 	public:
 		static SliItem* Parse(const uint8_t* data, size_t len);
@@ -25,10 +35,10 @@ namespace RTC { namespace RTCP
 		SliItem(SliItem* item);
 		SliItem(uint16_t first, uint16_t number, uint8_t pictureId);
 
-		void Dump();
-		void Serialize();
-		size_t Serialize(uint8_t* data);
-		size_t GetSize();
+		// Virtual methods inherited from FeedbackItem
+		void Dump() override;
+		size_t Serialize(uint8_t* data) override;
+		size_t GetSize() override;
 
 		uint16_t GetFirst();
 		void SetFirst(uint16_t first);
@@ -40,38 +50,14 @@ namespace RTC { namespace RTCP
 	private:
 		// Passed by argument.
 		Header* header = nullptr;
-		uint8_t* raw = nullptr;
 
 		uint16_t first;
 		uint16_t number;
 		uint8_t pictureId;
 	};
 
-	class FeedbackPsSliPacket
-		: public FeedbackPsPacket
-	{
-	public:
-		typedef std::vector<SliItem*>::iterator Iterator;
-
-	public:
-		static FeedbackPsSliPacket* Parse(const uint8_t* data, size_t len);
-
-	public:
-		// Parsed Report. Points to an external data.
-		FeedbackPsSliPacket(CommonHeader* commonHeader);
-		FeedbackPsSliPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
-
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
-		void AddItem(SliItem* item);
-		Iterator Begin();
-		Iterator End();
-
-	private:
-		std::vector<SliItem*> items;
-	};
+	// Sli packet declaration
+	typedef FeedbackPsItemPacket<SliItem> FeedbackPsSliPacket;
 
 	/* SliItem inline instance methods */
 
@@ -117,38 +103,6 @@ namespace RTC { namespace RTCP
 		this->pictureId = pictureId;
 	}
 
-	/* FeedbackPsSliPacket inline instance methods */
-
-	inline
-	size_t FeedbackPsSliPacket::GetSize()
-	{
-		size_t size = FeedbackPsPacket::GetSize();
-
-		for (auto item : this->items) {
-			size += item->GetSize();
-		}
-
-		return size;
-	}
-
-	inline
-	void FeedbackPsSliPacket::AddItem(SliItem* item)
-	{
-		this->items.push_back(item);
-	}
-
-	inline
-	FeedbackPsSliPacket::Iterator FeedbackPsSliPacket::Begin()
-	{
-		return this->items.begin();
-	}
-
-	inline
-	FeedbackPsSliPacket::Iterator FeedbackPsSliPacket::End()
-	{
-		return this->items.end();
-	}
-}
-}
+} } // RTP::RTCP
 
 #endif

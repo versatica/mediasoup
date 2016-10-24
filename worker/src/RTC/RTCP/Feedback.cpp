@@ -7,6 +7,7 @@
 #include "RTC/RTCP/FeedbackPsRpsi.h"
 #include "RTC/RTCP/FeedbackPsFir.h"
 #include "RTC/RTCP/FeedbackPsTst.h"
+#include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "Logger.h"
 
 #include <cstring>  // std::memcmp(), std::memcpy()
@@ -148,6 +149,7 @@ namespace RTCP
 				break;
 
 			case FeedbackPs::VBCM:
+				packet = FeedbackPsVbcmPacket::Parse(data, len);
 				break;
 
 			case FeedbackPs::PSLEI:

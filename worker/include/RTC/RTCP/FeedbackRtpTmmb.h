@@ -2,21 +2,35 @@
 #define MS_RTC_RTCP_FEEDBACK_TMMB_H
 
 #include "common.h"
-#include "RTC/RTCP/Feedback.h"
+#include "RTC/RTCP/FeedbackRtp.h"
 
-#include <vector>
+
+/* RFC 5104
+ * Temporary Maximum Media Stream Bit Rate Request (TMMBR)
+ * Temporary Maximum Media Stream Bit Rate Notification (TMMBN)
+
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                              SSRC                             |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  | MxTBR Exp |  MxTBR Mantissa                 |Measured Overhead|
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
 
 namespace RTC { namespace RTCP
 {
-	class TmmbItem
+	template<typename T> class TmmbItem
+		: public FeedbackItem
 	{
-
 	private:
 		struct Header
 		{
 			uint32_t ssrc;
 			uint32_t compact;
 		};
+
+	public:
+		static const FeedbackRtp::MessageType MessageType;
 
 	public:
 		static TmmbItem* Parse(const uint8_t* data, size_t len);
@@ -26,12 +40,11 @@ namespace RTC { namespace RTCP
 		TmmbItem(TmmbItem* item);
 		TmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
 
-		void Dump();
-		void Serialize();
-		size_t Serialize(uint8_t* data);
-		size_t GetSize();
+		// Virtual methods inherited from FeedbackItem
+		void Dump() override;
+		size_t Serialize(uint8_t* data) override;
+		size_t GetSize() override;
 
-		bool IsCorrect();
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);
 		uint64_t GetBitrate();
@@ -42,117 +55,67 @@ namespace RTC { namespace RTCP
 	private:
 		// Passed by argument.
 		Header* header = nullptr;
-		uint8_t* raw = nullptr;
 
 		uint64_t bitrate;
 		uint16_t overhead;
-		bool isCorrect = true;
 	};
 
-	template <typename T> class FeedbackRtpTmmbPacket
-		: public FeedbackRtpPacket
-	{
-	public:
-		typedef std::vector<TmmbItem*>::iterator Iterator;
-
-	public:
-		static const std::string Name;
-		static const FeedbackRtp::MessageType MessageType;
-		static FeedbackRtpTmmbPacket<T>* Parse(const uint8_t* data, size_t len);
-
-	public:
-		// Parsed Report. Points to an external data.
-		FeedbackRtpTmmbPacket(CommonHeader* commonHeader);
-		FeedbackRtpTmmbPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
-
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
-		void AddItem(TmmbItem* item);
-		Iterator Begin();
-		Iterator End();
-
-	private:
-		std::vector<TmmbItem*> items;
-	};
-
+	// Tmmb types declaration
 	class Tmmbr {};
 	class Tmmbn {};
 
-	typedef FeedbackRtpTmmbPacket<Tmmbr> FeedbackRtpTmmbrPacket;
-	typedef FeedbackRtpTmmbPacket<Tmmbn> FeedbackRtpTmmbnPacket;
+	// Tmmbn classes declaration
+	typedef TmmbItem<Tmmbr> TmmbrItem;
+	typedef TmmbItem<Tmmbn> TmmbnItem;
+
+	// Tmmbn packets declaration
+	typedef FeedbackRtpItemPacket<TmmbrItem> FeedbackRtpTmmbrPacket;
+	typedef FeedbackRtpItemPacket<TmmbnItem> FeedbackRtpTmmbnPacket;
 
 	/* TmmbItem inline instance methods */
 
-	inline
-	size_t TmmbItem::GetSize()
+	template <typename T>
+	size_t TmmbItem<T>::GetSize()
 	{
 		return sizeof(Header);
 	}
 
-	inline
-	bool TmmbItem::IsCorrect()
-	{
-		return this->isCorrect;
-	}
-
-	inline
-	uint32_t TmmbItem::GetSsrc()
+	template <typename T>
+	uint32_t TmmbItem<T>::GetSsrc()
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
-	inline
-	void TmmbItem::SetSsrc(uint32_t ssrc)
+	template <typename T>
+	void TmmbItem<T>::SetSsrc(uint32_t ssrc)
 	{
 		this->header->ssrc = (uint32_t)htonl(ssrc);
 	}
 
-	inline
-	uint64_t TmmbItem::GetBitrate()
+	template <typename T>
+	uint64_t TmmbItem<T>::GetBitrate()
 	{
 		return this->bitrate;
 	}
 
-	inline
-	void TmmbItem::SetBitrate(uint64_t bitrate)
+	template <typename T>
+	void TmmbItem<T>::SetBitrate(uint64_t bitrate)
 	{
 		this->bitrate = bitrate;
 	}
 
-	inline
-	uint16_t TmmbItem::GetOverhead()
+	template <typename T>
+	uint16_t TmmbItem<T>::GetOverhead()
 	{
 		return this->overhead;
 	}
 
-	inline
-	void TmmbItem::SetOverhead(uint16_t overhead)
+	template <typename T>
+	void TmmbItem<T>::SetOverhead(uint16_t overhead)
 	{
 		this->overhead = overhead;
 	}
 
-	/* FeedbackRtpTmmbPacket inline instance methods */
-
-	template <typename T>
-	size_t FeedbackRtpTmmbPacket<T>::GetSize()
-	{
-		size_t size = FeedbackRtpPacket::GetSize();
-
-		for (auto item : this->items) {
-			size += item->GetSize();
-		}
-
-		return size;
-	}
-
-	template <typename T>
-	void FeedbackRtpTmmbPacket<T>::AddItem(TmmbItem* item)
-	{
-		this->items.push_back(item);
-	}
-}
-}
+} } // RTP::RTCP
 
 #endif

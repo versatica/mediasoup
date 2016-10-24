@@ -12,7 +12,8 @@ namespace RTCP
 
 	/* TmmbItem Class methods. */
 
-	TmmbItem* TmmbItem::Parse(const uint8_t* data, size_t len)
+	template <typename T>
+	TmmbItem<T>* TmmbItem<T>::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE_STD();
 
@@ -35,7 +36,8 @@ namespace RTCP
 	}
 
 	/* TmmbItem Instance methods. */
-	TmmbItem::TmmbItem(Header* header)
+	template <typename T>
+	TmmbItem<T>::TmmbItem(Header* header)
 	{
 		this->header = header;
 
@@ -52,7 +54,8 @@ namespace RTCP
 		}
 	}
 
-	size_t TmmbItem::Serialize(uint8_t* data)
+	template <typename T>
+	size_t TmmbItem<T>::Serialize(uint8_t* data)
 	{
 		uint64_t mantissa = this->bitrate;
 		uint32_t exponent = 0;
@@ -73,7 +76,8 @@ namespace RTCP
 		return sizeof(Header);
 	}
 
-	void TmmbItem::Dump()
+	template <typename T>
+	void TmmbItem<T>::Dump()
 	{
 		MS_TRACE_STD();
 
@@ -87,103 +91,20 @@ namespace RTCP
 		MS_WARN("\t\t</Tmmb Item>");
 	}
 
-/* FeedbackRtpTmmbPacket Class methods. */
-
-	template <typename T>
-	FeedbackRtpTmmbPacket<T>* FeedbackRtpTmmbPacket<T>::Parse(const uint8_t* data, size_t len)
-	{
-		MS_TRACE_STD();
-
-		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
-		{
-				MS_WARN("not enough space for Feedback packet, discarded");
-				return nullptr;
-		}
-
-		CommonHeader* commonHeader = (CommonHeader*)data;
-		std::auto_ptr<FeedbackRtpTmmbPacket<T> > packet(new FeedbackRtpTmmbPacket<T>(commonHeader));
-
-		size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
-
-		while (len - offset > 0)
-		{
-			TmmbItem* item = TmmbItem::Parse(data+offset, len-offset);
-			if (item) {
-				packet->AddItem(item);
-				offset += item->GetSize();
-			} else {
-				return packet.release();
-			}
-		}
-
-		return packet.release();
-	}
-
-	/* FeedbackRtpTmmbPacket Instance methods. */
-
-	template <typename T>
-	FeedbackRtpTmmbPacket<T>::FeedbackRtpTmmbPacket(CommonHeader* commonHeader):
-		FeedbackRtpPacket(commonHeader)
-	{
-	}
-
-	template <typename T>
-	FeedbackRtpTmmbPacket<T>::FeedbackRtpTmmbPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackRtpPacket(MessageType, sender_ssrc, media_ssrc)
-	{
-	}
-
-	template <typename T>
-	size_t FeedbackRtpTmmbPacket<T>::Serialize(uint8_t* data)
-	{
-		MS_TRACE_STD();
-
-		size_t offset = FeedbackPacket::Serialize(data);
-
-		for(auto item : this->items) {
-			offset += item->Serialize(data + offset);
-		}
-
-		return offset;
-	}
-
-	template <typename T>
-	void FeedbackRtpTmmbPacket<T>::Dump()
-	{
-		MS_TRACE_STD();
-
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t<%s>", Name.c_str());
-		FeedbackRtpPacket::Dump();
-
-		for (auto item : this->items) {
-			item->Dump();
-		}
-
-		MS_WARN("\t</%s>", Name.c_str());
-	}
-
 	/* FeedbackRtpTmmbPacket specialization for Tmmbr class. */
 
 	template<>
-	const std::string FeedbackRtpTmmbPacket<Tmmbr>::Name = "FeedbackRtpTmmbrPacket";
-
-	template<>
-	const FeedbackRtp::MessageType FeedbackRtpTmmbPacket<Tmmbr>::MessageType = FeedbackRtp::TMMBR;
+	const FeedbackRtp::MessageType TmmbItem<Tmmbr>::MessageType = FeedbackRtp::TMMBR;
 
 	/* FeedbackRtpTmmbPacket specialization for Tmmbn class. */
 
 	template<>
-	const std::string FeedbackRtpTmmbPacket<Tmmbn>::Name = "FeedbackRtpTmmbnPacket";
+	const FeedbackRtp::MessageType TmmbItem<Tmmbn>::MessageType = FeedbackRtp::TMMBN;
 
-	template<>
-	const FeedbackRtp::MessageType FeedbackRtpTmmbPacket<Tmmbn>::MessageType = FeedbackRtp::TMMBN;
+	// explicit instantiation to have all TmmbItem definitions in this file
+	template class TmmbItem<Tmmbr>;
+	template class TmmbItem<Tmmbn>;
 
-	// explicit instantiation to have all FeedbackRtpTmmbPacket definitions in this file
-	template class FeedbackRtpTmmbPacket<Tmmbr>;
-	template class FeedbackRtpTmmbPacket<Tmmbn>;
 }
 }
 
