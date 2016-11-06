@@ -6,6 +6,7 @@
 #include "RTC/RTCP/FeedbackPsFir.h"
 #include "RTC/RTCP/FeedbackPsTst.h"
 #include "RTC/RTCP/FeedbackPsVbcm.h"
+#include "RTC/RTCP/FeedbackPsLei.h"
 #include "Logger.h"
 
 namespace RTC { namespace RTCP
@@ -83,6 +84,7 @@ namespace RTC { namespace RTCP
 	template class FeedbackPsItemPacket<TstrItem>;
 	template class FeedbackPsItemPacket<TstnItem>;
 	template class FeedbackPsItemPacket<VbcmItem>;
+	template class FeedbackPsItemPacket<PsLeiItem>;
 
 } } // RTP::RTCP
 
