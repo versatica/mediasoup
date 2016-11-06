@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpPacket"
 
 #include "RTC/RTCP/FeedbackRtp.h"
+#include "RTC/RTCP/FeedbackRtpNack.h"
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "Logger.h"
 
@@ -75,6 +76,7 @@ namespace RTCP
 	}
 
 	// explicit instantiation to have all FeedbackRtpPacket definitions in this file
+	template class FeedbackRtpItemPacket<NackItem>;
 	template class FeedbackRtpItemPacket<TmmbrItem>;
 	template class FeedbackRtpItemPacket<TmmbnItem>;
 }
