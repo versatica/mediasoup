@@ -5,9 +5,7 @@
 
 #include <cstring>  // std::memcmp(), std::memcpy()
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 
 	/* TmmbItem Class methods. */
@@ -105,6 +103,4 @@ namespace RTCP
 	template class TmmbItem<Tmmbr>;
 	template class TmmbItem<Tmmbn>;
 
-}
-}
-
+} } // RTP::RTCP

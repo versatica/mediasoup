@@ -22,6 +22,20 @@ namespace RTC { namespace RTCP
 		void Dump() override;
 	};
 
+	/* inline instance methods. */
+
+	inline
+	FeedbackPsPliPacket::FeedbackPsPliPacket(CommonHeader* commonHeader):
+		FeedbackPsPacket(commonHeader)
+	{
+	}
+
+	inline
+	FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
+		FeedbackPsPacket(FeedbackPs::PLI, sender_ssrc, media_ssrc)
+	{
+	}
+
 } } // RTP::RTCP
 
 #endif

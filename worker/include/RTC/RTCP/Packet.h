@@ -6,9 +6,7 @@
 #include "map"
 #include "string"
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 	enum class Type : uint8_t
 	{
@@ -33,7 +31,7 @@ namespace RTCP
 		{ Type::BYE,   "BYE"   },
 		{ Type::APP,   "APP"   },
 		{ Type::RTPFB, "RTPFB" },
-		{ Type::PSFB,  "PSBF"  }
+		{ Type::PSFB,  "PSFB"  }
 	};
 
 	const std::string& Type2String(Type type);
@@ -149,7 +147,7 @@ namespace RTCP
 	{
 		return this->raw;
 	}
-}
-}
+
+} } // RTP::RTCP
 
 #endif

@@ -19,9 +19,7 @@
 
 #include <cstring>  // std::memcmp(), std::memcpy()
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 
 	/* FeedbackPacket Class methods. */
@@ -31,10 +29,10 @@ namespace RTCP
 	{
 		static const std::string unknown("UNKNOWN");
 
-		if (type2String.find(type) == type2String.end())
+		if (FeedbackPacket<T>::type2String.find(type) == FeedbackPacket<T>::type2String.end())
 			return unknown;
 
-		return type2String[type];
+		return FeedbackPacket<T>::type2String[type];
 	}
 
 	/* FeedbackPacket Instance methods. */
@@ -88,10 +86,9 @@ namespace RTCP
 		if (!Logger::HasDebugLevel())
 			return;
 
-		MS_WARN("\tmessageType: %s", MessageType2String(this->messageType).c_str());
-		MS_WARN("\tsize: %zu", this->GetSize());
 		MS_WARN("\tsender_ssrc: %u", ntohl(this->header->s_ssrc));
 		MS_WARN("\tmedia_ssrc: %u", ntohl(this->header->m_ssrc));
+		MS_WARN("\tsize: %zu", this->GetSize());
 	}
 
 	/* FeedbackPacket specialization for Ps class. */
@@ -263,5 +260,5 @@ namespace RTCP
 	// explicit instantiation to have all FeedbackPacket definitions in this file
 	template class FeedbackPacket<FeedbackPs>;
 	template class FeedbackPacket<FeedbackRtp>;
-}
-}
+
+} } // RTP::RTCP

@@ -9,14 +9,11 @@
 
 #include <vector>
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 	class CompoundPacket
 	{
 	public:
-		CompoundPacket(){};
 		~CompoundPacket();
 
 		uint8_t* GetRaw();
@@ -84,7 +81,7 @@ namespace RTCP
 	{
 		this->sdesPacket.AddChunk(chunk);
 	}
-}
-}
+
+} } // RTP::RTCP
 
 #endif

@@ -139,9 +139,8 @@ namespace RTC { namespace RTCP
 	inline
 	SdesItem::~SdesItem()
 	{
-		if (this->raw) {
+		if (this->raw)
 			delete this->raw;
-		}
 	}
 
 	inline
@@ -190,7 +189,8 @@ namespace RTC { namespace RTCP
 	inline
 	SdesChunk::~SdesChunk()
 	{
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			delete item;
 		}
 	}
@@ -200,7 +200,8 @@ namespace RTC { namespace RTCP
 	{
 		size_t size = sizeof(this->ssrc);
 
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			size += item->GetSize();
 		}
 
@@ -250,7 +251,8 @@ namespace RTC { namespace RTCP
 	inline
 	SdesPacket::~SdesPacket()
 	{
-		for (auto chunk : this->chunks) {
+		for (auto chunk : this->chunks)
+		{
 			delete chunk;
 		}
 	}
@@ -266,7 +268,8 @@ namespace RTC { namespace RTCP
 	{
 		size_t size = sizeof(Packet::CommonHeader);
 
-		for (auto chunk : this->chunks) {
+		for (auto chunk : this->chunks)
+		{
 			size += chunk->GetSize();
 		}
 
@@ -290,7 +293,7 @@ namespace RTC { namespace RTCP
 	{
 		return this->chunks.end();
 	}
-}
-}
+
+} } // RTP::RTCP
 
 #endif

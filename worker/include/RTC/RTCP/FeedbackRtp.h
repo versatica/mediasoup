@@ -55,7 +55,8 @@ namespace RTC { namespace RTCP
 	{
 		size_t size = FeedbackRtpPacket::GetSize();
 
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			size += item->GetSize();
 		}
 
@@ -80,7 +81,6 @@ namespace RTC { namespace RTCP
 		return this->items.end();
 	}
 
-}
-}
+} } // RTP::RTCP
 
 #endif

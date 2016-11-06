@@ -8,9 +8,7 @@
 #include "RTC/RTCP/Feedback.h"
 #include "Logger.h"
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 	/* Namespace methods */
 	const std::string& Type2String(Type type)
@@ -92,12 +90,10 @@ namespace RTCP
 
 				case Type::PSFB:
 					current = FeedbackPsPacket::Parse(data, len);
-					current->Dump();
 					break;
 
 				case Type::RTPFB:
 					current = FeedbackRtpPacket::Parse(data, len);
-					current->Dump();
 					break;
 
 				default:
@@ -105,12 +101,26 @@ namespace RTCP
 					current = nullptr;
 			}
 
-			if (!current) {
-				MS_WARN("error parsing %s Packet", Type2String(Type(header->packet_type)).c_str());
+			if (!current)
+			{
+				std::string packetType = Type2String(Type(header->packet_type));
+
+				if (Type(header->packet_type) == Type::PSFB)
+				{
+					packetType += " "+ FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
+				}
+
+				else if (Type(header->packet_type) == Type::RTPFB)
+				{
+					packetType += " "+ FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
+				}
+
+				MS_WARN("error parsing %s Packet", packetType.c_str());
+
 				return first;
 			}
 
-			//current->Dump();
+			current->Dump();
 
 			data += packet_len;
 			len -= packet_len;
@@ -157,5 +167,5 @@ namespace RTCP
 
 		return sizeof(CommonHeader);
 	}
-}
-}
+
+} } // RTP::RTCP

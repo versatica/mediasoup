@@ -5,9 +5,7 @@
 #include "Logger.h"
 #include <cstring>  // std::memcmp(), std::memcpy()
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 
 	/* Sdes Item Class variables. */
@@ -259,5 +257,5 @@ namespace RTCP
 
 		MS_WARN("</Sdes Packet>");
 	}
-}
-}
+
+} } // RTP::RTCP

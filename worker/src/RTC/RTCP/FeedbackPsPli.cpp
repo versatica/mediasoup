@@ -5,9 +5,7 @@
 
 #include <cstring>  // std::memcmp(), std::memcpy()
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 
 /* FeedbackPsPliPacket Class methods. */
@@ -27,18 +25,6 @@ namespace RTCP
 		return packet.release();
 	}
 
-	/* FeedbackPsPliPacket Instance methods. */
-
-	FeedbackPsPliPacket::FeedbackPsPliPacket(CommonHeader* commonHeader):
-		FeedbackPsPacket(commonHeader)
-	{
-	}
-
-	FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsPacket(FeedbackPs::PLI, sender_ssrc, media_ssrc)
-	{
-	}
-
 	void FeedbackPsPliPacket::Dump()
 	{
 		MS_TRACE_STD();
@@ -50,6 +36,5 @@ namespace RTCP
 		FeedbackPsPacket::Dump();
 		MS_WARN("\t</FeedbackPsPliPacket>");
 	}
-}
-}
 
+} } // RTP::RTCP

@@ -5,9 +5,7 @@
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "Logger.h"
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 
 /* FeedbackRtpItemPacket Class methods. */
@@ -79,6 +77,5 @@ namespace RTCP
 	template class FeedbackRtpItemPacket<NackItem>;
 	template class FeedbackRtpItemPacket<TmmbrItem>;
 	template class FeedbackRtpItemPacket<TmmbnItem>;
-}
-}
 
+} } // RTP::RTCP

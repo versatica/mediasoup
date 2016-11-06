@@ -202,7 +202,8 @@ namespace RTC { namespace RTCP
 	inline
 	SenderReportPacket::~SenderReportPacket()
 	{
-		for(auto report : this->reports) {
+		for(auto report : this->reports)
+		{
 			delete report;
 		}
 	}
@@ -218,7 +219,8 @@ namespace RTC { namespace RTCP
 	{
 		size_t size = sizeof(Packet::CommonHeader);
 
-		for (auto report : this->reports) {
+		for (auto report : this->reports)
+		{
 			size += report->GetSize();
 		}
 
@@ -242,7 +244,7 @@ namespace RTC { namespace RTCP
 	{
 		return this->reports.end();
 	}
-}
-}
+
+} } // RTP::RTCP
 
 #endif

@@ -137,13 +137,13 @@ namespace RTC { namespace RTCP
 		uint32_t value = (uint32_t)Utils::Byte::Get3Bytes((uint8_t*)this->header, 5);
 
 		// possitive value
-		if (((value >> 23) & 1) == 0) {
+		if (((value >> 23) & 1) == 0)
 			return value;
-		}
+
 		// negative value
-		else if (value != 0x0800000) {
+		else if (value != 0x0800000)
 			value &= ~(1 << 23);
-		}
+
 		return -value;
 	}
 
@@ -239,7 +239,8 @@ namespace RTC { namespace RTCP
 	inline
 	ReceiverReportPacket::~ReceiverReportPacket()
 	{
-		for(auto report : this->reports) {
+		for(auto report : this->reports)
+		{
 			delete report;
 		}
 	}
@@ -255,7 +256,8 @@ namespace RTC { namespace RTCP
 	{
 		size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
 
-		for (auto report : reports) {
+		for (auto report : reports)
+		{
 			size += report->GetSize();
 		}
 
@@ -291,7 +293,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->reports.end();
 	}
-}
-}
 
+} } // RTP::RTCP
 #endif

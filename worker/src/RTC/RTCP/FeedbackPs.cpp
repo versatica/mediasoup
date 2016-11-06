@@ -52,7 +52,8 @@ namespace RTC { namespace RTCP
 
 		size_t offset = FeedbackPacket::Serialize(data);
 
-		for(auto item : this->items) {
+		for(auto item : this->items)
+		{
 			offset += item->Serialize(data + offset);
 		}
 
@@ -70,7 +71,8 @@ namespace RTC { namespace RTCP
 		MS_WARN("\t<%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
 		FeedbackPsPacket::Dump();
 
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			item->Dump();
 		}
 

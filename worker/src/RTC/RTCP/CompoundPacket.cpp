@@ -2,9 +2,7 @@
 
 #include "RTC/RTCP/CompoundPacket.h"
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 
 	/* CopoundPacket Instance methods. */
@@ -106,5 +104,5 @@ namespace RTCP
 		if (this->sdesPacket.GetCount())
 			this->sdesPacket.Dump();
 	}
-}
-}
+
+} } // RTP::RTCP

@@ -52,7 +52,6 @@ namespace RTC { namespace RTCP
 		return this->isCorrect;
 	}
 
-}
-}
+} } // RTP::RTCP
 
 #endif

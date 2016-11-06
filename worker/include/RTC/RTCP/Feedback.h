@@ -136,7 +136,7 @@ namespace RTC { namespace RTCP
 	{
 		this->header->m_ssrc = (uint32_t)htonl(ssrc);
 	}
-}
-}
+
+} } // RTP::RTCP
 
 #endif

@@ -4,9 +4,7 @@
 #include "Logger.h"
 #include <cstring>  // std::memcmp(), std::memcpy()
 
-namespace RTC
-{
-namespace RTCP
+namespace RTC { namespace RTCP
 {
 	/* SenderReport Class methods. */
 
@@ -126,5 +124,5 @@ namespace RTCP
 
 		MS_WARN("</SenderReportPacket>");
 	}
-}
-}
+
+} } // RTP::RTCP
