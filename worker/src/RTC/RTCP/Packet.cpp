@@ -4,6 +4,7 @@
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/Sdes.h"
+#include "RTC/RTCP/Bye.h"
 #include "RTC/RTCP/Feedback.h"
 #include "Logger.h"
 
@@ -82,7 +83,7 @@ namespace RTCP
 					break;
 
 				case Type::BYE:
-					current = nullptr;
+					current = ByePacket::Parse(data, len);
 					break;
 
 				case Type::APP:

@@ -807,6 +807,9 @@ namespace RTC
 
 					break;
 
+				case RTCP::Type::BYE:
+					break;
+
 				default:
 					MS_WARN("Unhandled RTCP type received to 'RTC::Peer': %u", (uint8_t)packet->GetType());
 					break;
