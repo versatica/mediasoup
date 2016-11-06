@@ -3,6 +3,7 @@
 #include "RTC/RTCP/FeedbackRtp.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
+#include "RTC/RTCP/FeedbackRtpTllei.h"
 #include "Logger.h"
 
 namespace RTC { namespace RTCP
@@ -77,5 +78,6 @@ namespace RTC { namespace RTCP
 	template class FeedbackRtpItemPacket<NackItem>;
 	template class FeedbackRtpItemPacket<TmmbrItem>;
 	template class FeedbackRtpItemPacket<TmmbnItem>;
+	template class FeedbackRtpItemPacket<TlleiItem>;
 
 } } // RTP::RTCP
