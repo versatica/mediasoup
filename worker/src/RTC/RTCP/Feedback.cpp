@@ -5,6 +5,7 @@
 // Feedback RTP
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
+#include "RTC/RTCP/FeedbackRtpSrReq.h"
 
 // Feedback PS
 #include "RTC/RTCP/FeedbackPsPli.h"
@@ -231,6 +232,7 @@ namespace RTCP
 				break;
 
 			case FeedbackRtp::SR_REQ:
+				packet = FeedbackRtpSrReqPacket::Parse(data, len);
 				break;
 
 			case FeedbackRtp::RAMS:
