@@ -84,7 +84,7 @@ namespace RTC { namespace RTCP
 			SR_REQ = 5,
 			RAMS   = 6,
 			TLLEI  = 7,
-			ECN_FB = 8,
+			ECN    = 8,
 			PS     = 9,
 			EXT    = 31
 		} MessageType;

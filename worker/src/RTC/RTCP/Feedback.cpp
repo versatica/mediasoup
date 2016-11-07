@@ -7,6 +7,7 @@
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "RTC/RTCP/FeedbackRtpSrReq.h"
 #include "RTC/RTCP/FeedbackRtpTllei.h"
+#include "RTC/RTCP/FeedbackRtpEcn.h"
 
 // Feedback PS
 #include "RTC/RTCP/FeedbackPsPli.h"
@@ -194,7 +195,7 @@ namespace RTC { namespace RTCP
 			{ FeedbackRtp::SR_REQ, "SR_REQ" },
 			{ FeedbackRtp::RAMS,   "RAMS"   },
 			{ FeedbackRtp::TLLEI,  "TLLEI"  },
-			{ FeedbackRtp::ECN_FB, "ECN_FB" },
+			{ FeedbackRtp::ECN,    "ECN"    },
 			{ FeedbackRtp::PS,     "PS"     },
 			{ FeedbackRtp::EXT,    "EXT"    }
 		};
@@ -240,7 +241,8 @@ namespace RTC { namespace RTCP
 				packet = FeedbackRtpTlleiPacket::Parse(data, len);
 				break;
 
-			case FeedbackRtp::ECN_FB:
+			case FeedbackRtp::ECN:
+				packet = FeedbackRtpEcnPacket::Parse(data, len);
 				break;
 
 			case FeedbackRtp::PS:
