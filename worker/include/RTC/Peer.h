@@ -7,7 +7,9 @@
 #include "RTC/RtpSender.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RtcpPacket.h"
+#include "RTC/RTCP/SenderReport.h"
+#include "RTC/RTCP/ReceiverReport.h"
+#include "RTC/RTCP/Feedback.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -32,8 +34,12 @@ namespace RTC
 			virtual void onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
 			virtual void onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
-			// TODO: TMP
-			virtual void onPeerRtcpPacket(RTC::Peer* peer, RTC::RtcpPacket* packet) = 0;
+			virtual void onPeerRtcpReceiverReport(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report) = 0;
+			virtual void onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) = 0;
+			virtual void onPeerRtcpSdesChunk(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SdesChunk* chunk) = 0;
+			virtual void onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet) = 0;
+			virtual void onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
+			virtual void onPeerRtcpCompleted(RTC::Peer* peer) = 0;
 		};
 
 	public:
@@ -45,14 +51,16 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		bool HasCapabilities();
 		std::vector<RTC::RtpReceiver*> GetRtpReceivers();
+		std::vector<RTC::RtpSender*> GetRtpSenders();
+		std::unordered_map<uint32_t, RTC::Transport*>& GetTransports();
 		/**
 		 * Add a new RtpSender to the Peer.
 		 * @param rtpSender     Instance of RtpSender.
 		 * @param peerName      Name of the receiver Peer.
 		 */
 		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters);
-		// TODO: Temporal stuff to route RTCP everywhere
-		std::unordered_map<uint32_t, RTC::Transport*>& GetTransports();
+		RTC::RtpSender* GetRtpSender(uint32_t ssrc);
+		void SendRtcp();
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
@@ -63,7 +71,7 @@ namespace RTC
 	public:
 		virtual void onTransportClosed(RTC::Transport* transport) override;
 		// TODO: TMP
-		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RtcpPacket* packet) override;
+		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
 
 	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:
@@ -114,7 +122,19 @@ namespace RTC
 		return rtpReceivers;
 	}
 
-	// TODO: Temporal stuff to route RTCP everywhere
+	inline
+	std::vector<RTC::RtpSender*> Peer::GetRtpSenders()
+	{
+		std::vector<RTC::RtpSender*> rtpSenders;
+
+		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+		{
+			rtpSenders.push_back(it->second);
+		}
+
+		return rtpSenders;
+	}
+
 	inline
 	std::unordered_map<uint32_t, RTC::Transport*>& Peer::GetTransports()
 	{

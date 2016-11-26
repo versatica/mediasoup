@@ -4,6 +4,8 @@
 #include "common.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
+#include "RTC/RTCP/ReceiverReport.h"
+#include "RTC/RTCP/Feedback.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -43,6 +45,11 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 
+		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
+		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
+		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
+		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
+
 	private:
 		void FillRtpParameters();
 
@@ -61,6 +68,9 @@ namespace RTC
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
+
+		// Receiver Report holding the RTP stats
+		std::auto_ptr<RTC::RTCP::ReceiverReport> receiverReport;
 	};
 
 	/* Inline methods. */
@@ -89,6 +99,12 @@ namespace RTC
 	{
 		return this->rtpParameters;
 	}
+
+	inline
+	RTC::RTCP::ReceiverReport* RtpReceiver::GetRtcpReceiverReport()
+	{
+		return this->receiverReport.release();
+	};
 }
 
 #endif

@@ -20,6 +20,7 @@ namespace RTC
 		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		RTC::RtpReceiver* GetRtpReceiver(RTC::RtpPacket* packet);
+		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
 
 	private:
 		void RollbackRtpReceiver(RTC::RtpReceiver* rtpReceiver, std::vector<uint32_t>& previousSsrcs, std::string& previousMuxId, std::vector<uint8_t>& previousPayloadTypes);

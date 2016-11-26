@@ -5,7 +5,8 @@
 #include "RTC/Transport.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RtcpPacket.h"
+#include "RTC/RTCP/SenderReport.h"
+#include "RTC/RTCP/Sdes.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_map>
@@ -39,6 +40,11 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 
+		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+		RTC::RTCP::SenderReport* GetRtcpSenderReport();
+
+		void ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk);
+		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 	private:
 		void SetPayloadTypesMapping();
 
@@ -59,6 +65,10 @@ namespace RTC
 		std::unordered_map<uint8_t, uint8_t> mapPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
+
+		// Sender Report holding the RTP stats
+		std::auto_ptr<RTC::RTCP::SenderReport> senderReport;
+		std::auto_ptr<RTC::RTCP::SdesChunk> sdesChunk;
 	};
 
 	/* Inline methods. */
@@ -81,6 +91,32 @@ namespace RTC
 	{
 		return this->rtpParameters;
 	}
+
+	inline
+	void RtpSender::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
+	{
+		this->senderReport.reset(new RTC::RTCP::SenderReport(report));
+		this->senderReport->Serialize();
+	};
+
+	inline
+	RTC::RTCP::SenderReport* RtpSender::GetRtcpSenderReport()
+	{
+		return this->senderReport.release();
+	};
+
+	inline
+	void RtpSender::ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk)
+	{
+		this->sdesChunk.reset(new RTC::RTCP::SdesChunk(chunk));
+		this->sdesChunk->Serialize();
+	};
+
+	inline
+	RTC::RTCP::SdesChunk* RtpSender::GetRtcpSdesChunk()
+	{
+		return this->sdesChunk.release();
+	};
 }
 
 #endif
