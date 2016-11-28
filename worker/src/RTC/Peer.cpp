@@ -703,11 +703,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		while (packet) {
+		while (packet)
+		{
 			switch (packet->GetType())
 			{
-
-				/* RTCP coming from a remote receiver which must be forwarded to the corresponding remote sender */
+				/* RTCP coming from a remote receiver which must be forwarded to the corresponding remote sender. */
 
 				case RTCP::Type::RR:
 					{
@@ -760,26 +760,25 @@ namespace RTC
 					}
 					break;
 
-				/* RTCP coming from a remote sender which must be forwarded to the corresponding remote receivers */
+				/* RTCP coming from a remote sender which must be forwarded to the corresponding remote receivers. */
 
 				case RTCP::Type::SR:
 					{
 						RTCP::SenderReportPacket* sr = (RTCP::SenderReportPacket*) packet;
-
 						RTCP::SenderReportPacket::Iterator it = sr->Begin();
-						// even if Sender Report packet can only contain one report..
-						for (; it != sr->End(); ++it) {
 
+						// Even if Sender Report packet can only contain one report..
+						for (; it != sr->End(); ++it)
+						{
 							auto& report = (*it);
 
-							// get the receiver associated to the SSRC indicated in the report
+							// Get the receiver associated to the SSRC indicated in the report.
 							RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
-							if (!rtpReceiver) {
+
+							if (!rtpReceiver)
 								MS_WARN("no RtpReceiver found for ssrc: %u while procesing a Sender Report", report->GetSsrc());
-							}
-							else {
+							else
 								this->listener->onPeerRtcpSenderReport(this, rtpReceiver, report);
-							}
 						}
 					}
 
@@ -788,20 +787,19 @@ namespace RTC
 				case RTCP::Type::SDES:
 					{
 						RTCP::SdesPacket* sdes = (RTCP::SdesPacket*) packet;
-
 						RTCP::SdesPacket::Iterator it = sdes->Begin();
-						for (; it != sdes->End(); ++it) {
 
+						for (; it != sdes->End(); ++it)
+						{
 							auto& chunk = (*it);
 
-							// get the receiver associated to the SSRC indicated in the chunk
+							// Get the receiver associated to the SSRC indicated in the chunk.
 							RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
-							if (!rtpReceiver) {
+
+							if (!rtpReceiver)
 								MS_WARN("no RtpReceiver found for ssrc: %u while procesing a SDES chunk", chunk->GetSsrc());
-							}
-							else {
+							else
 								this->listener->onPeerRtcpSdesChunk(this, rtpReceiver, chunk);
-							}
 						}
 					}
 
@@ -815,7 +813,7 @@ namespace RTC
 					break;
 			}
 
-		packet = packet->GetNext();
+			packet = packet->GetNext();
 		}
 
 		// TMP: Notify the listener about an incoming RTCP processing termination.
