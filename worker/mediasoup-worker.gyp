@@ -45,7 +45,6 @@
         'src/RTC/UdpSocket.cpp',
         'src/RTC/RtpDictionaries/Media.cpp',
         'src/RTC/RtpDictionaries/Parameters.cpp',
-        'src/RTC/RtpDictionaries/RTCRtpCodecRtxParameters.cpp',
         'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
         'src/RTC/RtpDictionaries/RtcpParameters.cpp',
         'src/RTC/RtpDictionaries/RtpCapabilities.cpp',
