@@ -196,19 +196,19 @@ namespace RTC
 
 		// Add minimum header.
 		std::memcpy(this->raw, this->header, sizeof(Header));
-		size_t pos = sizeof(Header);
 
 		// Update the header pointer.
 		this->header = (Header*)(this->raw);
+		size_t pos = sizeof(Header);
 
 		// Add CSRC list.
 		if (this->csrcList)
 		{
-			std::memcpy(this->raw + pos, this->csrcList, this->header->csrc_count * sizeof(header->ssrc));
+			std::memcpy(this->raw + pos, this->csrcList, this->header->csrc_count * sizeof(this->header->ssrc));
 
 			// Update the pointer.
 			this->csrcList = this->raw + pos;
-			pos += this->header->csrc_count * sizeof(header->ssrc);
+			pos += this->header->csrc_count * sizeof(this->header->ssrc);
 		}
 
 		// Add extension header.
@@ -239,5 +239,53 @@ namespace RTC
 		}
 
 		MS_ASSERT(pos == this->length, "pos != this->length");
+	}
+
+	RtpPacket* RtpPacket::Clone(uint8_t* buffer)
+	{
+		MS_TRACE();
+
+		// Copy the full packet into the given buffer.
+		std::memcpy(buffer, GetRaw(), GetLength());
+
+		// Set header pointer pointing to the given buffer.
+		Header* header = (Header*)buffer;
+		size_t pos = sizeof(Header);
+
+		// Check CSRC list.
+		if (this->csrcList)
+			pos += header->csrc_count * sizeof(header->ssrc);
+
+		// Check extension header.
+		ExtensionHeader* extensionHeader = nullptr;
+
+		if (this->extensionHeader)
+		{
+			// Set the header extension pointer.
+			extensionHeader = (ExtensionHeader*)(buffer + pos);
+			pos += 4 + GetExtensionHeaderLength();
+		}
+
+		// Check payload.
+		uint8_t* payload = nullptr;
+
+		if (this->payload)
+		{
+			// Set the payload pointer.
+			payload = buffer + pos;
+			pos += this->payloadLength;
+		}
+
+		// Check payload padding.
+		if (this->payloadPadding)
+		{
+			buffer[pos + (size_t)this->payloadPadding - 1] = this->payloadPadding;
+			pos += (size_t)this->payloadPadding;
+		}
+
+		MS_ASSERT(pos == this->length, "pos != this->length");
+
+		// Create the new RtpPacket instance and return it.
+		return new RtpPacket(header, extensionHeader, payload, this->payloadLength, this->payloadPadding, buffer, this->length);
 	}
 }

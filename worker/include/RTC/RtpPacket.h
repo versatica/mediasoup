@@ -64,6 +64,7 @@ namespace RTC
 		uint8_t* GetPayload();
 		size_t GetPayloadLength();
 		void Serialize();
+		RtpPacket* Clone(uint8_t* buffer);
 
 	private:
 		// Passed by argument.
