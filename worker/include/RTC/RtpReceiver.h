@@ -4,6 +4,7 @@
 #include "common.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
+#include "RTC/RtpBuffer.h"
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/Feedback.h"
 #include "Channel/Request.h"
@@ -65,6 +66,7 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
+		RTC::RtpBuffer* rtpBuffer = nullptr;
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;

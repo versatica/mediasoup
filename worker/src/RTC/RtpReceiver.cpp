@@ -6,6 +6,8 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 
+#define RTP_BUFFER_SIZE 100
+
 namespace RTC
 {
 	/* Instance methods. */
@@ -17,6 +19,9 @@ namespace RTC
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		// Create the RtpBuffer instance.
+		this->rtpBuffer = new RTC::RtpBuffer(RTP_BUFFER_SIZE);
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -34,6 +39,9 @@ namespace RTC
 
 		if (this->rtpParameters)
 			delete this->rtpParameters;
+
+		if (this->rtpBuffer)
+			delete this->rtpBuffer;
 
 		// Notify.
 		event_data[k_class] = "RtpReceiver";
@@ -240,6 +248,10 @@ namespace RTC
 
 			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
 		}
+
+		// Store in the buffer
+		// TODO: Must check what kind of packet we are storing, right?
+		this->rtpBuffer->Add(packet);
 	}
 
 	void RtpReceiver::FillRtpParameters()
