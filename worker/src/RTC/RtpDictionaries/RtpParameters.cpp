@@ -169,8 +169,6 @@ namespace RTC
 		if (this->codecs.size() == 0)
 			MS_THROW_ERROR("empty RtpParameters.codecs");
 
-		// Payload types must be unique.
-
 		std::unordered_set<uint8_t> payloadTypes;
 
 		for (auto& codec : this->codecs)

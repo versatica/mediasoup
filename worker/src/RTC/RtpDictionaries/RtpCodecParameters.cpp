@@ -26,7 +26,8 @@ namespace RTC
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
 
-		if (this->scope == RTC::Scope::ROOM_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::ROOM_CAPABILITY ||
 			this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// `kind` is mandatory.
@@ -55,7 +56,8 @@ namespace RTC
 			this->hasPayloadType = true;
 		}
 
-		if (this->scope == RTC::Scope::PEER_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::PEER_CAPABILITY ||
 			this->scope == RTC::Scope::RECEIVE)
 		{
 			if (!this->hasPayloadType)
@@ -123,7 +125,8 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		if (this->scope == RTC::Scope::ROOM_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::ROOM_CAPABILITY ||
 			this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// Add `kind`.
