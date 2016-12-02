@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTP_BUFFER_H
-#define MS_RTC_RTP_BUFFER_H
+#ifndef MS_RTC_RTP_STREAM_H
+#define MS_RTC_RTP_STREAM_H
 
 #include "common.h"
 #include "RTC/RtpPacket.h"
@@ -8,7 +8,7 @@
 
 namespace RTC
 {
-	class RtpBuffer
+	class RtpStream
 	{
 	private:
 		struct StorageItem
@@ -17,10 +17,10 @@ namespace RTC
 		};
 
 	public:
-		RtpBuffer(size_t size);
-		~RtpBuffer();
+		RtpStream(size_t bufferSize);
+		~RtpStream();
 
-		bool Add(RTC::RtpPacket* packet);
+		bool AddPacket(RTC::RtpPacket* packet);
 
 	private:
 		std::vector<StorageItem> storage;

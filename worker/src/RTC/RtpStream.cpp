@@ -1,21 +1,21 @@
 // TODO: https://tools.ietf.org/html/rfc3550#appendix-A.1
 
-#define MS_CLASS "RTC::RtpBuffer"
+#define MS_CLASS "RTC::RtpStream"
 
-#include "RTC/RtpBuffer.h"
+#include "RTC/RtpStream.h"
 #include "Logger.h"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtpBuffer::RtpBuffer(size_t size) :
-		storage(size)
+	RtpStream::RtpStream(size_t bufferSize) :
+		storage(bufferSize)
 	{
 		MS_TRACE();
 	}
 
-	RtpBuffer::~RtpBuffer()
+	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
 
@@ -26,7 +26,7 @@ namespace RTC
 		}
 	}
 
-	bool RtpBuffer::Add(RTC::RtpPacket* packet)
+	bool RtpStream::AddPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
