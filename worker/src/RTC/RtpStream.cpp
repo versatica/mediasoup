@@ -5,6 +5,11 @@
 #include "RTC/RtpStream.h"
 #include "Logger.h"
 
+#define MIN_SEQUENTIAL 2
+#define MAX_DROPOUT 3000
+#define MAX_MISORDER 100
+#define RTP_SEQ_MOD (1<<16)
+
 namespace RTC
 {
 	/* Instance methods. */
@@ -26,6 +31,118 @@ namespace RTC
 		}
 	}
 
+	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		uint16_t seq = packet->GetSequenceNumber();
+
+		// If this is the first packet seen, initialize stuff.
+		if (!this->started)
+		{
+			this->started = true;
+
+			InitSeq(seq);
+			this->max_seq = seq - 1;
+			this->probation = MIN_SEQUENTIAL;
+		}
+
+		// TODO: If this returns true, store the packet and return true just
+		// if it's not a duplicated packet.
+		UpdateSeq(seq);
+
+		return true;
+	}
+
+	void RtpStream::InitSeq(uint16_t seq)
+	{
+		MS_TRACE();
+
+		this->base_seq = seq;
+		this->max_seq = seq;
+		this->bad_seq = RTP_SEQ_MOD + 1; // So seq == bad_seq is false.
+		this->cycles = 0;
+		this->received = 0;
+		this->received_prior = 0;
+		this->expected_prior = 0;
+	}
+
+	bool RtpStream::UpdateSeq(uint16_t seq)
+	{
+		MS_TRACE();
+
+		uint16_t udelta = seq - this->max_seq;
+
+		/*
+		 * Source is not valid until MIN_SEQUENTIAL packets with
+		 * sequential sequence numbers have been received.
+		 */
+		if (this->probation)
+		{
+			// Packet is in sequence.
+			if (seq == this->max_seq + 1)
+			{
+				this->probation--;
+				this->max_seq = seq;
+
+				if (this->probation == 0)
+				{
+					InitSeq(seq);
+					this->received++;
+
+					return true;
+				}
+			}
+			else
+			{
+				this->probation = MIN_SEQUENTIAL - 1;
+				this->max_seq = seq;
+			}
+
+			return false;
+		}
+		else if (udelta < MAX_DROPOUT)
+		{
+			// In order, with permissible gap.
+			if (seq < this->max_seq)
+			{
+				// Sequence number wrapped: count another 64K cycle.
+				this->cycles += RTP_SEQ_MOD;
+			}
+
+			this->max_seq = seq;
+		}
+		else if (udelta <= RTP_SEQ_MOD - MAX_MISORDER)
+		{
+			// The sequence number made a very large jump.
+			if (seq == this->bad_seq)
+			{
+				/*
+				 * Two sequential packets -- assume that the other side
+				 * restarted without telling us so just re-sync
+				 * (i.e., pretend this was the first packet).
+				 */
+				InitSeq(seq);
+			}
+			else
+			{
+				this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
+
+				return false;
+			}
+		}
+		else
+		{
+			// Duplicate or reordered packet.
+			// TODO: so what? just return true?
+		}
+
+		this->received++;
+
+		return true;
+	}
+
+	// TODO: REMOVE
 	bool RtpStream::AddPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
