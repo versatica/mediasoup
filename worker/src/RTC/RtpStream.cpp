@@ -47,9 +47,14 @@ namespace RTC
 			this->probation = MIN_SEQUENTIAL;
 		}
 
-		// TODO: If this returns true, store the packet and return true just
-		// if it's not a duplicated packet.
-		UpdateSeq(seq);
+		// If not a valid packet ignore it.
+		if (!UpdateSeq(seq))
+		{
+			// TODO: remove
+			MS_WARN("invalid packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+
+			return false;
+		}
 
 		return true;
 	}
@@ -134,7 +139,7 @@ namespace RTC
 		else
 		{
 			// Duplicate or reordered packet.
-			// TODO: so what? just return true?
+			// NOTE: This would never happen because libsrtp rejects duplicated packets.
 		}
 
 		this->received++;

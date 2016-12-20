@@ -217,16 +217,17 @@ namespace RTC
 
 		// Store in the buffer
 		// TODO: Must check what kind of packet we are storing, right?
-		// TODO: RtpStream.AddPacket() should return true if the packet is valid and
+		// TODO: RtpStream.ReceivePacket() should return true if the packet is valid and
 		// false if it must be ignored.
-		// TODO: testing for just audio (remove)
-		if (this->kind == RTC::Media::Kind::AUDIO)
+		// TODO: testing for just video (remove)
+		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
 			// TODO: Enable when properly implemented.
-			// if (!this->rtpStream->AddPacket(packet))
-				// return;
+			if (!this->rtpStream->ReceivePacket(packet))
+				return;
 
-			this->rtpStream->AddPacket(packet);
+			// TODO: REMOVE
+			// this->rtpStream->ReceivePacket(packet);
 		}
 
 		// Notify the listener.
