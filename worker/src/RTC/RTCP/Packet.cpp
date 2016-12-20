@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::Packet"
+#define MS_CLASS "RTC::RTCP::Packet"
 
 #include "RTC/RTCP/Packet.h"
 #include "RTC/RTCP/ReceiverReport.h"
