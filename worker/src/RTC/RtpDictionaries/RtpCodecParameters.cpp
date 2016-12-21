@@ -21,13 +21,13 @@ namespace RTC
 		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_parameters("parameters");
-		static const Json::StaticString k_rtx("rtx");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
 
-		if (this->scope == RTC::Scope::ROOM_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::ROOM_CAPABILITY ||
 			this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// `kind` is mandatory.
@@ -56,7 +56,8 @@ namespace RTC
 			this->hasPayloadType = true;
 		}
 
-		if (this->scope == RTC::Scope::PEER_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::PEER_CAPABILITY ||
 			this->scope == RTC::Scope::RECEIVE)
 		{
 			if (!this->hasPayloadType)
@@ -85,17 +86,8 @@ namespace RTC
 		if (data[k_parameters].isObject())
 			this->parameters.Set(data[k_parameters]);
 
-		// if (this->scope == RTC::Scope::RECEIVE)
-		// {
-		// 	// `rtx` is optional.
-		// 	if (data[k_rtx].isObject())
-		// 	{
-		// 		this->rtx = RTC::RTCRtpCodecRtxParameters(data[k_rtx]);
-		// 		this->hasRtx = true;
-		// 	}
-		// }
-
-		if (this->scope == RTC::Scope::PEER_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::PEER_CAPABILITY ||
 			this->scope == RTC::Scope::RECEIVE)
 		{
 			// `rtcpFeedback` is optional.
@@ -129,12 +121,12 @@ namespace RTC
 		static const Json::StaticString k_ptime("ptime");
 		static const Json::StaticString k_numChannels("numChannels");
 		static const Json::StaticString k_parameters("parameters");
-		static const Json::StaticString k_rtx("rtx");
 		static const Json::StaticString k_rtcpFeedback("rtcpFeedback");
 
 		Json::Value json(Json::objectValue);
 
-		if (this->scope == RTC::Scope::ROOM_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::ROOM_CAPABILITY ||
 			this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// Add `kind`.
@@ -168,14 +160,8 @@ namespace RTC
 		// Add `parameters`.
 		json[k_parameters] = this->parameters.toJson();
 
-		if (this->scope == RTC::Scope::RECEIVE)
-		{
-			// Add `rtx`
-			if (this->hasRtx)
-				json[k_rtx] = this->rtx.toJson();
-		}
-
-		if (this->scope == RTC::Scope::PEER_CAPABILITY ||
+		if (
+			this->scope == RTC::Scope::PEER_CAPABILITY ||
 			this->scope == RTC::Scope::RECEIVE)
 		{
 			// Add `rtcpFeedback`.
@@ -206,7 +192,6 @@ namespace RTC
 				return false;
 		}
 
-
 		// Clock rate must match.
 		if (this->clockRate != codec.clockRate)
 			return false;
@@ -232,7 +217,8 @@ namespace RTC
 		{
 			case RTC::RtpCodecMime::Subtype::H264:
 			{
-				if (this->parameters.GetInteger(k_packetizationMode) !=
+				if (
+					this->parameters.GetInteger(k_packetizationMode) !=
 					codec.parameters.GetInteger(k_packetizationMode))
 				{
 					return false;
@@ -253,12 +239,22 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static std::string k_apt = "apt";
 		static std::string k_packetizationMode = "packetizationMode";
 
 		// Check per MIME parameters and set default values.
 
 		switch (this->mime.subtype)
 		{
+			// A RTX codec must have 'apt' parameter.
+			case RTC::RtpCodecMime::Subtype::RTX:
+			{
+				if (!this->parameters.HasInteger(k_apt))
+					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
+
+				break;
+			}
+
 			case RTC::RtpCodecMime::Subtype::OPUS:
 			{
 				// Opus default numChannels is 2.

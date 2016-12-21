@@ -6,8 +6,6 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 
-#define RTP_BUFFER_SIZE 100
-
 namespace RTC
 {
 	/* Instance methods. */
@@ -20,8 +18,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Create the RtpBuffer instance.
-		this->rtpBuffer = new RTC::RtpBuffer(RTP_BUFFER_SIZE);
+		// Create an RtpStream instance if video.
+		if (kind == RTC::Media::Kind::VIDEO)
+			this->rtpStream = new RTC::RtpStream(50);  // TODO: Set a proper size.
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -40,8 +39,8 @@ namespace RTC
 		if (this->rtpParameters)
 			delete this->rtpParameters;
 
-		if (this->rtpBuffer)
-			delete this->rtpBuffer;
+		if (this->rtpStream)
+			delete this->rtpStream;
 
 		// Notify.
 		event_data[k_class] = "RtpReceiver";
@@ -217,6 +216,17 @@ namespace RTC
 
 		// TODO: Check if stopped, etc (not yet done)
 
+		// Store in the buffer
+		// TODO: Must check what kind of packet we are storing, right?
+		// TODO: RtpStream.ReceivePacket() should return true if the packet is valid and
+		// false if it must be ignored.
+		if (this->kind == RTC::Media::Kind::VIDEO)
+		{
+			// TODO: Enable when properly implemented.
+			if (!this->rtpStream->ReceivePacket(packet))
+				return;
+		}
+
 		// Notify the listener.
 		this->listener->onRtpPacket(this, packet);
 
@@ -248,10 +258,6 @@ namespace RTC
 
 			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
 		}
-
-		// Store in the buffer
-		// TODO: Must check what kind of packet we are storing, right?
-		this->rtpBuffer->Add(packet);
 	}
 
 	void RtpReceiver::FillRtpParameters()

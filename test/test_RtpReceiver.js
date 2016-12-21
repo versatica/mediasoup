@@ -146,13 +146,8 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 						maxptime     : 80,
 						ptime        : 60,
 						numChannels  : 2,
-						// TODO: uncomment when RTX and RTCP implemented
+						// TODO: uncomment when RTCP is implemented
 						rtcpFeedback : [],
-						// rtx :
-						// {
-						// 	payloadType : 96,
-						// 	rtxTime     : 500
-						// },
 						// rtcpFeedback :
 						// [
 						// 	{ type: 'ccm',         parameter: 'fir' },
@@ -170,6 +165,16 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 							baz               : -123,
 							lol               : -456.789,
 							ids               : [ 123, 2, 3 ]
+						}
+					},
+					{
+						name         : 'video/rtx',
+						payloadType  : 96,
+						clockRate    : 90000,
+						parameters :
+						{
+							apt     : 101,
+							rtxTime : 500
 						}
 					}
 				],

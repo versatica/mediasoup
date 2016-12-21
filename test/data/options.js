@@ -73,6 +73,16 @@ module.exports =
 			},
 			{
 				kind        : 'video',
+				name        : 'video/rtx',
+				payloadType : 96,
+				clockRate   : 90000,
+				parameters :
+				{
+					apt : 101
+				}
+			},
+			{
+				kind        : 'video',
 				name        : 'video/H264',
 				payloadType : 102,
 				clockRate   : 90000,
@@ -83,12 +93,32 @@ module.exports =
 			},
 			{
 				kind        : 'video',
+				name        : 'video/rtx',
+				payloadType : 97,
+				clockRate   : 90000,
+				parameters  :
+				{
+					apt : 102
+				}
+			},
+			{
+				kind        : 'video',
 				name        : 'video/H264',
 				payloadType : 103,
 				clockRate   : 90000,
 				parameters  :
 				{
 					packetizationMode : 1
+				}
+			},
+			{
+				kind        : 'video',
+				name        : 'video/rtx',
+				payloadType : 98,
+				clockRate   : 90000,
+				parameters  :
+				{
+					apt : 103
 				}
 			}
 		]

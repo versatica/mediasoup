@@ -67,7 +67,8 @@ namespace RTC
 			CN = 300,
 			TELEPHONE_EVENT,
 			// Feature codecs:
-			ULPFEC = 400,
+			RTX = 400,
+			ULPFEC,
 			FLEXFEC,
 			RED
 		};
@@ -121,19 +122,6 @@ namespace RTC
 		std::string name;
 	};
 
-	class RTCRtpCodecRtxParameters
-	{
-	public:
-		RTCRtpCodecRtxParameters() {};
-		RTCRtpCodecRtxParameters(Json::Value& data);
-
-		Json::Value toJson();
-
-	public:
-		uint8_t  payloadType = 0;
-		uint32_t rtxTime = 0;
-	};
-
 	class RtcpFeedback
 	{
 	public:
@@ -171,8 +159,6 @@ namespace RTC
 		uint32_t                  ptime = 0;
 		uint32_t                  numChannels = 1;
 		RTC::Parameters           parameters;
-		RTCRtpCodecRtxParameters  rtx;
-		bool                      hasRtx = false;
 		std::vector<RtcpFeedback> rtcpFeedback;
 	};
 
