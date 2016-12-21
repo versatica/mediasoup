@@ -18,8 +18,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Create the RtpStream instance.
-		this->rtpStream = new RTC::RtpStream(50);
+		// Create an RtpStream instance if video.
+		if (kind == RTC::Media::Kind::VIDEO)
+			this->rtpStream = new RTC::RtpStream(50);  // TODO: Set a proper size.
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -219,15 +220,11 @@ namespace RTC
 		// TODO: Must check what kind of packet we are storing, right?
 		// TODO: RtpStream.ReceivePacket() should return true if the packet is valid and
 		// false if it must be ignored.
-		// TODO: testing for just video (remove)
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
 			// TODO: Enable when properly implemented.
 			if (!this->rtpStream->ReceivePacket(packet))
 				return;
-
-			// TODO: REMOVE
-			// this->rtpStream->ReceivePacket(packet);
 		}
 
 		// Notify the listener.

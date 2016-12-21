@@ -16,17 +16,25 @@ namespace RTC
 			uint8_t store[65536];
 		};
 
+	private:
+		struct BufferItem
+		{
+			uint32_t        seq32 = 0; // RTP seq in 32 bytes plus 16 bits cycles.
+			RTC::RtpPacket* packet = nullptr;
+		};
+
 	public:
 		RtpStream(size_t bufferSize);
 		~RtpStream();
 
 		bool ReceivePacket(RTC::RtpPacket* packet);
-		// TODO: REMOVE
-		bool AddPacket(RTC::RtpPacket* packet);
 
 	private:
 		void InitSeq(uint16_t seq);
 		bool UpdateSeq(uint16_t seq);
+		void CleanBuffer();
+		void StorePacket(RTC::RtpPacket* packet);
+		void Dump();
 
 	private:
 		bool started = false;  // Whether at least a RTP packet has been received.
@@ -43,8 +51,8 @@ namespace RTC
 		uint32_t jitter = 0;         // Estimated jitter.
 		// Others.
 		std::vector<StorageItem> storage;
-		typedef std::list<RTC::RtpPacket*> Packets;
-		Packets packets;
+		typedef std::list<BufferItem> Buffer;
+		Buffer buffer;
 	};
 }
 

@@ -24,11 +24,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Delete cloned packets.
-		for (auto& packet : this->packets)
-		{
-			delete packet;
-		}
+		// Clear buffer.
+		CleanBuffer();
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -56,6 +53,12 @@ namespace RTC
 			return false;
 		}
 
+		// Store the packet into the buffer.
+		StorePacket(packet);
+
+		// TODO: TMP
+		Dump();
+
 		return true;
 	}
 
@@ -63,6 +66,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Initialize/reset RTP counters.
 		this->base_seq = seq;
 		this->max_seq = seq;
 		this->bad_seq = RTP_SEQ_MOD + 1; // So seq == bad_seq is false.
@@ -70,6 +74,9 @@ namespace RTC
 		this->received = 0;
 		this->received_prior = 0;
 		this->expected_prior = 0;
+
+		// Clean buffer.
+		CleanBuffer();
 	}
 
 	bool RtpStream::UpdateSeq(uint16_t seq)
@@ -147,98 +154,114 @@ namespace RTC
 		return true;
 	}
 
-	// TODO: REMOVE
-	bool RtpStream::AddPacket(RTC::RtpPacket* packet)
+	void RtpStream::CleanBuffer()
 	{
 		MS_TRACE();
 
-		MS_WARN("BEGIN | seq_number: %" PRIu16, packet->GetSequenceNumber());
+		// Delete cloned packets.
+		for (auto& buffer_item : this->buffer)
+		{
+			delete buffer_item.packet;
+		}
+
+		// Clear list.
+		this->buffer.clear();
+	}
+
+	inline
+	void RtpStream::StorePacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// Sum the packet seq number and the number of 16 bits cycles.
+		uint32_t packet_seq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
+		BufferItem buffer_item;
+
+		buffer_item.seq32 = packet_seq32;
 
 		// If empty do it easy.
-		if (this->packets.size() == 0)
+		if (this->buffer.size() == 0)
 		{
-			MS_WARN("  empty packet list");
-
 			auto store = this->storage[0].store;
-			auto cloned_packet = packet->Clone(store);
 
-			this->packets.push_back(cloned_packet);
+			buffer_item.packet = packet->Clone(store);
 
-			MS_WARN("END   | seq_number: %" PRIu16, packet->GetSequenceNumber());
+			this->buffer.push_back(buffer_item);
 
-			return true;
+			return;
 		}
 
 		// Otherwise, do the stuff.
 
-		Packets::iterator new_it;
+		Buffer::iterator new_buffer_it;
 		uint8_t* store = nullptr;
 
-		auto it_r = this->packets.rbegin();
-		for (; it_r != this->packets.rend(); it_r++)
+		// Iterate the buffer in reverse order and find the proper place to store the
+		// packet.
+		auto buffer_it_r = this->buffer.rbegin();
+		for (; buffer_it_r != this->buffer.rend(); buffer_it_r++)
 		{
-			auto current_packet = *it_r;
+			auto current_seq32 = (*buffer_it_r).seq32;
 
-			if (packet->GetSequenceNumber() > current_packet->GetSequenceNumber())
+			if (packet_seq32 > current_seq32)
 			{
 				// Get a forward iterator pointing to the same element.
-				auto it = it_r.base();
+				auto it = buffer_it_r.base();
 
-				new_it = this->packets.insert(it, nullptr);
+				new_buffer_it = this->buffer.insert(it, buffer_item);
 
 				// Exit the loop.
 				break;
 			}
 		}
-		// If the packet was older than anything in the storate, just ignore it.
-		if (it_r == this->packets.rend())
+		// If the packet was older than anything in the buffer, just ignore it.
+		// NOTE: This should never happen.
+		if (buffer_it_r == this->buffer.rend())
 		{
-			// TODO: Wrong, this will drop all the received packets once sequence_number
-			// reaches 65535
+			MS_WARN("packet is older than anything in the buffer, ignoring it");
 
-			MS_WARN("  packet is older than anything in the storage, ignoring it");
-			MS_WARN("END   | seq_number: %" PRIu16, packet->GetSequenceNumber());
-
-			return false;
+			return;
 		}
 
-		MS_WARN("  packets.size:%zu, storage.size:%zu", this->packets.size(), this->storage.size());
-
-		// If the storage is not full use the next free area.
-		if (this->packets.size() - 1 < this->storage.size())
+		// If the storage is not full use its next free store.
+		if (this->buffer.size() - 1 < this->storage.size())
 		{
-			MS_WARN("  storage not full");
-
-			// Store points to the next free mem area.
-			store = this->storage[this->packets.size() - 1].store;
+			store = this->storage[this->buffer.size() - 1].store;
 		}
-		// Otherwise remove the first packet list entry and replace its storage area.
+		// Otherwise remove the first packet of the buffer and replace its storage area.
 		else
 		{
-			auto first_packet = *(this->packets.begin());
-
-			MS_WARN("  storage full, deleting first list packet with seq_number: %" PRIu16, first_packet->GetSequenceNumber());
+			auto& first_buffer_item = *(this->buffer.begin());
+			auto first_packet = first_buffer_item.packet;
 
 			// Store points to the store used by the first packet.
 			store = (uint8_t*)first_packet->GetRaw();
 			// Free the first packet.
 			delete first_packet;
 			// Remove the first element in the list.
-			this->packets.pop_front();
+			this->buffer.pop_front();
 		}
 
-		// Update the new list entry so it points to the cloned packed.
-		*new_it = packet->Clone(store);
+		// Update the new buffer item so it points to the cloned packed.
+		(*new_buffer_it).packet = packet->Clone(store);
+	}
 
-		MS_WARN("END   | seq_number: %" PRIu16, packet->GetSequenceNumber());
+	// TODO: TMP
+	void RtpStream::Dump()
+	{
+		MS_TRACE();
 
 		MS_WARN("<DUMP>");
-		for (auto& packet : this->packets)
-		{
-			MS_WARN("  - seq_number: %" PRIu16, packet->GetSequenceNumber());
-		}
-		MS_WARN("</DUMP>\n");
 
-		return true;
+		MS_WARN("  [buffer.size:%zu, storage.size:%zu]", this->buffer.size(), this->storage.size());
+
+		for (auto& buffer_item : this->buffer)
+		{
+			auto packet = buffer_item.packet;
+
+			MS_WARN("  packet [seq:%" PRIu16 ", seq32:%" PRIu32 "]", packet->GetSequenceNumber(), buffer_item.seq32);
+		}
+
+		MS_WARN("</DUMP>");
 	}
 }
