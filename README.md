@@ -63,7 +63,7 @@ Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
 
 
 [mediasoup-banner]: https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
-[mediasoup-website]: http://mediasoup.org
+[mediasoup-website]: https://mediasoup.org
 [travis-ci-shield-mediasoup]: https://img.shields.io/travis/ibc/mediasoup/master.svg
 [travis-ci-mediasoup]: http://travis-ci.org/ibc/mediasoup
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
