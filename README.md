@@ -37,7 +37,7 @@ $ npm install mediasoup --save
 
 * Multiple conference rooms with multiple participants
 * IPv6 ready
-* ICE / DTLS / RTP / RTCP / DataChannel over UDP and TCP
+* ICE / DTLS / RTP / RTCP over UDP and TCP
 * Extremely powerful (media handler subprocess coded in C++ on top of [libuv](http://libuv.org))
 * Can handle RTP packets in JavaScript land
 
