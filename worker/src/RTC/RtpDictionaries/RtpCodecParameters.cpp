@@ -201,7 +201,7 @@ namespace RTC
 		{
 			case RTC::Media::Kind::AUDIO:
 			{
-				// Num channels must match
+				// Num channels must match.
 				if (this->numChannels != codec.numChannels)
 					return false;
 
@@ -243,12 +243,11 @@ namespace RTC
 		static std::string k_packetizationMode = "packetizationMode";
 
 		// Check per MIME parameters and set default values.
-
 		switch (this->mime.subtype)
 		{
-			// A RTX codec must have 'apt' parameter.
 			case RTC::RtpCodecMime::Subtype::RTX:
 			{
+				// A RTX codec must have 'apt' parameter.
 				if (!this->parameters.HasInteger(k_apt))
 					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
 
@@ -258,7 +257,6 @@ namespace RTC
 			case RTC::RtpCodecMime::Subtype::OPUS:
 			{
 				// Opus default numChannels is 2.
-
 				if (this->numChannels < 2)
 					this->numChannels = 2;
 
@@ -268,7 +266,6 @@ namespace RTC
 			case RTC::RtpCodecMime::Subtype::H264:
 			{
 				// H264 default packetizationMode is 0.
-
 				if (!this->parameters.HasInteger(k_packetizationMode))
 					this->parameters.SetInteger(k_packetizationMode, 0);
 
