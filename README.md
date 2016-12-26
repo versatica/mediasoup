@@ -14,7 +14,7 @@
 
 ## Donate
 
-You can support **mediasoup** by making a donation [here][paypal-url]{:target="_blank"}. Thanks!
+You can support **mediasoup** by making a donation [here][paypal-url]. Thanks!
 
 
 
