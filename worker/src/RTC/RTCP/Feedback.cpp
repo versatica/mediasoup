@@ -17,6 +17,8 @@
 #include "RTC/RTCP/FeedbackPsTst.h"
 #include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "RTC/RTCP/FeedbackPsLei.h"
+#include "RTC/RTCP/FeedbackPsAfb.h"
+
 #include "Logger.h"
 
 #include <cstring>  // std::memcmp(), std::memcpy()
@@ -166,6 +168,7 @@ namespace RTC { namespace RTCP
 				break;
 
 			case FeedbackPs::AFB:
+				packet = FeedbackPsAfbPacket::Parse(data, len);
 				break;
 
 			case FeedbackPs::EXT:
