@@ -604,9 +604,12 @@ namespace RTC
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
-		// TODO: If NACK must call rtpReceiver->RequestRtpRetransmission() and
-		// MUST NOT forward the NACK.
-		// TODO: swtich(report->xxxx) etc
+		// TODO: switch(report->xxxx) etc
+		// TODO: If NACK:
+		// - Must call rtpReceiver->RequestRtpRetransmission(),
+		// - Must iterate this->rtpRetransmissionContainer until the first null entry
+		//   and call rtpSender->RetransmitRtpPacket(packet)
+		// - MUST NOT forward the NACK to the rtpReceiver
 
 		rtpReceiver->ReceiveRtcpReceiverReport(report);
 	}
