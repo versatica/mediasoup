@@ -239,6 +239,19 @@ namespace RTC
 		packet->SetPayloadType(originalPayloadType);
 	}
 
+	void RtpSender::RetransmitRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (!this->available || !this->transport)
+			return;
+
+		// If the peer supports RTX create a RTX packet and insert the given media
+		// packet as payload. Otherwise just send the packet as usual.
+		// TODO: No RTX for now so just send as usual.
+		SendRtpPacket(packet);
+	}
+
 	void RtpSender::SetPayloadTypesMapping()
 	{
 		MS_TRACE();

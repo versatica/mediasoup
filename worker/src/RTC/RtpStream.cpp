@@ -53,13 +53,23 @@ namespace RTC
 			return false;
 		}
 
-		// Store the packet into the buffer.
-		StorePacket(packet);
-
-		// TODO: TMP
-		Dump();
+		// If bufferSize was given, store the packet into the buffer.
+		if (this->storage.size() > 0)
+		{
+			StorePacket(packet);
+			// TODO: TMP
+			// Dump();
+		}
 
 		return true;
+	}
+
+	void RtpStream::RequestRtpRetransmission(uint16_t seq, uint16_t count, std::vector<RTC::RtpPacket*>& container)
+	{
+		MS_TRACE();
+
+		// TODO: This method must look for the requested RTP packets and insert them
+		// into the given container, and set to null the next container position.
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
@@ -223,7 +233,7 @@ namespace RTC
 			return;
 		}
 
-		// If the storage is not full use its next free store.
+		// If the buffer is not full use the next free storage item.
 		if (this->buffer.size() - 1 < this->storage.size())
 		{
 			store = this->storage[this->buffer.size() - 1].store;

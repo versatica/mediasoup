@@ -18,9 +18,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Create an RtpStream instance if video.
-		if (kind == RTC::Media::Kind::VIDEO)
-			this->rtpStream = new RTC::RtpStream(50);  // TODO: Set a proper size.
+		// Create an RtpStream.
+		switch (kind)
+		{
+			case RTC::Media::Kind::VIDEO:
+			case RTC::Media::Kind::DEPTH:
+				this->rtpStream = new RTC::RtpStream(200); // Buffer up to 200 packets.
+				break;
+			case RTC::Media::Kind::AUDIO:
+				this->rtpStream = new RTC::RtpStream(0); // No buffer for audio streams.
+				break;
+			default:
+				;
+		}
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -216,16 +226,11 @@ namespace RTC
 
 		// TODO: Check if stopped, etc (not yet done)
 
-		// Store in the buffer
-		// TODO: Must check what kind of packet we are storing, right?
-		// TODO: RtpStream.ReceivePacket() should return true if the packet is valid and
-		// false if it must be ignored.
-		if (this->kind == RTC::Media::Kind::VIDEO)
-		{
-			// TODO: Enable when properly implemented.
-			if (!this->rtpStream->ReceivePacket(packet))
-				return;
-		}
+		// Process the packet.
+		// TODO: Must check what kind of packet we are checking. For example, RTX
+		// packets (once implemented) should have a different handling.
+		if (!this->rtpStream->ReceivePacket(packet))
+			return;
 
 		// Notify the listener.
 		this->listener->onRtpPacket(this, packet);
@@ -258,6 +263,19 @@ namespace RTC
 
 			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
 		}
+	}
+
+	void RtpReceiver::RequestRtpRetransmission(uint16_t seq, uint16_t count, std::vector<RTC::RtpPacket*>& container)
+	{
+		MS_TRACE();
+
+		// First of all, set the first element of the container to null so, in case
+		// no packet is inserted into it, the reader will know it.
+		container[0] = nullptr;
+
+		// Proxy the request to the RtpStream.
+		if (this->rtpStream)
+			this->rtpStream->RequestRtpRetransmission(seq, count, container);
 	}
 
 	void RtpReceiver::FillRtpParameters()

@@ -10,6 +10,7 @@
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
+#include <vector>
 #include <json/json.h>
 
 namespace RTC
@@ -45,7 +46,8 @@ namespace RTC
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
-
+		void RequestRtpRetransmission(uint16_t seq, uint16_t count, std::vector<RTC::RtpPacket*>& container);
+		// TODO
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);

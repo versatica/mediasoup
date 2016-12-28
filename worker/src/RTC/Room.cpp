@@ -60,7 +60,8 @@ namespace RTC
 	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data) :
 		roomId(roomId),
 		listener(listener),
-		notifier(notifier)
+		notifier(notifier),
+		rtpRetransmissionContainer(200)
 	{
 		MS_TRACE();
 
@@ -595,19 +596,6 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtcpCompleted(RTC::Peer* peer)
-	{
-		MS_TRACE();
-
-		// Tell all the peers but the one in the argument to generate and send their RTCP
-		for (auto it = this->peers.begin(); it != this->peers.end(); ++it)
-		{
-			if (it->second != peer) {
-				it->second->SendRtcp();
-			}
-		}
-	}
-
 	void Room::onPeerRtcpReceiverReport(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
@@ -616,29 +604,11 @@ namespace RTC
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
+		// TODO: If NACK must call rtpReceiver->RequestRtpRetransmission() and
+		// MUST NOT forward the NACK.
+		// TODO: swtich(report->xxxx) etc
+
 		rtpReceiver->ReceiveRtcpReceiverReport(report);
-	}
-
-	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
-
-		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
-
-		rtpReceiver->ReceiveRtcpFeedback(packet);
-	}
-
-	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
-
-		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
-
-		rtpReceiver->ReceiveRtcpFeedback(packet);
 	}
 
 	void Room::onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
@@ -666,6 +636,41 @@ namespace RTC
 		for (auto& rtpSender : rtpSenders)
 		{
 			rtpSender->ReceiveRtcpSdesChunk(chunk);
+		}
+	}
+
+	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+
+		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+
+		rtpReceiver->ReceiveRtcpFeedback(packet);
+	}
+
+	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+
+		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+
+		rtpReceiver->ReceiveRtcpFeedback(packet);
+	}
+
+	void Room::onPeerRtcpCompleted(RTC::Peer* peer)
+	{
+		MS_TRACE();
+
+		// Tell all the peers but the one in the argument to generate and send their RTCP
+		for (auto it = this->peers.begin(); it != this->peers.end(); ++it)
+		{
+			if (it->second != peer) {
+				it->second->SendRtcp();
+			}
 		}
 	}
 }

@@ -34,13 +34,14 @@ namespace RTC
 		{ "vp9",             RtpCodecMime::Subtype::VP9             },
 		{ "h264",            RtpCodecMime::Subtype::H264            },
 		{ "h265",            RtpCodecMime::Subtype::H265            },
+		// Complementary codecs:
+		{ "cn",              RtpCodecMime::Subtype::CN              },
+		{ "telephone-event", RtpCodecMime::Subtype::TELEPHONE_EVENT },
 		// Feature codecs:
 		{ "rtx",             RtpCodecMime::Subtype::RTX             },
 		{ "ulpfec",          RtpCodecMime::Subtype::ULPFEC          },
 		{ "flexfec",         RtpCodecMime::Subtype::FLEXFEC         },
-		{ "red",             RtpCodecMime::Subtype::RED             },
-		{ "cn",              RtpCodecMime::Subtype::CN              },
-		{ "telephone-event", RtpCodecMime::Subtype::TELEPHONE_EVENT }
+		{ "red",             RtpCodecMime::Subtype::RED             }
 	};
 
 	std::map<RtpCodecMime::Subtype, std::string> RtpCodecMime::subtype2String =
@@ -56,13 +57,14 @@ namespace RTC
 		{ RtpCodecMime::Subtype::VP9,             "VP9"             },
 		{ RtpCodecMime::Subtype::H264,            "H264"            },
 		{ RtpCodecMime::Subtype::H265,            "H265"            },
+		// Complementary codecs:
+		{ RtpCodecMime::Subtype::CN,              "CN"              },
+		{ RtpCodecMime::Subtype::TELEPHONE_EVENT, "telephone-event" },
 		// Feature codecs:
 		{ RtpCodecMime::Subtype::RTX,             "rtx"             },
 		{ RtpCodecMime::Subtype::ULPFEC,          "ulpfec"          },
 		{ RtpCodecMime::Subtype::FLEXFEC,         "flexfec"         },
-		{ RtpCodecMime::Subtype::RED,             "red"             },
-		{ RtpCodecMime::Subtype::CN,              "CN"              },
-		{ RtpCodecMime::Subtype::TELEPHONE_EVENT, "telephone-event" }
+		{ RtpCodecMime::Subtype::RED,             "red"             }
 	};
 
 	/* Instance methods. */

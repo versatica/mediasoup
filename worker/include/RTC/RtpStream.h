@@ -28,6 +28,7 @@ namespace RTC
 		~RtpStream();
 
 		bool ReceivePacket(RTC::RtpPacket* packet);
+		void RequestRtpRetransmission(uint16_t seq, uint16_t count, std::vector<RTC::RtpPacket*>& container);
 
 	private:
 		void InitSeq(uint16_t seq);

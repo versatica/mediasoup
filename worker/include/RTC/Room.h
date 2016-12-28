@@ -11,6 +11,7 @@
 #include "Channel/Notifier.h"
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 #include <json/json.h>
 
 namespace RTC
@@ -73,6 +74,7 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 		std::unordered_map<RTC::RtpSender*, RTC::RtpReceiver*> mapRtpSenderRtpReceiver;
+		std::vector<RTC::RtpPacket*> rtpRetransmissionContainer;
 	};
 
 	/* Inline static methods. */
