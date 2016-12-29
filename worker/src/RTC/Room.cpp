@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::Room"
 
 #include "RTC/Room.h"
+#include "RTC/RTCP/FeedbackRtpNack.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include "Utils.h"
@@ -604,14 +605,6 @@ namespace RTC
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
-		// TODO: switch(report->xxxx) etc
-		// TODO: If NACK:
-		// - Must call rtpReceiver->RequestRtpRetransmission(),
-		// - Must iterate this->rtpRetransmissionContainer until the first null entry
-		//   and call rtpSender->RetransmitRtpPacket(packet)
-		// - MUST NOT forward the NACK to the rtpReceiver
-
-		// If not NACK, just forwar it.
 		rtpReceiver->ReceiveRtcpReceiverReport(report);
 	}
 
@@ -662,7 +655,35 @@ namespace RTC
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
-		rtpReceiver->ReceiveRtcpFeedback(packet);
+		switch (packet->GetMessageType())
+		{
+			case RTC::RTCP::FeedbackRtp::NACK:
+				{
+					RTC::RTCP::FeedbackRtpNackPacket* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+
+					for (auto it = nackPacket->Begin(); it != nackPacket->End(); it++)
+					{
+						RTC::RTCP::NackItem* item = *it;
+
+						rtpReceiver->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), rtpRetransmissionContainer);
+
+						for (auto it = rtpRetransmissionContainer.begin(); it != rtpRetransmissionContainer.end(); it++)
+						{
+							RTC::RtpPacket* packet = *it;
+
+							if (packet == nullptr)
+								break;
+
+							rtpSender->RetransmitRtpPacket(packet);
+						}
+					}
+				}
+
+			default:
+				{
+					rtpReceiver->ReceiveRtcpFeedback(packet);
+				}
+		}
 	}
 
 	void Room::onPeerRtcpCompleted(RTC::Peer* peer)
