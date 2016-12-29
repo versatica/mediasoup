@@ -2,32 +2,31 @@
 
 #include "RTC/RTCP/FeedbackRtpEcn.h"
 #include "Logger.h"
-
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-
-	/* EcnItem Class methods. */
+	/* Class methods. */
 
 	EcnItem* EcnItem::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-				MS_WARN("not enough space for Ecn item, discarded");
-				return nullptr;
+			MS_WARN("not enough space for Ecn item, discarded");
+			return nullptr;
 		}
 
 		Header* header = (Header*)data;
+
 		return new EcnItem(header);
 	}
 
 	size_t EcnItem::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Add minimum header.
 		std::memcpy(data, this->header, sizeof(Header));
@@ -37,7 +36,7 @@ namespace RTC { namespace RTCP
 
 	void EcnItem::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -52,6 +51,4 @@ namespace RTC { namespace RTCP
 		MS_WARN("\t\tduplicated_packets: %d", ntohs(this->header->duplicated_packets));
 		MS_WARN("\t\t</Ecn Item>");
 	}
-
-} } // RTP::RTCP
-
+}}

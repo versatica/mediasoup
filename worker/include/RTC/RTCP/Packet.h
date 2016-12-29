@@ -2,9 +2,8 @@
 #define MS_RTC_RTCP_PACKET_H
 
 #include "common.h"
-
-#include "map"
-#include "string"
+#include <map>
+#include <string>
 
 namespace RTC { namespace RTCP
 {
@@ -59,7 +58,6 @@ namespace RTC { namespace RTCP
 		static bool IsRtcp(const uint8_t* data, size_t len);
 		static Packet* Parse(const uint8_t* data, size_t len);
 
-
 	public:
 		Packet(Type type);
 		virtual ~Packet();
@@ -67,16 +65,14 @@ namespace RTC { namespace RTCP
 		void SetNext(Packet* packet);
 		Packet* GetNext();
 		Type GetType();
-
-	public:
 		size_t Serialize();
 		uint8_t* GetRaw();
 
 	public:
 		virtual void Dump() = 0;
-		virtual size_t GetCount();
+		virtual size_t GetCount() = 0;
 		virtual size_t GetSize() = 0;
-		virtual size_t Serialize(uint8_t* data);
+		virtual size_t Serialize(uint8_t* data) = 0;
 
 	private:
 		Type type;
@@ -125,6 +121,7 @@ namespace RTC { namespace RTCP
 			delete this->raw;
 
 		size_t size = this->GetSize();
+
 		this->raw = new uint8_t[size];
 
 		return this->Serialize(this->raw);
@@ -147,7 +144,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->raw;
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

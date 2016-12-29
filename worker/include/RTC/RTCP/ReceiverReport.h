@@ -4,7 +4,6 @@
 #include "common.h"
 #include "RTC/RTCP/Packet.h"
 #include "Utils.h"
-
 #include <vector>
 
 namespace RTC { namespace RTCP

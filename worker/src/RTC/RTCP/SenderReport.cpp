@@ -2,15 +2,15 @@
 
 #include "RTC/RTCP/SenderReport.h"
 #include "Logger.h"
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-	/* SenderReport Class methods. */
+	/* Class methods. */
 
 	SenderReport* SenderReport::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Get the header.
 		Header* header = (Header*)data;
@@ -18,19 +18,18 @@ namespace RTC { namespace RTCP
 			// Packet size must be >= header size.
 		if (sizeof(Header) > len)
 		{
-				MS_WARN("not enough space for sender report, packet discarded");
-
-				return nullptr;
+			MS_WARN("not enough space for sender report, packet discarded");
+			return nullptr;
 		}
 
 		return new SenderReport(header);
 	}
 
-	/* SenderReport Instance methods. */
+	/* Instance methods. */
 
 	void SenderReport::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -47,10 +46,11 @@ namespace RTC { namespace RTCP
 
 	void SenderReport::Serialize()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Allocate internal data.
-		if (!this->raw) {
+		if (!this->raw)
+		{
 			this->raw = new uint8_t[sizeof(Header)];
 
 			// Copy the header.
@@ -63,7 +63,7 @@ namespace RTC { namespace RTCP
 
 	size_t SenderReport::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Copy the header.
 		std::memcpy(data, this->header, sizeof(Header));
@@ -71,38 +71,41 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	/* SenderReportPacket Class methods. */
+	/* Class methods. */
 
 	SenderReportPacket* SenderReportPacket::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		std::auto_ptr<SenderReportPacket> packet(new SenderReportPacket());
-
 		size_t offset = sizeof(Packet::CommonHeader);
 
 		SenderReport* report = SenderReport::Parse(data+offset, len-offset);
-		if (report) {
+		if (report)
+		{
 			packet->AddReport(report);
-		} else {
+		}
+		else
+		{
 			return packet.release();
 		}
 
 		return packet.release();
 	}
 
-	/* SenderReportPacket Instance methods. */
+	/* Instance methods. */
 
 	size_t SenderReportPacket::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		MS_ASSERT(this->reports.size() == 1, "invalid number of sender reports");
 
 		size_t offset = Packet::Serialize(data);
 
-		// Serialize reports
-		for(auto report : this->reports) {
+		// Serialize reports.
+		for (auto report : this->reports)
+		{
 			offset += report->Serialize(data + offset);
 		}
 
@@ -111,18 +114,18 @@ namespace RTC { namespace RTCP
 
 	void SenderReportPacket::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
 
 		MS_WARN("<SenderReportPacket>");
 
-		for(auto report : this->reports) {
+		for (auto report : this->reports)
+		{
 			report->Dump();
 		}
 
 		MS_WARN("</SenderReportPacket>");
 	}
-
-} } // RTP::RTCP
+}}

@@ -11,17 +11,17 @@
 
 namespace RTC { namespace RTCP
 {
+	/* Class methods. */
 
-/* FeedbackPsItemPacket Class methods. */
 	template<typename Item>
 	FeedbackPsItemPacket<Item>* FeedbackPsItemPacket<Item>::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
-				MS_WARN("not enough space for Feedback packet, discarded");
-				return nullptr;
+			MS_WARN("not enough space for Feedback packet, discarded");
+			return nullptr;
 		}
 
 		CommonHeader* commonHeader = (CommonHeader*)data;
@@ -32,10 +32,14 @@ namespace RTC { namespace RTCP
 		while (len - offset > 0)
 		{
 			Item* item = Item::Parse(data+offset, len-offset);
-			if (item) {
+
+			if (item)
+			{
 				packet->AddItem(item);
 				offset += item->GetSize();
-			} else {
+			}
+			else
+			{
 				break;
 			}
 		}
@@ -43,16 +47,16 @@ namespace RTC { namespace RTCP
 		return packet.release();
 	}
 
-	/* FeedbackPsItemPacket Instance methods. */
+	/* Instance methods. */
 
 	template<typename Item>
 	size_t FeedbackPsItemPacket<Item>::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t offset = FeedbackPacket::Serialize(data);
 
-		for(auto item : this->items)
+		for (auto item : this->items)
 		{
 			offset += item->Serialize(data + offset);
 		}
@@ -63,7 +67,7 @@ namespace RTC { namespace RTCP
 	template<typename Item>
 	void FeedbackPsItemPacket<Item>::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -79,7 +83,7 @@ namespace RTC { namespace RTCP
 		MS_WARN("\t<%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
 	}
 
-	// explicit instantiation to have all FeedbackRtpPacket definitions in this file
+	// explicit instantiation to have all FeedbackRtpPacket definitions in this file.
 	template class FeedbackPsItemPacket<FirItem>;
 	template class FeedbackPsItemPacket<SliItem>;
 	template class FeedbackPsItemPacket<RpsiItem>;
@@ -87,6 +91,4 @@ namespace RTC { namespace RTCP
 	template class FeedbackPsItemPacket<TstnItem>;
 	template class FeedbackPsItemPacket<VbcmItem>;
 	template class FeedbackPsItemPacket<PsLeiItem>;
-
-} } // RTP::RTCP
-
+}}

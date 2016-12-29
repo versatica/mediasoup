@@ -3,16 +3,15 @@
 #include "RTC/RTCP/Bye.h"
 #include "Utils.h"
 #include "Logger.h"
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-
-	/* BYE Packet Class methods. */
+	/* Class methods. */
 
 	ByePacket* ByePacket::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Get the header.
 		Packet::CommonHeader* header = (Packet::CommonHeader*)data;
@@ -46,15 +45,16 @@ namespace RTC { namespace RTCP
 		return packet.release();
 	}
 
-	/* BYE Packet Instance methods. */
+	/* Instance methods. */
 
 	size_t ByePacket::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t offset = Packet::Serialize(data);
 
-		for(auto ssrc : this->ssrcs) {
+		for (auto ssrc : this->ssrcs)
+		{
 			std::memcpy(data, &ssrc, sizeof(uint32_t));
 			offset += sizeof(uint32_t);
 		}
@@ -62,11 +62,11 @@ namespace RTC { namespace RTCP
 		if (!this->reason.empty())
 		{
 			Utils::Byte::Set1Byte(data, offset, this->reason.length());
-			offset += sizeof(uint8_t);  // length field
+			offset += sizeof(uint8_t); // Length field.
 			offset += this->reason.length();
 		}
 
-		// 32 bits padding
+		// 32 bits padding.
 		size_t padding = (-offset) & 3;
 		for (size_t i = 0; i < padding; i++)
 		{
@@ -78,23 +78,21 @@ namespace RTC { namespace RTCP
 
 	void ByePacket::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
 
 		MS_WARN("<Bye Packet>");
 
-		for (auto ssrc : this->ssrcs) {
+		for (auto ssrc : this->ssrcs)
+		{
 			MS_WARN("\tssrc: %u", ssrc);
 		}
 
 		if (!this->reason.empty())
-		{
 			MS_WARN("\treason: %s", this->reason.c_str());
-		}
 
 		MS_WARN("</Bye Packet>");
 	}
-
-} } // RTP::RTCP
+}}

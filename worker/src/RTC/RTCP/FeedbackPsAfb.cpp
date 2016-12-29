@@ -2,32 +2,31 @@
 
 #include "RTC/RTCP/FeedbackPsAfb.h"
 #include "Logger.h"
-
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-
-/* FeedbackPsAfbPacket Class methods. */
+	/* Class methods. */
 
 	FeedbackPsAfbPacket* FeedbackPsAfbPacket::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
-				MS_WARN("not enough space for Feedback packet, discarded");
-				return nullptr;
+			MS_WARN("not enough space for Feedback packet, discarded");
+			return nullptr;
 		}
 
 		CommonHeader* commonHeader = (CommonHeader*)data;
 		std::auto_ptr<FeedbackPsAfbPacket> packet(new FeedbackPsAfbPacket(commonHeader));
+
 		return packet.release();
 	}
 
 	size_t FeedbackPsAfbPacket::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t offset = FeedbackPsPacket::Serialize(data);
 
@@ -37,10 +36,9 @@ namespace RTC { namespace RTCP
 		return offset + this->size;
 	}
 
-
 	void FeedbackPsAfbPacket::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -49,5 +47,4 @@ namespace RTC { namespace RTCP
 		FeedbackPsPacket::Dump();
 		MS_WARN("\t</FeedbackPsAfbPacket>");
 	}
-
-} } // RTP::RTCP
+}}

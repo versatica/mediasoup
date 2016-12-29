@@ -1,15 +1,13 @@
 #define MS_CLASS "RTC::RTCP::Feedback"
 
 #include "RTC/RTCP/Feedback.h"
-
-// Feedback RTP
+// Feedback RTP.
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "RTC/RTCP/FeedbackRtpSrReq.h"
 #include "RTC/RTCP/FeedbackRtpTllei.h"
 #include "RTC/RTCP/FeedbackRtpEcn.h"
-
-// Feedback PS
+// Feedback PS.
 #include "RTC/RTCP/FeedbackPsPli.h"
 #include "RTC/RTCP/FeedbackPsSli.h"
 #include "RTC/RTCP/FeedbackPsRpsi.h"
@@ -18,15 +16,12 @@
 #include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "RTC/RTCP/FeedbackPsLei.h"
 #include "RTC/RTCP/FeedbackPsAfb.h"
-
 #include "Logger.h"
-
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-
-	/* FeedbackPacket Class methods. */
+	/* Class methods. */
 
 	template <typename T>
 	const std::string& FeedbackPacket<T>::MessageType2String(typename T::MessageType type)
@@ -39,14 +34,15 @@ namespace RTC { namespace RTCP
 		return FeedbackPacket<T>::type2String[type];
 	}
 
-	/* FeedbackPacket Instance methods. */
+	/* Instance methods. */
 
 	template <typename T>
 	FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader):
 		Packet(RTCP::Type(commonHeader->packet_type)),
 		messageType(typename T::MessageType(commonHeader->count))
 	{
-		this->header = (Header*)(commonHeader + 1 /* 1 => sizeof(CommonHeader) */);
+		// 1 => sizeof(CommonHeader)
+		this->header = (Header*)(commonHeader + 1);
 	}
 
 	template <typename T>
@@ -67,12 +63,12 @@ namespace RTC { namespace RTCP
 			delete this->raw;
 	}
 
-	/* FeedbackPacket Instance methods. */
+	/* Instance methods. */
 
 	template <typename T>
 	size_t FeedbackPacket<T>::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t offset = Packet::Serialize(data);
 
@@ -85,7 +81,7 @@ namespace RTC { namespace RTCP
 	template <typename T>
 	void FeedbackPacket<T>::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -95,31 +91,31 @@ namespace RTC { namespace RTCP
 		MS_WARN("\tsize: %zu", this->GetSize());
 	}
 
-	/* FeedbackPacket specialization for Ps class. */
+	/* Specialization for Ps class. */
 
 	template<>
 	Type FeedbackPacket<FeedbackPs>::RtcpType = RTCP::Type::PSFB;
 
 	template<>
 	std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
-		{
-			{  FeedbackPs::PLI,   "PLI"   },
-			{  FeedbackPs::SLI,   "SLI"   },
-			{  FeedbackPs::RPSI,  "RPSI"  },
-			{  FeedbackPs::FIR,   "FIR"   },
-			{  FeedbackPs::TSTR,  "TSTR"  },
-			{  FeedbackPs::TSTN,  "TSTN"  },
-			{  FeedbackPs::VBCM,  "VBCM"  },
-			{  FeedbackPs::PSLEI, "PSLEI" },
-			{  FeedbackPs::ROI,   "ROI"   },
-			{  FeedbackPs::AFB,   "AFB"   },
-			{  FeedbackPs::EXT,   "EXT"   }
-		};
+	{
+		{  FeedbackPs::PLI,   "PLI"   },
+		{  FeedbackPs::SLI,   "SLI"   },
+		{  FeedbackPs::RPSI,  "RPSI"  },
+		{  FeedbackPs::FIR,   "FIR"   },
+		{  FeedbackPs::TSTR,  "TSTR"  },
+		{  FeedbackPs::TSTN,  "TSTN"  },
+		{  FeedbackPs::VBCM,  "VBCM"  },
+		{  FeedbackPs::PSLEI, "PSLEI" },
+		{  FeedbackPs::ROI,   "ROI"   },
+		{  FeedbackPs::AFB,   "AFB"   },
+		{  FeedbackPs::EXT,   "EXT"   }
+	};
 
 	template<>
 	FeedbackPacket<FeedbackPs>* FeedbackPacket<FeedbackPs>::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
@@ -175,40 +171,37 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-			{
 				MS_WARN("unknown RTCP PS Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
-
-			}
 		}
 
 		return packet;
 	}
 
-	/* FeedbackPacket specialization for Rtp class. */
+	/* Specialization for Rtcp class. */
 
 	template<>
 	Type FeedbackPacket<FeedbackRtp>::RtcpType = RTCP::Type::RTPFB;
 
 	template<>
 	std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
-		{
-			{ FeedbackRtp::NACK,   "NACK"   },
-			{ FeedbackRtp::TMMBR,  "TMMBR"  },
-			{ FeedbackRtp::TMMBN,  "TMMBN"  },
-			{ FeedbackRtp::SR_REQ, "SR_REQ" },
-			{ FeedbackRtp::RAMS,   "RAMS"   },
-			{ FeedbackRtp::TLLEI,  "TLLEI"  },
-			{ FeedbackRtp::ECN,    "ECN"    },
-			{ FeedbackRtp::PS,     "PS"     },
-			{ FeedbackRtp::EXT,    "EXT"    }
-		};
+	{
+		{ FeedbackRtp::NACK,   "NACK"   },
+		{ FeedbackRtp::TMMBR,  "TMMBR"  },
+		{ FeedbackRtp::TMMBN,  "TMMBN"  },
+		{ FeedbackRtp::SR_REQ, "SR_REQ" },
+		{ FeedbackRtp::RAMS,   "RAMS"   },
+		{ FeedbackRtp::TLLEI,  "TLLEI"  },
+		{ FeedbackRtp::ECN,    "ECN"    },
+		{ FeedbackRtp::PS,     "PS"     },
+		{ FeedbackRtp::EXT,    "EXT"    }
+	};
 
-	/* FeedbackRtpPacket Class methods. */
+	/* Class methods. */
 
 	template<>
 	FeedbackPacket<FeedbackRtp>* FeedbackPacket<FeedbackRtp>::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
@@ -255,17 +248,13 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-			{
 				MS_WARN("unknown RTCP RTP Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
-
-			}
 		}
 
 		return packet;
 	}
 
-	// explicit instantiation to have all FeedbackPacket definitions in this file
+	// Explicit instantiation to have all FeedbackPacket definitions in this file.
 	template class FeedbackPacket<FeedbackPs>;
 	template class FeedbackPacket<FeedbackRtp>;
-
-} } // RTP::RTCP
+}}

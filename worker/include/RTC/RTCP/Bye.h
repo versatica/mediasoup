@@ -3,13 +3,11 @@
 
 #include "common.h"
 #include "RTC/RTCP/Packet.h"
-
 #include <vector>
 #include <string>
 
 namespace RTC { namespace RTCP
 {
-
 	class ByePacket
 		: public Packet
 	{
@@ -22,18 +20,18 @@ namespace RTC { namespace RTCP
 	public:
 		ByePacket();
 
-		// Virtual methods inherited from Packet
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetCount() override;
-		size_t GetSize() override;
-
-	public:
 		void AddSsrc(uint32_t ssrc);
 		void SetReason(const std::string& reason);
 		const std::string& GetReason();
 		Iterator Begin();
 		Iterator End();
+
+	/* Pure virtual methods inherited from Packet */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetCount() override;
+		virtual size_t GetSize() override;
 
 	private:
 		std::vector<uint32_t> ssrcs;
@@ -45,8 +43,7 @@ namespace RTC { namespace RTCP
 	inline
 	ByePacket::ByePacket()
 		: Packet(Type::BYE)
-	{
-	}
+	{}
 
 	inline
 	size_t ByePacket::GetCount()
@@ -62,12 +59,12 @@ namespace RTC { namespace RTCP
 
 		if (!this->reason.empty())
 		{
-			size += sizeof(uint8_t);     // length field
+			size += sizeof(uint8_t); // Length field.
 			size += this->reason.length();
 		}
 
 		// http://stackoverflow.com/questions/11642210/computing-padding-required-for-n-byte-alignment
-		// Consider pading to 32 bits (4 bytes) boundary
+		// Consider pading to 32 bits (4 bytes) boundary.
 		return (size + 3) & ~3;
 	}
 
@@ -100,7 +97,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->ssrcs.end();
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

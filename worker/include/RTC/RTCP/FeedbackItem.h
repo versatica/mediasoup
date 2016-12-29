@@ -3,30 +3,27 @@
 
 #include "common.h"
 
-
 namespace RTC { namespace RTCP
 {
 	class FeedbackItem
 	{
-
 	public:
+		bool IsCorrect();
+
 		virtual void Dump() = 0;
 		virtual void Serialize();
 		virtual size_t Serialize(uint8_t* data) = 0;
 		virtual size_t GetSize() = 0;
-
-		bool IsCorrect();
 
 	protected:
 		virtual ~FeedbackItem();
 
 	protected:
 		uint8_t* raw = nullptr;
-
 		bool isCorrect = true;
 	};
 
-	/* FeedbackItem inline instance methods */
+	/* Inline instance methods */
 
 	inline
 	FeedbackItem::~FeedbackItem()
@@ -42,7 +39,6 @@ namespace RTC { namespace RTCP
 			delete this->raw;
 
 		this->raw = new uint8_t[this->GetSize()];
-
 		this->Serialize(this->raw);
 	}
 
@@ -51,7 +47,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->isCorrect;
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

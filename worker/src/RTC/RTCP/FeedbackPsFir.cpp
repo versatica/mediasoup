@@ -2,35 +2,34 @@
 
 #include "RTC/RTCP/FeedbackPsFir.h"
 #include "Logger.h"
-
-#include <cstring>  // std::memcmp(), std::memcpy()
-#include <string.h> // memset()
+#include <cstring>
+#include <string.h> // std::memset()
 
 namespace RTC { namespace RTCP
 {
-
-	/* FirItem Class methods. */
+	/* Class methods. */
 
 	FirItem* FirItem::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// data size must be >= header.
 		if (sizeof(Header) > len)
 		{
-				MS_WARN("not enough space for Fir item, discarded");
-				return nullptr;
+			MS_WARN("not enough space for Fir item, discarded");
+			return nullptr;
 		}
 
 		Header* header = (Header*)data;
+
 		return new FirItem(header);
 	}
 
-	/* FirItem Instance methods. */
+	/* Instance methods. */
 
 	FirItem::FirItem(uint32_t ssrc, uint8_t sequence_number)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = (Header*)this->raw;
@@ -44,15 +43,16 @@ namespace RTC { namespace RTCP
 
 	size_t FirItem::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
-		memcpy(data, this->header, sizeof(Header));
+		std::memcpy(data, this->header, sizeof(Header));
+
 		return sizeof(Header);
 	}
 
 	void FirItem::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -62,6 +62,4 @@ namespace RTC { namespace RTCP
 		MS_WARN("\t\t\tsequence_number: %u", this->header->sequence_number);
 		MS_WARN("\t\t</Fir Item>");
 	}
-
-} } // RTP::RTCP
-
+}}

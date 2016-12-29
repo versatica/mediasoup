@@ -1,11 +1,11 @@
 #define MS_CLASS "RTC::RTCP::CompoundPacket"
 
 #include "RTC/RTCP/CompoundPacket.h"
+#include "Logger.h"
 
 namespace RTC { namespace RTCP
 {
-
-	/* CopoundPacket Instance methods. */
+	/* Instance methods. */
 
 	CompoundPacket::~CompoundPacket()
 	{
@@ -23,22 +23,20 @@ namespace RTC { namespace RTCP
 		{
 			this->size = this->senderReportPacket.GetSize();
 
-			if (this->receiverReportPacket.GetCount()) {
+			if (this->receiverReportPacket.GetCount())
+			{
 				this->size += sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount();
 			}
 		}
-
 		// If no sender nor receiver reports are present send an empty Receiver Report
-		// packet as the head of the compound packet
+		// packet as the head of the compound packet.
 		else
 		{
 			this->size = this->receiverReportPacket.GetSize();
 		}
 
 		if (this->sdesPacket.GetCount())
-		{
 			this->size += this->sdesPacket.GetSize();
-		}
 
 		// Allocate it.
 		this->raw = new uint8_t[this->size];
@@ -51,8 +49,9 @@ namespace RTC { namespace RTCP
 			this->senderReportPacket.Serialize(this->raw);
 			offset = this->senderReportPacket.GetSize();
 
-			if (this->receiverReportPacket.GetCount()) {
-				// Fix header length
+			if (this->receiverReportPacket.GetCount())
+			{
+				// Fix header length.
 				Packet::CommonHeader* header = (Packet::CommonHeader*) this->raw;
 				header->length += (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount()) / 4;
 
@@ -66,7 +65,6 @@ namespace RTC { namespace RTCP
 				}
 			}
 		}
-
 		else
 		{
 			this->receiverReportPacket.Serialize(this->raw);
@@ -91,18 +89,27 @@ namespace RTC { namespace RTCP
 		{
 			this->senderReportPacket.Dump();
 
-			if (this->receiverReportPacket.GetCount()) {
+			if (this->receiverReportPacket.GetCount())
+			{
 				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
+
 				for (; it != this->receiverReportPacket.End(); ++it)
 					(*it)->Dump();
 			}
 		}
-
 		else
+		{
 			this->receiverReportPacket.Dump();
+		}
 
 		if (this->sdesPacket.GetCount())
 			this->sdesPacket.Dump();
 	}
 
-} } // RTP::RTCP
+	void CompoundPacket::AddSenderReport(SenderReport* report)
+	{
+		MS_ASSERT(this->senderReportPacket.GetCount() == 0, "a sender report is already present");
+
+		this->senderReportPacket.AddReport(report);
+	}
+}}

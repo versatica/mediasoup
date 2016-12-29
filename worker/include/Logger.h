@@ -6,9 +6,9 @@
 #include "handles/UnixStreamSocket.h"
 #include "Channel/UnixStreamSocket.h"
 #include <string>
-#include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
+#include <cstdio> // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstring>
-#include <cstdlib>  // std::abort()
+#include <cstdlib> // std::abort()
 
 #define MS_LOGGER_BUFFER_SIZE 10000
 
@@ -59,7 +59,9 @@ bool Logger::HasDebugLevel()
 	return (LogLevel::LOG_DEBUG == Settings::configuration.logLevel);
 }
 
-// NOTE: Each file including Logger.h MUST define its own MS_CLASS macro.
+// NOTE: Each source file (.cpp) including Logger.h MUST define its own MS_CLASS
+// macro.
+// NOTE: Include files (.h) MUST NOT include Logger.h.
 
 #define _MS_LOG_SEPARATOR_CHAR_STD "\n"
 

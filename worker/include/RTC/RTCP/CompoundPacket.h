@@ -5,8 +5,6 @@
 #include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/Sdes.h"
-#include "Logger.h" // MS_ASSERT
-
 #include <vector>
 
 namespace RTC { namespace RTCP
@@ -20,7 +18,6 @@ namespace RTC { namespace RTCP
 		size_t GetSize();
 		size_t GetSenderReportCount();
 		size_t GetReceiverReportCount();
-
 		void Dump();
 		void AddSenderReport(SenderReport* report);
 		void AddReceiverReport(ReceiverReport* report);
@@ -30,7 +27,6 @@ namespace RTC { namespace RTCP
 	private:
 		uint8_t* raw = nullptr;
 		size_t size = 0;
-
 		SenderReportPacket senderReportPacket;
 		ReceiverReportPacket receiverReportPacket;
 		SdesPacket sdesPacket;
@@ -63,14 +59,6 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	void CompoundPacket::AddSenderReport(SenderReport* report)
-	{
-		MS_ASSERT(this->senderReportPacket.GetCount() == 0, "A sender report is already present");
-
-		this->senderReportPacket.AddReport(report);
-	}
-
-	inline
 	void CompoundPacket::AddReceiverReport(ReceiverReport* report)
 	{
 		this->receiverReportPacket.AddReport(report);
@@ -81,7 +69,6 @@ namespace RTC { namespace RTCP
 	{
 		this->sdesPacket.AddChunk(chunk);
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

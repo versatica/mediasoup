@@ -3,12 +3,10 @@
 
 #include "common.h"
 #include "RTC/RTCP/Feedback.h"
-
 #include <vector>
 
 namespace RTC { namespace RTCP
 {
-
 	template<typename Item> class FeedbackPsItemPacket
 		: public FeedbackPsPacket
 	{
@@ -34,7 +32,6 @@ namespace RTC { namespace RTCP
 	private:
 		std::vector<Item*> items;
 	};
-
 
 	/* FeedbackPsPacket<Item> inline instance methods */
 

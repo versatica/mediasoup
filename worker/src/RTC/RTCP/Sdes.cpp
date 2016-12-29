@@ -3,12 +3,11 @@
 #include "RTC/RTCP/Sdes.h"
 #include "Utils.h"
 #include "Logger.h"
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-
-	/* Sdes Item Class variables. */
+	/* Item Class variables. */
 
 	std::map<SdesItem::Type, std::string> SdesItem::type2String =
 	{
@@ -20,14 +19,14 @@ namespace RTC { namespace RTCP
 		{ LOC,   "LOC"   },
 		{ TOOL,  "TOOL"  },
 		{ NOTE,  "NOTE"  },
-		{ PRIV,  "PRIV"  },
+		{ PRIV,  "PRIV"  }
 	};
 
-	/* SDES Item Class methods. */
+	/* Class methods. */
 
 	SdesItem* SdesItem::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Get the header.
 		Header* header = (Header*)data;
@@ -35,9 +34,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(uint8_t)*2 + header->length > len)
 		{
-				MS_WARN("not enough space for SDES item, discarded");
-
-				return nullptr;
+			MS_WARN("not enough space for SDES item, discarded");
+			return nullptr;
 		}
 
 		return new SdesItem(header);
@@ -53,11 +51,11 @@ namespace RTC { namespace RTCP
 		return type2String[type];
 	}
 
-	/* SDES Item Instance methods. */
+	/* Instance methods. */
 
 	SdesItem::SdesItem(Type type, size_t len, const char* value)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Allocate memory.
 		this->raw = new uint8_t[2 + len];
@@ -68,13 +66,13 @@ namespace RTC { namespace RTCP
 		this->header->type = type;
 		this->header->length = len;
 
-		// Copy the value into raw
+		// Copy the value into raw.
 		std::memcpy(this->header->value, value, this->header->length);
 	}
 
 	void SdesItem::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -88,19 +86,18 @@ namespace RTC { namespace RTCP
 
 	void SdesItem::Serialize()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (this->raw)
 			delete this->raw;
 
 		this->raw = new uint8_t[2 + this->header->length];
-
 		this->Serialize(this->raw);
 	}
 
 	size_t SdesItem::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Add minimum header.
 		std::memcpy(data, this->header, 2);
@@ -108,21 +105,19 @@ namespace RTC { namespace RTCP
 		// Copy the content.
 		std::memcpy(data+2, this->header->value, this->header->length);
 
-		return 2+this->header->length;
+		return 2 + this->header->length;
 	}
 
-
-	/* SDES Chunk Class methods. */
+	/* Class methods. */
 
 	SdesChunk* SdesChunk::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// data size must be > SSRC field.
 		if (sizeof(uint32_t) /* ssrc */ > len)
 		{
 			MS_WARN("not enough space for SDES chunk, discarded");
-
 			return nullptr;
 		}
 
@@ -133,15 +128,16 @@ namespace RTC { namespace RTCP
 		while (len - offset > 0)
 		{
 			SdesItem* item = SdesItem::Parse(data+offset, len-offset);
-			if (item) {
-
-				if (item->GetType() == SdesItem::END) {
+			if (item)
+			{
+				if (item->GetType() == SdesItem::END)
 					return chunk.release();
-				}
 
 				chunk->AddItem(item);
 				offset += item->GetSize();
-			} else {
+			}
+			else
+			{
 				return chunk.release();
 			}
 		}
@@ -149,30 +145,32 @@ namespace RTC { namespace RTCP
 		return chunk.release();
 	}
 
-	/* SDES Chunk Instance methods. */
+	/* Instance methods. */
 
 	void SdesChunk::Serialize()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			item->Serialize();
 		}
 	}
 
 	size_t SdesChunk::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		std::memcpy(data, &this->ssrc, sizeof(this->ssrc));
 
 		size_t offset = sizeof(this->ssrc);
 
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			offset += item->Serialize(data + offset);
 		}
 
-		// 32 bits padding
+		// 32 bits padding.
 		size_t padding = (-offset) & 3;
 		for (size_t i = 0; i < padding; i++)
 		{
@@ -184,7 +182,7 @@ namespace RTC { namespace RTCP
 
 	void SdesChunk::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -192,34 +190,36 @@ namespace RTC { namespace RTCP
 		MS_WARN("\t<Sdes Chunk>");
 		MS_WARN("\t\tssrc: %u", (uint32_t)ntohl(this->ssrc));
 
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			item->Dump();
 		}
 
 		MS_WARN("\t</Sdes Chunk>");
 	}
 
-	/* SDES Packet Class methods. */
+	/* Class methods. */
 
 	SdesPacket* SdesPacket::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Get the header.
 		Packet::CommonHeader* header = (Packet::CommonHeader*)data;
-
 		std::auto_ptr<SdesPacket> packet(new SdesPacket());
-
 		size_t offset = sizeof(Packet::CommonHeader);
-
 		uint8_t count = header->count;
+
 		while ((count--) && (len - offset > 0))
 		{
 			SdesChunk* chunk = SdesChunk::Parse(data+offset, len-offset);
-			if (chunk) {
+			if (chunk)
+			{
 				packet->AddChunk(chunk);
 				offset += chunk->GetSize();
-			} else {
+			}
+			else
+			{
 				return packet.release();
 			}
 		}
@@ -227,15 +227,16 @@ namespace RTC { namespace RTCP
 		return packet.release();
 	}
 
-	/* SDES Packet Instance methods. */
+	/* Instance methods. */
 
 	size_t SdesPacket::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t offset = Packet::Serialize(data);
 
-		for(auto chunk : this->chunks) {
+		for (auto chunk : this->chunks)
+		{
 			offset += chunk->Serialize(data + offset);
 		}
 
@@ -244,18 +245,18 @@ namespace RTC { namespace RTCP
 
 	void SdesPacket::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
 
 		MS_WARN("<Sdes Packet>");
 
-		for (auto chunk : this->chunks) {
+		for (auto chunk : this->chunks)
+		{
 			chunk->Dump();
 		}
 
 		MS_WARN("</Sdes Packet>");
 	}
-
-} } // RTP::RTCP
+}}

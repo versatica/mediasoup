@@ -9,17 +9,17 @@
 
 namespace RTC { namespace RTCP
 {
+	/* Class methods. */
 
-/* FeedbackRtpItemPacket Class methods. */
 	template<typename Item>
 	FeedbackRtpItemPacket<Item>* FeedbackRtpItemPacket<Item>::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
-				MS_WARN("not enough space for Feedback packet, discarded");
-				return nullptr;
+			MS_WARN("not enough space for Feedback packet, discarded");
+			return nullptr;
 		}
 
 		CommonHeader* commonHeader = (CommonHeader*)data;
@@ -30,10 +30,14 @@ namespace RTC { namespace RTCP
 		while (len - offset > 0)
 		{
 			Item* item = Item::Parse(data+offset, len-offset);
-			if (item) {
+
+			if (item)
+			{
 				packet->AddItem(item);
 				offset += item->GetSize();
-			} else {
+			}
+			else
+			{
 				break;
 			}
 		}
@@ -41,16 +45,17 @@ namespace RTC { namespace RTCP
 		return packet.release();
 	}
 
-	/* FeedbackRtpItemPacket Instance methods. */
+	/* Instance methods. */
 
 	template<typename Item>
 	size_t FeedbackRtpItemPacket<Item>::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t offset = FeedbackPacket::Serialize(data);
 
-		for(auto item : this->items) {
+		for (auto item : this->items)
+		{
 			offset += item->Serialize(data + offset);
 		}
 
@@ -60,7 +65,7 @@ namespace RTC { namespace RTCP
 	template<typename Item>
 	void FeedbackRtpItemPacket<Item>::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -68,18 +73,18 @@ namespace RTC { namespace RTCP
 		MS_WARN("\t<%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
 		FeedbackRtpPacket::Dump();
 
-		for (auto item : this->items) {
+		for (auto item : this->items)
+		{
 			item->Dump();
 		}
 
 		MS_WARN("\t<%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
 	}
 
-	// explicit instantiation to have all FeedbackRtpPacket definitions in this file
+	// Explicit instantiation to have all FeedbackRtpPacket definitions in this file.
 	template class FeedbackRtpItemPacket<NackItem>;
 	template class FeedbackRtpItemPacket<TmmbrItem>;
 	template class FeedbackRtpItemPacket<TmmbnItem>;
 	template class FeedbackRtpItemPacket<TlleiItem>;
 	template class FeedbackRtpItemPacket<EcnItem>;
-
-} } // RTP::RTCP
+}}

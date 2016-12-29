@@ -10,7 +10,8 @@
 
 namespace RTC { namespace RTCP
 {
-	/* Namespace methods */
+	/* Namespace methods. */
+
 	const std::string& Type2String(Type type)
 	{
 		static const std::string unknown("UNKNOWN");
@@ -27,7 +28,7 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		// First, Currently parsing and Last RTCP packets in the compound packet
+		// First, Currently parsing and Last RTCP packets in the compound packet.
 		Packet *first, *current, *last;
 		first = current = last = nullptr;
 
@@ -56,49 +57,62 @@ namespace RTC { namespace RTCP
 				{
 					current = SenderReportPacket::Parse(data, len);
 
-					if (!current) {
+					if (!current)
 						break;
-					}
 
-					if ((uint8_t)header->count > 0) {
+					if ((uint8_t)header->count > 0)
+					{
 						Packet* rr = ReceiverReportPacket::Parse(data, len, current->GetSize());
-
-						if (!rr) {
+						if (!rr)
 							break;
-						}
 
 						current->SetNext(rr);
 					}
-				}
+
 					break;
+				}
 
 				case Type::RR:
+				{
 					current = ReceiverReportPacket::Parse(data, len);
 					break;
+				}
 
 				case Type::SDES:
+				{
 					current = SdesPacket::Parse(data, len);
 					break;
+				}
 
 				case Type::BYE:
+				{
 					current = ByePacket::Parse(data, len);
 					break;
+				}
 
 				case Type::APP:
+				{
 					current = nullptr;
 					break;
+				}
 
 				case Type::PSFB:
+				{
 					current = FeedbackPsPacket::Parse(data, len);
 					break;
+				}
 
 				case Type::RTPFB:
+				{
 					current = FeedbackRtpPacket::Parse(data, len);
 					break;
+				}
 
 				default:
+				{
 					MS_WARN("unknown RTCP packet type [packet_type:%" PRIu8 "]", header->packet_type);
 					current = nullptr;
+				}
 			}
 
 			if (!current)
@@ -107,12 +121,11 @@ namespace RTC { namespace RTCP
 
 				if (Type(header->packet_type) == Type::PSFB)
 				{
-					packetType += " "+ FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
+					packetType += " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
 				}
-
 				else if (Type(header->packet_type) == Type::RTPFB)
 				{
-					packetType += " "+ FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
+					packetType += " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
 				}
 
 				MS_WARN("error parsing %s Packet", packetType.c_str());
@@ -120,6 +133,7 @@ namespace RTC { namespace RTCP
 				return first;
 			}
 
+			// TODO: REMOVE
 			current->Dump();
 
 			data += packet_len;
@@ -131,7 +145,6 @@ namespace RTC { namespace RTCP
 				last->SetNext(current);
 
 			last = current->GetNext() ? current->GetNext() : current;
-
 		}
 
 		return first;
@@ -141,8 +154,7 @@ namespace RTC { namespace RTCP
 
 	Packet::Packet(Type type)
 		:type(type)
-	{
-	}
+	{}
 
 	Packet::~Packet()
 	{
@@ -152,13 +164,12 @@ namespace RTC { namespace RTCP
 
 	size_t Packet::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t length = (this->GetSize() / 4) - 1;
+		CommonHeader* header = (Packet::CommonHeader*)data;
 
-		CommonHeader* header = (Packet::CommonHeader* )data;
-
-		// Fill the common header
+		// Fill the common header.
 		header->version = 2;
 		header->padding = 0;
 		header->count = (uint8_t)this->GetCount();
@@ -167,5 +178,4 @@ namespace RTC { namespace RTCP
 
 		return sizeof(CommonHeader);
 	}
-
-} } // RTP::RTCP
+}}

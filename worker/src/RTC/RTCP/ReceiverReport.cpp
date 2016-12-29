@@ -3,15 +3,15 @@
 #include "RTC/RTCP/ReceiverReport.h"
 #include "Utils.h"
 #include "Logger.h"
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-	/* ReceiverReport Class methods. */
+	/* Class methods. */
 
 	ReceiverReport* ReceiverReport::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Get the header.
 		Header* header = (Header*)data;
@@ -19,18 +19,18 @@ namespace RTC { namespace RTCP
 		// Packet size must be >= header size.
 		if (sizeof(Header) > len)
 		{
-				MS_WARN("not enough space for receiver report, packet discarded");
-				return nullptr;
+			MS_WARN("not enough space for receiver report, packet discarded");
+			return nullptr;
 		}
 
 		return new ReceiverReport(header);
 	}
 
-	/* ReceiverReport Instance methods. */
+	/* Instance methods. */
 
 	void ReceiverReport::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -48,10 +48,11 @@ namespace RTC { namespace RTCP
 
 	void ReceiverReport::Serialize()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Allocate internal data.
-		if (!this->raw) {
+		if (!this->raw)
+		{
 			this->raw = new uint8_t[sizeof(Header)];
 
 			// Copy the header.
@@ -64,7 +65,7 @@ namespace RTC { namespace RTCP
 
 	size_t ReceiverReport::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Copy the header.
 		std::memcpy(data, this->header, sizeof(Header));
@@ -72,36 +73,38 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	/* ReceiverReportPacket Class methods. */
+	/* Class methods. */
 
-	/* @data points to the begining of the incoming RTCP packet
-	 * @len is the total length of the packet
-	 * @offset points to the first Receiver Report if the incoming packet
+	/**
+	 * ReceiverReportPacket::Parse()
+	 * @param  data   - Points to the begining of the incoming RTCP packet.
+	 * @param  len    - Total length of the packet.
+	 * @param  offset - points to the first Receiver Report if the incoming packet.
 	 */
 	ReceiverReportPacket* ReceiverReportPacket::Parse(const uint8_t* data, size_t len, size_t offset)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Get the header.
 		Packet::CommonHeader* header = (Packet::CommonHeader*)data;
-
 		std::auto_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
 
 		packet->SetSsrc(Utils::Byte::Get4Bytes((uint8_t*)header, sizeof(CommonHeader)));
 
 		if (offset == 0)
-		{
 			offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;
-		}
 
 		uint8_t count = header->count;
 		while ((count--) && (len - offset > 0))
 		{
 			ReceiverReport* report = ReceiverReport::Parse(data+offset, len-offset);
-			if (report) {
+			if (report)
+			{
 				packet->AddReport(report);
 				offset += report->GetSize();
-			} else {
+			}
+			else
+			{
 				return packet.release();
 			}
 		}
@@ -109,20 +112,21 @@ namespace RTC { namespace RTCP
 		return packet.release();
 	}
 
-	/* ReceiverReportPacket Instance methods. */
+	/* Instance methods. */
 
 	size_t ReceiverReportPacket::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		size_t offset = Packet::Serialize(data);
 
-		// Copy the SSRC
+		// Copy the SSRC.
 		std::memcpy(data + sizeof(Packet::CommonHeader), &this->ssrc, sizeof(this->ssrc));
 		offset += sizeof(this->ssrc);
 
-		// Serialize reports
-		for(auto report : this->reports) {
+		// Serialize reports.
+		for (auto report : this->reports)
+		{
 			offset += report->Serialize(data + offset);
 		}
 
@@ -131,7 +135,7 @@ namespace RTC { namespace RTCP
 
 	void ReceiverReportPacket::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -139,11 +143,11 @@ namespace RTC { namespace RTCP
 		MS_WARN("<ReceiverReportPacket>");
 		MS_WARN("\tssrc: %u", (uint32_t)ntohl(this->ssrc));
 
-		for(auto report : this->reports) {
+		for (auto report : this->reports)
+		{
 			report->Dump();
 		}
 
 		MS_WARN("</ReceiverReportPacket>");
 	}
-
-} } // RTP::RTCP
+}}

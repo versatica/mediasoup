@@ -23,9 +23,11 @@ namespace RTC { namespace RTCP
 		static FeedbackPacket<T>* Parse(const uint8_t* data, size_t len);
 		static const std::string& MessageType2String(typename T::MessageType type);
 
+	private:
+		static std::map<typename T::MessageType, std::string> type2String;
+
 	public:
 		typename T::MessageType GetMessageType();
-
 		uint32_t GetSenderSsrc();
 		void SetSenderSsrc(uint32_t ssrc);
 		uint32_t GetMediaSsrc();
@@ -36,7 +38,8 @@ namespace RTC { namespace RTCP
 		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
 		virtual ~FeedbackPacket();
 
-		// Virtual methods inherited from Packet
+	/* Pure virtual methods inherited from Packet */
+	protected:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* data) override;
 		virtual size_t GetCount() override;
@@ -45,17 +48,12 @@ namespace RTC { namespace RTCP
 	private:
 		Header* header = nullptr;
 		uint8_t* raw = nullptr;
-
 		typename T::MessageType messageType;
-
-	private:
-		static std::map<typename T::MessageType, std::string> type2String;
 	};
 
 	class FeedbackPs
 	{
 	public:
-
 		typedef enum MessageType : uint8_t
 		{
 			PLI  = 1,
@@ -75,7 +73,6 @@ namespace RTC { namespace RTCP
 	class FeedbackRtp
 	{
 	public:
-
 		typedef enum MessageType : uint8_t
 		{
 			NACK   = 1,
@@ -93,7 +90,7 @@ namespace RTC { namespace RTCP
 	typedef FeedbackPacket<FeedbackPs> FeedbackPsPacket;
 	typedef FeedbackPacket<FeedbackRtp> FeedbackRtpPacket;
 
-	/* FeedbackPacket inline instance methods. */
+	/* Inline instance methods. */
 
 	template <typename T>
 	typename T::MessageType FeedbackPacket<T>::GetMessageType()
@@ -136,7 +133,6 @@ namespace RTC { namespace RTCP
 	{
 		this->header->m_ssrc = (uint32_t)htonl(ssrc);
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

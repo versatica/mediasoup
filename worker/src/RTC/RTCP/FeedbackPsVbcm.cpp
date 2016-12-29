@@ -2,30 +2,29 @@
 
 #include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "Logger.h"
-
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring>
 
 namespace RTC { namespace RTCP
 {
-
-	/* VbcmItem Class methods. */
+	/* Class methods. */
 
 	VbcmItem* VbcmItem::Parse(const uint8_t* data, size_t len)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-				MS_WARN("not enough space for Vbcm item, discarded");
-				return nullptr;
+			MS_WARN("not enough space for Vbcm item, discarded");
+			return nullptr;
 		}
 
 		Header* header = (Header*)data;
+
 		return new VbcmItem(header);
 	}
 
-	/* VbcmItem Instance methods. */
+	/* Instance methods. */
 	VbcmItem::VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value)
 	{
 		this->raw = new uint8_t[8 + length];
@@ -41,7 +40,7 @@ namespace RTC { namespace RTCP
 
 	size_t VbcmItem::Serialize(uint8_t* data)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		// Add minimum header.
 		std::memcpy(data, this->header, 8);
@@ -51,7 +50,7 @@ namespace RTC { namespace RTCP
 
 		size_t offset = 8+this->header->length;
 
-		// 32 bits padding
+		// 32 bits padding.
 		size_t padding = (-offset) & 3;
 		for (size_t i = 0; i < padding; i++)
 		{
@@ -63,7 +62,7 @@ namespace RTC { namespace RTCP
 
 	void VbcmItem::Dump()
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
 		if (!Logger::HasDebugLevel())
 			return;
@@ -75,6 +74,4 @@ namespace RTC { namespace RTCP
 		MS_WARN("\t\t\tlength: %u", ntohs(this->header->length));
 		MS_WARN("\t\t</Vbcm Item>");
 	}
-
-} } // RTP::RTCP
-
+}}
