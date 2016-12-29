@@ -265,13 +265,13 @@ namespace RTC
 		}
 	}
 
-	void RtpReceiver::RequestRtpRetransmission(uint16_t seq, uint16_t count, std::vector<RTC::RtpPacket*>& container)
+	void RtpReceiver::RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
 	{
 		MS_TRACE();
 
 		// Proxy the request to the RtpStream.
 		if (this->rtpStream)
-			this->rtpStream->RequestRtpRetransmission(seq, count, container);
+			this->rtpStream->RequestRtpRetransmission(seq, bitmask, container);
 	}
 
 	void RtpReceiver::FillRtpParameters()

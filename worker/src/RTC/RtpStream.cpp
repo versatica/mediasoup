@@ -66,9 +66,12 @@ namespace RTC
 
 	// This method looks for the requested RTP packets and inserts them into the
 	// given container (and set to null the next container position).
-	void RtpStream::RequestRtpRetransmission(uint16_t seq, uint16_t count, std::vector<RTC::RtpPacket*>& container)
+	void RtpStream::RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
 	{
 		MS_TRACE();
+
+		// 17: 16 bit mask + the initial sequence number.
+		static size_t maxRequestedPackets = 17;
 
 		// First of all, set the first element of the container to null so, in case
 		// no packet is inserted into it, the reader will know it.
@@ -80,13 +83,11 @@ namespace RTC
 
 		// Convert the given sequence numbers to 32 bits.
 		uint32_t first_seq32 = (uint32_t)seq + this->cycles;
-		uint32_t last_seq32 = first_seq32 + (uint32_t)count - 1;
+		uint32_t last_seq32 = first_seq32 + maxRequestedPackets - 1;
 		size_t container_idx = 0;
 
 		// Number of requested packets cannot be greater than the container size - 1
-		// (note: leave the last element be null). If so, remove the younger ones.
-		if ((size_t)count > container.size() - 1)
-			first_seq32 = last_seq32 - uint32_t(container.size() - 1);
+		MS_ASSERT(container.size() - 1 >= maxRequestedPackets, "RtpPacket container is too small");
 
 		auto buffer_it = this->buffer.begin();
 		auto buffer_it_r = this->buffer.rbegin();
@@ -113,15 +114,15 @@ namespace RTC
 			}
 		}
 
-		// Filter non present packets.
-		if (first_seq32 < buffer_first_seq32)
-			first_seq32 = buffer_first_seq32;
-		if (last_seq32 > buffer_last_seq32)
-			last_seq32 = buffer_last_seq32;
-
 		// Look for each requested packet.
-		for (uint32_t seq32 = first_seq32; seq32 <= last_seq32; seq32++)
+		uint32_t seq32 = first_seq32;
+		bool requested = true;
+
+		do
 		{
+			if (!requested)
+				continue;
+
 			for (; buffer_it != this->buffer.end(); buffer_it++)
 			{
 				auto current_seq32 = (*buffer_it).seq32;
@@ -137,7 +138,12 @@ namespace RTC
 					break;
 				}
 			}
+
+			requested = (bitmask & 1)? true : false;
+			bitmask >>= 1;
+			seq32++;
 		}
+		while (bitmask != 0);
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;
