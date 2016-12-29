@@ -64,12 +64,83 @@ namespace RTC
 		return true;
 	}
 
+	// This method looks for the requested RTP packets and inserts them into the
+	// given container (and set to null the next container position).
 	void RtpStream::RequestRtpRetransmission(uint16_t seq, uint16_t count, std::vector<RTC::RtpPacket*>& container)
 	{
 		MS_TRACE();
 
-		// TODO: This method must look for the requested RTP packets and insert them
-		// into the given container, and set to null the next container position.
+		// First of all, set the first element of the container to null so, in case
+		// no packet is inserted into it, the reader will know it.
+		container[0] = nullptr;
+
+		// If the buffer is empty, just return.
+		if (this->buffer.size() == 0)
+			return;
+
+		// Convert the given sequence numbers to 32 bits.
+		uint32_t first_seq32 = (uint32_t)seq + this->cycles;
+		uint32_t last_seq32 = first_seq32 + (uint32_t)count - 1;
+		size_t container_idx = 0;
+
+		// Number of requested packets cannot be greater than the container size - 1
+		// (note: leave the last element be null). If so, remove the younger ones.
+		if ((size_t)count > container.size() - 1)
+			first_seq32 = last_seq32 - uint32_t(container.size() - 1);
+
+		auto buffer_it = this->buffer.begin();
+		auto buffer_it_r = this->buffer.rbegin();
+		uint32_t buffer_first_seq32 = (*buffer_it).seq32;
+		uint32_t buffer_last_seq32 = (*buffer_it_r).seq32;
+
+		// Requested packet range not found.
+		if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
+		{
+			// Let's try with sequence numbers in the previous 16 cycle.
+			if (this->cycles > 0)
+			{
+				first_seq32 -= RTP_SEQ_MOD;
+				last_seq32 -= RTP_SEQ_MOD;
+
+				// Try again.
+				if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
+					return;
+			}
+			// Otherwise just return.
+			else
+			{
+				return;
+			}
+		}
+
+		// Filter non present packets.
+		if (first_seq32 < buffer_first_seq32)
+			first_seq32 = buffer_first_seq32;
+		if (last_seq32 > buffer_last_seq32)
+			last_seq32 = buffer_last_seq32;
+
+		// Look for each requested packet.
+		for (uint32_t seq32 = first_seq32; seq32 <= last_seq32; seq32++)
+		{
+			for (; buffer_it != this->buffer.end(); buffer_it++)
+			{
+				auto current_seq32 = (*buffer_it).seq32;
+
+				// Found.
+				if (current_seq32 == seq32)
+				{
+					auto current_packet = (*buffer_it).packet;
+
+					// Store the packet in the container and then increment its index.
+					container[container_idx++] = current_packet;
+					// Exit the loop.
+					break;
+				}
+			}
+		}
+
+		// Set the next container element to null.
+		container[container_idx] = nullptr;
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)

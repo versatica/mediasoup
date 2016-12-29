@@ -269,10 +269,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// First of all, set the first element of the container to null so, in case
-		// no packet is inserted into it, the reader will know it.
-		container[0] = nullptr;
-
 		// Proxy the request to the RtpStream.
 		if (this->rtpStream)
 			this->rtpStream->RequestRtpRetransmission(seq, count, container);

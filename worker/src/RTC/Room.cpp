@@ -61,7 +61,7 @@ namespace RTC
 		roomId(roomId),
 		listener(listener),
 		notifier(notifier),
-		rtpRetransmissionContainer(200)
+		rtpRetransmissionContainer(201) // Can retransmit up to 200 RTP packets.
 	{
 		MS_TRACE();
 
@@ -611,6 +611,7 @@ namespace RTC
 		//   and call rtpSender->RetransmitRtpPacket(packet)
 		// - MUST NOT forward the NACK to the rtpReceiver
 
+		// If not NACK, just forwar it.
 		rtpReceiver->ReceiveRtcpReceiverReport(report);
 	}
 
