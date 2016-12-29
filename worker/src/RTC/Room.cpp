@@ -62,7 +62,7 @@ namespace RTC
 		roomId(roomId),
 		listener(listener),
 		notifier(notifier),
-		rtpRetransmissionContainer(201) // Can retransmit up to 200 RTP packets.
+		rtpRetransmissionContainer(18) // Can retransmit up to 17 RTP packets.
 	{
 		MS_TRACE();
 

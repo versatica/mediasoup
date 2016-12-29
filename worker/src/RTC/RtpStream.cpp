@@ -86,7 +86,7 @@ namespace RTC
 		uint32_t last_seq32 = first_seq32 + maxRequestedPackets - 1;
 		size_t container_idx = 0;
 
-		// Number of requested packets cannot be greater than the container size - 1
+		// Number of requested packets cannot be greater than the container size - 1.
 		MS_ASSERT(container.size() - 1 >= maxRequestedPackets, "RtpPacket container is too small");
 
 		auto buffer_it = this->buffer.begin();
