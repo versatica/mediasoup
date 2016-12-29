@@ -6,11 +6,9 @@
 
 namespace RTC { namespace RTCP
 {
-
 	class FeedbackPsPliPacket
 		: public FeedbackPsPacket
 	{
-
 	public:
 		static FeedbackPsPliPacket* Parse(const uint8_t* data, size_t len);
 
@@ -19,23 +17,21 @@ namespace RTC { namespace RTCP
 		explicit FeedbackPsPliPacket(CommonHeader* commonHeader);
 		FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
 
-		void Dump() override;
+	public:
+		virtual void Dump() override;
 	};
 
-	/* inline instance methods. */
+	/* Inline instance methods. */
 
 	inline
 	FeedbackPsPliPacket::FeedbackPsPliPacket(CommonHeader* commonHeader):
 		FeedbackPsPacket(commonHeader)
-	{
-	}
+	{}
 
 	inline
 	FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
 		FeedbackPsPacket(FeedbackPs::PLI, sender_ssrc, media_ssrc)
-	{
-	}
-
-} } // RTP::RTCP
+	{}
+}}
 
 #endif

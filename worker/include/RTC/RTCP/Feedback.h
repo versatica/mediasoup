@@ -38,7 +38,7 @@ namespace RTC { namespace RTCP
 		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
 		virtual ~FeedbackPacket();
 
-	/* Pure virtual methods inherited from Packet */
+	/* Pure virtual methods inherited from Packet. */
 	protected:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* data) override;

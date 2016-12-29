@@ -46,45 +46,43 @@ namespace RTC { namespace RTCP
 		explicit VbcmItem(VbcmItem* item);
 		VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		uint32_t GetSsrc();
 		uint8_t  GetSequenceNumber();
 		uint8_t  GetPayloadType();
 		uint16_t GetLength();
 		uint8_t* GetValue();
 
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
+
 	private:
-		// Passed by argument.
 		Header* header = nullptr;
 	};
 
 	// Vbcm packet declaration
 	typedef FeedbackPsItemPacket<VbcmItem> FeedbackPsVbcmPacket;
 
-	/* VbcmItem inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	VbcmItem::VbcmItem(Header* header):
 		header(header)
-	{
-	}
+	{}
 
 	inline
 	VbcmItem::VbcmItem(VbcmItem* item):
 		header(item->header)
-	{
-	}
+	{}
 
 	inline
 	size_t VbcmItem::GetSize()
 	{
 		size_t size =  8 + size_t(this->header->length);
 
-		// Consider pading to 32 bits (4 bytes) boundary
+		// Consider pading to 32 bits (4 bytes) boundary.
 		return (size + 3) & ~3;
 	}
 
@@ -117,7 +115,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->header->value;
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

@@ -56,7 +56,6 @@ namespace RTC { namespace RTCP
 		void SetDelaySinceLastSenderReport(uint32_t dlsr);
 
 	private:
-		// Passed by argument.
 		Header* header = nullptr;
 		uint8_t* raw = nullptr;
 	};
@@ -74,25 +73,26 @@ namespace RTC { namespace RTCP
 		ReceiverReportPacket();
 		~ReceiverReportPacket();
 
-		// Virtual methods inherited from Packet
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetCount() override;
-		size_t GetSize() override;
-
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);
 		void AddReport(ReceiverReport* report);
 		Iterator Begin();
 		Iterator End();
 
+	/* Pure virtual methods inherited from Packet. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetCount() override;
+		virtual size_t GetSize() override;
+
 	private:
-		// SSRC of packet sender
+		// SSRC of packet sender.
 		uint32_t ssrc;
 		std::vector<ReceiverReport*> reports;
 	};
 
-	/* ReceiverReport inline instance methods. */
+	/* Inline instance methods. */
 
 	inline
 	size_t ReceiverReport::GetSize()
@@ -135,11 +135,11 @@ namespace RTC { namespace RTCP
 	{
 		uint32_t value = (uint32_t)Utils::Byte::Get3Bytes((uint8_t*)this->header, 5);
 
-		// possitive value
+		// Possitive value.
 		if (((value >> 23) & 1) == 0)
 			return value;
 
-		// negative value
+		// Negative value.
 		else if (value != 0x0800000)
 			value &= ~(1 << 23);
 
@@ -149,12 +149,12 @@ namespace RTC { namespace RTCP
 	inline
 	void ReceiverReport::SetTotalLost(int32_t total_lost)
 	{
-		// get the limit value for possitive and negative total_lost
-		int32_t clamp = (total_lost >= 0)?
+		// Get the limit value for possitive and negative total_lost.
+		int32_t clamp = (total_lost >= 0) ?
 			total_lost > 0x07FFFFF? 0x07FFFFF : total_lost :
 			-total_lost > 0x0800000? 0x0800000 : -total_lost;
 
-		uint32_t value = (total_lost >= 0)?
+		uint32_t value = (total_lost >= 0) ?
 			(clamp & 0x07FFFFF) : (clamp | 0x0800000);
 
 		Utils::Byte::Set3Bytes((uint8_t*)this->header, 5, value);
@@ -208,19 +208,17 @@ namespace RTC { namespace RTCP
 		this->header->dlsr = (uint32_t)htonl(dlsr);
 	}
 
-	/* ReceiverReportPacket Inline instance methods. */
+	/* Inline instance methods. */
 
 	inline
 	ReceiverReport::ReceiverReport(Header* header) :
 		header(header)
-	{
-	}
+	{}
 
 	inline
 	ReceiverReport::ReceiverReport(ReceiverReport* report) :
 		header(report->header)
-	{
-	}
+	{}
 
 	inline
 	ReceiverReport::~ReceiverReport()
@@ -232,13 +230,12 @@ namespace RTC { namespace RTCP
 	inline
 	ReceiverReportPacket::ReceiverReportPacket()
 		: Packet(Type::RR)
-	{
-	}
+	{}
 
 	inline
 	ReceiverReportPacket::~ReceiverReportPacket()
 	{
-		for(auto report : this->reports)
+		for (auto report : this->reports)
 		{
 			delete report;
 		}
@@ -292,6 +289,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->reports.end();
 	}
+}}
 
-} } // RTP::RTCP
 #endif

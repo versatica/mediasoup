@@ -4,7 +4,6 @@
 #include "common.h"
 #include "RTC/RTCP/FeedbackPs.h"
 
-
 /* RFC 5104
  * Full Intra Request (FIR)
  *
@@ -41,35 +40,33 @@ namespace RTC { namespace RTCP
 		explicit FirItem(FirItem* item);
 		FirItem(uint32_t ssrc, uint8_t sequence_number);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		uint32_t GetSsrc();
 		uint8_t GetSequenceNumber();
 
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
+
 	private:
-		// Passed by argument.
 		Header* header = nullptr;
 	};
 
-	// Fir packet declaration
+	// Fir packet declaration.
 	typedef FeedbackPsItemPacket<FirItem> FeedbackPsFirPacket;
 
-	/* FirItem inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	FirItem::FirItem(Header* header):
 		header(header)
-	{
-	}
+	{}
 
 	inline
 	FirItem::FirItem(FirItem* item) :
 		header(item->header)
-	{
-	}
+	{}
 
 	inline
 	size_t FirItem::GetSize()
@@ -88,7 +85,6 @@ namespace RTC { namespace RTCP
 	{
 		return (uint8_t)this->header->sequence_number;
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

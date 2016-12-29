@@ -51,11 +51,6 @@ namespace RTC { namespace RTCP
 		explicit EcnItem(Header* header);
 		explicit EcnItem(EcnItem* item);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		uint32_t GetSequenceNumber();
 		uint32_t GetEct0Counter();
 		uint32_t GetEct1Counter();
@@ -64,27 +59,30 @@ namespace RTC { namespace RTCP
 		uint16_t GetLostPackets();
 		uint16_t GetDuplicatedPackets();
 
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
+
 	private:
-		// Passed by argument.
 		Header* header = nullptr;
 	};
 
-	// Ecn packet declaration
+	// Ecn packet declaration.
 	typedef FeedbackRtpItemPacket<EcnItem> FeedbackRtpEcnPacket;
 
-	/* EcnItem inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	EcnItem::EcnItem(Header* header):
 		header(header)
-	{
-	}
+	{}
 
 	inline
 	EcnItem::EcnItem(EcnItem* item):
 		header(item->header)
-	{
-	}
+	{}
 
 	inline
 	size_t EcnItem::GetSize()
@@ -96,7 +94,6 @@ namespace RTC { namespace RTCP
 	uint32_t EcnItem::GetSequenceNumber()
 	{
 		return ntohl(this->header->sequence_number);
-
 	}
 
 	inline
@@ -134,8 +131,6 @@ namespace RTC { namespace RTCP
 	{
 		return ntohs(this->header->duplicated_packets);
 	}
-
-
-} } // RTP::RTCP
+}}
 
 #endif

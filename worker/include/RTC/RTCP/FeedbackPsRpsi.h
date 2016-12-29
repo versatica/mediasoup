@@ -45,27 +45,26 @@ namespace RTC { namespace RTCP
 		explicit RpsiItem(RpsiItem* item);
 		RpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		bool IsCorrect();
 		uint8_t GetPayloadType();
 		uint8_t* GetBitString();
 		size_t GetLength();
 
-	private:
-		// Passed by argument.
-		Header* header = nullptr;
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
 
+	private:
+		Header* header = nullptr;
 		size_t length;
 	};
 
-	// Rpsi packet declaration
+	// Rpsi packet declaration.
 	typedef FeedbackPsItemPacket<RpsiItem> FeedbackPsRpsiPacket;
 
-	/* RpsiItem inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	RpsiItem::RpsiItem(RpsiItem* item) :
@@ -101,7 +100,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->isCorrect;
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

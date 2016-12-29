@@ -4,7 +4,6 @@
 #include "common.h"
 #include "RTC/RTCP/FeedbackRtp.h"
 
-
 /* RFC 5104
  * Temporary Maximum Media Stream Bit Rate Request (TMMBR)
  * Temporary Maximum Media Stream Bit Rate Notification (TMMBN)
@@ -40,11 +39,6 @@ namespace RTC { namespace RTCP
 		explicit TmmbItem(TmmbItem* item);
 		TmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);
 		uint64_t GetBitrate();
@@ -52,27 +46,31 @@ namespace RTC { namespace RTCP
 		uint16_t GetOverhead();
 		void SetOverhead(uint16_t overhead);
 
-	private:
-		// Passed by argument.
-		Header* header = nullptr;
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
 
+	private:
+		Header* header = nullptr;
 		uint64_t bitrate;
 		uint16_t overhead;
 	};
 
-	// Tmmb types declaration
+	// Tmmb types declaration.
 	class Tmmbr {};
 	class Tmmbn {};
 
-	// Tmmbn classes declaration
+	// Tmmbn classes declaration.
 	typedef TmmbItem<Tmmbr> TmmbrItem;
 	typedef TmmbItem<Tmmbn> TmmbnItem;
 
-	// Tmmbn packets declaration
+	// Tmmbn packets declaration.
 	typedef FeedbackRtpItemPacket<TmmbrItem> FeedbackRtpTmmbrPacket;
 	typedef FeedbackRtpItemPacket<TmmbnItem> FeedbackRtpTmmbnPacket;
 
-	/* TmmbItem inline instance methods */
+	/* Inline instance methods. */
 
 	template <typename T>
 	size_t TmmbItem<T>::GetSize()
@@ -115,7 +113,6 @@ namespace RTC { namespace RTCP
 	{
 		this->overhead = overhead;
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

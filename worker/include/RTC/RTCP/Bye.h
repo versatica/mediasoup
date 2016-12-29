@@ -26,7 +26,7 @@ namespace RTC { namespace RTCP
 		Iterator Begin();
 		Iterator End();
 
-	/* Pure virtual methods inherited from Packet */
+	/* Pure virtual methods inherited from Packet. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* data) override;
@@ -38,7 +38,7 @@ namespace RTC { namespace RTCP
 		std::string reason;
 	};
 
-	/* BYE Packet inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	ByePacket::ByePacket()

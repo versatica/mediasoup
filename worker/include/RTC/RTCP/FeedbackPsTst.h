@@ -42,44 +42,42 @@ namespace RTC { namespace RTCP
 		explicit TstItem(TstItem* item);
 		TstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		uint32_t GetSsrc();
 		uint8_t GetSequenceNumber();
 		uint8_t GetIndex();
 
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
+
 	private:
-		// Passed by argument.
 		Header* header = nullptr;
 	};
 
 	class Tstr {};
 	class Tstn {};
 
-	// Tst classes declaration
+	// Tst classes declaration.
 	typedef TstItem<Tstr> TstrItem;
 	typedef TstItem<Tstn> TstnItem;
 
-	// Tst packets declaration
+	// Tst packets declaration.
 	typedef FeedbackPsItemPacket<TstrItem> FeedbackPsTstrPacket;
 	typedef FeedbackPsItemPacket<TstnItem> FeedbackPsTstnPacket;
 
-	/* TstItem inline instance methods */
+	/* Inline instance methods. */
 
 	template <typename T>
 	TstItem<T>::TstItem(Header* header):
 		header(header)
-	{
-	}
+	{}
 
 	template <typename T>
 	TstItem<T>::TstItem(TstItem* item) :
 		header(item->header)
-	{
-	}
+	{}
 
 	template <typename T>
 	size_t TstItem<T>::GetSize()
@@ -104,7 +102,6 @@ namespace RTC { namespace RTCP
 	{
 		return (uint8_t)ntohl(this->header->index);
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

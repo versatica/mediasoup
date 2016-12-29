@@ -3,12 +3,10 @@
 
 #include "common.h"
 #include "RTC/RTCP/Feedback.h"
-
 #include <vector>
 
 namespace RTC { namespace RTCP
 {
-
 	template<typename Item> class FeedbackRtpItemPacket
 		: public FeedbackRtpPacket
 	{
@@ -23,32 +21,31 @@ namespace RTC { namespace RTCP
 		explicit FeedbackRtpItemPacket(CommonHeader* commonHeader);
 		FeedbackRtpItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
 
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		void AddItem(Item* item);
 		Iterator Begin();
 		Iterator End();
+
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
 
 	private:
 		std::vector<Item*> items;
 	};
 
-
-	/* FeedbackRtpPacket<Item> inline instance methods */
+	/* Inline instance methods. */
 
 	template<typename Item>
 	FeedbackRtpItemPacket<Item>::FeedbackRtpItemPacket(CommonHeader* commonHeader):
 		FeedbackRtpPacket(commonHeader)
-	{
-	}
+	{}
 
 	template<typename Item>
 	FeedbackRtpItemPacket<Item>::FeedbackRtpItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
 		FeedbackRtpPacket(Item::MessageType, sender_ssrc, media_ssrc)
-	{
-	}
+	{}
 
 	template<typename Item>
 	size_t FeedbackRtpItemPacket<Item>::GetSize()
@@ -80,7 +77,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->items.end();
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

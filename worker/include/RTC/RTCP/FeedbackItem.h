@@ -10,13 +10,14 @@ namespace RTC { namespace RTCP
 	public:
 		bool IsCorrect();
 
+	protected:
+		virtual ~FeedbackItem();
+
+	public:
 		virtual void Dump() = 0;
 		virtual void Serialize();
 		virtual size_t Serialize(uint8_t* data) = 0;
 		virtual size_t GetSize() = 0;
-
-	protected:
-		virtual ~FeedbackItem();
 
 	protected:
 		uint8_t* raw = nullptr;

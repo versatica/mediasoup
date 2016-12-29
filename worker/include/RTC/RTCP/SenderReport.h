@@ -52,7 +52,6 @@ namespace RTC { namespace RTCP
 		void SetOctetCount(uint32_t octet_count);
 
 	private:
-		// Passed by argument.
 		Header* header = nullptr;
 		uint8_t* raw = nullptr;
 	};
@@ -70,33 +69,32 @@ namespace RTC { namespace RTCP
 		SenderReportPacket();
 		~SenderReportPacket();
 
-		// Virtual methods inherited from Packet
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetCount() override;
-		size_t GetSize() override;
-
 		void AddReport(SenderReport* report);
 		Iterator Begin();
 		Iterator End();
+
+	/* Pure virtual methods inherited from Packet. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetCount() override;
+		virtual size_t GetSize() override;
 
 	private:
 		std::vector<SenderReport*> reports;
 	};
 
-	/* SenderReport inline instance methods. */
+	/* Inline instance methods. */
 
 	inline
 	SenderReport::SenderReport(Header* header) :
 		header(header)
-	{
-	}
+	{}
 
 	inline
 	SenderReport::SenderReport(SenderReport* report) :
 		header(report->header)
-	{
-	}
+	{}
 
 	inline
 	SenderReport::~SenderReport()
@@ -190,18 +188,17 @@ namespace RTC { namespace RTCP
 		this->header->octet_count = (uint32_t)htonl(octet_count);
 	}
 
-	/* SenderReportPacket Inline instance methods. */
+	/* Inline instance methods. */
 
 	inline
 	SenderReportPacket::SenderReportPacket()
 		: Packet(Type::SR)
-	{
-	}
+	{}
 
 	inline
 	SenderReportPacket::~SenderReportPacket()
 	{
-		for(auto report : this->reports)
+		for (auto report : this->reports)
 		{
 			delete report;
 		}
@@ -243,7 +240,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->reports.end();
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

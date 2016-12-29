@@ -35,11 +35,6 @@ namespace RTC { namespace RTCP
 		explicit SliItem(SliItem* item);
 		SliItem(uint16_t first, uint16_t number, uint8_t pictureId);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		uint16_t GetFirst();
 		void SetFirst(uint16_t first);
 		uint16_t GetNumber();
@@ -47,19 +42,23 @@ namespace RTC { namespace RTCP
 		uint8_t GetPictureId();
 		void SetPictureId(uint8_t pictureId);
 
-	private:
-		// Passed by argument.
-		Header* header = nullptr;
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
 
+	private:
+		Header* header = nullptr;
 		uint16_t first;
 		uint16_t number;
 		uint8_t pictureId;
 	};
 
-	// Sli packet declaration
+	// Sli packet declaration.
 	typedef FeedbackPsItemPacket<SliItem> FeedbackPsSliPacket;
 
-	/* SliItem inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	size_t SliItem::GetSize()
@@ -102,7 +101,6 @@ namespace RTC { namespace RTCP
 	{
 		this->pictureId = pictureId;
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

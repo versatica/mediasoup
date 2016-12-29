@@ -35,34 +35,32 @@ namespace RTC { namespace RTCP
 		explicit PsLeiItem(PsLeiItem* item);
 		explicit PsLeiItem(uint32_t ssrc);
 
-		// Virtual methods inherited from FeedbackItem
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		uint32_t GetSsrc();
 
+	/* Virtual methods inherited from FeedbackItem. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
+
 	private:
-		// Passed by argument.
 		Header* header = nullptr;
 	};
 
-	// Lei packet declaration
+	// Lei packet declaration.
 	typedef FeedbackPsItemPacket<PsLeiItem> FeedbackPsLeiPacket;
 
-	/* PsLeiItem inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	PsLeiItem::PsLeiItem(Header* header):
 		header(header)
-	{
-	}
+	{}
 
 	inline
 	PsLeiItem::PsLeiItem(PsLeiItem* item):
 		header(item->header)
-	{
-	}
+	{}
 
 	inline
 	size_t PsLeiItem::GetSize()
@@ -75,7 +73,6 @@ namespace RTC { namespace RTCP
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

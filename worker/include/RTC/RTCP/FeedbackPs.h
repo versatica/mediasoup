@@ -21,31 +21,31 @@ namespace RTC { namespace RTCP
 		explicit FeedbackPsItemPacket(CommonHeader* commonHeader);
 		FeedbackPsItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
 
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetSize() override;
-
 		void AddItem(Item* item);
 		Iterator Begin();
 		Iterator End();
+
+	/* Pure virtual methods inherited from Packet. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetSize() override;
 
 	private:
 		std::vector<Item*> items;
 	};
 
-	/* FeedbackPsPacket<Item> inline instance methods */
+	/* Inline instance methods. */
 
 	template<typename Item>
 	FeedbackPsItemPacket<Item>::FeedbackPsItemPacket(CommonHeader* commonHeader):
 		FeedbackPsPacket(commonHeader)
-	{
-	}
+	{}
 
 	template<typename Item>
 	FeedbackPsItemPacket<Item>::FeedbackPsItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
 		FeedbackPsPacket(Item::MessageType, sender_ssrc, media_ssrc)
-	{
-	}
+	{}
 
 	template<typename Item>
 	size_t FeedbackPsItemPacket<Item>::GetSize()
@@ -77,7 +77,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->items.end();
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif

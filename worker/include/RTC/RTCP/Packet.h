@@ -9,15 +9,15 @@ namespace RTC { namespace RTCP
 {
 	enum class Type : uint8_t
 	{
-		FIR  = 192,
-		NACK = 193,
-		SR   = 200,
-		RR   = 201,
-		SDES = 202,
-		BYE  = 203,
-		APP  = 204,
+		FIR   = 192,
+		NACK  = 193,
+		SR    = 200,
+		RR    = 201,
+		SDES  = 202,
+		BYE   = 203,
+		APP   = 204,
 		RTPFB = 205,
-		PSFB = 206
+		PSFB  = 206
 	};
 
 	static std::map<Type, std::string> type2String =
@@ -70,9 +70,9 @@ namespace RTC { namespace RTCP
 
 	public:
 		virtual void Dump() = 0;
+		virtual size_t Serialize(uint8_t* data) = 0;
 		virtual size_t GetCount() = 0;
 		virtual size_t GetSize() = 0;
-		virtual size_t Serialize(uint8_t* data) = 0;
 
 	private:
 		Type type;

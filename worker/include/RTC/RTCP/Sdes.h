@@ -9,11 +9,9 @@
 
 namespace RTC { namespace RTCP
 {
-
-	/* SDES Item */
+	/* SDES Item. */
 	class SdesItem
 	{
-
 	public:
 		typedef enum Type : uint8_t
 		{
@@ -81,7 +79,6 @@ namespace RTC { namespace RTCP
 		void Serialize();
 		size_t Serialize(uint8_t* data);
 		size_t GetSize();
-
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);
 		void AddItem(SdesItem* item);
@@ -106,16 +103,16 @@ namespace RTC { namespace RTCP
 		SdesPacket();
 		~SdesPacket();
 
-		// Virtual methods inherited from Packet
-		void Dump() override;
-		size_t Serialize(uint8_t* data) override;
-		size_t GetCount() override;
-		size_t GetSize() override;
-
-	public:
 		void AddChunk(SdesChunk* chunk);
 		Iterator Begin();
 		Iterator End();
+
+	/* Pure virtual methods inherited from Packet. */
+	public:
+		virtual void Dump() override;
+		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t GetCount() override;
+		virtual size_t GetSize() override;
 
 	private:
 		std::vector<SdesChunk*> chunks;
@@ -126,14 +123,12 @@ namespace RTC { namespace RTCP
 	inline
 	SdesItem::SdesItem(Header* header) :
 		header(header)
-	{
-	}
+	{}
 
 	inline
 	SdesItem::SdesItem(SdesItem* item) :
 		header(item->header)
-	{
-	}
+	{}
 
 	inline
 	SdesItem::~SdesItem()
@@ -166,7 +161,7 @@ namespace RTC { namespace RTCP
 		return this->header->value;
 	}
 
-	/* SDES Chunk inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	SdesChunk::SdesChunk(uint32_t ssrc)
@@ -205,7 +200,7 @@ namespace RTC { namespace RTCP
 		}
 
 		// http://stackoverflow.com/questions/11642210/computing-padding-required-for-n-byte-alignment
-		// Consider pading to 32 bits (4 bytes) boundary
+		// Consider pading to 32 bits (4 bytes) boundary.
 		return (size + 3) & ~3;
 	}
 
@@ -239,13 +234,12 @@ namespace RTC { namespace RTCP
 		return this->items.end();
 	}
 
-	/* SDES Packet inline instance methods */
+	/* Inline instance methods. */
 
 	inline
 	SdesPacket::SdesPacket()
 		: Packet(Type::SDES)
-	{
-	}
+	{}
 
 	inline
 	SdesPacket::~SdesPacket()
@@ -292,7 +286,6 @@ namespace RTC { namespace RTCP
 	{
 		return this->chunks.end();
 	}
-
-} } // RTP::RTCP
+}}
 
 #endif
