@@ -48,8 +48,8 @@ namespace RTC { namespace RTCP
 		static EcnItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		EcnItem(Header* header);
-		EcnItem(EcnItem* item);
+		explicit EcnItem(Header* header);
+		explicit EcnItem(EcnItem* item);
 
 		// Virtual methods inherited from FeedbackItem
 		void Dump() override;

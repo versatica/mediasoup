@@ -23,7 +23,7 @@ namespace Channel
 		static uint8_t writeBuffer[];
 
 	public:
-		UnixStreamSocket(int fd);
+		explicit UnixStreamSocket(int fd);
 		virtual ~UnixStreamSocket();
 
 		void SetListener(Listener* listener);

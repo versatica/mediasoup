@@ -37,8 +37,8 @@ namespace RTC { namespace RTCP
 		static FirItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		FirItem(Header* header);
-		FirItem(FirItem* item);
+		explicit FirItem(Header* header);
+		explicit FirItem(FirItem* item);
 		FirItem(uint32_t ssrc, uint8_t sequence_number);
 
 		// Virtual methods inherited from FeedbackItem

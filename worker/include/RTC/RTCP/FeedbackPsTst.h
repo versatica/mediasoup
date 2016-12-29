@@ -38,8 +38,8 @@ namespace RTC { namespace RTCP
 		static TstItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		TstItem(Header* header);
-		TstItem(TstItem* item);
+		explicit TstItem(Header* header);
+		explicit TstItem(TstItem* item);
 		TstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
 
 		// Virtual methods inherited from FeedbackItem

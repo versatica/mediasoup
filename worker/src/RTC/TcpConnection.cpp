@@ -10,7 +10,7 @@ namespace RTC
 	/* Instance methods. */
 
 	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize) :
-		::TcpConnection(bufferSize),
+		::TcpConnection::TcpConnection(bufferSize),
 		listener(listener)
 	{
 		MS_TRACE();

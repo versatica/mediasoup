@@ -16,7 +16,7 @@ namespace RTC { namespace RTCP
 
 	public:
 		// Parsed Report. Points to an external data.
-		FeedbackPsPliPacket(CommonHeader* commonHeader);
+		explicit FeedbackPsPliPacket(CommonHeader* commonHeader);
 		FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
 
 		void Dump() override;

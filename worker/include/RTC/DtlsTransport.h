@@ -114,7 +114,7 @@ namespace RTC
 		static std::vector<SrtpProfileMapEntry> srtpProfiles;
 
 	public:
-		DtlsTransport(Listener* listener);
+		explicit DtlsTransport(Listener* listener);
 		virtual ~DtlsTransport();
 
 		void Close();

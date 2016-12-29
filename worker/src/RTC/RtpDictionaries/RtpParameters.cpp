@@ -94,17 +94,16 @@ namespace RTC
 		ValidateEncodings();
 	}
 
-	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
+	RtpParameters::RtpParameters(const RtpParameters* rtpParameters) :
+		muxId(rtpParameters->muxId),
+		codecs(rtpParameters->codecs),
+		encodings(rtpParameters->encodings),
+		headerExtensions(rtpParameters->headerExtensions),
+		rtcp(rtpParameters->rtcp),
+		hasRtcp(rtpParameters->hasRtcp),
+		userParameters(rtpParameters->userParameters)
 	{
 		MS_TRACE();
-
-		this->muxId = rtpParameters->muxId;
-		this->codecs = rtpParameters->codecs;
-		this->encodings = rtpParameters->encodings;
-		this->headerExtensions = rtpParameters->headerExtensions;
-		this->rtcp = rtpParameters->rtcp;
-		this->hasRtcp = rtpParameters->hasRtcp;
-		this->userParameters = rtpParameters->userParameters;
 	}
 
 	Json::Value RtpParameters::toJson()

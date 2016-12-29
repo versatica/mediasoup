@@ -42,8 +42,8 @@ namespace RTC { namespace RTCP
 		static VbcmItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		VbcmItem(Header* header);
-		VbcmItem(VbcmItem* item);
+		explicit VbcmItem(Header* header);
+		explicit VbcmItem(VbcmItem* item);
 		VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
 
 		// Virtual methods inherited from FeedbackItem

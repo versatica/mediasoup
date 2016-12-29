@@ -41,8 +41,8 @@ namespace RTC { namespace RTCP
 		static const std::string& Type2String(Type type);
 
 	public:
-		SdesItem(Header* header);
-		SdesItem(SdesItem* item);
+		explicit SdesItem(Header* header);
+		explicit SdesItem(SdesItem* item);
 		SdesItem(Type type, size_t len, const char* value);
 		~SdesItem();
 
@@ -73,8 +73,8 @@ namespace RTC { namespace RTCP
 		static SdesChunk* Parse(const uint8_t* data, size_t len);
 
 	public:
-		SdesChunk(const uint32_t ssrc);
-		SdesChunk(SdesChunk* chunk);
+		explicit SdesChunk(const uint32_t ssrc);
+		explicit SdesChunk(SdesChunk* chunk);
 		~SdesChunk();
 
 		void Dump();

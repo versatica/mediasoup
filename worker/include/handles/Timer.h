@@ -14,7 +14,7 @@ public:
 	};
 
 public:
-	Timer(Listener* listener);
+	explicit Timer(Listener* listener);
 
 	void Close();
 	void Start(uint64_t timeout);

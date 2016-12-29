@@ -24,7 +24,7 @@ public:
 	};
 
 public:
-	TcpConnection(size_t bufferSize);
+	explicit TcpConnection(size_t bufferSize);
 	virtual ~TcpConnection();
 
 	void Close();

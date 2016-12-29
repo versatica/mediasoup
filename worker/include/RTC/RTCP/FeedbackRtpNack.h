@@ -32,8 +32,8 @@ namespace RTC { namespace RTCP
 		static NackItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		NackItem(Header* header);
-		NackItem(NackItem* item);
+		explicit NackItem(Header* header);
+		explicit NackItem(NackItem* item);
 		NackItem(uint16_t packetId, uint16_t lostPacketBitmask);
 
 		// Virtual methods inherited from FeedbackItem

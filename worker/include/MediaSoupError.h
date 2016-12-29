@@ -10,7 +10,7 @@ class MediaSoupError :
 	public std::runtime_error
 {
 public:
-	MediaSoupError(const char* description);
+	explicit MediaSoupError(const char* description);
 };
 
 /* Inline methods. */

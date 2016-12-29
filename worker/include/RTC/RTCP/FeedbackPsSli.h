@@ -31,8 +31,8 @@ namespace RTC { namespace RTCP
 		static SliItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		SliItem(Header* header);
-		SliItem(SliItem* item);
+		explicit SliItem(Header* header);
+		explicit SliItem(SliItem* item);
 		SliItem(uint16_t first, uint16_t number, uint8_t pictureId);
 
 		// Virtual methods inherited from FeedbackItem

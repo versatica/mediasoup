@@ -125,7 +125,7 @@ namespace RTC
 	class RtcpFeedback
 	{
 	public:
-		RtcpFeedback(Json::Value& data);
+		explicit RtcpFeedback(Json::Value& data);
 
 		Json::Value toJson();
 
@@ -166,7 +166,7 @@ namespace RTC
 	{
 	public:
 		RtpFecParameters() {};
-		RtpFecParameters(Json::Value& data);
+		explicit RtpFecParameters(Json::Value& data);
 
 		Json::Value toJson();
 
@@ -179,7 +179,7 @@ namespace RTC
 	{
 	public:
 		RtpRtxParameters() {};
-		RtpRtxParameters(Json::Value& data);
+		explicit RtpRtxParameters(Json::Value& data);
 
 		Json::Value toJson();
 
@@ -191,7 +191,7 @@ namespace RTC
 	{
 	public:
 		RtpEncodingParameters() {};
-		RtpEncodingParameters(Json::Value& data);
+		explicit RtpEncodingParameters(Json::Value& data);
 
 		Json::Value toJson();
 
@@ -214,7 +214,7 @@ namespace RTC
 	class RtpHeaderExtensionParameters
 	{
 	public:
-		RtpHeaderExtensionParameters(Json::Value& data);
+		explicit RtpHeaderExtensionParameters(Json::Value& data);
 
 		Json::Value toJson();
 
@@ -229,7 +229,7 @@ namespace RTC
 	{
 	public:
 		RtcpParameters() {};
-		RtcpParameters(Json::Value& data);
+		explicit RtcpParameters(Json::Value& data);
 
 		Json::Value toJson();
 
@@ -242,8 +242,8 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
-		RtpParameters(Json::Value& data);
-		RtpParameters(const RtpParameters* RtpParameters);
+		explicit RtpParameters(Json::Value& data);
+		explicit RtpParameters(const RtpParameters* RtpParameters);
 
 		Json::Value toJson();
 
@@ -264,7 +264,7 @@ namespace RTC
 	class RtpHeaderExtension
 	{
 	public:
-		RtpHeaderExtension(Json::Value& data);
+		explicit RtpHeaderExtension(Json::Value& data);
 
 		Json::Value toJson();
 

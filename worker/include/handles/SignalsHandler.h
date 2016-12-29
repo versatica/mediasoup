@@ -15,7 +15,7 @@ public:
 	};
 
 public:
-	SignalsHandler(Listener* listener);
+	explicit SignalsHandler(Listener* listener);
 
 	void Close();
 	void AddSignal(int signum, std::string name);

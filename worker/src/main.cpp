@@ -17,11 +17,11 @@
 #include "Logger.h"
 #include <map>
 #include <string>
-#include <iostream>  // std::cerr, std::endl
-#include <cstdlib>  // std::_Exit(), std::genenv()
-#include <csignal>  // sigaction()
+#include <iostream> // std::cerr, std::endl
+#include <cstdlib> // std::_Exit(), std::genenv()
+#include <csignal> // sigaction()
 #include <cerrno>
-#include <unistd.h>  // getpid(), usleep()
+#include <unistd.h> // getpid(), usleep()
 #include <uv.h>
 
 static void init();

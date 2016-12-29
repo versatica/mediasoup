@@ -31,9 +31,9 @@ namespace RTC { namespace RTCP
 		static PsLeiItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		PsLeiItem(Header* header);
-		PsLeiItem(PsLeiItem* item);
-		PsLeiItem(uint32_t ssrc);
+		explicit PsLeiItem(Header* header);
+		explicit PsLeiItem(PsLeiItem* item);
+		explicit PsLeiItem(uint32_t ssrc);
 
 		// Virtual methods inherited from FeedbackItem
 		void Dump() override;

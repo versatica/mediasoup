@@ -27,27 +27,27 @@ namespace RTC
 		public:
 			Value() {};
 
-			Value(bool booleanValue) :
+			explicit Value(bool booleanValue) :
 				type(Type::BOOLEAN),
 				booleanValue(booleanValue)
 			{}
 
-			Value(int32_t integerValue) :
+			explicit Value(int32_t integerValue) :
 				type(Type::INTEGER),
 				integerValue(integerValue)
 			{}
 
-			Value(double doubleValue) :
+			explicit Value(double doubleValue) :
 				type(Type::DOUBLE),
 				doubleValue(doubleValue)
 			{}
 
-			Value(std::string& stringValue) :
+			explicit Value(std::string& stringValue) :
 				type(Type::STRING),
 				stringValue(stringValue)
 			{}
 
-			Value(std::vector<int32_t>& arrayOfIntegers) :
+			explicit Value(std::vector<int32_t>& arrayOfIntegers) :
 				type(Type::ARRAY_OF_INTEGERS),
 				arrayOfIntegers(arrayOfIntegers)
 			{}

@@ -20,7 +20,7 @@ namespace RTC
 
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
-		TransportTuple(RTC::TcpConnection* tcpConnection);
+		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 
 		void Close();
 		Json::Value toJson();

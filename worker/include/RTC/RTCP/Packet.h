@@ -59,7 +59,7 @@ namespace RTC { namespace RTCP
 		static Packet* Parse(const uint8_t* data, size_t len);
 
 	public:
-		Packet(Type type);
+		explicit Packet(Type type);
 		virtual ~Packet();
 
 		void SetNext(Packet* packet);

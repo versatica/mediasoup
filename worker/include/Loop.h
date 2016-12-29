@@ -15,7 +15,7 @@ class Loop :
 	public RTC::Room::Listener
 {
 public:
-	Loop(Channel::UnixStreamSocket* channel);
+	explicit Loop(Channel::UnixStreamSocket* channel);
 	~Loop();
 
 private:

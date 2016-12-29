@@ -11,7 +11,7 @@ namespace Channel
 	class Notifier
 	{
 	public:
-		Notifier(Channel::UnixStreamSocket* channel);
+		explicit Notifier(Channel::UnixStreamSocket* channel);
 		virtual ~Notifier();
 
 		void Close();

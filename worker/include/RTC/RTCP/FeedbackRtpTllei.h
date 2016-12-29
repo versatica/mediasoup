@@ -32,8 +32,8 @@ namespace RTC { namespace RTCP
 		static TlleiItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		TlleiItem(Header* header);
-		TlleiItem(TlleiItem* item);
+		explicit TlleiItem(Header* header);
+		explicit TlleiItem(TlleiItem* item);
 		TlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
 
 		// Virtual methods inherited from FeedbackItem

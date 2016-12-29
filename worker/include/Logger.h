@@ -42,7 +42,7 @@
 class Logger
 {
 public:
-	static void Init(const std::string id, Channel::UnixStreamSocket* channel);
+	static void Init(const std::string& id, Channel::UnixStreamSocket* channel);
 	static bool HasDebugLevel();
 
 public:

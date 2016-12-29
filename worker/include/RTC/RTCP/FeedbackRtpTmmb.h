@@ -36,8 +36,8 @@ namespace RTC { namespace RTCP
 		static TmmbItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		TmmbItem(Header* header);
-		TmmbItem(TmmbItem* item);
+		explicit TmmbItem(Header* header);
+		explicit TmmbItem(TmmbItem* item);
 		TmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
 
 		// Virtual methods inherited from FeedbackItem

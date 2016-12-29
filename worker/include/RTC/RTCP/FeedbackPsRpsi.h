@@ -41,8 +41,8 @@ namespace RTC { namespace RTCP
 		static RpsiItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		RpsiItem(Header* header);
-		RpsiItem(RpsiItem* item);
+		explicit RpsiItem(Header* header);
+		explicit RpsiItem(RpsiItem* item);
 		RpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
 
 		// Virtual methods inherited from FeedbackItem
@@ -70,8 +70,7 @@ namespace RTC { namespace RTCP
 	inline
 	RpsiItem::RpsiItem(RpsiItem* item) :
 		header(item->header)
-	{
-	}
+	{}
 
 	inline
 	size_t RpsiItem::GetSize()

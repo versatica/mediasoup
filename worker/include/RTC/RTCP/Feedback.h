@@ -34,7 +34,7 @@ namespace RTC { namespace RTCP
 		void SetMediaSsrc(uint32_t ssrc);
 
 	protected:
-		FeedbackPacket(CommonHeader* commonHeader);
+		explicit FeedbackPacket(CommonHeader* commonHeader);
 		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
 		virtual ~FeedbackPacket();
 

@@ -24,7 +24,7 @@ namespace RTC
 		};
 
 	public:
-		RtpStream(size_t bufferSize);
+		explicit RtpStream(size_t bufferSize);
 		~RtpStream();
 
 		bool ReceivePacket(RTC::RtpPacket* packet);

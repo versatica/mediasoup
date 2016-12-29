@@ -26,8 +26,8 @@ namespace RTC { namespace RTCP
 
 	public:
 		// Parsed Report. Points to an external data.
-		SenderReport(Header* header);
-		SenderReport(SenderReport* report);
+		explicit SenderReport(Header* header);
+		explicit SenderReport(SenderReport* report);
 
 		// Locally generated Report. Holds the data internally.
 		SenderReport();
