@@ -77,87 +77,87 @@ bool Logger::HasDebugLevel()
 #endif
 
 #ifdef MS_DEVEL
-#define MS_TRACE()  \
-	do  \
-	{  \
-		int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D(trace) " _MS_LOG_STR, _MS_LOG_ARG);  \
-		Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
-	}  \
+#define MS_TRACE() \
+	do \
+	{ \
+		int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D(trace) " _MS_LOG_STR, _MS_LOG_ARG); \
+		Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+	} \
 	while (0)
-#define MS_TRACE_STD()  \
-	do  \
-	{  \
-		std::fprintf(stdout, "(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG);  \
-		std::fflush(stdout);  \
-	}  \
+#define MS_TRACE_STD() \
+	do \
+	{ \
+		std::fprintf(stdout, "(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG); \
+		std::fflush(stdout); \
+	} \
 	while (0)
 #else
 #define MS_TRACE()
 #define MS_TRACE_STD()
 #endif
 
-#define MS_DEBUG(desc, ...)  \
-	do  \
-	{  \
-		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel)  \
-		{  \
-			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
-			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
-		}  \
-	}  \
+#define MS_DEBUG(desc, ...) \
+	do \
+	{ \
+		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel) \
+		{ \
+			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+		} \
+	} \
 	while (0)
 
-#define MS_DEBUG_STD(desc, ...)  \
-	do  \
-	{  \
-		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel)  \
-		{  \
-			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
-			std::fflush(stdout);  \
-		}  \
-	}  \
+#define MS_DEBUG_STD(desc, ...) \
+	do \
+	{ \
+		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel) \
+		{ \
+			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+			std::fflush(stdout); \
+		} \
+	} \
 	while (0)
 
-#define MS_WARN(desc, ...)  \
-	do  \
-	{  \
-		if (LogLevel::LOG_WARN <= Settings::configuration.logLevel)  \
-		{  \
-			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
-			Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
-		}  \
-	}  \
+#define MS_WARN(desc, ...) \
+	do \
+	{ \
+		if (LogLevel::LOG_WARN <= Settings::configuration.logLevel) \
+		{ \
+			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+		} \
+	} \
 	while (0)
 
-#define MS_ERROR(desc, ...)  \
-	do  \
-	{  \
-		int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__);  \
-		Logger::channel->SendLog(Logger::buffer, ms_logger_written);  \
-	}  \
+#define MS_ERROR(desc, ...) \
+	do \
+	{ \
+		int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+		Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+	} \
 	while (0)
 
-#define MS_ERROR_STD(desc, ...)  \
-	do  \
-	{  \
-		std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
-		std::fflush(stderr);  \
-	}  \
+#define MS_ERROR_STD(desc, ...) \
+	do \
+	{ \
+		std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		std::fflush(stderr); \
+	} \
 	while (0)
 
-#define MS_ABORT(desc, ...)  \
-	do  \
-	{  \
-		std::fprintf(stderr, "ABORT" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__);  \
-		std::fflush(stderr);  \
-		std::abort();  \
-	}  \
+#define MS_ABORT(desc, ...) \
+	do \
+	{ \
+		std::fprintf(stderr, "ABORT" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		std::fflush(stderr); \
+		std::abort(); \
+	} \
 	while (0)
 
-#define MS_ASSERT(condition, desc, ...)  \
-	if (!(condition))  \
-	{  \
-		MS_ABORT("failed assertion `%s': " desc, #condition, ##__VA_ARGS__);  \
+#define MS_ASSERT(condition, desc, ...) \
+	if (!(condition)) \
+	{ \
+		MS_ABORT("failed assertion `%s': " desc, #condition, ##__VA_ARGS__); \
 	}
 
 #endif
