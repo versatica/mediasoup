@@ -139,7 +139,7 @@ namespace RTC
 				}
 			}
 
-			requested = (bitmask & 1)? true : false;
+			requested = (bitmask & 1) ? true : false;
 			bitmask >>= 1;
 			seq32++;
 		}

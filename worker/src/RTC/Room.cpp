@@ -658,31 +658,33 @@ namespace RTC
 		switch (packet->GetMessageType())
 		{
 			case RTC::RTCP::FeedbackRtp::NACK:
+			{
+				RTC::RTCP::FeedbackRtpNackPacket* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+
+				for (auto it = nackPacket->Begin(); it != nackPacket->End(); it++)
 				{
-					RTC::RTCP::FeedbackRtpNackPacket* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+					RTC::RTCP::NackItem* item = *it;
 
-					for (auto it = nackPacket->Begin(); it != nackPacket->End(); it++)
+					rtpReceiver->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), this->rtpRetransmissionContainer);
+
+					for (auto it = this->rtpRetransmissionContainer.begin(); it != this->rtpRetransmissionContainer.end(); it++)
 					{
-						RTC::RTCP::NackItem* item = *it;
+						RTC::RtpPacket* packet = *it;
 
-						rtpReceiver->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), rtpRetransmissionContainer);
+						if (packet == nullptr)
+							break;
 
-						for (auto it = rtpRetransmissionContainer.begin(); it != rtpRetransmissionContainer.end(); it++)
-						{
-							RTC::RtpPacket* packet = *it;
-
-							if (packet == nullptr)
-								break;
-
-							rtpSender->RetransmitRtpPacket(packet);
-						}
+						rtpSender->RetransmitRtpPacket(packet);
 					}
 				}
 
+				break;
+			}
+
 			default:
-				{
-					rtpReceiver->ReceiveRtcpFeedback(packet);
-				}
+			{
+				rtpReceiver->ReceiveRtcpFeedback(packet);
+			}
 		}
 	}
 
