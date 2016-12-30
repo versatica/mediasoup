@@ -120,26 +120,26 @@ namespace RTC
 
 		do
 		{
-			if (!requested)
-				continue;
-
-			for (; buffer_it != this->buffer.end(); buffer_it++)
+			if (requested)
 			{
-				auto current_seq32 = (*buffer_it).seq32;
-
-				// Found.
-				if (current_seq32 == seq32)
+				for (; buffer_it != this->buffer.end(); buffer_it++)
 				{
-					auto current_packet = (*buffer_it).packet;
+					auto current_seq32 = (*buffer_it).seq32;
 
-					// Store the packet in the container and then increment its index.
-					container[container_idx++] = current_packet;
-					// Exit the loop.
-					break;
+					// Found.
+					if (current_seq32 == seq32)
+					{
+						auto current_packet = (*buffer_it).packet;
+
+						// Store the packet in the container and then increment its index.
+						container[container_idx++] = current_packet;
+						// Exit the loop.
+						break;
+					}
 				}
 			}
 
-			requested = (bitmask & 1) ? true : false;
+			requested = (bitmask & 1)? true : false;
 			bitmask >>= 1;
 			seq32++;
 		}
