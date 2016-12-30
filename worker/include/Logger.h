@@ -143,6 +143,17 @@ bool Logger::HasDebugLevel()
 	} \
 	while (0)
 
+	#define MS_WARN_TAG(tag, desc, ...) \
+		do \
+		{ \
+			if (LogLevel::LOG_WARN == Settings::configuration.logLevel && MS_GET_LOG_TAG(tag)) \
+			{ \
+				int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+				Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+			} \
+		} \
+		while (0)
+
 #define MS_ERROR(desc, ...) \
 	do \
 	{ \
