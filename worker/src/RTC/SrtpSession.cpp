@@ -68,7 +68,7 @@ namespace RTC
 				break;
 			case Profile::AES_CM_128_HMAC_SHA1_32:
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);  // NOTE: Must be 80 for RTCP!.
+				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp); // NOTE: Must be 80 for RTCP!.
 				break;
 			default:
 				MS_ABORT("unknown SRTP suite");
@@ -88,9 +88,9 @@ namespace RTC
 
 		policy.ssrc.value = 0;
 		policy.key = key;
-		policy.allow_repeat_tx = 0;
+		policy.allow_repeat_tx = 1; // Required for RTP retransmission without RTX.
 		policy.window_size = 1024;
-		policy.next = nullptr;  // No more policies.
+		policy.next = nullptr; // No more policies.
 
 		// Set the SRTP session.
 		err = srtp_create(&this->session, &policy);
