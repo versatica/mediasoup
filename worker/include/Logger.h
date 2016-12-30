@@ -11,12 +11,19 @@
 #include <cstdlib> // std::abort()
 
 #define MS_LOGGER_BUFFER_SIZE 10000
+#define MS_GET_LOG_TAG(k) Settings::logTags.k
 
 /*
  * Logger facility.
  *
- *   If the macro MS_DEVEL is set (see below) the output is even more verbose
- *   (it shows the file number in each log and enables the MS_TRACE() call).
+ *   Each source file (.cpp) including Logger.h MUST define its own
+ *   MS_CLASS macro.
+ *
+ *   Include files (.h) MUST NOT include Logger.h.
+ *
+ *   If the macro MS_DEVEL is set the output is even more verbose (it shows
+ *   the file number in each log and enables the MS_TRACE() call). For that,
+ *   Call the compiler with -DMS_DEVEL for more verbose logs.
  *
  * Usage:
  *
@@ -25,19 +32,19 @@
  * 	  - MS_WARN(...)
  * 	  - MS_ERROR(...)
  * 	  - MS_ABORT(...)
+ * 	  - MS_ASSERT(...)
  *
  * 	  Arguments to those macros (except MS_TRACE) have the same format as printf.
+ *
+ *    - MS_DEBUG_TAG(tag, ...)  Same as MS_DEBUG, but tag must be an enabled
+ *                              log tag (otherwise the log is not shown).
  *
  *  Examples:
  *
  * 	  - MS_TRACE();
  * 	  - MS_DEBUG("starting worker %d", num);
+ * 	  - MS_DEBUG_TAG(ice, "ICE completed");
  */
-
-/*
- * Call the compiler with -DMS_DEVEL for more verbose logs.
- */
-// #define MS_DEVEL
 
 class Logger
 {
@@ -58,10 +65,6 @@ bool Logger::HasDebugLevel()
 {
 	return (LogLevel::LOG_DEBUG == Settings::configuration.logLevel);
 }
-
-// NOTE: Each source file (.cpp) including Logger.h MUST define its own MS_CLASS
-// macro.
-// NOTE: Include files (.h) MUST NOT include Logger.h.
 
 #define _MS_LOG_SEPARATOR_CHAR_STD "\n"
 
@@ -100,6 +103,17 @@ bool Logger::HasDebugLevel()
 	do \
 	{ \
 		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel) \
+		{ \
+			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+		} \
+	} \
+	while (0)
+
+#define MS_DEBUG_TAG(tag, desc, ...) \
+	do \
+	{ \
+		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel && MS_GET_LOG_TAG(tag)) \
 		{ \
 			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 			Logger::channel->SendLog(Logger::buffer, ms_logger_written); \

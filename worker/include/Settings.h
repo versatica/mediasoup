@@ -7,7 +7,6 @@
 #include <map>
 #include <string>
 
-
 class Settings
 {
 public:
@@ -17,13 +16,22 @@ public:
 		LogLevel    logLevel             { LogLevel::LOG_DEBUG };
 		std::string rtcListenIPv4;
 		std::string rtcListenIPv6;
-		uint16_t    rtcMinPort          { 10000 };
-		uint16_t    rtcMaxPort          { 59999 };
+		uint16_t    rtcMinPort           { 10000 };
+		uint16_t    rtcMaxPort           { 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
 		// Private fields.
 		bool        hasIPv4              { false };
 		bool        hasIPv6              { false };
+	};
+
+public:
+	// Log tags.
+	struct LogTags
+	{
+		bool ice  { false };
+		bool dtls { false };
+		// TODO: Add more tags.
 	};
 
 public:
@@ -38,9 +46,11 @@ private:
 	static void SetRtcListenIPv6(const std::string &ip);
 	static void SetRtcPorts();
 	static void SetDtlsCertificateAndPrivateKeyFiles();
+	static void SetLogTags(Json::Value& tags);
 
 public:
 	static struct Configuration configuration;
+	static struct LogTags logTags;
 
 private:
 	static std::map<std::string, LogLevel> string2LogLevel;

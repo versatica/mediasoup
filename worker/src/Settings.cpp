@@ -6,9 +6,9 @@
 #include "Logger.h"
 #include <string>
 #include <map>
-#include <cctype>  // isprint()
+#include <cctype> // isprint()
 #include <cerrno>
-#include <unistd.h>  // close()
+#include <unistd.h> // close()
 #include <uv.h>
 extern "C"
 {
@@ -23,6 +23,7 @@ bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
+struct Settings::LogTags Settings::logTags;
 std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
@@ -175,8 +176,10 @@ void Settings::HandleRequest(Channel::Request* request)
 		case Channel::Request::MethodId::worker_updateSettings:
 		{
 			static const Json::StaticString k_logLevel("logLevel");
+			static const Json::StaticString k_logTags("logTags");
 
 			Json::Value json_logLevel = request->data[k_logLevel];
+			Json::Value json_logTags = request->data[k_logTags];
 
 			try
 			{
@@ -187,6 +190,12 @@ void Settings::HandleRequest(Channel::Request* request)
 
 					Settings::SetLogLevel(logLevel);
 				}
+
+				// Update logTags if requested.
+				if (json_logTags.isArray())
+				{
+					Settings::SetLogTags(json_logTags);
+				}
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -195,9 +204,6 @@ void Settings::HandleRequest(Channel::Request* request)
 			}
 
 			MS_DEBUG("updated settings:");
-
-			// Print configuration.
-			Settings::PrintConfiguration();
 
 			request->Accept();
 
@@ -427,6 +433,31 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 
 	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
 	Settings::configuration.dtlsPrivateKeyFile = dtlsPrivateKeyFile;
+}
+
+void Settings::SetLogTags(Json::Value& tags)
+{
+	MS_TRACE();
+
+	// Reset logTags.
+	struct LogTags newLogTags;
+
+	Settings::logTags = newLogTags;
+
+	for (Json::UInt i = 0; i < tags.size(); i++)
+	{
+		Json::Value entry = tags[i];
+
+		if (!entry.isString())
+			continue;
+
+		std::string tag(entry.asString());
+
+		if (tag == "ice")
+			Settings::logTags.ice = true;
+		else if (tag == "dtls")
+			Settings::logTags.dtls = true;
+	}
 }
 
 /* Helpers. */
