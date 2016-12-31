@@ -160,4 +160,15 @@ bool Logger::HasDebugLevel()
 		MS_ABORT("failed assertion `%s': " desc, #condition, ##__VA_ARGS__);  \
 	}
 
+#ifdef MS_LOG_STD
+	#undef MS_TRACE
+	#define MS_TRACE MS_TRACE_STD
+	#undef MS_DEBUG
+	#define MS_DEBUG MS_DEBUG_STD
+	#undef MS_WARN
+	#define MS_WARN MS_DEBUG_STD
+	#undef MS_ERROR
+	#define MS_ERROR MS_ERROR_STD
+#endif
+
 #endif
