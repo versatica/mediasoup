@@ -231,7 +231,6 @@
       [
         # C++ source files
         'test/tests.cpp',
-        'test/test_a.cpp',
         'test/test-rtcp.cpp',
         # C++ include files
         'test/fct.h'
