@@ -87,6 +87,13 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	inline
+	SenderReport::SenderReport()
+	{
+		this->raw = new uint8_t[sizeof(Header)];
+		this->header = (Header*)this->raw;
+	}
+
+	inline
 	SenderReport::SenderReport(Header* header) :
 		header(header)
 	{}
