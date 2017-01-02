@@ -29,7 +29,7 @@
  * MS_WARN_2TAGS(tag1, tag2, ...)
  *
  *   Logs if the current debug level is satisfied and any of the given two tags
- *   are enabled (or if the current source file defines the MS_LOG_DEV macro).
+ *   is enabled (or if the current source file defines the MS_LOG_DEV macro).
  *   Example:
  *     MS_DEBUG_2TAGS(ice, dtls, "media connection established");
  *
