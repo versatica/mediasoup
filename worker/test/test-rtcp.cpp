@@ -9,6 +9,7 @@
 #include "RTC/RTCP/Bye.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
+#include "RTC/RTCP/FeedbackRtpTllei.h"
 #include "Logger.h"
 #include <string>
 
@@ -360,6 +361,8 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		fct_chk_eq_int(item->GetPacketId(), packetId);
 		fct_chk_eq_int(item->GetLostPacketBitmask(), lostPacketBitmask);
+
+		delete item;
 	}
 	FCT_TEST_END()
 
@@ -414,5 +417,26 @@ FCTMF_SUITE_BGN(test_rtcp)
 		delete item;
 	}
 	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_rtpfb_tllei_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x01, 0x02, 0x00
+		};
+
+		uint16_t packetId = 1;
+		uint16_t lostPacketBitmask = 2;
+
+		TlleiItem* item = TlleiItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetPacketId(), packetId);
+		fct_chk_eq_int(item->GetLostPacketBitmask(), lostPacketBitmask);
+
+		delete item;
+	}
+	FCT_TEST_END()
+
 }
 FCTMF_SUITE_END();

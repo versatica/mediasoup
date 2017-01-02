@@ -79,7 +79,7 @@ namespace RTC { namespace RTCP
 	inline
 	uint16_t TlleiItem::GetLostPacketBitmask()
 	{
-		return (uint16_t)ntohs(this->header->lost_packet_bitmask);
+		return this->header->lost_packet_bitmask;
 	}
 }}
 
