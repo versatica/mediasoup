@@ -10,6 +10,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "RTC/RTCP/FeedbackRtpTllei.h"
+#include "RTC/RTCP/FeedbackRtpEcn.h"
 #include "Logger.h"
 #include <string>
 
@@ -433,6 +434,42 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		fct_chk_eq_int(item->GetPacketId(), packetId);
 		fct_chk_eq_int(item->GetLostPacketBitmask(), lostPacketBitmask);
+
+		delete item;
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_rtpfb_ecn_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x00, 0x00, 0x01, // Extended Highest Sequence Number
+			0x00, 0x00, 0x00, 0x01, // ECT (0) Counter
+			0x00, 0x00, 0x00, 0x01, // ECT (1) Counter
+			0x00, 0x01,             // ECN-CE Counter
+			0x00, 0x01,             // not-ECT Counter
+			0x00, 0x01,             // Lost Packets Counter
+			0x00, 0x01              // Duplication Counter
+		};
+
+		uint32_t sequenceNumber = 1;
+		uint32_t ect0Counter = 1;
+		uint32_t ect1Counter = 1;
+		uint16_t ecnCeCounter = 1;
+		uint16_t notEctCounter = 1;
+		uint16_t lostPackets = 1;
+		uint16_t duplicatedPackets = 1;
+
+		EcnItem* item = EcnItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetSequenceNumber(), sequenceNumber);
+		fct_chk_eq_int(item->GetEct0Counter(), ect0Counter);
+		fct_chk_eq_int(item->GetEct1Counter(), ect1Counter);
+		fct_chk_eq_int(item->GetEcnCeCounter(), ecnCeCounter);
+		fct_chk_eq_int(item->GetNotEctCounter(), notEctCounter);
+		fct_chk_eq_int(item->GetLostPackets(), lostPackets);
+		fct_chk_eq_int(item->GetDuplicatedPackets(), duplicatedPackets);
 
 		delete item;
 	}
