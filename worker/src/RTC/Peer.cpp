@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::Peer"
+// #define MS_LOG_DEV
 
 #include "RTC/Peer.h"
 #include "RTC/RtpDictionaries.h"
@@ -135,11 +136,14 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::peer_close:
 			{
+				#ifdef MS_LOG_DEV
 				uint32_t peerId = this->peerId;
+				#endif
 
 				Close();
 
-				MS_DEBUG("Peer closed [peerId:%" PRIu32 "]", peerId);
+				MS_DEBUG_DEV("Peer closed [peerId:%" PRIu32 "]", peerId);
+
 				request->Accept();
 
 				break;
@@ -174,8 +178,6 @@ namespace RTC
 				}
 
 				this->hasCapabilities = true;
-
-				MS_DEBUG("capabilities set");
 
 				// Notify the listener (Room) who will remove capabilities to make them
 				// a subset of the room capabilities.
@@ -221,7 +223,7 @@ namespace RTC
 
 				this->transports[transportId] = transport;
 
-				MS_DEBUG("Transport created [transportId:%" PRIu32 "]", transportId);
+				MS_DEBUG_DEV("Transport created [transportId:%" PRIu32 "]", transportId);
 
 				auto data = transport->toJson();
 
@@ -297,7 +299,7 @@ namespace RTC
 
 				this->rtpReceivers[rtpReceiverId] = rtpReceiver;
 
-				MS_DEBUG("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
+				MS_DEBUG_DEV("RtpReceiver created [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
 
 				// Set the Transport.
 				rtpReceiver->SetTransport(transport);
@@ -474,7 +476,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); it++)
 		{
 			auto rtpSender = it->second;
 			auto rtpParameters = rtpSender->GetParameters();
@@ -482,7 +484,7 @@ namespace RTC
 			if (!rtpParameters)
 				continue;
 
-			for (auto it2 = rtpParameters->encodings.begin(); it2 != rtpParameters->encodings.end(); ++it2)
+			for (auto it2 = rtpParameters->encodings.begin(); it2 != rtpParameters->encodings.end(); it2++)
 			{
 				auto& encoding = *it2;
 
@@ -503,21 +505,21 @@ namespace RTC
 		MS_TRACE();
 
 		// For every transport:
-		// - Create a CompoundPacket
-		// - Request every Sender and Receiver of such transport their RTCP data
-		// - Send the CompoundPacket
+		// - Create a CompoundPacket.
+		// - Request every Sender and Receiver of such transport their RTCP data.
+		// - Send the CompoundPacket.
 
-		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
+		for (auto it = this->transports.begin(); it != this->transports.end(); it++)
 		{
 			RTC::RTCP::CompoundPacket packet;
 			RTC::Transport* transport = it->second;
 
-			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); it++)
 			{
 				RTC::RtpSender* rtpSender = it->second;
 				RTC::RTCP::SenderReport* report = rtpSender->GetRtcpSenderReport();
 
-				// TODO: get next rtpSender data on next SendRtcp() call
+				// TODO: Get next rtpSender data on next SendRtcp() call.
 				if (report)
 				{
 					packet.AddSenderReport(report);
@@ -530,7 +532,7 @@ namespace RTC
 				}
 			}
 
-			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
+			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); it++)
 			{
 				RTC::RtpReceiver* rtpReceiver = it->second;
 				RTC::RTCP::ReceiverReport* report = rtpReceiver->GetRtcpReceiverReport();
@@ -540,9 +542,7 @@ namespace RTC
 			}
 
 			if (packet.GetSenderReportCount() || packet.GetReceiverReportCount())
-			{
 				transport->SendRtcpPacket(&packet);
-			}
 		}
 	}
 
@@ -662,7 +662,7 @@ namespace RTC
 		{
 			auto it = this->capabilities.codecs.begin();
 
-			for (; it != this->capabilities.codecs.end(); ++it)
+			for (; it != this->capabilities.codecs.end(); it++)
 			{
 				auto& codecCapability = *it;
 
@@ -710,106 +710,103 @@ namespace RTC
 				/* RTCP coming from a remote receiver which must be forwarded to the corresponding remote sender. */
 
 				case RTCP::Type::RR:
+				{
+					RTCP::ReceiverReportPacket* rr = static_cast<RTCP::ReceiverReportPacket*>(packet);
+
+					RTCP::ReceiverReportPacket::Iterator it = rr->Begin();
+					for (; it != rr->End(); it++)
 					{
-						RTCP::ReceiverReportPacket* rr = (RTCP::ReceiverReportPacket*) packet;
+						auto& report = (*it);
 
-						RTCP::ReceiverReportPacket::Iterator it = rr->Begin();
-						for (; it != rr->End(); ++it) {
+						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
 
-							auto& report = (*it);
-
-							RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
-
-							if (!rtpSender) {
-								MS_WARN("no RtpSender found for ssrc: %u while procesing a Receiver Report", report->GetSsrc());
-							}
-							else {
-								this->listener->onPeerRtcpReceiverReport(this, rtpSender, report);
-							}
-						}
+						if (!rtpSender)
+							MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Receiver Report [ssrc:%" PRIu32 "]", report->GetSsrc());
+						else
+							this->listener->onPeerRtcpReceiverReport(this, rtpSender, report);
 					}
+
 					break;
+				}
 
 				case RTCP::Type::PSFB:
-					{
-						RTCP::FeedbackPsPacket* feedback = (RTCP::FeedbackPsPacket*) packet;
+				{
+					RTCP::FeedbackPsPacket* feedback = static_cast<RTCP::FeedbackPsPacket*>(packet);
 
-						RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+					RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-						if (!rtpSender) {
-							MS_WARN("no RtpSender found for ssrc: %u while procesing a Feedback packet", feedback->GetMediaSsrc());
-						}
-						else {
-							this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
-						}
-					}
+					if (!rtpSender)
+						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
+					else
+						this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+
 					break;
+				}
 
 				case RTCP::Type::RTPFB:
-					{
-						RTCP::FeedbackRtpPacket* feedback = (RTCP::FeedbackRtpPacket*) packet;
+				{
+					RTCP::FeedbackRtpPacket* feedback = static_cast<RTCP::FeedbackRtpPacket*>(packet);
 
-						RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+					RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-						if (!rtpSender) {
-							MS_WARN("no RtpSender found for ssrc: %u while procesing a Feedback packet", feedback->GetMediaSsrc());
-						}
-						else {
-							this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
-						}
-					}
+					if (!rtpSender)
+						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
+					else
+						this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+
 					break;
+				}
 
 				/* RTCP coming from a remote sender which must be forwarded to the corresponding remote receivers. */
 
 				case RTCP::Type::SR:
+				{
+					RTCP::SenderReportPacket* sr = static_cast<RTCP::SenderReportPacket*>(packet);
+					RTCP::SenderReportPacket::Iterator it = sr->Begin();
+
+					// Even if Sender Report packet can only contain one report..
+					for (; it != sr->End(); it++)
 					{
-						RTCP::SenderReportPacket* sr = (RTCP::SenderReportPacket*) packet;
-						RTCP::SenderReportPacket::Iterator it = sr->Begin();
+						auto& report = (*it);
 
-						// Even if Sender Report packet can only contain one report..
-						for (; it != sr->End(); ++it)
-						{
-							auto& report = (*it);
+						// Get the receiver associated to the SSRC indicated in the report.
+						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
 
-							// Get the receiver associated to the SSRC indicated in the report.
-							RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
-
-							if (!rtpReceiver)
-								MS_WARN("no RtpReceiver found for ssrc: %u while procesing a Sender Report", report->GetSsrc());
-							else
-								this->listener->onPeerRtcpSenderReport(this, rtpReceiver, report);
-						}
+						if (!rtpReceiver)
+							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a Sender Report [ssrc:%" PRIu32 "]", report->GetSsrc());
+						else
+							this->listener->onPeerRtcpSenderReport(this, rtpReceiver, report);
 					}
 
 					break;
+				}
 
 				case RTCP::Type::SDES:
+				{
+					RTCP::SdesPacket* sdes = static_cast<RTCP::SdesPacket*>(packet);
+					RTCP::SdesPacket::Iterator it = sdes->Begin();
+
+					for (; it != sdes->End(); it++)
 					{
-						RTCP::SdesPacket* sdes = (RTCP::SdesPacket*) packet;
-						RTCP::SdesPacket::Iterator it = sdes->Begin();
+						auto& chunk = (*it);
 
-						for (; it != sdes->End(); ++it)
-						{
-							auto& chunk = (*it);
+						// Get the receiver associated to the SSRC indicated in the chunk.
+						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
 
-							// Get the receiver associated to the SSRC indicated in the chunk.
-							RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
-
-							if (!rtpReceiver)
-								MS_WARN("no RtpReceiver found for ssrc: %u while procesing a SDES chunk", chunk->GetSsrc());
-							else
-								this->listener->onPeerRtcpSdesChunk(this, rtpReceiver, chunk);
-						}
+						if (!rtpReceiver)
+							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+						else
+							this->listener->onPeerRtcpSdesChunk(this, rtpReceiver, chunk);
 					}
 
 					break;
+				}
 
 				case RTCP::Type::BYE:
 					break;
 
 				default:
-					MS_WARN("Unhandled RTCP type received to 'RTC::Peer': %u", (uint8_t)packet->GetType());
+					MS_WARN_TAG(rtcp, "unhandled RTCP type received [type:%" PRIu8 "]", (uint8_t)packet->GetType());
 					break;
 			}
 

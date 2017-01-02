@@ -1,8 +1,9 @@
 #define MS_CLASS "DepLibUV"
+// #define MS_LOG_DEV
 
 #include "DepLibUV.h"
 #include "Logger.h"
-#include <cstdlib>  // std::abort()
+#include <cstdlib> // std::abort()
 
 /* Static variables. */
 
@@ -38,7 +39,7 @@ void DepLibUV::PrintVersion()
 {
 	MS_TRACE();
 
-	MS_DEBUG("loaded libuv version: %s", uv_version_string());
+	MS_DEBUG_TAG(info, "loaded libuv version: %s", uv_version_string());
 }
 
 void DepLibUV::RunLoop()

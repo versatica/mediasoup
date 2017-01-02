@@ -1,4 +1,5 @@
 #define MS_CLASS "TcpServer"
+// #define MS_LOG_DEV
 
 #include "handles/TcpServer.h"
 #include "Utils.h"
@@ -141,9 +142,9 @@ void TcpServer::Close()
 	// Otherwise close all the connections (but not the TCP server).
 	else
 	{
-		MS_DEBUG("closing %zu active connections", this->connections.size());
+		MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
 
-		for (auto it = this->connections.begin(); it != this->connections.end(); ++it)
+		for (auto it = this->connections.begin(); it != this->connections.end(); it++)
 		{
 			TcpConnection* connection = *it;
 			connection->Close();
@@ -153,7 +154,7 @@ void TcpServer::Close()
 
 void TcpServer::Dump()
 {
-	MS_DEBUG("[TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
+	MS_DEBUG_DEV("[TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
 		(!this->isClosing) ? "open" : "closed",
 		this->connections.size());
@@ -290,7 +291,7 @@ void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool is_closed_
 
 	bool wasClosing = this->isClosing;
 
-	MS_DEBUG("TCP connection closed:");
+	MS_DEBUG_DEV("TCP connection closed");
 	connection->Dump();
 
 	// Remove the TcpConnection from the set.

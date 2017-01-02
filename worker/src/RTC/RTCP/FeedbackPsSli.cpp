@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsSliPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsSli.h"
 #include "Logger.h"
@@ -15,7 +16,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for Sli item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Sli item, discarded");
+
 			return nullptr;
 		}
 
@@ -54,14 +56,11 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Sli Item>");
-		MS_WARN("\t\t\tfirst: %u", this->first);
-		MS_WARN("\t\t\tnumber: %u", this->number);
-		MS_WARN("\t\t\tpictureId: %u", this->pictureId);
-		MS_WARN("\t\t</Sli Item>");
+		MS_DEBUG_DEV("<SliItem>");
+		MS_DEBUG_DEV("  first      : %" PRIu16, this->first);
+		MS_DEBUG_DEV("  number     : %" PRIu16, this->number);
+		MS_DEBUG_DEV("  picture id : %" PRIu8, this->pictureId);
+		MS_DEBUG_DEV("</SliItem>");
 	}
 }}
 

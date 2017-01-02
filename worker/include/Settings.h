@@ -6,6 +6,7 @@
 #include "Channel/Request.h"
 #include <map>
 #include <string>
+#include <vector>
 
 class Settings
 {
@@ -29,9 +30,13 @@ public:
 	// Log tags.
 	struct LogTags
 	{
+		bool info { false };
 		bool ice  { false };
 		bool dtls { false };
-		// TODO: Add more tags.
+		bool rtp  { false };
+		bool srtp { false };
+		bool rtcp { false };
+		// TODO: Add more tags (here and in Settings.cpp).
 	};
 
 public:
@@ -46,7 +51,8 @@ private:
 	static void SetRtcListenIPv6(const std::string &ip);
 	static void SetRtcPorts();
 	static void SetDtlsCertificateAndPrivateKeyFiles();
-	static void SetLogTags(Json::Value& tags);
+	static void SetLogTags(std::vector<std::string>& tags);
+	static void SetLogTags(Json::Value& json);
 
 public:
 	static struct Configuration configuration;

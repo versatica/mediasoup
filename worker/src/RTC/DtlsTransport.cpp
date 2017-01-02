@@ -1,14 +1,15 @@
 #define MS_CLASS "RTC::DtlsTransport"
+// #define MS_LOG_DEV
 
 #include "RTC/DtlsTransport.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
-#include <algorithm>  // std::remove
-#include <cstdio>  // std::sprintf(), std::fopen()
-#include <cstring>  // std::memcpy(), std::strcmp()
-#include <ctime>  // struct timeval
+#include <algorithm> // std::remove
+#include <cstdio> // std::sprintf(), std::fopen()
+#include <cstring> // std::memcpy(), std::strcmp()
+#include <ctime> // struct timeval
 #include <openssl/err.h>
 #include <openssl/bn.h>
 #include <openssl/evp.h>
@@ -379,7 +380,7 @@ namespace RTC
 		#endif
 
 		// Set the "use_srtp" DTLS extension.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
+		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); it++)
 		{
 			if (it != DtlsTransport::srtpProfiles.begin())
 				ssl_srtp_profiles += ":";
@@ -387,7 +388,7 @@ namespace RTC
 			SrtpProfileMapEntry* profile_entry = &(*it);
 			ssl_srtp_profiles += profile_entry->name;
 		}
-		MS_DEBUG("setting SRTP profiles for DTLS: %s", ssl_srtp_profiles.c_str());
+		MS_DEBUG_TAG(dtls, "setting SRTP profiles for DTLS: %s", ssl_srtp_profiles.c_str());
 		// NOTE: This function returns 0 on success.
 		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, ssl_srtp_profiles.c_str());
 		if (ret != 0)
@@ -416,7 +417,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin(); it != DtlsTransport::string2FingerprintAlgorithm.end(); ++it)
+		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin(); it != DtlsTransport::string2FingerprintAlgorithm.end(); it++)
 		{
 			std::string algorithm_str = it->first;
 			FingerprintAlgorithm algorithm = it->second;
@@ -461,7 +462,7 @@ namespace RTC
 			}
 			hex_fingerprint[size * 2] = '\0';
 
-			MS_DEBUG("%-7s fingerprint: %s", algorithm_str.c_str(), hex_fingerprint);
+			MS_DEBUG_TAG(dtls, "%-7s fingerprint: %s", algorithm_str.c_str(), hex_fingerprint);
 
 			// Store in the JSON.
 			DtlsTransport::localFingerprints[algorithm_str] = hex_fingerprint;
@@ -561,7 +562,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG("[role:%s, running:%s, handshake done:%s, connected:%s]",
+		MS_DEBUG_TAG(dtls, "[role:%s, running:%s, handshake done:%s, connected:%s]",
 			(this->localRole == Role::SERVER ? "server" : (this->localRole == Role::CLIENT ? "client" : "none")),
 			IsRunning() ? "yes" : "no",
 			this->handshakeDone ? "yes" : "no",
@@ -586,7 +587,7 @@ namespace RTC
 		// If the previous local DTLS role was 'client' or 'server' do reset.
 		if (previousLocalRole == Role::CLIENT || previousLocalRole == Role::SERVER)
 		{
-			MS_DEBUG("resetting DTLS due to local role change");
+			MS_DEBUG_TAG(dtls, "resetting DTLS due to local role change");
 
 			Reset();
 		}
@@ -601,7 +602,7 @@ namespace RTC
 		switch (this->localRole)
 		{
 			case Role::CLIENT:
-				MS_DEBUG("running [role:client]");
+				MS_DEBUG_TAG(dtls, "running [role:client]");
 
 				SSL_set_connect_state(this->ssl);
 				SSL_do_handshake(this->ssl);
@@ -610,7 +611,7 @@ namespace RTC
 				break;
 
 			case Role::SERVER:
-				MS_DEBUG("running [role:server]");
+				MS_DEBUG_TAG(dtls, "running [role:server]");
 
 				SSL_set_accept_state(this->ssl);
 				SSL_do_handshake(this->ssl);
@@ -633,7 +634,7 @@ namespace RTC
 		// so we may need to process it now.
 		if (this->handshakeDone && this->state != DtlsState::CONNECTED)
 		{
-			MS_DEBUG("handshake already done, processing it right now");
+			MS_DEBUG_TAG(dtls, "handshake already done, processing it right now");
 
 			ProcessHandshake();
 		}
@@ -656,7 +657,7 @@ namespace RTC
 		// Write the received DTLS data into the sslBioFromNetwork.
 		written = BIO_write(this->sslBioFromNetwork, (const void*)data, (int)len);
 		if (written != (int)len)
-			MS_WARN("OpenSSL BIO_write() wrote less (%zu bytes) than given data (%zu bytes)", (size_t)written, len);
+			MS_WARN_TAG(dtls, "OpenSSL BIO_write() wrote less (%zu bytes) than given data (%zu bytes)", (size_t)written, len);
 
 		// Must call SSL_read() to process received DTLS data.
 		read = SSL_read(this->ssl, (void*)DtlsTransport::sslReadBuffer, MS_SSL_READ_BUFFER_SIZE);
@@ -678,7 +679,7 @@ namespace RTC
 			// It is allowed to receive DTLS data even before validating remote fingerprint.
 			if (!this->handshakeDone)
 			{
-				MS_DEBUG("ignoring application data received while DTLS handshake not done");
+				MS_WARN_TAG(dtls, "ignoring application data received while DTLS handshake not done");
 
 				return;
 			}
@@ -695,14 +696,14 @@ namespace RTC
 		// We cannot send data to the peer if its remote fingerprint is not validated.
 		if (this->state != DtlsState::CONNECTED)
 		{
-			MS_ERROR("cannot send application data while DTLS is not fully connected");
+			MS_WARN_TAG(dtls, "cannot send application data while DTLS is not fully connected");
 
 			return;
 		}
 
 		if (len == 0)
 		{
-			MS_DEBUG("ignoring 0 length data");
+			MS_WARN_TAG(dtls, "ignoring 0 length data");
 
 			return;
 		}
@@ -718,7 +719,7 @@ namespace RTC
 		}
 		else if (written != (int)len)
 		{
-			MS_WARN("OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
+			MS_WARN_TAG(dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
 		}
 
 		// Send data.
@@ -734,7 +735,7 @@ namespace RTC
 		if (!IsRunning())
 			return;
 
-		MS_DEBUG("resetting DTLS transport");
+		MS_WARN_TAG(dtls, "resetting DTLS transport");
 
 		// Stop the DTLS timer.
 		this->timer->Stop();
@@ -777,10 +778,10 @@ namespace RTC
 			case SSL_ERROR_WANT_READ:
 				break;
 			case SSL_ERROR_WANT_WRITE:
-				MS_DEBUG("SSL status: SSL_ERROR_WANT_WRITE");
+				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_WRITE");
 				break;
 			case SSL_ERROR_WANT_X509_LOOKUP:
-				MS_DEBUG("SSL status: SSL_ERROR_WANT_X509_LOOKUP");
+				MS_DEBUG_TAG(dtls, "SSL status: SSL_ERROR_WANT_X509_LOOKUP");
 				break;
 			case SSL_ERROR_SYSCALL:
 				LOG_OPENSSL_ERROR("SSL status: SSL_ERROR_SYSCALL");
@@ -788,13 +789,13 @@ namespace RTC
 			case SSL_ERROR_ZERO_RETURN:
 				break;
 			case SSL_ERROR_WANT_CONNECT:
-				MS_DEBUG("SSL status: SSL_ERROR_WANT_CONNECT");
+				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_CONNECT");
 				break;
 			case SSL_ERROR_WANT_ACCEPT:
-				MS_DEBUG("SSL status: SSL_ERROR_WANT_ACCEPT");
+				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_ACCEPT");
 				break;
 			default:
-				MS_WARN("SSL status: unknown error");
+				MS_WARN_TAG(dtls, "SSL status: unknown error");
 		}
 
 		// Check if the handshake (or re-handshake) has been done right now.
@@ -815,7 +816,7 @@ namespace RTC
 		{
 			if (this->state == DtlsState::CONNECTED)
 			{
-				MS_DEBUG("disconnected");
+				MS_DEBUG_TAG(dtls, "disconnected");
 
 				Reset();
 
@@ -825,7 +826,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_DEBUG("connection failed");
+				MS_WARN_TAG(dtls, "connection failed");
 
 				Reset();
 
@@ -855,7 +856,7 @@ namespace RTC
 		if (read <= 0)
 			return;
 
-		MS_DEBUG("%ld bytes of DTLS data ready to sent to the peer", read);
+		MS_DEBUG_DEV("%ld bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
 		this->listener->onOutgoingDtlsData(this, (uint8_t*)data, (size_t)read);
@@ -887,7 +888,7 @@ namespace RTC
 		}
 		else if (timeout_ms < 30000)
 		{
-			MS_DEBUG("DTLS timer set in %" PRIu64 "ms", timeout_ms);
+			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeout_ms);
 
 			this->timer->Start(timeout_ms);
 
@@ -896,7 +897,7 @@ namespace RTC
 		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
 		else
 		{
-			MS_WARN("DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeout_ms);
+			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeout_ms);
 
 			Reset();
 
@@ -919,7 +920,7 @@ namespace RTC
 		// will be called when the fingerprint is set).
 		if (this->remoteFingerprint.algorithm == FingerprintAlgorithm::NONE)
 		{
-			MS_DEBUG("remote fingerprint not yet set, waiting for it");
+			MS_DEBUG_TAG(dtls, "remote fingerprint not yet set, waiting for it");
 
 			return;
 		}
@@ -949,7 +950,7 @@ namespace RTC
 		{
 			// NOTE: We assume that "use_srtp" DTLS extension is required even if
 			// there is no audio/video.
-			MS_WARN("SRTP profile not negotiated");
+			MS_WARN_TAG(dtls, "SRTP profile not negotiated");
 
 			Reset();
 
@@ -976,7 +977,7 @@ namespace RTC
 		certificate = SSL_get_peer_certificate(this->ssl);
 		if (!certificate)
 		{
-			MS_WARN("no certificate was provided by the peer");
+			MS_WARN_TAG(dtls, "no certificate was provided by the peer");
 
 			return false;
 		}
@@ -1023,14 +1024,14 @@ namespace RTC
 
 		if (this->remoteFingerprint.value.compare(hex_fingerprint) != 0)
 		{
-			MS_WARN("fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.value.c_str());
+			MS_WARN_TAG(dtls, "fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.value.c_str());
 
 			X509_free(certificate);
 
 			return false;
 		}
 
-		MS_DEBUG("valid remote fingerprint");
+		MS_DEBUG_TAG(dtls, "valid remote fingerprint");
 
 		// Get the remote certificate in PEM format.
 
@@ -1136,13 +1137,13 @@ namespace RTC
 		}
 
 		// Get the negotiated SRTP profile.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
+		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); it++)
 		{
 			SrtpProfileMapEntry* profile_entry = &(*it);
 
 			if (std::strcmp(ssl_srtp_profile->name, profile_entry->name) == 0)
 			{
-				MS_DEBUG("chosen SRTP profile: %s", profile_entry->name);
+				MS_DEBUG_TAG(dtls, "chosen SRTP profile: %s", profile_entry->name);
 
 				negotiated_srtp_profile = profile_entry->profile;
 			}
@@ -1167,7 +1168,7 @@ namespace RTC
 
 		if (where & SSL_CB_LOOP)
 		{
-			MS_DEBUG("[role:%s, action:'%s']", role, SSL_state_string_long(this->ssl));
+			MS_DEBUG_TAG(dtls, "[role:%s, action:'%s']", role, SSL_state_string_long(this->ssl));
 		}
 		else if (where & SSL_CB_ALERT)
 		{
@@ -1181,26 +1182,26 @@ namespace RTC
 			}
 
 			if (where & SSL_CB_READ)
-				MS_DEBUG("received DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
+				MS_WARN_TAG(dtls, "received DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
 			else if (where & SSL_CB_WRITE)
-				MS_DEBUG("sending DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
+				MS_DEBUG_TAG(dtls, "sending DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
 			else
-				MS_DEBUG("DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
+				MS_DEBUG_TAG(dtls, "DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
 		}
 		else if (where & SSL_CB_EXIT)
 		{
 			if (ret == 0)
-				MS_DEBUG("[role:%s, failed:'%s']", role, SSL_state_string_long(this->ssl));
+				MS_DEBUG_TAG(dtls, "[role:%s, failed:'%s']", role, SSL_state_string_long(this->ssl));
 			else if (ret < 0)
-				MS_DEBUG("role: %s, waiting:'%s']", role, SSL_state_string_long(this->ssl));
+				MS_DEBUG_TAG(dtls, "role: %s, waiting:'%s']", role, SSL_state_string_long(this->ssl));
 		}
 		else if (where & SSL_CB_HANDSHAKE_START)
 		{
-			MS_DEBUG("DTLS handshake start");
+			MS_DEBUG_TAG(dtls, "DTLS handshake start");
 		}
 		else if (where & SSL_CB_HANDSHAKE_DONE)
 		{
-			MS_DEBUG("DTLS handshake done");
+			MS_DEBUG_TAG(dtls, "DTLS handshake done");
 
 			this->handshakeDoneNow = true;
 		}

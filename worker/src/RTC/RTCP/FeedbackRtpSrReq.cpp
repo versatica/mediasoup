@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpSrReqPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpSrReq.h"
 #include "Logger.h"
@@ -13,7 +14,8 @@ namespace RTC { namespace RTCP
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
-			MS_WARN("not enough space for Feedback packet, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+
 			return nullptr;
 		}
 
@@ -24,13 +26,14 @@ namespace RTC { namespace RTCP
 
 	void FeedbackRtpSrReqPacket::Dump()
 	{
+		#ifdef MS_LOG_DEV
+
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t<FeedbackRtpSrReqPacket>");
+		MS_DEBUG_DEV("<FeedbackRtpSrReqPacket>");
 		FeedbackRtpPacket::Dump();
-		MS_WARN("\t</FeedbackRtpSrReqPacket>");
+		MS_DEBUG_DEV("</FeedbackRtpSrReqPacket>");
+
+		#endif
 	}
 }}

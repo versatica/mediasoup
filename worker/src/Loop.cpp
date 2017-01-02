@@ -1,4 +1,5 @@
 #define MS_CLASS "Loop"
+// #define MS_LOG_DEV
 
 #include "Loop.h"
 #include "DepLibUV.h"
@@ -6,9 +7,9 @@
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <string>
-#include <utility>  // std::pair()
+#include <utility> // std::pair()
 #include <cerrno>
-#include <iostream>  //  std::cout, std::cerr
+#include <iostream> //  std::cout, std::cerr
 #include <json/json.h>
 
 /* Instance methods. */
@@ -31,9 +32,9 @@ Loop::Loop(Channel::UnixStreamSocket* channel) :
 	this->signalsHandler->AddSignal(SIGINT, "INT");
 	this->signalsHandler->AddSignal(SIGTERM, "TERM");
 
-	MS_DEBUG("starting libuv loop");
+	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
-	MS_DEBUG("libuv loop ended");
+	MS_DEBUG_DEV("libuv loop ended");
 }
 
 Loop::~Loop()
@@ -112,17 +113,17 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 	switch (signum)
 	{
 		case SIGINT:
-			MS_DEBUG("signal INT received, exiting");
+			MS_DEBUG_DEV("signal INT received, exiting");
 			Close();
 			break;
 
 		case SIGTERM:
-			MS_DEBUG("signal TERM received, exiting");
+			MS_DEBUG_DEV("signal TERM received, exiting");
 			Close();
 			break;
 
 		default:
-			MS_WARN("received a signal (with signum %d) for which there is no handling code", signum);
+			MS_WARN_DEV("received a signal (with signum %d) for which there is no handling code", signum);
 	}
 }
 
@@ -130,7 +131,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 {
 	MS_TRACE();
 
-	MS_DEBUG("'%s' request", request->method.c_str());
+	MS_DEBUG_DEV("'%s' request", request->method.c_str());
 
 	switch (request->methodId)
 	{
@@ -199,7 +200,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 			this->rooms[roomId] = room;
 
-			MS_DEBUG("Room created [roomId:%" PRIu32 "]", roomId);
+			MS_DEBUG_DEV("Room created [roomId:%" PRIu32 "]", roomId);
 
 			Json::Value data(Json::objectValue);
 
@@ -271,8 +272,8 @@ void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* so
 	// If the pipe is remotely closed it means that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("Channel remotely closed, killing myself");
-	this->channel = nullptr;
 
+	this->channel = nullptr;
 	Close();
 }
 

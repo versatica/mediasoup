@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::TcpServer"
+// #define MS_LOG_DEV
 
 #include "RTC/TcpServer.h"
 #include "Settings.h"
@@ -125,13 +126,11 @@ namespace RTC
 			// Check whether the chosen port is available.
 			if (!(*available_ports)[iterating_port])
 			{
-				MS_DEBUG("port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterating_port, attempt);
+				MS_DEBUG_DEV("port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterating_port, attempt);
 
 				// If we have tried all the ports in the range raise an error.
 				if (iterating_port == initial_port)
-				{
 					MS_THROW_ERROR("no more available ports for IP '%s'", listen_ip);
-				}
 
 				continue;
 			}
@@ -165,27 +164,21 @@ namespace RTC
 			err = uv_tcp_bind(uvHandle, (const struct sockaddr*)&bind_addr, flags);
 			if (err)
 			{
-				MS_WARN("uv_tcp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s", attempt, iterating_port, uv_strerror(err));
+				MS_WARN_DEV("uv_tcp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s", attempt, iterating_port, uv_strerror(err));
 
 				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_error_close);
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
-				{
 					MS_THROW_ERROR("uv_tcp_bind() fails due to many open files");
-				}
 
 				// If bind() fails for more that MAX_BIND_ATTEMPTS then raise an error.
 				if (bind_attempt > MAX_BIND_ATTEMPTS)
-				{
 					MS_THROW_ERROR("uv_tcp_bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listen_ip);
-				}
 
 				// If we have tried all the ports in the range raise an error.
 				if (iterating_port == initial_port)
-				{
 					MS_THROW_ERROR("no more available ports for IP '%s'", listen_ip);
-				}
 
 				continue;
 			}
@@ -193,8 +186,8 @@ namespace RTC
 			// Set the port as unavailable.
 			(*available_ports)[iterating_port] = false;
 
-			MS_DEBUG("bind success [ip:%s, port:%" PRIu16 ", attempt:%" PRIu16 "]",
-					listen_ip, iterating_port, attempt);
+			MS_DEBUG_DEV("bind success [ip:%s, port:%" PRIu16 ", attempt:%" PRIu16 "]",
+				listen_ip, iterating_port, attempt);
 
 			return uvHandle;
 		};

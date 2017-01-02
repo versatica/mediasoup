@@ -1,4 +1,5 @@
 #define MS_CLASS "Timer"
+// #define MS_LOG_DEV
 
 #include "handles/Timer.h"
 #include "MediaSoupError.h"

@@ -1,4 +1,5 @@
 #define MS_CLASS "SignalsHandler"
+// #define MS_LOG_DEV
 
 #include "handles/SignalsHandler.h"
 #include "DepLibUV.h"

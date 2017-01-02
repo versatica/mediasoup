@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::TransportTuple"
+// #define MS_LOG_DEV
 
 #include "RTC/TransportTuple.h"
 #include "Logger.h"
@@ -41,13 +42,11 @@ namespace RTC
 		return json;
 	}
 
-	// TODO: TMP
 	void TransportTuple::Dump()
 	{
-		MS_TRACE();
+		#ifdef MS_LOG_DEV
 
-		if (!Logger::HasDebugLevel())
-			return;
+		MS_TRACE();
 
 		switch (this->protocol)
 		{
@@ -59,7 +58,7 @@ namespace RTC
 
 				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remote_family, remote_ip, &remote_port);
 
-				MS_DEBUG("[UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+				MS_DEBUG_DEV("[UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 					this->udpSocket->GetLocalIP().c_str(), this->udpSocket->GetLocalPort(),
 					remote_ip.c_str(), remote_port);
 				break;
@@ -67,11 +66,13 @@ namespace RTC
 
 			case Protocol::TCP:
 			{
-				MS_DEBUG("[TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+				MS_DEBUG_DEV("[TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 					this->tcpConnection->GetLocalIP().c_str(), this->tcpConnection->GetLocalPort(),
 					this->tcpConnection->GetPeerIP().c_str(), this->tcpConnection->GetPeerPort());
 				break;
 			}
 		}
+
+		#endif
 	}
 }

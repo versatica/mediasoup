@@ -1,6 +1,7 @@
-// TODO: https://tools.ietf.org/html/rfc3550#appendix-A.1
+// DOC: https://tools.ietf.org/html/rfc3550#appendix-A.1
 
 #define MS_CLASS "RTC::RtpStream"
+// #define MS_LOG_DEV
 
 #include "RTC/RtpStream.h"
 #include "Logger.h"
@@ -47,8 +48,7 @@ namespace RTC
 		// If not a valid packet ignore it.
 		if (!UpdateSeq(seq))
 		{
-			// TODO: remove
-			MS_WARN("invalid packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+			MS_WARN_TAG(rtp, "invalid packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
 
 			return false;
 		}
@@ -305,7 +305,7 @@ namespace RTC
 		// NOTE: This should never happen.
 		if (buffer_it_r == this->buffer.rend())
 		{
-			MS_WARN("packet is older than anything in the buffer, ignoring it");
+			MS_WARN_TAG(rtp, "packet is older than anything in the buffer, ignoring it");
 
 			return;
 		}
@@ -338,17 +338,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_WARN("<DUMP>");
+		MS_DEBUG_TAG(rtp, "<RtpStream>");
 
-		MS_WARN("  [buffer.size:%zu, storage.size:%zu]", this->buffer.size(), this->storage.size());
+		MS_DEBUG_TAG(rtp, "  [buffer.size:%zu, storage.size:%zu]", this->buffer.size(), this->storage.size());
 
 		for (auto& buffer_item : this->buffer)
 		{
 			auto packet = buffer_item.packet;
 
-			MS_WARN("  packet [seq:%" PRIu16 ", seq32:%" PRIu32 "]", packet->GetSequenceNumber(), buffer_item.seq32);
+			MS_DEBUG_TAG(rtp, "  packet [seq:%" PRIu16 ", seq32:%" PRIu32 "]", packet->GetSequenceNumber(), buffer_item.seq32);
 		}
 
-		MS_WARN("</DUMP>");
+		MS_DEBUG_TAG(rtp, "</RtpStream>");
 	}
 }

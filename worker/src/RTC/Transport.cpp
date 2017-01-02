@@ -1,11 +1,12 @@
 #define MS_CLASS "RTC::Transport"
+// #define MS_LOG_DEV
 
 #include "RTC/Transport.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
-#include <cmath>  // std::pow()
+#include <cmath> // std::pow()
 
 #define ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY 20000
 #define ICE_CANDIDATE_LOCAL_PRIORITY_PREFER_FAMILY_INCREMENT 10000
@@ -367,11 +368,13 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::transport_close:
 			{
+				#ifdef MS_LOG_DEV
 				uint32_t transportId = this->transportId;
+				#endif
 
 				Close();
 
-				MS_DEBUG("Transport closed [transportId:%" PRIu32 "]", transportId);
+				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transportId);
 				request->Accept();
 
 				break;
@@ -497,8 +500,7 @@ namespace RTC
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
 		{
-			// TODO: Should not log every packet.
-			MS_WARN("ignoring RTP packet due to non sending SRTP session");
+			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
 
 			return;
 		}
@@ -523,8 +525,7 @@ namespace RTC
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
 		{
-			// TODO: Should not log every packet.
-			MS_WARN("ignoring RTCP packet due to non sending SRTP session");
+			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
 
 			return;
 		}
@@ -549,8 +550,7 @@ namespace RTC
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
 		{
-			// TODO: Should not log every packet.
-			MS_WARN("ignoring RTCP packet due to non sending SRTP session");
+			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
 
 			return;
 		}
@@ -584,7 +584,7 @@ namespace RTC
 				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
 				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
-					MS_DEBUG("transition from DTLS local role 'auto' to 'server' and running DTLS transport");
+					MS_DEBUG_TAG(dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
 
 					this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
 					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
@@ -597,7 +597,7 @@ namespace RTC
 			case RTC::DtlsTransport::Role::CLIENT:
 				if (this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
-					MS_DEBUG("running DTLS transport in local role 'client'");
+					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'client'");
 
 					this->dtlsTransport->Run(RTC::DtlsTransport::Role::CLIENT);
 				}
@@ -609,7 +609,7 @@ namespace RTC
 				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
 				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
-					MS_DEBUG("running DTLS transport in local role 'server'");
+					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'server'");
 
 					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
 				}
@@ -647,8 +647,7 @@ namespace RTC
 		}
 		else
 		{
-			// TODO: should not debug all the unknown packets.
-			MS_DEBUG("ignoring received packet of unknown type");
+			MS_WARN_DEV("ignoring received packet of unknown type");
 		}
 	}
 
@@ -660,7 +659,7 @@ namespace RTC
 		RTC::StunMessage* msg = RTC::StunMessage::Parse(data, len);
 		if (!msg)
 		{
-			MS_DEBUG("ignoring wrong STUN message received");
+			MS_WARN_DEV("ignoring wrong STUN message received");
 
 			return;
 		}
@@ -679,7 +678,7 @@ namespace RTC
 		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
-			MS_DEBUG("ignoring DTLS data coming from an invalid tuple");
+			MS_WARN_DEV("ignoring DTLS data coming from an invalid tuple");
 
 			return;
 		}
@@ -691,13 +690,13 @@ namespace RTC
 		if (this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTING ||
 		    this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_DEBUG("DTLS data received, passing it to the DTLS transport");
+			MS_DEBUG_DEV("DTLS data received, passing it to the DTLS transport");
 
 			this->dtlsTransport->ProcessDtlsData(data, len);
 		}
 		else
 		{
-			MS_DEBUG("DtlsTransport is not 'connecting' or 'conneted', ignoring received DTLS data");
+			MS_WARN_DEV("Transport is not 'connecting' or 'connected', ignoring received DTLS data");
 
 			return;
 		}
@@ -711,8 +710,7 @@ namespace RTC
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			// TODO: Should not log every packet.
-			MS_WARN("ignoring RTP packet while DTLS not connected");
+			MS_WARN_DEV("ignoring RTP packet while DTLS not connected");
 
 			return;
 		}
@@ -720,8 +718,7 @@ namespace RTC
 		// Ensure there is receiving SRTP session.
 		if (!this->srtpRecvSession)
 		{
-			// TODO: Should not log every packet.
-			MS_WARN("ignoring RTP packet due to non receiving SRTP session");
+			MS_WARN_DEV("ignoring RTP packet due to non receiving SRTP session");
 
 			return;
 		}
@@ -729,7 +726,7 @@ namespace RTC
 		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
-			MS_DEBUG("ignoring RTP packet coming from an invalid tuple");
+			MS_WARN_DEV("ignoring RTP packet coming from an invalid tuple");
 
 			return;
 		}
@@ -741,7 +738,7 @@ namespace RTC
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 		if (!packet)
 		{
-			MS_WARN("received data is not a valid RTP packet");
+			MS_WARN_DEV("received data is not a valid RTP packet");
 
 			return;
 		}
@@ -751,16 +748,16 @@ namespace RTC
 
 		if (!rtpReceiver)
 		{
-			// TODO: We don't want to log every warning.
-			MS_WARN("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
+			MS_WARN_DEV("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
 
 			delete packet;
 			return;
 		}
 
-		// TODO: REMOVE
-		// MS_DEBUG("valid RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
-		// packet->Dump();  // TODO: REMOVE
+		MS_DEBUG_DEV("valid RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
+		#ifdef MS_LOG_DEV
+		// packet->Dump();
+		#endif
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
@@ -779,8 +776,7 @@ namespace RTC
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			// TODO: Should not log every packet.
-			MS_WARN("ignoring RTCP packet while DTLS not connected");
+			MS_WARN_DEV("ignoring RTCP packet while DTLS not connected");
 
 			return;
 		}
@@ -788,8 +784,7 @@ namespace RTC
 		// Ensure there is receiving SRTP session.
 		if (!this->srtpRecvSession)
 		{
-			// TODO: Should not log every packet.
-			MS_WARN("ignoring RTCP packet due to non receiving SRTP session");
+			MS_WARN_DEV("ignoring RTCP packet due to non receiving SRTP session");
 
 			return;
 		}
@@ -797,7 +792,7 @@ namespace RTC
 		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
-			MS_DEBUG("ignoring RTCP packet coming from an invalid tuple");
+			MS_WARN_DEV("ignoring RTCP packet coming from an invalid tuple");
 
 			return;
 		}
@@ -809,22 +804,22 @@ namespace RTC
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 		if (!packet)
 		{
-			MS_WARN("received data is not a valid RTCP compound or single packet");
+			MS_WARN_DEV("received data is not a valid RTCP compound or single packet");
 
 			return;
 		}
 
-		// TODO: implement this properly!
-		// For now let route the received RTCP packet to all our RtpReceivers.
 		this->listener->onTransportRtcpPacket(this, packet);
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		// this->iceServer->ForceSelectedTuple(tuple);
 
-		while (packet) {
-			RTC::RTCP::Packet* next = packet->GetNext();
+		while (packet)
+		{
+			RTC::RTCP::Packet* next_packet = packet->GetNext();
+
 			delete packet;
-			packet = next;
+			packet = next_packet;
 		}
 	}
 
@@ -899,7 +894,7 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		MS_DEBUG("ICE connected");
+		MS_DEBUG_TAG(ice, "ICE connected");
 
 		// Notify.
 		event_data[k_class] = "Transport";
@@ -920,7 +915,7 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		MS_DEBUG("ICE completed");
+		MS_DEBUG_TAG(ice, "ICE completed");
 
 		// Notify.
 		event_data[k_class] = "Transport";
@@ -941,7 +936,7 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		MS_DEBUG("ICE disconnected");
+		MS_DEBUG_TAG(ice, "ICE disconnected");
 
 		// Unset the selected tuple.
 		this->selectedTuple = nullptr;
@@ -965,7 +960,7 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		MS_DEBUG("DTLS connecting");
+		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
 		// Notify.
 		event_data[k_class] = "Transport";
@@ -984,7 +979,7 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		MS_DEBUG("DTLS connected");
+		MS_DEBUG_TAG(dtls, "DTLS connected");
 
 		// Close it if it was already set and update it.
 		if (this->srtpSendSession)
@@ -1038,7 +1033,7 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		MS_DEBUG("DTLS failed");
+		MS_WARN_TAG(dtls, "DTLS failed");
 
 		// Notify.
 		event_data[k_class] = "Transport";
@@ -1059,7 +1054,7 @@ namespace RTC
 
 		Json::Value event_data(Json::objectValue);
 
-		MS_DEBUG("DTLS remotely closed");
+		MS_DEBUG_TAG(dtls, "DTLS remotely closed");
 
 		// Notify.
 		event_data[k_class] = "Transport";
@@ -1076,13 +1071,10 @@ namespace RTC
 
 		if (!this->selectedTuple)
 		{
-			MS_DEBUG("no selected tuple set, cannot send DTLS packet");
+			MS_WARN_TAG(dtls, "no selected tuple set, cannot send DTLS packet");
+
 			return;
 		}
-
-		// TODO: remove
-		MS_DEBUG("media DTLS data to to:");
-		this->selectedTuple->Dump();
 
 		this->selectedTuple->Send(data, len);
 	}
@@ -1091,9 +1083,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG("DTLS application data received [size:%zu]", len);
-
-		// TODO: remove
-		MS_DEBUG("data: %s", std::string((char*)data, len).c_str());
+		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
 	}
 }

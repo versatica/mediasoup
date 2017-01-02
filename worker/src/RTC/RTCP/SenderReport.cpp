@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::SenderReport"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/SenderReport.h"
 #include "Logger.h"
@@ -18,7 +19,8 @@ namespace RTC { namespace RTCP
 			// Packet size must be >= header size.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for sender report, packet discarded");
+			MS_WARN_TAG(rtcp, "not enough space for sender report, packet discarded");
+
 			return nullptr;
 		}
 
@@ -31,17 +33,14 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t<SenderReport>");
-		MS_WARN("\t\tssrc: %u", ntohl(this->header->ssrc));
-		MS_WARN("\t\tntp_sec: %u", ntohl(this->header->ntp_sec));
-		MS_WARN("\t\tntp_frac: %u", ntohl(this->header->ntp_frac));
-		MS_WARN("\t\trtp_ts: %u", ntohl(this->header->rtp_ts));
-		MS_WARN("\t\tpacket_count: %u", ntohl(this->header->packet_count));
-		MS_WARN("\t\toctet_count: %u", ntohl(this->header->octet_count));
-		MS_WARN("\t</SenderReport>");
+		MS_DEBUG_DEV("<SenderReport>");
+		MS_DEBUG_DEV("  ssrc         : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("  ntp sec      : %" PRIu32, ntohl(this->header->ntp_sec));
+		MS_DEBUG_DEV("  ntp frac     : %" PRIu32, ntohl(this->header->ntp_frac));
+		MS_DEBUG_DEV("  rtp ts       : %" PRIu32, ntohl(this->header->rtp_ts));
+		MS_DEBUG_DEV("  packet count : %" PRIu32, ntohl(this->header->packet_count));
+		MS_DEBUG_DEV("  octet count  : %" PRIu32, ntohl(this->header->octet_count));
+		MS_DEBUG_DEV("</SenderReport>");
 	}
 
 	void SenderReport::Serialize()
@@ -82,13 +81,9 @@ namespace RTC { namespace RTCP
 
 		SenderReport* report = SenderReport::Parse(data+offset, len-offset);
 		if (report)
-		{
 			packet->AddReport(report);
-		}
 		else
-		{
 			return packet.release();
-		}
 
 		return packet.release();
 	}
@@ -114,18 +109,17 @@ namespace RTC { namespace RTCP
 
 	void SenderReportPacket::Dump()
 	{
+		#ifdef MS_LOG_DEV
+
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("<SenderReportPacket>");
-
+		MS_DEBUG_DEV("<SenderReportPacket>");
 		for (auto report : this->reports)
 		{
 			report->Dump();
 		}
+		MS_DEBUG_DEV("</SenderReportPacket>");
 
-		MS_WARN("</SenderReportPacket>");
+		#endif
 	}
 }}
