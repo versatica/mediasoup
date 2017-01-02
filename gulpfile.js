@@ -47,10 +47,6 @@ gulp.task('capabilities', () =>
 		.pipe(touch());
 });
 
-gulp.task('worker', shell.task(
-	[ 'make' ]
-));
-
 gulp.task('test', shell.task(
 	[ `tap --bail --color --reporter=spec ${tests.join(' ')}` ],
 	{
@@ -61,15 +57,9 @@ gulp.task('test', shell.task(
 gulp.task('test-debug', shell.task(
 	[ `tap --bail --reporter=tap ${tests.join(' ')}` ],
 	{
-		env     : { DEBUG: '*ERROR* *WARN*' },
+		env     : { DEBUG: '*WARN* *ERROR* *ABORT*' },
 		verbose : true
 	}
 ));
-
-gulp.task('t', gulp.series('test'));
-
-gulp.task('td', gulp.series('test-debug'));
-
-gulp.task('make', gulp.series('capabilities', 'worker'));
 
 gulp.task('default', gulp.series('lint'));
