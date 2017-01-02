@@ -8,6 +8,7 @@
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/Bye.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
+#include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "Logger.h"
 #include <string>
 
@@ -388,6 +389,29 @@ FCTMF_SUITE_BGN(test_rtcp)
 		NackItem item3((NackItem::Header*)buffer);
 		fct_chk_eq_int(item3.GetPacketId(), packetId);
 		fct_chk_eq_int(item3.GetLostPacketBitmask(), htons(lostPacketBitmask));
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_rtpfb_tmmb_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x00, 0x00, 0x00, // ssrc
+			0x04, 0x00, 0x02, 0x01
+		};
+
+		uint32_t ssrc = 0;
+		uint64_t bitrate = 2;
+		uint32_t overhead = 1;
+
+		TmmbrItem* item = TmmbrItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetSsrc(), ssrc);
+		fct_chk(item->GetBitrate() == bitrate);
+		fct_chk_eq_int(item->GetOverhead(), overhead);
+
+		delete item;
 	}
 	FCT_TEST_END()
 }
