@@ -5,6 +5,7 @@
 #include "RTC/RTCP/Sdes.h"
 #include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/ReceiverReport.h"
+#include "RTC/RTCP/Bye.h"
 #include "Logger.h"
 #include <string>
 
@@ -303,6 +304,41 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(report2.GetLastSenderReport(), lastSenderReport);
 		fct_chk_eq_int(report2.GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
 
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(create_parse_bye)
+	{
+		uint32_t ssrc1 = 1111;
+		uint32_t ssrc2 = 2222;
+		std::string reason("hasta la vista");
+
+		// Create local Bye packet and check content.
+		// ByePacket();
+		ByePacket bye1;
+
+		bye1.AddSsrc(ssrc1);
+		bye1.AddSsrc(ssrc2);
+		bye1.SetReason(reason);
+
+		ByePacket::Iterator it = bye1.Begin();
+
+		fct_chk_eq_int(*(it), ssrc1);
+		fct_chk_eq_int(*(++it), ssrc2);
+		fct_chk(bye1.GetReason() == reason);
+
+		// Locally store the content of the packet.
+		uint8_t buffer[bye1.GetSize()];
+		bye1.Serialize(buffer);
+
+		// Parse the buffer of the previous packet and check content.
+		ByePacket* bye2 = ByePacket::Parse(buffer, sizeof(buffer));
+
+		it = bye2->Begin();
+
+		fct_chk_eq_int(*(it), ssrc1);
+		fct_chk_eq_int(*(++it), ssrc2);
+		fct_chk(bye2->GetReason() == reason);
 	}
 	FCT_TEST_END()
 }

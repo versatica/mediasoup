@@ -29,14 +29,15 @@ namespace RTC { namespace RTCP
 				return nullptr;
 			}
 
-			packet->AddSsrc(Utils::Byte::Get4Bytes(data+offset, 0));
+			packet->AddSsrc(ntohl(Utils::Byte::Get4Bytes(data, offset)));
 			offset += sizeof(uint32_t);
 		}
 
-		if (count == 0)
+		if (len - offset > 0)
 		{
-			size_t length = size_t(Utils::Byte::Get1Byte(data+offset, 0));
-			if (sizeof(uint8_t) + length <= len-offset)
+			size_t length = size_t(Utils::Byte::Get1Byte(data, offset));
+			offset += sizeof(uint8_t);
+			if (length <= len-offset)
 			{
 				packet->SetReason(std::string((char*)data+offset, length));
 			}
@@ -53,16 +54,21 @@ namespace RTC { namespace RTCP
 
 		size_t offset = Packet::Serialize(data);
 
+		// SSRCs.
 		for (auto ssrc : this->ssrcs)
 		{
-			std::memcpy(data, &ssrc, sizeof(uint32_t));
+			Utils::Byte::Set4Bytes(data, offset, htonl(ssrc));
 			offset += sizeof(uint32_t);
 		}
 
 		if (!this->reason.empty())
 		{
+			// Length field.
 			Utils::Byte::Set1Byte(data, offset, this->reason.length());
-			offset += sizeof(uint8_t); // Length field.
+			offset += sizeof(uint8_t);
+
+			// Reason field.
+			std::memcpy(data+offset, this->reason.c_str(), this->reason.length());
 			offset += this->reason.length();
 		}
 
