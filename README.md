@@ -4,7 +4,7 @@
 [![][travis-ci-shield-mediasoup]][travis-ci-mediasoup]
 
 
-**Status:** Coming soon (check the project [milestones](https://github.com/ibc/mediasoup/milestones)).
+**Status:** v1.0.0 coming soon.
 
 
 ## Website and documentation
