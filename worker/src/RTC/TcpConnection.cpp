@@ -1,9 +1,10 @@
 #define MS_CLASS "RTC::TcpConnection"
+// #define MS_LOG_DEV
 
 #include "RTC/TcpConnection.h"
 #include "Utils.h"
 #include "Logger.h"
-#include <cstring>  // std::memmove()
+#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -25,7 +26,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG("data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+		MS_DEBUG_DEV("data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 			GetLocalIP().c_str(), GetLocalPort(),
 			GetPeerIP().c_str(), GetPeerPort());
 
@@ -75,7 +76,7 @@ namespace RTC
 				// the latest parsed frame filled it, then empty the full buffer.
 				if ((this->frameStart + 2 + packet_len) == this->bufferSize)
 				{
-					MS_DEBUG("no more space in the buffer, emptying the buffer data");
+					MS_DEBUG_DEV("no more space in the buffer, emptying the buffer data");
 
 					this->frameStart = 0;
 					this->bufferDataLen = 0;
@@ -91,7 +92,7 @@ namespace RTC
 				// parse again. Otherwise break here and wait for more data.
 				if (this->bufferDataLen > this->frameStart)
 				{
-					// MS_DEBUG("there is more data after the parsed frame, continue parsing");
+					MS_DEBUG_DEV("there is more data after the parsed frame, continue parsing");
 
 					continue;
 				}
@@ -111,7 +112,7 @@ namespace RTC
 					// the buffer, so move the frame to the position 0.
 					if (this->frameStart != 0)
 					{
-						// MS_DEBUG("no more space in the buffer, moving parsed bytes to the beginning of the buffer and wait for more data");
+						MS_DEBUG_DEV("no more space in the buffer, moving parsed bytes to the beginning of the buffer and wait for more data");
 
 						std::memmove(this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
 						this->bufferDataLen = this->bufferSize - this->frameStart;
@@ -121,7 +122,7 @@ namespace RTC
 					// The frame is too big, so close the connection.
 					else
 					{
-						MS_WARN("no more space in the buffer for the unfinished frame being parsed, closing the connection");
+						MS_WARN_DEV("no more space in the buffer for the unfinished frame being parsed, closing the connection");
 
 						// Close the socket.
 						Close();
@@ -130,7 +131,7 @@ namespace RTC
 				// The buffer is not full.
 				else
 				{
-					MS_DEBUG("frame not finished yet, waiting for more data");
+					MS_DEBUG_DEV("frame not finished yet, waiting for more data");
 				}
 
 				// Exit the parsing loop.

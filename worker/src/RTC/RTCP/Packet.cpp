@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::Packet"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/Packet.h"
 #include "RTC/RTCP/ReceiverReport.h"
@@ -36,7 +37,7 @@ namespace RTC { namespace RTCP
 		{
 			if (!Packet::IsRtcp(data, len))
 			{
-				MS_WARN("data is not a RTCP packet");
+				MS_WARN_TAG(rtcp, "data is not a RTCP packet");
 
 				return first;
 			}
@@ -46,7 +47,7 @@ namespace RTC { namespace RTCP
 
 			if (len < packet_len)
 			{
-				MS_WARN("packet length exceeds remaining data [len:%zu, packet_len:%zu]", len, packet_len);
+				MS_WARN_TAG(rtcp, "packet length exceeds remaining data [len:%zu, packet_len:%zu]", len, packet_len);
 
 				return first;
 			}
@@ -110,7 +111,8 @@ namespace RTC { namespace RTCP
 
 				default:
 				{
-					MS_WARN("unknown RTCP packet type [packet_type:%" PRIu8 "]", header->packet_type);
+					MS_WARN_TAG(rtcp, "unknown RTCP packet type [packet_type:%" PRIu8 "]", header->packet_type);
+
 					current = nullptr;
 				}
 			}
@@ -120,21 +122,18 @@ namespace RTC { namespace RTCP
 				std::string packetType = Type2String(Type(header->packet_type));
 
 				if (Type(header->packet_type) == Type::PSFB)
-				{
 					packetType += " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
-				}
 				else if (Type(header->packet_type) == Type::RTPFB)
-				{
 					packetType += " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
-				}
 
-				MS_WARN("error parsing %s Packet", packetType.c_str());
+				MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
 
 				return first;
 			}
 
-			// TODO: REMOVE
-			current->Dump();
+			#ifdef MS_LOG_DEV
+			// current->Dump();
+			#endif
 
 			data += packet_len;
 			len -= packet_len;

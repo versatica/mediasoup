@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RtpParameters"
+// #define MS_LOG_DEV
 
 #include "RTC/RtpDictionaries.h"
 #include "MediaSoupError.h"
@@ -186,7 +187,7 @@ namespace RTC
 					int32_t apt = codec.parameters.GetInteger(k_apt);
 					auto it = this->codecs.begin();
 
-					for (; it != this->codecs.end(); ++it)
+					for (; it != this->codecs.end(); it++)
 					{
 						auto codec = *it;
 
@@ -222,7 +223,7 @@ namespace RTC
 		{
 			auto it = this->codecs.begin();
 
-			for (; it != this->codecs.end(); ++it)
+			for (; it != this->codecs.end(); it++)
 			{
 				auto& codec = *it;
 
@@ -265,7 +266,7 @@ namespace RTC
 				{
 					auto it = this->codecs.begin();
 
-					for (; it != this->codecs.end(); ++it)
+					for (; it != this->codecs.end(); it++)
 					{
 						auto codec = *it;
 

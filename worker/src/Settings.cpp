@@ -1,14 +1,13 @@
 #define MS_CLASS "Settings"
+// #define MS_LOG_DEV
 
 #include "Settings.h"
 #include "Utils.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
-#include <string>
-#include <map>
-#include <cctype>  // isprint()
+#include <cctype> // isprint()
 #include <cerrno>
-#include <unistd.h>  // close()
+#include <unistd.h> // close()
 #include <uv.h>
 extern "C"
 {
@@ -23,6 +22,7 @@ bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
+struct Settings::LogTags Settings::logTags;
 std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
@@ -54,10 +54,12 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	int c;
 	int option_index = 0;
 	std::string value_string;
+	std::vector<std::string> log_tags;
 
 	struct option options[] =
 	{
 		{ "logLevel",            optional_argument, nullptr, 'l' },
+		{ "logTag",              optional_argument, nullptr, 't' },
 		{ "rtcListenIPv4",       optional_argument, nullptr, '4' },
 		{ "rtcListenIPv6",       optional_argument, nullptr, '6' },
 		{ "rtcMinPort",          optional_argument, nullptr, 'm' },
@@ -80,6 +82,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			case 'l':
 				value_string = std::string(optarg);
 				SetLogLevel(value_string);
+				break;
+
+			case 't':
+				value_string = std::string(optarg);
+				log_tags.push_back(value_string);
 				break;
 
 			case '4':
@@ -129,6 +136,10 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	/* Post configuration. */
 
+	// Set logTags.
+	if (!log_tags.empty())
+		Settings::SetLogTags(log_tags);
+
 	// RTC must have at least 'listenIPv4' or 'listenIPv6'.
 	if (!Settings::configuration.hasIPv4 && !Settings::configuration.hasIPv6)
 		MS_THROW_ERROR("at least rtcListenIPv4 or rtcListenIPv6 must be enabled");
@@ -144,26 +155,45 @@ void Settings::PrintConfiguration()
 {
 	MS_TRACE();
 
-	MS_DEBUG("<configuration>");
+	std::vector<std::string> log_tags;
 
-	MS_DEBUG("logLevel: \"%s\"", Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	if (Settings::logTags.info)
+		log_tags.push_back("info");
+	if (Settings::logTags.ice)
+		log_tags.push_back("ice");
+	if (Settings::logTags.dtls)
+		log_tags.push_back("dtls");
+	if (Settings::logTags.rtp)
+		log_tags.push_back("rtp");
+	if (Settings::logTags.srtp)
+		log_tags.push_back("srtp");
+	if (Settings::logTags.rtcp)
+		log_tags.push_back("rtcp");
+
+	MS_DEBUG_TAG(info, "<configuration>");
+
+	MS_DEBUG_TAG(info, "logLevel: \"%s\"", Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	for (auto& tag : log_tags)
+	{
+		MS_DEBUG_TAG(info, "logTag: \"%s\"", tag.c_str());
+	}
 	if (Settings::configuration.hasIPv4)
-		MS_DEBUG("rtcListenIPv4: \"%s\"", Settings::configuration.rtcListenIPv4.c_str());
+		MS_DEBUG_TAG(info, "rtcListenIPv4: \"%s\"", Settings::configuration.rtcListenIPv4.c_str());
 	else
-		MS_DEBUG("rtcListenIPv4: (unavailable)");
+		MS_DEBUG_TAG(info, "rtcListenIPv4: (unavailable)");
 	if (Settings::configuration.hasIPv6)
-		MS_DEBUG("rtcListenIPv6: \"%s\"", Settings::configuration.rtcListenIPv6.c_str());
+		MS_DEBUG_TAG(info, "rtcListenIPv6: \"%s\"", Settings::configuration.rtcListenIPv6.c_str());
 	else
-		MS_DEBUG("rtcListenIPv6: (unavailable)");
-	MS_DEBUG("rtcMinPort: %" PRIu16, Settings::configuration.rtcMinPort);
-	MS_DEBUG("rtcMaxPort: %" PRIu16, Settings::configuration.rtcMaxPort);
+		MS_DEBUG_TAG(info, "rtcListenIPv6: (unavailable)");
+	MS_DEBUG_TAG(info, "rtcMinPort: %" PRIu16, Settings::configuration.rtcMinPort);
+	MS_DEBUG_TAG(info, "rtcMaxPort: %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
-		MS_DEBUG("dtlsCertificateFile: \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG("dtlsPrivateKeyFile: \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
+		MS_DEBUG_TAG(info, "dtlsCertificateFile: \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG_TAG(info, "dtlsPrivateKeyFile: \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
-	MS_DEBUG("</configuration>");
+	MS_DEBUG_TAG(info, "</configuration>");
 }
 
 void Settings::HandleRequest(Channel::Request* request)
@@ -175,8 +205,10 @@ void Settings::HandleRequest(Channel::Request* request)
 		case Channel::Request::MethodId::worker_updateSettings:
 		{
 			static const Json::StaticString k_logLevel("logLevel");
+			static const Json::StaticString k_logTags("logTags");
 
 			Json::Value json_logLevel = request->data[k_logLevel];
+			Json::Value json_logTags = request->data[k_logTags];
 
 			try
 			{
@@ -187,6 +219,12 @@ void Settings::HandleRequest(Channel::Request* request)
 
 					Settings::SetLogLevel(logLevel);
 				}
+
+				// Update logTags if requested.
+				if (json_logTags.isArray())
+				{
+					Settings::SetLogTags(json_logTags);
+				}
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -194,9 +232,7 @@ void Settings::HandleRequest(Channel::Request* request)
 				return;
 			}
 
-			MS_DEBUG("updated settings:");
-
-			// Print configuration.
+			// Print the new effective configuration.
 			Settings::PrintConfiguration();
 
 			request->Accept();
@@ -427,6 +463,49 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 
 	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
 	Settings::configuration.dtlsPrivateKeyFile = dtlsPrivateKeyFile;
+}
+
+void Settings::SetLogTags(std::vector<std::string>& tags)
+{
+	MS_TRACE();
+
+	// Reset logTags.
+	struct LogTags newLogTags;
+
+	Settings::logTags = newLogTags;
+
+	for (auto& tag : tags)
+	{
+		if (tag == "info")
+			Settings::logTags.info = true;
+		else if (tag == "ice")
+			Settings::logTags.ice = true;
+		else if (tag == "dtls")
+			Settings::logTags.dtls = true;
+		else if (tag == "rtp")
+			Settings::logTags.rtp = true;
+		else if (tag == "srtp")
+			Settings::logTags.srtp = true;
+		else if (tag == "rtcp")
+			Settings::logTags.rtcp = true;
+	}
+}
+
+void Settings::SetLogTags(Json::Value& json)
+{
+	MS_TRACE();
+
+	std::vector<std::string> tags;
+
+	for (Json::UInt i = 0; i < json.size(); i++)
+	{
+		Json::Value entry = json[i];
+
+		if (entry.isString())
+			tags.push_back(entry.asString());
+	}
+
+	Settings::SetLogTags(tags);
 }
 
 /* Helpers. */

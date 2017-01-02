@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RtpCodecParameters"
+// #define MS_LOG_DEV
 
 #include "RTC/RtpDictionaries.h"
 #include "MediaSoupError.h"

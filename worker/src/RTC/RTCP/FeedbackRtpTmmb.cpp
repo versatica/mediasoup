@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpTmmbPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "Logger.h"
@@ -18,7 +19,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for Tmmb item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Tmmb item, discarded");
+
 			return nullptr;
 		}
 
@@ -45,7 +47,8 @@ namespace RTC { namespace RTCP
 
 		if ((this->bitrate >> exponent) != mantissa)
 		{
-			MS_WARN("invalid TMMB bitrate value : %u *2^%u", mantissa, exponent);
+			MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %u *2^%u", mantissa, exponent);
+
 			this->isCorrect = false;
 		}
 	}
@@ -78,14 +81,11 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Tmmb Item>");
-		MS_WARN("\t\t\tssrc: %u", ntohl(this->header->ssrc));
-		MS_WARN("\t\t\tbitrate: %" PRIu64, this->bitrate);
-		MS_WARN("\t\t\toverhead: %u", this->overhead);
-		MS_WARN("\t\t</Tmmb Item>");
+		MS_DEBUG_DEV("<TmmbItem>");
+		MS_DEBUG_DEV("  ssrc     : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("  bitrate  : %" PRIu64, this->bitrate);
+		MS_DEBUG_DEV("  overhead : %" PRIu16, this->overhead);
+		MS_DEBUG_DEV("</TmmbItem>");
 	}
 
 	/* Specialization for Tmmbr class. */

@@ -1,4 +1,5 @@
 #define MS_CLASS "Utils::Crypto"
+// #define MS_LOG_DEV
 
 #include "Utils.h"
 #include "Logger.h"

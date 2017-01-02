@@ -1,16 +1,17 @@
 /**
- * NOTE: This code cannot use MS_DEBUG, MS_WARN, MS_ERROR since this is the base
- * code of the intercommunication Channel.
+ * NOTE: This code cannot log to the Channel since this is the base code of the
+ * Channel.
  */
 
 #define MS_CLASS "UnixStreamSocket"
+// #define MS_LOG_DEV
 
 #include "handles/UnixStreamSocket.h"
 #include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
-#include <cstring>  // std::memcpy()
-#include <cstdlib>  // std::malloc(), std::free()
+#include <cstring> // std::memcpy()
+#include <cstdlib> // std::malloc(), std::free()
 
 /* Static methods for UV callbacks. */
 
@@ -206,7 +207,6 @@ void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 	if (this->bufferSize > this->bufferDataLen)
 	{
 		buf->len = this->bufferSize - this->bufferDataLen;
-		// MS_DEBUG_STD("available space in the buffer: %zu", buf->len);
 	}
 	else
 	{
@@ -236,8 +236,6 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Peer disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
 	{
-		MS_DEBUG("connection closed by peer, closing server side");
-
 		this->isClosedByPeer = true;
 
 		// Close local side of the pipe.
@@ -265,11 +263,11 @@ void UnixStreamSocket::onUvWriteError(int error)
 
 	if (error == UV_EPIPE || error == UV_ENOTCONN)
 	{
-		MS_DEBUG_STD("write error, closing the pipe: %s", uv_strerror(error));
+		MS_ERROR_STD("write error, closing the pipe: %s", uv_strerror(error));
 	}
 	else
 	{
-		MS_DEBUG_STD("write error, closing the pipe: %s", uv_strerror(error));
+		MS_ERROR_STD("write error, closing the pipe: %s", uv_strerror(error));
 
 		this->hasError = true;
 	}
@@ -285,9 +283,9 @@ void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 	delete req;
 
 	if (status == UV_EPIPE || status == UV_ENOTCONN || status == UV_ECANCELED)
-		MS_DEBUG_STD("shutdown error: %s", uv_strerror(status));
+		MS_ERROR_STD("shutdown error: %s", uv_strerror(status));
 	else if (status)
-		MS_DEBUG_STD("shutdown error: %s", uv_strerror(status));
+		MS_ERROR_STD("shutdown error: %s", uv_strerror(status));
 
 	// Now do close the handle.
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);

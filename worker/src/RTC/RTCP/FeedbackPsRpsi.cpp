@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsRpsiPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsRpsi.h"
 #include "Logger.h"
@@ -15,7 +16,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for Rpsi item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Rpsi item, discarded");
+
 			return nullptr;
 		}
 
@@ -37,15 +39,19 @@ namespace RTC { namespace RTCP
 		this->header = header;
 
 		// Calculate bit_string length.
-		if (this->header->padding_bits % 8 != 0) {
-			MS_WARN("invalid Rpsi packet with fractional padding bytes value");
+		if (this->header->padding_bits % 8 != 0)
+		{
+			MS_WARN_TAG(rtcp, "invalid Rpsi packet with fractional padding bytes value");
+
 			isCorrect = false;
 		}
 
 		size_t paddingBytes = this->header->padding_bits / 8;
 
-		if (paddingBytes > RpsiItem::MaxBitStringSize) {
-			MS_WARN("invalid Rpsi packet with too many padding bytes");
+		if (paddingBytes > RpsiItem::MaxBitStringSize)
+		{
+			MS_WARN_TAG(rtcp, "invalid Rpsi packet with too many padding bytes");
+
 			isCorrect = false;
 		}
 
@@ -89,13 +95,10 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Rpsi Item>");
-		MS_WARN("\t\t\tpadding bits: %u", this->header->padding_bits);
-		MS_WARN("\t\t\tpayload_type: %u", this->header->payload_type);
-		MS_WARN("\t\t\tlength: %zu", this->length);
-		MS_WARN("\t\t</Rpsi Item>");
+		MS_DEBUG_DEV("<RpsiItem>");
+		MS_DEBUG_DEV("  padding bits : %" PRIu8, this->header->padding_bits);
+		MS_DEBUG_DEV("  payload type : %" PRIu8, this->header->payload_type);
+		MS_DEBUG_DEV("  length       : %zu", this->length);
+		MS_DEBUG_DEV("</RpsiItem>");
 	}
 }}

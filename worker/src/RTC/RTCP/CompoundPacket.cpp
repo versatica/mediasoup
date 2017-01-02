@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::CompoundPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/CompoundPacket.h"
 #include "Logger.h"
@@ -18,15 +19,12 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		// Calculate the total required size for the entire message.
-
 		if (this->senderReportPacket.GetCount())
 		{
 			this->size = this->senderReportPacket.GetSize();
 
 			if (this->receiverReportPacket.GetCount())
-			{
 				this->size += sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount();
-			}
 		}
 		// If no sender nor receiver reports are present send an empty Receiver Report
 		// packet as the head of the compound packet.
@@ -56,7 +54,7 @@ namespace RTC { namespace RTCP
 				header->length += (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount()) / 4;
 
 				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
-				for (; it != this->receiverReportPacket.End(); ++it)
+				for (; it != this->receiverReportPacket.End(); it++)
 				{
 					ReceiverReport* report = (*it);
 
@@ -80,10 +78,9 @@ namespace RTC { namespace RTCP
 
 	void CompoundPacket::Dump()
 	{
-		MS_TRACE();
+		#ifdef MS_LOG_DEV
 
-		if (!Logger::HasDebugLevel())
-			return;
+		MS_TRACE();
 
 		if (this->senderReportPacket.GetCount())
 		{
@@ -93,8 +90,10 @@ namespace RTC { namespace RTCP
 			{
 				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
 
-				for (; it != this->receiverReportPacket.End(); ++it)
+				for (; it != this->receiverReportPacket.End(); it++)
+				{
 					(*it)->Dump();
+				}
 			}
 		}
 		else
@@ -104,6 +103,8 @@ namespace RTC { namespace RTCP
 
 		if (this->sdesPacket.GetCount())
 			this->sdesPacket.Dump();
+
+		#endif
 	}
 
 	void CompoundPacket::AddSenderReport(SenderReport* report)

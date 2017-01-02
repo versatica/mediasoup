@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::ReceiverReport"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/ReceiverReport.h"
 #include "Utils.h"
@@ -19,7 +20,8 @@ namespace RTC { namespace RTCP
 		// Packet size must be >= header size.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for receiver report, packet discarded");
+			MS_WARN_TAG(rtcp, "not enough space for receiver report, packet discarded");
+
 			return nullptr;
 		}
 
@@ -32,18 +34,15 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t<ReceiverReport>");
-		MS_WARN("\t\tssrc: %u", ntohl(this->header->ssrc));
-		MS_WARN("\t\tfraction_lost: %u", this->header->fraction_lost);
-		MS_WARN("\t\ttotal_lost: %d", this->GetTotalLost());
-		MS_WARN("\t\tlast_sec: %u", ntohl(this->header->last_sec));
-		MS_WARN("\t\tjitter: %u", ntohl(this->header->jitter));
-		MS_WARN("\t\tlsr: %u", ntohl(this->header->lsr));
-		MS_WARN("\t\tdlsr: %u", ntohl(this->header->dlsr));
-		MS_WARN("\t</ReceiverReport>");
+		MS_DEBUG_DEV("<ReceiverReport>");
+		MS_DEBUG_DEV("  ssrc          : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("  fraction lost : %" PRIu32, this->header->fraction_lost);
+		MS_DEBUG_DEV("  total lost    : %" PRIu32, this->GetTotalLost());
+		MS_DEBUG_DEV("  last seq      : %" PRIu32, ntohl(this->header->last_seq));
+		MS_DEBUG_DEV("  jitter        : %" PRIu32, ntohl(this->header->jitter));
+		MS_DEBUG_DEV("  lsr           : %" PRIu32, ntohl(this->header->lsr));
+		MS_DEBUG_DEV("  dlsr          : %" PRIu32, ntohl(this->header->dlsr));
+		MS_DEBUG_DEV("</ReceiverReport>");
 	}
 
 	void ReceiverReport::Serialize()
@@ -137,17 +136,16 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
+		#ifdef MS_LOG_DEV
 
-		MS_WARN("<ReceiverReportPacket>");
-		MS_WARN("\tssrc: %u", (uint32_t)ntohl(this->ssrc));
-
+		MS_DEBUG_DEV("<ReceiverReportPacket>");
+		MS_DEBUG_DEV("  ssrc: %" PRIu32, (uint32_t)ntohl(this->ssrc));
 		for (auto report : this->reports)
 		{
 			report->Dump();
 		}
+		MS_DEBUG_DEV("</ReceiverReportPacket>");
 
-		MS_WARN("</ReceiverReportPacket>");
+		#endif
 	}
 }}

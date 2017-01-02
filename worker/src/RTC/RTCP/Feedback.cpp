@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::Feedback"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/Feedback.h"
 // Feedback RTP.
@@ -41,7 +42,7 @@ namespace RTC { namespace RTCP
 		Packet(RTCP::Type(commonHeader->packet_type)),
 		messageType(typename T::MessageType(commonHeader->count))
 	{
-		// 1 => sizeof(CommonHeader)
+		// 1 => sizeof(CommonHeader).
 		this->header = (Header*)(commonHeader + 1);
 	}
 
@@ -83,12 +84,9 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\tsender_ssrc: %u", ntohl(this->header->s_ssrc));
-		MS_WARN("\tmedia_ssrc: %u", ntohl(this->header->m_ssrc));
-		MS_WARN("\tsize: %zu", this->GetSize());
+		MS_DEBUG_DEV("  sender ssrc : %" PRIu32, ntohl(this->header->s_ssrc));
+		MS_DEBUG_DEV("  media ssrc  : %" PRIu32, ntohl(this->header->m_ssrc));
+		MS_DEBUG_DEV("  size        : %zu", this->GetSize());
 	}
 
 	/* Specialization for Ps class. */
@@ -119,7 +117,8 @@ namespace RTC { namespace RTCP
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
-				MS_WARN("not enough space for Feedback packet, discarded");
+				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+
 				return nullptr;
 		}
 
@@ -171,7 +170,7 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-				MS_WARN("unknown RTCP PS Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
+				MS_WARN_TAG(rtcp, "unknown RTCP PS Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
 		}
 
 		return packet;
@@ -205,7 +204,8 @@ namespace RTC { namespace RTCP
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
-				MS_WARN("not enough space for Feedback packet, discarded");
+				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+
 				return nullptr;
 		}
 
@@ -248,7 +248,7 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-				MS_WARN("unknown RTCP RTP Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
+				MS_WARN_TAG(rtcp, "unknown RTCP RTP Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
 		}
 
 		return packet;

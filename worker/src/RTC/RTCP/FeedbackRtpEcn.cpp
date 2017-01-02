@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpEcnPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpEcn.h"
 #include "Logger.h"
@@ -15,7 +16,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for Ecn item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Ecn item, discarded");
+
 			return nullptr;
 		}
 
@@ -38,17 +40,14 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Ecn Item>");
-		MS_WARN("\t\tsequence_number: %d",    ntohl(this->header->sequence_number));
-		MS_WARN("\t\tect0_counter: %d",       ntohl(this->header->ect0_counter));
-		MS_WARN("\t\tect1_counter: %d",       ntohl(this->header->ect1_counter));
-		MS_WARN("\t\tecn_ce_counter: %d",     ntohs(this->header->ecn_ce_counter));
-		MS_WARN("\t\tnot_ect_counter: %d",    ntohs(this->header->not_ect_counter));
-		MS_WARN("\t\tlost_packets: %d",       ntohs(this->header->lost_packets));
-		MS_WARN("\t\tduplicated_packets: %d", ntohs(this->header->duplicated_packets));
-		MS_WARN("\t\t</Ecn Item>");
+		MS_DEBUG_DEV("<EcnItem>");
+		MS_DEBUG_DEV("  sequence number    : %" PRIu32, ntohl(this->header->sequence_number));
+		MS_DEBUG_DEV("  ect0 counter       : %" PRIu32, ntohl(this->header->ect0_counter));
+		MS_DEBUG_DEV("  ect1 counter       : %" PRIu32, ntohl(this->header->ect1_counter));
+		MS_DEBUG_DEV("  ecn ce counter     : %" PRIu16, ntohs(this->header->ecn_ce_counter));
+		MS_DEBUG_DEV("  not ect counter    : %" PRIu16, ntohs(this->header->not_ect_counter));
+		MS_DEBUG_DEV("  lost packets       : %" PRIu16, ntohs(this->header->lost_packets));
+		MS_DEBUG_DEV("  duplicated packets : %" PRIu16, ntohs(this->header->duplicated_packets));
+		MS_DEBUG_DEV("</EcnItem>");
 	}
 }}

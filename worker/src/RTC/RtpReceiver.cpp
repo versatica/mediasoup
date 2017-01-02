@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RtpReceiver"
+// #define MS_LOG_DEV
 
 #include "RTC/RtpReceiver.h"
 #include "RTC/Transport.h"
@@ -102,11 +103,14 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::rtpReceiver_close:
 			{
+				#ifdef MS_LOG_DEV
 				uint32_t rtpReceiverId = this->rtpReceiverId;
+				#endif
 
 				Close();
 
-				MS_DEBUG("RtpReceiver closed [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
+				MS_DEBUG_DEV("RtpReceiver closed [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
+
 				request->Accept();
 
 				break;
@@ -224,7 +228,7 @@ namespace RTC
 		static const Json::StaticString k_timestamp("timestamp");
 		static const Json::StaticString k_ssrc("ssrc");
 
-		// TODO: Check if stopped, etc (not yet done)
+		// TODO: Check if stopped, etc (not yet done).
 
 		// Process the packet.
 		// TODO: Must check what kind of packet we are checking. For example, RTX

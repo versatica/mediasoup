@@ -1,4 +1,5 @@
 #define MS_CLASS "UdpSocket"
+// #define MS_LOG_DEV
 
 #include "handles/UdpSocket.h"
 #include "Utils.h"
@@ -171,7 +172,7 @@ void UdpSocket::Close()
 
 void UdpSocket::Dump()
 {
-	MS_DEBUG("[UDP, local:%s :%" PRIu16 ", status:%s]",
+	MS_DEBUG_DEV("[UDP, local:%s :%" PRIu16 ", status:%s]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
 		(!this->isClosing) ? "open" : "closed");
 }
@@ -203,20 +204,20 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	}
 	else if (sent >= 0)
 	{
-		MS_WARN("datagram truncated (just %d of %zu bytes were sent)", sent, len);
+		MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 
 		return;
 	}
 	// Error,
 	else if (sent != UV_EAGAIN)
 	{
-		MS_WARN("uv_udp_try_send() failed: %s", uv_strerror(sent));
+		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
 
 		return;
 	}
 	// Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
 
-	// MS_DEBUG("could not send the datagram at first time, using uv_udp_send() now");
+	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.
 	UvSendData* send_data = (UvSendData*)std::malloc(sizeof(UvSendData) + len);
@@ -232,7 +233,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	{
 		// NOTE: uv_udp_send() returns error if a wrong INET family is given
 		// (IPv6 destination on a IPv4 binded socket), so be ready.
-		MS_WARN("uv_udp_send() failed: %s", uv_strerror(err));
+		MS_WARN_DEV("uv_udp_send() failed: %s", uv_strerror(err));
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(send_data);
@@ -339,7 +340,7 @@ void UdpSocket::onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockad
 	// Some error.
 	else
 	{
-		MS_DEBUG("read error: %s", uv_strerror(nread));
+		MS_DEBUG_DEV("read error: %s", uv_strerror(nread));
 	}
 }
 
@@ -351,7 +352,7 @@ void UdpSocket::onUvSendError(int error)
 	if (this->isClosing)
 		return;
 
-	MS_DEBUG("send error: %s", uv_strerror(error));
+	MS_DEBUG_DEV("send error: %s", uv_strerror(error));
 }
 
 inline

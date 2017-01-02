@@ -1,4 +1,5 @@
 #define MS_CLASS "DepUsrSCTP"
+// #define MS_LOG_DEV
 
 #include "DepUsrSCTP.h"
 #include "Logger.h"

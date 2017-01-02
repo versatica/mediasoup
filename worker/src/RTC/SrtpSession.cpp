@@ -1,10 +1,11 @@
 #define MS_CLASS "RTC::SrtpSession"
+// #define MS_LOG_DEV
 
 #include "RTC/SrtpSession.h"
 #include "DepLibSRTP.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
-#include <cstring>  // std::memset(), std::memcpy()
+#include <cstring> // std::memset(), std::memcpy()
 
 #define MS_ENCRYPT_BUFFER_SIZE 65536
 
@@ -34,16 +35,16 @@ namespace RTC
 		switch (data->event)
 		{
 			case event_ssrc_collision:
-				MS_WARN("SSRC collision occurred");
+				MS_WARN_TAG(srtp, "SSRC collision occurred");
 				break;
 			case event_key_soft_limit:
-				MS_WARN("stream reached the soft key usage limit and will expire soon");
+				MS_WARN_TAG(srtp, "stream reached the soft key usage limit and will expire soon");
 				break;
 			case event_key_hard_limit:
-				MS_WARN("stream reached the hard key usage limit and has expired");
+				MS_WARN_TAG(srtp, "stream reached the hard key usage limit and has expired");
 				break;
 			case event_packet_index_limit:
-				MS_WARN("stream reached the hard packet limit (2^48 packets)");
+				MS_WARN_TAG(srtp, "stream reached the hard packet limit (2^48 packets)");
 				break;
 		}
 	}
@@ -126,7 +127,7 @@ namespace RTC
 		// Ensure that the resulting SRTP packet fits into the encrypt buffer.
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
 		{
-			MS_WARN("cannot encrypt RTP packet, size too big (%zu bytes)", *len);
+			MS_WARN_TAG(srtp, "cannot encrypt RTP packet, size too big (%zu bytes)", *len);
 
 			return false;
 		}
@@ -138,8 +139,7 @@ namespace RTC
 		err = srtp_protect(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
-			// TODO
-			MS_WARN("srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_WARN_TAG(srtp, "srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
@@ -159,8 +159,7 @@ namespace RTC
 		err = srtp_unprotect(this->session, (void*)data, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
-			// TODO
-			MS_WARN("srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_WARN_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
@@ -175,7 +174,7 @@ namespace RTC
 		// Ensure that the resulting SRTCP packet fits into the encrypt buffer.
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
 		{
-			MS_WARN("cannot encrypt RTCP packet, size too big (%zu bytes)", *len);
+			MS_WARN_TAG(srtp, "cannot encrypt RTCP packet, size too big (%zu bytes)", *len);
 
 			return false;
 		}
@@ -187,8 +186,7 @@ namespace RTC
 		err = srtp_protect_rtcp(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
-			// TODO
-			MS_WARN("srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_WARN_TAG(srtp, "srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
@@ -208,8 +206,7 @@ namespace RTC
 		err = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
-			// TODO
-			MS_WARN("srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_WARN_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}

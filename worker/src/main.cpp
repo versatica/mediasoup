@@ -1,4 +1,5 @@
 #define MS_CLASS "main"
+// #define MS_LOG_DEV
 
 #include "common.h"
 #include "Settings.h"
@@ -17,7 +18,7 @@
 #include "Logger.h"
 #include <map>
 #include <string>
-#include <iostream> // std::cerr, std::endl
+#include <iostream> // std::cout, std::cerr, std::endl
 #include <cstdlib> // std::_Exit(), std::genenv()
 #include <csignal> // sigaction()
 #include <cerrno>
@@ -66,20 +67,20 @@ int main(int argc, char* argv[])
 	// Print the effective configuration.
 	Settings::PrintConfiguration();
 
-	MS_DEBUG("starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
+	MS_DEBUG_TAG(info, "starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
 
 	#if defined(MS_LITTLE_ENDIAN)
-		MS_DEBUG("Little-Endian CPU detected");
+		MS_DEBUG_TAG(info, "Little-Endian CPU detected");
 	#elif defined(MS_BIG_ENDIAN)
-		MS_DEBUG("Big-Endian CPU detected");
+		MS_DEBUG_TAG(info, "Big-Endian CPU detected");
 	#endif
 
 	#if defined(INTPTR_MAX) && defined(INT32_MAX) && (INTPTR_MAX == INT32_MAX)
-		MS_DEBUG("32 bits architecture detected");
+		MS_DEBUG_TAG(info, "32 bits architecture detected");
 	#elif defined(INTPTR_MAX) && defined(INT64_MAX) && (INTPTR_MAX == INT64_MAX)
-		MS_DEBUG("64 bits architecture detected");
+		MS_DEBUG_TAG(info, "64 bits architecture detected");
 	#else
-		MS_WARN("can not determine whether the architecture is 32 or 64 bits");
+		MS_WARN_TAG(info, "can not determine whether the architecture is 32 or 64 bits");
 	#endif
 
 	try
@@ -89,9 +90,8 @@ int main(int argc, char* argv[])
 		// Run the Loop.
 		Loop loop(channel);
 
+		// Loop ended.
 		destroy();
-
-		MS_DEBUG_STD("success exit");
 		exitSuccess();
 	}
 	catch (const MediaSoupError &error)
@@ -144,7 +144,7 @@ void ignoreSignals()
 	if (err)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
-	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); ++it)
+	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); it++)
 	{
 		auto& sig_name = it->first;
 		int sig_id = it->second;
