@@ -11,6 +11,7 @@
 #include "RTC/RTCP/FeedbackRtpTmmb.h"
 #include "RTC/RTCP/FeedbackRtpTllei.h"
 #include "RTC/RTCP/FeedbackRtpEcn.h"
+#include "RTC/RTCP/FeedbackPsSli.h"
 #include "Logger.h"
 #include <string>
 
@@ -475,5 +476,26 @@ FCTMF_SUITE_BGN(test_rtcp)
 	}
 	FCT_TEST_END()
 
+	FCT_TEST_BGN(parse_psfb_sli_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x08, 0x01, 0x01
+		};
+
+		uint16_t first = 1;
+		uint16_t number = 4;
+		uint8_t  pictureId = 1;
+
+		SliItem* item = SliItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetFirst(), first);
+		fct_chk_eq_int(item->GetNumber(), number);
+		fct_chk_eq_int(item->GetPictureId(), pictureId);
+
+		delete item;
+	}
+	FCT_TEST_END()
 }
 FCTMF_SUITE_END();
