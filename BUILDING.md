@@ -62,7 +62,7 @@ Validates the JavaScript code.
 
 ### `gulp capabilities`
 
-Reads **mediasoup** [media capabilities](data/supportedCapabilities) and inserts them into the worker C++ code. After that, `make Release` or `make Debug` must be called.
+Reads **mediasoup** [media capabilities](https://github.com/ibc/mediasoup/blob/master/data/supportedCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` or `make Debug` must be called.
 
 ### `gulp test`
 
