@@ -1,11 +1,13 @@
 #define MS_CLASS "TEST::RTCP"
 
 #include "fct.h"
+#include "common.h"
 #include "RTC/RTCP/Packet.h"
 #include "RTC/RTCP/Sdes.h"
 #include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/Bye.h"
+#include "RTC/RTCP/FeedbackRtpNack.h"
 #include "Logger.h"
 #include <string>
 
@@ -339,6 +341,53 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(*(it), ssrc1);
 		fct_chk_eq_int(*(++it), ssrc2);
 		fct_chk(bye2->GetReason() == reason);
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_rtpfb_nack_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x01, 0x02, 0x00
+		};
+
+		uint16_t packetId = 1;
+		uint16_t lostPacketBitmask = 2;
+
+		NackItem* item = NackItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetPacketId(), packetId);
+		fct_chk_eq_int(item->GetLostPacketBitmask(), lostPacketBitmask);
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(create_rtpfb_nack_item)
+	{
+		uint16_t packetId = 1;
+		uint16_t lostPacketBitmask = 2;
+
+		// Create local NackItem and check content.
+		// NackItem();
+		NackItem item1(packetId, lostPacketBitmask);
+		fct_chk_eq_int(item1.GetPacketId(), packetId);
+		fct_chk_eq_int(item1.GetLostPacketBitmask(), htons(lostPacketBitmask));
+
+		// Create local NackItem out of existing one and check content.
+		// NackItem(NackItem*);
+		NackItem item2(&item1);
+		fct_chk_eq_int(item2.GetPacketId(), packetId);
+		fct_chk_eq_int(item2.GetLostPacketBitmask(), htons(lostPacketBitmask));
+
+		// Locally store the content of the packet.
+		uint8_t buffer[item2.GetSize()];
+		item2.Serialize(buffer);
+
+		// Create local NackItem out of previous packet buffer and check content.
+		// NackItem(NackItem::Header*);
+		NackItem item3((NackItem::Header*)buffer);
+		fct_chk_eq_int(item3.GetPacketId(), packetId);
+		fct_chk_eq_int(item3.GetLostPacketBitmask(), htons(lostPacketBitmask));
 	}
 	FCT_TEST_END()
 }

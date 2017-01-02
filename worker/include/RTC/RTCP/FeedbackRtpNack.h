@@ -18,7 +18,7 @@ namespace RTC { namespace RTCP
 	class NackItem
 		: public FeedbackItem
 	{
-	private:
+	public:
 		struct Header
 		{
 			uint16_t packet_id;
