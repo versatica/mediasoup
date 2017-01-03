@@ -17,17 +17,21 @@ Builds a more verbose mediasoup and less optimized worker binary at `worker/out/
 
 Check the meaning of these macros in the [Logger.h](worker/include/Logger.h) header file.
 
-In order to instruct the **mediasoup** Node.js module to use the `Debug` mediasoup worker binary, an environment variable must be set before running the Node.js application or the internal test units:
+In order to instruct the **mediasoup** Node.js module to use the `Debug` mediasoup worker binary, an environment variable must be set before running the Node.js application or the JavaScript test units:
 
 ```bash
 $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
 ```
 
-Or, in order to run the internal test units with the `Debug` mediasoup worker:
+Or, in order to run the JavaScript test units with the `Debug` mediasoup worker:
 
 ```bash
 $ MEDIASOUP_BUILDTYPE=Debug gulp test-debug
 ```
+
+### `make test`
+
+Builds the `mediasoup-worker-test` test unit binary at `worker/out/Debug/` in `Debug` mode.
 
 ### `make xcode`
 
@@ -66,11 +70,15 @@ Reads **mediasoup** [media capabilities](https://github.com/ibc/mediasoup/blob/m
 
 ### `gulp test`
 
-Run the internal [test units](test/).
+Run the JavaScript [test units](test/).
 
 ### `gulp test-debug`
 
-Run the internal [test units](test/) in a more verbose fashion. Note however that running this task does not use the `Debug` mediasoup worker binary. If you wish to use it, set the `MEDIASOUP_BUILDTYPE` environment variable as explained above.
+Run the JavaScript [test units](test/) in a more verbose fashion. Note however that running this task does not use the `Debug` mediasoup worker binary. If you wish to use it, set the `MEDIASOUP_BUILDTYPE` environment variable as explained above.
+
+### `gulp test-worker`
+
+Run the mediasoup worker [test units](worker/test/). Take into account that, before running this task, the mediasoup worker test unit binary must be built by running `make test` (as explained above).
 
 ### `gulp`
 

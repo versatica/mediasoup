@@ -14,7 +14,7 @@
  * MS_TRACE()
  *
  *   Logs the current method/function if the current source file defines the
- *   MS_LOG_TRACE macro.
+ *   MS_LOG_TRACE macro and the current debug level is "debug".
  *
  * MS_DEBUG_TAG(tag, ...)
  * MS_WARN_TAG(tag, ...)
@@ -104,16 +104,22 @@ public:
 	#define MS_TRACE() \
 		do \
 		{ \
-			int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D(trace) " _MS_LOG_STR, _MS_LOG_ARG); \
-			Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+			if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel) \
+			{ \
+				int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D(trace) " _MS_LOG_STR, _MS_LOG_ARG); \
+				Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+			} \
 		} \
 		while (0)
 
 	#define MS_TRACE_STD() \
 		do \
 		{ \
-			std::fprintf(stdout, "(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG); \
-			std::fflush(stdout); \
+			if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel) \
+			{ \
+				std::fprintf(stdout, "(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG); \
+				std::fflush(stdout); \
+			} \
 		} \
 		while (0)
 #else

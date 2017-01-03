@@ -62,4 +62,12 @@ gulp.task('test-debug', shell.task(
 	}
 ));
 
+gulp.task('test-worker', shell.task(
+	[ 'worker/out/Debug/mediasoup-worker-test' ],
+	{
+		env     : { DEBUG: '*WARN* *ERROR* *ABORT*' },
+		verbose : true
+	}
+));
+
 gulp.task('default', gulp.series('lint'));
