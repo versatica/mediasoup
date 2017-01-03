@@ -12,6 +12,7 @@
 #include "RTC/RTCP/FeedbackRtpTllei.h"
 #include "RTC/RTCP/FeedbackRtpEcn.h"
 #include "RTC/RTCP/FeedbackPsSli.h"
+#include "RTC/RTCP/FeedbackPsRpsi.h"
 #include "Logger.h"
 #include <string>
 
@@ -493,6 +494,31 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(item->GetFirst(), first);
 		fct_chk_eq_int(item->GetNumber(), number);
 		fct_chk_eq_int(item->GetPictureId(), pictureId);
+
+		delete item;
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_psfb_rpsi_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x08,                   // Padding Bits
+			0x02,                   // Zero | Payload Type
+			0x00, 0x00,             // Native RPSI bit string
+			0x00, 0x00, 0x01, 0x00
+		};
+
+		uint8_t  payloadType = 1;
+		uint8_t  payloadMask = 1;
+		size_t length = 5;
+
+		RpsiItem* item = RpsiItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetPayloadType(), payloadType);
+		fct_chk_eq_int(item->GetLength(), length);
+		fct_chk_eq_int(item->GetBitString()[item->GetLength()-1] & 1, payloadMask);
 
 		delete item;
 	}
