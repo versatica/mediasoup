@@ -100,7 +100,7 @@ namespace RTC { namespace RTCP
 	template <typename T>
 	uint8_t TstItem<T>::GetIndex()
 	{
-		return (uint8_t)ntohl(this->header->index);
+		return (uint8_t)this->header->index;
 	}
 }}
 

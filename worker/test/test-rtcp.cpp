@@ -14,6 +14,7 @@
 #include "RTC/RTCP/FeedbackPsSli.h"
 #include "RTC/RTCP/FeedbackPsRpsi.h"
 #include "RTC/RTCP/FeedbackPsFir.h"
+#include "RTC/RTCP/FeedbackPsTst.h"
 #include "Logger.h"
 #include <string>
 
@@ -541,6 +542,30 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		fct_chk_eq_int(item->GetSsrc(), ssrc);
 		fct_chk_eq_int(item->GetSequenceNumber(), seq);
+
+		delete item;
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_psfb_tst_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x00, 0x00, 0x00, // SSRC
+			0x08,                   // Seq nr.
+			0x00, 0x00, 0x08        // Reserved | Index
+		};
+
+		uint32_t ssrc = 0;
+		uint8_t  seq = 8;
+		uint8_t  index = 1;
+
+		TstnItem* item = TstnItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetSsrc(), ssrc);
+		fct_chk_eq_int(item->GetSequenceNumber(), seq);
+		fct_chk_eq_int(item->GetIndex(), index);
 
 		delete item;
 	}
