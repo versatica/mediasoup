@@ -16,6 +16,7 @@
 #include "RTC/RTCP/FeedbackPsFir.h"
 #include "RTC/RTCP/FeedbackPsTst.h"
 #include "RTC/RTCP/FeedbackPsVbcm.h"
+#include "RTC/RTCP/FeedbackPsLei.h"
 #include "Logger.h"
 #include <string>
 
@@ -598,6 +599,24 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(item->GetPayloadType(), payloadType);
 		fct_chk_eq_int(item->GetLength(), length);
 		fct_chk_eq_int(item->GetValue()[item->GetLength() -1] & 1, valueMask);
+
+		delete item;
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_psfb_lei_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x00, 0x00, 0x01, // SSRC
+		};
+
+		uint32_t ssrc = 1;
+
+		PsLeiItem* item = PsLeiItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetSsrc(), ssrc);
 
 		delete item;
 	}
