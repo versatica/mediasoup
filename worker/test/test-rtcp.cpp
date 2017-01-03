@@ -13,6 +13,7 @@
 #include "RTC/RTCP/FeedbackRtpEcn.h"
 #include "RTC/RTCP/FeedbackPsSli.h"
 #include "RTC/RTCP/FeedbackPsRpsi.h"
+#include "RTC/RTCP/FeedbackPsFir.h"
 #include "Logger.h"
 #include <string>
 
@@ -519,6 +520,27 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(item->GetPayloadType(), payloadType);
 		fct_chk_eq_int(item->GetLength(), length);
 		fct_chk_eq_int(item->GetBitString()[item->GetLength()-1] & 1, payloadMask);
+
+		delete item;
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_psfb_fir_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x00, 0x00, 0x00, // SSRC
+			0x08, 0x00, 0x00, 0x00, // Seq nr.
+		};
+
+		uint32_t  ssrc = 0;
+		uint8_t  seq = 8;
+
+		FirItem* item = FirItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetSsrc(), ssrc);
+		fct_chk_eq_int(item->GetSequenceNumber(), seq);
 
 		delete item;
 	}
