@@ -608,34 +608,6 @@ namespace RTC
 		rtpReceiver->ReceiveRtcpReceiverReport(report);
 	}
 
-	void Room::onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
-
-		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
-
-		for (auto& rtpSender : rtpSenders)
-		{
-			rtpSender->ReceiveRtcpSenderReport(report);
-		}
-	}
-
-	void Room::onPeerRtcpSdesChunk(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SdesChunk* chunk)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
-
-		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
-
-		for (auto& rtpSender : rtpSenders)
-		{
-			rtpSender->ReceiveRtcpSdesChunk(chunk);
-		}
-	}
-
 	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
@@ -685,6 +657,34 @@ namespace RTC
 			{
 				rtpReceiver->ReceiveRtcpFeedback(packet);
 			}
+		}
+	}
+
+	void Room::onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+
+		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+
+		for (auto& rtpSender : rtpSenders)
+		{
+			rtpSender->ReceiveRtcpSenderReport(report);
+		}
+	}
+
+	void Room::onPeerRtcpSdesChunk(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SdesChunk* chunk)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+
+		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+
+		for (auto& rtpSender : rtpSenders)
+		{
+			rtpSender->ReceiveRtcpSdesChunk(chunk);
 		}
 	}
 

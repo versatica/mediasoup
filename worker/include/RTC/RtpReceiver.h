@@ -47,7 +47,6 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
-		// TODO
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);

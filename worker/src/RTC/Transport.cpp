@@ -814,6 +814,7 @@ namespace RTC
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		// this->iceServer->ForceSelectedTuple(tuple);
 
+		// Delete the whole packet.
 		while (packet)
 		{
 			RTC::RTCP::Packet* next_packet = packet->GetNext();

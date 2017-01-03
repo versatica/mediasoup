@@ -40,7 +40,6 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		// TODO
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport();
 		void ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk);

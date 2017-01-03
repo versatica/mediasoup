@@ -712,18 +712,17 @@ namespace RTC
 				case RTCP::Type::RR:
 				{
 					RTCP::ReceiverReportPacket* rr = static_cast<RTCP::ReceiverReportPacket*>(packet);
-
 					RTCP::ReceiverReportPacket::Iterator it = rr->Begin();
+
 					for (; it != rr->End(); it++)
 					{
 						auto& report = (*it);
-
 						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
 
-						if (!rtpSender)
-							MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Receiver Report [ssrc:%" PRIu32 "]", report->GetSsrc());
-						else
+						if (rtpSender)
 							this->listener->onPeerRtcpReceiverReport(this, rtpSender, report);
+						else
+							MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Receiver Report [ssrc:%" PRIu32 "]", report->GetSsrc());
 					}
 
 					break;
@@ -732,13 +731,12 @@ namespace RTC
 				case RTCP::Type::PSFB:
 				{
 					RTCP::FeedbackPsPacket* feedback = static_cast<RTCP::FeedbackPsPacket*>(packet);
-
 					RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-					if (!rtpSender)
-						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
-					else
+					if (rtpSender)
 						this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+					else
+						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
 
 					break;
 				}
@@ -746,13 +744,12 @@ namespace RTC
 				case RTCP::Type::RTPFB:
 				{
 					RTCP::FeedbackRtpPacket* feedback = static_cast<RTCP::FeedbackRtpPacket*>(packet);
-
 					RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-					if (!rtpSender)
-						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
-					else
+					if (rtpSender)
 						this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+					else
+						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
 
 					break;
 				}
@@ -768,14 +765,13 @@ namespace RTC
 					for (; it != sr->End(); it++)
 					{
 						auto& report = (*it);
-
 						// Get the receiver associated to the SSRC indicated in the report.
 						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
 
-						if (!rtpReceiver)
-							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a Sender Report [ssrc:%" PRIu32 "]", report->GetSsrc());
-						else
+						if (rtpReceiver)
 							this->listener->onPeerRtcpSenderReport(this, rtpReceiver, report);
+						else
+							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a Sender Report [ssrc:%" PRIu32 "]", report->GetSsrc());
 					}
 
 					break;
@@ -789,25 +785,29 @@ namespace RTC
 					for (; it != sdes->End(); it++)
 					{
 						auto& chunk = (*it);
-
 						// Get the receiver associated to the SSRC indicated in the chunk.
 						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
 
-						if (!rtpReceiver)
-							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
-						else
+						if (rtpReceiver)
 							this->listener->onPeerRtcpSdesChunk(this, rtpReceiver, chunk);
+						else
+							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
 					}
 
 					break;
 				}
 
 				case RTCP::Type::BYE:
+				{
+					MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
+
 					break;
+				}
 
 				default:
+				{
 					MS_WARN_TAG(rtcp, "unhandled RTCP type received [type:%" PRIu8 "]", (uint8_t)packet->GetType());
-					break;
+				}
 			}
 
 			packet = packet->GetNext();
