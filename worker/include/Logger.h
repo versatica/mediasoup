@@ -13,8 +13,8 @@
  *
  * MS_TRACE()
  *
- *   Logs the current method/function if the current source file defines the
- *   MS_LOG_TRACE macro and the current debug level is "debug".
+ *   Logs the current method/function if MS_LOG_TRACE macro is defined and the
+ *   current debug level is "debug".
  *
  * MS_DEBUG_TAG(tag, ...)
  * MS_WARN_TAG(tag, ...)
