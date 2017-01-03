@@ -128,9 +128,8 @@ namespace RTC
 				MS_DEBUG_DEV("port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iterating_port, attempt);
 
 				// If we have tried all the ports in the range raise an error.
-				if (iterating_port == initial_port) {
+				if (iterating_port == initial_port)
 					MS_THROW_ERROR("no more available ports for IP '%s'", listen_ip);
-				}
 
 				continue;
 			}

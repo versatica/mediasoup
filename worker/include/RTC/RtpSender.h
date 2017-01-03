@@ -66,8 +66,7 @@ namespace RTC
 		std::unordered_map<uint8_t, uint8_t> mapPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
-
-		// Sender Report holding the RTP stats
+		// Sender Report holding the RTP stats.
 		std::auto_ptr<RTC::RTCP::SenderReport> senderReport;
 		std::auto_ptr<RTC::RTCP::SdesChunk> sdesChunk;
 	};

@@ -132,39 +132,62 @@ namespace RTC
 			switch (attr_type)
 			{
 				case Attribute::Username:
+				{
 					msg->SetUsername((const char*)attr_value_pos, (size_t)attr_length);
+
 					break;
+				}
 				case Attribute::Priority:
+				{
 					msg->SetPriority(Utils::Byte::Get4Bytes(attr_value_pos, 0));
+
 					break;
+				}
 				case Attribute::IceControlling:
+				{
 					msg->SetIceControlling(Utils::Byte::Get8Bytes(attr_value_pos, 0));
+
 					break;
+				}
 				case Attribute::IceControlled:
+				{
 					msg->SetIceControlled(Utils::Byte::Get8Bytes(attr_value_pos, 0));
+
 					break;
+				}
 				case Attribute::UseCandidate:
+				{
 					msg->SetUseCandidate();
+
 					break;
+				}
 				case Attribute::MessageIntegrity:
+				{
 					has_message_integrity = true;
 					msg->SetMessageIntegrity(attr_value_pos);
+
 					break;
+				}
 				case Attribute::Fingerprint:
+				{
 					has_fingerprint = true;
 					fingerprint_attr_pos = pos;
 					fingerprint = Utils::Byte::Get4Bytes(attr_value_pos, 0);
 					msg->SetFingerprint();
+
 					break;
-				case Attribute::ErrorCode: {
+				}
+				case Attribute::ErrorCode:
+				{
 					uint8_t error_class = Utils::Byte::Get1Byte(attr_value_pos, 2);
 					uint8_t error_number = Utils::Byte::Get1Byte(attr_value_pos, 3);
 					uint16_t error_code = (uint16_t)(error_class * 100 + error_number);
 					msg->SetErrorCode(error_code);
+
 					break;
 				}
 				default:
-					break;
+					;
 			}
 
 			// Set next attribute position.
@@ -415,21 +438,30 @@ namespace RTC
 		if (this->hasUseCandidate)
 			this->length += 4;
 
-		if (add_xor_mapped_address) {
-			switch (this->xorMappedAddress->sa_family) {
+		if (add_xor_mapped_address)
+		{
+			switch (this->xorMappedAddress->sa_family)
+			{
 				case AF_INET:
+				{
 					xor_mapped_address_padded_len = 8;
 					this->length += 4 + 8;
+
 					break;
+				}
 				case AF_INET6:
+				{
 					xor_mapped_address_padded_len = 20;
 					this->length += 4 + 20;
+
 					break;
+				}
 				default:
+				{
 					MS_ERROR("invalid inet family in XOR-MAPPED-ADDRESS attribute");
 
 					add_xor_mapped_address = false;
-					break;
+				}
 			}
 		}
 
@@ -522,7 +554,8 @@ namespace RTC
 			uint8_t* attr_value = this->raw + pos + 4;
 			switch (this->xorMappedAddress->sa_family)
 			{
-				case AF_INET: {
+				case AF_INET:
+				{
 					// Set first byte to 0.
 					attr_value[0] = 0;
 					// Set inet family.
@@ -539,6 +572,7 @@ namespace RTC
 					attr_value[7] ^= StunMessage::magicCookie[3];
 
 					pos += 4 + 8;
+
 					break;
 				}
 				case AF_INET6:
@@ -571,6 +605,7 @@ namespace RTC
 					attr_value[19] ^= this->transactionId[11];
 
 					pos += 4 + 20;
+
 					break;
 				}
 			}

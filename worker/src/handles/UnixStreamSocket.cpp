@@ -134,7 +134,8 @@ void UnixStreamSocket::Close()
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
 	// Otherwise directly close the socket.
-	else {
+	else
+	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
 	}
 }
