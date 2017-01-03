@@ -37,8 +37,8 @@
     'xcode_settings':
     {
       'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
-      'GCC_WARN_ABOUT_MISSING_NEWLINE': 'YES',  # -Wnewline-eof
-      'PREBINDING': 'NO',                       # No -Wl,-prebind
+      'GCC_WARN_ABOUT_MISSING_NEWLINE': 'YES', # -Wnewline-eof
+      'PREBINDING': 'NO',                      # No -Wl,-prebind
       'OTHER_CFLAGS':
       [
         '-fstrict-aliasing',
@@ -57,10 +57,10 @@
     'conditions':
     [
       [ 'target_arch == "ia32"', {
-        'xcode_settings': { 'ARCHS': ['i386'] }
+        'xcode_settings': { 'ARCHS': [ 'i386' ] }
       }],
-      ['target_arch == "x64"', {
-        'xcode_settings': { 'ARCHS': ['x86_64'] }
+      [ 'target_arch == "x64"', {
+        'xcode_settings': { 'ARCHS': [ 'x86_64' ] }
       }],
       [ 'OS in "linux freebsd openbsd solaris"', {
         'target_conditions':

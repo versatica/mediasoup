@@ -161,10 +161,10 @@
       # Endianness
       [ 'node_byteorder=="big"', {
           # Define Big Endian
-          'defines': ['MS_BIG_ENDIAN']
+          'defines': [ 'MS_BIG_ENDIAN' ]
         }, {
           # Define Little Endian
-          'defines': ['MS_LITTLE_ENDIAN']
+          'defines': [ 'MS_LITTLE_ENDIAN' ]
       }],
 
       # Platform-specifics
@@ -226,7 +226,7 @@
     },
     {
       'target_name': 'mediasoup-worker-test',
-      'defines': ['MS_LOG_STD'],
+      'defines': [ 'MS_LOG_STD' ],
       'sources':
       [
         # C++ source files
