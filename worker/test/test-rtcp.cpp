@@ -232,7 +232,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 			0x00, 0x00, 0x04, 0xD2,	// ssrc
 			0x01,			// fraction_lost
 			0x00, 0x00, 0x04,	// total_lost
-			0x00, 0x00, 0x04, 0xD2,	// last_sec
+			0x00, 0x00, 0x04, 0xD2,	// last_seq
 			0x00, 0x00, 0x04, 0xD2,	// jitter
 			0x00, 0x00, 0x04, 0xD2,	// lsr
 			0x00, 0x00, 0x04, 0xD2,	// dlsr
@@ -241,7 +241,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint32_t ssrc = 1234;
 		uint8_t fractionLost = 1;
 		int32_t totalLost = 4;
-		uint32_t lastSec = 1234;
+		uint32_t lastSeq = 1234;
 		uint32_t jitter = 1234;
 		uint32_t lastSenderReport = 1234;
 		uint32_t delaySinceLastSenderReport = 1234;
@@ -252,7 +252,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(report->GetSsrc(), ssrc);
 		fct_chk_eq_int(report->GetFractionLost(), fractionLost);
 		fct_chk_eq_int(report->GetTotalLost(), totalLost);
-		fct_chk_eq_int(report->GetLastSec(), lastSec);
+		fct_chk_eq_int(report->GetLastSeq(), lastSeq);
 		fct_chk_eq_int(report->GetJitter(), jitter);
 		fct_chk_eq_int(report->GetLastSenderReport(), lastSenderReport);
 		fct_chk_eq_int(report->GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
@@ -264,7 +264,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint32_t ssrc = 1234;
 		uint8_t fractionLost = 1;
 		int32_t totalLost = 4;
-		uint32_t lastSec = 1234;
+		uint32_t lastSeq = 1234;
 		uint32_t jitter = 1234;
 		uint32_t lastSenderReport = 1234;
 		uint32_t delaySinceLastSenderReport = 1234;
@@ -276,7 +276,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 		report1.SetSsrc(ssrc);
 		report1.SetFractionLost(fractionLost);
 		report1.SetTotalLost(totalLost);
-		report1.SetLastSec(lastSec);
+		report1.SetLastSeq(lastSeq);
 		report1.SetJitter(jitter);
 		report1.SetLastSenderReport(lastSenderReport);
 		report1.SetDelaySinceLastSenderReport(delaySinceLastSenderReport);
@@ -284,7 +284,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(report1.GetSsrc(), ssrc);
 		fct_chk_eq_int(report1.GetFractionLost(), fractionLost);
 		fct_chk_eq_int(report1.GetTotalLost(), totalLost);
-		fct_chk_eq_int(report1.GetLastSec(), lastSec);
+		fct_chk_eq_int(report1.GetLastSeq(), lastSeq);
 		fct_chk_eq_int(report1.GetJitter(), jitter);
 		fct_chk_eq_int(report1.GetLastSenderReport(), lastSenderReport);
 		fct_chk_eq_int(report1.GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
@@ -296,7 +296,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(report2.GetSsrc(), ssrc);
 		fct_chk_eq_int(report2.GetFractionLost(), fractionLost);
 		fct_chk_eq_int(report2.GetTotalLost(), totalLost);
-		fct_chk_eq_int(report2.GetLastSec(), lastSec);
+		fct_chk_eq_int(report2.GetLastSeq(), lastSeq);
 		fct_chk_eq_int(report2.GetJitter(), jitter);
 		fct_chk_eq_int(report2.GetLastSenderReport(), lastSenderReport);
 		fct_chk_eq_int(report2.GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
@@ -311,7 +311,7 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(report2.GetSsrc(), ssrc);
 		fct_chk_eq_int(report2.GetFractionLost(), fractionLost);
 		fct_chk_eq_int(report2.GetTotalLost(), totalLost);
-		fct_chk_eq_int(report2.GetLastSec(), lastSec);
+		fct_chk_eq_int(report2.GetLastSeq(), lastSeq);
 		fct_chk_eq_int(report2.GetJitter(), jitter);
 		fct_chk_eq_int(report2.GetLastSenderReport(), lastSenderReport);
 		fct_chk_eq_int(report2.GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
