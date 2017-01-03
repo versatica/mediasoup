@@ -31,7 +31,7 @@ namespace RTC { namespace RTCP
 		{
 			uint8_t type;
 			uint8_t length;
-			char	value[];
+			char value[];
 		};
 
 	public:

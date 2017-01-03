@@ -4,7 +4,7 @@
 [![][travis-ci-shield-mediasoup]][travis-ci-mediasoup]
 
 
-**Status:** Coming soon (check the project [milestones](https://github.com/ibc/mediasoup/milestones)).
+**Status:** v1.0.0 coming soon.
 
 
 ## Website and documentation
@@ -20,6 +20,8 @@ You can support **mediasoup** by making a donation [here][paypal-url]. Thanks!
 
 ## Installation
 
+Within your Node.js application:
+
 ```bash
 $ npm install mediasoup --save
 ```
@@ -27,25 +29,26 @@ $ npm install mediasoup --save
 
 ## Design goals
 
-* Be a Node.js module
-* Be minimalist: just handle the media layer
-* Expose a modern ECMAScript 6 [API](/api/) in sync with [ORTC](http://ortc.org/)
-* Work with current [WebRTC](https://webrtc.org) client implementations
+* Be a Node.js module.
+* Be minimalist: just handle the media layer.
+* Expose a modern ECMAScript 6 [API](/api/) in sync with [WebRTC 1.0](https://w3c.github.io/webrtc-pc/) and [ORTC](http://ortc.org/).
+* Work with current WebRTC client implementations.
 
 
 ## Features
 
-* Multiple conference rooms with multiple participants
-* IPv6 ready
-* ICE / DTLS / RTP / RTCP over UDP and TCP
-* Extremely powerful (media handler subprocess coded in C++ on top of [libuv](http://libuv.org))
-* Can handle RTP packets in JavaScript land
+* Multiple conference rooms with multiple participants.
+* IPv6 ready.
+* ICE / DTLS / RTP / RTCP over UDP and TCP.
+* Extremely powerful (media worker subprocess coded in C++ on top of [libuv](http://libuv.org)).
+* Can handle RTP packets in JavaScript land.
 
 
 ## Requirements
 
 * Node.js >= `v4.0.0`
 * POSIX based operating system (Windows not yet supported)
+* `Python` 2
 * `make`
 * `gcc` or `clang` with C++11 support
 

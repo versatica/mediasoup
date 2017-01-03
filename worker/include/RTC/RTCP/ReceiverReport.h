@@ -17,7 +17,7 @@ namespace RTC { namespace RTCP
 			uint32_t ssrc;
 			uint32_t fraction_lost:8;
 			uint32_t total_lost:24;
-			uint32_t last_sec;
+			uint32_t last_seq;
 			uint32_t jitter;
 			uint32_t lsr;
 			uint32_t dlsr;
@@ -46,8 +46,8 @@ namespace RTC { namespace RTCP
 		void SetFractionLost(uint8_t fraction_lost);
 		int32_t GetTotalLost();
 		void SetTotalLost(int32_t total_lost);
-		uint32_t GetLastSec();
-		void SetLastSec(uint32_t last_sec);
+		uint32_t GetLastSeq();
+		void SetLastSeq(uint32_t last_seq);
 		uint32_t GetJitter();
 		void SetJitter(uint32_t jitter);
 		uint32_t GetLastSenderReport();
@@ -161,15 +161,15 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t ReceiverReport::GetLastSec()
+	uint32_t ReceiverReport::GetLastSeq()
 	{
-		return (uint32_t)ntohl(this->header->last_sec);
+		return (uint32_t)ntohl(this->header->last_seq);
 	}
 
 	inline
-	void ReceiverReport::SetLastSec(uint32_t last_sec)
+	void ReceiverReport::SetLastSeq(uint32_t last_seq)
 	{
-		this->header->last_sec = (uint32_t)htonl(last_sec);
+		this->header->last_seq = (uint32_t)htonl(last_seq);
 	}
 
 	inline

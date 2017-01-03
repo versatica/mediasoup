@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::Room"
+// #define MS_LOG_DEV
 
 #include "RTC/Room.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
@@ -194,11 +195,14 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::room_close:
 			{
+				#ifdef MS_LOG_DEV
 				uint32_t roomId = this->roomId;
+				#endif
 
 				Close();
 
-				MS_DEBUG("Room closed [roomId:%" PRIu32 "]", roomId);
+				MS_DEBUG_DEV("Room closed [roomId:%" PRIu32 "]", roomId);
+
 				request->Accept();
 
 				break;
@@ -258,7 +262,7 @@ namespace RTC
 				// Store the new Peer.
 				this->peers[peerId] = peer;
 
-				MS_DEBUG("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
+				MS_DEBUG_DEV("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
 
 				request->Accept();
 
@@ -441,7 +445,7 @@ namespace RTC
 			auto& peerCodecCapability = *it;
 			auto it2 = this->capabilities.codecs.begin();
 
-			for (; it2 != this->capabilities.codecs.end(); ++it2)
+			for (; it2 != this->capabilities.codecs.end(); it2++)
 			{
 				auto& roomCodecCapability = *it2;
 
@@ -450,13 +454,9 @@ namespace RTC
 			}
 
 			if (it2 != this->capabilities.codecs.end())
-			{
 				it++;
-			}
 			else
-			{
 				it = capabilities->codecs.erase(it);
-			}
 		}
 
 		// TODO: Remove unsupported header extensions.
@@ -692,8 +692,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Tell all the peers but the one in the argument to generate and send their RTCP
-		for (auto it = this->peers.begin(); it != this->peers.end(); ++it)
+		// Tell all the peers but the one in the argument to generate and send their RTCP.
+		for (auto it = this->peers.begin(); it != this->peers.end(); it++)
 		{
 			if (it->second != peer) {
 				it->second->SendRtcp();

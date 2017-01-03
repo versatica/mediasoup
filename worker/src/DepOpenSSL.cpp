@@ -1,10 +1,11 @@
 #define MS_CLASS "DepOpenSSL"
+// #define MS_LOG_DEV
 
 #include "DepOpenSSL.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <openssl/err.h>
-#include <openssl/engine.h>  // ENGINE_cleanup()
+#include <openssl/engine.h> // ENGINE_cleanup()
 
 /* Static attributes. */
 
@@ -18,7 +19,7 @@ void DepOpenSSL::ClassInit()
 {
 	MS_TRACE();
 
-	MS_DEBUG("loaded openssl version: %s", SSLeay_version(SSLEAY_VERSION));
+	MS_DEBUG_TAG(info, "loaded openssl version: %s", SSLeay_version(SSLEAY_VERSION));
 
 	// Initialize OpenSSL stuff.
 	SSL_load_error_strings();
@@ -105,7 +106,7 @@ void DepOpenSSL::LockingFunction(int mode, int n, const char *file, int line)
 	 * - line:  line in the source file calling this function.
 	 */
 
-	// MS_DEBUG("[mode: %s+%s, mutex id: %d, file: %s, line: %d]", mode & CRYPTO_LOCK ? "LOCK" : "UNLOCK", mode & CRYPTO_READ ? "READ" : "WRITE", n, file, line);
+	// MS_DEBUG_DEV("[mode: %s+%s, mutex id: %d, file: %s, line: %d]", mode & CRYPTO_LOCK ? "LOCK" : "UNLOCK", mode & CRYPTO_READ ? "READ" : "WRITE", n, file, line);
 
 	if (mode & CRYPTO_LOCK)
 		uv_mutex_lock(&DepOpenSSL::mutexes[n]);

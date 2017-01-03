@@ -1,12 +1,13 @@
 #define MS_CLASS "Channel::UnixStreamSocket"
+// #define MS_LOG_DEV
 
 #include "Channel/UnixStreamSocket.h"
 #include "Logger.h"
 #include "MediaSoupError.h"
-#include <sstream>  // std::ostringstream
-#include <cstring>  // std::memmove()
-#include <cmath>  // std::ceil()
-#include <cstdio>  // sprintf()
+#include <sstream> // std::ostringstream
+#include <cstring> // std::memmove()
+#include <cmath> // std::ceil()
+#include <cstdio> // sprintf()
 extern "C"
 {
 	#include <netstring.h>
@@ -210,8 +211,6 @@ namespace Channel
 				switch (ns_ret)
 				{
 					case NETSTRING_ERROR_TOO_SHORT:
-						// MS_DEBUG_STD("received netstring is too short, need more data");
-
 						// Check if the buffer is full.
 						if (this->bufferDataLen == this->bufferSize)
 						{
@@ -219,8 +218,6 @@ namespace Channel
 							// the buffer, so move the incomplete message to the position 0.
 							if (this->msgStart != 0)
 							{
-								// MS_DEBUG_STD("no more space in the buffer, moving parsed bytes to the beginning of the buffer and waiting for more data");
-
 								std::memmove(this->buffer, this->buffer + this->msgStart, read_len);
 								this->msgStart = 0;
 								this->bufferDataLen = read_len;
@@ -306,8 +303,6 @@ namespace Channel
 			// the latest parsed message filled it, then empty the full buffer.
 			if ((this->msgStart + read_len) == this->bufferSize)
 			{
-				// MS_DEBUG_STD("no more space in the buffer, emptying the buffer data");
-
 				this->msgStart = 0;
 				this->bufferDataLen = 0;
 			}
@@ -322,8 +317,6 @@ namespace Channel
 			// then parse again. Otherwise break here and wait for more data.
 			if (this->bufferDataLen > this->msgStart)
 			{
-				// MS_DEBUG_STD("there is more data after the parsed message, continue parsing");
-
 				continue;
 			}
 			else

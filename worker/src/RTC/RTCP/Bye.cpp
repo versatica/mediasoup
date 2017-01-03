@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::Bye"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/Bye.h"
 #include "Utils.h"
@@ -25,7 +26,8 @@ namespace RTC { namespace RTCP
 		{
 			if (sizeof(uint32_t) > len-offset)
 			{
-				MS_WARN("not enough space for SSRC in RTCP Bye message");
+				MS_WARN_TAG(rtcp, "not enough space for SSRC in RTCP Bye message");
+
 				return nullptr;
 			}
 
@@ -84,21 +86,19 @@ namespace RTC { namespace RTCP
 
 	void ByePacket::Dump()
 	{
+		#ifdef MS_LOG_DEV
+
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("<Bye Packet>");
-
+		MS_DEBUG_DEV("<ByePacket>");
 		for (auto ssrc : this->ssrcs)
 		{
-			MS_WARN("\tssrc: %u", ssrc);
+			MS_DEBUG_DEV("  ssrc   : %" PRIu32, ssrc);
 		}
-
 		if (!this->reason.empty())
-			MS_WARN("\treason: %s", this->reason.c_str());
+			MS_DEBUG_DEV("  reason : %s", this->reason.c_str());
+		MS_DEBUG_DEV("</ByePacket>");
 
-		MS_WARN("</Bye Packet>");
+		#endif
 	}
 }}

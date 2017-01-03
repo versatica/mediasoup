@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RtpListener"
+// #define MS_LOG_DEV
 
 #include "RTC/RtpListener.h"
 #include "MediaSoupError.h"
@@ -194,7 +195,7 @@ namespace RTC
 		{
 			auto it = rtpParameters->encodings.begin();
 
-			for (; it != rtpParameters->encodings.end(); ++it)
+			for (; it != rtpParameters->encodings.end(); it++)
 			{
 				auto& encoding = *it;
 
@@ -283,8 +284,7 @@ namespace RTC
 				}
 
 				// RTP PT not present.
-				// TODO: We don't want to log every warning.
-				MS_WARN("unknown RTP payloadType [payloadType:%" PRIu8 "]", packet->GetPayloadType());
+				MS_WARN_TAG(rtp, "unknown RTP payloadType [payloadType:%" PRIu8 "]", packet->GetPayloadType());
 
 				// TODO: We may emit "unhandledrtp" event.
 				return nullptr;

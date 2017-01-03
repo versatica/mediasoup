@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::IceServer"
+// #define MS_LOG_DEV
 
 #include "RTC/IceServer.h"
 #include "Logger.h"
@@ -14,7 +15,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG("[usernameFragment:%s, password:%s]", this->usernameFragment.c_str(), this->password.c_str());
+		MS_DEBUG_TAG(ice, "[usernameFragment:%s, password:%s]", this->usernameFragment.c_str(), this->password.c_str());
 	}
 
 	void IceServer::Close()
@@ -33,7 +34,7 @@ namespace RTC
 		{
 			if (msg->GetClass() == RTC::StunMessage::Class::Request)
 			{
-				MS_DEBUG("unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
+				MS_WARN_TAG(ice, "unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
 
 				// Reply 400.
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
@@ -43,7 +44,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_DEBUG("ignoring STUN Indication or Response with unknown method %#.3x", (unsigned int)msg->GetMethod());
+				MS_WARN_TAG(ice, "ignoring STUN Indication or Response with unknown method %#.3x", (unsigned int)msg->GetMethod());
 			}
 
 			return;
@@ -54,7 +55,7 @@ namespace RTC
 		{
 			if (msg->GetClass() == RTC::StunMessage::Class::Request)
 			{
-				MS_DEBUG("STUN Binding Request without FINGERPRINT => 400");
+				MS_WARN_TAG(ice, "STUN Binding Request without FINGERPRINT => 400");
 
 				// Reply 400.
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
@@ -64,7 +65,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_DEBUG("ignoring STUN Binding Response without FINGERPRINT");
+				MS_WARN_TAG(ice, "ignoring STUN Binding Response without FINGERPRINT");
 			}
 
 			return;
@@ -77,7 +78,7 @@ namespace RTC
 				// USERNAME, MESSAGE-INTEGRITY and PRIORITY are required.
 				if (!msg->HasMessageIntegrity() || !msg->GetPriority() || msg->GetUsername().empty())
 				{
-					MS_DEBUG("mising required attributes in STUN Binding Request => 400");
+					MS_WARN_TAG(ice, "mising required attributes in STUN Binding Request => 400");
 
 					// Reply 400.
 					RTC::StunMessage* response = msg->CreateErrorResponse(400);
@@ -96,7 +97,7 @@ namespace RTC
 
 					case RTC::StunMessage::Authentication::Unauthorized:
 					{
-						MS_DEBUG("wrong authentication in STUN Binding Request => 401");
+						MS_WARN_TAG(ice, "wrong authentication in STUN Binding Request => 401");
 
 						// Reply 401.
 						RTC::StunMessage* response = msg->CreateErrorResponse(401);
@@ -109,7 +110,7 @@ namespace RTC
 
 					case RTC::StunMessage::Authentication::BadRequest:
 					{
-						MS_DEBUG("cannot check authentication in STUN Binding Request => 400");
+						MS_WARN_TAG(ice, "cannot check authentication in STUN Binding Request => 400");
 
 						// Reply 400.
 						RTC::StunMessage* response = msg->CreateErrorResponse(400);
@@ -124,7 +125,7 @@ namespace RTC
 				// The remote peer must be ICE controlling.
 				if (msg->GetIceControlled())
 				{
-					MS_DEBUG("peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
+					MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
 
 					// Reply 487 (Role Conflict).
 					RTC::StunMessage* response = msg->CreateErrorResponse(487);
@@ -135,8 +136,7 @@ namespace RTC
 					return;
 				}
 
-				// TODO: yes or no
-				// MS_DEBUG("processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]", (uint32_t)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
+				MS_DEBUG_TAG(ice, "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]", (uint32_t)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
 				RTC::StunMessage* response = msg->CreateSuccessResponse();
@@ -160,21 +160,21 @@ namespace RTC
 
 			case RTC::StunMessage::Class::Indication:
 			{
-				MS_DEBUG("STUN Binding Indication processed");
+				MS_DEBUG_TAG(ice, "STUN Binding Indication processed");
 
 				break;
 			}
 
 			case RTC::StunMessage::Class::SuccessResponse:
 			{
-				MS_DEBUG("STUN Binding Success Response processed");
+				MS_DEBUG_TAG(ice, "STUN Binding Success Response processed");
 
 				break;
 			}
 
 			case RTC::StunMessage::Class::ErrorResponse:
 			{
-				MS_DEBUG("STUN Binding Error Response processed");
+				MS_DEBUG_TAG(ice, "STUN Binding Error Response processed");
 
 				break;
 			}
@@ -194,7 +194,7 @@ namespace RTC
 		RTC::TransportTuple* removed_tuple = nullptr;
 
 		// Find the removed tuple.
-		for (; it != this->tuples.end(); ++it)
+		for (; it != this->tuples.end(); it++)
 		{
 			RTC::TransportTuple* stored_tuple = std::addressof(*it);
 
@@ -269,7 +269,7 @@ namespace RTC
 
 				if (!has_use_candidate)
 				{
-					MS_DEBUG("transition from state 'new' to 'connected'");
+					MS_DEBUG_TAG(ice, "transition from state 'new' to 'connected'");
 
 					// Store the tuple.
 					auto stored_tuple = AddTuple(tuple);
@@ -285,7 +285,7 @@ namespace RTC
 				}
 				else
 				{
-					MS_DEBUG("transition from state 'new' to 'completed'");
+					MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
 
 					// Store the tuple.
 					auto stored_tuple = AddTuple(tuple);
@@ -313,7 +313,7 @@ namespace RTC
 
 				if (!has_use_candidate)
 				{
-					MS_DEBUG("transition from state 'disconnected' to 'connected'");
+					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'connected'");
 
 					// Store the tuple.
 					auto stored_tuple = AddTuple(tuple);
@@ -329,7 +329,7 @@ namespace RTC
 				}
 				else
 				{
-					MS_DEBUG("transition from state 'disconnected' to 'completed'");
+					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
 
 					// Store the tuple.
 					auto stored_tuple = AddTuple(tuple);
@@ -363,7 +363,7 @@ namespace RTC
 				}
 				else
 				{
-					MS_DEBUG("transition from state 'connected' to 'completed'");
+					MS_DEBUG_TAG(ice, "transition from state 'connected' to 'completed'");
 
 					auto stored_tuple = HasTuple(tuple);
 
@@ -449,7 +449,7 @@ namespace RTC
 			return this->selectedTuple;
 
 		// Otherwise check other stored tuples.
-		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
+		for (auto it = this->tuples.begin(); it != this->tuples.end(); it++)
 		{
 			RTC::TransportTuple* stored_tuple = std::addressof(*it);
 

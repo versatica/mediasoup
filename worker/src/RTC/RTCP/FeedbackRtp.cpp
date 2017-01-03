@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtp.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
@@ -18,7 +19,8 @@ namespace RTC { namespace RTCP
 
 		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
 		{
-			MS_WARN("not enough space for Feedback packet, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+
 			return nullptr;
 		}
 
@@ -65,20 +67,19 @@ namespace RTC { namespace RTCP
 	template<typename Item>
 	void FeedbackRtpItemPacket<Item>::Dump()
 	{
+		#ifdef MS_LOG_DEV
+
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t<%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
+		MS_DEBUG_DEV("<%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
 		FeedbackRtpPacket::Dump();
-
 		for (auto item : this->items)
 		{
 			item->Dump();
 		}
+		MS_DEBUG_DEV("</%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
 
-		MS_WARN("\t<%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
+		#endif
 	}
 
 	// Explicit instantiation to have all FeedbackRtpPacket definitions in this file.

@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::Sdes"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/Sdes.h"
 #include "Utils.h"
@@ -34,7 +35,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(uint8_t)*2 + header->length > len)
 		{
-			MS_WARN("not enough space for SDES item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for SDES item, discarded");
+
 			return nullptr;
 		}
 
@@ -74,14 +76,11 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Sdes Item>");
-		MS_WARN("\t\t\ttype: %s", Type2String(this->GetType()).c_str());
-		MS_WARN("\t\t\tlength: %u", this->header->length);
-		MS_WARN("\t\t\tvalue: %.*s", this->header->length, this->header->value);
-		MS_WARN("\t\t</Sdes Item>");
+		MS_DEBUG_DEV("<SdesItem>");
+		MS_DEBUG_DEV("  type   : %s", Type2String(this->GetType()).c_str());
+		MS_DEBUG_DEV("  length : %" PRIu8, this->header->length);
+		MS_DEBUG_DEV("  value  : %.*s", this->header->length, this->header->value);
+		MS_DEBUG_DEV("</SdesItem>");
 	}
 
 	void SdesItem::Serialize()
@@ -117,7 +116,8 @@ namespace RTC { namespace RTCP
 		// data size must be > SSRC field.
 		if (sizeof(uint32_t) /* ssrc */ > len)
 		{
-			MS_WARN("not enough space for SDES chunk, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for SDES chunk, discarded");
+
 			return nullptr;
 		}
 
@@ -182,20 +182,19 @@ namespace RTC { namespace RTCP
 
 	void SdesChunk::Dump()
 	{
+		#ifdef MS_LOG_DEV
+
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t<Sdes Chunk>");
-		MS_WARN("\t\tssrc: %u", (uint32_t)ntohl(this->ssrc));
-
+		MS_DEBUG_DEV("<SdesChunk>");
+		MS_DEBUG_DEV("  ssrc : %" PRIu32, (uint32_t)ntohl(this->ssrc));
 		for (auto item : this->items)
 		{
 			item->Dump();
 		}
+		MS_DEBUG_DEV("</SdesChunk>");
 
-		MS_WARN("\t</Sdes Chunk>");
+		#endif
 	}
 
 	/* Class methods. */
@@ -245,18 +244,17 @@ namespace RTC { namespace RTCP
 
 	void SdesPacket::Dump()
 	{
+		#ifdef MS_LOG_DEV
+
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("<Sdes Packet>");
-
+		MS_DEBUG_DEV("<SdesPacket>");
 		for (auto chunk : this->chunks)
 		{
 			chunk->Dump();
 		}
+		MS_DEBUG_DEV("</SdesPacket>");
 
-		MS_WARN("</Sdes Packet>");
+		#endif
 	}
 }}

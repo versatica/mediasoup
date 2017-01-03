@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::Parameters"
+// #define MS_LOG_DEV
 
 #include "RTC/Parameters.h"
 #include "Logger.h"
@@ -71,7 +72,7 @@ namespace RTC
 
 		MS_ASSERT(data.isObject(), "data is not a JSON object");
 
-		for (Json::Value::iterator it = data.begin(); it != data.end(); ++it)
+		for (Json::Value::iterator it = data.begin(); it != data.end(); it++)
 		{
 			std::string key = it.key().asString();
 			Json::Value value = (*it);
@@ -141,7 +142,7 @@ namespace RTC
 				}
 
 				default:
-					;  // Just ignore other value types.
+					; // Just ignore other value types.
 			}
 		}
 	}

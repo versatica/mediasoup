@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsPsLeiPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsLei.h"
 #include "Logger.h"
@@ -15,7 +16,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for PsLei item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for PsLei item, discarded");
+
 			return nullptr;
 		}
 
@@ -46,11 +48,8 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<PsLei Item>");
-		MS_WARN("\t\t\tssrc: %u", ntohl(this->header->ssrc));
-		MS_WARN("\t\t</PsLei Item>");
+		MS_DEBUG_DEV("<PsLeiItem>");
+		MS_DEBUG_DEV("  ssrc : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("</PsLeiItem>");
 	}
 }}

@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsVbcmPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "Logger.h"
@@ -15,7 +16,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for Vbcm item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Vbcm item, discarded");
+
 			return nullptr;
 		}
 
@@ -64,14 +66,11 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Vbcm Item>");
-		MS_WARN("\t\t\tssrc: %u", ntohl(this->header->ssrc));
-		MS_WARN("\t\t\tsequence_number: %u", this->header->sequence_number);
-		MS_WARN("\t\t\tpayload type: %u", this->header->payload_type);
-		MS_WARN("\t\t\tlength: %u", ntohs(this->header->length));
-		MS_WARN("\t\t</Vbcm Item>");
+		MS_DEBUG_DEV("<VbcmItem>");
+		MS_DEBUG_DEV("  ssrc            : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("  sequence number : %" PRIu8, this->header->sequence_number);
+		MS_DEBUG_DEV("  payload type    : %" PRIu8, this->header->payload_type);
+		MS_DEBUG_DEV("  length          : %" PRIu16, ntohs(this->header->length));
+		MS_DEBUG_DEV("</Vbcm Item>");
 	}
 }}

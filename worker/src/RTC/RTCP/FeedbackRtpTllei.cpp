@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpTlleiPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpTllei.h"
 #include "Logger.h"
@@ -15,7 +16,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for Tllei item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Tllei item, discarded");
+
 			return nullptr;
 		}
 
@@ -48,12 +50,9 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Tllei Item>");
-		MS_WARN("\t\t\tpid: %u", ntohl(this->header->packet_id));
-		MS_WARN("\t\t\tbpl: %u", ntohl(this->header->lost_packet_bitmask));
-		MS_WARN("\t\t</Tllei Item>");
+		MS_DEBUG_DEV("<TlleiItem>");
+		MS_DEBUG_DEV("  pid: %" PRIu16, ntohl(this->header->packet_id));
+		MS_DEBUG_DEV("  bpl: %" PRIu16, ntohl(this->header->lost_packet_bitmask));
+		MS_DEBUG_DEV("</TlleiItem>");
 	}
 }}

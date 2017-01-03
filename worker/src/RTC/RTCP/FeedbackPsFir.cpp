@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsFirPacket"
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsFir.h"
 #include "Logger.h"
@@ -16,7 +17,8 @@ namespace RTC { namespace RTCP
 		// data size must be >= header.
 		if (sizeof(Header) > len)
 		{
-			MS_WARN("not enough space for Fir item, discarded");
+			MS_WARN_TAG(rtcp, "not enough space for Fir item, discarded");
+
 			return nullptr;
 		}
 
@@ -54,12 +56,9 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		if (!Logger::HasDebugLevel())
-			return;
-
-		MS_WARN("\t\t<Fir Item>");
-		MS_WARN("\t\t\tssrc: %u", ntohl(this->header->ssrc));
-		MS_WARN("\t\t\tsequence_number: %u", this->header->sequence_number);
-		MS_WARN("\t\t</Fir Item>");
+		MS_DEBUG_DEV("<FirItem>");
+		MS_DEBUG_DEV("  ssrc            : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("  sequence number : %" PRIu8, this->header->sequence_number);
+		MS_DEBUG_DEV("\t\t</FirItem>");
 	}
 }}

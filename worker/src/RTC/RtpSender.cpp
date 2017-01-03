@@ -1,4 +1,5 @@
 #define MS_CLASS "RTC::RtpSender"
+// #define MS_LOG_DEV
 
 #include "RTC/RtpSender.h"
 #include "MediaSoupError.h"
@@ -53,7 +54,6 @@ namespace RTC
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
 		static const Json::StaticString k_available("available");
-		// TODO: TMP
 		static const Json::StaticString k_mapPayloadTypes("mapPayloadTypes");
 
 		Json::Value json(Json::objectValue);
@@ -71,7 +71,6 @@ namespace RTC
 
 		json[k_available] = this->available;
 
-		// TODO: TMP
 		json[k_mapPayloadTypes] = Json::objectValue;
 		for (auto& kv : this->mapPayloadTypes)
 		{
@@ -143,7 +142,7 @@ namespace RTC
 			auto& codec = *it;
 			auto it2 = this->peerCapabilities->codecs.begin();
 
-			for (; it2 != this->peerCapabilities->codecs.end(); ++it2)
+			for (; it2 != this->peerCapabilities->codecs.end(); it2++)
 			{
 				auto& codecCapability = *it2;
 
@@ -222,8 +221,7 @@ namespace RTC
 		// TODO: We should not report an error here but just ignore it.
 		if (it == this->mapPayloadTypes.end())
 		{
-			MS_ERROR("payload type not mapped [payloadType:%" PRIu8 "]",
-				originalPayloadType);
+			MS_ERROR("payload type not mapped [payloadType:%" PRIu8 "]", originalPayloadType);
 
 			return;
 		}
@@ -264,7 +262,7 @@ namespace RTC
 		{
 			auto it = this->peerCapabilities->codecs.begin();
 
-			for (; it != this->peerCapabilities->codecs.end(); ++it)
+			for (; it != this->peerCapabilities->codecs.end(); it++)
 			{
 				auto& codecCapability = *it;
 

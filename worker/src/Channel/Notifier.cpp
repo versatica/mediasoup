@@ -1,4 +1,5 @@
 #define MS_CLASS "Channel::Notifier"
+// #define MS_LOG_DEV
 
 #include "Channel/Notifier.h"
 #include "Logger.h"

@@ -1,12 +1,13 @@
 #define MS_CLASS "TcpConnection"
+// #define MS_LOG_DEV
 
 #include "handles/TcpConnection.h"
 #include "Utils.h"
 #include "DepLibUV.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
-#include <cstring>  // std::memcpy()
-#include <cstdlib>  // std::malloc(), std::free()
+#include <cstring> // std::memcpy()
+#include <cstdlib> // std::malloc(), std::free()
 
 /* Static methods for UV callbacks. */
 
@@ -83,6 +84,7 @@ void TcpConnection::Setup(Listener* listener, struct sockaddr_storage* localAddr
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
+
 		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 	}
 
@@ -131,7 +133,7 @@ void TcpConnection::Close()
 
 void TcpConnection::Dump()
 {
-	MS_DEBUG("[Tcp, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
+	MS_DEBUG_DEV("[Tcp, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
 		this->peerIP.c_str(), (uint16_t)this->peerPort,
 		(!this->isClosing) ? "open" : "closed");
@@ -189,13 +191,13 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	// Error. Should not happen.
 	else if (written < 0)
 	{
-		MS_WARN("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
 		Close();
 		return;
 	}
 
-	// MS_DEBUG("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, len);
+	// MS_DEBUG_DEV("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, len);
 
 	size_t pending_len = len - written;
 
@@ -249,13 +251,13 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	// Error. Should not happen.
 	else if (written < 0)
 	{
-		MS_WARN("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
 		Close();
 		return;
 	}
 
-	// MS_DEBUG("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, total_len);
+	// MS_DEBUG_DEV("could just write %zu bytes (%zu given) at first time, using uv_write() now", (size_t)written, total_len);
 
 	size_t pending_len = total_len - written;
 
@@ -324,7 +326,7 @@ void TcpConnection::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 	{
 		buf->len = 0;
 
-		MS_WARN("no available space in the buffer");
+		MS_WARN_DEV("no available space in the buffer");
 	}
 }
 
@@ -351,7 +353,7 @@ void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Client disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
 	{
-		MS_DEBUG("connection closed by peer, closing server side");
+		MS_DEBUG_DEV("connection closed by peer, closing server side");
 
 		this->isClosedByPeer = true;
 
@@ -361,7 +363,7 @@ void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	// Some error.
 	else
 	{
-		MS_DEBUG("read error, closing the connection: %s", uv_strerror(nread));
+		MS_WARN_DEV("read error, closing the connection: %s", uv_strerror(nread));
 
 		this->hasError = true;
 
@@ -380,11 +382,11 @@ void TcpConnection::onUvWriteError(int error)
 
 	if (error == UV_EPIPE || error == UV_ENOTCONN)
 	{
-		MS_DEBUG("write error, closing the connection: %s", uv_strerror(error));
+		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(error));
 	}
 	else
 	{
-		MS_DEBUG("write error, closing the connection: %s", uv_strerror(error));
+		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(error));
 
 		this->hasError = true;
 	}
@@ -400,9 +402,9 @@ void TcpConnection::onUvShutdown(uv_shutdown_t* req, int status)
 	delete req;
 
 	if (status == UV_EPIPE || status == UV_ENOTCONN || status == UV_ECANCELED)
-		MS_DEBUG("shutdown error: %s", uv_strerror(status));
+		MS_WARN_DEV("shutdown error: %s", uv_strerror(status));
 	else if (status)
-		MS_DEBUG("shutdown error: %s", uv_strerror(status));
+		MS_WARN_DEV("shutdown error: %s", uv_strerror(status));
 
 	// Now do close the handle.
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
