@@ -301,13 +301,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->transport->SendRtcpPacket(packet);
+		if (this->transport)
+			this->transport->SendRtcpPacket(packet);
 	};
 
 	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 
-		this->transport->SendRtcpPacket(packet);
+		if (this->transport)
+			this->transport->SendRtcpPacket(packet);
 	};
 }
