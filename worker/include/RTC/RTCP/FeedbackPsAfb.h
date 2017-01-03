@@ -17,6 +17,8 @@ namespace RTC { namespace RTCP
 		explicit FeedbackPsAfbPacket(CommonHeader* commonHeader);
 		FeedbackPsAfbPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
 
+		uint8_t* GetData();
+
 	/* Pure virtual methods inherited from Packet. */
 	public:
 		virtual void Dump() override;
@@ -42,6 +44,12 @@ namespace RTC { namespace RTCP
 	FeedbackPsAfbPacket::FeedbackPsAfbPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
 		FeedbackPsPacket(FeedbackPs::AFB, sender_ssrc, media_ssrc)
 	{}
+
+	inline
+	uint8_t* FeedbackPsAfbPacket::GetData()
+	{
+		return this->data;
+	}
 
 	inline
 	size_t FeedbackPsAfbPacket::GetSize()

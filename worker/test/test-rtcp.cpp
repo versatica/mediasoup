@@ -17,6 +17,7 @@
 #include "RTC/RTCP/FeedbackPsTst.h"
 #include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "RTC/RTCP/FeedbackPsLei.h"
+#include "RTC/RTCP/FeedbackPsAfb.h"
 #include "Logger.h"
 #include <string>
 
@@ -619,6 +620,28 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(item->GetSsrc(), ssrc);
 
 		delete item;
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_psfb_afb)
+	{
+		uint8_t buffer[] =
+		{
+			0x8F, 0xce, 0x00, 0x03, // RTCP common header
+			0x00, 0x00, 0x00, 0x00, // Sender SSRC
+			0x00, 0x00, 0x00, 0x00, // Media SSRC
+			0x00, 0x00, 0x00, 0x01, // Data
+		};
+
+		size_t dataSize = 4;
+		uint8_t dataBitmask = 1;
+
+		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
+		fct_req(packet != nullptr);
+
+		fct_chk_eq_int(packet->GetData()[dataSize -1] & 1, dataBitmask);
+
+		delete packet;
 	}
 	FCT_TEST_END()
 }
