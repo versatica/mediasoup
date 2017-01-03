@@ -15,6 +15,7 @@
 #include "RTC/RTCP/FeedbackPsRpsi.h"
 #include "RTC/RTCP/FeedbackPsFir.h"
 #include "RTC/RTCP/FeedbackPsTst.h"
+#include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "Logger.h"
 #include <string>
 
@@ -566,6 +567,37 @@ FCTMF_SUITE_BGN(test_rtcp)
 		fct_chk_eq_int(item->GetSsrc(), ssrc);
 		fct_chk_eq_int(item->GetSequenceNumber(), seq);
 		fct_chk_eq_int(item->GetIndex(), index);
+
+		delete item;
+	}
+	FCT_TEST_END()
+
+	FCT_TEST_BGN(parse_psfb_vbcm_item)
+	{
+		uint8_t buffer[] =
+		{
+			0x00, 0x00, 0x00, 0x00, // SSRC
+			0x08,                   // Seq nr.
+			0x02,                   // Zero | Payload Vbcm
+			0x00, 0x01,             // Length
+			0x01,                   // VBCM Octet String
+			0x00, 0x00, 0x00        // Padding
+		};
+
+		uint32_t ssrc = 0;
+		uint8_t  seq = 8;
+		uint8_t  payloadType = 1;
+		uint16_t length = 1;
+		uint8_t  valueMask = 1;
+
+		VbcmItem* item = VbcmItem::Parse(buffer, sizeof(buffer));
+		fct_req(item != nullptr);
+
+		fct_chk_eq_int(item->GetSsrc(), ssrc);
+		fct_chk_eq_int(item->GetSequenceNumber(), seq);
+		fct_chk_eq_int(item->GetPayloadType(), payloadType);
+		fct_chk_eq_int(item->GetLength(), length);
+		fct_chk_eq_int(item->GetValue()[item->GetLength() -1] & 1, valueMask);
 
 		delete item;
 	}

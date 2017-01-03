@@ -32,7 +32,7 @@ namespace RTC { namespace RTCP
 			uint8_t zero:1;
 			uint8_t payload_type:7;
 			uint16_t length;
-			uint8_t* value;
+			uint8_t value[];
 		};
 
 	public:
@@ -107,7 +107,7 @@ namespace RTC { namespace RTCP
 	inline
 	uint16_t VbcmItem::GetLength()
 	{
-		return (uint16_t)this->header->length;
+		return (uint16_t)ntohs(this->header->length);
 	}
 
 	inline

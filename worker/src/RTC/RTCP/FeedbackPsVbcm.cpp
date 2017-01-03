@@ -35,7 +35,7 @@ namespace RTC { namespace RTCP
 		this->header->zero = 0;
 		this->header->payload_type = payload_type;
 		this->header->length = htons(length);
-		this->header->value = value;
+		std::memcpy(this->header->value, value, sizeof(length));
 	}
 
 	size_t VbcmItem::Serialize(uint8_t* data)
