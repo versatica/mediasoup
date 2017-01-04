@@ -695,7 +695,7 @@ namespace RTC
 		// Tell all the peers but the one in the argument to generate and send their RTCP.
 		for (auto it = this->peers.begin(); it != this->peers.end(); it++)
 		{
-			auto current_peer = it->second;
+			RTC::Peer* current_peer = it->second;
 
 			if (current_peer != peer)
 				current_peer->SendRtcp();
