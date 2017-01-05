@@ -51,8 +51,8 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<NackItem>");
-		MS_DEBUG_DEV("  pid : %" PRIu16, ntohl(this->header->packet_id));
-		MS_DEBUG_DEV("  bpl : %" PRIu16, ntohl(this->header->lost_packet_bitmask));
+		MS_DEBUG_DEV("  pid : %" PRIu16, ntohs(this->header->packet_id));
+		MS_DEBUG_DEV("  bpl : %" PRIu16, ntohs(this->header->lost_packet_bitmask));
 		MS_DEBUG_DEV("</NackItem>");
 	}
 }}
