@@ -72,7 +72,7 @@ namespace RTC
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
 		// Receiver Report holding the RTP stats.
-		std::auto_ptr<RTC::RTCP::ReceiverReport> receiverReport;
+		std::unique_ptr<RTC::RTCP::ReceiverReport> receiverReport;
 	};
 
 	/* Inline methods. */

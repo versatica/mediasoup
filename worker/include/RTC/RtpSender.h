@@ -67,8 +67,8 @@ namespace RTC
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
 		// Sender Report holding the RTP stats.
-		std::auto_ptr<RTC::RTCP::SenderReport> senderReport;
-		std::auto_ptr<RTC::RTCP::SdesChunk> sdesChunk;
+		std::unique_ptr<RTC::RTCP::SenderReport> senderReport;
+		std::unique_ptr<RTC::RTCP::SdesChunk> sdesChunk;
 	};
 
 	/* Inline methods. */
