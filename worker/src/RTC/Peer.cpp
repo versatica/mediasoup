@@ -517,6 +517,10 @@ namespace RTC
 			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); it++)
 			{
 				RTC::RtpSender* rtpSender = it->second;
+
+				if (rtpSender->GetTransport() != transport)
+					continue;
+
 				RTC::RTCP::SenderReport* report = rtpSender->GetRtcpSenderReport();
 
 				// TODO: Get next rtpSender data on next SendRtcp() call.
@@ -535,6 +539,10 @@ namespace RTC
 			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); it++)
 			{
 				RTC::RtpReceiver* rtpReceiver = it->second;
+
+				if (rtpReceiver->GetTransport() != transport)
+					continue;
+
 				RTC::RTCP::ReceiverReport* report = rtpReceiver->GetRtcpReceiverReport();
 
 				if (report)

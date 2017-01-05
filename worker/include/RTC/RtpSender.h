@@ -36,6 +36,7 @@ namespace RTC
 		void SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities);
 		void Send(RTC::RtpParameters* rtpParameters);
 		void SetTransport(RTC::Transport* transport);
+		RTC::Transport* GetTransport();
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
@@ -76,6 +77,12 @@ namespace RTC
 	void RtpSender::SetTransport(RTC::Transport* transport)
 	{
 		this->transport = transport;
+	}
+
+	inline
+	RTC::Transport* RtpSender::GetTransport()
+	{
+		return this->transport;
 	}
 
 	inline
