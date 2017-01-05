@@ -17,7 +17,7 @@ namespace RTC { namespace RTCP
 		// Get the header.
 		Packet::CommonHeader* header = (Packet::CommonHeader*)data;
 
-		std::auto_ptr<ByePacket> packet(new ByePacket());
+		std::unique_ptr<ByePacket> packet(new ByePacket());
 
 		size_t offset = sizeof(Packet::CommonHeader);
 

@@ -86,7 +86,7 @@ namespace RTC { namespace RTCP
 
 		// Get the header.
 		Packet::CommonHeader* header = (Packet::CommonHeader*)data;
-		std::auto_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
+		std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
 
 		packet->SetSsrc(Utils::Byte::Get4Bytes((uint8_t*)header, sizeof(CommonHeader)));
 

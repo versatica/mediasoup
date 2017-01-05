@@ -22,7 +22,7 @@ namespace RTC { namespace RTCP
 		}
 
 		Header* header = (Header*)data;
-		std::auto_ptr<RpsiItem> item(new RpsiItem(header));
+		std::unique_ptr<RpsiItem> item(new RpsiItem(header));
 
 		if (item->IsCorrect())
 			return item.release();

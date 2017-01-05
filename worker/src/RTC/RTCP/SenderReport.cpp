@@ -76,7 +76,7 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		std::auto_ptr<SenderReportPacket> packet(new SenderReportPacket());
+		std::unique_ptr<SenderReportPacket> packet(new SenderReportPacket());
 		size_t offset = sizeof(Packet::CommonHeader);
 
 		SenderReport* report = SenderReport::Parse(data+offset, len-offset);

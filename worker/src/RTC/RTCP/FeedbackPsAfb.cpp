@@ -21,7 +21,7 @@ namespace RTC { namespace RTCP
 		}
 
 		CommonHeader* commonHeader = (CommonHeader*)data;
-		std::auto_ptr<FeedbackPsAfbPacket> packet(new FeedbackPsAfbPacket(commonHeader));
+		std::unique_ptr<FeedbackPsAfbPacket> packet(new FeedbackPsAfbPacket(commonHeader));
 
 		return packet.release();
 	}

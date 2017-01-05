@@ -24,7 +24,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		std::auto_ptr<TmmbItem> item(new TmmbItem(header));
+		std::unique_ptr<TmmbItem> item(new TmmbItem(header));
 
 		if (!item->IsCorrect())
 			return nullptr;

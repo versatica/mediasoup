@@ -121,7 +121,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		std::auto_ptr<SdesChunk> chunk(new SdesChunk(Utils::Byte::Get4Bytes(data, 0)));
+		std::unique_ptr<SdesChunk> chunk(new SdesChunk(Utils::Byte::Get4Bytes(data, 0)));
 
 		size_t offset = sizeof(uint32_t) /* ssrc */;
 
@@ -205,7 +205,7 @@ namespace RTC { namespace RTCP
 
 		// Get the header.
 		Packet::CommonHeader* header = (Packet::CommonHeader*)data;
-		std::auto_ptr<SdesPacket> packet(new SdesPacket());
+		std::unique_ptr<SdesPacket> packet(new SdesPacket());
 		size_t offset = sizeof(Packet::CommonHeader);
 		uint8_t count = header->count;
 
