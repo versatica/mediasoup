@@ -41,13 +41,13 @@ namespace RTC { namespace RTCP
 		this->pictureId = compact & 0x3f;       /* last   6 bits */
 	}
 
-	size_t SliItem::Serialize(uint8_t* data)
+	size_t SliItem::Serialize(uint8_t* buffer)
 	{
 		uint32_t compact = (this->first << 19) | (this->number << 6) | this->pictureId;
-		Header* header = (Header*)data;
+		Header* header = (Header*)buffer;
 
 		header->compact = htonl(compact);
-		std::memcpy(data, header, sizeof(Header));
+		std::memcpy(buffer, header, sizeof(Header));
 
 		return sizeof(Header);
 	}

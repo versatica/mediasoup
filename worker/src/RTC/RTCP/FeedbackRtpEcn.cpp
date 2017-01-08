@@ -26,12 +26,12 @@ namespace RTC { namespace RTCP
 		return new EcnItem(header);
 	}
 
-	size_t EcnItem::Serialize(uint8_t* data)
+	size_t EcnItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
 		// Add minimum header.
-		std::memcpy(data, this->header, sizeof(Header));
+		std::memcpy(buffer, this->header, sizeof(Header));
 
 		return sizeof(Header);
 	}

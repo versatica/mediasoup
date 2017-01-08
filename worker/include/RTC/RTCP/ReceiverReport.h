@@ -37,7 +37,7 @@ namespace RTC { namespace RTCP
 
 		void Dump();
 		void Serialize();
-		size_t Serialize(uint8_t* data);
+		size_t Serialize(uint8_t* buffer);
 		size_t GetSize();
 		const uint8_t* GetRaw();
 		uint32_t GetSsrc();
@@ -82,7 +82,7 @@ namespace RTC { namespace RTCP
 	/* Pure virtual methods inherited from Packet. */
 	public:
 		virtual void Dump() override;
-		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t Serialize(uint8_t* buffer) override;
 		virtual size_t GetCount() override;
 		virtual size_t GetSize() override;
 

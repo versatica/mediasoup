@@ -50,27 +50,27 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	size_t ByePacket::Serialize(uint8_t* data)
+	size_t ByePacket::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		size_t offset = Packet::Serialize(data);
+		size_t offset = Packet::Serialize(buffer);
 
 		// SSRCs.
 		for (auto ssrc : this->ssrcs)
 		{
-			Utils::Byte::Set4Bytes(data, offset, htonl(ssrc));
+			Utils::Byte::Set4Bytes(buffer, offset, htonl(ssrc));
 			offset += sizeof(uint32_t);
 		}
 
 		if (!this->reason.empty())
 		{
 			// Length field.
-			Utils::Byte::Set1Byte(data, offset, this->reason.length());
+			Utils::Byte::Set1Byte(buffer, offset, this->reason.length());
 			offset += sizeof(uint8_t);
 
 			// Reason field.
-			std::memcpy(data+offset, this->reason.c_str(), this->reason.length());
+			std::memcpy(buffer+offset, this->reason.c_str(), this->reason.length());
 			offset += this->reason.length();
 		}
 
@@ -78,7 +78,7 @@ namespace RTC { namespace RTCP
 		size_t padding = (-offset) & 3;
 		for (size_t i = 0; i < padding; i++)
 		{
-			data[offset+i] = 0;
+			buffer[offset+i] = 0;
 		}
 
 		return offset+padding;

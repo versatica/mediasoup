@@ -26,14 +26,14 @@ namespace RTC { namespace RTCP
 		return packet.release();
 	}
 
-	size_t FeedbackPsAfbPacket::Serialize(uint8_t* data)
+	size_t FeedbackPsAfbPacket::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		size_t offset = FeedbackPsPacket::Serialize(data);
+		size_t offset = FeedbackPsPacket::Serialize(buffer);
 
 		// Copy the content.
-		std::memcpy(data+offset, this->data, this->size);
+		std::memcpy(buffer+offset, this->data, this->size);
 
 		return offset + this->size;
 	}

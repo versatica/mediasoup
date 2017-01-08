@@ -67,14 +67,14 @@ namespace RTC { namespace RTCP
 	/* Instance methods. */
 
 	template <typename T>
-	size_t FeedbackPacket<T>::Serialize(uint8_t* data)
+	size_t FeedbackPacket<T>::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		size_t offset = Packet::Serialize(data);
+		size_t offset = Packet::Serialize(buffer);
 
 		// Copy the header.
-		std::memcpy(data+offset, this->header, sizeof(Header));
+		std::memcpy(buffer+offset, this->header, sizeof(Header));
 
 		return offset + sizeof(Header);
 	}

@@ -40,15 +40,15 @@ namespace RTC { namespace RTCP
 		std::memcpy(this->header->value, value, sizeof(length));
 	}
 
-	size_t VbcmItem::Serialize(uint8_t* data)
+	size_t VbcmItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
 		// Add minimum header.
-		std::memcpy(data, this->header, 8);
+		std::memcpy(buffer, this->header, 8);
 
 		// Copy the content.
-		std::memcpy(data+8, this->header->value, this->header->length);
+		std::memcpy(buffer+8, this->header->value, this->header->length);
 
 		size_t offset = 8+this->header->length;
 
@@ -56,7 +56,7 @@ namespace RTC { namespace RTCP
 		size_t padding = (-offset) & 3;
 		for (size_t i = 0; i < padding; i++)
 		{
-			data[offset+i] = 0;
+			buffer[offset+i] = 0;
 		}
 
 		return offset+padding;

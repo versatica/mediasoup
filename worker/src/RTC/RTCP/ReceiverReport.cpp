@@ -62,12 +62,12 @@ namespace RTC { namespace RTCP
 		}
 	}
 
-	size_t ReceiverReport::Serialize(uint8_t* data)
+	size_t ReceiverReport::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
 		// Copy the header.
-		std::memcpy(data, this->header, sizeof(Header));
+		std::memcpy(buffer, this->header, sizeof(Header));
 
 		return sizeof(Header);
 	}
@@ -113,20 +113,20 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	size_t ReceiverReportPacket::Serialize(uint8_t* data)
+	size_t ReceiverReportPacket::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		size_t offset = Packet::Serialize(data);
+		size_t offset = Packet::Serialize(buffer);
 
 		// Copy the SSRC.
-		std::memcpy(data + sizeof(Packet::CommonHeader), &this->ssrc, sizeof(this->ssrc));
+		std::memcpy(buffer + sizeof(Packet::CommonHeader), &this->ssrc, sizeof(this->ssrc));
 		offset += sizeof(this->ssrc);
 
 		// Serialize reports.
 		for (auto report : this->reports)
 		{
-			offset += report->Serialize(data + offset);
+			offset += report->Serialize(buffer + offset);
 		}
 
 		return offset;

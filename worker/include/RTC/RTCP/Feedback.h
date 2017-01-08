@@ -41,7 +41,7 @@ namespace RTC { namespace RTCP
 	/* Pure virtual methods inherited from Packet. */
 	protected:
 		virtual void Dump() override;
-		virtual size_t Serialize(uint8_t* data) override;
+		virtual size_t Serialize(uint8_t* buffer) override;
 		virtual size_t GetCount() override;
 		virtual size_t GetSize() override;
 

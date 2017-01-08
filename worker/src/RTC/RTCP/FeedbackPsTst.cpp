@@ -44,11 +44,11 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	size_t TstItem<T>::Serialize(uint8_t* data)
+	size_t TstItem<T>::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		std::memcpy(data, this->header, sizeof(Header));
+		std::memcpy(buffer, this->header, sizeof(Header));
 
 		return sizeof(Header);
 	}

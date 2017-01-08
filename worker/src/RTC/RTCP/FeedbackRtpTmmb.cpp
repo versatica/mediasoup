@@ -54,7 +54,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	size_t TmmbItem<T>::Serialize(uint8_t* data)
+	size_t TmmbItem<T>::Serialize(uint8_t* buffer)
 	{
 		uint64_t mantissa = this->bitrate;
 		uint32_t exponent = 0;
@@ -66,12 +66,12 @@ namespace RTC { namespace RTCP
 		}
 
 		uint32_t compact = (exponent << 26) | (mantissa << 9) | this->overhead;
-		Header* header = (Header*) data;
+		Header* header = (Header*)buffer;
 
 		header->ssrc = this->header->ssrc;
 		header->compact = htonl(compact);
 
-		std::memcpy(data, header, sizeof(Header));
+		std::memcpy(buffer, header, sizeof(Header));
 
 		return sizeof(Header);
 	}

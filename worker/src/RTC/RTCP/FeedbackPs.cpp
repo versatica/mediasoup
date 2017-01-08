@@ -52,15 +52,15 @@ namespace RTC { namespace RTCP
 	/* Instance methods. */
 
 	template<typename Item>
-	size_t FeedbackPsItemPacket<Item>::Serialize(uint8_t* data)
+	size_t FeedbackPsItemPacket<Item>::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		size_t offset = FeedbackPacket::Serialize(data);
+		size_t offset = FeedbackPacket::Serialize(buffer);
 
 		for (auto item : this->items)
 		{
-			offset += item->Serialize(data + offset);
+			offset += item->Serialize(buffer + offset);
 		}
 
 		return offset;

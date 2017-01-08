@@ -16,7 +16,7 @@ namespace RTC { namespace RTCP
 	public:
 		virtual void Dump() = 0;
 		virtual void Serialize();
-		virtual size_t Serialize(uint8_t* data) = 0;
+		virtual size_t Serialize(uint8_t* buffer) = 0;
 		virtual size_t GetSize() = 0;
 
 	protected:

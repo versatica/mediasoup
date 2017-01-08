@@ -82,11 +82,11 @@ namespace RTC { namespace RTCP
 		}
 	}
 
-	size_t RpsiItem::Serialize(uint8_t* data)
+	size_t RpsiItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		std::memcpy(data, this->header, sizeof(Header));
+		std::memcpy(buffer, this->header, sizeof(Header));
 
 		return sizeof(Header);
 	}

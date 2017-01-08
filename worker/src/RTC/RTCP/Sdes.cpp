@@ -94,15 +94,15 @@ namespace RTC { namespace RTCP
 		this->Serialize(this->raw);
 	}
 
-	size_t SdesItem::Serialize(uint8_t* data)
+	size_t SdesItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
 		// Add minimum header.
-		std::memcpy(data, this->header, 2);
+		std::memcpy(buffer, this->header, 2);
 
 		// Copy the content.
-		std::memcpy(data+2, this->header->value, this->header->length);
+		std::memcpy(buffer+2, this->header->value, this->header->length);
 
 		return 2 + this->header->length;
 	}
@@ -157,24 +157,24 @@ namespace RTC { namespace RTCP
 		}
 	}
 
-	size_t SdesChunk::Serialize(uint8_t* data)
+	size_t SdesChunk::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		std::memcpy(data, &this->ssrc, sizeof(this->ssrc));
+		std::memcpy(buffer, &this->ssrc, sizeof(this->ssrc));
 
 		size_t offset = sizeof(this->ssrc);
 
 		for (auto item : this->items)
 		{
-			offset += item->Serialize(data + offset);
+			offset += item->Serialize(buffer + offset);
 		}
 
 		// 32 bits padding.
 		size_t padding = (-offset) & 3;
 		for (size_t i = 0; i < padding; i++)
 		{
-			data[offset+i] = 0;
+			buffer[offset+i] = 0;
 		}
 
 		return offset+padding;
@@ -228,15 +228,15 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	size_t SdesPacket::Serialize(uint8_t* data)
+	size_t SdesPacket::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		size_t offset = Packet::Serialize(data);
+		size_t offset = Packet::Serialize(buffer);
 
 		for (auto chunk : this->chunks)
 		{
-			offset += chunk->Serialize(data + offset);
+			offset += chunk->Serialize(buffer + offset);
 		}
 
 		return offset;

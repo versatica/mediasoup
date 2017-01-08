@@ -161,12 +161,12 @@ namespace RTC { namespace RTCP
 			delete raw;
 	}
 
-	size_t Packet::Serialize(uint8_t* data)
+	size_t Packet::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
 		size_t length = (this->GetSize() / 4) - 1;
-		CommonHeader* header = (Packet::CommonHeader*)data;
+		CommonHeader* header = (Packet::CommonHeader*)buffer;
 
 		// Fill the common header.
 		header->version = 2;

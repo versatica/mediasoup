@@ -43,11 +43,11 @@ namespace RTC { namespace RTCP
 		this->header->sequence_number = sequence_number;
 	}
 
-	size_t FirItem::Serialize(uint8_t* data)
+	size_t FirItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		std::memcpy(data, this->header, sizeof(Header));
+		std::memcpy(buffer, this->header, sizeof(Header));
 
 		return sizeof(Header);
 	}
