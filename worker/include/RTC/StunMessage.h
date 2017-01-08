@@ -60,15 +60,14 @@ namespace RTC
 		static const uint8_t magicCookie[];
 
 	public:
-		StunMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* raw, size_t length);
+		StunMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
 		~StunMessage();
 
 		void Dump();
 		Class GetClass();
 		Method GetMethod();
-		const uint8_t* GetRaw();
-		void SetLength(size_t length);
-		size_t GetLength();
+		const uint8_t* GetData();
+		size_t GetSize();
 		void SetUsername(const char* username, size_t len);
 		void SetPriority(const uint32_t priority);
 		void SetIceControlling(const uint64_t iceControlling);
@@ -90,27 +89,25 @@ namespace RTC
 		StunMessage* CreateSuccessResponse();
 		StunMessage* CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string &password);
-		void Serialize();
+		void Serialize(uint8_t* buffer);
 
 	private:
 		// Passed by argument.
-		Class klass;  // 2 bytes.
-		Method method;  // 2 bytes.
-		const uint8_t* transactionId = nullptr;  // 12 bytes.
-		uint8_t* raw = nullptr;  // Allocated when Serialize().
-		size_t length = 0;  // The full message size (including header).
-		// Others.
-		bool isSerialized = false;
+		Class klass; // 2 bytes.
+		Method method; // 2 bytes.
+		const uint8_t* transactionId = nullptr; // 12 bytes.
+		uint8_t* data = nullptr; // Pointer to binary data.
+		size_t size = 0; // The full message size (including header).
 		// STUN attributes.
-		std::string username;  // Less than 513 bytes.
-		uint32_t priority = 0;  // 4 bytes unsigned integer.
-		uint64_t iceControlling = 0;  // 8 bytes unsigned integer.
-		uint64_t iceControlled = 0;  // 8 bytes unsigned integer.
-		bool hasUseCandidate = false;  // 0 bytes.
-		const uint8_t* messageIntegrity = nullptr;  // 20 bytes.
-		bool hasFingerprint = false;  // 4 bytes.
-		const struct sockaddr* xorMappedAddress = nullptr;  // 8 or 20 bytes.
-		uint16_t errorCode = 0;  // 4 bytes (no reason phrase).
+		std::string username; // Less than 513 bytes.
+		uint32_t priority = 0; // 4 bytes unsigned integer.
+		uint64_t iceControlling = 0; // 8 bytes unsigned integer.
+		uint64_t iceControlled = 0; // 8 bytes unsigned integer.
+		bool hasUseCandidate = false; // 0 bytes.
+		const uint8_t* messageIntegrity = nullptr; // 20 bytes.
+		bool hasFingerprint = false; // 4 bytes.
+		const struct sockaddr* xorMappedAddress = nullptr; // 8 or 20 bytes.
+		uint16_t errorCode = 0; // 4 bytes (no reason phrase).
 		std::string password;
 	};
 
@@ -145,21 +142,15 @@ namespace RTC
 	}
 
 	inline
-	const uint8_t* StunMessage::GetRaw()
+	const uint8_t* StunMessage::GetData()
 	{
-		return this->raw;
+		return this->data;
 	}
 
 	inline
-	void StunMessage::SetLength(size_t length)
+	size_t StunMessage::GetSize()
 	{
-		this->length = length;
-	}
-
-	inline
-	size_t StunMessage::GetLength()
-	{
-		return this->length;
+		return this->size;
 	}
 
 	inline

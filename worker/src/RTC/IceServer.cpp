@@ -4,8 +4,14 @@
 #include "RTC/IceServer.h"
 #include "Logger.h"
 
+#define MS_STUN_SERIALIZE_BUFFER_SIZE 65536
+
 namespace RTC
 {
+	/* Class variables. */
+
+	uint8_t IceServer::stunSerializeBuffer[MS_STUN_SERIALIZE_BUFFER_SIZE];
+
 	/* Instance methods. */
 
 	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password) :
@@ -38,7 +44,7 @@ namespace RTC
 
 				// Reply 400.
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
-				response->Serialize();
+				response->Serialize(IceServer::stunSerializeBuffer);
 				this->listener->onOutgoingStunMessage(this, response, tuple);
 				delete response;
 			}
@@ -59,7 +65,7 @@ namespace RTC
 
 				// Reply 400.
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
-				response->Serialize();
+				response->Serialize(IceServer::stunSerializeBuffer);
 				this->listener->onOutgoingStunMessage(this, response, tuple);
 				delete response;
 			}
@@ -82,7 +88,7 @@ namespace RTC
 
 					// Reply 400.
 					RTC::StunMessage* response = msg->CreateErrorResponse(400);
-					response->Serialize();
+					response->Serialize(IceServer::stunSerializeBuffer);
 					this->listener->onOutgoingStunMessage(this, response, tuple);
 					delete response;
 
@@ -101,7 +107,7 @@ namespace RTC
 
 						// Reply 401.
 						RTC::StunMessage* response = msg->CreateErrorResponse(401);
-						response->Serialize();
+						response->Serialize(IceServer::stunSerializeBuffer);
 						this->listener->onOutgoingStunMessage(this, response, tuple);
 						delete response;
 
@@ -114,7 +120,7 @@ namespace RTC
 
 						// Reply 400.
 						RTC::StunMessage* response = msg->CreateErrorResponse(400);
-						response->Serialize();
+						response->Serialize(IceServer::stunSerializeBuffer);
 						this->listener->onOutgoingStunMessage(this, response, tuple);
 						delete response;
 
@@ -129,7 +135,7 @@ namespace RTC
 
 					// Reply 487 (Role Conflict).
 					RTC::StunMessage* response = msg->CreateErrorResponse(487);
-					response->Serialize();
+					response->Serialize(IceServer::stunSerializeBuffer);
 					this->listener->onOutgoingStunMessage(this, response, tuple);
 					delete response;
 
@@ -148,7 +154,7 @@ namespace RTC
 				response->Authenticate(this->password);
 
 				// Send back.
-				response->Serialize();
+				response->Serialize(IceServer::stunSerializeBuffer);
 				this->listener->onOutgoingStunMessage(this, response, tuple);
 				delete response;
 

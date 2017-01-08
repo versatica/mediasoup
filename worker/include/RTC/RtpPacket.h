@@ -35,7 +35,7 @@ namespace RTC
 		struct ExtensionHeader
 		{
 			uint16_t id;
-			uint16_t length;  // Size of value in multiples of 4 bytes.
+			uint16_t length; // Size of value in multiples of 4 bytes.
 			uint8_t* value;
 		};
 
@@ -44,12 +44,12 @@ namespace RTC
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
 	public:
-		RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLen, uint8_t payloadPadding, const uint8_t* raw, size_t length);
+		RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLen, uint8_t payloadPadding, size_t size);
 		~RtpPacket();
 
 		void Dump();
-		const uint8_t* GetRaw();
-		size_t GetLength();
+		const uint8_t* GetData();
+		size_t GetSize();
 		uint8_t GetPayloadType();
 		void SetPayloadType(uint8_t payload_type);
 		bool HasMarker();
@@ -63,7 +63,7 @@ namespace RTC
 		size_t GetExtensionHeaderLength();
 		uint8_t* GetPayload();
 		size_t GetPayloadLength();
-		void Serialize();
+		void Serialize(uint8_t* buffer);
 		RtpPacket* Clone(uint8_t* buffer);
 
 	private:
@@ -74,10 +74,7 @@ namespace RTC
 		uint8_t* payload = nullptr;
 		size_t payloadLength = 0;
 		uint8_t payloadPadding = 0;
-		uint8_t* raw = nullptr;  // Allocated when Serialize().
-		size_t length = 0;
-		// Others.
-		bool isSerialized = false;
+		size_t size = 0; // Full size of the packet in bytes.
 	};
 
 	/* Inline static methods. */
@@ -101,16 +98,15 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	const uint8_t* RtpPacket::GetRaw()
+	const uint8_t* RtpPacket::GetData()
 	{
-		// Return pointer to the serialized data or to the original raw data.
-		return this->raw ? this->raw : (const uint8_t*)this->header;
+		return (const uint8_t*)this->header;
 	}
 
 	inline
-	size_t RtpPacket::GetLength()
+	size_t RtpPacket::GetSize()
 	{
-		return this->length;
+		return this->size;
 	}
 
 	inline

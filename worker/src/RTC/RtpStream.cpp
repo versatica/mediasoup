@@ -322,7 +322,7 @@ namespace RTC
 			auto first_packet = first_buffer_item.packet;
 
 			// Store points to the store used by the first packet.
-			store = (uint8_t*)first_packet->GetRaw();
+			store = (uint8_t*)first_packet->GetData();
 			// Free the first packet.
 			delete first_packet;
 			// Remove the first element in the list.

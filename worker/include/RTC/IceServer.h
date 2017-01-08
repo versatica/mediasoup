@@ -35,6 +35,9 @@ namespace RTC
 			virtual void onIceDisconnected(IceServer* iceServer) = 0;
 		};
 
+	private:
+		static uint8_t stunSerializeBuffer[];
+
 	public:
 		IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password);
 

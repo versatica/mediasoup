@@ -246,7 +246,7 @@ namespace RTC
 
 			event_data[k_class] = "RtpReceiver";
 
-			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpraw", event_data, packet->GetRaw(), packet->GetLength());
+			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpraw", event_data, packet->GetData(), packet->GetSize());
 		}
 
 		// Emit "rtpobject" is enabled.

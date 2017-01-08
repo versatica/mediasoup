@@ -4,8 +4,8 @@
 #include "RTC/StunMessage.h"
 #include "Utils.h"
 #include "Logger.h"
-#include <cstdio>  // std::snprintf()
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstdio> // std::snprintf()
+#include <cstring> // std::memcmp(), std::memcpy()
 
 namespace RTC
 {
@@ -88,8 +88,8 @@ namespace RTC
 		// Flags (positions) for special MESSAGE-INTEGRITY and FINGERPRINT attributes.
 		bool has_message_integrity = false;
 		bool has_fingerprint = false;
-		size_t fingerprint_attr_pos;  // Will point to the beginning of the attribute.
-		uint32_t fingerprint;  // Holds the value of the FINGERPRINT attribute.
+		size_t fingerprint_attr_pos; // Will point to the beginning of the attribute.
+		uint32_t fingerprint; // Holds the value of the FINGERPRINT attribute.
 
 		// Ensure there are at least 4 remaining bytes (attribute with 0 length).
 		while (pos + 4 <= len)
@@ -225,12 +225,12 @@ namespace RTC
 
 	/* Instance methods. */
 
-	StunMessage::StunMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* raw, size_t length) :
+	StunMessage::StunMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size) :
 		klass(klass),
 		method(method),
 		transactionId(transactionId),
-		raw((uint8_t*)raw),
-		length(length)
+		data((uint8_t*)data),
+		size(size)
 	{
 		MS_TRACE();
 	}
@@ -238,16 +238,16 @@ namespace RTC
 	StunMessage::~StunMessage()
 	{
 		MS_TRACE();
-
-		if (this->isSerialized)
-			delete this->raw;
 	}
 
 	void StunMessage::Dump()
 	{
+		#ifdef MS_LOG_DEV
+
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<StunMessage>");
+
 		std::string klass;
 		switch (this->klass)
 		{
@@ -261,7 +261,7 @@ namespace RTC
 		else
 			// This prints the unknown method number. Example: TURN Allocate => 0x003.
 			MS_DEBUG_DEV("  %s with unknown method %#.3x", klass.c_str(), (uint16_t)this->method);
-		MS_DEBUG_DEV("  length (with header): %zu bytes", this->length);
+		MS_DEBUG_DEV("  size: %zu bytes", this->size);
 		char transaction_id[25];
 		for (int i=0; i<12; i++)
 		{
@@ -302,7 +302,10 @@ namespace RTC
 		}
 		if (this->hasFingerprint)
 			MS_DEBUG_DEV("  fingerprint");
+
 		MS_DEBUG_DEV("</StunMessage>");
+
+		#endif
 	}
 
 	StunMessage::Authentication StunMessage::CheckAuthentication(const std::string &local_username, const std::string &local_password)
@@ -343,11 +346,11 @@ namespace RTC
 		// If there is FINGERPRINT it must be discarded for MESSAGE-INTEGRITY calculation,
 		// so the header length field must be modified (and later restored).
 		if (this->hasFingerprint)
-			// Set the length: full length - header length (20) - FINGERPRINT length (8).
-			Utils::Byte::Set2Bytes(this->raw, 2, (uint16_t)(this->length - 20 - 8));
+			// Set the header length field: full size - header length (20) - FINGERPRINT length (8).
+			Utils::Byte::Set2Bytes(this->data, 2, (uint16_t)(this->size - 20 - 8));
 
 		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-		const uint8_t* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(local_password, this->raw, (this->messageIntegrity - 4) - this->raw);
+		const uint8_t* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(local_password, this->data, (this->messageIntegrity - 4) - this->data);
 
 		Authentication result;
 
@@ -359,7 +362,7 @@ namespace RTC
 
 		// Restore the header length field.
 		if (this->hasFingerprint)
-			Utils::Byte::Set2Bytes(this->raw, 2, (uint16_t)(this->length - 20));
+			Utils::Byte::Set2Bytes(this->data, 2, (uint16_t)(this->size - 20));
 
 		return result;
 	}
@@ -399,15 +402,9 @@ namespace RTC
 		this->password = password;
 	}
 
-	void StunMessage::Serialize()
+	void StunMessage::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
-
-		if (this->isSerialized)
-			delete this->raw;
-
-		// Set this->isSerialized so the destructor will free the buffer.
-		this->isSerialized = true;
 
 		// Some useful variables.
 		uint16_t username_padded_len = 0;
@@ -415,28 +412,31 @@ namespace RTC
 		bool add_xor_mapped_address = (this->xorMappedAddress && this->method == StunMessage::Method::Binding && this->klass == Class::SuccessResponse);
 		bool add_error_code = (this->errorCode && this->klass == Class::ErrorResponse);
 		bool add_message_integrity = (this->klass != Class::ErrorResponse && !this->password.empty());
-		bool add_fingerprint = true;  // Do always.
+		bool add_fingerprint = true; // Do always.
+
+		// Update data pointer.
+		this->data = buffer;
 
 		// First calculate the total required size for the entire message.
-		this->length = 20;  // Header.
+		this->size = 20; // Header.
 
 		if (!this->username.empty())
 		{
 			username_padded_len = Utils::Byte::PadTo4Bytes((uint16_t)this->username.length());
-			this->length += 4 + username_padded_len;
+			this->size += 4 + username_padded_len;
 		}
 
 		if (this->priority)
-			this->length += 4 + 4;
+			this->size += 4 + 4;
 
 		if (this->iceControlling)
-			this->length += 4 + 8;
+			this->size += 4 + 8;
 
 		if (this->iceControlled)
-			this->length += 4 + 8;
+			this->size += 4 + 8;
 
 		if (this->hasUseCandidate)
-			this->length += 4;
+			this->size += 4;
 
 		if (add_xor_mapped_address)
 		{
@@ -445,14 +445,14 @@ namespace RTC
 				case AF_INET:
 				{
 					xor_mapped_address_padded_len = 8;
-					this->length += 4 + 8;
+					this->size += 4 + 8;
 
 					break;
 				}
 				case AF_INET6:
 				{
 					xor_mapped_address_padded_len = 20;
-					this->length += 4 + 20;
+					this->size += 4 + 20;
 
 					break;
 				}
@@ -466,16 +466,13 @@ namespace RTC
 		}
 
 		if (add_error_code)
-			this->length += 4 + 4;
+			this->size += 4 + 4;
 
 		if (add_message_integrity)
-			this->length += 4 + 20;
+			this->size += 4 + 20;
 
 		if (add_fingerprint)
-			this->length += 4 + 4;
-
-		// Allocate it.
-		this->raw = new uint8_t[this->length];
+			this->size += 4 + 4;
 
 		// Merge class and method fields into type.
 		uint16_t type_field = ((uint16_t)this->method & 0x0f80) << 2;
@@ -485,19 +482,19 @@ namespace RTC
 		type_field |= ((uint16_t)this->klass & 0x01) << 4;
 
 		// Set type field.
-		Utils::Byte::Set2Bytes(this->raw, 0, type_field);
+		Utils::Byte::Set2Bytes(buffer, 0, type_field);
 
 		// Set length field.
-		Utils::Byte::Set2Bytes(this->raw, 2, (uint16_t)this->length - 20);
+		Utils::Byte::Set2Bytes(buffer, 2, (uint16_t)this->size - 20);
 
 		// Set magic cookie.
-		std::memcpy(this->raw + 4, StunMessage::magicCookie, 4);
+		std::memcpy(buffer + 4, StunMessage::magicCookie, 4);
 
 		// Set TransactionId field.
-		std::memcpy(this->raw + 8, this->transactionId, 12);
+		std::memcpy(buffer + 8, this->transactionId, 12);
 
 		// Update the transaction ID pointer.
-		this->transactionId = this->raw + 8;
+		this->transactionId = buffer + 8;
 
 		// Add atributes.
 		size_t pos = 20;
@@ -505,53 +502,53 @@ namespace RTC
 		// Add USERNAME.
 		if (username_padded_len)
 		{
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::Username);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, (uint16_t)this->username.length());
-			std::memcpy(this->raw + pos + 4, this->username.c_str(), this->username.length());
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Username);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, (uint16_t)this->username.length());
+			std::memcpy(buffer + pos + 4, this->username.c_str(), this->username.length());
 			pos += 4 + username_padded_len;
 		}
 
 		// Add PRIORITY.
 		if (this->priority)
 		{
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::Priority);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, 4);
-			Utils::Byte::Set4Bytes(this->raw, pos + 4, this->priority);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Priority);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
+			Utils::Byte::Set4Bytes(buffer, pos + 4, this->priority);
 			pos += 4 + 4;
 		}
 
 		// Add ICE-CONTROLLING.
 		if (this->iceControlling)
 		{
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::IceControlling);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, 8);
-			Utils::Byte::Set8Bytes(this->raw, pos + 4, this->iceControlling);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::IceControlling);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, 8);
+			Utils::Byte::Set8Bytes(buffer, pos + 4, this->iceControlling);
 			pos += 4 + 8;
 		}
 
 		// Add ICE-CONTROLLED.
 		if (this->iceControlled)
 		{
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::IceControlled);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, 8);
-			Utils::Byte::Set8Bytes(this->raw, pos + 4, this->iceControlled);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::IceControlled);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, 8);
+			Utils::Byte::Set8Bytes(buffer, pos + 4, this->iceControlled);
 			pos += 4 + 8;
 		}
 
 		// Add USE-CANDIDATE.
 		if (this->hasUseCandidate)
 		{
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::UseCandidate);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, 0);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::UseCandidate);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, 0);
 			pos += 4;
 		}
 
 		// Add XOR-MAPPED-ADDRESS
 		if (add_xor_mapped_address)
 		{
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::XorMappedAddress);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, xor_mapped_address_padded_len);
-			uint8_t* attr_value = this->raw + pos + 4;
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::XorMappedAddress);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, xor_mapped_address_padded_len);
+			uint8_t* attr_value = buffer + pos + 4;
 			switch (this->xorMappedAddress->sa_family)
 			{
 				case AF_INET:
@@ -614,13 +611,13 @@ namespace RTC
 		// Add ERROR-CODE.
 		if (add_error_code)
 		{
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::ErrorCode);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, 4);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ErrorCode);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
 			uint8_t code_class = (uint8_t)(this->errorCode / 100);
 			uint8_t code_number = (uint8_t)this->errorCode - (code_class * 100);
-			Utils::Byte::Set2Bytes(this->raw, pos + 4, 0);
-			Utils::Byte::Set1Byte(this->raw, pos + 6, code_class);
-			Utils::Byte::Set1Byte(this->raw, pos + 7, code_number);
+			Utils::Byte::Set2Bytes(buffer, pos + 4, 0);
+			Utils::Byte::Set1Byte(buffer, pos + 6, code_class);
+			Utils::Byte::Set1Byte(buffer, pos + 7, code_number);
 			pos += 4 + 4;
 		}
 
@@ -629,22 +626,22 @@ namespace RTC
 		{
 			// Ignore FINGERPRINT.
 			if (add_fingerprint)
-				Utils::Byte::Set2Bytes(this->raw, 2, (uint16_t)(this->length - 20 - 8));
+				Utils::Byte::Set2Bytes(buffer, 2, (uint16_t)(this->size - 20 - 8));
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-			const uint8_t* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(this->password, this->raw, pos);
+			const uint8_t* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(this->password, buffer, pos);
 
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::MessageIntegrity);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, 20);
-			std::memcpy(this->raw + pos + 4, computed_message_integrity, 20);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::MessageIntegrity);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, 20);
+			std::memcpy(buffer + pos + 4, computed_message_integrity, 20);
 
 			// Update the pointer.
-			this->messageIntegrity = this->raw + pos + 4;
+			this->messageIntegrity = buffer + pos + 4;
 			pos += 4 + 20;
 
 			// Restore length field.
 			if (add_fingerprint)
-				Utils::Byte::Set2Bytes(this->raw, 2, (uint16_t)(this->length - 20));
+				Utils::Byte::Set2Bytes(buffer, 2, (uint16_t)(this->size - 20));
 		}
 		else
 		{
@@ -657,11 +654,11 @@ namespace RTC
 		{
 			// Compute the CRC32 of the message up to (but excluding) the FINGERPRINT
 			// attribute and XOR it with 0x5354554e.
-			uint32_t computed_fingerprint = Utils::Crypto::GetCRC32(this->raw, pos) ^ 0x5354554e;
+			uint32_t computed_fingerprint = Utils::Crypto::GetCRC32(buffer, pos) ^ 0x5354554e;
 
-			Utils::Byte::Set2Bytes(this->raw, pos, (uint16_t)Attribute::Fingerprint);
-			Utils::Byte::Set2Bytes(this->raw, pos + 2, 4);
-			Utils::Byte::Set4Bytes(this->raw, pos + 4, computed_fingerprint);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Fingerprint);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
+			Utils::Byte::Set4Bytes(buffer, pos + 4, computed_fingerprint);
 			pos += 4 + 4;
 			// Set flag.
 			this->hasFingerprint = true;
@@ -671,6 +668,6 @@ namespace RTC
 			this->hasFingerprint = false;
 		}
 
-		MS_ASSERT(pos == this->length, "pos != this->length");
+		MS_ASSERT(pos == this->size, "pos != this->size");
 	}
 }

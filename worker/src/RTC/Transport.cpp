@@ -505,8 +505,8 @@ namespace RTC
 			return;
 		}
 
-		const uint8_t* data = packet->GetRaw();
-		size_t len = packet->GetLength();
+		const uint8_t* data = packet->GetData();
+		size_t len = packet->GetSize();
 
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
 			return;
@@ -857,7 +857,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Send the STUN response over the same transport tuple.
-		tuple->Send(msg->GetRaw(), msg->GetLength());
+		tuple->Send(msg->GetData(), msg->GetSize());
 	}
 
 	void Transport::onIceSelectedTuple(RTC::IceServer* iceServer, RTC::TransportTuple* tuple)

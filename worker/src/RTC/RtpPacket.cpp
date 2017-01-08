@@ -108,34 +108,30 @@ namespace RTC
 		if (payloadLength == 0)
 			payload = nullptr;
 
-		MS_ASSERT(len == sizeof(Header) + csrc_list_size + (extensionHeader ? 4 + extension_value_size : 0) + payloadLength + (size_t)payloadPadding, "packet's computed length does not match received length");
+		MS_ASSERT(len == sizeof(Header) + csrc_list_size + (extensionHeader ? 4 + extension_value_size : 0) + payloadLength + (size_t)payloadPadding, "packet's computed size does not match received size");
 
-		return new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, data, len);
+		return new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
 	}
 
 	/* Instance methods. */
 
-	RtpPacket::RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLength, uint8_t payloadPadding, const uint8_t* raw, size_t length) :
+	RtpPacket::RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLength, uint8_t payloadPadding, size_t size) :
 		header(header),
 		extensionHeader(extensionHeader),
 		payload((uint8_t*)payload),
 		payloadLength(payloadLength),
 		payloadPadding(payloadPadding),
-		raw((uint8_t*)raw),
-		length(length)
+		size(size)
 	{
 		MS_TRACE();
 
 		if (this->header->csrc_count)
-			this->csrcList = (uint8_t*)raw + sizeof(Header);
+			this->csrcList = (uint8_t*)header + sizeof(Header);
 	}
 
 	RtpPacket::~RtpPacket()
 	{
 		MS_TRACE();
-
-		if (this->isSerialized)
-			delete this->raw;
 	}
 
 	void RtpPacket::Dump()
@@ -164,83 +160,73 @@ namespace RTC
 		#endif
 	}
 
-	void RtpPacket::Serialize()
+	void RtpPacket::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
-		if (this->isSerialized)
-			delete this->raw;
-
-		// Set this->isSerialized so the destructor will free the buffer.
-		this->isSerialized = true;
-
-		// Some useful variables.
 		size_t extension_value_size = 0;
 
 		// First calculate the total required size for the entire message.
-		this->length = sizeof(Header);  // Minimum header.
+		this->size = sizeof(Header); // Minimum header.
 
 		if (this->csrcList)
-			this->length += this->header->csrc_count * sizeof(header->ssrc);
+			this->size += this->header->csrc_count * sizeof(header->ssrc);
 
 		if (this->extensionHeader)
 		{
 			extension_value_size = (size_t)(ntohs(this->extensionHeader->length) * 4);
-			this->length += 4 + extension_value_size;
+			this->size += 4 + extension_value_size;
 		}
 
-		this->length += this->payloadLength;
+		this->size += this->payloadLength;
 
-		this->length += (size_t)this->payloadPadding;
-
-		// Allocate it.
-		this->raw = new uint8_t[this->length];
+		this->size += (size_t)this->payloadPadding;
 
 		// Add minimum header.
-		std::memcpy(this->raw, this->header, sizeof(Header));
+		std::memcpy(buffer, this->header, sizeof(Header));
 
 		// Update the header pointer.
-		this->header = (Header*)(this->raw);
+		this->header = (Header*)buffer;
 		size_t pos = sizeof(Header);
 
 		// Add CSRC list.
 		if (this->csrcList)
 		{
-			std::memcpy(this->raw + pos, this->csrcList, this->header->csrc_count * sizeof(this->header->ssrc));
+			std::memcpy(buffer + pos, this->csrcList, this->header->csrc_count * sizeof(this->header->ssrc));
 
 			// Update the pointer.
-			this->csrcList = this->raw + pos;
+			this->csrcList = buffer + pos;
 			pos += this->header->csrc_count * sizeof(this->header->ssrc);
 		}
 
 		// Add extension header.
 		if (this->extensionHeader)
 		{
-			std::memcpy(this->raw + pos, this->extensionHeader, 4 + extension_value_size);
+			std::memcpy(buffer + pos, this->extensionHeader, 4 + extension_value_size);
 
 			// Update the header extension pointer.
-			this->extensionHeader = (ExtensionHeader*)(this->raw + pos);
+			this->extensionHeader = (ExtensionHeader*)(buffer + pos);
 			pos += 4 + extension_value_size;
 		}
 
 		// Add payload.
 		if (this->payload)
 		{
-			std::memcpy(this->raw + pos, this->payload, this->payloadLength);
+			std::memcpy(buffer + pos, this->payload, this->payloadLength);
 
 			// Update the payload pointer.
-			this->payload = this->raw + pos;
+			this->payload = buffer + pos;
 			pos += this->payloadLength;
 		}
 
 		// Add payload padding.
 		if (this->payloadPadding)
 		{
-			this->raw[pos + (size_t)this->payloadPadding - 1] = this->payloadPadding;
+			buffer[pos + (size_t)this->payloadPadding - 1] = this->payloadPadding;
 			pos += (size_t)this->payloadPadding;
 		}
 
-		MS_ASSERT(pos == this->length, "pos != this->length");
+		MS_ASSERT(pos == this->size, "pos != this->size");
 	}
 
 	RtpPacket* RtpPacket::Clone(uint8_t* buffer)
@@ -248,7 +234,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Copy the full packet into the given buffer.
-		std::memcpy(buffer, GetRaw(), GetLength());
+		std::memcpy(buffer, GetData(), GetSize());
 
 		// Set header pointer pointing to the given buffer.
 		Header* header = (Header*)buffer;
@@ -285,9 +271,9 @@ namespace RTC
 			pos += (size_t)this->payloadPadding;
 		}
 
-		MS_ASSERT(pos == this->length, "pos != this->length");
+		MS_ASSERT(pos == this->size, "pos != this->size");
 
 		// Create the new RtpPacket instance and return it.
-		return new RtpPacket(header, extensionHeader, payload, this->payloadLength, this->payloadPadding, buffer, this->length);
+		return new RtpPacket(header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
 	}
 }
