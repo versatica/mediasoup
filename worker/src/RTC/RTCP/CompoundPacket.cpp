@@ -50,7 +50,7 @@ namespace RTC { namespace RTCP
 			if (this->receiverReportPacket.GetCount())
 			{
 				// Fix header length.
-				Packet::CommonHeader* header = (Packet::CommonHeader*) this->raw;
+				Packet::CommonHeader* header = (Packet::CommonHeader*)this->raw;
 				header->length += (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount()) / 4;
 
 				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();

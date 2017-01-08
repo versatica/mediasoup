@@ -33,7 +33,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		this->raw = new uint8_t[sizeof(Header)];
-		this->header = (Header*) this->raw;
+		this->header = (Header*)this->raw;
 
 		// Set reserved bits to zero.
 		std::memset(this->header, 0, sizeof(Header));

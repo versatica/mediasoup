@@ -66,7 +66,7 @@ namespace RTC { namespace RTCP
 		MS_ASSERT(length <= RpsiItem::MaxBitStringSize, "rpsi bit string length exceeds the maximum value");
 
 		this->raw = new uint8_t[sizeof(Header)];
-		this->header = (Header*) this->raw;
+		this->header = (Header*)this->raw;
 
 		// 32 bits padding.
 		size_t padding = (-length) & 3;
