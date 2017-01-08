@@ -4,7 +4,7 @@
 #include "RTC/RtpPacket.h"
 #include "Utils.h"
 #include "Logger.h"
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {

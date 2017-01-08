@@ -399,7 +399,7 @@ namespace RTC
 				static const Json::StaticString k_value("value");
 
 				RTC::DtlsTransport::Fingerprint remoteFingerprint;
-				RTC::DtlsTransport::Role remoteRole = RTC::DtlsTransport::Role::AUTO;  // Default value if missing.
+				RTC::DtlsTransport::Role remoteRole = RTC::DtlsTransport::Role::AUTO; // Default value if missing.
 
 				// Ensure this method is not called twice.
 				if (this->remoteDtlsParametersGiven)

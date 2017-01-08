@@ -11,7 +11,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	const uint8_t StunMessage::magicCookie[] = {0x21, 0x12, 0xA4, 0x42};
+	const uint8_t StunMessage::magicCookie[] = { 0x21, 0x12, 0xA4, 0x42 };
 
 	/* Class methods. */
 

@@ -134,7 +134,7 @@ namespace RTC
 			goto error;
 		}
 
-		ret = BN_set_word(bne, RSA_F4);  // RSA_F4 == 65537.
+		ret = BN_set_word(bne, RSA_F4); // RSA_F4 == 65537.
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("BN_set_word() failed");
@@ -189,8 +189,8 @@ namespace RTC
 		ASN1_INTEGER_set(X509_get_serialNumber(DtlsTransport::certificate), (long)Utils::Crypto::GetRandomUInt(1000000, 9999999));
 
 		// Set valid period.
-		X509_gmtime_adj(X509_get_notBefore(DtlsTransport::certificate), -1*60*60*24*365*10);  // - 10 years.
-		X509_gmtime_adj(X509_get_notAfter(DtlsTransport::certificate), 60*60*24*365*10);  // 10 years.
+		X509_gmtime_adj(X509_get_notBefore(DtlsTransport::certificate), -1*60*60*24*365*10); // - 10 years.
+		X509_gmtime_adj(X509_get_notAfter(DtlsTransport::certificate), 60*60*24*365*10); // 10 years.
 
 		// Set the public key for the certificate using the key.
 		ret = X509_set_pubkey(DtlsTransport::certificate, DtlsTransport::privateKey);
@@ -236,7 +236,7 @@ namespace RTC
 		if (rsa_key && !DtlsTransport::privateKey)
 			RSA_free(rsa_key);
 		if (DtlsTransport::privateKey)
-			EVP_PKEY_free(DtlsTransport::privateKey);  // NOTE: This also frees the RSA key.
+			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the RSA key.
 		if (DtlsTransport::certificate)
 			X509_free(DtlsTransport::certificate);
 

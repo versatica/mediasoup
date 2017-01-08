@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include <string>
-#include <cstring>  // std::memcmp(), std::memcpy()
+#include <cstring> // std::memcmp(), std::memcpy()
 #include <openssl/hmac.h>
 
 namespace Utils

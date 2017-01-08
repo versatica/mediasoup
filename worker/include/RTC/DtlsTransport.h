@@ -150,8 +150,8 @@ namespace RTC
 		Listener* listener = nullptr;
 		// Allocated by this.
 		SSL* ssl = nullptr;
-		BIO* sslBioFromNetwork = nullptr;  // The BIO from which ssl reads.
-		BIO* sslBioToNetwork = nullptr;  // The BIO in which ssl writes.
+		BIO* sslBioFromNetwork = nullptr; // The BIO from which ssl reads.
+		BIO* sslBioToNetwork = nullptr; // The BIO in which ssl writes.
 		Timer* timer = nullptr;
 		// Others.
 		DtlsState state = DtlsState::NEW;

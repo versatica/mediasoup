@@ -62,7 +62,7 @@ void DepOpenSSL::ClassDestroy()
 
 	// "Brutal" (thread-unsafe) Application-global cleanup functions.
 	ERR_free_strings();
-	EVP_cleanup();  // Removes all ciphers and digests.
+	EVP_cleanup(); // Removes all ciphers and digests.
 	CRYPTO_cleanup_all_ex_data();
 
 	// https://bugs.launchpad.net/percona-server/+bug/1341067.

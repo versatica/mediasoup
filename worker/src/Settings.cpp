@@ -71,7 +71,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	/* Parse command line options. */
 
-	opterr = 0;  // Don't allow getopt to print error messages.
+	opterr = 0; // Don't allow getopt to print error messages.
 	while ((c = getopt_long_only(argc, argv, "", options, &option_index)) != -1)
 	{
 		if (!optarg)

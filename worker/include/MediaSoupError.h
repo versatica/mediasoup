@@ -4,7 +4,7 @@
 #include "Logger.h"
 #include <stdexcept>
 #include <string>
-#include <cstdio>  // std::snprintf
+#include <cstdio> // std::snprintf
 
 class MediaSoupError :
 	public std::runtime_error

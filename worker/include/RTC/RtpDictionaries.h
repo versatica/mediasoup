@@ -137,7 +137,7 @@ namespace RTC
 	class RtpCodecParameters
 	{
 	public:
-		RtpCodecParameters() {};  // TODO: yes?
+		RtpCodecParameters() {}; // TODO: yes?
 		RtpCodecParameters(Json::Value& data, RTC::Scope scope);
 
 		Json::Value toJson();

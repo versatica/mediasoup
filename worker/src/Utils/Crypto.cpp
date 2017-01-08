@@ -11,7 +11,7 @@ namespace Utils
 
 	uint32_t Crypto::seed;
 	HMAC_CTX Crypto::hmacSha1Ctx;
-	uint8_t Crypto::hmacSha1Buffer[20];  // SHA-1 result is 20 bytes long.
+	uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
 	const uint32_t Crypto::crc32Table[] =
 	{
 		0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
