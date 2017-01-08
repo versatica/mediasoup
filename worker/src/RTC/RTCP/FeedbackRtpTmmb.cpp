@@ -38,7 +38,7 @@ namespace RTC { namespace RTCP
 	{
 		this->header = header;
 
-		uint32_t compact = ntohl(header->compact);
+		uint32_t compact = (uint32_t)ntohl(header->compact);
 		uint8_t exponent = compact >> 26;             /* first 6 bits */
 		uint32_t mantissa = (compact >> 9) & 0x1ffff; /* next 17 bits */
 
@@ -82,7 +82,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<TmmbItem>");
-		MS_DEBUG_DEV("  ssrc     : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("  ssrc     : %" PRIu32, (uint32_t)ntohl(this->header->ssrc));
 		MS_DEBUG_DEV("  bitrate  : %" PRIu64, this->bitrate);
 		MS_DEBUG_DEV("  overhead : %" PRIu16, this->overhead);
 		MS_DEBUG_DEV("</TmmbItem>");

@@ -35,13 +35,13 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<ReceiverReport>");
-		MS_DEBUG_DEV("  ssrc          : %" PRIu32, ntohl(this->header->ssrc));
+		MS_DEBUG_DEV("  ssrc          : %" PRIu32, (uint32_t)ntohl(this->header->ssrc));
 		MS_DEBUG_DEV("  fraction lost : %" PRIu32, this->header->fraction_lost);
 		MS_DEBUG_DEV("  total lost    : %" PRIu32, this->GetTotalLost());
-		MS_DEBUG_DEV("  last seq      : %" PRIu32, ntohl(this->header->last_seq));
-		MS_DEBUG_DEV("  jitter        : %" PRIu32, ntohl(this->header->jitter));
-		MS_DEBUG_DEV("  lsr           : %" PRIu32, ntohl(this->header->lsr));
-		MS_DEBUG_DEV("  dlsr          : %" PRIu32, ntohl(this->header->dlsr));
+		MS_DEBUG_DEV("  last seq      : %" PRIu32, (uint32_t)ntohl(this->header->last_seq));
+		MS_DEBUG_DEV("  jitter        : %" PRIu32, (uint32_t)ntohl(this->header->jitter));
+		MS_DEBUG_DEV("  lsr           : %" PRIu32, (uint32_t)ntohl(this->header->lsr));
+		MS_DEBUG_DEV("  dlsr          : %" PRIu32, (uint32_t)ntohl(this->header->dlsr));
 		MS_DEBUG_DEV("</ReceiverReport>");
 	}
 

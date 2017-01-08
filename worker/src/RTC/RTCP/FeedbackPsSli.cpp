@@ -34,7 +34,7 @@ namespace RTC { namespace RTCP
 
 		this->header = header;
 
-		uint32_t compact = ntohl(header->compact);
+		uint32_t compact = (uint32_t)ntohl(header->compact);
 
 		this->first = compact >> 19;            /* first 13 bits */
 		this->number = (compact >> 6) & 0x1fff; /* next  13 bits */
