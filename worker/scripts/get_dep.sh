@@ -95,7 +95,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.10.1"
+	GIT_TAG="v1.10.2"
 	DEST="deps/libuv"
 
 	if [ -d "${DEST}" ] ; then
