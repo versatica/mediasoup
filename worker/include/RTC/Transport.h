@@ -52,7 +52,7 @@ namespace RTC
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
-		RTC::RtpReceiver*  GetRtpReceiver(uint32_t ssrc);
+		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
 
 	private:
 		void MayRunDtlsTransport();
