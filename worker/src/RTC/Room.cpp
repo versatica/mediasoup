@@ -381,8 +381,9 @@ namespace RTC
 				// Set unique PT.
 
 				// If the codec has PT and it's not already used, let it untouched.
-				if (mediaCodec.hasPayloadType &&
-						roomPayloadTypes.find(mediaCodec.payloadType) == roomPayloadTypes.end())
+				if (
+					mediaCodec.hasPayloadType &&
+					roomPayloadTypes.find(mediaCodec.payloadType) == roomPayloadTypes.end())
 				{
 					;
 				}
