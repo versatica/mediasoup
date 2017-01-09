@@ -6,7 +6,7 @@ current_dir=${PWD##*/}
 dep=$1
 
 if [ "${current_dir}" != "worker" ] ; then
-	echo ">>> [ERROR] $(basename $0) must be named from mediasoup/worker/ directory" >&2
+	echo ">>> [ERROR] $(basename $0) must be called from mediasoup/worker/ directory" >&2
 	exit 1
 fi
 
@@ -14,7 +14,7 @@ function get_gyp()
 {
 	GIT_REPO="https://chromium.googlesource.com/external/gyp.git"
 	GIT_TAG="master"
-	DEST="tools/gyp"
+	DEST="deps/gyp"
 
 	if [ -d "${DEST}" ] ; then
 		echo ">>> [INFO] deleting ${DEST} ..."
