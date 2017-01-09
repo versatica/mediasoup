@@ -73,7 +73,6 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
 		virtual void onTransportClosed(RTC::Transport* transport) override;
-		// TODO: TMP
 		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
 
 	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
