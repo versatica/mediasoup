@@ -380,16 +380,10 @@ void TcpConnection::onUvWriteError(int error)
 	if (this->isClosing)
 		return;
 
-	if (error == UV_EPIPE || error == UV_ENOTCONN)
-	{
-		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(error));
-	}
-	else
-	{
-		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(error));
-
+	if (error != UV_EPIPE && error != UV_ENOTCONN)
 		this->hasError = true;
-	}
+
+	MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(error));
 
 	Close();
 }
@@ -402,9 +396,13 @@ void TcpConnection::onUvShutdown(uv_shutdown_t* req, int status)
 	delete req;
 
 	if (status == UV_EPIPE || status == UV_ENOTCONN || status == UV_ECANCELED)
+	{
 		MS_WARN_DEV("shutdown error: %s", uv_strerror(status));
+	}
 	else if (status)
+	{
 		MS_WARN_DEV("shutdown error: %s", uv_strerror(status));
+	}
 
 	// Now do close the handle.
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);

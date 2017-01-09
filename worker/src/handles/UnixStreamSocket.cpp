@@ -173,6 +173,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	else if (written < 0)
 	{
 		MS_ERROR_STD("uv_try_write() failed, closing the socket: %s", uv_strerror(written));
+
 		Close();
 		return;
 	}
@@ -262,16 +263,10 @@ void UnixStreamSocket::onUvWriteError(int error)
 	if (this->isClosing)
 		return;
 
-	if (error == UV_EPIPE || error == UV_ENOTCONN)
-	{
-		MS_ERROR_STD("write error, closing the pipe: %s", uv_strerror(error));
-	}
-	else
-	{
-		MS_ERROR_STD("write error, closing the pipe: %s", uv_strerror(error));
-
+	if (error != UV_EPIPE && error != UV_ENOTCONN)
 		this->hasError = true;
-	}
+
+	MS_ERROR_STD("write error, closing the pipe: %s", uv_strerror(error));
 
 	Close();
 }
@@ -284,9 +279,13 @@ void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 	delete req;
 
 	if (status == UV_EPIPE || status == UV_ENOTCONN || status == UV_ECANCELED)
+	{
 		MS_ERROR_STD("shutdown error: %s", uv_strerror(status));
+	}
 	else if (status)
+	{
 		MS_ERROR_STD("shutdown error: %s", uv_strerror(status));
+	}
 
 	// Now do close the handle.
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
