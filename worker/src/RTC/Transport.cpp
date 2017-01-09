@@ -530,8 +530,8 @@ namespace RTC
 			return;
 		}
 
-		size_t len = packet->Serialize();
-		const uint8_t* data = packet->GetRaw();
+		const uint8_t* data = packet->GetData();
+		size_t len = packet->GetSize();
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
@@ -539,7 +539,7 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
-	void Transport::SendRtcpPacket(RTC::RTCP::CompoundPacket* packet)
+	void Transport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();
 
@@ -555,8 +555,7 @@ namespace RTC
 			return;
 		}
 
-		packet->Serialize();
-		const uint8_t* data = packet->GetRaw();
+		const uint8_t* data = packet->GetData();
 		size_t len = packet->GetSize();
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))

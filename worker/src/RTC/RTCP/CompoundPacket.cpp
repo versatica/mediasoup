@@ -8,15 +8,11 @@ namespace RTC { namespace RTCP
 {
 	/* Instance methods. */
 
-	CompoundPacket::~CompoundPacket()
-	{
-		if (this->raw)
-			delete this->raw;
-	}
-
-	void CompoundPacket::Serialize()
+	void CompoundPacket::Serialize(uint8_t* data)
 	{
 		MS_TRACE();
+
+		this->header = data;
 
 		// Calculate the total required size for the entire message.
 		if (this->senderReportPacket.GetCount())
@@ -36,21 +32,18 @@ namespace RTC { namespace RTCP
 		if (this->sdesPacket.GetCount())
 			this->size += this->sdesPacket.GetSize();
 
-		// Allocate it.
-		this->raw = new uint8_t[this->size];
-
 		// Fill it.
 		size_t offset = 0;
 
 		if (this->senderReportPacket.GetCount())
 		{
-			this->senderReportPacket.Serialize(this->raw);
+			this->senderReportPacket.Serialize(this->header);
 			offset = this->senderReportPacket.GetSize();
 
 			if (this->receiverReportPacket.GetCount())
 			{
 				// Fix header length.
-				Packet::CommonHeader* header = (Packet::CommonHeader*)this->raw;
+				Packet::CommonHeader* header = (Packet::CommonHeader*)this->header;
 				header->length += (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount()) / 4;
 
 				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
@@ -58,20 +51,20 @@ namespace RTC { namespace RTCP
 				{
 					ReceiverReport* report = (*it);
 
-					report->Serialize(this->raw + offset);
+					report->Serialize(this->header + offset);
 					offset += sizeof(ReceiverReport::Header);
 				}
 			}
 		}
 		else
 		{
-			this->receiverReportPacket.Serialize(this->raw);
+			this->receiverReportPacket.Serialize(this->header);
 			offset = this->receiverReportPacket.GetSize();
 		}
 
 		if (this->sdesPacket.GetCount())
 		{
-			this->sdesPacket.Serialize(this->raw + offset);
+			this->sdesPacket.Serialize(this->header + offset);
 			offset += this->sdesPacket.GetSize();
 		}
 	}

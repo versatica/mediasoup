@@ -12,9 +12,7 @@ namespace RTC { namespace RTCP
 	class CompoundPacket
 	{
 	public:
-		~CompoundPacket();
-
-		uint8_t* GetRaw();
+		const uint8_t* GetData();
 		size_t GetSize();
 		size_t GetSenderReportCount();
 		size_t GetReceiverReportCount();
@@ -22,10 +20,10 @@ namespace RTC { namespace RTCP
 		void AddSenderReport(SenderReport* report);
 		void AddReceiverReport(ReceiverReport* report);
 		void AddSdesChunk(SdesChunk* chunk);
-		void Serialize();
+		void Serialize(uint8_t* buffer);
 
 	private:
-		uint8_t* raw = nullptr;
+		uint8_t* header = nullptr;
 		size_t size = 0;
 		SenderReportPacket senderReportPacket;
 		ReceiverReportPacket receiverReportPacket;
@@ -35,9 +33,9 @@ namespace RTC { namespace RTCP
 	/* Inline methods. */
 
 	inline
-	uint8_t* CompoundPacket::GetRaw()
+	const uint8_t* CompoundPacket::GetData()
 	{
-		return this->raw;
+		return this->header;
 	}
 
 	inline

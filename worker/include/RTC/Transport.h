@@ -51,7 +51,7 @@ namespace RTC
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
-		void SendRtcpPacket(RTC::RTCP::CompoundPacket* packet);
+		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
 		RTC::RtpReceiver*  GetRtpReceiver(uint32_t ssrc);
 
 	private:
