@@ -9,6 +9,10 @@
 
 namespace RTC
 {
+	/* Class variables. */
+
+	uint8_t RtpReceiver::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
+
 	/* Instance methods. */
 
 	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind) :
@@ -302,7 +306,17 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->transport)
+		{
+			// Ensure that the RTCP packet fits into the RTCP buffer.
+			if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+			{
+				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+				return;
+			}
+
+			packet->Serialize(RtpReceiver::rtcpBuffer);
 			this->transport->SendRtcpPacket(packet);
+		}
 	};
 
 	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet)
@@ -310,6 +324,16 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->transport)
+		{
+			// Ensure that the RTCP packet fits into the RTCP buffer.
+			if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+			{
+				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+				return;
+			}
+
+			packet->Serialize(RtpReceiver::rtcpBuffer);
 			this->transport->SendRtcpPacket(packet);
+		}
 	};
 }

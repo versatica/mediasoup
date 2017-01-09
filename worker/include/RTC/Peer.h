@@ -42,6 +42,9 @@ namespace RTC
 			virtual void onPeerRtcpCompleted(RTC::Peer* peer) = 0;
 		};
 
+	private:
+		static uint8_t rtcpBuffer[];
+
 	public:
 		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName);
 		virtual ~Peer();

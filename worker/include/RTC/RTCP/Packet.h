@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#define MS_RTCP_BUFFER_SIZE 65536
+
 namespace RTC { namespace RTCP
 {
 	enum class Type : uint8_t
@@ -65,8 +67,7 @@ namespace RTC { namespace RTCP
 		void SetNext(Packet* packet);
 		Packet* GetNext();
 		Type GetType();
-		size_t Serialize();
-		uint8_t* GetRaw();
+		const uint8_t* GetData();
 
 	public:
 		virtual void Dump() = 0;
@@ -77,7 +78,7 @@ namespace RTC { namespace RTCP
 	private:
 		Type type;
 		Packet* next = nullptr;
-		uint8_t* raw = nullptr;
+		CommonHeader* header = nullptr;
 	};
 
 	/* Inline static methods. */
@@ -103,6 +104,15 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	inline
+	Packet::Packet(Type type)
+		:type(type)
+	{}
+
+	inline
+	Packet::~Packet()
+	{}
+
+	inline
 	Packet* Packet::GetNext()
 	{
 		return this->next;
@@ -112,19 +122,6 @@ namespace RTC { namespace RTCP
 	void Packet::SetNext(Packet* packet)
 	{
 		this->next = packet;
-	}
-
-	inline
-	size_t Packet::Serialize()
-	{
-		if (this->raw)
-			delete this->raw;
-
-		size_t size = this->GetSize();
-
-		this->raw = new uint8_t[size];
-
-		return this->Serialize(this->raw);
 	}
 
 	inline
@@ -140,9 +137,9 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint8_t* Packet::GetRaw()
+	const uint8_t* Packet::GetData()
 	{
-		return this->raw;
+		return (uint8_t*)this->header;
 	}
 }}
 

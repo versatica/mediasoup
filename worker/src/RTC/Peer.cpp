@@ -9,6 +9,10 @@
 
 namespace RTC
 {
+	/* Class variables. */
+
+	uint8_t Peer::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
+
 	/* Instance methods. */
 
 	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName) :
@@ -550,7 +554,17 @@ namespace RTC
 			}
 
 			if (packet.GetSenderReportCount() || packet.GetReceiverReportCount())
-				transport->SendRtcpPacket(&packet);
+			{
+				// Ensure that the RTCP packet fits into the RTCP buffer.
+				if (packet.GetSize() > MS_RTCP_BUFFER_SIZE)
+				{
+					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet.GetSize());
+					return;
+				}
+
+				packet.Serialize(Peer::rtcpBuffer);
+				transport->SendRtcpCompoundPacket(&packet);
+			}
 		}
 	}
 

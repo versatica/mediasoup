@@ -33,17 +33,17 @@ namespace RTC { namespace RTCP
 		uint32_t GetMediaSsrc();
 		void SetMediaSsrc(uint32_t ssrc);
 
-	protected:
-		explicit FeedbackPacket(CommonHeader* commonHeader);
-		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
-		virtual ~FeedbackPacket();
-
 	/* Pure virtual methods inherited from Packet. */
-	protected:
+	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
 		virtual size_t GetCount() override;
 		virtual size_t GetSize() override;
+
+	protected:
+		explicit FeedbackPacket(CommonHeader* commonHeader);
+		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
+		virtual ~FeedbackPacket();
 
 	private:
 		Header* header = nullptr;

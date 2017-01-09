@@ -151,29 +151,20 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	Packet::Packet(Type type)
-		:type(type)
-	{}
-
-	Packet::~Packet()
-	{
-		if (this->raw)
-			delete raw;
-	}
-
 	size_t Packet::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
+		this->header = (CommonHeader*)buffer;
+
 		size_t length = (this->GetSize() / 4) - 1;
-		CommonHeader* header = (Packet::CommonHeader*)buffer;
 
 		// Fill the common header.
-		header->version = 2;
-		header->padding = 0;
-		header->count = (uint8_t)this->GetCount();
-		header->packet_type = (uint8_t) this->type;
-		header->length = htons(length);
+		this->header->version = 2;
+		this->header->padding = 0;
+		this->header->count = (uint8_t)this->GetCount();
+		this->header->packet_type = (uint8_t)this->type;
+		this->header->length = htons(length);
 
 		return sizeof(CommonHeader);
 	}
