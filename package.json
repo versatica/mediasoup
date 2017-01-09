@@ -21,12 +21,12 @@
   },
   "dependencies": {
     "check-types": "^7.0.1",
-    "clone": "^2.0.0",
-    "debug": "^2.2.0",
+    "clone": "^2.1.0",
+    "debug": "^2.6.0",
     "netstring": "^0.3.0",
     "random-number": "0.0.7",
     "random-string": "^0.1.2",
-    "sdp-transform": "^1.6.2"
+    "sdp-transform": "^1.7.0"
   },
   "devDependencies": {
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
@@ -34,7 +34,7 @@
     "gulp-replace": "^0.5.4",
     "gulp-shell": "^0.5.2",
     "gulp-touch": "^1.0.1",
-    "tap": "^7.1.2"
+    "tap": "^9.0.1"
   },
   "scripts": {
     "test": "gulp test",
