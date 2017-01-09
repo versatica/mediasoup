@@ -138,11 +138,6 @@ tap.test('room.getCapabilities() must retrieve current room capabilities', { tim
 	server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			// TODO: REMOVE
-			console.log(JSON.stringify(room.getCapabilities('audio'), null, '\t'));
-			console.log(JSON.stringify(room.getCapabilities('video'), null, '\t'));
-			console.log(JSON.stringify(room.getCapabilities('depth'), null, '\t'));
-
 			t.ok(room.getCapabilities('audio'), 'room.getCapabilities("audio") returns an object');
 			t.ok(room.getCapabilities('video'), 'room.getCapabilities("video") returns an object');
 			t.ok(room.getCapabilities('depth'), 'room.getCapabilities("depth") returns an object');
