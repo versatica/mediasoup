@@ -14,7 +14,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	RTC::RtpCapabilities Room::supportedCapabilities;
+	RTC::RtpCapabilities Room::supportedRtpCapabilities;
 
 	/* Class methods. */
 
@@ -31,13 +31,13 @@ namespace RTC
 
 			Json::CharReader* jsonReader = builder.newCharReader();
 
-			// NOTE: This line is auto-generated from data/supportedCapabilities.js.
-			const std::string capabilities = R"({"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}],"fecMechanisms":[]})";
+			// NOTE: These lines are auto-generated from data/supportedCapabilities.js.
+			const std::string supportedRtpCapabilities = R"({"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}],"fecMechanisms":[]})";
 
 			Json::Value json;
 			std::string json_parse_error;
 
-			if (!jsonReader->parse(capabilities.c_str(), capabilities.c_str() + capabilities.length(), &json, &json_parse_error))
+			if (!jsonReader->parse(supportedRtpCapabilities.c_str(), supportedRtpCapabilities.c_str() + supportedRtpCapabilities.length(), &json, &json_parse_error))
 			{
 				delete jsonReader;
 
@@ -48,7 +48,7 @@ namespace RTC
 
 			try
 			{
-				Room::supportedCapabilities = RTC::RtpCapabilities(json, RTC::Scope::ROOM_CAPABILITY);
+				Room::supportedRtpCapabilities = RTC::RtpCapabilities(json, RTC::Scope::ROOM_CAPABILITY);
 			}
 			catch (const MediaSoupError &error)
 			{
@@ -421,10 +421,10 @@ namespace RTC
 		}
 
 		// Add supported RTP header extensions.
-		this->capabilities.headerExtensions = Room::supportedCapabilities.headerExtensions;
+		this->capabilities.headerExtensions = Room::supportedRtpCapabilities.headerExtensions;
 
 		// Add supported FEC mechanisms.
-		this->capabilities.fecMechanisms = Room::supportedCapabilities.fecMechanisms;
+		this->capabilities.fecMechanisms = Room::supportedRtpCapabilities.fecMechanisms;
 	}
 
 	void Room::onPeerClosed(RTC::Peer* peer)
@@ -509,11 +509,11 @@ namespace RTC
 			{
 				RTC::Peer* sender_peer = kv.second;
 
-				// Skip receiver peer.
+				// Skip receiver Peer.
 				if (sender_peer == peer)
 					continue;
 
-				// Skip peer with capabilities unset yet.
+				// Skip Peer with capabilities not set yet.
 				if (!sender_peer->HasCapabilities())
 					continue;
 

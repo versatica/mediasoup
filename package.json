@@ -33,7 +33,7 @@
     "gulp-eslint": "^3.0.1",
     "gulp-replace": "^0.5.4",
     "gulp-shell": "^0.5.2",
-    "gulp-touch": "^1.0.1",
+    "gulp-touch-cmd": "0.0.1",
     "tap": "^9.0.1"
   },
   "scripts": {

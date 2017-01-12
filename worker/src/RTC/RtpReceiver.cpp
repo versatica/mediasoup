@@ -287,6 +287,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Set a random muxId.
+		// TODO: This is wrong, we are replacing the given muxId. Instead, this
+		// method should set a random muxId and map the original value.
 		this->rtpParameters->muxId = Utils::Crypto::GetRandomString(8);
 
 		// TODO: Fill SSRCs with random values and set some mechanism to replace

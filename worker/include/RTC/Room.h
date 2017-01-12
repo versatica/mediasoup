@@ -30,7 +30,7 @@ namespace RTC
 		static void ClassInit();
 
 	private:
-		static RTC::RtpCapabilities supportedCapabilities;
+		static RTC::RtpCapabilities supportedRtpCapabilities;
 		static std::vector<uint8_t> availablePayloadTypes;
 
 	public:

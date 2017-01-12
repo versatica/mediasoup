@@ -132,11 +132,11 @@ namespace RTC
 		// Clone given RTP parameters so we manage our own sender parameters.
 		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
 
-		// Remove RTP parameters not supported by this pper.
-
-		std::unordered_set<uint8_t> supportedPayloadTypes;
+		// Remove RTP parameters not supported by this Peer.
 
 		// Remove unsupported codecs.
+		std::unordered_set<uint8_t> supportedPayloadTypes;
+
 		for (auto it = this->rtpParameters->codecs.begin(); it != this->rtpParameters->codecs.end();)
 		{
 			auto& codec = *it;
@@ -181,16 +181,13 @@ namespace RTC
 		// Build the payload types map.
 		SetPayloadTypesMapping();
 
-		// TODO: Must check with PTs and encodings are supported so RTP packets
-		// handling is easy.
-
 		// If there are no encodings set not available.
 		if (this->rtpParameters->encodings.size() > 0)
 			this->available = true;
 		else
 			this->available = false;
 
-		// Emit "parameterschange" if those are new parameters.
+		// Emit "parameterschange" if these are updated parameters.
 		if (previousRtpParameters)
 		{
 			Json::Value event_data(Json::objectValue);
