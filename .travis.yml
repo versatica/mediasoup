@@ -63,12 +63,12 @@ before_script:
   - npm install -g gulp-cli
 
 script:
-  - gulp test-api
-  - gulp test-worker
+  - gulp test
 
 notifications:
   email:
     recipients:
       - ibc@aliax.net
+      - jmillan@aliax.net
     on_success: change
     on_failure: always

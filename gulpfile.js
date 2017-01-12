@@ -9,12 +9,12 @@ const shell = require('gulp-shell');
 let tests =
 [
 	'test/test_mediasoup.js',
-	// 'test/test_Server.js',
-	// 'test/test_Room.js',
-	// 'test/test_Peer.js',
-	// 'test/test_Transport.js',
-	// 'test/test_RtpReceiver.js',
-	// 'test/test_extra.js'
+	'test/test_Server.js',
+	'test/test_Room.js',
+	'test/test_Peer.js',
+	'test/test_Transport.js',
+	'test/test_RtpReceiver.js',
+	'test/test_extra.js'
 	// NOTE: Disable this test until fixed
 	// 'test/test_scene_1.js'
 ];
@@ -46,7 +46,7 @@ gulp.task('rtpcapabilities', () =>
 		.pipe(touch());
 });
 
-gulp.task('test-api', shell.task(
+gulp.task('test:api', shell.task(
 	[
 		'if type make &> /dev/null; then make; fi',
 		`tap --bail --color --reporter=spec ${tests.join(' ')}`
@@ -57,7 +57,7 @@ gulp.task('test-api', shell.task(
 	}
 ));
 
-gulp.task('test-worker', shell.task(
+gulp.task('test:worker', shell.task(
 	[
 		'if type make &> /dev/null; then make test; fi',
 		'worker/out/Debug/mediasoup-worker-test'
@@ -66,3 +66,5 @@ gulp.task('test-worker', shell.task(
 		verbose : true
 	}
 ));
+
+gulp.task('test', gulp.series('test:api', 'test:worker'));

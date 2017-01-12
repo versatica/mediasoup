@@ -62,16 +62,20 @@ Validates the JavaScript code.
 
 Reads **mediasoup** [supported RTP capabilities](https://github.com/ibc/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
 
-### `gulp test-api`
+### `gulp test:api`
 
 Runs the JavaScript [test units](test/). Before it, it invokes the `make` command.
 
 In order to run the JavaScript test units with the mediasoup worker in `Debug` mode the `MEDIASOUP_BUILDTYPE` environment variable must be set to `Debug`:
 
 ```bash
-$ MEDIASOUP_BUILDTYPE=Debug gulp test-debug
+$ MEDIASOUP_BUILDTYPE=Debug gulp test:debug
 ```
 
-### `gulp test-worker`
+### `gulp test:worker`
 
 Runs the mediasoup worker [test units](worker/test/) in `Debug` mode. Before it, it invokes the `make test` command.
+
+### `gulp test`
+
+Runs both the `test:api` and `test:worker` gulp tasks.
