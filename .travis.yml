@@ -56,7 +56,15 @@ matrix:
     #         - clang-3.7
     #   env: COMPILER=clang++-3.7
 
-install: npm install
+install:
+  - npm install
+
+before_script:
+  - npm install -g gulp-cli
+
+script:
+  gulp test-api
+  gulp test-worker
 
 notifications:
   email:
