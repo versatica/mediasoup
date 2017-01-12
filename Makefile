@@ -4,7 +4,12 @@
 
 .PHONY: default Release Debug test xcode clean clean-all
 
-default: Release
+default:
+ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
+	make Debug
+else
+	make Release
+endif
 
 Release:
 	cd worker && ./scripts/configure.py -R mediasoup-worker

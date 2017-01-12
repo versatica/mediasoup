@@ -17,16 +17,10 @@ Builds a more verbose mediasoup and less optimized worker binary at `worker/out/
 
 Check the meaning of these macros in the [Logger.h](worker/include/Logger.h) header file.
 
-In order to instruct the **mediasoup** Node.js module to use the `Debug` mediasoup worker binary, an environment variable must be set before running the Node.js application or the JavaScript test units:
+In order to instruct the **mediasoup** Node.js module to use the `Debug` mediasoup worker binary, an environment variable must be set before running the Node.js application:
 
 ```bash
 $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
-```
-
-Or, in order to run the JavaScript test units with the `Debug` mediasoup worker:
-
-```bash
-$ MEDIASOUP_BUILDTYPE=Debug gulp test-debug
 ```
 
 ### `make test`
@@ -43,11 +37,11 @@ Cleans objects and binaries related to the mediasoup worker.
 
 ### `make clean-all`
 
-Clean all the objects and binaries, including those generated for library dependencies (such as libuv, openssl and libsrtp).
+Cleans all the objects and binaries, including those generated for library dependencies (such as libuv, openssl and libsrtp).
 
 ### `make`
 
-The default task runs the `Release` task.
+The default task runs the `Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `Debug` task).
 
 
 ## gulpfile.js
@@ -64,22 +58,20 @@ $ npm install -g gulp-cli
 
 Validates the JavaScript code.
 
-### `gulp capabilities`
+### `gulp rtpcapabilities`
 
-Reads **mediasoup** [media capabilities](https://github.com/ibc/mediasoup/blob/master/data/supportedCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` or `make Debug` must be called.
+Reads **mediasoup** [supported RTP capabilities](https://github.com/ibc/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
 
-### `gulp test`
+### `gulp test-api`
 
-Run the JavaScript [test units](test/).
+Runs the JavaScript [test units](test/). Before it, it invokes the `make` command.
 
-### `gulp test-debug`
+In order to run the JavaScript test units with the mediasoup worker in `Debug` mode the `MEDIASOUP_BUILDTYPE` environment variable must be set to `Debug`:
 
-Run the JavaScript [test units](test/) in a more verbose fashion. Note however that running this task does not use the `Debug` mediasoup worker binary. If you wish to use it, set the `MEDIASOUP_BUILDTYPE` environment variable as explained above.
+```bash
+$ MEDIASOUP_BUILDTYPE=Debug gulp test-debug
+```
 
 ### `gulp test-worker`
 
-Run the mediasoup worker [test units](worker/test/). Take into account that, before running this task, the mediasoup worker test unit binary must be built by running `make test` (as explained above).
-
-### `gulp`
-
-The default task runs the `link` task.
+Runs the mediasoup worker [test units](worker/test/) in `Debug` mode. Before it, it invokes the `make test` command.
