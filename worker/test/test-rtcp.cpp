@@ -335,8 +335,9 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		ByePacket::Iterator it = bye1.Begin();
 
-		fct_chk_eq_int(*(it), ssrc1);
-		fct_chk_eq_int(*(++it), ssrc2);
+		fct_chk_eq_int(*it, ssrc1);
+		it++;
+		fct_chk_eq_int(*it, ssrc2);
 		fct_chk(bye1.GetReason() == reason);
 
 		// Locally store the content of the packet.
@@ -348,8 +349,9 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		it = bye2->Begin();
 
-		fct_chk_eq_int(*(it), ssrc1);
-		fct_chk_eq_int(*(++it), ssrc2);
+		fct_chk_eq_int(*it, ssrc1);
+		it++;
+		fct_chk_eq_int(*it, ssrc2);
 		fct_chk(bye2->GetReason() == reason);
 	}
 	FCT_TEST_END()
