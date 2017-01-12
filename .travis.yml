@@ -63,8 +63,8 @@ before_script:
   - npm install -g gulp-cli
 
 script:
-  gulp test-api
-  gulp test-worker
+  - gulp test-api
+  - gulp test-worker
 
 notifications:
   email:
