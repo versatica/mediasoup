@@ -1,0 +1,40 @@
+====
+TODO
+====
+
+
+MileStone 1.3 (Command Line Args)
+=================================
+
+- (P2) Start a "boilerplate" file.
+
+- (P1) Run only a specific test suite by name,
+
+      fct.exe --run-suite some_suite
+
+- Write up some rules for creating your own custom logger.
+
+Milestone 1.4 (Major Enhancements)
+==================================
+
+
+- (P2) Handle different languages for the built-in loggers.
+
+- Unicode Support
+
+- Figure out a way to have a test case without a FCT_BGN/END?
+
+    #include "fct.h"
+
+    FCT_VERY_QUICK(test1)
+    {
+       FCT_CHECK( ok );    // This should fail, with a hint!
+    }
+    FCT_VERY_QUICK_END()
+    FCT_VERY_QUICK(test2)
+    {
+       FCT_CHECK( ok );    // This should fail, with a hint!
+    }
+    FCT_VERY_QUICK_END()
+
+    /* Actually may be impossible. */
