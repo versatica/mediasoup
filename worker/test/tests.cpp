@@ -1,10 +1,17 @@
-#include "fct.h"
+#define CATCH_CONFIG_RUNNER
+
+#include "include/catch.hpp"
 #include "Settings.h"
+#include "LogLevel.h"
 
-FCT_BGN()
+int main(int argc, char* argv[])
 {
-	Settings::configuration.logLevel = LogLevel::LOG_WARN;
+	Settings::configuration.logLevel = LogLevel::LOG_DEBUG;
+	// TODO: think about this.
+	// Settings::configuration.logTags.rtp = true;
+	Settings::configuration.logTags.rtcp = true;
 
-	FCTMF_SUITE_CALL(test_rtcp);
+	int ret = Catch::Session().run(argc, argv);
+
+	return ret;
 }
-FCT_END();

@@ -99,23 +99,23 @@ function get_libsrtp()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
-function get_fctx()
+function get_catch()
 {
-	GIT_REPO="https://github.com/imb/fctx.git"
-	GIT_TAG="master"
-	DEST="deps/fctx"
+	GIT_REPO="https://github.com/philsquared/Catch.git"
+	GIT_TAG="v1.6.0"
+	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 
-	echo ">>> [INFO] copying include file to test/ directory ..."
+	echo ">>> [INFO] copying include file to test2/ directory ..."
 	cd ${WORKER_PWD}
-	cp ${DEST}/include/fct.h test/
+	cp ${DEST}/single_include/catch.hpp test2/
 }
 
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|fctx]"
+		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch]"
 		echo
 		;;
 	gyp)
@@ -136,8 +136,8 @@ case "${DEP}" in
 	libsrtp)
 		get_libsrtp
 		;;
-	fctx)
-		get_fctx
+	catch)
+		get_catch
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2

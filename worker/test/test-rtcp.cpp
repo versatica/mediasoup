@@ -1,6 +1,5 @@
-#define MS_CLASS "TEST::RTCP"
-
-#include "fct.h"
+#include "include/catch.hpp"
+#include "include/helpers.h"
 #include "common.h"
 #include "RTC/RTCP/Packet.h"
 #include "RTC/RTCP/Sdes.h"
@@ -18,26 +17,27 @@
 #include "RTC/RTCP/FeedbackPsVbcm.h"
 #include "RTC/RTCP/FeedbackPsLei.h"
 #include "RTC/RTCP/FeedbackPsAfb.h"
-#include "Logger.h"
 #include <string>
 
 using namespace RTC::RTCP;
 
-FCTMF_SUITE_BGN(test_rtcp)
+SCENARIO("parse RTCP packets", "[parser][rtcp]")
 {
-	FCT_TEST_BGN(minimum_header)
+	SECTION("minimum header")
 	{
 		uint8_t buffer[] =
 		{
-			0x81, 0xca, 0x00, 0x00, // RTCP common header
+			0x81, 0xca, 0x00, 0x00 // RTCP common header
 		};
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
-		fct_chk(packet != nullptr);
-	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(buffer_is_too_small)
+		REQUIRE(packet);
+
+		delete packet;
+	}
+
+	SECTION("buffer is to small")
 	{
 		uint8_t buffer[] =
 		{
@@ -45,50 +45,58 @@ FCTMF_SUITE_BGN(test_rtcp)
 		};
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
-		fct_chk(packet == nullptr);
-	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(version_is_zero)
+		REQUIRE_FALSE(packet);
+
+		delete packet;
+	}
+
+	SECTION("version is zero")
 	{
 		uint8_t buffer[] =
 		{
-			0x00, 0xca, 0x00, 0x01, // RTCP common header
+			0x00, 0xca, 0x00, 0x01,
 			0x00, 0x00, 0x00, 0x00
 		};
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
-		fct_chk(packet == nullptr);
-	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(length_is_wrong)
+		REQUIRE_FALSE(packet);
+
+		delete packet;
+	}
+
+	SECTION("length is wrong")
 	{
 		uint8_t buffer[] =
 		{
-			0x81, 0xca, 0x00, 0x04, // RTCP common header
+			0x81, 0xca, 0x00, 0x04,
 			0x00, 0x00, 0x00, 0x00
 		};
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
-		fct_chk(packet == nullptr);
-	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(type_is_unknown)
+		REQUIRE_FALSE(packet);
+
+		delete packet;
+	}
+
+	SECTION("type is unknown")
 	{
 		uint8_t buffer[] =
 		{
-			0x81, 0x00, 0x00, 0x01, // RTCP common header
+			0x81, 0x00, 0x00, 0x01,
 			0x00, 0x00, 0x00, 0x00
 		};
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
-		fct_chk(packet == nullptr);
-	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_sdes_chunk)
+		REQUIRE_FALSE(packet);
+
+		delete packet;
+	}
+
+	SECTION("parse SdesChunk")
 	{
 		uint8_t buffer[] =
 		{
@@ -100,56 +108,57 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		uint32_t ssrc = 0;
 		SdesItem::Type type = SdesItem::Type::CNAME;
-		const char* value = "outChannel";
-		size_t len = strlen(value);
+		std::string value = "outChannel";
+		size_t len = value.size();
 
 		SdesChunk* chunk = SdesChunk::Parse(buffer, sizeof(buffer));
-		fct_chk_eq_int(chunk->GetSsrc(), ssrc);
+
+		REQUIRE(chunk->GetSsrc() == ssrc);
 
 		SdesItem* item = *(chunk->Begin());
-		fct_chk(item->GetType() == type);
-		fct_chk_eq_int(item->GetLength(), len);
-		fct_chk_incl_str(item->GetValue(), value);
+
+		REQUIRE(item->GetType() == type);
+		REQUIRE(item->GetLength() == len);
+		REQUIRE(std::string(item->GetValue(), len) == "outChannel");
 
 		delete chunk;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(create_sdes_chunk)
+	SECTION("create SdesChunk")
 	{
 		uint32_t ssrc = 0;
 		SdesItem::Type type = SdesItem::Type::CNAME;
-		const char* value = "outChannel";
-		size_t len = strlen(value);
+		std::string value = "outChannel";
+		size_t len = value.size();
 
 		// Create sdes item.
-		SdesItem* item = new SdesItem(type, len, value);
+		SdesItem* item = new SdesItem(type, len, value.c_str());
 
-		// Create sdes chunk.
+		// // Create sdes chunk.
 		SdesChunk chunk(ssrc);
 		chunk.AddItem(item);
 
-		// Check chunk content.
-		fct_chk_eq_int(chunk.GetSsrc(), ssrc);
+		// // Check chunk content.
+		REQUIRE(chunk.GetSsrc() == ssrc);
 
-		// Check item content.
+		// // Check item content.
 		item = *(chunk.Begin());
-		fct_chk(item->GetType() == type);
-		fct_chk_eq_int(item->GetLength(), len);
-		fct_chk_incl_str(item->GetValue(), value);
-	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_sender_report)
+		REQUIRE(item->GetType() == type);
+		REQUIRE(item->GetLength() == len);
+		REQUIRE(std::string(item->GetValue(), len) == "outChannel");
+	}
+
+	SECTION("parse SenderReport")
 	{
 		uint8_t buffer[] =
 		{
-			0x00, 0x00, 0x04, 0xD2,	// ssrc
-			0x00, 0x00, 0x04, 0xD2,	// ntp sec
-			0x00, 0x00, 0x04, 0xD2,	// ntp frac
-			0x00, 0x00, 0x04, 0xD2,	// rtp ts
-			0x00, 0x00, 0x04, 0xD2,	// packet count
-			0x00, 0x00, 0x04, 0xD2,	// octet count
+			0x00, 0x00, 0x04, 0xD2, // ssrc
+			0x00, 0x00, 0x04, 0xD2, // ntp sec
+			0x00, 0x00, 0x04, 0xD2, // ntp frac
+			0x00, 0x00, 0x04, 0xD2, // rtp ts
+			0x00, 0x00, 0x04, 0xD2, // packet count
+			0x00, 0x00, 0x04, 0xD2, // octet count
 		};
 
 		uint32_t ssrc = 1234;
@@ -160,18 +169,20 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint32_t octetCount = 1234;
 
 		SenderReport* report = SenderReport::Parse(buffer, sizeof(SenderReport::Header));
-		fct_req(report != nullptr);
 
-		fct_chk_eq_int(report->GetSsrc(), ssrc);
-		fct_chk_eq_int(report->GetNtpSec(), ntpSec);
-		fct_chk_eq_int(report->GetNtpFrac(), ntpFrac);
-		fct_chk_eq_int(report->GetRtpTs(), rtpTs);
-		fct_chk_eq_int(report->GetPacketCount(), packetCount);
-		fct_chk_eq_int(report->GetOctetCount(), octetCount);
+		REQUIRE(report);
+
+		REQUIRE(report->GetSsrc() == ssrc);
+		REQUIRE(report->GetNtpSec() == ntpSec);
+		REQUIRE(report->GetNtpFrac() == ntpFrac);
+		REQUIRE(report->GetRtpTs() == rtpTs);
+		REQUIRE(report->GetPacketCount() == packetCount);
+		REQUIRE(report->GetOctetCount() == octetCount);
+
+		delete report;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(create_sender_report)
+	SECTION("create SenderReport")
 	{
 		uint32_t ssrc = 1234;
 		uint32_t ntpSec = 1234;
@@ -191,23 +202,23 @@ FCTMF_SUITE_BGN(test_rtcp)
 		report1.SetPacketCount(packetCount);
 		report1.SetOctetCount(octetCount);
 
-		fct_chk_eq_int(report1.GetSsrc(), ssrc);
-		fct_chk_eq_int(report1.GetNtpSec(), ntpSec);
-		fct_chk_eq_int(report1.GetNtpFrac(), ntpFrac);
-		fct_chk_eq_int(report1.GetRtpTs(), rtpTs);
-		fct_chk_eq_int(report1.GetPacketCount(), packetCount);
-		fct_chk_eq_int(report1.GetOctetCount(), octetCount);
+		REQUIRE(report1.GetSsrc() == ssrc);
+		REQUIRE(report1.GetNtpSec() == ntpSec);
+		REQUIRE(report1.GetNtpFrac() == ntpFrac);
+		REQUIRE(report1.GetRtpTs() == rtpTs);
+		REQUIRE(report1.GetPacketCount() == packetCount);
+		REQUIRE(report1.GetOctetCount() == octetCount);
 
 		// Create report out of the existing one and check content.
 		// SenderReport(SenderReport* report);
 		SenderReport report2(&report1);
 
-		fct_chk_eq_int(report2.GetSsrc(), ssrc);
-		fct_chk_eq_int(report2.GetNtpSec(), ntpSec);
-		fct_chk_eq_int(report2.GetNtpFrac(), ntpFrac);
-		fct_chk_eq_int(report2.GetRtpTs(), rtpTs);
-		fct_chk_eq_int(report2.GetPacketCount(), packetCount);
-		fct_chk_eq_int(report2.GetOctetCount(), octetCount);
+		REQUIRE(report2.GetSsrc() == ssrc);
+		REQUIRE(report2.GetNtpSec() == ntpSec);
+		REQUIRE(report2.GetNtpFrac() == ntpFrac);
+		REQUIRE(report2.GetRtpTs() == rtpTs);
+		REQUIRE(report2.GetPacketCount() == packetCount);
+		REQUIRE(report2.GetOctetCount() == octetCount);
 
 		// Locally store the content of the report.
 		report2.Serialize();
@@ -216,26 +227,25 @@ FCTMF_SUITE_BGN(test_rtcp)
 		// SenderReport(Header* header);
 		SenderReport report3((SenderReport::Header*)report2.GetRaw());
 
-		fct_chk_eq_int(report3.GetSsrc(), ssrc);
-		fct_chk_eq_int(report3.GetNtpSec(), ntpSec);
-		fct_chk_eq_int(report3.GetNtpFrac(), ntpFrac);
-		fct_chk_eq_int(report3.GetRtpTs(), rtpTs);
-		fct_chk_eq_int(report3.GetPacketCount(), packetCount);
-		fct_chk_eq_int(report3.GetOctetCount(), octetCount);
+		REQUIRE(report3.GetSsrc() == ssrc);
+		REQUIRE(report3.GetNtpSec() == ntpSec);
+		REQUIRE(report3.GetNtpFrac() == ntpFrac);
+		REQUIRE(report3.GetRtpTs() == rtpTs);
+		REQUIRE(report3.GetPacketCount() == packetCount);
+		REQUIRE(report3.GetOctetCount() == octetCount);
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_receiver_report)
+	SECTION("parse ReceiverReport")
 	{
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x04, 0xD2,	// ssrc
-			0x01,			// fraction_lost
-			0x00, 0x00, 0x04,	// total_lost
+			0x01,                   // fraction_lost
+			0x00, 0x00, 0x04,       // total_lost
 			0x00, 0x00, 0x04, 0xD2,	// last_seq
 			0x00, 0x00, 0x04, 0xD2,	// jitter
 			0x00, 0x00, 0x04, 0xD2,	// lsr
-			0x00, 0x00, 0x04, 0xD2,	// dlsr
+			0x00, 0x00, 0x04, 0xD2  // dlsr
 		};
 
 		uint32_t ssrc = 1234;
@@ -247,19 +257,19 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint32_t delaySinceLastSenderReport = 1234;
 
 		ReceiverReport* report = ReceiverReport::Parse(buffer, sizeof(ReceiverReport::Header));
-		fct_req(report != nullptr);
 
-		fct_chk_eq_int(report->GetSsrc(), ssrc);
-		fct_chk_eq_int(report->GetFractionLost(), fractionLost);
-		fct_chk_eq_int(report->GetTotalLost(), totalLost);
-		fct_chk_eq_int(report->GetLastSeq(), lastSeq);
-		fct_chk_eq_int(report->GetJitter(), jitter);
-		fct_chk_eq_int(report->GetLastSenderReport(), lastSenderReport);
-		fct_chk_eq_int(report->GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
+		REQUIRE(report);
+
+		REQUIRE(report->GetSsrc() == ssrc);
+		REQUIRE(report->GetFractionLost() == fractionLost);
+		REQUIRE(report->GetTotalLost() == totalLost);
+		REQUIRE(report->GetLastSeq() == lastSeq);
+		REQUIRE(report->GetJitter() == jitter);
+		REQUIRE(report->GetLastSenderReport() == lastSenderReport);
+		REQUIRE(report->GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(create_receiver_report)
+	SECTION("create ReceiverReport")
 	{
 		uint32_t ssrc = 1234;
 		uint8_t fractionLost = 1;
@@ -281,25 +291,25 @@ FCTMF_SUITE_BGN(test_rtcp)
 		report1.SetLastSenderReport(lastSenderReport);
 		report1.SetDelaySinceLastSenderReport(delaySinceLastSenderReport);
 
-		fct_chk_eq_int(report1.GetSsrc(), ssrc);
-		fct_chk_eq_int(report1.GetFractionLost(), fractionLost);
-		fct_chk_eq_int(report1.GetTotalLost(), totalLost);
-		fct_chk_eq_int(report1.GetLastSeq(), lastSeq);
-		fct_chk_eq_int(report1.GetJitter(), jitter);
-		fct_chk_eq_int(report1.GetLastSenderReport(), lastSenderReport);
-		fct_chk_eq_int(report1.GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
+		REQUIRE(report1.GetSsrc() == ssrc);
+		REQUIRE(report1.GetFractionLost() == fractionLost);
+		REQUIRE(report1.GetTotalLost() == totalLost);
+		REQUIRE(report1.GetLastSeq() == lastSeq);
+		REQUIRE(report1.GetJitter() == jitter);
+		REQUIRE(report1.GetLastSenderReport() == lastSenderReport);
+		REQUIRE(report1.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 
 		// Create report out of the existing one and check content.
 		// ReceiverReport(ReceiverReport* report);
 		ReceiverReport report2(&report1);
 
-		fct_chk_eq_int(report2.GetSsrc(), ssrc);
-		fct_chk_eq_int(report2.GetFractionLost(), fractionLost);
-		fct_chk_eq_int(report2.GetTotalLost(), totalLost);
-		fct_chk_eq_int(report2.GetLastSeq(), lastSeq);
-		fct_chk_eq_int(report2.GetJitter(), jitter);
-		fct_chk_eq_int(report2.GetLastSenderReport(), lastSenderReport);
-		fct_chk_eq_int(report2.GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
+		REQUIRE(report2.GetSsrc() == ssrc);
+		REQUIRE(report2.GetFractionLost() == fractionLost);
+		REQUIRE(report2.GetTotalLost() == totalLost);
+		REQUIRE(report2.GetLastSeq() == lastSeq);
+		REQUIRE(report2.GetJitter() == jitter);
+		REQUIRE(report2.GetLastSenderReport() == lastSenderReport);
+		REQUIRE(report2.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 
 		// Locally store the content of the report.
 		report2.Serialize();
@@ -308,18 +318,16 @@ FCTMF_SUITE_BGN(test_rtcp)
 		// ReceiverReport(Header* header);
 		ReceiverReport report3((ReceiverReport::Header*)report2.GetRaw());
 
-		fct_chk_eq_int(report2.GetSsrc(), ssrc);
-		fct_chk_eq_int(report2.GetFractionLost(), fractionLost);
-		fct_chk_eq_int(report2.GetTotalLost(), totalLost);
-		fct_chk_eq_int(report2.GetLastSeq(), lastSeq);
-		fct_chk_eq_int(report2.GetJitter(), jitter);
-		fct_chk_eq_int(report2.GetLastSenderReport(), lastSenderReport);
-		fct_chk_eq_int(report2.GetDelaySinceLastSenderReport(), delaySinceLastSenderReport);
-
+		REQUIRE(report2.GetSsrc() == ssrc);
+		REQUIRE(report2.GetFractionLost() == fractionLost);
+		REQUIRE(report2.GetTotalLost() == totalLost);
+		REQUIRE(report2.GetLastSeq() == lastSeq);
+		REQUIRE(report2.GetJitter() == jitter);
+		REQUIRE(report2.GetLastSenderReport() == lastSenderReport);
+		REQUIRE(report2.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(create_parse_bye)
+	SECTION("create and parse ByePacket")
 	{
 		uint32_t ssrc1 = 1111;
 		uint32_t ssrc2 = 2222;
@@ -335,10 +343,10 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		ByePacket::Iterator it = bye1.Begin();
 
-		fct_chk_eq_int(*it, ssrc1);
+		REQUIRE(*it == ssrc1);
 		it++;
-		fct_chk_eq_int(*it, ssrc2);
-		fct_chk(bye1.GetReason() == reason);
+		REQUIRE(*it == ssrc2);
+		REQUIRE(bye1.GetReason() == reason);
 
 		// Locally store the content of the packet.
 		uint8_t buffer[bye1.GetSize()];
@@ -349,14 +357,13 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		it = bye2->Begin();
 
-		fct_chk_eq_int(*it, ssrc1);
+		REQUIRE(*it == ssrc1);
 		it++;
-		fct_chk_eq_int(*it, ssrc2);
-		fct_chk(bye2->GetReason() == reason);
+		REQUIRE(*it == ssrc2);
+		REQUIRE(bye2->GetReason() == reason);
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_rtpfb_nack_item)
+	SECTION("parse NackItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -367,16 +374,15 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint16_t lostPacketBitmask = 2;
 
 		NackItem* item = NackItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetPacketId(), packetId);
-		fct_chk_eq_int(item->GetLostPacketBitmask(), lostPacketBitmask);
+		REQUIRE(item);
+		REQUIRE(item->GetPacketId() == packetId);
+		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(create_rtpfb_nack_item)
+	SECTION("create and parse NackItem")
 	{
 		uint16_t packetId = 1;
 		uint16_t lostPacketBitmask = 2;
@@ -384,28 +390,31 @@ FCTMF_SUITE_BGN(test_rtcp)
 		// Create local NackItem and check content.
 		// NackItem();
 		NackItem item1(packetId, lostPacketBitmask);
-		fct_chk_eq_int(item1.GetPacketId(), packetId);
-		fct_chk_eq_int(item1.GetLostPacketBitmask(), htons(lostPacketBitmask));
+
+		REQUIRE(item1.GetPacketId() == packetId);
+		REQUIRE(item1.GetLostPacketBitmask() == htons(lostPacketBitmask));
 
 		// Create local NackItem out of existing one and check content.
 		// NackItem(NackItem*);
 		NackItem item2(&item1);
-		fct_chk_eq_int(item2.GetPacketId(), packetId);
-		fct_chk_eq_int(item2.GetLostPacketBitmask(), htons(lostPacketBitmask));
+
+		REQUIRE(item2.GetPacketId() == packetId);
+		REQUIRE(item2.GetLostPacketBitmask() == htons(lostPacketBitmask));
 
 		// Locally store the content of the packet.
 		uint8_t buffer[item2.GetSize()];
+
 		item2.Serialize(buffer);
 
 		// Create local NackItem out of previous packet buffer and check content.
 		// NackItem(NackItem::Header*);
 		NackItem item3((NackItem::Header*)buffer);
-		fct_chk_eq_int(item3.GetPacketId(), packetId);
-		fct_chk_eq_int(item3.GetLostPacketBitmask(), htons(lostPacketBitmask));
-	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_rtpfb_tmmb_item)
+		REQUIRE(item3.GetPacketId() == packetId);
+		REQUIRE(item3.GetLostPacketBitmask() == htons(lostPacketBitmask));
+	}
+
+	SECTION("parse TmmbrItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -418,17 +427,16 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint32_t overhead = 1;
 
 		TmmbrItem* item = TmmbrItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetSsrc(), ssrc);
-		fct_chk(item->GetBitrate() == bitrate);
-		fct_chk_eq_int(item->GetOverhead(), overhead);
+		REQUIRE(item);
+		REQUIRE(item->GetSsrc() == ssrc);
+		REQUIRE(item->GetBitrate() == bitrate);
+		REQUIRE(item->GetOverhead() == overhead);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_rtpfb_tllei_item)
+	SECTION("parse TlleiItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -439,16 +447,15 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint16_t lostPacketBitmask = 2;
 
 		TlleiItem* item = TlleiItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetPacketId(), packetId);
-		fct_chk_eq_int(item->GetLostPacketBitmask(), lostPacketBitmask);
+		REQUIRE(item);
+		REQUIRE(item->GetPacketId() == packetId);
+		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_rtpfb_ecn_item)
+	SECTION("parse EcnItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -470,21 +477,20 @@ FCTMF_SUITE_BGN(test_rtcp)
 		uint16_t duplicatedPackets = 1;
 
 		EcnItem* item = EcnItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetSequenceNumber(), sequenceNumber);
-		fct_chk_eq_int(item->GetEct0Counter(), ect0Counter);
-		fct_chk_eq_int(item->GetEct1Counter(), ect1Counter);
-		fct_chk_eq_int(item->GetEcnCeCounter(), ecnCeCounter);
-		fct_chk_eq_int(item->GetNotEctCounter(), notEctCounter);
-		fct_chk_eq_int(item->GetLostPackets(), lostPackets);
-		fct_chk_eq_int(item->GetDuplicatedPackets(), duplicatedPackets);
+		REQUIRE(item);
+		REQUIRE(item->GetSequenceNumber() == sequenceNumber);
+		REQUIRE(item->GetEct0Counter() == ect0Counter);
+		REQUIRE(item->GetEct1Counter() == ect1Counter);
+		REQUIRE(item->GetEcnCeCounter() == ecnCeCounter);
+		REQUIRE(item->GetNotEctCounter() == notEctCounter);
+		REQUIRE(item->GetLostPackets() == lostPackets);
+		REQUIRE(item->GetDuplicatedPackets() == duplicatedPackets);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_psfb_sli_item)
+	SECTION("parse SliItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -493,20 +499,19 @@ FCTMF_SUITE_BGN(test_rtcp)
 
 		uint16_t first = 1;
 		uint16_t number = 4;
-		uint8_t  pictureId = 1;
+		uint8_t pictureId = 1;
 
 		SliItem* item = SliItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetFirst(), first);
-		fct_chk_eq_int(item->GetNumber(), number);
-		fct_chk_eq_int(item->GetPictureId(), pictureId);
+		REQUIRE(item);
+		REQUIRE(item->GetFirst() == first);
+		REQUIRE(item->GetNumber() == number);
+		REQUIRE(item->GetPictureId() == pictureId);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_psfb_rpsi_item)
+	SECTION("parse RpsiItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -516,43 +521,41 @@ FCTMF_SUITE_BGN(test_rtcp)
 			0x00, 0x00, 0x01, 0x00
 		};
 
-		uint8_t  payloadType = 1;
-		uint8_t  payloadMask = 1;
+		uint8_t payloadType = 1;
+		uint8_t payloadMask = 1;
 		size_t length = 5;
 
 		RpsiItem* item = RpsiItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetPayloadType(), payloadType);
-		fct_chk_eq_int(item->GetLength(), length);
-		fct_chk_eq_int(item->GetBitString()[item->GetLength()-1] & 1, payloadMask);
+		REQUIRE(item);
+		REQUIRE(item->GetPayloadType() == payloadType);
+		REQUIRE(item->GetLength() == length);
+		REQUIRE((item->GetBitString()[item->GetLength()-1] & 1) == payloadMask);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_psfb_fir_item)
+	SECTION("parse FirItem")
 	{
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x00, 0x00, // SSRC
-			0x08, 0x00, 0x00, 0x00, // Seq nr.
+			0x08, 0x00, 0x00, 0x00 // Seq nr.
 		};
 
-		uint32_t  ssrc = 0;
-		uint8_t  seq = 8;
+		uint32_t ssrc = 0;
+		uint8_t seq = 8;
 
 		FirItem* item = FirItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetSsrc(), ssrc);
-		fct_chk_eq_int(item->GetSequenceNumber(), seq);
+		REQUIRE(item);
+		REQUIRE(item->GetSsrc() == ssrc);
+		REQUIRE(item->GetSequenceNumber() == seq);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_psfb_tst_item)
+	SECTION("parse TstnItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -562,21 +565,20 @@ FCTMF_SUITE_BGN(test_rtcp)
 		};
 
 		uint32_t ssrc = 0;
-		uint8_t  seq = 8;
-		uint8_t  index = 1;
+		uint8_t seq = 8;
+		uint8_t index = 1;
 
 		TstnItem* item = TstnItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetSsrc(), ssrc);
-		fct_chk_eq_int(item->GetSequenceNumber(), seq);
-		fct_chk_eq_int(item->GetIndex(), index);
+		REQUIRE(item);
+		REQUIRE(item->GetSsrc() == ssrc);
+		REQUIRE(item->GetSequenceNumber() == seq);
+		REQUIRE(item->GetIndex() == index);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_psfb_vbcm_item)
+	SECTION("parse VbcmItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -589,62 +591,58 @@ FCTMF_SUITE_BGN(test_rtcp)
 		};
 
 		uint32_t ssrc = 0;
-		uint8_t  seq = 8;
-		uint8_t  payloadType = 1;
+		uint8_t seq = 8;
+		uint8_t payloadType = 1;
 		uint16_t length = 1;
-		uint8_t  valueMask = 1;
+		uint8_t valueMask = 1;
 
 		VbcmItem* item = VbcmItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetSsrc(), ssrc);
-		fct_chk_eq_int(item->GetSequenceNumber(), seq);
-		fct_chk_eq_int(item->GetPayloadType(), payloadType);
-		fct_chk_eq_int(item->GetLength(), length);
-		fct_chk_eq_int(item->GetValue()[item->GetLength() -1] & 1, valueMask);
+		REQUIRE(item);
+		REQUIRE(item->GetSsrc() == ssrc);
+		REQUIRE(item->GetSequenceNumber() == seq);
+		REQUIRE(item->GetPayloadType() == payloadType);
+		REQUIRE(item->GetLength() == length);
+		REQUIRE((item->GetValue()[item->GetLength() -1] & 1) == valueMask);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_psfb_lei_item)
+	SECTION("parse PsLeiItem")
 	{
 		uint8_t buffer[] =
 		{
-			0x00, 0x00, 0x00, 0x01, // SSRC
+			0x00, 0x00, 0x00, 0x01 // SSRC
 		};
 
 		uint32_t ssrc = 1;
 
 		PsLeiItem* item = PsLeiItem::Parse(buffer, sizeof(buffer));
-		fct_req(item != nullptr);
 
-		fct_chk_eq_int(item->GetSsrc(), ssrc);
+		REQUIRE(item);
+		REQUIRE(item->GetSsrc() == ssrc);
 
 		delete item;
 	}
-	FCT_TEST_END()
 
-	FCT_TEST_BGN(parse_psfb_afb)
+	SECTION("parse FeedbackPsAfbPacket")
 	{
 		uint8_t buffer[] =
 		{
 			0x8F, 0xce, 0x00, 0x03, // RTCP common header
 			0x00, 0x00, 0x00, 0x00, // Sender SSRC
 			0x00, 0x00, 0x00, 0x00, // Media SSRC
-			0x00, 0x00, 0x00, 0x01, // Data
+			0x00, 0x00, 0x00, 0x01  // Data
 		};
 
 		size_t dataSize = 4;
 		uint8_t dataBitmask = 1;
 
 		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
-		fct_req(packet != nullptr);
 
-		fct_chk_eq_int(packet->GetData()[dataSize -1] & 1, dataBitmask);
+		REQUIRE(packet);
+		REQUIRE((packet->GetData()[dataSize -1] & 1) == dataBitmask);
 
 		delete packet;
 	}
-	FCT_TEST_END()
 }
-FCTMF_SUITE_END();

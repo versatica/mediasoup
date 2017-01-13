@@ -1,0 +1,14 @@
+Real-Time Transport Protocol
+    [Stream setup by HEUR RT (frame 125)]
+    10.. .... = Version: RFC 1889 Version (2)
+    ..1. .... = Padding: True
+    ...0 .... = Extension: False
+    .... 0000 = Contributing source identifiers count: 0
+    0... .... = Marker: False
+    Payload type: DynamicRTP-Type-100 (100)
+    Sequence number: 28478
+    [Extended sequence number: 94014]
+    Timestamp: 172320136
+    Synchronization Source identifier: 0xc5abdf5a (3316375386)
+    Padding data: b8ece4baca4f2ca92f22bb99b859e8bd7ce122e4fa8bcb97...
+    Padding count: 241
