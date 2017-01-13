@@ -25,7 +25,7 @@ $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
 
 ### `make test`
 
-Builds the `mediasoup-worker-test` test unit binary at `worker/out/Debug/` in `Debug` mode.
+Builds the `mediasoup-worker-test` test unit binary at `worker/out/Release/`.
 
 ### `make xcode`
 
@@ -74,7 +74,7 @@ $ MEDIASOUP_BUILDTYPE=Debug gulp test:debug
 
 ### `gulp test:worker`
 
-Runs the mediasoup worker [test units](worker/test/) in `Debug` mode. Before it, it invokes the `make test` command.
+Runs the mediasoup worker [test units](worker/test/). Before it, it invokes the `make test` command.
 
 ### `gulp test`
 

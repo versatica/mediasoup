@@ -21,7 +21,7 @@ Debug:
 
 test:
 	cd worker && ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) BUILDTYPE=Debug -C worker/out
+	$(MAKE) BUILDTYPE=Release -C worker/out
 
 xcode:
 	cd worker && ./scripts/configure.py --format=xcode
