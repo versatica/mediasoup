@@ -232,6 +232,7 @@
         # C++ source files
         'test/tests.cpp',
         'test/test-rtcp.cpp',
+        'test/test-rtp.cpp',
         # C++ include files
         'test/fct.h'
       ]

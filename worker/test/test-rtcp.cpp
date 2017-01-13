@@ -1,4 +1,5 @@
 #define MS_CLASS "TEST::RTCP"
+#define MS_LOG_DEV
 
 #include "fct.h"
 #include "common.h"
