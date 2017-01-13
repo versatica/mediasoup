@@ -2,13 +2,46 @@
 
 set -e
 
-current_dir=${PWD##*/}
-dep=$1
+WORKER_PWD=${PWD}
+DEP=$1
 
-if [ "${current_dir}" != "worker" ] ; then
+current_dir_name=${WORKER_PWD##*/}
+if [ "${current_dir_name}" != "worker" ] ; then
 	echo ">>> [ERROR] $(basename $0) must be called from mediasoup/worker/ directory" >&2
 	exit 1
 fi
+
+function get_dep()
+{
+	GIT_REPO="$1"
+	GIT_TAG="$2"
+	DEST="$3"
+
+	echo ">>> [INFO] getting dep '${DEP}' ..."
+
+	if [ -d "${DEST}" ] ; then
+		echo ">>> [INFO] deleting ${DEST} ..."
+		git rm -rf --ignore-unmatch ${DEST} >/dev/null
+		rm -rf ${DEST}
+	fi
+
+	echo ">>> [INFO] cloning ${GIT_REPO} ..."
+	git clone ${GIT_REPO} ${DEST}
+
+	cd ${DEST}
+
+	echo ">>> [INFO] setting '${GIT_TAG}' git tag ..."
+	git checkout --quiet ${GIT_TAG}
+	set -e
+
+	echo ">>> [INFO] adding dep source code to the repository ..."
+	rm -rf .git
+	git add .
+
+	echo ">>> [INFO] got dep '${DEP}'"
+
+	cd ${WORKER_PWD}
+}
 
 function get_gyp()
 {
@@ -16,54 +49,21 @@ function get_gyp()
 	GIT_TAG="master"
 	DEST="deps/gyp"
 
-	if [ -d "${DEST}" ] ; then
-		echo ">>> [INFO] deleting ${DEST} ..."
-		git rm -rf ${DEST} >/dev/null
-		rm -rf ${DEST}
-	fi
-
-	echo ">>> [INFO] cloning ${GIT_REPO} ..."
-	git clone ${GIT_REPO} ${DEST}
-	cd ${DEST}
-
-	echo ">>> [INFO] setting tag ${GIT_TAG} ..."
-	git checkout ${GIT_TAG} 2>/dev/null
-
-	echo ">>> [INFO] adding ${GIT_REPO} to the repository ..."
-	rm -rf .git
-	git add .
-
-	echo ">>> [INFO] got gyp"
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
 function get_jsoncpp()
 {
 	GIT_REPO="https://github.com/open-source-parsers/jsoncpp.git"
-	GIT_TAG="1.7.7"
+	GIT_TAG="1.8.0"
 	DEST="deps/jsoncpp/jsoncpp"
 
-	if [ -d "${DEST}" ] ; then
-		echo ">>> [INFO] deleting ${DEST} ..."
-		git rm -rf ${DEST} >/dev/null
-		rm -rf ${DEST}
-	fi
-
-	echo ">>> [INFO] cloning ${GIT_REPO} ..."
-	git clone ${GIT_REPO} ${DEST}
-	cd ${DEST}
-
-	echo ">>> [INFO] setting tag ${GIT_TAG} ..."
-	git checkout ${GIT_TAG} 2>/dev/null
-
-	echo ">>> [INFO] adding ${GIT_REPO} to the repository ..."
-	rm -rf .git
-	git add .
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 
 	echo ">>> [INFO] running 'python amalgamate.py' ..."
-	# IMPORTANT: avoid default 'dist/' directory since, somehow, it fails
+	cd ${DEST}
+	# IMPORTANT: avoid default 'dist/' directory since, somehow, it fails.
 	python amalgamate.py -s bundled/jsoncpp.cpp
-
-	echo ">>> [INFO] got jsoncpp"
 }
 
 function get_netstring()
@@ -72,24 +72,7 @@ function get_netstring()
 	GIT_TAG="master"
 	DEST="deps/netstring/netstring-c"
 
-	if [ -d "${DEST}" ] ; then
-		echo ">>> [INFO] deleting ${DEST} ..."
-		git rm -rf ${DEST} >/dev/null
-		rm -rf ${DEST}
-	fi
-
-	echo ">>> [INFO] cloning ${GIT_REPO} ..."
-	git clone ${GIT_REPO} ${DEST}
-	cd ${DEST}
-
-	echo ">>> [INFO] setting tag ${GIT_TAG} ..."
-	git checkout ${GIT_TAG} 2>/dev/null
-
-	echo ">>> [INFO] adding ${GIT_REPO} to the repository ..."
-	rm -rf .git
-	git add .
-
-	echo ">>> [INFO] got netstring"
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
 function get_libuv()
@@ -98,24 +81,7 @@ function get_libuv()
 	GIT_TAG="v1.10.2"
 	DEST="deps/libuv"
 
-	if [ -d "${DEST}" ] ; then
-		echo ">>> [INFO] deleting ${DEST} ..."
-		git rm -rf ${DEST} >/dev/null
-		rm -rf ${DEST}
-	fi
-
-	echo ">>> [INFO] cloning ${GIT_REPO} ..."
-	git clone ${GIT_REPO} ${DEST}
-	cd ${DEST}
-
-	echo ">>> [INFO] setting tag ${GIT_TAG} ..."
-	git checkout ${GIT_TAG} 2>/dev/null
-
-	echo ">>> [INFO] adding ${GIT_REPO} to the repository ..."
-	rm -rf .git
-	git add .
-
-	echo ">>> [INFO] got libuv"
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
 function get_openssl()
@@ -130,30 +96,26 @@ function get_libsrtp()
 	GIT_TAG="master"
 	DEST="deps/libsrtp/srtp"
 
-	if [ -d "${DEST}" ] ; then
-		echo ">>> [INFO] deleting ${DEST} ..."
-		git rm -rf ${DEST} >/dev/null
-		rm -rf ${DEST}
-	fi
-
-	echo ">>> [INFO] cloning ${GIT_REPO} ..."
-	git clone ${GIT_REPO} ${DEST}
-	cd ${DEST}
-
-	echo ">>> [INFO] setting tag ${GIT_TAG} ..."
-	git checkout ${GIT_TAG} 2>/dev/null
-
-	echo ">>> [INFO] adding ${GIT_REPO} to the repository ..."
-	rm -rf .git
-	git add .
-
-	echo ">>> [INFO] got libsrtp"
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
-case "${dep}" in
+function get_fctx()
+{
+	GIT_REPO="https://github.com/imb/fctx.git"
+	GIT_TAG="master"
+	DEST="deps/fctx"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+
+	echo ">>> [INFO] copying include file to test/ directory ..."
+	cd ${WORKER_PWD}
+	cp ${DEST}/include/fct.h test/
+}
+
+case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp]"
+		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|fctx]"
 		echo
 		;;
 	gyp)
@@ -174,7 +136,17 @@ case "${dep}" in
 	libsrtp)
 		get_libsrtp
 		;;
+	fctx)
+		get_fctx
+		;;
 	*)
-		echo ">>> [ERROR] unknown dep '${dep}'" >&2
+		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
 		exit 1
 esac
+
+if [ $? -eq 0 ] ; then
+	echo ">>> [INFO] done"
+else
+	echo ">>> [ERROR] failed" >&2
+	exit 1
+fi
