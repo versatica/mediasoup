@@ -10,7 +10,7 @@ class Helpers
 public:
 	static bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
-		std::string file_path = "worker/test/" + std::string(file);
+		std::string file_path = "test/" + std::string(file);
 
 		std::ifstream in(file_path, std::ios::ate | std::ios::binary);
 		if (!in)
