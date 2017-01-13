@@ -66,8 +66,8 @@
 #include <cstdlib> // std::abort()
 
 #define MS_LOGGER_BUFFER_SIZE 10000
-#define _MS_TAG_ENABLED(tag) Settings::logTags.tag
-#define _MS_TAG_ENABLED_2(tag1, tag2) (Settings::logTags.tag1 || Settings::logTags.tag2)
+#define _MS_TAG_ENABLED(tag) Settings::configuration.logTags.tag
+#define _MS_TAG_ENABLED_2(tag1, tag2) (Settings::configuration.logTags.tag1 || Settings::configuration.logTags.tag2)
 #ifdef MS_LOG_DEV
 	#define _MS_LOG_DEV_ENABLED true
 #else

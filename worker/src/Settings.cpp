@@ -22,7 +22,6 @@ bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
-struct Settings::LogTags Settings::logTags;
 std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
@@ -157,17 +156,17 @@ void Settings::PrintConfiguration()
 
 	std::vector<std::string> log_tags;
 
-	if (Settings::logTags.info)
+	if (Settings::configuration.logTags.info)
 		log_tags.push_back("info");
-	if (Settings::logTags.ice)
+	if (Settings::configuration.logTags.ice)
 		log_tags.push_back("ice");
-	if (Settings::logTags.dtls)
+	if (Settings::configuration.logTags.dtls)
 		log_tags.push_back("dtls");
-	if (Settings::logTags.rtp)
+	if (Settings::configuration.logTags.rtp)
 		log_tags.push_back("rtp");
-	if (Settings::logTags.srtp)
+	if (Settings::configuration.logTags.srtp)
 		log_tags.push_back("srtp");
-	if (Settings::logTags.rtcp)
+	if (Settings::configuration.logTags.rtcp)
 		log_tags.push_back("rtcp");
 
 	MS_DEBUG_TAG(info, "<configuration>");
@@ -472,22 +471,22 @@ void Settings::SetLogTags(std::vector<std::string>& tags)
 	// Reset logTags.
 	struct LogTags newLogTags;
 
-	Settings::logTags = newLogTags;
+	Settings::configuration.logTags = newLogTags;
 
 	for (auto& tag : tags)
 	{
 		if (tag == "info")
-			Settings::logTags.info = true;
+			Settings::configuration.logTags.info = true;
 		else if (tag == "ice")
-			Settings::logTags.ice = true;
+			Settings::configuration.logTags.ice = true;
 		else if (tag == "dtls")
-			Settings::logTags.dtls = true;
+			Settings::configuration.logTags.dtls = true;
 		else if (tag == "rtp")
-			Settings::logTags.rtp = true;
+			Settings::configuration.logTags.rtp = true;
 		else if (tag == "srtp")
-			Settings::logTags.srtp = true;
+			Settings::configuration.logTags.srtp = true;
 		else if (tag == "rtcp")
-			Settings::logTags.rtcp = true;
+			Settings::configuration.logTags.rtcp = true;
 	}
 }
 
