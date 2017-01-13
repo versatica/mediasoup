@@ -231,10 +231,11 @@
       [
         # C++ source files
         'test/tests.cpp',
-        'test/test-rtcp.cpp',
         'test/test-rtp.cpp',
+        'test/test-rtcp.cpp',
         # C++ include files
-        'test/fct.h'
+        'test/catch.hpp',
+        'test/helpers.h'
       ]
     }
   ]
