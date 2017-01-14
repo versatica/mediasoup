@@ -54,7 +54,7 @@ As for now, we will not limit the bit rate for media streams, as we are relying 
 This information is to be bypassed from the remote RTP receiver to the corresponding remote RTP sender.
 
 ```
-RFC6051:
+RFC 6051:
 This memo outlines how RTP sessions are synchronised, and discusses
 how rapidly such synchronisation can occur.  We show that most RTP
 sessions can be synchronised immediately, but that the use of video
@@ -73,11 +73,11 @@ Applicable on multicast sessions.
 For now it can be just ignored. In future it could be useful when *mediasoup* generates **NACK** request, in order to ackonwledge remote RTP receivers about it and avoid them sending such requests, avoiding the so called "feedback storm" or "NACK storm".
 
 ```
-   RFC6642:
-   The RTCP TPLR message can be used by the intermediaries to
-   inform the receiver that the sender of the RTCP TPLR has received
-   reports that the indicated packets were lost and ask the receiver not
-   to send feedback to it regarding these packets.
+RFC 6642:
+The RTCP TPLR message can be used by the intermediaries to
+inform the receiver that the sender of the RTCP TPLR has received
+reports that the indicated packets were lost and ask the receiver not
+to send feedback to it regarding these packets.
 ```
 
 ### RTCP-ECN-FB	
@@ -113,13 +113,11 @@ Also to be locally sent when a new participant joins the conference for a fast r
 This information is to be ignored since it would affect the transmition rate of the remote RTP sender, affecting thus the overall participants of the room.
 
 ```
-   RFC5104:
-   The Temporal-Spatial Trade-off Request (TSTR) instructs the video
-   encoder to change its trade-off between temporal and spatial
-   resolution.  Index values from 0 to 31 indicate monotonically a
-   desire for higher frame rate.
-```   
-
+RFC 5104:
+The Temporal-Spatial Trade-off Request (TSTR) instructs the video
+encoder to change its trade-off between temporal and spatial
+resolution.  Index values from 0 to 31 indicate monotonically a
+desire for higher frame rate.```
 ### VBCM
 
 This information is to be ignored since different remote RTP receivers will potentially send different feedback for the same media stream.
