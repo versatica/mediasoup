@@ -41,7 +41,7 @@ NACK requests are locally consumed. The solicited RTP packets are re-sent to the
 ### TMMBR / TMMBN
 
 ```
-RFC5104:
+RFC 5104:
 A receiver, translator, or mixer uses the Temporary Maximum Media
 Stream Bit Rate Request (TMMBR, "timber") to request a sender to
 limit the maximum bit rate for a media stream (see section 2.2) to,
@@ -117,7 +117,9 @@ RFC 5104:
 The Temporal-Spatial Trade-off Request (TSTR) instructs the video
 encoder to change its trade-off between temporal and spatial
 resolution.  Index values from 0 to 31 indicate monotonically a
-desire for higher frame rate.```
+desire for higher frame rate.
+```
+
 ### VBCM
 
 This information is to be ignored since different remote RTP receivers will potentially send different feedback for the same media stream.
