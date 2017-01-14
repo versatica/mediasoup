@@ -20,15 +20,15 @@ In order to get the best media quality from the remote RTP senders, *mediasoup* 
 
 The combination of Sender and Receiver Reports will be used to determine the quality of each link. Information that will be available at the JavaScript API level in order to determine the quality of each participant in the room.
 
-### Sdes
+### SDES
 
 SDES information will be relayed from the remote RTP sender to the corresponding remote RTP receivers.
 
-### Bye
+### BYE
 
 BYE information will be relayed from the remote RTP sender to the corresponding remote RTP receivers.
 
-### App
+### APP
 
 App information will be relayed from the remote RTP sender to the corresponding remote RTP receivers.
 
