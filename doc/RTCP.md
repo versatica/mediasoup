@@ -12,7 +12,7 @@ In order to get the best media quality from the remote RTP senders, *mediasoup* 
 
 ### Sender Reports
 
-*mediasoup* will locally generate the Sender Reports of the streams it transmits. At the same time, it will consume the Sender Reports received from every remote RTP senders.
+*mediasoup* relays the Sender Reports coming from the remote RTP senders.
 
 ### Receiver Reports
 
