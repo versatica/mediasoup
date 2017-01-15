@@ -21,7 +21,7 @@ function get_dep()
 
 	if [ -d "${DEST}" ] ; then
 		echo ">>> [INFO] deleting ${DEST} ..."
-		git rm -rf --ignore-unmatch ${DEST} >/dev/null
+		git rm -rf --ignore-unmatch ${DEST} > /dev/null
 		rm -rf ${DEST}
 	fi
 
