@@ -50,7 +50,7 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
-		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
+		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
@@ -74,8 +74,6 @@ namespace RTC
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
-		// Receiver Report holding the RTP stats.
-		std::unique_ptr<RTC::RTCP::ReceiverReport> receiverReport;
 	};
 
 	/* Inline methods. */
@@ -106,10 +104,13 @@ namespace RTC
 	}
 
 	inline
-	RTC::RTCP::ReceiverReport* RtpReceiver::GetRtcpReceiverReport()
+	void RtpReceiver::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
-		return this->receiverReport.release();
-	};
+		// TODO: This assumes a single stream for now.
+		if (this->rtpStream)
+			this->rtpStream->ReceiveRtcpSenderReport(report);
+
+	}
 }
 
 #endif

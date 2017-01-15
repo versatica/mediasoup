@@ -604,9 +604,8 @@ namespace RTC
 
 		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
 
-		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
-
-		rtpReceiver->ReceiveRtcpReceiverReport(report);
+		// TODO: Calculate real downstream stats for the given RtpSender,
+		// considering the ReceiverReport generated locally and this one.
 	}
 
 	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
@@ -667,6 +666,9 @@ namespace RTC
 	void Room::onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
+
+		// RtpReceiver needs the sender report in order to generate it's receiver report.
+		rtpReceiver->ReceiveRtcpSenderReport(report);
 
 		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
 

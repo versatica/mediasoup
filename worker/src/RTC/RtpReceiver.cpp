@@ -323,12 +323,17 @@ namespace RTC
 		// SSRC values in received RTP packets to match the chosen random values.
 	}
 
-	void RtpReceiver::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	RTC::RTCP::ReceiverReport* RtpReceiver::GetRtcpReceiverReport()
 	{
-		MS_TRACE();
-
-		this->receiverReport.reset(new RTC::RTCP::ReceiverReport(report));
-		this->receiverReport->Serialize();
+		if (this->rtpStream)
+		{
+			RTC::RTCP::ReceiverReport* report = this->rtpStream->GetRtcpReceiverReport();
+			// TODO: This assumes a single stream for now.
+			report->SetSsrc(this->rtpParameters->encodings[0].ssrc);
+			return report;
+		}
+		else
+			return nullptr;
 	};
 
 	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet)

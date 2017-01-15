@@ -4,6 +4,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStream.h"
+#include "DepLibUV.h"
 #include "Logger.h"
 
 #define MIN_SEQUENTIAL 2
@@ -61,6 +62,9 @@ namespace RTC
 			// TODO: TMP
 			// Dump();
 		}
+
+		// Calculate Jitter
+		this->CalculateJitter(packet->GetTimestamp());
 
 		return true;
 	}
@@ -328,6 +332,68 @@ namespace RTC
 
 		// Update the new buffer item so it points to the cloned packed.
 		(*new_buffer_it).packet = packet->Clone(store);
+	}
+
+	void RtpStream::CalculateJitter(uint32_t rtpTimestamp)
+	{
+		if (!this->clockRate)
+			return;
+
+		int transit = DepLibUV::GetTime() - (rtpTimestamp*1000/this->clockRate);
+		int d = transit - this->transit;
+		this->transit = transit;
+		if (d < 0) d = -d;
+		this->jitter += (1./16.) * ((double)d - this->jitter);
+	}
+
+	RTC::RTCP::ReceiverReport* RtpStream::GetRtcpReceiverReport()
+	{
+		RTC::RTCP::ReceiverReport* report = new RTC::RTCP::ReceiverReport();
+
+		// Calculate Packets Expected and Lost
+		uint32_t expected = (this->cycles + this->max_seq) - this->base_seq + 1;
+		int32_t total_lost = expected - this->received;
+
+		report->SetTotalLost(total_lost);
+
+		// Calculate Fraction Lost
+		uint32_t expected_interval = expected - this->expected_prior;
+		this->expected_prior = expected;
+		uint32_t received_interval = this->received - this->received_prior;
+		this->received_prior = this->received;
+		uint32_t lost_interval = expected_interval - received_interval;
+		uint8_t fraction_lost;
+		if (expected_interval == 0 || lost_interval <= 0)
+			fraction_lost = 0;
+		else
+			fraction_lost = (lost_interval << 8) / expected_interval;
+
+		report->SetFractionLost(fraction_lost);
+
+		// Fill the rest of the report
+		report->SetLastSeq((uint32_t)this->max_seq + this->cycles);
+		report->SetJitter(this->jitter);
+
+		if (this->last_sr_received)
+		{
+			uint32_t dlsr = (DepLibUV::GetTime() - this->last_sr_received) / 1000 * 65536;
+			report->SetDelaySinceLastSenderReport(dlsr);
+			report->SetLastSenderReport(this->last_sr_timestamp);
+		}
+		else {
+			report->SetDelaySinceLastSenderReport(0);
+			report->SetLastSenderReport(0);
+		}
+
+		return report;
+	}
+
+	void RtpStream::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
+	{
+		this->last_sr_received = DepLibUV::GetTime();
+
+		this->last_sr_timestamp = htonl(report->GetNtpSec()) << 16;
+		this->last_sr_timestamp += htonl(report->GetNtpFrac()) >> 16;
 	}
 
 	// TODO: TMP
