@@ -395,11 +395,7 @@ void TcpConnection::onUvShutdown(uv_shutdown_t* req, int status)
 
 	delete req;
 
-	if (status == UV_EPIPE || status == UV_ENOTCONN || status == UV_ECANCELED)
-	{
-		MS_WARN_DEV("shutdown error: %s", uv_strerror(status));
-	}
-	else if (status)
+	if (status)
 	{
 		MS_WARN_DEV("shutdown error: %s", uv_strerror(status));
 	}
