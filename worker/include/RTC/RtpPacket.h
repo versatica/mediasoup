@@ -42,7 +42,7 @@ namespace RTC
 		};
 
 	private:
-		/* Struct for RTP header extension element. */
+		/* Struct for One-Byte extension element. */
 		struct OneByteExtensionElement
 		{
 			#if defined(MS_LITTLE_ENDIAN)
@@ -51,6 +51,20 @@ namespace RTC
 			#elif defined(MS_BIG_ENDIAN)
 				uint8_t id:4;
 				uint8_t len:4;
+			#endif
+			uint8_t value[1];
+		};
+
+	private:
+		/* Struct for Two-Bytes extension element. */
+		struct TwoBytesExtensionElement
+		{
+			#if defined(MS_LITTLE_ENDIAN)
+				uint8_t len:8;
+				uint8_t id:8;
+			#elif defined(MS_BIG_ENDIAN)
+				uint8_t id:8;
+				uint8_t len:8;
 			#endif
 			uint8_t value[1];
 		};
@@ -95,6 +109,7 @@ namespace RTC
 		uint8_t* csrcList = nullptr;
 		ExtensionHeader* extensionHeader = nullptr;
 		std::map<uint8_t, OneByteExtensionElement*> oneByteExtensionElements;
+		std::map<uint8_t, TwoBytesExtensionElement*> twoBytesExtensionElements;
 		uint8_t* payload = nullptr;
 		size_t payloadLength = 0;
 		uint8_t payloadPadding = 0;
@@ -223,39 +238,80 @@ namespace RTC
 	inline
 	bool RtpPacket::HasTwoBytesExtensionElements()
 	{
-		// TODO
-		return false;
+		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
 	}
 
 	inline
 	uint8_t RtpPacket::GetExtensionElementLength(uint8_t id)
 	{
-		if (this->oneByteExtensionElements.find(id) == this->oneByteExtensionElements.end())
-			return 0;
+		if (HasOneByteExtensionElements())
+		{
+			if (this->oneByteExtensionElements.find(id) == this->oneByteExtensionElements.end())
+				return 0;
 
-		return this->oneByteExtensionElements[id]->len + 1;
+			return this->oneByteExtensionElements[id]->len + 1;
+		}
+		else if (HasTwoBytesExtensionElements())
+		{
+			if (this->twoBytesExtensionElements.find(id) == this->twoBytesExtensionElements.end())
+				return 0;
+
+			return this->twoBytesExtensionElements[id]->len;
+		}
+		else
+		{
+			return 0;
+		}
 	}
 
 	inline
 	uint8_t* RtpPacket::GetExtensionElementValue(uint8_t id)
 	{
-		if (this->oneByteExtensionElements.find(id) == this->oneByteExtensionElements.end())
-			return nullptr;
+		if (HasOneByteExtensionElements())
+		{
+			if (this->oneByteExtensionElements.find(id) == this->oneByteExtensionElements.end())
+				return nullptr;
 
-		return this->oneByteExtensionElements[id]->value;
+			return this->oneByteExtensionElements[id]->value;
+		}
+		else if (HasTwoBytesExtensionElements())
+		{
+			if (this->twoBytesExtensionElements.find(id) == this->twoBytesExtensionElements.end())
+				return nullptr;
+
+			return this->twoBytesExtensionElements[id]->value;
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 
 	inline
 	void RtpPacket::SetExtensionElementId(uint8_t old_id, uint8_t new_id)
 	{
-		if (this->oneByteExtensionElements.find(old_id) == this->oneByteExtensionElements.end())
-			return;
+		if (HasOneByteExtensionElements())
+		{
+			if (this->oneByteExtensionElements.find(old_id) == this->oneByteExtensionElements.end())
+				return;
 
-		OneByteExtensionElement* element = this->oneByteExtensionElements[old_id];
+			OneByteExtensionElement* element = this->oneByteExtensionElements[old_id];
 
-		element->id = new_id;
-		this->oneByteExtensionElements[new_id] = element;
-		this->oneByteExtensionElements.erase(old_id);
+			element->id = new_id;
+			this->oneByteExtensionElements[new_id] = element;
+			this->oneByteExtensionElements.erase(old_id);
+		}
+		else if (HasTwoBytesExtensionElements())
+		{
+			if (this->twoBytesExtensionElements.find(old_id) == this->twoBytesExtensionElements.end())
+				return;
+
+			TwoBytesExtensionElement* element = this->twoBytesExtensionElements[old_id];
+
+			element->id = new_id;
+			this->twoBytesExtensionElements[new_id] = element;
+			this->twoBytesExtensionElements.erase(old_id);
+		}
 	}
 
 	inline

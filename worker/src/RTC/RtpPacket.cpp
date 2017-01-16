@@ -189,7 +189,7 @@ namespace RTC
 
 				if (ptr + 1 + len > extension_end)
 				{
-					MS_WARN_TAG(rtp, "not enough space for the announced header extension element value");
+					MS_WARN_TAG(rtp, "not enough space for the announced One-Byte header extension element value");
 
 					break;
 				}
@@ -198,6 +198,38 @@ namespace RTC
 				this->oneByteExtensionElements[id] = (OneByteExtensionElement*)ptr;
 
 				ptr += 1 + len;
+
+				// Counting padding bytes.
+				while ((ptr < extension_end) && (*ptr == 0))
+					++ptr;
+			}
+		}
+		// Parse Two-Bytes extension header.
+		else if (HasTwoBytesExtensionElements())
+		{
+			// Clear the Two-Bytes extension elements map.
+			this->twoBytesExtensionElements.clear();
+
+			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
+			uint8_t* ptr = extension_start;
+
+			while (ptr < extension_end)
+			{
+				uint8_t id = *ptr;
+				size_t len = *(++ptr);
+
+				if (ptr + len > extension_end)
+				{
+					MS_WARN_TAG(rtp, "not enough space for the announced Two-Bytes header extension element value");
+
+					break;
+				}
+
+				// Store the Two-Bytes extension element in a map.
+				this->twoBytesExtensionElements[id] = (TwoBytesExtensionElement*)ptr;
+
+				ptr += len;
 
 				// Counting padding bytes.
 				while ((ptr < extension_end) && (*ptr == 0))

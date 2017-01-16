@@ -30,6 +30,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 23617);
 		REQUIRE(packet->GetTimestamp() == 1660241882);
 		REQUIRE(packet->GetSsrc() == 2674985186);
+		REQUIRE(packet->HasOneByteExtensionElements());
+		REQUIRE(!packet->HasTwoBytesExtensionElements());
 		REQUIRE(packet->GetExtensionElementLength(1) == 1);
 		REQUIRE(packet->GetExtensionElementLength(2) == 0);
 		REQUIRE(packet->GetExtensionElementLength(3) == 0);
@@ -50,6 +52,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 23617);
 		REQUIRE(packet->GetTimestamp() == 1660241882);
 		REQUIRE(packet->GetSsrc() == 2674985186);
+		REQUIRE(packet->HasOneByteExtensionElements());
+		REQUIRE(!packet->HasTwoBytesExtensionElements());
 		REQUIRE(packet->GetExtensionElementLength(2) == 1);
 
 		packet->SetExtensionElementId(2, 3);
@@ -81,6 +85,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 28478);
 		REQUIRE(packet->GetTimestamp() == 172320136);
 		REQUIRE(packet->GetSsrc() == 3316375386);
+		REQUIRE(!packet->HasOneByteExtensionElements());
+		REQUIRE(!packet->HasTwoBytesExtensionElements());
 		REQUIRE(packet->GetExtensionElementLength(1) == 0);
 		REQUIRE(packet->GetExtensionElementLength(2) == 0);
 		REQUIRE(packet->GetExtensionElementLength(3) == 0);
@@ -108,6 +114,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 19354);
 		REQUIRE(packet->GetTimestamp() == 863466045);
 		REQUIRE(packet->GetSsrc() == 235797202);
+		REQUIRE(packet->HasOneByteExtensionElements());
+		REQUIRE(!packet->HasTwoBytesExtensionElements());
 		REQUIRE(packet->GetExtensionElementLength(1) == 1);
 		REQUIRE(packet->GetExtensionElementLength(2) == 0);
 		REQUIRE(packet->GetExtensionElementLength(3) == 3);
@@ -140,6 +148,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(cloned_packet->GetSequenceNumber() == 19354);
 		REQUIRE(cloned_packet->GetTimestamp() == 863466045);
 		REQUIRE(cloned_packet->GetSsrc() == 235797202);
+		REQUIRE(cloned_packet->HasOneByteExtensionElements());
+		REQUIRE(!cloned_packet->HasTwoBytesExtensionElements());
 		REQUIRE(cloned_packet->GetExtensionElementLength(1) == 0);
 		REQUIRE(cloned_packet->GetExtensionElementLength(2) == 3);
 		REQUIRE(cloned_packet->GetExtensionElementLength(3) == 1);
@@ -173,6 +183,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadType() == 1);
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
+		REQUIRE(!packet->HasOneByteExtensionElements());
+		REQUIRE(!packet->HasTwoBytesExtensionElements());
 		REQUIRE(packet->GetSsrc() == 5);
 
 		delete packet;
@@ -204,9 +216,67 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
+		REQUIRE(packet->HasOneByteExtensionElements());
+		REQUIRE(!packet->HasTwoBytesExtensionElements());
 		REQUIRE(packet->GetExtensionElementLength(1) == 1);
 		REQUIRE(packet->GetExtensionElementLength(2) == 2);
 		REQUIRE(packet->GetExtensionElementLength(3) == 4);
+
+		packet->SetExtensionElementId(1, 11);
+		packet->SetExtensionElementId(2, 12);
+		packet->SetExtensionElementId(3, 13);
+
+		REQUIRE(packet->GetExtensionElementLength(1) == 0);
+		REQUIRE(packet->GetExtensionElementLength(2) == 0);
+		REQUIRE(packet->GetExtensionElementLength(3) == 0);
+		REQUIRE(packet->GetExtensionElementLength(11) == 1);
+		REQUIRE(packet->GetExtensionElementLength(12) == 2);
+		REQUIRE(packet->GetExtensionElementLength(13) == 4);
+
+		delete packet;
+	}
+
+	SECTION("create RtpPacket with Two-Bytes extension header")
+	{
+		uint8_t buffer[] =
+		{
+			0b10010000, 0b00000001, 0, 8,
+			0, 0, 0, 4,
+			0, 0, 0, 5,
+			0b00010000, 0, 0, 3, // Extension header
+			1, 0, 2, 1,
+			0xFF, 0, 3, 4,
+			0xFF, 0xFF, 0xFF, 0xFF
+		};
+
+		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+
+		if (!packet)
+			FAIL("not a RTP packet");
+
+		REQUIRE(packet->HasMarker() == false);
+		REQUIRE(packet->HasExtensionHeader() == true);
+		REQUIRE(packet->GetExtensionHeaderLength() == 12);
+		REQUIRE(packet->GetPayloadType() == 1);
+		REQUIRE(packet->GetSequenceNumber() == 8);
+		REQUIRE(packet->GetTimestamp() == 4);
+		REQUIRE(packet->GetSsrc() == 5);
+		REQUIRE(!packet->HasOneByteExtensionElements());
+		REQUIRE(packet->HasTwoBytesExtensionElements());
+		REQUIRE(packet->GetExtensionElementLength(1) == 0);
+		REQUIRE(packet->GetExtensionElementLength(2) == 1);
+		REQUIRE(packet->GetExtensionElementLength(3) == 4);
+
+		packet->SetExtensionElementId(1, 11);
+		packet->SetExtensionElementId(2, 12);
+		packet->SetExtensionElementId(3, 13);
+
+		REQUIRE(packet->GetExtensionElementLength(1) == 0);
+		REQUIRE(packet->GetExtensionElementLength(2) == 0);
+		REQUIRE(packet->GetExtensionElementLength(3) == 0);
+		REQUIRE(packet->GetExtensionElementLength(11) == 0);
+		REQUIRE(packet->GetExtensionElementLength(12) == 1);
+		REQUIRE(packet->GetExtensionElementLength(13) == 4);
 
 		delete packet;
 	}
