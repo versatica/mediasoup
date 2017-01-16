@@ -42,7 +42,7 @@ Feature codecs ("video/rtx", "video/ulpfec", "video/flexfec" and "video/red") ar
 
 Valid media codecs are inserted into a `RtpCapabilities` object. Once done, supported RTP header extensions and supported FEC mechanisms (loaded from [lib/supportedRtpCapabilities.js](../lib/supportedRtpCapabilities.js)) are also included into the `RtpCapabilities` object.
 
-*TODO:* I'm evaluating whether mediasoup supported RTP capabilities should incudle the full list of supported codecs (including their supported RTCP feedbacks). I think I'll go that way around.
+*TODO:* I'm evaluating whether mediasoup supported RTP capabilities should include the full list of supported codecs (including their supported RTCP feedbacks). I think I'll go that way around. Yes, I'll do that.
 
 And the room is done.
 
@@ -89,7 +89,7 @@ After that, C++ `RtpReceiver::FillRtpParameters()` is called. This method does n
 * Should filter unsupported RTP header extensions and map the `id` of the supported ones to a static value.
   - *NOTE:* This is important so we can deal with PlanB in which all the RTP streams are sent over a single `m=` section.
 
-*TODO:* The whole mapping system could be implemented by maintaing two `RtpParameters` objects within each `RtpReceiver`: the original one and the mmaped one (although that wouldn't be efficient when it comes to mangle each RTP packet so it may be better to handle an internal value mapping...).
+*TODO:* The whole mapping system could be implemented by maintaing two `RtpParameters` objects within each `RtpReceiver`: the original one and the maped one (although that wouldn't be efficient when it comes to mangle each RTP packet so it may be better to handle an internal value mapping...).
 
 After that, C++ `Peer::onRtpReceiverParametersDone()` is called, which just calls to C++ `Room::onPeerRtpReceiverParameters()`.
 
