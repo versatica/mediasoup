@@ -327,7 +327,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(report2.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	}
 
-	SECTION("create and parse ByePacket")
+	SECTION("create ByePacket")
 	{
 		uint32_t ssrc1 = 1111;
 		uint32_t ssrc2 = 2222;
@@ -382,7 +382,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("create and parse NackItem")
+	SECTION("create NackItem")
 	{
 		uint16_t packetId = 1;
 		uint16_t lostPacketBitmask = 2;
