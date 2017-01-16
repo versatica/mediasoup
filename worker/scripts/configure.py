@@ -10,7 +10,7 @@ import sys
 version = sys.version_info[0]
 
 if version != 2:
-  raise RuntimeError('gyp requires Python 2, but this is Python ' + str(version))
+  raise RuntimeError('gyp requires Python 2, but this is Python ' + str(version) + ', ensure your python2 or python command points to the Python 2 executable')
 
 CC = os.environ.get('CC', 'cc')
 script_dir = os.path.dirname(__file__)

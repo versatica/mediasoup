@@ -17,7 +17,6 @@
 You can support **mediasoup** by making a donation [here][paypal-url]. Thanks!
 
 
-
 ## Installation
 
 Within your Node.js application:
@@ -25,6 +24,16 @@ Within your Node.js application:
 ```bash
 $ npm install mediasoup --save
 ```
+
+Prior to that, ensure your host satisfies the following **requirements**:
+
+* Node.js >= `v4.0.0`
+* POSIX based operating system (Windows not yet supported)
+* Python 2 (`python2` or `python` command must point to the Python 2 executable)
+* `make`
+* `gcc` and `g++`, or `clang`, with C++11 support
+
+*NOTE:* In Debian and Ubuntu install the `build-essential` package. It includes both `make` and `gcc`/`g++`.
 
 
 ## Design goals
@@ -42,15 +51,6 @@ $ npm install mediasoup --save
 * ICE / DTLS / RTP / RTCP over UDP and TCP.
 * Extremely powerful (media worker subprocess coded in C++ on top of [libuv](http://libuv.org)).
 * Can handle RTP packets in JavaScript land.
-
-
-## Requirements
-
-* Node.js >= `v4.0.0`
-* POSIX based operating system (Windows not yet supported)
-* `Python` 2
-* `make`
-* `gcc` or `clang` with C++11 support
 
 
 ## Author

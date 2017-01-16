@@ -2,6 +2,9 @@
 # make tasks for mediasoup-worker.
 #
 
+# Best effort to get Python 2 executable.
+PYTHON:=$(type -p python2 || echo python)
+
 .PHONY: default Release Debug test xcode clean clean-all
 
 default:
@@ -12,19 +15,19 @@ else
 endif
 
 Release:
-	cd worker && ./scripts/configure.py -R mediasoup-worker
+	cd worker && $(PYTHON) ./scripts/configure.py -R mediasoup-worker
 	$(MAKE) BUILDTYPE=Release -C worker/out
 
 Debug:
-	cd worker && ./scripts/configure.py -R mediasoup-worker
+	cd worker && $(PYTHON) ./scripts/configure.py -R mediasoup-worker
 	$(MAKE) BUILDTYPE=Debug -C worker/out
 
 test:
-	cd worker && ./scripts/configure.py -R mediasoup-worker-test
+	cd worker && $(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
 	$(MAKE) BUILDTYPE=Release -C worker/out
 
 xcode:
-	cd worker && ./scripts/configure.py --format=xcode
+	cd worker && $(PYTHON) ./scripts/configure.py --format=xcode
 
 clean:
 	$(RM) -rf worker/out/Release/mediasoup-worker
