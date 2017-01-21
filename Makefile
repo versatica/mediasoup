@@ -2,8 +2,9 @@
 # make tasks for mediasoup-worker.
 #
 
-# Best effort to get Python 2 executable.
-PYTHON:=$(type -p python2 || echo python)
+# Best effort to get Python 2 executable and also allow custom PYTHON
+# environment variable set by the user.
+PYTHON?=$(type -p python2 || echo python)
 
 .PHONY: default Release Debug test xcode clean clean-all
 
