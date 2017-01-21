@@ -60,7 +60,7 @@ gulp.task('test:api', shell.task(
 gulp.task('test:worker', shell.task(
 	[
 		'if type make &> /dev/null; then make test; fi',
-		'cd worker && ./out/Release/mediasoup-worker-test --invisibles --use-colour=yes'
+		`cd worker && ./out/${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ? 'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes`
 	],
 	{
 		verbose : true

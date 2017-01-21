@@ -6,7 +6,7 @@
 # environment variable set by the user.
 PYTHON?=$(type -p python2 || echo python)
 
-.PHONY: default Release Debug test xcode clean clean-all
+.PHONY: default Release Debug test test-Release test-Debug xcode clean clean-all
 
 default:
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
@@ -24,8 +24,19 @@ Debug:
 	$(MAKE) BUILDTYPE=Debug -C worker/out
 
 test:
+ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
+	make test-Debug
+else
+	make test-Release
+endif
+
+test-Release:
 	cd worker && $(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
 	$(MAKE) BUILDTYPE=Release -C worker/out
+
+test-Debug:
+	cd worker && $(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
+	$(MAKE) BUILDTYPE=Debug -C worker/out
 
 xcode:
 	cd worker && $(PYTHON) ./scripts/configure.py --format=xcode

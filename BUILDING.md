@@ -7,6 +7,10 @@ This document is intended for **mediasoup** developers.
 
 The root folder of the project contains a `Makefile` to build the mediasoup worker subproject (under the `worker/` folder).
 
+### `make`
+
+The default task runs the `Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `Debug` task).
+
 ### `make Release`
 
 Builds the production ready mediasoup worker binary at `worker/out/Release/`. This is the binary used in production when installing the **mediasoup** NPM module with `npm install mediasoup`.
@@ -25,7 +29,15 @@ $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
 
 ### `make test`
 
+Runs the `test-Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `test-Debug` task).
+
+### `make test-Release`
+
 Builds the `mediasoup-worker-test` test unit binary at `worker/out/Release/`.
+
+### `make test-Debug`
+
+Builds the `mediasoup-worker-test` test unit binary in `Debug` mode at `worker/out/Debug/`.
 
 ### `make xcode`
 
@@ -38,10 +50,6 @@ Cleans objects and binaries related to the mediasoup worker.
 ### `make clean-all`
 
 Cleans all the objects and binaries, including those generated for library dependencies (such as libuv, openssl and libsrtp).
-
-### `make`
-
-The default task runs the `Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `Debug` task).
 
 
 ## gulpfile.js
@@ -69,12 +77,18 @@ Runs the JavaScript [test units](test/). Before it, it invokes the `make` comman
 In order to run the JavaScript test units with the mediasoup worker in `Debug` mode the `MEDIASOUP_BUILDTYPE` environment variable must be set to `Debug`:
 
 ```bash
-$ MEDIASOUP_BUILDTYPE=Debug gulp test:debug
+$ MEDIASOUP_BUILDTYPE=Debug gulp test:api
 ```
 
 ### `gulp test:worker`
 
 Runs the mediasoup worker [test units](worker/test/). Before it, it invokes the `make test` command.
+
+In order to run the worker test units with the mediasoup worker in `Debug` mode the `MEDIASOUP_BUILDTYPE` environment variable must be set to `Debug`:
+
+```bash
+$ MEDIASOUP_BUILDTYPE=Debug gulp test:worker
+```
 
 ### `gulp test`
 
