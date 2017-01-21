@@ -13,7 +13,7 @@ Builds the production ready mediasoup worker binary at `worker/out/Release/`. Th
 
 ### `make Debug`
 
-Builds a more verbose and non optimized mediasoup worker binary at `worker/out/Debug/` with some C flags enabled (such as `-g` and `-O0`) and some macros defined (such as `DEBUG`, `MS_LOG_FILE_LINE` and `MS_LOG_TRACE`).
+Builds a more verbose and non optimized mediasoup worker binary at `worker/out/Debug/` with some C flags enabled (such as `-O0`) and some macros defined (such as `DEBUG` and `MS_LOG_FILE_LINE`).
 
 Check the meaning of these macros in the [Logger.h](worker/include/Logger.h) header file.
 
