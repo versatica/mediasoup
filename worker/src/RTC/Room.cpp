@@ -649,6 +649,9 @@ namespace RTC
 
 						rtpSender->RetransmitRtpPacket(packet);
 					}
+
+					// Reset the container by setting its first element to nullptr.
+					this->rtpRetransmissionContainer[0] = nullptr;
 				}
 
 				break;

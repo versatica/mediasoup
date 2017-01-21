@@ -22,20 +22,6 @@ namespace RTC
 		notifier(notifier)
 	{
 		MS_TRACE();
-
-		// Create an RtpStream.
-		switch (kind)
-		{
-			case RTC::Media::Kind::VIDEO:
-			case RTC::Media::Kind::DEPTH:
-				this->rtpStream = new RTC::RtpStream(200); // Buffer up to 200 packets.
-				break;
-			case RTC::Media::Kind::AUDIO:
-				this->rtpStream = new RTC::RtpStream(0); // No buffer for audio streams.
-				break;
-			default:
-				;
-		}
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -174,6 +160,45 @@ namespace RTC
 				// And notify again.
 				this->listener->onRtpReceiverParametersDone(this);
 
+				// Set the RtpStream.
+				// TODO: This assumes a single stream for now.
+				// TODO: We need a much better way to get the clock rate.
+
+				uint8_t streamPayloadType = this->rtpParameters->encodings[0].codecPayloadType;
+				uint32_t streamClockRate;
+
+				auto it = this->rtpParameters->codecs.begin();
+
+				for (; it != this->rtpParameters->codecs.end(); it++)
+				{
+					auto& codec = *it;
+
+					if (codec.payloadType == streamPayloadType)
+					{
+						streamClockRate = codec.clockRate;
+
+						break;
+					}
+				}
+				// This should never happen.
+				if (it == this->rtpParameters->codecs.end())
+					MS_ABORT("no valid codec payload type found for the first encoding");
+
+				switch (this->kind)
+				{
+					case RTC::Media::Kind::VIDEO:
+					case RTC::Media::Kind::DEPTH:
+						// Buffer up to 200 packets.
+						this->rtpStream = new RTC::RtpStream(streamClockRate, 200);
+						break;
+					case RTC::Media::Kind::AUDIO:
+						// No buffer for audio streams.
+						this->rtpStream = new RTC::RtpStream(streamClockRate, 0);
+						break;
+					default:
+						;
+				}
+
 				break;
 			}
 
@@ -233,6 +258,9 @@ namespace RTC
 		static const Json::StaticString k_ssrc("ssrc");
 
 		// TODO: Check if stopped, etc (not yet done).
+
+		// TODO: Handle multiple streams.
+		MS_ASSERT(this->rtpStream, "no RtpStream set");
 
 		// Process the packet.
 		// TODO: Must check what kind of packet we are checking. For example, RTX

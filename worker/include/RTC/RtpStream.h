@@ -24,7 +24,7 @@ namespace RTC
 		};
 
 	public:
-		explicit RtpStream(size_t bufferSize);
+		explicit RtpStream(uint32_t clockRate, size_t bufferSize);
 		~RtpStream();
 
 		bool ReceivePacket(RTC::RtpPacket* packet);
@@ -38,6 +38,8 @@ namespace RTC
 		void Dump();
 
 	private:
+		// Given as argument.
+		uint32_t clockRate = 0;
 		bool started = false; // Whether at least a RTP packet has been received.
 		// https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
 		uint16_t max_seq = 0; // Highest seq. number seen.

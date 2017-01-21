@@ -15,7 +15,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStream::RtpStream(size_t bufferSize) :
+	RtpStream::RtpStream(uint32_t clockRate, size_t bufferSize) :
+		clockRate(clockRate),
 		storage(bufferSize)
 	{
 		MS_TRACE();
@@ -72,10 +73,6 @@ namespace RTC
 
 		// 17: 16 bit mask + the initial sequence number.
 		static size_t maxRequestedPackets = 17;
-
-		// First of all, set the first element of the container to null so, in case
-		// no packet is inserted into it, the reader will know it.
-		container[0] = nullptr;
 
 		// If the buffer is empty, just return.
 		if (this->buffer.size() == 0)
