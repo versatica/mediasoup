@@ -753,26 +753,70 @@ namespace RTC
 				case RTCP::Type::PSFB:
 				{
 					RTCP::FeedbackPsPacket* feedback = static_cast<RTCP::FeedbackPsPacket*>(packet);
-					RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+					switch (feedback->GetMessageType())
+					{
+						case RTCP::FeedbackPs::PLI:
+						case RTCP::FeedbackPs::SLI:
+						case RTCP::FeedbackPs::RPSI:
+						case RTCP::FeedbackPs::FIR:
+						case RTCP::FeedbackPs::AFB:
+						{
+							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-					if (rtpSender)
-						this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
-					else
-						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
+							if (rtpSender)
+								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+							else
+								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 
+							break;
+						}
+
+						case RTCP::FeedbackPs::TSTR:
+						case RTCP::FeedbackPs::TSTN:
+						case RTCP::FeedbackPs::VBCM:
+						case RTCP::FeedbackPs::PSLEI:
+						case RTCP::FeedbackPs::ROI:
+						case RTCP::FeedbackPs::EXT:
+						default:
+						{
+							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							break;
+						}
+					}
 					break;
 				}
 
 				case RTCP::Type::RTPFB:
 				{
 					RTCP::FeedbackRtpPacket* feedback = static_cast<RTCP::FeedbackRtpPacket*>(packet);
-					RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-					if (rtpSender)
-						this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
-					else
-						MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet [ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
+					switch (feedback->GetMessageType())
+					{
+						case RTCP::FeedbackRtp::NACK:
+						{
+							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+							if (rtpSender)
+								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+							else
+								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 
+							break;
+						}
+
+						case RTCP::FeedbackRtp::TMMBR:
+						case RTCP::FeedbackRtp::TMMBN:
+						case RTCP::FeedbackRtp::SR_REQ:
+						case RTCP::FeedbackRtp::RAMS:
+						case RTCP::FeedbackRtp::TLLEI:
+						case RTCP::FeedbackRtp::ECN:
+						case RTCP::FeedbackRtp::PS:
+						case RTCP::FeedbackRtp::EXT:
+						default:
+						{
+							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							break;
+						}
+					}
 					break;
 				}
 
