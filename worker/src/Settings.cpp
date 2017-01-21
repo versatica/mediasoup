@@ -263,7 +263,7 @@ void Settings::SetDefaultRtcListenIP(int requested_family)
 	if (err)
 		MS_ABORT("uv_interface_addresses() failed: %s", uv_strerror(err));
 
-	for (int i = 0; i < num_addresses; i++)
+	for (int i = 0; i < num_addresses; ++i)
 	{
 		uv_interface_address_t address = addresses[i];
 
@@ -496,7 +496,7 @@ void Settings::SetLogTags(Json::Value& json)
 
 	std::vector<std::string> tags;
 
-	for (Json::UInt i = 0; i < json.size(); i++)
+	for (Json::UInt i = 0; i < json.size(); ++i)
 	{
 		Json::Value entry = json[i];
 

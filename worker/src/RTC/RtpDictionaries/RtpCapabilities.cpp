@@ -23,7 +23,7 @@ namespace RTC
 		{
 			auto& json_codecs = data[k_codecs];
 
-			for (Json::UInt i = 0; i < json_codecs.size(); i++)
+			for (Json::UInt i = 0; i < json_codecs.size(); ++i)
 			{
 				RtpCodecParameters codec(json_codecs[i], scope);
 
@@ -37,7 +37,7 @@ namespace RTC
 		{
 			auto& json_array = data[k_headerExtensions];
 
-			for (Json::UInt i = 0; i < json_array.size(); i++)
+			for (Json::UInt i = 0; i < json_array.size(); ++i)
 			{
 				RtpHeaderExtension headerExtension(json_array[i]);
 
@@ -51,7 +51,7 @@ namespace RTC
 		{
 			auto& json_array = data[k_fecMechanisms];
 
-			for (Json::UInt i = 0; i < json_array.size(); i++)
+			for (Json::UInt i = 0; i < json_array.size(); ++i)
 			{
 				if (!json_array[i].isString())
 					MS_THROW_ERROR("invalid RtpCapabilities.fecMechanisms");

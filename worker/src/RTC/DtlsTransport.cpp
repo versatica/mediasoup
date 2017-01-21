@@ -380,7 +380,7 @@ namespace RTC
 		#endif
 
 		// Set the "use_srtp" DTLS extension.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); it++)
+		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
 		{
 			if (it != DtlsTransport::srtpProfiles.begin())
 				ssl_srtp_profiles += ":";
@@ -417,7 +417,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin(); it != DtlsTransport::string2FingerprintAlgorithm.end(); it++)
+		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin(); it != DtlsTransport::string2FingerprintAlgorithm.end(); ++it)
 		{
 			std::string algorithm_str = it->first;
 			FingerprintAlgorithm algorithm = it->second;
@@ -456,7 +456,7 @@ namespace RTC
 			}
 
 			// Convert to hexadecimal format in lowecase without colons.
-			for (unsigned int i = 0; i < size; i++)
+			for (unsigned int i = 0; i < size; ++i)
 			{
 				std::sprintf(hex_fingerprint + (i * 2), "%.2x", binary_fingerprint[i]);
 			}
@@ -1016,7 +1016,7 @@ namespace RTC
 		}
 
 		// Convert to hexadecimal format in lowecase without colons.
-		for (unsigned int i = 0; i < size; i++)
+		for (unsigned int i = 0; i < size; ++i)
 		{
 			std::sprintf(hex_fingerprint + (i * 2), "%.2x", binary_fingerprint[i]);
 		}
@@ -1137,7 +1137,7 @@ namespace RTC
 		}
 
 		// Get the negotiated SRTP profile.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); it++)
+		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
 		{
 			SrtpProfileMapEntry* profile_entry = &(*it);
 

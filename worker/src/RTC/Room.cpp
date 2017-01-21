@@ -76,7 +76,7 @@ namespace RTC
 
 			std::vector<RTC::RtpCodecParameters> mediaCodecs;
 
-			for (Json::UInt i = 0; i < json_mediaCodecs.size(); i++)
+			for (Json::UInt i = 0; i < json_mediaCodecs.size(); ++i)
 			{
 				RTC::RtpCodecParameters mediaCodec(json_mediaCodecs[i], RTC::Scope::ROOM_CAPABILITY);
 
@@ -395,7 +395,7 @@ namespace RTC
 					while (dynamicPayloadTypeIt != dynamicPayloadTypes.end())
 					{
 						payloadType = *dynamicPayloadTypeIt;
-						dynamicPayloadTypeIt++;
+						++dynamicPayloadTypeIt;
 
 						if (roomPayloadTypes.find(payloadType) == roomPayloadTypes.end())
 						{
@@ -446,7 +446,7 @@ namespace RTC
 			auto& peerCodecCapability = *it;
 			auto it2 = this->capabilities.codecs.begin();
 
-			for (; it2 != this->capabilities.codecs.end(); it2++)
+			for (; it2 != this->capabilities.codecs.end(); ++it2)
 			{
 				auto& roomCodecCapability = *it2;
 
@@ -455,7 +455,7 @@ namespace RTC
 			}
 
 			if (it2 != this->capabilities.codecs.end())
-				it++;
+				++it;
 			else
 				it = capabilities->codecs.erase(it);
 		}
@@ -634,13 +634,13 @@ namespace RTC
 			{
 				RTC::RTCP::FeedbackRtpNackPacket* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
-				for (auto it = nackPacket->Begin(); it != nackPacket->End(); it++)
+				for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 				{
 					RTC::RTCP::NackItem* item = *it;
 
 					rtpReceiver->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), this->rtpRetransmissionContainer);
 
-					for (auto it = this->rtpRetransmissionContainer.begin(); it != this->rtpRetransmissionContainer.end(); it++)
+					for (auto it = this->rtpRetransmissionContainer.begin(); it != this->rtpRetransmissionContainer.end(); ++it)
 					{
 						RTC::RtpPacket* packet = *it;
 
@@ -697,7 +697,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Tell all the peers but the one in the argument to generate and send their RTCP.
-		for (auto it = this->peers.begin(); it != this->peers.end(); it++)
+		for (auto it = this->peers.begin(); it != this->peers.end(); ++it)
 		{
 			RTC::Peer* current_peer = it->second;
 

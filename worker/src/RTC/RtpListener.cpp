@@ -195,7 +195,7 @@ namespace RTC
 		{
 			auto it = rtpParameters->encodings.begin();
 
-			for (; it != rtpParameters->encodings.end(); it++)
+			for (; it != rtpParameters->encodings.end(); ++it)
 			{
 				auto& encoding = *it;
 
@@ -242,7 +242,7 @@ namespace RTC
 			if (it->second == rtpReceiver)
 				it = this->ssrcTable.erase(it);
 			else
-				it++;
+				++it;
 		}
 
 		for (auto it = this->muxIdTable.begin(); it != this->muxIdTable.end();)
@@ -250,7 +250,7 @@ namespace RTC
 			if (it->second == rtpReceiver)
 				it = this->muxIdTable.erase(it);
 			else
-				it++;
+				++it;
 		}
 
 		for (auto it = this->ptTable.begin(); it != this->ptTable.end();)
@@ -258,7 +258,7 @@ namespace RTC
 			if (it->second == rtpReceiver)
 				it = this->ptTable.erase(it);
 			else
-				it++;
+				++it;
 		}
 	}
 

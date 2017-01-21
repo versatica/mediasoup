@@ -263,7 +263,7 @@ namespace RTC
 			MS_DEBUG_DEV("  %s with unknown method %#.3x", klass.c_str(), (uint16_t)this->method);
 		MS_DEBUG_DEV("  size: %zu bytes", this->size);
 		char transaction_id[25];
-		for (int i=0; i<12; i++)
+		for (int i=0; i<12; ++i)
 		{
 			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
 			std::snprintf(transaction_id+(i*2), 3, "%.2x", this->transactionId[i]);
@@ -293,7 +293,7 @@ namespace RTC
 		if (this->messageIntegrity)
 		{
 			char message_integrity[41];
-			for (int i=0; i<20; i++)
+			for (int i=0; i<20; ++i)
 			{
 				std::snprintf(message_integrity+(i*2), 3, "%.2x", this->messageIntegrity[i]);
 			}

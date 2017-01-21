@@ -76,7 +76,7 @@ namespace RTC { namespace RTCP
 		std::memcpy(this->header->bit_string, bit_string, length);
 
 		// Fill padding.
-		for (size_t i = 0; i < padding; i++)
+		for (size_t i = 0; i < padding; ++i)
 		{
 			this->raw[sizeof(Header)+i-1] = 0;
 		}

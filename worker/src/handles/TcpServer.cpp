@@ -144,7 +144,7 @@ void TcpServer::Close()
 	{
 		MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
 
-		for (auto it = this->connections.begin(); it != this->connections.end(); it++)
+		for (auto it = this->connections.begin(); it != this->connections.end(); ++it)
 		{
 			TcpConnection* connection = *it;
 			connection->Close();

@@ -115,7 +115,7 @@ namespace RTC
 		// Fail also after bind() fails N times in theorically available ports.
 		while (true)
 		{
-			attempt++;
+			++attempt;
 
 			// Increase the iterate port) within the range of RTC TCP ports.
 			if (iterating_port < RTC::TcpServer::maxPort)
@@ -150,7 +150,7 @@ namespace RTC
 			}
 
 			// Try to bind on it.
-			bind_attempt++;
+			++bind_attempt;
 
 			uvHandle = new uv_tcp_t();
 

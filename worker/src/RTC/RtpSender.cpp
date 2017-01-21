@@ -142,7 +142,7 @@ namespace RTC
 			auto& codec = *it;
 			auto it2 = this->peerCapabilities->codecs.begin();
 
-			for (; it2 != this->peerCapabilities->codecs.end(); it2++)
+			for (; it2 != this->peerCapabilities->codecs.end(); ++it2)
 			{
 				auto& codecCapability = *it2;
 
@@ -153,7 +153,7 @@ namespace RTC
 			if (it2 != this->peerCapabilities->codecs.end())
 			{
 				supportedPayloadTypes.insert(codec.payloadType);
-				it++;
+				++it;
 			}
 			else
 			{
@@ -168,7 +168,7 @@ namespace RTC
 
 			if (supportedPayloadTypes.find(encoding.codecPayloadType) != supportedPayloadTypes.end())
 			{
-				it++;
+				++it;
 			}
 			else
 			{
@@ -259,7 +259,7 @@ namespace RTC
 		{
 			auto it = this->peerCapabilities->codecs.begin();
 
-			for (; it != this->peerCapabilities->codecs.end(); it++)
+			for (; it != this->peerCapabilities->codecs.end(); ++it)
 			{
 				auto& codecCapability = *it;
 

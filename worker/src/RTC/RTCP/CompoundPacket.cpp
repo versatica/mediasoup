@@ -47,7 +47,7 @@ namespace RTC { namespace RTCP
 				header->length += (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount()) / 4;
 
 				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
-				for (; it != this->receiverReportPacket.End(); it++)
+				for (; it != this->receiverReportPacket.End(); ++it)
 				{
 					ReceiverReport* report = (*it);
 
@@ -83,7 +83,7 @@ namespace RTC { namespace RTCP
 			{
 				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
 
-				for (; it != this->receiverReportPacket.End(); it++)
+				for (; it != this->receiverReportPacket.End(); ++it)
 				{
 					(*it)->Dump();
 				}

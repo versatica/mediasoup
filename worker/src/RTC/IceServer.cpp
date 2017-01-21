@@ -200,7 +200,7 @@ namespace RTC
 		RTC::TransportTuple* removed_tuple = nullptr;
 
 		// Find the removed tuple.
-		for (; it != this->tuples.end(); it++)
+		for (; it != this->tuples.end(); ++it)
 		{
 			RTC::TransportTuple* stored_tuple = std::addressof(*it);
 
@@ -455,7 +455,7 @@ namespace RTC
 			return this->selectedTuple;
 
 		// Otherwise check other stored tuples.
-		for (auto it = this->tuples.begin(); it != this->tuples.end(); it++)
+		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
 		{
 			RTC::TransportTuple* stored_tuple = std::addressof(*it);
 

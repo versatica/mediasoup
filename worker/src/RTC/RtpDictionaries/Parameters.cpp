@@ -72,7 +72,7 @@ namespace RTC
 
 		MS_ASSERT(data.isObject(), "data is not a JSON object");
 
-		for (Json::Value::iterator it = data.begin(); it != data.end(); it++)
+		for (Json::Value::iterator it = data.begin(); it != data.end(); ++it)
 		{
 			std::string key = it.key().asString();
 			Json::Value value = (*it);
@@ -120,7 +120,7 @@ namespace RTC
 					std::vector<int32_t> arrayOfIntegers;
 					bool isValid = true;
 
-					for (Json::UInt i = 0; i < value.size() && isValid; i++)
+					for (Json::UInt i = 0; i < value.size() && isValid; ++i)
 					{
 						auto& entry = value[i];
 

@@ -114,11 +114,11 @@ namespace RTC
 		// Fail also after bind() fails N times in theorically available ports.
 		while (true)
 		{
-			attempt++;
+			++attempt;
 
 			// Increase the iterate port within the range of RTC UDP ports.
 			if (iterating_port < RTC::UdpSocket::maxPort)
-				iterating_port++;
+				++iterating_port;
 			else
 				iterating_port = RTC::UdpSocket::minPort;
 
@@ -149,7 +149,7 @@ namespace RTC
 			}
 
 			// Try to bind on it.
-			bind_attempt++;
+			++bind_attempt;
 
 			uvHandle = new uv_udp_t();
 

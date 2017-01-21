@@ -119,7 +119,7 @@ namespace RTC
 		{
 			if (requested)
 			{
-				for (; buffer_it != this->buffer.end(); buffer_it++)
+				for (; buffer_it != this->buffer.end(); ++buffer_it)
 				{
 					auto current_seq32 = (*buffer_it).seq32;
 
@@ -138,7 +138,7 @@ namespace RTC
 
 			requested = (bitmask & 1) ? true : false;
 			bitmask >>= 1;
-			seq32++;
+			++seq32;
 		}
 		while (bitmask != 0);
 
@@ -283,7 +283,7 @@ namespace RTC
 		// Iterate the buffer in reverse order and find the proper place to store the
 		// packet.
 		auto buffer_it_r = this->buffer.rbegin();
-		for (; buffer_it_r != this->buffer.rend(); buffer_it_r++)
+		for (; buffer_it_r != this->buffer.rend(); ++buffer_it_r)
 		{
 			auto current_seq32 = (*buffer_it_r).seq32;
 

@@ -33,7 +33,7 @@ void DepOpenSSL::ClassInit()
 
 	DepOpenSSL::numMutexes = CRYPTO_num_locks();
 
-	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; i++)
+	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
 	{
 		int err = uv_mutex_init(&DepOpenSSL::mutexes[i]);
 		if (err)
@@ -69,7 +69,7 @@ void DepOpenSSL::ClassDestroy()
 	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 
 	// Free mutexes.
-	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; i++)
+	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
 	{
 		uv_mutex_destroy(&DepOpenSSL::mutexes[i]);
 	}

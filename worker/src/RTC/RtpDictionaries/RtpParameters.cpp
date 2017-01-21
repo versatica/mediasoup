@@ -35,7 +35,7 @@ namespace RTC
 		{
 			auto& json_codecs = data[k_codecs];
 
-			for (Json::UInt i = 0; i < json_codecs.size(); i++)
+			for (Json::UInt i = 0; i < json_codecs.size(); ++i)
 			{
 				RTC::RtpCodecParameters codec(json_codecs[i], RTC::Scope::RECEIVE);
 
@@ -53,7 +53,7 @@ namespace RTC
 		{
 			auto& json_array = data[k_encodings];
 
-			for (Json::UInt i = 0; i < json_array.size(); i++)
+			for (Json::UInt i = 0; i < json_array.size(); ++i)
 			{
 				RTC::RtpEncodingParameters encoding(json_array[i]);
 
@@ -67,7 +67,7 @@ namespace RTC
 		{
 			auto& json_array = data[k_headerExtensions];
 
-			for (Json::UInt i = 0; i < json_array.size(); i++)
+			for (Json::UInt i = 0; i < json_array.size(); ++i)
 			{
 				RTC::RtpHeaderExtensionParameters headerExtension(json_array[i]);
 
@@ -187,7 +187,7 @@ namespace RTC
 					int32_t apt = codec.parameters.GetInteger(k_apt);
 					auto it = this->codecs.begin();
 
-					for (; it != this->codecs.end(); it++)
+					for (; it != this->codecs.end(); ++it)
 					{
 						auto codec = *it;
 
@@ -223,7 +223,7 @@ namespace RTC
 		{
 			auto it = this->codecs.begin();
 
-			for (; it != this->codecs.end(); it++)
+			for (; it != this->codecs.end(); ++it)
 			{
 				auto& codec = *it;
 
@@ -266,7 +266,7 @@ namespace RTC
 				{
 					auto it = this->codecs.begin();
 
-					for (; it != this->codecs.end(); it++)
+					for (; it != this->codecs.end(); ++it)
 					{
 						auto codec = *it;
 

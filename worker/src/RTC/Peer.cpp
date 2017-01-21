@@ -480,7 +480,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); it++)
+		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
 		{
 			auto rtpSender = it->second;
 			auto rtpParameters = rtpSender->GetParameters();
@@ -488,7 +488,7 @@ namespace RTC
 			if (!rtpParameters)
 				continue;
 
-			for (auto it2 = rtpParameters->encodings.begin(); it2 != rtpParameters->encodings.end(); it2++)
+			for (auto it2 = rtpParameters->encodings.begin(); it2 != rtpParameters->encodings.end(); ++it2)
 			{
 				auto& encoding = *it2;
 
@@ -513,12 +513,12 @@ namespace RTC
 		// - Request every Sender and Receiver of such transport their RTCP data.
 		// - Send the CompoundPacket.
 
-		for (auto it = this->transports.begin(); it != this->transports.end(); it++)
+		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
 		{
 			RTC::RTCP::CompoundPacket packet;
 			RTC::Transport* transport = it->second;
 
-			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); it++)
+			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
 			{
 				RTC::RtpSender* rtpSender = it->second;
 
@@ -540,7 +540,7 @@ namespace RTC
 				}
 			}
 
-			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); it++)
+			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
 			{
 				RTC::RtpReceiver* rtpReceiver = it->second;
 
@@ -684,7 +684,7 @@ namespace RTC
 		{
 			auto it = this->capabilities.codecs.begin();
 
-			for (; it != this->capabilities.codecs.end(); it++)
+			for (; it != this->capabilities.codecs.end(); ++it)
 			{
 				auto& codecCapability = *it;
 
@@ -736,7 +736,7 @@ namespace RTC
 					RTCP::ReceiverReportPacket* rr = static_cast<RTCP::ReceiverReportPacket*>(packet);
 					RTCP::ReceiverReportPacket::Iterator it = rr->Begin();
 
-					for (; it != rr->End(); it++)
+					for (; it != rr->End(); ++it)
 					{
 						auto& report = (*it);
 						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
@@ -784,7 +784,7 @@ namespace RTC
 					RTCP::SenderReportPacket::Iterator it = sr->Begin();
 
 					// Even if Sender Report packet can only contain one report..
-					for (; it != sr->End(); it++)
+					for (; it != sr->End(); ++it)
 					{
 						auto& report = (*it);
 						// Get the receiver associated to the SSRC indicated in the report.
@@ -804,7 +804,7 @@ namespace RTC
 					RTCP::SdesPacket* sdes = static_cast<RTCP::SdesPacket*>(packet);
 					RTCP::SdesPacket::Iterator it = sdes->Begin();
 
-					for (; it != sdes->End(); it++)
+					for (; it != sdes->End(); ++it)
 					{
 						auto& chunk = (*it);
 						// Get the receiver associated to the SSRC indicated in the chunk.

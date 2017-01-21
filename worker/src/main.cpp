@@ -144,7 +144,7 @@ void ignoreSignals()
 	if (err)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
-	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); it++)
+	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); ++it)
 	{
 		auto& sig_name = it->first;
 		int sig_id = it->second;

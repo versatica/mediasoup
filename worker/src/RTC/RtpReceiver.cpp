@@ -169,7 +169,7 @@ namespace RTC
 
 				auto it = this->rtpParameters->codecs.begin();
 
-				for (; it != this->rtpParameters->codecs.end(); it++)
+				for (; it != this->rtpParameters->codecs.end(); ++it)
 				{
 					auto& codec = *it;
 
