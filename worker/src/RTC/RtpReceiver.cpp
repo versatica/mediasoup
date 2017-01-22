@@ -182,7 +182,9 @@ namespace RTC
 				}
 				// This should never happen.
 				if (it == this->rtpParameters->codecs.end())
+				{
 					MS_ABORT("no valid codec payload type found for the first encoding");
+				}
 
 				switch (this->kind)
 				{
@@ -209,6 +211,7 @@ namespace RTC
 				if (!request->data[k_enabled].isBool())
 				{
 					request->Reject("Request has invalid data.enabled");
+
 					return;
 				}
 
@@ -226,6 +229,7 @@ namespace RTC
 				if (!request->data[k_enabled].isBool())
 				{
 					request->Reject("Request has invalid data.enabled");
+
 					return;
 				}
 
@@ -328,13 +332,17 @@ namespace RTC
 		if (this->rtpStream)
 		{
 			RTC::RTCP::ReceiverReport* report = this->rtpStream->GetRtcpReceiverReport();
+
 			// TODO: This assumes a single stream for now.
 			report->SetSsrc(this->rtpParameters->encodings[0].ssrc);
+
 			return report;
 		}
 		else
+		{
 			return nullptr;
-	};
+		}
+	}
 
 	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet)
 	{
@@ -345,14 +353,16 @@ namespace RTC
 			// Ensure that the RTCP packet fits into the RTCP buffer.
 			if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
 			{
-				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
+					packet->GetSize());
+
 				return;
 			}
 
 			packet->Serialize(RtpReceiver::rtcpBuffer);
 			this->transport->SendRtcpPacket(packet);
 		}
-	};
+	}
 
 	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet)
 	{
@@ -363,12 +373,14 @@ namespace RTC
 			// Ensure that the RTCP packet fits into the RTCP buffer.
 			if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
 			{
-				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
+					packet->GetSize());
+
 				return;
 			}
 
 			packet->Serialize(RtpReceiver::rtcpBuffer);
 			this->transport->SendRtcpPacket(packet);
 		}
-	};
+	}
 }

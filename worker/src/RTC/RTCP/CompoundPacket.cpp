@@ -45,6 +45,7 @@ namespace RTC { namespace RTCP
 				// Fix header length field.
 				Packet::CommonHeader* header = (Packet::CommonHeader*)this->header;
 				size_t length = ((sizeof(SenderReport::Header) + (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount())) / 4);
+
 				header->length = htons(length);
 
 				// Fix header count field.

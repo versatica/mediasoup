@@ -516,7 +516,6 @@ namespace RTC
 		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
 		{
 			RTC::RTCP::CompoundPacket packet;
-
 			RTC::Transport* transport = it->second;
 
 			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
@@ -743,9 +742,13 @@ namespace RTC
 						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
 
 						if (rtpSender)
+						{
 							this->listener->onPeerRtcpReceiverReport(this, rtpSender, report);
+						}
 						else
+						{
 							MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Receiver Report [ssrc:%" PRIu32 "]", report->GetSsrc());
+						}
 					}
 
 					break;
@@ -765,9 +768,14 @@ namespace RTC
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
 							if (rtpSender)
+							{
 								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+							}
 							else
-								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							{
+								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							}
 
 							break;
 						}
@@ -780,7 +788,9 @@ namespace RTC
 						case RTCP::FeedbackPs::EXT:
 						default:
 						{
-							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+								RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+
 							break;
 						}
 					}
@@ -796,10 +806,16 @@ namespace RTC
 						case RTCP::FeedbackRtp::NACK:
 						{
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+
 							if (rtpSender)
+							{
 								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+							}
 							else
-								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							{
+								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+									RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							}
 
 							break;
 						}
@@ -814,7 +830,9 @@ namespace RTC
 						case RTCP::FeedbackRtp::EXT:
 						default:
 						{
-							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]", RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+								RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+
 							break;
 						}
 					}
@@ -836,9 +854,14 @@ namespace RTC
 						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
 
 						if (rtpReceiver)
+						{
 							this->listener->onPeerRtcpSenderReport(this, rtpReceiver, report);
+						}
 						else
-							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a Sender Report [ssrc:%" PRIu32 "]", report->GetSsrc());
+						{
+							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a Sender Report [ssrc:%" PRIu32 "]",
+								report->GetSsrc());
+						}
 					}
 
 					break;
@@ -856,9 +879,14 @@ namespace RTC
 						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
 
 						if (rtpReceiver)
+						{
 							this->listener->onPeerRtcpSdesChunk(this, rtpReceiver, chunk);
+						}
 						else
-							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+						{
+							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a SDES chunk [ssrc:%" PRIu32 "]",
+								chunk->GetSsrc());
+						}
 					}
 
 					break;
@@ -873,7 +901,8 @@ namespace RTC
 
 				default:
 				{
-					MS_WARN_TAG(rtcp, "unhandled RTCP type received [type:%" PRIu8 "]", (uint8_t)packet->GetType());
+					MS_WARN_TAG(rtcp, "unhandled RTCP type received [type:%" PRIu8 "]",
+						(uint8_t)packet->GetType());
 				}
 			}
 
