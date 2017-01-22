@@ -516,6 +516,7 @@ namespace RTC
 		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
 		{
 			RTC::RTCP::CompoundPacket packet;
+
 			RTC::Transport* transport = it->second;
 
 			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
@@ -527,7 +528,6 @@ namespace RTC
 
 				RTC::RTCP::SenderReport* report = rtpSender->GetRtcpSenderReport();
 
-				// TODO: Get next rtpSender data on next SendRtcp() call.
 				if (report)
 				{
 					packet.AddSenderReport(report);
@@ -539,6 +539,10 @@ namespace RTC
 					break;
 				}
 			}
+
+			// TMP: only send RR if SR is also being sent.
+			if (packet.GetSenderReportCount() == 0)
+				return;
 
 			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
 			{
@@ -553,18 +557,15 @@ namespace RTC
 					packet.AddReceiverReport(report);
 			}
 
-			if (packet.GetSenderReportCount() || packet.GetReceiverReportCount())
+			// Ensure that the RTCP packet fits into the RTCP buffer.
+			if (packet.GetSize() > MS_RTCP_BUFFER_SIZE)
 			{
-				// Ensure that the RTCP packet fits into the RTCP buffer.
-				if (packet.GetSize() > MS_RTCP_BUFFER_SIZE)
-				{
-					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet.GetSize());
-					return;
-				}
-
-				packet.Serialize(Peer::rtcpBuffer);
-				transport->SendRtcpCompoundPacket(&packet);
+				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet.GetSize());
+				return;
 			}
+
+			packet.Serialize(Peer::rtcpBuffer);
+			transport->SendRtcpCompoundPacket(&packet);
 		}
 	}
 
