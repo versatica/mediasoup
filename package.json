@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "0.3.0-pre4",
+  "version": "0.3.0-pre5",
   "description": "Powerful WebRTC SFU for Node.js",
   "main": "lib/mediasoup.js",
   "repository": {
