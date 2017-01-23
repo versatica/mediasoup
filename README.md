@@ -40,7 +40,7 @@ Prior to that, ensure your host satisfies the following **requirements**:
 
 * Be a Node.js module.
 * Be minimalist: just handle the media layer.
-* Expose a modern ECMAScript 6 [API](/api/) in sync with [WebRTC 1.0](https://w3c.github.io/webrtc-pc/) and [ORTC](http://ortc.org/).
+* Expose a modern ECMAScript 6 [API](https://mediasoup.org/api/) in sync with [WebRTC 1.0](https://w3c.github.io/webrtc-pc/) and [ORTC](http://ortc.org/).
 * Work with current WebRTC client implementations.
 
 
