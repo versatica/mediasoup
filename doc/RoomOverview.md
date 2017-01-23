@@ -75,8 +75,8 @@ After that, C++ `RtpReceiver::FillRtpParameters()` is called. This method does n
 * Set a random `muxId` and map the original value.
 * If any SSRC value is not given, set a random one and be ready to match the unknown incoming SSRC value to it.
 * If not given, set the `rtcp` field.
-* Should filter unsupported RTP header extensions and map the `id` of the supported ones to a static value.
-  - *NOTE:* This is important so we can deal with PlanB in which all the RTP streams are sent over a single `m=` section.
+* Should map the `id` of the supported ones to a static value.
+  * *NOTE:* This is important so we can deal with PlanB in which all the RTP streams are sent over a single `m=` section.
 
 *TODO:* The whole mapping system could be implemented by maintaing two `RtpParameters` objects within each `RtpReceiver`: the original one and the maped one (although that wouldn't be efficient when it comes to mangle each RTP packet so it may be better to handle an internal value mapping...).
 
