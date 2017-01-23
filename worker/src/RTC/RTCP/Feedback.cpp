@@ -42,8 +42,7 @@ namespace RTC { namespace RTCP
 		Packet(RTCP::Type(commonHeader->packet_type)),
 		messageType(typename T::MessageType(commonHeader->count))
 	{
-		// 1 => sizeof(CommonHeader).
-		this->header = (Header*)(commonHeader + 1);
+		this->header = (Header*)(commonHeader + sizeof(CommonHeader));
 	}
 
 	template <typename T>

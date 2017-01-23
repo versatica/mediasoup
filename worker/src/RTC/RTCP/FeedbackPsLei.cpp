@@ -22,15 +22,17 @@ namespace RTC { namespace RTCP
 		}
 
 		Header* header = (Header*)data;
+
 		return new PsLeiItem(header);
 	}
 
 	/* Instance methods. */
 	PsLeiItem::PsLeiItem(uint32_t ssrc)
 	{
+		MS_TRACE();
+
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = (Header*)this->raw;
-
 		this->header->ssrc = htonl(ssrc);
 	}
 

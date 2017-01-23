@@ -36,7 +36,7 @@ namespace RTC { namespace RTCP
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = (Header*)this->raw;
 
-		// set reserved bits to zero
+		// Set reserved bits to zero.
 		std::memset(this->header, 0, sizeof(Header));
 
 		this->header->ssrc = htonl(ssrc);
