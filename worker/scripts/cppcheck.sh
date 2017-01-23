@@ -19,10 +19,10 @@ fi
 
 CPPCHECKS="warning,style,performance,portability,unusedFunction"
 XML_FILE="/tmp/mediasoup-worker-cppcheck.xml"
-REPORT_DIR="/tmp/mediasoup-worker-cppcheck-report"
+HTML_REPORT_DIR="/tmp/mediasoup-worker-cppcheck-report"
 
 echo ">>> [INFO] running cppcheck ..."
-cppcheck --std=c++11 --enable=$CPPCHECKS -v --quiet --report-progress --inline-suppr --error-exitcode=69 -I include src --xml-version=2 2> $XML_FILE
+cppcheck --std=c++11 --enable=${CPPCHECKS} -v --quiet --report-progress --inline-suppr --error-exitcode=69 -I include src --xml-version=2 2> $XML_FILE
 
 # If exit code is 1 it means that some cppcheck option is wrong, so abort.
 if [ $? -eq 1 ] ; then
@@ -30,10 +30,14 @@ if [ $? -eq 1 ] ; then
 	exit 1
 fi
 
-echo ">>> [INFO] running cppcheck-htmlreport ..."
-cppcheck-htmlreport --title="mediasoup-worker" --file=$XML_FILE --report-dir=$REPORT_DIR --source-dir=. > /dev/null
+echo ">>> [INFO] cppcheck XML report file generated in ${XML_FILE}"
 
-echo ">>> [INFO] opening HTML report ..."
-open $REPORT_DIR/index.html
-ening HTML report ..."
-open $REPORT_DIR/index.html
+echo ">>> [INFO] running cppcheck-htmlreport ..."
+cppcheck-htmlreport --title="mediasoup-worker" --file=${XML_FILE} --report-dir=${HTML_REPORT_DIR} --source-dir=. > /dev/null
+
+echo ">>> [INFO] cppcheck HTML report generated in ${HTML_REPORT_DIR}"
+
+if type "open" &> /dev/null; then
+	echo ">>> [INFO] opening HTML report ..."
+	open ${HTML_REPORT_DIR}/index.html
+fi
