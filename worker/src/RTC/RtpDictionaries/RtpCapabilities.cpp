@@ -103,6 +103,55 @@ namespace RTC
 		return json;
 	}
 
+	void RtpCapabilities::RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions)
+	{
+		MS_TRACE();
+
+		std::vector<RtpHeaderExtension> updatedHeaderExtensions;
+
+		for (auto& headerExtension : this->headerExtensions)
+		{
+			for (auto& supportedHeaderExtension : supportedHeaderExtensions)
+			{
+				if (
+					headerExtension.uri == supportedHeaderExtension.uri &&
+					(
+						headerExtension.kind == supportedHeaderExtension.kind ||
+						supportedHeaderExtension.kind == RTC::Media::Kind::ALL
+					))
+				{
+					updatedHeaderExtensions.push_back(headerExtension);
+
+					break;
+				}
+			}
+		}
+
+		this->headerExtensions = updatedHeaderExtensions;
+	}
+
+	void RtpCapabilities::RemoveUnsupportedFecMechanisms(std::vector<std::string>& supportedFecMechanisms)
+	{
+		MS_TRACE();
+
+		std::vector<std::string> updatedFecMechanisms;
+
+		for (auto& fecMechanism : this->fecMechanisms)
+		{
+			for (auto& supportedFecMechanism : supportedFecMechanisms)
+			{
+				if (fecMechanism == supportedFecMechanism)
+				{
+					updatedFecMechanisms.push_back(fecMechanism);
+
+					break;
+				}
+			}
+		}
+
+		this->fecMechanisms = updatedFecMechanisms;
+	}
+
 	inline
 	void RtpCapabilities::ValidateCodecs(RTC::Scope scope)
 	{

@@ -43,8 +43,6 @@ These codecs have the same fields as the room codecs, with some variations:
 
 After that, C++ `Room::onPeerCapabilities(capabilities)` is called. This method removes peer's codecs not supported by the room, removes the unsupported RTCP feedback mechanisms from the supported codecs, and removes RTP header extensions and FEC mechanisms not supported by mediasoup.
 
-*TODO:* We must remove RTP header extensions and FEC mechanisms not supported by mediasoup (and currently we support none of them).
-
 
 ## Creating a RtpReceiver
 
