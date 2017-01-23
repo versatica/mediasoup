@@ -51,7 +51,7 @@ namespace RTC { namespace RTCP
 		messageType(messageType)
 	{
 		this->raw = new uint8_t[sizeof(Header)];
-		this->header = (Header*)this->raw;
+		this->header = reinterpret_cast<Header*>(this->raw);
 		this->header->s_ssrc = htonl(sender_ssrc);
 		this->header->m_ssrc = htonl(media_ssrc);
 	}

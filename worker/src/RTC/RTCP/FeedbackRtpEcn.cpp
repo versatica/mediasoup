@@ -21,7 +21,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return new EcnItem(header);
 	}

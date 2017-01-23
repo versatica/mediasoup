@@ -21,7 +21,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return new TlleiItem(header);
 	}
@@ -30,7 +30,7 @@ namespace RTC { namespace RTCP
 	TlleiItem::TlleiItem(uint16_t packetId, uint16_t lostPacketBitmask)
 	{
 		this->raw = new uint8_t[sizeof(Header)];
-		this->header = (Header*)this->raw;
+		this->header = reinterpret_cast<Header*>(this->raw);
 
 		this->header->packet_id = htons(packetId);
 		this->header->lost_packet_bitmask = htons(lostPacketBitmask);

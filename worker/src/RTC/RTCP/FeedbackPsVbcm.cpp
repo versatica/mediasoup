@@ -21,7 +21,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return new VbcmItem(header);
 	}
@@ -30,7 +30,7 @@ namespace RTC { namespace RTCP
 	VbcmItem::VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value)
 	{
 		this->raw = new uint8_t[8 + length];
-		this->header = (Header*)this->raw;
+		this->header = reinterpret_cast<Header*>(this->raw);
 
 		this->header->ssrc = htonl(ssrc);
 		this->header->sequence_number = sequence_number;

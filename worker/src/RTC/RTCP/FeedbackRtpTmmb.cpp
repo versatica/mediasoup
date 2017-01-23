@@ -14,7 +14,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		// Get the header.
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		// data size must be >= header + length value.
 		if (sizeof(Header) > len)
@@ -66,7 +66,7 @@ namespace RTC { namespace RTCP
 		}
 
 		uint32_t compact = (exponent << 26) | (mantissa << 9) | this->overhead;
-		Header* header = (Header*)buffer;
+		Header* header = reinterpret_cast<Header*>(buffer);
 
 		header->ssrc = this->header->ssrc;
 		header->compact = htonl(compact);

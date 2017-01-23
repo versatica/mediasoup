@@ -220,7 +220,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.
-	UvSendData* send_data = (UvSendData*)std::malloc(sizeof(UvSendData) + len);
+	UvSendData* send_data = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
 
 	send_data->socket = this;
 	std::memcpy(send_data->store, data, len);

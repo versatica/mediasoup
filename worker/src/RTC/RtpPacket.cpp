@@ -20,7 +20,7 @@ namespace RTC
 		uint8_t* ptr = (uint8_t*)data;
 
 		// Get the header.
-		Header* header = (Header*)ptr;
+		Header* header = reinterpret_cast<Header*>(ptr);
 
 		// Inspect data after the minimum header size.
 		// size_t pos = sizeof(Header);
@@ -57,7 +57,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			extensionHeader = (ExtensionHeader*)ptr;
+			extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
 
 			// The header extension contains a 16-bit length field that counts the number of
 			// 32-bit words in the extension, excluding the four-octet extension header.
@@ -195,7 +195,7 @@ namespace RTC
 				}
 
 				// Store the One-Byte extension element in a map.
-				this->oneByteExtensionElements[id] = (OneByteExtensionElement*)ptr;
+				this->oneByteExtensionElements[id] = reinterpret_cast<OneByteExtensionElement*>(ptr);
 
 				ptr += 1 + len;
 
@@ -227,7 +227,7 @@ namespace RTC
 				}
 
 				// Store the Two-Bytes extension element in a map.
-				this->twoBytesExtensionElements[id] = (TwoBytesExtensionElement*)ptr;
+				this->twoBytesExtensionElements[id] = reinterpret_cast<TwoBytesExtensionElement*>(ptr);
 
 				ptr += len;
 
@@ -262,7 +262,7 @@ namespace RTC
 		std::memcpy(buffer, this->header, sizeof(Header));
 
 		// Update the header pointer.
-		this->header = (Header*)ptr;
+		this->header = reinterpret_cast<Header*>(ptr);
 		ptr += sizeof(Header);
 
 		// Add CSRC list.
@@ -281,7 +281,7 @@ namespace RTC
 			std::memcpy(ptr, this->extensionHeader, 4 + extension_value_size);
 
 			// Update the header extension pointer.
-			this->extensionHeader = (ExtensionHeader*)ptr;
+			this->extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
 			ptr += 4 + extension_value_size;
 		}
 
@@ -318,7 +318,7 @@ namespace RTC
 		std::memcpy(buffer, GetData(), GetSize());
 
 		// Set header pointer pointing to the given buffer.
-		Header* header = (Header*)ptr;
+		Header* header = reinterpret_cast<Header*>(ptr);
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
@@ -331,7 +331,7 @@ namespace RTC
 		if (this->extensionHeader)
 		{
 			// Set the header extension pointer.
-			extensionHeader = (ExtensionHeader*)ptr;
+			extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
 			ptr += 4 + GetExtensionHeaderLength();
 		}
 

@@ -123,7 +123,7 @@ namespace RTC
 	{
 		// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
 
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return (
 			(len >= sizeof(Header)) &&

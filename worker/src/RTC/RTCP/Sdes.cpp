@@ -30,7 +30,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		// Get the header.
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		// data size must be >= header + length value.
 		if (sizeof(uint8_t)*2 + header->length > len)
@@ -63,7 +63,7 @@ namespace RTC { namespace RTCP
 		this->raw = new uint8_t[2 + len];
 
 		// Update the header pointer.
-		this->header = (Header*)(this->raw);
+		this->header = reinterpret_cast<Header*>(this->raw);
 
 		this->header->type = type;
 		this->header->length = len;

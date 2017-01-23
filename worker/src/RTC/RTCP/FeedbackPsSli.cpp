@@ -21,7 +21,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return new SliItem(header);
 	}
@@ -44,7 +44,7 @@ namespace RTC { namespace RTCP
 	size_t SliItem::Serialize(uint8_t* buffer)
 	{
 		uint32_t compact = (this->first << 19) | (this->number << 6) | this->pictureId;
-		Header* header = (Header*)buffer;
+		Header* header = reinterpret_cast<Header*>(buffer);
 
 		header->compact = htonl(compact);
 		std::memcpy(buffer, header, sizeof(Header));

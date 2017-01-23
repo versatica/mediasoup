@@ -21,7 +21,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return new PsLeiItem(header);
 	}
@@ -32,7 +32,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		this->raw = new uint8_t[sizeof(Header)];
-		this->header = (Header*)this->raw;
+		this->header = reinterpret_cast<Header*>(this->raw);
 		this->header->ssrc = htonl(ssrc);
 	}
 

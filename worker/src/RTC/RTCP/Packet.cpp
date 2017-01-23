@@ -42,7 +42,7 @@ namespace RTC { namespace RTCP
 				return first;
 			}
 
-			CommonHeader* header = (CommonHeader*)data;
+			CommonHeader* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 			size_t packet_len = (size_t)(ntohs(header->length) + 1) * 4;
 
 			if (len < packet_len)
@@ -155,7 +155,7 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		this->header = (CommonHeader*)buffer;
+		this->header = reinterpret_cast<CommonHeader*>(buffer);
 
 		size_t length = (this->GetSize() / 4) - 1;
 

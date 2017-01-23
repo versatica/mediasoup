@@ -21,7 +21,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 		std::unique_ptr<RpsiItem> item(new RpsiItem(header));
 
 		if (item->IsCorrect())
@@ -66,7 +66,7 @@ namespace RTC { namespace RTCP
 		MS_ASSERT(length <= RpsiItem::MaxBitStringSize, "rpsi bit string length exceeds the maximum value");
 
 		this->raw = new uint8_t[sizeof(Header)];
-		this->header = (Header*)this->raw;
+		this->header = reinterpret_cast<Header*>(this->raw);
 
 		// 32 bits padding.
 		size_t padding = (-length) & 3;

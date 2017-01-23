@@ -202,7 +202,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	size_t pending_len = len - written;
 
 	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
+	UvWriteData* write_data = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pending_len));
 
 	write_data->connection = this;
 	std::memcpy(write_data->store, data + written, pending_len);
@@ -262,7 +262,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	size_t pending_len = total_len - written;
 
 	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* write_data = (UvWriteData*)std::malloc(sizeof(UvWriteData) + pending_len);
+	UvWriteData* write_data = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pending_len));
 
 	write_data->connection = this;
 	// If the first buffer was not entirely written then splice it.

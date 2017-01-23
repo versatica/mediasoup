@@ -14,7 +14,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		// Get the header.
-		Header* header = (Header*)data;
+		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// Packet size must be >= header size.
 		if (sizeof(Header) > len)
@@ -56,7 +56,7 @@ namespace RTC { namespace RTCP
 			std::memcpy(this->raw, this->header, sizeof(Header));
 
 			// Update the header pointer.
-			this->header = (Header*)(this->raw);
+			this->header = reinterpret_cast<Header*>(this->raw);
 		}
 	}
 
