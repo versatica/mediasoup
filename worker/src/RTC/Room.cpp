@@ -509,9 +509,6 @@ namespace RTC
 
 				// Attach the RtpSender to peer.
 				peer->AddRtpSender(rtpSender, receiver_peer->peerName, rtpReceiver->GetParameters());
-
-				// Provide the RtpSender with the parameters of the RtpReceiver.
-				rtpSender->Send(rtpReceiver->GetParameters());
 			}
 		}
 	}
