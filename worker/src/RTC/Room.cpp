@@ -470,7 +470,12 @@ namespace RTC
 				auto& roomCodecCapability = *it2;
 
 				if (roomCodecCapability.Matches(peerCodecCapability))
+				{
+					// Once matched, remove the unsupported RTCP feedback from the given codec.
+					peerCodecCapability.RemoveUnsupportedRtcpFeedback(roomCodecCapability.rtcpFeedback);
+
 					break;
+				}
 			}
 
 			if (it2 != this->capabilities.codecs.end())

@@ -225,6 +225,30 @@ namespace RTC
 		return true;
 	}
 
+	void RtpCodecParameters::RemoveUnsupportedRtcpFeedback(std::vector<RtcpFeedback>& supportedRtcpFeedback)
+	{
+		MS_TRACE();
+
+		std::vector<RtcpFeedback> updatedRtcpFeedback;
+
+		for (auto& rtcpFeedbackItem : this->rtcpFeedback)
+		{
+			for (auto& supportedRtcpFeedbackItem : supportedRtcpFeedback)
+			{
+				if (
+					rtcpFeedbackItem.type == supportedRtcpFeedbackItem.type &&
+					rtcpFeedbackItem.parameter == supportedRtcpFeedbackItem.parameter)
+				{
+					updatedRtcpFeedback.push_back(supportedRtcpFeedbackItem);
+
+					break;
+				}
+			}
+		}
+
+		this->rtcpFeedback = updatedRtcpFeedback;
+	}
+
 	inline
 	void RtpCodecParameters::CheckCodec()
 	{
