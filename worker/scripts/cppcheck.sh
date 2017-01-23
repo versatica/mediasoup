@@ -17,13 +17,12 @@ if ! type "cppcheck-htmlreport" &> /dev/null; then
 	exit 1
 fi
 
-__IGNORE_MACROS="-U SOCK_CLOEXEC -U SOCK_NONBLOCK"
 CPPCHECKS="warning,style,performance,portability,unusedFunction"
 XML_FILE="/tmp/mediasoup-worker-cppcheck.xml"
 REPORT_DIR="/tmp/mediasoup-worker-cppcheck-report"
 
 echo ">>> [INFO] running cppcheck ..."
-cppcheck --std=c++11 --enable=$CPPCHECKS -v --quiet --report-progress --inline-suppr --error-exitcode=13 -I include src --xml-version=2 2> $XML_FILE
+cppcheck --std=c++11 --enable=$CPPCHECKS -v --quiet --report-progress --inline-suppr --error-exitcode=69 -I include src --xml-version=2 2> $XML_FILE
 
 # If exit code is 1 it means that some cppcheck option is wrong, so abort.
 if [ $? -eq 1 ] ; then
@@ -35,4 +34,6 @@ echo ">>> [INFO] running cppcheck-htmlreport ..."
 cppcheck-htmlreport --title="mediasoup-worker" --file=$XML_FILE --report-dir=$REPORT_DIR --source-dir=. > /dev/null
 
 echo ">>> [INFO] opening HTML report ..."
+open $REPORT_DIR/index.html
+ening HTML report ..."
 open $REPORT_DIR/index.html
