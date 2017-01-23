@@ -62,7 +62,7 @@ These codecs have the same fields as the peer's capabilities codecs above, with 
 
 * `kind` is ignored.
 
-*TODO:* Currently, if `receive()` is called ith a codec that is not supported by the room or not present in the peer's given capabilities, it fails. Not sure what should be the proper behavior here.
+If `receive()` is called ith a codec that is not supported by the room or not present in the peer's given capabilities, it fails. Not sure what should be the proper behavior here.
 
 Unsupported RTCP feedback mechanisms and RTP header extensions not supported by mediasoup or by the peer itself are removed.
 
