@@ -679,8 +679,7 @@ namespace RTC
 		auto rtpParameters = rtpReceiver->GetParameters();
 
 		// Given codecs must be a subset of the capability codecs of the peer.
-
-		for (auto codec : rtpParameters->codecs)
+		for (auto& codec : rtpParameters->codecs)
 		{
 			auto it = this->capabilities.codecs.begin();
 
@@ -689,7 +688,12 @@ namespace RTC
 				auto& codecCapability = *it;
 
 				if (codecCapability.Matches(codec, true))
+				{
+					// Once matched, remove the unsupported RTCP feedback from the given codec.
+					codec.RemoveUnsupportedRtcpFeedback(codecCapability.rtcpFeedback);
+
 					break;
+				}
 			}
 			if (it == this->capabilities.codecs.end())
 			{
@@ -697,6 +701,9 @@ namespace RTC
 					codec.payloadType, codec.mime.GetName().c_str());
 			}
 		}
+
+		// Remove unsupported header extensions.
+		rtpParameters->RemoveUnsupportedHeaderExtensions(this->capabilities.headerExtensions);
 
 		auto transport = rtpReceiver->GetTransport();
 

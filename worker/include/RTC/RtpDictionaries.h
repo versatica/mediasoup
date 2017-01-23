@@ -163,6 +163,39 @@ namespace RTC
 		std::vector<RtcpFeedback> rtcpFeedback;
 	};
 
+	class RtpHeaderExtension
+	{
+	public:
+		explicit RtpHeaderExtension(Json::Value& data);
+
+		Json::Value toJson();
+
+	public:
+		Media::Kind kind = Media::Kind::ALL;
+		std::string uri;
+		uint16_t    preferredId = 0;
+		bool        preferredEncrypt = false;
+	};
+
+	class RtpCapabilities
+	{
+	public:
+		RtpCapabilities() {};
+		RtpCapabilities(Json::Value& data, RTC::Scope scope);
+
+		Json::Value toJson();
+		void RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
+		void RemoveUnsupportedFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
+
+	private:
+		void ValidateCodecs(RTC::Scope scope);
+
+	public:
+		std::vector<RtpCodecParameters> codecs;
+		std::vector<RtpHeaderExtension> headerExtensions;
+		std::vector<std::string>        fecMechanisms;
+	};
+
 	class RtpFecParameters
 	{
 	public:
@@ -247,6 +280,7 @@ namespace RTC
 		explicit RtpParameters(const RtpParameters* RtpParameters);
 
 		Json::Value toJson();
+		void RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 
 	private:
 		void ValidateCodecs();
@@ -260,39 +294,6 @@ namespace RTC
 		RtcpParameters                            rtcp;
 		bool                                      hasRtcp = false;
 		Json::Value                               userParameters;
-	};
-
-	class RtpHeaderExtension
-	{
-	public:
-		explicit RtpHeaderExtension(Json::Value& data);
-
-		Json::Value toJson();
-
-	public:
-		Media::Kind kind = Media::Kind::ALL;
-		std::string uri;
-		uint16_t    preferredId = 0;
-		bool        preferredEncrypt = false;
-	};
-
-	class RtpCapabilities
-	{
-	public:
-		RtpCapabilities() {};
-		RtpCapabilities(Json::Value& data, RTC::Scope scope);
-
-		Json::Value toJson();
-		void RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
-		void RemoveUnsupportedFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
-
-	private:
-		void ValidateCodecs(RTC::Scope scope);
-
-	public:
-		std::vector<RtpCodecParameters> codecs;
-		std::vector<RtpHeaderExtension> headerExtensions;
-		std::vector<std::string>        fecMechanisms;
 	};
 }
 

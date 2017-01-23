@@ -158,6 +158,28 @@ namespace RTC
 		return json;
 	}
 
+	void RtpParameters::RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions)
+	{
+		MS_TRACE();
+
+		std::vector<RTC::RtpHeaderExtensionParameters> updatedHeaderExtensions;
+
+		for (auto& headerExtension : this->headerExtensions)
+		{
+			for (auto& supportedHeaderExtension : supportedHeaderExtensions)
+			{
+				if (headerExtension.uri == supportedHeaderExtension.uri)
+				{
+					updatedHeaderExtensions.push_back(headerExtension);
+
+					break;
+				}
+			}
+		}
+
+		this->headerExtensions = updatedHeaderExtensions;
+	}
+
 	inline
 	void RtpParameters::ValidateCodecs()
 	{

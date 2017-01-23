@@ -103,11 +103,11 @@ namespace RTC
 		return json;
 	}
 
-	void RtpCapabilities::RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions)
+	void RtpCapabilities::RemoveUnsupportedHeaderExtensions(std::vector<RTC::RtpHeaderExtension>& supportedHeaderExtensions)
 	{
 		MS_TRACE();
 
-		std::vector<RtpHeaderExtension> updatedHeaderExtensions;
+		std::vector<RTC::RtpHeaderExtension> updatedHeaderExtensions;
 
 		for (auto& headerExtension : this->headerExtensions)
 		{
