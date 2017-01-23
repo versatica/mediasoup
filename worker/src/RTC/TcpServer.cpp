@@ -174,7 +174,7 @@ namespace RTC
 
 				// If bind() fails for more that MAX_BIND_ATTEMPTS then raise an error.
 				if (bind_attempt > MAX_BIND_ATTEMPTS)
-					MS_THROW_ERROR("uv_tcp_bind() fails more than %u times for IP '%s'", MAX_BIND_ATTEMPTS, listen_ip);
+					MS_THROW_ERROR("uv_tcp_bind() fails more than %" PRIu16 " times for IP '%s'", (uint16_t)MAX_BIND_ATTEMPTS, listen_ip);
 
 				// If we have tried all the ports in the range raise an error.
 				if (iterating_port == initial_port)

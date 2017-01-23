@@ -44,7 +44,7 @@ namespace RTC
 		Protocol protocol;
 		uint16_t port;
 		CandidateType type;
-		TcpCandidateType tcpType;
+		TcpCandidateType tcpType = TcpCandidateType::PASSIVE;
 	};
 }
 

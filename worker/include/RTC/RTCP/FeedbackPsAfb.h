@@ -26,8 +26,8 @@ namespace RTC { namespace RTCP
 		virtual size_t GetSize() override;
 
 	private:
-		uint8_t *data;
-		size_t size;
+		uint8_t* data = nullptr;
+		size_t size = 0;
 	};
 
 	/* Inline instance methods. */

@@ -58,7 +58,7 @@ namespace RTC { namespace RTCP
 
 	private:
 		Header* header = nullptr;
-		size_t length;
+		size_t length = 0;
 	};
 
 	// Rpsi packet declaration.

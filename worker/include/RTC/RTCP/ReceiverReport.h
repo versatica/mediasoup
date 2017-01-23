@@ -88,7 +88,7 @@ namespace RTC { namespace RTCP
 
 	private:
 		// SSRC of packet sender.
-		uint32_t ssrc;
+		uint32_t ssrc = 0;
 		std::vector<ReceiverReport*> reports;
 	};
 
