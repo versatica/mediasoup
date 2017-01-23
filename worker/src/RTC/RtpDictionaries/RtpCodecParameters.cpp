@@ -87,22 +87,17 @@ namespace RTC
 		if (data[k_parameters].isObject())
 			this->parameters.Set(data[k_parameters]);
 
-		if (
-			this->scope == RTC::Scope::PEER_CAPABILITY ||
-			this->scope == RTC::Scope::RECEIVE)
+		// `rtcpFeedback` is optional.
+		if (data[k_rtcpFeedback].isArray())
 		{
-			// `rtcpFeedback` is optional.
-			if (data[k_rtcpFeedback].isArray())
+			auto& json_rtcpFeedback = data[k_rtcpFeedback];
+
+			for (Json::UInt i = 0; i < json_rtcpFeedback.size(); ++i)
 			{
-				auto& json_rtcpFeedback = data[k_rtcpFeedback];
+				RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
 
-				for (Json::UInt i = 0; i < json_rtcpFeedback.size(); ++i)
-				{
-					RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
-
-					// Append to the rtcpFeedback vector.
-					this->rtcpFeedback.push_back(rtcpFeedback);
-				}
+				// Append to the rtcpFeedback vector.
+				this->rtcpFeedback.push_back(rtcpFeedback);
 			}
 		}
 
@@ -161,17 +156,12 @@ namespace RTC
 		// Add `parameters`.
 		json[k_parameters] = this->parameters.toJson();
 
-		if (
-			this->scope == RTC::Scope::PEER_CAPABILITY ||
-			this->scope == RTC::Scope::RECEIVE)
-		{
-			// Add `rtcpFeedback`.
-			json[k_rtcpFeedback] = Json::arrayValue;
+		// Add `rtcpFeedback`.
+		json[k_rtcpFeedback] = Json::arrayValue;
 
-			for (auto& entry : this->rtcpFeedback)
-			{
-				json[k_rtcpFeedback].append(entry.toJson());
-			}
+		for (auto& entry : this->rtcpFeedback)
+		{
+			json[k_rtcpFeedback].append(entry.toJson());
 		}
 
 		return json;

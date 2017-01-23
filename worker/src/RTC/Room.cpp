@@ -32,7 +32,7 @@ namespace RTC
 			Json::CharReader* jsonReader = builder.newCharReader();
 
 			// NOTE: These lines are auto-generated from data/supportedCapabilities.js.
-			const std::string supportedRtpCapabilities = R"({"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}],"fecMechanisms":[]})";
+			const std::string supportedRtpCapabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","clockRate":48000,"numChannels":2,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMU","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMA","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/G722","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":48000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":8000,"rtcpFeedback":[]},{"kind":"video","name":"video/VP8","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"}]},{"kind":"video","name":"video/VP9","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"}]},{"kind":"video","name":"video/H264","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"}],"parameters":{"packetizationMode":0}},{"kind":"video","name":"video/H264","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"}],"parameters":{"packetizationMode":1}},{"kind":"video","name":"video/H265","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"}],"parameters":{"packetizationMode":0}},{"kind":"video","name":"video/H265","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"}],"parameters":{"packetizationMode":1}}],"headerExtensions":[{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false}],"fecMechanisms":[]})";
 
 			Json::Value json;
 			std::string json_parse_error;
@@ -73,7 +73,6 @@ namespace RTC
 		if (data[k_mediaCodecs].isArray())
 		{
 			auto& json_mediaCodecs = data[k_mediaCodecs];
-
 			std::vector<RTC::RtpCodecParameters> mediaCodecs;
 
 			for (Json::UInt i = 0; i < json_mediaCodecs.size(); ++i)
@@ -84,7 +83,27 @@ namespace RTC
 				if (mediaCodec.mime.IsFeatureCodec())
 					continue;
 
-				mediaCodecs.push_back(mediaCodec);
+				// Check whether the given media codec is supported by mediasoup. If not
+				// ignore it.
+				for (auto& supportedMediaCodec : Room::supportedRtpCapabilities.codecs)
+				{
+					if (supportedMediaCodec.Matches(mediaCodec, false))
+					{
+						// Clone the supported media codec.
+						RTC::RtpCodecParameters clonedSupportedMediaCodec = supportedMediaCodec;
+
+						// If PT was given set it.
+						if (mediaCodec.hasPayloadType)
+						{
+							clonedSupportedMediaCodec.hasPayloadType = true;
+							clonedSupportedMediaCodec.payloadType = mediaCodec.payloadType;
+						}
+
+						mediaCodecs.push_back(clonedSupportedMediaCodec);
+
+						break;
+					}
+				}
 			}
 
 			// Set room RTP capabilities.

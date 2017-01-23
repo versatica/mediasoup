@@ -21,28 +21,11 @@ Media codecs can also define some optional fields such as:
 * `maxptime`
 * `ptime`
 
-Available media codec names are:
-
-* "audio/opus"
-* "audio/PCMA"
-* "audio/PCMU"
-* "audio/ISAC"
-* "audio/G722"
-* "video/VP8"
-* "video/VP9"
-* "video/H264"
-* "video/H265"
-
-Complementary codecs are also considered media codecs. These are:
-
-* "audio/CN"
-* "audio/telephone-event"
-
 Feature codecs ("video/rtx", "video/ulpfec", "video/flexfec" and "video/red") are **NOT** media codecs and hence MUST NOT be placed into `roomOptions.mediaCodecs` (they will be ignored if present).
 
-Valid media codecs are inserted into a `RtpCapabilities` object. Once done, supported RTP header extensions and supported FEC mechanisms (loaded from [lib/supportedRtpCapabilities.js](../lib/supportedRtpCapabilities.js)) are also included into the `RtpCapabilities` object.
+Given media codecs are matched to the media codec configurations supported by mediasoup (check them at [lib/supportedRtpCapabilities.js](../lib/supportedRtpCapabilities.js)). No matching codecs are ignored.
 
-*TODO:* I'm evaluating whether mediasoup supported RTP capabilities should include the full list of supported codecs (including their supported RTCP feedbacks). I think I'll go that way around. Yes, I'll do that.
+At the end, the room `RtpCapabilities` object is a clone of the mediasoup's supported capabilities with the matching subset of given room media codecs.
 
 And the room is done.
 
