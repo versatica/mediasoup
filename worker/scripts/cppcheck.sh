@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+unamestr=`uname`
 current_dir=${PWD##*/}
 
 if [ "${current_dir}" != "worker" ] ; then
@@ -9,6 +10,13 @@ fi
 
 if ! type "cppcheck" &> /dev/null; then
 	echo ">>> [ERROR] cppcheck command not found" >&2
+
+	if [[ "$unamestr" == "Linux" ]] ; then
+		echo ">>> [INFO] install the cppcheck Linux package and try again"
+	elif [[ "$unamestr" == "Darwin" ]] ; then
+		echo ">>> [INFO] install the Homebrew cppcheck package and try again"
+	fi
+
 	exit 1
 fi
 
