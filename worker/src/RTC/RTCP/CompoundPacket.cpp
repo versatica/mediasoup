@@ -68,10 +68,7 @@ namespace RTC { namespace RTCP
 		}
 
 		if (this->sdesPacket.GetCount())
-		{
 			this->sdesPacket.Serialize(this->header + offset);
-			offset += this->sdesPacket.GetSize();
-		}
 	}
 
 	void CompoundPacket::Dump()
