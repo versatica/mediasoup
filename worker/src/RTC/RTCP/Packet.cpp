@@ -11,17 +11,20 @@
 
 namespace RTC { namespace RTCP
 {
-	/* Namespace methods. */
+	/* Class variables. */
 
-	const std::string& Type2String(Type type)
+	std::map<Type, std::string> Packet::type2String =
 	{
-		static const std::string unknown("UNKNOWN");
-
-		if (type2String.find(type) == type2String.end())
-			return unknown;
-
-		return type2String[type];
-	}
+		{ Type::FIR,   "FIR"   },
+		{ Type::NACK,  "NACK"  },
+		{ Type::SR,    "SR"    },
+		{ Type::RR,    "RR"    },
+		{ Type::SDES,  "SDES"  },
+		{ Type::BYE,   "BYE"   },
+		{ Type::APP,   "APP"   },
+		{ Type::RTPFB, "RTPFB" },
+		{ Type::PSFB,  "PSFB"  }
+	};
 
 	/* Class methods. */
 
@@ -147,6 +150,16 @@ namespace RTC { namespace RTCP
 		}
 
 		return first;
+	}
+
+	const std::string& Packet::Type2String(Type type)
+	{
+		static const std::string unknown("UNKNOWN");
+
+		if (Packet::type2String.find(type) == Packet::type2String.end())
+			return unknown;
+
+		return Packet::type2String[type];
 	}
 
 	/* Instance methods. */

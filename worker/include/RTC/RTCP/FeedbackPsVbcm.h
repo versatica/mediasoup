@@ -45,6 +45,7 @@ namespace RTC { namespace RTCP
 		explicit VbcmItem(Header* header);
 		explicit VbcmItem(VbcmItem* item);
 		VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
+		virtual ~VbcmItem() {};
 
 		uint32_t GetSsrc();
 		uint8_t  GetSequenceNumber();

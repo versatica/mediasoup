@@ -22,21 +22,6 @@ namespace RTC { namespace RTCP
 		PSFB  = 206
 	};
 
-	static std::map<Type, std::string> type2String =
-	{
-		{ Type::FIR,   "FIR"   },
-		{ Type::NACK,  "NACK"  },
-		{ Type::SR,    "SR"    },
-		{ Type::RR,    "RR"    },
-		{ Type::SDES,  "SDES"  },
-		{ Type::BYE,   "BYE"   },
-		{ Type::APP,   "APP"   },
-		{ Type::RTPFB, "RTPFB" },
-		{ Type::PSFB,  "PSFB"  }
-	};
-
-	const std::string& Type2String(Type type);
-
 	class Packet
 	{
 	public:
@@ -59,6 +44,12 @@ namespace RTC { namespace RTCP
 	public:
 		static bool IsRtcp(const uint8_t* data, size_t len);
 		static Packet* Parse(const uint8_t* data, size_t len);
+
+	private:
+		static const std::string& Type2String(Type type);
+
+	private:
+		static std::map<Type, std::string> type2String;
 
 	public:
 		explicit Packet(Type type);

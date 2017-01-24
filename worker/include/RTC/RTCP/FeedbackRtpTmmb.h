@@ -38,6 +38,7 @@ namespace RTC { namespace RTCP
 		explicit TmmbItem(Header* header);
 		explicit TmmbItem(TmmbItem* item);
 		TmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
+		virtual ~TmmbItem() {};
 
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);

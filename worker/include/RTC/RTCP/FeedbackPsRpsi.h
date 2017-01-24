@@ -44,6 +44,7 @@ namespace RTC { namespace RTCP
 		explicit RpsiItem(Header* header);
 		explicit RpsiItem(RpsiItem* item);
 		RpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
+		virtual ~RpsiItem() {};
 
 		bool IsCorrect();
 		uint8_t GetPayloadType();

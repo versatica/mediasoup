@@ -50,6 +50,7 @@ namespace RTC { namespace RTCP
 	public:
 		explicit EcnItem(Header* header);
 		explicit EcnItem(EcnItem* item);
+		virtual ~EcnItem() {};
 
 		uint32_t GetSequenceNumber();
 		uint32_t GetEct0Counter();

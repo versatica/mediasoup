@@ -67,7 +67,7 @@ namespace RTC { namespace RTCP
 
 	public:
 		SenderReportPacket();
-		~SenderReportPacket();
+		virtual ~SenderReportPacket();
 
 		void AddReport(SenderReport* report);
 		Iterator Begin();

@@ -24,6 +24,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() {};
+
+		public:
 			/**
 			 * These callbacks are guaranteed to be called before ProcessStunMessage()
 			 * returns, so the given pointers are still usable.

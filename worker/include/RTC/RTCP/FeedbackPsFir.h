@@ -39,6 +39,7 @@ namespace RTC { namespace RTCP
 		explicit FirItem(Header* header);
 		explicit FirItem(FirItem* item);
 		FirItem(uint32_t ssrc, uint8_t sequence_number);
+		virtual ~FirItem() {};
 
 		uint32_t GetSsrc();
 		uint8_t GetSequenceNumber();

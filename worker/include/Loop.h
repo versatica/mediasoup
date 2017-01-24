@@ -16,7 +16,7 @@ class Loop :
 {
 public:
 	explicit Loop(Channel::UnixStreamSocket* channel);
-	~Loop();
+	virtual ~Loop();
 
 private:
 	void Close();

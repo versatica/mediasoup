@@ -19,6 +19,7 @@ namespace RTC { namespace RTCP
 
 	public:
 		ByePacket();
+		virtual ~ByePacket() {};
 
 		void AddSsrc(uint32_t ssrc);
 		void SetReason(const std::string& reason);

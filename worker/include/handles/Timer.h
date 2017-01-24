@@ -10,6 +10,9 @@ public:
 	class Listener
 	{
 	public:
+		virtual ~Listener() {};
+
+	public:
 		virtual void onTimer(Timer* timer) = 0;
 	};
 

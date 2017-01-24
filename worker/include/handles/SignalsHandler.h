@@ -11,6 +11,9 @@ public:
 	class Listener
 	{
 	public:
+		virtual ~Listener() {};
+
+	public:
 		virtual void onSignal(SignalsHandler* signalsHandler, int signum) = 0;
 	};
 

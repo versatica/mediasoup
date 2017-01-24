@@ -11,6 +11,9 @@ public:
 	class Listener
 	{
 	public:
+		virtual ~Listener() {};
+
+	public:
 		virtual void onTcpConnectionClosed(TcpConnection* connection, bool is_closed_by_peer) = 0;
 	};
 

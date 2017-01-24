@@ -35,6 +35,7 @@ namespace RTC { namespace RTCP
 		explicit NackItem(Header* header);
 		explicit NackItem(NackItem* item);
 		NackItem(uint16_t packetId, uint16_t lostPacketBitmask);
+		virtual ~NackItem() {};
 
 		uint16_t GetPacketId();
 		uint16_t GetLostPacketBitmask();

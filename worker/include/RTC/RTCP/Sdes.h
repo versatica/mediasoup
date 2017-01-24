@@ -101,7 +101,7 @@ namespace RTC { namespace RTCP
 
 	public:
 		SdesPacket();
-		~SdesPacket();
+		virtual ~SdesPacket();
 
 		void AddChunk(SdesChunk* chunk);
 		Iterator Begin();

@@ -15,6 +15,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() {};
+
+		public:
 			virtual void onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr) = 0;
 		};
 
@@ -34,6 +37,7 @@ namespace RTC
 
 	public:
 		UdpSocket(Listener* listener, int address_family);
+		virtual ~UdpSocket() {};
 
 	/* Pure virtual methods inherited from ::UdpSocket. */
 	public:

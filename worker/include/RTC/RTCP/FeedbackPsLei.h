@@ -34,6 +34,7 @@ namespace RTC { namespace RTCP
 		explicit PsLeiItem(Header* header);
 		explicit PsLeiItem(PsLeiItem* item);
 		explicit PsLeiItem(uint32_t ssrc);
+		virtual ~PsLeiItem() {};
 
 		uint32_t GetSsrc();
 

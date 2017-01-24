@@ -71,7 +71,7 @@ namespace RTC { namespace RTCP
 
 	public:
 		ReceiverReportPacket();
-		~ReceiverReportPacket();
+		virtual ~ReceiverReportPacket();
 
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);

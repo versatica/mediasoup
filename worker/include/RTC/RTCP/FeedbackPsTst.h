@@ -41,6 +41,7 @@ namespace RTC { namespace RTCP
 		explicit TstItem(Header* header);
 		explicit TstItem(TstItem* item);
 		TstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
+		virtual ~TstItem() {};
 
 		uint32_t GetSsrc();
 		uint8_t GetSequenceNumber();

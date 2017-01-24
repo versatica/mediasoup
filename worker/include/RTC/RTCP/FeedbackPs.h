@@ -19,7 +19,8 @@ namespace RTC { namespace RTCP
 	public:
 		// Parsed Report. Points to an external data.
 		explicit FeedbackPsItemPacket(CommonHeader* commonHeader);
-		FeedbackPsItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
+		explicit FeedbackPsItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
+		virtual ~FeedbackPsItemPacket() {};
 
 		void AddItem(Item* item);
 		Iterator Begin();

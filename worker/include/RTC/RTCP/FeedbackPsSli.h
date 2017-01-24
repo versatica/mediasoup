@@ -34,6 +34,7 @@ namespace RTC { namespace RTCP
 		explicit SliItem(Header* header);
 		explicit SliItem(SliItem* item);
 		SliItem(uint16_t first, uint16_t number, uint8_t pictureId);
+		virtual ~SliItem() {};
 
 		uint16_t GetFirst();
 		void SetFirst(uint16_t first);

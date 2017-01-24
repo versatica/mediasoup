@@ -35,6 +35,7 @@ namespace RTC { namespace RTCP
 		explicit TlleiItem(Header* header);
 		explicit TlleiItem(TlleiItem* item);
 		TlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
+		virtual ~TlleiItem() {};
 
 		uint16_t GetPacketId();
 		uint16_t GetLostPacketBitmask();

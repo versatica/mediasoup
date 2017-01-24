@@ -16,6 +16,7 @@ namespace RTC { namespace RTCP
 		// Parsed Report. Points to an external data.
 		explicit FeedbackPsAfbPacket(CommonHeader* commonHeader);
 		FeedbackPsAfbPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
+		virtual ~FeedbackPsAfbPacket() {};
 
 		uint8_t* GetData();
 

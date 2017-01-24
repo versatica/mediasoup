@@ -17,6 +17,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() {};
+
+		public:
 			virtual void onRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool is_closed_by_peer) = 0;
 		};
 
@@ -36,6 +39,7 @@ namespace RTC
 
 	public:
 		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int address_family);
+		virtual ~TcpServer() {};
 
 	/* Pure virtual methods inherited from ::TcpServer. */
 	public:
