@@ -382,7 +382,12 @@ namespace RTC
 
 		if (this->last_sr_received)
 		{
-			uint32_t dlsr = (DepLibUV::GetTime() - this->last_sr_received) / 1000 * 65536;
+			// Get delay in milliseconds.
+			uint32_t delayMs = (DepLibUV::GetTime() - this->last_sr_received);
+
+			// Express delay in units of 1/65536 seconds.
+			uint32_t dlsr = (delayMs / 1000) << 16;
+			dlsr |= (uint32_t)((delayMs % 1000) * 65536 / 1000);
 
 			report->SetDelaySinceLastSenderReport(dlsr);
 			report->SetLastSenderReport(this->last_sr_timestamp);
