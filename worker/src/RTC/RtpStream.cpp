@@ -366,7 +366,7 @@ namespace RTC
 
 		this->received_prior = this->received;
 
-		uint32_t lost_interval = expected_interval - received_interval;
+		int32_t lost_interval = expected_interval - received_interval;
 		uint8_t fraction_lost;
 
 		if (expected_interval == 0 || lost_interval <= 0)
