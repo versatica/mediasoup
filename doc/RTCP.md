@@ -149,7 +149,7 @@ In future, this information is to be consumed by the local RTP Senders in order 
 
              | SR | RR | SDES | BYE | APP |
 -------------|----|----|------|-----|-----|
- RtpSender   |  G |  C |      |     |     |
+ RtpSender   |  B |  C |      |     |     |
  RtpReceiver |  C |  G |  B   |  B  |  B  |
 
 ### RTP Feedback RTCP
@@ -175,4 +175,4 @@ In future, this information is to be consumed by the local RTP Senders in order 
 
 (B): Bypass.
 
-(G): Generate. 
+(G): Generate locally. 
