@@ -189,6 +189,9 @@ namespace RTC
 
 				Json::Value data = this->capabilities.toJson();
 
+				// NOTE: We accept the request *after* calling onPeerCapabilities(). This
+				// guarantees that the Peer will receive a 'newrtpsender' event for all its
+				// associated RtpSenders *before* the setCapabilities() Promise resolves.
 				request->Accept(data);
 
 				break;
