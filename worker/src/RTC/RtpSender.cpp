@@ -218,7 +218,7 @@ namespace RTC
 		// TODO: We should not report an error here but just ignore it.
 		if (it == this->mapPayloadTypes.end())
 		{
-			MS_ERROR("payload type not mapped [payloadType:%" PRIu8 "]", originalPayloadType);
+			MS_DEBUG_TAG(rtp, "payload type not mapped [payloadType:%" PRIu8 "]", originalPayloadType);
 
 			return;
 		}
@@ -230,7 +230,7 @@ namespace RTC
 		// Send the packet.
 		this->transport->SendRtpPacket(packet);
 
-		// Recover the original packet payload type.
+		// Revert the original packet payload type.
 		packet->SetPayloadType(originalPayloadType);
 	}
 
