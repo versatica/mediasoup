@@ -39,7 +39,7 @@ namespace RTC
 			MS_THROW_ERROR("empty RtpHeaderExtension.uri");
 
 		// `preferredId` is mandatory.
-		if (!data[k_preferredId].asUInt())
+		if (!data[k_preferredId].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtension.preferredId");
 
 		this->preferredId = (uint16_t)data[k_preferredId].asUInt();
