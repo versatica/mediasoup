@@ -175,7 +175,8 @@ namespace RTC
 			}
 		}
 
-		// TODO: Remove unsupported header extensions.
+		// Remove unsupported header extensions.
+		this->rtpParameters->ReduceHeaderExtensions(this->peerCapabilities->headerExtensions);
 
 		// If there are no encodings set not available.
 		if (this->rtpParameters->encodings.size() > 0)

@@ -232,7 +232,7 @@ namespace RTC
 		return true;
 	}
 
-	void RtpCodecParameters::RemoveUnsupportedRtcpFeedback(std::vector<RTC::RtcpFeedback>& supportedRtcpFeedback)
+	void RtpCodecParameters::ReduceRtcpFeedback(std::vector<RTC::RtcpFeedback>& supportedRtcpFeedback)
 	{
 		MS_TRACE();
 

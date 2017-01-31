@@ -693,7 +693,7 @@ namespace RTC
 				if (codecCapability.Matches(codec, true))
 				{
 					// Once matched, remove the unsupported RTCP feedback from the given codec.
-					codec.RemoveUnsupportedRtcpFeedback(codecCapability.rtcpFeedback);
+					codec.ReduceRtcpFeedback(codecCapability.rtcpFeedback);
 
 					break;
 				}

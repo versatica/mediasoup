@@ -142,7 +142,7 @@ namespace RTC
 
 		Json::Value toJson();
 		bool Matches(RtpCodecParameters& codec, bool checkPayloadType = false);
-		void RemoveUnsupportedRtcpFeedback(std::vector<RtcpFeedback>& supportedRtcpFeedback);
+		void ReduceRtcpFeedback(std::vector<RtcpFeedback>& supportedRtcpFeedback);
 
 	private:
 		void CheckCodec();
@@ -185,7 +185,7 @@ namespace RTC
 
 		Json::Value toJson();
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
-		void RemoveUnsupportedFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
+		void ReduceFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
 
 	private:
 		void ValidateCodecs(RTC::Scope scope);

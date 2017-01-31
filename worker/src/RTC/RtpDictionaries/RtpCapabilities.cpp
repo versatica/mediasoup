@@ -120,8 +120,11 @@ namespace RTC
 						supportedHeaderExtension.kind == RTC::Media::Kind::ALL
 					))
 				{
-					// Replace with the matching header extension.
-					updatedHeaderExtensions.push_back(supportedHeaderExtension);
+					// Set the same id and other properties.
+					headerExtension.preferredId = supportedHeaderExtension.preferredId;
+					headerExtension.preferredEncrypt = supportedHeaderExtension.preferredEncrypt;
+
+					updatedHeaderExtensions.push_back(headerExtension);
 
 					break;
 				}
@@ -131,7 +134,7 @@ namespace RTC
 		this->headerExtensions = updatedHeaderExtensions;
 	}
 
-	void RtpCapabilities::RemoveUnsupportedFecMechanisms(std::vector<std::string>& supportedFecMechanisms)
+	void RtpCapabilities::ReduceFecMechanisms(std::vector<std::string>& supportedFecMechanisms)
 	{
 		MS_TRACE();
 
