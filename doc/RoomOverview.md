@@ -61,8 +61,9 @@ Once created, `rtpReceiver.receive(parameters)` must be called (otherwise the `R
 These codecs have the same fields as the peer's capabilities codecs above, with some variations:
 
 * `kind` is ignored.
+* `payloadType` MUST match the same value as the one set by the room (otherwise it will fail).
 
-If `receive()` is called ith a codec that is not supported by the room or not present in the peer's given capabilities, it fails. Not sure what should be the proper behavior here.
+If `receive()` is called ith a codec that is not supported by the room or not present in the peer's given capabilities, it fails.
 
 Unsupported RTCP feedback mechanisms and RTP header extensions not supported by mediasoup or by the peer itself are removed.
 
