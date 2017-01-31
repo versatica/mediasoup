@@ -706,7 +706,7 @@ namespace RTC
 		}
 
 		// Remove unsupported header extensions.
-		rtpParameters->RemoveUnsupportedHeaderExtensions(this->capabilities.headerExtensions);
+		rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
 
 		auto transport = rtpReceiver->GetTransport();
 

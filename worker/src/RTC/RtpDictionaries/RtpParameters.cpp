@@ -158,7 +158,7 @@ namespace RTC
 		return json;
 	}
 
-	void RtpParameters::RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions)
+	void RtpParameters::ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions)
 	{
 		MS_TRACE();
 
@@ -170,6 +170,10 @@ namespace RTC
 			{
 				if (headerExtension.uri == supportedHeaderExtension.uri)
 				{
+					// Set the same id and other properties.
+					headerExtension.id = supportedHeaderExtension.preferredId;
+					headerExtension.encrypt = supportedHeaderExtension.preferredEncrypt;
+
 					updatedHeaderExtensions.push_back(headerExtension);
 
 					break;

@@ -184,7 +184,7 @@ namespace RTC
 		RtpCapabilities(Json::Value& data, RTC::Scope scope);
 
 		Json::Value toJson();
-		void RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
+		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		void RemoveUnsupportedFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
 
 	private:
@@ -280,7 +280,7 @@ namespace RTC
 		explicit RtpParameters(const RtpParameters* RtpParameters);
 
 		Json::Value toJson();
-		void RemoveUnsupportedHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
+		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 
 	private:
 		void ValidateCodecs();

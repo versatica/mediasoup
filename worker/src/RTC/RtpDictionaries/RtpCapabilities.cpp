@@ -103,7 +103,7 @@ namespace RTC
 		return json;
 	}
 
-	void RtpCapabilities::RemoveUnsupportedHeaderExtensions(std::vector<RTC::RtpHeaderExtension>& supportedHeaderExtensions)
+	void RtpCapabilities::ReduceHeaderExtensions(std::vector<RTC::RtpHeaderExtension>& supportedHeaderExtensions)
 	{
 		MS_TRACE();
 
@@ -120,7 +120,8 @@ namespace RTC
 						supportedHeaderExtension.kind == RTC::Media::Kind::ALL
 					))
 				{
-					updatedHeaderExtensions.push_back(headerExtension);
+					// Replace with the matching header extension.
+					updatedHeaderExtensions.push_back(supportedHeaderExtension);
 
 					break;
 				}
