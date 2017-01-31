@@ -9,7 +9,7 @@
 #include "RTC/RTCP/Sdes.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
-#include <unordered_map>
+#include <unordered_set>
 #include <json/json.h>
 
 namespace RTC
@@ -63,7 +63,7 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 		// Others.
-		std::unordered_map<uint8_t, uint8_t> mapPayloadTypes;
+		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
 		// Sender Report holding the RTP stats.

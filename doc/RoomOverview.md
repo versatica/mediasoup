@@ -38,7 +38,7 @@ Once created, peer's capabilities must be set (otherwise no `RtpReceiver` can be
 
 These codecs have the same fields as the room codecs, with some variations:
 
-* `payloadType` is mandatory.
+* `payloadType` is ignored (it will be mapped to the same room codec).
 * `rtcpFeedback` is optional.
 
 After that, C++ `Room::onPeerCapabilities(capabilities)` is called. This method removes peer's codecs not supported by the room, removes the unsupported RTCP feedback mechanisms from the supported codecs, and removes RTP header extensions and FEC mechanisms not supported by mediasoup.

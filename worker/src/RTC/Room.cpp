@@ -87,7 +87,7 @@ namespace RTC
 				// ignore it.
 				for (auto& supportedMediaCodec : Room::supportedRtpCapabilities.codecs)
 				{
-					if (supportedMediaCodec.Matches(mediaCodec, false))
+					if (supportedMediaCodec.Matches(mediaCodec))
 					{
 						// Clone the supported media codec.
 						RTC::RtpCodecParameters clonedSupportedMediaCodec = supportedMediaCodec;
@@ -471,7 +471,11 @@ namespace RTC
 
 				if (roomCodecCapability.Matches(peerCodecCapability))
 				{
-					// Once matched, remove the unsupported RTCP feedback from the given codec.
+					// Set the same payload type.
+					peerCodecCapability.payloadType = roomCodecCapability.payloadType;
+					peerCodecCapability.hasPayloadType = true;
+
+					// Remove the unsupported RTCP feedback from the given codec.
 					peerCodecCapability.RemoveUnsupportedRtcpFeedback(roomCodecCapability.rtcpFeedback);
 
 					break;

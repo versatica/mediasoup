@@ -54,7 +54,7 @@ namespace RTC
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
 		static const Json::StaticString k_available("available");
-		static const Json::StaticString k_mapPayloadTypes("mapPayloadTypes");
+		static const Json::StaticString k_supportedPayloadTypes("supportedPayloadTypes");
 
 		Json::Value json(Json::objectValue);
 
@@ -71,10 +71,11 @@ namespace RTC
 
 		json[k_available] = this->available;
 
-		json[k_mapPayloadTypes] = Json::objectValue;
-		for (auto& kv : this->mapPayloadTypes)
+		json[k_supportedPayloadTypes] = Json::arrayValue;
+
+		for (auto payloadType : this->supportedPayloadTypes)
 		{
-			json[k_mapPayloadTypes][std::to_string(kv.first)] = kv.second;
+			json[k_supportedPayloadTypes].append((Json::UInt)payloadType);
 		}
 
 		return json;
@@ -135,8 +136,6 @@ namespace RTC
 		// Remove RTP parameters not supported by this Peer.
 
 		// Remove unsupported codecs.
-		std::unordered_set<uint8_t> supportedPayloadTypes;
-
 		for (auto it = this->rtpParameters->codecs.begin(); it != this->rtpParameters->codecs.end();)
 		{
 			auto& codec = *it;
@@ -152,7 +151,7 @@ namespace RTC
 
 			if (it2 != this->peerCapabilities->codecs.end())
 			{
-				supportedPayloadTypes.insert(codec.payloadType);
+				this->supportedPayloadTypes.insert(codec.payloadType);
 				++it;
 			}
 			else
@@ -177,9 +176,6 @@ namespace RTC
 		}
 
 		// TODO: Remove unsupported header extensions.
-
-		// Build the payload types map.
-		SetPayloadTypesMapping();
 
 		// If there are no encodings set not available.
 		if (this->rtpParameters->encodings.size() > 0)
@@ -209,29 +205,20 @@ namespace RTC
 
 		// Map the payload type.
 
-		uint8_t originalPayloadType = packet->GetPayloadType();
-		uint8_t mappedPayloadType;
-		auto it = this->mapPayloadTypes.find(originalPayloadType);
+		uint8_t payloadType = packet->GetPayloadType();
+		auto it = this->supportedPayloadTypes.find(payloadType);
 
 		// NOTE: This may happen if this peer supports just some codecs from the
 		// given RtpParameters.
-		// TODO: We should not report an error here but just ignore it.
-		if (it == this->mapPayloadTypes.end())
+		if (it == this->supportedPayloadTypes.end())
 		{
-			MS_DEBUG_TAG(rtp, "payload type not mapped [payloadType:%" PRIu8 "]", originalPayloadType);
+			MS_DEBUG_TAG(rtp, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
 		}
-		mappedPayloadType = this->mapPayloadTypes[originalPayloadType];
-
-		// Map the packet payload type.
-		packet->SetPayloadType(mappedPayloadType);
 
 		// Send the packet.
 		this->transport->SendRtpPacket(packet);
-
-		// Revert the original packet payload type.
-		packet->SetPayloadType(originalPayloadType);
 	}
 
 	void RtpSender::RetransmitRtpPacket(RTC::RtpPacket* packet)
@@ -245,52 +232,5 @@ namespace RTC
 		// packet as payload. Otherwise just send the packet as usual.
 		// TODO: No RTX for now so just send as usual.
 		SendRtpPacket(packet);
-	}
-
-	void RtpSender::SetPayloadTypesMapping()
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->peerCapabilities, "peer RTP capabilities are null");
-
-		this->mapPayloadTypes.clear();
-
-		for (auto& codec : this->rtpParameters->codecs)
-		{
-			auto it = this->peerCapabilities->codecs.begin();
-
-			for (; it != this->peerCapabilities->codecs.end(); ++it)
-			{
-				auto& codecCapability = *it;
-
-				if (codecCapability.Matches(codec))
-				{
-					auto originalPayloadType = codec.payloadType;
-					auto mappedPayloadType = codecCapability.payloadType;
-
-					// Set the mapping.
-					this->mapPayloadTypes[originalPayloadType] = mappedPayloadType;
-
-					// Override the codec payload type.
-					codec.payloadType = mappedPayloadType;
-
-					// Override encoding.codecPayloadType.
-					for (auto& encoding : this->rtpParameters->encodings)
-					{
-						// TODO: remove when confirmed
-						MS_ASSERT(encoding.hasCodecPayloadType, "encoding without codecPayloadType");
-
-						if (encoding.codecPayloadType == originalPayloadType)
-							encoding.codecPayloadType = mappedPayloadType;
-					}
-
-					break;
-				}
-			}
-
-			// This should not happen.
-			MS_ASSERT(it != this->peerCapabilities->codecs.end(),
-				"no matching room codec found [payloadType:%" PRIu8 "]", codec.payloadType);
-		}
 	}
 }
