@@ -543,8 +543,8 @@ namespace RTC
 			}
 
 			// TMP: only send RR if SR is also being sent.
-			if (packet.GetSenderReportCount() == 0)
-				return;
+			// if (packet.GetSenderReportCount() == 0)
+				// return;
 
 			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
 			{
