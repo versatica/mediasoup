@@ -14,7 +14,7 @@ namespace Utils
 		int ip_family = 0;
 
 		/**
-		 * Ragel: machine definition
+		 * Ragel: machine definition.
 		 */
 		%%{
 			machine IPParser;
@@ -79,17 +79,25 @@ namespace Utils
 		switch (addr->sa_family)
 		{
 			case AF_INET:
+			{
 				err = uv_inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, _ip, INET_ADDRSTRLEN);
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 				*port = (uint16_t)ntohs(((struct sockaddr_in*)addr)->sin_port);
+
 				break;
+			}
+
 			case AF_INET6:
+			{
 				err = uv_inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, _ip, INET6_ADDRSTRLEN);
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 				*port = (uint16_t)ntohs(((struct sockaddr_in6*)addr)->sin6_port);
+
 				break;
+			}
+
 			default:
 				MS_ABORT("unknown network family: %d", (int)addr->sa_family);
 		}

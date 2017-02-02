@@ -81,7 +81,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 					[
 						{
 							name        : 'video/H264',
-							payloadType : 102,
+							payloadType : 111,
 							clockRate   : 90000,
 							parameters  :
 							{
@@ -90,7 +90,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 						},
 						{
 							name        : 'video/H264',
-							payloadType : 103,
+							payloadType : 112,
 							clockRate   : 90000,
 							parameters  :
 							{
@@ -104,7 +104,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 							ssrc : 1111
 						},
 						{
-							codecPayloadType : 103
+							codecPayloadType : 112
 						},
 						{
 							ssrc : 3333
@@ -118,9 +118,9 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 					let rtpParameters = rtpReceiver.rtpParameters;
 
 					t.equal(rtpParameters.encodings.length, 3, 'computed rtpParameters has 3 encodings');
-					t.equal(rtpParameters.encodings[0].codecPayloadType, 102, 'first encoding has codecPayloadType 102');
-					t.equal(rtpParameters.encodings[1].codecPayloadType, 103, 'second encoding has codecPayloadType 103');
-					t.equal(rtpParameters.encodings[2].codecPayloadType, 102, 'third encoding has codecPayloadType 102');
+					t.equal(rtpParameters.encodings[0].codecPayloadType, 111, 'first encoding has codecPayloadType 111');
+					t.equal(rtpParameters.encodings[1].codecPayloadType, 112, 'second encoding has codecPayloadType 112');
+					t.equal(rtpParameters.encodings[2].codecPayloadType, 111, 'third encoding has codecPayloadType 111');
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
 		});
@@ -569,37 +569,6 @@ tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000
 					.catch((error) =>
 					{
 						t.pass(`rtpReceiver.receive() with unknown encoding.codecPayloadType failed: ${error}`);
-					});
-			});
-
-			funcs.push(function()
-			{
-				return rtpReceiver.receive(
-					{
-						codecs :
-						[
-							{
-								name        : 'audio/opus',
-								payloadType : 101,
-								clockRate   : 48000
-							},
-							{
-								name        : 'audio/CN',
-								payloadType : 102,
-								clockRate   : 16000
-							}
-						],
-						encodings :
-						[
-							{
-								codecPayloadType : 102
-							}
-						]
-					})
-					.then(() => t.fail('rtpReceiver.receive() with invalid encoding.codecPayloadType succeeded'))
-					.catch((error) =>
-					{
-						t.pass(`rtpReceiver.receive() failed: ${error}`);
 					});
 			});
 

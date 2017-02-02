@@ -189,6 +189,9 @@ namespace RTC
 
 				Json::Value data = this->capabilities.toJson();
 
+				// NOTE: We accept the request *after* calling onPeerCapabilities(). This
+				// guarantees that the Peer will receive a 'newrtpsender' event for all its
+				// associated RtpSenders *before* the setCapabilities() Promise resolves.
 				request->Accept(data);
 
 				break;
@@ -540,8 +543,8 @@ namespace RTC
 			}
 
 			// TMP: only send RR if SR is also being sent.
-			if (packet.GetSenderReportCount() == 0)
-				return;
+			// if (packet.GetSenderReportCount() == 0)
+				// return;
 
 			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
 			{
@@ -690,7 +693,7 @@ namespace RTC
 				if (codecCapability.Matches(codec, true))
 				{
 					// Once matched, remove the unsupported RTCP feedback from the given codec.
-					codec.RemoveUnsupportedRtcpFeedback(codecCapability.rtcpFeedback);
+					codec.ReduceRtcpFeedback(codecCapability.rtcpFeedback);
 
 					break;
 				}
@@ -703,7 +706,7 @@ namespace RTC
 		}
 
 		// Remove unsupported header extensions.
-		rtpParameters->RemoveUnsupportedHeaderExtensions(this->capabilities.headerExtensions);
+		rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
 
 		auto transport = rtpReceiver->GetTransport();
 

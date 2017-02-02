@@ -30,6 +30,6 @@ module.exports =
 		'space-in-parens'               : [ 2, 'never' ],
 		'spaced-comment'                : [ 2, 'always' ],
 		'comma-spacing'                 : [ 2, { before: false, after: true } ],
-		'jsx-quotes'                    : [ 2, 'prefer-single' ]
+		'no-loop-func'                  : 2
 	}
 };

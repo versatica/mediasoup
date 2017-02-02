@@ -38,7 +38,7 @@ Once created, peer's capabilities must be set (otherwise no `RtpReceiver` can be
 
 These codecs have the same fields as the room codecs, with some variations:
 
-* `payloadType` is mandatory.
+* `payloadType` is ignored (it will be mapped to the same room codec).
 * `rtcpFeedback` is optional.
 
 After that, C++ `Room::onPeerCapabilities(capabilities)` is called. This method removes peer's codecs not supported by the room, removes the unsupported RTCP feedback mechanisms from the supported codecs, and removes RTP header extensions and FEC mechanisms not supported by mediasoup.
@@ -61,8 +61,9 @@ Once created, `rtpReceiver.receive(parameters)` must be called (otherwise the `R
 These codecs have the same fields as the peer's capabilities codecs above, with some variations:
 
 * `kind` is ignored.
+* `payloadType` MUST match the same value as the one set by the room (otherwise it will fail).
 
-If `receive()` is called ith a codec that is not supported by the room or not present in the peer's given capabilities, it fails. Not sure what should be the proper behavior here.
+If `receive()` is called ith a codec that is not supported by the room or not present in the peer's given capabilities, it fails.
 
 Unsupported RTCP feedback mechanisms and RTP header extensions not supported by mediasoup or by the peer itself are removed.
 

@@ -57,12 +57,19 @@ namespace RTC
 			this->hasPayloadType = true;
 		}
 
-		if (
-			this->scope == RTC::Scope::PEER_CAPABILITY ||
-			this->scope == RTC::Scope::RECEIVE)
+		if (this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			if (!this->hasPayloadType)
 				MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
+		}
+
+		if (this->scope == RTC::Scope::RECEIVE)
+		{
+			if (!data[k_payloadType].isUInt())
+				MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
+
+			this->payloadType = (uint8_t)data[k_payloadType].asUInt();
+			this->hasPayloadType = true;
 		}
 
 		// `clockRate` is mandatory.
@@ -225,7 +232,7 @@ namespace RTC
 		return true;
 	}
 
-	void RtpCodecParameters::RemoveUnsupportedRtcpFeedback(std::vector<RTC::RtcpFeedback>& supportedRtcpFeedback)
+	void RtpCodecParameters::ReduceRtcpFeedback(std::vector<RTC::RtcpFeedback>& supportedRtcpFeedback)
 	{
 		MS_TRACE();
 

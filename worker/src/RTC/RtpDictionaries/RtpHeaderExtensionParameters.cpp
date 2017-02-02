@@ -30,7 +30,7 @@ namespace RTC
 			MS_THROW_ERROR("empty RtpHeaderExtensionParameters.uri");
 
 		// `id` is mandatory.
-		if (!data[k_id].asUInt())
+		if (!data[k_id].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.id");
 
 		this->id = (uint16_t)data[k_id].asUInt();

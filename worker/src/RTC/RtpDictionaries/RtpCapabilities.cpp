@@ -103,7 +103,7 @@ namespace RTC
 		return json;
 	}
 
-	void RtpCapabilities::RemoveUnsupportedHeaderExtensions(std::vector<RTC::RtpHeaderExtension>& supportedHeaderExtensions)
+	void RtpCapabilities::ReduceHeaderExtensions(std::vector<RTC::RtpHeaderExtension>& supportedHeaderExtensions)
 	{
 		MS_TRACE();
 
@@ -120,6 +120,10 @@ namespace RTC
 						supportedHeaderExtension.kind == RTC::Media::Kind::ALL
 					))
 				{
+					// Set the same id and other properties.
+					headerExtension.preferredId = supportedHeaderExtension.preferredId;
+					headerExtension.preferredEncrypt = supportedHeaderExtension.preferredEncrypt;
+
 					updatedHeaderExtensions.push_back(headerExtension);
 
 					break;
@@ -130,7 +134,7 @@ namespace RTC
 		this->headerExtensions = updatedHeaderExtensions;
 	}
 
-	void RtpCapabilities::RemoveUnsupportedFecMechanisms(std::vector<std::string>& supportedFecMechanisms)
+	void RtpCapabilities::ReduceFecMechanisms(std::vector<std::string>& supportedFecMechanisms)
 	{
 		MS_TRACE();
 
