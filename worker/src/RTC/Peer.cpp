@@ -192,6 +192,8 @@ namespace RTC
 				// NOTE: We accept the request *after* calling onPeerCapabilities(). This
 				// guarantees that the Peer will receive a 'newrtpsender' event for all its
 				// associated RtpSenders *before* the setCapabilities() Promise resolves.
+				// In other words, at the time setCapabilities() resolves, the Peer already
+				// has set all its current RtpSenders.
 				request->Accept(data);
 
 				break;
