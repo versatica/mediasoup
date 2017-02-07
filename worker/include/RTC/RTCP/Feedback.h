@@ -83,6 +83,7 @@ namespace RTC { namespace RTCP
 			TLLEI  = 7,
 			ECN    = 8,
 			PS     = 9,
+			GCC    = 15,
 			EXT    = 31
 		} MessageType;
 	};

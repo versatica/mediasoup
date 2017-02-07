@@ -816,6 +816,7 @@ namespace RTC
 					switch (feedback->GetMessageType())
 					{
 						case RTCP::FeedbackRtp::NACK:
+						case RTCP::FeedbackRtp::GCC:
 						{
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
