@@ -46,9 +46,6 @@ namespace RTC
 		void ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk);
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 
-	private:
-		void SetPayloadTypesMapping();
-
 	public:
 		// Passed by argument.
 		uint32_t rtpSenderId;
