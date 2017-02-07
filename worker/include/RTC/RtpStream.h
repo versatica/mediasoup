@@ -37,7 +37,7 @@ namespace RTC
 	private:
 		void InitSeq(uint16_t seq);
 		bool UpdateSeq(uint16_t seq);
-		void CleanBuffer();
+		void ClearBuffer();
 		void StorePacket(RTC::RtpPacket* packet);
 		void CalculateJitter(uint32_t rtpTimestamp);
 		void Dump();

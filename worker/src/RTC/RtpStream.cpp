@@ -28,7 +28,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Clear buffer.
-		CleanBuffer();
+		ClearBuffer();
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -164,7 +164,7 @@ namespace RTC
 		this->expected_prior = 0;
 
 		// Clean buffer.
-		CleanBuffer();
+		ClearBuffer();
 	}
 
 	bool RtpStream::UpdateSeq(uint16_t seq)
@@ -242,7 +242,7 @@ namespace RTC
 		return true;
 	}
 
-	void RtpStream::CleanBuffer()
+	void RtpStream::ClearBuffer()
 	{
 		MS_TRACE();
 
