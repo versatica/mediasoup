@@ -42,8 +42,11 @@ namespace RTC
 		// Add `type`.
 		json[k_type] = this->type;
 
-		// Add `parameter`.
-		json[k_parameter] = this->parameter;
+		// Add `parameter` (ensure it's null if no value).
+		if (this->parameter.length() > 0)
+			json[k_parameter] = this->parameter;
+		else
+			json[k_parameter] = Json::nullValue;
 
 		return json;
 	}
