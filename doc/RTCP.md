@@ -84,13 +84,17 @@ reports that the indicated packets were lost and ask the receiver not
 to send feedback to it regarding these packets.
 ```
 
-### RTCP-ECN-FB	
+### RTCP-ECN-FB
 
 For now it can be just ignored.
 
 ### PAUSE-RESUME
 
 Locally consume the pause-resume requests from remote RTP receivers in order to disable and enable the transmission for them independently. Applicable also in simulcast envirnments.
+
+### Transport-wide Congestion Control (TCC)
+
+Locally generate the RTP extension header on RTP packets sent by RTP transport, and consume the received RTCP Feedback to know exactly the state of received and lost packets on remote Peers.
 
 ## PS Feedback
 
@@ -149,30 +153,31 @@ In future, this information is to be consumed by the local RTP Senders in order 
 
              | SR | RR | SDES | BYE | APP |
 -------------|----|----|------|-----|-----|
- RtpSender   |  B |  C |      |     |     |
+ RtpSender   |  G |  C |      |     |     |
  RtpReceiver |  C |  G |  B   |  B  |  B  |
 
 ### RTP Feedback RTCP
- 
-             | NACK | TMMBR | TMMBN | TLLEI | ECN-FB | PAUSE-RESUME |
--------------|------|-------|-------|-------|--------|--------------|
- RtpSender   |   C  |   I   |       |       |    I   |       C      |
- RtpReceiver |      |       |   I   |   I   |        |              |
- 
+
+             | NACK | TMMBR | TMMBN | TLLEI | ECN-FB | PAUSE-RESUME | TCC |
+-------------|------|-------|-------|-------|--------|--------------|-----|
+ RtpSender   |   C  |   I   |       |       |    I   |       C      |     |
+ RtpReceiver |      |       |   I   |   I   |        |              |     |
+ RtpTransport|      |       |       |       |        |              | CG  |
+
 ## PS Feedback RTCP
- 
+
              | PLI | SLI | RPSI | FIR | TSTR | TSTN | VBCM | PSLI | ROI | REMB |
 -------------|-----|-----|------|-----|------|------|------|------|-----|------|
  RtpSender   |  B  |  B  |  B   |  B  |  I   |      |  I   |      |     |  C   |
  RtpReceiver |     |     |      |     |      |  I   |      |   I  |     |      |
- 
- 
+
+
 ( ): Does not apply.
 
-(I): Ignore. 
+(I): Ignore.
 
 (C): Consume locally.
 
 (B): Bypass.
 
-(G): Generate locally. 
+(G): Generate locally.
