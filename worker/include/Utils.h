@@ -261,11 +261,14 @@ namespace Utils
 	class String
 	{
 	public:
-		static void ToLowerCase(std::string& str)
-		{
-			std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-		}
+		static void ToLowerCase(std::string& str);
 	};
+
+	inline
+	void String::ToLowerCase(std::string& str)
+	{
+		std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+	}
 }
 
 #endif
