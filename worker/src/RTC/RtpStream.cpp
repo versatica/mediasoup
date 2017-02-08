@@ -11,6 +11,7 @@
 #define MAX_DROPOUT 3000
 #define MAX_MISORDER 100
 #define RTP_SEQ_MOD (1<<16)
+#define MAX_RETRANSMISSION_AGE 200 // Don't retransmit packets older than this (ms).
 
 namespace RTC
 {
@@ -55,13 +56,13 @@ namespace RTC
 			return false;
 		}
 
+		// Update highest timestamp seen.
+		if (packet->GetTimestamp() > this->max_timestamp)
+			this->max_timestamp = packet->GetTimestamp();
+
 		// If bufferSize was given, store the packet into the buffer.
 		if (this->storage.size() > 0)
-		{
 			StorePacket(packet);
-			// TODO: TMP
-			// Dump();
-		}
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
@@ -132,8 +133,19 @@ namespace RTC
 					{
 						auto current_packet = (*buffer_it).packet;
 
-						// Store the packet in the container and then increment its index.
-						container[container_idx++] = current_packet;
+						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
+						uint16_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->clockRate;
+
+						if (diff <= MAX_RETRANSMISSION_AGE)
+						{
+							// Store the packet in the container and then increment its index.
+							container[container_idx++] = current_packet;
+						}
+						else
+						{
+							MS_WARN_TAG(rtp, "ignoring retransmission for a packet older than %d ms", MAX_RETRANSMISSION_AGE);
+						}
+
 						// Exit the loop.
 						break;
 					}

@@ -59,7 +59,8 @@ namespace RTC
 		uint32_t received_prior = 0; // Packet received at last interval.
 		uint32_t transit = 0; // Relative trans time for prev pkt.
 		uint32_t jitter = 0; // Estimated jitter.
-		// Others.
+		// RTP buffer.
+		uint32_t max_timestamp = 0; // Highest timestamp seen.
 		std::vector<StorageItem> storage;
 		typedef std::list<BufferItem> Buffer;
 		Buffer buffer;
