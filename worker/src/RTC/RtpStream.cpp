@@ -7,7 +7,7 @@
 #include "DepLibUV.h"
 #include "Logger.h"
 
-#define MIN_SEQUENTIAL 2
+#define MIN_SEQUENTIAL 0
 #define MAX_DROPOUT 3000
 #define MAX_MISORDER 100
 #define RTP_SEQ_MOD (1<<16)
@@ -112,6 +112,8 @@ namespace RTC
 			// Otherwise just return.
 			else
 			{
+				MS_WARN_TAG(rtp, "requested range not in the buffer");
+
 				return;
 			}
 		}
@@ -124,6 +126,8 @@ namespace RTC
 		{
 			if (requested)
 			{
+				bool found = false;
+
 				for (; buffer_it != this->buffer.end(); ++buffer_it)
 				{
 					auto current_seq32 = (*buffer_it).seq32;
@@ -131,6 +135,8 @@ namespace RTC
 					// Found.
 					if (current_seq32 == seq32)
 					{
+						found = true;
+
 						auto current_packet = (*buffer_it).packet;
 
 						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
@@ -150,6 +156,9 @@ namespace RTC
 						break;
 					}
 				}
+
+				if (!found)
+					MS_WARN_TAG(rtp, "requested packet not found in the buffer");
 			}
 
 			requested = (bitmask & 1) ? true : false;
