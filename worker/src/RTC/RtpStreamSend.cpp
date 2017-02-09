@@ -78,7 +78,6 @@ namespace RTC
 		// Convert the given sequence numbers to 32 bits.
 		uint32_t first_seq32 = (uint32_t)seq + this->cycles;
 		uint32_t last_seq32 = first_seq32 + maxRequestedPackets - 1;
-		size_t container_idx = 0;
 
 		// Number of requested packets cannot be greater than the container size - 1.
 		MS_ASSERT(container.size() - 1 >= maxRequestedPackets, "RtpPacket container is too small");
@@ -104,7 +103,7 @@ namespace RTC
 			// Otherwise just return.
 			else
 			{
-				MS_WARN_TAG(rtp, "requested range not in the buffer");
+				MS_WARN_TAG(rtp, "requested packet range not in the buffer");
 
 				return;
 			}
@@ -113,12 +112,14 @@ namespace RTC
 		// Look for each requested packet.
 		uint32_t seq32 = first_seq32;
 		bool requested = true;
+		size_t container_idx = 0;
 
 		// Some variables for debugging.
 		uint16_t orig_bitmask = bitmask;
 		uint16_t sent_bitmask = 0b0000000000000000;
 		int8_t bitmask_counter = -1;
 		bool first_packet_sent = false;
+		bool too_old_packet_found = false;
 
 		do
 		{
@@ -134,10 +135,9 @@ namespace RTC
 					if (current_seq32 == seq32)
 					{
 						auto current_packet = (*buffer_it).packet;
-
-						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
 						uint32_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->clockRate;
 
+						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
 						if (diff <= MAX_RETRANSMISSION_AGE)
 						{
 							// Store the packet in the container and then increment its index.
@@ -147,9 +147,11 @@ namespace RTC
 							if (bitmask_counter == -1)
 								first_packet_sent = true;
 						}
-						else
+						else if (!too_old_packet_found)
 						{
 							MS_WARN_TAG(rtp, "ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]", MAX_RETRANSMISSION_AGE, diff);
+
+							too_old_packet_found = true;
 						}
 
 						// Exit the loop.
@@ -169,9 +171,18 @@ namespace RTC
 		}
 		while (bitmask != 0);
 
-		// TODO:
-		MS_WARN_TAG(rtcp, "[first_packet_sent:%d, bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
-			(int)first_packet_sent, UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
+		// If the first requested packet in the NACK was sent but not all the others,
+		// log it.
+		if (first_packet_sent && orig_bitmask != sent_bitmask)
+		{
+			MS_WARN_TAG(rtcp, "first packet sent but bitmask not [bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
+				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
+		}
+		else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
+		{
+			MS_WARN_TAG(rtcp, "first packet and bitmask sent [bitmask:" UINT16_TO_BINARY_PATTERN "]",
+				UINT16_TO_BINARY(orig_bitmask));
+		}
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;
