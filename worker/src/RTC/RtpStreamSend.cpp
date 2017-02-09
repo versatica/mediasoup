@@ -118,6 +118,7 @@ namespace RTC
 		uint16_t orig_bitmask = bitmask;
 		uint16_t sent_bitmask = 0b0000000000000000;
 		uint8_t counter = 0;
+		bool first_packet_sent = false;
 
 		do
 		{
@@ -141,7 +142,10 @@ namespace RTC
 						{
 							// Store the packet in the container and then increment its index.
 							container[container_idx++] = current_packet;
+
 							sent = true;
+							if (counter == 0)
+								first_packet_sent = true;
 						}
 						else
 						{
@@ -158,8 +162,6 @@ namespace RTC
 			bitmask >>= 1;
 			++seq32;
 
-			MS_WARN_TAG(rtcp, "---- counter: %zu", (size_t)counter);
-
 			// For debugging.
 			// NOTE: We don't check whether the first requested packet is sent but
 			// just the next 16.
@@ -170,8 +172,8 @@ namespace RTC
 		while (bitmask != 0);
 
 		// TODO:
-		MS_WARN_TAG(rtcp, "[orig_bitmask:" UINT16_TO_BINARY_PATTERN ", sent_bitmask: " UINT16_TO_BINARY_PATTERN "]",
-			UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
+		MS_WARN_TAG(rtcp, "[first_packet_sent:%d, bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
+			first_packet_sent, UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;
