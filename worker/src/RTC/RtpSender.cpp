@@ -2,12 +2,18 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpSender.h"
+#include "RTC/RTCP/FeedbackRtpNack.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include <unordered_set>
 
 namespace RTC
 {
+	/* Class variables. */
+
+	// Can retransmit up to 17 RTP packets.
+	std::vector<RTC::RtpPacket*> RtpSender::rtpRetransmissionContainer(18);
+
 	/* Instance methods. */
 
 	RtpSender::RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind) :
@@ -22,6 +28,12 @@ namespace RTC
 	RtpSender::~RtpSender()
 	{
 		MS_TRACE();
+
+		if (this->rtpParameters)
+			delete this->rtpParameters;
+
+		if (this->rtpStream)
+			delete this->rtpStream;
 	}
 
 	void RtpSender::Close()
@@ -29,9 +41,6 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString k_class("class");
-
-		if (this->rtpParameters)
-			delete this->rtpParameters;
 
 		Json::Value event_data(Json::objectValue);
 
@@ -180,9 +189,55 @@ namespace RTC
 
 		// If there are no encodings set not available.
 		if (this->rtpParameters->encodings.size() > 0)
+		{
 			this->available = true;
+
+			// Set the RtpStreamSend.
+			// TODO: This assumes a single stream for now.
+			// TODO: We need a much better way to get the clock rate.
+
+			uint8_t streamPayloadType = this->rtpParameters->encodings[0].codecPayloadType;
+			uint32_t streamClockRate;
+
+			auto it = this->rtpParameters->codecs.begin();
+
+			for (; it != this->rtpParameters->codecs.end(); ++it)
+			{
+				auto& codec = *it;
+
+				if (codec.payloadType == streamPayloadType)
+				{
+					streamClockRate = codec.clockRate;
+
+					break;
+				}
+			}
+			// This should never happen.
+			if (it == this->rtpParameters->codecs.end())
+			{
+				MS_ABORT("no valid codec payload type found for the first encoding");
+			}
+
+			// Create a RtpStreamSend for sending a single media stream.
+			switch (this->kind)
+			{
+				case RTC::Media::Kind::VIDEO:
+				case RTC::Media::Kind::DEPTH:
+					// Buffer up to 200 packets.
+					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 200);
+					break;
+				case RTC::Media::Kind::AUDIO:
+					// No buffer for audio streams.
+					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 0);
+					break;
+				default:
+					;
+			}
+		}
 		else
+		{
 			this->available = false;
+		}
 
 		// Emit "parameterschange" if these are updated parameters.
 		if (previousRtpParameters)
@@ -204,8 +259,15 @@ namespace RTC
 		if (!this->available || !this->transport)
 			return;
 
-		// Map the payload type.
+		MS_ASSERT(this->rtpStream, "no RtpStream set");
 
+		// Process the packet.
+		// TODO: Must check what kind of packet we are checking. For example, RTX
+		// packets (once implemented) should have a different handling.
+		if (!this->rtpStream->ReceivePacket(packet))
+			return;
+
+		// Map the payload type.
 		uint8_t payloadType = packet->GetPayloadType();
 		auto it = this->supportedPayloadTypes.find(payloadType);
 
@@ -220,6 +282,39 @@ namespace RTC
 
 		// Send the packet.
 		this->transport->SendRtpPacket(packet);
+	}
+
+	void RtpSender::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
+	{
+		MS_TRACE();
+
+		if (!this->rtpStream)
+		{
+			MS_WARN_TAG(rtp, "no RtpStreamSend");
+
+			return;
+		}
+
+
+		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
+		{
+			RTC::RTCP::NackItem* item = *it;
+
+			this->rtpStream->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), RtpSender::rtpRetransmissionContainer);
+
+			for (auto it = RtpSender::rtpRetransmissionContainer.begin(); it != RtpSender::rtpRetransmissionContainer.end(); ++it)
+			{
+				RTC::RtpPacket* packet = *it;
+
+				if (packet == nullptr)
+					break;
+
+				RetransmitRtpPacket(packet);
+			}
+
+			// Reset the container by setting its first element to nullptr.
+			RtpSender::rtpRetransmissionContainer[0] = nullptr;
+		}
 	}
 
 	void RtpSender::RetransmitRtpPacket(RTC::RtpPacket* packet)

@@ -4,13 +4,12 @@
 #include "common.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RtpStream.h"
+#include "RTC/RtpStreamRecv.h"
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/Feedback.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
-#include <vector>
 #include <json/json.h>
 
 namespace RTC
@@ -49,7 +48,6 @@ namespace RTC
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
-		void RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
@@ -70,7 +68,8 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
-		RTC::RtpStream* rtpStream = nullptr;
+		// TODO: For now just one.
+		RTC::RtpStreamRecv* rtpStream = nullptr;
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;

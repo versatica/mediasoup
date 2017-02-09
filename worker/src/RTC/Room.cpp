@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Room.h"
-#include "RTC/RTCP/FeedbackRtpNack.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 #include "Utils.h"
@@ -62,8 +61,7 @@ namespace RTC
 	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data) :
 		roomId(roomId),
 		listener(listener),
-		notifier(notifier),
-		rtpRetransmissionContainer(18) // Can retransmit up to 17 RTP packets.
+		notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -654,40 +652,7 @@ namespace RTC
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
-		switch (packet->GetMessageType())
-		{
-			case RTC::RTCP::FeedbackRtp::NACK:
-			{
-				RTC::RTCP::FeedbackRtpNackPacket* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
-
-				for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
-				{
-					RTC::RTCP::NackItem* item = *it;
-
-					rtpReceiver->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), this->rtpRetransmissionContainer);
-
-					for (auto it = this->rtpRetransmissionContainer.begin(); it != this->rtpRetransmissionContainer.end(); ++it)
-					{
-						RTC::RtpPacket* packet = *it;
-
-						if (packet == nullptr)
-							break;
-
-						rtpSender->RetransmitRtpPacket(packet);
-					}
-
-					// Reset the container by setting its first element to nullptr.
-					this->rtpRetransmissionContainer[0] = nullptr;
-				}
-
-				break;
-			}
-
-			default:
-			{
-				rtpReceiver->ReceiveRtcpFeedback(packet);
-			}
-		}
+		rtpReceiver->ReceiveRtcpFeedback(packet);
 	}
 
 	void Room::onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)

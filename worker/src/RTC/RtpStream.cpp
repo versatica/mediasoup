@@ -4,22 +4,19 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStream.h"
-#include "DepLibUV.h"
 #include "Logger.h"
 
 #define MIN_SEQUENTIAL 0
 #define MAX_DROPOUT 3000
 #define MAX_MISORDER 100
 #define RTP_SEQ_MOD (1<<16)
-#define MAX_RETRANSMISSION_AGE 200 // Don't retransmit packets older than this (ms).
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStream::RtpStream(uint32_t clockRate, size_t bufferSize) :
-		clockRate(clockRate),
-		storage(bufferSize)
+	RtpStream::RtpStream(uint32_t clockRate) :
+		clockRate(clockRate)
 	{
 		MS_TRACE();
 	}
@@ -27,9 +24,6 @@ namespace RTC
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
-
-		// Clear buffer.
-		ClearBuffer();
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -56,119 +50,11 @@ namespace RTC
 			return false;
 		}
 
-		// Update highest timestamp seen.
+		// Update highest seen RTP timestamp.
 		if (packet->GetTimestamp() > this->max_timestamp)
 			this->max_timestamp = packet->GetTimestamp();
 
-		// If bufferSize was given, store the packet into the buffer.
-		if (this->storage.size() > 0)
-			StorePacket(packet);
-
-		// Calculate Jitter.
-		CalculateJitter(packet->GetTimestamp());
-
 		return true;
-	}
-
-	// This method looks for the requested RTP packets and inserts them into the
-	// given container (and set to null the next container position).
-	void RtpStream::RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
-	{
-		MS_TRACE();
-
-		// 17: 16 bit mask + the initial sequence number.
-		static size_t maxRequestedPackets = 17;
-
-		// If the buffer is empty, just return.
-		if (this->buffer.size() == 0)
-			return;
-
-		// Convert the given sequence numbers to 32 bits.
-		uint32_t first_seq32 = (uint32_t)seq + this->cycles;
-		uint32_t last_seq32 = first_seq32 + maxRequestedPackets - 1;
-		size_t container_idx = 0;
-
-		// Number of requested packets cannot be greater than the container size - 1.
-		MS_ASSERT(container.size() - 1 >= maxRequestedPackets, "RtpPacket container is too small");
-
-		auto buffer_it = this->buffer.begin();
-		auto buffer_it_r = this->buffer.rbegin();
-		uint32_t buffer_first_seq32 = (*buffer_it).seq32;
-		uint32_t buffer_last_seq32 = (*buffer_it_r).seq32;
-
-		// Requested packet range not found.
-		if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
-		{
-			// Let's try with sequence numbers in the previous 16 cycle.
-			if (this->cycles > 0)
-			{
-				first_seq32 -= RTP_SEQ_MOD;
-				last_seq32 -= RTP_SEQ_MOD;
-
-				// Try again.
-				if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
-					return;
-			}
-			// Otherwise just return.
-			else
-			{
-				MS_WARN_TAG(rtp, "requested range not in the buffer");
-
-				return;
-			}
-		}
-
-		// Look for each requested packet.
-		uint32_t seq32 = first_seq32;
-		bool requested = true;
-
-		do
-		{
-			if (requested)
-			{
-				bool found = false;
-
-				for (; buffer_it != this->buffer.end(); ++buffer_it)
-				{
-					auto current_seq32 = (*buffer_it).seq32;
-
-					// Found.
-					if (current_seq32 == seq32)
-					{
-						found = true;
-
-						auto current_packet = (*buffer_it).packet;
-
-						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
-						uint16_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->clockRate;
-
-						if (diff <= MAX_RETRANSMISSION_AGE)
-						{
-							// Store the packet in the container and then increment its index.
-							container[container_idx++] = current_packet;
-						}
-						else
-						{
-							MS_WARN_TAG(rtp, "ignoring retransmission for a packet older than %d ms", MAX_RETRANSMISSION_AGE);
-						}
-
-						// Exit the loop.
-						break;
-					}
-				}
-
-				if (!found)
-					MS_WARN_TAG(rtp, "requested packet not found in the buffer");
-			}
-
-			requested = (bitmask & 1) ? true : false;
-			bitmask >>= 1;
-			++seq32;
-		}
-		while (bitmask != 0);
-
-		// Set the next container element to null.
-		container[container_idx] = nullptr;
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
@@ -183,9 +69,8 @@ namespace RTC
 		this->received = 0;
 		this->received_prior = 0;
 		this->expected_prior = 0;
-
-		// Clean buffer.
-		ClearBuffer();
+		// Also reset the highest seen RTP timestamp.
+		this->max_timestamp = 0;
 	}
 
 	bool RtpStream::UpdateSeq(uint16_t seq)
@@ -261,190 +146,5 @@ namespace RTC
 		this->received++;
 
 		return true;
-	}
-
-	void RtpStream::ClearBuffer()
-	{
-		MS_TRACE();
-
-		// Delete cloned packets.
-		for (auto& buffer_item : this->buffer)
-		{
-			delete buffer_item.packet;
-		}
-
-		// Clear list.
-		this->buffer.clear();
-	}
-
-	inline
-	void RtpStream::StorePacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packet_seq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
-		BufferItem buffer_item;
-
-		buffer_item.seq32 = packet_seq32;
-
-		// If empty do it easy.
-		if (this->buffer.size() == 0)
-		{
-			auto store = this->storage[0].store;
-
-			buffer_item.packet = packet->Clone(store);
-
-			this->buffer.push_back(buffer_item);
-
-			return;
-		}
-
-		// Otherwise, do the stuff.
-
-		Buffer::iterator new_buffer_it;
-		uint8_t* store = nullptr;
-
-		// Iterate the buffer in reverse order and find the proper place to store the
-		// packet.
-		auto buffer_it_r = this->buffer.rbegin();
-		for (; buffer_it_r != this->buffer.rend(); ++buffer_it_r)
-		{
-			auto current_seq32 = (*buffer_it_r).seq32;
-
-			if (packet_seq32 > current_seq32)
-			{
-				// Get a forward iterator pointing to the same element.
-				auto it = buffer_it_r.base();
-
-				new_buffer_it = this->buffer.insert(it, buffer_item);
-
-				// Exit the loop.
-				break;
-			}
-		}
-		// If the packet was older than anything in the buffer, just ignore it.
-		// NOTE: This should never happen.
-		if (buffer_it_r == this->buffer.rend())
-		{
-			MS_WARN_TAG(rtp, "packet is older than anything in the buffer, ignoring it");
-
-			return;
-		}
-
-		// If the buffer is not full use the next free storage item.
-		if (this->buffer.size() - 1 < this->storage.size())
-		{
-			store = this->storage[this->buffer.size() - 1].store;
-		}
-		// Otherwise remove the first packet of the buffer and replace its storage area.
-		else
-		{
-			auto& first_buffer_item = *(this->buffer.begin());
-			auto first_packet = first_buffer_item.packet;
-
-			// Store points to the store used by the first packet.
-			store = (uint8_t*)first_packet->GetData();
-			// Free the first packet.
-			delete first_packet;
-			// Remove the first element in the list.
-			this->buffer.pop_front();
-		}
-
-		// Update the new buffer item so it points to the cloned packed.
-		(*new_buffer_it).packet = packet->Clone(store);
-	}
-
-	void RtpStream::CalculateJitter(uint32_t rtpTimestamp)
-	{
-		if (!this->clockRate)
-			return;
-
-		int transit = DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->clockRate);
-		int d = transit - this->transit;
-
-		this->transit = transit;
-		if (d < 0) d = -d;
-		this->jitter += (1./16.) * ((double)d - this->jitter);
-	}
-
-	RTC::RTCP::ReceiverReport* RtpStream::GetRtcpReceiverReport()
-	{
-		RTC::RTCP::ReceiverReport* report = new RTC::RTCP::ReceiverReport();
-
-		// Calculate Packets Expected and Lost.
-		uint32_t expected = (this->cycles + this->max_seq) - this->base_seq + 1;
-		int32_t total_lost = expected - this->received;
-
-		report->SetTotalLost(total_lost);
-
-		// Calculate Fraction Lost.
-		uint32_t expected_interval = expected - this->expected_prior;
-
-		this->expected_prior = expected;
-
-		uint32_t received_interval = this->received - this->received_prior;
-
-		this->received_prior = this->received;
-
-		int32_t lost_interval = expected_interval - received_interval;
-		uint8_t fraction_lost;
-
-		if (expected_interval == 0 || lost_interval <= 0)
-			fraction_lost = 0;
-		else
-			fraction_lost = (lost_interval << 8) / expected_interval;
-
-		report->SetFractionLost(fraction_lost);
-
-		// Fill the rest of the report.
-		report->SetLastSeq((uint32_t)this->max_seq + this->cycles);
-		report->SetJitter(this->jitter);
-
-		if (this->last_sr_received)
-		{
-			// Get delay in milliseconds.
-			uint32_t delayMs = (DepLibUV::GetTime() - this->last_sr_received);
-
-			// Express delay in units of 1/65536 seconds.
-			uint32_t dlsr = (delayMs / 1000) << 16;
-			dlsr |= (uint32_t)((delayMs % 1000) * 65536 / 1000);
-
-			report->SetDelaySinceLastSenderReport(dlsr);
-			report->SetLastSenderReport(this->last_sr_timestamp);
-		}
-		else
-		{
-			report->SetDelaySinceLastSenderReport(0);
-			report->SetLastSenderReport(0);
-		}
-
-		return report;
-	}
-
-	void RtpStream::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
-	{
-		this->last_sr_received = DepLibUV::GetTime();
-		this->last_sr_timestamp = htonl(report->GetNtpSec()) << 16;
-		this->last_sr_timestamp += htonl(report->GetNtpFrac()) >> 16;
-	}
-
-	// TODO: TMP
-	void RtpStream::Dump()
-	{
-		MS_TRACE();
-
-		MS_DEBUG_TAG(rtp, "<RtpStream>");
-
-		MS_DEBUG_TAG(rtp, "  [buffer.size:%zu, storage.size:%zu]", this->buffer.size(), this->storage.size());
-
-		for (auto& buffer_item : this->buffer)
-		{
-			auto packet = buffer_item.packet;
-
-			MS_DEBUG_TAG(rtp, "  packet [seq:%" PRIu16 ", seq32:%" PRIu32 "]", packet->GetSequenceNumber(), buffer_item.seq32);
-		}
-
-		MS_DEBUG_TAG(rtp, "</RtpStream>");
 	}
 }

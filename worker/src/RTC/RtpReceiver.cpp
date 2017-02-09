@@ -27,6 +27,12 @@ namespace RTC
 	RtpReceiver::~RtpReceiver()
 	{
 		MS_TRACE();
+
+		if (this->rtpParameters)
+			delete this->rtpParameters;
+
+		if (this->rtpStream)
+			delete this->rtpStream;
 	}
 
 	void RtpReceiver::Close()
@@ -36,12 +42,6 @@ namespace RTC
 		static const Json::StaticString k_class("class");
 
 		Json::Value event_data(Json::objectValue);
-
-		if (this->rtpParameters)
-			delete this->rtpParameters;
-
-		if (this->rtpStream)
-			delete this->rtpStream;
 
 		// Notify.
 		event_data[k_class] = "RtpReceiver";
@@ -160,7 +160,7 @@ namespace RTC
 				// And notify again.
 				this->listener->onRtpReceiverParametersDone(this);
 
-				// Set the RtpStream.
+				// Set the RtpStreamRecv.
 				// TODO: This assumes a single stream for now.
 				// TODO: We need a much better way to get the clock rate.
 
@@ -186,20 +186,8 @@ namespace RTC
 					MS_ABORT("no valid codec payload type found for the first encoding");
 				}
 
-				switch (this->kind)
-				{
-					case RTC::Media::Kind::VIDEO:
-					case RTC::Media::Kind::DEPTH:
-						// Buffer up to 200 packets.
-						this->rtpStream = new RTC::RtpStream(streamClockRate, 200);
-						break;
-					case RTC::Media::Kind::AUDIO:
-						// No buffer for audio streams.
-						this->rtpStream = new RTC::RtpStream(streamClockRate, 0);
-						break;
-					default:
-						;
-				}
+				// Create a RtpStreamRecv for receiving a media stream.
+				this->rtpStream = new RTC::RtpStreamRecv(streamClockRate);
 
 				break;
 			}
@@ -303,15 +291,6 @@ namespace RTC
 
 			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
 		}
-	}
-
-	void RtpReceiver::RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
-	{
-		MS_TRACE();
-
-		// Proxy the request to the RtpStream.
-		if (this->rtpStream)
-			this->rtpStream->RequestRtpRetransmission(seq, bitmask, container);
 	}
 
 	void RtpReceiver::FillRtpParameters()

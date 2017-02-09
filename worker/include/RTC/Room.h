@@ -7,6 +7,10 @@
 #include "RTC/RtpReceiver.h"
 #include "RTC/RtpSender.h"
 #include "RTC/RtpPacket.h"
+#include "RTC/RTCP/ReceiverReport.h"
+#include "RTC/RTCP/SenderReport.h"
+#include "RTC/RTCP/Feedback.h"
+#include "RTC/RTCP/Sdes.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_map>
@@ -74,7 +78,6 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 		std::unordered_map<RTC::RtpSender*, RTC::RtpReceiver*> mapRtpSenderRtpReceiver;
-		std::vector<RTC::RtpPacket*> rtpRetransmissionContainer;
 	};
 
 	/* Inline static methods. */

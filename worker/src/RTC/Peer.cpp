@@ -4,6 +4,7 @@
 #include "RTC/Peer.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RTCP/CompoundPacket.h"
+#include "RTC/RTCP/FeedbackRtpNack.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
 
@@ -806,6 +807,7 @@ namespace RTC
 							break;
 						}
 					}
+
 					break;
 				}
 
@@ -821,11 +823,13 @@ namespace RTC
 
 							if (rtpSender)
 							{
-								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+								RTC::RTCP::FeedbackRtpNackPacket* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+
+								rtpSender->ReceiveNack(nackPacket);
 							}
 							else
 							{
-								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+								MS_WARN_TAG(rtcp, "no RtpSender found while procesing a NACK packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
 									RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 							}
 
@@ -848,6 +852,7 @@ namespace RTC
 							break;
 						}
 					}
+
 					break;
 				}
 

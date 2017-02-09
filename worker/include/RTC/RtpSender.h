@@ -3,13 +3,16 @@
 
 #include "common.h"
 #include "RTC/Transport.h"
+#include "RTC/RtpStreamSend.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
 #include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/Sdes.h"
+#include "RTC/RTCP/FeedbackRtpNack.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_set>
+#include <vector>
 #include <json/json.h>
 
 namespace RTC
@@ -26,6 +29,10 @@ namespace RTC
 			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
 
+	private:
+		// Container of RTP packets to retransmit.
+		static std::vector<RTC::RtpPacket*> rtpRetransmissionContainer;
+
 	public:
 		RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind);
 		virtual ~RtpSender();
@@ -40,11 +47,14 @@ namespace RTC
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
-		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport();
 		void ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk);
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
+		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
+
+	private:
+		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 
 	public:
 		// Passed by argument.
@@ -59,6 +69,7 @@ namespace RTC
 		RTC::RtpCapabilities* peerCapabilities = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
+		RTC::RtpStreamSend* rtpStream = nullptr;
 		// Others.
 		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.

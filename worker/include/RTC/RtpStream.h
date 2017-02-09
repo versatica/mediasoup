@@ -3,46 +3,22 @@
 
 #include "common.h"
 #include "RTC/RtpPacket.h"
-#include "RTC/RTCP/ReceiverReport.h"
-#include "RTC/RTCP/SenderReport.h"
-#include <vector>
-#include <list>
 
 namespace RTC
 {
 	class RtpStream
 	{
-	private:
-		struct StorageItem
-		{
-			uint8_t store[65536];
-		};
-
-	private:
-		struct BufferItem
-		{
-			uint32_t        seq32 = 0; // RTP seq in 32 bytes plus 16 bits cycles.
-			RTC::RtpPacket* packet = nullptr;
-		};
-
 	public:
-		explicit RtpStream(uint32_t clockRate, size_t bufferSize);
-		~RtpStream();
+		explicit RtpStream(uint32_t clockRate);
+		virtual ~RtpStream();
 
-		bool ReceivePacket(RTC::RtpPacket* packet);
-		void RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
-		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
-		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 
 	private:
 		void InitSeq(uint16_t seq);
 		bool UpdateSeq(uint16_t seq);
-		void ClearBuffer();
-		void StorePacket(RTC::RtpPacket* packet);
-		void CalculateJitter(uint32_t rtpTimestamp);
-		void Dump();
 
-	private:
+	protected:
 		// Given as argument.
 		uint32_t clockRate = 0;
 		bool started = false; // Whether at least a RTP packet has been received.
@@ -57,13 +33,8 @@ namespace RTC
 		uint32_t received = 0; // Packets received.
 		uint32_t expected_prior = 0; // Packet expected at last interval.
 		uint32_t received_prior = 0; // Packet received at last interval.
-		uint32_t transit = 0; // Relative trans time for prev pkt.
-		uint32_t jitter = 0; // Estimated jitter.
-		// RTP buffer.
+		// Others.
 		uint32_t max_timestamp = 0; // Highest timestamp seen.
-		std::vector<StorageItem> storage;
-		typedef std::list<BufferItem> Buffer;
-		Buffer buffer;
 	};
 }
 
