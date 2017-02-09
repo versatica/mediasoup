@@ -158,8 +158,13 @@ namespace RTC
 			bitmask >>= 1;
 			++seq32;
 
+			MS_WARN_TAG(rtcp, "---- counter: %zu", (size_t)counter);
+
 			// For debugging.
-			sent_bitmask |= (sent ? 1 : 0) << counter;
+			// NOTE: We don't check whether the first requested packet is sent but
+			// just the next 16.
+			if (counter > 0)
+				sent_bitmask |= (sent ? 1 : 0) << (counter - 1);
 			++counter;
 		}
 		while (bitmask != 0);
