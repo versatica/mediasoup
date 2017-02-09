@@ -117,7 +117,7 @@ namespace RTC
 		// Some variables for debugging.
 		uint16_t orig_bitmask = bitmask;
 		uint16_t sent_bitmask = 0b0000000000000000;
-		uint8_t counter = 0;
+		int8_t bitmask_counter = -1;
 		bool first_packet_sent = false;
 
 		do
@@ -144,7 +144,7 @@ namespace RTC
 							container[container_idx++] = current_packet;
 
 							sent = true;
-							if (counter == 0)
+							if (bitmask_counter == -1)
 								first_packet_sent = true;
 						}
 						else
@@ -163,11 +163,9 @@ namespace RTC
 			++seq32;
 
 			// For debugging.
-			// NOTE: We don't check whether the first requested packet is sent but
-			// just the next 16.
-			if (counter > 0)
-				sent_bitmask |= (sent ? 1 : 0) << (counter - 1);
-			++counter;
+			if (bitmask_counter >= 0)
+				sent_bitmask |= (sent ? 1 : 0) << bitmask_counter;
+			++bitmask_counter;
 		}
 		while (bitmask != 0);
 
