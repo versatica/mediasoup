@@ -136,7 +136,7 @@ namespace RTC
 						auto current_packet = (*buffer_it).packet;
 
 						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
-						uint16_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->clockRate;
+						uint32_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->clockRate;
 
 						if (diff <= MAX_RETRANSMISSION_AGE)
 						{
@@ -149,7 +149,7 @@ namespace RTC
 						}
 						else
 						{
-							MS_WARN_TAG(rtp, "ignoring retransmission for a packet older than %d ms", MAX_RETRANSMISSION_AGE);
+							MS_WARN_TAG(rtp, "ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]", MAX_RETRANSMISSION_AGE, diff);
 						}
 
 						// Exit the loop.
@@ -171,7 +171,7 @@ namespace RTC
 
 		// TODO:
 		MS_WARN_TAG(rtcp, "[first_packet_sent:%d, bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
-			first_packet_sent, UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
+			(int)first_packet_sent, UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;
