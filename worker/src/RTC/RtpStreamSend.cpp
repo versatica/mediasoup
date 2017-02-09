@@ -8,25 +8,25 @@
 #define MAX_RETRANSMISSION_AGE 200 // Don't retransmit packets older than this (ms).
 
 // Usage:
-//   MS_DEBUG_DEV("Leading text "UINT16_TO_BINARY_PATTERN, UINT16_TO_BINARY(bytes));
+//   MS_DEBUG_DEV("Leading text "UINT16_TO_BINARY_PATTERN, UINT16_TO_BINARY(value));
 #define UINT16_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c"
-#define UINT16_TO_BINARY(bytes)  \
-  (bytes & 0x8000 ? '1' : '0'), \
-  (bytes & 0x4000 ? '1' : '0'), \
-  (bytes & 0x2000 ? '1' : '0'), \
-  (bytes & 0x1000 ? '1' : '0'), \
-  (bytes & 0x800 ? '1' : '0'), \
-  (bytes & 0x400 ? '1' : '0'), \
-  (bytes & 0x200 ? '1' : '0'), \
-  (bytes & 0x100 ? '1' : '0'), \
-  (bytes & 0x80 ? '1' : '0'), \
-  (bytes & 0x40 ? '1' : '0'), \
-  (bytes & 0x20 ? '1' : '0'), \
-  (bytes & 0x10 ? '1' : '0'), \
-  (bytes & 0x08 ? '1' : '0'), \
-  (bytes & 0x04 ? '1' : '0'), \
-  (bytes & 0x02 ? '1' : '0'), \
-  (bytes & 0x01 ? '1' : '0')
+#define UINT16_TO_BINARY(value) \
+  (value & 0x8000 ? '1' : '0'), \
+  (value & 0x4000 ? '1' : '0'), \
+  (value & 0x2000 ? '1' : '0'), \
+  (value & 0x1000 ? '1' : '0'), \
+  (value & 0x800 ? '1' : '0'), \
+  (value & 0x400 ? '1' : '0'), \
+  (value & 0x200 ? '1' : '0'), \
+  (value & 0x100 ? '1' : '0'), \
+  (value & 0x80 ? '1' : '0'), \
+  (value & 0x40 ? '1' : '0'), \
+  (value & 0x20 ? '1' : '0'), \
+  (value & 0x10 ? '1' : '0'), \
+  (value & 0x08 ? '1' : '0'), \
+  (value & 0x04 ? '1' : '0'), \
+  (value & 0x02 ? '1' : '0'), \
+  (value & 0x01 ? '1' : '0')
 
 namespace RTC
 {
@@ -117,8 +117,9 @@ namespace RTC
 		// Some variables for debugging.
 		uint16_t orig_bitmask = bitmask;
 		uint16_t sent_bitmask = 0b0000000000000000;
-		int8_t bitmask_counter = -1;
+		bool is_first_packet = true;
 		bool first_packet_sent = false;
+		int8_t bitmask_counter = 0;
 		bool too_old_packet_found = false;
 
 		do
@@ -144,7 +145,8 @@ namespace RTC
 							container[container_idx++] = current_packet;
 
 							sent = true;
-							if (bitmask_counter == -1)
+
+							if (is_first_packet)
 								first_packet_sent = true;
 						}
 						else if (!too_old_packet_found)
@@ -164,10 +166,15 @@ namespace RTC
 			bitmask >>= 1;
 			++seq32;
 
-			// For debugging.
-			if (bitmask_counter >= 0)
+			if (!is_first_packet)
+			{
 				sent_bitmask |= (sent ? 1 : 0) << bitmask_counter;
-			++bitmask_counter;
+				++bitmask_counter;
+			}
+			else
+			{
+				is_first_packet = false;
+			}
 		}
 		while (bitmask != 0);
 
