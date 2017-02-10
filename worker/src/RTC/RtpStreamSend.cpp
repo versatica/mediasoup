@@ -119,17 +119,18 @@ namespace RTC
 
 		// Some variables for debugging.
 		uint16_t orig_bitmask = bitmask;
+		// TODO: Should I set htons here?
 		uint16_t sent_bitmask = 0b0000000000000000;
 		bool is_first_packet = true;
 		bool first_packet_sent = false;
 		int8_t bitmask_counter = 0;
 		bool too_old_packet_found = false;
 
-		do
+		while (requested || bitmask != 0)
 		{
 			// TODO: REMOVE
-			MS_WARN_TAG(rtcp, "loop [bitmask:" UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(bitmask));
+			// MS_WARN_TAG(rtcp, "loop [bitmask:" UINT16_TO_BINARY_PATTERN "]",
+				// UINT16_TO_BINARY(bitmask));
 
 			bool sent = false;
 
@@ -183,19 +184,13 @@ namespace RTC
 				is_first_packet = false;
 			}
 		}
-		while (bitmask != 0);
 
 		// If the first requested packet in the NACK was sent but not all the others,
 		// log it.
 		if (first_packet_sent && orig_bitmask != sent_bitmask)
 		{
-			MS_WARN_TAG(rtcp, "first packet sent but bitmask not [bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
+			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
 				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
-		}
-		else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
-		{
-			MS_WARN_TAG(rtcp, "first packet and bitmask sent [bitmask:" UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(orig_bitmask));
 		}
 
 		// Set the next container element to null.
