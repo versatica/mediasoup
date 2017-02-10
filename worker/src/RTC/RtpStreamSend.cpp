@@ -129,7 +129,7 @@ namespace RTC
 		{
 			// TODO: REMOVE
 			MS_WARN_TAG(rtcp, "loop [bitmask:" UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(ntohs(bitmask)));
+				UINT16_TO_BINARY(bitmask));
 
 			bool sent = false;
 
@@ -190,12 +190,12 @@ namespace RTC
 		if (first_packet_sent && orig_bitmask != sent_bitmask)
 		{
 			MS_WARN_TAG(rtcp, "first packet sent but bitmask not [bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(ntohs(orig_bitmask)), UINT16_TO_BINARY(ntohs(sent_bitmask)));
+				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
 		}
 		else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
 		{
 			MS_WARN_TAG(rtcp, "first packet and bitmask sent [bitmask:" UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(ntohs(orig_bitmask)));
+				UINT16_TO_BINARY(orig_bitmask));
 		}
 
 		// Set the next container element to null.
