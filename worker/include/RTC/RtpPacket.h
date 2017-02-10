@@ -85,7 +85,9 @@ namespace RTC
 		bool HasMarker();
 		void SetMarker(bool marker);
 		uint16_t GetSequenceNumber();
+		void SetSequenceNumber(uint16_t seq);
 		uint32_t GetTimestamp();
+		void SetTimestamp(uint32_t timestamp);
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);
 		bool HasExtensionHeader();
@@ -179,9 +181,21 @@ namespace RTC
 	}
 
 	inline
+	void RtpPacket::SetSequenceNumber(uint16_t seq)
+	{
+		this->header->sequence_number = (uint16_t)htons(seq);
+	}
+
+	inline
 	uint32_t RtpPacket::GetTimestamp()
 	{
 		return (uint32_t)ntohl(this->header->timestamp);
+	}
+
+	inline
+	void RtpPacket::SetTimestamp(uint32_t timestamp)
+	{
+		this->header->timestamp = (uint32_t)htonl(timestamp);
 	}
 
 	inline
