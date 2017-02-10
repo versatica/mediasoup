@@ -8,8 +8,8 @@ int main(int argc, char* argv[])
 {
 	Settings::configuration.logLevel = LogLevel::LOG_DEBUG;
 	// TODO: think about this.
-	// Settings::configuration.logTags.rtp = true;
-	// Settings::configuration.logTags.rtcp = true;
+	Settings::configuration.logTags.rtp = true;
+	Settings::configuration.logTags.rtcp = true;
 
 	int ret = Catch::Session().run(argc, argv);
 

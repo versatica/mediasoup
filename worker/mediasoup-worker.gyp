@@ -235,6 +235,7 @@
       [
         # C++ source files
         'test/tests.cpp',
+        'test/test-nack.cpp',
         'test/test-rtp.cpp',
         'test/test-rtcp.cpp',
         # C++ include files

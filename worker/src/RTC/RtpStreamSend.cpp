@@ -71,7 +71,10 @@ namespace RTC
 		// 17: 16 bit mask + the initial sequence number.
 		static size_t maxRequestedPackets = 17;
 
-		// If the buffer is empty, just return.
+		// Ensure the container's first element is 0.
+		container[0] = nullptr;
+
+		// If the buffer is empty just return.
 		if (this->buffer.size() == 0)
 			return;
 
@@ -124,6 +127,10 @@ namespace RTC
 
 		do
 		{
+			// TODO: REMOVE
+			MS_WARN_TAG(rtcp, "loop [bitmask:" UINT16_TO_BINARY_PATTERN "]",
+				UINT16_TO_BINARY(ntohs(bitmask)));
+
 			bool sent = false;
 
 			if (requested)
@@ -183,12 +190,12 @@ namespace RTC
 		if (first_packet_sent && orig_bitmask != sent_bitmask)
 		{
 			MS_WARN_TAG(rtcp, "first packet sent but bitmask not [bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
+				UINT16_TO_BINARY(ntohs(orig_bitmask)), UINT16_TO_BINARY(ntohs(sent_bitmask)));
 		}
 		else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
 		{
 			MS_WARN_TAG(rtcp, "first packet and bitmask sent [bitmask:" UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(orig_bitmask));
+				UINT16_TO_BINARY(ntohs(orig_bitmask)));
 		}
 
 		// Set the next container element to null.

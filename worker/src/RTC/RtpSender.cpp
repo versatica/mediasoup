@@ -295,7 +295,6 @@ namespace RTC
 			return;
 		}
 
-
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
 			RTC::RTCP::NackItem* item = *it;
@@ -311,9 +310,6 @@ namespace RTC
 
 				RetransmitRtpPacket(packet);
 			}
-
-			// Reset the container by setting its first element to nullptr.
-			RtpSender::rtpRetransmissionContainer[0] = nullptr;
 		}
 	}
 

@@ -24,7 +24,7 @@ namespace RTC
 		};
 
 	public:
-		explicit RtpStreamSend(uint32_t clockRate, size_t bufferSize);
+		RtpStreamSend(uint32_t clockRate, size_t bufferSize);
 		virtual ~RtpStreamSend();
 
 		bool ReceivePacket(RTC::RtpPacket* packet);

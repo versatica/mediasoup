@@ -5,8 +5,8 @@
 
 using namespace RTC;
 
-uint8_t buffer[65536];
-uint8_t buffer2[65536];
+static uint8_t buffer[65536];
+static uint8_t buffer2[65536];
 
 SCENARIO("parse RTP packets", "[parser][rtp]")
 {
