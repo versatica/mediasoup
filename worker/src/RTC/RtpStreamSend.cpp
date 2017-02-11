@@ -11,22 +11,22 @@
 //   MS_DEBUG_DEV("Leading text "UINT16_TO_BINARY_PATTERN, UINT16_TO_BINARY(value));
 #define UINT16_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c"
 #define UINT16_TO_BINARY(value) \
-	(value & 0x8000 ? '1' : '0'), \
-	(value & 0x4000 ? '1' : '0'), \
-	(value & 0x2000 ? '1' : '0'), \
-	(value & 0x1000 ? '1' : '0'), \
-	(value & 0x800 ? '1' : '0'), \
-	(value & 0x400 ? '1' : '0'), \
-	(value & 0x200 ? '1' : '0'), \
-	(value & 0x100 ? '1' : '0'), \
-	(value & 0x80 ? '1' : '0'), \
-	(value & 0x40 ? '1' : '0'), \
-	(value & 0x20 ? '1' : '0'), \
-	(value & 0x10 ? '1' : '0'), \
-	(value & 0x08 ? '1' : '0'), \
-	(value & 0x04 ? '1' : '0'), \
-	(value & 0x02 ? '1' : '0'), \
-	(value & 0x01 ? '1' : '0')
+	((value & 0x8000) ? '1' : '0'), \
+	((value & 0x4000) ? '1' : '0'), \
+	((value & 0x2000) ? '1' : '0'), \
+	((value & 0x1000) ? '1' : '0'), \
+	((value & 0x800) ? '1' : '0'), \
+	((value & 0x400) ? '1' : '0'), \
+	((value & 0x200) ? '1' : '0'), \
+	((value & 0x100) ? '1' : '0'), \
+	((value & 0x80) ? '1' : '0'), \
+	((value & 0x40) ? '1' : '0'), \
+	((value & 0x20) ? '1' : '0'), \
+	((value & 0x10) ? '1' : '0'), \
+	((value & 0x08) ? '1' : '0'), \
+	((value & 0x04) ? '1' : '0'), \
+	((value & 0x02) ? '1' : '0'), \
+	((value & 0x01) ? '1' : '0')
 
 namespace RTC
 {
@@ -123,14 +123,16 @@ namespace RTC
 		uint16_t sent_bitmask = 0b0000000000000000;
 		bool is_first_packet = true;
 		bool first_packet_sent = false;
-		int8_t bitmask_counter = 0;
+		uint8_t bitmask_counter = 0;
 		bool too_old_packet_found = false;
+
+		// TODO: REMOVE
+		// MS_WARN_TAG(rtcp, "loop [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(bitmask));
 
 		while (requested || bitmask != 0)
 		{
 			// TODO: REMOVE
-			// MS_WARN_TAG(rtcp, "loop [bitmask:" UINT16_TO_BINARY_PATTERN "]",
-				// UINT16_TO_BINARY(bitmask));
+			// MS_WARN_TAG(rtcp, "while [bit:%" PRIu8 ", requested:%d]", bitmask_counter, requested);
 
 			bool sent = false;
 
@@ -189,7 +191,7 @@ namespace RTC
 		// log it.
 		if (first_packet_sent && orig_bitmask != sent_bitmask)
 		{
-			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN ", sent: " UINT16_TO_BINARY_PATTERN "]",
+			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN ", sent:" UINT16_TO_BINARY_PATTERN "]",
 				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
 		}
 
