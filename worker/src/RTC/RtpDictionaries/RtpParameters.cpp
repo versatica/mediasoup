@@ -184,6 +184,38 @@ namespace RTC
 		this->headerExtensions = updatedHeaderExtensions;
 	}
 
+	uint32_t RtpParameters::GetClockRateForEncoding(uint8_t encodingIdx)
+	{
+		MS_TRACE();
+
+		if (this->encodings.size() < encodingIdx + 1)
+			MS_ABORT("no such a encoding [encodingIdx:%" PRIu8 "]", encodingIdx);
+
+		uint8_t payloadType = this->encodings[encodingIdx].codecPayloadType;
+		uint32_t clockRate = 0;
+
+		auto it = this->codecs.begin();
+
+		for (; it != this->codecs.end(); ++it)
+		{
+			auto& codec = *it;
+
+			if (codec.payloadType == payloadType)
+			{
+				clockRate = codec.clockRate;
+
+				break;
+			}
+		}
+		// This should never happen.
+		if (it == this->codecs.end())
+		{
+			MS_ABORT("no valid codec payload type for the requested encoding [encodingIdx:%" PRIu8 "]", encodingIdx);
+		}
+
+		return clockRate;
+	}
+
 	inline
 	void RtpParameters::ValidateCodecs()
 	{

@@ -161,30 +161,8 @@ namespace RTC
 				this->listener->onRtpReceiverParametersDone(this);
 
 				// Set the RtpStreamRecv.
-				// TODO: This assumes a single stream for now.
-				// TODO: We need a much better way to get the clock rate.
-
-				uint8_t streamPayloadType = this->rtpParameters->encodings[0].codecPayloadType;
-				uint32_t streamClockRate;
-
-				auto it = this->rtpParameters->codecs.begin();
-
-				for (; it != this->rtpParameters->codecs.end(); ++it)
-				{
-					auto& codec = *it;
-
-					if (codec.payloadType == streamPayloadType)
-					{
-						streamClockRate = codec.clockRate;
-
-						break;
-					}
-				}
-				// This should never happen.
-				if (it == this->rtpParameters->codecs.end())
-				{
-					MS_ABORT("no valid codec payload type found for the first encoding");
-				}
+				// TODO: This assumes a single receiving stream for now.
+				uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(0);
 
 				// Create a RtpStreamRecv for receiving a media stream.
 				this->rtpStream = new RTC::RtpStreamRecv(streamClockRate);
