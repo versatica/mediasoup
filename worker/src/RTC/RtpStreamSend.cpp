@@ -194,6 +194,11 @@ namespace RTC
 			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN ", sent:" UINT16_TO_BINARY_PATTERN "]",
 				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
 		}
+		// TODO: REMOVE
+		else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
+		{
+			MS_WARN_TAG(rtcp, "first packet sent and also all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(orig_bitmask));
+		}
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;
