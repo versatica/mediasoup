@@ -70,7 +70,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		stream->ReceivePacket(packet5);
 
 		// Create a NACK item that request for all the packets.
-		RTCP::NackItem nack_item(21006, htons(0b0000000000001111));
+		RTCP::NackItem nack_item(21006, 0b0000000000001111);
 		REQUIRE(nack_item.GetPacketId() == 21006);
 		REQUIRE(nack_item.GetLostPacketBitmask() == 0b0000000000001111);
 

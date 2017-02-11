@@ -367,11 +367,11 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 	{
 		uint8_t buffer[] =
 		{
-			0x00, 0x01, 0x02, 0x00
+			0x09, 0xc4, 0b10101010, 0b01010101
 		};
 
-		uint16_t packetId = 1;
-		uint16_t lostPacketBitmask = 2;
+		uint16_t packetId = 2500;
+		uint16_t lostPacketBitmask = 0b1010101001010101;
 
 		NackItem* item = NackItem::Parse(buffer, sizeof(buffer));
 
@@ -385,21 +385,21 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 	SECTION("create NackItem")
 	{
 		uint16_t packetId = 1;
-		uint16_t lostPacketBitmask = 2;
+		uint16_t lostPacketBitmask = 0b1010101001010101;
 
 		// Create local NackItem and check content.
 		// NackItem();
 		NackItem item1(packetId, lostPacketBitmask);
 
 		REQUIRE(item1.GetPacketId() == packetId);
-		REQUIRE(item1.GetLostPacketBitmask() == htons(lostPacketBitmask));
+		REQUIRE(item1.GetLostPacketBitmask() == lostPacketBitmask);
 
 		// Create local NackItem out of existing one and check content.
 		// NackItem(NackItem*);
 		NackItem item2(&item1);
 
 		REQUIRE(item2.GetPacketId() == packetId);
-		REQUIRE(item2.GetLostPacketBitmask() == htons(lostPacketBitmask));
+		REQUIRE(item2.GetLostPacketBitmask() == lostPacketBitmask);
 
 		// Locally store the content of the packet.
 		uint8_t buffer[item2.GetSize()];
@@ -411,7 +411,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		NackItem item3((NackItem::Header*)buffer);
 
 		REQUIRE(item3.GetPacketId() == packetId);
-		REQUIRE(item3.GetLostPacketBitmask() == htons(lostPacketBitmask));
+		REQUIRE(item3.GetLostPacketBitmask() == lostPacketBitmask);
 	}
 
 	SECTION("parse TmmbrItem")
@@ -440,11 +440,11 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 	{
 		uint8_t buffer[] =
 		{
-			0x00, 0x01, 0x02, 0x00
+			0x00, 0x01, 0b10101010, 0b01010101
 		};
 
 		uint16_t packetId = 1;
-		uint16_t lostPacketBitmask = 2;
+		uint16_t lostPacketBitmask = 0b1010101001010101;
 
 		TlleiItem* item = TlleiItem::Parse(buffer, sizeof(buffer));
 
