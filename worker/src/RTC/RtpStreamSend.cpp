@@ -119,7 +119,6 @@ namespace RTC
 
 		// Some variables for debugging.
 		uint16_t orig_bitmask = bitmask;
-		// TODO: Should I set htons here?
 		uint16_t sent_bitmask = 0b0000000000000000;
 		bool is_first_packet = true;
 		bool first_packet_sent = false;
