@@ -106,7 +106,8 @@ namespace RTC
 			// Otherwise just return.
 			else
 			{
-				MS_WARN_TAG(rtp, "requested packet range not in the buffer");
+				// TODO: REMOVE
+				// MS_WARN_TAG(rtp, "requested packet range not in the buffer");
 
 				return;
 			}
@@ -160,7 +161,8 @@ namespace RTC
 						}
 						else if (!too_old_packet_found)
 						{
-							MS_WARN_TAG(rtp, "ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]", MAX_RETRANSMISSION_AGE, diff);
+							// TODO: REMOVE
+							// MS_WARN_TAG(rtp, "ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]", MAX_RETRANSMISSION_AGE, diff);
 
 							too_old_packet_found = true;
 						}
@@ -194,10 +196,10 @@ namespace RTC
 				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
 		}
 		// TODO: REMOVE
-		else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
-		{
-			MS_WARN_TAG(rtcp, "first packet sent and also all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(orig_bitmask));
-		}
+		// else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
+		// {
+		// 	MS_WARN_TAG(rtcp, "first packet sent and also all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(orig_bitmask));
+		// }
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;
