@@ -53,7 +53,7 @@ gulp.task('test:api', shell.task(
 	],
 	{
 		verbose : true,
-		env     : { DEBUG: '*ABORT*' }
+		env     : { DEBUG: '*ABORT* *WARN*' }
 	}
 ));
 

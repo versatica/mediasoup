@@ -90,7 +90,6 @@ namespace RTC
 			this->userParameters = Json::objectValue;
 
 		// Validate RTP parameters.
-
 		ValidateCodecs();
 		ValidateEncodings();
 	}
@@ -156,6 +155,69 @@ namespace RTC
 		json[k_userParameters] = this->userParameters;
 
 		return json;
+	}
+
+	void RtpParameters::ReduceCodecsAndEncodings(RtpCapabilities& capabilities)
+	{
+		MS_TRACE();
+
+		std::vector<uint8_t> removedCodecPayloadTypes;
+
+		for (auto it = this->codecs.begin(); it != this->codecs.end();)
+		{
+			auto& codec = *it;
+			auto it2 = capabilities.codecs.begin();
+
+			for (; it2 != capabilities.codecs.end(); ++it2)
+			{
+				auto& codecCapability = *it2;
+
+				if (codecCapability.Matches(codec, true))
+				{
+					// Once matched, remove the unsupported RTCP feedback from the given codec.
+					codec.ReduceRtcpFeedback(codecCapability.rtcpFeedback);
+
+					++it;
+					break;
+				}
+			}
+			if (it2 == capabilities.codecs.end())
+			{
+				MS_WARN_DEV("no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
+					codec.payloadType, codec.mime.GetName().c_str());
+
+				removedCodecPayloadTypes.push_back(codec.payloadType);
+				it = this->codecs.erase(it);
+			}
+		}
+
+		// Remove encodings if associated to removed codecs.
+		for (auto it = this->encodings.begin(); it != this->encodings.end();)
+		{
+			auto& encoding = *it;
+			auto it2 = removedCodecPayloadTypes.begin();
+
+			for (; it2 != removedCodecPayloadTypes.end(); ++it2)
+			{
+				auto removedCodecPayloadType = *it2;
+
+				if (encoding.codecPayloadType == removedCodecPayloadType)
+				{
+					MS_WARN_DEV("removing encoding without matching codec");
+
+					it = this->encodings.erase(it);
+					break;
+				}
+			}
+			if (it2 == removedCodecPayloadTypes.end())
+			{
+				++it;
+			}
+		}
+
+		// Finally validate codecs and encodings.
+		ValidateCodecs();
+		ValidateEncodings();
 	}
 
 	void RtpParameters::ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions)

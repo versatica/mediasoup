@@ -684,29 +684,8 @@ namespace RTC
 
 		auto rtpParameters = rtpReceiver->GetParameters();
 
-		// Given codecs must be a subset of the capability codecs of the peer.
-		for (auto& codec : rtpParameters->codecs)
-		{
-			auto it = this->capabilities.codecs.begin();
-
-			for (; it != this->capabilities.codecs.end(); ++it)
-			{
-				auto& codecCapability = *it;
-
-				if (codecCapability.Matches(codec, true))
-				{
-					// Once matched, remove the unsupported RTCP feedback from the given codec.
-					codec.ReduceRtcpFeedback(codecCapability.rtcpFeedback);
-
-					break;
-				}
-			}
-			if (it == this->capabilities.codecs.end())
-			{
-				MS_THROW_ERROR("no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
-					codec.payloadType, codec.mime.GetName().c_str());
-			}
-		}
+		// Remove unsupported codecs and their associated encodings.
+		rtpParameters->ReduceCodecsAndEncodings(this->capabilities);
 
 		// Remove unsupported header extensions.
 		rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
