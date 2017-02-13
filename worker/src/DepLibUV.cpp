@@ -60,10 +60,10 @@ void DepLibUV::RunLoop()
 // TODO: Move to inline in the .h file.
 uint64_t DepLibUV::GetTime()
 {
-	static uint32_t maxTimeCounter = 2000;
+	static uint32_t maxTimeCounter = 32768;
 
 	// TODO: Remove.
-	if (DepLibUV::timeUpdateCounter == 0 && LAST_NOW != 0)
+	if (DepLibUV::timeUpdateCounter == 0)
 	{
 		MS_DEBUG_DEV("now - LAST_NOW: %" PRIu64 "ms", uv_now(DepLibUV::loop) - LAST_NOW);
 	}
