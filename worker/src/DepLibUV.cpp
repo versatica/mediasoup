@@ -1,5 +1,5 @@
 #define MS_CLASS "DepLibUV"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "DepLibUV.h"
 #include "Logger.h"
@@ -64,7 +64,9 @@ uint64_t DepLibUV::GetTime()
 
 	// TODO: Remove.
 	if (DepLibUV::timeUpdateCounter == 0 && LAST_NOW != 0)
+	{
 		MS_DEBUG_DEV("now - LAST_NOW: %" PRIu64 "ms", uv_now(DepLibUV::loop) - LAST_NOW);
+	}
 
 	// Update the libuv's concept of “now” every N usages.
 	if (++DepLibUV::timeUpdateCounter == maxTimeCounter)
