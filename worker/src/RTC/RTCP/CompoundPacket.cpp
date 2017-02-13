@@ -77,6 +77,8 @@ namespace RTC { namespace RTCP
 
 		MS_TRACE();
 
+		MS_DEBUG_DEV("<CompoundPacket>");
+
 		if (this->senderReportPacket.GetCount())
 		{
 			this->senderReportPacket.Dump();
@@ -98,6 +100,8 @@ namespace RTC { namespace RTCP
 
 		if (this->sdesPacket.GetCount())
 			this->sdesPacket.Dump();
+
+		MS_DEBUG_DEV("</CompoundPacket>");
 
 		#endif
 	}
