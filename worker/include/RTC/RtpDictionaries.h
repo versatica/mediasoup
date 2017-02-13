@@ -280,6 +280,7 @@ namespace RTC
 		explicit RtpParameters(const RtpParameters* RtpParameters);
 
 		Json::Value toJson();
+		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		uint32_t GetClockRateForEncoding(size_t encodingIdx);
 

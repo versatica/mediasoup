@@ -61,7 +61,7 @@ module.exports =
 			{
 				kind        : 'audio',
 				name        : 'audio/opus',
-				payloadType : 96,
+				payloadType : 100,
 				clockRate   : 48000,
 				numChannels : 2
 			},
@@ -74,23 +74,23 @@ module.exports =
 			{
 				kind        : 'video',
 				name        : 'video/VP8',
-				payloadType : 97,
+				payloadType : 110,
 				clockRate   : 90000
 			},
 			{
 				kind        : 'video',
 				name        : 'video/rtx',
-				payloadType : 100,
+				payloadType : 97,
 				clockRate   : 90000,
 				parameters :
 				{
-					apt : 97
+					apt : 110
 				}
 			},
 			{
 				kind        : 'video',
 				name        : 'video/H264',
-				payloadType : 98,
+				payloadType : 111,
 				clockRate   : 90000,
 				parameters  :
 				{
@@ -100,17 +100,17 @@ module.exports =
 			{
 				kind        : 'video',
 				name        : 'video/rtx',
-				payloadType : 101,
+				payloadType : 98,
 				clockRate   : 90000,
 				parameters  :
 				{
-					apt : 98
+					apt : 111
 				}
 			},
 			{
 				kind        : 'video',
 				name        : 'video/H264',
-				payloadType : 99,
+				payloadType : 112,
 				clockRate   : 90000,
 				parameters  :
 				{
@@ -120,11 +120,11 @@ module.exports =
 			{
 				kind        : 'video',
 				name        : 'video/rtx',
-				payloadType : 102,
+				payloadType : 99,
 				clockRate   : 90000,
 				parameters  :
 				{
-					apt : 99
+					apt : 112
 				}
 			}
 		]
