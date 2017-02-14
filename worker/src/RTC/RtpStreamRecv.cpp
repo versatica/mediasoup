@@ -91,8 +91,8 @@ namespace RTC
 	void RtpStreamRecv::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		this->last_sr_received = DepLibUV::GetTime();
-		this->last_sr_timestamp = htonl(report->GetNtpSec()) << 16;
-		this->last_sr_timestamp += htonl(report->GetNtpFrac()) >> 16;
+		this->last_sr_timestamp = report->GetNtpSec() << 16;
+		this->last_sr_timestamp += report->GetNtpFrac() >> 16;
 	}
 
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
