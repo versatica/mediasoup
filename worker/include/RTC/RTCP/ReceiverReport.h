@@ -193,7 +193,7 @@ namespace RTC { namespace RTCP
 	inline
 	void ReceiverReport::SetLastSenderReport(uint32_t lsr)
 	{
-		this->header->lsr = lsr;
+		this->header->lsr = (uint32_t)htonl(lsr);
 	}
 
 	inline
