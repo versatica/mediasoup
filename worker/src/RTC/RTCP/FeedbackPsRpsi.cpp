@@ -97,8 +97,8 @@ namespace RTC { namespace RTCP
 
 		MS_DEBUG_DEV("<RpsiItem>");
 		MS_DEBUG_DEV("  padding bits : %" PRIu8, this->header->padding_bits);
-		MS_DEBUG_DEV("  payload type : %" PRIu8, this->header->payload_type);
-		MS_DEBUG_DEV("  length       : %zu", this->length);
+		MS_DEBUG_DEV("  payload type : %" PRIu8, this->GetPayloadType());
+		MS_DEBUG_DEV("  length       : %zu", this->GetLength());
 		MS_DEBUG_DEV("</RpsiItem>");
 	}
 }}

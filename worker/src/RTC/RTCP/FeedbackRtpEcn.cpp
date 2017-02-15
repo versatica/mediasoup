@@ -41,13 +41,13 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<EcnItem>");
-		MS_DEBUG_DEV("  sequence number    : %" PRIu32, (uint32_t)ntohl(this->header->sequence_number));
-		MS_DEBUG_DEV("  ect0 counter       : %" PRIu32, (uint32_t)ntohl(this->header->ect0_counter));
-		MS_DEBUG_DEV("  ect1 counter       : %" PRIu32, (uint32_t)ntohl(this->header->ect1_counter));
-		MS_DEBUG_DEV("  ecn ce counter     : %" PRIu16, (uint16_t)ntohs(this->header->ecn_ce_counter));
-		MS_DEBUG_DEV("  not ect counter    : %" PRIu16, (uint16_t)ntohs(this->header->not_ect_counter));
-		MS_DEBUG_DEV("  lost packets       : %" PRIu16, (uint16_t)ntohs(this->header->lost_packets));
-		MS_DEBUG_DEV("  duplicated packets : %" PRIu16, (uint16_t)ntohs(this->header->duplicated_packets));
+		MS_DEBUG_DEV("  sequence number    : %" PRIu32, this->GetSequenceNumber());
+		MS_DEBUG_DEV("  ect0 counter       : %" PRIu32, this->GetEct0Counter());
+		MS_DEBUG_DEV("  ect1 counter       : %" PRIu32, this->GetEct1Counter());
+		MS_DEBUG_DEV("  ecn ce counter     : %" PRIu16, this->GetEcnCeCounter());
+		MS_DEBUG_DEV("  not ect counter    : %" PRIu16, this->GetNotEctcounter());
+		MS_DEBUG_DEV("  lost packets       : %" PRIu16, this->GetLostPackets());
+		MS_DEBUG_DEV("  duplicated packets : %" PRIu16, this->GetDuplicatedPackets());
 		MS_DEBUG_DEV("</EcnItem>");
 	}
 }}

@@ -57,8 +57,8 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<FirItem>");
-		MS_DEBUG_DEV("  ssrc            : %" PRIu32, (uint32_t)ntohl(this->header->ssrc));
-		MS_DEBUG_DEV("  sequence number : %" PRIu8, this->header->sequence_number);
+		MS_DEBUG_DEV("  ssrc            : %" PRIu32, this->GetSsrc());
+		MS_DEBUG_DEV("  sequence number : %" PRIu8, this->GetSequenceNumber());
 		MS_DEBUG_DEV("\t\t</FirItem>");
 	}
 }}

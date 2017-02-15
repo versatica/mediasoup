@@ -82,9 +82,9 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<TmmbItem>");
-		MS_DEBUG_DEV("  ssrc     : %" PRIu32, (uint32_t)ntohl(this->header->ssrc));
-		MS_DEBUG_DEV("  bitrate  : %" PRIu64, this->bitrate);
-		MS_DEBUG_DEV("  overhead : %" PRIu16, this->overhead);
+		MS_DEBUG_DEV("  ssrc     : %" PRIu32, this->GetSsrc());
+		MS_DEBUG_DEV("  bitrate  : %" PRIu64, this->GetBitrate());
+		MS_DEBUG_DEV("  overhead : %" PRIu16, this->GetOverhead());
 		MS_DEBUG_DEV("</TmmbItem>");
 	}
 

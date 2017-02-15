@@ -34,12 +34,12 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<SenderReport>");
-		MS_DEBUG_DEV("  ssrc         : %" PRIu32, (uint32_t)ntohl(this->header->ssrc));
-		MS_DEBUG_DEV("  ntp sec      : %" PRIu32, (uint32_t)ntohl(this->header->ntp_sec));
-		MS_DEBUG_DEV("  ntp frac     : %" PRIu32, (uint32_t)ntohl(this->header->ntp_frac));
-		MS_DEBUG_DEV("  rtp ts       : %" PRIu32, (uint32_t)ntohl(this->header->rtp_ts));
-		MS_DEBUG_DEV("  packet count : %" PRIu32, (uint32_t)ntohl(this->header->packet_count));
-		MS_DEBUG_DEV("  octet count  : %" PRIu32, (uint32_t)ntohl(this->header->octet_count));
+		MS_DEBUG_DEV("  ssrc         : %" PRIu32, this->GetSsrc());
+		MS_DEBUG_DEV("  ntp sec      : %" PRIu32, this->GetNtpSec());
+		MS_DEBUG_DEV("  ntp frac     : %" PRIu32, this->GetNtpFrac());
+		MS_DEBUG_DEV("  rtp ts       : %" PRIu32, this->GetRtpTs());
+		MS_DEBUG_DEV("  packet count : %" PRIu32, this->GetPacketCount());
+		MS_DEBUG_DEV("  octet count  : %" PRIu32, this->GetOctetCount());
 		MS_DEBUG_DEV("</SenderReport>");
 	}
 

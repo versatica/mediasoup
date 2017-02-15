@@ -67,10 +67,10 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<VbcmItem>");
-		MS_DEBUG_DEV("  ssrc            : %" PRIu32, (uint32_t)ntohl(this->header->ssrc));
-		MS_DEBUG_DEV("  sequence number : %" PRIu8, this->header->sequence_number);
-		MS_DEBUG_DEV("  payload type    : %" PRIu8, this->header->payload_type);
-		MS_DEBUG_DEV("  length          : %" PRIu16, (uint16_t)ntohs(this->header->length));
+		MS_DEBUG_DEV("  ssrc            : %" PRIu32, this->GetSsrc());
+		MS_DEBUG_DEV("  sequence number : %" PRIu8, this->GetSequenceNumber());
+		MS_DEBUG_DEV("  payload type    : %" PRIu8, this->GetPayloadType());
+		MS_DEBUG_DEV("  length          : %" PRIu16, this->GetLength());
 		MS_DEBUG_DEV("</Vbcm Item>");
 	}
 }}
