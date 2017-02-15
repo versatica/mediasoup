@@ -13,6 +13,7 @@
 #include "RTC/RTCP/Sdes.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
+#include "handles/Timer.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -23,7 +24,8 @@ namespace RTC
 	class Peer :
 		public RTC::Transport::Listener,
 		public RTC::RtpReceiver::Listener,
-		public RTC::RtpSender::Listener
+		public RTC::RtpSender::Listener,
+		public Timer::Listener
 	{
 	public:
 		class Listener
@@ -40,7 +42,6 @@ namespace RTC
 			virtual void onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
 			virtual void onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) = 0;
 			virtual void onPeerRtcpSdesChunk(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SdesChunk* chunk) = 0;
-			virtual void onPeerRtcpCompleted(RTC::Peer* peer) = 0;
 		};
 
 	private:
@@ -64,7 +65,7 @@ namespace RTC
 		 */
 		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters);
 		RTC::RtpSender* GetRtpSender(uint32_t ssrc);
-		void SendRtcp();
+		void SendRtcp(uint64_t now);
 
 	private:
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
@@ -87,6 +88,10 @@ namespace RTC
 	public:
 		virtual void onRtpSenderClosed(RTC::RtpSender* rtpSender) override;
 
+	/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		virtual void onTimer(Timer* timer) override;
+
 	public:
 		// Passed by argument.
 		uint32_t peerId;
@@ -97,6 +102,7 @@ namespace RTC
 		Listener* listener = nullptr;
 		Channel::Notifier* notifier = nullptr;
 		// Others.
+		Timer* timer = nullptr;
 		bool hasCapabilities = false;
 		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Transport*> transports;

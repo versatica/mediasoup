@@ -6,9 +6,11 @@
 #include "RTC/RtpStreamSend.h"
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
+#include "RTC/RtpDataCounter.h"
 #include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/Sdes.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
+#include "RTC/RTCP/CompoundPacket.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <unordered_set>
@@ -48,10 +50,10 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-		RTC::RTCP::SenderReport* GetRtcpSenderReport();
 		void ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk);
-		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
+		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
+		uint32_t GetTransmissionRate(uint64_t now);
 
 	private:
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
@@ -77,6 +79,14 @@ namespace RTC
 		// Sender Report holding the RTP stats.
 		std::unique_ptr<RTC::RTCP::SenderReport> senderReport;
 		std::unique_ptr<RTC::RTCP::SdesChunk> sdesChunk;
+		// RTP counters.
+		RTC::RtpDataCounter transmitted;
+		// Timestamp when last RTCP was sent.
+		uint64_t lastRtcpSentTime = 0;
+		uint16_t maxRtcpInterval;
+
+		// TODO: keep track of retransmitted data too.
+		//RTC::RtpDataCounter retransmitted;
 	};
 
 	/* Inline methods. */
@@ -114,12 +124,6 @@ namespace RTC
 	};
 
 	inline
-	RTC::RTCP::SenderReport* RtpSender::GetRtcpSenderReport()
-	{
-		return this->senderReport.release();
-	};
-
-	inline
 	void RtpSender::ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk)
 	{
 		this->sdesChunk.reset(new RTC::RTCP::SdesChunk(chunk));
@@ -127,9 +131,9 @@ namespace RTC
 	};
 
 	inline
-	RTC::RTCP::SdesChunk* RtpSender::GetRtcpSdesChunk()
+	uint32_t RtpSender::GetTransmissionRate(uint64_t now)
 	{
-		return this->sdesChunk.release();
+		return this->transmitted.GetRate(now);
 	};
 }
 

@@ -9,6 +9,10 @@
 
 namespace RTC { namespace RTCP
 {
+	// Maximum interval for regular RTCP mode.
+	constexpr uint16_t MAX_VIDEO_INTERVAL_MS = 1000;
+	constexpr uint16_t MAX_AUDIO_INTERVAL_MS = 5000;
+
 	enum class Type : uint8_t
 	{
 		FIR   = 192,

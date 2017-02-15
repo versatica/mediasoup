@@ -7,6 +7,7 @@
 #include "RTC/RtpStreamRecv.h"
 #include "RTC/RTCP/ReceiverReport.h"
 #include "RTC/RTCP/Feedback.h"
+#include "RTC/RTCP/CompoundPacket.h"
 #include "Channel/Request.h"
 #include "Channel/Notifier.h"
 #include <string>
@@ -49,7 +50,7 @@ namespace RTC
 		RTC::RtpParameters* GetParameters();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
+		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
 
@@ -73,6 +74,9 @@ namespace RTC
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
+		// Timestamp when last RTCP was sent.
+		uint64_t lastRtcpSentTime = 0;
+		uint16_t maxRtcpInterval;
 	};
 
 	/* Inline methods. */

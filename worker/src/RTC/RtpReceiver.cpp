@@ -22,6 +22,11 @@ namespace RTC
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		if (this->kind == RTC::Media::Kind::AUDIO)
+			this->maxRtcpInterval = RTC::RTCP::MAX_AUDIO_INTERVAL_MS;
+		else
+			this->maxRtcpInterval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -284,20 +289,20 @@ namespace RTC
 		// SSRC values in received RTP packets to match the chosen random values.
 	}
 
-	RTC::RTCP::ReceiverReport* RtpReceiver::GetRtcpReceiverReport()
+	void RtpReceiver::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
 	{
 		if (this->rtpStream)
 		{
-			RTC::RTCP::ReceiverReport* report = this->rtpStream->GetRtcpReceiverReport();
+			if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) >= this->maxRtcpInterval)
+			{
+				RTC::RTCP::ReceiverReport* report = this->rtpStream->GetRtcpReceiverReport();
 
-			// TODO: This assumes a single stream for now.
-			report->SetSsrc(this->rtpParameters->encodings[0].ssrc);
+				// TODO: This assumes a single stream for now.
+				report->SetSsrc(this->rtpParameters->encodings[0].ssrc);
+				packet->AddReceiverReport(report);
 
-			return report;
-		}
-		else
-		{
-			return nullptr;
+				this->lastRtcpSentTime = now;
+			}
 		}
 	}
 

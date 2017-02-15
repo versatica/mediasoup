@@ -23,6 +23,11 @@ namespace RTC
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		if (this->kind == RTC::Media::Kind::AUDIO)
+			this->maxRtcpInterval = RTC::RTCP::MAX_AUDIO_INTERVAL_MS;
+		else
+			this->maxRtcpInterval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
 	}
 
 	RtpSender::~RtpSender()
@@ -260,7 +265,27 @@ namespace RTC
 
 		// Send the packet.
 		this->transport->SendRtpPacket(packet);
+
+		// Save RTP data
+		transmitted.Update(packet);
 	}
+
+	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
+	{
+		// TODO: Until we generate Sender Report.
+		if (this->senderReport)
+		{
+			if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) >= this->maxRtcpInterval)
+			{
+				packet->AddSenderReport(this->senderReport.release());
+
+				if (this->sdesChunk)
+					packet->AddSdesChunk(this->sdesChunk.release());
+
+				this->lastRtcpSentTime = now;
+			}
+		}
+	};
 
 	void RtpSender::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
 	{

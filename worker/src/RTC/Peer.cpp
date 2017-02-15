@@ -7,6 +7,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
+#include "DepLibUV.h"
 
 namespace RTC
 {
@@ -23,11 +24,19 @@ namespace RTC
 		notifier(notifier)
 	{
 		MS_TRACE();
+
+		this->timer = new Timer(this);
+
+		// Start the RTCP timer.
+		this->timer->Start(uint64_t(RTC::RTCP::MAX_VIDEO_INTERVAL_MS / 2));
 	}
 
 	Peer::~Peer()
 	{
 		MS_TRACE();
+
+		// Close the RTCP timer.
+		this->timer->Close();
 	}
 
 	void Peer::Close()
@@ -510,7 +519,7 @@ namespace RTC
 		return nullptr;
 	}
 
-	void Peer::SendRtcp()
+	void Peer::SendRtcp(uint64_t now)
 	{
 		MS_TRACE();
 
@@ -521,7 +530,7 @@ namespace RTC
 
 		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
 		{
-			RTC::RTCP::CompoundPacket packet;
+			std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
 			RTC::Transport* transport = it->second;
 
 			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
@@ -531,23 +540,25 @@ namespace RTC
 				if (rtpSender->GetTransport() != transport)
 					continue;
 
-				RTC::RTCP::SenderReport* report = rtpSender->GetRtcpSenderReport();
+				rtpSender->GetRtcp(packet.get(), now);
 
-				if (report)
+				// Send one RTCP compound packet per sender report.
+				if (packet->GetSenderReportCount())
 				{
-					packet.AddSenderReport(report);
+					// Ensure that the RTCP packet fits into the RTCP buffer.
+					if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+					{
+						MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+						return;
+					}
 
-					RTC::RTCP::SdesChunk* chunk = rtpSender->GetRtcpSdesChunk();
-					if (chunk)
-						packet.AddSdesChunk(chunk);
+					packet->Serialize(Peer::rtcpBuffer);
+					transport->SendRtcpCompoundPacket(packet.get());
 
-					break;
+					// reset the Compound packet.
+					packet.reset(new RTC::RTCP::CompoundPacket());
 				}
 			}
-
-			// TMP: only send RR if SR is also being sent.
-			// if (packet.GetSenderReportCount() == 0)
-				// return;
 
 			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
 			{
@@ -556,21 +567,22 @@ namespace RTC
 				if (rtpReceiver->GetTransport() != transport)
 					continue;
 
-				RTC::RTCP::ReceiverReport* report = rtpReceiver->GetRtcpReceiverReport();
-
-				if (report)
-					packet.AddReceiverReport(report);
+				rtpReceiver->GetRtcp(packet.get(), now);
 			}
 
-			// Ensure that the RTCP packet fits into the RTCP buffer.
-			if (packet.GetSize() > MS_RTCP_BUFFER_SIZE)
+			// Send one RTCP compound with all receiver reports.
+			if (packet->GetReceiverReportCount())
 			{
-				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet.GetSize());
-				return;
-			}
+				// Ensure that the RTCP packet fits into the RTCP buffer.
+				if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+				{
+					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+					return;
+				}
 
-			packet.Serialize(Peer::rtcpBuffer);
-			transport->SendRtcpCompoundPacket(&packet);
+				packet->Serialize(Peer::rtcpBuffer);
+				transport->SendRtcpCompoundPacket(packet.get());
+			}
 		}
 	}
 
@@ -904,10 +916,6 @@ namespace RTC
 
 			packet = packet->GetNext();
 		}
-
-		// TMP: Notify the listener about an incoming RTCP processing termination.
-		// Used for now as a trigger to relay the processed RTCP data accordingly.
-		this->listener->onPeerRtcpCompleted(this);
 	}
 
 	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
@@ -938,5 +946,42 @@ namespace RTC
 
 		// Notify the listener (Room) so it can remove this RtpSender from its map.
 		this->listener->onPeerRtpSenderClosed(this, rtpSender);
+	}
+
+	void Peer::onTimer(Timer* timer)
+	{
+		uint64_t interval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+		uint32_t now = DepLibUV::GetTime();
+
+		// Transmission rate in kbps.
+		uint32_t rate = 0;
+
+		this->SendRtcp(now);
+
+		// Recalculate next RTCP interval.
+		if (this->rtpSenders.size()) {
+			// Get the RTP sending rate.
+			for (auto& kv : this->rtpSenders)
+			{
+				RTC::RtpSender* rtpSender = kv.second;
+				rate += rtpSender->GetTransmissionRate(now) / 1000;
+			}
+
+			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
+			if (rate)
+				interval = 360000 / rate;
+
+			if (interval > RTC::RTCP::MAX_VIDEO_INTERVAL_MS)
+				interval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+		}
+
+
+		/* The interval between RTCP packets is varied randomly over the range
+		 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
+		 * of all participants.
+		 */
+		interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+
+		this->timer->Start(interval);
 	}
 }

@@ -685,18 +685,4 @@ namespace RTC
 			rtpSender->ReceiveRtcpSdesChunk(chunk);
 		}
 	}
-
-	void Room::onPeerRtcpCompleted(RTC::Peer* peer)
-	{
-		MS_TRACE();
-
-		// Tell all the peers but the one in the argument to generate and send their RTCP.
-		for (auto it = this->peers.begin(); it != this->peers.end(); ++it)
-		{
-			RTC::Peer* current_peer = it->second;
-
-			if (current_peer != peer)
-				current_peer->SendRtcp();
-		}
-	}
 }
