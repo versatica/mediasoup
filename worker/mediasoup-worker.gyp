@@ -34,6 +34,7 @@
       'src/RTC/RtpStream.cpp',
       'src/RTC/RtpStreamRecv.cpp',
       'src/RTC/RtpStreamSend.cpp',
+      'src/RTC/RtpDataCounter.cpp',
       'src/RTC/SrtpSession.cpp',
       'src/RTC/StunMessage.cpp',
       'src/RTC/TcpConnection.cpp',
@@ -114,6 +115,7 @@
       'include/RTC/RtpStream.h',
       'include/RTC/RtpStreamRecv.h',
       'include/RTC/RtpStreamSend.h',
+      'include/RTC/RtpDataCounter.h',
       'include/RTC/SrtpSession.h',
       'include/RTC/StunMessage.h',
       'include/RTC/TcpConnection.h',
@@ -238,6 +240,7 @@
         'test/test-nack.cpp',
         'test/test-rtp.cpp',
         'test/test-rtcp.cpp',
+        'test/test-bitrate.cpp',
         # C++ include files
         'test/catch.hpp',
         'test/helpers.h'
