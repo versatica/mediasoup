@@ -8,8 +8,6 @@
 /* Static variables. */
 
 uv_loop_t* DepLibUV::loop = nullptr;
-uint32_t DepLibUV::maxTimeCounter = 16384;
-uint32_t DepLibUV::timeUpdateCounter = 0;
 
 /* Static methods. */
 

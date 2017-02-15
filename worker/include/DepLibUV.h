@@ -16,8 +16,6 @@ public:
 
 private:
 	static uv_loop_t* loop;
-	static uint32_t maxTimeCounter;
-	static uint32_t timeUpdateCounter;
 };
 
 /* Inline static methods. */
@@ -31,13 +29,6 @@ uv_loop_t* DepLibUV::GetLoop()
 inline
 uint64_t DepLibUV::GetTime()
 {
-	// Update the libuv's concept of “now” every maxTimeCounter usages.
-	if (++DepLibUV::timeUpdateCounter == DepLibUV::maxTimeCounter)
-	{
-		DepLibUV::timeUpdateCounter = 0;
-		uv_update_time(DepLibUV::loop);
-	}
-
 	return uv_now(DepLibUV::loop);
 }
 
