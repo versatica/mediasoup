@@ -22,8 +22,6 @@ namespace RTC
 		// Given as argument.
 		uint32_t clockRate = 0;
 		bool started = false; // Whether at least a RTP packet has been received.
-		uint32_t last_sr_timestamp = 0; // The middle 32 bits out of 64 in the NTP timestamp received in the most recent sender report.
-		uint64_t last_sr_received = 0; // Wallclock time representing the most recent sender report arrival.
 		// https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
 		uint16_t max_seq = 0; // Highest seq. number seen.
 		uint32_t cycles = 0; // Shifted count of seq. number cycles.
