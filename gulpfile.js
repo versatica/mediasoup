@@ -26,7 +26,6 @@ gulp.task('lint', () =>
 		'.eslintrc.js',
 		'gulpfile.js',
 		'lib/**/*.js',
-		'data/**/*.js',
 		'test/**/*.js'
 	];
 
