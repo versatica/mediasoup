@@ -26,7 +26,7 @@
     "netstring": "^0.3.0",
     "random-number": "0.0.7",
     "random-string": "^0.1.2",
-    "sdp-transform": "^1.7.0"
+    "sdp-transform": "^2.0.0"
   },
   "devDependencies": {
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
