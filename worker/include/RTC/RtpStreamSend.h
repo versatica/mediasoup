@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_STREAM_SEND_H
 
 #include "RTC/RtpStream.h"
+#include "RTC/RTCP/SenderReport.h"
 #include <vector>
 #include <list>
 
@@ -29,6 +30,7 @@ namespace RTC
 
 		bool ReceivePacket(RTC::RtpPacket* packet);
 		void RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
+		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
 
 	private:
 		void ClearBuffer();
@@ -39,6 +41,11 @@ namespace RTC
 		std::vector<StorageItem> storage;
 		typedef std::list<BufferItem> Buffer;
 		Buffer buffer;
+
+	private:
+		size_t receivedBytes = 0; // Bytes received.
+		uint64_t lastPacketTimeMs = 0; // Time (MS) when the last packet was received.
+		uint32_t lastPacketRtpTimestamp = 0; // RTP Timestamp of the last packet.
 	};
 }
 

@@ -12,17 +12,17 @@ In order to get the best media quality from the remote RTP senders, *mediasoup* 
 
 ### Sender Reports
 
-*mediasoup* relays the Sender Reports coming from the remote RTP senders.
+*mediasoup* locally generates the Sender Reports of the streams it sends.
 
 ### Receiver Reports
 
-*mediasoup* will locally generate the Receiver Reports of the streams it receivers. At the same time, it will consume the Receiver Reports from every remote RTP receivers.
+*mediasoup* locally generates the Receiver Reports of the streams it receives. At the same time, it will consume the Receiver Reports from every remote RTP receivers.
 
 The combination of Sender and Receiver Reports will be used to determine the quality of each link. Information that will be available at the JavaScript API level in order to determine the quality of each participant in the room.
 
 ### SDES
 
-SDES information will be relayed from the remote RTP sender to the corresponding remote RTP receivers.
+SDES information is relayed from the remote RTP sender to the corresponding remote RTP receivers.
 
 ### BYE
 
@@ -153,7 +153,7 @@ In future, this information is to be consumed by the local RTP Senders in order 
 
              | SR | RR | SDES | BYE | APP |
 -------------|----|----|------|-----|-----|
- RtpSender   |  B |  C |      |     |     |
+ RtpSender   |  G |  C |      |     |     |
  RtpReceiver |  C |  G |  B   |  B  |  B  |
 
 ### RTP Feedback RTCP

@@ -3,6 +3,8 @@
 
 #include "RTC/RtpStreamSend.h"
 #include "Logger.h"
+#include "DepLibUV.h"
+#include "Utils.h" // CurrentTimeNtp()
 
 #define RTP_SEQ_MOD (1<<16)
 #define MAX_RETRANSMISSION_AGE 200 // Don't retransmit packets older than this (ms).
@@ -58,6 +60,13 @@ namespace RTC
 		// If bufferSize was given, store the packet into the buffer.
 		if (this->storage.size() > 0)
 			StorePacket(packet);
+
+		// Increase packet counters.
+		this->receivedBytes += packet->GetPayloadLength();
+
+		// Record current time and RTP timestamp.
+		this->lastPacketTimeMs = DepLibUV::GetTime();
+		this->lastPacketRtpTimestamp = packet->GetTimestamp();
 
 		return true;
 	}
@@ -313,5 +322,32 @@ namespace RTC
 		}
 
 		MS_DEBUG_TAG(rtp, "</RtpStreamSend>");
+	}
+
+	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
+	{
+		MS_TRACE();
+
+		if (!received)
+			return nullptr;
+
+		RTC::RTCP::SenderReport* report = new RTC::RTCP::SenderReport();
+
+		report->SetPacketCount(this->received);
+		report->SetOctetCount(this->receivedBytes);
+
+		Utils::Time::Ntp ntp;
+		Utils::Time::CurrentTimeNtp(ntp);
+
+		report->SetNtpSec(ntp.seconds);
+		report->SetNtpFrac(ntp.fractions);
+
+		// Calculate RTP timestamp diff between now and last received RTP packet.
+		uint32_t diffMs = now - this->lastPacketTimeMs;
+		uint32_t diffRtpTimestamp = diffMs * this->clockRate / 1000;
+
+		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
+
+		return report;
 	}
 }

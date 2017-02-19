@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpSender.h"
+#include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "MediaSoupError.h"
 #include "Logger.h"
@@ -272,17 +273,23 @@ namespace RTC
 
 	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
 	{
-		// TODO: Until we generate Sender Report.
-		if (this->senderReport)
+		if (this->rtpStream)
 		{
 			if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) >= this->maxRtcpInterval)
 			{
-				packet->AddSenderReport(this->senderReport.release());
+				RTC::RTCP::SenderReport* report = this->rtpStream->GetRtcpSenderReport(now);
 
-				if (this->sdesChunk)
-					packet->AddSdesChunk(this->sdesChunk.release());
+				if (report)
+				{
+					// TODO: This assumes a single stream for now.
+					report->SetSsrc(this->rtpParameters->encodings[0].ssrc);
+					packet->AddSenderReport(report);
 
-				this->lastRtcpSentTime = now;
+					if (this->sdesChunk)
+						packet->AddSdesChunk(this->sdesChunk.release());
+
+					this->lastRtcpSentTime = now;
+				}
 			}
 		}
 	};

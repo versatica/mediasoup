@@ -5,6 +5,7 @@
 #include <string>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <openssl/hmac.h>
+#include <sys/time.h> // gettimeofday
 
 namespace Utils
 {
@@ -268,6 +269,33 @@ namespace Utils
 	void String::ToLowerCase(std::string& str)
 	{
 		std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+	}
+
+	class Time
+	{
+		// Seconds from Jan 1, 1900 to Jan 1, 1970
+		static constexpr uint32_t UnixNtpOffset = 0x83AA7E80;
+		// NTP fractional unit.
+		static constexpr double NtpFractionalUnit = 1LL<<32;
+
+	public:
+		struct Ntp
+		{
+			uint32_t seconds;
+			uint32_t fractions;
+		};
+
+		static void CurrentTimeNtp(Ntp& ntp);
+	};
+
+	inline
+	void Time::CurrentTimeNtp(Ntp& ntp)
+	{
+		struct timeval tv;
+		gettimeofday(&tv, NULL);
+
+		ntp.seconds = tv.tv_sec + UnixNtpOffset;
+		ntp.fractions = (uint32_t)((double)(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
 	}
 }
 

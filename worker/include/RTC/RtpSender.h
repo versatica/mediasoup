@@ -7,7 +7,6 @@
 #include "RTC/RtpDictionaries.h"
 #include "RTC/RtpPacket.h"
 #include "RTC/RtpDataCounter.h"
-#include "RTC/RTCP/SenderReport.h"
 #include "RTC/RTCP/Sdes.h"
 #include "RTC/RTCP/FeedbackRtpNack.h"
 #include "RTC/RTCP/CompoundPacket.h"
@@ -49,7 +48,6 @@ namespace RTC
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
-		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk);
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -76,8 +74,6 @@ namespace RTC
 		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
-		// Sender Report holding the RTP stats.
-		std::unique_ptr<RTC::RTCP::SenderReport> senderReport;
 		std::unique_ptr<RTC::RTCP::SdesChunk> sdesChunk;
 		// RTP counters.
 		RTC::RtpDataCounter transmitted;
@@ -115,13 +111,6 @@ namespace RTC
 	{
 		return this->rtpParameters;
 	}
-
-	inline
-	void RtpSender::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
-	{
-		this->senderReport.reset(new RTC::RTCP::SenderReport(report));
-		this->senderReport->Serialize();
-	};
 
 	inline
 	void RtpSender::ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk)
