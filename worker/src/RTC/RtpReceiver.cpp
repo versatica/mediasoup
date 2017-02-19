@@ -167,7 +167,7 @@ namespace RTC
 
 				// Set the RtpStreamRecv.
 				// TODO: This assumes a single receiving stream for now.
-				uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(0);
+				uint32_t streamClockRate = this->rtpParameters->GetEncodingClockRate(0);
 
 				// Create a RtpStreamRecv for receiving a media stream.
 				this->rtpStream = new RTC::RtpStreamRecv(streamClockRate);

@@ -139,11 +139,15 @@ namespace RTC
 
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
-		auto previousRtpParameters = this->rtpParameters;
+		auto hadParameters = this->rtpParameters ? true : false;
 
 		// Free the previous rtpParameters.
-		if (previousRtpParameters)
+		if (hadParameters)
 			delete this->rtpParameters;
+
+		// Delete previous RtpStreamSend (if any).
+		if (this->rtpStream)
+			delete this->rtpStream;
 
 		// Clone given RTP parameters so we manage our own sender parameters.
 		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
@@ -200,20 +204,26 @@ namespace RTC
 
 			// Set the RtpStreamSend.
 			// NOTE: We assume a single stream when sending to remote peers.
-			uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(0);
+			uint32_t streamClockRate = this->rtpParameters->GetEncodingClockRate(0);
 
 			// Create a RtpStreamSend for sending a single media stream.
 			switch (this->kind)
 			{
 				case RTC::Media::Kind::VIDEO:
 				case RTC::Media::Kind::DEPTH:
+				{
 					// Buffer up to 200 packets.
 					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 200);
 					break;
+				}
+
 				case RTC::Media::Kind::AUDIO:
+				{
 					// No buffer for audio streams.
 					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 0);
 					break;
+				}
+
 				default:
 					;
 			}
@@ -224,7 +234,7 @@ namespace RTC
 		}
 
 		// Emit "parameterschange" if these are updated parameters.
-		if (previousRtpParameters)
+		if (hadParameters)
 		{
 			Json::Value event_data(Json::objectValue);
 

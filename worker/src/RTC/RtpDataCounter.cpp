@@ -19,6 +19,7 @@ namespace RTC
 		// Set data in the index before the oldest index.
 		uint32_t offset = this->windowSize - 1;
 		uint32_t index = this->oldestIndex + offset;
+
 		if (index >= this->windowSize)
 			index -= this->windowSize;
 
@@ -46,15 +47,11 @@ namespace RTC
 
 		// Should never happen.
 		if (newOldestTime < this->oldestTime)
-		{
 			return;
-		}
 
 		// We are in the same time unit (ms) as the last entry.
 		if (newOldestTime == this->oldestTime)
-		{
 			return;
-		}
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (newOldestTime > this->oldestTime + this->windowSize)
@@ -66,8 +63,10 @@ namespace RTC
 		while (this->oldestTime < newOldestTime)
 		{
 			const BufferItem& oldestItem = buffer[this->oldestIndex];
+
 			this->totalCount -= oldestItem.count;
 			this->buffer[this->oldestIndex] = BufferItem();
+
 			if (++this->oldestIndex >= this->windowSize)
 				this->oldestIndex = 0;
 			++this->oldestTime;

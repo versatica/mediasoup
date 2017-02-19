@@ -282,7 +282,8 @@ namespace RTC
 		Json::Value toJson();
 		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
-		uint32_t GetClockRateForEncoding(size_t encodingIdx);
+		uint32_t GetEncodingClockRate(size_t encodingIdx);
+		uint32_t GetEncodingMediaSsrc(size_t encodingIdx);
 
 	private:
 		void ValidateCodecs();

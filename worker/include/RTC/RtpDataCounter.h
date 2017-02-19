@@ -68,6 +68,7 @@ namespace RTC
 		scale(scale)
 	{
 		uint64_t now = DepLibUV::GetTime();
+
 		this->Reset(now - windowSize);
 	}
 

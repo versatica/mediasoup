@@ -246,7 +246,7 @@ namespace RTC
 		this->headerExtensions = updatedHeaderExtensions;
 	}
 
-	uint32_t RtpParameters::GetClockRateForEncoding(size_t encodingIdx)
+	uint32_t RtpParameters::GetEncodingClockRate(size_t encodingIdx)
 	{
 		MS_TRACE();
 
@@ -276,6 +276,16 @@ namespace RTC
 		}
 
 		return clockRate;
+	}
+
+	uint32_t RtpParameters::GetEncodingMediaSsrc(size_t encodingIdx)
+	{
+		MS_TRACE();
+
+		if (this->encodings.size() < encodingIdx + 1)
+			MS_ABORT("no such a encoding [encodingIdx:%zu]", encodingIdx);
+
+		return this->encodings[encodingIdx].ssrc;
 	}
 
 	inline
