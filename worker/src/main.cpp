@@ -6,7 +6,6 @@
 #include "DepLibUV.h"
 #include "DepOpenSSL.h"
 #include "DepLibSRTP.h"
-#include "DepUsrSCTP.h"
 #include "Utils.h"
 #include "Channel/UnixStreamSocket.h"
 #include "RTC/UdpSocket.h"
@@ -114,7 +113,6 @@ void init()
 	// Initialize static stuff.
 	DepOpenSSL::ClassInit();
 	DepLibSRTP::ClassInit();
-	DepUsrSCTP::ClassInit();
 	Utils::Crypto::ClassInit();
 	RTC::UdpSocket::ClassInit();
 	RTC::TcpServer::ClassInit();
@@ -165,7 +163,6 @@ void destroy()
 	DepLibUV::ClassDestroy();
 	DepOpenSSL::ClassDestroy();
 	DepLibSRTP::ClassDestroy();
-	DepUsrSCTP::ClassDestroy();
 }
 
 void exitSuccess()
