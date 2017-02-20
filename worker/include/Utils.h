@@ -292,7 +292,7 @@ namespace Utils
 	void Time::CurrentTimeNtp(Ntp& ntp)
 	{
 		struct timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, nullptr);
 
 		ntp.seconds = tv.tv_sec + UnixNtpOffset;
 		ntp.fractions = (uint32_t)((double)(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);

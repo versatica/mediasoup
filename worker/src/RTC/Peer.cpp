@@ -953,17 +953,19 @@ namespace RTC
 		uint64_t interval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
 		uint32_t now = DepLibUV::GetTime();
 
-		// Transmission rate in kbps.
-		uint32_t rate = 0;
-
 		this->SendRtcp(now);
 
 		// Recalculate next RTCP interval.
-		if (this->rtpSenders.size()) {
+		if (this->rtpSenders.size())
+		{
+			// Transmission rate in kbps.
+			uint32_t rate = 0;
+
 			// Get the RTP sending rate.
 			for (auto& kv : this->rtpSenders)
 			{
 				RTC::RtpSender* rtpSender = kv.second;
+
 				rate += rtpSender->GetTransmissionRate(now) / 1000;
 			}
 
@@ -975,8 +977,8 @@ namespace RTC
 				interval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
 		}
 
-
-		/* The interval between RTCP packets is varied randomly over the range
+		/*
+		 * The interval between RTCP packets is varied randomly over the range
 		 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
 		 * of all participants.
 		 */

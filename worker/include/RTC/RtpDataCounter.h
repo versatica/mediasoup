@@ -17,7 +17,7 @@ namespace RTC
 		static constexpr size_t defaultWindowSize = 1000;
 
 	public:
-		RateCalculator(size_t windowSize = defaultWindowSize, float scale = kBpsScale);
+		explicit RateCalculator(size_t windowSize = defaultWindowSize, float scale = kBpsScale);
 		void Update(size_t count, uint64_t now);
 		uint32_t GetRate(uint64_t now);
 
