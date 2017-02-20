@@ -139,7 +139,7 @@ namespace RTC
 
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
-		auto hadParameters = this->rtpParameters ? true : false;
+		bool hadParameters = this->rtpParameters ? true : false;
 
 		// Free the previous rtpParameters.
 		if (hadParameters)
