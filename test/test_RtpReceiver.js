@@ -126,8 +126,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 		});
 });
 
-// TODO: Remove TODO
-tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout: 2000, todo: true }, (t) =>
+tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout: 2000 }, (t) =>
 {
 	return initTest(t)
 		.then((data) =>
@@ -142,20 +141,22 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 				[
 					{
 						name         : 'video/VP8',
-						payloadType  : 101,
+						payloadType  : 110,
 						clockRate    : 90000,
 						maxptime     : 80,
 						ptime        : 60,
 						numChannels  : 2,
-						// TODO: uncomment when RTCP is implemented
-						rtcpFeedback : [],
-						// rtcpFeedback :
-						// [
-						// 	{ type: 'ccm',         parameter: 'fir' },
-						// 	{ type: 'nack',        parameter: '' },
-						// 	{ type: 'nack',        parameter: 'pli' },
-						// 	{ type: 'google-remb', parameter: '' }
-						// ],
+						rtcpFeedback :
+						[
+							{ type: 'nack', parameter: null   },
+							{ type: 'nack', parameter: 'pli'  },
+							{ type: 'nack', parameter: 'sli'  },
+							{ type: 'nack', parameter: 'rpsi' },
+							{ type: 'nack', parameter: 'app'  },
+							{ type: 'ccm',  parameter: 'fir'  },
+							{ type: 'ack',  parameter: 'rpsi' },
+							{ type: 'ack',  parameter: 'app'  }
+						],
 						parameters :
 						{
 							profileLevelId    : 2,
@@ -167,31 +168,17 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 							lol               : -456.789,
 							ids               : [ 123, 2, 3 ]
 						}
-					},
-					{
-						name         : 'video/rtx',
-						payloadType  : 96,
-						clockRate    : 90000,
-						parameters :
-						{
-							apt     : 101,
-							rtxTime : 500
-						}
 					}
 				],
 				encodings :
 				[
 					{
 						ssrc             : 100000,
-						codecPayloadType : 101,
+						codecPayloadType : 110,
 						fec :
 						{
 							ssrc      : 200000,
 							mechanism : 'foo'
-						},
-						rtx :
-						{
-							ssrc : 300000
 						},
 						resolutionScale       : 2,
 						framerateScale        : 1.5,
@@ -204,25 +191,10 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 				headerExtensions :
 				[
 					{
-						uri        : 'urn:ietf:params:rtp-hdrext:foo',
-						id         : 1234,
+						uri        : 'urn:ietf:params:rtp-hdrext:toffset',
+						id         : 2,
 						encrypt    : false,
 						parameters : {}
-					},
-					{
-						uri        : 'urn:ietf:params:rtp-hdrext:bar',
-						id         : 5678,
-						encrypt    : true,
-						parameters : {}
-					},
-					{
-						uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-						id         : 6,
-						encrypt    : false,
-						parameters :
-						{
-							vad : 'on'
-						}
 					}
 				],
 				rtcp :

@@ -72,10 +72,21 @@ module.exports =
 				clockRate   : 8000
 			},
 			{
-				kind        : 'video',
-				name        : 'video/VP8',
-				payloadType : 110,
-				clockRate   : 90000
+				kind         : 'video',
+				name         : 'video/VP8',
+				payloadType  : 110,
+				clockRate    : 90000,
+				rtcpFeedback :
+				[
+					{ type: 'nack'                    },
+					{ type: 'nack', parameter: 'pli'  },
+					{ type: 'nack', parameter: 'sli'  },
+					{ type: 'nack', parameter: 'rpsi' },
+					{ type: 'nack', parameter: 'app'  },
+					{ type: 'ccm',  parameter: 'fir'  },
+					{ type: 'ack',  parameter: 'rpsi' },
+					{ type: 'ack',  parameter: 'app'  }
+				]
 			},
 			{
 				kind        : 'video',
@@ -88,14 +99,25 @@ module.exports =
 				}
 			},
 			{
-				kind        : 'video',
-				name        : 'video/H264',
-				payloadType : 111,
-				clockRate   : 90000,
-				parameters  :
+				kind         : 'video',
+				name         : 'video/H264',
+				payloadType  : 111,
+				clockRate    : 90000,
+				parameters   :
 				{
 					packetizationMode : 0
-				}
+				},
+				rtcpFeedback :
+				[
+					{ type: 'nack'                    },
+					{ type: 'nack', parameter: 'pli'  },
+					{ type: 'nack', parameter: 'sli'  },
+					{ type: 'nack', parameter: 'rpsi' },
+					{ type: 'nack', parameter: 'app'  },
+					{ type: 'ccm',  parameter: 'fir'  },
+					{ type: 'ack',  parameter: 'rpsi' },
+					{ type: 'ack',  parameter: 'app'  }
+				]
 			},
 			{
 				kind        : 'video',
@@ -108,14 +130,25 @@ module.exports =
 				}
 			},
 			{
-				kind        : 'video',
-				name        : 'video/H264',
-				payloadType : 112,
-				clockRate   : 90000,
-				parameters  :
+				kind         : 'video',
+				name         : 'video/H264',
+				payloadType  : 112,
+				clockRate    : 90000,
+				parameters   :
 				{
 					packetizationMode : 1
-				}
+				},
+				rtcpFeedback :
+				[
+					{ type: 'nack'                    },
+					{ type: 'nack', parameter: 'pli'  },
+					{ type: 'nack', parameter: 'sli'  },
+					{ type: 'nack', parameter: 'rpsi' },
+					{ type: 'nack', parameter: 'app'  },
+					{ type: 'ccm',  parameter: 'fir'  },
+					{ type: 'ack',  parameter: 'rpsi' },
+					{ type: 'ack',  parameter: 'app'  }
+				]
 			},
 			{
 				kind        : 'video',
@@ -127,6 +160,40 @@ module.exports =
 					apt : 112
 				}
 			}
-		]
+		],
+		headerExtensions :
+		[
+			{
+				kind             : 'audio',
+				uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				preferredId      : 1,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:ietf:params:rtp-hdrext:toffset',
+				preferredId      : 2,
+				preferredEncrypt : false
+			},
+			{
+				kind             : '',
+				uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				preferredId      : 3,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:3gpp:video-orientation',
+				preferredId      : 4,
+				preferredEncrypt : false
+			},
+			{
+				kind             : '',
+				uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+				preferredId      : 5,
+				preferredEncrypt : false
+			}
+		],
+		fecMechanisms : []
 	}
 };
