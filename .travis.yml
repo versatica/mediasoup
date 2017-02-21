@@ -1,13 +1,13 @@
-# Use Ubuntu 14.04 Trusty
-dist: trusty
-
-language: node_js
-
 # Just apply Travis-CI for these branches
 branches:
   only:
   - master
   - experimental
+
+# Use Ubuntu 14.04 Trusty
+dist: trusty
+
+language: node_js
 
 # DOC: http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 matrix:
