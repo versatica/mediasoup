@@ -32,7 +32,7 @@
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
     "gulp-eslint": "^3.0.1",
     "gulp-replace": "^0.5.4",
-    "gulp-shell": "^0.5.2",
+    "gulp-shell": "^0.6.0",
     "gulp-touch-cmd": "0.0.1",
     "tap": "^10.2.0"
   },
