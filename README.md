@@ -2,6 +2,7 @@
 
 [![][npm-shield-mediasoup]][npm-mediasoup]
 [![][travis-ci-shield-mediasoup]][travis-ci-mediasoup]
+[![][codacy-grade-shield-mediasoup]][codacy-grade-mediasoup]
 
 
 **Status:** v1.0.0 coming soon.
@@ -71,4 +72,6 @@ Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
 [travis-ci-mediasoup]: http://travis-ci.org/ibc/mediasoup
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
+[codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
+[codacy-grade-mediasoup]: https://www.codacy.com/app/ibc/mediasoup
 [paypal-url]: https://paypal.me/inakibazcastillo/100
