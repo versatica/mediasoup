@@ -761,6 +761,7 @@ namespace RTC
 				case RTCP::Type::PSFB:
 				{
 					RTCP::FeedbackPsPacket* feedback = static_cast<RTCP::FeedbackPsPacket*>(packet);
+
 					switch (feedback->GetMessageType())
 					{
 						case RTCP::FeedbackPs::PLI:
@@ -837,7 +838,7 @@ namespace RTC
 						case RTCP::FeedbackRtp::EXT:
 						default:
 						{
-							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+							MS_WARN_TAG(rtcp, "ignoring unsupported Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
 								RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(), feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 
 							break;
