@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpStreamRecv"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpStreamRecv.h"
-#include "DepLibUV.h"
-#include "Logger.h"
+#include "RTC/RtpStreamRecv.hpp"
+#include "DepLibUV.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {

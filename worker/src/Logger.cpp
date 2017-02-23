@@ -1,7 +1,7 @@
 #define MS_CLASS "Logger"
 // #define MS_LOG_DEV
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 /* Class variables. */
 

@@ -1,8 +1,8 @@
 #include "include/catch.hpp"
-#include "common.h"
-#include "RTC/RtpPacket.h"
-#include "RTC/RTCP/FeedbackRtpNack.h"
-#include "RTC/RtpStreamSend.h"
+#include "common.hpp"
+#include "RTC/RtpPacket.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RtpStreamSend.hpp"
 #include <vector>
 
 using namespace RTC;

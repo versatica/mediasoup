@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpPacket"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpPacket.h"
-#include "Utils.h"
-#include "Logger.h"
+#include "RTC/RtpPacket.hpp"
+#include "Utils.hpp"
+#include "Logger.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC

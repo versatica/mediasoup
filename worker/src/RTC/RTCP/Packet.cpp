@@ -1,13 +1,13 @@
 #define MS_CLASS "RTC::RTCP::Packet"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/Packet.h"
-#include "RTC/RTCP/ReceiverReport.h"
-#include "RTC/RTCP/SenderReport.h"
-#include "RTC/RTCP/Sdes.h"
-#include "RTC/RTCP/Bye.h"
-#include "RTC/RTCP/Feedback.h"
-#include "Logger.h"
+#include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RTCP/Bye.hpp"
+#include "RTC/RTCP/Feedback.hpp"
+#include "Logger.hpp"
 
 namespace RTC { namespace RTCP
 {

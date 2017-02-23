@@ -1,10 +1,10 @@
 #define MS_CLASS "RTC::RtpStreamSend"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpStreamSend.h"
-#include "Logger.h"
-#include "DepLibUV.h"
-#include "Utils.h" // CurrentTimeNtp()
+#include "RTC/RtpStreamSend.hpp"
+#include "Logger.hpp"
+#include "DepLibUV.hpp"
+#include "Utils.hpp"
 
 #define RTP_SEQ_MOD (1<<16)
 #define MAX_RETRANSMISSION_AGE 200 // Don't retransmit packets older than this (ms).

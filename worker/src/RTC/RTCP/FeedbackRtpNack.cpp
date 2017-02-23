@@ -1,8 +1,8 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpNackPacket"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/FeedbackRtpNack.h"
-#include "Logger.h"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "Logger.hpp"
 #include <cstring>
 
 namespace RTC { namespace RTCP

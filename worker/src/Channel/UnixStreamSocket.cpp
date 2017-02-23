@@ -1,9 +1,9 @@
 #define MS_CLASS "Channel::UnixStreamSocket"
 // #define MS_LOG_DEV
 
-#include "Channel/UnixStreamSocket.h"
-#include "Logger.h"
-#include "MediaSoupError.h"
+#include "Channel/UnixStreamSocket.hpp"
+#include "Logger.hpp"
+#include "MediaSoupError.hpp"
 #include <sstream> // std::ostringstream
 #include <cstring> // std::memmove()
 #include <cmath> // std::ceil()

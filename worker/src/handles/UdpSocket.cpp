@@ -1,11 +1,11 @@
 #define MS_CLASS "UdpSocket"
 // #define MS_LOG_DEV
 
-#include "handles/UdpSocket.h"
-#include "Utils.h"
-#include "DepLibUV.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "handles/UdpSocket.hpp"
+#include "Utils.hpp"
+#include "DepLibUV.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 
 #define MS_READ_BUFFER_SIZE  65536
 

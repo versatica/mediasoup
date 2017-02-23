@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpParameters"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/RtpDictionaries.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <unordered_set>
 
 namespace RTC

@@ -1,10 +1,10 @@
 #define MS_CLASS "RTC::SrtpSession"
 // #define MS_LOG_DEV
 
-#include "RTC/SrtpSession.h"
-#include "DepLibSRTP.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/SrtpSession.hpp"
+#include "DepLibSRTP.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <cstring> // std::memset(), std::memcpy()
 
 #define MS_ENCRYPT_BUFFER_SIZE 65536

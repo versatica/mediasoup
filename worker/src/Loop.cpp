@@ -1,11 +1,11 @@
 #define MS_CLASS "Loop"
 // #define MS_LOG_DEV
 
-#include "Loop.h"
-#include "DepLibUV.h"
-#include "Settings.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "Loop.hpp"
+#include "DepLibUV.hpp"
+#include "Settings.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <string>
 #include <utility> // std::pair()
 #include <cerrno>

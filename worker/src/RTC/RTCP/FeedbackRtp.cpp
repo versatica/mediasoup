@@ -1,12 +1,12 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpPacket"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/FeedbackRtp.h"
-#include "RTC/RTCP/FeedbackRtpNack.h"
-#include "RTC/RTCP/FeedbackRtpTmmb.h"
-#include "RTC/RTCP/FeedbackRtpTllei.h"
-#include "RTC/RTCP/FeedbackRtpEcn.h"
-#include "Logger.h"
+#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/FeedbackRtpTmmb.hpp"
+#include "RTC/RTCP/FeedbackRtpTllei.hpp"
+#include "RTC/RTCP/FeedbackRtpEcn.hpp"
+#include "Logger.hpp"
 
 namespace RTC { namespace RTCP
 {

@@ -1,10 +1,10 @@
 #define MS_CLASS "Settings"
 // #define MS_LOG_DEV
 
-#include "Settings.h"
-#include "Utils.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "Settings.hpp"
+#include "Utils.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <cctype> // isprint()
 #include <cerrno>
 #include <unistd.h> // close()

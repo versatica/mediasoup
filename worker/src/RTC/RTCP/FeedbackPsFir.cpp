@@ -1,8 +1,8 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsFirPacket"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/FeedbackPsFir.h"
-#include "Logger.h"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
+#include "Logger.hpp"
 #include <cstring>
 #include <string.h> // std::memset()
 

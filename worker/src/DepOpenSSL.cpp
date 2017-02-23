@@ -1,9 +1,9 @@
 #define MS_CLASS "DepOpenSSL"
 // #define MS_LOG_DEV
 
-#include "DepOpenSSL.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "DepOpenSSL.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <openssl/err.h>
 #include <openssl/engine.h> // ENGINE_cleanup()
 

@@ -1,9 +1,9 @@
 #define MS_CLASS "DepLibSRTP"
 // #define MS_LOG_DEV
 
-#include "DepLibSRTP.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "DepLibSRTP.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 
 /* Static variables. */
 

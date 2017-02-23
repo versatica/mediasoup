@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RTCP::ReceiverReport"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/ReceiverReport.h"
-#include "Utils.h"
-#include "Logger.h"
+#include "RTC/RTCP/ReceiverReport.hpp"
+#include "Utils.hpp"
+#include "Logger.hpp"
 #include <cstring>
 
 namespace RTC { namespace RTCP

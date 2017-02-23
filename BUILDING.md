@@ -19,7 +19,7 @@ Builds the production ready mediasoup worker binary at `worker/out/Release/`. Th
 
 Builds a more verbose and non optimized mediasoup worker binary at `worker/out/Debug/` with some C flags enabled (such as `-O0`) and some macros defined (such as `DEBUG` and `MS_LOG_FILE_LINE`).
 
-Check the meaning of these macros in the [Logger.h](worker/include/Logger.h) header file.
+Check the meaning of these macros in the [Logger.hpp](worker/include/Logger.hpp) header file.
 
 In order to instruct the **mediasoup** Node.js module to use the `Debug` mediasoup worker binary, an environment variable must be set before running the Node.js application:
 

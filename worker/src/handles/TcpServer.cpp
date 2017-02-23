@@ -1,11 +1,11 @@
 #define MS_CLASS "TcpServer"
 // #define MS_LOG_DEV
 
-#include "handles/TcpServer.h"
-#include "Utils.h"
-#include "DepLibUV.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "handles/TcpServer.hpp"
+#include "Utils.hpp"
+#include "DepLibUV.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 
 /* Static methods for UV callbacks. */
 

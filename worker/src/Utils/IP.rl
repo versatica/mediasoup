@@ -1,8 +1,8 @@
 #define MS_CLASS "Utils::IP"
 // #define MS_LOG_DEV
 
-#include "Utils.h"
-#include "Logger.h"
+#include "Utils.hpp"
+#include "Logger.hpp"
 #include <uv.h>
 
 namespace Utils

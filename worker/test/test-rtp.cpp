@@ -1,7 +1,7 @@
 #include "include/catch.hpp"
-#include "include/helpers.h"
-#include "common.h"
-#include "RTC/RtpPacket.h"
+#include "include/helpers.hpp"
+#include "common.hpp"
+#include "RTC/RtpPacket.hpp"
 
 using namespace RTC;
 

@@ -1,8 +1,8 @@
 #define MS_CLASS "RTC::IceServer"
 // #define MS_LOG_DEV
 
-#include "RTC/IceServer.h"
-#include "Logger.h"
+#include "RTC/IceServer.hpp"
+#include "Logger.hpp"
 
 #define MS_STUN_SERIALIZE_BUFFER_SIZE 65536
 

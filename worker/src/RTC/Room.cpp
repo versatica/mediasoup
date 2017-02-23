@@ -1,10 +1,10 @@
 #define MS_CLASS "RTC::Room"
 // #define MS_LOG_DEV
 
-#include "RTC/Room.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
-#include "Utils.h"
+#include "RTC/Room.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
+#include "Utils.hpp"
 #include <string>
 #include <vector>
 #include <set>

@@ -1,14 +1,14 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsPacket"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/FeedbackPs.h"
-#include "RTC/RTCP/FeedbackPsSli.h"
-#include "RTC/RTCP/FeedbackPsRpsi.h"
-#include "RTC/RTCP/FeedbackPsFir.h"
-#include "RTC/RTCP/FeedbackPsTst.h"
-#include "RTC/RTCP/FeedbackPsVbcm.h"
-#include "RTC/RTCP/FeedbackPsLei.h"
-#include "Logger.h"
+#include "RTC/RTCP/FeedbackPs.hpp"
+#include "RTC/RTCP/FeedbackPsSli.hpp"
+#include "RTC/RTCP/FeedbackPsRpsi.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
+#include "RTC/RTCP/FeedbackPsTst.hpp"
+#include "RTC/RTCP/FeedbackPsVbcm.hpp"
+#include "RTC/RTCP/FeedbackPsLei.hpp"
+#include "Logger.hpp"
 
 namespace RTC { namespace RTCP
 {

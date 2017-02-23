@@ -3,8 +3,8 @@
 #define MS_CLASS "RTC::RtpStream"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpStream.h"
-#include "Logger.h"
+#include "RTC/RtpStream.hpp"
+#include "Logger.hpp"
 
 #define MIN_SEQUENTIAL 0
 #define MAX_DROPOUT 3000

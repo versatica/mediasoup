@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpListener"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpListener.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/RtpListener.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {

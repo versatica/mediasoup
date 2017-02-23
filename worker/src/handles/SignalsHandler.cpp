@@ -1,10 +1,10 @@
 #define MS_CLASS "SignalsHandler"
 // #define MS_LOG_DEV
 
-#include "handles/SignalsHandler.h"
-#include "DepLibUV.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "handles/SignalsHandler.hpp"
+#include "DepLibUV.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 
 /* Static methods for UV callbacks. */
 

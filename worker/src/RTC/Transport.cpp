@@ -1,11 +1,11 @@
 #define MS_CLASS "RTC::Transport"
 // #define MS_LOG_DEV
 
-#include "RTC/Transport.h"
-#include "Settings.h"
-#include "Utils.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/Transport.hpp"
+#include "Settings.hpp"
+#include "Utils.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <cmath> // std::pow()
 
 #define ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY 20000

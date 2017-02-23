@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::StunMessage"
 // #define MS_LOG_DEV
 
-#include "RTC/StunMessage.h"
-#include "Utils.h"
-#include "Logger.h"
+#include "RTC/StunMessage.hpp"
+#include "Utils.hpp"
+#include "Logger.hpp"
 #include <cstdio> // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy()
 

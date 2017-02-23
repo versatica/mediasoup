@@ -1,8 +1,8 @@
 #define MS_CLASS "RTC::Parameters"
 // #define MS_LOG_DEV
 
-#include "RTC/Parameters.h"
-#include "Logger.h"
+#include "RTC/Parameters.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {

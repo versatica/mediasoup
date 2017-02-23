@@ -1,11 +1,11 @@
 #define MS_CLASS "RTC::DtlsTransport"
 // #define MS_LOG_DEV
 
-#include "RTC/DtlsTransport.h"
-#include "Settings.h"
-#include "Utils.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/DtlsTransport.hpp"
+#include "Settings.hpp"
+#include "Utils.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <algorithm> // std::remove
 #include <cstdio> // std::sprintf(), std::fopen()
 #include <cstring> // std::memcpy(), std::strcmp()

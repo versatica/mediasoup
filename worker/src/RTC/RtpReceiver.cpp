@@ -1,11 +1,11 @@
 #define MS_CLASS "RTC::RtpReceiver"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpReceiver.h"
-#include "RTC/Transport.h"
-#include "Utils.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/RtpReceiver.hpp"
+#include "RTC/Transport.hpp"
+#include "Utils.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {

@@ -1,12 +1,12 @@
 #define MS_CLASS "RTC::TcpServer"
 // #define MS_LOG_DEV
 
-#include "RTC/TcpServer.h"
-#include "Settings.h"
-#include "Utils.h"
-#include "DepLibUV.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/TcpServer.hpp"
+#include "Settings.hpp"
+#include "Utils.hpp"
+#include "DepLibUV.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 #include <string>
 
 #define MAX_BIND_ATTEMPTS 20

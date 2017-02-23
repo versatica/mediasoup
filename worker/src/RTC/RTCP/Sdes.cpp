@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RTCP::Sdes"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/Sdes.h"
-#include "Utils.h"
-#include "Logger.h"
+#include "RTC/RTCP/Sdes.hpp"
+#include "Utils.hpp"
+#include "Logger.hpp"
 #include <cstring>
 
 namespace RTC { namespace RTCP

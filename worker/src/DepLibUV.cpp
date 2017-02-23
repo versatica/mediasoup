@@ -1,8 +1,8 @@
 #define MS_CLASS "DepLibUV"
 // #define MS_LOG_DEV
 
-#include "DepLibUV.h"
-#include "Logger.h"
+#include "DepLibUV.hpp"
+#include "Logger.hpp"
 #include <cstdlib> // std::abort()
 
 /* Static variables. */

@@ -1,10 +1,10 @@
 #define MS_CLASS "RTC::Media"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.h"
-#include "Utils.h"
-#include "MediaSoupError.h"
-#include "Logger.h"
+#include "RTC/RtpDictionaries.hpp"
+#include "Utils.hpp"
+#include "MediaSoupError.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {

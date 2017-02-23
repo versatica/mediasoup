@@ -1,8 +1,8 @@
 #define MS_CLASS "RTC::RTCP::FeedbackPsAfbPacket"
 // #define MS_LOG_DEV
 
-#include "RTC/RTCP/FeedbackPsAfb.h"
-#include "Logger.h"
+#include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "Logger.hpp"
 #include <cstring>
 
 namespace RTC { namespace RTCP
