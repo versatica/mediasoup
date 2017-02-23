@@ -409,11 +409,10 @@ namespace RTC
 				// Otherwise assign an available PT.
 				else
 				{
-					uint8_t payloadType;
-
 					while (dynamicPayloadTypeIt != dynamicPayloadTypes.end())
 					{
-						payloadType = *dynamicPayloadTypeIt;
+						uint8_t payloadType = *dynamicPayloadTypeIt;
+
 						++dynamicPayloadTypeIt;
 
 						if (roomPayloadTypes.find(payloadType) == roomPayloadTypes.end())
