@@ -19,11 +19,14 @@
 // CATCH_CONFIG_CPP11_LONG_LONG : is long long supported?
 // CATCH_CONFIG_CPP11_OVERRIDE : is override supported?
 // CATCH_CONFIG_CPP11_UNIQUE_PTR : is unique_ptr supported (otherwise use auto_ptr)
+// CATCH_CONFIG_CPP11_SHUFFLE : is std::shuffle supported?
+// CATCH_CONFIG_CPP11_TYPE_TRAITS : are type_traits and enable_if supported?
 
 // CATCH_CONFIG_CPP11_OR_GREATER : Is C++11 supported?
 
 // CATCH_CONFIG_VARIADIC_MACROS : are variadic macros supported?
 // CATCH_CONFIG_COUNTER : is the __COUNTER__ macro supported?
+// CATCH_CONFIG_WINDOWS_SEH : is Windows SEH supported?
 // ****************
 // Note to maintainers: if new toggles are added please document them
 // in configuration.md, too
@@ -107,6 +110,8 @@
 // Visual C++
 #ifdef _MSC_VER
 
+#define CATCH_INTERNAL_CONFIG_WINDOWS_SEH
+
 #if (_MSC_VER >= 1600)
 #   define CATCH_INTERNAL_CONFIG_CPP11_NULLPTR
 #   define CATCH_INTERNAL_CONFIG_CPP11_UNIQUE_PTR
@@ -116,6 +121,7 @@
 #define CATCH_INTERNAL_CONFIG_CPP11_NOEXCEPT
 #define CATCH_INTERNAL_CONFIG_CPP11_GENERATED_METHODS
 #define CATCH_INTERNAL_CONFIG_CPP11_SHUFFLE
+#define CATCH_INTERNAL_CONFIG_CPP11_TYPE_TRAITS
 #endif
 
 #endif // _MSC_VER
@@ -184,6 +190,9 @@
 # if !defined(CATCH_INTERNAL_CONFIG_CPP11_SHUFFLE)
 #   define CATCH_INTERNAL_CONFIG_CPP11_SHUFFLE
 #  endif
+# if !defined(CATCH_INTERNAL_CONFIG_CPP11_TYPE_TRAITS)
+#  define CATCH_INTERNAL_CONFIG_CPP11_TYPE_TRAITS
+# endif
 
 #endif // __cplusplus >= 201103L
 
@@ -215,11 +224,20 @@
 #if defined(CATCH_INTERNAL_CONFIG_CPP11_UNIQUE_PTR) && !defined(CATCH_CONFIG_CPP11_NO_UNIQUE_PTR) && !defined(CATCH_CONFIG_CPP11_UNIQUE_PTR) && !defined(CATCH_CONFIG_NO_CPP11)
 #   define CATCH_CONFIG_CPP11_UNIQUE_PTR
 #endif
-#if defined(CATCH_INTERNAL_CONFIG_COUNTER) && !defined(CATCH_CONFIG_NO_COUNTER) && !defined(CATCH_CONFIG_COUNTER)
+// Use of __COUNTER__ is suppressed if __JETBRAINS_IDE__ is #defined (meaning we're being parsed by a JetBrains IDE for
+// analytics) because, at time of writing, __COUNTER__ is not properly handled by it.
+// This does not affect compilation
+#if defined(CATCH_INTERNAL_CONFIG_COUNTER) && !defined(CATCH_CONFIG_NO_COUNTER) && !defined(CATCH_CONFIG_COUNTER) && !defined(__JETBRAINS_IDE__)
 #   define CATCH_CONFIG_COUNTER
 #endif
 #if defined(CATCH_INTERNAL_CONFIG_CPP11_SHUFFLE) && !defined(CATCH_CONFIG_CPP11_NO_SHUFFLE) && !defined(CATCH_CONFIG_CPP11_SHUFFLE) && !defined(CATCH_CONFIG_NO_CPP11)
 #   define CATCH_CONFIG_CPP11_SHUFFLE
+#endif
+# if defined(CATCH_INTERNAL_CONFIG_CPP11_TYPE_TRAITS) && !defined(CATCH_CONFIG_CPP11_NO_TYPE_TRAITS) && !defined(CATCH_CONFIG_CPP11_TYPE_TRAITS) && !defined(CATCH_CONFIG_NO_CPP11)
+#  define CATCH_CONFIG_CPP11_TYPE_TRAITS
+# endif
+#if defined(CATCH_INTERNAL_CONFIG_WINDOWS_SEH) && !defined(CATCH_CONFIG_NO_WINDOWS_SEH) && !defined(CATCH_CONFIG_WINDOWS_SEH)
+#   define CATCH_CONFIG_WINDOWS_SEH
 #endif
 
 #if !defined(CATCH_INTERNAL_SUPPRESS_PARENTHESES_WARNINGS)

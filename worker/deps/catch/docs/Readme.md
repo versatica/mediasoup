@@ -12,9 +12,11 @@ Before looking at this material be sure to read the [tutorial](tutorial.md)
 * [Configuration](configuration.md)
 * [String Conversions](tostring.md)
 * [Why are my tests slow to compile?](slow-compiles.md)
+* [Known limitations](limitations.md)
 
 Other
 
 * [Why Catch?](why-catch.md)
+* [Open Source Projects using Catch](opensource-users.md)
 * [Contributing](contributing.md)
-* [Release Nodes](release-notes.md)
+* [Release Notes](release-notes.md)

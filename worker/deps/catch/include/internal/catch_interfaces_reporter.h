@@ -21,7 +21,6 @@
 #include <string>
 #include <ostream>
 #include <map>
-#include <assert.h>
 
 namespace Catch
 {
@@ -248,7 +247,7 @@ namespace Catch
         virtual void testRunEnded( TestRunStats const& testRunStats ) = 0;
 
         virtual void skipTest( TestCaseInfo const& testInfo ) = 0;
-        
+
         virtual MultipleReporters* tryAsMulti() { return CATCH_NULL; }
     };
 

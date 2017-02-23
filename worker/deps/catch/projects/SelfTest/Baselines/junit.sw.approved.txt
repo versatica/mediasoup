@@ -1,7 +1,9 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<testsuites>
-  <testsuite name="<exe-name>" errors="13" failures="68" tests="912" hostname="tbd" time="{duration}" timestamp="tbd">
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuitesspanner>
+  <testsuite name="<exe-name>" errors="13" failures="68" tests="935" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
     <testcase classname="global" name="# A test name that starts with a #" time="{duration}"/>
+    <testcase classname="global" name="#542" time="{duration}"/>
+    <testcase classname="global" name="#809" time="{duration}"/>
     <testcase classname="global" name="'Not' checks that should fail" time="{duration}">
       <failure message="false != false" type="CHECK">
 ConditionTests.cpp:<line number>
@@ -80,6 +82,9 @@ ExceptionTests.cpp:<line number>
     <testcase classname="Assertions then sections" name="A section" time="{duration}"/>
     <testcase classname="Assertions then sections" name="A section/Another section" time="{duration}"/>
     <testcase classname="Assertions then sections" name="A section/Another other section" time="{duration}"/>
+    <testcase classname="Character pretty printing" name="Specifically escaped" time="{duration}"/>
+    <testcase classname="Character pretty printing" name="General chars" time="{duration}"/>
+    <testcase classname="Character pretty printing" name="Low ASCII" time="{duration}"/>
     <testcase classname="global" name="Comparing function pointers" time="{duration}"/>
     <testcase classname="global" name="Comparing member function pointers" time="{duration}"/>
     <testcase classname="global" name="Comparisons between ints where one side is computed" time="{duration}"/>
@@ -97,7 +102,7 @@ ExceptionTests.cpp:<line number>
       </error>
     </testcase>
     <testcase classname="global" name="Custom exceptions can be translated when testing for throwing as something else" time="{duration}">
-      <error message="throwCustom()" type="REQUIRE_THROWS_AS">
+      <error message="throwCustom(), std::exception" type="REQUIRE_THROWS_AS">
 custom exception - not std
 ExceptionTests.cpp:<line number>
       </error>
@@ -167,11 +172,11 @@ MiscTests.cpp:<line number>
     <testcase classname="Exception messages can be tested for" name="different case" time="{duration}"/>
     <testcase classname="Exception messages can be tested for" name="wildcarded" time="{duration}"/>
     <testcase classname="global" name="Expected exceptions that don't throw or unexpected exceptions fail the test" time="{duration}">
-      <error message="thisThrows()" type="CHECK_THROWS_AS">
+      <error message="thisThrows(), std::string" type="CHECK_THROWS_AS">
 expected exception
 ExceptionTests.cpp:<line number>
       </error>
-      <failure message="thisDoesntThrow()" type="CHECK_THROWS_AS">
+      <failure message="thisDoesntThrow(), std::domain_error" type="CHECK_THROWS_AS">
 ExceptionTests.cpp:<line number>
       </failure>
       <error message="thisThrows()" type="CHECK_NOTHROW">
@@ -242,7 +247,9 @@ ConditionTests.cpp:<line number>
     <testcase classname="Long strings can be wrapped" name="With newlines/Trailing newline" time="{duration}"/>
     <testcase classname="Long strings can be wrapped" name="With newlines/Wrapped once" time="{duration}"/>
     <testcase classname="Long strings can be wrapped" name="With newlines/Wrapped twice" time="{duration}"/>
-    <testcase classname="Long strings can be wrapped" name="With tabs" time="{duration}"/>
+    <testcase classname="Long strings can be wrapped" name="With wrap-before/ after characters/No wrapping" time="{duration}"/>
+    <testcase classname="Long strings can be wrapped" name="With wrap-before/ after characters/Wrap before" time="{duration}"/>
+    <testcase classname="Long strings can be wrapped" name="With wrap-before/ after characters/Wrap after" time="{duration}"/>
     <testcase classname="global" name="Long text is truncted" time="{duration}"/>
     <testcase classname="global" name="ManuallyRegistered" time="{duration}"/>
     <testcase classname="global" name="Matchers can be (AllOf) composed with the &amp;&amp; operator" time="{duration}"/>
@@ -500,7 +507,7 @@ unexpected exception
 ExceptionTests.cpp:<line number>
       </error>
     </testcase>
-    <testcase classname="global" name="When unchecked exceptions are thrown during a CHECK the test should abort and fail" time="{duration}">
+    <testcase classname="global" name="When unchecked exceptions are thrown during a CHECK the test should continue" time="{duration}">
       <error message="thisThrows() == 0" type="CHECK">
 expected exception
 ExceptionTests.cpp:<line number>
@@ -652,8 +659,6 @@ TrickyTests.cpp:<line number>
     <testcase classname="global" name="toString( has_maker_and_toString )" time="{duration}"/>
     <testcase classname="global" name="toString( has_toString )" time="{duration}"/>
     <testcase classname="global" name="toString( vectors&lt;has_maker )" time="{duration}"/>
-    <testcase classname="global" name="toString( vectors&lt;has_maker_and_toString )" time="{duration}"/>
-    <testcase classname="global" name="toString( vectors&lt;has_toString )" time="{duration}"/>
     <testcase classname="global" name="toString(enum w/operator&lt;&lt;)" time="{duration}"/>
     <testcase classname="global" name="toString(enum)" time="{duration}"/>
     <testcase classname="global" name="vector&lt;int> -> toString" time="{duration}"/>

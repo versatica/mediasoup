@@ -32,6 +32,10 @@ namespace Catch {
             return "Reports test results as an XML document";
         }
 
+        virtual std::string getStylesheetRef() const {
+            return std::string();
+        }
+
     public: // StreamingReporterBase
 
         virtual void noMatchingTestCases( std::string const& s ) CATCH_OVERRIDE {
@@ -40,6 +44,9 @@ namespace Catch {
 
         virtual void testRunStarting( TestRunInfo const& testInfo ) CATCH_OVERRIDE {
             StreamingReporterBase::testRunStarting( testInfo );
+            std::string stylesheetRef = getStylesheetRef();
+            if( !stylesheetRef.empty() )
+                m_xml.writeStylesheetRef( stylesheetRef );
             m_xml.startElement( "Catch" );
             if( !m_config->name().empty() )
                 m_xml.writeAttribute( "name", m_config->name() );
@@ -53,10 +60,14 @@ namespace Catch {
 
         virtual void testCaseStarting( TestCaseInfo const& testInfo ) CATCH_OVERRIDE {
             StreamingReporterBase::testCaseStarting(testInfo);
-            m_xml.startElement( "TestCase" ).writeAttribute( "name", testInfo.name );
+            m_xml.startElement( "TestCase" )
+                .writeAttribute( "name", trim( testInfo.name ) )
+                .writeAttribute( "description", testInfo.description )
+                .writeAttribute( "tags", testInfo.tagsAsString );
 
             if ( m_config->showDurations() == ShowDurations::Always )
                 m_testCaseTimer.start();
+            m_xml.ensureTagClosed();
         }
 
         virtual void sectionStarting( SectionInfo const& sectionInfo ) CATCH_OVERRIDE {
@@ -65,6 +76,7 @@ namespace Catch {
                 m_xml.startElement( "Section" )
                     .writeAttribute( "name", trim( sectionInfo.name ) )
                     .writeAttribute( "description", sectionInfo.description );
+                m_xml.ensureTagClosed();
             }
         }
 
@@ -96,7 +108,7 @@ namespace Catch {
             if( assertionResult.hasExpression() ) {
                 m_xml.startElement( "Expression" )
                     .writeAttribute( "success", assertionResult.succeeded() )
-					.writeAttribute( "type", assertionResult.getTestMacroName() )
+                    .writeAttribute( "type", assertionResult.getTestMacroName() )
                     .writeAttribute( "filename", assertionResult.getSourceInfo().file )
                     .writeAttribute( "line", assertionResult.getSourceInfo().line );
 
@@ -163,6 +175,11 @@ namespace Catch {
 
             if ( m_config->showDurations() == ShowDurations::Always )
                 e.writeAttribute( "durationInSeconds", m_testCaseTimer.getElapsedSeconds() );
+
+            if( !testCaseStats.stdOut.empty() )
+                m_xml.scopedElement( "StdOut" ).writeText( trim( testCaseStats.stdOut ), false );
+            if( !testCaseStats.stdErr.empty() )
+                m_xml.scopedElement( "StdErr" ).writeText( trim( testCaseStats.stdErr ), false );
 
             m_xml.endElement();
         }

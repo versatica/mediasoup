@@ -11,8 +11,6 @@
 
 #include "catch_debugger.h"
 
-#include <iostream>
-
 #ifdef CATCH_PLATFORM_MAC
 
     #include <assert.h>
@@ -61,6 +59,33 @@
         }
     } // namespace Catch
 
+#elif defined(CATCH_PLATFORM_LINUX)
+    #include <fstream>
+    #include <string>
+
+    namespace Catch{
+        // The standard POSIX way of detecting a debugger is to attempt to
+        // ptrace() the process, but this needs to be done from a child and not
+        // this process itself to still allow attaching to this process later
+        // if wanted, so is rather heavy. Under Linux we have the PID of the
+        // "debugger" (which doesn't need to be gdb, of course, it could also
+        // be strace, for example) in /proc/$PID/status, so just get it from
+        // there instead.
+        bool isDebuggerActive(){
+            std::ifstream in("/proc/self/status");
+            for( std::string line; std::getline(in, line); ) {
+                static const int PREFIX_LEN = 11;
+                if( line.compare(0, PREFIX_LEN, "TracerPid:\t") == 0 ) {
+                    // We're traced if the PID is not 0 and no other PID starts
+                    // with 0 digit, so it's enough to check for just a single
+                    // character.
+                    return line.length() > PREFIX_LEN && line[PREFIX_LEN] != '0';
+                }
+            }
+
+            return false;
+        }
+    } // namespace Catch
 #elif defined(_MSC_VER)
     extern "C" __declspec(dllimport) int __stdcall IsDebuggerPresent();
     namespace Catch {
@@ -82,7 +107,9 @@
 #endif // Platform
 
 #ifdef CATCH_PLATFORM_WINDOWS
-    extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA( const char* );
+
+#include "catch_windows_h_proxy.h"
+
     namespace Catch {
         void writeToDebugConsole( std::string const& text ) {
             ::OutputDebugStringA( text.c_str() );

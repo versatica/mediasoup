@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from  __future__ import  print_function
 import os
 from scriptCommon import catchPath
@@ -22,6 +24,7 @@ def fixFile( path ):
     changed = 0
     for line in f:
         trimmed = line.rstrip() + "\n"
+        trimmed = trimmed.replace('\t', '    ')
         if trimmed != line:
             changed = changed +1
         lines.append( trimmed )

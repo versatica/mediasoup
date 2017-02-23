@@ -1,78 +1,95 @@
+#!/usr/bin/env python
+
 from  __future__ import print_function
 
 import os
 import sys
 import subprocess
 import re
+import difflib
 
 import scriptCommon
 from scriptCommon import catchPath
 
 rootPath = os.path.join(catchPath, 'projects/SelfTest/Baselines')
 
-filenameParser = re.compile(r'(.*)/(.*\..pp:)(.*)')
-filelineParser = re.compile(r'(.*\..pp:)([0-9]*)(.*)')
-pathParser = re.compile(r'(.*?)/(.*\..pp)(.*)')
-lineNumberParser = re.compile(r'(.*)line="[0-9]*"(.*)')
-hexParser = re.compile(r'(.*)\b(0[xX][0-9a-fA-F]+)\b(.*)')
-durationsParser = re.compile(r'(.*)time="[0-9]*\.[0-9]*"(.*)')
-versionParser = re.compile(r'(.*?)Catch v[0-9]*\.[0-9]*\.[0-9]*(.*)')
-devVersionParser = re.compile(r'(.*?)Catch v[0-9]*\.[0-9]*\.[0-9]*-develop\.[0-9]*(.*)')
-nullParser = re.compile(r'(.*?)\b(__null|nullptr)\b(.*)')
-exeNameParser = re.compile(r'(.*?)\b(CatchSelfTest|SelfTest)\b(.*)')
+
+filelocParser = re.compile(r'''
+    .*/
+    (.+\.[ch]pp)  # filename
+    (?::|\()      # : is starting separator between filename and line number on Linux, ( on Windows
+    ([0-9]*)      # line number
+    \)?           # Windows also has an ending separator, )
+''', re.VERBOSE)
+lineNumberParser = re.compile(r' line="[0-9]*"')
+hexParser = re.compile(r'\b(0[xX][0-9a-fA-F]+)\b')
+durationsParser = re.compile(r' time="[0-9]*\.[0-9]*"')
+timestampsParser = re.compile(r' timestamp="\d{4}-\d{2}-\d{2}T\d{2}\:\d{2}\:\d{2}Z"')
+versionParser = re.compile(r'Catch v[0-9]+\.[0-9]+\.[0-9]+(-develop\.[0-9]+)?')
+nullParser = re.compile(r'\b(__null|nullptr)\b')
+exeNameParser = re.compile(r'''
+    \b
+    (CatchSelfTest|SelfTest)  # Expected executable name
+    (?:.exe)?                 # Executable name contains .exe on Windows.
+    \b
+''', re.VERBOSE)
+# This is a hack until something more reasonable is figured out
+specialCaseParser = re.compile(r'file\((\d+)\)')
 
 if len(sys.argv) == 2:
     cmdPath = sys.argv[1]
 else:
-    cmdPath = scriptCommon.getBuildExecutable()
-
-if not cmdPath.startswith("/"):
-    cmdPath = os.path.join(catchPath, cmdPath)
+    cmdPath = os.path.join(catchPath, scriptCommon.getBuildExecutable())
 
 overallResult = 0
 
+def diffFiles(fileA, fileB):
+    with open(fileA, 'r') as file:
+        aLines = file.readlines()
+    with open(fileB, 'r') as file:
+        bLines = file.readlines()
+
+    shortenedFilenameA = fileA.rsplit(os.sep, 1)[-1]
+    shortenedFilenameB = fileB.rsplit(os.sep, 1)[-1]
+
+    diff = difflib.unified_diff(aLines, bLines, fromfile=shortenedFilenameA, tofile=shortenedFilenameB, n=0)
+    return [line for line in diff if line[0] in ('+', '-')]
+
+
 def filterLine(line):
-    m = filenameParser.match(line)
+    if catchPath in line:
+        # make paths relative to Catch root
+        line = line.replace(catchPath + os.sep, '')
+        # go from \ in windows paths to /
+        line = line.replace('\\', '/')
+
+
+    # strip source line numbers
+    m = filelocParser.match(line)
     if m:
-        line = m.group(2) + m.group(3)
-        m2 = filelineParser.match(line)
-        if m2:
-            line = m2.group(1) + "<line number>" + m2.group(3)
+        # note that this also strips directories, leaving only the filename
+        filename, lnum = m.groups()
+        lnum = ":<line number>" if lnum else ""
+        line = filename + lnum + line[m.end():]
     else:
-        m2 = lineNumberParser.match(line)
-        if m2:
-            line = m2.group(1) + m2.group(2)
-    m = pathParser.match(line)
-    if m:
-        path = "/" + m.group(2)
-        if path.startswith(catchPath):
-            path = path[1 + len(catchPath):]
-        line = m.group(1) + path + m.group(3)
-    m = devVersionParser.match(line)
-    if m:
-        line = m.group(1) + "<version>" + m.group(2)
-    else:
-        m = versionParser.match(line)
-        if m:
-            line = m.group(1) + "<version>" + m.group(2)
+        line = lineNumberParser.sub(" ", line)
 
-    m = nullParser.match(line)
-    if m:
-        line = m.group(1) + "0" + m.group(3)
+    # strip Catch version number
+    line = versionParser.sub("<version>", line)
 
-    m = exeNameParser.match(line)
-    if m:
-        line = m.group(1) + "<exe-name>" + m.group(3)
+    # replace *null* with 0
+    line = nullParser.sub("0", line)
 
-    while True:
-        m = hexParser.match(line)
-        if m:
-            line = m.group(1) + "0x<hex digits>" + m.group(3)
-        else:
-            break
-    m = durationsParser.match(line)
-    if m:
-        line = m.group(1) + 'time="{duration}"' + m.group(2)
+    # strip executable name
+    line = exeNameParser.sub("<exe-name>", line)
+
+    # strip hexadecimal numbers (presumably pointer values)
+    line = hexParser.sub("0x<hex digits>", line)
+
+    # strip durations and timestamps
+    line = durationsParser.sub(' time="{duration}"', line)
+    line = timestampsParser.sub(' timestamp="{iso8601-timestamp}"', line)
+    line = specialCaseParser.sub('file:\g<1>', line)
     return line
 
 
@@ -100,14 +117,15 @@ def approve(baseName, args):
     print()
     print(baseName + ":")
     if os.path.exists(baselinesPath):
-        diffResult = subprocess.call(["diff", baselinesPath, filteredResultsPath])
-        if diffResult == 0:
+        diffResult = diffFiles(baselinesPath, filteredResultsPath)
+        if diffResult:
+            print(''.join(diffResult))
+            print("  \n****************************\n  \033[91mResults differed")
+            if len(diffResult) > overallResult:
+                overallResult = len(diffResult)
+        else:
             os.remove(filteredResultsPath)
             print("  \033[92mResults matched")
-        else:
-            print("  \n****************************\n  \033[91mResults differed")
-            if diffResult > overallResult:
-                overallResult = diffResult
         print("\033[0m")
     else:
         print("  first approval")
@@ -119,15 +137,15 @@ print("Running approvals against executable:")
 print("  " + cmdPath)
 
 # Standard console reporter
-approve("console.std", ["~[c++11]", "--order", "lex"])
+approve("console.std", ["~[c++11]~[!nonportable]", "--order", "lex"])
 # console reporter, include passes, warn about No Assertions
-approve("console.sw", ["~[c++11]", "-s", "-w", "NoAssertions", "--order", "lex"])
+approve("console.sw", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "--order", "lex"])
 # console reporter, include passes, warn about No Assertions, limit failures to first 4
-approve("console.swa4", ["~[c++11]", "-s", "-w", "NoAssertions", "-x", "4", "--order", "lex"])
+approve("console.swa4", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "-x", "4", "--order", "lex"])
 # junit reporter, include passes, warn about No Assertions
-approve("junit.sw", ["~[c++11]", "-s", "-w", "NoAssertions", "-r", "junit", "--order", "lex"])
+approve("junit.sw", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "-r", "junit", "--order", "lex"])
 # xml reporter, include passes, warn about No Assertions
-approve("xml.sw", ["~[c++11]", "-s", "-w", "NoAssertions", "-r", "xml", "--order", "lex"])
+approve("xml.sw", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "-r", "xml", "--order", "lex"])
 
 if overallResult != 0:
     print("If these differenecs are expected run approve.py to approve new baselines")

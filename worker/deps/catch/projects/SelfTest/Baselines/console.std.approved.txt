@@ -131,7 +131,7 @@ ExceptionTests.cpp:<line number>
 ...............................................................................
 
 ExceptionTests.cpp:<line number>: FAILED:
-  REQUIRE_THROWS_AS( throwCustom() )
+  REQUIRE_THROWS_AS( throwCustom(), std::exception )
 due to unexpected exception with message:
   custom exception - not std
 
@@ -245,12 +245,12 @@ ExceptionTests.cpp:<line number>
 ...............................................................................
 
 ExceptionTests.cpp:<line number>: FAILED:
-  CHECK_THROWS_AS( thisThrows() )
+  CHECK_THROWS_AS( thisThrows(), std::string )
 due to unexpected exception with message:
   expected exception
 
 ExceptionTests.cpp:<line number>: FAILED:
-  CHECK_THROWS_AS( thisDoesntThrow() )
+  CHECK_THROWS_AS( thisDoesntThrow(), std::domain_error )
 because no exception was thrown where one was expected:
 
 ExceptionTests.cpp:<line number>: FAILED:
@@ -584,11 +584,11 @@ MiscTests.cpp:<line number>: FAILED:
   CHECK( s1 == s2 )
 with expansion:
   "if ($b == 10) {
-  		$a= 20;
+  		$a	= 20;
   }"
   ==
   "if ($b == 10) {
-  $a = 20;
+  	$a = 20;
   }
   "
 
@@ -613,8 +613,7 @@ due to unexpected exception with message:
   unexpected exception
 
 -------------------------------------------------------------------------------
-When unchecked exceptions are thrown during a CHECK the test should abort and
-fail
+When unchecked exceptions are thrown during a CHECK the test should continue
 -------------------------------------------------------------------------------
 ExceptionTests.cpp:<line number>
 ...............................................................................
@@ -712,7 +711,7 @@ MiscTests.cpp:<line number>: FAILED:
 with expansion:
   false
 
--------------------------------------------------------------------------------
+spanner-------------------------------------------------------------------------------
 just failure
 -------------------------------------------------------------------------------
 MessageTests.cpp:<line number>
@@ -830,6 +829,6 @@ with expansion:
   "first" == "second"
 
 ===============================================================================
-test cases: 159 | 115 passed | 42 failed |  2 failed as expected
-assertions: 909 | 813 passed | 78 failed | 18 failed as expected
+test cases: 161 | 117 passed | 42 failed |  2 failed as expected
+assertions: 932 | 836 passed | 78 failed | 18 failed as expected
 

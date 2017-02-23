@@ -8,7 +8,7 @@
 #ifndef TWOBLUECUBES_CATCH_INTERFACES_CONFIG_H_INCLUDED
 #define TWOBLUECUBES_CATCH_INTERFACES_CONFIG_H_INCLUDED
 
-#include <iostream>
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -41,7 +41,7 @@ namespace Catch {
         Auto,
         Yes,
         No
-    }; };    
+    }; };
 
     class TestSpec;
 
@@ -62,6 +62,8 @@ namespace Catch {
         virtual RunTests::InWhatOrder runOrder() const = 0;
         virtual unsigned int rngSeed() const = 0;
         virtual UseColour::YesOrNo useColour() const = 0;
+        virtual std::vector<std::string> const& getSectionsToRun() const = 0;
+
     };
 }
 
