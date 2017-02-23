@@ -42,8 +42,10 @@ namespace RTC
 
 				MS_THROW_ERROR_STD("JSON parsing error in supported RTP capabilities: %s", json_parse_error.c_str());
 			}
-
-			delete jsonReader;
+			else
+			{
+				delete jsonReader;
+			}
 
 			try
 			{
