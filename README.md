@@ -54,9 +54,10 @@ Prior to that, ensure your host satisfies the following **requirements**:
 * Can handle RTP packets in JavaScript land.
 
 
-## Author
+## Authors
 
-Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
+* Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
+* José Luis Millán ([@jmillan](https://github.com/jmillan/) at Github)
 
 
 ## License
