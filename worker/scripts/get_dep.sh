@@ -107,9 +107,9 @@ function get_catch()
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 
-	echo ">>> [INFO] copying include file to test/ directory ..."
+	echo ">>> [INFO] copying include file to test/include/ directory ..."
 	cd ${WORKER_PWD}
-	cp ${DEST}/single_include/catch.hpp test/
+	cp ${DEST}/single_include/catch.hpp test/include/
 }
 
 case "${DEP}" in
