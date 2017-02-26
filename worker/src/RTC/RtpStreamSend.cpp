@@ -115,8 +115,7 @@ namespace RTC
 			// Otherwise just return.
 			else
 			{
-				// TODO: REMOVE
-				// MS_WARN_TAG(rtp, "requested packet range not in the buffer");
+				MS_DEBUG_DEV("requested packet range not in the buffer");
 
 				return;
 			}
@@ -135,14 +134,10 @@ namespace RTC
 		uint8_t bitmask_counter = 0;
 		bool too_old_packet_found = false;
 
-		// TODO: REMOVE
-		// MS_WARN_TAG(rtcp, "loop [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(bitmask));
+		MS_DEBUG_DEV("loop [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(bitmask));
 
 		while (requested || bitmask != 0)
 		{
-			// TODO: REMOVE
-			// MS_WARN_TAG(rtcp, "while [bit:%" PRIu8 ", requested:%d]", bitmask_counter, requested);
-
 			bool sent = false;
 
 			if (requested)
@@ -170,8 +165,7 @@ namespace RTC
 						}
 						else if (!too_old_packet_found)
 						{
-							// TODO: REMOVE
-							// MS_WARN_TAG(rtp, "ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]", MAX_RETRANSMISSION_AGE, diff);
+							MS_DEBUG_DEV("ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]", MAX_RETRANSMISSION_AGE, diff);
 
 							too_old_packet_found = true;
 						}
@@ -204,11 +198,6 @@ namespace RTC
 			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN ", sent:" UINT16_TO_BINARY_PATTERN "]",
 				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
 		}
-		// TODO: REMOVE
-		// else if (first_packet_sent && orig_bitmask && orig_bitmask == sent_bitmask)
-		// {
-		// 	MS_WARN_TAG(rtcp, "first packet sent and also all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(orig_bitmask));
-		// }
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;

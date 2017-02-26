@@ -298,7 +298,7 @@ namespace RTC
 				RTC::RTCP::ReceiverReport* report = this->rtpStream->GetRtcpReceiverReport();
 
 				// TODO: This assumes a single stream for now.
-				report->SetSsrc(this->rtpParameters->encodings[0].ssrc);
+				report->SetSsrc(this->rtpParameters->GetEncodingMediaSsrc(0));
 				packet->AddReceiverReport(report);
 
 				this->lastRtcpSentTime = now;

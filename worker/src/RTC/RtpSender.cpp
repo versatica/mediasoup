@@ -292,7 +292,7 @@ namespace RTC
 				if (report)
 				{
 					// TODO: This assumes a single stream for now.
-					uint32_t ssrc = this->rtpParameters->encodings[0].ssrc;
+					uint32_t ssrc = this->rtpParameters->GetEncodingMediaSsrc(0);
 					std::string cname = this->rtpParameters->rtcp.cname;
 
 					report->SetSsrc(ssrc);
