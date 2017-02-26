@@ -121,7 +121,7 @@ namespace RTC { namespace RTCP
 				return nullptr;
 		}
 
-		CommonHeader* commonHeader = (CommonHeader*)data;
+		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 		FeedbackPsPacket* packet = nullptr;
 
 		switch (FeedbackPs::MessageType(commonHeader->count))

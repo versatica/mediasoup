@@ -19,7 +19,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		CommonHeader* commonHeader = (CommonHeader*)data;
+		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 		std::unique_ptr<FeedbackPsPliPacket> packet(new FeedbackPsPliPacket(commonHeader));
 
 		return packet.release();

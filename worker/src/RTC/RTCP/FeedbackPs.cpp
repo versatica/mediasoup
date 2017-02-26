@@ -26,7 +26,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		CommonHeader* commonHeader = (CommonHeader*)data;
+		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 		std::unique_ptr<FeedbackPsItemPacket<Item>> packet(new FeedbackPsItemPacket<Item>(commonHeader));
 
 		size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
