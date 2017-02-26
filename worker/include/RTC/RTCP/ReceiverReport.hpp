@@ -36,10 +36,8 @@ namespace RTC { namespace RTCP
 		~ReceiverReport();
 
 		void Dump();
-		void Serialize();
 		size_t Serialize(uint8_t* buffer);
 		size_t GetSize();
-		const uint8_t* GetRaw();
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);
 		uint8_t GetFractionLost();
@@ -57,7 +55,7 @@ namespace RTC { namespace RTCP
 
 	private:
 		Header* header = nullptr;
-		uint8_t* raw = nullptr;
+		uint8_t raw[sizeof(Header)] = {0};
 	};
 
 	class ReceiverReportPacket
@@ -98,12 +96,6 @@ namespace RTC { namespace RTCP
 	size_t ReceiverReport::GetSize()
 	{
 		return sizeof(Header);
-	}
-
-	inline
-	const uint8_t* ReceiverReport::GetRaw()
-	{
-		return this->raw;
 	}
 
 	inline
@@ -213,7 +205,6 @@ namespace RTC { namespace RTCP
 	inline
 	ReceiverReport::ReceiverReport()
 	{
-		this->raw = new uint8_t[sizeof(Header)];
 		this->header = reinterpret_cast<Header*>(this->raw);
 	}
 
@@ -230,8 +221,6 @@ namespace RTC { namespace RTCP
 	inline
 	ReceiverReport::~ReceiverReport()
 	{
-		if (this->raw)
-			delete this->raw;
 	}
 
 	inline

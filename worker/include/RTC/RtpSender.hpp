@@ -48,7 +48,6 @@ namespace RTC
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
 		void SendRtpPacket(RTC::RtpPacket* packet);
-		void ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk);
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		uint32_t GetTransmissionRate(uint64_t now);
@@ -74,7 +73,6 @@ namespace RTC
 		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
-		std::unique_ptr<RTC::RTCP::SdesChunk> sdesChunk;
 		// RTP counters.
 		RTC::RtpDataCounter transmitted;
 		// Timestamp when last RTCP was sent.
@@ -111,13 +109,6 @@ namespace RTC
 	{
 		return this->rtpParameters;
 	}
-
-	inline
-	void RtpSender::ReceiveRtcpSdesChunk(RTC::RTCP::SdesChunk* chunk)
-	{
-		this->sdesChunk.reset(new RTC::RTCP::SdesChunk(chunk));
-		this->sdesChunk->Serialize();
-	};
 
 	inline
 	uint32_t RtpSender::GetTransmissionRate(uint64_t now)

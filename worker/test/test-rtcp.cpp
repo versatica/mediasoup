@@ -219,20 +219,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(report2.GetRtpTs() == rtpTs);
 		REQUIRE(report2.GetPacketCount() == packetCount);
 		REQUIRE(report2.GetOctetCount() == octetCount);
-
-		// Locally store the content of the report.
-		report2.Serialize();
-
-		// Create report out of buffer and check content.
-		// SenderReport(Header* header);
-		SenderReport report3((SenderReport::Header*)report2.GetRaw());
-
-		REQUIRE(report3.GetSsrc() == ssrc);
-		REQUIRE(report3.GetNtpSec() == ntpSec);
-		REQUIRE(report3.GetNtpFrac() == ntpFrac);
-		REQUIRE(report3.GetRtpTs() == rtpTs);
-		REQUIRE(report3.GetPacketCount() == packetCount);
-		REQUIRE(report3.GetOctetCount() == octetCount);
 	}
 
 	SECTION("parse ReceiverReport")
@@ -302,21 +288,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		// Create report out of the existing one and check content.
 		// ReceiverReport(ReceiverReport* report);
 		ReceiverReport report2(&report1);
-
-		REQUIRE(report2.GetSsrc() == ssrc);
-		REQUIRE(report2.GetFractionLost() == fractionLost);
-		REQUIRE(report2.GetTotalLost() == totalLost);
-		REQUIRE(report2.GetLastSeq() == lastSeq);
-		REQUIRE(report2.GetJitter() == jitter);
-		REQUIRE(report2.GetLastSenderReport() == lastSenderReport);
-		REQUIRE(report2.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
-
-		// Locally store the content of the report.
-		report2.Serialize();
-
-		// Create report out of buffer and check content.
-		// ReceiverReport(Header* header);
-		ReceiverReport report3((ReceiverReport::Header*)report2.GetRaw());
 
 		REQUIRE(report2.GetSsrc() == ssrc);
 		REQUIRE(report2.GetFractionLost() == fractionLost);

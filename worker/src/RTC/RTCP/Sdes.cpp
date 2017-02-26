@@ -60,10 +60,10 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		// Allocate memory.
-		this->raw = new uint8_t[2 + len];
+		this->raw.reset(new uint8_t[2 + len]);
 
 		// Update the header pointer.
-		this->header = reinterpret_cast<Header*>(this->raw);
+		this->header = reinterpret_cast<Header*>(this->raw.get());
 
 		this->header->type = type;
 		this->header->length = len;
@@ -81,17 +81,6 @@ namespace RTC { namespace RTCP
 		MS_DEBUG_DEV("  length : %" PRIu8, this->header->length);
 		MS_DEBUG_DEV("  value  : %.*s", this->header->length, this->header->value);
 		MS_DEBUG_DEV("</SdesItem>");
-	}
-
-	void SdesItem::Serialize()
-	{
-		MS_TRACE();
-
-		if (this->raw)
-			delete this->raw;
-
-		this->raw = new uint8_t[2 + this->header->length];
-		this->Serialize(this->raw);
 	}
 
 	size_t SdesItem::Serialize(uint8_t* buffer)
@@ -146,16 +135,6 @@ namespace RTC { namespace RTCP
 	}
 
 	/* Instance methods. */
-
-	void SdesChunk::Serialize()
-	{
-		MS_TRACE();
-
-		for (auto item : this->items)
-		{
-			item->Serialize();
-		}
-	}
 
 	size_t SdesChunk::Serialize(uint8_t* buffer)
 	{

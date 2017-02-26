@@ -887,11 +887,7 @@ namespace RTC
 						// Get the receiver associated to the SSRC indicated in the chunk.
 						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
 
-						if (rtpReceiver)
-						{
-							this->listener->onPeerRtcpSdesChunk(this, rtpReceiver, chunk);
-						}
-						else
+						if (!rtpReceiver)
 						{
 							MS_WARN_TAG(rtcp, "no RtpReceiver found while procesing a SDES chunk [ssrc:%" PRIu32 "]",
 								chunk->GetSsrc());

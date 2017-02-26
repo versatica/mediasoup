@@ -45,7 +45,6 @@ namespace RTC { namespace RTCP
 		~SdesItem();
 
 		void Dump();
-		void Serialize();
 		size_t Serialize(uint8_t* buffer);
 		size_t GetSize();
 
@@ -56,7 +55,7 @@ namespace RTC { namespace RTCP
 	private:
 		// Passed by argument.
 		Header* header = nullptr;
-		uint8_t* raw = nullptr;
+		std::unique_ptr<uint8_t> raw;
 
 	private:
 		static std::map<SdesItem::Type, std::string> type2String;
@@ -133,8 +132,6 @@ namespace RTC { namespace RTCP
 	inline
 	SdesItem::~SdesItem()
 	{
-		if (this->raw)
-			delete this->raw;
 	}
 
 	inline

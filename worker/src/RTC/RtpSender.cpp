@@ -292,11 +292,18 @@ namespace RTC
 				if (report)
 				{
 					// TODO: This assumes a single stream for now.
-					report->SetSsrc(this->rtpParameters->encodings[0].ssrc);
+					uint32_t ssrc = this->rtpParameters->encodings[0].ssrc;
+					std::string cname = this->rtpParameters->rtcp.cname;
+
+					report->SetSsrc(ssrc);
 					packet->AddSenderReport(report);
 
-					if (this->sdesChunk)
-						packet->AddSdesChunk(this->sdesChunk.release());
+					// Build sdes chunk for this sender.
+					RTC::RTCP::SdesChunk *sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
+					RTC::RTCP::SdesItem *sdesItem = new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+
+					sdesChunk->AddItem(sdesItem);
+					packet->AddSdesChunk(sdesChunk);
 
 					this->lastRtcpSentTime = now;
 				}

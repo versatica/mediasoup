@@ -34,10 +34,8 @@ namespace RTC { namespace RTCP
 		~SenderReport();
 
 		void Dump();
-		void Serialize();
 		size_t Serialize(uint8_t* buffer);
 		size_t GetSize();
-		const uint8_t* GetRaw();
 		uint32_t GetSsrc();
 		void SetSsrc(uint32_t ssrc);
 		uint32_t GetNtpSec();
@@ -53,7 +51,7 @@ namespace RTC { namespace RTCP
 
 	private:
 		Header* header = nullptr;
-		uint8_t* raw = nullptr;
+		uint8_t raw[sizeof(Header)] = {0};
 	};
 
 	class SenderReportPacket
@@ -89,7 +87,6 @@ namespace RTC { namespace RTCP
 	inline
 	SenderReport::SenderReport()
 	{
-		this->raw = new uint8_t[sizeof(Header)];
 		this->header = reinterpret_cast<Header*>(this->raw);
 	}
 
@@ -106,20 +103,12 @@ namespace RTC { namespace RTCP
 	inline
 	SenderReport::~SenderReport()
 	{
-		if (this->raw)
-			delete this->raw;
 	}
 
 	inline
 	size_t SenderReport::GetSize()
 	{
 		return sizeof(Header);
-	}
-
-	inline
-	const uint8_t* SenderReport::GetRaw()
-	{
-		return this->raw;
 	}
 
 	inline

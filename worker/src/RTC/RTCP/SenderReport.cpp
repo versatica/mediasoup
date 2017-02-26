@@ -43,23 +43,6 @@ namespace RTC { namespace RTCP
 		MS_DEBUG_DEV("</SenderReport>");
 	}
 
-	void SenderReport::Serialize()
-	{
-		MS_TRACE();
-
-		// Allocate internal data.
-		if (!this->raw)
-		{
-			this->raw = new uint8_t[sizeof(Header)];
-
-			// Copy the header.
-			std::memcpy(this->raw, this->header, sizeof(Header));
-
-			// Update the header pointer.
-			this->header = reinterpret_cast<Header*>(this->raw);
-		}
-	}
-
 	size_t SenderReport::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();

@@ -665,18 +665,4 @@ namespace RTC
 
 		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
 	}
-
-	void Room::onPeerRtcpSdesChunk(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SdesChunk* chunk)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
-
-		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
-
-		for (auto& rtpSender : rtpSenders)
-		{
-			rtpSender->ReceiveRtcpSdesChunk(chunk);
-		}
-	}
 }
