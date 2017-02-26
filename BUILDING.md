@@ -56,7 +56,7 @@ Cleans all the objects and binaries, including those generated for library depen
 
 **mediasoup** comes with a `gulpfile.js` file to enable [gulp](https://www.npmjs.com/package/gulp) tasks.
 
-In order to tun these tasks, `gulp-cli` must be globally installed:
+In order to tun these tasks, `gulp-cli` (version >= 1.2.2) must be globally installed:
 
 ```bash
 $ npm install -g gulp-cli
