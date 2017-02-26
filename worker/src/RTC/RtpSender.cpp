@@ -309,7 +309,7 @@ namespace RTC
 				}
 			}
 		}
-	};
+	}
 
 	void RtpSender::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
 	{
