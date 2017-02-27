@@ -18,6 +18,8 @@ public:
 
 public:
 	explicit Timer(Listener* listener);
+	Timer& operator=(const Timer&) = delete;
+	Timer(const Timer&) = delete;
 
 	void Close();
 	void Start(uint64_t timeout);

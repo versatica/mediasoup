@@ -18,6 +18,8 @@ public:
 
 public:
 	UnixStreamSocket(int fd, size_t bufferSize);
+	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
+	UnixStreamSocket(const UnixStreamSocket&) = delete;
 	virtual ~UnixStreamSocket();
 
 	void Close();

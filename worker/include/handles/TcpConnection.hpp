@@ -28,6 +28,8 @@ public:
 
 public:
 	explicit TcpConnection(size_t bufferSize);
+	TcpConnection& operator=(const TcpConnection&) = delete;
+	TcpConnection(const TcpConnection&) = delete;
 	virtual ~TcpConnection();
 
 	void Close();
