@@ -742,6 +742,8 @@ namespace RTC
 			return;
 		}
 
+		MS_DEBUG_DEV("RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
+
 		// Get the associated RtpReceiver.
 		RTC::RtpReceiver* rtpReceiver = this->rtpListener.GetRtpReceiver(packet);
 
