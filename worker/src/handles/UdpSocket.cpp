@@ -172,9 +172,11 @@ void UdpSocket::Close()
 
 void UdpSocket::Dump()
 {
-	MS_DEBUG_DEV("[UDP, local:%s :%" PRIu16 ", status:%s]",
+	MS_DUMP("<UdpSocket>");
+	MS_DUMP("  [UDP, local:%s :%" PRIu16 ", status:%s]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
 		(!this->isClosing) ? "open" : "closed");
+	MS_DUMP("</UdpSocket>");
 }
 
 void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr)

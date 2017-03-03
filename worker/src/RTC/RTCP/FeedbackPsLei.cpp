@@ -50,8 +50,8 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<PsLeiItem>");
-		MS_DEBUG_DEV("  ssrc : %" PRIu32, this->GetSsrc());
-		MS_DEBUG_DEV("</PsLeiItem>");
+		MS_DUMP("<PsLeiItem>");
+		MS_DUMP("  ssrc : %" PRIu32, this->GetSsrc());
+		MS_DUMP("</PsLeiItem>");
 	}
 }}

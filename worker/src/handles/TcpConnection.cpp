@@ -133,10 +133,12 @@ void TcpConnection::Close()
 
 void TcpConnection::Dump()
 {
-	MS_DEBUG_DEV("[Tcp, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
+	MS_DUMP("<TcpConnection>");
+	MS_DUMP("  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
 		this->peerIP.c_str(), (uint16_t)this->peerPort,
 		(!this->isClosing) ? "open" : "closed");
+	MS_DUMP("</TcpConnection>");
 }
 
 void TcpConnection::Start()

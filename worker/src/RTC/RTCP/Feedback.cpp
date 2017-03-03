@@ -83,9 +83,9 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("  sender ssrc : %" PRIu32, (uint32_t)ntohl(this->header->s_ssrc));
-		MS_DEBUG_DEV("  media ssrc  : %" PRIu32, (uint32_t)ntohl(this->header->m_ssrc));
-		MS_DEBUG_DEV("  size        : %zu", this->GetSize());
+		MS_DUMP("  sender ssrc : %" PRIu32, (uint32_t)ntohl(this->header->s_ssrc));
+		MS_DUMP("  media ssrc  : %" PRIu32, (uint32_t)ntohl(this->header->m_ssrc));
+		MS_DUMP("  size        : %zu", this->GetSize());
 	}
 
 	/* Specialization for Ps class. */

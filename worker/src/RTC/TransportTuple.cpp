@@ -44,8 +44,6 @@ namespace RTC
 
 	void TransportTuple::Dump()
 	{
-		#ifdef MS_LOG_DEV
-
 		MS_TRACE();
 
 		switch (this->protocol)
@@ -58,21 +56,23 @@ namespace RTC
 
 				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remote_family, remote_ip, &remote_port);
 
-				MS_DEBUG_DEV("[UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+				MS_DUMP("<TransportTuple>");
+				MS_DUMP("  [UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 					this->udpSocket->GetLocalIP().c_str(), this->udpSocket->GetLocalPort(),
 					remote_ip.c_str(), remote_port);
+				MS_DUMP("</TransportTuple>");
 				break;
 			}
 
 			case Protocol::TCP:
 			{
-				MS_DEBUG_DEV("[TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+				MS_DUMP("<TransportTuple>");
+				MS_DUMP("  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 					this->tcpConnection->GetLocalIP().c_str(), this->tcpConnection->GetLocalPort(),
 					this->tcpConnection->GetPeerIP().c_str(), this->tcpConnection->GetPeerPort());
+				MS_DUMP("</TransportTuple>");
 				break;
 			}
 		}
-
-		#endif
 	}
 }

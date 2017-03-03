@@ -562,11 +562,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(dtls, "[role:%s, running:%s, handshake done:%s, connected:%s]",
+		MS_DUMP("<DtlsTransport>");
+		MS_DUMP("  [role:%s, running:%s, handshake done:%s, connected:%s]",
 			(this->localRole == Role::SERVER ? "server" : (this->localRole == Role::CLIENT ? "client" : "none")),
 			IsRunning() ? "yes" : "no",
 			this->handshakeDone ? "yes" : "no",
 			this->state == DtlsState::CONNECTED ? "yes" : "no");
+		MS_DUMP("</DtlsTransport>");
 	}
 
 	void DtlsTransport::Run(Role localRole)

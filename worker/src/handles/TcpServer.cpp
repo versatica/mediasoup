@@ -154,10 +154,12 @@ void TcpServer::Close()
 
 void TcpServer::Dump()
 {
-	MS_DEBUG_DEV("[TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
+	MS_DUMP("<TcpServer>");
+	MS_DUMP("  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 		this->localIP.c_str(), (uint16_t)this->localPort,
 		(!this->isClosing) ? "open" : "closed",
 		this->connections.size());
+	MS_DUMP("</TcpServer>");
 }
 
 const struct sockaddr* TcpServer::GetLocalAddress()
@@ -292,7 +294,6 @@ void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool is_closed_
 	bool wasClosing = this->isClosing;
 
 	MS_DEBUG_DEV("TCP connection closed");
-	connection->Dump();
 
 	// Remove the TcpConnection from the set.
 	this->connections.erase(connection);

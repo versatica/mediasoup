@@ -56,11 +56,11 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<SliItem>");
-		MS_DEBUG_DEV("  first      : %" PRIu16, this->first);
-		MS_DEBUG_DEV("  number     : %" PRIu16, this->number);
-		MS_DEBUG_DEV("  picture id : %" PRIu8, this->pictureId);
-		MS_DEBUG_DEV("</SliItem>");
+		MS_DUMP("<SliItem>");
+		MS_DUMP("  first      : %" PRIu16, this->first);
+		MS_DUMP("  number     : %" PRIu16, this->number);
+		MS_DUMP("  picture id : %" PRIu8, this->pictureId);
+		MS_DUMP("</SliItem>");
 	}
 }}
 

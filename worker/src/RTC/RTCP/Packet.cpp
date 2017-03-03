@@ -134,10 +134,6 @@ namespace RTC { namespace RTCP
 				return first;
 			}
 
-			#ifdef MS_LOG_DEV
-			// current->Dump();
-			#endif
-
 			data += packet_len;
 			len -= packet_len;
 

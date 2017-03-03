@@ -39,6 +39,10 @@
  * 	 Example:
  * 	   MS_DEBUG_DEV("Room closed [roomId:%" PRIu32 "]", roomId);
  *
+ * MS_DUMP(...)
+ *
+ *   For Dump() methods.
+ *
  * MS_ERROR(...)
  *
  *   Logs an error. Must just be used for internal errors that should not
@@ -265,6 +269,22 @@ public:
 	#define MS_WARN_DEV_STD(desc, ...) ;
 #endif
 
+#define MS_DUMP(desc, ...) \
+	do \
+	{ \
+		int ms_logger_written = std::snprintf(Logger::buffer, MS_LOGGER_BUFFER_SIZE, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+		Logger::channel->SendLog(Logger::buffer, ms_logger_written); \
+	} \
+	while (0)
+
+#define MS_DUMP_STD(desc, ...) \
+	do \
+	{ \
+		std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		std::fflush(stdout); \
+	} \
+	while (0)
+
 #define MS_ERROR(desc, ...) \
 	do \
 	{ \
@@ -311,6 +331,8 @@ public:
 	#define MS_DEBUG_DEV MS_DEBUG_DEV_STD
 	#undef MS_WARN_DEV
 	#define MS_WARN_DEV MS_WARN_DEV_STD
+	#undef MS_DUMP
+	#define MS_DUMP MS_DUMP_STD
 	#undef MS_ERROR
 	#define MS_ERROR MS_ERROR_STD
 #endif
