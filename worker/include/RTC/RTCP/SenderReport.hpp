@@ -31,7 +31,6 @@ namespace RTC { namespace RTCP
 
 		// Locally generated Report. Holds the data internally.
 		SenderReport();
-		~SenderReport();
 
 		void Dump();
 		size_t Serialize(uint8_t* buffer);
@@ -99,11 +98,6 @@ namespace RTC { namespace RTCP
 	SenderReport::SenderReport(SenderReport* report) :
 		header(report->header)
 	{}
-
-	inline
-	SenderReport::~SenderReport()
-	{
-	}
 
 	inline
 	size_t SenderReport::GetSize()
