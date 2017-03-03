@@ -86,19 +86,15 @@ namespace RTC { namespace RTCP
 
 	void ByePacket::Dump()
 	{
-		#ifdef MS_LOG_DEV
-
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<ByePacket>");
+		MS_DUMP("<ByePacket>");
 		for (auto ssrc : this->ssrcs)
 		{
-			MS_DEBUG_DEV("  ssrc   : %" PRIu32, ssrc);
+			MS_DUMP("  ssrc   : %" PRIu32, ssrc);
 		}
 		if (!this->reason.empty())
-			MS_DEBUG_DEV("  reason : %s", this->reason.c_str());
-		MS_DEBUG_DEV("</ByePacket>");
-
-		#endif
+			MS_DUMP("  reason : %s", this->reason.c_str());
+		MS_DUMP("</ByePacket>");
 	}
 }}

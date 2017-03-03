@@ -26,14 +26,10 @@ namespace RTC { namespace RTCP
 
 	void FeedbackRtpSrReqPacket::Dump()
 	{
-		#ifdef MS_LOG_DEV
-
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<FeedbackRtpSrReqPacket>");
+		MS_DUMP("<FeedbackRtpSrReqPacket>");
 		FeedbackRtpPacket::Dump();
-		MS_DEBUG_DEV("</FeedbackRtpSrReqPacket>");
-
-		#endif
+		MS_DUMP("</FeedbackRtpSrReqPacket>");
 	}
 }}

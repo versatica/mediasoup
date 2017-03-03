@@ -67,19 +67,15 @@ namespace RTC { namespace RTCP
 	template<typename Item>
 	void FeedbackRtpItemPacket<Item>::Dump()
 	{
-		#ifdef MS_LOG_DEV
-
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
+		MS_DUMP("<%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
 		FeedbackRtpPacket::Dump();
 		for (auto item : this->items)
 		{
 			item->Dump();
 		}
-		MS_DEBUG_DEV("</%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
-
-		#endif
+		MS_DUMP("</%s>", FeedbackRtpPacket::MessageType2String(Item::MessageType).c_str());
 	}
 
 	// Explicit instantiation to have all FeedbackRtpPacket definitions in this file.

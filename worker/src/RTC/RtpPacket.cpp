@@ -144,28 +144,24 @@ namespace RTC
 
 	void RtpPacket::Dump()
 	{
-		#ifdef MS_LOG_DEV
-
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<RtpPacket>");
-		MS_DEBUG_DEV("  padding          : %s", this->header->padding ? "true" : "false");
-		MS_DEBUG_DEV("  extension header : %s", HasExtensionHeader() ? "true" : "false");
+		MS_DUMP("<RtpPacket>");
+		MS_DUMP("  padding          : %s", this->header->padding ? "true" : "false");
+		MS_DUMP("  extension header : %s", HasExtensionHeader() ? "true" : "false");
 		if (HasExtensionHeader())
 		{
-			MS_DEBUG_DEV("    id     : %" PRIu16, GetExtensionHeaderId());
-			MS_DEBUG_DEV("    length : %zu bytes", GetExtensionHeaderLength());
+			MS_DUMP("    id     : %" PRIu16, GetExtensionHeaderId());
+			MS_DUMP("    length : %zu bytes", GetExtensionHeaderLength());
 		}
-		MS_DEBUG_DEV("  csrc count       : %" PRIu8, this->header->csrc_count);
-		MS_DEBUG_DEV("  marker           : %s", HasMarker() ? "true" : "false");
-		MS_DEBUG_DEV("  payload type     : %" PRIu8, GetPayloadType());
-		MS_DEBUG_DEV("  sequence number  : %" PRIu16, GetSequenceNumber());
-		MS_DEBUG_DEV("  timestamp        : %" PRIu32, GetTimestamp());
-		MS_DEBUG_DEV("  ssrc             : %" PRIu32, GetSsrc());
-		MS_DEBUG_DEV("  payload size     : %zu bytes", GetPayloadLength());
-		MS_DEBUG_DEV("</RtpPacket>");
-
-		#endif
+		MS_DUMP("  csrc count       : %" PRIu8, this->header->csrc_count);
+		MS_DUMP("  marker           : %s", HasMarker() ? "true" : "false");
+		MS_DUMP("  payload type     : %" PRIu8, GetPayloadType());
+		MS_DUMP("  sequence number  : %" PRIu16, GetSequenceNumber());
+		MS_DUMP("  timestamp        : %" PRIu32, GetTimestamp());
+		MS_DUMP("  ssrc             : %" PRIu32, GetSsrc());
+		MS_DUMP("  payload size     : %zu bytes", GetPayloadLength());
+		MS_DUMP("</RtpPacket>");
 	}
 
 	void RtpPacket::ParseExtensionElements()

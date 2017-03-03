@@ -299,18 +299,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(rtp, "<RtpStreamSend>");
-
-		MS_DEBUG_TAG(rtp, "  [buffer.size:%zu, storage.size:%zu]", this->buffer.size(), this->storage.size());
-
+		MS_DUMP("<RtpStreamSend>");
+		MS_DUMP("  [buffer.size:%zu, storage.size:%zu]", this->buffer.size(), this->storage.size());
 		for (auto& buffer_item : this->buffer)
 		{
 			auto packet = buffer_item.packet;
 
-			MS_DEBUG_TAG(rtp, "  packet [seq:%" PRIu16 ", seq32:%" PRIu32 "]", packet->GetSequenceNumber(), buffer_item.seq32);
+			MS_DUMP("  packet [seq:%" PRIu16 ", seq32:%" PRIu32 "]", packet->GetSequenceNumber(), buffer_item.seq32);
 		}
-
-		MS_DEBUG_TAG(rtp, "</RtpStreamSend>");
+		MS_DUMP("</RtpStreamSend>");
 	}
 
 	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)

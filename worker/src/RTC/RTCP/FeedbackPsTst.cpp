@@ -58,11 +58,11 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<TstItem>");
-		MS_DEBUG_DEV("  ssrc            : %" PRIu32, this->GetSsrc());
-		MS_DEBUG_DEV("  sequence number : %" PRIu32, this->GetSequenceNumber());
-		MS_DEBUG_DEV("  index           : %" PRIu32, this->GetIndex());
-		MS_DEBUG_DEV("</TstItem>");
+		MS_DUMP("<TstItem>");
+		MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
+		MS_DUMP("  sequence number : %" PRIu32, this->GetSequenceNumber());
+		MS_DUMP("  index           : %" PRIu32, this->GetIndex());
+		MS_DUMP("</TstItem>");
 	}
 
 	/* Specialization for Tstr class. */

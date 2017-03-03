@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::SenderReport"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/RTCP/SenderReport.hpp"
 #include "Logger.hpp"
@@ -33,14 +33,14 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<SenderReport>");
-		MS_DEBUG_DEV("  ssrc         : %" PRIu32, this->GetSsrc());
-		MS_DEBUG_DEV("  ntp sec      : %" PRIu32, this->GetNtpSec());
-		MS_DEBUG_DEV("  ntp frac     : %" PRIu32, this->GetNtpFrac());
-		MS_DEBUG_DEV("  rtp ts       : %" PRIu32, this->GetRtpTs());
-		MS_DEBUG_DEV("  packet count : %" PRIu32, this->GetPacketCount());
-		MS_DEBUG_DEV("  octet count  : %" PRIu32, this->GetOctetCount());
-		MS_DEBUG_DEV("</SenderReport>");
+		MS_DUMP("<SenderReport>");
+		MS_DUMP("  ssrc         : %" PRIu32, this->GetSsrc());
+		MS_DUMP("  ntp sec      : %" PRIu32, this->GetNtpSec());
+		MS_DUMP("  ntp frac     : %" PRIu32, this->GetNtpFrac());
+		MS_DUMP("  rtp ts       : %" PRIu32, this->GetRtpTs());
+		MS_DUMP("  packet count : %" PRIu32, this->GetPacketCount());
+		MS_DUMP("  octet count  : %" PRIu32, this->GetOctetCount());
+		MS_DUMP("</SenderReport>");
 	}
 
 	size_t SenderReport::Serialize(uint8_t* buffer)
@@ -92,17 +92,13 @@ namespace RTC { namespace RTCP
 
 	void SenderReportPacket::Dump()
 	{
-		#ifdef MS_LOG_DEV
-
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<SenderReportPacket>");
+		MS_DUMP("<SenderReportPacket>");
 		for (auto report : this->reports)
 		{
 			report->Dump();
 		}
-		MS_DEBUG_DEV("</SenderReportPacket>");
-
-		#endif
+		MS_DUMP("</SenderReportPacket>");
 	}
 }}

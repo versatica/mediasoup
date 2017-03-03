@@ -50,9 +50,9 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<NackItem>");
-		MS_DEBUG_DEV("  pid : %" PRIu16, this->GetPacketId());
-		MS_DEBUG_DEV("  bpl : %" PRIu16, this->GetLostPacketBitmask());
-		MS_DEBUG_DEV("</NackItem>");
+		MS_DUMP("<NackItem>");
+		MS_DUMP("  pid : %" PRIu16, this->GetPacketId());
+		MS_DUMP("  bpl : %" PRIu16, this->GetLostPacketBitmask());
+		MS_DUMP("</NackItem>");
 	}
 }}

@@ -756,9 +756,6 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV("valid RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", rtpReceiver:%" PRIu32 "]", packet->GetSsrc(), packet->GetPayloadType(), rtpReceiver->rtpReceiverId);
-		#ifdef MS_LOG_DEV
-		// packet->Dump();
-		#endif
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);

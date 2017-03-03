@@ -40,14 +40,10 @@ namespace RTC { namespace RTCP
 
 	void FeedbackPsAfbPacket::Dump()
 	{
-		#ifdef MS_LOG_DEV
-
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<FeedbackPsAfbPacket>");
+		MS_DUMP("<FeedbackPsAfbPacket>");
 		FeedbackPsPacket::Dump();
-		MS_DEBUG_DEV("</FeedbackPsAfbPacket>");
-
-		#endif
+		MS_DUMP("</FeedbackPsAfbPacket>");
 	}
 }}

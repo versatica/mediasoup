@@ -132,7 +132,7 @@ namespace RTC { namespace RTCP
 			return value;
 
 		// Negative value.
-		else if (value != 0x0800000)
+		if (value != 0x0800000)
 			value &= ~(1 << 23);
 
 		return -value;
