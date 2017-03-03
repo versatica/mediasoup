@@ -33,7 +33,6 @@ namespace RTC { namespace RTCP
 
 		// Locally generated Report. Holds the data internally.
 		ReceiverReport();
-		~ReceiverReport();
 
 		void Dump();
 		size_t Serialize(uint8_t* buffer);
@@ -91,6 +90,22 @@ namespace RTC { namespace RTCP
 	};
 
 	/* Inline instance methods. */
+
+	inline
+	ReceiverReport::ReceiverReport()
+	{
+		this->header = reinterpret_cast<Header*>(this->raw);
+	}
+
+	inline
+	ReceiverReport::ReceiverReport(Header* header) :
+		header(header)
+	{}
+
+	inline
+	ReceiverReport::ReceiverReport(ReceiverReport* report) :
+		header(report->header)
+	{}
 
 	inline
 	size_t ReceiverReport::GetSize()
@@ -198,29 +213,6 @@ namespace RTC { namespace RTCP
 	void ReceiverReport::SetDelaySinceLastSenderReport(uint32_t dlsr)
 	{
 		this->header->dlsr = (uint32_t)htonl(dlsr);
-	}
-
-	/* Inline instance methods. */
-
-	inline
-	ReceiverReport::ReceiverReport()
-	{
-		this->header = reinterpret_cast<Header*>(this->raw);
-	}
-
-	inline
-	ReceiverReport::ReceiverReport(Header* header) :
-		header(header)
-	{}
-
-	inline
-	ReceiverReport::ReceiverReport(ReceiverReport* report) :
-		header(report->header)
-	{}
-
-	inline
-	ReceiverReport::~ReceiverReport()
-	{
 	}
 
 	inline
