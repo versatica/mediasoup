@@ -271,7 +271,7 @@ namespace RTC
 		if (rid_pointer)
 		{
 			uint8_t rid_length = packet->GetExtensionElementLength(5);
-			std::string rid_value = std::string((const char*)rid_pointer, (size_t)rid_length+1);
+			std::string rid_value = std::string((const char*)rid_pointer, (size_t)rid_length);
 
 			MS_DEBUG_TAG(rtp, "RID [length:%zu, value:'%s', pointer[0]:'%c']", (size_t)rid_length, rid_value.c_str(), (char)rid_pointer[0]);
 			if ((char)rid_pointer[0] == '\0')
