@@ -266,6 +266,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: TESTING
+		uint8_t* rid_pointer = packet->GetExtensionElementValue(5);
+		if (rid_pointer)
+		{
+			uint8_t rid_length = packet->GetExtensionElementLength(5);
+			std::string rid_value = std::string((const char*)rid_pointer, (size_t)rid_length+1);
+
+			MS_DEBUG_TAG(rtp, "RID [length:%zu, value:'%s', pointer[0]:'%c']", (size_t)rid_length, rid_value.c_str(), (char)rid_pointer[0]);
+			if ((char)rid_pointer[0] == '\0')
+				MS_WARN_TAG(rtp, "RID data[0] is 0");
+
+		}
+
 		// First lookup into the SSRC table.
 		{
 			auto it = this->ssrcTable.find(packet->GetSsrc());
