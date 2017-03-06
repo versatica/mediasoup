@@ -37,7 +37,6 @@ namespace RTC
 	private:
 		void ClearBuffer();
 		void StorePacket(RTC::RtpPacket* packet);
-		void Dump();
 
 	private:
 		std::vector<StorageItem> storage;

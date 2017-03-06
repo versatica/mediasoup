@@ -224,6 +224,33 @@ namespace RTC
 		container[container_idx] = nullptr;
 	}
 
+	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
+	{
+		MS_TRACE();
+
+		if (!received)
+			return nullptr;
+
+		RTC::RTCP::SenderReport* report = new RTC::RTCP::SenderReport();
+
+		report->SetPacketCount(this->received);
+		report->SetOctetCount(this->receivedBytes);
+
+		Utils::Time::Ntp ntp;
+		Utils::Time::CurrentTimeNtp(ntp);
+
+		report->SetNtpSec(ntp.seconds);
+		report->SetNtpFrac(ntp.fractions);
+
+		// Calculate RTP timestamp diff between now and last received RTP packet.
+		uint32_t diffMs = now - this->lastPacketTimeMs;
+		uint32_t diffRtpTimestamp = diffMs * this->clockRate / 1000;
+
+		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
+
+		return report;
+	}
+
 	void RtpStreamSend::ClearBuffer()
 	{
 		MS_TRACE();
@@ -313,48 +340,5 @@ namespace RTC
 
 		// Update the new buffer item so it points to the cloned packed.
 		(*new_buffer_it).packet = packet->Clone(store);
-	}
-
-	// TODO: TMP
-	void RtpStreamSend::Dump()
-	{
-		MS_TRACE();
-
-		MS_DUMP("<RtpStreamSend>");
-		MS_DUMP("  [buffer.size:%zu, storage.size:%zu]", this->buffer.size(), this->storage.size());
-		for (auto& buffer_item : this->buffer)
-		{
-			auto packet = buffer_item.packet;
-
-			MS_DUMP("  packet [seq:%" PRIu16 ", seq32:%" PRIu32 "]", packet->GetSequenceNumber(), buffer_item.seq32);
-		}
-		MS_DUMP("</RtpStreamSend>");
-	}
-
-	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
-	{
-		MS_TRACE();
-
-		if (!received)
-			return nullptr;
-
-		RTC::RTCP::SenderReport* report = new RTC::RTCP::SenderReport();
-
-		report->SetPacketCount(this->received);
-		report->SetOctetCount(this->receivedBytes);
-
-		Utils::Time::Ntp ntp;
-		Utils::Time::CurrentTimeNtp(ntp);
-
-		report->SetNtpSec(ntp.seconds);
-		report->SetNtpFrac(ntp.fractions);
-
-		// Calculate RTP timestamp diff between now and last received RTP packet.
-		uint32_t diffMs = now - this->lastPacketTimeMs;
-		uint32_t diffRtpTimestamp = diffMs * this->clockRate / 1000;
-
-		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
-
-		return report;
 	}
 }
