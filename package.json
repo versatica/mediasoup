@@ -9,6 +9,13 @@
   },
   "author": "Iñaki Baz Castillo <ibc@aliax.net>",
   "license": "ISC",
+  "keywords": [
+    "webrtc",
+    "sfu",
+    "node",
+    "node-module",
+    "ortc"
+  ],
   "bugs": {
     "url": "https://github.com/ibc/mediasoup/issues"
   },
