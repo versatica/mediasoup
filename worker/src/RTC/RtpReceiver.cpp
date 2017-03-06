@@ -159,9 +159,6 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Fill RTP parameters.
-				FillRtpParameters();
-
 				// And notify again.
 				this->listener->onRtpReceiverParametersDone(this);
 
@@ -274,19 +271,6 @@ namespace RTC
 
 			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
 		}
-	}
-
-	void RtpReceiver::FillRtpParameters()
-	{
-		MS_TRACE();
-
-		// Set a random muxId.
-		// TODO: This is wrong, we are replacing the given muxId. Instead, this
-		// method should set a random muxId and map the original value.
-		this->rtpParameters->muxId = Utils::Crypto::GetRandomString(8);
-
-		// TODO: Fill SSRCs with random values and set some mechanism to replace
-		// SSRC values in received RTP packets to match the chosen random values.
 	}
 
 	void RtpReceiver::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)

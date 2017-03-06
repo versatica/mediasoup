@@ -11,6 +11,7 @@
 #include "Channel/Request.hpp"
 #include "Channel/Notifier.hpp"
 #include <string>
+#include <map>
 #include <json/json.h>
 
 namespace RTC
@@ -53,9 +54,6 @@ namespace RTC
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
-
-	private:
-		void FillRtpParameters();
 
 	public:
 		// Passed by argument.
