@@ -4,6 +4,7 @@
 #include "RTC/RtpSender.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "Utils.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
 #include <unordered_set>
@@ -70,6 +71,7 @@ namespace RTC
 		static const Json::StaticString k_hasTransport("hasTransport");
 		static const Json::StaticString k_available("available");
 		static const Json::StaticString k_supportedPayloadTypes("supportedPayloadTypes");
+		static const Json::StaticString k_rtpStream("rtpStream");
 
 		Json::Value json(Json::objectValue);
 
@@ -92,6 +94,9 @@ namespace RTC
 		{
 			json[k_supportedPayloadTypes].append((Json::UInt)payloadType);
 		}
+
+		if (this->rtpStream)
+			json[k_rtpStream] = this->rtpStream->toJson();
 
 		return json;
 	}
@@ -194,17 +199,32 @@ namespace RTC
 			}
 		}
 
+		// TODO: Temporal. To be refactored.
+		// Remove all the encodings but the first one.
+		if (this->rtpParameters->encodings.size() > 1)
+		{
+			RTC::RtpEncodingParameters encoding = this->rtpParameters->encodings[0];
+
+			this->rtpParameters->encodings.clear();
+			this->rtpParameters->encodings.push_back(encoding);
+		}
+
 		// Remove unsupported header extensions.
 		this->rtpParameters->ReduceHeaderExtensions(this->peerCapabilities->headerExtensions);
+
+		// Set a random muxId.
+		this->rtpParameters->muxId = Utils::Crypto::GetRandomString(8);
 
 		// If there are no encodings set not available.
 		if (this->rtpParameters->encodings.size() > 0)
 		{
 			this->available = true;
 
+			// NOTE: We assume a single stream/encoding when sending to remote peers.
+			auto encoding = this->rtpParameters->encodings[0];
+
 			// Set the RtpStreamSend.
-			// NOTE: We assume a single stream when sending to remote peers.
-			uint32_t streamClockRate = this->rtpParameters->GetEncodingClockRate(0);
+			uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
 
 			// Create a RtpStreamSend for sending a single media stream.
 			switch (this->kind)
@@ -255,6 +275,16 @@ namespace RTC
 
 		MS_ASSERT(this->rtpStream, "no RtpStream set");
 
+		// TODO: Must refactor for simulcast.
+		// Ignore the packet if the SSRC is not the single one in the sender
+		// RTP parameters.
+		if (packet->GetSsrc() != this->rtpParameters->encodings[0].ssrc)
+		{
+			MS_DEBUG_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
+
+			return;
+		}
+
 		// Process the packet.
 		// TODO: Must check what kind of packet we are checking. For example, RTX
 		// packets (once implemented) should have a different handling.
@@ -283,32 +313,31 @@ namespace RTC
 
 	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
 	{
-		if (this->rtpStream)
-		{
-			if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) >= this->maxRtcpInterval)
-			{
-				RTC::RTCP::SenderReport* report = this->rtpStream->GetRtcpSenderReport(now);
+		if (!this->rtpStream)
+			return;
 
-				if (report)
-				{
-					// TODO: This assumes a single stream for now.
-					uint32_t ssrc = this->rtpParameters->GetEncodingMediaSsrc(0);
-					std::string cname = this->rtpParameters->rtcp.cname;
+		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+			return;
 
-					report->SetSsrc(ssrc);
-					packet->AddSenderReport(report);
+		RTC::RTCP::SenderReport* report = this->rtpStream->GetRtcpSenderReport(now);
+		if (!report)
+			return;
 
-					// Build sdes chunk for this sender.
-					RTC::RTCP::SdesChunk *sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-					RTC::RTCP::SdesItem *sdesItem = new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+		// NOTE: This assumes a single stream.
+		uint32_t ssrc = this->rtpParameters->encodings[0].ssrc;
+		std::string cname = this->rtpParameters->rtcp.cname;
 
-					sdesChunk->AddItem(sdesItem);
-					packet->AddSdesChunk(sdesChunk);
+		report->SetSsrc(ssrc);
+		packet->AddSenderReport(report);
 
-					this->lastRtcpSentTime = now;
-				}
-			}
-		}
+		// Build sdes chunk for this sender.
+		RTC::RTCP::SdesChunk *sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
+		RTC::RTCP::SdesItem *sdesItem = new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+
+		sdesChunk->AddItem(sdesItem);
+		packet->AddSdesChunk(sdesChunk);
+
+		this->lastRtcpSentTime = now;
 	}
 
 	void RtpSender::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
