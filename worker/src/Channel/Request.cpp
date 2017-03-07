@@ -31,7 +31,8 @@ namespace Channel
 		{ "rtpReceiver.setRtpRawEvent",        Request::MethodId::rtpReceiver_setRtpRawEvent        },
 		{ "rtpReceiver.setRtpObjectEvent",     Request::MethodId::rtpReceiver_setRtpObjectEvent     },
 		{ "rtpSender.dump",                    Request::MethodId::rtpSender_dump                    },
-		{ "rtpSender.setTransport",            Request::MethodId::rtpSender_setTransport            }
+		{ "rtpSender.setTransport",            Request::MethodId::rtpSender_setTransport            },
+		{ "rtpSender.disable",                 Request::MethodId::rtpSender_disable                 }
 	};
 
 	/* Instance methods. */

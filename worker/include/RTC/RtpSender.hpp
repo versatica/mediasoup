@@ -47,6 +47,7 @@ namespace RTC
 		RTC::Transport* GetTransport();
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters();
+		bool GetActive();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -54,6 +55,7 @@ namespace RTC
 
 	private:
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+		void EmitActiveChange();
 
 	public:
 		// Passed by argument.
@@ -73,6 +75,8 @@ namespace RTC
 		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
 		bool available = false;
+		// Whether this RtpSender has been disabled by the app.
+		bool disabled = false;
 		// RTP counters.
 		RTC::RtpDataCounter transmitted;
 		// Timestamp when last RTCP was sent.
@@ -88,7 +92,12 @@ namespace RTC
 	inline
 	void RtpSender::SetTransport(RTC::Transport* transport)
 	{
+		bool wasActive = this->GetActive();
+
 		this->transport = transport;
+
+		if (wasActive != this->GetActive())
+			EmitActiveChange();
 	}
 
 	inline
@@ -100,8 +109,13 @@ namespace RTC
 	inline
 	void RtpSender::RemoveTransport(RTC::Transport* transport)
 	{
+		bool wasActive = this->GetActive();
+
 		if (this->transport == transport)
 			this->transport = nullptr;
+
+		if (wasActive != this->GetActive())
+			EmitActiveChange();
 	}
 
 	inline
@@ -111,10 +125,16 @@ namespace RTC
 	}
 
 	inline
+	bool RtpSender::GetActive()
+	{
+		return (this->available && this->transport && !this->disabled);
+	}
+
+	inline
 	uint32_t RtpSender::GetTransmissionRate(uint64_t now)
 	{
 		return this->transmitted.GetRate(now);
-	};
+	}
 }
 
 #endif

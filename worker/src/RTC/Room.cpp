@@ -303,6 +303,7 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
 			case Channel::Request::MethodId::rtpSender_dump:
 			case Channel::Request::MethodId::rtpSender_setTransport:
+			case Channel::Request::MethodId::rtpSender_disable:
 			{
 				RTC::Peer* peer;
 

@@ -37,7 +37,8 @@ namespace Channel
 			rtpReceiver_setRtpRawEvent,
 			rtpReceiver_setRtpObjectEvent,
 			rtpSender_dump,
-			rtpSender_setTransport
+			rtpSender_setTransport,
+			rtpSender_disable
 		};
 
 	private:

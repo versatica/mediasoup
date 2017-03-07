@@ -69,7 +69,7 @@ namespace RTC
 		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
 		static const Json::StaticString k_hasTransport("hasTransport");
-		static const Json::StaticString k_available("available");
+		static const Json::StaticString k_active("active");
 		static const Json::StaticString k_supportedPayloadTypes("supportedPayloadTypes");
 		static const Json::StaticString k_rtpStream("rtpStream");
 
@@ -86,7 +86,7 @@ namespace RTC
 
 		json[k_hasTransport] = this->transport ? true : false;
 
-		json[k_available] = this->available;
+		json[k_active] = this->GetActive();
 
 		json[k_supportedPayloadTypes] = Json::arrayValue;
 
@@ -116,6 +116,38 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::rtpSender_disable:
+			{
+				static const Json::StaticString k_disabled("disabled");
+
+				if (!request->data[k_disabled].isBool())
+				{
+					request->Reject("Request has invalid data.disabled");
+
+					return;
+				}
+
+				bool disabled = request->data[k_disabled].asBool();
+
+				// Nothing changed.
+				if (this->disabled == disabled)
+				{
+					request->Accept();
+					return;
+				}
+
+				bool wasActive = this->GetActive();
+
+				this->disabled = disabled;
+
+				if (wasActive != this->GetActive())
+					EmitActiveChange();
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -140,8 +172,9 @@ namespace RTC
 
 		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
-		static const Json::StaticString k_available("available");
+		static const Json::StaticString k_active("active");
 
+		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
 		bool hadParameters = this->rtpParameters ? true : false;
@@ -152,7 +185,10 @@ namespace RTC
 
 		// Delete previous RtpStreamSend (if any).
 		if (this->rtpStream)
+		{
 			delete this->rtpStream;
+			this->rtpStream = nullptr;
+		}
 
 		// Clone given RTP parameters so we manage our own sender parameters.
 		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
@@ -260,7 +296,7 @@ namespace RTC
 
 			event_data[k_class] = "RtpSender";
 			event_data[k_rtpParameters] = this->rtpParameters->toJson();
-			event_data[k_available] = this->available;
+			event_data[k_active] = this->GetActive();
 
 			this->notifier->Emit(this->rtpSenderId, "parameterschange", event_data);
 		}
@@ -270,7 +306,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->available || !this->transport)
+		if (!this->GetActive())
 			return;
 
 		MS_ASSERT(this->rtpStream, "no RtpStream set");
@@ -373,12 +409,27 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->available || !this->transport)
+		if (!this->GetActive())
 			return;
 
 		// If the peer supports RTX create a RTX packet and insert the given media
 		// packet as payload. Otherwise just send the packet as usual.
 		// TODO: No RTX for now so just send as usual.
 		SendRtpPacket(packet);
+	}
+
+	inline
+	void RtpSender::EmitActiveChange()
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_class("class");
+		static const Json::StaticString k_active("active");
+
+		Json::Value event_data(Json::objectValue);
+
+		event_data[k_class] = "RtpSender";
+		event_data[k_active] = this->GetActive();
+		this->notifier->Emit(this->rtpSenderId, "activechange", event_data);
 	}
 }

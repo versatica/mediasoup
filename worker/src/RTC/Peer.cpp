@@ -454,6 +454,31 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::rtpSender_disable:
+			{
+				RTC::RtpSender* rtpSender;
+
+				try
+				{
+					rtpSender = GetRtpSenderFromRequest(request);
+				}
+				catch (const MediaSoupError &error)
+				{
+					request->Reject(error.what());
+					return;
+				}
+
+				if (!rtpSender)
+				{
+					request->Reject("RtpSender does not exist");
+					return;
+				}
+
+				rtpSender->HandleRequest(request);
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");

@@ -230,6 +230,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
 		case Channel::Request::MethodId::rtpSender_dump:
 		case Channel::Request::MethodId::rtpSender_setTransport:
+		case Channel::Request::MethodId::rtpSender_disable:
 		{
 			RTC::Room* room;
 
