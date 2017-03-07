@@ -270,7 +270,7 @@ namespace RTC
 	public:
 		std::string cname;
 		uint32_t    ssrc = 0;
-		bool        reducedSize = false;
+		bool        reducedSize = true;
 	};
 
 	class RtpParameters
@@ -282,8 +282,7 @@ namespace RTC
 		Json::Value toJson();
 		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
-		uint32_t GetEncodingClockRate(size_t encodingIdx);
-		uint32_t GetEncodingMediaSsrc(size_t encodingIdx);
+		uint32_t GetClockRateForEncoding(RtpEncodingParameters& encoding);
 
 	private:
 		void ValidateCodecs();

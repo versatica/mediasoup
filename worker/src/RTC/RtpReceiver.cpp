@@ -36,8 +36,7 @@ namespace RTC
 		if (this->rtpParameters)
 			delete this->rtpParameters;
 
-		if (this->rtpStream)
-			delete this->rtpStream;
+		ClearRtpStreams();
 	}
 
 	void RtpReceiver::Close()
@@ -69,6 +68,9 @@ namespace RTC
 		static const Json::StaticString k_hasTransport("hasTransport");
 		static const Json::StaticString k_rtpRawEventEnabled("rtpRawEventEnabled");
 		static const Json::StaticString k_rtpObjectEventEnabled("rtpObjectEventEnabled");
+		static const Json::StaticString k_rtpStreams("rtpStreams");
+		static const Json::StaticString k_ssrc("ssrc");
+		static const Json::StaticString k_rtpStream("rtpStream");
 
 		Json::Value json(Json::objectValue);
 
@@ -86,6 +88,20 @@ namespace RTC
 		json[k_rtpRawEventEnabled] = this->rtpRawEventEnabled;
 
 		json[k_rtpObjectEventEnabled] = this->rtpObjectEventEnabled;
+
+		json[k_rtpStreams] = Json::arrayValue;
+
+		for (auto& kv : this->rtpStreams)
+		{
+			auto ssrc = kv.first;
+			auto rtpStream = kv.second;
+			Json::Value json_rtpStream(Json::objectValue);
+
+			json_rtpStream[k_ssrc] = (Json::UInt)ssrc;
+			json_rtpStream[k_rtpStream] = rtpStream->toJson();
+
+			json[k_rtpStreams].append(json_rtpStream);
+		}
 
 		return json;
 	}
@@ -151,26 +167,42 @@ namespace RTC
 					return;
 				}
 
-				// Free the previous rtpParameters.
+				// Free the previous parameters.
 				if (previousRtpParameters)
 					delete previousRtpParameters;
+
+				// Free previous RTP streams.
+				ClearRtpStreams();
 
 				Json::Value data = this->rtpParameters->toJson();
 
 				request->Accept(data);
 
-				// Fill RTP parameters.
-				FillRtpParameters();
-
 				// And notify again.
 				this->listener->onRtpReceiverParametersDone(this);
 
-				// Set the RtpStreamRecv.
-				// TODO: This assumes a single receiving stream for now.
-				uint32_t streamClockRate = this->rtpParameters->GetEncodingClockRate(0);
+				// Set the RtpStreamRecv instances.
+				for (auto& encoding : this->rtpParameters->encodings)
+				{
+					// Don't create an RtpStreamRecv if the encoding has no SSRC.
+					// TODO: For simulcast or, if not announced, this would be done
+					// dynamicall by the RtpListener when matching a RID with its SSRC.
+					if (!encoding.ssrc)
+						continue;
 
-				// Create a RtpStreamRecv for receiving a media stream.
-				this->rtpStream = new RTC::RtpStreamRecv(streamClockRate);
+					uint32_t ssrc = encoding.ssrc;
+
+					// Don't create a RtpStreamRecv if there is already one for the same SSRC.
+					// TODO: This may not work for SVC codecs.
+					if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
+						continue;
+
+					// Get the clock rate of the stream/encoding.
+					uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
+
+					// Create a RtpStreamRecv for receiving a media stream.
+					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(streamClockRate);
+				}
 
 				break;
 			}
@@ -234,13 +266,22 @@ namespace RTC
 
 		// TODO: Check if stopped, etc (not yet done).
 
-		// TODO: Handle multiple streams.
-		MS_ASSERT(this->rtpStream, "no RtpStream set");
+		// Find the corresponding RtpStreamRecv.
+		auto ssrc = packet->GetSsrc();
+
+		if (this->rtpStreams.find(ssrc) == this->rtpStreams.end())
+		{
+			MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
+
+			return;
+		}
+
+		auto rtpStream = this->rtpStreams[ssrc];
 
 		// Process the packet.
 		// TODO: Must check what kind of packet we are checking. For example, RTX
 		// packets (once implemented) should have a different handling.
-		if (!this->rtpStream->ReceivePacket(packet))
+		if (!rtpStream->ReceivePacket(packet))
 			return;
 
 		// Notify the listener.
@@ -276,34 +317,22 @@ namespace RTC
 		}
 	}
 
-	void RtpReceiver::FillRtpParameters()
-	{
-		MS_TRACE();
-
-		// Set a random muxId.
-		// TODO: This is wrong, we are replacing the given muxId. Instead, this
-		// method should set a random muxId and map the original value.
-		this->rtpParameters->muxId = Utils::Crypto::GetRandomString(8);
-
-		// TODO: Fill SSRCs with random values and set some mechanism to replace
-		// SSRC values in received RTP packets to match the chosen random values.
-	}
-
 	void RtpReceiver::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
 	{
-		if (this->rtpStream)
+		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+			return;
+
+		for (auto& kv : this->rtpStreams)
 		{
-			if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) >= this->maxRtcpInterval)
-			{
-				RTC::RTCP::ReceiverReport* report = this->rtpStream->GetRtcpReceiverReport();
+			auto ssrc = kv.first;
+			auto rtpStream = kv.second;
+			RTC::RTCP::ReceiverReport* report = rtpStream->GetRtcpReceiverReport();
 
-				// TODO: This assumes a single stream for now.
-				report->SetSsrc(this->rtpParameters->GetEncodingMediaSsrc(0));
-				packet->AddReceiverReport(report);
-
-				this->lastRtcpSentTime = now;
-			}
+			report->SetSsrc(ssrc);
+			packet->AddReceiverReport(report);
 		}
+
+		this->lastRtcpSentTime = now;
 	}
 
 	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet)
@@ -344,5 +373,19 @@ namespace RTC
 			packet->Serialize(RtpReceiver::rtcpBuffer);
 			this->transport->SendRtcpPacket(packet);
 		}
+	}
+
+	void RtpReceiver::ClearRtpStreams()
+	{
+		MS_TRACE();
+
+		for (auto& kv : this->rtpStreams)
+		{
+			auto rtpStream = kv.second;
+
+			delete rtpStream;
+		}
+
+		this->rtpStreams.clear();
 	}
 }

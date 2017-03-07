@@ -5,6 +5,7 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include <vector>
 #include <list>
+#include <json/json.h>
 
 namespace RTC
 {
@@ -28,6 +29,7 @@ namespace RTC
 		RtpStreamSend(uint32_t clockRate, size_t bufferSize);
 		virtual ~RtpStreamSend();
 
+		Json::Value toJson();
 		bool ReceivePacket(RTC::RtpPacket* packet);
 		void RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
@@ -35,7 +37,6 @@ namespace RTC
 	private:
 		void ClearBuffer();
 		void StorePacket(RTC::RtpPacket* packet);
-		void Dump();
 
 	private:
 		std::vector<StorageItem> storage;

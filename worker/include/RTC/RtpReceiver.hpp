@@ -11,6 +11,7 @@
 #include "Channel/Request.hpp"
 #include "Channel/Notifier.hpp"
 #include <string>
+#include <map>
 #include <json/json.h>
 
 namespace RTC
@@ -55,7 +56,7 @@ namespace RTC
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
 
 	private:
-		void FillRtpParameters();
+		void ClearRtpStreams();
 
 	public:
 		// Passed by argument.
@@ -69,8 +70,7 @@ namespace RTC
 		RTC::Transport* transport = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
-		// TODO: For now just one.
-		RTC::RtpStreamRecv* rtpStream = nullptr;
+		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		// Others.
 		bool rtpRawEventEnabled = false;
 		bool rtpObjectEventEnabled = false;
@@ -109,10 +109,13 @@ namespace RTC
 	inline
 	void RtpReceiver::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
-		// TODO: This assumes a single stream for now.
-		if (this->rtpStream)
-			this->rtpStream->ReceiveRtcpSenderReport(report);
+		auto it = this->rtpStreams.find(report->GetSsrc());
+		if (it != this->rtpStreams.end())
+		{
+			auto rtpStream = it->second;
 
+			rtpStream->ReceiveRtcpSenderReport(report);
+		}
 	}
 }
 

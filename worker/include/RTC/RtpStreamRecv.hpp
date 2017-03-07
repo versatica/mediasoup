@@ -4,6 +4,7 @@
 #include "RTC/RtpStream.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include <json/json.h>
 
 namespace RTC
 {
@@ -14,6 +15,7 @@ namespace RTC
 		explicit RtpStreamRecv(uint32_t clockRate);
 		virtual ~RtpStreamRecv();
 
+		Json::Value toJson();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
