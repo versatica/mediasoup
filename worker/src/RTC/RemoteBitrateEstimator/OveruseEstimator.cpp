@@ -8,8 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "OveruseEstimator"
+// #define MS_LOG_DEV
 
-#include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp.h"
+#include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
 #include "RTC/RemoteBitrateEstimator/BweDefines.hpp"
 #include "Logger.hpp"
 #include <math.h>
@@ -47,6 +49,7 @@ void OveruseEstimator::Update(int64_t t_delta,
                               int size_delta,
                               BandwidthUsage current_hypothesis,
                               int64_t now_ms) {
+  (void) now_ms;
   const double min_frame_period = UpdateMinFramePeriod(ts_delta);
   const double t_ts_delta = t_delta - ts_delta;
   double fs_delta = size_delta;
@@ -101,7 +104,7 @@ void OveruseEstimator::Update(int64_t t_delta,
   // The covariance matrix must be positive semi-definite.
   bool positive_semi_definite = E_[0][0] + E_[1][1] >= 0 &&
       E_[0][0] * E_[1][1] - E_[0][1] * E_[1][0] >= 0 && E_[0][0] >= 0;
-  MS_ASSERT(positive_semi_definite);
+  MS_ASSERT(positive_semi_definite, "'positive_semi_definite' missing");
   if (!positive_semi_definite) {
     MS_ERROR("The over-use estimator's covariance matrix is no longer semi-definite");
   }

@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "RemoteBitrateEstimatorAbsSendTime"
+// #define MS_LOG_DEV
 
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
-#include "webrtc/base/logging.h"
 #include "webrtc/modules/pacing/paced_sender.h"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include "webrtc/system_wrappers/include/metrics.h"
-#include "webrtc/typedefs.h"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <math.h>
@@ -144,11 +144,16 @@ RemoteBitrateEstimatorAbsSendTime::FindBestProbe(
     } else {
       int send_bitrate_bps = it->mean_size * 8 * 1000 / it->send_mean_ms;
       int recv_bitrate_bps = it->mean_size * 8 * 1000 / it->recv_mean_ms;
-      LOG(LS_INFO) << "Probe failed, sent at " << send_bitrate_bps
-                   << " bps, received at " << recv_bitrate_bps
-                   << " bps. Mean send delta: " << it->send_mean_ms
-                   << " ms, mean recv delta: " << it->recv_mean_ms
-                   << " ms, num probes: " << it->count;
+      MS_DEBUG_TAG(rbe, "Probe failed, sent at %d"
+                        " bps, received at %d"
+                        " bps. Mean send delta: %f"
+                        " ms, mean recv delta: %f"
+                        " ms, num probes: %d",
+                        send_bitrate_bps,
+                        recv_bitrate_bps,
+                        it->send_mean_ms,
+                        it->recv_mean_ms,
+                        it->count);
       break;
     }
   }
@@ -174,12 +179,17 @@ RemoteBitrateEstimatorAbsSendTime::ProcessClusters(int64_t now_ms) {
     // Make sure that a probe sent on a lower bitrate than our estimate can't
     // reduce the estimate.
     if (IsBitrateImproving(probe_bitrate_bps)) {
-      LOG(LS_INFO) << "Probe successful, sent at "
-                   << best_it->GetSendBitrateBps() << " bps, received at "
-                   << best_it->GetRecvBitrateBps()
-                   << " bps. Mean send delta: " << best_it->send_mean_ms
-                   << " ms, mean recv delta: " << best_it->recv_mean_ms
-                   << " ms, num probes: " << best_it->count;
+      MS_DEBUG_TAG(rbe, "Probe successful, sent at %d"
+                        " bps, received at %d"
+                        " bps. Mean send delta: %f"
+                        " ms, mean recv delta: %f"
+                        " ms, num probes: %d",
+                        best_it->GetSendBitrateBps(),
+                        best_it->GetRecvBitrateBps(),
+                        best_it->send_mean_ms,
+                        best_it->recv_mean_ms,
+                        best_it->count);
+
       remote_rate_.SetEstimate(probe_bitrate_bps, now_ms);
       return ProbeResult::kBitrateUpdated;
     }
@@ -215,8 +225,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(
     size_t payload_size,
     const RTPHeader& header) {
   if (!header.extension.hasAbsoluteSendTime) {
-    LOG(LS_WARNING) << "RemoteBitrateEstimatorAbsSendTimeImpl: Incoming packet "
-                       "is missing absolute send time extension!";
+    MS_WARN_TAG(rbe, "Incoming packet is missing absolute send time extension!");
     return;
   }
   IncomingPacketInfo(arrival_time_ms, header.extension.absoluteSendTime,
@@ -228,7 +237,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
     uint32_t send_time_24bits,
     size_t payload_size,
     uint32_t ssrc) {
-  MS_ASSERT(send_time_24bits < (1ul << 24));
+  MS_ASSERT(send_time_24bits < (1ul << 24), "invalid 'send_time_24bits' value");
   if (!uma_recorded_) {
     RTC_HISTOGRAM_ENUMERATION(kBweTypeHistogram, BweNames::kReceiverAbsSendTime,
                               BweNames::kBweNamesMax);
@@ -287,10 +296,16 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
           send_delta_ms = send_time_ms - probes_.back().send_time_ms;
           recv_delta_ms = arrival_time_ms - probes_.back().recv_time_ms;
         }
-        LOG(LS_INFO) << "Probe packet received: send time=" << send_time_ms
-                     << " ms, recv time=" << arrival_time_ms
-                     << " ms, send delta=" << send_delta_ms
-                     << " ms, recv delta=" << recv_delta_ms << " ms.";
+        MS_DEBUG_TAG(rbe, "Probe packet received: send time=%" PRId64
+                          " ms, recv time=%" PRId64
+                          " ms, send delta=%d"
+                          " ms, recv delta=%d"
+                          " ms",
+                          send_time_ms,
+                          arrival_time_ms,
+                          send_delta_ms,
+                          recv_delta_ms);
+
       }
       probes_.push_back(Probe(send_time_ms, arrival_time_ms, payload_size));
       ++total_probes_received_;
@@ -372,6 +387,7 @@ void RemoteBitrateEstimatorAbsSendTime::TimeoutStreams(int64_t now_ms) {
 
 void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avg_rtt_ms,
                                                     int64_t max_rtt_ms) {
+  (void)max_rtt_ms;
   remote_rate_.SetRtt(avg_rtt_ms);
 }
 

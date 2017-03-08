@@ -9,6 +9,9 @@
  */
 
 
+#define MS_CLASS "AimdRateControl"
+// #define MS_LOG_DEV
+
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/BweDefines.hpp"
@@ -98,7 +101,7 @@ void AimdRateControl::SetRtt(int64_t rtt) {
 }
 
 void AimdRateControl::Update(const RateControlInput* input, int64_t now_ms) {
-  MS_ASSERT(input);
+  MS_ASSERT(input, "'input' missing");
 
   // Set the initial bit rate value to what we're receiving the first half
   // second.
@@ -224,7 +227,7 @@ uint32_t AimdRateControl::ChangeBitrate(uint32_t new_bitrate_bps,
       break;
 
     default:
-      MS_ASSERT(false);
+      MS_ASSERT(false, "invalid 'rate_control_state_' value");
   }
   return ClampBitrate(new_bitrate_bps, incoming_bitrate_bps);
 }
@@ -289,6 +292,7 @@ void AimdRateControl::UpdateMaxBitRateEstimate(float incoming_bitrate_kbps) {
 
 void AimdRateControl::ChangeState(const RateControlInput& input,
                                   int64_t now_ms) {
+  (void) input;
   switch (current_input_.bw_state) {
     case kBwNormal:
       if (rate_control_state_ == kRcHold) {
@@ -305,7 +309,7 @@ void AimdRateControl::ChangeState(const RateControlInput& input,
       ChangeState(kRcHold);
       break;
     default:
-      MS_ASSERT(false);
+      MS_ASSERT(false, "invalid 'RateControlInput::bw_state' value");
   }
 }
 
