@@ -10,6 +10,7 @@
 
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp" // LatestTimestamp
 #include <algorithm>
 
 namespace RTC {
@@ -89,7 +90,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
     current_timestamp_group_.timestamp = timestamp;
     current_timestamp_group_.size = 0;
   } else {
-    current_timestamp_group_.timestamp = LatestTimestamp(
+    current_timestamp_group_.timestamp = Utils::Time::LatestTimestamp(
         current_timestamp_group_.timestamp, timestamp);
   }
   // Accumulate the frame size.
