@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <cassert>
 
 
 namespace RTC {
@@ -46,12 +47,12 @@ struct Cluster {
         num_above_min_delta(0) {}
 
   int GetSendBitrateBps() const {
-    MS_ASSERT(send_mean_ms > 0.0f);
+    assert(send_mean_ms > 0.0f);
     return mean_size * 8 * 1000 / send_mean_ms;
   }
 
   int GetRecvBitrateBps() const {
-    MS_ASSERT(recv_mean_ms > 0.0f);
+    assert(recv_mean_ms > 0.0f);
     return mean_size * 8 * 1000 / recv_mean_ms;
   }
 

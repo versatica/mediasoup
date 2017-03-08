@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "InterArrival"
+// #define MS_LOG_DEV
+
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp" // LatestTimestamp
@@ -34,9 +37,9 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
                                  uint32_t* timestamp_delta,
                                  int64_t* arrival_time_delta_ms,
                                  int* packet_size_delta) {
-  MS_ASSERT(timestamp_delta != NULL);
-  MS_ASSERT(arrival_time_delta_ms != NULL);
-  MS_ASSERT(packet_size_delta != NULL);
+  MS_ASSERT(timestamp_delta, "'timestamp_delta' missing");
+  MS_ASSERT(arrival_time_delta_ms, "'arrival_time_delta_ms' missing");
+  MS_ASSERT(packet_size_delta, "'packet_size_delta' missing");
   bool calculated_deltas = false;
   if (current_timestamp_group_.IsFirstPacket()) {
     // We don't have enough data to update the filter, so we store it until we
@@ -59,9 +62,9 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
           prev_timestamp_group_.last_system_time_ms;
       if (*arrival_time_delta_ms - system_time_delta_ms >=
           kArrivalTimeOffsetThresholdMs) {
-        LOG(LS_WARNING) << "The arrival time clock offset has changed (diff = "
-                        << *arrival_time_delta_ms - system_time_delta_ms
-                        << " ms), resetting.";
+        MS_WARN_TAG(rbe, "The arrival time clock offset has changed (diff = "
+                         "%" PRId64 " ms), resetting",
+                         *arrival_time_delta_ms - system_time_delta_ms);
         Reset();
         return false;
       }
@@ -70,16 +73,16 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
         // arrival timestamp.
         ++num_consecutive_reordered_packets_;
         if (num_consecutive_reordered_packets_ >= kReorderedResetThreshold) {
-          LOG(LS_WARNING) << "Packets are being reordered on the path from the "
-                             "socket to the bandwidth estimator. Ignoring this "
-                             "packet for bandwidth estimation, resetting.";
+          MS_WARN_TAG(rbe, "Packets are being reordered on the path from the "
+                           "socket to the bandwidth estimator. Ignoring this "
+                           "packet for bandwidth estimation, resetting");
           Reset();
         }
         return false;
       } else {
         num_consecutive_reordered_packets_ = 0;
       }
-      MS_ASSERT(*arrival_time_delta_ms >= 0);
+      MS_ASSERT(*arrival_time_delta_ms >= 0, "invalid 'arrival_time_delta_ms' value");
       *packet_size_delta = static_cast<int>(current_timestamp_group_.size) -
           static_cast<int>(prev_timestamp_group_.size);
       calculated_deltas = true;
@@ -134,7 +137,7 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
   if (!burst_grouping_) {
     return false;
   }
-  MS_ASSERT(current_timestamp_group_.complete_time_ms >= 0);
+  MS_ASSERT(current_timestamp_group_.complete_time_ms >= 0, "invalid 'complete_time_ms' value");
   int64_t arrival_time_delta_ms = arrival_time_ms -
       current_timestamp_group_.complete_time_ms;
   uint32_t timestamp_diff = timestamp - current_timestamp_group_.timestamp;

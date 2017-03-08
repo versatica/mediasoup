@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "OveruseDetector"
+// #define MS_LOG_DEV
+
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/BweDefines.hpp"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"

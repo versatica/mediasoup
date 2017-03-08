@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "RemoteBitrateEstimatorSingleStream"
+// #define MS_LOG_DEV
 
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorSingleStream.hpp"
-#include "webrtc/base/logging.h"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
 #include "webrtc/system_wrappers/include/metrics.h"
-#include "webrtc/typedefs.h"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <utility> // std::make_pair
@@ -51,8 +51,7 @@ RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(
       last_process_time_(-1),
       process_interval_ms_(kProcessIntervalMs),
       uma_recorded_(false) {
-  MS_ASSERT(observer_);
-  LOG(LS_INFO) << "RemoteBitrateEstimatorSingleStream: Instantiating.";
+  MS_ASSERT(observer_, "'observer_' missing");
 }
 
 RemoteBitrateEstimatorSingleStream::~RemoteBitrateEstimatorSingleStream() {
@@ -125,7 +124,7 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
     uint32_t incoming_bitrate_bps = incoming_bitrate_.Rate(now_ms);
     if (incoming_bitrate_bps &&
         (prior_state != kBwOverusing ||
-         GetRemoteRate()->TimeToReduceFurther(now_ms, *incoming_bitrate_bps))) {
+         GetRemoteRate()->TimeToReduceFurther(now_ms, incoming_bitrate_bps))) {
       // The first overuse should immediately trigger a new estimate.
       // We also have to update the estimate immediately if we are overusing
       // and the target bitrate is too high compared to what we are receiving.
@@ -196,6 +195,7 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
 
 void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avg_rtt_ms,
                                                      int64_t max_rtt_ms) {
+  (void)max_rtt_ms;
   GetRemoteRate()->SetRtt(avg_rtt_ms);
 }
 
@@ -210,7 +210,7 @@ void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc) {
 bool RemoteBitrateEstimatorSingleStream::LatestEstimate(
     std::vector<uint32_t>* ssrcs,
     uint32_t* bitrate_bps) const {
-  MS_ASSERT(bitrate_bps);
+  MS_ASSERT(bitrate_bps, "'bitrate_bps' missing");
   if (!remote_rate_->ValidEstimate()) {
     return false;
   }
@@ -224,7 +224,7 @@ bool RemoteBitrateEstimatorSingleStream::LatestEstimate(
 
 void RemoteBitrateEstimatorSingleStream::GetSsrcs(
     std::vector<uint32_t>* ssrcs) const {
-  MS_ASSERT(ssrcs);
+  MS_ASSERT(ssrcs, "'ssrcs' missing");
   ssrcs->resize(overuse_detectors_.size());
   int i = 0;
   for (SsrcOveruseEstimatorMap::const_iterator it = overuse_detectors_.begin();
