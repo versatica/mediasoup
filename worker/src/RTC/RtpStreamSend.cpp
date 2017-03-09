@@ -131,7 +131,11 @@ namespace RTC
 
 				// Try again.
 				if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
+				{
+					MS_DEBUG_DEV("requested packet range not in the buffer");
+
 					return;
+				}
 			}
 			// Otherwise just return.
 			else
@@ -191,6 +195,12 @@ namespace RTC
 							too_old_packet_found = true;
 						}
 
+						// Exit the loop.
+						break;
+					}
+					// It can not be after this packet.
+					else if (current_seq32 > seq32)
+					{
 						// Exit the loop.
 						break;
 					}

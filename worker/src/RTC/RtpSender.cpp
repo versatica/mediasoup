@@ -268,8 +268,8 @@ namespace RTC
 				case RTC::Media::Kind::VIDEO:
 				case RTC::Media::Kind::DEPTH:
 				{
-					// Buffer up to 200 packets.
-					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 200);
+					// Buffer up to 100 packets.
+					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 100);
 					break;
 				}
 
@@ -316,7 +316,7 @@ namespace RTC
 		// RTP parameters.
 		if (packet->GetSsrc() != this->rtpParameters->encodings[0].ssrc)
 		{
-			MS_DEBUG_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
+			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 			return;
 		}
