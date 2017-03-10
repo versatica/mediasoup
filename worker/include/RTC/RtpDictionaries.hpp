@@ -123,6 +123,26 @@ namespace RTC
 		std::string name;
 	};
 
+	class RtpHeaderExtensionUri
+	{
+	public:
+		enum class Type : uint8_t
+		{
+			UNKNOWN           = 0,
+			SSRC_AUDIO_LEVEL  = 1,
+			TO_OFFSET         = 2,
+			ABS_SEND_TIME     = 3,
+			VIDEO_ORIENTATION = 4,
+			RTP_STREAM_ID     = 5
+		};
+
+		private:
+			static std::unordered_map<std::string, Type> string2Type;
+
+		public:
+			static Type GetType(std::string& uri);
+	};
+
 	class RtcpFeedback
 	{
 	public:
@@ -172,10 +192,11 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		Media::Kind kind = Media::Kind::ALL;
-		std::string uri;
-		uint16_t    preferredId = 0;
-		bool        preferredEncrypt = false;
+		Media::Kind                 kind = Media::Kind::ALL;
+		std::string                 uri;
+		RtpHeaderExtensionUri::Type type;
+		uint16_t                    preferredId = 0;
+		bool                        preferredEncrypt = false;
 	};
 
 	class RtpCapabilities
@@ -254,10 +275,11 @@ namespace RTC
 		Json::Value toJson();
 
 	public:
-		std::string     uri;
-		uint16_t        id = 0;
-		bool            encrypt = false;
-		RTC::Parameters parameters;
+		std::string                 uri;
+		RtpHeaderExtensionUri::Type type;
+		uint16_t                    id = 0;
+		bool                        encrypt = false;
+		RTC::Parameters             parameters;
 	};
 
 	class RtcpParameters

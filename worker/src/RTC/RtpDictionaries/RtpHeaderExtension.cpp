@@ -38,6 +38,9 @@ namespace RTC
 		if (this->uri.empty())
 			MS_THROW_ERROR("empty RtpHeaderExtension.uri");
 
+		// Get the type.
+		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
+
 		// `preferredId` is mandatory.
 		if (!data[k_preferredId].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtension.preferredId");
