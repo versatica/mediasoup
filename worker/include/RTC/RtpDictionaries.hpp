@@ -58,6 +58,7 @@ namespace RTC
 			PCMU,
 			ISAC,
 			G722,
+			ILBC,
 			// Video codecs:
 			VP8 = 200,
 			VP9,

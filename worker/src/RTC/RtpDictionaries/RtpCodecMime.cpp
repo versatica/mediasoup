@@ -30,6 +30,7 @@ namespace RTC
 		{ "pcmu",            RtpCodecMime::Subtype::PCMU            },
 		{ "isac",            RtpCodecMime::Subtype::ISAC            },
 		{ "g722",            RtpCodecMime::Subtype::G722            },
+		{ "ilbc",            RtpCodecMime::Subtype::ILBC            },
 		// Video codecs:
 		{ "vp8",             RtpCodecMime::Subtype::VP8             },
 		{ "vp9",             RtpCodecMime::Subtype::VP9             },
@@ -53,6 +54,7 @@ namespace RTC
 		{ RtpCodecMime::Subtype::PCMU,            "PCMU"            },
 		{ RtpCodecMime::Subtype::ISAC,            "ISAC"            },
 		{ RtpCodecMime::Subtype::G722,            "G722"            },
+		{ RtpCodecMime::Subtype::ILBC,            "iLBC"            },
 		// Video codecs:
 		{ RtpCodecMime::Subtype::VP8,             "VP8"             },
 		{ RtpCodecMime::Subtype::VP9,             "VP9"             },
