@@ -59,6 +59,7 @@ namespace RTC
 			ISAC,
 			G722,
 			ILBC,
+			SILK,
 			// Video codecs:
 			VP8 = 200,
 			VP9,
