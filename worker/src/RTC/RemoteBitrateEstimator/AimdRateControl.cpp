@@ -25,8 +25,11 @@ namespace RTC {
 static const int64_t kDefaultRttMs = 200;
 static const int64_t kMaxFeedbackIntervalMs = 1000;
 
+// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
+constexpr int kMinBitrateBps = 10000;
+
 AimdRateControl::AimdRateControl()
-    : min_configured_bitrate_bps_(congestion_controller::GetMinBitrateBps()),
+    : min_configured_bitrate_bps_(kMinBitrateBps),
       max_configured_bitrate_bps_(30000000),
       current_bitrate_bps_(max_configured_bitrate_bps_),
       avg_max_bitrate_kbps_(-1.0f),
