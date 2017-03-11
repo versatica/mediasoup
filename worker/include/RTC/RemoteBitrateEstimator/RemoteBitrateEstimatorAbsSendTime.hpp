@@ -12,12 +12,12 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
 
 #include "common.hpp"
-#include "webrtc/base/rate_statistics.h"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
+#include "RTC/RtpDataCounter.hpp"
 #include "Logger.hpp"
 #include <list>
 #include <map>
@@ -118,7 +118,7 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
   std::unique_ptr<InterArrival> inter_arrival_;
   std::unique_ptr<OveruseEstimator> estimator_;
   OveruseDetector detector_;
-  RateStatistics incoming_bitrate_;
+  RateCalculator incoming_bitrate_;
   bool incoming_bitrate_initialized_;
   std::vector<int> recent_propagation_delta_ms_;
   std::vector<int64_t> recent_update_time_ms_;

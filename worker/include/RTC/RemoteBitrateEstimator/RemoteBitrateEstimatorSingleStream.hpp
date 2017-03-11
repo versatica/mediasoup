@@ -12,9 +12,9 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
 
 #include "common.hpp"
-#include "webrtc/base/rate_statistics.h"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
+#include "RTC/RtpDataCounter.hpp"
 #include <map>
 #include <memory>
 #include <vector>
@@ -53,7 +53,7 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   AimdRateControl* GetRemoteRate();
 
   SsrcOveruseEstimatorMap overuse_detectors_;
-  RateStatistics incoming_bitrate_;
+  RateCalculator incoming_bitrate_;
   uint32_t last_valid_incoming_bitrate_;
   std::unique_ptr<AimdRateControl> remote_rate_;
   RemoteBitrateObserver* observer_;
