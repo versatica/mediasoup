@@ -18,6 +18,7 @@
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
 #include "webrtc/system_wrappers/include/metrics.h"
 #include "DepLibUV.hpp"
+#include "Utils.hpp" // Byte::Get3Bytes
 #include "Logger.hpp"
 #include <utility> // std::make_pair
 
@@ -65,17 +66,18 @@ RemoteBitrateEstimatorSingleStream::~RemoteBitrateEstimatorSingleStream() {
 void RemoteBitrateEstimatorSingleStream::IncomingPacket(
     int64_t arrival_time_ms,
     size_t payload_size,
-    const RTPHeader& header) {
+    const RtpPacket& packet,
+    const uint8_t* transmissionTimeOffset
+    ) {
   if (!uma_recorded_) {
     BweNames type = BweNames::kReceiverTOffset;
-    if (!header.extension.hasTransmissionTimeOffset)
+    if (!transmissionTimeOffset)
       type = BweNames::kReceiverNoExtension;
-    RTC_HISTOGRAM_ENUMERATION(kBweTypeHistogram, type, BweNames::kBweNamesMax);
     uma_recorded_ = true;
   }
-  uint32_t ssrc = header.ssrc;
-  uint32_t rtp_timestamp = header.timestamp +
-      header.extension.transmissionTimeOffset;
+  uint32_t ssrc = packet.GetSsrc();
+  uint32_t rtp_timestamp = packet.GetTimestamp() +
+      Utils::Byte::Get3Bytes(transmissionTimeOffset, 0);
   int64_t now_ms = DepLibUV::GetTime();
   SsrcOveruseEstimatorMap::iterator it = overuse_detectors_.find(ssrc);
   if (it == overuse_detectors_.end()) {
