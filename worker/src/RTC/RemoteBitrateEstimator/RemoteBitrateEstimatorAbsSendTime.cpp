@@ -16,6 +16,7 @@
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include "webrtc/system_wrappers/include/metrics.h"
 #include "DepLibUV.hpp"
+#include "Utils.hpp" // Byte::Get3Bytes
 #include "Logger.hpp"
 #include <math.h>
 #include <algorithm>
@@ -223,13 +224,14 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketFeedbackVector(
 void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(
     int64_t arrival_time_ms,
     size_t payload_size,
-    const RTPHeader& header) {
-  if (!header.extension.hasAbsoluteSendTime) {
+    const RtpPacket& packet,
+    const uint8_t* absoluteSendTime) {
+  if (!absoluteSendTime) {
     MS_WARN_TAG(rbe, "Incoming packet is missing absolute send time extension!");
     return;
   }
-  IncomingPacketInfo(arrival_time_ms, header.extension.absoluteSendTime,
-                     payload_size, header.ssrc);
+  IncomingPacketInfo(arrival_time_ms, Utils::Byte::Get3Bytes(absoluteSendTime, 0),
+                     payload_size, packet.GetSsrc());
 }
 
 void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(

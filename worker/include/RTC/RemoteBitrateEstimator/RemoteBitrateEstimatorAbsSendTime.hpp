@@ -74,7 +74,8 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
 
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
-                      const RTPHeader& header) override;
+                      const RtpPacket& packet,
+                      const uint8_t* absoluteSendTime) override;
   // This class relies on Process() being called periodically (at least once
   // every other second) for streams to be timed out properly.
   void Process() override;

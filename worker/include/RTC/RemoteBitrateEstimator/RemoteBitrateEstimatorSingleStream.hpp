@@ -28,7 +28,8 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
 
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
-                      const RTPHeader& header) override;
+                      const RtpPacket& packet,
+                      const uint8_t* transmissionTimeOffset) override;
   void Process() override;
   int64_t TimeUntilNextProcess() override;
   void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;

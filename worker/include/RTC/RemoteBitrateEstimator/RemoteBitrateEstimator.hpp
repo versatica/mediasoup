@@ -14,7 +14,7 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_INCLUDE_REMOTE_BITRATE_ESTIMATOR_HPP
 
 #include "common.hpp"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "RTC/RtpPacket.hpp"
 #include <map>
 #include <vector>
 
@@ -60,7 +60,8 @@ class RemoteBitrateEstimator : public CallStatsObserver {
   // Note that |arrival_time_ms| can be of an arbitrary time base.
   virtual void IncomingPacket(int64_t arrival_time_ms,
                               size_t payload_size,
-                              const RTPHeader& header) = 0;
+                              const RtpPacket& packet,
+                              const uint8_t* extensionHeaderValue) = 0;
 
   // Removes all data for |ssrc|.
   virtual void RemoveStream(uint32_t ssrc) = 0;
