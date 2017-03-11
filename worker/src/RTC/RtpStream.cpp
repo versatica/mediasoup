@@ -15,7 +15,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStream::RtpStream(uint32_t clockRate) :
+	RtpStream::RtpStream(uint32_t ssrc, uint32_t clockRate) :
+		ssrc(ssrc),
 		clockRate(clockRate)
 	{
 		MS_TRACE();

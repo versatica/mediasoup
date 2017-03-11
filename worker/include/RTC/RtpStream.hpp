@@ -9,9 +9,10 @@ namespace RTC
 	class RtpStream
 	{
 	public:
-		explicit RtpStream(uint32_t clockRate);
+		explicit RtpStream(uint32_t ssrc, uint32_t clockRate);
 		virtual ~RtpStream();
 
+		uint32_t GetSsrc();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 
 	private:
@@ -20,6 +21,7 @@ namespace RTC
 
 	protected:
 		// Given as argument.
+		uint32_t ssrc = 0;
 		uint32_t clockRate = 0;
 		bool started = false; // Whether at least a RTP packet has been received.
 		// https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
@@ -34,6 +36,14 @@ namespace RTC
 		// Others.
 		uint32_t max_timestamp = 0; // Highest timestamp seen.
 	};
+
+	/* Inline instance methods. */
+
+	inline
+	uint32_t RtpStream::GetSsrc()
+	{
+		return this->ssrc;
+	}
 }
 
 #endif

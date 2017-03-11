@@ -69,10 +69,10 @@ namespace RTC
 		static const Json::StaticString k_rtpRawEventEnabled("rtpRawEventEnabled");
 		static const Json::StaticString k_rtpObjectEventEnabled("rtpObjectEventEnabled");
 		static const Json::StaticString k_rtpStreams("rtpStreams");
-		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_rtpStream("rtpStream");
 
 		Json::Value json(Json::objectValue);
+		Json::Value json_rtpStreams(Json::arrayValue);
 
 		json[k_rtpReceiverId] = (Json::UInt)this->rtpReceiverId;
 
@@ -89,19 +89,13 @@ namespace RTC
 
 		json[k_rtpObjectEventEnabled] = this->rtpObjectEventEnabled;
 
-		json[k_rtpStreams] = Json::arrayValue;
-
 		for (auto& kv : this->rtpStreams)
 		{
-			auto ssrc = kv.first;
 			auto rtpStream = kv.second;
-			Json::Value json_rtpStream(Json::objectValue);
 
-			json_rtpStream[k_ssrc] = (Json::UInt)ssrc;
-			json_rtpStream[k_rtpStream] = rtpStream->toJson();
-
-			json[k_rtpStreams].append(json_rtpStream);
+			json_rtpStreams.append(rtpStream->toJson());
 		}
+		json[k_rtpStreams] = json_rtpStreams;
 
 		return json;
 	}
@@ -201,7 +195,7 @@ namespace RTC
 					uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
 
 					// Create a RtpStreamRecv for receiving a media stream.
-					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(streamClockRate);
+					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(ssrc, streamClockRate);
 				}
 
 				break;
@@ -324,11 +318,10 @@ namespace RTC
 
 		for (auto& kv : this->rtpStreams)
 		{
-			auto ssrc = kv.first;
 			auto rtpStream = kv.second;
 			RTC::RTCP::ReceiverReport* report = rtpStream->GetRtcpReceiverReport();
 
-			report->SetSsrc(ssrc);
+			report->SetSsrc(rtpStream->GetSsrc());
 			packet->AddReceiverReport(report);
 		}
 

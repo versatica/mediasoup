@@ -34,8 +34,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(uint32_t clockRate, size_t bufferSize) :
-		RtpStream::RtpStream(clockRate),
+	RtpStreamSend::RtpStreamSend(uint32_t ssrc, uint32_t clockRate, size_t bufferSize) :
+		RtpStream::RtpStream(ssrc, clockRate),
 		storage(bufferSize)
 	{
 		MS_TRACE();
@@ -54,6 +54,7 @@ namespace RTC
 		MS_TRACE();
 
 		static Json::Value null_data(Json::nullValue);
+		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_received("received");
 		static const Json::StaticString k_maxTimestamp("maxTimestamp");
@@ -61,6 +62,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
+		json[k_ssrc] = (Json::UInt)this->ssrc;
 		json[k_clockRate] = (Json::UInt)this->clockRate;
 		json[k_received] = (Json::UInt)this->received;
 		json[k_maxTimestamp] = (Json::UInt)this->max_timestamp;

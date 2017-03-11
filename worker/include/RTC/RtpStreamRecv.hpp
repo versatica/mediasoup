@@ -12,7 +12,7 @@ namespace RTC
 		public RtpStream
 	{
 	public:
-		explicit RtpStreamRecv(uint32_t clockRate);
+		explicit RtpStreamRecv(uint32_t ssrc, uint32_t clockRate);
 		virtual ~RtpStreamRecv();
 
 		Json::Value toJson();
