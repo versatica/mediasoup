@@ -31,6 +31,7 @@ namespace RTC
 		{ "isac",            RtpCodecMime::Subtype::ISAC            },
 		{ "g722",            RtpCodecMime::Subtype::G722            },
 		{ "ilbc",            RtpCodecMime::Subtype::ILBC            },
+		{ "silk",            RtpCodecMime::Subtype::SILK            },
 		// Video codecs:
 		{ "vp8",             RtpCodecMime::Subtype::VP8             },
 		{ "vp9",             RtpCodecMime::Subtype::VP9             },
@@ -55,6 +56,7 @@ namespace RTC
 		{ RtpCodecMime::Subtype::ISAC,            "ISAC"            },
 		{ RtpCodecMime::Subtype::G722,            "G722"            },
 		{ RtpCodecMime::Subtype::ILBC,            "iLBC"            },
+		{ RtpCodecMime::Subtype::SILK,            "SILK"            },
 		// Video codecs:
 		{ RtpCodecMime::Subtype::VP8,             "VP8"             },
 		{ RtpCodecMime::Subtype::VP9,             "VP9"             },
