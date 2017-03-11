@@ -13,9 +13,6 @@
 
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/BweDefines.hpp"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/include/field_trial.h"
-#include "webrtc/system_wrappers/include/trace.h"
 #include <math.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -25,16 +22,31 @@
 
 namespace RTC {
 
+// (jmillan) disable the experiment until we know how to use the threshold values.
+/*
 const char kAdaptiveThresholdExperiment[] = "WebRTC-AdaptiveBweThreshold";
 const char kEnabledPrefix[] = "Enabled";
 const size_t kEnabledPrefixLength = sizeof(kEnabledPrefix) - 1;
 const char kDisabledPrefix[] = "Disabled";
 const size_t kDisabledPrefixLength = sizeof(kDisabledPrefix) - 1;
+*/
 
 const double kMaxAdaptOffsetMs = 15.0;
 const double kOverUsingTimeThreshold = 10;
 const int kMinNumDeltas = 60;
 
+// (jmillan) disable the experiment until we know how to use the threshold values.
+bool AdaptiveThresholdExperimentIsDisabled() {
+  return true;
+}
+
+bool ReadExperimentConstants(double* k_up, double* k_down) {
+  (void) k_up;
+  (void) k_down;
+  return false;
+}
+
+/*
 bool AdaptiveThresholdExperimentIsDisabled() {
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kAdaptiveThresholdExperiment);
@@ -43,9 +55,11 @@ bool AdaptiveThresholdExperimentIsDisabled() {
     return false;
   return experiment_string.substr(0, kDisabledPrefixLength) == kDisabledPrefix;
 }
+*/
 
 // Gets thresholds from the experiment name following the format
 // "WebRTC-AdaptiveBweThreshold/Enabled-0.5,0.002/".
+/*
 bool ReadExperimentConstants(double* k_up, double* k_down) {
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kAdaptiveThresholdExperiment);
@@ -56,6 +70,7 @@ bool ReadExperimentConstants(double* k_up, double* k_down) {
   return sscanf(experiment_string.substr(kEnabledPrefixLength + 1).c_str(),
                 "%lf,%lf", k_up, k_down) == 2;
 }
+*/
 
 OveruseDetector::OveruseDetector()
     // Experiment is on by default, but can be disabled with finch by setting
