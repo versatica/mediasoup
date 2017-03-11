@@ -16,7 +16,6 @@
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
-#include "webrtc/system_wrappers/include/metrics.h"
 #include "DepLibUV.hpp"
 #include "Utils.hpp" // Byte::Get3Bytes
 #include "Logger.hpp"
@@ -96,14 +95,15 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
   estimator->last_packet_time_ms = now_ms;
 
   // Check if incoming bitrate estimate is valid, and if it needs to be reset.
-  uint32_t incoming_bitrate = incoming_bitrate_.Rate(now_ms);
+  uint32_t incoming_bitrate = incoming_bitrate_.GetRate(now_ms);
   if (incoming_bitrate) {
     last_valid_incoming_bitrate_ = incoming_bitrate;
   } else if (last_valid_incoming_bitrate_ > 0) {
     // Incoming bitrate had a previous valid value, but now not enough data
     // point are left within the current window. Reset incoming bitrate
     // estimator so that the window size will only contain new data points.
-    incoming_bitrate_.Reset();
+    // (jmillan) Reset disabled! Check RateCalculator implementation.
+    //incoming_bitrate_.Reset(0);
     last_valid_incoming_bitrate_ = 0;
   }
   incoming_bitrate_.Update(payload_size, now_ms);
@@ -123,7 +123,7 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
                                estimator->estimator.num_of_deltas(), now_ms);
   }
   if (estimator->detector.State() == kBwOverusing) {
-    uint32_t incoming_bitrate_bps = incoming_bitrate_.Rate(now_ms);
+    uint32_t incoming_bitrate_bps = incoming_bitrate_.GetRate(now_ms);
     if (incoming_bitrate_bps &&
         (prior_state != kBwOverusing ||
          GetRemoteRate()->TimeToReduceFurther(now_ms, incoming_bitrate_bps))) {
@@ -182,7 +182,7 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
   double mean_noise_var = sum_var_noise /
       static_cast<double>(overuse_detectors_.size());
   const RateControlInput input(bw_state,
-                               incoming_bitrate_.Rate(now_ms),
+                               incoming_bitrate_.GetRate(now_ms),
                                mean_noise_var);
   remote_rate->Update(&input, now_ms);
   uint32_t target_bitrate = remote_rate->UpdateBandwidthEstimate(now_ms);

@@ -12,9 +12,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
-#include "webrtc/modules/pacing/paced_sender.h"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
-#include "webrtc/system_wrappers/include/metrics.h"
 #include "DepLibUV.hpp"
 #include "Utils.hpp" // Byte::Get3Bytes
 #include "Logger.hpp"
@@ -243,8 +241,6 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
     uint32_t ssrc) {
   MS_ASSERT(send_time_24bits < (1ul << 24), "invalid 'send_time_24bits' value");
   if (!uma_recorded_) {
-    RTC_HISTOGRAM_ENUMERATION(kBweTypeHistogram, BweNames::kReceiverAbsSendTime,
-                              BweNames::kBweNamesMax);
     uma_recorded_ = true;
   }
   // Shift up send time to use the full 32 bits that inter_arrival works with,
@@ -258,14 +254,15 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
 
   // Check if incoming bitrate estimate is valid, and if it needs to be reset.
   uint32_t incoming_bitrate =
-      incoming_bitrate_.Rate(arrival_time_ms);
+      incoming_bitrate_.GetRate(arrival_time_ms);
   if (incoming_bitrate) {
     incoming_bitrate_initialized_ = true;
   } else if (incoming_bitrate_initialized_) {
     // Incoming bitrate had a previous valid value, but now not enough data
     // point are left within the current window. Reset incoming bitrate
     // estimator so that the window size will only contain new data points.
-    incoming_bitrate_.Reset();
+    // (jmillan) TODO: Reset the RateCalculator.
+    //incoming_bitrate_.Reset();
     incoming_bitrate_initialized_ = false;
   }
   incoming_bitrate_.Update(payload_size, arrival_time_ms);
@@ -336,7 +333,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
         update_estimate = true;
       } else if (detector_.State() == kBwOverusing) {
         uint32_t incoming_rate =
-            incoming_bitrate_.Rate(arrival_time_ms);
+            incoming_bitrate_.GetRate(arrival_time_ms);
         if (incoming_rate &&
             remote_rate_.TimeToReduceFurther(now_ms, incoming_rate)) {
           update_estimate = true;
@@ -349,7 +346,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
       // We also have to update the estimate immediately if we are overusing
       // and the target bitrate is too high compared to what we are receiving.
       const RateControlInput input(detector_.State(),
-                                   incoming_bitrate_.Rate(arrival_time_ms),
+                                   incoming_bitrate_.GetRate(arrival_time_ms),
                                    estimator_->var_noise());
       remote_rate_.Update(&input, now_ms);
       target_bitrate_bps = remote_rate_.UpdateBandwidthEstimate(now_ms);
