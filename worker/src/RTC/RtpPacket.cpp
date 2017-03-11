@@ -304,7 +304,7 @@ namespace RTC
 		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
 	}
 
-	RtpPacket* RtpPacket::Clone(uint8_t* buffer)
+	RtpPacket* RtpPacket::Clone(uint8_t* buffer) const
 	{
 		MS_TRACE();
 
