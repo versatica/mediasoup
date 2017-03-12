@@ -75,7 +75,7 @@ bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
   }
 
   RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(
-      RemoteBitrateObserver* observer)
+      Listener* observer)
       : observer_(observer),
         inter_arrival_(),
         estimator_(),
@@ -311,7 +311,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
       probes_.push_back(Probe(send_time_ms, arrival_time_ms, payload_size));
       ++total_probes_received_;
       // Make sure that a probe which updated the bitrate immediately has an
-      // effect by calling the OnReceiveBitrateChanged callback.
+      // effect by calling the onReceiveBitrateChanged callback.
       if (ProcessClusters(now_ms) == ProbeResult::kBitrateUpdated)
         update_estimate = true;
     }
@@ -356,7 +356,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
   }
   if (update_estimate) {
     last_update_ms_ = now_ms;
-    observer_->OnReceiveBitrateChanged(ssrcs, target_bitrate_bps);
+    observer_->onReceiveBitrateChanged(ssrcs, target_bitrate_bps);
   }
 }
 

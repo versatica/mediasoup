@@ -66,7 +66,7 @@ struct Cluster {
 
 class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
  public:
-  RemoteBitrateEstimatorAbsSendTime(RemoteBitrateObserver* observer);
+  RemoteBitrateEstimatorAbsSendTime(Listener* observer);
   virtual ~RemoteBitrateEstimatorAbsSendTime() {}
 
   /*
@@ -114,7 +114,7 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
 
   void TimeoutStreams(int64_t now_ms);
 
-  RemoteBitrateObserver* const observer_;
+  Listener* const observer_;
   std::unique_ptr<InterArrival> inter_arrival_;
   std::unique_ptr<OveruseEstimator> estimator_;
   OveruseDetector detector_;

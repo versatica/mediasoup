@@ -34,20 +34,16 @@ class CallStatsObserver {
   virtual ~CallStatsObserver() {}
 };
 
-// RemoteBitrateObserver is used to signal changes in bitrate estimates for
-// the incoming streams.
-class RemoteBitrateObserver {
- public:
-  // Called when a receive channel group has a new bitrate estimate for the
-  // incoming streams.
-  virtual void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
-                                       uint32_t bitrate) = 0;
-
-  virtual ~RemoteBitrateObserver() {}
-};
-
-
 class RemoteBitrateEstimator : public CallStatsObserver {
+ public:
+   // Used to signal changes in bitrate estimates for the incoming streams.
+   class Listener
+   {
+     public:
+       // Called when a receive channel group has a new bitrate estimate for the incoming streams.
+       virtual void onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
+   };
+
  public:
   virtual ~RemoteBitrateEstimator() {}
 
