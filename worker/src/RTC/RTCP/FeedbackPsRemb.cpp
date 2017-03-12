@@ -10,7 +10,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class variables. */
 
-		uint32_t FeedbackPsRembPacket::UniqueIdentifier = 0x52454D42;
+	uint32_t FeedbackPsRembPacket::UniqueIdentifier = 0x52454D42;
 
 	/* Class methods. */
 
@@ -46,15 +46,10 @@ namespace RTC { namespace RTCP
 			return;
 		}
 
-		// Decompose header->compact (32 bits) into numSsrc, exponent and mantissa.
-
-		// First 8 bits.
 		size_t numSsrcs = data[12];
 
-		// Next 6 bits.
 		uint8_t exponent = data[13] >> 2;
 
-		// Next 18 bits.
 		uint64_t mantissa = (static_cast<uint32_t>(data[13] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 14);
 
 		this->bitrate = (mantissa << exponent);
