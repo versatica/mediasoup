@@ -134,14 +134,14 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		// Create sdes item.
 		SdesItem* item = new SdesItem(type, len, value.c_str());
 
-		// // Create sdes chunk.
+		// Create sdes chunk.
 		SdesChunk chunk(ssrc);
 		chunk.AddItem(item);
 
-		// // Check chunk content.
+		// Check chunk content.
 		REQUIRE(chunk.GetSsrc() == ssrc);
 
-		// // Check item content.
+		// Check item content.
 		item = *(chunk.Begin());
 
 		REQUIRE(item->GetType() == type);

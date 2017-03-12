@@ -392,12 +392,7 @@ namespace RTC
 		RTC::RTCP::NackItem* nackItem = new RTC::RTCP::NackItem(seq, bitmask);
 
 		packet.AddItem(nackItem);
-
-		packet.Dump();
-
+		packet.Serialize(RtpReceiver::rtcpBuffer);
 		this->transport->SendRtcpPacket(&packet);
-
-		// TODO: Remove.
-		MS_DEBUG_TAG(rtcp, "RTCP NACK feedback sent");
 	}
 }
