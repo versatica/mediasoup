@@ -3,6 +3,7 @@
 
 #include "RTC/Transport.hpp"
 #include "Settings.hpp"
+#include "DepLibUV.hpp"
 #include "Utils.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
@@ -195,6 +196,10 @@ namespace RTC
 
 		// Hack to avoid that Close() above attempts to delete this.
 		this->allocated = true;
+
+		// Set REMB
+		// TODO: Set only if negotiated.
+		this->SetRemb();
 	}
 
 	Transport::~Transport()
@@ -760,6 +765,20 @@ namespace RTC
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
 
+		// Feed the remote bitrate estimator (REMB).
+		if (this->HasRemb())
+		{
+			// TODO: Use dynamic extension header IDs.
+			// "Absolute Sender Time" RTP header extension header ID is hardcoded to 3.
+			const constexpr uint8_t AbsoluteSenderTimeId = 3;
+			uint8_t* absoluteSendTime = packet->GetExtensionElementValue(AbsoluteSenderTimeId);
+
+			if (absoluteSendTime != nullptr)
+			{
+				this->remoteBitrateEstimator->IncomingPacket(DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absoluteSendTime);
+			}
+		}
+
 		// Pass the RTP packet to the corresponding RtpReceiver.
 		rtpReceiver->ReceiveRtpPacket(packet);
 
@@ -1083,5 +1102,17 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
+	}
+
+	void Transport::onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_TAG(rbe, "time to send a RTCP REMB packet. bitrate '%" PRIu32 "'", bitrate);
+
+		for (auto ssrc: ssrcs)
+		{
+			MS_DEBUG_TAG(rbe, "\t ssrc: '%'" PRIu32 "'", ssrc);
+		}
 	}
 }
