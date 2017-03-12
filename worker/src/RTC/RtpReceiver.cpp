@@ -396,7 +396,5 @@ namespace RTC
 		packet.Dump();
 
 		this->transport->SendRtcpPacket(&packet);
-
-		delete nackItem;
 	}
 }
