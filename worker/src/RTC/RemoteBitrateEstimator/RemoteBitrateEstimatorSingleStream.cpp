@@ -43,7 +43,7 @@ struct RemoteBitrateEstimatorSingleStream::Detector {
 };
 
 RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(
-    RemoteBitrateObserver* observer)
+    Listener* observer)
     : incoming_bitrate_(kBitrateWindowMs, 8000),
       last_valid_incoming_bitrate_(0),
       remote_rate_(new AimdRateControl()),
@@ -191,7 +191,7 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
     //MS_DASSERT(process_interval_ms_ > 0);
     std::vector<uint32_t> ssrcs;
     GetSsrcs(&ssrcs);
-    observer_->OnReceiveBitrateChanged(ssrcs, target_bitrate);
+    observer_->onReceiveBitrateChanged(ssrcs, target_bitrate);
   }
 }
 

@@ -23,7 +23,7 @@ namespace RTC {
 
 class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
  public:
-  RemoteBitrateEstimatorSingleStream(RemoteBitrateObserver* observer);
+  RemoteBitrateEstimatorSingleStream(Listener* observer);
   virtual ~RemoteBitrateEstimatorSingleStream();
 
   void IncomingPacket(int64_t arrival_time_ms,
@@ -56,7 +56,7 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   RateCalculator incoming_bitrate_;
   uint32_t last_valid_incoming_bitrate_;
   std::unique_ptr<AimdRateControl> remote_rate_;
-  RemoteBitrateObserver* observer_;
+  Listener* observer_;
   int64_t last_process_time_;
   int64_t process_interval_ms_;
   bool uma_recorded_;
