@@ -32,7 +32,7 @@ namespace RTC
 			uint32_t ssrc;
 		};
 
-	public:
+	private:
 		/* Struct for RTP header extension. */
 		struct ExtensionHeader
 		{
