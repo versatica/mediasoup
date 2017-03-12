@@ -124,6 +124,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(data, "given data pointer is nullptr");
+
 		// Ensure that the resulting SRTP packet fits into the encrypt buffer.
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
 		{
@@ -154,6 +156,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(data, "given data pointer is nullptr");
+
 		srtp_err_status_t err;
 
 		err = srtp_unprotect(this->session, (void*)data, (int*)len);
@@ -170,6 +174,12 @@ namespace RTC
 	bool SrtpSession::EncryptRtcp(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(data, "given data pointer is nullptr");
+		MS_ASSERT(len, "given len pointer is nullptr");
+		MS_ASSERT(*len, "given len value is 0");
+		MS_ASSERT(this->session, "this->session is nullptr");
+		MS_ASSERT(SrtpSession::encryptBuffer, "(void*)SrtpSession::encryptBuffer is nullptr");
 
 		// Ensure that the resulting SRTCP packet fits into the encrypt buffer.
 		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
@@ -200,6 +210,8 @@ namespace RTC
 	bool SrtpSession::DecryptSrtcp(const uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(data, "given data pointer is nullptr");
 
 		srtp_err_status_t err;
 

@@ -151,6 +151,9 @@ namespace RTC
 
 		int32_t diff_seq32 = seq32 - this->last_seq32;
 
+		// TODO: REMOVE!!! TEST
+		diff_seq32 = 4;
+
 		// If the received seq is older than the last seen, ignore.
 		if (diff_seq32 < 1)
 			return;

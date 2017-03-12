@@ -4,6 +4,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "Logger.hpp"
 #include <cstring>
+#include <bitset> // std::bitset()
 
 namespace RTC { namespace RTCP
 {
@@ -50,9 +51,11 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
+		std::bitset<16> nack_bitset(this->GetLostPacketBitmask());
+
 		MS_DUMP("<NackItem>");
 		MS_DUMP("  pid : %" PRIu16, this->GetPacketId());
-		MS_DUMP("  bpl : %" PRIu16, this->GetLostPacketBitmask());
+		MS_DUMP("  bpl : %s", nack_bitset.to_string().c_str());
 		MS_DUMP("</NackItem>");
 	}
 }}
