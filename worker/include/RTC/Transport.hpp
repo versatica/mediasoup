@@ -41,6 +41,9 @@ namespace RTC
 			virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) = 0;
 		};
 
+	private:
+		static uint8_t rtcpBuffer[];
+
 	public:
 		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data);
 		virtual ~Transport();
