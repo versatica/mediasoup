@@ -16,6 +16,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "Channel/Request.hpp"
 #include "Channel/Notifier.hpp"
 #include <string>
@@ -29,7 +30,8 @@ namespace RTC
 		public RTC::TcpServer::Listener,
 		public RTC::TcpConnection::Listener,
 		public RTC::IceServer::Listener,
-		public RTC::DtlsTransport::Listener
+		public RTC::DtlsTransport::Listener,
+		public RTC::RemoteBitrateEstimator::Listener
 	{
 	public:
 		class Listener
@@ -52,6 +54,8 @@ namespace RTC
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
 		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
+		void SetRemb();
+		bool HasRemb();
 
 	private:
 		void MayRunDtlsTransport();
@@ -93,6 +97,10 @@ namespace RTC
 		virtual void onOutgoingDtlsData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		virtual void onDtlsApplicationData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
+	/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
+	public:
+		virtual void onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
+
 	public:
 		// Passed by argument.
 		uint32_t transportId;
@@ -118,6 +126,9 @@ namespace RTC
 		RTC::DtlsTransport::Role dtlsLocalRole = RTC::DtlsTransport::Role::AUTO;
 		// Others (RtpListener).
 		RtpListener rtpListener;
+		// REMB
+		bool hasRemb = false;
+		std::auto_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 	};
 
 	/* Inline instance methods. */
@@ -138,6 +149,19 @@ namespace RTC
 	RTC::RtpReceiver* Transport::GetRtpReceiver(uint32_t ssrc)
 	{
 		return this->rtpListener.GetRtpReceiver(ssrc);
+	}
+
+	inline
+	void Transport::SetRemb()
+	{
+		this->hasRemb = true;
+		this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
+	}
+
+	inline
+	bool Transport::HasRemb()
+	{
+		return this->hasRemb;
 	}
 }
 
