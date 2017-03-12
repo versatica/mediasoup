@@ -230,7 +230,7 @@
     },
     {
       'target_name': 'mediasoup-worker-test',
-      'defines': [ 'MS_LOG_STD' ],
+      'defines': [ 'MS_TEST', 'MS_LOG_STD' ],
       'sources':
       [
         # C++ source files
@@ -239,6 +239,7 @@
         'test/test-rtp.cpp',
         'test/test-rtcp.cpp',
         'test/test-bitrate.cpp',
+        'test/test-rtpstreamrecv.cpp',
         # C++ include files
         'test/catch.hpp',
         'test/helpers.hpp'

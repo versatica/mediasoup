@@ -19,6 +19,10 @@ namespace RTC
 		void InitSeq(uint16_t seq);
 		bool UpdateSeq(uint16_t seq);
 
+	/* Pure virtual methods that must be implemented by the subclass. */
+	protected:
+		virtual void onInitSeq() = 0;
+
 	protected:
 		// Given as argument.
 		uint32_t ssrc = 0;

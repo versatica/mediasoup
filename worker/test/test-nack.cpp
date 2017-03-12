@@ -60,7 +60,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet5->GetTimestamp() == 1533796931);
 
 		// Create a RtpStreamSend.
-		RtpStreamSend* stream = new RtpStreamSend(90000, 200);
+		RtpStreamSend* stream = new RtpStreamSend(packet1->GetSsrc(), 90000, 200);
 
 		// Receive all the packets in order into the stream.
 		stream->ReceivePacket(packet1);

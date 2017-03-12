@@ -3,7 +3,8 @@
 
 #include "RTC/RtpReceiver.hpp"
 #include "RTC/Transport.hpp"
-#include "Utils.hpp"
+#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
 
@@ -195,7 +196,7 @@ namespace RTC
 					uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
 
 					// Create a RtpStreamRecv for receiving a media stream.
-					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(ssrc, streamClockRate);
+					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, ssrc, streamClockRate);
 				}
 
 				break;
@@ -380,5 +381,22 @@ namespace RTC
 		}
 
 		this->rtpStreams.clear();
+	}
+
+	void RtpReceiver::onNackRequired(RTC::RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask)
+	{
+		if (!this->transport)
+			return;
+
+		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
+		RTC::RTCP::NackItem* nackItem = new RTC::RTCP::NackItem(seq, bitmask);
+
+		packet.AddItem(nackItem);
+
+		packet.Dump();
+
+		this->transport->SendRtcpPacket(&packet);
+
+		delete nackItem;
 	}
 }

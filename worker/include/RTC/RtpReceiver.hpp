@@ -20,7 +20,8 @@ namespace RTC
 	// the corresponding header files.
 	class Transport;
 
-	class RtpReceiver
+	class RtpReceiver :
+		public RtpStreamRecv::Listener
 	{
 	public:
 		/**
@@ -57,6 +58,10 @@ namespace RTC
 
 	private:
 		void ClearRtpStreams();
+
+	/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
+	public:
+		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask) override;
 
 	public:
 		// Passed by argument.

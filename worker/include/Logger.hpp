@@ -77,6 +77,27 @@
 	#define _MS_LOG_DEV_ENABLED false
 #endif
 
+// Usage:
+//   MS_DEBUG_DEV("Leading text "MS_UINT16_TO_BINARY_PATTERN, MS_UINT16_TO_BINARY(value));
+#define MS_UINT16_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c"
+#define MS_UINT16_TO_BINARY(value) \
+	((value & 0x8000) ? '1' : '0'), \
+	((value & 0x4000) ? '1' : '0'), \
+	((value & 0x2000) ? '1' : '0'), \
+	((value & 0x1000) ? '1' : '0'), \
+	((value & 0x800) ? '1' : '0'), \
+	((value & 0x400) ? '1' : '0'), \
+	((value & 0x200) ? '1' : '0'), \
+	((value & 0x100) ? '1' : '0'), \
+	((value & 0x80) ? '1' : '0'), \
+	((value & 0x40) ? '1' : '0'), \
+	((value & 0x20) ? '1' : '0'), \
+	((value & 0x10) ? '1' : '0'), \
+	((value & 0x08) ? '1' : '0'), \
+	((value & 0x04) ? '1' : '0'), \
+	((value & 0x02) ? '1' : '0'), \
+	((value & 0x01) ? '1' : '0')
+
 class Logger
 {
 public:

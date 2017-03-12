@@ -267,8 +267,8 @@ namespace RTC
 				case RTC::Media::Kind::VIDEO:
 				case RTC::Media::Kind::DEPTH:
 				{
-					// Buffer up to 100 packets.
-					this->rtpStream = new RTC::RtpStreamSend(ssrc, streamClockRate, 100);
+					// Buffer up to N packets.
+					this->rtpStream = new RTC::RtpStreamSend(ssrc, streamClockRate, 200);
 					break;
 				}
 
