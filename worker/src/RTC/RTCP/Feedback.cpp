@@ -17,6 +17,8 @@
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
 #include "RTC/RTCP/FeedbackPsLei.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "Utils.hpp"
 #include "Logger.hpp"
 #include <cstring>
 
@@ -162,8 +164,20 @@ namespace RTC { namespace RTCP
 				break;
 
 			case FeedbackPs::MessageType::AFB:
+			{
+				uint8_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
+				if (len > offset)
+				{
+					if (Utils::Byte::Get4Bytes(data, offset) == FeedbackPsRembPacket::UniqueIdentifier)
+					{
+						packet = FeedbackPsRembPacket::Parse(data, len);
+						break;
+					}
+				}
+
 				packet = FeedbackPsAfbPacket::Parse(data, len);
 				break;
+			}
 
 			case FeedbackPs::MessageType::EXT:
 				break;
