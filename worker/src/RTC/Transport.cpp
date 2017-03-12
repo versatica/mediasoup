@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Transport.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "Settings.hpp"
 #include "DepLibUV.hpp"
 #include "Utils.hpp"
@@ -33,6 +34,10 @@ uint32_t generateIceCandidatePriority(uint16_t local_preference)
 
 namespace RTC
 {
+	/* Class variables. */
+
+	uint8_t Transport::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
+
 	/* Instance methods. */
 
 	Transport::Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data) :
@@ -1108,11 +1113,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(rbe, "time to send a RTCP REMB packet. bitrate '%" PRIu32 "'", bitrate);
-
+		MS_DEBUG_TAG(rbe, "sending a RTCP REMB packet. bitrate '%" PRIu32 "'", bitrate);
 		for (auto ssrc: ssrcs)
 		{
 			MS_DEBUG_TAG(rbe, "\t ssrc: '%'" PRIu32 "'", ssrc);
 		}
+
+		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+		packet.SetBitrate(bitrate);
+		packet.SetSsrcs(ssrcs);
+		packet.Serialize(Transport::rtcpBuffer);
+		this->SendRtcpPacket(&packet);
 	}
 }
