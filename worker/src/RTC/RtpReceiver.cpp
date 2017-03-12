@@ -393,6 +393,10 @@ namespace RTC
 
 		packet.AddItem(nackItem);
 		packet.Serialize(RtpReceiver::rtcpBuffer);
+
+		// TODO: REMOVE
+		packet.Dump();
+
 		this->transport->SendRtcpPacket(&packet);
 	}
 }
