@@ -259,13 +259,6 @@ namespace RTC
 				RTC::Transport* transport = nullptr;
 				uint32_t rtpReceiverId;
 
-				// Capabilities must be set.
-				if (!this->hasCapabilities)
-				{
-					request->Reject("peer capabilities are not yet set");
-					return;
-				}
-
 				try
 				{
 					rtpReceiver = GetRtpReceiverFromRequest(request, &rtpReceiverId);
@@ -289,12 +282,6 @@ namespace RTC
 				catch (const MediaSoupError &error)
 				{
 					request->Reject(error.what());
-					return;
-				}
-
-				if (!transport)
-				{
-					request->Reject("Transport does not exist");
 					return;
 				}
 
@@ -721,11 +708,13 @@ namespace RTC
 
 		auto rtpParameters = rtpReceiver->GetParameters();
 
-		// Remove unsupported codecs and their associated encodings.
-		rtpParameters->ReduceCodecsAndEncodings(this->capabilities);
+    if (this->hasCapabilities) {
+  		// Remove unsupported codecs and their associated encodings.
+  		rtpParameters->ReduceCodecsAndEncodings(this->capabilities);
 
-		// Remove unsupported header extensions.
-		rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
+  		// Remove unsupported header extensions.
+  		rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
+    }
 
 		auto transport = rtpReceiver->GetTransport();
 
