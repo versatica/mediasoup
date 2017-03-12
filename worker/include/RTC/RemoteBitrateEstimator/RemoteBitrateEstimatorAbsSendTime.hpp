@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
-#define MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
+#ifndef MS_RTC_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
+#define MS_RTC_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
 
 #include "common.hpp"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
@@ -135,4 +135,4 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
 
 }  // namespace RTC
 
-#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_H_
+#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP

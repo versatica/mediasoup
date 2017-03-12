@@ -10,8 +10,8 @@
 
 // This class estimates the incoming available bandwidth.
 
-#ifndef MS_RTC_REMOTE_BITRATE_ESTIMATOR_INCLUDE_REMOTE_BITRATE_ESTIMATOR_HPP
-#define MS_RTC_REMOTE_BITRATE_ESTIMATOR_INCLUDE_REMOTE_BITRATE_ESTIMATOR_HPP
+#ifndef MS_RTC_REMOTE_BITRATE_ESTIMATOR_HPP
+#define MS_RTC_REMOTE_BITRATE_ESTIMATOR_HPP
 
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -103,4 +103,4 @@ class RemoteBitrateEstimator : public CallStatsObserver {
 
 }  // namespace RTC
 
-#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_HPP
+#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_HPP

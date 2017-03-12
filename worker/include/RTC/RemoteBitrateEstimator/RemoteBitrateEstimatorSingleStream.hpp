@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
-#define MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
+#ifndef MS_RTC_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
+#define MS_RTC_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
 
 #include "common.hpp"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
@@ -65,4 +65,4 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
 
 }  // namespace RTC
 
-#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_H_
+#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
