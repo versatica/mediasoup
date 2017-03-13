@@ -1,11 +1,11 @@
 {
-  "name": "mvrs-mediasoup",
-  "version": "0.5.1",
-  "description": "Metaversity fork of MediaSoup.",
+  "name": "mediasoup",
+  "version": "0.5.0",
+  "description": "Powerful WebRTC SFU for Node.js",
   "main": "lib/mediasoup.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mpk934/mediasoup.git"
+    "url": "https://github.com/ibc/mediasoup.git"
   },
   "author": "Iñaki Baz Castillo <ibc@aliax.net>",
   "license": "ISC",
@@ -42,9 +42,6 @@
     "gulp-shell": "^0.6.1",
     "gulp-touch-cmd": "0.0.1",
     "tap": "^10.3.0"
-  },
-  "publishConfig": {
-    "registry": "https://www.mpk934.com/registry"
   },
   "scripts": {
     "test": "gulp test",
