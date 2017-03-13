@@ -1,6 +1,6 @@
 {
   "name": "mvrs-mediasoup",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Metaversity fork of MediaSoup.",
   "main": "lib/mediasoup.js",
   "repository": {

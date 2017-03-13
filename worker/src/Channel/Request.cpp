@@ -30,7 +30,7 @@ namespace Channel
 		{ "rtpReceiver.receive",               Request::MethodId::rtpReceiver_receive               },
 		{ "rtpReceiver.setRtpRawEvent",        Request::MethodId::rtpReceiver_setRtpRawEvent        },
 		{ "rtpReceiver.setRtpObjectEvent",     Request::MethodId::rtpReceiver_setRtpObjectEvent     },
-    { "rtpReceiver.receiveRtpPacket",      Request::MethodId::rtpReceiver_receiveRtpPacket      },
+		{ "rtpReceiver.receiveRtpPacket",      Request::MethodId::rtpReceiver_receiveRtpPacket      },
 		{ "rtpSender.dump",                    Request::MethodId::rtpSender_dump                    },
 		{ "rtpSender.setTransport",            Request::MethodId::rtpSender_setTransport            },
 		{ "rtpSender.disable",                 Request::MethodId::rtpSender_disable                 }
@@ -40,8 +40,8 @@ namespace Channel
 
 	Request::Request(Channel::UnixStreamSocket* channel, Json::Value& json, const uint8_t* binary, size_t len) :
 		channel(channel),
-    binary(binary),
-    len(len)
+		binary(binary),
+		len(len)
 	{
 		MS_TRACE();
 

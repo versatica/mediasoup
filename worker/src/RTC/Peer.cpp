@@ -347,7 +347,7 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
 			case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
-      case Channel::Request::MethodId::rtpReceiver_receiveRtpPacket:
+			case Channel::Request::MethodId::rtpReceiver_receiveRtpPacket:
 			{
 				RTC::RtpReceiver* rtpReceiver;
 
@@ -709,13 +709,13 @@ namespace RTC
 
 		auto rtpParameters = rtpReceiver->GetParameters();
 
-    if (this->hasCapabilities) {
-  		// Remove unsupported codecs and their associated encodings.
-  		rtpParameters->ReduceCodecsAndEncodings(this->capabilities);
+		if (this->hasCapabilities) {
+			// Remove unsupported codecs and their associated encodings.
+			rtpParameters->ReduceCodecsAndEncodings(this->capabilities);
 
-  		// Remove unsupported header extensions.
-  		rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
-    }
+			// Remove unsupported header extensions.
+			rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
+		}
 
 		auto transport = rtpReceiver->GetTransport();
 
