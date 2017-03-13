@@ -9,33 +9,12 @@
 #define RTP_SEQ_MOD (1<<16)
 #define MAX_RETRANSMISSION_AGE 200 // Don't retransmit packets older than this (ms).
 
-// Usage:
-//   MS_DEBUG_DEV("Leading text "UINT16_TO_BINARY_PATTERN, UINT16_TO_BINARY(value));
-#define UINT16_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c"
-#define UINT16_TO_BINARY(value) \
-	((value & 0x8000) ? '1' : '0'), \
-	((value & 0x4000) ? '1' : '0'), \
-	((value & 0x2000) ? '1' : '0'), \
-	((value & 0x1000) ? '1' : '0'), \
-	((value & 0x800) ? '1' : '0'), \
-	((value & 0x400) ? '1' : '0'), \
-	((value & 0x200) ? '1' : '0'), \
-	((value & 0x100) ? '1' : '0'), \
-	((value & 0x80) ? '1' : '0'), \
-	((value & 0x40) ? '1' : '0'), \
-	((value & 0x20) ? '1' : '0'), \
-	((value & 0x10) ? '1' : '0'), \
-	((value & 0x08) ? '1' : '0'), \
-	((value & 0x04) ? '1' : '0'), \
-	((value & 0x02) ? '1' : '0'), \
-	((value & 0x01) ? '1' : '0')
-
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(uint32_t clockRate, size_t bufferSize) :
-		RtpStream::RtpStream(clockRate),
+	RtpStreamSend::RtpStreamSend(uint32_t ssrc, uint32_t clockRate, size_t bufferSize) :
+		RtpStream::RtpStream(ssrc, clockRate),
 		storage(bufferSize)
 	{
 		MS_TRACE();
@@ -54,6 +33,7 @@ namespace RTC
 		MS_TRACE();
 
 		static Json::Value null_data(Json::nullValue);
+		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_received("received");
 		static const Json::StaticString k_maxTimestamp("maxTimestamp");
@@ -61,6 +41,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
+		json[k_ssrc] = (Json::UInt)this->ssrc;
 		json[k_clockRate] = (Json::UInt)this->clockRate;
 		json[k_received] = (Json::UInt)this->received;
 		json[k_maxTimestamp] = (Json::UInt)this->max_timestamp;
@@ -159,7 +140,7 @@ namespace RTC
 		uint8_t bitmask_counter = 0;
 		bool too_old_packet_found = false;
 
-		MS_DEBUG_DEV("loop [bitmask:" UINT16_TO_BINARY_PATTERN "]", UINT16_TO_BINARY(bitmask));
+		MS_DEBUG_DEV("loop [bitmask:" MS_UINT16_TO_BINARY_PATTERN "]", MS_UINT16_TO_BINARY(bitmask));
 
 		while (requested || bitmask != 0)
 		{
@@ -226,8 +207,8 @@ namespace RTC
 		// log it.
 		if (first_packet_sent && orig_bitmask != sent_bitmask)
 		{
-			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" UINT16_TO_BINARY_PATTERN ", sent:" UINT16_TO_BINARY_PATTERN "]",
-				UINT16_TO_BINARY(orig_bitmask), UINT16_TO_BINARY(sent_bitmask));
+			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent:" MS_UINT16_TO_BINARY_PATTERN "]",
+				MS_UINT16_TO_BINARY(orig_bitmask), MS_UINT16_TO_BINARY(sent_bitmask));
 		}
 
 		// Set the next container element to null.
@@ -350,5 +331,10 @@ namespace RTC
 
 		// Update the new buffer item so it points to the cloned packed.
 		(*new_buffer_it).packet = packet->Clone(store);
+	}
+
+	void RtpStreamSend::onInitSeq()
+	{
+		// Do nothing.
 	}
 }

@@ -15,7 +15,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStream::RtpStream(uint32_t clockRate) :
+	RtpStream::RtpStream(uint32_t ssrc, uint32_t clockRate) :
+		ssrc(ssrc),
 		clockRate(clockRate)
 	{
 		MS_TRACE();
@@ -45,7 +46,10 @@ namespace RTC
 		// If not a valid packet ignore it.
 		if (!UpdateSeq(seq))
 		{
-			MS_WARN_TAG(rtp, "invalid packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+			if (!this->probation)
+			{
+				MS_WARN_TAG(rtp, "invalid packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+			}
 
 			return false;
 		}
@@ -71,6 +75,9 @@ namespace RTC
 		this->expected_prior = 0;
 		// Also reset the highest seen RTP timestamp.
 		this->max_timestamp = 0;
+
+		// Call the onInitSeq method of the child.
+		onInitSeq();
 	}
 
 	bool RtpStream::UpdateSeq(uint16_t seq)

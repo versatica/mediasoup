@@ -2,7 +2,7 @@
 #define MS_COMMON_HPP
 
 #include <memory> // std::addressof()
-#include <algorithm> // std::transform(), std::find()
+#include <algorithm> // std::transform(), std::find(), std::min(), std::max()
 #include <cstddef> // size_t
 #include <cstdint> // uint8_t, etc
 #include <cinttypes> // PRIu64, etc

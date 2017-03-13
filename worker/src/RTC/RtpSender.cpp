@@ -258,8 +258,7 @@ namespace RTC
 
 			// NOTE: We assume a single stream/encoding when sending to remote peers.
 			auto encoding = this->rtpParameters->encodings[0];
-
-			// Set the RtpStreamSend.
+			uint32_t ssrc = encoding.ssrc;
 			uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
 
 			// Create a RtpStreamSend for sending a single media stream.
@@ -268,15 +267,15 @@ namespace RTC
 				case RTC::Media::Kind::VIDEO:
 				case RTC::Media::Kind::DEPTH:
 				{
-					// Buffer up to 100 packets.
-					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 100);
+					// Buffer up to N packets.
+					this->rtpStream = new RTC::RtpStreamSend(ssrc, streamClockRate, 200);
 					break;
 				}
 
 				case RTC::Media::Kind::AUDIO:
 				{
 					// No buffer for audio streams.
-					this->rtpStream = new RTC::RtpStreamSend(streamClockRate, 0);
+					this->rtpStream = new RTC::RtpStreamSend(ssrc, streamClockRate, 0);
 					break;
 				}
 

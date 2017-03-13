@@ -62,7 +62,8 @@ gulp.task('test:worker', shell.task(
 		`cd worker && ./out/${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ? 'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes`
 	],
 	{
-		verbose : true
+		verbose : true,
+		env     : { DEBUG: '*ABORT* *WARN*' }
 	}
 ));
 

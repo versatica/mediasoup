@@ -3,7 +3,8 @@
 
 #include "RTC/RtpReceiver.hpp"
 #include "RTC/Transport.hpp"
-#include "Utils.hpp"
+#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
 
@@ -69,10 +70,10 @@ namespace RTC
 		static const Json::StaticString k_rtpRawEventEnabled("rtpRawEventEnabled");
 		static const Json::StaticString k_rtpObjectEventEnabled("rtpObjectEventEnabled");
 		static const Json::StaticString k_rtpStreams("rtpStreams");
-		static const Json::StaticString k_ssrc("ssrc");
 		static const Json::StaticString k_rtpStream("rtpStream");
 
 		Json::Value json(Json::objectValue);
+		Json::Value json_rtpStreams(Json::arrayValue);
 
 		json[k_rtpReceiverId] = (Json::UInt)this->rtpReceiverId;
 
@@ -89,19 +90,13 @@ namespace RTC
 
 		json[k_rtpObjectEventEnabled] = this->rtpObjectEventEnabled;
 
-		json[k_rtpStreams] = Json::arrayValue;
-
 		for (auto& kv : this->rtpStreams)
 		{
-			auto ssrc = kv.first;
 			auto rtpStream = kv.second;
-			Json::Value json_rtpStream(Json::objectValue);
 
-			json_rtpStream[k_ssrc] = (Json::UInt)ssrc;
-			json_rtpStream[k_rtpStream] = rtpStream->toJson();
-
-			json[k_rtpStreams].append(json_rtpStream);
+			json_rtpStreams.append(rtpStream->toJson());
 		}
+		json[k_rtpStreams] = json_rtpStreams;
 
 		return json;
 	}
@@ -199,9 +194,11 @@ namespace RTC
 
 					// Get the clock rate of the stream/encoding.
 					uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
+					// TODO: Let's assume that, if video, NACK is negotiated. Must do this better.
+					bool useNack = (this->kind != RTC::Media::Kind::AUDIO);
 
 					// Create a RtpStreamRecv for receiving a media stream.
-					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(streamClockRate);
+					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, ssrc, streamClockRate, useNack);
 				}
 
 				break;
@@ -324,11 +321,10 @@ namespace RTC
 
 		for (auto& kv : this->rtpStreams)
 		{
-			auto ssrc = kv.first;
 			auto rtpStream = kv.second;
 			RTC::RTCP::ReceiverReport* report = rtpStream->GetRtcpReceiverReport();
 
-			report->SetSsrc(ssrc);
+			report->SetSsrc(rtpStream->GetSsrc());
 			packet->AddReceiverReport(report);
 		}
 
@@ -387,5 +383,18 @@ namespace RTC
 		}
 
 		this->rtpStreams.clear();
+	}
+
+	void RtpReceiver::onNackRequired(RTC::RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask)
+	{
+		if (!this->transport)
+			return;
+
+		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
+		RTC::RTCP::NackItem* nackItem = new RTC::RTCP::NackItem(seq, bitmask);
+
+		packet.AddItem(nackItem);
+		packet.Serialize(RtpReceiver::rtcpBuffer);
+		this->transport->SendRtcpPacket(&packet);
 	}
 }
