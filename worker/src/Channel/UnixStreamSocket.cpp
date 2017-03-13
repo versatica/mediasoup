@@ -107,10 +107,10 @@ namespace Channel
 		}
 		else
 		{
-			ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-			std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
-			std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload.c_str(), ns_payload_len);
-			UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
+		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
+		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload.c_str(), ns_payload_len);
+		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
 		}
 
 		ns_len = ns_num_len + ns_payload_len + 2;
@@ -144,10 +144,10 @@ namespace Channel
 		}
 		else
 		{
-			ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-			std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
-			std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
-			UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
+		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
+		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
+		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
 		}
 
 		ns_len = ns_num_len + ns_payload_len + 2;
@@ -179,10 +179,10 @@ namespace Channel
 		}
 		else
 		{
-			ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-			std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
-			std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
-			UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
+		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
+		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
+		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
 		}
 
 		ns_len = ns_num_len + ns_payload_len + 2;
