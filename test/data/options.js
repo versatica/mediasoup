@@ -20,20 +20,10 @@ module.exports =
 				clockRate   : 8000
 			},
 			{
-				kind      : 'video',
-				name      : 'video/vp8',
+				kind        : 'video',
+				name        : 'video/vp8',
 				payloadType : 110,
-				clockRate : 90000
-			},
-			{
-				kind       : 'video',
-				name       : 'video/h264',
-				payloadType : 111,
-				clockRate  : 90000,
-				parameters :
-				{
-					packetizationMode : 0
-				}
+				clockRate   : 90000
 			},
 			{
 				kind       : 'video',
@@ -46,10 +36,10 @@ module.exports =
 				}
 			},
 			{
-				kind      : 'depth',
-				name      : 'video/vp8',
+				kind        : 'depth',
+				name        : 'video/vp8',
 				payloadType : 120,
-				clockRate : 90000
+				clockRate   : 90000
 			}
 		]
 	},

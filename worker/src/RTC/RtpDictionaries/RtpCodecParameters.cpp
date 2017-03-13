@@ -215,12 +215,15 @@ namespace RTC
 		{
 			case RTC::RtpCodecMime::Subtype::H264:
 			{
-				if (
-					this->parameters.GetInteger(k_packetizationMode) !=
-					codec.parameters.GetInteger(k_packetizationMode))
-				{
+				// https://tools.ietf.org/html/rfc6184#section-6.2
+				// packetization-mode 0 and 1 MUST be supported.
+				int32_t packetizationMode = this->parameters.GetInteger(k_packetizationMode);
+
+				if (packetizationMode == 0 || packetizationMode == 1)
+					codec.parameters.SetInteger(k_packetizationMode, packetizationMode);
+
+				if (codec.parameters.GetInteger(k_packetizationMode) != packetizationMode)
 					return false;
-				}
 
 				break;
 			}

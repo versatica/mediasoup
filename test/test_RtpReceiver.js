@@ -80,13 +80,10 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 					codecs :
 					[
 						{
-							name        : 'video/H264',
-							payloadType : 111,
-							clockRate   : 90000,
-							parameters  :
-							{
-								packetizationMode : 0
-							}
+							kind      : 'video',
+							name      : 'video/vp8',
+							payloadType : 110,
+							clockRate : 90000
 						},
 						{
 							name        : 'video/H264',
@@ -118,9 +115,9 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 					let rtpParameters = rtpReceiver.rtpParameters;
 
 					t.equal(rtpParameters.encodings.length, 3, 'computed rtpParameters has 3 encodings');
-					t.equal(rtpParameters.encodings[0].codecPayloadType, 111, 'first encoding has codecPayloadType 111');
+					t.equal(rtpParameters.encodings[0].codecPayloadType, 110, 'first encoding has codecPayloadType 110');
 					t.equal(rtpParameters.encodings[1].codecPayloadType, 112, 'second encoding has codecPayloadType 112');
-					t.equal(rtpParameters.encodings[2].codecPayloadType, 111, 'third encoding has codecPayloadType 111');
+					t.equal(rtpParameters.encodings[2].codecPayloadType, 110, 'third encoding has codecPayloadType 110');
 				})
 				.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
 		});
