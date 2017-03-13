@@ -190,6 +190,29 @@ namespace Channel
 		Write(UnixStreamSocket::writeBuffer, ns_len);
 	}
 
+  void UnixStreamSocket::HandleRequest(Json::Value& json, const uint8_t* binary, size_t len)
+  {
+    Channel::Request* request = nullptr;
+
+    try
+    {
+      request = new Channel::Request(this, json, binary, len);
+    }
+    catch (const MediaSoupError &error)
+    {
+      MS_ERROR_STD("discarding wrong Channel request");
+    }
+
+    if (request)
+    {
+      // Notify the listener.
+      this->listener->onChannelRequest(this, request);
+
+      // Delete the Request.
+      delete request;
+    }
+  }
+
 	void UnixStreamSocket::userOnUnixStreamRead()
 	{
 		MS_TRACE_STD();
@@ -272,27 +295,19 @@ namespace Channel
 			Json::Value json;
 			std::string json_parse_error;
 
-			if (this->jsonReader->parse((const char*)json_start, (const char*)json_start + json_len, &json, &json_parse_error))
+      if (!!this->lastBinaryRequest) {
+        this->HandleRequest(this->lastBinaryRequest, (const uint8_t*)json_start, json_len);
+        this->lastBinaryRequest = Json::Value();
+      }
+      else if (this->jsonReader->parse((const char*)json_start, (const char*)json_start + json_len, &json, &json_parse_error))
 			{
-				Channel::Request* request = nullptr;
+        static const Json::StaticString k_binary("binary");
+        if (json[k_binary].isBool() && json[k_binary].asBool()) {
+          this->lastBinaryRequest = json;
 
-				try
-				{
-					request = new Channel::Request(this, json);
-				}
-				catch (const MediaSoupError &error)
-				{
-					MS_ERROR_STD("discarding wrong Channel request");
-				}
-
-				if (request)
-				{
-					// Notify the listener.
-					this->listener->onChannelRequest(this, request);
-
-					// Delete the Request.
-					delete request;
-				}
+        } else {
+  				this->HandleRequest(json);
+        }
 			}
 			else
 			{

@@ -347,6 +347,7 @@ namespace RTC
 			case Channel::Request::MethodId::rtpReceiver_receive:
 			case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
 			case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
+      case Channel::Request::MethodId::rtpReceiver_receiveRtpPacket:
 			{
 				RTC::RtpReceiver* rtpReceiver;
 
