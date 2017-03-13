@@ -48,7 +48,7 @@ namespace RTC
 		{
 			if (!this->probation)
 			{
-				MS_WARN_TAG(rtp, "invalid packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+				MS_WARN_TAG(rtp, "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", packet->GetSsrc(), packet->GetSequenceNumber());
 			}
 
 			return false;

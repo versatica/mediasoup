@@ -24,7 +24,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Clear buffer.
+		// Clear the RTP buffer.
 		ClearBuffer();
 	}
 
@@ -305,7 +305,7 @@ namespace RTC
 		// NOTE: This should never happen.
 		if (buffer_it_r == this->buffer.rend())
 		{
-			MS_WARN_TAG(rtp, "packet is older than anything in the buffer, ignoring it");
+			MS_WARN_TAG(rtp, "ignoring packet older than anything in the buffer [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", packet->GetSsrc(), packet->GetSequenceNumber());
 
 			return;
 		}
@@ -335,6 +335,7 @@ namespace RTC
 
 	void RtpStreamSend::onInitSeq()
 	{
-		// Do nothing.
+		// Clear the RTP buffer.
+		ClearBuffer();
 	}
 }
