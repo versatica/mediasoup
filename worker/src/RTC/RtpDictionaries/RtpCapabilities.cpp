@@ -41,8 +41,9 @@ namespace RTC
 			{
 				RtpHeaderExtension headerExtension(json_array[i]);
 
-				// Append to the headerExtensions vector.
-				this->headerExtensions.push_back(headerExtension);
+				// If a known header extension, append to the headerExtensions vector.
+				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)
+					this->headerExtensions.push_back(headerExtension);
 			}
 		}
 
@@ -114,7 +115,7 @@ namespace RTC
 			for (auto& supportedHeaderExtension : supportedHeaderExtensions)
 			{
 				if (
-					headerExtension.uri == supportedHeaderExtension.uri &&
+					headerExtension.type == supportedHeaderExtension.type &&
 					(
 						headerExtension.kind == supportedHeaderExtension.kind ||
 						supportedHeaderExtension.kind == RTC::Media::Kind::ALL

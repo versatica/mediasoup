@@ -29,6 +29,9 @@ namespace RTC
 		if (this->uri.empty())
 			MS_THROW_ERROR("empty RtpHeaderExtensionParameters.uri");
 
+		// Get the type.
+		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
+
 		// `id` is mandatory.
 		if (!data[k_id].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.id");

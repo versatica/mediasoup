@@ -31,6 +31,15 @@ namespace RTC
 		};
 
 	private:
+		struct Data
+		{
+			std::string       muxId;
+			RTC::RtpCodecMime mediaMime;
+			uint32_t          mediaSsrc = 0;
+			// TODO: Add much more and move supportedPayloadTypes here.
+		};
+
+	private:
 		// Container of RTP packets to retransmit.
 		static std::vector<RTC::RtpPacket*> rtpRetransmissionContainer;
 
