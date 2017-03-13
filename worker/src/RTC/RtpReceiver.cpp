@@ -194,9 +194,11 @@ namespace RTC
 
 					// Get the clock rate of the stream/encoding.
 					uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
+					// TODO: Let's assume that, if video, NACK is negotiated. Must do this better.
+					bool useNack = (this->kind != RTC::Media::Kind::AUDIO);
 
 					// Create a RtpStreamRecv for receiving a media stream.
-					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, ssrc, streamClockRate);
+					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, ssrc, streamClockRate, useNack);
 				}
 
 				break;
@@ -393,10 +395,6 @@ namespace RTC
 
 		packet.AddItem(nackItem);
 		packet.Serialize(RtpReceiver::rtcpBuffer);
-
-		// TODO: REMOVE
-		packet.Dump();
-
 		this->transport->SendRtcpPacket(&packet);
 	}
 }

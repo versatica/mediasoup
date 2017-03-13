@@ -10,9 +10,10 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStreamRecv::RtpStreamRecv(Listener* listener, uint32_t ssrc, uint32_t clockRate) :
+	RtpStreamRecv::RtpStreamRecv(Listener* listener, uint32_t ssrc, uint32_t clockRate, bool useNack) :
 		RtpStream::RtpStream(ssrc, clockRate),
-		listener(listener)
+		listener(listener),
+		useNack(useNack)
 	{
 		MS_TRACE();
 	}
@@ -59,7 +60,8 @@ namespace RTC
 		CalculateJitter(packet->GetTimestamp());
 
 		// May trigger a NACK to the sender.
-		MayTriggerNack(packet);
+		if (this->useNack)
+			MayTriggerNack(packet);
 
 		return true;
 	}
@@ -175,7 +177,8 @@ namespace RTC
 		uint16_t nack_seq = (uint16_t)nack_seq32;
 		uint16_t nack_bitmask = (uint16_t)nack_bitset.to_ulong();
 
-		MS_DEBUG_TAG(rtcp, "NACK required [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]", nack_seq, MS_UINT16_TO_BINARY(nack_bitmask));
+		MS_DEBUG_TAG(rtcp, "NACK triggered [ssrc:%" PRIu32 ", seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+			this->ssrc, nack_seq, MS_UINT16_TO_BINARY(nack_bitmask));
 
 		this->listener->onNackRequired(this, nack_seq, nack_bitmask);
 	}

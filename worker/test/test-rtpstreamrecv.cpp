@@ -50,7 +50,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		REQUIRE(packet->GetSequenceNumber() == 100);
 
 		RtpStreamRecvListener listener;
-		RtpStreamRecv rtpStream(&listener, packet->GetSsrc(), 90000);
+		RtpStreamRecv rtpStream(&listener, packet->GetSsrc(), 90000, true);
 
 		rtpStream.ReceivePacket(packet);
 
@@ -101,7 +101,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		REQUIRE(packet->GetSequenceNumber() == 100);
 
 		RtpStreamRecvListener listener;
-		RtpStreamRecv rtpStream(&listener, packet->GetSsrc(), 90000);
+		RtpStreamRecv rtpStream(&listener, packet->GetSsrc(), 90000, true);
 
 		rtpStream.ReceivePacket(packet);
 
@@ -131,7 +131,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		REQUIRE(packet->GetSequenceNumber() == 65535);
 
 		RtpStreamRecvListener listener;
-		RtpStreamRecv rtpStream(&listener, packet->GetSsrc(), 90000);
+		RtpStreamRecv rtpStream(&listener, packet->GetSsrc(), 90000, true);
 
 		rtpStream.ReceivePacket(packet);
 
