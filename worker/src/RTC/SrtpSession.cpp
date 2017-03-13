@@ -159,7 +159,7 @@ namespace RTC
 		err = srtp_unprotect(this->session, (void*)data, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_WARN_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_DEBUG_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
@@ -206,7 +206,7 @@ namespace RTC
 		err = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_WARN_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_DEBUG_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
 
 			return false;
 		}
