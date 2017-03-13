@@ -30,14 +30,15 @@ namespace RTC
 			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
 
-	private:
-		struct Data
-		{
-			std::string       muxId;
-			RTC::RtpCodecMime mediaMime;
-			uint32_t          mediaSsrc = 0;
-			// TODO: Add much more and move supportedPayloadTypes here.
-		};
+	// NOTE: Comment for now.
+	// private:
+	// 	struct Data
+	// 	{
+	// 		std::string       muxId;
+	// 		RTC::RtpCodecMime mediaMime;
+	// 		uint32_t          mediaSsrc = 0;
+	// 		// TODO: Add much more and move supportedPayloadTypes here.
+	// 	};
 
 	private:
 		// Container of RTP packets to retransmit.
