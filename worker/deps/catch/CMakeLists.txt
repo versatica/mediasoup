@@ -70,6 +70,7 @@ set(TEST_SOURCES
         ${SELF_TEST_DIR}/ToStringWhich.cpp
         ${SELF_TEST_DIR}/TrickyTests.cpp
         ${SELF_TEST_DIR}/VariadicMacrosTests.cpp
+        ${SELF_TEST_DIR}/MatchersTests.cpp
         )
 CheckFileList(TEST_SOURCES ${SELF_TEST_DIR})
 
@@ -154,6 +155,9 @@ set(INTERNAL_HEADERS
         ${HEADER_DIR}/internal/catch_legacy_reporter_adapter.hpp
         ${HEADER_DIR}/internal/catch_list.hpp
         ${HEADER_DIR}/internal/catch_matchers.hpp
+        ${HEADER_DIR}/internal/catch_matchers_string.h
+        ${HEADER_DIR}/internal/catch_matchers_string.hpp
+        ${HEADER_DIR}/internal/catch_matchers_vector.h
         ${HEADER_DIR}/internal/catch_message.h
         ${HEADER_DIR}/internal/catch_message.hpp
         ${HEADER_DIR}/internal/catch_notimplemented_exception.h
@@ -206,11 +210,13 @@ CheckFileList(INTERNAL_HEADERS ${HEADER_DIR}/internal)
 
 # Please keep these ordered alphabetically
 set(REPORTER_HEADERS
+        ${HEADER_DIR}/reporters/catch_reporter_automake.hpp
         ${HEADER_DIR}/reporters/catch_reporter_bases.hpp
         ${HEADER_DIR}/reporters/catch_reporter_compact.hpp
         ${HEADER_DIR}/reporters/catch_reporter_console.hpp
         ${HEADER_DIR}/reporters/catch_reporter_junit.hpp
         ${HEADER_DIR}/reporters/catch_reporter_multi.hpp
+        ${HEADER_DIR}/reporters/catch_reporter_tap.hpp
         ${HEADER_DIR}/reporters/catch_reporter_teamcity.hpp
         ${HEADER_DIR}/reporters/catch_reporter_xml.hpp
         )

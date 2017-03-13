@@ -9,6 +9,9 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include "../include/reporters/catch_reporter_teamcity.hpp"
+#include "../include/reporters/catch_reporter_tap.hpp"
+#include "../include/reporters/catch_reporter_automake.hpp"
+
 
 // Some example tag aliases
 CATCH_REGISTER_TAG_ALIAS( "[@nhf]", "[failing]~[.]" )
@@ -468,7 +471,7 @@ TEST_CASE( "Text can be formatted using the Text class", "" ) {
     CHECK( Text( "hi there", narrow ).toString() == "hi\nthere" );
 }
 
-TEST_CASE( "Long text is truncted", "[Text][Truncated]" ) {
+TEST_CASE( "Long text is truncated", "[Text][Truncated]" ) {
 
     std::string longLine( 90, '*' );
 
