@@ -119,8 +119,6 @@ namespace RTC
 	public:
 		Type    type = Type::UNSET;
 		Subtype subtype = Subtype::UNSET;
-
-	private:
 		std::string name;
 	};
 
