@@ -31,6 +31,19 @@ tap.test('extra.paramFromSDP()', { timeout: 1000 }, (t) =>
 	t.equal(extra.paramFromSDP('foo'), 'foo');
 	t.equal(extra.paramFromSDP('wrong-param-'), 'wrongParam');
 
+	// Test SDP codec parameters that don't follow the camelcase convention of ORTC.
+	t.equal(extra.paramFromSDP('maxplaybackrate'), 'maxPlaybackRate');
+	t.equal(extra.paramFromSDP('MAXPLAYBACKRATE'), 'maxPlaybackRate');
+	t.equal(extra.paramFromSDP('sprop-maxcapturerate'), 'spropMaxCaptureRate');
+	t.equal(extra.paramFromSDP('maxaveragebitrate'), 'maxAverageBitrate');
+	t.equal(extra.paramFromSDP('useinbandfec'), 'useInbandFec');
+	t.equal(extra.paramFromSDP('usedtx'), 'useDtx');
+	t.equal(extra.paramFromSDP('sprop-maxcapturerate'), 'spropMaxCaptureRate');
+	t.equal(extra.paramFromSDP('L'), 'l');
+	t.equal(extra.paramFromSDP('l'), 'l');
+	t.equal(extra.paramFromSDP('D'), 'd');
+	t.equal(extra.paramFromSDP('ToP'), 'toP');
+
 	t.end();
 });
 
@@ -40,6 +53,19 @@ tap.test('extra.paramToSDP()', { timeout: 1000 }, (t) =>
 	t.equal(extra.paramToSDP('packetizationMode'), 'packetization-mode');
 	t.equal(extra.paramToSDP('Foo'), 'foo');
 	t.equal(extra.paramToSDP('WrongParam'), 'wrong-param');
+
+	// Test SDP codec parameters that don't follow the camelcase convention of ORTC.
+	t.equal(extra.paramToSDP('maxPlaybackRate'), 'maxplaybackrate');
+	t.equal(extra.paramToSDP('MAXPLAYBACKRATE'), 'maxplaybackrate');
+	t.equal(extra.paramToSDP('spropMaxCaptureRate'), 'sprop-maxcapturerate');
+	t.equal(extra.paramToSDP('maxAverageBitrate'), 'maxaveragebitrate');
+	t.equal(extra.paramToSDP('useInbandFec'), 'useinbandfec');
+	t.equal(extra.paramToSDP('useDtx'), 'usedtx');
+	t.equal(extra.paramToSDP('spropMaxCaptureRate'), 'sprop-maxcapturerate');
+	t.equal(extra.paramToSDP('l'), 'L');
+	t.equal(extra.paramToSDP('L'), 'L');
+	t.equal(extra.paramToSDP('d'), 'D');
+	t.equal(extra.paramToSDP('toP'), 'ToP');
 
 	t.end();
 });
