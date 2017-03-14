@@ -40,7 +40,9 @@ The same logic is applied as to Receiver Reports.
 
 ### NACK
 
-NACK requests are locally consumed. The solicited RTP packets are re-sent to the remote RTP receiver sending the request.
+Received NACK requests are locally consumed. The solicited RTP packets are re-sent to the remote RTP receiver sending the request.
+
+*mediasoup* locally generate NACK requests for remote senders.
 
 ### TMMBR / TMMBN
 
@@ -161,7 +163,7 @@ In future, this information is to be consumed by the local RTP Senders in order 
              | NACK | TMMBR | TMMBN | TLLEI | ECN-FB | PAUSE-RESUME | TCC |
 -------------|------|-------|-------|-------|--------|--------------|-----|
  RtpSender   |   C  |   I   |       |       |    I   |       C      |     |
- RtpReceiver |      |       |   I   |   I   |        |              |     |
+ RtpReceiver |   G  |       |   I   |   I   |        |              |     |
  RtpTransport|      |       |       |       |        |              | CG  |
 
 ## PS Feedback RTCP
