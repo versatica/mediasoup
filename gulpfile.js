@@ -68,3 +68,5 @@ gulp.task('test:worker', shell.task(
 ));
 
 gulp.task('test', gulp.series('test:api', 'test:worker'));
+
+gulp.task('default', gulp.series('lint', 'test'));
