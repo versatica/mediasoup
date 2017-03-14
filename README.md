@@ -56,8 +56,8 @@ Prior to that, ensure your host satisfies the following **requirements**:
 
 ## Authors
 
-* Iñaki Baz Castillo ([@ibc](https://github.com/ibc/) at Github)
-* José Luis Millán ([@jmillan](https://github.com/jmillan/) at Github)
+* Iñaki Baz Castillo [[website](https://inakibaz.me)|[github](https://github.com/ibc/)]
+* José Luis Millán [[github](https://github.com/jmillan/)]
 
 
 ## License
