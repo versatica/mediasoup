@@ -92,9 +92,8 @@ namespace RTC
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime = 0;
 		uint16_t maxRtcpInterval;
-
 		// TODO: keep track of retransmitted data too.
-		//RTC::RtpDataCounter retransmitted;
+		// RTC::RtpDataCounter retransmitted;
 	};
 
 	/* Inline methods. */

@@ -342,8 +342,8 @@ namespace RTC
 		// Send the packet.
 		this->transport->SendRtpPacket(packet);
 
-		// Save RTP data
-		transmitted.Update(packet);
+		// Save RTP data.
+		this->transmitted.Update(packet);
 	}
 
 	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
@@ -414,7 +414,11 @@ namespace RTC
 		// If the peer supports RTX create a RTX packet and insert the given media
 		// packet as payload. Otherwise just send the packet as usual.
 		// TODO: No RTX for now so just send as usual.
-		SendRtpPacket(packet);
+
+		MS_ASSERT(this->rtpStream, "no RtpStream set");
+
+		// Send the packet.
+		this->transport->SendRtpPacket(packet);
 	}
 
 	inline
