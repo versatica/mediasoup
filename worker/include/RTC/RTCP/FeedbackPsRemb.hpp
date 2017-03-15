@@ -2,7 +2,7 @@
 #define MS_RTC_RTCP_FEEDBACK_REMB_HPP
 
 #include "common.hpp"
-#include "RTC/RTCP/Feedback.hpp"
+#include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include <vector>
 
 /* draft-alvestrand-rmcat-remb-03
@@ -28,7 +28,7 @@
 namespace RTC { namespace RTCP
 {
 	class FeedbackPsRembPacket
-		: public FeedbackPsPacket
+		: public FeedbackPsAfbPacket
 	{
 	public:
 		// 'R' 'E' 'M' 'B'.
@@ -66,7 +66,7 @@ namespace RTC { namespace RTCP
 
 	inline
 	FeedbackPsRembPacket::FeedbackPsRembPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsPacket(FeedbackPs::AFB, sender_ssrc, media_ssrc)
+		FeedbackPsAfbPacket(sender_ssrc, media_ssrc, FeedbackPsAfbPacket::Application::REMB)
 	{}
 
 	inline

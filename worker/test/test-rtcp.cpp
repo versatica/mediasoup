@@ -613,7 +613,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
-		REQUIRE((packet->GetData()[dataSize -1] & 1) == dataBitmask);
+		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::UNKNOWN);
 
 		delete packet;
 	}
