@@ -5,6 +5,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
@@ -790,11 +791,21 @@ namespace RTC
 
 					switch (feedback->GetMessageType())
 					{
+						case RTCP::FeedbackPs::MessageType::AFB:
+						{
+							RTCP::FeedbackPsAfbPacket* afb = static_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::REMB)
+							{
+								// afb->Dump();
+								break;
+							}
+						}
+
+						// [[fallthrough]]; (C++17)
 						case RTCP::FeedbackPs::MessageType::PLI:
 						case RTCP::FeedbackPs::MessageType::SLI:
 						case RTCP::FeedbackPs::MessageType::RPSI:
 						case RTCP::FeedbackPs::MessageType::FIR:
-						case RTCP::FeedbackPs::MessageType::AFB:
 						{
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 

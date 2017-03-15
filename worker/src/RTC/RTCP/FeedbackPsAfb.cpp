@@ -2,6 +2,8 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "Utils.hpp"
 #include "Logger.hpp"
 #include <cstring>
 
@@ -21,7 +23,18 @@ namespace RTC { namespace RTCP
 		}
 
 		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-		std::unique_ptr<FeedbackPsAfbPacket> packet(new FeedbackPsAfbPacket(commonHeader));
+
+		std::unique_ptr<FeedbackPsAfbPacket> packet;
+
+		constexpr size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
+		if (Utils::Byte::Get4Bytes(data, offset) == FeedbackPsRembPacket::UniqueIdentifier)
+		{
+			packet.reset(FeedbackPsRembPacket::Parse(data, len));
+		}
+
+		else {
+			packet.reset(new FeedbackPsAfbPacket(commonHeader));
+		}
 
 		return packet.release();
 	}
