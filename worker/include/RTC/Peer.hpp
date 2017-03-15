@@ -10,7 +10,6 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/Feedback.hpp"
-#include "RTC/RTCP/Sdes.hpp"
 #include "Channel/Request.hpp"
 #include "Channel/Notifier.hpp"
 #include "handles/Timer.hpp"

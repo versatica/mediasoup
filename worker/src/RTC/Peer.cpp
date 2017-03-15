@@ -5,6 +5,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/Sdes.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
 #include "DepLibUV.hpp"
