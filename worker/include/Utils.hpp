@@ -84,7 +84,8 @@ namespace Utils
 	{
 	public:
 		/**
-		 * All these functions get and set bytes in Network Byte Order (Big Endian).
+		 * Getters below get value in Host Byte Order.
+		 * Setters below set value in Network Byte Order.
 		 */
 		static uint8_t Get1Byte(const uint8_t* data, size_t i);
 		static uint16_t Get2Bytes(const uint8_t* data, size_t i);
