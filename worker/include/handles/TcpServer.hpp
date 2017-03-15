@@ -21,6 +21,7 @@ public:
 	virtual void Dump();
 	bool IsClosing();
 	const struct sockaddr* GetLocalAddress();
+	int GetLocalFamily();
 	const std::string& GetLocalIP();
 	uint16_t GetLocalPort();
 	size_t GetNumConnections();
@@ -70,5 +71,30 @@ size_t TcpServer::GetNumConnections()
 {
 	return this->connections.size();
 }
+
+inline
+const struct sockaddr* TcpServer::GetLocalAddress()
+{
+	return (const struct sockaddr*)&this->localAddr;
+}
+
+inline
+int TcpServer::GetLocalFamily()
+{
+	return ((const struct sockaddr*)&this->localAddr)->sa_family;
+}
+
+inline
+const std::string& TcpServer::GetLocalIP()
+{
+	return this->localIP;
+}
+
+inline
+uint16_t TcpServer::GetLocalPort()
+{
+	return this->localPort;
+}
+
 
 #endif

@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/IceCandidate.hpp"
+#include "Settings.hpp"
 
 namespace RTC
 {
@@ -10,26 +11,75 @@ namespace RTC
 	IceCandidate::IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority) :
 		foundation("udpcandidate"),
 		priority(priority),
-		ip(udpSocket->GetLocalIP()),
+		family(udpSocket->GetLocalFamily()),
 		protocol(Protocol::UDP),
 		port(udpSocket->GetLocalPort()),
 		type(CandidateType::HOST)
-	{}
+	{
+		switch (this->family)
+		{
+			case AF_INET:
+			{
+				if (Settings::configuration.hasAnnouncedIPv4)
+					this->ip = Settings::configuration.rtcAnnouncedListenIPv4;
+				else
+					this->ip = udpSocket->GetLocalIP();
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				if (Settings::configuration.hasAnnouncedIPv6)
+					this->ip = Settings::configuration.rtcAnnouncedListenIPv6;
+				else
+					this->ip = udpSocket->GetLocalIP();
+
+				break;
+			}
+		}
+	}
 
 	IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority) :
 		foundation("tcpcandidate"),
 		priority(priority),
-		ip(tcpServer->GetLocalIP()),
+		family(tcpServer->GetLocalFamily()),
 		protocol(Protocol::TCP),
 		port(tcpServer->GetLocalPort()),
 		type(CandidateType::HOST),
 		tcpType(TcpCandidateType::PASSIVE)
-	{}
+	{
+		switch (this->family)
+		{
+			case AF_INET:
+			{
+				if (Settings::configuration.hasAnnouncedIPv4)
+					this->ip = Settings::configuration.rtcAnnouncedListenIPv4;
+				else
+					this->ip = tcpServer->GetLocalIP();
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				if (Settings::configuration.hasAnnouncedIPv6)
+					this->ip = Settings::configuration.rtcAnnouncedListenIPv6;
+				else
+					this->ip = tcpServer->GetLocalIP();
+
+				break;
+			}
+		}
+	}
 
 	Json::Value IceCandidate::toJson()
 	{
 		static const Json::StaticString k_foundation("foundation");
 		static const Json::StaticString k_priority("priority");
+		static const Json::StaticString k_family("family");
+		static const Json::StaticString v_ipv4("ipv4");
+		static const Json::StaticString v_ipv6("ipv6");
 		static const Json::StaticString k_ip("ip");
 		static const Json::StaticString k_port("port");
 		static const Json::StaticString k_type("type");
@@ -43,6 +93,18 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		json[k_foundation] = this->foundation;
+
+		switch (this->family)
+		{
+			case AF_INET:
+				json[k_family] = v_ipv4;
+				break;
+
+			case AF_INET6:
+				json[k_family] = v_ipv6;
+				break;
+		}
+
 		json[k_priority] = (Json::UInt)this->priority;
 		json[k_ip] = this->ip;
 		json[k_port] = (Json::UInt)this->port;

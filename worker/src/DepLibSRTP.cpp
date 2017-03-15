@@ -45,7 +45,7 @@ void DepLibSRTP::ClassInit()
 
 	srtp_err_status_t err;
 
-	MS_DEBUG_TAG(info, "loaded libsrtp version: %s", srtp_get_version_string());
+	MS_DEBUG_TAG(info, "loaded libsrtp version: \"%s\"", srtp_get_version_string());
 
 	err = srtp_init();
 	if (DepLibSRTP::IsError(err))

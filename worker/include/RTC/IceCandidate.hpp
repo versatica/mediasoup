@@ -40,6 +40,7 @@ namespace RTC
 		// Others.
 		std::string foundation;
 		uint32_t priority;
+		int family = 0;
 		std::string ip;
 		Protocol protocol;
 		uint16_t port;

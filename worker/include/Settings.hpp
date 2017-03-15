@@ -26,17 +26,21 @@ public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		LogLevel       logLevel             { LogLevel::LOG_DEBUG };
+		LogLevel       logLevel                { LogLevel::LOG_DEBUG };
 		struct LogTags logTags;
 		std::string    rtcListenIPv4;
 		std::string    rtcListenIPv6;
-		uint16_t       rtcMinPort           { 10000 };
-		uint16_t       rtcMaxPort           { 59999 };
+		std::string    rtcAnnouncedListenIPv4;
+		std::string    rtcAnnouncedListenIPv6;
+		uint16_t       rtcMinPort              { 10000 };
+		uint16_t       rtcMaxPort              { 59999 };
 		std::string    dtlsCertificateFile;
 		std::string    dtlsPrivateKeyFile;
 		// Private fields.
-		bool           hasIPv4              { false };
-		bool           hasIPv6              { false };
+		bool           hasIPv4                 { false };
+		bool           hasIPv6                 { false };
+		bool           hasAnnouncedIPv4        { false };
+		bool           hasAnnouncedIPv6        { false };
 	};
 
 public:
@@ -49,6 +53,8 @@ private:
 	static void SetLogLevel(std::string &level);
 	static void SetRtcListenIPv4(const std::string &ip);
 	static void SetRtcListenIPv6(const std::string &ip);
+	static void SetRtcAnnouncedListenIPv4(const std::string &ip);
+	static void SetRtcAnnouncedListenIPv6(const std::string &ip);
 	static void SetRtcPorts();
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 	static void SetLogTags(std::vector<std::string>& tags);

@@ -36,6 +36,7 @@ public:
 	void Send(const uint8_t* data, size_t len, const std::string &ip, uint16_t port);
 	void Send(const std::string &data, const std::string &ip, uint16_t port);
 	const struct sockaddr* GetLocalAddress();
+	int GetLocalFamily();
 	const std::string& GetLocalIP();
 	uint16_t GetLocalPort();
 
@@ -84,6 +85,12 @@ inline
 const struct sockaddr* UdpSocket::GetLocalAddress()
 {
 	return (const struct sockaddr*)&this->localAddr;
+}
+
+inline
+int UdpSocket::GetLocalFamily()
+{
+	return ((const struct sockaddr*)&this->localAddr)->sa_family;
 }
 
 inline

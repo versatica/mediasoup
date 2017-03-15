@@ -42,6 +42,7 @@ public:
 	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2);
 	void Write(const std::string &data);
 	const struct sockaddr* GetLocalAddress();
+	int GetLocalFamily();
 	const std::string& GetLocalIP();
 	uint16_t GetLocalPort();
 	const struct sockaddr* GetPeerAddress();
@@ -112,6 +113,12 @@ inline
 const struct sockaddr* TcpConnection::GetLocalAddress()
 {
 	return (const struct sockaddr*)this->localAddr;
+}
+
+inline
+int TcpConnection::GetLocalFamily()
+{
+	return ((const struct sockaddr*)&this->localAddr)->sa_family;
 }
 
 inline

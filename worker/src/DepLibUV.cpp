@@ -39,7 +39,7 @@ void DepLibUV::PrintVersion()
 {
 	MS_TRACE();
 
-	MS_DEBUG_TAG(info, "loaded libuv version: %s", uv_version_string());
+	MS_DEBUG_TAG(info, "loaded libuv version: \"%s\"", uv_version_string());
 }
 
 void DepLibUV::RunLoop()

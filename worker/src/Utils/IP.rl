@@ -43,7 +43,7 @@ namespace Utils
 		 */
 		%%write data;
 
-		// Used by Ragel:
+		// Used by Ragel.
 		size_t cs;
 		const unsigned char* p;
 		const unsigned char* pe;

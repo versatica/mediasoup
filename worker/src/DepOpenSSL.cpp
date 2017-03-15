@@ -19,7 +19,7 @@ void DepOpenSSL::ClassInit()
 {
 	MS_TRACE();
 
-	MS_DEBUG_TAG(info, "loaded openssl version: %s", SSLeay_version(SSLEAY_VERSION));
+	MS_DEBUG_TAG(info, "loaded openssl version: \"%s\"", SSLeay_version(SSLEAY_VERSION));
 
 	// Initialize OpenSSL stuff.
 	SSL_load_error_strings();

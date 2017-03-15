@@ -162,27 +162,6 @@ void TcpServer::Dump()
 	MS_DUMP("</TcpServer>");
 }
 
-const struct sockaddr* TcpServer::GetLocalAddress()
-{
-	MS_TRACE();
-
-	return (const struct sockaddr*)&this->localAddr;
-}
-
-const std::string& TcpServer::GetLocalIP()
-{
-	MS_TRACE();
-
-	return this->localIP;
-}
-
-uint16_t TcpServer::GetLocalPort()
-{
-	MS_TRACE();
-
-	return this->localPort;
-}
-
 bool TcpServer::SetLocalAddress()
 {
 	MS_TRACE();
