@@ -31,7 +31,7 @@ namespace RTC { namespace RTCP
 				return nullptr;
 			}
 
-			packet->AddSsrc(ntohl(Utils::Byte::Get4Bytes(data, offset)));
+			packet->AddSsrc(Utils::Byte::Get4Bytes(data, offset));
 			offset += sizeof(uint32_t);
 		}
 
@@ -59,7 +59,7 @@ namespace RTC { namespace RTCP
 		// SSRCs.
 		for (auto ssrc : this->ssrcs)
 		{
-			Utils::Byte::Set4Bytes(buffer, offset, htonl(ssrc));
+			Utils::Byte::Set4Bytes(buffer, offset, ssrc);
 			offset += sizeof(uint32_t);
 		}
 
