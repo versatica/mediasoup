@@ -320,18 +320,13 @@ namespace RTC
 			return;
 		}
 
-		// Process the packet.
-		// TODO: Must check what kind of packet we are checking. For example, RTX
-		// packets (once implemented) should have a different handling.
-		if (!this->rtpStream->ReceivePacket(packet))
-			return;
-
 		// Map the payload type.
 		uint8_t payloadType = packet->GetPayloadType();
 		auto it = this->supportedPayloadTypes.find(payloadType);
 
 		// NOTE: This may happen if this peer supports just some codecs from the
 		// given RtpParameters.
+		// TODO: We should just ignore those packets as they have non been negotiated.
 		if (it == this->supportedPayloadTypes.end())
 		{
 			MS_DEBUG_TAG(rtp, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
@@ -339,11 +334,17 @@ namespace RTC
 			return;
 		}
 
+		// Process the packet.
+		// TODO: Must check what kind of packet we are checking. For example, RTX
+		// packets (once implemented) should have a different handling.
+		if (!this->rtpStream->ReceivePacket(packet))
+			return;
+
 		// Send the packet.
 		this->transport->SendRtpPacket(packet);
 
 		// Save RTP data.
-		this->transmitted.Update(packet);
+		this->transmittedCounter.Update(packet);
 	}
 
 	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
@@ -365,7 +366,7 @@ namespace RTC
 		report->SetSsrc(ssrc);
 		packet->AddSenderReport(report);
 
-		// Build sdes chunk for this sender.
+		// Build SDES chunk for this sender.
 		RTC::RTCP::SdesChunk *sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
 		RTC::RTCP::SdesItem *sdesItem = new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 

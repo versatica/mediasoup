@@ -87,11 +87,11 @@ namespace RTC
 		bool available = false;
 		// Whether this RtpSender has been disabled by the app.
 		bool disabled = false;
-		// RTP counters.
-		RTC::RtpDataCounter transmitted;
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime = 0;
 		uint16_t maxRtcpInterval;
+		// RTP counters.
+		RTC::RtpDataCounter transmittedCounter;
 		// TODO: keep track of retransmitted data too.
 		// RTC::RtpDataCounter retransmitted;
 	};
@@ -142,7 +142,7 @@ namespace RTC
 	inline
 	uint32_t RtpSender::GetTransmissionRate(uint64_t now)
 	{
-		return this->transmitted.GetRate(now);
+		return this->transmittedCounter.GetRate(now);
 	}
 }
 
