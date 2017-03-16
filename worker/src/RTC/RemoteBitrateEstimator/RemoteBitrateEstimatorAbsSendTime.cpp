@@ -210,17 +210,6 @@ bool RemoteBitrateEstimatorAbsSendTime::IsBitrateImproving(
   return initial_probe || bitrate_above_estimate;
 }
 
-/*
-void RemoteBitrateEstimatorAbsSendTime::IncomingPacketFeedbackVector(
-    const std::vector<PacketInfo>& packet_feedback_vector) {
-  for (const auto& packet_info : packet_feedback_vector) {
-    IncomingPacketInfo(packet_info.arrival_time_ms,
-                       ConvertMsTo24Bits(packet_info.send_time_ms),
-                       packet_info.payload_size, 0);
-  }
-}
-*/
-
 void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(
     int64_t arrival_time_ms,
     size_t payload_size,
