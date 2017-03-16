@@ -20,10 +20,11 @@ namespace RTC
 		explicit RateCalculator(size_t windowSize = defaultWindowSize, float scale = kBpsScale);
 		void Update(size_t count, uint64_t now);
 		uint32_t GetRate(uint64_t now);
+		void Reset();
 
 	private:
 		void RemoveOldData(uint64_t now);
-		void Reset(uint64_t oldestTime);
+		void Reset(uint64_t now);
 
 	private:
 		struct BufferItem
@@ -69,16 +70,22 @@ namespace RTC
 	{
 		uint64_t now = DepLibUV::GetTime();
 
-		this->Reset(now - windowSize);
+		this->Reset(now);
 	}
 
 	inline
-	void RateCalculator::Reset(uint64_t oldestTime)
+	void RateCalculator::Reset()
+	{
+		this->Reset(this->oldestTime);
+	}
+
+	inline
+	void RateCalculator::Reset(uint64_t now)
 	{
 		this->buffer.reset(new BufferItem[windowSize]);
 		this->totalCount = 0;
 		this->oldestIndex = 0;
-		this->oldestTime = oldestTime;
+		this->oldestTime = now - this->windowSize;
 	}
 
 	inline
