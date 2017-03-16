@@ -250,8 +250,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
     // Incoming bitrate had a previous valid value, but now not enough data
     // point are left within the current window. Reset incoming bitrate
     // estimator so that the window size will only contain new data points.
-    // (jmillan) TODO: Reset the RateCalculator.
-    //incoming_bitrate_.Reset();
+    incoming_bitrate_.Reset();
     incoming_bitrate_initialized_ = false;
   }
   incoming_bitrate_.Update(payload_size, arrival_time_ms);
