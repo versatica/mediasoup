@@ -87,7 +87,7 @@ namespace RTC
 		delete this;
 	}
 
-	Json::Value Peer::toJson()
+	Json::Value Peer::toJson() const
 	{
 		MS_TRACE();
 
@@ -517,7 +517,7 @@ namespace RTC
 		this->notifier->Emit(this->peerId, "newrtpsender", event_data);
 	}
 
-	RTC::RtpSender* Peer::GetRtpSender(uint32_t ssrc)
+	RTC::RtpSender* Peer::GetRtpSender(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -612,7 +612,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId)
+	RTC::Transport* Peer::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId) const
 	{
 		MS_TRACE();
 
@@ -639,7 +639,7 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpReceiver* Peer::GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId)
+	RTC::RtpReceiver* Peer::GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId) const
 	{
 		MS_TRACE();
 
@@ -666,7 +666,7 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpSender* Peer::GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId)
+	RTC::RtpSender* Peer::GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId) const
 	{
 		MS_TRACE();
 

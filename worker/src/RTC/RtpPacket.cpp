@@ -142,7 +142,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void RtpPacket::Dump()
+	void RtpPacket::Dump() const
 	{
 		MS_TRACE();
 

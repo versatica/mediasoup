@@ -67,7 +67,7 @@ namespace RTC
 		ValidateCodecs(scope);
 	}
 
-	Json::Value RtpCapabilities::toJson()
+	Json::Value RtpCapabilities::toJson() const
 	{
 		MS_TRACE();
 

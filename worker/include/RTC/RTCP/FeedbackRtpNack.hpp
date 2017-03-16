@@ -37,14 +37,14 @@ namespace RTC { namespace RTCP
 		NackItem(uint16_t packetId, uint16_t lostPacketBitmask);
 		virtual ~NackItem() {};
 
-		uint16_t GetPacketId();
-		uint16_t GetLostPacketBitmask();
+		uint16_t GetPacketId() const;
+		uint16_t GetLostPacketBitmask() const;
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -66,19 +66,19 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t NackItem::GetSize()
+	size_t NackItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint16_t NackItem::GetPacketId()
+	uint16_t NackItem::GetPacketId() const
 	{
 		return (uint16_t)ntohs(this->header->packet_id);
 	}
 
 	inline
-	uint16_t NackItem::GetLostPacketBitmask()
+	uint16_t NackItem::GetLostPacketBitmask() const
 	{
 		return (uint16_t)ntohs(this->header->lost_packet_bitmask);
 	}

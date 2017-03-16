@@ -13,10 +13,10 @@ namespace RTC
 	class RtpListener
 	{
 	public:
-		Json::Value toJson();
-		bool HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver);
-		bool HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver);
-		bool HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver);
+		Json::Value toJson() const;
+		bool HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver) const;
+		bool HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver) const;
+		bool HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver) const;
 		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		RTC::RtpReceiver* GetRtpReceiver(RTC::RtpPacket* packet);
@@ -37,7 +37,7 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool RtpListener::HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver)
+	bool RtpListener::HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver) const
 	{
 		auto it = this->ssrcTable.find(ssrc);
 
@@ -52,7 +52,7 @@ namespace RTC
 	}
 
 	inline
-	bool RtpListener::HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver)
+	bool RtpListener::HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver) const
 	{
 		auto it = this->muxIdTable.find(muxId);
 
@@ -67,7 +67,7 @@ namespace RTC
 	}
 
 	inline
-	bool RtpListener::HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver)
+	bool RtpListener::HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver) const
 	{
 		auto it = this->ptTable.find(payloadType);
 

@@ -46,11 +46,11 @@ namespace RTC { namespace RTCP
 
 		void Dump();
 		size_t Serialize(uint8_t* buffer);
-		size_t GetSize();
+		size_t GetSize() const;
 
-		SdesItem::Type GetType();
-		uint8_t GetLength();
-		char* GetValue();
+		SdesItem::Type GetType() const;
+		uint8_t GetLength() const;
+		char* GetValue() const;
 
 	private:
 		// Passed by argument.
@@ -77,8 +77,8 @@ namespace RTC { namespace RTCP
 		void Dump();
 		void Serialize();
 		size_t Serialize(uint8_t* buffer);
-		size_t GetSize();
-		uint32_t GetSsrc();
+		size_t GetSize() const;
+		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
 		void AddItem(SdesItem* item);
 		Iterator Begin();
@@ -110,8 +110,8 @@ namespace RTC { namespace RTCP
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetCount() override;
-		virtual size_t GetSize() override;
+		virtual size_t GetCount() const override;
+		virtual size_t GetSize() const override;
 
 	private:
 		std::vector<SdesChunk*> chunks;
@@ -135,25 +135,25 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	size_t SdesItem::GetSize()
+	size_t SdesItem::GetSize() const
 	{
 		return 2 + size_t(this->header->length);
 	}
 
 	inline
-	SdesItem::Type SdesItem::GetType()
+	SdesItem::Type SdesItem::GetType() const
 	{
 		return (SdesItem::Type)this->header->type;
 	}
 
 	inline
-	uint8_t SdesItem::GetLength()
+	uint8_t SdesItem::GetLength() const
 	{
 		return this->header->length;
 	}
 
 	inline
-	char* SdesItem::GetValue()
+	char* SdesItem::GetValue() const
 	{
 		return this->header->value;
 	}
@@ -187,7 +187,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	size_t SdesChunk::GetSize()
+	size_t SdesChunk::GetSize() const
 	{
 		size_t size = sizeof(this->ssrc);
 
@@ -202,7 +202,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t SdesChunk::GetSsrc()
+	uint32_t SdesChunk::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->ssrc);
 	}
@@ -248,13 +248,13 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	size_t SdesPacket::GetCount()
+	size_t SdesPacket::GetCount() const
 	{
 		return this->chunks.size();
 	}
 
 	inline
-	size_t SdesPacket::GetSize()
+	size_t SdesPacket::GetSize() const
 	{
 		size_t size = sizeof(Packet::CommonHeader);
 

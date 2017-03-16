@@ -47,7 +47,7 @@ namespace RTC
 			this->parameters.Set(data[k_parameters]);
 	}
 
-	Json::Value RtpHeaderExtensionParameters::toJson()
+	Json::Value RtpHeaderExtensionParameters::toJson() const
 	{
 		MS_TRACE();
 

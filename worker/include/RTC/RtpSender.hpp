@@ -49,15 +49,15 @@ namespace RTC
 		virtual ~RtpSender();
 
 		void Close();
-		Json::Value toJson();
+		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		void SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities);
 		void Send(RTC::RtpParameters* rtpParameters);
 		void SetTransport(RTC::Transport* transport);
-		RTC::Transport* GetTransport();
+		RTC::Transport* GetTransport() const;
 		void RemoveTransport(RTC::Transport* transport);
-		RTC::RtpParameters* GetParameters();
-		bool GetActive();
+		RTC::RtpParameters* GetParameters() const;
+		bool GetActive() const;
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -65,7 +65,7 @@ namespace RTC
 
 	private:
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void EmitActiveChange();
+		void EmitActiveChange() const;
 
 	public:
 		// Passed by argument.
@@ -110,7 +110,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::Transport* RtpSender::GetTransport()
+	RTC::Transport* RtpSender::GetTransport() const
 	{
 		return this->transport;
 	}
@@ -128,13 +128,13 @@ namespace RTC
 	}
 
 	inline
-	RTC::RtpParameters* RtpSender::GetParameters()
+	RTC::RtpParameters* RtpSender::GetParameters() const
 	{
 		return this->rtpParameters;
 	}
 
 	inline
-	bool RtpSender::GetActive()
+	bool RtpSender::GetActive() const
 	{
 		return (this->available && this->transport && !this->disabled);
 	}

@@ -23,7 +23,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::toJson()
+	Json::Value RtpStreamRecv::toJson() const
 	{
 		MS_TRACE();
 

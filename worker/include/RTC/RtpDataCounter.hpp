@@ -51,8 +51,8 @@ namespace RTC
 	public:
 		void Update(RTC::RtpPacket* packet);
 		uint32_t GetRate(uint64_t now);
-		size_t GetPacketCount();
-		size_t GetBytes();
+		size_t GetPacketCount() const;
+		size_t GetBytes() const;
 
 	private:
 		RateCalculator rate;
@@ -82,19 +82,19 @@ namespace RTC
 	}
 
 	inline
-	size_t RtpDataCounter::GetPacketCount()
-	{
-		return this->packets;
-	}
-
-	inline
 	uint32_t RtpDataCounter::GetRate(uint64_t now)
 	{
 		return this->rate.GetRate(now);
 	}
 
 	inline
-	size_t RtpDataCounter::GetBytes()
+	size_t RtpDataCounter::GetPacketCount() const
+	{
+		return this->packets;
+	}
+
+	inline
+	size_t RtpDataCounter::GetBytes() const
 	{
 		return this->bytes;
 	}

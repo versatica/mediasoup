@@ -46,10 +46,10 @@ namespace RTC
 
 		void Close();
 		void ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple);
-		std::string& GetUsernameFragment();
-		std::string& GetPassword();
-		IceState GetState();
-		bool IsValidTuple(RTC::TransportTuple* tuple);
+		const std::string& GetUsernameFragment() const;
+		const std::string& GetPassword() const;
+		IceState GetState() const;
+		bool IsValidTuple(RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
 		// This should be just called in 'connected' or completed' state
 		// and the given tuple must be an already valid tuple.
@@ -64,7 +64,7 @@ namespace RTC
 		/**
 		 * If the given tuple exists return its stored address, nullptr otherwise.
 		 */
-		RTC::TransportTuple* HasTuple(RTC::TransportTuple* tuple);
+		RTC::TransportTuple* HasTuple(RTC::TransportTuple* tuple) const;
 		/**
 		 * Set the given tuple as the selected tuple.
 		 * NOTE: The given tuple MUST be already stored within the list.
@@ -82,22 +82,22 @@ namespace RTC
 		RTC::TransportTuple* selectedTuple = nullptr;
 	};
 
-	/* Inline methods. */
+	/* Inline instance methods. */
 
 	inline
-	std::string& IceServer::GetUsernameFragment()
+	const std::string& IceServer::GetUsernameFragment() const
 	{
 		return this->usernameFragment;
 	}
 
 	inline
-	std::string& IceServer::GetPassword()
+	const std::string& IceServer::GetPassword() const
 	{
 		return this->password;
 	}
 
 	inline
-	IceServer::IceState IceServer::GetState()
+	IceServer::IceState IceServer::GetState() const
 	{
 		return this->state;
 	}

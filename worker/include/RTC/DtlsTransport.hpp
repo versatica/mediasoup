@@ -118,16 +118,16 @@ namespace RTC
 		virtual ~DtlsTransport();
 
 		void Close();
-		void Dump();
+		void Dump() const;
 		void Run(Role localRole);
 		void SetRemoteFingerprint(Fingerprint fingerprint);
 		void ProcessDtlsData(const uint8_t* data, size_t len);
-		DtlsState GetState();
-		Role GetLocalRole();
+		DtlsState GetState() const;
+		Role GetLocalRole() const;
 		void SendApplicationData(const uint8_t* data, size_t len);
 
 	private:
-		bool IsRunning();
+		bool IsRunning() const;
 		void Reset();
 		bool CheckStatus(int return_code);
 		void SendPendingOutgoingDtlsData();
@@ -206,7 +206,19 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool DtlsTransport::IsRunning()
+	DtlsTransport::DtlsState DtlsTransport::GetState() const
+	{
+		return this->state;
+	}
+
+	inline
+	DtlsTransport::Role DtlsTransport::GetLocalRole() const
+	{
+		return this->localRole;
+	}
+
+	inline
+	bool DtlsTransport::IsRunning() const
 	{
 		switch (this->state)
 		{
@@ -222,18 +234,6 @@ namespace RTC
 
 		// Make GCC 4.9 happy.
 		return false;
-	}
-
-	inline
-	DtlsTransport::DtlsState DtlsTransport::GetState()
-	{
-		return this->state;
-	}
-
-	inline
-	DtlsTransport::Role DtlsTransport::GetLocalRole()
-	{
-		return this->localRole;
 	}
 }
 

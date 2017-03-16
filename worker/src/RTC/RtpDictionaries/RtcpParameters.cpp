@@ -37,7 +37,7 @@ namespace RTC
 			this->reducedSize = data[k_reducedSize].asBool();
 	}
 
-	Json::Value RtcpParameters::toJson()
+	Json::Value RtcpParameters::toJson() const
 	{
 		MS_TRACE();
 

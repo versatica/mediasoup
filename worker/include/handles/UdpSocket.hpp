@@ -30,15 +30,15 @@ public:
 	virtual ~UdpSocket();
 
 	void Close();
-	virtual void Dump();
+	virtual void Dump() const;
 	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
 	void Send(const std::string &data, const struct sockaddr* addr);
 	void Send(const uint8_t* data, size_t len, const std::string &ip, uint16_t port);
 	void Send(const std::string &data, const std::string &ip, uint16_t port);
-	const struct sockaddr* GetLocalAddress();
-	int GetLocalFamily();
-	const std::string& GetLocalIP();
-	uint16_t GetLocalPort();
+	const struct sockaddr* GetLocalAddress() const;
+	int GetLocalFamily() const;
+	const std::string& GetLocalIP() const;
+	uint16_t GetLocalPort() const;
 
 private:
 	bool SetLocalAddress();
@@ -82,25 +82,25 @@ void UdpSocket::Send(const std::string &data, const std::string &ip, uint16_t po
 }
 
 inline
-const struct sockaddr* UdpSocket::GetLocalAddress()
+const struct sockaddr* UdpSocket::GetLocalAddress() const
 {
 	return (const struct sockaddr*)&this->localAddr;
 }
 
 inline
-int UdpSocket::GetLocalFamily()
+int UdpSocket::GetLocalFamily() const
 {
 	return ((const struct sockaddr*)&this->localAddr)->sa_family;
 }
 
 inline
-const std::string& UdpSocket::GetLocalIP()
+const std::string& UdpSocket::GetLocalIP() const
 {
 	return this->localIP;
 }
 
 inline
-uint16_t UdpSocket::GetLocalPort()
+uint16_t UdpSocket::GetLocalPort() const
 {
 	return this->localPort;
 }

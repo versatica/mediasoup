@@ -40,18 +40,18 @@ namespace RTC { namespace RTCP
 		TmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
 		virtual ~TmmbItem() {};
 
-		uint32_t GetSsrc();
+		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
-		uint64_t GetBitrate();
+		uint64_t GetBitrate() const;
 		void SetBitrate(uint64_t bitrate);
-		uint16_t GetOverhead();
+		uint16_t GetOverhead() const;
 		void SetOverhead(uint16_t overhead);
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -74,13 +74,13 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	template <typename T>
-	size_t TmmbItem<T>::GetSize()
+	size_t TmmbItem<T>::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	template <typename T>
-	uint32_t TmmbItem<T>::GetSsrc()
+	uint32_t TmmbItem<T>::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
@@ -92,7 +92,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	uint64_t TmmbItem<T>::GetBitrate()
+	uint64_t TmmbItem<T>::GetBitrate() const
 	{
 		return this->bitrate;
 	}
@@ -104,7 +104,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	uint16_t TmmbItem<T>::GetOverhead()
+	uint16_t TmmbItem<T>::GetOverhead() const
 	{
 		return this->overhead;
 	}

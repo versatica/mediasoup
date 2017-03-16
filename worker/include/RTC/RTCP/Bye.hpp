@@ -23,7 +23,7 @@ namespace RTC { namespace RTCP
 
 		void AddSsrc(uint32_t ssrc);
 		void SetReason(const std::string& reason);
-		const std::string& GetReason();
+		const std::string& GetReason() const;
 		Iterator Begin();
 		Iterator End();
 
@@ -31,8 +31,8 @@ namespace RTC { namespace RTCP
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetCount() override;
-		virtual size_t GetSize() override;
+		virtual size_t GetCount() const override;
+		virtual size_t GetSize() const override;
 
 	private:
 		std::vector<uint32_t> ssrcs;
@@ -47,15 +47,16 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t ByePacket::GetCount()
+	size_t ByePacket::GetCount() const
 	{
 		return this->ssrcs.size();
 	}
 
 	inline
-	size_t ByePacket::GetSize()
+	size_t ByePacket::GetSize() const
 	{
 		size_t size = sizeof(Packet::CommonHeader);
+
 		size += ssrcs.size() * sizeof(uint32_t);
 
 		if (!this->reason.empty())
@@ -82,7 +83,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	const std::string& ByePacket::GetReason()
+	const std::string& ByePacket::GetReason() const
 	{
 		return this->reason;
 	}

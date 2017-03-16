@@ -43,15 +43,15 @@ namespace RTC { namespace RTCP
 		TstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
 		virtual ~TstItem() {};
 
-		uint32_t GetSsrc();
-		uint8_t GetSequenceNumber();
-		uint8_t GetIndex();
+		uint32_t GetSsrc() const;
+		uint8_t GetSequenceNumber() const;
+		uint8_t GetIndex() const;
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -81,25 +81,25 @@ namespace RTC { namespace RTCP
 	{}
 
 	template <typename T>
-	size_t TstItem<T>::GetSize()
+	size_t TstItem<T>::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	template <typename T>
-	uint32_t TstItem<T>::GetSsrc()
+	uint32_t TstItem<T>::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
 	template <typename T>
-	uint8_t TstItem<T>::GetSequenceNumber()
+	uint8_t TstItem<T>::GetSequenceNumber() const
 	{
 		return (uint8_t)this->header->sequence_number;
 	}
 
 	template <typename T>
-	uint8_t TstItem<T>::GetIndex()
+	uint8_t TstItem<T>::GetIndex() const
 	{
 		return (uint8_t)this->header->index;
 	}

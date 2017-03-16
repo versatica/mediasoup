@@ -36,20 +36,20 @@ namespace RTC { namespace RTCP
 
 		void Dump();
 		size_t Serialize(uint8_t* buffer);
-		size_t GetSize();
-		uint32_t GetSsrc();
+		size_t GetSize() const;
+		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
-		uint8_t GetFractionLost();
+		uint8_t GetFractionLost() const;
 		void SetFractionLost(uint8_t fraction_lost);
-		int32_t GetTotalLost();
+		int32_t GetTotalLost() const;
 		void SetTotalLost(int32_t total_lost);
-		uint32_t GetLastSeq();
+		uint32_t GetLastSeq() const;
 		void SetLastSeq(uint32_t last_seq);
-		uint32_t GetJitter();
+		uint32_t GetJitter() const;
 		void SetJitter(uint32_t jitter);
-		uint32_t GetLastSenderReport();
+		uint32_t GetLastSenderReport() const;
 		void SetLastSenderReport(uint32_t lsr);
-		uint32_t GetDelaySinceLastSenderReport();
+		uint32_t GetDelaySinceLastSenderReport() const;
 		void SetDelaySinceLastSenderReport(uint32_t dlsr);
 
 	private:
@@ -70,7 +70,7 @@ namespace RTC { namespace RTCP
 		ReceiverReportPacket();
 		virtual ~ReceiverReportPacket();
 
-		uint32_t GetSsrc();
+		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
 		void AddReport(ReceiverReport* report);
 		Iterator Begin();
@@ -80,8 +80,8 @@ namespace RTC { namespace RTCP
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetCount() override;
-		virtual size_t GetSize() override;
+		virtual size_t GetCount() const override;
+		virtual size_t GetSize() const override;
 
 	private:
 		// SSRC of packet sender.
@@ -108,13 +108,13 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t ReceiverReport::GetSize()
+	size_t ReceiverReport::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint32_t ReceiverReport::GetSsrc()
+	uint32_t ReceiverReport::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
@@ -126,7 +126,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint8_t ReceiverReport::GetFractionLost()
+	uint8_t ReceiverReport::GetFractionLost() const
 	{
 		return (uint8_t)Utils::Byte::Get1Byte((uint8_t*)this->header, 4);
 	}
@@ -138,7 +138,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	int32_t ReceiverReport::GetTotalLost()
+	int32_t ReceiverReport::GetTotalLost() const
 	{
 		uint32_t value = (uint32_t)Utils::Byte::Get3Bytes((uint8_t*)this->header, 5);
 
@@ -168,7 +168,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t ReceiverReport::GetLastSeq()
+	uint32_t ReceiverReport::GetLastSeq() const
 	{
 		return (uint32_t)ntohl(this->header->last_seq);
 	}
@@ -180,7 +180,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t ReceiverReport::GetJitter()
+	uint32_t ReceiverReport::GetJitter() const
 	{
 		return (uint32_t)ntohl(this->header->jitter);
 	}
@@ -192,7 +192,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t ReceiverReport::GetLastSenderReport()
+	uint32_t ReceiverReport::GetLastSenderReport() const
 	{
 		return (uint32_t)ntohl(this->header->lsr);
 	}
@@ -204,7 +204,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t ReceiverReport::GetDelaySinceLastSenderReport()
+	uint32_t ReceiverReport::GetDelaySinceLastSenderReport() const
 	{
 		return (uint32_t)ntohl(this->header->dlsr);
 	}
@@ -230,13 +230,13 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	size_t ReceiverReportPacket::GetCount()
+	size_t ReceiverReportPacket::GetCount() const
 	{
 		return this->reports.size();
 	}
 
 	inline
-	size_t ReceiverReportPacket::GetSize()
+	size_t ReceiverReportPacket::GetSize() const
 	{
 		size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
 
@@ -249,7 +249,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t ReceiverReportPacket::GetSsrc()
+	uint32_t ReceiverReportPacket::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->ssrc);
 	}

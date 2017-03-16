@@ -140,7 +140,7 @@ namespace RTC
 		delete this;
 	}
 
-	Json::Value Room::toJson()
+	Json::Value Room::toJson() const
 	{
 		MS_TRACE();
 
@@ -330,7 +330,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Peer* Room::GetPeerFromRequest(Channel::Request* request, uint32_t* peerId)
+	RTC::Peer* Room::GetPeerFromRequest(Channel::Request* request, uint32_t* peerId) const
 	{
 		MS_TRACE();
 

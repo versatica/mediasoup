@@ -8,7 +8,7 @@ namespace RTC { namespace RTCP
 	class FeedbackItem
 	{
 	public:
-		bool IsCorrect();
+		bool IsCorrect() const;
 
 	protected:
 		virtual ~FeedbackItem();
@@ -17,7 +17,7 @@ namespace RTC { namespace RTCP
 		virtual void Dump() = 0;
 		virtual void Serialize();
 		virtual size_t Serialize(uint8_t* buffer) = 0;
-		virtual size_t GetSize() = 0;
+		virtual size_t GetSize() const = 0;
 
 	protected:
 		uint8_t* raw = nullptr;
@@ -44,7 +44,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	bool FeedbackItem::IsCorrect()
+	bool FeedbackItem::IsCorrect() const
 	{
 		return this->isCorrect;
 	}

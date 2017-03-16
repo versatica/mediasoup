@@ -52,19 +52,19 @@ namespace RTC { namespace RTCP
 		explicit EcnItem(EcnItem* item);
 		virtual ~EcnItem() {};
 
-		uint32_t GetSequenceNumber();
-		uint32_t GetEct0Counter();
-		uint32_t GetEct1Counter();
-		uint16_t GetEcnCeCounter();
-		uint16_t GetNotEctCounter();
-		uint16_t GetLostPackets();
-		uint16_t GetDuplicatedPackets();
+		uint32_t GetSequenceNumber() const;
+		uint32_t GetEct0Counter() const;
+		uint32_t GetEct1Counter() const;
+		uint16_t GetEcnCeCounter() const;
+		uint16_t GetNotEctCounter() const;
+		uint16_t GetLostPackets() const;
+		uint16_t GetDuplicatedPackets() const;
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -86,49 +86,49 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t EcnItem::GetSize()
+	size_t EcnItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint32_t EcnItem::GetSequenceNumber()
+	uint32_t EcnItem::GetSequenceNumber() const
 	{
 		return ntohl(this->header->sequence_number);
 	}
 
 	inline
-	uint32_t EcnItem::GetEct0Counter()
+	uint32_t EcnItem::GetEct0Counter() const
 	{
 		return ntohl(this->header->ect0_counter);
 	}
 
 	inline
-	uint32_t EcnItem::GetEct1Counter()
+	uint32_t EcnItem::GetEct1Counter() const
 	{
 		return ntohl(this->header->ect1_counter);
 	}
 
 	inline
-	uint16_t EcnItem::GetEcnCeCounter()
+	uint16_t EcnItem::GetEcnCeCounter() const
 	{
 		return ntohs(this->header->ecn_ce_counter);
 	}
 
 	inline
-	uint16_t EcnItem::GetNotEctCounter()
+	uint16_t EcnItem::GetNotEctCounter() const
 	{
 		return ntohs(this->header->not_ect_counter);
 	}
 
 	inline
-	uint16_t EcnItem::GetLostPackets()
+	uint16_t EcnItem::GetLostPackets() const
 	{
 		return ntohs(this->header->lost_packets);
 	}
 
 	inline
-	uint16_t EcnItem::GetDuplicatedPackets()
+	uint16_t EcnItem::GetDuplicatedPackets() const
 	{
 		return ntohs(this->header->duplicated_packets);
 	}

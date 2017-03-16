@@ -9,7 +9,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value RtpListener::toJson()
+	Json::Value RtpListener::toJson() const
 	{
 		MS_TRACE();
 
@@ -323,7 +323,7 @@ namespace RTC
 			}
 		}
 
-		// TODO: We may emit "unhandledrtp" event.
+		// TODO: We may emit 'unhandledrtp' event.
 		return nullptr;
 	}
 

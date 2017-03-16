@@ -23,7 +23,7 @@ public:
 	virtual ~UnixStreamSocket();
 
 	void Close();
-	bool IsClosing();
+	bool IsClosing() const;
 	void Write(const uint8_t* data, size_t len);
 	void Write(const std::string &data);
 
@@ -60,7 +60,7 @@ protected:
 /* Inline methods. */
 
 inline
-bool UnixStreamSocket::IsClosing()
+bool UnixStreamSocket::IsClosing() const
 {
 	return this->isClosing;
 }

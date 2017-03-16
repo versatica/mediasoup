@@ -50,25 +50,25 @@ namespace RTC
 		virtual ~Peer();
 
 		void Close();
-		Json::Value toJson();
+		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
-		bool HasCapabilities();
-		std::vector<RTC::RtpReceiver*> GetRtpReceivers();
-		std::vector<RTC::RtpSender*> GetRtpSenders();
-		std::unordered_map<uint32_t, RTC::Transport*>& GetTransports();
+		bool HasCapabilities() const;
+		std::vector<RTC::RtpReceiver*> GetRtpReceivers() const;
+		std::vector<RTC::RtpSender*> GetRtpSenders() const;
+		const std::unordered_map<uint32_t, RTC::Transport*>& GetTransports() const;
 		/**
 		 * Add a new RtpSender to the Peer.
 		 * @param rtpSender     Instance of RtpSender.
 		 * @param peerName      Name of the receiver Peer.
 		 */
 		void AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters);
-		RTC::RtpSender* GetRtpSender(uint32_t ssrc);
+		RTC::RtpSender* GetRtpSender(uint32_t ssrc) const;
 		void SendRtcp(uint64_t now);
 
 	private:
-		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr);
-		RTC::RtpReceiver* GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId = nullptr);
-		RTC::RtpSender* GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId = nullptr);
+		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr) const;
+		RTC::RtpReceiver* GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId = nullptr) const;
+		RTC::RtpSender* GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId = nullptr) const;
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -111,13 +111,13 @@ namespace RTC
 	/* Inline methods. */
 
 	inline
-	bool Peer::HasCapabilities()
+	bool Peer::HasCapabilities() const
 	{
 		return this->hasCapabilities;
 	}
 
 	inline
-	std::vector<RTC::RtpReceiver*> Peer::GetRtpReceivers()
+	std::vector<RTC::RtpReceiver*> Peer::GetRtpReceivers() const
 	{
 		std::vector<RTC::RtpReceiver*> rtpReceivers;
 
@@ -130,7 +130,7 @@ namespace RTC
 	}
 
 	inline
-	std::vector<RTC::RtpSender*> Peer::GetRtpSenders()
+	std::vector<RTC::RtpSender*> Peer::GetRtpSenders() const
 	{
 		std::vector<RTC::RtpSender*> rtpSenders;
 
@@ -143,7 +143,7 @@ namespace RTC
 	}
 
 	inline
-	std::unordered_map<uint32_t, RTC::Transport*>& Peer::GetTransports()
+	const std::unordered_map<uint32_t, RTC::Transport*>& Peer::GetTransports() const
 	{
 		return this->transports;
 	}

@@ -152,7 +152,7 @@ void TcpServer::Close()
 	}
 }
 
-void TcpServer::Dump()
+void TcpServer::Dump() const
 {
 	MS_DUMP("<TcpServer>");
 	MS_DUMP("  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",

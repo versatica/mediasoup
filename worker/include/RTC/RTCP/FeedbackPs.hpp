@@ -30,7 +30,7 @@ namespace RTC { namespace RTCP
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		std::vector<Item*> items;
@@ -49,7 +49,7 @@ namespace RTC { namespace RTCP
 	{}
 
 	template<typename Item>
-	size_t FeedbackPsItemPacket<Item>::GetSize()
+	size_t FeedbackPsItemPacket<Item>::GetSize() const
 	{
 		size_t size = FeedbackPsPacket::GetSize();
 

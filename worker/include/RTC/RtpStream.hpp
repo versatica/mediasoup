@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <json/json.h>
 
 namespace RTC
 {
@@ -12,6 +13,7 @@ namespace RTC
 		explicit RtpStream(uint32_t ssrc, uint32_t clockRate);
 		virtual ~RtpStream();
 
+		virtual Json::Value toJson() const = 0;
 		uint32_t GetSsrc();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 

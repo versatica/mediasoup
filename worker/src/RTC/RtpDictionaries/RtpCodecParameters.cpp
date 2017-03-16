@@ -112,7 +112,7 @@ namespace RTC
 		CheckCodec();
 	}
 
-	Json::Value RtpCodecParameters::toJson()
+	Json::Value RtpCodecParameters::toJson() const
 	{
 		MS_TRACE();
 

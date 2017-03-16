@@ -60,15 +60,15 @@ namespace RTC { namespace RTCP
 		virtual ~Packet();
 
 		void SetNext(Packet* packet);
-		Packet* GetNext();
-		Type GetType();
-		const uint8_t* GetData();
+		Packet* GetNext() const;
+		Type GetType() const;
+		const uint8_t* GetData() const;
 
 	public:
 		virtual void Dump() = 0;
 		virtual size_t Serialize(uint8_t* buffer) = 0;
-		virtual size_t GetCount() = 0;
-		virtual size_t GetSize() = 0;
+		virtual size_t GetCount() const = 0;
+		virtual size_t GetSize() const = 0;
 
 	private:
 		Type type;
@@ -108,7 +108,7 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	Packet* Packet::GetNext()
+	Packet* Packet::GetNext() const
 	{
 		return this->next;
 	}
@@ -120,19 +120,19 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	Type Packet::GetType()
+	Type Packet::GetType() const
 	{
 		return this->type;
 	}
 
 	inline
-	size_t Packet::GetCount()
+	size_t Packet::GetCount() const
 	{
 		return 0;
 	}
 
 	inline
-	const uint8_t* Packet::GetData()
+	const uint8_t* Packet::GetData() const
 	{
 		return (uint8_t*)this->header;
 	}

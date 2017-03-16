@@ -170,7 +170,7 @@ void UdpSocket::Close()
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
 }
 
-void UdpSocket::Dump()
+void UdpSocket::Dump() const
 {
 	MS_DUMP("<UdpSocket>");
 	MS_DUMP("  [UDP, local:%s :%" PRIu16 ", status:%s]",

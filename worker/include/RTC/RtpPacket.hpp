@@ -77,31 +77,31 @@ namespace RTC
 		RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLen, uint8_t payloadPadding, size_t size);
 		~RtpPacket();
 
-		void Dump();
-		const uint8_t* GetData();
-		size_t GetSize();
-		uint8_t GetPayloadType();
+		void Dump() const;
+		const uint8_t* GetData() const;
+		size_t GetSize() const;
+		uint8_t GetPayloadType() const;
 		void SetPayloadType(uint8_t payload_type);
-		bool HasMarker();
+		bool HasMarker() const;
 		void SetMarker(bool marker);
-		uint16_t GetSequenceNumber();
+		uint16_t GetSequenceNumber() const;
 		void SetSequenceNumber(uint16_t seq);
-		uint32_t GetTimestamp();
+		uint32_t GetTimestamp() const;
 		void SetTimestamp(uint32_t timestamp);
-		uint32_t GetSsrc();
+		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
-		bool HasExtensionHeader();
-		uint16_t GetExtensionHeaderId();
-		size_t GetExtensionHeaderLength();
-		uint8_t* GetExtensionHeaderValue();
+		bool HasExtensionHeader() const;
+		uint16_t GetExtensionHeaderId() const;
+		size_t GetExtensionHeaderLength() const;
+		uint8_t* GetExtensionHeaderValue() const;
 		void ParseExtensionElements();
-		bool HasOneByteExtensionElements();
-		bool HasTwoBytesExtensionElements();
+		bool HasOneByteExtensionElements() const;
+		bool HasTwoBytesExtensionElements() const;
 		uint8_t GetExtensionElementLength(uint8_t id);
 		uint8_t* GetExtensionElementValue(uint8_t id);
 		void SetExtensionElementId(uint8_t old_id, uint8_t new_id);
-		uint8_t* GetPayload();
-		size_t GetPayloadLength();
+		uint8_t* GetPayload() const;
+		size_t GetPayloadLength() const;
 		void Serialize(uint8_t* buffer);
 		RtpPacket* Clone(uint8_t* buffer);
 
@@ -139,19 +139,19 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	const uint8_t* RtpPacket::GetData()
+	const uint8_t* RtpPacket::GetData() const
 	{
 		return (const uint8_t*)this->header;
 	}
 
 	inline
-	size_t RtpPacket::GetSize()
+	size_t RtpPacket::GetSize() const
 	{
 		return this->size;
 	}
 
 	inline
-	uint8_t RtpPacket::GetPayloadType()
+	uint8_t RtpPacket::GetPayloadType() const
 	{
 		return this->header->payload_type;
 	}
@@ -163,7 +163,7 @@ namespace RTC
 	}
 
 	inline
-	bool RtpPacket::HasMarker()
+	bool RtpPacket::HasMarker() const
 	{
 		return this->header->marker;
 	}
@@ -175,7 +175,7 @@ namespace RTC
 	}
 
 	inline
-	uint16_t RtpPacket::GetSequenceNumber()
+	uint16_t RtpPacket::GetSequenceNumber() const
 	{
 		return (uint16_t)ntohs(this->header->sequence_number);
 	}
@@ -187,7 +187,7 @@ namespace RTC
 	}
 
 	inline
-	uint32_t RtpPacket::GetTimestamp()
+	uint32_t RtpPacket::GetTimestamp() const
 	{
 		return (uint32_t)ntohl(this->header->timestamp);
 	}
@@ -199,7 +199,7 @@ namespace RTC
 	}
 
 	inline
-	uint32_t RtpPacket::GetSsrc()
+	uint32_t RtpPacket::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
@@ -211,13 +211,13 @@ namespace RTC
 	}
 
 	inline
-	bool RtpPacket::HasExtensionHeader()
+	bool RtpPacket::HasExtensionHeader() const
 	{
 		return (this->extensionHeader ? true : false);
 	}
 
 	inline
-	uint16_t RtpPacket::GetExtensionHeaderId()
+	uint16_t RtpPacket::GetExtensionHeaderId() const
 	{
 		if (!this->extensionHeader)
 			return 0;
@@ -226,7 +226,7 @@ namespace RTC
 	}
 
 	inline
-	size_t RtpPacket::GetExtensionHeaderLength()
+	size_t RtpPacket::GetExtensionHeaderLength() const
 	{
 		if (!this->extensionHeader)
 			return 0;
@@ -235,7 +235,7 @@ namespace RTC
 	}
 
 	inline
-	uint8_t* RtpPacket::GetExtensionHeaderValue()
+	uint8_t* RtpPacket::GetExtensionHeaderValue() const
 	{
 		if (!this->extensionHeader)
 			return nullptr;
@@ -244,13 +244,13 @@ namespace RTC
 	}
 
 	inline
-	bool RtpPacket::HasOneByteExtensionElements()
+	bool RtpPacket::HasOneByteExtensionElements() const
 	{
 		return GetExtensionHeaderId() == 0xBEDE;
 	}
 
 	inline
-	bool RtpPacket::HasTwoBytesExtensionElements()
+	bool RtpPacket::HasTwoBytesExtensionElements() const
 	{
 		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
 	}
@@ -329,13 +329,13 @@ namespace RTC
 	}
 
 	inline
-	uint8_t* RtpPacket::GetPayload()
+	uint8_t* RtpPacket::GetPayload() const
 	{
 		return this->payload;
 	}
 
 	inline
-	size_t RtpPacket::GetPayloadLength()
+	size_t RtpPacket::GetPayloadLength() const
 	{
 		return this->payloadLength;
 	}

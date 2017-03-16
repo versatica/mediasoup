@@ -36,13 +36,13 @@ namespace RTC { namespace RTCP
 		explicit PsLeiItem(uint32_t ssrc);
 		virtual ~PsLeiItem() {};
 
-		uint32_t GetSsrc();
+		uint32_t GetSsrc() const;
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -64,13 +64,13 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t PsLeiItem::GetSize()
+	size_t PsLeiItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint32_t PsLeiItem::GetSsrc()
+	uint32_t PsLeiItem::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}

@@ -88,7 +88,7 @@ namespace RTC
 		}
 	}
 
-	Json::Value RtpEncodingParameters::toJson()
+	Json::Value RtpEncodingParameters::toJson() const
 	{
 		MS_TRACE();
 

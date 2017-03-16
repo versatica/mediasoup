@@ -30,7 +30,7 @@ namespace RTC
 			this->parameter = data[k_parameter].asString();
 	}
 
-	Json::Value RtcpFeedback::toJson()
+	Json::Value RtcpFeedback::toJson() const
 	{
 		MS_TRACE();
 

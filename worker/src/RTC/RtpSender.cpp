@@ -60,7 +60,7 @@ namespace RTC
 		delete this;
 	}
 
-	Json::Value RtpSender::toJson()
+	Json::Value RtpSender::toJson() const
 	{
 		MS_TRACE();
 
@@ -423,7 +423,7 @@ namespace RTC
 	}
 
 	inline
-	void RtpSender::EmitActiveChange()
+	void RtpSender::EmitActiveChange() const
 	{
 		MS_TRACE();
 

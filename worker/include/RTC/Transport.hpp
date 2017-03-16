@@ -44,7 +44,7 @@ namespace RTC
 		virtual ~Transport();
 
 		void Close();
-		Json::Value toJson();
+		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);

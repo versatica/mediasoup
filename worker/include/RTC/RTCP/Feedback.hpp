@@ -27,18 +27,18 @@ namespace RTC { namespace RTCP
 		static std::map<typename T::MessageType, std::string> type2String;
 
 	public:
-		typename T::MessageType GetMessageType();
-		uint32_t GetSenderSsrc();
+		typename T::MessageType GetMessageType() const;
+		uint32_t GetSenderSsrc() const;
 		void SetSenderSsrc(uint32_t ssrc);
-		uint32_t GetMediaSsrc();
+		uint32_t GetMediaSsrc() const;
 		void SetMediaSsrc(uint32_t ssrc);
 
 	/* Pure virtual methods inherited from Packet. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetCount() override;
-		virtual size_t GetSize() override;
+		virtual size_t GetCount() const override;
+		virtual size_t GetSize() const override;
 
 	protected:
 		explicit FeedbackPacket(CommonHeader* commonHeader);
@@ -93,25 +93,25 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	template <typename T>
-	typename T::MessageType FeedbackPacket<T>::GetMessageType()
+	typename T::MessageType FeedbackPacket<T>::GetMessageType() const
 	{
 		return this->messageType;
 	}
 
 	template <typename T>
-	size_t FeedbackPacket<T>::GetCount()
+	size_t FeedbackPacket<T>::GetCount() const
 	{
 		return (size_t)this->GetMessageType();
 	}
 
 	template <typename T>
-	size_t FeedbackPacket<T>::GetSize()
+	size_t FeedbackPacket<T>::GetSize() const
 	{
 		return sizeof(CommonHeader) + sizeof(Header);
 	}
 
 	template <typename T>
-	uint32_t FeedbackPacket<T>::GetSenderSsrc()
+	uint32_t FeedbackPacket<T>::GetSenderSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->s_ssrc);
 	}
@@ -123,7 +123,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	uint32_t FeedbackPacket<T>::GetMediaSsrc()
+	uint32_t FeedbackPacket<T>::GetMediaSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->m_ssrc);
 	}

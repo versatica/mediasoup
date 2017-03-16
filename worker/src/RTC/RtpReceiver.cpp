@@ -58,7 +58,7 @@ namespace RTC
 		delete this;
 	}
 
-	Json::Value RtpReceiver::toJson()
+	Json::Value RtpReceiver::toJson() const
 	{
 		MS_TRACE();
 

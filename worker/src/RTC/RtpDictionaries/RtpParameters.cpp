@@ -107,7 +107,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpParameters::toJson()
+	Json::Value RtpParameters::toJson() const
 	{
 		MS_TRACE();
 
@@ -247,7 +247,7 @@ namespace RTC
 		this->headerExtensions = updatedHeaderExtensions;
 	}
 
-	uint32_t RtpParameters::GetClockRateForEncoding(RtpEncodingParameters& encoding)
+	uint32_t RtpParameters::GetClockRateForEncoding(RtpEncodingParameters& encoding) const
 	{
 		MS_TRACE();
 

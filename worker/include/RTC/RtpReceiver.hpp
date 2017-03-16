@@ -44,12 +44,12 @@ namespace RTC
 		virtual ~RtpReceiver();
 
 		void Close();
-		Json::Value toJson();
+		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		void SetTransport(RTC::Transport* transport);
-		RTC::Transport* GetTransport();
+		RTC::Transport* GetTransport() const;
 		void RemoveTransport(RTC::Transport* transport);
-		RTC::RtpParameters* GetParameters();
+		RTC::RtpParameters* GetParameters() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
@@ -93,7 +93,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::Transport* RtpReceiver::GetTransport()
+	RTC::Transport* RtpReceiver::GetTransport() const
 	{
 		return this->transport;
 	}
@@ -106,7 +106,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::RtpParameters* RtpReceiver::GetParameters()
+	RTC::RtpParameters* RtpReceiver::GetParameters() const
 	{
 		return this->rtpParameters;
 	}

@@ -46,16 +46,16 @@ namespace RTC { namespace RTCP
 		RpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
 		virtual ~RpsiItem() {};
 
-		bool IsCorrect();
-		uint8_t GetPayloadType();
-		uint8_t* GetBitString();
-		size_t GetLength();
+		bool IsCorrect() const;
+		uint8_t GetPayloadType() const;
+		uint8_t* GetBitString() const;
+		size_t GetLength() const;
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -73,31 +73,31 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t RpsiItem::GetSize()
+	size_t RpsiItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint8_t RpsiItem::GetPayloadType()
+	uint8_t RpsiItem::GetPayloadType() const
 	{
 		return this->header->payload_type;
 	}
 
 	inline
-	uint8_t* RpsiItem::GetBitString()
+	uint8_t* RpsiItem::GetBitString() const
 	{
 		return this->header->bit_string;
 	}
 
 	inline
-	size_t RpsiItem::GetLength()
+	size_t RpsiItem::GetLength() const
 	{
 		return this->length;
 	}
 
 	inline
-	bool RpsiItem::IsCorrect()
+	bool RpsiItem::IsCorrect() const
 	{
 		return this->isCorrect;
 	}

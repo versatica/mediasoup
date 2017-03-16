@@ -12,10 +12,10 @@ namespace RTC { namespace RTCP
 	class CompoundPacket
 	{
 	public:
-		const uint8_t* GetData();
-		size_t GetSize();
-		size_t GetSenderReportCount();
-		size_t GetReceiverReportCount();
+		const uint8_t* GetData() const;
+		size_t GetSize() const;
+		size_t GetSenderReportCount() const;
+		size_t GetReceiverReportCount() const;
 		void Dump();
 		void AddSenderReport(SenderReport* report);
 		void AddReceiverReport(ReceiverReport* report);
@@ -33,25 +33,25 @@ namespace RTC { namespace RTCP
 	/* Inline methods. */
 
 	inline
-	const uint8_t* CompoundPacket::GetData()
+	const uint8_t* CompoundPacket::GetData() const
 	{
 		return this->header;
 	}
 
 	inline
-	size_t CompoundPacket::GetSize()
+	size_t CompoundPacket::GetSize() const
 	{
 		return this->size;
 	}
 
 	inline
-	size_t CompoundPacket::GetSenderReportCount()
+	size_t CompoundPacket::GetSenderReportCount() const
 	{
 		return this->senderReportPacket.GetCount();
 	}
 
 	inline
-	size_t CompoundPacket::GetReceiverReportCount()
+	size_t CompoundPacket::GetReceiverReportCount() const
 	{
 		return this->receiverReportPacket.GetCount();
 	}

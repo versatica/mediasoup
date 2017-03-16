@@ -28,7 +28,7 @@ namespace RTC
 		ClearBuffer();
 	}
 
-	Json::Value RtpStreamSend::toJson()
+	Json::Value RtpStreamSend::toJson() const
 	{
 		MS_TRACE();
 

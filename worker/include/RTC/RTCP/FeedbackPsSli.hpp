@@ -36,18 +36,18 @@ namespace RTC { namespace RTCP
 		SliItem(uint16_t first, uint16_t number, uint8_t pictureId);
 		virtual ~SliItem() {};
 
-		uint16_t GetFirst();
+		uint16_t GetFirst() const;
 		void SetFirst(uint16_t first);
-		uint16_t GetNumber();
+		uint16_t GetNumber() const;
 		void SetNumber(uint16_t number);
-		uint8_t GetPictureId();
+		uint8_t GetPictureId() const;
 		void SetPictureId(uint8_t pictureId);
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -62,13 +62,13 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	inline
-	size_t SliItem::GetSize()
+	size_t SliItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint16_t SliItem::GetFirst()
+	uint16_t SliItem::GetFirst() const
 	{
 		return this->first;
 	}
@@ -80,7 +80,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint16_t SliItem::GetNumber()
+	uint16_t SliItem::GetNumber() const
 	{
 		return this->number;
 	}
@@ -92,7 +92,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint8_t SliItem::GetPictureId()
+	uint8_t SliItem::GetPictureId() const
 	{
 		return this->pictureId;
 	}

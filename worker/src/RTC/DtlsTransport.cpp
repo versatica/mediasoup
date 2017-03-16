@@ -558,7 +558,7 @@ namespace RTC
 		delete this;
 	}
 
-	void DtlsTransport::Dump()
+	void DtlsTransport::Dump() const
 	{
 		MS_TRACE();
 

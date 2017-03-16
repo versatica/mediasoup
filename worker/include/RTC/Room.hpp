@@ -42,12 +42,12 @@ namespace RTC
 		virtual ~Room();
 
 		void Close();
-		Json::Value toJson();
+		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
-		RTC::RtpCapabilities& GetCapabilities();
+		const RTC::RtpCapabilities& GetCapabilities() const;
 
 	private:
-		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr);
+		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr) const;
 		void SetCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs);
 
 	/* Pure virtual methods inherited from RTC::Peer::Listener. */
@@ -81,7 +81,7 @@ namespace RTC
 	/* Inline static methods. */
 
 	inline
-	RTC::RtpCapabilities& Room::GetCapabilities()
+	const RTC::RtpCapabilities& Room::GetCapabilities() const
 	{
 		return this->capabilities;
 	}

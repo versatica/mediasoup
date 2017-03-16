@@ -30,7 +30,7 @@ namespace RTC
 			this->ssrc = (uint32_t)data[k_ssrc].asUInt();
 	}
 
-	Json::Value RtpFecParameters::toJson()
+	Json::Value RtpFecParameters::toJson() const
 	{
 		MS_TRACE();
 

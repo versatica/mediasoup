@@ -240,7 +240,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void StunMessage::Dump()
+	void StunMessage::Dump() const
 	{
 		MS_TRACE();
 

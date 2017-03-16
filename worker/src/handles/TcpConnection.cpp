@@ -131,7 +131,7 @@ void TcpConnection::Close()
 	}
 }
 
-void TcpConnection::Dump()
+void TcpConnection::Dump() const
 {
 	MS_DUMP("<TcpConnection>");
 	MS_DUMP("  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",

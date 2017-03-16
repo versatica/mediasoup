@@ -63,11 +63,11 @@ namespace RTC
 		StunMessage(Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
 		~StunMessage();
 
-		void Dump();
-		Class GetClass();
-		Method GetMethod();
-		const uint8_t* GetData();
-		size_t GetSize();
+		void Dump() const;
+		Class GetClass() const;
+		Method GetMethod() const;
+		const uint8_t* GetData() const;
+		size_t GetSize() const;
 		void SetUsername(const char* username, size_t len);
 		void SetPriority(const uint32_t priority);
 		void SetIceControlling(const uint64_t iceControlling);
@@ -77,14 +77,14 @@ namespace RTC
 		void SetErrorCode(uint16_t errorCode);
 		void SetMessageIntegrity(const uint8_t* messageIntegrity);
 		void SetFingerprint();
-		const std::string& GetUsername();
-		uint32_t GetPriority();
-		uint64_t GetIceControlling();
-		uint64_t GetIceControlled();
-		bool HasUseCandidate();
-		uint16_t GetErrorCode();
-		bool HasMessageIntegrity();
-		bool HasFingerprint();
+		const std::string& GetUsername() const;
+		uint32_t GetPriority() const;
+		uint64_t GetIceControlling() const;
+		uint64_t GetIceControlled() const;
+		bool HasUseCandidate() const;
+		uint16_t GetErrorCode() const;
+		bool HasMessageIntegrity() const;
+		bool HasFingerprint() const;
 		Authentication CheckAuthentication(const std::string &local_username, const std::string &local_password);
 		StunMessage* CreateSuccessResponse();
 		StunMessage* CreateErrorResponse(uint16_t errorCode);
@@ -111,7 +111,7 @@ namespace RTC
 		std::string password;
 	};
 
-	/* Inline methods. */
+	/* Inline class methods. */
 
 	inline
 	bool StunMessage::IsStun(const uint8_t* data, size_t len)
@@ -129,26 +129,28 @@ namespace RTC
 		);
 	}
 
+	/* Inline instance methods. */
+
 	inline
-	StunMessage::Class StunMessage::GetClass()
+	StunMessage::Class StunMessage::GetClass() const
 	{
 		return this->klass;
 	}
 
 	inline
-	StunMessage::Method StunMessage::GetMethod()
+	StunMessage::Method StunMessage::GetMethod() const
 	{
 		return this->method;
 	}
 
 	inline
-	const uint8_t* StunMessage::GetData()
+	const uint8_t* StunMessage::GetData() const
 	{
 		return this->data;
 	}
 
 	inline
-	size_t StunMessage::GetSize()
+	size_t StunMessage::GetSize() const
 	{
 		return this->size;
 	}
@@ -214,49 +216,49 @@ namespace RTC
 	}
 
 	inline
-	const std::string& StunMessage::GetUsername()
+	const std::string& StunMessage::GetUsername() const
 	{
 		return this->username;
 	}
 
 	inline
-	uint32_t StunMessage::GetPriority()
+	uint32_t StunMessage::GetPriority() const
 	{
 		return this->priority;
 	}
 
 	inline
-	uint64_t StunMessage::GetIceControlling()
+	uint64_t StunMessage::GetIceControlling() const
 	{
 		return this->iceControlling;
 	}
 
 	inline
-	uint64_t StunMessage::GetIceControlled()
+	uint64_t StunMessage::GetIceControlled() const
 	{
 		return this->iceControlled;
 	}
 
 	inline
-	bool StunMessage::HasUseCandidate()
+	bool StunMessage::HasUseCandidate() const
 	{
 		return this->hasUseCandidate;
 	}
 
 	inline
-	uint16_t StunMessage::GetErrorCode()
+	uint16_t StunMessage::GetErrorCode() const
 	{
 		return this->errorCode;
 	}
 
 	inline
-	bool StunMessage::HasMessageIntegrity()
+	bool StunMessage::HasMessageIntegrity() const
 	{
 		return (this->messageIntegrity ? true : false);
 	}
 
 	inline
-	bool StunMessage::HasFingerprint()
+	bool StunMessage::HasFingerprint() const
 	{
 		return this->hasFingerprint;
 	}

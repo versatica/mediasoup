@@ -187,7 +187,7 @@ namespace RTC
 		}
 	}
 
-	bool IceServer::IsValidTuple(RTC::TransportTuple* tuple)
+	bool IceServer::IsValidTuple(RTC::TransportTuple* tuple) const
 	{
 		MS_TRACE();
 
@@ -441,7 +441,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::TransportTuple* IceServer::HasTuple(RTC::TransportTuple* tuple)
+	RTC::TransportTuple* IceServer::HasTuple(RTC::TransportTuple* tuple) const
 	{
 		MS_TRACE();
 
@@ -457,7 +457,7 @@ namespace RTC
 		// Otherwise check other stored tuples.
 		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
 		{
-			RTC::TransportTuple* stored_tuple = std::addressof(*it);
+			RTC::TransportTuple* stored_tuple = const_cast<RTC::TransportTuple*>(std::addressof(*it));
 
 			if (stored_tuple->Compare(tuple))
 				return stored_tuple;

@@ -34,18 +34,18 @@ namespace RTC { namespace RTCP
 
 		void Dump();
 		size_t Serialize(uint8_t* buffer);
-		size_t GetSize();
-		uint32_t GetSsrc();
+		size_t GetSize() const;
+		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
-		uint32_t GetNtpSec();
+		uint32_t GetNtpSec() const;
 		void SetNtpSec(uint32_t ntp_sec);
-		uint32_t GetNtpFrac();
+		uint32_t GetNtpFrac() const;
 		void SetNtpFrac(uint32_t ntp_frac);
-		uint32_t GetRtpTs();
+		uint32_t GetRtpTs() const;
 		void SetRtpTs(uint32_t rtp_ts);
-		uint32_t GetPacketCount();
+		uint32_t GetPacketCount() const;
 		void SetPacketCount(uint32_t packet_count);
-		uint32_t GetOctetCount();
+		uint32_t GetOctetCount() const;
 		void SetOctetCount(uint32_t octet_count);
 
 	private:
@@ -74,8 +74,8 @@ namespace RTC { namespace RTCP
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetCount() override;
-		virtual size_t GetSize() override;
+		virtual size_t GetCount() const override;
+		virtual size_t GetSize() const override;
 
 	private:
 		std::vector<SenderReport*> reports;
@@ -100,13 +100,13 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t SenderReport::GetSize()
+	size_t SenderReport::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint32_t SenderReport::GetSsrc()
+	uint32_t SenderReport::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
@@ -118,7 +118,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t SenderReport::GetNtpSec()
+	uint32_t SenderReport::GetNtpSec() const
 	{
 		return (uint32_t)ntohl(this->header->ntp_sec);
 	}
@@ -130,7 +130,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t SenderReport::GetNtpFrac()
+	uint32_t SenderReport::GetNtpFrac() const
 	{
 		return (uint32_t)ntohl(this->header->ntp_frac);
 	}
@@ -142,7 +142,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t SenderReport::GetRtpTs()
+	uint32_t SenderReport::GetRtpTs() const
 	{
 		return (uint32_t)ntohl(this->header->rtp_ts);
 	}
@@ -155,7 +155,7 @@ namespace RTC { namespace RTCP
 
 	inline
 
-	uint32_t SenderReport::GetPacketCount()
+	uint32_t SenderReport::GetPacketCount() const
 	{
 		return (uint32_t)ntohl(this->header->packet_count);
 	}
@@ -167,7 +167,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t SenderReport::GetOctetCount()
+	uint32_t SenderReport::GetOctetCount() const
 	{
 		return (uint32_t)ntohl(this->header->octet_count);
 	}
@@ -195,13 +195,13 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	size_t SenderReportPacket::GetCount()
+	size_t SenderReportPacket::GetCount() const
 	{
 		return this->reports.size();
 	}
 
 	inline
-	size_t SenderReportPacket::GetSize()
+	size_t SenderReportPacket::GetSize() const
 	{
 		size_t size = sizeof(Packet::CommonHeader);
 

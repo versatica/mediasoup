@@ -18,13 +18,13 @@ public:
 	virtual ~TcpServer();
 
 	void Close();
-	virtual void Dump();
-	bool IsClosing();
-	const struct sockaddr* GetLocalAddress();
-	int GetLocalFamily();
-	const std::string& GetLocalIP();
-	uint16_t GetLocalPort();
-	size_t GetNumConnections();
+	virtual void Dump() const;
+	bool IsClosing() const;
+	const struct sockaddr* GetLocalAddress() const;
+	int GetLocalFamily() const;
+	const std::string& GetLocalIP() const;
+	uint16_t GetLocalPort() const;
+	size_t GetNumConnections() const;
 
 private:
 	bool SetLocalAddress();
@@ -61,37 +61,37 @@ protected:
 /* Inline methods. */
 
 inline
-bool TcpServer::IsClosing()
+bool TcpServer::IsClosing() const
 {
 	return this->isClosing;
 }
 
 inline
-size_t TcpServer::GetNumConnections()
+size_t TcpServer::GetNumConnections() const
 {
 	return this->connections.size();
 }
 
 inline
-const struct sockaddr* TcpServer::GetLocalAddress()
+const struct sockaddr* TcpServer::GetLocalAddress() const
 {
 	return (const struct sockaddr*)&this->localAddr;
 }
 
 inline
-int TcpServer::GetLocalFamily()
+int TcpServer::GetLocalFamily() const
 {
 	return ((const struct sockaddr*)&this->localAddr)->sa_family;
 }
 
 inline
-const std::string& TcpServer::GetLocalIP()
+const std::string& TcpServer::GetLocalIP() const
 {
 	return this->localIP;
 }
 
 inline
-uint16_t TcpServer::GetLocalPort()
+uint16_t TcpServer::GetLocalPort() const
 {
 	return this->localPort;
 }

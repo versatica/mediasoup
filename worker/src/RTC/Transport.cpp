@@ -247,7 +247,7 @@ namespace RTC
 		}
 	}
 
-	Json::Value Transport::toJson()
+	Json::Value Transport::toJson() const
 	{
 		MS_TRACE();
 

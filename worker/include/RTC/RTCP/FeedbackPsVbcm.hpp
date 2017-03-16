@@ -47,17 +47,17 @@ namespace RTC { namespace RTCP
 		VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
 		virtual ~VbcmItem() {};
 
-		uint32_t GetSsrc();
-		uint8_t  GetSequenceNumber();
-		uint8_t  GetPayloadType();
-		uint16_t GetLength();
-		uint8_t* GetValue();
+		uint32_t GetSsrc() const;
+		uint8_t  GetSequenceNumber() const;
+		uint8_t  GetPayloadType() const;
+		uint16_t GetLength() const;
+		uint8_t* GetValue() const;
 
 	/* Virtual methods inherited from FeedbackItem. */
 	public:
 		virtual void Dump() override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		Header* header = nullptr;
@@ -79,7 +79,7 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	size_t VbcmItem::GetSize()
+	size_t VbcmItem::GetSize() const
 	{
 		size_t size =  8 + size_t(this->header->length);
 
@@ -88,31 +88,31 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t VbcmItem::GetSsrc()
+	uint32_t VbcmItem::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
 	inline
-	uint8_t VbcmItem::GetSequenceNumber()
+	uint8_t VbcmItem::GetSequenceNumber() const
 	{
 		return (uint8_t)this->header->sequence_number;
 	}
 
 	inline
-	uint8_t VbcmItem::GetPayloadType()
+	uint8_t VbcmItem::GetPayloadType() const
 	{
 		return (uint8_t)this->header->payload_type;
 	}
 
 	inline
-	uint16_t VbcmItem::GetLength()
+	uint16_t VbcmItem::GetLength() const
 	{
 		return (uint16_t)ntohs(this->header->length);
 	}
 
 	inline
-	uint8_t* VbcmItem::GetValue()
+	uint8_t* VbcmItem::GetValue() const
 	{
 		return this->header->value;
 	}

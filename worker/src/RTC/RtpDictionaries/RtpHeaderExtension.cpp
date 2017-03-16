@@ -52,7 +52,7 @@ namespace RTC
 			this->preferredEncrypt = data[k_preferredEncrypt].asBool();
 	}
 
-	Json::Value RtpHeaderExtension::toJson()
+	Json::Value RtpHeaderExtension::toJson() const
 	{
 		MS_TRACE();
 

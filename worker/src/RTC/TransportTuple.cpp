@@ -10,7 +10,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value TransportTuple::toJson()
+	Json::Value TransportTuple::toJson() const
 	{
 		MS_TRACE();
 
@@ -42,7 +42,7 @@ namespace RTC
 		return json;
 	}
 
-	void TransportTuple::Dump()
+	void TransportTuple::Dump() const
 	{
 		MS_TRACE();
 
