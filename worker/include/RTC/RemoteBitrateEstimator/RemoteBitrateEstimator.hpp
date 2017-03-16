@@ -47,17 +47,6 @@ class RemoteBitrateEstimator : public CallStatsObserver {
  public:
   virtual ~RemoteBitrateEstimator() {}
 
-  /*
-   // (jmillan) We are not considering the incoming RTCP Feedback pointing to the
-   // streams to calculate the rate, only RTP.
-   // See: modules/rtp_rtcp/source/rtcp_receiver.cc for implementation.
-
-  virtual void IncomingPacketFeedbackVector(
-      const std::vector<PacketInfo>& packet_feedback_vector) {
-    assert(false);
-  };
-  */
-
   // Called for each incoming packet. Updates the incoming payload bitrate
   // estimate and the over-use detector. If an over-use is detected the
   // remote bitrate estimate will be updated. Note that |payload_size| is the
