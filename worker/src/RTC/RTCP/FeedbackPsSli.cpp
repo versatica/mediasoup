@@ -52,7 +52,7 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void SliItem::Dump()
+	void SliItem::Dump() const
 	{
 		MS_TRACE();
 

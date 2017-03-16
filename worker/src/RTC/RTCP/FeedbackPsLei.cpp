@@ -46,7 +46,7 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void PsLeiItem::Dump()
+	void PsLeiItem::Dump() const
 	{
 		MS_TRACE();
 

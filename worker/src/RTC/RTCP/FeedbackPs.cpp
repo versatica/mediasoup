@@ -67,7 +67,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template<typename Item>
-	void FeedbackPsItemPacket<Item>::Dump()
+	void FeedbackPsItemPacket<Item>::Dump() const
 	{
 		MS_TRACE();
 

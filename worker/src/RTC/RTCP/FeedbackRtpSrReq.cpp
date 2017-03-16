@@ -24,7 +24,7 @@ namespace RTC { namespace RTCP
 		return new FeedbackRtpSrReqPacket(commonHeader);
 	}
 
-	void FeedbackRtpSrReqPacket::Dump()
+	void FeedbackRtpSrReqPacket::Dump() const
 	{
 		MS_TRACE();
 

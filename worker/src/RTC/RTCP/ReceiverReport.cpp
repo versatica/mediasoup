@@ -30,7 +30,7 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	void ReceiverReport::Dump()
+	void ReceiverReport::Dump() const
 	{
 		MS_TRACE();
 
@@ -115,7 +115,7 @@ namespace RTC { namespace RTCP
 		return offset;
 	}
 
-	void ReceiverReportPacket::Dump()
+	void ReceiverReportPacket::Dump() const
 	{
 		MS_TRACE();
 

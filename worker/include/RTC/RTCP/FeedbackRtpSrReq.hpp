@@ -18,7 +18,7 @@ namespace RTC { namespace RTCP
 		FeedbackRtpSrReqPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
 		virtual ~FeedbackRtpSrReqPacket() {};
 
-		virtual void Dump() override;
+		virtual void Dump() const override;
 	};
 
 	/* Inline instance methods. */

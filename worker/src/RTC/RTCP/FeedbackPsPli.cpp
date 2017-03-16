@@ -25,7 +25,7 @@ namespace RTC { namespace RTCP
 		return packet.release();
 	}
 
-	void FeedbackPsPliPacket::Dump()
+	void FeedbackPsPliPacket::Dump() const
 	{
 		MS_TRACE();
 

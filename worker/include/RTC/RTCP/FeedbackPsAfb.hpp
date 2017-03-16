@@ -22,7 +22,7 @@ namespace RTC { namespace RTCP
 
 	/* Pure virtual methods inherited from Packet. */
 	public:
-		virtual void Dump() override;
+		virtual void Dump() const override;
 		virtual size_t Serialize(uint8_t* buffer) override;
 		virtual size_t GetSize() const override;
 

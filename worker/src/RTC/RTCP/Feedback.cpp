@@ -79,7 +79,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	void FeedbackPacket<T>::Dump()
+	void FeedbackPacket<T>::Dump() const
 	{
 		MS_TRACE();
 

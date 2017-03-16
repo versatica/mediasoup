@@ -14,7 +14,7 @@ namespace RTC { namespace RTCP
 		virtual ~FeedbackItem();
 
 	public:
-		virtual void Dump() = 0;
+		virtual void Dump() const = 0;
 		virtual void Serialize();
 		virtual size_t Serialize(uint8_t* buffer) = 0;
 		virtual size_t GetSize() const = 0;

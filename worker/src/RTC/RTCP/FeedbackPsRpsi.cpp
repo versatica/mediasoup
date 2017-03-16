@@ -91,7 +91,7 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void RpsiItem::Dump()
+	void RpsiItem::Dump() const
 	{
 		MS_TRACE();
 

@@ -71,7 +71,7 @@ namespace RTC { namespace RTCP
 			this->sdesPacket.Serialize(this->header + offset);
 	}
 
-	void CompoundPacket::Dump()
+	void CompoundPacket::Dump() const
 	{
 		MS_TRACE();
 

@@ -65,7 +65,7 @@ namespace RTC { namespace RTCP
 		const uint8_t* GetData() const;
 
 	public:
-		virtual void Dump() = 0;
+		virtual void Dump() const = 0;
 		virtual size_t Serialize(uint8_t* buffer) = 0;
 		virtual size_t GetCount() const = 0;
 		virtual size_t GetSize() const = 0;

@@ -73,7 +73,7 @@ namespace RTC
 		}
 	}
 
-	Json::Value IceCandidate::toJson()
+	Json::Value IceCandidate::toJson() const
 	{
 		static const Json::StaticString k_foundation("foundation");
 		static const Json::StaticString k_priority("priority");

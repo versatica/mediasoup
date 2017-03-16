@@ -77,7 +77,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	void TmmbItem<T>::Dump()
+	void TmmbItem<T>::Dump() const
 	{
 		MS_TRACE();
 

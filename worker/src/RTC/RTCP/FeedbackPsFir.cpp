@@ -52,7 +52,7 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void FirItem::Dump()
+	void FirItem::Dump() const
 	{
 		MS_TRACE();
 

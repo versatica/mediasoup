@@ -62,7 +62,7 @@ namespace RTC { namespace RTCP
 		return offset+padding;
 	}
 
-	void VbcmItem::Dump()
+	void VbcmItem::Dump() const
 	{
 		MS_TRACE();
 

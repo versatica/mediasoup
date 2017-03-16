@@ -19,7 +19,7 @@ namespace RTC { namespace RTCP
 		virtual ~FeedbackPsPliPacket() {};
 
 	public:
-		virtual void Dump() override;
+		virtual void Dump() const override;
 	};
 
 	/* Inline instance methods. */

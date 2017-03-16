@@ -72,7 +72,7 @@ namespace RTC { namespace RTCP
 		std::memcpy(this->header->value, value, this->header->length);
 	}
 
-	void SdesItem::Dump()
+	void SdesItem::Dump() const
 	{
 		MS_TRACE();
 
@@ -159,7 +159,7 @@ namespace RTC { namespace RTCP
 		return offset+padding;
 	}
 
-	void SdesChunk::Dump()
+	void SdesChunk::Dump() const
 	{
 		MS_TRACE();
 
@@ -217,7 +217,7 @@ namespace RTC { namespace RTCP
 		return offset;
 	}
 
-	void SdesPacket::Dump()
+	void SdesPacket::Dump() const
 	{
 		MS_TRACE();
 

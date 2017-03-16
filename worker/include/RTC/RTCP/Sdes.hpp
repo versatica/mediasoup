@@ -44,7 +44,7 @@ namespace RTC { namespace RTCP
 		SdesItem(Type type, size_t len, const char* value);
 		~SdesItem();
 
-		void Dump();
+		void Dump() const;
 		size_t Serialize(uint8_t* buffer);
 		size_t GetSize() const;
 
@@ -74,7 +74,7 @@ namespace RTC { namespace RTCP
 		explicit SdesChunk(SdesChunk* chunk);
 		~SdesChunk();
 
-		void Dump();
+		void Dump() const;
 		void Serialize();
 		size_t Serialize(uint8_t* buffer);
 		size_t GetSize() const;
@@ -108,7 +108,7 @@ namespace RTC { namespace RTCP
 
 	/* Pure virtual methods inherited from Packet. */
 	public:
-		virtual void Dump() override;
+		virtual void Dump() const override;
 		virtual size_t Serialize(uint8_t* buffer) override;
 		virtual size_t GetCount() const override;
 		virtual size_t GetSize() const override;

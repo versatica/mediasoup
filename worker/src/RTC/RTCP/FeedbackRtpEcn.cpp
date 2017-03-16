@@ -36,7 +36,7 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void EcnItem::Dump()
+	void EcnItem::Dump() const
 	{
 		MS_TRACE();
 

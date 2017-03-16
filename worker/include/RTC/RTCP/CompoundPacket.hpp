@@ -16,7 +16,7 @@ namespace RTC { namespace RTCP
 		size_t GetSize() const;
 		size_t GetSenderReportCount() const;
 		size_t GetReceiverReportCount() const;
-		void Dump();
+		void Dump() const;
 		void AddSenderReport(SenderReport* report);
 		void AddReceiverReport(ReceiverReport* report);
 		void AddSdesChunk(SdesChunk* chunk);

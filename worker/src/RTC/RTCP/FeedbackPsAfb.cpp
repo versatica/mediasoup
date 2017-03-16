@@ -38,7 +38,7 @@ namespace RTC { namespace RTCP
 		return offset + this->size;
 	}
 
-	void FeedbackPsAfbPacket::Dump()
+	void FeedbackPsAfbPacket::Dump() const
 	{
 		MS_TRACE();
 

@@ -47,7 +47,7 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void NackItem::Dump()
+	void NackItem::Dump() const
 	{
 		MS_TRACE();
 

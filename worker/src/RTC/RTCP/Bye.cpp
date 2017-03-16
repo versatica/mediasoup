@@ -84,7 +84,7 @@ namespace RTC { namespace RTCP
 		return offset+padding;
 	}
 
-	void ByePacket::Dump()
+	void ByePacket::Dump() const
 	{
 		MS_TRACE();
 
