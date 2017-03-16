@@ -82,19 +82,10 @@ namespace RTC { namespace RTCP
 			this->senderReportPacket.Dump();
 
 			if (this->receiverReportPacket.GetCount())
-			{
-				ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
-
-				for (; it != this->receiverReportPacket.End(); ++it)
-				{
-					(*it)->Dump();
-				}
-			}
+				this->receiverReportPacket.Dump();
 		}
 		else
-		{
 			this->receiverReportPacket.Dump();
-		}
 
 		if (this->sdesPacket.GetCount())
 			this->sdesPacket.Dump();
