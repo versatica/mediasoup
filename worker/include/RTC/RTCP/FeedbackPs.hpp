@@ -7,20 +7,20 @@
 
 namespace RTC { namespace RTCP
 {
-	template<typename Item> class FeedbackPsItemPacket
+	template<typename Item> class FeedbackPsItemsPacket
 		: public FeedbackPsPacket
 	{
 	public:
 		typedef typename std::vector<Item*>::iterator Iterator;
 
 	public:
-		static FeedbackPsItemPacket<Item>* Parse(const uint8_t* data, size_t len);
+		static FeedbackPsItemsPacket<Item>* Parse(const uint8_t* data, size_t len);
 
 	public:
 		// Parsed Report. Points to an external data.
-		explicit FeedbackPsItemPacket(CommonHeader* commonHeader);
-		explicit FeedbackPsItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
-		virtual ~FeedbackPsItemPacket() {};
+		explicit FeedbackPsItemsPacket(CommonHeader* commonHeader);
+		explicit FeedbackPsItemsPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
+		virtual ~FeedbackPsItemsPacket() {};
 
 		void AddItem(Item* item);
 		Iterator Begin();
@@ -39,17 +39,17 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	template<typename Item>
-	FeedbackPsItemPacket<Item>::FeedbackPsItemPacket(CommonHeader* commonHeader):
+	FeedbackPsItemsPacket<Item>::FeedbackPsItemsPacket(CommonHeader* commonHeader):
 		FeedbackPsPacket(commonHeader)
 	{}
 
 	template<typename Item>
-	FeedbackPsItemPacket<Item>::FeedbackPsItemPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
+	FeedbackPsItemsPacket<Item>::FeedbackPsItemsPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
 		FeedbackPsPacket(Item::MessageType, sender_ssrc, media_ssrc)
 	{}
 
 	template<typename Item>
-	size_t FeedbackPsItemPacket<Item>::GetSize() const
+	size_t FeedbackPsItemsPacket<Item>::GetSize() const
 	{
 		size_t size = FeedbackPsPacket::GetSize();
 
@@ -62,19 +62,19 @@ namespace RTC { namespace RTCP
 	}
 
 	template<typename Item>
-	void FeedbackPsItemPacket<Item>::AddItem(Item* item)
+	void FeedbackPsItemsPacket<Item>::AddItem(Item* item)
 	{
 		this->items.push_back(item);
 	}
 
 	template<typename Item>
-	typename FeedbackPsItemPacket<Item>::Iterator FeedbackPsItemPacket<Item>::Begin()
+	typename FeedbackPsItemsPacket<Item>::Iterator FeedbackPsItemsPacket<Item>::Begin()
 	{
 		return this->items.begin();
 	}
 
 	template<typename Item>
-	typename FeedbackPsItemPacket<Item>::Iterator FeedbackPsItemPacket<Item>::End()
+	typename FeedbackPsItemsPacket<Item>::Iterator FeedbackPsItemsPacket<Item>::End()
 	{
 		return this->items.end();
 	}

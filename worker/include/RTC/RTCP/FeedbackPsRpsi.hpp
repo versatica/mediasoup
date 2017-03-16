@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_RPSI_HPP
-#define MS_RTC_RTCP_FEEDBACK_RPSI_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_PS_RPSI_HPP
+#define MS_RTC_RTCP_FEEDBACK_PS_RPSI_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -19,7 +19,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class RpsiItem
+	class FeedbackPsRpsiItem
 		: public FeedbackItem
 	{
 		const static size_t MaxBitStringSize = 6;
@@ -38,13 +38,13 @@ namespace RTC { namespace RTCP
 		static const FeedbackPs::MessageType MessageType = FeedbackPs::RPSI;
 
 	public:
-		static RpsiItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackPsRpsiItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit RpsiItem(Header* header);
-		explicit RpsiItem(RpsiItem* item);
-		RpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
-		virtual ~RpsiItem() {};
+		explicit FeedbackPsRpsiItem(Header* header);
+		explicit FeedbackPsRpsiItem(FeedbackPsRpsiItem* item);
+		FeedbackPsRpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
+		virtual ~FeedbackPsRpsiItem() {};
 
 		bool IsCorrect() const;
 		uint8_t GetPayloadType() const;
@@ -63,41 +63,41 @@ namespace RTC { namespace RTCP
 	};
 
 	// Rpsi packet declaration.
-	typedef FeedbackPsItemPacket<RpsiItem> FeedbackPsRpsiPacket;
+	typedef FeedbackPsItemsPacket<FeedbackPsRpsiItem> FeedbackPsRpsiPacket;
 
 	/* Inline instance methods. */
 
 	inline
-	RpsiItem::RpsiItem(RpsiItem* item) :
+	FeedbackPsRpsiItem::FeedbackPsRpsiItem(FeedbackPsRpsiItem* item) :
 		header(item->header)
 	{}
 
 	inline
-	size_t RpsiItem::GetSize() const
+	size_t FeedbackPsRpsiItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint8_t RpsiItem::GetPayloadType() const
+	uint8_t FeedbackPsRpsiItem::GetPayloadType() const
 	{
 		return this->header->payload_type;
 	}
 
 	inline
-	uint8_t* RpsiItem::GetBitString() const
+	uint8_t* FeedbackPsRpsiItem::GetBitString() const
 	{
 		return this->header->bit_string;
 	}
 
 	inline
-	size_t RpsiItem::GetLength() const
+	size_t FeedbackPsRpsiItem::GetLength() const
 	{
 		return this->length;
 	}
 
 	inline
-	bool RpsiItem::IsCorrect() const
+	bool FeedbackPsRpsiItem::IsCorrect() const
 	{
 		return this->isCorrect;
 	}

@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsTstPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackPsTst"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsTst.hpp"
@@ -10,7 +10,7 @@ namespace RTC { namespace RTCP
 	/* Class methods. */
 
 	template <typename T>
-	TstItem<T>* TstItem<T>::Parse(const uint8_t* data, size_t len)
+	FeedbackPsTstItem<T>* FeedbackPsTstItem<T>::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -24,11 +24,11 @@ namespace RTC { namespace RTCP
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
-		return new TstItem(header);
+		return new FeedbackPsTstItem(header);
 	}
 
 	template <typename T>
-	TstItem<T>::TstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index)
+	FeedbackPsTstItem<T>::FeedbackPsTstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index)
 	{
 		MS_TRACE();
 
@@ -44,7 +44,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	size_t TstItem<T>::Serialize(uint8_t* buffer)
+	size_t FeedbackPsTstItem<T>::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -54,28 +54,28 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	void TstItem<T>::Dump() const
+	void FeedbackPsTstItem<T>::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<TstItem>");
+		MS_DUMP("<FeedbackPsTstItem>");
 		MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
 		MS_DUMP("  sequence number : %" PRIu32, this->GetSequenceNumber());
 		MS_DUMP("  index           : %" PRIu32, this->GetIndex());
-		MS_DUMP("</TstItem>");
+		MS_DUMP("</FeedbackPsTstItem>");
 	}
 
 	/* Specialization for Tstr class. */
 
 	template<>
-	const FeedbackPs::MessageType TstItem<Tstr>::MessageType = FeedbackPs::TSTR;
+	const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::MessageType = FeedbackPs::TSTR;
 
 	/* Specialization for Tstn class. */
 
 	template<>
-	const FeedbackPs::MessageType TstItem<Tstn>::MessageType = FeedbackPs::TSTN;
+	const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::MessageType = FeedbackPs::TSTN;
 
 	// Explicit instantiation to have all definitions in this file.
-	template class TstItem<Tstr>;
-	template class TstItem<Tstn>;
+	template class FeedbackPsTstItem<Tstr>;
+	template class FeedbackPsTstItem<Tstn>;
 }}

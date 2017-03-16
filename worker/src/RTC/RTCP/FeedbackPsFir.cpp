@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsFirPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackPsFir"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsFir.hpp"
@@ -10,7 +10,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 
-	FirItem* FirItem::Parse(const uint8_t* data, size_t len)
+	FeedbackPsFirItem* FeedbackPsFirItem::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -24,12 +24,12 @@ namespace RTC { namespace RTCP
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
-		return new FirItem(header);
+		return new FeedbackPsFirItem(header);
 	}
 
 	/* Instance methods. */
 
-	FirItem::FirItem(uint32_t ssrc, uint8_t sequence_number)
+	FeedbackPsFirItem::FeedbackPsFirItem(uint32_t ssrc, uint8_t sequence_number)
 	{
 		MS_TRACE();
 
@@ -43,7 +43,7 @@ namespace RTC { namespace RTCP
 		this->header->sequence_number = sequence_number;
 	}
 
-	size_t FirItem::Serialize(uint8_t* buffer)
+	size_t FeedbackPsFirItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -52,13 +52,13 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void FirItem::Dump() const
+	void FeedbackPsFirItem::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<FirItem>");
+		MS_DUMP("<FeedbackPsFirItem>");
 		MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
 		MS_DUMP("  sequence number : %" PRIu8, this->GetSequenceNumber());
-		MS_DUMP("</FirItem>");
+		MS_DUMP("</FeedbackPsFirItem>");
 	}
 }}

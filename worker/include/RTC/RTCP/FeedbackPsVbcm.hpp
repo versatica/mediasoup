@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_VBCM_HPP
-#define MS_RTC_RTCP_FEEDBACK_VBCM_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_PS_VBCM_HPP
+#define MS_RTC_RTCP_FEEDBACK_PS_VBCM_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -21,7 +21,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class VbcmItem
+	class FeedbackPsVbcmItem
 		: public FeedbackItem
 	{
 	private:
@@ -39,13 +39,13 @@ namespace RTC { namespace RTCP
 		static const FeedbackPs::MessageType MessageType = FeedbackPs::FIR;
 
 	public:
-		static VbcmItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackPsVbcmItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit VbcmItem(Header* header);
-		explicit VbcmItem(VbcmItem* item);
-		VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
-		virtual ~VbcmItem() {};
+		explicit FeedbackPsVbcmItem(Header* header);
+		explicit FeedbackPsVbcmItem(FeedbackPsVbcmItem* item);
+		FeedbackPsVbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
+		virtual ~FeedbackPsVbcmItem() {};
 
 		uint32_t GetSsrc() const;
 		uint8_t  GetSequenceNumber() const;
@@ -64,22 +64,22 @@ namespace RTC { namespace RTCP
 	};
 
 	// Vbcm packet declaration
-	typedef FeedbackPsItemPacket<VbcmItem> FeedbackPsVbcmPacket;
+	typedef FeedbackPsItemsPacket<FeedbackPsVbcmItem> FeedbackPsVbcmPacket;
 
 	/* Inline instance methods. */
 
 	inline
-	VbcmItem::VbcmItem(Header* header):
+	FeedbackPsVbcmItem::FeedbackPsVbcmItem(Header* header):
 		header(header)
 	{}
 
 	inline
-	VbcmItem::VbcmItem(VbcmItem* item):
+	FeedbackPsVbcmItem::FeedbackPsVbcmItem(FeedbackPsVbcmItem* item):
 		header(item->header)
 	{}
 
 	inline
-	size_t VbcmItem::GetSize() const
+	size_t FeedbackPsVbcmItem::GetSize() const
 	{
 		size_t size =  8 + size_t(this->header->length);
 
@@ -88,31 +88,31 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	uint32_t VbcmItem::GetSsrc() const
+	uint32_t FeedbackPsVbcmItem::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
 	inline
-	uint8_t VbcmItem::GetSequenceNumber() const
+	uint8_t FeedbackPsVbcmItem::GetSequenceNumber() const
 	{
 		return (uint8_t)this->header->sequence_number;
 	}
 
 	inline
-	uint8_t VbcmItem::GetPayloadType() const
+	uint8_t FeedbackPsVbcmItem::GetPayloadType() const
 	{
 		return (uint8_t)this->header->payload_type;
 	}
 
 	inline
-	uint16_t VbcmItem::GetLength() const
+	uint16_t FeedbackPsVbcmItem::GetLength() const
 	{
 		return (uint16_t)ntohs(this->header->length);
 	}
 
 	inline
-	uint8_t* VbcmItem::GetValue() const
+	uint8_t* FeedbackPsVbcmItem::GetValue() const
 	{
 		return this->header->value;
 	}

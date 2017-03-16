@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackRtpNackPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackRtpNack"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -10,7 +10,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 
-	NackItem* NackItem::Parse(const uint8_t* data, size_t len)
+	FeedbackRtpNackItem* FeedbackRtpNackItem::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -24,11 +24,11 @@ namespace RTC { namespace RTCP
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
-		return new NackItem(header);
+		return new FeedbackRtpNackItem(header);
 	}
 
 	/* Instance methods. */
-	NackItem::NackItem(uint16_t packetId, uint16_t lostPacketBitmask)
+	FeedbackRtpNackItem::FeedbackRtpNackItem(uint16_t packetId, uint16_t lostPacketBitmask)
 	{
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = reinterpret_cast<Header*>(this->raw);
@@ -37,7 +37,7 @@ namespace RTC { namespace RTCP
 		this->header->lost_packet_bitmask = htons(lostPacketBitmask);
 	}
 
-	size_t NackItem::Serialize(uint8_t* buffer)
+	size_t FeedbackRtpNackItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -47,15 +47,15 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void NackItem::Dump() const
+	void FeedbackRtpNackItem::Dump() const
 	{
 		MS_TRACE();
 
 		std::bitset<16> nack_bitset(this->GetLostPacketBitmask());
 
-		MS_DUMP("<NackItem>");
+		MS_DUMP("<FeedbackRtpNackItem>");
 		MS_DUMP("  pid : %" PRIu16, this->GetPacketId());
 		MS_DUMP("  bpl : %s", nack_bitset.to_string().c_str());
-		MS_DUMP("</NackItem>");
+		MS_DUMP("</FeedbackRtpNackItem>");
 	}
 }}

@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackRtpTlleiPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackRtpTllei"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpTllei.hpp"
@@ -9,7 +9,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 
-	TlleiItem* TlleiItem::Parse(const uint8_t* data, size_t len)
+	FeedbackRtpTlleiItem* FeedbackRtpTlleiItem::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -23,11 +23,11 @@ namespace RTC { namespace RTCP
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
-		return new TlleiItem(header);
+		return new FeedbackRtpTlleiItem(header);
 	}
 
 	/* Instance methods. */
-	TlleiItem::TlleiItem(uint16_t packetId, uint16_t lostPacketBitmask)
+	FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask)
 	{
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = reinterpret_cast<Header*>(this->raw);
@@ -36,7 +36,7 @@ namespace RTC { namespace RTCP
 		this->header->lost_packet_bitmask = htons(lostPacketBitmask);
 	}
 
-	size_t TlleiItem::Serialize(uint8_t* buffer)
+	size_t FeedbackRtpTlleiItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -46,13 +46,13 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void TlleiItem::Dump() const
+	void FeedbackRtpTlleiItem::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<TlleiItem>");
+		MS_DUMP("<FeedbackRtpTlleiItem>");
 		MS_DUMP("  pid: %" PRIu16, this->GetPacketId());
 		MS_DUMP("  bpl: %" PRIu16, this->GetLostPacketBitmask());
-		MS_DUMP("</TlleiItem>");
+		MS_DUMP("</FeedbackRtpTlleiItem>");
 	}
 }}

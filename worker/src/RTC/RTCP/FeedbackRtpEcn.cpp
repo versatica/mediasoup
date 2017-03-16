@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackRtpEcnPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackRtpEcn"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpEcn.hpp"
@@ -9,7 +9,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 
-	EcnItem* EcnItem::Parse(const uint8_t* data, size_t len)
+	FeedbackRtpEcnItem* FeedbackRtpEcnItem::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -23,10 +23,10 @@ namespace RTC { namespace RTCP
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
-		return new EcnItem(header);
+		return new FeedbackRtpEcnItem(header);
 	}
 
-	size_t EcnItem::Serialize(uint8_t* buffer)
+	size_t FeedbackRtpEcnItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -36,11 +36,11 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void EcnItem::Dump() const
+	void FeedbackRtpEcnItem::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<EcnItem>");
+		MS_DUMP("<FeedbackRtpEcnItem>");
 		MS_DUMP("  sequence number    : %" PRIu32, this->GetSequenceNumber());
 		MS_DUMP("  ect0 counter       : %" PRIu32, this->GetEct0Counter());
 		MS_DUMP("  ect1 counter       : %" PRIu32, this->GetEct1Counter());
@@ -48,6 +48,6 @@ namespace RTC { namespace RTCP
 		MS_DUMP("  not ect counter    : %" PRIu16, this->GetNotEctCounter());
 		MS_DUMP("  lost packets       : %" PRIu16, this->GetLostPackets());
 		MS_DUMP("  duplicated packets : %" PRIu16, this->GetDuplicatedPackets());
-		MS_DUMP("</EcnItem>");
+		MS_DUMP("</FeedbackRtpEcnItem>");
 	}
 }}

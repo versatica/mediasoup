@@ -391,7 +391,7 @@ namespace RTC
 			return;
 
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
-		RTC::RTCP::NackItem* nackItem = new RTC::RTCP::NackItem(seq, bitmask);
+		RTC::RTCP::FeedbackRtpNackItem* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
 		packet.AddItem(nackItem);
 		packet.Serialize(RtpReceiver::rtcpBuffer);

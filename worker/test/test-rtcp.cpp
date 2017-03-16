@@ -334,7 +334,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(bye2->GetReason() == reason);
 	}
 
-	SECTION("parse NackItem")
+	SECTION("parse FeedbackRtpNackItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -344,7 +344,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint16_t packetId = 2500;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
 
-		NackItem* item = NackItem::Parse(buffer, sizeof(buffer));
+		FeedbackRtpNackItem* item = FeedbackRtpNackItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetPacketId() == packetId);
@@ -353,21 +353,21 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("create NackItem")
+	SECTION("create FeedbackRtpNackItem")
 	{
 		uint16_t packetId = 1;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
 
 		// Create local NackItem and check content.
-		// NackItem();
-		NackItem item1(packetId, lostPacketBitmask);
+		// FeedbackRtpNackItem();
+		FeedbackRtpNackItem item1(packetId, lostPacketBitmask);
 
 		REQUIRE(item1.GetPacketId() == packetId);
 		REQUIRE(item1.GetLostPacketBitmask() == lostPacketBitmask);
 
 		// Create local NackItem out of existing one and check content.
-		// NackItem(NackItem*);
-		NackItem item2(&item1);
+		// FeedbackRtpNackItem(FeedbackRtpNackItem*);
+		FeedbackRtpNackItem item2(&item1);
 
 		REQUIRE(item2.GetPacketId() == packetId);
 		REQUIRE(item2.GetLostPacketBitmask() == lostPacketBitmask);
@@ -378,14 +378,14 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		item2.Serialize(buffer);
 
 		// Create local NackItem out of previous packet buffer and check content.
-		// NackItem(NackItem::Header*);
-		NackItem item3((NackItem::Header*)buffer);
+		// FeedbackRtpNackItem(FeedbackRtpNackItem::Header*);
+		FeedbackRtpNackItem item3((FeedbackRtpNackItem::Header*)buffer);
 
 		REQUIRE(item3.GetPacketId() == packetId);
 		REQUIRE(item3.GetLostPacketBitmask() == lostPacketBitmask);
 	}
 
-	SECTION("parse TmmbrItem")
+	SECTION("parse FeedbackRtpTmmbrItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -397,7 +397,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint64_t bitrate = 2;
 		uint32_t overhead = 1;
 
-		TmmbrItem* item = TmmbrItem::Parse(buffer, sizeof(buffer));
+		FeedbackRtpTmmbrItem* item = FeedbackRtpTmmbrItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
@@ -407,7 +407,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse TlleiItem")
+	SECTION("parse FeedbackRtpTlleiItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -417,7 +417,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint16_t packetId = 1;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
 
-		TlleiItem* item = TlleiItem::Parse(buffer, sizeof(buffer));
+		FeedbackRtpTlleiItem* item = FeedbackRtpTlleiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetPacketId() == packetId);
@@ -426,7 +426,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse EcnItem")
+	SECTION("parse FeedbackRtpEcnItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -447,7 +447,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint16_t lostPackets = 1;
 		uint16_t duplicatedPackets = 1;
 
-		EcnItem* item = EcnItem::Parse(buffer, sizeof(buffer));
+		FeedbackRtpEcnItem* item = FeedbackRtpEcnItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetSequenceNumber() == sequenceNumber);
@@ -461,7 +461,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse SliItem")
+	SECTION("parse FeedbackPsSliItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -472,7 +472,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint16_t number = 4;
 		uint8_t pictureId = 1;
 
-		SliItem* item = SliItem::Parse(buffer, sizeof(buffer));
+		FeedbackPsSliItem* item = FeedbackPsSliItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetFirst() == first);
@@ -482,7 +482,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse RpsiItem")
+	SECTION("parse FeedbackPsRpsiItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -496,7 +496,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint8_t payloadMask = 1;
 		size_t length = 5;
 
-		RpsiItem* item = RpsiItem::Parse(buffer, sizeof(buffer));
+		FeedbackPsRpsiItem* item = FeedbackPsRpsiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetPayloadType() == payloadType);
@@ -506,7 +506,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse FirItem")
+	SECTION("parse FeedbackPsFirItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -517,7 +517,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint32_t ssrc = 0;
 		uint8_t seq = 8;
 
-		FirItem* item = FirItem::Parse(buffer, sizeof(buffer));
+		FeedbackPsFirItem* item = FeedbackPsFirItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
@@ -526,7 +526,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse TstnItem")
+	SECTION("parse FeedbackPsTstnItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -539,7 +539,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint8_t seq = 8;
 		uint8_t index = 1;
 
-		TstnItem* item = TstnItem::Parse(buffer, sizeof(buffer));
+		FeedbackPsTstnItem* item = FeedbackPsTstnItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
@@ -549,7 +549,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse VbcmItem")
+	SECTION("parse FeedbackPsVbcmItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -567,7 +567,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint16_t length = 1;
 		uint8_t valueMask = 1;
 
-		VbcmItem* item = VbcmItem::Parse(buffer, sizeof(buffer));
+		FeedbackPsVbcmItem* item = FeedbackPsVbcmItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
@@ -579,7 +579,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		delete item;
 	}
 
-	SECTION("parse PsLeiItem")
+	SECTION("parse FeedbackPsLeiItem")
 	{
 		uint8_t buffer[] =
 		{
@@ -588,7 +588,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 
 		uint32_t ssrc = 1;
 
-		PsLeiItem* item = PsLeiItem::Parse(buffer, sizeof(buffer));
+		FeedbackPsLeiItem* item = FeedbackPsLeiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);

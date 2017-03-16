@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_TMMB_HPP
-#define MS_RTC_RTCP_FEEDBACK_TMMB_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_RTP_TMMB_HPP
+#define MS_RTC_RTCP_FEEDBACK_RTP_TMMB_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -18,7 +18,7 @@
 
 namespace RTC { namespace RTCP
 {
-	template<typename T> class TmmbItem
+	template<typename T> class FeedbackRtpTmmbItem
 		: public FeedbackItem
 	{
 	private:
@@ -32,13 +32,13 @@ namespace RTC { namespace RTCP
 		static const FeedbackRtp::MessageType MessageType;
 
 	public:
-		static TmmbItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackRtpTmmbItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit TmmbItem(Header* header);
-		explicit TmmbItem(TmmbItem* item);
-		TmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
-		virtual ~TmmbItem() {};
+		explicit FeedbackRtpTmmbItem(Header* header);
+		explicit FeedbackRtpTmmbItem(FeedbackRtpTmmbItem* item);
+		FeedbackRtpTmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
+		virtual ~FeedbackRtpTmmbItem() {};
 
 		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
@@ -60,57 +60,57 @@ namespace RTC { namespace RTCP
 	};
 
 	// Tmmb types declaration.
-	class Tmmbr {};
-	class Tmmbn {};
+	class FeedbackRtpTmmbr {};
+	class FeedbackRtpTmmbn {};
 
 	// Tmmbn classes declaration.
-	typedef TmmbItem<Tmmbr> TmmbrItem;
-	typedef TmmbItem<Tmmbn> TmmbnItem;
+	typedef FeedbackRtpTmmbItem<FeedbackRtpTmmbr> FeedbackRtpTmmbrItem;
+	typedef FeedbackRtpTmmbItem<FeedbackRtpTmmbn> FeedbackRtpTmmbnItem;
 
 	// Tmmbn packets declaration.
-	typedef FeedbackRtpItemPacket<TmmbrItem> FeedbackRtpTmmbrPacket;
-	typedef FeedbackRtpItemPacket<TmmbnItem> FeedbackRtpTmmbnPacket;
+	typedef FeedbackRtpItemsPacket<FeedbackRtpTmmbrItem> FeedbackRtpTmmbrPacket;
+	typedef FeedbackRtpItemsPacket<FeedbackRtpTmmbnItem> FeedbackRtpTmmbnPacket;
 
 	/* Inline instance methods. */
 
 	template <typename T>
-	size_t TmmbItem<T>::GetSize() const
+	size_t FeedbackRtpTmmbItem<T>::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	template <typename T>
-	uint32_t TmmbItem<T>::GetSsrc() const
+	uint32_t FeedbackRtpTmmbItem<T>::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
 	template <typename T>
-	void TmmbItem<T>::SetSsrc(uint32_t ssrc)
+	void FeedbackRtpTmmbItem<T>::SetSsrc(uint32_t ssrc)
 	{
 		this->header->ssrc = (uint32_t)htonl(ssrc);
 	}
 
 	template <typename T>
-	uint64_t TmmbItem<T>::GetBitrate() const
+	uint64_t FeedbackRtpTmmbItem<T>::GetBitrate() const
 	{
 		return this->bitrate;
 	}
 
 	template <typename T>
-	void TmmbItem<T>::SetBitrate(uint64_t bitrate)
+	void FeedbackRtpTmmbItem<T>::SetBitrate(uint64_t bitrate)
 	{
 		this->bitrate = bitrate;
 	}
 
 	template <typename T>
-	uint16_t TmmbItem<T>::GetOverhead() const
+	uint16_t FeedbackRtpTmmbItem<T>::GetOverhead() const
 	{
 		return this->overhead;
 	}
 
 	template <typename T>
-	void TmmbItem<T>::SetOverhead(uint16_t overhead)
+	void FeedbackRtpTmmbItem<T>::SetOverhead(uint16_t overhead)
 	{
 		this->overhead = overhead;
 	}

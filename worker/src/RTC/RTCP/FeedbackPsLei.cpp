@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsPsLeiPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackPsPsLei"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsLei.hpp"
@@ -9,7 +9,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 
-	PsLeiItem* PsLeiItem::Parse(const uint8_t* data, size_t len)
+	FeedbackPsLeiItem* FeedbackPsLeiItem::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -23,11 +23,11 @@ namespace RTC { namespace RTCP
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
-		return new PsLeiItem(header);
+		return new FeedbackPsLeiItem(header);
 	}
 
 	/* Instance methods. */
-	PsLeiItem::PsLeiItem(uint32_t ssrc)
+	FeedbackPsLeiItem::FeedbackPsLeiItem(uint32_t ssrc)
 	{
 		MS_TRACE();
 
@@ -36,7 +36,7 @@ namespace RTC { namespace RTCP
 		this->header->ssrc = htonl(ssrc);
 	}
 
-	size_t PsLeiItem::Serialize(uint8_t* buffer)
+	size_t FeedbackPsLeiItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -46,12 +46,12 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void PsLeiItem::Dump() const
+	void FeedbackPsLeiItem::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<PsLeiItem>");
+		MS_DUMP("<FeedbackPsLeiItem>");
 		MS_DUMP("  ssrc : %" PRIu32, this->GetSsrc());
-		MS_DUMP("</PsLeiItem>");
+		MS_DUMP("</FeedbackPsLeiItem>");
 	}
 }}

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_ECN_HPP
-#define MS_RTC_RTCP_FEEDBACK_ECN_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_RTP_ECN_HPP
+#define MS_RTC_RTCP_FEEDBACK_RTP_ECN_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -26,7 +26,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class EcnItem
+	class FeedbackRtpEcnItem
 		: public FeedbackItem
 	{
 	private:
@@ -45,12 +45,12 @@ namespace RTC { namespace RTCP
 		static const FeedbackRtp::MessageType MessageType = FeedbackRtp::ECN;
 
 	public:
-		static EcnItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackRtpEcnItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit EcnItem(Header* header);
-		explicit EcnItem(EcnItem* item);
-		virtual ~EcnItem() {};
+		explicit FeedbackRtpEcnItem(Header* header);
+		explicit FeedbackRtpEcnItem(FeedbackRtpEcnItem* item);
+		virtual ~FeedbackRtpEcnItem() {};
 
 		uint32_t GetSequenceNumber() const;
 		uint32_t GetEct0Counter() const;
@@ -71,64 +71,64 @@ namespace RTC { namespace RTCP
 	};
 
 	// Ecn packet declaration.
-	typedef FeedbackRtpItemPacket<EcnItem> FeedbackRtpEcnPacket;
+	typedef FeedbackRtpItemsPacket<FeedbackRtpEcnItem> FeedbackRtpEcnPacket;
 
 	/* Inline instance methods. */
 
 	inline
-	EcnItem::EcnItem(Header* header):
+	FeedbackRtpEcnItem::FeedbackRtpEcnItem(Header* header):
 		header(header)
 	{}
 
 	inline
-	EcnItem::EcnItem(EcnItem* item):
+	FeedbackRtpEcnItem::FeedbackRtpEcnItem(FeedbackRtpEcnItem* item):
 		header(item->header)
 	{}
 
 	inline
-	size_t EcnItem::GetSize() const
+	size_t FeedbackRtpEcnItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint32_t EcnItem::GetSequenceNumber() const
+	uint32_t FeedbackRtpEcnItem::GetSequenceNumber() const
 	{
 		return ntohl(this->header->sequence_number);
 	}
 
 	inline
-	uint32_t EcnItem::GetEct0Counter() const
+	uint32_t FeedbackRtpEcnItem::GetEct0Counter() const
 	{
 		return ntohl(this->header->ect0_counter);
 	}
 
 	inline
-	uint32_t EcnItem::GetEct1Counter() const
+	uint32_t FeedbackRtpEcnItem::GetEct1Counter() const
 	{
 		return ntohl(this->header->ect1_counter);
 	}
 
 	inline
-	uint16_t EcnItem::GetEcnCeCounter() const
+	uint16_t FeedbackRtpEcnItem::GetEcnCeCounter() const
 	{
 		return ntohs(this->header->ecn_ce_counter);
 	}
 
 	inline
-	uint16_t EcnItem::GetNotEctCounter() const
+	uint16_t FeedbackRtpEcnItem::GetNotEctCounter() const
 	{
 		return ntohs(this->header->not_ect_counter);
 	}
 
 	inline
-	uint16_t EcnItem::GetLostPackets() const
+	uint16_t FeedbackRtpEcnItem::GetLostPackets() const
 	{
 		return ntohs(this->header->lost_packets);
 	}
 
 	inline
-	uint16_t EcnItem::GetDuplicatedPackets() const
+	uint16_t FeedbackRtpEcnItem::GetDuplicatedPackets() const
 	{
 		return ntohs(this->header->duplicated_packets);
 	}

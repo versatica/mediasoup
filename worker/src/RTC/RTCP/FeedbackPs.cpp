@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackPs"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -15,7 +15,7 @@ namespace RTC { namespace RTCP
 	/* Class methods. */
 
 	template<typename Item>
-	FeedbackPsItemPacket<Item>* FeedbackPsItemPacket<Item>::Parse(const uint8_t* data, size_t len)
+	FeedbackPsItemsPacket<Item>* FeedbackPsItemsPacket<Item>::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -27,7 +27,7 @@ namespace RTC { namespace RTCP
 		}
 
 		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-		std::unique_ptr<FeedbackPsItemPacket<Item>> packet(new FeedbackPsItemPacket<Item>(commonHeader));
+		std::unique_ptr<FeedbackPsItemsPacket<Item>> packet(new FeedbackPsItemsPacket<Item>(commonHeader));
 
 		size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
 
@@ -52,7 +52,7 @@ namespace RTC { namespace RTCP
 	/* Instance methods. */
 
 	template<typename Item>
-	size_t FeedbackPsItemPacket<Item>::Serialize(uint8_t* buffer)
+	size_t FeedbackPsItemsPacket<Item>::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -67,7 +67,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template<typename Item>
-	void FeedbackPsItemPacket<Item>::Dump() const
+	void FeedbackPsItemsPacket<Item>::Dump() const
 	{
 		MS_TRACE();
 
@@ -81,11 +81,11 @@ namespace RTC { namespace RTCP
 	}
 
 	// explicit instantiation to have all FeedbackRtpPacket definitions in this file.
-	template class FeedbackPsItemPacket<FirItem>;
-	template class FeedbackPsItemPacket<SliItem>;
-	template class FeedbackPsItemPacket<RpsiItem>;
-	template class FeedbackPsItemPacket<TstrItem>;
-	template class FeedbackPsItemPacket<TstnItem>;
-	template class FeedbackPsItemPacket<VbcmItem>;
-	template class FeedbackPsItemPacket<PsLeiItem>;
+	template class FeedbackPsItemsPacket<FeedbackPsFirItem>;
+	template class FeedbackPsItemsPacket<FeedbackPsSliItem>;
+	template class FeedbackPsItemsPacket<FeedbackPsRpsiItem>;
+	template class FeedbackPsItemsPacket<FeedbackPsTstrItem>;
+	template class FeedbackPsItemsPacket<FeedbackPsTstnItem>;
+	template class FeedbackPsItemsPacket<FeedbackPsVbcmItem>;
+	template class FeedbackPsItemsPacket<FeedbackPsLeiItem>;
 }}

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_TLLEI_HPP
-#define MS_RTC_RTCP_FEEDBACK_TLLEI_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_RTP_TLLEI_HPP
+#define MS_RTC_RTCP_FEEDBACK_RTP_TLLEI_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -15,7 +15,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class TlleiItem
+	class FeedbackRtpTlleiItem
 		: public FeedbackItem
 	{
 	private:
@@ -29,13 +29,13 @@ namespace RTC { namespace RTCP
 		static const FeedbackRtp::MessageType MessageType = FeedbackRtp::TLLEI;
 
 	public:
-		static TlleiItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackRtpTlleiItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit TlleiItem(Header* header);
-		explicit TlleiItem(TlleiItem* item);
-		TlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
-		virtual ~TlleiItem() {};
+		explicit FeedbackRtpTlleiItem(Header* header);
+		explicit FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item);
+		FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
+		virtual ~FeedbackRtpTlleiItem() {};
 
 		uint16_t GetPacketId() const;
 		uint16_t GetLostPacketBitmask() const;
@@ -51,34 +51,34 @@ namespace RTC { namespace RTCP
 	};
 
 	// Nack packet declaration.
-	typedef FeedbackRtpItemPacket<TlleiItem> FeedbackRtpTlleiPacket;
+	typedef FeedbackRtpItemsPacket<FeedbackRtpTlleiItem> FeedbackRtpTlleiPacket;
 
 	/* Inline instance methods. */
 
 	inline
-	TlleiItem::TlleiItem(Header* header):
+	FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(Header* header):
 		header(header)
 	{}
 
 	inline
-	TlleiItem::TlleiItem(TlleiItem* item):
+	FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item):
 		header(item->header)
 	{}
 
 	inline
-	size_t TlleiItem::GetSize() const
+	size_t FeedbackRtpTlleiItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint16_t TlleiItem::GetPacketId() const
+	uint16_t FeedbackRtpTlleiItem::GetPacketId() const
 	{
 		return (uint16_t)ntohs(this->header->packet_id);
 	}
 
 	inline
-	uint16_t TlleiItem::GetLostPacketBitmask() const
+	uint16_t FeedbackRtpTlleiItem::GetLostPacketBitmask() const
 	{
 		return (uint16_t)ntohs(this->header->lost_packet_bitmask);
 	}

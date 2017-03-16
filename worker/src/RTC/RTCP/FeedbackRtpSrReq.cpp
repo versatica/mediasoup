@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackRtpSrReqPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackRtpSrReq"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpSrReq.hpp"

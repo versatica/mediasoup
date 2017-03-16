@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_PSLEI_HPP
-#define MS_RTC_RTCP_FEEDBACK_PSLEI_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_PS_LEI_HPP
+#define MS_RTC_RTCP_FEEDBACK_PS_LEI_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -15,7 +15,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class PsLeiItem
+	class FeedbackPsLeiItem
 		: public FeedbackItem
 	{
 	private:
@@ -28,13 +28,13 @@ namespace RTC { namespace RTCP
 		static const FeedbackPs::MessageType MessageType = FeedbackPs::PSLEI;
 
 	public:
-		static PsLeiItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackPsLeiItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit PsLeiItem(Header* header);
-		explicit PsLeiItem(PsLeiItem* item);
-		explicit PsLeiItem(uint32_t ssrc);
-		virtual ~PsLeiItem() {};
+		explicit FeedbackPsLeiItem(Header* header);
+		explicit FeedbackPsLeiItem(FeedbackPsLeiItem* item);
+		explicit FeedbackPsLeiItem(uint32_t ssrc);
+		virtual ~FeedbackPsLeiItem() {};
 
 		uint32_t GetSsrc() const;
 
@@ -49,28 +49,28 @@ namespace RTC { namespace RTCP
 	};
 
 	// Lei packet declaration.
-	typedef FeedbackPsItemPacket<PsLeiItem> FeedbackPsLeiPacket;
+	typedef FeedbackPsItemsPacket<FeedbackPsLeiItem> FeedbackPsLeiPacket;
 
 	/* Inline instance methods. */
 
 	inline
-	PsLeiItem::PsLeiItem(Header* header):
+	FeedbackPsLeiItem::FeedbackPsLeiItem(Header* header):
 		header(header)
 	{}
 
 	inline
-	PsLeiItem::PsLeiItem(PsLeiItem* item):
+	FeedbackPsLeiItem::FeedbackPsLeiItem(FeedbackPsLeiItem* item):
 		header(item->header)
 	{}
 
 	inline
-	size_t PsLeiItem::GetSize() const
+	size_t FeedbackPsLeiItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint32_t PsLeiItem::GetSsrc() const
+	uint32_t FeedbackPsLeiItem::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}

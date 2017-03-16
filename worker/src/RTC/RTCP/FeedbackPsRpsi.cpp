@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsRpsiPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackPsRpsi"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsRpsi.hpp"
@@ -9,7 +9,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 
-	RpsiItem* RpsiItem::Parse(const uint8_t* data, size_t len)
+	FeedbackPsRpsiItem* FeedbackPsRpsiItem::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -22,7 +22,7 @@ namespace RTC { namespace RTCP
 		}
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
-		std::unique_ptr<RpsiItem> item(new RpsiItem(header));
+		std::unique_ptr<FeedbackPsRpsiItem> item(new FeedbackPsRpsiItem(header));
 
 		if (item->IsCorrect())
 			return item.release();
@@ -32,7 +32,7 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	RpsiItem::RpsiItem(Header* header)
+	FeedbackPsRpsiItem::FeedbackPsRpsiItem(Header* header)
 	{
 		MS_TRACE();
 
@@ -48,22 +48,22 @@ namespace RTC { namespace RTCP
 
 		size_t paddingBytes = this->header->padding_bits / 8;
 
-		if (paddingBytes > RpsiItem::MaxBitStringSize)
+		if (paddingBytes > FeedbackPsRpsiItem::MaxBitStringSize)
 		{
 			MS_WARN_TAG(rtcp, "invalid Rpsi packet with too many padding bytes");
 
 			isCorrect = false;
 		}
 
-		this->length = RpsiItem::MaxBitStringSize - paddingBytes;
+		this->length = FeedbackPsRpsiItem::MaxBitStringSize - paddingBytes;
 	}
 
-	RpsiItem::RpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length)
+	FeedbackPsRpsiItem::FeedbackPsRpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(payload_type <= 0x7f, "rpsi payload type exceeds the maximum value");
-		MS_ASSERT(length <= RpsiItem::MaxBitStringSize, "rpsi bit string length exceeds the maximum value");
+		MS_ASSERT(length <= FeedbackPsRpsiItem::MaxBitStringSize, "rpsi bit string length exceeds the maximum value");
 
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = reinterpret_cast<Header*>(this->raw);
@@ -82,7 +82,7 @@ namespace RTC { namespace RTCP
 		}
 	}
 
-	size_t RpsiItem::Serialize(uint8_t* buffer)
+	size_t FeedbackPsRpsiItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -91,14 +91,14 @@ namespace RTC { namespace RTCP
 		return sizeof(Header);
 	}
 
-	void RpsiItem::Dump() const
+	void FeedbackPsRpsiItem::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<RpsiItem>");
+		MS_DUMP("<FeedbackPsRpsiItem>");
 		MS_DUMP("  padding bits : %" PRIu8, this->header->padding_bits);
 		MS_DUMP("  payload type : %" PRIu8, this->GetPayloadType());
 		MS_DUMP("  length       : %zu", this->GetLength());
-		MS_DUMP("</RpsiItem>");
+		MS_DUMP("</FeedbackPsRpsiItem>");
 	}
 }}

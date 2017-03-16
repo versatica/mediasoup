@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackRtpPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackRtp"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -13,7 +13,7 @@ namespace RTC { namespace RTCP
 	/* Class methods. */
 
 	template<typename Item>
-	FeedbackRtpItemPacket<Item>* FeedbackRtpItemPacket<Item>::Parse(const uint8_t* data, size_t len)
+	FeedbackRtpItemsPacket<Item>* FeedbackRtpItemsPacket<Item>::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -25,7 +25,7 @@ namespace RTC { namespace RTCP
 		}
 
 		CommonHeader* commonHeader = (CommonHeader*)data;
-		std::unique_ptr<FeedbackRtpItemPacket<Item>> packet(new FeedbackRtpItemPacket<Item>(commonHeader));
+		std::unique_ptr<FeedbackRtpItemsPacket<Item>> packet(new FeedbackRtpItemsPacket<Item>(commonHeader));
 
 		size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
 
@@ -50,7 +50,7 @@ namespace RTC { namespace RTCP
 	/* Instance methods. */
 
 	template<typename Item>
-	size_t FeedbackRtpItemPacket<Item>::Serialize(uint8_t* buffer)
+	size_t FeedbackRtpItemsPacket<Item>::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -65,7 +65,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template<typename Item>
-	void FeedbackRtpItemPacket<Item>::Dump() const
+	void FeedbackRtpItemsPacket<Item>::Dump() const
 	{
 		MS_TRACE();
 
@@ -79,9 +79,9 @@ namespace RTC { namespace RTCP
 	}
 
 	// Explicit instantiation to have all FeedbackRtpPacket definitions in this file.
-	template class FeedbackRtpItemPacket<NackItem>;
-	template class FeedbackRtpItemPacket<TmmbrItem>;
-	template class FeedbackRtpItemPacket<TmmbnItem>;
-	template class FeedbackRtpItemPacket<TlleiItem>;
-	template class FeedbackRtpItemPacket<EcnItem>;
+	template class FeedbackRtpItemsPacket<FeedbackRtpNackItem>;
+	template class FeedbackRtpItemsPacket<FeedbackRtpTmmbrItem>;
+	template class FeedbackRtpItemsPacket<FeedbackRtpTmmbnItem>;
+	template class FeedbackRtpItemsPacket<FeedbackRtpTlleiItem>;
+	template class FeedbackRtpItemsPacket<FeedbackRtpEcnItem>;
 }}

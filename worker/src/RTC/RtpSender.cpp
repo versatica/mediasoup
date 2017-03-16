@@ -389,7 +389,7 @@ namespace RTC
 
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
-			RTC::RTCP::NackItem* item = *it;
+			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
 			this->rtpStream->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), RtpSender::rtpRetransmissionContainer);
 

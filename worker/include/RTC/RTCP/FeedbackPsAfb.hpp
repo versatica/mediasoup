@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_AFB_HPP
-#define MS_RTC_RTCP_FEEDBACK_AFB_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_PS_AFB_HPP
+#define MS_RTC_RTCP_FEEDBACK_PS_AFB_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"

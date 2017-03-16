@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_PLI_HPP
-#define MS_RTC_RTCP_FEEDBACK_PLI_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_PS_PLI_HPP
+#define MS_RTC_RTCP_FEEDBACK_PS_PLI_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_NACK_HPP
-#define MS_RTC_RTCP_FEEDBACK_NACK_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_RTP_NACK_HPP
+#define MS_RTC_RTCP_FEEDBACK_RTP_NACK_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -15,7 +15,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class NackItem
+	class FeedbackRtpNackItem
 		: public FeedbackItem
 	{
 	public:
@@ -29,13 +29,13 @@ namespace RTC { namespace RTCP
 		static const FeedbackRtp::MessageType MessageType = FeedbackRtp::NACK;
 
 	public:
-		static NackItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackRtpNackItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit NackItem(Header* header);
-		explicit NackItem(NackItem* item);
-		NackItem(uint16_t packetId, uint16_t lostPacketBitmask);
-		virtual ~NackItem() {};
+		explicit FeedbackRtpNackItem(Header* header);
+		explicit FeedbackRtpNackItem(FeedbackRtpNackItem* item);
+		FeedbackRtpNackItem(uint16_t packetId, uint16_t lostPacketBitmask);
+		virtual ~FeedbackRtpNackItem() {};
 
 		uint16_t GetPacketId() const;
 		uint16_t GetLostPacketBitmask() const;
@@ -51,34 +51,34 @@ namespace RTC { namespace RTCP
 	};
 
 	// Nack packet declaration.
-	typedef FeedbackRtpItemPacket<NackItem> FeedbackRtpNackPacket;
+	typedef FeedbackRtpItemsPacket<FeedbackRtpNackItem> FeedbackRtpNackPacket;
 
 	/* Inline instance methods. */
 
 	inline
-	NackItem::NackItem(Header* header):
+	FeedbackRtpNackItem::FeedbackRtpNackItem(Header* header):
 		header(header)
 	{}
 
 	inline
-	NackItem::NackItem(NackItem* item):
+	FeedbackRtpNackItem::FeedbackRtpNackItem(FeedbackRtpNackItem* item):
 		header(item->header)
 	{}
 
 	inline
-	size_t NackItem::GetSize() const
+	size_t FeedbackRtpNackItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint16_t NackItem::GetPacketId() const
+	uint16_t FeedbackRtpNackItem::GetPacketId() const
 	{
 		return (uint16_t)ntohs(this->header->packet_id);
 	}
 
 	inline
-	uint16_t NackItem::GetLostPacketBitmask() const
+	uint16_t FeedbackRtpNackItem::GetLostPacketBitmask() const
 	{
 		return (uint16_t)ntohs(this->header->lost_packet_bitmask);
 	}

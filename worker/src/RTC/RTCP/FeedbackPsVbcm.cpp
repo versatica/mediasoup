@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsVbcmPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackPsVbcm"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
@@ -9,7 +9,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 
-	VbcmItem* VbcmItem::Parse(const uint8_t* data, size_t len)
+	FeedbackPsVbcmItem* FeedbackPsVbcmItem::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -23,11 +23,11 @@ namespace RTC { namespace RTCP
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
-		return new VbcmItem(header);
+		return new FeedbackPsVbcmItem(header);
 	}
 
 	/* Instance methods. */
-	VbcmItem::VbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value)
+	FeedbackPsVbcmItem::FeedbackPsVbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value)
 	{
 		this->raw = new uint8_t[8 + length];
 		this->header = reinterpret_cast<Header*>(this->raw);
@@ -40,7 +40,7 @@ namespace RTC { namespace RTCP
 		std::memcpy(this->header->value, value, sizeof(length));
 	}
 
-	size_t VbcmItem::Serialize(uint8_t* buffer)
+	size_t FeedbackPsVbcmItem::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -62,15 +62,15 @@ namespace RTC { namespace RTCP
 		return offset+padding;
 	}
 
-	void VbcmItem::Dump() const
+	void FeedbackPsVbcmItem::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<VbcmItem>");
+		MS_DUMP("<FeedbackPsVbcmItem>");
 		MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
 		MS_DUMP("  sequence number : %" PRIu8, this->GetSequenceNumber());
 		MS_DUMP("  payload type    : %" PRIu8, this->GetPayloadType());
 		MS_DUMP("  length          : %" PRIu16, this->GetLength());
-		MS_DUMP("</VbcmItem>");
+		MS_DUMP("</FeedbackPsVbcmItem>");
 	}
 }}

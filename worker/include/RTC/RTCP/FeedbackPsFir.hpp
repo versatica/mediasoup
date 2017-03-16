@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTCP_FEEDBACK_FIR_HPP
-#define MS_RTC_RTCP_FEEDBACK_FIR_HPP
+#ifndef MS_RTC_RTCP_FEEDBACK_PS_FIR_HPP
+#define MS_RTC_RTCP_FEEDBACK_PS_FIR_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -18,7 +18,7 @@
 
 namespace RTC { namespace RTCP
 {
-	class FirItem
+	class FeedbackPsFirItem
 		: public FeedbackItem
 	{
 	private:
@@ -33,13 +33,13 @@ namespace RTC { namespace RTCP
 		static const FeedbackPs::MessageType MessageType = FeedbackPs::FIR;
 
 	public:
-		static FirItem* Parse(const uint8_t* data, size_t len);
+		static FeedbackPsFirItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit FirItem(Header* header);
-		explicit FirItem(FirItem* item);
-		FirItem(uint32_t ssrc, uint8_t sequence_number);
-		virtual ~FirItem() {};
+		explicit FeedbackPsFirItem(Header* header);
+		explicit FeedbackPsFirItem(FeedbackPsFirItem* item);
+		FeedbackPsFirItem(uint32_t ssrc, uint8_t sequence_number);
+		virtual ~FeedbackPsFirItem() {};
 
 		uint32_t GetSsrc() const;
 		uint8_t GetSequenceNumber() const;
@@ -55,34 +55,34 @@ namespace RTC { namespace RTCP
 	};
 
 	// Fir packet declaration.
-	typedef FeedbackPsItemPacket<FirItem> FeedbackPsFirPacket;
+	typedef FeedbackPsItemsPacket<FeedbackPsFirItem> FeedbackPsFirPacket;
 
 	/* Inline instance methods. */
 
 	inline
-	FirItem::FirItem(Header* header):
+	FeedbackPsFirItem::FeedbackPsFirItem(Header* header):
 		header(header)
 	{}
 
 	inline
-	FirItem::FirItem(FirItem* item) :
+	FeedbackPsFirItem::FeedbackPsFirItem(FeedbackPsFirItem* item) :
 		header(item->header)
 	{}
 
 	inline
-	size_t FirItem::GetSize() const
+	size_t FeedbackPsFirItem::GetSize() const
 	{
 		return sizeof(Header);
 	}
 
 	inline
-	uint32_t FirItem::GetSsrc() const
+	uint32_t FeedbackPsFirItem::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
 	inline
-	uint8_t FirItem::GetSequenceNumber() const
+	uint8_t FeedbackPsFirItem::GetSequenceNumber() const
 	{
 		return (uint8_t)this->header->sequence_number;
 	}

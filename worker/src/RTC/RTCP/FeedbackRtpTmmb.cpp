@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackRtpTmmbPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackRtpTmmb"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
@@ -9,7 +9,7 @@ namespace RTC { namespace RTCP
 {
 	/* Class methods. */
 	template <typename T>
-	TmmbItem<T>* TmmbItem<T>::Parse(const uint8_t* data, size_t len)
+	FeedbackRtpTmmbItem<T>* FeedbackRtpTmmbItem<T>::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -24,7 +24,7 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		std::unique_ptr<TmmbItem> item(new TmmbItem(header));
+		std::unique_ptr<FeedbackRtpTmmbItem> item(new FeedbackRtpTmmbItem(header));
 
 		if (!item->IsCorrect())
 			return nullptr;
@@ -34,7 +34,7 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 	template <typename T>
-	TmmbItem<T>::TmmbItem(Header* header)
+	FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(Header* header)
 	{
 		this->header = header;
 
@@ -54,7 +54,7 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	size_t TmmbItem<T>::Serialize(uint8_t* buffer)
+	size_t FeedbackRtpTmmbItem<T>::Serialize(uint8_t* buffer)
 	{
 		uint64_t mantissa = this->bitrate;
 		uint32_t exponent = 0;
@@ -77,28 +77,28 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	void TmmbItem<T>::Dump() const
+	void FeedbackRtpTmmbItem<T>::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<TmmbItem>");
+		MS_DUMP("<FeedbackRtpTmmbItem>");
 		MS_DUMP("  ssrc     : %" PRIu32, this->GetSsrc());
 		MS_DUMP("  bitrate  : %" PRIu64, this->GetBitrate());
 		MS_DUMP("  overhead : %" PRIu16, this->GetOverhead());
-		MS_DUMP("</TmmbItem>");
+		MS_DUMP("</FeedbackRtpTmmbItem>");
 	}
 
 	/* Specialization for Tmmbr class. */
 
 	template<>
-	const FeedbackRtp::MessageType TmmbItem<Tmmbr>::MessageType = FeedbackRtp::TMMBR;
+	const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbr>::MessageType = FeedbackRtp::TMMBR;
 
 	/* Specialization for Tmmbn class. */
 
 	template<>
-	const FeedbackRtp::MessageType TmmbItem<Tmmbn>::MessageType = FeedbackRtp::TMMBN;
+	const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbn>::MessageType = FeedbackRtp::TMMBN;
 
-	// Explicit instantiation to have all TmmbItem definitions in this file.
-	template class TmmbItem<Tmmbr>;
-	template class TmmbItem<Tmmbn>;
+	// Explicit instantiation to have all FeedbackRtpTmmbItem definitions in this file.
+	template class FeedbackRtpTmmbItem<FeedbackRtpTmmbr>;
+	template class FeedbackRtpTmmbItem<FeedbackRtpTmmbn>;
 }}
