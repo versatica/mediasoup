@@ -40,14 +40,14 @@ namespace RTC
 
 		if (Settings::configuration.hasIPv4)
 		{
-			err = uv_ip4_addr(Settings::configuration.rtcListenIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::UdpSocket::sockaddrStorageIPv4);
+			err = uv_ip4_addr(Settings::configuration.rtcIPv4.c_str(), 0, (struct sockaddr_in*)&RTC::UdpSocket::sockaddrStorageIPv4);
 			if (err)
 				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
 		if (Settings::configuration.hasIPv6)
 		{
-			err = uv_ip6_addr(Settings::configuration.rtcListenIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::UdpSocket::sockaddrStorageIPv6);
+			err = uv_ip6_addr(Settings::configuration.rtcIPv6.c_str(), 0, (struct sockaddr_in6*)&RTC::UdpSocket::sockaddrStorageIPv6);
 			if (err)
 				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
@@ -89,13 +89,13 @@ namespace RTC
 			case AF_INET:
 				available_ports = &RTC::UdpSocket::availableIPv4Ports;
 				bind_addr = RTC::UdpSocket::sockaddrStorageIPv4;
-				listen_ip = Settings::configuration.rtcListenIPv4.c_str();
+				listen_ip = Settings::configuration.rtcIPv4.c_str();
 				break;
 
 			case AF_INET6:
 				available_ports = &RTC::UdpSocket::availableIPv6Ports;
 				bind_addr = RTC::UdpSocket::sockaddrStorageIPv6;
-				listen_ip = Settings::configuration.rtcListenIPv6.c_str();
+				listen_ip = Settings::configuration.rtcIPv6.c_str();
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
 				break;

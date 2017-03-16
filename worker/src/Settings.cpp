@@ -43,8 +43,8 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	/* Set default configuration. */
 
-	SetDefaultRtcListenIP(AF_INET);
-	SetDefaultRtcListenIP(AF_INET6);
+	SetDefaultRtcIP(AF_INET);
+	SetDefaultRtcIP(AF_INET6);
 
 	/* Variables for getopt. */
 
@@ -57,16 +57,16 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	struct option options[] =
 	{
-		{ "logLevel",               optional_argument, nullptr, 'l' },
-		{ "logTag",                 optional_argument, nullptr, 't' },
-		{ "rtcListenIPv4",          optional_argument, nullptr, '4' },
-		{ "rtcListenIPv6",          optional_argument, nullptr, '6' },
-		{ "rtcAnnouncedListenIPv4", optional_argument, nullptr, '5' },
-		{ "rtcAnnouncedListenIPv6", optional_argument, nullptr, '7' },
-		{ "rtcMinPort",             optional_argument, nullptr, 'm' },
-		{ "rtcMaxPort",             optional_argument, nullptr, 'M' },
-		{ "dtlsCertificateFile",    optional_argument, nullptr, 'c' },
-		{ "dtlsPrivateKeyFile",     optional_argument, nullptr, 'p' },
+		{ "logLevel",            optional_argument, nullptr, 'l' },
+		{ "logTag",              optional_argument, nullptr, 't' },
+		{ "rtcIPv4",             optional_argument, nullptr, '4' },
+		{ "rtcIPv6",             optional_argument, nullptr, '6' },
+		{ "rtcAnnouncedIPv4",    optional_argument, nullptr, '5' },
+		{ "rtcAnnouncedIPv6",    optional_argument, nullptr, '7' },
+		{ "rtcMinPort",          optional_argument, nullptr, 'm' },
+		{ "rtcMaxPort",          optional_argument, nullptr, 'M' },
+		{ "dtlsCertificateFile", optional_argument, nullptr, 'c' },
+		{ "dtlsPrivateKeyFile",  optional_argument, nullptr, 'p' },
 		{ 0, 0, 0, 0 }
 	};
 
@@ -92,22 +92,22 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case '4':
 				value_string = std::string(optarg);
-				SetRtcListenIPv4(value_string);
+				SetRtcIPv4(value_string);
 				break;
 
 			case '6':
 				value_string = std::string(optarg);
-				SetRtcListenIPv6(value_string);
+				SetRtcIPv6(value_string);
 				break;
 
 			case '5':
 				value_string = std::string(optarg);
-				SetRtcAnnouncedListenIPv4(value_string);
+				SetRtcAnnouncedIPv4(value_string);
 				break;
 
 			case '7':
 				value_string = std::string(optarg);
-				SetRtcAnnouncedListenIPv6(value_string);
+				SetRtcAnnouncedIPv6(value_string);
 				break;
 
 			case 'm':
@@ -151,19 +151,19 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	if (!log_tags.empty())
 		Settings::SetLogTags(log_tags);
 
-	// RTC must have at least 'listenIPv4' or 'listenIPv6'.
+	// RTC must have at least 'IPv4' or 'IPv6'.
 	if (!Settings::configuration.hasIPv4 && !Settings::configuration.hasIPv6)
-		MS_THROW_ERROR("at least rtcListenIPv4 or rtcListenIPv6 must be enabled");
+		MS_THROW_ERROR("at least rtcIPv4 or rtcIPv6 must be enabled");
 
 	// Clean RTP announced IPs if not available.
 	if (!Settings::configuration.hasIPv4)
 	{
-		Settings::configuration.rtcAnnouncedListenIPv4 = "";
+		Settings::configuration.rtcAnnouncedIPv4 = "";
 		Settings::configuration.hasAnnouncedIPv4 = false;
 	}
 	if (!Settings::configuration.hasIPv6)
 	{
-		Settings::configuration.rtcAnnouncedListenIPv6 = "";
+		Settings::configuration.rtcAnnouncedIPv6 = "";
 		Settings::configuration.hasAnnouncedIPv6 = false;
 	}
 
@@ -195,33 +195,33 @@ void Settings::PrintConfiguration()
 
 	MS_DEBUG_TAG(info, "<configuration>");
 
-	MS_DEBUG_TAG(info, "  logLevel               : \"%s\"", Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	MS_DEBUG_TAG(info, "  logLevel            : \"%s\"", Settings::logLevel2String[Settings::configuration.logLevel].c_str());
 	for (auto& tag : log_tags)
 	{
-		MS_DEBUG_TAG(info, "  logTag                 : \"%s\"", tag.c_str());
+		MS_DEBUG_TAG(info, "  logTag              : \"%s\"", tag.c_str());
 	}
 	if (Settings::configuration.hasIPv4)
-		MS_DEBUG_TAG(info, "  rtcListenIPv4          : \"%s\"", Settings::configuration.rtcListenIPv4.c_str());
+		MS_DEBUG_TAG(info, "  rtcIPv4             : \"%s\"", Settings::configuration.rtcIPv4.c_str());
 	else
-		MS_DEBUG_TAG(info, "  rtcListenIPv4          : (unavailable)");
+		MS_DEBUG_TAG(info, "  rtcIPv4             : (unavailable)");
 	if (Settings::configuration.hasIPv6)
-		MS_DEBUG_TAG(info, "  rtcListenIPv6          : \"%s\"", Settings::configuration.rtcListenIPv6.c_str());
+		MS_DEBUG_TAG(info, "  rtcIPv6             : \"%s\"", Settings::configuration.rtcIPv6.c_str());
 	else
-		MS_DEBUG_TAG(info, "  rtcListenIPv6          : (unavailable)");
+		MS_DEBUG_TAG(info, "  rtcIPv6             : (unavailable)");
 	if (Settings::configuration.hasAnnouncedIPv4)
-		MS_DEBUG_TAG(info, "  rtcAnnouncedListenIPv4 : \"%s\"", Settings::configuration.rtcAnnouncedListenIPv4.c_str());
+		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv4    : \"%s\"", Settings::configuration.rtcAnnouncedIPv4.c_str());
 	else
-		MS_DEBUG_TAG(info, "  rtcAnnouncedListenIPv4 : (unset)");
+		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv4    : (unset)");
 	if (Settings::configuration.hasAnnouncedIPv6)
-		MS_DEBUG_TAG(info, "  rtcAnnouncedListenIPv6 : \"%s\"", Settings::configuration.rtcAnnouncedListenIPv6.c_str());
+		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv6    : \"%s\"", Settings::configuration.rtcAnnouncedIPv6.c_str());
 	else
-		MS_DEBUG_TAG(info, "  rtcAnnouncedListenIPv6 : (unset)");
-	MS_DEBUG_TAG(info, "  rtcMinPort             : %" PRIu16, Settings::configuration.rtcMinPort);
-	MS_DEBUG_TAG(info, "  rtcMaxPort             : %" PRIu16, Settings::configuration.rtcMaxPort);
+		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv6    : (unset)");
+	MS_DEBUG_TAG(info, "  rtcMinPort          : %" PRIu16, Settings::configuration.rtcMinPort);
+	MS_DEBUG_TAG(info, "  rtcMaxPort          : %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
-		MS_DEBUG_TAG(info, "  dtlsCertificateFile    : \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile     : \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
+		MS_DEBUG_TAG(info, "  dtlsCertificateFile : \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile  : \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
 	MS_DEBUG_TAG(info, "</configuration>");
@@ -280,7 +280,7 @@ void Settings::HandleRequest(Channel::Request* request)
 	}
 }
 
-void Settings::SetDefaultRtcListenIP(int requested_family)
+void Settings::SetDefaultRtcIP(int requested_family)
 {
 	MS_TRACE();
 
@@ -341,13 +341,13 @@ void Settings::SetDefaultRtcListenIP(int requested_family)
 
 	if (!ipv4.empty())
 	{
-		Settings::configuration.rtcListenIPv4 = ipv4;
+		Settings::configuration.rtcIPv4 = ipv4;
 		Settings::configuration.hasIPv4 = true;
 	}
 
 	if (!ipv6.empty())
 	{
-		Settings::configuration.rtcListenIPv6 = ipv6;
+		Settings::configuration.rtcIPv6 = ipv6;
 		Settings::configuration.hasIPv6 = true;
 	}
 
@@ -367,7 +367,7 @@ void Settings::SetLogLevel(std::string &level)
 	Settings::configuration.logLevel = Settings::string2LogLevel[level];
 }
 
-void Settings::SetRtcListenIPv4(const std::string &ip)
+void Settings::SetRtcIPv4(const std::string &ip)
 {
 	MS_TRACE();
 
@@ -376,7 +376,7 @@ void Settings::SetRtcListenIPv4(const std::string &ip)
 
 	if (ip.empty() || ip.compare("false") == 0)
 	{
-		Settings::configuration.rtcListenIPv4.clear();
+		Settings::configuration.rtcIPv4.clear();
 		Settings::configuration.hasIPv4 = false;
 		return;
 	}
@@ -385,22 +385,22 @@ void Settings::SetRtcListenIPv4(const std::string &ip)
 	{
 		case AF_INET:
 			if (ip == "0.0.0.0")
-				MS_THROW_ERROR("rtcListenIPv4 cannot be '0.0.0.0'");
-			Settings::configuration.rtcListenIPv4 = ip;
+				MS_THROW_ERROR("rtcIPv4 cannot be '0.0.0.0'");
+			Settings::configuration.rtcIPv4 = ip;
 			Settings::configuration.hasIPv4 = true;
 			break;
 		case AF_INET6:
-			MS_THROW_ERROR("invalid IPv6 '%s' for rtcListenIPv4", ip.c_str());
+			MS_THROW_ERROR("invalid IPv6 '%s' for rtcIPv4", ip.c_str());
 		default:
-			MS_THROW_ERROR("invalid value '%s' for rtcListenIPv4", ip.c_str());
+			MS_THROW_ERROR("invalid value '%s' for rtcIPv4", ip.c_str());
 	}
 
 	int bind_errno;
 	if (!IsBindableIP(ip, AF_INET, &bind_errno))
-		MS_THROW_ERROR("cannot bind on '%s' for rtcListenIPv4: %s", ip.c_str(), std::strerror(bind_errno));
+		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv4: %s", ip.c_str(), std::strerror(bind_errno));
 }
 
-void Settings::SetRtcListenIPv6(const std::string &ip)
+void Settings::SetRtcIPv6(const std::string &ip)
 {
 	MS_TRACE();
 
@@ -409,7 +409,7 @@ void Settings::SetRtcListenIPv6(const std::string &ip)
 
 	if (ip.empty() || ip.compare("false") == 0)
 	{
-		Settings::configuration.rtcListenIPv6.clear();
+		Settings::configuration.rtcIPv6.clear();
 		Settings::configuration.hasIPv6 = false;
 		return;
 	}
@@ -418,22 +418,22 @@ void Settings::SetRtcListenIPv6(const std::string &ip)
 	{
 		case AF_INET6:
 			if (ip == "::")
-				MS_THROW_ERROR("rtcListenIPv6 cannot be '::'");
-			Settings::configuration.rtcListenIPv6 = ip;
+				MS_THROW_ERROR("rtcIPv6 cannot be '::'");
+			Settings::configuration.rtcIPv6 = ip;
 			Settings::configuration.hasIPv6 = true;
 			break;
 		case AF_INET:
-			MS_THROW_ERROR("invalid IPv4 '%s' for rtcListenIPv6", ip.c_str());
+			MS_THROW_ERROR("invalid IPv4 '%s' for rtcIPv6", ip.c_str());
 		default:
-			MS_THROW_ERROR("invalid value '%s' for rtcListenIPv6", ip.c_str());
+			MS_THROW_ERROR("invalid value '%s' for rtcIPv6", ip.c_str());
 	}
 
 	int bind_errno;
 	if (!IsBindableIP(ip, AF_INET6, &bind_errno))
-		MS_THROW_ERROR("cannot bind on '%s' for rtcListenIPv6: %s", ip.c_str(), std::strerror(bind_errno));
+		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv6: %s", ip.c_str(), std::strerror(bind_errno));
 }
 
-void Settings::SetRtcAnnouncedListenIPv4(const std::string &ip)
+void Settings::SetRtcAnnouncedIPv4(const std::string &ip)
 {
 	MS_TRACE();
 
@@ -441,18 +441,18 @@ void Settings::SetRtcAnnouncedListenIPv4(const std::string &ip)
 	{
 		case AF_INET:
 			if (ip == "0.0.0.0")
-				MS_THROW_ERROR("rtcAnnouncedListenIPv4 cannot be '0.0.0.0'");
-			Settings::configuration.rtcAnnouncedListenIPv4 = ip;
+				MS_THROW_ERROR("rtcAnnouncedIPv4 cannot be '0.0.0.0'");
+			Settings::configuration.rtcAnnouncedIPv4 = ip;
 			Settings::configuration.hasAnnouncedIPv4 = true;
 			break;
 		case AF_INET6:
-			MS_THROW_ERROR("invalid IPv6 '%s' for rtcAnnouncedListenIPv4", ip.c_str());
+			MS_THROW_ERROR("invalid IPv6 '%s' for rtcAnnouncedIPv4", ip.c_str());
 		default:
-			MS_THROW_ERROR("invalid value '%s' for rtcAnnouncedListenIPv4", ip.c_str());
+			MS_THROW_ERROR("invalid value '%s' for rtcAnnouncedIPv4", ip.c_str());
 	}
 }
 
-void Settings::SetRtcAnnouncedListenIPv6(const std::string &ip)
+void Settings::SetRtcAnnouncedIPv6(const std::string &ip)
 {
 	MS_TRACE();
 
@@ -460,14 +460,14 @@ void Settings::SetRtcAnnouncedListenIPv6(const std::string &ip)
 	{
 		case AF_INET6:
 			if (ip == "::")
-				MS_THROW_ERROR("rtcAnnouncedListenIPv6 cannot be '::'");
-			Settings::configuration.rtcAnnouncedListenIPv6 = ip;
+				MS_THROW_ERROR("rtcAnnouncedIPv6 cannot be '::'");
+			Settings::configuration.rtcAnnouncedIPv6 = ip;
 			Settings::configuration.hasAnnouncedIPv6 = true;
 			break;
 		case AF_INET:
-			MS_THROW_ERROR("invalid IPv4 '%s' for rtcAnnouncedListenIPv6", ip.c_str());
+			MS_THROW_ERROR("invalid IPv4 '%s' for rtcAnnouncedIPv6", ip.c_str());
 		default:
-			MS_THROW_ERROR("invalid value '%s' for rtcAnnouncedListenIPv6", ip.c_str());
+			MS_THROW_ERROR("invalid value '%s' for rtcAnnouncedIPv6", ip.c_str());
 	}
 }
 

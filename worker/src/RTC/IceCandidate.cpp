@@ -21,7 +21,7 @@ namespace RTC
 			case AF_INET:
 			{
 				if (Settings::configuration.hasAnnouncedIPv4)
-					this->ip = Settings::configuration.rtcAnnouncedListenIPv4;
+					this->ip = Settings::configuration.rtcAnnouncedIPv4;
 				else
 					this->ip = udpSocket->GetLocalIP();
 
@@ -31,7 +31,7 @@ namespace RTC
 			case AF_INET6:
 			{
 				if (Settings::configuration.hasAnnouncedIPv6)
-					this->ip = Settings::configuration.rtcAnnouncedListenIPv6;
+					this->ip = Settings::configuration.rtcAnnouncedIPv6;
 				else
 					this->ip = udpSocket->GetLocalIP();
 
@@ -54,7 +54,7 @@ namespace RTC
 			case AF_INET:
 			{
 				if (Settings::configuration.hasAnnouncedIPv4)
-					this->ip = Settings::configuration.rtcAnnouncedListenIPv4;
+					this->ip = Settings::configuration.rtcAnnouncedIPv4;
 				else
 					this->ip = tcpServer->GetLocalIP();
 
@@ -64,7 +64,7 @@ namespace RTC
 			case AF_INET6:
 			{
 				if (Settings::configuration.hasAnnouncedIPv6)
-					this->ip = Settings::configuration.rtcAnnouncedListenIPv6;
+					this->ip = Settings::configuration.rtcAnnouncedIPv6;
 				else
 					this->ip = tcpServer->GetLocalIP();
 
