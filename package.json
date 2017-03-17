@@ -28,18 +28,18 @@
   },
   "dependencies": {
     "check-types": "^7.1.5",
-    "clone": "^2.1.0",
-    "debug": "^2.6.1",
+    "clone": "^2.1.1",
+    "debug": "^2.6.3",
     "netstring": "^0.3.0",
     "random-number": "0.0.7",
     "random-string": "^0.1.2",
-    "sdp-transform": "^2.2.0"
+    "sdp-transform": "^2.3.0"
   },
   "devDependencies": {
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
     "gulp-eslint": "^3.0.1",
     "gulp-replace": "^0.5.4",
-    "gulp-shell": "^0.6.1",
+    "gulp-shell": "^0.6.3",
     "gulp-touch-cmd": "0.0.1",
     "tap": "^10.3.0"
   },
