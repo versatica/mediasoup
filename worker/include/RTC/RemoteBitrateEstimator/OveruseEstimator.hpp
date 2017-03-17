@@ -11,7 +11,7 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_OVERUSE_ESTIMATOR_HPP
 
 #include "common.hpp"
-#include "RTC/RemoteBitrateEstimator/BweDefines.hpp"
+#include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
 #include <deque>
 
 namespace RTC {

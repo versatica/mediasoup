@@ -13,39 +13,15 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
-#include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
-#include "RTC/RemoteBitrateEstimator/BweDefines.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include "Logger.hpp"
 #include <algorithm>
 #include <cmath>
 
-namespace RTC {
+static constexpr int64_t kMaxFeedbackIntervalMs = 1000;
 
-static const int64_t kDefaultRttMs = 200;
-static const int64_t kMaxFeedbackIntervalMs = 1000;
-
-// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
-constexpr int kMinBitrateBps = 10000;
-
-AimdRateControl::AimdRateControl()
-    : min_configured_bitrate_bps_(kMinBitrateBps),
-      max_configured_bitrate_bps_(30000000),
-      current_bitrate_bps_(max_configured_bitrate_bps_),
-      avg_max_bitrate_kbps_(-1.0f),
-      var_max_bitrate_kbps_(0.4f),
-      rate_control_state_(kRcHold),
-      rate_control_region_(kRcMaxUnknown),
-      time_last_bitrate_change_(-1),
-      current_input_(kBwNormal, 0, 1.0),
-      updated_(false),
-      time_first_incoming_estimate_(-1),
-      bitrate_is_initialized_(false),
-      beta_(0.85f),
-      rtt_(kDefaultRttMs),
-      in_experiment_(!AdaptiveThresholdExperimentIsDisabled()) {}
-
-AimdRateControl::~AimdRateControl() {}
+namespace RTC
+{
 
 void AimdRateControl::SetStartBitrate(int start_bitrate_bps) {
   current_bitrate_bps_ = start_bitrate_bps;

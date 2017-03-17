@@ -12,7 +12,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
-#include "RTC/RemoteBitrateEstimator/BweDefines.hpp"
 #include <math.h>
 #include <stdlib.h>
 #include <algorithm>

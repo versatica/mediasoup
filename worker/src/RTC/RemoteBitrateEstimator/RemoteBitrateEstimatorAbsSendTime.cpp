@@ -80,7 +80,7 @@ bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
         inter_arrival_(),
         estimator_(),
         detector_(),
-        incoming_bitrate_(kBitrateWindowMs, 8000),
+        incoming_bitrate_(),
         incoming_bitrate_initialized_(false),
         total_probes_received_(0),
         first_packet_time_ms_(-1),

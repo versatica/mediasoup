@@ -154,7 +154,6 @@
       'include/RTC/RTCP/FeedbackPsAfb.hpp',
       'include/RTC/RTCP/FeedbackPsRemb.hpp',
       'include/RTC/RemoteBitrateEstimator/AimdRateControl.hpp',
-      'include/RTC/RemoteBitrateEstimator/BweDefines.hpp',
       'include/RTC/RemoteBitrateEstimator/InterArrival.hpp',
       'include/RTC/RemoteBitrateEstimator/OveruseDetector.hpp',
       'include/RTC/RemoteBitrateEstimator/OveruseEstimator.hpp',

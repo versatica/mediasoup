@@ -44,7 +44,7 @@ struct RemoteBitrateEstimatorSingleStream::Detector {
 
 RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(
     Listener* observer)
-    : incoming_bitrate_(kBitrateWindowMs, 8000),
+    : incoming_bitrate_(),
       last_valid_incoming_bitrate_(0),
       remote_rate_(new AimdRateControl()),
       observer_(observer),
@@ -69,9 +69,6 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
     const uint8_t* transmissionTimeOffset
     ) {
   if (!uma_recorded_) {
-    BweNames type = BweNames::kReceiverTOffset;
-    if (!transmissionTimeOffset)
-      type = BweNames::kReceiverNoExtension;
     uma_recorded_ = true;
   }
   uint32_t ssrc = packet.GetSsrc();
