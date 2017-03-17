@@ -196,12 +196,13 @@ namespace RTC
 		// Remove RTP parameters not supported by this Peer.
 
 		// Remove unsupported codecs.
-		for (auto it = this->rtpParameters->codecs.begin(); it != this->rtpParameters->codecs.end();)
+		auto codecs = this->rtpParameters->codecs;
+		for (auto it = codecs.begin(); it != this->rtpParameters->codecs.end();)
 		{
 			auto& codec = *it;
-			auto it2 = this->peerCapabilities->codecs.begin();
+			auto it2 = codecs.begin();
 
-			for (; it2 != this->peerCapabilities->codecs.end(); ++it2)
+			for (; it2 != codecs.end(); ++it2)
 			{
 				auto& codecCapability = *it2;
 
@@ -209,19 +210,20 @@ namespace RTC
 					break;
 			}
 
-			if (it2 != this->peerCapabilities->codecs.end())
+			if (it2 != codecs.end())
 			{
 				this->supportedPayloadTypes.insert(codec.payloadType);
 				++it;
 			}
 			else
 			{
-				it = this->rtpParameters->codecs.erase(it);
+				it = codecs.erase(it);
 			}
 		}
 
 		// Remove unsupported encodings.
-		for (auto it = this->rtpParameters->encodings.begin(); it != this->rtpParameters->encodings.end();)
+		auto encodings = this->rtpParameters->encodings;
+		for (auto it = encodings.begin(); it != encodings.end();)
 		{
 			auto& encoding = *it;
 
@@ -231,18 +233,18 @@ namespace RTC
 			}
 			else
 			{
-				it = this->rtpParameters->encodings.erase(it);
+				it = encodings.erase(it);
 			}
 		}
 
 		// TODO: Temporal. To be refactored.
 		// Remove all the encodings but the first one.
-		if (this->rtpParameters->encodings.size() > 1)
+		if (encodings.size() > 1)
 		{
-			RTC::RtpEncodingParameters encoding = this->rtpParameters->encodings[0];
+			RTC::RtpEncodingParameters encoding = encodings[0];
 
-			this->rtpParameters->encodings.clear();
-			this->rtpParameters->encodings.push_back(encoding);
+			encodings.clear();
+			encodings.push_back(encoding);
 		}
 
 		// Remove unsupported header extensions.
@@ -252,12 +254,12 @@ namespace RTC
 		this->rtpParameters->muxId = Utils::Crypto::GetRandomString(8);
 
 		// If there are no encodings set not available.
-		if (this->rtpParameters->encodings.size() > 0)
+		if (!encodings.empty())
 		{
 			this->available = true;
 
 			// NOTE: We assume a single stream/encoding when sending to remote peers.
-			auto encoding = this->rtpParameters->encodings[0];
+			auto encoding = encodings[0];
 			uint32_t ssrc = encoding.ssrc;
 			uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
 
