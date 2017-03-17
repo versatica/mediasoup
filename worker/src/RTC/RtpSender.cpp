@@ -196,7 +196,8 @@ namespace RTC
 		// Remove RTP parameters not supported by this Peer.
 
 		// Remove unsupported codecs.
-		auto codecs = this->rtpParameters->codecs;
+		auto& codecs = this->rtpParameters->codecs;
+
 		for (auto it = codecs.begin(); it != this->rtpParameters->codecs.end();)
 		{
 			auto& codec = *it;
@@ -222,7 +223,8 @@ namespace RTC
 		}
 
 		// Remove unsupported encodings.
-		auto encodings = this->rtpParameters->encodings;
+		auto& encodings = this->rtpParameters->encodings;
+
 		for (auto it = encodings.begin(); it != encodings.end();)
 		{
 			auto& encoding = *it;
