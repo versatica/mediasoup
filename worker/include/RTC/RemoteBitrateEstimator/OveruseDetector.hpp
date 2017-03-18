@@ -42,16 +42,16 @@ class OveruseDetector {
   void UpdateThreshold(double modified_offset, int64_t now_ms);
   void InitializeExperiment();
 
-  bool in_experiment_;
-  double k_up_;
-  double k_down_;
-  double overusing_time_threshold_;
-  double threshold_;
-  int64_t last_update_ms_;
-  double prev_offset_;
-  double time_over_using_;
-  int overuse_counter_;
-  BandwidthUsage hypothesis_;
+  bool inExperiment;
+  double kUp;
+  double kDown;
+  double overusingTimeThreshold;
+  double threshold;
+  int64_t lastUpdateMs;
+  double prevOffset;
+  double timeOverUsing;
+  int overuseCounter;
+  BandwidthUsage hypothesis;
 
 };
 }  // namespace RTC

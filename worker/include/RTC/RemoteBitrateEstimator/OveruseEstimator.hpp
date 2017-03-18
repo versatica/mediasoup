@@ -63,18 +63,18 @@ class OveruseEstimator {
 
   // Returns the estimated noise/jitter variance in ms^2.
   double var_noise() const {
-    return var_noise_;
+    return varNoise;
   }
 
   // Returns the estimated inter-arrival time delta offset in ms.
-  double offset() const {
-    return offset_;
+  double GetOffset() const {
+    return this->offset;
   }
 
   // Returns the number of deltas which the current over-use estimator state is
   // based on.
   unsigned int num_of_deltas() const {
-    return num_of_deltas_;
+    return numOfDeltas;
   }
 
  private:
@@ -83,18 +83,18 @@ class OveruseEstimator {
 
   // Must be first member variable. Cannot be const because we need to be
   // copyable.
-  OverUseDetectorOptions options_;
-  uint16_t num_of_deltas_;
-  double slope_;
-  double offset_;
-  double prev_offset_;
-  double E_[2][2];
-  double process_noise_[2];
-  double avg_noise_;
-  double var_noise_;
-  std::deque<double> ts_delta_hist_;
+  OverUseDetectorOptions options;
+  uint16_t numOfDeltas;
+  double slope;
+  double offset;
+  double prevOffset;
+  double E[2][2];
+  double processNoise[2];
+  double avgNoise;
+  double varNoise;
+  std::deque<double> tsDeltaHist;
 
 };
 }  // namespace RTC
 
-#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_OVERUSE_ESTIMATOR_H_
+#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_OVERUSE_ESTIMATOR_HPP

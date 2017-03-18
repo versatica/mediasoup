@@ -48,18 +48,18 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
 
   void GetSsrcs(std::vector<uint32_t>* ssrcs) const;
 
-  // Returns |remote_rate_| if the pointed to object exists,
+  // Returns |remoteRate| if the pointed to object exists,
   // otherwise creates it.
   AimdRateControl* GetRemoteRate();
 
-  SsrcOveruseEstimatorMap overuse_detectors_;
-  RateCalculator incoming_bitrate_;
-  uint32_t last_valid_incoming_bitrate_;
-  std::unique_ptr<AimdRateControl> remote_rate_;
-  Listener* observer_;
-  int64_t last_process_time_;
-  int64_t process_interval_ms_;
-  bool uma_recorded_;
+  SsrcOveruseEstimatorMap overuseDetectors;
+  RateCalculator incomingBitrate;
+  uint32_t lastValidIncomingBitrate;
+  std::unique_ptr<AimdRateControl> remoteRate;
+  Listener* observer;
+  int64_t lastProcessTime;
+  int64_t processIntervalMs;
+  bool umaRecorded;
 
 };
 

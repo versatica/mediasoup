@@ -109,22 +109,22 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
 
   void TimeoutStreams(int64_t now_ms);
 
-  Listener* const observer_;
-  std::unique_ptr<InterArrival> inter_arrival_;
-  std::unique_ptr<OveruseEstimator> estimator_;
-  OveruseDetector detector_;
-  RateCalculator incoming_bitrate_;
-  bool incoming_bitrate_initialized_;
-  std::vector<int> recent_propagation_delta_ms_;
-  std::vector<int64_t> recent_update_time_ms_;
-  std::list<Probe> probes_;
-  size_t total_probes_received_;
-  int64_t first_packet_time_ms_;
-  int64_t last_update_ms_;
-  bool uma_recorded_;
+  Listener* const observer;
+  std::unique_ptr<InterArrival> interArrival;
+  std::unique_ptr<OveruseEstimator> estimator;
+  OveruseDetector detector;
+  RateCalculator incomingBitrate;
+  bool incomingBitrateInitialized;
+  std::vector<int> recentPropagationDeltaMs;
+  std::vector<int64_t> recentUpdateTimeMs;
+  std::list<Probe> probes;
+  size_t totalProbesReceived;
+  int64_t firstPacketTimeMs;
+  int64_t lastUpdateMs;
+  bool umaRecorded;
 
-  Ssrcs ssrcs_;
-  AimdRateControl remote_rate_;
+  Ssrcs ssrcs;
+  AimdRateControl remoteRate;
 
 };
 

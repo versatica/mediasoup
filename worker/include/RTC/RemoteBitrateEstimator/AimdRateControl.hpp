@@ -88,31 +88,31 @@ namespace RTC
 		// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
 		static constexpr int kMinBitrateBps = 10000;
 
-		uint32_t min_configured_bitrate_bps_ = kMinBitrateBps;
-		uint32_t max_configured_bitrate_bps_ = 30000000;
-		uint32_t current_bitrate_bps_ = max_configured_bitrate_bps_;
-		float avg_max_bitrate_kbps_ = -1.0f;
-		float var_max_bitrate_kbps_ = 0.4f;
-		RateControlState rate_control_state_ = kRcHold;
-		RateControlRegion rate_control_region_ = kRcMaxUnknown;
-		int64_t time_last_bitrate_change_ = -1;
-		RateControlInput current_input_;
-		bool updated_ = false;
-		int64_t time_first_incoming_estimate_ = -1;
-		bool bitrate_is_initialized_ = false;
-		float beta_ = 0.85f;
-		int64_t rtt_ = kDefaultRttMs;
-		bool in_experiment_;
-		int last_decrease_;
+		uint32_t minConfiguredBitrateBps = kMinBitrateBps;
+		uint32_t maxConfiguredBitrateBps = 30000000;
+		uint32_t currentBitrateBps = this->maxConfiguredBitrateBps;
+		float avgMaxBitrateKbps = -1.0f;
+		float varMaxBitrateKbps = 0.4f;
+		RateControlState rateControlState = kRcHold;
+		RateControlRegion rateControlRegion = kRcMaxUnknown;
+		int64_t timeLastBitrateChange = -1;
+		RateControlInput currentInput;
+		bool updated = false;
+		int64_t timeFirstIncomingEstimate = -1;
+		bool bitrateIsInitialized = false;
+		float beta = 0.85f;
+		int64_t rtt = kDefaultRttMs;
+		bool inExperiment;
+		int lastDecrease;
 	};
 
 	inline
 	AimdRateControl::AimdRateControl() :
-		current_input_(kBwNormal, 0, 1.0)
+		currentInput(kBwNormal, 0, 1.0)
 	{
 		// TODO: (jmillan) do it configurable
-		//in_experiment_ = false;
-		in_experiment_ = !AdaptiveThresholdExperimentIsDisabled();
+		//inExperiment = false;
+		inExperiment = !AdaptiveThresholdExperimentIsDisabled();
 	}
 
 	inline
