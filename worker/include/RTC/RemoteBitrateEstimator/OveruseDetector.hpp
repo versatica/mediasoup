@@ -25,21 +25,21 @@ class OveruseDetector {
   virtual ~OveruseDetector();
 
   // Update the detection state based on the estimated inter-arrival time delta
-  // offset. |timestamp_delta| is the delta between the last timestamp which the
+  // offset. |timestampDelta| is the delta between the last timestamp which the
   // estimated offset is based on and the last timestamp on which the last
   // offset was based on, representing the time between detector updates.
-  // |num_of_deltas| is the number of deltas the offset estimate is based on.
+  // |numOfDeltas| is the number of deltas the offset estimate is based on.
   // Returns the state after the detection update.
   BandwidthUsage Detect(double offset,
-                        double timestamp_delta,
-                        int num_of_deltas,
-                        int64_t now_ms);
+                        double timestampDelta,
+                        int numOfDeltas,
+                        int64_t nowMs);
 
   // Returns the current detector state.
   BandwidthUsage State() const;
 
  private:
-  void UpdateThreshold(double modified_offset, int64_t now_ms);
+  void UpdateThreshold(double modifiedOffset, int64_t nowMs);
   void InitializeExperiment();
 
   bool inExperiment;

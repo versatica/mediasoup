@@ -79,11 +79,11 @@ class InterArrival {
   void Reset();
 
   const uint32_t kTimestampGroupLengthTicks;
-  TimestampGroup current_timestamp_group_;
-  TimestampGroup prev_timestamp_group_;
-  double timestamp_to_ms_coeff_;
-  bool burst_grouping_;
-  int num_consecutive_reordered_packets_;
+  TimestampGroup currentTimestampGroup;
+  TimestampGroup prevTimestampGroup;
+  double timestampToMsCoeff;
+  bool burstGrouping;
+  int numConsecutiveReorderedPackets;
 
 };
 }  // namespace RTC

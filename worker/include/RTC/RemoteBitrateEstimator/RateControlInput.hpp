@@ -4,24 +4,24 @@
 #include "common.hpp"
 #include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
 
-// webrtc/modules/remote_bitrate_estimator/include/bwe_defines.h
+// webrtc/modules/remote_bitrate_estimator/include/bweDefines.h
 
 namespace RTC
 {
 	struct RateControlInput
 	{
-		RateControlInput(BandwidthUsage bw_state, const uint32_t incoming_bitrate, double noise_var);
+		RateControlInput(BandwidthUsage bwState, const uint32_t incomingBitrate, double noiseVar);
 
-		BandwidthUsage bw_state;
-		uint32_t incoming_bitrate;
-		double noise_var;
+		BandwidthUsage bwState;
+		uint32_t incomingBitrate;
+		double noiseVar;
 	};
 
 	inline
-	RateControlInput::RateControlInput(BandwidthUsage bw_state, const uint32_t incoming_bitrate, double noise_var) :
-		bw_state(bw_state),
-		incoming_bitrate(incoming_bitrate),
-		noise_var(noise_var)
+	RateControlInput::RateControlInput(BandwidthUsage bwState, const uint32_t incomingBitrate, double noiseVar) :
+		bwState(bwState),
+		incomingBitrate(incomingBitrate),
+		noiseVar(noiseVar)
 	{}
 }
 

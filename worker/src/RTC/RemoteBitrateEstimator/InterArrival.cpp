@@ -24,11 +24,11 @@ InterArrival::InterArrival(uint32_t timestamp_group_length_ticks,
                            double timestamp_to_ms_coeff,
                            bool enable_burst_grouping)
     : kTimestampGroupLengthTicks(timestamp_group_length_ticks),
-      current_timestamp_group_(),
-      prev_timestamp_group_(),
-      timestamp_to_ms_coeff_(timestamp_to_ms_coeff),
-      burst_grouping_(enable_burst_grouping),
-      num_consecutive_reordered_packets_(0) {}
+      currentTimestampGroup(),
+      prevTimestampGroup(),
+      timestampToMsCoeff(timestamp_to_ms_coeff),
+      burstGrouping(enable_burst_grouping),
+      numConsecutiveReorderedPackets(0) {}
 
 bool InterArrival::ComputeDeltas(uint32_t timestamp,
                                  int64_t arrival_time_ms,
@@ -41,25 +41,25 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
   MS_ASSERT(arrival_time_delta_ms, "'arrival_time_delta_ms' missing");
   MS_ASSERT(packet_size_delta, "'packet_size_delta' missing");
   bool calculated_deltas = false;
-  if (current_timestamp_group_.IsFirstPacket()) {
+  if (this->currentTimestampGroup.IsFirstPacket()) {
     // We don't have enough data to update the filter, so we store it until we
     // have two frames of data to process.
-    current_timestamp_group_.timestamp = timestamp;
-    current_timestamp_group_.first_timestamp = timestamp;
+    this->currentTimestampGroup.timestamp = timestamp;
+    this->currentTimestampGroup.first_timestamp = timestamp;
   } else if (!PacketInOrder(timestamp)) {
     return false;
   } else if (NewTimestampGroup(arrival_time_ms, timestamp)) {
     // First packet of a later frame, the previous frame sample is ready.
-    if (prev_timestamp_group_.complete_time_ms >= 0) {
-      *timestamp_delta = current_timestamp_group_.timestamp -
-                         prev_timestamp_group_.timestamp;
-      *arrival_time_delta_ms = current_timestamp_group_.complete_time_ms -
-                               prev_timestamp_group_.complete_time_ms;
+    if (this->prevTimestampGroup.complete_time_ms >= 0) {
+      *timestamp_delta = this->currentTimestampGroup.timestamp -
+                         this->prevTimestampGroup.timestamp;
+      *arrival_time_delta_ms = this->currentTimestampGroup.complete_time_ms -
+                               this->prevTimestampGroup.complete_time_ms;
       // Check system time differences to see if we have an unproportional jump
       // in arrival time. In that case reset the inter-arrival computations.
       int64_t system_time_delta_ms =
-          current_timestamp_group_.last_system_time_ms -
-          prev_timestamp_group_.last_system_time_ms;
+          this->currentTimestampGroup.last_system_time_ms -
+          this->prevTimestampGroup.last_system_time_ms;
       if (*arrival_time_delta_ms - system_time_delta_ms >=
           kArrivalTimeOffsetThresholdMs) {
         MS_WARN_TAG(rbe, "The arrival time clock offset has changed (diff = "
@@ -71,8 +71,8 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
       if (*arrival_time_delta_ms < 0) {
         // The group of packets has been reordered since receiving its local
         // arrival timestamp.
-        ++num_consecutive_reordered_packets_;
-        if (num_consecutive_reordered_packets_ >= kReorderedResetThreshold) {
+        ++this->numConsecutiveReorderedPackets;
+        if (this->numConsecutiveReorderedPackets >= kReorderedResetThreshold) {
           MS_WARN_TAG(rbe, "Packets are being reordered on the path from the "
                            "socket to the bandwidth estimator. Ignoring this "
                            "packet for bandwidth estimation, resetting");
@@ -80,68 +80,68 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
         }
         return false;
       } else {
-        num_consecutive_reordered_packets_ = 0;
+        this->numConsecutiveReorderedPackets = 0;
       }
       MS_ASSERT(*arrival_time_delta_ms >= 0, "invalid 'arrival_time_delta_ms' value");
-      *packet_size_delta = static_cast<int>(current_timestamp_group_.size) -
-          static_cast<int>(prev_timestamp_group_.size);
+      *packet_size_delta = static_cast<int>(this->currentTimestampGroup.size) -
+          static_cast<int>(this->prevTimestampGroup.size);
       calculated_deltas = true;
     }
-    prev_timestamp_group_ = current_timestamp_group_;
+    this->prevTimestampGroup = this->currentTimestampGroup;
     // The new timestamp is now the current frame.
-    current_timestamp_group_.first_timestamp = timestamp;
-    current_timestamp_group_.timestamp = timestamp;
-    current_timestamp_group_.size = 0;
+    this->currentTimestampGroup.first_timestamp = timestamp;
+    this->currentTimestampGroup.timestamp = timestamp;
+    this->currentTimestampGroup.size = 0;
   } else {
-    current_timestamp_group_.timestamp = Utils::Time::LatestTimestamp(
-        current_timestamp_group_.timestamp, timestamp);
+    this->currentTimestampGroup.timestamp = Utils::Time::LatestTimestamp(
+        this->currentTimestampGroup.timestamp, timestamp);
   }
   // Accumulate the frame size.
-  current_timestamp_group_.size += packet_size;
-  current_timestamp_group_.complete_time_ms = arrival_time_ms;
-  current_timestamp_group_.last_system_time_ms = system_time_ms;
+  this->currentTimestampGroup.size += packet_size;
+  this->currentTimestampGroup.complete_time_ms = arrival_time_ms;
+  this->currentTimestampGroup.last_system_time_ms = system_time_ms;
 
   return calculated_deltas;
 }
 
 bool InterArrival::PacketInOrder(uint32_t timestamp) {
-  if (current_timestamp_group_.IsFirstPacket()) {
+  if (this->currentTimestampGroup.IsFirstPacket()) {
     return true;
   } else {
     // Assume that a diff which is bigger than half the timestamp interval
     // (32 bits) must be due to reordering. This code is almost identical to
     // that in IsNewerTimestamp() in module_common_types.h.
     uint32_t timestamp_diff = timestamp -
-        current_timestamp_group_.first_timestamp;
+        this->currentTimestampGroup.first_timestamp;
     return timestamp_diff < 0x80000000;
   }
 }
 
 // Assumes that |timestamp| is not reordered compared to
-// |current_timestamp_group_|.
+// |this->currentTimestampGroup|.
 bool InterArrival::NewTimestampGroup(int64_t arrival_time_ms,
                                      uint32_t timestamp) const {
-  if (current_timestamp_group_.IsFirstPacket()) {
+  if (this->currentTimestampGroup.IsFirstPacket()) {
     return false;
   } else if (BelongsToBurst(arrival_time_ms, timestamp)) {
     return false;
   } else {
     uint32_t timestamp_diff = timestamp -
-        current_timestamp_group_.first_timestamp;
+        this->currentTimestampGroup.first_timestamp;
     return timestamp_diff > kTimestampGroupLengthTicks;
   }
 }
 
 bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
                                   uint32_t timestamp) const {
-  if (!burst_grouping_) {
+  if (!this->burstGrouping) {
     return false;
   }
-  MS_ASSERT(current_timestamp_group_.complete_time_ms >= 0, "invalid 'complete_time_ms' value");
+  MS_ASSERT(this->currentTimestampGroup.complete_time_ms >= 0, "invalid 'complete_time_ms' value");
   int64_t arrival_time_delta_ms = arrival_time_ms -
-      current_timestamp_group_.complete_time_ms;
-  uint32_t timestamp_diff = timestamp - current_timestamp_group_.timestamp;
-  int64_t ts_delta_ms = timestamp_to_ms_coeff_ * timestamp_diff + 0.5;
+      this->currentTimestampGroup.complete_time_ms;
+  uint32_t timestamp_diff = timestamp - this->currentTimestampGroup.timestamp;
+  int64_t ts_delta_ms = this->timestampToMsCoeff * timestamp_diff + 0.5;
   if (ts_delta_ms == 0)
     return true;
   int propagation_delta_ms = arrival_time_delta_ms - ts_delta_ms;
@@ -150,8 +150,8 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
 }
 
 void InterArrival::Reset() {
-  num_consecutive_reordered_packets_ = 0;
-  current_timestamp_group_ = TimestampGroup();
-  prev_timestamp_group_ = TimestampGroup();
+  this->numConsecutiveReorderedPackets = 0;
+  this->currentTimestampGroup = TimestampGroup();
+  this->prevTimestampGroup = TimestampGroup();
 }
 }  // namespace RTC

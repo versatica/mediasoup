@@ -41,19 +41,19 @@ namespace RTC
 		// Returns true if there is a valid estimate of the incoming bitrate, false
 		// otherwise.
 		bool ValidEstimate() const;
-		void SetStartBitrate(int start_bitrate_bps);
-		void SetMinBitrate(int min_bitrate_bps);
+		void SetStartBitrate(int startBitrateBps);
+		void SetMinBitrate(int minBitrateBps);
 		int64_t GetFeedbackInterval() const;
 		// Returns true if the bitrate estimate hasn't been changed for more than
-		// an RTT, or if the incoming_bitrate is less than half of the current
+		// an RTT, or if the incomingBitrate is less than half of the current
 		// estimate. Should be used to decide if we should reduce the rate further
 		// when over-using.
-		bool TimeToReduceFurther(int64_t time_now, uint32_t incoming_bitrate_bps) const;
+		bool TimeToReduceFurther(int64_t timeNow, uint32_t incomingBitrateBps) const;
 		uint32_t LatestEstimate() const;
-		uint32_t UpdateBandwidthEstimate(int64_t now_ms);
+		uint32_t UpdateBandwidthEstimate(int64_t nowMs);
 		void SetRtt(int64_t rtt);
-		void Update(const RateControlInput* input, int64_t now_ms);
-		void SetEstimate(int bitrate_bps, int64_t now_ms);
+		void Update(const RateControlInput* input, int64_t nowMs);
+		void SetEstimate(int bitrateBps, int64_t nowMs);
 
 	public:
 		// Returns the increase rate which is used when used bandwidth is near the
@@ -69,17 +69,17 @@ namespace RTC
 		// in the "decrease" state the bitrate will be decreased to slightly below the
 		// incoming bitrate. When in the "hold" state the bitrate will be kept
 		// constant to allow built up queues to drain.
-		uint32_t ChangeBitrate(uint32_t current_bitrate, uint32_t incoming_bitrate, int64_t now_ms);
-		// Clamps new_bitrate_bps to within the configured min bitrate and a linear
+		uint32_t ChangeBitrate(uint32_t currentBitrate, uint32_t incomingBitrate, int64_t nowMs);
+		// Clamps newBitrateBps to within the configured min bitrate and a linear
 		// function of the incoming bitrate, so that the new bitrate can't grow too
 		// large compared to the bitrate actually being received by the other end.
-		uint32_t ClampBitrate(uint32_t new_bitrate_bps, uint32_t incoming_bitrate_bps) const;
-		uint32_t MultiplicativeRateIncrease(int64_t now_ms, int64_t last_ms, uint32_t current_bitrate_bps) const;
-		uint32_t AdditiveRateIncrease(int64_t now_ms, int64_t last_ms) const;
-		void UpdateChangePeriod(int64_t now_ms);
-		void UpdateMaxBitRateEstimate(float incoming_bit_rate_kbps);
-		void ChangeState(const RateControlInput& input, int64_t now_ms);
-		void ChangeState(RateControlState new_state);
+		uint32_t ClampBitrate(uint32_t newBitrateBps, uint32_t incomingBitrateBps) const;
+		uint32_t MultiplicativeRateIncrease(int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const;
+		uint32_t AdditiveRateIncrease(int64_t nowMs, int64_t lastMs) const;
+		void UpdateChangePeriod(int64_t nowMs);
+		void UpdateMaxBitRateEstimate(float incomingBitRateKbps);
+		void ChangeState(const RateControlInput& input, int64_t nowMs);
+		void ChangeState(RateControlState newState);
 		void ChangeRegion(RateControlRegion region);
 
 	private:

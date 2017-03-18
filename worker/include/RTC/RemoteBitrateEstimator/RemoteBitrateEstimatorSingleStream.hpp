@@ -26,17 +26,17 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   RemoteBitrateEstimatorSingleStream(Listener* observer);
   virtual ~RemoteBitrateEstimatorSingleStream();
 
-  void IncomingPacket(int64_t arrival_time_ms,
-                      size_t payload_size,
+  void IncomingPacket(int64_t arrivalTimeMs,
+                      size_t payloadSize,
                       const RtpPacket& packet,
                       const uint8_t* transmissionTimeOffset) override;
   void Process() override;
   int64_t TimeUntilNextProcess() override;
-  void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
+  void OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs) override;
   void RemoveStream(uint32_t ssrc) override;
   bool LatestEstimate(std::vector<uint32_t>* ssrcs,
-                      uint32_t* bitrate_bps) const override;
-  void SetMinBitrate(int min_bitrate_bps) override;
+                      uint32_t* bitrateBps) const override;
+  void SetMinBitrate(int minBitrateBps) override;
 
  private:
   struct Detector;
@@ -44,7 +44,7 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   typedef std::map<uint32_t, Detector*> SsrcOveruseEstimatorMap;
 
   // Triggers a new estimate calculation.
-  void UpdateEstimate(int64_t time_now);
+  void UpdateEstimate(int64_t timeNow);
 
   void GetSsrcs(std::vector<uint32_t>* ssrcs) const;
 

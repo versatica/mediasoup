@@ -26,24 +26,24 @@ namespace RTC {
 // class and delete this? See also disabled warning at line 27
 struct OverUseDetectorOptions {
   OverUseDetectorOptions()
-      : initial_slope(8.0 / 512.0),
-        initial_offset(0),
+      : initialSlope(8.0 / 512.0),
+        initialOffset(0),
         initial_e(),
-        initial_process_noise(),
-        initial_avg_noise(0.0),
-        initial_var_noise(50) {
+        initialProcessNoise(),
+        initialAvgNoise(0.0),
+        initialVarNoise(50) {
     initial_e[0][0] = 100;
     initial_e[1][1] = 1e-1;
     initial_e[0][1] = initial_e[1][0] = 0;
-    initial_process_noise[0] = 1e-13;
-    initial_process_noise[1] = 1e-3;
+    initialProcessNoise[0] = 1e-13;
+    initialProcessNoise[1] = 1e-3;
   }
-  double initial_slope;
-  double initial_offset;
+  double initialSlope;
+  double initialOffset;
   double initial_e[2][2];
-  double initial_process_noise[2];
-  double initial_avg_noise;
-  double initial_var_noise;
+  double initialProcessNoise[2];
+  double initialAvgNoise;
+  double initialVarNoise;
 };
 
 class OveruseEstimator {
@@ -55,15 +55,15 @@ class OveruseEstimator {
   // between timestamp groups as defined by the InterArrival class.
   // |current_hypothesis| should be the hypothesis of the over-use detector at
   // this time.
-  void Update(int64_t t_delta,
-              double ts_delta,
-              int size_delta,
-              BandwidthUsage current_hypothesis,
-              int64_t now_ms);
+  void Update(int64_t tDelta,
+              double tsDelta,
+              int sizeDelta,
+              BandwidthUsage currentHypothesis,
+              int64_t nowMs);
 
   // Returns the estimated noise/jitter variance in ms^2.
-  double var_noise() const {
-    return varNoise;
+  double GetVarNoise() const {
+    return this->varNoise;
   }
 
   // Returns the estimated inter-arrival time delta offset in ms.
@@ -73,13 +73,13 @@ class OveruseEstimator {
 
   // Returns the number of deltas which the current over-use estimator state is
   // based on.
-  unsigned int num_of_deltas() const {
-    return numOfDeltas;
+  unsigned int GetNumOfDeltas() const {
+    return this->numOfDeltas;
   }
 
  private:
-  double UpdateMinFramePeriod(double ts_delta);
-  void UpdateNoiseEstimate(double residual, double ts_delta, bool stable_state);
+  double UpdateMinFramePeriod(double tsDelta);
+  void UpdateNoiseEstimate(double residual, double tsDelta, bool stableState);
 
   // Must be first member variable. Cannot be const because we need to be
   // copyable.
