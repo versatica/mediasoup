@@ -23,280 +23,226 @@ static constexpr int64_t kMaxFeedbackIntervalMs = 1000;
 namespace RTC
 {
 
-void AimdRateControl::SetStartBitrate(int startBitrateBps) {
-  this->currentBitrateBps = startBitrateBps;
-  this->bitrateIsInitialized = true;
-}
+	int64_t AimdRateControl::GetFeedbackInterval() const {
+		// Estimate how often we can send RTCP if we allocate up to 5% of bandwidth
+		// to feedback.
+		static const int kRtcpSize = 80;
+		int64_t interval = static_cast<int64_t>(
+				kRtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
+		const int64_t kMinFeedbackIntervalMs = 200;
+		return std::min(std::max(interval, kMinFeedbackIntervalMs),
+				kMaxFeedbackIntervalMs);
+	}
 
-void AimdRateControl::SetMinBitrate(int minBitrateBps) {
-  this->minConfiguredBitrateBps = minBitrateBps;
-  this->currentBitrateBps = std::max<int>(minBitrateBps, this->currentBitrateBps);
-}
+	bool AimdRateControl::TimeToReduceFurther(int64_t timeNow,
+			uint32_t incomingBitrateBps) const {
+		const int64_t bitrateReductionInterval =
+			std::max<int64_t>(std::min<int64_t>(this->rtt, 200), 10);
+		if (timeNow - this->timeLastBitrateChange >= bitrateReductionInterval) {
+			return true;
+		}
+		if (ValidEstimate()) {
+			// TODO(terelius/holmer): Investigate consequences of increasing
+			// the threshold to 0.95 * LatestEstimate().
+			const uint32_t threshold = static_cast<uint32_t> (0.5 * LatestEstimate());
+			return incomingBitrateBps < threshold;
+		}
+		return false;
+	}
 
-bool AimdRateControl::ValidEstimate() const {
-  return this->bitrateIsInitialized;
-}
+	void AimdRateControl::Update(const RateControlInput* input, int64_t nowMs) {
+		MS_ASSERT(input, "'input' missing");
 
-int64_t AimdRateControl::GetFeedbackInterval() const {
-  // Estimate how often we can send RTCP if we allocate up to 5% of bandwidth
-  // to feedback.
-  static const int kRtcpSize = 80;
-  int64_t interval = static_cast<int64_t>(
-      kRtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
-  const int64_t kMinFeedbackIntervalMs = 200;
-  return std::min(std::max(interval, kMinFeedbackIntervalMs),
-                  kMaxFeedbackIntervalMs);
-}
+		// Set the initial bit rate value to what we're receiving the first half
+		// second.
+		if (!this->bitrateIsInitialized) {
+			const int64_t kInitializationTimeMs = 5000;
+			//MSDASSERT(kBitrateWindowMs <= kInitializationTimeMs);
+			if (this->timeFirstIncomingEstimate < 0) {
+				if (input->incomingBitrate)
+					this->timeFirstIncomingEstimate = nowMs;
+			} else if (nowMs - this->timeFirstIncomingEstimate > kInitializationTimeMs &&
+					input->incomingBitrate) {
+				this->currentBitrateBps = input->incomingBitrate;
+				this->bitrateIsInitialized = true;
+			}
+		}
 
-bool AimdRateControl::TimeToReduceFurther(int64_t timeNow,
-                                          uint32_t incomingBitrateBps) const {
-  const int64_t bitrateReductionInterval =
-      std::max<int64_t>(std::min<int64_t>(this->rtt, 200), 10);
-  if (timeNow - this->timeLastBitrateChange >= bitrateReductionInterval) {
-    return true;
-  }
-  if (ValidEstimate()) {
-    // TODO(terelius/holmer): Investigate consequences of increasing
-    // the threshold to 0.95 * LatestEstimate().
-    const uint32_t threshold = static_cast<uint32_t> (0.5 * LatestEstimate());
-    return incomingBitrateBps < threshold;
-  }
-  return false;
-}
+		if (this->updated && this->currentInput.bwState == kBwOverusing) {
+			// Only update delay factor and incoming bit rate. We always want to react
+			// on an over-use.
+			this->currentInput.noiseVar = input->noiseVar;
+			this->currentInput.incomingBitrate = input->incomingBitrate;
+		} else {
+			this->updated = true;
+			this->currentInput = *input;
+		}
+	}
 
-uint32_t AimdRateControl::LatestEstimate() const {
-  return this->currentBitrateBps;
-}
+	int AimdRateControl::GetNearMaxIncreaseRateBps() const {
+		//MSDASSERT(this->currentBitrateBps > 0);
+		double bitsPerFrame = static_cast<double>(this->currentBitrateBps) / 30.0;
+		double packetsPerFrame = std::ceil(bitsPerFrame / (8.0 * 1200.0));
+		double avgPacketSizeBits = bitsPerFrame / packetsPerFrame;
+		// Approximate the over-use estimator delay to 100 ms.
+		const int64_t responseTime = this->inExperiment ? (this->rtt + 100) * 2 : this->rtt + 100;
 
-uint32_t AimdRateControl::UpdateBandwidthEstimate(int64_t nowMs) {
-  this->currentBitrateBps = ChangeBitrate(
-      this->currentBitrateBps,
-      this->currentInput.incomingBitrate, nowMs);
-  return this->currentBitrateBps;
-}
+		constexpr double kMinIncreaseRateBps = 4000;
+		return static_cast<int>(std::max(
+					kMinIncreaseRateBps, (avgPacketSizeBits * 1000) / responseTime));
+	}
 
-void AimdRateControl::SetRtt(int64_t rtt) {
-  this->rtt = rtt;
-}
+	uint32_t AimdRateControl::ChangeBitrate(uint32_t newBitrateBps,
+			uint32_t incomingBitrateBps,
+			int64_t nowMs) {
+		if (!this->updated) {
+			return this->currentBitrateBps;
+		}
+		// An over-use should always trigger us to reduce the bitrate, even though
+		// we have not yet established our first estimate. By acting on the over-use,
+		// we will end up with a valid estimate.
+		if (!this->bitrateIsInitialized && this->currentInput.bwState != kBwOverusing)
+			return this->currentBitrateBps;
+		this->updated = false;
+		ChangeState(this->currentInput, nowMs);
+		// Calculated here because it's used in multiple places.
+		const float incomingBitrateKbps = incomingBitrateBps / 1000.0f;
+		// Calculate the max bit rate std dev given the normalized
+		// variance and the current incoming bit rate.
+		const float stdMaxBitRate = sqrt(this->varMaxBitrateKbps *
+				this->avgMaxBitrateKbps);
+		switch (this->rateControlState) {
+			case kRcHold:
+				break;
 
-void AimdRateControl::Update(const RateControlInput* input, int64_t nowMs) {
-  MS_ASSERT(input, "'input' missing");
+			case kRcIncrease:
+				if (this->avgMaxBitrateKbps >= 0 &&
+						incomingBitrateKbps >
+						this->avgMaxBitrateKbps + 3 * stdMaxBitRate) {
+					ChangeRegion(kRcMaxUnknown);
+					this->avgMaxBitrateKbps = -1.0;
+				}
+				if (this->rateControlRegion == kRcNearMax) {
+					uint32_t additiveIncreaseBps =
+						AdditiveRateIncrease(nowMs, this->timeLastBitrateChange);
+					newBitrateBps += additiveIncreaseBps;
+				} else {
+					uint32_t multiplicativeIncreaseBps = MultiplicativeRateIncrease(
+							nowMs, this->timeLastBitrateChange, newBitrateBps);
+					newBitrateBps += multiplicativeIncreaseBps;
+				}
 
-  // Set the initial bit rate value to what we're receiving the first half
-  // second.
-  if (!this->bitrateIsInitialized) {
-    const int64_t kInitializationTimeMs = 5000;
-    //MSDASSERT(kBitrateWindowMs <= kInitializationTimeMs);
-    if (this->timeFirstIncomingEstimate < 0) {
-      if (input->incomingBitrate)
-        this->timeFirstIncomingEstimate = nowMs;
-    } else if (nowMs - this->timeFirstIncomingEstimate > kInitializationTimeMs &&
-               input->incomingBitrate) {
-      this->currentBitrateBps = input->incomingBitrate;
-      this->bitrateIsInitialized = true;
-    }
-  }
+				this->timeLastBitrateChange = nowMs;
+				break;
 
-  if (this->updated && this->currentInput.bwState == kBwOverusing) {
-    // Only update delay factor and incoming bit rate. We always want to react
-    // on an over-use.
-    this->currentInput.noiseVar = input->noiseVar;
-    this->currentInput.incomingBitrate = input->incomingBitrate;
-  } else {
-    this->updated = true;
-    this->currentInput = *input;
-  }
-}
+			case kRcDecrease:
+				this->bitrateIsInitialized = true;
+				// Set bit rate to something slightly lower than max
+				// to get rid of any self-induced delay.
+				newBitrateBps =
+					static_cast<uint32_t>(this->beta * incomingBitrateBps + 0.5);
+				if (newBitrateBps > this->currentBitrateBps) {
+					// Avoid increasing the rate when over-using.
+					if (this->rateControlRegion != kRcMaxUnknown) {
+						newBitrateBps = static_cast<uint32_t>(
+								this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f);
+					}
+					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
+				}
+				ChangeRegion(kRcNearMax);
 
-void AimdRateControl::SetEstimate(int bitrateBps, int64_t nowMs) {
-  this->updated = true;
-  this->bitrateIsInitialized = true;
-  this->currentBitrateBps = ClampBitrate(bitrateBps, bitrateBps);
-  this->timeLastBitrateChange = nowMs;
-}
+				if (incomingBitrateBps < this->currentBitrateBps) {
+					this->lastDecrease = int(this->currentBitrateBps - newBitrateBps);
+				}
+				if (incomingBitrateKbps <
+						this->avgMaxBitrateKbps - 3 * stdMaxBitRate) {
+					this->avgMaxBitrateKbps = -1.0f;
+				}
 
-int AimdRateControl::GetNearMaxIncreaseRateBps() const {
-  //MSDASSERT(this->currentBitrateBps > 0);
-  double bitsPerFrame = static_cast<double>(this->currentBitrateBps) / 30.0;
-  double packetsPerFrame = std::ceil(bitsPerFrame / (8.0 * 1200.0));
-  double avgPacketSizeBits = bitsPerFrame / packetsPerFrame;
-  // Approximate the over-use estimator delay to 100 ms.
-  const int64_t responseTime = this->inExperiment ? (this->rtt + 100) * 2 : this->rtt + 100;
+				UpdateMaxBitRateEstimate(incomingBitrateKbps);
+				// Stay on hold until the pipes are cleared.
+				ChangeState(kRcHold);
+				this->timeLastBitrateChange = nowMs;
+				break;
 
-  constexpr double kMinIncreaseRateBps = 4000;
-  return static_cast<int>(std::max(
-      kMinIncreaseRateBps, (avgPacketSizeBits * 1000) / responseTime));
-}
+			default:
+				MS_ASSERT(false, "invalid 'this->rateControlState' value");
+		}
+		return ClampBitrate(newBitrateBps, incomingBitrateBps);
+	}
 
-int AimdRateControl::GetLastBitrateDecreaseBps() const {
-  return this->lastDecrease;
-}
+	uint32_t AimdRateControl::ClampBitrate(uint32_t newBitrateBps,
+			uint32_t incomingBitrateBps) const {
+		// Don't change the bit rate if the send side is too far off.
+		// We allow a bit more lag at very low rates to not too easily get stuck if
+		// the encoder produces uneven outputs.
+		const uint32_t maxBitrateBps =
+			static_cast<uint32_t>(1.5f * incomingBitrateBps) + 10000;
+		if (newBitrateBps > this->currentBitrateBps &&
+				newBitrateBps > maxBitrateBps) {
+			newBitrateBps = std::max(this->currentBitrateBps, maxBitrateBps);
+		}
+		newBitrateBps = std::max(newBitrateBps, this->minConfiguredBitrateBps);
+		return newBitrateBps;
+	}
 
-uint32_t AimdRateControl::ChangeBitrate(uint32_t newBitrateBps,
-                                        uint32_t incomingBitrateBps,
-                                        int64_t nowMs) {
-  if (!this->updated) {
-    return this->currentBitrateBps;
-  }
-  // An over-use should always trigger us to reduce the bitrate, even though
-  // we have not yet established our first estimate. By acting on the over-use,
-  // we will end up with a valid estimate.
-  if (!this->bitrateIsInitialized && this->currentInput.bwState != kBwOverusing)
-    return this->currentBitrateBps;
-  this->updated = false;
-  ChangeState(this->currentInput, nowMs);
-  // Calculated here because it's used in multiple places.
-  const float incomingBitrateKbps = incomingBitrateBps / 1000.0f;
-  // Calculate the max bit rate std dev given the normalized
-  // variance and the current incoming bit rate.
-  const float stdMaxBitRate = sqrt(this->varMaxBitrateKbps *
-                                      this->avgMaxBitrateKbps);
-  switch (this->rateControlState) {
-    case kRcHold:
-      break;
+	uint32_t AimdRateControl::MultiplicativeRateIncrease(
+			int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const {
+		double alpha = 1.08;
+		if (lastMs > -1) {
+			int timeSinceLastUpdateMs = std::min(static_cast<int>(nowMs - lastMs),
+					1000);
+			alpha = pow(alpha,  timeSinceLastUpdateMs / 1000.0);
+		}
+		uint32_t multiplicativeIncreaseBps = std::max(
+				currentBitrateBps * (alpha - 1.0), 1000.0);
+		return multiplicativeIncreaseBps;
+	}
 
-    case kRcIncrease:
-      if (this->avgMaxBitrateKbps >= 0 &&
-          incomingBitrateKbps >
-              this->avgMaxBitrateKbps + 3 * stdMaxBitRate) {
-        ChangeRegion(kRcMaxUnknown);
-        this->avgMaxBitrateKbps = -1.0;
-      }
-      if (this->rateControlRegion == kRcNearMax) {
-        uint32_t additiveIncreaseBps =
-            AdditiveRateIncrease(nowMs, this->timeLastBitrateChange);
-        newBitrateBps += additiveIncreaseBps;
-      } else {
-        uint32_t multiplicativeIncreaseBps = MultiplicativeRateIncrease(
-            nowMs, this->timeLastBitrateChange, newBitrateBps);
-        newBitrateBps += multiplicativeIncreaseBps;
-      }
+	void AimdRateControl::UpdateMaxBitRateEstimate(float incomingBitrateKbps) {
+		const float alpha = 0.05f;
+		if (this->avgMaxBitrateKbps == -1.0f) {
+			this->avgMaxBitrateKbps = incomingBitrateKbps;
+		} else {
+			this->avgMaxBitrateKbps = (1 - alpha) * this->avgMaxBitrateKbps +
+				alpha * incomingBitrateKbps;
+		}
+		// Estimate the max bit rate variance and normalize the variance
+		// with the average max bit rate.
+		const float norm = std::max(this->avgMaxBitrateKbps, 1.0f);
+		this->varMaxBitrateKbps = (1 - alpha) * this->varMaxBitrateKbps +
+			alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) *
+			(this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
+		// 0.4 ~= 14 kbit/s at 500 kbit/s
+		if (this->varMaxBitrateKbps < 0.4f) {
+			this->varMaxBitrateKbps = 0.4f;
+		}
+		// 2.5f ~= 35 kbit/s at 500 kbit/s
+		if (this->varMaxBitrateKbps > 2.5f) {
+			this->varMaxBitrateKbps = 2.5f;
+		}
+	}
 
-      this->timeLastBitrateChange = nowMs;
-      break;
-
-    case kRcDecrease:
-      this->bitrateIsInitialized = true;
-      // Set bit rate to something slightly lower than max
-      // to get rid of any self-induced delay.
-      newBitrateBps =
-          static_cast<uint32_t>(this->beta * incomingBitrateBps + 0.5);
-      if (newBitrateBps > this->currentBitrateBps) {
-        // Avoid increasing the rate when over-using.
-        if (this->rateControlRegion != kRcMaxUnknown) {
-          newBitrateBps = static_cast<uint32_t>(
-              this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f);
-        }
-        newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
-      }
-      ChangeRegion(kRcNearMax);
-
-      if (incomingBitrateBps < this->currentBitrateBps) {
-        this->lastDecrease = int(this->currentBitrateBps - newBitrateBps);
-      }
-      if (incomingBitrateKbps <
-          this->avgMaxBitrateKbps - 3 * stdMaxBitRate) {
-        this->avgMaxBitrateKbps = -1.0f;
-      }
-
-      UpdateMaxBitRateEstimate(incomingBitrateKbps);
-      // Stay on hold until the pipes are cleared.
-      ChangeState(kRcHold);
-      this->timeLastBitrateChange = nowMs;
-      break;
-
-    default:
-      MS_ASSERT(false, "invalid 'this->rateControlState' value");
-  }
-  return ClampBitrate(newBitrateBps, incomingBitrateBps);
-}
-
-uint32_t AimdRateControl::ClampBitrate(uint32_t newBitrateBps,
-                                       uint32_t incomingBitrateBps) const {
-  // Don't change the bit rate if the send side is too far off.
-  // We allow a bit more lag at very low rates to not too easily get stuck if
-  // the encoder produces uneven outputs.
-  const uint32_t maxBitrateBps =
-      static_cast<uint32_t>(1.5f * incomingBitrateBps) + 10000;
-  if (newBitrateBps > this->currentBitrateBps &&
-      newBitrateBps > maxBitrateBps) {
-    newBitrateBps = std::max(this->currentBitrateBps, maxBitrateBps);
-  }
-  newBitrateBps = std::max(newBitrateBps, this->minConfiguredBitrateBps);
-  return newBitrateBps;
-}
-
-uint32_t AimdRateControl::MultiplicativeRateIncrease(
-    int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const {
-  double alpha = 1.08;
-  if (lastMs > -1) {
-    int timeSinceLastUpdateMs = std::min(static_cast<int>(nowMs - lastMs),
-                                             1000);
-    alpha = pow(alpha,  timeSinceLastUpdateMs / 1000.0);
-  }
-  uint32_t multiplicativeIncreaseBps = std::max(
-      currentBitrateBps * (alpha - 1.0), 1000.0);
-  return multiplicativeIncreaseBps;
-}
-
-uint32_t AimdRateControl::AdditiveRateIncrease(int64_t nowMs,
-                                               int64_t lastMs) const {
-  return static_cast<uint32_t>((nowMs - lastMs) *
-                               GetNearMaxIncreaseRateBps() / 1000);
-}
-
-void AimdRateControl::UpdateMaxBitRateEstimate(float incomingBitrateKbps) {
-  const float alpha = 0.05f;
-  if (this->avgMaxBitrateKbps == -1.0f) {
-    this->avgMaxBitrateKbps = incomingBitrateKbps;
-  } else {
-    this->avgMaxBitrateKbps = (1 - alpha) * this->avgMaxBitrateKbps +
-        alpha * incomingBitrateKbps;
-  }
-  // Estimate the max bit rate variance and normalize the variance
-  // with the average max bit rate.
-  const float norm = std::max(this->avgMaxBitrateKbps, 1.0f);
-  this->varMaxBitrateKbps = (1 - alpha) * this->varMaxBitrateKbps +
-      alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) *
-          (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
-  // 0.4 ~= 14 kbit/s at 500 kbit/s
-  if (this->varMaxBitrateKbps < 0.4f) {
-    this->varMaxBitrateKbps = 0.4f;
-  }
-  // 2.5f ~= 35 kbit/s at 500 kbit/s
-  if (this->varMaxBitrateKbps > 2.5f) {
-    this->varMaxBitrateKbps = 2.5f;
-  }
-}
-
-void AimdRateControl::ChangeState(const RateControlInput& input,
-                                  int64_t nowMs) {
-  (void) input;
-  switch (this->currentInput.bwState) {
-    case kBwNormal:
-      if (this->rateControlState == kRcHold) {
-        this->timeLastBitrateChange = nowMs;
-        ChangeState(kRcIncrease);
-      }
-      break;
-    case kBwOverusing:
-      if (this->rateControlState != kRcDecrease) {
-        ChangeState(kRcDecrease);
-      }
-      break;
-    case kBwUnderusing:
-      ChangeState(kRcHold);
-      break;
-    default:
-      MS_ASSERT(false, "invalid 'RateControlInput::bwState' value");
-  }
-}
-
-void AimdRateControl::ChangeRegion(RateControlRegion region) {
-  this->rateControlRegion = region;
-}
-
-void AimdRateControl::ChangeState(RateControlState newState) {
-  this->rateControlState = newState;
-}
+	void AimdRateControl::ChangeState(const RateControlInput& input,
+			int64_t nowMs) {
+		(void) input;
+		switch (this->currentInput.bwState) {
+			case kBwNormal:
+				if (this->rateControlState == kRcHold) {
+					this->timeLastBitrateChange = nowMs;
+					ChangeState(kRcIncrease);
+				}
+				break;
+			case kBwOverusing:
+				if (this->rateControlState != kRcDecrease) {
+					ChangeState(kRcDecrease);
+				}
+				break;
+			case kBwUnderusing:
+				ChangeState(kRcHold);
+				break;
+			default:
+				MS_ASSERT(false, "invalid 'RateControlInput::bwState' value");
+		}
+	}
 }  // namespace RTC

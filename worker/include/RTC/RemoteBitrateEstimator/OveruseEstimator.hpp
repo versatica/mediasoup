@@ -16,85 +16,114 @@
 
 namespace RTC {
 
-// (jmillan) borrowed from webrtc/common_types.h
-//
-// Bandwidth over-use detector options.  These are used to drive
-// experimentation with bandwidth estimation parameters.
-// See modules/remote_bitrate_estimator/overuse_detector.h
-// TODO(terelius): This is only used in overuse_estimator.cc, and only in the
-// default constructed state. Can we move the relevant variables into that
-// class and delete this? See also disabled warning at line 27
-struct OverUseDetectorOptions {
-  OverUseDetectorOptions()
-      : initialSlope(8.0 / 512.0),
-        initialOffset(0),
-        initial_e(),
-        initialProcessNoise(),
-        initialAvgNoise(0.0),
-        initialVarNoise(50) {
-    initial_e[0][0] = 100;
-    initial_e[1][1] = 1e-1;
-    initial_e[0][1] = initial_e[1][0] = 0;
-    initialProcessNoise[0] = 1e-13;
-    initialProcessNoise[1] = 1e-3;
-  }
-  double initialSlope;
-  double initialOffset;
-  double initial_e[2][2];
-  double initialProcessNoise[2];
-  double initialAvgNoise;
-  double initialVarNoise;
-};
+	// (jmillan) borrowed from webrtc/common_types.h
+	//
+	// Bandwidth over-use detector options.  These are used to drive
+	// experimentation with bandwidth estimation parameters.
+	// See modules/remote_bitrate_estimator/overuse_detector.h
+	// TODO(terelius): This is only used in overuse_estimator.cc, and only in the
+	// default constructed state. Can we move the relevant variables into that
+	// class and delete this? See also disabled warning at line 27
+	struct OverUseDetectorOptions {
+		OverUseDetectorOptions()
+			: initialSlope(8.0 / 512.0),
+			initialOffset(0),
+			initialE(),
+			initialProcessNoise(),
+			initialAvgNoise(0.0),
+			initialVarNoise(50) {
+				initialE[0][0] = 100;
+				initialE[1][1] = 1e-1;
+				initialE[0][1] = initialE[1][0] = 0;
+				initialProcessNoise[0] = 1e-13;
+				initialProcessNoise[1] = 1e-3;
+			}
+		double initialSlope;
+		double initialOffset;
+		double initialE[2][2];
+		double initialProcessNoise[2];
+		double initialAvgNoise;
+		double initialVarNoise;
+	};
 
-class OveruseEstimator {
- public:
-  explicit OveruseEstimator(const OverUseDetectorOptions& options);
-  ~OveruseEstimator();
+	class OveruseEstimator {
+	public:
+		explicit OveruseEstimator(const OverUseDetectorOptions& options);
+		~OveruseEstimator();
 
-  // Update the estimator with a new sample. The deltas should represent deltas
-  // between timestamp groups as defined by the InterArrival class.
-  // |current_hypothesis| should be the hypothesis of the over-use detector at
-  // this time.
-  void Update(int64_t tDelta,
-              double tsDelta,
-              int sizeDelta,
-              BandwidthUsage currentHypothesis,
-              int64_t nowMs);
+		// Update the estimator with a new sample. The deltas should represent deltas
+		// between timestamp groups as defined by the InterArrival class.
+		// |current_hypothesis| should be the hypothesis of the over-use detector at
+		// this time.
+		void Update(int64_t tDelta,
+				double tsDelta,
+				int sizeDelta,
+				BandwidthUsage currentHypothesis,
+				int64_t nowMs);
 
-  // Returns the estimated noise/jitter variance in ms^2.
-  double GetVarNoise() const {
-    return this->varNoise;
-  }
+		// Returns the estimated noise/jitter variance in ms^2.
+		double GetVarNoise() const;
+		// Returns the estimated inter-arrival time delta offset in ms.
+		double GetOffset() const;
+		// Returns the number of deltas which the current over-use estimator state is
+		// based on.
+		unsigned int GetNumOfDeltas() const;
 
-  // Returns the estimated inter-arrival time delta offset in ms.
-  double GetOffset() const {
-    return this->offset;
-  }
+	private:
+		double UpdateMinFramePeriod(double tsDelta);
+		void UpdateNoiseEstimate(double residual, double tsDelta, bool stableState);
 
-  // Returns the number of deltas which the current over-use estimator state is
-  // based on.
-  unsigned int GetNumOfDeltas() const {
-    return this->numOfDeltas;
-  }
+	private:
+		// Must be first member variable. Cannot be const because we need to be
+		// copyable.
+		OverUseDetectorOptions options;
+		uint16_t numOfDeltas;
+		double slope;
+		double offset;
+		double prevOffset;
+		double E[2][2];
+		double processNoise[2];
+		double avgNoise;
+		double varNoise;
+		std::deque<double> tsDeltaHist;
+	};
 
- private:
-  double UpdateMinFramePeriod(double tsDelta);
-  void UpdateNoiseEstimate(double residual, double tsDelta, bool stableState);
+	inline
+	OveruseEstimator::OveruseEstimator(const OverUseDetectorOptions& options) :
+		options(options),
+		numOfDeltas(0),
+		slope(this->options.initialSlope),
+		offset(this->options.initialOffset),
+		prevOffset(this->options.initialOffset),
+		E(),
+		processNoise(),
+		avgNoise(this->options.initialAvgNoise),
+		varNoise(this->options.initialVarNoise),
+		tsDeltaHist() {
+			memcpy(this->E, this->options.initialE, sizeof(this->E));
+			memcpy(this->processNoise, this->options.initialProcessNoise,
+					sizeof(this->processNoise));
+	}
 
-  // Must be first member variable. Cannot be const because we need to be
-  // copyable.
-  OverUseDetectorOptions options;
-  uint16_t numOfDeltas;
-  double slope;
-  double offset;
-  double prevOffset;
-  double E[2][2];
-  double processNoise[2];
-  double avgNoise;
-  double varNoise;
-  std::deque<double> tsDeltaHist;
+	inline
+	OveruseEstimator::~OveruseEstimator() {
+		this->tsDeltaHist.clear();
+	}
 
-};
+	inline
+	double OveruseEstimator::GetVarNoise() const {
+		return this->varNoise;
+	}
+
+	inline
+	double OveruseEstimator::GetOffset() const {
+		return this->offset;
+	}
+
+	inline
+	unsigned int OveruseEstimator::GetNumOfDeltas() const {
+		return this->numOfDeltas;
+	}
 }  // namespace RTC
 
 #endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_OVERUSE_ESTIMATOR_HPP

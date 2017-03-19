@@ -20,133 +20,113 @@
 
 namespace RTC {
 
-enum { kMinFramePeriodHistoryLength = 60 };
-enum { kDeltaCounterMax = 1000 };
+	enum { kMinFramePeriodHistoryLength = 60 };
+	enum { kDeltaCounterMax = 1000 };
 
-OveruseEstimator::OveruseEstimator(const OverUseDetectorOptions& options)
-    : options(options),
-      numOfDeltas(0),
-      slope(this->options.initialSlope),
-      offset(this->options.initialOffset),
-      prevOffset(this->options.initialOffset),
-      E(),
-      processNoise(),
-      avgNoise(this->options.initialAvgNoise),
-      varNoise(this->options.initialVarNoise),
-      tsDeltaHist() {
-  memcpy(this->E, this->options.initial_e, sizeof(this->E));
-  memcpy(this->processNoise, this->options.initialProcessNoise,
-         sizeof(this->processNoise));
-}
+	void OveruseEstimator::Update(int64_t tDelta,
+			double tsDelta,
+			int sizeDelta,
+			BandwidthUsage currentHypothesis,
+			int64_t nowMs) {
+		(void) nowMs;
+		const double minFramePeriod = UpdateMinFramePeriod(tsDelta);
+		const double tTsDelta = tDelta - tsDelta;
+		double fsDelta = sizeDelta;
 
-OveruseEstimator::~OveruseEstimator() {
-  this->tsDeltaHist.clear();
-}
+		++this->numOfDeltas;
+		if (this->numOfDeltas > kDeltaCounterMax) {
+			this->numOfDeltas = kDeltaCounterMax;
+		}
 
-void OveruseEstimator::Update(int64_t tDelta,
-                              double tsDelta,
-                              int sizeDelta,
-                              BandwidthUsage currentHypothesis,
-                              int64_t nowMs) {
-  (void) nowMs;
-  const double minFramePeriod = UpdateMinFramePeriod(tsDelta);
-  const double tTsDelta = tDelta - tsDelta;
-  double fsDelta = sizeDelta;
+		// Update the Kalman filter.
+		this->E[0][0] += this->processNoise[0];
+		this->E[1][1] += this->processNoise[1];
 
-  ++this->numOfDeltas;
-  if (this->numOfDeltas > kDeltaCounterMax) {
-    this->numOfDeltas = kDeltaCounterMax;
-  }
+		if ((currentHypothesis == kBwOverusing && this->offset < this->prevOffset) ||
+				(currentHypothesis == kBwUnderusing && this->offset > this->prevOffset)) {
+			this->E[1][1] += 10 * this->processNoise[1];
+		}
 
-  // Update the Kalman filter.
-  this->E[0][0] += this->processNoise[0];
-  this->E[1][1] += this->processNoise[1];
+		const double h[2] = {fsDelta, 1.0};
+		const double Eh[2] = {this->E[0][0]*h[0] + this->E[0][1]*h[1],
+			this->E[1][0]*h[0] + this->E[1][1]*h[1]};
 
-  if ((currentHypothesis == kBwOverusing && this->offset < this->prevOffset) ||
-      (currentHypothesis == kBwUnderusing && this->offset > this->prevOffset)) {
-    this->E[1][1] += 10 * this->processNoise[1];
-  }
+		const double residual = tTsDelta - this->slope*h[0] - this->offset;
 
-  const double h[2] = {fsDelta, 1.0};
-  const double Eh[2] = {this->E[0][0]*h[0] + this->E[0][1]*h[1],
-                        this->E[1][0]*h[0] + this->E[1][1]*h[1]};
+		const bool inStableState = (currentHypothesis == kBwNormal);
+		const double maxResidual = 3.0 * sqrt(this->varNoise);
+		// We try to filter out very late frames. For instance periodic key
+		// frames doesn't fit the Gaussian model well.
+		if (fabs(residual) < maxResidual) {
+			UpdateNoiseEstimate(residual, minFramePeriod, inStableState);
+		} else {
+			UpdateNoiseEstimate(residual < 0 ? -maxResidual : maxResidual,
+					minFramePeriod, inStableState);
+		}
 
-  const double residual = tTsDelta - this->slope*h[0] - this->offset;
+		const double denom = this->varNoise + h[0]*Eh[0] + h[1]*Eh[1];
 
-  const bool inStableState = (currentHypothesis == kBwNormal);
-  const double maxResidual = 3.0 * sqrt(this->varNoise);
-  // We try to filter out very late frames. For instance periodic key
-  // frames doesn't fit the Gaussian model well.
-  if (fabs(residual) < maxResidual) {
-    UpdateNoiseEstimate(residual, minFramePeriod, inStableState);
-  } else {
-    UpdateNoiseEstimate(residual < 0 ? -maxResidual : maxResidual,
-                        minFramePeriod, inStableState);
-  }
+		const double K[2] = {Eh[0] / denom,
+			Eh[1] / denom};
 
-  const double denom = this->varNoise + h[0]*Eh[0] + h[1]*Eh[1];
+		const double IKh[2][2] = {{1.0 - K[0]*h[0], -K[0]*h[1]},
+			{-K[1]*h[0], 1.0 - K[1]*h[1]}};
+		const double e00 = this->E[0][0];
+		const double e01 = this->E[0][1];
 
-  const double K[2] = {Eh[0] / denom,
-                       Eh[1] / denom};
+		// Update state.
+		this->E[0][0] = e00 * IKh[0][0] + this->E[1][0] * IKh[0][1];
+		this->E[0][1] = e01 * IKh[0][0] + this->E[1][1] * IKh[0][1];
+		this->E[1][0] = e00 * IKh[1][0] + this->E[1][0] * IKh[1][1];
+		this->E[1][1] = e01 * IKh[1][0] + this->E[1][1] * IKh[1][1];
 
-  const double IKh[2][2] = {{1.0 - K[0]*h[0], -K[0]*h[1]},
-                            {-K[1]*h[0], 1.0 - K[1]*h[1]}};
-  const double e00 = this->E[0][0];
-  const double e01 = this->E[0][1];
+		// The covariance matrix must be positive semi-definite.
+		bool positiveSemiDefinite = this->E[0][0] + this->E[1][1] >= 0 &&
+			this->E[0][0] * this->E[1][1] - this->E[0][1] * this->E[1][0] >= 0 && this->E[0][0] >= 0;
+		MS_ASSERT(positiveSemiDefinite, "'positiveSemiDefinite' missing");
+		if (!positiveSemiDefinite) {
+			MS_ERROR("The over-use estimator's covariance matrix is no longer semi-definite");
+		}
 
-  // Update state.
-  this->E[0][0] = e00 * IKh[0][0] + this->E[1][0] * IKh[0][1];
-  this->E[0][1] = e01 * IKh[0][0] + this->E[1][1] * IKh[0][1];
-  this->E[1][0] = e00 * IKh[1][0] + this->E[1][0] * IKh[1][1];
-  this->E[1][1] = e01 * IKh[1][0] + this->E[1][1] * IKh[1][1];
+		this->slope = this->slope + K[0] * residual;
+		this->prevOffset = this->offset;
+		this->offset = this->offset + K[1] * residual;
+	}
 
-  // The covariance matrix must be positive semi-definite.
-  bool positiveSemiDefinite = this->E[0][0] + this->E[1][1] >= 0 &&
-      this->E[0][0] * this->E[1][1] - this->E[0][1] * this->E[1][0] >= 0 && this->E[0][0] >= 0;
-  MS_ASSERT(positiveSemiDefinite, "'positiveSemiDefinite' missing");
-  if (!positiveSemiDefinite) {
-    MS_ERROR("The over-use estimator's covariance matrix is no longer semi-definite");
-  }
+	double OveruseEstimator::UpdateMinFramePeriod(double tsDelta) {
+		double minFramePeriod = tsDelta;
+		if (this->tsDeltaHist.size() >= kMinFramePeriodHistoryLength) {
+			this->tsDeltaHist.pop_front();
+		}
+		for (const double oldTsDelta : this->tsDeltaHist) {
+			minFramePeriod = std::min(oldTsDelta, minFramePeriod);
+		}
+		this->tsDeltaHist.push_back(tsDelta);
+		return minFramePeriod;
+	}
 
-  this->slope = this->slope + K[0] * residual;
-  this->prevOffset = this->offset;
-  this->offset = this->offset + K[1] * residual;
-}
-
-double OveruseEstimator::UpdateMinFramePeriod(double tsDelta) {
-  double minFramePeriod = tsDelta;
-  if (this->tsDeltaHist.size() >= kMinFramePeriodHistoryLength) {
-    this->tsDeltaHist.pop_front();
-  }
-  for (const double oldTsDelta : this->tsDeltaHist) {
-    minFramePeriod = std::min(oldTsDelta, minFramePeriod);
-  }
-  this->tsDeltaHist.push_back(tsDelta);
-  return minFramePeriod;
-}
-
-void OveruseEstimator::UpdateNoiseEstimate(double residual,
-                                           double tsDelta,
-                                           bool stableState) {
-  if (!stableState) {
-    return;
-  }
-  // Faster filter during startup to faster adapt to the jitter level
-  // of the network. |alpha| is tuned for 30 frames per second, but is scaled
-  // according to |tsDelta|.
-  double alpha = 0.01;
-  if (this->numOfDeltas > 10*30) {
-    alpha = 0.002;
-  }
-  // Only update the noise estimate if we're not over-using. |beta| is a
-  // function of alpha and the time delta since the previous update.
-  const double beta = pow(1 - alpha, tsDelta * 30.0 / 1000.0);
-  this->avgNoise = beta * this->avgNoise
-              + (1 - beta) * residual;
-  this->varNoise = beta * this->varNoise
-              + (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
-  if (this->varNoise < 1) {
-    this->varNoise = 1;
-  }
-}
+	void OveruseEstimator::UpdateNoiseEstimate(double residual,
+			double tsDelta,
+			bool stableState) {
+		if (!stableState) {
+			return;
+		}
+		// Faster filter during startup to faster adapt to the jitter level
+		// of the network. |alpha| is tuned for 30 frames per second, but is scaled
+		// according to |tsDelta|.
+		double alpha = 0.01;
+		if (this->numOfDeltas > 10*30) {
+			alpha = 0.002;
+		}
+		// Only update the noise estimate if we're not over-using. |beta| is a
+		// function of alpha and the time delta since the previous update.
+		const double beta = pow(1 - alpha, tsDelta * 30.0 / 1000.0);
+		this->avgNoise = beta * this->avgNoise
+			+ (1 - beta) * residual;
+		this->varNoise = beta * this->varNoise
+			+ (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
+		if (this->varNoise < 1) {
+			this->varNoise = 1;
+		}
+	}
 }  // namespace RTC

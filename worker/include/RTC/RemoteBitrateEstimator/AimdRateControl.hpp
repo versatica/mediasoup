@@ -84,7 +84,6 @@ namespace RTC
 
 	private:
 		static constexpr int64_t kDefaultRttMs = 200;
-
 		// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
 		static constexpr int kMinBitrateBps = 10000;
 
@@ -110,8 +109,6 @@ namespace RTC
 	AimdRateControl::AimdRateControl() :
 		currentInput(kBwNormal, 0, 1.0)
 	{
-		// TODO: (jmillan) do it configurable
-		//inExperiment = false;
 		inExperiment = !AdaptiveThresholdExperimentIsDisabled();
 	}
 
@@ -119,6 +116,70 @@ namespace RTC
 	AimdRateControl::~AimdRateControl()
 	{}
 
+	inline
+	void AimdRateControl::SetStartBitrate(int startBitrateBps) {
+		this->currentBitrateBps = startBitrateBps;
+		this->bitrateIsInitialized = true;
+	}
+
+	inline
+	void AimdRateControl::SetMinBitrate(int minBitrateBps) {
+		this->minConfiguredBitrateBps = minBitrateBps;
+		this->currentBitrateBps = std::max<int>(minBitrateBps, this->currentBitrateBps);
+	}
+
+	inline
+	bool AimdRateControl::ValidEstimate() const {
+		return this->bitrateIsInitialized;
+	}
+
+	inline
+	uint32_t AimdRateControl::LatestEstimate() const {
+		return this->currentBitrateBps;
+	}
+
+	inline
+	uint32_t AimdRateControl::UpdateBandwidthEstimate(int64_t nowMs) {
+		this->currentBitrateBps = ChangeBitrate(
+				this->currentBitrateBps,
+				this->currentInput.incomingBitrate, nowMs);
+		return this->currentBitrateBps;
+	}
+
+	inline
+	void AimdRateControl::SetRtt(int64_t rtt) {
+		this->rtt = rtt;
+	}
+
+	inline
+	void AimdRateControl::SetEstimate(int bitrateBps, int64_t nowMs) {
+		this->updated = true;
+		this->bitrateIsInitialized = true;
+		this->currentBitrateBps = ClampBitrate(bitrateBps, bitrateBps);
+		this->timeLastBitrateChange = nowMs;
+	}
+
+	inline
+	int AimdRateControl::GetLastBitrateDecreaseBps() const {
+		return this->lastDecrease;
+	}
+
+	inline
+	uint32_t AimdRateControl::AdditiveRateIncrease(int64_t nowMs,
+			int64_t lastMs) const {
+		return static_cast<uint32_t>((nowMs - lastMs) *
+				GetNearMaxIncreaseRateBps() / 1000);
+	}
+
+	inline
+	void AimdRateControl::ChangeRegion(RateControlRegion region) {
+		this->rateControlRegion = region;
+	}
+
+	inline
+	void AimdRateControl::ChangeState(RateControlState newState) {
+		this->rateControlState = newState;
+	}
 }  // namespace RTC
 
 #endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_AIMD_RATE_CONTROL_HPP
