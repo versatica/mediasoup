@@ -30,9 +30,9 @@ namespace RTC
 		 const size_t kDisabledPrefixLength = sizeof(kDisabledPrefix) - 1;
 		 */
 
-	const double kMaxAdaptOffsetMs = 15.0;
-	const double kOverUsingTimeThreshold = 10;
-	const int kMinNumDeltas = 60;
+	constexpr double kMaxAdaptOffsetMs = 15.0;
+	constexpr double kOverUsingTimeThreshold = 10;
+	constexpr int kMinNumDeltas = 60;
 
 	// (jmillan) disable the experiment until we know how to use the threshold values.
 	bool AdaptiveThresholdExperimentIsDisabled()
@@ -50,32 +50,6 @@ namespace RTC
 		(void) kDown;
 		return false;
 	}
-
-	/*
-		 bool AdaptiveThresholdExperimentIsDisabled() {
-		 std::string experimentString =
-		 webrtc::fieldTrial::FindFullName(kAdaptiveThresholdExperiment);
-		 const size_t kMinExperimentLength = kDisabledPrefixLength;
-		 if (experimentString.length() < kMinExperimentLength)
-		 return false;
-		 return experimentString.substr(0, kDisabledPrefixLength) == kDisabledPrefix;
-		 }
-		 */
-
-	// Gets thresholds from the experiment name following the format
-	// "WebRTC-AdaptiveBweThreshold/Enabled-0.5,0.002/".
-	/*
-		 bool ReadExperimentConstants(double* kUp, double* kDown) {
-		 std::string experimentString =
-		 webrtc::fieldTrial::FindFullName(kAdaptiveThresholdExperiment);
-		 const size_t kMinExperimentLength = kEnabledPrefixLength + 3;
-		 if (experimentString.length() < kMinExperimentLength ||
-		 experimentString.substr(0, kEnabledPrefixLength) != kEnabledPrefix)
-		 return false;
-		 return sscanf(experimentString.substr(kEnabledPrefixLength + 1).c_str(),
-		 "%lf,%lf", kUp, kDown) == 2;
-		 }
-		 */
 
 	BandwidthUsage OveruseDetector::Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs)
 	{

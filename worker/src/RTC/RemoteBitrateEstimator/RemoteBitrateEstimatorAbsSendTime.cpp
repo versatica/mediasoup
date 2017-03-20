@@ -33,7 +33,7 @@ namespace RTC
 		kExpectedNumberOfProbes = 3
 	};
 
-	static const double kTimestampToMs = 1000.0 / static_cast<double>(1 << kInterArrivalShift);
+	static constexpr double kTimestampToMs = 1000.0 / static_cast<double>(1 << kInterArrivalShift);
 
 	template<typename K, typename V>
 	std::vector<K> Keys(const std::map<K, V>& map)

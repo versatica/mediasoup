@@ -18,28 +18,12 @@ namespace RTC
 {
 	// (jmillan) borrowed from webrtc/common_types.h
 	//
-	// Bandwidth over-use detector options.  These are used to drive
-	// experimentation with bandwidth estimation parameters.
+	// Bandwidth over-use detector options.
+	// These are used to drive experimentation with bandwidth estimation parameters.
 	// See modules/remote_bitrate_estimator/overuse_detector.h
-	// TODO(terelius): This is only used in overuse_estimator.cc, and only in the
-	// default constructed state. Can we move the relevant variables into that
-	// class and delete this? See also disabled warning at line 27
 	struct OverUseDetectorOptions
 	{
-		OverUseDetectorOptions() :
-			initialSlope(8.0 / 512.0),
-			initialOffset(0),
-			initialE(),
-			initialProcessNoise(),
-			initialAvgNoise(0.0),
-			initialVarNoise(50)
-		{
-			initialE[0][0] = 100;
-			initialE[1][1] = 1e-1;
-			initialE[0][1] = initialE[1][0] = 0;
-			initialProcessNoise[0] = 1e-13;
-			initialProcessNoise[1] = 1e-3;
-		}
+		OverUseDetectorOptions();
 
 		double initialSlope;
 		double initialOffset;
@@ -74,8 +58,7 @@ namespace RTC
 		void UpdateNoiseEstimate(double residual, double tsDelta, bool stableState);
 
 	private:
-		// Must be first member variable. Cannot be const because we need to be
-		// copyable.
+		// Must be first member variable. Cannot be const because we need to be copyable.
 		OverUseDetectorOptions options;
 		uint16_t numOfDeltas;
 		double slope;
@@ -87,6 +70,24 @@ namespace RTC
 		double varNoise;
 		std::deque<double> tsDeltaHist;
 	};
+
+	/* Inline methods. */
+
+	inline
+	OverUseDetectorOptions::OverUseDetectorOptions() :
+		initialSlope(8.0 / 512.0),
+		initialOffset(0),
+		initialE(),
+		initialProcessNoise(),
+		initialAvgNoise(0.0),
+		initialVarNoise(50)
+	{
+		initialE[0][0] = 100;
+		initialE[1][1] = 1e-1;
+		initialE[0][1] = initialE[1][0] = 0;
+		initialProcessNoise[0] = 1e-13;
+		initialProcessNoise[1] = 1e-3;
+	}
 
 	inline
 	OveruseEstimator::OveruseEstimator(const OverUseDetectorOptions& options) :

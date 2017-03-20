@@ -29,9 +29,8 @@ namespace RTC
 {
 	struct Probe
 	{
-		Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize) : sendTimeMs(sendTimeMs), recvTimeMs(recvTimeMs), payloadSize(payloadSize)
-		{
-		}
+		Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize);
+
 		int64_t sendTimeMs;
 		int64_t recvTimeMs;
 		size_t payloadSize;
@@ -54,9 +53,7 @@ namespace RTC
 	{
 	public:
 		RemoteBitrateEstimatorAbsSendTime(Listener* observer);
-		virtual ~RemoteBitrateEstimatorAbsSendTime()
-		{
-		}
+		virtual ~RemoteBitrateEstimatorAbsSendTime() = default;
 
 		void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint8_t* absoluteSendTime) override;
 		// This class relies on Process() being called periodically (at least once
@@ -70,6 +67,7 @@ namespace RTC
 
 	private:
 		typedef std::map<uint32_t, int64_t> Ssrcs;
+
 		enum class ProbeResult
 		{
 			kBitrateUpdated,
@@ -78,7 +76,6 @@ namespace RTC
 
 	private:
 		static bool IsWithinClusterBounds(int sendDeltaMs, const Cluster& clusterAggregate);
-
 		static void AddCluster(std::list<Cluster>* clusters, Cluster* cluster);
 
 		void IncomingPacketInfo(int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc);
@@ -112,6 +109,15 @@ namespace RTC
 		Ssrcs ssrcs;
 		AimdRateControl remoteRate;
 	};
+
+	/* Inline Methods. */
+
+	inline
+	Probe::Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize) :
+		sendTimeMs(sendTimeMs),
+		recvTimeMs(recvTimeMs),
+		payloadSize(payloadSize)
+		{}
 
 	inline
 	int Cluster::GetSendBitrateBps() const

@@ -20,15 +20,6 @@ namespace RTC
 {
 	static const int kBurstDeltaThresholdMs = 5;
 
-	InterArrival::InterArrival(uint32_t timestamp_group_length_ticks, double timestamp_to_ms_coeff, bool enable_burst_grouping) :
-		kTimestampGroupLengthTicks(timestamp_group_length_ticks),
-		currentTimestampGroup(),
-		prevTimestampGroup(),
-		timestampToMsCoeff(timestamp_to_ms_coeff),
-		burstGrouping(enable_burst_grouping),
-		numConsecutiveReorderedPackets(0)
-	{}
-
 	bool InterArrival::ComputeDeltas(uint32_t timestamp, int64_t arrival_time_ms, int64_t system_time_ms, size_t packet_size, uint32_t* timestamp_delta,
 	                                 int64_t* arrival_time_delta_ms, int* packet_size_delta)
 	{

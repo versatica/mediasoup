@@ -52,7 +52,8 @@ namespace RTC
 		BandwidthUsage hypothesis = kBwNormal;
 	};
 
-	inline OveruseDetector::OveruseDetector() :
+	inline
+	OveruseDetector::OveruseDetector() :
 	inExperiment(!AdaptiveThresholdExperimentIsDisabled())
 	{
 		if (this->inExperiment)

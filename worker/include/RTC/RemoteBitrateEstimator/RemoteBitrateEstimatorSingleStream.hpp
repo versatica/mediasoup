@@ -23,7 +23,8 @@
 
 namespace RTC
 {
-	class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator
+	class RemoteBitrateEstimatorSingleStream :
+		public RemoteBitrateEstimator
 	{
 	public:
 		RemoteBitrateEstimatorSingleStream(Listener* observer);
@@ -77,6 +78,8 @@ namespace RTC
 		int64_t processIntervalMs;
 		bool umaRecorded = false;
 	};
+
+	/* Inline Methods. */
 
 	inline
 	RemoteBitrateEstimatorSingleStream::Detector::Detector(int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping) :

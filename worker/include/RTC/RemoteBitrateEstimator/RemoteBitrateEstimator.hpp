@@ -29,11 +29,9 @@ namespace RTC
 	class CallStatsObserver
 	{
 	public:
-		virtual void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) = 0;
+		virtual ~CallStatsObserver() = default;
 
-		virtual ~CallStatsObserver()
-		{
-		}
+		virtual void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) = 0;
 	};
 
 	class RemoteBitrateEstimator : public CallStatsObserver
@@ -48,9 +46,7 @@ namespace RTC
 		};
 
 	public:
-		virtual ~RemoteBitrateEstimator()
-		{
-		}
+		virtual ~RemoteBitrateEstimator() = default;
 
 		// Called for each incoming packet. Updates the incoming payload bitrate
 		// estimate and the over-use detector. If an over-use is detected the

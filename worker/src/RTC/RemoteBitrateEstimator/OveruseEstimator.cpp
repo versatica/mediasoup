@@ -20,14 +20,8 @@
 
 namespace RTC
 {
-	enum
-	{
-		kMinFramePeriodHistoryLength = 60
-	};
-	enum
-	{
-		kDeltaCounterMax = 1000
-	};
+	constexpr size_t kMinFramePeriodHistoryLength = 60;
+	constexpr uint16_t kDeltaCounterMax = 1000;
 
 	void OveruseEstimator::Update(int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs)
 	{

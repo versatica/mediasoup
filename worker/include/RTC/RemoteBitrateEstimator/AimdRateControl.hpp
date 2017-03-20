@@ -106,6 +106,8 @@ namespace RTC
 		int lastDecrease;
 	};
 
+	/* Inline methods. */
+
 	inline
 	AimdRateControl::AimdRateControl() :
 		currentInput(kBwNormal, 0, 1.0)
