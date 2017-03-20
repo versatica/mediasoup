@@ -36,7 +36,7 @@ namespace RTC
 
 	public:
 		AimdRateControl();
-		virtual ~AimdRateControl();
+		virtual ~AimdRateControl() = default;
 
 		// Returns true if there is a valid estimate of the incoming bitrate, false
 		// otherwise.
@@ -112,10 +112,6 @@ namespace RTC
 	{
 		inExperiment = !AdaptiveThresholdExperimentIsDisabled();
 	}
-
-	inline
-	AimdRateControl::~AimdRateControl()
-	{}
 
 	inline
 	void AimdRateControl::SetStartBitrate(int startBitrateBps)

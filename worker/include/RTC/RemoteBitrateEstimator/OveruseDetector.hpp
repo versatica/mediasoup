@@ -23,7 +23,6 @@ namespace RTC
 	{
 	public:
 		OveruseDetector();
-		virtual ~OveruseDetector();
 
 		// Update the detection state based on the estimated inter-arrival time delta
 		// offset. |timestampDelta| is the delta between the last timestamp which the
@@ -59,10 +58,6 @@ namespace RTC
 		if (this->inExperiment)
 			InitializeExperiment();
 	}
-
-	inline
-	OveruseDetector::~OveruseDetector()
-	{}
 
 	inline
 	BandwidthUsage OveruseDetector::State() const
