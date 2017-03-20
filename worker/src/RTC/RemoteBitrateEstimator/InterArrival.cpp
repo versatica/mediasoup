@@ -32,6 +32,8 @@ namespace RTC
 	bool InterArrival::ComputeDeltas(uint32_t timestamp, int64_t arrival_time_ms, int64_t system_time_ms, size_t packet_size, uint32_t* timestamp_delta,
 	                                 int64_t* arrival_time_delta_ms, int* packet_size_delta)
 	{
+		MS_TRACE();
+
 		MS_ASSERT(timestamp_delta, "'timestamp_delta' missing");
 		MS_ASSERT(arrival_time_delta_ms, "'arrival_time_delta_ms' missing");
 		MS_ASSERT(packet_size_delta, "'packet_size_delta' missing");
@@ -107,6 +109,8 @@ namespace RTC
 
 	bool InterArrival::PacketInOrder(uint32_t timestamp)
 	{
+		MS_TRACE();
+
 		if (this->currentTimestampGroup.IsFirstPacket())
 		{
 			return true;
@@ -125,6 +129,8 @@ namespace RTC
 	// |this->currentTimestampGroup|.
 	bool InterArrival::NewTimestampGroup(int64_t arrival_time_ms, uint32_t timestamp) const
 	{
+		MS_TRACE();
+
 		if (this->currentTimestampGroup.IsFirstPacket())
 		{
 			return false;
@@ -142,6 +148,8 @@ namespace RTC
 
 	bool InterArrival::BelongsToBurst(int64_t arrival_time_ms, uint32_t timestamp) const
 	{
+		MS_TRACE();
+
 		if (!this->burstGrouping)
 		{
 			return false;
@@ -158,6 +166,8 @@ namespace RTC
 
 	void InterArrival::Reset()
 	{
+		MS_TRACE();
+
 		this->numConsecutiveReorderedPackets = 0;
 		this->currentTimestampGroup = TimestampGroup();
 		this->prevTimestampGroup = TimestampGroup();

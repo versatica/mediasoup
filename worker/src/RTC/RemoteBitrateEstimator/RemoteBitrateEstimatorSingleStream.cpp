@@ -25,6 +25,8 @@ namespace RTC
 {
 	void RemoteBitrateEstimatorSingleStream::IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint8_t* transmissionTimeOffset)
 	{
+		MS_TRACE();
+
 		if (!this->umaRecorded)
 		{
 			this->umaRecorded = true;
@@ -89,6 +91,8 @@ namespace RTC
 
 	int64_t RemoteBitrateEstimatorSingleStream::TimeUntilNextProcess()
 	{
+		MS_TRACE();
+
 		if (this->lastProcessTime < 0)
 		{
 			return 0;
@@ -99,6 +103,8 @@ namespace RTC
 
 	void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t nowMs)
 	{
+		MS_TRACE();
+
 		BandwidthUsage bwState = kBwNormal;
 		double sumVarNoise = 0.0;
 		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.begin();
@@ -147,6 +153,8 @@ namespace RTC
 
 	bool RemoteBitrateEstimatorSingleStream::LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
 	{
+		MS_TRACE();
+
 		MS_ASSERT(bitrateBps, "'bitrateBps' missing");
 		if (!this->remoteRate->ValidEstimate())
 		{
@@ -162,6 +170,8 @@ namespace RTC
 
 	void RemoteBitrateEstimatorSingleStream::GetSsrcs(std::vector<uint32_t>* ssrcs) const
 	{
+		MS_TRACE();
+
 		MS_ASSERT(ssrcs, "'ssrcs' missing");
 		ssrcs->resize(this->overuseDetectors.size());
 		int i = 0;

@@ -55,6 +55,8 @@ namespace RTC
 
 	bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(int sendDeltaMs, const Cluster& clusterAggregate)
 	{
+		MS_TRACE();
+
 		if (clusterAggregate.count == 0)
 			return true;
 		float clusterMean = clusterAggregate.sendMeanMs / static_cast<float>(clusterAggregate.count);
@@ -63,6 +65,8 @@ namespace RTC
 
 	void RemoteBitrateEstimatorAbsSendTime::AddCluster(std::list<Cluster>* clusters, Cluster* cluster)
 	{
+		MS_TRACE();
+
 		cluster->sendMeanMs /= static_cast<float>(cluster->count);
 		cluster->recvMeanMs /= static_cast<float>(cluster->count);
 		cluster->meanSize /= cluster->count;
@@ -71,6 +75,8 @@ namespace RTC
 
 	void RemoteBitrateEstimatorAbsSendTime::ComputeClusters(std::list<Cluster>* clusters) const
 	{
+		MS_TRACE();
+
 		Cluster current;
 		int64_t prevSendTime = -1;
 		int64_t prevRecvTime = -1;
@@ -104,6 +110,8 @@ namespace RTC
 
 	std::list<Cluster>::const_iterator RemoteBitrateEstimatorAbsSendTime::FindBestProbe(const std::list<Cluster>& clusters) const
 	{
+		MS_TRACE();
+
 		int highestProbeBitrateBps = 0;
 		std::list<Cluster>::const_iterator bestIt = clusters.end();
 		for (std::list<Cluster>::const_iterator it = clusters.begin(); it != clusters.end(); ++it)
@@ -132,6 +140,8 @@ namespace RTC
 
 	RemoteBitrateEstimatorAbsSendTime::ProbeResult RemoteBitrateEstimatorAbsSendTime::ProcessClusters(int64_t nowMs)
 	{
+		MS_TRACE();
+
 		std::list<Cluster> clusters;
 		ComputeClusters(&clusters);
 		if (clusters.empty())
@@ -167,6 +177,8 @@ namespace RTC
 
 	bool RemoteBitrateEstimatorAbsSendTime::IsBitrateImproving(int newBitrateBps) const
 	{
+		MS_TRACE();
+
 		bool initialProbe = !this->remoteRate.ValidEstimate() && newBitrateBps > 0;
 		bool bitrateAboveEstimate = this->remoteRate.ValidEstimate() && newBitrateBps > static_cast<int>(this->remoteRate.LatestEstimate());
 		return initialProbe || bitrateAboveEstimate;
@@ -174,6 +186,8 @@ namespace RTC
 
 	void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint8_t* absoluteSendTime)
 	{
+		MS_TRACE();
+
 		if (!absoluteSendTime)
 		{
 			MS_WARN_TAG(rbe, "Incoming packet is missing absolute send time extension!");
@@ -184,6 +198,8 @@ namespace RTC
 
 	void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc)
 	{
+		MS_TRACE();
+
 		MS_ASSERT(sendTime_24bits < (1ul << 24), "invalid 'sendTime_24bits' value");
 		if (!this->umaRecorded)
 		{
@@ -300,6 +316,8 @@ namespace RTC
 
 	void RemoteBitrateEstimatorAbsSendTime::TimeoutStreams(int64_t nowMs)
 	{
+		MS_TRACE();
+
 		for (Ssrcs::iterator it = this->ssrcs.begin(); it != this->ssrcs.end();)
 		{
 			if ((nowMs - it->second) > kStreamTimeOutMs)
@@ -323,6 +341,8 @@ namespace RTC
 
 	bool RemoteBitrateEstimatorAbsSendTime::LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
 	{
+		MS_TRACE();
+
 		//MS_DASSERT(ssrcs);
 		//MS_DASSERT(bitrateBps);
 		if (!this->remoteRate.ValidEstimate())

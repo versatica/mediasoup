@@ -31,6 +31,8 @@ namespace RTC
 
 	void OveruseEstimator::Update(int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs)
 	{
+		MS_TRACE();
+
 		(void) nowMs;
 		const double minFramePeriod = UpdateMinFramePeriod(tsDelta);
 		const double tTsDelta = tDelta - tsDelta;
@@ -100,6 +102,8 @@ namespace RTC
 
 	double OveruseEstimator::UpdateMinFramePeriod(double tsDelta)
 	{
+		MS_TRACE();
+
 		double minFramePeriod = tsDelta;
 		if (this->tsDeltaHist.size() >= kMinFramePeriodHistoryLength)
 		{
@@ -115,6 +119,8 @@ namespace RTC
 
 	void OveruseEstimator::UpdateNoiseEstimate(double residual, double tsDelta, bool stableState)
 	{
+		MS_TRACE();
+
 		if (!stableState)
 		{
 			return;

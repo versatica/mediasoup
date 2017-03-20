@@ -25,6 +25,8 @@ namespace RTC
 
 	int64_t AimdRateControl::GetFeedbackInterval() const
 	{
+		MS_TRACE();
+
 		// Estimate how often we can send RTCP if we allocate up to 5% of bandwidth
 		// to feedback.
 		static const int kRtcpSize = 80;
@@ -35,6 +37,8 @@ namespace RTC
 
 	bool AimdRateControl::TimeToReduceFurther(int64_t timeNow, uint32_t incomingBitrateBps) const
 	{
+		MS_TRACE();
+
 		const int64_t bitrateReductionInterval = std::max<int64_t>(std::min<int64_t>(this->rtt, 200), 10);
 		if (timeNow - this->timeLastBitrateChange >= bitrateReductionInterval)
 		{
@@ -52,6 +56,8 @@ namespace RTC
 
 	void AimdRateControl::Update(const RateControlInput* input, int64_t nowMs)
 	{
+		MS_TRACE();
+
 		MS_ASSERT(input, "'input' missing");
 
 		// Set the initial bit rate value to what we're receiving the first half
@@ -88,6 +94,8 @@ namespace RTC
 
 	int AimdRateControl::GetNearMaxIncreaseRateBps() const
 	{
+		MS_TRACE();
+
 		//MSDASSERT(this->currentBitrateBps > 0);
 		double bitsPerFrame = static_cast<double>(this->currentBitrateBps) / 30.0;
 		double packetsPerFrame = std::ceil(bitsPerFrame / (8.0 * 1200.0));
@@ -101,6 +109,8 @@ namespace RTC
 
 	uint32_t AimdRateControl::ChangeBitrate(uint32_t newBitrateBps, uint32_t incomingBitrateBps, int64_t nowMs)
 	{
+		MS_TRACE();
+
 		if (!this->updated)
 		{
 			return this->currentBitrateBps;
@@ -181,6 +191,8 @@ namespace RTC
 
 	uint32_t AimdRateControl::ClampBitrate(uint32_t newBitrateBps, uint32_t incomingBitrateBps) const
 	{
+		MS_TRACE();
+
 		// Don't change the bit rate if the send side is too far off.
 		// We allow a bit more lag at very low rates to not too easily get stuck if
 		// the encoder produces uneven outputs.
@@ -195,6 +207,8 @@ namespace RTC
 
 	uint32_t AimdRateControl::MultiplicativeRateIncrease(int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const
 	{
+		MS_TRACE();
+
 		double alpha = 1.08;
 		if (lastMs > -1)
 		{
@@ -207,6 +221,8 @@ namespace RTC
 
 	void AimdRateControl::UpdateMaxBitRateEstimate(float incomingBitrateKbps)
 	{
+		MS_TRACE();
+
 		const float alpha = 0.05f;
 		if (this->avgMaxBitrateKbps == -1.0f)
 		{
@@ -220,7 +236,7 @@ namespace RTC
 		// with the average max bit rate.
 		const float norm = std::max(this->avgMaxBitrateKbps, 1.0f);
 		this->varMaxBitrateKbps = (1 - alpha) * this->varMaxBitrateKbps +
-		                          alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) * (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
+			alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) * (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
 		// 0.4 ~= 14 kbit/s at 500 kbit/s
 		if (this->varMaxBitrateKbps < 0.4f)
 		{
@@ -235,6 +251,8 @@ namespace RTC
 
 	void AimdRateControl::ChangeState(const RateControlInput& input, int64_t nowMs)
 	{
+		MS_TRACE();
+
 		(void) input;
 		switch (this->currentInput.bwState)
 		{

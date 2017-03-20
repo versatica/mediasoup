@@ -12,6 +12,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
+#include "Logger.hpp"
 #include <math.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -36,11 +37,15 @@ namespace RTC
 	// (jmillan) disable the experiment until we know how to use the threshold values.
 	bool AdaptiveThresholdExperimentIsDisabled()
 	{
+		MS_TRACE();
+
 		return true;
 	}
 
 	bool ReadExperimentConstants(double* kUp, double* kDown)
 	{
+		MS_TRACE();
+
 		(void) kUp;
 		(void) kDown;
 		return false;
@@ -74,6 +79,8 @@ namespace RTC
 
 	BandwidthUsage OveruseDetector::Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs)
 	{
+		MS_TRACE();
+
 		if (numOfDeltas < 2)
 		{
 			return kBwNormal;
@@ -125,6 +132,8 @@ namespace RTC
 
 	void OveruseDetector::UpdateThreshold(double modifiedOffset, int64_t nowMs)
 	{
+		MS_TRACE();
+
 		if (!this->inExperiment)
 			return;
 
@@ -153,6 +162,8 @@ namespace RTC
 
 	void OveruseDetector::InitializeExperiment()
 	{
+		MS_TRACE();
+
 		//MS_DASSERT(this->inExperiment);
 		double kUp = 0.0;
 		double kDown = 0.0;
