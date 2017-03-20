@@ -15,11 +15,12 @@
 #include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
 #include <list>
 
-namespace RTC {
-
+namespace RTC
+{
 	bool AdaptiveThresholdExperimentIsDisabled();
 
-	class OveruseDetector {
+	class OveruseDetector
+	{
 	public:
 		OveruseDetector();
 		virtual ~OveruseDetector();
@@ -30,10 +31,7 @@ namespace RTC {
 		// offset was based on, representing the time between detector updates.
 		// |numOfDeltas| is the number of deltas the offset estimate is based on.
 		// Returns the state after the detection update.
-		BandwidthUsage Detect(double offset,
-				double timestampDelta,
-				int numOfDeltas,
-				int64_t nowMs);
+		BandwidthUsage Detect(double offset, double timestampDelta, int numOfDeltas, int64_t nowMs);
 
 		// Returns the current detector state.
 		BandwidthUsage State() const;
@@ -42,6 +40,7 @@ namespace RTC {
 		void UpdateThreshold(double modifiedOffset, int64_t nowMs);
 		void InitializeExperiment();
 
+	private:
 		bool inExperiment;
 		double kUp = 0.0087;
 		double kDown = 0.039;
@@ -52,25 +51,24 @@ namespace RTC {
 		double timeOverUsing = -1;
 		int overuseCounter = 0;
 		BandwidthUsage hypothesis = kBwNormal;
-
 	};
 
-	inline
-		OveruseDetector::OveruseDetector() :
-			inExperiment(!AdaptiveThresholdExperimentIsDisabled())
+	inline OveruseDetector::OveruseDetector() :
+	inExperiment(!AdaptiveThresholdExperimentIsDisabled())
 	{
 		if (this->inExperiment)
 			InitializeExperiment();
 	}
 
 	inline
-		OveruseDetector::~OveruseDetector() {}
+	OveruseDetector::~OveruseDetector()
+	{}
 
 	inline
-		BandwidthUsage OveruseDetector::State() const {
-			return this->hypothesis;
-		}
+	BandwidthUsage OveruseDetector::State() const
+	{
+		return this->hypothesis;
+	}
+}
 
-}  // namespace RTC
-
-#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_OVERUSE_DETECTOR_HPP
+#endif

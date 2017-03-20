@@ -14,8 +14,8 @@
 #include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
 #include <deque>
 
-namespace RTC {
-
+namespace RTC
+{
 	// (jmillan) borrowed from webrtc/common_types.h
 	//
 	// Bandwidth over-use detector options.  These are used to drive
@@ -24,20 +24,23 @@ namespace RTC {
 	// TODO(terelius): This is only used in overuse_estimator.cc, and only in the
 	// default constructed state. Can we move the relevant variables into that
 	// class and delete this? See also disabled warning at line 27
-	struct OverUseDetectorOptions {
-		OverUseDetectorOptions()
-			: initialSlope(8.0 / 512.0),
+	struct OverUseDetectorOptions
+	{
+		OverUseDetectorOptions() :
+			initialSlope(8.0 / 512.0),
 			initialOffset(0),
 			initialE(),
 			initialProcessNoise(),
 			initialAvgNoise(0.0),
-			initialVarNoise(50) {
-				initialE[0][0] = 100;
-				initialE[1][1] = 1e-1;
-				initialE[0][1] = initialE[1][0] = 0;
-				initialProcessNoise[0] = 1e-13;
-				initialProcessNoise[1] = 1e-3;
-			}
+			initialVarNoise(50)
+		{
+			initialE[0][0] = 100;
+			initialE[1][1] = 1e-1;
+			initialE[0][1] = initialE[1][0] = 0;
+			initialProcessNoise[0] = 1e-13;
+			initialProcessNoise[1] = 1e-3;
+		}
+
 		double initialSlope;
 		double initialOffset;
 		double initialE[2][2];
@@ -46,7 +49,8 @@ namespace RTC {
 		double initialVarNoise;
 	};
 
-	class OveruseEstimator {
+	class OveruseEstimator
+	{
 	public:
 		explicit OveruseEstimator(const OverUseDetectorOptions& options);
 		~OveruseEstimator();
@@ -55,11 +59,7 @@ namespace RTC {
 		// between timestamp groups as defined by the InterArrival class.
 		// |current_hypothesis| should be the hypothesis of the over-use detector at
 		// this time.
-		void Update(int64_t tDelta,
-				double tsDelta,
-				int sizeDelta,
-				BandwidthUsage currentHypothesis,
-				int64_t nowMs);
+		void Update(int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs);
 
 		// Returns the estimated noise/jitter variance in ms^2.
 		double GetVarNoise() const;
@@ -99,31 +99,35 @@ namespace RTC {
 		processNoise(),
 		avgNoise(this->options.initialAvgNoise),
 		varNoise(this->options.initialVarNoise),
-		tsDeltaHist() {
-			memcpy(this->E, this->options.initialE, sizeof(this->E));
-			memcpy(this->processNoise, this->options.initialProcessNoise,
-					sizeof(this->processNoise));
+		tsDeltaHist()
+	{
+		memcpy(this->E, this->options.initialE, sizeof(this->E));
+		memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));
 	}
 
 	inline
-	OveruseEstimator::~OveruseEstimator() {
+	OveruseEstimator::~OveruseEstimator()
+	{
 		this->tsDeltaHist.clear();
 	}
 
 	inline
-	double OveruseEstimator::GetVarNoise() const {
+	double OveruseEstimator::GetVarNoise() const
+	{
 		return this->varNoise;
 	}
 
 	inline
-	double OveruseEstimator::GetOffset() const {
+	double OveruseEstimator::GetOffset() const
+	{
 		return this->offset;
 	}
 
 	inline
-	unsigned int OveruseEstimator::GetNumOfDeltas() const {
+	unsigned int OveruseEstimator::GetNumOfDeltas() const
+	{
 		return this->numOfDeltas;
 	}
-}  // namespace RTC
+}
 
-#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_OVERUSE_ESTIMATOR_HPP
+#endif

@@ -21,45 +21,33 @@
 #include <memory>
 #include <vector>
 
-namespace RTC {
-
-	class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
-		public:
+namespace RTC
+{
+	class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator
+	{
+	public:
 		RemoteBitrateEstimatorSingleStream(Listener* observer);
 		virtual ~RemoteBitrateEstimatorSingleStream();
 
-		void IncomingPacket(int64_t arrivalTimeMs,
-				size_t payloadSize,
-				const RtpPacket& packet,
-				const uint8_t* transmissionTimeOffset) override;
+		void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint8_t* transmissionTimeOffset) override;
 		void Process() override;
 		int64_t TimeUntilNextProcess() override;
 		void OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs) override;
 		void RemoveStream(uint32_t ssrc) override;
-		bool LatestEstimate(std::vector<uint32_t>* ssrcs,
-				uint32_t* bitrateBps) const override;
+		bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const override;
 		void SetMinBitrate(int minBitrateBps) override;
 
-		private:
+	private:
 		static constexpr double kTimestampToMs = 1.0 / 90.0;
 
-		private:
-		struct Detector {
-			enum { kTimestampGroupLengthMs = 5 };
-			explicit Detector(int64_t lastPacketTimeMs,
-					const OverUseDetectorOptions& options,
-					bool enableBurstGrouping);
-			/*
-			explicit Detector(int64_t lastPacketTimeMs,
-					const OverUseDetectorOptions& options,
-					bool enableBurstGrouping)
-				: lastPacketTimeMs(lastPacketTimeMs),
-				interArrival(90 * kTimestampGroupLengthMs,
-						kTimestampToMs,
-						enableBurstGrouping),
-				estimator(options),
-				detector() {}
-				*/
+	private:
+		struct Detector
+		{
+			enum
+			{
+				kTimestampGroupLengthMs = 5
+			};
+			explicit Detector(int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping);
 
 			int64_t lastPacketTimeMs;
 			InterArrival interArrival;
@@ -67,10 +55,10 @@ namespace RTC {
 			OveruseDetector detector;
 		};
 
-		private:
+	private:
 		typedef std::map<uint32_t, Detector*> SsrcOveruseEstimatorMap;
 
-		private:
+	private:
 		// Triggers a new estimate calculation.
 		void UpdateEstimate(int64_t timeNow);
 		void GetSsrcs(std::vector<uint32_t>* ssrcs) const;
@@ -79,7 +67,7 @@ namespace RTC {
 		// otherwise creates it.
 		AimdRateControl* GetRemoteRate();
 
-		private:
+	private:
 		SsrcOveruseEstimatorMap overuseDetectors;
 		RateCalculator incomingBitrate;
 		uint32_t lastValidIncomingBitrate = 0;
@@ -91,29 +79,26 @@ namespace RTC {
 	};
 
 	inline
-	RemoteBitrateEstimatorSingleStream::Detector::Detector(int64_t lastPacketTimeMs,
-					const OverUseDetectorOptions& options,
-					bool enableBurstGrouping) :
-				lastPacketTimeMs(lastPacketTimeMs),
-				interArrival(90 * kTimestampGroupLengthMs, kTimestampToMs, enableBurstGrouping),
-				estimator(options),
-				detector()
+	RemoteBitrateEstimatorSingleStream::Detector::Detector(int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping) :
+		lastPacketTimeMs(lastPacketTimeMs),
+		interArrival(90 * kTimestampGroupLengthMs, kTimestampToMs, enableBurstGrouping),
+		estimator(options),
+		detector()
 	{}
 
 	inline
-	RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(
-			Listener* observer)
-		: incomingBitrate(),
-		remoteRate(new AimdRateControl()),
-		observer(observer),
-		processIntervalMs(kProcessIntervalMs)
-		{
-			//MS_ASSERT(this->observer, "'this->observer' missing");
-		}
+	RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer) :
+		incomingBitrate(),
+		remoteRate(new AimdRateControl()), observer(observer), processIntervalMs(kProcessIntervalMs)
+	{
+		//MS_ASSERT(this->observer, "'this->observer' missing");
+	}
 
 	inline
-	RemoteBitrateEstimatorSingleStream::~RemoteBitrateEstimatorSingleStream() {
-		while (!this->overuseDetectors.empty()) {
+	RemoteBitrateEstimatorSingleStream::~RemoteBitrateEstimatorSingleStream()
+	{
+		while (!this->overuseDetectors.empty())
+		{
 			SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.begin();
 			delete it->second;
 			this->overuseDetectors.erase(it);
@@ -121,40 +106,43 @@ namespace RTC {
 	}
 
 	inline
-	void RemoteBitrateEstimatorSingleStream::Process() {
-		{
-			UpdateEstimate(DepLibUV::GetTime());
-		}
+	void RemoteBitrateEstimatorSingleStream::Process()
+	{
+		UpdateEstimate(DepLibUV::GetTime());
 		this->lastProcessTime = DepLibUV::GetTime();
 	}
 
 	inline
-	void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avgRttMs,
-			int64_t maxRttMs) {
-		(void)maxRttMs;
+	void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)
+	{
+		(void) maxRttMs;
 		GetRemoteRate()->SetRtt(avgRttMs);
 	}
 
 	inline
-	void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc) {
+	void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc)
+	{
 		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.find(ssrc);
-		if (it != this->overuseDetectors.end()) {
+		if (it != this->overuseDetectors.end())
+		{
 			delete it->second;
 			this->overuseDetectors.erase(it);
 		}
 	}
 
 	inline
-	AimdRateControl* RemoteBitrateEstimatorSingleStream::GetRemoteRate() {
+	AimdRateControl* RemoteBitrateEstimatorSingleStream::GetRemoteRate()
+	{
 		if (!this->remoteRate)
 			this->remoteRate.reset(new AimdRateControl());
 		return this->remoteRate.get();
 	}
 
 	inline
-	void RemoteBitrateEstimatorSingleStream::SetMinBitrate(int minBitrateBps) {
+	void RemoteBitrateEstimatorSingleStream::SetMinBitrate(int minBitrateBps)
+	{
 		this->remoteRate->SetMinBitrate(minBitrateBps);
 	}
-}  // namespace RTC
+}
 
-#endif  // MS_RTC_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
+#endif

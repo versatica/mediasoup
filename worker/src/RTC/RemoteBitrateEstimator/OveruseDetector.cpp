@@ -18,9 +18,8 @@
 #include <sstream>
 #include <string>
 
-
-namespace RTC {
-
+namespace RTC
+{
 	// (jmillan) disable the experiment until we know how to use the threshold values.
 	/*
 		 const char kAdaptiveThresholdExperiment[] = "WebRTC-AdaptiveBweThreshold";
@@ -35,11 +34,13 @@ namespace RTC {
 	const int kMinNumDeltas = 60;
 
 	// (jmillan) disable the experiment until we know how to use the threshold values.
-	bool AdaptiveThresholdExperimentIsDisabled() {
+	bool AdaptiveThresholdExperimentIsDisabled()
+	{
 		return true;
 	}
 
-	bool ReadExperimentConstants(double* kUp, double* kDown) {
+	bool ReadExperimentConstants(double* kUp, double* kDown)
+	{
 		(void) kUp;
 		(void) kDown;
 		return false;
@@ -71,37 +72,46 @@ namespace RTC {
 		 }
 		 */
 
-	BandwidthUsage OveruseDetector::Detect(double offset,
-			double tsDelta,
-			int numOfDeltas,
-			int64_t nowMs) {
-		if (numOfDeltas < 2) {
+	BandwidthUsage OveruseDetector::Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs)
+	{
+		if (numOfDeltas < 2)
+		{
 			return kBwNormal;
 		}
 		const double T = std::min(numOfDeltas, kMinNumDeltas) * offset;
-		if (T > this->threshold) {
-			if (this->timeOverUsing == -1) {
+		if (T > this->threshold)
+		{
+			if (this->timeOverUsing == -1)
+			{
 				// Initialize the timer. Assume that we've been
 				// over-using half of the time since the previous
 				// sample.
 				this->timeOverUsing = tsDelta / 2;
-			} else {
+			}
+			else
+			{
 				// Increment timer
 				this->timeOverUsing += tsDelta;
 			}
 			this->overuseCounter++;
-			if (this->timeOverUsing > this->overusingTimeThreshold && this->overuseCounter > 1) {
-				if (offset >= this->prevOffset) {
+			if (this->timeOverUsing > this->overusingTimeThreshold && this->overuseCounter > 1)
+			{
+				if (offset >= this->prevOffset)
+				{
 					this->timeOverUsing = 0;
 					this->overuseCounter = 0;
 					this->hypothesis = kBwOverusing;
 				}
 			}
-		} else if (T < -this->threshold) {
+		}
+		else if (T < -this->threshold)
+		{
 			this->timeOverUsing = -1;
 			this->overuseCounter = 0;
 			this->hypothesis = kBwUnderusing;
-		} else {
+		}
+		else
+		{
 			this->timeOverUsing = -1;
 			this->overuseCounter = 0;
 			this->hypothesis = kBwNormal;
@@ -113,14 +123,16 @@ namespace RTC {
 		return this->hypothesis;
 	}
 
-	void OveruseDetector::UpdateThreshold(double modifiedOffset, int64_t nowMs) {
+	void OveruseDetector::UpdateThreshold(double modifiedOffset, int64_t nowMs)
+	{
 		if (!this->inExperiment)
 			return;
 
 		if (this->lastUpdateMs == -1)
 			this->lastUpdateMs = nowMs;
 
-		if (fabs(modifiedOffset) > this->threshold + kMaxAdaptOffsetMs) {
+		if (fabs(modifiedOffset) > this->threshold + kMaxAdaptOffsetMs)
+		{
 			// Avoid adapting the threshold to big latency spikes, caused e.g.,
 			// by a sudden capacity drop.
 			this->lastUpdateMs = nowMs;
@@ -130,8 +142,7 @@ namespace RTC {
 		const double k = fabs(modifiedOffset) < this->threshold ? this->kDown : this->kUp;
 		const int64_t kMaxTimeDeltaMs = 100;
 		int64_t timeDeltaMs = std::min(nowMs - this->lastUpdateMs, kMaxTimeDeltaMs);
-		this->threshold +=
-			k * (fabs(modifiedOffset) - this->threshold) * timeDeltaMs;
+		this->threshold += k * (fabs(modifiedOffset) - this->threshold) * timeDeltaMs;
 
 		const double kMinThreshold = 6;
 		const double kMaxThreshold = 600;
@@ -140,14 +151,16 @@ namespace RTC {
 		this->lastUpdateMs = nowMs;
 	}
 
-	void OveruseDetector::InitializeExperiment() {
+	void OveruseDetector::InitializeExperiment()
+	{
 		//MS_DASSERT(this->inExperiment);
 		double kUp = 0.0;
 		double kDown = 0.0;
 		this->overusingTimeThreshold = kOverUsingTimeThreshold;
-		if (ReadExperimentConstants(&kUp, &kDown)) {
+		if (ReadExperimentConstants(&kUp, &kDown))
+		{
 			this->kUp = kUp;
 			this->kDown = kDown;
 		}
 	}
-}  // namespace RTC
+}
