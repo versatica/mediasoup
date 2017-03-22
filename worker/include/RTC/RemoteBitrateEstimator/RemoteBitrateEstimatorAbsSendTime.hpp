@@ -51,6 +51,10 @@ namespace RTC
 
 	class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator
 	{
+	private:
+		static bool IsWithinClusterBounds(int sendDeltaMs, const Cluster& clusterAggregate);
+		static void AddCluster(std::list<Cluster>* clusters, Cluster* cluster);
+
 	public:
 		RemoteBitrateEstimatorAbsSendTime(Listener* observer);
 		virtual ~RemoteBitrateEstimatorAbsSendTime() = default;
@@ -75,9 +79,6 @@ namespace RTC
 		};
 
 	private:
-		static bool IsWithinClusterBounds(int sendDeltaMs, const Cluster& clusterAggregate);
-		static void AddCluster(std::list<Cluster>* clusters, Cluster* cluster);
-
 		void IncomingPacketInfo(int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc);
 
 		void ComputeClusters(std::list<Cluster>* clusters) const;

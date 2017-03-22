@@ -27,6 +27,11 @@ namespace RTC
 	class AimdRateControl
 	{
 	private:
+		static constexpr int64_t kDefaultRttMs = 200;
+		// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
+		static constexpr int kMinBitrateBps = 10000;
+
+	private:
 		enum RateControlState
 		{
 			kRcHold,
@@ -81,11 +86,6 @@ namespace RTC
 		void ChangeState(const RateControlInput& input, int64_t nowMs);
 		void ChangeState(RateControlState newState);
 		void ChangeRegion(RateControlRegion region);
-
-	private:
-		static constexpr int64_t kDefaultRttMs = 200;
-		// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
-		static constexpr int kMinBitrateBps = 10000;
 
 	private:
 		uint32_t minConfiguredBitrateBps = kMinBitrateBps;

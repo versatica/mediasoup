@@ -26,6 +26,9 @@ namespace RTC
 	class RemoteBitrateEstimatorSingleStream :
 		public RemoteBitrateEstimator
 	{
+	private:
+		static constexpr double kTimestampToMs = 1.0 / 90.0;
+
 	public:
 		RemoteBitrateEstimatorSingleStream(Listener* observer);
 		virtual ~RemoteBitrateEstimatorSingleStream();
@@ -37,9 +40,6 @@ namespace RTC
 		void RemoveStream(uint32_t ssrc) override;
 		bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const override;
 		void SetMinBitrate(int minBitrateBps) override;
-
-	private:
-		static constexpr double kTimestampToMs = 1.0 / 90.0;
 
 	private:
 		struct Detector

@@ -45,6 +45,10 @@ namespace RTC
 			virtual void onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
 		};
 
+	protected:
+		static const int64_t kProcessIntervalMs = 500;
+		static const int64_t kStreamTimeOutMs = 2000;
+
 	public:
 		virtual ~RemoteBitrateEstimator() = default;
 
@@ -81,10 +85,6 @@ namespace RTC
 		// Process any pending tasks such as timeouts.
 		// Called on a worker thread.
 		virtual void Process() = 0;
-
-	protected:
-		static const int64_t kProcessIntervalMs = 500;
-		static const int64_t kStreamTimeOutMs = 2000;
 	};
 }
 
