@@ -25,7 +25,7 @@ namespace RTC
 		};
 
 	public:
-		RtpStream(RTC::RtpStream::Params& params);
+		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
 		virtual Json::Value toJson() const = 0;
