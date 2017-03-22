@@ -27,16 +27,25 @@ namespace Matchers {
             }
 
         protected:
+            virtual ~MatcherUntypedBase();
             virtual std::string describe() const = 0;
             mutable std::string m_cachedToString;
         private:
             MatcherUntypedBase& operator = ( MatcherUntypedBase const& );
         };
 
-        template<typename ObjectT, typename ComparatorT = ObjectT>
-        struct MatcherBase : MatcherUntypedBase {
-
+        template<typename ObjectT>
+        struct MatcherMethod {
             virtual bool match( ObjectT const& arg ) const = 0;
+        };
+        template<typename PtrT>
+        struct MatcherMethod<PtrT*> {
+            virtual bool match( PtrT* arg ) const = 0;
+        };
+
+        template<typename ObjectT, typename ComparatorT = ObjectT>
+        struct MatcherBase : MatcherUntypedBase, MatcherMethod<ObjectT> {
+
 
             MatchAllOf<ComparatorT> operator && ( MatcherBase const& other ) const;
             MatchAnyOf<ComparatorT> operator || ( MatcherBase const& other ) const;

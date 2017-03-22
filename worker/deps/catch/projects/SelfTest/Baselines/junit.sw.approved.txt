@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuitesspanner>
-  <testsuite name="<exe-name>" errors="13" failures="76" tests="956" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
+  <testsuite name="<exe-name>" errors="13" failures="77" tests="964" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
     <testcase classname="global" name="# A test name that starts with a #" time="{duration}"/>
     <testcase classname="global" name="#542" time="{duration}"/>
     <testcase classname="global" name="#809" time="{duration}"/>
+    <testcase classname="global" name="#835 -- errno should not be touched by Catch" time="{duration}">
+      <failure message="1 == 0" type="CHECK">
+MiscTests.cpp:<line number>
+      </failure>
+    </testcase>
     <testcase classname="global" name="'Not' checks that should fail" time="{duration}">
       <failure message="false != false" type="CHECK">
 ConditionTests.cpp:<line number>
@@ -83,6 +88,8 @@ ExceptionTests.cpp:<line number>
     <testcase classname="Assertions then sections" name="A section" time="{duration}"/>
     <testcase classname="Assertions then sections" name="A section/Another section" time="{duration}"/>
     <testcase classname="Assertions then sections" name="A section/Another other section" time="{duration}"/>
+    <testcase classname="Capture and info messages" name="Capture should stringify like assertions" time="{duration}"/>
+    <testcase classname="Capture and info messages" name="Info should NOT stringify the way assertions do" time="{duration}"/>
     <testcase classname="Character pretty printing" name="Specifically escaped" time="{duration}"/>
     <testcase classname="Character pretty printing" name="General chars" time="{duration}"/>
     <testcase classname="Character pretty printing" name="Low ASCII" time="{duration}"/>
@@ -195,6 +202,12 @@ MessageTests.cpp:<line number>
 MessageTests.cpp:<line number>
       </failure>
     </testcase>
+    <testcase classname="global" name="FAIL_CHECK does not abort the test" time="{duration}">
+      <failure type="FAIL_CHECK">
+This is a failure
+MessageTests.cpp:<line number>
+      </failure>
+    </testcase>
     <testcase classname="global" name="Factorials are computed" time="{duration}"/>
     <testcase classname="global" name="Generator over a range of pairs" time="{duration}"/>
     <testcase classname="global" name="Generators over two ranges" time="{duration}"/>
@@ -250,7 +263,7 @@ ConditionTests.cpp:<line number>
     <testcase classname="Long strings can be wrapped" name="With wrap-before/ after characters/No wrapping" time="{duration}"/>
     <testcase classname="Long strings can be wrapped" name="With wrap-before/ after characters/Wrap before" time="{duration}"/>
     <testcase classname="Long strings can be wrapped" name="With wrap-before/ after characters/Wrap after" time="{duration}"/>
-    <testcase classname="global" name="Long text is truncted" time="{duration}"/>
+    <testcase classname="global" name="Long text is truncated" time="{duration}"/>
     <testcase classname="global" name="ManuallyRegistered" time="{duration}"/>
     <testcase classname="global" name="Matchers can be (AllOf) composed with the &amp;&amp; operator" time="{duration}"/>
     <testcase classname="global" name="Matchers can be (AnyOf) composed with the || operator" time="{duration}"/>
@@ -387,6 +400,7 @@ MessageTests.cpp:<line number>
     <testcase classname="global" name="Parsing a std::pair" time="{duration}"/>
     <testcase classname="global" name="Pointers can be compared to null" time="{duration}"/>
     <testcase classname="global" name="Pointers can be converted to strings" time="{duration}"/>
+    <testcase classname="Process can be configured on command line" name="empty args don't cause a crash" time="{duration}"/>
     <testcase classname="Process can be configured on command line" name="default - no arguments" time="{duration}"/>
     <testcase classname="Process can be configured on command line" name="test lists/1 test" time="{duration}"/>
     <testcase classname="Process can be configured on command line" name="test lists/Specify one test case exclusion using exclude:" time="{duration}"/>

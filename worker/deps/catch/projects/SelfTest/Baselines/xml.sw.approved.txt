@@ -50,6 +50,25 @@
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="#835 -- errno should not be touched by Catch" tags="[!shouldfail]" filename="projects/<exe-name>/MiscTests.cpp" >
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/MiscTests.cpp" >
+        <Original>
+          f() == 0
+        </Original>
+        <Expanded>
+          1 == 0
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MiscTests.cpp" >
+        <Original>
+          (*__error()) == 1
+        </Original>
+        <Expanded>
+          1 == 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="'Not' checks that should fail" tags="[.][failing][hide]" filename="projects/<exe-name>/ConditionTests.cpp" >
       <Expression success="false" type="CHECK" filename="projects/<exe-name>/ConditionTests.cpp" >
         <Original>
@@ -640,6 +659,37 @@
           <OverallResults successes="1" failures="0" expectedFailures="0"/>
         </Section>
         <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Capture and info messages" filename="projects/<exe-name>/ToStringGeneralTests.cpp" >
+      <Section name="Capture should stringify like assertions" filename="projects/<exe-name>/ToStringGeneralTests.cpp" >
+        <Info>
+          i := 2
+        </Info>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/ToStringGeneralTests.cpp" >
+          <Original>
+            true
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Info should NOT stringify the way assertions do" filename="projects/<exe-name>/ToStringGeneralTests.cpp" >
+        <Info>
+          3
+        </Info>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/ToStringGeneralTests.cpp" >
+          <Original>
+            true
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
       <OverallResult success="true"/>
     </TestCase>
@@ -1326,6 +1376,15 @@
     </TestCase>
     <TestCase name="FAIL does not require an argument" tags="[.][failing][hide][messages]" filename="projects/<exe-name>/MessageTests.cpp" >
       <Failure filename="projects/<exe-name>/MessageTests.cpp" />
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="FAIL_CHECK does not abort the test" tags="[.][failing][hide][messages]" filename="projects/<exe-name>/MessageTests.cpp" >
+      <Failure filename="projects/<exe-name>/MessageTests.cpp" >
+        This is a failure
+      </Failure>
+      <Warning>
+        This message appears in the output
+      </Warning>
       <OverallResult success="false"/>
     </TestCase>
     <TestCase name="Factorials are computed" tags="[factorial]" filename="projects/<exe-name>/MiscTests.cpp" >
@@ -2607,6 +2666,9 @@
       <OverallResult success="false"/>
     </TestCase>
     <TestCase name="INFO gets logged on failure, even if captured before successful assertions" tags="[.][failing][hide][messages]" filename="projects/<exe-name>/MessageTests.cpp" >
+      <Info>
+        this message may be logged later
+      </Info>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           a == 2
@@ -2637,6 +2699,9 @@
           2 == 0
         </Expanded>
       </Expression>
+      <Info>
+        but not this
+      </Info>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           a == 2
@@ -3409,7 +3474,7 @@ re>"
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <TestCase name="Long text is truncted" tags="[Text][Truncated]" filename="projects/<exe-name>/TestMain.cpp" >
+    <TestCase name="Long text is truncated" tags="[Text][Truncated]" filename="projects/<exe-name>/TestMain.cpp" >
       <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/TestMain.cpp" >
         <Original>
           t.toString(), EndsWith( "... message truncated due to excessive size" )
@@ -6150,6 +6215,25 @@ re>"
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="Process can be configured on command line" tags="[command-line][config]" filename="projects/<exe-name>/TestMain.cpp" >
+      <Section name="empty args don't cause a crash" filename="projects/<exe-name>/TestMain.cpp" >
+        <Expression success="true" type="CHECK_NOTHROW" filename="projects/<exe-name>/TestMain.cpp" >
+          <Original>
+            parser.parseInto( std::vector&lt;std::string>(), config )
+          </Original>
+          <Expanded>
+            parser.parseInto( std::vector&lt;std::string>(), config )
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK" filename="projects/<exe-name>/TestMain.cpp" >
+          <Original>
+            config.processName == ""
+          </Original>
+          <Expanded>
+            "" == ""
+          </Expanded>
+        </Expression>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
       <Section name="default - no arguments" filename="projects/<exe-name>/TestMain.cpp" >
         <Expression success="true" type="CHECK_NOTHROW" filename="projects/<exe-name>/TestMain.cpp" >
           <Original>
@@ -6157,6 +6241,14 @@ re>"
           </Original>
           <Expanded>
             parseIntoConfig( argv, config )
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK" filename="projects/<exe-name>/TestMain.cpp" >
+          <Original>
+            config.processName == "test"
+          </Original>
+          <Expanded>
+            "test" == "test"
           </Expanded>
         </Expression>
         <Expression success="true" type="CHECK" filename="projects/<exe-name>/TestMain.cpp" >
@@ -6191,7 +6283,7 @@ re>"
             true
           </Expanded>
         </Expression>
-        <OverallResults successes="5" failures="0" expectedFailures="0"/>
+        <OverallResults successes="6" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="test lists" filename="projects/<exe-name>/TestMain.cpp" >
         <Section name="1 test" description="Specify one test case using" filename="projects/<exe-name>/TestMain.cpp" >
@@ -6736,6 +6828,12 @@ re>"
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="SCOPED_INFO is reset for each loop" tags="[.][failing][hide][messages]" filename="projects/<exe-name>/MessageTests.cpp" >
+      <Info>
+        current counter 0
+      </Info>
+      <Info>
+        i := 0
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6744,6 +6842,12 @@ re>"
           0 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 1
+      </Info>
+      <Info>
+        i := 1
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6752,6 +6856,12 @@ re>"
           1 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 2
+      </Info>
+      <Info>
+        i := 2
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6760,6 +6870,12 @@ re>"
           2 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 3
+      </Info>
+      <Info>
+        i := 3
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6768,6 +6884,12 @@ re>"
           3 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 4
+      </Info>
+      <Info>
+        i := 4
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6776,6 +6898,12 @@ re>"
           4 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 5
+      </Info>
+      <Info>
+        i := 5
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6784,6 +6912,12 @@ re>"
           5 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 6
+      </Info>
+      <Info>
+        i := 6
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6792,6 +6926,12 @@ re>"
           6 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 7
+      </Info>
+      <Info>
+        i := 7
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6800,6 +6940,12 @@ re>"
           7 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 8
+      </Info>
+      <Info>
+        i := 8
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -6808,6 +6954,12 @@ re>"
           8 &lt; 10
         </Expanded>
       </Expression>
+      <Info>
+        current counter 9
+      </Info>
+      <Info>
+        i := 9
+      </Info>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MessageTests.cpp" >
         <Original>
           i &lt; 10
@@ -9086,6 +9238,9 @@ spanner      <OverallResult success="true"/>
           1 == 0
         </Expanded>
       </Expression>
+      <Info>
+        Testing if fib[2] (2) is even
+      </Info>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/MiscTests.cpp" >
         <Original>
           ( fib[i] % 2 ) == 0
@@ -9116,6 +9271,9 @@ spanner      <OverallResult success="true"/>
           1 == 0
         </Expanded>
       </Expression>
+      <Info>
+        Testing if fib[5] (8) is even
+      </Info>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/MiscTests.cpp" >
         <Original>
           ( fib[i] % 2 ) == 0
@@ -9885,7 +10043,7 @@ spanner      <OverallResult success="true"/>
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="849" failures="89" expectedFailures="18"/>
+    <OverallResults successes="855" failures="90" expectedFailures="19"/>
   </Group>
-  <OverallResults successes="849" failures="88" expectedFailures="18"/>
+  <OverallResults successes="855" failures="89" expectedFailures="19"/>
 </Catch>

@@ -18,25 +18,6 @@
 
 namespace Catch {
 
-    namespace {
-        // Because formatting using c++ streams is stateful, drop down to C is required
-        // Alternatively we could use stringstream, but its performance is... not good.
-        std::string getFormattedDuration( double duration ) {
-            // Max exponent + 1 is required to represent the whole part
-            // + 1 for decimal point
-            // + 3 for the 3 decimal places
-            // + 1 for null terminator
-            const size_t maxDoubleSize = DBL_MAX_10_EXP + 1 + 1 + 3 + 1;
-            char buffer[maxDoubleSize];
-#ifdef _MSC_VER
-            sprintf_s(buffer, "%.3f", duration);
-#else
-            sprintf(buffer, "%.3f", duration);
-#endif
-            return std::string(buffer);
-        }
-    }
-
 
     struct ConsoleReporter : StreamingReporterBase {
         ConsoleReporter( ReporterConfig const& _config )
@@ -59,18 +40,15 @@ namespace Catch {
         virtual bool assertionEnded( AssertionStats const& _assertionStats ) CATCH_OVERRIDE {
             AssertionResult const& result = _assertionStats.assertionResult;
 
-            bool printInfoMessages = true;
+            bool includeResults = m_config->includeSuccessfulResults() || !result.isOk();
 
-            // Drop out if result was successful and we're not printing those
-            if( !m_config->includeSuccessfulResults() && result.isOk() ) {
-                if( result.getResultType() != ResultWas::Warning )
-                    return false;
-                printInfoMessages = false;
-            }
+            // Drop out if result was successful but we're not printing them.
+            if( !includeResults && result.getResultType() != ResultWas::Warning )
+                return false;
 
             lazyPrint();
 
-            AssertionPrinter printer( stream, _assertionStats, printInfoMessages );
+            AssertionPrinter printer( stream, _assertionStats, includeResults );
             printer.print();
             stream << std::endl;
             return true;

@@ -1,10 +1,10 @@
 ![catch logo](catch-logo-small.png)
 
-*v1.8.1*
+[![Github Releases](https://img.shields.io/github/release/philsquared/catch.svg)](https://github.com/philsquared/catch/releases)
+[![Build Status](https://travis-ci.org/philsquared/Catch.svg?branch=master)](https://travis-ci.org/philsquared/Catch)
+[![Build status](https://ci.appveyor.com/api/projects/status/hrtk60hv6tw6fght/branch/master?svg=true)](https://ci.appveyor.com/project/philsquared/catch/branch/master)
 
-Build status (on Travis CI) [![Build Status](https://travis-ci.org/philsquared/Catch.svg?branch=master)](https://travis-ci.org/philsquared/Catch)
-
-<a href="https://github.com/philsquared/Catch/releases/download/v1.8.1/catch.hpp">The latest, single header, version can be downloaded directly using this link</a>
+<a href="https://github.com/philsquared/Catch/releases/download/v1.8.2/catch.hpp">The latest, single header, version can be downloaded directly using this link</a>
 
 ## What's the Catch?
 

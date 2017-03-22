@@ -49,6 +49,23 @@ with expansion:
   42 == {?}
 
 -------------------------------------------------------------------------------
+#835 -- errno should not be touched by Catch
+-------------------------------------------------------------------------------
+MiscTests.cpp:<line number>
+...............................................................................
+
+MiscTests.cpp:<line number>: FAILED:
+  CHECK( f() == 0 )
+with expansion:
+  1 == 0
+
+MiscTests.cpp:<line number>:
+PASSED:
+  REQUIRE( (*__error()) == 1 )
+with expansion:
+  1 == 1
+
+-------------------------------------------------------------------------------
 'Not' checks that should fail
 -------------------------------------------------------------------------------
 ConditionTests.cpp:<line number>
@@ -602,6 +619,32 @@ PASSED:
   REQUIRE( Catch::alwaysTrue() )
 with expansion:
   true
+
+-------------------------------------------------------------------------------
+Capture and info messages
+  Capture should stringify like assertions
+-------------------------------------------------------------------------------
+ToStringGeneralTests.cpp:<line number>
+...............................................................................
+
+ToStringGeneralTests.cpp:<line number>:
+PASSED:
+  REQUIRE( true )
+with message:
+  i := 2
+
+-------------------------------------------------------------------------------
+Capture and info messages
+  Info should NOT stringify the way assertions do
+-------------------------------------------------------------------------------
+ToStringGeneralTests.cpp:<line number>
+...............................................................................
+
+ToStringGeneralTests.cpp:<line number>:
+PASSED:
+  REQUIRE( true )
+with message:
+  3
 
 -------------------------------------------------------------------------------
 Character pretty printing
@@ -1172,6 +1215,20 @@ MessageTests.cpp:<line number>
 ...............................................................................
 
 MessageTests.cpp:<line number>: FAILED:
+
+-------------------------------------------------------------------------------
+FAIL_CHECK does not abort the test
+-------------------------------------------------------------------------------
+MessageTests.cpp:<line number>
+...............................................................................
+
+MessageTests.cpp:<line number>: FAILED:
+explicitly with message:
+  This is a failure
+
+MessageTests.cpp:<line number>:
+warning:
+  This message appears in the output
 
 -------------------------------------------------------------------------------
 Factorials are computed
@@ -3292,7 +3349,7 @@ with expansion:
   re>"
 
 -------------------------------------------------------------------------------
-Long text is truncted
+Long text is truncated
 -------------------------------------------------------------------------------
 TestMain.cpp:<line number>
 ...............................................................................
@@ -5816,6 +5873,23 @@ warning:
 
 -------------------------------------------------------------------------------
 Process can be configured on command line
+  empty args don't cause a crash
+-------------------------------------------------------------------------------
+TestMain.cpp:<line number>
+...............................................................................
+
+TestMain.cpp:<line number>:
+PASSED:
+  CHECK_NOTHROW( parser.parseInto( std::vector<std::string>(), config ) )
+
+TestMain.cpp:<line number>:
+PASSED:
+  CHECK( config.processName == "" )
+with expansion:
+  "" == ""
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
   default - no arguments
 -------------------------------------------------------------------------------
 TestMain.cpp:<line number>
@@ -5824,6 +5898,12 @@ TestMain.cpp:<line number>
 TestMain.cpp:<line number>:
 PASSED:
   CHECK_NOTHROW( parseIntoConfig( argv, config ) )
+
+TestMain.cpp:<line number>:
+PASSED:
+  CHECK( config.processName == "test" )
+with expansion:
+  "test" == "test"
 
 TestMain.cpp:<line number>:
 PASSED:
@@ -9324,6 +9404,6 @@ MiscTests.cpp:<line number>:
 PASSED:
 
 ===============================================================================
-test cases: 163 | 117 passed | 44 failed |  2 failed as expected
-assertions: 955 | 849 passed | 88 failed | 18 failed as expected
+test cases: 166 | 118 passed | 45 failed |  3 failed as expected
+assertions: 963 | 855 passed | 89 failed | 19 failed as expected
 
