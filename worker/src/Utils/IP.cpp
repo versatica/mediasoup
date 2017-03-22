@@ -37,7 +37,7 @@ static const int IPParser_start = 1;
 
 #line 45 "src/Utils/IP.rl"
 
-		// Used by Ragel:
+		// Used by Ragel.
 		size_t cs;
 		const unsigned char* p;
 		const unsigned char* pe;
