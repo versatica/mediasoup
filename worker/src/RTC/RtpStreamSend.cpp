@@ -42,7 +42,6 @@ namespace RTC
 		json[k_params] = this->params.toJson();
 		json[k_received] = (Json::UInt)this->received;
 		json[k_maxTimestamp] = (Json::UInt)this->max_timestamp;
-
 		json[k_receivedBytes] = (Json::UInt)this->receivedBytes;
 
 		return json;

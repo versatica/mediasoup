@@ -26,10 +26,10 @@ BraceWrapping:
 BinPackArguments: true
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
-BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializersBeforeComma: true
 BreakStringLiterals: true
 ColumnLimit: 150
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 1
 DerivePointerAlignment: true
 IndentCaseLabels: true
