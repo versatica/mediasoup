@@ -30,7 +30,7 @@ namespace RTC { namespace RTCP
 
 	inline
 	FeedbackRtpSrReqPacket::FeedbackRtpSrReqPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackRtpPacket(FeedbackRtp::SR_REQ, sender_ssrc, media_ssrc)
+		FeedbackRtpPacket(FeedbackRtp::MessageType::SR_REQ, sender_ssrc, media_ssrc)
 	{}
 }}
 

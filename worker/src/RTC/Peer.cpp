@@ -790,11 +790,11 @@ namespace RTC
 
 					switch (feedback->GetMessageType())
 					{
-						case RTCP::FeedbackPs::PLI:
-						case RTCP::FeedbackPs::SLI:
-						case RTCP::FeedbackPs::RPSI:
-						case RTCP::FeedbackPs::FIR:
-						case RTCP::FeedbackPs::AFB:
+						case RTCP::FeedbackPs::MessageType::PLI:
+						case RTCP::FeedbackPs::MessageType::SLI:
+						case RTCP::FeedbackPs::MessageType::RPSI:
+						case RTCP::FeedbackPs::MessageType::FIR:
+						case RTCP::FeedbackPs::MessageType::AFB:
 						{
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
@@ -811,12 +811,12 @@ namespace RTC
 							break;
 						}
 
-						case RTCP::FeedbackPs::TSTR:
-						case RTCP::FeedbackPs::TSTN:
-						case RTCP::FeedbackPs::VBCM:
-						case RTCP::FeedbackPs::PSLEI:
-						case RTCP::FeedbackPs::ROI:
-						case RTCP::FeedbackPs::EXT:
+						case RTCP::FeedbackPs::MessageType::TSTR:
+						case RTCP::FeedbackPs::MessageType::TSTN:
+						case RTCP::FeedbackPs::MessageType::VBCM:
+						case RTCP::FeedbackPs::MessageType::PSLEI:
+						case RTCP::FeedbackPs::MessageType::ROI:
+						case RTCP::FeedbackPs::MessageType::EXT:
 						default:
 						{
 							MS_WARN_TAG(rtcp, "ignoring Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
@@ -835,7 +835,7 @@ namespace RTC
 
 					switch (feedback->GetMessageType())
 					{
-						case RTCP::FeedbackRtp::NACK:
+						case RTCP::FeedbackRtp::MessageType::NACK:
 						{
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
@@ -854,14 +854,14 @@ namespace RTC
 							break;
 						}
 
-						case RTCP::FeedbackRtp::TMMBR:
-						case RTCP::FeedbackRtp::TMMBN:
-						case RTCP::FeedbackRtp::SR_REQ:
-						case RTCP::FeedbackRtp::RAMS:
-						case RTCP::FeedbackRtp::TLLEI:
-						case RTCP::FeedbackRtp::ECN:
-						case RTCP::FeedbackRtp::PS:
-						case RTCP::FeedbackRtp::EXT:
+						case RTCP::FeedbackRtp::MessageType::TMMBR:
+						case RTCP::FeedbackRtp::MessageType::TMMBN:
+						case RTCP::FeedbackRtp::MessageType::SR_REQ:
+						case RTCP::FeedbackRtp::MessageType::RAMS:
+						case RTCP::FeedbackRtp::MessageType::TLLEI:
+						case RTCP::FeedbackRtp::MessageType::ECN:
+						case RTCP::FeedbackRtp::MessageType::PS:
+						case RTCP::FeedbackRtp::MessageType::EXT:
 						default:
 						{
 							MS_WARN_TAG(rtcp, "ignoring unsupported Feedback packet '%s' [sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",

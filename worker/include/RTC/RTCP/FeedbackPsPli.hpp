@@ -31,7 +31,7 @@ namespace RTC { namespace RTCP
 
 	inline
 	FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsPacket(FeedbackPs::PLI, sender_ssrc, media_ssrc)
+		FeedbackPsPacket(FeedbackPs::MessageType::PLI, sender_ssrc, media_ssrc)
 	{}
 }}
 

@@ -35,7 +35,7 @@ namespace RTC { namespace RTCP
 		};
 
 	public:
-		static const FeedbackPs::MessageType MessageType = FeedbackPs::RPSI;
+		static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::RPSI;
 
 	public:
 		static FeedbackPsRpsiItem* Parse(const uint8_t* data, size_t len);

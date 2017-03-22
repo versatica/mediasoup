@@ -42,7 +42,7 @@ namespace RTC { namespace RTCP
 		};
 
 	public:
-		static const FeedbackRtp::MessageType MessageType = FeedbackRtp::ECN;
+		static const FeedbackRtp::MessageType MessageType = FeedbackRtp::MessageType::ECN;
 
 	public:
 		static FeedbackRtpEcnItem* Parse(const uint8_t* data, size_t len);

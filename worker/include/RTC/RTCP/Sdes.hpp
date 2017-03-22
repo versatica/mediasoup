@@ -13,7 +13,7 @@ namespace RTC { namespace RTCP
 	class SdesItem
 	{
 	public:
-		typedef enum Type : uint8_t
+		enum class Type : uint8_t
 		{
 			END = 0,
 			CNAME,
@@ -24,24 +24,24 @@ namespace RTC { namespace RTCP
 			TOOL,
 			NOTE,
 			PRIV
-		} Type;
+		};
 
 	private:
 		struct Header
 		{
-			uint8_t type;
+			SdesItem::Type type;
 			uint8_t length;
 			char value[];
 		};
 
 	public:
 		static SdesItem* Parse(const uint8_t* data, size_t len);
-		static const std::string& Type2String(Type type);
+		static const std::string& Type2String(SdesItem::Type type);
 
 	public:
 		explicit SdesItem(Header* header);
 		explicit SdesItem(SdesItem* item);
-		SdesItem(Type type, size_t len, const char* value);
+		SdesItem(SdesItem::Type type, size_t len, const char* value);
 		~SdesItem();
 
 		void Dump() const;
@@ -143,7 +143,7 @@ namespace RTC { namespace RTCP
 	inline
 	SdesItem::Type SdesItem::GetType() const
 	{
-		return (SdesItem::Type)this->header->type;
+		return this->header->type;
 	}
 
 	inline
@@ -235,7 +235,7 @@ namespace RTC { namespace RTCP
 
 	inline
 	SdesPacket::SdesPacket()
-		: Packet(Type::SDES)
+		: Packet(RTCP::Type::SDES)
 	{}
 
 	inline
