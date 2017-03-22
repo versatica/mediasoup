@@ -62,22 +62,34 @@ In order to tun these tasks, `gulp-cli` (version >= 1.2.2) must be globally inst
 $ npm install -g gulp-cli
 ```
 
+### `gulp lint:node`
+
+Validates the Node.js JavaScript code.
+
+### `gulp lint:worker`
+
+Validates the worker C++ code.
+
 ### `gulp lint`
 
-Validates the JavaScript code.
+Runs both the `lint:node` and `lint:worker` gulp tasks.
+
+### `gulp format:worker`
+
+Rewrites all the worker source files and include files in order to satisfy the rules at `worker/.clang-format`.
 
 ### `gulp rtpcapabilities`
 
 Reads **mediasoup** [supported RTP capabilities](https://github.com/ibc/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
 
-### `gulp test:api`
+### `gulp test:node`
 
-Runs the JavaScript [test units](test/). Before it, it invokes the `make` command.
+Runs the Node.js [test units](test/). Before it, it invokes the `make` command.
 
 In order to run the JavaScript test units with the mediasoup worker in `Debug` mode the `MEDIASOUP_BUILDTYPE` environment variable must be set to `Debug`:
 
 ```bash
-$ MEDIASOUP_BUILDTYPE=Debug gulp test:api
+$ MEDIASOUP_BUILDTYPE=Debug gulp test:node
 ```
 
 ### `gulp test:worker`
@@ -92,4 +104,4 @@ $ MEDIASOUP_BUILDTYPE=Debug gulp test:worker
 
 ### `gulp test`
 
-Runs both the `test:api` and `test:worker` gulp tasks.
+Runs both the `test:node` and `test:worker` gulp tasks.

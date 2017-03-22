@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
+    "gulp-clang-format": "^1.0.23",
     "gulp-eslint": "^3.0.1",
     "gulp-replace": "^0.5.4",
     "gulp-shell": "^0.6.3",

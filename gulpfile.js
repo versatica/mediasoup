@@ -5,8 +5,21 @@ const eslint = require('gulp-eslint');
 const replace = require('gulp-replace');
 const touch = require('gulp-touch-cmd');
 const shell = require('gulp-shell');
+const clangFormat = require('gulp-clang-format');
 
-let tests =
+let nodeFiles =
+[
+	'.eslintrc.js',
+	'gulpfile.js',
+	'lib/**/*.js',
+	'test/**/*.js'
+];
+const workerFiles =
+[
+	'worker/src/**/*.cpp',
+	'worker/include/**/*.hpp'
+];
+const nodeTests =
 [
 	'test/test_mediasoup.js',
 	'test/test_Server.js',
@@ -19,36 +32,36 @@ let tests =
 	// 'test/test_scene_1.js'
 ];
 
-gulp.task('lint', () =>
+gulp.task('lint:node', () =>
 {
-	let src =
-	[
-		'.eslintrc.js',
-		'gulpfile.js',
-		'lib/**/*.js',
-		'test/**/*.js'
-	];
-
-	return gulp.src(src)
+	return gulp.src(nodeFiles)
 		.pipe(eslint())
 		.pipe(eslint.format())
 		.pipe(eslint.failAfterError());
 });
 
-gulp.task('rtpcapabilities', () =>
+gulp.task('lint:worker', () =>
 {
-	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
+	let src = workerFiles.concat(
+		// Remove Ragel generated files.
+		'!worker/src/Utils/IP.cpp'
+	);
 
-	return gulp.src('worker/src/RTC/Room.cpp')
-		.pipe(replace(/(const std::string supportedRtpCapabilities =).*/, `$1 R"(${JSON.stringify(supportedRtpCapabilities)})";`))
-		.pipe(gulp.dest('worker/src/RTC/'))
-		.pipe(touch());
+	return gulp.src(src)
+		.pipe(clangFormat.checkFormat('file', null, { verbose: true, fail: true }));
 });
 
-gulp.task('test:api', shell.task(
+gulp.task('format:worker', () =>
+{
+	return gulp.src(workerFiles, { base: '.' })
+		.pipe(clangFormat.format('file'))
+		.pipe(gulp.dest('.'));
+});
+
+gulp.task('test:node', shell.task(
 	[
 		'if type make &> /dev/null; then make; fi',
-		`tap --bail --color --reporter=spec ${tests.join(' ')}`
+		`tap --bail --color --reporter=spec ${nodeTests.join(' ')}`
 	],
 	{
 		verbose : true,
@@ -67,6 +80,18 @@ gulp.task('test:worker', shell.task(
 	}
 ));
 
-gulp.task('test', gulp.series('test:api', 'test:worker'));
+gulp.task('rtpcapabilities', () =>
+{
+	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
+
+	return gulp.src('worker/src/RTC/Room.cpp')
+		.pipe(replace(/(const std::string supportedRtpCapabilities =).*/, `$1 R"(${JSON.stringify(supportedRtpCapabilities)})";`))
+		.pipe(gulp.dest('worker/src/RTC/'))
+		.pipe(touch());
+});
+
+gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
+
+gulp.task('test', gulp.series('test:node', 'test:worker'));
 
 gulp.task('default', gulp.series('lint', 'test'));
