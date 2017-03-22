@@ -131,7 +131,7 @@ namespace RTC
 			{
 				int sendBitrateBps = it->meanSize * 8 * 1000 / it->sendMeanMs;
 				int recvBitrateBps = it->meanSize * 8 * 1000 / it->recvMeanMs;
-				MS_DEBUG_TAG(rbe, "Probe failed, sent at %d bps, received at %d bps. Mean send delta: %f ms, mean recv delta: %f ms, num probes: %d", sendBitrateBps, recvBitrateBps, it->sendMeanMs, it->recvMeanMs, it->count);
+				MS_DEBUG_TAG(rbe, "probe failed, sent at %d bps, received at %d bps. Mean send delta: %f ms, mean recv delta: %f ms, num probes: %d", sendBitrateBps, recvBitrateBps, it->sendMeanMs, it->recvMeanMs, it->count);
 				break;
 			}
 		}
@@ -161,7 +161,7 @@ namespace RTC
 			// reduce the estimate.
 			if (IsBitrateImproving(probeBitrateBps))
 			{
-				MS_DEBUG_TAG(rbe, "Probe successful, sent at %d bps, received at %d bps. Mean send delta: %f ms, mean recv delta: %f ms, num probes: %d", bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps(), bestIt->sendMeanMs, bestIt->recvMeanMs, bestIt->count);
+				MS_DEBUG_TAG(rbe, "probe successful, sent at %d bps, received at %d bps. Mean send delta: %f ms, mean recv delta: %f ms, num probes: %d", bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps(), bestIt->sendMeanMs, bestIt->recvMeanMs, bestIt->count);
 
 				this->remoteRate.SetEstimate(probeBitrateBps, nowMs);
 				return ProbeResult::kBitrateUpdated;
@@ -190,7 +190,7 @@ namespace RTC
 
 		if (!absoluteSendTime)
 		{
-			MS_WARN_TAG(rbe, "Incoming packet is missing absolute send time extension!");
+			MS_WARN_TAG(rbe, "incoming packet is missing absolute send time extension!");
 			return;
 		}
 		IncomingPacketInfo(arrivalTimeMs, Utils::Byte::Get3Bytes(absoluteSendTime, 0), payloadSize, packet.GetSsrc());
@@ -261,7 +261,7 @@ namespace RTC
 						sendDeltaMs = sendTimeMs - this->probes.back().sendTimeMs;
 						recvDeltaMs = arrivalTimeMs - this->probes.back().recvTimeMs;
 					}
-					MS_DEBUG_TAG(rbe, "Probe packet received: send time=%" PRId64 " ms, recv time=%" PRId64 " ms, send delta=%d ms, recv delta=%d ms", sendTimeMs, arrivalTimeMs, sendDeltaMs, recvDeltaMs);
+					MS_DEBUG_TAG(rbe, "probe packet received: send time=%" PRId64 " ms, recv time=%" PRId64 " ms, send delta=%d ms, recv delta=%d ms", sendTimeMs, arrivalTimeMs, sendDeltaMs, recvDeltaMs);
 				}
 				this->probes.push_back(Probe(sendTimeMs, arrivalTimeMs, payloadSize));
 				++this->totalProbesReceived;

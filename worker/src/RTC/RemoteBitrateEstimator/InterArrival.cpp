@@ -52,7 +52,7 @@ namespace RTC
 				int64_t system_time_delta_ms = this->currentTimestampGroup.last_system_time_ms - this->prevTimestampGroup.last_system_time_ms;
 				if (*arrival_time_delta_ms - system_time_delta_ms >= kArrivalTimeOffsetThresholdMs)
 				{
-					MS_WARN_TAG(rbe, "The arrival time clock offset has changed (diff = "
+					MS_WARN_TAG(rbe, "the arrival time clock offset has changed (diff = "
 					                 "%" PRId64 " ms), resetting",
 					            *arrival_time_delta_ms - system_time_delta_ms);
 					Reset();
@@ -65,7 +65,7 @@ namespace RTC
 					++this->numConsecutiveReorderedPackets;
 					if (this->numConsecutiveReorderedPackets >= kReorderedResetThreshold)
 					{
-						MS_WARN_TAG(rbe, "Packets are being reordered on the path from the "
+						MS_WARN_TAG(rbe, "packets are being reordered on the path from the "
 						                 "socket to the bandwidth estimator. Ignoring this "
 						                 "packet for bandwidth estimation, resetting");
 						Reset();

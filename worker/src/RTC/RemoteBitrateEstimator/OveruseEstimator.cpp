@@ -86,7 +86,7 @@ namespace RTC
 		MS_ASSERT(positiveSemiDefinite, "'positiveSemiDefinite' missing");
 		if (!positiveSemiDefinite)
 		{
-			MS_ERROR("The over-use estimator's covariance matrix is no longer semi-definite");
+			MS_ERROR("the over-use estimator's covariance matrix is no longer semi-definite");
 		}
 
 		this->slope = this->slope + K[0] * residual;
