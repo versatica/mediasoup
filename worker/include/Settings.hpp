@@ -53,8 +53,6 @@ private:
 	static void SetLogLevel(std::string &level);
 	static void SetRtcIPv4(const std::string &ip);
 	static void SetRtcIPv6(const std::string &ip);
-	static void SetRtcAnnouncedIPv4(const std::string &ip);
-	static void SetRtcAnnouncedIPv6(const std::string &ip);
 	static void SetRtcPorts();
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 	static void SetLogTags(std::vector<std::string>& tags);

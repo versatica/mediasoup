@@ -102,12 +102,14 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case '5':
 				value_string = std::string(optarg);
-				SetRtcAnnouncedIPv4(value_string);
+				Settings::configuration.rtcAnnouncedIPv4 = value_string;
+				Settings::configuration.hasAnnouncedIPv4 = true;
 				break;
 
 			case '7':
 				value_string = std::string(optarg);
-				SetRtcAnnouncedIPv6(value_string);
+				Settings::configuration.rtcAnnouncedIPv6 = value_string;
+				Settings::configuration.hasAnnouncedIPv6 = true;
 				break;
 
 			case 'm':
@@ -431,44 +433,6 @@ void Settings::SetRtcIPv6(const std::string &ip)
 	int bind_errno;
 	if (!IsBindableIP(ip, AF_INET6, &bind_errno))
 		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv6: %s", ip.c_str(), std::strerror(bind_errno));
-}
-
-void Settings::SetRtcAnnouncedIPv4(const std::string &ip)
-{
-	MS_TRACE();
-
-	switch (Utils::IP::GetFamily(ip))
-	{
-		case AF_INET:
-			if (ip == "0.0.0.0")
-				MS_THROW_ERROR("rtcAnnouncedIPv4 cannot be '0.0.0.0'");
-			Settings::configuration.rtcAnnouncedIPv4 = ip;
-			Settings::configuration.hasAnnouncedIPv4 = true;
-			break;
-		case AF_INET6:
-			MS_THROW_ERROR("invalid IPv6 '%s' for rtcAnnouncedIPv4", ip.c_str());
-		default:
-			MS_THROW_ERROR("invalid value '%s' for rtcAnnouncedIPv4", ip.c_str());
-	}
-}
-
-void Settings::SetRtcAnnouncedIPv6(const std::string &ip)
-{
-	MS_TRACE();
-
-	switch (Utils::IP::GetFamily(ip))
-	{
-		case AF_INET6:
-			if (ip == "::")
-				MS_THROW_ERROR("rtcAnnouncedIPv6 cannot be '::'");
-			Settings::configuration.rtcAnnouncedIPv6 = ip;
-			Settings::configuration.hasAnnouncedIPv6 = true;
-			break;
-		case AF_INET:
-			MS_THROW_ERROR("invalid IPv4 '%s' for rtcAnnouncedIPv6", ip.c_str());
-		default:
-			MS_THROW_ERROR("invalid value '%s' for rtcAnnouncedIPv6", ip.c_str());
-	}
 }
 
 void Settings::SetRtcPorts()
