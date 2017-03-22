@@ -21,7 +21,7 @@ matrix:
           packages:
             - g++-4.8
       env: COMPILER=g++-4.8
-    - node_js: 5
+    - node_js: 6
       compiler: gcc
       addons:
         apt:
@@ -30,7 +30,7 @@ matrix:
           packages:
             - g++-4.9
       env: COMPILER=g++-4.9
-    - node_js: 6
+    - node_js: 7
       compiler: gcc
       addons:
         apt:
