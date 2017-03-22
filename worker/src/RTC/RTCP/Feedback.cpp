@@ -96,17 +96,17 @@ namespace RTC { namespace RTCP
 	template<>
 	std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
 	{
-		{  FeedbackPs::PLI,   "PLI"   },
-		{  FeedbackPs::SLI,   "SLI"   },
-		{  FeedbackPs::RPSI,  "RPSI"  },
-		{  FeedbackPs::FIR,   "FIR"   },
-		{  FeedbackPs::TSTR,  "TSTR"  },
-		{  FeedbackPs::TSTN,  "TSTN"  },
-		{  FeedbackPs::VBCM,  "VBCM"  },
-		{  FeedbackPs::PSLEI, "PSLEI" },
-		{  FeedbackPs::ROI,   "ROI"   },
-		{  FeedbackPs::AFB,   "AFB"   },
-		{  FeedbackPs::EXT,   "EXT"   }
+		{  FeedbackPs::MessageType::PLI,   "PLI"   },
+		{  FeedbackPs::MessageType::SLI,   "SLI"   },
+		{  FeedbackPs::MessageType::RPSI,  "RPSI"  },
+		{  FeedbackPs::MessageType::FIR,   "FIR"   },
+		{  FeedbackPs::MessageType::TSTR,  "TSTR"  },
+		{  FeedbackPs::MessageType::TSTN,  "TSTN"  },
+		{  FeedbackPs::MessageType::VBCM,  "VBCM"  },
+		{  FeedbackPs::MessageType::PSLEI, "PSLEI" },
+		{  FeedbackPs::MessageType::ROI,   "ROI"   },
+		{  FeedbackPs::MessageType::AFB,   "AFB"   },
+		{  FeedbackPs::MessageType::EXT,   "EXT"   }
 	};
 
 	template<>
@@ -126,46 +126,46 @@ namespace RTC { namespace RTCP
 
 		switch (FeedbackPs::MessageType(commonHeader->count))
 		{
-			case FeedbackPs::PLI:
+			case FeedbackPs::MessageType::PLI:
 				packet = FeedbackPsPliPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::SLI:
+			case FeedbackPs::MessageType::SLI:
 				packet = FeedbackPsSliPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::RPSI:
+			case FeedbackPs::MessageType::RPSI:
 				packet = FeedbackPsRpsiPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::FIR:
+			case FeedbackPs::MessageType::FIR:
 				packet = FeedbackPsFirPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::TSTR:
+			case FeedbackPs::MessageType::TSTR:
 				packet = FeedbackPsTstrPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::TSTN:
+			case FeedbackPs::MessageType::TSTN:
 				packet = FeedbackPsTstnPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::VBCM:
+			case FeedbackPs::MessageType::VBCM:
 				packet = FeedbackPsVbcmPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::PSLEI:
+			case FeedbackPs::MessageType::PSLEI:
 				packet = FeedbackPsLeiPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::ROI:
+			case FeedbackPs::MessageType::ROI:
 				break;
 
-			case FeedbackPs::AFB:
+			case FeedbackPs::MessageType::AFB:
 				packet = FeedbackPsAfbPacket::Parse(data, len);
 				break;
 
-			case FeedbackPs::EXT:
+			case FeedbackPs::MessageType::EXT:
 				break;
 
 			default:
@@ -183,15 +183,15 @@ namespace RTC { namespace RTCP
 	template<>
 	std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
 	{
-		{ FeedbackRtp::NACK,   "NACK"   },
-		{ FeedbackRtp::TMMBR,  "TMMBR"  },
-		{ FeedbackRtp::TMMBN,  "TMMBN"  },
-		{ FeedbackRtp::SR_REQ, "SR_REQ" },
-		{ FeedbackRtp::RAMS,   "RAMS"   },
-		{ FeedbackRtp::TLLEI,  "TLLEI"  },
-		{ FeedbackRtp::ECN,    "ECN"    },
-		{ FeedbackRtp::PS,     "PS"     },
-		{ FeedbackRtp::EXT,    "EXT"    }
+		{ FeedbackRtp::MessageType::NACK,   "NACK"   },
+		{ FeedbackRtp::MessageType::TMMBR,  "TMMBR"  },
+		{ FeedbackRtp::MessageType::TMMBN,  "TMMBN"  },
+		{ FeedbackRtp::MessageType::SR_REQ, "SR_REQ" },
+		{ FeedbackRtp::MessageType::RAMS,   "RAMS"   },
+		{ FeedbackRtp::MessageType::TLLEI,  "TLLEI"  },
+		{ FeedbackRtp::MessageType::ECN,    "ECN"    },
+		{ FeedbackRtp::MessageType::PS,     "PS"     },
+		{ FeedbackRtp::MessageType::EXT,    "EXT"    }
 	};
 
 	/* Class methods. */
@@ -213,37 +213,37 @@ namespace RTC { namespace RTCP
 
 		switch (FeedbackRtp::MessageType(commonHeader->count))
 		{
-			case FeedbackRtp::NACK:
+			case FeedbackRtp::MessageType::NACK:
 				packet = FeedbackRtpNackPacket::Parse(data, len);
 				break;
 
-			case FeedbackRtp::TMMBR:
+			case FeedbackRtp::MessageType::TMMBR:
 				packet = FeedbackRtpTmmbrPacket::Parse(data, len);
 				break;
 
-			case FeedbackRtp::TMMBN:
+			case FeedbackRtp::MessageType::TMMBN:
 				packet = FeedbackRtpTmmbnPacket::Parse(data, len);
 				break;
 
-			case FeedbackRtp::SR_REQ:
+			case FeedbackRtp::MessageType::SR_REQ:
 				packet = FeedbackRtpSrReqPacket::Parse(data, len);
 				break;
 
-			case FeedbackRtp::RAMS:
+			case FeedbackRtp::MessageType::RAMS:
 				break;
 
-			case FeedbackRtp::TLLEI:
+			case FeedbackRtp::MessageType::TLLEI:
 				packet = FeedbackRtpTlleiPacket::Parse(data, len);
 				break;
 
-			case FeedbackRtp::ECN:
+			case FeedbackRtp::MessageType::ECN:
 				packet = FeedbackRtpEcnPacket::Parse(data, len);
 				break;
 
-			case FeedbackRtp::PS:
+			case FeedbackRtp::MessageType::PS:
 				break;
 
-			case FeedbackRtp::EXT:
+			case FeedbackRtp::MessageType::EXT:
 				break;
 
 			default:

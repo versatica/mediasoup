@@ -43,7 +43,7 @@ namespace RTC { namespace RTCP
 
 	inline
 	FeedbackPsAfbPacket::FeedbackPsAfbPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsPacket(FeedbackPs::AFB, sender_ssrc, media_ssrc)
+		FeedbackPsPacket(FeedbackPs::MessageType::AFB, sender_ssrc, media_ssrc)
 	{}
 
 	inline

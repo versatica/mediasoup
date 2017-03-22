@@ -30,7 +30,7 @@ namespace RTC { namespace RTCP
 		};
 
 	public:
-		static const FeedbackPs::MessageType MessageType = FeedbackPs::FIR;
+		static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::FIR;
 
 	public:
 		static FeedbackPsFirItem* Parse(const uint8_t* data, size_t len);

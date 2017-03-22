@@ -54,7 +54,7 @@ namespace RTC { namespace RTCP
 	class FeedbackPs
 	{
 	public:
-		typedef enum MessageType : uint8_t
+		enum class MessageType : uint8_t
 		{
 			PLI  = 1,
 			SLI  = 2,
@@ -67,13 +67,13 @@ namespace RTC { namespace RTCP
 			ROI  = 9,
 			AFB  = 15,
 			EXT  = 31
-		} MessageType;
+		};
 	};
 
 	class FeedbackRtp
 	{
 	public:
-		typedef enum MessageType : uint8_t
+		enum class MessageType : uint8_t
 		{
 			NACK   = 1,
 			TMMBR  = 3,
@@ -84,7 +84,7 @@ namespace RTC { namespace RTCP
 			ECN    = 8,
 			PS     = 9,
 			EXT    = 31
-		} MessageType;
+		};
 	};
 
 	typedef FeedbackPacket<FeedbackPs> FeedbackPsPacket;

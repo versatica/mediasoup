@@ -12,15 +12,15 @@ namespace RTC { namespace RTCP
 
 	std::map<SdesItem::Type, std::string> SdesItem::type2String =
 	{
-		{ END,   "END"   },
-		{ CNAME, "CNAME" },
-		{ NAME,  "NAME"  },
-		{ EMAIL, "EMAIL" },
-		{ PHONE, "PHONE" },
-		{ LOC,   "LOC"   },
-		{ TOOL,  "TOOL"  },
-		{ NOTE,  "NOTE"  },
-		{ PRIV,  "PRIV"  }
+		{ SdesItem::Type::END,   "END"   },
+		{ SdesItem::Type::CNAME, "CNAME" },
+		{ SdesItem::Type::NAME,  "NAME"  },
+		{ SdesItem::Type::EMAIL, "EMAIL" },
+		{ SdesItem::Type::PHONE, "PHONE" },
+		{ SdesItem::Type::LOC,   "LOC"   },
+		{ SdesItem::Type::TOOL,  "TOOL"  },
+		{ SdesItem::Type::NOTE,  "NOTE"  },
+		{ SdesItem::Type::PRIV,  "PRIV"  }
 	};
 
 	/* Class methods. */
@@ -43,7 +43,7 @@ namespace RTC { namespace RTCP
 		return new SdesItem(header);
 	}
 
-	const std::string& SdesItem::Type2String(Type type)
+	const std::string& SdesItem::Type2String(SdesItem::Type type)
 	{
 		static const std::string unknown("UNKNOWN");
 
@@ -55,7 +55,7 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	SdesItem::SdesItem(Type type, size_t len, const char* value)
+	SdesItem::SdesItem(SdesItem::Type type, size_t len, const char* value)
 	{
 		MS_TRACE();
 
@@ -77,7 +77,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DUMP("<SdesItem>");
-		MS_DUMP("  type   : %s", Type2String(this->GetType()).c_str());
+		MS_DUMP("  type   : %s", SdesItem::Type2String(this->GetType()).c_str());
 		MS_DUMP("  length : %" PRIu8, this->header->length);
 		MS_DUMP("  value  : %.*s", this->header->length, this->header->value);
 		MS_DUMP("</SdesItem>");
@@ -119,7 +119,7 @@ namespace RTC { namespace RTCP
 			SdesItem* item = SdesItem::Parse(data+offset, len-offset);
 			if (item)
 			{
-				if (item->GetType() == SdesItem::END)
+				if (item->GetType() == SdesItem::Type::END)
 					return chunk.release();
 
 				chunk->AddItem(item);
