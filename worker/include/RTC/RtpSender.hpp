@@ -64,6 +64,7 @@ namespace RTC
 		uint32_t GetTransmissionRate(uint64_t now);
 
 	private:
+		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		void EmitActiveChange() const;
 

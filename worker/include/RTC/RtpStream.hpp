@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <json/json.h>
 
 namespace RTC
@@ -10,7 +11,21 @@ namespace RTC
 	class RtpStream
 	{
 	public:
-		explicit RtpStream(uint32_t ssrc, uint32_t clockRate);
+		struct Params
+		{
+		public:
+			Json::Value toJson() const;
+
+		public:
+			uint32_t          ssrc = 0;
+			uint8_t           payloadType = 0;
+			RTC::RtpCodecMime mime;
+			uint32_t          clockRate = 0;
+			bool              useNack = false;
+		};
+
+	public:
+		RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
 		virtual Json::Value toJson() const = 0;
@@ -27,8 +42,8 @@ namespace RTC
 
 	protected:
 		// Given as argument.
-		uint32_t ssrc = 0;
-		uint32_t clockRate = 0;
+		RtpStream::Params params;
+		// Others.
 		bool started = false; // Whether at least a RTP packet has been received.
 		// https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
 		uint16_t max_seq = 0; // Highest seq. number seen.
@@ -48,7 +63,7 @@ namespace RTC
 	inline
 	uint32_t RtpStream::GetSsrc()
 	{
-		return this->ssrc;
+		return this->params.ssrc;
 	}
 }
 

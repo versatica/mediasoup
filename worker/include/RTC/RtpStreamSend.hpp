@@ -25,7 +25,7 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamSend(uint32_t ssrc, uint32_t clockRate, size_t bufferSize);
+		RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize);
 		virtual ~RtpStreamSend();
 
 		virtual Json::Value toJson() const override;

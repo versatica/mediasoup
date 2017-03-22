@@ -176,29 +176,10 @@ namespace RTC
 				// And notify again.
 				this->listener->onRtpReceiverParametersDone(this);
 
-				// Set the RtpStreamRecv instances.
+				// Create RtpStreamRecv instances.
 				for (auto& encoding : this->rtpParameters->encodings)
 				{
-					// Don't create an RtpStreamRecv if the encoding has no SSRC.
-					// TODO: For simulcast or, if not announced, this would be done
-					// dynamicall by the RtpListener when matching a RID with its SSRC.
-					if (!encoding.ssrc)
-						continue;
-
-					uint32_t ssrc = encoding.ssrc;
-
-					// Don't create a RtpStreamRecv if there is already one for the same SSRC.
-					// TODO: This may not work for SVC codecs.
-					if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
-						continue;
-
-					// Get the clock rate of the stream/encoding.
-					uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
-					// TODO: Let's assume that, if video, NACK is negotiated. Must do this better.
-					bool useNack = (this->kind != RTC::Media::Kind::AUDIO);
-
-					// Create a RtpStreamRecv for receiving a media stream.
-					this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, ssrc, streamClockRate, useNack);
+					CreateRtpStream(encoding);
 				}
 
 				break;
@@ -369,6 +350,39 @@ namespace RTC
 			packet->Serialize(RtpReceiver::rtcpBuffer);
 			this->transport->SendRtcpPacket(packet);
 		}
+	}
+
+	void RtpReceiver::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
+	{
+		MS_TRACE();
+
+		// Don't create an RtpStreamRecv if the encoding has no SSRC.
+		// TODO: For simulcast or, if not announced, this would be done
+		// dynamicall by the RtpListener when matching a RID with its SSRC.
+		if (!encoding.ssrc)
+			return;
+
+		uint32_t ssrc = encoding.ssrc;
+
+		// Don't create a RtpStreamRecv if there is already one for the same SSRC.
+		// TODO: This may not work for SVC codecs.
+		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
+			return;
+
+		// Get the codec of the stream/encoding.
+		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+
+		// Create stream params.
+		RTC::RtpStream::Params params;
+
+		params.ssrc = ssrc;
+		params.payloadType = codec.payloadType;
+		params.mime = codec.mime;
+		params.clockRate = codec.clockRate;
+		params.useNack = (this->kind != RTC::Media::Kind::AUDIO);
+
+		// Create a RtpStreamRecv for receiving a media stream.
+		this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, params);
 	}
 
 	void RtpReceiver::ClearRtpStreams()

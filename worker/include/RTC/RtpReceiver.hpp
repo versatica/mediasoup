@@ -57,6 +57,7 @@ namespace RTC
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
 
 	private:
+		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ClearRtpStreams();
 
 	/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */

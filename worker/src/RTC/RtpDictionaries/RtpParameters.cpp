@@ -247,12 +247,12 @@ namespace RTC
 		this->headerExtensions = updatedHeaderExtensions;
 	}
 
-	uint32_t RtpParameters::GetClockRateForEncoding(RtpEncodingParameters& encoding) const
+	RTC::RtpCodecParameters& RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding)
 	{
 		MS_TRACE();
 
+		static RTC::RtpCodecParameters fakeCodec;
 		uint8_t payloadType = encoding.codecPayloadType;
-		uint32_t clockRate = 0;
 
 		auto it = this->codecs.begin();
 		for (; it != this->codecs.end(); ++it)
@@ -260,11 +260,7 @@ namespace RTC
 			auto& codec = *it;
 
 			if (codec.payloadType == payloadType)
-			{
-				clockRate = codec.clockRate;
-
-				break;
-			}
+				return codec;
 		}
 		// This should never happen.
 		if (it == this->codecs.end())
@@ -272,7 +268,7 @@ namespace RTC
 			MS_ABORT("no valid codec payload type for the given encoding");
 		}
 
-		return clockRate;
+		return fakeCodec;
 	}
 
 	inline

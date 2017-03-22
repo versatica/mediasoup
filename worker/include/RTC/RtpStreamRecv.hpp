@@ -18,7 +18,7 @@ namespace RTC
 		};
 
 	public:
-		explicit RtpStreamRecv(Listener* listener, uint32_t ssrc, uint32_t clockRate, bool useNack);
+		RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params);
 		virtual ~RtpStreamRecv();
 
 		virtual Json::Value toJson() const override;
@@ -38,7 +38,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
-		bool useNack = false;
+		// Others.
 		uint32_t last_sr_timestamp = 0; // The middle 32 bits out of 64 in the NTP timestamp received in the most recent sender report.
 		uint64_t last_sr_received = 0; // Wallclock time representing the most recent sender report arrival.
 		uint32_t transit = 0; // Relative trans time for prev pkt.

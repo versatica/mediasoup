@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include <vector>
 
@@ -59,8 +60,14 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet5->GetSequenceNumber() == 21010);
 		REQUIRE(packet5->GetTimestamp() == 1533796931);
 
+		RtpStream::Params params;
+
+		params.ssrc = packet1->GetSsrc();
+		params.clockRate = 90000;
+		params.useNack = true;
+
 		// Create a RtpStreamSend.
-		RtpStreamSend* stream = new RtpStreamSend(packet1->GetSsrc(), 90000, 200);
+		RtpStreamSend* stream = new RtpStreamSend(params, 200);
 
 		// Receive all the packets in order into the stream.
 		stream->ReceivePacket(packet1);

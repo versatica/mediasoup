@@ -117,8 +117,8 @@ namespace RTC
 		}
 
 	public:
-		Type    type = Type::UNSET;
-		Subtype subtype = Subtype::UNSET;
+		Type        type = Type::UNSET;
+		Subtype     subtype = Subtype::UNSET;
 		std::string name;
 	};
 
@@ -304,7 +304,7 @@ namespace RTC
 		Json::Value toJson() const;
 		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
-		uint32_t GetClockRateForEncoding(RtpEncodingParameters& encoding) const;
+		RTC::RtpCodecParameters& GetCodecForEncoding(RtpEncodingParameters& encoding);
 
 	private:
 		void ValidateCodecs();

@@ -13,8 +13,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(uint32_t ssrc, uint32_t clockRate, size_t bufferSize) :
-		RtpStream::RtpStream(ssrc, clockRate),
+	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize) :
+		RtpStream::RtpStream(params),
 		storage(bufferSize)
 	{
 		MS_TRACE();
@@ -32,17 +32,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static Json::Value null_data(Json::nullValue);
-		static const Json::StaticString k_ssrc("ssrc");
-		static const Json::StaticString k_clockRate("clockRate");
+		static const Json::StaticString k_params("params");
 		static const Json::StaticString k_received("received");
 		static const Json::StaticString k_maxTimestamp("maxTimestamp");
 		static const Json::StaticString k_receivedBytes("receivedBytes");
 
 		Json::Value json(Json::objectValue);
 
-		json[k_ssrc] = (Json::UInt)this->ssrc;
-		json[k_clockRate] = (Json::UInt)this->clockRate;
+		json[k_params] = this->params.toJson();
 		json[k_received] = (Json::UInt)this->received;
 		json[k_maxTimestamp] = (Json::UInt)this->max_timestamp;
 
@@ -156,7 +153,7 @@ namespace RTC
 					if (current_seq32 == seq32)
 					{
 						auto current_packet = (*buffer_it).packet;
-						uint32_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->clockRate;
+						uint32_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->params.clockRate;
 
 						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
 						if (diff <= MAX_RETRANSMISSION_AGE)
@@ -235,7 +232,7 @@ namespace RTC
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
 		uint32_t diffMs = now - this->lastPacketTimeMs;
-		uint32_t diffRtpTimestamp = diffMs * this->clockRate / 1000;
+		uint32_t diffRtpTimestamp = diffMs * this->params.clockRate / 1000;
 
 		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
 

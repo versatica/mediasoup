@@ -261,31 +261,7 @@ namespace RTC
 			this->available = true;
 
 			// NOTE: We assume a single stream/encoding when sending to remote peers.
-			auto encoding = encodings[0];
-			uint32_t ssrc = encoding.ssrc;
-			uint32_t streamClockRate = this->rtpParameters->GetClockRateForEncoding(encoding);
-
-			// Create a RtpStreamSend for sending a single media stream.
-			switch (this->kind)
-			{
-				case RTC::Media::Kind::VIDEO:
-				case RTC::Media::Kind::DEPTH:
-				{
-					// Buffer up to N packets.
-					this->rtpStream = new RTC::RtpStreamSend(ssrc, streamClockRate, 200);
-					break;
-				}
-
-				case RTC::Media::Kind::AUDIO:
-				{
-					// No buffer for audio streams.
-					this->rtpStream = new RTC::RtpStreamSend(ssrc, streamClockRate, 0);
-					break;
-				}
-
-				default:
-					;
-			}
+			CreateRtpStream(encodings[0]);
 		}
 		else
 		{
@@ -406,6 +382,46 @@ namespace RTC
 
 				RetransmitRtpPacket(packet);
 			}
+		}
+	}
+
+	void RtpSender::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
+	{
+		MS_TRACE();
+
+		uint32_t ssrc = encoding.ssrc;
+		// Get the codec of the stream/encoding.
+		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+
+		// Create stream params.
+		RTC::RtpStream::Params params;
+
+		params.ssrc = ssrc;
+		params.payloadType = codec.payloadType;
+		params.mime = codec.mime;
+		params.clockRate = codec.clockRate;
+		params.useNack = (this->kind != RTC::Media::Kind::AUDIO);
+
+		// Create a RtpStreamSend for sending a single media stream.
+		switch (this->kind)
+		{
+			case RTC::Media::Kind::VIDEO:
+			case RTC::Media::Kind::DEPTH:
+			{
+				// Buffer up to N packets.
+				this->rtpStream = new RTC::RtpStreamSend(params, 200);
+				break;
+			}
+
+			case RTC::Media::Kind::AUDIO:
+			{
+				// No buffer for audio streams.
+				this->rtpStream = new RTC::RtpStreamSend(params, 0);
+				break;
+			}
+
+			default:
+				;
 		}
 	}
 

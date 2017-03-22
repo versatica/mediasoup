@@ -15,9 +15,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStream::RtpStream(uint32_t ssrc, uint32_t clockRate) :
-		ssrc(ssrc),
-		clockRate(clockRate)
+	RtpStream::RtpStream(RTC::RtpStream::Params& params) :
+		params(params)
 	{
 		MS_TRACE();
 	}
@@ -153,5 +152,26 @@ namespace RTC
 		this->received++;
 
 		return true;
+	}
+
+	Json::Value RtpStream::Params::toJson() const
+	{
+		MS_TRACE();
+
+		static const Json::StaticString k_ssrc("ssrc");
+		static const Json::StaticString k_payloadType("payloadType");
+		static const Json::StaticString k_mime("mime");
+		static const Json::StaticString k_clockRate("clockRate");
+		static const Json::StaticString k_useNack("useNack");
+
+		Json::Value json(Json::objectValue);
+
+		json[k_ssrc] = (Json::UInt)this->ssrc;
+		json[k_payloadType] = (Json::UInt)this->payloadType;
+		json[k_mime] = this->mime.name;
+		json[k_clockRate] = (Json::UInt)this->clockRate;
+		json[k_useNack] = this->useNack;
+
+		return json;
 	}
 }
