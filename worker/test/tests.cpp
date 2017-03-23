@@ -3,6 +3,7 @@
 #include "include/catch.hpp"
 #include "Settings.hpp"
 #include "LogLevel.hpp"
+#include "Logger.hpp"
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "Utils.hpp"
@@ -15,6 +16,9 @@ int main(int argc, char* argv[])
 	Settings::configuration.logLevel = LogLevel::LOG_DEBUG;
 	Settings::configuration.logTags.rtp = true;
 	Settings::configuration.logTags.rtcp = true;
+
+	// Initialize the Logger.
+	Logger::Init("tests");
 
 	init();
 
