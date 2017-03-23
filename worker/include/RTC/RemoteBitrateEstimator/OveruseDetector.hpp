@@ -17,12 +17,13 @@
 
 namespace RTC
 {
-	bool AdaptiveThresholdExperimentIsDisabled();
-
 	class OveruseDetector
 	{
+		private:
+		static constexpr double kOverUsingTimeThreshold = 10;
+
 	public:
-		OveruseDetector();
+		OveruseDetector() = default;
 
 		// Update the detection state based on the estimated inter-arrival time delta
 		// offset. |timestampDelta| is the delta between the last timestamp which the
@@ -37,13 +38,11 @@ namespace RTC
 
 	private:
 		void UpdateThreshold(double modifiedOffset, int64_t nowMs);
-		void InitializeExperiment();
 
 	private:
-		bool inExperiment;
 		double kUp = 0.0087;
 		double kDown = 0.039;
-		double overusingTimeThreshold = 100;
+		double overusingTimeThreshold = kOverUsingTimeThreshold;
 		double threshold = 12.5;
 		int64_t lastUpdateMs = -1;
 		double prevOffset = 0.0;
@@ -51,14 +50,6 @@ namespace RTC
 		int overuseCounter = 0;
 		BandwidthUsage hypothesis = kBwNormal;
 	};
-
-	inline
-	OveruseDetector::OveruseDetector() :
-	inExperiment(!AdaptiveThresholdExperimentIsDisabled())
-	{
-		if (this->inExperiment)
-			InitializeExperiment();
-	}
 
 	inline
 	BandwidthUsage OveruseDetector::State() const

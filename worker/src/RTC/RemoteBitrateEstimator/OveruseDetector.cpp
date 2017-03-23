@@ -21,35 +21,8 @@
 
 namespace RTC
 {
-	// (jmillan) disable the experiment until we know how to use the threshold values.
-	/*
-		 const char kAdaptiveThresholdExperiment[] = "WebRTC-AdaptiveBweThreshold";
-		 const char kEnabledPrefix[] = "Enabled";
-		 const size_t kEnabledPrefixLength = sizeof(kEnabledPrefix) - 1;
-		 const char kDisabledPrefix[] = "Disabled";
-		 const size_t kDisabledPrefixLength = sizeof(kDisabledPrefix) - 1;
-		 */
-
 	constexpr double kMaxAdaptOffsetMs = 15.0;
-	constexpr double kOverUsingTimeThreshold = 10;
 	constexpr int kMinNumDeltas = 60;
-
-	// (jmillan) disable the experiment until we know how to use the threshold values.
-	bool AdaptiveThresholdExperimentIsDisabled()
-	{
-		MS_TRACE();
-
-		return true;
-	}
-
-	bool ReadExperimentConstants(double* kUp, double* kDown)
-	{
-		MS_TRACE();
-
-		(void) kUp;
-		(void) kDown;
-		return false;
-	}
 
 	BandwidthUsage OveruseDetector::Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs)
 	{
@@ -108,9 +81,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->inExperiment)
-			return;
-
 		if (this->lastUpdateMs == -1)
 			this->lastUpdateMs = nowMs;
 
@@ -132,20 +102,5 @@ namespace RTC
 		this->threshold = std::min(std::max(this->threshold, kMinThreshold), kMaxThreshold);
 
 		this->lastUpdateMs = nowMs;
-	}
-
-	void OveruseDetector::InitializeExperiment()
-	{
-		MS_TRACE();
-
-		//MS_DASSERT(this->inExperiment);
-		double kUp = 0.0;
-		double kDown = 0.0;
-		this->overusingTimeThreshold = kOverUsingTimeThreshold;
-		if (ReadExperimentConstants(&kUp, &kDown))
-		{
-			this->kUp = kUp;
-			this->kDown = kDown;
-		}
 	}
 }

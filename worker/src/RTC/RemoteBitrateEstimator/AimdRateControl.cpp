@@ -101,7 +101,7 @@ namespace RTC
 		double packetsPerFrame = std::ceil(bitsPerFrame / (8.0 * 1200.0));
 		double avgPacketSizeBits = bitsPerFrame / packetsPerFrame;
 		// Approximate the over-use estimator delay to 100 ms.
-		const int64_t responseTime = this->inExperiment ? (this->rtt + 100) * 2 : this->rtt + 100;
+		const int64_t responseTime = (this->rtt + 100) * 2;
 
 		constexpr double kMinIncreaseRateBps = 4000;
 		return static_cast<int>(std::max(kMinIncreaseRateBps, (avgPacketSizeBits * 1000) / responseTime));

@@ -102,7 +102,6 @@ namespace RTC
 		bool bitrateIsInitialized = false;
 		float beta = 0.85f;
 		int64_t rtt = kDefaultRttMs;
-		bool inExperiment;
 		int lastDecrease;
 	};
 
@@ -111,9 +110,7 @@ namespace RTC
 	inline
 	AimdRateControl::AimdRateControl() :
 		currentInput(kBwNormal, 0, 1.0)
-	{
-		inExperiment = !AdaptiveThresholdExperimentIsDisabled();
-	}
+	{}
 
 	inline
 	void AimdRateControl::SetStartBitrate(int startBitrateBps)
