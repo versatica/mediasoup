@@ -13,6 +13,7 @@
 #include "common.hpp"
 #include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
 #include <deque>
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -102,8 +103,8 @@ namespace RTC
 		varNoise(this->options.initialVarNoise),
 		tsDeltaHist()
 	{
-		memcpy(this->E, this->options.initialE, sizeof(this->E));
-		memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));
+		std::memcpy(this->E, this->options.initialE, sizeof(this->E));
+		std::memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));
 	}
 
 	inline
