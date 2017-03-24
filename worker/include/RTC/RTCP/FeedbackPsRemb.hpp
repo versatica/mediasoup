@@ -51,9 +51,9 @@ namespace RTC { namespace RTCP
 
 	/* Pure virtual methods inherited from Packet. */
 	public:
-		virtual void Dump() override;
+		virtual void Dump() const override;
 		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() override;
+		virtual size_t GetSize() const override;
 
 	private:
 		std::vector<uint32_t> ssrcs;
@@ -100,7 +100,7 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	size_t FeedbackPsRembPacket::GetSize()
+	size_t FeedbackPsRembPacket::GetSize() const
 	{
 		return FeedbackPsPacket::GetSize() + 8 + (sizeof(uint32_t) * this->ssrcs.size());
 	}

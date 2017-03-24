@@ -114,7 +114,7 @@ namespace RTC { namespace RTCP
 		return offset;
 	}
 
-	void FeedbackPsRembPacket::Dump()
+	void FeedbackPsRembPacket::Dump() const
 	{
 		MS_TRACE();
 
