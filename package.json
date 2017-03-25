@@ -24,7 +24,7 @@
     "!win32"
   ],
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=4.8.0"
   },
   "dependencies": {
     "check-types": "^7.1.5",
