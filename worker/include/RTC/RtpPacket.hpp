@@ -2,6 +2,8 @@
 #define MS_RTC_RTP_PACKET_HPP
 
 #include "common.hpp"
+#include "RTC/RtpDictionaries.hpp"
+#include "Utils.hpp"
 #include <map>
 
 namespace RTC
@@ -33,7 +35,7 @@ namespace RTC
 		};
 
 	private:
-		/* Struct for RTP header extension. */
+		/* Struct for RTP extension header. */
 		struct ExtensionHeader
 		{
 			uint16_t id;
@@ -94,16 +96,18 @@ namespace RTC
 		uint16_t GetExtensionHeaderId() const;
 		size_t GetExtensionHeaderLength() const;
 		uint8_t* GetExtensionHeaderValue() const;
-		void ParseExtensionElements();
 		bool HasOneByteExtensionElements() const;
 		bool HasTwoBytesExtensionElements() const;
-		uint8_t GetExtensionElementLength(uint8_t id);
-		uint8_t* GetExtensionElementValue(uint8_t id);
-		void SetExtensionElementId(uint8_t old_id, uint8_t new_id);
+		void AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id);
+		uint8_t* GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
+		uint32_t GetAbsSendTime() const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
 		void Serialize(uint8_t* buffer);
-		RtpPacket* Clone(uint8_t* buffer);
+		RtpPacket* Clone(uint8_t* buffer) const;
+
+	private:
+		void ParseExtensionElements();
 
 	private:
 		// Passed by argument.
@@ -112,6 +116,7 @@ namespace RTC
 		ExtensionHeader* extensionHeader = nullptr;
 		std::map<uint8_t, OneByteExtensionElement*> oneByteExtensionElements;
 		std::map<uint8_t, TwoBytesExtensionElement*> twoBytesExtensionElements;
+		std::map<RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
 		uint8_t* payload = nullptr;
 		size_t payloadLength = 0;
 		uint8_t payloadPadding = 0;
@@ -256,44 +261,36 @@ namespace RTC
 	}
 
 	inline
-	uint8_t RtpPacket::GetExtensionElementLength(uint8_t id)
+	void RtpPacket::AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id)
 	{
-		if (HasOneByteExtensionElements())
-		{
-			if (this->oneByteExtensionElements.find(id) == this->oneByteExtensionElements.end())
-				return 0;
-
-			return this->oneByteExtensionElements[id]->len + 1;
-		}
-		else if (HasTwoBytesExtensionElements())
-		{
-			if (this->twoBytesExtensionElements.find(id) == this->twoBytesExtensionElements.end())
-				return 0;
-
-			return this->twoBytesExtensionElements[id]->len;
-		}
-		else
-		{
-			return 0;
-		}
+		this->extensionMap[uri] = id;
 	}
 
 	inline
-	uint8_t* RtpPacket::GetExtensionElementValue(uint8_t id)
+	uint8_t* RtpPacket::GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const
 	{
+		*len = 0;
+
+		if (this->extensionMap.find(uri) == this->extensionMap.end())
+			return nullptr;
+
+		uint8_t id = this->extensionMap.at(uri);
+
 		if (HasOneByteExtensionElements())
 		{
 			if (this->oneByteExtensionElements.find(id) == this->oneByteExtensionElements.end())
 				return nullptr;
 
-			return this->oneByteExtensionElements[id]->value;
+			*len = this->oneByteExtensionElements.at(id)->len + 1;
+			return this->oneByteExtensionElements.at(id)->value;
 		}
 		else if (HasTwoBytesExtensionElements())
 		{
 			if (this->twoBytesExtensionElements.find(id) == this->twoBytesExtensionElements.end())
 				return nullptr;
 
-			return this->twoBytesExtensionElements[id]->value;
+			*len = this->oneByteExtensionElements.at(id)->len;
+			return this->twoBytesExtensionElements.at(id)->value;
 		}
 		else
 		{
@@ -302,30 +299,17 @@ namespace RTC
 	}
 
 	inline
-	void RtpPacket::SetExtensionElementId(uint8_t old_id, uint8_t new_id)
+	uint32_t RtpPacket::GetAbsSendTime() const
 	{
-		if (HasOneByteExtensionElements())
-		{
-			if (this->oneByteExtensionElements.find(old_id) == this->oneByteExtensionElements.end())
-				return;
+		uint8_t exten_len;
+		uint8_t* exten_value;
 
-			OneByteExtensionElement* element = this->oneByteExtensionElements[old_id];
+		exten_value = GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
 
-			element->id = new_id;
-			this->oneByteExtensionElements[new_id] = element;
-			this->oneByteExtensionElements.erase(old_id);
-		}
-		else if (HasTwoBytesExtensionElements())
-		{
-			if (this->twoBytesExtensionElements.find(old_id) == this->twoBytesExtensionElements.end())
-				return;
+		if (!exten_value)
+			return 0;
 
-			TwoBytesExtensionElement* element = this->twoBytesExtensionElements[old_id];
-
-			element->id = new_id;
-			this->twoBytesExtensionElements[new_id] = element;
-			this->twoBytesExtensionElements.erase(old_id);
-		}
+		return Utils::Byte::Get3Bytes(exten_value, 0);
 	}
 
 	inline

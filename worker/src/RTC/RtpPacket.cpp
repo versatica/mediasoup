@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpPacket.hpp"
-#include "Utils.hpp"
 #include "Logger.hpp"
 #include <cstring> // std::memcpy()
 
@@ -164,76 +163,6 @@ namespace RTC
 		MS_DUMP("</RtpPacket>");
 	}
 
-	void RtpPacket::ParseExtensionElements()
-	{
-		MS_TRACE();
-
-		// Parse One-Byte extension header.
-		if (HasOneByteExtensionElements())
-		{
-			// Clear the One-Byte extension elements map.
-			this->oneByteExtensionElements.clear();
-
-			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
-			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
-			uint8_t* ptr = extension_start;
-
-			while (ptr < extension_end)
-			{
-				uint8_t id = (*ptr & 0xF0) >> 4;
-				size_t len = (*ptr & 0x0F) + 1;
-
-				if (ptr + 1 + len > extension_end)
-				{
-					MS_WARN_TAG(rtp, "not enough space for the announced One-Byte header extension element value");
-
-					break;
-				}
-
-				// Store the One-Byte extension element in a map.
-				this->oneByteExtensionElements[id] = reinterpret_cast<OneByteExtensionElement*>(ptr);
-
-				ptr += 1 + len;
-
-				// Counting padding bytes.
-				while ((ptr < extension_end) && (*ptr == 0))
-					++ptr;
-			}
-		}
-		// Parse Two-Bytes extension header.
-		else if (HasTwoBytesExtensionElements())
-		{
-			// Clear the Two-Bytes extension elements map.
-			this->twoBytesExtensionElements.clear();
-
-			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
-			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
-			uint8_t* ptr = extension_start;
-
-			while (ptr < extension_end)
-			{
-				uint8_t id = *ptr;
-				size_t len = *(++ptr);
-
-				if (ptr + len > extension_end)
-				{
-					MS_WARN_TAG(rtp, "not enough space for the announced Two-Bytes header extension element value");
-
-					break;
-				}
-
-				// Store the Two-Bytes extension element in a map.
-				this->twoBytesExtensionElements[id] = reinterpret_cast<TwoBytesExtensionElement*>(ptr);
-
-				ptr += len;
-
-				// Counting padding bytes.
-				while ((ptr < extension_end) && (*ptr == 0))
-					++ptr;
-			}
-		}
-	}
-
 	void RtpPacket::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
@@ -304,7 +233,7 @@ namespace RTC
 		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
 	}
 
-	RtpPacket* RtpPacket::Clone(uint8_t* buffer)
+	RtpPacket* RtpPacket::Clone(uint8_t* buffer) const
 	{
 		MS_TRACE();
 
@@ -357,5 +286,75 @@ namespace RTC
 		packet->ParseExtensionElements();
 
 		return packet;
+	}
+
+	void RtpPacket::ParseExtensionElements()
+	{
+		MS_TRACE();
+
+		// Parse One-Byte extension header.
+		if (HasOneByteExtensionElements())
+		{
+			// Clear the One-Byte extension elements map.
+			this->oneByteExtensionElements.clear();
+
+			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
+			uint8_t* ptr = extension_start;
+
+			while (ptr < extension_end)
+			{
+				uint8_t id = (*ptr & 0xF0) >> 4;
+				size_t len = (*ptr & 0x0F) + 1;
+
+				if (ptr + 1 + len > extension_end)
+				{
+					MS_WARN_TAG(rtp, "not enough space for the announced One-Byte header extension element value");
+
+					break;
+				}
+
+				// Store the One-Byte extension element in a map.
+				this->oneByteExtensionElements[id] = reinterpret_cast<OneByteExtensionElement*>(ptr);
+
+				ptr += 1 + len;
+
+				// Counting padding bytes.
+				while ((ptr < extension_end) && (*ptr == 0))
+					++ptr;
+			}
+		}
+		// Parse Two-Bytes extension header.
+		else if (HasTwoBytesExtensionElements())
+		{
+			// Clear the Two-Bytes extension elements map.
+			this->twoBytesExtensionElements.clear();
+
+			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
+			uint8_t* ptr = extension_start;
+
+			while (ptr < extension_end)
+			{
+				uint8_t id = *ptr;
+				size_t len = *(++ptr);
+
+				if (ptr + len > extension_end)
+				{
+					MS_WARN_TAG(rtp, "not enough space for the announced Two-Bytes header extension element value");
+
+					break;
+				}
+
+				// Store the Two-Bytes extension element in a map.
+				this->twoBytesExtensionElements[id] = reinterpret_cast<TwoBytesExtensionElement*>(ptr);
+
+				ptr += len;
+
+				// Counting padding bytes.
+				while ((ptr < extension_end) && (*ptr == 0))
+					++ptr;
+			}
+		}
 	}
 }
