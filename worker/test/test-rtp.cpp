@@ -33,8 +33,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 23617);
 		REQUIRE(packet->GetTimestamp() == 1660241882);
 		REQUIRE(packet->GetSsrc() == 2674985186);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
 		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::TO_OFFSET, 1);
 		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 10);
@@ -64,8 +64,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 23617);
 		REQUIRE(packet->GetTimestamp() == 1660241882);
 		REQUIRE(packet->GetSsrc() == 2674985186);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
 		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::TO_OFFSET, &exten_len);
 
@@ -101,8 +101,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 28478);
 		REQUIRE(packet->GetTimestamp() == 172320136);
 		REQUIRE(packet->GetSsrc() == 3316375386);
-		REQUIRE(!packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
+		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
 		delete packet;
 	}
@@ -129,8 +129,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 19354);
 		REQUIRE(packet->GetTimestamp() == 863466045);
 		REQUIRE(packet->GetSsrc() == 235797202);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
 		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
 
@@ -155,8 +155,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(cloned_packet->GetSequenceNumber() == 19354);
 		REQUIRE(cloned_packet->GetTimestamp() == 863466045);
 		REQUIRE(cloned_packet->GetSsrc() == 235797202);
-		REQUIRE(cloned_packet->HasOneByteExtensionElements());
-		REQUIRE(!cloned_packet->HasTwoBytesExtensionElements());
+		REQUIRE(cloned_packet->HasOneByteExtensions());
+		REQUIRE(!cloned_packet->HasTwoBytesExtensions());
 
 		cloned_packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
 
@@ -190,8 +190,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadType() == 1);
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
-		REQUIRE(!packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
+		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 		REQUIRE(packet->GetSsrc() == 5);
 
 		delete packet;
@@ -223,8 +223,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
 		delete packet;
 	}
@@ -254,8 +254,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(!packet->HasOneByteExtensionElements());
-		REQUIRE(packet->HasTwoBytesExtensionElements());
+		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions());
 
 		delete packet;
 	}
