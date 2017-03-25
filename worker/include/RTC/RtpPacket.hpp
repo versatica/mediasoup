@@ -44,8 +44,8 @@ namespace RTC
 		};
 
 	private:
-		/* Struct for One-Byte extension element. */
-		struct OneByteExtensionElement
+		/* Struct for One-Byte extension. */
+		struct OneByteExtension
 		{
 			#if defined(MS_LITTLE_ENDIAN)
 				uint8_t len:4;
@@ -58,8 +58,8 @@ namespace RTC
 		};
 
 	private:
-		/* Struct for Two-Bytes extension element. */
-		struct TwoBytesExtensionElement
+		/* Struct for Two-Bytes extension. */
+		struct TwoBytesExtension
 		{
 			#if defined(MS_LITTLE_ENDIAN)
 				uint8_t len:8;
@@ -96,8 +96,8 @@ namespace RTC
 		uint16_t GetExtensionHeaderId() const;
 		size_t GetExtensionHeaderLength() const;
 		uint8_t* GetExtensionHeaderValue() const;
-		bool HasOneByteExtensionElements() const;
-		bool HasTwoBytesExtensionElements() const;
+		bool HasOneByteExtensions() const;
+		bool HasTwoBytesExtensions() const;
 		void AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id);
 		uint8_t* GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
 		uint32_t GetAbsSendTime() const;
@@ -107,15 +107,15 @@ namespace RTC
 		RtpPacket* Clone(uint8_t* buffer) const;
 
 	private:
-		void ParseExtensionElements();
+		void ParseExtensions();
 
 	private:
 		// Passed by argument.
 		Header* header = nullptr;
 		uint8_t* csrcList = nullptr;
 		ExtensionHeader* extensionHeader = nullptr;
-		std::map<uint8_t, OneByteExtensionElement*> oneByteExtensionElements;
-		std::map<uint8_t, TwoBytesExtensionElement*> twoBytesExtensionElements;
+		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
+		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
 		std::map<RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
 		uint8_t* payload = nullptr;
 		size_t payloadLength = 0;
@@ -249,13 +249,13 @@ namespace RTC
 	}
 
 	inline
-	bool RtpPacket::HasOneByteExtensionElements() const
+	bool RtpPacket::HasOneByteExtensions() const
 	{
 		return GetExtensionHeaderId() == 0xBEDE;
 	}
 
 	inline
-	bool RtpPacket::HasTwoBytesExtensionElements() const
+	bool RtpPacket::HasTwoBytesExtensions() const
 	{
 		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
 	}
@@ -276,21 +276,21 @@ namespace RTC
 
 		uint8_t id = this->extensionMap.at(uri);
 
-		if (HasOneByteExtensionElements())
+		if (HasOneByteExtensions())
 		{
-			if (this->oneByteExtensionElements.find(id) == this->oneByteExtensionElements.end())
+			if (this->oneByteExtensions.find(id) == this->oneByteExtensions.end())
 				return nullptr;
 
-			*len = this->oneByteExtensionElements.at(id)->len + 1;
-			return this->oneByteExtensionElements.at(id)->value;
+			*len = this->oneByteExtensions.at(id)->len + 1;
+			return this->oneByteExtensions.at(id)->value;
 		}
-		else if (HasTwoBytesExtensionElements())
+		else if (HasTwoBytesExtensions())
 		{
-			if (this->twoBytesExtensionElements.find(id) == this->twoBytesExtensionElements.end())
+			if (this->twoBytesExtensions.find(id) == this->twoBytesExtensions.end())
 				return nullptr;
 
-			*len = this->oneByteExtensionElements.at(id)->len;
-			return this->twoBytesExtensionElements.at(id)->value;
+			*len = this->oneByteExtensions.at(id)->len;
+			return this->twoBytesExtensions.at(id)->value;
 		}
 		else
 		{

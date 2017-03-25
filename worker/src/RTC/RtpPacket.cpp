@@ -115,7 +115,7 @@ namespace RTC
 		RtpPacket* packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
 
 		// Parse RFC 5285 extension header.
-		packet->ParseExtensionElements();
+		packet->ParseExtensions();
 
 		return packet;
 	}
@@ -211,7 +211,7 @@ namespace RTC
 		}
 
 		// Parse and regenerate RFC 5285 extension header.
-		ParseExtensionElements();
+		ParseExtensions();
 
 		// Add payload.
 		if (this->payload)
@@ -283,20 +283,20 @@ namespace RTC
 		RtpPacket* packet = new RtpPacket(header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Parse RFC 5285 extension header.
-		packet->ParseExtensionElements();
+		packet->ParseExtensions();
 
 		return packet;
 	}
 
-	void RtpPacket::ParseExtensionElements()
+	void RtpPacket::ParseExtensions()
 	{
 		MS_TRACE();
 
 		// Parse One-Byte extension header.
-		if (HasOneByteExtensionElements())
+		if (HasOneByteExtensions())
 		{
 			// Clear the One-Byte extension elements map.
-			this->oneByteExtensionElements.clear();
+			this->oneByteExtensions.clear();
 
 			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
 			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
@@ -315,7 +315,7 @@ namespace RTC
 				}
 
 				// Store the One-Byte extension element in a map.
-				this->oneByteExtensionElements[id] = reinterpret_cast<OneByteExtensionElement*>(ptr);
+				this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
 
 				ptr += 1 + len;
 
@@ -325,10 +325,10 @@ namespace RTC
 			}
 		}
 		// Parse Two-Bytes extension header.
-		else if (HasTwoBytesExtensionElements())
+		else if (HasTwoBytesExtensions())
 		{
 			// Clear the Two-Bytes extension elements map.
-			this->twoBytesExtensionElements.clear();
+			this->twoBytesExtensions.clear();
 
 			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
 			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
@@ -347,7 +347,7 @@ namespace RTC
 				}
 
 				// Store the Two-Bytes extension element in a map.
-				this->twoBytesExtensionElements[id] = reinterpret_cast<TwoBytesExtensionElement*>(ptr);
+				this->twoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
 
 				ptr += len;
 
