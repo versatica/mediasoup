@@ -306,7 +306,7 @@ namespace RTC
 
 		exten_value = GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
 
-		if (!exten_value)
+		if (!exten_value || exten_len != 3)
 			return 0;
 
 		return Utils::Byte::Get3Bytes(exten_value, 0);
