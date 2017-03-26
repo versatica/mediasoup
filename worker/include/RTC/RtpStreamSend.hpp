@@ -53,7 +53,7 @@ namespace RTC
 		size_t receivedBytes = 0; // Bytes received.
 		uint64_t lastPacketTimeMs = 0; // Time (MS) when the last packet was received.
 		uint32_t lastPacketRtpTimestamp = 0; // RTP Timestamp of the last packet.
-		uint32_t rtt; // Round trip time.
+		uint32_t rtt = 0; // Round trip time.
 	};
 
 	inline
