@@ -11,7 +11,7 @@ char Logger::buffer[MS_LOGGER_BUFFER_SIZE];
 
 /* Class methods. */
 
-void Logger::Init(const std::string id, Channel::UnixStreamSocket* channel)
+void Logger::Init(const std::string &id, Channel::UnixStreamSocket* channel)
 {
 	Logger::id = id;
 	Logger::channel = channel;
@@ -19,7 +19,7 @@ void Logger::Init(const std::string id, Channel::UnixStreamSocket* channel)
 	MS_TRACE();
 }
 
-void Logger::Init(const std::string id)
+void Logger::Init(const std::string &id)
 {
 	Logger::id = id;
 

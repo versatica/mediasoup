@@ -7,6 +7,7 @@
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "Utils.hpp"
+#include <string>
 
 static void init();
 static void destroy();
@@ -17,8 +18,10 @@ int main(int argc, char* argv[])
 	Settings::configuration.logTags.rtp = true;
 	Settings::configuration.logTags.rtcp = true;
 
+	std::string loggerId = "tests";
+
 	// Initialize the Logger.
-	Logger::Init("tests");
+	Logger::Init(loggerId);
 
 	init();
 
