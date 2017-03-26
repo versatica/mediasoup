@@ -285,6 +285,9 @@ namespace RTC
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
 
+		// Clone the extension map.
+		packet->extensionMap = this->extensionMap;
+
 		return packet;
 	}
 
