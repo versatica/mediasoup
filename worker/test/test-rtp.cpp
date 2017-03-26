@@ -25,6 +25,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		if (!packet)
 			FAIL("not a RTP packet");
 
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::TO_OFFSET, 1);
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 10);
+
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasExtensionHeader() == true);
 		REQUIRE(packet->GetExtensionHeaderId() == 0xBEDE);
@@ -35,9 +38,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSsrc() == 2674985186);
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(!packet->HasTwoBytesExtensions());
-
-		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::TO_OFFSET, 1);
-		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 10);
 
 		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::TO_OFFSET, &exten_len);
 
@@ -113,6 +113,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		size_t len;
 		uint8_t exten_len;
 		uint8_t* exten_value;
+		bool voice;
+		uint8_t volume;
+		uint32_t absSendTime;
 
 		if (!Helpers::ReadBinaryFile("data/packet3.raw", buffer, &len))
 			FAIL("cannot open file");
@@ -121,6 +124,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		if (!packet)
 			FAIL("not a RTP packet");
+
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 1);
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasExtensionHeader() == true);
@@ -133,16 +139,25 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(!packet->HasTwoBytesExtensions());
 
-		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
-
 		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
 
 		REQUIRE(exten_len == 3);
 		REQUIRE(exten_value);
 		REQUIRE(exten_value[0] == 0x65);
 		REQUIRE(exten_value[1] == 0x34);
-		REQUIRE(exten_value[2] == 0x1E);
-		REQUIRE(packet->GetAbsSendTime() == 0x65341e);
+		REQUIRE(exten_value[2] == 0x1e);
+
+		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &exten_len);
+
+		REQUIRE(exten_len == 1);
+		REQUIRE(exten_value);
+		REQUIRE(exten_value[0] == 0xd0);
+
+		REQUIRE(packet->ReadAudioLevel(&volume, &voice) == true);
+		REQUIRE(volume == 0b1010000);
+		REQUIRE(voice == true);
+		REQUIRE(packet->ReadAbsSendTime(&absSendTime) == true);
+		REQUIRE(absSendTime == 0x65341e);
 
 		auto cloned_packet = packet->Clone(buffer2);
 
@@ -165,8 +180,19 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(exten_value);
 		REQUIRE(exten_value[0] == 0x65);
 		REQUIRE(exten_value[1] == 0x34);
-		REQUIRE(exten_value[2] == 0x1E);
-		REQUIRE(cloned_packet->GetAbsSendTime() == 0x65341e);
+		REQUIRE(exten_value[2] == 0x1e);
+
+		exten_value = cloned_packet->GetExtension(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &exten_len);
+
+		REQUIRE(exten_len == 1);
+		REQUIRE(exten_value);
+		REQUIRE(exten_value[0] == 0xd0);
+
+		REQUIRE(cloned_packet->ReadAudioLevel(&volume, &voice) == true);
+		REQUIRE(volume == 0b1010000);
+		REQUIRE(voice == true);
+		REQUIRE(cloned_packet->ReadAbsSendTime(&absSendTime) == true);
+		REQUIRE(absSendTime == 0x65341e);
 
 		delete cloned_packet;
 	}

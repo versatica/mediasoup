@@ -100,7 +100,8 @@ namespace RTC
 		bool HasTwoBytesExtensions() const;
 		void AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id);
 		uint8_t* GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
-		uint32_t GetAbsSendTime() const;
+		bool ReadAudioLevel(uint8_t* volume, bool* voice) const;
+		bool ReadAbsSendTime(uint32_t* time) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
 		void Serialize(uint8_t* buffer);
@@ -299,7 +300,25 @@ namespace RTC
 	}
 
 	inline
-	uint32_t RtpPacket::GetAbsSendTime() const
+	bool RtpPacket::ReadAudioLevel(uint8_t* volume, bool* voice) const
+	{
+		uint8_t exten_len;
+		uint8_t* exten_value;
+
+		exten_value = GetExtension(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &exten_len);
+
+		if (!exten_value || exten_len != 1)
+			return false;
+
+		*volume = Utils::Byte::Get1Byte(exten_value, 0);
+		*voice = (*volume & (1 << 7)) ? true : false;
+		*volume &= ~(1 << 7);
+
+		return true;
+	}
+
+	inline
+	bool RtpPacket::ReadAbsSendTime(uint32_t* time) const
 	{
 		uint8_t exten_len;
 		uint8_t* exten_value;
@@ -307,9 +326,11 @@ namespace RTC
 		exten_value = GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
 
 		if (!exten_value || exten_len != 3)
-			return 0;
+			return false;
 
-		return Utils::Byte::Get3Bytes(exten_value, 0);
+		*time = Utils::Byte::Get3Bytes(exten_value, 0);
+
+		return true;
 	}
 
 	inline
