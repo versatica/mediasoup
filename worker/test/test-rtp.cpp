@@ -2,6 +2,7 @@
 #include "include/helpers.hpp"
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 using namespace RTC;
 
@@ -13,6 +14,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 	SECTION("parse packet1.raw")
 	{
 		size_t len;
+		uint8_t exten_len;
+		uint8_t* exten_value;
 
 		if (!Helpers::ReadBinaryFile("data/packet1.raw", buffer, &len))
 			FAIL("cannot open file");
@@ -30,17 +33,26 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 23617);
 		REQUIRE(packet->GetTimestamp() == 1660241882);
 		REQUIRE(packet->GetSsrc() == 2674985186);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
-		REQUIRE(packet->GetExtensionElementLength(1) == 1);
-		REQUIRE(packet->GetExtensionElementLength(2) == 0);
-		REQUIRE(packet->GetExtensionElementLength(3) == 0);
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
-		packet->SetExtensionElementId(1, 2);
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::TO_OFFSET, 1);
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 10);
 
-		REQUIRE(packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(packet->GetExtensionElementLength(2) == 1);
-		REQUIRE(packet->GetExtensionElementLength(3) == 0);
+		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::TO_OFFSET, &exten_len);
+
+		REQUIRE(exten_len == 1);
+		REQUIRE(exten_value[0] == 0xff);
+
+		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, &exten_len);
+
+		REQUIRE(exten_len == 0);
+		REQUIRE(exten_value == nullptr);
+
+		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, &exten_len);
+
+		REQUIRE(exten_len == 0);
+		REQUIRE(exten_value == nullptr);
 
 		packet->Serialize(buffer2);
 
@@ -52,15 +64,19 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 23617);
 		REQUIRE(packet->GetTimestamp() == 1660241882);
 		REQUIRE(packet->GetSsrc() == 2674985186);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
-		REQUIRE(packet->GetExtensionElementLength(2) == 1);
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
-		packet->SetExtensionElementId(2, 3);
+		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::TO_OFFSET, &exten_len);
 
-		REQUIRE(packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(packet->GetExtensionElementLength(2) == 0);
-		REQUIRE(packet->GetExtensionElementLength(3) == 1);
+		REQUIRE(exten_len == 1);
+		REQUIRE(exten_value);
+		REQUIRE(exten_value[0] == 0xff);
+
+		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, &exten_len);
+
+		REQUIRE(exten_len == 0);
+		REQUIRE(exten_value == nullptr);
 
 		delete packet;
 	}
@@ -85,11 +101,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 28478);
 		REQUIRE(packet->GetTimestamp() == 172320136);
 		REQUIRE(packet->GetSsrc() == 3316375386);
-		REQUIRE(!packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
-		REQUIRE(packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(packet->GetExtensionElementLength(2) == 0);
-		REQUIRE(packet->GetExtensionElementLength(3) == 0);
+		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
 		delete packet;
 	}
@@ -97,6 +110,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 	SECTION("parse packet3.raw")
 	{
 		size_t len;
+		uint8_t exten_len;
+		uint8_t* exten_value;
 
 		if (!Helpers::ReadBinaryFile("data/packet3.raw", buffer, &len))
 			FAIL("cannot open file");
@@ -114,27 +129,19 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 19354);
 		REQUIRE(packet->GetTimestamp() == 863466045);
 		REQUIRE(packet->GetSsrc() == 235797202);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
-		REQUIRE(packet->GetExtensionElementLength(1) == 1);
-		REQUIRE(packet->GetExtensionElementLength(2) == 0);
-		REQUIRE(packet->GetExtensionElementLength(3) == 3);
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
-		// value: 65341e
-		uint8_t* value = packet->GetExtensionElementValue(3);
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
 
-		REQUIRE(value);
+		exten_value = packet->GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
 
-		REQUIRE(value[0] == 0x65);
-		REQUIRE(value[1] == 0x34);
-		REQUIRE(value[2] == 0x1E);
-
-		packet->SetExtensionElementId(3, 2);
-		packet->SetExtensionElementId(1, 3);
-
-		REQUIRE(packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(packet->GetExtensionElementLength(2) == 3);
-		REQUIRE(packet->GetExtensionElementLength(3) == 1);
+		REQUIRE(exten_len == 3);
+		REQUIRE(exten_value);
+		REQUIRE(exten_value[0] == 0x65);
+		REQUIRE(exten_value[1] == 0x34);
+		REQUIRE(exten_value[2] == 0x1E);
+		REQUIRE(packet->GetAbsSendTime() == 0x65341e);
 
 		auto cloned_packet = packet->Clone(buffer2);
 
@@ -148,18 +155,18 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(cloned_packet->GetSequenceNumber() == 19354);
 		REQUIRE(cloned_packet->GetTimestamp() == 863466045);
 		REQUIRE(cloned_packet->GetSsrc() == 235797202);
-		REQUIRE(cloned_packet->HasOneByteExtensionElements());
-		REQUIRE(!cloned_packet->HasTwoBytesExtensionElements());
-		REQUIRE(cloned_packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(cloned_packet->GetExtensionElementLength(2) == 3);
-		REQUIRE(cloned_packet->GetExtensionElementLength(3) == 1);
+		REQUIRE(cloned_packet->HasOneByteExtensions());
+		REQUIRE(!cloned_packet->HasTwoBytesExtensions());
 
-		cloned_packet->SetExtensionElementId(3, 1);
-		cloned_packet->SetExtensionElementId(2, 3);
+		cloned_packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
 
-		REQUIRE(cloned_packet->GetExtensionElementLength(1) == 1);
-		REQUIRE(cloned_packet->GetExtensionElementLength(2) == 0);
-		REQUIRE(cloned_packet->GetExtensionElementLength(3) == 3);
+		exten_value = cloned_packet->GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
+
+		REQUIRE(exten_len == 3);
+		REQUIRE(exten_value);
+		REQUIRE(exten_value[0] == 0x65);
+		REQUIRE(exten_value[1] == 0x34);
+		REQUIRE(exten_value[2] == 0x1E);
 
 		delete cloned_packet;
 	}
@@ -183,8 +190,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadType() == 1);
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
-		REQUIRE(!packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
+		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 		REQUIRE(packet->GetSsrc() == 5);
 
 		delete packet;
@@ -216,22 +223,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(packet->HasOneByteExtensionElements());
-		REQUIRE(!packet->HasTwoBytesExtensionElements());
-		REQUIRE(packet->GetExtensionElementLength(1) == 1);
-		REQUIRE(packet->GetExtensionElementLength(2) == 2);
-		REQUIRE(packet->GetExtensionElementLength(3) == 4);
-
-		packet->SetExtensionElementId(1, 11);
-		packet->SetExtensionElementId(2, 12);
-		packet->SetExtensionElementId(3, 13);
-
-		REQUIRE(packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(packet->GetExtensionElementLength(2) == 0);
-		REQUIRE(packet->GetExtensionElementLength(3) == 0);
-		REQUIRE(packet->GetExtensionElementLength(11) == 1);
-		REQUIRE(packet->GetExtensionElementLength(12) == 2);
-		REQUIRE(packet->GetExtensionElementLength(13) == 4);
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(!packet->HasTwoBytesExtensions());
 
 		delete packet;
 	}
@@ -261,22 +254,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(!packet->HasOneByteExtensionElements());
-		REQUIRE(packet->HasTwoBytesExtensionElements());
-		REQUIRE(packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(packet->GetExtensionElementLength(2) == 1);
-		REQUIRE(packet->GetExtensionElementLength(3) == 4);
-
-		packet->SetExtensionElementId(1, 11);
-		packet->SetExtensionElementId(2, 12);
-		packet->SetExtensionElementId(3, 13);
-
-		REQUIRE(packet->GetExtensionElementLength(1) == 0);
-		REQUIRE(packet->GetExtensionElementLength(2) == 0);
-		REQUIRE(packet->GetExtensionElementLength(3) == 0);
-		REQUIRE(packet->GetExtensionElementLength(11) == 0);
-		REQUIRE(packet->GetExtensionElementLength(12) == 1);
-		REQUIRE(packet->GetExtensionElementLength(13) == 4);
+		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions());
 
 		delete packet;
 	}
