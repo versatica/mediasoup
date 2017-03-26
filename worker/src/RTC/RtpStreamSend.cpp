@@ -36,6 +36,7 @@ namespace RTC
 		static const Json::StaticString k_received("received");
 		static const Json::StaticString k_maxTimestamp("maxTimestamp");
 		static const Json::StaticString k_receivedBytes("receivedBytes");
+		static const Json::StaticString k_rtt("rtt");
 
 		Json::Value json(Json::objectValue);
 
@@ -43,6 +44,7 @@ namespace RTC
 		json[k_received] = (Json::UInt)this->received;
 		json[k_maxTimestamp] = (Json::UInt)this->max_timestamp;
 		json[k_receivedBytes] = (Json::UInt)this->receivedBytes;
+		json[k_rtt] = (Json::UInt)this->rtt;
 
 		return json;
 	}
@@ -67,6 +69,38 @@ namespace RTC
 		this->lastPacketRtpTimestamp = packet->GetTimestamp();
 
 		return true;
+	}
+
+	void RtpStreamSend::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	{
+		MS_TRACE();
+
+		/* Calculate RTT. */
+
+		// If no SR has been received yet, Last Sender Timestamp is set to zero.
+		if (report->GetLastSenderReport() == 0)
+		{
+			// TODO: Remove.
+			MS_DEBUG_TAG(rtp, "report->GetLastSenderReport() == 0");
+			report->Dump();
+			return;
+		}
+
+		// Get the compact NTP representation of the current timestamp.
+		Utils::Time::Ntp nowNtp;
+		Utils::Time::CurrentTimeNtp(nowNtp);
+		uint32_t nowCompactNtp = (nowNtp.seconds & 0x0000FFFF) << 16;
+		nowCompactNtp |= (nowNtp.fractions & 0xFFFF0000) >> 16;
+
+		uint32_t lastSr = report->GetLastSenderReport();
+		uint32_t dlsr = report->GetDelaySinceLastSenderReport();
+
+		// RTT in 1/2^16 seconds.
+		uint32_t rtt = nowCompactNtp - dlsr - lastSr;
+
+		// RTT in milliseconds.
+		this->rtt = ((rtt >> 16) * 1000);
+		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the

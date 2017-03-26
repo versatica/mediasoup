@@ -3,6 +3,7 @@
 
 #include "RTC/RtpStream.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include <vector>
 #include <list>
 
@@ -30,8 +31,10 @@ namespace RTC
 
 		virtual Json::Value toJson() const override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
+		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
+		uint32_t GetRtt() const;
 
 	private:
 		void ClearBuffer();
@@ -50,7 +53,14 @@ namespace RTC
 		size_t receivedBytes = 0; // Bytes received.
 		uint64_t lastPacketTimeMs = 0; // Time (MS) when the last packet was received.
 		uint32_t lastPacketRtpTimestamp = 0; // RTP Timestamp of the last packet.
+		uint32_t rtt; // Round trip time.
 	};
+
+	inline
+	uint32_t RtpStreamSend::GetRtt() const
+	{
+		return this->rtt;
+	}
 }
 
 #endif
