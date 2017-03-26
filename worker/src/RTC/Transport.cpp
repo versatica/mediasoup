@@ -778,12 +778,11 @@ namespace RTC
 			// "Absolute Sender Time" RTP header extension header ID is hardcoded to 3.
 			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
 
-			uint8_t exten_len;
-			uint8_t* absoluteSendTime = packet->GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
+			uint32_t absSendTime;
 
-			if (absoluteSendTime != nullptr)
+			if (packet->ReadAbsSendTime(&absSendTime))
 			{
-				this->remoteBitrateEstimator->IncomingPacket(DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absoluteSendTime);
+				this->remoteBitrateEstimator->IncomingPacket(DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 			}
 		}
 

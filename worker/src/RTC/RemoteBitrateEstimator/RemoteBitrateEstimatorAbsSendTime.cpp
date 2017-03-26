@@ -14,7 +14,6 @@
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include "DepLibUV.hpp"
-#include "Utils.hpp" // Byte::Get3Bytes
 #include "Logger.hpp"
 #include <math.h>
 #include <algorithm>
@@ -184,16 +183,11 @@ namespace RTC
 		return initialProbe || bitrateAboveEstimate;
 	}
 
-	void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint8_t* absoluteSendTime)
+	void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t absSendTime)
 	{
 		MS_TRACE();
 
-		if (!absoluteSendTime)
-		{
-			MS_WARN_TAG(rbe, "incoming packet is missing absolute send time extension!");
-			return;
-		}
-		IncomingPacketInfo(arrivalTimeMs, Utils::Byte::Get3Bytes(absoluteSendTime, 0), payloadSize, packet.GetSsrc());
+		IncomingPacketInfo(arrivalTimeMs, absSendTime, payloadSize, packet.GetSsrc());
 	}
 
 	void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc)

@@ -17,13 +17,12 @@
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
 #include "DepLibUV.hpp"
-#include "Utils.hpp" // Byte::Get3Bytes
 #include "Logger.hpp"
 #include <utility> // std::make_pair
 
 namespace RTC
 {
-	void RemoteBitrateEstimatorSingleStream::IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint8_t* transmissionTimeOffset)
+	void RemoteBitrateEstimatorSingleStream::IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t transmissionTimeOffset)
 	{
 		MS_TRACE();
 
@@ -32,7 +31,7 @@ namespace RTC
 			this->umaRecorded = true;
 		}
 		uint32_t ssrc = packet.GetSsrc();
-		uint32_t rtpTimestamp = packet.GetTimestamp() + Utils::Byte::Get3Bytes(transmissionTimeOffset, 0);
+		uint32_t rtpTimestamp = packet.GetTimestamp() + transmissionTimeOffset;
 		int64_t nowMs = DepLibUV::GetTime();
 		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.find(ssrc);
 		if (it == this->overuseDetectors.end())

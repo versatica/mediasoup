@@ -57,7 +57,7 @@ namespace RTC
 		// remote bitrate estimate will be updated. Note that |payload_size| is the
 		// packet size excluding headers.
 		// Note that |arrival_time_ms| can be of an arbitrary time base.
-		virtual void IncomingPacket(int64_t arrival_time_ms, size_t payload_size, const RtpPacket& packet, const uint8_t* extensionHeaderValue) = 0;
+		virtual void IncomingPacket(int64_t arrival_time_ms, size_t payload_size, const RtpPacket& packet, const uint32_t absSendTime) = 0;
 
 		// Removes all data for |ssrc|.
 		virtual void RemoveStream(uint32_t ssrc) = 0;

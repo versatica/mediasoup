@@ -59,7 +59,7 @@ namespace RTC
 		RemoteBitrateEstimatorAbsSendTime(Listener* observer);
 		virtual ~RemoteBitrateEstimatorAbsSendTime() = default;
 
-		void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint8_t* absoluteSendTime) override;
+		void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t absSendTime) override;
 		// This class relies on Process() being called periodically (at least once
 		// every other second) for streams to be timed out properly.
 		void Process() override;
