@@ -131,7 +131,7 @@ namespace RTC
 		RtpListener rtpListener;
 		// REMB
 		bool hasRemb = false;
-		std::auto_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
+		std::unique_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 	};
 
 	/* Inline instance methods. */

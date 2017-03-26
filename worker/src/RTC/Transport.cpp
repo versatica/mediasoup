@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Transport.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "Settings.hpp"
 #include "DepLibUV.hpp"
@@ -775,8 +776,10 @@ namespace RTC
 		{
 			// TODO: Use dynamic extension header IDs.
 			// "Absolute Sender Time" RTP header extension header ID is hardcoded to 3.
-			const constexpr uint8_t AbsoluteSenderTimeId = 3;
-			uint8_t* absoluteSendTime = packet->GetExtensionElementValue(AbsoluteSenderTimeId);
+			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
+
+			uint8_t exten_len;
+			uint8_t* absoluteSendTime = packet->GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
 
 			if (absoluteSendTime != nullptr)
 			{
