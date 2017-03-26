@@ -385,6 +385,20 @@ namespace RTC
 		}
 	}
 
+	void RtpSender::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	{
+		MS_TRACE();
+
+		if (!this->rtpStream)
+		{
+			MS_WARN_TAG(rtp, "no RtpStreamSend");
+
+			return;
+		}
+
+		this->rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
 	void RtpSender::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
 	{
 		MS_TRACE();

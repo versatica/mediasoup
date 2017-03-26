@@ -8,6 +8,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "Channel/Request.hpp"
@@ -61,6 +62,7 @@ namespace RTC
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
+		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetTransmissionRate(uint64_t now);
 
 	private:
