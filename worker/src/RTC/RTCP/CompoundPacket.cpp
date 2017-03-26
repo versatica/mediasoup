@@ -40,10 +40,13 @@ namespace RTC { namespace RTCP
 			this->senderReportPacket.Serialize(this->header);
 			offset = this->senderReportPacket.GetSize();
 
+			// Fix header count field.
+			Packet::CommonHeader* header = reinterpret_cast<Packet::CommonHeader*>(this->header);
+			header->count = 0;
+
 			if (this->receiverReportPacket.GetCount())
 			{
 				// Fix header length field.
-				Packet::CommonHeader* header = (Packet::CommonHeader*)this->header;
 				size_t length = ((sizeof(SenderReport::Header) + (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount())) / 4);
 
 				header->length = htons(length);
