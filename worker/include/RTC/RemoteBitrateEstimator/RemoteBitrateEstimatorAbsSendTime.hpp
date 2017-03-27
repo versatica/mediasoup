@@ -56,7 +56,7 @@ namespace RTC
 		static void AddCluster(std::list<Cluster>* clusters, Cluster* cluster);
 
 	public:
-		RemoteBitrateEstimatorAbsSendTime(Listener* observer);
+		explicit RemoteBitrateEstimatorAbsSendTime(Listener* observer);
 		virtual ~RemoteBitrateEstimatorAbsSendTime() = default;
 
 		void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t absSendTime) override;

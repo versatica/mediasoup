@@ -30,7 +30,7 @@ namespace RTC
 		static constexpr double kTimestampToMs = 1.0 / 90.0;
 
 	public:
-		RemoteBitrateEstimatorSingleStream(Listener* observer);
+		explicit RemoteBitrateEstimatorSingleStream(Listener* observer);
 		virtual ~RemoteBitrateEstimatorSingleStream();
 
 		void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t transmissionTimeOffset) override;
