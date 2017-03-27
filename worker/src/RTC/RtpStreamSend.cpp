@@ -77,19 +77,11 @@ namespace RTC
 
 		/* Calculate RTT. */
 
-		// If no SR has been received yet, Last Sender Timestamp is set to zero.
-		if (report->GetLastSenderReport() == 0)
-		{
-			// TODO: Remove.
-			MS_DEBUG_TAG(rtp, "report->GetLastSenderReport() == 0");
-			report->Dump();
-			return;
-		}
-
 		// Get the compact NTP representation of the current timestamp.
 		Utils::Time::Ntp nowNtp;
 		Utils::Time::CurrentTimeNtp(nowNtp);
 		uint32_t nowCompactNtp = (nowNtp.seconds & 0x0000FFFF) << 16;
+
 		nowCompactNtp |= (nowNtp.fractions & 0xFFFF0000) >> 16;
 
 		uint32_t lastSr = report->GetLastSenderReport();
