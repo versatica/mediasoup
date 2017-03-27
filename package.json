@@ -1,7 +1,7 @@
 {
   "name": "mediasoup",
   "version": "0.8.0",
-  "description": "Powerful WebRTC SFU for Node.js",
+  "description": "Cutting Edge WebRTC Video Conferencing",
   "main": "lib/mediasoup.js",
   "repository": {
     "type": "git",

@@ -28,7 +28,7 @@ $ npm install mediasoup --save
 
 Prior to that, ensure your host satisfies the following **requirements**:
 
-* Node.js >= `v4.0.0`
+* Node.js >= `v4.8.0`
 * POSIX based operating system (Windows not yet supported)
 * Python 2 (`python2` or `python` command must point to the Python 2 executable)
 * `make`
@@ -39,6 +39,7 @@ Prior to that, ensure your host satisfies the following **requirements**:
 
 ## Design goals
 
+* Be a WebRTC [SFU](https://webrtcglossary.com/sfu/) (Selective Forwarding Unit).
 * Be a Node.js module.
 * Be minimalist: just handle the media layer.
 * Expose a modern ECMAScript 6 [API](https://mediasoup.org/api/) in sync with [WebRTC 1.0](https://w3c.github.io/webrtc-pc/) and [ORTC](http://ortc.org/).
@@ -48,8 +49,10 @@ Prior to that, ensure your host satisfies the following **requirements**:
 ## Features
 
 * Multiple conference rooms with multiple participants.
+* Multi-stream over a single (BUNDLE) transport (Plan-B and Unified-Plan).
 * IPv6 ready.
 * ICE / DTLS / RTP / RTCP over UDP and TCP.
+* Congestion control via [REMB](https://tools.ietf.org/html/draft-alvestrand-rmcat-remb).
 * Extremely powerful (media worker subprocess coded in C++ on top of [libuv](http://libuv.org)).
 * Can handle RTP packets in JavaScript land.
 
