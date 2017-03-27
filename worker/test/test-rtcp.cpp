@@ -17,6 +17,7 @@
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
 #include "RTC/RTCP/FeedbackPsLei.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include <string>
 
 using namespace RTC::RTCP;
@@ -612,8 +613,38 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
-		REQUIRE((packet->GetData()[dataSize -1] & 1) == dataBitmask);
+		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::UNKNOWN);
 
 		delete packet;
+	}
+
+	SECTION("FeedbackPsRembPacket")
+	{
+		uint32_t sender_ssrc = 0;
+		uint32_t media_ssrc = 0;
+		uint64_t bitrate = 654321;
+		// Precission lost.
+		uint64_t bitrateParsed = 654320;
+		std::vector<uint32_t> ssrcs { 11111, 22222, 33333, 44444 };
+
+		// Create a packet.
+		FeedbackPsRembPacket packet(sender_ssrc, media_ssrc);
+		packet.SetBitrate(bitrate);
+		packet.SetSsrcs(ssrcs);
+
+		// Serialize.
+		uint8_t rtcpBuffer[MS_RTCP_BUFFER_SIZE];
+		packet.Serialize(rtcpBuffer);
+
+		RTC::RTCP::Packet::CommonHeader* header = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(rtcpBuffer);
+		size_t len = (size_t)(ntohs(header->length) + 1) * 4;
+
+		// Recover the packet out of the serialized buffer.
+		FeedbackPsRembPacket* parsed = FeedbackPsRembPacket::Parse(rtcpBuffer, len);
+		REQUIRE(parsed);
+		REQUIRE(parsed->GetMediaSsrc() == media_ssrc);
+		REQUIRE(parsed->GetSenderSsrc() == sender_ssrc);
+		REQUIRE(parsed->GetBitrate() == bitrateParsed);
+		REQUIRE(parsed->GetSsrcs() == ssrcs);
 	}
 }

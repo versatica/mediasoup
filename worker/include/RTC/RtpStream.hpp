@@ -22,6 +22,7 @@ namespace RTC
 			RTC::RtpCodecMime mime;
 			uint32_t          clockRate = 0;
 			bool              useNack = false;
+			uint8_t           absSendTimeId = 0; // 0 means no abs-send-time id.
 		};
 
 	public:

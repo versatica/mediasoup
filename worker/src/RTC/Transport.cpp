@@ -2,7 +2,9 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Transport.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "Settings.hpp"
+#include "DepLibUV.hpp"
 #include "Utils.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
@@ -32,6 +34,10 @@ uint32_t generateIceCandidatePriority(uint16_t local_preference)
 
 namespace RTC
 {
+	/* Class variables. */
+
+	uint8_t Transport::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
+
 	/* Instance methods. */
 
 	Transport::Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data) :
@@ -274,6 +280,7 @@ namespace RTC
 		static const Json::StaticString v_connecting("connecting");
 		static const Json::StaticString v_closed("closed");
 		static const Json::StaticString v_failed("failed");
+		static const Json::StaticString k_useRemb("useRemb");
 		static const Json::StaticString k_rtpListener("rtpListener");
 
 		Json::Value json(Json::objectValue);
@@ -353,6 +360,9 @@ namespace RTC
 				json[k_dtlsState] = v_closed;
 				break;
 		}
+
+		// Add `useRemb`.
+		json[k_useRemb] = (this->remoteBitrateEstimator ? true : false);
 
 		// Add `rtpListener`.
 		json[k_rtpListener] = this->rtpListener.toJson();
@@ -763,6 +773,18 @@ namespace RTC
 		// Pass the RTP packet to the corresponding RtpReceiver.
 		rtpReceiver->ReceiveRtpPacket(packet);
 
+		// Feed the remote bitrate estimator (REMB).
+		if (this->remoteBitrateEstimator)
+		{
+			uint32_t absSendTime;
+
+			if (packet->ReadAbsSendTime(&absSendTime))
+			{
+				this->remoteBitrateEstimator->IncomingPacket(
+					DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
+			}
+		}
+
 		delete packet;
 	}
 
@@ -1083,5 +1105,22 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
+	}
+
+	void Transport::onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_TAG(rbe, "sending RTCP REMB packet [bitrate:%" PRIu32 "]", bitrate);
+		for (auto ssrc: ssrcs)
+		{
+			MS_DEBUG_TAG(rbe, "  ssrc : %" PRIu32, ssrc);
+		}
+
+		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+		packet.SetBitrate(bitrate);
+		packet.SetSsrcs(ssrcs);
+		packet.Serialize(Transport::rtcpBuffer);
+		this->SendRtcpPacket(&packet);
 	}
 }

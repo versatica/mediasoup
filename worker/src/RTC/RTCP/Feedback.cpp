@@ -17,6 +17,7 @@
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
 #include "RTC/RTCP/FeedbackPsLei.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "Utils.hpp"
 #include "Logger.hpp"
 #include <cstring>
 
@@ -162,8 +163,10 @@ namespace RTC { namespace RTCP
 				break;
 
 			case FeedbackPs::MessageType::AFB:
+			{
 				packet = FeedbackPsAfbPacket::Parse(data, len);
 				break;
+			}
 
 			case FeedbackPs::MessageType::EXT:
 				break;

@@ -19,6 +19,7 @@ public:
 		bool rtp  { false };
 		bool srtp { false };
 		bool rtcp { false };
+		bool rbe  { false };
 		// TODO: Add more tags (here and in Settings.cpp).
 	};
 

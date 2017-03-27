@@ -147,6 +147,7 @@ Application information will be relayed from the remote RTP receiver to the corr
 ### REMB (for now a subtype of AFB)
 
 In future, this information is to be consumed by the local RTP Senders in order to adapt their transmission rate to the availability of the remote RTP receivers.
+REMB RTCP is generated locally based on the remote bitrate estimation.
 
 
 ## Mediasoup internal behaviour for each type of RTCP
@@ -172,6 +173,7 @@ In future, this information is to be consumed by the local RTP Senders in order 
 -------------|-----|-----|------|-----|------|------|------|------|-----|------|
  RtpSender   |  B  |  B  |  B   |  B  |  I   |      |  I   |      |     |  C   |
  RtpReceiver |     |     |      |     |      |  I   |      |   I  |     |      |
+ RtpTransport|     |     |      |     |      |      |      |      |     |  G   |
 
 
 ( ): Does not apply.

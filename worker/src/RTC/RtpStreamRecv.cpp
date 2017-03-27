@@ -54,6 +54,13 @@ namespace RTC
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
 
+		// Set RTP header extension ids.
+		if (this->params.absSendTimeId)
+		{
+			packet->AddExtensionMapping(
+				RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
+		}
+
 		// May trigger a NACK to the sender.
 		if (this->params.useNack)
 			MayTriggerNack(packet);

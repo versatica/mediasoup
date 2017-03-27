@@ -194,7 +194,7 @@ namespace RTC
 		Media::Kind                 kind = Media::Kind::ALL;
 		std::string                 uri;
 		RtpHeaderExtensionUri::Type type;
-		uint16_t                    preferredId = 0;
+		uint8_t                     preferredId = 0;
 		bool                        preferredEncrypt = false;
 	};
 
@@ -276,7 +276,7 @@ namespace RTC
 	public:
 		std::string                 uri;
 		RtpHeaderExtensionUri::Type type;
-		uint16_t                    id = 0;
+		uint8_t                     id = 0;
 		bool                        encrypt = false;
 		RTC::Parameters             parameters;
 	};

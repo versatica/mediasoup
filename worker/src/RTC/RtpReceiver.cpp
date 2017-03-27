@@ -371,6 +371,31 @@ namespace RTC
 
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack = false;
+		bool useRemb = false;
+		uint8_t absSendTimeId = 0;
+
+		for (auto& fb : codec.rtcpFeedback)
+		{
+			if (!useNack && fb.type == "nack")
+			{
+				MS_DEBUG_TAG(rtcp, "enabling NACK generation");
+				useNack = true;
+			}
+			else if (!useRemb && fb.type == "goog-remb")
+			{
+				MS_DEBUG_TAG(rbe, "enabling REMB");
+				useRemb = true;
+			}
+		}
+
+		for (auto& exten : this->rtpParameters->headerExtensions)
+		{
+			if (!absSendTimeId && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			{
+				absSendTimeId = exten.id;
+			}
+		}
 
 		// Create stream params.
 		RTC::RtpStream::Params params;
@@ -379,10 +404,15 @@ namespace RTC
 		params.payloadType = codec.payloadType;
 		params.mime = codec.mime;
 		params.clockRate = codec.clockRate;
-		params.useNack = (this->kind != RTC::Media::Kind::AUDIO);
+		params.useNack = useNack;
+		params.absSendTimeId = absSendTimeId;
 
 		// Create a RtpStreamRecv for receiving a media stream.
 		this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, params);
+
+		// Enable REMB in the transport if requested.
+		if (useRemb)
+			this->transport->EnableRemb();
 	}
 
 	void RtpReceiver::ClearRtpStreams()

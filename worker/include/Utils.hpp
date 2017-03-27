@@ -287,6 +287,8 @@ namespace Utils
 		};
 
 		static void CurrentTimeNtp(Ntp& ntp);
+		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp);
+		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2);
 	};
 
 	inline
@@ -297,6 +299,26 @@ namespace Utils
 
 		ntp.seconds = tv.tv_sec + UnixNtpOffset;
 		ntp.fractions = (uint32_t)((double)(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
+	}
+
+	inline
+	bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp)
+	{
+		// Distinguish between elements that are exactly 0x80000000 apart.
+		// If t1>t2 and |t1-t2| = 0x80000000: IsNewer(t1,t2)=true,
+		// IsNewer(t2,t1)=false
+		// rather than having IsNewer(t1,t2) = IsNewer(t2,t1) = false.
+		if (static_cast<uint32_t>(timestamp - prev_timestamp) == 0x80000000) {
+			return timestamp > prev_timestamp;
+		}
+		return timestamp != prev_timestamp &&
+			static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
+	}
+
+	inline
+	uint32_t Time::LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2)
+	{
+		return IsNewerTimestamp(timestamp1, timestamp2) ? timestamp1 : timestamp2;
 	}
 }
 

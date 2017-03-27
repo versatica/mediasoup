@@ -45,7 +45,7 @@ namespace RTC
 		if (!data[k_preferredId].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtension.preferredId");
 
-		this->preferredId = (uint16_t)data[k_preferredId].asUInt();
+		this->preferredId = (uint8_t)data[k_preferredId].asUInt();
 
 		// `preferredEncrypt` is optional.
 		if (data[k_preferredEncrypt].isBool())
