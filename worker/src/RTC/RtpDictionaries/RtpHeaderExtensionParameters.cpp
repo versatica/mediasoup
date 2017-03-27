@@ -36,7 +36,7 @@ namespace RTC
 		if (!data[k_id].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.id");
 
-		this->id = (uint16_t)data[k_id].asUInt();
+		this->id = (uint8_t)data[k_id].asUInt();
 
 		// `encrypt` is optional.
 		if (data[k_encrypt].isBool())

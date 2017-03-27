@@ -57,8 +57,7 @@ namespace RTC
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
 		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
-		void SetRemb();
-		bool HasRemb();
+		void EnableRemb();
 
 	private:
 		void MayRunDtlsTransport();
@@ -129,8 +128,7 @@ namespace RTC
 		RTC::DtlsTransport::Role dtlsLocalRole = RTC::DtlsTransport::Role::AUTO;
 		// Others (RtpListener).
 		RtpListener rtpListener;
-		// REMB
-		bool hasRemb = false;
+		// REMB.
 		std::unique_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 	};
 
@@ -155,16 +153,13 @@ namespace RTC
 	}
 
 	inline
-	void Transport::SetRemb()
+	void Transport::EnableRemb()
 	{
-		this->hasRemb = true;
-		this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
-	}
-
-	inline
-	bool Transport::HasRemb()
-	{
-		return this->hasRemb;
+		if (!this->remoteBitrateEstimator)
+		{
+			this->remoteBitrateEstimator.reset(
+				new RTC::RemoteBitrateEstimatorAbsSendTime(this));
+		}
 	}
 }
 

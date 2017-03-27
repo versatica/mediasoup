@@ -96,7 +96,7 @@ namespace RTC
 		{
 			return 0;
 		}
-		//MS_DASSERT(this->processIntervalMs > 0);
+		// MS_DASSERT(this->processIntervalMs > 0);
 		return this->lastProcessTime + this->processIntervalMs - DepLibUV::GetTime();
 	}
 
@@ -143,8 +143,10 @@ namespace RTC
 		if (remoteRate->ValidEstimate())
 		{
 			this->processIntervalMs = remoteRate->GetFeedbackInterval();
-			//MS_DASSERT(this->processIntervalMs > 0);
+			// MS_DASSERT(this->processIntervalMs > 0);
+
 			std::vector<uint32_t> ssrcs;
+
 			GetSsrcs(&ssrcs);
 			this->observer->onReceiveBitrateChanged(ssrcs, targetBitrate);
 		}
@@ -155,15 +157,18 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(bitrateBps, "'bitrateBps' missing");
+
 		if (!this->remoteRate->ValidEstimate())
 		{
 			return false;
 		}
+
 		GetSsrcs(ssrcs);
 		if (ssrcs->empty())
 			*bitrateBps = 0;
 		else
 			*bitrateBps = this->remoteRate->LatestEstimate();
+
 		return true;
 	}
 
@@ -172,7 +177,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(ssrcs, "'ssrcs' missing");
+
 		ssrcs->resize(this->overuseDetectors.size());
+
 		int i = 0;
 		for (SsrcOveruseEstimatorMap::const_iterator it = this->overuseDetectors.begin(); it != this->overuseDetectors.end(); ++it, ++i)
 		{

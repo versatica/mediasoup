@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Transport.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "Settings.hpp"
 #include "DepLibUV.hpp"
@@ -202,10 +201,6 @@ namespace RTC
 
 		// Hack to avoid that Close() above attempts to delete this.
 		this->allocated = true;
-
-		// Set REMB
-		// TODO: Set only if negotiated.
-		this->SetRemb();
 	}
 
 	Transport::~Transport()
@@ -285,6 +280,7 @@ namespace RTC
 		static const Json::StaticString v_connecting("connecting");
 		static const Json::StaticString v_closed("closed");
 		static const Json::StaticString v_failed("failed");
+		static const Json::StaticString k_useRemb("useRemb");
 		static const Json::StaticString k_rtpListener("rtpListener");
 
 		Json::Value json(Json::objectValue);
@@ -364,6 +360,9 @@ namespace RTC
 				json[k_dtlsState] = v_closed;
 				break;
 		}
+
+		// Add `useRemb`.
+		json[k_useRemb] = (this->remoteBitrateEstimator ? true : false);
 
 		// Add `rtpListener`.
 		json[k_rtpListener] = this->rtpListener.toJson();
@@ -771,23 +770,20 @@ namespace RTC
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
 
-		// Feed the remote bitrate estimator (REMB).
-		if (this->HasRemb())
-		{
-			// TODO: Use dynamic extension header IDs.
-			// "Absolute Sender Time" RTP header extension header ID is hardcoded to 3.
-			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 3);
+		// Pass the RTP packet to the corresponding RtpReceiver.
+		rtpReceiver->ReceiveRtpPacket(packet);
 
+		// Feed the remote bitrate estimator (REMB).
+		if (this->remoteBitrateEstimator)
+		{
 			uint32_t absSendTime;
 
 			if (packet->ReadAbsSendTime(&absSendTime))
 			{
-				this->remoteBitrateEstimator->IncomingPacket(DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
+				this->remoteBitrateEstimator->IncomingPacket(
+					DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 			}
 		}
-
-		// Pass the RTP packet to the corresponding RtpReceiver.
-		rtpReceiver->ReceiveRtpPacket(packet);
 
 		delete packet;
 	}
@@ -1115,10 +1111,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(rbe, "sending a RTCP REMB packet. bitrate '%" PRIu32 "'", bitrate);
+		MS_DEBUG_TAG(rbe, "sending RTCP REMB packet [bitrate:%" PRIu32 "]", bitrate);
 		for (auto ssrc: ssrcs)
 		{
-			MS_DEBUG_TAG(rbe, "\t ssrc: '%'" PRIu32 "'", ssrc);
+			MS_DEBUG_TAG(rbe, "  ssrc : %" PRIu32, ssrc);
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);

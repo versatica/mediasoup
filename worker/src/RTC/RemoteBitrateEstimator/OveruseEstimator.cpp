@@ -83,7 +83,9 @@ namespace RTC
 		// The covariance matrix must be positive semi-definite.
 		bool positiveSemiDefinite =
 		    this->E[0][0] + this->E[1][1] >= 0 && this->E[0][0] * this->E[1][1] - this->E[0][1] * this->E[1][0] >= 0 && this->E[0][0] >= 0;
-		MS_ASSERT(positiveSemiDefinite, "'positiveSemiDefinite' missing");
+
+		MS_ASSERT(positiveSemiDefinite, "positiveSemiDefinite missing");
+
 		if (!positiveSemiDefinite)
 		{
 			MS_ERROR("the over-use estimator's covariance matrix is no longer semi-definite");
@@ -99,6 +101,7 @@ namespace RTC
 		MS_TRACE();
 
 		double minFramePeriod = tsDelta;
+
 		if (this->tsDeltaHist.size() >= kMinFramePeriodHistoryLength)
 		{
 			this->tsDeltaHist.pop_front();
@@ -123,13 +126,16 @@ namespace RTC
 		// of the network. |alpha| is tuned for 30 frames per second, but is scaled
 		// according to |tsDelta|.
 		double alpha = 0.01;
+
 		if (this->numOfDeltas > 10 * 30)
 		{
 			alpha = 0.002;
 		}
+
 		// Only update the noise estimate if we're not over-using. |beta| is a
 		// function of alpha and the time delta since the previous update.
 		const double beta = pow(1 - alpha, tsDelta * 30.0 / 1000.0);
+
 		this->avgNoise = beta * this->avgNoise + (1 - beta) * residual;
 		this->varNoise = beta * this->varNoise + (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
 		if (this->varNoise < 1)

@@ -107,6 +107,14 @@ namespace RTC
 		// Ensure the container's first element is 0.
 		container[0] = nullptr;
 
+		// If NACK is not supported, exit.
+		if (!this->params.useNack)
+		{
+			MS_WARN_TAG(rtcp, "NACK not negotiated");
+
+			return;
+		}
+
 		// If the buffer is empty just return.
 		if (this->buffer.size() == 0)
 			return;

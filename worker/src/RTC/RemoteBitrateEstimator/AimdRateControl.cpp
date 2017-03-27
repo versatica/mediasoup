@@ -58,7 +58,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(input, "'input' missing");
+		MS_ASSERT(input, "input missing");
 
 		// Set the initial bit rate value to what we're receiving the first half
 		// second.
@@ -96,7 +96,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		//MSDASSERT(this->currentBitrateBps > 0);
+		// MS_ASSERT(this->currentBitrateBps > 0);
+
 		double bitsPerFrame = static_cast<double>(this->currentBitrateBps) / 30.0;
 		double packetsPerFrame = std::ceil(bitsPerFrame / (8.0 * 1200.0));
 		double avgPacketSizeBits = bitsPerFrame / packetsPerFrame;
@@ -184,7 +185,7 @@ namespace RTC
 				break;
 
 			default:
-				MS_ASSERT(false, "invalid 'this->rateControlState' value");
+				MS_ASSERT(false, "invalid this->rateControlState value");
 		}
 		return ClampBitrate(newBitrateBps, incomingBitrateBps);
 	}
@@ -216,6 +217,7 @@ namespace RTC
 			alpha = pow(alpha, timeSinceLastUpdateMs / 1000.0);
 		}
 		uint32_t multiplicativeIncreaseBps = std::max(currentBitrateBps * (alpha - 1.0), 1000.0);
+
 		return multiplicativeIncreaseBps;
 	}
 
@@ -273,7 +275,7 @@ namespace RTC
 				ChangeState(kRcHold);
 				break;
 			default:
-				MS_ASSERT(false, "invalid 'RateControlInput::bwState' value");
+				MS_ASSERT(false, "invalid RateControlInput::bwState value");
 		}
 	}
 }

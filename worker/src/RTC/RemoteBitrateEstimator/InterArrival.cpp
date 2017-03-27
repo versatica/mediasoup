@@ -28,7 +28,9 @@ namespace RTC
 		MS_ASSERT(timestamp_delta, "'timestamp_delta' missing");
 		MS_ASSERT(arrival_time_delta_ms, "'arrival_time_delta_ms' missing");
 		MS_ASSERT(packet_size_delta, "'packet_size_delta' missing");
+
 		bool calculated_deltas = false;
+
 		if (this->currentTimestampGroup.IsFirstPacket())
 		{
 			// We don't have enough data to update the filter, so we store it until we
@@ -52,9 +54,9 @@ namespace RTC
 				int64_t system_time_delta_ms = this->currentTimestampGroup.last_system_time_ms - this->prevTimestampGroup.last_system_time_ms;
 				if (*arrival_time_delta_ms - system_time_delta_ms >= kArrivalTimeOffsetThresholdMs)
 				{
-					MS_WARN_TAG(rbe, "the arrival time clock offset has changed (diff = "
-					                 "%" PRId64 " ms), resetting",
-					            *arrival_time_delta_ms - system_time_delta_ms);
+					MS_WARN_TAG(rbe, "the arrival time clock offset has changed, resetting [diff:%" PRId64 "ms]",
+						*arrival_time_delta_ms - system_time_delta_ms);
+
 					Reset();
 					return false;
 				}
@@ -66,7 +68,7 @@ namespace RTC
 					if (this->numConsecutiveReorderedPackets >= kReorderedResetThreshold)
 					{
 						MS_WARN_TAG(rbe, "packets are being reordered on the path from the "
-						                 "socket to the bandwidth estimator. Ignoring this "
+						                 "socket to the bandwidth estimator, ignoring this "
 						                 "packet for bandwidth estimation, resetting");
 						Reset();
 					}
@@ -76,7 +78,9 @@ namespace RTC
 				{
 					this->numConsecutiveReorderedPackets = 0;
 				}
-				MS_ASSERT(*arrival_time_delta_ms >= 0, "invalid 'arrival_time_delta_ms' value");
+
+				MS_ASSERT(*arrival_time_delta_ms >= 0, "invalid arrival_time_delta_ms value");
+
 				*packet_size_delta = static_cast<int>(this->currentTimestampGroup.size) - static_cast<int>(this->prevTimestampGroup.size);
 				calculated_deltas = true;
 			}
@@ -112,6 +116,7 @@ namespace RTC
 			// (32 bits) must be due to reordering. This code is almost identical to
 			// that in IsNewerTimestamp() in module_common_types.h.
 			uint32_t timestamp_diff = timestamp - this->currentTimestampGroup.first_timestamp;
+
 			return timestamp_diff < 0x80000000;
 		}
 	}
@@ -145,13 +150,16 @@ namespace RTC
 		{
 			return false;
 		}
-		MS_ASSERT(this->currentTimestampGroup.complete_time_ms >= 0, "invalid 'complete_time_ms' value");
+		MS_ASSERT(this->currentTimestampGroup.complete_time_ms >= 0, "invalid complete_time_ms value");
 		int64_t arrival_time_delta_ms = arrival_time_ms - this->currentTimestampGroup.complete_time_ms;
 		uint32_t timestamp_diff = timestamp - this->currentTimestampGroup.timestamp;
 		int64_t ts_delta_ms = this->timestampToMsCoeff * timestamp_diff + 0.5;
+
 		if (ts_delta_ms == 0)
 			return true;
+
 		int propagation_delta_ms = arrival_time_delta_ms - ts_delta_ms;
+
 		return propagation_delta_ms < 0 && arrival_time_delta_ms <= kBurstDeltaThresholdMs;
 	}
 

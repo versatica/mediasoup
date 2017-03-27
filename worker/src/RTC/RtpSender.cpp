@@ -406,6 +406,25 @@ namespace RTC
 		uint32_t ssrc = encoding.ssrc;
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack = false;
+		uint8_t absSendTimeId = 0; // 0 means no abs-send-time id.
+
+		for (auto& fb : codec.rtcpFeedback)
+		{
+			if (!useNack && fb.type == "nack")
+			{
+				MS_DEBUG_TAG(rtcp, "enabling NACK processing");
+				useNack = true;
+			}
+		}
+
+		for (auto& exten : this->rtpParameters->headerExtensions)
+		{
+			if (!absSendTimeId && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			{
+				absSendTimeId = exten.id;
+			}
+		}
 
 		// Create stream params.
 		RTC::RtpStream::Params params;
@@ -414,29 +433,14 @@ namespace RTC
 		params.payloadType = codec.payloadType;
 		params.mime = codec.mime;
 		params.clockRate = codec.clockRate;
-		params.useNack = (this->kind != RTC::Media::Kind::AUDIO);
+		params.useNack = useNack;
+		params.absSendTimeId = absSendTimeId;
 
 		// Create a RtpStreamSend for sending a single media stream.
-		switch (this->kind)
-		{
-			case RTC::Media::Kind::VIDEO:
-			case RTC::Media::Kind::DEPTH:
-			{
-				// Buffer up to N packets.
-				this->rtpStream = new RTC::RtpStreamSend(params, 200);
-				break;
-			}
-
-			case RTC::Media::Kind::AUDIO:
-			{
-				// No buffer for audio streams.
-				this->rtpStream = new RTC::RtpStreamSend(params, 0);
-				break;
-			}
-
-			default:
-				;
-		}
+		if (useNack)
+			this->rtpStream = new RTC::RtpStreamSend(params, 200);
+		else
+			this->rtpStream = new RTC::RtpStreamSend(params, 0);
 	}
 
 	void RtpSender::RetransmitRtpPacket(RTC::RtpPacket* packet)

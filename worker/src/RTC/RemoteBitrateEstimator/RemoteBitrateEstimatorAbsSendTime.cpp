@@ -130,7 +130,10 @@ namespace RTC
 			{
 				int sendBitrateBps = it->meanSize * 8 * 1000 / it->sendMeanMs;
 				int recvBitrateBps = it->meanSize * 8 * 1000 / it->recvMeanMs;
-				MS_DEBUG_TAG(rbe, "probe failed, sent at %d bps, received at %d bps. Mean send delta: %f ms, mean recv delta: %f ms, num probes: %d", sendBitrateBps, recvBitrateBps, it->sendMeanMs, it->recvMeanMs, it->count);
+
+				MS_DEBUG_TAG(rbe, "probe failed, sent at %d bps, received at %d bps [mean send delta:%fms, mean recv delta:%fms, num probes:%d]",
+					sendBitrateBps, recvBitrateBps, it->sendMeanMs, it->recvMeanMs, it->count);
+
 				break;
 			}
 		}
@@ -160,7 +163,8 @@ namespace RTC
 			// reduce the estimate.
 			if (IsBitrateImproving(probeBitrateBps))
 			{
-				MS_DEBUG_TAG(rbe, "probe successful, sent at %d bps, received at %d bps. Mean send delta: %f ms, mean recv delta: %f ms, num probes: %d", bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps(), bestIt->sendMeanMs, bestIt->recvMeanMs, bestIt->count);
+				MS_DEBUG_TAG(rbe, "probe successful, sent at %d bps, received at %d bps [mean send delta:%fms, mean recv delta: %f ms, num probes:%d",
+					bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps(), bestIt->sendMeanMs, bestIt->recvMeanMs, bestIt->count);
 
 				this->remoteRate.SetEstimate(probeBitrateBps, nowMs);
 				return ProbeResult::kBitrateUpdated;
@@ -194,16 +198,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(sendTime_24bits < (1ul << 24), "invalid 'sendTime_24bits' value");
+		MS_ASSERT(sendTime_24bits < (1ul << 24), "invalid sendTime_24bits value");
+
 		if (!this->umaRecorded)
 		{
 			this->umaRecorded = true;
 		}
+
 		// Shift up send time to use the full 32 bits that interArrival works with,
 		// so wrapping works properly.
 		uint32_t timestamp = sendTime_24bits << kAbsSendTimeInterArrivalUpshift;
 		int64_t sendTimeMs = static_cast<int64_t>(timestamp) * kTimestampToMs;
-
 		int64_t nowMs = DepLibUV::GetTime();
 		// TODO(holmer): SSRCs are only needed for REMB, should be broken out from
 		// here.
@@ -235,8 +240,8 @@ namespace RTC
 		std::vector<uint32_t> ssrcs;
 		{
 			TimeoutStreams(nowMs);
-			//MS_DASSERT(this->interArrival.get());
-			//MS_DASSERT(this->estimator.get());
+			// MS_DASSERT(this->interArrival.get());
+			// MS_DASSERT(this->estimator.get());
 			this->ssrcs[ssrc] = nowMs;
 
 			// For now only try to detect probes while we don't have a valid estimate.
@@ -337,8 +342,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		//MS_DASSERT(ssrcs);
-		//MS_DASSERT(bitrateBps);
+		// MS_DASSERT(ssrcs);
+		// MS_DASSERT(bitrateBps);
 		if (!this->remoteRate.ValidEstimate())
 		{
 			return false;
@@ -352,6 +357,7 @@ namespace RTC
 		{
 			*bitrateBps = this->remoteRate.LatestEstimate();
 		}
+
 		return true;
 	}
 }
