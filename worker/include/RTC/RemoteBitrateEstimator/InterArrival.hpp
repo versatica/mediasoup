@@ -47,30 +47,27 @@ namespace RTC
 			TimestampGroup();
 			bool IsFirstPacket() const;
 
-			size_t size;
-			uint32_t first_timestamp;
-			uint32_t timestamp;
-			int64_t complete_time_ms;
-			int64_t last_system_time_ms;
+			size_t size = 0;
+			uint32_t first_timestamp = 0;
+			uint32_t timestamp = 0;
+			int64_t complete_time_ms = 0;
+			int64_t last_system_time_ms = 0;
 		};
 
 		// Returns true if the packet with timestamp |timestamp| arrived in order.
 		bool PacketInOrder(uint32_t timestamp);
-
 		// Returns true if the last packet was the end of the current batch and the
 		// packet with |timestamp| is the first of a new batch.
 		bool NewTimestampGroup(int64_t arrival_time_ms, uint32_t timestamp) const;
-
 		bool BelongsToBurst(int64_t arrival_time_ms, uint32_t timestamp) const;
-
 		void Reset();
 
 		const uint32_t kTimestampGroupLengthTicks;
 		TimestampGroup currentTimestampGroup;
 		TimestampGroup prevTimestampGroup;
-		double timestampToMsCoeff;
-		bool burstGrouping;
-		int numConsecutiveReorderedPackets;
+		double timestampToMsCoeff = 0;
+		bool burstGrouping = false;
+		int numConsecutiveReorderedPackets = 0;
 	};
 
 	/* Inline methods. */

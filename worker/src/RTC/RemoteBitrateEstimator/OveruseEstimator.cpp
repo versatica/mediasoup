@@ -27,7 +27,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		(void) nowMs;
+		(void)nowMs;
 		const double minFramePeriod = UpdateMinFramePeriod(tsDelta);
 		const double tTsDelta = tDelta - tsDelta;
 		double fsDelta = sizeDelta;
@@ -50,11 +50,10 @@ namespace RTC
 
 		const double h[2] = {fsDelta, 1.0};
 		const double Eh[2] = {this->E[0][0] * h[0] + this->E[0][1] * h[1], this->E[1][0] * h[0] + this->E[1][1] * h[1]};
-
 		const double residual = tTsDelta - this->slope * h[0] - this->offset;
-
 		const bool inStableState = (currentHypothesis == kBwNormal);
 		const double maxResidual = 3.0 * sqrt(this->varNoise);
+
 		// We try to filter out very late frames. For instance periodic key
 		// frames doesn't fit the Gaussian model well.
 		if (fabs(residual) < maxResidual)
@@ -67,9 +66,7 @@ namespace RTC
 		}
 
 		const double denom = this->varNoise + h[0] * Eh[0] + h[1] * Eh[1];
-
 		const double K[2] = {Eh[0] / denom, Eh[1] / denom};
-
 		const double IKh[2][2] = {{1.0 - K[0] * h[0], -K[0] * h[1]}, {-K[1] * h[0], 1.0 - K[1] * h[1]}};
 		const double e00 = this->E[0][0];
 		const double e01 = this->E[0][1];
@@ -111,6 +108,7 @@ namespace RTC
 			minFramePeriod = std::min(oldTsDelta, minFramePeriod);
 		}
 		this->tsDeltaHist.push_back(tsDelta);
+
 		return minFramePeriod;
 	}
 
@@ -122,6 +120,7 @@ namespace RTC
 		{
 			return;
 		}
+
 		// Faster filter during startup to faster adapt to the jitter level
 		// of the network. |alpha| is tuned for 30 frames per second, but is scaled
 		// according to |tsDelta|.

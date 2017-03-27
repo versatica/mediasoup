@@ -32,7 +32,6 @@ namespace RTC
 		// |numOfDeltas| is the number of deltas the offset estimate is based on.
 		// Returns the state after the detection update.
 		BandwidthUsage Detect(double offset, double timestampDelta, int numOfDeltas, int64_t nowMs);
-
 		// Returns the current detector state.
 		BandwidthUsage State() const;
 

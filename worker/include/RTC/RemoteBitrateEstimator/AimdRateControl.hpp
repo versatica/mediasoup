@@ -102,7 +102,7 @@ namespace RTC
 		bool bitrateIsInitialized = false;
 		float beta = 0.85f;
 		int64_t rtt = kDefaultRttMs;
-		int lastDecrease;
+		int lastDecrease = 0;
 	};
 
 	/* Inline methods. */

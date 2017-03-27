@@ -15,7 +15,6 @@
 
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <cassert>
 #include <map>
 #include <vector>
 
@@ -61,14 +60,11 @@ namespace RTC
 
 		// Removes all data for |ssrc|.
 		virtual void RemoveStream(uint32_t ssrc) = 0;
-
 		// Returns true if a valid estimate exists and sets |bitrate_bps| to the
 		// estimated payload bitrate in bits per second. |ssrcs| is the list of ssrcs
 		// currently being received and of which the bitrate estimate is based upon.
 		virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrate_bps) const = 0;
-
 		virtual void SetMinBitrate(int min_bitrate_bps) = 0;
-
 		// (jmillan) borrowed from webrtc/modules/include/module.h.
 		//
 		// Returns the number of milliseconds until the module wants a worker
@@ -81,7 +77,6 @@ namespace RTC
 		// thread that calls Process() will also have it's tick count reference
 		// which might not match with what the implementations use.
 		virtual int64_t TimeUntilNextProcess() = 0;
-
 		// Process any pending tasks such as timeouts.
 		// Called on a worker thread.
 		virtual void Process() = 0;

@@ -57,8 +57,8 @@ namespace RTC { namespace RTCP
 
 	private:
 		std::vector<uint32_t> ssrcs;
-		// Bitrate represented in bps
-		uint64_t bitrate;
+		// Bitrate represented in bps.
+		uint64_t bitrate = 0;
 		bool isCorrect = true;
 	};
 

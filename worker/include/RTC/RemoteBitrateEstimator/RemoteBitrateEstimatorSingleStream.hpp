@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <cassert>
 
 namespace RTC
 {
@@ -73,9 +74,9 @@ namespace RTC
 		RateCalculator incomingBitrate;
 		uint32_t lastValidIncomingBitrate = 0;
 		std::unique_ptr<AimdRateControl> remoteRate;
-		Listener* observer;
+		Listener* observer = nullptr;
 		int64_t lastProcessTime = -1;
-		int64_t processIntervalMs;
+		int64_t processIntervalMs = 0;
 		bool umaRecorded = false;
 	};
 
@@ -94,7 +95,7 @@ namespace RTC
 		incomingBitrate(),
 		remoteRate(new AimdRateControl()), observer(observer), processIntervalMs(kProcessIntervalMs)
 	{
-		//MS_ASSERT(this->observer, "'this->observer' missing");
+		// assert(this->observer);
 	}
 
 	inline
@@ -118,7 +119,7 @@ namespace RTC
 	inline
 	void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)
 	{
-		(void) maxRttMs;
+		(void)maxRttMs;
 		GetRemoteRate()->SetRtt(avgRttMs);
 	}
 

@@ -32,6 +32,7 @@ namespace RTC
 		static const int kRtcpSize = 80;
 		int64_t interval = static_cast<int64_t>(kRtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
 		const int64_t kMinFeedbackIntervalMs = 200;
+
 		return std::min(std::max(interval, kMinFeedbackIntervalMs), kMaxFeedbackIntervalMs);
 	}
 
@@ -49,8 +50,10 @@ namespace RTC
 			// TODO(terelius/holmer): Investigate consequences of increasing
 			// the threshold to 0.95 * LatestEstimate().
 			const uint32_t threshold = static_cast<uint32_t>(0.5 * LatestEstimate());
+
 			return incomingBitrateBps < threshold;
 		}
+
 		return false;
 	}
 
@@ -65,7 +68,9 @@ namespace RTC
 		if (!this->bitrateIsInitialized)
 		{
 			const int64_t kInitializationTimeMs = 5000;
-			//MSDASSERT(kBitrateWindowMs <= kInitializationTimeMs);
+
+			// MS_ASSERT(kBitrateWindowMs <= kInitializationTimeMs);
+
 			if (this->timeFirstIncomingEstimate < 0)
 			{
 				if (input->incomingBitrate)
@@ -105,6 +110,7 @@ namespace RTC
 		const int64_t responseTime = (this->rtt + 100) * 2;
 
 		constexpr double kMinIncreaseRateBps = 4000;
+
 		return static_cast<int>(std::max(kMinIncreaseRateBps, (avgPacketSizeBits * 1000) / responseTime));
 	}
 
@@ -116,18 +122,22 @@ namespace RTC
 		{
 			return this->currentBitrateBps;
 		}
+
 		// An over-use should always trigger us to reduce the bitrate, even though
 		// we have not yet established our first estimate. By acting on the over-use,
 		// we will end up with a valid estimate.
 		if (!this->bitrateIsInitialized && this->currentInput.bwState != kBwOverusing)
 			return this->currentBitrateBps;
+
 		this->updated = false;
 		ChangeState(this->currentInput, nowMs);
+
 		// Calculated here because it's used in multiple places.
 		const float incomingBitrateKbps = incomingBitrateBps / 1000.0f;
 		// Calculate the max bit rate std dev given the normalized
 		// variance and the current incoming bit rate.
 		const float stdMaxBitRate = sqrt(this->varMaxBitrateKbps * this->avgMaxBitrateKbps);
+
 		switch (this->rateControlState)
 		{
 			case kRcHold:
@@ -187,6 +197,7 @@ namespace RTC
 			default:
 				MS_ASSERT(false, "invalid this->rateControlState value");
 		}
+
 		return ClampBitrate(newBitrateBps, incomingBitrateBps);
 	}
 
@@ -198,11 +209,13 @@ namespace RTC
 		// We allow a bit more lag at very low rates to not too easily get stuck if
 		// the encoder produces uneven outputs.
 		const uint32_t maxBitrateBps = static_cast<uint32_t>(1.5f * incomingBitrateBps) + 10000;
+
 		if (newBitrateBps > this->currentBitrateBps && newBitrateBps > maxBitrateBps)
 		{
 			newBitrateBps = std::max(this->currentBitrateBps, maxBitrateBps);
 		}
 		newBitrateBps = std::max(newBitrateBps, this->minConfiguredBitrateBps);
+
 		return newBitrateBps;
 	}
 
@@ -211,11 +224,13 @@ namespace RTC
 		MS_TRACE();
 
 		double alpha = 1.08;
+
 		if (lastMs > -1)
 		{
 			int timeSinceLastUpdateMs = std::min(static_cast<int>(nowMs - lastMs), 1000);
 			alpha = pow(alpha, timeSinceLastUpdateMs / 1000.0);
 		}
+
 		uint32_t multiplicativeIncreaseBps = std::max(currentBitrateBps * (alpha - 1.0), 1000.0);
 
 		return multiplicativeIncreaseBps;
@@ -226,6 +241,7 @@ namespace RTC
 		MS_TRACE();
 
 		const float alpha = 0.05f;
+
 		if (this->avgMaxBitrateKbps == -1.0f)
 		{
 			this->avgMaxBitrateKbps = incomingBitrateKbps;
@@ -234,9 +250,11 @@ namespace RTC
 		{
 			this->avgMaxBitrateKbps = (1 - alpha) * this->avgMaxBitrateKbps + alpha * incomingBitrateKbps;
 		}
+
 		// Estimate the max bit rate variance and normalize the variance
 		// with the average max bit rate.
 		const float norm = std::max(this->avgMaxBitrateKbps, 1.0f);
+
 		this->varMaxBitrateKbps = (1 - alpha) * this->varMaxBitrateKbps +
 			alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) * (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
 		// 0.4 ~= 14 kbit/s at 500 kbit/s
@@ -255,7 +273,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		(void) input;
+		(void)input;
 		switch (this->currentInput.bwState)
 		{
 			case kBwNormal:

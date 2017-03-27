@@ -45,7 +45,6 @@ namespace RTC
 		// |current_hypothesis| should be the hypothesis of the over-use detector at
 		// this time.
 		void Update(int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs);
-
 		// Returns the estimated noise/jitter variance in ms^2.
 		double GetVarNoise() const;
 		// Returns the estimated inter-arrival time delta offset in ms.
@@ -61,14 +60,14 @@ namespace RTC
 	private:
 		// Must be first member variable. Cannot be const because we need to be copyable.
 		OverUseDetectorOptions options;
-		uint16_t numOfDeltas;
-		double slope;
-		double offset;
-		double prevOffset;
+		uint16_t numOfDeltas = 0;
+		double slope = 0;
+		double offset = 0;
+		double prevOffset = 0;
 		double E[2][2];
 		double processNoise[2];
-		double avgNoise;
-		double varNoise;
+		double avgNoise = 0;
+		double varNoise = 0;
 		std::deque<double> tsDeltaHist;
 	};
 

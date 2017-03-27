@@ -13,8 +13,8 @@ namespace RTC
 		RateControlInput(BandwidthUsage bwState, const uint32_t incomingBitrate, double noiseVar);
 
 		BandwidthUsage bwState;
-		uint32_t incomingBitrate;
-		double noiseVar;
+		uint32_t incomingBitrate = 0;
+		double noiseVar = 0;
 	};
 
 	/* Inline methods. */

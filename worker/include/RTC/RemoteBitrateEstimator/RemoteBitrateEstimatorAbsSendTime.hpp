@@ -31,9 +31,9 @@ namespace RTC
 	{
 		Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize);
 
-		int64_t sendTimeMs;
-		int64_t recvTimeMs;
-		size_t payloadSize;
+		int64_t sendTimeMs = 0;
+		int64_t recvTimeMs = 0;
+		size_t payloadSize = 0;
 	};
 
 	struct Cluster
@@ -82,18 +82,14 @@ namespace RTC
 		void IncomingPacketInfo(int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc);
 
 		void ComputeClusters(std::list<Cluster>* clusters) const;
-
 		std::list<Cluster>::const_iterator FindBestProbe(const std::list<Cluster>& clusters) const;
-
 		// Returns true if a probe which changed the estimate was detected.
 		ProbeResult ProcessClusters(int64_t nowMs);
-
 		bool IsBitrateImproving(int probeBitrateBps) const;
-
 		void TimeoutStreams(int64_t nowMs);
 
 	private:
-		Listener* const observer;
+		Listener* const observer = nullptr;
 		std::unique_ptr<InterArrival> interArrival;
 		std::unique_ptr<OveruseEstimator> estimator;
 		OveruseDetector detector;
@@ -106,7 +102,6 @@ namespace RTC
 		int64_t firstPacketTimeMs = -1;
 		int64_t lastUpdateMs = -1;
 		bool umaRecorded = false;
-
 		Ssrcs ssrcs;
 		AimdRateControl remoteRate;
 	};
@@ -124,6 +119,7 @@ namespace RTC
 	int Cluster::GetSendBitrateBps() const
 	{
 		assert(sendMeanMs > 0.0f);
+
 		return meanSize * 8 * 1000 / sendMeanMs;
 	}
 
@@ -131,6 +127,7 @@ namespace RTC
 	int Cluster::GetRecvBitrateBps() const
 	{
 		assert(recvMeanMs > 0.0f);
+
 		return meanSize * 8 * 1000 / recvMeanMs;
 	}
 
@@ -157,7 +154,7 @@ namespace RTC
 	inline
 	void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)
 	{
-		(void) maxRttMs;
+		(void)maxRttMs;
 		this->remoteRate.SetRtt(avgRttMs);
 	}
 
