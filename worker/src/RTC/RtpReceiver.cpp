@@ -5,6 +5,7 @@
 #include "RTC/Transport.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
 
@@ -455,6 +456,9 @@ namespace RTC
 		if (!this->transport)
 			return;
 
-		// TODO
+		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
+
+		packet.Serialize(RtpReceiver::rtcpBuffer);
+		this->transport->SendRtcpPacket(&packet);
 	}
 }
