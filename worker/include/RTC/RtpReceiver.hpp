@@ -63,6 +63,7 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
 		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask) override;
+		virtual void onPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 
 	public:
 		// Passed by argument.

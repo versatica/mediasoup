@@ -7,7 +7,7 @@
 #include "Utils.hpp"
 
 #define RTP_SEQ_MOD (1<<16)
-#define MAX_RETRANSMISSION_AGE 200 // Don't retransmit packets older than this (ms).
+#define MAX_RETRANSMISSION_AGE 400 // Don't retransmit packets older than this (ms).
 
 namespace RTC
 {

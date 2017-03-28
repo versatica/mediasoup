@@ -163,6 +163,7 @@ namespace RTC
 		static const Json::StaticString k_mime("mime");
 		static const Json::StaticString k_clockRate("clockRate");
 		static const Json::StaticString k_useNack("useNack");
+		static const Json::StaticString k_usePli("usePli");
 		static const Json::StaticString k_absSendTimeId("absSendTimeId");
 
 		Json::Value json(Json::objectValue);
@@ -172,6 +173,7 @@ namespace RTC
 		json[k_mime] = this->mime.name;
 		json[k_clockRate] = (Json::UInt)this->clockRate;
 		json[k_useNack] = this->useNack;
+		json[k_usePli] = this->usePli;
 		json[k_absSendTimeId] = (Json::UInt)this->absSendTimeId;
 
 		return json;

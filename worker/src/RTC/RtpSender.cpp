@@ -407,14 +407,20 @@ namespace RTC
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
 		bool useNack = false;
+		bool usePli = false;
 		uint8_t absSendTimeId = 0; // 0 means no abs-send-time id.
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
 			if (!useNack && fb.type == "nack")
 			{
-				MS_DEBUG_TAG(rtcp, "enabling NACK processing");
+				MS_DEBUG_TAG(rtcp, "enabling NACK reception");
 				useNack = true;
+			}
+			if (!usePli && fb.type == "nack" && fb.parameter == "pli")
+			{
+				MS_DEBUG_TAG(rtcp, "enabling PLI reception");
+				usePli = true;
 			}
 		}
 
@@ -434,6 +440,7 @@ namespace RTC
 		params.mime = codec.mime;
 		params.clockRate = codec.clockRate;
 		params.useNack = useNack;
+		params.usePli = usePli;
 		params.absSendTimeId = absSendTimeId;
 
 		// Create a RtpStreamSend for sending a single media stream.

@@ -166,6 +166,20 @@ namespace RTC
 		if (diff_seq32 == 1)
 			return;
 
+		// If 16 or more packets was lost, ask for a PLI (if supported).
+		if (diff_seq32 >= 16 && this->params.usePli)
+		{
+			MS_DEBUG_TAG(rtcp, "PLI triggered [ssrc:%" PRIu32 ", diff_seq32:%" PRIu32 "]",
+				this->params.ssrc, diff_seq32);
+
+			this->listener->onPliRequired(this);
+
+			// TODO: Now we should stop sending NACK for a while (ideally after a full keyframe
+			// is received...).
+
+			return;
+		}
+
 		// Some packet(s) is/are missing, trigger a NACK.
 		uint8_t nack_bitmask_count = std::min(diff_seq32 - 2, 16);
 		uint32_t nack_seq32 = this->last_seq32 - nack_bitmask_count - 1;

@@ -316,40 +316,41 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->transport)
+		if (!this->transport)
+			return;
+
+
+		// Ensure that the RTCP packet fits into the RTCP buffer.
+		if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
 		{
-			// Ensure that the RTCP packet fits into the RTCP buffer.
-			if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
-			{
-				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
-					packet->GetSize());
+			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
+				packet->GetSize());
 
-				return;
-			}
-
-			packet->Serialize(RtpReceiver::rtcpBuffer);
-			this->transport->SendRtcpPacket(packet);
+			return;
 		}
+
+		packet->Serialize(RtpReceiver::rtcpBuffer);
+		this->transport->SendRtcpPacket(packet);
 	}
 
 	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 
-		if (this->transport)
+		if (!this->transport)
+			return;
+
+		// Ensure that the RTCP packet fits into the RTCP buffer.
+		if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
 		{
-			// Ensure that the RTCP packet fits into the RTCP buffer.
-			if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
-			{
-				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
-					packet->GetSize());
+			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
+				packet->GetSize());
 
-				return;
-			}
-
-			packet->Serialize(RtpReceiver::rtcpBuffer);
-			this->transport->SendRtcpPacket(packet);
+			return;
 		}
+
+		packet->Serialize(RtpReceiver::rtcpBuffer);
+		this->transport->SendRtcpPacket(packet);
 	}
 
 	void RtpReceiver::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
@@ -372,6 +373,7 @@ namespace RTC
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
 		bool useNack = false;
+		bool usePli = false;
 		bool useRemb = false;
 		uint8_t absSendTimeId = 0;
 
@@ -381,6 +383,11 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(rtcp, "enabling NACK generation");
 				useNack = true;
+			}
+			if (!usePli && fb.type == "nack" && fb.parameter == "pli")
+			{
+				MS_DEBUG_TAG(rtcp, "enabling PLI generation");
+				usePli = true;
 			}
 			else if (!useRemb && fb.type == "goog-remb")
 			{
@@ -405,6 +412,7 @@ namespace RTC
 		params.mime = codec.mime;
 		params.clockRate = codec.clockRate;
 		params.useNack = useNack;
+		params.usePli = usePli;
 		params.absSendTimeId = absSendTimeId;
 
 		// Create a RtpStreamRecv for receiving a media stream.
@@ -440,5 +448,13 @@ namespace RTC
 		packet.AddItem(nackItem);
 		packet.Serialize(RtpReceiver::rtcpBuffer);
 		this->transport->SendRtcpPacket(&packet);
+	}
+
+	void RtpReceiver::onPliRequired(RTC::RtpStreamRecv* rtpStream)
+	{
+		if (!this->transport)
+			return;
+
+		// TODO
 	}
 }
