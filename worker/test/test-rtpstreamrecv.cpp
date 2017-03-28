@@ -21,20 +21,25 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 
 			INFO("NACK required [seq:" << seq << ", bitmask:" << nack_bitset << "]");
 
-			REQUIRE(this->should_trigger == true);
+			REQUIRE(this->should_trigger_nack == true);
 			REQUIRE(seq == this->expected_nack_seq);
 			REQUIRE(bitmask == this->expected_nack_bitmask);
 
-			this->should_trigger = false;
+			this->should_trigger_nack = false;
 		}
 
 		virtual void onPliRequired(RtpStreamRecv* rtpStream) override
 		{
 			INFO("PLI required");
+
+			REQUIRE(this->should_trigger_pli == true);
+
+			this->should_trigger_pli = false;
 		}
 
 	public:
-		bool     should_trigger = false;
+		bool     should_trigger_nack = false;
+		bool     should_trigger_pli = false;
 		uint16_t expected_nack_seq = 0;
 		uint16_t expected_nack_bitmask = 0;
 	};
@@ -60,6 +65,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		params.ssrc = packet->GetSsrc();
 		params.clockRate = 90000;
 		params.useNack = true;
+		params.usePli = true;
 
 		RtpStreamRecvListener listener;
 		RtpStreamRecv rtpStream(&listener, params);
@@ -73,11 +79,11 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		packet->SetSequenceNumber(104);
-		listener.should_trigger = true;
+		listener.should_trigger_nack = true;
 		listener.expected_nack_seq = 102;
 		listener.expected_nack_bitmask = 0b0000000000000001;
 		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
+		REQUIRE(listener.should_trigger_nack == false);
 
 		packet->SetSequenceNumber(104);
 		rtpStream.ReceivePacket(packet);
@@ -89,11 +95,11 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		packet->SetSequenceNumber(108);
-		listener.should_trigger = true;
+		listener.should_trigger_nack = true;
 		listener.expected_nack_seq = 105;
 		listener.expected_nack_bitmask = 0b0000000000000011;
 		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
+		REQUIRE(listener.should_trigger_nack == false);
 
 		delete packet;
 	}
@@ -119,6 +125,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		params.ssrc = packet->GetSsrc();
 		params.clockRate = 90000;
 		params.useNack = true;
+		params.usePli = true;
 
 		RtpStreamRecvListener listener;
 		RtpStreamRecv rtpStream(&listener, params);
@@ -126,11 +133,10 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		packet->SetSequenceNumber(120);
-		listener.should_trigger = true;
-		listener.expected_nack_seq = 103;
-		listener.expected_nack_bitmask = 0b1111111111111111;
+		listener.should_trigger_pli = true;
 		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
+		REQUIRE(listener.should_trigger_nack == false);
+		REQUIRE(listener.should_trigger_pli == false);
 
 		delete packet;
 	}
@@ -156,6 +162,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		params.ssrc = packet->GetSsrc();
 		params.clockRate = 90000;
 		params.useNack = true;
+		params.usePli = true;
 
 		RtpStreamRecvListener listener;
 		RtpStreamRecv rtpStream(&listener, params);
@@ -163,11 +170,10 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		packet->SetSequenceNumber(20);
-		listener.should_trigger = true;
-		listener.expected_nack_seq = 3;
-		listener.expected_nack_bitmask = 0b1111111111111111;
+		listener.should_trigger_pli = true;
 		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
+		REQUIRE(listener.should_trigger_nack == false);
+		REQUIRE(listener.should_trigger_pli == false);
 
 		delete packet;
 	}

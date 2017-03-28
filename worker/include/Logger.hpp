@@ -207,7 +207,7 @@ public:
 	} \
 	while (0)
 
-#define MS_DEBUG_2TAGS_STD(tag, desc, ...) \
+#define MS_DEBUG_2TAGS_STD(tag1, tag2, desc, ...) \
 	do \
 	{ \
 		if (LogLevel::LOG_DEBUG == Settings::configuration.logLevel && (_MS_TAG_ENABLED_2(tag1, tag2) || _MS_LOG_DEV_ENABLED)) \

@@ -196,6 +196,8 @@ void Settings::PrintConfiguration()
 		log_tags.push_back("rtcp");
 	if (Settings::configuration.logTags.rbe)
 		log_tags.push_back("rbe");
+	if (Settings::configuration.logTags.rtx)
+		log_tags.push_back("rtx");
 
 	MS_DEBUG_TAG(info, "<configuration>");
 
@@ -525,6 +527,8 @@ void Settings::SetLogTags(std::vector<std::string>& tags)
 			Settings::configuration.logTags.rtcp = true;
 		else if (tag == "rbe")
 			Settings::configuration.logTags.rbe = true;
+		else if (tag == "rtx")
+			Settings::configuration.logTags.rtx = true;
 	}
 }
 

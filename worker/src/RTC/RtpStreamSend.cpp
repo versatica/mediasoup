@@ -365,6 +365,8 @@ namespace RTC
 
 	void RtpStreamSend::onInitSeq()
 	{
+		MS_TRACE();
+
 		// Clear the RTP buffer.
 		ClearBuffer();
 	}
