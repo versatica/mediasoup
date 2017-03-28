@@ -28,6 +28,11 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 			this->should_trigger = false;
 		}
 
+		virtual void onPliRequired(RtpStreamRecv* rtpStream) override
+		{
+			INFO("PLI required");
+		}
+
 	public:
 		bool     should_trigger = false;
 		uint16_t expected_nack_seq = 0;
