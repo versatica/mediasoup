@@ -22,11 +22,7 @@ namespace RTC { namespace RTCP
 		: public FeedbackItem
 	{
 	private:
-		struct Header
-		{
-			uint32_t ssrc;
-			uint32_t compact;
-		};
+		static constexpr size_t HeaderSize = 8;
 
 	public:
 		static const FeedbackRtp::MessageType MessageType;
@@ -35,10 +31,8 @@ namespace RTC { namespace RTCP
 		static FeedbackRtpTmmbItem* Parse(const uint8_t* data, size_t len);
 
 	public:
-		explicit FeedbackRtpTmmbItem(Header* header);
-		explicit FeedbackRtpTmmbItem(FeedbackRtpTmmbItem* item);
-		FeedbackRtpTmmbItem(uint32_t ssrc, uint64_t bitrate, uint32_t overhead);
-		virtual ~FeedbackRtpTmmbItem() {};
+		explicit FeedbackRtpTmmbItem(const uint8_t* data);
+		FeedbackRtpTmmbItem();
 
 		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
@@ -54,9 +48,9 @@ namespace RTC { namespace RTCP
 		virtual size_t GetSize() const override;
 
 	private:
-		Header* header = nullptr;
-		uint64_t bitrate;
-		uint16_t overhead;
+		uint32_t ssrc = 0;
+		uint64_t bitrate = 0;
+		uint16_t overhead = 0;
 	};
 
 	// Tmmb types declaration.
@@ -74,21 +68,25 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	template <typename T>
+	FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem()
+	{}
+
+	template <typename T>
 	size_t FeedbackRtpTmmbItem<T>::GetSize() const
 	{
-		return sizeof(Header);
+		return HeaderSize;
 	}
 
 	template <typename T>
 	uint32_t FeedbackRtpTmmbItem<T>::GetSsrc() const
 	{
-		return (uint32_t)ntohl(this->header->ssrc);
+		return this->ssrc;
 	}
 
 	template <typename T>
 	void FeedbackRtpTmmbItem<T>::SetSsrc(uint32_t ssrc)
 	{
-		this->header->ssrc = (uint32_t)htonl(ssrc);
+		this->ssrc = ssrc;
 	}
 
 	template <typename T>
