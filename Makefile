@@ -4,7 +4,7 @@
 
 # Best effort to get Python 2 executable and also allow custom PYTHON
 # environment variable set by the user.
-PYTHON ?= $(shell type -p python2 &> /dev/null || echo python)
+PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 
 .PHONY: default Release Debug test test-Release test-Debug xcode clean clean-all
 
