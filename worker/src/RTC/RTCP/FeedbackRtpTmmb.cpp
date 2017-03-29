@@ -3,6 +3,7 @@
 
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include <cstring>
 
 namespace RTC { namespace RTCP
@@ -13,18 +14,15 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		// Get the header.
-		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
-
 		// data size must be >= header + length value.
-		if (sizeof(Header) > len)
+		if (HeaderSize > len)
 		{
 			MS_WARN_TAG(rtcp, "not enough space for Tmmb item, discarded");
 
 			return nullptr;
 		}
 
-		std::unique_ptr<FeedbackRtpTmmbItem> item(new FeedbackRtpTmmbItem(header));
+		std::unique_ptr<FeedbackRtpTmmbItem> item(new FeedbackRtpTmmbItem(data));
 
 		if (!item->IsCorrect())
 			return nullptr;
@@ -34,20 +32,25 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 	template <typename T>
-	FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(Header* header)
+	FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const uint8_t* data)
 	{
-		this->header = header;
 
-		uint32_t compact = (uint32_t)ntohl(header->compact);
-		uint8_t exponent = compact >> 26;             /* first 6 bits */
-		uint32_t mantissa = (compact >> 9) & 0x1ffff; /* next 17 bits */
+		this->ssrc = Utils::Byte::Get4Bytes(data, 0);
 
+		// Read the 4 bytes block.
+		uint32_t compact = Utils::Byte::Get4Bytes(data, 4);
+
+		// Read each component.
+		uint8_t exponent = compact >> 26;              // 6 bits.
+		uint64_t mantissa = (compact >> 9) & 0x1ffff;  // 17 bits.
+		this-> overhead = compact & 0x1ff;             // 9 bits.
+
+		// Get the bitrate out of exponent and mantissa.
 		this->bitrate = (mantissa << exponent);
-		this->overhead = compact & 0x1ff;             /* last 9 bits */
 
 		if ((this->bitrate >> exponent) != mantissa)
 		{
-			MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %u *2^%u", mantissa, exponent);
+			MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %" PRIu64" *2^%" PRIu8, mantissa, exponent);
 
 			this->isCorrect = false;
 		}
@@ -56,24 +59,22 @@ namespace RTC { namespace RTCP
 	template <typename T>
 	size_t FeedbackRtpTmmbItem<T>::Serialize(uint8_t* buffer)
 	{
+		static constexpr uint32_t MaxMantissa = 0x1ffff; // 17 bits.
+
 		uint64_t mantissa = this->bitrate;
 		uint32_t exponent = 0;
 
-		while (mantissa > 0x1ffff /* max mantissa (17 bits) */)
-		{
+		while (mantissa > MaxMantissa) {
 			mantissa >>= 1;
 			++exponent;
 		}
 
+		Utils::Byte::Set4Bytes(buffer, 0, this->ssrc);
+
 		uint32_t compact = (exponent << 26) | (mantissa << 9) | this->overhead;
-		Header* header = reinterpret_cast<Header*>(buffer);
+		Utils::Byte::Set4Bytes(buffer, 4, compact);
 
-		header->ssrc = this->header->ssrc;
-		header->compact = htonl(compact);
-
-		std::memcpy(buffer, header, sizeof(Header));
-
-		return sizeof(Header);
+		return HeaderSize;
 	}
 
 	template <typename T>

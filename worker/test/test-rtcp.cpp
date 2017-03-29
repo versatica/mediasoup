@@ -386,17 +386,44 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(item3.GetLostPacketBitmask() == lostPacketBitmask);
 	}
 
+	SECTION("create FeedbackRtpTmmbrItem")
+	{
+		uint32_t ssrc = 1234;
+		uint64_t bitrate = 3000000; // bits per second.
+		uint32_t overhead = 1;
+
+		FeedbackRtpTmmbrItem item;
+		item.SetSsrc(ssrc);
+		item.SetBitrate(bitrate);
+		item.SetOverhead(overhead);
+
+		REQUIRE(item.GetSsrc() == ssrc);
+		REQUIRE(item.GetBitrate() == bitrate);
+		REQUIRE(item.GetOverhead() == overhead);
+
+		uint8_t buffer[8];
+		item.Serialize(buffer);
+		FeedbackRtpTmmbrItem* item2 = FeedbackRtpTmmbrItem::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(item2);
+		REQUIRE(item2->GetSsrc() == ssrc);
+		REQUIRE(item2->GetBitrate() == bitrate);
+		REQUIRE(item2->GetOverhead() == overhead);
+
+		delete item2;
+	}
+
 	SECTION("parse FeedbackRtpTmmbrItem")
 	{
 		uint8_t buffer[] =
 		{
-			0x00, 0x00, 0x00, 0x00, // ssrc
-			0x04, 0x00, 0x02, 0x01
+			0xba, 0xac, 0x8c, 0xcd,
+			0x18, 0x2c, 0x9e, 0x00
 		};
 
-		uint32_t ssrc = 0;
-		uint64_t bitrate = 2;
-		uint32_t overhead = 1;
+		uint32_t ssrc     = 3131870413;
+		uint64_t bitrate  = 365504;
+		uint16_t overhead = 0;
 
 		FeedbackRtpTmmbrItem* item = FeedbackRtpTmmbrItem::Parse(buffer, sizeof(buffer));
 
@@ -406,6 +433,36 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(item->GetOverhead() == overhead);
 
 		delete item;
+	}
+
+	SECTION("parse FeedbackRtpTmmbrPacket")
+	{
+
+		uint8_t buffer[] =
+		{
+			0x83, 0xcd, 0x00, 0x04,
+			0x6d, 0x6a, 0x8c, 0x9f,
+			0x00, 0x00, 0x00, 0x00,
+			0xba, 0xac, 0x8c, 0xcd,
+			0x18, 0x2c, 0x9e, 0x00
+		};
+
+		uint32_t ssrc     = 3131870413;
+		uint64_t bitrate  = 365504;
+		uint16_t overhead = 0;
+
+		FeedbackRtpTmmbrPacket* packet = FeedbackRtpTmmbrPacket::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(packet);
+
+		REQUIRE(packet->Begin() != packet->End());
+
+		FeedbackRtpTmmbrItem* item = (*packet->Begin());
+		REQUIRE(item->GetSsrc() == ssrc);
+		REQUIRE(item->GetBitrate() == bitrate);
+		REQUIRE(item->GetOverhead() == overhead);
+
+		delete packet;
 	}
 
 	SECTION("parse FeedbackRtpTlleiItem")
