@@ -22,7 +22,7 @@ namespace RTC
 		explicit NackGenerator(Listener* listener);
 		~NackGenerator();
 
-		void ReceivePacket(RTC::RtpPacket* packet, uint32_t seq32);
+		void ReceivePacket(RTC::RtpPacket* packet);
 
 	/* Pure virtual methods inherited from Timer::Listener. */
 	public:

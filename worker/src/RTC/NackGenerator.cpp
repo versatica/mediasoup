@@ -24,15 +24,17 @@ namespace RTC
 		MS_TRACE();
 
 		// Close the timer.
-		this->timer->Close();
+		this->timer->Destroy();
 	}
 
-	void NackGenerator::ReceivePacket(RTC::RtpPacket* packet, uint32_t seq32)
+	void NackGenerator::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
 		// TODO: This is just a copy&paste of the previous NACK algorithm located in
 		// the RtpStreamRecv.MayTriggerNack(). This must be refactorized.
+
+		uint32_t seq32 = packet->GetExtendedSequenceNumber();
 
 		// If this is the first packet, just update last seen extended seq number.
 		if (this->last_seq32 == 0)

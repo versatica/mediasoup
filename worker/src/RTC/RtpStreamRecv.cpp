@@ -65,11 +65,7 @@ namespace RTC
 
 		// Pass the packet to the NackGenerator.
 		if (this->nackGenerator)
-		{
-			uint32_t seq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
-
-			this->nackGenerator->ReceivePacket(packet, seq32);
-		}
+			this->nackGenerator->ReceivePacket(packet);
 
 		return true;
 	}
