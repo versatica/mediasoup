@@ -27,9 +27,12 @@ public:
 	explicit UdpSocket(uv_udp_t* uvHandle);
 	UdpSocket& operator=(const UdpSocket&) = delete;
 	UdpSocket(const UdpSocket&) = delete;
+
+protected:
 	virtual ~UdpSocket();
 
-	void Close();
+public:
+	void Destroy();
 	virtual void Dump() const;
 	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
 	void Send(const std::string &data, const struct sockaddr* addr);

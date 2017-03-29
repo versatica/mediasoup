@@ -43,7 +43,7 @@ namespace RTC
 			delete this->rtpStream;
 	}
 
-	void RtpSender::Close()
+	void RtpSender::Destroy()
 	{
 		MS_TRACE();
 

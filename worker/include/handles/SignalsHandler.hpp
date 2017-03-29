@@ -20,7 +20,11 @@ public:
 public:
 	explicit SignalsHandler(Listener* listener);
 
-	void Close();
+private:
+	~SignalsHandler() {};
+
+public:
+	void Destroy();
 	void AddSignal(int signum, std::string name);
 
 /* Callbacks fired by UV events. */

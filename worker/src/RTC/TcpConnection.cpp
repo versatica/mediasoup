@@ -17,11 +17,6 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	TcpConnection::~TcpConnection()
-	{
-		MS_TRACE();
-	}
-
 	void TcpConnection::userOnTcpConnectionRead()
 	{
 		MS_TRACE();
@@ -50,7 +45,7 @@ namespace RTC
 		while (true)
 		{
 			// We may receive multiple packets in the same TCP chunk. If one of them is
-			// a DTLS Close Alert this would be closed (Close() called) so we cannot call
+			// a DTLS Close Alert this would be closed (Destroy() called) so we cannot call
 			// our listeners anymore.
 			if (IsClosing())
 				return;
@@ -125,7 +120,7 @@ namespace RTC
 						MS_WARN_DEV("no more space in the buffer for the unfinished frame being parsed, closing the connection");
 
 						// Close the socket.
-						Close();
+						Destroy();
 					}
 				}
 				// The buffer is not full.

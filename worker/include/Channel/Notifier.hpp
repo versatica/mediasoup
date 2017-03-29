@@ -12,9 +12,6 @@ namespace Channel
 	{
 	public:
 		explicit Notifier(Channel::UnixStreamSocket* channel);
-		virtual ~Notifier();
-
-		void Close();
 
 		void Emit(uint32_t targetId, std::string event);
 		void Emit(uint32_t targetId, std::string event, Json::Value& data);

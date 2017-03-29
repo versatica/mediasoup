@@ -18,8 +18,11 @@ namespace RTC
 
 	public:
 		TcpConnection(Listener* listener, size_t bufferSize);
-		virtual ~TcpConnection();
 
+	private:
+		virtual ~TcpConnection() {};
+
+	public:
 		void Send(const uint8_t* data, size_t len);
 
 	/* Pure virtual methods inherited from ::TcpConnection. */

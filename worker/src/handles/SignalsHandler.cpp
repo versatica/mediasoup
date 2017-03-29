@@ -52,7 +52,7 @@ void SignalsHandler::AddSignal(int signum, std::string name)
 	this->uvHandles.push_back(uvHandle);
 }
 
-void SignalsHandler::Close()
+void SignalsHandler::Destroy()
 {
 	MS_TRACE();
 

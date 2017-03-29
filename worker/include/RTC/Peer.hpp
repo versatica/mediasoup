@@ -47,9 +47,12 @@ namespace RTC
 
 	public:
 		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName);
+
+	private:
 		virtual ~Peer();
 
-		void Close();
+	public:
+		void Destroy();
 		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		bool HasCapabilities() const;

@@ -41,7 +41,7 @@ namespace RTC
 		ClearRtpStreams();
 	}
 
-	void RtpReceiver::Close()
+	void RtpReceiver::Destroy()
 	{
 		MS_TRACE();
 
@@ -114,7 +114,7 @@ namespace RTC
 				uint32_t rtpReceiverId = this->rtpReceiverId;
 				#endif
 
-				Close();
+				Destroy();
 
 				MS_DEBUG_DEV("RtpReceiver closed [rtpReceiverId:%" PRIu32 "]", rtpReceiverId);
 

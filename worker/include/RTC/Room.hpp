@@ -39,9 +39,12 @@ namespace RTC
 
 	public:
 		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data);
+
+	private:
 		virtual ~Room();
 
-		void Close();
+	public:
+		void Destroy();
 		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		const RTC::RtpCapabilities& GetCapabilities() const;

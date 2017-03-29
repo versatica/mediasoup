@@ -107,7 +107,7 @@ UnixStreamSocket::~UnixStreamSocket()
 		delete[] this->buffer;
 }
 
-void UnixStreamSocket::Close()
+void UnixStreamSocket::Destroy()
 {
 	MS_TRACE_STD();
 
@@ -174,7 +174,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	{
 		MS_ERROR_STD("uv_try_write() failed, closing the socket: %s", uv_strerror(written));
 
-		Close();
+		Destroy();
 		return;
 	}
 
@@ -241,7 +241,7 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 		this->isClosedByPeer = true;
 
 		// Close local side of the pipe.
-		Close();
+		Destroy();
 	}
 	// Some error.
 	else
@@ -251,7 +251,7 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 		this->hasError = true;
 
 		// Close the socket.
-		Close();
+		Destroy();
 	}
 }
 
@@ -268,7 +268,7 @@ void UnixStreamSocket::onUvWriteError(int error)
 
 	MS_ERROR_STD("write error, closing the pipe: %s", uv_strerror(error));
 
-	Close();
+	Destroy();
 }
 
 inline

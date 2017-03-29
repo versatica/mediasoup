@@ -14,18 +14,6 @@ namespace Channel
 		MS_TRACE();
 	}
 
-	Notifier::~Notifier()
-	{
-		MS_TRACE();
-	}
-
-	void Notifier::Close()
-	{
-		MS_TRACE();
-
-		delete this;
-	}
-
 	void Notifier::Emit(uint32_t targetId, std::string event)
 	{
 		MS_TRACE();

@@ -24,7 +24,7 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "[usernameFragment:%s, password:%s]", this->usernameFragment.c_str(), this->password.c_str());
 	}
 
-	void IceServer::Close()
+	void IceServer::Destroy()
 	{
 		MS_TRACE();
 

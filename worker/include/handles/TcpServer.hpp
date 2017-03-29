@@ -15,9 +15,12 @@ public:
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */
 	TcpServer(uv_tcp_t* uvHandle, int backlog);
+
+protected:
 	virtual ~TcpServer();
 
-	void Close();
+public:
+	void Destroy();
 	virtual void Dump() const;
 	bool IsClosing() const;
 	const struct sockaddr* GetLocalAddress() const;

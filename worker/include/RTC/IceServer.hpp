@@ -44,7 +44,7 @@ namespace RTC
 	public:
 		IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password);
 
-		void Close();
+		void Destroy();
 		void ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple);
 		const std::string& GetUsernameFragment() const;
 		const std::string& GetPassword() const;

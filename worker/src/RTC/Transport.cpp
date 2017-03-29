@@ -191,7 +191,7 @@ namespace RTC
 		// Ensure there is at least one IP:port binding.
 		if (!this->udpSockets.size() && !this->tcpServers.size())
 		{
-			Close();
+			Destroy();
 
 			MS_THROW_ERROR("could not open any IP:port");
 		}
@@ -199,7 +199,7 @@ namespace RTC
 		// Create a DTLS agent.
 		this->dtlsTransport = new RTC::DtlsTransport(this);
 
-		// Hack to avoid that Close() above attempts to delete this.
+		// Hack to avoid that Destroy() above attempts to delete this.
 		this->allocated = true;
 	}
 
@@ -208,7 +208,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void Transport::Close()
+	void Transport::Destroy()
 	{
 		MS_TRACE();
 
@@ -217,23 +217,23 @@ namespace RTC
 		Json::Value event_data(Json::objectValue);
 
 		if (this->srtpRecvSession)
-			this->srtpRecvSession->Close();
+			this->srtpRecvSession->Destroy();
 
 		if (this->srtpSendSession)
-			this->srtpSendSession->Close();
+			this->srtpSendSession->Destroy();
 
 		if (this->dtlsTransport)
-			this->dtlsTransport->Close();
+			this->dtlsTransport->Destroy();
 
 		if (this->iceServer)
-			this->iceServer->Close();
+			this->iceServer->Destroy();
 
 		for (auto socket : this->udpSockets)
-			socket->Close();
+			socket->Destroy();
 		this->udpSockets.clear();
 
 		for (auto server : this->tcpServers)
-			server->Close();
+			server->Destroy();
 		this->tcpServers.clear();
 
 		this->selectedTuple = nullptr;
@@ -382,7 +382,7 @@ namespace RTC
 				uint32_t transportId = this->transportId;
 				#endif
 
-				Close();
+				Destroy();
 
 				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transportId);
 				request->Accept();
@@ -968,7 +968,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "icestatechange", event_data);
 
 		// This is a fatal error so close the transport.
-		Close();
+		Destroy();
 	}
 
 	void Transport::onDtlsConnecting(RTC::DtlsTransport* dtlsTransport)
@@ -1005,12 +1005,12 @@ namespace RTC
 		// Close it if it was already set and update it.
 		if (this->srtpSendSession)
 		{
-			this->srtpSendSession->Close();
+			this->srtpSendSession->Destroy();
 			this->srtpSendSession = nullptr;
 		}
 		if (this->srtpRecvSession)
 		{
-			this->srtpRecvSession->Close();
+			this->srtpRecvSession->Destroy();
 			this->srtpRecvSession = nullptr;
 		}
 
@@ -1033,7 +1033,7 @@ namespace RTC
 		{
 			MS_ERROR("error creating SRTP receiving session: %s", error.what());
 
-			this->srtpSendSession->Close();
+			this->srtpSendSession->Destroy();
 			this->srtpSendSession = nullptr;
 		}
 
@@ -1062,7 +1062,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 
 		// This is a fatal error so close the transport.
-		Close();
+		Destroy();
 	}
 
 	void Transport::onDtlsClosed(RTC::DtlsTransport* dtlsTransport)
@@ -1083,7 +1083,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 
 		// This is a fatal error so close the transport.
-		Close();
+		Destroy();
 	}
 
 	void Transport::onOutgoingDtlsData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)

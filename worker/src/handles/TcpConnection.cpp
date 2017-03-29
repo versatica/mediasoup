@@ -97,7 +97,7 @@ void TcpConnection::Setup(Listener* listener, struct sockaddr_storage* localAddr
 	this->localPort = localPort;
 }
 
-void TcpConnection::Close()
+void TcpConnection::Destroy()
 {
 	MS_TRACE();
 
@@ -195,7 +195,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	{
 		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
-		Close();
+		Destroy();
 		return;
 	}
 
@@ -255,7 +255,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	{
 		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
-		Close();
+		Destroy();
 		return;
 	}
 
@@ -360,7 +360,7 @@ void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
 		this->isClosedByPeer = true;
 
 		// Close server side of the connection.
-		Close();
+		Destroy();
 	}
 	// Some error.
 	else
@@ -370,7 +370,7 @@ void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
 		this->hasError = true;
 
 		// Close server side of the connection.
-		Close();
+		Destroy();
 	}
 }
 
@@ -387,7 +387,7 @@ void TcpConnection::onUvWriteError(int error)
 
 	MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(error));
 
-	Close();
+	Destroy();
 }
 
 inline

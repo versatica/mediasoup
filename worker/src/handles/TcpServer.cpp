@@ -125,7 +125,7 @@ TcpServer::~TcpServer()
 		delete this->uvHandle;
 }
 
-void TcpServer::Close()
+void TcpServer::Destroy()
 {
 	MS_TRACE();
 
@@ -147,7 +147,7 @@ void TcpServer::Close()
 		for (auto it = this->connections.begin(); it != this->connections.end(); ++it)
 		{
 			TcpConnection* connection = *it;
-			connection->Close();
+			connection->Destroy();
 		}
 	}
 }
@@ -232,7 +232,7 @@ void TcpServer::onUvConnection(int status)
 	{
 		MS_ERROR("cannot run the TCP connection, closing the connection: %s", error.what());
 
-		connection->Close();
+		connection->Destroy();
 
 		// NOTE: Don't return here so the user won't be notified about a TCP connection
 		// closure for which there was not a previous creation event.
@@ -261,8 +261,8 @@ void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool is_closed_
 
 	// NOTE:
 	// Worst scenario is that in which this is the latest connection,
-	// which is remotely closed (no TcpServer.Close() was called) and the user
-	// call TcpServer.Close() on userOnTcpConnectionClosed() callback, so Close()
+	// which is remotely closed (no TcpServer.Destroy() was called) and the user
+	// call TcpServer.Destroy() on userOnTcpConnectionClosed() callback, so Destroy()
 	// is called with zero connections and calls uv_close(), but then
 	// onTcpConnectionClosed() continues and finds that isClosing is true and
 	// there are zero connections, so calls uv_close() again and get a crash.

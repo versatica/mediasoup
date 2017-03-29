@@ -20,9 +20,12 @@ public:
 	UnixStreamSocket(int fd, size_t bufferSize);
 	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
 	UnixStreamSocket(const UnixStreamSocket&) = delete;
+
+protected:
 	virtual ~UnixStreamSocket();
 
-	void Close();
+public:
+	void Destroy();
 	bool IsClosing() const;
 	void Write(const uint8_t* data, size_t len);
 	void Write(const std::string &data);

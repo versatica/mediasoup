@@ -31,25 +31,18 @@ namespace RTC
 			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
 
-	// NOTE: Comment for now.
-	// private:
-	// 	struct Data
-	// 	{
-	// 		std::string       muxId;
-	// 		RTC::RtpCodecMime mediaMime;
-	// 		uint32_t          mediaSsrc = 0;
-	// 		// TODO: Add much more and move supportedPayloadTypes here.
-	// 	};
-
 	private:
 		// Container of RTP packets to retransmit.
 		static std::vector<RTC::RtpPacket*> rtpRetransmissionContainer;
 
 	public:
 		RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind);
+
+	private:
 		virtual ~RtpSender();
 
-		void Close();
+	public:
+		void Destroy();
 		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		void SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities);

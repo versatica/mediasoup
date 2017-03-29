@@ -37,11 +37,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Close the RTCP timer.
-		this->timer->Close();
+		// Destroy the RTCP timer.
+		this->timer->Destroy();
 	}
 
-	void Peer::Close()
+	void Peer::Destroy()
 	{
 		MS_TRACE();
 
@@ -55,7 +55,7 @@ namespace RTC
 			RTC::RtpReceiver* rtpReceiver = it->second;
 
 			it = this->rtpReceivers.erase(it);
-			rtpReceiver->Close();
+			rtpReceiver->Destroy();
 		}
 
 		// Close all the RtpSenders.
@@ -64,18 +64,18 @@ namespace RTC
 			RTC::RtpSender* rtpSender = it->second;
 
 			it = this->rtpSenders.erase(it);
-			rtpSender->Close();
+			rtpSender->Destroy();
 		}
 
 		// Close all the Transports.
 		// NOTE: It is critical to close Transports after RtpReceivers/RtpSenders
-		// because RtcReceiver.Close() fires an event in the Transport.
+		// because RtcReceiver.Destroy() fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
 			RTC::Transport* transport = it->second;
 
 			it = this->transports.erase(it);
-			transport->Close();
+			transport->Destroy();
 		}
 
 		// Notify.
@@ -156,7 +156,7 @@ namespace RTC
 				uint32_t peerId = this->peerId;
 				#endif
 
-				Close();
+				Destroy();
 
 				MS_DEBUG_DEV("Peer closed [peerId:%" PRIu32 "]", peerId);
 

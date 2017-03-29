@@ -5,6 +5,10 @@
 #include <string>
 #include <uv.h>
 
+// Avoid cyclic #include problem by declaring classes instead of including
+// the corresponding header files.
+class TcpServer;
+
 class TcpConnection
 {
 public:
@@ -26,13 +30,19 @@ public:
 		uint8_t        store[1];
 	};
 
+// Let the TcpServer class directly call the destructor of TcpConnection.
+friend class TcpServer;
+
 public:
 	explicit TcpConnection(size_t bufferSize);
 	TcpConnection& operator=(const TcpConnection&) = delete;
 	TcpConnection(const TcpConnection&) = delete;
+
+protected:
 	virtual ~TcpConnection();
 
-	void Close();
+public:
+	void Destroy();
 	virtual void Dump() const;
 	void Setup(Listener* listener, struct sockaddr_storage* localAddr, const std::string &localIP, uint16_t localPort);
 	bool IsClosing() const;

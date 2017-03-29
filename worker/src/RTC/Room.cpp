@@ -110,7 +110,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void Room::Close()
+	void Room::Destroy()
 	{
 		MS_TRACE();
 
@@ -127,7 +127,7 @@ namespace RTC
 			RTC::Peer* peer = it->second;
 
 			it = this->peers.erase(it);
-			peer->Close();
+			peer->Destroy();
 		}
 
 		// Notify.
@@ -211,7 +211,7 @@ namespace RTC
 				uint32_t roomId = this->roomId;
 				#endif
 
-				Close();
+				Destroy();
 
 				MS_DEBUG_DEV("Room closed [roomId:%" PRIu32 "]", roomId);
 
@@ -569,7 +569,7 @@ namespace RTC
 		// RtpSenders associated to the closed RtpReceiver.
 		if (this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end())
 		{
-			// Make a copy of the set of RtpSenders given that Close() will be called
+			// Make a copy of the set of RtpSenders given that Destroy() will be called
 			// in all of them, producing onPeerRtpSenderClosed() that will remove it
 			// from the map.
 			auto rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
@@ -577,7 +577,7 @@ namespace RTC
 			// Safely iterate the copy of the set.
 			for (auto& rtpSender : rtpSenders)
 			{
-				rtpSender->Close();
+				rtpSender->Destroy();
 			}
 
 			// Finally delete the RtpReceiver entry in the map.

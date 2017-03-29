@@ -151,7 +151,7 @@ UdpSocket::~UdpSocket()
 		delete this->uvHandle;
 }
 
-void UdpSocket::Close()
+void UdpSocket::Destroy()
 {
 	MS_TRACE();
 

@@ -34,9 +34,12 @@ namespace RTC
 
 	public:
 		SrtpSession(Type type, Profile profile, uint8_t* key, size_t key_len);
+
+	private:
 		~SrtpSession();
 
-		void Close();
+	public:
+		void Destroy();
 		bool EncryptRtp(const uint8_t** data, size_t* len);
 		bool DecryptSrtp(const uint8_t* data, size_t* len);
 		bool EncryptRtcp(const uint8_t** data, size_t* len);

@@ -39,6 +39,8 @@ namespace RTC
 
 	public:
 		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int address_family);
+
+	private:
 		virtual ~TcpServer() {};
 
 	/* Pure virtual methods inherited from ::TcpServer. */

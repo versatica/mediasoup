@@ -541,7 +541,7 @@ namespace RTC
 		}
 	}
 
-	void DtlsTransport::Close()
+	void DtlsTransport::Destroy()
 	{
 		MS_TRACE();
 
@@ -552,8 +552,8 @@ namespace RTC
 			SendPendingOutgoingDtlsData();
 		}
 
-		// Close the DTLS timer.
-		this->timer->Close();
+		// Destroy the DTLS timer.
+		this->timer->Destroy();
 
 		delete this;
 	}

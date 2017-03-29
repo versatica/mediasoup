@@ -21,7 +21,11 @@ public:
 	Timer& operator=(const Timer&) = delete;
 	Timer(const Timer&) = delete;
 
-	void Close();
+private:
+	~Timer() {};
+
+public:
+	void Destroy();
 	void Start(uint64_t timeout);
 	void Stop();
 

@@ -56,7 +56,7 @@ void Loop::Close()
 
 	// Close the SignalsHandler.
 	if (this->signalsHandler)
-		this->signalsHandler->Close();
+		this->signalsHandler->Destroy();
 
 	// Close all the Rooms.
 	// NOTE: Upon Room closure the onRoomClosed() method is called which
@@ -67,15 +67,15 @@ void Loop::Close()
 		RTC::Room* room = it->second;
 
 		it = this->rooms.erase(it);
-		room->Close();
+		room->Destroy();
 	}
 
-	// Close the Notifier.
-	this->notifier->Close();
+	// Delete the Notifier.
+	delete this->notifier;
 
 	// Close the Channel socket.
 	if (this->channel)
-		this->channel->Close();
+		this->channel->Destroy();
 }
 
 RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)

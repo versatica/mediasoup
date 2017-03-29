@@ -22,7 +22,6 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 
-		void Close();
 		Json::Value toJson() const;
 		void Dump() const;
 		void StoreUdpRemoteAddress();
@@ -43,13 +42,6 @@ namespace RTC
 	};
 
 	/* Inline methods. */
-
-	inline
-	void TransportTuple::Close()
-	{
-		if (this->protocol == Protocol::TCP)
-			this->tcpConnection->Close();
-	}
 
 	inline
 	TransportTuple::TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr) :

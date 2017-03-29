@@ -37,6 +37,8 @@ namespace RTC
 
 	public:
 		UdpSocket(Listener* listener, int address_family);
+
+	private:
 		virtual ~UdpSocket() {};
 
 	/* Pure virtual methods inherited from ::UdpSocket. */

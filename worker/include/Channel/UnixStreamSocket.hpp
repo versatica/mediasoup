@@ -24,8 +24,11 @@ namespace Channel
 
 	public:
 		explicit UnixStreamSocket(int fd);
+
+	private:
 		virtual ~UnixStreamSocket();
 
+	public:
 		void SetListener(Listener* listener);
 		void Send(Json::Value &json);
 		void SendLog(char* ns_payload, size_t ns_payload_len);

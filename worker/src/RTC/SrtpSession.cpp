@@ -113,7 +113,7 @@ namespace RTC
 		}
 	}
 
-	void SrtpSession::Close()
+	void SrtpSession::Destroy()
 	{
 		MS_TRACE();
 

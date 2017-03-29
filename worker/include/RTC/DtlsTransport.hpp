@@ -76,16 +76,16 @@ namespace RTC
 			virtual void onDtlsConnected(DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
-			// NOTE: The caller MUST NOT call Close() during this callback.
+			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void onDtlsFailed(DtlsTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
-			// NOTE: The caller MUST NOT call Close() during this callback.
+			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void onDtlsClosed(DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
-			// NOTE: The caller MUST NOT call Close() during this callback.
+			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void onOutgoingDtlsData(DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
-			// NOTE: The caller MUST NOT call Close() during this callback.
+			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void onDtlsApplicationData(DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 
@@ -115,9 +115,12 @@ namespace RTC
 
 	public:
 		explicit DtlsTransport(Listener* listener);
+
+	private:
 		virtual ~DtlsTransport();
 
-		void Close();
+	public:
+		void Destroy();
 		void Dump() const;
 		void Run(Role localRole);
 		void SetRemoteFingerprint(Fingerprint fingerprint);

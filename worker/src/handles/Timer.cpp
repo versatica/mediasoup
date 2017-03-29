@@ -41,7 +41,7 @@ Timer::Timer(Listener* listener) :
 	}
 }
 
-void Timer::Close()
+void Timer::Destroy()
 {
 	MS_TRACE();
 

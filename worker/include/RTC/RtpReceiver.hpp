@@ -41,9 +41,12 @@ namespace RTC
 
 	public:
 		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind);
+
+	private:
 		virtual ~RtpReceiver();
 
-		void Close();
+	public:
+		void Destroy();
 		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		void SetTransport(RTC::Transport* transport);
