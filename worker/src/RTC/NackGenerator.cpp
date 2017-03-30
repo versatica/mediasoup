@@ -1,17 +1,26 @@
 #define MS_CLASS "RTC::NackGenerator"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO: REMOVE
 
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <bitset> // std::bitset()
+
+// TODO: REMOVE
+uint32_t first_seq32 = 0;
 
 namespace RTC
 {
+	constexpr uint32_t kMaxPacketAge = 10000;
+	constexpr size_t kMaxNackPackets = 500;
+	constexpr uint32_t kDefaultRttMs = 100;
+	constexpr uint8_t kMaxNackRetries = 8;
+	constexpr uint64_t kProcessIntervalMs = 25;
+
 	/* Instance methods. */
 
 	NackGenerator::NackGenerator(Listener* listener) :
-		listener(listener)
+		listener(listener),
+		rtt(kDefaultRttMs)
 	{
 		MS_TRACE();
 
@@ -31,66 +40,182 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: This is just a copy&paste of the previous NACK algorithm located in
-		// the RtpStreamRecv.MayTriggerNack(). This must be refactorized.
-
 		uint32_t seq32 = packet->GetExtendedSequenceNumber();
 
-		// If this is the first packet, just update last seen extended seq number.
-		if (this->last_seq32 == 0)
+		// TODO: REMOVE
+		// if (
+		// 	(seq32 >= first_seq32 + 100 && seq32 < first_seq32 + 140) ||
+		// 	(seq32 >= first_seq32 + 150 && seq32 < first_seq32 + 160))
+		// {
+		// 	MS_DEBUG_DEV("dropping packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+		// 	return;
+		// }
+
+		if (!this->started)
 		{
-			this->last_seq32 = (seq32 != 0 ? seq32 : 1);
+			// TODO: REMOVE
+			first_seq32 = seq32;
+
+			this->last_seq32 = seq32;
+			this->started = true;
+
+			// Start the periodic timer now.
+			this->timer->Start(kProcessIntervalMs);
+
 			return;
 		}
 
-		int32_t diff_seq32 = seq32 - this->last_seq32;
-
-		// If the received seq is older than the last seen, ignore.
-		if (diff_seq32 < 1)
-			return;
-		// Otherwise, update the last seen seq.
-		else
-			this->last_seq32 = seq32;
-
-		// Just received next expected seq, do nothing.
-		if (diff_seq32 == 1)
-			return;
-
-		// If 16 or more packets was lost, ask for a full frame.
-		if (diff_seq32 >= 16)
+		// Obviously never nacked, so ignore.
+		if (seq32 == this->last_seq32)
 		{
-			MS_DEBUG_DEV("full frame required");
+			return;
+		}
+		else if (seq32 == this->last_seq32 + 1)
+		{
+			this->last_seq32++;
+			return;
+		}
 
+		// May be an out of order packet or a retransmitted packet (without RTX).
+		if (seq32 < this->last_seq32)
+		{
+			auto it = this->nack_list.find(seq32);
+
+			// It was a nacked packet.
+			if (it != this->nack_list.end())
+			{
+				MS_DEBUG_TAG(rtx,
+					"nacked packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+					packet->GetSsrc(), packet->GetSequenceNumber());
+
+				this->nack_list.erase(it);
+			}
+			// Out of order packet.
+			else
+			{
+				MS_DEBUG_TAG(rtx,
+					"out of order packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+					packet->GetSsrc(), packet->GetSequenceNumber());
+			}
+
+			return;
+		}
+
+		// Otherwise we may have lost some packets.
+		AddPacketsToNackList(this->last_seq32 + 1, seq32);
+		this->last_seq32 = seq32;
+
+		// Check if there are any nacks that are waiting for this seq number.
+		std::vector<uint16_t> nack_batch = GetNackBatch(NackFilter::SEQ);
+
+		if (!nack_batch.empty())
+			this->listener->onNackRequired(nack_batch);
+	}
+
+	void NackGenerator::AddPacketsToNackList(uint32_t seq32_start, uint32_t seq32_end)
+	{
+		MS_TRACE();
+
+		// Remove old packets.
+		auto it = this->nack_list.lower_bound(seq32_end - kMaxPacketAge);
+
+		this->nack_list.erase(this->nack_list.begin(), it);
+
+		// If the nack list is too large, clear it and request a full frame.
+		uint32_t num_new_nacks = seq32_end - seq32_start;
+
+		if (this->nack_list.size() + num_new_nacks > kMaxNackPackets)
+		{
+			MS_DEBUG_TAG(rtx, "nack list too large, clearing it and requesting a full frame");
+
+			this->nack_list.clear();
 			this->listener->onFullFrameRequired();
 
-			// TODO: Now we should stop sending NACK for a while (ideally after a full keyframe
-			// is received...).
-
 			return;
 		}
 
-		// Some packet(s) is/are missing, trigger a NACK.
-		uint8_t nack_bitmask_count = std::min(diff_seq32 - 2, 16);
-		uint32_t nack_seq32 = this->last_seq32 - nack_bitmask_count - 1;
-		std::bitset<16> nack_bitset(0);
-
-		for (uint8_t i = 0; i < nack_bitmask_count; ++i)
+		for (uint32_t seq32 = seq32_start; seq32 != seq32_end; ++seq32)
 		{
-			nack_bitset[i] = 1;
+			NackInfo nack_info(seq32);
+
+			MS_ASSERT(this->nack_list.find(seq32) == this->nack_list.end(), "packet already in the NACK list");
+
+			this->nack_list[seq32] = nack_info;
 		}
 
-		uint16_t nack_seq = (uint16_t)nack_seq32;
-		uint16_t nack_bitmask = (uint16_t)nack_bitset.to_ulong();
+		// TODO: REMOVE
+		MS_DEBUG_DEV("this->nack_list.size(): %zu", this->nack_list.size());
+	}
 
-		MS_DEBUG_DEV("NACK required [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-			nack_seq, MS_UINT16_TO_BINARY(nack_bitmask));
+	std::vector<uint16_t> NackGenerator::GetNackBatch(NackFilter filter)
+	{
+		uint64_t now = DepLibUV::GetTime();
+		std::vector<uint16_t> nack_batch;
+		auto it = this->nack_list.begin();
 
-		this->listener->onNackRequired(nack_seq, nack_bitmask);
+		while (it != this->nack_list.end())
+		{
+			NackInfo& nack_info = it->second;
+			uint16_t seq = nack_info.seq32 % (1<<16);
+
+			if (filter == NackFilter::SEQ && nack_info.sent_at_time == 0)
+			{
+				nack_info.retries++;
+				nack_info.sent_at_time = now;
+
+				if (nack_info.retries >= kMaxNackRetries)
+				{
+					MS_WARN_TAG(rtx,
+						"sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]", seq);
+
+					it = this->nack_list.erase(it);
+				}
+				else
+				{
+					nack_batch.emplace_back(seq);
+					++it;
+				}
+
+				continue;
+			}
+
+			if (filter == NackFilter::TIME && nack_info.sent_at_time + this->rtt < now)
+			{
+				nack_info.retries++;
+				nack_info.sent_at_time = now;
+
+				if (nack_info.retries >= kMaxNackRetries)
+				{
+					MS_WARN_TAG(rtx,
+						"sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]", seq);
+
+					it = this->nack_list.erase(it);
+				}
+				else
+				{
+					nack_batch.emplace_back(seq);
+					++it;
+				}
+
+				continue;
+			}
+
+			++it;
+		}
+
+		return nack_batch;
 	}
 
 	inline
 	void NackGenerator::onTimer(Timer* timer)
 	{
 		MS_TRACE();
+
+		std::vector<uint16_t> nack_batch = GetNackBatch(NackFilter::TIME);
+
+		if (!nack_batch.empty())
+			this->listener->onNackRequired(nack_batch);
+
+		this->timer->Start(kProcessIntervalMs);
 	}
 }

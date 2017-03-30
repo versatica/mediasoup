@@ -16,7 +16,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask) = 0;
+			virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers) = 0;
 			virtual void onPliRequired(RTC::RtpStreamRecv* rtpStream) = 0;
 		};
 
@@ -38,7 +38,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
-		virtual void onNackRequired(uint16_t seq, uint16_t bitmask) override;
+		virtual void onNackRequired(const std::vector<uint16_t>& seq_numbers) override;
 		virtual void onFullFrameRequired() override;
 
 	private:

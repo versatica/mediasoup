@@ -5,6 +5,9 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 
+// TODO: REMOVE
+static uint64_t before = 0;
+
 namespace RTC
 {
 	/* Instance methods. */
@@ -14,9 +17,6 @@ namespace RTC
 		listener(listener)
 	{
 		MS_TRACE();
-
-		if (params.useNack)
-			this->nackGenerator.reset(new RTC::NackGenerator(this));
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()
@@ -64,7 +64,7 @@ namespace RTC
 		}
 
 		// Pass the packet to the NackGenerator.
-		if (this->nackGenerator)
+		if (this->params.useNack)
 			this->nackGenerator->ReceivePacket(packet);
 
 		return true;
@@ -149,22 +149,27 @@ namespace RTC
 		MS_TRACE();
 
 		// Reset NackGenerator.
-		if (this->nackGenerator)
+		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 	}
 
-	void RtpStreamRecv::onNackRequired(uint16_t seq, uint16_t bitmask)
+	void RtpStreamRecv::onNackRequired(const std::vector<uint16_t>& seq_numbers)
 	{
 		MS_TRACE();
 
-		if (!this->params.useNack)
-			return;
+		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_DEBUG_2TAGS(rtcp,rtx,
-			"NACK triggered [ssrc:%" PRIu32 ", seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-			this->params.ssrc, seq, MS_UINT16_TO_BINARY(bitmask));
+		// TODO: REMOVE
+		uint64_t time_diff = DepLibUV::GetTime() - before;
+		before = DepLibUV::GetTime();
+		std::stringstream str;
+		std::copy(seq_numbers.begin(), seq_numbers.end(), std::ostream_iterator<uint16_t>(str, ","));
 
-		this->listener->onNackRequired(this, seq, bitmask);
+		MS_DEBUG_TAG(rtx,
+			"RTP retransmission required [time_diff:%" PRIu64 ", ssrc:%" PRIu32 ", seqs:%s]",
+			time_diff, this->params.ssrc, str.str().c_str());
+
+		this->listener->onNackRequired(this, seq_numbers);
 	}
 
 	void RtpStreamRecv::onFullFrameRequired()
@@ -172,10 +177,12 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->params.usePli)
+		{
+			MS_WARN_TAG(rtx, "PLI required but not supported by the endpoint");
 			return;
+		}
 
-		MS_DEBUG_2TAGS(rtcp, rtx, "PLI triggered [ssrc:%" PRIu32 "]",
-			this->params.ssrc);
+		MS_DEBUG_TAG(rtx, "PLI triggered [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 		this->listener->onPliRequired(this);
 	}

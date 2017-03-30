@@ -13,10 +13,8 @@ namespace RTC
 	public:
 		struct Params
 		{
-		public:
 			Json::Value toJson() const;
 
-		public:
 			uint32_t          ssrc = 0;
 			uint8_t           payloadType = 0;
 			RTC::RtpCodecMime mime;
