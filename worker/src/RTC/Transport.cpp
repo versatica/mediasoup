@@ -742,7 +742,21 @@ namespace RTC
 
 		// Decrypt the SRTP packet.
 		if (!this->srtpRecvSession->DecryptSrtp(data, &len))
+		{
+			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			if (!packet)
+			{
+				MS_WARN_DEV("DecryptSrtp() failed due to an invalid RTP packet");
+			}
+			else
+			{
+				MS_WARN_TAG(srtp, "DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
+
+				delete packet;
+			}
+
 			return;
+		}
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 		if (!packet)
