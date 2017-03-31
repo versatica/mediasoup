@@ -171,6 +171,7 @@ namespace RTC
 		bool is_first_packet = true;
 		bool first_packet_sent = false;
 		uint8_t bitmask_counter = 0;
+		bool too_old_packet_found = false;
 
 		MS_DEBUG_DEV("loop [bitmask:" MS_UINT16_TO_BINARY_PATTERN "]", MS_UINT16_TO_BINARY(bitmask));
 
@@ -193,9 +194,14 @@ namespace RTC
 						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
 						if (diff > MAX_RETRANSMISSION_AGE)
 						{
-							MS_DEBUG_TAG(rtx,
-								"ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]",
-								MAX_RETRANSMISSION_AGE, diff);
+							if (!too_old_packet_found)
+							{
+								MS_DEBUG_TAG(rtx,
+									"ignoring retransmission for too old packet [seq:%" PRIu16 ", max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]",
+									current_packet->GetSequenceNumber(), MAX_RETRANSMISSION_AGE, diff);
+
+								too_old_packet_found = true;
+							}
 
 							break;
 						}
@@ -208,8 +214,8 @@ namespace RTC
 							now - resent_at_time < static_cast<uint64_t>(rtt))
 						{
 							MS_DEBUG_TAG(rtx,
-								"ignoring retransmission for a packet already resent in the last RTT ms [rtt:%" PRIu32 "]",
-								rtt);
+								"ignoring retransmission for a packet already resent in the last RTT ms [seq:%" PRIu16 ", rtt:%" PRIu32 "]",
+								current_packet->GetSequenceNumber(), rtt);
 
 							break;
 						}
