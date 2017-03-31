@@ -484,7 +484,6 @@ namespace RTC
 		}
 
 		packet.Serialize(RtpReceiver::rtcpBuffer);
-		packet.Dump(); // TODO: REMOVE
 		this->transport->SendRtcpPacket(&packet);
 	}
 
