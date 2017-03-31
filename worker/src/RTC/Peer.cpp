@@ -796,7 +796,6 @@ namespace RTC
 							RTCP::FeedbackPsAfbPacket* afb = static_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
 							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::REMB)
 							{
-								// afb->Dump();
 								break;
 							}
 						}
@@ -811,6 +810,12 @@ namespace RTC
 
 							if (rtpSender)
 							{
+								if (feedback->GetMessageType() == RTCP::FeedbackPs::MessageType::PLI)
+								{
+									MS_DEBUG_TAG(rtx, "PLI received [media_ssrc:%" PRIu32 "]",
+										feedback->GetMediaSsrc());
+								}
+
 								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
 							}
 							else
