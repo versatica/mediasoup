@@ -22,6 +22,7 @@ namespace RTC
 		struct BufferItem
 		{
 			uint32_t        seq32 = 0; // RTP seq in 32 bytes plus 16 bits cycles.
+			uint64_t        resent_at_time = 0;
 			RTC::RtpPacket* packet = nullptr;
 		};
 

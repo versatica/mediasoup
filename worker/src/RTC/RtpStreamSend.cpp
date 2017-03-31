@@ -7,7 +7,8 @@
 #include "Utils.hpp"
 
 #define RTP_SEQ_MOD (1<<16)
-#define MAX_RETRANSMISSION_AGE 300 // Don't retransmit packets older than this (ms).
+#define MAX_RETRANSMISSION_AGE 1000 // Don't retransmit packets older than this (ms).
+#define DEFAULT_RTT 100 // Default RTT if not set (in ms).
 
 namespace RTC
 {
@@ -143,7 +144,7 @@ namespace RTC
 				// Try again.
 				if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
 				{
-					MS_DEBUG_DEV("requested packet range not in the buffer");
+					MS_WARN_TAG(rtx, "requested packet range not in the buffer");
 
 					return;
 				}
@@ -151,13 +152,15 @@ namespace RTC
 			// Otherwise just return.
 			else
 			{
-				MS_DEBUG_DEV("requested packet range not in the buffer");
+				MS_WARN_TAG(rtx, "requested packet range not in the buffer");
 
 				return;
 			}
 		}
 
 		// Look for each requested packet.
+		uint64_t now = DepLibUV::GetTime();
+		uint32_t rtt = (this->rtt ? this->rtt : DEFAULT_RTT);
 		uint32_t seq32 = first_seq32;
 		bool requested = true;
 		size_t container_idx = 0;
@@ -168,7 +171,6 @@ namespace RTC
 		bool is_first_packet = true;
 		bool first_packet_sent = false;
 		uint8_t bitmask_counter = 0;
-		bool too_old_packet_found = false;
 
 		MS_DEBUG_DEV("loop [bitmask:" MS_UINT16_TO_BINARY_PATTERN "]", MS_UINT16_TO_BINARY(bitmask));
 
@@ -189,30 +191,44 @@ namespace RTC
 						uint32_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->params.clockRate;
 
 						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
-						if (diff <= MAX_RETRANSMISSION_AGE)
+						if (diff > MAX_RETRANSMISSION_AGE)
 						{
-							// Store the packet in the container and then increment its index.
-							container[container_idx++] = current_packet;
+							MS_DEBUG_TAG(rtx,
+								"ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]",
+								MAX_RETRANSMISSION_AGE, diff);
 
-							sent = true;
-
-							if (is_first_packet)
-								first_packet_sent = true;
-						}
-						else if (!too_old_packet_found)
-						{
-							MS_DEBUG_DEV("ignoring retransmission for too old packet [max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]", MAX_RETRANSMISSION_AGE, diff);
-
-							too_old_packet_found = true;
+							break;
 						}
 
-						// Exit the loop.
+						// Don't resent the packet if it was resent in the last RTT ms.
+						uint32_t resent_at_time = (*buffer_it).resent_at_time;
+
+						if (
+							resent_at_time &&
+							now - resent_at_time < static_cast<uint64_t>(rtt))
+						{
+							MS_DEBUG_TAG(rtx,
+								"ignoring retransmission for a packet already resent in the last RTT ms [rtt:%" PRIu32 "]",
+								rtt);
+
+							break;
+						}
+
+						// Store the packet in the container and then increment its index.
+						container[container_idx++] = current_packet;
+
+						// Save when this packet was resent.
+						(*buffer_it).resent_at_time = now;
+
+						sent = true;
+						if (is_first_packet)
+							first_packet_sent = true;
+
 						break;
 					}
 					// It can not be after this packet.
 					else if (current_seq32 > seq32)
 					{
-						// Exit the loop.
 						break;
 					}
 				}
