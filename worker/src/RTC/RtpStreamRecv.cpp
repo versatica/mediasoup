@@ -4,7 +4,6 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <bitset> // std::bitset()
 
 namespace RTC
 {
@@ -61,9 +60,9 @@ namespace RTC
 				RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
 		}
 
-		// May trigger a NACK to the sender.
+		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
-			MayTriggerNack(packet);
+			this->nackGenerator->ReceivePacket(packet);
 
 		return true;
 	}
@@ -142,65 +141,40 @@ namespace RTC
 		this->jitter += (1./16.) * ((double)d - this->jitter);
 	}
 
-	void RtpStreamRecv::MayTriggerNack(RTC::RtpPacket* packet)
-	{
-		uint32_t seq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
-
-		// If this is the first packet, just update last seen extended seq number.
-		if (this->last_seq32 == 0)
-		{
-			this->last_seq32 = (seq32 != 0 ? seq32 : 1);
-			return;
-		}
-
-		int32_t diff_seq32 = seq32 - this->last_seq32;
-
-		// If the received seq is older than the last seen, ignore.
-		if (diff_seq32 < 1)
-			return;
-		// Otherwise, update the last seen seq.
-		else
-			this->last_seq32 = seq32;
-
-		// Just received next expected seq, do nothing.
-		if (diff_seq32 == 1)
-			return;
-
-		// If 16 or more packets was lost, ask for a PLI (if supported).
-		if (diff_seq32 >= 16 && this->params.usePli)
-		{
-			MS_DEBUG_TAG(rtcp, "PLI triggered [ssrc:%" PRIu32 ", diff_seq32:%" PRIu32 "]",
-				this->params.ssrc, diff_seq32);
-
-			this->listener->onPliRequired(this);
-
-			// TODO: Now we should stop sending NACK for a while (ideally after a full keyframe
-			// is received...).
-
-			return;
-		}
-
-		// Some packet(s) is/are missing, trigger a NACK.
-		uint8_t nack_bitmask_count = std::min(diff_seq32 - 2, 16);
-		uint32_t nack_seq32 = this->last_seq32 - nack_bitmask_count - 1;
-		std::bitset<16> nack_bitset(0);
-
-		for (uint8_t i = 0; i < nack_bitmask_count; ++i)
-		{
-			nack_bitset[i] = 1;
-		}
-
-		uint16_t nack_seq = (uint16_t)nack_seq32;
-		uint16_t nack_bitmask = (uint16_t)nack_bitset.to_ulong();
-
-		MS_DEBUG_TAG(rtcp, "NACK triggered [ssrc:%" PRIu32 ", seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-			this->params.ssrc, nack_seq, MS_UINT16_TO_BINARY(nack_bitmask));
-
-		this->listener->onNackRequired(this, nack_seq, nack_bitmask);
-	}
-
 	void RtpStreamRecv::onInitSeq()
 	{
-		this->last_seq32 = 0;
+		MS_TRACE();
+
+		// Reset NackGenerator.
+		if (this->params.useNack)
+			this->nackGenerator.reset(new RTC::NackGenerator(this));
+	}
+
+	void RtpStreamRecv::onNackRequired(const std::vector<uint16_t>& seq_numbers)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->params.useNack, "NACK required but not supported");
+
+		MS_DEBUG_TAG(rtx,
+			"RTP retransmission required [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
+			this->params.ssrc, seq_numbers[0], seq_numbers.size());
+
+		this->listener->onNackRequired(this, seq_numbers);
+	}
+
+	void RtpStreamRecv::onFullFrameRequired()
+	{
+		MS_TRACE();
+
+		if (!this->params.usePli)
+		{
+			MS_WARN_TAG(rtx, "PLI required but not supported by the endpoint");
+			return;
+		}
+
+		MS_DEBUG_TAG(rtx, "PLI triggered [ssrc:%" PRIu32 "]", this->params.ssrc);
+
+		this->listener->onPliRequired(this);
 	}
 }

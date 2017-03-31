@@ -53,6 +53,10 @@ namespace RTC
 			return false;
 		}
 
+		// Set the extended sequence number into the packet.
+		packet->SetExtendedSequenceNumber(
+			this->cycles + (uint32_t)packet->GetSequenceNumber());
+
 		// Update highest seen RTP timestamp.
 		if (packet->GetTimestamp() > this->max_timestamp)
 			this->max_timestamp = packet->GetTimestamp();

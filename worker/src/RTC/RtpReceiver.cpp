@@ -320,7 +320,6 @@ namespace RTC
 		if (!this->transport)
 			return;
 
-
 		// Ensure that the RTCP packet fits into the RTCP buffer.
 		if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
 		{
@@ -438,16 +437,54 @@ namespace RTC
 		this->rtpStreams.clear();
 	}
 
-	void RtpReceiver::onNackRequired(RTC::RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask)
+	void RtpReceiver::onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers)
 	{
 		if (!this->transport)
 			return;
 
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
-		RTC::RTCP::FeedbackRtpNackItem* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+		auto it = seq_numbers.begin();
+		const auto end = seq_numbers.end();
 
-		packet.AddItem(nackItem);
+		while (it != end)
+		{
+			uint16_t seq;
+			uint16_t bitmask = 0;
+
+			seq = *it;
+			++it;
+
+			while (it != end)
+			{
+				uint16_t shift = *it - seq - 1;
+
+				if (shift <= 15)
+				{
+					bitmask |= (1 << shift);
+					++it;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			RTC::RTCP::FeedbackRtpNackItem* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+
+			packet.AddItem(nackItem);
+		}
+
+		// Ensure that the RTCP packet fits into the RTCP buffer.
+		if (packet.GetSize() > MS_RTCP_BUFFER_SIZE)
+		{
+			MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)",
+				packet.GetSize());
+
+			return;
+		}
+
 		packet.Serialize(RtpReceiver::rtcpBuffer);
+		packet.Dump(); // TODO: REMOVE
 		this->transport->SendRtcpPacket(&packet);
 	}
 

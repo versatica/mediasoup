@@ -60,6 +60,7 @@ namespace RTC
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
 		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
+		bool IsConnected() const;
 		void EnableRemb();
 
 	private:
@@ -153,6 +154,12 @@ namespace RTC
 	RTC::RtpReceiver* Transport::GetRtpReceiver(uint32_t ssrc)
 	{
 		return this->rtpListener.GetRtpReceiver(ssrc);
+	}
+
+	inline
+	bool Transport::IsConnected() const
+	{
+		return this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED;
 	}
 
 	inline

@@ -4,17 +4,19 @@
 #include "RTC/RtpStream.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/NackGenerator.hpp"
 
 namespace RTC
 {
 	class RtpStreamRecv :
-		public RtpStream
+		public RtpStream,
+		public RTC::NackGenerator::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask) = 0;
+			virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers) = 0;
 			virtual void onPliRequired(RTC::RtpStreamRecv* rtpStream) = 0;
 		};
 
@@ -29,12 +31,15 @@ namespace RTC
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
-		void MayTriggerNack(RTC::RtpPacket* packet);
-		void ResetNack();
 
 	/* Pure virtual methods inherited from RtpStream. */
 	protected:
 		virtual void onInitSeq() override;
+
+	/* Pure virtual methods inherited from RTC::NackGenerator. */
+	protected:
+		virtual void onNackRequired(const std::vector<uint16_t>& seq_numbers) override;
+		virtual void onFullFrameRequired() override;
 
 	private:
 		// Passed by argument.
@@ -44,7 +49,7 @@ namespace RTC
 		uint64_t last_sr_received = 0; // Wallclock time representing the most recent sender report arrival.
 		uint32_t transit = 0; // Relative trans time for prev pkt.
 		uint32_t jitter = 0; // Estimated jitter.
-		uint32_t last_seq32 = 0; // Extended seq number of last valid packet.
+		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 	};
 }
 

@@ -5,7 +5,7 @@
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "Logger.hpp"
-#include <bitset> // std::bitset()
+#include <vector>
 
 using namespace RTC;
 
@@ -15,160 +15,107 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		public RtpStreamRecv::Listener
 	{
 	public:
-		virtual void onNackRequired(RtpStreamRecv* rtpStream, uint16_t seq, uint16_t bitmask) override
+		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers) override
 		{
-			std::bitset<16> nack_bitset(bitmask);
+			INFO("NACK required");
 
-			INFO("NACK required [seq:" << seq << ", bitmask:" << nack_bitset << "]");
+			REQUIRE(this->should_trigger_nack == true);
 
-			REQUIRE(this->should_trigger == true);
-			REQUIRE(seq == this->expected_nack_seq);
-			REQUIRE(bitmask == this->expected_nack_bitmask);
-
-			this->should_trigger = false;
+			this->should_trigger_nack = false;
+			this->seq_numbers = seq_numbers;
 		}
 
 		virtual void onPliRequired(RtpStreamRecv* rtpStream) override
 		{
 			INFO("PLI required");
+
+			REQUIRE(this->should_trigger_pli == true);
+
+			this->should_trigger_pli = false;
+			this->seq_numbers.clear();
 		}
 
 	public:
-		bool     should_trigger = false;
-		uint16_t expected_nack_seq = 0;
-		uint16_t expected_nack_bitmask = 0;
+		bool should_trigger_nack = false;
+		bool should_trigger_pli = false;
+		std::vector<uint16_t> seq_numbers;
 	};
 
-	SECTION("loose packets newer than 16 seq units")
+	uint8_t buffer[] =
 	{
-		uint8_t buffer[] =
-		{
-			0b10000000, 0b00000001, 0, 100,
-			0, 0, 0, 4,
-			0, 0, 0, 5
-		};
+		0b10000000, 0b00000001, 0, 1,
+		0, 0, 0, 4,
+		0, 0, 0, 5
+	};
+	RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+	if (!packet)
+		FAIL("not a RTP packet");
 
-		if (!packet)
-			FAIL("not a RTP packet");
+	RtpStream::Params params;
 
-		REQUIRE(packet->GetSequenceNumber() == 100);
+	params.ssrc = packet->GetSsrc();
+	params.clockRate = 90000;
+	params.useNack = true;
+	params.usePli = true;
 
-		RtpStream::Params params;
-
-		params.ssrc = packet->GetSsrc();
-		params.clockRate = 90000;
-		params.useNack = true;
-
+	SECTION("nack one packet")
+	{
 		RtpStreamRecvListener listener;
 		RtpStreamRecv rtpStream(&listener, params);
 
+		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet);
 
-		packet->SetSequenceNumber(101);
+		packet->SetSequenceNumber(3);
+		listener.should_trigger_nack = true;
 		rtpStream.ReceivePacket(packet);
 
-		packet->SetSequenceNumber(98);
+		REQUIRE(listener.seq_numbers.size() == 1);
+		REQUIRE(listener.seq_numbers[0] == 2);
+		listener.seq_numbers.clear();
+
+		packet->SetSequenceNumber(2);
 		rtpStream.ReceivePacket(packet);
 
-		packet->SetSequenceNumber(104);
-		listener.should_trigger = true;
-		listener.expected_nack_seq = 102;
-		listener.expected_nack_bitmask = 0b0000000000000001;
-		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
+		REQUIRE(listener.seq_numbers.size() == 0);
 
-		packet->SetSequenceNumber(104);
+		packet->SetSequenceNumber(4);
 		rtpStream.ReceivePacket(packet);
 
-		packet->SetSequenceNumber(102);
-		rtpStream.ReceivePacket(packet);
-
-		packet->SetSequenceNumber(103);
-		rtpStream.ReceivePacket(packet);
-
-		packet->SetSequenceNumber(108);
-		listener.should_trigger = true;
-		listener.expected_nack_seq = 105;
-		listener.expected_nack_bitmask = 0b0000000000000011;
-		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
-
-		delete packet;
+		REQUIRE(listener.seq_numbers.size() == 0);
 	}
 
-	SECTION("loose packets older than 16 seq units")
+	SECTION("wrapping sequence numbers")
 	{
-		uint8_t buffer[] =
-		{
-			0b10000000, 0b00000001, 0, 100,
-			0, 0, 0, 4,
-			0, 0, 0, 5
-		};
-
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
-
-		if (!packet)
-			FAIL("not a RTP packet");
-
-		REQUIRE(packet->GetSequenceNumber() == 100);
-
-		RtpStream::Params params;
-
-		params.ssrc = packet->GetSsrc();
-		params.clockRate = 90000;
-		params.useNack = true;
-
 		RtpStreamRecvListener listener;
 		RtpStreamRecv rtpStream(&listener, params);
 
+		packet->SetSequenceNumber(0xfffe);
 		rtpStream.ReceivePacket(packet);
 
-		packet->SetSequenceNumber(120);
-		listener.should_trigger = true;
-		listener.expected_nack_seq = 103;
-		listener.expected_nack_bitmask = 0b1111111111111111;
+		packet->SetSequenceNumber(1);
+		listener.should_trigger_nack = true;
 		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
 
-		delete packet;
+		REQUIRE(listener.seq_numbers.size() == 2);
+		REQUIRE(listener.seq_numbers[0] == 0xffff);
+		REQUIRE(listener.seq_numbers[1] == 0);
+		listener.seq_numbers.clear();
 	}
 
-	SECTION("increase seq cycles and loose packets older than 16 seq units")
+	SECTION("require PLI")
 	{
-		uint8_t buffer[] =
-		{
-			0b10000000, 0b00000001, 0b11111111, 0b11111111,
-			0, 0, 0, 4,
-			0, 0, 0, 5
-		};
-
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
-
-		if (!packet)
-			FAIL("not a RTP packet");
-
-		REQUIRE(packet->GetSequenceNumber() == 65535);
-
-		RtpStream::Params params;
-
-		params.ssrc = packet->GetSsrc();
-		params.clockRate = 90000;
-		params.useNack = true;
-
 		RtpStreamRecvListener listener;
 		RtpStreamRecv rtpStream(&listener, params);
 
+		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet);
 
-		packet->SetSequenceNumber(20);
-		listener.should_trigger = true;
-		listener.expected_nack_seq = 3;
-		listener.expected_nack_bitmask = 0b1111111111111111;
+		packet->SetSequenceNumber(510);
+		listener.should_trigger_pli = true;
 		rtpStream.ReceivePacket(packet);
-		REQUIRE(listener.should_trigger == false);
-
-		delete packet;
 	}
+
+	delete packet;
 }

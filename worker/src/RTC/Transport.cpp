@@ -687,7 +687,7 @@ namespace RTC
 		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
-			MS_WARN_DEV("ignoring DTLS data coming from an invalid tuple");
+			MS_WARN_TAG(dtls, "ignoring DTLS data coming from an invalid tuple");
 
 			return;
 		}
@@ -705,7 +705,8 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_DEV("Transport is not 'connecting' or 'connected', ignoring received DTLS data");
+			MS_WARN_TAG(dtls,
+				"Transport is not 'connecting' or 'connected', ignoring received DTLS data");
 
 			return;
 		}
@@ -719,7 +720,7 @@ namespace RTC
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_WARN_DEV("ignoring RTP packet while DTLS not connected");
+			MS_WARN_2TAGS(dtls, rtp, "ignoring RTP packet while DTLS not connected");
 
 			return;
 		}
@@ -727,7 +728,7 @@ namespace RTC
 		// Ensure there is receiving SRTP session.
 		if (!this->srtpRecvSession)
 		{
-			MS_WARN_DEV("ignoring RTP packet due to non receiving SRTP session");
+			MS_WARN_TAG(srtp, "ignoring RTP packet due to non receiving SRTP session");
 
 			return;
 		}
@@ -735,19 +736,35 @@ namespace RTC
 		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
-			MS_WARN_DEV("ignoring RTP packet coming from an invalid tuple");
+			MS_WARN_TAG(rtp, "ignoring RTP packet coming from an invalid tuple");
 
 			return;
 		}
 
 		// Decrypt the SRTP packet.
 		if (!this->srtpRecvSession->DecryptSrtp(data, &len))
+		{
+			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			if (!packet)
+			{
+				MS_WARN_TAG(srtp, "DecryptSrtp() failed due to an invalid RTP packet");
+			}
+			else
+			{
+				MS_WARN_TAG(srtp,
+					"DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", seq:%" PRIu16 "]",
+					packet->GetSsrc(), packet->GetPayloadType(), packet->GetSequenceNumber());
+
+				delete packet;
+			}
+
 			return;
+		}
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 		if (!packet)
 		{
-			MS_WARN_DEV("received data is not a valid RTP packet");
+			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
 
 			return;
 		}
@@ -759,7 +776,9 @@ namespace RTC
 
 		if (!rtpReceiver)
 		{
-			MS_WARN_DEV("no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
+			MS_WARN_TAG(rtp,
+				"no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
+				packet->GetSsrc(), packet->GetPayloadType());
 
 			delete packet;
 			return;
@@ -796,7 +815,7 @@ namespace RTC
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_WARN_DEV("ignoring RTCP packet while DTLS not connected");
+			MS_WARN_2TAGS(dtls, rtcp, "ignoring RTCP packet while DTLS not connected");
 
 			return;
 		}
@@ -804,7 +823,7 @@ namespace RTC
 		// Ensure there is receiving SRTP session.
 		if (!this->srtpRecvSession)
 		{
-			MS_WARN_DEV("ignoring RTCP packet due to non receiving SRTP session");
+			MS_WARN_TAG(srtp, "ignoring RTCP packet due to non receiving SRTP session");
 
 			return;
 		}
@@ -812,7 +831,7 @@ namespace RTC
 		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
 		{
-			MS_WARN_DEV("ignoring RTCP packet coming from an invalid tuple");
+			MS_WARN_TAG(rtcp, "ignoring RTCP packet coming from an invalid tuple");
 
 			return;
 		}
@@ -824,7 +843,7 @@ namespace RTC
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 		if (!packet)
 		{
-			MS_WARN_DEV("received data is not a valid RTCP compound or single packet");
+			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 
 			return;
 		}

@@ -88,6 +88,8 @@ namespace RTC
 		void SetMarker(bool marker);
 		uint16_t GetSequenceNumber() const;
 		void SetSequenceNumber(uint16_t seq);
+		uint32_t GetExtendedSequenceNumber() const;
+		void SetExtendedSequenceNumber(uint32_t seq32);
 		uint32_t GetTimestamp() const;
 		void SetTimestamp(uint32_t timestamp);
 		uint32_t GetSsrc() const;
@@ -122,6 +124,7 @@ namespace RTC
 		size_t payloadLength = 0;
 		uint8_t payloadPadding = 0;
 		size_t size = 0; // Full size of the packet in bytes.
+		uint32_t seq32 = 0; // Extended seq number.
 	};
 
 	/* Inline static methods. */
@@ -190,6 +193,18 @@ namespace RTC
 	void RtpPacket::SetSequenceNumber(uint16_t seq)
 	{
 		this->header->sequence_number = (uint16_t)htons(seq);
+	}
+
+	inline
+	uint32_t RtpPacket::GetExtendedSequenceNumber() const
+	{
+		return this->seq32;
+	}
+
+	inline
+	void RtpPacket::SetExtendedSequenceNumber(uint32_t seq32)
+	{
+		this->seq32 = seq32;
 	}
 
 	inline

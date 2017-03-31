@@ -445,7 +445,7 @@ namespace RTC
 
 		// Create a RtpStreamSend for sending a single media stream.
 		if (useNack)
-			this->rtpStream = new RTC::RtpStreamSend(params, 200);
+			this->rtpStream = new RTC::RtpStreamSend(params, 1000);
 		else
 			this->rtpStream = new RTC::RtpStreamSend(params, 0);
 	}
