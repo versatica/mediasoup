@@ -750,7 +750,9 @@ namespace RTC
 			}
 			else
 			{
-				MS_WARN_TAG(srtp, "DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", packet->GetSsrc(), packet->GetPayloadType());
+				MS_WARN_TAG(srtp,
+					"DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", seq:%" PRIu16 "]",
+					packet->GetSsrc(), packet->GetPayloadType(), packet->GetSequenceNumber());
 
 				delete packet;
 			}
