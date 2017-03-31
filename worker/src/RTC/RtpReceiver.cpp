@@ -500,4 +500,18 @@ namespace RTC
 		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
 	}
+
+	void RtpReceiver::RequestFullFrame() const
+	{
+		MS_TRACE();
+
+		if (this->kind == RTC::Media::Kind::VIDEO || this->kind == RTC::Media::Kind::DEPTH)
+		{
+			for (auto& kv : this->rtpStreams)
+			{
+				auto rtpStream = kv.second;
+				rtpStream->RequestFullFrame();
+			}
+		}
+	}
 }

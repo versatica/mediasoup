@@ -585,6 +585,17 @@ namespace RTC
 		}
 	}
 
+	void Room::onPeerRtpSenderTransportConnected(RTC::Peer* peer, RTC::RtpSender* rtpSender)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+
+		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+
+		rtpReceiver->RequestFullFrame();
+	}
+
 	void Room::onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
