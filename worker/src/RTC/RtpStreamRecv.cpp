@@ -5,11 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 
-// TODO: REMOVE
-#include <ostream>
-#include <iterator>
-static uint64_t before = 0;
-
 namespace RTC
 {
 	/* Instance methods. */
@@ -161,15 +156,10 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		// TODO: REMOVE
-		uint64_t time_diff = DepLibUV::GetTime() - before;
-		before = DepLibUV::GetTime();
-		std::stringstream str;
-		std::copy(seq_numbers.begin(), seq_numbers.end(), std::ostream_iterator<uint16_t>(str, ","));
-
+		// TODO: REMOVE?
 		MS_DEBUG_TAG(rtx,
-			"RTP retransmission required [time_diff:%" PRIu64 ", ssrc:%" PRIu32 ", seqs:%s]",
-			time_diff, this->params.ssrc, str.str().c_str());
+			"RTP retransmission required [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
+			this->params.ssrc, seq_numbers[0], seq_numbers.size());
 
 		this->listener->onNackRequired(this, seq_numbers);
 	}
