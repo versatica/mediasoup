@@ -495,6 +495,9 @@ namespace RTC
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
 
 		packet.Serialize(RtpReceiver::rtcpBuffer);
+
+		// Send two, because it's free.
+		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
 	}
 }
