@@ -694,6 +694,20 @@ namespace RTC
 		}
 	}
 
+	void Peer::onTransportConnected(RTC::Transport* transport)
+	{
+		MS_TRACE();
+
+		// Notify the listener.
+		for (auto& kv : this->rtpSenders)
+		{
+			RTC::RtpSender* rtpSender = kv.second;
+
+			if (rtpSender->GetTransport() == transport)
+				this->listener->onPeerRtpSenderTransportConnected(this, rtpSender);
+		}
+	}
+
 	void Peer::onTransportClosed(RTC::Transport* transport)
 	{
 		MS_TRACE();
