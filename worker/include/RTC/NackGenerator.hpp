@@ -24,7 +24,7 @@ namespace RTC
 		struct NackInfo
 		{
 			NackInfo() {};
-			NackInfo(uint32_t seq32);
+			explicit NackInfo(uint32_t seq32);
 
 			uint32_t seq32 = 0;
 			uint64_t sent_at_time = 0;
