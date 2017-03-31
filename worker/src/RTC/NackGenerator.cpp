@@ -1,12 +1,9 @@
 #define MS_CLASS "RTC::NackGenerator"
-#define MS_LOG_DEV // TODO: REMOVE
+// #define MS_LOG_DEV
 
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-
-// TODO: REMOVE
-uint32_t first_seq32 = 0;
 
 namespace RTC
 {
@@ -42,20 +39,8 @@ namespace RTC
 
 		uint32_t seq32 = packet->GetExtendedSequenceNumber();
 
-		// TODO: REMOVE
-		// if (
-		// 	(seq32 >= first_seq32 + 100 && seq32 < first_seq32 + 140) ||
-		// 	(seq32 >= first_seq32 + 150 && seq32 < first_seq32 + 160))
-		// {
-		// 	MS_DEBUG_DEV("dropping packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
-		// 	return;
-		// }
-
 		if (!this->started)
 		{
-			// TODO: REMOVE
-			first_seq32 = seq32;
-
 			this->last_seq32 = seq32;
 			this->started = true;
 
@@ -142,9 +127,6 @@ namespace RTC
 
 			this->nack_list[seq32] = nack_info;
 		}
-
-		// TODO: REMOVE
-		MS_DEBUG_DEV("this->nack_list.size(): %zu", this->nack_list.size());
 	}
 
 	std::vector<uint16_t> NackGenerator::GetNackBatch(NackFilter filter)

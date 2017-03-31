@@ -156,7 +156,6 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		// TODO: REMOVE?
 		MS_DEBUG_TAG(rtx,
 			"RTP retransmission required [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
 			this->params.ssrc, seq_numbers[0], seq_numbers.size());
