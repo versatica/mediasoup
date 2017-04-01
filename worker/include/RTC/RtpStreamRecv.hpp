@@ -53,6 +53,8 @@ namespace RTC
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 	};
 
+	/* Inline instance methods. */
+
 	inline
 	void RtpStreamRecv::RequestFullFrame()
 	{

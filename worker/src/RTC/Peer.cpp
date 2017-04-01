@@ -698,13 +698,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the listener.
+		// If the transport is used by any RtpSender (video/depth) notify the
+		// listener.
 		for (auto& kv : this->rtpSenders)
 		{
 			RTC::RtpSender* rtpSender = kv.second;
 
-			if (rtpSender->GetTransport() == transport)
-				this->listener->onPeerRtpSenderTransportConnected(this, rtpSender);
+			if (
+				rtpSender->kind != RTC::Media::Kind::VIDEO ||
+				rtpSender->kind != RTC::Media::Kind::DEPTH ||
+				rtpSender->GetTransport() != transport)
+			{
+				continue;
+			}
+
+			this->listener->onPeerRtpSenderTransportConnected(this, rtpSender);
 		}
 	}
 
