@@ -111,7 +111,7 @@ namespace RTC
 		// If NACK is not supported, exit.
 		if (!this->params.useNack)
 		{
-			MS_WARN_TAG(rtcp, "NACK not negotiated");
+			MS_WARN_TAG(rtx, "NACK not negotiated");
 
 			return;
 		}
@@ -255,11 +255,11 @@ namespace RTC
 			}
 		}
 
-		// If the first requested packet in the NACK was sent but not all the others,
-		// log it.
-		if (first_packet_sent && orig_bitmask != sent_bitmask)
+		// If not all the requested packets was sent, log it.
+		if (!first_packet_sent || orig_bitmask != sent_bitmask)
 		{
-			MS_WARN_TAG(rtcp, "first packet sent but not all the bitmask packets [bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent:" MS_UINT16_TO_BINARY_PATTERN "]",
+			MS_WARN_TAG(rtx, "not all the requested packet could be sent [first_was_sent:%s, bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent:" MS_UINT16_TO_BINARY_PATTERN "]",
+				first_packet_sent ? "yes" : "no",
 				MS_UINT16_TO_BINARY(orig_bitmask), MS_UINT16_TO_BINARY(sent_bitmask));
 		}
 
