@@ -40,6 +40,7 @@ namespace RTC
 			virtual void onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet) = 0;
 			virtual void onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
 			virtual void onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) = 0;
+			virtual void onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
 		};
 
 	private:
@@ -75,6 +76,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
+		virtual void onTransportConnected(RTC::Transport* transport) override;
 		virtual void onTransportClosed(RTC::Transport* transport) override;
 		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
 

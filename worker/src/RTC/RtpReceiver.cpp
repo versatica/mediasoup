@@ -353,6 +353,18 @@ namespace RTC
 		this->transport->SendRtcpPacket(packet);
 	}
 
+	void RtpReceiver::RequestFullFrame() const
+	{
+		MS_TRACE();
+
+		for (auto& kv : this->rtpStreams)
+		{
+			auto rtpStream = kv.second;
+
+			rtpStream->RequestFullFrame();
+		}
+	}
+
 	void RtpReceiver::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
 	{
 		MS_TRACE();

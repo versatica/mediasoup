@@ -58,6 +58,7 @@ namespace RTC
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
+		void RequestFullFrame() const;
 
 	private:
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);

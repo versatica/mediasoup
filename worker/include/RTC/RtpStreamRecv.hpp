@@ -28,6 +28,7 @@ namespace RTC
 		virtual bool ReceivePacket(RTC::RtpPacket* packet) override;
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+		void RequestFullFrame();
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
@@ -51,6 +52,15 @@ namespace RTC
 		uint32_t jitter = 0; // Estimated jitter.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 	};
+
+	/* Inline instance methods. */
+
+	inline
+	void RtpStreamRecv::RequestFullFrame()
+	{
+		if (this->params.usePli)
+			this->listener->onPliRequired(this);
+	}
 }
 
 #endif
