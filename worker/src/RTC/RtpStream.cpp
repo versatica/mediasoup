@@ -145,7 +145,7 @@ namespace RTC
 					"too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 					packet->GetSsrc(), packet->GetSequenceNumber());
 
-				// InitSeq(seq);
+				InitSeq(seq);
 			}
 			else
 			{
@@ -153,13 +153,13 @@ namespace RTC
 					"bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 					packet->GetSsrc(), packet->GetSequenceNumber());
 
-				// this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
+				this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
 
-				// return false;
+				return false;
 			}
 
 			// TODO: testing
-			this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
+			// this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
 		}
 
 		this->received++;
