@@ -57,6 +57,9 @@ void Timer::Start(uint64_t timeout)
 
 	int err;
 
+	if (uv_is_active((uv_handle_t*)this->uvHandle))
+		Stop();
+
 	err = uv_timer_start(this->uvHandle, (uv_timer_cb)on_timer, timeout, 0);
 	if (err)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
