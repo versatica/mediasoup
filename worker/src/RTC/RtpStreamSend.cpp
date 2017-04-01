@@ -258,9 +258,14 @@ namespace RTC
 		// If not all the requested packets was sent, log it.
 		if (!first_packet_sent || orig_bitmask != sent_bitmask)
 		{
-			MS_WARN_TAG(rtx, "could not sent all [seq:%" PRIu16 ", first:%s, bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent_bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+			MS_WARN_TAG(rtx, "could not resend all packets [seq:%" PRIu16 ", first:%s, bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent_bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
 				seq, first_packet_sent ? "yes" : "no",
 				MS_UINT16_TO_BINARY(orig_bitmask), MS_UINT16_TO_BINARY(sent_bitmask));
+		}
+		else
+		{
+			MS_DEBUG_TAG(rtx, "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+				seq, MS_UINT16_TO_BINARY(orig_bitmask));
 		}
 
 		// Set the next container element to null.
