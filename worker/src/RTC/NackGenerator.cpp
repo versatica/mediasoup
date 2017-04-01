@@ -7,17 +7,17 @@
 
 namespace RTC
 {
-	constexpr uint32_t kMaxPacketAge = 10000;
-	constexpr size_t kMaxNackPackets = 500;
-	constexpr uint32_t kDefaultRttMs = 100;
-	constexpr uint8_t kMaxNackRetries = 8;
-	constexpr uint64_t kProcessIntervalMs = 25;
+	constexpr uint32_t MAX_PACKET_AGE = 10000;
+	constexpr size_t MAX_NACK_PACKETS = 500;
+	constexpr uint32_t DEFAULT_RTT = 100;
+	constexpr uint8_t MAX_NACK_RETRIES = 8;
+	constexpr uint64_t TIMER_INTERVAL = 25;
 
 	/* Instance methods. */
 
 	NackGenerator::NackGenerator(Listener* listener) :
 		listener(listener),
-		rtt(kDefaultRttMs)
+		rtt(DEFAULT_RTT)
 	{
 		MS_TRACE();
 
@@ -43,9 +43,6 @@ namespace RTC
 		{
 			this->last_seq32 = seq32;
 			this->started = true;
-
-			// Start the periodic timer now.
-			this->timer->Start(kProcessIntervalMs);
 
 			return;
 		}
@@ -95,6 +92,8 @@ namespace RTC
 
 		if (!nack_batch.empty())
 			this->listener->onNackRequired(nack_batch);
+
+		MayRunTimer();
 	}
 
 	void NackGenerator::AddPacketsToNackList(uint32_t seq32_start, uint32_t seq32_end)
@@ -102,14 +101,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Remove old packets.
-		auto it = this->nack_list.lower_bound(seq32_end - kMaxPacketAge);
+		auto it = this->nack_list.lower_bound(seq32_end - MAX_PACKET_AGE);
 
 		this->nack_list.erase(this->nack_list.begin(), it);
 
 		// If the nack list is too large, clear it and request a full frame.
 		uint32_t num_new_nacks = seq32_end - seq32_start;
 
-		if (this->nack_list.size() + num_new_nacks > kMaxNackPackets)
+		if (this->nack_list.size() + num_new_nacks > MAX_NACK_PACKETS)
 		{
 			MS_DEBUG_TAG(rtx, "nack list too large, clearing it and requesting a full frame");
 
@@ -145,7 +144,7 @@ namespace RTC
 				nack_info.retries++;
 				nack_info.sent_at_time = now;
 
-				if (nack_info.retries >= kMaxNackRetries)
+				if (nack_info.retries >= MAX_NACK_RETRIES)
 				{
 					MS_WARN_TAG(rtx,
 						"sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]", seq);
@@ -166,7 +165,7 @@ namespace RTC
 				nack_info.retries++;
 				nack_info.sent_at_time = now;
 
-				if (nack_info.retries >= kMaxNackRetries)
+				if (nack_info.retries >= MAX_NACK_RETRIES)
 				{
 					MS_WARN_TAG(rtx,
 						"sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]", seq);
@@ -189,6 +188,13 @@ namespace RTC
 	}
 
 	inline
+	void NackGenerator::MayRunTimer() const
+	{
+		if (this->nack_list.size() > 0)
+			this->timer->Start(TIMER_INTERVAL);
+	}
+
+	inline
 	void NackGenerator::onTimer(Timer* timer)
 	{
 		MS_TRACE();
@@ -198,6 +204,6 @@ namespace RTC
 		if (!nack_batch.empty())
 			this->listener->onNackRequired(nack_batch);
 
-		this->timer->Start(kProcessIntervalMs);
+		MayRunTimer();
 	}
 }

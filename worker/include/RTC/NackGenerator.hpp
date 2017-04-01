@@ -46,6 +46,7 @@ namespace RTC
 	private:
 		void AddPacketsToNackList(uint32_t seq32_start, uint32_t seq32_end);
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
+		void MayRunTimer() const;
 
 	/* Pure virtual methods inherited from Timer::Listener. */
 	public:
