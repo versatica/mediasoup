@@ -1061,6 +1061,8 @@ namespace RTC
 		event_data[k_dtlsState] = v_connected;
 		event_data[k_dtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
+
+		this->listener->onTransportConnected(this);
 	}
 
 	void Transport::onDtlsFailed(RTC::DtlsTransport* dtlsTransport)
