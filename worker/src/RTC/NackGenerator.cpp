@@ -122,7 +122,8 @@ namespace RTC
 		{
 			// NOTE: Let the packet become out of order for a while without requesting
 			// it into a NACK.
-			uint32_t send_at_seq_num = seq32 + 2;
+			// TODO: To be done.
+			uint32_t send_at_seq_num = seq32 + 0;
 
 			NackInfo nack_info(seq32, send_at_seq_num);
 
