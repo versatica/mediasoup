@@ -24,9 +24,10 @@ namespace RTC
 		struct NackInfo
 		{
 			NackInfo() {};
-			explicit NackInfo(uint32_t seq32);
+			explicit NackInfo(uint32_t seq32, uint32_t send_at_seq_num);
 
 			uint32_t seq32 = 0;
+			uint32_t send_at_seq_num = 0;
 			uint64_t sent_at_time = 0;
 			uint8_t retries = 0;
 		};
@@ -67,8 +68,9 @@ namespace RTC
 	// Inline instance methods.
 
 	inline
-	NackGenerator::NackInfo::NackInfo(uint32_t seq32) :
-		seq32(seq32)
+	NackGenerator::NackInfo::NackInfo(uint32_t seq32, uint32_t send_at_seq_num) :
+		seq32(seq32),
+		send_at_seq_num(send_at_seq_num)
 	{}
 }
 

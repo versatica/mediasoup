@@ -120,7 +120,11 @@ namespace RTC
 
 		for (uint32_t seq32 = seq32_start; seq32 != seq32_end; ++seq32)
 		{
-			NackInfo nack_info(seq32);
+			// NOTE: Let the packet become out of order for a while without requesting
+			// it into a NACK.
+			uint32_t send_at_seq_num = seq32 + 2;
+
+			NackInfo nack_info(seq32, send_at_seq_num);
 
 			MS_ASSERT(this->nack_list.find(seq32) == this->nack_list.end(), "packet already in the NACK list");
 
@@ -139,7 +143,10 @@ namespace RTC
 			NackInfo& nack_info = it->second;
 			uint16_t seq = nack_info.seq32 % (1<<16);
 
-			if (filter == NackFilter::SEQ && nack_info.sent_at_time == 0)
+			if (
+				filter == NackFilter::SEQ &&
+				nack_info.sent_at_time == 0 &&
+				this->last_seq32 >= nack_info.send_at_seq_num)
 			{
 				nack_info.retries++;
 				nack_info.sent_at_time = now;
@@ -160,7 +167,9 @@ namespace RTC
 				continue;
 			}
 
-			if (filter == NackFilter::TIME && nack_info.sent_at_time + this->rtt < now)
+			if (
+				filter == NackFilter::TIME &&
+				nack_info.sent_at_time + this->rtt < now)
 			{
 				nack_info.retries++;
 				nack_info.sent_at_time = now;
