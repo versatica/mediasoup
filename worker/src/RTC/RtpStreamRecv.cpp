@@ -145,6 +145,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_WARN_TAG(rtp, "opsss");
+
 		// Reset NackGenerator.
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
