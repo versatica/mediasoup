@@ -7,7 +7,7 @@
 #include "Utils.hpp"
 
 #define RTP_SEQ_MOD (1<<16)
-#define MAX_RETRANSMISSION_AGE 2000 // Don't retransmit packets older than this (ms).
+#define MAX_RETRANSMISSION_AGE 1000 // Don't retransmit packets older than this (ms).
 #define DEFAULT_RTT 100 // Default RTT if not set (in ms).
 
 namespace RTC
@@ -254,17 +254,17 @@ namespace RTC
 		}
 
 		// If not all the requested packets was sent, log it.
-		// if (!first_packet_sent || orig_bitmask != sent_bitmask)
-		// {
-		// 	MS_DEBUG_TAG(rtx, "could not resend all packets [seq:%" PRIu16 ", first:%s, bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent_bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-		// 		seq, first_packet_sent ? "yes" : "no",
-		// 		MS_UINT16_TO_BINARY(orig_bitmask), MS_UINT16_TO_BINARY(sent_bitmask));
-		// }
-		// else
-		// {
-		// 	MS_DEBUG_TAG(rtx, "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-		// 		seq, MS_UINT16_TO_BINARY(orig_bitmask));
-		// }
+		if (!first_packet_sent || orig_bitmask != sent_bitmask)
+		{
+			MS_DEBUG_TAG(rtx, "could not resend all packets [seq:%" PRIu16 ", first:%s, bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent_bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+				seq, first_packet_sent ? "yes" : "no",
+				MS_UINT16_TO_BINARY(orig_bitmask), MS_UINT16_TO_BINARY(sent_bitmask));
+		}
+		else
+		{
+			MS_DEBUG_TAG(rtx, "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+				seq, MS_UINT16_TO_BINARY(orig_bitmask));
+		}
 
 		// Set the next container element to null.
 		container[container_idx] = nullptr;
@@ -391,8 +391,6 @@ namespace RTC
 	void RtpStreamSend::onInitSeq()
 	{
 		MS_TRACE();
-
-		MS_WARN_TAG(rtp, "opsss");
 
 		// Clear the RTP buffer.
 		ClearBuffer();

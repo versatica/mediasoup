@@ -157,9 +157,6 @@ namespace RTC
 
 				return false;
 			}
-
-			// TODO: testing
-			// this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
 		}
 
 		this->received++;

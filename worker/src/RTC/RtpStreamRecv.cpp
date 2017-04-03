@@ -145,8 +145,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_WARN_TAG(rtp, "opsss");
-
 		// Reset NackGenerator.
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
@@ -159,7 +157,7 @@ namespace RTC
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
 		MS_DEBUG_TAG(rtx,
-			"RTP retransmission required [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
+			"triggering NACK [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
 			this->params.ssrc, seq_numbers[0], seq_numbers.size());
 
 		this->listener->onNackRequired(this, seq_numbers);
@@ -175,7 +173,7 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG_TAG(rtx, "PLI triggered [ssrc:%" PRIu32 "]", this->params.ssrc);
+		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 		this->listener->onPliRequired(this);
 	}
