@@ -35,19 +35,20 @@ namespace RTC
 		// If this is the first packet seen, initialize stuff.
 		if (!this->started)
 		{
-			this->started = true;
-
 			InitSeq(seq);
+			this->started = true;
 			this->max_seq = seq - 1;
 			this->probation = MIN_SEQUENTIAL;
 		}
 
 		// If not a valid packet ignore it.
-		if (!UpdateSeq(seq))
+		if (!UpdateSeq(packet))
 		{
 			if (!this->probation)
 			{
-				MS_WARN_TAG(rtp, "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", packet->GetSsrc(), packet->GetSequenceNumber());
+				MS_WARN_TAG(rtp,
+					"invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+					packet->GetSsrc(), packet->GetSequenceNumber());
 			}
 
 			return false;
@@ -83,10 +84,11 @@ namespace RTC
 		onInitSeq();
 	}
 
-	bool RtpStream::UpdateSeq(uint16_t seq)
+	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
+		uint16_t seq = packet->GetSequenceNumber();
 		uint16_t udelta = seq - this->max_seq;
 
 		/*
@@ -138,19 +140,22 @@ namespace RTC
 				 * restarted without telling us so just re-sync
 				 * (i.e., pretend this was the first packet).
 				 */
+				MS_WARN_TAG(rtp,
+					"too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+					packet->GetSsrc(), packet->GetSequenceNumber());
+
 				InitSeq(seq);
 			}
 			else
 			{
+				MS_WARN_TAG(rtp,
+					"bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+					packet->GetSsrc(), packet->GetSequenceNumber());
+
 				this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
 
 				return false;
 			}
-		}
-		else
-		{
-			// Duplicate or reordered packet.
-			// NOTE: This would never happen because libsrtp rejects duplicated packets.
 		}
 
 		this->received++;

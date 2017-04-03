@@ -148,6 +148,15 @@ namespace RTC
 		// Reset NackGenerator.
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
+
+		// If we got out of sync, request a full frame.
+		if (this->started && this->params.usePli)
+		{
+			MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]",
+				this->params.ssrc);
+
+			this->listener->onPliRequired(this);
+		}
 	}
 
 	void RtpStreamRecv::onNackRequired(const std::vector<uint16_t>& seq_numbers)
@@ -156,8 +165,8 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_DEBUG_TAG(rtx,
-			"RTP retransmission required [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
+		MS_WARN_TAG(rtx,
+			"triggering NACK [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
 			this->params.ssrc, seq_numbers[0], seq_numbers.size());
 
 		this->listener->onNackRequired(this, seq_numbers);
@@ -170,10 +179,12 @@ namespace RTC
 		if (!this->params.usePli)
 		{
 			MS_WARN_TAG(rtx, "PLI required but not supported by the endpoint");
+
 			return;
 		}
 
-		MS_DEBUG_TAG(rtx, "PLI triggered [ssrc:%" PRIu32 "]", this->params.ssrc);
+		MS_DEBUG_TAG(rtx,
+			"triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 		this->listener->onPliRequired(this);
 	}

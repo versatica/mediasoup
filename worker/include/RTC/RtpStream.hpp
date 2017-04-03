@@ -34,7 +34,7 @@ namespace RTC
 
 	private:
 		void InitSeq(uint16_t seq);
-		bool UpdateSeq(uint16_t seq);
+		bool UpdateSeq(RTC::RtpPacket* packet);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
