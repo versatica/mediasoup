@@ -490,7 +490,7 @@ namespace RTC
 		}
 	}
 
-	void Peer::AddRtpSender(RTC::RtpSender* rtpSender, std::string& peerName, RTC::RtpParameters* rtpParameters)
+	void Peer::AddRtpSender(RTC::RtpSender* rtpSender, const std::string& peerName, RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
