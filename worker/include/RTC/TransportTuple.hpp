@@ -25,7 +25,7 @@ namespace RTC
 		Json::Value toJson() const;
 		void Dump() const;
 		void StoreUdpRemoteAddress();
-		bool Compare(TransportTuple* tuple) const;
+		bool Compare(const TransportTuple* tuple) const;
 		void Send(const uint8_t* data, size_t len);
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
@@ -72,7 +72,7 @@ namespace RTC
 	}
 
 	inline
-	bool TransportTuple::Compare(TransportTuple* tuple) const
+	bool TransportTuple::Compare(const TransportTuple* tuple) const
 	{
 		if (this->protocol == Protocol::UDP && tuple->GetProtocol() == Protocol::UDP)
 		{

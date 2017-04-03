@@ -439,7 +439,7 @@ namespace RTC
 		this->capabilities.fecMechanisms = Room::supportedRtpCapabilities.fecMechanisms;
 	}
 
-	void Room::onPeerClosed(RTC::Peer* peer)
+	void Room::onPeerClosed(const RTC::Peer* peer)
 	{
 		MS_TRACE();
 
@@ -512,7 +512,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpReceiverParameters(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
+	void Room::onPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
@@ -561,7 +561,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpReceiverClosed(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
+	void Room::onPeerRtpReceiverClosed(const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
@@ -585,7 +585,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpSenderClosed(RTC::Peer* peer, RTC::RtpSender* rtpSender)
+	void Room::onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
@@ -602,7 +602,7 @@ namespace RTC
 		this->mapRtpSenderRtpReceiver.erase(rtpSender);
 	}
 
-	void Room::onPeerRtpPacket(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
+	void Room::onPeerRtpPacket(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -618,7 +618,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtcpReceiverReport(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
+	void Room::onPeerRtcpReceiverReport(const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
@@ -627,7 +627,7 @@ namespace RTC
 		rtpSender->ReceiveRtcpReceiverReport(report);
 	}
 
-	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
+	void Room::onPeerRtcpFeedback(const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
 
@@ -638,7 +638,7 @@ namespace RTC
 		rtpReceiver->ReceiveRtcpFeedback(packet);
 	}
 
-	void Room::onPeerRtcpFeedback(RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
+	void Room::onPeerRtcpFeedback(const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -649,7 +649,7 @@ namespace RTC
 		rtpReceiver->ReceiveRtcpFeedback(packet);
 	}
 
-	void Room::onPeerRtcpSenderReport(RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
+	void Room::onPeerRtcpSenderReport(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
 

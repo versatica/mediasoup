@@ -313,7 +313,7 @@ namespace RTC
 		this->lastRtcpSentTime = now;
 	}
 
-	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet)
+	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const
 	{
 		MS_TRACE();
 
@@ -333,7 +333,7 @@ namespace RTC
 		this->transport->SendRtcpPacket(packet);
 	}
 
-	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet)
+	void RtpReceiver::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const
 	{
 		MS_TRACE();
 

@@ -14,11 +14,11 @@ namespace RTC
 	{
 	public:
 		Json::Value toJson() const;
-		bool HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver) const;
-		bool HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver) const;
-		bool HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver) const;
+		bool HasSsrc(uint32_t ssrc, const RTC::RtpReceiver* rtpReceiver) const;
+		bool HasMuxId(std::string& muxId, const RTC::RtpReceiver* rtpReceiver) const;
+		bool HasPayloadType(uint8_t payloadType, const RTC::RtpReceiver* rtpReceiver) const;
 		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
-		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
+		void RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver);
 		RTC::RtpReceiver* GetRtpReceiver(RTC::RtpPacket* packet);
 		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
 
@@ -29,7 +29,7 @@ namespace RTC
 		// Table of SSRC / RtpReceiver pairs.
 		std::unordered_map<uint32_t, RTC::RtpReceiver*> ssrcTable;
 		//  Table of MID RTP header extension / RtpReceiver pairs.
-		std::unordered_map<std::string, RTC::RtpReceiver*> muxIdTable;
+		std::unordered_map<std::string, const RTC::RtpReceiver*> muxIdTable;
 		// Table of RTP payload type / RtpReceiver pairs.
 		std::unordered_map<uint8_t, RTC::RtpReceiver*> ptTable;
 	};
@@ -37,7 +37,7 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline
-	bool RtpListener::HasSsrc(uint32_t ssrc, RTC::RtpReceiver* rtpReceiver) const
+	bool RtpListener::HasSsrc(uint32_t ssrc, const RTC::RtpReceiver* rtpReceiver) const
 	{
 		auto it = this->ssrcTable.find(ssrc);
 
@@ -52,7 +52,7 @@ namespace RTC
 	}
 
 	inline
-	bool RtpListener::HasMuxId(std::string& muxId, RTC::RtpReceiver* rtpReceiver) const
+	bool RtpListener::HasMuxId(std::string& muxId, const RTC::RtpReceiver* rtpReceiver) const
 	{
 		auto it = this->muxIdTable.find(muxId);
 
@@ -67,7 +67,7 @@ namespace RTC
 	}
 
 	inline
-	bool RtpListener::HasPayloadType(uint8_t payloadType, RTC::RtpReceiver* rtpReceiver) const
+	bool RtpListener::HasPayloadType(uint8_t payloadType, const RTC::RtpReceiver* rtpReceiver) const
 	{
 		auto it = this->ptTable.find(payloadType);
 

@@ -33,7 +33,7 @@ namespace RTC
 			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver) = 0;
 			virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onRtpPacket(RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
-			virtual void onRtpReceiverClosed(RtpReceiver* rtpReceiver) = 0;
+			virtual void onRtpReceiverClosed(const RtpReceiver* rtpReceiver) = 0;
 		};
 
 	private:
@@ -56,8 +56,8 @@ namespace RTC
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
-		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet);
-		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet);
+		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
+		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
 		void RequestFullFrame() const;
 
 	private:

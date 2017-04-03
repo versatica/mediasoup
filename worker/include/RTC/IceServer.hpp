@@ -31,11 +31,11 @@ namespace RTC
 			 * These callbacks are guaranteed to be called before ProcessStunMessage()
 			 * returns, so the given pointers are still usable.
 			 */
-			virtual void onOutgoingStunMessage(IceServer* iceServer, RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
-			virtual void onIceSelectedTuple(IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
-			virtual void onIceConnected(IceServer* iceServer) = 0;
-			virtual void onIceCompleted(IceServer* iceServer) = 0;
-			virtual void onIceDisconnected(IceServer* iceServer) = 0;
+			virtual void onOutgoingStunMessage(const IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
+			virtual void onIceSelectedTuple(const IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+			virtual void onIceConnected(const IceServer* iceServer) = 0;
+			virtual void onIceCompleted(const IceServer* iceServer) = 0;
+			virtual void onIceDisconnected(const IceServer* iceServer) = 0;
 		};
 
 	private:
@@ -49,11 +49,11 @@ namespace RTC
 		const std::string& GetUsernameFragment() const;
 		const std::string& GetPassword() const;
 		IceState GetState() const;
-		bool IsValidTuple(RTC::TransportTuple* tuple) const;
+		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
 		// This should be just called in 'connected' or completed' state
 		// and the given tuple must be an already valid tuple.
-		void ForceSelectedTuple(RTC::TransportTuple* tuple);
+		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
 		void HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate);
@@ -64,7 +64,7 @@ namespace RTC
 		/**
 		 * If the given tuple exists return its stored address, nullptr otherwise.
 		 */
-		RTC::TransportTuple* HasTuple(RTC::TransportTuple* tuple) const;
+		RTC::TransportTuple* HasTuple(const RTC::TransportTuple* tuple) const;
 		/**
 		 * Set the given tuple as the selected tuple.
 		 * NOTE: The given tuple MUST be already stored within the list.
