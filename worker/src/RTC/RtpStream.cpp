@@ -35,9 +35,8 @@ namespace RTC
 		// If this is the first packet seen, initialize stuff.
 		if (!this->started)
 		{
-			this->started = true;
-
 			InitSeq(seq);
+			this->started = true;
 			this->max_seq = seq - 1;
 			this->probation = MIN_SEQUENTIAL;
 		}
