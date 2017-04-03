@@ -680,7 +680,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::onDtlsDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	void Transport::onDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -990,7 +990,7 @@ namespace RTC
 		Destroy();
 	}
 
-	void Transport::onDtlsConnecting(RTC::DtlsTransport* dtlsTransport)
+	void Transport::onDtlsConnecting(const RTC::DtlsTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
@@ -1008,7 +1008,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", event_data);
 	}
 
-	void Transport::onDtlsConnected(RTC::DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert)
+	void Transport::onDtlsConnected(const RTC::DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert)
 	{
 		MS_TRACE();
 
@@ -1065,7 +1065,7 @@ namespace RTC
 		this->listener->onTransportConnected(this);
 	}
 
-	void Transport::onDtlsFailed(RTC::DtlsTransport* dtlsTransport)
+	void Transport::onDtlsFailed(const RTC::DtlsTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
@@ -1086,7 +1086,7 @@ namespace RTC
 		Destroy();
 	}
 
-	void Transport::onDtlsClosed(RTC::DtlsTransport* dtlsTransport)
+	void Transport::onDtlsClosed(const RTC::DtlsTransport* dtlsTransport)
 	{
 		MS_TRACE();
 
@@ -1107,7 +1107,7 @@ namespace RTC
 		Destroy();
 	}
 
-	void Transport::onOutgoingDtlsData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
+	void Transport::onOutgoingDtlsData(const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1121,7 +1121,7 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
-	void Transport::onDtlsApplicationData(RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
+	void Transport::onDtlsApplicationData(const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

@@ -69,24 +69,24 @@ namespace RTC
 			// DTLS is in the process of negotiating a secure connection. Incoming
 			// media can flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDtlsConnecting(DtlsTransport* dtlsTransport) = 0;
+			virtual void onDtlsConnecting(const DtlsTransport* dtlsTransport) = 0;
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDtlsConnected(DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert) = 0;
+			virtual void onDtlsConnected(const DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsFailed(DtlsTransport* dtlsTransport) = 0;
+			virtual void onDtlsFailed(const DtlsTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsClosed(DtlsTransport* dtlsTransport) = 0;
+			virtual void onDtlsClosed(const DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onOutgoingDtlsData(DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			virtual void onOutgoingDtlsData(const DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsApplicationData(DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			virtual void onDtlsApplicationData(const DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:

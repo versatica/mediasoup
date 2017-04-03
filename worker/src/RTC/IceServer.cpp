@@ -187,7 +187,7 @@ namespace RTC
 		}
 	}
 
-	bool IceServer::IsValidTuple(RTC::TransportTuple* tuple) const
+	bool IceServer::IsValidTuple(const RTC::TransportTuple* tuple) const
 	{
 		MS_TRACE();
 
@@ -245,7 +245,7 @@ namespace RTC
 		}
 	}
 
-	void IceServer::ForceSelectedTuple(RTC::TransportTuple* tuple)
+	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -441,7 +441,7 @@ namespace RTC
 	}
 
 	inline
-	RTC::TransportTuple* IceServer::HasTuple(RTC::TransportTuple* tuple) const
+	RTC::TransportTuple* IceServer::HasTuple(const RTC::TransportTuple* tuple) const
 	{
 		MS_TRACE();
 

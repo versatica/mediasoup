@@ -49,11 +49,11 @@ namespace RTC
 		const std::string& GetUsernameFragment() const;
 		const std::string& GetPassword() const;
 		IceState GetState() const;
-		bool IsValidTuple(RTC::TransportTuple* tuple) const;
+		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
 		// This should be just called in 'connected' or completed' state
 		// and the given tuple must be an already valid tuple.
-		void ForceSelectedTuple(RTC::TransportTuple* tuple);
+		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
 		void HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate);
@@ -64,7 +64,7 @@ namespace RTC
 		/**
 		 * If the given tuple exists return its stored address, nullptr otherwise.
 		 */
-		RTC::TransportTuple* HasTuple(RTC::TransportTuple* tuple) const;
+		RTC::TransportTuple* HasTuple(const RTC::TransportTuple* tuple) const;
 		/**
 		 * Set the given tuple as the selected tuple.
 		 * NOTE: The given tuple MUST be already stored within the list.
