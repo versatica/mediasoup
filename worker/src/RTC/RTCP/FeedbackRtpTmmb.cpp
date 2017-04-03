@@ -34,23 +34,22 @@ namespace RTC { namespace RTCP
 	template <typename T>
 	FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const uint8_t* data)
 	{
-
 		this->ssrc = Utils::Byte::Get4Bytes(data, 0);
 
 		// Read the 4 bytes block.
 		uint32_t compact = Utils::Byte::Get4Bytes(data, 4);
-
 		// Read each component.
-		uint8_t exponent = compact >> 26;              // 6 bits.
-		uint64_t mantissa = (compact >> 9) & 0x1ffff;  // 17 bits.
-		this-> overhead = compact & 0x1ff;             // 9 bits.
+		uint8_t exponent = compact >> 26;             // 6 bits.
+		uint64_t mantissa = (compact >> 9) & 0x1ffff; // 17 bits.
+
+		this->overhead = compact & 0x1ff;             // 9 bits.
 
 		// Get the bitrate out of exponent and mantissa.
 		this->bitrate = (mantissa << exponent);
 
 		if ((this->bitrate >> exponent) != mantissa)
 		{
-			MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %" PRIu64" *2^%" PRIu8, mantissa, exponent);
+			MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %" PRIu64" x 2^%" PRIu8, mantissa, exponent);
 
 			this->isCorrect = false;
 		}
@@ -64,7 +63,8 @@ namespace RTC { namespace RTCP
 		uint64_t mantissa = this->bitrate;
 		uint32_t exponent = 0;
 
-		while (mantissa > MaxMantissa) {
+		while (mantissa > MaxMantissa)
+		{
 			mantissa >>= 1;
 			++exponent;
 		}
@@ -72,6 +72,7 @@ namespace RTC { namespace RTCP
 		Utils::Byte::Set4Bytes(buffer, 0, this->ssrc);
 
 		uint32_t compact = (exponent << 26) | (mantissa << 9) | this->overhead;
+
 		Utils::Byte::Set4Bytes(buffer, 4, compact);
 
 		return HeaderSize;
