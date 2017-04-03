@@ -165,7 +165,7 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_DEBUG_TAG(rtx,
+		MS_WARN_TAG(rtx,
 			"triggering NACK [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
 			this->params.ssrc, seq_numbers[0], seq_numbers.size());
 

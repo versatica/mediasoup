@@ -15,8 +15,6 @@ static void destroy();
 int main(int argc, char* argv[])
 {
 	Settings::configuration.logLevel = LogLevel::LOG_DEBUG;
-	Settings::configuration.logTags.rtp = true;
-	Settings::configuration.logTags.rtcp = true;
 
 	std::string loggerId = "tests";
 
