@@ -289,6 +289,7 @@ namespace RTC
 			case Channel::Request::MethodId::transport_close:
 			case Channel::Request::MethodId::transport_dump:
 			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
+			case Channel::Request::MethodId::transport_setMaxBitrate:
 			case Channel::Request::MethodId::rtpReceiver_close:
 			case Channel::Request::MethodId::rtpReceiver_dump:
 			case Channel::Request::MethodId::rtpReceiver_receive:

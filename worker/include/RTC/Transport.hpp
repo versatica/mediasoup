@@ -133,8 +133,9 @@ namespace RTC
 		RTC::DtlsTransport::Role dtlsLocalRole = RTC::DtlsTransport::Role::AUTO;
 		// Others (RtpListener).
 		RtpListener rtpListener;
-		// REMB.
+		// REMB and bitrate stuff.
 		std::unique_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
+		uint32_t maxBitrate = 0;
 	};
 
 	/* Inline instance methods. */

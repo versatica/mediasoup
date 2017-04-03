@@ -281,6 +281,7 @@ namespace RTC
 		static const Json::StaticString v_closed("closed");
 		static const Json::StaticString v_failed("failed");
 		static const Json::StaticString k_useRemb("useRemb");
+		static const Json::StaticString k_maxBitrate("maxBitrate");
 		static const Json::StaticString k_rtpListener("rtpListener");
 
 		Json::Value json(Json::objectValue);
@@ -363,6 +364,9 @@ namespace RTC
 
 		// Add `useRemb`.
 		json[k_useRemb] = (this->remoteBitrateEstimator ? true : false);
+
+		// Add `maxBitrate`.
+		json[k_maxBitrate] = (Json::UInt)this->maxBitrate;
 
 		// Add `rtpListener`.
 		json[k_rtpListener] = this->rtpListener.toJson();
@@ -486,6 +490,34 @@ namespace RTC
 
 				// Run the DTLS transport if ready.
 				MayRunDtlsTransport();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::transport_setMaxBitrate:
+			{
+				static const Json::StaticString k_bitrate("bitrate");
+				static constexpr uint32_t MinBitrate = 10000;
+
+				// Validate request data.
+
+				if (!request->data[k_bitrate].isUInt())
+				{
+					request->Reject("missing data.bitrate");
+					return;
+				}
+
+				uint32_t bitrate = (uint32_t)request->data[k_bitrate].asUInt();
+
+				if (bitrate < MinBitrate)
+					bitrate = MinBitrate;
+
+				this->maxBitrate = bitrate;
+
+				MS_DEBUG_TAG(rbe, "transport max bitrate set to %" PRIu32 "bps",
+					this->maxBitrate);
+
+				request->Accept();
 
 				break;
 			}
@@ -1132,14 +1164,23 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(rbe, "sending RTCP REMB packet [bitrate:%" PRIu32 "]", bitrate);
+		uint32_t effective_bitrate = bitrate;
+
+		// Limit bitrate if requested via API.
+		if (this->maxBitrate)
+			effective_bitrate = std::min(bitrate, this->maxBitrate);
+
+		MS_DEBUG_TAG(rbe,
+			"sending RTCP REMB packet [estimated:%" PRIu32 "bps, effective:%" PRIu32 "bps]",
+			bitrate, effective_bitrate);
+
 		for (auto ssrc: ssrcs)
 		{
 			MS_DEBUG_TAG(rbe, "  ssrc : %" PRIu32, ssrc);
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
-		packet.SetBitrate(bitrate);
+		packet.SetBitrate(effective_bitrate);
 		packet.SetSsrcs(ssrcs);
 		packet.Serialize(Transport::rtcpBuffer);
 		this->SendRtcpPacket(&packet);
