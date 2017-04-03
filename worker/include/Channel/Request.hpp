@@ -31,6 +31,7 @@ namespace Channel
 			transport_close,
 			transport_dump,
 			transport_setRemoteDtlsParameters,
+			transport_setMaxBitrate,
 			rtpReceiver_close,
 			rtpReceiver_dump,
 			rtpReceiver_receive,

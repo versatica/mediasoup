@@ -333,6 +333,7 @@ namespace RTC
 			case Channel::Request::MethodId::transport_close:
 			case Channel::Request::MethodId::transport_dump:
 			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
+			case Channel::Request::MethodId::transport_setMaxBitrate:
 			{
 				RTC::Transport* transport;
 
