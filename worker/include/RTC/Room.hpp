@@ -58,7 +58,7 @@ namespace RTC
 		virtual void onPeerClosed(const RTC::Peer* peer) override;
 		virtual void onPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) override;
 		virtual void onPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
-		virtual void onPeerRtpReceiverClosed(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
+		virtual void onPeerRtpReceiverClosed(const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver) override;
 		virtual void onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 		virtual void onPeerRtpPacket(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
 		virtual void onPeerRtcpReceiverReport(const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report) override;
@@ -78,8 +78,8 @@ namespace RTC
 		// Others.
 		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
-		std::unordered_map<RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
-		std::unordered_map<RTC::RtpSender*, RTC::RtpReceiver*> mapRtpSenderRtpReceiver;
+		std::unordered_map<const RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
+		std::unordered_map<const RTC::RtpSender*, const RTC::RtpReceiver*> mapRtpSenderRtpReceiver;
 	};
 
 	/* Inline static methods. */

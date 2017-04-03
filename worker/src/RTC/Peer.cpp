@@ -1011,7 +1011,7 @@ namespace RTC
 		}
 	}
 
-	void Peer::onRtpReceiverClosed(RTC::RtpReceiver* rtpReceiver)
+	void Peer::onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 

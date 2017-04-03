@@ -56,7 +56,7 @@ namespace RTC
 		Json::Value toJson() const;
 		void HandleRequest(Channel::Request* request);
 		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
-		void RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver);
+		void RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
@@ -146,7 +146,7 @@ namespace RTC
 	}
 
 	inline
-	void Transport::RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver)
+	void Transport::RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver)
 	{
 		this->rtpListener.RemoveRtpReceiver(rtpReceiver);
 	}

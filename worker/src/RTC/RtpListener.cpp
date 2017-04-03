@@ -230,7 +230,7 @@ namespace RTC
 		}
 	}
 
-	void RtpListener::RemoveRtpReceiver(RTC::RtpReceiver* rtpReceiver)
+	void RtpListener::RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
