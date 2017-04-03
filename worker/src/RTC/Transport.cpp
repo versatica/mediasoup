@@ -891,7 +891,7 @@ namespace RTC
 		onPacketRecv(&tuple, data, len);
 	}
 
-	void Transport::onOutgoingStunMessage(RTC::IceServer* iceServer, RTC::StunMessage* msg, RTC::TransportTuple* tuple)
+	void Transport::onOutgoingStunMessage(const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -899,7 +899,7 @@ namespace RTC
 		tuple->Send(msg->GetData(), msg->GetSize());
 	}
 
-	void Transport::onIceSelectedTuple(RTC::IceServer* iceServer, RTC::TransportTuple* tuple)
+	void Transport::onIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -924,7 +924,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "iceselectedtuplechange", event_data);
 	}
 
-	void Transport::onIceConnected(RTC::IceServer* iceServer)
+	void Transport::onIceConnected(const RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 
@@ -945,7 +945,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	void Transport::onIceCompleted(RTC::IceServer* iceServer)
+	void Transport::onIceCompleted(const RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 
@@ -966,7 +966,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	void Transport::onIceDisconnected(RTC::IceServer* iceServer)
+	void Transport::onIceDisconnected(const RTC::IceServer* iceServer)
 	{
 		MS_TRACE();
 

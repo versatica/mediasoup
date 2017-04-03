@@ -89,11 +89,11 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
-		virtual void onOutgoingStunMessage(RTC::IceServer* iceServer, RTC::StunMessage* msg, RTC::TransportTuple* tuple) override;
-		virtual void onIceSelectedTuple(IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		virtual void onIceConnected(IceServer* iceServer) override;
-		virtual void onIceCompleted(IceServer* iceServer) override;
-		virtual void onIceDisconnected(IceServer* iceServer) override;
+		virtual void onOutgoingStunMessage(const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) override;
+		virtual void onIceSelectedTuple(const IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		virtual void onIceConnected(const IceServer* iceServer) override;
+		virtual void onIceCompleted(const IceServer* iceServer) override;
+		virtual void onIceDisconnected(const IceServer* iceServer) override;
 
 	/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
