@@ -16,6 +16,12 @@
  *   Logs the current method/function if MS_LOG_TRACE macro is defined and the
  *   current debug level is "debug".
  *
+ * MS_HAS_DEBUG_TAG(tag)
+ * MS_HAS_WARN_TAG(tag)
+ *
+ *   True if the current debug level is satisfied and the given tag is enabled
+ *   (or if the current source file defines the MS_LOG_DEV macro).
+ *
  * MS_DEBUG_TAG(tag, ...)
  * MS_WARN_TAG(tag, ...)
  *
@@ -151,6 +157,12 @@ public:
 	#define MS_TRACE() ;
 	#define MS_TRACE_STD() ;
 #endif
+
+#define MS_HAS_DEBUG_TAG(tag) \
+	(LogLevel::LOG_DEBUG == Settings::configuration.logLevel && (_MS_TAG_ENABLED(tag) || _MS_LOG_DEV_ENABLED))
+
+#define MS_HAS_WARN_TAG(tag) \
+	(LogLevel::LOG_WARN <= Settings::configuration.logLevel && (_MS_TAG_ENABLED(tag) || _MS_LOG_DEV_ENABLED))
 
 #define MS_DEBUG_TAG(tag, desc, ...) \
 	do \

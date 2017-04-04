@@ -41,10 +41,10 @@ namespace RTC
 		MS_TRACE();
 
 		const int64_t bitrateReductionInterval = std::max<int64_t>(std::min<int64_t>(this->rtt, 200), 10);
+
 		if (timeNow - this->timeLastBitrateChange >= bitrateReductionInterval)
-		{
 			return true;
-		}
+
 		if (ValidEstimate())
 		{
 			// TODO(terelius/holmer): Investigate consequences of increasing
@@ -108,10 +108,10 @@ namespace RTC
 		double avgPacketSizeBits = bitsPerFrame / packetsPerFrame;
 		// Approximate the over-use estimator delay to 100 ms.
 		const int64_t responseTime = (this->rtt + 100) * 2;
-
 		constexpr double kMinIncreaseRateBps = 4000;
 
-		return static_cast<int>(std::max(kMinIncreaseRateBps, (avgPacketSizeBits * 1000) / responseTime));
+		return static_cast<int>(std::max(kMinIncreaseRateBps,
+			(avgPacketSizeBits * 1000) / responseTime));
 	}
 
 	uint32_t AimdRateControl::ChangeBitrate(uint32_t newBitrateBps, uint32_t incomingBitrateBps, int64_t nowMs)
@@ -119,9 +119,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->updated)
-		{
 			return this->currentBitrateBps;
-		}
 
 		// An over-use should always trigger us to reduce the bitrate, even though
 		// we have not yet established our first estimate. By acting on the over-use,
@@ -152,11 +150,13 @@ namespace RTC
 				if (this->rateControlRegion == kRcNearMax)
 				{
 					uint32_t additiveIncreaseBps = AdditiveRateIncrease(nowMs, this->timeLastBitrateChange);
+
 					newBitrateBps += additiveIncreaseBps;
 				}
 				else
 				{
 					uint32_t multiplicativeIncreaseBps = MultiplicativeRateIncrease(nowMs, this->timeLastBitrateChange, newBitrateBps);
+
 					newBitrateBps += multiplicativeIncreaseBps;
 				}
 
@@ -168,6 +168,7 @@ namespace RTC
 				// Set bit rate to something slightly lower than max
 				// to get rid of any self-induced delay.
 				newBitrateBps = static_cast<uint32_t>(this->beta * incomingBitrateBps + 0.5);
+
 				if (newBitrateBps > this->currentBitrateBps)
 				{
 					// Avoid increasing the rate when over-using.
@@ -177,12 +178,14 @@ namespace RTC
 					}
 					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
 				}
+
 				ChangeRegion(kRcNearMax);
 
 				if (incomingBitrateBps < this->currentBitrateBps)
 				{
 					this->lastDecrease = int(this->currentBitrateBps - newBitrateBps);
 				}
+
 				if (incomingBitrateKbps < this->avgMaxBitrateKbps - 3 * stdMaxBitRate)
 				{
 					this->avgMaxBitrateKbps = -1.0f;
@@ -228,6 +231,7 @@ namespace RTC
 		if (lastMs > -1)
 		{
 			int timeSinceLastUpdateMs = std::min(static_cast<int>(nowMs - lastMs), 1000);
+
 			alpha = pow(alpha, timeSinceLastUpdateMs / 1000.0);
 		}
 
@@ -257,6 +261,7 @@ namespace RTC
 
 		this->varMaxBitrateKbps = (1 - alpha) * this->varMaxBitrateKbps +
 			alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) * (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
+
 		// 0.4 ~= 14 kbit/s at 500 kbit/s
 		if (this->varMaxBitrateKbps < 0.4f)
 		{

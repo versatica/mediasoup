@@ -95,10 +95,12 @@ namespace RTC
 		const double k = fabs(modifiedOffset) < this->threshold ? this->kDown : this->kUp;
 		const int64_t kMaxTimeDeltaMs = 100;
 		int64_t timeDeltaMs = std::min(nowMs - this->lastUpdateMs, kMaxTimeDeltaMs);
+
 		this->threshold += k * (fabs(modifiedOffset) - this->threshold) * timeDeltaMs;
 
 		const double kMinThreshold = 6;
 		const double kMaxThreshold = 600;
+
 		this->threshold = std::min(std::max(this->threshold, kMinThreshold), kMaxThreshold);
 
 		this->lastUpdateMs = nowMs;

@@ -761,6 +761,30 @@ namespace RTC
 		this->transports.erase(transport->transportId);
 	}
 
+	void Peer::onTransportFullFrameRequired(RTC::Transport* transport)
+	{
+		MS_TRACE();
+
+		// If the transport is used by any RtpReceiver (video/depth) notify the
+		// listener.
+		for (auto& kv : this->rtpReceivers)
+		{
+			RTC::RtpReceiver* rtpReceiver = kv.second;
+
+			if (
+				rtpReceiver->kind != RTC::Media::Kind::VIDEO &&
+				rtpReceiver->kind != RTC::Media::Kind::DEPTH)
+			{
+				continue;
+			}
+
+			if (rtpReceiver->GetTransport() != transport)
+				continue;
+
+			rtpReceiver->RequestFullFrame();
+		}
+	}
+
 	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
