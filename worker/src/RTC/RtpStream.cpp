@@ -6,13 +6,15 @@
 #include "RTC/RtpStream.hpp"
 #include "Logger.hpp"
 
-#define MIN_SEQUENTIAL 0
-#define MAX_DROPOUT 3000
-#define MAX_MISORDER 100
-#define RTP_SEQ_MOD (1<<16)
-
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint32_t MinSequential = 0;
+	static constexpr uint16_t MaxDropout = 3000;
+	static constexpr uint16_t MaxMisorder = 100;
+	static constexpr uint32_t RtpSeqMod = 1<<16;
+
 	/* Instance methods. */
 
 	RtpStream::RtpStream(RTC::RtpStream::Params& params) :
@@ -37,8 +39,8 @@ namespace RTC
 		{
 			InitSeq(seq);
 			this->started = true;
-			this->max_seq = seq - 1;
-			this->probation = MIN_SEQUENTIAL;
+			this->maxSeq = seq - 1;
+			this->probation = MinSequential;
 		}
 
 		// If not a valid packet ignore it.
@@ -59,8 +61,8 @@ namespace RTC
 			this->cycles + (uint32_t)packet->GetSequenceNumber());
 
 		// Update highest seen RTP timestamp.
-		if (packet->GetTimestamp() > this->max_timestamp)
-			this->max_timestamp = packet->GetTimestamp();
+		if (packet->GetTimestamp() > this->maxTimestamp)
+			this->maxTimestamp = packet->GetTimestamp();
 
 		return true;
 	}
@@ -70,15 +72,15 @@ namespace RTC
 		MS_TRACE();
 
 		// Initialize/reset RTP counters.
-		this->base_seq = seq;
-		this->max_seq = seq;
-		this->bad_seq = RTP_SEQ_MOD + 1; // So seq == bad_seq is false.
+		this->baseSeq = seq;
+		this->maxSeq = seq;
+		this->badSeq = RtpSeqMod + 1; // So seq == badSeq is false.
 		this->cycles = 0;
 		this->received = 0;
-		this->received_prior = 0;
-		this->expected_prior = 0;
+		this->receivedPrior = 0;
+		this->expectedPrior = 0;
 		// Also reset the highest seen RTP timestamp.
-		this->max_timestamp = 0;
+		this->maxTimestamp = 0;
 
 		// Call the onInitSeq method of the child.
 		onInitSeq();
@@ -89,19 +91,19 @@ namespace RTC
 		MS_TRACE();
 
 		uint16_t seq = packet->GetSequenceNumber();
-		uint16_t udelta = seq - this->max_seq;
+		uint16_t udelta = seq - this->maxSeq;
 
 		/*
-		 * Source is not valid until MIN_SEQUENTIAL packets with
+		 * Source is not valid until MinSequential packets with
 		 * sequential sequence numbers have been received.
 		 */
 		if (this->probation)
 		{
 			// Packet is in sequence.
-			if (seq == this->max_seq + 1)
+			if (seq == this->maxSeq + 1)
 			{
 				this->probation--;
-				this->max_seq = seq;
+				this->maxSeq = seq;
 
 				if (this->probation == 0)
 				{
@@ -113,27 +115,27 @@ namespace RTC
 			}
 			else
 			{
-				this->probation = MIN_SEQUENTIAL - 1;
-				this->max_seq = seq;
+				this->probation = MinSequential - 1;
+				this->maxSeq = seq;
 			}
 
 			return false;
 		}
-		else if (udelta < MAX_DROPOUT)
+		else if (udelta < MaxDropout)
 		{
 			// In order, with permissible gap.
-			if (seq < this->max_seq)
+			if (seq < this->maxSeq)
 			{
 				// Sequence number wrapped: count another 64K cycle.
-				this->cycles += RTP_SEQ_MOD;
+				this->cycles += RtpSeqMod;
 			}
 
-			this->max_seq = seq;
+			this->maxSeq = seq;
 		}
-		else if (udelta <= RTP_SEQ_MOD - MAX_MISORDER)
+		else if (udelta <= RtpSeqMod - MaxMisorder)
 		{
 			// The sequence number made a very large jump.
-			if (seq == this->bad_seq)
+			if (seq == this->badSeq)
 			{
 				/*
 				 * Two sequential packets -- assume that the other side
@@ -152,7 +154,7 @@ namespace RTC
 					"bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 					packet->GetSsrc(), packet->GetSequenceNumber());
 
-				this->bad_seq = (seq + 1) & (RTP_SEQ_MOD - 1);
+				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
 
 				return false;
 			}

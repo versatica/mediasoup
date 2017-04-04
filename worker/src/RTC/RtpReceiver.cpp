@@ -47,11 +47,11 @@ namespace RTC
 
 		static const Json::StaticString k_class("class");
 
-		Json::Value event_data(Json::objectValue);
+		Json::Value eventData(Json::objectValue);
 
 		// Notify.
-		event_data[k_class] = "RtpReceiver";
-		this->notifier->Emit(this->rtpReceiverId, "close", event_data);
+		eventData[k_class] = "RtpReceiver";
+		this->notifier->Emit(this->rtpReceiverId, "close", eventData);
 
 		// Notify the listener.
 		this->listener->onRtpReceiverClosed(this);
@@ -63,7 +63,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static Json::Value null_data(Json::nullValue);
 		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
 		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
@@ -74,7 +73,7 @@ namespace RTC
 		static const Json::StaticString k_rtpStream("rtpStream");
 
 		Json::Value json(Json::objectValue);
-		Json::Value json_rtpStreams(Json::arrayValue);
+		Json::Value jsonRtpStreams(Json::arrayValue);
 
 		json[k_rtpReceiverId] = (Json::UInt)this->rtpReceiverId;
 
@@ -83,7 +82,7 @@ namespace RTC
 		if (this->rtpParameters)
 			json[k_rtpParameters] = this->rtpParameters->toJson();
 		else
-			json[k_rtpParameters] = null_data;
+			json[k_rtpParameters] = Json::nullValue;
 
 		json[k_hasTransport] = this->transport ? true : false;
 
@@ -95,9 +94,9 @@ namespace RTC
 		{
 			auto rtpStream = kv.second;
 
-			json_rtpStreams.append(rtpStream->toJson());
+			jsonRtpStreams.append(rtpStream->toJson());
 		}
-		json[k_rtpStreams] = json_rtpStreams;
+		json[k_rtpStreams] = jsonRtpStreams;
 
 		return json;
 	}
@@ -110,9 +109,9 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::rtpReceiver_close:
 			{
-				#ifdef MS_LOG_DEV
+			#ifdef MS_LOG_DEV
 				uint32_t rtpReceiverId = this->rtpReceiverId;
-				#endif
+			#endif
 
 				Destroy();
 
@@ -269,30 +268,32 @@ namespace RTC
 		// Emit "rtpraw" if enabled.
 		if (this->rtpRawEventEnabled)
 		{
-			Json::Value event_data(Json::objectValue);
+			Json::Value eventData(Json::objectValue);
 
-			event_data[k_class] = "RtpReceiver";
+			eventData[k_class] = "RtpReceiver";
 
-			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpraw", event_data, packet->GetData(), packet->GetSize());
+			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpraw", eventData,
+				packet->GetData(), packet->GetSize());
 		}
 
 		// Emit "rtpobject" is enabled.
 		if (this->rtpObjectEventEnabled)
 		{
-			Json::Value event_data(Json::objectValue);
-			Json::Value json_object(Json::objectValue);
+			Json::Value eventData(Json::objectValue);
+			Json::Value jsonObject(Json::objectValue);
 
-			event_data[k_class] = "RtpReceiver";
+			eventData[k_class] = "RtpReceiver";
 
-			json_object[k_payloadType] = (Json::UInt)packet->GetPayloadType();
-			json_object[k_marker] = packet->HasMarker();
-			json_object[k_sequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
-			json_object[k_timestamp] = (Json::UInt)packet->GetTimestamp();
-			json_object[k_ssrc] = (Json::UInt)packet->GetSsrc();
+			jsonObject[k_payloadType] = (Json::UInt)packet->GetPayloadType();
+			jsonObject[k_marker] = packet->HasMarker();
+			jsonObject[k_sequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
+			jsonObject[k_timestamp] = (Json::UInt)packet->GetTimestamp();
+			jsonObject[k_ssrc] = (Json::UInt)packet->GetSsrc();
 
-			event_data[k_object] = json_object;
+			eventData[k_object] = jsonObject;
 
-			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", event_data, packet->GetPayload(), packet->GetPayloadLength());
+			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", eventData,
+				packet->GetPayload(), packet->GetPayloadLength());
 		}
 	}
 
@@ -394,16 +395,19 @@ namespace RTC
 			if (!useNack && fb.type == "nack")
 			{
 				MS_DEBUG_TAG(rtcp, "enabling NACK generation");
+
 				useNack = true;
 			}
 			if (!usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
 				MS_DEBUG_TAG(rtcp, "enabling PLI generation");
+
 				usePli = true;
 			}
 			else if (!useRemb && fb.type == "goog-remb")
 			{
 				MS_DEBUG_TAG(rbe, "enabling REMB");
+
 				useRemb = true;
 			}
 		}
@@ -449,14 +453,14 @@ namespace RTC
 		this->rtpStreams.clear();
 	}
 
-	void RtpReceiver::onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers)
+	void RtpReceiver::onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
 	{
 		if (!this->transport)
 			return;
 
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
-		auto it = seq_numbers.begin();
-		const auto end = seq_numbers.end();
+		auto it = seqNumbers.begin();
+		const auto end = seqNumbers.end();
 
 		while (it != end)
 		{

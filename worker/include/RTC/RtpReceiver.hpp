@@ -66,7 +66,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
-		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers) override;
+		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		virtual void onPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 
 	public:
@@ -121,6 +121,7 @@ namespace RTC
 	void RtpReceiver::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		auto it = this->rtpStreams.find(report->GetSsrc());
+
 		if (it != this->rtpStreams.end())
 		{
 			auto rtpStream = it->second;

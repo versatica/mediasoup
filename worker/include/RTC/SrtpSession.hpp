@@ -29,11 +29,8 @@ namespace RTC
 	private:
 		static void onSrtpEvent(srtp_event_data_t* data);
 
-	private:
-		static uint8_t encryptBuffer[];
-
 	public:
-		SrtpSession(Type type, Profile profile, uint8_t* key, size_t key_len);
+		SrtpSession(Type type, Profile profile, uint8_t* key, size_t keyLen);
 
 	private:
 		~SrtpSession();

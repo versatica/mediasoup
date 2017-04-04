@@ -14,22 +14,22 @@ namespace RTC
 		/* Struct for RTP header. */
 		struct Header
 		{
-			#if defined(MS_LITTLE_ENDIAN)
-				uint8_t csrc_count:4;
-				uint8_t extension:1;
-				uint8_t padding:1;
-				uint8_t version:2;
-				uint8_t payload_type:7;
-				uint8_t marker:1;
-			#elif defined(MS_BIG_ENDIAN)
-				uint8_t version:2;
-				uint8_t padding:1;
-				uint8_t extension:1;
-				uint8_t csrc_count:4;
-				uint8_t marker:1;
-				uint8_t payload_type:7;
-			#endif
-			uint16_t sequence_number;
+		#if defined(MS_LITTLE_ENDIAN)
+			uint8_t csrcCount:4;
+			uint8_t extension:1;
+			uint8_t padding:1;
+			uint8_t version:2;
+			uint8_t payloadType:7;
+			uint8_t marker:1;
+		#elif defined(MS_BIG_ENDIAN)
+			uint8_t version:2;
+			uint8_t padding:1;
+			uint8_t extension:1;
+			uint8_t csrcCount:4;
+			uint8_t marker:1;
+			uint8_t payloadType:7;
+		#endif
+			uint16_t sequenceNumber;
 			uint32_t timestamp;
 			uint32_t ssrc;
 		};
@@ -47,13 +47,13 @@ namespace RTC
 		/* Struct for One-Byte extension. */
 		struct OneByteExtension
 		{
-			#if defined(MS_LITTLE_ENDIAN)
-				uint8_t len:4;
-				uint8_t id:4;
-			#elif defined(MS_BIG_ENDIAN)
-				uint8_t id:4;
-				uint8_t len:4;
-			#endif
+		#if defined(MS_LITTLE_ENDIAN)
+			uint8_t len:4;
+			uint8_t id:4;
+		#elif defined(MS_BIG_ENDIAN)
+			uint8_t id:4;
+			uint8_t len:4;
+		#endif
 			uint8_t value[1];
 		};
 
@@ -61,13 +61,13 @@ namespace RTC
 		/* Struct for Two-Bytes extension. */
 		struct TwoBytesExtension
 		{
-			#if defined(MS_LITTLE_ENDIAN)
-				uint8_t len:8;
-				uint8_t id:8;
-			#elif defined(MS_BIG_ENDIAN)
-				uint8_t id:8;
-				uint8_t len:8;
-			#endif
+		#if defined(MS_LITTLE_ENDIAN)
+			uint8_t len:8;
+			uint8_t id:8;
+		#elif defined(MS_BIG_ENDIAN)
+			uint8_t id:8;
+			uint8_t len:8;
+		#endif
 			uint8_t value[1];
 		};
 
@@ -83,7 +83,7 @@ namespace RTC
 		const uint8_t* GetData() const;
 		size_t GetSize() const;
 		uint8_t GetPayloadType() const;
-		void SetPayloadType(uint8_t payload_type);
+		void SetPayloadType(uint8_t payloadType);
 		bool HasMarker() const;
 		void SetMarker(bool marker);
 		uint16_t GetSequenceNumber() const;
@@ -162,13 +162,13 @@ namespace RTC
 	inline
 	uint8_t RtpPacket::GetPayloadType() const
 	{
-		return this->header->payload_type;
+		return this->header->payloadType;
 	}
 
 	inline
-	void RtpPacket::SetPayloadType(uint8_t payload_type)
+	void RtpPacket::SetPayloadType(uint8_t payloadType)
 	{
-		this->header->payload_type = payload_type;
+		this->header->payloadType = payloadType;
 	}
 
 	inline
@@ -186,13 +186,13 @@ namespace RTC
 	inline
 	uint16_t RtpPacket::GetSequenceNumber() const
 	{
-		return (uint16_t)ntohs(this->header->sequence_number);
+		return (uint16_t)ntohs(this->header->sequenceNumber);
 	}
 
 	inline
 	void RtpPacket::SetSequenceNumber(uint16_t seq)
 	{
-		this->header->sequence_number = (uint16_t)htons(seq);
+		this->header->sequenceNumber = (uint16_t)htons(seq);
 	}
 
 	inline
@@ -298,6 +298,7 @@ namespace RTC
 				return nullptr;
 
 			*len = this->oneByteExtensions.at(id)->len + 1;
+
 			return this->oneByteExtensions.at(id)->value;
 		}
 		else if (HasTwoBytesExtensions())
@@ -306,6 +307,7 @@ namespace RTC
 				return nullptr;
 
 			*len = this->oneByteExtensions.at(id)->len;
+
 			return this->twoBytesExtensions.at(id)->value;
 		}
 		else
@@ -317,15 +319,15 @@ namespace RTC
 	inline
 	bool RtpPacket::ReadAudioLevel(uint8_t* volume, bool* voice) const
 	{
-		uint8_t exten_len;
-		uint8_t* exten_value;
+		uint8_t extenLen;
+		uint8_t* extenValue;
 
-		exten_value = GetExtension(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &exten_len);
+		extenValue = GetExtension(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &extenLen);
 
-		if (!exten_value || exten_len != 1)
+		if (!extenValue || extenLen != 1)
 			return false;
 
-		*volume = Utils::Byte::Get1Byte(exten_value, 0);
+		*volume = Utils::Byte::Get1Byte(extenValue, 0);
 		*voice = (*volume & (1 << 7)) ? true : false;
 		*volume &= ~(1 << 7);
 
@@ -335,15 +337,15 @@ namespace RTC
 	inline
 	bool RtpPacket::ReadAbsSendTime(uint32_t* time) const
 	{
-		uint8_t exten_len;
-		uint8_t* exten_value;
+		uint8_t extenLen;
+		uint8_t* extenValue;
 
-		exten_value = GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &exten_len);
+		extenValue = GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
 
-		if (!exten_value || exten_len != 3)
+		if (!extenValue || extenLen != 3)
 			return false;
 
-		*time = Utils::Byte::Get3Bytes(exten_value, 0);
+		*time = Utils::Byte::Get3Bytes(extenValue, 0);
 
 		return true;
 	}

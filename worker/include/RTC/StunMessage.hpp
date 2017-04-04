@@ -85,7 +85,7 @@ namespace RTC
 		uint16_t GetErrorCode() const;
 		bool HasMessageIntegrity() const;
 		bool HasFingerprint() const;
-		Authentication CheckAuthentication(const std::string &local_username, const std::string &local_password);
+		Authentication CheckAuthentication(const std::string &localUsername, const std::string &localPassword);
 		StunMessage* CreateSuccessResponse();
 		StunMessage* CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string &password);

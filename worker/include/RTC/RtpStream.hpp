@@ -46,16 +46,16 @@ namespace RTC
 		// Others.
 		bool started = false; // Whether at least a RTP packet has been received.
 		// https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
-		uint16_t max_seq = 0; // Highest seq. number seen.
+		uint16_t maxSeq = 0; // Highest seq. number seen.
 		uint32_t cycles = 0; // Shifted count of seq. number cycles.
-		uint32_t base_seq = 0; // Base seq number.
-		uint32_t bad_seq = 0; // Last 'bad' seq number + 1.
+		uint32_t baseSeq = 0; // Base seq number.
+		uint32_t badSeq = 0; // Last 'bad' seq number + 1.
 		uint32_t probation = 0; // Seq. packets till source is valid.
 		uint32_t received = 0; // Packets received.
-		uint32_t expected_prior = 0; // Packet expected at last interval.
-		uint32_t received_prior = 0; // Packet received at last interval.
+		uint32_t expectedPrior = 0; // Packet expected at last interval.
+		uint32_t receivedPrior = 0; // Packet received at last interval.
 		// Others.
-		uint32_t max_timestamp = 0; // Highest timestamp seen.
+		uint32_t maxTimestamp = 0; // Highest timestamp seen.
 	};
 
 	/* Inline instance methods. */

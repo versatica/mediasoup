@@ -9,7 +9,7 @@
 #include <string>
 #include <utility> // std::pair()
 #include <cerrno>
-#include <iostream> //  std::cout, std::cerr
+#include <iostream> // std::cout, std::cerr
 #include <json/json.h>
 
 /* Instance methods. */
@@ -52,6 +52,7 @@ void Loop::Close()
 
 		return;
 	}
+
 	this->closed = true;
 
 	// Close the SignalsHandler.
@@ -84,16 +85,16 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 
 	static const Json::StaticString k_roomId("roomId");
 
-	auto json_roomId = request->internal[k_roomId];
+	auto jsonRoomId = request->internal[k_roomId];
 
-	if (!json_roomId.isUInt())
+	if (!jsonRoomId.isUInt())
 		MS_THROW_ERROR("Request has not numeric internal.roomId");
 
 	// If given, fill roomId.
 	if (roomId)
-		*roomId = json_roomId.asUInt();
+		*roomId = jsonRoomId.asUInt();
 
-	auto it = this->rooms.find(json_roomId.asUInt());
+	auto it = this->rooms.find(jsonRoomId.asUInt());
 	if (it != this->rooms.end())
 	{
 		RTC::Room* room = it->second;
@@ -123,7 +124,8 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 			break;
 
 		default:
-			MS_WARN_DEV("received a signal (with signum %d) for which there is no handling code", signum);
+			MS_WARN_DEV("received a signal (with signum %d) for which there is no handling code",
+				signum);
 	}
 }
 
@@ -151,6 +153,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 				json_rooms.append(room->toJson());
 			}
+
 			json[k_rooms] = json_rooms;
 
 			request->Accept(json);
@@ -179,12 +182,14 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			catch (const MediaSoupError &error)
 			{
 				request->Reject(error.what());
+
 				return;
 			}
 
 			if (room)
 			{
 				request->Reject("Room already exists");
+
 				return;
 			}
 
@@ -195,6 +200,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			catch (const MediaSoupError &error)
 			{
 				request->Reject(error.what());
+
 				return;
 			}
 
@@ -242,12 +248,14 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			catch (const MediaSoupError &error)
 			{
 				request->Reject(error.what());
+
 				return;
 			}
 
 			if (!room)
 			{
 				request->Reject("Room does not exist");
+
 				return;
 			}
 

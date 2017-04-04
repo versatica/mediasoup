@@ -7,14 +7,13 @@
 #include "Utils.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
-#include <unordered_set>
+#include <vector>
 
 namespace RTC
 {
-	/* Class variables. */
+	/* Static. */
 
-	// Can retransmit up to 17 RTP packets.
-	std::vector<RTC::RtpPacket*> RtpSender::rtpRetransmissionContainer(18);
+	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
 
 	/* Instance methods. */
 
@@ -49,10 +48,10 @@ namespace RTC
 
 		static const Json::StaticString k_class("class");
 
-		Json::Value event_data(Json::objectValue);
+		Json::Value eventData(Json::objectValue);
 
-		event_data[k_class] = "RtpSender";
-		this->notifier->Emit(this->rtpSenderId, "close", event_data);
+		eventData[k_class] = "RtpSender";
+		this->notifier->Emit(this->rtpSenderId, "close", eventData);
 
 		// Notify the listener.
 		this->listener->onRtpSenderClosed(this);
@@ -64,7 +63,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static Json::Value null_data(Json::nullValue);
 		static const Json::StaticString k_rtpSenderId("rtpSenderId");
 		static const Json::StaticString k_kind("kind");
 		static const Json::StaticString k_rtpParameters("rtpParameters");
@@ -82,7 +80,7 @@ namespace RTC
 		if (this->rtpParameters)
 			json[k_rtpParameters] = this->rtpParameters->toJson();
 		else
-			json[k_rtpParameters] = null_data;
+			json[k_rtpParameters] = Json::nullValue;
 
 		json[k_hasTransport] = this->transport ? true : false;
 
@@ -133,6 +131,7 @@ namespace RTC
 				if (this->disabled == disabled)
 				{
 					request->Accept();
+
 					return;
 				}
 
@@ -271,13 +270,13 @@ namespace RTC
 		// Emit "parameterschange" if these are updated parameters.
 		if (hadParameters)
 		{
-			Json::Value event_data(Json::objectValue);
+			Json::Value eventData(Json::objectValue);
 
-			event_data[k_class] = "RtpSender";
-			event_data[k_rtpParameters] = this->rtpParameters->toJson();
-			event_data[k_active] = this->GetActive();
+			eventData[k_class] = "RtpSender";
+			eventData[k_rtpParameters] = this->rtpParameters->toJson();
+			eventData[k_active] = this->GetActive();
 
-			this->notifier->Emit(this->rtpSenderId, "parameterschange", event_data);
+			this->notifier->Emit(this->rtpSenderId, "parameterschange", eventData);
 		}
 	}
 
@@ -295,7 +294,8 @@ namespace RTC
 		// RTP parameters.
 		if (packet->GetSsrc() != this->rtpParameters->encodings[0].ssrc)
 		{
-			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
+			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]",
+				packet->GetSsrc());
 
 			return;
 		}
@@ -348,7 +348,8 @@ namespace RTC
 
 		// Build SDES chunk for this sender.
 		RTC::RTCP::SdesChunk *sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		RTC::RTCP::SdesItem *sdesItem = new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+		RTC::RTCP::SdesItem *sdesItem =
+			new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
 		sdesChunk->AddItem(sdesItem);
 		packet->AddSdesChunk(sdesChunk);
@@ -371,11 +372,12 @@ namespace RTC
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
-			this->rtpStream->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), RtpSender::rtpRetransmissionContainer);
+			this->rtpStream->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
 
-			for (auto it = RtpSender::rtpRetransmissionContainer.begin(); it != RtpSender::rtpRetransmissionContainer.end(); ++it)
+			auto it2 = RtpRetransmissionContainer.begin();
+			for (; it2 != RtpRetransmissionContainer.end(); ++it2)
 			{
-				RTC::RtpPacket* packet = *it;
+				RTC::RtpPacket* packet = *it2;
 
 				if (packet == nullptr)
 					break;
@@ -415,11 +417,13 @@ namespace RTC
 			if (!useNack && fb.type == "nack")
 			{
 				MS_DEBUG_TAG(rtcp, "enabling NACK reception");
+
 				useNack = true;
 			}
 			if (!usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
 				MS_DEBUG_TAG(rtcp, "enabling PLI reception");
+
 				usePli = true;
 			}
 		}
@@ -475,10 +479,11 @@ namespace RTC
 		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_active("active");
 
-		Json::Value event_data(Json::objectValue);
+		Json::Value eventData(Json::objectValue);
 
-		event_data[k_class] = "RtpSender";
-		event_data[k_active] = this->GetActive();
-		this->notifier->Emit(this->rtpSenderId, "activechange", event_data);
+		eventData[k_class] = "RtpSender";
+		eventData[k_active] = this->GetActive();
+
+		this->notifier->Emit(this->rtpSenderId, "activechange", eventData);
 	}
 }

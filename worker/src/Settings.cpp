@@ -16,8 +16,7 @@ extern "C"
 
 /* Helpers declaration. */
 
-static
-bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
+static bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 
 /* Class variables. */
 
@@ -51,9 +50,9 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	extern char *optarg;
 	extern int opterr, optopt;
 	int c;
-	int option_index = 0;
-	std::string value_string;
-	std::vector<std::string> log_tags;
+	int optionIdx = 0;
+	std::string stringValue;
+	std::vector<std::string> logTags;
 
 	struct option options[] =
 	{
@@ -73,7 +72,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Parse command line options. */
 
 	opterr = 0; // Don't allow getopt to print error messages.
-	while ((c = getopt_long_only(argc, argv, "", options, &option_index)) != -1)
+	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
 		if (!optarg)
 			MS_THROW_ERROR("unknown configuration parameter: %s", optarg);
@@ -81,34 +80,34 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		switch (c)
 		{
 			case 'l':
-				value_string = std::string(optarg);
-				SetLogLevel(value_string);
+				stringValue = std::string(optarg);
+				SetLogLevel(stringValue);
 				break;
 
 			case 't':
-				value_string = std::string(optarg);
-				log_tags.push_back(value_string);
+				stringValue = std::string(optarg);
+				logTags.push_back(stringValue);
 				break;
 
 			case '4':
-				value_string = std::string(optarg);
-				SetRtcIPv4(value_string);
+				stringValue = std::string(optarg);
+				SetRtcIPv4(stringValue);
 				break;
 
 			case '6':
-				value_string = std::string(optarg);
-				SetRtcIPv6(value_string);
+				stringValue = std::string(optarg);
+				SetRtcIPv6(stringValue);
 				break;
 
 			case '5':
-				value_string = std::string(optarg);
-				Settings::configuration.rtcAnnouncedIPv4 = value_string;
+				stringValue = std::string(optarg);
+				Settings::configuration.rtcAnnouncedIPv4 = stringValue;
 				Settings::configuration.hasAnnouncedIPv4 = true;
 				break;
 
 			case '7':
-				value_string = std::string(optarg);
-				Settings::configuration.rtcAnnouncedIPv6 = value_string;
+				stringValue = std::string(optarg);
+				Settings::configuration.rtcAnnouncedIPv6 = stringValue;
 				Settings::configuration.hasAnnouncedIPv6 = true;
 				break;
 
@@ -121,13 +120,13 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				break;
 
 			case 'c':
-				value_string = std::string(optarg);
-				Settings::configuration.dtlsCertificateFile = value_string;
+				stringValue = std::string(optarg);
+				Settings::configuration.dtlsCertificateFile = stringValue;
 				break;
 
 			case 'p':
-				value_string = std::string(optarg);
-				Settings::configuration.dtlsPrivateKeyFile = value_string;
+				stringValue = std::string(optarg);
+				Settings::configuration.dtlsPrivateKeyFile = stringValue;
 				break;
 
 			// Invalid option.
@@ -150,8 +149,8 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Post configuration. */
 
 	// Set logTags.
-	if (!log_tags.empty())
-		Settings::SetLogTags(log_tags);
+	if (!logTags.empty())
+		Settings::SetLogTags(logTags);
 
 	// RTC must have at least 'IPv4' or 'IPv6'.
 	if (!Settings::configuration.hasIPv4 && !Settings::configuration.hasIPv6)
@@ -180,54 +179,76 @@ void Settings::PrintConfiguration()
 {
 	MS_TRACE();
 
-	std::vector<std::string> log_tags;
+	std::vector<std::string> logTags;
 
 	if (Settings::configuration.logTags.info)
-		log_tags.push_back("info");
+		logTags.push_back("info");
 	if (Settings::configuration.logTags.ice)
-		log_tags.push_back("ice");
+		logTags.push_back("ice");
 	if (Settings::configuration.logTags.dtls)
-		log_tags.push_back("dtls");
+		logTags.push_back("dtls");
 	if (Settings::configuration.logTags.rtp)
-		log_tags.push_back("rtp");
+		logTags.push_back("rtp");
 	if (Settings::configuration.logTags.srtp)
-		log_tags.push_back("srtp");
+		logTags.push_back("srtp");
 	if (Settings::configuration.logTags.rtcp)
-		log_tags.push_back("rtcp");
+		logTags.push_back("rtcp");
 	if (Settings::configuration.logTags.rbe)
-		log_tags.push_back("rbe");
+		logTags.push_back("rbe");
 	if (Settings::configuration.logTags.rtx)
-		log_tags.push_back("rtx");
+		logTags.push_back("rtx");
 
 	MS_DEBUG_TAG(info, "<configuration>");
 
-	MS_DEBUG_TAG(info, "  logLevel            : \"%s\"", Settings::logLevel2String[Settings::configuration.logLevel].c_str());
-	for (auto& tag : log_tags)
+	MS_DEBUG_TAG(info, "  logLevel            : \"%s\"",
+		Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	for (auto& tag : logTags)
 	{
 		MS_DEBUG_TAG(info, "  logTag              : \"%s\"", tag.c_str());
 	}
 	if (Settings::configuration.hasIPv4)
-		MS_DEBUG_TAG(info, "  rtcIPv4             : \"%s\"", Settings::configuration.rtcIPv4.c_str());
+	{
+		MS_DEBUG_TAG(info, "  rtcIPv4             : \"%s\"",
+			Settings::configuration.rtcIPv4.c_str());
+	}
 	else
+	{
 		MS_DEBUG_TAG(info, "  rtcIPv4             : (unavailable)");
+	}
 	if (Settings::configuration.hasIPv6)
-		MS_DEBUG_TAG(info, "  rtcIPv6             : \"%s\"", Settings::configuration.rtcIPv6.c_str());
+	{
+		MS_DEBUG_TAG(info, "  rtcIPv6             : \"%s\"",
+			Settings::configuration.rtcIPv6.c_str());
+	}
 	else
+	{
 		MS_DEBUG_TAG(info, "  rtcIPv6             : (unavailable)");
+	}
 	if (Settings::configuration.hasAnnouncedIPv4)
-		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv4    : \"%s\"", Settings::configuration.rtcAnnouncedIPv4.c_str());
+	{
+		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv4    : \"%s\"",
+			Settings::configuration.rtcAnnouncedIPv4.c_str());
+	}
 	else
+	{
 		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv4    : (unset)");
+	}
 	if (Settings::configuration.hasAnnouncedIPv6)
+	{
 		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv6    : \"%s\"", Settings::configuration.rtcAnnouncedIPv6.c_str());
+	}
 	else
+	{
 		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv6    : (unset)");
+	}
 	MS_DEBUG_TAG(info, "  rtcMinPort          : %" PRIu16, Settings::configuration.rtcMinPort);
 	MS_DEBUG_TAG(info, "  rtcMaxPort          : %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
-		MS_DEBUG_TAG(info, "  dtlsCertificateFile : \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile  : \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
+		MS_DEBUG_TAG(info, "  dtlsCertificateFile : \"%s\"",
+			Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile  : \"%s\"",
+			Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
 	MS_DEBUG_TAG(info, "</configuration>");
@@ -244,28 +265,29 @@ void Settings::HandleRequest(Channel::Request* request)
 			static const Json::StaticString k_logLevel("logLevel");
 			static const Json::StaticString k_logTags("logTags");
 
-			Json::Value json_logLevel = request->data[k_logLevel];
-			Json::Value json_logTags = request->data[k_logTags];
+			Json::Value jsonLogLevel = request->data[k_logLevel];
+			Json::Value jsonLogTags = request->data[k_logTags];
 
 			try
 			{
 				// Update logLevel if requested.
-				if (json_logLevel.isString())
+				if (jsonLogLevel.isString())
 				{
-					std::string logLevel = json_logLevel.asString();
+					std::string logLevel = jsonLogLevel.asString();
 
 					Settings::SetLogLevel(logLevel);
 				}
 
 				// Update logTags if requested.
-				if (json_logTags.isArray())
+				if (jsonLogTags.isArray())
 				{
-					Settings::SetLogTags(json_logTags);
+					Settings::SetLogTags(jsonLogTags);
 				}
 			}
 			catch (const MediaSoupError &error)
 			{
 				request->Reject(error.what());
+
 				return;
 			}
 
@@ -286,22 +308,22 @@ void Settings::HandleRequest(Channel::Request* request)
 	}
 }
 
-void Settings::SetDefaultRtcIP(int requested_family)
+void Settings::SetDefaultRtcIP(int requestedFamily)
 {
 	MS_TRACE();
 
 	int err;
 	uv_interface_address_t* addresses;
-	int num_addresses;
+	int numAddresses;
 	std::string ipv4;
 	std::string ipv6;
-	int bind_errno;
+	int bindErrno;
 
-	err = uv_interface_addresses(&addresses, &num_addresses);
+	err = uv_interface_addresses(&addresses, &numAddresses);
 	if (err)
 		MS_ABORT("uv_interface_addresses() failed: %s", uv_strerror(err));
 
-	for (int i = 0; i < num_addresses; ++i)
+	for (int i = 0; i < numAddresses; ++i)
 	{
 		uv_interface_address_t address = addresses[i];
 
@@ -314,7 +336,7 @@ void Settings::SetDefaultRtcIP(int requested_family)
 		std::string ip;
 		Utils::IP::GetAddressInfo((struct sockaddr*)(&address.address.address4), &family, ip, &port);
 
-		if (family != requested_family)
+		if (family != requestedFamily)
 			continue;
 
 		switch (family)
@@ -325,7 +347,7 @@ void Settings::SetDefaultRtcIP(int requested_family)
 					continue;
 
 				// Check if it is bindable.
-				if (!IsBindableIP(ip, AF_INET, &bind_errno))
+				if (!IsBindableIP(ip, AF_INET, &bindErrno))
 					continue;
 
 				ipv4 = ip;
@@ -337,7 +359,7 @@ void Settings::SetDefaultRtcIP(int requested_family)
 					continue;
 
 				// Check if it is bindable.
-				if (!IsBindableIP(ip, AF_INET6, &bind_errno))
+				if (!IsBindableIP(ip, AF_INET6, &bindErrno))
 					continue;
 
 				ipv6 = ip;
@@ -357,7 +379,7 @@ void Settings::SetDefaultRtcIP(int requested_family)
 		Settings::configuration.hasIPv6 = true;
 	}
 
-	uv_free_interface_addresses(addresses, num_addresses);
+	uv_free_interface_addresses(addresses, numAddresses);
 }
 
 void Settings::SetLogLevel(std::string &level)
@@ -384,6 +406,7 @@ void Settings::SetRtcIPv4(const std::string &ip)
 	{
 		Settings::configuration.rtcIPv4.clear();
 		Settings::configuration.hasIPv4 = false;
+
 		return;
 	}
 
@@ -401,9 +424,10 @@ void Settings::SetRtcIPv4(const std::string &ip)
 			MS_THROW_ERROR("invalid value '%s' for rtcIPv4", ip.c_str());
 	}
 
-	int bind_errno;
-	if (!IsBindableIP(ip, AF_INET, &bind_errno))
-		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv4: %s", ip.c_str(), std::strerror(bind_errno));
+	int bindErrno;
+
+	if (!IsBindableIP(ip, AF_INET, &bindErrno))
+		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv4: %s", ip.c_str(), std::strerror(bindErrno));
 }
 
 void Settings::SetRtcIPv6(const std::string &ip)
@@ -417,6 +441,7 @@ void Settings::SetRtcIPv6(const std::string &ip)
 	{
 		Settings::configuration.rtcIPv6.clear();
 		Settings::configuration.hasIPv6 = false;
+
 		return;
 	}
 
@@ -434,9 +459,10 @@ void Settings::SetRtcIPv6(const std::string &ip)
 			MS_THROW_ERROR("invalid value '%s' for rtcIPv6", ip.c_str());
 	}
 
-	int bind_errno;
-	if (!IsBindableIP(ip, AF_INET6, &bind_errno))
-		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv6: %s", ip.c_str(), std::strerror(bind_errno));
+	int bindErrno;
+
+	if (!IsBindableIP(ip, AF_INET6, &bindErrno))
+		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv6: %s", ip.c_str(), std::strerror(bindErrno));
 }
 
 void Settings::SetRtcPorts()
@@ -474,6 +500,7 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	{
 		Settings::configuration.dtlsCertificateFile = "";
 		Settings::configuration.dtlsPrivateKeyFile = "";
+
 		return;
 	}
 
@@ -551,38 +578,38 @@ void Settings::SetLogTags(Json::Value& json)
 
 /* Helpers. */
 
-bool IsBindableIP(const std::string &ip, int family, int* bind_errno)
+bool IsBindableIP(const std::string &ip, int family, int* bindErrno)
 {
 	MS_TRACE();
 
-	struct sockaddr_storage bind_addr;
-	int bind_socket;
+	struct sockaddr_storage bindAddr;
+	int bindSocket;
 	int err = 0;
 	bool success;
 
 	switch (family)
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), 0, (struct sockaddr_in*)&bind_addr);
+			err = uv_ip4_addr(ip.c_str(), 0, (struct sockaddr_in*)&bindAddr);
 			if (err)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
-			bind_socket = socket(AF_INET, SOCK_DGRAM, 0);
-			if (bind_socket == -1)
+			bindSocket = socket(AF_INET, SOCK_DGRAM, 0);
+			if (bindSocket == -1)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
-			err = bind(bind_socket, (const struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in));
+			err = bind(bindSocket, (const struct sockaddr*)&bindAddr, sizeof(struct sockaddr_in));
 			break;
 
 		case AF_INET6:
-			uv_ip6_addr(ip.c_str(), 0, (struct sockaddr_in6*)&bind_addr);
+			uv_ip6_addr(ip.c_str(), 0, (struct sockaddr_in6*)&bindAddr);
 			if (err)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
-			bind_socket = socket(AF_INET6, SOCK_DGRAM, 0);
-			if (bind_socket == -1)
+			bindSocket = socket(AF_INET6, SOCK_DGRAM, 0);
+			if (bindSocket == -1)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
-			err = bind(bind_socket, (const struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in6));
+			err = bind(bindSocket, (const struct sockaddr*)&bindAddr, sizeof(struct sockaddr_in6));
 			break;
 
 		default:
@@ -596,10 +623,10 @@ bool IsBindableIP(const std::string &ip, int family, int* bind_errno)
 	else
 	{
 		success = false;
-		*bind_errno = errno;
+		*bindErrno = errno;
 	}
 
-	err = close(bind_socket);
+	err = close(bindSocket);
 	if (err)
 		MS_ABORT("close() failed: %s", std::strerror(errno));
 

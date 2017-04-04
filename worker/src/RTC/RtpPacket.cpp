@@ -26,32 +26,34 @@ namespace RTC
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		size_t csrc_list_size = 0;
+		size_t csrcListSize = 0;
 
-		if (header->csrc_count)
+		if (header->csrcCount)
 		{
-			csrc_list_size = header->csrc_count * sizeof(header->ssrc);
+			csrcListSize = header->csrcCount * sizeof(header->ssrc);
 
 			// Packet size must be >= header size + CSRC list.
-			if (len < (ptr - data) + csrc_list_size)
+			if (len < (ptr - data) + csrcListSize)
 			{
-				MS_WARN_TAG(rtp, "not enough space for the announced CSRC list, packet discarded");
+				MS_WARN_TAG(rtp,
+					"not enough space for the announced CSRC list, packet discarded");
 
 				return nullptr;
 			}
-			ptr += csrc_list_size;
+			ptr += csrcListSize;
 		}
 
 		// Check header extension.
 		ExtensionHeader* extensionHeader = nullptr;
-		size_t extension_value_size = 0;
+		size_t extensionValueSize = 0;
 
 		if (header->extension)
 		{
 			// The extension header is at least 4 bytes.
 			if (len < size_t(ptr - data) + 4)
 			{
-				MS_WARN_TAG(rtp, "not enough space for the announced extension header, packet discarded");
+				MS_WARN_TAG(rtp,
+					"not enough space for the announced extension header, packet discarded");
 
 				return nullptr;
 			}
@@ -60,16 +62,17 @@ namespace RTC
 
 			// The header extension contains a 16-bit length field that counts the number of
 			// 32-bit words in the extension, excluding the four-octet extension header.
-			extension_value_size = (size_t)(ntohs(extensionHeader->length) * 4);
+			extensionValueSize = (size_t)(ntohs(extensionHeader->length) * 4);
 
 			// Packet size must be >= header size + CSRC list + header extension size.
-			if (len < (ptr - data) + 4 + extension_value_size)
+			if (len < (ptr - data) + 4 + extensionValueSize)
 			{
-				MS_WARN_TAG(rtp, "not enough space for the announced header extension value, packet discarded");
+				MS_WARN_TAG(rtp,
+					"not enough space for the announced header extension value, packet discarded");
 
 				return nullptr;
 			}
-			ptr += 4 + extension_value_size;
+			ptr += 4 + extensionValueSize;
 		}
 
 		// Get payload.
@@ -85,7 +88,8 @@ namespace RTC
 			// Must be at least a single payload byte.
 			if (payloadLength == 0)
 			{
-				MS_WARN_TAG(rtp, "padding bit is set but no space for a padding byte, packet discarded");
+				MS_WARN_TAG(rtp,
+					"padding bit is set but no space for a padding byte, packet discarded");
 
 				return nullptr;
 			}
@@ -100,7 +104,8 @@ namespace RTC
 
 			if (payloadLength < (size_t)payloadPadding)
 			{
-				MS_WARN_TAG(rtp, "number of padding octets is greater than available space for payload, packet discarded");
+				MS_WARN_TAG(rtp,
+					"number of padding octets is greater than available space for payload, packet discarded");
 
 				return nullptr;
 			}
@@ -110,9 +115,12 @@ namespace RTC
 		if (payloadLength == 0)
 			payload = nullptr;
 
-		MS_ASSERT(len == sizeof(Header) + csrc_list_size + (extensionHeader ? 4 + extension_value_size : 0) + payloadLength + (size_t)payloadPadding, "packet's computed size does not match received size");
+		MS_ASSERT(len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 +
+			extensionValueSize : 0) + payloadLength + (size_t)payloadPadding,
+			"packet's computed size does not match received size");
 
-		RtpPacket* packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
+		RtpPacket* packet = new RtpPacket(header, extensionHeader, payload, payloadLength,
+			payloadPadding, len);
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
@@ -132,7 +140,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->header->csrc_count)
+		if (this->header->csrcCount)
 			this->csrcList = (uint8_t*)header + sizeof(Header);
 	}
 
@@ -153,7 +161,7 @@ namespace RTC
 			MS_DUMP("    id     : %" PRIu16, GetExtensionHeaderId());
 			MS_DUMP("    length : %zu bytes", GetExtensionHeaderLength());
 		}
-		MS_DUMP("  csrc count       : %" PRIu8, this->header->csrc_count);
+		MS_DUMP("  csrc count       : %" PRIu8, this->header->csrcCount);
 		MS_DUMP("  marker           : %s", HasMarker() ? "true" : "false");
 		MS_DUMP("  payload type     : %" PRIu8, GetPayloadType());
 		MS_DUMP("  sequence number  : %" PRIu16, GetSequenceNumber());
@@ -171,12 +179,12 @@ namespace RTC
 		this->size = sizeof(Header); // Minimum header.
 
 		if (this->csrcList)
-			this->size += this->header->csrc_count * sizeof(header->ssrc);
+			this->size += this->header->csrcCount * sizeof(header->ssrc);
 
-		size_t extension_value_size = GetExtensionHeaderLength();
+		size_t extensionValueSize = GetExtensionHeaderLength();
 
 		if (this->extensionHeader)
-			this->size += 4 + extension_value_size;
+			this->size += 4 + extensionValueSize;
 
 		this->size += this->payloadLength;
 		this->size += (size_t)this->payloadPadding;
@@ -193,21 +201,21 @@ namespace RTC
 		// Add CSRC list.
 		if (this->csrcList)
 		{
-			std::memcpy(ptr, this->csrcList, this->header->csrc_count * sizeof(this->header->ssrc));
+			std::memcpy(ptr, this->csrcList, this->header->csrcCount * sizeof(this->header->ssrc));
 
 			// Update the pointer.
 			this->csrcList = ptr;
-			ptr += this->header->csrc_count * sizeof(this->header->ssrc);
+			ptr += this->header->csrcCount * sizeof(this->header->ssrc);
 		}
 
 		// Add extension header.
 		if (this->extensionHeader)
 		{
-			std::memcpy(ptr, this->extensionHeader, 4 + extension_value_size);
+			std::memcpy(ptr, this->extensionHeader, 4 + extensionValueSize);
 
 			// Update the header extension pointer.
 			this->extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
-			ptr += 4 + extension_value_size;
+			ptr += 4 + extensionValueSize;
 		}
 
 		// Parse and regenerate RFC 5285 extension header.
@@ -248,7 +256,7 @@ namespace RTC
 
 		// Check CSRC list.
 		if (this->csrcList)
-			ptr += header->csrc_count * sizeof(header->ssrc);
+			ptr += header->csrcCount * sizeof(header->ssrc);
 
 		// Check extension header.
 		ExtensionHeader* extensionHeader = nullptr;
@@ -280,7 +288,8 @@ namespace RTC
 		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
 
 		// Create the new RtpPacket instance and return it.
-		RtpPacket* packet = new RtpPacket(header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
+		RtpPacket* packet = new RtpPacket(header, extensionHeader, payload, this->payloadLength,
+			this->payloadPadding, this->size);
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
@@ -301,18 +310,19 @@ namespace RTC
 			// Clear the One-Byte extension elements map.
 			this->oneByteExtensions.clear();
 
-			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
-			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
-			uint8_t* ptr = extension_start;
+			uint8_t* extensionStart = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extensionEnd = extensionStart + GetExtensionHeaderLength();
+			uint8_t* ptr = extensionStart;
 
-			while (ptr < extension_end)
+			while (ptr < extensionEnd)
 			{
 				uint8_t id = (*ptr & 0xF0) >> 4;
 				size_t len = (*ptr & 0x0F) + 1;
 
-				if (ptr + 1 + len > extension_end)
+				if (ptr + 1 + len > extensionEnd)
 				{
-					MS_WARN_TAG(rtp, "not enough space for the announced One-Byte header extension element value");
+					MS_WARN_TAG(rtp,
+						"not enough space for the announced One-Byte header extension element value");
 
 					break;
 				}
@@ -323,7 +333,7 @@ namespace RTC
 				ptr += 1 + len;
 
 				// Counting padding bytes.
-				while ((ptr < extension_end) && (*ptr == 0))
+				while ((ptr < extensionEnd) && (*ptr == 0))
 					++ptr;
 			}
 		}
@@ -333,18 +343,19 @@ namespace RTC
 			// Clear the Two-Bytes extension elements map.
 			this->twoBytesExtensions.clear();
 
-			uint8_t* extension_start = (uint8_t*)this->extensionHeader + 4;
-			uint8_t* extension_end = extension_start + GetExtensionHeaderLength();
-			uint8_t* ptr = extension_start;
+			uint8_t* extensionStart = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extensionEnd = extensionStart + GetExtensionHeaderLength();
+			uint8_t* ptr = extensionStart;
 
-			while (ptr < extension_end)
+			while (ptr < extensionEnd)
 			{
 				uint8_t id = *ptr;
 				size_t len = *(++ptr);
 
-				if (ptr + len > extension_end)
+				if (ptr + len > extensionEnd)
 				{
-					MS_WARN_TAG(rtp, "not enough space for the announced Two-Bytes header extension element value");
+					MS_WARN_TAG(rtp,
+						"not enough space for the announced Two-Bytes header extension element value");
 
 					break;
 				}
@@ -355,7 +366,7 @@ namespace RTC
 				ptr += len;
 
 				// Counting padding bytes.
-				while ((ptr < extension_end) && (*ptr == 0))
+				while ((ptr < extensionEnd) && (*ptr == 0))
 					++ptr;
 			}
 		}

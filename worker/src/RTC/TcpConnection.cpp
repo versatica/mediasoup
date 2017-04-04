@@ -22,8 +22,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DEBUG_DEV("data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-			GetLocalIP().c_str(), GetLocalPort(),
-			GetPeerIP().c_str(), GetPeerPort());
+			GetLocalIP().c_str(), GetLocalPort(), GetPeerIP().c_str(), GetPeerPort());
 
 		/*
 		 * Framing RFC 4571

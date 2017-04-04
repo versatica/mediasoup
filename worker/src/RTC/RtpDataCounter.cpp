@@ -57,6 +57,7 @@ namespace RTC
 		if (newOldestTime > this->oldestTime + this->windowSize)
 		{
 			this->Reset(newOldestTime);
+
 			return;
 		}
 
@@ -69,6 +70,7 @@ namespace RTC
 
 			if (++this->oldestIndex >= this->windowSize)
 				this->oldestIndex = 0;
+
 			++this->oldestTime;
 		}
 

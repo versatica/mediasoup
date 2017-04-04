@@ -87,15 +87,22 @@ namespace Utils
 		int ret;
 
 		ret = HMAC_Init_ex(&Crypto::hmacSha1Ctx, key.c_str(), key.length(), EVP_sha1(), nullptr);
+
 		MS_ASSERT(ret == 1, "OpenSSL HMAC_Init_ex() failed with key '%s'", key.c_str());
 
 		ret = HMAC_Update(&Crypto::hmacSha1Ctx, (const uint8_t*)data, (int)len);
-		MS_ASSERT(ret == 1, "OpenSSL HMAC_Update() failed with key '%s' and data length %zu bytes", key.c_str(), len);
 
-		uint32_t result_len;
-		ret = HMAC_Final(&Crypto::hmacSha1Ctx, (uint8_t *)Crypto::hmacSha1Buffer, &result_len);
-		MS_ASSERT(ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key.c_str(), len);
-		MS_ASSERT(result_len == 20, "OpenSSL HMAC_Final() result_len is %u instead of 20", result_len);
+		MS_ASSERT(ret == 1, "OpenSSL HMAC_Update() failed with key '%s' and data length %zu bytes",
+			key.c_str(), len);
+
+		uint32_t resultLen;
+
+		ret = HMAC_Final(&Crypto::hmacSha1Ctx, (uint8_t *)Crypto::hmacSha1Buffer, &resultLen);
+
+		MS_ASSERT(ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes",
+			key.c_str(), len);
+		MS_ASSERT(resultLen == 20, "OpenSSL HMAC_Final() resultLen is %u instead of 20",
+			resultLen);
 
 		return Crypto::hmacSha1Buffer;
 	}

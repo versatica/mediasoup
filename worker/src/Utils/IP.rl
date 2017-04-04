@@ -11,7 +11,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		int ip_family = 0;
+		int ipFamily = 0;
 
 		/**
 		 * Ragel: machine definition.
@@ -23,12 +23,12 @@ namespace Utils
 
 			action on_ipv4
 			{
-				ip_family = AF_INET;
+				ipFamily = AF_INET;
 			}
 
 			action on_ipv6
 			{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 
 			include grammar "grammar.rl";
@@ -64,7 +64,7 @@ namespace Utils
 
 		// Ensure that the parsing has consumed all the given length.
 		if (ip_len == (size_t)(p - (const unsigned char*)ip))
-			return ip_family;
+			return ipFamily;
 		else
 			return AF_UNSPEC;
 	}
@@ -80,9 +80,12 @@ namespace Utils
 		{
 			case AF_INET:
 			{
-				err = uv_inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, _ip, INET_ADDRSTRLEN);
+				err = uv_inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, _ip,
+					INET_ADDRSTRLEN);
+
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
+
 				*port = (uint16_t)ntohs(((struct sockaddr_in*)addr)->sin_port);
 
 				break;
@@ -90,9 +93,12 @@ namespace Utils
 
 			case AF_INET6:
 			{
-				err = uv_inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, _ip, INET6_ADDRSTRLEN);
+				err = uv_inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, _ip,
+					INET6_ADDRSTRLEN);
+
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
+
 				*port = (uint16_t)ntohs(((struct sockaddr_in6*)addr)->sin6_port);
 
 				break;

@@ -4,13 +4,12 @@
 #include "RTC/IceServer.hpp"
 #include "Logger.hpp"
 
-#define MS_STUN_SERIALIZE_BUFFER_SIZE 65536
-
 namespace RTC
 {
-	/* Class variables. */
+	/* Static. */
 
-	uint8_t IceServer::stunSerializeBuffer[MS_STUN_SERIALIZE_BUFFER_SIZE];
+	static constexpr size_t StunSerializeBufferSize = 65536;
+	static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
 
 	/* Instance methods. */
 
@@ -21,7 +20,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(ice, "[usernameFragment:%s, password:%s]", this->usernameFragment.c_str(), this->password.c_str());
+		MS_DEBUG_TAG(ice, "[usernameFragment:%s, password:%s]",
+			this->usernameFragment.c_str(), this->password.c_str());
 	}
 
 	void IceServer::Destroy()
@@ -40,17 +40,20 @@ namespace RTC
 		{
 			if (msg->GetClass() == RTC::StunMessage::Class::Request)
 			{
-				MS_WARN_TAG(ice, "unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
+				MS_WARN_TAG(ice, "unknown method %#.3x in STUN Request => 400",
+					(unsigned int)msg->GetMethod());
 
 				// Reply 400.
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
-				response->Serialize(IceServer::stunSerializeBuffer);
+
+				response->Serialize(StunSerializeBuffer);
 				this->listener->onOutgoingStunMessage(this, response, tuple);
 				delete response;
 			}
 			else
 			{
-				MS_WARN_TAG(ice, "ignoring STUN Indication or Response with unknown method %#.3x", (unsigned int)msg->GetMethod());
+				MS_WARN_TAG(ice, "ignoring STUN Indication or Response with unknown method %#.3x",
+					(unsigned int)msg->GetMethod());
 			}
 
 			return;
@@ -65,7 +68,8 @@ namespace RTC
 
 				// Reply 400.
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
-				response->Serialize(IceServer::stunSerializeBuffer);
+
+				response->Serialize(StunSerializeBuffer);
 				this->listener->onOutgoingStunMessage(this, response, tuple);
 				delete response;
 			}
@@ -88,7 +92,8 @@ namespace RTC
 
 					// Reply 400.
 					RTC::StunMessage* response = msg->CreateErrorResponse(400);
-					response->Serialize(IceServer::stunSerializeBuffer);
+
+					response->Serialize(StunSerializeBuffer);
 					this->listener->onOutgoingStunMessage(this, response, tuple);
 					delete response;
 
@@ -107,7 +112,8 @@ namespace RTC
 
 						// Reply 401.
 						RTC::StunMessage* response = msg->CreateErrorResponse(401);
-						response->Serialize(IceServer::stunSerializeBuffer);
+
+						response->Serialize(StunSerializeBuffer);
 						this->listener->onOutgoingStunMessage(this, response, tuple);
 						delete response;
 
@@ -120,7 +126,8 @@ namespace RTC
 
 						// Reply 400.
 						RTC::StunMessage* response = msg->CreateErrorResponse(400);
-						response->Serialize(IceServer::stunSerializeBuffer);
+
+						response->Serialize(StunSerializeBuffer);
 						this->listener->onOutgoingStunMessage(this, response, tuple);
 						delete response;
 
@@ -135,14 +142,17 @@ namespace RTC
 
 					// Reply 487 (Role Conflict).
 					RTC::StunMessage* response = msg->CreateErrorResponse(487);
-					response->Serialize(IceServer::stunSerializeBuffer);
+
+					response->Serialize(StunSerializeBuffer);
 					this->listener->onOutgoingStunMessage(this, response, tuple);
 					delete response;
 
 					return;
 				}
 
-				MS_DEBUG_TAG(ice, "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]", (uint32_t)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
+				MS_DEBUG_TAG(ice,
+					"processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]",
+					(uint32_t)msg->GetPriority(), msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
 				RTC::StunMessage* response = msg->CreateSuccessResponse();
@@ -154,7 +164,7 @@ namespace RTC
 				response->Authenticate(this->password);
 
 				// Send back.
-				response->Serialize(IceServer::stunSerializeBuffer);
+				response->Serialize(StunSerializeBuffer);
 				this->listener->onOutgoingStunMessage(this, response, tuple);
 				delete response;
 
@@ -196,27 +206,27 @@ namespace RTC
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
 	{
-		auto it = this->tuples.begin();
-		RTC::TransportTuple* removed_tuple = nullptr;
+		RTC::TransportTuple* removedTuple = nullptr;
 
 		// Find the removed tuple.
+		auto it = this->tuples.begin();
 		for (; it != this->tuples.end(); ++it)
 		{
-			RTC::TransportTuple* stored_tuple = std::addressof(*it);
+			RTC::TransportTuple* storedTuple = std::addressof(*it);
 
-			if (stored_tuple->Compare(tuple))
+			if (storedTuple->Compare(tuple))
 			{
-				removed_tuple = stored_tuple;
+				removedTuple = storedTuple;
 				break;
 			}
 		}
 
 		// If not found, ignore.
-		if (!removed_tuple)
+		if (!removedTuple)
 			return;
 
 		// If this is not the selected tuple just remove it.
-		if (removed_tuple != this->selectedTuple)
+		if (removedTuple != this->selectedTuple)
 		{
 			this->tuples.erase(it);
 
@@ -233,12 +243,11 @@ namespace RTC
 			{
 				SetSelectedTuple(std::addressof(*this->tuples.begin()));
 			}
-			// Or just emit 'disconnected' and the null selected tuple..
+			// Or just emit 'disconnected'.
 			else
 			{
 				// Update state.
 				this->state = IceState::DISCONNECTED;
-
 				// Notify the listener.
 				this->listener->onIceDisconnected(this);
 			}
@@ -249,17 +258,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->selectedTuple != nullptr, "cannot force the selected tuple if there was not a selected tuple");
+		MS_ASSERT(this->selectedTuple != nullptr,
+			"cannot force the selected tuple if there was not a selected tuple");
 
-		auto stored_tuple = HasTuple(tuple);
+		auto storedTuple = HasTuple(tuple);
 
-		MS_ASSERT(stored_tuple, "cannot force the selected tuple if the given tuple was not already a valid tuple");
+		MS_ASSERT(storedTuple,
+			"cannot force the selected tuple if the given tuple was not already a valid tuple");
 
 		// Mark it as selected tuple.
-		SetSelectedTuple(stored_tuple);
+		SetSelectedTuple(storedTuple);
 	}
 
-	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate)
+	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool hasUseCandidate)
 	{
 		MS_TRACE();
 
@@ -268,24 +279,24 @@ namespace RTC
 			case IceState::NEW:
 			{
 				// There should be no tuples.
-				MS_ASSERT(this->tuples.size() == 0, "state is 'new' but there are %zu tuples", this->tuples.size());
+				MS_ASSERT(this->tuples.size() == 0, "state is 'new' but there are %zu tuples",
+					this->tuples.size());
 
 				// There shouldn't be a selected tuple.
-				MS_ASSERT(this->selectedTuple == nullptr, "state is 'new' but there is selected tuple");
+				MS_ASSERT(this->selectedTuple == nullptr,
+					"state is 'new' but there is selected tuple");
 
-				if (!has_use_candidate)
+				if (!hasUseCandidate)
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'new' to 'connected'");
 
 					// Store the tuple.
-					auto stored_tuple = AddTuple(tuple);
+					auto storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
-					SetSelectedTuple(stored_tuple);
-
+					SetSelectedTuple(storedTuple);
 					// Update state.
 					this->state = IceState::CONNECTED;
-
 					// Notify the listener.
 					this->listener->onIceConnected(this);
 				}
@@ -294,14 +305,12 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
 
 					// Store the tuple.
-					auto stored_tuple = AddTuple(tuple);
+					auto storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
-					SetSelectedTuple(stored_tuple);
-
+					SetSelectedTuple(storedTuple);
 					// Update state.
 					this->state = IceState::COMPLETED;
-
 					// Notify the listener.
 					this->listener->onIceCompleted(this);
 				}
@@ -312,24 +321,24 @@ namespace RTC
 			case IceState::DISCONNECTED:
 			{
 				// There should be no tuples.
-				MS_ASSERT(this->tuples.size() == 0, "state is 'disconnected' but there are %zu tuples", this->tuples.size());
+				MS_ASSERT(this->tuples.size() == 0,
+					"state is 'disconnected' but there are %zu tuples", this->tuples.size());
 
 				// There shouldn't be a selected tuple.
-				MS_ASSERT(this->selectedTuple == nullptr, "state is 'disconnected' but there is selected tuple");
+				MS_ASSERT(this->selectedTuple == nullptr,
+					"state is 'disconnected' but there is selected tuple");
 
-				if (!has_use_candidate)
+				if (!hasUseCandidate)
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'connected'");
 
 					// Store the tuple.
-					auto stored_tuple = AddTuple(tuple);
+					auto storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
-					SetSelectedTuple(stored_tuple);
-
+					SetSelectedTuple(storedTuple);
 					// Update state.
 					this->state = IceState::CONNECTED;
-
 					// Notify the listener.
 					this->listener->onIceConnected(this);
 				}
@@ -338,14 +347,12 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
 
 					// Store the tuple.
-					auto stored_tuple = AddTuple(tuple);
+					auto storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
-					SetSelectedTuple(stored_tuple);
-
+					SetSelectedTuple(storedTuple);
 					// Update state.
 					this->state = IceState::COMPLETED;
-
 					// Notify the listener.
 					this->listener->onIceCompleted(this);
 				}
@@ -356,12 +363,14 @@ namespace RTC
 			case IceState::CONNECTED:
 			{
 				// There should be some tuples.
-				MS_ASSERT(this->tuples.size() > 0, "state is 'connected' but there are no tuples");
+				MS_ASSERT(this->tuples.size() > 0,
+					"state is 'connected' but there are no tuples");
 
 				// There should be a selected tuple.
-				MS_ASSERT(this->selectedTuple != nullptr, "state is 'connected' but there is not selected tuple");
+				MS_ASSERT(this->selectedTuple != nullptr,
+					"state is 'connected' but there is not selected tuple");
 
-				if (!has_use_candidate)
+				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
 					if (!HasTuple(tuple))
@@ -371,18 +380,16 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'connected' to 'completed'");
 
-					auto stored_tuple = HasTuple(tuple);
+					auto storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (!stored_tuple)
-						stored_tuple = AddTuple(tuple);
+					if (!storedTuple)
+						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
-					SetSelectedTuple(stored_tuple);
-
+					SetSelectedTuple(storedTuple);
 					// Update state.
 					this->state = IceState::COMPLETED;
-
 					// Notify the listener.
 					this->listener->onIceCompleted(this);
 				}
@@ -396,9 +403,10 @@ namespace RTC
 				MS_ASSERT(this->tuples.size() > 0, "state is 'completed' but there are no tuples");
 
 				// There should be a selected tuple.
-				MS_ASSERT(this->selectedTuple != nullptr, "state is 'completed' but there is not selected tuple");
+				MS_ASSERT(this->selectedTuple != nullptr,
+					"state is 'completed' but there is not selected tuple");
 
-				if (!has_use_candidate)
+				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
 					if (!HasTuple(tuple))
@@ -406,14 +414,14 @@ namespace RTC
 				}
 				else
 				{
-					auto stored_tuple = HasTuple(tuple);
+					auto storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (!stored_tuple)
-						stored_tuple = AddTuple(tuple);
+					if (!storedTuple)
+						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
-					SetSelectedTuple(stored_tuple);
+					SetSelectedTuple(storedTuple);
 				}
 
 				break;
@@ -429,15 +437,15 @@ namespace RTC
 		// Add the new tuple at the beginning of the list.
 		this->tuples.push_front(*tuple);
 
-		auto stored_tuple = std::addressof(*this->tuples.begin());
+		auto storedTuple = std::addressof(*this->tuples.begin());
 
 		// If it is UDP then we must store the remote address (until now it is
 		// just a pointer that will be freed soon).
-		if (stored_tuple->GetProtocol() == TransportTuple::Protocol::UDP)
-			stored_tuple->StoreUdpRemoteAddress();
+		if (storedTuple->GetProtocol() == TransportTuple::Protocol::UDP)
+			storedTuple->StoreUdpRemoteAddress();
 
 		// Return the address of the inserted tuple.
-		return stored_tuple;
+		return storedTuple;
 	}
 
 	inline
@@ -457,25 +465,25 @@ namespace RTC
 		// Otherwise check other stored tuples.
 		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
 		{
-			RTC::TransportTuple* stored_tuple = const_cast<RTC::TransportTuple*>(std::addressof(*it));
+			RTC::TransportTuple* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(*it));
 
-			if (stored_tuple->Compare(tuple))
-				return stored_tuple;
+			if (storedTuple->Compare(tuple))
+				return storedTuple;
 		}
 
 		return nullptr;
 	}
 
 	inline
-	void IceServer::SetSelectedTuple(RTC::TransportTuple* stored_tuple)
+	void IceServer::SetSelectedTuple(RTC::TransportTuple* storedTuple)
 	{
 		MS_TRACE();
 
 		// If already the selected tuple do nothing.
-		if (stored_tuple == this->selectedTuple)
+		if (storedTuple == this->selectedTuple)
 			return;
 
-		this->selectedTuple = stored_tuple;
+		this->selectedTuple = storedTuple;
 
 		// Notify the listener.
 		this->listener->onIceSelectedTuple(this, this->selectedTuple);

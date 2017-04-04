@@ -35,7 +35,7 @@ namespace RTC
 
 		json[k_params] = this->params.toJson();
 		json[k_received] = (Json::UInt)this->received;
-		json[k_maxTimestamp] = (Json::UInt)this->max_timestamp;
+		json[k_maxTimestamp] = (Json::UInt)this->maxTimestamp;
 		json[k_transit] = (Json::UInt)this->transit;
 		json[k_jitter] = (Json::UInt)this->jitter;
 
@@ -74,45 +74,44 @@ namespace RTC
 		RTC::RTCP::ReceiverReport* report = new RTC::RTCP::ReceiverReport();
 
 		// Calculate Packets Expected and Lost.
-		uint32_t expected = (this->cycles + this->max_seq) - this->base_seq + 1;
-		int32_t total_lost = expected - this->received;
+		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
+		int32_t totalLost = expected - this->received;
 
-		report->SetTotalLost(total_lost);
+		report->SetTotalLost(totalLost);
 
 		// Calculate Fraction Lost.
-		uint32_t expected_interval = expected - this->expected_prior;
+		uint32_t expectedInterval = expected - this->expectedPrior;
 
-		this->expected_prior = expected;
+		this->expectedPrior = expected;
 
-		uint32_t received_interval = this->received - this->received_prior;
+		uint32_t receivedInterval = this->received - this->receivedPrior;
 
-		this->received_prior = this->received;
+		this->receivedPrior = this->received;
 
-		int32_t lost_interval = expected_interval - received_interval;
-		uint8_t fraction_lost;
+		int32_t lostInterval = expectedInterval - receivedInterval;
+		uint8_t fractionLost;
 
-		if (expected_interval == 0 || lost_interval <= 0)
-			fraction_lost = 0;
+		if (expectedInterval == 0 || lostInterval <= 0)
+			fractionLost = 0;
 		else
-			fraction_lost = (lost_interval << 8) / expected_interval;
+			fractionLost = (lostInterval << 8) / expectedInterval;
 
-		report->SetFractionLost(fraction_lost);
+		report->SetFractionLost(fractionLost);
 
 		// Fill the rest of the report.
-		report->SetLastSeq((uint32_t)this->max_seq + this->cycles);
+		report->SetLastSeq((uint32_t)this->maxSeq + this->cycles);
 		report->SetJitter(this->jitter);
 
-		if (this->last_sr_received)
+		if (this->lastSrReceived)
 		{
 			// Get delay in milliseconds.
-			uint32_t delayMs = (DepLibUV::GetTime() - this->last_sr_received);
-
+			uint32_t delayMs = (DepLibUV::GetTime() - this->lastSrReceived);
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlsr = (delayMs / 1000) << 16;
-			dlsr |= (uint32_t)((delayMs % 1000) * 65536 / 1000);
 
+			dlsr |= (uint32_t)((delayMs % 1000) * 65536 / 1000);
 			report->SetDelaySinceLastSenderReport(dlsr);
-			report->SetLastSenderReport(this->last_sr_timestamp);
+			report->SetLastSenderReport(this->lastSrTimestamp);
 		}
 		else
 		{
@@ -127,9 +126,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->last_sr_received = DepLibUV::GetTime();
-		this->last_sr_timestamp = report->GetNtpSec() << 16;
-		this->last_sr_timestamp += report->GetNtpFrac() >> 16;
+		this->lastSrReceived = DepLibUV::GetTime();
+		this->lastSrTimestamp = report->GetNtpSec() << 16;
+		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 	}
 
 	void RtpStreamRecv::RequestFullFrame()
@@ -172,14 +171,13 @@ namespace RTC
 		// If we got out of sync, request a full frame.
 		if (this->started && this->params.usePli)
 		{
-			MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]",
-				this->params.ssrc);
+			MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 			this->listener->onPliRequired(this);
 		}
 	}
 
-	void RtpStreamRecv::onNackRequired(const std::vector<uint16_t>& seq_numbers)
+	void RtpStreamRecv::onNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
@@ -187,9 +185,9 @@ namespace RTC
 
 		MS_WARN_TAG(rtx,
 			"triggering NACK [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
-			this->params.ssrc, seq_numbers[0], seq_numbers.size());
+			this->params.ssrc, seqNumbers[0], seqNumbers.size());
 
-		this->listener->onNackRequired(this, seq_numbers);
+		this->listener->onNackRequired(this, seqNumbers);
 	}
 
 	void RtpStreamRecv::onFullFrameRequired()
@@ -203,8 +201,7 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG_TAG(rtx,
-			"triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
+		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 		this->listener->onPliRequired(this);
 	}

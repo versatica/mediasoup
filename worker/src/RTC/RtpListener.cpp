@@ -18,9 +18,9 @@ namespace RTC
 		static const Json::StaticString k_ptTable("ptTable");
 
 		Json::Value json(Json::objectValue);
-		Json::Value json_ssrcTable(Json::objectValue);
-		Json::Value json_muxIdTable(Json::objectValue);
-		Json::Value json_ptTable(Json::objectValue);
+		Json::Value jsonSsrcTable(Json::objectValue);
+		Json::Value jsonMuxIdTable(Json::objectValue);
+		Json::Value jsonPtTable(Json::objectValue);
 
 		// Add `ssrcTable`.
 		for (auto& kv : this->ssrcTable)
@@ -28,9 +28,9 @@ namespace RTC
 			auto ssrc = kv.first;
 			auto rtpReceiver = kv.second;
 
-			json_ssrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
+			jsonSsrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_ssrcTable] = json_ssrcTable;
+		json[k_ssrcTable] = jsonSsrcTable;
 
 		// Add `muxIdTable`.
 		for (auto& kv : this->muxIdTable)
@@ -38,9 +38,9 @@ namespace RTC
 			auto muxId = kv.first;
 			auto rtpReceiver = kv.second;
 
-			json_muxIdTable[muxId] = std::to_string(rtpReceiver->rtpReceiverId);
+			jsonMuxIdTable[muxId] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_muxIdTable] = json_muxIdTable;
+		json[k_muxIdTable] = jsonMuxIdTable;
 
 		// Add `ptTable`.
 		for (auto& kv : this->ptTable)
@@ -48,9 +48,9 @@ namespace RTC
 			auto payloadType = kv.first;
 			auto rtpReceiver = kv.second;
 
-			json_ptTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
+			jsonPtTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_ptTable] = json_ptTable;
+		json[k_ptTable] = jsonPtTable;
 
 		return json;
 	}
@@ -266,18 +266,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: REMOVE.
-		// uint8_t* rid_pointer = packet->GetExtensionElementValue(5);
-		// if (rid_pointer)
-		// {
-		// 	uint8_t rid_length = packet->GetExtensionElementLength(5);
-		// 	std::string rid_value = std::string((const char*)rid_pointer, (size_t)rid_length);
-
-		// 	MS_DEBUG_TAG(rtp, "RID [length:%zu, value:'%s', pointer[0]:'%c']", (size_t)rid_length, rid_value.c_str(), (char)rid_pointer[0]);
-		// 	if ((char)rid_pointer[0] == '\0')
-		// 		MS_WARN_TAG(rtp, "RID data[0] is 0");
-		// }
-
 		// First lookup into the SSRC table.
 		{
 			auto it = this->ssrcTable.find(packet->GetSsrc());
@@ -296,7 +284,8 @@ namespace RTC
 				}
 
 				// RTP PT not present.
-				MS_WARN_TAG(rtp, "unknown RTP payloadType [payloadType:%" PRIu8 "]", packet->GetPayloadType());
+				MS_WARN_TAG(rtp, "unknown RTP payloadType [payloadType:%" PRIu8 "]",
+					packet->GetPayloadType());
 
 				// TODO: We may emit "unhandledrtp" event.
 				return nullptr;
@@ -323,7 +312,7 @@ namespace RTC
 			}
 		}
 
-		// TODO: We may emit 'unhandledrtp' event.
+		// TODO: We may emit "unhandledrtp" event.
 		return nullptr;
 	}
 

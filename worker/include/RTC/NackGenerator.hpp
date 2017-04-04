@@ -16,7 +16,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onNackRequired(const std::vector<uint16_t>& seq_numbers) = 0;
+			virtual void onNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void onFullFrameRequired() = 0;
 		};
 
@@ -24,11 +24,11 @@ namespace RTC
 		struct NackInfo
 		{
 			NackInfo() {};
-			explicit NackInfo(uint32_t seq32, uint32_t send_at_seq_num);
+			explicit NackInfo(uint32_t seq32, uint32_t sendAtSeqNum);
 
 			uint32_t seq32 = 0;
-			uint32_t send_at_seq_num = 0;
-			uint64_t sent_at_time = 0;
+			uint32_t sendAtSeqNum = 0;
+			uint64_t sentAtTime = 0;
 			uint8_t retries = 0;
 		};
 
@@ -45,7 +45,7 @@ namespace RTC
 		void ReceivePacket(RTC::RtpPacket* packet);
 
 	private:
-		void AddPacketsToNackList(uint32_t seq32_start, uint32_t seq32_end);
+		void AddPacketsToNackList(uint32_t seq32Start, uint32_t seq32End);
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
 		void MayRunTimer() const;
 
@@ -59,18 +59,18 @@ namespace RTC
 		// Allocated by this.
 		Timer* timer = nullptr;
 		// Others.
-		std::map<uint32_t, NackInfo> nack_list;
+		std::map<uint32_t, NackInfo> nackList;
 		bool started = false;
-		uint32_t last_seq32 = 0; // Extended seq number of last valid packet.
+		uint32_t lastSeq32 = 0; // Extended seq number of last valid packet.
 		uint32_t rtt = 0; // Round trip time (ms).
 	};
 
 	// Inline instance methods.
 
 	inline
-	NackGenerator::NackInfo::NackInfo(uint32_t seq32, uint32_t send_at_seq_num) :
+	NackGenerator::NackInfo::NackInfo(uint32_t seq32, uint32_t sendAtSeqNum) :
 		seq32(seq32),
-		send_at_seq_num(send_at_seq_num)
+		sendAtSeqNum(sendAtSeqNum)
 	{}
 }
 

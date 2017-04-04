@@ -14,7 +14,6 @@
 #include "Channel/Request.hpp"
 #include "Channel/Notifier.hpp"
 #include <unordered_set>
-#include <vector>
 #include <json/json.h>
 
 namespace RTC
@@ -30,10 +29,6 @@ namespace RTC
 		public:
 			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
-
-	private:
-		// Container of RTP packets to retransmit.
-		static std::vector<RTC::RtpPacket*> rtpRetransmissionContainer;
 
 	public:
 		RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind);

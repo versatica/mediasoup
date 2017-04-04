@@ -6,7 +6,6 @@
 #include "Utils.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
-#include <algorithm> // std::remove
 #include <cstdio> // std::sprintf(), std::fopen()
 #include <cstring> // std::memcpy(), std::strcmp()
 #include <ctime> // struct timeval
@@ -16,33 +15,27 @@
 #include <openssl/rsa.h>
 #include <openssl/asn1.h>
 
-#define MS_SSL_READ_BUFFER_SIZE 65536
-// NOTE: Those values are hardcoded as we just use AES_CM_128_HMAC_SHA1_80 and
-// AES_CM_128_HMAC_SHA1_32 which share same length values for key and salt.
-#define MS_SRTP_MASTER_KEY_LENGTH 16
-#define MS_SRTP_MASTER_SALT_LENGTH 14
-#define MS_SRTP_MASTER_LENGTH (MS_SRTP_MASTER_KEY_LENGTH + MS_SRTP_MASTER_SALT_LENGTH)
-#define LOG_OPENSSL_ERROR(desc)  \
-	do  \
-	{  \
-		if (ERR_peek_error() == 0)  \
-			MS_ERROR("OpenSSL error [desc:'%s']", desc);  \
-		else  \
-		{  \
-			unsigned long err;  \
-			while ((err = ERR_get_error()) != 0)  \
-			{  \
-				MS_ERROR("OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr));  \
-			}  \
-			ERR_clear_error();  \
-		}  \
-	}  \
+#define LOG_OPENSSL_ERROR(desc) \
+	do \
+	{ \
+		if (ERR_peek_error() == 0) \
+			MS_ERROR("OpenSSL error [desc:'%s']", desc); \
+		else \
+		{ \
+			unsigned long err; \
+			while ((err = ERR_get_error()) != 0) \
+			{ \
+				MS_ERROR("OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr)); \
+			} \
+			ERR_clear_error(); \
+		} \
+	} \
 	while (0)
 
 /* Static methods for OpenSSL callbacks. */
 
 static inline
-int on_ssl_certificate_verify(int preverify_ok, X509_STORE_CTX* ctx)
+int on_ssl_certificate_verify(int preverifyOk, X509_STORE_CTX* ctx)
 {
 	MS_TRACE();
 
@@ -58,12 +51,21 @@ void on_ssl_info(const SSL* ssl, int where, int ret)
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr int SslReadBufferSize = 65536;
+	// NOTE: Those values are hardcoded as we just use AES_CM_128_HMAC_SHA1_80 and
+	// AES_CM_128_HMAC_SHA1_32 which share same length values for key and salt.
+	static constexpr size_t SrtpMasterKeyLength = 16;
+	static constexpr size_t SrtpMasterSaltLength = 14;
+	static constexpr size_t SrtpMasterLength = SrtpMasterKeyLength + SrtpMasterSaltLength;
+
 	/* Class variables. */
 
 	X509* DtlsTransport::certificate = nullptr;
 	EVP_PKEY* DtlsTransport::privateKey = nullptr;
 	SSL_CTX* DtlsTransport::sslCtx = nullptr;
-	uint8_t DtlsTransport::sslReadBuffer[MS_SSL_READ_BUFFER_SIZE];
+	uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	std::map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
 	{
 		{ "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
@@ -92,10 +94,16 @@ namespace RTC
 		MS_TRACE();
 
 		// Generate a X509 certificate and private key (unless PEM files are provided).
-		if (Settings::configuration.dtlsCertificateFile.empty() || Settings::configuration.dtlsPrivateKeyFile.empty())
+		if (
+			Settings::configuration.dtlsCertificateFile.empty() ||
+			Settings::configuration.dtlsPrivateKeyFile.empty())
+		{
 			GenerateCertificateAndPrivateKey();
+		}
 		else
+		{
 			ReadCertificateAndPrivateKeyFromFiles();
+		}
 
 		// Create a global SSL_CTX.
 		CreateSSL_CTX();
@@ -122,9 +130,9 @@ namespace RTC
 
 		int ret = 0;
 		BIGNUM* bne = nullptr;
-		RSA* rsa_key = nullptr;
-		int num_bits = 1024;
-		X509_NAME* cert_name = nullptr;
+		RSA* rsaKey = nullptr;
+		int numBits = 1024;
+		X509_NAME* certName = nullptr;
 
 		// Create a big number object.
 		bne = BN_new();
@@ -142,15 +150,15 @@ namespace RTC
 		}
 
 		// Generate a RSA key.
-		rsa_key = RSA_new();
-		if (!rsa_key)
+		rsaKey = RSA_new();
+		if (!rsaKey)
 		{
 			LOG_OPENSSL_ERROR("RSA_new() failed");
 			goto error;
 		}
 
 		// This takes some time.
-		ret = RSA_generate_key_ex(rsa_key, num_bits, bne, nullptr);
+		ret = RSA_generate_key_ex(rsaKey, numBits, bne, nullptr);
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("RSA_generate_key_ex() failed");
@@ -165,14 +173,14 @@ namespace RTC
 			goto error;
 		}
 
-		ret = EVP_PKEY_assign_RSA(DtlsTransport::privateKey, rsa_key);
+		ret = EVP_PKEY_assign_RSA(DtlsTransport::privateKey, rsaKey);
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("EVP_PKEY_assign_RSA() failed");
 			goto error;
 		}
 		// The RSA key now belongs to the private key, so don't clean it up separately.
-		rsa_key = nullptr;
+		rsaKey = nullptr;
 
 		// Create the X509 certificate.
 		DtlsTransport::certificate = X509_new();
@@ -186,10 +194,11 @@ namespace RTC
 		X509_set_version(DtlsTransport::certificate, 2);
 
 		// Set serial number (avoid default 0).
-		ASN1_INTEGER_set(X509_get_serialNumber(DtlsTransport::certificate), (long)Utils::Crypto::GetRandomUInt(1000000, 9999999));
+		ASN1_INTEGER_set(X509_get_serialNumber(DtlsTransport::certificate),
+			(long)Utils::Crypto::GetRandomUInt(1000000, 9999999));
 
 		// Set valid period.
-		X509_gmtime_adj(X509_get_notBefore(DtlsTransport::certificate), -1*60*60*24*365*10); // - 10 years.
+		X509_gmtime_adj(X509_get_notBefore(DtlsTransport::certificate), -1*60*60*24*365*10); // -10 years.
 		X509_gmtime_adj(X509_get_notAfter(DtlsTransport::certificate), 60*60*24*365*10); // 10 years.
 
 		// Set the public key for the certificate using the key.
@@ -201,17 +210,17 @@ namespace RTC
 		}
 
 		// Set certificate fields.
-		cert_name = X509_get_subject_name(DtlsTransport::certificate);
-		if (!cert_name)
+		certName = X509_get_subject_name(DtlsTransport::certificate);
+		if (!certName)
 		{
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
 		}
-		X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(certName, "O", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(certName, "CN", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
 
 		// It is self-signed so set the issuer name to be the same as the subject.
-		ret = X509_set_issuer_name(DtlsTransport::certificate, cert_name);
+		ret = X509_set_issuer_name(DtlsTransport::certificate, certName);
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("X509_set_issuer_name() failed");
@@ -228,13 +237,14 @@ namespace RTC
 
 		// Free stuff and return.
 		BN_free(bne);
+
 		return;
 
 	error:
 		if (bne)
 			BN_free(bne);
-		if (rsa_key && !DtlsTransport::privateKey)
-			RSA_free(rsa_key);
+		if (rsaKey && !DtlsTransport::privateKey)
+			RSA_free(rsaKey);
 		if (DtlsTransport::privateKey)
 			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the RSA key.
 		if (DtlsTransport::certificate)
@@ -255,12 +265,14 @@ namespace RTC
 			MS_ERROR("error reading DTLS certificate file: %s", std::strerror(errno));
 			goto error;
 		}
+
 		DtlsTransport::certificate = PEM_read_X509(file, nullptr, nullptr, nullptr);
 		if (!DtlsTransport::certificate)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_X509() failed");
 			goto error;
 		}
+
 		fclose(file);
 
 		file = fopen(Settings::configuration.dtlsPrivateKeyFile.c_str(), "r");
@@ -269,12 +281,14 @@ namespace RTC
 			MS_ERROR("error reading DTLS private key file: %s", std::strerror(errno));
 			goto error;
 		}
+
 		DtlsTransport::privateKey = PEM_read_PrivateKey(file, nullptr, nullptr, nullptr);
 		if (!DtlsTransport::privateKey)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_PrivateKey() failed");
 			goto error;
 		}
+
 		fclose(file);
 
 		return;
@@ -287,21 +301,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::string ssl_srtp_profiles;
+		std::string dtlsSrtpProfiles;
 		EC_KEY* ecdh = nullptr;
 		int ret;
 
 		/* Set the global DTLS context. */
 
-		// - Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
-		#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-			DtlsTransport::sslCtx = SSL_CTX_new(DTLS_method());
-		// - Just DTLS 1.0 (requires OpenSSL >= 1.0.1).
-		#elif (OPENSSL_VERSION_NUMBER >= 0x10001000L)
-			DtlsTransport::sslCtx = SSL_CTX_new(DTLSv1_method());
-		#else
-			#error "too old OpenSSL version"
-		#endif
+	// - Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
+	#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+		DtlsTransport::sslCtx = SSL_CTX_new(DTLS_method());
+	// - Just DTLS 1.0 (requires OpenSSL >= 1.0.1).
+	#elif (OPENSSL_VERSION_NUMBER >= 0x10001000L)
+		DtlsTransport::sslCtx = SSL_CTX_new(DTLSv1_method());
+	#else
+		#error "too old OpenSSL version"
+	#endif
 
 		if (!DtlsTransport::sslCtx)
 		{
@@ -350,7 +364,8 @@ namespace RTC
 		SSL_CTX_set_info_callback(DtlsTransport::sslCtx, on_ssl_info);
 
 		// Set ciphers.
-		ret = SSL_CTX_set_cipher_list(DtlsTransport::sslCtx, "ALL:!ADH:!LOW:!EXP:!MD5:!aNULL:!eNULL:@STRENGTH");
+		ret = SSL_CTX_set_cipher_list(DtlsTransport::sslCtx,
+			"ALL:!ADH:!LOW:!EXP:!MD5:!aNULL:!eNULL:@STRENGTH");
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_set_cipher_list() failed");
@@ -361,39 +376,47 @@ namespace RTC
 		// DOC: http://en.wikibooks.org/wiki/OpenSSL/Diffie-Hellman_parameters
 		// NOTE: https://code.google.com/p/chromium/issues/detail?id=406458
 		// For OpenSSL >= 1.0.2:
-		#if (OPENSSL_VERSION_NUMBER >= 0x10002000L)
-			SSL_CTX_set_ecdh_auto(DtlsTransport::sslCtx, 1);
-		#else
-			ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-			if (!ecdh)
-			{
-				LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
-				goto error;
-			}
-			if (SSL_CTX_set_tmp_ecdh(DtlsTransport::sslCtx, ecdh) != 1)
-			{
-				LOG_OPENSSL_ERROR("SSL_CTX_set_tmp_ecdh() failed");
-				goto error;
-			}
-			EC_KEY_free(ecdh);
-			ecdh = nullptr;
-		#endif
+	#if (OPENSSL_VERSION_NUMBER >= 0x10002000L)
+		SSL_CTX_set_ecdh_auto(DtlsTransport::sslCtx, 1);
+	#else
+		ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+
+		if (!ecdh)
+		{
+			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
+			goto error;
+		}
+
+		if (SSL_CTX_set_tmp_ecdh(DtlsTransport::sslCtx, ecdh) != 1)
+		{
+			LOG_OPENSSL_ERROR("SSL_CTX_set_tmp_ecdh() failed");
+			goto error;
+		}
+
+		EC_KEY_free(ecdh);
+		ecdh = nullptr;
+	#endif
 
 		// Set the "use_srtp" DTLS extension.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
 		{
-			if (it != DtlsTransport::srtpProfiles.begin())
-				ssl_srtp_profiles += ":";
+			auto it = DtlsTransport::srtpProfiles.begin();
+			for (; it != DtlsTransport::srtpProfiles.end(); ++it)
+			{
+				if (it != DtlsTransport::srtpProfiles.begin())
+					dtlsSrtpProfiles += ":";
 
-			SrtpProfileMapEntry* profile_entry = &(*it);
-			ssl_srtp_profiles += profile_entry->name;
+				SrtpProfileMapEntry* profile_entry = &(*it);
+				dtlsSrtpProfiles += profile_entry->name;
+			}
 		}
-		MS_DEBUG_TAG(dtls, "setting SRTP profiles for DTLS: %s", ssl_srtp_profiles.c_str());
+
+		MS_DEBUG_TAG(dtls, "setting SRTP profiles for DTLS: %s", dtlsSrtpProfiles.c_str());
+
 		// NOTE: This function returns 0 on success.
-		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, ssl_srtp_profiles.c_str());
+		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpProfiles.c_str());
 		if (ret != 0)
 		{
-			MS_ERROR("SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", ssl_srtp_profiles.c_str());
+			MS_ERROR("SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", dtlsSrtpProfiles.c_str());
 			LOG_OPENSSL_ERROR("SSL_CTX_set_tlsext_use_srtp() failed");
 			goto error;
 		}
@@ -417,38 +440,39 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin(); it != DtlsTransport::string2FingerprintAlgorithm.end(); ++it)
+		auto it = DtlsTransport::string2FingerprintAlgorithm.begin();
+		for (; it != DtlsTransport::string2FingerprintAlgorithm.end(); ++it)
 		{
-			std::string algorithm_str = it->first;
+			std::string algorithmString = it->first;
 			FingerprintAlgorithm algorithm = it->second;
-			uint8_t binary_fingerprint[EVP_MAX_MD_SIZE];
+			uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size = 0;
-			char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
-			const EVP_MD* hash_function;
+			char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
+			const EVP_MD* hashFunction;
 			int ret;
 
 			switch (algorithm)
 			{
 				case FingerprintAlgorithm::SHA1:
-					hash_function = EVP_sha1();
+					hashFunction = EVP_sha1();
 					break;
 				case FingerprintAlgorithm::SHA224:
-					hash_function = EVP_sha224();
+					hashFunction = EVP_sha224();
 					break;
 				case FingerprintAlgorithm::SHA256:
-					hash_function = EVP_sha256();
+					hashFunction = EVP_sha256();
 					break;
 				case FingerprintAlgorithm::SHA384:
-					hash_function = EVP_sha384();
+					hashFunction = EVP_sha384();
 					break;
 				case FingerprintAlgorithm::SHA512:
-					hash_function = EVP_sha512();
+					hashFunction = EVP_sha512();
 					break;
 				default:
 					MS_THROW_ERROR("unknown algorithm");
 			}
 
-			ret = X509_digest(DtlsTransport::certificate, hash_function, binary_fingerprint, &size);
+			ret = X509_digest(DtlsTransport::certificate, hashFunction, binaryFingerprint, &size);
 			if (ret == 0)
 			{
 				MS_ERROR("X509_digest() failed");
@@ -458,14 +482,14 @@ namespace RTC
 			// Convert to hexadecimal format in lowecase without colons.
 			for (unsigned int i = 0; i < size; ++i)
 			{
-				std::sprintf(hex_fingerprint + (i * 2), "%.2x", binary_fingerprint[i]);
+				std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
 			}
-			hex_fingerprint[size * 2] = '\0';
+			hexFingerprint[size * 2] = '\0';
 
-			MS_DEBUG_TAG(dtls, "%-7s fingerprint: %s", algorithm_str.c_str(), hex_fingerprint);
+			MS_DEBUG_TAG(dtls, "%-7s fingerprint: %s", algorithmString.c_str(), hexFingerprint);
 
 			// Store in the JSON.
-			DtlsTransport::localFingerprints[algorithm_str] = hex_fingerprint;
+			DtlsTransport::localFingerprints[algorithmString] = hexFingerprint;
 		}
 	}
 
@@ -575,7 +599,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(localRole == Role::CLIENT || localRole == Role::SERVER, "local DTLS role must be 'client' or 'server'");
+		MS_ASSERT(localRole == Role::CLIENT || localRole == Role::SERVER,
+			"local DTLS role must be 'client' or 'server'");
 
 		Role previousLocalRole = this->localRole;
 
@@ -628,7 +653,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(fingerprint.algorithm != FingerprintAlgorithm::NONE, "no fingerprint algorithm provided");
+		MS_ASSERT(fingerprint.algorithm != FingerprintAlgorithm::NONE,
+			"no fingerprint algorithm provided");
 
 		this->remoteFingerprint = fingerprint;
 
@@ -659,10 +685,13 @@ namespace RTC
 		// Write the received DTLS data into the sslBioFromNetwork.
 		written = BIO_write(this->sslBioFromNetwork, (const void*)data, (int)len);
 		if (written != (int)len)
-			MS_WARN_TAG(dtls, "OpenSSL BIO_write() wrote less (%zu bytes) than given data (%zu bytes)", (size_t)written, len);
+		{
+			MS_WARN_TAG(dtls, "OpenSSL BIO_write() wrote less (%zu bytes) than given data (%zu bytes)",
+				(size_t)written, len);
+		}
 
 		// Must call SSL_read() to process received DTLS data.
-		read = SSL_read(this->ssl, (void*)DtlsTransport::sslReadBuffer, MS_SSL_READ_BUFFER_SIZE);
+		read = SSL_read(this->ssl, (void*)DtlsTransport::sslReadBuffer, SslReadBufferSize);
 
 		// Send data if it's ready.
 		SendPendingOutgoingDtlsData();
@@ -687,7 +716,8 @@ namespace RTC
 			}
 
 			// Notify the listener.
-			this->listener->onDtlsApplicationData(this, (uint8_t*)DtlsTransport::sslReadBuffer, (size_t)read);
+			this->listener->onDtlsApplicationData(this, (uint8_t*)DtlsTransport::sslReadBuffer,
+				(size_t)read);
 		}
 	}
 
@@ -721,7 +751,8 @@ namespace RTC
 		}
 		else if (written != (int)len)
 		{
-			MS_WARN_TAG(dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
+			MS_WARN_TAG(dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)",
+				written, len);
 		}
 
 		// Send data.
@@ -767,7 +798,7 @@ namespace RTC
 		MS_TRACE();
 
 		int err;
-		bool was_handshake_done = this->handshakeDone;
+		bool wasHandshakeDone = this->handshakeDone;
 
 		err = SSL_get_error(this->ssl, return_code);
 		switch (err)
@@ -810,11 +841,14 @@ namespace RTC
 			this->timer->Stop();
 
 			// Process the handshake just once (ignore if DTLS renegotiation).
-			if (!was_handshake_done)
+			if (!wasHandshakeDone)
 				ProcessHandshake();
 		}
 		// Check if the peer sent close alert or a fatal error happened.
-		else if ((SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN) || err == SSL_ERROR_SSL || err == SSL_ERROR_SYSCALL)
+		else if (
+			(SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN) ||
+			err == SSL_ERROR_SSL
+			|| err == SSL_ERROR_SYSCALL)
 		{
 			if (this->state == DtlsState::CONNECTED)
 			{
@@ -874,32 +908,32 @@ namespace RTC
 		MS_TRACE();
 
 		long int ret;
-		struct timeval dtls_timeout;
-		uint64_t timeout_ms;
+		struct timeval dtlsTimeout;
+		uint64_t timeoutMs;
 
-		// NOTE: If ret == 0 then ignore the value in dtls_timeout.
+		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
-		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtls_timeout);
+		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtlsTimeout);
 		if (ret == 0)
 			return true;
 
-		timeout_ms = (dtls_timeout.tv_sec * (uint64_t)1000) + (dtls_timeout.tv_usec / 1000);
-		if (timeout_ms == 0)
+		timeoutMs = (dtlsTimeout.tv_sec * (uint64_t)1000) + (dtlsTimeout.tv_usec / 1000);
+		if (timeoutMs == 0)
 		{
 			return true;
 		}
-		else if (timeout_ms < 30000)
+		else if (timeoutMs < 30000)
 		{
-			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeout_ms);
+			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeoutMs);
 
-			this->timer->Start(timeout_ms);
+			this->timer->Start(timeoutMs);
 
 			return true;
 		}
 		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
 		else
 		{
-			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeout_ms);
+			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
 
 			Reset();
 
@@ -970,10 +1004,10 @@ namespace RTC
 		MS_ASSERT(this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE, "remote fingerprint not set");
 
 		X509* certificate;
-		uint8_t binary_fingerprint[EVP_MAX_MD_SIZE];
+		uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
 		unsigned int size = 0;
-		char hex_fingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
-		const EVP_MD* hash_function;
+		char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
+		const EVP_MD* hashFunction;
 		int ret;
 
 		certificate = SSL_get_peer_certificate(this->ssl);
@@ -987,19 +1021,19 @@ namespace RTC
 		switch (this->remoteFingerprint.algorithm)
 		{
 			case FingerprintAlgorithm::SHA1:
-				hash_function = EVP_sha1();
+				hashFunction = EVP_sha1();
 				break;
 			case FingerprintAlgorithm::SHA224:
-				hash_function = EVP_sha224();
+				hashFunction = EVP_sha224();
 				break;
 			case FingerprintAlgorithm::SHA256:
-				hash_function = EVP_sha256();
+				hashFunction = EVP_sha256();
 				break;
 			case FingerprintAlgorithm::SHA384:
-				hash_function = EVP_sha384();
+				hashFunction = EVP_sha384();
 				break;
 			case FingerprintAlgorithm::SHA512:
-				hash_function = EVP_sha512();
+				hashFunction = EVP_sha512();
 				break;
 			default:
 				MS_ABORT("unknown algorithm");
@@ -1007,7 +1041,7 @@ namespace RTC
 
 		// Compare the remote fingerprint with the value given via signaling.
 
-		ret = X509_digest(certificate, hash_function, binary_fingerprint, &size);
+		ret = X509_digest(certificate, hashFunction, binaryFingerprint, &size);
 		if (ret == 0)
 		{
 			MS_ERROR("X509_digest() failed");
@@ -1020,13 +1054,15 @@ namespace RTC
 		// Convert to hexadecimal format in lowecase without colons.
 		for (unsigned int i = 0; i < size; ++i)
 		{
-			std::sprintf(hex_fingerprint + (i * 2), "%.2x", binary_fingerprint[i]);
+			std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
 		}
-		hex_fingerprint[size * 2] = '\0';
+		hexFingerprint[size * 2] = '\0';
 
-		if (this->remoteFingerprint.value.compare(hex_fingerprint) != 0)
+		if (this->remoteFingerprint.value.compare(hexFingerprint) != 0)
 		{
-			MS_WARN_TAG(dtls, "fingerprint in the remote certificate (%s) does not match the announced one (%s)", hex_fingerprint, this->remoteFingerprint.value.c_str());
+			MS_WARN_TAG(dtls,
+				"fingerprint in the remote certificate (%s) does not match the announced one (%s)",
+				hexFingerprint, this->remoteFingerprint.value.c_str());
 
 			X509_free(certificate);
 
@@ -1042,7 +1078,7 @@ namespace RTC
 		// Ensure the underlying BUF_MEM structure is also freed.
 		// NOTE: Avoid stupid "warning: value computed is not used [-Wunused-value]" since
 		// BIO_set_close() always returns 1.
-		(void) BIO_set_close(bio, BIO_CLOSE);
+		(void)BIO_set_close(bio, BIO_CLOSE);
 
 		ret = PEM_write_bio_X509(bio, certificate);
 		if (ret != 1)
@@ -1081,31 +1117,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint8_t srtp_material[MS_SRTP_MASTER_LENGTH * 2];
-		uint8_t* srtp_local_key;
-		uint8_t* srtp_local_salt;
-		uint8_t* srtp_remote_key;
-		uint8_t* srtp_remote_salt;
-		uint8_t srtp_local_master_key[MS_SRTP_MASTER_LENGTH];
-		uint8_t srtp_remote_master_key[MS_SRTP_MASTER_LENGTH];
+		uint8_t srtpMaterial[SrtpMasterLength * 2];
+		uint8_t* srtpLocalKey;
+		uint8_t* srtpLocalSalt;
+		uint8_t* srtpRemoteKey;
+		uint8_t* srtpRemoteSalt;
+		uint8_t srtpLocalMasterKey[SrtpMasterLength];
+		uint8_t srtpRemoteMasterKey[SrtpMasterLength];
 		int ret;
 
-		ret = SSL_export_keying_material(this->ssl, srtp_material, MS_SRTP_MASTER_LENGTH * 2, "EXTRACTOR-dtls_srtp", 19, nullptr, 0, 0);
+		ret = SSL_export_keying_material(this->ssl, srtpMaterial, SrtpMasterLength * 2,
+			"EXTRACTOR-dtls_srtp", 19, nullptr, 0, 0);
+
 		MS_ASSERT(ret != 0, "SSL_export_keying_material() failed");
 
 		switch (this->localRole)
 		{
 			case Role::SERVER:
-				srtp_remote_key = srtp_material;
-				srtp_local_key = srtp_remote_key + MS_SRTP_MASTER_KEY_LENGTH;
-				srtp_remote_salt = srtp_local_key + MS_SRTP_MASTER_KEY_LENGTH;
-				srtp_local_salt = srtp_remote_salt + MS_SRTP_MASTER_SALT_LENGTH;
+				srtpRemoteKey = srtpMaterial;
+				srtpLocalKey = srtpRemoteKey + SrtpMasterKeyLength;
+				srtpRemoteSalt = srtpLocalKey + SrtpMasterKeyLength;
+				srtpLocalSalt = srtpRemoteSalt + SrtpMasterSaltLength;
 				break;
 			case Role::CLIENT:
-				srtp_local_key = srtp_material;
-				srtp_remote_key = srtp_local_key + MS_SRTP_MASTER_KEY_LENGTH;
-				srtp_local_salt = srtp_remote_key + MS_SRTP_MASTER_KEY_LENGTH;
-				srtp_remote_salt = srtp_local_salt + MS_SRTP_MASTER_SALT_LENGTH;
+				srtpLocalKey = srtpMaterial;
+				srtpRemoteKey = srtpLocalKey + SrtpMasterKeyLength;
+				srtpLocalSalt = srtpRemoteKey + SrtpMasterKeyLength;
+				srtpRemoteSalt = srtpLocalSalt + SrtpMasterSaltLength;
 				break;
 			default:
 				MS_ABORT("no DTLS role set");
@@ -1113,15 +1151,16 @@ namespace RTC
 		}
 
 		// Create the SRTP local master key.
-		std::memcpy(srtp_local_master_key, srtp_local_key, MS_SRTP_MASTER_KEY_LENGTH);
-		std::memcpy(srtp_local_master_key + MS_SRTP_MASTER_KEY_LENGTH, srtp_local_salt, MS_SRTP_MASTER_SALT_LENGTH);
+		std::memcpy(srtpLocalMasterKey, srtpLocalKey, SrtpMasterKeyLength);
+		std::memcpy(srtpLocalMasterKey + SrtpMasterKeyLength, srtpLocalSalt, SrtpMasterSaltLength);
 		// Create the SRTP remote master key.
-		std::memcpy(srtp_remote_master_key, srtp_remote_key, MS_SRTP_MASTER_KEY_LENGTH);
-		std::memcpy(srtp_remote_master_key + MS_SRTP_MASTER_KEY_LENGTH, srtp_remote_salt, MS_SRTP_MASTER_SALT_LENGTH);
+		std::memcpy(srtpRemoteMasterKey, srtpRemoteKey, SrtpMasterKeyLength);
+		std::memcpy(srtpRemoteMasterKey + SrtpMasterKeyLength, srtpRemoteSalt, SrtpMasterSaltLength);
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTED;
-		this->listener->onDtlsConnected(this, srtp_profile, srtp_local_master_key, MS_SRTP_MASTER_LENGTH, srtp_remote_master_key, MS_SRTP_MASTER_LENGTH, this->remoteCert);
+		this->listener->onDtlsConnected(this, srtp_profile, srtpLocalMasterKey, SrtpMasterLength,
+			srtpRemoteMasterKey, SrtpMasterLength, this->remoteCert);
 	}
 
 	inline
@@ -1129,17 +1168,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::SrtpSession::Profile negotiated_srtp_profile = RTC::SrtpSession::Profile::NONE;
+		RTC::SrtpSession::Profile negotiatedSrtpProfile = RTC::SrtpSession::Profile::NONE;
 
 		// Ensure that the SRTP profile has been negotiated.
 		SRTP_PROTECTION_PROFILE* ssl_srtp_profile = SSL_get_selected_srtp_profile(this->ssl);
 		if (!ssl_srtp_profile)
 		{
-			return negotiated_srtp_profile;
+			return negotiatedSrtpProfile;
 		}
 
 		// Get the negotiated SRTP profile.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
+		auto it = DtlsTransport::srtpProfiles.begin();
+		for (; it != DtlsTransport::srtpProfiles.end(); ++it)
 		{
 			SrtpProfileMapEntry* profile_entry = &(*it);
 
@@ -1147,13 +1187,13 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(dtls, "chosen SRTP profile: %s", profile_entry->name);
 
-				negotiated_srtp_profile = profile_entry->profile;
+				negotiatedSrtpProfile = profile_entry->profile;
 			}
 		}
 
-		MS_ASSERT(negotiated_srtp_profile != RTC::SrtpSession::Profile::NONE, "chosen SRTP profile is not an available one");
+		MS_ASSERT(negotiatedSrtpProfile != RTC::SrtpSession::Profile::NONE, "chosen SRTP profile is not an available one");
 
-		return negotiated_srtp_profile;
+		return negotiatedSrtpProfile;
 	}
 
 	inline
@@ -1184,11 +1224,20 @@ namespace RTC
 			}
 
 			if (where & SSL_CB_READ)
-				MS_WARN_TAG(dtls, "received DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
+			{
+				MS_WARN_TAG(dtls, "received DTLS %s alert: %s",
+					alert_type, SSL_alert_desc_string_long(ret));
+			}
 			else if (where & SSL_CB_WRITE)
-				MS_DEBUG_TAG(dtls, "sending DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
+			{
+				MS_DEBUG_TAG(dtls, "sending DTLS %s alert: %s",
+					alert_type, SSL_alert_desc_string_long(ret));
+			}
 			else
-				MS_DEBUG_TAG(dtls, "DTLS %s alert: %s", alert_type, SSL_alert_desc_string_long(ret));
+			{
+				MS_DEBUG_TAG(dtls, "DTLS %s alert: %s",
+					alert_type, SSL_alert_desc_string_long(ret));
+			}
 		}
 		else if (where & SSL_CB_EXIT)
 		{
@@ -1218,10 +1267,8 @@ namespace RTC
 		MS_TRACE();
 
 		DTLSv1_handle_timeout(this->ssl);
-
 		// If required, send DTLS data.
 		SendPendingOutgoingDtlsData();
-
 		// Set the DTLS timer again.
 		SetTimeout();
 	}

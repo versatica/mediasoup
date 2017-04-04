@@ -6,12 +6,15 @@
 #include "DepLibUV.hpp"
 #include "Utils.hpp"
 
-#define RTP_SEQ_MOD (1<<16)
-#define MAX_RETRANSMISSION_AGE 500 // Don't retransmit packets older than this (ms).
-#define DEFAULT_RTT 100 // Default RTT if not set (in ms).
-
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint32_t RtpSeqMod = 1<<16;
+	// Don't retransmit packets older than this (ms).
+	static constexpr uint32_t MaxRetransmissionAge = 500;
+	static constexpr uint32_t DefaultRtt = 100;
+
 	/* Instance methods. */
 
 	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize) :
@@ -43,7 +46,7 @@ namespace RTC
 
 		json[k_params] = this->params.toJson();
 		json[k_received] = (Json::UInt)this->received;
-		json[k_maxTimestamp] = (Json::UInt)this->max_timestamp;
+		json[k_maxTimestamp] = (Json::UInt)this->maxTimestamp;
 		json[k_receivedBytes] = (Json::UInt)this->receivedBytes;
 		json[k_rtt] = (Json::UInt)this->rtt;
 
@@ -103,7 +106,7 @@ namespace RTC
 		MS_TRACE();
 
 		// 17: 16 bit mask + the initial sequence number.
-		static size_t maxRequestedPackets = 17;
+		static constexpr size_t MaxRequestedPackets = 17;
 
 		// Ensure the container's first element is 0.
 		container[0] = nullptr;
@@ -121,28 +124,28 @@ namespace RTC
 			return;
 
 		// Convert the given sequence numbers to 32 bits.
-		uint32_t first_seq32 = (uint32_t)seq + this->cycles;
-		uint32_t last_seq32 = first_seq32 + maxRequestedPackets - 1;
+		uint32_t firstSeq32 = (uint32_t)seq + this->cycles;
+		uint32_t lastSeq32 = firstSeq32 + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
-		MS_ASSERT(container.size() - 1 >= maxRequestedPackets, "RtpPacket container is too small");
+		MS_ASSERT(container.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
 
-		auto buffer_it = this->buffer.begin();
-		auto buffer_it_r = this->buffer.rbegin();
-		uint32_t buffer_first_seq32 = (*buffer_it).seq32;
-		uint32_t buffer_last_seq32 = (*buffer_it_r).seq32;
+		auto bufferIt = this->buffer.begin();
+		auto bufferItReverse = this->buffer.rbegin();
+		uint32_t bufferFirstSeq32 = (*bufferIt).seq32;
+		uint32_t bufferLastSeq32 = (*bufferItReverse).seq32;
 
 		// Requested packet range not found.
-		if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
+		if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
 		{
 			// Let's try with sequence numbers in the previous 16 cycle.
 			if (this->cycles > 0)
 			{
-				first_seq32 -= RTP_SEQ_MOD;
-				last_seq32 -= RTP_SEQ_MOD;
+				firstSeq32 -= RtpSeqMod;
+				lastSeq32 -= RtpSeqMod;
 
 				// Try again.
-				if (first_seq32 > buffer_last_seq32 || last_seq32 < buffer_first_seq32)
+				if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
 				{
 					MS_WARN_TAG(rtx, "requested packet range not in the buffer");
 
@@ -160,18 +163,18 @@ namespace RTC
 
 		// Look for each requested packet.
 		uint64_t now = DepLibUV::GetTime();
-		uint32_t rtt = (this->rtt ? this->rtt : DEFAULT_RTT);
-		uint32_t seq32 = first_seq32;
+		uint32_t rtt = (this->rtt ? this->rtt : DefaultRtt);
+		uint32_t seq32 = firstSeq32;
 		bool requested = true;
-		size_t container_idx = 0;
+		size_t containerIdx = 0;
 
 		// Some variables for debugging.
-		uint16_t orig_bitmask = bitmask;
-		uint16_t sent_bitmask = 0b0000000000000000;
-		bool is_first_packet = true;
-		bool first_packet_sent = false;
-		uint8_t bitmask_counter = 0;
-		bool too_old_packet_found = false;
+		uint16_t origBitmask = bitmask;
+		uint16_t sentBitmask = 0b0000000000000000;
+		bool isFirstPacket = true;
+		bool firstPacketSent = false;
+		uint8_t bitmaskCounter = 0;
+		bool tooOldPacketFound = false;
 
 		while (requested || bitmask != 0)
 		{
@@ -179,59 +182,59 @@ namespace RTC
 
 			if (requested)
 			{
-				for (; buffer_it != this->buffer.end(); ++buffer_it)
+				for (; bufferIt != this->buffer.end(); ++bufferIt)
 				{
-					auto current_seq32 = (*buffer_it).seq32;
+					auto currentSeq32 = (*bufferIt).seq32;
 
 					// Found.
-					if (current_seq32 == seq32)
+					if (currentSeq32 == seq32)
 					{
-						auto current_packet = (*buffer_it).packet;
-						uint32_t diff = (this->max_timestamp - current_packet->GetTimestamp()) * 1000 / this->params.clockRate;
+						auto currentPacket = (*bufferIt).packet;
+						uint32_t diff = (this->maxTimestamp - currentPacket->GetTimestamp()) * 1000 / this->params.clockRate;
 
-						// Just provide the packet if no older than MAX_RETRANSMISSION_AGE ms.
-						if (diff > MAX_RETRANSMISSION_AGE)
+						// Just provide the packet if no older than MaxRetransmissionAge ms.
+						if (diff > MaxRetransmissionAge)
 						{
-							if (!too_old_packet_found)
+							if (!tooOldPacketFound)
 							{
 								MS_WARN_TAG(rtx,
 									"ignoring retransmission for too old packet [seq:%" PRIu16 ", max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]",
-									current_packet->GetSequenceNumber(), MAX_RETRANSMISSION_AGE, diff);
+									currentPacket->GetSequenceNumber(), MaxRetransmissionAge, diff);
 
-								too_old_packet_found = true;
+								tooOldPacketFound = true;
 							}
 
 							break;
 						}
 
 						// Don't resent the packet if it was resent in the last RTT ms.
-						uint32_t resent_at_time = (*buffer_it).resent_at_time;
+						uint32_t resentAtTime = (*bufferIt).resentAtTime;
 
 						if (
-							resent_at_time &&
-							now - resent_at_time < static_cast<uint64_t>(rtt))
+							resentAtTime &&
+							now - resentAtTime < static_cast<uint64_t>(rtt))
 						{
 							MS_WARN_TAG(rtx,
 								"ignoring retransmission for a packet already resent in the last RTT ms [seq:%" PRIu16 ", rtt:%" PRIu32 "]",
-								current_packet->GetSequenceNumber(), rtt);
+								currentPacket->GetSequenceNumber(), rtt);
 
 							break;
 						}
 
 						// Store the packet in the container and then increment its index.
-						container[container_idx++] = current_packet;
+						container[containerIdx++] = currentPacket;
 
 						// Save when this packet was resent.
-						(*buffer_it).resent_at_time = now;
+						(*bufferIt).resentAtTime = now;
 
 						sent = true;
-						if (is_first_packet)
-							first_packet_sent = true;
+						if (isFirstPacket)
+							firstPacketSent = true;
 
 						break;
 					}
 					// It can not be after this packet.
-					else if (current_seq32 > seq32)
+					else if (currentSeq32 > seq32)
 					{
 						break;
 					}
@@ -242,32 +245,35 @@ namespace RTC
 			bitmask >>= 1;
 			++seq32;
 
-			if (!is_first_packet)
+			if (!isFirstPacket)
 			{
-				sent_bitmask |= (sent ? 1 : 0) << bitmask_counter;
-				++bitmask_counter;
+				sentBitmask |= (sent ? 1 : 0) << bitmaskCounter;
+				++bitmaskCounter;
 			}
 			else
 			{
-				is_first_packet = false;
+				isFirstPacket = false;
 			}
 		}
 
 		// If not all the requested packets was sent, log it.
-		if (!first_packet_sent || orig_bitmask != sent_bitmask)
+		if (!firstPacketSent || origBitmask != sentBitmask)
 		{
-			MS_DEBUG_TAG(rtx, "could not resend all packets [seq:%" PRIu16 ", first:%s, bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent_bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-				seq, first_packet_sent ? "yes" : "no",
-				MS_UINT16_TO_BINARY(orig_bitmask), MS_UINT16_TO_BINARY(sent_bitmask));
+			MS_DEBUG_TAG(rtx,
+				"could not resend all packets [seq:%" PRIu16 ", first:%s, "
+				"bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sentBitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+				seq, firstPacketSent ? "yes" : "no",
+				MS_UINT16_TO_BINARY(origBitmask), MS_UINT16_TO_BINARY(sentBitmask));
 		}
 		else
 		{
-			MS_DEBUG_TAG(rtx, "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-				seq, MS_UINT16_TO_BINARY(orig_bitmask));
+			MS_DEBUG_TAG(rtx,
+				"all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+				seq, MS_UINT16_TO_BINARY(origBitmask));
 		}
 
 		// Set the next container element to null.
-		container[container_idx] = nullptr;
+		container[containerIdx] = nullptr;
 	}
 
 	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
@@ -302,9 +308,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Delete cloned packets.
-		for (auto& buffer_item : this->buffer)
+		for (auto& bufferItem : this->buffer)
 		{
-			delete buffer_item.packet;
+			delete bufferItem.packet;
 		}
 
 		// Clear list.
@@ -317,40 +323,40 @@ namespace RTC
 		MS_TRACE();
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packet_seq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
-		BufferItem buffer_item;
+		uint32_t packetSeq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
+		BufferItem bufferItem;
 
-		buffer_item.seq32 = packet_seq32;
+		bufferItem.seq32 = packetSeq32;
 
 		// If empty do it easy.
 		if (this->buffer.size() == 0)
 		{
 			auto store = this->storage[0].store;
 
-			buffer_item.packet = packet->Clone(store);
-			this->buffer.push_back(buffer_item);
+			bufferItem.packet = packet->Clone(store);
+			this->buffer.push_back(bufferItem);
 
 			return;
 		}
 
 		// Otherwise, do the stuff.
 
-		Buffer::iterator new_buffer_it;
+		Buffer::iterator newBufferIt;
 		uint8_t* store = nullptr;
 
 		// Iterate the buffer in reverse order and find the proper place to store the
 		// packet.
-		auto buffer_it_r = this->buffer.rbegin();
-		for (; buffer_it_r != this->buffer.rend(); ++buffer_it_r)
+		auto bufferItReverse = this->buffer.rbegin();
+		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
 		{
-			auto current_seq32 = (*buffer_it_r).seq32;
+			auto currentSeq32 = (*bufferItReverse).seq32;
 
-			if (packet_seq32 > current_seq32)
+			if (packetSeq32 > currentSeq32)
 			{
 				// Get a forward iterator pointing to the same element.
-				auto it = buffer_it_r.base();
+				auto it = bufferItReverse.base();
 
-				new_buffer_it = this->buffer.insert(it, buffer_item);
+				newBufferIt = this->buffer.insert(it, bufferItem);
 
 				// Exit the loop.
 				break;
@@ -358,9 +364,11 @@ namespace RTC
 		}
 		// If the packet was older than anything in the buffer, just ignore it.
 		// NOTE: This should never happen.
-		if (buffer_it_r == this->buffer.rend())
+		if (bufferItReverse == this->buffer.rend())
 		{
-			MS_WARN_TAG(rtp, "ignoring packet older than anything in the buffer [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", packet->GetSsrc(), packet->GetSequenceNumber());
+			MS_WARN_TAG(rtp,
+				"ignoring packet older than anything in the buffer [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				packet->GetSsrc(), packet->GetSequenceNumber());
 
 			return;
 		}
@@ -373,19 +381,19 @@ namespace RTC
 		// Otherwise remove the first packet of the buffer and replace its storage area.
 		else
 		{
-			auto& first_buffer_item = *(this->buffer.begin());
-			auto first_packet = first_buffer_item.packet;
+			auto& firstBufferItem = *(this->buffer.begin());
+			auto firstPacket = firstBufferItem.packet;
 
 			// Store points to the store used by the first packet.
-			store = (uint8_t*)first_packet->GetData();
+			store = (uint8_t*)firstPacket->GetData();
 			// Free the first packet.
-			delete first_packet;
+			delete firstPacket;
 			// Remove the first element in the list.
 			this->buffer.pop_front();
 		}
 
 		// Update the new buffer item so it points to the cloned packed.
-		(*new_buffer_it).packet = packet->Clone(store);
+		(*newBufferIt).packet = packet->Clone(store);
 	}
 
 	void RtpStreamSend::onInitSeq()

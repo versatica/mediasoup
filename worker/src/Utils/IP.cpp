@@ -13,7 +13,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		int ip_family = 0;
+		int ipFamily = 0;
 
 		/**
 		 * Ragel: machine definition.
@@ -156,13 +156,13 @@ case 7:
 tr20:
 #line 25 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET;
+				ipFamily = AF_INET;
 			}
 	goto st86;
 tr77:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st86;
 st86:
@@ -174,7 +174,7 @@ case 86:
 tr21:
 #line 25 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET;
+				ipFamily = AF_INET;
 			}
 	goto st87;
 st87:
@@ -188,7 +188,7 @@ case 87:
 tr23:
 #line 25 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET;
+				ipFamily = AF_INET;
 			}
 	goto st88;
 st88:
@@ -202,7 +202,7 @@ case 88:
 tr22:
 #line 25 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET;
+				ipFamily = AF_INET;
 			}
 	goto st89;
 st89:
@@ -221,7 +221,7 @@ case 89:
 tr120:
 #line 25 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET;
+				ipFamily = AF_INET;
 			}
 	goto st90;
 st90:
@@ -775,7 +775,7 @@ case 50:
 tr78:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st91;
 st91:
@@ -789,7 +789,7 @@ case 91:
 tr80:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st92;
 st92:
@@ -803,7 +803,7 @@ case 92:
 tr79:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st93;
 st93:
@@ -822,7 +822,7 @@ case 93:
 tr121:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st94;
 st94:
@@ -970,7 +970,7 @@ case 62:
 tr85:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st95;
 st95:
@@ -990,7 +990,7 @@ case 95:
 tr122:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st96;
 st96:
@@ -1010,7 +1010,7 @@ case 96:
 tr123:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st97;
 st97:
@@ -1156,7 +1156,7 @@ case 69:
 tr62:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st98;
 st98:
@@ -1191,7 +1191,7 @@ case 70:
 tr53:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st99;
 st99:
@@ -1216,7 +1216,7 @@ case 99:
 tr90:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st100;
 st100:
@@ -1240,7 +1240,7 @@ case 100:
 tr124:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st101;
 st101:
@@ -1262,7 +1262,7 @@ case 101:
 tr126:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st102;
 st102:
@@ -1284,7 +1284,7 @@ case 102:
 tr127:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st103;
 st103:
@@ -1311,7 +1311,7 @@ case 71:
 tr91:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st104;
 st104:
@@ -1335,7 +1335,7 @@ case 104:
 tr128:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st105;
 st105:
@@ -1359,7 +1359,7 @@ case 105:
 tr129:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st106;
 st106:
@@ -1383,7 +1383,7 @@ case 106:
 tr92:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st107;
 st107:
@@ -1411,7 +1411,7 @@ case 107:
 tr130:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st108;
 st108:
@@ -1438,7 +1438,7 @@ case 108:
 tr131:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st109;
 st109:
@@ -1462,7 +1462,7 @@ case 109:
 tr93:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st110;
 st110:
@@ -1486,7 +1486,7 @@ case 110:
 tr94:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st111;
 st111:
@@ -1508,7 +1508,7 @@ case 111:
 tr47:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st112;
 st112:
@@ -1533,7 +1533,7 @@ case 112:
 tr95:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st113;
 st113:
@@ -1557,7 +1557,7 @@ case 113:
 tr132:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st114;
 st114:
@@ -1579,7 +1579,7 @@ case 114:
 tr134:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st115;
 st115:
@@ -1601,7 +1601,7 @@ case 115:
 tr135:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st116;
 st116:
@@ -1633,7 +1633,7 @@ case 72:
 tr96:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st117;
 st117:
@@ -1657,7 +1657,7 @@ case 117:
 tr136:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st118;
 st118:
@@ -1681,7 +1681,7 @@ case 118:
 tr137:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st119;
 st119:
@@ -1705,7 +1705,7 @@ case 119:
 tr97:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st120;
 st120:
@@ -1733,7 +1733,7 @@ case 120:
 tr138:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st121;
 st121:
@@ -1760,7 +1760,7 @@ case 121:
 tr139:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st122;
 st122:
@@ -1784,7 +1784,7 @@ case 122:
 tr98:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st123;
 st123:
@@ -1808,7 +1808,7 @@ case 123:
 tr99:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st124;
 st124:
@@ -1830,7 +1830,7 @@ case 124:
 tr41:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st125;
 st125:
@@ -1855,7 +1855,7 @@ case 125:
 tr100:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st126;
 st126:
@@ -1879,7 +1879,7 @@ case 126:
 tr140:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st127;
 st127:
@@ -1901,7 +1901,7 @@ case 127:
 tr142:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st128;
 st128:
@@ -1923,7 +1923,7 @@ case 128:
 tr143:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st129;
 st129:
@@ -1955,7 +1955,7 @@ case 73:
 tr101:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st130;
 st130:
@@ -1979,7 +1979,7 @@ case 130:
 tr144:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st131;
 st131:
@@ -2003,7 +2003,7 @@ case 131:
 tr145:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st132;
 st132:
@@ -2027,7 +2027,7 @@ case 132:
 tr102:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st133;
 st133:
@@ -2055,7 +2055,7 @@ case 133:
 tr146:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st134;
 st134:
@@ -2082,7 +2082,7 @@ case 134:
 tr147:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st135;
 st135:
@@ -2106,7 +2106,7 @@ case 135:
 tr103:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st136;
 st136:
@@ -2130,7 +2130,7 @@ case 136:
 tr104:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st137;
 st137:
@@ -2152,7 +2152,7 @@ case 137:
 tr35:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st138;
 st138:
@@ -2177,7 +2177,7 @@ case 138:
 tr105:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st139;
 st139:
@@ -2201,7 +2201,7 @@ case 139:
 tr148:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st140;
 st140:
@@ -2223,7 +2223,7 @@ case 140:
 tr150:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st141;
 st141:
@@ -2245,7 +2245,7 @@ case 141:
 tr151:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st142;
 st142:
@@ -2277,7 +2277,7 @@ case 74:
 tr106:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st143;
 st143:
@@ -2301,7 +2301,7 @@ case 143:
 tr152:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st144;
 st144:
@@ -2325,7 +2325,7 @@ case 144:
 tr153:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st145;
 st145:
@@ -2349,7 +2349,7 @@ case 145:
 tr107:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st146;
 st146:
@@ -2377,7 +2377,7 @@ case 146:
 tr154:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st147;
 st147:
@@ -2404,7 +2404,7 @@ case 147:
 tr155:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st148;
 st148:
@@ -2428,7 +2428,7 @@ case 148:
 tr108:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st149;
 st149:
@@ -2452,7 +2452,7 @@ case 149:
 tr109:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st150;
 st150:
@@ -2474,7 +2474,7 @@ case 150:
 tr29:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st151;
 st151:
@@ -2499,7 +2499,7 @@ case 151:
 tr115:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st152;
 st152:
@@ -2523,7 +2523,7 @@ case 152:
 tr156:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st153;
 st153:
@@ -2545,7 +2545,7 @@ case 153:
 tr158:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st154;
 st154:
@@ -2567,7 +2567,7 @@ case 154:
 tr159:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st155;
 st155:
@@ -2599,7 +2599,7 @@ case 75:
 tr116:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st156;
 st156:
@@ -2623,7 +2623,7 @@ case 156:
 tr160:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st157;
 st157:
@@ -2647,7 +2647,7 @@ case 157:
 tr161:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st158;
 st158:
@@ -2671,7 +2671,7 @@ case 158:
 tr117:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st159;
 st159:
@@ -2699,7 +2699,7 @@ case 159:
 tr162:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st160;
 st160:
@@ -2726,7 +2726,7 @@ case 160:
 tr163:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st161;
 st161:
@@ -2750,7 +2750,7 @@ case 161:
 tr118:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st162;
 st162:
@@ -2774,7 +2774,7 @@ case 162:
 tr119:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st163;
 st163:
@@ -2929,7 +2929,7 @@ case 83:
 tr114:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st164;
 st164:
@@ -2954,7 +2954,7 @@ case 164:
 tr164:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st165;
 st165:
@@ -2978,7 +2978,7 @@ case 165:
 tr169:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st166;
 st166:
@@ -3000,7 +3000,7 @@ case 166:
 tr171:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st167;
 st167:
@@ -3022,7 +3022,7 @@ case 167:
 tr172:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st168;
 st168:
@@ -3054,7 +3054,7 @@ case 84:
 tr165:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st169;
 st169:
@@ -3078,7 +3078,7 @@ case 169:
 tr173:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st170;
 st170:
@@ -3102,7 +3102,7 @@ case 170:
 tr174:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st171;
 st171:
@@ -3126,7 +3126,7 @@ case 171:
 tr166:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st172;
 st172:
@@ -3154,7 +3154,7 @@ case 172:
 tr175:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st173;
 st173:
@@ -3181,7 +3181,7 @@ case 173:
 tr176:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st174;
 st174:
@@ -3205,7 +3205,7 @@ case 174:
 tr167:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st175;
 st175:
@@ -3229,7 +3229,7 @@ case 175:
 tr168:
 #line 30 "src/Utils/IP.rl"
 	{
-				ip_family = AF_INET6;
+				ipFamily = AF_INET6;
 			}
 	goto st176;
 st176:
@@ -3448,7 +3448,7 @@ case 85:
 
 		// Ensure that the parsing has consumed all the given length.
 		if (ip_len == (size_t)(p - (const unsigned char*)ip))
-			return ip_family;
+			return ipFamily;
 		else
 			return AF_UNSPEC;
 	}
@@ -3464,9 +3464,12 @@ case 85:
 		{
 			case AF_INET:
 			{
-				err = uv_inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, _ip, INET_ADDRSTRLEN);
+				err = uv_inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, _ip,
+					INET_ADDRSTRLEN);
+
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
+
 				*port = (uint16_t)ntohs(((struct sockaddr_in*)addr)->sin_port);
 
 				break;
@@ -3474,9 +3477,12 @@ case 85:
 
 			case AF_INET6:
 			{
-				err = uv_inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, _ip, INET6_ADDRSTRLEN);
+				err = uv_inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, _ip,
+					INET6_ADDRSTRLEN);
+
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
+
 				*port = (uint16_t)ntohs(((struct sockaddr_in6*)addr)->sin6_port);
 
 				break;

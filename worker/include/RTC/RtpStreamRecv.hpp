@@ -16,7 +16,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers) = 0;
+			virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void onPliRequired(RTC::RtpStreamRecv* rtpStream) = 0;
 		};
 
@@ -39,15 +39,15 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
-		virtual void onNackRequired(const std::vector<uint16_t>& seq_numbers) override;
+		virtual void onNackRequired(const std::vector<uint16_t>& seqNumbers) override;
 		virtual void onFullFrameRequired() override;
 
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		uint32_t last_sr_timestamp = 0; // The middle 32 bits out of 64 in the NTP timestamp received in the most recent sender report.
-		uint64_t last_sr_received = 0; // Wallclock time representing the most recent sender report arrival.
+		uint32_t lastSrTimestamp = 0; // The middle 32 bits out of 64 in the NTP timestamp received in the most recent sender report.
+		uint64_t lastSrReceived = 0; // Wallclock time representing the most recent sender report arrival.
 		uint32_t transit = 0; // Relative trans time for prev pkt.
 		uint32_t jitter = 0; // Estimated jitter.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;

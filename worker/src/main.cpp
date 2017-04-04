@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
 	if (argc == 1 || !std::getenv("MEDIASOUP_CHANNEL_FD"))
 	{
 		std::cerr << "ERROR: you don't seem to be my real father" << std::endl;
+
 		std::_Exit(EXIT_FAILURE);
 	}
 
@@ -68,19 +69,19 @@ int main(int argc, char* argv[])
 
 	MS_DEBUG_TAG(info, "starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
 
-	#if defined(MS_LITTLE_ENDIAN)
-		MS_DEBUG_TAG(info, "Little-Endian CPU detected");
-	#elif defined(MS_BIG_ENDIAN)
-		MS_DEBUG_TAG(info, "Big-Endian CPU detected");
-	#endif
+#if defined(MS_LITTLE_ENDIAN)
+	MS_DEBUG_TAG(info, "Little-Endian CPU detected");
+#elif defined(MS_BIG_ENDIAN)
+	MS_DEBUG_TAG(info, "Big-Endian CPU detected");
+#endif
 
-	#if defined(INTPTR_MAX) && defined(INT32_MAX) && (INTPTR_MAX == INT32_MAX)
-		MS_DEBUG_TAG(info, "32 bits architecture detected");
-	#elif defined(INTPTR_MAX) && defined(INT64_MAX) && (INTPTR_MAX == INT64_MAX)
-		MS_DEBUG_TAG(info, "64 bits architecture detected");
-	#else
-		MS_WARN_TAG(info, "can not determine whether the architecture is 32 or 64 bits");
-	#endif
+#if defined(INTPTR_MAX) && defined(INT32_MAX) && (INTPTR_MAX == INT32_MAX)
+	MS_DEBUG_TAG(info, "32 bits architecture detected");
+#elif defined(INTPTR_MAX) && defined(INT64_MAX) && (INTPTR_MAX == INT64_MAX)
+	MS_DEBUG_TAG(info, "64 bits architecture detected");
+#else
+	MS_WARN_TAG(info, "can not determine whether the architecture is 32 or 64 bits");
+#endif
 
 	try
 	{
@@ -95,9 +96,9 @@ int main(int argc, char* argv[])
 	}
 	catch (const MediaSoupError &error)
 	{
-		destroy();
-
 		MS_ERROR_STD("failure exit: %s", error.what());
+
+		destroy();
 		exitWithError();
 	}
 }
@@ -107,7 +108,6 @@ void init()
 	MS_TRACE();
 
 	ignoreSignals();
-
 	DepLibUV::PrintVersion();
 
 	// Initialize static stuff.
@@ -127,7 +127,7 @@ void ignoreSignals()
 
 	int err;
 	struct sigaction act;
-	std::map<std::string, int> ignored_signals =
+	std::map<std::string, int> ignoredSignals =
 	{
 		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },
@@ -142,14 +142,17 @@ void ignoreSignals()
 	if (err)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
-	for (auto it = ignored_signals.begin(); it != ignored_signals.end(); ++it)
+	for (auto it = ignoredSignals.begin(); it != ignoredSignals.end(); ++it)
 	{
-		auto& sig_name = it->first;
-		int sig_id = it->second;
+		auto& sigName = it->first;
+		int sigId = it->second;
 
-		err = sigaction(sig_id, &act, nullptr);
+		err = sigaction(sigId, &act, nullptr);
 		if (err)
-			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sig_name.c_str(), std::strerror(errno));
+		{
+			MS_THROW_ERROR("sigaction() failed for signal %s: %s",
+				sigName.c_str(), std::strerror(errno));
+		}
 	}
 }
 
@@ -169,7 +172,6 @@ void exitSuccess()
 {
 	// Wait a bit so peding messages to stdout/Channel arrive to the main process.
 	usleep(100000);
-
 	// And exit with success status.
 	std::_Exit(EXIT_SUCCESS);
 }
@@ -178,7 +180,6 @@ void exitWithError()
 {
 	// Wait a bit so peding messages to stderr arrive to the main process.
 	usleep(100000);
-
 	// And exit with error status.
 	std::_Exit(EXIT_FAILURE);
 }

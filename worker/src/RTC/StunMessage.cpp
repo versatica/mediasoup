@@ -42,27 +42,29 @@ namespace RTC
 		 */
 
 		// Get type field.
-		uint16_t msg_type = Utils::Byte::Get2Bytes(data, 0);
+		uint16_t msgType = Utils::Byte::Get2Bytes(data, 0);
 
 		// Get length field.
-		uint16_t msg_length = Utils::Byte::Get2Bytes(data, 2);
+		uint16_t msgLength = Utils::Byte::Get2Bytes(data, 2);
 
 		// length field must be total size minus header's 20 bytes, and must be multiple of 4 Bytes.
-		if (((size_t)msg_length != len - 20) || (msg_length & 0x03))
+		if (((size_t)msgLength != len - 20) || (msgLength & 0x03))
 		{
-			MS_WARN_TAG(ice, "length field + 20 does not match total size (or it is not multiple of 4 bytes), message discarded");
+			MS_WARN_TAG(ice,
+				"length field + 20 does not match total size (or it is not multiple of 4 bytes), "
+				"message discarded");
 
 			return nullptr;
 		}
 
 		// Get STUN method.
-		uint16_t msg_method = (msg_type & 0x000f) | ((msg_type & 0x00e0)>>1) | ((msg_type & 0x3E00)>>2);
+		uint16_t msgMethod = (msgType & 0x000f) | ((msgType & 0x00e0)>>1) | ((msgType & 0x3E00)>>2);
 
 		// Get STUN class.
-		uint16_t msg_class = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
+		uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
 		// Create a new StunMessage (data + 8 points to the received TransactionID field).
-		StunMessage* msg = new StunMessage((Class)msg_class, (Method)msg_method, data + 8, data, len);
+		StunMessage* msg = new StunMessage((Class)msgClass, (Method)msgMethod, data + 8, data, len);
 
 		/*
 		    STUN Attributes
@@ -86,22 +88,22 @@ namespace RTC
 		size_t pos = 20;
 
 		// Flags (positions) for special MESSAGE-INTEGRITY and FINGERPRINT attributes.
-		bool has_message_integrity = false;
-		bool has_fingerprint = false;
-		size_t fingerprint_attr_pos; // Will point to the beginning of the attribute.
+		bool hasMessageIntegrity = false;
+		bool hasFingerprint = false;
+		size_t fingerprintAttrPos; // Will point to the beginning of the attribute.
 		uint32_t fingerprint; // Holds the value of the FINGERPRINT attribute.
 
 		// Ensure there are at least 4 remaining bytes (attribute with 0 length).
 		while (pos + 4 <= len)
 		{
 			// Get the attribute type.
-			Attribute attr_type = (Attribute)Utils::Byte::Get2Bytes(data, pos);
+			Attribute attrType = (Attribute)Utils::Byte::Get2Bytes(data, pos);
 
 			// Get the attribute length.
-			uint16_t attr_length = Utils::Byte::Get2Bytes(data, pos + 2);
+			uint16_t attrLength = Utils::Byte::Get2Bytes(data, pos + 2);
 
 			// Ensure the attribute length is not greater than the remaining size.
-			if ((pos + 4 + attr_length) > len)
+			if ((pos + 4 + attrLength) > len)
 			{
 				MS_WARN_TAG(ice, "the attribute length exceeds the remaining size, message discarded");
 
@@ -110,7 +112,7 @@ namespace RTC
 			}
 
 			// FINGERPRINT must be the last attribute.
-			if (has_fingerprint)
+			if (hasFingerprint)
 			{
 				MS_WARN_TAG(ice, "attribute after FINGERPRINT is not allowed, message discarded");
 
@@ -119,39 +121,41 @@ namespace RTC
 			}
 
 			// After a MESSAGE-INTEGRITY attribute just FINGERPRINT is allowed.
-			if (has_message_integrity && attr_type != Attribute::Fingerprint)
+			if (hasMessageIntegrity && attrType != Attribute::Fingerprint)
 			{
-				MS_WARN_TAG(ice, "attribute after MESSAGE_INTEGRITY other than FINGERPRINT is not allowed, message discarded");
+				MS_WARN_TAG(ice,
+					"attribute after MESSAGE_INTEGRITY other than FINGERPRINT is not allowed, "
+					"message discarded");
 
 				delete msg;
 				return nullptr;
 			}
 
-			const uint8_t* attr_value_pos = data + pos + 4;
+			const uint8_t* attrValuePos = data + pos + 4;
 
-			switch (attr_type)
+			switch (attrType)
 			{
 				case Attribute::Username:
 				{
-					msg->SetUsername((const char*)attr_value_pos, (size_t)attr_length);
+					msg->SetUsername((const char*)attrValuePos, (size_t)attrLength);
 
 					break;
 				}
 				case Attribute::Priority:
 				{
-					msg->SetPriority(Utils::Byte::Get4Bytes(attr_value_pos, 0));
+					msg->SetPriority(Utils::Byte::Get4Bytes(attrValuePos, 0));
 
 					break;
 				}
 				case Attribute::IceControlling:
 				{
-					msg->SetIceControlling(Utils::Byte::Get8Bytes(attr_value_pos, 0));
+					msg->SetIceControlling(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
 				case Attribute::IceControlled:
 				{
-					msg->SetIceControlled(Utils::Byte::Get8Bytes(attr_value_pos, 0));
+					msg->SetIceControlled(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
@@ -163,26 +167,27 @@ namespace RTC
 				}
 				case Attribute::MessageIntegrity:
 				{
-					has_message_integrity = true;
-					msg->SetMessageIntegrity(attr_value_pos);
+					hasMessageIntegrity = true;
+					msg->SetMessageIntegrity(attrValuePos);
 
 					break;
 				}
 				case Attribute::Fingerprint:
 				{
-					has_fingerprint = true;
-					fingerprint_attr_pos = pos;
-					fingerprint = Utils::Byte::Get4Bytes(attr_value_pos, 0);
+					hasFingerprint = true;
+					fingerprintAttrPos = pos;
+					fingerprint = Utils::Byte::Get4Bytes(attrValuePos, 0);
 					msg->SetFingerprint();
 
 					break;
 				}
 				case Attribute::ErrorCode:
 				{
-					uint8_t error_class = Utils::Byte::Get1Byte(attr_value_pos, 2);
-					uint8_t error_number = Utils::Byte::Get1Byte(attr_value_pos, 3);
-					uint16_t error_code = (uint16_t)(error_class * 100 + error_number);
-					msg->SetErrorCode(error_code);
+					uint8_t errorClass = Utils::Byte::Get1Byte(attrValuePos, 2);
+					uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
+					uint16_t errorCode = (uint16_t)(errorClass * 100 + errorNumber);
+
+					msg->SetErrorCode(errorCode);
 
 					break;
 				}
@@ -191,7 +196,7 @@ namespace RTC
 			}
 
 			// Set next attribute position.
-			pos = (size_t)Utils::Byte::PadTo4Bytes((uint16_t)(pos + 4 + attr_length));
+			pos = (size_t)Utils::Byte::PadTo4Bytes((uint16_t)(pos + 4 + attrLength));
 		}
 
 		// Ensure current position matches the total length.
@@ -204,16 +209,19 @@ namespace RTC
 		}
 
 		// If it has FINGERPRINT attribute then verify it.
-		if (has_fingerprint)
+		if (hasFingerprint)
 		{
 			// Compute the CRC32 of the received message up to (but excluding) the
 			// FINGERPRINT attribute and XOR it with 0x5354554e.
-			uint32_t computed_fingerprint = Utils::Crypto::GetCRC32(data, fingerprint_attr_pos) ^ 0x5354554e;
+			uint32_t computedFingerprint =
+				Utils::Crypto::GetCRC32(data, fingerprintAttrPos) ^ 0x5354554e;
 
 			// Compare with the FINGERPRINT value in the message.
-			if (fingerprint != computed_fingerprint)
+			if (fingerprint != computedFingerprint)
 			{
-				MS_WARN_TAG(ice, "computed FINGERPRINT value does not match the value in the message,| message discarded");
+				MS_WARN_TAG(ice,
+					"computed FINGERPRINT value does not match the value in the message, "
+					"message discarded");
 
 				delete msg;
 				return nullptr;
@@ -264,13 +272,15 @@ namespace RTC
 			MS_DUMP("  %s with unknown method %#.3x", klass.c_str(), (uint16_t)this->method);
 		}
 		MS_DUMP("  size: %zu bytes", this->size);
-		char transaction_id[25];
+
+		static char TransactionId[25];
+
 		for (int i=0; i<12; ++i)
 		{
 			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
-			std::snprintf(transaction_id+(i*2), 3, "%.2x", this->transactionId[i]);
+			std::snprintf(TransactionId+(i*2), 3, "%.2x", this->transactionId[i]);
 		}
-		MS_DUMP("  transactionId: %s", transaction_id);
+		MS_DUMP("  transactionId: %s", TransactionId);
 		if (this->errorCode)
 			MS_DUMP("  errorCode: %" PRIu16, this->errorCode);
 		if (!this->username.empty())
@@ -288,19 +298,21 @@ namespace RTC
 			int family;
 			uint16_t port;
 			std::string ip;
+
 			Utils::IP::GetAddressInfo(this->xorMappedAddress, &family, ip, &port);
 
 			MS_DUMP("  xorMappedAddress: %s : %" PRIu16, ip.c_str(), port);
 		}
 		if (this->messageIntegrity)
 		{
-			char message_integrity[41];
+			static char MessageIntegrity[41];
+
 			for (int i=0; i<20; ++i)
 			{
-				std::snprintf(message_integrity+(i*2), 3, "%.2x", this->messageIntegrity[i]);
+				std::snprintf(MessageIntegrity+(i*2), 3, "%.2x", this->messageIntegrity[i]);
 			}
 
-			MS_DUMP("  messageIntegrity: %s", message_integrity);
+			MS_DUMP("  messageIntegrity: %s", MessageIntegrity);
 		}
 		if (this->hasFingerprint)
 			MS_DUMP("  fingerprint");
@@ -308,7 +320,7 @@ namespace RTC
 		MS_DUMP("</StunMessage>");
 	}
 
-	StunMessage::Authentication StunMessage::CheckAuthentication(const std::string &local_username, const std::string &local_password)
+	StunMessage::Authentication StunMessage::CheckAuthentication(const std::string &localUsername, const std::string &localPassword)
 	{
 		MS_TRACE();
 
@@ -322,11 +334,12 @@ namespace RTC
 					return Authentication::BadRequest;
 
 				// Check that USERNAME attribute begins with our local username plus ":".
-				size_t local_username_len = local_username.length();
+				size_t localUsernameLen = localUsername.length();
+
 				if (
-					this->username.length() <= local_username_len ||
-					this->username.at(local_username_len) != ':' ||
-					(this->username.compare(0, local_username_len, local_username) != 0)
+					this->username.length() <= localUsernameLen ||
+					this->username.at(localUsernameLen) != ':' ||
+					(this->username.compare(0, localUsernameLen, localUsername) != 0)
 				)
 					return Authentication::Unauthorized;
 
@@ -350,12 +363,13 @@ namespace RTC
 			Utils::Byte::Set2Bytes(this->data, 2, (uint16_t)(this->size - 20 - 8));
 
 		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-		const uint8_t* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(local_password, this->data, (this->messageIntegrity - 4) - this->data);
+		const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHMAC_SHA1(localPassword,
+			this->data, (this->messageIntegrity - 4) - this->data);
 
 		Authentication result;
 
 		// Compare the computed HMAC-SHA1 with the MESSAGE-INTEGRITY in the message.
-		if (std::memcmp(this->messageIntegrity, computed_message_integrity, 20) == 0)
+		if (std::memcmp(this->messageIntegrity, computedMessageIntegrity, 20) == 0)
 			result = Authentication::OK;
 		else
 			result = Authentication::Unauthorized;
@@ -371,7 +385,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->klass == Class::Request, "attempt to create a success response for a non Request STUN message");
+		MS_ASSERT(this->klass == Class::Request,
+			"attempt to create a success response for a non Request STUN message");
 
 		return new StunMessage(Class::SuccessResponse, this->method, this->transactionId, nullptr, 0);
 	}
@@ -380,9 +395,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->klass == Class::Request, "attempt to create an error response for a non Request STUN message");
+		MS_ASSERT(this->klass == Class::Request,
+			"attempt to create an error response for a non Request STUN message");
 
-		StunMessage* response = new StunMessage(Class::ErrorResponse, this->method, this->transactionId, nullptr, 0);
+		StunMessage* response = new StunMessage(Class::ErrorResponse, this->method,
+			this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);
 
@@ -407,12 +424,13 @@ namespace RTC
 		MS_TRACE();
 
 		// Some useful variables.
-		uint16_t username_padded_len = 0;
-		uint16_t xor_mapped_address_padded_len = 0;
-		bool add_xor_mapped_address = (this->xorMappedAddress && this->method == StunMessage::Method::Binding && this->klass == Class::SuccessResponse);
-		bool add_error_code = (this->errorCode && this->klass == Class::ErrorResponse);
-		bool add_message_integrity = (this->klass != Class::ErrorResponse && !this->password.empty());
-		bool add_fingerprint = true; // Do always.
+		uint16_t usernamePaddedLen = 0;
+		uint16_t xorMappedAddressPaddedLen = 0;
+		bool addXorMappedAddress = (this->xorMappedAddress &&
+			this->method == StunMessage::Method::Binding && this->klass == Class::SuccessResponse);
+		bool addErrorCode = (this->errorCode && this->klass == Class::ErrorResponse);
+		bool addMessageIntegrity = (this->klass != Class::ErrorResponse && !this->password.empty());
+		bool addFingerprint = true; // Do always.
 
 		// Update data pointer.
 		this->data = buffer;
@@ -422,8 +440,8 @@ namespace RTC
 
 		if (!this->username.empty())
 		{
-			username_padded_len = Utils::Byte::PadTo4Bytes((uint16_t)this->username.length());
-			this->size += 4 + username_padded_len;
+			usernamePaddedLen = Utils::Byte::PadTo4Bytes((uint16_t)this->username.length());
+			this->size += 4 + usernamePaddedLen;
 		}
 
 		if (this->priority)
@@ -438,20 +456,20 @@ namespace RTC
 		if (this->hasUseCandidate)
 			this->size += 4;
 
-		if (add_xor_mapped_address)
+		if (addXorMappedAddress)
 		{
 			switch (this->xorMappedAddress->sa_family)
 			{
 				case AF_INET:
 				{
-					xor_mapped_address_padded_len = 8;
+					xorMappedAddressPaddedLen = 8;
 					this->size += 4 + 8;
 
 					break;
 				}
 				case AF_INET6:
 				{
-					xor_mapped_address_padded_len = 20;
+					xorMappedAddressPaddedLen = 20;
 					this->size += 4 + 20;
 
 					break;
@@ -460,29 +478,30 @@ namespace RTC
 				{
 					MS_ERROR("invalid inet family in XOR-MAPPED-ADDRESS attribute");
 
-					add_xor_mapped_address = false;
+					addXorMappedAddress = false;
 				}
 			}
 		}
 
-		if (add_error_code)
+		if (addErrorCode)
 			this->size += 4 + 4;
 
-		if (add_message_integrity)
+		if (addMessageIntegrity)
 			this->size += 4 + 20;
 
-		if (add_fingerprint)
+		if (addFingerprint)
 			this->size += 4 + 4;
 
 		// Merge class and method fields into type.
-		uint16_t type_field = ((uint16_t)this->method & 0x0f80) << 2;
-		type_field |= ((uint16_t)this->method & 0x0070) << 1;
-		type_field |= ((uint16_t)this->method & 0x000f);
-		type_field |= ((uint16_t)this->klass & 0x02) << 7;
-		type_field |= ((uint16_t)this->klass & 0x01) << 4;
+		uint16_t typeField = ((uint16_t)this->method & 0x0f80) << 2;
+
+		typeField |= ((uint16_t)this->method & 0x0070) << 1;
+		typeField |= ((uint16_t)this->method & 0x000f);
+		typeField |= ((uint16_t)this->klass & 0x02) << 7;
+		typeField |= ((uint16_t)this->klass & 0x01) << 4;
 
 		// Set type field.
-		Utils::Byte::Set2Bytes(buffer, 0, type_field);
+		Utils::Byte::Set2Bytes(buffer, 0, typeField);
 
 		// Set length field.
 		Utils::Byte::Set2Bytes(buffer, 2, (uint16_t)this->size - 20);
@@ -500,12 +519,12 @@ namespace RTC
 		size_t pos = 20;
 
 		// Add USERNAME.
-		if (username_padded_len)
+		if (usernamePaddedLen)
 		{
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Username);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, (uint16_t)this->username.length());
 			std::memcpy(buffer + pos + 4, this->username.c_str(), this->username.length());
-			pos += 4 + username_padded_len;
+			pos += 4 + usernamePaddedLen;
 		}
 
 		// Add PRIORITY.
@@ -544,11 +563,13 @@ namespace RTC
 		}
 
 		// Add XOR-MAPPED-ADDRESS
-		if (add_xor_mapped_address)
+		if (addXorMappedAddress)
 		{
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::XorMappedAddress);
-			Utils::Byte::Set2Bytes(buffer, pos + 2, xor_mapped_address_padded_len);
+			Utils::Byte::Set2Bytes(buffer, pos + 2, xorMappedAddressPaddedLen);
+
 			uint8_t* attr_value = buffer + pos + 4;
+
 			switch (this->xorMappedAddress->sa_family)
 			{
 				case AF_INET:
@@ -609,38 +630,40 @@ namespace RTC
 		}
 
 		// Add ERROR-CODE.
-		if (add_error_code)
+		if (addErrorCode)
 		{
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ErrorCode);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
-			uint8_t code_class = (uint8_t)(this->errorCode / 100);
-			uint8_t code_number = (uint8_t)this->errorCode - (code_class * 100);
+
+			uint8_t codeClass = (uint8_t)(this->errorCode / 100);
+			uint8_t codeNumber = (uint8_t)this->errorCode - (codeClass * 100);
+
 			Utils::Byte::Set2Bytes(buffer, pos + 4, 0);
-			Utils::Byte::Set1Byte(buffer, pos + 6, code_class);
-			Utils::Byte::Set1Byte(buffer, pos + 7, code_number);
+			Utils::Byte::Set1Byte(buffer, pos + 6, codeClass);
+			Utils::Byte::Set1Byte(buffer, pos + 7, codeNumber);
 			pos += 4 + 4;
 		}
 
 		// Add MESSAGE-INTEGRITY.
-		if (add_message_integrity)
+		if (addMessageIntegrity)
 		{
 			// Ignore FINGERPRINT.
-			if (add_fingerprint)
+			if (addFingerprint)
 				Utils::Byte::Set2Bytes(buffer, 2, (uint16_t)(this->size - 20 - 8));
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-			const uint8_t* computed_message_integrity = Utils::Crypto::GetHMAC_SHA1(this->password, buffer, pos);
+			const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHMAC_SHA1(this->password, buffer, pos);
 
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::MessageIntegrity);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 20);
-			std::memcpy(buffer + pos + 4, computed_message_integrity, 20);
+			std::memcpy(buffer + pos + 4, computedMessageIntegrity, 20);
 
 			// Update the pointer.
 			this->messageIntegrity = buffer + pos + 4;
 			pos += 4 + 20;
 
 			// Restore length field.
-			if (add_fingerprint)
+			if (addFingerprint)
 				Utils::Byte::Set2Bytes(buffer, 2, (uint16_t)(this->size - 20));
 		}
 		else
@@ -650,15 +673,15 @@ namespace RTC
 		}
 
 		// Add FINGERPRINT.
-		if (add_fingerprint)
+		if (addFingerprint)
 		{
 			// Compute the CRC32 of the message up to (but excluding) the FINGERPRINT
 			// attribute and XOR it with 0x5354554e.
-			uint32_t computed_fingerprint = Utils::Crypto::GetCRC32(buffer, pos) ^ 0x5354554e;
+			uint32_t computedFingerprint = Utils::Crypto::GetCRC32(buffer, pos) ^ 0x5354554e;
 
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Fingerprint);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
-			Utils::Byte::Set4Bytes(buffer, pos + 4, computed_fingerprint);
+			Utils::Byte::Set4Bytes(buffer, pos + 4, computedFingerprint);
 			pos += 4 + 4;
 			// Set flag.
 			this->hasFingerprint = true;

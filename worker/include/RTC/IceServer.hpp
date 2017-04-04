@@ -38,9 +38,6 @@ namespace RTC
 			virtual void onIceDisconnected(const IceServer* iceServer) = 0;
 		};
 
-	private:
-		static uint8_t stunSerializeBuffer[];
-
 	public:
 		IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password);
 
@@ -56,7 +53,7 @@ namespace RTC
 		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
-		void HandleTuple(RTC::TransportTuple* tuple, bool has_use_candidate);
+		void HandleTuple(RTC::TransportTuple* tuple, bool hasUseCandidate);
 		/**
 		 * Store the given tuple and return its stored address.
 		 */
@@ -69,7 +66,7 @@ namespace RTC
 		 * Set the given tuple as the selected tuple.
 		 * NOTE: The given tuple MUST be already stored within the list.
 		 */
-		void SetSelectedTuple(RTC::TransportTuple* stored_tuple);
+		void SetSelectedTuple(RTC::TransportTuple* storedTuple);
 
 	private:
 		// Passed by argument.

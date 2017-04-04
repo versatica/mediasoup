@@ -34,13 +34,15 @@ namespace RTC
 			const std::string supportedRtpCapabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","clockRate":48000,"numChannels":2,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMU","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMA","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/G722","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/iLBC","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":24000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":12000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":48000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":8000,"rtcpFeedback":[]},{"kind":"video","name":"video/VP8","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/VP9","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":0},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":1},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H265","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":1,"preferredEncrypt":false},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":2,"preferredEncrypt":false},{"kind":"","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":3,"preferredEncrypt":false},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":4,"preferredEncrypt":false},{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","preferredId":5,"preferredEncrypt":false}],"fecMechanisms":[]})";
 
 			Json::Value json;
-			std::string json_parse_error;
+			std::string jsonParseError;
 
-			if (!jsonReader->parse(supportedRtpCapabilities.c_str(), supportedRtpCapabilities.c_str() + supportedRtpCapabilities.length(), &json, &json_parse_error))
+			if (!jsonReader->parse(supportedRtpCapabilities.c_str(),
+				supportedRtpCapabilities.c_str() + supportedRtpCapabilities.length(), &json, &jsonParseError))
 			{
 				delete jsonReader;
 
-				MS_THROW_ERROR_STD("JSON parsing error in supported RTP capabilities: %s", json_parse_error.c_str());
+				MS_THROW_ERROR_STD("JSON parsing error in supported RTP capabilities: %s",
+					jsonParseError.c_str());
 			}
 			else
 			{
@@ -72,12 +74,12 @@ namespace RTC
 		// `mediaCodecs` is optional.
 		if (data[k_mediaCodecs].isArray())
 		{
-			auto& json_mediaCodecs = data[k_mediaCodecs];
+			auto& jsonMediaCodecs = data[k_mediaCodecs];
 			std::vector<RTC::RtpCodecParameters> mediaCodecs;
 
-			for (Json::UInt i = 0; i < json_mediaCodecs.size(); ++i)
+			for (Json::UInt i = 0; i < jsonMediaCodecs.size(); ++i)
 			{
-				RTC::RtpCodecParameters mediaCodec(json_mediaCodecs[i], RTC::Scope::ROOM_CAPABILITY);
+				RTC::RtpCodecParameters mediaCodec(jsonMediaCodecs[i], RTC::Scope::ROOM_CAPABILITY);
 
 				// Ignore feature codecs.
 				if (mediaCodec.mime.IsFeatureCodec())
@@ -116,7 +118,7 @@ namespace RTC
 
 		static const Json::StaticString k_class("class");
 
-		Json::Value event_data(Json::objectValue);
+		Json::Value eventData(Json::objectValue);
 
 		// Close all the Peers.
 		// NOTE: Upon Peer closure the onPeerClosed() method is called which
@@ -131,8 +133,8 @@ namespace RTC
 		}
 
 		// Notify.
-		event_data[k_class] = "Room";
-		this->notifier->Emit(this->roomId, "close", event_data);
+		eventData[k_class] = "Room";
+		this->notifier->Emit(this->roomId, "close", eventData);
 
 		// Notify the listener.
 		this->listener->onRoomClosed(this);
@@ -151,9 +153,9 @@ namespace RTC
 		static const Json::StaticString k_mapRtpSenderRtpReceiver("mapRtpSenderRtpReceiver");
 
 		Json::Value json(Json::objectValue);
-		Json::Value json_peers(Json::arrayValue);
-		Json::Value json_mapRtpReceiverRtpSenders(Json::objectValue);
-		Json::Value json_mapRtpSenderRtpReceiver(Json::objectValue);
+		Json::Value jsonPeers(Json::arrayValue);
+		Json::Value jsonMapRtpReceiverRtpSenders(Json::objectValue);
+		Json::Value jsonMapRtpSenderRtpReceiver(Json::objectValue);
 
 		// Add `roomId`.
 		json[k_roomId] = (Json::UInt)this->roomId;
@@ -166,25 +168,25 @@ namespace RTC
 		{
 			RTC::Peer* peer = kv.second;
 
-			json_peers.append(peer->toJson());
+			jsonPeers.append(peer->toJson());
 		}
-		json[k_peers] = json_peers;
+		json[k_peers] = jsonPeers;
 
 		// Add `mapRtpReceiverRtpSenders`.
 		for (auto& kv : this->mapRtpReceiverRtpSenders)
 		{
 			auto rtpReceiver = kv.first;
 			auto& rtpSenders = kv.second;
-			Json::Value json_rtpReceivers(Json::arrayValue);
+			Json::Value jsonRtpReceivers(Json::arrayValue);
 
 			for (auto& rtpSender : rtpSenders)
 			{
-				json_rtpReceivers.append(std::to_string(rtpSender->rtpSenderId));
+				jsonRtpReceivers.append(std::to_string(rtpSender->rtpSenderId));
 			}
 
-			json_mapRtpReceiverRtpSenders[std::to_string(rtpReceiver->rtpReceiverId)] = json_rtpReceivers;
+			jsonMapRtpReceiverRtpSenders[std::to_string(rtpReceiver->rtpReceiverId)] = jsonRtpReceivers;
 		}
-		json[k_mapRtpReceiverRtpSenders] = json_mapRtpReceiverRtpSenders;
+		json[k_mapRtpReceiverRtpSenders] = jsonMapRtpReceiverRtpSenders;
 
 		// Add `mapRtpSenderRtpReceiver`.
 		for (auto& kv : this->mapRtpSenderRtpReceiver)
@@ -192,9 +194,10 @@ namespace RTC
 			auto rtpSender = kv.first;
 			auto rtpReceiver = kv.second;
 
-			json_mapRtpSenderRtpReceiver[std::to_string(rtpSender->rtpSenderId)] = std::to_string(rtpReceiver->rtpReceiverId);
+			jsonMapRtpSenderRtpReceiver[std::to_string(rtpSender->rtpSenderId)] =
+				std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_mapRtpSenderRtpReceiver] = json_mapRtpSenderRtpReceiver;
+		json[k_mapRtpSenderRtpReceiver] = jsonMapRtpSenderRtpReceiver;
 
 		return json;
 	}
@@ -207,9 +210,9 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::room_close:
 			{
-				#ifdef MS_LOG_DEV
+			#ifdef MS_LOG_DEV
 				uint32_t roomId = this->roomId;
-				#endif
+			#endif
 
 				Destroy();
 
@@ -244,18 +247,21 @@ namespace RTC
 				catch (const MediaSoupError &error)
 				{
 					request->Reject(error.what());
+
 					return;
 				}
 
 				if (peer)
 				{
 					request->Reject("Peer already exists");
+
 					return;
 				}
 
 				if (!request->internal[k_peerName].isString())
 				{
 					request->Reject("Request has not string internal.peerName");
+
 					return;
 				}
 
@@ -268,6 +274,7 @@ namespace RTC
 				catch (const MediaSoupError &error)
 				{
 					request->Reject(error.what());
+
 					return;
 				}
 
@@ -308,12 +315,14 @@ namespace RTC
 				catch (const MediaSoupError &error)
 				{
 					request->Reject(error.what());
+
 					return;
 				}
 
 				if (!peer)
 				{
 					request->Reject("Peer does not exist");
+
 					return;
 				}
 
@@ -337,16 +346,16 @@ namespace RTC
 
 		static const Json::StaticString k_peerId("peerId");
 
-		auto json_peerId = request->internal[k_peerId];
+		auto jsonPeerId = request->internal[k_peerId];
 
-		if (!json_peerId.isUInt())
+		if (!jsonPeerId.isUInt())
 			MS_THROW_ERROR("Request has not numeric .peerId field");
 
 		// If given, fill peerId.
 		if (peerId)
-			*peerId = json_peerId.asUInt();
+			*peerId = jsonPeerId.asUInt();
 
-		auto it = this->peers.find(json_peerId.asUInt());
+		auto it = this->peers.find(jsonPeerId.asUInt());
 		if (it != this->peers.end())
 		{
 			RTC::Peer* peer = it->second;
@@ -492,23 +501,24 @@ namespace RTC
 		// create RtpSenders for this new Peer.
 		for (auto& kv : this->peers)
 		{
-			RTC::Peer* receiver_peer = kv.second;
+			RTC::Peer* receiverPeer = kv.second;
 
-			for (auto rtpReceiver : receiver_peer->GetRtpReceivers())
+			for (auto rtpReceiver : receiverPeer->GetRtpReceivers())
 			{
 				// Skip if the RtpReceiver has not parameters.
 				if (!rtpReceiver->GetParameters())
 					continue;
 
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId, rtpReceiver->kind);
+				RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId,
+					rtpReceiver->kind);
 
 				// Store into the maps.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 				this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
 
 				// Attach the RtpSender to peer.
-				peer->AddRtpSender(rtpSender, receiver_peer->peerName, rtpReceiver->GetParameters());
+				peer->AddRtpSender(rtpSender, receiverPeer->peerName, rtpReceiver->GetParameters());
 			}
 		}
 	}
@@ -528,26 +538,27 @@ namespace RTC
 
 			for (auto& kv : this->peers)
 			{
-				RTC::Peer* sender_peer = kv.second;
+				RTC::Peer* senderPeer = kv.second;
 
 				// Skip receiver Peer.
-				if (sender_peer == peer)
+				if (senderPeer == peer)
 					continue;
 
 				// Skip Peer with capabilities not set yet.
-				if (!sender_peer->HasCapabilities())
+				if (!senderPeer->HasCapabilities())
 					continue;
 
 				// Create a RtpSender for the other Peer.
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender = new RTC::RtpSender(sender_peer, this->notifier, rtpSenderId, rtpReceiver->kind);
+				RTC::RtpSender* rtpSender = new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId,
+					rtpReceiver->kind);
 
 				// Store into the maps.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
 				this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
 
-				// Attach the RtpSender to sender_peer.
-				sender_peer->AddRtpSender(rtpSender, peer->peerName, rtpReceiver->GetParameters());
+				// Attach the RtpSender to senderPeer.
+				senderPeer->AddRtpSender(rtpSender, peer->peerName, rtpReceiver->GetParameters());
 			}
 		}
 		// If this is not a new RtpReceiver let's retrieve its updated parameters
@@ -607,7 +618,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) !=
+			this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
 
 		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
 
@@ -623,7 +635,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
+			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
 
 		rtpSender->ReceiveRtcpReceiverReport(report);
 	}
@@ -632,7 +645,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
+			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
@@ -643,7 +657,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
+			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
@@ -657,14 +672,16 @@ namespace RTC
 		// RtpReceiver needs the sender report in order to generate it's receiver report.
 		rtpReceiver->ReceiveRtcpSenderReport(report);
 
-		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) !=
+			this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
 	}
 
 	void Room::onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
+			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 

@@ -11,9 +11,10 @@
 
 namespace RTC
 {
-	/* Class variables. */
+	/* Static. */
 
-	uint8_t SrtpSession::encryptBuffer[MS_ENCRYPT_BUFFER_SIZE];
+	static constexpr size_t EncryptBufferSize = 65536;
+	static uint8_t EncryptBuffer[EncryptBufferSize];
 
 	/* Class methods. */
 
@@ -51,7 +52,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SrtpSession::SrtpSession(Type type, Profile profile, uint8_t* key, size_t key_len)
+	SrtpSession::SrtpSession(Type type, Profile profile, uint8_t* key, size_t keyLen)
 	{
 		MS_TRACE();
 
@@ -75,7 +76,8 @@ namespace RTC
 				MS_ABORT("unknown SRTP suite");
 		}
 
-		MS_ASSERT((int)key_len == policy.rtp.cipher_key_len, "given key_len does not match policy.rtp.cipher_key_len");
+		MS_ASSERT((int)keyLen == policy.rtp.cipher_key_len,
+			"given keyLen does not match policy.rtp.cipher_keyLen");
 
 		switch (type)
 		{
@@ -91,7 +93,7 @@ namespace RTC
 		policy.key = key;
 		// Required for sending RTP retransmission without RTX.
 		policy.allow_repeat_tx = 1;
-		policy.window_size = 4096;
+		policy.window_size = 2048;
 		policy.next = nullptr;
 
 		// Set the SRTP session.
@@ -133,11 +135,11 @@ namespace RTC
 			return false;
 		}
 
-		std::memcpy(SrtpSession::encryptBuffer, *data, *len);
+		std::memcpy(EncryptBuffer, *data, *len);
 
 		srtp_err_status_t err;
 
-		err = srtp_protect(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
+		err = srtp_protect(this->session, (void*)EncryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -146,7 +148,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const uint8_t*)SrtpSession::encryptBuffer;
+		*data = (const uint8_t*)EncryptBuffer;
 
 		return true;
 	}
@@ -180,11 +182,11 @@ namespace RTC
 			return false;
 		}
 
-		std::memcpy(SrtpSession::encryptBuffer, *data, *len);
+		std::memcpy(EncryptBuffer, *data, *len);
 
 		srtp_err_status_t err;
 
-		err = srtp_protect_rtcp(this->session, (void*)SrtpSession::encryptBuffer, (int*)len);
+		err = srtp_protect_rtcp(this->session, (void*)EncryptBuffer, (int*)len);
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -193,7 +195,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const uint8_t*)SrtpSession::encryptBuffer;
+		*data = (const uint8_t*)EncryptBuffer;
 
 		return true;
 	}
