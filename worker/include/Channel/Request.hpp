@@ -37,6 +37,7 @@ namespace Channel
 			rtpReceiver_receive,
 			rtpReceiver_setRtpRawEvent,
 			rtpReceiver_setRtpObjectEvent,
+			rtpReceiver_receiveRtpPacket,
 			rtpSender_dump,
 			rtpSender_setTransport,
 			rtpSender_disable
@@ -46,7 +47,7 @@ namespace Channel
 		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
-		Request(Channel::UnixStreamSocket* channel, Json::Value& json);
+		Request(Channel::UnixStreamSocket* channel, Json::Value& json, const uint8_t* binary, size_t len);
 		virtual ~Request();
 
 		void Accept();
@@ -62,6 +63,8 @@ namespace Channel
 		MethodId methodId;
 		Json::Value internal;
 		Json::Value data;
+		const uint8_t* binary;
+		size_t len;
 		// Others.
 		bool replied = false;
 	};

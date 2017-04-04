@@ -222,6 +222,23 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::rtpReceiver_receiveRtpPacket:
+			{
+				if (!request->binary) {
+					request->Reject("missing binary packet");
+					return;
+				}
+				auto packet = RTC::RtpPacket::Parse(request->binary, request->len);
+				if (!packet) {
+					request->Reject("invalid rtp packet");
+					return;
+				}
+				this->ReceiveRtpPacket(packet);
+				delete packet;
+				request->Accept();
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");

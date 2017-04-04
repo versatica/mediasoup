@@ -40,12 +40,15 @@ namespace Channel
 		virtual void userOnUnixStreamSocketClosed(bool is_closed_by_peer) override;
 
 	private:
+		void HandleRequest(Json::Value& json, const uint8_t* binary = nullptr, size_t len = 0);
+
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
 		Json::CharReader* jsonReader = nullptr;
 		Json::StreamWriter* jsonWriter = nullptr;
 		size_t msgStart = 0; // Where the latest message starts.
+		Json::Value lastBinaryRequest;
 		bool closed = false;
 	};
 }
