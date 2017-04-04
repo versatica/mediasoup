@@ -30,6 +30,17 @@ module.exports =
 		'space-in-parens'               : [ 2, 'never' ],
 		'spaced-comment'                : [ 2, 'always' ],
 		'comma-spacing'                 : [ 2, { before: false, after: true } ],
-		'no-loop-func'                  : 2
+		'no-loop-func'                  : 2,
+		'max-len'                       : [
+		                                    2,
+		                                    {
+		                                    	code                   : 100,
+		                                    	ignoreStrings          : true,
+		                                    	ignoreUrls             : true,
+		                                    	ignoreTemplateLiterals : true,
+		                                    	tabWidth               : 2,
+		                                    	ignoreComments         : true
+		                                    }
+		                                  ]
 	}
 };

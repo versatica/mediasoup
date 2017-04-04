@@ -72,7 +72,8 @@ gulp.task('test:node', shell.task(
 gulp.task('test:worker', shell.task(
 	[
 		'if type make &> /dev/null; then make test; fi',
-		`cd worker && ./out/${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ? 'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes`
+		`cd worker && ./out/${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ?
+			'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes`
 	],
 	{
 		verbose : true,
@@ -85,12 +86,15 @@ gulp.task('rtpcapabilities', () =>
 	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
 
 	return gulp.src('worker/src/RTC/Room.cpp')
-		.pipe(replace(/(const std::string supportedRtpCapabilities =).*/, `$1 R"(${JSON.stringify(supportedRtpCapabilities)})";`))
+		.pipe(replace(/(const std::string supportedRtpCapabilities =).*/,
+			`$1 R"(${JSON.stringify(supportedRtpCapabilities)})";`))
 		.pipe(gulp.dest('worker/src/RTC/'))
 		.pipe(touch());
 });
 
-gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
+// TODO: Uncomment when C++ syntax and clang-format stuff is done.
+// gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
+gulp.task('lint', gulp.series('lint:node'));
 
 gulp.task('test', gulp.series('test:node', 'test:worker'));
 
