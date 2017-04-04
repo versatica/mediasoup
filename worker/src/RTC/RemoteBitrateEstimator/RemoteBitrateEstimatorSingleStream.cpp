@@ -30,9 +30,11 @@ namespace RTC
 		{
 			this->umaRecorded = true;
 		}
+
 		uint32_t ssrc = packet.GetSsrc();
 		uint32_t rtpTimestamp = packet.GetTimestamp() + transmissionTimeOffset;
 		int64_t nowMs = DepLibUV::GetTime();
+
 		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.find(ssrc);
 		if (it == this->overuseDetectors.end())
 		{
@@ -46,11 +48,13 @@ namespace RTC
 				this->overuseDetectors.insert(std::make_pair(ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
 			it = insertResult.first;
 		}
+
 		Detector* estimator = it->second;
 		estimator->lastPacketTimeMs = nowMs;
 
 		// Check if incoming bitrate estimate is valid, and if it needs to be reset.
 		uint32_t incomingBitrate = this->incomingBitrate.GetRate(nowMs);
+
 		if (incomingBitrate)
 		{
 			this->lastValidIncomingBitrate = incomingBitrate;
@@ -63,21 +67,26 @@ namespace RTC
 			this->incomingBitrate.Reset();
 			this->lastValidIncomingBitrate = 0;
 		}
+
 		this->incomingBitrate.Update(payloadSize, nowMs);
 
 		const BandwidthUsage priorState = estimator->detector.State();
 		uint32_t timestampDelta = 0;
 		int64_t timeDelta = 0;
 		int sizeDelta = 0;
+
 		if (estimator->interArrival.ComputeDeltas(rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
 		{
 			double timestampDeltaMs = timestampDelta * kTimestampToMs;
+
 			estimator->estimator.Update(timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
 			estimator->detector.Detect(estimator->estimator.GetOffset(), timestampDeltaMs, estimator->estimator.GetNumOfDeltas(), nowMs);
 		}
+
 		if (estimator->detector.State() == kBwOverusing)
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
+
 			if (incomingBitrateBps && (priorState != kBwOverusing || GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
@@ -93,10 +102,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->lastProcessTime < 0)
-		{
 			return 0;
-		}
-		// MS_DASSERT(this->processIntervalMs > 0);
+
+		// MS_ASSERT(this->processIntervalMs > 0);
 		return this->lastProcessTime + this->processIntervalMs - DepLibUV::GetTime();
 	}
 
@@ -107,9 +115,11 @@ namespace RTC
 		BandwidthUsage bwState = kBwNormal;
 		double sumVarNoise = 0.0;
 		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.begin();
+
 		while (it != this->overuseDetectors.end())
 		{
 			const int64_t timeOfLastReceivedPacket = it->second->lastPacketTimeMs;
+
 			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > kStreamTimeOutMs)
 			{
 				// This over-use detector hasn't received packets for |kStreamTimeOutMs|
@@ -123,9 +133,8 @@ namespace RTC
 				// Make sure that we trigger an over-use if any of the over-use detectors
 				// is detecting over-use.
 				if (it->second->detector.State() > bwState)
-				{
 					bwState = it->second->detector.State();
-				}
+
 				++it;
 			}
 		}
@@ -134,16 +143,19 @@ namespace RTC
 		{
 			return;
 		}
-		AimdRateControl* remoteRate = GetRemoteRate();
 
+		AimdRateControl* remoteRate = GetRemoteRate();
 		double meanNoiseVar = sumVarNoise / static_cast<double>(this->overuseDetectors.size());
 		const RateControlInput input(bwState, this->incomingBitrate.GetRate(nowMs), meanNoiseVar);
+
 		remoteRate->Update(&input, nowMs);
+
 		uint32_t targetBitrate = remoteRate->UpdateBandwidthEstimate(nowMs);
+
 		if (remoteRate->ValidEstimate())
 		{
 			this->processIntervalMs = remoteRate->GetFeedbackInterval();
-			// MS_DASSERT(this->processIntervalMs > 0);
+			// MS_ASSERT(this->processIntervalMs > 0);
 
 			std::vector<uint32_t> ssrcs;
 
@@ -156,12 +168,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(bitrateBps, "'bitrateBps' missing");
+		MS_ASSERT(bitrateBps, "bitrateBps missing");
 
 		if (!this->remoteRate->ValidEstimate())
-		{
 			return false;
-		}
 
 		GetSsrcs(ssrcs);
 		if (ssrcs->empty())
@@ -176,11 +186,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(ssrcs, "'ssrcs' missing");
+		MS_ASSERT(ssrcs, "ssrcs missing");
 
 		ssrcs->resize(this->overuseDetectors.size());
 
 		int i = 0;
+
 		for (SsrcOveruseEstimatorMap::const_iterator it = this->overuseDetectors.begin(); it != this->overuseDetectors.end(); ++it, ++i)
 		{
 			(*ssrcs)[i] = it->first;

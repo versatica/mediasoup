@@ -40,6 +40,7 @@ namespace RTC
 			virtual void onTransportConnected(RTC::Transport* transport) = 0;
 			virtual void onTransportClosed(RTC::Transport* transport) = 0;
 			virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) = 0;
+			virtual void onTransportFullFrameRequired(RTC::Transport* transport) = 0;
 		};
 
 	private:
@@ -136,6 +137,8 @@ namespace RTC
 		// REMB and bitrate stuff.
 		std::unique_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 		uint32_t maxBitrate = 0;
+		uint32_t effectiveMaxBitrate = 0;
+		uint64_t lastEffectiveMaxBitrateAt = 0;
 	};
 
 	/* Inline instance methods. */

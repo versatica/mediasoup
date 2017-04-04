@@ -49,9 +49,11 @@ namespace RTC
 			{
 				*timestamp_delta = this->currentTimestampGroup.timestamp - this->prevTimestampGroup.timestamp;
 				*arrival_time_delta_ms = this->currentTimestampGroup.complete_time_ms - this->prevTimestampGroup.complete_time_ms;
+
 				// Check system time differences to see if we have an unproportional jump
 				// in arrival time. In that case reset the inter-arrival computations.
 				int64_t system_time_delta_ms = this->currentTimestampGroup.last_system_time_ms - this->prevTimestampGroup.last_system_time_ms;
+
 				if (*arrival_time_delta_ms - system_time_delta_ms >= kArrivalTimeOffsetThresholdMs)
 				{
 					MS_WARN_TAG(rbe, "the arrival time clock offset has changed, resetting [diff:%" PRId64 "ms]",
@@ -60,6 +62,7 @@ namespace RTC
 					Reset();
 					return false;
 				}
+
 				if (*arrival_time_delta_ms < 0)
 				{
 					// The group of packets has been reordered since receiving its local
@@ -72,6 +75,7 @@ namespace RTC
 						                 "packet for bandwidth estimation, resetting");
 						Reset();
 					}
+
 					return false;
 				}
 				else
@@ -84,6 +88,7 @@ namespace RTC
 				*packet_size_delta = static_cast<int>(this->currentTimestampGroup.size) - static_cast<int>(this->prevTimestampGroup.size);
 				calculated_deltas = true;
 			}
+
 			this->prevTimestampGroup = this->currentTimestampGroup;
 			// The new timestamp is now the current frame.
 			this->currentTimestampGroup.first_timestamp = timestamp;
@@ -138,6 +143,7 @@ namespace RTC
 		else
 		{
 			uint32_t timestamp_diff = timestamp - this->currentTimestampGroup.first_timestamp;
+
 			return timestamp_diff > kTimestampGroupLengthTicks;
 		}
 	}
@@ -150,7 +156,9 @@ namespace RTC
 		{
 			return false;
 		}
+
 		MS_ASSERT(this->currentTimestampGroup.complete_time_ms >= 0, "invalid complete_time_ms value");
+
 		int64_t arrival_time_delta_ms = arrival_time_ms - this->currentTimestampGroup.complete_time_ms;
 		uint32_t timestamp_diff = timestamp - this->currentTimestampGroup.timestamp;
 		int64_t ts_delta_ms = this->timestampToMsCoeff * timestamp_diff + 0.5;

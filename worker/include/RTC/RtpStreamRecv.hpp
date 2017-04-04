@@ -52,15 +52,6 @@ namespace RTC
 		uint32_t jitter = 0; // Estimated jitter.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 	};
-
-	/* Inline instance methods. */
-
-	inline
-	void RtpStreamRecv::RequestFullFrame()
-	{
-		if (this->params.usePli)
-			this->listener->onPliRequired(this);
-	}
 }
 
 #endif

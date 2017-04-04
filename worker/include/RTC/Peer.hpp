@@ -79,6 +79,7 @@ namespace RTC
 		virtual void onTransportConnected(RTC::Transport* transport) override;
 		virtual void onTransportClosed(RTC::Transport* transport) override;
 		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
+		virtual void onTransportFullFrameRequired(RTC::Transport* transport) override;
 
 	/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:

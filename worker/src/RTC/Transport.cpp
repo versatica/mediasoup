@@ -8,6 +8,8 @@
 #include "Utils.hpp"
 #include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include <sstream> // std::ostringstream()
+#include <iterator> // std::ostream_iterator<>()
 #include <cmath> // std::pow()
 
 #define ICE_CANDIDATE_DEFAULT_LOCAL_PRIORITY 20000
@@ -34,6 +36,11 @@ uint32_t generateIceCandidatePriority(uint16_t local_preference)
 
 namespace RTC
 {
+	/* Consts. */
+
+	static constexpr uint64_t EffectiveMaxBitrateCheckInterval = 2000; // In ms.
+	static constexpr double EffectiveMaxBitrateThresholdBeforeFullFrame = 0.6; // 0.0 - 1.0.
+
 	/* Class variables. */
 
 	uint8_t Transport::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
@@ -282,6 +289,7 @@ namespace RTC
 		static const Json::StaticString v_failed("failed");
 		static const Json::StaticString k_useRemb("useRemb");
 		static const Json::StaticString k_maxBitrate("maxBitrate");
+		static const Json::StaticString k_effectiveMaxBitrate("effectiveMaxBitrate");
 		static const Json::StaticString k_rtpListener("rtpListener");
 
 		Json::Value json(Json::objectValue);
@@ -367,6 +375,9 @@ namespace RTC
 
 		// Add `maxBitrate`.
 		json[k_maxBitrate] = (Json::UInt)this->maxBitrate;
+
+		// Add `effectiveMaxBitrate`.
+		json[k_effectiveMaxBitrate] = (Json::UInt)this->effectiveMaxBitrate;
 
 		// Add `rtpListener`.
 		json[k_rtpListener] = this->rtpListener.toJson();
@@ -1164,19 +1175,25 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint32_t effective_bitrate = bitrate;
+		uint32_t effective_bitrate;
+		uint64_t now = DepLibUV::GetTime();
 
 		// Limit bitrate if requested via API.
 		if (this->maxBitrate)
 			effective_bitrate = std::min(bitrate, this->maxBitrate);
+		else
+			effective_bitrate = bitrate;
 
-		MS_DEBUG_TAG(rbe,
-			"sending RTCP REMB packet [estimated:%" PRIu32 "bps, effective:%" PRIu32 "bps]",
-			bitrate, effective_bitrate);
-
-		for (auto ssrc: ssrcs)
+		if (MS_HAS_DEBUG_TAG(rbe))
 		{
-			MS_DEBUG_TAG(rbe, "  ssrc : %" PRIu32, ssrc);
+			std::ostringstream ssrcs_stream;
+
+			std::copy(ssrcs.begin(), ssrcs.end() - 1, std::ostream_iterator<int>(ssrcs_stream, ","));
+			ssrcs_stream << ssrcs.back();
+
+			MS_DEBUG_TAG(rbe,
+				"sending RTCP REMB packet [estimated:%" PRIu32 "bps, effective:%" PRIu32 "bps, ssrcs:%s]",
+				bitrate, effective_bitrate, ssrcs_stream.str().c_str());
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
@@ -1184,5 +1201,23 @@ namespace RTC
 		packet.SetSsrcs(ssrcs);
 		packet.Serialize(Transport::rtcpBuffer);
 		this->SendRtcpPacket(&packet);
+
+		// Trigger a full frame for all the suitable strams if the effective max bitrate
+		// has decreased abruptly.
+		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
+		{
+			if (
+				bitrate &&
+				this->effectiveMaxBitrate &&
+				(double)effective_bitrate / (double)this->effectiveMaxBitrate < EffectiveMaxBitrateThresholdBeforeFullFrame)
+			{
+				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting full frames");
+
+				this->listener->onTransportFullFrameRequired(this);
+			}
+
+			this->lastEffectiveMaxBitrateAt = now;
+			this->effectiveMaxBitrate = effective_bitrate;
+		}
 	}
 }

@@ -69,6 +69,8 @@ namespace RTC
 
 	RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtcpReceiverReport()
 	{
+		MS_TRACE();
+
 		RTC::RTCP::ReceiverReport* report = new RTC::RTCP::ReceiverReport();
 
 		// Calculate Packets Expected and Lost.
@@ -123,13 +125,31 @@ namespace RTC
 
 	void RtpStreamRecv::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
+		MS_TRACE();
+
 		this->last_sr_received = DepLibUV::GetTime();
 		this->last_sr_timestamp = report->GetNtpSec() << 16;
 		this->last_sr_timestamp += report->GetNtpFrac() >> 16;
 	}
 
+	void RtpStreamRecv::RequestFullFrame()
+	{
+		MS_TRACE();
+
+		if (this->params.usePli)
+		{
+			// Reset NackGenerator.
+			if (this->params.useNack)
+				this->nackGenerator.reset(new RTC::NackGenerator(this));
+
+			this->listener->onPliRequired(this);
+		}
+	}
+
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
 	{
+		MS_TRACE();
+
 		if (!this->params.clockRate)
 			return;
 
