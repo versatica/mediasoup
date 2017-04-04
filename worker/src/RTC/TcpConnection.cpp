@@ -49,26 +49,24 @@ namespace RTC
 			if (IsClosing())
 				return;
 
-			size_t data_len = this->bufferDataLen - this->frameStart;
-			size_t packet_len;
+			size_t dataLen = this->bufferDataLen - this->frameStart;
+			size_t packetLen;
 
-			if (data_len >= 2)
-				packet_len = (size_t)Utils::Byte::Get2Bytes(this->buffer + this->frameStart, 0);
+			if (dataLen >= 2)
+				packetLen = (size_t)Utils::Byte::Get2Bytes(this->buffer + this->frameStart, 0);
 
-			// We have packet_len bytes.
-			if (data_len >= 2 && data_len >= 2 + packet_len)
+			// We have packetLen bytes.
+			if (dataLen >= 2 && dataLen >= 2 + packetLen)
 			{
 				const uint8_t* packet = this->buffer + this->frameStart + 2;
 
 				// Notify the listener.
-				if (packet_len != 0)
-				{
-					this->listener->onPacketRecv(this, packet, packet_len);
-				}
+				if (packetLen != 0)
+					this->listener->onPacketRecv(this, packet, packetLen);
 
 				// If there is no more space available in the buffer and that is because
 				// the latest parsed frame filled it, then empty the full buffer.
-				if ((this->frameStart + 2 + packet_len) == this->bufferSize)
+				if ((this->frameStart + 2 + packetLen) == this->bufferSize)
 				{
 					MS_DEBUG_DEV("no more space in the buffer, emptying the buffer data");
 
@@ -79,7 +77,7 @@ namespace RTC
 				// frame to the next position after the parsed frame.
 				else
 				{
-					this->frameStart += 2 + packet_len;
+					this->frameStart += 2 + packetLen;
 				}
 
 				// If there is more data in the buffer after the parsed frame then
@@ -106,9 +104,11 @@ namespace RTC
 					// the buffer, so move the frame to the position 0.
 					if (this->frameStart != 0)
 					{
-						MS_DEBUG_DEV("no more space in the buffer, moving parsed bytes to the beginning of the buffer and wait for more data");
+						MS_DEBUG_DEV("no more space in the buffer, moving parsed bytes to the beginning of "
+							"the buffer and wait for more data");
 
-						std::memmove(this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
+						std::memmove(this->buffer, this->buffer + this->frameStart,
+							this->bufferSize - this->frameStart);
 						this->bufferDataLen = this->bufferSize - this->frameStart;
 						this->frameStart = 0;
 					}
@@ -140,10 +140,10 @@ namespace RTC
 
 		// Write according to Framing RFC 4571.
 
-		uint8_t frame_len[2];
+		uint8_t frameLen[2];
 
-		Utils::Byte::Set2Bytes(frame_len, 0, len);
+		Utils::Byte::Set2Bytes(frameLen, 0, len);
 
-		Write(frame_len, 2, data, len);
+		Write(frameLen, 2, data, len);
 	}
 }
