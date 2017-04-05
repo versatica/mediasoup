@@ -35,7 +35,7 @@
     "debug": "^2.6.3",
     "netstring": "^0.3.0",
     "random-number": "0.0.7",
-    "random-string": "^0.1.2",
+    "randomatic": "^1.1.6",
     "sdp-transform": "^2.3.0"
   },
   "devDependencies": {
