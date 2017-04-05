@@ -18,7 +18,7 @@
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <utility> // std::make_pair
+#include <utility> // std::make_pair()
 
 namespace RTC
 {
@@ -45,7 +45,8 @@ namespace RTC
 			// automatically cleaned up when we have one RemoteBitrateEstimator per REMB
 			// group.
 			std::pair<SsrcOveruseEstimatorMap::iterator, bool> insertResult =
-				this->overuseDetectors.insert(std::make_pair(ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
+				this->overuseDetectors.insert(std::make_pair(
+					ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
 			it = insertResult.first;
 		}
 
@@ -75,19 +76,26 @@ namespace RTC
 		int64_t timeDelta = 0;
 		int sizeDelta = 0;
 
-		if (estimator->interArrival.ComputeDeltas(rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
+		if (estimator->interArrival.ComputeDeltas(
+			rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
 		{
 			double timestampDeltaMs = timestampDelta * kTimestampToMs;
 
-			estimator->estimator.Update(timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
-			estimator->detector.Detect(estimator->estimator.GetOffset(), timestampDeltaMs, estimator->estimator.GetNumOfDeltas(), nowMs);
+			estimator->estimator.Update(
+				timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
+
+			estimator->detector.Detect(
+				estimator->estimator.GetOffset(),
+				timestampDeltaMs, estimator->estimator.GetNumOfDeltas(), nowMs);
 		}
 
 		if (estimator->detector.State() == kBwOverusing)
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
 
-			if (incomingBitrateBps && (priorState != kBwOverusing || GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
+			if (
+				incomingBitrateBps && (priorState != kBwOverusing ||
+				GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
 				// We also have to update the estimate immediately if we are overusing
@@ -155,6 +163,7 @@ namespace RTC
 		if (remoteRate->ValidEstimate())
 		{
 			this->processIntervalMs = remoteRate->GetFeedbackInterval();
+
 			// MS_ASSERT(this->processIntervalMs > 0);
 
 			std::vector<uint32_t> ssrcs;
@@ -191,8 +200,9 @@ namespace RTC
 		ssrcs->resize(this->overuseDetectors.size());
 
 		int i = 0;
+		SsrcOveruseEstimatorMap::const_iterator it = this->overuseDetectors.begin();
 
-		for (SsrcOveruseEstimatorMap::const_iterator it = this->overuseDetectors.begin(); it != this->overuseDetectors.end(); ++it, ++i)
+		for (; it != this->overuseDetectors.end(); ++it, ++i)
 		{
 			(*ssrcs)[i] = it->first;
 		}
