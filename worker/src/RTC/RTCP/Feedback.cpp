@@ -40,7 +40,7 @@ namespace RTC { namespace RTCP
 
 	template <typename T>
 	FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader):
-		Packet(RTCP::Type(commonHeader->packet_type)),
+		Packet(RTCP::Type(commonHeader->packetType)),
 		messageType(typename T::MessageType(commonHeader->count))
 	{
 		this->header = reinterpret_cast<Header*>(reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader));
@@ -172,7 +172,7 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-				MS_WARN_TAG(rtcp, "unknown RTCP PS Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
+				MS_WARN_TAG(rtcp, "unknown RTCP PS Feedback message type [packetType:%" PRIu8 "]", commonHeader->count);
 		}
 
 		return packet;
@@ -250,7 +250,7 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-				MS_WARN_TAG(rtcp, "unknown RTCP RTP Feedback message type [packet_type:%" PRIu8 "]", commonHeader->count);
+				MS_WARN_TAG(rtcp, "unknown RTCP RTP Feedback message type [packetType:%" PRIu8 "]", commonHeader->count);
 		}
 
 		return packet;

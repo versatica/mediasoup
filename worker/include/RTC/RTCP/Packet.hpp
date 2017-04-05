@@ -7,7 +7,7 @@
 
 namespace RTC { namespace RTCP
 {
-	// Internal buffer for RTCP serialization
+	// Internal buffer for RTCP serialization.
 	constexpr size_t bufferSize = 65536;
 	extern uint8_t buffer[bufferSize];
 
@@ -34,16 +34,16 @@ namespace RTC { namespace RTCP
 		/* Struct for RTCP common header. */
 		struct CommonHeader
 		{
-			#if defined(MS_LITTLE_ENDIAN)
-				uint8_t count:5;
-				uint8_t padding:1;
-				uint8_t version:2;
-			#elif defined(MS_BIG_ENDIAN)
-				uint8_t version:2;
-				uint8_t padding:1;
-				uint8_t count:5;
-			#endif
-			uint8_t packet_type:8;
+		#if defined(MS_LITTLE_ENDIAN)
+			uint8_t count:5;
+			uint8_t padding:1;
+			uint8_t version:2;
+		#elif defined(MS_BIG_ENDIAN)
+			uint8_t version:2;
+			uint8_t padding:1;
+			uint8_t count:5;
+		#endif
+			uint8_t packetType:8;
 			uint16_t length:16;
 		};
 
@@ -94,7 +94,7 @@ namespace RTC { namespace RTCP
 			// RTCP packet types defined by IANA:
 			// http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
 			// RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
-			(header->packet_type >= 192 && header->packet_type <= 223)
+			(header->packetType >= 192 && header->packetType <= 223)
 		);
 	}
 

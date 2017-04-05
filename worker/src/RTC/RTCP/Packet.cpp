@@ -59,7 +59,7 @@ namespace RTC { namespace RTCP
 				return first;
 			}
 
-			switch (Type(header->packet_type))
+			switch (Type(header->packetType))
 			{
 				case Type::SR:
 				{
@@ -118,7 +118,7 @@ namespace RTC { namespace RTCP
 
 				default:
 				{
-					MS_WARN_TAG(rtcp, "unknown RTCP packet type [packet_type:%" PRIu8 "]", header->packet_type);
+					MS_WARN_TAG(rtcp, "unknown RTCP packet type [packetType:%" PRIu8 "]", header->packetType);
 
 					current = nullptr;
 				}
@@ -126,11 +126,11 @@ namespace RTC { namespace RTCP
 
 			if (!current)
 			{
-				std::string packetType = Type2String(Type(header->packet_type));
+				std::string packetType = Type2String(Type(header->packetType));
 
-				if (Type(header->packet_type) == Type::PSFB)
+				if (Type(header->packetType) == Type::PSFB)
 					packetType += " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
-				else if (Type(header->packet_type) == Type::RTPFB)
+				else if (Type(header->packetType) == Type::RTPFB)
 					packetType += " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
 
 				MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
@@ -176,7 +176,7 @@ namespace RTC { namespace RTCP
 		this->header->version = 2;
 		this->header->padding = 0;
 		this->header->count = (uint8_t)this->GetCount();
-		this->header->packet_type = (uint8_t)this->type;
+		this->header->packetType = (uint8_t)this->type;
 		this->header->length = htons(length);
 
 		return sizeof(CommonHeader);
