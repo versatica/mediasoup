@@ -80,7 +80,7 @@ Rewrites all the worker source files and include files in order to satisfy the r
 
 ### `gulp rtpcapabilities`
 
-Reads **mediasoup** [supported RTP capabilities](https://github.com/ibc/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
+Reads **mediasoup** [supported RTP capabilities](https://github.com/versatica/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
 
 ### `gulp test:node`
 

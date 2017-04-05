@@ -5,7 +5,7 @@
   "main": "lib/mediasoup.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ibc/mediasoup.git"
+    "url": "https://github.com/versatica/mediasoup.git"
   },
   "author": "Iñaki Baz Castillo <ibc@aliax.net>",
   "license": "ISC",
@@ -17,7 +17,7 @@
     "ortc"
   ],
   "bugs": {
-    "url": "https://github.com/ibc/mediasoup/issues"
+    "url": "https://github.com/versatica/mediasoup/issues"
   },
   "homepage": "http://mediasoup.org",
   "os": [

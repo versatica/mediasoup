@@ -70,12 +70,12 @@ Prior to that, ensure your host satisfies the following **requirements**:
 
 
 
-[mediasoup-banner]: https://raw.githubusercontent.com/ibc/mediasoup-website/master/_art/mediasoup_banner.png
+[mediasoup-banner]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup_banner.png
 [mediasoup-website]: https://mediasoup.org
-[travis-ci-shield-mediasoup]: https://img.shields.io/travis/ibc/mediasoup/master.svg
-[travis-ci-mediasoup]: http://travis-ci.org/ibc/mediasoup
+[travis-ci-shield-mediasoup]: https://img.shields.io/travis/versatica/mediasoup/master.svg
+[travis-ci-mediasoup]: http://travis-ci.org/versatica/mediasoup
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
 [codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
-[codacy-grade-mediasoup]: https://www.codacy.com/app/ibc/mediasoup
+[codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
 [paypal-url]: https://paypal.me/inakibazcastillo/100
