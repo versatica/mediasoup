@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "author": "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
   "contributors": [
