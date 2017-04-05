@@ -76,7 +76,9 @@ namespace RTC
 	{
 		if (this->protocol == Protocol::UDP && tuple->GetProtocol() == Protocol::UDP)
 		{
-			return (this->udpSocket == tuple->udpSocket && Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
+			return (
+				this->udpSocket == tuple->udpSocket &&
+				Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
 		}
 		else if (this->protocol == Protocol::TCP && tuple->GetProtocol() == Protocol::TCP)
 		{

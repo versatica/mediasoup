@@ -11,13 +11,10 @@ public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
-		UdpSocket*    socket;
+		UdpSocket* socket;
 		uv_udp_send_t req;
-		uint8_t       store[1];
+		uint8_t store[1];
 	};
-
-private:
-	static uint8_t readBuffer[];
 
 public:
 	UdpSocket(const std::string &ip, uint16_t port);
@@ -48,7 +45,7 @@ private:
 
 /* Callbacks fired by UV events. */
 public:
-	void onUvRecvAlloc(size_t suggested_size, uv_buf_t* buf);
+	void onUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
 	void onUvSendError(int error);
 	void onUvClosed();

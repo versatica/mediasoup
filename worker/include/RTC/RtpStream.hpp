@@ -15,13 +15,13 @@ namespace RTC
 		{
 			Json::Value toJson() const;
 
-			uint32_t          ssrc = 0;
-			uint8_t           payloadType = 0;
+			uint32_t ssrc = 0;
+			uint8_t payloadType = 0;
 			RTC::RtpCodecMime mime;
-			uint32_t          clockRate = 0;
-			bool              useNack = false;
-			bool              usePli = false;
-			uint8_t           absSendTimeId = 0; // 0 means no abs-send-time id.
+			uint32_t clockRate = 0;
+			bool useNack = false;
+			bool usePli = false;
+			uint8_t absSendTimeId = 0; // 0 means no abs-send-time id.
 		};
 
 	public:

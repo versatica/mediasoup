@@ -8,14 +8,14 @@
 
 /* Static methods for UV callbacks. */
 
-static inline
-void on_signal(uv_signal_t* handle, int signum)
+inline
+static void onSignal(uv_signal_t* handle, int signum)
 {
 	static_cast<SignalsHandler*>(handle->data)->onUvSignal(signum);
 }
 
-static inline
-void on_close(uv_handle_t* handle)
+inline
+static void onClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -41,10 +41,11 @@ void SignalsHandler::AddSignal(int signum, std::string name)
 	if (err)
 	{
 		delete uvHandle;
+
 		MS_THROW_ERROR("uv_signal_init() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 	}
 
-	err = uv_signal_start(uvHandle, (uv_signal_cb)on_signal, signum);
+	err = uv_signal_start(uvHandle, (uv_signal_cb)onSignal, signum);
 	if (err)
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 
@@ -58,7 +59,7 @@ void SignalsHandler::Destroy()
 
 	for (auto uvHandle : uvHandles)
 	{
-		uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_close);
+		uv_close((uv_handle_t*)uvHandle, (uv_close_cb)onClose);
 	}
 
 	// And delete this.

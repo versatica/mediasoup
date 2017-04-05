@@ -235,7 +235,8 @@ void Settings::PrintConfiguration()
 	}
 	if (Settings::configuration.hasAnnouncedIPv6)
 	{
-		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv6    : \"%s\"", Settings::configuration.rtcAnnouncedIPv6.c_str());
+		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv6    : \"%s\"",
+			Settings::configuration.rtcAnnouncedIPv6.c_str());
 	}
 	else
 	{
@@ -334,7 +335,9 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 		int family;
 		uint16_t port;
 		std::string ip;
-		Utils::IP::GetAddressInfo((struct sockaddr*)(&address.address.address4), &family, ip, &port);
+
+		Utils::IP::GetAddressInfo(
+			(struct sockaddr*)(&address.address.address4), &family, ip, &port);
 
 		if (family != requestedFamily)
 			continue;
@@ -496,7 +499,9 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 {
 	MS_TRACE();
 
-	if (Settings::configuration.dtlsCertificateFile.empty() || Settings::configuration.dtlsPrivateKeyFile.empty())
+	if (
+		Settings::configuration.dtlsCertificateFile.empty() ||
+		Settings::configuration.dtlsPrivateKeyFile.empty())
 	{
 		Settings::configuration.dtlsCertificateFile = "";
 		Settings::configuration.dtlsPrivateKeyFile = "";

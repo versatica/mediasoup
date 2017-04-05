@@ -13,14 +13,14 @@ struct data
 	uint32_t rate;
 };
 
-void validate(RateCalculator& rate, uint64_t time_base,  std::vector<data>& input)
+void validate(RateCalculator& rate, uint64_t timeBase,  std::vector<data>& input)
 {
 	for (auto it = input.begin(); it != input.end(); ++it)
 	{
 		auto& item = *it;
 
-		rate.Update(item.size, time_base + item.offset);
-		REQUIRE(rate.GetRate(time_base + item.offset) == item.rate);
+		rate.Update(item.size, timeBase + item.offset);
+		REQUIRE(rate.GetRate(timeBase + item.offset) == item.rate);
 	}
 }
 

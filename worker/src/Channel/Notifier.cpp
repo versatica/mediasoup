@@ -46,7 +46,7 @@ namespace Channel
 		this->channel->Send(json);
 	}
 
-	void Notifier::EmitWithBinary(uint32_t targetId, std::string event, Json::Value& data, const uint8_t* binary_data, size_t binary_len)
+	void Notifier::EmitWithBinary(uint32_t targetId, std::string event, Json::Value& data, const uint8_t* binaryData, size_t binaryLen)
 	{
 		MS_TRACE();
 
@@ -63,6 +63,6 @@ namespace Channel
 		json[k_binary] = true;
 
 		this->channel->Send(json);
-		this->channel->SendBinary(binary_data, binary_len);
+		this->channel->SendBinary(binaryData, binaryLen);
 	}
 }

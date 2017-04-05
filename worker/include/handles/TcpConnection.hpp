@@ -18,7 +18,7 @@ public:
 		virtual ~Listener() {};
 
 	public:
-		virtual void onTcpConnectionClosed(TcpConnection* connection, bool is_closed_by_peer) = 0;
+		virtual void onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
 	};
 
 public:
@@ -26,8 +26,8 @@ public:
 	struct UvWriteData
 	{
 		TcpConnection* connection;
-		uv_write_t     req;
-		uint8_t        store[1];
+		uv_write_t req;
+		uint8_t store[1];
 	};
 
 // Let the TcpServer class directly call the destructor of TcpConnection.
@@ -64,7 +64,7 @@ private:
 
 /* Callbacks fired by UV events. */
 public:
-	void onUvReadAlloc(size_t suggested_size, uv_buf_t* buf);
+	void onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void onUvRead(ssize_t nread, const uv_buf_t* buf);
 	void onUvWriteError(int error);
 	void onUvShutdown(uv_shutdown_t* req, int status);

@@ -7,7 +7,8 @@
 #include <unordered_set>
 #include <uv.h>
 
-class TcpServer : public TcpConnection::Listener
+class TcpServer :
+	public TcpConnection::Listener
 {
 public:
 	TcpServer(const std::string &ip, uint16_t port, int backlog);
@@ -36,7 +37,7 @@ private:
 protected:
 	virtual void userOnTcpConnectionAlloc(TcpConnection** connection) = 0;
 	virtual void userOnNewTcpConnection(TcpConnection* connection) = 0;
-	virtual void userOnTcpConnectionClosed(TcpConnection* connection, bool is_closed_by_peer) = 0;
+	virtual void userOnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
 	virtual void userOnTcpServerClosed() = 0;
 
 /* Callbacks fired by UV events. */
@@ -46,7 +47,7 @@ public:
 
 /* Methods inherited from TcpConnection::Listener. */
 public:
-	virtual void onTcpConnectionClosed(TcpConnection* connection, bool is_closed_by_peer);
+	virtual void onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer);
 
 private:
 	// Allocated by this (may be passed by argument).
@@ -98,6 +99,5 @@ uint16_t TcpServer::GetLocalPort() const
 {
 	return this->localPort;
 }
-
 
 #endif

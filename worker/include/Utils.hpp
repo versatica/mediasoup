@@ -12,7 +12,7 @@ namespace Utils
 	class IP
 	{
 	public:
-		static int GetFamily(const char *ip, size_t ip_len);
+		static int GetFamily(const char *ip, size_t ipLen);
 		static int GetFamily(const std::string &ip);
 		static void GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, uint16_t* port);
 		static bool CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2);
@@ -31,8 +31,12 @@ namespace Utils
 	bool IP::CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2)
 	{
 		// Compare family.
-		if (addr1->sa_family != addr2->sa_family || (addr1->sa_family != AF_INET && addr1->sa_family != AF_INET6))
+		if (
+			addr1->sa_family != addr2->sa_family ||
+			(addr1->sa_family != AF_INET && addr1->sa_family != AF_INET6))
+		{
 			return false;
+		}
 
 		// Compare port.
 		if (((struct sockaddr_in*)addr1)->sin_port != ((struct sockaddr_in*)addr2)->sin_port)
@@ -42,12 +46,18 @@ namespace Utils
 		switch (addr1->sa_family)
 		{
 			case AF_INET:
-				if (std::memcmp(&((struct sockaddr_in*)addr1)->sin_addr, &((struct sockaddr_in*)addr2)->sin_addr, 4) == 0)
+				if (std::memcmp(
+					&((struct sockaddr_in*)addr1)->sin_addr, &((struct sockaddr_in*)addr2)->sin_addr, 4) == 0)
+				{
 					return true;
+				}
 				break;
 			case AF_INET6:
-				if (std::memcmp(&((struct sockaddr_in6*)addr1)->sin6_addr, &((struct sockaddr_in6*)addr2)->sin6_addr, 16) == 0)
+				if (std::memcmp(
+					&((struct sockaddr_in6*)addr1)->sin6_addr, &((struct sockaddr_in6*)addr2)->sin6_addr, 16) == 0)
+				{
 					return true;
+				}
 				break;
 			default:
 				return false;
@@ -59,19 +69,19 @@ namespace Utils
 	inline
 	struct sockaddr_storage IP::CopyAddress(const struct sockaddr* addr)
 	{
-		struct sockaddr_storage copied_addr;
+		struct sockaddr_storage copiedAddr;
 
 		switch (addr->sa_family)
 		{
 			case AF_INET:
-				std::memcpy(&copied_addr, addr, sizeof(struct sockaddr_in));
+				std::memcpy(&copiedAddr, addr, sizeof(struct sockaddr_in));
 				break;
 			case AF_INET6:
-				std::memcpy(&copied_addr, addr, sizeof(struct sockaddr_in6));
+				std::memcpy(&copiedAddr, addr, sizeof(struct sockaddr_in6));
 				break;
 		}
 
-		return copied_addr;
+		return copiedAddr;
 	}
 
 	class File
@@ -124,13 +134,14 @@ namespace Utils
 	inline
 	uint32_t Byte::Get4Bytes(const uint8_t* data, size_t i)
 	{
-		return (uint32_t)(data[i+3]) | ((uint32_t)(data[i+2]))<<8 | ((uint32_t)(data[i+1]))<<16 | ((uint32_t)(data[i]))<<24;
+		return (uint32_t)(data[i+3]) | ((uint32_t)(data[i+2]))<<8 | ((uint32_t)(data[i+1]))<<16 |
+			((uint32_t)(data[i]))<<24;
 	}
 
 	inline
 	uint64_t Byte::Get8Bytes(const uint8_t* data, size_t i)
 	{
-		return ((uint64_t)Byte::Get4Bytes(data,i))<<32 | Byte::Get4Bytes(data,i+4);
+		return ((uint64_t)Byte::Get4Bytes(data, i))<<32 | Byte::Get4Bytes(data, i+4);
 	}
 
 	inline
@@ -287,7 +298,7 @@ namespace Utils
 		};
 
 		static void CurrentTimeNtp(Ntp& ntp);
-		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp);
+		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp);
 		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2);
 	};
 
@@ -295,6 +306,7 @@ namespace Utils
 	void Time::CurrentTimeNtp(Ntp& ntp)
 	{
 		struct timeval tv;
+
 		gettimeofday(&tv, nullptr);
 
 		ntp.seconds = tv.tv_sec + UnixNtpOffset;
@@ -302,17 +314,17 @@ namespace Utils
 	}
 
 	inline
-	bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp)
+	bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)
 	{
 		// Distinguish between elements that are exactly 0x80000000 apart.
 		// If t1>t2 and |t1-t2| = 0x80000000: IsNewer(t1,t2)=true,
 		// IsNewer(t2,t1)=false
 		// rather than having IsNewer(t1,t2) = IsNewer(t2,t1) = false.
-		if (static_cast<uint32_t>(timestamp - prev_timestamp) == 0x80000000) {
-			return timestamp > prev_timestamp;
-		}
-		return timestamp != prev_timestamp &&
-			static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
+		if (static_cast<uint32_t>(timestamp - prevTimestamp) == 0x80000000)
+			return timestamp > prevTimestamp;
+
+		return timestamp != prevTimestamp &&
+			static_cast<uint32_t>(timestamp - prevTimestamp) < 0x80000000;
 	}
 
 	inline

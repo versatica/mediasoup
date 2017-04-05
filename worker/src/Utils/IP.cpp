@@ -9,7 +9,7 @@
 
 namespace Utils
 {
-	int IP::GetFamily(const char *ip, size_t ip_len)
+	int IP::GetFamily(const char *ip, size_t ipLen)
 	{
 		MS_TRACE();
 
@@ -43,7 +43,7 @@ static const int IPParser_start = 1;
 		const unsigned char* pe;
 
 		p = (const unsigned char*)ip;
-		pe = p + ip_len;
+		pe = p + ipLen;
 
 		/**
 		 * Ragel: %%write init
@@ -3447,7 +3447,7 @@ case 85:
 #line 64 "src/Utils/IP.rl"
 
 		// Ensure that the parsing has consumed all the given length.
-		if (ip_len == (size_t)(p - (const unsigned char*)ip))
+		if (ipLen == (size_t)(p - (const unsigned char*)ip))
 			return ipFamily;
 		else
 			return AF_UNSPEC;
@@ -3457,15 +3457,15 @@ case 85:
 	{
 		MS_TRACE();
 
-		char _ip[INET6_ADDRSTRLEN+1];
+		char ipBuffer[INET6_ADDRSTRLEN+1];
 		int err;
 
 		switch (addr->sa_family)
 		{
 			case AF_INET:
 			{
-				err = uv_inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, _ip,
-					INET_ADDRSTRLEN);
+				err = uv_inet_ntop(
+					AF_INET, &((struct sockaddr_in*)addr)->sin_addr, ipBuffer, INET_ADDRSTRLEN);
 
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
@@ -3477,8 +3477,8 @@ case 85:
 
 			case AF_INET6:
 			{
-				err = uv_inet_ntop(AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, _ip,
-					INET6_ADDRSTRLEN);
+				err = uv_inet_ntop(
+					AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, ipBuffer, INET6_ADDRSTRLEN);
 
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
@@ -3493,6 +3493,6 @@ case 85:
 		}
 
 		*family = addr->sa_family;
-		ip.assign(_ip);
+		ip.assign(ipBuffer);
 	}
 }

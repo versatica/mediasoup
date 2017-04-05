@@ -59,8 +59,8 @@ namespace RTC
 		const std::unordered_map<uint32_t, RTC::Transport*>& GetTransports() const;
 		/**
 		 * Add a new RtpSender to the Peer.
-		 * @param rtpSender     Instance of RtpSender.
-		 * @param peerName      Name of the receiver Peer.
+		 * @param rtpSender - Instance of RtpSender.
+		 * @param peerName - Name of the receiver Peer.
 		 */
 		void AddRtpSender(RTC::RtpSender* rtpSender, const std::string& peerName, RTC::RtpParameters* rtpParameters);
 		RTC::RtpSender* GetRtpSender(uint32_t ssrc) const;

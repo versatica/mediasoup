@@ -34,8 +34,8 @@
 
 /* Static methods for OpenSSL callbacks. */
 
-static inline
-int on_ssl_certificate_verify(int preverifyOk, X509_STORE_CTX* ctx)
+inline
+static int onSslCertificate_verify(int preverifyOk, X509_STORE_CTX* ctx)
 {
 	MS_TRACE();
 
@@ -43,8 +43,8 @@ int on_ssl_certificate_verify(int preverifyOk, X509_STORE_CTX* ctx)
 	return 1;
 }
 
-static inline
-void on_ssl_info(const SSL* ssl, int where, int ret)
+inline
+static void onSslInfo(const SSL* ssl, int where, int ret)
 {
 	static_cast<RTC::DtlsTransport*>(SSL_get_ex_data(ssl, 0))->onSSLInfo(where, ret);
 }
@@ -216,8 +216,8 @@ namespace RTC
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
 		}
-		X509_NAME_add_entry_by_txt(certName, "O", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(certName, "CN", MBSTRING_ASC, (uint8_t*)MS_APP_NAME, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(certName, "O", MBSTRING_ASC, (uint8_t*)"mediasoup", -1, -1, 0);
+		X509_NAME_add_entry_by_txt(certName, "CN", MBSTRING_ASC, (uint8_t*)"mediasoup", -1, -1, 0);
 
 		// It is self-signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DtlsTransport::certificate, certName);
@@ -345,7 +345,9 @@ namespace RTC
 		}
 
 		// Set options.
-		SSL_CTX_set_options(DtlsTransport::sslCtx, SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_NO_TICKET | SSL_OP_SINGLE_ECDH_USE);
+		SSL_CTX_set_options(
+			DtlsTransport::sslCtx,
+			SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_NO_TICKET | SSL_OP_SINGLE_ECDH_USE);
 
 		// Don't use sessions cache.
 		SSL_CTX_set_session_cache_mode(DtlsTransport::sslCtx, SSL_SESS_CACHE_OFF);
@@ -358,10 +360,13 @@ namespace RTC
 		SSL_CTX_set_verify_depth(DtlsTransport::sslCtx, 4);
 
 		// Require certificate from peer.
-		SSL_CTX_set_verify(DtlsTransport::sslCtx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, on_ssl_certificate_verify);
+		SSL_CTX_set_verify(
+			DtlsTransport::sslCtx,
+			SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+			onSslCertificate_verify);
 
 		// Set SSL info callback.
-		SSL_CTX_set_info_callback(DtlsTransport::sslCtx, on_ssl_info);
+		SSL_CTX_set_info_callback(DtlsTransport::sslCtx, onSslInfo);
 
 		// Set ciphers.
 		ret = SSL_CTX_set_cipher_list(DtlsTransport::sslCtx,
@@ -416,7 +421,8 @@ namespace RTC
 		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpProfiles.c_str());
 		if (ret != 0)
 		{
-			MS_ERROR("SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", dtlsSrtpProfiles.c_str());
+			MS_ERROR("SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'",
+				dtlsSrtpProfiles.c_str());
 			LOG_OPENSSL_ERROR("SSL_CTX_set_tlsext_use_srtp() failed");
 			goto error;
 		}
@@ -588,7 +594,8 @@ namespace RTC
 
 		MS_DUMP("<DtlsTransport>");
 		MS_DUMP("  [role:%s, running:%s, handshake done:%s, connected:%s]",
-			(this->localRole == Role::SERVER ? "server" : (this->localRole == Role::CLIENT ? "client" : "none")),
+			(this->localRole == Role::SERVER ?
+				"server" : (this->localRole == Role::CLIENT ? "client" : "none")),
 			IsRunning() ? "yes" : "no",
 			this->handshakeDone ? "yes" : "no",
 			this->state == DtlsState::CONNECTED ? "yes" : "no");
@@ -974,13 +981,13 @@ namespace RTC
 		}
 
 		// Get the negotiated SRTP profile.
-		RTC::SrtpSession::Profile srtp_profile;
-		srtp_profile = GetNegotiatedSrtpProfile();
+		RTC::SrtpSession::Profile srtpProfile;
+		srtpProfile = GetNegotiatedSrtpProfile();
 
-		if (srtp_profile != RTC::SrtpSession::Profile::NONE)
+		if (srtpProfile != RTC::SrtpSession::Profile::NONE)
 		{
 			// Extract the SRTP keys (will notify the listener with them).
-			ExtractSrtpKeys(srtp_profile);
+			ExtractSrtpKeys(srtpProfile);
 		}
 		else
 		{
@@ -1001,7 +1008,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE, "remote fingerprint not set");
+		MS_ASSERT(this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE,
+			"remote fingerprint not set");
 
 		X509* certificate;
 		uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
@@ -1113,7 +1121,7 @@ namespace RTC
 	}
 
 	inline
-	void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::Profile srtp_profile)
+	void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::Profile srtpProfile)
 	{
 		MS_TRACE();
 
@@ -1159,7 +1167,8 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTED;
-		this->listener->onDtlsConnected(this, srtp_profile, srtpLocalMasterKey, SrtpMasterLength,
+		this->listener->onDtlsConnected(
+			this, srtpProfile, srtpLocalMasterKey, SrtpMasterLength,
 			srtpRemoteMasterKey, SrtpMasterLength, this->remoteCert);
 	}
 
@@ -1191,7 +1200,8 @@ namespace RTC
 			}
 		}
 
-		MS_ASSERT(negotiatedSrtpProfile != RTC::SrtpSession::Profile::NONE, "chosen SRTP profile is not an available one");
+		MS_ASSERT(negotiatedSrtpProfile != RTC::SrtpSession::Profile::NONE,
+			"chosen SRTP profile is not an available one");
 
 		return negotiatedSrtpProfile;
 	}

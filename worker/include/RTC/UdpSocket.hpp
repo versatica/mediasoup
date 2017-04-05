@@ -18,14 +18,14 @@ namespace RTC
 			virtual ~Listener() {};
 
 		public:
-			virtual void onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr) = 0;
+			virtual void onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
 		};
 
 	public:
 		static void ClassInit();
 
 	private:
-		static uv_udp_t* GetRandomPort(int address_family);
+		static uv_udp_t* GetRandomPort(int addressFamily);
 
 	private:
 		static struct sockaddr_storage sockaddrStorageIPv4;
@@ -36,7 +36,7 @@ namespace RTC
 		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
 
 	public:
-		UdpSocket(Listener* listener, int address_family);
+		UdpSocket(Listener* listener, int addressFamily);
 
 	private:
 		virtual ~UdpSocket() {};

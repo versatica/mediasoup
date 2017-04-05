@@ -91,21 +91,22 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static Json::Value empty_data(Json::objectValue);
+		static Json::Value EmptyData(Json::objectValue);
 
-		Accept(empty_data);
+		Accept(EmptyData);
 	}
 
 	void Request::Accept(Json::Value &data)
 	{
 		MS_TRACE();
 
-		static Json::Value empty_data(Json::objectValue);
+		static Json::Value EmptyData(Json::objectValue);
 		static const Json::StaticString k_id("id");
 		static const Json::StaticString k_accepted("accepted");
 		static const Json::StaticString k_data("data");
 
 		MS_ASSERT(this->replied == false, "Request already replied");
+
 		this->replied = true;
 
 		Json::Value json(Json::objectValue);
@@ -116,7 +117,7 @@ namespace Channel
 		if (data.isObject())
 			json[k_data] = data;
 		else
-			json[k_data] = empty_data;
+			json[k_data] = EmptyData;
 
 		this->channel->Send(json);
 	}
@@ -141,6 +142,7 @@ namespace Channel
 		static const Json::StaticString k_reason("reason");
 
 		MS_ASSERT(this->replied == false, "Request already replied");
+
 		this->replied = true;
 
 		Json::Value json(Json::objectValue);

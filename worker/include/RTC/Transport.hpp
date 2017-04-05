@@ -75,11 +75,11 @@ namespace RTC
 
 	/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
-		virtual void onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr) override;
+		virtual void onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
 
 	/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
-		virtual void onRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool is_closed_by_peer) override;
+		virtual void onRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) override;
 
 	/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
@@ -88,17 +88,17 @@ namespace RTC
 	/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
 		virtual void onOutgoingStunMessage(const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) override;
-		virtual void onIceSelectedTuple(const IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		virtual void onIceConnected(const IceServer* iceServer) override;
-		virtual void onIceCompleted(const IceServer* iceServer) override;
-		virtual void onIceDisconnected(const IceServer* iceServer) override;
+		virtual void onIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		virtual void onIceConnected(const RTC::IceServer* iceServer) override;
+		virtual void onIceCompleted(const RTC::IceServer* iceServer) override;
+		virtual void onIceDisconnected(const RTC::IceServer* iceServer) override;
 
 	/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
-		virtual void onDtlsConnecting(const DtlsTransport* dtlsTransport) override;
-		virtual void onDtlsConnected(const DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtp_profile, uint8_t* srtp_local_key, size_t srtp_local_key_len, uint8_t* srtp_remote_key, size_t srtp_remote_key_len, std::string& remoteCert) override;
-		virtual void onDtlsFailed(const DtlsTransport* dtlsTransport) override;
-		virtual void onDtlsClosed(const DtlsTransport* dtlsTransport) override;
+		virtual void onDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) override;
+		virtual void onDtlsConnected(const RTC::DtlsTransport* dtlsTransport, RTC::SrtpSession::Profile srtpProfile, uint8_t* srtpLocalKey, size_t srtpLocalKeyLen, uint8_t* srtpRemoteKey, size_t srtpRemoteKeyLen, std::string& remoteCert) override;
+		virtual void onDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
+		virtual void onDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
 		virtual void onOutgoingDtlsData(const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		virtual void onDtlsApplicationData(const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
@@ -132,7 +132,7 @@ namespace RTC
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		// REMB and bitrate stuff.
-		std::unique_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
+		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 		uint32_t maxBitrate = 0;
 		uint32_t effectiveMaxBitrate = 0;
 		uint64_t lastEffectiveMaxBitrateAt = 0;

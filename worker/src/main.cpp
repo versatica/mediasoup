@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 	// Print the effective configuration.
 	Settings::PrintConfiguration();
 
-	MS_DEBUG_TAG(info, "starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
+	MS_DEBUG_TAG(info, "starting mediasoup-worker [pid:%ld]", (long)getpid());
 
 #if defined(MS_LITTLE_ENDIAN)
 	MS_DEBUG_TAG(info, "Little-Endian CPU detected");

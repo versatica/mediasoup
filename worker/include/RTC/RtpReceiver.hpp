@@ -30,10 +30,10 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver) = 0;
+			virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver) = 0;
 			virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) = 0;
-			virtual void onRtpPacket(RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
-			virtual void onRtpReceiverClosed(const RtpReceiver* rtpReceiver) = 0;
+			virtual void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
+			virtual void onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver) = 0;
 		};
 
 	public:
@@ -118,7 +118,6 @@ namespace RTC
 	void RtpReceiver::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		auto it = this->rtpStreams.find(report->GetSsrc());
-
 		if (it != this->rtpStreams.end())
 		{
 			auto rtpStream = it->second;

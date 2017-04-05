@@ -902,22 +902,22 @@ namespace RTC
 		}
 	}
 
-	void Transport::onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remote_addr)
+	void Transport::onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
-		RTC::TransportTuple tuple(socket, remote_addr);
+		RTC::TransportTuple tuple(socket, remoteAddr);
 
 		onPacketRecv(&tuple, data, len);
 	}
 
-	void Transport::onRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool is_closed_by_peer)
+	void Transport::onRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
 
-		if (is_closed_by_peer)
+		if (isClosedByPeer)
 			this->iceServer->RemoveTuple(&tuple);
 	}
 

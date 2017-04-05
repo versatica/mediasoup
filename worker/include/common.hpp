@@ -10,7 +10,4 @@
 #include <netinet/in.h> // sockaddr_in, sockaddr_in6
 #include <arpa/inet.h> // htonl(), htons(), ntohl(), ntohs()
 
-#define MS_APP_NAME "mediasoup"
-#define MS_PROCESS_NAME "mediasoup-worker"
-
 #endif

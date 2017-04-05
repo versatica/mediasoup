@@ -12,12 +12,12 @@ namespace RTC
 	class RateCalculator
 	{
 	public:
-		static constexpr float kBpsScale = 8000.0f;
-		static constexpr float kbpsScale = 1000.0f;
-		static constexpr size_t defaultWindowSize = 1000;
+		static constexpr float BpsScale = 8000.0f;
+		static constexpr float BpsScale2 = 1000.0f;
+		static constexpr size_t DefaultWindowSize = 1000;
 
 	public:
-		explicit RateCalculator(size_t windowSize = defaultWindowSize, float scale = kBpsScale);
+		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = BpsScale);
 		void Update(size_t count, uint64_t now);
 		uint32_t GetRate(uint64_t now);
 		void Reset();
@@ -42,9 +42,9 @@ namespace RTC
 		// Total count in the time window.
 		size_t totalCount = 0;
 		// Window Size (in milliseconds).
-		size_t windowSize = defaultWindowSize;
+		size_t windowSize = DefaultWindowSize;
 		// Scale in which the rate is represented.
-		const float scale = kBpsScale;
+		const float scale = BpsScale;
 	};
 
 	class RtpDataCounter

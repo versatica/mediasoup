@@ -12,8 +12,8 @@ public:
 	struct UvWriteData
 	{
 		UnixStreamSocket* socket;
-		uv_write_t        req;
-		uint8_t           store[1];
+		uv_write_t req;
+		uint8_t store[1];
 	};
 
 public:
@@ -41,7 +41,7 @@ public:
 /* Pure virtual methods that must be implemented by the subclass. */
 protected:
 	virtual void userOnUnixStreamRead() = 0;
-	virtual void userOnUnixStreamSocketClosed(bool is_closed_by_peer) = 0;
+	virtual void userOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
 
 private:
 	// Allocated by this.
