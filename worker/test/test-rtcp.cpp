@@ -690,7 +690,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		packet.SetSsrcs(ssrcs);
 
 		// Serialize.
-		uint8_t rtcpBuffer[MS_RTCP_BUFFER_SIZE];
+		uint8_t rtcpBuffer[RTC::RTCP::bufferSize];
 		packet.Serialize(rtcpBuffer);
 
 		RTC::RTCP::Packet::CommonHeader* header = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(rtcpBuffer);
