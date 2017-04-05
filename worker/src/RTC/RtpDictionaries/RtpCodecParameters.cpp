@@ -97,11 +97,11 @@ namespace RTC
 		// `rtcpFeedback` is optional.
 		if (data[k_rtcpFeedback].isArray())
 		{
-			auto& json_rtcpFeedback = data[k_rtcpFeedback];
+			auto& jsonRtcpFeedback = data[k_rtcpFeedback];
 
-			for (Json::UInt i = 0; i < json_rtcpFeedback.size(); ++i)
+			for (Json::UInt i = 0; i < jsonRtcpFeedback.size(); ++i)
 			{
-				RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
+				RTC::RtcpFeedback rtcpFeedback(jsonRtcpFeedback[i]);
 
 				// Append to the rtcpFeedback vector.
 				this->rtcpFeedback.push_back(rtcpFeedback);

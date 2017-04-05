@@ -33,11 +33,11 @@ namespace RTC
 		// `codecs` is mandatory.
 		if (data[k_codecs].isArray())
 		{
-			auto& json_codecs = data[k_codecs];
+			auto& jsonCodecs = data[k_codecs];
 
-			for (Json::UInt i = 0; i < json_codecs.size(); ++i)
+			for (Json::UInt i = 0; i < jsonCodecs.size(); ++i)
 			{
-				RTC::RtpCodecParameters codec(json_codecs[i], RTC::Scope::RECEIVE);
+				RTC::RtpCodecParameters codec(jsonCodecs[i], RTC::Scope::RECEIVE);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -51,11 +51,11 @@ namespace RTC
 		// `encodings` is optional.
 		if (data[k_encodings].isArray())
 		{
-			auto& json_array = data[k_encodings];
+			auto& jsonArray = data[k_encodings];
 
-			for (Json::UInt i = 0; i < json_array.size(); ++i)
+			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
 			{
-				RTC::RtpEncodingParameters encoding(json_array[i]);
+				RTC::RtpEncodingParameters encoding(jsonArray[i]);
 
 				// Append to the encodings vector.
 				this->encodings.push_back(encoding);
@@ -65,11 +65,11 @@ namespace RTC
 		// `headerExtensions` is optional.
 		if (data[k_headerExtensions].isArray())
 		{
-			auto& json_array = data[k_headerExtensions];
+			auto& jsonArray = data[k_headerExtensions];
 
-			for (Json::UInt i = 0; i < json_array.size(); ++i)
+			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
 			{
-				RTC::RtpHeaderExtensionParameters headerExtension(json_array[i]);
+				RTC::RtpHeaderExtensionParameters headerExtension(jsonArray[i]);
 
 				// If a known header extension, append to the headerExtensions vector.
 				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)

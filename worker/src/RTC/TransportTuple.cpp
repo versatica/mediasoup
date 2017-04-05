@@ -23,11 +23,11 @@ namespace RTC
 		static const Json::StaticString v_tcp("tcp");
 
 		Json::Value json(Json::objectValue);
-		int ip_family;
+		int ipFamily;
 		std::string ip;
 		uint16_t port;
 
-		Utils::IP::GetAddressInfo(this->GetLocalAddress(), &ip_family, ip, &port);
+		Utils::IP::GetAddressInfo(this->GetLocalAddress(), &ipFamily, ip, &port);
 		json[k_localIP] = ip;
 		json[k_localPort] = (Json::UInt)port;
 		if (this->GetProtocol() == RTC::TransportTuple::Protocol::UDP)
@@ -35,7 +35,7 @@ namespace RTC
 		else
 			json[k_protocol] = v_tcp;
 
-		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ip_family, ip, &port);
+		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ipFamily, ip, &port);
 		json[k_remoteIP] = ip;
 		json[k_remotePort] = (Json::UInt)port;
 

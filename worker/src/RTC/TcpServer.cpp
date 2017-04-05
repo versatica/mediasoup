@@ -234,7 +234,7 @@ namespace RTC
 			connection->Destroy();
 	}
 
-	void TcpServer::userOnTcpConnectionClosed(::TcpConnection* connection, bool is_closed_by_peer)
+	void TcpServer::userOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
 
@@ -244,7 +244,7 @@ namespace RTC
 		if (!IsClosing())
 		{
 			this->listener->onRtcTcpConnectionClosed(this, static_cast<RTC::TcpConnection*>(connection),
-				is_closed_by_peer);
+				isClosedByPeer);
 		}
 	}
 

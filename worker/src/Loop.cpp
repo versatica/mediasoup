@@ -143,7 +143,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			static const Json::StaticString k_rooms("rooms");
 
 			Json::Value json(Json::objectValue);
-			Json::Value json_rooms(Json::arrayValue);
+			Json::Value jsonRooms(Json::arrayValue);
 
 			json[k_workerId] = Logger::id;
 
@@ -151,10 +151,10 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				auto room = kv.second;
 
-				json_rooms.append(room->toJson());
+				jsonRooms.append(room->toJson());
 			}
 
-			json[k_rooms] = json_rooms;
+			json[k_rooms] = jsonRooms;
 
 			request->Accept(json);
 

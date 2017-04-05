@@ -38,6 +38,7 @@ namespace RTC { namespace RTCP
 
 		// First, Currently parsing and Last RTCP packets in the compound packet.
 		Packet *first, *current, *last;
+
 		first = current = last = nullptr;
 
 		while (int(len) > 0)
@@ -50,11 +51,11 @@ namespace RTC { namespace RTCP
 			}
 
 			CommonHeader* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			size_t packet_len = (size_t)(ntohs(header->length) + 1) * 4;
+			size_t packetLlen = (size_t)(ntohs(header->length) + 1) * 4;
 
-			if (len < packet_len)
+			if (len < packetLlen)
 			{
-				MS_WARN_TAG(rtcp, "packet length exceeds remaining data [len:%zu, packet_len:%zu]", len, packet_len);
+				MS_WARN_TAG(rtcp, "packet length exceeds remaining data [len:%zu, packet len:%zu]", len, packetLlen);
 
 				return first;
 			}
@@ -118,7 +119,8 @@ namespace RTC { namespace RTCP
 
 				default:
 				{
-					MS_WARN_TAG(rtcp, "unknown RTCP packet type [packetType:%" PRIu8 "]", header->packetType);
+					MS_WARN_TAG(rtcp,
+						"unknown RTCP packet type [packetType:%" PRIu8 "]", header->packetType);
 
 					current = nullptr;
 				}
@@ -129,17 +131,23 @@ namespace RTC { namespace RTCP
 				std::string packetType = Type2String(Type(header->packetType));
 
 				if (Type(header->packetType) == Type::PSFB)
-					packetType += " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
+				{
+					packetType += " " +
+						FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
+				}
 				else if (Type(header->packetType) == Type::RTPFB)
-					packetType += " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
+				{
+					packetType += " " +
+						FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
+				}
 
 				MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
 
 				return first;
 			}
 
-			data += packet_len;
-			len -= packet_len;
+			data += packetLlen;
+			len -= packetLlen;
 
 			if (!first)
 				first = current;

@@ -86,7 +86,6 @@ namespace RTC
 
 		// Start looking for attributes after STUN header (Byte #20).
 		size_t pos = 20;
-
 		// Flags (positions) for special MESSAGE-INTEGRITY and FINGERPRINT attributes.
 		bool hasMessageIntegrity = false;
 		bool hasFingerprint = false;
@@ -568,26 +567,28 @@ namespace RTC
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::XorMappedAddress);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, xorMappedAddressPaddedLen);
 
-			uint8_t* attr_value = buffer + pos + 4;
+			uint8_t* attrValue = buffer + pos + 4;
 
 			switch (this->xorMappedAddress->sa_family)
 			{
 				case AF_INET:
 				{
 					// Set first byte to 0.
-					attr_value[0] = 0;
+					attrValue[0] = 0;
 					// Set inet family.
-					attr_value[1] = 0x01;
+					attrValue[1] = 0x01;
 					// Set port and XOR it.
-					std::memcpy(attr_value + 2, &((const sockaddr_in*)(this->xorMappedAddress))->sin_port, 2);
-					attr_value[2] ^= StunMessage::magicCookie[0];
-					attr_value[3] ^= StunMessage::magicCookie[1];
+					std::memcpy(
+						attrValue + 2, &((const sockaddr_in*)(this->xorMappedAddress))->sin_port, 2);
+					attrValue[2] ^= StunMessage::magicCookie[0];
+					attrValue[3] ^= StunMessage::magicCookie[1];
 					// Set address and XOR it.
-					std::memcpy(attr_value + 4, &((const sockaddr_in*)this->xorMappedAddress)->sin_addr.s_addr, 4);
-					attr_value[4] ^= StunMessage::magicCookie[0];
-					attr_value[5] ^= StunMessage::magicCookie[1];
-					attr_value[6] ^= StunMessage::magicCookie[2];
-					attr_value[7] ^= StunMessage::magicCookie[3];
+					std::memcpy(
+						attrValue + 4, &((const sockaddr_in*)this->xorMappedAddress)->sin_addr.s_addr, 4);
+					attrValue[4] ^= StunMessage::magicCookie[0];
+					attrValue[5] ^= StunMessage::magicCookie[1];
+					attrValue[6] ^= StunMessage::magicCookie[2];
+					attrValue[7] ^= StunMessage::magicCookie[3];
 
 					pos += 4 + 8;
 
@@ -596,31 +597,33 @@ namespace RTC
 				case AF_INET6:
 				{
 					// Set first byte to 0.
-					attr_value[0] = 0;
+					attrValue[0] = 0;
 					// Set inet family.
-					attr_value[1] = 0x02;
+					attrValue[1] = 0x02;
 					// Set port and XOR it.
-					std::memcpy(attr_value + 2, &((const sockaddr_in6*)(this->xorMappedAddress))->sin6_port, 2);
-					attr_value[2] ^= StunMessage::magicCookie[0];
-					attr_value[3] ^= StunMessage::magicCookie[1];
+					std::memcpy(
+						attrValue + 2, &((const sockaddr_in6*)(this->xorMappedAddress))->sin6_port, 2);
+					attrValue[2] ^= StunMessage::magicCookie[0];
+					attrValue[3] ^= StunMessage::magicCookie[1];
 					// Set address and XOR it.
-					std::memcpy(attr_value + 4, &((const sockaddr_in6*)this->xorMappedAddress)->sin6_addr.s6_addr, 16);
-					attr_value[4] ^= StunMessage::magicCookie[0];
-					attr_value[5] ^= StunMessage::magicCookie[1];
-					attr_value[6] ^= StunMessage::magicCookie[2];
-					attr_value[7] ^= StunMessage::magicCookie[3];
-					attr_value[8] ^= this->transactionId[0];
-					attr_value[9] ^= this->transactionId[1];
-					attr_value[10] ^= this->transactionId[2];
-					attr_value[11] ^= this->transactionId[3];
-					attr_value[12] ^= this->transactionId[4];
-					attr_value[13] ^= this->transactionId[5];
-					attr_value[14] ^= this->transactionId[6];
-					attr_value[15] ^= this->transactionId[7];
-					attr_value[16] ^= this->transactionId[8];
-					attr_value[17] ^= this->transactionId[9];
-					attr_value[18] ^= this->transactionId[10];
-					attr_value[19] ^= this->transactionId[11];
+					std::memcpy(
+						attrValue + 4, &((const sockaddr_in6*)this->xorMappedAddress)->sin6_addr.s6_addr, 16);
+					attrValue[4] ^= StunMessage::magicCookie[0];
+					attrValue[5] ^= StunMessage::magicCookie[1];
+					attrValue[6] ^= StunMessage::magicCookie[2];
+					attrValue[7] ^= StunMessage::magicCookie[3];
+					attrValue[8] ^= this->transactionId[0];
+					attrValue[9] ^= this->transactionId[1];
+					attrValue[10] ^= this->transactionId[2];
+					attrValue[11] ^= this->transactionId[3];
+					attrValue[12] ^= this->transactionId[4];
+					attrValue[13] ^= this->transactionId[5];
+					attrValue[14] ^= this->transactionId[6];
+					attrValue[15] ^= this->transactionId[7];
+					attrValue[16] ^= this->transactionId[8];
+					attrValue[17] ^= this->transactionId[9];
+					attrValue[18] ^= this->transactionId[10];
+					attrValue[19] ^= this->transactionId[11];
 
 					pos += 4 + 20;
 
@@ -652,7 +655,8 @@ namespace RTC
 				Utils::Byte::Set2Bytes(buffer, 2, (uint16_t)(this->size - 20 - 8));
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-			const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHMAC_SHA1(this->password, buffer, pos);
+			const uint8_t* computedMessageIntegrity =
+				Utils::Crypto::GetHMAC_SHA1(this->password, buffer, pos);
 
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::MessageIntegrity);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 20);

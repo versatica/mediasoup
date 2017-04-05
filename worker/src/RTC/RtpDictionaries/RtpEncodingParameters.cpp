@@ -75,11 +75,11 @@ namespace RTC
 		// `dependencyEncodingIds` is optional.
 		if (data[k_dependencyEncodingIds].isArray())
 		{
-			auto& json_array = data[k_dependencyEncodingIds];
+			auto& jsonArray = data[k_dependencyEncodingIds];
 
-			for (Json::UInt i = 0; i < json_array.size(); ++i)
+			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
 			{
-				auto& entry = json_array[i];
+				auto& entry = jsonArray[i];
 
 				// Append to the dependencyEncodingIds vector.
 				if (entry.isString())

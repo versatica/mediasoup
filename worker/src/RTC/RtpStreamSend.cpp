@@ -90,7 +90,6 @@ namespace RTC
 
 		uint32_t lastSr = report->GetLastSenderReport();
 		uint32_t dlsr = report->GetDelaySinceLastSenderReport();
-
 		// RTT in 1/2^16 seconds.
 		uint32_t rtt = nowCompactNtp - dlsr - lastSr;
 
@@ -190,7 +189,8 @@ namespace RTC
 					if (currentSeq32 == seq32)
 					{
 						auto currentPacket = (*bufferIt).packet;
-						uint32_t diff = (this->maxTimestamp - currentPacket->GetTimestamp()) * 1000 / this->params.clockRate;
+						uint32_t diff =
+							(this->maxTimestamp - currentPacket->GetTimestamp()) * 1000 / this->params.clockRate;
 
 						// Just provide the packet if no older than MaxRetransmissionAge ms.
 						if (diff > MaxRetransmissionAge)
@@ -198,7 +198,8 @@ namespace RTC
 							if (!tooOldPacketFound)
 							{
 								MS_WARN_TAG(rtx,
-									"ignoring retransmission for too old packet [seq:%" PRIu16 ", max_age:%" PRIu32 "ms, packet_age:%" PRIu32 "ms]",
+									"ignoring retransmission for too old packet "
+									"[seq:%" PRIu16 ", max age:%" PRIu32 "ms, packet age:%" PRIu32 "ms]",
 									currentPacket->GetSequenceNumber(), MaxRetransmissionAge, diff);
 
 								tooOldPacketFound = true;
@@ -215,7 +216,8 @@ namespace RTC
 							now - resentAtTime < static_cast<uint64_t>(rtt))
 						{
 							MS_WARN_TAG(rtx,
-								"ignoring retransmission for a packet already resent in the last RTT ms [seq:%" PRIu16 ", rtt:%" PRIu32 "]",
+								"ignoring retransmission for a packet already resent in the last RTT ms "
+								"[seq:%" PRIu16 ", rtt:%" PRIu32 "]",
 								currentPacket->GetSequenceNumber(), rtt);
 
 							break;
@@ -261,7 +263,7 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(rtx,
 				"could not resend all packets [seq:%" PRIu16 ", first:%s, "
-				"bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sentBitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+				"bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
 				seq, firstPacketSent ? "yes" : "no",
 				MS_UINT16_TO_BINARY(origBitmask), MS_UINT16_TO_BINARY(sentBitmask));
 		}

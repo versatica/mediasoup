@@ -14,8 +14,8 @@ namespace RTC { namespace RTCP
 		/* Struct for RTP Feedback message. */
 		struct Header
 		{
-			uint32_t s_ssrc;
-			uint32_t m_ssrc;
+			uint32_t senderSsrc;
+			uint32_t mediaSsrc;
 		};
 
 	public:
@@ -42,7 +42,7 @@ namespace RTC { namespace RTCP
 
 	protected:
 		explicit FeedbackPacket(CommonHeader* commonHeader);
-		FeedbackPacket(typename T::MessageType type, uint32_t sender_ssrc, uint32_t media_ssrc);
+		FeedbackPacket(typename T::MessageType type, uint32_t senderSsrc, uint32_t mediaSsrc);
 		virtual ~FeedbackPacket();
 
 	private:
@@ -113,25 +113,25 @@ namespace RTC { namespace RTCP
 	template <typename T>
 	uint32_t FeedbackPacket<T>::GetSenderSsrc() const
 	{
-		return (uint32_t)ntohl(this->header->s_ssrc);
+		return (uint32_t)ntohl(this->header->senderSsrc);
 	}
 
 	template <typename T>
 	void FeedbackPacket<T>::SetSenderSsrc(uint32_t ssrc)
 	{
-		this->header->s_ssrc = (uint32_t)htonl(ssrc);
+		this->header->senderSsrc = (uint32_t)htonl(ssrc);
 	}
 
 	template <typename T>
 	uint32_t FeedbackPacket<T>::GetMediaSsrc() const
 	{
-		return (uint32_t)ntohl(this->header->m_ssrc);
+		return (uint32_t)ntohl(this->header->mediaSsrc);
 	}
 
 	template <typename T>
 	void FeedbackPacket<T>::SetMediaSsrc(uint32_t ssrc)
 	{
-		this->header->m_ssrc = (uint32_t)htonl(ssrc);
+		this->header->mediaSsrc = (uint32_t)htonl(ssrc);
 	}
 }}
 

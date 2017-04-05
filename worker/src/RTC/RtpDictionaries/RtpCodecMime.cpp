@@ -78,13 +78,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto slash_pos = name.find('/');
+		auto slashPos = name.find('/');
 
-		if (slash_pos == std::string::npos || slash_pos == 0 || slash_pos == name.length() - 1)
+		if (slashPos == std::string::npos || slashPos == 0 || slashPos == name.length() - 1)
 			MS_THROW_ERROR("wrong codec MIME");
 
-		std::string type = name.substr(0, slash_pos);
-		std::string subtype = name.substr(slash_pos + 1);
+		std::string type = name.substr(0, slashPos);
+		std::string subtype = name.substr(slashPos + 1);
 
 		// Force lowcase names.
 		Utils::String::ToLowerCase(type);

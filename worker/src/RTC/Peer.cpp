@@ -906,7 +906,7 @@ namespace RTC
 							{
 								if (feedback->GetMessageType() == RTCP::FeedbackPs::MessageType::PLI)
 								{
-									MS_DEBUG_TAG(rtx, "PLI received [media_ssrc:%" PRIu32 "]",
+									MS_DEBUG_TAG(rtx, "PLI received [media ssrc:%" PRIu32 "]",
 										feedback->GetMediaSsrc());
 								}
 
@@ -916,7 +916,7 @@ namespace RTC
 							{
 								MS_WARN_TAG(rtcp,
 									"no RtpSender found for received %s Feedback packet "
-									"[sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 									feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 							}
@@ -934,7 +934,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(rtcp,
 								"ignoring unsupported %s Feedback packet "
-								"[sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+								"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 								RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 								feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 
@@ -966,7 +966,7 @@ namespace RTC
 							{
 								MS_WARN_TAG(rtcp,
 									"no RtpSender found for received NACK Feedback packet "
-									"[sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 									feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 							}
 
@@ -985,7 +985,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(rtcp,
 								"ignoring unsupported %s Feedback packet "
-								"[sender_ssrc:%" PRIu32 ", media_ssrc:%" PRIu32 "]",
+								"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 								RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 								feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
 

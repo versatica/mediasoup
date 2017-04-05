@@ -410,8 +410,8 @@ namespace RTC
 				if (it != DtlsTransport::srtpProfiles.begin())
 					dtlsSrtpProfiles += ":";
 
-				SrtpProfileMapEntry* profile_entry = &(*it);
-				dtlsSrtpProfiles += profile_entry->name;
+				SrtpProfileMapEntry* profileEntry = &(*it);
+				dtlsSrtpProfiles += profileEntry->name;
 			}
 		}
 
@@ -1190,13 +1190,13 @@ namespace RTC
 		auto it = DtlsTransport::srtpProfiles.begin();
 		for (; it != DtlsTransport::srtpProfiles.end(); ++it)
 		{
-			SrtpProfileMapEntry* profile_entry = &(*it);
+			SrtpProfileMapEntry* profileEntry = &(*it);
 
-			if (std::strcmp(ssl_srtp_profile->name, profile_entry->name) == 0)
+			if (std::strcmp(ssl_srtp_profile->name, profileEntry->name) == 0)
 			{
-				MS_DEBUG_TAG(dtls, "chosen SRTP profile: %s", profile_entry->name);
+				MS_DEBUG_TAG(dtls, "chosen SRTP profile: %s", profileEntry->name);
 
-				negotiatedSrtpProfile = profile_entry->profile;
+				negotiatedSrtpProfile = profileEntry->profile;
 			}
 		}
 
@@ -1224,29 +1224,29 @@ namespace RTC
 		}
 		else if (where & SSL_CB_ALERT)
 		{
-			const char* alert_type;
+			const char* alertType;
 
 			switch (*SSL_alert_type_string(ret))
 			{
-				case 'W':  alert_type = "warning";    break;
-				case 'F':  alert_type = "fatal";      break;
-				default:   alert_type = "undefined";
+				case 'W':  alertType = "warning";    break;
+				case 'F':  alertType = "fatal";      break;
+				default:   alertType = "undefined";
 			}
 
 			if (where & SSL_CB_READ)
 			{
 				MS_WARN_TAG(dtls, "received DTLS %s alert: %s",
-					alert_type, SSL_alert_desc_string_long(ret));
+					alertType, SSL_alert_desc_string_long(ret));
 			}
 			else if (where & SSL_CB_WRITE)
 			{
 				MS_DEBUG_TAG(dtls, "sending DTLS %s alert: %s",
-					alert_type, SSL_alert_desc_string_long(ret));
+					alertType, SSL_alert_desc_string_long(ret));
 			}
 			else
 			{
 				MS_DEBUG_TAG(dtls, "DTLS %s alert: %s",
-					alert_type, SSL_alert_desc_string_long(ret));
+					alertType, SSL_alert_desc_string_long(ret));
 			}
 		}
 		else if (where & SSL_CB_EXIT)

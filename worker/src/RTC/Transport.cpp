@@ -914,10 +914,10 @@ namespace RTC
 		// Delete the whole packet.
 		while (packet)
 		{
-			RTC::RTCP::Packet* next_packet = packet->GetNext();
+			RTC::RTCP::Packet* nextPacket = packet->GetNext();
 
 			delete packet;
-			packet = next_packet;
+			packet = nextPacket;
 		}
 	}
 

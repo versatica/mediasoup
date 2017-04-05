@@ -184,7 +184,7 @@ namespace RTC
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
 		MS_WARN_TAG(rtx,
-			"triggering NACK [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
+			"triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
 			this->params.ssrc, seqNumbers[0], seqNumbers.size());
 
 		this->listener->onNackRequired(this, seqNumbers);

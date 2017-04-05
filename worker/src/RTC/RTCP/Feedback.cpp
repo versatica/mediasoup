@@ -47,14 +47,14 @@ namespace RTC { namespace RTCP
 	}
 
 	template <typename T>
-	FeedbackPacket<T>::FeedbackPacket(typename T::MessageType messageType, uint32_t sender_ssrc, uint32_t media_ssrc):
+	FeedbackPacket<T>::FeedbackPacket(typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc):
 		Packet(RtcpType),
 		messageType(messageType)
 	{
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = reinterpret_cast<Header*>(this->raw);
-		this->header->s_ssrc = htonl(sender_ssrc);
-		this->header->m_ssrc = htonl(media_ssrc);
+		this->header->senderSsrc = htonl(senderSsrc);
+		this->header->mediaSsrc = htonl(mediaSsrc);
 	}
 
 	template <typename T>
@@ -84,8 +84,8 @@ namespace RTC { namespace RTCP
 	{
 		MS_TRACE();
 
-		MS_DUMP("  sender ssrc : %" PRIu32, (uint32_t)ntohl(this->header->s_ssrc));
-		MS_DUMP("  media ssrc  : %" PRIu32, (uint32_t)ntohl(this->header->m_ssrc));
+		MS_DUMP("  sender ssrc : %" PRIu32, GetSenderSsrc());
+		MS_DUMP("  media ssrc  : %" PRIu32, GetMediaSsrc());
 		MS_DUMP("  size        : %zu", this->GetSize());
 	}
 
