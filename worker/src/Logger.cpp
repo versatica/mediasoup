@@ -7,7 +7,7 @@
 
 std::string Logger::id = "unset";
 Channel::UnixStreamSocket* Logger::channel = nullptr;
-char Logger::buffer[MS_LOGGER_BUFFER_SIZE];
+char Logger::buffer[Logger::bufferSize];
 
 /* Class methods. */
 

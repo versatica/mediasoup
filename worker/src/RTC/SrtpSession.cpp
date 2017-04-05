@@ -7,8 +7,6 @@
 #include "Logger.hpp"
 #include <cstring> // std::memset(), std::memcpy()
 
-#define MS_ENCRYPT_BUFFER_SIZE 65536
-
 namespace RTC
 {
 	/* Static. */
@@ -128,7 +126,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ensure that the resulting SRTP packet fits into the encrypt buffer.
-		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
+		if (*len + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
 		{
 			MS_WARN_TAG(srtp, "cannot encrypt RTP packet, size too big (%zu bytes)", *len);
 
@@ -175,7 +173,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ensure that the resulting SRTCP packet fits into the encrypt buffer.
-		if (*len + SRTP_MAX_TRAILER_LEN > MS_ENCRYPT_BUFFER_SIZE)
+		if (*len + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
 		{
 			MS_WARN_TAG(srtp, "cannot encrypt RTCP packet, size too big (%zu bytes)", *len);
 
