@@ -26,9 +26,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MAX_AUDIO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxAudioIntervalMs;
 		else
-			this->maxRtcpInterval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxVideoIntervalMs;
 	}
 
 	RtpSender::~RtpSender()

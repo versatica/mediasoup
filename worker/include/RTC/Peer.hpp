@@ -43,9 +43,6 @@ namespace RTC
 			virtual void onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
 		};
 
-	private:
-		static uint8_t rtcpBuffer[];
-
 	public:
 		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName);
 

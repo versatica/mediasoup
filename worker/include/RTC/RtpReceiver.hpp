@@ -36,9 +36,6 @@ namespace RTC
 			virtual void onRtpReceiverClosed(const RtpReceiver* rtpReceiver) = 0;
 		};
 
-	private:
-		static uint8_t rtcpBuffer[];
-
 	public:
 		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind);
 

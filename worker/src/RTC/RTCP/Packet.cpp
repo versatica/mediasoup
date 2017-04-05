@@ -11,6 +11,10 @@
 
 namespace RTC { namespace RTCP
 {
+	/* Namespace variables. */
+
+	uint8_t buffer[bufferSize];
+
 	/* Class variables. */
 
 	std::map<Type, std::string> Packet::type2String =

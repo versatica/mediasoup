@@ -11,10 +11,6 @@
 
 namespace RTC
 {
-	/* Class variables. */
-
-	uint8_t RtpReceiver::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
-
 	/* Instance methods. */
 
 	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind) :
@@ -26,9 +22,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MAX_AUDIO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxAudioIntervalMs;
 		else
-			this->maxRtcpInterval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxAudioIntervalMs;
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -322,7 +318,7 @@ namespace RTC
 			return;
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+		if (packet->GetSize() > RTC::RTCP::bufferSize)
 		{
 			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
 				packet->GetSize());
@@ -330,7 +326,7 @@ namespace RTC
 			return;
 		}
 
-		packet->Serialize(RtpReceiver::rtcpBuffer);
+		packet->Serialize(RTC::RTCP::buffer);
 		this->transport->SendRtcpPacket(packet);
 	}
 
@@ -342,7 +338,7 @@ namespace RTC
 			return;
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+		if (packet->GetSize() > RTC::RTCP::bufferSize)
 		{
 			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
 				packet->GetSize());
@@ -350,7 +346,7 @@ namespace RTC
 			return;
 		}
 
-		packet->Serialize(RtpReceiver::rtcpBuffer);
+		packet->Serialize(RTC::RTCP::buffer);
 		this->transport->SendRtcpPacket(packet);
 	}
 
@@ -491,7 +487,7 @@ namespace RTC
 		}
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet.GetSize() > MS_RTCP_BUFFER_SIZE)
+		if (packet.GetSize() > RTC::RTCP::bufferSize)
 		{
 			MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)",
 				packet.GetSize());
@@ -499,7 +495,7 @@ namespace RTC
 			return;
 		}
 
-		packet.Serialize(RtpReceiver::rtcpBuffer);
+		packet.Serialize(RTC::RTCP::buffer);
 		this->transport->SendRtcpPacket(&packet);
 	}
 
@@ -510,7 +506,7 @@ namespace RTC
 
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
 
-		packet.Serialize(RtpReceiver::rtcpBuffer);
+		packet.Serialize(RTC::RTCP::buffer);
 
 		// Send two, because it's free.
 		this->transport->SendRtcpPacket(&packet);

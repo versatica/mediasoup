@@ -41,10 +41,6 @@ namespace RTC
 	static constexpr uint64_t EffectiveMaxBitrateCheckInterval = 2000; // In ms.
 	static constexpr double EffectiveMaxBitrateThresholdBeforeFullFrame = 0.6; // 0.0 - 1.0.
 
-	/* Class variables. */
-
-	uint8_t Transport::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
-
 	/* Instance methods. */
 
 	Transport::Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data) :
@@ -1199,7 +1195,7 @@ namespace RTC
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
 		packet.SetBitrate(effective_bitrate);
 		packet.SetSsrcs(ssrcs);
-		packet.Serialize(Transport::rtcpBuffer);
+		packet.Serialize(RTC::RTCP::buffer);
 		this->SendRtcpPacket(&packet);
 
 		// Trigger a full frame for all the suitable strams if the effective max bitrate

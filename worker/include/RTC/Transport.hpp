@@ -43,9 +43,6 @@ namespace RTC
 			virtual void onTransportFullFrameRequired(RTC::Transport* transport) = 0;
 		};
 
-	private:
-		static uint8_t rtcpBuffer[];
-
 	public:
 		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data);
 

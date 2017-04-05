@@ -13,10 +13,6 @@
 
 namespace RTC
 {
-	/* Class variables. */
-
-	uint8_t Peer::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
-
 	/* Instance methods. */
 
 	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName) :
@@ -30,7 +26,7 @@ namespace RTC
 		this->timer = new Timer(this);
 
 		// Start the RTCP timer.
-		this->timer->Start(uint64_t(RTC::RTCP::MAX_VIDEO_INTERVAL_MS / 2));
+		this->timer->Start(uint64_t(RTC::RTCP::maxVideoIntervalMs / 2));
 	}
 
 	Peer::~Peer()
@@ -600,7 +596,7 @@ namespace RTC
 				if (packet->GetSenderReportCount())
 				{
 					// Ensure that the RTCP packet fits into the RTCP buffer.
-					if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+					if (packet->GetSize() > RTC::RTCP::bufferSize)
 					{
 						MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
 							packet->GetSize());
@@ -608,7 +604,7 @@ namespace RTC
 						return;
 					}
 
-					packet->Serialize(Peer::rtcpBuffer);
+					packet->Serialize(RTC::RTCP::buffer);
 					transport->SendRtcpCompoundPacket(packet.get());
 					// Reset the Compound packet.
 					packet.reset(new RTC::RTCP::CompoundPacket());
@@ -629,7 +625,7 @@ namespace RTC
 			if (packet->GetReceiverReportCount())
 			{
 				// Ensure that the RTCP packet fits into the RTCP buffer.
-				if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+				if (packet->GetSize() > RTC::RTCP::bufferSize)
 				{
 					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
 						packet->GetSize());
@@ -637,7 +633,7 @@ namespace RTC
 					return;
 				}
 
-				packet->Serialize(Peer::rtcpBuffer);
+				packet->Serialize(RTC::RTCP::buffer);
 				transport->SendRtcpCompoundPacket(packet.get());
 			}
 		}
@@ -1100,7 +1096,7 @@ namespace RTC
 
 	void Peer::onTimer(Timer* timer)
 	{
-		uint64_t interval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+		uint64_t interval = RTC::RTCP::maxVideoIntervalMs;
 		uint32_t now = DepLibUV::GetTime();
 
 		this->SendRtcp(now);
@@ -1123,8 +1119,8 @@ namespace RTC
 			if (rate)
 				interval = 360000 / rate;
 
-			if (interval > RTC::RTCP::MAX_VIDEO_INTERVAL_MS)
-				interval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+			if (interval > RTC::RTCP::maxVideoIntervalMs)
+				interval = RTC::RTCP::maxVideoIntervalMs;
 		}
 
 		/*

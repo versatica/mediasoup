@@ -5,13 +5,15 @@
 #include <map>
 #include <string>
 
-#define MS_RTCP_BUFFER_SIZE 65536
-
 namespace RTC { namespace RTCP
 {
+	// Internal buffer for RTCP serialization
+	constexpr size_t bufferSize = 65536;
+	extern uint8_t buffer[bufferSize];
+
 	// Maximum interval for regular RTCP mode.
-	constexpr uint16_t MAX_VIDEO_INTERVAL_MS = 1000;
-	constexpr uint16_t MAX_AUDIO_INTERVAL_MS = 5000;
+	constexpr uint16_t maxVideoIntervalMs = 1000;
+	constexpr uint16_t maxAudioIntervalMs = 5000;
 
 	enum class Type : uint8_t
 	{
