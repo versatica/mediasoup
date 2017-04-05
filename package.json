@@ -2,13 +2,16 @@
   "name": "mediasoup",
   "version": "0.8.3",
   "description": "Cutting Edge WebRTC Video Conferencing",
-  "main": "lib/mediasoup.js",
+  "author": "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
+  "contributors": [
+    "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)"
+  ],
+  "homepage": "https://mediasoup.org",
+  "license": "ISC",
   "repository": {
     "type": "git",
     "url": "https://github.com/versatica/mediasoup.git"
   },
-  "author": "Iñaki Baz Castillo <ibc@aliax.net>",
-  "license": "ISC",
   "keywords": [
     "webrtc",
     "sfu",
@@ -19,13 +22,13 @@
   "bugs": {
     "url": "https://github.com/versatica/mediasoup/issues"
   },
-  "homepage": "http://mediasoup.org",
   "os": [
     "!win32"
   ],
   "engines": {
     "node": ">=4.8.0 <5.0.0 || >=5.7.0"
   },
+  "main": "lib/mediasoup.js",
   "dependencies": {
     "check-types": "^7.1.5",
     "clone": "^2.1.1",
