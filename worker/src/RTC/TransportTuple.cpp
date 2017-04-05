@@ -50,16 +50,16 @@ namespace RTC
 		{
 			case Protocol::UDP:
 			{
-				int remote_family;
-				std::string remote_ip;
-				uint16_t remote_port;
+				int remoteFamily;
+				std::string remoteIp;
+				uint16_t remotePort;
 
-				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remote_family, remote_ip, &remote_port);
+				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remoteFamily, remoteIp, &remotePort);
 
 				MS_DUMP("<TransportTuple>");
 				MS_DUMP("  [UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 					this->udpSocket->GetLocalIP().c_str(), this->udpSocket->GetLocalPort(),
-					remote_ip.c_str(), remote_port);
+					remoteIp.c_str(), remotePort);
 				MS_DUMP("</TransportTuple>");
 				break;
 			}
