@@ -38,15 +38,15 @@ namespace RTC { namespace RTCP
 
 		this->header = header;
 
-		// Calculate bit_string length.
-		if (this->header->padding_bits % 8 != 0)
+		// Calculate bitString length.
+		if (this->header->paddingBits % 8 != 0)
 		{
 			MS_WARN_TAG(rtcp, "invalid Rpsi packet with fractional padding bytes value");
 
 			isCorrect = false;
 		}
 
-		size_t paddingBytes = this->header->padding_bits / 8;
+		size_t paddingBytes = this->header->paddingBits / 8;
 
 		if (paddingBytes > FeedbackPsRpsiItem::MaxBitStringSize)
 		{
@@ -58,11 +58,11 @@ namespace RTC { namespace RTCP
 		this->length = FeedbackPsRpsiItem::MaxBitStringSize - paddingBytes;
 	}
 
-	FeedbackPsRpsiItem::FeedbackPsRpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length)
+	FeedbackPsRpsiItem::FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(payload_type <= 0x7f, "rpsi payload type exceeds the maximum value");
+		MS_ASSERT(payloadType <= 0x7f, "rpsi payload type exceeds the maximum value");
 		MS_ASSERT(length <= FeedbackPsRpsiItem::MaxBitStringSize, "rpsi bit string length exceeds the maximum value");
 
 		this->raw = new uint8_t[sizeof(Header)];
@@ -71,9 +71,9 @@ namespace RTC { namespace RTCP
 		// 32 bits padding.
 		size_t padding = (-length) & 3;
 
-		this->header->padding_bits = padding * 8;
+		this->header->paddingBits = padding * 8;
 		this->header->zero = 0;
-		std::memcpy(this->header->bit_string, bit_string, length);
+		std::memcpy(this->header->bitString, bitString, length);
 
 		// Fill padding.
 		for (size_t i = 0; i < padding; ++i)
@@ -96,7 +96,7 @@ namespace RTC { namespace RTCP
 		MS_TRACE();
 
 		MS_DUMP("<FeedbackPsRpsiItem>");
-		MS_DUMP("  padding bits : %" PRIu8, this->header->padding_bits);
+		MS_DUMP("  padding bits : %" PRIu8, this->header->paddingBits);
 		MS_DUMP("  payload type : %" PRIu8, this->GetPayloadType());
 		MS_DUMP("  length       : %zu", this->GetLength());
 		MS_DUMP("</FeedbackPsRpsiItem>");

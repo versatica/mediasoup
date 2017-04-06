@@ -15,7 +15,7 @@ namespace RTC { namespace RTCP
 	public:
 		// Parsed Report. Points to an external data.
 		explicit FeedbackRtpSrReqPacket(CommonHeader* commonHeader);
-		FeedbackRtpSrReqPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
+		FeedbackRtpSrReqPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
 		virtual ~FeedbackRtpSrReqPacket() {};
 
 		virtual void Dump() const override;
@@ -29,8 +29,8 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	FeedbackRtpSrReqPacket::FeedbackRtpSrReqPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackRtpPacket(FeedbackRtp::MessageType::SR_REQ, sender_ssrc, media_ssrc)
+	FeedbackRtpSrReqPacket::FeedbackRtpSrReqPacket(uint32_t senderSsrc, uint32_t mediaSsrc):
+		FeedbackRtpPacket(FeedbackRtp::MessageType::SR_REQ, senderSsrc, mediaSsrc)
 	{}
 }}
 

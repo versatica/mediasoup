@@ -28,9 +28,9 @@ namespace RTC { namespace RTCP
 		struct Header
 		{
 			uint32_t ssrc;
-			uint8_t sequence_number;
+			uint8_t sequenceNumber;
 			uint8_t zero:1;
-			uint8_t payload_type:7;
+			uint8_t payloadType:7;
 			uint16_t length;
 			uint8_t value[];
 		};
@@ -44,7 +44,7 @@ namespace RTC { namespace RTCP
 	public:
 		explicit FeedbackPsVbcmItem(Header* header);
 		explicit FeedbackPsVbcmItem(FeedbackPsVbcmItem* item);
-		FeedbackPsVbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
+		FeedbackPsVbcmItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value);
 		virtual ~FeedbackPsVbcmItem() {};
 
 		uint32_t GetSsrc() const;
@@ -96,13 +96,13 @@ namespace RTC { namespace RTCP
 	inline
 	uint8_t FeedbackPsVbcmItem::GetSequenceNumber() const
 	{
-		return (uint8_t)this->header->sequence_number;
+		return (uint8_t)this->header->sequenceNumber;
 	}
 
 	inline
 	uint8_t FeedbackPsVbcmItem::GetPayloadType() const
 	{
-		return (uint8_t)this->header->payload_type;
+		return (uint8_t)this->header->payloadType;
 	}
 
 	inline

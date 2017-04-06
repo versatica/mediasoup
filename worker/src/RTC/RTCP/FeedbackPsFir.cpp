@@ -29,7 +29,7 @@ namespace RTC { namespace RTCP
 
 	/* Instance methods. */
 
-	FeedbackPsFirItem::FeedbackPsFirItem(uint32_t ssrc, uint8_t sequence_number)
+	FeedbackPsFirItem::FeedbackPsFirItem(uint32_t ssrc, uint8_t sequenceNumber)
 	{
 		MS_TRACE();
 
@@ -40,7 +40,7 @@ namespace RTC { namespace RTCP
 		std::memset(this->header, 0, sizeof(Header));
 
 		this->header->ssrc = htonl(ssrc);
-		this->header->sequence_number = sequence_number;
+		this->header->sequenceNumber = sequenceNumber;
 	}
 
 	size_t FeedbackPsFirItem::Serialize(uint8_t* buffer)

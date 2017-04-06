@@ -21,8 +21,8 @@ namespace RTC { namespace RTCP
 	public:
 		struct Header
 		{
-			uint16_t packet_id;
-			uint16_t lost_packet_bitmask;
+			uint16_t packetId;
+			uint16_t lostPacketBitmask;
 		};
 
 	public:
@@ -74,13 +74,13 @@ namespace RTC { namespace RTCP
 	inline
 	uint16_t FeedbackRtpNackItem::GetPacketId() const
 	{
-		return (uint16_t)ntohs(this->header->packet_id);
+		return (uint16_t)ntohs(this->header->packetId);
 	}
 
 	inline
 	uint16_t FeedbackRtpNackItem::GetLostPacketBitmask() const
 	{
-		return (uint16_t)ntohs(this->header->lost_packet_bitmask);
+		return (uint16_t)ntohs(this->header->lostPacketBitmask);
 	}
 }}
 

@@ -27,15 +27,15 @@ namespace RTC { namespace RTCP
 	}
 
 	/* Instance methods. */
-	FeedbackPsVbcmItem::FeedbackPsVbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value)
+	FeedbackPsVbcmItem::FeedbackPsVbcmItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value)
 	{
 		this->raw = new uint8_t[8 + length];
 		this->header = reinterpret_cast<Header*>(this->raw);
 
 		this->header->ssrc = htonl(ssrc);
-		this->header->sequence_number = sequence_number;
+		this->header->sequenceNumber = sequenceNumber;
 		this->header->zero = 0;
-		this->header->payload_type = payload_type;
+		this->header->payloadType = payloadType;
 		this->header->length = htons(length);
 		std::memcpy(this->header->value, value, sizeof(length));
 	}

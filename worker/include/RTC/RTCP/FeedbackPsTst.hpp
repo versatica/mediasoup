@@ -26,7 +26,7 @@ namespace RTC { namespace RTCP
 		struct Header
 		{
 			uint32_t ssrc;
-			uint32_t sequence_number:8;
+			uint32_t sequenceNumber:8;
 			uint32_t reserved:19;
 			uint32_t index:5;
 		};
@@ -95,7 +95,7 @@ namespace RTC { namespace RTCP
 	template <typename T>
 	uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
 	{
-		return (uint8_t)this->header->sequence_number;
+		return (uint8_t)this->header->sequenceNumber;
 	}
 
 	template <typename T>

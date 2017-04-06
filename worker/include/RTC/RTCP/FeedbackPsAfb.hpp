@@ -22,7 +22,7 @@ namespace RTC { namespace RTCP
 	public:
 		// Parsed Report. Points to an external data.
 		explicit FeedbackPsAfbPacket(CommonHeader* commonHeader, Application application = UNKNOWN);
-		FeedbackPsAfbPacket(uint32_t sender_ssrc, uint32_t media_ssrc, Application application = UNKNOWN);
+		FeedbackPsAfbPacket(uint32_t senderSsrc, uint32_t mediaSsrc, Application application = UNKNOWN);
 		virtual ~FeedbackPsAfbPacket() {};
 
 		Application GetApplication() const;
@@ -51,8 +51,8 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	FeedbackPsAfbPacket::FeedbackPsAfbPacket(uint32_t sender_ssrc, uint32_t media_ssrc, Application application):
-		FeedbackPsPacket(FeedbackPs::MessageType::AFB, sender_ssrc, media_ssrc)
+	FeedbackPsAfbPacket::FeedbackPsAfbPacket(uint32_t senderSsrc, uint32_t mediaSsrc, Application application):
+		FeedbackPsPacket(FeedbackPs::MessageType::AFB, senderSsrc, mediaSsrc)
 	{
 		this->application = application;
 	}

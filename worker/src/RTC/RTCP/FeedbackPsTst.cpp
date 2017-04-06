@@ -39,7 +39,7 @@ namespace RTC { namespace RTCP
 		std::memset(this->header, 0, sizeof(Header));
 
 		this->header->ssrc = htonl(ssrc);
-		this->header->sequence_number = sequenceNumber;
+		this->header->sequenceNumber = sequenceNumber;
 		this->header->index = index;
 	}
 

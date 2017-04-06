@@ -40,7 +40,7 @@ namespace RTC { namespace RTCP
 	public:
 		// Parsed Report. Points to an external data.
 		explicit FeedbackPsRembPacket(CommonHeader* commonHeader);
-		FeedbackPsRembPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
+		FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
 		virtual ~FeedbackPsRembPacket() {};
 
 		bool IsCorrect();
@@ -65,8 +65,8 @@ namespace RTC { namespace RTCP
 	/* Inline instance methods. */
 
 	inline
-	FeedbackPsRembPacket::FeedbackPsRembPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsAfbPacket(sender_ssrc, media_ssrc, FeedbackPsAfbPacket::Application::REMB)
+	FeedbackPsRembPacket::FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc):
+		FeedbackPsAfbPacket(senderSsrc, mediaSsrc, FeedbackPsAfbPacket::Application::REMB)
 	{}
 
 	inline

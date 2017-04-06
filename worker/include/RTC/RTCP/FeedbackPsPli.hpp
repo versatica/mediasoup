@@ -15,7 +15,7 @@ namespace RTC { namespace RTCP
 	public:
 		// Parsed Report. Points to an external data.
 		explicit FeedbackPsPliPacket(CommonHeader* commonHeader);
-		FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
+		FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
 		virtual ~FeedbackPsPliPacket() {};
 
 	public:
@@ -30,8 +30,8 @@ namespace RTC { namespace RTCP
 	{}
 
 	inline
-	FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsPacket(FeedbackPs::MessageType::PLI, sender_ssrc, media_ssrc)
+	FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc):
+		FeedbackPsPacket(FeedbackPs::MessageType::PLI, senderSsrc, mediaSsrc)
 	{}
 }}
 

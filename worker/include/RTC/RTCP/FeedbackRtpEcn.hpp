@@ -32,13 +32,13 @@ namespace RTC { namespace RTCP
 	private:
 		struct Header
 		{
-			uint32_t sequence_number;
-			uint32_t ect0_counter;
-			uint32_t ect1_counter;
-			uint16_t ecn_ce_counter;
-			uint16_t not_ect_counter;
-			uint16_t lost_packets;
-			uint16_t duplicated_packets;
+			uint32_t sequenceNumber;
+			uint32_t ect0Counter;
+			uint32_t ect1Counter;
+			uint16_t ecnCeCounter;
+			uint16_t notEctCounter;
+			uint16_t lostPackets;
+			uint16_t duplicatedPackets;
 		};
 
 	public:
@@ -94,43 +94,43 @@ namespace RTC { namespace RTCP
 	inline
 	uint32_t FeedbackRtpEcnItem::GetSequenceNumber() const
 	{
-		return ntohl(this->header->sequence_number);
+		return ntohl(this->header->sequenceNumber);
 	}
 
 	inline
 	uint32_t FeedbackRtpEcnItem::GetEct0Counter() const
 	{
-		return ntohl(this->header->ect0_counter);
+		return ntohl(this->header->ect0Counter);
 	}
 
 	inline
 	uint32_t FeedbackRtpEcnItem::GetEct1Counter() const
 	{
-		return ntohl(this->header->ect1_counter);
+		return ntohl(this->header->ect1Counter);
 	}
 
 	inline
 	uint16_t FeedbackRtpEcnItem::GetEcnCeCounter() const
 	{
-		return ntohs(this->header->ecn_ce_counter);
+		return ntohs(this->header->ecnCeCounter);
 	}
 
 	inline
 	uint16_t FeedbackRtpEcnItem::GetNotEctCounter() const
 	{
-		return ntohs(this->header->not_ect_counter);
+		return ntohs(this->header->notEctCounter);
 	}
 
 	inline
 	uint16_t FeedbackRtpEcnItem::GetLostPackets() const
 	{
-		return ntohs(this->header->lost_packets);
+		return ntohs(this->header->lostPackets);
 	}
 
 	inline
 	uint16_t FeedbackRtpEcnItem::GetDuplicatedPackets() const
 	{
-		return ntohs(this->header->duplicated_packets);
+		return ntohs(this->header->duplicatedPackets);
 	}
 }}
 

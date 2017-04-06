@@ -28,10 +28,10 @@ namespace RTC { namespace RTCP
 	private:
 		struct Header
 		{
-			uint8_t padding_bits;
+			uint8_t paddingBits;
 			uint8_t zero:1;
-			uint8_t payload_type:7;
-			uint8_t bit_string[MaxBitStringSize];
+			uint8_t payloadType:7;
+			uint8_t bitString[MaxBitStringSize];
 		};
 
 	public:
@@ -43,7 +43,7 @@ namespace RTC { namespace RTCP
 	public:
 		explicit FeedbackPsRpsiItem(Header* header);
 		explicit FeedbackPsRpsiItem(FeedbackPsRpsiItem* item);
-		FeedbackPsRpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
+		FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length);
 		virtual ~FeedbackPsRpsiItem() {};
 
 		bool IsCorrect() const;
@@ -81,13 +81,13 @@ namespace RTC { namespace RTCP
 	inline
 	uint8_t FeedbackPsRpsiItem::GetPayloadType() const
 	{
-		return this->header->payload_type;
+		return this->header->payloadType;
 	}
 
 	inline
 	uint8_t* FeedbackPsRpsiItem::GetBitString() const
 	{
-		return this->header->bit_string;
+		return this->header->bitString;
 	}
 
 	inline

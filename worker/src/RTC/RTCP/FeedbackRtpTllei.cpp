@@ -32,8 +32,8 @@ namespace RTC { namespace RTCP
 		this->raw = new uint8_t[sizeof(Header)];
 		this->header = reinterpret_cast<Header*>(this->raw);
 
-		this->header->packet_id = htons(packetId);
-		this->header->lost_packet_bitmask = htons(lostPacketBitmask);
+		this->header->packetId = htons(packetId);
+		this->header->lostPacketBitmask = htons(lostPacketBitmask);
 	}
 
 	size_t FeedbackRtpTlleiItem::Serialize(uint8_t* buffer)

@@ -14,11 +14,11 @@ namespace RTC { namespace RTCP
 		struct Header
 		{
 			uint32_t ssrc;
-			uint32_t ntp_sec;
-			uint32_t ntp_frac;
-			uint32_t rtp_ts;
-			uint32_t packet_count;
-			uint32_t octet_count;
+			uint32_t ntpSec;
+			uint32_t ntpFrac;
+			uint32_t rtpTs;
+			uint32_t packetCount;
+			uint32_t octetCount;
 		};
 
 	public:
@@ -38,15 +38,15 @@ namespace RTC { namespace RTCP
 		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
 		uint32_t GetNtpSec() const;
-		void SetNtpSec(uint32_t ntp_sec);
+		void SetNtpSec(uint32_t ntpSec);
 		uint32_t GetNtpFrac() const;
-		void SetNtpFrac(uint32_t ntp_frac);
+		void SetNtpFrac(uint32_t ntpFrac);
 		uint32_t GetRtpTs() const;
-		void SetRtpTs(uint32_t rtp_ts);
+		void SetRtpTs(uint32_t rtpTs);
 		uint32_t GetPacketCount() const;
-		void SetPacketCount(uint32_t packet_count);
+		void SetPacketCount(uint32_t packetCount);
 		uint32_t GetOctetCount() const;
-		void SetOctetCount(uint32_t octet_count);
+		void SetOctetCount(uint32_t octetCount);
 
 	private:
 		Header* header = nullptr;
@@ -120,62 +120,62 @@ namespace RTC { namespace RTCP
 	inline
 	uint32_t SenderReport::GetNtpSec() const
 	{
-		return (uint32_t)ntohl(this->header->ntp_sec);
+		return (uint32_t)ntohl(this->header->ntpSec);
 	}
 
 	inline
-	void SenderReport::SetNtpSec(uint32_t ntp_sec)
+	void SenderReport::SetNtpSec(uint32_t ntpSec)
 	{
-		this->header->ntp_sec = (uint32_t)htonl(ntp_sec);
+		this->header->ntpSec = (uint32_t)htonl(ntpSec);
 	}
 
 	inline
 	uint32_t SenderReport::GetNtpFrac() const
 	{
-		return (uint32_t)ntohl(this->header->ntp_frac);
+		return (uint32_t)ntohl(this->header->ntpFrac);
 	}
 
 	inline
-	void SenderReport::SetNtpFrac(uint32_t ntp_frac)
+	void SenderReport::SetNtpFrac(uint32_t ntpFrac)
 	{
-		this->header->ntp_frac = (uint32_t)htonl(ntp_frac);
+		this->header->ntpFrac = (uint32_t)htonl(ntpFrac);
 	}
 
 	inline
 	uint32_t SenderReport::GetRtpTs() const
 	{
-		return (uint32_t)ntohl(this->header->rtp_ts);
+		return (uint32_t)ntohl(this->header->rtpTs);
 	}
 
 	inline
-	void SenderReport::SetRtpTs(uint32_t rtp_ts)
+	void SenderReport::SetRtpTs(uint32_t rtpTs)
 	{
-		this->header->rtp_ts = (uint32_t)htonl(rtp_ts);
+		this->header->rtpTs = (uint32_t)htonl(rtpTs);
 	}
 
 	inline
 
 	uint32_t SenderReport::GetPacketCount() const
 	{
-		return (uint32_t)ntohl(this->header->packet_count);
+		return (uint32_t)ntohl(this->header->packetCount);
 	}
 
 	inline
-	void SenderReport::SetPacketCount(uint32_t packet_count)
+	void SenderReport::SetPacketCount(uint32_t packetCount)
 	{
-		this->header->packet_count = (uint32_t)htonl(packet_count);
+		this->header->packetCount = (uint32_t)htonl(packetCount);
 	}
 
 	inline
 	uint32_t SenderReport::GetOctetCount() const
 	{
-		return (uint32_t)ntohl(this->header->octet_count);
+		return (uint32_t)ntohl(this->header->octetCount);
 	}
 
 	inline
-	void SenderReport::SetOctetCount(uint32_t octet_count)
+	void SenderReport::SetOctetCount(uint32_t octetCount)
 	{
-		this->header->octet_count = (uint32_t)htonl(octet_count);
+		this->header->octetCount = (uint32_t)htonl(octetCount);
 	}
 
 	/* Inline instance methods. */

@@ -15,9 +15,9 @@ namespace RTC { namespace RTCP
 		struct Header
 		{
 			uint32_t ssrc;
-			uint32_t fraction_lost:8;
-			uint32_t total_lost:24;
-			uint32_t last_seq;
+			uint32_t fractionLost:8;
+			uint32_t totalLost:24;
+			uint32_t lastSeq;
 			uint32_t jitter;
 			uint32_t lsr;
 			uint32_t dlsr;
@@ -40,11 +40,11 @@ namespace RTC { namespace RTCP
 		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
 		uint8_t GetFractionLost() const;
-		void SetFractionLost(uint8_t fraction_lost);
+		void SetFractionLost(uint8_t fractionLost);
 		int32_t GetTotalLost() const;
-		void SetTotalLost(int32_t total_lost);
+		void SetTotalLost(int32_t totalLost);
 		uint32_t GetLastSeq() const;
-		void SetLastSeq(uint32_t last_seq);
+		void SetLastSeq(uint32_t lastSeq);
 		uint32_t GetJitter() const;
 		void SetJitter(uint32_t jitter);
 		uint32_t GetLastSenderReport() const;
@@ -132,9 +132,9 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	void ReceiverReport::SetFractionLost(uint8_t fraction_lost)
+	void ReceiverReport::SetFractionLost(uint8_t fractionLost)
 	{
-		Utils::Byte::Set1Byte((uint8_t*)this->header, 4, fraction_lost);
+		Utils::Byte::Set1Byte((uint8_t*)this->header, 4, fractionLost);
 	}
 
 	inline
@@ -154,14 +154,14 @@ namespace RTC { namespace RTCP
 	}
 
 	inline
-	void ReceiverReport::SetTotalLost(int32_t total_lost)
+	void ReceiverReport::SetTotalLost(int32_t totalLost)
 	{
-		// Get the limit value for possitive and negative total_lost.
-		int32_t clamp = (total_lost >= 0) ?
-			total_lost > 0x07FFFFF? 0x07FFFFF : total_lost :
-			-total_lost > 0x0800000? 0x0800000 : -total_lost;
+		// Get the limit value for possitive and negative totalLost.
+		int32_t clamp = (totalLost >= 0) ?
+			totalLost > 0x07FFFFF? 0x07FFFFF : totalLost :
+			-totalLost > 0x0800000? 0x0800000 : -totalLost;
 
-		uint32_t value = (total_lost >= 0) ?
+		uint32_t value = (totalLost >= 0) ?
 			(clamp & 0x07FFFFF) : (clamp | 0x0800000);
 
 		Utils::Byte::Set3Bytes((uint8_t*)this->header, 5, value);
@@ -170,13 +170,13 @@ namespace RTC { namespace RTCP
 	inline
 	uint32_t ReceiverReport::GetLastSeq() const
 	{
-		return (uint32_t)ntohl(this->header->last_seq);
+		return (uint32_t)ntohl(this->header->lastSeq);
 	}
 
 	inline
-	void ReceiverReport::SetLastSeq(uint32_t last_seq)
+	void ReceiverReport::SetLastSeq(uint32_t lastSeq)
 	{
-		this->header->last_seq = (uint32_t)htonl(last_seq);
+		this->header->lastSeq = (uint32_t)htonl(lastSeq);
 	}
 
 	inline

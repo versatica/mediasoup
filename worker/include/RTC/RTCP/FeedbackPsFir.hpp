@@ -25,7 +25,7 @@ namespace RTC { namespace RTCP
 		struct Header
 		{
 			uint32_t ssrc;
-			uint8_t sequence_number;
+			uint8_t sequenceNumber;
 			uint32_t reserved:24;
 		};
 
@@ -38,7 +38,7 @@ namespace RTC { namespace RTCP
 	public:
 		explicit FeedbackPsFirItem(Header* header);
 		explicit FeedbackPsFirItem(FeedbackPsFirItem* item);
-		FeedbackPsFirItem(uint32_t ssrc, uint8_t sequence_number);
+		FeedbackPsFirItem(uint32_t ssrc, uint8_t sequenceNumber);
 		virtual ~FeedbackPsFirItem() {};
 
 		uint32_t GetSsrc() const;
@@ -84,7 +84,7 @@ namespace RTC { namespace RTCP
 	inline
 	uint8_t FeedbackPsFirItem::GetSequenceNumber() const
 	{
-		return (uint8_t)this->header->sequence_number;
+		return (uint8_t)this->header->sequenceNumber;
 	}
 }}
 
