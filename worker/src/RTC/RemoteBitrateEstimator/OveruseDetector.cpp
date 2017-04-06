@@ -48,7 +48,9 @@ namespace RTC
 				this->timeOverUsing += tsDelta;
 			}
 			this->overuseCounter++;
-			if (this->timeOverUsing > this->overusingTimeThreshold && this->overuseCounter > 1)
+			if (
+				this->timeOverUsing > this->overusingTimeThreshold &&
+				this->overuseCounter > 1)
 			{
 				if (offset >= this->prevOffset)
 				{
@@ -101,7 +103,8 @@ namespace RTC
 		const double kMinThreshold = 6;
 		const double kMaxThreshold = 600;
 
-		this->threshold = std::min(std::max(this->threshold, kMinThreshold), kMaxThreshold);
+		this->threshold = std::min(
+			std::max(this->threshold, kMinThreshold), kMaxThreshold);
 
 		this->lastUpdateMs = nowMs;
 	}

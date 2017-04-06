@@ -77,7 +77,8 @@ namespace RTC
 		int sizeDelta = 0;
 
 		if (estimator->interArrival.ComputeDeltas(
-			rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
+			rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta,
+			&sizeDelta))
 		{
 			double timestampDeltaMs = timestampDelta * kTimestampToMs;
 
@@ -128,7 +129,9 @@ namespace RTC
 		{
 			const int64_t timeOfLastReceivedPacket = it->second->lastPacketTimeMs;
 
-			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > kStreamTimeOutMs)
+			if (
+					timeOfLastReceivedPacket >= 0 &&
+					nowMs - timeOfLastReceivedPacket > kStreamTimeOutMs)
 			{
 				// This over-use detector hasn't received packets for |kStreamTimeOutMs|
 				// milliseconds and is considered stale.
@@ -153,8 +156,10 @@ namespace RTC
 		}
 
 		AimdRateControl* remoteRate = GetRemoteRate();
-		double meanNoiseVar = sumVarNoise / static_cast<double>(this->overuseDetectors.size());
-		const RateControlInput input(bwState, this->incomingBitrate.GetRate(nowMs), meanNoiseVar);
+		double meanNoiseVar = sumVarNoise /
+			static_cast<double>(this->overuseDetectors.size());
+		const RateControlInput input(
+				bwState, this->incomingBitrate.GetRate(nowMs), meanNoiseVar);
 
 		remoteRate->Update(&input, nowMs);
 

@@ -141,7 +141,8 @@ namespace RTC
 	inline
 	uint32_t AimdRateControl::UpdateBandwidthEstimate(int64_t nowMs)
 	{
-		this->currentBitrateBps = ChangeBitrate(this->currentBitrateBps, this->currentInput.incomingBitrate, nowMs);
+		this->currentBitrateBps = ChangeBitrate(
+			this->currentBitrateBps, this->currentInput.incomingBitrate, nowMs);
 		return this->currentBitrateBps;
 	}
 
@@ -169,7 +170,8 @@ namespace RTC
 	inline
 	uint32_t AimdRateControl::AdditiveRateIncrease(int64_t nowMs, int64_t lastMs) const
 	{
-		return static_cast<uint32_t>((nowMs - lastMs) * GetNearMaxIncreaseRateBps() / 1000);
+		return static_cast<uint32_t>(
+			(nowMs - lastMs) * GetNearMaxIncreaseRateBps() / 1000);
 	}
 
 	inline

@@ -32,7 +32,8 @@ namespace RTC
 		kExpectedNumberOfProbes = 3
 	};
 
-	static constexpr double kTimestampToMs = 1000.0 / static_cast<double>(1 << kInterArrivalShift);
+	static constexpr double kTimestampToMs = 1000.0 / static_cast<double>(
+		1 << kInterArrivalShift);
 
 	template<typename K, typename V>
 	std::vector<K> Keys(const std::map<K, V>& map)
@@ -41,7 +42,8 @@ namespace RTC
 
 		keys.reserve(map.size());
 
-		for (typename std::map<K, V>::const_iterator it = map.begin(); it != map.end(); ++it)
+		typename std::map<K, V>::const_iterator it = map.begin();
+		for (; it != map.end(); ++it)
 		{
 			keys.push_back(it->first);
 		}
@@ -51,7 +53,9 @@ namespace RTC
 
 	uint32_t ConvertMsTo24Bits(int64_t timeMs)
 	{
-		uint32_t time_24Bits = static_cast<uint32_t>(((static_cast<uint64_t>(timeMs) << kAbsSendTimeFraction) + 500) / 1000) & 0x00FFFFFF;
+		uint32_t time_24Bits = static_cast<uint32_t>(
+			((static_cast<uint64_t>(timeMs) << kAbsSendTimeFraction) + 500) / 1000) &
+			0x00FFFFFF;
 
 		return time_24Bits;
 	}
@@ -63,7 +67,8 @@ namespace RTC
 		if (clusterAggregate.count == 0)
 			return true;
 
-		float clusterMean = clusterAggregate.sendMeanMs / static_cast<float>(clusterAggregate.count);
+		float clusterMean = clusterAggregate.sendMeanMs /
+			static_cast<float>(clusterAggregate.count);
 
 		return fabs(static_cast<float>(sendDeltaMs) - clusterMean) < 2.5f;
 	}
@@ -86,7 +91,8 @@ namespace RTC
 		int64_t prevSendTime = -1;
 		int64_t prevRecvTime = -1;
 
-		for (std::list<Probe>::const_iterator it = this->probes.begin(); it != this->probes.end(); ++it)
+		std::list<Probe>::const_iterator it = this->probes.begin();
+		for (; it != this->probes.end(); ++it)
 		{
 			if (prevSendTime >= 0)
 			{
@@ -127,14 +133,19 @@ namespace RTC
 		int highestProbeBitrateBps = 0;
 		std::list<Cluster>::const_iterator bestIt = clusters.end();
 
-		for (std::list<Cluster>::const_iterator it = clusters.begin(); it != clusters.end(); ++it)
+		std::list<Cluster>::const_iterator it = clusters.begin();
+		for (; it != clusters.end(); ++it)
 		{
 			if (it->sendMeanMs == 0 || it->recvMeanMs == 0)
 				continue;
 
-			if (it->numAboveMinDelta > it->count / 2 && (it->recvMeanMs - it->sendMeanMs <= 2.0f && it->sendMeanMs - it->recvMeanMs <= 5.0f))
+			if (
+				it->numAboveMinDelta > it->count / 2 &&
+				(it->recvMeanMs - it->sendMeanMs <= 2.0f &&
+				it->sendMeanMs - it->recvMeanMs <= 5.0f))
 			{
-				int probeBitrateBps = std::min(it->GetSendBitrateBps(), it->GetRecvBitrateBps());
+				int probeBitrateBps = std::min(
+						it->GetSendBitrateBps(), it->GetRecvBitrateBps());
 
 				if (probeBitrateBps > highestProbeBitrateBps)
 				{
@@ -147,8 +158,10 @@ namespace RTC
 				int sendBitrateBps = it->meanSize * 8 * 1000 / it->sendMeanMs;
 				int recvBitrateBps = it->meanSize * 8 * 1000 / it->recvMeanMs;
 
-				MS_DEBUG_TAG(rbe, "probe failed, sent at %d bps, received at %d bps [mean send delta:%fms, mean recv delta:%fms, num probes:%d]",
-					sendBitrateBps, recvBitrateBps, it->sendMeanMs, it->recvMeanMs, it->count);
+				MS_DEBUG_TAG(rbe, "probe failed, sent at %d bps, received at %d bps [mean "
+				                  "send delta:%fms, mean recv delta:%fms, num probes:%d]",
+				                  sendBitrateBps, recvBitrateBps, it->sendMeanMs,
+				                  it->recvMeanMs, it->count);
 
 				break;
 			}
@@ -177,14 +190,18 @@ namespace RTC
 		std::list<Cluster>::const_iterator bestIt = FindBestProbe(clusters);
 		if (bestIt != clusters.end())
 		{
-			int probeBitrateBps = std::min(bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps());
+			int probeBitrateBps = std::min(
+				bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps());
 
 			// Make sure that a probe sent on a lower bitrate than our estimate can't
 			// reduce the estimate.
 			if (IsBitrateImproving(probeBitrateBps))
 			{
-				MS_DEBUG_TAG(rbe, "probe successful, sent at %d bps, received at %d bps [mean send delta:%fms, mean recv delta: %f ms, num probes:%d",
-					bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps(), bestIt->sendMeanMs, bestIt->recvMeanMs, bestIt->count);
+				MS_DEBUG_TAG(rbe, "probe successful, sent at %d bps, received at %d bps "
+				                  "[mean send delta:%fms, mean recv delta: %f ms, "
+				                  "num probes:%d",
+				                  bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps(),
+				                  bestIt->sendMeanMs, bestIt->recvMeanMs, bestIt->count);
 
 				this->remoteRate.SetEstimate(probeBitrateBps, nowMs);
 
@@ -275,7 +292,10 @@ namespace RTC
 			// the sender.
 			const size_t kMinProbePacketSize = 200;
 
-			if (payloadSize > kMinProbePacketSize && (!this->remoteRate.ValidEstimate() || nowMs - this->firstPacketTimeMs < kInitialProbingIntervalMs))
+			if (
+					payloadSize > kMinProbePacketSize &&
+					(!this->remoteRate.ValidEstimate() ||
+					 nowMs - this->firstPacketTimeMs < kInitialProbingIntervalMs))
 			{
 				// TODO(holmer): Use a map instead to get correct order?
 				if (this->totalProbesReceived < kMaxProbePackets)
@@ -289,8 +309,9 @@ namespace RTC
 						recvDeltaMs = arrivalTimeMs - this->probes.back().recvTimeMs;
 					}
 
-					MS_DEBUG_TAG(rbe,
-						"probe packet received [send time:%" PRId64 "ms, recv time:%" PRId64 "ms, send delta:%dms, recv delta:%d ms]", sendTimeMs, arrivalTimeMs, sendDeltaMs, recvDeltaMs);
+					MS_DEBUG_TAG(rbe, "probe packet received [send time:%" PRId64 "ms, recv "
+					                  "time:%" PRId64 "ms, send delta:%dms, recv delta:%d ms]",
+					                  sendTimeMs, arrivalTimeMs, sendDeltaMs, recvDeltaMs);
 				}
 
 				this->probes.push_back(Probe(sendTimeMs, arrivalTimeMs, payloadSize));
@@ -302,12 +323,17 @@ namespace RTC
 					updateEstimate = true;
 			}
 
-			if (this->interArrival->ComputeDeltas(timestamp, arrivalTimeMs, nowMs, payloadSize, &tsDelta, &tDelta, &sizeDelta))
+			if (
+					this->interArrival->ComputeDeltas(
+						timestamp, arrivalTimeMs, nowMs, payloadSize, &tsDelta, &tDelta,
+						&sizeDelta))
 			{
 				double tsDeltaMs = (1000.0 * tsDelta) / (1 << kInterArrivalShift);
 
 				this->estimator->Update(tDelta, tsDeltaMs, sizeDelta, this->detector.State(), arrivalTimeMs);
-				this->detector.Detect(this->estimator->GetOffset(), tsDeltaMs, this->estimator->GetNumOfDeltas(), arrivalTimeMs);
+				this->detector.Detect(
+					this->estimator->GetOffset(), tsDeltaMs, this->estimator->GetNumOfDeltas(),
+					arrivalTimeMs);
 			}
 
 			if (!updateEstimate)
@@ -324,7 +350,9 @@ namespace RTC
 				{
 					uint32_t incomingRate = this->incomingBitrate.GetRate(arrivalTimeMs);
 
-					if (incomingRate && this->remoteRate.TimeToReduceFurther(nowMs, incomingRate))
+					if (
+							incomingRate &&
+							this->remoteRate.TimeToReduceFurther(nowMs, incomingRate))
 						updateEstimate = true;
 				}
 			}
@@ -367,7 +395,9 @@ namespace RTC
 		if (this->ssrcs.empty())
 		{
 			// We can't update the estimate if we don't have any active streams.
-			this->interArrival.reset(new InterArrival((kTimestampGroupLengthMs << kInterArrivalShift) / 1000, kTimestampToMs, true));
+			this->interArrival.reset(
+					new InterArrival((kTimestampGroupLengthMs << kInterArrivalShift) / 1000,
+						kTimestampToMs, true));
 			this->estimator.reset(new OveruseEstimator(OverUseDetectorOptions()));
 			// We deliberately don't reset the this->firstPacketTimeMs here for now since
 			// we only probe for bandwidth in the beginning of a call right now.

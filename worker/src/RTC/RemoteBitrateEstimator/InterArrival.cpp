@@ -47,17 +47,21 @@ namespace RTC
 			// First packet of a later frame, the previous frame sample is ready.
 			if (this->prevTimestampGroup.completeTimeMs >= 0)
 			{
-				*timestampDelta = this->currentTimestampGroup.timestamp - this->prevTimestampGroup.timestamp;
-				*arrivalTimeDeltaMs = this->currentTimestampGroup.completeTimeMs - this->prevTimestampGroup.completeTimeMs;
+				*timestampDelta = this->currentTimestampGroup.timestamp -
+					this->prevTimestampGroup.timestamp;
+				*arrivalTimeDeltaMs = this->currentTimestampGroup.completeTimeMs -
+					this->prevTimestampGroup.completeTimeMs;
 
 				// Check system time differences to see if we have an unproportional jump
 				// in arrival time. In that case reset the inter-arrival computations.
-				int64_t systemTimeDeltaMs = this->currentTimestampGroup.lastSystemTimeMs - this->prevTimestampGroup.lastSystemTimeMs;
+				int64_t systemTimeDeltaMs = this->currentTimestampGroup.lastSystemTimeMs -
+					this->prevTimestampGroup.lastSystemTimeMs;
 
 				if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= kArrivalTimeOffsetThresholdMs)
 				{
-					MS_WARN_TAG(rbe, "the arrival time clock offset has changed, resetting [diff:%" PRId64 "ms]",
-						*arrivalTimeDeltaMs - systemTimeDeltaMs);
+					MS_WARN_TAG(rbe, "the arrival time clock offset has changed, resetting"
+					                 "[diff:%" PRId64 "ms]",
+					                 *arrivalTimeDeltaMs - systemTimeDeltaMs);
 
 					Reset();
 					return false;
@@ -85,7 +89,9 @@ namespace RTC
 
 				MS_ASSERT(*arrivalTimeDeltaMs >= 0, "invalid arrivalTimeDeltaMs value");
 
-				*packetSizeDelta = static_cast<int>(this->currentTimestampGroup.size) - static_cast<int>(this->prevTimestampGroup.size);
+				*packetSizeDelta = static_cast<int>(
+					this->currentTimestampGroup.size) -
+					static_cast<int>(this->prevTimestampGroup.size);
 				calculatedDeltas = true;
 			}
 
@@ -97,7 +103,8 @@ namespace RTC
 		}
 		else
 		{
-			this->currentTimestampGroup.timestamp = Utils::Time::LatestTimestamp(this->currentTimestampGroup.timestamp, timestamp);
+			this->currentTimestampGroup.timestamp = Utils::Time::LatestTimestamp(
+				this->currentTimestampGroup.timestamp, timestamp);
 		}
 		// Accumulate the frame size.
 		this->currentTimestampGroup.size += packetSize;
@@ -157,9 +164,13 @@ namespace RTC
 			return false;
 		}
 
-		MS_ASSERT(this->currentTimestampGroup.completeTimeMs >= 0, "invalid completeTimeMs value");
+		MS_ASSERT(
+			this->currentTimestampGroup.completeTimeMs >= 0,
+			"invalid completeTimeMs value");
 
-		int64_t arrivalTimeDeltaMs = arrivalTimeMs - this->currentTimestampGroup.completeTimeMs;
+		int64_t arrivalTimeDeltaMs = arrivalTimeMs -
+			this->currentTimestampGroup.completeTimeMs;
+
 		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.timestamp;
 		int64_t tsDeltaMs = this->timestampToMsCoeff * timestampDiff + 0.5;
 

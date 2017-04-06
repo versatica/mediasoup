@@ -30,7 +30,8 @@ namespace RTC
 		// Estimate how often we can send RTCP if we allocate up to 5% of bandwidth
 		// to feedback.
 		static const int kRtcpSize = 80;
-		int64_t interval = static_cast<int64_t>(kRtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
+		int64_t interval = static_cast<int64_t>(
+			kRtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
 		const int64_t kMinFeedbackIntervalMs = 200;
 
 		return std::min(std::max(interval, kMinFeedbackIntervalMs), kMaxFeedbackIntervalMs);
@@ -40,7 +41,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const int64_t bitrateReductionInterval = std::max<int64_t>(std::min<int64_t>(this->rtt, 200), 10);
+		const int64_t bitrateReductionInterval = std::max<int64_t>(
+			std::min<int64_t>(this->rtt, 200), 10);
 
 		if (timeNow - this->timeLastBitrateChange >= bitrateReductionInterval)
 			return true;
@@ -76,7 +78,9 @@ namespace RTC
 				if (input->incomingBitrate)
 					this->timeFirstIncomingEstimate = nowMs;
 			}
-			else if (nowMs - this->timeFirstIncomingEstimate > kInitializationTimeMs && input->incomingBitrate)
+			else if (
+				nowMs - this->timeFirstIncomingEstimate > kInitializationTimeMs &&
+				input->incomingBitrate)
 			{
 				this->currentBitrateBps = input->incomingBitrate;
 				this->bitrateIsInitialized = true;
@@ -142,7 +146,9 @@ namespace RTC
 				break;
 
 			case kRcIncrease:
-				if (this->avgMaxBitrateKbps >= 0 && incomingBitrateKbps > this->avgMaxBitrateKbps + 3 * stdMaxBitRate)
+				if (
+					this->avgMaxBitrateKbps >= 0 &&
+					incomingBitrateKbps > this->avgMaxBitrateKbps + 3 * stdMaxBitRate)
 				{
 					ChangeRegion(kRcMaxUnknown);
 					this->avgMaxBitrateKbps = -1.0;
@@ -155,7 +161,8 @@ namespace RTC
 				}
 				else
 				{
-					uint32_t multiplicativeIncreaseBps = MultiplicativeRateIncrease(nowMs, this->timeLastBitrateChange, newBitrateBps);
+					uint32_t multiplicativeIncreaseBps = MultiplicativeRateIncrease(
+						nowMs, this->timeLastBitrateChange, newBitrateBps);
 
 					newBitrateBps += multiplicativeIncreaseBps;
 				}
@@ -174,7 +181,8 @@ namespace RTC
 					// Avoid increasing the rate when over-using.
 					if (this->rateControlRegion != kRcMaxUnknown)
 					{
-						newBitrateBps = static_cast<uint32_t>(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f);
+						newBitrateBps = static_cast<uint32_t>(
+							this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f);
 					}
 					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
 				}
@@ -260,7 +268,8 @@ namespace RTC
 		const float norm = std::max(this->avgMaxBitrateKbps, 1.0f);
 
 		this->varMaxBitrateKbps = (1 - alpha) * this->varMaxBitrateKbps +
-			alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) * (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
+			alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) *
+			(this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
 
 		// 0.4 ~= 14 kbit/s at 500 kbit/s
 		if (this->varMaxBitrateKbps < 0.4f)

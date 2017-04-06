@@ -49,7 +49,12 @@ namespace RTC
 		}
 
 		const double h[2] = {fsDelta, 1.0};
-		const double Eh[2] = {this->E[0][0] * h[0] + this->E[0][1] * h[1], this->E[1][0] * h[0] + this->E[1][1] * h[1]};
+		const double Eh[2] =
+		{
+			this->E[0][0] * h[0] + this->E[0][1] * h[1],
+			this->E[1][0] * h[0] + this->E[1][1] * h[1]
+		};
+
 		const double residual = tTsDelta - this->slope * h[0] - this->offset;
 		const bool inStableState = (currentHypothesis == kBwNormal);
 		const double maxResidual = 3.0 * sqrt(this->varNoise);
@@ -62,12 +67,18 @@ namespace RTC
 		}
 		else
 		{
-			UpdateNoiseEstimate(residual < 0 ? -maxResidual : maxResidual, minFramePeriod, inStableState);
+			UpdateNoiseEstimate(
+				residual < 0 ? -maxResidual : maxResidual, minFramePeriod, inStableState);
 		}
 
 		const double denom = this->varNoise + h[0] * Eh[0] + h[1] * Eh[1];
 		const double K[2] = {Eh[0] / denom, Eh[1] / denom};
-		const double IKh[2][2] = {{1.0 - K[0] * h[0], -K[0] * h[1]}, {-K[1] * h[0], 1.0 - K[1] * h[1]}};
+		const double IKh[2][2] =
+		{
+			{1.0 - K[0] * h[0], -K[0] * h[1]},
+			{-K[1] * h[0], 1.0 - K[1] * h[1]}
+		};
+
 		const double e00 = this->E[0][0];
 		const double e01 = this->E[0][1];
 
@@ -79,7 +90,9 @@ namespace RTC
 
 		// The covariance matrix must be positive semi-definite.
 		bool positiveSemiDefinite =
-		    this->E[0][0] + this->E[1][1] >= 0 && this->E[0][0] * this->E[1][1] - this->E[0][1] * this->E[1][0] >= 0 && this->E[0][0] >= 0;
+		    this->E[0][0] + this->E[1][1] >= 0 &&
+				this->E[0][0] * this->E[1][1] - this->E[0][1] * this->E[1][0] >= 0 &&
+				this->E[0][0] >= 0;
 
 		MS_ASSERT(positiveSemiDefinite, "positiveSemiDefinite missing");
 

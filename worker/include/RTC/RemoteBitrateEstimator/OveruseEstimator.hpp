@@ -103,7 +103,9 @@ namespace RTC
 		tsDeltaHist()
 	{
 		std::memcpy(this->E, this->options.initialE, sizeof(this->E));
-		std::memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));
+		std::memcpy(
+			this->processNoise, this->options.initialProcessNoise,
+			sizeof(this->processNoise));
 	}
 
 	inline
