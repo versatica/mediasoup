@@ -42,7 +42,7 @@ namespace RTC
 
 		// Update the estimator with a new sample. The deltas should represent deltas
 		// between timestamp groups as defined by the InterArrival class.
-		// |current_hypothesis| should be the hypothesis of the over-use detector at
+		// |currentHypothesis| should be the hypothesis of the over-use detector at
 		// this time.
 		void Update(int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs);
 		// Returns the estimated noise/jitter variance in ms^2.
