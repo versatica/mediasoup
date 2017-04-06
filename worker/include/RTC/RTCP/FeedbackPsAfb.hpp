@@ -45,8 +45,12 @@ namespace RTC { namespace RTCP
 	FeedbackPsAfbPacket::FeedbackPsAfbPacket(CommonHeader* commonHeader, Application application):
 		FeedbackPsPacket(commonHeader)
 	{
-		this->size = ((ntohs(commonHeader->length) + 1) * 4) - (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header));
-		this->data = (uint8_t*)commonHeader + sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
+		this->size = ((ntohs(commonHeader->length) + 1) * 4) -
+			(sizeof(CommonHeader) + sizeof(FeedbackPacket::Header));
+
+		this->data = (uint8_t*)commonHeader + sizeof(CommonHeader) +
+			sizeof(FeedbackPacket::Header);
+
 		this->application = application;
 	}
 

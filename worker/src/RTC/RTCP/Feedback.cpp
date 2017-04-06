@@ -30,7 +30,9 @@ namespace RTC { namespace RTCP
 	{
 		static const std::string unknown("UNKNOWN");
 
-		if (FeedbackPacket<T>::type2String.find(type) == FeedbackPacket<T>::type2String.end())
+		if (
+			FeedbackPacket<T>::type2String.find(type) ==
+			FeedbackPacket<T>::type2String.end())
 			return unknown;
 
 		return FeedbackPacket<T>::type2String[type];
@@ -122,7 +124,8 @@ namespace RTC { namespace RTCP
 				return nullptr;
 		}
 
-		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+		CommonHeader* commonHeader = const_cast<CommonHeader*>(
+			reinterpret_cast<const CommonHeader*>(data));
 		FeedbackPsPacket* packet = nullptr;
 
 		switch (FeedbackPs::MessageType(commonHeader->count))
@@ -172,7 +175,8 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-				MS_WARN_TAG(rtcp, "unknown RTCP PS Feedback message type [packetType:%" PRIu8 "]", commonHeader->count);
+				MS_WARN_TAG(rtcp, "unknown RTCP PS Feedback message type [packetType:%"
+				                  PRIu8 "]", commonHeader->count);
 		}
 
 		return packet;
@@ -250,7 +254,9 @@ namespace RTC { namespace RTCP
 				break;
 
 			default:
-				MS_WARN_TAG(rtcp, "unknown RTCP RTP Feedback message type [packetType:%" PRIu8 "]", commonHeader->count);
+				MS_WARN_TAG(rtcp, "unknown RTCP RTP Feedback message type [packetType:%"
+				                  PRIu8 "]",
+				                  commonHeader->count);
 		}
 
 		return packet;

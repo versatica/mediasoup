@@ -131,8 +131,7 @@ namespace RTC { namespace RTCP
 
 	inline
 	SdesItem::~SdesItem()
-	{
-	}
+	{}
 
 	inline
 	size_t SdesItem::GetSize() const

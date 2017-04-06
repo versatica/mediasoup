@@ -20,7 +20,10 @@ namespace RTC { namespace RTCP
 			this->size = this->senderReportPacket.GetSize();
 
 			if (this->receiverReportPacket.GetCount())
-				this->size += sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount();
+			{
+				this->size += sizeof(ReceiverReport::Header) *
+					this->receiverReportPacket.GetCount();
+			}
 		}
 		// If no sender nor receiver reports are present send an empty Receiver Report
 		// packet as the head of the compound packet.
@@ -41,13 +44,16 @@ namespace RTC { namespace RTCP
 			offset = this->senderReportPacket.GetSize();
 
 			// Fix header count field.
-			Packet::CommonHeader* header = reinterpret_cast<Packet::CommonHeader*>(this->header);
+			Packet::CommonHeader* header = reinterpret_cast<Packet::CommonHeader*>(
+				this->header);
 			header->count = 0;
 
 			if (this->receiverReportPacket.GetCount())
 			{
 				// Fix header length field.
-				size_t length = ((sizeof(SenderReport::Header) + (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount())) / 4);
+				size_t length = ((sizeof(SenderReport::Header) +
+					(sizeof(ReceiverReport::Header) *
+					 this->receiverReportPacket.GetCount())) / 4);
 
 				header->length = htons(length);
 
@@ -98,7 +104,8 @@ namespace RTC { namespace RTCP
 
 	void CompoundPacket::AddSenderReport(SenderReport* report)
 	{
-		MS_ASSERT(this->senderReportPacket.GetCount() == 0, "a sender report is already present");
+		MS_ASSERT(this->senderReportPacket.GetCount() == 0,
+			"a sender report is already present");
 
 		this->senderReportPacket.AddReport(report);
 	}

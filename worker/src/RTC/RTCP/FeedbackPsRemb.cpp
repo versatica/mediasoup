@@ -25,8 +25,11 @@ namespace RTC { namespace RTCP
 			return nullptr;
 		}
 
-		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-		std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader));
+		CommonHeader* commonHeader = const_cast<CommonHeader*>(
+			reinterpret_cast<const CommonHeader*>(data));
+
+		std::unique_ptr<FeedbackPsRembPacket> packet(
+			new FeedbackPsRembPacket(commonHeader));
 
 		if (!packet->IsCorrect())
 			return nullptr;
@@ -50,21 +53,27 @@ namespace RTC { namespace RTCP
 
 		uint8_t exponent = data[13] >> 2;
 
-		uint64_t mantissa = (static_cast<uint32_t>(data[13] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 14);
+		uint64_t mantissa = (static_cast<uint32_t>(data[13] & 0x03) << 16) |
+			Utils::Byte::Get2Bytes(data, 14);
 
 		this->bitrate = (mantissa << exponent);
 		if ((this->bitrate >> exponent) != mantissa)
 		{
-			MS_WARN_TAG(rtcp, "invalid REMB bitrate value : %" PRIu64" *2^%u", mantissa, exponent);
+			MS_WARN_TAG(rtcp, "invalid REMB bitrate value : %" PRIu64" *2^%u",
+			                  mantissa, exponent);
+
 			this->isCorrect = false;
 			return;
 		}
 
 		// Check length.
 		size_t len = (size_t)(ntohs(commonHeader->length) + 1) * 4;
-		if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + sizeof(Header) + (numSsrcs * sizeof(uint32_t)))
+		if (
+				len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header)
+				+ sizeof(Header) + (numSsrcs * sizeof(uint32_t)))
 		{
-			MS_WARN_TAG(rtcp, "invalid payload size: %zu for the given number of ssrcs: %zu", len, numSsrcs);
+			MS_WARN_TAG(rtcp, "invalid payload size: %zu for the given number of ssrcs: "
+			                  "%zu", len, numSsrcs);
 
 			this->isCorrect = false;
 			return;

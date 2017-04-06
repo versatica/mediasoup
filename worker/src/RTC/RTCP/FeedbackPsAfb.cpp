@@ -27,7 +27,8 @@ namespace RTC { namespace RTCP
 		std::unique_ptr<FeedbackPsAfbPacket> packet;
 
 		constexpr size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
-		if (Utils::Byte::Get4Bytes(data, offset) == FeedbackPsRembPacket::UniqueIdentifier)
+		if (
+			Utils::Byte::Get4Bytes(data, offset) == FeedbackPsRembPacket::UniqueIdentifier)
 		{
 			packet.reset(FeedbackPsRembPacket::Parse(data, len));
 		}

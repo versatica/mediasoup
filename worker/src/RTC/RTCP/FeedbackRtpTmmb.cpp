@@ -49,7 +49,8 @@ namespace RTC { namespace RTCP
 
 		if ((this->bitrate >> exponent) != mantissa)
 		{
-			MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %" PRIu64" x 2^%" PRIu8, mantissa, exponent);
+			MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %" PRIu64" x 2^%" PRIu8,
+			                  mantissa, exponent);
 
 			this->isCorrect = false;
 		}

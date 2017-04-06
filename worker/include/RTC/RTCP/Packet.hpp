@@ -83,7 +83,8 @@ namespace RTC { namespace RTCP
 	inline
 	bool Packet::IsRtcp(const uint8_t* data, size_t len)
 	{
-		CommonHeader* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+		CommonHeader* header = const_cast<CommonHeader*>(
+			reinterpret_cast<const CommonHeader*>(data));
 
 		return (
 			(len >= sizeof(CommonHeader)) &&

@@ -50,12 +50,15 @@ namespace RTC { namespace RTCP
 				return first;
 			}
 
-			CommonHeader* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			CommonHeader* header = const_cast<CommonHeader*>(
+				reinterpret_cast<const CommonHeader*>(data));
+
 			size_t packetLlen = (size_t)(ntohs(header->length) + 1) * 4;
 
 			if (len < packetLlen)
 			{
-				MS_WARN_TAG(rtcp, "packet length exceeds remaining data [len:%zu, packet len:%zu]", len, packetLlen);
+				MS_WARN_TAG(rtcp, "packet length exceeds remaining data [len:%zu, "
+				                  "packet len:%zu]", len, packetLlen);
 
 				return first;
 			}
