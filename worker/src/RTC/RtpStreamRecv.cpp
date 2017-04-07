@@ -168,10 +168,11 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		// If we got out of sync, request a full frame.
-		if (this->started && this->params.usePli)
+		// Request a full frame so dropped video packets don't cause lag.
+		if (this->params.mime.type == RTC::RtpCodecMime::Type::VIDEO)
 		{
-			MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
+			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]",
+				this->params.ssrc);
 
 			this->listener->onPliRequired(this);
 		}
