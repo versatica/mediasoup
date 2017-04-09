@@ -66,6 +66,7 @@ namespace RTC
 	EVP_PKEY* DtlsTransport::privateKey = nullptr;
 	SSL_CTX* DtlsTransport::sslCtx = nullptr;
 	uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
+	// clang-format off
 	std::map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
 	{
 		{ "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
@@ -80,12 +81,15 @@ namespace RTC
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
+	// clang-format on
 	Json::Value DtlsTransport::localFingerprints = Json::Value(Json::objectValue);
+	// clang-format off
 	std::vector<DtlsTransport::SrtpProfileMapEntry> DtlsTransport::srtpProfiles =
 	{
 		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
 		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
+	// clang-format on
 
 	/* Class methods. */
 

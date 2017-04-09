@@ -10,18 +10,17 @@ namespace RTC
 {
 	/* Class variables. */
 
+	// clang-format off
 	std::unordered_map<std::string, RtpCodecMime::Type> RtpCodecMime::string2Type =
 	{
 		{ "audio", RtpCodecMime::Type::AUDIO },
 		{ "video", RtpCodecMime::Type::VIDEO }
 	};
-
 	std::map<RtpCodecMime::Type, std::string> RtpCodecMime::type2String =
 	{
 		{ RtpCodecMime::Type::AUDIO, "audio" },
 		{ RtpCodecMime::Type::VIDEO, "video" }
 	};
-
 	std::unordered_map<std::string, RtpCodecMime::Subtype> RtpCodecMime::string2Subtype =
 	{
 		// Audio codecs:
@@ -46,7 +45,6 @@ namespace RTC
 		{ "flexfec",         RtpCodecMime::Subtype::FLEXFEC         },
 		{ "red",             RtpCodecMime::Subtype::RED             }
 	};
-
 	std::map<RtpCodecMime::Subtype, std::string> RtpCodecMime::subtype2String =
 	{
 		// Audio codecs:
@@ -71,6 +69,7 @@ namespace RTC
 		{ RtpCodecMime::Subtype::FLEXFEC,         "flexfec"         },
 		{ RtpCodecMime::Subtype::RED,             "red"             }
 	};
+	// clang-format on
 
 	/* Instance methods. */
 

@@ -10,6 +10,7 @@ namespace RTC { namespace RTCP
 {
 	/* Item Class variables. */
 
+	// clang-format off
 	std::map<SdesItem::Type, std::string> SdesItem::type2String =
 	{
 		{ SdesItem::Type::END,   "END"   },
@@ -22,6 +23,7 @@ namespace RTC { namespace RTCP
 		{ SdesItem::Type::NOTE,  "NOTE"  },
 		{ SdesItem::Type::PRIV,  "PRIV"  }
 	};
+	// clang-format on
 
 	/* Class methods. */
 

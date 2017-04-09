@@ -9,6 +9,7 @@ namespace Channel
 {
 	/* Class variables. */
 
+	// clang-format off
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
 		{ "worker.dump",                       Request::MethodId::worker_dump                       },
@@ -35,6 +36,7 @@ namespace Channel
 		{ "rtpSender.setTransport",            Request::MethodId::rtpSender_setTransport            },
 		{ "rtpSender.disable",                 Request::MethodId::rtpSender_disable                 }
 	};
+	// clang-format on
 
 	/* Instance methods. */
 

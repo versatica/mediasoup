@@ -10,6 +10,7 @@ namespace RTC
 {
 	/* Class variables. */
 
+	// clang-format off
 	std::unordered_map<std::string, Media::Kind> Media::string2Kind =
 	{
 		{ "",      Media::Kind::ALL   },
@@ -17,7 +18,6 @@ namespace RTC
 		{ "video", Media::Kind::VIDEO },
 		{ "depth", Media::Kind::DEPTH }
 	};
-
 	std::map<Media::Kind, Json::StaticString> Media::kind2Json =
 	{
 		{ Media::Kind::ALL,   Json::StaticString("")      },
@@ -25,6 +25,7 @@ namespace RTC
 		{ Media::Kind::VIDEO, Json::StaticString("video") },
 		{ Media::Kind::DEPTH, Json::StaticString("depth") }
 	};
+	// clang-format on
 
 	/* Class methods. */
 

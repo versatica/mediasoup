@@ -21,6 +21,7 @@ static bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
 /* Class variables. */
 
 struct Settings::Configuration Settings::configuration;
+// clang-format off
 std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
@@ -33,6 +34,7 @@ std::map<LogLevel, std::string> Settings::logLevel2String =
 	{ LogLevel::LOG_WARN,  "warn"  },
 	{ LogLevel::LOG_ERROR, "error" }
 };
+// clang-format on
 
 /* Class methods. */
 

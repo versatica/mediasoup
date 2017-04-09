@@ -17,6 +17,7 @@ namespace RTC { namespace RTCP
 
 	/* Class variables. */
 
+	// clang-format off
 	std::map<Type, std::string> Packet::type2String =
 	{
 		{ Type::FIR,   "FIR"   },
@@ -29,6 +30,7 @@ namespace RTC { namespace RTCP
 		{ Type::RTPFB, "RTPFB" },
 		{ Type::PSFB,  "PSFB"  }
 	};
+	// clang-format on
 
 	/* Class methods. */
 
