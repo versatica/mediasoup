@@ -53,7 +53,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	int optionIdx = 0;
 	std::string stringValue;
 	std::vector<std::string> logTags;
-
+  // clang-format off
 	struct option options[] =
 	{
 		{ "logLevel",            optional_argument, nullptr, 'l' },
@@ -68,6 +68,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ "dtlsPrivateKeyFile",  optional_argument, nullptr, 'p' },
 		{ 0, 0, 0, 0 }
 	};
+	// clang-format on
 
 	/* Parse command line options. */
 

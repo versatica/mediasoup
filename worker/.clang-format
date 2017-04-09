@@ -1,7 +1,7 @@
 Language: Cpp
 AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
-AlignConsecutiveAssignments: false
+AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: false
 AlignEscapedNewlinesLeft: false
 AlignOperands: true
@@ -30,18 +30,18 @@ BraceWrapping:
   BeforeElse: true
   IndentBraces: false
 BreakBeforeBinaryOperators: None
-#BreakBeforeInheritanceComma not usable in clang-format version 4.0.0
+BreakBeforeInheritanceComma: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: true
 BreakStringLiterals: true
 ColumnLimit: 100
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
-ConstructorInitializerIndentWidth: 6
+ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
-DerivePointerAlignment: true
+DerivePointerAlignment: false
 DisableFormat: false
 ExperimentalAutoDetectBinPacking: true
-#FixNamespaceComments not usable in clang-format version 4.0.0
+FixNamespaceComments: true
 IncludeCategories:
   - Regex:    '"common.hpp"'
     Priority: 1
