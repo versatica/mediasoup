@@ -172,8 +172,7 @@ namespace RTC
 		// Request a full frame so dropped video packets don't cause lag.
 		if (this->params.mime.type == RTC::RtpCodecMime::Type::VIDEO)
 		{
-			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]",
-				this->params.ssrc);
+			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 			this->listener->onPliRequired(this);
 		}

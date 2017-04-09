@@ -53,7 +53,12 @@ gulp.task('lint:worker', () =>
 
 gulp.task('format:worker', () =>
 {
-	return gulp.src(workerFiles, { base: '.' })
+	let src = workerFiles.concat(
+		// Remove Ragel generated files.
+		'!worker/src/Utils/IP.cpp'
+	);
+
+	return gulp.src(src, { base: '.' })
 		.pipe(clangFormat.format('file'))
 		.pipe(gulp.dest('.'));
 });
