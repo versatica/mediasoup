@@ -43,14 +43,14 @@ DisableFormat: false
 ExperimentalAutoDetectBinPacking: true
 #FixNamespaceComments not usable in clang-format version 4.0.0
 IncludeCategories:
-  - Regex:           'common.hpp'
-    Priority:        0
-  - Regex:           '^(<|"(uv|openssl|srtp|json)/)'
-    Priority:        2
-  - Regex:           '<*.*>'
-    Priority:        3
-  - Regex:           '.*'
-    Priority:        1
+  - Regex:    'common.hpp'
+    Priority: 1
+  - Regex:    '"*.*"'
+    Priority: 2
+  - Regex:    '^(<(uv|openssl|srtp|json|netstring)(.|/))'
+    Priority: 3
+  - Regex:    '<*.*>'
+    Priority: 4
 IncludeIsMainRegex: '$'
 IndentCaseLabels: true
 IndentWidth: 2
