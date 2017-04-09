@@ -92,9 +92,7 @@ gulp.task('rtpcapabilities', () =>
 		.pipe(touch());
 });
 
-// TODO: Uncomment when C++ syntax and clang-format stuff is done.
-// gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
-gulp.task('lint', gulp.series('lint:node'));
+gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
 
 gulp.task('test', gulp.series('test:node', 'test:worker'));
 
