@@ -74,6 +74,8 @@
 #include <cstring>
 #include <cstdlib> // std::abort()
 
+// clang-format off
+
 #define _MS_TAG_ENABLED(tag) Settings::configuration.logTags.tag
 #define _MS_TAG_ENABLED_2(tag1, tag2) (Settings::configuration.logTags.tag1 || Settings::configuration.logTags.tag2)
 #ifdef MS_LOG_DEV
@@ -370,5 +372,7 @@ public:
 	#undef MS_ERROR
 	#define MS_ERROR MS_ERROR_STD
 #endif
+
+// clang-format on
 
 #endif
