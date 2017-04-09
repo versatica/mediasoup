@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "Channel/UnixStreamSocket.hpp"
-#include <string>
 #include <json/json.h>
+#include <string>
 
 namespace Channel
 {
@@ -15,7 +15,12 @@ namespace Channel
 
 		void Emit(uint32_t targetId, std::string event);
 		void Emit(uint32_t targetId, std::string event, Json::Value& data);
-		void EmitWithBinary(uint32_t targetId, std::string event, Json::Value& data, const uint8_t* binary_data, size_t binary_len);
+		void EmitWithBinary(
+		    uint32_t targetId,
+		    std::string event,
+		    Json::Value& data,
+		    const uint8_t* binaryData,
+		    size_t binaryLen);
 
 	public:
 		// Passed by argument.

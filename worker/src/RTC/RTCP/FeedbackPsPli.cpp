@@ -4,33 +4,38 @@
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "Logger.hpp"
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	/* Class methods. */
-
-	FeedbackPsPliPacket* FeedbackPsPliPacket::Parse(const uint8_t* data, size_t len)
+	namespace RTCP
 	{
-		MS_TRACE();
+		/* Class methods. */
 
-		if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
+		FeedbackPsPliPacket* FeedbackPsPliPacket::Parse(const uint8_t* data, size_t len)
 		{
-			MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+			MS_TRACE();
 
-			return nullptr;
+			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
+			{
+				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+
+				return nullptr;
+			}
+
+			CommonHeader* commonHeader =
+			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+
+			std::unique_ptr<FeedbackPsPliPacket> packet(new FeedbackPsPliPacket(commonHeader));
+
+			return packet.release();
 		}
 
-		CommonHeader* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-		std::unique_ptr<FeedbackPsPliPacket> packet(new FeedbackPsPliPacket(commonHeader));
+		void FeedbackPsPliPacket::Dump() const
+		{
+			MS_TRACE();
 
-		return packet.release();
+			MS_DUMP("<FeedbackPsPliPacket>");
+			FeedbackPsPacket::Dump();
+			MS_DUMP("</FeedbackPsPliPacket>");
+		}
 	}
-
-	void FeedbackPsPliPacket::Dump() const
-	{
-		MS_TRACE();
-
-		MS_DUMP("<FeedbackPsPliPacket>");
-		FeedbackPsPacket::Dump();
-		MS_DUMP("</FeedbackPsPliPacket>");
-	}
-}}
+}

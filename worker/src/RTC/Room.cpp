@@ -2,12 +2,12 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Room.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
 namespace RTC
 {
@@ -31,18 +31,22 @@ namespace RTC
 			Json::CharReader* jsonReader = builder.newCharReader();
 
 			// NOTE: These lines are auto-generated from data/supportedCapabilities.js.
-			const std::string supportedRtpCapabilities = R"({"codecs":[{"kind":"audio","name":"audio/opus","clockRate":48000,"numChannels":2,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMU","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMA","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/G722","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/iLBC","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":24000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":12000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":48000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":8000,"rtcpFeedback":[]},{"kind":"video","name":"video/VP8","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/VP9","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":0},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":1},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H265","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":1,"preferredEncrypt":false},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":2,"preferredEncrypt":false},{"kind":"","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":3,"preferredEncrypt":false},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":4,"preferredEncrypt":false},{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","preferredId":5,"preferredEncrypt":false}],"fecMechanisms":[]})";
+			const std::string supportedRtpCapabilities =
+			    R"({"codecs":[{"kind":"audio","name":"audio/opus","clockRate":48000,"numChannels":2,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMU","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMA","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/G722","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/iLBC","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":24000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":12000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":48000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":8000,"rtcpFeedback":[]},{"kind":"video","name":"video/VP8","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/VP9","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":0},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":1},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H265","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":1,"preferredEncrypt":false},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":2,"preferredEncrypt":false},{"kind":"","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":3,"preferredEncrypt":false},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":4,"preferredEncrypt":false},{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","preferredId":5,"preferredEncrypt":false}],"fecMechanisms":[]})";
 
 			Json::Value json;
 			std::string jsonParseError;
 
-			if (!jsonReader->parse(supportedRtpCapabilities.c_str(),
-				supportedRtpCapabilities.c_str() + supportedRtpCapabilities.length(), &json, &jsonParseError))
+			if (!jsonReader->parse(
+			        supportedRtpCapabilities.c_str(),
+			        supportedRtpCapabilities.c_str() + supportedRtpCapabilities.length(),
+			        &json,
+			        &jsonParseError))
 			{
 				delete jsonReader;
 
-				MS_THROW_ERROR_STD("JSON parsing error in supported RTP capabilities: %s",
-					jsonParseError.c_str());
+				MS_THROW_ERROR_STD(
+				    "JSON parsing error in supported RTP capabilities: %s", jsonParseError.c_str());
 			}
 			else
 			{
@@ -53,7 +57,7 @@ namespace RTC
 			{
 				Room::supportedRtpCapabilities = RTC::RtpCapabilities(json, RTC::Scope::ROOM_CAPABILITY);
 			}
-			catch (const MediaSoupError &error)
+			catch (const MediaSoupError& error)
 			{
 				MS_THROW_ERROR_STD("wrong supported RTP capabilities: %s", error.what());
 			}
@@ -62,10 +66,10 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data) :
-		roomId(roomId),
-		listener(listener),
-		notifier(notifier)
+	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data)
+	    : roomId(roomId)
+	    , listener(listener)
+	    , notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -191,11 +195,11 @@ namespace RTC
 		// Add `mapRtpSenderRtpReceiver`.
 		for (auto& kv : this->mapRtpSenderRtpReceiver)
 		{
-			auto rtpSender = kv.first;
+			auto rtpSender   = kv.first;
 			auto rtpReceiver = kv.second;
 
 			jsonMapRtpSenderRtpReceiver[std::to_string(rtpSender->rtpSenderId)] =
-				std::to_string(rtpReceiver->rtpReceiverId);
+			    std::to_string(rtpReceiver->rtpReceiverId);
 		}
 		json[k_mapRtpSenderRtpReceiver] = jsonMapRtpSenderRtpReceiver;
 
@@ -210,9 +214,9 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::room_close:
 			{
-			#ifdef MS_LOG_DEV
+#ifdef MS_LOG_DEV
 				uint32_t roomId = this->roomId;
-			#endif
+#endif
 
 				Destroy();
 
@@ -244,7 +248,7 @@ namespace RTC
 				{
 					peer = GetPeerFromRequest(request, &peerId);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -271,7 +275,7 @@ namespace RTC
 				{
 					peer = new RTC::Peer(this, this->notifier, peerId, peerName);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -312,7 +316,7 @@ namespace RTC
 				{
 					peer = GetPeerFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -375,19 +379,12 @@ namespace RTC
 		// Set codecs.
 		{
 			// Available dynamic payload types.
-			static const std::vector<uint8_t> dynamicPayloadTypes
-			{
-				100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
-				110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
-				120, 121, 122, 123, 124, 125, 126, 127,
-				 96,  97,  98,  99,
-				 77,  78,  79,  80,  81,  82,  83,  84,  85,  86,
-				 87,  88,  89,  90,  91,  92,  93,  94,  95,
-				 35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
-				 45,  46,  47,  48,  49,  50,  51,  52,  53,  54,
-				 55,  56,  57,  58,  59,  60,  61,  62,  63,  64,
-				 65,  66,  67,  68,  69,  70,  71
-			};
+			static const std::vector<uint8_t> dynamicPayloadTypes{
+			    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
+			    118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 96,  97,  98,  99,  77,  78,  79,  80,
+			    81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  35,  36,  37,
+			    38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,
+			    56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71};
 			// Iterator for available dynamic payload types.
 			auto dynamicPayloadTypeIt = dynamicPayloadTypes.begin();
 			// Payload types used by the room.
@@ -404,9 +401,8 @@ namespace RTC
 				// Set unique PT.
 
 				// If the codec has PT and it's not already used, let it untouched.
-				if (
-					mediaCodec.hasPayloadType &&
-					roomPayloadTypes.find(mediaCodec.payloadType) == roomPayloadTypes.end())
+				if (mediaCodec.hasPayloadType &&
+				    roomPayloadTypes.find(mediaCodec.payloadType) == roomPayloadTypes.end())
 				{
 					;
 				}
@@ -422,7 +418,7 @@ namespace RTC
 						if (roomPayloadTypes.find(payloadType) == roomPayloadTypes.end())
 						{
 							// Assign PT.
-							mediaCodec.payloadType = payloadType;
+							mediaCodec.payloadType    = payloadType;
 							mediaCodec.hasPayloadType = true;
 
 							break;
@@ -466,7 +462,7 @@ namespace RTC
 		for (auto it = capabilities->codecs.begin(); it != capabilities->codecs.end();)
 		{
 			auto& peerCodecCapability = *it;
-			auto it2 = this->capabilities.codecs.begin();
+			auto it2                  = this->capabilities.codecs.begin();
 
 			for (; it2 != this->capabilities.codecs.end(); ++it2)
 			{
@@ -475,7 +471,7 @@ namespace RTC
 				if (roomCodecCapability.Matches(peerCodecCapability))
 				{
 					// Set the same payload type.
-					peerCodecCapability.payloadType = roomCodecCapability.payloadType;
+					peerCodecCapability.payloadType    = roomCodecCapability.payloadType;
 					peerCodecCapability.hasPayloadType = true;
 
 					// Remove the unsupported RTCP feedback from the given codec.
@@ -510,8 +506,8 @@ namespace RTC
 					continue;
 
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender = new RTC::RtpSender(peer, this->notifier, rtpSenderId,
-					rtpReceiver->kind);
+				RTC::RtpSender* rtpSender =
+				    new RTC::RtpSender(peer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
 				// Store into the maps.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
@@ -550,8 +546,8 @@ namespace RTC
 
 				// Create a RtpSender for the other Peer.
 				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender = new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId,
-					rtpReceiver->kind);
+				RTC::RtpSender* rtpSender =
+				    new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
 				// Store into the maps.
 				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
@@ -618,8 +614,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) !=
-			this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+		MS_ASSERT(
+		    this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(),
+		    "RtpReceiver not present in the map");
 
 		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
 
@@ -631,57 +628,66 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtcpReceiverReport(const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
+	void Room::onPeerRtcpReceiverReport(
+	    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
-			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(
+		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
+		    "RtpSender not present in the map");
 
 		rtpSender->ReceiveRtcpReceiverReport(report);
 	}
 
-	void Room::onPeerRtcpFeedback(const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
+	void Room::onPeerRtcpFeedback(
+	    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
-			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(
+		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
+		    "RtpSender not present in the map");
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
 		rtpReceiver->ReceiveRtcpFeedback(packet);
 	}
 
-	void Room::onPeerRtcpFeedback(const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
+	void Room::onPeerRtcpFeedback(
+	    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
-			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(
+		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
+		    "RtpSender not present in the map");
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
 		rtpReceiver->ReceiveRtcpFeedback(packet);
 	}
 
-	void Room::onPeerRtcpSenderReport(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
+	void Room::onPeerRtcpSenderReport(
+	    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
 
 		// RtpReceiver needs the sender report in order to generate it's receiver report.
 		rtpReceiver->ReceiveRtcpSenderReport(report);
 
-		MS_ASSERT(this->mapRtpReceiverRtpSenders.find(rtpReceiver) !=
-			this->mapRtpReceiverRtpSenders.end(), "RtpReceiver not present in the map");
+		MS_ASSERT(
+		    this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(),
+		    "RtpReceiver not present in the map");
 	}
 
 	void Room::onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapRtpSenderRtpReceiver.find(rtpSender) !=
-			this->mapRtpSenderRtpReceiver.end(), "RtpSender not present in the map");
+		MS_ASSERT(
+		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
+		    "RtpSender not present in the map");
 
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 

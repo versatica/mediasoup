@@ -1,14 +1,15 @@
 #define MS_CLASS "RTC::RtpHeaderExtensionUri"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "Utils.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Class variables. */
 
+	// clang-format off
 	std::unordered_map<std::string, RtpHeaderExtensionUri::Type> RtpHeaderExtensionUri::string2Type =
 	{
 		{ "urn:ietf:params:rtp-hdrext:ssrc-audio-level",                RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL  },
@@ -17,6 +18,7 @@ namespace RTC
 		{ "urn:3gpp:video-orientation",                                 RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION },
 		{ "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",              RtpHeaderExtensionUri::Type::RTP_STREAM_ID     }
 	};
+	// clang-format on
 
 	/* Class methods. */
 

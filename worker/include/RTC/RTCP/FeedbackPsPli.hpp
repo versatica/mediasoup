@@ -4,35 +4,37 @@
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	class FeedbackPsPliPacket
-		: public FeedbackPsPacket
+	namespace RTCP
 	{
-	public:
-		static FeedbackPsPliPacket* Parse(const uint8_t* data, size_t len);
+		class FeedbackPsPliPacket : public FeedbackPsPacket
+		{
+		public:
+			static FeedbackPsPliPacket* Parse(const uint8_t* data, size_t len);
 
-	public:
-		// Parsed Report. Points to an external data.
-		explicit FeedbackPsPliPacket(CommonHeader* commonHeader);
-		FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
-		virtual ~FeedbackPsPliPacket() {};
+		public:
+			// Parsed Report. Points to an external data.
+			explicit FeedbackPsPliPacket(CommonHeader* commonHeader);
+			FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
+			virtual ~FeedbackPsPliPacket(){};
 
-	public:
-		virtual void Dump() const override;
-	};
+		public:
+			virtual void Dump() const override;
+		};
 
-	/* Inline instance methods. */
+		/* Inline instance methods. */
 
-	inline
-	FeedbackPsPliPacket::FeedbackPsPliPacket(CommonHeader* commonHeader):
-		FeedbackPsPacket(commonHeader)
-	{}
+		inline FeedbackPsPliPacket::FeedbackPsPliPacket(CommonHeader* commonHeader)
+		    : FeedbackPsPacket(commonHeader)
+		{
+		}
 
-	inline
-	FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsPacket(FeedbackPs::MessageType::PLI, sender_ssrc, media_ssrc)
-	{}
-}}
+		inline FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
+		    : FeedbackPsPacket(FeedbackPs::MessageType::PLI, senderSsrc, mediaSsrc)
+		{
+		}
+	}
+}
 
 #endif

@@ -2,13 +2,14 @@
 // #define MS_LOG_DEV
 
 #include "Channel/Request.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
 
 namespace Channel
 {
 	/* Class variables. */
 
+	// clang-format off
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
 		{ "worker.dump",                       Request::MethodId::worker_dump                       },
@@ -35,11 +36,12 @@ namespace Channel
 		{ "rtpSender.setTransport",            Request::MethodId::rtpSender_setTransport            },
 		{ "rtpSender.disable",                 Request::MethodId::rtpSender_disable                 }
 	};
+	// clang-format on
 
 	/* Instance methods. */
 
-	Request::Request(Channel::UnixStreamSocket* channel, Json::Value& json) :
-		channel(channel)
+	Request::Request(Channel::UnixStreamSocket* channel, Json::Value& json)
+	    : channel(channel)
 	{
 		MS_TRACE();
 
@@ -91,32 +93,33 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static Json::Value empty_data(Json::objectValue);
+		static Json::Value EmptyData(Json::objectValue);
 
-		Accept(empty_data);
+		Accept(EmptyData);
 	}
 
-	void Request::Accept(Json::Value &data)
+	void Request::Accept(Json::Value& data)
 	{
 		MS_TRACE();
 
-		static Json::Value empty_data(Json::objectValue);
+		static Json::Value EmptyData(Json::objectValue);
 		static const Json::StaticString k_id("id");
 		static const Json::StaticString k_accepted("accepted");
 		static const Json::StaticString k_data("data");
 
 		MS_ASSERT(this->replied == false, "Request already replied");
+
 		this->replied = true;
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id] = (Json::UInt)this->id;
+		json[k_id]       = (Json::UInt)this->id;
 		json[k_accepted] = true;
 
 		if (data.isObject())
 			json[k_data] = data;
 		else
-			json[k_data] = empty_data;
+			json[k_data] = EmptyData;
 
 		this->channel->Send(json);
 	}
@@ -141,11 +144,12 @@ namespace Channel
 		static const Json::StaticString k_reason("reason");
 
 		MS_ASSERT(this->replied == false, "Request already replied");
+
 		this->replied = true;
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id] = (Json::UInt)this->id;
+		json[k_id]       = (Json::UInt)this->id;
 		json[k_rejected] = true;
 
 		if (reason)

@@ -5,79 +5,84 @@
 #include "RTC/RTCP/Feedback.hpp"
 #include <vector>
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	template<typename Item> class FeedbackPsItemsPacket
-		: public FeedbackPsPacket
+	namespace RTCP
 	{
-	public:
-		typedef typename std::vector<Item*>::iterator Iterator;
-
-	public:
-		static FeedbackPsItemsPacket<Item>* Parse(const uint8_t* data, size_t len);
-
-	public:
-		// Parsed Report. Points to an external data.
-		explicit FeedbackPsItemsPacket(CommonHeader* commonHeader);
-		explicit FeedbackPsItemsPacket(uint32_t sender_ssrc, uint32_t media_ssrc = 0);
-		virtual ~FeedbackPsItemsPacket() {};
-
-		void AddItem(Item* item);
-		Iterator Begin();
-		Iterator End();
-
-	/* Pure virtual methods inherited from Packet. */
-	public:
-		virtual void Dump() const override;
-		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() const override;
-
-	private:
-		std::vector<Item*> items;
-	};
-
-	/* Inline instance methods. */
-
-	template<typename Item>
-	FeedbackPsItemsPacket<Item>::FeedbackPsItemsPacket(CommonHeader* commonHeader):
-		FeedbackPsPacket(commonHeader)
-	{}
-
-	template<typename Item>
-	FeedbackPsItemsPacket<Item>::FeedbackPsItemsPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsPacket(Item::MessageType, sender_ssrc, media_ssrc)
-	{}
-
-	template<typename Item>
-	size_t FeedbackPsItemsPacket<Item>::GetSize() const
-	{
-		size_t size = FeedbackPsPacket::GetSize();
-
-		for (auto item : this->items)
+		template<typename Item>
+		class FeedbackPsItemsPacket : public FeedbackPsPacket
 		{
-			size += item->GetSize();
+		public:
+			typedef typename std::vector<Item*>::iterator Iterator;
+
+		public:
+			static FeedbackPsItemsPacket<Item>* Parse(const uint8_t* data, size_t len);
+
+		public:
+			// Parsed Report. Points to an external data.
+			explicit FeedbackPsItemsPacket(CommonHeader* commonHeader);
+			explicit FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0);
+			virtual ~FeedbackPsItemsPacket(){};
+
+			void AddItem(Item* item);
+			Iterator Begin();
+			Iterator End();
+
+			/* Pure virtual methods inherited from Packet. */
+		public:
+			virtual void Dump() const override;
+			virtual size_t Serialize(uint8_t* buffer) override;
+			virtual size_t GetSize() const override;
+
+		private:
+			std::vector<Item*> items;
+		};
+
+		/* Inline instance methods. */
+
+		template<typename Item>
+		FeedbackPsItemsPacket<Item>::FeedbackPsItemsPacket(CommonHeader* commonHeader)
+		    : FeedbackPsPacket(commonHeader)
+		{
 		}
 
-		return size;
-	}
+		template<typename Item>
+		FeedbackPsItemsPacket<Item>::FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
+		    : FeedbackPsPacket(Item::MessageType, senderSsrc, mediaSsrc)
+		{
+		}
 
-	template<typename Item>
-	void FeedbackPsItemsPacket<Item>::AddItem(Item* item)
-	{
-		this->items.push_back(item);
-	}
+		template<typename Item>
+		size_t FeedbackPsItemsPacket<Item>::GetSize() const
+		{
+			size_t size = FeedbackPsPacket::GetSize();
 
-	template<typename Item>
-	typename FeedbackPsItemsPacket<Item>::Iterator FeedbackPsItemsPacket<Item>::Begin()
-	{
-		return this->items.begin();
-	}
+			for (auto item : this->items)
+			{
+				size += item->GetSize();
+			}
 
-	template<typename Item>
-	typename FeedbackPsItemsPacket<Item>::Iterator FeedbackPsItemsPacket<Item>::End()
-	{
-		return this->items.end();
+			return size;
+		}
+
+		template<typename Item>
+		void FeedbackPsItemsPacket<Item>::AddItem(Item* item)
+		{
+			this->items.push_back(item);
+		}
+
+		template<typename Item>
+		typename FeedbackPsItemsPacket<Item>::Iterator FeedbackPsItemsPacket<Item>::Begin()
+		{
+			return this->items.begin();
+		}
+
+		template<typename Item>
+		typename FeedbackPsItemsPacket<Item>::Iterator FeedbackPsItemsPacket<Item>::End()
+		{
+			return this->items.end();
+		}
 	}
-}}
+}
 
 #endif

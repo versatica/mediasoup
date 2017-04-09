@@ -11,15 +11,15 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_OVERUSE_DETECTOR_HPP
 
 #include "common.hpp"
-#include "RTC/RemoteBitrateEstimator/RateControlRegion.hpp"
 #include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
+#include "RTC/RemoteBitrateEstimator/RateControlRegion.hpp"
 #include <list>
 
 namespace RTC
 {
 	class OveruseDetector
 	{
-		private:
+	private:
 		static constexpr double kOverUsingTimeThreshold = 10;
 
 	public:
@@ -39,19 +39,18 @@ namespace RTC
 		void UpdateThreshold(double modifiedOffset, int64_t nowMs);
 
 	private:
-		double kUp = 0.0087;
-		double kDown = 0.039;
+		double kUp                    = 0.0087;
+		double kDown                  = 0.039;
 		double overusingTimeThreshold = kOverUsingTimeThreshold;
-		double threshold = 12.5;
-		int64_t lastUpdateMs = -1;
-		double prevOffset = 0.0;
-		double timeOverUsing = -1;
-		int overuseCounter = 0;
-		BandwidthUsage hypothesis = kBwNormal;
+		double threshold              = 12.5;
+		int64_t lastUpdateMs          = -1;
+		double prevOffset             = 0.0;
+		double timeOverUsing          = -1;
+		int overuseCounter            = 0;
+		BandwidthUsage hypothesis     = kBwNormal;
 	};
 
-	inline
-	BandwidthUsage OveruseDetector::State() const
+	inline BandwidthUsage OveruseDetector::State() const
 	{
 		return this->hypothesis;
 	}

@@ -2,11 +2,11 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpSender.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "Utils.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "Utils.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
 #include <vector>
 
 namespace RTC
@@ -17,18 +17,19 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpSender::RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind) :
-		rtpSenderId(rtpSenderId),
-		kind(kind),
-		listener(listener),
-		notifier(notifier)
+	RtpSender::RtpSender(
+	    Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind)
+	    : rtpSenderId(rtpSenderId)
+	    , kind(kind)
+	    , listener(listener)
+	    , notifier(notifier)
 	{
 		MS_TRACE();
 
 		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MAX_AUDIO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxAudioIntervalMs;
 		else
-			this->maxRtcpInterval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxVideoIntervalMs;
 	}
 
 	RtpSender::~RtpSender()
@@ -200,7 +201,7 @@ namespace RTC
 		for (auto it = codecs.begin(); it != this->rtpParameters->codecs.end();)
 		{
 			auto& codec = *it;
-			auto it2 = codecs.begin();
+			auto it2    = codecs.begin();
 
 			for (; it2 != codecs.end(); ++it2)
 			{
@@ -272,9 +273,9 @@ namespace RTC
 		{
 			Json::Value eventData(Json::objectValue);
 
-			eventData[k_class] = "RtpSender";
+			eventData[k_class]         = "RtpSender";
 			eventData[k_rtpParameters] = this->rtpParameters->toJson();
-			eventData[k_active] = this->GetActive();
+			eventData[k_active]        = this->GetActive();
 
 			this->notifier->Emit(this->rtpSenderId, "parameterschange", eventData);
 		}
@@ -294,15 +295,14 @@ namespace RTC
 		// RTP parameters.
 		if (packet->GetSsrc() != this->rtpParameters->encodings[0].ssrc)
 		{
-			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]",
-				packet->GetSsrc());
+			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 			return;
 		}
 
 		// Map the payload type.
 		uint8_t payloadType = packet->GetPayloadType();
-		auto it = this->supportedPayloadTypes.find(payloadType);
+		auto it             = this->supportedPayloadTypes.find(payloadType);
 
 		// NOTE: This may happen if this peer supports just some codecs from the
 		// given RtpParameters.
@@ -327,7 +327,7 @@ namespace RTC
 		this->transmittedCounter.Update(packet);
 	}
 
-	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
+	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
 		if (!this->rtpStream)
 			return;
@@ -340,16 +340,16 @@ namespace RTC
 			return;
 
 		// NOTE: This assumes a single stream.
-		uint32_t ssrc = this->rtpParameters->encodings[0].ssrc;
+		uint32_t ssrc     = this->rtpParameters->encodings[0].ssrc;
 		std::string cname = this->rtpParameters->rtcp.cname;
 
 		report->SetSsrc(ssrc);
 		packet->AddSenderReport(report);
 
 		// Build SDES chunk for this sender.
-		RTC::RTCP::SdesChunk *sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		RTC::RTCP::SdesItem *sdesItem =
-			new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+		RTC::RTCP::SdesChunk* sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
+		RTC::RTCP::SdesItem* sdesItem =
+		    new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
 		sdesChunk->AddItem(sdesItem);
 		packet->AddSdesChunk(sdesChunk);
@@ -372,7 +372,8 @@ namespace RTC
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
-			this->rtpStream->RequestRtpRetransmission(item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
+			this->rtpStream->RequestRtpRetransmission(
+			    item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
 
 			auto it2 = RtpRetransmissionContainer.begin();
 			for (; it2 != RtpRetransmissionContainer.end(); ++it2)
@@ -407,9 +408,9 @@ namespace RTC
 
 		uint32_t ssrc = encoding.ssrc;
 		// Get the codec of the stream/encoding.
-		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
-		bool useNack = false;
-		bool usePli = false;
+		auto& codec           = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack          = false;
+		bool usePli           = false;
 		uint8_t absSendTimeId = 0; // 0 means no abs-send-time id.
 
 		for (auto& fb : codec.rtcpFeedback)
@@ -439,12 +440,12 @@ namespace RTC
 		// Create stream params.
 		RTC::RtpStream::Params params;
 
-		params.ssrc = ssrc;
-		params.payloadType = codec.payloadType;
-		params.mime = codec.mime;
-		params.clockRate = codec.clockRate;
-		params.useNack = useNack;
-		params.usePli = usePli;
+		params.ssrc          = ssrc;
+		params.payloadType   = codec.payloadType;
+		params.mime          = codec.mime;
+		params.clockRate     = codec.clockRate;
+		params.useNack       = useNack;
+		params.usePli        = usePli;
 		params.absSendTimeId = absSendTimeId;
 
 		// Create a RtpStreamSend for sending a single media stream.
@@ -471,8 +472,7 @@ namespace RTC
 		this->transport->SendRtpPacket(packet);
 	}
 
-	inline
-	void RtpSender::EmitActiveChange() const
+	inline void RtpSender::EmitActiveChange() const
 	{
 		MS_TRACE();
 
@@ -481,7 +481,7 @@ namespace RTC
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[k_class] = "RtpSender";
+		eventData[k_class]  = "RtpSender";
 		eventData[k_active] = this->GetActive();
 
 		this->notifier->Emit(this->rtpSenderId, "activechange", eventData);

@@ -3,19 +3,19 @@
 
 #include "Loop.hpp"
 #include "DepLibUV.hpp"
-#include "Settings.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
-#include <string>
-#include <utility> // std::pair()
+#include "MediaSoupError.hpp"
+#include "Settings.hpp"
+#include <json/json.h>
 #include <cerrno>
 #include <iostream> // std::cout, std::cerr
-#include <json/json.h>
+#include <string>
+#include <utility> // std::pair()
 
 /* Instance methods. */
 
-Loop::Loop(Channel::UnixStreamSocket* channel) :
-	channel(channel)
+Loop::Loop(Channel::UnixStreamSocket* channel)
+    : channel(channel)
 {
 	MS_TRACE();
 
@@ -124,8 +124,7 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 			break;
 
 		default:
-			MS_WARN_DEV("received a signal (with signum %d) for which there is no handling code",
-				signum);
+			MS_WARN_DEV("received a signal (with signum %d) for which there is no handling code", signum);
 	}
 }
 
@@ -143,7 +142,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			static const Json::StaticString k_rooms("rooms");
 
 			Json::Value json(Json::objectValue);
-			Json::Value json_rooms(Json::arrayValue);
+			Json::Value jsonRooms(Json::arrayValue);
 
 			json[k_workerId] = Logger::id;
 
@@ -151,10 +150,10 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				auto room = kv.second;
 
-				json_rooms.append(room->toJson());
+				jsonRooms.append(room->toJson());
 			}
 
-			json[k_rooms] = json_rooms;
+			json[k_rooms] = jsonRooms;
 
 			request->Accept(json);
 
@@ -179,7 +178,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				room = GetRoomFromRequest(request, &roomId);
 			}
-			catch (const MediaSoupError &error)
+			catch (const MediaSoupError& error)
 			{
 				request->Reject(error.what());
 
@@ -197,7 +196,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				room = new RTC::Room(this, this->notifier, roomId, request->data);
 			}
-			catch (const MediaSoupError &error)
+			catch (const MediaSoupError& error)
 			{
 				request->Reject(error.what());
 
@@ -245,7 +244,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			{
 				room = GetRoomFromRequest(request);
 			}
-			catch (const MediaSoupError &error)
+			catch (const MediaSoupError& error)
 			{
 				request->Reject(error.what());
 

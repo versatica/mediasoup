@@ -6,26 +6,25 @@
 
 namespace RTC
 {
-	class TcpConnection :
-		public ::TcpConnection
+	class TcpConnection : public ::TcpConnection
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void onPacketRecv(RTC::TcpConnection *connection, const uint8_t* data, size_t len) = 0;
+			virtual void onPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
 		TcpConnection(Listener* listener, size_t bufferSize);
 
 	private:
-		virtual ~TcpConnection() {};
+		virtual ~TcpConnection(){};
 
 	public:
 		void Send(const uint8_t* data, size_t len);
 
-	/* Pure virtual methods inherited from ::TcpConnection. */
+		/* Pure virtual methods inherited from ::TcpConnection. */
 	public:
 		virtual void userOnTcpConnectionRead() override;
 

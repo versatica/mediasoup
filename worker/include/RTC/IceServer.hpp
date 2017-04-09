@@ -4,8 +4,8 @@
 #include "common.hpp"
 #include "RTC/StunMessage.hpp"
 #include "RTC/TransportTuple.hpp"
-#include <string>
 #include <list>
+#include <string>
 
 namespace RTC
 {
@@ -24,18 +24,19 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener() {};
+			virtual ~Listener(){};
 
 		public:
 			/**
 			 * These callbacks are guaranteed to be called before ProcessStunMessage()
 			 * returns, so the given pointers are still usable.
 			 */
-			virtual void onOutgoingStunMessage(const IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
-			virtual void onIceSelectedTuple(const IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
-			virtual void onIceConnected(const IceServer* iceServer) = 0;
-			virtual void onIceCompleted(const IceServer* iceServer) = 0;
-			virtual void onIceDisconnected(const IceServer* iceServer) = 0;
+			virtual void onOutgoingStunMessage(
+			    const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
+			virtual void onIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+			virtual void onIceConnected(const RTC::IceServer* iceServer)    = 0;
+			virtual void onIceCompleted(const RTC::IceServer* iceServer)    = 0;
+			virtual void onIceDisconnected(const RTC::IceServer* iceServer) = 0;
 		};
 
 	public:
@@ -81,20 +82,17 @@ namespace RTC
 
 	/* Inline instance methods. */
 
-	inline
-	const std::string& IceServer::GetUsernameFragment() const
+	inline const std::string& IceServer::GetUsernameFragment() const
 	{
 		return this->usernameFragment;
 	}
 
-	inline
-	const std::string& IceServer::GetPassword() const
+	inline const std::string& IceServer::GetPassword() const
 	{
 		return this->password;
 	}
 
-	inline
-	IceServer::IceState IceServer::GetState() const
+	inline IceServer::IceState IceServer::GetState() const
 	{
 		return this->state;
 	}

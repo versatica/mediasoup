@@ -2,10 +2,10 @@
 // #define MS_LOG_DEV
 
 #include "DepOpenSSL.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
-#include <openssl/err.h>
+#include "MediaSoupError.hpp"
 #include <openssl/engine.h> // ENGINE_cleanup()
+#include <openssl/err.h>
 
 /* Static attributes. */
 
@@ -91,7 +91,7 @@ void DepOpenSSL::SetThreadId(CRYPTO_THREADID* id)
 	CRYPTO_THREADID_set_numeric(id, (unsigned long)uv_thread_self());
 }
 
-void DepOpenSSL::LockingFunction(int mode, int n, const char *file, int line)
+void DepOpenSSL::LockingFunction(int mode, int n, const char* file, int line)
 {
 	// MS_TRACE();
 

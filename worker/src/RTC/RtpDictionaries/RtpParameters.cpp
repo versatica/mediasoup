@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpParameters"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <unordered_set>
 
 namespace RTC
@@ -33,11 +33,11 @@ namespace RTC
 		// `codecs` is mandatory.
 		if (data[k_codecs].isArray())
 		{
-			auto& json_codecs = data[k_codecs];
+			auto& jsonCodecs = data[k_codecs];
 
-			for (Json::UInt i = 0; i < json_codecs.size(); ++i)
+			for (Json::UInt i = 0; i < jsonCodecs.size(); ++i)
 			{
-				RTC::RtpCodecParameters codec(json_codecs[i], RTC::Scope::RECEIVE);
+				RTC::RtpCodecParameters codec(jsonCodecs[i], RTC::Scope::RECEIVE);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -51,11 +51,11 @@ namespace RTC
 		// `encodings` is optional.
 		if (data[k_encodings].isArray())
 		{
-			auto& json_array = data[k_encodings];
+			auto& jsonArray = data[k_encodings];
 
-			for (Json::UInt i = 0; i < json_array.size(); ++i)
+			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
 			{
-				RTC::RtpEncodingParameters encoding(json_array[i]);
+				RTC::RtpEncodingParameters encoding(jsonArray[i]);
 
 				// Append to the encodings vector.
 				this->encodings.push_back(encoding);
@@ -65,11 +65,11 @@ namespace RTC
 		// `headerExtensions` is optional.
 		if (data[k_headerExtensions].isArray())
 		{
-			auto& json_array = data[k_headerExtensions];
+			auto& jsonArray = data[k_headerExtensions];
 
-			for (Json::UInt i = 0; i < json_array.size(); ++i)
+			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
 			{
-				RTC::RtpHeaderExtensionParameters headerExtension(json_array[i]);
+				RTC::RtpHeaderExtensionParameters headerExtension(jsonArray[i]);
 
 				// If a known header extension, append to the headerExtensions vector.
 				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)
@@ -80,7 +80,7 @@ namespace RTC
 		// `rtcp` is optional.
 		if (data[k_rtcp].isObject())
 		{
-			this->rtcp = RTC::RtcpParameters(data[k_rtcp]);
+			this->rtcp    = RTC::RtcpParameters(data[k_rtcp]);
 			this->hasRtcp = true;
 		}
 
@@ -95,14 +95,14 @@ namespace RTC
 		ValidateEncodings();
 	}
 
-	RtpParameters::RtpParameters(const RtpParameters* rtpParameters) :
-		muxId(rtpParameters->muxId),
-		codecs(rtpParameters->codecs),
-		encodings(rtpParameters->encodings),
-		headerExtensions(rtpParameters->headerExtensions),
-		rtcp(rtpParameters->rtcp),
-		hasRtcp(rtpParameters->hasRtcp),
-		userParameters(rtpParameters->userParameters)
+	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
+	    : muxId(rtpParameters->muxId)
+	    , codecs(rtpParameters->codecs)
+	    , encodings(rtpParameters->encodings)
+	    , headerExtensions(rtpParameters->headerExtensions)
+	    , rtcp(rtpParameters->rtcp)
+	    , hasRtcp(rtpParameters->hasRtcp)
+	    , userParameters(rtpParameters->userParameters)
 	{
 		MS_TRACE();
 	}
@@ -167,7 +167,7 @@ namespace RTC
 		for (auto it = this->codecs.begin(); it != this->codecs.end();)
 		{
 			auto& codec = *it;
-			auto it2 = capabilities.codecs.begin();
+			auto it2    = capabilities.codecs.begin();
 
 			for (; it2 != capabilities.codecs.end(); ++it2)
 			{
@@ -184,8 +184,10 @@ namespace RTC
 			}
 			if (it2 == capabilities.codecs.end())
 			{
-				MS_WARN_DEV("no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
-					codec.payloadType, codec.mime.GetName().c_str());
+				MS_WARN_DEV(
+				    "no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
+				    codec.payloadType,
+				    codec.mime.GetName().c_str());
 
 				removedCodecPayloadTypes.push_back(codec.payloadType);
 				it = this->codecs.erase(it);
@@ -196,7 +198,7 @@ namespace RTC
 		for (auto it = this->encodings.begin(); it != this->encodings.end();)
 		{
 			auto& encoding = *it;
-			auto it2 = removedCodecPayloadTypes.begin();
+			auto it2       = removedCodecPayloadTypes.begin();
 
 			for (; it2 != removedCodecPayloadTypes.end(); ++it2)
 			{
@@ -234,7 +236,7 @@ namespace RTC
 				if (headerExtension.type == supportedHeaderExtension.type)
 				{
 					// Set the same id and other properties.
-					headerExtension.id = supportedHeaderExtension.preferredId;
+					headerExtension.id      = supportedHeaderExtension.preferredId;
 					headerExtension.encrypt = supportedHeaderExtension.preferredEncrypt;
 
 					updatedHeaderExtensions.push_back(headerExtension);
@@ -271,8 +273,7 @@ namespace RTC
 		return fakeCodec;
 	}
 
-	inline
-	void RtpParameters::ValidateCodecs()
+	inline void RtpParameters::ValidateCodecs()
 	{
 		MS_TRACE();
 
@@ -298,7 +299,7 @@ namespace RTC
 				{
 					// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
 					int32_t apt = codec.parameters.GetInteger(k_apt);
-					auto it = this->codecs.begin();
+					auto it     = this->codecs.begin();
 
 					for (; it != this->codecs.end(); ++it)
 					{
@@ -322,14 +323,12 @@ namespace RTC
 					break;
 				}
 
-				default:
-					;
+				default:;
 			}
 		}
 	}
 
-	inline
-	void RtpParameters::ValidateEncodings()
+	inline void RtpParameters::ValidateEncodings()
 	{
 		uint8_t firstMediaPayloadType;
 
@@ -358,7 +357,7 @@ namespace RTC
 		{
 			RTC::RtpEncodingParameters encoding;
 
-			encoding.codecPayloadType = firstMediaPayloadType;
+			encoding.codecPayloadType    = firstMediaPayloadType;
 			encoding.hasCodecPayloadType = true;
 
 			// Insert into the encodings vector.
@@ -372,7 +371,7 @@ namespace RTC
 			{
 				if (!encoding.hasCodecPayloadType)
 				{
-					encoding.codecPayloadType = firstMediaPayloadType;
+					encoding.codecPayloadType    = firstMediaPayloadType;
 					encoding.hasCodecPayloadType = true;
 				}
 				else

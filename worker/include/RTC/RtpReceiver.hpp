@@ -2,17 +2,17 @@
 #define MS_RTC_RTP_RECEIVER_HPP
 
 #include "common.hpp"
+#include "Channel/Notifier.hpp"
+#include "Channel/Request.hpp"
+#include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/Feedback.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/Feedback.hpp"
-#include "RTC/RTCP/CompoundPacket.hpp"
-#include "Channel/Request.hpp"
-#include "Channel/Notifier.hpp"
-#include <string>
-#include <map>
 #include <json/json.h>
+#include <map>
+#include <string>
 
 namespace RTC
 {
@@ -20,8 +20,7 @@ namespace RTC
 	// the corresponding header files.
 	class Transport;
 
-	class RtpReceiver :
-		public RtpStreamRecv::Listener
+	class RtpReceiver : public RtpStreamRecv::Listener
 	{
 	public:
 		/**
@@ -30,17 +29,15 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpReceiverParameters(RtpReceiver* rtpReceiver) = 0;
-			virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) = 0;
-			virtual void onRtpPacket(RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
-			virtual void onRtpReceiverClosed(const RtpReceiver* rtpReceiver) = 0;
+			virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)             = 0;
+			virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver)         = 0;
+			virtual void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
+			virtual void onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver)           = 0;
 		};
 
-	private:
-		static uint8_t rtcpBuffer[];
-
 	public:
-		RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind);
+		RtpReceiver(
+		    Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind);
 
 	private:
 		virtual ~RtpReceiver();
@@ -55,7 +52,7 @@ namespace RTC
 		RTC::RtpParameters* GetParameters() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
 		void RequestFullFrame() const;
@@ -64,9 +61,10 @@ namespace RTC
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ClearRtpStreams();
 
-	/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
+		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
-		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
+		virtual void onNackRequired(
+		    RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		virtual void onPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 
 	public:
@@ -76,14 +74,14 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
+		Listener* listener          = nullptr;
 		Channel::Notifier* notifier = nullptr;
-		RTC::Transport* transport = nullptr;
+		RTC::Transport* transport   = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		// Others.
-		bool rtpRawEventEnabled = false;
+		bool rtpRawEventEnabled    = false;
 		bool rtpObjectEventEnabled = false;
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime = 0;
@@ -92,36 +90,30 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline
-	void RtpReceiver::SetTransport(RTC::Transport* transport)
+	inline void RtpReceiver::SetTransport(RTC::Transport* transport)
 	{
 		this->transport = transport;
 	}
 
-	inline
-	RTC::Transport* RtpReceiver::GetTransport() const
+	inline RTC::Transport* RtpReceiver::GetTransport() const
 	{
 		return this->transport;
 	}
 
-	inline
-	void RtpReceiver::RemoveTransport(RTC::Transport* transport)
+	inline void RtpReceiver::RemoveTransport(RTC::Transport* transport)
 	{
 		if (this->transport == transport)
 			this->transport = nullptr;
 	}
 
-	inline
-	RTC::RtpParameters* RtpReceiver::GetParameters() const
+	inline RTC::RtpParameters* RtpReceiver::GetParameters() const
 	{
 		return this->rtpParameters;
 	}
 
-	inline
-	void RtpReceiver::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
+	inline void RtpReceiver::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		auto it = this->rtpStreams.find(report->GetSsrc());
-
 		if (it != this->rtpStreams.end())
 		{
 			auto rtpStream = it->second;

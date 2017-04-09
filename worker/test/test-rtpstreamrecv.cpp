@@ -15,30 +15,30 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		public RtpStreamRecv::Listener
 	{
 	public:
-		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seq_numbers) override
+		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override
 		{
 			INFO("NACK required");
 
-			REQUIRE(this->should_trigger_nack == true);
+			REQUIRE(this->shouldTriggerNack == true);
 
-			this->should_trigger_nack = false;
-			this->seq_numbers = seq_numbers;
+			this->shouldTriggerNack = false;
+			this->seqNumbers = seqNumbers;
 		}
 
 		virtual void onPliRequired(RtpStreamRecv* rtpStream) override
 		{
 			INFO("PLI required");
 
-			REQUIRE(this->should_trigger_pli == true);
+			REQUIRE(this->shouldTriggerPli == true);
 
-			this->should_trigger_pli = false;
-			this->seq_numbers.clear();
+			this->shouldTriggerPli = false;
+			this->seqNumbers.clear();
 		}
 
 	public:
-		bool should_trigger_nack = false;
-		bool should_trigger_pli = false;
-		std::vector<uint16_t> seq_numbers;
+		bool shouldTriggerNack = false;
+		bool shouldTriggerPli = false;
+		std::vector<uint16_t> seqNumbers;
 	};
 
 	uint8_t buffer[] =
@@ -68,22 +68,22 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		packet->SetSequenceNumber(3);
-		listener.should_trigger_nack = true;
+		listener.shouldTriggerNack = true;
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seq_numbers.size() == 1);
-		REQUIRE(listener.seq_numbers[0] == 2);
-		listener.seq_numbers.clear();
+		REQUIRE(listener.seqNumbers.size() == 1);
+		REQUIRE(listener.seqNumbers[0] == 2);
+		listener.seqNumbers.clear();
 
 		packet->SetSequenceNumber(2);
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seq_numbers.size() == 0);
+		REQUIRE(listener.seqNumbers.size() == 0);
 
 		packet->SetSequenceNumber(4);
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seq_numbers.size() == 0);
+		REQUIRE(listener.seqNumbers.size() == 0);
 	}
 
 	SECTION("wrapping sequence numbers")
@@ -95,13 +95,13 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		packet->SetSequenceNumber(1);
-		listener.should_trigger_nack = true;
+		listener.shouldTriggerNack = true;
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seq_numbers.size() == 2);
-		REQUIRE(listener.seq_numbers[0] == 0xffff);
-		REQUIRE(listener.seq_numbers[1] == 0);
-		listener.seq_numbers.clear();
+		REQUIRE(listener.seqNumbers.size() == 2);
+		REQUIRE(listener.seqNumbers[0] == 0xffff);
+		REQUIRE(listener.seqNumbers[1] == 0);
+		listener.seqNumbers.clear();
 	}
 
 	SECTION("require PLI")
@@ -113,7 +113,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		packet->SetSequenceNumber(510);
-		listener.should_trigger_pli = true;
+		listener.shouldTriggerPli = true;
 		rtpStream.ReceivePacket(packet);
 	}
 

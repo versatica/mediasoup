@@ -16,7 +16,7 @@ namespace RTC
 
 		for (auto& kv : this->mapKeyValues)
 		{
-			auto& key = kv.first;
+			auto& key   = kv.first;
 			auto& value = kv.second;
 
 			switch (value.type)
@@ -74,7 +74,7 @@ namespace RTC
 
 		for (Json::Value::iterator it = data.begin(); it != data.end(); ++it)
 		{
-			std::string key = it.key().asString();
+			std::string key   = it.key().asString();
 			Json::Value value = (*it);
 
 			switch (value.type())
@@ -141,8 +141,7 @@ namespace RTC
 					break;
 				}
 
-				default:
-					; // Just ignore other value types.
+				default:; // Just ignore other value types.
 			}
 		}
 	}
@@ -151,8 +150,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-			"key does not exist [key:%s]", key.c_str());
+		MS_ASSERT(
+		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		    "key does not exist [key:%s]",
+		    key.c_str());
 
 		return this->mapKeyValues[key].booleanValue;
 	}
@@ -161,8 +162,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-			"key does not exist [key:%s]", key.c_str());
+		MS_ASSERT(
+		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		    "key does not exist [key:%s]",
+		    key.c_str());
 
 		return this->mapKeyValues[key].integerValue;
 	}
@@ -171,8 +174,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-			"key does not exist [key:%s]", key.c_str());
+		MS_ASSERT(
+		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		    "key does not exist [key:%s]",
+		    key.c_str());
 
 		return this->mapKeyValues[key].doubleValue;
 	}
@@ -181,8 +186,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-			"key does not exist [key:%s]", key.c_str());
+		MS_ASSERT(
+		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		    "key does not exist [key:%s]",
+		    key.c_str());
 
 		return this->mapKeyValues[key].stringValue;
 	}
@@ -191,8 +198,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-			"key does not exist [key:%s]", key.c_str());
+		MS_ASSERT(
+		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		    "key does not exist [key:%s]",
+		    key.c_str());
 
 		return this->mapKeyValues[key].arrayOfIntegers;
 	}

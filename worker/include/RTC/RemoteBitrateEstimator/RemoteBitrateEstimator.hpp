@@ -30,7 +30,7 @@ namespace RTC
 	public:
 		virtual ~CallStatsObserver() = default;
 
-		virtual void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) = 0;
+		virtual void OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs) = 0;
 	};
 
 	class RemoteBitrateEstimator : public CallStatsObserver
@@ -46,25 +46,29 @@ namespace RTC
 
 	protected:
 		static const int64_t kProcessIntervalMs = 500;
-		static const int64_t kStreamTimeOutMs = 2000;
+		static const int64_t kStreamTimeOutMs   = 2000;
 
 	public:
 		virtual ~RemoteBitrateEstimator() = default;
 
 		// Called for each incoming packet. Updates the incoming payload bitrate
 		// estimate and the over-use detector. If an over-use is detected the
-		// remote bitrate estimate will be updated. Note that |payload_size| is the
+		// remote bitrate estimate will be updated. Note that |payloadSize| is the
 		// packet size excluding headers.
-		// Note that |arrival_time_ms| can be of an arbitrary time base.
-		virtual void IncomingPacket(int64_t arrival_time_ms, size_t payload_size, const RtpPacket& packet, const uint32_t absSendTime) = 0;
+		// Note that |arrivalTimeMs| can be of an arbitrary time base.
+		virtual void IncomingPacket(
+		    int64_t arrivalTimeMs,
+		    size_t payloadSize,
+		    const RtpPacket& packet,
+		    const uint32_t absSendTime) = 0;
 
 		// Removes all data for |ssrc|.
 		virtual void RemoveStream(uint32_t ssrc) = 0;
-		// Returns true if a valid estimate exists and sets |bitrate_bps| to the
+		// Returns true if a valid estimate exists and sets |bitrateBps| to the
 		// estimated payload bitrate in bits per second. |ssrcs| is the list of ssrcs
 		// currently being received and of which the bitrate estimate is based upon.
-		virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrate_bps) const = 0;
-		virtual void SetMinBitrate(int min_bitrate_bps) = 0;
+		virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const = 0;
+		virtual void SetMinBitrate(int minBitrateBps)                                         = 0;
 		// (jmillan) borrowed from webrtc/modules/include/module.h.
 		//
 		// Returns the number of milliseconds until the module wants a worker

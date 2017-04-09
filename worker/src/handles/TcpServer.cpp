@@ -2,41 +2,38 @@
 // #define MS_LOG_DEV
 
 #include "handles/TcpServer.hpp"
-#include "Utils.hpp"
 #include "DepLibUV.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "Utils.hpp"
 
 /* Static methods for UV callbacks. */
 
-static inline
-void on_connection(uv_stream_t* handle, int status)
+inline static void onConnection(uv_stream_t* handle, int status)
 {
 	static_cast<TcpServer*>(handle->data)->onUvConnection(status);
 }
 
-static inline
-void on_close(uv_handle_t* handle)
+inline static void onClose(uv_handle_t* handle)
 {
 	static_cast<TcpServer*>(handle->data)->onUvClosed();
 }
 
-static inline
-void on_error_close(uv_handle_t* handle)
+inline static void onErrorClose(uv_handle_t* handle)
 {
 	delete handle;
 }
 
 /* Instance methods. */
 
-TcpServer::TcpServer(const std::string &ip, uint16_t port, int backlog)
+TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 {
 	MS_TRACE();
 
 	int err;
 	int flags = 0;
 
-	this->uvHandle = new uv_tcp_t;
+	this->uvHandle       = new uv_tcp_t;
 	this->uvHandle->data = (void*)this;
 
 	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
@@ -44,21 +41,22 @@ TcpServer::TcpServer(const std::string &ip, uint16_t port, int backlog)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
+
 		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 	}
 
-	struct sockaddr_storage bind_addr;
+	struct sockaddr_storage bindAddr;
 
 	switch (Utils::IP::GetFamily(ip))
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bind_addr);
+			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bindAddr);
 			if (err)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
-			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&bind_addr);
+			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&bindAddr);
 			if (err)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			// Don't also bind into IPv4 when listening in IPv6.
@@ -66,35 +64,35 @@ TcpServer::TcpServer(const std::string &ip, uint16_t port, int backlog)
 			break;
 
 		default:
-			uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+			uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 			MS_THROW_ERROR("invalid binding IP '%s'", ip.c_str());
 			break;
 	}
 
-	err = uv_tcp_bind(this->uvHandle, (const struct sockaddr*)&bind_addr, flags);
+	err = uv_tcp_bind(this->uvHandle, (const struct sockaddr*)&bindAddr, flags);
 	if (err)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_tcp_bind() failed: %s", uv_strerror(err));
 	}
 
-	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)on_connection);
+	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
 	if (err)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
 
-TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) :
-	uvHandle(uvHandle)
+TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog)
+    : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
@@ -102,17 +100,17 @@ TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) :
 
 	this->uvHandle->data = (void*)this;
 
-	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)on_connection);
+	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
 	if (err)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -137,7 +135,7 @@ void TcpServer::Destroy()
 	// If there are no connections then close now.
 	if (this->connections.empty())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
 	}
 	// Otherwise close all the connections (but not the TCP server).
 	else
@@ -147,6 +145,7 @@ void TcpServer::Destroy()
 		for (auto it = this->connections.begin(); it != this->connections.end(); ++it)
 		{
 			TcpConnection* connection = *it;
+
 			connection->Destroy();
 		}
 	}
@@ -155,10 +154,12 @@ void TcpServer::Destroy()
 void TcpServer::Dump() const
 {
 	MS_DUMP("<TcpServer>");
-	MS_DUMP("  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
-		this->localIP.c_str(), (uint16_t)this->localPort,
-		(!this->isClosing) ? "open" : "closed",
-		this->connections.size());
+	MS_DUMP(
+	    "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
+	    this->localIP.c_str(),
+	    (uint16_t)this->localPort,
+	    (!this->isClosing) ? "open" : "closed",
+	    this->connections.size());
 	MS_DUMP("</TcpServer>");
 }
 
@@ -178,13 +179,13 @@ bool TcpServer::SetLocalAddress()
 	}
 
 	int family;
-	Utils::IP::GetAddressInfo((const struct sockaddr*)&this->localAddr, &family, this->localIP, &this->localPort);
+	Utils::IP::GetAddressInfo(
+	    (const struct sockaddr*)&this->localAddr, &family, this->localIP, &this->localPort);
 
 	return true;
 }
 
-inline
-void TcpServer::onUvConnection(int status)
+inline void TcpServer::onUvConnection(int status)
 {
 	MS_TRACE();
 
@@ -203,15 +204,17 @@ void TcpServer::onUvConnection(int status)
 	// Notify the subclass so it provides an allocated derived class of TCPConnection.
 	TcpConnection* connection = nullptr;
 	userOnTcpConnectionAlloc(&connection);
+
 	MS_ASSERT(connection != nullptr, "TcpConnection pointer was not allocated by the user");
 
 	try
 	{
 		connection->Setup(this, &(this->localAddr), this->localIP, this->localPort);
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		delete connection;
+
 		return;
 	}
 
@@ -228,7 +231,7 @@ void TcpServer::onUvConnection(int status)
 	{
 		connection->Start();
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		MS_ERROR("cannot run the TCP connection, closing the connection: %s", error.what());
 
@@ -242,8 +245,7 @@ void TcpServer::onUvConnection(int status)
 	userOnNewTcpConnection(connection);
 }
 
-inline
-void TcpServer::onUvClosed()
+inline void TcpServer::onUvClosed()
 {
 	MS_TRACE();
 
@@ -254,8 +256,7 @@ void TcpServer::onUvClosed()
 	delete this;
 }
 
-inline
-void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool is_closed_by_peer)
+inline void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
 {
 	MS_TRACE();
 
@@ -278,10 +279,10 @@ void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool is_closed_
 	this->connections.erase(connection);
 
 	// Notify the subclass.
-	userOnTcpConnectionClosed(connection, is_closed_by_peer);
+	userOnTcpConnectionClosed(connection, isClosedByPeer);
 
 	// Check if the server was closing connections, and if this is the last
 	// connection then close the server now.
 	if (wasClosing && this->connections.empty())
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
 }

@@ -1,9 +1,9 @@
 #ifndef MS_DEP_OPENSSL_HPP
-#define	MS_DEP_OPENSSL_HPP
+#define MS_DEP_OPENSSL_HPP
 
 #include "common.hpp"
-#include <openssl/ssl.h>
 #include <openssl/crypto.h>
+#include <openssl/ssl.h>
 #include <uv.h>
 
 /* OpenSSL doc: struct CRYPTO_dynlock_value has to be defined by the application. */
@@ -20,7 +20,7 @@ public:
 
 private:
 	static void SetThreadId(CRYPTO_THREADID* id);
-	static void LockingFunction(int mode, int n, const char *file, int line);
+	static void LockingFunction(int mode, int n, const char* file, int line);
 	static CRYPTO_dynlock_value* DynCreateFunction(const char* file, int line);
 	static void DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* file, int line);
 	static void DynDestroyFunction(CRYPTO_dynlock_value* v, const char* file, int line);

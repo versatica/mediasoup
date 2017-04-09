@@ -6,59 +6,62 @@
 #include <cstring>
 #include <string.h> // std::memset()
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	/* Class methods. */
-
-	FeedbackPsFirItem* FeedbackPsFirItem::Parse(const uint8_t* data, size_t len)
+	namespace RTCP
 	{
-		MS_TRACE();
+		/* Class methods. */
 
-		// data size must be >= header.
-		if (sizeof(Header) > len)
+		FeedbackPsFirItem* FeedbackPsFirItem::Parse(const uint8_t* data, size_t len)
 		{
-			MS_WARN_TAG(rtcp, "not enough space for Fir item, discarded");
+			MS_TRACE();
 
-			return nullptr;
+			// data size must be >= header.
+			if (sizeof(Header) > len)
+			{
+				MS_WARN_TAG(rtcp, "not enough space for Fir item, discarded");
+
+				return nullptr;
+			}
+
+			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+
+			return new FeedbackPsFirItem(header);
 		}
 
-		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+		/* Instance methods. */
 
-		return new FeedbackPsFirItem(header);
+		FeedbackPsFirItem::FeedbackPsFirItem(uint32_t ssrc, uint8_t sequenceNumber)
+		{
+			MS_TRACE();
+
+			this->raw    = new uint8_t[sizeof(Header)];
+			this->header = reinterpret_cast<Header*>(this->raw);
+
+			// Set reserved bits to zero.
+			std::memset(this->header, 0, sizeof(Header));
+
+			this->header->ssrc           = htonl(ssrc);
+			this->header->sequenceNumber = sequenceNumber;
+		}
+
+		size_t FeedbackPsFirItem::Serialize(uint8_t* buffer)
+		{
+			MS_TRACE();
+
+			std::memcpy(buffer, this->header, sizeof(Header));
+
+			return sizeof(Header);
+		}
+
+		void FeedbackPsFirItem::Dump() const
+		{
+			MS_TRACE();
+
+			MS_DUMP("<FeedbackPsFirItem>");
+			MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
+			MS_DUMP("  sequence number : %" PRIu8, this->GetSequenceNumber());
+			MS_DUMP("</FeedbackPsFirItem>");
+		}
 	}
-
-	/* Instance methods. */
-
-	FeedbackPsFirItem::FeedbackPsFirItem(uint32_t ssrc, uint8_t sequence_number)
-	{
-		MS_TRACE();
-
-		this->raw = new uint8_t[sizeof(Header)];
-		this->header = reinterpret_cast<Header*>(this->raw);
-
-		// Set reserved bits to zero.
-		std::memset(this->header, 0, sizeof(Header));
-
-		this->header->ssrc = htonl(ssrc);
-		this->header->sequence_number = sequence_number;
-	}
-
-	size_t FeedbackPsFirItem::Serialize(uint8_t* buffer)
-	{
-		MS_TRACE();
-
-		std::memcpy(buffer, this->header, sizeof(Header));
-
-		return sizeof(Header);
-	}
-
-	void FeedbackPsFirItem::Dump() const
-	{
-		MS_TRACE();
-
-		MS_DUMP("<FeedbackPsFirItem>");
-		MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
-		MS_DUMP("  sequence number : %" PRIu8, this->GetSequenceNumber());
-		MS_DUMP("</FeedbackPsFirItem>");
-	}
-}}
+}

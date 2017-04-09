@@ -111,7 +111,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		SdesItem::Type type = SdesItem::Type::CNAME;
 		std::string value = "outChannel";
 		size_t len = value.size();
-
 		SdesChunk* chunk = SdesChunk::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(chunk->GetSsrc() == ssrc);
@@ -131,12 +130,12 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		SdesItem::Type type = SdesItem::Type::CNAME;
 		std::string value = "outChannel";
 		size_t len = value.size();
-
 		// Create sdes item.
 		SdesItem* item = new SdesItem(type, len, value.c_str());
 
 		// Create sdes chunk.
 		SdesChunk chunk(ssrc);
+
 		chunk.AddItem(item);
 
 		// Check chunk content.
@@ -168,7 +167,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint32_t rtpTs = 1234;
 		uint32_t packetCount = 1234;
 		uint32_t octetCount = 1234;
-
 		SenderReport* report = SenderReport::Parse(buffer, sizeof(SenderReport::Header));
 
 		REQUIRE(report);
@@ -191,7 +189,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint32_t rtpTs = 1234;
 		uint32_t packetCount = 1234;
 		uint32_t octetCount = 1234;
-
 		// Create local report and check content.
 		// SenderReport();
 		SenderReport report1;
@@ -227,9 +224,9 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x04, 0xD2,	// ssrc
-			0x01,                   // fraction_lost
-			0x00, 0x00, 0x04,       // total_lost
-			0x00, 0x00, 0x04, 0xD2,	// last_seq
+			0x01,                   // fractionLost
+			0x00, 0x00, 0x04,       // totalLost
+			0x00, 0x00, 0x04, 0xD2,	// lastSeq
 			0x00, 0x00, 0x04, 0xD2,	// jitter
 			0x00, 0x00, 0x04, 0xD2,	// lsr
 			0x00, 0x00, 0x04, 0xD2  // dlsr
@@ -242,11 +239,9 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint32_t jitter = 1234;
 		uint32_t lastSenderReport = 1234;
 		uint32_t delaySinceLastSenderReport = 1234;
-
 		ReceiverReport* report = ReceiverReport::Parse(buffer, sizeof(ReceiverReport::Header));
 
 		REQUIRE(report);
-
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetFractionLost() == fractionLost);
 		REQUIRE(report->GetTotalLost() == totalLost);
@@ -265,7 +260,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint32_t jitter = 1234;
 		uint32_t lastSenderReport = 1234;
 		uint32_t delaySinceLastSenderReport = 1234;
-
 		// Create local report and check content.
 		// ReceiverReport();
 		ReceiverReport report1;
@@ -304,7 +298,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint32_t ssrc1 = 1111;
 		uint32_t ssrc2 = 2222;
 		std::string reason("hasta la vista");
-
 		// Create local Bye packet and check content.
 		// ByePacket();
 		ByePacket bye1;
@@ -322,6 +315,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 
 		// Locally store the content of the packet.
 		uint8_t buffer[bye1.GetSize()];
+
 		bye1.Serialize(buffer);
 
 		// Parse the buffer of the previous packet and check content.
@@ -341,10 +335,8 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		{
 			0x09, 0xc4, 0b10101010, 0b01010101
 		};
-
 		uint16_t packetId = 2500;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
-
 		FeedbackRtpNackItem* item = FeedbackRtpNackItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -358,7 +350,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 	{
 		uint16_t packetId = 1;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
-
 		// Create local NackItem and check content.
 		// FeedbackRtpNackItem();
 		FeedbackRtpNackItem item1(packetId, lostPacketBitmask);
@@ -391,8 +382,8 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint32_t ssrc = 1234;
 		uint64_t bitrate = 3000000; // bits per second.
 		uint32_t overhead = 1;
-
 		FeedbackRtpTmmbrItem item;
+
 		item.SetSsrc(ssrc);
 		item.SetBitrate(bitrate);
 		item.SetOverhead(overhead);
@@ -402,7 +393,9 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(item.GetOverhead() == overhead);
 
 		uint8_t buffer[8];
+
 		item.Serialize(buffer);
+
 		FeedbackRtpTmmbrItem* item2 = FeedbackRtpTmmbrItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item2);
@@ -420,11 +413,9 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0xba, 0xac, 0x8c, 0xcd,
 			0x18, 0x2c, 0x9e, 0x00
 		};
-
 		uint32_t ssrc     = 3131870413;
 		uint64_t bitrate  = 365504;
 		uint16_t overhead = 0;
-
 		FeedbackRtpTmmbrItem* item = FeedbackRtpTmmbrItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -446,18 +437,16 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0xba, 0xac, 0x8c, 0xcd,
 			0x18, 0x2c, 0x9e, 0x00
 		};
-
 		uint32_t ssrc     = 3131870413;
 		uint64_t bitrate  = 365504;
 		uint16_t overhead = 0;
-
 		FeedbackRtpTmmbrPacket* packet = FeedbackRtpTmmbrPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
-
 		REQUIRE(packet->Begin() != packet->End());
 
 		FeedbackRtpTmmbrItem* item = (*packet->Begin());
+
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetBitrate() == bitrate);
 		REQUIRE(item->GetOverhead() == overhead);
@@ -471,10 +460,8 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		{
 			0x00, 0x01, 0b10101010, 0b01010101
 		};
-
 		uint16_t packetId = 1;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
-
 		FeedbackRtpTlleiItem* item = FeedbackRtpTlleiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -496,7 +483,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0x00, 0x01,             // Lost Packets Counter
 			0x00, 0x01              // Duplication Counter
 		};
-
 		uint32_t sequenceNumber = 1;
 		uint32_t ect0Counter = 1;
 		uint32_t ect1Counter = 1;
@@ -504,7 +490,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		uint16_t notEctCounter = 1;
 		uint16_t lostPackets = 1;
 		uint16_t duplicatedPackets = 1;
-
 		FeedbackRtpEcnItem* item = FeedbackRtpEcnItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -525,11 +510,9 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		{
 			0x00, 0x08, 0x01, 0x01
 		};
-
 		uint16_t first = 1;
 		uint16_t number = 4;
 		uint8_t pictureId = 1;
-
 		FeedbackPsSliItem* item = FeedbackPsSliItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -549,11 +532,9 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0x00, 0x00,             // Native RPSI bit string
 			0x00, 0x00, 0x01, 0x00
 		};
-
 		uint8_t payloadType = 1;
 		uint8_t payloadMask = 1;
 		size_t length = 5;
-
 		FeedbackPsRpsiItem* item = FeedbackPsRpsiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -571,10 +552,8 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0x00, 0x00, 0x00, 0x00, // SSRC
 			0x08, 0x00, 0x00, 0x00 // Seq nr.
 		};
-
 		uint32_t ssrc = 0;
 		uint8_t seq = 8;
-
 		FeedbackPsFirItem* item = FeedbackPsFirItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -592,11 +571,9 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0x08,                   // Seq nr.
 			0x00, 0x00, 0x08        // Reserved | Index
 		};
-
 		uint32_t ssrc = 0;
 		uint8_t seq = 8;
 		uint8_t index = 1;
-
 		FeedbackPsTstnItem* item = FeedbackPsTstnItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -618,13 +595,11 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0x01,                   // VBCM Octet String
 			0x00, 0x00, 0x00        // Padding
 		};
-
 		uint32_t ssrc = 0;
 		uint8_t seq = 8;
 		uint8_t payloadType = 1;
 		uint16_t length = 1;
 		uint8_t valueMask = 1;
-
 		FeedbackPsVbcmItem* item = FeedbackPsVbcmItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -643,9 +618,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		{
 			0x00, 0x00, 0x00, 0x01 // SSRC
 		};
-
 		uint32_t ssrc = 1;
-
 		FeedbackPsLeiItem* item = FeedbackPsLeiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -663,10 +636,8 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 			0x00, 0x00, 0x00, 0x00, // Media SSRC
 			0x00, 0x00, 0x00, 0x01  // Data
 		};
-
 		size_t dataSize = 4;
 		uint8_t dataBitmask = 1;
-
 		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
@@ -683,14 +654,15 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		// Precission lost.
 		uint64_t bitrateParsed = 654320;
 		std::vector<uint32_t> ssrcs { 11111, 22222, 33333, 44444 };
-
 		// Create a packet.
 		FeedbackPsRembPacket packet(sender_ssrc, media_ssrc);
+
 		packet.SetBitrate(bitrate);
 		packet.SetSsrcs(ssrcs);
 
 		// Serialize.
-		uint8_t rtcpBuffer[MS_RTCP_BUFFER_SIZE];
+		uint8_t rtcpBuffer[RTC::RTCP::bufferSize];
+
 		packet.Serialize(rtcpBuffer);
 
 		RTC::RTCP::Packet::CommonHeader* header = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(rtcpBuffer);
@@ -698,6 +670,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 
 		// Recover the packet out of the serialized buffer.
 		FeedbackPsRembPacket* parsed = FeedbackPsRembPacket::Parse(rtcpBuffer, len);
+
 		REQUIRE(parsed);
 		REQUIRE(parsed->GetMediaSsrc() == media_ssrc);
 		REQUIRE(parsed->GetSenderSsrc() == sender_ssrc);

@@ -2,33 +2,30 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpReceiver.hpp"
-#include "RTC/Transport.hpp"
+#include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/FeedbackPsPli.hpp"
-#include "MediaSoupError.hpp"
-#include "Logger.hpp"
+#include "RTC/Transport.hpp"
 
 namespace RTC
 {
-	/* Class variables. */
-
-	uint8_t RtpReceiver::rtcpBuffer[MS_RTCP_BUFFER_SIZE];
-
 	/* Instance methods. */
 
-	RtpReceiver::RtpReceiver(Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind) :
-		rtpReceiverId(rtpReceiverId),
-		kind(kind),
-		listener(listener),
-		notifier(notifier)
+	RtpReceiver::RtpReceiver(
+	    Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind)
+	    : rtpReceiverId(rtpReceiverId)
+	    , kind(kind)
+	    , listener(listener)
+	    , notifier(notifier)
 	{
 		MS_TRACE();
 
 		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MAX_AUDIO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxAudioIntervalMs;
 		else
-			this->maxRtcpInterval = RTC::RTCP::MAX_VIDEO_INTERVAL_MS;
+			this->maxRtcpInterval = RTC::RTCP::maxAudioIntervalMs;
 	}
 
 	RtpReceiver::~RtpReceiver()
@@ -109,9 +106,9 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::rtpReceiver_close:
 			{
-			#ifdef MS_LOG_DEV
+#ifdef MS_LOG_DEV
 				uint32_t rtpReceiverId = this->rtpReceiverId;
-			#endif
+#endif
 
 				Destroy();
 
@@ -140,7 +137,7 @@ namespace RTC
 				{
 					this->rtpParameters = new RTC::RtpParameters(request->data);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -152,7 +149,7 @@ namespace RTC
 				{
 					this->listener->onRtpReceiverParameters(this);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					// Rollback previous parameters.
 					this->rtpParameters = previousRtpParameters;
@@ -272,8 +269,8 @@ namespace RTC
 
 			eventData[k_class] = "RtpReceiver";
 
-			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpraw", eventData,
-				packet->GetData(), packet->GetSize());
+			this->notifier->EmitWithBinary(
+			    this->rtpReceiverId, "rtpraw", eventData, packet->GetData(), packet->GetSize());
 		}
 
 		// Emit "rtpobject" is enabled.
@@ -284,27 +281,27 @@ namespace RTC
 
 			eventData[k_class] = "RtpReceiver";
 
-			jsonObject[k_payloadType] = (Json::UInt)packet->GetPayloadType();
-			jsonObject[k_marker] = packet->HasMarker();
+			jsonObject[k_payloadType]    = (Json::UInt)packet->GetPayloadType();
+			jsonObject[k_marker]         = packet->HasMarker();
 			jsonObject[k_sequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
-			jsonObject[k_timestamp] = (Json::UInt)packet->GetTimestamp();
-			jsonObject[k_ssrc] = (Json::UInt)packet->GetSsrc();
+			jsonObject[k_timestamp]      = (Json::UInt)packet->GetTimestamp();
+			jsonObject[k_ssrc]           = (Json::UInt)packet->GetSsrc();
 
 			eventData[k_object] = jsonObject;
 
-			this->notifier->EmitWithBinary(this->rtpReceiverId, "rtpobject", eventData,
-				packet->GetPayload(), packet->GetPayloadLength());
+			this->notifier->EmitWithBinary(
+			    this->rtpReceiverId, "rtpobject", eventData, packet->GetPayload(), packet->GetPayloadLength());
 		}
 	}
 
-	void RtpReceiver::GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now)
+	void RtpReceiver::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
 		for (auto& kv : this->rtpStreams)
 		{
-			auto rtpStream = kv.second;
+			auto rtpStream                    = kv.second;
 			RTC::RTCP::ReceiverReport* report = rtpStream->GetRtcpReceiverReport();
 
 			report->SetSsrc(rtpStream->GetSsrc());
@@ -322,15 +319,14 @@ namespace RTC
 			return;
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+		if (packet->GetSize() > RTC::RTCP::bufferSize)
 		{
-			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
-				packet->GetSize());
+			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
 
 			return;
 		}
 
-		packet->Serialize(RtpReceiver::rtcpBuffer);
+		packet->Serialize(RTC::RTCP::buffer);
 		this->transport->SendRtcpPacket(packet);
 	}
 
@@ -342,15 +338,14 @@ namespace RTC
 			return;
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet->GetSize() > MS_RTCP_BUFFER_SIZE)
+		if (packet->GetSize() > RTC::RTCP::bufferSize)
 		{
-			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
-				packet->GetSize());
+			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
 
 			return;
 		}
 
-		packet->Serialize(RtpReceiver::rtcpBuffer);
+		packet->Serialize(RTC::RTCP::buffer);
 		this->transport->SendRtcpPacket(packet);
 	}
 
@@ -384,10 +379,10 @@ namespace RTC
 			return;
 
 		// Get the codec of the stream/encoding.
-		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
-		bool useNack = false;
-		bool usePli = false;
-		bool useRemb = false;
+		auto& codec           = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack          = false;
+		bool usePli           = false;
+		bool useRemb          = false;
 		uint8_t absSendTimeId = 0;
 
 		for (auto& fb : codec.rtcpFeedback)
@@ -423,12 +418,12 @@ namespace RTC
 		// Create stream params.
 		RTC::RtpStream::Params params;
 
-		params.ssrc = ssrc;
-		params.payloadType = codec.payloadType;
-		params.mime = codec.mime;
-		params.clockRate = codec.clockRate;
-		params.useNack = useNack;
-		params.usePli = usePli;
+		params.ssrc          = ssrc;
+		params.payloadType   = codec.payloadType;
+		params.mime          = codec.mime;
+		params.clockRate     = codec.clockRate;
+		params.useNack       = useNack;
+		params.usePli        = usePli;
 		params.absSendTimeId = absSendTimeId;
 
 		// Create a RtpStreamRecv for receiving a media stream.
@@ -459,7 +454,7 @@ namespace RTC
 			return;
 
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
-		auto it = seqNumbers.begin();
+		auto it        = seqNumbers.begin();
 		const auto end = seqNumbers.end();
 
 		while (it != end)
@@ -491,15 +486,14 @@ namespace RTC
 		}
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet.GetSize() > MS_RTCP_BUFFER_SIZE)
+		if (packet.GetSize() > RTC::RTCP::bufferSize)
 		{
-			MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)",
-				packet.GetSize());
+			MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)", packet.GetSize());
 
 			return;
 		}
 
-		packet.Serialize(RtpReceiver::rtcpBuffer);
+		packet.Serialize(RTC::RTCP::buffer);
 		this->transport->SendRtcpPacket(&packet);
 	}
 
@@ -510,7 +504,7 @@ namespace RTC
 
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
 
-		packet.Serialize(RtpReceiver::rtcpBuffer);
+		packet.Serialize(RTC::RTCP::buffer);
 
 		// Send two, because it's free.
 		this->transport->SendRtcpPacket(&packet);

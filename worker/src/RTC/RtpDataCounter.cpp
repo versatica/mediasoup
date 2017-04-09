@@ -18,7 +18,7 @@ namespace RTC
 
 		// Set data in the index before the oldest index.
 		uint32_t offset = this->windowSize - 1;
-		uint32_t index = this->oldestIndex + offset;
+		uint32_t index  = this->oldestIndex + offset;
 
 		if (index >= this->windowSize)
 			index -= this->windowSize;
@@ -34,7 +34,7 @@ namespace RTC
 		this->RemoveOldData(now);
 
 		int64_t nominalWindowSize = now - this->oldestTime;
-		float scale = this->scale / nominalWindowSize;
+		float scale               = this->scale / nominalWindowSize;
 
 		return static_cast<uint32_t>(this->totalCount * scale + 0.5f);
 	}

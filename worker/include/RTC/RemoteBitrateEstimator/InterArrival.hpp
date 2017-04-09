@@ -23,23 +23,30 @@ namespace RTC
 	public:
 		// After this many packet groups received out of order InterArrival will
 		// reset, assuming that clocks have made a jump.
-		static constexpr int kReorderedResetThreshold = 3;
+		static constexpr int kReorderedResetThreshold          = 3;
 		static constexpr int64_t kArrivalTimeOffsetThresholdMs = 3000;
 
 		// A timestamp group is defined as all packets with a timestamp which are at
-		// most timestamp_group_length_ticks older than the first timestamp in that
+		// most timestampGroupLengthTicks older than the first timestamp in that
 		// group.
-		InterArrival(uint32_t timestamp_group_length_ticks, double timestamp_to_ms_coeff, bool enable_burst_grouping);
+		InterArrival(uint32_t timestampGroupLengthTicks, double timestampToMsCoeff, bool enableBurstGrouping);
 
 		// This function returns true if a delta was computed, or false if the current
 		// group is still incomplete or if only one group has been completed.
 		// |timestamp| is the timestamp.
-		// |arrival_time_ms| is the local time at which the packet arrived.
-		// |packet_size| is the size of the packet.
-		// |timestamp_delta| (output) is the computed timestamp delta.
-		// |arrival_time_delta_ms| (output) is the computed arrival-time delta.
-		// |packet_size_delta| (output) is the computed size delta.
-		bool ComputeDeltas(uint32_t timestamp, int64_t arrival_time_ms, int64_t system_time_ms, size_t packet_size, uint32_t* timestamp_delta, int64_t* arrival_time_delta_ms, int* packet_size_delta);
+		// |arrivalTimeMs| is the local time at which the packet arrived.
+		// |packetSize| is the size of the packet.
+		// |timestampDelta| (output) is the computed timestamp delta.
+		// |arrivalTimeDeltaMs| (output) is the computed arrival-time delta.
+		// |packetSizeDelta| (output) is the computed size delta.
+		bool ComputeDeltas(
+		    uint32_t timestamp,
+		    int64_t arrivalTimeMs,
+		    int64_t systemTimeMs,
+		    size_t packetSize,
+		    uint32_t* timestampDelta,
+		    int64_t* arrivalTimeDeltaMs,
+		    int* packetSizeDelta);
 
 	private:
 		struct TimestampGroup
@@ -47,54 +54,54 @@ namespace RTC
 			TimestampGroup();
 			bool IsFirstPacket() const;
 
-			size_t size = 0;
-			uint32_t first_timestamp = 0;
-			uint32_t timestamp = 0;
-			int64_t complete_time_ms = 0;
-			int64_t last_system_time_ms = 0;
+			size_t size              = 0;
+			uint32_t firstTimestamp  = 0;
+			uint32_t timestamp       = 0;
+			int64_t completeTimeMs   = 0;
+			int64_t lastSystemTimeMs = 0;
 		};
 
 		// Returns true if the packet with timestamp |timestamp| arrived in order.
 		bool PacketInOrder(uint32_t timestamp);
 		// Returns true if the last packet was the end of the current batch and the
 		// packet with |timestamp| is the first of a new batch.
-		bool NewTimestampGroup(int64_t arrival_time_ms, uint32_t timestamp) const;
-		bool BelongsToBurst(int64_t arrival_time_ms, uint32_t timestamp) const;
+		bool NewTimestampGroup(int64_t arrivalTimeMs, uint32_t timestamp) const;
+		bool BelongsToBurst(int64_t arrivalTimeMs, uint32_t timestamp) const;
 		void Reset();
 
 		const uint32_t kTimestampGroupLengthTicks;
 		TimestampGroup currentTimestampGroup;
 		TimestampGroup prevTimestampGroup;
-		double timestampToMsCoeff = 0;
-		bool burstGrouping = false;
+		double timestampToMsCoeff          = 0;
+		bool burstGrouping                 = false;
 		int numConsecutiveReorderedPackets = 0;
 	};
 
 	/* Inline methods. */
 
-	inline
-	InterArrival::TimestampGroup::TimestampGroup() :
-		size(0),
-		first_timestamp(0),
-		timestamp(0),
-		complete_time_ms(-1)
-	{}
-
-	inline
-	bool InterArrival::TimestampGroup::IsFirstPacket() const
+	inline InterArrival::TimestampGroup::TimestampGroup()
+	    : size(0)
+	    , firstTimestamp(0)
+	    , timestamp(0)
+	    , completeTimeMs(-1)
 	{
-		return complete_time_ms == -1;
 	}
 
-	inline
-	InterArrival::InterArrival(uint32_t timestamp_group_length_ticks, double timestamp_to_ms_coeff, bool enable_burst_grouping) :
-		kTimestampGroupLengthTicks(timestamp_group_length_ticks),
-		currentTimestampGroup(),
-		prevTimestampGroup(),
-		timestampToMsCoeff(timestamp_to_ms_coeff),
-		burstGrouping(enable_burst_grouping),
-		numConsecutiveReorderedPackets(0)
-	{}
+	inline bool InterArrival::TimestampGroup::IsFirstPacket() const
+	{
+		return completeTimeMs == -1;
+	}
+
+	inline InterArrival::InterArrival(
+	    uint32_t timestampGroupLengthTicks, double timestampToMsCoeff, bool enableBurstGrouping)
+	    : kTimestampGroupLengthTicks(timestampGroupLengthTicks)
+	    , currentTimestampGroup()
+	    , prevTimestampGroup()
+	    , timestampToMsCoeff(timestampToMsCoeff)
+	    , burstGrouping(enableBurstGrouping)
+	    , numConsecutiveReorderedPackets(0)
+	{
+	}
 }
 
 #endif

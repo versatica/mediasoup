@@ -1,5 +1,5 @@
 #ifndef MS_LOG_LEVEL_HPP
-#define	MS_LOG_LEVEL_HPP
+#define MS_LOG_LEVEL_HPP
 
 #include "common.hpp"
 

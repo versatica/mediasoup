@@ -1,5 +1,5 @@
 #ifndef MS_DEP_LIBUV_HPP
-#define	MS_DEP_LIBUV_HPP
+#define MS_DEP_LIBUV_HPP
 
 #include "common.hpp"
 #include <uv.h>
@@ -20,14 +20,12 @@ private:
 
 /* Inline static methods. */
 
-inline
-uv_loop_t* DepLibUV::GetLoop()
+inline uv_loop_t* DepLibUV::GetLoop()
 {
 	return DepLibUV::loop;
 }
 
-inline
-uint64_t DepLibUV::GetTime()
+inline uint64_t DepLibUV::GetTime()
 {
 	return uv_now(DepLibUV::loop);
 }

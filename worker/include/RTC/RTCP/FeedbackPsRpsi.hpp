@@ -17,90 +17,87 @@
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 */
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	class FeedbackPsRpsiItem
-		: public FeedbackItem
+	namespace RTCP
 	{
-		const static size_t MaxBitStringSize = 6;
-		const static size_t BitStringOffset = 2;
-
-	private:
-		struct Header
+		class FeedbackPsRpsiItem : public FeedbackItem
 		{
-			uint8_t padding_bits;
-			uint8_t zero:1;
-			uint8_t payload_type:7;
-			uint8_t bit_string[MaxBitStringSize];
+			const static size_t MaxBitStringSize = 6;
+			const static size_t BitStringOffset  = 2;
+
+		private:
+			struct Header
+			{
+				uint8_t paddingBits;
+				uint8_t zero : 1;
+				uint8_t payloadType : 7;
+				uint8_t bitString[MaxBitStringSize];
+			};
+
+		public:
+			static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::RPSI;
+
+		public:
+			static FeedbackPsRpsiItem* Parse(const uint8_t* data, size_t len);
+
+		public:
+			explicit FeedbackPsRpsiItem(Header* header);
+			explicit FeedbackPsRpsiItem(FeedbackPsRpsiItem* item);
+			FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length);
+			virtual ~FeedbackPsRpsiItem(){};
+
+			bool IsCorrect() const;
+			uint8_t GetPayloadType() const;
+			uint8_t* GetBitString() const;
+			size_t GetLength() const;
+
+			/* Virtual methods inherited from FeedbackItem. */
+		public:
+			virtual void Dump() const override;
+			virtual size_t Serialize(uint8_t* buffer) override;
+			virtual size_t GetSize() const override;
+
+		private:
+			Header* header = nullptr;
+			size_t length  = 0;
 		};
 
-	public:
-		static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::RPSI;
+		// Rpsi packet declaration.
+		typedef FeedbackPsItemsPacket<FeedbackPsRpsiItem> FeedbackPsRpsiPacket;
 
-	public:
-		static FeedbackPsRpsiItem* Parse(const uint8_t* data, size_t len);
+		/* Inline instance methods. */
 
-	public:
-		explicit FeedbackPsRpsiItem(Header* header);
-		explicit FeedbackPsRpsiItem(FeedbackPsRpsiItem* item);
-		FeedbackPsRpsiItem(uint8_t payload_type, uint8_t* bit_string, size_t length);
-		virtual ~FeedbackPsRpsiItem() {};
+		inline FeedbackPsRpsiItem::FeedbackPsRpsiItem(FeedbackPsRpsiItem* item)
+		    : header(item->header)
+		{
+		}
 
-		bool IsCorrect() const;
-		uint8_t GetPayloadType() const;
-		uint8_t* GetBitString() const;
-		size_t GetLength() const;
+		inline size_t FeedbackPsRpsiItem::GetSize() const
+		{
+			return sizeof(Header);
+		}
 
-	/* Virtual methods inherited from FeedbackItem. */
-	public:
-		virtual void Dump() const override;
-		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() const override;
+		inline uint8_t FeedbackPsRpsiItem::GetPayloadType() const
+		{
+			return this->header->payloadType;
+		}
 
-	private:
-		Header* header = nullptr;
-		size_t length = 0;
-	};
+		inline uint8_t* FeedbackPsRpsiItem::GetBitString() const
+		{
+			return this->header->bitString;
+		}
 
-	// Rpsi packet declaration.
-	typedef FeedbackPsItemsPacket<FeedbackPsRpsiItem> FeedbackPsRpsiPacket;
+		inline size_t FeedbackPsRpsiItem::GetLength() const
+		{
+			return this->length;
+		}
 
-	/* Inline instance methods. */
-
-	inline
-	FeedbackPsRpsiItem::FeedbackPsRpsiItem(FeedbackPsRpsiItem* item) :
-		header(item->header)
-	{}
-
-	inline
-	size_t FeedbackPsRpsiItem::GetSize() const
-	{
-		return sizeof(Header);
+		inline bool FeedbackPsRpsiItem::IsCorrect() const
+		{
+			return this->isCorrect;
+		}
 	}
-
-	inline
-	uint8_t FeedbackPsRpsiItem::GetPayloadType() const
-	{
-		return this->header->payload_type;
-	}
-
-	inline
-	uint8_t* FeedbackPsRpsiItem::GetBitString() const
-	{
-		return this->header->bit_string;
-	}
-
-	inline
-	size_t FeedbackPsRpsiItem::GetLength() const
-	{
-		return this->length;
-	}
-
-	inline
-	bool FeedbackPsRpsiItem::IsCorrect() const
-	{
-		return this->isCorrect;
-	}
-}}
+}
 
 #endif

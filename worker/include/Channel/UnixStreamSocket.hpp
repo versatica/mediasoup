@@ -2,14 +2,13 @@
 #define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "handles/UnixStreamSocket.hpp"
 #include "Channel/Request.hpp"
+#include "handles/UnixStreamSocket.hpp"
 #include <json/json.h>
 
 namespace Channel
 {
-	class UnixStreamSocket :
-		public ::UnixStreamSocket
+	class UnixStreamSocket : public ::UnixStreamSocket
 	{
 	public:
 		class Listener
@@ -19,9 +18,6 @@ namespace Channel
 			virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
 		};
 
-	private:
-		static uint8_t writeBuffer[];
-
 	public:
 		explicit UnixStreamSocket(int fd);
 
@@ -30,23 +26,23 @@ namespace Channel
 
 	public:
 		void SetListener(Listener* listener);
-		void Send(Json::Value &json);
-		void SendLog(char* ns_payload, size_t ns_payload_len);
-		void SendBinary(const uint8_t* ns_payload, size_t ns_payload_len);
+		void Send(Json::Value& json);
+		void SendLog(char* nsPayload, size_t nsPayloadLen);
+		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
 
-	/* Pure virtual methods inherited from ::UnixStreamSocket. */
+		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		virtual void userOnUnixStreamRead() override;
-		virtual void userOnUnixStreamSocketClosed(bool is_closed_by_peer) override;
+		virtual void userOnUnixStreamSocketClosed(bool isClosedByPeer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		Json::CharReader* jsonReader = nullptr;
+		Json::CharReader* jsonReader   = nullptr;
 		Json::StreamWriter* jsonWriter = nullptr;
-		size_t msgStart = 0; // Where the latest message starts.
-		bool closed = false;
+		size_t msgStart                = 0; // Where the latest message starts.
+		bool closed                    = false;
 	};
 }
 

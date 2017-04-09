@@ -1,16 +1,22 @@
+Language: Cpp
 AccessModifierOffset: -2
-AlignConsecutiveAssignments: false
-AlignEscapedNewlinesLeft: true
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlinesLeft: false
 AlignOperands: true
 AlignTrailingComments: true
-AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
-AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: true
+BinPackArguments: false
+BinPackParameters: false
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterClass: true
@@ -23,32 +29,47 @@ BraceWrapping:
   BeforeCatch: true
   BeforeElse: true
   IndentBraces: false
-BinPackArguments: true
 BreakBeforeBinaryOperators: None
+BreakBeforeInheritanceComma: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: true
 BreakStringLiterals: true
-ColumnLimit: 150
+ColumnLimit: 100
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
-ConstructorInitializerIndentWidth: 1
-DerivePointerAlignment: true
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+DerivePointerAlignment: false
+DisableFormat: false
+ExperimentalAutoDetectBinPacking: true
+FixNamespaceComments: true
+IncludeCategories:
+  - Regex:    '"common.hpp"'
+    Priority: 1
+  - Regex:    '^"(Channel|RTC|handles)/'
+    Priority: 3
+  - Regex:    '"*"'
+    Priority: 2
+  - Regex:    '^<(uv|openssl|srtp|json|netstring)(.|/)'
+    Priority: 4
+  - Regex:    '<*>'
+    Priority: 5
+IncludeIsMainRegex: '$'
 IndentCaseLabels: true
 IndentWidth: 2
-IndentWrappedFunctionNames: true
+IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
-Language: Cpp
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All
-PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyBreakBeforeFirstCallParameter: 5
 PenaltyBreakComment: 100
-PenaltyBreakFirstLessLess: 100
-PenaltyBreakString: 100
-PenaltyExcessCharacter: 100
-PenaltyReturnTypeOnItsOwnLine: 100
+PenaltyBreakFirstLessLess: 200
+PenaltyBreakString: 20
+PenaltyExcessCharacter: 10
+PenaltyReturnTypeOnItsOwnLine: 1000
 PointerAlignment: Left
-ReflowComments: false
-SortIncludes: false
-SpaceAfterCStyleCast: true
+ReflowComments: true
+SortIncludes: true
+SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
@@ -56,6 +77,7 @@ SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
 SpacesInAngles: false
 SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: true
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: Cpp11

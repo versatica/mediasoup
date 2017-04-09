@@ -8,67 +8,61 @@
 
 #include "handles/UnixStreamSocket.hpp"
 #include "DepLibUV.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
-#include <cstring> // std::memcpy()
+#include "MediaSoupError.hpp"
 #include <cstdlib> // std::malloc(), std::free()
+#include <cstring> // std::memcpy()
 
 /* Static methods for UV callbacks. */
 
-static inline
-void on_alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
+inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	static_cast<UnixStreamSocket*>(handle->data)->onUvReadAlloc(suggested_size, buf);
+	static_cast<UnixStreamSocket*>(handle->data)->onUvReadAlloc(suggestedSize, buf);
 }
 
-static inline
-void on_read(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
+inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
 	static_cast<UnixStreamSocket*>(handle->data)->onUvRead(nread, buf);
 }
 
-static inline
-void on_write(uv_write_t* req, int status)
+inline static void onWrite(uv_write_t* req, int status)
 {
-	UnixStreamSocket::UvWriteData* write_data = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
-	UnixStreamSocket* socket = write_data->socket;
+	UnixStreamSocket::UvWriteData* writeData = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
+	UnixStreamSocket* socket                 = writeData->socket;
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
-	std::free(write_data);
+	std::free(writeData);
 
 	// Just notify the UnixStreamSocket when error.
 	if (status)
 		socket->onUvWriteError(status);
 }
 
-static inline
-void on_shutdown(uv_shutdown_t* req, int status)
+inline static void onShutdown(uv_shutdown_t* req, int status)
 {
 	static_cast<UnixStreamSocket*>(req->data)->onUvShutdown(req, status);
 }
 
-static inline
-void on_close(uv_handle_t* handle)
+inline static void onClose(uv_handle_t* handle)
 {
 	static_cast<UnixStreamSocket*>(handle->data)->onUvClosed();
 }
 
-static inline
-void on_error_close(uv_handle_t* handle)
+inline static void onErrorClose(uv_handle_t* handle)
 {
 	delete handle;
 }
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) :
-	bufferSize(bufferSize)
+UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize)
+    : bufferSize(bufferSize)
 {
 	MS_TRACE_STD();
 
 	int err;
 
-	this->uvHandle = new uv_pipe_t;
+	this->uvHandle       = new uv_pipe_t;
 	this->uvHandle->data = (void*)this;
 
 	err = uv_pipe_init(DepLibUV::GetLoop(), this->uvHandle, 0);
@@ -76,21 +70,24 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) :
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
+
 		MS_THROW_ERROR_STD("uv_pipe_init() failed: %s", uv_strerror(err));
 	}
 
 	err = uv_pipe_open(this->uvHandle, fd);
 	if (err)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+
 		MS_THROW_ERROR_STD("uv_pipe_open() failed: %s", uv_strerror(err));
 	}
 
 	// Start reading.
-	err = uv_read_start((uv_stream_t*)this->uvHandle, (uv_alloc_cb)on_alloc, (uv_read_cb)on_read);
+	err = uv_read_start((uv_stream_t*)this->uvHandle, (uv_alloc_cb)onAlloc, (uv_read_cb)onRead);
 	if (err)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_error_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+
 		MS_THROW_ERROR_STD("uv_read_start() failed: %s", uv_strerror(err));
 	}
 
@@ -128,15 +125,15 @@ void UnixStreamSocket::Destroy()
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		uv_shutdown_t* req = new uv_shutdown_t;
-		req->data = (void*)this;
-		err = uv_shutdown(req, (uv_stream_t*)this->uvHandle, (uv_shutdown_cb)on_shutdown);
+		req->data          = (void*)this;
+		err                = uv_shutdown(req, (uv_stream_t*)this->uvHandle, (uv_shutdown_cb)onShutdown);
 		if (err)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
 	// Otherwise directly close the socket.
 	else
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
+		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
 	}
 }
 
@@ -155,7 +152,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	// First try uv_try_write(). In case it can not directly send all the given data
 	// then build a uv_req_t and use uv_write().
 
-	buffer = uv_buf_init((char*)data, len);
+	buffer  = uv_buf_init((char*)data, len);
 	written = uv_try_write((uv_stream_t*)this->uvHandle, &buffer, 1);
 
 	// All the data was written. Done.
@@ -166,7 +163,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	// Cannot write any data at first time. Use uv_write().
 	else if (written == UV_EAGAIN || written == UV_ENOSYS)
 	{
-		// Set written to 0 so pending_len can be properly calculated.
+		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
 	// Error. Should not happen.
@@ -175,27 +172,27 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		MS_ERROR_STD("uv_try_write() failed, closing the socket: %s", uv_strerror(written));
 
 		Destroy();
+
 		return;
 	}
 
-	size_t pending_len = len - written;
+	size_t pendingLen = len - written;
 
 	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* write_data = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pending_len));
+	UvWriteData* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
-	write_data->socket = this;
-	std::memcpy(write_data->store, data + written, pending_len);
-	write_data->req.data = (void*)write_data;
+	writeData->socket = this;
+	std::memcpy(writeData->store, data + written, pendingLen);
+	writeData->req.data = (void*)writeData;
 
-	buffer = uv_buf_init((char*)write_data->store, pending_len);
+	buffer = uv_buf_init((char*)writeData->store, pendingLen);
 
-	err = uv_write(&write_data->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)on_write);
+	err = uv_write(&writeData->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)onWrite);
 	if (err)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
-inline
-void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
+inline void UnixStreamSocket::onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
@@ -204,7 +201,7 @@ void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.
-	buf->base = (char *)(this->buffer + this->bufferDataLen);
+	buf->base = (char*)(this->buffer + this->bufferDataLen);
 	// Give UV all the remaining space in the buffer.
 	if (this->bufferSize > this->bufferDataLen)
 	{
@@ -218,8 +215,7 @@ void UnixStreamSocket::onUvReadAlloc(size_t suggested_size, uv_buf_t* buf)
 	}
 }
 
-inline
-void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
+inline void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
@@ -255,8 +251,7 @@ void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
 	}
 }
 
-inline
-void UnixStreamSocket::onUvWriteError(int error)
+inline void UnixStreamSocket::onUvWriteError(int error)
 {
 	MS_TRACE_STD();
 
@@ -271,8 +266,7 @@ void UnixStreamSocket::onUvWriteError(int error)
 	Destroy();
 }
 
-inline
-void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
+inline void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 {
 	MS_TRACE_STD();
 
@@ -284,11 +278,10 @@ void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 	}
 
 	// Now do close the handle.
-	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)on_close);
+	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
 }
 
-inline
-void UnixStreamSocket::onUvClosed()
+inline void UnixStreamSocket::onUvClosed()
 {
 	MS_TRACE_STD();
 

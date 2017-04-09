@@ -19,103 +19,100 @@
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	class FeedbackPsVbcmItem
-		: public FeedbackItem
+	namespace RTCP
 	{
-	private:
-		struct Header
+		class FeedbackPsVbcmItem : public FeedbackItem
 		{
-			uint32_t ssrc;
-			uint8_t sequence_number;
-			uint8_t zero:1;
-			uint8_t payload_type:7;
-			uint16_t length;
-			uint8_t value[];
+		private:
+			struct Header
+			{
+				uint32_t ssrc;
+				uint8_t sequenceNumber;
+				uint8_t zero : 1;
+				uint8_t payloadType : 7;
+				uint16_t length;
+				uint8_t value[];
+			};
+
+		public:
+			static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::FIR;
+
+		public:
+			static FeedbackPsVbcmItem* Parse(const uint8_t* data, size_t len);
+
+		public:
+			explicit FeedbackPsVbcmItem(Header* header);
+			explicit FeedbackPsVbcmItem(FeedbackPsVbcmItem* item);
+			FeedbackPsVbcmItem(
+			    uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value);
+			virtual ~FeedbackPsVbcmItem(){};
+
+			uint32_t GetSsrc() const;
+			uint8_t GetSequenceNumber() const;
+			uint8_t GetPayloadType() const;
+			uint16_t GetLength() const;
+			uint8_t* GetValue() const;
+
+			/* Virtual methods inherited from FeedbackItem. */
+		public:
+			virtual void Dump() const override;
+			virtual size_t Serialize(uint8_t* buffer) override;
+			virtual size_t GetSize() const override;
+
+		private:
+			Header* header = nullptr;
 		};
 
-	public:
-		static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::FIR;
+		// Vbcm packet declaration
+		typedef FeedbackPsItemsPacket<FeedbackPsVbcmItem> FeedbackPsVbcmPacket;
 
-	public:
-		static FeedbackPsVbcmItem* Parse(const uint8_t* data, size_t len);
+		/* Inline instance methods. */
 
-	public:
-		explicit FeedbackPsVbcmItem(Header* header);
-		explicit FeedbackPsVbcmItem(FeedbackPsVbcmItem* item);
-		FeedbackPsVbcmItem(uint32_t ssrc, uint8_t sequence_number, uint8_t payload_type, uint16_t length, uint8_t* value);
-		virtual ~FeedbackPsVbcmItem() {};
+		inline FeedbackPsVbcmItem::FeedbackPsVbcmItem(Header* header)
+		    : header(header)
+		{
+		}
 
-		uint32_t GetSsrc() const;
-		uint8_t  GetSequenceNumber() const;
-		uint8_t  GetPayloadType() const;
-		uint16_t GetLength() const;
-		uint8_t* GetValue() const;
+		inline FeedbackPsVbcmItem::FeedbackPsVbcmItem(FeedbackPsVbcmItem* item)
+		    : header(item->header)
+		{
+		}
 
-	/* Virtual methods inherited from FeedbackItem. */
-	public:
-		virtual void Dump() const override;
-		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() const override;
+		inline size_t FeedbackPsVbcmItem::GetSize() const
+		{
+			size_t size = 8 + size_t(this->header->length);
 
-	private:
-		Header* header = nullptr;
-	};
+			// Consider pading to 32 bits (4 bytes) boundary.
+			return (size + 3) & ~3;
+		}
 
-	// Vbcm packet declaration
-	typedef FeedbackPsItemsPacket<FeedbackPsVbcmItem> FeedbackPsVbcmPacket;
+		inline uint32_t FeedbackPsVbcmItem::GetSsrc() const
+		{
+			return (uint32_t)ntohl(this->header->ssrc);
+		}
 
-	/* Inline instance methods. */
+		inline uint8_t FeedbackPsVbcmItem::GetSequenceNumber() const
+		{
+			return (uint8_t)this->header->sequenceNumber;
+		}
 
-	inline
-	FeedbackPsVbcmItem::FeedbackPsVbcmItem(Header* header):
-		header(header)
-	{}
+		inline uint8_t FeedbackPsVbcmItem::GetPayloadType() const
+		{
+			return (uint8_t)this->header->payloadType;
+		}
 
-	inline
-	FeedbackPsVbcmItem::FeedbackPsVbcmItem(FeedbackPsVbcmItem* item):
-		header(item->header)
-	{}
+		inline uint16_t FeedbackPsVbcmItem::GetLength() const
+		{
+			return (uint16_t)ntohs(this->header->length);
+		}
 
-	inline
-	size_t FeedbackPsVbcmItem::GetSize() const
-	{
-		size_t size =  8 + size_t(this->header->length);
-
-		// Consider pading to 32 bits (4 bytes) boundary.
-		return (size + 3) & ~3;
+		inline uint8_t* FeedbackPsVbcmItem::GetValue() const
+		{
+			return this->header->value;
+		}
 	}
-
-	inline
-	uint32_t FeedbackPsVbcmItem::GetSsrc() const
-	{
-		return (uint32_t)ntohl(this->header->ssrc);
-	}
-
-	inline
-	uint8_t FeedbackPsVbcmItem::GetSequenceNumber() const
-	{
-		return (uint8_t)this->header->sequence_number;
-	}
-
-	inline
-	uint8_t FeedbackPsVbcmItem::GetPayloadType() const
-	{
-		return (uint8_t)this->header->payload_type;
-	}
-
-	inline
-	uint16_t FeedbackPsVbcmItem::GetLength() const
-	{
-		return (uint16_t)ntohs(this->header->length);
-	}
-
-	inline
-	uint8_t* FeedbackPsVbcmItem::GetValue() const
-	{
-		return this->header->value;
-	}
-}}
+}
 
 #endif

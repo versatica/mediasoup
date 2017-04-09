@@ -25,85 +25,81 @@
    |  ...                                                          |
    */
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	class FeedbackPsRembPacket
-		: public FeedbackPsAfbPacket
+	namespace RTCP
 	{
-	public:
-		// 'R' 'E' 'M' 'B'.
-		static uint32_t UniqueIdentifier;
+		class FeedbackPsRembPacket : public FeedbackPsAfbPacket
+		{
+		public:
+			// 'R' 'E' 'M' 'B'.
+			static uint32_t UniqueIdentifier;
 
-	public:
-		static FeedbackPsRembPacket* Parse(const uint8_t* data, size_t len);
+		public:
+			static FeedbackPsRembPacket* Parse(const uint8_t* data, size_t len);
 
-	public:
-		// Parsed Report. Points to an external data.
-		explicit FeedbackPsRembPacket(CommonHeader* commonHeader);
-		FeedbackPsRembPacket(uint32_t sender_ssrc, uint32_t media_ssrc);
-		virtual ~FeedbackPsRembPacket() {};
+		public:
+			// Parsed Report. Points to an external data.
+			explicit FeedbackPsRembPacket(CommonHeader* commonHeader);
+			FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
+			virtual ~FeedbackPsRembPacket(){};
 
-		bool IsCorrect();
-		void SetBitrate(uint64_t bitrate);
-		void SetSsrcs(const std::vector<uint32_t>& ssrcs);
-		uint64_t GetBitrate();
-		const std::vector<uint32_t>& GetSsrcs();
+			bool IsCorrect();
+			void SetBitrate(uint64_t bitrate);
+			void SetSsrcs(const std::vector<uint32_t>& ssrcs);
+			uint64_t GetBitrate();
+			const std::vector<uint32_t>& GetSsrcs();
 
-	/* Pure virtual methods inherited from Packet. */
-	public:
-		virtual void Dump() const override;
-		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() const override;
+			/* Pure virtual methods inherited from Packet. */
+		public:
+			virtual void Dump() const override;
+			virtual size_t Serialize(uint8_t* buffer) override;
+			virtual size_t GetSize() const override;
 
-	private:
-		std::vector<uint32_t> ssrcs;
-		// Bitrate represented in bps.
-		uint64_t bitrate = 0;
-		bool isCorrect = true;
-	};
+		private:
+			std::vector<uint32_t> ssrcs;
+			// Bitrate represented in bps.
+			uint64_t bitrate = 0;
+			bool isCorrect   = true;
+		};
 
-	/* Inline instance methods. */
+		/* Inline instance methods. */
 
-	inline
-	FeedbackPsRembPacket::FeedbackPsRembPacket(uint32_t sender_ssrc, uint32_t media_ssrc):
-		FeedbackPsAfbPacket(sender_ssrc, media_ssrc, FeedbackPsAfbPacket::Application::REMB)
-	{}
+		inline FeedbackPsRembPacket::FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
+		    : FeedbackPsAfbPacket(senderSsrc, mediaSsrc, FeedbackPsAfbPacket::Application::REMB)
+		{
+		}
 
-	inline
-	bool FeedbackPsRembPacket::IsCorrect()
-	{
-		return this->isCorrect;
+		inline bool FeedbackPsRembPacket::IsCorrect()
+		{
+			return this->isCorrect;
+		}
+
+		inline void FeedbackPsRembPacket::SetBitrate(uint64_t bitrate)
+		{
+			this->bitrate = bitrate;
+		}
+
+		inline void FeedbackPsRembPacket::SetSsrcs(const std::vector<uint32_t>& ssrcs)
+		{
+			this->ssrcs = ssrcs;
+		}
+
+		inline uint64_t FeedbackPsRembPacket::GetBitrate()
+		{
+			return this->bitrate;
+		}
+
+		inline const std::vector<uint32_t>& FeedbackPsRembPacket::GetSsrcs()
+		{
+			return this->ssrcs;
+		}
+
+		inline size_t FeedbackPsRembPacket::GetSize() const
+		{
+			return FeedbackPsPacket::GetSize() + 8 + (sizeof(uint32_t) * this->ssrcs.size());
+		}
 	}
-
-	inline
-	void FeedbackPsRembPacket::SetBitrate(uint64_t bitrate)
-	{
-		this->bitrate = bitrate;
-	}
-
-	inline
-	void FeedbackPsRembPacket::SetSsrcs(const std::vector<uint32_t>& ssrcs)
-	{
-		this->ssrcs = ssrcs;
-	}
-
-	inline
-	uint64_t FeedbackPsRembPacket::GetBitrate()
-	{
-		return this->bitrate;
-	}
-
-	inline
-	const std::vector<uint32_t>& FeedbackPsRembPacket::GetSsrcs()
-	{
-		return this->ssrcs;
-	}
-
-	inline
-	size_t FeedbackPsRembPacket::GetSize() const
-	{
-		return FeedbackPsPacket::GetSize() + 8 + (sizeof(uint32_t) * this->ssrcs.size());
-	}
-}}
+}
 
 #endif

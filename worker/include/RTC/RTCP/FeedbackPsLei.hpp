@@ -13,67 +13,67 @@
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	class FeedbackPsLeiItem
-		: public FeedbackItem
+	namespace RTCP
 	{
-	private:
-		struct Header
+		class FeedbackPsLeiItem : public FeedbackItem
 		{
-			uint32_t ssrc;
+		private:
+			struct Header
+			{
+				uint32_t ssrc;
+			};
+
+		public:
+			static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::PSLEI;
+
+		public:
+			static FeedbackPsLeiItem* Parse(const uint8_t* data, size_t len);
+
+		public:
+			explicit FeedbackPsLeiItem(Header* header);
+			explicit FeedbackPsLeiItem(FeedbackPsLeiItem* item);
+			explicit FeedbackPsLeiItem(uint32_t ssrc);
+			virtual ~FeedbackPsLeiItem(){};
+
+			uint32_t GetSsrc() const;
+
+			/* Virtual methods inherited from FeedbackItem. */
+		public:
+			virtual void Dump() const override;
+			virtual size_t Serialize(uint8_t* buffer) override;
+			virtual size_t GetSize() const override;
+
+		private:
+			Header* header = nullptr;
 		};
 
-	public:
-		static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::PSLEI;
+		// Lei packet declaration.
+		typedef FeedbackPsItemsPacket<FeedbackPsLeiItem> FeedbackPsLeiPacket;
 
-	public:
-		static FeedbackPsLeiItem* Parse(const uint8_t* data, size_t len);
+		/* Inline instance methods. */
 
-	public:
-		explicit FeedbackPsLeiItem(Header* header);
-		explicit FeedbackPsLeiItem(FeedbackPsLeiItem* item);
-		explicit FeedbackPsLeiItem(uint32_t ssrc);
-		virtual ~FeedbackPsLeiItem() {};
+		inline FeedbackPsLeiItem::FeedbackPsLeiItem(Header* header)
+		    : header(header)
+		{
+		}
 
-		uint32_t GetSsrc() const;
+		inline FeedbackPsLeiItem::FeedbackPsLeiItem(FeedbackPsLeiItem* item)
+		    : header(item->header)
+		{
+		}
 
-	/* Virtual methods inherited from FeedbackItem. */
-	public:
-		virtual void Dump() const override;
-		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() const override;
+		inline size_t FeedbackPsLeiItem::GetSize() const
+		{
+			return sizeof(Header);
+		}
 
-	private:
-		Header* header = nullptr;
-	};
-
-	// Lei packet declaration.
-	typedef FeedbackPsItemsPacket<FeedbackPsLeiItem> FeedbackPsLeiPacket;
-
-	/* Inline instance methods. */
-
-	inline
-	FeedbackPsLeiItem::FeedbackPsLeiItem(Header* header):
-		header(header)
-	{}
-
-	inline
-	FeedbackPsLeiItem::FeedbackPsLeiItem(FeedbackPsLeiItem* item):
-		header(item->header)
-	{}
-
-	inline
-	size_t FeedbackPsLeiItem::GetSize() const
-	{
-		return sizeof(Header);
+		inline uint32_t FeedbackPsLeiItem::GetSsrc() const
+		{
+			return (uint32_t)ntohl(this->header->ssrc);
+		}
 	}
-
-	inline
-	uint32_t FeedbackPsLeiItem::GetSsrc() const
-	{
-		return (uint32_t)ntohl(this->header->ssrc);
-	}
-}}
+}
 
 #endif

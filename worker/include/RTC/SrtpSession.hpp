@@ -50,8 +50,7 @@ namespace RTC
 
 	/* Inline instance methods. */
 
-	inline
-	void SrtpSession::RemoveStream(uint32_t ssrc)
+	inline void SrtpSession::RemoveStream(uint32_t ssrc)
 	{
 		srtp_remove_stream(this->session, htonl(ssrc));
 	}

@@ -17,92 +17,101 @@
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	template<typename T> class FeedbackPsTstItem
-		: public FeedbackItem
+	namespace RTCP
 	{
-	private:
-		struct Header
+		template<typename T>
+		class FeedbackPsTstItem : public FeedbackItem
 		{
-			uint32_t ssrc;
-			uint32_t sequence_number:8;
-			uint32_t reserved:19;
-			uint32_t index:5;
+		private:
+			struct Header
+			{
+				uint32_t ssrc;
+				uint32_t sequenceNumber : 8;
+				uint32_t reserved : 19;
+				uint32_t index : 5;
+			};
+
+		public:
+			static const FeedbackPs::MessageType MessageType;
+
+		public:
+			static FeedbackPsTstItem* Parse(const uint8_t* data, size_t len);
+
+		public:
+			explicit FeedbackPsTstItem(Header* header);
+			explicit FeedbackPsTstItem(FeedbackPsTstItem* item);
+			FeedbackPsTstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
+			virtual ~FeedbackPsTstItem(){};
+
+			uint32_t GetSsrc() const;
+			uint8_t GetSequenceNumber() const;
+			uint8_t GetIndex() const;
+
+			/* Virtual methods inherited from FeedbackItem. */
+		public:
+			virtual void Dump() const override;
+			virtual size_t Serialize(uint8_t* buffer) override;
+			virtual size_t GetSize() const override;
+
+		private:
+			Header* header = nullptr;
 		};
 
-	public:
-		static const FeedbackPs::MessageType MessageType;
+		class Tstr
+		{
+		};
+		class Tstn
+		{
+		};
 
-	public:
-		static FeedbackPsTstItem* Parse(const uint8_t* data, size_t len);
+		// Tst classes declaration.
+		typedef FeedbackPsTstItem<Tstr> FeedbackPsTstrItem;
+		typedef FeedbackPsTstItem<Tstn> FeedbackPsTstnItem;
 
-	public:
-		explicit FeedbackPsTstItem(Header* header);
-		explicit FeedbackPsTstItem(FeedbackPsTstItem* item);
-		FeedbackPsTstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
-		virtual ~FeedbackPsTstItem() {};
+		// Tst packets declaration.
+		typedef FeedbackPsItemsPacket<FeedbackPsTstrItem> FeedbackPsTstrPacket;
+		typedef FeedbackPsItemsPacket<FeedbackPsTstnItem> FeedbackPsTstnPacket;
 
-		uint32_t GetSsrc() const;
-		uint8_t GetSequenceNumber() const;
-		uint8_t GetIndex() const;
+		/* Inline instance methods. */
 
-	/* Virtual methods inherited from FeedbackItem. */
-	public:
-		virtual void Dump() const override;
-		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() const override;
+		template<typename T>
+		FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header)
+		    : header(header)
+		{
+		}
 
-	private:
-		Header* header = nullptr;
-	};
+		template<typename T>
+		FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item)
+		    : header(item->header)
+		{
+		}
 
-	class Tstr {};
-	class Tstn {};
+		template<typename T>
+		size_t FeedbackPsTstItem<T>::GetSize() const
+		{
+			return sizeof(Header);
+		}
 
-	// Tst classes declaration.
-	typedef FeedbackPsTstItem<Tstr> FeedbackPsTstrItem;
-	typedef FeedbackPsTstItem<Tstn> FeedbackPsTstnItem;
+		template<typename T>
+		uint32_t FeedbackPsTstItem<T>::GetSsrc() const
+		{
+			return (uint32_t)ntohl(this->header->ssrc);
+		}
 
-	// Tst packets declaration.
-	typedef FeedbackPsItemsPacket<FeedbackPsTstrItem> FeedbackPsTstrPacket;
-	typedef FeedbackPsItemsPacket<FeedbackPsTstnItem> FeedbackPsTstnPacket;
+		template<typename T>
+		uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
+		{
+			return (uint8_t)this->header->sequenceNumber;
+		}
 
-	/* Inline instance methods. */
-
-	template <typename T>
-	FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header):
-		header(header)
-	{}
-
-	template <typename T>
-	FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item) :
-		header(item->header)
-	{}
-
-	template <typename T>
-	size_t FeedbackPsTstItem<T>::GetSize() const
-	{
-		return sizeof(Header);
+		template<typename T>
+		uint8_t FeedbackPsTstItem<T>::GetIndex() const
+		{
+			return (uint8_t)this->header->index;
+		}
 	}
-
-	template <typename T>
-	uint32_t FeedbackPsTstItem<T>::GetSsrc() const
-	{
-		return (uint32_t)ntohl(this->header->ssrc);
-	}
-
-	template <typename T>
-	uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
-	{
-		return (uint8_t)this->header->sequence_number;
-	}
-
-	template <typename T>
-	uint8_t FeedbackPsTstItem<T>::GetIndex() const
-	{
-		return (uint8_t)this->header->index;
-	}
-}}
+}
 
 #endif

@@ -2,8 +2,8 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpListener.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
 
 namespace RTC
 {
@@ -25,7 +25,7 @@ namespace RTC
 		// Add `ssrcTable`.
 		for (auto& kv : this->ssrcTable)
 		{
-			auto ssrc = kv.first;
+			auto ssrc        = kv.first;
 			auto rtpReceiver = kv.second;
 
 			jsonSsrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
@@ -35,7 +35,7 @@ namespace RTC
 		// Add `muxIdTable`.
 		for (auto& kv : this->muxIdTable)
 		{
-			auto muxId = kv.first;
+			auto muxId       = kv.first;
 			auto rtpReceiver = kv.second;
 
 			jsonMuxIdTable[muxId] = std::to_string(rtpReceiver->rtpReceiverId);
@@ -71,7 +71,7 @@ namespace RTC
 
 		for (auto& kv : this->ssrcTable)
 		{
-			auto ssrc = kv.first;
+			auto ssrc                 = kv.first;
 			auto& existingRtpReceiver = kv.second;
 
 			if (existingRtpReceiver == rtpReceiver)
@@ -80,7 +80,7 @@ namespace RTC
 
 		for (auto& kv : this->muxIdTable)
 		{
-			auto& muxId = kv.first;
+			auto& muxId               = kv.first;
 			auto& existingRtpReceiver = kv.second;
 
 			if (existingRtpReceiver == rtpReceiver)
@@ -92,7 +92,7 @@ namespace RTC
 
 		for (auto& kv : this->ptTable)
 		{
-			auto payloadType = kv.first;
+			auto payloadType          = kv.first;
 			auto& existingRtpReceiver = kv.second;
 
 			if (existingRtpReceiver == rtpReceiver)
@@ -199,10 +199,8 @@ namespace RTC
 			{
 				auto& encoding = *it;
 
-				if (
-						!encoding.ssrc ||
-						(encoding.hasRtx && !encoding.rtx.ssrc) ||
-						(encoding.hasFec && !encoding.fec.ssrc))
+				if (!encoding.ssrc || (encoding.hasRtx && !encoding.rtx.ssrc) ||
+				    (encoding.hasFec && !encoding.fec.ssrc))
 				{
 					break;
 				}
@@ -223,7 +221,8 @@ namespace RTC
 						RemoveRtpReceiver(rtpReceiver);
 						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
 
-						MS_THROW_ERROR("payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
+						MS_THROW_ERROR(
+						    "payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
 					}
 				}
 			}
@@ -272,7 +271,7 @@ namespace RTC
 
 			if (it != this->ssrcTable.end())
 			{
-				auto rtpReceiver = it->second;
+				auto rtpReceiver   = it->second;
 				auto rtpParameters = rtpReceiver->GetParameters();
 
 				// Ensure the RTP PT is present in RtpParameters.
@@ -284,8 +283,7 @@ namespace RTC
 				}
 
 				// RTP PT not present.
-				MS_WARN_TAG(rtp, "unknown RTP payloadType [payloadType:%" PRIu8 "]",
-					packet->GetPayloadType());
+				MS_WARN_TAG(rtp, "unknown RTP payloadType [payloadType:%" PRIu8 "]", packet->GetPayloadType());
 
 				// TODO: We may emit "unhandledrtp" event.
 				return nullptr;
@@ -331,7 +329,11 @@ namespace RTC
 		return nullptr;
 	}
 
-	void RtpListener::RollbackRtpReceiver(RTC::RtpReceiver* rtpReceiver, std::vector<uint32_t>& previousSsrcs, std::string& previousMuxId, std::vector<uint8_t>& previousPayloadTypes)
+	void RtpListener::RollbackRtpReceiver(
+	    RTC::RtpReceiver* rtpReceiver,
+	    std::vector<uint32_t>& previousSsrcs,
+	    std::string& previousMuxId,
+	    std::vector<uint8_t>& previousPayloadTypes)
 	{
 		MS_TRACE();
 

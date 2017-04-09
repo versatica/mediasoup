@@ -4,29 +4,27 @@
 #include "Channel/UnixStreamSocket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
-#include <sstream> // std::ostringstream
+#include <cmath>   // std::ceil()
+#include <cstdio>  // sprintf()
 #include <cstring> // std::memmove()
-#include <cmath> // std::ceil()
-#include <cstdio> // sprintf()
-extern "C"
-{
-	#include <netstring.h>
+#include <sstream> // std::ostringstream
+extern "C" {
+#include <netstring.h>
 }
-
-// netstring length for a 65536 bytes payload
-#define NS_MAX_SIZE      65543
-#define MESSAGE_MAX_SIZE 65536
 
 namespace Channel
 {
-	/* Class variables. */
+	/* Static. */
 
-	uint8_t UnixStreamSocket::writeBuffer[NS_MAX_SIZE];
+	// netstring length for a 65536 bytes payload.
+	static constexpr size_t MaxSize        = 65543;
+	static constexpr size_t MessageMaxSize = 65536;
+	static uint8_t WriteBuffer[MaxSize];
 
 	/* Instance methods. */
 
-	UnixStreamSocket::UnixStreamSocket(int fd) :
-		::UnixStreamSocket::UnixStreamSocket(fd, NS_MAX_SIZE)
+	UnixStreamSocket::UnixStreamSocket(int fd)
+	    : ::UnixStreamSocket::UnixStreamSocket(fd, MaxSize)
 	{
 		MS_TRACE_STD();
 
@@ -34,11 +32,11 @@ namespace Channel
 		{
 			Json::CharReaderBuilder builder;
 			Json::Value settings = Json::nullValue;
-			Json::Value invalid_settings;
+			Json::Value invalidSettings;
 
 			builder.strictMode(&settings);
 
-			MS_ASSERT(builder.validate(&invalid_settings), "invalid Json::CharReaderBuilder");
+			MS_ASSERT(builder.validate(&invalidSettings), "invalid Json::CharReaderBuilder");
 
 			this->jsonReader = builder.newCharReader();
 		}
@@ -46,14 +44,14 @@ namespace Channel
 		// Create the JSON writer.
 		{
 			Json::StreamWriterBuilder builder;
-			Json::Value invalid_settings;
+			Json::Value invalidSettings;
 
-			builder["commentStyle"] = "None";
-			builder["indentation"] = "";
+			builder["commentStyle"]            = "None";
+			builder["indentation"]             = "";
 			builder["enableYAMLCompatibility"] = false;
-			builder["dropNullPlaceholders"] = false;
+			builder["dropNullPlaceholders"]    = false;
 
-			MS_ASSERT(builder.validate(&invalid_settings), "invalid Json::StreamWriterBuilder");
+			MS_ASSERT(builder.validate(&invalidSettings), "invalid Json::StreamWriterBuilder");
 
 			this->jsonWriter = builder.newStreamWriter();
 		}
@@ -74,7 +72,7 @@ namespace Channel
 		this->listener = listener;
 	}
 
-	void UnixStreamSocket::Send(Json::Value &msg)
+	void UnixStreamSocket::Send(Json::Value& msg)
 	{
 		if (this->closed)
 			return;
@@ -82,112 +80,112 @@ namespace Channel
 		// MS_TRACE_STD();
 
 		std::ostringstream stream;
-		std::string ns_payload;
-		size_t ns_payload_len;
-		size_t ns_num_len;
-		size_t ns_len;
+		std::string nsPayload;
+		size_t nsPayloadLen;
+		size_t nsNumLen;
+		size_t nsLen;
 
 		this->jsonWriter->write(msg, &stream);
-		ns_payload = stream.str();
-		ns_payload_len = ns_payload.length();
+		nsPayload    = stream.str();
+		nsPayloadLen = nsPayload.length();
 
-		if (ns_payload_len > MESSAGE_MAX_SIZE)
+		if (nsPayloadLen > MessageMaxSize)
 		{
 			MS_ERROR_STD("mesage too big");
 
 			return;
 		}
 
-		if (ns_payload_len == 0)
+		if (nsPayloadLen == 0)
 		{
-			ns_num_len = 1;
-			UnixStreamSocket::writeBuffer[0] = '0';
-			UnixStreamSocket::writeBuffer[1] = ':';
-			UnixStreamSocket::writeBuffer[2] = ',';
+			nsNumLen       = 1;
+			WriteBuffer[0] = '0';
+			WriteBuffer[1] = ':';
+			WriteBuffer[2] = ',';
 		}
 		else
 		{
-		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
-		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload.c_str(), ns_payload_len);
-		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
+			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload.c_str(), nsPayloadLen);
+			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
-		ns_len = ns_num_len + ns_payload_len + 2;
+		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(UnixStreamSocket::writeBuffer, ns_len);
+		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::SendLog(char* ns_payload, size_t ns_payload_len)
+	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
 	{
 		if (this->closed)
 			return;
 
 		// MS_TRACE_STD();
 
-		size_t ns_num_len;
-		size_t ns_len;
+		size_t nsNumLen;
+		size_t nsLen;
 
-		if (ns_payload_len > MESSAGE_MAX_SIZE)
+		if (nsPayloadLen > MessageMaxSize)
 		{
 			MS_ERROR_STD("mesage too big");
 
 			return;
 		}
 
-		if (ns_payload_len == 0)
+		if (nsPayloadLen == 0)
 		{
-			ns_num_len = 1;
-			UnixStreamSocket::writeBuffer[0] = '0';
-			UnixStreamSocket::writeBuffer[1] = ':';
-			UnixStreamSocket::writeBuffer[2] = ',';
+			nsNumLen       = 1;
+			WriteBuffer[0] = '0';
+			WriteBuffer[1] = ':';
+			WriteBuffer[2] = ',';
 		}
 		else
 		{
-		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
-		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
-		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
+			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
-		ns_len = ns_num_len + ns_payload_len + 2;
+		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(UnixStreamSocket::writeBuffer, ns_len);
+		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::SendBinary(const uint8_t* ns_payload, size_t ns_payload_len)
+	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
 	{
 		if (this->closed)
 			return;
 
-		size_t ns_num_len;
-		size_t ns_len;
+		size_t nsNumLen;
+		size_t nsLen;
 
-		if (ns_payload_len > MESSAGE_MAX_SIZE)
+		if (nsPayloadLen > MessageMaxSize)
 		{
 			MS_ERROR_STD("mesage too big");
 
 			return;
 		}
 
-		if (ns_payload_len == 0)
+		if (nsPayloadLen == 0)
 		{
-			ns_num_len = 1;
-			UnixStreamSocket::writeBuffer[0] = '0';
-			UnixStreamSocket::writeBuffer[1] = ':';
-			UnixStreamSocket::writeBuffer[2] = ',';
+			nsNumLen       = 1;
+			WriteBuffer[0] = '0';
+			WriteBuffer[1] = ':';
+			WriteBuffer[2] = ',';
 		}
 		else
 		{
-		  ns_num_len = (size_t)std::ceil(std::log10((double)ns_payload_len + 1));
-		  std::sprintf((char*)UnixStreamSocket::writeBuffer, "%zu:", ns_payload_len);
-		  std::memcpy(UnixStreamSocket::writeBuffer + ns_num_len + 1, ns_payload, ns_payload_len);
-		  UnixStreamSocket::writeBuffer[ns_num_len + ns_payload_len + 1] = ',';
+			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
+			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
-		ns_len = ns_num_len + ns_payload_len + 2;
+		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(UnixStreamSocket::writeBuffer, ns_len);
+		Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::userOnUnixStreamRead()
@@ -200,15 +198,15 @@ namespace Channel
 			if (IsClosing())
 				return;
 
-			size_t read_len = this->bufferDataLen - this->msgStart;
-			char* json_start = nullptr;
-			size_t json_len;
-			int ns_ret = netstring_read((char*)(this->buffer + this->msgStart), read_len,
-				&json_start, &json_len);
+			size_t readLen  = this->bufferDataLen - this->msgStart;
+			char* jsonStart = nullptr;
+			size_t jsonLen;
+			int nsRet =
+			    netstring_read((char*)(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
 
-			if (ns_ret != 0)
+			if (nsRet != 0)
 			{
-				switch (ns_ret)
+				switch (nsRet)
 				{
 					case NETSTRING_ERROR_TOO_SHORT:
 						// Check if the buffer is full.
@@ -218,17 +216,19 @@ namespace Channel
 							// the buffer, so move the incomplete message to the position 0.
 							if (this->msgStart != 0)
 							{
-								std::memmove(this->buffer, this->buffer + this->msgStart, read_len);
-								this->msgStart = 0;
-								this->bufferDataLen = read_len;
+								std::memmove(this->buffer, this->buffer + this->msgStart, readLen);
+								this->msgStart      = 0;
+								this->bufferDataLen = readLen;
 							}
 							// Second case: the incomplete message begins at position 0 of the buffer.
 							// The message is too big, so discard it.
 							else
 							{
-								MS_ERROR_STD("no more space in the buffer for the unfinished message being parsed, discarding it");
+								MS_ERROR_STD(
+								    "no more space in the buffer for the unfinished message being parsed, "
+								    "discarding it");
 
-								this->msgStart = 0;
+								this->msgStart      = 0;
 								this->bufferDataLen = 0;
 							}
 						}
@@ -259,20 +259,21 @@ namespace Channel
 				}
 
 				// Error, so reset and exit the parsing loop.
-				this->msgStart = 0;
+				this->msgStart      = 0;
 				this->bufferDataLen = 0;
 
 				return;
 			}
 
-			// If here it means that json_start points to the beginning of a JSON string
-			// with json_len bytes length, so recalculate read_len.
-			read_len = (const uint8_t*)json_start - (this->buffer + this->msgStart) + json_len + 1;
+			// If here it means that jsonStart points to the beginning of a JSON string
+			// with jsonLen bytes length, so recalculate readLen.
+			readLen = (const uint8_t*)jsonStart - (this->buffer + this->msgStart) + jsonLen + 1;
 
 			Json::Value json;
-			std::string json_parse_error;
+			std::string jsonParseError;
 
-			if (this->jsonReader->parse((const char*)json_start, (const char*)json_start + json_len, &json, &json_parse_error))
+			if (this->jsonReader->parse(
+			        (const char*)jsonStart, (const char*)jsonStart + jsonLen, &json, &jsonParseError))
 			{
 				Channel::Request* request = nullptr;
 
@@ -280,7 +281,7 @@ namespace Channel
 				{
 					request = new Channel::Request(this, json);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					MS_ERROR_STD("discarding wrong Channel request");
 				}
@@ -296,21 +297,21 @@ namespace Channel
 			}
 			else
 			{
-				MS_ERROR_STD("JSON parsing error: %s", json_parse_error.c_str());
+				MS_ERROR_STD("JSON parsing error: %s", jsonParseError.c_str());
 			}
 
 			// If there is no more space available in the buffer and that is because
 			// the latest parsed message filled it, then empty the full buffer.
-			if ((this->msgStart + read_len) == this->bufferSize)
+			if ((this->msgStart + readLen) == this->bufferSize)
 			{
-				this->msgStart = 0;
+				this->msgStart      = 0;
 				this->bufferDataLen = 0;
 			}
 			// If there is still space in the buffer, set the beginning of the next
 			// parsing to the next position after the parsed message.
 			else
 			{
-				this->msgStart += read_len;
+				this->msgStart += readLen;
 			}
 
 			// If there is more data in the buffer after the parsed message
@@ -326,13 +327,13 @@ namespace Channel
 		}
 	}
 
-	void UnixStreamSocket::userOnUnixStreamSocketClosed(bool is_closed_by_peer)
+	void UnixStreamSocket::userOnUnixStreamSocketClosed(bool isClosedByPeer)
 	{
 		MS_TRACE_STD();
 
 		this->closed = true;
 
-		if (is_closed_by_peer)
+		if (isClosedByPeer)
 		{
 			// Notify the listener.
 			this->listener->onChannelUnixStreamSocketRemotelyClosed(this);

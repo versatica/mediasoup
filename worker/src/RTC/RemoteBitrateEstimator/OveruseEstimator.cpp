@@ -13,24 +13,25 @@
 
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
 #include "Logger.hpp"
+#include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <algorithm>
 
 namespace RTC
 {
 	constexpr size_t kMinFramePeriodHistoryLength = 60;
-	constexpr uint16_t kDeltaCounterMax = 1000;
+	constexpr uint16_t kDeltaCounterMax           = 1000;
 
-	void OveruseEstimator::Update(int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs)
+	void OveruseEstimator::Update(
+	    int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs)
 	{
 		MS_TRACE();
 
 		(void)nowMs;
 		const double minFramePeriod = UpdateMinFramePeriod(tsDelta);
-		const double tTsDelta = tDelta - tsDelta;
-		double fsDelta = sizeDelta;
+		const double tTsDelta       = tDelta - tsDelta;
+		double fsDelta              = sizeDelta;
 
 		++this->numOfDeltas;
 		if (this->numOfDeltas > kDeltaCounterMax)
@@ -48,9 +49,11 @@ namespace RTC
 			this->E[1][1] += 10 * this->processNoise[1];
 		}
 
-		const double h[2] = {fsDelta, 1.0};
-		const double Eh[2] = {this->E[0][0] * h[0] + this->E[0][1] * h[1], this->E[1][0] * h[0] + this->E[1][1] * h[1]};
-		const double residual = tTsDelta - this->slope * h[0] - this->offset;
+		const double h[2]  = {fsDelta, 1.0};
+		const double Eh[2] = {this->E[0][0] * h[0] + this->E[0][1] * h[1],
+		                      this->E[1][0] * h[0] + this->E[1][1] * h[1]};
+
+		const double residual    = tTsDelta - this->slope * h[0] - this->offset;
 		const bool inStableState = (currentHypothesis == kBwNormal);
 		const double maxResidual = 3.0 * sqrt(this->varNoise);
 
@@ -65,9 +68,10 @@ namespace RTC
 			UpdateNoiseEstimate(residual < 0 ? -maxResidual : maxResidual, minFramePeriod, inStableState);
 		}
 
-		const double denom = this->varNoise + h[0] * Eh[0] + h[1] * Eh[1];
-		const double K[2] = {Eh[0] / denom, Eh[1] / denom};
+		const double denom     = this->varNoise + h[0] * Eh[0] + h[1] * Eh[1];
+		const double K[2]      = {Eh[0] / denom, Eh[1] / denom};
 		const double IKh[2][2] = {{1.0 - K[0] * h[0], -K[0] * h[1]}, {-K[1] * h[0], 1.0 - K[1] * h[1]}};
+
 		const double e00 = this->E[0][0];
 		const double e01 = this->E[0][1];
 
@@ -78,8 +82,9 @@ namespace RTC
 		this->E[1][1] = e01 * IKh[1][0] + this->E[1][1] * IKh[1][1];
 
 		// The covariance matrix must be positive semi-definite.
-		bool positiveSemiDefinite =
-		    this->E[0][0] + this->E[1][1] >= 0 && this->E[0][0] * this->E[1][1] - this->E[0][1] * this->E[1][0] >= 0 && this->E[0][0] >= 0;
+		bool positiveSemiDefinite = this->E[0][0] + this->E[1][1] >= 0 &&
+		                            this->E[0][0] * this->E[1][1] - this->E[0][1] * this->E[1][0] >= 0 &&
+		                            this->E[0][0] >= 0;
 
 		MS_ASSERT(positiveSemiDefinite, "positiveSemiDefinite missing");
 
@@ -88,9 +93,9 @@ namespace RTC
 			MS_ERROR("the over-use estimator's covariance matrix is no longer semi-definite");
 		}
 
-		this->slope = this->slope + K[0] * residual;
+		this->slope      = this->slope + K[0] * residual;
 		this->prevOffset = this->offset;
-		this->offset = this->offset + K[1] * residual;
+		this->offset     = this->offset + K[1] * residual;
 	}
 
 	double OveruseEstimator::UpdateMinFramePeriod(double tsDelta)
@@ -136,7 +141,8 @@ namespace RTC
 		const double beta = pow(1 - alpha, tsDelta * 30.0 / 1000.0);
 
 		this->avgNoise = beta * this->avgNoise + (1 - beta) * residual;
-		this->varNoise = beta * this->varNoise + (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
+		this->varNoise = beta * this->varNoise +
+		                 (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
 		if (this->varNoise < 1)
 		{
 			this->varNoise = 1;

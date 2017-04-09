@@ -2,8 +2,8 @@
 #define MS_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include <string>
 #include <uv.h>
+#include <string>
 
 class UnixStreamSocket
 {
@@ -12,14 +12,14 @@ public:
 	struct UvWriteData
 	{
 		UnixStreamSocket* socket;
-		uv_write_t        req;
-		uint8_t           store[1];
+		uv_write_t req;
+		uint8_t store[1];
 	};
 
 public:
 	UnixStreamSocket(int fd, size_t bufferSize);
 	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
-	UnixStreamSocket(const UnixStreamSocket&) = delete;
+	UnixStreamSocket(const UnixStreamSocket&)            = delete;
 
 protected:
 	virtual ~UnixStreamSocket();
@@ -28,9 +28,9 @@ public:
 	void Destroy();
 	bool IsClosing() const;
 	void Write(const uint8_t* data, size_t len);
-	void Write(const std::string &data);
+	void Write(const std::string& data);
 
-/* Callbacks fired by UV events. */
+	/* Callbacks fired by UV events. */
 public:
 	void onUvReadAlloc(size_t suggested_size, uv_buf_t* buf);
 	void onUvRead(ssize_t nread, const uv_buf_t* buf);
@@ -38,18 +38,18 @@ public:
 	void onUvShutdown(uv_shutdown_t* req, int status);
 	void onUvClosed();
 
-/* Pure virtual methods that must be implemented by the subclass. */
+	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnUnixStreamRead() = 0;
-	virtual void userOnUnixStreamSocketClosed(bool is_closed_by_peer) = 0;
+	virtual void userOnUnixStreamRead()                            = 0;
+	virtual void userOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
 
 private:
 	// Allocated by this.
 	uv_pipe_t* uvHandle = nullptr;
 	// Others.
-	bool isClosing = false;
+	bool isClosing      = false;
 	bool isClosedByPeer = false;
-	bool hasError = false;
+	bool hasError       = false;
 
 protected:
 	// Passed by argument.
@@ -62,14 +62,12 @@ protected:
 
 /* Inline methods. */
 
-inline
-bool UnixStreamSocket::IsClosing() const
+inline bool UnixStreamSocket::IsClosing() const
 {
 	return this->isClosing;
 }
 
-inline
-void UnixStreamSocket::Write(const std::string &data)
+inline void UnixStreamSocket::Write(const std::string& data)
 {
 	Write((const uint8_t*)data.c_str(), data.size());
 }

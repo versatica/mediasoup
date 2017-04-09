@@ -63,25 +63,11 @@ These codecs have the same fields as the peer's capabilities codecs above, with 
 * `kind` is ignored.
 * `payloadType` MUST match the same value as the one set by the room (otherwise it will fail).
 
-If `receive()` is called ith a codec that is not supported by the room or not present in the peer's given capabilities, it fails.
+If `receive()` is called with a codec that is not supported by the room or not present in the peer's given capabilities, it fails.
 
 Unsupported RTCP feedback mechanisms and RTP header extensions not supported by mediasoup or by the peer itself are removed.
 
 Effective RTP parameters are returned to the `receive()` promise.
-
-After that, C++ `RtpReceiver::FillRtpParameters()` is called. This method does nothing right now.
-
-*TODO:* C++ `RtpReceiver::FillRtpParameters()` should:
-
-* Set a random `muxId` and map the original value.
-* If any SSRC value is not given, set a random one and be ready to match the unknown incoming SSRC value to it.
-* If not given, set the `rtcp` field.
-* Should map the `id` of the supported ones to a static value.
-  * *NOTE:* This is important so we can deal with PlanB in which all the RTP streams are sent over a single `m=` section.
-
-*TODO:* The whole mapping system could be implemented by maintaing two `RtpParameters` objects within each `RtpReceiver`: the original one and the maped one (although that wouldn't be efficient when it comes to mangle each RTP packet so it may be better to handle an internal value mapping...).
-
-After that, C++ `Peer::onRtpReceiverParametersDone()` is called, which just calls to C++ `Room::onPeerRtpReceiverParameters()`.
 
 `Room::onPeerRtpReceiverParameters()` creates `RtpSenders` associated to this `RtpReceiver` (for every other `Peer` with its capabilities already set) by calling `Peer::AddRtpSender()` on them.
 

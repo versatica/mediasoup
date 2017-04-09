@@ -1,27 +1,26 @@
 #define MS_CLASS "RTC::RtpCodecMime"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "Utils.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Class variables. */
 
+	// clang-format off
 	std::unordered_map<std::string, RtpCodecMime::Type> RtpCodecMime::string2Type =
 	{
 		{ "audio", RtpCodecMime::Type::AUDIO },
 		{ "video", RtpCodecMime::Type::VIDEO }
 	};
-
 	std::map<RtpCodecMime::Type, std::string> RtpCodecMime::type2String =
 	{
 		{ RtpCodecMime::Type::AUDIO, "audio" },
 		{ RtpCodecMime::Type::VIDEO, "video" }
 	};
-
 	std::unordered_map<std::string, RtpCodecMime::Subtype> RtpCodecMime::string2Subtype =
 	{
 		// Audio codecs:
@@ -46,7 +45,6 @@ namespace RTC
 		{ "flexfec",         RtpCodecMime::Subtype::FLEXFEC         },
 		{ "red",             RtpCodecMime::Subtype::RED             }
 	};
-
 	std::map<RtpCodecMime::Subtype, std::string> RtpCodecMime::subtype2String =
 	{
 		// Audio codecs:
@@ -71,6 +69,7 @@ namespace RTC
 		{ RtpCodecMime::Subtype::FLEXFEC,         "flexfec"         },
 		{ RtpCodecMime::Subtype::RED,             "red"             }
 	};
+	// clang-format on
 
 	/* Instance methods. */
 
@@ -78,13 +77,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto slash_pos = name.find('/');
+		auto slashPos = name.find('/');
 
-		if (slash_pos == std::string::npos || slash_pos == 0 || slash_pos == name.length() - 1)
+		if (slashPos == std::string::npos || slashPos == 0 || slashPos == name.length() - 1)
 			MS_THROW_ERROR("wrong codec MIME");
 
-		std::string type = name.substr(0, slash_pos);
-		std::string subtype = name.substr(slash_pos + 1);
+		std::string type    = name.substr(0, slashPos);
+		std::string subtype = name.substr(slashPos + 1);
 
 		// Force lowcase names.
 		Utils::String::ToLowerCase(type);

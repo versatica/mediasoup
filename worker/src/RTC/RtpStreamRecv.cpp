@@ -9,9 +9,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params) :
-		RtpStream::RtpStream(params),
-		listener(listener)
+	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
+	    : RtpStream::RtpStream(params)
+	    , listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -33,11 +33,11 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[k_params] = this->params.toJson();
-		json[k_received] = (Json::UInt)this->received;
+		json[k_params]       = this->params.toJson();
+		json[k_received]     = (Json::UInt)this->received;
 		json[k_maxTimestamp] = (Json::UInt)this->maxTimestamp;
-		json[k_transit] = (Json::UInt)this->transit;
-		json[k_jitter] = (Json::UInt)this->jitter;
+		json[k_transit]      = (Json::UInt)this->transit;
+		json[k_jitter]       = (Json::UInt)this->jitter;
 
 		return json;
 	}
@@ -57,7 +57,7 @@ namespace RTC
 		if (this->params.absSendTimeId)
 		{
 			packet->AddExtensionMapping(
-				RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
+			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
 		}
 
 		// Pass the packet to the NackGenerator.
@@ -126,7 +126,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastSrReceived = DepLibUV::GetTime();
+		this->lastSrReceived  = DepLibUV::GetTime();
 		this->lastSrTimestamp = report->GetNtpSec() << 16;
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 	}
@@ -153,11 +153,12 @@ namespace RTC
 			return;
 
 		int transit = DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate);
-		int d = transit - this->transit;
+		int d       = transit - this->transit;
 
 		this->transit = transit;
-		if (d < 0) d = -d;
-		this->jitter += (1./16.) * ((double)d - this->jitter);
+		if (d < 0)
+			d = -d;
+		this->jitter += (1. / 16.) * ((double)d - this->jitter);
 	}
 
 	void RtpStreamRecv::onInitSeq()
@@ -184,9 +185,12 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_WARN_TAG(rtx,
-			"triggering NACK [ssrc:%" PRIu32 ", first_seq:%" PRIu16 ", num_packets:%zu]",
-			this->params.ssrc, seqNumbers[0], seqNumbers.size());
+		MS_WARN_TAG(
+		    rtx,
+		    "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
+		    this->params.ssrc,
+		    seqNumbers[0],
+		    seqNumbers.size());
 
 		this->listener->onNackRequired(this, seqNumbers);
 	}

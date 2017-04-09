@@ -2,8 +2,8 @@
 #define MS_RTC_RTP_PACKET_HPP
 
 #include "common.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <map>
 
 namespace RTC
@@ -14,21 +14,21 @@ namespace RTC
 		/* Struct for RTP header. */
 		struct Header
 		{
-		#if defined(MS_LITTLE_ENDIAN)
-			uint8_t csrcCount:4;
-			uint8_t extension:1;
-			uint8_t padding:1;
-			uint8_t version:2;
-			uint8_t payloadType:7;
-			uint8_t marker:1;
-		#elif defined(MS_BIG_ENDIAN)
-			uint8_t version:2;
-			uint8_t padding:1;
-			uint8_t extension:1;
-			uint8_t csrcCount:4;
-			uint8_t marker:1;
-			uint8_t payloadType:7;
-		#endif
+#if defined(MS_LITTLE_ENDIAN)
+			uint8_t csrcCount : 4;
+			uint8_t extension : 1;
+			uint8_t padding : 1;
+			uint8_t version : 2;
+			uint8_t payloadType : 7;
+			uint8_t marker : 1;
+#elif defined(MS_BIG_ENDIAN)
+			uint8_t version : 2;
+			uint8_t padding : 1;
+			uint8_t extension : 1;
+			uint8_t csrcCount : 4;
+			uint8_t marker : 1;
+			uint8_t payloadType : 7;
+#endif
 			uint16_t sequenceNumber;
 			uint32_t timestamp;
 			uint32_t ssrc;
@@ -47,13 +47,13 @@ namespace RTC
 		/* Struct for One-Byte extension. */
 		struct OneByteExtension
 		{
-		#if defined(MS_LITTLE_ENDIAN)
-			uint8_t len:4;
-			uint8_t id:4;
-		#elif defined(MS_BIG_ENDIAN)
-			uint8_t id:4;
-			uint8_t len:4;
-		#endif
+#if defined(MS_LITTLE_ENDIAN)
+			uint8_t len : 4;
+			uint8_t id : 4;
+#elif defined(MS_BIG_ENDIAN)
+			uint8_t id : 4;
+			uint8_t len : 4;
+#endif
 			uint8_t value[1];
 		};
 
@@ -61,13 +61,13 @@ namespace RTC
 		/* Struct for Two-Bytes extension. */
 		struct TwoBytesExtension
 		{
-		#if defined(MS_LITTLE_ENDIAN)
-			uint8_t len:8;
-			uint8_t id:8;
-		#elif defined(MS_BIG_ENDIAN)
-			uint8_t id:8;
-			uint8_t len:8;
-		#endif
+#if defined(MS_LITTLE_ENDIAN)
+			uint8_t len : 8;
+			uint8_t id : 8;
+#elif defined(MS_BIG_ENDIAN)
+			uint8_t id : 8;
+			uint8_t len : 8;
+#endif
 			uint8_t value[1];
 		};
 
@@ -76,7 +76,13 @@ namespace RTC
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
 	public:
-		RtpPacket(Header* header, ExtensionHeader* extensionHeader, const uint8_t* payload, size_t payloadLen, uint8_t payloadPadding, size_t size);
+		RtpPacket(
+		    Header* header,
+		    ExtensionHeader* extensionHeader,
+		    const uint8_t* payload,
+		    size_t payloadLen,
+		    uint8_t payloadPadding,
+		    size_t size);
 		~RtpPacket();
 
 		void Dump() const;
@@ -114,131 +120,113 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Header* header = nullptr;
-		uint8_t* csrcList = nullptr;
+		Header* header                   = nullptr;
+		uint8_t* csrcList                = nullptr;
 		ExtensionHeader* extensionHeader = nullptr;
 		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
 		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
 		std::map<RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
-		uint8_t* payload = nullptr;
-		size_t payloadLength = 0;
+		uint8_t* payload       = nullptr;
+		size_t payloadLength   = 0;
 		uint8_t payloadPadding = 0;
-		size_t size = 0; // Full size of the packet in bytes.
-		uint32_t seq32 = 0; // Extended seq number.
+		size_t size            = 0; // Full size of the packet in bytes.
+		uint32_t seq32         = 0; // Extended seq number.
 	};
 
 	/* Inline static methods. */
 
-	inline
-	bool RtpPacket::IsRtp(const uint8_t* data, size_t len)
+	inline bool RtpPacket::IsRtp(const uint8_t* data, size_t len)
 	{
 		// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
 
 		Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return (
-			(len >= sizeof(Header)) &&
-			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-			(data[0] > 127 && data[0] < 192) &&
-			// RTP Version must be 2.
-			(header->version == 2)
-		);
+		    (len >= sizeof(Header)) &&
+		    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+		    (data[0] > 127 && data[0] < 192) &&
+		    // RTP Version must be 2.
+		    (header->version == 2));
 	}
 
 	/* Inline instance methods. */
 
-	inline
-	const uint8_t* RtpPacket::GetData() const
+	inline const uint8_t* RtpPacket::GetData() const
 	{
 		return (const uint8_t*)this->header;
 	}
 
-	inline
-	size_t RtpPacket::GetSize() const
+	inline size_t RtpPacket::GetSize() const
 	{
 		return this->size;
 	}
 
-	inline
-	uint8_t RtpPacket::GetPayloadType() const
+	inline uint8_t RtpPacket::GetPayloadType() const
 	{
 		return this->header->payloadType;
 	}
 
-	inline
-	void RtpPacket::SetPayloadType(uint8_t payloadType)
+	inline void RtpPacket::SetPayloadType(uint8_t payloadType)
 	{
 		this->header->payloadType = payloadType;
 	}
 
-	inline
-	bool RtpPacket::HasMarker() const
+	inline bool RtpPacket::HasMarker() const
 	{
 		return this->header->marker;
 	}
 
-	inline
-	void RtpPacket::SetMarker(bool marker)
+	inline void RtpPacket::SetMarker(bool marker)
 	{
 		this->header->marker = marker;
 	}
 
-	inline
-	uint16_t RtpPacket::GetSequenceNumber() const
+	inline uint16_t RtpPacket::GetSequenceNumber() const
 	{
 		return (uint16_t)ntohs(this->header->sequenceNumber);
 	}
 
-	inline
-	void RtpPacket::SetSequenceNumber(uint16_t seq)
+	inline void RtpPacket::SetSequenceNumber(uint16_t seq)
 	{
 		this->header->sequenceNumber = (uint16_t)htons(seq);
 	}
 
-	inline
-	uint32_t RtpPacket::GetExtendedSequenceNumber() const
+	inline uint32_t RtpPacket::GetExtendedSequenceNumber() const
 	{
 		return this->seq32;
 	}
 
-	inline
-	void RtpPacket::SetExtendedSequenceNumber(uint32_t seq32)
+	inline void RtpPacket::SetExtendedSequenceNumber(uint32_t seq32)
 	{
 		this->seq32 = seq32;
 	}
 
-	inline
-	uint32_t RtpPacket::GetTimestamp() const
+	inline uint32_t RtpPacket::GetTimestamp() const
 	{
 		return (uint32_t)ntohl(this->header->timestamp);
 	}
 
-	inline
-	void RtpPacket::SetTimestamp(uint32_t timestamp)
+	inline void RtpPacket::SetTimestamp(uint32_t timestamp)
 	{
 		this->header->timestamp = (uint32_t)htonl(timestamp);
 	}
 
-	inline
-	uint32_t RtpPacket::GetSsrc() const
+	inline uint32_t RtpPacket::GetSsrc() const
 	{
 		return (uint32_t)ntohl(this->header->ssrc);
 	}
 
-	inline
-	void RtpPacket::SetSsrc(uint32_t ssrc)
+	inline void RtpPacket::SetSsrc(uint32_t ssrc)
 	{
 		this->header->ssrc = (uint32_t)htonl(ssrc);
 	}
 
-	inline
-	bool RtpPacket::HasExtensionHeader() const
+	inline bool RtpPacket::HasExtensionHeader() const
 	{
 		return (this->extensionHeader ? true : false);
 	}
 
-	inline
-	uint16_t RtpPacket::GetExtensionHeaderId() const
+	inline uint16_t RtpPacket::GetExtensionHeaderId() const
 	{
 		if (!this->extensionHeader)
 			return 0;
@@ -246,8 +234,7 @@ namespace RTC
 		return uint16_t(ntohs(this->extensionHeader->id));
 	}
 
-	inline
-	size_t RtpPacket::GetExtensionHeaderLength() const
+	inline size_t RtpPacket::GetExtensionHeaderLength() const
 	{
 		if (!this->extensionHeader)
 			return 0;
@@ -255,8 +242,7 @@ namespace RTC
 		return size_t(ntohs(this->extensionHeader->length) * 4);
 	}
 
-	inline
-	uint8_t* RtpPacket::GetExtensionHeaderValue() const
+	inline uint8_t* RtpPacket::GetExtensionHeaderValue() const
 	{
 		if (!this->extensionHeader)
 			return nullptr;
@@ -264,26 +250,22 @@ namespace RTC
 		return this->extensionHeader->value;
 	}
 
-	inline
-	bool RtpPacket::HasOneByteExtensions() const
+	inline bool RtpPacket::HasOneByteExtensions() const
 	{
 		return GetExtensionHeaderId() == 0xBEDE;
 	}
 
-	inline
-	bool RtpPacket::HasTwoBytesExtensions() const
+	inline bool RtpPacket::HasTwoBytesExtensions() const
 	{
 		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
 	}
 
-	inline
-	void RtpPacket::AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id)
+	inline void RtpPacket::AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id)
 	{
 		this->extensionMap[uri] = id;
 	}
 
-	inline
-	uint8_t* RtpPacket::GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const
+	inline uint8_t* RtpPacket::GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const
 	{
 		*len = 0;
 
@@ -316,8 +298,7 @@ namespace RTC
 		}
 	}
 
-	inline
-	bool RtpPacket::ReadAudioLevel(uint8_t* volume, bool* voice) const
+	inline bool RtpPacket::ReadAudioLevel(uint8_t* volume, bool* voice) const
 	{
 		uint8_t extenLen;
 		uint8_t* extenValue;
@@ -328,14 +309,13 @@ namespace RTC
 			return false;
 
 		*volume = Utils::Byte::Get1Byte(extenValue, 0);
-		*voice = (*volume & (1 << 7)) ? true : false;
+		*voice  = (*volume & (1 << 7)) ? true : false;
 		*volume &= ~(1 << 7);
 
 		return true;
 	}
 
-	inline
-	bool RtpPacket::ReadAbsSendTime(uint32_t* time) const
+	inline bool RtpPacket::ReadAbsSendTime(uint32_t* time) const
 	{
 		uint8_t extenLen;
 		uint8_t* extenValue;
@@ -350,14 +330,12 @@ namespace RTC
 		return true;
 	}
 
-	inline
-	uint8_t* RtpPacket::GetPayload() const
+	inline uint8_t* RtpPacket::GetPayload() const
 	{
 		return this->payload;
 	}
 
-	inline
-	size_t RtpPacket::GetPayloadLength() const
+	inline size_t RtpPacket::GetPayloadLength() const
 	{
 		return this->payloadLength;
 	}

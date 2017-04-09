@@ -2,27 +2,27 @@
 // #define MS_LOG_DEV
 
 #include "common.hpp"
-#include "Settings.hpp"
+#include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
-#include "DepLibSRTP.hpp"
-#include "Utils.hpp"
-#include "Channel/UnixStreamSocket.hpp"
-#include "RTC/UdpSocket.hpp"
-#include "RTC/TcpServer.hpp"
-#include "RTC/DtlsTransport.hpp"
-#include "RTC/SrtpSession.hpp"
+#include "Logger.hpp"
 #include "Loop.hpp"
 #include "MediaSoupError.hpp"
-#include "Logger.hpp"
+#include "Settings.hpp"
+#include "Utils.hpp"
+#include "Channel/UnixStreamSocket.hpp"
+#include "RTC/DtlsTransport.hpp"
+#include "RTC/SrtpSession.hpp"
+#include "RTC/TcpServer.hpp"
+#include "RTC/UdpSocket.hpp"
+#include <uv.h>
+#include <cerrno>
+#include <csignal>  // sigaction()
+#include <cstdlib>  // std::_Exit(), std::genenv()
+#include <iostream> // std::cout, std::cerr, std::endl
 #include <map>
 #include <string>
-#include <iostream> // std::cout, std::cerr, std::endl
-#include <cstdlib> // std::_Exit(), std::genenv()
-#include <csignal> // sigaction()
-#include <cerrno>
 #include <unistd.h> // getpid(), usleep()
-#include <uv.h>
 
 static void init();
 static void ignoreSignals();
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 	}
 
 	std::string id = std::string(argv[1]);
-	int channelFd = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
+	int channelFd  = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
 
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	{
 		Settings::SetConfiguration(argc, argv);
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		MS_ERROR("configuration error: %s", error.what());
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 	// Print the effective configuration.
 	Settings::PrintConfiguration();
 
-	MS_DEBUG_TAG(info, "starting " MS_PROCESS_NAME " [pid:%ld]", (long)getpid());
+	MS_DEBUG_TAG(info, "starting mediasoup-worker [pid:%ld]", (long)getpid());
 
 #if defined(MS_LITTLE_ENDIAN)
 	MS_DEBUG_TAG(info, "Little-Endian CPU detected");
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 		destroy();
 		exitSuccess();
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
@@ -127,31 +127,24 @@ void ignoreSignals()
 
 	int err;
 	struct sigaction act;
-	std::map<std::string, int> ignoredSignals =
-	{
-		{ "PIPE", SIGPIPE },
-		{ "HUP",  SIGHUP  },
-		{ "ALRM", SIGALRM },
-		{ "USR1", SIGUSR2 },
-		{ "USR2", SIGUSR1 }
-	};
+	std::map<std::string, int> ignoredSignals = {
+	    {"PIPE", SIGPIPE}, {"HUP", SIGHUP}, {"ALRM", SIGALRM}, {"USR1", SIGUSR2}, {"USR2", SIGUSR1}};
 
 	act.sa_handler = SIG_IGN;
-	act.sa_flags = 0;
-	err = sigfillset(&act.sa_mask);
+	act.sa_flags   = 0;
+	err            = sigfillset(&act.sa_mask);
 	if (err)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
 	for (auto it = ignoredSignals.begin(); it != ignoredSignals.end(); ++it)
 	{
 		auto& sigName = it->first;
-		int sigId = it->second;
+		int sigId     = it->second;
 
 		err = sigaction(sigId, &act, nullptr);
 		if (err)
 		{
-			MS_THROW_ERROR("sigaction() failed for signal %s: %s",
-				sigName.c_str(), std::strerror(errno));
+			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 		}
 	}
 }

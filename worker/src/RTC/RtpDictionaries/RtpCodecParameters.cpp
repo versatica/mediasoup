@@ -1,16 +1,16 @@
 #define MS_CLASS "RTC::RtpCodecParameters"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(Json::Value& data, RTC::Scope scope) :
-		scope(scope)
+	RtpCodecParameters::RtpCodecParameters(Json::Value& data, RTC::Scope scope)
+	    : scope(scope)
 	{
 		MS_TRACE();
 
@@ -27,9 +27,7 @@ namespace RTC
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
 
-		if (
-			this->scope == RTC::Scope::ROOM_CAPABILITY ||
-			this->scope == RTC::Scope::PEER_CAPABILITY)
+		if (this->scope == RTC::Scope::ROOM_CAPABILITY || this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// `kind` is mandatory.
 			if (!data[k_kind].isString())
@@ -53,7 +51,7 @@ namespace RTC
 
 		if (data[k_payloadType].isUInt())
 		{
-			this->payloadType = (uint8_t)data[k_payloadType].asUInt();
+			this->payloadType    = (uint8_t)data[k_payloadType].asUInt();
 			this->hasPayloadType = true;
 		}
 
@@ -68,7 +66,7 @@ namespace RTC
 			if (!data[k_payloadType].isUInt())
 				MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
 
-			this->payloadType = (uint8_t)data[k_payloadType].asUInt();
+			this->payloadType    = (uint8_t)data[k_payloadType].asUInt();
 			this->hasPayloadType = true;
 		}
 
@@ -97,11 +95,11 @@ namespace RTC
 		// `rtcpFeedback` is optional.
 		if (data[k_rtcpFeedback].isArray())
 		{
-			auto& json_rtcpFeedback = data[k_rtcpFeedback];
+			auto& jsonRtcpFeedback = data[k_rtcpFeedback];
 
-			for (Json::UInt i = 0; i < json_rtcpFeedback.size(); ++i)
+			for (Json::UInt i = 0; i < jsonRtcpFeedback.size(); ++i)
 			{
-				RTC::RtcpFeedback rtcpFeedback(json_rtcpFeedback[i]);
+				RTC::RtcpFeedback rtcpFeedback(jsonRtcpFeedback[i]);
 
 				// Append to the rtcpFeedback vector.
 				this->rtcpFeedback.push_back(rtcpFeedback);
@@ -128,9 +126,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		if (
-			this->scope == RTC::Scope::ROOM_CAPABILITY ||
-			this->scope == RTC::Scope::PEER_CAPABILITY)
+		if (this->scope == RTC::Scope::ROOM_CAPABILITY || this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// Add `kind`.
 			json[k_kind] = RTC::Media::GetJsonString(this->kind);
@@ -206,8 +202,7 @@ namespace RTC
 				break;
 			}
 
-			default:
-				;
+			default:;
 		}
 
 		// Per MIME checks.
@@ -215,7 +210,7 @@ namespace RTC
 		{
 			case RTC::RtpCodecMime::Subtype::H264:
 			{
-				int32_t packetizationMode = this->parameters.GetInteger(k_packetizationMode);
+				int32_t packetizationMode      = this->parameters.GetInteger(k_packetizationMode);
 				int32_t givenPacketizationMode = codec.parameters.GetInteger(k_packetizationMode);
 
 				if (packetizationMode != givenPacketizationMode)
@@ -224,8 +219,7 @@ namespace RTC
 				break;
 			}
 
-			default:
-				;
+			default:;
 		}
 
 		return true;
@@ -241,9 +235,8 @@ namespace RTC
 		{
 			for (auto& supportedRtcpFeedbackItem : supportedRtcpFeedback)
 			{
-				if (
-					rtcpFeedbackItem.type == supportedRtcpFeedbackItem.type &&
-					rtcpFeedbackItem.parameter == supportedRtcpFeedbackItem.parameter)
+				if (rtcpFeedbackItem.type == supportedRtcpFeedbackItem.type &&
+				    rtcpFeedbackItem.parameter == supportedRtcpFeedbackItem.parameter)
 				{
 					updatedRtcpFeedback.push_back(supportedRtcpFeedbackItem);
 
@@ -255,12 +248,11 @@ namespace RTC
 		this->rtcpFeedback = updatedRtcpFeedback;
 	}
 
-	inline
-	void RtpCodecParameters::CheckCodec()
+	inline void RtpCodecParameters::CheckCodec()
 	{
 		MS_TRACE();
 
-		static std::string k_apt = "apt";
+		static std::string k_apt               = "apt";
 		static std::string k_packetizationMode = "packetizationMode";
 
 		// Check per MIME parameters and set default values.
@@ -293,8 +285,7 @@ namespace RTC
 				break;
 			}
 
-			default:
-				;
+			default:;
 		}
 	}
 }

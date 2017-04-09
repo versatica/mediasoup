@@ -9,17 +9,17 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr uint32_t MaxPacketAge = 10000;
-	constexpr size_t MaxNackPackets = 500;
-	constexpr uint32_t DefaultRtt = 100;
+	constexpr uint32_t MaxPacketAge  = 10000;
+	constexpr size_t MaxNackPackets  = 500;
+	constexpr uint32_t DefaultRtt    = 100;
 	constexpr uint8_t MaxNackRetries = 8;
 	constexpr uint64_t TimerInterval = 25;
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener) :
-		listener(listener),
-		rtt(DefaultRtt)
+	NackGenerator::NackGenerator(Listener* listener)
+	    : listener(listener)
+	    , rtt(DefaultRtt)
 	{
 		MS_TRACE();
 
@@ -44,7 +44,7 @@ namespace RTC
 		if (!this->started)
 		{
 			this->lastSeq32 = seq32;
-			this->started = true;
+			this->started   = true;
 
 			return;
 		}
@@ -69,18 +69,22 @@ namespace RTC
 			// It was a nacked packet.
 			if (it != this->nackList.end())
 			{
-				MS_DEBUG_TAG(rtx,
-					"nacked packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-					packet->GetSsrc(), packet->GetSequenceNumber());
+				MS_DEBUG_TAG(
+				    rtx,
+				    "nacked packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				    packet->GetSsrc(),
+				    packet->GetSequenceNumber());
 
 				this->nackList.erase(it);
 			}
 			// Out of order packet.
 			else
 			{
-				MS_DEBUG_TAG(rtx,
-					"out of order packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-					packet->GetSsrc(), packet->GetSequenceNumber());
+				MS_DEBUG_TAG(
+				    rtx,
+				    "out of order packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				    packet->GetSsrc(),
+				    packet->GetSequenceNumber());
 			}
 
 			return;
@@ -130,8 +134,8 @@ namespace RTC
 
 			NackInfo nackInfo(seq32, sendAtSeqNum);
 
-			MS_ASSERT(this->nackList.find(seq32) == this->nackList.end(),
-				"packet already in the NACK list");
+			MS_ASSERT(
+			    this->nackList.find(seq32) == this->nackList.end(), "packet already in the NACK list");
 
 			this->nackList[seq32] = nackInfo;
 		}
@@ -146,21 +150,20 @@ namespace RTC
 		while (it != this->nackList.end())
 		{
 			NackInfo& nackInfo = it->second;
-			uint16_t seq = nackInfo.seq32 % (1<<16);
+			uint16_t seq       = nackInfo.seq32 % (1 << 16);
 
-			if (
-				filter == NackFilter::SEQ &&
-				nackInfo.sentAtTime == 0 &&
-				this->lastSeq32 >= nackInfo.sendAtSeqNum)
+			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
+			    this->lastSeq32 >= nackInfo.sendAtSeqNum)
 			{
 				nackInfo.retries++;
 				nackInfo.sentAtTime = now;
 
 				if (nackInfo.retries >= MaxNackRetries)
 				{
-					MS_WARN_TAG(rtx,
-						"sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
-						seq);
+					MS_WARN_TAG(
+					    rtx,
+					    "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					    seq);
 
 					it = this->nackList.erase(it);
 				}
@@ -173,18 +176,17 @@ namespace RTC
 				continue;
 			}
 
-			if (
-				filter == NackFilter::TIME &&
-				nackInfo.sentAtTime + this->rtt < now)
+			if (filter == NackFilter::TIME && nackInfo.sentAtTime + this->rtt < now)
 			{
 				nackInfo.retries++;
 				nackInfo.sentAtTime = now;
 
 				if (nackInfo.retries >= MaxNackRetries)
 				{
-					MS_WARN_TAG(rtx,
-						"sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
-						seq);
+					MS_WARN_TAG(
+					    rtx,
+					    "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					    seq);
 
 					it = this->nackList.erase(it);
 				}
@@ -203,15 +205,13 @@ namespace RTC
 		return nackBatch;
 	}
 
-	inline
-	void NackGenerator::MayRunTimer() const
+	inline void NackGenerator::MayRunTimer() const
 	{
 		if (this->nackList.size() > 0)
 			this->timer->Start(TimerInterval);
 	}
 
-	inline
-	void NackGenerator::onTimer(Timer* timer)
+	inline void NackGenerator::onTimer(Timer* timer)
 	{
 		MS_TRACE();
 

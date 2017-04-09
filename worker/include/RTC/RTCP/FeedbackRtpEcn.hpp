@@ -24,114 +24,108 @@
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	class FeedbackRtpEcnItem
-		: public FeedbackItem
+	namespace RTCP
 	{
-	private:
-		struct Header
+		class FeedbackRtpEcnItem : public FeedbackItem
 		{
-			uint32_t sequence_number;
-			uint32_t ect0_counter;
-			uint32_t ect1_counter;
-			uint16_t ecn_ce_counter;
-			uint16_t not_ect_counter;
-			uint16_t lost_packets;
-			uint16_t duplicated_packets;
+		private:
+			struct Header
+			{
+				uint32_t sequenceNumber;
+				uint32_t ect0Counter;
+				uint32_t ect1Counter;
+				uint16_t ecnCeCounter;
+				uint16_t notEctCounter;
+				uint16_t lostPackets;
+				uint16_t duplicatedPackets;
+			};
+
+		public:
+			static const FeedbackRtp::MessageType MessageType = FeedbackRtp::MessageType::ECN;
+
+		public:
+			static FeedbackRtpEcnItem* Parse(const uint8_t* data, size_t len);
+
+		public:
+			explicit FeedbackRtpEcnItem(Header* header);
+			explicit FeedbackRtpEcnItem(FeedbackRtpEcnItem* item);
+			virtual ~FeedbackRtpEcnItem(){};
+
+			uint32_t GetSequenceNumber() const;
+			uint32_t GetEct0Counter() const;
+			uint32_t GetEct1Counter() const;
+			uint16_t GetEcnCeCounter() const;
+			uint16_t GetNotEctCounter() const;
+			uint16_t GetLostPackets() const;
+			uint16_t GetDuplicatedPackets() const;
+
+			/* Virtual methods inherited from FeedbackItem. */
+		public:
+			virtual void Dump() const override;
+			virtual size_t Serialize(uint8_t* buffer) override;
+			virtual size_t GetSize() const override;
+
+		private:
+			Header* header = nullptr;
 		};
 
-	public:
-		static const FeedbackRtp::MessageType MessageType = FeedbackRtp::MessageType::ECN;
+		// Ecn packet declaration.
+		typedef FeedbackRtpItemsPacket<FeedbackRtpEcnItem> FeedbackRtpEcnPacket;
 
-	public:
-		static FeedbackRtpEcnItem* Parse(const uint8_t* data, size_t len);
+		/* Inline instance methods. */
 
-	public:
-		explicit FeedbackRtpEcnItem(Header* header);
-		explicit FeedbackRtpEcnItem(FeedbackRtpEcnItem* item);
-		virtual ~FeedbackRtpEcnItem() {};
+		inline FeedbackRtpEcnItem::FeedbackRtpEcnItem(Header* header)
+		    : header(header)
+		{
+		}
 
-		uint32_t GetSequenceNumber() const;
-		uint32_t GetEct0Counter() const;
-		uint32_t GetEct1Counter() const;
-		uint16_t GetEcnCeCounter() const;
-		uint16_t GetNotEctCounter() const;
-		uint16_t GetLostPackets() const;
-		uint16_t GetDuplicatedPackets() const;
+		inline FeedbackRtpEcnItem::FeedbackRtpEcnItem(FeedbackRtpEcnItem* item)
+		    : header(item->header)
+		{
+		}
 
-	/* Virtual methods inherited from FeedbackItem. */
-	public:
-		virtual void Dump() const override;
-		virtual size_t Serialize(uint8_t* buffer) override;
-		virtual size_t GetSize() const override;
+		inline size_t FeedbackRtpEcnItem::GetSize() const
+		{
+			return sizeof(Header);
+		}
 
-	private:
-		Header* header = nullptr;
-	};
+		inline uint32_t FeedbackRtpEcnItem::GetSequenceNumber() const
+		{
+			return ntohl(this->header->sequenceNumber);
+		}
 
-	// Ecn packet declaration.
-	typedef FeedbackRtpItemsPacket<FeedbackRtpEcnItem> FeedbackRtpEcnPacket;
+		inline uint32_t FeedbackRtpEcnItem::GetEct0Counter() const
+		{
+			return ntohl(this->header->ect0Counter);
+		}
 
-	/* Inline instance methods. */
+		inline uint32_t FeedbackRtpEcnItem::GetEct1Counter() const
+		{
+			return ntohl(this->header->ect1Counter);
+		}
 
-	inline
-	FeedbackRtpEcnItem::FeedbackRtpEcnItem(Header* header):
-		header(header)
-	{}
+		inline uint16_t FeedbackRtpEcnItem::GetEcnCeCounter() const
+		{
+			return ntohs(this->header->ecnCeCounter);
+		}
 
-	inline
-	FeedbackRtpEcnItem::FeedbackRtpEcnItem(FeedbackRtpEcnItem* item):
-		header(item->header)
-	{}
+		inline uint16_t FeedbackRtpEcnItem::GetNotEctCounter() const
+		{
+			return ntohs(this->header->notEctCounter);
+		}
 
-	inline
-	size_t FeedbackRtpEcnItem::GetSize() const
-	{
-		return sizeof(Header);
+		inline uint16_t FeedbackRtpEcnItem::GetLostPackets() const
+		{
+			return ntohs(this->header->lostPackets);
+		}
+
+		inline uint16_t FeedbackRtpEcnItem::GetDuplicatedPackets() const
+		{
+			return ntohs(this->header->duplicatedPackets);
+		}
 	}
-
-	inline
-	uint32_t FeedbackRtpEcnItem::GetSequenceNumber() const
-	{
-		return ntohl(this->header->sequence_number);
-	}
-
-	inline
-	uint32_t FeedbackRtpEcnItem::GetEct0Counter() const
-	{
-		return ntohl(this->header->ect0_counter);
-	}
-
-	inline
-	uint32_t FeedbackRtpEcnItem::GetEct1Counter() const
-	{
-		return ntohl(this->header->ect1_counter);
-	}
-
-	inline
-	uint16_t FeedbackRtpEcnItem::GetEcnCeCounter() const
-	{
-		return ntohs(this->header->ecn_ce_counter);
-	}
-
-	inline
-	uint16_t FeedbackRtpEcnItem::GetNotEctCounter() const
-	{
-		return ntohs(this->header->not_ect_counter);
-	}
-
-	inline
-	uint16_t FeedbackRtpEcnItem::GetLostPackets() const
-	{
-		return ntohs(this->header->lost_packets);
-	}
-
-	inline
-	uint16_t FeedbackRtpEcnItem::GetDuplicatedPackets() const
-	{
-		return ntohs(this->header->duplicated_packets);
-	}
-}}
+}
 
 #endif

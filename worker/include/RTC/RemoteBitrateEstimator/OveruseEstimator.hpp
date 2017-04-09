@@ -12,8 +12,8 @@
 
 #include "common.hpp"
 #include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
-#include <deque>
 #include <cstring> // std::memcpy()
+#include <deque>
 
 namespace RTC
 {
@@ -42,9 +42,10 @@ namespace RTC
 
 		// Update the estimator with a new sample. The deltas should represent deltas
 		// between timestamp groups as defined by the InterArrival class.
-		// |current_hypothesis| should be the hypothesis of the over-use detector at
+		// |currentHypothesis| should be the hypothesis of the over-use detector at
 		// this time.
-		void Update(int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs);
+		void Update(
+		    int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs);
 		// Returns the estimated noise/jitter variance in ms^2.
 		double GetVarNoise() const;
 		// Returns the estimated inter-arrival time delta offset in ms.
@@ -61,9 +62,9 @@ namespace RTC
 		// Must be first member variable. Cannot be const because we need to be copyable.
 		OverUseDetectorOptions options;
 		uint16_t numOfDeltas = 0;
-		double slope = 0;
-		double offset = 0;
-		double prevOffset = 0;
+		double slope         = 0;
+		double offset        = 0;
+		double prevOffset    = 0;
 		double E[2][2];
 		double processNoise[2];
 		double avgNoise = 0;
@@ -73,59 +74,53 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline
-	OverUseDetectorOptions::OverUseDetectorOptions() :
-		initialSlope(8.0 / 512.0),
-		initialOffset(0),
-		initialE(),
-		initialProcessNoise(),
-		initialAvgNoise(0.0),
-		initialVarNoise(50)
+	inline OverUseDetectorOptions::OverUseDetectorOptions()
+	    : initialSlope(8.0 / 512.0)
+	    , initialOffset(0)
+	    , initialE()
+	    , initialProcessNoise()
+	    , initialAvgNoise(0.0)
+	    , initialVarNoise(50)
 	{
 		initialE[0][0] = 100;
 		initialE[1][1] = 1e-1;
 		initialE[0][1] = initialE[1][0] = 0;
-		initialProcessNoise[0] = 1e-13;
-		initialProcessNoise[1] = 1e-3;
+		initialProcessNoise[0]          = 1e-13;
+		initialProcessNoise[1]          = 1e-3;
 	}
 
-	inline
-	OveruseEstimator::OveruseEstimator(const OverUseDetectorOptions& options) :
-		options(options),
-		numOfDeltas(0),
-		slope(this->options.initialSlope),
-		offset(this->options.initialOffset),
-		prevOffset(this->options.initialOffset),
-		E(),
-		processNoise(),
-		avgNoise(this->options.initialAvgNoise),
-		varNoise(this->options.initialVarNoise),
-		tsDeltaHist()
+	inline OveruseEstimator::OveruseEstimator(const OverUseDetectorOptions& options)
+	    : options(options)
+	    , numOfDeltas(0)
+	    , slope(this->options.initialSlope)
+	    , offset(this->options.initialOffset)
+	    , prevOffset(this->options.initialOffset)
+	    , E()
+	    , processNoise()
+	    , avgNoise(this->options.initialAvgNoise)
+	    , varNoise(this->options.initialVarNoise)
+	    , tsDeltaHist()
 	{
 		std::memcpy(this->E, this->options.initialE, sizeof(this->E));
 		std::memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));
 	}
 
-	inline
-	OveruseEstimator::~OveruseEstimator()
+	inline OveruseEstimator::~OveruseEstimator()
 	{
 		this->tsDeltaHist.clear();
 	}
 
-	inline
-	double OveruseEstimator::GetVarNoise() const
+	inline double OveruseEstimator::GetVarNoise() const
 	{
 		return this->varNoise;
 	}
 
-	inline
-	double OveruseEstimator::GetOffset() const
+	inline double OveruseEstimator::GetOffset() const
 	{
 		return this->offset;
 	}
 
-	inline
-	unsigned int OveruseEstimator::GetNumOfDeltas() const
+	inline unsigned int OveruseEstimator::GetNumOfDeltas() const
 	{
 		return this->numOfDeltas;
 	}

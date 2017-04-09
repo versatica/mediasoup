@@ -12,9 +12,9 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_AIMD_RATE_CONTROL_HPP
 
 #include "common.hpp"
-#include "RTC/RemoteBitrateEstimator/RateControlRegion.hpp"
-#include "RTC/RemoteBitrateEstimator/RateControlInput.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
+#include "RTC/RemoteBitrateEstimator/RateControlInput.hpp"
+#include "RTC/RemoteBitrateEstimator/RateControlRegion.hpp"
 
 // A rate control implementation based on additive increases of
 // bitrate when no over-use is detected and multiplicative decreases when
@@ -88,98 +88,88 @@ namespace RTC
 		void ChangeRegion(RateControlRegion region);
 
 	private:
-		uint32_t minConfiguredBitrateBps = kMinBitrateBps;
-		uint32_t maxConfiguredBitrateBps = 30000000;
-		uint32_t currentBitrateBps = this->maxConfiguredBitrateBps;
-		float avgMaxBitrateKbps = -1.0f;
-		float varMaxBitrateKbps = 0.4f;
-		RateControlState rateControlState = kRcHold;
+		uint32_t minConfiguredBitrateBps    = kMinBitrateBps;
+		uint32_t maxConfiguredBitrateBps    = 30000000;
+		uint32_t currentBitrateBps          = this->maxConfiguredBitrateBps;
+		float avgMaxBitrateKbps             = -1.0f;
+		float varMaxBitrateKbps             = 0.4f;
+		RateControlState rateControlState   = kRcHold;
 		RateControlRegion rateControlRegion = kRcMaxUnknown;
-		int64_t timeLastBitrateChange = -1;
+		int64_t timeLastBitrateChange       = -1;
 		RateControlInput currentInput;
-		bool updated = false;
+		bool updated                      = false;
 		int64_t timeFirstIncomingEstimate = -1;
-		bool bitrateIsInitialized = false;
-		float beta = 0.85f;
-		int64_t rtt = kDefaultRttMs;
-		int lastDecrease = 0;
+		bool bitrateIsInitialized         = false;
+		float beta                        = 0.85f;
+		int64_t rtt                       = kDefaultRttMs;
+		int lastDecrease                  = 0;
 	};
 
 	/* Inline methods. */
 
-	inline
-	AimdRateControl::AimdRateControl() :
-		currentInput(kBwNormal, 0, 1.0)
-	{}
-
-	inline
-	void AimdRateControl::SetStartBitrate(int startBitrateBps)
+	inline AimdRateControl::AimdRateControl()
+	    : currentInput(kBwNormal, 0, 1.0)
 	{
-		this->currentBitrateBps = startBitrateBps;
+	}
+
+	inline void AimdRateControl::SetStartBitrate(int startBitrateBps)
+	{
+		this->currentBitrateBps    = startBitrateBps;
 		this->bitrateIsInitialized = true;
 	}
 
-	inline
-	void AimdRateControl::SetMinBitrate(int minBitrateBps)
+	inline void AimdRateControl::SetMinBitrate(int minBitrateBps)
 	{
 		this->minConfiguredBitrateBps = minBitrateBps;
-		this->currentBitrateBps = std::max<int>(minBitrateBps, this->currentBitrateBps);
+		this->currentBitrateBps       = std::max<int>(minBitrateBps, this->currentBitrateBps);
 	}
 
-	inline
-	bool AimdRateControl::ValidEstimate() const
+	inline bool AimdRateControl::ValidEstimate() const
 	{
 		return this->bitrateIsInitialized;
 	}
 
-	inline
-	uint32_t AimdRateControl::LatestEstimate() const
+	inline uint32_t AimdRateControl::LatestEstimate() const
 	{
 		return this->currentBitrateBps;
 	}
 
-	inline
-	uint32_t AimdRateControl::UpdateBandwidthEstimate(int64_t nowMs)
+	inline uint32_t AimdRateControl::UpdateBandwidthEstimate(int64_t nowMs)
 	{
-		this->currentBitrateBps = ChangeBitrate(this->currentBitrateBps, this->currentInput.incomingBitrate, nowMs);
+		this->currentBitrateBps =
+		    ChangeBitrate(this->currentBitrateBps, this->currentInput.incomingBitrate, nowMs);
 		return this->currentBitrateBps;
 	}
 
-	inline
-	void AimdRateControl::SetRtt(int64_t rtt)
+	inline void AimdRateControl::SetRtt(int64_t rtt)
 	{
 		this->rtt = rtt;
 	}
 
-	inline
-	void AimdRateControl::SetEstimate(int bitrateBps, int64_t nowMs)
+	inline void AimdRateControl::SetEstimate(int bitrateBps, int64_t nowMs)
 	{
-		this->updated = true;
-		this->bitrateIsInitialized = true;
-		this->currentBitrateBps = ClampBitrate(bitrateBps, bitrateBps);
+		this->updated               = true;
+		this->bitrateIsInitialized  = true;
+		this->currentBitrateBps     = ClampBitrate(bitrateBps, bitrateBps);
 		this->timeLastBitrateChange = nowMs;
 	}
 
-	inline
-	int AimdRateControl::GetLastBitrateDecreaseBps() const
+	inline int AimdRateControl::GetLastBitrateDecreaseBps() const
 	{
 		return this->lastDecrease;
 	}
 
-	inline
-	uint32_t AimdRateControl::AdditiveRateIncrease(int64_t nowMs, int64_t lastMs) const
+	inline uint32_t AimdRateControl::AdditiveRateIncrease(int64_t nowMs, int64_t lastMs) const
 	{
 		return static_cast<uint32_t>((nowMs - lastMs) * GetNearMaxIncreaseRateBps() / 1000);
 	}
 
-	inline
-	void AimdRateControl::ChangeRegion(RateControlRegion region)
+	inline void AimdRateControl::ChangeRegion(RateControlRegion region)
 	{
 		this->rateControlRegion = region;
 	}
 
-	inline
-	void AimdRateControl::ChangeState(RateControlState newState)
+	inline void AimdRateControl::ChangeState(RateControlState newState)
 	{
 		this->rateControlState = newState;
 	}
