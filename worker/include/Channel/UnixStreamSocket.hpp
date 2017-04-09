@@ -2,14 +2,13 @@
 #define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "handles/UnixStreamSocket.hpp"
 #include "Channel/Request.hpp"
+#include "handles/UnixStreamSocket.hpp"
 #include <json/json.h>
 
 namespace Channel
 {
-	class UnixStreamSocket :
-		public ::UnixStreamSocket
+	class UnixStreamSocket : public ::UnixStreamSocket
 	{
 	public:
 		class Listener
@@ -27,11 +26,11 @@ namespace Channel
 
 	public:
 		void SetListener(Listener* listener);
-		void Send(Json::Value &json);
+		void Send(Json::Value& json);
 		void SendLog(char* nsPayload, size_t nsPayloadLen);
 		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
 
-	/* Pure virtual methods inherited from ::UnixStreamSocket. */
+		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		virtual void userOnUnixStreamRead() override;
 		virtual void userOnUnixStreamSocketClosed(bool isClosedByPeer) override;
@@ -40,10 +39,10 @@ namespace Channel
 		// Passed by argument.
 		Listener* listener = nullptr;
 		// Others.
-		Json::CharReader* jsonReader = nullptr;
+		Json::CharReader* jsonReader   = nullptr;
 		Json::StreamWriter* jsonWriter = nullptr;
-		size_t msgStart = 0; // Where the latest message starts.
-		bool closed = false;
+		size_t msgStart                = 0; // Where the latest message starts.
+		bool closed                    = false;
 	};
 }
 

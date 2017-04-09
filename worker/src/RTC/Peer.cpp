@@ -2,24 +2,24 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Peer.hpp"
-#include "RTC/RtpDictionaries.hpp"
-#include "RTC/RTCP/CompoundPacket.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RTCP/Sdes.hpp"
-#include "MediaSoupError.hpp"
-#include "Logger.hpp"
 #include "DepLibUV.hpp"
+#include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName) :
-		peerId(peerId),
-		peerName(peerName),
-		listener(listener),
-		notifier(notifier)
+	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName)
+	    : peerId(peerId)
+	    , peerName(peerName)
+	    , listener(listener)
+	    , notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -148,9 +148,9 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::peer_close:
 			{
-			#ifdef MS_LOG_DEV
+#ifdef MS_LOG_DEV
 				uint32_t peerId = this->peerId;
-			#endif
+#endif
 
 				Destroy();
 
@@ -184,7 +184,7 @@ namespace RTC
 				{
 					this->capabilities = RTC::RtpCapabilities(request->data, RTC::Scope::PEER_CAPABILITY);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -218,7 +218,7 @@ namespace RTC
 				{
 					transport = GetTransportFromRequest(request, &transportId);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -236,7 +236,7 @@ namespace RTC
 				{
 					transport = new RTC::Transport(this, this->notifier, transportId, request->data);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -274,7 +274,7 @@ namespace RTC
 				{
 					rtpReceiver = GetRtpReceiverFromRequest(request, &rtpReceiverId);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -292,7 +292,7 @@ namespace RTC
 				{
 					transport = GetTransportFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -316,10 +316,10 @@ namespace RTC
 				// Create a RtpReceiver instance.
 				try
 				{
-					rtpReceiver = new RTC::RtpReceiver(this, this->notifier, rtpReceiverId,
-						RTC::Media::GetKind(kind));
+					rtpReceiver =
+					    new RTC::RtpReceiver(this, this->notifier, rtpReceiverId, RTC::Media::GetKind(kind));
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -349,7 +349,7 @@ namespace RTC
 				{
 					transport = GetTransportFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -380,7 +380,7 @@ namespace RTC
 				{
 					rtpReceiver = GetRtpReceiverFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -407,7 +407,7 @@ namespace RTC
 				{
 					rtpSender = GetRtpSenderFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -434,7 +434,7 @@ namespace RTC
 				{
 					rtpSender = GetRtpSenderFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -454,7 +454,7 @@ namespace RTC
 				{
 					transport = GetTransportFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -483,7 +483,7 @@ namespace RTC
 				{
 					rtpSender = GetRtpSenderFromRequest(request);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
 
@@ -511,15 +511,17 @@ namespace RTC
 		}
 	}
 
-	void Peer::AddRtpSender(RTC::RtpSender* rtpSender, const std::string& peerName, RTC::RtpParameters* rtpParameters)
+	void Peer::AddRtpSender(
+	    RTC::RtpSender* rtpSender, const std::string& peerName, RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
 		static const Json::StaticString k_class("class");
 		static const Json::StaticString k_peerName("peerName");
 
-		MS_ASSERT(this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
-			"given RtpSender already exists in this Peer");
+		MS_ASSERT(
+		    this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
+		    "given RtpSender already exists in this Peer");
 
 		// Provide the RtpSender with peer's capabilities.
 		rtpSender->SetPeerCapabilities(std::addressof(this->capabilities));
@@ -533,7 +535,7 @@ namespace RTC
 		// Notify.
 		Json::Value eventData = rtpSender->toJson();
 
-		eventData[k_class] = "Peer";
+		eventData[k_class]    = "Peer";
 		eventData[k_peerName] = peerName;
 
 		this->notifier->Emit(this->peerId, "newrtpsender", eventData);
@@ -546,7 +548,7 @@ namespace RTC
 		auto it = this->rtpSenders.begin();
 		for (; it != this->rtpSenders.end(); ++it)
 		{
-			auto rtpSender = it->second;
+			auto rtpSender     = it->second;
 			auto rtpParameters = rtpSender->GetParameters();
 
 			if (!rtpParameters)
@@ -598,8 +600,7 @@ namespace RTC
 					// Ensure that the RTCP packet fits into the RTCP buffer.
 					if (packet->GetSize() > RTC::RTCP::bufferSize)
 					{
-						MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
-							packet->GetSize());
+						MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
 
 						return;
 					}
@@ -627,8 +628,7 @@ namespace RTC
 				// Ensure that the RTCP packet fits into the RTCP buffer.
 				if (packet->GetSize() > RTC::RTCP::bufferSize)
 				{
-					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)",
-						packet->GetSize());
+					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
 
 					return;
 				}
@@ -730,9 +730,7 @@ namespace RTC
 		{
 			RTC::RtpSender* rtpSender = kv.second;
 
-			if (
-				rtpSender->kind != RTC::Media::Kind::VIDEO &&
-				rtpSender->kind != RTC::Media::Kind::DEPTH)
+			if (rtpSender->kind != RTC::Media::Kind::VIDEO && rtpSender->kind != RTC::Media::Kind::DEPTH)
 			{
 				continue;
 			}
@@ -749,9 +747,7 @@ namespace RTC
 		{
 			RTC::RtpReceiver* rtpReceiver = kv.second;
 
-			if (
-				rtpReceiver->kind != RTC::Media::Kind::VIDEO &&
-				rtpReceiver->kind != RTC::Media::Kind::DEPTH)
+			if (rtpReceiver->kind != RTC::Media::Kind::VIDEO && rtpReceiver->kind != RTC::Media::Kind::DEPTH)
 			{
 				continue;
 			}
@@ -796,9 +792,7 @@ namespace RTC
 		{
 			RTC::RtpReceiver* rtpReceiver = kv.second;
 
-			if (
-				rtpReceiver->kind != RTC::Media::Kind::VIDEO &&
-				rtpReceiver->kind != RTC::Media::Kind::DEPTH)
+			if (rtpReceiver->kind != RTC::Media::Kind::VIDEO && rtpReceiver->kind != RTC::Media::Kind::DEPTH)
 			{
 				continue;
 			}
@@ -853,7 +847,8 @@ namespace RTC
 		{
 			switch (packet->GetType())
 			{
-				/* RTCP coming from a remote receiver which must be forwarded to the corresponding remote sender. */
+				/* RTCP coming from a remote receiver which must be forwarded to the corresponding remote
+				 * sender. */
 
 				case RTCP::Type::RR:
 				{
@@ -862,7 +857,7 @@ namespace RTC
 
 					for (; it != rr->End(); ++it)
 					{
-						auto& report = (*it);
+						auto& report              = (*it);
 						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
 
 						if (rtpSender)
@@ -871,9 +866,10 @@ namespace RTC
 						}
 						else
 						{
-							MS_WARN_TAG(rtcp,
-								"no RtpSender found for received Receiver Report [ssrc:%" PRIu32 "]",
-								report->GetSsrc());
+							MS_WARN_TAG(
+							    rtcp,
+							    "no RtpSender found for received Receiver Report [ssrc:%" PRIu32 "]",
+							    report->GetSsrc());
 						}
 					}
 
@@ -906,19 +902,20 @@ namespace RTC
 							{
 								if (feedback->GetMessageType() == RTCP::FeedbackPs::MessageType::PLI)
 								{
-									MS_DEBUG_TAG(rtx, "PLI received [media ssrc:%" PRIu32 "]",
-										feedback->GetMediaSsrc());
+									MS_DEBUG_TAG(rtx, "PLI received [media ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
 								}
 
 								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
 							}
 							else
 							{
-								MS_WARN_TAG(rtcp,
-									"no RtpSender found for received %s Feedback packet "
-									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-									feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+								MS_WARN_TAG(
+								    rtcp,
+								    "no RtpSender found for received %s Feedback packet "
+								    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+								    RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+								    feedback->GetMediaSsrc(),
+								    feedback->GetMediaSsrc());
 							}
 
 							break;
@@ -932,11 +929,13 @@ namespace RTC
 						case RTCP::FeedbackPs::MessageType::EXT:
 						default:
 						{
-							MS_WARN_TAG(rtcp,
-								"ignoring unsupported %s Feedback packet "
-								"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-								RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-								feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							MS_WARN_TAG(
+							    rtcp,
+							    "ignoring unsupported %s Feedback packet "
+							    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							    RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							    feedback->GetMediaSsrc(),
+							    feedback->GetMediaSsrc());
 
 							break;
 						}
@@ -958,16 +957,18 @@ namespace RTC
 							if (rtpSender)
 							{
 								RTC::RTCP::FeedbackRtpNackPacket* nackPacket =
-									static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+								    static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
 								rtpSender->ReceiveNack(nackPacket);
 							}
 							else
 							{
-								MS_WARN_TAG(rtcp,
-									"no RtpSender found for received NACK Feedback packet "
-									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-									feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+								MS_WARN_TAG(
+								    rtcp,
+								    "no RtpSender found for received NACK Feedback packet "
+								    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+								    feedback->GetMediaSsrc(),
+								    feedback->GetMediaSsrc());
 							}
 
 							break;
@@ -983,11 +984,13 @@ namespace RTC
 						case RTCP::FeedbackRtp::MessageType::EXT:
 						default:
 						{
-							MS_WARN_TAG(rtcp,
-								"ignoring unsupported %s Feedback packet "
-								"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-								RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-								feedback->GetMediaSsrc(), feedback->GetMediaSsrc());
+							MS_WARN_TAG(
+							    rtcp,
+							    "ignoring unsupported %s Feedback packet "
+							    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							    RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							    feedback->GetMediaSsrc(),
+							    feedback->GetMediaSsrc());
 
 							break;
 						}
@@ -996,11 +999,12 @@ namespace RTC
 					break;
 				}
 
-				/* RTCP coming from a remote sender which must be forwarded to the corresponding remote receivers. */
+				/* RTCP coming from a remote sender which must be forwarded to the corresponding remote
+				 * receivers. */
 
 				case RTCP::Type::SR:
 				{
-					RTCP::SenderReportPacket* sr = static_cast<RTCP::SenderReportPacket*>(packet);
+					RTCP::SenderReportPacket* sr          = static_cast<RTCP::SenderReportPacket*>(packet);
 					RTCP::SenderReportPacket::Iterator it = sr->Begin();
 
 					// Even if Sender Report packet can only contain one report..
@@ -1016,9 +1020,10 @@ namespace RTC
 						}
 						else
 						{
-							MS_WARN_TAG(rtcp,
-								"no RtpReceiver found for received Sender Report [ssrc:%" PRIu32 "]",
-								report->GetSsrc());
+							MS_WARN_TAG(
+							    rtcp,
+							    "no RtpReceiver found for received Sender Report [ssrc:%" PRIu32 "]",
+							    report->GetSsrc());
 						}
 					}
 
@@ -1027,7 +1032,7 @@ namespace RTC
 
 				case RTCP::Type::SDES:
 				{
-					RTCP::SdesPacket* sdes = static_cast<RTCP::SdesPacket*>(packet);
+					RTCP::SdesPacket* sdes        = static_cast<RTCP::SdesPacket*>(packet);
 					RTCP::SdesPacket::Iterator it = sdes->Begin();
 
 					for (; it != sdes->End(); ++it)
@@ -1038,8 +1043,8 @@ namespace RTC
 
 						if (!rtpReceiver)
 						{
-							MS_WARN_TAG(rtcp, "no RtpReceiver for received SDES chunk [ssrc:%" PRIu32 "]",
-								chunk->GetSsrc());
+							MS_WARN_TAG(
+							    rtcp, "no RtpReceiver for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
 						}
 					}
 
@@ -1055,8 +1060,8 @@ namespace RTC
 
 				default:
 				{
-					MS_WARN_TAG(rtcp, "unhandled RTCP type received [type:%" PRIu8 "]",
-						(uint8_t)packet->GetType());
+					MS_WARN_TAG(
+					    rtcp, "unhandled RTCP type received [type:%" PRIu8 "]", (uint8_t)packet->GetType());
 				}
 			}
 
@@ -1097,7 +1102,7 @@ namespace RTC
 	void Peer::onTimer(Timer* timer)
 	{
 		uint64_t interval = RTC::RTCP::maxVideoIntervalMs;
-		uint32_t now = DepLibUV::GetTime();
+		uint32_t now      = DepLibUV::GetTime();
 
 		this->SendRtcp(now);
 

@@ -3,22 +3,25 @@
 
 #include "common.hpp"
 #include "handles/UdpSocket.hpp"
-#include <unordered_map>
 #include <uv.h>
+#include <unordered_map>
 
 namespace RTC
 {
-	class UdpSocket :
-		public ::UdpSocket
+	class UdpSocket : public ::UdpSocket
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual ~Listener() {};
+			virtual ~Listener(){};
 
 		public:
-			virtual void onPacketRecv(RTC::UdpSocket *socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
+			virtual void onPacketRecv(
+			    RTC::UdpSocket* socket,
+			    const uint8_t* data,
+			    size_t len,
+			    const struct sockaddr* remoteAddr) = 0;
 		};
 
 	public:
@@ -39,11 +42,12 @@ namespace RTC
 		UdpSocket(Listener* listener, int addressFamily);
 
 	private:
-		virtual ~UdpSocket() {};
+		virtual ~UdpSocket(){};
 
-	/* Pure virtual methods inherited from ::UdpSocket. */
+		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
-		virtual void userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
+		virtual void userOnUdpDatagramRecv(
+		    const uint8_t* data, size_t len, const struct sockaddr* addr) override;
 		virtual void userOnUdpSocketClosed() override;
 
 	private:

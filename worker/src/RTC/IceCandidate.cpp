@@ -8,13 +8,13 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	IceCandidate::IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority) :
-		foundation("udpcandidate"),
-		priority(priority),
-		family(udpSocket->GetLocalFamily()),
-		protocol(Protocol::UDP),
-		port(udpSocket->GetLocalPort()),
-		type(CandidateType::HOST)
+	IceCandidate::IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
+	    : foundation("udpcandidate")
+	    , priority(priority)
+	    , family(udpSocket->GetLocalFamily())
+	    , protocol(Protocol::UDP)
+	    , port(udpSocket->GetLocalPort())
+	    , type(CandidateType::HOST)
 	{
 		switch (this->family)
 		{
@@ -40,14 +40,14 @@ namespace RTC
 		}
 	}
 
-	IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority) :
-		foundation("tcpcandidate"),
-		priority(priority),
-		family(tcpServer->GetLocalFamily()),
-		protocol(Protocol::TCP),
-		port(tcpServer->GetLocalPort()),
-		type(CandidateType::HOST),
-		tcpType(TcpCandidateType::PASSIVE)
+	IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
+	    : foundation("tcpcandidate")
+	    , priority(priority)
+	    , family(tcpServer->GetLocalFamily())
+	    , protocol(Protocol::TCP)
+	    , port(tcpServer->GetLocalPort())
+	    , type(CandidateType::HOST)
+	    , tcpType(TcpCandidateType::PASSIVE)
 	{
 		switch (this->family)
 		{
@@ -106,8 +106,8 @@ namespace RTC
 		}
 
 		json[k_priority] = (Json::UInt)this->priority;
-		json[k_ip] = this->ip;
-		json[k_port] = (Json::UInt)this->port;
+		json[k_ip]       = this->ip;
+		json[k_port]     = (Json::UInt)this->port;
 
 		switch (this->type)
 		{

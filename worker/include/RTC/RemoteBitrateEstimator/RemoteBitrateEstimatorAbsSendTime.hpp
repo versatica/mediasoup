@@ -12,18 +12,18 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
 
 #include "common.hpp"
+#include "Logger.hpp"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
-#include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
+#include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include "RTC/RtpDataCounter.hpp"
-#include "Logger.hpp"
+#include <cassert>
 #include <list>
 #include <map>
 #include <memory>
 #include <vector>
-#include <cassert>
 
 namespace RTC
 {
@@ -44,8 +44,8 @@ namespace RTC
 		float sendMeanMs = 0.0f;
 		float recvMeanMs = 0.0f;
 		// TODO(holmer): Add some variance metric as well?
-		size_t meanSize = 0;
-		int count = 0;
+		size_t meanSize      = 0;
+		int count            = 0;
 		int numAboveMinDelta = 0;
 	};
 
@@ -59,7 +59,11 @@ namespace RTC
 		explicit RemoteBitrateEstimatorAbsSendTime(Listener* observer);
 		virtual ~RemoteBitrateEstimatorAbsSendTime() = default;
 
-		void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t absSendTime) override;
+		void IncomingPacket(
+		    int64_t arrivalTimeMs,
+		    size_t payloadSize,
+		    const RtpPacket& packet,
+		    const uint32_t absSendTime) override;
 		// This class relies on Process() being called periodically (at least once
 		// every other second) for streams to be timed out properly.
 		void Process() override;
@@ -79,7 +83,8 @@ namespace RTC
 		};
 
 	private:
-		void IncomingPacketInfo(int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc);
+		void IncomingPacketInfo(
+		    int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc);
 
 		void ComputeClusters(std::list<Cluster>* clusters) const;
 		std::list<Cluster>::const_iterator FindBestProbe(const std::list<Cluster>& clusters) const;
@@ -99,73 +104,67 @@ namespace RTC
 		std::vector<int64_t> recentUpdateTimeMs;
 		std::list<Probe> probes;
 		size_t totalProbesReceived = 0;
-		int64_t firstPacketTimeMs = -1;
-		int64_t lastUpdateMs = -1;
-		bool umaRecorded = false;
+		int64_t firstPacketTimeMs  = -1;
+		int64_t lastUpdateMs       = -1;
+		bool umaRecorded           = false;
 		Ssrcs ssrcs;
 		AimdRateControl remoteRate;
 	};
 
 	/* Inline Methods. */
 
-	inline
-	Probe::Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize) :
-		sendTimeMs(sendTimeMs),
-		recvTimeMs(recvTimeMs),
-		payloadSize(payloadSize)
-		{}
+	inline Probe::Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize)
+	    : sendTimeMs(sendTimeMs)
+	    , recvTimeMs(recvTimeMs)
+	    , payloadSize(payloadSize)
+	{
+	}
 
-	inline
-	int Cluster::GetSendBitrateBps() const
+	inline int Cluster::GetSendBitrateBps() const
 	{
 		assert(sendMeanMs > 0.0f);
 
 		return meanSize * 8 * 1000 / sendMeanMs;
 	}
 
-	inline
-	int Cluster::GetRecvBitrateBps() const
+	inline int Cluster::GetRecvBitrateBps() const
 	{
 		assert(recvMeanMs > 0.0f);
 
 		return meanSize * 8 * 1000 / recvMeanMs;
 	}
 
-	inline
-	RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* observer) :
-		observer(observer),
-		interArrival(),
-		estimator(),
-		detector(),
-		incomingBitrate()
-	{}
+	inline RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* observer)
+	    : observer(observer)
+	    , interArrival()
+	    , estimator()
+	    , detector()
+	    , incomingBitrate()
+	{
+	}
 
-	inline
-	void RemoteBitrateEstimatorAbsSendTime::Process()
-	{}
+	inline void RemoteBitrateEstimatorAbsSendTime::Process()
+	{
+	}
 
-	inline
-	int64_t RemoteBitrateEstimatorAbsSendTime::TimeUntilNextProcess()
+	inline int64_t RemoteBitrateEstimatorAbsSendTime::TimeUntilNextProcess()
 	{
 		const int64_t kDisabledModuleTime = 1000;
 		return kDisabledModuleTime;
 	}
 
-	inline
-	void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)
+	inline void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)
 	{
 		(void)maxRttMs;
 		this->remoteRate.SetRtt(avgRttMs);
 	}
 
-	inline
-	void RemoteBitrateEstimatorAbsSendTime::RemoveStream(uint32_t ssrc)
+	inline void RemoteBitrateEstimatorAbsSendTime::RemoveStream(uint32_t ssrc)
 	{
 		this->ssrcs.erase(ssrc);
 	}
 
-	inline
-	void RemoteBitrateEstimatorAbsSendTime::SetMinBitrate(int minBitrateBps)
+	inline void RemoteBitrateEstimatorAbsSendTime::SetMinBitrate(int minBitrateBps)
 	{
 		this->remoteRate.SetMinBitrate(minBitrateBps);
 	}

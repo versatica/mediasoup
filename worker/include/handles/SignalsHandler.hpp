@@ -1,9 +1,9 @@
 #ifndef MS_SIGNALS_HANDLER_HPP
-#define	MS_SIGNALS_HANDLER_HPP
+#define MS_SIGNALS_HANDLER_HPP
 
-#include <vector>
-#include <string>
 #include <uv.h>
+#include <string>
+#include <vector>
 
 class SignalsHandler
 {
@@ -11,7 +11,7 @@ public:
 	class Listener
 	{
 	public:
-		virtual ~Listener() {};
+		virtual ~Listener(){};
 
 	public:
 		virtual void onSignal(SignalsHandler* signalsHandler, int signum) = 0;
@@ -21,13 +21,13 @@ public:
 	explicit SignalsHandler(Listener* listener);
 
 private:
-	~SignalsHandler() {};
+	~SignalsHandler(){};
 
 public:
 	void Destroy();
 	void AddSignal(int signum, std::string name);
 
-/* Callbacks fired by UV events. */
+	/* Callbacks fired by UV events. */
 public:
 	void onUvSignal(int signum);
 

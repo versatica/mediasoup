@@ -1,10 +1,10 @@
 #define MS_CLASS "RTC::RtpCodecMime"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "Utils.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
@@ -82,7 +82,7 @@ namespace RTC
 		if (slashPos == std::string::npos || slashPos == 0 || slashPos == name.length() - 1)
 			MS_THROW_ERROR("wrong codec MIME");
 
-		std::string type = name.substr(0, slashPos);
+		std::string type    = name.substr(0, slashPos);
 		std::string subtype = name.substr(slashPos + 1);
 
 		// Force lowcase names.

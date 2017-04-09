@@ -12,17 +12,21 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorSingleStream.hpp"
+#include "DepLibUV.hpp"
+#include "Logger.hpp"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseEstimator.hpp"
-#include "DepLibUV.hpp"
-#include "Logger.hpp"
 #include <utility> // std::make_pair()
 
 namespace RTC
 {
-	void RemoteBitrateEstimatorSingleStream::IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t transmissionTimeOffset)
+	void RemoteBitrateEstimatorSingleStream::IncomingPacket(
+	    int64_t arrivalTimeMs,
+	    size_t payloadSize,
+	    const RtpPacket& packet,
+	    const uint32_t transmissionTimeOffset)
 	{
 		MS_TRACE();
 
@@ -31,9 +35,9 @@ namespace RTC
 			this->umaRecorded = true;
 		}
 
-		uint32_t ssrc = packet.GetSsrc();
+		uint32_t ssrc         = packet.GetSsrc();
 		uint32_t rtpTimestamp = packet.GetTimestamp() + transmissionTimeOffset;
-		int64_t nowMs = DepLibUV::GetTime();
+		int64_t nowMs         = DepLibUV::GetTime();
 
 		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.find(ssrc);
 		if (it == this->overuseDetectors.end())
@@ -44,13 +48,12 @@ namespace RTC
 			// callback will no longer be called for the old SSRC. This will be
 			// automatically cleaned up when we have one RemoteBitrateEstimator per REMB
 			// group.
-			std::pair<SsrcOveruseEstimatorMap::iterator, bool> insertResult =
-				this->overuseDetectors.insert(std::make_pair(
-					ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
+			std::pair<SsrcOveruseEstimatorMap::iterator, bool> insertResult = this->overuseDetectors.insert(
+			    std::make_pair(ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
 			it = insertResult.first;
 		}
 
-		Detector* estimator = it->second;
+		Detector* estimator         = it->second;
 		estimator->lastPacketTimeMs = nowMs;
 
 		// Check if incoming bitrate estimate is valid, and if it needs to be reset.
@@ -72,31 +75,31 @@ namespace RTC
 		this->incomingBitrate.Update(payloadSize, nowMs);
 
 		const BandwidthUsage priorState = estimator->detector.State();
-		uint32_t timestampDelta = 0;
-		int64_t timeDelta = 0;
-		int sizeDelta = 0;
+		uint32_t timestampDelta         = 0;
+		int64_t timeDelta               = 0;
+		int sizeDelta                   = 0;
 
 		if (estimator->interArrival.ComputeDeltas(
-			rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta,
-			&sizeDelta))
+		        rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
 		{
 			double timestampDeltaMs = timestampDelta * kTimestampToMs;
 
 			estimator->estimator.Update(
-				timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
+			    timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
 
 			estimator->detector.Detect(
-				estimator->estimator.GetOffset(),
-				timestampDeltaMs, estimator->estimator.GetNumOfDeltas(), nowMs);
+			    estimator->estimator.GetOffset(),
+			    timestampDeltaMs,
+			    estimator->estimator.GetNumOfDeltas(),
+			    nowMs);
 		}
 
 		if (estimator->detector.State() == kBwOverusing)
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
 
-			if (
-				incomingBitrateBps && (priorState != kBwOverusing ||
-				GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
+			if (incomingBitrateBps && (priorState != kBwOverusing ||
+			                           GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
 				// We also have to update the estimate immediately if we are overusing
@@ -121,17 +124,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		BandwidthUsage bwState = kBwNormal;
-		double sumVarNoise = 0.0;
+		BandwidthUsage bwState               = kBwNormal;
+		double sumVarNoise                   = 0.0;
 		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.begin();
 
 		while (it != this->overuseDetectors.end())
 		{
 			const int64_t timeOfLastReceivedPacket = it->second->lastPacketTimeMs;
 
-			if (
-					timeOfLastReceivedPacket >= 0 &&
-					nowMs - timeOfLastReceivedPacket > kStreamTimeOutMs)
+			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > kStreamTimeOutMs)
 			{
 				// This over-use detector hasn't received packets for |kStreamTimeOutMs|
 				// milliseconds and is considered stale.
@@ -156,10 +157,8 @@ namespace RTC
 		}
 
 		AimdRateControl* remoteRate = GetRemoteRate();
-		double meanNoiseVar = sumVarNoise /
-			static_cast<double>(this->overuseDetectors.size());
-		const RateControlInput input(
-				bwState, this->incomingBitrate.GetRate(nowMs), meanNoiseVar);
+		double meanNoiseVar         = sumVarNoise / static_cast<double>(this->overuseDetectors.size());
+		const RateControlInput input(bwState, this->incomingBitrate.GetRate(nowMs), meanNoiseVar);
 
 		remoteRate->Update(&input, nowMs);
 
@@ -178,7 +177,8 @@ namespace RTC
 		}
 	}
 
-	bool RemoteBitrateEstimatorSingleStream::LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
+	bool RemoteBitrateEstimatorSingleStream::LatestEstimate(
+	    std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
 	{
 		MS_TRACE();
 
@@ -204,7 +204,7 @@ namespace RTC
 
 		ssrcs->resize(this->overuseDetectors.size());
 
-		int i = 0;
+		int i                                      = 0;
 		SsrcOveruseEstimatorMap::const_iterator it = this->overuseDetectors.begin();
 
 		for (; it != this->overuseDetectors.end(); ++it, ++i)

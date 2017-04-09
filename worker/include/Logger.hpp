@@ -64,15 +64,15 @@
  */
 
 #ifndef MS_LOGGER_HPP
-#define	MS_LOGGER_HPP
+#define MS_LOGGER_HPP
 
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Channel/UnixStreamSocket.hpp"
-#include <string>
-#include <cstdio> // std::snprintf(), std::fprintf(), stdout, stderr
-#include <cstring>
+#include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstdlib> // std::abort()
+#include <cstring>
+#include <string>
 
 // clang-format off
 

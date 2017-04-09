@@ -2,25 +2,25 @@
 #define MS_RTC_TCP_SERVER_HPP
 
 #include "common.hpp"
-#include "handles/TcpServer.hpp"
-#include "handles/TcpConnection.hpp"
 #include "RTC/TcpConnection.hpp"
-#include <unordered_map>
+#include "handles/TcpConnection.hpp"
+#include "handles/TcpServer.hpp"
 #include <uv.h>
+#include <unordered_map>
 
 namespace RTC
 {
-	class TcpServer :
-		public ::TcpServer
+	class TcpServer : public ::TcpServer
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual ~Listener() {};
+			virtual ~Listener(){};
 
 		public:
-			virtual void onRtcTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) = 0;
+			virtual void onRtcTcpConnectionClosed(
+			    RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) = 0;
 		};
 
 	public:
@@ -41,9 +41,9 @@ namespace RTC
 		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int addressFamily);
 
 	private:
-		virtual ~TcpServer() {};
+		virtual ~TcpServer(){};
 
-	/* Pure virtual methods inherited from ::TcpServer. */
+		/* Pure virtual methods inherited from ::TcpServer. */
 	public:
 		virtual void userOnTcpConnectionAlloc(::TcpConnection** connection) override;
 		virtual void userOnNewTcpConnection(::TcpConnection* connection) override;
@@ -52,7 +52,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
+		Listener* listener                         = nullptr;
 		RTC::TcpConnection::Listener* connListener = nullptr;
 	};
 }

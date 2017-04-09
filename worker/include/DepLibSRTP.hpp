@@ -1,8 +1,8 @@
 #ifndef MS_DEP_LIBSRTP_HPP
-#define	MS_DEP_LIBSRTP_HPP
+#define MS_DEP_LIBSRTP_HPP
 
-#include <vector>
 #include <srtp.h>
+#include <vector>
 
 class DepLibSRTP
 {
@@ -18,14 +18,12 @@ private:
 
 /* Inline static methods. */
 
-inline
-bool DepLibSRTP::IsError(srtp_err_status_t code)
+inline bool DepLibSRTP::IsError(srtp_err_status_t code)
 {
 	return (code != srtp_err_status_ok);
 }
 
-inline
-const char* DepLibSRTP::GetErrorString(srtp_err_status_t code)
+inline const char* DepLibSRTP::GetErrorString(srtp_err_status_t code)
 {
 	// This throws out_of_range if the given index is not in the vector.
 	return DepLibSRTP::errors.at(code);

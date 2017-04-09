@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpEncodingParameters"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
@@ -30,7 +30,7 @@ namespace RTC
 		// `codecPayloadType` is optional.
 		if (data[k_codecPayloadType].isUInt())
 		{
-			this->codecPayloadType = (uint8_t)data[k_codecPayloadType].asUInt();
+			this->codecPayloadType    = (uint8_t)data[k_codecPayloadType].asUInt();
 			this->hasCodecPayloadType = true;
 		}
 
@@ -41,14 +41,14 @@ namespace RTC
 		// `fec` is optional.
 		if (data[k_fec].isObject())
 		{
-			this->fec = RtpFecParameters(data[k_fec]);
+			this->fec    = RtpFecParameters(data[k_fec]);
 			this->hasFec = true;
 		}
 
 		// `rtx` is optional.
 		if (data[k_rtx].isObject())
 		{
-			this->rtx = RtpRtxParameters(data[k_rtx]);
+			this->rtx    = RtpRtxParameters(data[k_rtx]);
 			this->hasRtx = true;
 		}
 

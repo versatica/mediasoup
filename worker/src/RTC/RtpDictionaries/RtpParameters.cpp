@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpParameters"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <unordered_set>
 
 namespace RTC
@@ -80,7 +80,7 @@ namespace RTC
 		// `rtcp` is optional.
 		if (data[k_rtcp].isObject())
 		{
-			this->rtcp = RTC::RtcpParameters(data[k_rtcp]);
+			this->rtcp    = RTC::RtcpParameters(data[k_rtcp]);
 			this->hasRtcp = true;
 		}
 
@@ -95,14 +95,14 @@ namespace RTC
 		ValidateEncodings();
 	}
 
-	RtpParameters::RtpParameters(const RtpParameters* rtpParameters) :
-		muxId(rtpParameters->muxId),
-		codecs(rtpParameters->codecs),
-		encodings(rtpParameters->encodings),
-		headerExtensions(rtpParameters->headerExtensions),
-		rtcp(rtpParameters->rtcp),
-		hasRtcp(rtpParameters->hasRtcp),
-		userParameters(rtpParameters->userParameters)
+	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
+	    : muxId(rtpParameters->muxId)
+	    , codecs(rtpParameters->codecs)
+	    , encodings(rtpParameters->encodings)
+	    , headerExtensions(rtpParameters->headerExtensions)
+	    , rtcp(rtpParameters->rtcp)
+	    , hasRtcp(rtpParameters->hasRtcp)
+	    , userParameters(rtpParameters->userParameters)
 	{
 		MS_TRACE();
 	}
@@ -167,7 +167,7 @@ namespace RTC
 		for (auto it = this->codecs.begin(); it != this->codecs.end();)
 		{
 			auto& codec = *it;
-			auto it2 = capabilities.codecs.begin();
+			auto it2    = capabilities.codecs.begin();
 
 			for (; it2 != capabilities.codecs.end(); ++it2)
 			{
@@ -184,8 +184,10 @@ namespace RTC
 			}
 			if (it2 == capabilities.codecs.end())
 			{
-				MS_WARN_DEV("no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
-					codec.payloadType, codec.mime.GetName().c_str());
+				MS_WARN_DEV(
+				    "no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
+				    codec.payloadType,
+				    codec.mime.GetName().c_str());
 
 				removedCodecPayloadTypes.push_back(codec.payloadType);
 				it = this->codecs.erase(it);
@@ -196,7 +198,7 @@ namespace RTC
 		for (auto it = this->encodings.begin(); it != this->encodings.end();)
 		{
 			auto& encoding = *it;
-			auto it2 = removedCodecPayloadTypes.begin();
+			auto it2       = removedCodecPayloadTypes.begin();
 
 			for (; it2 != removedCodecPayloadTypes.end(); ++it2)
 			{
@@ -234,7 +236,7 @@ namespace RTC
 				if (headerExtension.type == supportedHeaderExtension.type)
 				{
 					// Set the same id and other properties.
-					headerExtension.id = supportedHeaderExtension.preferredId;
+					headerExtension.id      = supportedHeaderExtension.preferredId;
 					headerExtension.encrypt = supportedHeaderExtension.preferredEncrypt;
 
 					updatedHeaderExtensions.push_back(headerExtension);
@@ -271,8 +273,7 @@ namespace RTC
 		return fakeCodec;
 	}
 
-	inline
-	void RtpParameters::ValidateCodecs()
+	inline void RtpParameters::ValidateCodecs()
 	{
 		MS_TRACE();
 
@@ -298,7 +299,7 @@ namespace RTC
 				{
 					// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
 					int32_t apt = codec.parameters.GetInteger(k_apt);
-					auto it = this->codecs.begin();
+					auto it     = this->codecs.begin();
 
 					for (; it != this->codecs.end(); ++it)
 					{
@@ -322,14 +323,12 @@ namespace RTC
 					break;
 				}
 
-				default:
-					;
+				default:;
 			}
 		}
 	}
 
-	inline
-	void RtpParameters::ValidateEncodings()
+	inline void RtpParameters::ValidateEncodings()
 	{
 		uint8_t firstMediaPayloadType;
 
@@ -358,7 +357,7 @@ namespace RTC
 		{
 			RTC::RtpEncodingParameters encoding;
 
-			encoding.codecPayloadType = firstMediaPayloadType;
+			encoding.codecPayloadType    = firstMediaPayloadType;
 			encoding.hasCodecPayloadType = true;
 
 			// Insert into the encodings vector.
@@ -372,7 +371,7 @@ namespace RTC
 			{
 				if (!encoding.hasCodecPayloadType)
 				{
-					encoding.codecPayloadType = firstMediaPayloadType;
+					encoding.codecPayloadType    = firstMediaPayloadType;
 					encoding.hasCodecPayloadType = true;
 				}
 				else

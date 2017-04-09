@@ -2,28 +2,26 @@
 // #define MS_LOG_DEV
 
 #include "handles/Timer.hpp"
-#include "MediaSoupError.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
 
 /* Static methods for UV callbacks. */
 
-inline
-static void onTimer(uv_timer_t* handle)
+inline static void onTimer(uv_timer_t* handle)
 {
 	static_cast<Timer*>(handle->data)->onUvTimer();
 }
 
-inline
-static void onClose(uv_handle_t* handle)
+inline static void onClose(uv_handle_t* handle)
 {
 	delete handle;
 }
 
 /* Instance methods. */
 
-Timer::Timer(Listener* listener) :
-	listener(listener)
+Timer::Timer(Listener* listener)
+    : listener(listener)
 {
 	MS_TRACE();
 
@@ -77,8 +75,7 @@ void Timer::Stop()
 		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
 }
 
-inline
-void Timer::onUvTimer()
+inline void Timer::onUvTimer()
 {
 	MS_TRACE();
 

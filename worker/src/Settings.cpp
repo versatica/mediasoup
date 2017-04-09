@@ -2,21 +2,20 @@
 // #define MS_LOG_DEV
 
 #include "Settings.hpp"
-#include "Utils.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "Utils.hpp"
+#include <uv.h>
 #include <cctype> // isprint()
 #include <cerrno>
 #include <unistd.h> // close()
-#include <uv.h>
-extern "C"
-{
-	#include <getopt.h>
+extern "C" {
+#include <getopt.h>
 }
 
 /* Helpers declaration. */
 
-static bool IsBindableIP(const std::string &ip, int family, int* _bind_err);
+static bool IsBindableIP(const std::string& ip, int family, int* _bind_err);
 
 /* Class variables. */
 
@@ -49,13 +48,13 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	/* Variables for getopt. */
 
-	extern char *optarg;
+	extern char* optarg;
 	extern int opterr, optopt;
 	int c;
 	int optionIdx = 0;
 	std::string stringValue;
 	std::vector<std::string> logTags;
-  // clang-format off
+	// clang-format off
 	struct option options[] =
 	{
 		{ "logLevel",            optional_argument, nullptr, 'l' },
@@ -103,13 +102,13 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				break;
 
 			case '5':
-				stringValue = std::string(optarg);
+				stringValue                              = std::string(optarg);
 				Settings::configuration.rtcAnnouncedIPv4 = stringValue;
 				Settings::configuration.hasAnnouncedIPv4 = true;
 				break;
 
 			case '7':
-				stringValue = std::string(optarg);
+				stringValue                              = std::string(optarg);
 				Settings::configuration.rtcAnnouncedIPv6 = stringValue;
 				Settings::configuration.hasAnnouncedIPv6 = true;
 				break;
@@ -123,12 +122,12 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				break;
 
 			case 'c':
-				stringValue = std::string(optarg);
+				stringValue                                 = std::string(optarg);
 				Settings::configuration.dtlsCertificateFile = stringValue;
 				break;
 
 			case 'p':
-				stringValue = std::string(optarg);
+				stringValue                                = std::string(optarg);
 				Settings::configuration.dtlsPrivateKeyFile = stringValue;
 				break;
 
@@ -203,16 +202,17 @@ void Settings::PrintConfiguration()
 
 	MS_DEBUG_TAG(info, "<configuration>");
 
-	MS_DEBUG_TAG(info, "  logLevel            : \"%s\"",
-		Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	MS_DEBUG_TAG(
+	    info,
+	    "  logLevel            : \"%s\"",
+	    Settings::logLevel2String[Settings::configuration.logLevel].c_str());
 	for (auto& tag : logTags)
 	{
 		MS_DEBUG_TAG(info, "  logTag              : \"%s\"", tag.c_str());
 	}
 	if (Settings::configuration.hasIPv4)
 	{
-		MS_DEBUG_TAG(info, "  rtcIPv4             : \"%s\"",
-			Settings::configuration.rtcIPv4.c_str());
+		MS_DEBUG_TAG(info, "  rtcIPv4             : \"%s\"", Settings::configuration.rtcIPv4.c_str());
 	}
 	else
 	{
@@ -220,8 +220,7 @@ void Settings::PrintConfiguration()
 	}
 	if (Settings::configuration.hasIPv6)
 	{
-		MS_DEBUG_TAG(info, "  rtcIPv6             : \"%s\"",
-			Settings::configuration.rtcIPv6.c_str());
+		MS_DEBUG_TAG(info, "  rtcIPv6             : \"%s\"", Settings::configuration.rtcIPv6.c_str());
 	}
 	else
 	{
@@ -229,8 +228,8 @@ void Settings::PrintConfiguration()
 	}
 	if (Settings::configuration.hasAnnouncedIPv4)
 	{
-		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv4    : \"%s\"",
-			Settings::configuration.rtcAnnouncedIPv4.c_str());
+		MS_DEBUG_TAG(
+		    info, "  rtcAnnouncedIPv4    : \"%s\"", Settings::configuration.rtcAnnouncedIPv4.c_str());
 	}
 	else
 	{
@@ -238,8 +237,8 @@ void Settings::PrintConfiguration()
 	}
 	if (Settings::configuration.hasAnnouncedIPv6)
 	{
-		MS_DEBUG_TAG(info, "  rtcAnnouncedIPv6    : \"%s\"",
-			Settings::configuration.rtcAnnouncedIPv6.c_str());
+		MS_DEBUG_TAG(
+		    info, "  rtcAnnouncedIPv6    : \"%s\"", Settings::configuration.rtcAnnouncedIPv6.c_str());
 	}
 	else
 	{
@@ -249,10 +248,10 @@ void Settings::PrintConfiguration()
 	MS_DEBUG_TAG(info, "  rtcMaxPort          : %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
-		MS_DEBUG_TAG(info, "  dtlsCertificateFile : \"%s\"",
-			Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile  : \"%s\"",
-			Settings::configuration.dtlsPrivateKeyFile.c_str());
+		MS_DEBUG_TAG(
+		    info, "  dtlsCertificateFile : \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG_TAG(
+		    info, "  dtlsPrivateKeyFile  : \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
 	MS_DEBUG_TAG(info, "</configuration>");
@@ -270,7 +269,7 @@ void Settings::HandleRequest(Channel::Request* request)
 			static const Json::StaticString k_logTags("logTags");
 
 			Json::Value jsonLogLevel = request->data[k_logLevel];
-			Json::Value jsonLogTags = request->data[k_logTags];
+			Json::Value jsonLogTags  = request->data[k_logTags];
 
 			try
 			{
@@ -288,7 +287,7 @@ void Settings::HandleRequest(Channel::Request* request)
 					Settings::SetLogTags(jsonLogTags);
 				}
 			}
-			catch (const MediaSoupError &error)
+			catch (const MediaSoupError& error)
 			{
 				request->Reject(error.what());
 
@@ -339,8 +338,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 		uint16_t port;
 		std::string ip;
 
-		Utils::IP::GetAddressInfo(
-			(struct sockaddr*)(&address.address.address4), &family, ip, &port);
+		Utils::IP::GetAddressInfo((struct sockaddr*)(&address.address.address4), &family, ip, &port);
 
 		if (family != requestedFamily)
 			continue;
@@ -388,7 +386,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 	uv_free_interface_addresses(addresses, numAddresses);
 }
 
-void Settings::SetLogLevel(std::string &level)
+void Settings::SetLogLevel(std::string& level)
 {
 	MS_TRACE();
 
@@ -401,7 +399,7 @@ void Settings::SetLogLevel(std::string &level)
 	Settings::configuration.logLevel = Settings::string2LogLevel[level];
 }
 
-void Settings::SetRtcIPv4(const std::string &ip)
+void Settings::SetRtcIPv4(const std::string& ip)
 {
 	MS_TRACE();
 
@@ -436,7 +434,7 @@ void Settings::SetRtcIPv4(const std::string &ip)
 		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv4: %s", ip.c_str(), std::strerror(bindErrno));
 }
 
-void Settings::SetRtcIPv6(const std::string &ip)
+void Settings::SetRtcIPv6(const std::string& ip)
 {
 	MS_TRACE();
 
@@ -502,24 +500,23 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 {
 	MS_TRACE();
 
-	if (
-		Settings::configuration.dtlsCertificateFile.empty() ||
-		Settings::configuration.dtlsPrivateKeyFile.empty())
+	if (Settings::configuration.dtlsCertificateFile.empty() ||
+	    Settings::configuration.dtlsPrivateKeyFile.empty())
 	{
 		Settings::configuration.dtlsCertificateFile = "";
-		Settings::configuration.dtlsPrivateKeyFile = "";
+		Settings::configuration.dtlsPrivateKeyFile  = "";
 
 		return;
 	}
 
 	std::string dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
-	std::string dtlsPrivateKeyFile = Settings::configuration.dtlsPrivateKeyFile;
+	std::string dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
 
 	try
 	{
 		Utils::File::CheckFile(dtlsCertificateFile.c_str());
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		MS_THROW_ERROR("dtlsCertificateFile: %s", error.what());
 	}
@@ -528,13 +525,13 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	{
 		Utils::File::CheckFile(dtlsPrivateKeyFile.c_str());
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		MS_THROW_ERROR("dtlsPrivateKeyFile: %s", error.what());
 	}
 
 	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
-	Settings::configuration.dtlsPrivateKeyFile = dtlsPrivateKeyFile;
+	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
 }
 
 void Settings::SetLogTags(std::vector<std::string>& tags)
@@ -586,7 +583,7 @@ void Settings::SetLogTags(Json::Value& json)
 
 /* Helpers. */
 
-bool IsBindableIP(const std::string &ip, int family, int* bindErrno)
+bool IsBindableIP(const std::string& ip, int family, int* bindErrno)
 {
 	MS_TRACE();
 
@@ -630,7 +627,7 @@ bool IsBindableIP(const std::string &ip, int family, int* bindErrno)
 	}
 	else
 	{
-		success = false;
+		success    = false;
 		*bindErrno = errno;
 	}
 

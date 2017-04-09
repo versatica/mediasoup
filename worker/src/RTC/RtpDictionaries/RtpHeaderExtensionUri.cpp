@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpHeaderExtensionUri"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "Utils.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {

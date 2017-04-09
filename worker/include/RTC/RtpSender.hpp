@@ -2,19 +2,19 @@
 #define MS_RTC_RTP_SENDER_HPP
 
 #include "common.hpp"
-#include "RTC/Transport.hpp"
-#include "RTC/RtpStreamSend.hpp"
+#include "Channel/Notifier.hpp"
+#include "Channel/Request.hpp"
+#include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpDataCounter.hpp"
-#include "RTC/RTCP/Sdes.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/CompoundPacket.hpp"
-#include "Channel/Request.hpp"
-#include "Channel/Notifier.hpp"
-#include <unordered_set>
+#include "RTC/RtpStreamSend.hpp"
+#include "RTC/Transport.hpp"
 #include <json/json.h>
+#include <unordered_set>
 
 namespace RTC
 {
@@ -31,7 +31,8 @@ namespace RTC
 		};
 
 	public:
-		RtpSender(Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind);
+		RtpSender(
+		    Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind);
 
 	private:
 		virtual ~RtpSender();
@@ -48,7 +49,7 @@ namespace RTC
 		RTC::RtpParameters* GetParameters() const;
 		bool GetActive() const;
 		void SendRtpPacket(RTC::RtpPacket* packet);
-		void GetRtcp(RTC::RTCP::CompoundPacket *packet, uint64_t now);
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetTransmissionRate(uint64_t now);
@@ -65,13 +66,13 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
-		Channel::Notifier* notifier = nullptr;
-		RTC::Transport* transport = nullptr;
+		Listener* listener                     = nullptr;
+		Channel::Notifier* notifier            = nullptr;
+		RTC::Transport* transport              = nullptr;
 		RTC::RtpCapabilities* peerCapabilities = nullptr;
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters = nullptr;
-		RTC::RtpStreamSend* rtpStream = nullptr;
+		RTC::RtpStreamSend* rtpStream     = nullptr;
 		// Others.
 		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
@@ -89,8 +90,7 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline
-	void RtpSender::SetTransport(RTC::Transport* transport)
+	inline void RtpSender::SetTransport(RTC::Transport* transport)
 	{
 		bool wasActive = this->GetActive();
 
@@ -100,14 +100,12 @@ namespace RTC
 			EmitActiveChange();
 	}
 
-	inline
-	RTC::Transport* RtpSender::GetTransport() const
+	inline RTC::Transport* RtpSender::GetTransport() const
 	{
 		return this->transport;
 	}
 
-	inline
-	void RtpSender::RemoveTransport(RTC::Transport* transport)
+	inline void RtpSender::RemoveTransport(RTC::Transport* transport)
 	{
 		bool wasActive = this->GetActive();
 
@@ -118,20 +116,17 @@ namespace RTC
 			EmitActiveChange();
 	}
 
-	inline
-	RTC::RtpParameters* RtpSender::GetParameters() const
+	inline RTC::RtpParameters* RtpSender::GetParameters() const
 	{
 		return this->rtpParameters;
 	}
 
-	inline
-	bool RtpSender::GetActive() const
+	inline bool RtpSender::GetActive() const
 	{
 		return (this->available && this->transport && !this->disabled);
 	}
 
-	inline
-	uint32_t RtpSender::GetTransmissionRate(uint64_t now)
+	inline uint32_t RtpSender::GetTransmissionRate(uint64_t now)
 	{
 		return this->transmittedCounter.GetRate(now);
 	}

@@ -46,7 +46,7 @@ namespace RTC
 
 	protected:
 		static const int64_t kProcessIntervalMs = 500;
-		static const int64_t kStreamTimeOutMs = 2000;
+		static const int64_t kStreamTimeOutMs   = 2000;
 
 	public:
 		virtual ~RemoteBitrateEstimator() = default;
@@ -56,7 +56,11 @@ namespace RTC
 		// remote bitrate estimate will be updated. Note that |payloadSize| is the
 		// packet size excluding headers.
 		// Note that |arrivalTimeMs| can be of an arbitrary time base.
-		virtual void IncomingPacket(int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t absSendTime) = 0;
+		virtual void IncomingPacket(
+		    int64_t arrivalTimeMs,
+		    size_t payloadSize,
+		    const RtpPacket& packet,
+		    const uint32_t absSendTime) = 0;
 
 		// Removes all data for |ssrc|.
 		virtual void RemoveStream(uint32_t ssrc) = 0;
@@ -64,7 +68,7 @@ namespace RTC
 		// estimated payload bitrate in bits per second. |ssrcs| is the list of ssrcs
 		// currently being received and of which the bitrate estimate is based upon.
 		virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const = 0;
-		virtual void SetMinBitrate(int minBitrateBps) = 0;
+		virtual void SetMinBitrate(int minBitrateBps)                                         = 0;
 		// (jmillan) borrowed from webrtc/modules/include/module.h.
 		//
 		// Returns the number of milliseconds until the module wants a worker

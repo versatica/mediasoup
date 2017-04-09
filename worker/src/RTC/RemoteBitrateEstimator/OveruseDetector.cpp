@@ -13,16 +13,16 @@
 
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "Logger.hpp"
-#include <math.h>
-#include <stdlib.h>
 #include <algorithm>
+#include <math.h>
 #include <sstream>
+#include <stdlib.h>
 #include <string>
 
 namespace RTC
 {
 	constexpr double kMaxAdaptOffsetMs = 15.0;
-	constexpr int kMinNumDeltas = 60;
+	constexpr int kMinNumDeltas        = 60;
 
 	BandwidthUsage OveruseDetector::Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs)
 	{
@@ -48,29 +48,27 @@ namespace RTC
 				this->timeOverUsing += tsDelta;
 			}
 			this->overuseCounter++;
-			if (
-				this->timeOverUsing > this->overusingTimeThreshold &&
-				this->overuseCounter > 1)
+			if (this->timeOverUsing > this->overusingTimeThreshold && this->overuseCounter > 1)
 			{
 				if (offset >= this->prevOffset)
 				{
-					this->timeOverUsing = 0;
+					this->timeOverUsing  = 0;
 					this->overuseCounter = 0;
-					this->hypothesis = kBwOverusing;
+					this->hypothesis     = kBwOverusing;
 				}
 			}
 		}
 		else if (T < -this->threshold)
 		{
-			this->timeOverUsing = -1;
+			this->timeOverUsing  = -1;
 			this->overuseCounter = 0;
-			this->hypothesis = kBwUnderusing;
+			this->hypothesis     = kBwUnderusing;
 		}
 		else
 		{
-			this->timeOverUsing = -1;
+			this->timeOverUsing  = -1;
 			this->overuseCounter = 0;
-			this->hypothesis = kBwNormal;
+			this->hypothesis     = kBwNormal;
 		}
 		this->prevOffset = offset;
 
@@ -96,15 +94,14 @@ namespace RTC
 
 		const double k = fabs(modifiedOffset) < this->threshold ? this->kDown : this->kUp;
 		const int64_t kMaxTimeDeltaMs = 100;
-		int64_t timeDeltaMs = std::min(nowMs - this->lastUpdateMs, kMaxTimeDeltaMs);
+		int64_t timeDeltaMs           = std::min(nowMs - this->lastUpdateMs, kMaxTimeDeltaMs);
 
 		this->threshold += k * (fabs(modifiedOffset) - this->threshold) * timeDeltaMs;
 
 		const double kMinThreshold = 6;
 		const double kMaxThreshold = 600;
 
-		this->threshold = std::min(
-			std::max(this->threshold, kMinThreshold), kMaxThreshold);
+		this->threshold = std::min(std::max(this->threshold, kMinThreshold), kMaxThreshold);
 
 		this->lastUpdateMs = nowMs;
 	}

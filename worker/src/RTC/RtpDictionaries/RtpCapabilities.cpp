@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpCapabilities"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpDictionaries.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <unordered_set>
 
 namespace RTC
@@ -104,7 +104,8 @@ namespace RTC
 		return json;
 	}
 
-	void RtpCapabilities::ReduceHeaderExtensions(std::vector<RTC::RtpHeaderExtension>& supportedHeaderExtensions)
+	void RtpCapabilities::ReduceHeaderExtensions(
+	    std::vector<RTC::RtpHeaderExtension>& supportedHeaderExtensions)
 	{
 		MS_TRACE();
 
@@ -114,15 +115,12 @@ namespace RTC
 		{
 			for (auto& supportedHeaderExtension : supportedHeaderExtensions)
 			{
-				if (
-					headerExtension.type == supportedHeaderExtension.type &&
-					(
-						headerExtension.kind == supportedHeaderExtension.kind ||
-						supportedHeaderExtension.kind == RTC::Media::Kind::ALL
-					))
+				if (headerExtension.type == supportedHeaderExtension.type &&
+				    (headerExtension.kind == supportedHeaderExtension.kind ||
+				     supportedHeaderExtension.kind == RTC::Media::Kind::ALL))
 				{
 					// Set the same id and other properties.
-					headerExtension.preferredId = supportedHeaderExtension.preferredId;
+					headerExtension.preferredId      = supportedHeaderExtension.preferredId;
 					headerExtension.preferredEncrypt = supportedHeaderExtension.preferredEncrypt;
 
 					updatedHeaderExtensions.push_back(headerExtension);
@@ -157,8 +155,7 @@ namespace RTC
 		this->fecMechanisms = updatedFecMechanisms;
 	}
 
-	inline
-	void RtpCapabilities::ValidateCodecs(RTC::Scope scope)
+	inline void RtpCapabilities::ValidateCodecs(RTC::Scope scope)
 	{
 		MS_TRACE();
 

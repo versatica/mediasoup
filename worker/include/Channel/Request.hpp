@@ -2,9 +2,9 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
+#include <json/json.h>
 #include <string>
 #include <unordered_map>
-#include <json/json.h>
 
 namespace Channel
 {
@@ -50,7 +50,7 @@ namespace Channel
 		virtual ~Request();
 
 		void Accept();
-		void Accept(Json::Value &data);
+		void Accept(Json::Value& data);
 		void Reject(std::string& reason);
 		void Reject(const char* reason = nullptr);
 

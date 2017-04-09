@@ -1,5 +1,5 @@
 #ifndef MS_TIMER_HPP
-#define	MS_TIMER_HPP
+#define MS_TIMER_HPP
 
 #include "common.hpp"
 #include <uv.h>
@@ -10,7 +10,7 @@ public:
 	class Listener
 	{
 	public:
-		virtual ~Listener() {};
+		virtual ~Listener(){};
 
 	public:
 		virtual void onTimer(Timer* timer) = 0;
@@ -19,17 +19,17 @@ public:
 public:
 	explicit Timer(Listener* listener);
 	Timer& operator=(const Timer&) = delete;
-	Timer(const Timer&) = delete;
+	Timer(const Timer&)            = delete;
 
 private:
-	~Timer() {};
+	~Timer(){};
 
 public:
 	void Destroy();
 	void Start(uint64_t timeout);
 	void Stop();
 
-/* Callbacks fired by UV events. */
+	/* Callbacks fired by UV events. */
 public:
 	void onUvTimer();
 

@@ -2,8 +2,8 @@
 // #define MS_LOG_DEV
 
 #include "Channel/Request.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
 
 namespace Channel
 {
@@ -40,8 +40,8 @@ namespace Channel
 
 	/* Instance methods. */
 
-	Request::Request(Channel::UnixStreamSocket* channel, Json::Value& json) :
-		channel(channel)
+	Request::Request(Channel::UnixStreamSocket* channel, Json::Value& json)
+	    : channel(channel)
 	{
 		MS_TRACE();
 
@@ -98,7 +98,7 @@ namespace Channel
 		Accept(EmptyData);
 	}
 
-	void Request::Accept(Json::Value &data)
+	void Request::Accept(Json::Value& data)
 	{
 		MS_TRACE();
 
@@ -113,7 +113,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id] = (Json::UInt)this->id;
+		json[k_id]       = (Json::UInt)this->id;
 		json[k_accepted] = true;
 
 		if (data.isObject())
@@ -149,7 +149,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id] = (Json::UInt)this->id;
+		json[k_id]       = (Json::UInt)this->id;
 		json[k_rejected] = true;
 
 		if (reason)

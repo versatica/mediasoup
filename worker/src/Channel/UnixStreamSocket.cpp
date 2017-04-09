@@ -4,13 +4,12 @@
 #include "Channel/UnixStreamSocket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
-#include <sstream> // std::ostringstream
+#include <cmath>   // std::ceil()
+#include <cstdio>  // sprintf()
 #include <cstring> // std::memmove()
-#include <cmath> // std::ceil()
-#include <cstdio> // sprintf()
-extern "C"
-{
-	#include <netstring.h>
+#include <sstream> // std::ostringstream
+extern "C" {
+#include <netstring.h>
 }
 
 namespace Channel
@@ -18,14 +17,14 @@ namespace Channel
 	/* Static. */
 
 	// netstring length for a 65536 bytes payload.
-	static constexpr size_t MaxSize = 65543;
+	static constexpr size_t MaxSize        = 65543;
 	static constexpr size_t MessageMaxSize = 65536;
 	static uint8_t WriteBuffer[MaxSize];
 
 	/* Instance methods. */
 
-	UnixStreamSocket::UnixStreamSocket(int fd) :
-		::UnixStreamSocket::UnixStreamSocket(fd, MaxSize)
+	UnixStreamSocket::UnixStreamSocket(int fd)
+	    : ::UnixStreamSocket::UnixStreamSocket(fd, MaxSize)
 	{
 		MS_TRACE_STD();
 
@@ -47,10 +46,10 @@ namespace Channel
 			Json::StreamWriterBuilder builder;
 			Json::Value invalidSettings;
 
-			builder["commentStyle"] = "None";
-			builder["indentation"] = "";
+			builder["commentStyle"]            = "None";
+			builder["indentation"]             = "";
 			builder["enableYAMLCompatibility"] = false;
-			builder["dropNullPlaceholders"] = false;
+			builder["dropNullPlaceholders"]    = false;
 
 			MS_ASSERT(builder.validate(&invalidSettings), "invalid Json::StreamWriterBuilder");
 
@@ -73,7 +72,7 @@ namespace Channel
 		this->listener = listener;
 	}
 
-	void UnixStreamSocket::Send(Json::Value &msg)
+	void UnixStreamSocket::Send(Json::Value& msg)
 	{
 		if (this->closed)
 			return;
@@ -87,7 +86,7 @@ namespace Channel
 		size_t nsLen;
 
 		this->jsonWriter->write(msg, &stream);
-		nsPayload = stream.str();
+		nsPayload    = stream.str();
 		nsPayloadLen = nsPayload.length();
 
 		if (nsPayloadLen > MessageMaxSize)
@@ -99,17 +98,17 @@ namespace Channel
 
 		if (nsPayloadLen == 0)
 		{
-			nsNumLen = 1;
+			nsNumLen       = 1;
 			WriteBuffer[0] = '0';
 			WriteBuffer[1] = ':';
 			WriteBuffer[2] = ',';
 		}
 		else
 		{
-		  nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
-		  std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
-		  std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload.c_str(), nsPayloadLen);
-		  WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
+			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload.c_str(), nsPayloadLen);
+			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
@@ -136,17 +135,17 @@ namespace Channel
 
 		if (nsPayloadLen == 0)
 		{
-			nsNumLen = 1;
+			nsNumLen       = 1;
 			WriteBuffer[0] = '0';
 			WriteBuffer[1] = ':';
 			WriteBuffer[2] = ',';
 		}
 		else
 		{
-		  nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
-		  std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
-		  std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-		  WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
+			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
@@ -171,17 +170,17 @@ namespace Channel
 
 		if (nsPayloadLen == 0)
 		{
-			nsNumLen = 1;
+			nsNumLen       = 1;
 			WriteBuffer[0] = '0';
 			WriteBuffer[1] = ':';
 			WriteBuffer[2] = ',';
 		}
 		else
 		{
-		  nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
-		  std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
-		  std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-		  WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
+			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
@@ -199,11 +198,11 @@ namespace Channel
 			if (IsClosing())
 				return;
 
-			size_t readLen = this->bufferDataLen - this->msgStart;
+			size_t readLen  = this->bufferDataLen - this->msgStart;
 			char* jsonStart = nullptr;
 			size_t jsonLen;
-			int nsRet = netstring_read((char*)(this->buffer + this->msgStart), readLen,
-				&jsonStart, &jsonLen);
+			int nsRet =
+			    netstring_read((char*)(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
 
 			if (nsRet != 0)
 			{
@@ -218,7 +217,7 @@ namespace Channel
 							if (this->msgStart != 0)
 							{
 								std::memmove(this->buffer, this->buffer + this->msgStart, readLen);
-								this->msgStart = 0;
+								this->msgStart      = 0;
 								this->bufferDataLen = readLen;
 							}
 							// Second case: the incomplete message begins at position 0 of the buffer.
@@ -226,10 +225,10 @@ namespace Channel
 							else
 							{
 								MS_ERROR_STD(
-									"no more space in the buffer for the unfinished message being parsed, "
-									"discarding it");
+								    "no more space in the buffer for the unfinished message being parsed, "
+								    "discarding it");
 
-								this->msgStart = 0;
+								this->msgStart      = 0;
 								this->bufferDataLen = 0;
 							}
 						}
@@ -260,7 +259,7 @@ namespace Channel
 				}
 
 				// Error, so reset and exit the parsing loop.
-				this->msgStart = 0;
+				this->msgStart      = 0;
 				this->bufferDataLen = 0;
 
 				return;
@@ -274,7 +273,7 @@ namespace Channel
 			std::string jsonParseError;
 
 			if (this->jsonReader->parse(
-				(const char*)jsonStart, (const char*)jsonStart + jsonLen, &json, &jsonParseError))
+			        (const char*)jsonStart, (const char*)jsonStart + jsonLen, &json, &jsonParseError))
 			{
 				Channel::Request* request = nullptr;
 
@@ -282,7 +281,7 @@ namespace Channel
 				{
 					request = new Channel::Request(this, json);
 				}
-				catch (const MediaSoupError &error)
+				catch (const MediaSoupError& error)
 				{
 					MS_ERROR_STD("discarding wrong Channel request");
 				}
@@ -305,7 +304,7 @@ namespace Channel
 			// the latest parsed message filled it, then empty the full buffer.
 			if ((this->msgStart + readLen) == this->bufferSize)
 			{
-				this->msgStart = 0;
+				this->msgStart      = 0;
 				this->bufferDataLen = 0;
 			}
 			// If there is still space in the buffer, set the beginning of the next

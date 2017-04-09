@@ -2,17 +2,17 @@
 // #define MS_LOG_DEV
 
 #include "RTC/TcpConnection.hpp"
-#include "Utils.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include <cstring> // std::memmove()
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize) :
-		::TcpConnection::TcpConnection(bufferSize),
-		listener(listener)
+	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
+	    : ::TcpConnection::TcpConnection(bufferSize)
+	    , listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -21,8 +21,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-			GetLocalIP().c_str(), GetLocalPort(), GetPeerIP().c_str(), GetPeerPort());
+		MS_DEBUG_DEV(
+		    "data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+		    GetLocalIP().c_str(),
+		    GetLocalPort(),
+		    GetPeerIP().c_str(),
+		    GetPeerPort());
 
 		/*
 		 * Framing RFC 4571
@@ -70,7 +74,7 @@ namespace RTC
 				{
 					MS_DEBUG_DEV("no more space in the buffer, emptying the buffer data");
 
-					this->frameStart = 0;
+					this->frameStart    = 0;
 					this->bufferDataLen = 0;
 				}
 				// If there is still space in the buffer, set the beginning of the next
@@ -104,19 +108,22 @@ namespace RTC
 					// the buffer, so move the frame to the position 0.
 					if (this->frameStart != 0)
 					{
-						MS_DEBUG_DEV("no more space in the buffer, moving parsed bytes to the beginning of "
-							"the buffer and wait for more data");
+						MS_DEBUG_DEV(
+						    "no more space in the buffer, moving parsed bytes to the beginning of "
+						    "the buffer and wait for more data");
 
-						std::memmove(this->buffer, this->buffer + this->frameStart,
-							this->bufferSize - this->frameStart);
+						std::memmove(
+						    this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
 						this->bufferDataLen = this->bufferSize - this->frameStart;
-						this->frameStart = 0;
+						this->frameStart    = 0;
 					}
 					// Second case: the incomplete frame begins at position 0 of the buffer.
 					// The frame is too big, so close the connection.
 					else
 					{
-						MS_WARN_DEV("no more space in the buffer for the unfinished frame being parsed, closing the connection");
+						MS_WARN_DEV(
+						    "no more space in the buffer for the unfinished frame being parsed, closing the "
+						    "connection");
 
 						// Close the socket.
 						Destroy();

@@ -20,8 +20,14 @@ namespace RTC
 {
 	static const int kBurstDeltaThresholdMs = 5;
 
-	bool InterArrival::ComputeDeltas(uint32_t timestamp, int64_t arrivalTimeMs, int64_t systemTimeMs, size_t packetSize, uint32_t* timestampDelta,
-	                                 int64_t* arrivalTimeDeltaMs, int* packetSizeDelta)
+	bool InterArrival::ComputeDeltas(
+	    uint32_t timestamp,
+	    int64_t arrivalTimeMs,
+	    int64_t systemTimeMs,
+	    size_t packetSize,
+	    uint32_t* timestampDelta,
+	    int64_t* arrivalTimeDeltaMs,
+	    int* packetSizeDelta)
 	{
 		MS_TRACE();
 
@@ -35,7 +41,7 @@ namespace RTC
 		{
 			// We don't have enough data to update the filter, so we store it until we
 			// have two frames of data to process.
-			this->currentTimestampGroup.timestamp = timestamp;
+			this->currentTimestampGroup.timestamp      = timestamp;
 			this->currentTimestampGroup.firstTimestamp = timestamp;
 		}
 		else if (!PacketInOrder(timestamp))
@@ -47,21 +53,22 @@ namespace RTC
 			// First packet of a later frame, the previous frame sample is ready.
 			if (this->prevTimestampGroup.completeTimeMs >= 0)
 			{
-				*timestampDelta = this->currentTimestampGroup.timestamp -
-					this->prevTimestampGroup.timestamp;
-				*arrivalTimeDeltaMs = this->currentTimestampGroup.completeTimeMs -
-					this->prevTimestampGroup.completeTimeMs;
+				*timestampDelta = this->currentTimestampGroup.timestamp - this->prevTimestampGroup.timestamp;
+				*arrivalTimeDeltaMs =
+				    this->currentTimestampGroup.completeTimeMs - this->prevTimestampGroup.completeTimeMs;
 
 				// Check system time differences to see if we have an unproportional jump
 				// in arrival time. In that case reset the inter-arrival computations.
-				int64_t systemTimeDeltaMs = this->currentTimestampGroup.lastSystemTimeMs -
-					this->prevTimestampGroup.lastSystemTimeMs;
+				int64_t systemTimeDeltaMs =
+				    this->currentTimestampGroup.lastSystemTimeMs - this->prevTimestampGroup.lastSystemTimeMs;
 
 				if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= kArrivalTimeOffsetThresholdMs)
 				{
-					MS_WARN_TAG(rbe, "the arrival time clock offset has changed, resetting"
-					                 "[diff:%" PRId64 "ms]",
-					                 *arrivalTimeDeltaMs - systemTimeDeltaMs);
+					MS_WARN_TAG(
+					    rbe,
+					    "the arrival time clock offset has changed, resetting"
+					    "[diff:%" PRId64 "ms]",
+					    *arrivalTimeDeltaMs - systemTimeDeltaMs);
 
 					Reset();
 					return false;
@@ -74,9 +81,11 @@ namespace RTC
 					++this->numConsecutiveReorderedPackets;
 					if (this->numConsecutiveReorderedPackets >= kReorderedResetThreshold)
 					{
-						MS_WARN_TAG(rbe, "packets are being reordered on the path from the "
-						                 "socket to the bandwidth estimator, ignoring this "
-						                 "packet for bandwidth estimation, resetting");
+						MS_WARN_TAG(
+						    rbe,
+						    "packets are being reordered on the path from the "
+						    "socket to the bandwidth estimator, ignoring this "
+						    "packet for bandwidth estimation, resetting");
 						Reset();
 					}
 
@@ -89,26 +98,25 @@ namespace RTC
 
 				MS_ASSERT(*arrivalTimeDeltaMs >= 0, "invalid arrivalTimeDeltaMs value");
 
-				*packetSizeDelta = static_cast<int>(
-					this->currentTimestampGroup.size) -
-					static_cast<int>(this->prevTimestampGroup.size);
+				*packetSizeDelta = static_cast<int>(this->currentTimestampGroup.size) -
+				                   static_cast<int>(this->prevTimestampGroup.size);
 				calculatedDeltas = true;
 			}
 
 			this->prevTimestampGroup = this->currentTimestampGroup;
 			// The new timestamp is now the current frame.
 			this->currentTimestampGroup.firstTimestamp = timestamp;
-			this->currentTimestampGroup.timestamp = timestamp;
-			this->currentTimestampGroup.size = 0;
+			this->currentTimestampGroup.timestamp      = timestamp;
+			this->currentTimestampGroup.size           = 0;
 		}
 		else
 		{
-			this->currentTimestampGroup.timestamp = Utils::Time::LatestTimestamp(
-				this->currentTimestampGroup.timestamp, timestamp);
+			this->currentTimestampGroup.timestamp =
+			    Utils::Time::LatestTimestamp(this->currentTimestampGroup.timestamp, timestamp);
 		}
 		// Accumulate the frame size.
 		this->currentTimestampGroup.size += packetSize;
-		this->currentTimestampGroup.completeTimeMs = arrivalTimeMs;
+		this->currentTimestampGroup.completeTimeMs   = arrivalTimeMs;
 		this->currentTimestampGroup.lastSystemTimeMs = systemTimeMs;
 
 		return calculatedDeltas;
@@ -164,15 +172,12 @@ namespace RTC
 			return false;
 		}
 
-		MS_ASSERT(
-			this->currentTimestampGroup.completeTimeMs >= 0,
-			"invalid completeTimeMs value");
+		MS_ASSERT(this->currentTimestampGroup.completeTimeMs >= 0, "invalid completeTimeMs value");
 
-		int64_t arrivalTimeDeltaMs = arrivalTimeMs -
-			this->currentTimestampGroup.completeTimeMs;
+		int64_t arrivalTimeDeltaMs = arrivalTimeMs - this->currentTimestampGroup.completeTimeMs;
 
 		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.timestamp;
-		int64_t tsDeltaMs = this->timestampToMsCoeff * timestampDiff + 0.5;
+		int64_t tsDeltaMs      = this->timestampToMsCoeff * timestampDiff + 0.5;
 
 		if (tsDeltaMs == 0)
 			return true;
@@ -187,7 +192,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->numConsecutiveReorderedPackets = 0;
-		this->currentTimestampGroup = TimestampGroup();
-		this->prevTimestampGroup = TimestampGroup();
+		this->currentTimestampGroup          = TimestampGroup();
+		this->prevTimestampGroup             = TimestampGroup();
 	}
 }

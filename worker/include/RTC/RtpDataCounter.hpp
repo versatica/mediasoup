@@ -12,8 +12,8 @@ namespace RTC
 	class RateCalculator
 	{
 	public:
-		static constexpr float BpsScale = 8000.0f;
-		static constexpr float BpsScale2 = 1000.0f;
+		static constexpr float BpsScale           = 8000.0f;
+		static constexpr float BpsScale2          = 1000.0f;
 		static constexpr size_t DefaultWindowSize = 1000;
 
 	public:
@@ -58,50 +58,44 @@ namespace RTC
 	private:
 		RateCalculator rate;
 		size_t packets = 0;
-		size_t bytes = 0;
+		size_t bytes   = 0;
 	};
 
 	/* Inline instance methods. */
 
-	inline
-	RateCalculator::RateCalculator(size_t windowSize, float scale) :
-		windowSize(windowSize),
-		scale(scale)
+	inline RateCalculator::RateCalculator(size_t windowSize, float scale)
+	    : windowSize(windowSize)
+	    , scale(scale)
 	{
 		uint64_t now = DepLibUV::GetTime();
 
 		this->Reset(now);
 	}
 
-	inline
-	void RateCalculator::Reset()
+	inline void RateCalculator::Reset()
 	{
 		this->Reset(this->oldestTime);
 	}
 
-	inline
-	void RateCalculator::Reset(uint64_t now)
+	inline void RateCalculator::Reset(uint64_t now)
 	{
 		this->buffer.reset(new BufferItem[windowSize]);
-		this->totalCount = 0;
+		this->totalCount  = 0;
 		this->oldestIndex = 0;
-		this->oldestTime = now - this->windowSize;
+		this->oldestTime  = now - this->windowSize;
 	}
 
-	inline
-	uint32_t RtpDataCounter::GetRate(uint64_t now)
+	inline uint32_t RtpDataCounter::GetRate(uint64_t now)
 	{
 		return this->rate.GetRate(now);
 	}
 
-	inline
-	size_t RtpDataCounter::GetPacketCount() const
+	inline size_t RtpDataCounter::GetPacketCount() const
 	{
 		return this->packets;
 	}
 
-	inline
-	size_t RtpDataCounter::GetBytes() const
+	inline size_t RtpDataCounter::GetBytes() const
 	{
 		return this->bytes;
 	}

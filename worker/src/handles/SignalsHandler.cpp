@@ -3,27 +3,25 @@
 
 #include "handles/SignalsHandler.hpp"
 #include "DepLibUV.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
 
 /* Static methods for UV callbacks. */
 
-inline
-static void onSignal(uv_signal_t* handle, int signum)
+inline static void onSignal(uv_signal_t* handle, int signum)
 {
 	static_cast<SignalsHandler*>(handle->data)->onUvSignal(signum);
 }
 
-inline
-static void onClose(uv_handle_t* handle)
+inline static void onClose(uv_handle_t* handle)
 {
 	delete handle;
 }
 
 /* Instance methods. */
 
-SignalsHandler::SignalsHandler(Listener* listener) :
-	listener(listener)
+SignalsHandler::SignalsHandler(Listener* listener)
+    : listener(listener)
 {
 	MS_TRACE();
 }
@@ -35,7 +33,7 @@ void SignalsHandler::AddSignal(int signum, std::string name)
 	int err;
 
 	uv_signal_t* uvHandle = new uv_signal_t;
-	uvHandle->data = (void*)this;
+	uvHandle->data        = (void*)this;
 
 	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
 	if (err)
@@ -66,8 +64,7 @@ void SignalsHandler::Destroy()
 	delete this;
 }
 
-inline
-void SignalsHandler::onUvSignal(int signum)
+inline void SignalsHandler::onUvSignal(int signum)
 {
 	MS_TRACE();
 

@@ -2,41 +2,38 @@
 // #define MS_LOG_DEV
 
 #include "handles/TcpServer.hpp"
-#include "Utils.hpp"
 #include "DepLibUV.hpp"
-#include "MediaSoupError.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
+#include "Utils.hpp"
 
 /* Static methods for UV callbacks. */
 
-inline
-static void onConnection(uv_stream_t* handle, int status)
+inline static void onConnection(uv_stream_t* handle, int status)
 {
 	static_cast<TcpServer*>(handle->data)->onUvConnection(status);
 }
 
-inline
-static void onClose(uv_handle_t* handle)
+inline static void onClose(uv_handle_t* handle)
 {
 	static_cast<TcpServer*>(handle->data)->onUvClosed();
 }
 
-inline
-static void onErrorClose(uv_handle_t* handle)
+inline static void onErrorClose(uv_handle_t* handle)
 {
 	delete handle;
 }
 
 /* Instance methods. */
 
-TcpServer::TcpServer(const std::string &ip, uint16_t port, int backlog)
+TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 {
 	MS_TRACE();
 
 	int err;
 	int flags = 0;
 
-	this->uvHandle = new uv_tcp_t;
+	this->uvHandle       = new uv_tcp_t;
 	this->uvHandle->data = (void*)this;
 
 	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
@@ -94,8 +91,8 @@ TcpServer::TcpServer(const std::string &ip, uint16_t port, int backlog)
 	}
 }
 
-TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) :
-	uvHandle(uvHandle)
+TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog)
+    : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
@@ -157,10 +154,12 @@ void TcpServer::Destroy()
 void TcpServer::Dump() const
 {
 	MS_DUMP("<TcpServer>");
-	MS_DUMP("  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
-		this->localIP.c_str(), (uint16_t)this->localPort,
-		(!this->isClosing) ? "open" : "closed",
-		this->connections.size());
+	MS_DUMP(
+	    "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
+	    this->localIP.c_str(),
+	    (uint16_t)this->localPort,
+	    (!this->isClosing) ? "open" : "closed",
+	    this->connections.size());
 	MS_DUMP("</TcpServer>");
 }
 
@@ -181,13 +180,12 @@ bool TcpServer::SetLocalAddress()
 
 	int family;
 	Utils::IP::GetAddressInfo(
-		(const struct sockaddr*)&this->localAddr, &family, this->localIP, &this->localPort);
+	    (const struct sockaddr*)&this->localAddr, &family, this->localIP, &this->localPort);
 
 	return true;
 }
 
-inline
-void TcpServer::onUvConnection(int status)
+inline void TcpServer::onUvConnection(int status)
 {
 	MS_TRACE();
 
@@ -213,7 +211,7 @@ void TcpServer::onUvConnection(int status)
 	{
 		connection->Setup(this, &(this->localAddr), this->localIP, this->localPort);
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		delete connection;
 
@@ -233,7 +231,7 @@ void TcpServer::onUvConnection(int status)
 	{
 		connection->Start();
 	}
-	catch (const MediaSoupError &error)
+	catch (const MediaSoupError& error)
 	{
 		MS_ERROR("cannot run the TCP connection, closing the connection: %s", error.what());
 
@@ -247,8 +245,7 @@ void TcpServer::onUvConnection(int status)
 	userOnNewTcpConnection(connection);
 }
 
-inline
-void TcpServer::onUvClosed()
+inline void TcpServer::onUvClosed()
 {
 	MS_TRACE();
 
@@ -259,8 +256,7 @@ void TcpServer::onUvClosed()
 	delete this;
 }
 
-inline
-void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
+inline void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
 {
 	MS_TRACE();
 

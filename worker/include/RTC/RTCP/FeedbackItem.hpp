@@ -3,51 +3,51 @@
 
 #include "common.hpp"
 
-namespace RTC { namespace RTCP
+namespace RTC
 {
-	class FeedbackItem
+	namespace RTCP
 	{
-	public:
-		bool IsCorrect() const;
+		class FeedbackItem
+		{
+		public:
+			bool IsCorrect() const;
 
-	protected:
-		virtual ~FeedbackItem();
+		protected:
+			virtual ~FeedbackItem();
 
-	public:
-		virtual void Dump() const = 0;
-		virtual void Serialize();
-		virtual size_t Serialize(uint8_t* buffer) = 0;
-		virtual size_t GetSize() const = 0;
+		public:
+			virtual void Dump() const = 0;
+			virtual void Serialize();
+			virtual size_t Serialize(uint8_t* buffer) = 0;
+			virtual size_t GetSize() const            = 0;
 
-	protected:
-		uint8_t* raw = nullptr;
-		bool isCorrect = true;
-	};
+		protected:
+			uint8_t* raw   = nullptr;
+			bool isCorrect = true;
+		};
 
-	/* Inline instance methods */
+		/* Inline instance methods */
 
-	inline
-	FeedbackItem::~FeedbackItem()
-	{
-		if (this->raw)
-			delete this->raw;
+		inline FeedbackItem::~FeedbackItem()
+		{
+			if (this->raw)
+				delete this->raw;
+		}
+
+		inline void FeedbackItem::Serialize()
+		{
+			if (this->raw)
+				delete this->raw;
+
+			this->raw = new uint8_t[this->GetSize()];
+			this->Serialize(this->raw);
+		}
+
+		inline bool FeedbackItem::IsCorrect() const
+		{
+			return this->isCorrect;
+		}
 	}
-
-	inline
-	void FeedbackItem::Serialize()
-	{
-		if (this->raw)
-			delete this->raw;
-
-		this->raw = new uint8_t[this->GetSize()];
-		this->Serialize(this->raw);
-	}
-
-	inline
-	bool FeedbackItem::IsCorrect() const
-	{
-		return this->isCorrect;
-	}
-}}
+}
 
 #endif
