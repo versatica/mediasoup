@@ -21,7 +21,6 @@ public:
 		bool rtcp { false };
 		bool rtx  { false };
 		bool rbe  { false };
-		// TODO: Add more tags (here and in Settings.cpp).
 	};
 
 public:
