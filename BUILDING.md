@@ -62,13 +62,17 @@ In order to tun these tasks, `gulp-cli` (version >= 1.2.2) must be globally inst
 $ npm install -g gulp-cli
 ```
 
+### `gulp`
+
+The default task runs the `gulp:lint` and `gulp:test` tasks.
+
 ### `gulp lint:node`
 
-Validates the Node.js JavaScript code.
+Validates the Node.js JavaScript code/syntax.
 
 ### `gulp lint:worker`
 
-Validates the worker C++ code.
+Validates the worker C++ code/syntax against the `worker/.clang-format` rules.
 
 ### `gulp lint`
 
@@ -77,6 +81,10 @@ Runs both the `lint:node` and `lint:worker` gulp tasks.
 ### `gulp format:worker`
 
 Rewrites all the worker source files and include files in order to satisfy the rules at `worker/.clang-format`.
+
+### `gulp format`
+
+Runs the `format:worker` gulp task.
 
 ### `gulp rtpcapabilities`
 
