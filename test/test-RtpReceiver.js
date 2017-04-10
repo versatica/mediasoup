@@ -39,7 +39,7 @@ tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 2000
 			let transport = data.transport;
 			let rtpReceiver = peer.RtpReceiver('audio', transport);
 
-			t.equal(rtpReceiver.associatedPeer, peer, 'associated peer must match');
+			t.equal(rtpReceiver.peer, peer, 'associated peer must match');
 
 			return rtpReceiver.receive(
 				{

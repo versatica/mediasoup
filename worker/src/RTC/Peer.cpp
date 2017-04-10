@@ -509,12 +509,16 @@ namespace RTC
 	}
 
 	void Peer::AddRtpSender(
-	    RTC::RtpSender* rtpSender, const std::string& peerName, RTC::RtpParameters* rtpParameters)
+	    RTC::RtpSender* rtpSender, RTC::RtpParameters* rtpParameters, uint32_t associatedRtpReceiverId)
 	{
 		MS_TRACE();
 
 		static const Json::StaticString k_class("class");
-		static const Json::StaticString k_peerName("peerName");
+		static const Json::StaticString k_rtpSenderId("rtpSenderId");
+		static const Json::StaticString k_kind("kind");
+		static const Json::StaticString k_rtpParameters("rtpParameters");
+		static const Json::StaticString k_active("active");
+		static const Json::StaticString k_associatedRtpReceiverId("associatedRtpReceiverId");
 
 		MS_ASSERT(
 		    this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
@@ -532,8 +536,12 @@ namespace RTC
 		// Notify.
 		Json::Value eventData = rtpSender->toJson();
 
-		eventData[k_class]    = "Peer";
-		eventData[k_peerName] = peerName;
+		eventData[k_class]                   = "Peer";
+		eventData[k_rtpSenderId]             = (Json::UInt)rtpSender->rtpSenderId;
+		eventData[k_kind]                    = RTC::Media::GetJsonString(rtpSender->kind);
+		eventData[k_rtpParameters]           = rtpSender->GetParameters()->toJson();
+		eventData[k_active]                  = rtpSender->GetActive();
+		eventData[k_associatedRtpReceiverId] = (Json::UInt)associatedRtpReceiverId;
 
 		this->notifier->Emit(this->peerId, "newrtpsender", eventData);
 	}

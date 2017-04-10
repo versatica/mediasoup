@@ -68,7 +68,7 @@ namespace RTC
 		 * @param peerName - Name of the receiver Peer.
 		 */
 		void AddRtpSender(
-		    RTC::RtpSender* rtpSender, const std::string& peerName, RTC::RtpParameters* rtpParameters);
+		    RTC::RtpSender* rtpSender, RTC::RtpParameters* rtpParameters, uint32_t associatedRtpReceiverId);
 		RTC::RtpSender* GetRtpSender(uint32_t ssrc) const;
 		void SendRtcp(uint64_t now);
 
