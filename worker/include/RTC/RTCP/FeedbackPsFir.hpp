@@ -60,13 +60,11 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline FeedbackPsFirItem::FeedbackPsFirItem(Header* header)
-		    : header(header)
+		inline FeedbackPsFirItem::FeedbackPsFirItem(Header* header) : header(header)
 		{
 		}
 
-		inline FeedbackPsFirItem::FeedbackPsFirItem(FeedbackPsFirItem* item)
-		    : header(item->header)
+		inline FeedbackPsFirItem::FeedbackPsFirItem(FeedbackPsFirItem* item) : header(item->header)
 		{
 		}
 

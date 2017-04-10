@@ -235,11 +235,7 @@ namespace RTC
 
 	StunMessage::StunMessage(
 	    Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size)
-	    : klass(klass)
-	    , method(method)
-	    , transactionId(transactionId)
-	    , data((uint8_t*)data)
-	    , size(size)
+	    : klass(klass), method(method), transactionId(transactionId), data((uint8_t*)data), size(size)
 	{
 		MS_TRACE();
 	}

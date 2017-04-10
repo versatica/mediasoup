@@ -54,13 +54,11 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline FeedbackPsLeiItem::FeedbackPsLeiItem(Header* header)
-		    : header(header)
+		inline FeedbackPsLeiItem::FeedbackPsLeiItem(Header* header) : header(header)
 		{
 		}
 
-		inline FeedbackPsLeiItem::FeedbackPsLeiItem(FeedbackPsLeiItem* item)
-		    : header(item->header)
+		inline FeedbackPsLeiItem::FeedbackPsLeiItem(FeedbackPsLeiItem* item) : header(item->header)
 		{
 		}
 

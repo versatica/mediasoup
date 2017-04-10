@@ -44,15 +44,12 @@ namespace RTC
 	/* Inline methods. */
 
 	inline TransportTuple::TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
-	    : udpSocket(udpSocket)
-	    , udpRemoteAddr((struct sockaddr*)udpRemoteAddr)
-	    , protocol(Protocol::UDP)
+	    : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
 	{
 	}
 
 	inline TransportTuple::TransportTuple(RTC::TcpConnection* tcpConnection)
-	    : tcpConnection(tcpConnection)
-	    , protocol(Protocol::TCP)
+	    : tcpConnection(tcpConnection), protocol(Protocol::TCP)
 	{
 	}
 

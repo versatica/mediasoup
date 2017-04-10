@@ -9,8 +9,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(Json::Value& data, RTC::Scope scope)
-	    : scope(scope)
+	RtpCodecParameters::RtpCodecParameters(Json::Value& data, RTC::Scope scope) : scope(scope)
 	{
 		MS_TRACE();
 

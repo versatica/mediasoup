@@ -107,8 +107,7 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline AimdRateControl::AimdRateControl()
-	    : currentInput(kBwNormal, 0, 1.0)
+	inline AimdRateControl::AimdRateControl() : currentInput(kBwNormal, 0, 1.0)
 	{
 	}
 

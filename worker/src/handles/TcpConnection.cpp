@@ -46,8 +46,7 @@ inline static void onClose(uv_handle_t* handle)
 
 /* Instance methods. */
 
-TcpConnection::TcpConnection(size_t bufferSize)
-    : bufferSize(bufferSize)
+TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 {
 	MS_TRACE();
 

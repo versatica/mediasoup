@@ -115,8 +115,7 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	}
 }
 
-UdpSocket::UdpSocket(uv_udp_t* uvHandle)
-    : uvHandle(uvHandle)
+UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 

@@ -14,9 +14,7 @@ namespace RTC
 	/* Instance methods. */
 
 	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password)
-	    : listener(listener)
-	    , usernameFragment(usernameFragment)
-	    , password(password)
+	    : listener(listener), usernameFragment(usernameFragment), password(password)
 	{
 		MS_TRACE();
 

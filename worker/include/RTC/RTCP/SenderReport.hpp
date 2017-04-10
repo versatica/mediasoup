@@ -89,13 +89,11 @@ namespace RTC
 			this->header = reinterpret_cast<Header*>(this->raw);
 		}
 
-		inline SenderReport::SenderReport(Header* header)
-		    : header(header)
+		inline SenderReport::SenderReport(Header* header) : header(header)
 		{
 		}
 
-		inline SenderReport::SenderReport(SenderReport* report)
-		    : header(report->header)
+		inline SenderReport::SenderReport(SenderReport* report) : header(report->header)
 		{
 		}
 
@@ -169,8 +167,7 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline SenderReportPacket::SenderReportPacket()
-		    : Packet(Type::SR)
+		inline SenderReportPacket::SenderReportPacket() : Packet(Type::SR)
 		{
 		}
 

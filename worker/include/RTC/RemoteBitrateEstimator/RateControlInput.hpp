@@ -21,9 +21,7 @@ namespace RTC
 
 	inline RateControlInput::RateControlInput(
 	    BandwidthUsage bwState, const uint32_t incomingBitrate, double noiseVar)
-	    : bwState(bwState)
-	    , incomingBitrate(incomingBitrate)
-	    , noiseVar(noiseVar)
+	    : bwState(bwState), incomingBitrate(incomingBitrate), noiseVar(noiseVar)
 	{
 	}
 }

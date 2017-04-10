@@ -120,13 +120,11 @@ namespace RTC
 
 		/* SDES Item inline instance methods */
 
-		inline SdesItem::SdesItem(Header* header)
-		    : header(header)
+		inline SdesItem::SdesItem(Header* header) : header(header)
 		{
 		}
 
-		inline SdesItem::SdesItem(SdesItem* item)
-		    : header(item->header)
+		inline SdesItem::SdesItem(SdesItem* item) : header(item->header)
 		{
 		}
 
@@ -220,8 +218,7 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline SdesPacket::SdesPacket()
-		    : Packet(RTCP::Type::SDES)
+		inline SdesPacket::SdesPacket() : Packet(RTCP::Type::SDES)
 		{
 		}
 

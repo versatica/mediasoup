@@ -10,8 +10,7 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
-	    : RtpStream::RtpStream(params)
-	    , listener(listener)
+	    : RtpStream::RtpStream(params), listener(listener)
 	{
 		MS_TRACE();
 	}

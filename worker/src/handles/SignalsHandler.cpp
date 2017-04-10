@@ -20,8 +20,7 @@ inline static void onClose(uv_handle_t* handle)
 
 /* Instance methods. */
 
-SignalsHandler::SignalsHandler(Listener* listener)
-    : listener(listener)
+SignalsHandler::SignalsHandler(Listener* listener) : listener(listener)
 {
 	MS_TRACE();
 }

@@ -64,8 +64,7 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline RateCalculator::RateCalculator(size_t windowSize, float scale)
-	    : windowSize(windowSize)
-	    , scale(scale)
+	    : windowSize(windowSize), scale(scale)
 	{
 		uint64_t now = DepLibUV::GetTime();
 

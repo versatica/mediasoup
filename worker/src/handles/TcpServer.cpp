@@ -91,8 +91,7 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 	}
 }
 
-TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog)
-    : uvHandle(uvHandle)
+TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 

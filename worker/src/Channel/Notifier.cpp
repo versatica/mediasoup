@@ -8,8 +8,7 @@ namespace Channel
 {
 	/* Instance methods. */
 
-	Notifier::Notifier(Channel::UnixStreamSocket* channel)
-	    : channel(channel)
+	Notifier::Notifier(Channel::UnixStreamSocket* channel) : channel(channel)
 	{
 		MS_TRACE();
 	}

@@ -43,9 +43,7 @@ namespace RTC
 
 	Transport::Transport(
 	    Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data)
-	    : transportId(transportId)
-	    , listener(listener)
-	    , notifier(notifier)
+	    : transportId(transportId), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
 

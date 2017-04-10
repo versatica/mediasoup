@@ -114,9 +114,7 @@ namespace RTC
 	/* Inline Methods. */
 
 	inline Probe::Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize)
-	    : sendTimeMs(sendTimeMs)
-	    , recvTimeMs(recvTimeMs)
-	    , payloadSize(payloadSize)
+	    : sendTimeMs(sendTimeMs), recvTimeMs(recvTimeMs), payloadSize(payloadSize)
 	{
 	}
 
@@ -135,11 +133,7 @@ namespace RTC
 	}
 
 	inline RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* observer)
-	    : observer(observer)
-	    , interArrival()
-	    , estimator()
-	    , detector()
-	    , incomingBitrate()
+	    : observer(observer), interArrival(), estimator(), detector(), incomingBitrate()
 	{
 	}
 

@@ -56,8 +56,7 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline FeedbackRtpNackItem::FeedbackRtpNackItem(Header* header)
-		    : header(header)
+		inline FeedbackRtpNackItem::FeedbackRtpNackItem(Header* header) : header(header)
 		{
 		}
 

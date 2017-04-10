@@ -55,8 +55,7 @@ inline static void onErrorClose(uv_handle_t* handle)
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize)
-    : bufferSize(bufferSize)
+UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(bufferSize)
 {
 	MS_TRACE_STD();
 

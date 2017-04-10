@@ -76,13 +76,11 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline FeedbackRtpEcnItem::FeedbackRtpEcnItem(Header* header)
-		    : header(header)
+		inline FeedbackRtpEcnItem::FeedbackRtpEcnItem(Header* header) : header(header)
 		{
 		}
 
-		inline FeedbackRtpEcnItem::FeedbackRtpEcnItem(FeedbackRtpEcnItem* item)
-		    : header(item->header)
+		inline FeedbackRtpEcnItem::FeedbackRtpEcnItem(FeedbackRtpEcnItem* item) : header(item->header)
 		{
 		}
 

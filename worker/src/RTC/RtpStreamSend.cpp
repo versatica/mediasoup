@@ -18,8 +18,7 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize)
-	    : RtpStream::RtpStream(params)
-	    , storage(bufferSize)
+	    : RtpStream::RtpStream(params), storage(bufferSize)
 	{
 		MS_TRACE();
 	}

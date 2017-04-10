@@ -42,8 +42,7 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline ByePacket::ByePacket()
-		    : Packet(Type::BYE)
+		inline ByePacket::ByePacket() : Packet(Type::BYE)
 		{
 		}
 

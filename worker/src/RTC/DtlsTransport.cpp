@@ -503,8 +503,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	DtlsTransport::DtlsTransport(Listener* listener)
-	    : listener(listener)
+	DtlsTransport::DtlsTransport(Listener* listener) : listener(listener)
 	{
 		MS_TRACE();
 

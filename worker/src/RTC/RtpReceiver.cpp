@@ -15,10 +15,7 @@ namespace RTC
 
 	RtpReceiver::RtpReceiver(
 	    Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind)
-	    : rtpReceiverId(rtpReceiverId)
-	    , kind(kind)
-	    , listener(listener)
-	    , notifier(notifier)
+	    : rtpReceiverId(rtpReceiverId), kind(kind), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
 

@@ -96,13 +96,10 @@ namespace RTC
 	}
 
 	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
-	    : muxId(rtpParameters->muxId)
-	    , codecs(rtpParameters->codecs)
-	    , encodings(rtpParameters->encodings)
-	    , headerExtensions(rtpParameters->headerExtensions)
-	    , rtcp(rtpParameters->rtcp)
-	    , hasRtcp(rtpParameters->hasRtcp)
-	    , userParameters(rtpParameters->userParameters)
+	    : muxId(rtpParameters->muxId), codecs(rtpParameters->codecs),
+	      encodings(rtpParameters->encodings), headerExtensions(rtpParameters->headerExtensions),
+	      rtcp(rtpParameters->rtcp), hasRtcp(rtpParameters->hasRtcp),
+	      userParameters(rtpParameters->userParameters)
 	{
 		MS_TRACE();
 	}

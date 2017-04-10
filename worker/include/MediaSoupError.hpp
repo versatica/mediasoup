@@ -13,8 +13,7 @@ public:
 
 /* Inline methods. */
 
-inline MediaSoupError::MediaSoupError(const char* description)
-    : std::runtime_error(description)
+inline MediaSoupError::MediaSoupError(const char* description) : std::runtime_error(description)
 {
 }
 

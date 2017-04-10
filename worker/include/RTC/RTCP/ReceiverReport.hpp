@@ -97,13 +97,11 @@ namespace RTC
 			this->header = reinterpret_cast<Header*>(this->raw);
 		}
 
-		inline ReceiverReport::ReceiverReport(Header* header)
-		    : header(header)
+		inline ReceiverReport::ReceiverReport(Header* header) : header(header)
 		{
 		}
 
-		inline ReceiverReport::ReceiverReport(ReceiverReport* report)
-		    : header(report->header)
+		inline ReceiverReport::ReceiverReport(ReceiverReport* report) : header(report->header)
 		{
 		}
 
@@ -198,8 +196,7 @@ namespace RTC
 			this->header->dlsr = (uint32_t)htonl(dlsr);
 		}
 
-		inline ReceiverReportPacket::ReceiverReportPacket()
-		    : Packet(Type::RR)
+		inline ReceiverReportPacket::ReceiverReportPacket() : Packet(Type::RR)
 		{
 		}
 

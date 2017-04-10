@@ -16,10 +16,7 @@ namespace RTC
 	/* Instance methods. */
 
 	Peer::Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName)
-	    : peerId(peerId)
-	    , peerName(peerName)
-	    , listener(listener)
-	    , notifier(notifier)
+	    : peerId(peerId), peerName(peerName), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
 

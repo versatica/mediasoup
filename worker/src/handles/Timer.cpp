@@ -20,8 +20,7 @@ inline static void onClose(uv_handle_t* handle)
 
 /* Instance methods. */
 
-Timer::Timer(Listener* listener)
-    : listener(listener)
+Timer::Timer(Listener* listener) : listener(listener)
 {
 	MS_TRACE();
 

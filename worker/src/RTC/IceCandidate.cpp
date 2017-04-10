@@ -9,12 +9,8 @@ namespace RTC
 	/* Instance methods. */
 
 	IceCandidate::IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
-	    : foundation("udpcandidate")
-	    , priority(priority)
-	    , family(udpSocket->GetLocalFamily())
-	    , protocol(Protocol::UDP)
-	    , port(udpSocket->GetLocalPort())
-	    , type(CandidateType::HOST)
+	    : foundation("udpcandidate"), priority(priority), family(udpSocket->GetLocalFamily()),
+	      protocol(Protocol::UDP), port(udpSocket->GetLocalPort()), type(CandidateType::HOST)
 	{
 		switch (this->family)
 		{
@@ -41,13 +37,9 @@ namespace RTC
 	}
 
 	IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
-	    : foundation("tcpcandidate")
-	    , priority(priority)
-	    , family(tcpServer->GetLocalFamily())
-	    , protocol(Protocol::TCP)
-	    , port(tcpServer->GetLocalPort())
-	    , type(CandidateType::HOST)
-	    , tcpType(TcpCandidateType::PASSIVE)
+	    : foundation("tcpcandidate"), priority(priority), family(tcpServer->GetLocalFamily()),
+	      protocol(Protocol::TCP), port(tcpServer->GetLocalPort()), type(CandidateType::HOST),
+	      tcpType(TcpCandidateType::PASSIVE)
 	{
 		switch (this->family)
 		{

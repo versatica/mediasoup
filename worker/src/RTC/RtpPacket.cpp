@@ -137,12 +137,8 @@ namespace RTC
 	    size_t payloadLength,
 	    uint8_t payloadPadding,
 	    size_t size)
-	    : header(header)
-	    , extensionHeader(extensionHeader)
-	    , payload((uint8_t*)payload)
-	    , payloadLength(payloadLength)
-	    , payloadPadding(payloadPadding)
-	    , size(size)
+	    : header(header), extensionHeader(extensionHeader), payload((uint8_t*)payload),
+	      payloadLength(payloadLength), payloadPadding(payloadPadding), size(size)
 	{
 		MS_TRACE();
 

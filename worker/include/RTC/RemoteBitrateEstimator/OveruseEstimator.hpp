@@ -75,12 +75,8 @@ namespace RTC
 	/* Inline methods. */
 
 	inline OverUseDetectorOptions::OverUseDetectorOptions()
-	    : initialSlope(8.0 / 512.0)
-	    , initialOffset(0)
-	    , initialE()
-	    , initialProcessNoise()
-	    , initialAvgNoise(0.0)
-	    , initialVarNoise(50)
+	    : initialSlope(8.0 / 512.0), initialOffset(0), initialE(), initialProcessNoise(),
+	      initialAvgNoise(0.0), initialVarNoise(50)
 	{
 		initialE[0][0] = 100;
 		initialE[1][1] = 1e-1;
@@ -90,16 +86,10 @@ namespace RTC
 	}
 
 	inline OveruseEstimator::OveruseEstimator(const OverUseDetectorOptions& options)
-	    : options(options)
-	    , numOfDeltas(0)
-	    , slope(this->options.initialSlope)
-	    , offset(this->options.initialOffset)
-	    , prevOffset(this->options.initialOffset)
-	    , E()
-	    , processNoise()
-	    , avgNoise(this->options.initialAvgNoise)
-	    , varNoise(this->options.initialVarNoise)
-	    , tsDeltaHist()
+	    : options(options), numOfDeltas(0), slope(this->options.initialSlope),
+	      offset(this->options.initialOffset), prevOffset(this->options.initialOffset), E(),
+	      processNoise(), avgNoise(this->options.initialAvgNoise),
+	      varNoise(this->options.initialVarNoise), tsDeltaHist()
 	{
 		std::memcpy(this->E, this->options.initialE, sizeof(this->E));
 		std::memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));

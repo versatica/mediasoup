@@ -70,13 +70,11 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline FeedbackPsVbcmItem::FeedbackPsVbcmItem(Header* header)
-		    : header(header)
+		inline FeedbackPsVbcmItem::FeedbackPsVbcmItem(Header* header) : header(header)
 		{
 		}
 
-		inline FeedbackPsVbcmItem::FeedbackPsVbcmItem(FeedbackPsVbcmItem* item)
-		    : header(item->header)
+		inline FeedbackPsVbcmItem::FeedbackPsVbcmItem(FeedbackPsVbcmItem* item) : header(item->header)
 		{
 		}
 

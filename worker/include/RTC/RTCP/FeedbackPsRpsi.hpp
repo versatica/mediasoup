@@ -68,8 +68,7 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline FeedbackPsRpsiItem::FeedbackPsRpsiItem(FeedbackPsRpsiItem* item)
-		    : header(item->header)
+		inline FeedbackPsRpsiItem::FeedbackPsRpsiItem(FeedbackPsRpsiItem* item) : header(item->header)
 		{
 		}
 

@@ -77,14 +77,12 @@ namespace RTC
 		/* Inline instance methods. */
 
 		template<typename T>
-		FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header)
-		    : header(header)
+		FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header) : header(header)
 		{
 		}
 
 		template<typename T>
-		FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item)
-		    : header(item->header)
+		FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item) : header(item->header)
 		{
 		}
 

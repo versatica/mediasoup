@@ -14,8 +14,7 @@
 
 /* Instance methods. */
 
-Loop::Loop(Channel::UnixStreamSocket* channel)
-    : channel(channel)
+Loop::Loop(Channel::UnixStreamSocket* channel) : channel(channel)
 {
 	MS_TRACE();
 

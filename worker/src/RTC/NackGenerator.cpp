@@ -17,9 +17,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener)
-	    : listener(listener)
-	    , rtt(DefaultRtt)
+	NackGenerator::NackGenerator(Listener* listener) : listener(listener), rtt(DefaultRtt)
 	{
 		MS_TRACE();
 

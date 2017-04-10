@@ -88,18 +88,15 @@ namespace RTC
 
 	inline RemoteBitrateEstimatorSingleStream::Detector::Detector(
 	    int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping)
-	    : lastPacketTimeMs(lastPacketTimeMs)
-	    , interArrival(90 * kTimestampGroupLengthMs, kTimestampToMs, enableBurstGrouping)
-	    , estimator(options)
-	    , detector()
+	    : lastPacketTimeMs(lastPacketTimeMs),
+	      interArrival(90 * kTimestampGroupLengthMs, kTimestampToMs, enableBurstGrouping),
+	      estimator(options), detector()
 	{
 	}
 
 	inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer)
-	    : incomingBitrate()
-	    , remoteRate(new AimdRateControl())
-	    , observer(observer)
-	    , processIntervalMs(kProcessIntervalMs)
+	    : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer),
+	      processIntervalMs(kProcessIntervalMs)
 	{
 		// assert(this->observer);
 	}

@@ -80,10 +80,7 @@ namespace RTC
 	/* Inline methods. */
 
 	inline InterArrival::TimestampGroup::TimestampGroup()
-	    : size(0)
-	    , firstTimestamp(0)
-	    , timestamp(0)
-	    , completeTimeMs(-1)
+	    : size(0), firstTimestamp(0), timestamp(0), completeTimeMs(-1)
 	{
 	}
 
@@ -94,12 +91,9 @@ namespace RTC
 
 	inline InterArrival::InterArrival(
 	    uint32_t timestampGroupLengthTicks, double timestampToMsCoeff, bool enableBurstGrouping)
-	    : kTimestampGroupLengthTicks(timestampGroupLengthTicks)
-	    , currentTimestampGroup()
-	    , prevTimestampGroup()
-	    , timestampToMsCoeff(timestampToMsCoeff)
-	    , burstGrouping(enableBurstGrouping)
-	    , numConsecutiveReorderedPackets(0)
+	    : kTimestampGroupLengthTicks(timestampGroupLengthTicks), currentTimestampGroup(),
+	      prevTimestampGroup(), timestampToMsCoeff(timestampToMsCoeff),
+	      burstGrouping(enableBurstGrouping), numConsecutiveReorderedPackets(0)
 	{
 	}
 }

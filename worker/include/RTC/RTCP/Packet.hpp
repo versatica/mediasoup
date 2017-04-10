@@ -100,8 +100,7 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline Packet::Packet(Type type)
-		    : type(type)
+		inline Packet::Packet(Type type) : type(type)
 		{
 		}
 

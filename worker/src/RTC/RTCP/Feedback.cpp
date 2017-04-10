@@ -42,8 +42,8 @@ namespace RTC
 
 		template<typename T>
 		FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader)
-		    : Packet(RTCP::Type(commonHeader->packetType))
-		    , messageType(typename T::MessageType(commonHeader->count))
+		    : Packet(RTCP::Type(commonHeader->packetType)),
+		      messageType(typename T::MessageType(commonHeader->count))
 		{
 			this->header =
 			    reinterpret_cast<Header*>(reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader));
@@ -52,8 +52,7 @@ namespace RTC
 		template<typename T>
 		FeedbackPacket<T>::FeedbackPacket(
 		    typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : Packet(RtcpType)
-		    , messageType(messageType)
+		    : Packet(RtcpType), messageType(messageType)
 		{
 			this->raw                = new uint8_t[sizeof(Header)];
 			this->header             = reinterpret_cast<Header*>(this->raw);

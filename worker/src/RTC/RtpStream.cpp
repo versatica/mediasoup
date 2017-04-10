@@ -17,8 +17,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStream::RtpStream(RTC::RtpStream::Params& params)
-	    : params(params)
+	RtpStream::RtpStream(RTC::RtpStream::Params& params) : params(params)
 	{
 		MS_TRACE();
 	}
