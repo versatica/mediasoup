@@ -442,6 +442,28 @@ namespace RTC
 		this->capabilities.fecMechanisms = Room::supportedRtpCapabilities.fecMechanisms;
 	}
 
+	inline void Room::AddRtpSenderForRtpReceiver(RTC::Peer* senderPeer, const RTC::RtpReceiver* rtpReceiver)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(senderPeer->HasCapabilities(), "sender peer has no capabilities");
+		MS_ASSERT(rtpReceiver->GetParameters(), "rtpReceiver has no parameters");
+
+		uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+		RTC::RtpSender* rtpSender =
+		    new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
+
+		// Store into the maps.
+		this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
+		this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
+
+		auto rtpParameters           = rtpReceiver->GetParameters();
+		auto associatedRtpReceiverId = rtpReceiver->rtpReceiverId;
+
+		// Attach the RtpSender to the peer.
+		senderPeer->AddRtpSender(rtpSender, rtpParameters, associatedRtpReceiverId);
+	}
+
 	void Room::onPeerClosed(const RTC::Peer* peer)
 	{
 		MS_TRACE();
@@ -502,19 +524,7 @@ namespace RTC
 				if (!rtpReceiver->GetParameters())
 					continue;
 
-				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender =
-				    new RTC::RtpSender(peer, this->notifier, rtpSenderId, rtpReceiver->kind);
-
-				// Store into the maps.
-				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
-				this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
-
-				auto rtpParameters           = rtpReceiver->GetParameters();
-				auto associatedRtpReceiverId = rtpReceiver->rtpReceiverId;
-
-				// Attach the RtpSender to the peer.
-				peer->AddRtpSender(rtpSender, rtpParameters, associatedRtpReceiverId);
+				AddRtpSenderForRtpReceiver(peer, rtpReceiver);
 			}
 		}
 	}
@@ -544,20 +554,7 @@ namespace RTC
 				if (!senderPeer->HasCapabilities())
 					continue;
 
-				// Create a RtpSender for the other Peer.
-				uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-				RTC::RtpSender* rtpSender =
-				    new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
-
-				// Store into the maps.
-				this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
-				this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
-
-				auto rtpParameters           = rtpReceiver->GetParameters();
-				auto associatedRtpReceiverId = rtpReceiver->rtpReceiverId;
-
-				// Attach the RtpSender to the senderPeer.
-				senderPeer->AddRtpSender(rtpSender, rtpParameters, associatedRtpReceiverId);
+				AddRtpSenderForRtpReceiver(senderPeer, rtpReceiver);
 			}
 		}
 		// If this is not a new RtpReceiver let's retrieve its updated parameters

@@ -758,7 +758,7 @@ namespace RTC
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_WARN_2TAGS(dtls, rtp, "ignoring RTP packet while DTLS not connected");
+			MS_DEBUG_2TAGS(dtls, rtp, "ignoring RTP packet while DTLS not connected");
 
 			return;
 		}
@@ -766,7 +766,7 @@ namespace RTC
 		// Ensure there is receiving SRTP session.
 		if (!this->srtpRecvSession)
 		{
-			MS_WARN_TAG(srtp, "ignoring RTP packet due to non receiving SRTP session");
+			MS_DEBUG_TAG(srtp, "ignoring RTP packet due to non receiving SRTP session");
 
 			return;
 		}
@@ -868,7 +868,7 @@ namespace RTC
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_WARN_2TAGS(dtls, rtcp, "ignoring RTCP packet while DTLS not connected");
+			MS_DEBUG_2TAGS(dtls, rtcp, "ignoring RTCP packet while DTLS not connected");
 
 			return;
 		}
@@ -876,7 +876,7 @@ namespace RTC
 		// Ensure there is receiving SRTP session.
 		if (!this->srtpRecvSession)
 		{
-			MS_WARN_TAG(srtp, "ignoring RTCP packet due to non receiving SRTP session");
+			MS_DEBUG_TAG(srtp, "ignoring RTCP packet due to non receiving SRTP session");
 
 			return;
 		}
