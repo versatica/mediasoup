@@ -14,7 +14,7 @@ if ! type "flint++" &> /dev/null; then
 fi
 
 echo ">>> [INFO] running flint++ in src/ folder ..."
-flint++ --recursive --verbose scr/
+flint++ --recursive --verbose src/
 
 echo
 echo ">>> [INFO] running flint++ in include/ folder ..."
