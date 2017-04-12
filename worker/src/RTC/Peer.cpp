@@ -339,6 +339,7 @@ namespace RTC
 			case Channel::Request::MethodId::transport_dump:
 			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 			case Channel::Request::MethodId::transport_setMaxBitrate:
+			case Channel::Request::MethodId::transport_changeUfragPwd:
 			{
 				RTC::Transport* transport;
 
@@ -392,6 +393,73 @@ namespace RTC
 				}
 
 				rtpReceiver->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::rtpReceiver_setTransport:
+			{
+				RTC::RtpReceiver* rtpReceiver;
+
+				try
+				{
+					rtpReceiver = GetRtpReceiverFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (!rtpReceiver)
+				{
+					request->Reject("RtpReceiver does not exist");
+
+					return;
+				}
+
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (!transport)
+				{
+					request->Reject("Transport does not exist");
+
+					return;
+				}
+
+				try
+				{
+					// NOTE: This may throw.
+					transport->AddRtpReceiver(rtpReceiver);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Enable REMB in the new transport if it was enabled in the previous one.
+				auto previousTransport = rtpReceiver->GetTransport();
+
+				if (previousTransport && previousTransport->HasRemb())
+					transport->EnableRemb();
+
+				rtpReceiver->SetTransport(transport);
+
+				request->Accept();
 
 				break;
 			}

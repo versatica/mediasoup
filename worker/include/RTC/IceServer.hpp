@@ -46,6 +46,8 @@ namespace RTC
 		void ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple);
 		const std::string& GetUsernameFragment() const;
 		const std::string& GetPassword() const;
+		void SetUsernameFragment(const std::string& usernameFragment);
+		void SetPassword(const std::string& password);
 		IceState GetState() const;
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
@@ -90,6 +92,16 @@ namespace RTC
 	inline const std::string& IceServer::GetPassword() const
 	{
 		return this->password;
+	}
+
+	inline void IceServer::SetUsernameFragment(const std::string& usernameFragment)
+	{
+		this->usernameFragment = usernameFragment;
+	}
+
+	inline void IceServer::SetPassword(const std::string& password)
+	{
+		this->password = password;
 	}
 
 	inline IceServer::IceState IceServer::GetState() const

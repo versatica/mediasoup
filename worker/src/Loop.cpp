@@ -228,9 +228,11 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 		case Channel::Request::MethodId::transport_dump:
 		case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
 		case Channel::Request::MethodId::transport_setMaxBitrate:
+		case Channel::Request::MethodId::transport_changeUfragPwd:
 		case Channel::Request::MethodId::rtpReceiver_close:
 		case Channel::Request::MethodId::rtpReceiver_dump:
 		case Channel::Request::MethodId::rtpReceiver_receive:
+		case Channel::Request::MethodId::rtpReceiver_setTransport:
 		case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
 		case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
 		case Channel::Request::MethodId::rtpSender_dump:

@@ -533,6 +533,27 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::transport_changeUfragPwd:
+			{
+				static const Json::StaticString k_usernameFragment("usernameFragment");
+				static const Json::StaticString k_password("password");
+
+				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
+				std::string password         = Utils::Crypto::GetRandomString(32);
+
+				this->iceServer->SetUsernameFragment(usernameFragment);
+				this->iceServer->SetPassword(password);
+
+				Json::Value data(Json::objectValue);
+
+				data[k_usernameFragment] = this->iceServer->GetUsernameFragment();
+				data[k_password]         = this->iceServer->GetPassword();
+
+				request->Accept(data);
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");

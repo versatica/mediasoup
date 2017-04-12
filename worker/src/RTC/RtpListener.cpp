@@ -99,7 +99,7 @@ namespace RTC
 				previousPayloadTypes.push_back(payloadType);
 		}
 
-		// First remove from the the listener tables all the entries pointing to
+		// First remove from the listener tables all the entries pointing to
 		// the given RtpReceiver.
 		RemoveRtpReceiver(rtpReceiver);
 
