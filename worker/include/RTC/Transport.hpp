@@ -60,6 +60,7 @@ namespace RTC
 		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
 		bool IsConnected() const;
 		void EnableRemb();
+		bool HasRemb();
 
 	private:
 		void MayRunDtlsTransport();
@@ -182,6 +183,14 @@ namespace RTC
 		{
 			this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
 		}
+	}
+
+	inline bool Transport::HasRemb()
+	{
+		if (this->remoteBitrateEstimator)
+			return true;
+		else
+			return false;
 	}
 }
 

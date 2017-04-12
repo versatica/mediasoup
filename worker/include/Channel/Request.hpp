@@ -35,6 +35,7 @@ namespace Channel
 			rtpReceiver_close,
 			rtpReceiver_dump,
 			rtpReceiver_receive,
+			rtpReceiver_setTransport,
 			rtpReceiver_setRtpRawEvent,
 			rtpReceiver_setRtpObjectEvent,
 			rtpSender_dump,
