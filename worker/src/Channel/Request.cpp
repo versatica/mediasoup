@@ -27,6 +27,7 @@ namespace Channel
 		{ "transport.dump",                    Request::MethodId::transport_dump                    },
 		{ "transport.setRemoteDtlsParameters", Request::MethodId::transport_setRemoteDtlsParameters },
 		{ "transport.setMaxBitrate",           Request::MethodId::transport_setMaxBitrate           },
+		{ "transport.changeUfragPwd",          Request::MethodId::transport_changeUfragPwd          },
 		{ "rtpReceiver.close",                 Request::MethodId::rtpReceiver_close                 },
 		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  },
 		{ "rtpReceiver.receive",               Request::MethodId::rtpReceiver_receive               },
