@@ -35,6 +35,7 @@ namespace RTC
 		public:
 			explicit FeedbackRtpTmmbItem(const uint8_t* data);
 			FeedbackRtpTmmbItem();
+			virtual ~FeedbackRtpTmmbItem() = default;
 
 			uint32_t GetSsrc() const;
 			void SetSsrc(uint32_t ssrc);

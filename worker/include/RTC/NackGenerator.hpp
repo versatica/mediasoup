@@ -39,7 +39,7 @@ namespace RTC
 
 	public:
 		explicit NackGenerator(Listener* listener);
-		~NackGenerator();
+		virtual ~NackGenerator();
 
 		void ReceivePacket(RTC::RtpPacket* packet);
 
