@@ -253,7 +253,7 @@ namespace RTC
 		if (!IsClosing())
 		{
 			this->listener->onRtcTcpConnectionClosed(
-			    this, static_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
+			    this, dynamic_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
 		}
 	}
 
