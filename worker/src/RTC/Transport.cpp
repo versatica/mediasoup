@@ -508,6 +508,7 @@ namespace RTC
 			case Channel::Request::MethodId::transport_setMaxBitrate:
 			{
 				static const Json::StaticString k_bitrate("bitrate");
+				static constexpr uint32_t MinBitrate = 10000;
 
 				// Validate request data.
 
@@ -518,7 +519,12 @@ namespace RTC
 					return;
 				}
 
-				this->maxBitrate = (uint32_t)request->data[k_bitrate].asUInt();
+				uint32_t bitrate = (uint32_t)request->data[k_bitrate].asUInt();
+
+				if (bitrate < MinBitrate)
+					bitrate = MinBitrate;
+
+				this->maxBitrate = bitrate;
 
 				MS_DEBUG_TAG(rbe, "transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
 
