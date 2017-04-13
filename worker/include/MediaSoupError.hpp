@@ -24,7 +24,7 @@ inline MediaSoupError::MediaSoupError(const char* description) : std::runtime_er
 		static char buffer[2000];                                                                      \
 		std::snprintf(buffer, 2000, desc, ##__VA_ARGS__);                                              \
 		throw MediaSoupError(buffer);                                                                  \
-	} while (0)
+	} while (false)
 
 #define MS_THROW_ERROR_STD(desc, ...)                                                              \
 	do                                                                                               \
@@ -33,6 +33,6 @@ inline MediaSoupError::MediaSoupError(const char* description) : std::runtime_er
 		static char buffer[2000];                                                                      \
 		std::snprintf(buffer, 2000, desc, ##__VA_ARGS__);                                              \
 		throw MediaSoupError(buffer);                                                                  \
-	} while (0)
+	} while (false)
 
 #endif

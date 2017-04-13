@@ -143,7 +143,7 @@ public:
 				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 			} \
 		} \
-		while (0)
+		while (false)
 
 	#define MS_TRACE_STD() \
 		do \
@@ -154,7 +154,7 @@ public:
 				std::fflush(stdout); \
 			} \
 		} \
-		while (0)
+		while (false)
 #else
 	#define MS_TRACE() ;
 	#define MS_TRACE_STD() ;
@@ -175,7 +175,7 @@ public:
 			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #define MS_DEBUG_TAG_STD(tag, desc, ...) \
 	do \
@@ -186,7 +186,7 @@ public:
 			std::fflush(stdout); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #define MS_WARN_TAG(tag, desc, ...) \
 	do \
@@ -197,7 +197,7 @@ public:
 			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #define MS_WARN_TAG_STD(tag, desc, ...) \
 	do \
@@ -208,7 +208,7 @@ public:
 			std::fflush(stderr); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #define MS_DEBUG_2TAGS(tag1, tag2, desc, ...) \
 	do \
@@ -219,7 +219,7 @@ public:
 			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #define MS_DEBUG_2TAGS_STD(tag1, tag2, desc, ...) \
 	do \
@@ -230,7 +230,7 @@ public:
 			std::fflush(stdout); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #define MS_WARN_2TAGS(tag1, tag2, desc, ...) \
 	do \
@@ -241,7 +241,7 @@ public:
 			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #define MS_WARN_2TAGS_STD(tag1, tag2, desc, ...) \
 	do \
@@ -252,7 +252,7 @@ public:
 			std::fflush(stderr); \
 		} \
 	} \
-	while (0)
+	while (false)
 
 #ifdef MS_LOG_DEV
 	#define MS_DEBUG_DEV(desc, ...) \
@@ -264,7 +264,7 @@ public:
 				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 			} \
 		} \
-		while (0)
+		while (false)
 
 	#define MS_DEBUG_DEV_STD(desc, ...) \
 		do \
@@ -275,7 +275,7 @@ public:
 				std::fflush(stdout); \
 			} \
 		} \
-		while (0)
+		while (false)
 
 	#define MS_WARN_DEV(desc, ...) \
 		do \
@@ -286,7 +286,7 @@ public:
 				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 			} \
 		} \
-		while (0)
+		while (false)
 
 	#define MS_WARN_DEV_STD(desc, ...) \
 		do \
@@ -297,7 +297,7 @@ public:
 				std::fflush(stderr); \
 			} \
 		} \
-		while (0)
+		while (false)
 #else
 	#define MS_DEBUG_DEV(desc, ...) ;
 	#define MS_DEBUG_DEV_STD(desc, ...) ;
@@ -311,7 +311,7 @@ public:
 		int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 		Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 	} \
-	while (0)
+	while (false)
 
 #define MS_DUMP_STD(desc, ...) \
 	do \
@@ -319,7 +319,7 @@ public:
 		std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
 		std::fflush(stdout); \
 	} \
-	while (0)
+	while (false)
 
 #define MS_ERROR(desc, ...) \
 	do \
@@ -327,7 +327,7 @@ public:
 		int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 		Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 	} \
-	while (0)
+	while (false)
 
 #define MS_ERROR_STD(desc, ...) \
 	do \
@@ -335,7 +335,7 @@ public:
 		std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
 		std::fflush(stderr); \
 	} \
-	while (0)
+	while (false)
 
 #define MS_ABORT(desc, ...) \
 	do \
@@ -344,7 +344,7 @@ public:
 		std::fflush(stderr); \
 		std::abort(); \
 	} \
-	while (0)
+	while (false)
 
 #define MS_ASSERT(condition, desc, ...) \
 	if (!(condition)) \
