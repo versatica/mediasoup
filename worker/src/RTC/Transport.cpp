@@ -1261,4 +1261,4 @@ namespace RTC
 			this->effectiveMaxBitrate       = effectiveBitrate;
 		}
 	}
-}
+} // namespace RTC

@@ -148,4 +148,4 @@ namespace RTC
 			this->varNoise = 1;
 		}
 	}
-}
+} // namespace RTC

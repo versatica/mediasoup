@@ -130,6 +130,6 @@ namespace RTC
 	{
 		return this->transmittedCounter.GetRate(now);
 	}
-}
+} // namespace RTC
 
 #endif

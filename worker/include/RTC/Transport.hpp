@@ -192,6 +192,6 @@ namespace RTC
 		else
 			return false;
 	}
-}
+} // namespace RTC
 
 #endif

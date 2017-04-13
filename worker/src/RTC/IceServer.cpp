@@ -493,4 +493,4 @@ namespace RTC
 		// Notify the listener.
 		this->listener->onIceSelectedTuple(this, this->selectedTuple);
 	}
-}
+} // namespace RTC

@@ -85,6 +85,6 @@ namespace RTC
 		// Called on a worker thread.
 		virtual void Process() = 0;
 	};
-}
+} // namespace RTC
 
 #endif

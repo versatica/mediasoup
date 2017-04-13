@@ -87,5 +87,5 @@ namespace RTC
 		template class FeedbackRtpItemsPacket<FeedbackRtpTmmbnItem>;
 		template class FeedbackRtpItemsPacket<FeedbackRtpTlleiItem>;
 		template class FeedbackRtpItemsPacket<FeedbackRtpEcnItem>;
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

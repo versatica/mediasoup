@@ -61,6 +61,6 @@ namespace RTC
 	{
 		return this->rtt;
 	}
-}
+} // namespace RTC
 
 #endif

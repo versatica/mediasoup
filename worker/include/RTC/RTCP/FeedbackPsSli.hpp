@@ -96,7 +96,7 @@ namespace RTC
 		{
 			this->pictureId = pictureId;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

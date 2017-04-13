@@ -110,7 +110,7 @@ namespace RTC
 		{
 			return this->header->value;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

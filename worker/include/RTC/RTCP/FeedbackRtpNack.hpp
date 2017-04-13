@@ -79,7 +79,7 @@ namespace RTC
 		{
 			return (uint16_t)ntohs(this->header->lostPacketBitmask);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

@@ -3495,4 +3495,4 @@ case 85:
 		*family = addr->sa_family;
 		ip.assign(ipBuffer);
 	}
-}
+} // namespace Utils

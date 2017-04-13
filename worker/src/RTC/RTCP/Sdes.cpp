@@ -232,5 +232,5 @@ namespace RTC
 			}
 			MS_DUMP("</SdesPacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

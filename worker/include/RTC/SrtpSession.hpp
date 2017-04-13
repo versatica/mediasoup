@@ -54,6 +54,6 @@ namespace RTC
 	{
 		srtp_remove_stream(this->session, htonl(ssrc));
 	}
-}
+} // namespace RTC
 
 #endif

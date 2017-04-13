@@ -338,4 +338,4 @@ namespace Channel
 			this->listener->onChannelUnixStreamSocketRemotelyClosed(this);
 		}
 	}
-}
+} // namespace Channel

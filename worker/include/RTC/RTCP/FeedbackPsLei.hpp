@@ -71,7 +71,7 @@ namespace RTC
 		{
 			return (uint32_t)ntohl(this->header->ssrc);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

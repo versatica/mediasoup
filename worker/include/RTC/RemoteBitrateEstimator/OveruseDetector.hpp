@@ -54,6 +54,6 @@ namespace RTC
 	{
 		return this->hypothesis;
 	}
-}
+} // namespace RTC
 
 #endif

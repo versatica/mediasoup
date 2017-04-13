@@ -114,6 +114,6 @@ namespace RTC
 	{
 		return this->numOfDeltas;
 	}
-}
+} // namespace RTC
 
 #endif

@@ -96,6 +96,6 @@ namespace RTC
 	      burstGrouping(enableBurstGrouping), numConsecutiveReorderedPackets(0)
 	{
 	}
-}
+} // namespace RTC
 
 #endif

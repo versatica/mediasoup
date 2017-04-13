@@ -47,6 +47,6 @@ namespace RTC
 		CandidateType type;
 		TcpCandidateType tcpType = TcpCandidateType::PASSIVE;
 	};
-}
+} // namespace RTC
 
 #endif

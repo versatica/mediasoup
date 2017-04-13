@@ -70,6 +70,6 @@ namespace RTC
 	    : seq32(seq32), sendAtSeqNum(sendAtSeqNum)
 	{
 	}
-}
+} // namespace RTC
 
 #endif

@@ -319,6 +319,6 @@ namespace RTC
 		bool hasRtcp = false;
 		Json::Value userParameters;
 	};
-}
+} // namespace RTC
 
 #endif

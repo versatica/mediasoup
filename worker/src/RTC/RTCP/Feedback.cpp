@@ -265,5 +265,5 @@ namespace RTC
 		// Explicit instantiation to have all FeedbackPacket definitions in this file.
 		template class FeedbackPacket<FeedbackPs>;
 		template class FeedbackPacket<FeedbackRtp>;
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

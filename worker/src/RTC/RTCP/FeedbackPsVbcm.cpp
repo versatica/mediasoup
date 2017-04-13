@@ -76,5 +76,5 @@ namespace RTC
 			MS_DUMP("  length          : %" PRIu16, this->GetLength());
 			MS_DUMP("</FeedbackPsVbcmItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

@@ -82,5 +82,5 @@ namespace RTC
 		// Explicit instantiation to have all definitions in this file.
 		template class FeedbackPsTstItem<Tstr>;
 		template class FeedbackPsTstItem<Tstn>;
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

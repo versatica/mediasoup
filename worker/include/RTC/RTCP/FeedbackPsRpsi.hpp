@@ -96,7 +96,7 @@ namespace RTC
 		{
 			return this->isCorrect;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

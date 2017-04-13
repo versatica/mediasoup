@@ -82,7 +82,7 @@ namespace RTC
 		{
 			return this->items.end();
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

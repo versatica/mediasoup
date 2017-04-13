@@ -55,6 +55,6 @@ namespace RTC
 		Listener* listener                         = nullptr;
 		RTC::TcpConnection::Listener* connListener = nullptr;
 	};
-}
+} // namespace RTC
 
 #endif

@@ -212,4 +212,4 @@ namespace RTC
 			(*ssrcs)[i] = it->first;
 		}
 	}
-}
+} // namespace RTC

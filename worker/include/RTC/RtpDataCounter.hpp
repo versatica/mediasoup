@@ -98,6 +98,6 @@ namespace RTC
 	{
 		return this->bytes;
 	}
-}
+} // namespace RTC
 
 #endif

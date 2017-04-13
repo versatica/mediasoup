@@ -132,7 +132,7 @@ namespace RTC
 		{
 			return (uint8_t*)this->header;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

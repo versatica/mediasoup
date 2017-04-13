@@ -33,7 +33,7 @@ namespace RTC
 		    : FeedbackRtpPacket(FeedbackRtp::MessageType::SR_REQ, senderSsrc, mediaSsrc)
 		{
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

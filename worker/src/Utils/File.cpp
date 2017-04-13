@@ -31,4 +31,4 @@ namespace Utils
 		if (err)
 			MS_THROW_ERROR("cannot read file '%s': %s", file, std::strerror(errno));
 	}
-}
+} // namespace Utils

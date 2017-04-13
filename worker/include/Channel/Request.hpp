@@ -67,6 +67,6 @@ namespace Channel
 		// Others.
 		bool replied = false;
 	};
-}
+} // namespace Channel
 
 #endif

@@ -172,6 +172,6 @@ namespace RTC
 	{
 		this->rateControlState = newState;
 	}
-}
+} // namespace RTC
 
 #endif

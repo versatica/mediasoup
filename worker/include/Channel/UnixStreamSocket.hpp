@@ -44,6 +44,6 @@ namespace Channel
 		size_t msgStart                = 0; // Where the latest message starts.
 		bool closed                    = false;
 	};
-}
+} // namespace Channel
 
 #endif

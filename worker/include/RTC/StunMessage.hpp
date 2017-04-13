@@ -240,6 +240,6 @@ namespace RTC
 	{
 		return this->hasFingerprint;
 	}
-}
+} // namespace RTC
 
 #endif

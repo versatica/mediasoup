@@ -26,6 +26,6 @@ namespace Channel
 		// Passed by argument.
 		Channel::UnixStreamSocket* channel = nullptr;
 	};
-}
+} // namespace Channel
 
 #endif

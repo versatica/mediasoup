@@ -107,6 +107,6 @@ namespace RTC
 		else
 			return this->tcpConnection->GetPeerAddress();
 	}
-}
+} // namespace RTC
 
 #endif

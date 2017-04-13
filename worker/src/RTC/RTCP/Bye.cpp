@@ -99,5 +99,5 @@ namespace RTC
 				MS_DUMP("  reason : %s", this->reason.c_str());
 			MS_DUMP("</ByePacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

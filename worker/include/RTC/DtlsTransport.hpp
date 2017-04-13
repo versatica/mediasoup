@@ -237,6 +237,6 @@ namespace RTC
 		// Make GCC 4.9 happy.
 		return false;
 	}
-}
+} // namespace RTC
 
 #endif

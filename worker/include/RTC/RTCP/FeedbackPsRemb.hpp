@@ -99,7 +99,7 @@ namespace RTC
 		{
 			return FeedbackPsPacket::GetSize() + 8 + (sizeof(uint32_t) * this->ssrcs.size());
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

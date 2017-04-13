@@ -24,6 +24,6 @@ namespace RTC
 	    : bwState(bwState), incomingBitrate(incomingBitrate), noiseVar(noiseVar)
 	{
 	}
-}
+} // namespace RTC
 
 #endif

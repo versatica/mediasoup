@@ -11,6 +11,6 @@ namespace RTC
 		kBwUnderusing,
 		kBwOverusing
 	};
-}
+} // namespace RTC
 
 #endif

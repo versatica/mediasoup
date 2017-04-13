@@ -63,7 +63,7 @@ namespace RTC
 		{
 			this->sdesPacket.AddChunk(chunk);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

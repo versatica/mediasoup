@@ -123,7 +123,7 @@ namespace RTC
 		{
 			return ntohs(this->header->duplicatedPackets);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

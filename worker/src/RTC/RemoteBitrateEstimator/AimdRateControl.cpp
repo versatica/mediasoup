@@ -304,4 +304,4 @@ namespace RTC
 				MS_ASSERT(false, "invalid RateControlInput::bwState value");
 		}
 	}
-}
+} // namespace RTC

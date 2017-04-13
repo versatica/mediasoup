@@ -1192,4 +1192,4 @@ namespace RTC
 		interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
 		this->timer->Start(interval);
 	}
-}
+} // namespace RTC

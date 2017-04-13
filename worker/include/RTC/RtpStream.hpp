@@ -64,6 +64,6 @@ namespace RTC
 	{
 		return this->params.ssrc;
 	}
-}
+} // namespace RTC
 
 #endif

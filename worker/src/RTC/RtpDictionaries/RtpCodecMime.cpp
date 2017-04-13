@@ -112,4 +112,4 @@ namespace RTC
 		// Set name.
 		this->name = type2String[this->type] + "/" + subtype2String[this->subtype];
 	}
-}
+} // namespace RTC

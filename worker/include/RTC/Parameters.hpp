@@ -162,6 +162,6 @@ namespace RTC
 	{
 		this->mapKeyValues[key] = Value(arrayOfIntegers);
 	}
-}
+} // namespace RTC
 
 #endif

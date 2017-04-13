@@ -36,4 +36,4 @@ namespace RTC
 		else
 			return RtpHeaderExtensionUri::Type::UNKNOWN;
 	}
-}
+} // namespace RTC

@@ -261,7 +261,7 @@ namespace RTC
 		{
 			return this->chunks.end();
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

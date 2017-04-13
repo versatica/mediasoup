@@ -120,7 +120,7 @@ namespace RTC
 		{
 			this->overhead = overhead;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

@@ -339,6 +339,6 @@ namespace RTC
 	{
 		return this->payloadLength;
 	}
-}
+} // namespace RTC
 
 #endif

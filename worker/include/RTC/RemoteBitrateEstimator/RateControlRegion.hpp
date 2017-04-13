@@ -11,6 +11,6 @@ namespace RTC
 		kRcAboveMax,
 		kRcMaxUnknown
 	};
-}
+} // namespace RTC
 
 #endif

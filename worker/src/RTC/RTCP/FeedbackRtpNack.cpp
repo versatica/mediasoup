@@ -60,5 +60,5 @@ namespace RTC
 			MS_DUMP("  bpl : %s", nackBitset.to_string().c_str());
 			MS_DUMP("</FeedbackRtpNackItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

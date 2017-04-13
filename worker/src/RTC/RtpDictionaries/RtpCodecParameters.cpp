@@ -287,4 +287,4 @@ namespace RTC
 			default:;
 		}
 	}
-}
+} // namespace RTC

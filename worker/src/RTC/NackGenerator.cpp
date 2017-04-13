@@ -220,4 +220,4 @@ namespace RTC
 
 		MayRunTimer();
 	}
-}
+} // namespace RTC

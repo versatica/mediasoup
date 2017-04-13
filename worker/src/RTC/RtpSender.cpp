@@ -483,4 +483,4 @@ namespace RTC
 
 		this->notifier->Emit(this->rtpSenderId, "activechange", eventData);
 	}
-}
+} // namespace RTC

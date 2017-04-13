@@ -103,5 +103,5 @@ namespace RTC
 			}
 			MS_DUMP("</SenderReportPacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

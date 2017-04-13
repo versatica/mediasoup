@@ -92,7 +92,7 @@ namespace RTC
 		{
 			return this->ssrcs.end();
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

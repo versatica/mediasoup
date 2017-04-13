@@ -105,4 +105,4 @@ namespace RTC
 
 		this->lastUpdateMs = nowMs;
 	}
-}
+} // namespace RTC

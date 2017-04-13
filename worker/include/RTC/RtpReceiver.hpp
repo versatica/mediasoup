@@ -121,6 +121,6 @@ namespace RTC
 			rtpStream->ReceiveRtcpSenderReport(report);
 		}
 	}
-}
+} // namespace RTC
 
 #endif

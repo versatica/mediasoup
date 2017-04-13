@@ -48,4 +48,4 @@ namespace RTC
 
 		return json;
 	}
-}
+} // namespace RTC

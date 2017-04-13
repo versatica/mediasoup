@@ -249,7 +249,7 @@ namespace RTC
 		{
 			return this->reports.end();
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

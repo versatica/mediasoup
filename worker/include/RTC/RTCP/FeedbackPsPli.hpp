@@ -34,7 +34,7 @@ namespace RTC
 		    : FeedbackPsPacket(FeedbackPs::MessageType::PLI, senderSsrc, mediaSsrc)
 		{
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

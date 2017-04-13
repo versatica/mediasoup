@@ -195,4 +195,4 @@ namespace RTC
 		this->currentTimestampGroup          = TimestampGroup();
 		this->prevTimestampGroup             = TimestampGroup();
 	}
-}
+} // namespace RTC

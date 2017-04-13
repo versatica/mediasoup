@@ -81,6 +81,6 @@ namespace RTC
 			return (it->second != rtpReceiver);
 		}
 	}
-}
+} // namespace RTC
 
 #endif

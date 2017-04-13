@@ -52,5 +52,5 @@ namespace RTC
 			MS_DUMP("  duplicated packets : %" PRIu16, this->GetDuplicatedPackets());
 			MS_DUMP("</FeedbackRtpEcnItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

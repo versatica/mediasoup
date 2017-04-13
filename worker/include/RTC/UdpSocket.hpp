@@ -54,6 +54,6 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener = nullptr;
 	};
-}
+} // namespace RTC
 
 #endif

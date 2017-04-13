@@ -695,4 +695,4 @@ namespace RTC
 
 		rtpReceiver->RequestFullFrame();
 	}
-}
+} // namespace RTC

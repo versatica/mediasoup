@@ -158,4 +158,4 @@ namespace Channel
 
 		this->channel->Send(json);
 	}
-}
+} // namespace Channel

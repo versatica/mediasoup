@@ -34,6 +34,6 @@ namespace RTC
 		// Others.
 		size_t frameStart = 0; // Where the latest frame starts.
 	};
-}
+} // namespace RTC
 
 #endif

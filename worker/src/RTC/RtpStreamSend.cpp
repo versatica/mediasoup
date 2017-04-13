@@ -415,4 +415,4 @@ namespace RTC
 		// Clear the RTP buffer.
 		ClearBuffer();
 	}
-}
+} // namespace RTC

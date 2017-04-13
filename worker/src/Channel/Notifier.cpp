@@ -65,4 +65,4 @@ namespace Channel
 		this->channel->Send(json);
 		this->channel->SendBinary(binaryData, binaryLen);
 	}
-}
+} // namespace Channel

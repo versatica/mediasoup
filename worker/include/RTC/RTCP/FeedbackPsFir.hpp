@@ -82,7 +82,7 @@ namespace RTC
 		{
 			return (uint8_t)this->header->sequenceNumber;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

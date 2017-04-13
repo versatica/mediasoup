@@ -205,4 +205,4 @@ namespace RTC
 
 		return this->mapKeyValues[key].arrayOfIntegers;
 	}
-}
+} // namespace RTC

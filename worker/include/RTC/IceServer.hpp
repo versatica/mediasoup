@@ -108,6 +108,6 @@ namespace RTC
 	{
 		return this->state;
 	}
-}
+} // namespace RTC
 
 #endif

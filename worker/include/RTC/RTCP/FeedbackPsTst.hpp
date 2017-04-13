@@ -109,7 +109,7 @@ namespace RTC
 		{
 			return (uint8_t)this->header->index;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

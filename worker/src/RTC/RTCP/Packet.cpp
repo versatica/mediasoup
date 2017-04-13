@@ -198,5 +198,5 @@ namespace RTC
 
 			return sizeof(CommonHeader);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

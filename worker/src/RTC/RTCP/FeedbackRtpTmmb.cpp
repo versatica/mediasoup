@@ -107,5 +107,5 @@ namespace RTC
 		// Explicit instantiation to have all FeedbackRtpTmmbItem definitions in this file.
 		template class FeedbackRtpTmmbItem<FeedbackRtpTmmbr>;
 		template class FeedbackRtpTmmbItem<FeedbackRtpTmmbn>;
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

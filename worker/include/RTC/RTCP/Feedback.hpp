@@ -135,7 +135,7 @@ namespace RTC
 		{
 			this->header->mediaSsrc = (uint32_t)htonl(ssrc);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

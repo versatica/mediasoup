@@ -1290,4 +1290,4 @@ namespace RTC
 		// Set the DTLS timer again.
 		SetTimeout();
 	}
-}
+} // namespace RTC

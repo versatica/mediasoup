@@ -103,4 +103,4 @@ namespace Utils
 
 		return Crypto::hmacSha1Buffer;
 	}
-}
+} // namespace Utils

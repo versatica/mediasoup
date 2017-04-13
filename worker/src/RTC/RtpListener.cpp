@@ -350,4 +350,4 @@ namespace RTC
 			this->ptTable[payloadType] = rtpReceiver;
 		}
 	}
-}
+} // namespace RTC

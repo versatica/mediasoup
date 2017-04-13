@@ -162,6 +162,6 @@ namespace RTC
 	{
 		this->remoteRate.SetMinBitrate(minBitrateBps);
 	}
-}
+} // namespace RTC
 
 #endif

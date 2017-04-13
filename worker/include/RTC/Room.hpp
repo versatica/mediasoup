@@ -94,6 +94,6 @@ namespace RTC
 	{
 		return this->capabilities;
 	}
-}
+} // namespace RTC
 
 #endif

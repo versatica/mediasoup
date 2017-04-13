@@ -85,4 +85,4 @@ namespace RTC
 		this->bytes += packet->GetSize();
 		this->rate.Update(packet->GetSize(), now);
 	}
-}
+} // namespace RTC

@@ -507,4 +507,4 @@ namespace RTC
 		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
 	}
-}
+} // namespace RTC

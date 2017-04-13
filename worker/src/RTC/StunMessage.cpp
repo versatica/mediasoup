@@ -703,4 +703,4 @@ namespace RTC
 
 		MS_ASSERT(pos == this->size, "pos != this->size");
 	}
-}
+} // namespace RTC

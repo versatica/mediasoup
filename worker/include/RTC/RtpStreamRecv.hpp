@@ -53,6 +53,6 @@ namespace RTC
 		uint32_t jitter  = 0; // Estimated jitter.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 	};
-}
+} // namespace RTC
 
 #endif
