@@ -17,7 +17,8 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Packet::CommonHeader* header = (Packet::CommonHeader*)data;
+			Packet::CommonHeader* header =
+			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<ByePacket> packet(new ByePacket());
 
