@@ -1083,10 +1083,10 @@ namespace RTC
 	void Transport::onDtlsConnected(
 	    const RTC::DtlsTransport* dtlsTransport,
 	    RTC::SrtpSession::Profile srtp_profile,
-	    uint8_t* srtp_local_key,
-	    size_t srtp_local_key_len,
-	    uint8_t* srtp_remote_key,
-	    size_t srtp_remote_key_len,
+	    uint8_t* srtpLocalKey,
+	    size_t srtpLocalKeyLen,
+	    uint8_t* srtpRemoteKey,
+	    size_t srtpRemoteKeyLen,
 	    std::string& remoteCert)
 	{
 		MS_TRACE();
@@ -1115,7 +1115,7 @@ namespace RTC
 		try
 		{
 			this->srtpSendSession = new RTC::SrtpSession(
-			    RTC::SrtpSession::Type::OUTBOUND, srtp_profile, srtp_local_key, srtp_local_key_len);
+			    RTC::SrtpSession::Type::OUTBOUND, srtp_profile, srtpLocalKey, srtpLocalKeyLen);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -1125,7 +1125,7 @@ namespace RTC
 		try
 		{
 			this->srtpRecvSession = new RTC::SrtpSession(
-			    SrtpSession::Type::INBOUND, srtp_profile, srtp_remote_key, srtp_remote_key_len);
+			    SrtpSession::Type::INBOUND, srtp_profile, srtpRemoteKey, srtpRemoteKeyLen);
 		}
 		catch (const MediaSoupError& error)
 		{
