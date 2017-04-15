@@ -4,7 +4,7 @@
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "Logger.hpp"
 #include <cstring>
-#include <string.h> // std::memset()
+#include <cstring> // std::memset()
 
 namespace RTC
 {

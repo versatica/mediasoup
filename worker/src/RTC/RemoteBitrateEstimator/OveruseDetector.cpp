@@ -14,9 +14,9 @@
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
 #include "Logger.hpp"
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 
 namespace RTC

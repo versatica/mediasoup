@@ -16,7 +16,7 @@
 #include "Logger.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 namespace RTC
 {
