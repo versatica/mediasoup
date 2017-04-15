@@ -19,7 +19,7 @@ namespace RTC
 		TcpConnection(Listener* listener, size_t bufferSize);
 
 	private:
-		virtual ~TcpConnection(){};
+		virtual ~TcpConnection() = default;
 
 	public:
 		void Send(const uint8_t* data, size_t len);

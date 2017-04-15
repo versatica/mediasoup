@@ -14,7 +14,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener(){};
+			virtual ~Listener() = default;
 
 		public:
 			virtual void onPacketRecv(
@@ -42,7 +42,7 @@ namespace RTC
 		UdpSocket(Listener* listener, int addressFamily);
 
 	private:
-		virtual ~UdpSocket(){};
+		virtual ~UdpSocket() = default;
 
 		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:

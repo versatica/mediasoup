@@ -10,7 +10,7 @@ public:
 	class Listener
 	{
 	public:
-		virtual ~Listener(){};
+		virtual ~Listener() = default;
 
 	public:
 		virtual void onTimer(Timer* timer) = 0;
@@ -22,7 +22,7 @@ public:
 	Timer(const Timer&)            = delete;
 
 private:
-	~Timer(){};
+	~Timer() = default;
 
 public:
 	void Destroy();

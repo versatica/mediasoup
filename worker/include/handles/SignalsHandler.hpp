@@ -11,7 +11,7 @@ public:
 	class Listener
 	{
 	public:
-		virtual ~Listener(){};
+		virtual ~Listener() = default;
 
 	public:
 		virtual void onSignal(SignalsHandler* signalsHandler, int signum) = 0;
@@ -21,7 +21,7 @@ public:
 	explicit SignalsHandler(Listener* listener);
 
 private:
-	~SignalsHandler(){};
+	~SignalsHandler() = default;
 
 public:
 	void Destroy();

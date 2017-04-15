@@ -24,7 +24,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener(){};
+			virtual ~Listener() = default;
 
 		public:
 			/**
