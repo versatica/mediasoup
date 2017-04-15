@@ -297,7 +297,7 @@ namespace RTC
 
 		// Add `iceLocalCandidates`.
 		json[k_iceLocalCandidates] = Json::arrayValue;
-		for (auto iceCandidate : this->iceLocalCandidates)
+		for (const auto& iceCandidate : this->iceLocalCandidates)
 		{
 			json[k_iceLocalCandidates].append(iceCandidate.toJson());
 		}

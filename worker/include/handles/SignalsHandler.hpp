@@ -25,7 +25,7 @@ private:
 
 public:
 	void Destroy();
-	void AddSignal(int signum, std::string name);
+	void AddSignal(int signum, const std::string& name);
 
 	/* Callbacks fired by UV events. */
 public:

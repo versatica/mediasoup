@@ -13,11 +13,11 @@ namespace Channel
 	public:
 		explicit Notifier(Channel::UnixStreamSocket* channel);
 
-		void Emit(uint32_t targetId, std::string event);
-		void Emit(uint32_t targetId, std::string event, Json::Value& data);
+		void Emit(uint32_t targetId, const std::string& event);
+		void Emit(uint32_t targetId, const std::string& event, Json::Value& data);
 		void EmitWithBinary(
 		    uint32_t targetId,
-		    std::string event,
+		    const std::string& event,
 		    Json::Value& data,
 		    const uint8_t* binaryData,
 		    size_t binaryLen);

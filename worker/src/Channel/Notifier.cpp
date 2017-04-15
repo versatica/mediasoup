@@ -13,7 +13,7 @@ namespace Channel
 		MS_TRACE();
 	}
 
-	void Notifier::Emit(uint32_t targetId, std::string event)
+	void Notifier::Emit(uint32_t targetId, const std::string& event)
 	{
 		MS_TRACE();
 
@@ -28,7 +28,7 @@ namespace Channel
 		this->channel->Send(json);
 	}
 
-	void Notifier::Emit(uint32_t targetId, std::string event, Json::Value& data)
+	void Notifier::Emit(uint32_t targetId, const std::string& event, Json::Value& data)
 	{
 		MS_TRACE();
 
@@ -46,7 +46,7 @@ namespace Channel
 	}
 
 	void Notifier::EmitWithBinary(
-	    uint32_t targetId, std::string event, Json::Value& data, const uint8_t* binaryData, size_t binaryLen)
+	    uint32_t targetId, const std::string& event, Json::Value& data, const uint8_t* binaryData, size_t binaryLen)
 	{
 		MS_TRACE();
 

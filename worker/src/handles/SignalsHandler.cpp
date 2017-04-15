@@ -25,7 +25,7 @@ SignalsHandler::SignalsHandler(Listener* listener) : listener(listener)
 	MS_TRACE();
 }
 
-void SignalsHandler::AddSignal(int signum, std::string name)
+void SignalsHandler::AddSignal(int signum, const std::string& name)
 {
 	MS_TRACE();
 

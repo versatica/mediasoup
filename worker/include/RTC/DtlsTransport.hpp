@@ -100,8 +100,8 @@ namespace RTC
 		static void ClassInit();
 		static void ClassDestroy();
 		static Json::Value& GetLocalFingerprints();
-		static Role StringToRole(std::string role);
-		static FingerprintAlgorithm GetFingerprintAlgorithm(std::string fingerprint);
+		static Role StringToRole(const std::string& role);
+		static FingerprintAlgorithm GetFingerprintAlgorithm(const std::string& fingerprint);
 		static bool IsDtls(const uint8_t* data, size_t len);
 
 	private:
@@ -179,7 +179,7 @@ namespace RTC
 		return DtlsTransport::localFingerprints;
 	}
 
-	inline DtlsTransport::Role DtlsTransport::StringToRole(std::string role)
+	inline DtlsTransport::Role DtlsTransport::StringToRole(const std::string& role)
 	{
 		auto it = DtlsTransport::string2Role.find(role);
 
@@ -189,7 +189,7 @@ namespace RTC
 			return DtlsTransport::Role::NONE;
 	}
 
-	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(std::string fingerprint)
+	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(const std::string& fingerprint)
 	{
 		auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
 
