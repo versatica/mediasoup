@@ -328,7 +328,7 @@ namespace RTC
 					    recvDeltaMs);
 				}
 
-				this->probes.push_back(Probe(sendTimeMs, arrivalTimeMs, payloadSize));
+				this->probes.emplace_back(sendTimeMs, arrivalTimeMs, payloadSize);
 				++this->totalProbesReceived;
 
 				// Make sure that a probe which updated the bitrate immediately has an
