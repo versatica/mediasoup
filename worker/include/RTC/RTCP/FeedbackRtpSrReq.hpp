@@ -17,7 +17,7 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackRtpSrReqPacket(CommonHeader* commonHeader);
 			FeedbackRtpSrReqPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
-			virtual ~FeedbackRtpSrReqPacket(){};
+			virtual ~FeedbackRtpSrReqPacket() = default;
 
 			virtual void Dump() const override;
 		};

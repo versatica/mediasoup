@@ -35,7 +35,7 @@ namespace RTC
 			explicit FeedbackPsLeiItem(Header* header);
 			explicit FeedbackPsLeiItem(FeedbackPsLeiItem* item);
 			explicit FeedbackPsLeiItem(uint32_t ssrc);
-			virtual ~FeedbackPsLeiItem(){};
+			virtual ~FeedbackPsLeiItem() = default;
 
 			uint32_t GetSsrc() const;
 

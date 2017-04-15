@@ -22,7 +22,7 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsItemsPacket(CommonHeader* commonHeader);
 			explicit FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0);
-			virtual ~FeedbackPsItemsPacket(){};
+			virtual ~FeedbackPsItemsPacket() = default;
 
 			void AddItem(Item* item);
 			Iterator Begin();

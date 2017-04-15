@@ -20,7 +20,7 @@ namespace RTC
 
 		public:
 			ByePacket();
-			virtual ~ByePacket(){};
+			virtual ~ByePacket() = default;
 
 			void AddSsrc(uint32_t ssrc);
 			void SetReason(const std::string& reason);

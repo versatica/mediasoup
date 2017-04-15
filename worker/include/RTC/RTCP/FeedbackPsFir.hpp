@@ -40,7 +40,7 @@ namespace RTC
 			explicit FeedbackPsFirItem(Header* header);
 			explicit FeedbackPsFirItem(FeedbackPsFirItem* item);
 			FeedbackPsFirItem(uint32_t ssrc, uint8_t sequenceNumber);
-			virtual ~FeedbackPsFirItem(){};
+			virtual ~FeedbackPsFirItem() = default;
 
 			uint32_t GetSsrc() const;
 			uint8_t GetSequenceNumber() const;

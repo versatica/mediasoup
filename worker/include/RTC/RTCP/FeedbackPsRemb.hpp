@@ -42,7 +42,7 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsRembPacket(CommonHeader* commonHeader);
 			FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
-			virtual ~FeedbackPsRembPacket(){};
+			virtual ~FeedbackPsRembPacket() = default;
 
 			bool IsCorrect();
 			void SetBitrate(uint64_t bitrate);

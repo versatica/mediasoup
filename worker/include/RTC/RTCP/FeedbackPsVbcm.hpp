@@ -47,7 +47,7 @@ namespace RTC
 			explicit FeedbackPsVbcmItem(FeedbackPsVbcmItem* item);
 			FeedbackPsVbcmItem(
 			    uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value);
-			virtual ~FeedbackPsVbcmItem(){};
+			virtual ~FeedbackPsVbcmItem() = default;
 
 			uint32_t GetSsrc() const;
 			uint8_t GetSequenceNumber() const;

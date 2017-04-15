@@ -76,8 +76,7 @@ namespace RTC
 
 		template<typename T>
 		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem()
-		{
-		}
+		= default;
 
 		template<typename T>
 		size_t FeedbackRtpTmmbItem<T>::GetSize() const

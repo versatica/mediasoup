@@ -44,7 +44,7 @@ namespace RTC
 			explicit SdesItem(Header* header);
 			explicit SdesItem(SdesItem* item);
 			SdesItem(SdesItem::Type type, size_t len, const char* value);
-			~SdesItem();
+			~SdesItem() = default;
 
 			void Dump() const;
 			size_t Serialize(uint8_t* buffer);
@@ -125,10 +125,6 @@ namespace RTC
 		}
 
 		inline SdesItem::SdesItem(SdesItem* item) : header(item->header)
-		{
-		}
-
-		inline SdesItem::~SdesItem()
 		{
 		}
 

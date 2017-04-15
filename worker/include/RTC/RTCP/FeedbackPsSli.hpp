@@ -35,7 +35,7 @@ namespace RTC
 			explicit FeedbackPsSliItem(Header* header);
 			explicit FeedbackPsSliItem(FeedbackPsSliItem* item);
 			FeedbackPsSliItem(uint16_t first, uint16_t number, uint8_t pictureId);
-			virtual ~FeedbackPsSliItem(){};
+			virtual ~FeedbackPsSliItem() = default;
 
 			uint16_t GetFirst() const;
 			void SetFirst(uint16_t first);

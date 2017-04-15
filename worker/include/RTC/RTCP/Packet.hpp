@@ -105,8 +105,7 @@ namespace RTC
 		}
 
 		inline Packet::~Packet()
-		{
-		}
+		= default;
 
 		inline Packet* Packet::GetNext() const
 		{

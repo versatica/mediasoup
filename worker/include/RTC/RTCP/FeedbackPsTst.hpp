@@ -43,7 +43,7 @@ namespace RTC
 			explicit FeedbackPsTstItem(Header* header);
 			explicit FeedbackPsTstItem(FeedbackPsTstItem* item);
 			FeedbackPsTstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
-			virtual ~FeedbackPsTstItem(){};
+			virtual ~FeedbackPsTstItem() = default;
 
 			uint32_t GetSsrc() const;
 			uint8_t GetSequenceNumber() const;

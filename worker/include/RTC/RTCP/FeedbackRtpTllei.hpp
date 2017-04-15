@@ -36,7 +36,7 @@ namespace RTC
 			explicit FeedbackRtpTlleiItem(Header* header);
 			explicit FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item);
 			FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
-			virtual ~FeedbackRtpTlleiItem(){};
+			virtual ~FeedbackRtpTlleiItem() = default;
 
 			uint16_t GetPacketId() const;
 			uint16_t GetLostPacketBitmask() const;

@@ -51,7 +51,7 @@ namespace RTC
 		public:
 			explicit FeedbackRtpEcnItem(Header* header);
 			explicit FeedbackRtpEcnItem(FeedbackRtpEcnItem* item);
-			virtual ~FeedbackRtpEcnItem(){};
+			virtual ~FeedbackRtpEcnItem() = default;
 
 			uint32_t GetSequenceNumber() const;
 			uint32_t GetEct0Counter() const;

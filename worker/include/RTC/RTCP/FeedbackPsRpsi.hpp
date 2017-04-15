@@ -45,7 +45,7 @@ namespace RTC
 			explicit FeedbackPsRpsiItem(Header* header);
 			explicit FeedbackPsRpsiItem(FeedbackPsRpsiItem* item);
 			FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length);
-			virtual ~FeedbackPsRpsiItem(){};
+			virtual ~FeedbackPsRpsiItem() = default;
 
 			bool IsCorrect() const;
 			uint8_t GetPayloadType() const;
