@@ -131,9 +131,9 @@ namespace RTC
 	{
 		std::vector<RTC::RtpReceiver*> rtpReceivers;
 
-		for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
+		for (const auto & rtpReceiver : this->rtpReceivers)
 		{
-			rtpReceivers.push_back(it->second);
+			rtpReceivers.push_back(rtpReceiver.second);
 		}
 
 		return rtpReceivers;
@@ -143,9 +143,9 @@ namespace RTC
 	{
 		std::vector<RTC::RtpSender*> rtpSenders;
 
-		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+		for (const auto & rtpSender : this->rtpSenders)
 		{
-			rtpSenders.push_back(it->second);
+			rtpSenders.push_back(rtpSender.second);
 		}
 
 		return rtpSenders;
