@@ -39,7 +39,7 @@ namespace RTC
 		uint32_t rtpTimestamp = packet.GetTimestamp() + transmissionTimeOffset;
 		int64_t nowMs         = DepLibUV::GetTime();
 
-		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.find(ssrc);
+		auto it = this->overuseDetectors.find(ssrc);
 		if (it == this->overuseDetectors.end())
 		{
 			// This is a new SSRC. Adding to map.
@@ -126,7 +126,7 @@ namespace RTC
 
 		BandwidthUsage bwState               = kBwNormal;
 		double sumVarNoise                   = 0.0;
-		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.begin();
+		auto it = this->overuseDetectors.begin();
 
 		while (it != this->overuseDetectors.end())
 		{
@@ -205,7 +205,7 @@ namespace RTC
 		ssrcs->resize(this->overuseDetectors.size());
 
 		int i                                      = 0;
-		SsrcOveruseEstimatorMap::const_iterator it = this->overuseDetectors.begin();
+		auto it = this->overuseDetectors.begin();
 
 		for (; it != this->overuseDetectors.end(); ++it, ++i)
 		{

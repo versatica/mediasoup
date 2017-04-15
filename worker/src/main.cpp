@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 	DepLibUV::ClassInit();
 
 	// Set the Channel socket (this will be handled and deleted by the Loop).
-	Channel::UnixStreamSocket* channel = new Channel::UnixStreamSocket(channelFd);
+	auto* channel = new Channel::UnixStreamSocket(channelFd);
 
 	// Initialize the Logger.
 	Logger::Init(id, channel);

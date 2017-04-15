@@ -61,7 +61,7 @@ namespace RTC
 					// Fix header count field.
 					header->count = this->receiverReportPacket.GetCount();
 
-					ReceiverReportPacket::Iterator it = this->receiverReportPacket.Begin();
+					auto it = this->receiverReportPacket.Begin();
 					for (; it != this->receiverReportPacket.End(); ++it)
 					{
 						ReceiverReport* report = (*it);

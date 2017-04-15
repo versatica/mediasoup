@@ -120,7 +120,7 @@ CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char*  /*file*/, int  
 {
 	// MS_TRACE();
 
-	CRYPTO_dynlock_value* value = new CRYPTO_dynlock_value;
+	auto* value = new CRYPTO_dynlock_value;
 	if (!value)
 	{
 		MS_ABORT("new CRYPTO_dynlock_value failed");

@@ -41,7 +41,7 @@ namespace RTC
 
 		keys.reserve(map.size());
 
-		typename std::map<K, V>::const_iterator it = map.begin();
+		auto it = map.begin();
 		for (; it != map.end(); ++it)
 		{
 			keys.push_back(it->first);
@@ -90,7 +90,7 @@ namespace RTC
 		int64_t prevSendTime = -1;
 		int64_t prevRecvTime = -1;
 
-		std::list<Probe>::const_iterator it = this->probes.begin();
+		auto it = this->probes.begin();
 		for (; it != this->probes.end(); ++it)
 		{
 			if (prevSendTime >= 0)
@@ -131,9 +131,9 @@ namespace RTC
 		MS_TRACE();
 
 		int highestProbeBitrateBps                = 0;
-		std::list<Cluster>::const_iterator bestIt = clusters.end();
+		auto bestIt = clusters.end();
 
-		std::list<Cluster>::const_iterator it = clusters.begin();
+		auto it = clusters.begin();
 		for (; it != clusters.end(); ++it)
 		{
 			if (it->sendMeanMs == 0 || it->recvMeanMs == 0)
@@ -190,7 +190,7 @@ namespace RTC
 			return ProbeResult::kNoUpdate;
 		}
 
-		std::list<Cluster>::const_iterator bestIt = FindBestProbe(clusters);
+		auto bestIt = FindBestProbe(clusters);
 		if (bestIt != clusters.end())
 		{
 			int probeBitrateBps = std::min(bestIt->GetSendBitrateBps(), bestIt->GetRecvBitrateBps());
@@ -393,7 +393,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (Ssrcs::iterator it = this->ssrcs.begin(); it != this->ssrcs.end();)
+		for (auto it = this->ssrcs.begin(); it != this->ssrcs.end();)
 		{
 			if ((nowMs - it->second) > kStreamTimeOutMs)
 				this->ssrcs.erase(it++);
