@@ -35,15 +35,15 @@ namespace RTC
 			explicit FeedbackPsLeiItem(Header* header);
 			explicit FeedbackPsLeiItem(FeedbackPsLeiItem* item);
 			explicit FeedbackPsLeiItem(uint32_t ssrc);
-			virtual ~FeedbackPsLeiItem() = default;
+			~FeedbackPsLeiItem() override = default;
 
 			uint32_t GetSsrc() const;
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			Header* header = nullptr;

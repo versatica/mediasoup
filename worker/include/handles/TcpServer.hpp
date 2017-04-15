@@ -17,7 +17,7 @@ public:
 	TcpServer(uv_tcp_t* uvHandle, int backlog);
 
 protected:
-	virtual ~TcpServer();
+	~TcpServer() override;
 
 public:
 	void Destroy();
@@ -46,7 +46,7 @@ public:
 
 	/* Methods inherited from TcpConnection::Listener. */
 public:
-	virtual void onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer);
+	void onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) override;
 
 private:
 	// Allocated by this (may be passed by argument).

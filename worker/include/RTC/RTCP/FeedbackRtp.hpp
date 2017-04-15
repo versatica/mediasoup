@@ -22,7 +22,7 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackRtpItemsPacket(CommonHeader* commonHeader);
 			explicit FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0);
-			virtual ~FeedbackRtpItemsPacket() = default;
+			~FeedbackRtpItemsPacket() override = default;
 
 			void AddItem(Item* item);
 			Iterator Begin();
@@ -30,9 +30,9 @@ namespace RTC
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			std::vector<Item*> items;

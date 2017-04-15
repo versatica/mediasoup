@@ -47,7 +47,7 @@ namespace RTC
 			explicit FeedbackPsVbcmItem(FeedbackPsVbcmItem* item);
 			FeedbackPsVbcmItem(
 			    uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value);
-			virtual ~FeedbackPsVbcmItem() = default;
+			~FeedbackPsVbcmItem() override = default;
 
 			uint32_t GetSsrc() const;
 			uint8_t GetSequenceNumber() const;
@@ -57,9 +57,9 @@ namespace RTC
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			Header* header = nullptr;

@@ -51,7 +51,7 @@ namespace RTC
 		public:
 			explicit FeedbackRtpEcnItem(Header* header);
 			explicit FeedbackRtpEcnItem(FeedbackRtpEcnItem* item);
-			virtual ~FeedbackRtpEcnItem() = default;
+			~FeedbackRtpEcnItem() override = default;
 
 			uint32_t GetSequenceNumber() const;
 			uint32_t GetEct0Counter() const;
@@ -63,9 +63,9 @@ namespace RTC
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			Header* header = nullptr;

@@ -20,15 +20,15 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsAfbPacket(CommonHeader* commonHeader, Application application = UNKNOWN);
 			FeedbackPsAfbPacket(uint32_t senderSsrc, uint32_t mediaSsrc, Application application = UNKNOWN);
-			virtual ~FeedbackPsAfbPacket() = default;
+			~FeedbackPsAfbPacket() override = default;
 
 			Application GetApplication() const;
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			Application application = UNKNOWN;

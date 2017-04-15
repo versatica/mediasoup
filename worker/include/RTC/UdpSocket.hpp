@@ -42,13 +42,13 @@ namespace RTC
 		UdpSocket(Listener* listener, int addressFamily);
 
 	private:
-		virtual ~UdpSocket() = default;
+		~UdpSocket() override = default;
 
 		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
-		virtual void userOnUdpDatagramRecv(
+		void userOnUdpDatagramRecv(
 		    const uint8_t* data, size_t len, const struct sockaddr* addr) override;
-		virtual void userOnUdpSocketClosed() override;
+		void userOnUdpSocketClosed() override;
 
 	private:
 		// Passed by argument.

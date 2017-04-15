@@ -36,16 +36,16 @@ namespace RTC
 			explicit FeedbackRtpTlleiItem(Header* header);
 			explicit FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item);
 			FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
-			virtual ~FeedbackRtpTlleiItem() = default;
+			~FeedbackRtpTlleiItem() override = default;
 
 			uint16_t GetPacketId() const;
 			uint16_t GetLostPacketBitmask() const;
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			Header* header = nullptr;

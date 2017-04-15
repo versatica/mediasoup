@@ -35,7 +35,7 @@ namespace RTC
 		public:
 			explicit FeedbackRtpTmmbItem(const uint8_t* data);
 			FeedbackRtpTmmbItem();
-			virtual ~FeedbackRtpTmmbItem() = default;
+			~FeedbackRtpTmmbItem() override = default;
 
 			uint32_t GetSsrc() const;
 			void SetSsrc(uint32_t ssrc);
@@ -46,9 +46,9 @@ namespace RTC
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			uint32_t ssrc     = 0;

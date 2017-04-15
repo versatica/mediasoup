@@ -19,14 +19,14 @@ namespace RTC
 		TcpConnection(Listener* listener, size_t bufferSize);
 
 	private:
-		virtual ~TcpConnection() = default;
+		~TcpConnection() override = default;
 
 	public:
 		void Send(const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from ::TcpConnection. */
 	public:
-		virtual void userOnTcpConnectionRead() override;
+		void userOnTcpConnectionRead() override;
 
 	private:
 		// Passed by argument.

@@ -55,23 +55,23 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
-		virtual void onPeerClosed(const RTC::Peer* peer) override;
-		virtual void onPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) override;
-		virtual void onPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
-		virtual void onPeerRtpReceiverClosed(
+		void onPeerClosed(const RTC::Peer* peer) override;
+		void onPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) override;
+		void onPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
+		void onPeerRtpReceiverClosed(
 		    const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver) override;
-		virtual void onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
-		virtual void onPeerRtpPacket(
+		void onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
+		void onPeerRtpPacket(
 		    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
-		virtual void onPeerRtcpReceiverReport(
+		void onPeerRtcpReceiverReport(
 		    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report) override;
-		virtual void onPeerRtcpFeedback(
+		void onPeerRtcpFeedback(
 		    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet) override;
-		virtual void onPeerRtcpFeedback(
+		void onPeerRtcpFeedback(
 		    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet) override;
-		virtual void onPeerRtcpSenderReport(
+		void onPeerRtcpSenderReport(
 		    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) override;
-		virtual void onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
+		void onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 
 	public:
 		// Passed by argument.

@@ -57,7 +57,7 @@ namespace RTC
 
 	public:
 		explicit RemoteBitrateEstimatorAbsSendTime(Listener* observer);
-		virtual ~RemoteBitrateEstimatorAbsSendTime() = default;
+		~RemoteBitrateEstimatorAbsSendTime() override = default;
 
 		void IncomingPacket(
 		    int64_t arrivalTimeMs,

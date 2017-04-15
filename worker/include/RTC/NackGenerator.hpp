@@ -39,7 +39,7 @@ namespace RTC
 
 	public:
 		explicit NackGenerator(Listener* listener);
-		virtual ~NackGenerator();
+		~NackGenerator() override;
 
 		void ReceivePacket(RTC::RtpPacket* packet);
 
@@ -50,7 +50,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
-		virtual void onTimer(Timer* timer) override;
+		void onTimer(Timer* timer) override;
 
 	private:
 		// Passed by argument.

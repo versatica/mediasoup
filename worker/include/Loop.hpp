@@ -15,7 +15,7 @@ class Loop : public SignalsHandler::Listener,
 {
 public:
 	explicit Loop(Channel::UnixStreamSocket* channel);
-	virtual ~Loop();
+	~Loop() override;
 
 private:
 	void Close();
@@ -23,16 +23,16 @@ private:
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
-	virtual void onSignal(SignalsHandler* signalsHandler, int signum) override;
+	void onSignal(SignalsHandler* signalsHandler, int signum) override;
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
-	virtual void onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
-	virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
+	void onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
+	void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
 
 	/* Methods inherited from RTC::Room::Listener. */
 public:
-	virtual void onRoomClosed(RTC::Room* room) override;
+	void onRoomClosed(RTC::Room* room) override;
 
 private:
 	// Passed by argument.

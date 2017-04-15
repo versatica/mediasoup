@@ -41,14 +41,14 @@ namespace RTC
 		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int addressFamily);
 
 	private:
-		virtual ~TcpServer() = default;
+		~TcpServer() override = default;
 
 		/* Pure virtual methods inherited from ::TcpServer. */
 	public:
-		virtual void userOnTcpConnectionAlloc(::TcpConnection** connection) override;
-		virtual void userOnNewTcpConnection(::TcpConnection* connection) override;
-		virtual void userOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer) override;
-		virtual void userOnTcpServerClosed() override;
+		void userOnTcpConnectionAlloc(::TcpConnection** connection) override;
+		void userOnNewTcpConnection(::TcpConnection* connection) override;
+		void userOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer) override;
+		void userOnTcpServerClosed() override;
 
 	private:
 		// Passed by argument.

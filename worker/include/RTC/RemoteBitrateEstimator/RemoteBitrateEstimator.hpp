@@ -49,7 +49,7 @@ namespace RTC
 		static const int64_t kStreamTimeOutMs   = 2000;
 
 	public:
-		virtual ~RemoteBitrateEstimator() = default;
+		~RemoteBitrateEstimator() override = default;
 
 		// Called for each incoming packet. Updates the incoming payload bitrate
 		// estimate and the over-use detector. If an over-use is detected the

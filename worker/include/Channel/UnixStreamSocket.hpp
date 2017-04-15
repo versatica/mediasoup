@@ -22,7 +22,7 @@ namespace Channel
 		explicit UnixStreamSocket(int fd);
 
 	private:
-		virtual ~UnixStreamSocket();
+		~UnixStreamSocket() override;
 
 	public:
 		void SetListener(Listener* listener);
@@ -32,8 +32,8 @@ namespace Channel
 
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
-		virtual void userOnUnixStreamRead() override;
-		virtual void userOnUnixStreamSocketClosed(bool isClosedByPeer) override;
+		void userOnUnixStreamRead() override;
+		void userOnUnixStreamSocketClosed(bool isClosedByPeer) override;
 
 	private:
 		// Passed by argument.

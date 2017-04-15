@@ -42,7 +42,7 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsRembPacket(CommonHeader* commonHeader);
 			FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
-			virtual ~FeedbackPsRembPacket() = default;
+			~FeedbackPsRembPacket() override = default;
 
 			bool IsCorrect();
 			void SetBitrate(uint64_t bitrate);
@@ -52,9 +52,9 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			std::vector<uint32_t> ssrcs;

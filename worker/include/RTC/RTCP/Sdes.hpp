@@ -101,7 +101,7 @@ namespace RTC
 
 		public:
 			SdesPacket();
-			virtual ~SdesPacket();
+			~SdesPacket() override;
 
 			void AddChunk(SdesChunk* chunk);
 			Iterator Begin();
@@ -109,10 +109,10 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetCount() const override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetCount() const override;
+			size_t GetSize() const override;
 
 		private:
 			std::vector<SdesChunk*> chunks;

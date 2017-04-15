@@ -52,7 +52,7 @@ namespace RTC
 		Peer(Listener* listener, Channel::Notifier* notifier, uint32_t peerId, std::string& peerName);
 
 	private:
-		virtual ~Peer();
+		~Peer() override;
 
 	public:
 		void Destroy();
@@ -82,25 +82,25 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		virtual void onTransportConnected(RTC::Transport* transport) override;
-		virtual void onTransportClosed(RTC::Transport* transport) override;
-		virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
-		virtual void onTransportFullFrameRequired(RTC::Transport* transport) override;
+		void onTransportConnected(RTC::Transport* transport) override;
+		void onTransportClosed(RTC::Transport* transport) override;
+		void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
+		void onTransportFullFrameRequired(RTC::Transport* transport) override;
 
 		/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:
-		virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver) override;
-		virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) override;
-		virtual void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
-		virtual void onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver) override;
+		void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver) override;
+		void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) override;
+		void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
+		void onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver) override;
 
 		/* Pure virtual methods inherited from RTC::RtpSender::Listener. */
 	public:
-		virtual void onRtpSenderClosed(RTC::RtpSender* rtpSender) override;
+		void onRtpSenderClosed(RTC::RtpSender* rtpSender) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
-		virtual void onTimer(Timer* timer) override;
+		void onTimer(Timer* timer) override;
 
 	public:
 		// Passed by argument.

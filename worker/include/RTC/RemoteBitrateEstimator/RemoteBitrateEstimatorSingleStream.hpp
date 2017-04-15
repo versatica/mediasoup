@@ -31,7 +31,7 @@ namespace RTC
 
 	public:
 		explicit RemoteBitrateEstimatorSingleStream(Listener* observer);
-		virtual ~RemoteBitrateEstimatorSingleStream();
+		~RemoteBitrateEstimatorSingleStream() override;
 
 		void IncomingPacket(
 		    int64_t arrivalTimeMs,

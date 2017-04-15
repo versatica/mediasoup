@@ -27,9 +27,9 @@ namespace RTC
 
 	public:
 		RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize);
-		virtual ~RtpStreamSend();
+		~RtpStreamSend() override;
 
-		virtual Json::Value toJson() const override;
+		Json::Value toJson() const override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(
@@ -43,7 +43,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
-		virtual void onInitSeq() override;
+		void onInitSeq() override;
 
 	private:
 		std::vector<StorageItem> storage;
