@@ -105,7 +105,7 @@ namespace RTC
 	{
 		while (!this->overuseDetectors.empty())
 		{
-			SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.begin();
+			auto it = this->overuseDetectors.begin();
 			delete it->second;
 			this->overuseDetectors.erase(it);
 		}
@@ -125,7 +125,7 @@ namespace RTC
 
 	inline void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc)
 	{
-		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.find(ssrc);
+		auto it = this->overuseDetectors.find(ssrc);
 		if (it != this->overuseDetectors.end())
 		{
 			delete it->second;

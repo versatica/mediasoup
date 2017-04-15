@@ -159,7 +159,7 @@ namespace RTC
 		{
 			this->ssrc = chunk->ssrc;
 
-			for (Iterator it = chunk->Begin(); it != chunk->End(); ++it)
+			for (auto it = chunk->Begin(); it != chunk->End(); ++it)
 			{
 				this->AddItem(new SdesItem(*it));
 			}
