@@ -934,13 +934,13 @@ namespace RTC
 
 				case RTCP::Type::PSFB:
 				{
-					RTCP::FeedbackPsPacket* feedback = static_cast<RTCP::FeedbackPsPacket*>(packet);
+					RTCP::FeedbackPsPacket* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
 
 					switch (feedback->GetMessageType())
 					{
 						case RTCP::FeedbackPs::MessageType::AFB:
 						{
-							RTCP::FeedbackPsAfbPacket* afb = static_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+							RTCP::FeedbackPsAfbPacket* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
 
 							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::REMB)
 								break;
@@ -1002,7 +1002,7 @@ namespace RTC
 
 				case RTCP::Type::RTPFB:
 				{
-					RTCP::FeedbackRtpPacket* feedback = static_cast<RTCP::FeedbackRtpPacket*>(packet);
+					RTCP::FeedbackRtpPacket* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
 
 					switch (feedback->GetMessageType())
 					{
@@ -1013,7 +1013,7 @@ namespace RTC
 							if (rtpSender)
 							{
 								RTC::RTCP::FeedbackRtpNackPacket* nackPacket =
-								    static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+								    dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
 								rtpSender->ReceiveNack(nackPacket);
 							}
