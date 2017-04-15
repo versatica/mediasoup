@@ -67,7 +67,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ "rtcMaxPort",          optional_argument, nullptr, 'M' },
 		{ "dtlsCertificateFile", optional_argument, nullptr, 'c' },
 		{ "dtlsPrivateKeyFile",  optional_argument, nullptr, 'p' },
-		{ 0, 0, 0, 0 }
+		{ nullptr, 0, nullptr, 0 }
 	};
 	// clang-format on
 
