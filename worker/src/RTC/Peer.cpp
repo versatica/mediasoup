@@ -653,14 +653,14 @@ namespace RTC
 		// - Request every Sender and Receiver of such transport their RTCP data.
 		// - Send the CompoundPacket.
 
-		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
+		for (auto & it : this->transports)
 		{
 			std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
-			RTC::Transport* transport = it->second;
+			RTC::Transport* transport = it.second;
 
-			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+			for (auto & it : this->rtpSenders)
 			{
-				RTC::RtpSender* rtpSender = it->second;
+				RTC::RtpSender* rtpSender = it.second;
 
 				if (rtpSender->GetTransport() != transport)
 					continue;
@@ -685,9 +685,9 @@ namespace RTC
 				}
 			}
 
-			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
+			for (auto & it : this->rtpReceivers)
 			{
-				RTC::RtpReceiver* rtpReceiver = it->second;
+				RTC::RtpReceiver* rtpReceiver = it.second;
 
 				if (rtpReceiver->GetTransport() != transport)
 					continue;

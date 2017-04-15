@@ -141,11 +141,9 @@ void TcpServer::Destroy()
 	{
 		MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
 
-		for (auto it = this->connections.begin(); it != this->connections.end(); ++it)
+		for (auto connection : this->connections)
 		{
-			TcpConnection* connection = *it;
-
-			connection->Destroy();
+				connection->Destroy();
 		}
 	}
 }

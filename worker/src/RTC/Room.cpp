@@ -78,9 +78,9 @@ namespace RTC
 			auto& jsonMediaCodecs = data[k_mediaCodecs];
 			std::vector<RTC::RtpCodecParameters> mediaCodecs;
 
-			for (Json::UInt i = 0; i < jsonMediaCodecs.size(); ++i)
+			for (auto & jsonMediaCodec : jsonMediaCodecs)
 			{
-				RTC::RtpCodecParameters mediaCodec(jsonMediaCodecs[i], RTC::Scope::ROOM_CAPABILITY);
+				RTC::RtpCodecParameters mediaCodec(jsonMediaCodec, RTC::Scope::ROOM_CAPABILITY);
 
 				// Ignore feature codecs.
 				if (mediaCodec.mime.IsFeatureCodec())

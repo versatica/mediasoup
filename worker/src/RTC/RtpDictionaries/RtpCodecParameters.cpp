@@ -96,9 +96,9 @@ namespace RTC
 		{
 			auto& jsonRtcpFeedback = data[k_rtcpFeedback];
 
-			for (Json::UInt i = 0; i < jsonRtcpFeedback.size(); ++i)
+			for (auto & i : jsonRtcpFeedback)
 			{
-				RTC::RtcpFeedback rtcpFeedback(jsonRtcpFeedback[i]);
+				RTC::RtcpFeedback rtcpFeedback(i);
 
 				// Append to the rtcpFeedback vector.
 				this->rtcpFeedback.push_back(rtcpFeedback);

@@ -469,9 +469,9 @@ namespace RTC
 			return this->selectedTuple;
 
 		// Otherwise check other stored tuples.
-		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
+		for (const auto & it : this->tuples)
 		{
-			RTC::TransportTuple* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(*it));
+			RTC::TransportTuple* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
 
 			if (storedTuple->Compare(tuple))
 				return storedTuple;

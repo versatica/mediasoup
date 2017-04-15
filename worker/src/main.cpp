@@ -136,10 +136,10 @@ void ignoreSignals()
 	if (err)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
-	for (auto it = ignoredSignals.begin(); it != ignoredSignals.end(); ++it)
+	for (auto & ignoredSignal : ignoredSignals)
 	{
-		auto& sigName = it->first;
-		int sigId     = it->second;
+		auto& sigName = ignoredSignal.first;
+		int sigId     = ignoredSignal.second;
 
 		err = sigaction(sigId, &act, nullptr);
 		if (err)

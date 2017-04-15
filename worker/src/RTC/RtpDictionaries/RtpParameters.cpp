@@ -35,9 +35,9 @@ namespace RTC
 		{
 			auto& jsonCodecs = data[k_codecs];
 
-			for (Json::UInt i = 0; i < jsonCodecs.size(); ++i)
+			for (auto & jsonCodec : jsonCodecs)
 			{
-				RTC::RtpCodecParameters codec(jsonCodecs[i], RTC::Scope::RECEIVE);
+				RTC::RtpCodecParameters codec(jsonCodec, RTC::Scope::RECEIVE);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -53,9 +53,9 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_encodings];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (auto & i : jsonArray)
 			{
-				RTC::RtpEncodingParameters encoding(jsonArray[i]);
+				RTC::RtpEncodingParameters encoding(i);
 
 				// Append to the encodings vector.
 				this->encodings.push_back(encoding);
@@ -67,9 +67,9 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_headerExtensions];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (auto & i : jsonArray)
 			{
-				RTC::RtpHeaderExtensionParameters headerExtension(jsonArray[i]);
+				RTC::RtpHeaderExtensionParameters headerExtension(i);
 
 				// If a known header extension, append to the headerExtensions vector.
 				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)

@@ -77,11 +77,9 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_dependencyEncodingIds];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (auto & entry : jsonArray)
 			{
-				auto& entry = jsonArray[i];
-
-				// Append to the dependencyEncodingIds vector.
+					// Append to the dependencyEncodingIds vector.
 				if (entry.isString())
 					this->dependencyEncodingIds.push_back(entry.asString());
 			}

@@ -570,11 +570,9 @@ void Settings::SetLogTags(Json::Value& json)
 
 	std::vector<std::string> tags;
 
-	for (Json::UInt i = 0; i < json.size(); ++i)
+	for (auto entry : json)
 	{
-		Json::Value entry = json[i];
-
-		if (entry.isString())
+			if (entry.isString())
 			tags.push_back(entry.asString());
 	}
 

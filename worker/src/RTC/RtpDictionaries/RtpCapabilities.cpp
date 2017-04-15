@@ -23,9 +23,9 @@ namespace RTC
 		{
 			auto& jsonCodecs = data[k_codecs];
 
-			for (Json::UInt i = 0; i < jsonCodecs.size(); ++i)
+			for (auto & jsonCodec : jsonCodecs)
 			{
-				RtpCodecParameters codec(jsonCodecs[i], scope);
+				RtpCodecParameters codec(jsonCodec, scope);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -37,9 +37,9 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_headerExtensions];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (auto & i : jsonArray)
 			{
-				RtpHeaderExtension headerExtension(jsonArray[i]);
+				RtpHeaderExtension headerExtension(i);
 
 				// If a known header extension, append to the headerExtensions vector.
 				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)
@@ -52,13 +52,13 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_fecMechanisms];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (const auto & i : jsonArray)
 			{
-				if (!jsonArray[i].isString())
+				if (!i.isString())
 					MS_THROW_ERROR("invalid RtpCapabilities.fecMechanisms");
 
 				// Append to the fecMechanisms vector.
-				this->fecMechanisms.push_back(jsonArray[i].asString());
+				this->fecMechanisms.push_back(i.asString());
 			}
 		}
 
