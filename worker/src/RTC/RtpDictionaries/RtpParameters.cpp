@@ -277,7 +277,7 @@ namespace RTC
 		static std::string k_apt = "apt";
 
 		// Must be at least one codec.
-		if (this->codecs.size() == 0)
+		if (this->codecs.empty())
 			MS_THROW_ERROR("empty RtpParameters.codecs");
 
 		std::unordered_set<uint8_t> payloadTypes;
@@ -350,7 +350,7 @@ namespace RTC
 
 		// If there are no encodings create one with `codecPayloadType` pointing to
 		// the first media codec.
-		if (this->encodings.size() == 0)
+		if (this->encodings.empty())
 		{
 			RTC::RtpEncodingParameters encoding;
 

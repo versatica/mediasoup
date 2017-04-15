@@ -290,7 +290,7 @@ namespace RTC
 			{
 				// There should be no tuples.
 				MS_ASSERT(
-				    this->tuples.size() == 0, "state is 'new' but there are %zu tuples", this->tuples.size());
+				    this->tuples.empty(), "state is 'new' but there are %zu tuples", this->tuples.size());
 
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(this->selectedTuple == nullptr, "state is 'new' but there is selected tuple");
@@ -331,7 +331,7 @@ namespace RTC
 			{
 				// There should be no tuples.
 				MS_ASSERT(
-				    this->tuples.size() == 0,
+				    this->tuples.empty(),
 				    "state is 'disconnected' but there are %zu tuples",
 				    this->tuples.size());
 
@@ -374,7 +374,7 @@ namespace RTC
 			case IceState::CONNECTED:
 			{
 				// There should be some tuples.
-				MS_ASSERT(this->tuples.size() > 0, "state is 'connected' but there are no tuples");
+				MS_ASSERT(!this->tuples.empty(), "state is 'connected' but there are no tuples");
 
 				// There should be a selected tuple.
 				MS_ASSERT(
@@ -410,7 +410,7 @@ namespace RTC
 			case IceState::COMPLETED:
 			{
 				// There should be some tuples.
-				MS_ASSERT(this->tuples.size() > 0, "state is 'completed' but there are no tuples");
+				MS_ASSERT(!this->tuples.empty(), "state is 'completed' but there are no tuples");
 
 				// There should be a selected tuple.
 				MS_ASSERT(

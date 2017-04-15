@@ -135,7 +135,7 @@ namespace RTC
 						}
 					}
 
-					if (arrayOfIntegers.size() > 0 && isValid)
+					if (!arrayOfIntegers.empty() && isValid)
 						this->mapKeyValues[key] = Value(arrayOfIntegers);
 
 					break;

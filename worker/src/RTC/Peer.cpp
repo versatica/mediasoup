@@ -1163,7 +1163,7 @@ namespace RTC
 		this->SendRtcp(now);
 
 		// Recalculate next RTCP interval.
-		if (this->rtpSenders.size())
+		if (!this->rtpSenders.empty())
 		{
 			// Transmission rate in kbps.
 			uint32_t rate = 0;

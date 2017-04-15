@@ -61,7 +61,7 @@ namespace RTC
 			return false;
 
 		// If bufferSize was given, store the packet into the buffer.
-		if (this->storage.size() > 0)
+		if (!this->storage.empty())
 			StorePacket(packet);
 
 		// Increase packet counters.
@@ -119,7 +119,7 @@ namespace RTC
 		}
 
 		// If the buffer is empty just return.
-		if (this->buffer.size() == 0)
+		if (this->buffer.empty())
 			return;
 
 		// Convert the given sequence numbers to 32 bits.
@@ -339,7 +339,7 @@ namespace RTC
 		bufferItem.seq32 = packetSeq32;
 
 		// If empty do it easy.
-		if (this->buffer.size() == 0)
+		if (this->buffer.empty())
 		{
 			auto store = this->storage[0].store;
 

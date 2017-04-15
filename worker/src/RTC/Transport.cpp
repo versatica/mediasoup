@@ -188,7 +188,7 @@ namespace RTC
 		}
 
 		// Ensure there is at least one IP:port binding.
-		if (!this->udpSockets.size() && !this->tcpServers.size())
+		if (this->udpSockets.empty() && this->tcpServers.empty())
 		{
 			Destroy();
 
