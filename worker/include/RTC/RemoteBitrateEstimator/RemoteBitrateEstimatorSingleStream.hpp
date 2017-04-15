@@ -66,7 +66,7 @@ namespace RTC
 
 	private:
 		// Triggers a new estimate calculation.
-		void UpdateEstimate(int64_t timeNow);
+		void UpdateEstimate(int64_t nowMs);
 		void GetSsrcs(std::vector<uint32_t>* ssrcs) const;
 
 		// Returns |remoteRate| if the pointed to object exists,

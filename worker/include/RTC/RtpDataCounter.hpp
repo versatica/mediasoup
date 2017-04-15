@@ -18,7 +18,7 @@ namespace RTC
 
 	public:
 		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = BpsScale);
-		void Update(size_t count, uint64_t now);
+		void Update(size_t size, uint64_t now);
 		uint32_t GetRate(uint64_t now);
 		void Reset();
 

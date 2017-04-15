@@ -74,7 +74,7 @@ namespace RTC
 		// in the "decrease" state the bitrate will be decreased to slightly below the
 		// incoming bitrate. When in the "hold" state the bitrate will be kept
 		// constant to allow built up queues to drain.
-		uint32_t ChangeBitrate(uint32_t currentBitrate, uint32_t incomingBitrate, int64_t nowMs);
+		uint32_t ChangeBitrate(uint32_t newBitrateBps, uint32_t incomingBitrateBps, int64_t nowMs);
 		// Clamps newBitrateBps to within the configured min bitrate and a linear
 		// function of the incoming bitrate, so that the new bitrate can't grow too
 		// large compared to the bitrate actually being received by the other end.
@@ -82,7 +82,7 @@ namespace RTC
 		uint32_t MultiplicativeRateIncrease(int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const;
 		uint32_t AdditiveRateIncrease(int64_t nowMs, int64_t lastMs) const;
 		void UpdateChangePeriod(int64_t nowMs);
-		void UpdateMaxBitRateEstimate(float incomingBitRateKbps);
+		void UpdateMaxBitRateEstimate(float incomingBitrateKbps);
 		void ChangeState(const RateControlInput& input, int64_t nowMs);
 		void ChangeState(RateControlState newState);
 		void ChangeRegion(RateControlRegion region);

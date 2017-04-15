@@ -22,7 +22,7 @@ namespace RTC
 			void AddSenderReport(SenderReport* report);
 			void AddReceiverReport(ReceiverReport* report);
 			void AddSdesChunk(SdesChunk* chunk);
-			void Serialize(uint8_t* buffer);
+			void Serialize(uint8_t* data);
 
 		private:
 			uint8_t* header = nullptr;

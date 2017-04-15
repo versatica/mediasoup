@@ -44,7 +44,7 @@ namespace RTC
 
 		protected:
 			explicit FeedbackPacket(CommonHeader* commonHeader);
-			FeedbackPacket(typename T::MessageType type, uint32_t senderSsrc, uint32_t mediaSsrc);
+			FeedbackPacket(typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc);
 			virtual ~FeedbackPacket();
 
 		private:

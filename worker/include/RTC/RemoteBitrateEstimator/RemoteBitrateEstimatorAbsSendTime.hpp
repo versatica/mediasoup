@@ -90,7 +90,7 @@ namespace RTC
 		std::list<Cluster>::const_iterator FindBestProbe(const std::list<Cluster>& clusters) const;
 		// Returns true if a probe which changed the estimate was detected.
 		ProbeResult ProcessClusters(int64_t nowMs);
-		bool IsBitrateImproving(int probeBitrateBps) const;
+		bool IsBitrateImproving(int newBitrateBps) const;
 		void TimeoutStreams(int64_t nowMs);
 
 	private:

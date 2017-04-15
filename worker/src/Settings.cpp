@@ -15,7 +15,7 @@ extern "C" {
 
 /* Helpers declaration. */
 
-static bool IsBindableIP(const std::string& ip, int family, int* _bind_err);
+static bool IsBindableIP(const std::string& ip, int family, int* bindErrno);
 
 /* Class variables. */
 

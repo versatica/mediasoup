@@ -80,7 +80,7 @@ namespace RTC
 		    Header* header,
 		    ExtensionHeader* extensionHeader,
 		    const uint8_t* payload,
-		    size_t payloadLen,
+		    size_t payloadLength,
 		    uint8_t payloadPadding,
 		    size_t size);
 		~RtpPacket();
