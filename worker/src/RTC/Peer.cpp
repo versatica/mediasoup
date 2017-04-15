@@ -909,7 +909,7 @@ namespace RTC
 				case RTCP::Type::RR:
 				{
 					RTCP::ReceiverReportPacket* rr = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
-					RTCP::ReceiverReportPacket::Iterator it = rr->Begin();
+					auto it = rr->Begin();
 
 					for (; it != rr->End(); ++it)
 					{
@@ -1061,7 +1061,7 @@ namespace RTC
 				case RTCP::Type::SR:
 				{
 					RTCP::SenderReportPacket* sr          = dynamic_cast<RTCP::SenderReportPacket*>(packet);
-					RTCP::SenderReportPacket::Iterator it = sr->Begin();
+					auto it = sr->Begin();
 
 					// Even if Sender Report packet can only contain one report..
 					for (; it != sr->End(); ++it)
@@ -1089,7 +1089,7 @@ namespace RTC
 				case RTCP::Type::SDES:
 				{
 					RTCP::SdesPacket* sdes        = dynamic_cast<RTCP::SdesPacket*>(packet);
-					RTCP::SdesPacket::Iterator it = sdes->Begin();
+					auto it = sdes->Begin();
 
 					for (; it != sdes->End(); ++it)
 					{

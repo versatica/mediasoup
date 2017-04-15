@@ -452,7 +452,7 @@ namespace RTC
 		MS_ASSERT(rtpReceiver->GetParameters(), "rtpReceiver has no parameters");
 
 		uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-		RTC::RtpSender* rtpSender =
+		auto rtpSender =
 		    new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
 		// Store into the maps.

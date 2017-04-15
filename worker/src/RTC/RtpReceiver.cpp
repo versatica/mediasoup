@@ -477,7 +477,7 @@ namespace RTC
 				}
 			}
 
-			RTC::RTCP::FeedbackRtpNackItem* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+			auto nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
 			packet.AddItem(nackItem);
 		}

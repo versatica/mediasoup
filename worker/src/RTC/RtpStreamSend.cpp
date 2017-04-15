@@ -294,7 +294,7 @@ namespace RTC
 		if (!received)
 			return nullptr;
 
-		RTC::RTCP::SenderReport* report = new RTC::RTCP::SenderReport();
+		auto report = new RTC::RTCP::SenderReport();
 
 		report->SetPacketCount(this->received);
 		report->SetOctetCount(this->receivedBytes);

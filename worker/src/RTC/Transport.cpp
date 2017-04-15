@@ -97,7 +97,7 @@ namespace RTC
 
 			try
 			{
-				RTC::UdpSocket* udpSocket = new RTC::UdpSocket(this, AF_INET);
+				auto udpSocket = new RTC::UdpSocket(this, AF_INET);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
@@ -123,7 +123,7 @@ namespace RTC
 
 			try
 			{
-				RTC::UdpSocket* udpSocket = new RTC::UdpSocket(this, AF_INET6);
+				auto udpSocket = new RTC::UdpSocket(this, AF_INET6);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
@@ -149,7 +149,7 @@ namespace RTC
 
 			try
 			{
-				RTC::TcpServer* tcpServer = new RTC::TcpServer(this, this, AF_INET);
+				auto tcpServer = new RTC::TcpServer(this, this, AF_INET);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
@@ -175,7 +175,7 @@ namespace RTC
 
 			try
 			{
-				RTC::TcpServer* tcpServer = new RTC::TcpServer(this, this, AF_INET6);
+				auto tcpServer = new RTC::TcpServer(this, this, AF_INET6);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);

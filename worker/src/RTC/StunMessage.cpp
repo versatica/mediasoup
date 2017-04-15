@@ -65,7 +65,7 @@ namespace RTC
 		uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
 		// Create a new StunMessage (data + 8 points to the received TransactionID field).
-		StunMessage* msg = new StunMessage((Class)msgClass, (Method)msgMethod, data + 8, data, len);
+		auto msg = new StunMessage((Class)msgClass, (Method)msgMethod, data + 8, data, len);
 
 		/*
 		    STUN Attributes
@@ -404,7 +404,7 @@ namespace RTC
 		    this->klass == Class::Request,
 		    "attempt to create an error response for a non Request STUN message");
 
-		StunMessage* response =
+		auto response =
 		    new StunMessage(Class::ErrorResponse, this->method, this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);

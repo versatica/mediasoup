@@ -113,7 +113,7 @@ void TcpConnection::Destroy()
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
-		uv_shutdown_t* req = new uv_shutdown_t;
+		auto req           = new uv_shutdown_t;
 		req->data          = (void*)this;
 		err                = uv_shutdown(req, (uv_stream_t*)this->uvHandle, (uv_shutdown_cb)onShutdown);
 		if (err)

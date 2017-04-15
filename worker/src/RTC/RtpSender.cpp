@@ -344,8 +344,8 @@ namespace RTC
 		packet->AddSenderReport(report);
 
 		// Build SDES chunk for this sender.
-		RTC::RTCP::SdesChunk* sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		RTC::RTCP::SdesItem* sdesItem =
+		auto sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
+		auto sdesItem =
 		    new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
 		sdesChunk->AddItem(sdesItem);

@@ -70,7 +70,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RTCP::ReceiverReport* report = new RTC::RTCP::ReceiverReport();
+		auto report = new RTC::RTCP::ReceiverReport();
 
 		// Calculate Packets Expected and Lost.
 		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
