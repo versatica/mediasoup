@@ -29,7 +29,7 @@
 			}                                                                                            \
 			ERR_clear_error();                                                                           \
 		}                                                                                              \
-	} while (0)
+	} while (false)
 
 /* Static methods for OpenSSL callbacks. */
 
