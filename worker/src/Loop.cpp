@@ -106,7 +106,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 	}
 }
 
-void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
+void Loop::onSignal(SignalsHandler*  /*signalsHandler*/, int signum)
 {
 	MS_TRACE();
 
@@ -127,7 +127,7 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 	}
 }
 
-void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request)
+void Loop::onChannelRequest(Channel::UnixStreamSocket*  /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();
 
@@ -273,7 +273,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 	}
 }
 
-void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* socket)
+void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket*  /*socket*/)
 {
 	MS_TRACE_STD();
 

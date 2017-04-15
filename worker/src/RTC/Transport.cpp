@@ -943,7 +943,7 @@ namespace RTC
 	}
 
 	void Transport::onRtcTcpConnectionClosed(
-	    RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer)
+	    RTC::TcpServer*  /*tcpServer*/, RTC::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
 
@@ -963,7 +963,7 @@ namespace RTC
 	}
 
 	void Transport::onOutgoingStunMessage(
-	    const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple)
+	    const RTC::IceServer*  /*iceServer*/, const RTC::StunMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -971,7 +971,7 @@ namespace RTC
 		tuple->Send(msg->GetData(), msg->GetSize());
 	}
 
-	void Transport::onIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple)
+	void Transport::onIceSelectedTuple(const RTC::IceServer*  /*iceServer*/, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -996,7 +996,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
 	}
 
-	void Transport::onIceConnected(const RTC::IceServer* iceServer)
+	void Transport::onIceConnected(const RTC::IceServer*  /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1017,7 +1017,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	void Transport::onIceCompleted(const RTC::IceServer* iceServer)
+	void Transport::onIceCompleted(const RTC::IceServer*  /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1038,7 +1038,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	void Transport::onIceDisconnected(const RTC::IceServer* iceServer)
+	void Transport::onIceDisconnected(const RTC::IceServer*  /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1062,7 +1062,7 @@ namespace RTC
 		Destroy();
 	}
 
-	void Transport::onDtlsConnecting(const RTC::DtlsTransport* dtlsTransport)
+	void Transport::onDtlsConnecting(const RTC::DtlsTransport*  /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1081,7 +1081,7 @@ namespace RTC
 	}
 
 	void Transport::onDtlsConnected(
-	    const RTC::DtlsTransport* dtlsTransport,
+	    const RTC::DtlsTransport*  /*dtlsTransport*/,
 	    RTC::SrtpSession::Profile srtpProfile,
 	    uint8_t* srtpLocalKey,
 	    size_t srtpLocalKeyLen,
@@ -1144,7 +1144,7 @@ namespace RTC
 		this->listener->onTransportConnected(this);
 	}
 
-	void Transport::onDtlsFailed(const RTC::DtlsTransport* dtlsTransport)
+	void Transport::onDtlsFailed(const RTC::DtlsTransport*  /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1165,7 +1165,7 @@ namespace RTC
 		Destroy();
 	}
 
-	void Transport::onDtlsClosed(const RTC::DtlsTransport* dtlsTransport)
+	void Transport::onDtlsClosed(const RTC::DtlsTransport*  /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1187,7 +1187,7 @@ namespace RTC
 	}
 
 	void Transport::onOutgoingDtlsData(
-	    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
+	    const RTC::DtlsTransport*  /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1202,7 +1202,7 @@ namespace RTC
 	}
 
 	void Transport::onDtlsApplicationData(
-	    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len)
+	    const RTC::DtlsTransport*  /*dtlsTransport*/, const uint8_t*  /*data*/, size_t len)
 	{
 		MS_TRACE();
 

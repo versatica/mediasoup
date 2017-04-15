@@ -191,7 +191,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
-inline void UnixStreamSocket::onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf)
+inline void UnixStreamSocket::onUvReadAlloc(size_t  /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
@@ -214,7 +214,7 @@ inline void UnixStreamSocket::onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf)
 	}
 }
 
-inline void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* buf)
+inline void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t*  /*buf*/)
 {
 	MS_TRACE_STD();
 

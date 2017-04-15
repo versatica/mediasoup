@@ -1155,7 +1155,7 @@ namespace RTC
 		this->listener->onPeerRtpSenderClosed(this, rtpSender);
 	}
 
-	void Peer::onTimer(Timer* timer)
+	void Peer::onTimer(Timer*  /*timer*/)
 	{
 		uint64_t interval = RTC::RTCP::maxVideoIntervalMs;
 		uint32_t now      = DepLibUV::GetTime();

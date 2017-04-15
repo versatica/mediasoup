@@ -91,7 +91,7 @@ void DepOpenSSL::SetThreadId(CRYPTO_THREADID* id)
 	CRYPTO_THREADID_set_numeric(id, (unsigned long)uv_thread_self());
 }
 
-void DepOpenSSL::LockingFunction(int mode, int n, const char* file, int line)
+void DepOpenSSL::LockingFunction(int mode, int n, const char*  /*file*/, int  /*line*/)
 {
 	// MS_TRACE();
 
@@ -116,7 +116,7 @@ void DepOpenSSL::LockingFunction(int mode, int n, const char* file, int line)
 		uv_mutex_unlock(&DepOpenSSL::mutexes[n]);
 }
 
-CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* file, int line)
+CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char*  /*file*/, int  /*line*/)
 {
 	// MS_TRACE();
 
@@ -132,7 +132,7 @@ CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* file, int line)
 	return value;
 }
 
-void DepOpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* file, int line)
+void DepOpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char*  /*file*/, int  /*line*/)
 {
 	// MS_TRACE();
 
@@ -142,7 +142,7 @@ void DepOpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* 
 		uv_mutex_unlock(&v->mutex);
 }
 
-void DepOpenSSL::DynDestroyFunction(CRYPTO_dynlock_value* v, const char* file, int line)
+void DepOpenSSL::DynDestroyFunction(CRYPTO_dynlock_value* v, const char*  /*file*/, int  /*line*/)
 {
 	// MS_TRACE();
 

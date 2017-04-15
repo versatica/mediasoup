@@ -571,7 +571,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpReceiverClosed(const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver)
+	void Room::onPeerRtpReceiverClosed(const RTC::Peer*  /*peer*/, const RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
@@ -595,7 +595,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender)
+	void Room::onPeerRtpSenderClosed(const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
@@ -612,7 +612,7 @@ namespace RTC
 		this->mapRtpSenderRtpReceiver.erase(rtpSender);
 	}
 
-	void Room::onPeerRtpPacket(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
+	void Room::onPeerRtpPacket(const RTC::Peer*  /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -631,7 +631,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpReceiverReport(
-	    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
+	    const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
@@ -643,7 +643,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpFeedback(
-	    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
+	    const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
 
@@ -657,7 +657,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpFeedback(
-	    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
+	    const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -671,7 +671,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpSenderReport(
-	    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
+	    const RTC::Peer*  /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
 
@@ -683,7 +683,7 @@ namespace RTC
 		    "RtpReceiver not present in the map");
 	}
 
-	void Room::onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender)
+	void Room::onFullFrameRequired(RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 

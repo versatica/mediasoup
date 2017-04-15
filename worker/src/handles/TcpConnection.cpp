@@ -309,7 +309,7 @@ bool TcpConnection::SetPeerAddress()
 	return true;
 }
 
-inline void TcpConnection::onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf)
+inline void TcpConnection::onUvReadAlloc(size_t  /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
@@ -332,7 +332,7 @@ inline void TcpConnection::onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf)
 	}
 }
 
-inline void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* buf)
+inline void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t*  /*buf*/)
 {
 	MS_TRACE();
 
