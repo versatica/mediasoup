@@ -1,6 +1,8 @@
 #define MS_CLASS "RTC::IceServer"
 // #define MS_LOG_DEV
 
+#include <utility>
+
 #include "RTC/IceServer.hpp"
 #include "Logger.hpp"
 
@@ -13,8 +15,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password)
-	    : listener(listener), usernameFragment(usernameFragment), password(password)
+	IceServer::IceServer(Listener* listener, std::string  usernameFragment, std::string  password)
+	    : listener(listener), usernameFragment(std::move(usernameFragment)), password(std::move(password))
 	{
 		MS_TRACE();
 
