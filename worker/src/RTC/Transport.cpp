@@ -1082,7 +1082,7 @@ namespace RTC
 
 	void Transport::onDtlsConnected(
 	    const RTC::DtlsTransport* dtlsTransport,
-	    RTC::SrtpSession::Profile srtp_profile,
+	    RTC::SrtpSession::Profile srtpProfile,
 	    uint8_t* srtpLocalKey,
 	    size_t srtpLocalKeyLen,
 	    uint8_t* srtpRemoteKey,
@@ -1115,7 +1115,7 @@ namespace RTC
 		try
 		{
 			this->srtpSendSession = new RTC::SrtpSession(
-			    RTC::SrtpSession::Type::OUTBOUND, srtp_profile, srtpLocalKey, srtpLocalKeyLen);
+			    RTC::SrtpSession::Type::OUTBOUND, srtpProfile, srtpLocalKey, srtpLocalKeyLen);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -1125,7 +1125,7 @@ namespace RTC
 		try
 		{
 			this->srtpRecvSession = new RTC::SrtpSession(
-			    SrtpSession::Type::INBOUND, srtp_profile, srtpRemoteKey, srtpRemoteKeyLen);
+			    SrtpSession::Type::INBOUND, srtpProfile, srtpRemoteKey, srtpRemoteKeyLen);
 		}
 		catch (const MediaSoupError& error)
 		{

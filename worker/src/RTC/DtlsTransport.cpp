@@ -805,14 +805,14 @@ namespace RTC
 			ERR_clear_error();
 	}
 
-	inline bool DtlsTransport::CheckStatus(int return_code)
+	inline bool DtlsTransport::CheckStatus(int returnCode)
 	{
 		MS_TRACE();
 
 		int err;
 		bool wasHandshakeDone = this->handshakeDone;
 
-		err = SSL_get_error(this->ssl, return_code);
+		err = SSL_get_error(this->ssl, returnCode);
 		switch (err)
 		{
 			case SSL_ERROR_NONE:

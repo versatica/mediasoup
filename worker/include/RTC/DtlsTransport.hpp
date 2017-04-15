@@ -139,7 +139,7 @@ namespace RTC
 	private:
 		bool IsRunning() const;
 		void Reset();
-		bool CheckStatus(int return_code);
+		bool CheckStatus(int returnCode);
 		void SendPendingOutgoingDtlsData();
 		bool SetTimeout();
 		void ProcessHandshake();

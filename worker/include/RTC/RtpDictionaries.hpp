@@ -299,7 +299,7 @@ namespace RTC
 	{
 	public:
 		explicit RtpParameters(Json::Value& data);
-		explicit RtpParameters(const RtpParameters* RtpParameters);
+		explicit RtpParameters(const RtpParameters* rtpParameters);
 
 		Json::Value toJson() const;
 		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);

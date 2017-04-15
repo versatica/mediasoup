@@ -32,7 +32,7 @@ public:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvReadAlloc(size_t suggested_size, uv_buf_t* buf);
+	void onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void onUvRead(ssize_t nread, const uv_buf_t* buf);
 	void onUvWriteError(int error);
 	void onUvShutdown(uv_shutdown_t* req, int status);
