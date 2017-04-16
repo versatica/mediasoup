@@ -1,5 +1,8 @@
 /node_modules/
 
+# clang-tidy stuff
+/worker/compile_commands.json
+
 # gyp generated stuff
 /worker/out/
 /worker/**/*.xcodeproj/

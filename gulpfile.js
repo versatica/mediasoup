@@ -3,6 +3,7 @@
 const gulp = require('gulp');
 const eslint = require('gulp-eslint');
 const replace = require('gulp-replace');
+const rename = require('gulp-rename');
 const touch = require('gulp-touch-cmd');
 const shell = require('gulp-shell');
 const clangFormat = require('gulp-clang-format');
@@ -33,7 +34,7 @@ const nodeTests =
 	// NOTE: Disable this test until adapted.
 	// 'test/test-scene-1.js'
 ];
-const compilationDatabase = 'worker/compile_commands.json';
+const compilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const numCpus = os.cpus().length;
 
 gulp.task('lint:node', () =>
@@ -69,8 +70,9 @@ gulp.task('format:worker', () =>
 
 gulp.task('tidy:worker:prepare', () =>
 {
-	return gulp.src(compilationDatabase)
+	return gulp.src(compilationDatabaseTemplate)
 		.pipe(replace(/PATH/gm, `${__dirname}/worker`))
+		.pipe(rename('compile_commands.json'))
 		.pipe(gulp.dest('worker'))
 		.pipe(touch());
 });
