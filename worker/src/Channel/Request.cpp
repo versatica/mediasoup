@@ -46,18 +46,18 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_method("method");
-		static const Json::StaticString k_internal("internal");
-		static const Json::StaticString k_data("data");
+		static const Json::StaticString JsonString_id("id");
+		static const Json::StaticString JsonString_method("method");
+		static const Json::StaticString JsonString_internal("internal");
+		static const Json::StaticString JsonString_data("data");
 
-		if (json[k_id].isUInt())
-			this->id = json[k_id].asUInt();
+		if (json[JsonString_id].isUInt())
+			this->id = json[JsonString_id].asUInt();
 		else
 			MS_THROW_ERROR("json has no numeric .id field");
 
-		if (json[k_method].isString())
-			this->method = json[k_method].asString();
+		if (json[JsonString_method].isString())
+			this->method = json[JsonString_method].asString();
 		else
 			MS_THROW_ERROR("json has no string .method field");
 
@@ -74,13 +74,13 @@ namespace Channel
 			MS_THROW_ERROR("unknown .method '%s'", this->method.c_str());
 		}
 
-		if (json[k_internal].isObject())
-			this->internal = json[k_internal];
+		if (json[JsonString_internal].isObject())
+			this->internal = json[JsonString_internal];
 		else
 			this->internal = Json::Value(Json::objectValue);
 
-		if (json[k_data].isObject())
-			this->data = json[k_data];
+		if (json[JsonString_data].isObject())
+			this->data = json[JsonString_data];
 		else
 			this->data = Json::Value(Json::objectValue);
 	}
@@ -104,9 +104,9 @@ namespace Channel
 		MS_TRACE();
 
 		static Json::Value EmptyData(Json::objectValue);
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_accepted("accepted");
-		static const Json::StaticString k_data("data");
+		static const Json::StaticString JsonString_id("id");
+		static const Json::StaticString JsonString_accepted("accepted");
+		static const Json::StaticString JsonString_data("data");
 
 		MS_ASSERT(this->replied == false, "Request already replied");
 
@@ -114,13 +114,13 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id]       = (Json::UInt)this->id;
-		json[k_accepted] = true;
+		json[JsonString_id]       = (Json::UInt)this->id;
+		json[JsonString_accepted] = true;
 
 		if (data.isObject())
-			json[k_data] = data;
+			json[JsonString_data] = data;
 		else
-			json[k_data] = EmptyData;
+			json[JsonString_data] = EmptyData;
 
 		this->channel->Send(json);
 	}
@@ -140,9 +140,9 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_rejected("rejected");
-		static const Json::StaticString k_reason("reason");
+		static const Json::StaticString JsonString_id("id");
+		static const Json::StaticString JsonString_rejected("rejected");
+		static const Json::StaticString JsonString_reason("reason");
 
 		MS_ASSERT(this->replied == false, "Request already replied");
 
@@ -150,11 +150,11 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id]       = (Json::UInt)this->id;
-		json[k_rejected] = true;
+		json[JsonString_id]       = (Json::UInt)this->id;
+		json[JsonString_rejected] = true;
 
 		if (reason)
-			json[k_reason] = reason;
+			json[JsonString_reason] = reason;
 
 		this->channel->Send(json);
 	}

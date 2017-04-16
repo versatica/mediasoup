@@ -89,7 +89,7 @@ namespace RTC
 			};
 		};
 
-		using FeedbackPsPacket = FeedbackPacket<RTC::RTCP::FeedbackPs>;
+		using FeedbackPsPacket  = FeedbackPacket<RTC::RTCP::FeedbackPs>;
 		using FeedbackRtpPacket = FeedbackPacket<RTC::RTCP::FeedbackRtp>;
 
 		/* Inline instance methods. */

@@ -113,9 +113,9 @@ void TcpConnection::Destroy()
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
-		auto req           = new uv_shutdown_t;
-		req->data          = (void*)this;
-		err                = uv_shutdown(req, (uv_stream_t*)this->uvHandle, (uv_shutdown_cb)onShutdown);
+		auto req  = new uv_shutdown_t;
+		req->data = (void*)this;
+		err       = uv_shutdown(req, (uv_stream_t*)this->uvHandle, (uv_shutdown_cb)onShutdown);
 		if (err)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
@@ -309,7 +309,7 @@ bool TcpConnection::SetPeerAddress()
 	return true;
 }
 
-inline void TcpConnection::onUvReadAlloc(size_t  /*suggestedSize*/, uv_buf_t* buf)
+inline void TcpConnection::onUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
@@ -332,7 +332,7 @@ inline void TcpConnection::onUvReadAlloc(size_t  /*suggestedSize*/, uv_buf_t* bu
 	}
 }
 
-inline void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t*  /*buf*/)
+inline void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE();
 

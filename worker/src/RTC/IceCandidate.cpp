@@ -67,58 +67,58 @@ namespace RTC
 
 	Json::Value IceCandidate::toJson() const
 	{
-		static const Json::StaticString k_foundation("foundation");
-		static const Json::StaticString k_priority("priority");
-		static const Json::StaticString k_family("family");
-		static const Json::StaticString v_ipv4("ipv4");
-		static const Json::StaticString v_ipv6("ipv6");
-		static const Json::StaticString k_ip("ip");
-		static const Json::StaticString k_port("port");
-		static const Json::StaticString k_type("type");
-		static const Json::StaticString v_host("host");
-		static const Json::StaticString k_protocol("protocol");
-		static const Json::StaticString v_udp("udp");
-		static const Json::StaticString v_tcp("tcp");
-		static const Json::StaticString k_tcpType("tcpType");
-		static const Json::StaticString v_passive("passive");
+		static const Json::StaticString JsonString_foundation("foundation");
+		static const Json::StaticString JsonString_priority("priority");
+		static const Json::StaticString JsonString_family("family");
+		static const Json::StaticString JsonString_ipv4("ipv4");
+		static const Json::StaticString JsonString_ipv6("ipv6");
+		static const Json::StaticString JsonString_ip("ip");
+		static const Json::StaticString JsonString_port("port");
+		static const Json::StaticString JsonString_type("type");
+		static const Json::StaticString JsonString_host("host");
+		static const Json::StaticString JsonString_protocol("protocol");
+		static const Json::StaticString JsonString_udp("udp");
+		static const Json::StaticString JsonString_tcp("tcp");
+		static const Json::StaticString JsonString_tcpType("tcpType");
+		static const Json::StaticString JsonString_passive("passive");
 
 		Json::Value json(Json::objectValue);
 
-		json[k_foundation] = this->foundation;
+		json[JsonString_foundation] = this->foundation;
 
 		switch (this->family)
 		{
 			case AF_INET:
-				json[k_family] = v_ipv4;
+				json[JsonString_family] = JsonString_ipv4;
 				break;
 
 			case AF_INET6:
-				json[k_family] = v_ipv6;
+				json[JsonString_family] = JsonString_ipv6;
 				break;
 		}
 
-		json[k_priority] = (Json::UInt)this->priority;
-		json[k_ip]       = this->ip;
-		json[k_port]     = (Json::UInt)this->port;
+		json[JsonString_priority] = (Json::UInt)this->priority;
+		json[JsonString_ip]       = this->ip;
+		json[JsonString_port]     = (Json::UInt)this->port;
 
 		switch (this->type)
 		{
 			case CandidateType::HOST:
-				json[k_type] = v_host;
+				json[JsonString_type] = JsonString_host;
 				break;
 		}
 
 		switch (this->protocol)
 		{
 			case Protocol::UDP:
-				json[k_protocol] = v_udp;
+				json[JsonString_protocol] = JsonString_udp;
 				break;
 			case Protocol::TCP:
-				json[k_protocol] = v_tcp;
+				json[JsonString_protocol] = JsonString_tcp;
 				switch (this->tcpType)
 				{
 					case TcpCandidateType::PASSIVE:
-						json[k_tcpType] = v_passive;
+						json[JsonString_tcpType] = JsonString_passive;
 						break;
 				}
 				break;

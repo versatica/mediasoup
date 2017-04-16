@@ -35,19 +35,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_params("params");
-		static const Json::StaticString k_received("received");
-		static const Json::StaticString k_maxTimestamp("maxTimestamp");
-		static const Json::StaticString k_receivedBytes("receivedBytes");
-		static const Json::StaticString k_rtt("rtt");
+		static const Json::StaticString JsonString_params("params");
+		static const Json::StaticString JsonString_received("received");
+		static const Json::StaticString JsonString_maxTimestamp("maxTimestamp");
+		static const Json::StaticString JsonString_receivedBytes("receivedBytes");
+		static const Json::StaticString JsonString_rtt("rtt");
 
 		Json::Value json(Json::objectValue);
 
-		json[k_params]        = this->params.toJson();
-		json[k_received]      = (Json::UInt)this->received;
-		json[k_maxTimestamp]  = (Json::UInt)this->maxTimestamp;
-		json[k_receivedBytes] = (Json::UInt)this->receivedBytes;
-		json[k_rtt]           = (Json::UInt)this->rtt;
+		json[JsonString_params]        = this->params.toJson();
+		json[JsonString_received]      = (Json::UInt)this->received;
+		json[JsonString_maxTimestamp]  = (Json::UInt)this->maxTimestamp;
+		json[JsonString_receivedBytes] = (Json::UInt)this->receivedBytes;
+		json[JsonString_rtt]           = (Json::UInt)this->rtt;
 
 		return json;
 	}

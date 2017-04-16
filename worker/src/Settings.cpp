@@ -265,11 +265,11 @@ void Settings::HandleRequest(Channel::Request* request)
 	{
 		case Channel::Request::MethodId::worker_updateSettings:
 		{
-			static const Json::StaticString k_logLevel("logLevel");
-			static const Json::StaticString k_logTags("logTags");
+			static const Json::StaticString JsonString_logLevel("logLevel");
+			static const Json::StaticString JsonString_logTags("logTags");
 
-			Json::Value jsonLogLevel = request->data[k_logLevel];
-			Json::Value jsonLogTags  = request->data[k_logTags];
+			Json::Value jsonLogLevel = request->data[JsonString_logLevel];
+			Json::Value jsonLogTags  = request->data[JsonString_logTags];
 
 			try
 			{
@@ -572,7 +572,7 @@ void Settings::SetLogTags(Json::Value& json)
 
 	for (const auto& entry : json)
 	{
-			if (entry.isString())
+		if (entry.isString())
 			tags.push_back(entry.asString());
 	}
 

@@ -38,7 +38,7 @@ namespace RTC
 	class OveruseEstimator
 	{
 	public:
-		explicit OveruseEstimator(OverUseDetectorOptions  options);
+		explicit OveruseEstimator(OverUseDetectorOptions options);
 		~OveruseEstimator();
 
 		// Update the estimator with a new sample. The deltas should represent deltas
@@ -86,7 +86,7 @@ namespace RTC
 		initialProcessNoise[1]          = 1e-3;
 	}
 
-	inline OveruseEstimator::OveruseEstimator(OverUseDetectorOptions  options)
+	inline OveruseEstimator::OveruseEstimator(OverUseDetectorOptions options)
 	    : options(std::move(options)), numOfDeltas(0), slope(this->options.initialSlope),
 	      offset(this->options.initialOffset), prevOffset(this->options.initialOffset), E(),
 	      processNoise(), avgNoise(this->options.initialAvgNoise),

@@ -13,9 +13,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrcTable("ssrcTable");
-		static const Json::StaticString k_muxIdTable("muxIdTable");
-		static const Json::StaticString k_ptTable("ptTable");
+		static const Json::StaticString JsonString_ssrcTable("ssrcTable");
+		static const Json::StaticString JsonString_muxIdTable("muxIdTable");
+		static const Json::StaticString JsonString_ptTable("ptTable");
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonSsrcTable(Json::objectValue);
@@ -30,7 +30,7 @@ namespace RTC
 
 			jsonSsrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_ssrcTable] = jsonSsrcTable;
+		json[JsonString_ssrcTable] = jsonSsrcTable;
 
 		// Add `muxIdTable`.
 		for (auto& kv : this->muxIdTable)
@@ -40,7 +40,7 @@ namespace RTC
 
 			jsonMuxIdTable[muxId] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_muxIdTable] = jsonMuxIdTable;
+		json[JsonString_muxIdTable] = jsonMuxIdTable;
 
 		// Add `ptTable`.
 		for (auto& kv : this->ptTable)
@@ -50,7 +50,7 @@ namespace RTC
 
 			jsonPtTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_ptTable] = jsonPtTable;
+		json[JsonString_ptTable] = jsonPtTable;
 
 		return json;
 	}

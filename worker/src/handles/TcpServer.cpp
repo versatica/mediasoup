@@ -143,7 +143,7 @@ void TcpServer::Destroy()
 
 		for (auto connection : this->connections)
 		{
-				connection->Destroy();
+			connection->Destroy();
 		}
 	}
 }

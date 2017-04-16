@@ -124,9 +124,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		BandwidthUsage bwState               = BwNormal;
-		double sumVarNoise                   = 0.0;
-		auto it = this->overuseDetectors.begin();
+		BandwidthUsage bwState = BwNormal;
+		double sumVarNoise     = 0.0;
+		auto it                = this->overuseDetectors.begin();
 
 		while (it != this->overuseDetectors.end())
 		{
@@ -204,7 +204,7 @@ namespace RTC
 
 		ssrcs->resize(this->overuseDetectors.size());
 
-		int i                                      = 0;
+		int i   = 0;
 		auto it = this->overuseDetectors.begin();
 
 		for (; it != this->overuseDetectors.end(); ++it, ++i)

@@ -58,8 +58,7 @@ namespace RTC
 		void onPeerClosed(const RTC::Peer* peer) override;
 		void onPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) override;
 		void onPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
-		void onPeerRtpReceiverClosed(
-		    const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver) override;
+		void onPeerRtpReceiverClosed(const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver) override;
 		void onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 		void onPeerRtpPacket(
 		    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;

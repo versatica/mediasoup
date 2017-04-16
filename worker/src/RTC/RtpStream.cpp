@@ -173,23 +173,23 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
-		static const Json::StaticString k_payloadType("payloadType");
-		static const Json::StaticString k_mime("mime");
-		static const Json::StaticString k_clockRate("clockRate");
-		static const Json::StaticString k_useNack("useNack");
-		static const Json::StaticString k_usePli("usePli");
-		static const Json::StaticString k_absSendTimeId("absSendTimeId");
+		static const Json::StaticString JsonString_ssrc("ssrc");
+		static const Json::StaticString JsonString_payloadType("payloadType");
+		static const Json::StaticString JsonString_mime("mime");
+		static const Json::StaticString JsonString_clockRate("clockRate");
+		static const Json::StaticString JsonString_useNack("useNack");
+		static const Json::StaticString JsonString_usePli("usePli");
+		static const Json::StaticString JsonString_absSendTimeId("absSendTimeId");
 
 		Json::Value json(Json::objectValue);
 
-		json[k_ssrc]          = (Json::UInt)this->ssrc;
-		json[k_payloadType]   = (Json::UInt)this->payloadType;
-		json[k_mime]          = this->mime.name;
-		json[k_clockRate]     = (Json::UInt)this->clockRate;
-		json[k_useNack]       = this->useNack;
-		json[k_usePli]        = this->usePli;
-		json[k_absSendTimeId] = (Json::UInt)this->absSendTimeId;
+		json[JsonString_ssrc]          = (Json::UInt)this->ssrc;
+		json[JsonString_payloadType]   = (Json::UInt)this->payloadType;
+		json[JsonString_mime]          = this->mime.name;
+		json[JsonString_clockRate]     = (Json::UInt)this->clockRate;
+		json[JsonString_useNack]       = this->useNack;
+		json[JsonString_usePli]        = this->usePli;
+		json[JsonString_absSendTimeId] = (Json::UInt)this->absSendTimeId;
 
 		return json;
 	}

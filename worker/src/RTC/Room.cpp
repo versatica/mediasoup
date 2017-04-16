@@ -70,15 +70,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_mediaCodecs("mediaCodecs");
+		static const Json::StaticString JsonString_mediaCodecs("mediaCodecs");
 
 		// `mediaCodecs` is optional.
-		if (data[k_mediaCodecs].isArray())
+		if (data[JsonString_mediaCodecs].isArray())
 		{
-			auto& jsonMediaCodecs = data[k_mediaCodecs];
+			auto& jsonMediaCodecs = data[JsonString_mediaCodecs];
 			std::vector<RTC::RtpCodecParameters> mediaCodecs;
 
-			for (auto & jsonMediaCodec : jsonMediaCodecs)
+			for (auto& jsonMediaCodec : jsonMediaCodecs)
 			{
 				RTC::RtpCodecParameters mediaCodec(jsonMediaCodec, RTC::Scope::ROOM_CAPABILITY);
 
@@ -117,7 +117,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
+		static const Json::StaticString JsonString_class("class");
 
 		Json::Value eventData(Json::objectValue);
 
@@ -134,7 +134,7 @@ namespace RTC
 		}
 
 		// Notify.
-		eventData[k_class] = "Room";
+		eventData[JsonString_class] = "Room";
 		this->notifier->Emit(this->roomId, "close", eventData);
 
 		// Notify the listener.
@@ -147,11 +147,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_roomId("roomId");
-		static const Json::StaticString k_capabilities("capabilities");
-		static const Json::StaticString k_peers("peers");
-		static const Json::StaticString k_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
-		static const Json::StaticString k_mapRtpSenderRtpReceiver("mapRtpSenderRtpReceiver");
+		static const Json::StaticString JsonString_roomId("roomId");
+		static const Json::StaticString JsonString_capabilities("capabilities");
+		static const Json::StaticString JsonString_peers("peers");
+		static const Json::StaticString JsonString_mapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
+		static const Json::StaticString JsonString_mapRtpSenderRtpReceiver("mapRtpSenderRtpReceiver");
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonPeers(Json::arrayValue);
@@ -159,10 +159,10 @@ namespace RTC
 		Json::Value jsonMapRtpSenderRtpReceiver(Json::objectValue);
 
 		// Add `roomId`.
-		json[k_roomId] = (Json::UInt)this->roomId;
+		json[JsonString_roomId] = (Json::UInt)this->roomId;
 
 		// Add `capabilities`.
-		json[k_capabilities] = this->capabilities.toJson();
+		json[JsonString_capabilities] = this->capabilities.toJson();
 
 		// Add `peers`.
 		for (auto& kv : this->peers)
@@ -171,7 +171,7 @@ namespace RTC
 
 			jsonPeers.append(peer->toJson());
 		}
-		json[k_peers] = jsonPeers;
+		json[JsonString_peers] = jsonPeers;
 
 		// Add `mapRtpReceiverRtpSenders`.
 		for (auto& kv : this->mapRtpReceiverRtpSenders)
@@ -187,7 +187,7 @@ namespace RTC
 
 			jsonMapRtpReceiverRtpSenders[std::to_string(rtpReceiver->rtpReceiverId)] = jsonRtpReceivers;
 		}
-		json[k_mapRtpReceiverRtpSenders] = jsonMapRtpReceiverRtpSenders;
+		json[JsonString_mapRtpReceiverRtpSenders] = jsonMapRtpReceiverRtpSenders;
 
 		// Add `mapRtpSenderRtpReceiver`.
 		for (auto& kv : this->mapRtpSenderRtpReceiver)
@@ -198,7 +198,7 @@ namespace RTC
 			jsonMapRtpSenderRtpReceiver[std::to_string(rtpSender->rtpSenderId)] =
 			    std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_mapRtpSenderRtpReceiver] = jsonMapRtpSenderRtpReceiver;
+		json[JsonString_mapRtpSenderRtpReceiver] = jsonMapRtpSenderRtpReceiver;
 
 		return json;
 	}
@@ -235,7 +235,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::room_createPeer:
 			{
-				static const Json::StaticString k_peerName("peerName");
+				static const Json::StaticString JsonString_peerName("peerName");
 
 				RTC::Peer* peer;
 				uint32_t peerId;
@@ -259,14 +259,14 @@ namespace RTC
 					return;
 				}
 
-				if (!request->internal[k_peerName].isString())
+				if (!request->internal[JsonString_peerName].isString())
 				{
 					request->Reject("Request has not string internal.peerName");
 
 					return;
 				}
 
-				peerName = request->internal[k_peerName].asString();
+				peerName = request->internal[JsonString_peerName].asString();
 
 				try
 				{
@@ -347,9 +347,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_peerId("peerId");
+		static const Json::StaticString JsonString_peerId("peerId");
 
-		auto jsonPeerId = request->internal[k_peerId];
+		auto jsonPeerId = request->internal[JsonString_peerId];
 
 		if (!jsonPeerId.isUInt())
 			MS_THROW_ERROR("Request has not numeric .peerId field");
@@ -452,8 +452,7 @@ namespace RTC
 		MS_ASSERT(rtpReceiver->GetParameters(), "rtpReceiver has no parameters");
 
 		uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-		auto rtpSender =
-		    new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
+		auto rtpSender = new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
 		// Store into the maps.
 		this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
@@ -571,7 +570,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpReceiverClosed(const RTC::Peer*  /*peer*/, const RTC::RtpReceiver* rtpReceiver)
+	void Room::onPeerRtpReceiverClosed(const RTC::Peer* /*peer*/, const RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
@@ -595,7 +594,7 @@ namespace RTC
 		}
 	}
 
-	void Room::onPeerRtpSenderClosed(const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender)
+	void Room::onPeerRtpSenderClosed(const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
@@ -612,7 +611,8 @@ namespace RTC
 		this->mapRtpSenderRtpReceiver.erase(rtpSender);
 	}
 
-	void Room::onPeerRtpPacket(const RTC::Peer*  /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
+	void Room::onPeerRtpPacket(
+	    const RTC::Peer* /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -631,7 +631,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpReceiverReport(
-	    const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
+	    const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
@@ -643,7 +643,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpFeedback(
-	    const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
+	    const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
 
@@ -657,7 +657,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpFeedback(
-	    const RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
+	    const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -671,7 +671,7 @@ namespace RTC
 	}
 
 	void Room::onPeerRtcpSenderReport(
-	    const RTC::Peer*  /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
+	    const RTC::Peer* /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
 
@@ -683,7 +683,7 @@ namespace RTC
 		    "RtpReceiver not present in the map");
 	}
 
-	void Room::onFullFrameRequired(RTC::Peer*  /*peer*/, RTC::RtpSender* rtpSender)
+	void Room::onFullFrameRequired(RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 

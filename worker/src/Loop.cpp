@@ -82,9 +82,9 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 {
 	MS_TRACE();
 
-	static const Json::StaticString k_roomId("roomId");
+	static const Json::StaticString JsonString_roomId("roomId");
 
-	auto jsonRoomId = request->internal[k_roomId];
+	auto jsonRoomId = request->internal[JsonString_roomId];
 
 	if (!jsonRoomId.isUInt())
 		MS_THROW_ERROR("Request has not numeric internal.roomId");
@@ -106,7 +106,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 	}
 }
 
-void Loop::onSignal(SignalsHandler*  /*signalsHandler*/, int signum)
+void Loop::onSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
 	MS_TRACE();
 
@@ -127,7 +127,7 @@ void Loop::onSignal(SignalsHandler*  /*signalsHandler*/, int signum)
 	}
 }
 
-void Loop::onChannelRequest(Channel::UnixStreamSocket*  /*channel*/, Channel::Request* request)
+void Loop::onChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();
 
@@ -137,13 +137,13 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket*  /*channel*/, Channel::Re
 	{
 		case Channel::Request::MethodId::worker_dump:
 		{
-			static const Json::StaticString k_workerId("workerId");
-			static const Json::StaticString k_rooms("rooms");
+			static const Json::StaticString JsonString_workerId("workerId");
+			static const Json::StaticString JsonString_rooms("rooms");
 
 			Json::Value json(Json::objectValue);
 			Json::Value jsonRooms(Json::arrayValue);
 
-			json[k_workerId] = Logger::id;
+			json[JsonString_workerId] = Logger::id;
 
 			for (auto& kv : this->rooms)
 			{
@@ -152,7 +152,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket*  /*channel*/, Channel::Re
 				jsonRooms.append(room->toJson());
 			}
 
-			json[k_rooms] = jsonRooms;
+			json[JsonString_rooms] = jsonRooms;
 
 			request->Accept(json);
 
@@ -168,7 +168,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket*  /*channel*/, Channel::Re
 
 		case Channel::Request::MethodId::worker_createRoom:
 		{
-			static const Json::StaticString k_capabilities("capabilities");
+			static const Json::StaticString JsonString_capabilities("capabilities");
 
 			RTC::Room* room;
 			uint32_t roomId;
@@ -209,7 +209,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket*  /*channel*/, Channel::Re
 			Json::Value data(Json::objectValue);
 
 			// Add `capabilities`.
-			data[k_capabilities] = room->GetCapabilities().toJson();
+			data[JsonString_capabilities] = room->GetCapabilities().toJson();
 
 			request->Accept(data);
 
@@ -273,7 +273,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket*  /*channel*/, Channel::Re
 	}
 }
 
-void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket*  /*socket*/)
+void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 

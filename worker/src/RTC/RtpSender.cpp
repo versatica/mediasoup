@@ -44,11 +44,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
+		static const Json::StaticString JsonString_class("class");
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[k_class] = "RtpSender";
+		eventData[JsonString_class] = "RtpSender";
 		this->notifier->Emit(this->rtpSenderId, "close", eventData);
 
 		// Notify the listener.
@@ -61,38 +61,38 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_rtpSenderId("rtpSenderId");
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
-		static const Json::StaticString k_hasTransport("hasTransport");
-		static const Json::StaticString k_active("active");
-		static const Json::StaticString k_supportedPayloadTypes("supportedPayloadTypes");
-		static const Json::StaticString k_rtpStream("rtpStream");
+		static const Json::StaticString JsonString_rtpSenderId("rtpSenderId");
+		static const Json::StaticString JsonString_kind("kind");
+		static const Json::StaticString JsonString_rtpParameters("rtpParameters");
+		static const Json::StaticString JsonString_hasTransport("hasTransport");
+		static const Json::StaticString JsonString_active("active");
+		static const Json::StaticString JsonString_supportedPayloadTypes("supportedPayloadTypes");
+		static const Json::StaticString JsonString_rtpStream("rtpStream");
 
 		Json::Value json(Json::objectValue);
 
-		json[k_rtpSenderId] = (Json::UInt)this->rtpSenderId;
+		json[JsonString_rtpSenderId] = (Json::UInt)this->rtpSenderId;
 
-		json[k_kind] = RTC::Media::GetJsonString(this->kind);
+		json[JsonString_kind] = RTC::Media::GetJsonString(this->kind);
 
 		if (this->rtpParameters)
-			json[k_rtpParameters] = this->rtpParameters->toJson();
+			json[JsonString_rtpParameters] = this->rtpParameters->toJson();
 		else
-			json[k_rtpParameters] = Json::nullValue;
+			json[JsonString_rtpParameters] = Json::nullValue;
 
-		json[k_hasTransport] = this->transport ? true : false;
+		json[JsonString_hasTransport] = this->transport ? true : false;
 
-		json[k_active] = this->GetActive();
+		json[JsonString_active] = this->GetActive();
 
-		json[k_supportedPayloadTypes] = Json::arrayValue;
+		json[JsonString_supportedPayloadTypes] = Json::arrayValue;
 
 		for (auto payloadType : this->supportedPayloadTypes)
 		{
-			json[k_supportedPayloadTypes].append((Json::UInt)payloadType);
+			json[JsonString_supportedPayloadTypes].append((Json::UInt)payloadType);
 		}
 
 		if (this->rtpStream)
-			json[k_rtpStream] = this->rtpStream->toJson();
+			json[JsonString_rtpStream] = this->rtpStream->toJson();
 
 		return json;
 	}
@@ -114,16 +114,16 @@ namespace RTC
 
 			case Channel::Request::MethodId::rtpSender_disable:
 			{
-				static const Json::StaticString k_disabled("disabled");
+				static const Json::StaticString JsonString_disabled("disabled");
 
-				if (!request->data[k_disabled].isBool())
+				if (!request->data[JsonString_disabled].isBool())
 				{
 					request->Reject("Request has invalid data.disabled");
 
 					return;
 				}
 
-				bool disabled = request->data[k_disabled].asBool();
+				bool disabled = request->data[JsonString_disabled].asBool();
 
 				// Nothing changed.
 				if (this->disabled == disabled)
@@ -167,9 +167,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
-		static const Json::StaticString k_active("active");
+		static const Json::StaticString JsonString_class("class");
+		static const Json::StaticString JsonString_rtpParameters("rtpParameters");
+		static const Json::StaticString JsonString_active("active");
 
 		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
@@ -270,9 +270,9 @@ namespace RTC
 		{
 			Json::Value eventData(Json::objectValue);
 
-			eventData[k_class]         = "RtpSender";
-			eventData[k_rtpParameters] = this->rtpParameters->toJson();
-			eventData[k_active]        = this->GetActive();
+			eventData[JsonString_class]         = "RtpSender";
+			eventData[JsonString_rtpParameters] = this->rtpParameters->toJson();
+			eventData[JsonString_active]        = this->GetActive();
 
 			this->notifier->Emit(this->rtpSenderId, "parameterschange", eventData);
 		}
@@ -473,13 +473,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
-		static const Json::StaticString k_active("active");
+		static const Json::StaticString JsonString_class("class");
+		static const Json::StaticString JsonString_active("active");
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[k_class]  = "RtpSender";
-		eventData[k_active] = this->GetActive();
+		eventData[JsonString_class]  = "RtpSender";
+		eventData[JsonString_active] = this->GetActive();
 
 		this->notifier->Emit(this->rtpSenderId, "activechange", eventData);
 	}

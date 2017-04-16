@@ -23,7 +23,7 @@ namespace RTC
 		{
 			auto& jsonCodecs = data[k_codecs];
 
-			for (auto & jsonCodec : jsonCodecs)
+			for (auto& jsonCodec : jsonCodecs)
 			{
 				RtpCodecParameters codec(jsonCodec, scope);
 
@@ -37,7 +37,7 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_headerExtensions];
 
-			for (auto & i : jsonArray)
+			for (auto& i : jsonArray)
 			{
 				RtpHeaderExtension headerExtension(i);
 
@@ -52,7 +52,7 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_fecMechanisms];
 
-			for (const auto & i : jsonArray)
+			for (const auto& i : jsonArray)
 			{
 				if (!i.isString())
 					MS_THROW_ERROR("invalid RtpCapabilities.fecMechanisms");

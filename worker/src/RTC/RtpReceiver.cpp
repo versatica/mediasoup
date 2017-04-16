@@ -39,12 +39,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
+		static const Json::StaticString JsonString_class("class");
 
 		Json::Value eventData(Json::objectValue);
 
 		// Notify.
-		eventData[k_class] = "RtpReceiver";
+		eventData[JsonString_class] = "RtpReceiver";
 		this->notifier->Emit(this->rtpReceiverId, "close", eventData);
 
 		// Notify the listener.
@@ -57,32 +57,32 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
-		static const Json::StaticString k_hasTransport("hasTransport");
-		static const Json::StaticString k_rtpRawEventEnabled("rtpRawEventEnabled");
-		static const Json::StaticString k_rtpObjectEventEnabled("rtpObjectEventEnabled");
-		static const Json::StaticString k_rtpStreams("rtpStreams");
-		static const Json::StaticString k_rtpStream("rtpStream");
+		static const Json::StaticString JsonString_rtpReceiverId("rtpReceiverId");
+		static const Json::StaticString JsonString_kind("kind");
+		static const Json::StaticString JsonString_rtpParameters("rtpParameters");
+		static const Json::StaticString JsonString_hasTransport("hasTransport");
+		static const Json::StaticString JsonString_rtpRawEventEnabled("rtpRawEventEnabled");
+		static const Json::StaticString JsonString_rtpObjectEventEnabled("rtpObjectEventEnabled");
+		static const Json::StaticString JsonString_rtpStreams("rtpStreams");
+		static const Json::StaticString JsonString_rtpStream("rtpStream");
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonRtpStreams(Json::arrayValue);
 
-		json[k_rtpReceiverId] = (Json::UInt)this->rtpReceiverId;
+		json[JsonString_rtpReceiverId] = (Json::UInt)this->rtpReceiverId;
 
-		json[k_kind] = RTC::Media::GetJsonString(this->kind);
+		json[JsonString_kind] = RTC::Media::GetJsonString(this->kind);
 
 		if (this->rtpParameters)
-			json[k_rtpParameters] = this->rtpParameters->toJson();
+			json[JsonString_rtpParameters] = this->rtpParameters->toJson();
 		else
-			json[k_rtpParameters] = Json::nullValue;
+			json[JsonString_rtpParameters] = Json::nullValue;
 
-		json[k_hasTransport] = this->transport ? true : false;
+		json[JsonString_hasTransport] = this->transport ? true : false;
 
-		json[k_rtpRawEventEnabled] = this->rtpRawEventEnabled;
+		json[JsonString_rtpRawEventEnabled] = this->rtpRawEventEnabled;
 
-		json[k_rtpObjectEventEnabled] = this->rtpObjectEventEnabled;
+		json[JsonString_rtpObjectEventEnabled] = this->rtpObjectEventEnabled;
 
 		for (auto& kv : this->rtpStreams)
 		{
@@ -90,7 +90,7 @@ namespace RTC
 
 			jsonRtpStreams.append(rtpStream->toJson());
 		}
-		json[k_rtpStreams] = jsonRtpStreams;
+		json[JsonString_rtpStreams] = jsonRtpStreams;
 
 		return json;
 	}
@@ -181,16 +181,16 @@ namespace RTC
 
 			case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
 			{
-				static const Json::StaticString k_enabled("enabled");
+				static const Json::StaticString JsonString_enabled("enabled");
 
-				if (!request->data[k_enabled].isBool())
+				if (!request->data[JsonString_enabled].isBool())
 				{
 					request->Reject("Request has invalid data.enabled");
 
 					return;
 				}
 
-				this->rtpRawEventEnabled = request->data[k_enabled].asBool();
+				this->rtpRawEventEnabled = request->data[JsonString_enabled].asBool();
 
 				request->Accept();
 
@@ -199,16 +199,16 @@ namespace RTC
 
 			case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
 			{
-				static const Json::StaticString k_enabled("enabled");
+				static const Json::StaticString JsonString_enabled("enabled");
 
-				if (!request->data[k_enabled].isBool())
+				if (!request->data[JsonString_enabled].isBool())
 				{
 					request->Reject("Request has invalid data.enabled");
 
 					return;
 				}
 
-				this->rtpObjectEventEnabled = request->data[k_enabled].asBool();
+				this->rtpObjectEventEnabled = request->data[JsonString_enabled].asBool();
 
 				request->Accept();
 
@@ -228,13 +228,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
-		static const Json::StaticString k_object("object");
-		static const Json::StaticString k_payloadType("payloadType");
-		static const Json::StaticString k_marker("marker");
-		static const Json::StaticString k_sequenceNumber("sequenceNumber");
-		static const Json::StaticString k_timestamp("timestamp");
-		static const Json::StaticString k_ssrc("ssrc");
+		static const Json::StaticString JsonString_class("class");
+		static const Json::StaticString JsonString_object("object");
+		static const Json::StaticString JsonString_payloadType("payloadType");
+		static const Json::StaticString JsonString_marker("marker");
+		static const Json::StaticString JsonString_sequenceNumber("sequenceNumber");
+		static const Json::StaticString JsonString_timestamp("timestamp");
+		static const Json::StaticString JsonString_ssrc("ssrc");
 
 		// TODO: Check if stopped, etc (not yet done).
 
@@ -264,7 +264,7 @@ namespace RTC
 		{
 			Json::Value eventData(Json::objectValue);
 
-			eventData[k_class] = "RtpReceiver";
+			eventData[JsonString_class] = "RtpReceiver";
 
 			this->notifier->EmitWithBinary(
 			    this->rtpReceiverId, "rtpraw", eventData, packet->GetData(), packet->GetSize());
@@ -276,15 +276,15 @@ namespace RTC
 			Json::Value eventData(Json::objectValue);
 			Json::Value jsonObject(Json::objectValue);
 
-			eventData[k_class] = "RtpReceiver";
+			eventData[JsonString_class] = "RtpReceiver";
 
-			jsonObject[k_payloadType]    = (Json::UInt)packet->GetPayloadType();
-			jsonObject[k_marker]         = packet->HasMarker();
-			jsonObject[k_sequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
-			jsonObject[k_timestamp]      = (Json::UInt)packet->GetTimestamp();
-			jsonObject[k_ssrc]           = (Json::UInt)packet->GetSsrc();
+			jsonObject[JsonString_payloadType]    = (Json::UInt)packet->GetPayloadType();
+			jsonObject[JsonString_marker]         = packet->HasMarker();
+			jsonObject[JsonString_sequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
+			jsonObject[JsonString_timestamp]      = (Json::UInt)packet->GetTimestamp();
+			jsonObject[JsonString_ssrc]           = (Json::UInt)packet->GetSsrc();
 
-			eventData[k_object] = jsonObject;
+			eventData[JsonString_object] = jsonObject;
 
 			this->notifier->EmitWithBinary(
 			    this->rtpReceiverId, "rtpobject", eventData, packet->GetPayload(), packet->GetPayloadLength());

@@ -189,7 +189,8 @@ namespace RTC
 			return DtlsTransport::Role::NONE;
 	}
 
-	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(const std::string& fingerprint)
+	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(
+	    const std::string& fingerprint)
 	{
 		auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
 

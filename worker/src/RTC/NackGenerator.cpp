@@ -209,7 +209,7 @@ namespace RTC
 			this->timer->Start(TimerInterval);
 	}
 
-	inline void NackGenerator::onTimer(Timer*  /*timer*/)
+	inline void NackGenerator::onTimer(Timer* /*timer*/)
 	{
 		MS_TRACE();
 

@@ -46,8 +46,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
-		void userOnUdpDatagramRecv(
-		    const uint8_t* data, size_t len, const struct sockaddr* addr) override;
+		void userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
 		void userOnUdpSocketClosed() override;
 
 	private:

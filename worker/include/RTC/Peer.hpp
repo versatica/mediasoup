@@ -131,7 +131,7 @@ namespace RTC
 	{
 		std::vector<RTC::RtpReceiver*> rtpReceivers;
 
-		for (const auto & rtpReceiver : this->rtpReceivers)
+		for (const auto& rtpReceiver : this->rtpReceivers)
 		{
 			rtpReceivers.push_back(rtpReceiver.second);
 		}
@@ -143,7 +143,7 @@ namespace RTC
 	{
 		std::vector<RTC::RtpSender*> rtpSenders;
 
-		for (const auto & rtpSender : this->rtpSenders)
+		for (const auto& rtpSender : this->rtpSenders)
 		{
 			rtpSenders.push_back(rtpSender.second);
 		}

@@ -58,7 +58,7 @@ namespace RTC
 		class SenderReportPacket : public Packet
 		{
 		public:
-			using Iterator = std::vector<SenderReport *>::iterator;
+			using Iterator = std::vector<SenderReport*>::iterator;
 
 		public:
 			static SenderReportPacket* Parse(const uint8_t* data, size_t len);

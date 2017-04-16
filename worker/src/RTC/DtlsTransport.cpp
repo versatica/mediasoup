@@ -33,7 +33,7 @@
 
 /* Static methods for OpenSSL callbacks. */
 
-inline static int onSslCertificate_verify(int  /*preverifyOk*/, X509_STORE_CTX*  /*ctx*/)
+inline static int onSslCertificate_verify(int /*preverifyOk*/, X509_STORE_CTX* /*ctx*/)
 {
 	MS_TRACE();
 
@@ -1280,7 +1280,7 @@ namespace RTC
 		// receipt of a close alert does not work (the flag is set after this callback).
 	}
 
-	inline void DtlsTransport::onTimer(Timer*  /*timer*/)
+	inline void DtlsTransport::onTimer(Timer* /*timer*/)
 	{
 		MS_TRACE();
 

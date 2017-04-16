@@ -11,15 +11,21 @@ namespace RTC
 		class FeedbackPsAfbPacket : public FeedbackPsPacket
 		{
 		public:
-			enum class Application : uint8_t { UNKNOWN = 0, REMB = 1 };
+			enum class Application : uint8_t
+			{
+				UNKNOWN = 0,
+				REMB    = 1
+			};
 
 		public:
 			static FeedbackPsAfbPacket* Parse(const uint8_t* data, size_t len);
 
 		public:
 			// Parsed Report. Points to an external data.
-			explicit FeedbackPsAfbPacket(CommonHeader* commonHeader, Application application = Application::UNKNOWN);
-			FeedbackPsAfbPacket(uint32_t senderSsrc, uint32_t mediaSsrc, Application application = Application::UNKNOWN);
+			explicit FeedbackPsAfbPacket(
+			    CommonHeader* commonHeader, Application application = Application::UNKNOWN);
+			FeedbackPsAfbPacket(
+			    uint32_t senderSsrc, uint32_t mediaSsrc, Application application = Application::UNKNOWN);
 			~FeedbackPsAfbPacket() override = default;
 
 			Application GetApplication() const;

@@ -35,7 +35,7 @@ namespace RTC
 		{
 			auto& jsonCodecs = data[k_codecs];
 
-			for (auto & jsonCodec : jsonCodecs)
+			for (auto& jsonCodec : jsonCodecs)
 			{
 				RTC::RtpCodecParameters codec(jsonCodec, RTC::Scope::RECEIVE);
 
@@ -53,7 +53,7 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_encodings];
 
-			for (auto & i : jsonArray)
+			for (auto& i : jsonArray)
 			{
 				RTC::RtpEncodingParameters encoding(i);
 
@@ -67,7 +67,7 @@ namespace RTC
 		{
 			auto& jsonArray = data[k_headerExtensions];
 
-			for (auto & i : jsonArray)
+			for (auto& i : jsonArray)
 			{
 				RTC::RtpHeaderExtensionParameters headerExtension(i);
 

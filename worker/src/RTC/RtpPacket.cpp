@@ -119,8 +119,7 @@ namespace RTC
 		               payloadLength + (size_t)payloadPadding,
 		    "packet's computed size does not match received size");
 
-		auto packet =
-		    new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
+		auto packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();

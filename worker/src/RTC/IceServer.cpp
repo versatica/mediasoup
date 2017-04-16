@@ -3,8 +3,8 @@
 
 #include <utility>
 
-#include "RTC/IceServer.hpp"
 #include "Logger.hpp"
+#include "RTC/IceServer.hpp"
 
 namespace RTC
 {
@@ -15,8 +15,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	IceServer::IceServer(Listener* listener, std::string  usernameFragment, std::string  password)
-	    : listener(listener), usernameFragment(std::move(usernameFragment)), password(std::move(password))
+	IceServer::IceServer(Listener* listener, std::string usernameFragment, std::string password)
+	    : listener(listener), usernameFragment(std::move(usernameFragment)),
+	      password(std::move(password))
 	{
 		MS_TRACE();
 
@@ -471,7 +472,7 @@ namespace RTC
 			return this->selectedTuple;
 
 		// Otherwise check other stored tuples.
-		for (const auto & it : this->tuples)
+		for (const auto& it : this->tuples)
 		{
 			RTC::TransportTuple* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
 

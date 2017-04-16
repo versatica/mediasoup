@@ -298,7 +298,7 @@ bool UdpSocket::SetLocalAddress()
 	return true;
 }
 
-inline void UdpSocket::onUvRecvAlloc(size_t  /*suggestedSize*/, uv_buf_t* buf)
+inline void UdpSocket::onUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
@@ -342,7 +342,7 @@ inline void UdpSocket::onUvRecv(
 	}
 }
 
-inline void UdpSocket::onUvSendError(int  /*error*/)
+inline void UdpSocket::onUvSendError(int /*error*/)
 {
 	MS_TRACE();
 

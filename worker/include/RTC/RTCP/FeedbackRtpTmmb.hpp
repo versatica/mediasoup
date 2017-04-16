@@ -75,8 +75,7 @@ namespace RTC
 		/* Inline instance methods. */
 
 		template<typename T>
-		inline FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem()
-		= default;
+		inline FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem() = default;
 
 		template<typename T>
 		inline size_t FeedbackRtpTmmbItem<T>::GetSize() const

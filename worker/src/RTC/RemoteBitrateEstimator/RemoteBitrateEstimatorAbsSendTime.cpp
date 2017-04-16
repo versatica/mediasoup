@@ -130,8 +130,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int highestProbeBitrateBps                = 0;
-		auto bestIt = clusters.end();
+		int highestProbeBitrateBps = 0;
+		auto bestIt                = clusters.end();
 
 		auto it = clusters.begin();
 		for (; it != clusters.end(); ++it)

@@ -24,19 +24,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_params("params");
-		static const Json::StaticString k_received("received");
-		static const Json::StaticString k_maxTimestamp("maxTimestamp");
-		static const Json::StaticString k_transit("transit");
-		static const Json::StaticString k_jitter("jitter");
+		static const Json::StaticString JsonString_params("params");
+		static const Json::StaticString JsonString_received("received");
+		static const Json::StaticString JsonString_maxTimestamp("maxTimestamp");
+		static const Json::StaticString JsonString_transit("transit");
+		static const Json::StaticString JsonString_jitter("jitter");
 
 		Json::Value json(Json::objectValue);
 
-		json[k_params]       = this->params.toJson();
-		json[k_received]     = (Json::UInt)this->received;
-		json[k_maxTimestamp] = (Json::UInt)this->maxTimestamp;
-		json[k_transit]      = (Json::UInt)this->transit;
-		json[k_jitter]       = (Json::UInt)this->jitter;
+		json[JsonString_params]       = this->params.toJson();
+		json[JsonString_received]     = (Json::UInt)this->received;
+		json[JsonString_maxTimestamp] = (Json::UInt)this->maxTimestamp;
+		json[JsonString_transit]      = (Json::UInt)this->transit;
+		json[JsonString_jitter]       = (Json::UInt)this->jitter;
 
 		return json;
 	}
