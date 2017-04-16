@@ -32,10 +32,10 @@ namespace RTC
 	static constexpr size_t ExpectedNumberOfProbes     = 3;
 	static constexpr double TimestampToMs = 1000.0 / static_cast<double>(1 << InterArrivalShift);
 
-	template<typename k, typename v>
-	std::vector<k> keys(const std::map<k, v>& map)
+	template<typename K, typename V>
+	std::vector<K> keys(const std::map<K, V>& map)
 	{
-		std::vector<k> keys;
+		std::vector<K> keys;
 
 		keys.reserve(map.size());
 
@@ -242,18 +242,18 @@ namespace RTC
 	}
 
 	void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
-	    int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc)
+	    int64_t arrivalTimeMs, uint32_t sendTime24bits, size_t payloadSize, uint32_t ssrc)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(sendTime_24bits < (1ul << 24), "invalid sendTime_24bits value");
+		MS_ASSERT(sendTime24bits < (1ul << 24), "invalid sendTime24bits value");
 
 		if (!this->umaRecorded)
 			this->umaRecorded = true;
 
 		// Shift up send time to use the full 32 bits that interArrival works with,
 		// so wrapping works properly.
-		uint32_t timestamp = sendTime_24bits << AbsSendTimeInterArrivalUpshift;
+		uint32_t timestamp = sendTime24bits << AbsSendTimeInterArrivalUpshift;
 		int64_t sendTimeMs = static_cast<int64_t>(timestamp) * TimestampToMs;
 		int64_t nowMs      = DepLibUV::GetTime();
 		// TODO(holmer): SSRCs are only needed for REMB, should be broken out from
