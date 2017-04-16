@@ -6,6 +6,8 @@ const replace = require('gulp-replace');
 const touch = require('gulp-touch-cmd');
 const shell = require('gulp-shell');
 const clangFormat = require('gulp-clang-format');
+const path = require('path');
+const os = require('os');
 
 let nodeFiles =
 [
@@ -31,6 +33,8 @@ const nodeTests =
 	// NOTE: Disable this test until adapted.
 	// 'test/test-scene-1.js'
 ];
+const compilationDatabase = 'worker/compile_commands.json';
+const numCpus = os.cpus().length;
 
 gulp.task('lint:node', () =>
 {
@@ -62,6 +66,24 @@ gulp.task('format:worker', () =>
 		.pipe(clangFormat.format('file'))
 		.pipe(gulp.dest('.'));
 });
+
+gulp.task('tidy:worker:prepare', () =>
+{
+	return gulp.src(compilationDatabase)
+		.pipe(replace(/PATH/gm, `${__dirname}/worker`))
+		.pipe(gulp.dest('worker'))
+		.pipe(touch());
+});
+
+gulp.task('tidy:worker:run', shell.task(
+	[
+		`cd worker && run-clang-tidy.py -header-filter=.*.hpp -p=. -checks=${process.env.MEDIASOUP_TIDY_CHECKS !== undefined ? process.env.MEDIASOUP_TIDY_CHECKS : ''} ${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix' : ''} -j=${numCpus}`
+	],
+	{
+		verbose : true,
+		env     : { DEBUG: '*ABORT* *WARN*' }
+	}
+));
 
 gulp.task('test:node', shell.task(
 	[
@@ -101,6 +123,8 @@ gulp.task('rtpcapabilities', () =>
 gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
 
 gulp.task('format', gulp.series('format:worker'));
+
+gulp.task('tidy:worker', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
 
 gulp.task('test', gulp.series('test:node', 'test:worker'));
 
