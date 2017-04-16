@@ -95,8 +95,7 @@ namespace RTC
 	}
 
 	inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer)
-	    : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer),
-	      processIntervalMs(processIntervalMs)
+	    : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer)
 	{
 		// assert(this->observer);
 	}
