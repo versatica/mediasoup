@@ -132,7 +132,7 @@ gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
 
 gulp.task('format', gulp.series('format:worker'));
 
-gulp.task('tidy:worker', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
+gulp.task('tidy', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
 
 gulp.task('test', gulp.series('test:node', 'test:worker'));
 
