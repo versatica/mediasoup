@@ -13,38 +13,38 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_mechanism("mechanism");
-		static const Json::StaticString k_ssrc("ssrc");
+		static const Json::StaticString JsonString_mechanism("mechanism");
+		static const Json::StaticString JsonString_ssrc("ssrc");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpFecParameters is not an object");
 
 		// `mechanism` is mandatory.
-		if (!data[k_mechanism].isString())
+		if (!data[JsonString_mechanism].isString())
 			MS_THROW_ERROR("missing RtpFecParameters.mechanism");
 
-		this->mechanism = data[k_mechanism].asString();
+		this->mechanism = data[JsonString_mechanism].asString();
 
 		// `ssrc` is optional.
-		if (data[k_ssrc].isUInt())
-			this->ssrc = (uint32_t)data[k_ssrc].asUInt();
+		if (data[JsonString_ssrc].isUInt())
+			this->ssrc = (uint32_t)data[JsonString_ssrc].asUInt();
 	}
 
 	Json::Value RtpFecParameters::toJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_mechanism("mechanism");
-		static const Json::StaticString k_ssrc("ssrc");
+		static const Json::StaticString JsonString_mechanism("mechanism");
+		static const Json::StaticString JsonString_ssrc("ssrc");
 
 		Json::Value json(Json::objectValue);
 
 		// Add `mechanism`.
-		json[k_mechanism] = this->mechanism;
+		json[JsonString_mechanism] = this->mechanism;
 
 		// Add `ssrc`.
 		if (this->ssrc)
-			json[k_ssrc] = (Json::UInt)this->ssrc;
+			json[JsonString_ssrc] = (Json::UInt)this->ssrc;
 
 		return json;
 	}

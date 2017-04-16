@@ -13,40 +13,40 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_type("type");
-		static const Json::StaticString k_parameter("parameter");
+		static const Json::StaticString JsonString_type("type");
+		static const Json::StaticString JsonString_parameter("parameter");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtcpFeedback is not an object");
 
 		// `type` is mandatory.
-		if (!data[k_type].isString())
+		if (!data[JsonString_type].isString())
 			MS_THROW_ERROR("missing RtcpFeedback.type");
 
-		this->type = data[k_type].asString();
+		this->type = data[JsonString_type].asString();
 
 		// `parameter` is optional.
-		if (data[k_parameter].isString())
-			this->parameter = data[k_parameter].asString();
+		if (data[JsonString_parameter].isString())
+			this->parameter = data[JsonString_parameter].asString();
 	}
 
 	Json::Value RtcpFeedback::toJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_type("type");
-		static const Json::StaticString k_parameter("parameter");
+		static const Json::StaticString JsonString_type("type");
+		static const Json::StaticString JsonString_parameter("parameter");
 
 		Json::Value json(Json::objectValue);
 
 		// Add `type`.
-		json[k_type] = this->type;
+		json[JsonString_type] = this->type;
 
 		// Add `parameter` (ensure it's null if no value).
 		if (this->parameter.length() > 0)
-			json[k_parameter] = this->parameter;
+			json[JsonString_parameter] = this->parameter;
 		else
-			json[k_parameter] = Json::nullValue;
+			json[JsonString_parameter] = Json::nullValue;
 
 		return json;
 	}

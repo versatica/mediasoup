@@ -14,14 +14,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_codecs("codecs");
-		static const Json::StaticString k_headerExtensions("headerExtensions");
-		static const Json::StaticString k_fecMechanisms("fecMechanisms");
+		static const Json::StaticString JsonString_codecs("codecs");
+		static const Json::StaticString JsonString_headerExtensions("headerExtensions");
+		static const Json::StaticString JsonString_fecMechanisms("fecMechanisms");
 
 		// `codecs` is optional.
-		if (data[k_codecs].isArray())
+		if (data[JsonString_codecs].isArray())
 		{
-			auto& jsonCodecs = data[k_codecs];
+			auto& jsonCodecs = data[JsonString_codecs];
 
 			for (auto& jsonCodec : jsonCodecs)
 			{
@@ -33,9 +33,9 @@ namespace RTC
 		}
 
 		// `headerExtensions` is optional.
-		if (data[k_headerExtensions].isArray())
+		if (data[JsonString_headerExtensions].isArray())
 		{
-			auto& jsonArray = data[k_headerExtensions];
+			auto& jsonArray = data[JsonString_headerExtensions];
 
 			for (auto& i : jsonArray)
 			{
@@ -48,9 +48,9 @@ namespace RTC
 		}
 
 		// `fecMechanisms` is optional.
-		if (data[k_fecMechanisms].isArray())
+		if (data[JsonString_fecMechanisms].isArray())
 		{
-			auto& jsonArray = data[k_fecMechanisms];
+			auto& jsonArray = data[JsonString_fecMechanisms];
 
 			for (const auto& i : jsonArray)
 			{
@@ -71,34 +71,34 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_codecs("codecs");
-		static const Json::StaticString k_headerExtensions("headerExtensions");
-		static const Json::StaticString k_fecMechanisms("fecMechanisms");
+		static const Json::StaticString JsonString_codecs("codecs");
+		static const Json::StaticString JsonString_headerExtensions("headerExtensions");
+		static const Json::StaticString JsonString_fecMechanisms("fecMechanisms");
 
 		Json::Value json(Json::objectValue);
 
 		// Add `codecs`.
-		json[k_codecs] = Json::arrayValue;
+		json[JsonString_codecs] = Json::arrayValue;
 
 		for (auto& entry : this->codecs)
 		{
-			json[k_codecs].append(entry.toJson());
+			json[JsonString_codecs].append(entry.toJson());
 		}
 
 		// Add `headerExtensions`.
-		json[k_headerExtensions] = Json::arrayValue;
+		json[JsonString_headerExtensions] = Json::arrayValue;
 
 		for (auto& entry : this->headerExtensions)
 		{
-			json[k_headerExtensions].append(entry.toJson());
+			json[JsonString_headerExtensions].append(entry.toJson());
 		}
 
 		// Add `fecMechanisms`.
-		json[k_fecMechanisms] = Json::arrayValue;
+		json[JsonString_fecMechanisms] = Json::arrayValue;
 
 		for (auto& entry : this->fecMechanisms)
 		{
-			json[k_fecMechanisms].append(entry);
+			json[JsonString_fecMechanisms].append(entry);
 		}
 
 		return json;

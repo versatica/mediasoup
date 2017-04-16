@@ -13,50 +13,50 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_cname("cname");
-		static const Json::StaticString k_ssrc("ssrc");
-		static const Json::StaticString k_reducedSize("reducedSize");
+		static const Json::StaticString JsonString_cname("cname");
+		static const Json::StaticString JsonString_ssrc("ssrc");
+		static const Json::StaticString JsonString_reducedSize("reducedSize");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtcpParameters is not an object");
 
 		// `cname` is optional.
-		if (data[k_cname].isString())
+		if (data[JsonString_cname].isString())
 		{
-			this->cname = data[k_cname].asString();
+			this->cname = data[JsonString_cname].asString();
 			if (this->cname.empty())
 				MS_THROW_ERROR("empty RtcpParameters.cname");
 		}
 
 		// `ssrc` is optional.
-		if (data[k_ssrc].isUInt())
-			this->ssrc = (uint32_t)data[k_ssrc].asUInt();
+		if (data[JsonString_ssrc].isUInt())
+			this->ssrc = (uint32_t)data[JsonString_ssrc].asUInt();
 
 		// `reducedSize` is optional.
-		if (data[k_reducedSize].isBool())
-			this->reducedSize = data[k_reducedSize].asBool();
+		if (data[JsonString_reducedSize].isBool())
+			this->reducedSize = data[JsonString_reducedSize].asBool();
 	}
 
 	Json::Value RtcpParameters::toJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_cname("cname");
-		static const Json::StaticString k_ssrc("ssrc");
-		static const Json::StaticString k_reducedSize("reducedSize");
+		static const Json::StaticString JsonString_cname("cname");
+		static const Json::StaticString JsonString_ssrc("ssrc");
+		static const Json::StaticString JsonString_reducedSize("reducedSize");
 
 		Json::Value json(Json::objectValue);
 
 		// Add `cname`.
 		if (!this->cname.empty())
-			json[k_cname] = this->cname;
+			json[JsonString_cname] = this->cname;
 
 		// Add `ssrc`.
 		if (this->ssrc)
-			json[k_ssrc] = (Json::UInt)this->ssrc;
+			json[JsonString_ssrc] = (Json::UInt)this->ssrc;
 
 		// Add `reducedSize`.
-		json[k_reducedSize] = this->reducedSize;
+		json[JsonString_reducedSize] = this->reducedSize;
 
 		return json;
 	}
