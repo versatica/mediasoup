@@ -41,12 +41,12 @@ namespace RTC
 		{
 		public:
 			// Called when a receive channel group has a new bitrate estimate for the incoming streams.
-			virtual void onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
+			virtual void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
 		};
 
 	protected:
-		static const int64_t ProcessIntervalMs = 500;
-		static const int64_t StreamTimeOutMs   = 2000;
+		static const int64_t processIntervalMs = 500;
+		static const int64_t streamTimeOutMs   = 2000;
 
 	public:
 		~RemoteBitrateEstimator() override = default;

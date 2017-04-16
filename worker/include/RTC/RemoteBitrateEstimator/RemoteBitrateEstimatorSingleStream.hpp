@@ -50,7 +50,7 @@ namespace RTC
 		{
 			enum
 			{
-				TimestampGroupLengthMs = 5
+				TIMESTAMP_GROUP_LENGTH_MS = 5
 			};
 			explicit Detector(
 			    int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping);
@@ -89,14 +89,14 @@ namespace RTC
 	inline RemoteBitrateEstimatorSingleStream::Detector::Detector(
 	    int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping)
 	    : lastPacketTimeMs(lastPacketTimeMs),
-	      interArrival(90 * TimestampGroupLengthMs, TimestampToMs, enableBurstGrouping),
+	      interArrival(90 * TIMESTAMP_GROUP_LENGTH_MS, TimestampToMs, enableBurstGrouping),
 	      estimator(options), detector()
 	{
 	}
 
 	inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer)
 	    : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer),
-	      processIntervalMs(ProcessIntervalMs)
+	      processIntervalMs(processIntervalMs)
 	{
 		// assert(this->observer);
 	}

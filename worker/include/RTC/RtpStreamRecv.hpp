@@ -14,16 +14,16 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onNackRequired(
+			virtual void OnNackRequired(
 			    RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
-			virtual void onPliRequired(RTC::RtpStreamRecv* rtpStream)                   = 0;
+			virtual void OnPliRequired(RTC::RtpStreamRecv* rtpStream)                   = 0;
 		};
 
 	public:
 		RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params);
 		~RtpStreamRecv() override;
 
-		Json::Value toJson() const override;
+		Json::Value ToJson() const override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
@@ -34,12 +34,12 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
-		void onInitSeq() override;
+		void OnInitSeq() override;
 
 		/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
-		void onNackRequired(const std::vector<uint16_t>& seqNumbers) override;
-		void onFullFrameRequired() override;
+		void OnNackRequired(const std::vector<uint16_t>& seqNumbers) override;
+		void OnFullFrameRequired() override;
 
 	private:
 		// Passed by argument.

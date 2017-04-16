@@ -27,7 +27,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackRtp::MessageType MessageType = FeedbackRtp::MessageType::TLLEI;
+			static const FeedbackRtp::MessageType messageType = FeedbackRtp::MessageType::TLLEI;
 
 		public:
 			static FeedbackRtpTlleiItem* Parse(const uint8_t* data, size_t len);

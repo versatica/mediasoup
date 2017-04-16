@@ -27,7 +27,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackRtp::MessageType MessageType = FeedbackRtp::MessageType::NACK;
+			static const FeedbackRtp::MessageType messageType = FeedbackRtp::MessageType::NACK;
 
 		public:
 			static FeedbackRtpNackItem* Parse(const uint8_t* data, size_t len);

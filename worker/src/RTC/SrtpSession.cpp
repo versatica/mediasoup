@@ -22,12 +22,12 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_install_event_handler((srtp_event_handler_func_t*)onSrtpEvent);
+		err = srtp_install_event_handler((srtp_event_handler_func_t*)OnSrtpEvent);
 		if (DepLibSRTP::IsError(err))
 			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
 	}
 
-	void SrtpSession::onSrtpEvent(srtp_event_data_t* data)
+	void SrtpSession::OnSrtpEvent(srtp_event_data_t* data)
 	{
 		MS_TRACE();
 

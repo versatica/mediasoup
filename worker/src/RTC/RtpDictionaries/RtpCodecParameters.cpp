@@ -13,15 +13,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_kind("kind");
-		static const Json::StaticString JsonString_name("name");
-		static const Json::StaticString JsonString_payloadType("payloadType");
-		static const Json::StaticString JsonString_clockRate("clockRate");
-		static const Json::StaticString JsonString_maxptime("maxptime");
-		static const Json::StaticString JsonString_ptime("ptime");
-		static const Json::StaticString JsonString_numChannels("numChannels");
-		static const Json::StaticString JsonString_parameters("parameters");
-		static const Json::StaticString JsonString_rtcpFeedback("rtcpFeedback");
+		static const Json::StaticString JsonStringKind("kind");
+		static const Json::StaticString JsonStringName("name");
+		static const Json::StaticString JsonStringPayloadType("payloadType");
+		static const Json::StaticString JsonStringClockRate("clockRate");
+		static const Json::StaticString JsonStringMaxptime("maxptime");
+		static const Json::StaticString JsonStringPtime("ptime");
+		static const Json::StaticString JsonStringNumChannels("numChannels");
+		static const Json::StaticString JsonStringParameters("parameters");
+		static const Json::StaticString JsonStringRtcpFeedback("rtcpFeedback");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
@@ -29,28 +29,28 @@ namespace RTC
 		if (this->scope == RTC::Scope::ROOM_CAPABILITY || this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// `kind` is mandatory.
-			if (!data[JsonString_kind].isString())
+			if (!data[JsonStringKind].isString())
 				MS_THROW_ERROR("missing RtpCodecParameters.kind");
 
-			std::string kind = data[JsonString_kind].asString();
+			std::string kind = data[JsonStringKind].asString();
 
 			// NOTE: This may throw.
 			this->kind = RTC::Media::GetKind(kind);
 		}
 
 		// `name` is mandatory.
-		if (!data[JsonString_name].isString())
+		if (!data[JsonStringName].isString())
 			MS_THROW_ERROR("missing RtpCodec.name");
 
-		std::string name = data[JsonString_name].asString();
+		std::string name = data[JsonStringName].asString();
 
 		// Set MIME field.
 		// NOTE: This may throw.
 		this->mime.SetName(name);
 
-		if (data[JsonString_payloadType].isUInt())
+		if (data[JsonStringPayloadType].isUInt())
 		{
-			this->payloadType    = (uint8_t)data[JsonString_payloadType].asUInt();
+			this->payloadType    = (uint8_t)data[JsonStringPayloadType].asUInt();
 			this->hasPayloadType = true;
 		}
 
@@ -62,39 +62,39 @@ namespace RTC
 
 		if (this->scope == RTC::Scope::RECEIVE)
 		{
-			if (!data[JsonString_payloadType].isUInt())
+			if (!data[JsonStringPayloadType].isUInt())
 				MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
 
-			this->payloadType    = (uint8_t)data[JsonString_payloadType].asUInt();
+			this->payloadType    = (uint8_t)data[JsonStringPayloadType].asUInt();
 			this->hasPayloadType = true;
 		}
 
 		// `clockRate` is mandatory.
-		if (!data[JsonString_clockRate].isUInt())
+		if (!data[JsonStringClockRate].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
 
-		this->clockRate = (uint32_t)data[JsonString_clockRate].asUInt();
+		this->clockRate = (uint32_t)data[JsonStringClockRate].asUInt();
 
 		// `maxptime` is optional.
-		if (data[JsonString_maxptime].isUInt())
-			this->maxptime = (uint32_t)data[JsonString_maxptime].asUInt();
+		if (data[JsonStringMaxptime].isUInt())
+			this->maxptime = (uint32_t)data[JsonStringMaxptime].asUInt();
 
 		// `ptime` is optional.
-		if (data[JsonString_ptime].isUInt())
-			this->ptime = (uint32_t)data[JsonString_ptime].asUInt();
+		if (data[JsonStringPtime].isUInt())
+			this->ptime = (uint32_t)data[JsonStringPtime].asUInt();
 
 		// `numChannels` is optional.
-		if (data[JsonString_numChannels].isUInt())
-			this->numChannels = (uint32_t)data[JsonString_numChannels].asUInt();
+		if (data[JsonStringNumChannels].isUInt())
+			this->numChannels = (uint32_t)data[JsonStringNumChannels].asUInt();
 
 		// `parameters` is optional.
-		if (data[JsonString_parameters].isObject())
-			this->parameters.Set(data[JsonString_parameters]);
+		if (data[JsonStringParameters].isObject())
+			this->parameters.Set(data[JsonStringParameters]);
 
 		// `rtcpFeedback` is optional.
-		if (data[JsonString_rtcpFeedback].isArray())
+		if (data[JsonStringRtcpFeedback].isArray())
 		{
-			auto& jsonRtcpFeedback = data[JsonString_rtcpFeedback];
+			auto& jsonRtcpFeedback = data[JsonStringRtcpFeedback];
 
 			for (auto& i : jsonRtcpFeedback)
 			{
@@ -109,61 +109,61 @@ namespace RTC
 		CheckCodec();
 	}
 
-	Json::Value RtpCodecParameters::toJson() const
+	Json::Value RtpCodecParameters::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_kind("kind");
-		static const Json::StaticString JsonString_name("name");
-		static const Json::StaticString JsonString_payloadType("payloadType");
-		static const Json::StaticString JsonString_clockRate("clockRate");
-		static const Json::StaticString JsonString_maxptime("maxptime");
-		static const Json::StaticString JsonString_ptime("ptime");
-		static const Json::StaticString JsonString_numChannels("numChannels");
-		static const Json::StaticString JsonString_parameters("parameters");
-		static const Json::StaticString JsonString_rtcpFeedback("rtcpFeedback");
+		static const Json::StaticString JsonStringKind("kind");
+		static const Json::StaticString JsonStringName("name");
+		static const Json::StaticString JsonStringPayloadType("payloadType");
+		static const Json::StaticString JsonStringClockRate("clockRate");
+		static const Json::StaticString JsonStringMaxptime("maxptime");
+		static const Json::StaticString JsonStringPtime("ptime");
+		static const Json::StaticString JsonStringNumChannels("numChannels");
+		static const Json::StaticString JsonStringParameters("parameters");
+		static const Json::StaticString JsonStringRtcpFeedback("rtcpFeedback");
 
 		Json::Value json(Json::objectValue);
 
 		if (this->scope == RTC::Scope::ROOM_CAPABILITY || this->scope == RTC::Scope::PEER_CAPABILITY)
 		{
 			// Add `kind`.
-			json[JsonString_kind] = RTC::Media::GetJsonString(this->kind);
+			json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 		}
 
 		// Add `name`.
-		json[JsonString_name] = this->mime.GetName();
+		json[JsonStringName] = this->mime.GetName();
 
 		if (this->hasPayloadType)
 		{
 			// Add `payloadType`.
-			json[JsonString_payloadType] = (Json::UInt)this->payloadType;
+			json[JsonStringPayloadType] = (Json::UInt)this->payloadType;
 		}
 
 		// Add `clockRate`.
-		json[JsonString_clockRate] = (Json::UInt)this->clockRate;
+		json[JsonStringClockRate] = (Json::UInt)this->clockRate;
 
 		// Add `maxptime`.
 		if (this->maxptime)
-			json[JsonString_maxptime] = (Json::UInt)this->maxptime;
+			json[JsonStringMaxptime] = (Json::UInt)this->maxptime;
 
 		// Add `ptime`.
 		if (this->ptime)
-			json[JsonString_ptime] = (Json::UInt)this->ptime;
+			json[JsonStringPtime] = (Json::UInt)this->ptime;
 
 		// Add `numChannels`.
 		if (this->numChannels > 1)
-			json[JsonString_numChannels] = (Json::UInt)this->numChannels;
+			json[JsonStringNumChannels] = (Json::UInt)this->numChannels;
 
 		// Add `parameters`.
-		json[JsonString_parameters] = this->parameters.toJson();
+		json[JsonStringParameters] = this->parameters.ToJson();
 
 		// Add `rtcpFeedback`.
-		json[JsonString_rtcpFeedback] = Json::arrayValue;
+		json[JsonStringRtcpFeedback] = Json::arrayValue;
 
 		for (auto& entry : this->rtcpFeedback)
 		{
-			json[JsonString_rtcpFeedback].append(entry.toJson());
+			json[JsonStringRtcpFeedback].append(entry.ToJson());
 		}
 
 		return json;
@@ -173,7 +173,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string JsonString_packetizationMode = "packetizationMode";
+		static std::string jsonStringPacketizationMode = "packetizationMode";
 
 		// MIME must match.
 		if (this->mime != codec.mime)
@@ -209,8 +209,8 @@ namespace RTC
 		{
 			case RTC::RtpCodecMime::Subtype::H264:
 			{
-				int32_t packetizationMode      = this->parameters.GetInteger(JsonString_packetizationMode);
-				int32_t givenPacketizationMode = codec.parameters.GetInteger(JsonString_packetizationMode);
+				int32_t packetizationMode      = this->parameters.GetInteger(jsonStringPacketizationMode);
+				int32_t givenPacketizationMode = codec.parameters.GetInteger(jsonStringPacketizationMode);
 
 				if (packetizationMode != givenPacketizationMode)
 					return false;
@@ -251,8 +251,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string JsonString_apt               = "apt";
-		static std::string JsonString_packetizationMode = "packetizationMode";
+		static std::string jsonStringApt               = "apt";
+		static std::string jsonStringPacketizationMode = "packetizationMode";
 
 		// Check per MIME parameters and set default values.
 		switch (this->mime.subtype)
@@ -260,7 +260,7 @@ namespace RTC
 			case RTC::RtpCodecMime::Subtype::RTX:
 			{
 				// A RTX codec must have 'apt' parameter.
-				if (!this->parameters.HasInteger(JsonString_apt))
+				if (!this->parameters.HasInteger(jsonStringApt))
 					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
 
 				break;
@@ -278,8 +278,8 @@ namespace RTC
 			case RTC::RtpCodecMime::Subtype::H264:
 			{
 				// H264 default packetizationMode is 0.
-				if (!this->parameters.HasInteger(JsonString_packetizationMode))
-					this->parameters.SetInteger(JsonString_packetizationMode, 0);
+				if (!this->parameters.HasInteger(jsonStringPacketizationMode))
+					this->parameters.SetInteger(jsonStringPacketizationMode, 0);
 
 				break;
 			}

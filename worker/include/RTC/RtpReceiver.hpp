@@ -29,10 +29,10 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)             = 0;
-			virtual void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver)         = 0;
-			virtual void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
-			virtual void onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver)           = 0;
+			virtual void OnRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)             = 0;
+			virtual void OnRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver)         = 0;
+			virtual void OnRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
+			virtual void OnRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver)           = 0;
 		};
 
 	public:
@@ -44,7 +44,7 @@ namespace RTC
 
 	public:
 		void Destroy();
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		void SetTransport(RTC::Transport* transport);
 		RTC::Transport* GetTransport() const;
@@ -63,8 +63,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
-		void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
-		void onPliRequired(RTC::RtpStreamRecv* rtpStream) override;
+		void OnNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
+		void OnPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 
 	public:
 		// Passed by argument.

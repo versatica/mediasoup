@@ -10,17 +10,17 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value TransportTuple::toJson() const
+	Json::Value TransportTuple::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_localIP("localIP");
-		static const Json::StaticString JsonString_remoteIP("remoteIP");
-		static const Json::StaticString JsonString_localPort("localPort");
-		static const Json::StaticString JsonString_remotePort("remotePort");
-		static const Json::StaticString JsonString_protocol("protocol");
-		static const Json::StaticString JsonString_udp("udp");
-		static const Json::StaticString JsonString_tcp("tcp");
+		static const Json::StaticString JsonStringLocalIp("localIP");
+		static const Json::StaticString JsonStringRemoteIp("remoteIP");
+		static const Json::StaticString JsonStringLocalPort("localPort");
+		static const Json::StaticString JsonStringRemotePort("remotePort");
+		static const Json::StaticString JsonStringProtocol("protocol");
+		static const Json::StaticString JsonStringUdp("udp");
+		static const Json::StaticString JsonStringTcp("tcp");
 
 		Json::Value json(Json::objectValue);
 		int ipFamily;
@@ -28,16 +28,16 @@ namespace RTC
 		uint16_t port;
 
 		Utils::IP::GetAddressInfo(this->GetLocalAddress(), &ipFamily, ip, &port);
-		json[JsonString_localIP]   = ip;
-		json[JsonString_localPort] = (Json::UInt)port;
+		json[JsonStringLocalIp]   = ip;
+		json[JsonStringLocalPort] = (Json::UInt)port;
 		if (this->GetProtocol() == RTC::TransportTuple::Protocol::UDP)
-			json[JsonString_protocol] = JsonString_udp;
+			json[JsonStringProtocol] = JsonStringUdp;
 		else
-			json[JsonString_protocol] = JsonString_tcp;
+			json[JsonStringProtocol] = JsonStringTcp;
 
 		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ipFamily, ip, &port);
-		json[JsonString_remoteIP]   = ip;
-		json[JsonString_remotePort] = (Json::UInt)port;
+		json[JsonStringRemoteIp]   = ip;
+		json[JsonStringRemotePort] = (Json::UInt)port;
 
 		return json;
 	}

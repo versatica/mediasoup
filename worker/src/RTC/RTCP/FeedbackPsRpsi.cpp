@@ -50,14 +50,14 @@ namespace RTC
 
 			size_t paddingBytes = this->header->paddingBits / 8;
 
-			if (paddingBytes > FeedbackPsRpsiItem::MaxBitStringSize)
+			if (paddingBytes > FeedbackPsRpsiItem::maxBitStringSize)
 			{
 				MS_WARN_TAG(rtcp, "invalid Rpsi packet with too many padding bytes");
 
 				isCorrect = false;
 			}
 
-			this->length = FeedbackPsRpsiItem::MaxBitStringSize - paddingBytes;
+			this->length = FeedbackPsRpsiItem::maxBitStringSize - paddingBytes;
 		}
 
 		FeedbackPsRpsiItem::FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length)
@@ -66,7 +66,7 @@ namespace RTC
 
 			MS_ASSERT(payloadType <= 0x7f, "rpsi payload type exceeds the maximum value");
 			MS_ASSERT(
-			    length <= FeedbackPsRpsiItem::MaxBitStringSize,
+			    length <= FeedbackPsRpsiItem::maxBitStringSize,
 			    "rpsi bit string length exceeds the maximum value");
 
 			this->raw    = new uint8_t[sizeof(Header)];

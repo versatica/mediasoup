@@ -17,12 +17,12 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	static_cast<UnixStreamSocket*>(handle->data)->onUvReadAlloc(suggestedSize, buf);
+	static_cast<UnixStreamSocket*>(handle->data)->OnUvReadAlloc(suggestedSize, buf);
 }
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
-	static_cast<UnixStreamSocket*>(handle->data)->onUvRead(nread, buf);
+	static_cast<UnixStreamSocket*>(handle->data)->OnUvRead(nread, buf);
 }
 
 inline static void onWrite(uv_write_t* req, int status)
@@ -35,17 +35,17 @@ inline static void onWrite(uv_write_t* req, int status)
 
 	// Just notify the UnixStreamSocket when error.
 	if (status)
-		socket->onUvWriteError(status);
+		socket->OnUvWriteError(status);
 }
 
 inline static void onShutdown(uv_shutdown_t* req, int status)
 {
-	static_cast<UnixStreamSocket*>(req->data)->onUvShutdown(req, status);
+	static_cast<UnixStreamSocket*>(req->data)->OnUvShutdown(req, status);
 }
 
 inline static void onClose(uv_handle_t* handle)
 {
-	static_cast<UnixStreamSocket*>(handle->data)->onUvClosed();
+	static_cast<UnixStreamSocket*>(handle->data)->OnUvClosed();
 }
 
 inline static void onErrorClose(uv_handle_t* handle)
@@ -191,7 +191,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
-inline void UnixStreamSocket::onUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
+inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
@@ -214,7 +214,7 @@ inline void UnixStreamSocket::onUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 	}
 }
 
-inline void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
+inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE_STD();
 
@@ -228,7 +228,7 @@ inline void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		this->bufferDataLen += (size_t)nread;
 
 		// Notify the subclass.
-		userOnUnixStreamRead();
+		UserOnUnixStreamRead();
 	}
 	// Peer disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
@@ -250,7 +250,7 @@ inline void UnixStreamSocket::onUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 	}
 }
 
-inline void UnixStreamSocket::onUvWriteError(int error)
+inline void UnixStreamSocket::OnUvWriteError(int error)
 {
 	MS_TRACE_STD();
 
@@ -265,7 +265,7 @@ inline void UnixStreamSocket::onUvWriteError(int error)
 	Destroy();
 }
 
-inline void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
+inline void UnixStreamSocket::OnUvShutdown(uv_shutdown_t* req, int status)
 {
 	MS_TRACE_STD();
 
@@ -280,12 +280,12 @@ inline void UnixStreamSocket::onUvShutdown(uv_shutdown_t* req, int status)
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
 }
 
-inline void UnixStreamSocket::onUvClosed()
+inline void UnixStreamSocket::OnUvClosed()
 {
 	MS_TRACE_STD();
 
 	// Notify the subclass.
-	userOnUnixStreamSocketClosed(this->isClosedByPeer);
+	UserOnUnixStreamSocketClosed(this->isClosedByPeer);
 
 	// And delete this.
 	delete this;

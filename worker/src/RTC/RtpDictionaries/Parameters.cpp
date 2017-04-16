@@ -8,7 +8,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value Parameters::toJson() const
+	Json::Value Parameters::ToJson() const
 	{
 		MS_TRACE();
 

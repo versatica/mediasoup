@@ -13,7 +13,7 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void onTimer(Timer* timer) = 0;
+		virtual void OnTimer(Timer* timer) = 0;
 	};
 
 public:
@@ -31,7 +31,7 @@ public:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvTimer();
+	void OnUvTimer();
 
 private:
 	// Passed by argument.

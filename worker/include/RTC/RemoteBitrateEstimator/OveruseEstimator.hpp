@@ -66,7 +66,7 @@ namespace RTC
 		double slope         = 0;
 		double offset        = 0;
 		double prevOffset    = 0;
-		double E[2][2];
+		double e[2][2];
 		double processNoise[2];
 		double avgNoise = 0;
 		double varNoise = 0;
@@ -88,11 +88,11 @@ namespace RTC
 
 	inline OveruseEstimator::OveruseEstimator(OverUseDetectorOptions options)
 	    : options(std::move(options)), numOfDeltas(0), slope(this->options.initialSlope),
-	      offset(this->options.initialOffset), prevOffset(this->options.initialOffset), E(),
+	      offset(this->options.initialOffset), prevOffset(this->options.initialOffset), e(),
 	      processNoise(), avgNoise(this->options.initialAvgNoise),
 	      varNoise(this->options.initialVarNoise), tsDeltaHist()
 	{
-		std::memcpy(this->E, this->options.initialE, sizeof(this->E));
+		std::memcpy(this->e, this->options.initialE, sizeof(this->e));
 		std::memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));
 	}
 

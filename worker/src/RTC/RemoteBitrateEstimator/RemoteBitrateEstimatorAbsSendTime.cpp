@@ -22,20 +22,20 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr int TimestampGroupLengthMs = 5;
-	static constexpr uint32_t AbsSendTimeFraction = 18;
+	static constexpr int TimestampGroupLengthMs              = 5;
+	static constexpr uint32_t AbsSendTimeFraction            = 18;
 	static constexpr uint32_t AbsSendTimeInterArrivalUpshift = 8;
 	static constexpr uint32_t InterArrivalShift = AbsSendTimeFraction + AbsSendTimeInterArrivalUpshift;
 	static constexpr uint32_t InitialProbingIntervalMs = 2000;
-	static constexpr int MinClusterSize = 4;
-	static constexpr size_t MaxProbePackets = 15;
-	static constexpr size_t ExpectedNumberOfProbes = 3;
+	static constexpr int MinClusterSize                = 4;
+	static constexpr size_t MaxProbePackets            = 15;
+	static constexpr size_t ExpectedNumberOfProbes     = 3;
 	static constexpr double TimestampToMs = 1000.0 / static_cast<double>(1 << InterArrivalShift);
 
-	template<typename K, typename V>
-	std::vector<K> Keys(const std::map<K, V>& map)
+	template<typename k, typename v>
+	std::vector<k> keys(const std::map<k, v>& map)
 	{
-		std::vector<K> keys;
+		std::vector<k> keys;
 
 		keys.reserve(map.size());
 
@@ -48,13 +48,13 @@ namespace RTC
 		return keys;
 	}
 
-	uint32_t ConvertMsTo24Bits(int64_t timeMs)
+	uint32_t convertMsTo24Bits(int64_t timeMs)
 	{
-		uint32_t time_24Bits =
+		uint32_t time24Bits =
 		    static_cast<uint32_t>(((static_cast<uint64_t>(timeMs) << AbsSendTimeFraction) + 500) / 1000) &
 		    0x00FFFFFF;
 
-		return time_24Bits;
+		return time24Bits;
 	}
 
 	bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
@@ -185,7 +185,7 @@ namespace RTC
 			if (this->probes.size() >= MaxProbePackets)
 				this->probes.pop_front();
 
-			return ProbeResult::NoUpdate;
+			return ProbeResult::NO_UPDATE;
 		}
 
 		auto bestIt = FindBestProbe(clusters);
@@ -210,7 +210,7 @@ namespace RTC
 
 				this->remoteRate.SetEstimate(probeBitrateBps, nowMs);
 
-				return ProbeResult::BitrateUpdated;
+				return ProbeResult::BITRATE_UPDATED;
 			}
 		}
 
@@ -219,7 +219,7 @@ namespace RTC
 		if (clusters.size() >= ExpectedNumberOfProbes)
 			this->probes.clear();
 
-		return ProbeResult::NoUpdate;
+		return ProbeResult::NO_UPDATE;
 	}
 
 	bool RemoteBitrateEstimatorAbsSendTime::IsBitrateImproving(int newBitrateBps) const
@@ -297,9 +297,9 @@ namespace RTC
 			// For now only try to detect probes while we don't have a valid estimate.
 			// We currently assume that only packets larger than 200 bytes are paced by
 			// the sender.
-			const size_t MinProbePacketSize = 200;
+			const size_t minProbePacketSize = 200;
 
-			if (payloadSize > MinProbePacketSize &&
+			if (payloadSize > minProbePacketSize &&
 			    (!this->remoteRate.ValidEstimate() ||
 			     nowMs - this->firstPacketTimeMs < InitialProbingIntervalMs))
 			{
@@ -331,7 +331,7 @@ namespace RTC
 
 				// Make sure that a probe which updated the bitrate immediately has an
 				// effect by calling the onReceiveBitrateChanged callback.
-				if (ProcessClusters(nowMs) == ProbeResult::BitrateUpdated)
+				if (ProcessClusters(nowMs) == ProbeResult::BITRATE_UPDATED)
 					updateEstimate = true;
 			}
 
@@ -354,7 +354,7 @@ namespace RTC
 				{
 					updateEstimate = true;
 				}
-				else if (this->detector.State() == BwOverusing)
+				else if (this->detector.State() == BW_OVERUSING)
 				{
 					uint32_t incomingRate = this->incomingBitrate.GetRate(arrivalTimeMs);
 
@@ -376,14 +376,14 @@ namespace RTC
 				this->remoteRate.Update(&input, nowMs);
 				targetBitrateBps = this->remoteRate.UpdateBandwidthEstimate(nowMs);
 				updateEstimate   = this->remoteRate.ValidEstimate();
-				ssrcs            = Keys(this->ssrcs);
+				ssrcs            = keys(this->ssrcs);
 			}
 		}
 
 		if (updateEstimate)
 		{
 			this->lastUpdateMs = nowMs;
-			this->observer->onReceiveBitrateChanged(ssrcs, targetBitrateBps);
+			this->observer->OnReceiveBitrateChanged(ssrcs, targetBitrateBps);
 		}
 	}
 
@@ -393,7 +393,7 @@ namespace RTC
 
 		for (auto it = this->ssrcs.begin(); it != this->ssrcs.end();)
 		{
-			if ((nowMs - it->second) > StreamTimeOutMs)
+			if ((nowMs - it->second) > streamTimeOutMs)
 				this->ssrcs.erase(it++);
 			else
 				++it;
@@ -421,7 +421,7 @@ namespace RTC
 		if (!this->remoteRate.ValidEstimate())
 			return false;
 
-		*ssrcs = Keys(this->ssrcs);
+		*ssrcs = keys(this->ssrcs);
 		if (this->ssrcs.empty())
 			*bitrateBps = 0;
 		else

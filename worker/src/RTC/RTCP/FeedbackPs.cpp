@@ -76,13 +76,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
+			MS_DUMP("<%s>", FeedbackPsPacket::MessageType2String(Item::messageType).c_str());
 			FeedbackPsPacket::Dump();
 			for (auto item : this->items)
 			{
 				item->Dump();
 			}
-			MS_DUMP("</%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
+			MS_DUMP("</%s>", FeedbackPsPacket::MessageType2String(Item::messageType).c_str());
 		}
 
 		// explicit instantiation to have all FeedbackRtpPacket definitions in this file.

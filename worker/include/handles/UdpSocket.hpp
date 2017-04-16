@@ -45,15 +45,15 @@ private:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
-	void onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	void onUvSendError(int error);
-	void onUvClosed();
+	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
+	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
+	void OnUvSendError(int error);
+	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
-	virtual void userOnUdpSocketClosed() = 0;
+	virtual void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
+	virtual void UserOnUdpSocketClosed() = 0;
 
 private:
 	// Allocated by this (may be passed by argument).

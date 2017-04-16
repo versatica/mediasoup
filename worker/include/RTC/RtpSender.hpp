@@ -27,7 +27,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
+			virtual void OnRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
 
 	public:
@@ -39,7 +39,7 @@ namespace RTC
 
 	public:
 		void Destroy();
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		void SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities);
 		void Send(RTC::RtpParameters* rtpParameters);

@@ -14,8 +14,8 @@ namespace Channel
 		class Listener
 		{
 		public:
-			virtual void onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
+			virtual void OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
 		};
 
 	public:
@@ -32,8 +32,8 @@ namespace Channel
 
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
-		void userOnUnixStreamRead() override;
-		void userOnUnixStreamSocketClosed(bool isClosedByPeer) override;
+		void UserOnUnixStreamRead() override;
+		void UserOnUnixStreamSocketClosed(bool isClosedByPeer) override;
 
 	private:
 		// Passed by argument.

@@ -34,7 +34,7 @@ namespace RTC
 		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority);
 		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	private:
 		// Others.

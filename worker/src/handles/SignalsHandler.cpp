@@ -10,7 +10,7 @@
 
 inline static void onSignal(uv_signal_t* handle, int signum)
 {
-	static_cast<SignalsHandler*>(handle->data)->onUvSignal(signum);
+	static_cast<SignalsHandler*>(handle->data)->OnUvSignal(signum);
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -63,10 +63,10 @@ void SignalsHandler::Destroy()
 	delete this;
 }
 
-inline void SignalsHandler::onUvSignal(int signum)
+inline void SignalsHandler::OnUvSignal(int signum)
 {
 	MS_TRACE();
 
 	// Notify the listener.
-	this->listener->onSignal(this, signum);
+	this->listener->OnSignal(this, signum);
 }

@@ -22,7 +22,7 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void Dump() const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;

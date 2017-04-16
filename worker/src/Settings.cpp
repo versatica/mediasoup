@@ -15,7 +15,7 @@ extern "C" {
 
 /* Helpers declaration. */
 
-static bool IsBindableIP(const std::string& ip, int family, int* bindErrno);
+static bool isBindableIp(const std::string& ip, int family, int* bindErrno);
 
 /* Class variables. */
 
@@ -263,13 +263,13 @@ void Settings::HandleRequest(Channel::Request* request)
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::worker_updateSettings:
+		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{
-			static const Json::StaticString JsonString_logLevel("logLevel");
-			static const Json::StaticString JsonString_logTags("logTags");
+			static const Json::StaticString JsonStringLogLevel("logLevel");
+			static const Json::StaticString JsonStringLogTags("logTags");
 
-			Json::Value jsonLogLevel = request->data[JsonString_logLevel];
-			Json::Value jsonLogTags  = request->data[JsonString_logTags];
+			Json::Value jsonLogLevel = request->data[JsonStringLogLevel];
+			Json::Value jsonLogTags  = request->data[JsonStringLogTags];
 
 			try
 			{
@@ -351,7 +351,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 					continue;
 
 				// Check if it is bindable.
-				if (!IsBindableIP(ip, AF_INET, &bindErrno))
+				if (!isBindableIp(ip, AF_INET, &bindErrno))
 					continue;
 
 				ipv4 = ip;
@@ -363,7 +363,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 					continue;
 
 				// Check if it is bindable.
-				if (!IsBindableIP(ip, AF_INET6, &bindErrno))
+				if (!isBindableIp(ip, AF_INET6, &bindErrno))
 					continue;
 
 				ipv6 = ip;
@@ -430,7 +430,7 @@ void Settings::SetRtcIPv4(const std::string& ip)
 
 	int bindErrno;
 
-	if (!IsBindableIP(ip, AF_INET, &bindErrno))
+	if (!isBindableIp(ip, AF_INET, &bindErrno))
 		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv4: %s", ip.c_str(), std::strerror(bindErrno));
 }
 
@@ -465,7 +465,7 @@ void Settings::SetRtcIPv6(const std::string& ip)
 
 	int bindErrno;
 
-	if (!IsBindableIP(ip, AF_INET6, &bindErrno))
+	if (!isBindableIp(ip, AF_INET6, &bindErrno))
 		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv6: %s", ip.c_str(), std::strerror(bindErrno));
 }
 
@@ -581,7 +581,7 @@ void Settings::SetLogTags(Json::Value& json)
 
 /* Helpers. */
 
-bool IsBindableIP(const std::string& ip, int family, int* bindErrno)
+bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 {
 	MS_TRACE();
 

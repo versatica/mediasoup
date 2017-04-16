@@ -20,23 +20,23 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::toJson() const
+	Json::Value RtpStreamRecv::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_params("params");
-		static const Json::StaticString JsonString_received("received");
-		static const Json::StaticString JsonString_maxTimestamp("maxTimestamp");
-		static const Json::StaticString JsonString_transit("transit");
-		static const Json::StaticString JsonString_jitter("jitter");
+		static const Json::StaticString JsonStringParams("params");
+		static const Json::StaticString JsonStringReceived("received");
+		static const Json::StaticString JsonStringMaxTimestamp("maxTimestamp");
+		static const Json::StaticString JsonStringTransit("transit");
+		static const Json::StaticString JsonStringJitter("jitter");
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonString_params]       = this->params.toJson();
-		json[JsonString_received]     = (Json::UInt)this->received;
-		json[JsonString_maxTimestamp] = (Json::UInt)this->maxTimestamp;
-		json[JsonString_transit]      = (Json::UInt)this->transit;
-		json[JsonString_jitter]       = (Json::UInt)this->jitter;
+		json[JsonStringParams]       = this->params.ToJson();
+		json[JsonStringReceived]     = (Json::UInt)this->received;
+		json[JsonStringMaxTimestamp] = (Json::UInt)this->maxTimestamp;
+		json[JsonStringTransit]      = (Json::UInt)this->transit;
+		json[JsonStringJitter]       = (Json::UInt)this->jitter;
 
 		return json;
 	}
@@ -140,7 +140,7 @@ namespace RTC
 			if (this->params.useNack)
 				this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-			this->listener->onPliRequired(this);
+			this->listener->OnPliRequired(this);
 		}
 	}
 
@@ -160,7 +160,7 @@ namespace RTC
 		this->jitter += (1. / 16.) * ((double)d - this->jitter);
 	}
 
-	void RtpStreamRecv::onInitSeq()
+	void RtpStreamRecv::OnInitSeq()
 	{
 		MS_TRACE();
 
@@ -173,11 +173,11 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
-			this->listener->onPliRequired(this);
+			this->listener->OnPliRequired(this);
 		}
 	}
 
-	void RtpStreamRecv::onNackRequired(const std::vector<uint16_t>& seqNumbers)
+	void RtpStreamRecv::OnNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
@@ -190,10 +190,10 @@ namespace RTC
 		    seqNumbers[0],
 		    seqNumbers.size());
 
-		this->listener->onNackRequired(this, seqNumbers);
+		this->listener->OnNackRequired(this, seqNumbers);
 	}
 
-	void RtpStreamRecv::onFullFrameRequired()
+	void RtpStreamRecv::OnFullFrameRequired()
 	{
 		MS_TRACE();
 
@@ -206,6 +206,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
-		this->listener->onPliRequired(this);
+		this->listener->OnPliRequired(this);
 	}
 } // namespace RTC

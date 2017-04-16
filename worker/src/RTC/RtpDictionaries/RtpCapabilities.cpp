@@ -14,14 +14,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_codecs("codecs");
-		static const Json::StaticString JsonString_headerExtensions("headerExtensions");
-		static const Json::StaticString JsonString_fecMechanisms("fecMechanisms");
+		static const Json::StaticString JsonStringCodecs("codecs");
+		static const Json::StaticString JsonStringHeaderExtensions("headerExtensions");
+		static const Json::StaticString JsonStringFecMechanisms("fecMechanisms");
 
 		// `codecs` is optional.
-		if (data[JsonString_codecs].isArray())
+		if (data[JsonStringCodecs].isArray())
 		{
-			auto& jsonCodecs = data[JsonString_codecs];
+			auto& jsonCodecs = data[JsonStringCodecs];
 
 			for (auto& jsonCodec : jsonCodecs)
 			{
@@ -33,9 +33,9 @@ namespace RTC
 		}
 
 		// `headerExtensions` is optional.
-		if (data[JsonString_headerExtensions].isArray())
+		if (data[JsonStringHeaderExtensions].isArray())
 		{
-			auto& jsonArray = data[JsonString_headerExtensions];
+			auto& jsonArray = data[JsonStringHeaderExtensions];
 
 			for (auto& i : jsonArray)
 			{
@@ -48,9 +48,9 @@ namespace RTC
 		}
 
 		// `fecMechanisms` is optional.
-		if (data[JsonString_fecMechanisms].isArray())
+		if (data[JsonStringFecMechanisms].isArray())
 		{
-			auto& jsonArray = data[JsonString_fecMechanisms];
+			auto& jsonArray = data[JsonStringFecMechanisms];
 
 			for (const auto& i : jsonArray)
 			{
@@ -67,38 +67,38 @@ namespace RTC
 		ValidateCodecs(scope);
 	}
 
-	Json::Value RtpCapabilities::toJson() const
+	Json::Value RtpCapabilities::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_codecs("codecs");
-		static const Json::StaticString JsonString_headerExtensions("headerExtensions");
-		static const Json::StaticString JsonString_fecMechanisms("fecMechanisms");
+		static const Json::StaticString JsonStringCodecs("codecs");
+		static const Json::StaticString JsonStringHeaderExtensions("headerExtensions");
+		static const Json::StaticString JsonStringFecMechanisms("fecMechanisms");
 
 		Json::Value json(Json::objectValue);
 
 		// Add `codecs`.
-		json[JsonString_codecs] = Json::arrayValue;
+		json[JsonStringCodecs] = Json::arrayValue;
 
 		for (auto& entry : this->codecs)
 		{
-			json[JsonString_codecs].append(entry.toJson());
+			json[JsonStringCodecs].append(entry.ToJson());
 		}
 
 		// Add `headerExtensions`.
-		json[JsonString_headerExtensions] = Json::arrayValue;
+		json[JsonStringHeaderExtensions] = Json::arrayValue;
 
 		for (auto& entry : this->headerExtensions)
 		{
-			json[JsonString_headerExtensions].append(entry.toJson());
+			json[JsonStringHeaderExtensions].append(entry.ToJson());
 		}
 
 		// Add `fecMechanisms`.
-		json[JsonString_fecMechanisms] = Json::arrayValue;
+		json[JsonStringFecMechanisms] = Json::arrayValue;
 
 		for (auto& entry : this->fecMechanisms)
 		{
-			json[JsonString_fecMechanisms].append(entry);
+			json[JsonStringFecMechanisms].append(entry);
 		}
 
 		return json;

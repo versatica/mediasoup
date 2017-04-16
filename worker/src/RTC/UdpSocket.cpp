@@ -11,7 +11,7 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void on_error_close(uv_handle_t* handle)
+static inline void onErrorClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -182,7 +182,7 @@ namespace RTC
 				    iteratingPort,
 				    uv_strerror(err));
 
-				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_error_close);
+				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)onErrorClose);
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
@@ -225,7 +225,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void UdpSocket::userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
+	void UdpSocket::UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
 	{
 		MS_TRACE();
 
@@ -237,10 +237,10 @@ namespace RTC
 		}
 
 		// Notify the reader.
-		this->listener->onPacketRecv(this, data, len, addr);
+		this->listener->OnPacketRecv(this, data, len, addr);
 	}
 
-	void UdpSocket::userOnUdpSocketClosed()
+	void UdpSocket::UserOnUdpSocketClosed()
 	{
 		MS_TRACE();
 

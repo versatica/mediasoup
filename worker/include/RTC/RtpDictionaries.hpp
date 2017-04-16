@@ -147,7 +147,7 @@ namespace RTC
 	public:
 		explicit RtcpFeedback(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string type;
@@ -160,7 +160,7 @@ namespace RTC
 		RtpCodecParameters(){};
 		RtpCodecParameters(Json::Value& data, RTC::Scope scope);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		bool Matches(RtpCodecParameters& codec, bool checkPayloadType = false);
 		void ReduceRtcpFeedback(std::vector<RtcpFeedback>& supportedRtcpFeedback);
 
@@ -188,7 +188,7 @@ namespace RTC
 	public:
 		explicit RtpHeaderExtension(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		Media::Kind kind = Media::Kind::ALL;
@@ -204,7 +204,7 @@ namespace RTC
 		RtpCapabilities(){};
 		RtpCapabilities(Json::Value& data, RTC::Scope scope);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		void ReduceFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
 
@@ -223,7 +223,7 @@ namespace RTC
 		RtpFecParameters(){};
 		explicit RtpFecParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string mechanism;
@@ -236,7 +236,7 @@ namespace RTC
 		RtpRtxParameters(){};
 		explicit RtpRtxParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		uint32_t ssrc = 0;
@@ -248,7 +248,7 @@ namespace RTC
 		RtpEncodingParameters(){};
 		explicit RtpEncodingParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		uint32_t ssrc            = 0;
@@ -271,7 +271,7 @@ namespace RTC
 	public:
 		explicit RtpHeaderExtensionParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string uri;
@@ -287,7 +287,7 @@ namespace RTC
 		RtcpParameters(){};
 		explicit RtcpParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string cname;
@@ -301,7 +301,7 @@ namespace RTC
 		explicit RtpParameters(Json::Value& data);
 		explicit RtpParameters(const RtpParameters* rtpParameters);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		RTC::RtpCodecParameters& GetCodecForEncoding(RtpEncodingParameters& encoding);

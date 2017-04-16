@@ -17,13 +17,13 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_targetId("targetId");
-		static const Json::StaticString JsonString_event("event");
+		static const Json::StaticString JsonStringTargetId("targetId");
+		static const Json::StaticString JsonStringEvent("event");
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonString_targetId] = (Json::UInt)targetId;
-		json[JsonString_event]    = event;
+		json[JsonStringTargetId] = (Json::UInt)targetId;
+		json[JsonStringEvent]    = event;
 
 		this->channel->Send(json);
 	}
@@ -32,15 +32,15 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_targetId("targetId");
-		static const Json::StaticString JsonString_event("event");
-		static const Json::StaticString JsonString_data("data");
+		static const Json::StaticString JsonStringTargetId("targetId");
+		static const Json::StaticString JsonStringEvent("event");
+		static const Json::StaticString JsonStringData("data");
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonString_targetId] = (Json::UInt)targetId;
-		json[JsonString_event]    = event;
-		json[JsonString_data]     = data;
+		json[JsonStringTargetId] = (Json::UInt)targetId;
+		json[JsonStringEvent]    = event;
+		json[JsonStringData]     = data;
 
 		this->channel->Send(json);
 	}
@@ -54,17 +54,17 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_targetId("targetId");
-		static const Json::StaticString JsonString_event("event");
-		static const Json::StaticString JsonString_data("data");
-		static const Json::StaticString JsonString_binary("binary");
+		static const Json::StaticString JsonStringTargetId("targetId");
+		static const Json::StaticString JsonStringEvent("event");
+		static const Json::StaticString JsonStringData("data");
+		static const Json::StaticString JsonStringBinary("binary");
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonString_targetId] = (Json::UInt)targetId;
-		json[JsonString_event]    = event;
-		json[JsonString_data]     = data;
-		json[JsonString_binary]   = true;
+		json[JsonStringTargetId] = (Json::UInt)targetId;
+		json[JsonStringEvent]    = event;
+		json[JsonStringData]     = data;
+		json[JsonStringBinary]   = true;
 
 		this->channel->Send(json);
 		this->channel->SendBinary(binaryData, binaryLen);

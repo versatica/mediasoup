@@ -13,7 +13,7 @@ namespace RTC
 	public:
 		struct Params
 		{
-			Json::Value toJson() const;
+			Json::Value ToJson() const;
 
 			uint32_t ssrc       = 0;
 			uint8_t payloadType = 0;
@@ -28,7 +28,7 @@ namespace RTC
 		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
-		virtual Json::Value toJson() const = 0;
+		virtual Json::Value ToJson() const = 0;
 		uint32_t GetSsrc();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 
@@ -38,7 +38,7 @@ namespace RTC
 
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
-		virtual void onInitSeq() = 0;
+		virtual void OnInitSeq() = 0;
 
 	protected:
 		// Given as argument.

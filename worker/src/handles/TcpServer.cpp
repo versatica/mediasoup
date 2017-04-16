@@ -11,12 +11,12 @@
 
 inline static void onConnection(uv_stream_t* handle, int status)
 {
-	static_cast<TcpServer*>(handle->data)->onUvConnection(status);
+	static_cast<TcpServer*>(handle->data)->OnUvConnection(status);
 }
 
 inline static void onClose(uv_handle_t* handle)
 {
-	static_cast<TcpServer*>(handle->data)->onUvClosed();
+	static_cast<TcpServer*>(handle->data)->OnUvClosed();
 }
 
 inline static void onErrorClose(uv_handle_t* handle)
@@ -182,7 +182,7 @@ bool TcpServer::SetLocalAddress()
 	return true;
 }
 
-inline void TcpServer::onUvConnection(int status)
+inline void TcpServer::OnUvConnection(int status)
 {
 	MS_TRACE();
 
@@ -200,7 +200,7 @@ inline void TcpServer::onUvConnection(int status)
 
 	// Notify the subclass so it provides an allocated derived class of TCPConnection.
 	TcpConnection* connection = nullptr;
-	userOnTcpConnectionAlloc(&connection);
+	UserOnTcpConnectionAlloc(&connection);
 
 	MS_ASSERT(connection != nullptr, "TcpConnection pointer was not allocated by the user");
 
@@ -239,28 +239,28 @@ inline void TcpServer::onUvConnection(int status)
 	}
 
 	// Notify the subclass.
-	userOnNewTcpConnection(connection);
+	UserOnNewTcpConnection(connection);
 }
 
-inline void TcpServer::onUvClosed()
+inline void TcpServer::OnUvClosed()
 {
 	MS_TRACE();
 
 	// Motify the subclass.
-	userOnTcpServerClosed();
+	UserOnTcpServerClosed();
 
 	// And delete this.
 	delete this;
 }
 
-inline void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
+inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
 {
 	MS_TRACE();
 
 	// NOTE:
 	// Worst scenario is that in which this is the latest connection,
 	// which is remotely closed (no TcpServer.Destroy() was called) and the user
-	// call TcpServer.Destroy() on userOnTcpConnectionClosed() callback, so Destroy()
+	// call TcpServer.Destroy() on UserOnTcpConnectionClosed() callback, so Destroy()
 	// is called with zero connections and calls uv_close(), but then
 	// onTcpConnectionClosed() continues and finds that isClosing is true and
 	// there are zero connections, so calls uv_close() again and get a crash.
@@ -276,7 +276,7 @@ inline void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool isC
 	this->connections.erase(connection);
 
 	// Notify the subclass.
-	userOnTcpConnectionClosed(connection, isClosedByPeer);
+	UserOnTcpConnectionClosed(connection, isClosedByPeer);
 
 	// Check if the server was closing connections, and if this is the last
 	// connection then close the server now.

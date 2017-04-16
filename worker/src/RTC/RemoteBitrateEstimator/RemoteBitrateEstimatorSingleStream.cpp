@@ -94,11 +94,11 @@ namespace RTC
 			    nowMs);
 		}
 
-		if (estimator->detector.State() == BwOverusing)
+		if (estimator->detector.State() == BW_OVERUSING)
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
 
-			if (incomingBitrateBps && (priorState != BwOverusing ||
+			if (incomingBitrateBps && (priorState != BW_OVERUSING ||
 			                           GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
@@ -124,7 +124,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		BandwidthUsage bwState = BwNormal;
+		BandwidthUsage bwState = BW_NORMAL;
 		double sumVarNoise     = 0.0;
 		auto it                = this->overuseDetectors.begin();
 
@@ -132,7 +132,7 @@ namespace RTC
 		{
 			const int64_t timeOfLastReceivedPacket = it->second->lastPacketTimeMs;
 
-			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > StreamTimeOutMs)
+			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > streamTimeOutMs)
 			{
 				// This over-use detector hasn't received packets for |kStreamTimeOutMs|
 				// milliseconds and is considered stale.
@@ -173,7 +173,7 @@ namespace RTC
 			std::vector<uint32_t> ssrcs;
 
 			GetSsrcs(&ssrcs);
-			this->observer->onReceiveBitrateChanged(ssrcs, targetBitrate);
+			this->observer->OnReceiveBitrateChanged(ssrcs, targetBitrate);
 		}
 	}
 

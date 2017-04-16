@@ -33,7 +33,7 @@
 
 /* Static methods for OpenSSL callbacks. */
 
-inline static int onSslCertificate_verify(int /*preverifyOk*/, X509_STORE_CTX* /*ctx*/)
+inline static int onSslCertificateVerify(int /*preverifyOk*/, X509_STORE_CTX* /*ctx*/)
 {
 	MS_TRACE();
 
@@ -43,7 +43,7 @@ inline static int onSslCertificate_verify(int /*preverifyOk*/, X509_STORE_CTX* /
 
 inline static void onSslInfo(const SSL* ssl, int where, int ret)
 {
-	static_cast<RTC::DtlsTransport*>(SSL_get_ex_data(ssl, 0))->onSSLInfo(where, ret);
+	static_cast<RTC::DtlsTransport*>(SSL_get_ex_data(ssl, 0))->OnSslInfo(where, ret);
 }
 
 namespace RTC
@@ -106,7 +106,7 @@ namespace RTC
 		}
 
 		// Create a global SSL_CTX.
-		CreateSSL_CTX();
+		CreateSslCtx();
 
 		// Generate certificate fingerprints.
 		GenerateFingerprints();
@@ -300,7 +300,7 @@ namespace RTC
 		MS_THROW_ERROR("error reading DTLS certificate and private key PEM files");
 	}
 
-	void DtlsTransport::CreateSSL_CTX()
+	void DtlsTransport::CreateSslCtx()
 	{
 		MS_TRACE();
 
@@ -366,7 +366,7 @@ namespace RTC
 		SSL_CTX_set_verify(
 		    DtlsTransport::sslCtx,
 		    SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
-		    onSslCertificate_verify);
+		    onSslCertificateVerify);
 
 		// Set SSL info callback.
 		SSL_CTX_set_info_callback(DtlsTransport::sslCtx, onSslInfo);
@@ -634,7 +634,7 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTING;
-		this->listener->onDtlsConnecting(this);
+		this->listener->OnDtlsConnecting(this);
 
 		switch (this->localRole)
 		{
@@ -729,7 +729,7 @@ namespace RTC
 			}
 
 			// Notify the listener.
-			this->listener->onDtlsApplicationData(
+			this->listener->OnDtlsApplicationData(
 			    this, (uint8_t*)DtlsTransport::sslReadBuffer, (size_t)read);
 		}
 	}
@@ -867,7 +867,7 @@ namespace RTC
 
 				// Set state and notify the listener.
 				this->state = DtlsState::CLOSED;
-				this->listener->onDtlsClosed(this);
+				this->listener->OnDtlsClosed(this);
 			}
 			else
 			{
@@ -877,7 +877,7 @@ namespace RTC
 
 				// Set state and notify the listener.
 				this->state = DtlsState::FAILED;
-				this->listener->onDtlsFailed(this);
+				this->listener->OnDtlsFailed(this);
 			}
 
 			return false;
@@ -903,7 +903,7 @@ namespace RTC
 		MS_DEBUG_DEV("%ld bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
-		this->listener->onOutgoingDtlsData(this, (uint8_t*)data, (size_t)read);
+		this->listener->OnOutgoingDtlsData(this, (uint8_t*)data, (size_t)read);
 
 		// Clear the BIO buffer.
 		// NOTE: the (void) avoids the -Wunused-value warning.
@@ -946,7 +946,7 @@ namespace RTC
 
 			// Set state and notify the listener.
 			this->state = DtlsState::FAILED;
-			this->listener->onDtlsFailed(this);
+			this->listener->OnDtlsFailed(this);
 
 			return false;
 		}
@@ -974,7 +974,7 @@ namespace RTC
 
 			// Set state and notify the listener.
 			this->state = DtlsState::FAILED;
-			this->listener->onDtlsFailed(this);
+			this->listener->OnDtlsFailed(this);
 
 			return;
 		}
@@ -998,7 +998,7 @@ namespace RTC
 
 			// Set state and notify the listener.
 			this->state = DtlsState::FAILED;
-			this->listener->onDtlsFailed(this);
+			this->listener->OnDtlsFailed(this);
 		}
 	}
 
@@ -1167,7 +1167,7 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTED;
-		this->listener->onDtlsConnected(
+		this->listener->OnDtlsConnected(
 		    this,
 		    srtpProfile,
 		    srtpLocalMasterKey,
@@ -1184,8 +1184,8 @@ namespace RTC
 		RTC::SrtpSession::Profile negotiatedSrtpProfile = RTC::SrtpSession::Profile::NONE;
 
 		// Ensure that the SRTP profile has been negotiated.
-		SRTP_PROTECTION_PROFILE* ssl_srtp_profile = SSL_get_selected_srtp_profile(this->ssl);
-		if (!ssl_srtp_profile)
+		SRTP_PROTECTION_PROFILE* sslSrtpProfile = SSL_get_selected_srtp_profile(this->ssl);
+		if (!sslSrtpProfile)
 		{
 			return negotiatedSrtpProfile;
 		}
@@ -1196,7 +1196,7 @@ namespace RTC
 		{
 			SrtpProfileMapEntry* profileEntry = &(*it);
 
-			if (std::strcmp(ssl_srtp_profile->name, profileEntry->name) == 0)
+			if (std::strcmp(sslSrtpProfile->name, profileEntry->name) == 0)
 			{
 				MS_DEBUG_TAG(dtls, "chosen SRTP profile: %s", profileEntry->name);
 
@@ -1211,7 +1211,7 @@ namespace RTC
 		return negotiatedSrtpProfile;
 	}
 
-	inline void DtlsTransport::onSSLInfo(int where, int ret)
+	inline void DtlsTransport::OnSslInfo(int where, int ret)
 	{
 		MS_TRACE();
 
@@ -1280,7 +1280,7 @@ namespace RTC
 		// receipt of a close alert does not work (the flag is set after this callback).
 	}
 
-	inline void DtlsTransport::onTimer(Timer* /*timer*/)
+	inline void DtlsTransport::OnTimer(Timer* /*timer*/)
 	{
 		MS_TRACE();
 

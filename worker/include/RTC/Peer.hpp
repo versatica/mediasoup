@@ -29,23 +29,23 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onPeerClosed(const RTC::Peer* peer)                                     = 0;
-			virtual void onPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) = 0;
-			virtual void onPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
-			virtual void onPeerRtpReceiverClosed(
+			virtual void OnPeerClosed(const RTC::Peer* peer)                                     = 0;
+			virtual void OnPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) = 0;
+			virtual void OnPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) = 0;
+			virtual void OnPeerRtpReceiverClosed(
 			    const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver)                      = 0;
-			virtual void onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
-			virtual void onPeerRtpPacket(
+			virtual void OnPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
+			virtual void OnPeerRtpPacket(
 			    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
-			virtual void onPeerRtcpReceiverReport(
+			virtual void OnPeerRtcpReceiverReport(
 			    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report) = 0;
-			virtual void onPeerRtcpFeedback(
+			virtual void OnPeerRtcpFeedback(
 			    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet) = 0;
-			virtual void onPeerRtcpFeedback(
+			virtual void OnPeerRtcpFeedback(
 			    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
-			virtual void onPeerRtcpSenderReport(
+			virtual void OnPeerRtcpSenderReport(
 			    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) = 0;
-			virtual void onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
+			virtual void OnFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) = 0;
 		};
 
 	public:
@@ -56,7 +56,7 @@ namespace RTC
 
 	public:
 		void Destroy();
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		bool HasCapabilities() const;
 		std::vector<RTC::RtpReceiver*> GetRtpReceivers() const;
@@ -82,25 +82,25 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		void onTransportConnected(RTC::Transport* transport) override;
-		void onTransportClosed(RTC::Transport* transport) override;
-		void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
-		void onTransportFullFrameRequired(RTC::Transport* transport) override;
+		void OnTransportConnected(RTC::Transport* transport) override;
+		void OnTransportClosed(RTC::Transport* transport) override;
+		void OnTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
+		void OnTransportFullFrameRequired(RTC::Transport* transport) override;
 
 		/* Pure virtual methods inherited from RTC::RtpReceiver::Listener. */
 	public:
-		void onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver) override;
-		void onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) override;
-		void onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
-		void onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver) override;
+		void OnRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver) override;
+		void OnRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver) override;
+		void OnRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
+		void OnRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver) override;
 
 		/* Pure virtual methods inherited from RTC::RtpSender::Listener. */
 	public:
-		void onRtpSenderClosed(RTC::RtpSender* rtpSender) override;
+		void OnRtpSenderClosed(RTC::RtpSender* rtpSender) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
-		void onTimer(Timer* timer) override;
+		void OnTimer(Timer* timer) override;
 
 	public:
 		// Passed by argument.

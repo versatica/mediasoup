@@ -23,16 +23,16 @@ private:
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
-	void onSignal(SignalsHandler* signalsHandler, int signum) override;
+	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
-	void onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
-	void onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
+	void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
+	void OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
 
 	/* Methods inherited from RTC::Room::Listener. */
 public:
-	void onRoomClosed(RTC::Room* room) override;
+	void OnRoomClosed(RTC::Room* room) override;
 
 private:
 	// Passed by argument.

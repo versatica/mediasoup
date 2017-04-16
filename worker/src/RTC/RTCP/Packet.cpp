@@ -15,7 +15,7 @@ namespace RTC
 	{
 		/* Namespace variables. */
 
-		uint8_t buffer[bufferSize];
+		uint8_t Buffer[BufferSize];
 
 		/* Class variables. */
 
@@ -171,10 +171,10 @@ namespace RTC
 
 		const std::string& Packet::Type2String(Type type)
 		{
-			static const std::string unknown("UNKNOWN");
+			static const std::string Unknown("UNKNOWN");
 
 			if (Packet::type2String.find(type) == Packet::type2String.end())
-				return unknown;
+				return Unknown;
 
 			return Packet::type2String[type];
 		}

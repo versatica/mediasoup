@@ -13,50 +13,50 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_cname("cname");
-		static const Json::StaticString JsonString_ssrc("ssrc");
-		static const Json::StaticString JsonString_reducedSize("reducedSize");
+		static const Json::StaticString JsonStringCname("cname");
+		static const Json::StaticString JsonStringSsrc("ssrc");
+		static const Json::StaticString JsonStringReducedSize("reducedSize");
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtcpParameters is not an object");
 
 		// `cname` is optional.
-		if (data[JsonString_cname].isString())
+		if (data[JsonStringCname].isString())
 		{
-			this->cname = data[JsonString_cname].asString();
+			this->cname = data[JsonStringCname].asString();
 			if (this->cname.empty())
 				MS_THROW_ERROR("empty RtcpParameters.cname");
 		}
 
 		// `ssrc` is optional.
-		if (data[JsonString_ssrc].isUInt())
-			this->ssrc = (uint32_t)data[JsonString_ssrc].asUInt();
+		if (data[JsonStringSsrc].isUInt())
+			this->ssrc = (uint32_t)data[JsonStringSsrc].asUInt();
 
 		// `reducedSize` is optional.
-		if (data[JsonString_reducedSize].isBool())
-			this->reducedSize = data[JsonString_reducedSize].asBool();
+		if (data[JsonStringReducedSize].isBool())
+			this->reducedSize = data[JsonStringReducedSize].asBool();
 	}
 
-	Json::Value RtcpParameters::toJson() const
+	Json::Value RtcpParameters::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_cname("cname");
-		static const Json::StaticString JsonString_ssrc("ssrc");
-		static const Json::StaticString JsonString_reducedSize("reducedSize");
+		static const Json::StaticString JsonStringCname("cname");
+		static const Json::StaticString JsonStringSsrc("ssrc");
+		static const Json::StaticString JsonStringReducedSize("reducedSize");
 
 		Json::Value json(Json::objectValue);
 
 		// Add `cname`.
 		if (!this->cname.empty())
-			json[JsonString_cname] = this->cname;
+			json[JsonStringCname] = this->cname;
 
 		// Add `ssrc`.
 		if (this->ssrc)
-			json[JsonString_ssrc] = (Json::UInt)this->ssrc;
+			json[JsonStringSsrc] = (Json::UInt)this->ssrc;
 
 		// Add `reducedSize`.
-		json[JsonString_reducedSize] = this->reducedSize;
+		json[JsonStringReducedSize] = this->reducedSize;
 
 		return json;
 	}

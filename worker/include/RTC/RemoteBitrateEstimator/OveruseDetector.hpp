@@ -47,7 +47,7 @@ namespace RTC
 		double prevOffset             = 0.0;
 		double timeOverUsing          = -1;
 		int overuseCounter            = 0;
-		BandwidthUsage hypothesis     = BwNormal;
+		BandwidthUsage hypothesis     = BW_NORMAL;
 	};
 
 	inline BandwidthUsage OveruseDetector::State() const

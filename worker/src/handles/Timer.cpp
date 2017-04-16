@@ -10,7 +10,7 @@
 
 inline static void onTimer(uv_timer_t* handle)
 {
-	static_cast<Timer*>(handle->data)->onUvTimer();
+	static_cast<Timer*>(handle->data)->OnUvTimer();
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -74,10 +74,10 @@ void Timer::Stop()
 		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
 }
 
-inline void Timer::onUvTimer()
+inline void Timer::OnUvTimer()
 {
 	MS_TRACE();
 
 	// Notify the listener.
-	this->listener->onTimer(this);
+	this->listener->OnTimer(this);
 }

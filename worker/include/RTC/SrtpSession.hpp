@@ -27,7 +27,7 @@ namespace RTC
 		static void ClassInit();
 
 	private:
-		static void onSrtpEvent(srtp_event_data_t* data);
+		static void OnSrtpEvent(srtp_event_data_t* data);
 
 	public:
 		SrtpSession(Type type, Profile profile, uint8_t* key, size_t keyLen);

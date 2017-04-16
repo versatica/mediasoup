@@ -20,14 +20,14 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		template<typename T>
+		template<typename t>
 		class FeedbackRtpTmmbItem : public FeedbackItem
 		{
 		private:
 			static constexpr size_t HeaderSize = 8;
 
 		public:
-			static const FeedbackRtp::MessageType MessageType;
+			static const FeedbackRtp::MessageType messageType;
 
 		public:
 			static FeedbackRtpTmmbItem* Parse(const uint8_t* data, size_t len);

@@ -15,8 +15,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
-			virtual void onFullFrameRequired()                                   = 0;
+			virtual void OnNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
+			virtual void OnFullFrameRequired()                                   = 0;
 		};
 
 	private:
@@ -50,7 +50,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
-		void onTimer(Timer* timer) override;
+		void OnTimer(Timer* timer) override;
 
 	private:
 		// Passed by argument.

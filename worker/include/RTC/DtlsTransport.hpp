@@ -67,11 +67,11 @@ namespace RTC
 			// DTLS is in the process of negotiating a secure connection. Incoming
 			// media can flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDtlsConnected(
+			virtual void OnDtlsConnected(
 			    const RTC::DtlsTransport* dtlsTransport,
 			    RTC::SrtpSession::Profile srtpProfile,
 			    uint8_t* srtpLocalKey,
@@ -82,17 +82,17 @@ namespace RTC
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onOutgoingDtlsData(
+			virtual void OnOutgoingDtlsData(
 			    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsApplicationData(
+			virtual void OnDtlsApplicationData(
 			    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 
@@ -107,7 +107,7 @@ namespace RTC
 	private:
 		static void GenerateCertificateAndPrivateKey();
 		static void ReadCertificateAndPrivateKeyFromFiles();
-		static void CreateSSL_CTX();
+		static void CreateSslCtx();
 		static void GenerateFingerprints();
 
 	private:
@@ -149,11 +149,11 @@ namespace RTC
 
 		/* Callbacks fired by OpenSSL events. */
 	public:
-		void onSSLInfo(int where, int ret);
+		void OnSslInfo(int where, int ret);
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
-		void onTimer(Timer* timer) override;
+		void OnTimer(Timer* timer) override;
 
 	private:
 		// Passed by argument.

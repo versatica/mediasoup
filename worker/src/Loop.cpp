@@ -82,9 +82,9 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 {
 	MS_TRACE();
 
-	static const Json::StaticString JsonString_roomId("roomId");
+	static const Json::StaticString JsonStringRoomId("roomId");
 
-	auto jsonRoomId = request->internal[JsonString_roomId];
+	auto jsonRoomId = request->internal[JsonStringRoomId];
 
 	if (!jsonRoomId.isUInt())
 		MS_THROW_ERROR("Request has not numeric internal.roomId");
@@ -106,7 +106,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 	}
 }
 
-void Loop::onSignal(SignalsHandler* /*signalsHandler*/, int signum)
+void Loop::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
 	MS_TRACE();
 
@@ -127,7 +127,7 @@ void Loop::onSignal(SignalsHandler* /*signalsHandler*/, int signum)
 	}
 }
 
-void Loop::onChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
+void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();
 
@@ -135,40 +135,40 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::worker_dump:
+		case Channel::Request::MethodId::WORKER_DUMP:
 		{
-			static const Json::StaticString JsonString_workerId("workerId");
-			static const Json::StaticString JsonString_rooms("rooms");
+			static const Json::StaticString JsonStringWorkerId("workerId");
+			static const Json::StaticString JsonStringRooms("rooms");
 
 			Json::Value json(Json::objectValue);
 			Json::Value jsonRooms(Json::arrayValue);
 
-			json[JsonString_workerId] = Logger::id;
+			json[JsonStringWorkerId] = Logger::id;
 
 			for (auto& kv : this->rooms)
 			{
 				auto room = kv.second;
 
-				jsonRooms.append(room->toJson());
+				jsonRooms.append(room->ToJson());
 			}
 
-			json[JsonString_rooms] = jsonRooms;
+			json[JsonStringRooms] = jsonRooms;
 
 			request->Accept(json);
 
 			break;
 		}
 
-		case Channel::Request::MethodId::worker_updateSettings:
+		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{
 			Settings::HandleRequest(request);
 
 			break;
 		}
 
-		case Channel::Request::MethodId::worker_createRoom:
+		case Channel::Request::MethodId::WORKER_CREATE_ROOM:
 		{
-			static const Json::StaticString JsonString_capabilities("capabilities");
+			static const Json::StaticString JsonStringCapabilities("capabilities");
 
 			RTC::Room* room;
 			uint32_t roomId;
@@ -209,35 +209,35 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 			Json::Value data(Json::objectValue);
 
 			// Add `capabilities`.
-			data[JsonString_capabilities] = room->GetCapabilities().toJson();
+			data[JsonStringCapabilities] = room->GetCapabilities().ToJson();
 
 			request->Accept(data);
 
 			break;
 		}
 
-		case Channel::Request::MethodId::room_close:
-		case Channel::Request::MethodId::room_dump:
-		case Channel::Request::MethodId::room_createPeer:
-		case Channel::Request::MethodId::peer_close:
-		case Channel::Request::MethodId::peer_dump:
-		case Channel::Request::MethodId::peer_setCapabilities:
-		case Channel::Request::MethodId::peer_createTransport:
-		case Channel::Request::MethodId::peer_createRtpReceiver:
-		case Channel::Request::MethodId::transport_close:
-		case Channel::Request::MethodId::transport_dump:
-		case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
-		case Channel::Request::MethodId::transport_setMaxBitrate:
-		case Channel::Request::MethodId::transport_changeUfragPwd:
-		case Channel::Request::MethodId::rtpReceiver_close:
-		case Channel::Request::MethodId::rtpReceiver_dump:
-		case Channel::Request::MethodId::rtpReceiver_receive:
-		case Channel::Request::MethodId::rtpReceiver_setTransport:
-		case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
-		case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
-		case Channel::Request::MethodId::rtpSender_dump:
-		case Channel::Request::MethodId::rtpSender_setTransport:
-		case Channel::Request::MethodId::rtpSender_disable:
+		case Channel::Request::MethodId::ROOM_CLOSE:
+		case Channel::Request::MethodId::ROOM_DUMP:
+		case Channel::Request::MethodId::ROOM_CREATE_PEER:
+		case Channel::Request::MethodId::PEER_CLOSE:
+		case Channel::Request::MethodId::PEER_DUMP:
+		case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
+		case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
+		case Channel::Request::MethodId::PEER_CREATE_RTP_RECEIVER:
+		case Channel::Request::MethodId::TRANSPORT_CLOSE:
+		case Channel::Request::MethodId::TRANSPORT_DUMP:
+		case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
+		case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
+		case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
+		case Channel::Request::MethodId::RTP_RECEIVER_CLOSE:
+		case Channel::Request::MethodId::RTP_RECEIVER_DUMP:
+		case Channel::Request::MethodId::RTP_RECEIVER_RECEIVE:
+		case Channel::Request::MethodId::RTP_RECEIVER_SET_TRANSPORT:
+		case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT:
+		case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT:
+		case Channel::Request::MethodId::RTP_SENDER_DUMP:
+		case Channel::Request::MethodId::RTP_SENDER_SET_TRANSPORT:
+		case Channel::Request::MethodId::RTP_SENDER_DISABLE:
 		{
 			RTC::Room* room;
 
@@ -273,7 +273,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 	}
 }
 
-void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
+void Loop::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
@@ -287,7 +287,7 @@ void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*
 	Close();
 }
 
-void Loop::onRoomClosed(RTC::Room* room)
+void Loop::OnRoomClosed(RTC::Room* room)
 {
 	MS_TRACE();
 

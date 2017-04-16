@@ -31,12 +31,12 @@ namespace RTC
 			 * These callbacks are guaranteed to be called before ProcessStunMessage()
 			 * returns, so the given pointers are still usable.
 			 */
-			virtual void onOutgoingStunMessage(
+			virtual void OnOutgoingStunMessage(
 			    const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
-			virtual void onIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
-			virtual void onIceConnected(const RTC::IceServer* iceServer)    = 0;
-			virtual void onIceCompleted(const RTC::IceServer* iceServer)    = 0;
-			virtual void onIceDisconnected(const RTC::IceServer* iceServer) = 0;
+			virtual void OnIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+			virtual void OnIceConnected(const RTC::IceServer* iceServer)    = 0;
+			virtual void OnIceCompleted(const RTC::IceServer* iceServer)    = 0;
+			virtual void OnIceDisconnected(const RTC::IceServer* iceServer) = 0;
 		};
 
 	public:

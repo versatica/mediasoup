@@ -30,10 +30,10 @@ namespace RTC
 
 		if (numOfDeltas < 2)
 		{
-			return BwNormal;
+			return BW_NORMAL;
 		}
-		const double T = std::min(numOfDeltas, MinNumDeltas) * offset;
-		if (T > this->threshold)
+		const double t = std::min(numOfDeltas, MinNumDeltas) * offset;
+		if (t > this->threshold)
 		{
 			if (this->timeOverUsing == -1)
 			{
@@ -54,25 +54,25 @@ namespace RTC
 				{
 					this->timeOverUsing  = 0;
 					this->overuseCounter = 0;
-					this->hypothesis     = BwOverusing;
+					this->hypothesis     = BW_OVERUSING;
 				}
 			}
 		}
-		else if (T < -this->threshold)
+		else if (t < -this->threshold)
 		{
 			this->timeOverUsing  = -1;
 			this->overuseCounter = 0;
-			this->hypothesis     = BwUnderusing;
+			this->hypothesis     = BW_UNDERUSING;
 		}
 		else
 		{
 			this->timeOverUsing  = -1;
 			this->overuseCounter = 0;
-			this->hypothesis     = BwNormal;
+			this->hypothesis     = BW_NORMAL;
 		}
 		this->prevOffset = offset;
 
-		UpdateThreshold(T, nowMs);
+		UpdateThreshold(t, nowMs);
 
 		return this->hypothesis;
 	}
@@ -92,16 +92,16 @@ namespace RTC
 			return;
 		}
 
-		const double k = fabs(modifiedOffset) < this->threshold ? this->down : this->up;
-		const int64_t MaxTimeDeltaMs = 100;
-		int64_t timeDeltaMs           = std::min(nowMs - this->lastUpdateMs, MaxTimeDeltaMs);
+		const double k               = fabs(modifiedOffset) < this->threshold ? this->down : this->up;
+		const int64_t maxTimeDeltaMs = 100;
+		int64_t timeDeltaMs          = std::min(nowMs - this->lastUpdateMs, maxTimeDeltaMs);
 
 		this->threshold += k * (fabs(modifiedOffset) - this->threshold) * timeDeltaMs;
 
-		const double MinThreshold = 6;
-		const double MaxThreshold = 600;
+		const double minThreshold = 6;
+		const double maxThreshold = 600;
 
-		this->threshold = std::min(std::max(this->threshold, MinThreshold), MaxThreshold);
+		this->threshold = std::min(std::max(this->threshold, minThreshold), maxThreshold);
 
 		this->lastUpdateMs = nowMs;
 	}

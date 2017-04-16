@@ -16,7 +16,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void TcpConnection::userOnTcpConnectionRead()
+	void TcpConnection::UserOnTcpConnectionRead()
 	{
 		MS_TRACE();
 
@@ -65,7 +65,7 @@ namespace RTC
 
 				// Notify the listener.
 				if (packetLen != 0)
-					this->listener->onPacketRecv(this, packet, packetLen);
+					this->listener->OnPacketRecv(this, packet, packetLen);
 
 				// If there is no more space available in the buffer and that is because
 				// the latest parsed frame filled it, then empty the full buffer.

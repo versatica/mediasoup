@@ -75,13 +75,13 @@ namespace RTC
 
 		enum class ProbeResult
 		{
-			BitrateUpdated,
-			NoUpdate
+			BITRATE_UPDATED,
+			NO_UPDATE
 		};
 
 	private:
 		void IncomingPacketInfo(
-		    int64_t arrivalTimeMs, uint32_t sendTime_24bits, size_t payloadSize, uint32_t ssrc);
+		    int64_t arrivalTimeMs, uint32_t sendTime24bits, size_t payloadSize, uint32_t ssrc);
 
 		void ComputeClusters(std::list<Cluster>* clusters) const;
 		std::list<Cluster>::const_iterator FindBestProbe(const std::list<Cluster>& clusters) const;

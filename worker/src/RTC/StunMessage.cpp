@@ -121,7 +121,7 @@ namespace RTC
 			}
 
 			// After a MESSAGE-INTEGRITY attribute just FINGERPRINT is allowed.
-			if (hasMessageIntegrity && attrType != Attribute::Fingerprint)
+			if (hasMessageIntegrity && attrType != Attribute::FINGERPRINT)
 			{
 				MS_WARN_TAG(
 				    ice,
@@ -136,44 +136,44 @@ namespace RTC
 
 			switch (attrType)
 			{
-				case Attribute::Username:
+				case Attribute::USERNAME:
 				{
 					msg->SetUsername((const char*)attrValuePos, (size_t)attrLength);
 
 					break;
 				}
-				case Attribute::Priority:
+				case Attribute::PRIORITY:
 				{
 					msg->SetPriority(Utils::Byte::Get4Bytes(attrValuePos, 0));
 
 					break;
 				}
-				case Attribute::IceControlling:
+				case Attribute::ICE_CONTROLLING:
 				{
 					msg->SetIceControlling(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
-				case Attribute::IceControlled:
+				case Attribute::ICE_CONTROLLED:
 				{
 					msg->SetIceControlled(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
-				case Attribute::UseCandidate:
+				case Attribute::USE_CANDIDATE:
 				{
 					msg->SetUseCandidate();
 
 					break;
 				}
-				case Attribute::MessageIntegrity:
+				case Attribute::MESSAGE_INTEGRITY:
 				{
 					hasMessageIntegrity = true;
 					msg->SetMessageIntegrity(attrValuePos);
 
 					break;
 				}
-				case Attribute::Fingerprint:
+				case Attribute::FINGERPRINT:
 				{
 					hasFingerprint     = true;
 					fingerprintAttrPos = pos;
@@ -182,7 +182,7 @@ namespace RTC
 
 					break;
 				}
-				case Attribute::ErrorCode:
+				case Attribute::ERROR_CODE:
 				{
 					uint8_t errorClass  = Utils::Byte::Get1Byte(attrValuePos, 2);
 					uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
@@ -254,20 +254,20 @@ namespace RTC
 		std::string klass;
 		switch (this->klass)
 		{
-			case Class::Request:
+			case Class::REQUEST:
 				klass = "Request";
 				break;
-			case Class::Indication:
+			case Class::INDICATION:
 				klass = "Indication";
 				break;
-			case Class::SuccessResponse:
+			case Class::SUCCESS_RESPONSE:
 				klass = "SuccessResponse";
 				break;
-			case Class::ErrorResponse:
+			case Class::ERROR_RESPONSE:
 				klass = "ErrorResponse";
 				break;
 		}
-		if (this->method == Method::Binding)
+		if (this->method == Method::BINDING)
 		{
 			MS_DUMP("  Binding %s", klass.c_str());
 		}
@@ -332,12 +332,12 @@ namespace RTC
 
 		switch (this->klass)
 		{
-			case Class::Request:
-			case Class::Indication:
+			case Class::REQUEST:
+			case Class::INDICATION:
 			{
 				// Both USERNAME and MESSAGE-INTEGRITY must be present.
 				if (!this->messageIntegrity || this->username.empty())
-					return Authentication::BadRequest;
+					return Authentication::BAD_REQUEST;
 
 				// Check that USERNAME attribute begins with our local username plus ":".
 				size_t localUsernameLen = localUsername.length();
@@ -345,18 +345,18 @@ namespace RTC
 				if (this->username.length() <= localUsernameLen ||
 				    this->username.at(localUsernameLen) != ':' ||
 				    (this->username.compare(0, localUsernameLen, localUsername) != 0))
-					return Authentication::Unauthorized;
+					return Authentication::UNAUTHORIZED;
 
 				break;
 			}
 			// This method cannot check authentication in received responses (as we
 			// are ICE-Lite and don't generate requests).
-			case Class::SuccessResponse:
-			case Class::ErrorResponse:
+			case Class::SUCCESS_RESPONSE:
+			case Class::ERROR_RESPONSE:
 			{
 				MS_ERROR("cannot check authentication for a STUN response");
 
-				return Authentication::BadRequest;
+				return Authentication::BAD_REQUEST;
 			}
 		}
 
@@ -367,7 +367,7 @@ namespace RTC
 			Utils::Byte::Set2Bytes(this->data, 2, (uint16_t)(this->size - 20 - 8));
 
 		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-		const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHMAC_SHA1(
+		const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacShA1(
 		    localPassword, this->data, (this->messageIntegrity - 4) - this->data);
 
 		Authentication result;
@@ -376,7 +376,7 @@ namespace RTC
 		if (std::memcmp(this->messageIntegrity, computedMessageIntegrity, 20) == 0)
 			result = Authentication::OK;
 		else
-			result = Authentication::Unauthorized;
+			result = Authentication::UNAUTHORIZED;
 
 		// Restore the header length field.
 		if (this->hasFingerprint)
@@ -390,10 +390,10 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->klass == Class::Request,
+		    this->klass == Class::REQUEST,
 		    "attempt to create a success response for a non Request STUN message");
 
-		return new StunMessage(Class::SuccessResponse, this->method, this->transactionId, nullptr, 0);
+		return new StunMessage(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
 	}
 
 	StunMessage* StunMessage::CreateErrorResponse(uint16_t errorCode)
@@ -401,11 +401,11 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->klass == Class::Request,
+		    this->klass == Class::REQUEST,
 		    "attempt to create an error response for a non Request STUN message");
 
 		auto response =
-		    new StunMessage(Class::ErrorResponse, this->method, this->transactionId, nullptr, 0);
+		    new StunMessage(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);
 
@@ -415,7 +415,7 @@ namespace RTC
 	void StunMessage::Authenticate(const std::string& password)
 	{
 		// Just for Request, Indication and SuccessResponse messages.
-		if (this->klass == Class::ErrorResponse)
+		if (this->klass == Class::ERROR_RESPONSE)
 		{
 			MS_ERROR("cannot set password for ErrorResponse messages");
 
@@ -433,10 +433,10 @@ namespace RTC
 		uint16_t usernamePaddedLen         = 0;
 		uint16_t xorMappedAddressPaddedLen = 0;
 		bool addXorMappedAddress =
-		    (this->xorMappedAddress && this->method == StunMessage::Method::Binding &&
-		     this->klass == Class::SuccessResponse);
-		bool addErrorCode        = (this->errorCode && this->klass == Class::ErrorResponse);
-		bool addMessageIntegrity = (this->klass != Class::ErrorResponse && !this->password.empty());
+		    (this->xorMappedAddress && this->method == StunMessage::Method::BINDING &&
+		     this->klass == Class::SUCCESS_RESPONSE);
+		bool addErrorCode        = (this->errorCode && this->klass == Class::ERROR_RESPONSE);
+		bool addMessageIntegrity = (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
 		bool addFingerprint      = true; // Do always.
 
 		// Update data pointer.
@@ -528,7 +528,7 @@ namespace RTC
 		// Add USERNAME.
 		if (usernamePaddedLen)
 		{
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Username);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::USERNAME);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, (uint16_t)this->username.length());
 			std::memcpy(buffer + pos + 4, this->username.c_str(), this->username.length());
 			pos += 4 + usernamePaddedLen;
@@ -537,7 +537,7 @@ namespace RTC
 		// Add PRIORITY.
 		if (this->priority)
 		{
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Priority);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::PRIORITY);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
 			Utils::Byte::Set4Bytes(buffer, pos + 4, this->priority);
 			pos += 4 + 4;
@@ -546,7 +546,7 @@ namespace RTC
 		// Add ICE-CONTROLLING.
 		if (this->iceControlling)
 		{
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::IceControlling);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ICE_CONTROLLING);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 8);
 			Utils::Byte::Set8Bytes(buffer, pos + 4, this->iceControlling);
 			pos += 4 + 8;
@@ -555,7 +555,7 @@ namespace RTC
 		// Add ICE-CONTROLLED.
 		if (this->iceControlled)
 		{
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::IceControlled);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ICE_CONTROLLED);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 8);
 			Utils::Byte::Set8Bytes(buffer, pos + 4, this->iceControlled);
 			pos += 4 + 8;
@@ -564,7 +564,7 @@ namespace RTC
 		// Add USE-CANDIDATE.
 		if (this->hasUseCandidate)
 		{
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::UseCandidate);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::USE_CANDIDATE);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 0);
 			pos += 4;
 		}
@@ -572,7 +572,7 @@ namespace RTC
 		// Add XOR-MAPPED-ADDRESS
 		if (addXorMappedAddress)
 		{
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::XorMappedAddress);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::XOR_MAPPED_ADDRESS);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, xorMappedAddressPaddedLen);
 
 			uint8_t* attrValue = buffer + pos + 4;
@@ -641,7 +641,7 @@ namespace RTC
 		// Add ERROR-CODE.
 		if (addErrorCode)
 		{
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ErrorCode);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ERROR_CODE);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
 
 			uint8_t codeClass  = (uint8_t)(this->errorCode / 100);
@@ -662,9 +662,9 @@ namespace RTC
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
 			const uint8_t* computedMessageIntegrity =
-			    Utils::Crypto::GetHMAC_SHA1(this->password, buffer, pos);
+			    Utils::Crypto::GetHmacShA1(this->password, buffer, pos);
 
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::MessageIntegrity);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::MESSAGE_INTEGRITY);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 20);
 			std::memcpy(buffer + pos + 4, computedMessageIntegrity, 20);
 
@@ -689,7 +689,7 @@ namespace RTC
 			// attribute and XOR it with 0x5354554e.
 			uint32_t computedFingerprint = Utils::Crypto::GetCRC32(buffer, pos) ^ 0x5354554e;
 
-			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::Fingerprint);
+			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::FINGERPRINT);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
 			Utils::Byte::Set4Bytes(buffer, pos + 4, computedFingerprint);
 			pos += 4 + 4;

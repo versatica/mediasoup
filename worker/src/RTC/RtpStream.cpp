@@ -82,8 +82,8 @@ namespace RTC
 		// Also reset the highest seen RTP timestamp.
 		this->maxTimestamp = 0;
 
-		// Call the onInitSeq method of the child.
-		onInitSeq();
+		// Call the OnInitSeq method of the child.
+		OnInitSeq();
 	}
 
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)
@@ -169,27 +169,27 @@ namespace RTC
 		return true;
 	}
 
-	Json::Value RtpStream::Params::toJson() const
+	Json::Value RtpStream::Params::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_ssrc("ssrc");
-		static const Json::StaticString JsonString_payloadType("payloadType");
-		static const Json::StaticString JsonString_mime("mime");
-		static const Json::StaticString JsonString_clockRate("clockRate");
-		static const Json::StaticString JsonString_useNack("useNack");
-		static const Json::StaticString JsonString_usePli("usePli");
-		static const Json::StaticString JsonString_absSendTimeId("absSendTimeId");
+		static const Json::StaticString JsonStringSsrc("ssrc");
+		static const Json::StaticString JsonStringPayloadType("payloadType");
+		static const Json::StaticString JsonStringMime("mime");
+		static const Json::StaticString JsonStringClockRate("clockRate");
+		static const Json::StaticString JsonStringUseNack("useNack");
+		static const Json::StaticString JsonStringUsePli("usePli");
+		static const Json::StaticString JsonStringAbsSendTimeId("absSendTimeId");
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonString_ssrc]          = (Json::UInt)this->ssrc;
-		json[JsonString_payloadType]   = (Json::UInt)this->payloadType;
-		json[JsonString_mime]          = this->mime.name;
-		json[JsonString_clockRate]     = (Json::UInt)this->clockRate;
-		json[JsonString_useNack]       = this->useNack;
-		json[JsonString_usePli]        = this->usePli;
-		json[JsonString_absSendTimeId] = (Json::UInt)this->absSendTimeId;
+		json[JsonStringSsrc]          = (Json::UInt)this->ssrc;
+		json[JsonStringPayloadType]   = (Json::UInt)this->payloadType;
+		json[JsonStringMime]          = this->mime.name;
+		json[JsonStringClockRate]     = (Json::UInt)this->clockRate;
+		json[JsonStringUseNack]       = this->useNack;
+		json[JsonStringUsePli]        = this->usePli;
+		json[JsonStringAbsSendTimeId] = (Json::UInt)this->absSendTimeId;
 
 		return json;
 	}

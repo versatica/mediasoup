@@ -18,7 +18,7 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
+		virtual void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
 	};
 
 public:
@@ -68,15 +68,15 @@ private:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
-	void onUvRead(ssize_t nread, const uv_buf_t* buf);
-	void onUvWriteError(int error);
-	void onUvShutdown(uv_shutdown_t* req, int status);
-	void onUvClosed();
+	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
+	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
+	void OnUvWriteError(int error);
+	void OnUvShutdown(uv_shutdown_t* req, int status);
+	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnTcpConnectionRead() = 0;
+	virtual void UserOnTcpConnectionRead() = 0;
 
 private:
 	// Passed by argument.

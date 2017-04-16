@@ -82,7 +82,7 @@ gulp.task('tidy:worker:run', shell.task(
 		'./scripts/clang-tidy.py ' +
 		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
 		'-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements ' +
-		'-header-filter=.*.hpp ' +
+		// '-header-filter=.*.hpp ' +
 		'-p=. ' +
 		`-j=${numCpus} ` +
 		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS || ''} ` +

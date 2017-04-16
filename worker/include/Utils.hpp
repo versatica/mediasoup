@@ -202,7 +202,7 @@ namespace Utils
 		static uint32_t GetRandomUInt(uint32_t min, uint32_t max);
 		static const std::string GetRandomString(size_t len);
 		static uint32_t GetCRC32(const uint8_t* data, size_t size);
-		static const uint8_t* GetHMAC_SHA1(const std::string& key, const uint8_t* data, size_t len);
+		static const uint8_t* GetHmacShA1(const std::string& key, const uint8_t* data, size_t len);
 
 	private:
 		static uint32_t seed;

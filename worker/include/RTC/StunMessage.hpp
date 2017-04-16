@@ -12,44 +12,44 @@ namespace RTC
 		// STUN message class.
 		enum class Class : uint16_t
 		{
-			Request         = 0,
-			Indication      = 1,
-			SuccessResponse = 2,
-			ErrorResponse   = 3
+			REQUEST          = 0,
+			INDICATION       = 1,
+			SUCCESS_RESPONSE = 2,
+			ERROR_RESPONSE   = 3
 		};
 
 		// STUN message method.
 		enum class Method : uint16_t
 		{
-			Binding = 1
+			BINDING = 1
 		};
 
 		// Attribute type.
 		enum class Attribute : uint16_t
 		{
-			MappedAddress     = 0x0001,
-			Username          = 0x0006,
-			MessageIntegrity  = 0x0008,
-			ErrorCode         = 0x0009,
-			UnknownAttributes = 0x000A,
-			Realm             = 0x0014,
-			Nonce             = 0x0015,
-			XorMappedAddress  = 0x0020,
-			Priority          = 0x0024,
-			UseCandidate      = 0x0025,
-			Software          = 0x8022,
-			AlternateServer   = 0x8023,
-			Fingerprint       = 0x8028,
-			IceControlled     = 0x8029,
-			IceControlling    = 0x802A
+			MAPPED_ADDRESS     = 0x0001,
+			USERNAME           = 0x0006,
+			MESSAGE_INTEGRITY  = 0x0008,
+			ERROR_CODE         = 0x0009,
+			UNKNOWN_ATTRIBUTES = 0x000A,
+			REALM              = 0x0014,
+			NONCE              = 0x0015,
+			XOR_MAPPED_ADDRESS = 0x0020,
+			PRIORITY           = 0x0024,
+			USE_CANDIDATE      = 0x0025,
+			SOFTWARE           = 0x8022,
+			ALTERNATE_SERVER   = 0x8023,
+			FINGERPRINT        = 0x8028,
+			ICE_CONTROLLED     = 0x8029,
+			ICE_CONTROLLING    = 0x802A
 		};
 
 		// Authentication result.
 		enum class Authentication
 		{
 			OK           = 0,
-			Unauthorized = 1,
-			BadRequest   = 2
+			UNAUTHORIZED = 1,
+			BAD_REQUEST  = 2
 		};
 
 	public:

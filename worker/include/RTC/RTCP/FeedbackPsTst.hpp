@@ -21,7 +21,7 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		template<typename T>
+		template<typename t>
 		class FeedbackPsTstItem : public FeedbackItem
 		{
 		private:
@@ -34,7 +34,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType MessageType;
+			static const FeedbackPs::MessageType messageType;
 
 		public:
 			static FeedbackPsTstItem* Parse(const uint8_t* data, size_t len);

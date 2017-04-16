@@ -12,7 +12,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
+			virtual void OnPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
@@ -26,7 +26,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from ::TcpConnection. */
 	public:
-		void userOnTcpConnectionRead() override;
+		void UserOnTcpConnectionRead() override;
 
 	private:
 		// Passed by argument.

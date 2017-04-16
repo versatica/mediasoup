@@ -34,9 +34,9 @@ namespace RTC
 	private:
 		enum RateControlState
 		{
-			RcHold,
-			RcIncrease,
-			RcDecrease
+			RC_HOLD,
+			RC_INCREASE,
+			RC_DECREASE
 		};
 
 	public:
@@ -93,8 +93,8 @@ namespace RTC
 		uint32_t currentBitrateBps          = this->maxConfiguredBitrateBps;
 		float avgMaxBitrateKbps             = -1.0f;
 		float varMaxBitrateKbps             = 0.4f;
-		RateControlState rateControlState   = RcHold;
-		RateControlRegion rateControlRegion = RcMaxUnknown;
+		RateControlState rateControlState   = RC_HOLD;
+		RateControlRegion rateControlRegion = RC_MAX_UNKNOWN;
 		int64_t timeLastBitrateChange       = -1;
 		RateControlInput currentInput;
 		bool updated                      = false;
@@ -107,7 +107,7 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline AimdRateControl::AimdRateControl() : currentInput(BwNormal, 0, 1.0)
+	inline AimdRateControl::AimdRateControl() : currentInput(BW_NORMAL, 0, 1.0)
 	{
 	}
 

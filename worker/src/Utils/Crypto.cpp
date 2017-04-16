@@ -72,7 +72,7 @@ namespace Utils
 		HMAC_CTX_cleanup(&Crypto::hmacSha1Ctx);
 	}
 
-	const uint8_t* Crypto::GetHMAC_SHA1(const std::string& key, const uint8_t* data, size_t len)
+	const uint8_t* Crypto::GetHmacShA1(const std::string& key, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

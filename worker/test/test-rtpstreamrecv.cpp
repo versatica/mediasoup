@@ -15,7 +15,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		public RtpStreamRecv::Listener
 	{
 	public:
-		virtual void onNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override
+		virtual void OnNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override
 		{
 			INFO("NACK required");
 
@@ -25,7 +25,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 			this->seqNumbers = seqNumbers;
 		}
 
-		virtual void onPliRequired(RtpStreamRecv* rtpStream) override
+		virtual void OnPliRequired(RtpStreamRecv* rtpStream) override
 		{
 			INFO("PLI required");
 

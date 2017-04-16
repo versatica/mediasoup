@@ -17,7 +17,7 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void onPacketRecv(
+			virtual void OnPacketRecv(
 			    RTC::UdpSocket* socket,
 			    const uint8_t* data,
 			    size_t len,
@@ -46,8 +46,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
-		void userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
-		void userOnUdpSocketClosed() override;
+		void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
+		void UserOnUdpSocketClosed() override;
 
 	private:
 		// Passed by argument.

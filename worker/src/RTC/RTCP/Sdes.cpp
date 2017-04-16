@@ -49,10 +49,10 @@ namespace RTC
 
 		const std::string& SdesItem::Type2String(SdesItem::Type type)
 		{
-			static const std::string unknown("UNKNOWN");
+			static const std::string Unknown("UNKNOWN");
 
 			if (type2String.find(type) == type2String.end())
-				return unknown;
+				return Unknown;
 
 			return type2String[type];
 		}

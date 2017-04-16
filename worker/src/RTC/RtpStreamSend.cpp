@@ -31,23 +31,23 @@ namespace RTC
 		ClearBuffer();
 	}
 
-	Json::Value RtpStreamSend::toJson() const
+	Json::Value RtpStreamSend::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonString_params("params");
-		static const Json::StaticString JsonString_received("received");
-		static const Json::StaticString JsonString_maxTimestamp("maxTimestamp");
-		static const Json::StaticString JsonString_receivedBytes("receivedBytes");
-		static const Json::StaticString JsonString_rtt("rtt");
+		static const Json::StaticString JsonStringParams("params");
+		static const Json::StaticString JsonStringReceived("received");
+		static const Json::StaticString JsonStringMaxTimestamp("maxTimestamp");
+		static const Json::StaticString JsonStringReceivedBytes("receivedBytes");
+		static const Json::StaticString JsonStringRtt("rtt");
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonString_params]        = this->params.toJson();
-		json[JsonString_received]      = (Json::UInt)this->received;
-		json[JsonString_maxTimestamp]  = (Json::UInt)this->maxTimestamp;
-		json[JsonString_receivedBytes] = (Json::UInt)this->receivedBytes;
-		json[JsonString_rtt]           = (Json::UInt)this->rtt;
+		json[JsonStringParams]        = this->params.ToJson();
+		json[JsonStringReceived]      = (Json::UInt)this->received;
+		json[JsonStringMaxTimestamp]  = (Json::UInt)this->maxTimestamp;
+		json[JsonStringReceivedBytes] = (Json::UInt)this->receivedBytes;
+		json[JsonStringRtt]           = (Json::UInt)this->rtt;
 
 		return json;
 	}
@@ -408,7 +408,7 @@ namespace RTC
 		(*newBufferIt).packet = packet->Clone(store);
 	}
 
-	void RtpStreamSend::onInitSeq()
+	void RtpStreamSend::OnInitSeq()
 	{
 		MS_TRACE();
 

@@ -14,7 +14,7 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void onSignal(SignalsHandler* signalsHandler, int signum) = 0;
+		virtual void OnSignal(SignalsHandler* signalsHandler, int signum) = 0;
 	};
 
 public:
@@ -29,7 +29,7 @@ public:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvSignal(int signum);
+	void OnUvSignal(int signum);
 
 private:
 	// Passed by argument.

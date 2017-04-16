@@ -60,7 +60,7 @@ namespace RTC
 	public:
 		Parameters(){};
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void Set(Json::Value& data);
 
 		bool HasBoolean(std::string& key);

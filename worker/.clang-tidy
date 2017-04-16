@@ -245,13 +245,13 @@ CheckOptions:
   - key:             readability-identifier-naming.TemplateParameterSuffix
     value:           ''
   - key:             readability-identifier-naming.TemplateTemplateParameterCase
-    value:           camelBack
+    value:           CamelCase
   - key:             readability-identifier-naming.TemplateTemplateParameterPrefix
     value:           ''
   - key:             readability-identifier-naming.TemplateTemplateParameterSuffix
     value:           ''
   - key:             readability-identifier-naming.TypeTemplateParameterCase
-    value:           camelBack
+    value:           CamelCase
   - key:             readability-identifier-naming.TypeTemplateParameterPrefix
     value:           ''
   - key:             readability-identifier-naming.TypeTemplateParameterSuffix

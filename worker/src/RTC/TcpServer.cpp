@@ -11,7 +11,7 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void on_error_close(uv_handle_t* handle)
+static inline void onErrorClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -183,7 +183,7 @@ namespace RTC
 				    iteratingPort,
 				    uv_strerror(err));
 
-				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_error_close);
+				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)onErrorClose);
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
@@ -226,7 +226,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void TcpServer::userOnTcpConnectionAlloc(::TcpConnection** connection)
+	void TcpServer::UserOnTcpConnectionAlloc(::TcpConnection** connection)
 	{
 		MS_TRACE();
 
@@ -234,7 +234,7 @@ namespace RTC
 		*connection = new RTC::TcpConnection(this->connListener, 65536);
 	}
 
-	void TcpServer::userOnNewTcpConnection(::TcpConnection* connection)
+	void TcpServer::UserOnNewTcpConnection(::TcpConnection* connection)
 	{
 		MS_TRACE();
 
@@ -243,7 +243,7 @@ namespace RTC
 			connection->Destroy();
 	}
 
-	void TcpServer::userOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)
+	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
 
@@ -252,12 +252,12 @@ namespace RTC
 		// At the end, this is just called if the connection was remotely closed.
 		if (!IsClosing())
 		{
-			this->listener->onRtcTcpConnectionClosed(
+			this->listener->OnRtcTcpConnectionClosed(
 			    this, dynamic_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
 		}
 	}
 
-	void TcpServer::userOnTcpServerClosed()
+	void TcpServer::UserOnTcpServerClosed()
 	{
 		MS_TRACE();
 

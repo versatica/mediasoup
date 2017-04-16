@@ -30,10 +30,10 @@ namespace RTC
 		template<typename T>
 		const std::string& FeedbackPacket<T>::MessageType2String(typename T::MessageType type)
 		{
-			static const std::string unknown("UNKNOWN");
+			static const std::string Unknown("UNKNOWN");
 
 			if (FeedbackPacket<T>::type2String.find(type) == FeedbackPacket<T>::type2String.end())
-				return unknown;
+				return Unknown;
 
 			return FeedbackPacket<T>::type2String[type];
 		}
@@ -52,7 +52,7 @@ namespace RTC
 		template<typename T>
 		FeedbackPacket<T>::FeedbackPacket(
 		    typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : Packet(RtcpType), messageType(messageType)
+		    : Packet(rtcpType), messageType(messageType)
 		{
 			this->raw                = new uint8_t[sizeof(Header)];
 			this->header             = reinterpret_cast<Header*>(this->raw);
@@ -95,7 +95,7 @@ namespace RTC
 		/* Specialization for Ps class. */
 
 		template<>
-		Type FeedbackPacket<FeedbackPs>::RtcpType = RTCP::Type::PSFB;
+		Type FeedbackPacket<FeedbackPs>::rtcpType = RTCP::Type::PSFB;
 
 		template<>
 		std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String = {
@@ -186,7 +186,7 @@ namespace RTC
 		/* Specialization for Rtcp class. */
 
 		template<>
-		Type FeedbackPacket<FeedbackRtp>::RtcpType = RTCP::Type::RTPFB;
+		Type FeedbackPacket<FeedbackRtp>::rtcpType = RTCP::Type::RTPFB;
 
 		template<>
 		std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String = {

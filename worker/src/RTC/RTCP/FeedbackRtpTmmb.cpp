@@ -95,13 +95,13 @@ namespace RTC
 		/* Specialization for Tmmbr class. */
 
 		template<>
-		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbr>::MessageType =
+		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbr>::messageType =
 		    FeedbackRtp::MessageType::TMMBR;
 
 		/* Specialization for Tmmbn class. */
 
 		template<>
-		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbn>::MessageType =
+		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbn>::messageType =
 		    FeedbackRtp::MessageType::TMMBN;
 
 		// Explicit instantiation to have all FeedbackRtpTmmbItem definitions in this file.

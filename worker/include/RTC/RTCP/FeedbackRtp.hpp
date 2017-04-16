@@ -48,7 +48,7 @@ namespace RTC
 
 		template<typename Item>
 		inline FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : FeedbackRtpPacket(Item::MessageType, senderSsrc, mediaSsrc)
+		    : FeedbackRtpPacket(Item::messageType, senderSsrc, mediaSsrc)
 		{
 		}
 

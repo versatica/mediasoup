@@ -32,16 +32,16 @@ public:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
-	void onUvRead(ssize_t nread, const uv_buf_t* buf);
-	void onUvWriteError(int error);
-	void onUvShutdown(uv_shutdown_t* req, int status);
-	void onUvClosed();
+	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
+	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
+	void OnUvWriteError(int error);
+	void OnUvShutdown(uv_shutdown_t* req, int status);
+	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnUnixStreamRead()                            = 0;
-	virtual void userOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
+	virtual void UserOnUnixStreamRead()                            = 0;
+	virtual void UserOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
 
 private:
 	// Allocated by this.

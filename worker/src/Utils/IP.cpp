@@ -28,7 +28,7 @@ namespace Utils
 		 */
 
 #line 31 "src/Utils/IP.cpp"
-static const int IPParser_start = 1;
+static const int IpParserStart = 1;
 
 
 
@@ -51,7 +51,7 @@ static const int IPParser_start = 1;
 
 #line 53 "src/Utils/IP.cpp"
 	{
-	cs = IPParser_start;
+	cs = IpParserStart;
 	}
 
 #line 58 "src/Utils/IP.rl"

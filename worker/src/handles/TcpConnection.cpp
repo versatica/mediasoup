@@ -13,12 +13,12 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	static_cast<TcpConnection*>(handle->data)->onUvReadAlloc(suggestedSize, buf);
+	static_cast<TcpConnection*>(handle->data)->OnUvReadAlloc(suggestedSize, buf);
 }
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
-	static_cast<TcpConnection*>(handle->data)->onUvRead(nread, buf);
+	static_cast<TcpConnection*>(handle->data)->OnUvRead(nread, buf);
 }
 
 inline static void onWrite(uv_write_t* req, int status)
@@ -31,17 +31,17 @@ inline static void onWrite(uv_write_t* req, int status)
 
 	// Just notify the TcpConnection when error.
 	if (status)
-		connection->onUvWriteError(status);
+		connection->OnUvWriteError(status);
 }
 
 inline static void onShutdown(uv_shutdown_t* req, int status)
 {
-	static_cast<TcpConnection*>(req->data)->onUvShutdown(req, status);
+	static_cast<TcpConnection*>(req->data)->OnUvShutdown(req, status);
 }
 
 inline static void onClose(uv_handle_t* handle)
 {
-	static_cast<TcpConnection*>(handle->data)->onUvClosed();
+	static_cast<TcpConnection*>(handle->data)->OnUvClosed();
 }
 
 /* Instance methods. */
@@ -309,7 +309,7 @@ bool TcpConnection::SetPeerAddress()
 	return true;
 }
 
-inline void TcpConnection::onUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
+inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
@@ -332,7 +332,7 @@ inline void TcpConnection::onUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf
 	}
 }
 
-inline void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
+inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE();
 
@@ -349,7 +349,7 @@ inline void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		this->bufferDataLen += (size_t)nread;
 
 		// Notify the subclass.
-		userOnTcpConnectionRead();
+		UserOnTcpConnectionRead();
 	}
 	// Client disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
@@ -373,7 +373,7 @@ inline void TcpConnection::onUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 	}
 }
 
-inline void TcpConnection::onUvWriteError(int error)
+inline void TcpConnection::OnUvWriteError(int error)
 {
 	MS_TRACE();
 
@@ -388,7 +388,7 @@ inline void TcpConnection::onUvWriteError(int error)
 	Destroy();
 }
 
-inline void TcpConnection::onUvShutdown(uv_shutdown_t* req, int status)
+inline void TcpConnection::OnUvShutdown(uv_shutdown_t* req, int status)
 {
 	MS_TRACE();
 
@@ -403,12 +403,12 @@ inline void TcpConnection::onUvShutdown(uv_shutdown_t* req, int status)
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
 }
 
-inline void TcpConnection::onUvClosed()
+inline void TcpConnection::OnUvClosed()
 {
 	MS_TRACE();
 
 	// Notify the listener.
-	this->listener->onTcpConnectionClosed(this, this->isClosedByPeer);
+	this->listener->OnTcpConnectionClosed(this, this->isClosedByPeer);
 
 	// And delete this.
 	delete this;

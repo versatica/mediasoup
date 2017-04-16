@@ -187,7 +187,7 @@ namespace Channel
 		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::userOnUnixStreamRead()
+	void UnixStreamSocket::UserOnUnixStreamRead()
 	{
 		MS_TRACE_STD();
 
@@ -288,7 +288,7 @@ namespace Channel
 				if (request)
 				{
 					// Notify the listener.
-					this->listener->onChannelRequest(this, request);
+					this->listener->OnChannelRequest(this, request);
 
 					// Delete the Request.
 					delete request;
@@ -326,7 +326,7 @@ namespace Channel
 		}
 	}
 
-	void UnixStreamSocket::userOnUnixStreamSocketClosed(bool isClosedByPeer)
+	void UnixStreamSocket::UserOnUnixStreamSocketClosed(bool isClosedByPeer)
 	{
 		MS_TRACE_STD();
 
@@ -335,7 +335,7 @@ namespace Channel
 		if (isClosedByPeer)
 		{
 			// Notify the listener.
-			this->listener->onChannelUnixStreamSocketRemotelyClosed(this);
+			this->listener->OnChannelUnixStreamSocketRemotelyClosed(this);
 		}
 	}
 } // namespace Channel
