@@ -7,7 +7,6 @@ const rename = require('gulp-rename');
 const touch = require('gulp-touch-cmd');
 const shell = require('gulp-shell');
 const clangFormat = require('gulp-clang-format');
-const path = require('path');
 const os = require('os');
 
 let nodeFiles =
@@ -71,7 +70,7 @@ gulp.task('format:worker', () =>
 gulp.task('tidy:worker:prepare', () =>
 {
 	return gulp.src(compilationDatabaseTemplate)
-		.pipe(replace(/PATH/gm, `${__dirname}/worker`))
+		.pipe(replace(/PATH/gm, __dirname))
 		.pipe(rename('compile_commands.json'))
 		.pipe(gulp.dest('worker'))
 		.pipe(touch());
@@ -79,11 +78,12 @@ gulp.task('tidy:worker:prepare', () =>
 
 gulp.task('tidy:worker:run', shell.task(
 	[
-		`cd worker && ./scripts/run-clang-tidy.py -header-filter=.*.hpp -p=. -checks=${process.env.MEDIASOUP_TIDY_CHECKS !== undefined ? process.env.MEDIASOUP_TIDY_CHECKS : ''} ${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix' : ''} -j=${numCpus}`
+		'cd worker && ./scripts/run-clang-tidy.py -header-filter=.*.hpp -p=. ' +
+		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS !== undefined ? process.env.MEDIASOUP_TIDY_CHECKS : ''} ` +
+		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix' : ''} -j=${numCpus}`
 	],
 	{
-		verbose : true,
-		env     : { DEBUG: '*ABORT* *WARN*' }
+		verbose : true
 	}
 ));
 
