@@ -37,7 +37,7 @@ namespace RTC
 		    int64_t arrivalTimeMs,
 		    size_t payloadSize,
 		    const RtpPacket& packet,
-		    const uint32_t transmissionTimeOffset) override;
+		    uint32_t transmissionTimeOffset) override;
 		void Process() override;
 		int64_t TimeUntilNextProcess() override;
 		void OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs) override;

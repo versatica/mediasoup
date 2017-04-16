@@ -70,9 +70,9 @@ namespace RTC
 		const uint8_t* GetData() const;
 		size_t GetSize() const;
 		void SetUsername(const char* username, size_t len);
-		void SetPriority(const uint32_t priority);
-		void SetIceControlling(const uint64_t iceControlling);
-		void SetIceControlled(const uint64_t iceControlled);
+		void SetPriority(uint32_t priority);
+		void SetIceControlling(uint64_t iceControlling);
+		void SetIceControlled(uint64_t iceControlled);
 		void SetUseCandidate();
 		void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
 		void SetErrorCode(uint16_t errorCode);

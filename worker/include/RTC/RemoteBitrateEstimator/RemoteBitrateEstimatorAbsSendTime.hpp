@@ -63,7 +63,7 @@ namespace RTC
 		    int64_t arrivalTimeMs,
 		    size_t payloadSize,
 		    const RtpPacket& packet,
-		    const uint32_t absSendTime) override;
+		    uint32_t absSendTime) override;
 		// This class relies on Process() being called periodically (at least once
 		// every other second) for streams to be timed out properly.
 		void Process() override;

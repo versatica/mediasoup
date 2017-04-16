@@ -60,7 +60,7 @@ namespace RTC
 		    int64_t arrivalTimeMs,
 		    size_t payloadSize,
 		    const RtpPacket& packet,
-		    const uint32_t absSendTime) = 0;
+		    uint32_t absSendTime) = 0;
 
 		// Removes all data for |ssrc|.
 		virtual void RemoveStream(uint32_t ssrc) = 0;

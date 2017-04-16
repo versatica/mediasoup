@@ -72,7 +72,7 @@ namespace RTC
 			static SdesChunk* Parse(const uint8_t* data, size_t len);
 
 		public:
-			explicit SdesChunk(const uint32_t ssrc);
+			explicit SdesChunk(uint32_t ssrc);
 			explicit SdesChunk(SdesChunk* chunk);
 			~SdesChunk();
 
