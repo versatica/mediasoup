@@ -74,7 +74,7 @@ namespace RTC
 		void SetMinBitrate(int minBitrateBps) override;
 
 	private:
-		typedef std::map<uint32_t, int64_t> Ssrcs;
+		using Ssrcs = std::map<uint32_t, int64_t>;
 
 		enum class ProbeResult
 		{

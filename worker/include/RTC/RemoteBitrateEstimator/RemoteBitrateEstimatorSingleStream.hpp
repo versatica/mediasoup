@@ -62,7 +62,7 @@ namespace RTC
 		};
 
 	private:
-		typedef std::map<uint32_t, Detector*> SsrcOveruseEstimatorMap;
+		using SsrcOveruseEstimatorMap = std::map<uint32_t, Detector*>;
 
 	private:
 		// Triggers a new estimate calculation.
