@@ -39,7 +39,7 @@ namespace RTC
 		}
 
 		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader)
-		    : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::REMB)
+		    : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
 			uint8_t* data = reinterpret_cast<uint8_t*>(commonHeader + 1);
 

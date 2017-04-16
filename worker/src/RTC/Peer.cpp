@@ -942,7 +942,7 @@ namespace RTC
 						{
 							RTCP::FeedbackPsAfbPacket* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
 
-							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::REMB)
+							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
 								break;
 						}
 
