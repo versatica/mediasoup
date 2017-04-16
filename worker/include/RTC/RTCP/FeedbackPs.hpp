@@ -13,7 +13,7 @@ namespace RTC
 		class FeedbackPsItemsPacket : public FeedbackPsPacket
 		{
 		public:
-			typedef typename std::vector<Item*>::iterator Iterator;
+			using Iterator = typename std::vector<Item*>::iterator;
 
 		public:
 			static FeedbackPsItemsPacket<Item>* Parse(const uint8_t* data, size_t len);

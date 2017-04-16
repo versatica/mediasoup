@@ -51,8 +51,8 @@ namespace RTC
 			Header* header = nullptr;
 		};
 
-		// Nack packet declaration.
-		typedef FeedbackRtpItemsPacket<FeedbackRtpTlleiItem> FeedbackRtpTlleiPacket;
+		// Tllei packet declaration.
+		using FeedbackRtpTlleiPacket = FeedbackRtpItemsPacket<FeedbackRtpTlleiItem>;
 
 		/* Inline instance methods. */
 

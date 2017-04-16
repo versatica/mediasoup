@@ -64,7 +64,7 @@ namespace RTC
 		};
 
 		// Rpsi packet declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsRpsiItem> FeedbackPsRpsiPacket;
+		using FeedbackPsRpsiPacket =  FeedbackPsItemsPacket<FeedbackPsRpsiItem>;
 
 		/* Inline instance methods. */
 

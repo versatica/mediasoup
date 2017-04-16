@@ -47,7 +47,7 @@ namespace RTC
 
 	private:
 		std::vector<StorageItem> storage;
-		typedef std::list<BufferItem> Buffer;
+		using Buffer = std::list<BufferItem>;
 		Buffer buffer;
 
 	private:

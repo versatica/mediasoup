@@ -13,7 +13,7 @@ namespace RTC
 		class ByePacket : public Packet
 		{
 		public:
-			typedef std::vector<uint32_t>::iterator Iterator;
+			using Iterator = std::vector<uint32_t>::iterator;
 
 		public:
 			static ByePacket* Parse(const uint8_t* data, size_t len);

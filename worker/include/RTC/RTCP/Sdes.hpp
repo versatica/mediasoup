@@ -66,7 +66,7 @@ namespace RTC
 		class SdesChunk
 		{
 		public:
-			typedef std::vector<SdesItem*>::iterator Iterator;
+			using Iterator = std::vector<SdesItem *>::iterator;
 
 		public:
 			static SdesChunk* Parse(const uint8_t* data, size_t len);
@@ -94,7 +94,7 @@ namespace RTC
 		class SdesPacket : public Packet
 		{
 		public:
-			typedef std::vector<SdesChunk*>::iterator Iterator;
+			using Iterator = std::vector<SdesChunk *>::iterator;
 
 		public:
 			static SdesPacket* Parse(const uint8_t* data, size_t len);

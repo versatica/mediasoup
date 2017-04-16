@@ -56,7 +56,7 @@ namespace RTC
 		};
 
 		// Fir packet declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsFirItem> FeedbackPsFirPacket;
+		using FeedbackPsFirPacket = FeedbackPsItemsPacket<FeedbackPsFirItem>;
 
 		/* Inline instance methods. */
 

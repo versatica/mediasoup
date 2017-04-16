@@ -52,7 +52,7 @@ namespace RTC
 		};
 
 		// Nack packet declaration.
-		typedef FeedbackRtpItemsPacket<FeedbackRtpNackItem> FeedbackRtpNackPacket;
+		using FeedbackRtpNackPacket = FeedbackRtpItemsPacket<FeedbackRtpNackItem>;
 
 		/* Inline instance methods. */
 

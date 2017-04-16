@@ -50,7 +50,7 @@ namespace RTC
 		};
 
 		// Lei packet declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsLeiItem> FeedbackPsLeiPacket;
+		using FeedbackPsLeiPacket = FeedbackPsItemsPacket<FeedbackPsLeiItem>;
 
 		/* Inline instance methods. */
 

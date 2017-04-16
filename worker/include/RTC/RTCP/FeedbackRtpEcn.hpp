@@ -72,7 +72,7 @@ namespace RTC
 		};
 
 		// Ecn packet declaration.
-		typedef FeedbackRtpItemsPacket<FeedbackRtpEcnItem> FeedbackRtpEcnPacket;
+		using FeedbackRtpEcnPacket = FeedbackRtpItemsPacket<FeedbackRtpEcnItem>;
 
 		/* Inline instance methods. */
 

@@ -66,7 +66,7 @@ namespace RTC
 		};
 
 		// Vbcm packet declaration
-		typedef FeedbackPsItemsPacket<FeedbackPsVbcmItem> FeedbackPsVbcmPacket;
+		using FeedbackPsVbcmPacket = FeedbackPsItemsPacket<FeedbackPsVbcmItem>;
 
 		/* Inline instance methods. */
 

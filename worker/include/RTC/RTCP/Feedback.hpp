@@ -89,8 +89,8 @@ namespace RTC
 			};
 		};
 
-		typedef FeedbackPacket<FeedbackPs> FeedbackPsPacket;
-		typedef FeedbackPacket<FeedbackRtp> FeedbackRtpPacket;
+		using FeedbackPsPacket = FeedbackPacket<RTC::RTCP::FeedbackPs>;
+		using FeedbackRtpPacket = FeedbackPacket<RTC::RTCP::FeedbackRtp>;
 
 		/* Inline instance methods. */
 

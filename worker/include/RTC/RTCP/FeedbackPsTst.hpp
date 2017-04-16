@@ -67,12 +67,12 @@ namespace RTC
 		};
 
 		// Tst classes declaration.
-		typedef FeedbackPsTstItem<Tstr> FeedbackPsTstrItem;
-		typedef FeedbackPsTstItem<Tstn> FeedbackPsTstnItem;
+		using FeedbackPsTstrItem = FeedbackPsTstItem<Tstr>;
+		using FeedbackPsTstnItem = FeedbackPsTstItem<Tstn>;
 
 		// Tst packets declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsTstrItem> FeedbackPsTstrPacket;
-		typedef FeedbackPsItemsPacket<FeedbackPsTstnItem> FeedbackPsTstnPacket;
+		using FeedbackPsTstrPacket = FeedbackPsItemsPacket<FeedbackPsTstrItem>;
+		using FeedbackPsTstnPacket = FeedbackPsItemsPacket<FeedbackPsTstnItem>;
 
 		/* Inline instance methods. */
 

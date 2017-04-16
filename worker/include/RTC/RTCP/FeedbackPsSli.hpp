@@ -58,7 +58,7 @@ namespace RTC
 		};
 
 		// Sli packet declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsSliItem> FeedbackPsSliPacket;
+		using FeedbackPsSliPacket = FeedbackPsItemsPacket<FeedbackPsSliItem>;
 
 		/* Inline instance methods. */
 

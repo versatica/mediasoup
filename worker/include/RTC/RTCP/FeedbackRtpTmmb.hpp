@@ -65,12 +65,12 @@ namespace RTC
 		};
 
 		// Tmmbn classes declaration.
-		typedef FeedbackRtpTmmbItem<FeedbackRtpTmmbr> FeedbackRtpTmmbrItem;
-		typedef FeedbackRtpTmmbItem<FeedbackRtpTmmbn> FeedbackRtpTmmbnItem;
+		using FeedbackRtpTmmbrItem = FeedbackRtpTmmbItem<FeedbackRtpTmmbr>;
+		using FeedbackRtpTmmbnItem = FeedbackRtpTmmbItem<FeedbackRtpTmmbn>;
 
 		// Tmmbn packets declaration.
-		typedef FeedbackRtpItemsPacket<FeedbackRtpTmmbrItem> FeedbackRtpTmmbrPacket;
-		typedef FeedbackRtpItemsPacket<FeedbackRtpTmmbnItem> FeedbackRtpTmmbnPacket;
+		using FeedbackRtpTmmbrPacket = FeedbackRtpItemsPacket<FeedbackRtpTmmbrItem>;
+		using FeedbackRtpTmmbnPacket = FeedbackRtpItemsPacket<FeedbackRtpTmmbnItem>;
 
 		/* Inline instance methods. */
 
