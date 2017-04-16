@@ -75,47 +75,47 @@ namespace RTC
 		/* Inline instance methods. */
 
 		template<typename T>
-		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem()
+		inline FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem()
 		= default;
 
 		template<typename T>
-		size_t FeedbackRtpTmmbItem<T>::GetSize() const
+		inline size_t FeedbackRtpTmmbItem<T>::GetSize() const
 		{
 			return HeaderSize;
 		}
 
 		template<typename T>
-		uint32_t FeedbackRtpTmmbItem<T>::GetSsrc() const
+		inline uint32_t FeedbackRtpTmmbItem<T>::GetSsrc() const
 		{
 			return this->ssrc;
 		}
 
 		template<typename T>
-		void FeedbackRtpTmmbItem<T>::SetSsrc(uint32_t ssrc)
+		inline void FeedbackRtpTmmbItem<T>::SetSsrc(uint32_t ssrc)
 		{
 			this->ssrc = ssrc;
 		}
 
 		template<typename T>
-		uint64_t FeedbackRtpTmmbItem<T>::GetBitrate() const
+		inline uint64_t FeedbackRtpTmmbItem<T>::GetBitrate() const
 		{
 			return this->bitrate;
 		}
 
 		template<typename T>
-		void FeedbackRtpTmmbItem<T>::SetBitrate(uint64_t bitrate)
+		inline void FeedbackRtpTmmbItem<T>::SetBitrate(uint64_t bitrate)
 		{
 			this->bitrate = bitrate;
 		}
 
 		template<typename T>
-		uint16_t FeedbackRtpTmmbItem<T>::GetOverhead() const
+		inline uint16_t FeedbackRtpTmmbItem<T>::GetOverhead() const
 		{
 			return this->overhead;
 		}
 
 		template<typename T>
-		void FeedbackRtpTmmbItem<T>::SetOverhead(uint16_t overhead)
+		inline void FeedbackRtpTmmbItem<T>::SetOverhead(uint16_t overhead)
 		{
 			this->overhead = overhead;
 		}

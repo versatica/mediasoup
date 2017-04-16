@@ -77,35 +77,35 @@ namespace RTC
 		/* Inline instance methods. */
 
 		template<typename T>
-		FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header) : header(header)
+		inline FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header) : header(header)
 		{
 		}
 
 		template<typename T>
-		FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item) : header(item->header)
+		inline FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item) : header(item->header)
 		{
 		}
 
 		template<typename T>
-		size_t FeedbackPsTstItem<T>::GetSize() const
+		inline size_t FeedbackPsTstItem<T>::GetSize() const
 		{
 			return sizeof(Header);
 		}
 
 		template<typename T>
-		uint32_t FeedbackPsTstItem<T>::GetSsrc() const
+		inline uint32_t FeedbackPsTstItem<T>::GetSsrc() const
 		{
 			return (uint32_t)ntohl(this->header->ssrc);
 		}
 
 		template<typename T>
-		uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
+		inline uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
 		{
 			return (uint8_t)this->header->sequenceNumber;
 		}
 
 		template<typename T>
-		uint8_t FeedbackPsTstItem<T>::GetIndex() const
+		inline uint8_t FeedbackPsTstItem<T>::GetIndex() const
 		{
 			return (uint8_t)this->header->index;
 		}

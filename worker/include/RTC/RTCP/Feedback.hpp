@@ -95,43 +95,43 @@ namespace RTC
 		/* Inline instance methods. */
 
 		template<typename T>
-		typename T::MessageType FeedbackPacket<T>::GetMessageType() const
+		inline typename T::MessageType FeedbackPacket<T>::GetMessageType() const
 		{
 			return this->messageType;
 		}
 
 		template<typename T>
-		size_t FeedbackPacket<T>::GetCount() const
+		inline size_t FeedbackPacket<T>::GetCount() const
 		{
 			return (size_t)this->GetMessageType();
 		}
 
 		template<typename T>
-		size_t FeedbackPacket<T>::GetSize() const
+		inline size_t FeedbackPacket<T>::GetSize() const
 		{
 			return sizeof(CommonHeader) + sizeof(Header);
 		}
 
 		template<typename T>
-		uint32_t FeedbackPacket<T>::GetSenderSsrc() const
+		inline uint32_t FeedbackPacket<T>::GetSenderSsrc() const
 		{
 			return (uint32_t)ntohl(this->header->senderSsrc);
 		}
 
 		template<typename T>
-		void FeedbackPacket<T>::SetSenderSsrc(uint32_t ssrc)
+		inline void FeedbackPacket<T>::SetSenderSsrc(uint32_t ssrc)
 		{
 			this->header->senderSsrc = (uint32_t)htonl(ssrc);
 		}
 
 		template<typename T>
-		uint32_t FeedbackPacket<T>::GetMediaSsrc() const
+		inline uint32_t FeedbackPacket<T>::GetMediaSsrc() const
 		{
 			return (uint32_t)ntohl(this->header->mediaSsrc);
 		}
 
 		template<typename T>
-		void FeedbackPacket<T>::SetMediaSsrc(uint32_t ssrc)
+		inline void FeedbackPacket<T>::SetMediaSsrc(uint32_t ssrc)
 		{
 			this->header->mediaSsrc = (uint32_t)htonl(ssrc);
 		}

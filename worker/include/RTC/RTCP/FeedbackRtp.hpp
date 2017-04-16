@@ -41,19 +41,19 @@ namespace RTC
 		/* Inline instance methods. */
 
 		template<typename Item>
-		FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(CommonHeader* commonHeader)
+		inline FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(CommonHeader* commonHeader)
 		    : FeedbackRtpPacket(commonHeader)
 		{
 		}
 
 		template<typename Item>
-		FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
+		inline FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
 		    : FeedbackRtpPacket(Item::MessageType, senderSsrc, mediaSsrc)
 		{
 		}
 
 		template<typename Item>
-		size_t FeedbackRtpItemsPacket<Item>::GetSize() const
+		inline size_t FeedbackRtpItemsPacket<Item>::GetSize() const
 		{
 			size_t size = FeedbackRtpPacket::GetSize();
 
@@ -66,19 +66,19 @@ namespace RTC
 		}
 
 		template<typename Item>
-		void FeedbackRtpItemsPacket<Item>::AddItem(Item* item)
+		inline void FeedbackRtpItemsPacket<Item>::AddItem(Item* item)
 		{
 			this->items.push_back(item);
 		}
 
 		template<typename Item>
-		typename FeedbackRtpItemsPacket<Item>::Iterator FeedbackRtpItemsPacket<Item>::Begin()
+		inline typename FeedbackRtpItemsPacket<Item>::Iterator FeedbackRtpItemsPacket<Item>::Begin()
 		{
 			return this->items.begin();
 		}
 
 		template<typename Item>
-		typename FeedbackRtpItemsPacket<Item>::Iterator FeedbackRtpItemsPacket<Item>::End()
+		inline typename FeedbackRtpItemsPacket<Item>::Iterator FeedbackRtpItemsPacket<Item>::End()
 		{
 			return this->items.end();
 		}
