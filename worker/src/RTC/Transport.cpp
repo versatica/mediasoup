@@ -34,7 +34,7 @@ static inline uint32_t generateIceCandidatePriority(uint16_t localPreference)
 
 namespace RTC
 {
-	/* Consts. */
+	/* Static. */
 
 	static constexpr uint64_t EffectiveMaxBitrateCheckInterval          = 2000; // In ms.
 	static constexpr double EffectiveMaxBitrateThresholdBeforeFullFrame = 0.6;  // 0.0 - 1.0.
