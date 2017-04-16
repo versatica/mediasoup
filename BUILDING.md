@@ -78,6 +78,10 @@ Validates the worker C++ code/syntax against the `worker/.clang-format` rules.
 
 Runs both the `lint:node` and `lint:worker` gulp tasks.
 
+### `gulp tidy`
+
+Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/).
+
 ### `gulp format:worker`
 
 Rewrites all the worker source files and include files in order to satisfy the rules at `worker/.clang-format`.
