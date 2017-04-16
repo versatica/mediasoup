@@ -82,7 +82,7 @@ namespace RTC
 		if (estimator->interArrival.ComputeDeltas(
 		        rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
 		{
-			double timestampDeltaMs = timestampDelta * kTimestampToMs;
+			double timestampDeltaMs = timestampDelta * TimestampToMs;
 
 			estimator->estimator.Update(
 			    timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
@@ -94,11 +94,11 @@ namespace RTC
 			    nowMs);
 		}
 
-		if (estimator->detector.State() == kBwOverusing)
+		if (estimator->detector.State() == BwOverusing)
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
 
-			if (incomingBitrateBps && (priorState != kBwOverusing ||
+			if (incomingBitrateBps && (priorState != BwOverusing ||
 			                           GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
@@ -124,7 +124,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		BandwidthUsage bwState               = kBwNormal;
+		BandwidthUsage bwState               = BwNormal;
 		double sumVarNoise                   = 0.0;
 		auto it = this->overuseDetectors.begin();
 
@@ -132,7 +132,7 @@ namespace RTC
 		{
 			const int64_t timeOfLastReceivedPacket = it->second->lastPacketTimeMs;
 
-			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > kStreamTimeOutMs)
+			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > StreamTimeOutMs)
 			{
 				// This over-use detector hasn't received packets for |kStreamTimeOutMs|
 				// milliseconds and is considered stale.

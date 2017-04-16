@@ -21,8 +21,8 @@
 
 namespace RTC
 {
-	constexpr double kMaxAdaptOffsetMs = 15.0;
-	constexpr int kMinNumDeltas        = 60;
+	constexpr double MaxAdaptOffsetMs = 15.0;
+	constexpr int MinNumDeltas        = 60;
 
 	BandwidthUsage OveruseDetector::Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs)
 	{
@@ -30,9 +30,9 @@ namespace RTC
 
 		if (numOfDeltas < 2)
 		{
-			return kBwNormal;
+			return BwNormal;
 		}
-		const double T = std::min(numOfDeltas, kMinNumDeltas) * offset;
+		const double T = std::min(numOfDeltas, MinNumDeltas) * offset;
 		if (T > this->threshold)
 		{
 			if (this->timeOverUsing == -1)
@@ -54,7 +54,7 @@ namespace RTC
 				{
 					this->timeOverUsing  = 0;
 					this->overuseCounter = 0;
-					this->hypothesis     = kBwOverusing;
+					this->hypothesis     = BwOverusing;
 				}
 			}
 		}
@@ -62,13 +62,13 @@ namespace RTC
 		{
 			this->timeOverUsing  = -1;
 			this->overuseCounter = 0;
-			this->hypothesis     = kBwUnderusing;
+			this->hypothesis     = BwUnderusing;
 		}
 		else
 		{
 			this->timeOverUsing  = -1;
 			this->overuseCounter = 0;
-			this->hypothesis     = kBwNormal;
+			this->hypothesis     = BwNormal;
 		}
 		this->prevOffset = offset;
 
@@ -84,7 +84,7 @@ namespace RTC
 		if (this->lastUpdateMs == -1)
 			this->lastUpdateMs = nowMs;
 
-		if (fabs(modifiedOffset) > this->threshold + kMaxAdaptOffsetMs)
+		if (fabs(modifiedOffset) > this->threshold + MaxAdaptOffsetMs)
 		{
 			// Avoid adapting the threshold to big latency spikes, caused e.g.,
 			// by a sudden capacity drop.
@@ -92,16 +92,16 @@ namespace RTC
 			return;
 		}
 
-		const double k = fabs(modifiedOffset) < this->threshold ? this->kDown : this->kUp;
-		const int64_t kMaxTimeDeltaMs = 100;
-		int64_t timeDeltaMs           = std::min(nowMs - this->lastUpdateMs, kMaxTimeDeltaMs);
+		const double k = fabs(modifiedOffset) < this->threshold ? this->down : this->up;
+		const int64_t MaxTimeDeltaMs = 100;
+		int64_t timeDeltaMs           = std::min(nowMs - this->lastUpdateMs, MaxTimeDeltaMs);
 
 		this->threshold += k * (fabs(modifiedOffset) - this->threshold) * timeDeltaMs;
 
-		const double kMinThreshold = 6;
-		const double kMaxThreshold = 600;
+		const double MinThreshold = 6;
+		const double MaxThreshold = 600;
 
-		this->threshold = std::min(std::max(this->threshold, kMinThreshold), kMaxThreshold);
+		this->threshold = std::min(std::max(this->threshold, MinThreshold), MaxThreshold);
 
 		this->lastUpdateMs = nowMs;
 	}

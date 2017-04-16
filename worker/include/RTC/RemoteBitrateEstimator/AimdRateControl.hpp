@@ -27,16 +27,16 @@ namespace RTC
 	class AimdRateControl
 	{
 	private:
-		static constexpr int64_t kDefaultRttMs = 200;
+		static constexpr int64_t DefaultRttMs = 200;
 		// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
-		static constexpr int kMinBitrateBps = 10000;
+		static constexpr int MinBitrateBps = 10000;
 
 	private:
 		enum RateControlState
 		{
-			kRcHold,
-			kRcIncrease,
-			kRcDecrease
+			RcHold,
+			RcIncrease,
+			RcDecrease
 		};
 
 	public:
@@ -88,26 +88,26 @@ namespace RTC
 		void ChangeRegion(RateControlRegion region);
 
 	private:
-		uint32_t minConfiguredBitrateBps    = kMinBitrateBps;
+		uint32_t minConfiguredBitrateBps    = MinBitrateBps;
 		uint32_t maxConfiguredBitrateBps    = 30000000;
 		uint32_t currentBitrateBps          = this->maxConfiguredBitrateBps;
 		float avgMaxBitrateKbps             = -1.0f;
 		float varMaxBitrateKbps             = 0.4f;
-		RateControlState rateControlState   = kRcHold;
-		RateControlRegion rateControlRegion = kRcMaxUnknown;
+		RateControlState rateControlState   = RcHold;
+		RateControlRegion rateControlRegion = RcMaxUnknown;
 		int64_t timeLastBitrateChange       = -1;
 		RateControlInput currentInput;
 		bool updated                      = false;
 		int64_t timeFirstIncomingEstimate = -1;
 		bool bitrateIsInitialized         = false;
 		float beta                        = 0.85f;
-		int64_t rtt                       = kDefaultRttMs;
+		int64_t rtt                       = DefaultRttMs;
 		int lastDecrease                  = 0;
 	};
 
 	/* Inline methods. */
 
-	inline AimdRateControl::AimdRateControl() : currentInput(kBwNormal, 0, 1.0)
+	inline AimdRateControl::AimdRateControl() : currentInput(BwNormal, 0, 1.0)
 	{
 	}
 

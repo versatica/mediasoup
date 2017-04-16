@@ -78,8 +78,8 @@ namespace RTC
 
 		enum class ProbeResult
 		{
-			kBitrateUpdated,
-			kNoUpdate
+			BitrateUpdated,
+			NoUpdate
 		};
 
 	private:
@@ -143,8 +143,9 @@ namespace RTC
 
 	inline int64_t RemoteBitrateEstimatorAbsSendTime::TimeUntilNextProcess()
 	{
-		const int64_t kDisabledModuleTime = 1000;
-		return kDisabledModuleTime;
+		static const int64_t DisabledModuleTime = 1000;
+
+		return DisabledModuleTime;
 	}
 
 	inline void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)

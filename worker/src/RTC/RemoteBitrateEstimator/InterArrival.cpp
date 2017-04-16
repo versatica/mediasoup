@@ -18,7 +18,7 @@
 
 namespace RTC
 {
-	static const int kBurstDeltaThresholdMs = 5;
+	static const int BurstDeltaThresholdMs = 5;
 
 	bool InterArrival::ComputeDeltas(
 	    uint32_t timestamp,
@@ -62,7 +62,7 @@ namespace RTC
 				int64_t systemTimeDeltaMs =
 				    this->currentTimestampGroup.lastSystemTimeMs - this->prevTimestampGroup.lastSystemTimeMs;
 
-				if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= kArrivalTimeOffsetThresholdMs)
+				if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= ArrivalTimeOffsetThresholdMs)
 				{
 					MS_WARN_TAG(
 					    rbe,
@@ -79,7 +79,7 @@ namespace RTC
 					// The group of packets has been reordered since receiving its local
 					// arrival timestamp.
 					++this->numConsecutiveReorderedPackets;
-					if (this->numConsecutiveReorderedPackets >= kReorderedResetThreshold)
+					if (this->numConsecutiveReorderedPackets >= ReorderedResetThreshold)
 					{
 						MS_WARN_TAG(
 						    rbe,
@@ -159,7 +159,7 @@ namespace RTC
 		{
 			uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
 
-			return timestampDiff > kTimestampGroupLengthTicks;
+			return timestampDiff > this->timestampGroupLengthTicks;
 		}
 	}
 
@@ -184,7 +184,7 @@ namespace RTC
 
 		int propagationDeltaMs = arrivalTimeDeltaMs - tsDeltaMs;
 
-		return propagationDeltaMs < 0 && arrivalTimeDeltaMs <= kBurstDeltaThresholdMs;
+		return propagationDeltaMs < 0 && arrivalTimeDeltaMs <= BurstDeltaThresholdMs;
 	}
 
 	void InterArrival::Reset()

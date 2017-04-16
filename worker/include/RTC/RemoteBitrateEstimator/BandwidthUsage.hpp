@@ -7,9 +7,9 @@ namespace RTC
 {
 	enum BandwidthUsage
 	{
-		kBwNormal,
-		kBwUnderusing,
-		kBwOverusing
+		BwNormal,
+		BwUnderusing,
+		BwOverusing
 	};
 } // namespace RTC
 

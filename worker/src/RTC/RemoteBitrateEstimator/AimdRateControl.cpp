@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <cmath>
 
-static constexpr int64_t kMaxFeedbackIntervalMs = 1000;
+static constexpr int64_t MaxFeedbackIntervalMs = 1000;
 
 namespace RTC
 {
@@ -27,12 +27,13 @@ namespace RTC
 
 		// Estimate how often we can send RTCP if we allocate up to 5% of bandwidth
 		// to feedback.
-		static const int kRtcpSize = 80;
-		int64_t interval =
-		    static_cast<int64_t>(kRtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
-		const int64_t kMinFeedbackIntervalMs = 200;
+		static const int RtcpSize = 80;
+		const int64_t MinFeedbackIntervalMs = 200;
 
-		return std::min(std::max(interval, kMinFeedbackIntervalMs), kMaxFeedbackIntervalMs);
+		int64_t interval =
+		    static_cast<int64_t>(RtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
+
+		return std::min(std::max(interval, MinFeedbackIntervalMs), MaxFeedbackIntervalMs);
 	}
 
 	bool AimdRateControl::TimeToReduceFurther(int64_t timeNow, uint32_t incomingBitrateBps) const
@@ -66,23 +67,23 @@ namespace RTC
 		// second.
 		if (!this->bitrateIsInitialized)
 		{
-			const int64_t kInitializationTimeMs = 5000;
+			const int64_t InitializationTimeMs = 5000;
 
-			// MS_ASSERT(kBitrateWindowMs <= kInitializationTimeMs);
+			// MS_ASSERT(BitrateWindowMs <= InitializationTimeMs);
 
 			if (this->timeFirstIncomingEstimate < 0)
 			{
 				if (input->incomingBitrate)
 					this->timeFirstIncomingEstimate = nowMs;
 			}
-			else if (nowMs - this->timeFirstIncomingEstimate > kInitializationTimeMs && input->incomingBitrate)
+			else if (nowMs - this->timeFirstIncomingEstimate > InitializationTimeMs && input->incomingBitrate)
 			{
 				this->currentBitrateBps    = input->incomingBitrate;
 				this->bitrateIsInitialized = true;
 			}
 		}
 
-		if (this->updated && this->currentInput.bwState == kBwOverusing)
+		if (this->updated && this->currentInput.bwState == BwOverusing)
 		{
 			// Only update delay factor and incoming bit rate. We always want to react
 			// on an over-use.
@@ -102,14 +103,15 @@ namespace RTC
 
 		// MS_ASSERT(this->currentBitrateBps > 0);
 
+		// Approximate the over-use estimator delay to 100 ms.
+		const int64_t responseTime           = (this->rtt + 100) * 2;
+		constexpr double MinIncreaseRateBps = 4000;
+
 		double bitsPerFrame      = static_cast<double>(this->currentBitrateBps) / 30.0;
 		double packetsPerFrame   = std::ceil(bitsPerFrame / (8.0 * 1200.0));
 		double avgPacketSizeBits = bitsPerFrame / packetsPerFrame;
-		// Approximate the over-use estimator delay to 100 ms.
-		const int64_t responseTime           = (this->rtt + 100) * 2;
-		constexpr double kMinIncreaseRateBps = 4000;
 
-		return static_cast<int>(std::max(kMinIncreaseRateBps, (avgPacketSizeBits * 1000) / responseTime));
+		return static_cast<int>(std::max(MinIncreaseRateBps, (avgPacketSizeBits * 1000) / responseTime));
 	}
 
 	uint32_t AimdRateControl::ChangeBitrate(
@@ -123,7 +125,7 @@ namespace RTC
 		// An over-use should always trigger us to reduce the bitrate, even though
 		// we have not yet established our first estimate. By acting on the over-use,
 		// we will end up with a valid estimate.
-		if (!this->bitrateIsInitialized && this->currentInput.bwState != kBwOverusing)
+		if (!this->bitrateIsInitialized && this->currentInput.bwState != BwOverusing)
 			return this->currentBitrateBps;
 
 		this->updated = false;
@@ -137,17 +139,17 @@ namespace RTC
 
 		switch (this->rateControlState)
 		{
-			case kRcHold:
+			case RcHold:
 				break;
 
-			case kRcIncrease:
+			case RcIncrease:
 				if (this->avgMaxBitrateKbps >= 0 &&
 				    incomingBitrateKbps > this->avgMaxBitrateKbps + 3 * stdMaxBitRate)
 				{
-					ChangeRegion(kRcMaxUnknown);
+					ChangeRegion(RcMaxUnknown);
 					this->avgMaxBitrateKbps = -1.0;
 				}
-				if (this->rateControlRegion == kRcNearMax)
+				if (this->rateControlRegion == RcNearMax)
 				{
 					uint32_t additiveIncreaseBps = AdditiveRateIncrease(nowMs, this->timeLastBitrateChange);
 
@@ -164,7 +166,7 @@ namespace RTC
 				this->timeLastBitrateChange = nowMs;
 				break;
 
-			case kRcDecrease:
+			case RcDecrease:
 				this->bitrateIsInitialized = true;
 				// Set bit rate to something slightly lower than max
 				// to get rid of any self-induced delay.
@@ -173,14 +175,14 @@ namespace RTC
 				if (newBitrateBps > this->currentBitrateBps)
 				{
 					// Avoid increasing the rate when over-using.
-					if (this->rateControlRegion != kRcMaxUnknown)
+					if (this->rateControlRegion != RcMaxUnknown)
 					{
 						newBitrateBps = static_cast<uint32_t>(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f);
 					}
 					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
 				}
 
-				ChangeRegion(kRcNearMax);
+				ChangeRegion(RcNearMax);
 
 				if (incomingBitrateBps < this->currentBitrateBps)
 				{
@@ -194,7 +196,7 @@ namespace RTC
 
 				UpdateMaxBitRateEstimate(incomingBitrateKbps);
 				// Stay on hold until the pipes are cleared.
-				ChangeState(kRcHold);
+				ChangeState(RcHold);
 				this->timeLastBitrateChange = nowMs;
 				break;
 
@@ -284,21 +286,21 @@ namespace RTC
 		(void)input;
 		switch (this->currentInput.bwState)
 		{
-			case kBwNormal:
-				if (this->rateControlState == kRcHold)
+			case BwNormal:
+				if (this->rateControlState == RcHold)
 				{
 					this->timeLastBitrateChange = nowMs;
-					ChangeState(kRcIncrease);
+					ChangeState(RcIncrease);
 				}
 				break;
-			case kBwOverusing:
-				if (this->rateControlState != kRcDecrease)
+			case BwOverusing:
+				if (this->rateControlState != RcDecrease)
 				{
-					ChangeState(kRcDecrease);
+					ChangeState(RcDecrease);
 				}
 				break;
-			case kBwUnderusing:
-				ChangeState(kRcHold);
+			case BwUnderusing:
+				ChangeState(RcHold);
 				break;
 			default:
 				MS_ASSERT(false, "invalid RateControlInput::bwState value");

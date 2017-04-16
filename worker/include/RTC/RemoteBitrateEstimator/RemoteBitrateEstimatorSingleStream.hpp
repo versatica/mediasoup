@@ -27,7 +27,7 @@ namespace RTC
 	class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator
 	{
 	private:
-		static constexpr double kTimestampToMs = 1.0 / 90.0;
+		static constexpr double TimestampToMs = 1.0 / 90.0;
 
 	public:
 		explicit RemoteBitrateEstimatorSingleStream(Listener* observer);
@@ -50,7 +50,7 @@ namespace RTC
 		{
 			enum
 			{
-				kTimestampGroupLengthMs = 5
+				TimestampGroupLengthMs = 5
 			};
 			explicit Detector(
 			    int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping);
@@ -89,14 +89,14 @@ namespace RTC
 	inline RemoteBitrateEstimatorSingleStream::Detector::Detector(
 	    int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping)
 	    : lastPacketTimeMs(lastPacketTimeMs),
-	      interArrival(90 * kTimestampGroupLengthMs, kTimestampToMs, enableBurstGrouping),
+	      interArrival(90 * TimestampGroupLengthMs, TimestampToMs, enableBurstGrouping),
 	      estimator(options), detector()
 	{
 	}
 
 	inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer)
 	    : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer),
-	      processIntervalMs(kProcessIntervalMs)
+	      processIntervalMs(ProcessIntervalMs)
 	{
 		// assert(this->observer);
 	}

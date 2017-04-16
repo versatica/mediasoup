@@ -20,8 +20,8 @@
 
 namespace RTC
 {
-	constexpr size_t kMinFramePeriodHistoryLength = 60;
-	constexpr uint16_t kDeltaCounterMax           = 1000;
+	constexpr size_t MinFramePeriodHistoryLength = 60;
+	constexpr uint16_t DeltaCounterMax           = 1000;
 
 	void OveruseEstimator::Update(
 	    int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs)
@@ -34,17 +34,17 @@ namespace RTC
 		double fsDelta              = sizeDelta;
 
 		++this->numOfDeltas;
-		if (this->numOfDeltas > kDeltaCounterMax)
+		if (this->numOfDeltas > DeltaCounterMax)
 		{
-			this->numOfDeltas = kDeltaCounterMax;
+			this->numOfDeltas = DeltaCounterMax;
 		}
 
 		// Update the Kalman filter.
 		this->E[0][0] += this->processNoise[0];
 		this->E[1][1] += this->processNoise[1];
 
-		if ((currentHypothesis == kBwOverusing && this->offset < this->prevOffset) ||
-		    (currentHypothesis == kBwUnderusing && this->offset > this->prevOffset))
+		if ((currentHypothesis == BwOverusing && this->offset < this->prevOffset) ||
+		    (currentHypothesis == BwUnderusing && this->offset > this->prevOffset))
 		{
 			this->E[1][1] += 10 * this->processNoise[1];
 		}
@@ -54,7 +54,7 @@ namespace RTC
 		                      this->E[1][0] * h[0] + this->E[1][1] * h[1]};
 
 		const double residual    = tTsDelta - this->slope * h[0] - this->offset;
-		const bool inStableState = (currentHypothesis == kBwNormal);
+		const bool inStableState = (currentHypothesis == BwNormal);
 		const double maxResidual = 3.0 * sqrt(this->varNoise);
 
 		// We try to filter out very late frames. For instance periodic key
@@ -104,7 +104,7 @@ namespace RTC
 
 		double minFramePeriod = tsDelta;
 
-		if (this->tsDeltaHist.size() >= kMinFramePeriodHistoryLength)
+		if (this->tsDeltaHist.size() >= MinFramePeriodHistoryLength)
 		{
 			this->tsDeltaHist.pop_front();
 		}
