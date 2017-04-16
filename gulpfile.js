@@ -78,7 +78,10 @@ gulp.task('tidy:worker:prepare', () =>
 
 gulp.task('tidy:worker:run', shell.task(
 	[
-		'cd worker && ./scripts/run-clang-tidy.py -header-filter=.*.hpp -p=. ' +
+		'cd worker && ./scripts/run-clang-tidy.py ' +
+		'-clang-tidy-binary=../node_modules/clang-tools-prebuilt/dist/bin/clang-tidy ' +
+		'-clang-apply-replacements-binary=../node_modules/clang-tools-prebuilt/dist/bin/clang-apply-replacements ' +
+		'-header-filter=.*.hpp -p=. ' +
 		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS !== undefined ? process.env.MEDIASOUP_TIDY_CHECKS : ''} ` +
 		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix' : ''} -j=${numCpus}`
 	],
