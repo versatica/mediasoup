@@ -36,35 +36,16 @@ const nodeTests =
 const compilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const numCpus = os.cpus().length;
 
-gulp.task('lint:node', () =>
+gulp.task('rtpcapabilities', () =>
 {
-	return gulp.src(nodeFiles)
-		.pipe(eslint())
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
-});
+	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
 
-gulp.task('lint:worker', () =>
-{
-	let src = workerFiles.concat(
-		// Remove Ragel generated files.
-		'!worker/src/Utils/IP.cpp'
-	);
-
-	return gulp.src(src)
-		.pipe(clangFormat.checkFormat('file', null, { verbose: true, fail: true }));
-});
-
-gulp.task('format:worker', () =>
-{
-	let src = workerFiles.concat(
-		// Remove Ragel generated files.
-		'!worker/src/Utils/IP.cpp'
-	);
-
-	return gulp.src(src, { base: '.' })
-		.pipe(clangFormat.format('file'))
-		.pipe(gulp.dest('.'));
+	return gulp.src('worker/src/RTC/Room.cpp')
+		// Let's generate valid syntax as expected by clang-format rules.
+		.pipe(replace(/(const std::string supportedRtpCapabilities =).*\r?\n.*/,
+			`$1\n\t\t\t    R"(${JSON.stringify(supportedRtpCapabilities)})";`))
+		.pipe(gulp.dest('worker/src/RTC/'))
+		.pipe(touch());
 });
 
 gulp.task('tidy:worker:prepare', () =>
@@ -93,6 +74,18 @@ gulp.task('tidy:worker:run', shell.task(
 	}
 ));
 
+gulp.task('format:worker', () =>
+{
+	let src = workerFiles.concat(
+		// Remove Ragel generated files.
+		'!worker/src/Utils/IP.cpp'
+	);
+
+	return gulp.src(src, { base: '.' })
+		.pipe(clangFormat.format('file'))
+		.pipe(gulp.dest('.'));
+});
+
 gulp.task('test:node', shell.task(
 	[
 		'if type make &> /dev/null; then make; fi',
@@ -116,23 +109,30 @@ gulp.task('test:worker', shell.task(
 	}
 ));
 
-gulp.task('rtpcapabilities', () =>
+gulp.task('lint:node', () =>
 {
-	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
-
-	return gulp.src('worker/src/RTC/Room.cpp')
-		// Let's generate valid syntax as expected by clang-format rules.
-		.pipe(replace(/(const std::string supportedRtpCapabilities =).*\r?\n.*/,
-			`$1\n\t\t\t    R"(${JSON.stringify(supportedRtpCapabilities)})";`))
-		.pipe(gulp.dest('worker/src/RTC/'))
-		.pipe(touch());
+	return gulp.src(nodeFiles)
+		.pipe(eslint())
+		.pipe(eslint.format())
+		.pipe(eslint.failAfterError());
 });
 
-gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
+gulp.task('lint:worker', () =>
+{
+	let src = workerFiles.concat(
+		// Remove Ragel generated files.
+		'!worker/src/Utils/IP.cpp'
+	);
+
+	return gulp.src(src)
+		.pipe(clangFormat.checkFormat('file', null, { verbose: true, fail: true }));
+});
+
+gulp.task('tidy', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
 
 gulp.task('format', gulp.series('format:worker'));
 
-gulp.task('tidy', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
+gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
 
 gulp.task('test', gulp.series('test:node', 'test:worker'));
 
