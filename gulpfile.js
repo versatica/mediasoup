@@ -78,7 +78,7 @@ gulp.task('tidy:worker:prepare', () =>
 
 gulp.task('tidy:worker:run', shell.task(
 	[
-		'cd worker && ./scripts/run-clang-tidy.py ' +
+		'cd worker && ./scripts/clang-tidy.py ' +
 		'-clang-tidy-binary=../node_modules/clang-tools-prebuilt/dist/bin/clang-tidy ' +
 		'-clang-apply-replacements-binary=../node_modules/clang-tools-prebuilt/dist/bin/clang-apply-replacements ' +
 		'-header-filter=.*.hpp -p=. ' +
