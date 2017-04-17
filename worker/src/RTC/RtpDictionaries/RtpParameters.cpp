@@ -327,7 +327,7 @@ namespace RTC
 
 	inline void RtpParameters::ValidateEncodings()
 	{
-		uint8_t firstMediaPayloadType;
+		uint8_t firstMediaPayloadType = 0;
 
 		{
 			auto it = this->codecs.begin();
