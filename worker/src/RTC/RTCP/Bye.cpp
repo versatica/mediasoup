@@ -17,8 +17,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Packet::CommonHeader* header =
-			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<ByePacket> packet(new ByePacket());
 
@@ -40,7 +39,7 @@ namespace RTC
 
 			if (len - offset > 0)
 			{
-				size_t length = size_t(Utils::Byte::Get1Byte(data, offset));
+				auto length = size_t(Utils::Byte::Get1Byte(data, offset));
 				offset += sizeof(uint8_t);
 				if (length <= len - offset)
 				{

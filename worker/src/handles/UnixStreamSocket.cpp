@@ -27,7 +27,7 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	UnixStreamSocket::UvWriteData* writeData = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
+	auto* writeData                          = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
 	UnixStreamSocket* socket                 = writeData->socket;
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
@@ -176,7 +176,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	size_t pendingLen = len - written;
 
 	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
+	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
 	writeData->socket = this;
 	std::memcpy(writeData->store, data + written, pendingLen);

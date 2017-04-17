@@ -17,7 +17,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// Packet size must be >= header size.
 			if (sizeof(Header) > len)
@@ -70,8 +70,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Packet::CommonHeader* header =
-			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
 

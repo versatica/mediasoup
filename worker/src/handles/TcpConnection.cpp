@@ -23,7 +23,7 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	TcpConnection::UvWriteData* writeData = static_cast<TcpConnection::UvWriteData*>(req->data);
+	auto* writeData                       = static_cast<TcpConnection::UvWriteData*>(req->data);
 	TcpConnection* connection             = writeData->connection;
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
@@ -201,7 +201,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 
 	size_t pendingLen = len - written;
 	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
+	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
 	writeData->connection = this;
 	std::memcpy(writeData->store, data + written, pendingLen);
@@ -262,7 +262,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	size_t pendingLen = totalLen - written;
 
 	// Allocate a special UvWriteData struct pointer.
-	UvWriteData* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
+	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
 	writeData->connection = this;
 	// If the first buffer was not entirely written then splice it.

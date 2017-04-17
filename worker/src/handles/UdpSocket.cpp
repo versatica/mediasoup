@@ -27,7 +27,7 @@ inline static void onRecv(
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
-	UdpSocket::UvSendData* sendData = static_cast<UdpSocket::UvSendData*>(req->data);
+	auto* sendData                  = static_cast<UdpSocket::UvSendData*>(req->data);
 	UdpSocket* socket               = sendData->socket;
 
 	// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
@@ -218,7 +218,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.
-	UvSendData* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
+	auto* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
 
 	sendData->socket = this;
 	std::memcpy(sendData->store, data, len);

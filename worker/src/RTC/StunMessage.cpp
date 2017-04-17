@@ -97,7 +97,7 @@ namespace RTC
 		while (pos + 4 <= len)
 		{
 			// Get the attribute type.
-			Attribute attrType = (Attribute)Utils::Byte::Get2Bytes(data, pos);
+			auto attrType = (Attribute)Utils::Byte::Get2Bytes(data, pos);
 
 			// Get the attribute length.
 			uint16_t attrLength = Utils::Byte::Get2Bytes(data, pos + 2);
@@ -186,7 +186,7 @@ namespace RTC
 				{
 					uint8_t errorClass  = Utils::Byte::Get1Byte(attrValuePos, 2);
 					uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
-					uint16_t errorCode  = (uint16_t)(errorClass * 100 + errorNumber);
+					auto errorCode      = (uint16_t)(errorClass * 100 + errorNumber);
 
 					msg->SetErrorCode(errorCode);
 
@@ -644,7 +644,7 @@ namespace RTC
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ERROR_CODE);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
 
-			uint8_t codeClass  = (uint8_t)(this->errorCode / 100);
+			auto codeClass     = (uint8_t)(this->errorCode / 100);
 			uint8_t codeNumber = (uint8_t)this->errorCode - (codeClass * 100);
 
 			Utils::Byte::Set2Bytes(buffer, pos + 4, 0);

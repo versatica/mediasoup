@@ -27,8 +27,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			CommonHeader* commonHeader =
-			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader));
 
@@ -41,7 +40,7 @@ namespace RTC
 		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader)
 		    : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
-			uint8_t* data = reinterpret_cast<uint8_t*>(commonHeader + 1);
+			auto* data = reinterpret_cast<uint8_t*>(commonHeader + 1);
 
 			if (Utils::Byte::Get4Bytes(data, 8) != uniqueIdentifier)
 			{

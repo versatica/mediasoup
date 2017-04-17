@@ -472,7 +472,7 @@ namespace RTC
 		// Otherwise check other stored tuples.
 		for (const auto& it : this->tuples)
 		{
-			RTC::TransportTuple* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
+			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
 
 			if (storedTuple->Compare(tuple))
 				return storedTuple;

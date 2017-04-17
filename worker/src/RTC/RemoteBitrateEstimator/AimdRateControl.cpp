@@ -30,7 +30,7 @@ namespace RTC
 		static const int RtcpSize           = 80;
 		const int64_t minFeedbackIntervalMs = 200;
 
-		int64_t interval =
+		auto interval =
 		    static_cast<int64_t>(RtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
 
 		return std::min(std::max(interval, minFeedbackIntervalMs), MaxFeedbackIntervalMs);
@@ -49,7 +49,7 @@ namespace RTC
 		{
 			// TODO(terelius/holmer): Investigate consequences of increasing
 			// the threshold to 0.95 * LatestEstimate().
-			const uint32_t threshold = static_cast<uint32_t>(0.5 * LatestEstimate());
+			const auto threshold = static_cast<uint32_t>(0.5 * LatestEstimate());
 
 			return incomingBitrateBps < threshold;
 		}

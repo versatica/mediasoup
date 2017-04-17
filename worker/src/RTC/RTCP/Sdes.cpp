@@ -34,7 +34,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// data size must be >= header + length value.
 			if (sizeof(uint8_t) * 2 + header->length > len)
@@ -183,8 +183,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Packet::CommonHeader* header =
-			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<SdesPacket> packet(new SdesPacket());
 			size_t offset = sizeof(Packet::CommonHeader);

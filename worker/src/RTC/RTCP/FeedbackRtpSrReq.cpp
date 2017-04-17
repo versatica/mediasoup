@@ -21,7 +21,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			CommonHeader* commonHeader = (CommonHeader*)data;
+			auto* commonHeader = (CommonHeader*)data;
 
 			return new FeedbackRtpSrReqPacket(commonHeader);
 		}

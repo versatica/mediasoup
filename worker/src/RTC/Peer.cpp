@@ -902,7 +902,7 @@ namespace RTC
 
 				case RTCP::Type::RR:
 				{
-					RTCP::ReceiverReportPacket* rr = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
+					auto* rr                       = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
 					auto it                        = rr->Begin();
 
 					for (; it != rr->End(); ++it)
@@ -928,13 +928,13 @@ namespace RTC
 
 				case RTCP::Type::PSFB:
 				{
-					RTCP::FeedbackPsPacket* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
+					auto* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
 
 					switch (feedback->GetMessageType())
 					{
 						case RTCP::FeedbackPs::MessageType::AFB:
 						{
-							RTCP::FeedbackPsAfbPacket* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+							auto* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
 
 							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
 								break;
@@ -996,7 +996,7 @@ namespace RTC
 
 				case RTCP::Type::RTPFB:
 				{
-					RTCP::FeedbackRtpPacket* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
+					auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
 
 					switch (feedback->GetMessageType())
 					{
@@ -1006,8 +1006,7 @@ namespace RTC
 
 							if (rtpSender != nullptr)
 							{
-								RTC::RTCP::FeedbackRtpNackPacket* nackPacket =
-								    dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+								auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
 								rtpSender->ReceiveNack(nackPacket);
 							}
@@ -1054,7 +1053,7 @@ namespace RTC
 
 				case RTCP::Type::SR:
 				{
-					RTCP::SenderReportPacket* sr = dynamic_cast<RTCP::SenderReportPacket*>(packet);
+					auto* sr                     = dynamic_cast<RTCP::SenderReportPacket*>(packet);
 					auto it                      = sr->Begin();
 
 					// Even if Sender Report packet can only contain one report..
@@ -1082,7 +1081,7 @@ namespace RTC
 
 				case RTCP::Type::SDES:
 				{
-					RTCP::SdesPacket* sdes = dynamic_cast<RTCP::SdesPacket*>(packet);
+					auto* sdes             = dynamic_cast<RTCP::SdesPacket*>(packet);
 					auto it                = sdes->Begin();
 
 					for (; it != sdes->End(); ++it)

@@ -16,10 +16,10 @@ namespace RTC
 		if (!RtpPacket::IsRtp(data, len))
 			return nullptr;
 
-		uint8_t* ptr = (uint8_t*)data;
+		auto* ptr = (uint8_t*)data;
 
 		// Get the header.
-		Header* header = reinterpret_cast<Header*>(ptr);
+		auto* header = reinterpret_cast<Header*>(ptr);
 
 		// Inspect data after the minimum header size.
 		// size_t pos = sizeof(Header);
@@ -252,7 +252,7 @@ namespace RTC
 		std::memcpy(buffer, GetData(), GetSize());
 
 		// Set header pointer pointing to the given buffer.
-		Header* header = reinterpret_cast<Header*>(ptr);
+		auto* header = reinterpret_cast<Header*>(ptr);
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
