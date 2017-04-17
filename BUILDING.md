@@ -70,18 +70,6 @@ The default task runs the `gulp:lint` and `gulp:test` tasks.
 
 Reads **mediasoup** [supported RTP capabilities](https://github.com/versatica/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
 
-### `gulp tidy`
-
-Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/).
-
-### `gulp format`
-
-Runs the `format:worker` gulp task.
-
-### `gulp format:worker`
-
-Rewrites all the worker source files and include files in order to satisfy the rules at `worker/.clang-format`.
-
 ### `gulp lint`
 
 Runs both the `lint:node` and `lint:worker` gulp tasks.
@@ -93,6 +81,22 @@ Validates the Node.js JavaScript code/syntax.
 ### `gulp lint:worker`
 
 Validates the worker C++ code/syntax against the `worker/.clang-format` rules.
+
+### `gulp format`
+
+Runs the `format:worker` gulp task.
+
+### `gulp format:worker`
+
+Rewrites worker source and include files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
+
+### `gulp tidy`
+
+Runs the `tidy:worker` gulp task.
+
+### `gulp tidy:worker`
+
+Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/).
 
 ### `gulp test`
 

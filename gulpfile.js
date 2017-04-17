@@ -33,11 +33,12 @@ const nodeTests =
 	// NOTE: Disable this test until adapted.
 	// 'test/test-scene-1.js'
 ];
-const compilationDatabaseTemplate = 'worker/compile_commands_template.json';
-const numCpus = os.cpus().length;
-const headerFilterRegex = '(common.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp' +
-	'|LogLevel.hpp|Logger.hpp|Loop.hpp|MediaSoupError.hpp|Settings.hpp|Utils.hpp' +
+const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
+const workerHeaderFilterRegex =
+	'(common.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp' +
+	'|Loop.hpp|MediaSoupError.hpp|Settings.hpp|Utils.hpp' +
 	'|handles/*.hpp|Channel/*.hpp|RTC/**/*.hpp)';
+const numCpus = os.cpus().length;
 
 gulp.task('rtpcapabilities', () =>
 {
@@ -51,32 +52,24 @@ gulp.task('rtpcapabilities', () =>
 		.pipe(touch());
 });
 
-gulp.task('tidy:worker:prepare', () =>
+gulp.task('lint:node', () =>
 {
-	return gulp.src(compilationDatabaseTemplate)
-		.pipe(replace(/PATH/gm, __dirname))
-		.pipe(rename('compile_commands.json'))
-		.pipe(gulp.dest('worker'))
-		.pipe(touch());
+	return gulp.src(nodeFiles)
+		.pipe(eslint())
+		.pipe(eslint.format())
+		.pipe(eslint.failAfterError());
 });
 
-gulp.task('tidy:worker:run', shell.task(
-	[
-		'cd worker && ' +
-		'./scripts/clang-tidy.py ' +
-		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
-		'-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements ' +
-		`-header-filter='${headerFilterRegex}' ` +
-		'-p=. ' +
-		`-j=${numCpus} ` +
-		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS || ''} ` +
-		'-quiet ' +
-		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix -format' : ''}`
-	],
-	{
-		verbose : true
-	}
-));
+gulp.task('lint:worker', () =>
+{
+	let src = workerFiles.concat(
+		// Remove Ragel generated files.
+		'!worker/src/Utils/IP.cpp'
+	);
+
+	return gulp.src(src)
+		.pipe(clangFormat.checkFormat('file', null, { verbose: true, fail: true }));
+});
 
 gulp.task('format:worker', () =>
 {
@@ -89,6 +82,35 @@ gulp.task('format:worker', () =>
 		.pipe(clangFormat.format('file'))
 		.pipe(gulp.dest('.'));
 });
+
+gulp.task('tidy:worker:prepare', () =>
+{
+	return gulp.src(workerCompilationDatabaseTemplate)
+		.pipe(replace(/PATH/gm, __dirname))
+		.pipe(rename('compile_commands.json'))
+		.pipe(gulp.dest('worker'))
+		.pipe(touch());
+});
+
+gulp.task('tidy:worker:run', shell.task(
+	[
+		'cd worker && ' +
+		'./scripts/clang-tidy.py ' +
+		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
+		'-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements ' +
+		`-header-filter='${workerHeaderFilterRegex}' ` +
+		'-p=. ' +
+		`-j=${numCpus} ` +
+		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS || ''} ` +
+		'-quiet ' +
+		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix -format' : ''}`
+	],
+	{
+		verbose : true
+	}
+));
+
+gulp.task('tidy:worker', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
 
 gulp.task('test:node', shell.task(
 	[
@@ -113,30 +135,11 @@ gulp.task('test:worker', shell.task(
 	}
 ));
 
-gulp.task('lint:node', () =>
-{
-	return gulp.src(nodeFiles)
-		.pipe(eslint())
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
-});
-
-gulp.task('lint:worker', () =>
-{
-	let src = workerFiles.concat(
-		// Remove Ragel generated files.
-		'!worker/src/Utils/IP.cpp'
-	);
-
-	return gulp.src(src)
-		.pipe(clangFormat.checkFormat('file', null, { verbose: true, fail: true }));
-});
-
-gulp.task('tidy', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
+gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
 
 gulp.task('format', gulp.series('format:worker'));
 
-gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
+gulp.task('tidy', gulp.series('tidy:worker'));
 
 gulp.task('test', gulp.series('test:node', 'test:worker'));
 
