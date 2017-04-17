@@ -52,7 +52,7 @@ namespace RTC
 		{
 			return;
 		}
-		else if (seq32 == this->lastSeq32 + 1)
+		if (seq32 == this->lastSeq32 + 1)
 		{
 			this->lastSeq32++;
 

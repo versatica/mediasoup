@@ -239,10 +239,8 @@ namespace RTC
 						break;
 					}
 					// It can not be after this packet.
-					else if (currentSeq32 > seq32)
-					{
+					if (currentSeq32 > seq32)
 						break;
-					}
 				}
 			}
 

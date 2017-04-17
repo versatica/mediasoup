@@ -365,10 +365,8 @@ namespace RTC
 
 			return peer;
 		}
-		else
-		{
-			return nullptr;
-		}
+
+		return nullptr;
 	}
 
 	void Room::SetCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs)

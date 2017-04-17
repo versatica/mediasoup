@@ -384,8 +384,8 @@ namespace RTC
 							// Must be a media codec.
 							if (codec.mime.IsMediaCodec())
 								break;
-							else
-								MS_THROW_ERROR("invalid encoding.codecPayloadType");
+
+							MS_THROW_ERROR("invalid encoding.codecPayloadType");
 						}
 					}
 					if (it == this->codecs.end())

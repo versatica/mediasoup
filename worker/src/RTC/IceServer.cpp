@@ -242,24 +242,22 @@ namespace RTC
 			return;
 		}
 		// Otherwise this was the selected tuple.
+
+		this->tuples.erase(it);
+		this->selectedTuple = nullptr;
+
+		// Mark the first tuple as selected tuple (if any).
+		if (this->tuples.begin() != this->tuples.end())
+		{
+			SetSelectedTuple(std::addressof(*this->tuples.begin()));
+		}
+		// Or just emit 'disconnected'.
 		else
 		{
-			this->tuples.erase(it);
-			this->selectedTuple = nullptr;
-
-			// Mark the first tuple as selected tuple (if any).
-			if (this->tuples.begin() != this->tuples.end())
-			{
-				SetSelectedTuple(std::addressof(*this->tuples.begin()));
-			}
-			// Or just emit 'disconnected'.
-			else
-			{
-				// Update state.
-				this->state = IceState::DISCONNECTED;
-				// Notify the listener.
-				this->listener->OnIceDisconnected(this);
-			}
+			// Update state.
+			this->state = IceState::DISCONNECTED;
+			// Notify the listener.
+			this->listener->OnIceDisconnected(this);
 		}
 	}
 

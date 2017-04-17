@@ -200,7 +200,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	{
 		return;
 	}
-	else if (sent >= 0)
+	if (sent >= 0)
 	{
 		MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 

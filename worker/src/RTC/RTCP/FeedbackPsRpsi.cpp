@@ -28,8 +28,8 @@ namespace RTC
 
 			if (item->IsCorrect())
 				return item.release();
-			else
-				return nullptr;
+
+			return nullptr;
 		}
 
 		/* Instance methods. */

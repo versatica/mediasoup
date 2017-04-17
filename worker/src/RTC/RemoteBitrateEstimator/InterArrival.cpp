@@ -91,10 +91,8 @@ namespace RTC
 
 					return false;
 				}
-				else
-				{
-					this->numConsecutiveReorderedPackets = 0;
-				}
+
+				this->numConsecutiveReorderedPackets = 0;
 
 				MS_ASSERT(*arrivalTimeDeltaMs >= 0, "invalid arrivalTimeDeltaMs value");
 
@@ -127,18 +125,14 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->currentTimestampGroup.IsFirstPacket())
-		{
 			return true;
-		}
-		else
-		{
-			// Assume that a diff which is bigger than half the timestamp interval
-			// (32 bits) must be due to reordering. This code is almost identical to
-			// that in IsNewerTimestamp() in module_common_types.h.
-			uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
 
-			return timestampDiff < 0x80000000;
-		}
+		// Assume that a diff which is bigger than half the timestamp interval
+		// (32 bits) must be due to reordering. This code is almost identical to
+		// that in IsNewerTimestamp() in module_common_types.h.
+		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
+
+		return timestampDiff < 0x80000000;
 	}
 
 	// Assumes that |timestamp| is not reordered compared to
@@ -148,13 +142,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->currentTimestampGroup.IsFirstPacket())
-		{
 			return false;
-		}
-		else if (BelongsToBurst(arrivalTimeMs, timestamp))
-		{
+		if (BelongsToBurst(arrivalTimeMs, timestamp))
 			return false;
-		}
 		else
 		{
 			uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;

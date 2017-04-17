@@ -634,7 +634,7 @@ namespace RTC
 
 				if (encoding.ssrc == ssrc)
 					return rtpSender;
-				else if (encoding.hasFec && encoding.fec.ssrc == ssrc)
+				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
 					return rtpSender;
 				else if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
 					return rtpSender;
@@ -733,10 +733,8 @@ namespace RTC
 
 			return transport;
 		}
-		else
-		{
-			return nullptr;
-		}
+
+		return nullptr;
 	}
 
 	RTC::RtpReceiver* Peer::GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId) const
@@ -760,10 +758,8 @@ namespace RTC
 
 			return rtpReceiver;
 		}
-		else
-		{
-			return nullptr;
-		}
+
+		return nullptr;
 	}
 
 	RTC::RtpSender* Peer::GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId) const
@@ -787,10 +783,8 @@ namespace RTC
 
 			return rtpSender;
 		}
-		else
-		{
-			return nullptr;
-		}
+
+		return nullptr;
 	}
 
 	void Peer::OnTransportConnected(RTC::Transport* transport)

@@ -929,7 +929,7 @@ namespace RTC
 		{
 			return true;
 		}
-		else if (timeoutMs < 30000)
+		if (timeoutMs < 30000)
 		{
 			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeoutMs);
 

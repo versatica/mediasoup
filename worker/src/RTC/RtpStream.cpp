@@ -121,7 +121,7 @@ namespace RTC
 
 			return false;
 		}
-		else if (udelta < MaxDropout)
+		if (udelta < MaxDropout)
 		{
 			// In order, with permissible gap.
 			if (seq < this->maxSeq)

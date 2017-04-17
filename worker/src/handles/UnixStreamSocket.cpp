@@ -158,7 +158,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		return;
 	}
 	// Cannot write any data at first time. Use uv_write().
-	else if (written == UV_EAGAIN || written == UV_ENOSYS)
+	if (written == UV_EAGAIN || written == UV_ENOSYS)
 	{
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;

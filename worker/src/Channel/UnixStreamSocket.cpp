@@ -319,10 +319,8 @@ namespace Channel
 			{
 				continue;
 			}
-			else
-			{
-				break;
-			}
+
+			break;
 		}
 	}
 

@@ -91,10 +91,8 @@ namespace RTC
 
 					continue;
 				}
-				else
-				{
-					break;
-				}
+
+				break;
 			}
 
 			// Incomplete packet.

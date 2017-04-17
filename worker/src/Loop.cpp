@@ -100,10 +100,8 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 
 		return room;
 	}
-	else
-	{
-		return nullptr;
-	}
+
+	return nullptr;
 }
 
 void Loop::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
