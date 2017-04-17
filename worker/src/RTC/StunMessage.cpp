@@ -278,14 +278,14 @@ namespace RTC
 		}
 		MS_DUMP("  size: %zu bytes", this->size);
 
-		static char TransactionId[25];
+		static char transactionId[25];
 
 		for (int i = 0; i < 12; ++i)
 		{
 			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
-			std::snprintf(TransactionId + (i * 2), 3, "%.2x", this->transactionId[i]);
+			std::snprintf(transactionId + (i * 2), 3, "%.2x", this->transactionId[i]);
 		}
-		MS_DUMP("  transactionId: %s", TransactionId);
+		MS_DUMP("  transactionId: %s", transactionId);
 		if (this->errorCode)
 			MS_DUMP("  errorCode: %" PRIu16, this->errorCode);
 		if (!this->username.empty())
@@ -310,14 +310,14 @@ namespace RTC
 		}
 		if (this->messageIntegrity)
 		{
-			static char MessageIntegrity[41];
+			static char messageIntegrity[41];
 
 			for (int i = 0; i < 20; ++i)
 			{
-				std::snprintf(MessageIntegrity + (i * 2), 3, "%.2x", this->messageIntegrity[i]);
+				std::snprintf(messageIntegrity + (i * 2), 3, "%.2x", this->messageIntegrity[i]);
 			}
 
-			MS_DUMP("  messageIntegrity: %s", MessageIntegrity);
+			MS_DUMP("  messageIntegrity: %s", messageIntegrity);
 		}
 		if (this->hasFingerprint)
 			MS_DUMP("  fingerprint");
