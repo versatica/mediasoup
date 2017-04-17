@@ -244,7 +244,7 @@ namespace RTC
 				}
 			}
 
-			requested = (bitmask & 1) != 0 ? true : false;
+			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
 			++seq32;
 

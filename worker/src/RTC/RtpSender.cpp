@@ -77,7 +77,7 @@ namespace RTC
 		else
 			json[JsonStringRtpParameters] = Json::nullValue;
 
-		json[JsonStringHasTransport] = this->transport != nullptr ? true : false;
+		json[JsonStringHasTransport] = this->transport != nullptr;
 
 		json[JsonStringActive] = this->GetActive();
 
@@ -171,7 +171,7 @@ namespace RTC
 		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
-		bool hadParameters = this->rtpParameters != nullptr ? true : false;
+		bool hadParameters = this->rtpParameters != nullptr;
 
 		// Free the previous rtpParameters.
 		if (hadParameters)

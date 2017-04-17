@@ -108,7 +108,7 @@ namespace Channel
 		static const Json::StaticString JsonStringAccepted("accepted");
 		static const Json::StaticString JsonStringData("data");
 
-		MS_ASSERT(this->replied == false, "Request already replied");
+		MS_ASSERT(!this->replied, "Request already replied");
 
 		this->replied = true;
 
@@ -144,7 +144,7 @@ namespace Channel
 		static const Json::StaticString JsonStringRejected("rejected");
 		static const Json::StaticString JsonStringReason("reason");
 
-		MS_ASSERT(this->replied == false, "Request already replied");
+		MS_ASSERT(!this->replied, "Request already replied");
 
 		this->replied = true;
 

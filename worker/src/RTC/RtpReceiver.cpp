@@ -77,7 +77,7 @@ namespace RTC
 		else
 			json[JsonStringRtpParameters] = Json::nullValue;
 
-		json[JsonStringHasTransport] = this->transport != nullptr ? true : false;
+		json[JsonStringHasTransport] = this->transport != nullptr;
 
 		json[JsonStringRtpRawEventEnabled] = this->rtpRawEventEnabled;
 

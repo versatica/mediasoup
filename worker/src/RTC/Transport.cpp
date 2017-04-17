@@ -365,7 +365,7 @@ namespace RTC
 		}
 
 		// Add `useRemb`.
-		json[JsonStringUseRemb] = (this->remoteBitrateEstimator ? true : false);
+		json[JsonStringUseRemb] = (static_cast<bool>(this->remoteBitrateEstimator));
 
 		// Add `maxBitrate`.
 		json[JsonStringMaxBitrate] = (Json::UInt)this->maxBitrate;

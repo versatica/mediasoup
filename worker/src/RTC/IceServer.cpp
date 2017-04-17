@@ -210,7 +210,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return HasTuple(tuple) != nullptr ? true : false;
+		return HasTuple(tuple) != nullptr;
 	}
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
