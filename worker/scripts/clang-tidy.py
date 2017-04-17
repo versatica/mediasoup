@@ -92,6 +92,8 @@ def apply_fixes(args, tmpdir):
   invocation = [args.clang_apply_replacements_binary]
   if args.format:
     invocation.append('-format')
+    invocation.append('-style=file')
+    invocation.append('-style-config=../')
   invocation.append(tmpdir)
   subprocess.call(invocation)
   shutil.rmtree(tmpdir)

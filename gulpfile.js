@@ -67,7 +67,7 @@ gulp.task('tidy:worker:run', shell.task(
 		'-p=. ' +
 		`-j=${numCpus} ` +
 		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS || ''} ` +
-		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix' : ''}`
+		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix -format' : ''}`
 	],
 	{
 		verbose : true
