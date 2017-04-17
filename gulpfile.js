@@ -9,7 +9,7 @@ const shell = require('gulp-shell');
 const clangFormat = require('gulp-clang-format');
 const os = require('os');
 
-let nodeFiles =
+const nodeFiles =
 [
 	'.eslintrc.js',
 	'gulpfile.js',
