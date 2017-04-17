@@ -401,10 +401,10 @@ void Settings::SetRtcIPv4(const std::string& ip)
 {
 	MS_TRACE();
 
-	if (ip.compare("true") == 0)
+	if (ip == "true")
 		return;
 
-	if (ip.empty() || ip.compare("false") == 0)
+	if (ip.empty() || ip == "false")
 	{
 		Settings::configuration.rtcIPv4.clear();
 		Settings::configuration.hasIPv4 = false;
@@ -436,10 +436,10 @@ void Settings::SetRtcIPv6(const std::string& ip)
 {
 	MS_TRACE();
 
-	if (ip.compare("true") == 0)
+	if (ip == "true")
 		return;
 
-	if (ip.empty() || ip.compare("false") == 0)
+	if (ip.empty() || ip == "false")
 	{
 		Settings::configuration.rtcIPv6.clear();
 		Settings::configuration.hasIPv6 = false;

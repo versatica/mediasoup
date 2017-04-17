@@ -1063,7 +1063,7 @@ namespace RTC
 		}
 		hexFingerprint[size * 2] = '\0';
 
-		if (this->remoteFingerprint.value.compare(hexFingerprint) != 0)
+		if (this->remoteFingerprint.value != hexFingerprint)
 		{
 			MS_WARN_TAG(
 			    dtls,
