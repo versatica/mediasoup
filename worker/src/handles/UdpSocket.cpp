@@ -142,8 +142,7 @@ UdpSocket::~UdpSocket()
 {
 	MS_TRACE();
 
-	if (this->uvHandle)
-		delete this->uvHandle;
+	delete this->uvHandle;
 }
 
 void UdpSocket::Destroy()

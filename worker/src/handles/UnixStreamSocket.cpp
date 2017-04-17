@@ -97,10 +97,8 @@ UnixStreamSocket::~UnixStreamSocket()
 {
 	MS_TRACE_STD();
 
-	if (this->uvHandle)
-		delete this->uvHandle;
-	if (this->buffer)
-		delete[] this->buffer;
+	delete this->uvHandle;
+	delete[] this->buffer;
 }
 
 void UnixStreamSocket::Destroy()

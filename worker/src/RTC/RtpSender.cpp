@@ -33,11 +33,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->rtpParameters)
-			delete this->rtpParameters;
-
-		if (this->rtpStream)
-			delete this->rtpStream;
+		delete this->rtpParameters;
+		delete this->rtpStream;
 	}
 
 	void RtpSender::Destroy()

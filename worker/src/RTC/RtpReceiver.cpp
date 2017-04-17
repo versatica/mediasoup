@@ -29,8 +29,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->rtpParameters)
-			delete this->rtpParameters;
+		delete this->rtpParameters;
 
 		ClearRtpStreams();
 	}
@@ -157,8 +156,7 @@ namespace RTC
 				}
 
 				// Free the previous parameters.
-				if (previousRtpParameters)
-					delete previousRtpParameters;
+				delete previousRtpParameters;
 
 				// Free previous RTP streams.
 				ClearRtpStreams();

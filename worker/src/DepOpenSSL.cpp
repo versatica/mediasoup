@@ -73,8 +73,8 @@ void DepOpenSSL::ClassDestroy()
 	{
 		uv_mutex_destroy(&DepOpenSSL::mutexes[i]);
 	}
-	if (DepOpenSSL::mutexes)
-		delete[] DepOpenSSL::mutexes;
+
+	delete[] DepOpenSSL::mutexes;
 
 	// Reset callbacks.
 	CRYPTO_THREADID_set_callback(nullptr);

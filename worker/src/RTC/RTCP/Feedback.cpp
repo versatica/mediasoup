@@ -63,8 +63,7 @@ namespace RTC
 		template<typename T>
 		FeedbackPacket<T>::~FeedbackPacket<T>()
 		{
-			if (this->raw)
-				delete this->raw;
+			delete this->raw;
 		}
 
 		/* Instance methods. */

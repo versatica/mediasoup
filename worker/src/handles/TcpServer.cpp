@@ -118,8 +118,7 @@ TcpServer::~TcpServer()
 {
 	MS_TRACE();
 
-	if (this->uvHandle)
-		delete this->uvHandle;
+	delete this->uvHandle;
 }
 
 void TcpServer::Destroy()
