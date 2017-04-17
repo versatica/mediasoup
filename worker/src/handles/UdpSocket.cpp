@@ -27,8 +27,8 @@ inline static void onRecv(
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
-	auto* sendData                  = static_cast<UdpSocket::UvSendData*>(req->data);
-	UdpSocket* socket               = sendData->socket;
+	auto* sendData    = static_cast<UdpSocket::UvSendData*>(req->data);
+	UdpSocket* socket = sendData->socket;
 
 	// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 	std::free(sendData);

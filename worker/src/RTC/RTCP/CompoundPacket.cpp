@@ -45,8 +45,8 @@ namespace RTC
 				offset = this->senderReportPacket.GetSize();
 
 				// Fix header count field.
-				auto* header                 = reinterpret_cast<Packet::CommonHeader*>(this->header);
-				header->count                = 0;
+				auto* header  = reinterpret_cast<Packet::CommonHeader*>(this->header);
+				header->count = 0;
 
 				if (this->receiverReportPacket.GetCount() != 0u)
 				{

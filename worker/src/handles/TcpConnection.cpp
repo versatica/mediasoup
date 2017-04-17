@@ -23,8 +23,8 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	auto* writeData                       = static_cast<TcpConnection::UvWriteData*>(req->data);
-	TcpConnection* connection             = writeData->connection;
+	auto* writeData           = static_cast<TcpConnection::UvWriteData*>(req->data);
+	TcpConnection* connection = writeData->connection;
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
 	std::free(writeData);

@@ -902,8 +902,8 @@ namespace RTC
 
 				case RTCP::Type::RR:
 				{
-					auto* rr                       = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
-					auto it                        = rr->Begin();
+					auto* rr = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
+					auto it  = rr->Begin();
 
 					for (; it != rr->End(); ++it)
 					{
@@ -1053,8 +1053,8 @@ namespace RTC
 
 				case RTCP::Type::SR:
 				{
-					auto* sr                     = dynamic_cast<RTCP::SenderReportPacket*>(packet);
-					auto it                      = sr->Begin();
+					auto* sr = dynamic_cast<RTCP::SenderReportPacket*>(packet);
+					auto it  = sr->Begin();
 
 					// Even if Sender Report packet can only contain one report..
 					for (; it != sr->End(); ++it)
@@ -1081,8 +1081,8 @@ namespace RTC
 
 				case RTCP::Type::SDES:
 				{
-					auto* sdes             = dynamic_cast<RTCP::SdesPacket*>(packet);
-					auto it                = sdes->Begin();
+					auto* sdes = dynamic_cast<RTCP::SdesPacket*>(packet);
+					auto it    = sdes->Begin();
 
 					for (; it != sdes->End(); ++it)
 					{

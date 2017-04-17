@@ -212,8 +212,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* commonHeader         = (CommonHeader*)data;
-			FeedbackRtpPacket* packet  = nullptr;
+			auto* commonHeader        = (CommonHeader*)data;
+			FeedbackRtpPacket* packet = nullptr;
 
 			switch (FeedbackRtp::MessageType(commonHeader->count))
 			{
