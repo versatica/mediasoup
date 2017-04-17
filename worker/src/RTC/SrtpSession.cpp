@@ -105,7 +105,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->session)
+		if (this->session != nullptr)
 		{
 			srtp_err_status_t err;
 

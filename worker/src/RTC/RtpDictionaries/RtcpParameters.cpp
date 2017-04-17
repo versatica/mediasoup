@@ -52,7 +52,7 @@ namespace RTC
 			json[JsonStringCname] = this->cname;
 
 		// Add `ssrc`.
-		if (this->ssrc)
+		if (this->ssrc != 0u)
 			json[JsonStringSsrc] = (Json::UInt)this->ssrc;
 
 		// Add `reducedSize`.

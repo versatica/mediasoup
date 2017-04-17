@@ -215,16 +215,16 @@ namespace RTC
 
 		Json::Value eventData(Json::objectValue);
 
-		if (this->srtpRecvSession)
+		if (this->srtpRecvSession != nullptr)
 			this->srtpRecvSession->Destroy();
 
-		if (this->srtpSendSession)
+		if (this->srtpSendSession != nullptr)
 			this->srtpSendSession->Destroy();
 
-		if (this->dtlsTransport)
+		if (this->dtlsTransport != nullptr)
 			this->dtlsTransport->Destroy();
 
-		if (this->iceServer)
+		if (this->iceServer != nullptr)
 			this->iceServer->Destroy();
 
 		for (auto socket : this->udpSockets)
@@ -304,7 +304,7 @@ namespace RTC
 		}
 
 		// Add `iceSelectedTuple`.
-		if (this->selectedTuple)
+		if (this->selectedTuple != nullptr)
 			json[JsonStringIceSelectedTuple] = this->selectedTuple->ToJson();
 
 		// Add `iceState`.
@@ -570,11 +570,11 @@ namespace RTC
 		MS_TRACE();
 
 		// If there is no selected tuple do nothing.
-		if (!this->selectedTuple)
+		if (this->selectedTuple == nullptr)
 			return;
 
 		// Ensure there is sending SRTP session.
-		if (!this->srtpSendSession)
+		if (this->srtpSendSession == nullptr)
 		{
 			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
 
@@ -595,11 +595,11 @@ namespace RTC
 		MS_TRACE();
 
 		// If there is no selected tuple do nothing.
-		if (!this->selectedTuple)
+		if (this->selectedTuple == nullptr)
 			return;
 
 		// Ensure there is sending SRTP session.
-		if (!this->srtpSendSession)
+		if (this->srtpSendSession == nullptr)
 		{
 			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
 
@@ -620,11 +620,11 @@ namespace RTC
 		MS_TRACE();
 
 		// If there is no selected tuple do nothing.
-		if (!this->selectedTuple)
+		if (this->selectedTuple == nullptr)
 			return;
 
 		// Ensure there is sending SRTP session.
-		if (!this->srtpSendSession)
+		if (this->srtpSendSession == nullptr)
 		{
 			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
 
@@ -730,7 +730,7 @@ namespace RTC
 		MS_TRACE();
 
 		RTC::StunMessage* msg = RTC::StunMessage::Parse(data, len);
-		if (!msg)
+		if (msg == nullptr)
 		{
 			MS_WARN_DEV("ignoring wrong STUN message received");
 
@@ -787,7 +787,7 @@ namespace RTC
 		}
 
 		// Ensure there is receiving SRTP session.
-		if (!this->srtpRecvSession)
+		if (this->srtpRecvSession == nullptr)
 		{
 			MS_DEBUG_TAG(srtp, "ignoring RTP packet due to non receiving SRTP session");
 
@@ -807,7 +807,7 @@ namespace RTC
 		{
 			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
-			if (!packet)
+			if (packet == nullptr)
 			{
 				MS_WARN_TAG(srtp, "DecryptSrtp() failed due to an invalid RTP packet");
 			}
@@ -828,7 +828,7 @@ namespace RTC
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
-		if (!packet)
+		if (packet == nullptr)
 		{
 			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
 
@@ -838,7 +838,7 @@ namespace RTC
 		// Get the associated RtpReceiver.
 		RTC::RtpReceiver* rtpReceiver = this->rtpListener.GetRtpReceiver(packet);
 
-		if (!rtpReceiver)
+		if (rtpReceiver == nullptr)
 		{
 			MS_WARN_TAG(
 			    rtp,
@@ -891,7 +891,7 @@ namespace RTC
 		}
 
 		// Ensure there is receiving SRTP session.
-		if (!this->srtpRecvSession)
+		if (this->srtpRecvSession == nullptr)
 		{
 			MS_DEBUG_TAG(srtp, "ignoring RTCP packet due to non receiving SRTP session");
 
@@ -912,7 +912,7 @@ namespace RTC
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 
-		if (!packet)
+		if (packet == nullptr)
 		{
 			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 
@@ -925,7 +925,7 @@ namespace RTC
 		// this->iceServer->ForceSelectedTuple(tuple);
 
 		// Delete the whole packet.
-		while (packet)
+		while (packet != nullptr)
 		{
 			RTC::RTCP::Packet* nextPacket = packet->GetNext();
 
@@ -1103,12 +1103,12 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connected");
 
 		// Close it if it was already set and update it.
-		if (this->srtpSendSession)
+		if (this->srtpSendSession != nullptr)
 		{
 			this->srtpSendSession->Destroy();
 			this->srtpSendSession = nullptr;
 		}
-		if (this->srtpRecvSession)
+		if (this->srtpRecvSession != nullptr)
 		{
 			this->srtpRecvSession->Destroy();
 			this->srtpRecvSession = nullptr;
@@ -1193,7 +1193,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->selectedTuple)
+		if (this->selectedTuple == nullptr)
 		{
 			MS_WARN_TAG(dtls, "no selected tuple set, cannot send DTLS packet");
 
@@ -1219,7 +1219,7 @@ namespace RTC
 		uint64_t now = DepLibUV::GetTime();
 
 		// Limit bitrate if requested via API.
-		if (this->maxBitrate)
+		if (this->maxBitrate != 0u)
 			effectiveBitrate = std::min(bitrate, this->maxBitrate);
 		else
 			effectiveBitrate = bitrate;
@@ -1250,7 +1250,7 @@ namespace RTC
 		// has decreased abruptly.
 		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
 		{
-			if (bitrate && this->effectiveMaxBitrate &&
+			if ((bitrate != 0u) && (this->effectiveMaxBitrate != 0u) &&
 			    (double)effectiveBitrate / (double)this->effectiveMaxBitrate <
 			        EffectiveMaxBitrateThresholdBeforeFullFrame)
 			{

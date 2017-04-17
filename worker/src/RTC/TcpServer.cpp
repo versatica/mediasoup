@@ -47,7 +47,7 @@ namespace RTC
 			    0,
 			    (struct sockaddr_in*)&RTC::TcpServer::sockaddrStorageIPv4);
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -58,7 +58,7 @@ namespace RTC
 			    0,
 			    (struct sockaddr_in6*)&RTC::TcpServer::sockaddrStorageIPv6);
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -168,14 +168,14 @@ namespace RTC
 			uvHandle = new uv_tcp_t();
 
 			err = uv_tcp_init(DepLibUV::GetLoop(), uvHandle);
-			if (err)
+			if (err != 0)
 			{
 				delete uvHandle;
 				MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 			}
 
 			err = uv_tcp_bind(uvHandle, (const struct sockaddr*)&bindAddr, flags);
-			if (err)
+			if (err != 0)
 			{
 				MS_WARN_DEV(
 				    "uv_tcp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s",

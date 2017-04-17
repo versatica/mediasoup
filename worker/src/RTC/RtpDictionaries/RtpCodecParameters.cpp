@@ -144,11 +144,11 @@ namespace RTC
 		json[JsonStringClockRate] = (Json::UInt)this->clockRate;
 
 		// Add `maxptime`.
-		if (this->maxptime)
+		if (this->maxptime != 0u)
 			json[JsonStringMaxptime] = (Json::UInt)this->maxptime;
 
 		// Add `ptime`.
-		if (this->ptime)
+		if (this->ptime != 0u)
 			json[JsonStringPtime] = (Json::UInt)this->ptime;
 
 		// Add `numChannels`.

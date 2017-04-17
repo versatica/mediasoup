@@ -48,7 +48,7 @@ namespace RTC
 		uint16_t msgLength = Utils::Byte::Get2Bytes(data, 2);
 
 		// length field must be total size minus header's 20 bytes, and must be multiple of 4 Bytes.
-		if (((size_t)msgLength != len - 20) || (msgLength & 0x03))
+		if (((size_t)msgLength != len - 20) || ((msgLength & 0x03) != 0))
 		{
 			MS_WARN_TAG(
 			    ice,
@@ -286,19 +286,19 @@ namespace RTC
 			std::snprintf(transactionId + (i * 2), 3, "%.2x", this->transactionId[i]);
 		}
 		MS_DUMP("  transactionId: %s", transactionId);
-		if (this->errorCode)
+		if (this->errorCode != 0u)
 			MS_DUMP("  errorCode: %" PRIu16, this->errorCode);
 		if (!this->username.empty())
 			MS_DUMP("  username: %s", this->username.c_str());
-		if (this->priority)
+		if (this->priority != 0u)
 			MS_DUMP("  priority: %" PRIu32, this->priority);
-		if (this->iceControlling)
+		if (this->iceControlling != 0u)
 			MS_DUMP("  iceControlling: %" PRIu64, this->iceControlling);
-		if (this->iceControlled)
+		if (this->iceControlled != 0u)
 			MS_DUMP("  iceControlled: %" PRIu64, this->iceControlled);
 		if (this->hasUseCandidate)
 			MS_DUMP("  useCandidate");
-		if (this->xorMappedAddress)
+		if (this->xorMappedAddress != nullptr)
 		{
 			int family;
 			uint16_t port;
@@ -308,7 +308,7 @@ namespace RTC
 
 			MS_DUMP("  xorMappedAddress: %s : %" PRIu16, ip.c_str(), port);
 		}
-		if (this->messageIntegrity)
+		if (this->messageIntegrity != nullptr)
 		{
 			static char messageIntegrity[41];
 
@@ -336,7 +336,7 @@ namespace RTC
 			case Class::INDICATION:
 			{
 				// Both USERNAME and MESSAGE-INTEGRITY must be present.
-				if (!this->messageIntegrity || this->username.empty())
+				if ((this->messageIntegrity == nullptr) || this->username.empty())
 					return Authentication::BAD_REQUEST;
 
 				// Check that USERNAME attribute begins with our local username plus ":".
@@ -433,9 +433,9 @@ namespace RTC
 		uint16_t usernamePaddedLen         = 0;
 		uint16_t xorMappedAddressPaddedLen = 0;
 		bool addXorMappedAddress =
-		    (this->xorMappedAddress && this->method == StunMessage::Method::BINDING &&
+		    ((this->xorMappedAddress != nullptr) && this->method == StunMessage::Method::BINDING &&
 		     this->klass == Class::SUCCESS_RESPONSE);
-		bool addErrorCode        = (this->errorCode && this->klass == Class::ERROR_RESPONSE);
+		bool addErrorCode        = ((this->errorCode != 0u) && this->klass == Class::ERROR_RESPONSE);
 		bool addMessageIntegrity = (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
 		bool addFingerprint      = true; // Do always.
 
@@ -451,13 +451,13 @@ namespace RTC
 			this->size += 4 + usernamePaddedLen;
 		}
 
-		if (this->priority)
+		if (this->priority != 0u)
 			this->size += 4 + 4;
 
-		if (this->iceControlling)
+		if (this->iceControlling != 0u)
 			this->size += 4 + 8;
 
-		if (this->iceControlled)
+		if (this->iceControlled != 0u)
 			this->size += 4 + 8;
 
 		if (this->hasUseCandidate)
@@ -526,7 +526,7 @@ namespace RTC
 		size_t pos = 20;
 
 		// Add USERNAME.
-		if (usernamePaddedLen)
+		if (usernamePaddedLen != 0u)
 		{
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::USERNAME);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, (uint16_t)this->username.length());
@@ -535,7 +535,7 @@ namespace RTC
 		}
 
 		// Add PRIORITY.
-		if (this->priority)
+		if (this->priority != 0u)
 		{
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::PRIORITY);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
@@ -544,7 +544,7 @@ namespace RTC
 		}
 
 		// Add ICE-CONTROLLING.
-		if (this->iceControlling)
+		if (this->iceControlling != 0u)
 		{
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ICE_CONTROLLING);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 8);
@@ -553,7 +553,7 @@ namespace RTC
 		}
 
 		// Add ICE-CONTROLLED.
-		if (this->iceControlled)
+		if (this->iceControlled != 0u)
 		{
 			Utils::Byte::Set2Bytes(buffer, pos, (uint16_t)Attribute::ICE_CONTROLLED);
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 8);

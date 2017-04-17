@@ -153,7 +153,7 @@ namespace Channel
 		json[JsonStringId]       = (Json::UInt)this->id;
 		json[JsonStringRejected] = true;
 
-		if (reason)
+		if (reason != nullptr)
 			json[JsonStringReason] = reason;
 
 		this->channel->Send(json);

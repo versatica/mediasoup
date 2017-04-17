@@ -34,7 +34,7 @@ inline static void onSend(uv_udp_send_t* req, int status)
 	std::free(sendData);
 
 	// Just notify the UdpSocket when error.
-	if (status)
+	if (status != 0)
 		socket->OnUvSendError(status);
 }
 
@@ -61,7 +61,7 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	this->uvHandle->data = (void*)this;
 
 	err = uv_udp_init(DepLibUV::GetLoop(), this->uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -75,13 +75,13 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	{
 		case AF_INET:
 			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bindAddr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
 			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&bindAddr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			// Don't also bind into IPv4 when listening in IPv6.
 			flags |= UV_UDP_IPV6ONLY;
@@ -94,14 +94,14 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	}
 
 	err = uv_udp_bind(this->uvHandle, (const struct sockaddr*)&bindAddr, flags);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_udp_bind() failed: %s", uv_strerror(err));
 	}
 
 	err = uv_udp_recv_start(this->uvHandle, (uv_alloc_cb)onAlloc, (uv_udp_recv_cb)onRecv);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
@@ -124,7 +124,7 @@ UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	this->uvHandle->data = (void*)this;
 
 	err = uv_udp_recv_start(this->uvHandle, (uv_alloc_cb)onAlloc, (uv_udp_recv_cb)onRecv);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
@@ -158,7 +158,7 @@ void UdpSocket::Destroy()
 
 	// Don't read more.
 	err = uv_udp_recv_stop(this->uvHandle);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
 
 	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
@@ -227,7 +227,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	buffer = uv_buf_init((char*)sendData->store, len);
 
 	err = uv_udp_send(&sendData->req, this->uvHandle, &buffer, 1, addr, (uv_udp_send_cb)onSend);
-	if (err)
+	if (err != 0)
 	{
 		// NOTE: uv_udp_send() returns error if a wrong INET family is given
 		// (IPv6 destination on a IPv4 binded socket), so be ready.
@@ -256,13 +256,13 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 	{
 		case AF_INET:
 			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&addr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
 			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&addr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			break;
 
@@ -283,7 +283,7 @@ bool UdpSocket::SetLocalAddress()
 	int len = sizeof(this->localAddr);
 
 	err = uv_udp_getsockname(this->uvHandle, (struct sockaddr*)&this->localAddr, &len);
-	if (err)
+	if (err != 0)
 	{
 		MS_ERROR("uv_udp_getsockname() failed: %s", uv_strerror(err));
 
@@ -321,7 +321,7 @@ inline void UdpSocket::OnUvRecv(
 		return;
 
 	// Check flags.
-	if (flags & UV_UDP_PARTIAL)
+	if ((flags & UV_UDP_PARTIAL) != 0u)
 	{
 		MS_ERROR("received datagram was truncated due to insufficient buffer, ignoring it");
 

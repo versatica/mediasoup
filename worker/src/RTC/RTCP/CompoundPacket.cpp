@@ -17,11 +17,11 @@ namespace RTC
 			this->header = data;
 
 			// Calculate the total required size for the entire message.
-			if (this->senderReportPacket.GetCount())
+			if (this->senderReportPacket.GetCount() != 0u)
 			{
 				this->size = this->senderReportPacket.GetSize();
 
-				if (this->receiverReportPacket.GetCount())
+				if (this->receiverReportPacket.GetCount() != 0u)
 				{
 					this->size += sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount();
 				}
@@ -33,13 +33,13 @@ namespace RTC
 				this->size = this->receiverReportPacket.GetSize();
 			}
 
-			if (this->sdesPacket.GetCount())
+			if (this->sdesPacket.GetCount() != 0u)
 				this->size += this->sdesPacket.GetSize();
 
 			// Fill it.
 			size_t offset = 0;
 
-			if (this->senderReportPacket.GetCount())
+			if (this->senderReportPacket.GetCount() != 0u)
 			{
 				this->senderReportPacket.Serialize(this->header);
 				offset = this->senderReportPacket.GetSize();
@@ -48,7 +48,7 @@ namespace RTC
 				Packet::CommonHeader* header = reinterpret_cast<Packet::CommonHeader*>(this->header);
 				header->count                = 0;
 
-				if (this->receiverReportPacket.GetCount())
+				if (this->receiverReportPacket.GetCount() != 0u)
 				{
 					// Fix header length field.
 					size_t length =
@@ -77,7 +77,7 @@ namespace RTC
 				offset = this->receiverReportPacket.GetSize();
 			}
 
-			if (this->sdesPacket.GetCount())
+			if (this->sdesPacket.GetCount() != 0u)
 				this->sdesPacket.Serialize(this->header + offset);
 		}
 
@@ -87,17 +87,17 @@ namespace RTC
 
 			MS_DUMP("<CompoundPacket>");
 
-			if (this->senderReportPacket.GetCount())
+			if (this->senderReportPacket.GetCount() != 0u)
 			{
 				this->senderReportPacket.Dump();
 
-				if (this->receiverReportPacket.GetCount())
+				if (this->receiverReportPacket.GetCount() != 0u)
 					this->receiverReportPacket.Dump();
 			}
 			else
 				this->receiverReportPacket.Dump();
 
-			if (this->sdesPacket.GetCount())
+			if (this->sdesPacket.GetCount() != 0u)
 				this->sdesPacket.Dump();
 
 			MS_DUMP("</CompoundPacket>");

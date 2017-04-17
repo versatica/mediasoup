@@ -72,12 +72,12 @@ namespace RTC
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
-		if (this->rtpParameters)
+		if (this->rtpParameters != nullptr)
 			json[JsonStringRtpParameters] = this->rtpParameters->ToJson();
 		else
 			json[JsonStringRtpParameters] = Json::nullValue;
 
-		json[JsonStringHasTransport] = this->transport ? true : false;
+		json[JsonStringHasTransport] = this->transport != nullptr ? true : false;
 
 		json[JsonStringActive] = this->GetActive();
 
@@ -88,7 +88,7 @@ namespace RTC
 			json[JsonStringSupportedPayloadTypes].append((Json::UInt)payloadType);
 		}
 
-		if (this->rtpStream)
+		if (this->rtpStream != nullptr)
 			json[JsonStringRtpStream] = this->rtpStream->ToJson();
 
 		return json;
@@ -171,14 +171,14 @@ namespace RTC
 		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
-		bool hadParameters = this->rtpParameters ? true : false;
+		bool hadParameters = this->rtpParameters != nullptr ? true : false;
 
 		// Free the previous rtpParameters.
 		if (hadParameters)
 			delete this->rtpParameters;
 
 		// Delete previous RtpStreamSend (if any).
-		if (this->rtpStream)
+		if (this->rtpStream != nullptr)
 		{
 			delete this->rtpStream;
 			this->rtpStream = nullptr;
@@ -323,14 +323,14 @@ namespace RTC
 
 	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
-		if (!this->rtpStream)
+		if (this->rtpStream == nullptr)
 			return;
 
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
 		RTC::RTCP::SenderReport* report = this->rtpStream->GetRtcpSenderReport(now);
-		if (!report)
+		if (report == nullptr)
 			return;
 
 		// NOTE: This assumes a single stream.
@@ -355,7 +355,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->rtpStream)
+		if (this->rtpStream == nullptr)
 		{
 			MS_WARN_TAG(rtp, "no RtpStreamSend");
 
@@ -386,7 +386,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->rtpStream)
+		if (this->rtpStream == nullptr)
 		{
 			MS_WARN_TAG(rtp, "no RtpStreamSend");
 
@@ -425,7 +425,7 @@ namespace RTC
 
 		for (auto& exten : this->rtpParameters->headerExtensions)
 		{
-			if (!absSendTimeId && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
 				absSendTimeId = exten.id;
 			}

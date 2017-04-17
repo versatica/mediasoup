@@ -55,7 +55,7 @@ void Loop::Close()
 	this->closed = true;
 
 	// Close the SignalsHandler.
-	if (this->signalsHandler)
+	if (this->signalsHandler != nullptr)
 		this->signalsHandler->Destroy();
 
 	// Close all the Rooms.
@@ -74,7 +74,7 @@ void Loop::Close()
 	delete this->notifier;
 
 	// Close the Channel socket.
-	if (this->channel)
+	if (this->channel != nullptr)
 		this->channel->Destroy();
 }
 
@@ -90,7 +90,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 		MS_THROW_ERROR("Request has not numeric internal.roomId");
 
 	// If given, fill roomId.
-	if (roomId)
+	if (roomId != nullptr)
 		*roomId = jsonRoomId.asUInt();
 
 	auto it = this->rooms.find(jsonRoomId.asUInt());
@@ -182,7 +182,7 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 				return;
 			}
 
-			if (room)
+			if (room != nullptr)
 			{
 				request->Reject("Room already exists");
 
@@ -250,7 +250,7 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 				return;
 			}
 
-			if (!room)
+			if (room == nullptr)
 			{
 				request->Reject("Room does not exist");
 

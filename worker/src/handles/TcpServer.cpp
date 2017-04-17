@@ -37,7 +37,7 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 	this->uvHandle->data = (void*)this;
 
 	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -51,13 +51,13 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 	{
 		case AF_INET:
 			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bindAddr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
 			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&bindAddr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			// Don't also bind into IPv4 when listening in IPv6.
 			flags |= UV_TCP_IPV6ONLY;
@@ -70,14 +70,14 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 	}
 
 	err = uv_tcp_bind(this->uvHandle, (const struct sockaddr*)&bindAddr, flags);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_tcp_bind() failed: %s", uv_strerror(err));
 	}
 
 	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
@@ -100,7 +100,7 @@ TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
 	this->uvHandle->data = (void*)this;
 
 	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
@@ -167,7 +167,7 @@ bool TcpServer::SetLocalAddress()
 	int len = sizeof(this->localAddr);
 
 	err = uv_tcp_getsockname(this->uvHandle, (struct sockaddr*)&this->localAddr, &len);
-	if (err)
+	if (err != 0)
 	{
 		MS_ERROR("uv_tcp_getsockname() failed: %s", uv_strerror(err));
 
@@ -190,7 +190,7 @@ inline void TcpServer::OnUvConnection(int status)
 
 	int err;
 
-	if (status)
+	if (status != 0)
 	{
 		MS_ERROR("error while receiving a new TCP connection: %s", uv_strerror(status));
 
@@ -216,7 +216,7 @@ inline void TcpServer::OnUvConnection(int status)
 
 	// Accept the connection.
 	err = uv_accept((uv_stream_t*)this->uvHandle, (uv_stream_t*)connection->GetUvHandle());
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
 
 	// Insert the TcpConnection in the set.

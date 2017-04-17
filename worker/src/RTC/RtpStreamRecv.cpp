@@ -53,7 +53,7 @@ namespace RTC
 		CalculateJitter(packet->GetTimestamp());
 
 		// Set RTP header extension ids.
-		if (this->params.absSendTimeId)
+		if (this->params.absSendTimeId != 0u)
 		{
 			packet->AddExtensionMapping(
 			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
@@ -101,7 +101,7 @@ namespace RTC
 		report->SetLastSeq((uint32_t)this->maxSeq + this->cycles);
 		report->SetJitter(this->jitter);
 
-		if (this->lastSrReceived)
+		if (this->lastSrReceived != 0u)
 		{
 			// Get delay in milliseconds.
 			uint32_t delayMs = (DepLibUV::GetTime() - this->lastSrReceived);
@@ -148,7 +148,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->params.clockRate)
+		if (this->params.clockRate == 0u)
 			return;
 
 		int transit = DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate);

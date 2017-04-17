@@ -113,7 +113,7 @@ namespace RTC
 
 				ssrc = encoding.ssrc;
 
-				if (ssrc)
+				if (ssrc != 0u)
 				{
 					if (!this->HasSsrc(ssrc, rtpReceiver))
 					{
@@ -132,7 +132,7 @@ namespace RTC
 
 				ssrc = encoding.rtx.ssrc;
 
-				if (ssrc)
+				if (ssrc != 0u)
 				{
 					if (!this->HasSsrc(ssrc, rtpReceiver))
 					{
@@ -151,7 +151,7 @@ namespace RTC
 
 				ssrc = encoding.fec.ssrc;
 
-				if (ssrc)
+				if (ssrc != 0u)
 				{
 					if (!this->HasSsrc(ssrc, rtpReceiver))
 					{
@@ -199,8 +199,8 @@ namespace RTC
 			{
 				auto& encoding = *it;
 
-				if (!encoding.ssrc || (encoding.hasRtx && !encoding.rtx.ssrc) ||
-				    (encoding.hasFec && !encoding.fec.ssrc))
+				if ((encoding.ssrc == 0u) || (encoding.hasRtx && (encoding.rtx.ssrc == 0u)) ||
+				    (encoding.hasFec && (encoding.fec.ssrc == 0u)))
 				{
 					break;
 				}

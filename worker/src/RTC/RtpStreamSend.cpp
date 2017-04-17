@@ -162,7 +162,7 @@ namespace RTC
 
 		// Look for each requested packet.
 		uint64_t now        = DepLibUV::GetTime();
-		uint32_t rtt        = (this->rtt ? this->rtt : DefaultRtt);
+		uint32_t rtt        = (this->rtt != 0u ? this->rtt : DefaultRtt);
 		uint32_t seq32      = firstSeq32;
 		bool requested      = true;
 		size_t containerIdx = 0;
@@ -214,7 +214,7 @@ namespace RTC
 						// Don't resent the packet if it was resent in the last RTT ms.
 						uint32_t resentAtTime = (*bufferIt).resentAtTime;
 
-						if (resentAtTime && now - resentAtTime < static_cast<uint64_t>(rtt))
+						if ((resentAtTime != 0u) && now - resentAtTime < static_cast<uint64_t>(rtt))
 						{
 							MS_WARN_TAG(
 							    rtx,
@@ -244,7 +244,7 @@ namespace RTC
 				}
 			}
 
-			requested = (bitmask & 1) ? true : false;
+			requested = (bitmask & 1) != 0 ? true : false;
 			bitmask >>= 1;
 			++seq32;
 
@@ -289,7 +289,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!received)
+		if (received == 0u)
 			return nullptr;
 
 		auto report = new RTC::RTCP::SenderReport();

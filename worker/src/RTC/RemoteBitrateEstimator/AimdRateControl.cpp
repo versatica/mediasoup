@@ -73,10 +73,10 @@ namespace RTC
 
 			if (this->timeFirstIncomingEstimate < 0)
 			{
-				if (input->incomingBitrate)
+				if (input->incomingBitrate != 0u)
 					this->timeFirstIncomingEstimate = nowMs;
 			}
-			else if (nowMs - this->timeFirstIncomingEstimate > initializationTimeMs && input->incomingBitrate)
+			else if (nowMs - this->timeFirstIncomingEstimate > initializationTimeMs && (input->incomingBitrate != 0u))
 			{
 				this->currentBitrateBps    = input->incomingBitrate;
 				this->bitrateIsInitialized = true;

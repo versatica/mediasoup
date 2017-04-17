@@ -28,7 +28,7 @@ void DepOpenSSL::ClassInit()
 
 	// Make OpenSSL thread-safe (even if we are single thread).
 	DepOpenSSL::mutexes = new uv_mutex_t[CRYPTO_num_locks()];
-	if (!DepOpenSSL::mutexes)
+	if (DepOpenSSL::mutexes == nullptr)
 		MS_THROW_ERROR("allocation of mutexes failed");
 
 	DepOpenSSL::numMutexes = CRYPTO_num_locks();
@@ -36,7 +36,7 @@ void DepOpenSSL::ClassInit()
 	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
 	{
 		int err = uv_mutex_init(&DepOpenSSL::mutexes[i]);
-		if (err)
+		if (err != 0)
 			MS_THROW_ERROR("uv_mutex_init() failed with return code %d\n", err);
 	}
 
@@ -110,7 +110,7 @@ void DepOpenSSL::LockingFunction(int mode, int n, const char* /*file*/, int /*li
 	// 	mode & CRYPTO_LOCK ? "LOCK" : "UNLOCK", mode & CRYPTO_READ ? "READ" : "WRITE",
 	// 	n, file, line);
 
-	if (mode & CRYPTO_LOCK)
+	if ((mode & CRYPTO_LOCK) != 0)
 		uv_mutex_lock(&DepOpenSSL::mutexes[n]);
 	else
 		uv_mutex_unlock(&DepOpenSSL::mutexes[n]);
@@ -121,7 +121,7 @@ CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* /*file*/, int /*
 	// MS_TRACE();
 
 	auto* value = new CRYPTO_dynlock_value;
-	if (!value)
+	if (value == nullptr)
 	{
 		MS_ABORT("new CRYPTO_dynlock_value failed");
 
@@ -136,7 +136,7 @@ void DepOpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* 
 {
 	// MS_TRACE();
 
-	if (mode & CRYPTO_LOCK)
+	if ((mode & CRYPTO_LOCK) != 0)
 		uv_mutex_lock(&v->mutex);
 	else
 		uv_mutex_unlock(&v->mutex);

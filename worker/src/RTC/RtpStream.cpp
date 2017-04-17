@@ -45,7 +45,7 @@ namespace RTC
 		// If not a valid packet ignore it.
 		if (!UpdateSeq(packet))
 		{
-			if (!this->probation)
+			if (this->probation == 0u)
 			{
 				MS_WARN_TAG(
 				    rtp,
@@ -97,7 +97,7 @@ namespace RTC
 		 * Source is not valid until MinSequential packets with
 		 * sequential sequence numbers have been received.
 		 */
-		if (this->probation)
+		if (this->probation != 0u)
 		{
 			// Packet is in sequence.
 			if (seq == this->maxSeq + 1)

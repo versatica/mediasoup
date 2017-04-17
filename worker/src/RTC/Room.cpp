@@ -252,7 +252,7 @@ namespace RTC
 					return;
 				}
 
-				if (peer)
+				if (peer != nullptr)
 				{
 					request->Reject("Peer already exists");
 
@@ -322,7 +322,7 @@ namespace RTC
 					return;
 				}
 
-				if (!peer)
+				if (peer == nullptr)
 				{
 					request->Reject("Peer does not exist");
 
@@ -355,7 +355,7 @@ namespace RTC
 			MS_THROW_ERROR("Request has not numeric .peerId field");
 
 		// If given, fill peerId.
-		if (peerId)
+		if (peerId != nullptr)
 			*peerId = jsonPeerId.asUInt();
 
 		auto it = this->peers.find(jsonPeerId.asUInt());
@@ -520,7 +520,7 @@ namespace RTC
 			for (auto rtpReceiver : receiverPeer->GetRtpReceivers())
 			{
 				// Skip if the RtpReceiver has not parameters.
-				if (!rtpReceiver->GetParameters())
+				if (rtpReceiver->GetParameters() == nullptr)
 					continue;
 
 				AddRtpSenderForRtpReceiver(peer, rtpReceiver);

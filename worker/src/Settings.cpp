@@ -76,7 +76,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	opterr = 0; // Don't allow getopt to print error messages.
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
-		if (!optarg)
+		if (optarg == nullptr)
 			MS_THROW_ERROR("unknown configuration parameter: %s", optarg);
 
 		switch (c)
@@ -133,7 +133,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			// Invalid option.
 			case '?':
-				if (isprint(optopt))
+				if (isprint(optopt) != 0)
 					MS_THROW_ERROR("invalid option '-%c'", (char)optopt);
 				else
 					MS_THROW_ERROR("unknown long option given as argument");
@@ -323,7 +323,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 	int bindErrno;
 
 	err = uv_interface_addresses(&addresses, &numAddresses);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_interface_addresses() failed: %s", uv_strerror(err));
 
 	for (int i = 0; i < numAddresses; ++i)
@@ -331,7 +331,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 		uv_interface_address_t address = addresses[i];
 
 		// Ignore internal addresses.
-		if (address.is_internal)
+		if (address.is_internal != 0)
 			continue;
 
 		int family;
@@ -594,7 +594,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 	{
 		case AF_INET:
 			err = uv_ip4_addr(ip.c_str(), 0, (struct sockaddr_in*)&bindAddr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
 			bindSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -606,7 +606,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 
 		case AF_INET6:
 			uv_ip6_addr(ip.c_str(), 0, (struct sockaddr_in6*)&bindAddr);
-			if (err)
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			bindSocket = socket(AF_INET6, SOCK_DGRAM, 0);
 			if (bindSocket == -1)
@@ -630,7 +630,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 	}
 
 	err = close(bindSocket);
-	if (err)
+	if (err != 0)
 		MS_ABORT("close() failed: %s", std::strerror(errno));
 
 	return success;

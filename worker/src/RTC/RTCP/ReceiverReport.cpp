@@ -81,10 +81,10 @@ namespace RTC
 				offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;
 
 			uint8_t count = header->count;
-			while ((count--) && (len - offset > 0))
+			while (((count--) != 0u) && (len - offset > 0))
 			{
 				ReceiverReport* report = ReceiverReport::Parse(data + offset, len - offset);
-				if (report)
+				if (report != nullptr)
 				{
 					packet->AddReport(report);
 					offset += report->GetSize();

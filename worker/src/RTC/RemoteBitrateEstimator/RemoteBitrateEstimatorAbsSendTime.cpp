@@ -261,7 +261,7 @@ namespace RTC
 		// Check if incoming bitrate estimate is valid, and if it needs to be reset.
 		uint32_t incomingBitrate = this->incomingBitrate.GetRate(arrivalTimeMs);
 
-		if (incomingBitrate)
+		if (incomingBitrate != 0u)
 		{
 			this->incomingBitrateInitialized = true;
 		}
@@ -358,7 +358,7 @@ namespace RTC
 				{
 					uint32_t incomingRate = this->incomingBitrate.GetRate(arrivalTimeMs);
 
-					if (incomingRate && this->remoteRate.TimeToReduceFurther(nowMs, incomingRate))
+					if ((incomingRate != 0u) && this->remoteRate.TimeToReduceFurther(nowMs, incomingRate))
 						updateEstimate = true;
 				}
 			}

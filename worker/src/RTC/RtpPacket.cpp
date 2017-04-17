@@ -28,7 +28,7 @@ namespace RTC
 		// Check CSRC list.
 		size_t csrcListSize = 0;
 
-		if (header->csrcCount)
+		if (header->csrcCount != 0u)
 		{
 			csrcListSize = header->csrcCount * sizeof(header->ssrc);
 
@@ -46,7 +46,7 @@ namespace RTC
 		ExtensionHeader* extensionHeader = nullptr;
 		size_t extensionValueSize        = 0;
 
-		if (header->extension)
+		if (header->extension != 0u)
 		{
 			// The extension header is at least 4 bytes.
 			if (len < size_t(ptr - data) + 4)
@@ -81,7 +81,7 @@ namespace RTC
 		MS_ASSERT(len >= size_t(ptr - data), "payload has negative size");
 
 		// Check padding field.
-		if (header->padding)
+		if (header->padding != 0u)
 		{
 			// Must be at least a single payload byte.
 			if (payloadLength == 0)
@@ -141,7 +141,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->header->csrcCount)
+		if (this->header->csrcCount != 0u)
 			this->csrcList = (uint8_t*)header + sizeof(Header);
 	}
 
@@ -179,12 +179,12 @@ namespace RTC
 		// First calculate the total required size for the entire message.
 		this->size = sizeof(Header); // Minimum header.
 
-		if (this->csrcList)
+		if (this->csrcList != nullptr)
 			this->size += this->header->csrcCount * sizeof(header->ssrc);
 
 		size_t extensionValueSize = GetExtensionHeaderLength();
 
-		if (this->extensionHeader)
+		if (this->extensionHeader != nullptr)
 			this->size += 4 + extensionValueSize;
 
 		this->size += this->payloadLength;
@@ -200,7 +200,7 @@ namespace RTC
 		ptr += sizeof(Header);
 
 		// Add CSRC list.
-		if (this->csrcList)
+		if (this->csrcList != nullptr)
 		{
 			std::memcpy(ptr, this->csrcList, this->header->csrcCount * sizeof(this->header->ssrc));
 
@@ -210,7 +210,7 @@ namespace RTC
 		}
 
 		// Add extension header.
-		if (this->extensionHeader)
+		if (this->extensionHeader != nullptr)
 		{
 			std::memcpy(ptr, this->extensionHeader, 4 + extensionValueSize);
 
@@ -223,7 +223,7 @@ namespace RTC
 		ParseExtensions();
 
 		// Add payload.
-		if (this->payload)
+		if (this->payload != nullptr)
 		{
 			std::memcpy(ptr, this->payload, this->payloadLength);
 
@@ -233,7 +233,7 @@ namespace RTC
 		}
 
 		// Add payload padding.
-		if (this->payloadPadding)
+		if (this->payloadPadding != 0u)
 		{
 			*(ptr + (size_t)this->payloadPadding - 1) = this->payloadPadding;
 			ptr += (size_t)this->payloadPadding;
@@ -256,13 +256,13 @@ namespace RTC
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		if (this->csrcList)
+		if (this->csrcList != nullptr)
 			ptr += header->csrcCount * sizeof(header->ssrc);
 
 		// Check extension header.
 		ExtensionHeader* extensionHeader = nullptr;
 
-		if (this->extensionHeader)
+		if (this->extensionHeader != nullptr)
 		{
 			// Set the header extension pointer.
 			extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
@@ -272,7 +272,7 @@ namespace RTC
 		// Check payload.
 		uint8_t* payload = nullptr;
 
-		if (this->payload)
+		if (this->payload != nullptr)
 		{
 			// Set the payload pointer.
 			payload = ptr;
@@ -280,7 +280,7 @@ namespace RTC
 		}
 
 		// Check payload padding.
-		if (this->payloadPadding)
+		if (this->payloadPadding != 0u)
 		{
 			*(ptr + (size_t)this->payloadPadding - 1) = this->payloadPadding;
 			ptr += (size_t)this->payloadPadding;

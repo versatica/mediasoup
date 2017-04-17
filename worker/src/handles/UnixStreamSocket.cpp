@@ -34,7 +34,7 @@ inline static void onWrite(uv_write_t* req, int status)
 	std::free(writeData);
 
 	// Just notify the UnixStreamSocket when error.
-	if (status)
+	if (status != 0)
 		socket->OnUvWriteError(status);
 }
 
@@ -65,7 +65,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(buffe
 	this->uvHandle->data = (void*)this;
 
 	err = uv_pipe_init(DepLibUV::GetLoop(), this->uvHandle, 0);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -74,7 +74,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(buffe
 	}
 
 	err = uv_pipe_open(this->uvHandle, fd);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 
@@ -83,7 +83,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(buffe
 
 	// Start reading.
 	err = uv_read_start((uv_stream_t*)this->uvHandle, (uv_alloc_cb)onAlloc, (uv_read_cb)onRead);
-	if (err)
+	if (err != 0)
 	{
 		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
 
@@ -114,7 +114,7 @@ void UnixStreamSocket::Destroy()
 
 	// Don't read more.
 	err = uv_read_stop((uv_stream_t*)this->uvHandle);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
 
 	// If there is no error and the peer didn't close its pipe side then close gracefully.
@@ -124,7 +124,7 @@ void UnixStreamSocket::Destroy()
 		auto req  = new uv_shutdown_t;
 		req->data = (void*)this;
 		err       = uv_shutdown(req, (uv_stream_t*)this->uvHandle, (uv_shutdown_cb)onShutdown);
-		if (err)
+		if (err != 0)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
 	// Otherwise directly close the socket.
@@ -185,7 +185,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	buffer = uv_buf_init((char*)writeData->store, pendingLen);
 
 	err = uv_write(&writeData->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)onWrite);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
@@ -194,7 +194,7 @@ inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 	MS_TRACE_STD();
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
-	if (!this->buffer)
+	if (this->buffer == nullptr)
 		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.
@@ -269,7 +269,7 @@ inline void UnixStreamSocket::OnUvShutdown(uv_shutdown_t* req, int status)
 
 	delete req;
 
-	if (status)
+	if (status != 0)
 	{
 		MS_ERROR_STD("shutdown error: %s", uv_strerror(status));
 	}

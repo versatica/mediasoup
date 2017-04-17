@@ -116,11 +116,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (DtlsTransport::privateKey)
+		if (DtlsTransport::privateKey != nullptr)
 			EVP_PKEY_free(DtlsTransport::privateKey);
-		if (DtlsTransport::certificate)
+		if (DtlsTransport::certificate != nullptr)
 			X509_free(DtlsTransport::certificate);
-		if (DtlsTransport::sslCtx)
+		if (DtlsTransport::sslCtx != nullptr)
 			SSL_CTX_free(DtlsTransport::sslCtx);
 	}
 
@@ -136,7 +136,7 @@ namespace RTC
 
 		// Create a big number object.
 		bne = BN_new();
-		if (!bne)
+		if (bne == nullptr)
 		{
 			LOG_OPENSSL_ERROR("BN_new() failed");
 			goto error;
@@ -151,7 +151,7 @@ namespace RTC
 
 		// Generate a RSA key.
 		rsaKey = RSA_new();
-		if (!rsaKey)
+		if (rsaKey == nullptr)
 		{
 			LOG_OPENSSL_ERROR("RSA_new() failed");
 			goto error;
@@ -167,7 +167,7 @@ namespace RTC
 
 		// Create a private key object (needed to hold the RSA key).
 		DtlsTransport::privateKey = EVP_PKEY_new();
-		if (!DtlsTransport::privateKey)
+		if (DtlsTransport::privateKey == nullptr)
 		{
 			LOG_OPENSSL_ERROR("EVP_PKEY_new() failed");
 			goto error;
@@ -184,7 +184,7 @@ namespace RTC
 
 		// Create the X509 certificate.
 		DtlsTransport::certificate = X509_new();
-		if (!DtlsTransport::certificate)
+		if (DtlsTransport::certificate == nullptr)
 		{
 			LOG_OPENSSL_ERROR("X509_new() failed");
 			goto error;
@@ -214,7 +214,7 @@ namespace RTC
 
 		// Set certificate fields.
 		certName = X509_get_subject_name(DtlsTransport::certificate);
-		if (!certName)
+		if (certName == nullptr)
 		{
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
@@ -244,13 +244,13 @@ namespace RTC
 		return;
 
 	error:
-		if (bne)
+		if (bne != nullptr)
 			BN_free(bne);
-		if (rsaKey && !DtlsTransport::privateKey)
+		if ((rsaKey != nullptr) && (DtlsTransport::privateKey == nullptr))
 			RSA_free(rsaKey);
-		if (DtlsTransport::privateKey)
+		if (DtlsTransport::privateKey != nullptr)
 			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the RSA key.
-		if (DtlsTransport::certificate)
+		if (DtlsTransport::certificate != nullptr)
 			X509_free(DtlsTransport::certificate);
 
 		MS_THROW_ERROR("DTLS certificate and private key generation failed");
@@ -263,14 +263,14 @@ namespace RTC
 		FILE* file = nullptr;
 
 		file = fopen(Settings::configuration.dtlsCertificateFile.c_str(), "r");
-		if (!file)
+		if (file == nullptr)
 		{
 			MS_ERROR("error reading DTLS certificate file: %s", std::strerror(errno));
 			goto error;
 		}
 
 		DtlsTransport::certificate = PEM_read_X509(file, nullptr, nullptr, nullptr);
-		if (!DtlsTransport::certificate)
+		if (DtlsTransport::certificate == nullptr)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_X509() failed");
 			goto error;
@@ -279,14 +279,14 @@ namespace RTC
 		fclose(file);
 
 		file = fopen(Settings::configuration.dtlsPrivateKeyFile.c_str(), "r");
-		if (!file)
+		if (file == nullptr)
 		{
 			MS_ERROR("error reading DTLS private key file: %s", std::strerror(errno));
 			goto error;
 		}
 
 		DtlsTransport::privateKey = PEM_read_PrivateKey(file, nullptr, nullptr, nullptr);
-		if (!DtlsTransport::privateKey)
+		if (DtlsTransport::privateKey == nullptr)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_PrivateKey() failed");
 			goto error;
@@ -320,7 +320,7 @@ namespace RTC
 #error "too old OpenSSL version"
 #endif
 
-		if (!DtlsTransport::sslCtx)
+		if (DtlsTransport::sslCtx == nullptr)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_new() failed");
 			goto error;
@@ -432,13 +432,13 @@ namespace RTC
 		return;
 
 	error:
-		if (DtlsTransport::sslCtx)
+		if (DtlsTransport::sslCtx != nullptr)
 		{
 			SSL_CTX_free(DtlsTransport::sslCtx);
 			DtlsTransport::sslCtx = nullptr;
 		}
 
-		if (ecdh)
+		if (ecdh != nullptr)
 			EC_KEY_free(ecdh);
 
 		MS_THROW_ERROR("SSL context creation failed");
@@ -510,7 +510,7 @@ namespace RTC
 		/* Set SSL. */
 
 		this->ssl = SSL_new(DtlsTransport::sslCtx);
-		if (!this->ssl)
+		if (this->ssl == nullptr)
 		{
 			LOG_OPENSSL_ERROR("SSL_new() failed");
 			goto error;
@@ -520,7 +520,7 @@ namespace RTC
 		SSL_set_ex_data(this->ssl, 0, static_cast<void*>(this));
 
 		this->sslBioFromNetwork = BIO_new(BIO_s_mem());
-		if (!this->sslBioFromNetwork)
+		if (this->sslBioFromNetwork == nullptr)
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
 			SSL_free(this->ssl);
@@ -528,7 +528,7 @@ namespace RTC
 		}
 
 		this->sslBioToNetwork = BIO_new(BIO_s_mem());
-		if (!this->sslBioToNetwork)
+		if (this->sslBioToNetwork == nullptr)
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
 			BIO_free(this->sslBioFromNetwork);
@@ -547,11 +547,11 @@ namespace RTC
 	error:
 		// NOTE: At this point SSL_set_bio() was not called so we must free BIOs as
 		// well.
-		if (this->sslBioFromNetwork)
+		if (this->sslBioFromNetwork != nullptr)
 			BIO_free(this->sslBioFromNetwork);
-		if (this->sslBioToNetwork)
+		if (this->sslBioToNetwork != nullptr)
 			BIO_free(this->sslBioToNetwork);
-		if (this->ssl)
+		if (this->ssl != nullptr)
 			SSL_free(this->ssl);
 
 		// NOTE: If this is not catched by the caller the program will abort, but
@@ -563,7 +563,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->ssl)
+		if (this->ssl != nullptr)
 		{
 			SSL_free(this->ssl);
 			this->ssl               = nullptr;
@@ -857,7 +857,7 @@ namespace RTC
 				ProcessHandshake();
 		}
 		// Check if the peer sent close alert or a fatal error happened.
-		else if ((SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN) || err == SSL_ERROR_SSL || err == SSL_ERROR_SYSCALL)
+		else if (((SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN) != 0) || err == SSL_ERROR_SSL || err == SSL_ERROR_SYSCALL)
 		{
 			if (this->state == DtlsState::CONNECTED)
 			{
@@ -1016,7 +1016,7 @@ namespace RTC
 		int ret;
 
 		certificate = SSL_get_peer_certificate(this->ssl);
-		if (!certificate)
+		if (certificate == nullptr)
 		{
 			MS_WARN_TAG(dtls, "no certificate was provided by the peer");
 
@@ -1101,7 +1101,7 @@ namespace RTC
 		BUF_MEM* mem;
 
 		BIO_get_mem_ptr(bio, &mem);
-		if (!mem || !mem->data || !mem->length)
+		if ((mem == nullptr) || (mem->data == nullptr) || (mem->length == 0u))
 		{
 			LOG_OPENSSL_ERROR("BIO_get_mem_ptr() failed");
 
@@ -1183,7 +1183,7 @@ namespace RTC
 
 		// Ensure that the SRTP profile has been negotiated.
 		SRTP_PROTECTION_PROFILE* sslSrtpProfile = SSL_get_selected_srtp_profile(this->ssl);
-		if (!sslSrtpProfile)
+		if (sslSrtpProfile == nullptr)
 		{
 			return negotiatedSrtpProfile;
 		}
@@ -1216,18 +1216,18 @@ namespace RTC
 		int w = where & -SSL_ST_MASK;
 		const char* role;
 
-		if (w & SSL_ST_CONNECT)
+		if ((w & SSL_ST_CONNECT) != 0)
 			role = "client";
-		else if (w & SSL_ST_ACCEPT)
+		else if ((w & SSL_ST_ACCEPT) != 0)
 			role = "server";
 		else
 			role = "undefined";
 
-		if (where & SSL_CB_LOOP)
+		if ((where & SSL_CB_LOOP) != 0)
 		{
 			MS_DEBUG_TAG(dtls, "[role:%s, action:'%s']", role, SSL_state_string_long(this->ssl));
 		}
-		else if (where & SSL_CB_ALERT)
+		else if ((where & SSL_CB_ALERT) != 0)
 		{
 			const char* alertType;
 
@@ -1243,11 +1243,11 @@ namespace RTC
 					alertType = "undefined";
 			}
 
-			if (where & SSL_CB_READ)
+			if ((where & SSL_CB_READ) != 0)
 			{
 				MS_WARN_TAG(dtls, "received DTLS %s alert: %s", alertType, SSL_alert_desc_string_long(ret));
 			}
-			else if (where & SSL_CB_WRITE)
+			else if ((where & SSL_CB_WRITE) != 0)
 			{
 				MS_DEBUG_TAG(dtls, "sending DTLS %s alert: %s", alertType, SSL_alert_desc_string_long(ret));
 			}
@@ -1256,18 +1256,18 @@ namespace RTC
 				MS_DEBUG_TAG(dtls, "DTLS %s alert: %s", alertType, SSL_alert_desc_string_long(ret));
 			}
 		}
-		else if (where & SSL_CB_EXIT)
+		else if ((where & SSL_CB_EXIT) != 0)
 		{
 			if (ret == 0)
 				MS_DEBUG_TAG(dtls, "[role:%s, failed:'%s']", role, SSL_state_string_long(this->ssl));
 			else if (ret < 0)
 				MS_DEBUG_TAG(dtls, "role: %s, waiting:'%s']", role, SSL_state_string_long(this->ssl));
 		}
-		else if (where & SSL_CB_HANDSHAKE_START)
+		else if ((where & SSL_CB_HANDSHAKE_START) != 0)
 		{
 			MS_DEBUG_TAG(dtls, "DTLS handshake start");
 		}
-		else if (where & SSL_CB_HANDSHAKE_DONE)
+		else if ((where & SSL_CB_HANDSHAKE_DONE) != 0)
 		{
 			MS_DEBUG_TAG(dtls, "DTLS handshake done");
 

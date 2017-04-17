@@ -25,7 +25,7 @@ namespace RTC
 			size_t offset = sizeof(Packet::CommonHeader);
 
 			uint8_t count = header->count;
-			while ((count--) && (len - offset > 0))
+			while (((count--) != 0u) && (len - offset > 0))
 			{
 				if (sizeof(uint32_t) > len - offset)
 				{

@@ -46,7 +46,7 @@ namespace RTC
 			    0,
 			    (struct sockaddr_in*)&RTC::UdpSocket::sockaddrStorageIPv4);
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -57,7 +57,7 @@ namespace RTC
 			    0,
 			    (struct sockaddr_in6*)&RTC::UdpSocket::sockaddrStorageIPv6);
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -167,14 +167,14 @@ namespace RTC
 			uvHandle = new uv_udp_t();
 
 			err = uv_udp_init(DepLibUV::GetLoop(), uvHandle);
-			if (err)
+			if (err != 0)
 			{
 				delete uvHandle;
 				MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
 			}
 
 			err = uv_udp_bind(uvHandle, (const struct sockaddr*)&bindAddr, flags);
-			if (err)
+			if (err != 0)
 			{
 				MS_WARN_DEV(
 				    "uv_udp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s",
@@ -229,7 +229,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->listener)
+		if (this->listener == nullptr)
 		{
 			MS_ERROR("no listener set");
 

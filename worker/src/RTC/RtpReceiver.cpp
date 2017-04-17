@@ -72,12 +72,12 @@ namespace RTC
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
-		if (this->rtpParameters)
+		if (this->rtpParameters != nullptr)
 			json[JsonStringRtpParameters] = this->rtpParameters->ToJson();
 		else
 			json[JsonStringRtpParameters] = Json::nullValue;
 
-		json[JsonStringHasTransport] = this->transport ? true : false;
+		json[JsonStringHasTransport] = this->transport != nullptr ? true : false;
 
 		json[JsonStringRtpRawEventEnabled] = this->rtpRawEventEnabled;
 
@@ -310,7 +310,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->transport)
+		if (this->transport == nullptr)
 			return;
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
@@ -329,7 +329,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->transport)
+		if (this->transport == nullptr)
 			return;
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
@@ -363,7 +363,7 @@ namespace RTC
 		// Don't create an RtpStreamRecv if the encoding has no SSRC.
 		// TODO: For simulcast or, if not announced, this would be done
 		// dynamicall by the RtpListener when matching a RID with its SSRC.
-		if (!encoding.ssrc)
+		if (encoding.ssrc == 0u)
 			return;
 
 		uint32_t ssrc = encoding.ssrc;
@@ -404,7 +404,7 @@ namespace RTC
 
 		for (auto& exten : this->rtpParameters->headerExtensions)
 		{
-			if (!absSendTimeId && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
 				absSendTimeId = exten.id;
 			}
@@ -445,7 +445,7 @@ namespace RTC
 
 	void RtpReceiver::OnNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
 	{
-		if (!this->transport)
+		if (this->transport == nullptr)
 			return;
 
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
@@ -494,7 +494,7 @@ namespace RTC
 
 	void RtpReceiver::OnPliRequired(RTC::RtpStreamRecv* rtpStream)
 	{
-		if (!this->transport)
+		if (this->transport == nullptr)
 			return;
 
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());

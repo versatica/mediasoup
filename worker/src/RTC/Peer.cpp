@@ -222,7 +222,7 @@ namespace RTC
 					return;
 				}
 
-				if (transport)
+				if (transport != nullptr)
 				{
 					request->Reject("Transport already exists");
 
@@ -278,7 +278,7 @@ namespace RTC
 					return;
 				}
 
-				if (rtpReceiver)
+				if (rtpReceiver != nullptr)
 				{
 					request->Reject("RtpReceiver already exists");
 
@@ -296,7 +296,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -354,7 +354,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -385,7 +385,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpReceiver)
+				if (rtpReceiver == nullptr)
 				{
 					request->Reject("RtpReceiver does not exist");
 
@@ -412,7 +412,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpReceiver)
+				if (rtpReceiver == nullptr)
 				{
 					request->Reject("RtpReceiver does not exist");
 
@@ -432,7 +432,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -454,7 +454,7 @@ namespace RTC
 				// Enable REMB in the new transport if it was enabled in the previous one.
 				auto previousTransport = rtpReceiver->GetTransport();
 
-				if (previousTransport && previousTransport->HasRemb())
+				if ((previousTransport != nullptr) && previousTransport->HasRemb())
 					transport->EnableRemb();
 
 				rtpReceiver->SetTransport(transport);
@@ -479,7 +479,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpSender)
+				if (rtpSender == nullptr)
 				{
 					request->Reject("RtpSender does not exist");
 
@@ -506,7 +506,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpSender)
+				if (rtpSender == nullptr)
 				{
 					request->Reject("RtpSender does not exist");
 
@@ -526,7 +526,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -555,7 +555,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpSender)
+				if (rtpSender == nullptr)
 				{
 					request->Reject("RtpSender does not exist");
 
@@ -624,7 +624,7 @@ namespace RTC
 			auto rtpSender     = it->second;
 			auto rtpParameters = rtpSender->GetParameters();
 
-			if (!rtpParameters)
+			if (rtpParameters == nullptr)
 				continue;
 
 			auto it2 = rtpParameters->encodings.begin();
@@ -668,7 +668,7 @@ namespace RTC
 				rtpSender->GetRtcp(packet.get(), now);
 
 				// Send one RTCP compound packet per sender report.
-				if (packet->GetSenderReportCount())
+				if (packet->GetSenderReportCount() != 0u)
 				{
 					// Ensure that the RTCP packet fits into the RTCP buffer.
 					if (packet->GetSize() > RTC::RTCP::BufferSize)
@@ -696,7 +696,7 @@ namespace RTC
 			}
 
 			// Send one RTCP compound with all receiver reports.
-			if (packet->GetReceiverReportCount())
+			if (packet->GetReceiverReportCount() != 0u)
 			{
 				// Ensure that the RTCP packet fits into the RTCP buffer.
 				if (packet->GetSize() > RTC::RTCP::BufferSize)
@@ -723,7 +723,7 @@ namespace RTC
 		if (!jsonTransportId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.transportId");
 
-		if (transportId)
+		if (transportId != nullptr)
 			*transportId = jsonTransportId.asUInt();
 
 		auto it = this->transports.find(jsonTransportId.asUInt());
@@ -748,7 +748,7 @@ namespace RTC
 		if (!jsonRtpReceiverId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.rtpReceiverId");
 
-		if (rtpReceiverId)
+		if (rtpReceiverId != nullptr)
 			*rtpReceiverId = jsonRtpReceiverId.asUInt();
 
 		auto it = this->rtpReceivers.find(jsonRtpReceiverId.asUInt());
@@ -773,7 +773,7 @@ namespace RTC
 		if (!jsonRtpSenderId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.rtpSenderId");
 
-		if (rtpSenderId)
+		if (rtpSenderId != nullptr)
 			*rtpSenderId = jsonRtpSenderId.asUInt();
 
 		auto it = this->rtpSenders.find(jsonRtpSenderId.asUInt());
@@ -869,7 +869,7 @@ namespace RTC
 		auto transport = rtpReceiver->GetTransport();
 
 		// NOTE: This may throw.
-		if (transport)
+		if (transport != nullptr)
 			transport->AddRtpReceiver(rtpReceiver);
 	}
 
@@ -893,7 +893,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		while (packet)
+		while (packet != nullptr)
 		{
 			switch (packet->GetType())
 			{
@@ -910,7 +910,7 @@ namespace RTC
 						auto& report              = (*it);
 						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
 
-						if (rtpSender)
+						if (rtpSender != nullptr)
 						{
 							this->listener->OnPeerRtcpReceiverReport(this, rtpSender, report);
 						}
@@ -948,7 +948,7 @@ namespace RTC
 						{
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-							if (rtpSender)
+							if (rtpSender != nullptr)
 							{
 								if (feedback->GetMessageType() == RTCP::FeedbackPs::MessageType::PLI)
 								{
@@ -1004,7 +1004,7 @@ namespace RTC
 						{
 							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-							if (rtpSender)
+							if (rtpSender != nullptr)
 							{
 								RTC::RTCP::FeedbackRtpNackPacket* nackPacket =
 								    dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
@@ -1064,7 +1064,7 @@ namespace RTC
 						// Get the receiver associated to the SSRC indicated in the report.
 						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
 
-						if (rtpReceiver)
+						if (rtpReceiver != nullptr)
 						{
 							this->listener->OnPeerRtcpSenderReport(this, rtpReceiver, report);
 						}
@@ -1091,7 +1091,7 @@ namespace RTC
 						// Get the receiver associated to the SSRC indicated in the chunk.
 						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
 
-						if (!rtpReceiver)
+						if (rtpReceiver == nullptr)
 						{
 							MS_WARN_TAG(
 							    rtcp, "no RtpReceiver for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
@@ -1171,7 +1171,7 @@ namespace RTC
 			}
 
 			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
-			if (rate)
+			if (rate != 0u)
 				interval = 360000 / rate;
 
 			if (interval > RTC::RTCP::MaxVideoIntervalMs)

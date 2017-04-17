@@ -92,7 +92,7 @@ namespace RTC
 			case RTC::StunMessage::Class::REQUEST:
 			{
 				// USERNAME, MESSAGE-INTEGRITY and PRIORITY are required.
-				if (!msg->HasMessageIntegrity() || !msg->GetPriority() || msg->GetUsername().empty())
+				if (!msg->HasMessageIntegrity() || (msg->GetPriority() == 0u) || msg->GetUsername().empty())
 				{
 					MS_WARN_TAG(ice, "mising required attributes in STUN Binding Request => 400");
 
@@ -210,7 +210,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return HasTuple(tuple) ? true : false;
+		return HasTuple(tuple) != nullptr ? true : false;
 	}
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
@@ -231,7 +231,7 @@ namespace RTC
 		}
 
 		// If not found, ignore.
-		if (!removedTuple)
+		if (removedTuple == nullptr)
 			return;
 
 		// If this is not the selected tuple just remove it.
@@ -382,7 +382,7 @@ namespace RTC
 				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
-					if (!HasTuple(tuple))
+					if (HasTuple(tuple) == nullptr)
 						AddTuple(tuple);
 				}
 				else
@@ -392,7 +392,7 @@ namespace RTC
 					auto storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (!storedTuple)
+					if (storedTuple == nullptr)
 						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
@@ -418,7 +418,7 @@ namespace RTC
 				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
-					if (!HasTuple(tuple))
+					if (HasTuple(tuple) == nullptr)
 						AddTuple(tuple);
 				}
 				else
@@ -426,7 +426,7 @@ namespace RTC
 					auto storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (!storedTuple)
+					if (storedTuple == nullptr)
 						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
@@ -462,7 +462,7 @@ namespace RTC
 
 		// If there is no selected tuple yet then we know that the tuples list
 		// is empty.
-		if (!this->selectedTuple)
+		if (this->selectedTuple == nullptr)
 			return nullptr;
 
 		// Check the current selected tuple.

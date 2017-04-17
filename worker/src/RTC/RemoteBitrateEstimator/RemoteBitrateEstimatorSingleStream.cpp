@@ -59,7 +59,7 @@ namespace RTC
 		// Check if incoming bitrate estimate is valid, and if it needs to be reset.
 		uint32_t incomingBitrate = this->incomingBitrate.GetRate(nowMs);
 
-		if (incomingBitrate)
+		if (incomingBitrate != 0u)
 		{
 			this->lastValidIncomingBitrate = incomingBitrate;
 		}
@@ -98,8 +98,9 @@ namespace RTC
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
 
-			if (incomingBitrateBps && (priorState != BW_OVERUSING ||
-			                           GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
+			if ((incomingBitrateBps != 0u) &&
+			    (priorState != BW_OVERUSING ||
+			     GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
 				// We also have to update the estimate immediately if we are overusing

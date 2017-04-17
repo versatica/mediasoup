@@ -30,7 +30,7 @@ inline static void onWrite(uv_write_t* req, int status)
 	std::free(writeData);
 
 	// Just notify the TcpConnection when error.
-	if (status)
+	if (status != 0)
 		connection->OnUvWriteError(status);
 }
 
@@ -73,7 +73,7 @@ void TcpConnection::Setup(
 
 	// Set the UV handle.
 	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -103,7 +103,7 @@ void TcpConnection::Destroy()
 
 	// Don't read more.
 	err = uv_read_stop((uv_stream_t*)this->uvHandle);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
 
 	// If there is no error and the peer didn't close its connection side then close gracefully.
@@ -114,7 +114,7 @@ void TcpConnection::Destroy()
 		auto req  = new uv_shutdown_t;
 		req->data = (void*)this;
 		err       = uv_shutdown(req, (uv_stream_t*)this->uvHandle, (uv_shutdown_cb)onShutdown);
-		if (err)
+		if (err != 0)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
 	// Otherwise directly close the socket.
@@ -147,7 +147,7 @@ void TcpConnection::Start()
 	int err;
 
 	err = uv_read_start((uv_stream_t*)this->uvHandle, (uv_alloc_cb)onAlloc, (uv_read_cb)onRead);
-	if (err)
+	if (err != 0)
 		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
 
 	// Get the peer address.
@@ -210,7 +210,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	buffer = uv_buf_init((char*)writeData->store, pendingLen);
 
 	err = uv_write(&writeData->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)onWrite);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
@@ -281,7 +281,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	uv_buf_t buffer = uv_buf_init((char*)writeData->store, pendingLen);
 
 	err = uv_write(&writeData->req, (uv_stream_t*)this->uvHandle, &buffer, 1, (uv_write_cb)onWrite);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
@@ -293,7 +293,7 @@ bool TcpConnection::SetPeerAddress()
 	int len = sizeof(this->peerAddr);
 
 	err = uv_tcp_getpeername(this->uvHandle, (struct sockaddr*)&this->peerAddr, &len);
-	if (err)
+	if (err != 0)
 	{
 		MS_ERROR("uv_tcp_getpeername() failed: %s", uv_strerror(err));
 
@@ -312,7 +312,7 @@ inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf
 	MS_TRACE();
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
-	if (!this->buffer)
+	if (this->buffer == nullptr)
 		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.
@@ -392,7 +392,7 @@ inline void TcpConnection::OnUvShutdown(uv_shutdown_t* req, int status)
 
 	delete req;
 
-	if (status)
+	if (status != 0)
 	{
 		MS_WARN_DEV("shutdown error: %s", uv_strerror(status));
 	}

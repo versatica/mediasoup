@@ -76,13 +76,13 @@ namespace RTC
 					{
 						current = SenderReportPacket::Parse(data, len);
 
-						if (!current)
+						if (current == nullptr)
 							break;
 
 						if ((uint8_t)header->count > 0)
 						{
 							Packet* rr = ReceiverReportPacket::Parse(data, len, current->GetSize());
-							if (!rr)
+							if (rr == nullptr)
 								break;
 
 							current->SetNext(rr);
@@ -135,7 +135,7 @@ namespace RTC
 					}
 				}
 
-				if (!current)
+				if (current == nullptr)
 				{
 					std::string packetType = Type2String(Type(header->packetType));
 
@@ -158,12 +158,12 @@ namespace RTC
 				data += packetLlen;
 				len -= packetLlen;
 
-				if (!first)
+				if (first == nullptr)
 					first = current;
 				else
 					last->SetNext(current);
 
-				last = current->GetNext() ? current->GetNext() : current;
+				last = current->GetNext() != nullptr ? current->GetNext() : current;
 			}
 
 			return first;

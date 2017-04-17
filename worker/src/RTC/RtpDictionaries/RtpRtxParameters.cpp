@@ -32,7 +32,7 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		// Add `ssrc`.
-		if (this->ssrc)
+		if (this->ssrc != 0u)
 			json[JsonStringSsrc] = (Json::UInt)this->ssrc;
 
 		return json;

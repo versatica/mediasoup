@@ -30,7 +30,7 @@ Timer::Timer(Listener* listener) : listener(listener)
 	uvHandle->data = (void*)this;
 
 	err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -55,11 +55,11 @@ void Timer::Start(uint64_t timeout)
 
 	int err;
 
-	if (uv_is_active((uv_handle_t*)this->uvHandle))
+	if (uv_is_active((uv_handle_t*)this->uvHandle) != 0)
 		Stop();
 
 	err = uv_timer_start(this->uvHandle, (uv_timer_cb)onTimer, timeout, 0);
-	if (err)
+	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
 }
 
@@ -70,7 +70,7 @@ void Timer::Stop()
 	int err;
 
 	err = uv_timer_stop(this->uvHandle);
-	if (err)
+	if (err != 0)
 		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
 }
 

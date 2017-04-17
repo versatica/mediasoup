@@ -121,7 +121,7 @@ namespace RTC
 			while (len - offset > 0)
 			{
 				SdesItem* item = SdesItem::Parse(data + offset, len - offset);
-				if (item)
+				if (item != nullptr)
 				{
 					if (item->GetType() == SdesItem::Type::END)
 						return chunk.release();
@@ -190,10 +190,10 @@ namespace RTC
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 
-			while ((count--) && (len - offset > 0))
+			while (((count--) != 0u) && (len - offset > 0))
 			{
 				SdesChunk* chunk = SdesChunk::Parse(data + offset, len - offset);
-				if (chunk)
+				if (chunk != nullptr)
 				{
 					packet->AddChunk(chunk);
 					offset += chunk->GetSize();

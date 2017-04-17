@@ -3467,7 +3467,7 @@ case 85:
 				err = uv_inet_ntop(
 					AF_INET, &((struct sockaddr_in*)addr)->sin_addr, ipBuffer, INET_ADDRSTRLEN);
 
-				if (err)
+				if (err != 0)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
 				*port = (uint16_t)ntohs(((struct sockaddr_in*)addr)->sin_port);
@@ -3480,7 +3480,7 @@ case 85:
 				err = uv_inet_ntop(
 					AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, ipBuffer, INET6_ADDRSTRLEN);
 
-				if (err)
+				if (err != 0)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
 				*port = (uint16_t)ntohs(((struct sockaddr_in6*)addr)->sin6_port);

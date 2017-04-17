@@ -35,7 +35,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	uvHandle->data = (void*)this;
 
 	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete uvHandle;
 
@@ -43,7 +43,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	}
 
 	err = uv_signal_start(uvHandle, (uv_signal_cb)onSignal, signum);
-	if (err)
+	if (err != 0)
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 
 	// Enter the UV handle into the vector.

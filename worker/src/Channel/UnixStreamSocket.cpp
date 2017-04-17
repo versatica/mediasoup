@@ -285,7 +285,7 @@ namespace Channel
 					MS_ERROR_STD("discarding wrong Channel request");
 				}
 
-				if (request)
+				if (request != nullptr)
 				{
 					// Notify the listener.
 					this->listener->OnChannelRequest(this, request);

@@ -33,7 +33,7 @@ static void exitWithError();
 int main(int argc, char* argv[])
 {
 	// Ensure we are called by our Node library.
-	if (argc == 1 || !std::getenv("MEDIASOUP_CHANNEL_FD"))
+	if (argc == 1 || (std::getenv("MEDIASOUP_CHANNEL_FD") == nullptr))
 	{
 		std::cerr << "ERROR: you don't seem to be my real father" << std::endl;
 
@@ -133,7 +133,7 @@ void ignoreSignals()
 	act.sa_handler = SIG_IGN;
 	act.sa_flags   = 0;
 	err            = sigfillset(&act.sa_mask);
-	if (err)
+	if (err != 0)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
 	for (auto& ignoredSignal : ignoredSignals)
@@ -142,7 +142,7 @@ void ignoreSignals()
 		int sigId     = ignoredSignal.second;
 
 		err = sigaction(sigId, &act, nullptr);
-		if (err)
+		if (err != 0)
 		{
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 		}
