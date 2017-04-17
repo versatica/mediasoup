@@ -35,6 +35,9 @@ const nodeTests =
 ];
 const compilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const numCpus = os.cpus().length;
+const headerFilterRegex = '(common.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp' +
+	'|LogLevel.hpp|Logger.hpp|Loop.hpp|MediaSoupError.hpp|Settings.hpp|Utils.hpp' +
+	'|handles/*.hpp|Channel/*.hpp|RTC/**/*.hpp)';
 
 gulp.task('rtpcapabilities', () =>
 {
@@ -63,7 +66,7 @@ gulp.task('tidy:worker:run', shell.task(
 		'./scripts/clang-tidy.py ' +
 		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
 		'-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements ' +
-		// '-header-filter=.*.hpp ' +
+		`-header-filter='${headerFilterRegex}' ` +
 		'-p=. ' +
 		`-j=${numCpus} ` +
 		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS || ''} ` +
