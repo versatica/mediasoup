@@ -375,11 +375,6 @@
         "file": "PATH/worker/src/Utils/File.cpp"
     }, 
     {
-        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/Utils/IP.o PATH/worker/src/Utils/IP.cpp", 
-        "directory": "PATH/worker/out", 
-        "file": "PATH/worker/src/Utils/IP.cpp"
-    }, 
-    {
         "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/handles/SignalsHandler.o PATH/worker/src/handles/SignalsHandler.cpp", 
         "directory": "PATH/worker/out", 
         "file": "PATH/worker/src/handles/SignalsHandler.cpp"
