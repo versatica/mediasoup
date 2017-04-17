@@ -80,7 +80,7 @@ Validates the Node.js JavaScript code/syntax.
 
 ### `gulp lint:worker`
 
-Validates the worker C++ code/syntax against the `worker/.clang-format` rules.
+Validates the worker C++ code/syntax using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) following `worker/.clang-format` rules.
 
 ### `gulp format`
 
@@ -96,7 +96,7 @@ Runs the `tidy:worker` gulp task.
 
 ### `gulp tidy:worker`
 
-Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/).
+Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) following following `worker/.clang-tidy` rules.
 
 *NOTE:* It just works on OSX.
 
