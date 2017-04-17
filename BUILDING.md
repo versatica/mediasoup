@@ -98,6 +98,8 @@ Runs the `tidy:worker` gulp task.
 
 Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/).
 
+*NOTE:* It just works on OSX.
+
 ### `gulp test`
 
 Runs both the `test:node` and `test:worker` gulp tasks.
