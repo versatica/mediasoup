@@ -38,8 +38,7 @@ namespace RTC
 
 	IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
 	    : foundation("tcpcandidate"), priority(priority), family(tcpServer->GetLocalFamily()),
-	      protocol(Protocol::TCP), port(tcpServer->GetLocalPort()), type(CandidateType::HOST),
-	      tcpType(TcpCandidateType::PASSIVE)
+	      protocol(Protocol::TCP), port(tcpServer->GetLocalPort()), type(CandidateType::HOST)
 	{
 		switch (this->family)
 		{

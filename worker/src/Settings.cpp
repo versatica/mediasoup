@@ -182,21 +182,21 @@ void Settings::PrintConfiguration()
 	std::vector<std::string> logTags;
 
 	if (Settings::configuration.logTags.info)
-		logTags.push_back("info");
+		logTags.emplace_back("info");
 	if (Settings::configuration.logTags.ice)
-		logTags.push_back("ice");
+		logTags.emplace_back("ice");
 	if (Settings::configuration.logTags.dtls)
-		logTags.push_back("dtls");
+		logTags.emplace_back("dtls");
 	if (Settings::configuration.logTags.rtp)
-		logTags.push_back("rtp");
+		logTags.emplace_back("rtp");
 	if (Settings::configuration.logTags.srtp)
-		logTags.push_back("srtp");
+		logTags.emplace_back("srtp");
 	if (Settings::configuration.logTags.rtcp)
-		logTags.push_back("rtcp");
+		logTags.emplace_back("rtcp");
 	if (Settings::configuration.logTags.rbe)
-		logTags.push_back("rbe");
+		logTags.emplace_back("rbe");
 	if (Settings::configuration.logTags.rtx)
-		logTags.push_back("rtx");
+		logTags.emplace_back("rtx");
 
 	MS_DEBUG_TAG(info, "<configuration>");
 
