@@ -3449,8 +3449,8 @@ case 85:
 		// Ensure that the parsing has consumed all the given length.
 		if (ipLen == (size_t)(p - (const unsigned char*)ip))
 			return ipFamily;
-		else
-			return AF_UNSPEC;
+
+		  return AF_UNSPEC;
 	}
 
 	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, uint16_t* port)

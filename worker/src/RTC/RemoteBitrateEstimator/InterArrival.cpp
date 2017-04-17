@@ -145,12 +145,10 @@ namespace RTC
 			return false;
 		if (BelongsToBurst(arrivalTimeMs, timestamp))
 			return false;
-		else
-		{
-			uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
 
-			return timestampDiff > this->timestampGroupLengthTicks;
-		}
+		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
+
+		return timestampDiff > this->timestampGroupLengthTicks;
 	}
 
 	bool InterArrival::BelongsToBurst(int64_t arrivalTimeMs, uint32_t timestamp) const

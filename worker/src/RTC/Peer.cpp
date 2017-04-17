@@ -636,7 +636,7 @@ namespace RTC
 					return rtpSender;
 				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
 					return rtpSender;
-				else if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
+				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
 					return rtpSender;
 			}
 		}

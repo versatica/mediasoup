@@ -938,18 +938,16 @@ namespace RTC
 			return true;
 		}
 		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
-		else
-		{
-			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
 
-			Reset();
+		MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
 
-			// Set state and notify the listener.
-			this->state = DtlsState::FAILED;
-			this->listener->OnDtlsFailed(this);
+		Reset();
 
-			return false;
-		}
+		// Set state and notify the listener.
+		this->state = DtlsState::FAILED;
+		this->listener->OnDtlsFailed(this);
+
+		return false;
 	}
 
 	inline void DtlsTransport::ProcessHandshake()

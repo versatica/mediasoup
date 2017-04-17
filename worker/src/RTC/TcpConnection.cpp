@@ -96,45 +96,43 @@ namespace RTC
 			}
 
 			// Incomplete packet.
-			else
+
+			// Check if the buffer is full.
+			if (this->bufferDataLen == this->bufferSize)
 			{
-				// Check if the buffer is full.
-				if (this->bufferDataLen == this->bufferSize)
+				// First case: the incomplete frame does not begin at position 0 of
+				// the buffer, so move the frame to the position 0.
+				if (this->frameStart != 0)
 				{
-					// First case: the incomplete frame does not begin at position 0 of
-					// the buffer, so move the frame to the position 0.
-					if (this->frameStart != 0)
-					{
-						MS_DEBUG_DEV(
-						    "no more space in the buffer, moving parsed bytes to the beginning of "
-						    "the buffer and wait for more data");
+					MS_DEBUG_DEV(
+					    "no more space in the buffer, moving parsed bytes to the beginning of "
+					    "the buffer and wait for more data");
 
-						std::memmove(
-						    this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
-						this->bufferDataLen = this->bufferSize - this->frameStart;
-						this->frameStart    = 0;
-					}
-					// Second case: the incomplete frame begins at position 0 of the buffer.
-					// The frame is too big, so close the connection.
-					else
-					{
-						MS_WARN_DEV(
-						    "no more space in the buffer for the unfinished frame being parsed, closing the "
-						    "connection");
-
-						// Close the socket.
-						Destroy();
-					}
+					std::memmove(
+					    this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
+					this->bufferDataLen = this->bufferSize - this->frameStart;
+					this->frameStart    = 0;
 				}
-				// The buffer is not full.
+				// Second case: the incomplete frame begins at position 0 of the buffer.
+				// The frame is too big, so close the connection.
 				else
 				{
-					MS_DEBUG_DEV("frame not finished yet, waiting for more data");
-				}
+					MS_WARN_DEV(
+					    "no more space in the buffer for the unfinished frame being parsed, closing the "
+					    "connection");
 
-				// Exit the parsing loop.
-				break;
+					// Close the socket.
+					Destroy();
+				}
 			}
+			// The buffer is not full.
+			else
+			{
+				MS_DEBUG_DEV("frame not finished yet, waiting for more data");
+			}
+
+			// Exit the parsing loop.
+			break;
 		}
 	}
 

@@ -207,7 +207,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 		return;
 	}
 	// Error,
-	else if (sent != UV_EAGAIN)
+	if (sent != UV_EAGAIN)
 	{
 		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
 
