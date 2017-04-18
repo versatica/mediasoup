@@ -66,7 +66,7 @@ void DepOpenSSL::ClassDestroy()
 	CRYPTO_cleanup_all_ex_data();
 
 	// https://bugs.launchpad.net/percona-server/+bug/1341067.
-	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
+	sk_SSL_COMP_free(SSL_COMP_get_compression_methods()); // NOLINT
 
 	// Free mutexes.
 	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
@@ -88,7 +88,7 @@ void DepOpenSSL::SetThreadId(CRYPTO_THREADID* id)
 {
 	// MS_TRACE();
 
-	CRYPTO_THREADID_set_numeric(id, (unsigned long)uv_thread_self());
+	CRYPTO_THREADID_set_numeric(id, (unsigned long)uv_thread_self()); // NOLINT
 }
 
 void DepOpenSSL::LockingFunction(int mode, int n, const char* /*file*/, int /*line*/)
