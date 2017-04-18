@@ -27,7 +27,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackRtp::MessageType messageType = FeedbackRtp::MessageType::TLLEI;
+			static const FeedbackRtp::MessageType messageType{FeedbackRtp::MessageType::TLLEI};
 
 		public:
 			static FeedbackRtpTlleiItem* Parse(const uint8_t* data, size_t len);
@@ -48,7 +48,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{nullptr};
 		};
 
 		// Tllei packet declaration.

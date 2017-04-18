@@ -93,7 +93,7 @@ protected:
 	// Passed by argument.
 	size_t bufferSize{0};
 	// Allocated by this.
-	uint8_t* buffer = nullptr;
+	uint8_t* buffer{nullptr};
 	// Others.
 	size_t bufferDataLen{0};
 	std::string localIP;

@@ -14,7 +14,9 @@ namespace Utils
 	{
 		MS_TRACE();
 
+		// clang-format off
 		struct stat fileStat{};
+		// clang-format on
 		int err;
 
 		// Ensure the given file exists.

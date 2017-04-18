@@ -23,8 +23,8 @@ namespace RTC
 	public:
 		// After this many packet groups received out of order InterArrival will
 		// reset, assuming that clocks have made a jump.
-		static constexpr int ReorderedResetThreshold          = 3;
-		static constexpr int64_t ArrivalTimeOffsetThresholdMs = 3000;
+		static constexpr int ReorderedResetThreshold{3};
+		static constexpr int64_t ArrivalTimeOffsetThresholdMs{3000};
 
 		// A timestamp group is defined as all packets with a timestamp which are at
 		// most timestampGroupLengthTicks older than the first timestamp in that
@@ -54,11 +54,11 @@ namespace RTC
 			TimestampGroup();
 			bool IsFirstPacket() const;
 
-			size_t size              = 0;
-			uint32_t firstTimestamp  = 0;
-			uint32_t timestamp       = 0;
-			int64_t completeTimeMs   = 0;
-			int64_t lastSystemTimeMs = 0;
+			size_t size{0};
+			uint32_t firstTimestamp{0};
+			uint32_t timestamp{0};
+			int64_t completeTimeMs{0};
+			int64_t lastSystemTimeMs{0};
 		};
 
 		// Returns true if the packet with timestamp |timestamp| arrived in order.
@@ -72,9 +72,9 @@ namespace RTC
 		const uint32_t timestampGroupLengthTicks;
 		TimestampGroup currentTimestampGroup;
 		TimestampGroup prevTimestampGroup;
-		double timestampToMsCoeff          = 0;
-		bool burstGrouping                 = false;
-		int numConsecutiveReorderedPackets = 0;
+		double timestampToMsCoeff{0};
+		bool burstGrouping{false};
+		int numConsecutiveReorderedPackets{0};
 	};
 
 	/* Inline methods. */

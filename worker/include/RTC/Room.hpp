@@ -74,12 +74,12 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t roomId;
+		uint32_t roomId{0};
 
 	private:
 		// Passed by argument.
-		Listener* listener          = nullptr;
-		Channel::Notifier* notifier = nullptr;
+		Listener* listener{nullptr};
+		Channel::Notifier* notifier{nullptr};
 		// Others.
 		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;

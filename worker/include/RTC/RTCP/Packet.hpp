@@ -10,12 +10,12 @@ namespace RTC
 	namespace RTCP
 	{
 		// Internal buffer for RTCP serialization.
-		constexpr size_t BufferSize = 65536;
+		constexpr size_t BufferSize{65536};
 		extern uint8_t Buffer[BufferSize];
 
 		// Maximum interval for regular RTCP mode.
-		constexpr uint16_t MaxVideoIntervalMs = 1000;
-		constexpr uint16_t MaxAudioIntervalMs = 5000;
+		constexpr uint16_t MaxVideoIntervalMs{1000};
+		constexpr uint16_t MaxAudioIntervalMs{5000};
 
 		enum class Type : uint8_t
 		{
@@ -76,8 +76,8 @@ namespace RTC
 
 		private:
 			Type type;
-			Packet* next         = nullptr;
-			CommonHeader* header = nullptr;
+			Packet* next{nullptr};
+			CommonHeader* header{nullptr};
 		};
 
 		/* Inline static methods. */

@@ -45,7 +45,9 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 	}
 
+	// clang-format off
 	struct sockaddr_storage bindAddr{};
+	// clang-format on
 
 	switch (Utils::IP::GetFamily(ip))
 	{

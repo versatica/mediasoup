@@ -125,34 +125,34 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t transportId;
+		uint32_t transportId{0};
 
 	private:
 		// Passed by argument.
-		Listener* listener          = nullptr;
-		Channel::Notifier* notifier = nullptr;
+		Listener* listener{nullptr};
+		Channel::Notifier* notifier{nullptr};
 		// Allocated by this.
-		RTC::IceServer* iceServer = nullptr;
+		RTC::IceServer* iceServer{nullptr};
 		std::vector<RTC::UdpSocket*> udpSockets;
 		std::vector<RTC::TcpServer*> tcpServers;
-		RTC::DtlsTransport* dtlsTransport = nullptr;
-		RTC::SrtpSession* srtpRecvSession = nullptr;
-		RTC::SrtpSession* srtpSendSession = nullptr;
+		RTC::DtlsTransport* dtlsTransport{nullptr};
+		RTC::SrtpSession* srtpRecvSession{nullptr};
+		RTC::SrtpSession* srtpSendSession{nullptr};
 		// Others.
-		bool allocated = false;
+		bool allocated{false};
 		// Others (ICE).
 		std::vector<IceCandidate> iceLocalCandidates;
-		RTC::TransportTuple* selectedTuple = nullptr;
+		RTC::TransportTuple* selectedTuple{nullptr};
 		// Others (DTLS).
-		bool remoteDtlsParametersGiven         = false;
-		RTC::DtlsTransport::Role dtlsLocalRole = RTC::DtlsTransport::Role::AUTO;
+		bool remoteDtlsParametersGiven{false};
+		RTC::DtlsTransport::Role dtlsLocalRole{RTC::DtlsTransport::Role::AUTO};
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		// REMB and bitrate stuff.
 		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
-		uint32_t maxBitrate                = 0;
-		uint32_t effectiveMaxBitrate       = 0;
-		uint64_t lastEffectiveMaxBitrateAt = 0;
+		uint32_t maxBitrate{0};
+		uint32_t effectiveMaxBitrate{0};
+		uint64_t lastEffectiveMaxBitrateAt{0};
 	};
 
 	/* Inline instance methods. */

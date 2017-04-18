@@ -20,7 +20,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint16_t MaxBindAttempts = 20;
+	static constexpr uint16_t MaxBindAttempts{20};
 
 	/* Class variables. */
 
@@ -84,7 +84,9 @@ namespace RTC
 
 		int err;
 		uv_udp_t* uvHandle = nullptr;
+		// clang-format off
 		struct sockaddr_storage bindAddr{};
+		// clang-format on
 		const char* listenIp;
 		uint16_t initialPort;
 		uint16_t iteratingPort;

@@ -51,8 +51,8 @@ namespace RTC
 			void SetOctetCount(uint32_t octetCount);
 
 		private:
-			Header* header              = nullptr;
-			uint8_t raw[sizeof(Header)] = {0};
+			Header* header{nullptr};
+			uint8_t raw[sizeof(Header)]{0};
 		};
 
 		class SenderReportPacket : public Packet

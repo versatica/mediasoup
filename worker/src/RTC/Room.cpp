@@ -70,7 +70,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringMediaCodecs("mediaCodecs");
+		static const Json::StaticString JsonStringMediaCodecs{"mediaCodecs"};
 
 		// `mediaCodecs` is optional.
 		if (data[JsonStringMediaCodecs].isArray())
@@ -117,7 +117,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
+		static const Json::StaticString JsonStringClass{"class"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -147,11 +147,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRoomId("roomId");
-		static const Json::StaticString JsonStringCapabilities("capabilities");
-		static const Json::StaticString JsonStringPeers("peers");
-		static const Json::StaticString JsonStringMapRtpReceiverRtpSenders("mapRtpReceiverRtpSenders");
-		static const Json::StaticString JsonStringMapRtpSenderRtpReceiver("mapRtpSenderRtpReceiver");
+		static const Json::StaticString JsonStringRoomId{"roomId"};
+		static const Json::StaticString JsonStringCapabilities{"capabilities"};
+		static const Json::StaticString JsonStringPeers{"peers"};
+		static const Json::StaticString JsonStringMapRtpReceiverRtpSenders{"mapRtpReceiverRtpSenders"};
+		static const Json::StaticString JsonStringMapRtpSenderRtpReceiver{"mapRtpSenderRtpReceiver"};
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonPeers(Json::arrayValue);
@@ -235,7 +235,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROOM_CREATE_PEER:
 			{
-				static const Json::StaticString JsonStringPeerName("peerName");
+				static const Json::StaticString JsonStringPeerName{"peerName"};
 
 				RTC::Peer* peer;
 				uint32_t peerId;
@@ -347,7 +347,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringPeerId("peerId");
+		static const Json::StaticString JsonStringPeerId{"peerId"};
 
 		auto jsonPeerId = request->internal[JsonStringPeerId];
 

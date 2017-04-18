@@ -267,9 +267,9 @@ namespace Utils
 	class Time
 	{
 		// Seconds from Jan 1, 1900 to Jan 1, 1970.
-		static constexpr uint32_t UnixNtpOffset = 0x83AA7E80;
+		static constexpr uint32_t UnixNtpOffset{0x83AA7E80};
 		// NTP fractional unit.
-		static constexpr double NtpFractionalUnit = 1LL << 32;
+		static constexpr double NtpFractionalUnit{1LL << 32};
 
 	public:
 		struct Ntp

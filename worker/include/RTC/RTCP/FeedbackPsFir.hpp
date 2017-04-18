@@ -31,7 +31,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType messageType = FeedbackPs::MessageType::FIR;
+			static const FeedbackPs::MessageType messageType{FeedbackPs::MessageType::FIR};
 
 		public:
 			static FeedbackPsFirItem* Parse(const uint8_t* data, size_t len);
@@ -52,7 +52,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{nullptr};
 		};
 
 		// Fir packet declaration.

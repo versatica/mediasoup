@@ -19,7 +19,7 @@
 
 namespace RTC
 {
-	static const int BurstDeltaThresholdMs = 5;
+	static const int BurstDeltaThresholdMs{5};
 
 	bool InterArrival::ComputeDeltas(
 	    uint32_t timestamp,

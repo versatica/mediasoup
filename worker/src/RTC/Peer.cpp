@@ -38,7 +38,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
+		static const Json::StaticString JsonStringClass{"class"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -85,12 +85,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringPeerId("peerId");
-		static const Json::StaticString JsonStringPeerName("peerName");
-		static const Json::StaticString JsonStringCapabilities("capabilities");
-		static const Json::StaticString JsonStringTransports("transports");
-		static const Json::StaticString JsonStringRtpReceivers("rtpReceivers");
-		static const Json::StaticString JsonStringRtpSenders("rtpSenders");
+		static const Json::StaticString JsonStringPeerId{"peerId"};
+		static const Json::StaticString JsonStringPeerName{"peerName"};
+		static const Json::StaticString JsonStringCapabilities{"capabilities"};
+		static const Json::StaticString JsonStringTransports{"transports"};
+		static const Json::StaticString JsonStringRtpReceivers{"rtpReceivers"};
+		static const Json::StaticString JsonStringRtpSenders{"rtpSenders"};
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonTransports(Json::arrayValue);
@@ -253,7 +253,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::PEER_CREATE_RTP_RECEIVER:
 			{
-				static const Json::StaticString JsonStringKind("kind");
+				static const Json::StaticString JsonStringKind{"kind"};
 
 				RTC::RtpReceiver* rtpReceiver;
 				RTC::Transport* transport = nullptr;
@@ -581,12 +581,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringRtpSenderId("rtpSenderId");
-		static const Json::StaticString JsonStringKind("kind");
-		static const Json::StaticString JsonStringRtpParameters("rtpParameters");
-		static const Json::StaticString JsonStringActive("active");
-		static const Json::StaticString JsonStringAssociatedRtpReceiverId("associatedRtpReceiverId");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringRtpSenderId{"rtpSenderId"};
+		static const Json::StaticString JsonStringKind{"kind"};
+		static const Json::StaticString JsonStringRtpParameters{"rtpParameters"};
+		static const Json::StaticString JsonStringActive{"active"};
+		static const Json::StaticString JsonStringAssociatedRtpReceiverId{"associatedRtpReceiverId"};
 
 		MS_ASSERT(
 		    this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
@@ -716,7 +716,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTransportId("transportId");
+		static const Json::StaticString JsonStringTransportId{"transportId"};
 
 		auto jsonTransportId = request->internal[JsonStringTransportId];
 
@@ -741,7 +741,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRtpReceiverId("rtpReceiverId");
+		static const Json::StaticString JsonStringRtpReceiverId{"rtpReceiverId"};
 
 		auto jsonRtpReceiverId = request->internal[JsonStringRtpReceiverId];
 
@@ -766,7 +766,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRtpSenderId("rtpSenderId");
+		static const Json::StaticString JsonStringRtpSenderId{"rtpSenderId"};
 
 		auto jsonRtpSenderId = request->internal[JsonStringRtpSenderId];
 

@@ -10,10 +10,10 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t RtpSeqMod = 1 << 16;
+	static constexpr uint32_t RtpSeqMod{1 << 16};
 	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionAge = 500;
-	static constexpr uint32_t DefaultRtt           = 100;
+	static constexpr uint32_t MaxRetransmissionAge{500};
+	static constexpr uint32_t DefaultRtt{100};
 
 	/* Instance methods. */
 
@@ -35,11 +35,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringParams("params");
-		static const Json::StaticString JsonStringReceived("received");
-		static const Json::StaticString JsonStringMaxTimestamp("maxTimestamp");
-		static const Json::StaticString JsonStringReceivedBytes("receivedBytes");
-		static const Json::StaticString JsonStringRtt("rtt");
+		static const Json::StaticString JsonStringParams{"params"};
+		static const Json::StaticString JsonStringReceived{"received"};
+		static const Json::StaticString JsonStringMaxTimestamp{"maxTimestamp"};
+		static const Json::StaticString JsonStringReceivedBytes{"receivedBytes"};
+		static const Json::StaticString JsonStringRtt{"rtt"};
 
 		Json::Value json(Json::objectValue);
 
@@ -105,7 +105,7 @@ namespace RTC
 		MS_TRACE();
 
 		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets = 17;
+		static constexpr size_t MaxRequestedPackets{17};
 
 		// Ensure the container's first element is 0.
 		container[0] = nullptr;

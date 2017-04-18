@@ -27,7 +27,7 @@ namespace RTC
 	class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator
 	{
 	private:
-		static constexpr double TimestampToMs = 1.0 / 90.0;
+		static constexpr double TimestampToMs{1.0 / 90.0};
 
 	public:
 		explicit RemoteBitrateEstimatorSingleStream(Listener* observer);
@@ -76,12 +76,12 @@ namespace RTC
 	private:
 		SsrcOveruseEstimatorMap overuseDetectors;
 		RateCalculator incomingBitrate;
-		uint32_t lastValidIncomingBitrate = 0;
+		uint32_t lastValidIncomingBitrate{0};
 		std::unique_ptr<AimdRateControl> remoteRate;
-		Listener* observer        = nullptr;
-		int64_t lastProcessTime   = -1;
-		int64_t processIntervalMs = 0;
-		bool umaRecorded          = false;
+		Listener* observer{nullptr};
+		int64_t lastProcessTime{-1};
+		int64_t processIntervalMs{0};
+		bool umaRecorded{false};
 	};
 
 	/* Inline Methods. */
@@ -106,6 +106,7 @@ namespace RTC
 		while (!this->overuseDetectors.empty())
 		{
 			auto it = this->overuseDetectors.begin();
+
 			delete it->second;
 			this->overuseDetectors.erase(it);
 		}
@@ -117,15 +118,15 @@ namespace RTC
 		this->lastProcessTime = DepLibUV::GetTime();
 	}
 
-	inline void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)
+	inline void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avgRttMs, int64_t /*maxRttMs*/)
 	{
-		(void)maxRttMs;
 		GetRemoteRate()->SetRtt(avgRttMs);
 	}
 
 	inline void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc)
 	{
 		auto it = this->overuseDetectors.find(ssrc);
+
 		if (it != this->overuseDetectors.end())
 		{
 			delete it->second;

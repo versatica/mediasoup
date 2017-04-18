@@ -13,8 +13,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringType("type");
-		static const Json::StaticString JsonStringParameter("parameter");
+		static const Json::StaticString JsonStringType{"type"};
+		static const Json::StaticString JsonStringParameter{"parameter"};
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtcpFeedback is not an object");
@@ -34,8 +34,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringType("type");
-		static const Json::StaticString JsonStringParameter("parameter");
+		static const Json::StaticString JsonStringType{"type"};
+		static const Json::StaticString JsonStringParameter{"parameter"};
 
 		Json::Value json(Json::objectValue);
 

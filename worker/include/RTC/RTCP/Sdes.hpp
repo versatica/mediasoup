@@ -56,7 +56,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Header* header = nullptr;
+			Header* header{nullptr};
 			std::unique_ptr<uint8_t> raw;
 
 		private:
@@ -87,7 +87,7 @@ namespace RTC
 			Iterator End();
 
 		private:
-			uint32_t ssrc;
+			uint32_t ssrc{0};
 			std::vector<SdesItem*> items;
 		};
 

@@ -20,8 +20,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint16_t MaxBindAttempts          = 20;
-	static constexpr size_t MaxTcpConnectionsPerServer = 10;
+	static constexpr uint16_t MaxBindAttempts{20};
+	static constexpr size_t MaxTcpConnectionsPerServer{10};
 
 	/* Class variables. */
 
@@ -85,7 +85,9 @@ namespace RTC
 
 		int err;
 		uv_tcp_t* uvHandle = nullptr;
-		struct sockaddr_storage bindAddr{};
+		struct sockaddr_storage bindAddr
+		{
+		};
 		const char* listenIp;
 		uint16_t initialPort;
 		uint16_t iteratingPort;

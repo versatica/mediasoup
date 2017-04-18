@@ -13,10 +13,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind("kind");
-		static const Json::StaticString JsonStringUri("uri");
-		static const Json::StaticString JsonStringPreferredId("preferredId");
-		static const Json::StaticString JsonStringPreferredEncrypt("preferredEncrypt");
+		static const Json::StaticString JsonStringKind{"kind"};
+		static const Json::StaticString JsonStringUri{"uri"};
+		static const Json::StaticString JsonStringPreferredId{"preferredId"};
+		static const Json::StaticString JsonStringPreferredEncrypt{"preferredEncrypt"};
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpHeaderExtension is not an object");
@@ -56,10 +56,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind("kind");
-		static const Json::StaticString JsonStringUri("uri");
-		static const Json::StaticString JsonStringPreferredId("preferredId");
-		static const Json::StaticString JsonStringPreferredEncrypt("preferredEncrypt");
+		static const Json::StaticString JsonStringKind{"kind"};
+		static const Json::StaticString JsonStringUri{"uri"};
+		static const Json::StaticString JsonStringPreferredId{"preferredId"};
+		static const Json::StaticString JsonStringPreferredEncrypt{"preferredEncrypt"};
 
 		Json::Value json(Json::objectValue);
 

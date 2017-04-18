@@ -13,10 +13,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringUri("uri");
-		static const Json::StaticString JsonStringId("id");
-		static const Json::StaticString JsonStringEncrypt("encrypt");
-		static const Json::StaticString JsonStringParameters("parameters");
+		static const Json::StaticString JsonStringUri{"uri"};
+		static const Json::StaticString JsonStringId{"id"};
+		static const Json::StaticString JsonStringEncrypt{"encrypt"};
+		static const Json::StaticString JsonStringParameters{"parameters"};
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpHeaderExtensionParameters is not an object");
@@ -51,10 +51,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringUri("uri");
-		static const Json::StaticString JsonStringId("id");
-		static const Json::StaticString JsonStringEncrypt("encrypt");
-		static const Json::StaticString JsonStringParameters("parameters");
+		static const Json::StaticString JsonStringUri{"uri"};
+		static const Json::StaticString JsonStringId{"id"};
+		static const Json::StaticString JsonStringEncrypt{"encrypt"};
+		static const Json::StaticString JsonStringParameters{"parameters"};
 
 		Json::Value json(Json::objectValue);
 

@@ -17,8 +17,8 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTargetId("targetId");
-		static const Json::StaticString JsonStringEvent("event");
+		static const Json::StaticString JsonStringTargetId{"targetId"};
+		static const Json::StaticString JsonStringEvent{"event"};
 
 		Json::Value json(Json::objectValue);
 
@@ -32,9 +32,9 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTargetId("targetId");
-		static const Json::StaticString JsonStringEvent("event");
-		static const Json::StaticString JsonStringData("data");
+		static const Json::StaticString JsonStringTargetId{"targetId"};
+		static const Json::StaticString JsonStringEvent{"event"};
+		static const Json::StaticString JsonStringData{"data"};
 
 		Json::Value json(Json::objectValue);
 
@@ -54,10 +54,10 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTargetId("targetId");
-		static const Json::StaticString JsonStringEvent("event");
-		static const Json::StaticString JsonStringData("data");
-		static const Json::StaticString JsonStringBinary("binary");
+		static const Json::StaticString JsonStringTargetId{"targetId"};
+		static const Json::StaticString JsonStringEvent{"event"};
+		static const Json::StaticString JsonStringData{"data"};
+		static const Json::StaticString JsonStringBinary{"binary"};
 
 		Json::Value json(Json::objectValue);
 

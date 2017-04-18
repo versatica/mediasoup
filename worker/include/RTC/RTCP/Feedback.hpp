@@ -48,8 +48,8 @@ namespace RTC
 			~FeedbackPacket() override;
 
 		private:
-			Header* header = nullptr;
-			uint8_t* raw   = nullptr;
+			Header* header{nullptr};
+			uint8_t* raw{nullptr};
 			typename t::MessageType messageType;
 		};
 

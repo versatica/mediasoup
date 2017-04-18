@@ -23,8 +23,8 @@ namespace RTC
 	{
 		class FeedbackPsRpsiItem : public FeedbackItem
 		{
-			const static size_t maxBitStringSize = 6;
-			const static size_t bitStringOffset  = 2;
+			const static size_t maxBitStringSize{6};
+			const static size_t bitStringOffset{2};
 
 		private:
 			struct Header
@@ -36,7 +36,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType messageType = FeedbackPs::MessageType::RPSI;
+			static const FeedbackPs::MessageType messageType{FeedbackPs::MessageType::RPSI};
 
 		public:
 			static FeedbackPsRpsiItem* Parse(const uint8_t* data, size_t len);
@@ -59,8 +59,8 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
-			size_t length  = 0;
+			Header* header{nullptr};
+			size_t length{0};
 		};
 
 		// Rpsi packet declaration.

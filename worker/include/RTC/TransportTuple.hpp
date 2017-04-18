@@ -33,10 +33,10 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::UdpSocket* udpSocket      = nullptr;
-		struct sockaddr* udpRemoteAddr = nullptr;
+		RTC::UdpSocket* udpSocket{nullptr};
+		struct sockaddr* udpRemoteAddr{nullptr};
 		sockaddr_storage udpRemoteAddrStorage;
-		RTC::TcpConnection* tcpConnection = nullptr;
+		RTC::TcpConnection* tcpConnection{nullptr};
 		// Others.
 		Protocol protocol;
 	};

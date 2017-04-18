@@ -27,7 +27,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackRtp::MessageType messageType = FeedbackRtp::MessageType::NACK;
+			static const FeedbackRtp::MessageType messageType{FeedbackRtp::MessageType::NACK};
 
 		public:
 			static FeedbackRtpNackItem* Parse(const uint8_t* data, size_t len);
@@ -48,7 +48,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{nullptr};
 		};
 
 		// Nack packet declaration.

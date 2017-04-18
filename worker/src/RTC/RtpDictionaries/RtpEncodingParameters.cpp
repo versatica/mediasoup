@@ -13,16 +13,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc("ssrc");
-		static const Json::StaticString JsonStringCodecPayloadType("codecPayloadType");
-		static const Json::StaticString JsonStringFec("fec");
-		static const Json::StaticString JsonStringRtx("rtx");
-		static const Json::StaticString JsonStringResolutionScale("resolutionScale");
-		static const Json::StaticString JsonStringFramerateScale("framerateScale");
-		static const Json::StaticString JsonStringMaxFramerate("maxFramerate");
-		static const Json::StaticString JsonStringActive("active");
-		static const Json::StaticString JsonStringEncodingId("encodingId");
-		static const Json::StaticString JsonStringDependencyEncodingIds("dependencyEncodingIds");
+		static const Json::StaticString JsonStringSsrc{"ssrc"};
+		static const Json::StaticString JsonStringCodecPayloadType{"codecPayloadType"};
+		static const Json::StaticString JsonStringFec{"fec"};
+		static const Json::StaticString JsonStringRtx{"rtx"};
+		static const Json::StaticString JsonStringResolutionScale{"resolutionScale"};
+		static const Json::StaticString JsonStringFramerateScale{"framerateScale"};
+		static const Json::StaticString JsonStringMaxFramerate{"maxFramerate"};
+		static const Json::StaticString JsonStringActive{"active"};
+		static const Json::StaticString JsonStringEncodingId{"encodingId"};
+		static const Json::StaticString JsonStringDependencyEncodingIds{"dependencyEncodingIds"};
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpEncodingParameters is not an object");
@@ -90,16 +90,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc("ssrc");
-		static const Json::StaticString JsonStringCodecPayloadType("codecPayloadType");
-		static const Json::StaticString JsonStringFec("fec");
-		static const Json::StaticString JsonStringRtx("rtx");
-		static const Json::StaticString JsonStringResolutionScale("resolutionScale");
-		static const Json::StaticString JsonStringFramerateScale("framerateScale");
-		static const Json::StaticString JsonStringMaxFramerate("maxFramerate");
-		static const Json::StaticString JsonStringActive("active");
-		static const Json::StaticString JsonStringEncodingId("encodingId");
-		static const Json::StaticString JsonStringDependencyEncodingIds("dependencyEncodingIds");
+		static const Json::StaticString JsonStringSsrc{"ssrc"};
+		static const Json::StaticString JsonStringCodecPayloadType{"codecPayloadType"};
+		static const Json::StaticString JsonStringFec{"fec"};
+		static const Json::StaticString JsonStringRtx{"rtx"};
+		static const Json::StaticString JsonStringResolutionScale{"resolutionScale"};
+		static const Json::StaticString JsonStringFramerateScale{"framerateScale"};
+		static const Json::StaticString JsonStringMaxFramerate{"maxFramerate"};
+		static const Json::StaticString JsonStringActive{"active"};
+		static const Json::StaticString JsonStringEncodingId{"encodingId"};
+		static const Json::StaticString JsonStringDependencyEncodingIds{"dependencyEncodingIds"};
 
 		Json::Value json(Json::objectValue);
 

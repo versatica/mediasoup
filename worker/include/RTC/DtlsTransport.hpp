@@ -157,18 +157,18 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
+		Listener* listener{nullptr};
 		// Allocated by this.
-		SSL* ssl               = nullptr;
-		BIO* sslBioFromNetwork = nullptr; // The BIO from which ssl reads.
-		BIO* sslBioToNetwork   = nullptr; // The BIO in which ssl writes.
-		Timer* timer           = nullptr;
+		SSL* ssl{nullptr};
+		BIO* sslBioFromNetwork{nullptr}; // The BIO from which ssl reads.
+		BIO* sslBioToNetwork{nullptr};   // The BIO in which ssl writes.
+		Timer* timer{nullptr};
 		// Others.
-		DtlsState state               = DtlsState::NEW;
-		Role localRole                = Role::NONE;
-		Fingerprint remoteFingerprint = {FingerprintAlgorithm::NONE, ""};
-		bool handshakeDone            = false;
-		bool handshakeDoneNow         = false;
+		DtlsState state{DtlsState::NEW};
+		Role localRole{Role::NONE};
+		Fingerprint remoteFingerprint{FingerprintAlgorithm::NONE, ""};
+		bool handshakeDone{false};
+		bool handshakeDoneNow{false};
 		std::string remoteCert;
 	};
 

@@ -14,13 +14,13 @@
 
 /* Consts. */
 
-static constexpr uint16_t IceCandidateDefaultLocalPriority                 = 20000;
-static constexpr uint16_t IceCandidateLocalPriorityPreferFamilyIncrement   = 10000;
-static constexpr uint16_t IceCandidateLocalPriorityPreferProtocolIncrement = 5000;
+static constexpr uint16_t IceCandidateDefaultLocalPriority{20000};
+static constexpr uint16_t IceCandidateLocalPriorityPreferFamilyIncrement{10000};
+static constexpr uint16_t IceCandidateLocalPriorityPreferProtocolIncrement{5000};
 // We just provide "host" candidates so `type preference` is fixed.
-static constexpr uint16_t IceTypePreference = 64;
+static constexpr uint16_t IceTypePreference{64};
 // We do not support non rtcp-mux so `component` is always 1.
-static constexpr uint16_t IceComponent = 1;
+static constexpr uint16_t IceComponent{1};
 
 /* Static helpers. */
 
@@ -36,8 +36,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t EffectiveMaxBitrateCheckInterval          = 2000; // In ms.
-	static constexpr double EffectiveMaxBitrateThresholdBeforeFullFrame = 0.6;  // 0.0 - 1.0.
+	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{2000};         // In ms.
+	static constexpr double EffectiveMaxBitrateThresholdBeforeFullFrame{0.6}; // 0.0 - 1.0.
 
 	/* Instance methods. */
 
@@ -47,12 +47,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringUdp("udp");
-		static const Json::StaticString JsonStringTcp("tcp");
-		static const Json::StaticString JsonStringPreferIPv4("preferIPv4");
-		static const Json::StaticString JsonStringPreferIPv6("preferIPv6");
-		static const Json::StaticString JsonStringPreferUdp("preferUdp");
-		static const Json::StaticString JsonStringPreferTcp("preferTcp");
+		static const Json::StaticString JsonStringUdp{"udp"};
+		static const Json::StaticString JsonStringTcp{"tcp"};
+		static const Json::StaticString JsonStringPreferIPv4{"preferIPv4"};
+		static const Json::StaticString JsonStringPreferIPv6{"preferIPv6"};
+		static const Json::StaticString JsonStringPreferUdp{"preferUdp"};
+		static const Json::StaticString JsonStringPreferTcp{"preferTcp"};
 
 		bool tryIPv4udp = true;
 		bool tryIPv6udp = true;
@@ -211,7 +211,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
+		static const Json::StaticString JsonStringClass{"class"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -256,33 +256,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTransportId("transportId");
-		static const Json::StaticString JsonStringIceRole("iceRole");
-		static const Json::StaticString JsonStringControlled("controlled");
-		static const Json::StaticString JsonStringIceLocalParameters("iceLocalParameters");
-		static const Json::StaticString JsonStringUsernameFragment("usernameFragment");
-		static const Json::StaticString JsonStringPassword("password");
-		static const Json::StaticString JsonStringIceLocalCandidates("iceLocalCandidates");
-		static const Json::StaticString JsonStringIceSelectedTuple("iceSelectedTuple");
-		static const Json::StaticString JsonStringIceState("iceState");
-		static const Json::StaticString JsonStringNew("new");
-		static const Json::StaticString JsonStringConnected("connected");
-		static const Json::StaticString JsonStringCompleted("completed");
-		static const Json::StaticString JsonStringDisconnected("disconnected");
-		static const Json::StaticString JsonStringDtlsLocalParameters("dtlsLocalParameters");
-		static const Json::StaticString JsonStringFingerprints("fingerprints");
-		static const Json::StaticString JsonStringRole("role");
-		static const Json::StaticString JsonStringAuto("auto");
-		static const Json::StaticString JsonStringClient("client");
-		static const Json::StaticString JsonStringServer("server");
-		static const Json::StaticString JsonStringDtlsState("dtlsState");
-		static const Json::StaticString JsonStringConnecting("connecting");
-		static const Json::StaticString JsonStringClosed("closed");
-		static const Json::StaticString JsonStringFailed("failed");
-		static const Json::StaticString JsonStringUseRemb("useRemb");
-		static const Json::StaticString JsonStringMaxBitrate("maxBitrate");
-		static const Json::StaticString JsonStringEffectiveMaxBitrate("effectiveMaxBitrate");
-		static const Json::StaticString JsonStringRtpListener("rtpListener");
+		static const Json::StaticString JsonStringTransportId{"transportId"};
+		static const Json::StaticString JsonStringIceRole{"iceRole"};
+		static const Json::StaticString JsonStringControlled{"controlled"};
+		static const Json::StaticString JsonStringIceLocalParameters{"iceLocalParameters"};
+		static const Json::StaticString JsonStringUsernameFragment{"usernameFragment"};
+		static const Json::StaticString JsonStringPassword{"password"};
+		static const Json::StaticString JsonStringIceLocalCandidates{"iceLocalCandidates"};
+		static const Json::StaticString JsonStringIceSelectedTuple{"iceSelectedTuple"};
+		static const Json::StaticString JsonStringIceState{"iceState"};
+		static const Json::StaticString JsonStringNew{"new"};
+		static const Json::StaticString JsonStringConnected{"connected"};
+		static const Json::StaticString JsonStringCompleted{"completed"};
+		static const Json::StaticString JsonStringDisconnected{"disconnected"};
+		static const Json::StaticString JsonStringDtlsLocalParameters{"dtlsLocalParameters"};
+		static const Json::StaticString JsonStringFingerprints{"fingerprints"};
+		static const Json::StaticString JsonStringRole{"role"};
+		static const Json::StaticString JsonStringAuto{"auto"};
+		static const Json::StaticString JsonStringClient{"client"};
+		static const Json::StaticString JsonStringServer{"server"};
+		static const Json::StaticString JsonStringDtlsState{"dtlsState"};
+		static const Json::StaticString JsonStringConnecting{"connecting"};
+		static const Json::StaticString JsonStringClosed{"closed"};
+		static const Json::StaticString JsonStringFailed{"failed"};
+		static const Json::StaticString JsonStringUseRemb{"useRemb"};
+		static const Json::StaticString JsonStringMaxBitrate{"maxBitrate"};
+		static const Json::StaticString JsonStringEffectiveMaxBitrate{"effectiveMaxBitrate"};
+		static const Json::StaticString JsonStringRtpListener{"rtpListener"};
 
 		Json::Value json(Json::objectValue);
 
@@ -411,12 +411,12 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
 			{
-				static const Json::StaticString JsonStringRole("role");
-				static const Json::StaticString JsonStringClient("client");
-				static const Json::StaticString JsonStringServer("server");
-				static const Json::StaticString JsonStringFingerprint("fingerprint");
-				static const Json::StaticString JsonStringAlgorithm("algorithm");
-				static const Json::StaticString JsonStringValue("value");
+				static const Json::StaticString JsonStringRole{"role"};
+				static const Json::StaticString JsonStringClient{"client"};
+				static const Json::StaticString JsonStringServer{"server"};
+				static const Json::StaticString JsonStringFingerprint{"fingerprint"};
+				static const Json::StaticString JsonStringAlgorithm{"algorithm"};
+				static const Json::StaticString JsonStringValue{"value"};
 
 				RTC::DtlsTransport::Fingerprint remoteFingerprint;
 				RTC::DtlsTransport::Role remoteRole =
@@ -509,8 +509,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
 			{
-				static const Json::StaticString JsonStringBitrate("bitrate");
-				static constexpr uint32_t MinBitrate = 10000;
+				static const Json::StaticString JsonStringBitrate{"bitrate"};
+				static constexpr uint32_t MinBitrate{10000};
 
 				// Validate request data.
 
@@ -537,8 +537,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
 			{
-				static const Json::StaticString JsonStringUsernameFragment("usernameFragment");
-				static const Json::StaticString JsonStringPassword("password");
+				static const Json::StaticString JsonStringUsernameFragment{"usernameFragment"};
+				static const Json::StaticString JsonStringPassword{"password"};
 
 				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
 				std::string password         = Utils::Crypto::GetRandomString(32);
@@ -977,8 +977,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringIceSelectedTuple("iceSelectedTuple");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringIceSelectedTuple{"iceSelectedTuple"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -1002,9 +1002,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringIceState("iceState");
-		static const Json::StaticString JsonStringConnected("connected");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringIceState{"iceState"};
+		static const Json::StaticString JsonStringConnected{"connected"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -1023,9 +1023,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringIceState("iceState");
-		static const Json::StaticString JsonStringCompleted("completed");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringIceState{"iceState"};
+		static const Json::StaticString JsonStringCompleted{"completed"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -1044,9 +1044,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringIceState("iceState");
-		static const Json::StaticString JsonStringDisconnected("disconnected");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringIceState{"iceState"};
+		static const Json::StaticString JsonStringDisconnected{"disconnected"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -1068,9 +1068,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringDtlsState("dtlsState");
-		static const Json::StaticString JsonStringConnecting("connecting");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringDtlsState{"dtlsState"};
+		static const Json::StaticString JsonStringConnecting{"connecting"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -1093,10 +1093,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringDtlsState("dtlsState");
-		static const Json::StaticString JsonStringConnected("connected");
-		static const Json::StaticString JsonStringDtlsRemoteCert("dtlsRemoteCert");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringDtlsState{"dtlsState"};
+		static const Json::StaticString JsonStringConnected{"connected"};
+		static const Json::StaticString JsonStringDtlsRemoteCert{"dtlsRemoteCert"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -1150,9 +1150,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringDtlsState("dtlsState");
-		static const Json::StaticString JsonStringFailed("failed");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringDtlsState{"dtlsState"};
+		static const Json::StaticString JsonStringFailed{"failed"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -1171,9 +1171,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringDtlsState("dtlsState");
-		static const Json::StaticString JsonStringClosed("closed");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringDtlsState{"dtlsState"};
+		static const Json::StaticString JsonStringClosed{"closed"};
 
 		Json::Value eventData(Json::objectValue);
 

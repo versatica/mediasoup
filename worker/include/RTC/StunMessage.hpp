@@ -95,21 +95,21 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Class klass;                            // 2 bytes.
-		Method method;                          // 2 bytes.
-		const uint8_t* transactionId = nullptr; // 12 bytes.
-		uint8_t* data                = nullptr; // Pointer to binary data.
-		size_t size                  = 0;       // The full message size (including header).
+		Class klass;                           // 2 bytes.
+		Method method;                         // 2 bytes.
+		const uint8_t* transactionId{nullptr}; // 12 bytes.
+		uint8_t* data{nullptr};                // Pointer to binary data.
+		size_t size{0};                        // The full message size (including header).
 		// STUN attributes.
-		std::string username;                              // Less than 513 bytes.
-		uint32_t priority                       = 0;       // 4 bytes unsigned integer.
-		uint64_t iceControlling                 = 0;       // 8 bytes unsigned integer.
-		uint64_t iceControlled                  = 0;       // 8 bytes unsigned integer.
-		bool hasUseCandidate                    = false;   // 0 bytes.
-		const uint8_t* messageIntegrity         = nullptr; // 20 bytes.
-		bool hasFingerprint                     = false;   // 4 bytes.
-		const struct sockaddr* xorMappedAddress = nullptr; // 8 or 20 bytes.
-		uint16_t errorCode                      = 0;       // 4 bytes (no reason phrase).
+		std::string username;                             // Less than 513 bytes.
+		uint32_t priority{0};                             // 4 bytes unsigned integer.
+		uint64_t iceControlling{0};                       // 8 bytes unsigned integer.
+		uint64_t iceControlled{0};                        // 8 bytes unsigned integer.
+		bool hasUseCandidate{false};                      // 0 bytes.
+		const uint8_t* messageIntegrity{nullptr};         // 20 bytes.
+		bool hasFingerprint{false};                       // 4 bytes.
+		const struct sockaddr* xorMappedAddress{nullptr}; // 8 or 20 bytes.
+		uint16_t errorCode{0};                            // 4 bytes (no reason phrase).
 		std::string password;
 	};
 

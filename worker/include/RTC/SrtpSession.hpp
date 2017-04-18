@@ -45,7 +45,7 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		srtp_t session = nullptr;
+		srtp_t session{nullptr};
 	};
 
 	/* Inline instance methods. */

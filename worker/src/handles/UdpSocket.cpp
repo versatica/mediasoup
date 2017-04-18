@@ -9,7 +9,7 @@
 
 /* Static. */
 
-static constexpr size_t ReadBufferSize = 65536;
+static constexpr size_t ReadBufferSize{65536};
 static uint8_t ReadBuffer[ReadBufferSize];
 
 /* Static methods for UV callbacks. */
@@ -69,7 +69,9 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 		MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
 	}
 
+	// clang-format off
 	struct sockaddr_storage bindAddr{};
+	// clang-format on
 
 	switch (Utils::IP::GetFamily(ip))
 	{
@@ -255,7 +257,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 	if (len == 0)
 		return;
 
-	struct sockaddr_storage addr{};
+	struct sockaddr_storage addr;
 
 	switch (Utils::IP::GetFamily(ip))
 	{

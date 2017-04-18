@@ -126,9 +126,17 @@ void ignoreSignals()
 	MS_TRACE();
 
 	int err;
+	// clang-format off
 	struct sigaction act{};
-	std::map<std::string, int> ignoredSignals = {
-	    {"PIPE", SIGPIPE}, {"HUP", SIGHUP}, {"ALRM", SIGALRM}, {"USR1", SIGUSR2}, {"USR2", SIGUSR1}};
+	std::map<std::string, int> ignoredSignals =
+	{
+		{ "PIPE", SIGPIPE },
+		{ "HUP",  SIGHUP  },
+		{ "ALRM", SIGALRM },
+		{ "USR1", SIGUSR2 },
+		{ "USR2", SIGUSR1}
+	};
+	// clang-format on
 
 	// Ignore clang-tidy cppcoreguidelines-pro-type-cstyle-cast.
 	act.sa_handler = SIG_IGN; // NOLINT

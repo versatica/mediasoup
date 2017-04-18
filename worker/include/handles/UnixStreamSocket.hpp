@@ -45,7 +45,7 @@ protected:
 
 private:
 	// Allocated by this.
-	uv_pipe_t* uvHandle = nullptr;
+	uv_pipe_t* uvHandle{nullptr};
 	// Others.
 	bool isClosing{false};
 	bool isClosedByPeer{false};

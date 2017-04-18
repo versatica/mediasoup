@@ -27,9 +27,9 @@ namespace RTC
 	class AimdRateControl
 	{
 	private:
-		static constexpr int64_t DefaultRttMs = 200;
+		static constexpr int64_t DefaultRttMs{200};
 		// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
-		static constexpr int MinBitrateBps = 10000;
+		static constexpr int MinBitrateBps{10000};
 
 	private:
 		enum RateControlState
@@ -88,21 +88,21 @@ namespace RTC
 		void ChangeRegion(RateControlRegion region);
 
 	private:
-		uint32_t minConfiguredBitrateBps    = MinBitrateBps;
-		uint32_t maxConfiguredBitrateBps    = 30000000;
-		uint32_t currentBitrateBps          = this->maxConfiguredBitrateBps;
-		float avgMaxBitrateKbps             = -1.0f;
-		float varMaxBitrateKbps             = 0.4f;
-		RateControlState rateControlState   = RC_HOLD;
-		RateControlRegion rateControlRegion = RC_MAX_UNKNOWN;
-		int64_t timeLastBitrateChange       = -1;
+		uint32_t minConfiguredBitrateBps{MinBitrateBps};
+		uint32_t maxConfiguredBitrateBps{30000000};
+		uint32_t currentBitrateBps{this->maxConfiguredBitrateBps};
+		float avgMaxBitrateKbps{-1.0f};
+		float varMaxBitrateKbps{0.4f};
+		RateControlState rateControlState{RC_HOLD};
+		RateControlRegion rateControlRegion{RC_MAX_UNKNOWN};
+		int64_t timeLastBitrateChange{-1};
 		RateControlInput currentInput;
-		bool updated                      = false;
-		int64_t timeFirstIncomingEstimate = -1;
-		bool bitrateIsInitialized         = false;
-		float beta                        = 0.85f;
-		int64_t rtt                       = DefaultRttMs;
-		int lastDecrease                  = 0;
+		bool updated{false};
+		int64_t timeFirstIncomingEstimate{-1};
+		bool bitrateIsInitialized{false};
+		float beta{0.85f};
+		int64_t rtt{DefaultRttMs};
+		int lastDecrease{0};
 	};
 
 	/* Inline methods. */

@@ -38,7 +38,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
+		static const Json::StaticString JsonStringClass{"class"};
 
 		Json::Value eventData(Json::objectValue);
 
@@ -56,14 +56,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRtpReceiverId("rtpReceiverId");
-		static const Json::StaticString JsonStringKind("kind");
-		static const Json::StaticString JsonStringRtpParameters("rtpParameters");
-		static const Json::StaticString JsonStringHasTransport("hasTransport");
-		static const Json::StaticString JsonStringRtpRawEventEnabled("rtpRawEventEnabled");
-		static const Json::StaticString JsonStringRtpObjectEventEnabled("rtpObjectEventEnabled");
-		static const Json::StaticString JsonStringRtpStreams("rtpStreams");
-		static const Json::StaticString JsonStringRtpStream("rtpStream");
+		static const Json::StaticString JsonStringRtpReceiverId{"rtpReceiverId"};
+		static const Json::StaticString JsonStringKind{"kind"};
+		static const Json::StaticString JsonStringRtpParameters{"rtpParameters"};
+		static const Json::StaticString JsonStringHasTransport{"hasTransport"};
+		static const Json::StaticString JsonStringRtpRawEventEnabled{"rtpRawEventEnabled"};
+		static const Json::StaticString JsonStringRtpObjectEventEnabled{"rtpObjectEventEnabled"};
+		static const Json::StaticString JsonStringRtpStreams{"rtpStreams"};
+		static const Json::StaticString JsonStringRtpStream{"rtpStream"};
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonRtpStreams(Json::arrayValue);
@@ -179,7 +179,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT:
 			{
-				static const Json::StaticString JsonStringEnabled("enabled");
+				static const Json::StaticString JsonStringEnabled{"enabled"};
 
 				if (!request->data[JsonStringEnabled].isBool())
 				{
@@ -197,7 +197,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT:
 			{
-				static const Json::StaticString JsonStringEnabled("enabled");
+				static const Json::StaticString JsonStringEnabled{"enabled"};
 
 				if (!request->data[JsonStringEnabled].isBool())
 				{
@@ -226,13 +226,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass("class");
-		static const Json::StaticString JsonStringObject("object");
-		static const Json::StaticString JsonStringPayloadType("payloadType");
-		static const Json::StaticString JsonStringMarker("marker");
-		static const Json::StaticString JsonStringSequenceNumber("sequenceNumber");
-		static const Json::StaticString JsonStringTimestamp("timestamp");
-		static const Json::StaticString JsonStringSsrc("ssrc");
+		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringObject{"object"};
+		static const Json::StaticString JsonStringPayloadType{"payloadType"};
+		static const Json::StaticString JsonStringMarker{"marker"};
+		static const Json::StaticString JsonStringSequenceNumber{"sequenceNumber"};
+		static const Json::StaticString JsonStringTimestamp{"timestamp"};
+		static const Json::StaticString JsonStringSsrc{"ssrc"};
 
 		// TODO: Check if stopped, etc (not yet done).
 

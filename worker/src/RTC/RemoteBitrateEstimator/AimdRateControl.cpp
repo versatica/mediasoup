@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <cmath> // std::lround()
 
-static constexpr int64_t MaxFeedbackIntervalMs = 1000;
+static constexpr int64_t MaxFeedbackIntervalMs{1000};
 
 namespace RTC
 {
@@ -27,7 +27,7 @@ namespace RTC
 
 		// Estimate how often we can send RTCP if we allocate up to 5% of bandwidth
 		// to feedback.
-		static const int RtcpSize = 80;
+		static const int RtcpSize{80};
 
 		const int64_t minFeedbackIntervalMs = 200;
 		auto interval                       = static_cast<int64_t>(

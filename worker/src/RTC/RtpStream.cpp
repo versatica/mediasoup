@@ -10,10 +10,10 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t MinSequential = 0;
-	static constexpr uint16_t MaxDropout    = 3000;
-	static constexpr uint16_t MaxMisorder   = 100;
-	static constexpr uint32_t RtpSeqMod     = 1 << 16;
+	static constexpr uint32_t MinSequential{0};
+	static constexpr uint16_t MaxDropout{3000};
+	static constexpr uint16_t MaxMisorder{100};
+	static constexpr uint32_t RtpSeqMod{1 << 16};
 
 	/* Instance methods. */
 
@@ -174,13 +174,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc("ssrc");
-		static const Json::StaticString JsonStringPayloadType("payloadType");
-		static const Json::StaticString JsonStringMime("mime");
-		static const Json::StaticString JsonStringClockRate("clockRate");
-		static const Json::StaticString JsonStringUseNack("useNack");
-		static const Json::StaticString JsonStringUsePli("usePli");
-		static const Json::StaticString JsonStringAbsSendTimeId("absSendTimeId");
+		static const Json::StaticString JsonStringSsrc{"ssrc"};
+		static const Json::StaticString JsonStringPayloadType{"payloadType"};
+		static const Json::StaticString JsonStringMime{"mime"};
+		static const Json::StaticString JsonStringClockRate{"clockRate"};
+		static const Json::StaticString JsonStringUseNack{"useNack"};
+		static const Json::StaticString JsonStringUsePli{"usePli"};
+		static const Json::StaticString JsonStringAbsSendTimeId{"absSendTimeId"};
 
 		Json::Value json(Json::objectValue);
 

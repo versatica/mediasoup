@@ -120,17 +120,17 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Header* header                   = nullptr;
-		uint8_t* csrcList                = nullptr;
-		ExtensionHeader* extensionHeader = nullptr;
+		Header* header{nullptr};
+		uint8_t* csrcList{nullptr};
+		ExtensionHeader* extensionHeader{nullptr};
 		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
 		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
 		std::map<RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
-		uint8_t* payload       = nullptr;
-		size_t payloadLength   = 0;
-		uint8_t payloadPadding = 0;
-		size_t size            = 0; // Full size of the packet in bytes.
-		uint32_t seq32         = 0; // Extended seq number.
+		uint8_t* payload{nullptr};
+		size_t payloadLength{0};
+		uint8_t payloadPadding{0};
+		size_t size{0};    // Full size of the packet in bytes.
+		uint32_t seq32{0}; // Extended seq number.
 	};
 
 	/* Inline static methods. */

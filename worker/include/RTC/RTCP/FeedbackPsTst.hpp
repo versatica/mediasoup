@@ -56,7 +56,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{nullptr};
 		};
 
 		class Tstr

@@ -13,9 +13,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCname("cname");
-		static const Json::StaticString JsonStringSsrc("ssrc");
-		static const Json::StaticString JsonStringReducedSize("reducedSize");
+		static const Json::StaticString JsonStringCname{"cname"};
+		static const Json::StaticString JsonStringSsrc{"ssrc"};
+		static const Json::StaticString JsonStringReducedSize{"reducedSize"};
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtcpParameters is not an object");
@@ -41,9 +41,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCname("cname");
-		static const Json::StaticString JsonStringSsrc("ssrc");
-		static const Json::StaticString JsonStringReducedSize("reducedSize");
+		static const Json::StaticString JsonStringCname{"cname"};
+		static const Json::StaticString JsonStringSsrc{"ssrc"};
+		static const Json::StaticString JsonStringReducedSize{"reducedSize"};
 
 		Json::Value json(Json::objectValue);
 

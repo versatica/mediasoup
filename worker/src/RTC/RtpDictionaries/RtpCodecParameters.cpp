@@ -13,15 +13,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind("kind");
-		static const Json::StaticString JsonStringName("name");
-		static const Json::StaticString JsonStringPayloadType("payloadType");
-		static const Json::StaticString JsonStringClockRate("clockRate");
-		static const Json::StaticString JsonStringMaxptime("maxptime");
-		static const Json::StaticString JsonStringPtime("ptime");
-		static const Json::StaticString JsonStringNumChannels("numChannels");
-		static const Json::StaticString JsonStringParameters("parameters");
-		static const Json::StaticString JsonStringRtcpFeedback("rtcpFeedback");
+		static const Json::StaticString JsonStringKind{"kind"};
+		static const Json::StaticString JsonStringName{"name"};
+		static const Json::StaticString JsonStringPayloadType{"payloadType"};
+		static const Json::StaticString JsonStringClockRate{"clockRate"};
+		static const Json::StaticString JsonStringMaxptime{"maxptime"};
+		static const Json::StaticString JsonStringPtime{"ptime"};
+		static const Json::StaticString JsonStringNumChannels{"numChannels"};
+		static const Json::StaticString JsonStringParameters{"parameters"};
+		static const Json::StaticString JsonStringRtcpFeedback{"rtcpFeedback"};
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
@@ -113,15 +113,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind("kind");
-		static const Json::StaticString JsonStringName("name");
-		static const Json::StaticString JsonStringPayloadType("payloadType");
-		static const Json::StaticString JsonStringClockRate("clockRate");
-		static const Json::StaticString JsonStringMaxptime("maxptime");
-		static const Json::StaticString JsonStringPtime("ptime");
-		static const Json::StaticString JsonStringNumChannels("numChannels");
-		static const Json::StaticString JsonStringParameters("parameters");
-		static const Json::StaticString JsonStringRtcpFeedback("rtcpFeedback");
+		static const Json::StaticString JsonStringKind{"kind"};
+		static const Json::StaticString JsonStringName{"name"};
+		static const Json::StaticString JsonStringPayloadType{"payloadType"};
+		static const Json::StaticString JsonStringClockRate{"clockRate"};
+		static const Json::StaticString JsonStringMaxptime{"maxptime"};
+		static const Json::StaticString JsonStringPtime{"ptime"};
+		static const Json::StaticString JsonStringNumChannels{"numChannels"};
+		static const Json::StaticString JsonStringParameters{"parameters"};
+		static const Json::StaticString JsonStringRtcpFeedback{"rtcpFeedback"};
 
 		Json::Value json(Json::objectValue);
 
@@ -173,7 +173,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string jsonStringPacketizationMode = "packetizationMode";
+		static std::string jsonStringPacketizationMode{"packetizationMode"};
 
 		// MIME must match.
 		if (this->mime != codec.mime)
@@ -251,8 +251,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string jsonStringApt               = "apt";
-		static std::string jsonStringPacketizationMode = "packetizationMode";
+		static std::string jsonStringApt{"apt"};
+		static std::string jsonStringPacketizationMode{"packetizationMode"};
 
 		// Check per MIME parameters and set default values.
 		switch (this->mime.subtype)

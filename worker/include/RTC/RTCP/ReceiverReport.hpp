@@ -55,8 +55,8 @@ namespace RTC
 			void SetDelaySinceLastSenderReport(uint32_t dlsr);
 
 		private:
-			Header* header              = nullptr;
-			uint8_t raw[sizeof(Header)] = {0};
+			Header* header{nullptr};
+			uint8_t raw[sizeof(Header)]{0};
 		};
 
 		class ReceiverReportPacket : public Packet
@@ -86,7 +86,7 @@ namespace RTC
 
 		private:
 			// SSRC of packet sender.
-			uint32_t ssrc = 0;
+			uint32_t ssrc{0};
 			std::vector<ReceiverReport*> reports;
 		};
 

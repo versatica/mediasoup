@@ -39,13 +39,13 @@ namespace RTC
 	private:
 		// Others.
 		std::string foundation;
-		uint32_t priority;
-		int family = 0;
+		uint32_t priority{0};
+		int family{0};
 		std::string ip;
 		Protocol protocol;
-		uint16_t port;
+		uint16_t port{0};
 		CandidateType type;
-		TcpCandidateType tcpType = TcpCandidateType::PASSIVE;
+		TcpCandidateType tcpType{TcpCandidateType::PASSIVE};
 	};
 } // namespace RTC
 

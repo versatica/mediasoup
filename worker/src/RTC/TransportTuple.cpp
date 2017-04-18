@@ -14,13 +14,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringLocalIp("localIP");
-		static const Json::StaticString JsonStringRemoteIp("remoteIP");
-		static const Json::StaticString JsonStringLocalPort("localPort");
-		static const Json::StaticString JsonStringRemotePort("remotePort");
-		static const Json::StaticString JsonStringProtocol("protocol");
-		static const Json::StaticString JsonStringUdp("udp");
-		static const Json::StaticString JsonStringTcp("tcp");
+		static const Json::StaticString JsonStringLocalIp{"localIP"};
+		static const Json::StaticString JsonStringRemoteIp{"remoteIP"};
+		static const Json::StaticString JsonStringLocalPort{"localPort"};
+		static const Json::StaticString JsonStringRemotePort{"remotePort"};
+		static const Json::StaticString JsonStringProtocol{"protocol"};
+		static const Json::StaticString JsonStringUdp{"udp"};
+		static const Json::StaticString JsonStringTcp{"tcp"};
 
 		Json::Value json(Json::objectValue);
 		int ipFamily;

@@ -62,14 +62,14 @@ namespace RTC
 	private:
 		// Must be first member variable. Cannot be const because we need to be copyable.
 		OverUseDetectorOptions options;
-		uint16_t numOfDeltas = 0;
-		double slope         = 0;
-		double offset        = 0;
-		double prevOffset    = 0;
+		uint16_t numOfDeltas{0};
+		double slope{0};
+		double offset{0};
+		double prevOffset{0};
 		double e[2][2];
 		double processNoise[2];
-		double avgNoise = 0;
-		double varNoise = 0;
+		double avgNoise{0};
+		double varNoise{0};
 		std::deque<double> tsDeltaHist;
 	};
 

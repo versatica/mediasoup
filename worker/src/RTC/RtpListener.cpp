@@ -13,9 +13,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrcTable("ssrcTable");
-		static const Json::StaticString JsonStringMuxIdTable("muxIdTable");
-		static const Json::StaticString JsonStringPtTable("ptTable");
+		static const Json::StaticString JsonStringSsrcTable{"ssrcTable"};
+		static const Json::StaticString JsonStringMuxIdTable{"muxIdTable"};
+		static const Json::StaticString JsonStringPtTable{"ptTable"};
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonSsrcTable(Json::objectValue);

@@ -22,15 +22,15 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr int TimestampGroupLengthMs              = 5;
-	static constexpr uint32_t AbsSendTimeFraction            = 18;
-	static constexpr uint32_t AbsSendTimeInterArrivalUpshift = 8;
-	static constexpr uint32_t InterArrivalShift = AbsSendTimeFraction + AbsSendTimeInterArrivalUpshift;
-	static constexpr uint32_t InitialProbingIntervalMs = 2000;
-	static constexpr int MinClusterSize                = 4;
-	static constexpr size_t MaxProbePackets            = 15;
-	static constexpr size_t ExpectedNumberOfProbes     = 3;
-	static constexpr double TimestampToMs = 1000.0 / static_cast<double>(1 << InterArrivalShift);
+	static constexpr int TimestampGroupLengthMs{5};
+	static constexpr uint32_t AbsSendTimeFraction{18};
+	static constexpr uint32_t AbsSendTimeInterArrivalUpshift{8};
+	static constexpr uint32_t InterArrivalShift{AbsSendTimeFraction + AbsSendTimeInterArrivalUpshift};
+	static constexpr uint32_t InitialProbingIntervalMs{2000};
+	static constexpr int MinClusterSize{4};
+	static constexpr size_t MaxProbePackets{15};
+	static constexpr size_t ExpectedNumberOfProbes{3};
+	static constexpr double TimestampToMs{1000.0 / static_cast<double>(1 << InterArrivalShift)};
 
 	template<typename K, typename V>
 	std::vector<K> keys(const std::map<K, V>& map)
