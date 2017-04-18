@@ -251,6 +251,7 @@ namespace RTC
 		MS_TRACE();
 
 		static RTC::RtpCodecParameters fakeCodec;
+
 		uint8_t payloadType = encoding.codecPayloadType;
 
 		auto it = this->codecs.begin();
