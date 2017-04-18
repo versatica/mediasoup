@@ -168,7 +168,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<SdesChunk>");
-			MS_DUMP("  ssrc : %" PRIu32, (uint32_t)ntohl(this->ssrc));
+			MS_DUMP("  ssrc : %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
 			for (auto item : this->items)
 			{
 				item->Dump();

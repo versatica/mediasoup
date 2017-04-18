@@ -124,7 +124,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<ReceiverReportPacket>");
-			MS_DUMP("  ssrc: %" PRIu32, (uint32_t)ntohl(this->ssrc));
+			MS_DUMP("  ssrc: %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
 			for (auto report : this->reports)
 			{
 				report->Dump();

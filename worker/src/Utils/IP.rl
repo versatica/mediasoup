@@ -86,7 +86,7 @@ namespace Utils
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
-				*port = (uint16_t)ntohs(((struct sockaddr_in*)addr)->sin_port);
+				*port = static_cast<uint16_t>(ntohs(((struct sockaddr_in*)addr)->sin_port));
 
 				break;
 			}
@@ -99,7 +99,7 @@ namespace Utils
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
-				*port = (uint16_t)ntohs(((struct sockaddr_in6*)addr)->sin6_port);
+				*port = static_cast<uint16_t>(ntohs(((struct sockaddr_in6*)addr)->sin6_port));
 
 				break;
 			}
