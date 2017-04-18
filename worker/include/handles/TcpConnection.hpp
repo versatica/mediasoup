@@ -25,8 +25,8 @@ public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
-		TcpConnection* connection;
-		uv_write_t req;
+		TcpConnection* connection{nullptr};
+		uv_write_t req{};
 		uint8_t store[1];
 	};
 
@@ -80,27 +80,27 @@ protected:
 
 private:
 	// Passed by argument.
-	Listener* listener = nullptr;
+	Listener* listener{nullptr};
 	// Allocated by this.
-	uv_tcp_t* uvHandle = nullptr;
+	uv_tcp_t* uvHandle{nullptr};
 	// Others.
-	struct sockaddr_storage* localAddr = nullptr;
-	bool isClosing                     = false;
-	bool isClosedByPeer                = false;
-	bool hasError                      = false;
+	struct sockaddr_storage* localAddr{nullptr};
+	bool isClosing{false};
+	bool isClosedByPeer{false};
+	bool hasError{false};
 
 protected:
 	// Passed by argument.
-	size_t bufferSize = 0;
+	size_t bufferSize{0};
 	// Allocated by this.
 	uint8_t* buffer = nullptr;
 	// Others.
-	size_t bufferDataLen = 0;
-	std::string localIP;
-	uint16_t localPort = 0;
-	struct sockaddr_storage peerAddr;
-	std::string peerIP;
-	uint16_t peerPort = 0;
+	size_t bufferDataLen{0};
+	std::string localIP{};
+	uint16_t localPort{0};
+	struct sockaddr_storage peerAddr{};
+	std::string peerIP{};
+	uint16_t peerPort{0};
 };
 
 /* Inline methods. */

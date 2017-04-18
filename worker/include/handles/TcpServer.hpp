@@ -50,15 +50,15 @@ public:
 
 private:
 	// Allocated by this (may be passed by argument).
-	uv_tcp_t* uvHandle = nullptr;
+	uv_tcp_t* uvHandle{nullptr};
 	// Others.
-	std::unordered_set<TcpConnection*> connections;
-	bool isClosing = false;
+	std::unordered_set<TcpConnection*> connections{};
+	bool isClosing{false};
 
 protected:
-	struct sockaddr_storage localAddr;
-	std::string localIP;
-	uint16_t localPort = 0;
+	struct sockaddr_storage localAddr{};
+	std::string localIP{};
+	uint16_t localPort{0};
 };
 
 /* Inline methods. */

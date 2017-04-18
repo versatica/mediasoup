@@ -189,7 +189,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	if (len == 0)
 		return;
 
-	uv_buf_t buffer;
+	uv_buf_t buffer{};
 	int sent;
 	int err;
 
@@ -255,7 +255,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 	if (len == 0)
 		return;
 
-	struct sockaddr_storage addr;
+	struct sockaddr_storage addr{};
 
 	switch (Utils::IP::GetFamily(ip))
 	{
