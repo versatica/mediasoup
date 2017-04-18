@@ -49,7 +49,7 @@
     "tap": "^10.3.2"
   },
   "optionalDependencies": {
-    "clang-tools-prebuilt": "^0.1.3"
+    "clang-tools-prebuilt": "^0.1.4"
   },
   "scripts": {
     "test": "gulp test",
