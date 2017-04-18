@@ -916,7 +916,7 @@ namespace RTC
 		MS_TRACE();
 
 		int64_t ret;
-		struct timeval dtlsTimeout;
+		struct timeval dtlsTimeout{};
 		uint64_t timeoutMs;
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.

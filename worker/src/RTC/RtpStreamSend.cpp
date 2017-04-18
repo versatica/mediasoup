@@ -81,7 +81,7 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the compact NTP representation of the current timestamp.
-		Utils::Time::Ntp nowNtp;
+		Utils::Time::Ntp nowNtp{};
 		Utils::Time::CurrentTimeNtp(nowNtp);
 		uint32_t nowCompactNtp = (nowNtp.seconds & 0x0000FFFF) << 16;
 
@@ -297,7 +297,7 @@ namespace RTC
 		report->SetPacketCount(this->received);
 		report->SetOctetCount(this->receivedBytes);
 
-		Utils::Time::Ntp ntp;
+		Utils::Time::Ntp ntp{};
 		Utils::Time::CurrentTimeNtp(ntp);
 
 		report->SetNtpSec(ntp.seconds);

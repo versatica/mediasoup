@@ -45,7 +45,7 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 	}
 
-	struct sockaddr_storage bindAddr;
+	struct sockaddr_storage bindAddr{};
 
 	switch (Utils::IP::GetFamily(ip))
 	{

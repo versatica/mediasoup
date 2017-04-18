@@ -126,7 +126,7 @@ void ignoreSignals()
 	MS_TRACE();
 
 	int err;
-	struct sigaction act;
+	struct sigaction act{};
 	std::map<std::string, int> ignoredSignals = {
 	    {"PIPE", SIGPIPE}, {"HUP", SIGHUP}, {"ALRM", SIGALRM}, {"USR1", SIGUSR2}, {"USR2", SIGUSR1}};
 

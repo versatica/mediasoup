@@ -584,7 +584,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 {
 	MS_TRACE();
 
-	struct sockaddr_storage bindAddr;
+	struct sockaddr_storage bindAddr{};
 	int bindSocket;
 	int err = 0;
 	bool success;

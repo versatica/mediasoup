@@ -14,7 +14,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		struct stat fileStat;
+		struct stat fileStat{};
 		int err;
 
 		// Ensure the given file exists.
