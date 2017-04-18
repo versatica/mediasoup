@@ -63,7 +63,7 @@ namespace Utils
 		%%write exec;
 
 		// Ensure that the parsing has consumed all the given length.
-		if (ipLen == (size_t)(p - (const unsigned char*)ip))
+		if (ipLen == static_cast<size_t>(p - (const unsigned char*)ip))
 			return ipFamily;
 		else
 			return AF_UNSPEC;

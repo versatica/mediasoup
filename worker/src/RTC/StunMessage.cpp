@@ -278,7 +278,7 @@ namespace RTC
 		else
 		{
 			// This prints the unknown method number. Example: TURN Allocate => 0x003.
-			MS_DUMP("  %s with unknown method %#.3x", klass.c_str(), (uint16_t)this->method);
+			MS_DUMP("  %s with unknown method %#.3x", klass.c_str(), static_cast<uint16_t>(this->method));
 		}
 		MS_DUMP("  size: %zu bytes", this->size);
 

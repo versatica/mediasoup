@@ -49,7 +49,7 @@ namespace RTC
 		if (header->extension != 0u)
 		{
 			// The extension header is at least 4 bytes.
-			if (len < size_t(ptr - data) + 4)
+			if (len < static_cast<size_t>(ptr - data) + 4)
 			{
 				MS_WARN_TAG(rtp, "not enough space for the announced extension header, packet discarded");
 
@@ -78,7 +78,7 @@ namespace RTC
 		size_t payloadLength   = len - (ptr - data);
 		uint8_t payloadPadding = 0;
 
-		MS_ASSERT(len >= size_t(ptr - data), "payload has negative size");
+		MS_ASSERT(len >= static_cast<size_t>(ptr - data), "payload has negative size");
 
 		// Check padding field.
 		if (header->padding != 0u)
@@ -116,7 +116,7 @@ namespace RTC
 
 		MS_ASSERT(
 		    len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 + extensionValueSize : 0) +
-		               payloadLength + (size_t)payloadPadding,
+		               payloadLength + static_cast<size_t>(payloadPadding),
 		    "packet's computed size does not match received size");
 
 		auto packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
@@ -239,7 +239,7 @@ namespace RTC
 			ptr += static_cast<size_t>(this->payloadPadding);
 		}
 
-		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
+		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
 	}
 
 	RtpPacket* RtpPacket::Clone(uint8_t* buffer) const
@@ -286,7 +286,7 @@ namespace RTC
 			ptr += static_cast<size_t>(this->payloadPadding);
 		}
 
-		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
+		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
 
 		// Create the new RtpPacket instance and return it.
 		auto packet = new RtpPacket(

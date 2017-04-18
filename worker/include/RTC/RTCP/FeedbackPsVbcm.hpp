@@ -80,7 +80,7 @@ namespace RTC
 
 		inline size_t FeedbackPsVbcmItem::GetSize() const
 		{
-			size_t size = 8 + size_t(this->header->length);
+			size_t size = 8 + static_cast<size_t>(this->header->length);
 
 			// Consider pading to 32 bits (4 bytes) boundary.
 			return (size + 3) & ~3;
@@ -88,22 +88,22 @@ namespace RTC
 
 		inline uint32_t FeedbackPsVbcmItem::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->ssrc);
+			return static_cast<uint32_t>(ntohl(this->header->ssrc));
 		}
 
 		inline uint8_t FeedbackPsVbcmItem::GetSequenceNumber() const
 		{
-			return (uint8_t)this->header->sequenceNumber;
+			return static_cast<uint8_t>(this->header->sequenceNumber);
 		}
 
 		inline uint8_t FeedbackPsVbcmItem::GetPayloadType() const
 		{
-			return (uint8_t)this->header->payloadType;
+			return static_cast<uint8_t>(this->header->payloadType);
 		}
 
 		inline uint16_t FeedbackPsVbcmItem::GetLength() const
 		{
-			return (uint16_t)ntohs(this->header->length);
+			return static_cast<uint16_t>(ntohs(this->header->length));
 		}
 
 		inline uint8_t* FeedbackPsVbcmItem::GetValue() const

@@ -160,7 +160,7 @@ namespace RTC
 
 				MS_DEBUG_DEV(
 				    "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]",
-				    (uint32_t)msg->GetPriority(),
+				    static_cast<uint32_t>(msg->GetPriority()),
 				    msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.

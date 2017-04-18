@@ -75,12 +75,12 @@ namespace RTC
 
 		inline uint32_t FeedbackPsFirItem::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->ssrc);
+			return static_cast<uint32_t>(ntohl(this->header->ssrc));
 		}
 
 		inline uint8_t FeedbackPsFirItem::GetSequenceNumber() const
 		{
-			return (uint8_t)this->header->sequenceNumber;
+			return static_cast<uint8_t>(this->header->sequenceNumber);
 		}
 	} // namespace RTCP
 } // namespace RTC

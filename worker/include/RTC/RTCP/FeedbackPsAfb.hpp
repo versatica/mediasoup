@@ -47,7 +47,7 @@ namespace RTC
 		inline FeedbackPsAfbPacket::FeedbackPsAfbPacket(CommonHeader* commonHeader, Application application)
 		    : FeedbackPsPacket(commonHeader)
 		{
-			this->size = ((ntohs(commonHeader->length) + 1) * 4) -
+			this->size = ((static_cast<size_t>(ntohs(commonHeader->length)) + 1) * 4) -
 			             (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header));
 
 			this->data = (uint8_t*)commonHeader + sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);

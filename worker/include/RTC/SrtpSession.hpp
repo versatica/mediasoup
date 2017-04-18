@@ -52,7 +52,7 @@ namespace RTC
 
 	inline void SrtpSession::RemoveStream(uint32_t ssrc)
 	{
-		srtp_remove_stream(this->session, htonl(ssrc));
+		srtp_remove_stream(this->session, static_cast<uint32_t>(htonl(ssrc)));
 	}
 } // namespace RTC
 

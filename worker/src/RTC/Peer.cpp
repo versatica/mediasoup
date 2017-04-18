@@ -23,7 +23,7 @@ namespace RTC
 		this->timer = new Timer(this);
 
 		// Start the RTCP timer.
-		this->timer->Start(uint64_t(RTC::RTCP::MaxVideoIntervalMs / 2));
+		this->timer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	Peer::~Peer()
@@ -1110,7 +1110,9 @@ namespace RTC
 				default:
 				{
 					MS_WARN_TAG(
-					    rtcp, "unhandled RTCP type received [type:%" PRIu8 "]", (uint8_t)packet->GetType());
+					    rtcp,
+					    "unhandled RTCP type received [type:%" PRIu8 "]",
+					    static_cast<uint8_t>(packet->GetType()));
 				}
 			}
 

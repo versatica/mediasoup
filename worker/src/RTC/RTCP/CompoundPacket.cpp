@@ -56,7 +56,7 @@ namespace RTC
 					      (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount())) /
 					     4);
 
-					header->length = htons(length);
+					header->length = static_cast<uint16_t>(htons(length));
 
 					// Fix header count field.
 					header->count = this->receiverReportPacket.GetCount();

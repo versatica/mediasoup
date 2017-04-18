@@ -701,7 +701,7 @@ namespace RTC
 			MS_WARN_TAG(
 			    dtls,
 			    "OpenSSL BIO_write() wrote less (%zu bytes) than given data (%zu bytes)",
-			    (size_t)written,
+			    static_cast<size_t>(written),
 			    len);
 		}
 

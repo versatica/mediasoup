@@ -174,7 +174,7 @@ void UdpSocket::Dump() const
 	MS_DUMP(
 	    "  [UDP, local:%s :%" PRIu16 ", status:%s]",
 	    this->localIP.c_str(),
-	    (uint16_t)this->localPort,
+	    static_cast<uint16_t>(this->localPort),
 	    (!this->isClosing) ? "open" : "closed");
 	MS_DUMP("</UdpSocket>");
 }

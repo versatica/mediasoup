@@ -95,19 +95,19 @@ namespace RTC
 		template<typename T>
 		inline uint32_t FeedbackPsTstItem<T>::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->ssrc);
+			return static_cast<uint32_t>(ntohl(this->header->ssrc));
 		}
 
 		template<typename T>
 		inline uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
 		{
-			return (uint8_t)this->header->sequenceNumber;
+			return static_cast<uint8_t>(this->header->sequenceNumber);
 		}
 
 		template<typename T>
 		inline uint8_t FeedbackPsTstItem<T>::GetIndex() const
 		{
-			return (uint8_t)this->header->index;
+			return static_cast<uint8_t>(this->header->index);
 		}
 	} // namespace RTCP
 } // namespace RTC

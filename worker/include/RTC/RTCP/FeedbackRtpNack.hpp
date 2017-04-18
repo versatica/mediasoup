@@ -72,12 +72,12 @@ namespace RTC
 
 		inline uint16_t FeedbackRtpNackItem::GetPacketId() const
 		{
-			return (uint16_t)ntohs(this->header->packetId);
+			return static_cast<uint16_t>(ntohs(this->header->packetId));
 		}
 
 		inline uint16_t FeedbackRtpNackItem::GetLostPacketBitmask() const
 		{
-			return (uint16_t)ntohs(this->header->lostPacketBitmask);
+			return static_cast<uint16_t>(ntohs(this->header->lostPacketBitmask));
 		}
 	} // namespace RTCP
 } // namespace RTC

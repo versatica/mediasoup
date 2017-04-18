@@ -183,12 +183,12 @@ namespace RTC
 
 	inline uint16_t RtpPacket::GetSequenceNumber() const
 	{
-		return (uint16_t)ntohs(this->header->sequenceNumber);
+		return static_cast<uint16_t>(ntohs(this->header->sequenceNumber));
 	}
 
 	inline void RtpPacket::SetSequenceNumber(uint16_t seq)
 	{
-		this->header->sequenceNumber = (uint16_t)htons(seq);
+		this->header->sequenceNumber = static_cast<uint16_t>(htons(seq));
 	}
 
 	inline uint32_t RtpPacket::GetExtendedSequenceNumber() const
@@ -203,22 +203,22 @@ namespace RTC
 
 	inline uint32_t RtpPacket::GetTimestamp() const
 	{
-		return (uint32_t)ntohl(this->header->timestamp);
+		return static_cast<uint32_t>(ntohl(this->header->timestamp));
 	}
 
 	inline void RtpPacket::SetTimestamp(uint32_t timestamp)
 	{
-		this->header->timestamp = (uint32_t)htonl(timestamp);
+		this->header->timestamp = static_cast<uint32_t>(htonl(timestamp));
 	}
 
 	inline uint32_t RtpPacket::GetSsrc() const
 	{
-		return (uint32_t)ntohl(this->header->ssrc);
+		return static_cast<uint32_t>(ntohl(this->header->ssrc));
 	}
 
 	inline void RtpPacket::SetSsrc(uint32_t ssrc)
 	{
-		this->header->ssrc = (uint32_t)htonl(ssrc);
+		this->header->ssrc = static_cast<uint32_t>(htonl(ssrc));
 	}
 
 	inline bool RtpPacket::HasExtensionHeader() const
@@ -231,7 +231,7 @@ namespace RTC
 		if (!this->extensionHeader)
 			return 0;
 
-		return uint16_t(ntohs(this->extensionHeader->id));
+		return static_cast<uint16_t>(ntohs(this->extensionHeader->id));
 	}
 
 	inline size_t RtpPacket::GetExtensionHeaderLength() const
@@ -239,7 +239,7 @@ namespace RTC
 		if (!this->extensionHeader)
 			return 0;
 
-		return size_t(ntohs(this->extensionHeader->length) * 4);
+		return static_cast<size_t>(ntohs(this->extensionHeader->length) * 4);
 	}
 
 	inline uint8_t* RtpPacket::GetExtensionHeaderValue() const

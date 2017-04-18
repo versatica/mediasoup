@@ -48,7 +48,7 @@ namespace RTC
 			uint32_t compact = (this->first << 19) | (this->number << 6) | this->pictureId;
 			auto* header     = reinterpret_cast<Header*>(buffer);
 
-			header->compact = htonl(compact);
+			header->compact = static_cast<uint32_t>(htonl(compact));
 			std::memcpy(buffer, header, sizeof(Header));
 
 			return sizeof(Header);

@@ -131,9 +131,9 @@ void TcpConnection::Dump() const
 	MS_DUMP(
 	    "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
 	    this->localIP.c_str(),
-	    (uint16_t)this->localPort,
+	    static_cast<uint16_t>(this->localPort),
 	    this->peerIP.c_str(),
-	    (uint16_t)this->peerPort,
+	    static_cast<uint16_t>(this->peerPort),
 	    (!this->isClosing) ? "open" : "closed");
 	MS_DUMP("</TcpConnection>");
 }
@@ -200,8 +200,9 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 		return;
 	}
 
-	// MS_DEBUG_DEV("could just write %zu bytes (%zu given) at first time, using uv_write() now",
-	// 	(size_t)written, len);
+	// MS_DEBUG_DEV(
+	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
+	// 	static_cast<size_t>(written), len);
 
 	size_t pendingLen = len - written;
 	// Allocate a special UvWriteData struct pointer.
@@ -265,8 +266,9 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 		return;
 	}
 
-	// MS_DEBUG_DEV("could just write %zu bytes (%zu given) at first time, using uv_write() now",
-	// 	(size_t)written, totalLen);
+	// MS_DEBUG_DEV(
+	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
+	// 	static_cast<size_t>(written), totalLen);
 
 	size_t pendingLen = totalLen - written;
 

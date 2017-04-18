@@ -69,7 +69,7 @@ namespace RTC
 
 		inline uint32_t FeedbackPsLeiItem::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->ssrc);
+			return static_cast<uint32_t>(ntohl(this->header->ssrc));
 		}
 	} // namespace RTCP
 } // namespace RTC

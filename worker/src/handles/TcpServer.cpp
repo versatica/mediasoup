@@ -161,7 +161,7 @@ void TcpServer::Dump() const
 	MS_DUMP(
 	    "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 	    this->localIP.c_str(),
-	    (uint16_t)this->localPort,
+	    static_cast<uint16_t>(this->localPort),
 	    (!this->isClosing) ? "open" : "closed",
 	    this->connections.size());
 	MS_DUMP("</TcpServer>");

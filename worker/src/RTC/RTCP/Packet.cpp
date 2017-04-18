@@ -194,7 +194,7 @@ namespace RTC
 			this->header->padding    = 0;
 			this->header->count      = static_cast<uint8_t>(this->GetCount());
 			this->header->packetType = static_cast<uint8_t>(this->type);
-			this->header->length     = htons(length);
+			this->header->length     = static_cast<uint16_t>(htons(length));
 
 			return sizeof(CommonHeader);
 		}

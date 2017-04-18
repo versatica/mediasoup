@@ -119,23 +119,24 @@ namespace Utils
 
 	inline uint16_t Byte::Get2Bytes(const uint8_t* data, size_t i)
 	{
-		return (uint16_t)(data[i + 1]) | ((uint16_t)(data[i])) << 8;
+		return static_cast<uint16_t>(data[i + 1]) | static_cast<uint16_t>(data[i]) << 8;
 	}
 
 	inline uint32_t Byte::Get3Bytes(const uint8_t* data, size_t i)
 	{
-		return (uint32_t)(data[i + 2]) | ((uint32_t)(data[i + 1])) << 8 | ((uint32_t)(data[i])) << 16;
+		return static_cast<uint32_t>(data[i + 2]) | static_cast<uint32_t>(data[i + 1]) << 8 |
+		       static_cast<uint32_t>(data[i]) << 16;
 	}
 
 	inline uint32_t Byte::Get4Bytes(const uint8_t* data, size_t i)
 	{
-		return (uint32_t)(data[i + 3]) | ((uint32_t)(data[i + 2])) << 8 |
-		       ((uint32_t)(data[i + 1])) << 16 | ((uint32_t)(data[i])) << 24;
+		return static_cast<uint32_t>(data[i + 3]) | static_cast<uint32_t>(data[i + 2]) << 8 |
+		       static_cast<uint32_t>(data[i + 1]) << 16 | static_cast<uint32_t>(data[i]) << 24;
 	}
 
 	inline uint64_t Byte::Get8Bytes(const uint8_t* data, size_t i)
 	{
-		return ((uint64_t)Byte::Get4Bytes(data, i)) << 32 | Byte::Get4Bytes(data, i + 4);
+		return static_cast<uint64_t>(Byte::Get4Bytes(data, i)) << 32 | Byte::Get4Bytes(data, i + 4);
 	}
 
 	inline void Byte::Set1Byte(uint8_t* data, size_t i, uint8_t value)
@@ -145,35 +146,35 @@ namespace Utils
 
 	inline void Byte::Set2Bytes(uint8_t* data, size_t i, uint16_t value)
 	{
-		data[i + 1] = (uint8_t)(value);
-		data[i]     = (uint8_t)(value >> 8);
+		data[i + 1] = static_cast<uint8_t>(value);
+		data[i]     = static_cast<uint8_t>(value >> 8);
 	}
 
 	inline void Byte::Set3Bytes(uint8_t* data, size_t i, uint32_t value)
 	{
-		data[i + 2] = (uint8_t)(value);
-		data[i + 1] = (uint8_t)(value >> 8);
-		data[i]     = (uint8_t)(value >> 16);
+		data[i + 2] = static_cast<uint8_t>(value);
+		data[i + 1] = static_cast<uint8_t>(value >> 8);
+		data[i]     = static_cast<uint8_t>(value >> 16);
 	}
 
 	inline void Byte::Set4Bytes(uint8_t* data, size_t i, uint32_t value)
 	{
-		data[i + 3] = (uint8_t)(value);
-		data[i + 2] = (uint8_t)(value >> 8);
-		data[i + 1] = (uint8_t)(value >> 16);
-		data[i]     = (uint8_t)(value >> 24);
+		data[i + 3] = static_cast<uint8_t>(value);
+		data[i + 2] = static_cast<uint8_t>(value >> 8);
+		data[i + 1] = static_cast<uint8_t>(value >> 16);
+		data[i]     = static_cast<uint8_t>(value >> 24);
 	}
 
 	inline void Byte::Set8Bytes(uint8_t* data, size_t i, uint64_t value)
 	{
-		data[i + 7] = (uint8_t)(value);
-		data[i + 6] = (uint8_t)(value >> 8);
-		data[i + 5] = (uint8_t)(value >> 16);
-		data[i + 4] = (uint8_t)(value >> 24);
-		data[i + 3] = (uint8_t)(value >> 32);
-		data[i + 2] = (uint8_t)(value >> 40);
-		data[i + 1] = (uint8_t)(value >> 48);
-		data[i]     = (uint8_t)(value >> 56);
+		data[i + 7] = static_cast<uint8_t>(value);
+		data[i + 6] = static_cast<uint8_t>(value >> 8);
+		data[i + 5] = static_cast<uint8_t>(value >> 16);
+		data[i + 4] = static_cast<uint8_t>(value >> 24);
+		data[i + 3] = static_cast<uint8_t>(value >> 32);
+		data[i + 2] = static_cast<uint8_t>(value >> 40);
+		data[i + 1] = static_cast<uint8_t>(value >> 48);
+		data[i]     = static_cast<uint8_t>(value >> 56);
 	}
 
 	inline uint16_t Byte::PadTo4Bytes(uint16_t size)
@@ -220,7 +221,8 @@ namespace Utils
 		// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
 
 		// This seems to produce better results.
-		Crypto::seed = (uint32_t)((214013 * Crypto::seed) + 2531011);
+		Crypto::seed = static_cast<uint32_t>((214013 * Crypto::seed) + 2531011);
+
 		return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
 	}
 
@@ -288,7 +290,7 @@ namespace Utils
 		gettimeofday(&tv, nullptr);
 
 		ntp.seconds   = tv.tv_sec + UnixNtpOffset;
-		ntp.fractions = (uint32_t)((double)(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
+		ntp.fractions = static_cast<uint32_t>((double)(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
 	}
 
 	inline bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)

@@ -18,12 +18,10 @@ namespace RTC
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-
 			std::unique_ptr<ByePacket> packet(new ByePacket());
-
 			size_t offset = sizeof(Packet::CommonHeader);
-
 			uint8_t count = header->count;
+
 			while (((count--) != 0u) && (len - offset > 0))
 			{
 				if (sizeof(uint32_t) > len - offset)
@@ -39,7 +37,8 @@ namespace RTC
 
 			if (len - offset > 0)
 			{
-				auto length = size_t(Utils::Byte::Get1Byte(data, offset));
+				auto length = static_cast<size_t>(Utils::Byte::Get1Byte(data, offset));
+
 				offset += sizeof(uint8_t);
 				if (length <= len - offset)
 				{
@@ -78,6 +77,7 @@ namespace RTC
 
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
+
 			for (size_t i = 0; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;

@@ -103,7 +103,7 @@ namespace RTC
 		template<typename T>
 		inline size_t FeedbackPacket<T>::GetCount() const
 		{
-			return (size_t)this->GetMessageType();
+			return static_cast<size_t>(this->GetMessageType());
 		}
 
 		template<typename T>
@@ -115,25 +115,25 @@ namespace RTC
 		template<typename T>
 		inline uint32_t FeedbackPacket<T>::GetSenderSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->senderSsrc);
+			return static_cast<uint32_t>(ntohl(this->header->senderSsrc));
 		}
 
 		template<typename T>
 		inline void FeedbackPacket<T>::SetSenderSsrc(uint32_t ssrc)
 		{
-			this->header->senderSsrc = (uint32_t)htonl(ssrc);
+			this->header->senderSsrc = static_cast<uint32_t>(htonl(ssrc));
 		}
 
 		template<typename T>
 		inline uint32_t FeedbackPacket<T>::GetMediaSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->mediaSsrc);
+			return static_cast<uint32_t>(ntohl(this->header->mediaSsrc));
 		}
 
 		template<typename T>
 		inline void FeedbackPacket<T>::SetMediaSsrc(uint32_t ssrc)
 		{
-			this->header->mediaSsrc = (uint32_t)htonl(ssrc);
+			this->header->mediaSsrc = static_cast<uint32_t>(htonl(ssrc));
 		}
 	} // namespace RTCP
 } // namespace RTC

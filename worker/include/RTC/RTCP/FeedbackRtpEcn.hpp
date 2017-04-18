@@ -91,37 +91,37 @@ namespace RTC
 
 		inline uint32_t FeedbackRtpEcnItem::GetSequenceNumber() const
 		{
-			return ntohl(this->header->sequenceNumber);
+			return static_cast<uint32_t>(ntohl(this->header->sequenceNumber));
 		}
 
 		inline uint32_t FeedbackRtpEcnItem::GetEct0Counter() const
 		{
-			return ntohl(this->header->ect0Counter);
+			return static_cast<uint32_t>(ntohl(this->header->ect0Counter));
 		}
 
 		inline uint32_t FeedbackRtpEcnItem::GetEct1Counter() const
 		{
-			return ntohl(this->header->ect1Counter);
+			return static_cast<uint32_t>(ntohl(this->header->ect1Counter));
 		}
 
 		inline uint16_t FeedbackRtpEcnItem::GetEcnCeCounter() const
 		{
-			return ntohs(this->header->ecnCeCounter);
+			return static_cast<uint16_t>(ntohs(this->header->ecnCeCounter));
 		}
 
 		inline uint16_t FeedbackRtpEcnItem::GetNotEctCounter() const
 		{
-			return ntohs(this->header->notEctCounter);
+			return static_cast<uint16_t>(ntohs(this->header->notEctCounter));
 		}
 
 		inline uint16_t FeedbackRtpEcnItem::GetLostPackets() const
 		{
-			return ntohs(this->header->lostPackets);
+			return static_cast<uint16_t>(ntohs(this->header->lostPackets));
 		}
 
 		inline uint16_t FeedbackRtpEcnItem::GetDuplicatedPackets() const
 		{
-			return ntohs(this->header->duplicatedPackets);
+			return static_cast<uint16_t>(ntohs(this->header->duplicatedPackets));
 		}
 	} // namespace RTCP
 } // namespace RTC

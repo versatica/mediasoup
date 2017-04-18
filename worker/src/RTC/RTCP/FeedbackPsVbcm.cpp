@@ -35,11 +35,11 @@ namespace RTC
 			this->raw    = new uint8_t[8 + length];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
-			this->header->ssrc           = htonl(ssrc);
+			this->header->ssrc           = static_cast<uint32_t>(htonl(ssrc));
 			this->header->sequenceNumber = sequenceNumber;
 			this->header->zero           = 0;
 			this->header->payloadType    = payloadType;
-			this->header->length         = htons(length);
+			this->header->length         = static_cast<uint16_t>(htons(length));
 			std::memcpy(this->header->value, value, sizeof(length));
 		}
 
