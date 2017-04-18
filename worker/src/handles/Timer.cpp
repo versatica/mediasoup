@@ -43,7 +43,7 @@ void Timer::Destroy()
 {
 	MS_TRACE();
 
-	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 
 	// Delete this.
 	delete this;
@@ -55,10 +55,10 @@ void Timer::Start(uint64_t timeout)
 
 	int err;
 
-	if (uv_is_active((uv_handle_t*)this->uvHandle) != 0)
+	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
 		Stop();
 
-	err = uv_timer_start(this->uvHandle, (uv_timer_cb)onTimer, timeout, 0);
+	err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), timeout, 0);
 	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
 }

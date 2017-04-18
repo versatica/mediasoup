@@ -44,10 +44,10 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		json[JsonStringParams]        = this->params.ToJson();
-		json[JsonStringReceived]      = (Json::UInt)this->received;
-		json[JsonStringMaxTimestamp]  = (Json::UInt)this->maxTimestamp;
-		json[JsonStringReceivedBytes] = (Json::UInt)this->receivedBytes;
-		json[JsonStringRtt]           = (Json::UInt)this->rtt;
+		json[JsonStringReceived]      = static_cast<Json::UInt>(this->received);
+		json[JsonStringMaxTimestamp]  = static_cast<Json::UInt>(this->maxTimestamp);
+		json[JsonStringReceivedBytes] = static_cast<Json::UInt>(this->receivedBytes);
+		json[JsonStringRtt]           = static_cast<Json::UInt>(this->rtt);
 
 		return json;
 	}
@@ -123,7 +123,7 @@ namespace RTC
 			return;
 
 		// Convert the given sequence numbers to 32 bits.
-		uint32_t firstSeq32 = (uint32_t)seq + this->cycles;
+		uint32_t firstSeq32 = static_cast<uint32_t>(seq) + this->cycles;
 		uint32_t lastSeq32  = firstSeq32 + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
@@ -331,7 +331,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packetSeq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
+		uint32_t packetSeq32 = static_cast<uint32_t>(packet->GetSequenceNumber()) + this->cycles;
 		BufferItem bufferItem;
 
 		bufferItem.seq32 = packetSeq32;
@@ -395,7 +395,7 @@ namespace RTC
 			auto firstPacket      = firstBufferItem.packet;
 
 			// Store points to the store used by the first packet.
-			store = (uint8_t*)firstPacket->GetData();
+			store = const_cast<uint8_t*>(firstPacket->GetData());
 			// Free the first packet.
 			delete firstPacket;
 			// Remove the first element in the list.

@@ -16,7 +16,7 @@ namespace RTC
 		if (!RtpPacket::IsRtp(data, len))
 			return nullptr;
 
-		auto* ptr = (uint8_t*)data;
+		auto* ptr = const_cast<uint8_t*>(data);
 
 		// Get the header.
 		auto* header = reinterpret_cast<Header*>(ptr);
@@ -60,7 +60,7 @@ namespace RTC
 
 			// The header extension contains a 16-bit length field that counts the number of
 			// 32-bit words in the extension, excluding the four-octet extension header.
-			extensionValueSize = (size_t)(ntohs(extensionHeader->length) * 4);
+			extensionValueSize = static_cast<size_t>(ntohs(extensionHeader->length) * 4);
 
 			// Packet size must be >= header size + CSRC list + header extension size.
 			if (len < (ptr - data) + 4 + extensionValueSize)
@@ -99,7 +99,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (payloadLength < (size_t)payloadPadding)
+			if (payloadLength < static_cast<size_t>(payloadPadding))
 			{
 				MS_WARN_TAG(
 				    rtp,
@@ -108,7 +108,7 @@ namespace RTC
 
 				return nullptr;
 			}
-			payloadLength -= (size_t)payloadPadding;
+			payloadLength -= static_cast<size_t>(payloadPadding);
 		}
 
 		if (payloadLength == 0)
@@ -136,13 +136,13 @@ namespace RTC
 	    size_t payloadLength,
 	    uint8_t payloadPadding,
 	    size_t size)
-	    : header(header), extensionHeader(extensionHeader), payload((uint8_t*)payload),
+	    : header(header), extensionHeader(extensionHeader), payload(const_cast<uint8_t*>(payload)),
 	      payloadLength(payloadLength), payloadPadding(payloadPadding), size(size)
 	{
 		MS_TRACE();
 
 		if (this->header->csrcCount != 0u)
-			this->csrcList = (uint8_t*)header + sizeof(Header);
+			this->csrcList = reinterpret_cast<uint8_t*>(header) + sizeof(Header);
 	}
 
 	RtpPacket::~RtpPacket()
@@ -188,7 +188,7 @@ namespace RTC
 			this->size += 4 + extensionValueSize;
 
 		this->size += this->payloadLength;
-		this->size += (size_t)this->payloadPadding;
+		this->size += static_cast<size_t>(this->payloadPadding);
 
 		uint8_t* ptr = buffer;
 
@@ -235,8 +235,8 @@ namespace RTC
 		// Add payload padding.
 		if (this->payloadPadding != 0u)
 		{
-			*(ptr + (size_t)this->payloadPadding - 1) = this->payloadPadding;
-			ptr += (size_t)this->payloadPadding;
+			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
+			ptr += static_cast<size_t>(this->payloadPadding);
 		}
 
 		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
@@ -282,8 +282,8 @@ namespace RTC
 		// Check payload padding.
 		if (this->payloadPadding != 0u)
 		{
-			*(ptr + (size_t)this->payloadPadding - 1) = this->payloadPadding;
-			ptr += (size_t)this->payloadPadding;
+			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
+			ptr += static_cast<size_t>(this->payloadPadding);
 		}
 
 		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
@@ -311,7 +311,7 @@ namespace RTC
 			// Clear the One-Byte extension elements map.
 			this->oneByteExtensions.clear();
 
-			uint8_t* extensionStart = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
@@ -344,7 +344,7 @@ namespace RTC
 			// Clear the Two-Bytes extension elements map.
 			this->twoBytesExtensions.clear();
 
-			uint8_t* extensionStart = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 

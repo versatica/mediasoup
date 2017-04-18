@@ -50,7 +50,7 @@ namespace RTC
 
 		if (data[JsonStringPayloadType].isUInt())
 		{
-			this->payloadType    = (uint8_t)data[JsonStringPayloadType].asUInt();
+			this->payloadType    = static_cast<uint8_t>(data[JsonStringPayloadType].asUInt());
 			this->hasPayloadType = true;
 		}
 
@@ -65,7 +65,7 @@ namespace RTC
 			if (!data[JsonStringPayloadType].isUInt())
 				MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
 
-			this->payloadType    = (uint8_t)data[JsonStringPayloadType].asUInt();
+			this->payloadType    = static_cast<uint8_t>(data[JsonStringPayloadType].asUInt());
 			this->hasPayloadType = true;
 		}
 
@@ -73,19 +73,19 @@ namespace RTC
 		if (!data[JsonStringClockRate].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
 
-		this->clockRate = (uint32_t)data[JsonStringClockRate].asUInt();
+		this->clockRate = static_cast<uint32_t>(data[JsonStringClockRate].asUInt());
 
 		// `maxptime` is optional.
 		if (data[JsonStringMaxptime].isUInt())
-			this->maxptime = (uint32_t)data[JsonStringMaxptime].asUInt();
+			this->maxptime = static_cast<uint32_t>(data[JsonStringMaxptime].asUInt());
 
 		// `ptime` is optional.
 		if (data[JsonStringPtime].isUInt())
-			this->ptime = (uint32_t)data[JsonStringPtime].asUInt();
+			this->ptime = static_cast<uint32_t>(data[JsonStringPtime].asUInt());
 
 		// `numChannels` is optional.
 		if (data[JsonStringNumChannels].isUInt())
-			this->numChannels = (uint32_t)data[JsonStringNumChannels].asUInt();
+			this->numChannels = static_cast<uint32_t>(data[JsonStringNumChannels].asUInt());
 
 		// `parameters` is optional.
 		if (data[JsonStringParameters].isObject())
@@ -137,23 +137,23 @@ namespace RTC
 		if (this->hasPayloadType)
 		{
 			// Add `payloadType`.
-			json[JsonStringPayloadType] = (Json::UInt)this->payloadType;
+			json[JsonStringPayloadType] = static_cast<Json::UInt>(this->payloadType);
 		}
 
 		// Add `clockRate`.
-		json[JsonStringClockRate] = (Json::UInt)this->clockRate;
+		json[JsonStringClockRate] = static_cast<Json::UInt>(this->clockRate);
 
 		// Add `maxptime`.
 		if (this->maxptime != 0u)
-			json[JsonStringMaxptime] = (Json::UInt)this->maxptime;
+			json[JsonStringMaxptime] = static_cast<Json::UInt>(this->maxptime);
 
 		// Add `ptime`.
 		if (this->ptime != 0u)
-			json[JsonStringPtime] = (Json::UInt)this->ptime;
+			json[JsonStringPtime] = static_cast<Json::UInt>(this->ptime);
 
 		// Add `numChannels`.
 		if (this->numChannels > 1)
-			json[JsonStringNumChannels] = (Json::UInt)this->numChannels;
+			json[JsonStringNumChannels] = static_cast<Json::UInt>(this->numChannels);
 
 		// Add `parameters`.
 		json[JsonStringParameters] = this->parameters.ToJson();

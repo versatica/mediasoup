@@ -59,7 +59,7 @@ namespace Utils
 
 		// Init the vrypto seed with a random number taken from the address
 		// of the seed variable itself (which is random).
-		Crypto::seed = (uint32_t)(uintptr_t)&Crypto::seed;
+		Crypto::seed = static_cast<uint32_t>((uintptr_t)&Crypto::seed);
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
 		HMAC_CTX_init(&Crypto::hmacSha1Ctx);
@@ -82,7 +82,7 @@ namespace Utils
 
 		MS_ASSERT(ret == 1, "OpenSSL HMAC_Init_ex() failed with key '%s'", key.c_str());
 
-		ret = HMAC_Update(&Crypto::hmacSha1Ctx, (const uint8_t*)data, (int)len);
+		ret = HMAC_Update(&Crypto::hmacSha1Ctx, data, static_cast<int>(len));
 
 		MS_ASSERT(
 		    ret == 1,

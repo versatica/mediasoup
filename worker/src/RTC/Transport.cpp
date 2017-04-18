@@ -286,7 +286,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringTransportId] = (Json::UInt)this->transportId;
+		json[JsonStringTransportId] = static_cast<Json::UInt>(this->transportId);
 
 		// Add `iceRole` (we are always "controlled").
 		json[JsonStringIceRole] = JsonStringControlled;
@@ -368,10 +368,10 @@ namespace RTC
 		json[JsonStringUseRemb] = (static_cast<bool>(this->remoteBitrateEstimator));
 
 		// Add `maxBitrate`.
-		json[JsonStringMaxBitrate] = (Json::UInt)this->maxBitrate;
+		json[JsonStringMaxBitrate] = static_cast<Json::UInt>(this->maxBitrate);
 
 		// Add `effectiveMaxBitrate`.
-		json[JsonStringEffectiveMaxBitrate] = (Json::UInt)this->effectiveMaxBitrate;
+		json[JsonStringEffectiveMaxBitrate] = static_cast<Json::UInt>(this->effectiveMaxBitrate);
 
 		// Add `rtpListener`.
 		json[JsonStringRtpListener] = this->rtpListener.ToJson();
@@ -521,7 +521,7 @@ namespace RTC
 					return;
 				}
 
-				auto bitrate = (uint32_t)request->data[JsonStringBitrate].asUInt();
+				auto bitrate = static_cast<uint32_t>(request->data[JsonStringBitrate].asUInt());
 
 				if (bitrate < MinBitrate)
 					bitrate = MinBitrate;
@@ -1251,7 +1251,7 @@ namespace RTC
 		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
 		{
 			if ((bitrate != 0u) && (this->effectiveMaxBitrate != 0u) &&
-			    (double)effectiveBitrate / (double)this->effectiveMaxBitrate <
+			    static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
 			        EffectiveMaxBitrateThresholdBeforeFullFrame)
 			{
 				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting full frames");

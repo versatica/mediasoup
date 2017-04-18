@@ -30,13 +30,13 @@ namespace RTC
 		// `codecPayloadType` is optional.
 		if (data[JsonStringCodecPayloadType].isUInt())
 		{
-			this->codecPayloadType    = (uint8_t)data[JsonStringCodecPayloadType].asUInt();
+			this->codecPayloadType    = static_cast<uint8_t>(data[JsonStringCodecPayloadType].asUInt());
 			this->hasCodecPayloadType = true;
 		}
 
 		// `ssrc` is optional.
 		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = (uint32_t)data[JsonStringSsrc].asUInt();
+			this->ssrc = static_cast<uint32_t>(data[JsonStringSsrc].asUInt());
 
 		// `fec` is optional.
 		if (data[JsonStringFec].isObject())
@@ -62,7 +62,7 @@ namespace RTC
 
 		// `maxFramerate` is optional.
 		if (data[JsonStringMaxFramerate].isUInt())
-			this->maxFramerate = (uint32_t)data[JsonStringMaxFramerate].asUInt();
+			this->maxFramerate = static_cast<uint32_t>(data[JsonStringMaxFramerate].asUInt());
 
 		// `active` is optional.
 		if (data[JsonStringActive].isBool())
@@ -105,11 +105,11 @@ namespace RTC
 
 		// Add `codecPayloadType`.
 		if (this->hasCodecPayloadType)
-			json[JsonStringCodecPayloadType] = (Json::UInt)this->codecPayloadType;
+			json[JsonStringCodecPayloadType] = static_cast<Json::UInt>(this->codecPayloadType);
 
 		// Add `ssrc`.
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = (Json::UInt)this->ssrc;
+			json[JsonStringSsrc] = static_cast<Json::UInt>(this->ssrc);
 
 		// Add `fec`
 		if (this->hasFec)
@@ -129,7 +129,7 @@ namespace RTC
 
 		// Add `maxFramerate`.
 		if (this->maxFramerate != 0u)
-			json[JsonStringMaxFramerate] = (Json::UInt)this->maxFramerate;
+			json[JsonStringMaxFramerate] = static_cast<Json::UInt>(this->maxFramerate);
 
 		// Add `active`.
 		json[JsonStringActive] = this->active;

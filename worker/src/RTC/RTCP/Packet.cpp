@@ -56,7 +56,7 @@ namespace RTC
 
 				auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-				size_t packetLlen = (size_t)(ntohs(header->length) + 1) * 4;
+				size_t packetLlen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
 
 				if (len < packetLlen)
 				{
@@ -79,7 +79,7 @@ namespace RTC
 						if (current == nullptr)
 							break;
 
-						if ((uint8_t)header->count > 0)
+						if (header->count > 0)
 						{
 							Packet* rr = ReceiverReportPacket::Parse(data, len, current->GetSize());
 							if (rr == nullptr)
@@ -192,8 +192,8 @@ namespace RTC
 			// Fill the common header.
 			this->header->version    = 2;
 			this->header->padding    = 0;
-			this->header->count      = (uint8_t)this->GetCount();
-			this->header->packetType = (uint8_t)this->type;
+			this->header->count      = static_cast<uint8_t>(this->GetCount());
+			this->header->packetType = static_cast<uint8_t>(this->type);
 			this->header->length     = htons(length);
 
 			return sizeof(CommonHeader);

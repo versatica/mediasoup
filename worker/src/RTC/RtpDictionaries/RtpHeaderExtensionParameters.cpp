@@ -36,7 +36,7 @@ namespace RTC
 		if (!data[JsonStringId].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.id");
 
-		this->id = (uint8_t)data[JsonStringId].asUInt();
+		this->id = static_cast<uint8_t>(data[JsonStringId].asUInt());
 
 		// `encrypt` is optional.
 		if (data[JsonStringEncrypt].isBool())
@@ -62,7 +62,7 @@ namespace RTC
 		json[JsonStringUri] = this->uri;
 
 		// Add `id`.
-		json[JsonStringId] = (Json::UInt)this->id;
+		json[JsonStringId] = static_cast<Json::UInt>(this->id);
 
 		// Add `encrypt`.
 		json[JsonStringEncrypt] = this->encrypt;

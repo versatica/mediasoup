@@ -336,7 +336,8 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 		uint16_t port;
 		std::string ip;
 
-		Utils::IP::GetAddressInfo((struct sockaddr*)(&address.address.address4), &family, ip, &port);
+		Utils::IP::GetAddressInfo(
+		    reinterpret_cast<struct sockaddr*>(&address.address.address4), &family, ip, &port);
 
 		if (family != requestedFamily)
 			continue;
@@ -591,7 +592,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 	switch (family)
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), 0, (struct sockaddr_in*)&bindAddr);
+			err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
@@ -599,18 +600,22 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 			if (bindSocket == -1)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
-			err = bind(bindSocket, (const struct sockaddr*)&bindAddr, sizeof(struct sockaddr_in));
+			err = bind(
+			    bindSocket, reinterpret_cast<const struct sockaddr*>(&bindAddr), sizeof(struct sockaddr_in));
 			break;
 
 		case AF_INET6:
-			uv_ip6_addr(ip.c_str(), 0, (struct sockaddr_in6*)&bindAddr);
+			uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			bindSocket = socket(AF_INET6, SOCK_DGRAM, 0);
 			if (bindSocket == -1)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
-			err = bind(bindSocket, (const struct sockaddr*)&bindAddr, sizeof(struct sockaddr_in6));
+			err = bind(
+			    bindSocket,
+			    reinterpret_cast<const struct sockaddr*>(&bindAddr),
+			    sizeof(struct sockaddr_in6));
 			break;
 
 		default:

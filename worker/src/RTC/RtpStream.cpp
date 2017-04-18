@@ -58,7 +58,8 @@ namespace RTC
 		}
 
 		// Set the extended sequence number into the packet.
-		packet->SetExtendedSequenceNumber(this->cycles + (uint32_t)packet->GetSequenceNumber());
+		packet->SetExtendedSequenceNumber(
+		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Update highest seen RTP timestamp.
 		if (packet->GetTimestamp() > this->maxTimestamp)
@@ -183,13 +184,13 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringSsrc]          = (Json::UInt)this->ssrc;
-		json[JsonStringPayloadType]   = (Json::UInt)this->payloadType;
+		json[JsonStringSsrc]          = static_cast<Json::UInt>(this->ssrc);
+		json[JsonStringPayloadType]   = static_cast<Json::UInt>(this->payloadType);
 		json[JsonStringMime]          = this->mime.name;
-		json[JsonStringClockRate]     = (Json::UInt)this->clockRate;
+		json[JsonStringClockRate]     = static_cast<Json::UInt>(this->clockRate);
 		json[JsonStringUseNack]       = this->useNack;
 		json[JsonStringUsePli]        = this->usePli;
-		json[JsonStringAbsSendTimeId] = (Json::UInt)this->absSendTimeId;
+		json[JsonStringAbsSendTimeId] = static_cast<Json::UInt>(this->absSendTimeId);
 
 		return json;
 	}

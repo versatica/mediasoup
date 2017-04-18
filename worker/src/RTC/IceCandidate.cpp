@@ -96,9 +96,9 @@ namespace RTC
 				break;
 		}
 
-		json[JsonStringPriority] = (Json::UInt)this->priority;
+		json[JsonStringPriority] = static_cast<Json::UInt>(this->priority);
 		json[JsonStringIp]       = this->ip;
-		json[JsonStringPort]     = (Json::UInt)this->port;
+		json[JsonStringPort]     = static_cast<Json::UInt>(this->port);
 
 		switch (this->type)
 		{

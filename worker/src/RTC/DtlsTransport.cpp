@@ -196,7 +196,7 @@ namespace RTC
 		// Set serial number (avoid default 0).
 		ASN1_INTEGER_set(
 		    X509_get_serialNumber(DtlsTransport::certificate),
-		    (long)Utils::Crypto::GetRandomUInt(1000000, 9999999));
+		    static_cast<long>(Utils::Crypto::GetRandomUInt(1000000, 9999999)));
 
 		// Set valid period.
 		X509_gmtime_adj(
@@ -219,8 +219,10 @@ namespace RTC
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
 		}
-		X509_NAME_add_entry_by_txt(certName, "O", MBSTRING_ASC, (uint8_t*)"mediasoup", -1, -1, 0);
-		X509_NAME_add_entry_by_txt(certName, "CN", MBSTRING_ASC, (uint8_t*)"mediasoup", -1, -1, 0);
+		X509_NAME_add_entry_by_txt(
+		    certName, "O", MBSTRING_ASC, reinterpret_cast<const uint8_t*>("mediasoup"), -1, -1, 0);
+		X509_NAME_add_entry_by_txt(
+		    certName, "CN", MBSTRING_ASC, reinterpret_cast<const uint8_t*>("mediasoup"), -1, -1, 0);
 
 		// It is self-signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DtlsTransport::certificate, certName);
@@ -693,8 +695,8 @@ namespace RTC
 		}
 
 		// Write the received DTLS data into the sslBioFromNetwork.
-		written = BIO_write(this->sslBioFromNetwork, (const void*)data, (int)len);
-		if (written != (int)len)
+		written = BIO_write(this->sslBioFromNetwork, (const void*)data, static_cast<int>(len));
+		if (written != static_cast<int>(len))
 		{
 			MS_WARN_TAG(
 			    dtls,
@@ -730,7 +732,7 @@ namespace RTC
 
 			// Notify the listener.
 			this->listener->OnDtlsApplicationData(
-			    this, (uint8_t*)DtlsTransport::sslReadBuffer, (size_t)read);
+			    this, (uint8_t*)DtlsTransport::sslReadBuffer, static_cast<size_t>(read));
 		}
 	}
 
@@ -755,14 +757,14 @@ namespace RTC
 
 		int written;
 
-		written = SSL_write(this->ssl, (const void*)data, (int)len);
+		written = SSL_write(this->ssl, (const void*)data, static_cast<int>(len));
 		if (written < 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_write() failed");
 
 			CheckStatus(written);
 		}
-		else if (written != (int)len)
+		else if (written != static_cast<int>(len))
 		{
 			MS_WARN_TAG(
 			    dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
@@ -903,7 +905,8 @@ namespace RTC
 		MS_DEBUG_DEV("%ld bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
-		this->listener->OnOutgoingDtlsData(this, (uint8_t*)data, (size_t)read);
+		this->listener->OnOutgoingDtlsData(
+		    this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
 
 		// Clear the BIO buffer.
 		// NOTE: the (void) avoids the -Wunused-value warning.
@@ -924,7 +927,7 @@ namespace RTC
 		if (ret == 0)
 			return true;
 
-		timeoutMs = (dtlsTimeout.tv_sec * (uint64_t)1000) + (dtlsTimeout.tv_usec / 1000);
+		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
 		if (timeoutMs == 0)
 		{
 			return true;

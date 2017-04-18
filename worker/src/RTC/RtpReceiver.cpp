@@ -68,7 +68,7 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 		Json::Value jsonRtpStreams(Json::arrayValue);
 
-		json[JsonStringRtpReceiverId] = (Json::UInt)this->rtpReceiverId;
+		json[JsonStringRtpReceiverId] = static_cast<Json::UInt>(this->rtpReceiverId);
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
@@ -276,11 +276,11 @@ namespace RTC
 
 			eventData[JsonStringClass] = "RtpReceiver";
 
-			jsonObject[JsonStringPayloadType]    = (Json::UInt)packet->GetPayloadType();
+			jsonObject[JsonStringPayloadType]    = static_cast<Json::UInt>(packet->GetPayloadType());
 			jsonObject[JsonStringMarker]         = packet->HasMarker();
-			jsonObject[JsonStringSequenceNumber] = (Json::UInt)packet->GetSequenceNumber();
-			jsonObject[JsonStringTimestamp]      = (Json::UInt)packet->GetTimestamp();
-			jsonObject[JsonStringSsrc]           = (Json::UInt)packet->GetSsrc();
+			jsonObject[JsonStringSequenceNumber] = static_cast<Json::UInt>(packet->GetSequenceNumber());
+			jsonObject[JsonStringTimestamp]      = static_cast<Json::UInt>(packet->GetTimestamp());
+			jsonObject[JsonStringSsrc]           = static_cast<Json::UInt>(packet->GetSsrc());
 
 			eventData[JsonStringObject] = jsonObject;
 

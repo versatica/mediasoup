@@ -66,7 +66,7 @@ namespace RTC
 			}
 
 			// Check length.
-			size_t len = (size_t)(ntohs(commonHeader->length) + 1) * 4;
+			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
 			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + sizeof(Header) +
 			               (numSsrcs * sizeof(uint32_t)))
 			{

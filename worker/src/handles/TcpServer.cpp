@@ -50,13 +50,15 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 	switch (Utils::IP::GetFamily(ip))
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bindAddr);
+			err = uv_ip4_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
-			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&bindAddr);
+			err = uv_ip6_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			// Don't also bind into IPv4 when listening in IPv6.
@@ -64,29 +66,32 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 			break;
 
 		default:
-			uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 			MS_THROW_ERROR("invalid binding IP '%s'", ip.c_str());
 			break;
 	}
 
-	err = uv_tcp_bind(this->uvHandle, (const struct sockaddr*)&bindAddr, flags);
+	err = uv_tcp_bind(this->uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
 	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_tcp_bind() failed: %s", uv_strerror(err));
 	}
 
-	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
+	err = uv_listen(
+	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	    backlog,
+	    static_cast<uv_connection_cb>(onConnection));
 	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -99,17 +104,20 @@ TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
 
 	this->uvHandle->data = (void*)this;
 
-	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
+	err = uv_listen(
+	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	    backlog,
+	    static_cast<uv_connection_cb>(onConnection));
 	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -133,7 +141,7 @@ void TcpServer::Destroy()
 	// If there are no connections then close now.
 	if (this->connections.empty())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 	}
 	// Otherwise close all the connections (but not the TCP server).
 	else
@@ -166,7 +174,8 @@ bool TcpServer::SetLocalAddress()
 	int err;
 	int len = sizeof(this->localAddr);
 
-	err = uv_tcp_getsockname(this->uvHandle, (struct sockaddr*)&this->localAddr, &len);
+	err =
+	    uv_tcp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
 	if (err != 0)
 	{
 		MS_ERROR("uv_tcp_getsockname() failed: %s", uv_strerror(err));
@@ -176,7 +185,10 @@ bool TcpServer::SetLocalAddress()
 
 	int family;
 	Utils::IP::GetAddressInfo(
-	    (const struct sockaddr*)&this->localAddr, &family, this->localIP, &this->localPort);
+	    reinterpret_cast<const struct sockaddr*>(&this->localAddr),
+	    &family,
+	    this->localIP,
+	    &this->localPort);
 
 	return true;
 }
@@ -215,7 +227,9 @@ inline void TcpServer::OnUvConnection(int status)
 	}
 
 	// Accept the connection.
-	err = uv_accept((uv_stream_t*)this->uvHandle, (uv_stream_t*)connection->GetUvHandle());
+	err = uv_accept(
+	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	    reinterpret_cast<uv_stream_t*>(connection->GetUvHandle()));
 	if (err != 0)
 		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
 
@@ -280,5 +294,5 @@ inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection, bool isC
 	// Check if the server was closing connections, and if this is the last
 	// connection then close the server now.
 	if (wasClosing && this->connections.empty())
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }

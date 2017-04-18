@@ -42,7 +42,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 		MS_THROW_ERROR("uv_signal_init() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 	}
 
-	err = uv_signal_start(uvHandle, (uv_signal_cb)onSignal, signum);
+	err = uv_signal_start(uvHandle, static_cast<uv_signal_cb>(onSignal), signum);
 	if (err != 0)
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 
@@ -56,7 +56,7 @@ void SignalsHandler::Destroy()
 
 	for (auto uvHandle : uvHandles)
 	{
-		uv_close((uv_handle_t*)uvHandle, (uv_close_cb)onClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 	}
 
 	// And delete this.

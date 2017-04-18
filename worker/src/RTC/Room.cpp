@@ -159,7 +159,7 @@ namespace RTC
 		Json::Value jsonMapRtpSenderRtpReceiver(Json::objectValue);
 
 		// Add `roomId`.
-		json[JsonStringRoomId] = (Json::UInt)this->roomId;
+		json[JsonStringRoomId] = static_cast<Json::UInt>(this->roomId);
 
 		// Add `capabilities`.
 		json[JsonStringCapabilities] = this->capabilities.ToJson();

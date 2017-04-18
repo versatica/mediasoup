@@ -45,7 +45,7 @@ namespace RTC
 			err = uv_ip4_addr(
 			    Settings::configuration.rtcIPv4.c_str(),
 			    0,
-			    (struct sockaddr_in*)&RTC::TcpServer::sockaddrStorageIPv4);
+			    reinterpret_cast<struct sockaddr_in*>(&RTC::TcpServer::sockaddrStorageIPv4));
 
 			if (err != 0)
 				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
@@ -56,7 +56,7 @@ namespace RTC
 			err = uv_ip6_addr(
 			    Settings::configuration.rtcIPv6.c_str(),
 			    0,
-			    (struct sockaddr_in6*)&RTC::TcpServer::sockaddrStorageIPv6);
+			    reinterpret_cast<struct sockaddr_in6*>(&RTC::TcpServer::sockaddrStorageIPv6));
 
 			if (err != 0)
 				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
@@ -116,8 +116,9 @@ namespace RTC
 		}
 
 		// Choose a random first port to start from.
-		initialPort = (uint16_t)Utils::Crypto::GetRandomUInt(
-		    (uint32_t)RTC::TcpServer::minPort, (uint32_t)RTC::TcpServer::maxPort);
+		initialPort = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(
+		    static_cast<uint32_t>(RTC::TcpServer::minPort),
+		    static_cast<uint32_t>(RTC::TcpServer::maxPort)));
 
 		iteratingPort = initialPort;
 
@@ -155,10 +156,10 @@ namespace RTC
 			switch (addressFamily)
 			{
 				case AF_INET:
-					((struct sockaddr_in*)&bindAddr)->sin_port = htons(iteratingPort);
+					(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(iteratingPort);
 					break;
 				case AF_INET6:
-					((struct sockaddr_in6*)&bindAddr)->sin6_port = htons(iteratingPort);
+					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(iteratingPort);
 					break;
 			}
 
@@ -174,7 +175,7 @@ namespace RTC
 				MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 			}
 
-			err = uv_tcp_bind(uvHandle, (const struct sockaddr*)&bindAddr, flags);
+			err = uv_tcp_bind(uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
 			if (err != 0)
 			{
 				MS_WARN_DEV(
@@ -183,7 +184,7 @@ namespace RTC
 				    iteratingPort,
 				    uv_strerror(err));
 
-				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)onErrorClose);
+				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onErrorClose));
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)

@@ -22,7 +22,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_install_event_handler((srtp_event_handler_func_t*)OnSrtpEvent);
+		err = srtp_install_event_handler(static_cast<srtp_event_handler_func_t*>(OnSrtpEvent));
 		if (DepLibSRTP::IsError(err))
 			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
 	}
@@ -138,7 +138,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_protect(this->session, (void*)EncryptBuffer, (int*)len);
+		err = srtp_protect(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -158,7 +158,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_unprotect(this->session, (void*)data, (int*)len);
+		err = srtp_unprotect(this->session, (void*)data, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_DEBUG_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -185,7 +185,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_protect_rtcp(this->session, (void*)EncryptBuffer, (int*)len);
+		err = srtp_protect_rtcp(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -205,7 +205,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
+		err = srtp_unprotect_rtcp(this->session, (void*)data, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_DEBUG_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));

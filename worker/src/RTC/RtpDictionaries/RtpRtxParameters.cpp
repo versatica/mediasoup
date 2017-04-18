@@ -20,7 +20,7 @@ namespace RTC
 
 		// `ssrc` is optional.
 		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = (uint32_t)data[JsonStringSsrc].asUInt();
+			this->ssrc = static_cast<uint32_t>(data[JsonStringSsrc].asUInt());
 	}
 
 	Json::Value RtpRtxParameters::ToJson() const
@@ -33,7 +33,7 @@ namespace RTC
 
 		// Add `ssrc`.
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = (Json::UInt)this->ssrc;
+			json[JsonStringSsrc] = static_cast<Json::UInt>(this->ssrc);
 
 		return json;
 	}

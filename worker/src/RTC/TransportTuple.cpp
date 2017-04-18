@@ -29,7 +29,7 @@ namespace RTC
 
 		Utils::IP::GetAddressInfo(this->GetLocalAddress(), &ipFamily, ip, &port);
 		json[JsonStringLocalIp]   = ip;
-		json[JsonStringLocalPort] = (Json::UInt)port;
+		json[JsonStringLocalPort] = static_cast<Json::UInt>(port);
 		if (this->GetProtocol() == RTC::TransportTuple::Protocol::UDP)
 			json[JsonStringProtocol] = JsonStringUdp;
 		else
@@ -37,7 +37,7 @@ namespace RTC
 
 		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ipFamily, ip, &port);
 		json[JsonStringRemoteIp]   = ip;
-		json[JsonStringRemotePort] = (Json::UInt)port;
+		json[JsonStringRemotePort] = static_cast<Json::UInt>(port);
 
 		return json;
 	}

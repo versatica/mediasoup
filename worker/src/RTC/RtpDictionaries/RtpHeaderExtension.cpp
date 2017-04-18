@@ -45,7 +45,7 @@ namespace RTC
 		if (!data[JsonStringPreferredId].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtension.preferredId");
 
-		this->preferredId = (uint8_t)data[JsonStringPreferredId].asUInt();
+		this->preferredId = static_cast<uint8_t>(data[JsonStringPreferredId].asUInt());
 
 		// `preferredEncrypt` is optional.
 		if (data[JsonStringPreferredEncrypt].isBool())
@@ -70,7 +70,7 @@ namespace RTC
 		json[JsonStringUri] = this->uri;
 
 		// Add `preferredId`.
-		json[JsonStringPreferredId] = (Json::UInt)this->preferredId;
+		json[JsonStringPreferredId] = static_cast<Json::UInt>(this->preferredId);
 
 		// Add `preferredEncrypt`.
 		json[JsonStringPreferredEncrypt] = this->preferredEncrypt;

@@ -302,7 +302,7 @@ namespace RTC
 					{
 						auto codec = *it;
 
-						if ((int32_t)codec.payloadType == apt)
+						if (static_cast<int32_t>(codec.payloadType) == apt)
 						{
 							if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::RTX)
 								MS_THROW_ERROR("apt in RTX codec points to a RTX codec");

@@ -74,7 +74,8 @@ namespace RTC
 
 			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
 
-			packet->SetSsrc(Utils::Byte::Get4Bytes((uint8_t*)header, sizeof(CommonHeader)));
+			packet->SetSsrc(
+			    Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), sizeof(CommonHeader)));
 
 			if (offset == 0)
 				offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;

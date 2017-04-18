@@ -36,7 +36,7 @@ namespace RTC
 
 			this->header = header;
 
-			auto compact = (uint32_t)ntohl(header->compact);
+			auto compact = static_cast<uint32_t> ntohl(header->compact);
 
 			this->first     = compact >> 19;           /* first 13 bits */
 			this->number    = (compact >> 6) & 0x1fff; /* next  13 bits */
