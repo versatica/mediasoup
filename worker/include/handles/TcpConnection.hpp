@@ -26,7 +26,7 @@ public:
 	struct UvWriteData
 	{
 		TcpConnection* connection{nullptr};
-		uv_write_t req{};
+		uv_write_t req;
 		uint8_t store[1];
 	};
 
@@ -96,10 +96,10 @@ protected:
 	uint8_t* buffer = nullptr;
 	// Others.
 	size_t bufferDataLen{0};
-	std::string localIP{};
+	std::string localIP;
 	uint16_t localPort{0};
-	struct sockaddr_storage peerAddr{};
-	std::string peerIP{};
+	struct sockaddr_storage peerAddr;
+	std::string peerIP;
 	uint16_t peerPort{0};
 };
 

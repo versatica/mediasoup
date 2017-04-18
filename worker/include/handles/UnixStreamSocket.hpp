@@ -12,7 +12,7 @@ public:
 	struct UvWriteData
 	{
 		UnixStreamSocket* socket{nullptr};
-		uv_write_t req{};
+		uv_write_t req;
 		uint8_t store[1];
 	};
 

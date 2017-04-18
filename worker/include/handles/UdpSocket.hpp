@@ -12,7 +12,7 @@ public:
 	struct UvSendData
 	{
 		UdpSocket* socket{nullptr};
-		uv_udp_send_t req{};
+		uv_udp_send_t req;
 		uint8_t store[1];
 	};
 
@@ -62,8 +62,8 @@ private:
 	bool isClosing{false};
 
 protected:
-	struct sockaddr_storage localAddr{};
-	std::string localIP{};
+	struct sockaddr_storage localAddr;
+	std::string localIP;
 	uint16_t localPort{0};
 };
 

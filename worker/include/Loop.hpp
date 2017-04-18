@@ -42,7 +42,7 @@ private:
 	SignalsHandler* signalsHandler{nullptr};
 	// Others.
 	bool closed{false};
-	std::unordered_map<uint32_t, RTC::Room*> rooms{};
+	std::unordered_map<uint32_t, RTC::Room*> rooms;
 };
 
 #endif

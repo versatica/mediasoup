@@ -17,7 +17,7 @@ namespace Channel
 	public:
 		enum class MethodId
 		{
-			UNKNOWN = 0,
+			UNKNOWN     = 0,
 			WORKER_DUMP = 1,
 			WORKER_UPDATE_SETTINGS,
 			WORKER_CREATE_ROOM,
@@ -61,10 +61,10 @@ namespace Channel
 		// Passed by argument.
 		Channel::UnixStreamSocket* channel{nullptr};
 		uint32_t id{0};
-		std::string method{};
+		std::string method;
 		MethodId methodId{MethodId::UNKNOWN};
-		Json::Value internal{};
-		Json::Value data{};
+		Json::Value internal;
+		Json::Value data;
 		// Others.
 		bool replied{false};
 	};
