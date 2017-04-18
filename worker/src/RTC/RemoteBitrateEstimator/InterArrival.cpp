@@ -165,8 +165,8 @@ namespace RTC
 
 		int64_t arrivalTimeDeltaMs = arrivalTimeMs - this->currentTimestampGroup.completeTimeMs;
 		uint32_t timestampDiff     = timestamp - this->currentTimestampGroup.timestamp;
-		int64_t tsDeltaMs =
-		    static_cast<int64_t>(std::lround(this->timestampToMsCoeff * timestampDiff)) + 0.5;
+		auto tsDeltaMs =
+		    static_cast<int64_t>(std::lround(this->timestampToMsCoeff * timestampDiff + 0.5));
 
 		if (tsDeltaMs == 0)
 			return true;
