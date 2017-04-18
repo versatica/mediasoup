@@ -130,7 +130,8 @@ void ignoreSignals()
 	std::map<std::string, int> ignoredSignals = {
 	    {"PIPE", SIGPIPE}, {"HUP", SIGHUP}, {"ALRM", SIGALRM}, {"USR1", SIGUSR2}, {"USR2", SIGUSR1}};
 
-	act.sa_handler = SIG_IGN;
+	// Ignore clang-tidy cppcoreguidelines-pro-type-cstyle-cast.
+	act.sa_handler = SIG_IGN; // NOLINT
 	act.sa_flags   = 0;
 	err            = sigfillset(&act.sa_mask);
 	if (err != 0)

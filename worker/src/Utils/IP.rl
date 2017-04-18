@@ -69,7 +69,7 @@ namespace Utils
 			return AF_UNSPEC;
 	}
 
-	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, uint16_t* port)
+	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string& ip, uint16_t* port)
 	{
 		MS_TRACE();
 

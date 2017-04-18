@@ -173,7 +173,7 @@ namespace RTC
 			goto error;
 		}
 
-		ret = EVP_PKEY_assign_RSA(DtlsTransport::privateKey, rsaKey);
+		ret = EVP_PKEY_assign_RSA(DtlsTransport::privateKey, rsaKey); // NOLINT
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("EVP_PKEY_assign_RSA() failed");
@@ -413,7 +413,7 @@ namespace RTC
 				if (it != DtlsTransport::srtpProfiles.begin())
 					dtlsSrtpProfiles += ":";
 
-				SrtpProfileMapEntry* profileEntry = &(*it);
+				SrtpProfileMapEntry* profileEntry = std::addressof(*it);
 				dtlsSrtpProfiles += profileEntry->name;
 			}
 		}
@@ -896,7 +896,7 @@ namespace RTC
 		int64_t read;
 		char* data = nullptr;
 
-		read = BIO_get_mem_data(this->sslBioToNetwork, &data);
+		read = BIO_get_mem_data(this->sslBioToNetwork, &data); // NOLINT
 		if (read <= 0)
 			return;
 
@@ -921,7 +921,7 @@ namespace RTC
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
-		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtlsTimeout);
+		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtlsTimeout); // NOLINT
 		if (ret == 0)
 			return true;
 
@@ -1101,7 +1101,7 @@ namespace RTC
 
 		BUF_MEM* mem;
 
-		BIO_get_mem_ptr(bio, &mem);
+		BIO_get_mem_ptr(bio, &mem); // NOLINT
 		if ((mem == nullptr) || (mem->data == nullptr) || (mem->length == 0u))
 		{
 			LOG_OPENSSL_ERROR("BIO_get_mem_ptr() failed");
@@ -1193,7 +1193,7 @@ namespace RTC
 		auto it = DtlsTransport::srtpProfiles.begin();
 		for (; it != DtlsTransport::srtpProfiles.end(); ++it)
 		{
-			SrtpProfileMapEntry* profileEntry = &(*it);
+			SrtpProfileMapEntry* profileEntry = std::addressof(*it);
 
 			if (std::strcmp(sslSrtpProfile->name, profileEntry->name) == 0)
 			{

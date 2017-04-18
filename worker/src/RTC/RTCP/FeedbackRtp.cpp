@@ -26,7 +26,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* commonHeader = (CommonHeader*)data;
+			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 			std::unique_ptr<FeedbackRtpItemsPacket<Item>> packet(
 			    new FeedbackRtpItemsPacket<Item>(commonHeader));
 

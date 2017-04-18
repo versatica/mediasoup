@@ -59,7 +59,7 @@ namespace Utils
 
 		// Init the vrypto seed with a random number taken from the address
 		// of the seed variable itself (which is random).
-		Crypto::seed = static_cast<uint32_t>((uintptr_t)&Crypto::seed);
+		Crypto::seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed)));
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
 		HMAC_CTX_init(&Crypto::hmacSha1Ctx);

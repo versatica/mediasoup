@@ -212,7 +212,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* commonHeader        = (CommonHeader*)data;
+			auto* commonHeader        = reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(data));
 			FeedbackRtpPacket* packet = nullptr;
 
 			switch (FeedbackRtp::MessageType(commonHeader->count))

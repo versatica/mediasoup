@@ -42,7 +42,7 @@ namespace RTC
 				offset += sizeof(uint8_t);
 				if (length <= len - offset)
 				{
-					packet->SetReason(std::string((char*)data + offset, length));
+					packet->SetReason(std::string(reinterpret_cast<const char*>(data) + offset, length));
 				}
 			}
 

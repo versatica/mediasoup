@@ -196,7 +196,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	// First try uv_udp_try_send(). In case it can not directly send the datagram
 	// then build a uv_req_t and use uv_udp_send().
 
-	buffer = uv_buf_init((char*)data, len);
+	buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
 	sent   = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
 
 	// Entire datagram was sent. Done.

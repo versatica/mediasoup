@@ -176,7 +176,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	// First try uv_try_write(). In case it can not directly write all the given
 	// data then build a uv_req_t and use uv_write().
 
-	buffer  = uv_buf_init((char*)data, len);
+	buffer  = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
 	written = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), &buffer, 1);
 
 	// All the data was written. Done.
@@ -242,8 +242,8 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	// First try uv_try_write(). In case it can not directly write all the given
 	// data then build a uv_req_t and use uv_write().
 
-	buffers[0] = uv_buf_init((char*)data1, len1);
-	buffers[1] = uv_buf_init((char*)data2, len2);
+	buffers[0] = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data1)), len1);
+	buffers[1] = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data2)), len2);
 	written    = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), buffers, 2);
 
 	// All the data was written. Done.

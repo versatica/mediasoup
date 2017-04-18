@@ -153,7 +153,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	// First try uv_try_write(). In case it can not directly send all the given data
 	// then build a uv_req_t and use uv_write().
 
-	buffer  = uv_buf_init((char*)data, len);
+	buffer  = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
 	written = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), &buffer, 1);
 
 	// All the data was written. Done.
