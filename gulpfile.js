@@ -29,9 +29,7 @@ const nodeTests =
 	'test/test-Peer.js',
 	'test/test-Transport.js',
 	'test/test-RtpReceiver.js',
-	'test/test-extra.js'
-	// NOTE: Disable this test until adapted.
-	// 'test/test-scene-1.js'
+	'test/test-extra.js
 ];
 const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const workerHeaderFilterRegex =
