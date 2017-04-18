@@ -27,10 +27,11 @@ namespace RTC
 
 		// Estimate how often we can send RTCP if we allocate up to 5% of bandwidth
 		// to feedback.
-		static const int RtcpSize           = 80;
+		static const int RtcpSize = 80;
+
 		const int64_t minFeedbackIntervalMs = 200;
 		auto interval                       = static_cast<int64_t>(
-        std::lround(RtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5));
+        std::lround((RtcpSize * 8.0 * 1000.0) / (0.05 * this->currentBitrateBps) + 0.5));
 
 		return std::min(std::max(interval, minFeedbackIntervalMs), MaxFeedbackIntervalMs);
 	}
@@ -167,8 +168,8 @@ namespace RTC
 
 			case RC_DECREASE:
 				this->bitrateIsInitialized = true;
-				// Set bit rate to something slightly lower than max
-				// to get rid of any self-induced delay.
+				// Set bit rate to something slightly lower than max to get rid
+				// of any self-induced delay.
 				newBitrateBps = static_cast<uint32_t>(std::lround(this->beta * incomingBitrateBps + 0.5));
 
 				if (newBitrateBps > this->currentBitrateBps)
@@ -176,8 +177,8 @@ namespace RTC
 					// Avoid increasing the rate when over-using.
 					if (this->rateControlRegion != RC_MAX_UNKNOWN)
 					{
-						newBitrateBps =
-						    static_cast<uint32_t>(std::lround(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5));
+						newBitrateBps = static_cast<uint32_t>(
+						    std::lround(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f));
 					}
 					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
 				}
