@@ -35,9 +35,9 @@ public:
 
 private:
 	// Passed by argument.
-	Listener* listener = nullptr;
+	Listener* listener{nullptr};
 	// Allocated by this.
-	uv_timer_t* uvHandle = nullptr;
+	uv_timer_t* uvHandle{nullptr};
 };
 
 #endif

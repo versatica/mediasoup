@@ -11,7 +11,7 @@ public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
-		UdpSocket* socket;
+		UdpSocket* socket{nullptr};
 		uv_udp_send_t req;
 		uint8_t store[1];
 	};
@@ -57,14 +57,14 @@ protected:
 
 private:
 	// Allocated by this (may be passed by argument).
-	uv_udp_t* uvHandle = nullptr;
+	uv_udp_t* uvHandle{nullptr};
 	// Others.
-	bool isClosing = false;
+	bool isClosing{false};
 
 protected:
 	struct sockaddr_storage localAddr{};
 	std::string localIP;
-	uint16_t localPort = 0;
+	uint16_t localPort{0};
 };
 
 /* Inline methods. */

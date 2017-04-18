@@ -11,7 +11,7 @@ public:
 	/* Struct for the data field of uv_req_t when writing data. */
 	struct UvWriteData
 	{
-		UnixStreamSocket* socket;
+		UnixStreamSocket* socket{nullptr};
 		uv_write_t req;
 		uint8_t store[1];
 	};
@@ -47,17 +47,17 @@ private:
 	// Allocated by this.
 	uv_pipe_t* uvHandle = nullptr;
 	// Others.
-	bool isClosing      = false;
-	bool isClosedByPeer = false;
-	bool hasError       = false;
+	bool isClosing{false};
+	bool isClosedByPeer{false};
+	bool hasError{false};
 
 protected:
 	// Passed by argument.
-	size_t bufferSize = 0;
+	size_t bufferSize{0};
 	// Allocated by this.
-	uint8_t* buffer = nullptr;
+	uint8_t* buffer{nullptr};
 	// Others.
-	size_t bufferDataLen = 0;
+	size_t bufferDataLen{0};
 };
 
 /* Inline methods. */

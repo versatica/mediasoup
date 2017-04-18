@@ -33,7 +33,7 @@ public:
 
 private:
 	// Passed by argument.
-	Listener* listener = nullptr;
+	Listener* listener{nullptr};
 	// Allocated by this.
 	std::vector<uv_signal_t*> uvHandles;
 };
