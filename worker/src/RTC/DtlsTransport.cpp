@@ -22,7 +22,7 @@
 			MS_ERROR("OpenSSL error [desc:'%s']", desc);                                                 \
 		else                                                                                           \
 		{                                                                                              \
-			unsigned long err;                                                                           \
+			int64_t err;                                                                                 \
 			while ((err = ERR_get_error()) != 0)                                                         \
 			{                                                                                            \
 				MS_ERROR("OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr));   \
@@ -196,13 +196,11 @@ namespace RTC
 		// Set serial number (avoid default 0).
 		ASN1_INTEGER_set(
 		    X509_get_serialNumber(DtlsTransport::certificate),
-		    static_cast<long>(Utils::Crypto::GetRandomUInt(1000000, 9999999)));
+		    static_cast<uint64_t>(Utils::Crypto::GetRandomUInt(1000000, 9999999)));
 
 		// Set valid period.
-		X509_gmtime_adj(
-		    X509_get_notBefore(DtlsTransport::certificate), -1 * 60 * 60 * 24 * 365 * 10); // -10 years.
-		X509_gmtime_adj(
-		    X509_get_notAfter(DtlsTransport::certificate), 60 * 60 * 24 * 365 * 10); // 10 years.
+		X509_gmtime_adj(X509_get_notBefore(DtlsTransport::certificate), -315360000); // -10 years.
+		X509_gmtime_adj(X509_get_notAfter(DtlsTransport::certificate), 315360000);   // 10 years.
 
 		// Set the public key for the certificate using the key.
 		ret = X509_set_pubkey(DtlsTransport::certificate, DtlsTransport::privateKey);
@@ -895,7 +893,7 @@ namespace RTC
 		if (BIO_eof(this->sslBioToNetwork))
 			return;
 
-		long read;
+		int64_t read;
 		char* data = nullptr;
 
 		read = BIO_get_mem_data(this->sslBioToNetwork, &data);
@@ -917,7 +915,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		long int ret;
+		int64_t ret;
 		struct timeval dtlsTimeout;
 		uint64_t timeoutMs;
 

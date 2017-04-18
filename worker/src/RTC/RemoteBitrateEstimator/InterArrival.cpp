@@ -15,6 +15,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp" // LatestTimestamp
 #include <algorithm>
+#include <cmath> // std::lround()
 
 namespace RTC
 {
@@ -163,9 +164,9 @@ namespace RTC
 		MS_ASSERT(this->currentTimestampGroup.completeTimeMs >= 0, "invalid completeTimeMs value");
 
 		int64_t arrivalTimeDeltaMs = arrivalTimeMs - this->currentTimestampGroup.completeTimeMs;
-
-		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.timestamp;
-		int64_t tsDeltaMs      = this->timestampToMsCoeff * timestampDiff + 0.5;
+		uint32_t timestampDiff     = timestamp - this->currentTimestampGroup.timestamp;
+		int64_t tsDeltaMs =
+		    static_cast<int64_t>(std::lround(this->timestampToMsCoeff * timestampDiff)) + 0.5;
 
 		if (tsDeltaMs == 0)
 			return true;

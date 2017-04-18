@@ -318,7 +318,7 @@ namespace RTC
 			while (ptr < extensionEnd)
 			{
 				uint8_t id = (*ptr & 0xF0) >> 4;
-				size_t len = (*ptr & 0x0F) + 1;
+				size_t len = static_cast<size_t>(*ptr & 0x0F) + 1;
 
 				if (ptr + 1 + len > extensionEnd)
 				{

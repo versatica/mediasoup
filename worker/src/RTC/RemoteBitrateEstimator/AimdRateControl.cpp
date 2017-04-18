@@ -15,7 +15,7 @@
 #include "Logger.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp"
 #include <algorithm>
-#include <cmath>
+#include <cmath> // std::lround()
 
 static constexpr int64_t MaxFeedbackIntervalMs = 1000;
 
@@ -29,9 +29,8 @@ namespace RTC
 		// to feedback.
 		static const int RtcpSize           = 80;
 		const int64_t minFeedbackIntervalMs = 200;
-
-		auto interval =
-		    static_cast<int64_t>(RtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps) + 0.5);
+		auto interval                       = static_cast<int64_t>(
+        std::lround(RtcpSize * 8.0 * 1000.0 / (0.05 * this->currentBitrateBps)) + 0.5);
 
 		return std::min(std::max(interval, minFeedbackIntervalMs), MaxFeedbackIntervalMs);
 	}
@@ -170,14 +169,15 @@ namespace RTC
 				this->bitrateIsInitialized = true;
 				// Set bit rate to something slightly lower than max
 				// to get rid of any self-induced delay.
-				newBitrateBps = static_cast<uint32_t>(this->beta * incomingBitrateBps + 0.5);
+				newBitrateBps = static_cast<uint32_t>(std::lround(this->beta * incomingBitrateBps) + 0.5);
 
 				if (newBitrateBps > this->currentBitrateBps)
 				{
 					// Avoid increasing the rate when over-using.
 					if (this->rateControlRegion != RC_MAX_UNKNOWN)
 					{
-						newBitrateBps = static_cast<uint32_t>(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f);
+						newBitrateBps =
+						    static_cast<uint32_t>(std::lround(this->beta * this->avgMaxBitrateKbps * 1000) + 0.5);
 					}
 					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
 				}
