@@ -124,13 +124,13 @@ namespace RTC
 
 		// Convert the given sequence numbers to 32 bits.
 		auto firstSeq32 = static_cast<uint32_t>(seq + this->cycles);
-		auto lastSeq32 = static_cast<uint32_t>(firstSeq32 + MaxRequestedPackets - 1);
+		auto lastSeq32  = static_cast<uint32_t>(firstSeq32 + MaxRequestedPackets - 1);
 
 		// Number of requested packets cannot be greater than the container size - 1.
 		MS_ASSERT(container.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
 
-		auto bufferIt             = this->buffer.begin();
-		auto bufferItReverse      = this->buffer.rbegin();
+		auto bufferIt         = this->buffer.begin();
+		auto bufferItReverse  = this->buffer.rbegin();
 		auto bufferFirstSeq32 = static_cast<uint32_t>((*bufferIt).seq32);
 		uint32_t bufferLastSeq32{ (*bufferItReverse).seq32 };
 
@@ -304,7 +304,7 @@ namespace RTC
 		report->SetNtpFrac(ntp.fractions);
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
-		auto diffMs = static_cast<uint32_t>(now - this->lastPacketTimeMs);
+		auto diffMs           = static_cast<uint32_t>(now - this->lastPacketTimeMs);
 		auto diffRtpTimestamp = static_cast<uint32_t>(diffMs * this->params.clockRate / 1000);
 
 		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
