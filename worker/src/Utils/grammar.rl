@@ -24,15 +24,16 @@
 	IPv4address                   = decimal_uchar "." decimal_uchar "." decimal_uchar "." decimal_uchar;
 	h16                           = HEXDIG{1,4};
 	ls32                          = ( h16 ":" h16 ) | IPv4address;
-	IPv6address                   = ( ( h16 ":" ){6} ls32 ) |
-	                                ( "::" ( h16 ":" ){5} ls32 ) |
-	                                ( h16? "::" ( h16 ":" ){4} ls32 ) |
-	                                ( ( ( h16 ":" )? h16 )? "::" ( h16 ":" ){3} ls32 ) |
-	                                ( ( ( h16 ":" ){,2} h16 )? "::" ( h16 ":" ){2} ls32 ) |
-	                                ( ( ( h16 ":" ){,3} h16 )? "::" h16 ":" ls32 ) |
-	                                ( ( ( h16 ":" ){,4} h16 )? "::" ls32 ) |
-	                                ( ( ( h16 ":" ){,5} h16 )? "::" h16 ) |
-	                                ( ( ( h16 ":" ){,6} h16 )? "::" );
+	scopeId                       = "%" alphanum{1,20};
+	IPv6address                   = ( ( h16 ":" ){6} ls32 scopeId? ) |
+	                                ( "::" ( h16 ":" ){5} ls32 scopeId? ) |
+	                                ( h16? "::" ( h16 ":" ){4} ls32 scopeId? ) |
+	                                ( ( ( h16 ":" )? h16 )? "::" ( h16 ":" ){3} ls32 scopeId? ) |
+	                                ( ( ( h16 ":" ){,2} h16 )? "::" ( h16 ":" ){2} ls32 scopeId? ) |
+	                                ( ( ( h16 ":" ){,3} h16 )? "::" h16 ":" ls32 scopeId? ) |
+	                                ( ( ( h16 ":" ){,4} h16 )? "::" ls32 scopeId? ) |
+	                                ( ( ( h16 ":" ){,5} h16 )? "::" h16 scopeId? ) |
+	                                ( ( ( h16 ":" ){,6} h16 )? "::" scopeId? );
 	port                          = DIGIT{1,4} |
 	                                "1".."5" DIGIT{4} |
 	                                "6" "0".."4" DIGIT{3} |
