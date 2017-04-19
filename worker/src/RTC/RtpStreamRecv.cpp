@@ -73,7 +73,7 @@ namespace RTC
 		auto report = new RTC::RTCP::ReceiverReport();
 
 		// Calculate Packets Expected and Lost.
-		auto expected  = static_cast<int32_t>((this->cycles + this->maxSeq) - this->baseSeq + 1);
+		auto expected = static_cast<int32_t>((this->cycles + this->maxSeq) - this->baseSeq + 1);
 		auto totalLost = static_cast<int32_t>(expected - this->received);
 
 		report->SetTotalLost(totalLost);
@@ -151,8 +151,7 @@ namespace RTC
 		if (this->params.clockRate == 0u)
 			return;
 
-		auto transit =
-		    static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		auto transit = static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
 		auto d = static_cast<int>(transit - this->transit);
 
 		this->transit = transit;
