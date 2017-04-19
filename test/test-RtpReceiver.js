@@ -26,7 +26,7 @@ function initTest(t)
 		})
 		.then((transport) =>
 		{
-			return { peer: peer, transport: transport };
+			return { peer, transport };
 		});
 }
 

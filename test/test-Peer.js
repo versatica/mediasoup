@@ -21,7 +21,7 @@ function initTest(t)
 		})
 		.then(() =>
 		{
-			return { peer: peer };
+			return { peer };
 		});
 }
 

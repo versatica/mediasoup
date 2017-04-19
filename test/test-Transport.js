@@ -20,7 +20,7 @@ function initTest(t)
 		})
 		.then((transport) =>
 		{
-			return { peer: peer, transport: transport };
+			return { peer, transport };
 		});
 }
 
@@ -198,5 +198,52 @@ tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 					setTimeout(() => transport.close(), 100);
 				})
 				.catch((error) => t.fail(`peer.createTransport() failed: ${error}`));
+		});
+});
+
+tap.test('create transport in a server with rtcAnnouncedIPv4', { timeout: 2000 }, (t) =>
+{
+	let server = mediasoup.Server(
+		{
+			rtcIPv4          : true,
+			rtcIPv6          : false,
+			rtcAnnouncedIPv4 : 'test.foo.com'
+		});
+	let peer;
+
+	t.tearDown(() => server.close());
+
+	return server.createRoom(roomOptions)
+		.then((room) =>
+		{
+			peer = room.Peer('alice');
+		})
+		.then(() =>
+		{
+			return peer.createTransport({ tcp: false });
+		})
+		.then((transport) =>
+		{
+			let candidates = transport.iceLocalCandidates;
+			let candidate = candidates[0];
+
+			t.equal(candidates.length, 1, 'transport has 1 ICE local candidate');
+			t.equal(candidate.protocol, 'udp', 'candidate.protocol must be udp');
+			t.equal(candidate.family, 'ipv4', 'candidate.family must be ipv4');
+			t.equal(candidate.ip, 'test.foo.com', 'candidate.ip must be test.foo.com');
+		})
+		.then(() =>
+		{
+			return peer.createTransport({ udp: false });
+		})
+		.then((transport) =>
+		{
+			let candidates = transport.iceLocalCandidates;
+			let candidate = candidates[0];
+
+			t.equal(candidates.length, 1, 'transport has 1 ICE local candidate');
+			t.equal(candidate.protocol, 'tcp', 'candidate.protocol must be tcp');
+			t.equal(candidate.family, 'ipv4', 'candidate.family must be ipv4');
+			t.equal(candidate.ip, 'test.foo.com', 'candidate.ip must be test.foo.com');
 		});
 });
