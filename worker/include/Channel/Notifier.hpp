@@ -24,7 +24,7 @@ namespace Channel
 
 	public:
 		// Passed by argument.
-		Channel::UnixStreamSocket* channel{nullptr};
+		Channel::UnixStreamSocket* channel{ nullptr };
 	};
 } // namespace Channel
 

@@ -51,7 +51,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{nullptr};
+		Listener* listener{ nullptr };
 	};
 } // namespace RTC
 

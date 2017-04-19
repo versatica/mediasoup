@@ -56,8 +56,8 @@ namespace RTC
 		{
 			this->raw                = new uint8_t[sizeof(Header)];
 			this->header             = reinterpret_cast<Header*>(this->raw);
-			this->header->senderSsrc = uint32_t{htonl(senderSsrc)};
-			this->header->mediaSsrc  = uint32_t{htonl(mediaSsrc)};
+			this->header->senderSsrc = uint32_t{ htonl(senderSsrc) };
+			this->header->mediaSsrc  = uint32_t{ htonl(mediaSsrc) };
 		}
 
 		template<typename T>
@@ -98,17 +98,13 @@ namespace RTC
 
 		template<>
 		std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String = {
-		    {FeedbackPs::MessageType::PLI, "PLI"},
-		    {FeedbackPs::MessageType::SLI, "SLI"},
-		    {FeedbackPs::MessageType::RPSI, "RPSI"},
-		    {FeedbackPs::MessageType::FIR, "FIR"},
-		    {FeedbackPs::MessageType::TSTR, "TSTR"},
-		    {FeedbackPs::MessageType::TSTN, "TSTN"},
-		    {FeedbackPs::MessageType::VBCM, "VBCM"},
-		    {FeedbackPs::MessageType::PSLEI, "PSLEI"},
-		    {FeedbackPs::MessageType::ROI, "ROI"},
-		    {FeedbackPs::MessageType::AFB, "AFB"},
-		    {FeedbackPs::MessageType::EXT, "EXT"}};
+			{ FeedbackPs::MessageType::PLI, "PLI" },   { FeedbackPs::MessageType::SLI, "SLI" },
+			{ FeedbackPs::MessageType::RPSI, "RPSI" }, { FeedbackPs::MessageType::FIR, "FIR" },
+			{ FeedbackPs::MessageType::TSTR, "TSTR" }, { FeedbackPs::MessageType::TSTN, "TSTN" },
+			{ FeedbackPs::MessageType::VBCM, "VBCM" }, { FeedbackPs::MessageType::PSLEI, "PSLEI" },
+			{ FeedbackPs::MessageType::ROI, "ROI" },   { FeedbackPs::MessageType::AFB, "AFB" },
+			{ FeedbackPs::MessageType::EXT, "EXT" }
+		};
 
 		template<>
 		FeedbackPacket<FeedbackPs>* FeedbackPacket<FeedbackPs>::Parse(const uint8_t* data, size_t len)
@@ -188,15 +184,12 @@ namespace RTC
 
 		template<>
 		std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String = {
-		    {FeedbackRtp::MessageType::NACK, "NACK"},
-		    {FeedbackRtp::MessageType::TMMBR, "TMMBR"},
-		    {FeedbackRtp::MessageType::TMMBN, "TMMBN"},
-		    {FeedbackRtp::MessageType::SR_REQ, "SR_REQ"},
-		    {FeedbackRtp::MessageType::RAMS, "RAMS"},
-		    {FeedbackRtp::MessageType::TLLEI, "TLLEI"},
-		    {FeedbackRtp::MessageType::ECN, "ECN"},
-		    {FeedbackRtp::MessageType::PS, "PS"},
-		    {FeedbackRtp::MessageType::EXT, "EXT"}};
+			{ FeedbackRtp::MessageType::NACK, "NACK" },   { FeedbackRtp::MessageType::TMMBR, "TMMBR" },
+			{ FeedbackRtp::MessageType::TMMBN, "TMMBN" }, { FeedbackRtp::MessageType::SR_REQ, "SR_REQ" },
+			{ FeedbackRtp::MessageType::RAMS, "RAMS" },   { FeedbackRtp::MessageType::TLLEI, "TLLEI" },
+			{ FeedbackRtp::MessageType::ECN, "ECN" },     { FeedbackRtp::MessageType::PS, "PS" },
+			{ FeedbackRtp::MessageType::EXT, "EXT" }
+		};
 
 		/* Class methods. */
 

@@ -24,7 +24,7 @@ namespace RTC
 		class FeedbackRtpTmmbItem : public FeedbackItem
 		{
 		private:
-			static constexpr size_t HeaderSize{8};
+			static constexpr size_t HeaderSize{ 8 };
 
 		public:
 			static const FeedbackRtp::MessageType messageType;
@@ -51,9 +51,9 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			uint32_t ssrc{0};
-			uint64_t bitrate{0};
-			uint16_t overhead{0};
+			uint32_t ssrc{ 0 };
+			uint64_t bitrate{ 0 };
+			uint16_t overhead{ 0 };
 		};
 
 		// Tmmb types declaration.

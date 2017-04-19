@@ -37,9 +37,9 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Application application{Application::UNKNOWN};
-			uint8_t* data{nullptr};
-			size_t size{0};
+			Application application{ Application::UNKNOWN };
+			uint8_t* data{ nullptr };
+			size_t size{ 0 };
 		};
 
 		/* Inline instance methods. */

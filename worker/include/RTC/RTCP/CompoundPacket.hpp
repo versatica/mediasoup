@@ -25,8 +25,8 @@ namespace RTC
 			void Serialize(uint8_t* data);
 
 		private:
-			uint8_t* header{nullptr};
-			size_t size{0};
+			uint8_t* header{ nullptr };
+			size_t size{ 0 };
 			SenderReportPacket senderReportPacket;
 			ReceiverReportPacket receiverReportPacket;
 			SdesPacket sdesPacket;

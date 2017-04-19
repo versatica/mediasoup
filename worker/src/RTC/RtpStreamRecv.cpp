@@ -24,19 +24,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringParams{"params"};
-		static const Json::StaticString JsonStringReceived{"received"};
-		static const Json::StaticString JsonStringMaxTimestamp{"maxTimestamp"};
-		static const Json::StaticString JsonStringTransit{"transit"};
-		static const Json::StaticString JsonStringJitter{"jitter"};
+		static const Json::StaticString JsonStringParams{ "params" };
+		static const Json::StaticString JsonStringReceived{ "received" };
+		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
+		static const Json::StaticString JsonStringTransit{ "transit" };
+		static const Json::StaticString JsonStringJitter{ "jitter" };
 
 		Json::Value json(Json::objectValue);
 
 		json[JsonStringParams]       = this->params.ToJson();
-		json[JsonStringReceived]     = Json::UInt{this->received};
-		json[JsonStringMaxTimestamp] = Json::UInt{this->maxTimestamp};
-		json[JsonStringTransit]      = Json::UInt{this->transit};
-		json[JsonStringJitter]       = Json::UInt{this->jitter};
+		json[JsonStringReceived]     = Json::UInt{ this->received };
+		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
+		json[JsonStringTransit]      = Json::UInt{ this->transit };
+		json[JsonStringJitter]       = Json::UInt{ this->jitter };
 
 		return json;
 	}
@@ -108,7 +108,7 @@ namespace RTC
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlsr = (delayMs / 1000) << 16;
 
-			dlsr |= uint32_t{(delayMs % 1000) * 65536 / 1000};
+			dlsr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
 			report->SetDelaySinceLastSenderReport(dlsr);
 			report->SetLastSenderReport(this->lastSrTimestamp);
 		}

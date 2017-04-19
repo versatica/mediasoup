@@ -20,9 +20,9 @@ namespace RTC
 	private:
 		struct BufferItem
 		{
-			uint32_t seq32{0}; // RTP seq in 32 bytes plus 16 bits cycles.
-			uint64_t resentAtTime{0};
-			RTC::RtpPacket* packet{nullptr};
+			uint32_t seq32{ 0 }; // RTP seq in 32 bytes plus 16 bits cycles.
+			uint64_t resentAtTime{ 0 };
+			RTC::RtpPacket* packet{ nullptr };
 		};
 
 	public:
@@ -51,10 +51,10 @@ namespace RTC
 		Buffer buffer;
 
 	private:
-		size_t receivedBytes{0};            // Bytes received.
-		uint64_t lastPacketTimeMs{0};       // Time (MS) when the last packet was received.
-		uint32_t lastPacketRtpTimestamp{0}; // RTP Timestamp of the last packet.
-		uint32_t rtt{0};                    // Round trip time.
+		size_t receivedBytes{ 0 };            // Bytes received.
+		uint64_t lastPacketTimeMs{ 0 };       // Time (MS) when the last packet was received.
+		uint32_t lastPacketRtpTimestamp{ 0 }; // RTP Timestamp of the last packet.
+		uint32_t rtt{ 0 };                    // Round trip time.
 	};
 
 	inline uint32_t RtpStreamSend::GetRtt() const

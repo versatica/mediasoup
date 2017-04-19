@@ -10,10 +10,10 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t RtpSeqMod{1 << 16};
+	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionAge{500};
-	static constexpr uint32_t DefaultRtt{100};
+	static constexpr uint32_t MaxRetransmissionAge{ 500 };
+	static constexpr uint32_t DefaultRtt{ 100 };
 
 	/* Instance methods. */
 
@@ -35,19 +35,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringParams{"params"};
-		static const Json::StaticString JsonStringReceived{"received"};
-		static const Json::StaticString JsonStringMaxTimestamp{"maxTimestamp"};
-		static const Json::StaticString JsonStringReceivedBytes{"receivedBytes"};
-		static const Json::StaticString JsonStringRtt{"rtt"};
+		static const Json::StaticString JsonStringParams{ "params" };
+		static const Json::StaticString JsonStringReceived{ "received" };
+		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
+		static const Json::StaticString JsonStringReceivedBytes{ "receivedBytes" };
+		static const Json::StaticString JsonStringRtt{ "rtt" };
 
 		Json::Value json(Json::objectValue);
 
 		json[JsonStringParams]        = this->params.ToJson();
-		json[JsonStringReceived]      = Json::UInt{this->received};
-		json[JsonStringMaxTimestamp]  = Json::UInt{this->maxTimestamp};
+		json[JsonStringReceived]      = Json::UInt{ this->received };
+		json[JsonStringMaxTimestamp]  = Json::UInt{ this->maxTimestamp };
 		json[JsonStringReceivedBytes] = static_cast<Json::UInt>(this->receivedBytes);
-		json[JsonStringRtt]           = Json::UInt{this->rtt};
+		json[JsonStringRtt]           = Json::UInt{ this->rtt };
 
 		return json;
 	}
@@ -105,7 +105,7 @@ namespace RTC
 		MS_TRACE();
 
 		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets{17};
+		static constexpr size_t MaxRequestedPackets{ 17 };
 
 		// Ensure the container's first element is 0.
 		container[0] = nullptr;
@@ -123,7 +123,7 @@ namespace RTC
 			return;
 
 		// Convert the given sequence numbers to 32 bits.
-		uint32_t firstSeq32 = uint32_t{seq} + this->cycles;
+		uint32_t firstSeq32 = uint32_t{ seq } + this->cycles;
 		uint32_t lastSeq32  = firstSeq32 + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
@@ -331,7 +331,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packetSeq32 = uint32_t{packet->GetSequenceNumber()} + this->cycles;
+		uint32_t packetSeq32 = uint32_t{ packet->GetSequenceNumber() } + this->cycles;
 		BufferItem bufferItem;
 
 		bufferItem.seq32 = packetSeq32;

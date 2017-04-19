@@ -14,12 +14,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringMuxId{"muxId"};
-		static const Json::StaticString JsonStringCodecs{"codecs"};
-		static const Json::StaticString JsonStringEncodings{"encodings"};
-		static const Json::StaticString JsonStringHeaderExtensions{"headerExtensions"};
-		static const Json::StaticString JsonStringRtcp{"rtcp"};
-		static const Json::StaticString JsonStringUserParameters{"userParameters"};
+		static const Json::StaticString JsonStringMuxId{ "muxId" };
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringEncodings{ "encodings" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringRtcp{ "rtcp" };
+		static const Json::StaticString JsonStringUserParameters{ "userParameters" };
 
 		// `muxId` is optional.
 		if (data[JsonStringMuxId].isString())
@@ -108,12 +108,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringMuxId{"muxId"};
-		static const Json::StaticString JsonStringCodecs{"codecs"};
-		static const Json::StaticString JsonStringEncodings{"encodings"};
-		static const Json::StaticString JsonStringHeaderExtensions{"headerExtensions"};
-		static const Json::StaticString JsonStringRtcp{"rtcp"};
-		static const Json::StaticString JsonStringUserParameters{"userParameters"};
+		static const Json::StaticString JsonStringMuxId{ "muxId" };
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringEncodings{ "encodings" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringRtcp{ "rtcp" };
+		static const Json::StaticString JsonStringUserParameters{ "userParameters" };
 
 		Json::Value json(Json::objectValue);
 
@@ -275,7 +275,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string jsonStringApt{"apt"};
+		static std::string jsonStringApt{ "apt" };
 
 		// Must be at least one codec.
 		if (this->codecs.empty())

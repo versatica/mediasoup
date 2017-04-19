@@ -115,7 +115,7 @@ public:
 public:
 	static std::string id;
 	static Channel::UnixStreamSocket* channel;
-	static const size_t bufferSize{10000};
+	static const size_t bufferSize {10000};
 	static char buffer[];
 };
 

@@ -13,9 +13,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCname{"cname"};
-		static const Json::StaticString JsonStringSsrc{"ssrc"};
-		static const Json::StaticString JsonStringReducedSize{"reducedSize"};
+		static const Json::StaticString JsonStringCname{ "cname" };
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		static const Json::StaticString JsonStringReducedSize{ "reducedSize" };
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtcpParameters is not an object");
@@ -30,7 +30,7 @@ namespace RTC
 
 		// `ssrc` is optional.
 		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = uint32_t{data[JsonStringSsrc].asUInt()};
+			this->ssrc = uint32_t{ data[JsonStringSsrc].asUInt() };
 
 		// `reducedSize` is optional.
 		if (data[JsonStringReducedSize].isBool())
@@ -41,9 +41,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCname{"cname"};
-		static const Json::StaticString JsonStringSsrc{"ssrc"};
-		static const Json::StaticString JsonStringReducedSize{"reducedSize"};
+		static const Json::StaticString JsonStringCname{ "cname" };
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		static const Json::StaticString JsonStringReducedSize{ "reducedSize" };
 
 		Json::Value json(Json::objectValue);
 
@@ -53,7 +53,7 @@ namespace RTC
 
 		// Add `ssrc`.
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = Json::UInt{this->ssrc};
+			json[JsonStringSsrc] = Json::UInt{ this->ssrc };
 
 		// Add `reducedSize`.
 		json[JsonStringReducedSize] = this->reducedSize;

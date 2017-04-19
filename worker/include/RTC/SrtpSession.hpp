@@ -45,14 +45,14 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		srtp_t session{nullptr};
+		srtp_t session{ nullptr };
 	};
 
 	/* Inline instance methods. */
 
 	inline void SrtpSession::RemoveStream(uint32_t ssrc)
 	{
-		srtp_remove_stream(this->session, static_cast<uint32_t>(htonl(ssrc)));
+		srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });
 	}
 } // namespace RTC
 

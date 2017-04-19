@@ -13,16 +13,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{"ssrc"};
-		static const Json::StaticString JsonStringCodecPayloadType{"codecPayloadType"};
-		static const Json::StaticString JsonStringFec{"fec"};
-		static const Json::StaticString JsonStringRtx{"rtx"};
-		static const Json::StaticString JsonStringResolutionScale{"resolutionScale"};
-		static const Json::StaticString JsonStringFramerateScale{"framerateScale"};
-		static const Json::StaticString JsonStringMaxFramerate{"maxFramerate"};
-		static const Json::StaticString JsonStringActive{"active"};
-		static const Json::StaticString JsonStringEncodingId{"encodingId"};
-		static const Json::StaticString JsonStringDependencyEncodingIds{"dependencyEncodingIds"};
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		static const Json::StaticString JsonStringCodecPayloadType{ "codecPayloadType" };
+		static const Json::StaticString JsonStringFec{ "fec" };
+		static const Json::StaticString JsonStringRtx{ "rtx" };
+		static const Json::StaticString JsonStringResolutionScale{ "resolutionScale" };
+		static const Json::StaticString JsonStringFramerateScale{ "framerateScale" };
+		static const Json::StaticString JsonStringMaxFramerate{ "maxFramerate" };
+		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringEncodingId{ "encodingId" };
+		static const Json::StaticString JsonStringDependencyEncodingIds{ "dependencyEncodingIds" };
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpEncodingParameters is not an object");
@@ -36,7 +36,7 @@ namespace RTC
 
 		// `ssrc` is optional.
 		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = uint32_t{data[JsonStringSsrc].asUInt()};
+			this->ssrc = uint32_t{ data[JsonStringSsrc].asUInt() };
 
 		// `fec` is optional.
 		if (data[JsonStringFec].isObject())
@@ -62,7 +62,7 @@ namespace RTC
 
 		// `maxFramerate` is optional.
 		if (data[JsonStringMaxFramerate].isUInt())
-			this->maxFramerate = uint32_t{data[JsonStringMaxFramerate].asUInt()};
+			this->maxFramerate = uint32_t{ data[JsonStringMaxFramerate].asUInt() };
 
 		// `active` is optional.
 		if (data[JsonStringActive].isBool())
@@ -90,26 +90,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{"ssrc"};
-		static const Json::StaticString JsonStringCodecPayloadType{"codecPayloadType"};
-		static const Json::StaticString JsonStringFec{"fec"};
-		static const Json::StaticString JsonStringRtx{"rtx"};
-		static const Json::StaticString JsonStringResolutionScale{"resolutionScale"};
-		static const Json::StaticString JsonStringFramerateScale{"framerateScale"};
-		static const Json::StaticString JsonStringMaxFramerate{"maxFramerate"};
-		static const Json::StaticString JsonStringActive{"active"};
-		static const Json::StaticString JsonStringEncodingId{"encodingId"};
-		static const Json::StaticString JsonStringDependencyEncodingIds{"dependencyEncodingIds"};
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		static const Json::StaticString JsonStringCodecPayloadType{ "codecPayloadType" };
+		static const Json::StaticString JsonStringFec{ "fec" };
+		static const Json::StaticString JsonStringRtx{ "rtx" };
+		static const Json::StaticString JsonStringResolutionScale{ "resolutionScale" };
+		static const Json::StaticString JsonStringFramerateScale{ "framerateScale" };
+		static const Json::StaticString JsonStringMaxFramerate{ "maxFramerate" };
+		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringEncodingId{ "encodingId" };
+		static const Json::StaticString JsonStringDependencyEncodingIds{ "dependencyEncodingIds" };
 
 		Json::Value json(Json::objectValue);
 
 		// Add `codecPayloadType`.
 		if (this->hasCodecPayloadType)
-			json[JsonStringCodecPayloadType] = Json::UInt{this->codecPayloadType};
+			json[JsonStringCodecPayloadType] = Json::UInt{ this->codecPayloadType };
 
 		// Add `ssrc`.
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = Json::UInt{this->ssrc};
+			json[JsonStringSsrc] = Json::UInt{ this->ssrc };
 
 		// Add `fec`
 		if (this->hasFec)
@@ -129,7 +129,7 @@ namespace RTC
 
 		// Add `maxFramerate`.
 		if (this->maxFramerate != 0u)
-			json[JsonStringMaxFramerate] = Json::UInt{this->maxFramerate};
+			json[JsonStringMaxFramerate] = Json::UInt{ this->maxFramerate };
 
 		// Add `active`.
 		json[JsonStringActive] = this->active;

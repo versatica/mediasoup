@@ -20,7 +20,7 @@ namespace RTC
 	class OveruseDetector
 	{
 	private:
-		static constexpr double OverUsingTimeThreshold{10};
+		static constexpr double OverUsingTimeThreshold{ 10 };
 
 	public:
 		OveruseDetector() = default;
@@ -39,15 +39,15 @@ namespace RTC
 		void UpdateThreshold(double modifiedOffset, int64_t nowMs);
 
 	private:
-		double up{0.0087};
-		double down{0.039};
-		double overusingTimeThreshold{OverUsingTimeThreshold};
-		double threshold{12.5};
-		int64_t lastUpdateMs{-1};
-		double prevOffset{0.0};
-		double timeOverUsing{-1};
-		int overuseCounter{0};
-		BandwidthUsage hypothesis{BW_NORMAL};
+		double up{ 0.0087 };
+		double down{ 0.039 };
+		double overusingTimeThreshold{ OverUsingTimeThreshold };
+		double threshold{ 12.5 };
+		int64_t lastUpdateMs{ -1 };
+		double prevOffset{ 0.0 };
+		double timeOverUsing{ -1 };
+		int overuseCounter{ 0 };
+		BandwidthUsage hypothesis{ BW_NORMAL };
 	};
 
 	inline BandwidthUsage OveruseDetector::State() const

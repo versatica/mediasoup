@@ -45,8 +45,8 @@ namespace RTC
 		};
 
 	protected:
-		static const int64_t processIntervalMs{500};
-		static const int64_t streamTimeOutMs{2000};
+		static const int64_t processIntervalMs{ 500 };
+		static const int64_t streamTimeOutMs{ 2000 };
 
 	public:
 		~RemoteBitrateEstimator() override = default;

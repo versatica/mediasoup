@@ -49,9 +49,9 @@ namespace RTC
 			this->e[1][1] += 10 * this->processNoise[1];
 		}
 
-		const double h[2]  = {fsDelta, 1.0};
-		const double eh[2] = {this->e[0][0] * h[0] + this->e[0][1] * h[1],
-		                      this->e[1][0] * h[0] + this->e[1][1] * h[1]};
+		const double h[2]  = { fsDelta, 1.0 };
+		const double eh[2] = { this->e[0][0] * h[0] + this->e[0][1] * h[1],
+			                     this->e[1][0] * h[0] + this->e[1][1] * h[1] };
 
 		const double residual    = tTsDelta - this->slope * h[0] - this->offset;
 		const bool inStableState = (currentHypothesis == BW_NORMAL);
@@ -69,8 +69,9 @@ namespace RTC
 		}
 
 		const double denom     = this->varNoise + h[0] * eh[0] + h[1] * eh[1];
-		const double k[2]      = {eh[0] / denom, eh[1] / denom};
-		const double iKh[2][2] = {{1.0 - k[0] * h[0], -k[0] * h[1]}, {-k[1] * h[0], 1.0 - k[1] * h[1]}};
+		const double k[2]      = { eh[0] / denom, eh[1] / denom };
+		const double iKh[2][2] = { { 1.0 - k[0] * h[0], -k[0] * h[1] },
+			                         { -k[1] * h[0], 1.0 - k[1] * h[1] } };
 
 		const double e00 = this->e[0][0];
 		const double e01 = this->e[0][1];

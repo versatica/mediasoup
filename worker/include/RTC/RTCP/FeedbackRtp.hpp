@@ -55,7 +55,7 @@ namespace RTC
 		template<typename Item>
 		inline size_t FeedbackRtpItemsPacket<Item>::GetSize() const
 		{
-			size_t size = FeedbackRtpPacket::GetSize();
+			size_t size{ FeedbackRtpPacket::GetSize() };
 
 			for (auto item : this->items)
 			{

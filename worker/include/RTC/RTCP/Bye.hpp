@@ -53,7 +53,7 @@ namespace RTC
 
 		inline size_t ByePacket::GetSize() const
 		{
-			size_t size = sizeof(Packet::CommonHeader);
+			size_t size{ sizeof(Packet::CommonHeader) };
 
 			size += ssrcs.size() * sizeof(uint32_t);
 

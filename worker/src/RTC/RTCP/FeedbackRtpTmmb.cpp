@@ -60,7 +60,7 @@ namespace RTC
 		template<typename T>
 		size_t FeedbackRtpTmmbItem<T>::Serialize(uint8_t* buffer)
 		{
-			static constexpr uint32_t MaxMantissa{0x1ffff}; // 17 bits.
+			static constexpr uint32_t MaxMantissa{ 0x1ffff }; // 17 bits.
 
 			uint64_t mantissa = this->bitrate;
 			uint32_t exponent = 0;

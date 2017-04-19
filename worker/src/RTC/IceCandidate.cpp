@@ -66,20 +66,20 @@ namespace RTC
 
 	Json::Value IceCandidate::ToJson() const
 	{
-		static const Json::StaticString JsonStringFoundation{"foundation"};
-		static const Json::StaticString JsonStringPriority{"priority"};
-		static const Json::StaticString JsonStringFamily{"family"};
-		static const Json::StaticString JsonStringIpv4{"ipv4"};
-		static const Json::StaticString JsonStringIpv6{"ipv6"};
-		static const Json::StaticString JsonStringIp{"ip"};
-		static const Json::StaticString JsonStringPort{"port"};
-		static const Json::StaticString JsonStringType{"type"};
-		static const Json::StaticString JsonStringHost{"host"};
-		static const Json::StaticString JsonStringProtocol{"protocol"};
-		static const Json::StaticString JsonStringUdp{"udp"};
-		static const Json::StaticString JsonStringTcp{"tcp"};
-		static const Json::StaticString JsonStringTcpType{"tcpType"};
-		static const Json::StaticString JsonStringPassive{"passive"};
+		static const Json::StaticString JsonStringFoundation{ "foundation" };
+		static const Json::StaticString JsonStringPriority{ "priority" };
+		static const Json::StaticString JsonStringFamily{ "family" };
+		static const Json::StaticString JsonStringIpv4{ "ipv4" };
+		static const Json::StaticString JsonStringIpv6{ "ipv6" };
+		static const Json::StaticString JsonStringIp{ "ip" };
+		static const Json::StaticString JsonStringPort{ "port" };
+		static const Json::StaticString JsonStringType{ "type" };
+		static const Json::StaticString JsonStringHost{ "host" };
+		static const Json::StaticString JsonStringProtocol{ "protocol" };
+		static const Json::StaticString JsonStringUdp{ "udp" };
+		static const Json::StaticString JsonStringTcp{ "tcp" };
+		static const Json::StaticString JsonStringTcpType{ "tcpType" };
+		static const Json::StaticString JsonStringPassive{ "passive" };
 
 		Json::Value json(Json::objectValue);
 
@@ -96,9 +96,9 @@ namespace RTC
 				break;
 		}
 
-		json[JsonStringPriority] = Json::UInt{this->priority};
+		json[JsonStringPriority] = Json::UInt{ this->priority };
 		json[JsonStringIp]       = this->ip;
-		json[JsonStringPort]     = Json::UInt{this->port};
+		json[JsonStringPort]     = Json::UInt{ this->port };
 
 		switch (this->type)
 		{

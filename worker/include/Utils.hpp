@@ -119,24 +119,23 @@ namespace Utils
 
 	inline uint16_t Byte::Get2Bytes(const uint8_t* data, size_t i)
 	{
-		return uint16_t{data[i + 1]} | uint16_t{data[i]} << 8;
+		return uint16_t{ data[i + 1] } | uint16_t{ data[i] } << 8;
 	}
 
 	inline uint32_t Byte::Get3Bytes(const uint8_t* data, size_t i)
 	{
-		return uint32_t{data[i + 2]} | uint32_t{data[i + 1]} << 8 |
-		       uint32_t{data[i]} << 16;
+		return uint32_t{ data[i + 2] } | uint32_t{ data[i + 1] } << 8 | uint32_t{ data[i] } << 16;
 	}
 
 	inline uint32_t Byte::Get4Bytes(const uint8_t* data, size_t i)
 	{
-		return uint32_t{data[i + 3]} | uint32_t{data[i + 2]} << 8 |
-		       uint32_t{data[i + 1]} << 16 | uint32_t{data[i]} << 24;
+		return uint32_t{ data[i + 3] } | uint32_t{ data[i + 2] } << 8 | uint32_t{ data[i + 1] } << 16 |
+		       uint32_t{ data[i] } << 24;
 	}
 
 	inline uint64_t Byte::Get8Bytes(const uint8_t* data, size_t i)
 	{
-		return uint64_t{Byte::Get4Bytes(data, i)} << 32 | Byte::Get4Bytes(data, i + 4);
+		return uint64_t{ Byte::Get4Bytes(data, i) } << 32 | Byte::Get4Bytes(data, i + 4);
 	}
 
 	inline void Byte::Set1Byte(uint8_t* data, size_t i, uint8_t value)
@@ -221,7 +220,7 @@ namespace Utils
 		// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
 
 		// This seems to produce better results.
-		Crypto::seed = static_cast<uint32_t>((214013 * Crypto::seed) + 2531011);
+		Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
 
 		return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
 	}
@@ -229,14 +228,14 @@ namespace Utils
 	inline const std::string Crypto::GetRandomString(size_t len)
 	{
 		static char buffer[64];
-		static const char chars[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
-		                             'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-		                             'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+		static const char chars[]{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+			                         'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+			                         'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
 		if (len > 64)
 			len = 64;
 
-		for (size_t i = 0; i < len; ++i)
+		for (size_t i{ 0 }; i < len; ++i)
 			buffer[i] = chars[GetRandomUInt(0, sizeof(chars) - 1)];
 
 		return std::string(buffer, len);
@@ -244,8 +243,8 @@ namespace Utils
 
 	inline uint32_t Crypto::GetCRC32(const uint8_t* data, size_t size)
 	{
-		uint32_t crc     = 0xFFFFFFFF;
-		const uint8_t* p = data;
+		uint32_t crc{ 0xFFFFFFFF };
+		const uint8_t* p{ data };
 
 		while (size--)
 			crc = Crypto::crc32Table[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
@@ -267,9 +266,9 @@ namespace Utils
 	class Time
 	{
 		// Seconds from Jan 1, 1900 to Jan 1, 1970.
-		static constexpr uint32_t UnixNtpOffset{0x83AA7E80};
+		static constexpr uint32_t UnixNtpOffset{ 0x83AA7E80 };
 		// NTP fractional unit.
-		static constexpr double NtpFractionalUnit{1LL << 32};
+		static constexpr double NtpFractionalUnit{ 1LL << 32 };
 
 	public:
 		struct Ntp
@@ -289,8 +288,9 @@ namespace Utils
 
 		gettimeofday(&tv, nullptr);
 
-		ntp.seconds   = tv.tv_sec + UnixNtpOffset;
-		ntp.fractions = static_cast<uint32_t>((double)(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
+		ntp.seconds = tv.tv_sec + UnixNtpOffset;
+		ntp.fractions =
+		    static_cast<uint32_t>(static_cast<double>(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
 	}
 
 	inline bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)

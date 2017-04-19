@@ -26,7 +26,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType messageType{FeedbackPs::MessageType::PSLEI};
+			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::PSLEI };
 
 		public:
 			static FeedbackPsLeiItem* Parse(const uint8_t* data, size_t len);
@@ -46,7 +46,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header{nullptr};
+			Header* header{ nullptr };
 		};
 
 		// Lei packet declaration.
@@ -69,7 +69,7 @@ namespace RTC
 
 		inline uint32_t FeedbackPsLeiItem::GetSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->ssrc));
+			return uint32_t{ ntohl(this->header->ssrc) };
 		}
 	} // namespace RTCP
 } // namespace RTC

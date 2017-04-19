@@ -20,8 +20,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint16_t MaxBindAttempts{20};
-	static constexpr size_t MaxTcpConnectionsPerServer{10};
+	static constexpr uint16_t MaxBindAttempts{ 20 };
+	static constexpr size_t MaxTcpConnectionsPerServer{ 10 };
 
 	/* Class variables. */
 

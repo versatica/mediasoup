@@ -27,7 +27,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackRtp::MessageType messageType{FeedbackRtp::MessageType::TLLEI};
+			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::TLLEI };
 
 		public:
 			static FeedbackRtpTlleiItem* Parse(const uint8_t* data, size_t len);
@@ -48,7 +48,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header{nullptr};
+			Header* header{ nullptr };
 		};
 
 		// Tllei packet declaration.
@@ -72,12 +72,12 @@ namespace RTC
 
 		inline uint16_t FeedbackRtpTlleiItem::GetPacketId() const
 		{
-			return static_cast<uint16_t>(ntohs(this->header->packetId));
+			return uint16_t{ ntohs(this->header->packetId) };
 		}
 
 		inline uint16_t FeedbackRtpTlleiItem::GetLostPacketBitmask() const
 		{
-			return static_cast<uint16_t>(ntohs(this->header->lostPacketBitmask));
+			return uint16_t{ ntohs(this->header->lostPacketBitmask) };
 		}
 	} // namespace RTCP
 } // namespace RTC

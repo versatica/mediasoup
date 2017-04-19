@@ -68,23 +68,23 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t rtpReceiverId{0};
+		uint32_t rtpReceiverId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:
 		// Passed by argument.
-		Listener* listener{nullptr};
-		Channel::Notifier* notifier{nullptr};
-		RTC::Transport* transport{nullptr};
+		Listener* listener{ nullptr };
+		Channel::Notifier* notifier{ nullptr };
+		RTC::Transport* transport{ nullptr };
 		// Allocated by this.
-		RTC::RtpParameters* rtpParameters{nullptr};
+		RTC::RtpParameters* rtpParameters{ nullptr };
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		// Others.
-		bool rtpRawEventEnabled{false};
-		bool rtpObjectEventEnabled{false};
+		bool rtpRawEventEnabled{ false };
+		bool rtpObjectEventEnabled{ false };
 		// Timestamp when last RTCP was sent.
-		uint64_t lastRtcpSentTime{0};
-		uint16_t maxRtcpInterval{0};
+		uint64_t lastRtcpSentTime{ 0 };
+		uint16_t maxRtcpInterval{ 0 };
 	};
 
 	/* Inline methods. */

@@ -56,7 +56,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header{nullptr};
+			Header* header{ nullptr };
 		};
 
 		class Tstr
@@ -95,7 +95,7 @@ namespace RTC
 		template<typename T>
 		inline uint32_t FeedbackPsTstItem<T>::GetSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->ssrc));
+			return uint32_t{ ntohl(this->header->ssrc) };
 		}
 
 		template<typename T>

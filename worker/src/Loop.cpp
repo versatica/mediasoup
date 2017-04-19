@@ -82,7 +82,7 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 {
 	MS_TRACE();
 
-	static const Json::StaticString JsonStringRoomId{"roomId"};
+	static const Json::StaticString JsonStringRoomId{ "roomId" };
 
 	auto jsonRoomId = request->internal[JsonStringRoomId];
 
@@ -135,8 +135,8 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 	{
 		case Channel::Request::MethodId::WORKER_DUMP:
 		{
-			static const Json::StaticString JsonStringWorkerId{"workerId"};
-			static const Json::StaticString JsonStringRooms{"rooms"};
+			static const Json::StaticString JsonStringWorkerId{ "workerId" };
+			static const Json::StaticString JsonStringRooms{ "rooms" };
 
 			Json::Value json(Json::objectValue);
 			Json::Value jsonRooms(Json::arrayValue);
@@ -166,7 +166,7 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 
 		case Channel::Request::MethodId::WORKER_CREATE_ROOM:
 		{
-			static const Json::StaticString JsonStringCapabilities{"capabilities"};
+			static const Json::StaticString JsonStringCapabilities{ "capabilities" };
 
 			RTC::Room* room;
 			uint32_t roomId;

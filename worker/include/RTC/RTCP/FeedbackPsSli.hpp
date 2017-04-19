@@ -26,7 +26,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType messageType{FeedbackPs::MessageType::SLI};
+			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::SLI };
 
 		public:
 			static FeedbackPsSliItem* Parse(const uint8_t* data, size_t len);
@@ -51,10 +51,10 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			Header* header{nullptr};
-			uint16_t first{0};
-			uint16_t number{0};
-			uint8_t pictureId{0};
+			Header* header{ nullptr };
+			uint16_t first{ 0 };
+			uint16_t number{ 0 };
+			uint8_t pictureId{ 0 };
 		};
 
 		// Sli packet declaration.

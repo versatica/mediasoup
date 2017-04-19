@@ -104,16 +104,16 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t peerId{0};
+		uint32_t peerId{ 0 };
 		std::string peerName;
 
 	private:
 		// Passed by argument.
-		Listener* listener{nullptr};
-		Channel::Notifier* notifier{nullptr};
+		Listener* listener{ nullptr };
+		Channel::Notifier* notifier{ nullptr };
 		// Others.
-		Timer* timer{nullptr};
-		bool hasCapabilities{false};
+		Timer* timer{ nullptr };
+		bool hasCapabilities{ false };
 		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Transport*> transports;
 		std::unordered_map<uint32_t, RTC::RtpReceiver*> rtpReceivers;

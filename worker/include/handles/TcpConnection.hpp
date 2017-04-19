@@ -25,7 +25,7 @@ public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
-		TcpConnection* connection{nullptr};
+		TcpConnection* connection{ nullptr };
 		uv_write_t req;
 		uint8_t store[1];
 	};
@@ -80,27 +80,27 @@ protected:
 
 private:
 	// Passed by argument.
-	Listener* listener{nullptr};
+	Listener* listener{ nullptr };
 	// Allocated by this.
-	uv_tcp_t* uvHandle{nullptr};
+	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
-	struct sockaddr_storage* localAddr{nullptr};
-	bool isClosing{false};
-	bool isClosedByPeer{false};
-	bool hasError{false};
+	struct sockaddr_storage* localAddr{ nullptr };
+	bool isClosing{ false };
+	bool isClosedByPeer{ false };
+	bool hasError{ false };
 
 protected:
 	// Passed by argument.
-	size_t bufferSize{0};
+	size_t bufferSize{ 0 };
 	// Allocated by this.
-	uint8_t* buffer{nullptr};
+	uint8_t* buffer{ nullptr };
 	// Others.
-	size_t bufferDataLen{0};
+	size_t bufferDataLen{ 0 };
 	std::string localIP;
-	uint16_t localPort{0};
+	uint16_t localPort{ 0 };
 	struct sockaddr_storage peerAddr;
 	std::string peerIP;
-	uint16_t peerPort{0};
+	uint16_t peerPort{ 0 };
 };
 
 /* Inline methods. */
@@ -117,17 +117,17 @@ inline uv_tcp_t* TcpConnection::GetUvHandle() const
 
 inline void TcpConnection::Write(const std::string& data)
 {
-	Write((const uint8_t*)data.c_str(), data.size());
+	Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 }
 
 inline const struct sockaddr* TcpConnection::GetLocalAddress() const
 {
-	return (const struct sockaddr*)this->localAddr;
+	return reinterpret_cast<const struct sockaddr*>(this->localAddr);
 }
 
 inline int TcpConnection::GetLocalFamily() const
 {
-	return ((const struct sockaddr*)&this->localAddr)->sa_family;
+	return reinterpret_cast<const struct sockaddr*>(this->localAddr)->sa_family;
 }
 
 inline const std::string& TcpConnection::GetLocalIP() const
@@ -142,7 +142,7 @@ inline uint16_t TcpConnection::GetLocalPort() const
 
 inline const struct sockaddr* TcpConnection::GetPeerAddress() const
 {
-	return (const struct sockaddr*)&this->peerAddr;
+	return reinterpret_cast<const struct sockaddr*>(&this->peerAddr);
 }
 
 inline const std::string& TcpConnection::GetPeerIP() const

@@ -73,13 +73,13 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{nullptr};
+		Listener* listener{ nullptr };
 		// Others.
 		std::string usernameFragment;
 		std::string password;
-		IceState state{IceState::NEW};
+		IceState state{ IceState::NEW };
 		std::list<RTC::TransportTuple> tuples;
-		RTC::TransportTuple* selectedTuple{nullptr};
+		RTC::TransportTuple* selectedTuple{ nullptr };
 	};
 
 	/* Inline instance methods. */

@@ -37,12 +37,12 @@ namespace Channel
 
 	private:
 		// Passed by argument.
-		Listener* listener{nullptr};
+		Listener* listener{ nullptr };
 		// Others.
-		Json::CharReader* jsonReader{nullptr};
-		Json::StreamWriter* jsonWriter{nullptr};
-		size_t msgStart{0}; // Where the latest message starts.
-		bool closed{false};
+		Json::CharReader* jsonReader{ nullptr };
+		Json::StreamWriter* jsonWriter{ nullptr };
+		size_t msgStart{ 0 }; // Where the latest message starts.
+		bool closed{ false };
 	};
 } // namespace Channel
 

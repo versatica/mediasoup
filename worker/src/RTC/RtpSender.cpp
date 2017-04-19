@@ -41,7 +41,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringClass{ "class" };
 
 		Json::Value eventData(Json::objectValue);
 
@@ -58,17 +58,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRtpSenderId{"rtpSenderId"};
-		static const Json::StaticString JsonStringKind{"kind"};
-		static const Json::StaticString JsonStringRtpParameters{"rtpParameters"};
-		static const Json::StaticString JsonStringHasTransport{"hasTransport"};
-		static const Json::StaticString JsonStringActive{"active"};
-		static const Json::StaticString JsonStringSupportedPayloadTypes{"supportedPayloadTypes"};
-		static const Json::StaticString JsonStringRtpStream{"rtpStream"};
+		static const Json::StaticString JsonStringRtpSenderId{ "rtpSenderId" };
+		static const Json::StaticString JsonStringKind{ "kind" };
+		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+		static const Json::StaticString JsonStringHasTransport{ "hasTransport" };
+		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringSupportedPayloadTypes{ "supportedPayloadTypes" };
+		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringRtpSenderId] = Json::UInt{this->rtpSenderId};
+		json[JsonStringRtpSenderId] = Json::UInt{ this->rtpSenderId };
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
@@ -85,7 +85,7 @@ namespace RTC
 
 		for (auto payloadType : this->supportedPayloadTypes)
 		{
-			json[JsonStringSupportedPayloadTypes].append(Json::UInt{payloadType});
+			json[JsonStringSupportedPayloadTypes].append(Json::UInt{ payloadType });
 		}
 
 		if (this->rtpStream != nullptr)
@@ -111,7 +111,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::RTP_SENDER_DISABLE:
 			{
-				static const Json::StaticString JsonStringDisabled{"disabled"};
+				static const Json::StaticString JsonStringDisabled{ "disabled" };
 
 				if (!request->data[JsonStringDisabled].isBool())
 				{
@@ -164,9 +164,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{"class"};
-		static const Json::StaticString JsonStringRtpParameters{"rtpParameters"};
-		static const Json::StaticString JsonStringActive{"active"};
+		static const Json::StaticString JsonStringClass{ "class" };
+		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+		static const Json::StaticString JsonStringActive{ "active" };
 
 		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
@@ -470,8 +470,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{"class"};
-		static const Json::StaticString JsonStringActive{"active"};
+		static const Json::StaticString JsonStringClass{ "class" };
+		static const Json::StaticString JsonStringActive{ "active" };
 
 		Json::Value eventData(Json::objectValue);
 

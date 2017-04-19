@@ -14,9 +14,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCodecs{"codecs"};
-		static const Json::StaticString JsonStringHeaderExtensions{"headerExtensions"};
-		static const Json::StaticString JsonStringFecMechanisms{"fecMechanisms"};
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringFecMechanisms{ "fecMechanisms" };
 
 		// `codecs` is optional.
 		if (data[JsonStringCodecs].isArray())
@@ -71,9 +71,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCodecs{"codecs"};
-		static const Json::StaticString JsonStringHeaderExtensions{"headerExtensions"};
-		static const Json::StaticString JsonStringFecMechanisms{"fecMechanisms"};
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringFecMechanisms{ "fecMechanisms" };
 
 		Json::Value json(Json::objectValue);
 

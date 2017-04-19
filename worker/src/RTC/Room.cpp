@@ -70,7 +70,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringMediaCodecs{"mediaCodecs"};
+		static const Json::StaticString JsonStringMediaCodecs{ "mediaCodecs" };
 
 		// `mediaCodecs` is optional.
 		if (data[JsonStringMediaCodecs].isArray())
@@ -117,7 +117,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{"class"};
+		static const Json::StaticString JsonStringClass{ "class" };
 
 		Json::Value eventData(Json::objectValue);
 
@@ -147,11 +147,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRoomId{"roomId"};
-		static const Json::StaticString JsonStringCapabilities{"capabilities"};
-		static const Json::StaticString JsonStringPeers{"peers"};
-		static const Json::StaticString JsonStringMapRtpReceiverRtpSenders{"mapRtpReceiverRtpSenders"};
-		static const Json::StaticString JsonStringMapRtpSenderRtpReceiver{"mapRtpSenderRtpReceiver"};
+		static const Json::StaticString JsonStringRoomId{ "roomId" };
+		static const Json::StaticString JsonStringCapabilities{ "capabilities" };
+		static const Json::StaticString JsonStringPeers{ "peers" };
+		static const Json::StaticString JsonStringMapRtpReceiverRtpSenders{ "mapRtpReceiverRtpSenders" };
+		static const Json::StaticString JsonStringMapRtpSenderRtpReceiver{ "mapRtpSenderRtpReceiver" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonPeers(Json::arrayValue);
@@ -159,7 +159,7 @@ namespace RTC
 		Json::Value jsonMapRtpSenderRtpReceiver(Json::objectValue);
 
 		// Add `roomId`.
-		json[JsonStringRoomId] = Json::UInt{this->roomId};
+		json[JsonStringRoomId] = Json::UInt{ this->roomId };
 
 		// Add `capabilities`.
 		json[JsonStringCapabilities] = this->capabilities.ToJson();
@@ -235,7 +235,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROOM_CREATE_PEER:
 			{
-				static const Json::StaticString JsonStringPeerName{"peerName"};
+				static const Json::StaticString JsonStringPeerName{ "peerName" };
 
 				RTC::Peer* peer;
 				uint32_t peerId;
@@ -347,7 +347,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringPeerId{"peerId"};
+		static const Json::StaticString JsonStringPeerId{ "peerId" };
 
 		auto jsonPeerId = request->internal[JsonStringPeerId];
 
@@ -377,11 +377,12 @@ namespace RTC
 		{
 			// Available dynamic payload types.
 			static const std::vector<uint8_t> DynamicPayloadTypes{
-			    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
-			    118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 96,  97,  98,  99,  77,  78,  79,  80,
-			    81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  35,  36,  37,
-			    38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,
-			    56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71};
+				100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
+				118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 96,  97,  98,  99,  77,  78,  79,  80,
+				81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  35,  36,  37,
+				38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,
+				56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71
+			};
 			// Iterator for available dynamic payload types.
 			auto dynamicPayloadTypeIt = DynamicPayloadTypes.begin();
 			// Payload types used by the room.

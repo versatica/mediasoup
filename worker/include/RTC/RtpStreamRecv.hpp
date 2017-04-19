@@ -43,14 +43,14 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{nullptr};
+		Listener* listener{ nullptr };
 		// Others.
-		uint32_t lastSrTimestamp{0}; // The middle 32 bits out of 64 in the NTP timestamp received in
-		                             // the most recent sender report.
-		uint64_t lastSrReceived{0};  // Wallclock time representing the most recent sender report
-		                             // arrival.
-		uint32_t transit{0};         // Relative trans time for prev pkt.
-		uint32_t jitter{0};          // Estimated jitter.
+		uint32_t lastSrTimestamp{ 0 }; // The middle 32 bits out of 64 in the NTP timestamp received in
+		                               // the most recent sender report.
+		uint64_t lastSrReceived{ 0 };  // Wallclock time representing the most recent sender report
+		                               // arrival.
+		uint32_t transit{ 0 };         // Relative trans time for prev pkt.
+		uint32_t jitter{ 0 };          // Estimated jitter.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 	};
 } // namespace RTC

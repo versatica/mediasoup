@@ -61,27 +61,27 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t rtpSenderId{0};
+		uint32_t rtpSenderId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:
 		// Passed by argument.
-		Listener* listener{nullptr};
-		Channel::Notifier* notifier{nullptr};
-		RTC::Transport* transport{nullptr};
-		RTC::RtpCapabilities* peerCapabilities{nullptr};
+		Listener* listener{ nullptr };
+		Channel::Notifier* notifier{ nullptr };
+		RTC::Transport* transport{ nullptr };
+		RTC::RtpCapabilities* peerCapabilities{ nullptr };
 		// Allocated by this.
-		RTC::RtpParameters* rtpParameters{nullptr};
-		RTC::RtpStreamSend* rtpStream{nullptr};
+		RTC::RtpParameters* rtpParameters{ nullptr };
+		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
-		bool available{false};
+		bool available{ false };
 		// Whether this RtpSender has been disabled by the app.
-		bool disabled{false};
+		bool disabled{ false };
 		// Timestamp when last RTCP was sent.
-		uint64_t lastRtcpSentTime{0};
-		uint16_t maxRtcpInterval{0};
+		uint64_t lastRtcpSentTime{ 0 };
+		uint16_t maxRtcpInterval{ 0 };
 		// RTP counters.
 		RTC::RtpDataCounter transmittedCounter;
 		// TODO: keep track of retransmitted data too.
@@ -92,7 +92,7 @@ namespace RTC
 
 	inline void RtpSender::SetTransport(RTC::Transport* transport)
 	{
-		bool wasActive = this->GetActive();
+		bool wasActive{ this->GetActive() };
 
 		this->transport = transport;
 
@@ -107,7 +107,7 @@ namespace RTC
 
 	inline void RtpSender::RemoveTransport(RTC::Transport* transport)
 	{
-		bool wasActive = this->GetActive();
+		bool wasActive{ this->GetActive() };
 
 		if (this->transport == transport)
 			this->transport = nullptr;

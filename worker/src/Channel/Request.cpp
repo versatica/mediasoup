@@ -46,10 +46,10 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringId{"id"};
-		static const Json::StaticString JsonStringMethod{"method"};
-		static const Json::StaticString JsonStringInternal{"internal"};
-		static const Json::StaticString JsonStringData{"data"};
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringMethod{ "method" };
+		static const Json::StaticString JsonStringInternal{ "internal" };
+		static const Json::StaticString JsonStringData{ "data" };
 
 		if (json[JsonStringId].isUInt())
 			this->id = json[JsonStringId].asUInt();
@@ -104,9 +104,9 @@ namespace Channel
 		MS_TRACE();
 
 		static Json::Value emptyData(Json::objectValue);
-		static const Json::StaticString JsonStringId{"id"};
-		static const Json::StaticString JsonStringAccepted{"accepted"};
-		static const Json::StaticString JsonStringData{"data"};
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringAccepted{ "accepted" };
+		static const Json::StaticString JsonStringData{ "data" };
 
 		MS_ASSERT(!this->replied, "Request already replied");
 
@@ -114,7 +114,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringId]       = Json::UInt{this->id};
+		json[JsonStringId]       = Json::UInt{ this->id };
 		json[JsonStringAccepted] = true;
 
 		if (data.isObject())
@@ -140,9 +140,9 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringId{"id"};
-		static const Json::StaticString JsonStringRejected{"rejected"};
-		static const Json::StaticString JsonStringReason{"reason"};
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringRejected{ "rejected" };
+		static const Json::StaticString JsonStringReason{ "reason" };
 
 		MS_ASSERT(!this->replied, "Request already replied");
 
@@ -150,7 +150,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringId]       = Json::UInt{this->id};
+		json[JsonStringId]       = Json::UInt{ this->id };
 		json[JsonStringRejected] = true;
 
 		if (reason != nullptr)

@@ -56,7 +56,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Header* header{nullptr};
+			Header* header{ nullptr };
 			std::unique_ptr<uint8_t> raw;
 
 		private:
@@ -87,7 +87,7 @@ namespace RTC
 			Iterator End();
 
 		private:
-			uint32_t ssrc{0};
+			uint32_t ssrc{ 0 };
 			std::vector<SdesItem*> items;
 		};
 
@@ -130,7 +130,7 @@ namespace RTC
 
 		inline size_t SdesItem::GetSize() const
 		{
-			return 2 + size_t{this->header->length};
+			return 2 + size_t{ this->header->length };
 		}
 
 		inline SdesItem::Type SdesItem::GetType() const
@@ -152,7 +152,7 @@ namespace RTC
 
 		inline SdesChunk::SdesChunk(uint32_t ssrc)
 		{
-			this->ssrc = uint32_t{htonl(ssrc)};
+			this->ssrc = uint32_t{ htonl(ssrc) };
 		}
 
 		inline SdesChunk::SdesChunk(SdesChunk* chunk)
@@ -189,12 +189,12 @@ namespace RTC
 
 		inline uint32_t SdesChunk::GetSsrc() const
 		{
-			return uint32_t{ntohl(this->ssrc)};
+			return uint32_t{ ntohl(this->ssrc) };
 		}
 
 		inline void SdesChunk::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = uint32_t{htonl(ssrc)};
+			this->ssrc = uint32_t{ htonl(ssrc) };
 		}
 
 		inline void SdesChunk::AddItem(SdesItem* item)
@@ -233,7 +233,7 @@ namespace RTC
 
 		inline size_t SdesPacket::GetSize() const
 		{
-			size_t size = sizeof(Packet::CommonHeader);
+			size_t size{ sizeof(Packet::CommonHeader) };
 
 			for (auto chunk : this->chunks)
 			{

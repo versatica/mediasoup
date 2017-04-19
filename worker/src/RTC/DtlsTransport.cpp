@@ -50,12 +50,12 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr int SslReadBufferSize{65536};
+	static constexpr int SslReadBufferSize{ 65536 };
 	// NOTE: Those values are hardcoded as we just use AES_CM_128_HMAC_SHA1_80 and
 	// AES_CM_128_HMAC_SHA1_32 which share same length values for key and salt.
-	static constexpr size_t SrtpMasterKeyLength{16};
-	static constexpr size_t SrtpMasterSaltLength{14};
-	static constexpr size_t SrtpMasterLength{SrtpMasterKeyLength + SrtpMasterSaltLength};
+	static constexpr size_t SrtpMasterKeyLength{ 16 };
+	static constexpr size_t SrtpMasterSaltLength{ 14 };
+	static constexpr size_t SrtpMasterLength{ SrtpMasterKeyLength + SrtpMasterSaltLength };
 
 	/* Class variables. */
 

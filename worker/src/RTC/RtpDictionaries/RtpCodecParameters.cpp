@@ -13,15 +13,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind{"kind"};
-		static const Json::StaticString JsonStringName{"name"};
-		static const Json::StaticString JsonStringPayloadType{"payloadType"};
-		static const Json::StaticString JsonStringClockRate{"clockRate"};
-		static const Json::StaticString JsonStringMaxptime{"maxptime"};
-		static const Json::StaticString JsonStringPtime{"ptime"};
-		static const Json::StaticString JsonStringNumChannels{"numChannels"};
-		static const Json::StaticString JsonStringParameters{"parameters"};
-		static const Json::StaticString JsonStringRtcpFeedback{"rtcpFeedback"};
+		static const Json::StaticString JsonStringKind{ "kind" };
+		static const Json::StaticString JsonStringName{ "name" };
+		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
+		static const Json::StaticString JsonStringClockRate{ "clockRate" };
+		static const Json::StaticString JsonStringMaxptime{ "maxptime" };
+		static const Json::StaticString JsonStringPtime{ "ptime" };
+		static const Json::StaticString JsonStringNumChannels{ "numChannels" };
+		static const Json::StaticString JsonStringParameters{ "parameters" };
+		static const Json::StaticString JsonStringRtcpFeedback{ "rtcpFeedback" };
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
@@ -73,19 +73,19 @@ namespace RTC
 		if (!data[JsonStringClockRate].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
 
-		this->clockRate = uint32_t{data[JsonStringClockRate].asUInt()};
+		this->clockRate = uint32_t{ data[JsonStringClockRate].asUInt() };
 
 		// `maxptime` is optional.
 		if (data[JsonStringMaxptime].isUInt())
-			this->maxptime = uint32_t{data[JsonStringMaxptime].asUInt()};
+			this->maxptime = uint32_t{ data[JsonStringMaxptime].asUInt() };
 
 		// `ptime` is optional.
 		if (data[JsonStringPtime].isUInt())
-			this->ptime = uint32_t{data[JsonStringPtime].asUInt()};
+			this->ptime = uint32_t{ data[JsonStringPtime].asUInt() };
 
 		// `numChannels` is optional.
 		if (data[JsonStringNumChannels].isUInt())
-			this->numChannels = uint32_t{data[JsonStringNumChannels].asUInt()};
+			this->numChannels = uint32_t{ data[JsonStringNumChannels].asUInt() };
 
 		// `parameters` is optional.
 		if (data[JsonStringParameters].isObject())
@@ -113,15 +113,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind{"kind"};
-		static const Json::StaticString JsonStringName{"name"};
-		static const Json::StaticString JsonStringPayloadType{"payloadType"};
-		static const Json::StaticString JsonStringClockRate{"clockRate"};
-		static const Json::StaticString JsonStringMaxptime{"maxptime"};
-		static const Json::StaticString JsonStringPtime{"ptime"};
-		static const Json::StaticString JsonStringNumChannels{"numChannels"};
-		static const Json::StaticString JsonStringParameters{"parameters"};
-		static const Json::StaticString JsonStringRtcpFeedback{"rtcpFeedback"};
+		static const Json::StaticString JsonStringKind{ "kind" };
+		static const Json::StaticString JsonStringName{ "name" };
+		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
+		static const Json::StaticString JsonStringClockRate{ "clockRate" };
+		static const Json::StaticString JsonStringMaxptime{ "maxptime" };
+		static const Json::StaticString JsonStringPtime{ "ptime" };
+		static const Json::StaticString JsonStringNumChannels{ "numChannels" };
+		static const Json::StaticString JsonStringParameters{ "parameters" };
+		static const Json::StaticString JsonStringRtcpFeedback{ "rtcpFeedback" };
 
 		Json::Value json(Json::objectValue);
 
@@ -137,23 +137,23 @@ namespace RTC
 		if (this->hasPayloadType)
 		{
 			// Add `payloadType`.
-			json[JsonStringPayloadType] = Json::UInt{this->payloadType};
+			json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
 		}
 
 		// Add `clockRate`.
-		json[JsonStringClockRate] = Json::UInt{this->clockRate};
+		json[JsonStringClockRate] = Json::UInt{ this->clockRate };
 
 		// Add `maxptime`.
 		if (this->maxptime != 0u)
-			json[JsonStringMaxptime] = Json::UInt{this->maxptime};
+			json[JsonStringMaxptime] = Json::UInt{ this->maxptime };
 
 		// Add `ptime`.
 		if (this->ptime != 0u)
-			json[JsonStringPtime] = Json::UInt{this->ptime};
+			json[JsonStringPtime] = Json::UInt{ this->ptime };
 
 		// Add `numChannels`.
 		if (this->numChannels > 1)
-			json[JsonStringNumChannels] = Json::UInt{this->numChannels};
+			json[JsonStringNumChannels] = Json::UInt{ this->numChannels };
 
 		// Add `parameters`.
 		json[JsonStringParameters] = this->parameters.ToJson();
@@ -173,7 +173,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string jsonStringPacketizationMode{"packetizationMode"};
+		static std::string jsonStringPacketizationMode{ "packetizationMode" };
 
 		// MIME must match.
 		if (this->mime != codec.mime)
@@ -251,8 +251,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string jsonStringApt{"apt"};
-		static std::string jsonStringPacketizationMode{"packetizationMode"};
+		static std::string jsonStringApt{ "apt" };
+		static std::string jsonStringPacketizationMode{ "packetizationMode" };
 
 		// Check per MIME parameters and set default values.
 		switch (this->mime.subtype)

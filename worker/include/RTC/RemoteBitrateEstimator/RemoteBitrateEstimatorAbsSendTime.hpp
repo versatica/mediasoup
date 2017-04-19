@@ -12,7 +12,6 @@
 #define MS_RTC_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
 
 #include "common.hpp"
-#include "Logger.hpp"
 #include "RTC/RemoteBitrateEstimator/AimdRateControl.hpp"
 #include "RTC/RemoteBitrateEstimator/InterArrival.hpp"
 #include "RTC/RemoteBitrateEstimator/OveruseDetector.hpp"
@@ -31,9 +30,9 @@ namespace RTC
 	{
 		Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize);
 
-		int64_t sendTimeMs{0};
-		int64_t recvTimeMs{0};
-		size_t payloadSize{0};
+		int64_t sendTimeMs{ 0 };
+		int64_t recvTimeMs{ 0 };
+		size_t payloadSize{ 0 };
 	};
 
 	struct Cluster
@@ -41,12 +40,12 @@ namespace RTC
 		int GetSendBitrateBps() const;
 		int GetRecvBitrateBps() const;
 
-		float sendMeanMs{0.0f};
-		float recvMeanMs{0.0f};
+		float sendMeanMs{ 0.0f };
+		float recvMeanMs{ 0.0f };
 		// TODO(holmer): Add some variance metric as well?
-		size_t meanSize{0};
-		int count{0};
-		int numAboveMinDelta{0};
+		size_t meanSize{ 0 };
+		int count{ 0 };
+		int numAboveMinDelta{ 0 };
 	};
 
 	class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator
@@ -91,19 +90,19 @@ namespace RTC
 		void TimeoutStreams(int64_t nowMs);
 
 	private:
-		Listener* const observer{nullptr};
+		Listener* const observer{ nullptr };
 		std::unique_ptr<InterArrival> interArrival;
 		std::unique_ptr<OveruseEstimator> estimator;
 		OveruseDetector detector;
 		RateCalculator incomingBitrate;
-		bool incomingBitrateInitialized{false};
+		bool incomingBitrateInitialized{ false };
 		std::vector<int> recentPropagationDeltaMs;
 		std::vector<int64_t> recentUpdateTimeMs;
 		std::list<Probe> probes;
-		size_t totalProbesReceived{0};
-		int64_t firstPacketTimeMs{-1};
-		int64_t lastUpdateMs{-1};
-		bool umaRecorded{false};
+		size_t totalProbesReceived{ 0 };
+		int64_t firstPacketTimeMs{ -1 };
+		int64_t lastUpdateMs{ -1 };
+		bool umaRecorded{ false };
 		Ssrcs ssrcs;
 		AimdRateControl remoteRate;
 	};
@@ -140,14 +139,13 @@ namespace RTC
 
 	inline int64_t RemoteBitrateEstimatorAbsSendTime::TimeUntilNextProcess()
 	{
-		static const int64_t DisabledModuleTime{1000};
+		static const int64_t DisabledModuleTime{ 1000 };
 
 		return DisabledModuleTime;
 	}
 
-	inline void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs)
+	inline void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avgRttMs, int64_t /*maxRttMs*/)
 	{
-		(void)maxRttMs;
 		this->remoteRate.SetRtt(avgRttMs);
 	}
 

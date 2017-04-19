@@ -48,8 +48,8 @@ namespace RTC
 			~FeedbackPacket() override;
 
 		private:
-			Header* header{nullptr};
-			uint8_t* raw{nullptr};
+			Header* header{ nullptr };
+			uint8_t* raw{ nullptr };
 			typename t::MessageType messageType;
 		};
 
@@ -115,25 +115,25 @@ namespace RTC
 		template<typename T>
 		inline uint32_t FeedbackPacket<T>::GetSenderSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->senderSsrc));
+			return uint32_t{ ntohl(this->header->senderSsrc) };
 		}
 
 		template<typename T>
 		inline void FeedbackPacket<T>::SetSenderSsrc(uint32_t ssrc)
 		{
-			this->header->senderSsrc = uint32_t{htonl(ssrc)};
+			this->header->senderSsrc = uint32_t{ htonl(ssrc) };
 		}
 
 		template<typename T>
 		inline uint32_t FeedbackPacket<T>::GetMediaSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->mediaSsrc));
+			return uint32_t{ ntohl(this->header->mediaSsrc) };
 		}
 
 		template<typename T>
 		inline void FeedbackPacket<T>::SetMediaSsrc(uint32_t ssrc)
 		{
-			this->header->mediaSsrc = uint32_t{htonl(ssrc)};
+			this->header->mediaSsrc = uint32_t{ htonl(ssrc) };
 		}
 	} // namespace RTCP
 } // namespace RTC

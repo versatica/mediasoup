@@ -263,8 +263,8 @@ void Settings::HandleRequest(Channel::Request* request)
 	{
 		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{
-			static const Json::StaticString JsonStringLogLevel{"logLevel"};
-			static const Json::StaticString JsonStringLogTags{"logTags"};
+			static const Json::StaticString JsonStringLogLevel{ "logLevel" };
+			static const Json::StaticString JsonStringLogTags{ "logTags" };
 
 			Json::Value jsonLogLevel = request->data[JsonStringLogLevel];
 			Json::Value jsonLogTags  = request->data[JsonStringLogTags];
