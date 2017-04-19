@@ -104,65 +104,62 @@ namespace RTC
 
 		inline uint32_t SenderReport::GetSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->ssrc));
+			return uint32_t{ntohl(this->header->ssrc)};
 		}
 
 		inline void SenderReport::SetSsrc(uint32_t ssrc)
 		{
-			this->header->ssrc = static_cast<uint32_t>(htonl(ssrc));
+			this->header->ssrc = uint32_t{htonl(ssrc)};
 		}
 
 		inline uint32_t SenderReport::GetNtpSec() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->ntpSec));
+			return uint32_t{ntohl(this->header->ntpSec)};
 		}
 
 		inline void SenderReport::SetNtpSec(uint32_t ntpSec)
 		{
-			this->header->ntpSec = static_cast<uint32_t>(htonl(ntpSec));
+			this->header->ntpSec = uint32_t{htonl(ntpSec)};
 		}
 
 		inline uint32_t SenderReport::GetNtpFrac() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->ntpFrac));
+			return uint32_t{ntohl(this->header->ntpFrac)};
 		}
 
 		inline void SenderReport::SetNtpFrac(uint32_t ntpFrac)
 		{
-			this->header->ntpFrac = static_cast<uint32_t>(htonl(ntpFrac));
+			this->header->ntpFrac = uint32_t{htonl(ntpFrac)};
 		}
 
 		inline uint32_t SenderReport::GetRtpTs() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->rtpTs));
+			return uint32_t{ntohl(this->header->rtpTs)};
 		}
 
 		inline void SenderReport::SetRtpTs(uint32_t rtpTs)
 		{
-			this->header->rtpTs = static_cast<uint32_t>(htonl(rtpTs));
+			this->header->rtpTs = uint32_t{htonl(rtpTs)};
 		}
 
-		inline
-
-		    uint32_t
-		    SenderReport::GetPacketCount() const
+		inline uint32_t SenderReport::GetPacketCount() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->packetCount));
+			return uint32_t{ntohl(this->header->packetCount)};
 		}
 
 		inline void SenderReport::SetPacketCount(uint32_t packetCount)
 		{
-			this->header->packetCount = static_cast<uint32_t>(htonl(packetCount));
+			this->header->packetCount = uint32_t{htonl(packetCount)};
 		}
 
 		inline uint32_t SenderReport::GetOctetCount() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->octetCount));
+			return uint32_t{ntohl(this->header->octetCount)};
 		}
 
 		inline void SenderReport::SetOctetCount(uint32_t octetCount)
 		{
-			this->header->octetCount = static_cast<uint32_t>(htonl(octetCount));
+			this->header->octetCount = uint32_t{htonl(octetCount)};
 		}
 
 		/* Inline instance methods. */

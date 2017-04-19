@@ -112,17 +112,17 @@ namespace RTC
 
 		inline uint32_t ReceiverReport::GetSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->ssrc));
+			return uint32_t{ntohl(this->header->ssrc)};
 		}
 
 		inline void ReceiverReport::SetSsrc(uint32_t ssrc)
 		{
-			this->header->ssrc = static_cast<uint32_t>(htonl(ssrc));
+			this->header->ssrc = uint32_t{htonl(ssrc)};
 		}
 
 		inline uint8_t ReceiverReport::GetFractionLost() const
 		{
-			return static_cast<uint8_t>(Utils::Byte::Get1Byte((uint8_t*)this->header, 4));
+			return uint8_t{Utils::Byte::Get1Byte((uint8_t*)this->header, 4)};
 		}
 
 		inline void ReceiverReport::SetFractionLost(uint8_t fractionLost)
@@ -132,7 +132,7 @@ namespace RTC
 
 		inline int32_t ReceiverReport::GetTotalLost() const
 		{
-			uint32_t value = static_cast<uint32_t>(Utils::Byte::Get3Bytes((uint8_t*)this->header, 5));
+			uint32_t value = uint32_t{Utils::Byte::Get3Bytes((uint8_t*)this->header, 5)};
 
 			// Possitive value.
 			if (((value >> 23) & 1) == 0)
@@ -158,42 +158,42 @@ namespace RTC
 
 		inline uint32_t ReceiverReport::GetLastSeq() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->lastSeq));
+			return uint32_t{ntohl(this->header->lastSeq)};
 		}
 
 		inline void ReceiverReport::SetLastSeq(uint32_t lastSeq)
 		{
-			this->header->lastSeq = static_cast<uint32_t>(htonl(lastSeq));
+			this->header->lastSeq = uint32_t{htonl(lastSeq)};
 		}
 
 		inline uint32_t ReceiverReport::GetJitter() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->jitter));
+			return uint32_t{ntohl(this->header->jitter)};
 		}
 
 		inline void ReceiverReport::SetJitter(uint32_t jitter)
 		{
-			this->header->jitter = static_cast<uint32_t>(htonl(jitter));
+			this->header->jitter = uint32_t{htonl(jitter)};
 		}
 
 		inline uint32_t ReceiverReport::GetLastSenderReport() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->lsr));
+			return uint32_t{ntohl(this->header->lsr)};
 		}
 
 		inline void ReceiverReport::SetLastSenderReport(uint32_t lsr)
 		{
-			this->header->lsr = static_cast<uint32_t>(htonl(lsr));
+			this->header->lsr = uint32_t{htonl(lsr)};
 		}
 
 		inline uint32_t ReceiverReport::GetDelaySinceLastSenderReport() const
 		{
-			return static_cast<uint32_t>(ntohl(this->header->dlsr));
+			return uint32_t{ntohl(this->header->dlsr)};
 		}
 
 		inline void ReceiverReport::SetDelaySinceLastSenderReport(uint32_t dlsr)
 		{
-			this->header->dlsr = static_cast<uint32_t>(htonl(dlsr));
+			this->header->dlsr = uint32_t{htonl(dlsr)};
 		}
 
 		inline ReceiverReportPacket::ReceiverReportPacket() : Packet(Type::RR)
@@ -227,12 +227,12 @@ namespace RTC
 
 		inline uint32_t ReceiverReportPacket::GetSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->ssrc));
+			return uint32_t{ntohl(this->ssrc)};
 		}
 
 		inline void ReceiverReportPacket::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = static_cast<uint32_t>(htonl(ssrc));
+			this->ssrc = uint32_t{htonl(ssrc)};
 		}
 
 		inline void ReceiverReportPacket::AddReport(ReceiverReport* report)

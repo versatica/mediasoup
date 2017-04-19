@@ -119,24 +119,24 @@ namespace Utils
 
 	inline uint16_t Byte::Get2Bytes(const uint8_t* data, size_t i)
 	{
-		return static_cast<uint16_t>(data[i + 1]) | static_cast<uint16_t>(data[i]) << 8;
+		return uint16_t{data[i + 1]} | uint16_t{data[i]} << 8;
 	}
 
 	inline uint32_t Byte::Get3Bytes(const uint8_t* data, size_t i)
 	{
-		return static_cast<uint32_t>(data[i + 2]) | static_cast<uint32_t>(data[i + 1]) << 8 |
-		       static_cast<uint32_t>(data[i]) << 16;
+		return uint32_t{data[i + 2]} | uint32_t{data[i + 1]} << 8 |
+		       uint32_t{data[i]} << 16;
 	}
 
 	inline uint32_t Byte::Get4Bytes(const uint8_t* data, size_t i)
 	{
-		return static_cast<uint32_t>(data[i + 3]) | static_cast<uint32_t>(data[i + 2]) << 8 |
-		       static_cast<uint32_t>(data[i + 1]) << 16 | static_cast<uint32_t>(data[i]) << 24;
+		return uint32_t{data[i + 3]} | uint32_t{data[i + 2]} << 8 |
+		       uint32_t{data[i + 1]} << 16 | uint32_t{data[i]} << 24;
 	}
 
 	inline uint64_t Byte::Get8Bytes(const uint8_t* data, size_t i)
 	{
-		return static_cast<uint64_t>(Byte::Get4Bytes(data, i)) << 32 | Byte::Get4Bytes(data, i + 4);
+		return uint64_t{Byte::Get4Bytes(data, i)} << 32 | Byte::Get4Bytes(data, i + 4);
 	}
 
 	inline void Byte::Set1Byte(uint8_t* data, size_t i, uint8_t value)

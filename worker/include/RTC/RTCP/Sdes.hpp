@@ -130,7 +130,7 @@ namespace RTC
 
 		inline size_t SdesItem::GetSize() const
 		{
-			return 2 + static_cast<size_t>(this->header->length);
+			return 2 + size_t{this->header->length};
 		}
 
 		inline SdesItem::Type SdesItem::GetType() const
@@ -152,7 +152,7 @@ namespace RTC
 
 		inline SdesChunk::SdesChunk(uint32_t ssrc)
 		{
-			this->ssrc = static_cast<uint32_t>(htonl(ssrc));
+			this->ssrc = uint32_t{htonl(ssrc)};
 		}
 
 		inline SdesChunk::SdesChunk(SdesChunk* chunk)
@@ -189,12 +189,12 @@ namespace RTC
 
 		inline uint32_t SdesChunk::GetSsrc() const
 		{
-			return static_cast<uint32_t>(ntohl(this->ssrc));
+			return uint32_t{ntohl(this->ssrc)};
 		}
 
 		inline void SdesChunk::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = static_cast<uint32_t>(htonl(ssrc));
+			this->ssrc = uint32_t{htonl(ssrc)};
 		}
 
 		inline void SdesChunk::AddItem(SdesItem* item)
