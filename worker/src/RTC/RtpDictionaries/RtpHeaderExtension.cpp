@@ -70,7 +70,7 @@ namespace RTC
 		json[JsonStringUri] = this->uri;
 
 		// Add `preferredId`.
-		json[JsonStringPreferredId] = static_cast<Json::UInt>(this->preferredId);
+		json[JsonStringPreferredId] = Json::UInt{this->preferredId};
 
 		// Add `preferredEncrypt`.
 		json[JsonStringPreferredEncrypt] = this->preferredEncrypt;

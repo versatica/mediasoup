@@ -105,11 +105,11 @@ namespace RTC
 
 		// Add `codecPayloadType`.
 		if (this->hasCodecPayloadType)
-			json[JsonStringCodecPayloadType] = static_cast<Json::UInt>(this->codecPayloadType);
+			json[JsonStringCodecPayloadType] = Json::UInt{this->codecPayloadType};
 
 		// Add `ssrc`.
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = static_cast<Json::UInt>(this->ssrc);
+			json[JsonStringSsrc] = Json::UInt{this->ssrc};
 
 		// Add `fec`
 		if (this->hasFec)
@@ -129,7 +129,7 @@ namespace RTC
 
 		// Add `maxFramerate`.
 		if (this->maxFramerate != 0u)
-			json[JsonStringMaxFramerate] = static_cast<Json::UInt>(this->maxFramerate);
+			json[JsonStringMaxFramerate] = Json::UInt{this->maxFramerate};
 
 		// Add `active`.
 		json[JsonStringActive] = this->active;

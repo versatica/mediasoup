@@ -33,7 +33,7 @@ namespace RTC
 
 		// Add `ssrc`.
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = static_cast<Json::UInt>(this->ssrc);
+			json[JsonStringSsrc] = Json::UInt{this->ssrc};
 
 		return json;
 	}

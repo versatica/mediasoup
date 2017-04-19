@@ -184,13 +184,13 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringSsrc]          = static_cast<Json::UInt>(this->ssrc);
-		json[JsonStringPayloadType]   = static_cast<Json::UInt>(this->payloadType);
+		json[JsonStringSsrc]          = Json::UInt{this->ssrc};
+		json[JsonStringPayloadType]   = Json::UInt{this->payloadType};
 		json[JsonStringMime]          = this->mime.name;
-		json[JsonStringClockRate]     = static_cast<Json::UInt>(this->clockRate);
+		json[JsonStringClockRate]     = Json::UInt{this->clockRate};
 		json[JsonStringUseNack]       = this->useNack;
 		json[JsonStringUsePli]        = this->usePli;
-		json[JsonStringAbsSendTimeId] = static_cast<Json::UInt>(this->absSendTimeId);
+		json[JsonStringAbsSendTimeId] = Json::UInt{this->absSendTimeId};
 
 		return json;
 	}

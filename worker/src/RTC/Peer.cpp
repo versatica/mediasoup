@@ -98,7 +98,7 @@ namespace RTC
 		Json::Value jsonRtpSenders(Json::arrayValue);
 
 		// Add `peerId`.
-		json[JsonStringPeerId] = static_cast<Json::UInt>(this->peerId);
+		json[JsonStringPeerId] = Json::UInt{this->peerId};
 
 		// Add `peerName`.
 		json[JsonStringPeerName] = this->peerName;
@@ -605,11 +605,11 @@ namespace RTC
 		Json::Value eventData = rtpSender->ToJson();
 
 		eventData[JsonStringClass]                   = "Peer";
-		eventData[JsonStringRtpSenderId]             = static_cast<Json::UInt>(rtpSender->rtpSenderId);
+		eventData[JsonStringRtpSenderId]             = Json::UInt{rtpSender->rtpSenderId};
 		eventData[JsonStringKind]                    = RTC::Media::GetJsonString(rtpSender->kind);
 		eventData[JsonStringRtpParameters]           = rtpSender->GetParameters()->ToJson();
 		eventData[JsonStringActive]                  = rtpSender->GetActive();
-		eventData[JsonStringAssociatedRtpReceiverId] = static_cast<Json::UInt>(associatedRtpReceiverId);
+		eventData[JsonStringAssociatedRtpReceiverId] = Json::UInt{associatedRtpReceiverId};
 
 		this->notifier->Emit(this->peerId, "newrtpsender", eventData);
 	}

@@ -22,7 +22,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringTargetId] = static_cast<Json::UInt>(targetId);
+		json[JsonStringTargetId] = Json::UInt{targetId};
 		json[JsonStringEvent]    = event;
 
 		this->channel->Send(json);
@@ -38,7 +38,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringTargetId] = static_cast<Json::UInt>(targetId);
+		json[JsonStringTargetId] = Json::UInt{targetId};
 		json[JsonStringEvent]    = event;
 		json[JsonStringData]     = data;
 
@@ -61,7 +61,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringTargetId] = static_cast<Json::UInt>(targetId);
+		json[JsonStringTargetId] = Json::UInt{targetId};
 		json[JsonStringEvent]    = event;
 		json[JsonStringData]     = data;
 		json[JsonStringBinary]   = true;

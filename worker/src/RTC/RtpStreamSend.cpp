@@ -44,10 +44,10 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		json[JsonStringParams]        = this->params.ToJson();
-		json[JsonStringReceived]      = static_cast<Json::UInt>(this->received);
-		json[JsonStringMaxTimestamp]  = static_cast<Json::UInt>(this->maxTimestamp);
+		json[JsonStringReceived]      = Json::UInt{this->received};
+		json[JsonStringMaxTimestamp]  = Json::UInt{this->maxTimestamp};
 		json[JsonStringReceivedBytes] = static_cast<Json::UInt>(this->receivedBytes);
-		json[JsonStringRtt]           = static_cast<Json::UInt>(this->rtt);
+		json[JsonStringRtt]           = Json::UInt{this->rtt};
 
 		return json;
 	}

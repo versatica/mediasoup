@@ -30,7 +30,7 @@ namespace RTC
 
 				case Value::Type::INTEGER:
 				{
-					json[key] = static_cast<Json::Int>(value.integerValue);
+					json[key] = Json::Int{value.integerValue};
 
 					break;
 				}
@@ -54,7 +54,7 @@ namespace RTC
 					Json::Value array(Json::arrayValue);
 
 					for (auto& entry : value.arrayOfIntegers)
-						array.append(static_cast<Json::Int>(entry));
+						array.append(Json::Int{entry});
 
 					json[key] = array;
 

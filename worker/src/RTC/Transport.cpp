@@ -286,7 +286,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringTransportId] = static_cast<Json::UInt>(this->transportId);
+		json[JsonStringTransportId] = Json::UInt{this->transportId};
 
 		// Add `iceRole` (we are always "controlled").
 		json[JsonStringIceRole] = JsonStringControlled;
@@ -368,10 +368,10 @@ namespace RTC
 		json[JsonStringUseRemb] = (static_cast<bool>(this->remoteBitrateEstimator));
 
 		// Add `maxBitrate`.
-		json[JsonStringMaxBitrate] = static_cast<Json::UInt>(this->maxBitrate);
+		json[JsonStringMaxBitrate] = Json::UInt{this->maxBitrate};
 
 		// Add `effectiveMaxBitrate`.
-		json[JsonStringEffectiveMaxBitrate] = static_cast<Json::UInt>(this->effectiveMaxBitrate);
+		json[JsonStringEffectiveMaxBitrate] = Json::UInt{this->effectiveMaxBitrate};
 
 		// Add `rtpListener`.
 		json[JsonStringRtpListener] = this->rtpListener.ToJson();

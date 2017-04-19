@@ -68,7 +68,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringRtpSenderId] = static_cast<Json::UInt>(this->rtpSenderId);
+		json[JsonStringRtpSenderId] = Json::UInt{this->rtpSenderId};
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
@@ -85,7 +85,7 @@ namespace RTC
 
 		for (auto payloadType : this->supportedPayloadTypes)
 		{
-			json[JsonStringSupportedPayloadTypes].append(static_cast<Json::UInt>(payloadType));
+			json[JsonStringSupportedPayloadTypes].append(Json::UInt{payloadType});
 		}
 
 		if (this->rtpStream != nullptr)

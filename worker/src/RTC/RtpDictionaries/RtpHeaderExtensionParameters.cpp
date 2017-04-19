@@ -62,7 +62,7 @@ namespace RTC
 		json[JsonStringUri] = this->uri;
 
 		// Add `id`.
-		json[JsonStringId] = static_cast<Json::UInt>(this->id);
+		json[JsonStringId] = Json::UInt{this->id};
 
 		// Add `encrypt`.
 		json[JsonStringEncrypt] = this->encrypt;

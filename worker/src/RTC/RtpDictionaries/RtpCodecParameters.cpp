@@ -137,23 +137,23 @@ namespace RTC
 		if (this->hasPayloadType)
 		{
 			// Add `payloadType`.
-			json[JsonStringPayloadType] = static_cast<Json::UInt>(this->payloadType);
+			json[JsonStringPayloadType] = Json::UInt{this->payloadType};
 		}
 
 		// Add `clockRate`.
-		json[JsonStringClockRate] = static_cast<Json::UInt>(this->clockRate);
+		json[JsonStringClockRate] = Json::UInt{this->clockRate};
 
 		// Add `maxptime`.
 		if (this->maxptime != 0u)
-			json[JsonStringMaxptime] = static_cast<Json::UInt>(this->maxptime);
+			json[JsonStringMaxptime] = Json::UInt{this->maxptime};
 
 		// Add `ptime`.
 		if (this->ptime != 0u)
-			json[JsonStringPtime] = static_cast<Json::UInt>(this->ptime);
+			json[JsonStringPtime] = Json::UInt{this->ptime};
 
 		// Add `numChannels`.
 		if (this->numChannels > 1)
-			json[JsonStringNumChannels] = static_cast<Json::UInt>(this->numChannels);
+			json[JsonStringNumChannels] = Json::UInt{this->numChannels};
 
 		// Add `parameters`.
 		json[JsonStringParameters] = this->parameters.ToJson();

@@ -114,7 +114,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringId]       = static_cast<Json::UInt>(this->id);
+		json[JsonStringId]       = Json::UInt{this->id};
 		json[JsonStringAccepted] = true;
 
 		if (data.isObject())
@@ -150,7 +150,7 @@ namespace Channel
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringId]       = static_cast<Json::UInt>(this->id);
+		json[JsonStringId]       = Json::UInt{this->id};
 		json[JsonStringRejected] = true;
 
 		if (reason != nullptr)
