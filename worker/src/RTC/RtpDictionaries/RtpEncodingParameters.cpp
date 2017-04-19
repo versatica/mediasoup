@@ -36,7 +36,7 @@ namespace RTC
 
 		// `ssrc` is optional.
 		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = static_cast<uint32_t>(data[JsonStringSsrc].asUInt());
+			this->ssrc = uint32_t{data[JsonStringSsrc].asUInt()};
 
 		// `fec` is optional.
 		if (data[JsonStringFec].isObject())
@@ -62,7 +62,7 @@ namespace RTC
 
 		// `maxFramerate` is optional.
 		if (data[JsonStringMaxFramerate].isUInt())
-			this->maxFramerate = static_cast<uint32_t>(data[JsonStringMaxFramerate].asUInt());
+			this->maxFramerate = uint32_t{data[JsonStringMaxFramerate].asUInt()};
 
 		// `active` is optional.
 		if (data[JsonStringActive].isBool())

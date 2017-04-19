@@ -37,7 +37,7 @@ namespace RTC
 
 			if (len - offset > 0)
 			{
-				auto length = static_cast<size_t>(Utils::Byte::Get1Byte(data, offset));
+				auto length = size_t{Utils::Byte::Get1Byte(data, offset)};
 
 				offset += sizeof(uint8_t);
 				if (length <= len - offset)

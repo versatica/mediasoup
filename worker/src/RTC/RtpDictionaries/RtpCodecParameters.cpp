@@ -73,19 +73,19 @@ namespace RTC
 		if (!data[JsonStringClockRate].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
 
-		this->clockRate = static_cast<uint32_t>(data[JsonStringClockRate].asUInt());
+		this->clockRate = uint32_t{data[JsonStringClockRate].asUInt()};
 
 		// `maxptime` is optional.
 		if (data[JsonStringMaxptime].isUInt())
-			this->maxptime = static_cast<uint32_t>(data[JsonStringMaxptime].asUInt());
+			this->maxptime = uint32_t{data[JsonStringMaxptime].asUInt()};
 
 		// `ptime` is optional.
 		if (data[JsonStringPtime].isUInt())
-			this->ptime = static_cast<uint32_t>(data[JsonStringPtime].asUInt());
+			this->ptime = uint32_t{data[JsonStringPtime].asUInt()};
 
 		// `numChannels` is optional.
 		if (data[JsonStringNumChannels].isUInt())
-			this->numChannels = static_cast<uint32_t>(data[JsonStringNumChannels].asUInt());
+			this->numChannels = uint32_t{data[JsonStringNumChannels].asUInt()};
 
 		// `parameters` is optional.
 		if (data[JsonStringParameters].isObject())

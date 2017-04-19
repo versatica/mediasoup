@@ -90,7 +90,7 @@ namespace RTC
 
 				case Json::intValue:
 				{
-					auto integerValue = static_cast<int32_t>(value.asInt());
+					auto integerValue = int32_t{value.asInt()};
 
 					this->mapKeyValues[key] = Value(integerValue);
 

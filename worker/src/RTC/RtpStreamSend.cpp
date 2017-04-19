@@ -123,7 +123,7 @@ namespace RTC
 			return;
 
 		// Convert the given sequence numbers to 32 bits.
-		uint32_t firstSeq32 = static_cast<uint32_t>(seq) + this->cycles;
+		uint32_t firstSeq32 = uint32_t{seq} + this->cycles;
 		uint32_t lastSeq32  = firstSeq32 + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
@@ -331,7 +331,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packetSeq32 = static_cast<uint32_t>(packet->GetSequenceNumber()) + this->cycles;
+		uint32_t packetSeq32 = uint32_t{packet->GetSequenceNumber()} + this->cycles;
 		BufferItem bufferItem;
 
 		bufferItem.seq32 = packetSeq32;

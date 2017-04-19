@@ -254,7 +254,7 @@ namespace RTC
 		// Shift up send time to use the full 32 bits that interArrival works with,
 		// so wrapping works properly.
 		uint32_t timestamp = sendTime24bits << AbsSendTimeInterArrivalUpshift;
-		int64_t sendTimeMs = static_cast<int64_t>(timestamp) * TimestampToMs;
+		int64_t sendTimeMs = int64_t{timestamp} * TimestampToMs;
 		int64_t nowMs      = DepLibUV::GetTime();
 		// TODO(holmer): SSRCs are only needed for REMB, should be broken out from
 		// here.

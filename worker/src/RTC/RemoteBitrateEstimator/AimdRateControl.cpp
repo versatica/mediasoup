@@ -30,8 +30,7 @@ namespace RTC
 		static const int RtcpSize{80};
 
 		const int64_t minFeedbackIntervalMs = 200;
-		auto interval                       = static_cast<int64_t>(
-        std::lround((RtcpSize * 8.0 * 1000.0) / (0.05 * this->currentBitrateBps) + 0.5));
+		auto interval                       = int64_t{std::lround((RtcpSize * 8.0 * 1000.0) / (0.05 * this->currentBitrateBps) + 0.5)};
 
 		return std::min(std::max(interval, minFeedbackIntervalMs), MaxFeedbackIntervalMs);
 	}

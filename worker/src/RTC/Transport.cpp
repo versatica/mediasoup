@@ -521,7 +521,7 @@ namespace RTC
 					return;
 				}
 
-				auto bitrate = static_cast<uint32_t>(request->data[JsonStringBitrate].asUInt());
+				auto bitrate = uint32_t{request->data[JsonStringBitrate].asUInt()};
 
 				if (bitrate < MinBitrate)
 					bitrate = MinBitrate;

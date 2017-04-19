@@ -30,7 +30,7 @@ namespace RTC
 
 		// `ssrc` is optional.
 		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = static_cast<uint32_t>(data[JsonStringSsrc].asUInt());
+			this->ssrc = uint32_t{data[JsonStringSsrc].asUInt()};
 
 		// `reducedSize` is optional.
 		if (data[JsonStringReducedSize].isBool())

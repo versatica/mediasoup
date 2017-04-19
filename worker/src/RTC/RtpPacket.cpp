@@ -108,7 +108,7 @@ namespace RTC
 
 				return nullptr;
 			}
-			payloadLength -= static_cast<size_t>(payloadPadding);
+			payloadLength -= size_t{payloadPadding};
 		}
 
 		if (payloadLength == 0)
@@ -188,7 +188,7 @@ namespace RTC
 			this->size += 4 + extensionValueSize;
 
 		this->size += this->payloadLength;
-		this->size += static_cast<size_t>(this->payloadPadding);
+		this->size += size_t{this->payloadPadding};
 
 		uint8_t* ptr = buffer;
 
@@ -236,7 +236,7 @@ namespace RTC
 		if (this->payloadPadding != 0u)
 		{
 			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
-			ptr += static_cast<size_t>(this->payloadPadding);
+			ptr += size_t{this->payloadPadding};
 		}
 
 		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
@@ -283,7 +283,7 @@ namespace RTC
 		if (this->payloadPadding != 0u)
 		{
 			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
-			ptr += static_cast<size_t>(this->payloadPadding);
+			ptr += size_t{this->payloadPadding};
 		}
 
 		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
