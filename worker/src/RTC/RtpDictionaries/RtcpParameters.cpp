@@ -45,7 +45,7 @@ namespace RTC
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 		static const Json::StaticString JsonStringReducedSize{ "reducedSize" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		// Add `cname`.
 		if (!this->cname.empty())

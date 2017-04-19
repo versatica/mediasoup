@@ -59,9 +59,9 @@ namespace RTC
 
 	/* Class variables. */
 
-	X509* DtlsTransport::certificate{ nullptr };
-	EVP_PKEY* DtlsTransport::privateKey{ nullptr };
-	SSL_CTX* DtlsTransport::sslCtx{ nullptr };
+	X509* DtlsTransport::certificate    = nullptr;
+	EVP_PKEY* DtlsTransport::privateKey = nullptr;
+	SSL_CTX* DtlsTransport::sslCtx      = nullptr;
 	uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	// clang-format off
 	std::map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
@@ -79,7 +79,7 @@ namespace RTC
 		{ "server", DtlsTransport::Role::SERVER }
 	};
 	// clang-format on
-	Json::Value DtlsTransport::localFingerprints = Json::Value{ Json::objectValue };
+	Json::Value DtlsTransport::localFingerprints = Json::Value(Json::objectValue);
 	// clang-format off
 	std::vector<DtlsTransport::SrtpProfileMapEntry> DtlsTransport::srtpProfiles =
 	{
@@ -128,11 +128,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int ret{ 0 };
-		BIGNUM* bne{ nullptr };
-		RSA* rsaKey{ nullptr };
-		int numBits{ 1024 };
-		X509_NAME* certName{ nullptr };
+		int ret             = 0;
+		BIGNUM* bne         = nullptr;
+		RSA* rsaKey         = nullptr;
+		int numBits         = 1024;
+		X509_NAME* certName = nullptr;
 
 		// Create a big number object.
 		bne = BN_new();
@@ -260,7 +260,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		FILE* file{ nullptr };
+		FILE* file = nullptr;
 
 		file = fopen(Settings::configuration.dtlsCertificateFile.c_str(), "r");
 		if (file == nullptr)
@@ -305,7 +305,7 @@ namespace RTC
 		MS_TRACE();
 
 		std::string dtlsSrtpProfiles;
-		EC_KEY* ecdh{ nullptr };
+		EC_KEY* ecdh = nullptr;
 		int ret;
 
 /* Set the global DTLS context. */
@@ -451,12 +451,12 @@ namespace RTC
 		auto it = DtlsTransport::string2FingerprintAlgorithm.begin();
 		for (; it != DtlsTransport::string2FingerprintAlgorithm.end(); ++it)
 		{
-			std::string algorithmString{ it->first };
-			FingerprintAlgorithm algorithm{ it->second };
+			std::string algorithmString    = it->first;
+			FingerprintAlgorithm algorithm = it->second;
 			uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
-			unsigned int size{ 0 };
+			unsigned int size = 0;
 			char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
-			const EVP_MD* hashFunction{ nullptr };
+			const EVP_MD* hashFunction;
 			int ret;
 
 			switch (algorithm)
@@ -488,7 +488,7 @@ namespace RTC
 			}
 
 			// Convert to hexadecimal format in lowecase without colons.
-			for (unsigned int i{ 0 }; i < size; ++i)
+			for (unsigned int i = 0; i < size; ++i)
 			{
 				std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
 			}
@@ -612,7 +612,7 @@ namespace RTC
 		    localRole == Role::CLIENT || localRole == Role::SERVER,
 		    "local DTLS role must be 'client' or 'server'");
 
-		Role previousLocalRole{ this->localRole };
+		Role previousLocalRole = this->localRole;
 
 		if (localRole == previousLocalRole)
 		{
@@ -704,7 +704,7 @@ namespace RTC
 		}
 
 		// Must call SSL_read() to process received DTLS data.
-		read = SSL_read(this->ssl, static_cast<void*>(DtlsTransport::sslReadBuffer), SslReadBufferSize);
+		read = SSL_read(this->ssl, (void*)DtlsTransport::sslReadBuffer, SslReadBufferSize);
 
 		// Send data if it's ready.
 		SendPendingOutgoingDtlsData();
@@ -810,7 +810,7 @@ namespace RTC
 		MS_TRACE();
 
 		int err;
-		bool wasHandshakeDone{ this->handshakeDone };
+		bool wasHandshakeDone = this->handshakeDone;
 
 		err = SSL_get_error(this->ssl, returnCode);
 		switch (err)
@@ -894,7 +894,7 @@ namespace RTC
 			return;
 
 		int64_t read;
-		char* data{ nullptr };
+		char* data = nullptr;
 
 		read = BIO_get_mem_data(this->sslBioToNetwork, &data); // NOLINT
 		if (read <= 0)
@@ -923,7 +923,7 @@ namespace RTC
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
-		ret = DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
+		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtlsTimeout); // NOLINT
 		if (ret == 0)
 			return true;
 
@@ -1013,10 +1013,9 @@ namespace RTC
 
 		X509* certificate;
 		uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
-		unsigned int size{ 0 };
+		unsigned int size = 0;
 		char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
-		const EVP_MD* hashFunction{ nullptr };
-		;
+		const EVP_MD* hashFunction;
 		int ret;
 
 		certificate = SSL_get_peer_certificate(this->ssl);
@@ -1061,7 +1060,7 @@ namespace RTC
 		}
 
 		// Convert to hexadecimal format in lowecase without colons.
-		for (unsigned int i{ 0 }; i < size; ++i)
+		for (unsigned int i = 0; i < size; ++i)
 		{
 			std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
 		}
@@ -1084,7 +1083,7 @@ namespace RTC
 
 		// Get the remote certificate in PEM format.
 
-		BIO* bio{ BIO_new(BIO_s_mem()) };
+		BIO* bio = BIO_new(BIO_s_mem());
 
 		// Ensure the underlying BUF_MEM structure is also freed.
 		// NOTE: Avoid stupid "warning: value computed is not used [-Wunused-value]" since
@@ -1183,10 +1182,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::SrtpSession::Profile negotiatedSrtpProfile{ RTC::SrtpSession::Profile::NONE };
+		RTC::SrtpSession::Profile negotiatedSrtpProfile = RTC::SrtpSession::Profile::NONE;
 
 		// Ensure that the SRTP profile has been negotiated.
-		SRTP_PROTECTION_PROFILE* sslSrtpProfile{ SSL_get_selected_srtp_profile(this->ssl) };
+		SRTP_PROTECTION_PROFILE* sslSrtpProfile = SSL_get_selected_srtp_profile(this->ssl);
 		if (sslSrtpProfile == nullptr)
 		{
 			return negotiatedSrtpProfile;
@@ -1196,7 +1195,7 @@ namespace RTC
 		auto it = DtlsTransport::srtpProfiles.begin();
 		for (; it != DtlsTransport::srtpProfiles.end(); ++it)
 		{
-			SrtpProfileMapEntry* profileEntry{ std::addressof(*it) };
+			SrtpProfileMapEntry* profileEntry = std::addressof(*it);
 
 			if (std::strcmp(sslSrtpProfile->name, profileEntry->name) == 0)
 			{
@@ -1217,8 +1216,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int w{ where & -SSL_ST_MASK };
-		const char* role{ nullptr };
+		int w = where & -SSL_ST_MASK;
+		const char* role;
 
 		if ((w & SSL_ST_CONNECT) != 0)
 			role = "client";

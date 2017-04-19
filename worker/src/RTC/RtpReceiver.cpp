@@ -40,7 +40,7 @@ namespace RTC
 
 		static const Json::StaticString JsonStringClass{ "class" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		// Notify.
 		eventData[JsonStringClass] = "RtpReceiver";
@@ -65,8 +65,8 @@ namespace RTC
 		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
 		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
 
-		Json::Value json{ Json::objectValue };
-		Json::Value jsonRtpStreams{ Json::arrayValue };
+		Json::Value json(Json::objectValue);
+		Json::Value jsonRtpStreams(Json::arrayValue);
 
 		json[JsonStringRtpReceiverId] = Json::UInt{ this->rtpReceiverId };
 
@@ -103,7 +103,7 @@ namespace RTC
 			case Channel::Request::MethodId::RTP_RECEIVER_CLOSE:
 			{
 #ifdef MS_LOG_DEV
-				uint32_t rtpReceiverId{ this->rtpReceiverId };
+				uint32_t rtpReceiverId = this->rtpReceiverId;
 #endif
 
 				Destroy();
@@ -117,7 +117,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::RTP_RECEIVER_DUMP:
 			{
-				auto json = ToJson();
+				Json::Value json = ToJson();
 
 				request->Accept(json);
 
@@ -161,7 +161,7 @@ namespace RTC
 				// Free previous RTP streams.
 				ClearRtpStreams();
 
-				auto data = this->rtpParameters->ToJson();
+				Json::Value data = this->rtpParameters->ToJson();
 
 				request->Accept(data);
 
@@ -260,7 +260,7 @@ namespace RTC
 		// Emit "rtpraw" if enabled.
 		if (this->rtpRawEventEnabled)
 		{
-			Json::Value eventData{ Json::objectValue };
+			Json::Value eventData(Json::objectValue);
 
 			eventData[JsonStringClass] = "RtpReceiver";
 
@@ -271,8 +271,8 @@ namespace RTC
 		// Emit "rtpobject" is enabled.
 		if (this->rtpObjectEventEnabled)
 		{
-			Json::Value eventData{ Json::objectValue };
-			Json::Value jsonObject{ Json::objectValue };
+			Json::Value eventData(Json::objectValue);
+			Json::Value jsonObject(Json::objectValue);
 
 			eventData[JsonStringClass] = "RtpReceiver";
 
@@ -366,7 +366,7 @@ namespace RTC
 		if (encoding.ssrc == 0u)
 			return;
 
-		auto ssrc = encoding.ssrc;
+		uint32_t ssrc = encoding.ssrc;
 
 		// Don't create a RtpStreamRecv if there is already one for the same SSRC.
 		// TODO: This may not work for SVC codecs.
@@ -374,11 +374,11 @@ namespace RTC
 			return;
 
 		// Get the codec of the stream/encoding.
-		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
-		bool useNack{ false };
-		bool usePli{ false };
-		bool useRemb{ false };
-		uint8_t absSendTimeId{ 0 };
+		auto& codec           = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack          = false;
+		bool usePli           = false;
+		bool useRemb          = false;
+		uint8_t absSendTimeId = 0;
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
@@ -455,14 +455,14 @@ namespace RTC
 		while (it != end)
 		{
 			uint16_t seq;
-			uint16_t bitmask{ 0 };
+			uint16_t bitmask = 0;
 
 			seq = *it;
 			++it;
 
 			while (it != end)
 			{
-				uint16_t shift = static_cast<uint16_t>(*it - seq - 1);
+				uint16_t shift = *it - seq - 1;
 
 				if (shift <= 15)
 				{

@@ -43,7 +43,7 @@ namespace RTC
 
 		static const Json::StaticString JsonStringClass{ "class" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		eventData[JsonStringClass] = "RtpSender";
 		this->notifier->Emit(this->rtpSenderId, "close", eventData);
@@ -66,7 +66,7 @@ namespace RTC
 		static const Json::StaticString JsonStringSupportedPayloadTypes{ "supportedPayloadTypes" };
 		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		json[JsonStringRtpSenderId] = Json::UInt{ this->rtpSenderId };
 
@@ -102,7 +102,7 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::RTP_SENDER_DUMP:
 			{
-				auto json = ToJson();
+				Json::Value json = ToJson();
 
 				request->Accept(json);
 
@@ -120,7 +120,7 @@ namespace RTC
 					return;
 				}
 
-				bool disabled{ request->data[JsonStringDisabled].asBool() };
+				bool disabled = request->data[JsonStringDisabled].asBool();
 
 				// Nothing changed.
 				if (this->disabled == disabled)
@@ -130,7 +130,7 @@ namespace RTC
 					return;
 				}
 
-				bool wasActive{ this->GetActive() };
+				bool wasActive = this->GetActive();
 
 				this->disabled = disabled;
 
@@ -171,7 +171,7 @@ namespace RTC
 		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
-		bool hadParameters{ this->rtpParameters != nullptr };
+		bool hadParameters = this->rtpParameters != nullptr;
 
 		// Free the previous rtpParameters.
 		if (hadParameters)
@@ -237,7 +237,7 @@ namespace RTC
 		// Remove all the encodings but the first one.
 		if (encodings.size() > 1)
 		{
-			auto encoding = encodings[0];
+			RTC::RtpEncodingParameters encoding = encodings[0];
 
 			encodings.clear();
 			encodings.push_back(encoding);
@@ -265,7 +265,7 @@ namespace RTC
 		// Emit "parameterschange" if these are updated parameters.
 		if (hadParameters)
 		{
-			Json::Value eventData{ Json::objectValue };
+			Json::Value eventData(Json::objectValue);
 
 			eventData[JsonStringClass]         = "RtpSender";
 			eventData[JsonStringRtpParameters] = this->rtpParameters->ToJson();
@@ -295,8 +295,8 @@ namespace RTC
 		}
 
 		// Map the payload type.
-		uint8_t payloadType{ packet->GetPayloadType() };
-		auto it = this->supportedPayloadTypes.find(payloadType);
+		uint8_t payloadType = packet->GetPayloadType();
+		auto it             = this->supportedPayloadTypes.find(payloadType);
 
 		// NOTE: This may happen if this peer supports just some codecs from the
 		// given RtpParameters.
@@ -329,13 +329,13 @@ namespace RTC
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(now);
+		RTC::RTCP::SenderReport* report = this->rtpStream->GetRtcpSenderReport(now);
 		if (report == nullptr)
 			return;
 
 		// NOTE: This assumes a single stream.
-		auto ssrc   = this->rtpParameters->encodings[0].ssrc;
-		auto& cname = this->rtpParameters->rtcp.cname;
+		uint32_t ssrc     = this->rtpParameters->encodings[0].ssrc;
+		std::string cname = this->rtpParameters->rtcp.cname;
 
 		report->SetSsrc(ssrc);
 		packet->AddSenderReport(report);
@@ -400,12 +400,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto ssrc = encoding.ssrc;
+		uint32_t ssrc = encoding.ssrc;
 		// Get the codec of the stream/encoding.
-		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
-		bool useNack{ false };
-		bool usePli{ false };
-		uint8_t absSendTimeId{ 0 }; // 0 means no abs-send-time id.
+		auto& codec           = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack          = false;
+		bool usePli           = false;
+		uint8_t absSendTimeId = 0; // 0 means no abs-send-time id.
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
@@ -473,7 +473,7 @@ namespace RTC
 		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringActive{ "active" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		eventData[JsonStringClass]  = "RtpSender";
 		eventData[JsonStringActive] = this->GetActive();

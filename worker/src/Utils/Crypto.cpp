@@ -12,9 +12,7 @@ namespace Utils
 	uint32_t Crypto::seed;
 	HMAC_CTX Crypto::hmacSha1Ctx;
 	uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
-	// clang-format off
-	const uint32_t Crypto::crc32Table[] =
-	{
+	const uint32_t Crypto::crc32Table[] = {
 		0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
 		0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988, 0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91,
 		0x1db71064, 0x6ab020f2, 0xf3b97148, 0x84be41de, 0x1adad47d, 0x6ddde4eb, 0xf4d4b551, 0x83d385c7,
@@ -48,7 +46,6 @@ namespace Utils
 		0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693, 0x54de5729, 0x23d967bf,
 		0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 	};
-	// clang-format on
 
 	/* Static methods. */
 

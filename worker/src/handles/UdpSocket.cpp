@@ -55,10 +55,10 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	MS_TRACE();
 
 	int err;
-	int flags{ 0 };
+	int flags = 0;
 
 	this->uvHandle       = new uv_udp_t;
-	this->uvHandle->data = static_cast<void*>(this);
+	this->uvHandle->data = (void*)this;
 
 	err = uv_udp_init(DepLibUV::GetLoop(), this->uvHandle);
 	if (err != 0)
@@ -126,7 +126,7 @@ UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 
 	int err;
 
-	this->uvHandle->data = static_cast<void*>(this);
+	this->uvHandle->data = (void*)this;
 
 	err = uv_udp_recv_start(
 	    this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
@@ -228,7 +228,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 
 	sendData->socket = this;
 	std::memcpy(sendData->store, data, len);
-	sendData->req.data = static_cast<void*>(sendData);
+	sendData->req.data = (void*)sendData;
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
 
@@ -289,7 +289,7 @@ bool UdpSocket::SetLocalAddress()
 	MS_TRACE();
 
 	int err;
-	int len{ sizeof(this->localAddr) };
+	int len = sizeof(this->localAddr);
 
 	err =
 	    uv_udp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);

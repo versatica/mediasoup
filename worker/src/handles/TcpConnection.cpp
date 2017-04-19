@@ -23,8 +23,8 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	auto* writeData  = static_cast<TcpConnection::UvWriteData*>(req->data);
-	auto* connection = writeData->connection;
+	auto* writeData           = static_cast<TcpConnection::UvWriteData*>(req->data);
+	TcpConnection* connection = writeData->connection;
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
 	std::free(writeData);
@@ -51,7 +51,7 @@ TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 	MS_TRACE();
 
 	this->uvHandle       = new uv_tcp_t;
-	this->uvHandle->data = static_cast<void*>(this);
+	this->uvHandle->data = (void*)this;
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
 }
@@ -112,7 +112,7 @@ void TcpConnection::Destroy()
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
 		auto req  = new uv_shutdown_t;
-		req->data = static_cast<void*>(this);
+		req->data = (void*)this;
 		err       = uv_shutdown(
         req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 		if (err != 0)
@@ -204,13 +204,13 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
 	// 	static_cast<size_t>(written), len);
 
-	size_t pendingLen{ len - written };
+	size_t pendingLen = len - written;
 	// Allocate a special UvWriteData struct pointer.
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
 	writeData->connection = this;
 	std::memcpy(writeData->store, data + written, pendingLen);
-	writeData->req.data = static_cast<void*>(writeData);
+	writeData->req.data = (void*)writeData;
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
@@ -234,7 +234,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	if (len1 == 0 && len2 == 0)
 		return;
 
-	size_t totalLen{ len1 + len2 };
+	size_t totalLen = len1 + len2;
 	uv_buf_t buffers[2];
 	int written;
 	int err;
@@ -270,7 +270,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
 	// 	static_cast<size_t>(written), totalLen);
 
-	size_t pendingLen{ totalLen - written };
+	size_t pendingLen = totalLen - written;
 
 	// Allocate a special UvWriteData struct pointer.
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
@@ -291,7 +291,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 		    data2 + (static_cast<size_t>(written) - len1),
 		    len2 - (static_cast<size_t>(written) - len1));
 	}
-	writeData->req.data = static_cast<void*>(writeData);
+	writeData->req.data = (void*)writeData;
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
@@ -310,7 +310,7 @@ bool TcpConnection::SetPeerAddress()
 	MS_TRACE();
 
 	int err;
-	int len{ sizeof(this->peerAddr) };
+	int len = sizeof(this->peerAddr);
 
 	err = uv_tcp_getpeername(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->peerAddr), &len);
 	if (err != 0)

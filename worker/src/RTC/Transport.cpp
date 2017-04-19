@@ -213,7 +213,7 @@ namespace RTC
 
 		static const Json::StaticString JsonStringClass{ "class" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		if (this->srtpRecvSession != nullptr)
 			this->srtpRecvSession->Destroy();
@@ -284,7 +284,7 @@ namespace RTC
 		static const Json::StaticString JsonStringEffectiveMaxBitrate{ "effectiveMaxBitrate" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		json[JsonStringTransportId] = Json::UInt{ this->transportId };
 
@@ -482,7 +482,7 @@ namespace RTC
 						return;
 				}
 
-				Json::Value data{ Json::objectValue };
+				Json::Value data(Json::objectValue);
 
 				switch (this->dtlsLocalRole)
 				{
@@ -546,7 +546,7 @@ namespace RTC
 				this->iceServer->SetUsernameFragment(usernameFragment);
 				this->iceServer->SetPassword(password);
 
-				Json::Value data{ Json::objectValue };
+				Json::Value data(Json::objectValue);
 
 				data[JsonStringUsernameFragment] = this->iceServer->GetUsernameFragment();
 				data[JsonStringPassword]         = this->iceServer->GetPassword();
@@ -980,7 +980,7 @@ namespace RTC
 		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
@@ -1006,7 +1006,7 @@ namespace RTC
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringConnected{ "connected" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		MS_DEBUG_TAG(ice, "ICE connected");
 
@@ -1027,7 +1027,7 @@ namespace RTC
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringCompleted{ "completed" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		MS_DEBUG_TAG(ice, "ICE completed");
 
@@ -1048,7 +1048,7 @@ namespace RTC
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringDisconnected{ "disconnected" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
@@ -1072,7 +1072,7 @@ namespace RTC
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringConnecting{ "connecting" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
@@ -1098,7 +1098,7 @@ namespace RTC
 		static const Json::StaticString JsonStringConnected{ "connected" };
 		static const Json::StaticString JsonStringDtlsRemoteCert{ "dtlsRemoteCert" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		MS_DEBUG_TAG(dtls, "DTLS connected");
 
@@ -1154,7 +1154,7 @@ namespace RTC
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringFailed{ "failed" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		MS_WARN_TAG(dtls, "DTLS failed");
 
@@ -1175,7 +1175,7 @@ namespace RTC
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringClosed{ "closed" };
 
-		Json::Value eventData{ Json::objectValue };
+		Json::Value eventData(Json::objectValue);
 
 		MS_DEBUG_TAG(dtls, "DTLS remotely closed");
 

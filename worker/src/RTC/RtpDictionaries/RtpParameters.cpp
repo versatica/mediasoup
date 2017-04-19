@@ -115,7 +115,7 @@ namespace RTC
 		static const Json::StaticString JsonStringRtcp{ "rtcp" };
 		static const Json::StaticString JsonStringUserParameters{ "userParameters" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		// Add `muxId`.
 		if (!this->muxId.empty())

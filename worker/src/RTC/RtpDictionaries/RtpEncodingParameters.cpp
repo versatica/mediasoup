@@ -101,7 +101,7 @@ namespace RTC
 		static const Json::StaticString JsonStringEncodingId{ "encodingId" };
 		static const Json::StaticString JsonStringDependencyEncodingIds{ "dependencyEncodingIds" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		// Add `codecPayloadType`.
 		if (this->hasCodecPayloadType)

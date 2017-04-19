@@ -41,7 +41,7 @@ namespace RTC
 		static const Json::StaticString JsonStringReceivedBytes{ "receivedBytes" };
 		static const Json::StaticString JsonStringRtt{ "rtt" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		json[JsonStringParams]        = this->params.ToJson();
 		json[JsonStringReceived]      = Json::UInt{ this->received };
@@ -83,14 +83,14 @@ namespace RTC
 		// Get the compact NTP representation of the current timestamp.
 		Utils::Time::Ntp nowNtp{};
 		Utils::Time::CurrentTimeNtp(nowNtp);
-		uint32_t nowCompactNtp{ (nowNtp.seconds & 0x0000FFFF) << 16 };
+		uint32_t nowCompactNtp = (nowNtp.seconds & 0x0000FFFF) << 16;
 
 		nowCompactNtp |= (nowNtp.fractions & 0xFFFF0000) >> 16;
 
-		uint32_t lastSr{ report->GetLastSenderReport() };
-		uint32_t dlsr{ report->GetDelaySinceLastSenderReport() };
+		uint32_t lastSr = report->GetLastSenderReport();
+		uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
 		// RTT in 1/2^16 seconds.
-		uint32_t rtt{ nowCompactNtp - dlsr - lastSr };
+		uint32_t rtt = nowCompactNtp - dlsr - lastSr;
 
 		// RTT in milliseconds.
 		this->rtt = ((rtt >> 16) * 1000);
@@ -123,16 +123,16 @@ namespace RTC
 			return;
 
 		// Convert the given sequence numbers to 32 bits.
-		auto firstSeq32 = static_cast<uint32_t>(seq + this->cycles);
-		auto lastSeq32 = static_cast<uint32_t>(firstSeq32 + MaxRequestedPackets - 1);
+		uint32_t firstSeq32 = uint32_t{ seq } + this->cycles;
+		uint32_t lastSeq32  = firstSeq32 + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
 		MS_ASSERT(container.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
 
 		auto bufferIt             = this->buffer.begin();
 		auto bufferItReverse      = this->buffer.rbegin();
-		auto bufferFirstSeq32 = static_cast<uint32_t>((*bufferIt).seq32);
-		uint32_t bufferLastSeq32{ (*bufferItReverse).seq32 };
+		uint32_t bufferFirstSeq32 = (*bufferIt).seq32;
+		uint32_t bufferLastSeq32  = (*bufferItReverse).seq32;
 
 		// Requested packet range not found.
 		if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
@@ -161,23 +161,23 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t now{ DepLibUV::GetTime() };
-		uint32_t rtt{ (this->rtt != 0u ? this->rtt : DefaultRtt) };
-		uint32_t seq32{ firstSeq32 };
-		bool requested{ true };
-		size_t containerIdx{ 0 };
+		uint64_t now        = DepLibUV::GetTime();
+		uint32_t rtt        = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint32_t seq32      = firstSeq32;
+		bool requested      = true;
+		size_t containerIdx = 0;
 
 		// Some variables for debugging.
-		uint16_t origBitmask{ bitmask };
-		uint16_t sentBitmask{ 0b0000000000000000 };
-		bool isFirstPacket{ true };
-		bool firstPacketSent{ false };
-		uint8_t bitmaskCounter{ 0 };
-		bool tooOldPacketFound{ false };
+		uint16_t origBitmask   = bitmask;
+		uint16_t sentBitmask   = 0b0000000000000000;
+		bool isFirstPacket     = true;
+		bool firstPacketSent   = false;
+		uint8_t bitmaskCounter = 0;
+		bool tooOldPacketFound = false;
 
 		while (requested || bitmask != 0)
 		{
-			bool sent{ false };
+			bool sent = false;
 
 			if (requested)
 			{
@@ -212,7 +212,7 @@ namespace RTC
 						}
 
 						// Don't resent the packet if it was resent in the last RTT ms.
-						auto resentAtTime = static_cast<uint32_t>((*bufferIt).resentAtTime);
+						uint32_t resentAtTime = (*bufferIt).resentAtTime;
 
 						if ((resentAtTime != 0u) && now - resentAtTime < static_cast<uint64_t>(rtt))
 						{
@@ -304,8 +304,8 @@ namespace RTC
 		report->SetNtpFrac(ntp.fractions);
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
-		auto diffMs = static_cast<uint32_t>(now - this->lastPacketTimeMs);
-		auto diffRtpTimestamp = static_cast<uint32_t>(diffMs * this->params.clockRate / 1000);
+		uint32_t diffMs           = now - this->lastPacketTimeMs;
+		uint32_t diffRtpTimestamp = diffMs * this->params.clockRate / 1000;
 
 		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
 
@@ -331,7 +331,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		auto packetSeq32 = uint32_t{ packet->GetSequenceNumber() } + this->cycles;
+		uint32_t packetSeq32 = uint32_t{ packet->GetSequenceNumber() } + this->cycles;
 		BufferItem bufferItem;
 
 		bufferItem.seq32 = packetSeq32;
@@ -350,7 +350,7 @@ namespace RTC
 		// Otherwise, do the stuff.
 
 		Buffer::iterator newBufferIt;
-		uint8_t* store{ nullptr };
+		uint8_t* store = nullptr;
 
 		// Iterate the buffer in reverse order and find the proper place to store the
 		// packet.

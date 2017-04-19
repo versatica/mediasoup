@@ -18,8 +18,8 @@ namespace RTC
 		this->RemoveOldData(now);
 
 		// Set data in the index before the oldest index.
-		uint32_t offset = static_cast<uint32_t>(this->windowSize - 1);
-		uint32_t index{ this->oldestIndex + offset };
+		uint32_t offset = this->windowSize - 1;
+		uint32_t index  = this->oldestIndex + offset;
 
 		if (index >= this->windowSize)
 			index -= this->windowSize;
@@ -34,8 +34,8 @@ namespace RTC
 
 		this->RemoveOldData(now);
 
-		int64_t nominalWindowSize = static_cast<int64_t>(now - this->oldestTime);
-		float scale{ this->scale / nominalWindowSize };
+		int64_t nominalWindowSize = now - this->oldestTime;
+		float scale               = this->scale / nominalWindowSize;
 
 		return static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
 	}
@@ -44,7 +44,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t newOldestTime{ now - this->windowSize };
+		uint64_t newOldestTime = now - this->windowSize;
 
 		// Should never happen.
 		if (newOldestTime < this->oldestTime)
@@ -64,7 +64,7 @@ namespace RTC
 
 		while (this->oldestTime < newOldestTime)
 		{
-			const BufferItem& oldestItem{ buffer[this->oldestIndex] };
+			const BufferItem& oldestItem = buffer[this->oldestIndex];
 
 			this->totalCount -= oldestItem.count;
 			this->buffer[this->oldestIndex] = BufferItem();
@@ -80,7 +80,7 @@ namespace RTC
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
 	{
-		uint64_t now{ DepLibUV::GetTime() };
+		uint64_t now = DepLibUV::GetTime();
 
 		this->packets++;
 		this->bytes += packet->GetSize();

@@ -48,7 +48,7 @@ namespace RTC
 				    ice, "unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
 
 				// Reply 400.
-				RTC::StunMessage* response{ msg->CreateErrorResponse(400) };
+				RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 				response->Serialize(StunSerializeBuffer);
 				this->listener->OnOutgoingStunMessage(this, response, tuple);
@@ -73,7 +73,7 @@ namespace RTC
 				MS_WARN_TAG(ice, "STUN Binding Request without FINGERPRINT => 400");
 
 				// Reply 400.
-				RTC::StunMessage* response{ msg->CreateErrorResponse(400) };
+				RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 				response->Serialize(StunSerializeBuffer);
 				this->listener->OnOutgoingStunMessage(this, response, tuple);
@@ -97,7 +97,7 @@ namespace RTC
 					MS_WARN_TAG(ice, "mising required attributes in STUN Binding Request => 400");
 
 					// Reply 400.
-					RTC::StunMessage* response{ msg->CreateErrorResponse(400) };
+					RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 					response->Serialize(StunSerializeBuffer);
 					this->listener->OnOutgoingStunMessage(this, response, tuple);
@@ -117,7 +117,7 @@ namespace RTC
 						MS_WARN_TAG(ice, "wrong authentication in STUN Binding Request => 401");
 
 						// Reply 401.
-						RTC::StunMessage* response{ msg->CreateErrorResponse(401) };
+						RTC::StunMessage* response = msg->CreateErrorResponse(401);
 
 						response->Serialize(StunSerializeBuffer);
 						this->listener->OnOutgoingStunMessage(this, response, tuple);
@@ -131,7 +131,7 @@ namespace RTC
 						MS_WARN_TAG(ice, "cannot check authentication in STUN Binding Request => 400");
 
 						// Reply 400.
-						RTC::StunMessage* response{ msg->CreateErrorResponse(400) };
+						RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 						response->Serialize(StunSerializeBuffer);
 						this->listener->OnOutgoingStunMessage(this, response, tuple);
@@ -149,7 +149,7 @@ namespace RTC
 				// 	MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
 
 				// 	// Reply 487 (Role Conflict).
-				// 	RTC::StunMessage* response{ msg->CreateErrorResponse(487) };
+				// 	RTC::StunMessage* response = msg->CreateErrorResponse(487);
 
 				// 	response->Serialize(StunSerializeBuffer);
 				// 	this->listener->OnOutgoingStunMessage(this, response, tuple);
@@ -164,7 +164,7 @@ namespace RTC
 				    msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
-				RTC::StunMessage* response{ msg->CreateSuccessResponse() };
+				RTC::StunMessage* response = msg->CreateSuccessResponse();
 
 				// Add XOR-MAPPED-ADDRESS.
 				response->SetXorMappedAddress(tuple->GetRemoteAddress());
@@ -215,13 +215,13 @@ namespace RTC
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
 	{
-		RTC::TransportTuple* removedTuple{ nullptr };
+		RTC::TransportTuple* removedTuple = nullptr;
 
 		// Find the removed tuple.
 		auto it = this->tuples.begin();
 		for (; it != this->tuples.end(); ++it)
 		{
-			RTC::TransportTuple* storedTuple{ std::addressof(*it) };
+			RTC::TransportTuple* storedTuple = std::addressof(*it);
 
 			if (storedTuple->Compare(tuple))
 			{

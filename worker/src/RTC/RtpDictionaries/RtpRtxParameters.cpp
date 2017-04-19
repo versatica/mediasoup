@@ -29,7 +29,7 @@ namespace RTC
 
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		// Add `ssrc`.
 		if (this->ssrc != 0u)

@@ -32,7 +32,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	int err;
 
 	auto uvHandle  = new uv_signal_t;
-	uvHandle->data = static_cast<void*>(this);
+	uvHandle->data = (void*)this;
 
 	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
 	if (err != 0)

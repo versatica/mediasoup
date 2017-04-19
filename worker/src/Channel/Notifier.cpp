@@ -20,7 +20,7 @@ namespace Channel
 		static const Json::StaticString JsonStringTargetId{ "targetId" };
 		static const Json::StaticString JsonStringEvent{ "event" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		json[JsonStringTargetId] = Json::UInt{ targetId };
 		json[JsonStringEvent]    = event;
@@ -36,7 +36,7 @@ namespace Channel
 		static const Json::StaticString JsonStringEvent{ "event" };
 		static const Json::StaticString JsonStringData{ "data" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		json[JsonStringTargetId] = Json::UInt{ targetId };
 		json[JsonStringEvent]    = event;
@@ -59,7 +59,7 @@ namespace Channel
 		static const Json::StaticString JsonStringData{ "data" };
 		static const Json::StaticString JsonStringBinary{ "binary" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		json[JsonStringTargetId] = Json::UInt{ targetId };
 		json[JsonStringEvent]    = event;

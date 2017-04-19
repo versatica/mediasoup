@@ -9,11 +9,11 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr uint32_t MaxPacketAge{ 10000 };
-	constexpr size_t MaxNackPackets{ 500 };
-	constexpr uint32_t DefaultRtt{ 100 };
-	constexpr uint8_t MaxNackRetries{ 8 };
-	constexpr uint64_t TimerInterval{ 25 };
+	constexpr uint32_t MaxPacketAge  = 10000;
+	constexpr size_t MaxNackPackets  = 500;
+	constexpr uint32_t DefaultRtt    = 100;
+	constexpr uint8_t MaxNackRetries = 8;
+	constexpr uint64_t TimerInterval = 25;
 
 	/* Instance methods. */
 
@@ -37,7 +37,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint32_t seq32{ packet->GetExtendedSequenceNumber() };
+		uint32_t seq32 = packet->GetExtendedSequenceNumber();
 
 		if (!this->started)
 		{
@@ -111,7 +111,7 @@ namespace RTC
 		this->nackList.erase(this->nackList.begin(), it);
 
 		// If the nack list is too large, clear it and request a full frame.
-		uint32_t numNewNacks{ seq32End - seq32Start };
+		uint32_t numNewNacks = seq32End - seq32Start;
 
 		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
@@ -123,12 +123,12 @@ namespace RTC
 			return;
 		}
 
-		for (uint32_t seq32{ seq32Start }; seq32 != seq32End; ++seq32)
+		for (uint32_t seq32 = seq32Start; seq32 != seq32End; ++seq32)
 		{
 			// NOTE: Let the packet become out of order for a while without requesting
 			// it into a NACK.
 			// TODO: To be done.
-			uint32_t sendAtSeqNum{ seq32 + 0 };
+			uint32_t sendAtSeqNum = seq32 + 0;
 
 			NackInfo nackInfo(seq32, sendAtSeqNum);
 
@@ -141,14 +141,14 @@ namespace RTC
 
 	std::vector<uint16_t> NackGenerator::GetNackBatch(NackFilter filter)
 	{
-		uint64_t now{ DepLibUV::GetTime() };
+		uint64_t now = DepLibUV::GetTime();
 		std::vector<uint16_t> nackBatch;
 		auto it = this->nackList.begin();
 
 		while (it != this->nackList.end())
 		{
-			NackInfo& nackInfo{ it->second };
-			uint16_t seq = nackInfo.seq32 % (1 << 16);
+			NackInfo& nackInfo = it->second;
+			uint16_t seq       = nackInfo.seq32 % (1 << 16);
 
 			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
 			    this->lastSeq32 >= nackInfo.sendAtSeqNum)
@@ -213,7 +213,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::vector<uint16_t> nackBatch{ GetNackBatch(NackFilter::TIME) };
+		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::TIME);
 
 		if (!nackBatch.empty())
 			this->listener->OnNackRequired(nackBatch);

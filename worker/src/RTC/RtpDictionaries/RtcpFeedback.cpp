@@ -37,7 +37,7 @@ namespace RTC
 		static const Json::StaticString JsonStringType{ "type" };
 		static const Json::StaticString JsonStringParameter{ "parameter" };
 
-		Json::Value json{ Json::objectValue };
+		Json::Value json(Json::objectValue);
 
 		// Add `type`.
 		json[JsonStringType] = this->type;

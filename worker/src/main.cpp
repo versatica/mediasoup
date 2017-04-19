@@ -40,8 +40,8 @@ int main(int argc, char* argv[])
 		std::_Exit(EXIT_FAILURE);
 	}
 
-	std::string id{ std::string(argv[1]) };
-	int channelFd{ std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD")) };
+	std::string id = std::string(argv[1]);
+	int channelFd  = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
 
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
