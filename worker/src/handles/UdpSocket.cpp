@@ -257,7 +257,9 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 	if (len == 0)
 		return;
 
-	struct sockaddr_storage addr;
+	// clang-format off
+	struct sockaddr_storage addr{};
+	// clang-format on
 
 	switch (Utils::IP::GetFamily(ip))
 	{

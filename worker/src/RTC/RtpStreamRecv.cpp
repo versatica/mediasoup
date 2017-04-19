@@ -104,7 +104,7 @@ namespace RTC
 		if (this->lastSrReceived != 0u)
 		{
 			// Get delay in milliseconds.
-			uint32_t delayMs = static_cast<uint32_t>(DepLibUV::GetTime() - this->lastSrReceived);
+			auto delayMs = static_cast<uint32_t>(DepLibUV::GetTime() - this->lastSrReceived);
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlsr = (delayMs / 1000) << 16;
 
@@ -151,7 +151,7 @@ namespace RTC
 		if (this->params.clockRate == 0u)
 			return;
 
-		int transit =
+		auto transit =
 		    static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
 
