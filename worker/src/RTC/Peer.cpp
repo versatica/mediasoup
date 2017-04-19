@@ -45,7 +45,7 @@ namespace RTC
 		// Close all the RtpReceivers.
 		for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end();)
 		{
-			RTC::RtpReceiver* rtpReceiver = it->second;
+			auto* rtpReceiver = it->second;
 
 			it = this->rtpReceivers.erase(it);
 			rtpReceiver->Destroy();
@@ -54,7 +54,7 @@ namespace RTC
 		// Close all the RtpSenders.
 		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end();)
 		{
-			RTC::RtpSender* rtpSender = it->second;
+			auto* rtpSender = it->second;
 
 			it = this->rtpSenders.erase(it);
 			rtpSender->Destroy();
@@ -65,7 +65,7 @@ namespace RTC
 		// because RtcReceiver.Destroy() fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
-			RTC::Transport* transport = it->second;
+			auto* transport = it->second;
 
 			it = this->transports.erase(it);
 			transport->Destroy();
@@ -110,7 +110,7 @@ namespace RTC
 		// Add `transports`.
 		for (auto& kv : this->transports)
 		{
-			RTC::Transport* transport = kv.second;
+			auto* transport = kv.second;
 
 			jsonTransports.append(transport->ToJson());
 		}
@@ -119,7 +119,7 @@ namespace RTC
 		// Add `rtpReceivers`.
 		for (auto& kv : this->rtpReceivers)
 		{
-			RTC::RtpReceiver* rtpReceiver = kv.second;
+			auto* rtpReceiver = kv.second;
 
 			jsonRtpReceivers.append(rtpReceiver->ToJson());
 		}
@@ -128,7 +128,7 @@ namespace RTC
 		// Add `rtpSenders`.
 		for (auto& kv : this->rtpSenders)
 		{
-			RTC::RtpSender* rtpSender = kv.second;
+			auto* rtpSender = kv.second;
 
 			jsonRtpSenders.append(rtpSender->ToJson());
 		}
@@ -160,7 +160,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::PEER_DUMP:
 			{
-				Json::Value json = ToJson();
+				auto json = ToJson();
 
 				request->Accept(json);
 
@@ -256,7 +256,7 @@ namespace RTC
 				static const Json::StaticString JsonStringKind{ "kind" };
 
 				RTC::RtpReceiver* rtpReceiver;
-				RTC::Transport* transport = nullptr;
+				RTC::Transport* transport{ nullptr };
 				uint32_t rtpReceiverId;
 
 				// Capabilities must be set.
@@ -656,11 +656,11 @@ namespace RTC
 		for (auto& it : this->transports)
 		{
 			std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
-			RTC::Transport* transport = it.second;
+			auto* transport = it.second;
 
 			for (auto& it : this->rtpSenders)
 			{
-				RTC::RtpSender* rtpSender = it.second;
+				auto* rtpSender = it.second;
 
 				if (rtpSender->GetTransport() != transport)
 					continue;
@@ -687,7 +687,7 @@ namespace RTC
 
 			for (auto& it : this->rtpReceivers)
 			{
-				RTC::RtpReceiver* rtpReceiver = it.second;
+				auto* rtpReceiver = it.second;
 
 				if (rtpReceiver->GetTransport() != transport)
 					continue;
@@ -729,7 +729,7 @@ namespace RTC
 		auto it = this->transports.find(jsonTransportId.asUInt());
 		if (it != this->transports.end())
 		{
-			RTC::Transport* transport = it->second;
+			auto* transport = it->second;
 
 			return transport;
 		}
@@ -754,7 +754,7 @@ namespace RTC
 		auto it = this->rtpReceivers.find(jsonRtpReceiverId.asUInt());
 		if (it != this->rtpReceivers.end())
 		{
-			RTC::RtpReceiver* rtpReceiver = it->second;
+			auto* rtpReceiver = it->second;
 
 			return rtpReceiver;
 		}
@@ -779,7 +779,7 @@ namespace RTC
 		auto it = this->rtpSenders.find(jsonRtpSenderId.asUInt());
 		if (it != this->rtpSenders.end())
 		{
-			RTC::RtpSender* rtpSender = it->second;
+			auto* rtpSender = it->second;
 
 			return rtpSender;
 		}
@@ -795,7 +795,7 @@ namespace RTC
 		// listener.
 		for (auto& kv : this->rtpSenders)
 		{
-			RTC::RtpSender* rtpSender = kv.second;
+			auto* rtpSender = kv.second;
 
 			if (rtpSender->kind != RTC::Media::Kind::VIDEO && rtpSender->kind != RTC::Media::Kind::DEPTH)
 			{
@@ -816,7 +816,7 @@ namespace RTC
 		// Must remove the closed Transport from all the RtpReceivers holding it.
 		for (auto& kv : this->rtpReceivers)
 		{
-			RTC::RtpReceiver* rtpReceiver = kv.second;
+			auto* rtpReceiver = kv.second;
 
 			rtpReceiver->RemoveTransport(transport);
 		}
@@ -824,7 +824,7 @@ namespace RTC
 		// Must also unset this Transport from all the RtpSenders using it.
 		for (auto& kv : this->rtpSenders)
 		{
-			RTC::RtpSender* rtpSender = kv.second;
+			auto* rtpSender = kv.second;
 
 			rtpSender->RemoveTransport(transport);
 		}
@@ -840,7 +840,7 @@ namespace RTC
 		// listener.
 		for (auto& kv : this->rtpReceivers)
 		{
-			RTC::RtpReceiver* rtpReceiver = kv.second;
+			auto* rtpReceiver = kv.second;
 
 			if (rtpReceiver->kind != RTC::Media::Kind::VIDEO && rtpReceiver->kind != RTC::Media::Kind::DEPTH)
 			{
@@ -907,8 +907,8 @@ namespace RTC
 
 					for (; it != rr->End(); ++it)
 					{
-						auto& report              = (*it);
-						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
+						auto& report    = (*it);
+						auto* rtpSender = this->GetRtpSender(report->GetSsrc());
 
 						if (rtpSender != nullptr)
 						{
@@ -946,7 +946,7 @@ namespace RTC
 						case RTCP::FeedbackPs::MessageType::RPSI:
 						case RTCP::FeedbackPs::MessageType::FIR:
 						{
-							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+							auto* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
 							if (rtpSender != nullptr)
 							{
@@ -1002,7 +1002,7 @@ namespace RTC
 					{
 						case RTCP::FeedbackRtp::MessageType::NACK:
 						{
-							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+							auto* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
 							if (rtpSender != nullptr)
 							{
@@ -1061,7 +1061,7 @@ namespace RTC
 					{
 						auto& report = (*it);
 						// Get the receiver associated to the SSRC indicated in the report.
-						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
+						auto* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
 
 						if (rtpReceiver != nullptr)
 						{
@@ -1088,7 +1088,7 @@ namespace RTC
 					{
 						auto& chunk = (*it);
 						// Get the receiver associated to the SSRC indicated in the chunk.
-						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
+						auto* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
 
 						if (rtpReceiver == nullptr)
 						{
@@ -1166,7 +1166,7 @@ namespace RTC
 			// Get the RTP sending rate.
 			for (auto& kv : this->rtpSenders)
 			{
-				RTC::RtpSender* rtpSender = kv.second;
+				auto* rtpSender = kv.second;
 
 				rate += rtpSender->GetTransmissionRate(now) / 1000;
 			}

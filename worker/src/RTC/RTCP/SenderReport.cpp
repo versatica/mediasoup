@@ -65,6 +65,7 @@ namespace RTC
 			size_t offset = sizeof(Packet::CommonHeader);
 
 			SenderReport* report = SenderReport::Parse(data + offset, len - offset);
+
 			if (report != nullptr)
 				packet->AddReport(report);
 			else

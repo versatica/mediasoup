@@ -36,7 +36,7 @@ namespace RTC
 		MS_ASSERT(arrivalTimeDeltaMs, "'arrivalTimeDeltaMs' missing");
 		MS_ASSERT(packetSizeDelta, "'packetSizeDelta' missing");
 
-		bool calculatedDeltas = false;
+		bool calculatedDeltas{ false };
 
 		if (this->currentTimestampGroup.IsFirstPacket())
 		{
@@ -72,6 +72,7 @@ namespace RTC
 					    *arrivalTimeDeltaMs - systemTimeDeltaMs);
 
 					Reset();
+
 					return false;
 				}
 
@@ -113,6 +114,7 @@ namespace RTC
 			this->currentTimestampGroup.timestamp =
 			    Utils::Time::LatestTimestamp(this->currentTimestampGroup.timestamp, timestamp);
 		}
+
 		// Accumulate the frame size.
 		this->currentTimestampGroup.size += packetSize;
 		this->currentTimestampGroup.completeTimeMs   = arrivalTimeMs;
@@ -144,6 +146,7 @@ namespace RTC
 
 		if (this->currentTimestampGroup.IsFirstPacket())
 			return false;
+
 		if (BelongsToBurst(arrivalTimeMs, timestamp))
 			return false;
 
@@ -157,9 +160,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->burstGrouping)
-		{
 			return false;
-		}
 
 		MS_ASSERT(this->currentTimestampGroup.completeTimeMs >= 0, "invalid completeTimeMs value");
 

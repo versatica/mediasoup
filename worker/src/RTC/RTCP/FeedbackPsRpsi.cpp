@@ -24,6 +24,7 @@ namespace RTC
 			}
 
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+
 			std::unique_ptr<FeedbackPsRpsiItem> item(new FeedbackPsRpsiItem(header));
 
 			if (item->IsCorrect())
@@ -80,7 +81,7 @@ namespace RTC
 			std::memcpy(this->header->bitString, bitString, length);
 
 			// Fill padding.
-			for (size_t i = 0; i < padding; ++i)
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				this->raw[sizeof(Header) + i - 1] = 0;
 			}

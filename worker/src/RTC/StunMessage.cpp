@@ -87,10 +87,10 @@ namespace RTC
 		 */
 
 		// Start looking for attributes after STUN header (Byte #20).
-		size_t pos = 20;
+		size_t pos{ 20 };
 		// Flags (positions) for special MESSAGE-INTEGRITY and FINGERPRINT attributes.
-		bool hasMessageIntegrity = false;
-		bool hasFingerprint      = false;
+		bool hasMessageIntegrity{ false };
+		bool hasFingerprint{ false };
 		size_t fingerprintAttrPos; // Will point to the beginning of the attribute.
 		uint32_t fingerprint;      // Holds the value of the FINGERPRINT attribute.
 
@@ -284,7 +284,7 @@ namespace RTC
 
 		static char transactionId[25];
 
-		for (int i = 0; i < 12; ++i)
+		for (int i{ 0 }; i < 12; ++i)
 		{
 			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
 			std::snprintf(transactionId + (i * 2), 3, "%.2x", this->transactionId[i]);
@@ -316,7 +316,7 @@ namespace RTC
 		{
 			static char messageIntegrity[41];
 
-			for (int i = 0; i < 20; ++i)
+			for (int i{ 0 }; i < 20; ++i)
 			{
 				std::snprintf(messageIntegrity + (i * 2), 3, "%.2x", this->messageIntegrity[i]);
 			}
@@ -434,14 +434,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Some useful variables.
-		uint16_t usernamePaddedLen         = 0;
-		uint16_t xorMappedAddressPaddedLen = 0;
+		uint16_t usernamePaddedLen{ 0 };
+		uint16_t xorMappedAddressPaddedLen{ 0 };
 		bool addXorMappedAddress =
 		    ((this->xorMappedAddress != nullptr) && this->method == StunMessage::Method::BINDING &&
 		     this->klass == Class::SUCCESS_RESPONSE);
 		bool addErrorCode        = ((this->errorCode != 0u) && this->klass == Class::ERROR_RESPONSE);
 		bool addMessageIntegrity = (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
-		bool addFingerprint      = true; // Do always.
+		bool addFingerprint{ true }; // Do always.
 
 		// Update data pointer.
 		this->data = buffer;
@@ -527,7 +527,7 @@ namespace RTC
 		this->transactionId = buffer + 8;
 
 		// Add atributes.
-		size_t pos = 20;
+		size_t pos{ 20 };
 
 		// Add USERNAME.
 		if (usernamePaddedLen != 0u)

@@ -54,8 +54,7 @@ namespace RTC
 					return first;
 				}
 
-				auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-
+				auto* header      = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 				size_t packetLlen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
 
 				if (len < packetLlen)
@@ -82,6 +81,7 @@ namespace RTC
 						if (header->count > 0)
 						{
 							Packet* rr = ReceiverReportPacket::Parse(data, len, current->GetSize());
+
 							if (rr == nullptr)
 								break;
 

@@ -102,7 +102,7 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::RTP_SENDER_DUMP:
 			{
-				Json::Value json = ToJson();
+				auto json = ToJson();
 
 				request->Accept(json);
 
@@ -329,7 +329,7 @@ namespace RTC
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		RTC::RTCP::SenderReport* report = this->rtpStream->GetRtcpSenderReport(now);
+		auto* report = this->rtpStream->GetRtcpSenderReport(now);
 		if (report == nullptr)
 			return;
 
@@ -402,10 +402,10 @@ namespace RTC
 
 		uint32_t ssrc = encoding.ssrc;
 		// Get the codec of the stream/encoding.
-		auto& codec           = this->rtpParameters->GetCodecForEncoding(encoding);
-		bool useNack          = false;
-		bool usePli           = false;
-		uint8_t absSendTimeId = 0; // 0 means no abs-send-time id.
+		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack{ false };
+		bool usePli{ false };
+		uint8_t absSendTimeId{ 0 }; // 0 means no abs-send-time id.
 
 		for (auto& fb : codec.rtcpFeedback)
 		{

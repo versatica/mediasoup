@@ -77,6 +77,7 @@ namespace RTC
 		cluster->sendMeanMs /= static_cast<float>(cluster->count);
 		cluster->recvMeanMs /= static_cast<float>(cluster->count);
 		cluster->meanSize /= cluster->count;
+
 		clusters->push_back(*cluster);
 	}
 
@@ -85,8 +86,8 @@ namespace RTC
 		MS_TRACE();
 
 		Cluster current;
-		int64_t prevSendTime = -1;
-		int64_t prevRecvTime = -1;
+		int64_t prevSendTime{ -1 };
+		int64_t prevRecvTime{ -1 };
 
 		auto it = this->probes.begin();
 		for (; it != this->probes.end(); ++it)
@@ -97,9 +98,7 @@ namespace RTC
 				int recvDeltaMs = it->recvTimeMs - prevRecvTime;
 
 				if (sendDeltaMs >= 1 && recvDeltaMs >= 1)
-				{
 					++current.numAboveMinDelta;
-				}
 
 				if (!IsWithinClusterBounds(sendDeltaMs, current))
 				{
@@ -128,8 +127,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int highestProbeBitrateBps = 0;
-		auto bestIt                = clusters.end();
+		int highestProbeBitrateBps{ 0 };
+		auto bestIt = clusters.end();
 
 		auto it = clusters.begin();
 		for (; it != clusters.end(); ++it)
@@ -279,11 +278,11 @@ namespace RTC
 		if (this->firstPacketTimeMs == -1)
 			this->firstPacketTimeMs = nowMs;
 
-		uint32_t tsDelta          = 0;
-		int64_t tDelta            = 0;
-		int sizeDelta             = 0;
-		bool updateEstimate       = false;
-		uint32_t targetBitrateBps = 0;
+		uint32_t tsDelta{ 0 };
+		int64_t tDelta{ 0 };
+		int sizeDelta{ 0 };
+		bool updateEstimate{ false };
+		uint32_t targetBitrateBps{ 0 };
 		std::vector<uint32_t> ssrcs;
 
 		{
@@ -297,7 +296,7 @@ namespace RTC
 			// For now only try to detect probes while we don't have a valid estimate.
 			// We currently assume that only packets larger than 200 bytes are paced by
 			// the sender.
-			const size_t minProbePacketSize = 200;
+			const size_t minProbePacketSize{ 200 };
 
 			if (payloadSize > minProbePacketSize &&
 			    (!this->remoteRate.ValidEstimate() ||
@@ -306,8 +305,8 @@ namespace RTC
 				// TODO(holmer): Use a map instead to get correct order?
 				if (this->totalProbesReceived < MaxProbePackets)
 				{
-					int sendDeltaMs = -1;
-					int recvDeltaMs = -1;
+					int sendDeltaMs{ -1 };
+					int recvDeltaMs{ -1 };
 
 					if (!this->probes.empty())
 					{
@@ -422,6 +421,7 @@ namespace RTC
 			return false;
 
 		*ssrcs = keys(this->ssrcs);
+
 		if (this->ssrcs.empty())
 			*bitrateBps = 0;
 		else

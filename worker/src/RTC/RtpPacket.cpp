@@ -26,7 +26,7 @@ namespace RTC
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		size_t csrcListSize = 0;
+		size_t csrcListSize{ 0 };
 
 		if (header->csrcCount != 0u)
 		{
@@ -43,8 +43,8 @@ namespace RTC
 		}
 
 		// Check header extension.
-		ExtensionHeader* extensionHeader = nullptr;
-		size_t extensionValueSize        = 0;
+		ExtensionHeader* extensionHeader{ nullptr };
+		size_t extensionValueSize{ 0 };
 
 		if (header->extension != 0u)
 		{
@@ -74,9 +74,9 @@ namespace RTC
 		}
 
 		// Get payload.
-		uint8_t* payload       = ptr;
-		size_t payloadLength   = len - (ptr - data);
-		uint8_t payloadPadding = 0;
+		uint8_t* payload     = ptr;
+		size_t payloadLength = len - (ptr - data);
+		uint8_t payloadPadding{ 0 };
 
 		MS_ASSERT(len >= static_cast<size_t>(ptr - data), "payload has negative size");
 
@@ -260,7 +260,7 @@ namespace RTC
 			ptr += header->csrcCount * sizeof(header->ssrc);
 
 		// Check extension header.
-		ExtensionHeader* extensionHeader = nullptr;
+		ExtensionHeader* extensionHeader{ nullptr };
 
 		if (this->extensionHeader != nullptr)
 		{
@@ -270,7 +270,7 @@ namespace RTC
 		}
 
 		// Check payload.
-		uint8_t* payload = nullptr;
+		uint8_t* payload{ nullptr };
 
 		if (this->payload != nullptr)
 		{

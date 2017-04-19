@@ -21,8 +21,8 @@
 
 namespace RTC
 {
-	constexpr double MaxAdaptOffsetMs = 15.0;
-	constexpr int MinNumDeltas        = 60;
+	constexpr double MaxAdaptOffsetMs{ 15.0 };
+	constexpr int MinNumDeltas{ 60 };
 
 	BandwidthUsage OveruseDetector::Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs)
 	{
@@ -32,7 +32,9 @@ namespace RTC
 		{
 			return BW_NORMAL;
 		}
+
 		const double t = std::min(numOfDeltas, MinNumDeltas) * offset;
+
 		if (t > this->threshold)
 		{
 			if (this->timeOverUsing == -1)
@@ -47,7 +49,9 @@ namespace RTC
 				// Increment timer
 				this->timeOverUsing += tsDelta;
 			}
+
 			this->overuseCounter++;
+
 			if (this->timeOverUsing > this->overusingTimeThreshold && this->overuseCounter > 1)
 			{
 				if (offset >= this->prevOffset)
@@ -70,8 +74,8 @@ namespace RTC
 			this->overuseCounter = 0;
 			this->hypothesis     = BW_NORMAL;
 		}
-		this->prevOffset = offset;
 
+		this->prevOffset = offset;
 		UpdateThreshold(t, nowMs);
 
 		return this->hypothesis;
@@ -89,20 +93,20 @@ namespace RTC
 			// Avoid adapting the threshold to big latency spikes, caused e.g.,
 			// by a sudden capacity drop.
 			this->lastUpdateMs = nowMs;
+
 			return;
 		}
 
-		const double k               = fabs(modifiedOffset) < this->threshold ? this->down : this->up;
-		const int64_t maxTimeDeltaMs = 100;
-		int64_t timeDeltaMs          = std::min(nowMs - this->lastUpdateMs, maxTimeDeltaMs);
+		const double k = fabs(modifiedOffset) < this->threshold ? this->down : this->up;
+		const int64_t maxTimeDeltaMs{ 100 };
+		int64_t timeDeltaMs = std::min(nowMs - this->lastUpdateMs, maxTimeDeltaMs);
 
 		this->threshold += k * (fabs(modifiedOffset) - this->threshold) * timeDeltaMs;
 
-		const double minThreshold = 6;
-		const double maxThreshold = 600;
+		const double minThreshold{ 6 };
+		const double maxThreshold{ 600 };
 
-		this->threshold = std::min(std::max(this->threshold, minThreshold), maxThreshold);
-
+		this->threshold    = std::min(std::max(this->threshold, minThreshold), maxThreshold);
 		this->lastUpdateMs = nowMs;
 	}
 } // namespace RTC

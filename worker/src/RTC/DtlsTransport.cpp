@@ -59,9 +59,9 @@ namespace RTC
 
 	/* Class variables. */
 
-	X509* DtlsTransport::certificate    = nullptr;
-	EVP_PKEY* DtlsTransport::privateKey = nullptr;
-	SSL_CTX* DtlsTransport::sslCtx      = nullptr;
+	X509* DtlsTransport::certificate{ nullptr };
+	EVP_PKEY* DtlsTransport::privateKey{ nullptr };
+	SSL_CTX* DtlsTransport::sslCtx{ nullptr };
 	uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	// clang-format off
 	std::map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
@@ -128,11 +128,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int ret             = 0;
-		BIGNUM* bne         = nullptr;
-		RSA* rsaKey         = nullptr;
-		int numBits         = 1024;
-		X509_NAME* certName = nullptr;
+		int ret{ 0 };
+		BIGNUM* bne{ nullptr };
+		RSA* rsaKey{ nullptr };
+		int numBits{ 1024 };
+		X509_NAME* certName{ nullptr };
 
 		// Create a big number object.
 		bne = BN_new();
@@ -260,7 +260,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		FILE* file = nullptr;
+		FILE* file{ nullptr };
 
 		file = fopen(Settings::configuration.dtlsCertificateFile.c_str(), "r");
 		if (file == nullptr)
@@ -305,7 +305,7 @@ namespace RTC
 		MS_TRACE();
 
 		std::string dtlsSrtpProfiles;
-		EC_KEY* ecdh = nullptr;
+		EC_KEY* ecdh{ nullptr };
 		int ret;
 
 /* Set the global DTLS context. */
@@ -454,7 +454,7 @@ namespace RTC
 			std::string algorithmString    = it->first;
 			FingerprintAlgorithm algorithm = it->second;
 			uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
-			unsigned int size = 0;
+			unsigned int size{ 0 };
 			char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
 			const EVP_MD* hashFunction;
 			int ret;
@@ -488,7 +488,7 @@ namespace RTC
 			}
 
 			// Convert to hexadecimal format in lowecase without colons.
-			for (unsigned int i = 0; i < size; ++i)
+			for (unsigned int i{ 0 }; i < size; ++i)
 			{
 				std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
 			}
@@ -894,7 +894,7 @@ namespace RTC
 			return;
 
 		int64_t read;
-		char* data = nullptr;
+		char* data{ nullptr };
 
 		read = BIO_get_mem_data(this->sslBioToNetwork, &data); // NOLINT
 		if (read <= 0)
@@ -1013,7 +1013,7 @@ namespace RTC
 
 		X509* certificate;
 		uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
-		unsigned int size = 0;
+		unsigned int size{ 0 };
 		char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
 		const EVP_MD* hashFunction;
 		int ret;
@@ -1060,7 +1060,7 @@ namespace RTC
 		}
 
 		// Convert to hexadecimal format in lowecase without colons.
-		for (unsigned int i = 0; i < size; ++i)
+		for (unsigned int i{ 0 }; i < size; ++i)
 		{
 			std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
 		}

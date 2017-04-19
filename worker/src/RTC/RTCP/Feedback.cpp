@@ -96,15 +96,23 @@ namespace RTC
 		template<>
 		Type FeedbackPacket<FeedbackPs>::rtcpType = RTCP::Type::PSFB;
 
+		// clang-format off
 		template<>
-		std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String = {
-			{ FeedbackPs::MessageType::PLI, "PLI" },   { FeedbackPs::MessageType::SLI, "SLI" },
-			{ FeedbackPs::MessageType::RPSI, "RPSI" }, { FeedbackPs::MessageType::FIR, "FIR" },
-			{ FeedbackPs::MessageType::TSTR, "TSTR" }, { FeedbackPs::MessageType::TSTN, "TSTN" },
-			{ FeedbackPs::MessageType::VBCM, "VBCM" }, { FeedbackPs::MessageType::PSLEI, "PSLEI" },
-			{ FeedbackPs::MessageType::ROI, "ROI" },   { FeedbackPs::MessageType::AFB, "AFB" },
-			{ FeedbackPs::MessageType::EXT, "EXT" }
+		std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
+		{
+			{ FeedbackPs::MessageType::PLI,   "PLI"   },
+			{ FeedbackPs::MessageType::SLI,   "SLI"   },
+			{ FeedbackPs::MessageType::RPSI,  "RPSI"  },
+			{ FeedbackPs::MessageType::FIR,   "FIR"   },
+			{ FeedbackPs::MessageType::TSTR,  "TSTR"  },
+			{ FeedbackPs::MessageType::TSTN,  "TSTN"  },
+			{ FeedbackPs::MessageType::VBCM,  "VBCM"  },
+			{ FeedbackPs::MessageType::PSLEI, "PSLEI" },
+			{ FeedbackPs::MessageType::ROI,   "ROI"   },
+			{ FeedbackPs::MessageType::AFB,   "AFB"   },
+			{ FeedbackPs::MessageType::EXT,   "EXT"   }
 		};
+		// clang-format on
 
 		template<>
 		FeedbackPacket<FeedbackPs>* FeedbackPacket<FeedbackPs>::Parse(const uint8_t* data, size_t len)
@@ -119,7 +127,7 @@ namespace RTC
 			}
 
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			FeedbackPsPacket* packet = nullptr;
+			FeedbackPsPacket* packet{ nullptr };
 
 			switch (FeedbackPs::MessageType(commonHeader->count))
 			{
@@ -182,14 +190,21 @@ namespace RTC
 		template<>
 		Type FeedbackPacket<FeedbackRtp>::rtcpType = RTCP::Type::RTPFB;
 
+		// clang-format off
 		template<>
-		std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String = {
-			{ FeedbackRtp::MessageType::NACK, "NACK" },   { FeedbackRtp::MessageType::TMMBR, "TMMBR" },
-			{ FeedbackRtp::MessageType::TMMBN, "TMMBN" }, { FeedbackRtp::MessageType::SR_REQ, "SR_REQ" },
-			{ FeedbackRtp::MessageType::RAMS, "RAMS" },   { FeedbackRtp::MessageType::TLLEI, "TLLEI" },
-			{ FeedbackRtp::MessageType::ECN, "ECN" },     { FeedbackRtp::MessageType::PS, "PS" },
-			{ FeedbackRtp::MessageType::EXT, "EXT" }
+		std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
+		{
+			{ FeedbackRtp::MessageType::NACK,   "NACK"   },
+			{ FeedbackRtp::MessageType::TMMBR,  "TMMBR"  },
+			{ FeedbackRtp::MessageType::TMMBN,  "TMMBN"  },
+			{ FeedbackRtp::MessageType::SR_REQ, "SR_REQ" },
+			{ FeedbackRtp::MessageType::RAMS,   "RAMS"   },
+			{ FeedbackRtp::MessageType::TLLEI,  "TLLEI"  },
+			{ FeedbackRtp::MessageType::ECN,    "ECN"    },
+			{ FeedbackRtp::MessageType::PS,     "PS"     },
+			{ FeedbackRtp::MessageType::EXT,    "EXT"    }
 		};
+		// clang-format on
 
 		/* Class methods. */
 
@@ -205,8 +220,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* commonHeader        = reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(data));
-			FeedbackRtpPacket* packet = nullptr;
+			auto* commonHeader = reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(data));
+			FeedbackRtpPacket* packet{ nullptr };
 
 			switch (FeedbackRtp::MessageType(commonHeader->count))
 			{

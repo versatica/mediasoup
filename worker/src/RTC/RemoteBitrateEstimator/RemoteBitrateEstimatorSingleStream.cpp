@@ -31,9 +31,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->umaRecorded)
-		{
 			this->umaRecorded = true;
-		}
 
 		uint32_t ssrc         = packet.GetSsrc();
 		uint32_t rtpTimestamp = packet.GetTimestamp() + transmissionTimeOffset;
@@ -75,9 +73,9 @@ namespace RTC
 		this->incomingBitrate.Update(payloadSize, nowMs);
 
 		const BandwidthUsage priorState = estimator->detector.State();
-		uint32_t timestampDelta         = 0;
-		int64_t timeDelta               = 0;
-		int sizeDelta                   = 0;
+		uint32_t timestampDelta{ 0 };
+		int64_t timeDelta{ 0 };
+		int sizeDelta{ 0 };
 
 		if (estimator->interArrival.ComputeDeltas(
 		        rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
@@ -125,9 +123,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		BandwidthUsage bwState = BW_NORMAL;
-		double sumVarNoise     = 0.0;
-		auto it                = this->overuseDetectors.begin();
+		BandwidthUsage bwState{ BW_NORMAL };
+		double sumVarNoise{ 0.0 };
+		auto it = this->overuseDetectors.begin();
 
 		while (it != this->overuseDetectors.end())
 		{
@@ -153,9 +151,7 @@ namespace RTC
 		}
 		// We can't update the estimate if we don't have any active streams.
 		if (this->overuseDetectors.empty())
-		{
 			return;
-		}
 
 		AimdRateControl* remoteRate = GetRemoteRate();
 		double meanNoiseVar         = sumVarNoise / static_cast<double>(this->overuseDetectors.size());
@@ -189,6 +185,7 @@ namespace RTC
 			return false;
 
 		GetSsrcs(ssrcs);
+
 		if (ssrcs->empty())
 			*bitrateBps = 0;
 		else
@@ -205,7 +202,7 @@ namespace RTC
 
 		ssrcs->resize(this->overuseDetectors.size());
 
-		int i   = 0;
+		int i{ 0 };
 		auto it = this->overuseDetectors.begin();
 
 		for (; it != this->overuseDetectors.end(); ++it, ++i)

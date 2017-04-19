@@ -45,7 +45,6 @@ namespace RTC
 			uint64_t mantissa = (compact >> 9) & 0x1ffff; // 17 bits.
 
 			this->overhead = compact & 0x1ff; // 9 bits.
-
 			// Get the bitrate out of exponent and mantissa.
 			this->bitrate = (mantissa << exponent);
 
@@ -63,7 +62,7 @@ namespace RTC
 			static constexpr uint32_t MaxMantissa{ 0x1ffff }; // 17 bits.
 
 			uint64_t mantissa = this->bitrate;
-			uint32_t exponent = 0;
+			uint32_t exponent{ 0 };
 
 			while (mantissa > MaxMantissa)
 			{

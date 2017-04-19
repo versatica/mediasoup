@@ -92,7 +92,7 @@ namespace RTC
 
 	inline void RtpSender::SetTransport(RTC::Transport* transport)
 	{
-		bool wasActive{ this->GetActive() };
+		bool wasActive = this->GetActive();
 
 		this->transport = transport;
 
@@ -107,7 +107,7 @@ namespace RTC
 
 	inline void RtpSender::RemoveTransport(RTC::Transport* transport)
 	{
-		bool wasActive{ this->GetActive() };
+		bool wasActive = this->GetActive();
 
 		if (this->transport == transport)
 			this->transport = nullptr;

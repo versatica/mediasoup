@@ -54,15 +54,15 @@ namespace RTC
 		static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
 		static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
 
-		bool tryIPv4udp = true;
-		bool tryIPv6udp = true;
-		bool tryIPv4tcp = true;
-		bool tryIPv6tcp = true;
+		bool tryIPv4udp{ true };
+		bool tryIPv6udp{ true };
+		bool tryIPv4tcp{ true };
+		bool tryIPv6tcp{ true };
 
-		bool preferIPv4 = false;
-		bool preferIPv6 = false;
-		bool preferUdp  = false;
-		bool preferTcp  = false;
+		bool preferIPv4{ false };
+		bool preferIPv6{ false };
+		bool preferUdp{ false };
+		bool preferTcp{ false };
 
 		if (data[JsonStringUdp].isBool())
 			tryIPv4udp = tryIPv6udp = data[JsonStringUdp].asBool();
@@ -402,7 +402,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
 			{
-				Json::Value json = ToJson();
+				auto json = ToJson();
 
 				request->Accept(json);
 

@@ -54,10 +54,10 @@ namespace RTC
 			std::memcpy(buffer + 8, this->header->value, this->header->length);
 
 			size_t offset = 8 + this->header->length;
-
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
-			for (size_t i = 0; i < padding; ++i)
+
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}

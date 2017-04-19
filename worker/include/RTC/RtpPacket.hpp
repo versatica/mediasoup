@@ -272,7 +272,7 @@ namespace RTC
 		if (this->extensionMap.find(uri) == this->extensionMap.end())
 			return nullptr;
 
-		uint8_t id{ this->extensionMap.at(uri) };
+		uint8_t id = this->extensionMap.at(uri);
 
 		if (HasOneByteExtensions())
 		{

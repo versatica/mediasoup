@@ -29,7 +29,7 @@ namespace RTC
 		// to feedback.
 		static const int RtcpSize{ 80 };
 
-		const int64_t minFeedbackIntervalMs = 200;
+		const int64_t minFeedbackIntervalMs{ 200 };
 		auto interval =
 		    int64_t{ std::lround((RtcpSize * 8.0 * 1000.0) / (0.05 * this->currentBitrateBps) + 0.5) };
 
@@ -67,7 +67,7 @@ namespace RTC
 		// second.
 		if (!this->bitrateIsInitialized)
 		{
-			const int64_t initializationTimeMs = 5000;
+			const int64_t initializationTimeMs{ 5000 };
 
 			// MS_ASSERT(BitrateWindowMs <= InitializationTimeMs);
 
@@ -104,8 +104,8 @@ namespace RTC
 		// MS_ASSERT(this->currentBitrateBps > 0);
 
 		// Approximate the over-use estimator delay to 100 ms.
-		const int64_t responseTime          = (this->rtt + 100) * 2;
-		constexpr double MinIncreaseRateBps = 4000;
+		const int64_t responseTime = (this->rtt + 100) * 2;
+		constexpr double MinIncreaseRateBps{ 4000 };
 
 		double bitsPerFrame      = static_cast<double>(this->currentBitrateBps) / 30.0;
 		double packetsPerFrame   = std::ceil(bitsPerFrame / (8.0 * 1200.0));
@@ -180,20 +180,17 @@ namespace RTC
 						newBitrateBps = static_cast<uint32_t>(
 						    std::lround(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f));
 					}
+
 					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
 				}
 
 				ChangeRegion(RC_NEAR_MAX);
 
 				if (incomingBitrateBps < this->currentBitrateBps)
-				{
 					this->lastDecrease = int(this->currentBitrateBps - newBitrateBps);
-				}
 
 				if (incomingBitrateKbps < this->avgMaxBitrateKbps - 3 * stdMaxBitRate)
-				{
 					this->avgMaxBitrateKbps = -1.0f;
-				}
 
 				UpdateMaxBitRateEstimate(incomingBitrateKbps);
 				// Stay on hold until the pipes are cleared.
@@ -218,9 +215,8 @@ namespace RTC
 		const uint32_t maxBitrateBps = static_cast<uint32_t>(1.5f * incomingBitrateBps) + 10000;
 
 		if (newBitrateBps > this->currentBitrateBps && newBitrateBps > maxBitrateBps)
-		{
 			newBitrateBps = std::max(this->currentBitrateBps, maxBitrateBps);
-		}
+
 		newBitrateBps = std::max(newBitrateBps, this->minConfiguredBitrateBps);
 
 		return newBitrateBps;
@@ -231,7 +227,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		double alpha = 1.08;
+		double alpha{ 1.08 };
 
 		if (lastMs > -1)
 		{
@@ -249,7 +245,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const float alpha = 0.05f;
+		const float alpha{ 0.05f };
 
 		if (this->avgMaxBitrateKbps == -1.0f)
 		{
@@ -270,14 +266,10 @@ namespace RTC
 
 		// 0.4 ~= 14 kbit/s at 500 kbit/s
 		if (this->varMaxBitrateKbps < 0.4f)
-		{
 			this->varMaxBitrateKbps = 0.4f;
-		}
 		// 2.5f ~= 35 kbit/s at 500 kbit/s
 		if (this->varMaxBitrateKbps > 2.5f)
-		{
 			this->varMaxBitrateKbps = 2.5f;
-		}
 	}
 
 	void AimdRateControl::ChangeState(const RateControlInput& input, int64_t nowMs)
@@ -285,6 +277,7 @@ namespace RTC
 		MS_TRACE();
 
 		(void)input;
+
 		switch (this->currentInput.bwState)
 		{
 			case BW_NORMAL:

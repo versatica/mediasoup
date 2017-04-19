@@ -117,7 +117,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::RTP_RECEIVER_DUMP:
 			{
-				Json::Value json = ToJson();
+				auto json = ToJson();
 
 				request->Accept(json);
 
@@ -161,7 +161,7 @@ namespace RTC
 				// Free previous RTP streams.
 				ClearRtpStreams();
 
-				Json::Value data = this->rtpParameters->ToJson();
+				auto data = this->rtpParameters->ToJson();
 
 				request->Accept(data);
 
@@ -237,7 +237,7 @@ namespace RTC
 		// TODO: Check if stopped, etc (not yet done).
 
 		// Find the corresponding RtpStreamRecv.
-		auto ssrc = packet->GetSsrc();
+		uint32_t ssrc = packet->GetSsrc();
 
 		if (this->rtpStreams.find(ssrc) == this->rtpStreams.end())
 		{
@@ -296,8 +296,8 @@ namespace RTC
 
 		for (auto& kv : this->rtpStreams)
 		{
-			auto rtpStream                    = kv.second;
-			RTC::RTCP::ReceiverReport* report = rtpStream->GetRtcpReceiverReport();
+			auto rtpStream = kv.second;
+			auto* report   = rtpStream->GetRtcpReceiverReport();
 
 			report->SetSsrc(rtpStream->GetSsrc());
 			packet->AddReceiverReport(report);
@@ -374,11 +374,11 @@ namespace RTC
 			return;
 
 		// Get the codec of the stream/encoding.
-		auto& codec           = this->rtpParameters->GetCodecForEncoding(encoding);
-		bool useNack          = false;
-		bool usePli           = false;
-		bool useRemb          = false;
-		uint8_t absSendTimeId = 0;
+		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack{ false };
+		bool usePli{ false };
+		bool useRemb{ false };
+		uint8_t absSendTimeId{ 0 };
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
@@ -455,7 +455,7 @@ namespace RTC
 		while (it != end)
 		{
 			uint16_t seq;
-			uint16_t bitmask = 0;
+			uint16_t bitmask{ 0 };
 
 			seq = *it;
 			++it;

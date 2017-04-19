@@ -183,7 +183,7 @@ namespace RTC
 
 		inline size_t SenderReportPacket::GetSize() const
 		{
-			size_t size{ sizeof(Packet::CommonHeader) };
+			size_t size = sizeof(Packet::CommonHeader);
 
 			for (auto report : this->reports)
 			{

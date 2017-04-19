@@ -10,8 +10,8 @@
 /* Static attributes. */
 
 // This array will store all of the mutex available for OpenSSL.
-uv_mutex_t* DepOpenSSL::mutexes = nullptr;
-uint32_t DepOpenSSL::numMutexes = 0;
+uv_mutex_t* DepOpenSSL::mutexes{ nullptr };
+uint32_t DepOpenSSL::numMutexes{ 0 };
 
 /* Static methods. */
 
@@ -28,12 +28,13 @@ void DepOpenSSL::ClassInit()
 
 	// Make OpenSSL thread-safe (even if we are single thread).
 	DepOpenSSL::mutexes = new uv_mutex_t[CRYPTO_num_locks()];
+
 	if (DepOpenSSL::mutexes == nullptr)
 		MS_THROW_ERROR("allocation of mutexes failed");
 
 	DepOpenSSL::numMutexes = CRYPTO_num_locks();
 
-	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
+	for (uint32_t i{ 0 }; i < DepOpenSSL::numMutexes; ++i)
 	{
 		int err = uv_mutex_init(&DepOpenSSL::mutexes[i]);
 		if (err != 0)
@@ -69,7 +70,7 @@ void DepOpenSSL::ClassDestroy()
 	sk_SSL_COMP_free(SSL_COMP_get_compression_methods()); // NOLINT
 
 	// Free mutexes.
-	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
+	for (uint32_t i{ 0 }; i < DepOpenSSL::numMutexes; ++i)
 	{
 		uv_mutex_destroy(&DepOpenSSL::mutexes[i]);
 	}
@@ -121,6 +122,7 @@ CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* /*file*/, int /*
 	// MS_TRACE();
 
 	auto* value = new CRYPTO_dynlock_value;
+
 	if (value == nullptr)
 	{
 		MS_ABORT("new CRYPTO_dynlock_value failed");

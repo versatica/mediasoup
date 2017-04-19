@@ -215,7 +215,7 @@ namespace RTC
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
 	{
-		RTC::TransportTuple* removedTuple = nullptr;
+		RTC::TransportTuple* removedTuple{ nullptr };
 
 		// Find the removed tuple.
 		auto it = this->tuples.begin();

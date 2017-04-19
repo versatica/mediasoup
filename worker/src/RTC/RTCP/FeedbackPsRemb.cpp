@@ -12,7 +12,7 @@ namespace RTC
 	{
 		/* Class variables. */
 
-		uint32_t FeedbackPsRembPacket::uniqueIdentifier = 0x52454D42;
+		uint32_t FeedbackPsRembPacket::uniqueIdentifier{ 0x52454D42 };
 
 		/* Class methods. */
 
@@ -49,10 +49,8 @@ namespace RTC
 				return;
 			}
 
-			size_t numSsrcs = data[12];
-
+			size_t numSsrcs  = data[12];
 			uint8_t exponent = data[13] >> 2;
-
 			uint64_t mantissa =
 			    (static_cast<uint32_t>(data[13] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 14);
 
@@ -67,6 +65,7 @@ namespace RTC
 
 			// Check length.
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
+
 			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + sizeof(Header) +
 			               (numSsrcs * sizeof(uint32_t)))
 			{
@@ -81,9 +80,9 @@ namespace RTC
 				return;
 			}
 
-			size_t index = 16;
+			size_t index{ 16 };
 			this->ssrcs.reserve(numSsrcs);
-			for (size_t n = 0; n < numSsrcs; ++n)
+			for (size_t n{ 0 }; n < numSsrcs; ++n)
 			{
 				this->ssrcs.push_back(Utils::Byte::Get4Bytes(data, index));
 				index += sizeof(uint32_t);
@@ -94,10 +93,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = FeedbackPsPacket::Serialize(buffer);
-
+			size_t offset     = FeedbackPsPacket::Serialize(buffer);
 			uint64_t mantissa = this->bitrate;
-			uint8_t exponent  = 0;
+			uint8_t exponent{ 0 };
 
 			while (mantissa > 0x3FFFF /* max mantissa (18 bits) */)
 			{

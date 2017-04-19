@@ -71,7 +71,6 @@ namespace RTC
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-
 			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
 
 			packet->SetSsrc(
@@ -81,9 +80,11 @@ namespace RTC
 				offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;
 
 			uint8_t count = header->count;
+
 			while (((count--) != 0u) && (len - offset > 0))
 			{
 				ReceiverReport* report = ReceiverReport::Parse(data + offset, len - offset);
+
 				if (report != nullptr)
 				{
 					packet->AddReport(report);

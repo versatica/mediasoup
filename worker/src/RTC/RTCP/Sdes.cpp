@@ -121,6 +121,7 @@ namespace RTC
 			while (len - offset > 0)
 			{
 				SdesItem* item = SdesItem::Parse(data + offset, len - offset);
+
 				if (item != nullptr)
 				{
 					if (item->GetType() == SdesItem::Type::END)
@@ -155,7 +156,8 @@ namespace RTC
 
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
-			for (size_t i = 0; i < padding; ++i)
+
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}
@@ -184,7 +186,6 @@ namespace RTC
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-
 			std::unique_ptr<SdesPacket> packet(new SdesPacket());
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
@@ -192,6 +193,7 @@ namespace RTC
 			while (((count--) != 0u) && (len - offset > 0))
 			{
 				SdesChunk* chunk = SdesChunk::Parse(data + offset, len - offset);
+
 				if (chunk != nullptr)
 				{
 					packet->AddChunk(chunk);

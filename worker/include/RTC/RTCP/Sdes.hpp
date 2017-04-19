@@ -233,7 +233,7 @@ namespace RTC
 
 		inline size_t SdesPacket::GetSize() const
 		{
-			size_t size{ sizeof(Packet::CommonHeader) };
+			size_t size = sizeof(Packet::CommonHeader);
 
 			for (auto chunk : this->chunks)
 			{

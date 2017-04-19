@@ -13,7 +13,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		int ipFamily = 0;
+		int ipFamily{ 0 };
 
 		/**
 		 * Ragel: machine definition.

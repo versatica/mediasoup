@@ -78,7 +78,7 @@ namespace RTC
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
 
-			for (size_t i = 0; i < padding; ++i)
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}

@@ -83,16 +83,16 @@ namespace RTC
 			MS_THROW_ERROR("IPv6 family not available for RTC");
 
 		int err;
-		uv_udp_t* uvHandle = nullptr;
+		uv_udp_t* uvHandle{ nullptr };
 		// clang-format off
 		struct sockaddr_storage bindAddr{};
 		// clang-format on
 		const char* listenIp;
 		uint16_t initialPort;
 		uint16_t iteratingPort;
-		uint16_t attempt     = 0;
-		uint16_t bindAttempt = 0;
-		int flags            = 0;
+		uint16_t attempt{ 0 };
+		uint16_t bindAttempt{ 0 };
+		int flags{ 0 };
 		std::unordered_map<uint16_t, bool>* availablePorts;
 
 		switch (addressFamily)

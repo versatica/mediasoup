@@ -228,9 +228,9 @@ namespace Utils
 	inline const std::string Crypto::GetRandomString(size_t len)
 	{
 		static char buffer[64];
-		static const char chars[]{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
-			                         'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-			                         'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+		static const char chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+			                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+			                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
 		if (len > 64)
 			len = 64;
@@ -244,7 +244,7 @@ namespace Utils
 	inline uint32_t Crypto::GetCRC32(const uint8_t* data, size_t size)
 	{
 		uint32_t crc{ 0xFFFFFFFF };
-		const uint8_t* p{ data };
+		const uint8_t* p = data;
 
 		while (size--)
 			crc = Crypto::crc32Table[(crc ^ *p++) & 0xFF] ^ (crc >> 8);

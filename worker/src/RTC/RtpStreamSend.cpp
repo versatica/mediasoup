@@ -161,19 +161,19 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t now        = DepLibUV::GetTime();
-		uint32_t rtt        = (this->rtt != 0u ? this->rtt : DefaultRtt);
-		uint32_t seq32      = firstSeq32;
-		bool requested      = true;
-		size_t containerIdx = 0;
+		uint64_t now   = DepLibUV::GetTime();
+		uint32_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint32_t seq32 = firstSeq32;
+		bool requested{ true };
+		size_t containerIdx{ 0 };
 
 		// Some variables for debugging.
-		uint16_t origBitmask   = bitmask;
-		uint16_t sentBitmask   = 0b0000000000000000;
-		bool isFirstPacket     = true;
-		bool firstPacketSent   = false;
-		uint8_t bitmaskCounter = 0;
-		bool tooOldPacketFound = false;
+		uint16_t origBitmask = bitmask;
+		uint16_t sentBitmask{ 0b0000000000000000 };
+		bool isFirstPacket{ true };
+		bool firstPacketSent{ false };
+		uint8_t bitmaskCounter{ 0 };
+		bool tooOldPacketFound{ false };
 
 		while (requested || bitmask != 0)
 		{
@@ -350,7 +350,7 @@ namespace RTC
 		// Otherwise, do the stuff.
 
 		Buffer::iterator newBufferIt;
-		uint8_t* store = nullptr;
+		uint8_t* store{ nullptr };
 
 		// Iterate the buffer in reverse order and find the proper place to store the
 		// packet.
