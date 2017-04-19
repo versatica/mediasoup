@@ -22,7 +22,7 @@ namespace RTC
 		static const Json::StaticString JsonStringUdp{ "udp" };
 		static const Json::StaticString JsonStringTcp{ "tcp" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 		int ipFamily;
 		std::string ip;
 		uint16_t port;

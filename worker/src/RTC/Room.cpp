@@ -28,11 +28,11 @@ namespace RTC
 			    R"({"codecs":[{"kind":"audio","name":"audio/opus","clockRate":48000,"numChannels":2,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMU","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/PCMA","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/ISAC","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/G722","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/iLBC","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":24000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":12000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/SILK","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":48000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"audio/telephone-event","clockRate":8000,"rtcpFeedback":[]},{"kind":"video","name":"video/VP8","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/VP9","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":0},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H264","clockRate":90000,"parameters":{"packetizationMode":1},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"video/H265","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":1,"preferredEncrypt":false},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":2,"preferredEncrypt":false},{"kind":"","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":3,"preferredEncrypt":false},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":4,"preferredEncrypt":false},{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","preferredId":5,"preferredEncrypt":false}],"fecMechanisms":[]})";
 
 			Json::CharReaderBuilder builder;
-			Json::Value settings = Json::nullValue;
+			Json::Value settings{ Json::nullValue };
 
 			builder.strictMode(&settings);
 
-			Json::CharReader* jsonReader = builder.newCharReader();
+			Json::CharReader* jsonReader{ builder.newCharReader() };
 			Json::Value json;
 			std::string jsonParseError;
 
@@ -119,7 +119,7 @@ namespace RTC
 
 		static const Json::StaticString JsonStringClass{ "class" };
 
-		Json::Value eventData(Json::objectValue);
+		Json::Value eventData{ Json::objectValue };
 
 		// Close all the Peers.
 		// NOTE: Upon Peer closure the onPeerClosed() method is called which
@@ -127,7 +127,7 @@ namespace RTC
 		// and remove elements.
 		for (auto it = this->peers.begin(); it != this->peers.end();)
 		{
-			RTC::Peer* peer = it->second;
+			auto* peer = it->second;
 
 			it = this->peers.erase(it);
 			peer->Destroy();
@@ -153,10 +153,10 @@ namespace RTC
 		static const Json::StaticString JsonStringMapRtpReceiverRtpSenders{ "mapRtpReceiverRtpSenders" };
 		static const Json::StaticString JsonStringMapRtpSenderRtpReceiver{ "mapRtpSenderRtpReceiver" };
 
-		Json::Value json(Json::objectValue);
-		Json::Value jsonPeers(Json::arrayValue);
-		Json::Value jsonMapRtpReceiverRtpSenders(Json::objectValue);
-		Json::Value jsonMapRtpSenderRtpReceiver(Json::objectValue);
+		Json::Value json{ Json::objectValue };
+		Json::Value jsonPeers{ Json::arrayValue };
+		Json::Value jsonMapRtpReceiverRtpSenders{ Json::objectValue };
+		Json::Value jsonMapRtpSenderRtpReceiver{ Json::objectValue };
 
 		// Add `roomId`.
 		json[JsonStringRoomId] = Json::UInt{ this->roomId };
@@ -167,7 +167,7 @@ namespace RTC
 		// Add `peers`.
 		for (auto& kv : this->peers)
 		{
-			RTC::Peer* peer = kv.second;
+			auto* peer = kv.second;
 
 			jsonPeers.append(peer->ToJson());
 		}
@@ -178,7 +178,7 @@ namespace RTC
 		{
 			auto rtpReceiver = kv.first;
 			auto& rtpSenders = kv.second;
-			Json::Value jsonRtpReceivers(Json::arrayValue);
+			Json::Value jsonRtpReceivers{ Json::arrayValue };
 
 			for (auto& rtpSender : rtpSenders)
 			{
@@ -212,7 +212,7 @@ namespace RTC
 			case Channel::Request::MethodId::ROOM_CLOSE:
 			{
 #ifdef MS_LOG_DEV
-				uint32_t roomId = this->roomId;
+				uint32_t roomId{ this->roomId };
 #endif
 
 				Destroy();
@@ -226,7 +226,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROOM_DUMP:
 			{
-				Json::Value json = ToJson();
+				auto json = ToJson();
 
 				request->Accept(json);
 
@@ -237,7 +237,7 @@ namespace RTC
 			{
 				static const Json::StaticString JsonStringPeerName{ "peerName" };
 
-				RTC::Peer* peer;
+				RTC::Peer* peer{ nullptr };
 				uint32_t peerId;
 				std::string peerName;
 
@@ -309,7 +309,7 @@ namespace RTC
 			case Channel::Request::MethodId::RTP_SENDER_SET_TRANSPORT:
 			case Channel::Request::MethodId::RTP_SENDER_DISABLE:
 			{
-				RTC::Peer* peer;
+				RTC::Peer* peer{ nullptr };
 
 				try
 				{
@@ -361,7 +361,7 @@ namespace RTC
 		auto it = this->peers.find(jsonPeerId.asUInt());
 		if (it != this->peers.end())
 		{
-			RTC::Peer* peer = it->second;
+			auto* peer = it->second;
 
 			return peer;
 		}
@@ -409,7 +409,7 @@ namespace RTC
 				{
 					while (dynamicPayloadTypeIt != DynamicPayloadTypes.end())
 					{
-						uint8_t payloadType = *dynamicPayloadTypeIt;
+						uint8_t payloadType{ *dynamicPayloadTypeIt };
 
 						++dynamicPayloadTypeIt;
 
@@ -450,7 +450,7 @@ namespace RTC
 		MS_ASSERT(senderPeer->HasCapabilities(), "sender peer has no capabilities");
 		MS_ASSERT(rtpReceiver->GetParameters(), "rtpReceiver has no parameters");
 
-		uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+		uint32_t rtpSenderId{ Utils::Crypto::GetRandomUInt(10000000, 99999999) };
 		auto rtpSender = new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
 
 		// Store into the maps.
@@ -516,7 +516,7 @@ namespace RTC
 		// create RtpSenders for this new Peer.
 		for (auto& kv : this->peers)
 		{
-			RTC::Peer* receiverPeer = kv.second;
+			auto* receiverPeer = kv.second;
 
 			for (auto rtpReceiver : receiverPeer->GetRtpReceivers())
 			{
@@ -544,7 +544,7 @@ namespace RTC
 
 			for (auto& kv : this->peers)
 			{
-				RTC::Peer* senderPeer = kv.second;
+				auto* senderPeer = kv.second;
 
 				// Skip receiver Peer.
 				if (senderPeer == peer)

@@ -5,8 +5,8 @@
 
 /* Class variables. */
 
-std::string Logger::id                     = "unset";
-Channel::UnixStreamSocket* Logger::channel = nullptr;
+std::string Logger::id{ "unset" };
+Channel::UnixStreamSocket* Logger::channel{ nullptr };
 char Logger::buffer[Logger::bufferSize];
 
 /* Class methods. */

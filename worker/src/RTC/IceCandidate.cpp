@@ -81,7 +81,7 @@ namespace RTC
 		static const Json::StaticString JsonStringTcpType{ "tcpType" };
 		static const Json::StaticString JsonStringPassive{ "passive" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		json[JsonStringFoundation] = this->foundation;
 

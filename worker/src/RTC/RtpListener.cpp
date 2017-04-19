@@ -17,10 +17,10 @@ namespace RTC
 		static const Json::StaticString JsonStringMuxIdTable{ "muxIdTable" };
 		static const Json::StaticString JsonStringPtTable{ "ptTable" };
 
-		Json::Value json(Json::objectValue);
-		Json::Value jsonSsrcTable(Json::objectValue);
-		Json::Value jsonMuxIdTable(Json::objectValue);
-		Json::Value jsonPtTable(Json::objectValue);
+		Json::Value json{ Json::objectValue };
+		Json::Value jsonSsrcTable{ Json::objectValue };
+		Json::Value jsonMuxIdTable{ Json::objectValue };
+		Json::Value jsonPtTable{ Json::objectValue };
 
 		// Add `ssrcTable`.
 		for (auto& kv : this->ssrcTable)
@@ -210,7 +210,7 @@ namespace RTC
 			{
 				for (auto& codec : rtpParameters->codecs)
 				{
-					uint8_t payloadType = codec.payloadType;
+					uint8_t payloadType{ codec.payloadType };
 
 					if (!this->HasPayloadType(payloadType, rtpReceiver))
 					{

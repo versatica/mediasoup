@@ -77,12 +77,12 @@ namespace Channel
 		if (json[JsonStringInternal].isObject())
 			this->internal = json[JsonStringInternal];
 		else
-			this->internal = Json::Value(Json::objectValue);
+			this->internal = Json::Value{ Json::objectValue };
 
 		if (json[JsonStringData].isObject())
 			this->data = json[JsonStringData];
 		else
-			this->data = Json::Value(Json::objectValue);
+			this->data = Json::Value{ Json::objectValue };
 	}
 
 	Request::~Request()
@@ -94,7 +94,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static Json::Value emptyData(Json::objectValue);
+		static Json::Value emptyData{ Json::objectValue };
 
 		Accept(emptyData);
 	}
@@ -103,7 +103,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static Json::Value emptyData(Json::objectValue);
+		static Json::Value emptyData{ Json::objectValue };
 		static const Json::StaticString JsonStringId{ "id" };
 		static const Json::StaticString JsonStringAccepted{ "accepted" };
 		static const Json::StaticString JsonStringData{ "data" };
@@ -112,7 +112,7 @@ namespace Channel
 
 		this->replied = true;
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		json[JsonStringId]       = Json::UInt{ this->id };
 		json[JsonStringAccepted] = true;
@@ -148,7 +148,7 @@ namespace Channel
 
 		this->replied = true;
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		json[JsonStringId]       = Json::UInt{ this->id };
 		json[JsonStringRejected] = true;

@@ -61,7 +61,7 @@ namespace RTC
 		static const Json::StaticString JsonStringPreferredId{ "preferredId" };
 		static const Json::StaticString JsonStringPreferredEncrypt{ "preferredEncrypt" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		// Add `kind`.
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);

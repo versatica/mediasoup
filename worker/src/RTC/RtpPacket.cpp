@@ -16,17 +16,17 @@ namespace RTC
 		if (!RtpPacket::IsRtp(data, len))
 			return nullptr;
 
-		auto* ptr = const_cast<uint8_t*>(data);
+		auto* ptr{ const_cast<uint8_t*>(data) };
 
 		// Get the header.
-		auto* header = reinterpret_cast<Header*>(ptr);
+		auto* header{ reinterpret_cast<Header*>(ptr) };
 
 		// Inspect data after the minimum header size.
 		// size_t pos = sizeof(Header);
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		size_t csrcListSize = 0;
+		size_t csrcListSize{ 0 };
 
 		if (header->csrcCount != 0u)
 		{
@@ -43,8 +43,8 @@ namespace RTC
 		}
 
 		// Check header extension.
-		ExtensionHeader* extensionHeader = nullptr;
-		size_t extensionValueSize        = 0;
+		ExtensionHeader* extensionHeader{ nullptr };
+		size_t extensionValueSize{ 0 };
 
 		if (header->extension != 0u)
 		{
@@ -74,9 +74,9 @@ namespace RTC
 		}
 
 		// Get payload.
-		uint8_t* payload       = ptr;
-		size_t payloadLength   = len - (ptr - data);
-		uint8_t payloadPadding = 0;
+		uint8_t* payload{ ptr };
+		size_t payloadLength{ len - (ptr - data) };
+		uint8_t payloadPadding{ 0 };
 
 		MS_ASSERT(len >= static_cast<size_t>(ptr - data), "payload has negative size");
 
@@ -182,7 +182,7 @@ namespace RTC
 		if (this->csrcList != nullptr)
 			this->size += this->header->csrcCount * sizeof(header->ssrc);
 
-		size_t extensionValueSize = GetExtensionHeaderLength();
+		size_t extensionValueSize{ GetExtensionHeaderLength() };
 
 		if (this->extensionHeader != nullptr)
 			this->size += 4 + extensionValueSize;
@@ -190,7 +190,7 @@ namespace RTC
 		this->size += this->payloadLength;
 		this->size += size_t{ this->payloadPadding };
 
-		uint8_t* ptr = buffer;
+		uint8_t* ptr{ buffer };
 
 		// Add minimum header.
 		std::memcpy(buffer, this->header, sizeof(Header));
@@ -246,7 +246,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint8_t* ptr = buffer;
+		uint8_t* ptr{ buffer };
 
 		// Copy the full packet into the given buffer.
 		std::memcpy(buffer, GetData(), GetSize());
@@ -260,7 +260,7 @@ namespace RTC
 			ptr += header->csrcCount * sizeof(header->ssrc);
 
 		// Check extension header.
-		ExtensionHeader* extensionHeader = nullptr;
+		ExtensionHeader* extensionHeader{ nullptr };
 
 		if (this->extensionHeader != nullptr)
 		{
@@ -270,7 +270,7 @@ namespace RTC
 		}
 
 		// Check payload.
-		uint8_t* payload = nullptr;
+		uint8_t* payload{ nullptr };
 
 		if (this->payload != nullptr)
 		{
@@ -311,14 +311,14 @@ namespace RTC
 			// Clear the One-Byte extension elements map.
 			this->oneByteExtensions.clear();
 
-			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
-			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
-			uint8_t* ptr            = extensionStart;
+			uint8_t* extensionStart{ reinterpret_cast<uint8_t*>(this->extensionHeader) + 4 };
+			uint8_t* extensionEnd{ extensionStart + GetExtensionHeaderLength() };
+			uint8_t* ptr{ extensionStart };
 
 			while (ptr < extensionEnd)
 			{
-				uint8_t id = (*ptr & 0xF0) >> 4;
-				size_t len = static_cast<size_t>(*ptr & 0x0F) + 1;
+				uint8_t id = static_cast<uint8_t>((*ptr & 0xF0) >> 4);
+				size_t len{ static_cast<size_t>(*ptr & 0x0F) + 1 };
 
 				if (ptr + 1 + len > extensionEnd)
 				{
@@ -344,14 +344,14 @@ namespace RTC
 			// Clear the Two-Bytes extension elements map.
 			this->twoBytesExtensions.clear();
 
-			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
-			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
-			uint8_t* ptr            = extensionStart;
+			uint8_t* extensionStart{ reinterpret_cast<uint8_t*>(this->extensionHeader) + 4 };
+			uint8_t* extensionEnd{ extensionStart + GetExtensionHeaderLength() };
+			uint8_t* ptr{ extensionStart };
 
 			while (ptr < extensionEnd)
 			{
-				uint8_t id = *ptr;
-				size_t len = *(++ptr);
+				uint8_t id{ *ptr };
+				size_t len{ *(++ptr) };
 
 				if (ptr + len > extensionEnd)
 				{

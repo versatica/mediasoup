@@ -30,7 +30,7 @@ namespace Channel
 		// Create the JSON reader.
 		{
 			Json::CharReaderBuilder builder;
-			Json::Value settings = Json::nullValue;
+			Json::Value settings{ Json::nullValue };
 			Json::Value invalidSettings;
 
 			builder.strictMode(&settings);
@@ -197,8 +197,8 @@ namespace Channel
 			if (IsClosing())
 				return;
 
-			size_t readLen  = this->bufferDataLen - this->msgStart;
-			char* jsonStart = nullptr;
+			size_t readLen{ this->bufferDataLen - this->msgStart };
+			char* jsonStart{ nullptr };
 			size_t jsonLen;
 			int nsRet = netstring_read(
 			    reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
@@ -275,7 +275,7 @@ namespace Channel
 			if (this->jsonReader->parse(
 			        (const char*)jsonStart, (const char*)jsonStart + jsonLen, &json, &jsonParseError))
 			{
-				Channel::Request* request = nullptr;
+				Channel::Request* request{ nullptr };
 
 				try
 				{

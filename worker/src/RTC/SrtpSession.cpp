@@ -138,7 +138,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_protect(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
+		err = srtp_protect(this->session, static_cast<void*>(EncryptBuffer), reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -158,7 +158,8 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_unprotect(this->session, (void*)data, reinterpret_cast<int*>(len));
+		err = srtp_unprotect(
+		    this->session, static_cast<void*>(const_cast<uint8_t*>(data)), reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_DEBUG_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -185,7 +186,8 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_protect_rtcp(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
+		err = srtp_protect_rtcp(
+		    this->session, static_cast<void*>(EncryptBuffer), reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -205,7 +207,8 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_unprotect_rtcp(this->session, (void*)data, reinterpret_cast<int*>(len));
+		err = srtp_unprotect_rtcp(
+		    this->session, static_cast<void*>(const_cast<uint8_t*>(data)), reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_DEBUG_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));

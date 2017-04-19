@@ -62,7 +62,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(buffe
 	int err;
 
 	this->uvHandle       = new uv_pipe_t;
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_pipe_init(DepLibUV::GetLoop(), this->uvHandle, 0);
 	if (err != 0)
@@ -125,7 +125,7 @@ void UnixStreamSocket::Destroy()
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		auto req  = new uv_shutdown_t;
-		req->data = (void*)this;
+		req->data = static_cast<void*>(this);
 		err       = uv_shutdown(
         req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 		if (err != 0)
@@ -177,14 +177,14 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		return;
 	}
 
-	size_t pendingLen = len - written;
+	size_t pendingLen{ len - written };
 
 	// Allocate a special UvWriteData struct pointer.
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
 	writeData->socket = this;
 	std::memcpy(writeData->store, data + written, pendingLen);
-	writeData->req.data = (void*)writeData;
+	writeData->req.data = static_cast<void*>(writeData);
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 

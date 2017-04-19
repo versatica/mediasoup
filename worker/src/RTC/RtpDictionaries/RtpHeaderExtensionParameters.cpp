@@ -56,7 +56,7 @@ namespace RTC
 		static const Json::StaticString JsonStringEncrypt{ "encrypt" };
 		static const Json::StaticString JsonStringParameters{ "parameters" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		// Add `uri`.
 		json[JsonStringUri] = this->uri;

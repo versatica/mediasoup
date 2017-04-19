@@ -37,7 +37,7 @@ namespace RTC
 		static const Json::StaticString JsonStringMechanism{ "mechanism" };
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		// Add `mechanism`.
 		json[JsonStringMechanism] = this->mechanism;

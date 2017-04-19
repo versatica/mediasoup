@@ -123,7 +123,7 @@ namespace RTC
 		static const Json::StaticString JsonStringParameters{ "parameters" };
 		static const Json::StaticString JsonStringRtcpFeedback{ "rtcpFeedback" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		if (this->scope == RTC::Scope::ROOM_CAPABILITY || this->scope == RTC::Scope::PEER_CAPABILITY)
 		{

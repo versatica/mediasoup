@@ -31,10 +31,10 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 	MS_TRACE();
 
 	int err;
-	int flags = 0;
+	int flags{ 0 };
 
 	this->uvHandle       = new uv_tcp_t;
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
 	if (err != 0)
@@ -104,7 +104,7 @@ TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
 
 	int err;
 
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_listen(
 	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
@@ -174,7 +174,7 @@ bool TcpServer::SetLocalAddress()
 	MS_TRACE();
 
 	int err;
-	int len = sizeof(this->localAddr);
+	int len{ sizeof(this->localAddr) };
 
 	err =
 	    uv_tcp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
@@ -212,7 +212,7 @@ inline void TcpServer::OnUvConnection(int status)
 	}
 
 	// Notify the subclass so it provides an allocated derived class of TCPConnection.
-	TcpConnection* connection = nullptr;
+	TcpConnection* connection{ nullptr };
 	UserOnTcpConnectionAlloc(&connection);
 
 	MS_ASSERT(connection != nullptr, "TcpConnection pointer was not allocated by the user");
@@ -283,7 +283,7 @@ inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection, bool isC
 	// SOLUTION:
 	// Check isClosing value *before* onTcpConnectionClosed() callback.
 
-	bool wasClosing = this->isClosing;
+	bool wasClosing{ this->isClosing };
 
 	MS_DEBUG_DEV("TCP connection closed");
 

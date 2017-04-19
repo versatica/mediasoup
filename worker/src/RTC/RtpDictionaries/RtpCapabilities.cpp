@@ -75,7 +75,7 @@ namespace RTC
 		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
 		static const Json::StaticString JsonStringFecMechanisms{ "fecMechanisms" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		// Add `codecs`.
 		json[JsonStringCodecs] = Json::arrayValue;

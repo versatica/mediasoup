@@ -49,7 +49,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Variables for getopt. */
 
 	int c;
-	int optionIdx = 0;
+	int optionIdx{ 0 };
 	std::string stringValue;
 	std::vector<std::string> logTags;
 	// clang-format off
@@ -266,15 +266,15 @@ void Settings::HandleRequest(Channel::Request* request)
 			static const Json::StaticString JsonStringLogLevel{ "logLevel" };
 			static const Json::StaticString JsonStringLogTags{ "logTags" };
 
-			Json::Value jsonLogLevel = request->data[JsonStringLogLevel];
-			Json::Value jsonLogTags  = request->data[JsonStringLogTags];
+			Json::Value jsonLogLevel{ request->data[JsonStringLogLevel] };
+			Json::Value jsonLogTags{ request->data[JsonStringLogTags] };
 
 			try
 			{
 				// Update logLevel if requested.
 				if (jsonLogLevel.isString())
 				{
-					std::string logLevel = jsonLogLevel.asString();
+					std::string logLevel{ jsonLogLevel.asString() };
 
 					Settings::SetLogLevel(logLevel);
 				}
@@ -324,9 +324,9 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 	if (err != 0)
 		MS_ABORT("uv_interface_addresses() failed: %s", uv_strerror(err));
 
-	for (int i = 0; i < numAddresses; ++i)
+	for (int i{ 0 }; i < numAddresses; ++i)
 	{
-		uv_interface_address_t address = addresses[i];
+		uv_interface_address_t address{ addresses[i] };
 
 		// Ignore internal addresses.
 		if (address.is_internal != 0)
@@ -472,8 +472,8 @@ void Settings::SetRtcPorts()
 {
 	MS_TRACE();
 
-	uint16_t minPort = Settings::configuration.rtcMinPort;
-	uint16_t maxPort = Settings::configuration.rtcMaxPort;
+	uint16_t minPort{ Settings::configuration.rtcMinPort };
+	uint16_t maxPort{ Settings::configuration.rtcMaxPort };
 
 	if (minPort < 1024)
 		MS_THROW_ERROR("rtcMinPort must be greater or equal than 1024");
@@ -508,8 +508,8 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 		return;
 	}
 
-	std::string dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
-	std::string dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
+	std::string dtlsCertificateFile{ Settings::configuration.dtlsCertificateFile };
+	std::string dtlsPrivateKeyFile{ Settings::configuration.dtlsPrivateKeyFile };
 
 	try
 	{
@@ -588,7 +588,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 	struct sockaddr_storage bindAddr{};
 	// clang-format on
 	int bindSocket;
-	int err = 0;
+	int err{ 0 };
 	bool success;
 
 	switch (family)

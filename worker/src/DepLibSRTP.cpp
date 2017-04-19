@@ -7,7 +7,9 @@
 
 /* Static variables. */
 
-std::vector<const char*> DepLibSRTP::errors = {
+// clang-format off
+std::vector<const char*> DepLibSRTP::errors =
+{
 	// From 0 (srtp_err_status_ok) to 24 (srtp_err_status_pfkey_err).
 	"success (srtp_err_status_ok)",
 	"unspecified failure (srtp_err_status_fail)",
@@ -35,6 +37,7 @@ std::vector<const char*> DepLibSRTP::errors = {
 	"error while using semaphores (srtp_err_status_semaphore_err)",
 	"error while using pfkey (srtp_err_status_pfkey_err)"
 };
+// clang-format on
 
 /* Static methods. */
 

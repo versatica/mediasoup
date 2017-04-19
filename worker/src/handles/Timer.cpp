@@ -27,7 +27,7 @@ Timer::Timer(Listener* listener) : listener(listener)
 	int err;
 
 	this->uvHandle = new uv_timer_t;
-	uvHandle->data = (void*)this;
+	uvHandle->data = static_cast<void*>(this);
 
 	err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
 	if (err != 0)

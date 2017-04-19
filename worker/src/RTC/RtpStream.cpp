@@ -31,7 +31,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq = packet->GetSequenceNumber();
+		auto seq = packet->GetSequenceNumber();
 
 		// If this is the first packet seen, initialize stuff.
 		if (!this->started)
@@ -91,8 +91,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq    = packet->GetSequenceNumber();
-		uint16_t udelta = seq - this->maxSeq;
+		uint16_t seq{ packet->GetSequenceNumber() };
+		uint16_t udelta{ static_cast<uint16_t>(seq - this->maxSeq) };
 
 		/*
 		 * Source is not valid until MinSequential packets with
@@ -182,7 +182,7 @@ namespace RTC
 		static const Json::StaticString JsonStringUsePli{ "usePli" };
 		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		json[JsonStringSsrc]          = Json::UInt{ this->ssrc };
 		json[JsonStringPayloadType]   = Json::UInt{ this->payloadType };

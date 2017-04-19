@@ -12,7 +12,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		for (auto& kv : this->mapKeyValues)
 		{
@@ -51,7 +51,7 @@ namespace RTC
 
 				case Value::Type::ARRAY_OF_INTEGERS:
 				{
-					Json::Value array(Json::arrayValue);
+					Json::Value array{ Json::arrayValue };
 
 					for (auto& entry : value.arrayOfIntegers)
 						array.append(Json::Int{ entry });

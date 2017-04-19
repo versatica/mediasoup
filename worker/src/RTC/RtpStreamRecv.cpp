@@ -30,7 +30,7 @@ namespace RTC
 		static const Json::StaticString JsonStringTransit{ "transit" };
 		static const Json::StaticString JsonStringJitter{ "jitter" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json{ Json::objectValue };
 
 		json[JsonStringParams]       = this->params.ToJson();
 		json[JsonStringReceived]     = Json::UInt{ this->received };
@@ -73,21 +73,21 @@ namespace RTC
 		auto report = new RTC::RTCP::ReceiverReport();
 
 		// Calculate Packets Expected and Lost.
-		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
-		int32_t totalLost = expected - this->received;
+		auto expected = static_cast<int32_t>((this->cycles + this->maxSeq) - this->baseSeq + 1);
+		auto totalLost = static_cast<int32_t>(expected - this->received);
 
 		report->SetTotalLost(totalLost);
 
 		// Calculate Fraction Lost.
-		uint32_t expectedInterval = expected - this->expectedPrior;
+		uint32_t expectedInterval{ expected - this->expectedPrior };
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->received - this->receivedPrior;
+		uint32_t receivedInterval{ this->received - this->receivedPrior };
 
 		this->receivedPrior = this->received;
 
-		int32_t lostInterval = expectedInterval - receivedInterval;
+		auto lostInterval = static_cast<int32_t>(expectedInterval - receivedInterval);
 		uint8_t fractionLost;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
@@ -104,11 +104,11 @@ namespace RTC
 		if (this->lastSrReceived != 0u)
 		{
 			// Get delay in milliseconds.
-			uint32_t delayMs = (DepLibUV::GetTime() - this->lastSrReceived);
+			auto delayMs = static_cast<int32_t>(DepLibUV::GetTime() - this->lastSrReceived);
 			// Express delay in units of 1/65536 seconds.
-			uint32_t dlsr = (delayMs / 1000) << 16;
+			auto dlsr = static_cast<int32_t>((delayMs / 1000) << 16);
 
-			dlsr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
+			dlsr |= static_cast<int32_t>((delayMs % 1000) * 65536 / 1000);
 			report->SetDelaySinceLastSenderReport(dlsr);
 			report->SetLastSenderReport(this->lastSrTimestamp);
 		}
@@ -151,8 +151,8 @@ namespace RTC
 		if (this->params.clockRate == 0u)
 			return;
 
-		int transit = DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate);
-		int d       = transit - this->transit;
+		auto transit = static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		auto d = static_cast<int>(transit - this->transit);
 
 		this->transit = transit;
 		if (d < 0)

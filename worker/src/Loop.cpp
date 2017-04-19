@@ -138,8 +138,8 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 			static const Json::StaticString JsonStringWorkerId{ "workerId" };
 			static const Json::StaticString JsonStringRooms{ "rooms" };
 
-			Json::Value json(Json::objectValue);
-			Json::Value jsonRooms(Json::arrayValue);
+			Json::Value json{ Json::objectValue };
+			Json::Value jsonRooms{ Json::arrayValue };
 
 			json[JsonStringWorkerId] = Logger::id;
 
@@ -204,7 +204,7 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 
 			MS_DEBUG_DEV("Room created [roomId:%" PRIu32 "]", roomId);
 
-			Json::Value data(Json::objectValue);
+			Json::Value data{ Json::objectValue };
 
 			// Add `capabilities`.
 			data[JsonStringCapabilities] = room->GetCapabilities().ToJson();
