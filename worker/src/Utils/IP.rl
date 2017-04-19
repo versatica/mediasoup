@@ -11,7 +11,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		int ipFamily = 0;
+		int ipFamily{ 0 };
 
 		/**
 		 * Ragel: machine definition.
@@ -63,13 +63,13 @@ namespace Utils
 		%%write exec;
 
 		// Ensure that the parsing has consumed all the given length.
-		if (ipLen == (size_t)(p - (const unsigned char*)ip))
+		if (ipLen == static_cast<size_t>(p - (const unsigned char*)ip))
 			return ipFamily;
 		else
 			return AF_UNSPEC;
 	}
 
-	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string &ip, uint16_t* port)
+	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string& ip, uint16_t* port)
 	{
 		MS_TRACE();
 
@@ -86,7 +86,7 @@ namespace Utils
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
-				*port = (uint16_t)ntohs(((struct sockaddr_in*)addr)->sin_port);
+				*port = static_cast<uint16_t>(ntohs(((struct sockaddr_in*)addr)->sin_port));
 
 				break;
 			}
@@ -99,7 +99,7 @@ namespace Utils
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
-				*port = (uint16_t)ntohs(((struct sockaddr_in6*)addr)->sin6_port);
+				*port = static_cast<uint16_t>(ntohs(((struct sockaddr_in6*)addr)->sin6_port));
 
 				break;
 			}
