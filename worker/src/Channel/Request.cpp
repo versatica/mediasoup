@@ -12,31 +12,31 @@ namespace Channel
 	// clang-format off
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
-		{ "worker.dump",                       Request::MethodId::worker_dump                       },
-		{ "worker.updateSettings",             Request::MethodId::worker_updateSettings             },
-		{ "worker.createRoom",                 Request::MethodId::worker_createRoom                 },
-		{ "room.close",                        Request::MethodId::room_close                        },
-		{ "room.dump",                         Request::MethodId::room_dump                         },
-		{ "room.createPeer",                   Request::MethodId::room_createPeer                   },
-		{ "peer.close",                        Request::MethodId::peer_close                        },
-		{ "peer.dump",                         Request::MethodId::peer_dump                         },
-		{ "peer.setCapabilities",              Request::MethodId::peer_setCapabilities              },
-		{ "peer.createTransport",              Request::MethodId::peer_createTransport              },
-		{ "peer.createRtpReceiver",            Request::MethodId::peer_createRtpReceiver            },
-		{ "transport.close",                   Request::MethodId::transport_close                   },
-		{ "transport.dump",                    Request::MethodId::transport_dump                    },
-		{ "transport.setRemoteDtlsParameters", Request::MethodId::transport_setRemoteDtlsParameters },
-		{ "transport.setMaxBitrate",           Request::MethodId::transport_setMaxBitrate           },
-		{ "transport.changeUfragPwd",          Request::MethodId::transport_changeUfragPwd          },
-		{ "rtpReceiver.close",                 Request::MethodId::rtpReceiver_close                 },
-		{ "rtpReceiver.dump",                  Request::MethodId::rtpReceiver_dump                  },
-		{ "rtpReceiver.receive",               Request::MethodId::rtpReceiver_receive               },
-		{ "rtpReceiver.setTransport",          Request::MethodId::rtpReceiver_setTransport          },
-		{ "rtpReceiver.setRtpRawEvent",        Request::MethodId::rtpReceiver_setRtpRawEvent        },
-		{ "rtpReceiver.setRtpObjectEvent",     Request::MethodId::rtpReceiver_setRtpObjectEvent     },
-		{ "rtpSender.dump",                    Request::MethodId::rtpSender_dump                    },
-		{ "rtpSender.setTransport",            Request::MethodId::rtpSender_setTransport            },
-		{ "rtpSender.disable",                 Request::MethodId::rtpSender_disable                 }
+		{ "worker.dump",                       Request::MethodId::WORKER_DUMP                          },
+		{ "worker.updateSettings",             Request::MethodId::WORKER_UPDATE_SETTINGS               },
+		{ "worker.createRoom",                 Request::MethodId::WORKER_CREATE_ROOM                   },
+		{ "room.close",                        Request::MethodId::ROOM_CLOSE                           },
+		{ "room.dump",                         Request::MethodId::ROOM_DUMP                            },
+		{ "room.createPeer",                   Request::MethodId::ROOM_CREATE_PEER                     },
+		{ "peer.close",                        Request::MethodId::PEER_CLOSE                           },
+		{ "peer.dump",                         Request::MethodId::PEER_DUMP                            },
+		{ "peer.setCapabilities",              Request::MethodId::PEER_SET_CAPABILITIES                },
+		{ "peer.createTransport",              Request::MethodId::PEER_CREATE_TRANSPORT                },
+		{ "peer.createRtpReceiver",            Request::MethodId::PEER_CREATE_RTP_RECEIVER             },
+		{ "transport.close",                   Request::MethodId::TRANSPORT_CLOSE                      },
+		{ "transport.dump",                    Request::MethodId::TRANSPORT_DUMP                       },
+		{ "transport.setRemoteDtlsParameters", Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS },
+		{ "transport.setMaxBitrate",           Request::MethodId::TRANSPORT_SET_MAX_BITRATE            },
+		{ "transport.changeUfragPwd",          Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD           },
+		{ "rtpReceiver.close",                 Request::MethodId::RTP_RECEIVER_CLOSE                   },
+		{ "rtpReceiver.dump",                  Request::MethodId::RTP_RECEIVER_DUMP                    },
+		{ "rtpReceiver.receive",               Request::MethodId::RTP_RECEIVER_RECEIVE                 },
+		{ "rtpReceiver.setTransport",          Request::MethodId::RTP_RECEIVER_SET_TRANSPORT           },
+		{ "rtpReceiver.setRtpRawEvent",        Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT       },
+		{ "rtpReceiver.setRtpObjectEvent",     Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT    },
+		{ "rtpSender.dump",                    Request::MethodId::RTP_SENDER_DUMP                      },
+		{ "rtpSender.setTransport",            Request::MethodId::RTP_SENDER_SET_TRANSPORT             },
+		{ "rtpSender.disable",                 Request::MethodId::RTP_SENDER_DISABLE                   }
 	};
 	// clang-format on
 
@@ -46,18 +46,18 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_method("method");
-		static const Json::StaticString k_internal("internal");
-		static const Json::StaticString k_data("data");
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringMethod{ "method" };
+		static const Json::StaticString JsonStringInternal{ "internal" };
+		static const Json::StaticString JsonStringData{ "data" };
 
-		if (json[k_id].isUInt())
-			this->id = json[k_id].asUInt();
+		if (json[JsonStringId].isUInt())
+			this->id = json[JsonStringId].asUInt();
 		else
 			MS_THROW_ERROR("json has no numeric .id field");
 
-		if (json[k_method].isString())
-			this->method = json[k_method].asString();
+		if (json[JsonStringMethod].isString())
+			this->method = json[JsonStringMethod].asString();
 		else
 			MS_THROW_ERROR("json has no string .method field");
 
@@ -74,13 +74,13 @@ namespace Channel
 			MS_THROW_ERROR("unknown .method '%s'", this->method.c_str());
 		}
 
-		if (json[k_internal].isObject())
-			this->internal = json[k_internal];
+		if (json[JsonStringInternal].isObject())
+			this->internal = json[JsonStringInternal];
 		else
 			this->internal = Json::Value(Json::objectValue);
 
-		if (json[k_data].isObject())
-			this->data = json[k_data];
+		if (json[JsonStringData].isObject())
+			this->data = json[JsonStringData];
 		else
 			this->data = Json::Value(Json::objectValue);
 	}
@@ -94,33 +94,33 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static Json::Value EmptyData(Json::objectValue);
+		static Json::Value emptyData(Json::objectValue);
 
-		Accept(EmptyData);
+		Accept(emptyData);
 	}
 
 	void Request::Accept(Json::Value& data)
 	{
 		MS_TRACE();
 
-		static Json::Value EmptyData(Json::objectValue);
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_accepted("accepted");
-		static const Json::StaticString k_data("data");
+		static Json::Value emptyData(Json::objectValue);
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringAccepted{ "accepted" };
+		static const Json::StaticString JsonStringData{ "data" };
 
-		MS_ASSERT(this->replied == false, "Request already replied");
+		MS_ASSERT(!this->replied, "Request already replied");
 
 		this->replied = true;
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id]       = (Json::UInt)this->id;
-		json[k_accepted] = true;
+		json[JsonStringId]       = Json::UInt{ this->id };
+		json[JsonStringAccepted] = true;
 
 		if (data.isObject())
-			json[k_data] = data;
+			json[JsonStringData] = data;
 		else
-			json[k_data] = EmptyData;
+			json[JsonStringData] = emptyData;
 
 		this->channel->Send(json);
 	}
@@ -140,22 +140,22 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_rejected("rejected");
-		static const Json::StaticString k_reason("reason");
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringRejected{ "rejected" };
+		static const Json::StaticString JsonStringReason{ "reason" };
 
-		MS_ASSERT(this->replied == false, "Request already replied");
+		MS_ASSERT(!this->replied, "Request already replied");
 
 		this->replied = true;
 
 		Json::Value json(Json::objectValue);
 
-		json[k_id]       = (Json::UInt)this->id;
-		json[k_rejected] = true;
+		json[JsonStringId]       = Json::UInt{ this->id };
+		json[JsonStringRejected] = true;
 
-		if (reason)
-			json[k_reason] = reason;
+		if (reason != nullptr)
+			json[JsonStringReason] = reason;
 
 		this->channel->Send(json);
 	}
-}
+} // namespace Channel

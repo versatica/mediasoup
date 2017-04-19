@@ -11,7 +11,7 @@ public:
 	/* Struct for the data field of uv_req_t when writing data. */
 	struct UvWriteData
 	{
-		UnixStreamSocket* socket;
+		UnixStreamSocket* socket{ nullptr };
 		uv_write_t req;
 		uint8_t store[1];
 	};
@@ -32,32 +32,32 @@ public:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvReadAlloc(size_t suggested_size, uv_buf_t* buf);
-	void onUvRead(ssize_t nread, const uv_buf_t* buf);
-	void onUvWriteError(int error);
-	void onUvShutdown(uv_shutdown_t* req, int status);
-	void onUvClosed();
+	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
+	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
+	void OnUvWriteError(int error);
+	void OnUvShutdown(uv_shutdown_t* req, int status);
+	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnUnixStreamRead()                            = 0;
-	virtual void userOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
+	virtual void UserOnUnixStreamRead()                            = 0;
+	virtual void UserOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
 
 private:
 	// Allocated by this.
-	uv_pipe_t* uvHandle = nullptr;
+	uv_pipe_t* uvHandle{ nullptr };
 	// Others.
-	bool isClosing      = false;
-	bool isClosedByPeer = false;
-	bool hasError       = false;
+	bool isClosing{ false };
+	bool isClosedByPeer{ false };
+	bool hasError{ false };
 
 protected:
 	// Passed by argument.
-	size_t bufferSize = 0;
+	size_t bufferSize{ 0 };
 	// Allocated by this.
-	uint8_t* buffer = nullptr;
+	uint8_t* buffer{ nullptr };
 	// Others.
-	size_t bufferDataLen = 0;
+	size_t bufferDataLen{ 0 };
 };
 
 /* Inline methods. */
@@ -69,7 +69,7 @@ inline bool UnixStreamSocket::IsClosing() const
 
 inline void UnixStreamSocket::Write(const std::string& data)
 {
-	Write((const uint8_t*)data.c_str(), data.size());
+	Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 }
 
 #endif

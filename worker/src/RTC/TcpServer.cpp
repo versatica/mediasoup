@@ -11,7 +11,7 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void on_error_close(uv_handle_t* handle)
+static inline void onErrorClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -20,8 +20,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint16_t MaxBindAttempts          = 20;
-	static constexpr size_t MaxTcpConnectionsPerServer = 10;
+	static constexpr uint16_t MaxBindAttempts{ 20 };
+	static constexpr size_t MaxTcpConnectionsPerServer{ 10 };
 
 	/* Class variables. */
 
@@ -45,9 +45,9 @@ namespace RTC
 			err = uv_ip4_addr(
 			    Settings::configuration.rtcIPv4.c_str(),
 			    0,
-			    (struct sockaddr_in*)&RTC::TcpServer::sockaddrStorageIPv4);
+			    reinterpret_cast<struct sockaddr_in*>(&RTC::TcpServer::sockaddrStorageIPv4));
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -56,9 +56,9 @@ namespace RTC
 			err = uv_ip6_addr(
 			    Settings::configuration.rtcIPv6.c_str(),
 			    0,
-			    (struct sockaddr_in6*)&RTC::TcpServer::sockaddrStorageIPv6);
+			    reinterpret_cast<struct sockaddr_in6*>(&RTC::TcpServer::sockaddrStorageIPv6));
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -84,14 +84,16 @@ namespace RTC
 			MS_THROW_ERROR("IPv6 family not available for RTC");
 
 		int err;
-		uv_tcp_t* uvHandle = nullptr;
-		struct sockaddr_storage bindAddr;
+		uv_tcp_t* uvHandle{ nullptr };
+		struct sockaddr_storage bindAddr
+		{
+		};
 		const char* listenIp;
 		uint16_t initialPort;
 		uint16_t iteratingPort;
-		uint16_t attempt     = 0;
-		uint16_t bindAttempt = 0;
-		int flags            = 0;
+		uint16_t attempt{ 0 };
+		uint16_t bindAttempt{ 0 };
+		int flags{ 0 };
 		std::unordered_map<uint16_t, bool>* availablePorts;
 
 		switch (addressFamily)
@@ -116,8 +118,9 @@ namespace RTC
 		}
 
 		// Choose a random first port to start from.
-		initialPort = (uint16_t)Utils::Crypto::GetRandomUInt(
-		    (uint32_t)RTC::TcpServer::minPort, (uint32_t)RTC::TcpServer::maxPort);
+		initialPort = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(
+		    static_cast<uint32_t>(RTC::TcpServer::minPort),
+		    static_cast<uint32_t>(RTC::TcpServer::maxPort)));
 
 		iteratingPort = initialPort;
 
@@ -155,10 +158,10 @@ namespace RTC
 			switch (addressFamily)
 			{
 				case AF_INET:
-					((struct sockaddr_in*)&bindAddr)->sin_port = htons(iteratingPort);
+					(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(iteratingPort);
 					break;
 				case AF_INET6:
-					((struct sockaddr_in6*)&bindAddr)->sin6_port = htons(iteratingPort);
+					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(iteratingPort);
 					break;
 			}
 
@@ -168,14 +171,14 @@ namespace RTC
 			uvHandle = new uv_tcp_t();
 
 			err = uv_tcp_init(DepLibUV::GetLoop(), uvHandle);
-			if (err)
+			if (err != 0)
 			{
 				delete uvHandle;
 				MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 			}
 
-			err = uv_tcp_bind(uvHandle, (const struct sockaddr*)&bindAddr, flags);
-			if (err)
+			err = uv_tcp_bind(uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
+			if (err != 0)
 			{
 				MS_WARN_DEV(
 				    "uv_tcp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s",
@@ -183,7 +186,7 @@ namespace RTC
 				    iteratingPort,
 				    uv_strerror(err));
 
-				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_error_close);
+				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onErrorClose));
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
@@ -226,7 +229,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void TcpServer::userOnTcpConnectionAlloc(::TcpConnection** connection)
+	void TcpServer::UserOnTcpConnectionAlloc(::TcpConnection** connection)
 	{
 		MS_TRACE();
 
@@ -234,7 +237,7 @@ namespace RTC
 		*connection = new RTC::TcpConnection(this->connListener, 65536);
 	}
 
-	void TcpServer::userOnNewTcpConnection(::TcpConnection* connection)
+	void TcpServer::UserOnNewTcpConnection(::TcpConnection* connection)
 	{
 		MS_TRACE();
 
@@ -243,7 +246,7 @@ namespace RTC
 			connection->Destroy();
 	}
 
-	void TcpServer::userOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)
+	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
 
@@ -252,12 +255,12 @@ namespace RTC
 		// At the end, this is just called if the connection was remotely closed.
 		if (!IsClosing())
 		{
-			this->listener->onRtcTcpConnectionClosed(
-			    this, static_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
+			this->listener->OnRtcTcpConnectionClosed(
+			    this, dynamic_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
 		}
 	}
 
-	void TcpServer::userOnTcpServerClosed()
+	void TcpServer::UserOnTcpServerClosed()
 	{
 		MS_TRACE();
 
@@ -267,4 +270,4 @@ namespace RTC
 		else if (this->localAddr.ss_family == AF_INET6)
 			RTC::TcpServer::availableIPv6Ports[this->localPort] = true;
 	}
-}
+} // namespace RTC

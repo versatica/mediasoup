@@ -22,8 +22,8 @@ namespace RTC
 			virtual size_t GetSize() const            = 0;
 
 		protected:
-			uint8_t* raw   = nullptr;
-			bool isCorrect = true;
+			uint8_t* raw{ nullptr };
+			bool isCorrect{ true };
 		};
 
 		/* Inline instance methods */
@@ -47,7 +47,7 @@ namespace RTC
 		{
 			return this->isCorrect;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

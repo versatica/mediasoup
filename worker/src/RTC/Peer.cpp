@@ -23,7 +23,7 @@ namespace RTC
 		this->timer = new Timer(this);
 
 		// Start the RTCP timer.
-		this->timer->Start(uint64_t(RTC::RTCP::maxVideoIntervalMs / 2));
+		this->timer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	Peer::~Peer()
@@ -38,14 +38,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
+		static const Json::StaticString JsonStringClass{ "class" };
 
 		Json::Value eventData(Json::objectValue);
 
 		// Close all the RtpReceivers.
 		for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end();)
 		{
-			RTC::RtpReceiver* rtpReceiver = it->second;
+			auto* rtpReceiver = it->second;
 
 			it = this->rtpReceivers.erase(it);
 			rtpReceiver->Destroy();
@@ -54,7 +54,7 @@ namespace RTC
 		// Close all the RtpSenders.
 		for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end();)
 		{
-			RTC::RtpSender* rtpSender = it->second;
+			auto* rtpSender = it->second;
 
 			it = this->rtpSenders.erase(it);
 			rtpSender->Destroy();
@@ -65,32 +65,32 @@ namespace RTC
 		// because RtcReceiver.Destroy() fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
-			RTC::Transport* transport = it->second;
+			auto* transport = it->second;
 
 			it = this->transports.erase(it);
 			transport->Destroy();
 		}
 
 		// Notify.
-		eventData[k_class] = "Peer";
+		eventData[JsonStringClass] = "Peer";
 		this->notifier->Emit(this->peerId, "close", eventData);
 
 		// Notify the listener.
-		this->listener->onPeerClosed(this);
+		this->listener->OnPeerClosed(this);
 
 		delete this;
 	}
 
-	Json::Value Peer::toJson() const
+	Json::Value Peer::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_peerId("peerId");
-		static const Json::StaticString k_peerName("peerName");
-		static const Json::StaticString k_capabilities("capabilities");
-		static const Json::StaticString k_transports("transports");
-		static const Json::StaticString k_rtpReceivers("rtpReceivers");
-		static const Json::StaticString k_rtpSenders("rtpSenders");
+		static const Json::StaticString JsonStringPeerId{ "peerId" };
+		static const Json::StaticString JsonStringPeerName{ "peerName" };
+		static const Json::StaticString JsonStringCapabilities{ "capabilities" };
+		static const Json::StaticString JsonStringTransports{ "transports" };
+		static const Json::StaticString JsonStringRtpReceivers{ "rtpReceivers" };
+		static const Json::StaticString JsonStringRtpSenders{ "rtpSenders" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonTransports(Json::arrayValue);
@@ -98,41 +98,41 @@ namespace RTC
 		Json::Value jsonRtpSenders(Json::arrayValue);
 
 		// Add `peerId`.
-		json[k_peerId] = (Json::UInt)this->peerId;
+		json[JsonStringPeerId] = Json::UInt{ this->peerId };
 
 		// Add `peerName`.
-		json[k_peerName] = this->peerName;
+		json[JsonStringPeerName] = this->peerName;
 
 		// Add `capabilities`.
 		if (this->hasCapabilities)
-			json[k_capabilities] = this->capabilities.toJson();
+			json[JsonStringCapabilities] = this->capabilities.ToJson();
 
 		// Add `transports`.
 		for (auto& kv : this->transports)
 		{
-			RTC::Transport* transport = kv.second;
+			auto* transport = kv.second;
 
-			jsonTransports.append(transport->toJson());
+			jsonTransports.append(transport->ToJson());
 		}
-		json[k_transports] = jsonTransports;
+		json[JsonStringTransports] = jsonTransports;
 
 		// Add `rtpReceivers`.
 		for (auto& kv : this->rtpReceivers)
 		{
-			RTC::RtpReceiver* rtpReceiver = kv.second;
+			auto* rtpReceiver = kv.second;
 
-			jsonRtpReceivers.append(rtpReceiver->toJson());
+			jsonRtpReceivers.append(rtpReceiver->ToJson());
 		}
-		json[k_rtpReceivers] = jsonRtpReceivers;
+		json[JsonStringRtpReceivers] = jsonRtpReceivers;
 
 		// Add `rtpSenders`.
 		for (auto& kv : this->rtpSenders)
 		{
-			RTC::RtpSender* rtpSender = kv.second;
+			auto* rtpSender = kv.second;
 
-			jsonRtpSenders.append(rtpSender->toJson());
+			jsonRtpSenders.append(rtpSender->ToJson());
 		}
-		json[k_rtpSenders] = jsonRtpSenders;
+		json[JsonStringRtpSenders] = jsonRtpSenders;
 
 		return json;
 	}
@@ -143,7 +143,7 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::peer_close:
+			case Channel::Request::MethodId::PEER_CLOSE:
 			{
 #ifdef MS_LOG_DEV
 				uint32_t peerId = this->peerId;
@@ -158,16 +158,16 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::peer_dump:
+			case Channel::Request::MethodId::PEER_DUMP:
 			{
-				Json::Value json = toJson();
+				auto json = ToJson();
 
 				request->Accept(json);
 
 				break;
 			}
 
-			case Channel::Request::MethodId::peer_setCapabilities:
+			case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
 			{
 				// Capabilities must not be set.
 				if (this->hasCapabilities)
@@ -192,9 +192,9 @@ namespace RTC
 
 				// Notify the listener (Room) who will remove capabilities to make them
 				// a subset of the room capabilities.
-				this->listener->onPeerCapabilities(this, std::addressof(this->capabilities));
+				this->listener->OnPeerCapabilities(this, std::addressof(this->capabilities));
 
-				Json::Value data = this->capabilities.toJson();
+				Json::Value data = this->capabilities.ToJson();
 
 				// NOTE: We accept the request *after* calling onPeerCapabilities(). This
 				// guarantees that the Peer will receive a "newrtpsender" event for all its
@@ -206,7 +206,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::peer_createTransport:
+			case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
 			{
 				RTC::Transport* transport;
 				uint32_t transportId;
@@ -222,7 +222,7 @@ namespace RTC
 					return;
 				}
 
-				if (transport)
+				if (transport != nullptr)
 				{
 					request->Reject("Transport already exists");
 
@@ -244,19 +244,19 @@ namespace RTC
 
 				MS_DEBUG_DEV("Transport created [transportId:%" PRIu32 "]", transportId);
 
-				auto data = transport->toJson();
+				auto data = transport->ToJson();
 
 				request->Accept(data);
 
 				break;
 			}
 
-			case Channel::Request::MethodId::peer_createRtpReceiver:
+			case Channel::Request::MethodId::PEER_CREATE_RTP_RECEIVER:
 			{
-				static const Json::StaticString k_kind("kind");
+				static const Json::StaticString JsonStringKind{ "kind" };
 
 				RTC::RtpReceiver* rtpReceiver;
-				RTC::Transport* transport = nullptr;
+				RTC::Transport* transport{ nullptr };
 				uint32_t rtpReceiverId;
 
 				// Capabilities must be set.
@@ -278,7 +278,7 @@ namespace RTC
 					return;
 				}
 
-				if (rtpReceiver)
+				if (rtpReceiver != nullptr)
 				{
 					request->Reject("RtpReceiver already exists");
 
@@ -296,7 +296,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -305,10 +305,10 @@ namespace RTC
 
 				// `kind` is mandatory.
 
-				if (!request->data[k_kind].isString())
+				if (!request->data[JsonStringKind].isString())
 					MS_THROW_ERROR("missing kind");
 
-				std::string kind = request->data[k_kind].asString();
+				std::string kind = request->data[JsonStringKind].asString();
 
 				// Create a RtpReceiver instance.
 				try
@@ -335,11 +335,11 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::transport_close:
-			case Channel::Request::MethodId::transport_dump:
-			case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
-			case Channel::Request::MethodId::transport_setMaxBitrate:
-			case Channel::Request::MethodId::transport_changeUfragPwd:
+			case Channel::Request::MethodId::TRANSPORT_CLOSE:
+			case Channel::Request::MethodId::TRANSPORT_DUMP:
+			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
+			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
+			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
 			{
 				RTC::Transport* transport;
 
@@ -354,7 +354,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -366,11 +366,11 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpReceiver_close:
-			case Channel::Request::MethodId::rtpReceiver_dump:
-			case Channel::Request::MethodId::rtpReceiver_receive:
-			case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
-			case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
+			case Channel::Request::MethodId::RTP_RECEIVER_CLOSE:
+			case Channel::Request::MethodId::RTP_RECEIVER_DUMP:
+			case Channel::Request::MethodId::RTP_RECEIVER_RECEIVE:
+			case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT:
+			case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT:
 			{
 				RTC::RtpReceiver* rtpReceiver;
 
@@ -385,7 +385,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpReceiver)
+				if (rtpReceiver == nullptr)
 				{
 					request->Reject("RtpReceiver does not exist");
 
@@ -397,7 +397,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpReceiver_setTransport:
+			case Channel::Request::MethodId::RTP_RECEIVER_SET_TRANSPORT:
 			{
 				RTC::RtpReceiver* rtpReceiver;
 
@@ -412,7 +412,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpReceiver)
+				if (rtpReceiver == nullptr)
 				{
 					request->Reject("RtpReceiver does not exist");
 
@@ -432,7 +432,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -454,7 +454,7 @@ namespace RTC
 				// Enable REMB in the new transport if it was enabled in the previous one.
 				auto previousTransport = rtpReceiver->GetTransport();
 
-				if (previousTransport && previousTransport->HasRemb())
+				if ((previousTransport != nullptr) && previousTransport->HasRemb())
 					transport->EnableRemb();
 
 				rtpReceiver->SetTransport(transport);
@@ -464,7 +464,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpSender_dump:
+			case Channel::Request::MethodId::RTP_SENDER_DUMP:
 			{
 				RTC::RtpSender* rtpSender;
 
@@ -479,7 +479,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpSender)
+				if (rtpSender == nullptr)
 				{
 					request->Reject("RtpSender does not exist");
 
@@ -491,7 +491,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpSender_setTransport:
+			case Channel::Request::MethodId::RTP_SENDER_SET_TRANSPORT:
 			{
 				RTC::RtpSender* rtpSender;
 
@@ -506,7 +506,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpSender)
+				if (rtpSender == nullptr)
 				{
 					request->Reject("RtpSender does not exist");
 
@@ -526,7 +526,7 @@ namespace RTC
 					return;
 				}
 
-				if (!transport)
+				if (transport == nullptr)
 				{
 					request->Reject("Transport does not exist");
 
@@ -540,7 +540,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpSender_disable:
+			case Channel::Request::MethodId::RTP_SENDER_DISABLE:
 			{
 				RTC::RtpSender* rtpSender;
 
@@ -555,7 +555,7 @@ namespace RTC
 					return;
 				}
 
-				if (!rtpSender)
+				if (rtpSender == nullptr)
 				{
 					request->Reject("RtpSender does not exist");
 
@@ -581,12 +581,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
-		static const Json::StaticString k_rtpSenderId("rtpSenderId");
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
-		static const Json::StaticString k_active("active");
-		static const Json::StaticString k_associatedRtpReceiverId("associatedRtpReceiverId");
+		static const Json::StaticString JsonStringClass{ "class" };
+		static const Json::StaticString JsonStringRtpSenderId{ "rtpSenderId" };
+		static const Json::StaticString JsonStringKind{ "kind" };
+		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringAssociatedRtpReceiverId{ "associatedRtpReceiverId" };
 
 		MS_ASSERT(
 		    this->rtpSenders.find(rtpSender->rtpSenderId) == this->rtpSenders.end(),
@@ -602,14 +602,14 @@ namespace RTC
 		this->rtpSenders[rtpSender->rtpSenderId] = rtpSender;
 
 		// Notify.
-		Json::Value eventData = rtpSender->toJson();
+		Json::Value eventData = rtpSender->ToJson();
 
-		eventData[k_class]                   = "Peer";
-		eventData[k_rtpSenderId]             = (Json::UInt)rtpSender->rtpSenderId;
-		eventData[k_kind]                    = RTC::Media::GetJsonString(rtpSender->kind);
-		eventData[k_rtpParameters]           = rtpSender->GetParameters()->toJson();
-		eventData[k_active]                  = rtpSender->GetActive();
-		eventData[k_associatedRtpReceiverId] = (Json::UInt)associatedRtpReceiverId;
+		eventData[JsonStringClass]                   = "Peer";
+		eventData[JsonStringRtpSenderId]             = Json::UInt{ rtpSender->rtpSenderId };
+		eventData[JsonStringKind]                    = RTC::Media::GetJsonString(rtpSender->kind);
+		eventData[JsonStringRtpParameters]           = rtpSender->GetParameters()->ToJson();
+		eventData[JsonStringActive]                  = rtpSender->GetActive();
+		eventData[JsonStringAssociatedRtpReceiverId] = Json::UInt{ associatedRtpReceiverId };
 
 		this->notifier->Emit(this->peerId, "newrtpsender", eventData);
 	}
@@ -624,7 +624,7 @@ namespace RTC
 			auto rtpSender     = it->second;
 			auto rtpParameters = rtpSender->GetParameters();
 
-			if (!rtpParameters)
+			if (rtpParameters == nullptr)
 				continue;
 
 			auto it2 = rtpParameters->encodings.begin();
@@ -634,9 +634,9 @@ namespace RTC
 
 				if (encoding.ssrc == ssrc)
 					return rtpSender;
-				else if (encoding.hasFec && encoding.fec.ssrc == ssrc)
+				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
 					return rtpSender;
-				else if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
+				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
 					return rtpSender;
 			}
 		}
@@ -653,14 +653,14 @@ namespace RTC
 		// - Request every Sender and Receiver of such transport their RTCP data.
 		// - Send the CompoundPacket.
 
-		for (auto it = this->transports.begin(); it != this->transports.end(); ++it)
+		for (auto& it : this->transports)
 		{
 			std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
-			RTC::Transport* transport = it->second;
+			auto* transport = it.second;
 
-			for (auto it = this->rtpSenders.begin(); it != this->rtpSenders.end(); ++it)
+			for (auto& it : this->rtpSenders)
 			{
-				RTC::RtpSender* rtpSender = it->second;
+				auto* rtpSender = it.second;
 
 				if (rtpSender->GetTransport() != transport)
 					continue;
@@ -668,26 +668,26 @@ namespace RTC
 				rtpSender->GetRtcp(packet.get(), now);
 
 				// Send one RTCP compound packet per sender report.
-				if (packet->GetSenderReportCount())
+				if (packet->GetSenderReportCount() != 0u)
 				{
 					// Ensure that the RTCP packet fits into the RTCP buffer.
-					if (packet->GetSize() > RTC::RTCP::bufferSize)
+					if (packet->GetSize() > RTC::RTCP::BufferSize)
 					{
 						MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
 
 						return;
 					}
 
-					packet->Serialize(RTC::RTCP::buffer);
+					packet->Serialize(RTC::RTCP::Buffer);
 					transport->SendRtcpCompoundPacket(packet.get());
 					// Reset the Compound packet.
 					packet.reset(new RTC::RTCP::CompoundPacket());
 				}
 			}
 
-			for (auto it = this->rtpReceivers.begin(); it != this->rtpReceivers.end(); ++it)
+			for (auto& it : this->rtpReceivers)
 			{
-				RTC::RtpReceiver* rtpReceiver = it->second;
+				auto* rtpReceiver = it.second;
 
 				if (rtpReceiver->GetTransport() != transport)
 					continue;
@@ -696,17 +696,17 @@ namespace RTC
 			}
 
 			// Send one RTCP compound with all receiver reports.
-			if (packet->GetReceiverReportCount())
+			if (packet->GetReceiverReportCount() != 0u)
 			{
 				// Ensure that the RTCP packet fits into the RTCP buffer.
-				if (packet->GetSize() > RTC::RTCP::bufferSize)
+				if (packet->GetSize() > RTC::RTCP::BufferSize)
 				{
 					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
 
 					return;
 				}
 
-				packet->Serialize(RTC::RTCP::buffer);
+				packet->Serialize(RTC::RTCP::Buffer);
 				transport->SendRtcpCompoundPacket(packet.get());
 			}
 		}
@@ -716,84 +716,78 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_transportId("transportId");
+		static const Json::StaticString JsonStringTransportId{ "transportId" };
 
-		auto jsonTransportId = request->internal[k_transportId];
+		auto jsonTransportId = request->internal[JsonStringTransportId];
 
 		if (!jsonTransportId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.transportId");
 
-		if (transportId)
+		if (transportId != nullptr)
 			*transportId = jsonTransportId.asUInt();
 
 		auto it = this->transports.find(jsonTransportId.asUInt());
 		if (it != this->transports.end())
 		{
-			RTC::Transport* transport = it->second;
+			auto* transport = it->second;
 
 			return transport;
 		}
-		else
-		{
-			return nullptr;
-		}
+
+		return nullptr;
 	}
 
 	RTC::RtpReceiver* Peer::GetRtpReceiverFromRequest(Channel::Request* request, uint32_t* rtpReceiverId) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_rtpReceiverId("rtpReceiverId");
+		static const Json::StaticString JsonStringRtpReceiverId{ "rtpReceiverId" };
 
-		auto jsonRtpReceiverId = request->internal[k_rtpReceiverId];
+		auto jsonRtpReceiverId = request->internal[JsonStringRtpReceiverId];
 
 		if (!jsonRtpReceiverId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.rtpReceiverId");
 
-		if (rtpReceiverId)
+		if (rtpReceiverId != nullptr)
 			*rtpReceiverId = jsonRtpReceiverId.asUInt();
 
 		auto it = this->rtpReceivers.find(jsonRtpReceiverId.asUInt());
 		if (it != this->rtpReceivers.end())
 		{
-			RTC::RtpReceiver* rtpReceiver = it->second;
+			auto* rtpReceiver = it->second;
 
 			return rtpReceiver;
 		}
-		else
-		{
-			return nullptr;
-		}
+
+		return nullptr;
 	}
 
 	RTC::RtpSender* Peer::GetRtpSenderFromRequest(Channel::Request* request, uint32_t* rtpSenderId) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_rtpSenderId("rtpSenderId");
+		static const Json::StaticString JsonStringRtpSenderId{ "rtpSenderId" };
 
-		auto jsonRtpSenderId = request->internal[k_rtpSenderId];
+		auto jsonRtpSenderId = request->internal[JsonStringRtpSenderId];
 
 		if (!jsonRtpSenderId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.rtpSenderId");
 
-		if (rtpSenderId)
+		if (rtpSenderId != nullptr)
 			*rtpSenderId = jsonRtpSenderId.asUInt();
 
 		auto it = this->rtpSenders.find(jsonRtpSenderId.asUInt());
 		if (it != this->rtpSenders.end())
 		{
-			RTC::RtpSender* rtpSender = it->second;
+			auto* rtpSender = it->second;
 
 			return rtpSender;
 		}
-		else
-		{
-			return nullptr;
-		}
+
+		return nullptr;
 	}
 
-	void Peer::onTransportConnected(RTC::Transport* transport)
+	void Peer::OnTransportConnected(RTC::Transport* transport)
 	{
 		MS_TRACE();
 
@@ -801,7 +795,7 @@ namespace RTC
 		// listener.
 		for (auto& kv : this->rtpSenders)
 		{
-			RTC::RtpSender* rtpSender = kv.second;
+			auto* rtpSender = kv.second;
 
 			if (rtpSender->kind != RTC::Media::Kind::VIDEO && rtpSender->kind != RTC::Media::Kind::DEPTH)
 			{
@@ -811,18 +805,18 @@ namespace RTC
 			if (rtpSender->GetTransport() != transport)
 				continue;
 
-			this->listener->onFullFrameRequired(this, rtpSender);
+			this->listener->OnFullFrameRequired(this, rtpSender);
 		}
 	}
 
-	void Peer::onTransportClosed(RTC::Transport* transport)
+	void Peer::OnTransportClosed(RTC::Transport* transport)
 	{
 		MS_TRACE();
 
 		// Must remove the closed Transport from all the RtpReceivers holding it.
 		for (auto& kv : this->rtpReceivers)
 		{
-			RTC::RtpReceiver* rtpReceiver = kv.second;
+			auto* rtpReceiver = kv.second;
 
 			rtpReceiver->RemoveTransport(transport);
 		}
@@ -830,7 +824,7 @@ namespace RTC
 		// Must also unset this Transport from all the RtpSenders using it.
 		for (auto& kv : this->rtpSenders)
 		{
-			RTC::RtpSender* rtpSender = kv.second;
+			auto* rtpSender = kv.second;
 
 			rtpSender->RemoveTransport(transport);
 		}
@@ -838,7 +832,7 @@ namespace RTC
 		this->transports.erase(transport->transportId);
 	}
 
-	void Peer::onTransportFullFrameRequired(RTC::Transport* transport)
+	void Peer::OnTransportFullFrameRequired(RTC::Transport* transport)
 	{
 		MS_TRACE();
 
@@ -846,7 +840,7 @@ namespace RTC
 		// listener.
 		for (auto& kv : this->rtpReceivers)
 		{
-			RTC::RtpReceiver* rtpReceiver = kv.second;
+			auto* rtpReceiver = kv.second;
 
 			if (rtpReceiver->kind != RTC::Media::Kind::VIDEO && rtpReceiver->kind != RTC::Media::Kind::DEPTH)
 			{
@@ -860,7 +854,7 @@ namespace RTC
 		}
 	}
 
-	void Peer::onRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)
+	void Peer::OnRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
@@ -875,31 +869,31 @@ namespace RTC
 		auto transport = rtpReceiver->GetTransport();
 
 		// NOTE: This may throw.
-		if (transport)
+		if (transport != nullptr)
 			transport->AddRtpReceiver(rtpReceiver);
 	}
 
-	void Peer::onRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver)
+	void Peer::OnRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
 		// Notify the listener (Room).
-		this->listener->onPeerRtpReceiverParameters(this, rtpReceiver);
+		this->listener->OnPeerRtpReceiverParameters(this, rtpReceiver);
 	}
 
-	void Peer::onRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
+	void Peer::OnRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
 		// Notify the listener.
-		this->listener->onPeerRtpPacket(this, rtpReceiver, packet);
+		this->listener->OnPeerRtpPacket(this, rtpReceiver, packet);
 	}
 
-	void Peer::onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet)
+	void Peer::OnTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
-		while (packet)
+		while (packet != nullptr)
 		{
 			switch (packet->GetType())
 			{
@@ -908,17 +902,17 @@ namespace RTC
 
 				case RTCP::Type::RR:
 				{
-					RTCP::ReceiverReportPacket* rr = static_cast<RTCP::ReceiverReportPacket*>(packet);
-					RTCP::ReceiverReportPacket::Iterator it = rr->Begin();
+					auto* rr = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
+					auto it  = rr->Begin();
 
 					for (; it != rr->End(); ++it)
 					{
-						auto& report              = (*it);
-						RTC::RtpSender* rtpSender = this->GetRtpSender(report->GetSsrc());
+						auto& report    = (*it);
+						auto* rtpSender = this->GetRtpSender(report->GetSsrc());
 
-						if (rtpSender)
+						if (rtpSender != nullptr)
 						{
-							this->listener->onPeerRtcpReceiverReport(this, rtpSender, report);
+							this->listener->OnPeerRtcpReceiverReport(this, rtpSender, report);
 						}
 						else
 						{
@@ -934,15 +928,15 @@ namespace RTC
 
 				case RTCP::Type::PSFB:
 				{
-					RTCP::FeedbackPsPacket* feedback = static_cast<RTCP::FeedbackPsPacket*>(packet);
+					auto* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
 
 					switch (feedback->GetMessageType())
 					{
 						case RTCP::FeedbackPs::MessageType::AFB:
 						{
-							RTCP::FeedbackPsAfbPacket* afb = static_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+							auto* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
 
-							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::REMB)
+							if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
 								break;
 						}
 
@@ -952,16 +946,16 @@ namespace RTC
 						case RTCP::FeedbackPs::MessageType::RPSI:
 						case RTCP::FeedbackPs::MessageType::FIR:
 						{
-							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+							auto* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-							if (rtpSender)
+							if (rtpSender != nullptr)
 							{
 								if (feedback->GetMessageType() == RTCP::FeedbackPs::MessageType::PLI)
 								{
 									MS_DEBUG_TAG(rtx, "PLI received [media ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
 								}
 
-								this->listener->onPeerRtcpFeedback(this, rtpSender, feedback);
+								this->listener->OnPeerRtcpFeedback(this, rtpSender, feedback);
 							}
 							else
 							{
@@ -1002,18 +996,17 @@ namespace RTC
 
 				case RTCP::Type::RTPFB:
 				{
-					RTCP::FeedbackRtpPacket* feedback = static_cast<RTCP::FeedbackRtpPacket*>(packet);
+					auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
 
 					switch (feedback->GetMessageType())
 					{
 						case RTCP::FeedbackRtp::MessageType::NACK:
 						{
-							RTC::RtpSender* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
+							auto* rtpSender = this->GetRtpSender(feedback->GetMediaSsrc());
 
-							if (rtpSender)
+							if (rtpSender != nullptr)
 							{
-								RTC::RTCP::FeedbackRtpNackPacket* nackPacket =
-								    static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+								auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
 								rtpSender->ReceiveNack(nackPacket);
 							}
@@ -1060,19 +1053,19 @@ namespace RTC
 
 				case RTCP::Type::SR:
 				{
-					RTCP::SenderReportPacket* sr          = static_cast<RTCP::SenderReportPacket*>(packet);
-					RTCP::SenderReportPacket::Iterator it = sr->Begin();
+					auto* sr = dynamic_cast<RTCP::SenderReportPacket*>(packet);
+					auto it  = sr->Begin();
 
 					// Even if Sender Report packet can only contain one report..
 					for (; it != sr->End(); ++it)
 					{
 						auto& report = (*it);
 						// Get the receiver associated to the SSRC indicated in the report.
-						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
+						auto* rtpReceiver = transport->GetRtpReceiver(report->GetSsrc());
 
-						if (rtpReceiver)
+						if (rtpReceiver != nullptr)
 						{
-							this->listener->onPeerRtcpSenderReport(this, rtpReceiver, report);
+							this->listener->OnPeerRtcpSenderReport(this, rtpReceiver, report);
 						}
 						else
 						{
@@ -1088,16 +1081,16 @@ namespace RTC
 
 				case RTCP::Type::SDES:
 				{
-					RTCP::SdesPacket* sdes        = static_cast<RTCP::SdesPacket*>(packet);
-					RTCP::SdesPacket::Iterator it = sdes->Begin();
+					auto* sdes = dynamic_cast<RTCP::SdesPacket*>(packet);
+					auto it    = sdes->Begin();
 
 					for (; it != sdes->End(); ++it)
 					{
 						auto& chunk = (*it);
 						// Get the receiver associated to the SSRC indicated in the chunk.
-						RTC::RtpReceiver* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
+						auto* rtpReceiver = transport->GetRtpReceiver(chunk->GetSsrc());
 
-						if (!rtpReceiver)
+						if (rtpReceiver == nullptr)
 						{
 							MS_WARN_TAG(
 							    rtcp, "no RtpReceiver for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
@@ -1117,7 +1110,9 @@ namespace RTC
 				default:
 				{
 					MS_WARN_TAG(
-					    rtcp, "unhandled RTCP type received [type:%" PRIu8 "]", (uint8_t)packet->GetType());
+					    rtcp,
+					    "unhandled RTCP type received [type:%" PRIu8 "]",
+					    static_cast<uint8_t>(packet->GetType()));
 				}
 			}
 
@@ -1125,7 +1120,7 @@ namespace RTC
 		}
 	}
 
-	void Peer::onRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver)
+	void Peer::OnRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver)
 	{
 		MS_TRACE();
 
@@ -1141,10 +1136,10 @@ namespace RTC
 		this->rtpReceivers.erase(rtpReceiver->rtpReceiverId);
 
 		// Notify the listener (Room) so it can remove this RtpReceiver from its map.
-		this->listener->onPeerRtpReceiverClosed(this, rtpReceiver);
+		this->listener->OnPeerRtpReceiverClosed(this, rtpReceiver);
 	}
 
-	void Peer::onRtpSenderClosed(RTC::RtpSender* rtpSender)
+	void Peer::OnRtpSenderClosed(RTC::RtpSender* rtpSender)
 	{
 		MS_TRACE();
 
@@ -1152,18 +1147,18 @@ namespace RTC
 		this->rtpSenders.erase(rtpSender->rtpSenderId);
 
 		// Notify the listener (Room) so it can remove this RtpSender from its map.
-		this->listener->onPeerRtpSenderClosed(this, rtpSender);
+		this->listener->OnPeerRtpSenderClosed(this, rtpSender);
 	}
 
-	void Peer::onTimer(Timer* timer)
+	void Peer::OnTimer(Timer* /*timer*/)
 	{
-		uint64_t interval = RTC::RTCP::maxVideoIntervalMs;
+		uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
 		uint32_t now      = DepLibUV::GetTime();
 
 		this->SendRtcp(now);
 
 		// Recalculate next RTCP interval.
-		if (this->rtpSenders.size())
+		if (!this->rtpSenders.empty())
 		{
 			// Transmission rate in kbps.
 			uint32_t rate = 0;
@@ -1171,17 +1166,17 @@ namespace RTC
 			// Get the RTP sending rate.
 			for (auto& kv : this->rtpSenders)
 			{
-				RTC::RtpSender* rtpSender = kv.second;
+				auto* rtpSender = kv.second;
 
 				rate += rtpSender->GetTransmissionRate(now) / 1000;
 			}
 
 			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
-			if (rate)
+			if (rate != 0u)
 				interval = 360000 / rate;
 
-			if (interval > RTC::RTCP::maxVideoIntervalMs)
-				interval = RTC::RTCP::maxVideoIntervalMs;
+			if (interval > RTC::RTCP::MaxVideoIntervalMs)
+				interval = RTC::RTCP::MaxVideoIntervalMs;
 		}
 
 		/*
@@ -1192,4 +1187,4 @@ namespace RTC
 		interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
 		this->timer->Start(interval);
 	}
-}
+} // namespace RTC

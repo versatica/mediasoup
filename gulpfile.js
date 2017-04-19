@@ -3,11 +3,13 @@
 const gulp = require('gulp');
 const eslint = require('gulp-eslint');
 const replace = require('gulp-replace');
+const rename = require('gulp-rename');
 const touch = require('gulp-touch-cmd');
 const shell = require('gulp-shell');
 const clangFormat = require('gulp-clang-format');
+const os = require('os');
 
-let nodeFiles =
+const nodeFiles =
 [
 	'.eslintrc.js',
 	'gulpfile.js',
@@ -28,9 +30,25 @@ const nodeTests =
 	'test/test-Transport.js',
 	'test/test-RtpReceiver.js',
 	'test/test-extra.js'
-	// NOTE: Disable this test until adapted.
-	// 'test/test-scene-1.js'
 ];
+const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
+const workerHeaderFilterRegex =
+	'(common.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp' +
+	'|Loop.hpp|MediaSoupError.hpp|Settings.hpp|Utils.hpp' +
+	'|handles/*.hpp|Channel/*.hpp|RTC/**/*.hpp)';
+const numCpus = os.cpus().length;
+
+gulp.task('rtpcapabilities', () =>
+{
+	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
+
+	return gulp.src('worker/src/RTC/Room.cpp')
+		// Let's generate valid syntax as expected by clang-format rules.
+		.pipe(replace(/(const std::string supportedRtpCapabilities =).*\r?\n.*/,
+			`$1\n\t\t\t    R"(${JSON.stringify(supportedRtpCapabilities)})";`))
+		.pipe(gulp.dest('worker/src/RTC/'))
+		.pipe(touch());
+});
 
 gulp.task('lint:node', () =>
 {
@@ -63,6 +81,35 @@ gulp.task('format:worker', () =>
 		.pipe(gulp.dest('.'));
 });
 
+gulp.task('tidy:worker:prepare', () =>
+{
+	return gulp.src(workerCompilationDatabaseTemplate)
+		.pipe(replace(/PATH/gm, __dirname))
+		.pipe(rename('compile_commands.json'))
+		.pipe(gulp.dest('worker'))
+		.pipe(touch());
+});
+
+gulp.task('tidy:worker:run', shell.task(
+	[
+		'cd worker && ' +
+		'./scripts/clang-tidy.py ' +
+		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
+		'-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements ' +
+		`-header-filter='${workerHeaderFilterRegex}' ` +
+		'-p=. ' +
+		`-j=${numCpus} ` +
+		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS || ''} ` +
+		'-quiet ' +
+		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix -format' : ''}`
+	],
+	{
+		verbose : true
+	}
+));
+
+gulp.task('tidy:worker', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
+
 gulp.task('test:node', shell.task(
 	[
 		'if type make &> /dev/null; then make; fi',
@@ -86,21 +133,11 @@ gulp.task('test:worker', shell.task(
 	}
 ));
 
-gulp.task('rtpcapabilities', () =>
-{
-	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
-
-	return gulp.src('worker/src/RTC/Room.cpp')
-		// Let's generate valid syntax as expected by clang-format rules.
-		.pipe(replace(/(const std::string supportedRtpCapabilities =).*\r?\n.*/,
-			`$1\n\t\t\t    R"(${JSON.stringify(supportedRtpCapabilities)})";`))
-		.pipe(gulp.dest('worker/src/RTC/'))
-		.pipe(touch());
-});
-
 gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
 
 gulp.task('format', gulp.series('format:worker'));
+
+gulp.task('tidy', gulp.series('tidy:worker'));
 
 gulp.task('test', gulp.series('test:node', 'test:worker'));
 

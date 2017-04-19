@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// Packet size must be >= header size.
 			if (sizeof(Header) > len)
@@ -65,7 +65,8 @@ namespace RTC
 			size_t offset = sizeof(Packet::CommonHeader);
 
 			SenderReport* report = SenderReport::Parse(data + offset, len - offset);
-			if (report)
+
+			if (report != nullptr)
 				packet->AddReport(report);
 			else
 				return packet.release();
@@ -103,5 +104,5 @@ namespace RTC
 			}
 			MS_DUMP("</SenderReportPacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

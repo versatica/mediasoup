@@ -9,11 +9,11 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr uint32_t MaxPacketAge  = 10000;
-	constexpr size_t MaxNackPackets  = 500;
-	constexpr uint32_t DefaultRtt    = 100;
-	constexpr uint8_t MaxNackRetries = 8;
-	constexpr uint64_t TimerInterval = 25;
+	constexpr uint32_t MaxPacketAge{ 10000 };
+	constexpr size_t MaxNackPackets{ 500 };
+	constexpr uint32_t DefaultRtt{ 100 };
+	constexpr uint8_t MaxNackRetries{ 8 };
+	constexpr uint64_t TimerInterval{ 25 };
 
 	/* Instance methods. */
 
@@ -52,7 +52,7 @@ namespace RTC
 		{
 			return;
 		}
-		else if (seq32 == this->lastSeq32 + 1)
+		if (seq32 == this->lastSeq32 + 1)
 		{
 			this->lastSeq32++;
 
@@ -96,7 +96,7 @@ namespace RTC
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
 
 		if (!nackBatch.empty())
-			this->listener->onNackRequired(nackBatch);
+			this->listener->OnNackRequired(nackBatch);
 
 		MayRunTimer();
 	}
@@ -118,7 +118,7 @@ namespace RTC
 			MS_DEBUG_TAG(rtx, "nack list too large, clearing it and requesting a full frame");
 
 			this->nackList.clear();
-			this->listener->onFullFrameRequired();
+			this->listener->OnFullFrameRequired();
 
 			return;
 		}
@@ -205,19 +205,19 @@ namespace RTC
 
 	inline void NackGenerator::MayRunTimer() const
 	{
-		if (this->nackList.size() > 0)
+		if (!this->nackList.empty())
 			this->timer->Start(TimerInterval);
 	}
 
-	inline void NackGenerator::onTimer(Timer* timer)
+	inline void NackGenerator::OnTimer(Timer* /*timer*/)
 	{
 		MS_TRACE();
 
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::TIME);
 
 		if (!nackBatch.empty())
-			this->listener->onNackRequired(nackBatch);
+			this->listener->OnNackRequired(nackBatch);
 
 		MayRunTimer();
 	}
-}
+} // namespace RTC

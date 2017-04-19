@@ -8,7 +8,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value Parameters::toJson() const
+	Json::Value Parameters::ToJson() const
 	{
 		MS_TRACE();
 
@@ -30,7 +30,7 @@ namespace RTC
 
 				case Value::Type::INTEGER:
 				{
-					json[key] = (Json::Int)value.integerValue;
+					json[key] = Json::Int{ value.integerValue };
 
 					break;
 				}
@@ -54,7 +54,7 @@ namespace RTC
 					Json::Value array(Json::arrayValue);
 
 					for (auto& entry : value.arrayOfIntegers)
-						array.append((Json::Int)entry);
+						array.append(Json::Int{ entry });
 
 					json[key] = array;
 
@@ -90,7 +90,7 @@ namespace RTC
 
 				case Json::intValue:
 				{
-					int32_t integerValue = (int32_t)value.asInt();
+					auto integerValue = int32_t{ value.asInt() };
 
 					this->mapKeyValues[key] = Value(integerValue);
 
@@ -126,7 +126,7 @@ namespace RTC
 
 						if (entry.isInt())
 						{
-							arrayOfIntegers.push_back((int32_t)entry.asInt());
+							arrayOfIntegers.push_back(static_cast<int32_t>(entry.asInt()));
 						}
 						else
 						{
@@ -135,7 +135,7 @@ namespace RTC
 						}
 					}
 
-					if (arrayOfIntegers.size() > 0 && isValid)
+					if (!arrayOfIntegers.empty() && isValid)
 						this->mapKeyValues[key] = Value(arrayOfIntegers);
 
 					break;
@@ -205,4 +205,4 @@ namespace RTC
 
 		return this->mapKeyValues[key].arrayOfIntegers;
 	}
-}
+} // namespace RTC

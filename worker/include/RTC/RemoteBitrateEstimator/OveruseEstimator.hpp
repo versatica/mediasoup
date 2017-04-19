@@ -14,6 +14,7 @@
 #include "RTC/RemoteBitrateEstimator/BandwidthUsage.hpp"
 #include <cstring> // std::memcpy()
 #include <deque>
+#include <utility>
 
 namespace RTC
 {
@@ -37,7 +38,7 @@ namespace RTC
 	class OveruseEstimator
 	{
 	public:
-		explicit OveruseEstimator(const OverUseDetectorOptions& options);
+		explicit OveruseEstimator(OverUseDetectorOptions options);
 		~OveruseEstimator();
 
 		// Update the estimator with a new sample. The deltas should represent deltas
@@ -61,14 +62,14 @@ namespace RTC
 	private:
 		// Must be first member variable. Cannot be const because we need to be copyable.
 		OverUseDetectorOptions options;
-		uint16_t numOfDeltas = 0;
-		double slope         = 0;
-		double offset        = 0;
-		double prevOffset    = 0;
-		double E[2][2];
+		uint16_t numOfDeltas{ 0 };
+		double slope{ 0 };
+		double offset{ 0 };
+		double prevOffset{ 0 };
+		double e[2][2];
 		double processNoise[2];
-		double avgNoise = 0;
-		double varNoise = 0;
+		double avgNoise{ 0 };
+		double varNoise{ 0 };
 		std::deque<double> tsDeltaHist;
 	};
 
@@ -85,13 +86,13 @@ namespace RTC
 		initialProcessNoise[1]          = 1e-3;
 	}
 
-	inline OveruseEstimator::OveruseEstimator(const OverUseDetectorOptions& options)
-	    : options(options), numOfDeltas(0), slope(this->options.initialSlope),
-	      offset(this->options.initialOffset), prevOffset(this->options.initialOffset), E(),
+	inline OveruseEstimator::OveruseEstimator(OverUseDetectorOptions options)
+	    : options(std::move(options)), numOfDeltas(0), slope(this->options.initialSlope),
+	      offset(this->options.initialOffset), prevOffset(this->options.initialOffset), e(),
 	      processNoise(), avgNoise(this->options.initialAvgNoise),
 	      varNoise(this->options.initialVarNoise), tsDeltaHist()
 	{
-		std::memcpy(this->E, this->options.initialE, sizeof(this->E));
+		std::memcpy(this->e, this->options.initialE, sizeof(this->e));
 		std::memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));
 	}
 
@@ -114,6 +115,6 @@ namespace RTC
 	{
 		return this->numOfDeltas;
 	}
-}
+} // namespace RTC
 
 #endif

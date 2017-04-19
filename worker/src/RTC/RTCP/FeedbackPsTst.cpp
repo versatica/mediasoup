@@ -24,7 +24,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			return new FeedbackPsTstItem(header);
 		}
@@ -40,7 +40,7 @@ namespace RTC
 			// Set reserved bits to zero.
 			std::memset(this->header, 0, sizeof(Header));
 
-			this->header->ssrc           = htonl(ssrc);
+			this->header->ssrc           = uint32_t{ htonl(ssrc) };
 			this->header->sequenceNumber = sequenceNumber;
 			this->header->index          = index;
 		}
@@ -70,17 +70,17 @@ namespace RTC
 		/* Specialization for Tstr class. */
 
 		template<>
-		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::MessageType =
+		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::messageType =
 		    FeedbackPs::MessageType::TSTR;
 
 		/* Specialization for Tstn class. */
 
 		template<>
-		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::MessageType =
+		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::messageType =
 		    FeedbackPs::MessageType::TSTN;
 
 		// Explicit instantiation to have all definitions in this file.
 		template class FeedbackPsTstItem<Tstr>;
 		template class FeedbackPsTstItem<Tstn>;
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

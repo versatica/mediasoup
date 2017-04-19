@@ -15,7 +15,7 @@ extern "C" {
 
 /* Helpers declaration. */
 
-static bool IsBindableIP(const std::string& ip, int family, int* _bind_err);
+static bool isBindableIp(const std::string& ip, int family, int* bindErrno);
 
 /* Class variables. */
 
@@ -48,10 +48,8 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	/* Variables for getopt. */
 
-	extern char* optarg;
-	extern int opterr, optopt;
 	int c;
-	int optionIdx = 0;
+	int optionIdx{ 0 };
 	std::string stringValue;
 	std::vector<std::string> logTags;
 	// clang-format off
@@ -67,7 +65,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ "rtcMaxPort",          optional_argument, nullptr, 'M' },
 		{ "dtlsCertificateFile", optional_argument, nullptr, 'c' },
 		{ "dtlsPrivateKeyFile",  optional_argument, nullptr, 'p' },
-		{ 0, 0, 0, 0 }
+		{ nullptr, 0, nullptr, 0 }
 	};
 	// clang-format on
 
@@ -76,7 +74,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	opterr = 0; // Don't allow getopt to print error messages.
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
-		if (!optarg)
+		if (optarg == nullptr)
 			MS_THROW_ERROR("unknown configuration parameter: %s", optarg);
 
 		switch (c)
@@ -133,7 +131,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			// Invalid option.
 			case '?':
-				if (isprint(optopt))
+				if (isprint(optopt) != 0)
 					MS_THROW_ERROR("invalid option '-%c'", (char)optopt);
 				else
 					MS_THROW_ERROR("unknown long option given as argument");
@@ -184,21 +182,21 @@ void Settings::PrintConfiguration()
 	std::vector<std::string> logTags;
 
 	if (Settings::configuration.logTags.info)
-		logTags.push_back("info");
+		logTags.emplace_back("info");
 	if (Settings::configuration.logTags.ice)
-		logTags.push_back("ice");
+		logTags.emplace_back("ice");
 	if (Settings::configuration.logTags.dtls)
-		logTags.push_back("dtls");
+		logTags.emplace_back("dtls");
 	if (Settings::configuration.logTags.rtp)
-		logTags.push_back("rtp");
+		logTags.emplace_back("rtp");
 	if (Settings::configuration.logTags.srtp)
-		logTags.push_back("srtp");
+		logTags.emplace_back("srtp");
 	if (Settings::configuration.logTags.rtcp)
-		logTags.push_back("rtcp");
+		logTags.emplace_back("rtcp");
 	if (Settings::configuration.logTags.rbe)
-		logTags.push_back("rbe");
+		logTags.emplace_back("rbe");
 	if (Settings::configuration.logTags.rtx)
-		logTags.push_back("rtx");
+		logTags.emplace_back("rtx");
 
 	MS_DEBUG_TAG(info, "<configuration>");
 
@@ -263,13 +261,13 @@ void Settings::HandleRequest(Channel::Request* request)
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::worker_updateSettings:
+		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{
-			static const Json::StaticString k_logLevel("logLevel");
-			static const Json::StaticString k_logTags("logTags");
+			static const Json::StaticString JsonStringLogLevel{ "logLevel" };
+			static const Json::StaticString JsonStringLogTags{ "logTags" };
 
-			Json::Value jsonLogLevel = request->data[k_logLevel];
-			Json::Value jsonLogTags  = request->data[k_logTags];
+			Json::Value jsonLogLevel = request->data[JsonStringLogLevel];
+			Json::Value jsonLogTags  = request->data[JsonStringLogTags];
 
 			try
 			{
@@ -323,22 +321,23 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 	int bindErrno;
 
 	err = uv_interface_addresses(&addresses, &numAddresses);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_interface_addresses() failed: %s", uv_strerror(err));
 
-	for (int i = 0; i < numAddresses; ++i)
+	for (int i{ 0 }; i < numAddresses; ++i)
 	{
 		uv_interface_address_t address = addresses[i];
 
 		// Ignore internal addresses.
-		if (address.is_internal)
+		if (address.is_internal != 0)
 			continue;
 
 		int family;
 		uint16_t port;
 		std::string ip;
 
-		Utils::IP::GetAddressInfo((struct sockaddr*)(&address.address.address4), &family, ip, &port);
+		Utils::IP::GetAddressInfo(
+		    reinterpret_cast<struct sockaddr*>(&address.address.address4), &family, ip, &port);
 
 		if (family != requestedFamily)
 			continue;
@@ -351,7 +350,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 					continue;
 
 				// Check if it is bindable.
-				if (!IsBindableIP(ip, AF_INET, &bindErrno))
+				if (!isBindableIp(ip, AF_INET, &bindErrno))
 					continue;
 
 				ipv4 = ip;
@@ -363,7 +362,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 					continue;
 
 				// Check if it is bindable.
-				if (!IsBindableIP(ip, AF_INET6, &bindErrno))
+				if (!isBindableIp(ip, AF_INET6, &bindErrno))
 					continue;
 
 				ipv6 = ip;
@@ -403,10 +402,10 @@ void Settings::SetRtcIPv4(const std::string& ip)
 {
 	MS_TRACE();
 
-	if (ip.compare("true") == 0)
+	if (ip == "true")
 		return;
 
-	if (ip.empty() || ip.compare("false") == 0)
+	if (ip.empty() || ip == "false")
 	{
 		Settings::configuration.rtcIPv4.clear();
 		Settings::configuration.hasIPv4 = false;
@@ -430,7 +429,7 @@ void Settings::SetRtcIPv4(const std::string& ip)
 
 	int bindErrno;
 
-	if (!IsBindableIP(ip, AF_INET, &bindErrno))
+	if (!isBindableIp(ip, AF_INET, &bindErrno))
 		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv4: %s", ip.c_str(), std::strerror(bindErrno));
 }
 
@@ -438,10 +437,10 @@ void Settings::SetRtcIPv6(const std::string& ip)
 {
 	MS_TRACE();
 
-	if (ip.compare("true") == 0)
+	if (ip == "true")
 		return;
 
-	if (ip.empty() || ip.compare("false") == 0)
+	if (ip.empty() || ip == "false")
 	{
 		Settings::configuration.rtcIPv6.clear();
 		Settings::configuration.hasIPv6 = false;
@@ -465,7 +464,7 @@ void Settings::SetRtcIPv6(const std::string& ip)
 
 	int bindErrno;
 
-	if (!IsBindableIP(ip, AF_INET6, &bindErrno))
+	if (!isBindableIp(ip, AF_INET6, &bindErrno))
 		MS_THROW_ERROR("cannot bind on '%s' for rtcIPv6: %s", ip.c_str(), std::strerror(bindErrno));
 }
 
@@ -570,10 +569,8 @@ void Settings::SetLogTags(Json::Value& json)
 
 	std::vector<std::string> tags;
 
-	for (Json::UInt i = 0; i < json.size(); ++i)
+	for (const auto& entry : json)
 	{
-		Json::Value entry = json[i];
-
 		if (entry.isString())
 			tags.push_back(entry.asString());
 	}
@@ -583,38 +580,44 @@ void Settings::SetLogTags(Json::Value& json)
 
 /* Helpers. */
 
-bool IsBindableIP(const std::string& ip, int family, int* bindErrno)
+bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 {
 	MS_TRACE();
 
-	struct sockaddr_storage bindAddr;
+	// clang-format off
+	struct sockaddr_storage bindAddr{};
+	// clang-format on
 	int bindSocket;
-	int err = 0;
+	int err{ 0 };
 	bool success;
 
 	switch (family)
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), 0, (struct sockaddr_in*)&bindAddr);
-			if (err)
+			err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
 			bindSocket = socket(AF_INET, SOCK_DGRAM, 0);
 			if (bindSocket == -1)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
-			err = bind(bindSocket, (const struct sockaddr*)&bindAddr, sizeof(struct sockaddr_in));
+			err = bind(
+			    bindSocket, reinterpret_cast<const struct sockaddr*>(&bindAddr), sizeof(struct sockaddr_in));
 			break;
 
 		case AF_INET6:
-			uv_ip6_addr(ip.c_str(), 0, (struct sockaddr_in6*)&bindAddr);
-			if (err)
+			uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			bindSocket = socket(AF_INET6, SOCK_DGRAM, 0);
 			if (bindSocket == -1)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
-			err = bind(bindSocket, (const struct sockaddr*)&bindAddr, sizeof(struct sockaddr_in6));
+			err = bind(
+			    bindSocket,
+			    reinterpret_cast<const struct sockaddr*>(&bindAddr),
+			    sizeof(struct sockaddr_in6));
 			break;
 
 		default:
@@ -632,7 +635,7 @@ bool IsBindableIP(const std::string& ip, int family, int* bindErrno)
 	}
 
 	err = close(bindSocket);
-	if (err)
+	if (err != 0)
 		MS_ABORT("close() failed: %s", std::strerror(errno));
 
 	return success;

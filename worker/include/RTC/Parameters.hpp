@@ -50,9 +50,9 @@ namespace RTC
 
 		public:
 			Type type;
-			bool booleanValue    = false;
-			int32_t integerValue = 0;
-			double doubleValue   = 0.0;
+			bool booleanValue{ false };
+			int32_t integerValue{ 0 };
+			double doubleValue{ 0.0 };
 			std::string stringValue;
 			std::vector<int32_t> arrayOfIntegers;
 		};
@@ -60,7 +60,7 @@ namespace RTC
 	public:
 		Parameters(){};
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void Set(Json::Value& data);
 
 		bool HasBoolean(std::string& key);
@@ -162,6 +162,6 @@ namespace RTC
 	{
 		this->mapKeyValues[key] = Value(arrayOfIntegers);
 	}
-}
+} // namespace RTC
 
 #endif

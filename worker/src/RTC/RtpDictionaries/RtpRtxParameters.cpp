@@ -13,28 +13,28 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpRtxParameters is not an object");
 
 		// `ssrc` is optional.
-		if (data[k_ssrc].isUInt())
-			this->ssrc = (uint32_t)data[k_ssrc].asUInt();
+		if (data[JsonStringSsrc].isUInt())
+			this->ssrc = uint32_t{ data[JsonStringSsrc].asUInt() };
 	}
 
-	Json::Value RtpRtxParameters::toJson() const
+	Json::Value RtpRtxParameters::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 
 		Json::Value json(Json::objectValue);
 
 		// Add `ssrc`.
-		if (this->ssrc)
-			json[k_ssrc] = (Json::UInt)this->ssrc;
+		if (this->ssrc != 0u)
+			json[JsonStringSsrc] = Json::UInt{ this->ssrc };
 
 		return json;
 	}
-}
+} // namespace RTC

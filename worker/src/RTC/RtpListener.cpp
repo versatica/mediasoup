@@ -9,13 +9,13 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value RtpListener::toJson() const
+	Json::Value RtpListener::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrcTable("ssrcTable");
-		static const Json::StaticString k_muxIdTable("muxIdTable");
-		static const Json::StaticString k_ptTable("ptTable");
+		static const Json::StaticString JsonStringSsrcTable{ "ssrcTable" };
+		static const Json::StaticString JsonStringMuxIdTable{ "muxIdTable" };
+		static const Json::StaticString JsonStringPtTable{ "ptTable" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonSsrcTable(Json::objectValue);
@@ -30,7 +30,7 @@ namespace RTC
 
 			jsonSsrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_ssrcTable] = jsonSsrcTable;
+		json[JsonStringSsrcTable] = jsonSsrcTable;
 
 		// Add `muxIdTable`.
 		for (auto& kv : this->muxIdTable)
@@ -40,7 +40,7 @@ namespace RTC
 
 			jsonMuxIdTable[muxId] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_muxIdTable] = jsonMuxIdTable;
+		json[JsonStringMuxIdTable] = jsonMuxIdTable;
 
 		// Add `ptTable`.
 		for (auto& kv : this->ptTable)
@@ -50,7 +50,7 @@ namespace RTC
 
 			jsonPtTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
 		}
-		json[k_ptTable] = jsonPtTable;
+		json[JsonStringPtTable] = jsonPtTable;
 
 		return json;
 	}
@@ -113,7 +113,7 @@ namespace RTC
 
 				ssrc = encoding.ssrc;
 
-				if (ssrc)
+				if (ssrc != 0u)
 				{
 					if (!this->HasSsrc(ssrc, rtpReceiver))
 					{
@@ -132,7 +132,7 @@ namespace RTC
 
 				ssrc = encoding.rtx.ssrc;
 
-				if (ssrc)
+				if (ssrc != 0u)
 				{
 					if (!this->HasSsrc(ssrc, rtpReceiver))
 					{
@@ -151,7 +151,7 @@ namespace RTC
 
 				ssrc = encoding.fec.ssrc;
 
-				if (ssrc)
+				if (ssrc != 0u)
 				{
 					if (!this->HasSsrc(ssrc, rtpReceiver))
 					{
@@ -199,8 +199,8 @@ namespace RTC
 			{
 				auto& encoding = *it;
 
-				if (!encoding.ssrc || (encoding.hasRtx && !encoding.rtx.ssrc) ||
-				    (encoding.hasFec && !encoding.fec.ssrc))
+				if ((encoding.ssrc == 0u) || (encoding.hasRtx && (encoding.rtx.ssrc == 0u)) ||
+				    (encoding.hasFec && (encoding.fec.ssrc == 0u)))
 				{
 					break;
 				}
@@ -350,4 +350,4 @@ namespace RTC
 			this->ptTable[payloadType] = rtpReceiver;
 		}
 	}
-}
+} // namespace RTC

@@ -24,7 +24,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			return new FeedbackRtpNackItem(header);
 		}
@@ -35,8 +35,8 @@ namespace RTC
 			this->raw    = new uint8_t[sizeof(Header)];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
-			this->header->packetId          = htons(packetId);
-			this->header->lostPacketBitmask = htons(lostPacketBitmask);
+			this->header->packetId          = uint16_t{ htons(packetId) };
+			this->header->lostPacketBitmask = uint16_t{ htons(lostPacketBitmask) };
 		}
 
 		size_t FeedbackRtpNackItem::Serialize(uint8_t* buffer)
@@ -60,5 +60,5 @@ namespace RTC
 			MS_DUMP("  bpl : %s", nackBitset.to_string().c_str());
 			MS_DUMP("</FeedbackRtpNackItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

@@ -67,11 +67,11 @@ namespace RTC
 			// DTLS is in the process of negotiating a secure connection. Incoming
 			// media can flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void onDtlsConnected(
+			virtual void OnDtlsConnected(
 			    const RTC::DtlsTransport* dtlsTransport,
 			    RTC::SrtpSession::Profile srtpProfile,
 			    uint8_t* srtpLocalKey,
@@ -82,17 +82,17 @@ namespace RTC
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onOutgoingDtlsData(
+			virtual void OnOutgoingDtlsData(
 			    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
-			virtual void onDtlsApplicationData(
+			virtual void OnDtlsApplicationData(
 			    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 
@@ -100,14 +100,14 @@ namespace RTC
 		static void ClassInit();
 		static void ClassDestroy();
 		static Json::Value& GetLocalFingerprints();
-		static Role StringToRole(std::string role);
-		static FingerprintAlgorithm GetFingerprintAlgorithm(std::string fingerprint);
+		static Role StringToRole(const std::string& role);
+		static FingerprintAlgorithm GetFingerprintAlgorithm(const std::string& fingerprint);
 		static bool IsDtls(const uint8_t* data, size_t len);
 
 	private:
 		static void GenerateCertificateAndPrivateKey();
 		static void ReadCertificateAndPrivateKeyFromFiles();
-		static void CreateSSL_CTX();
+		static void CreateSslCtx();
 		static void GenerateFingerprints();
 
 	private:
@@ -124,7 +124,7 @@ namespace RTC
 		explicit DtlsTransport(Listener* listener);
 
 	private:
-		virtual ~DtlsTransport();
+		~DtlsTransport() override;
 
 	public:
 		void Destroy();
@@ -139,7 +139,7 @@ namespace RTC
 	private:
 		bool IsRunning() const;
 		void Reset();
-		bool CheckStatus(int return_code);
+		bool CheckStatus(int returnCode);
 		void SendPendingOutgoingDtlsData();
 		bool SetTimeout();
 		void ProcessHandshake();
@@ -149,26 +149,26 @@ namespace RTC
 
 		/* Callbacks fired by OpenSSL events. */
 	public:
-		void onSSLInfo(int where, int ret);
+		void OnSslInfo(int where, int ret);
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
-		virtual void onTimer(Timer* timer) override;
+		void OnTimer(Timer* timer) override;
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
+		Listener* listener{ nullptr };
 		// Allocated by this.
-		SSL* ssl               = nullptr;
-		BIO* sslBioFromNetwork = nullptr; // The BIO from which ssl reads.
-		BIO* sslBioToNetwork   = nullptr; // The BIO in which ssl writes.
-		Timer* timer           = nullptr;
+		SSL* ssl{ nullptr };
+		BIO* sslBioFromNetwork{ nullptr }; // The BIO from which ssl reads.
+		BIO* sslBioToNetwork{ nullptr };   // The BIO in which ssl writes.
+		Timer* timer{ nullptr };
 		// Others.
-		DtlsState state               = DtlsState::NEW;
-		Role localRole                = Role::NONE;
-		Fingerprint remoteFingerprint = {FingerprintAlgorithm::NONE, ""};
-		bool handshakeDone            = false;
-		bool handshakeDoneNow         = false;
+		DtlsState state{ DtlsState::NEW };
+		Role localRole{ Role::NONE };
+		Fingerprint remoteFingerprint{ FingerprintAlgorithm::NONE, "" };
+		bool handshakeDone{ false };
+		bool handshakeDoneNow{ false };
 		std::string remoteCert;
 	};
 
@@ -179,7 +179,7 @@ namespace RTC
 		return DtlsTransport::localFingerprints;
 	}
 
-	inline DtlsTransport::Role DtlsTransport::StringToRole(std::string role)
+	inline DtlsTransport::Role DtlsTransport::StringToRole(const std::string& role)
 	{
 		auto it = DtlsTransport::string2Role.find(role);
 
@@ -189,7 +189,8 @@ namespace RTC
 			return DtlsTransport::Role::NONE;
 	}
 
-	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(std::string fingerprint)
+	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(
+	    const std::string& fingerprint)
 	{
 		auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
 
@@ -237,6 +238,6 @@ namespace RTC
 		// Make GCC 4.9 happy.
 		return false;
 	}
-}
+} // namespace RTC
 
 #endif

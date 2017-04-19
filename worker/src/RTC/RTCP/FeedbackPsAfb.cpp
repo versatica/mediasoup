@@ -24,13 +24,12 @@ namespace RTC
 				return nullptr;
 			}
 
-			CommonHeader* commonHeader =
-			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<FeedbackPsAfbPacket> packet;
 
-			constexpr size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
-			if (Utils::Byte::Get4Bytes(data, offset) == FeedbackPsRembPacket::UniqueIdentifier)
+			constexpr size_t Offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
+			if (Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::uniqueIdentifier)
 			{
 				packet.reset(FeedbackPsRembPacket::Parse(data, len));
 			}
@@ -63,5 +62,5 @@ namespace RTC
 			FeedbackPsPacket::Dump();
 			MS_DUMP("</FeedbackPsAfbPacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

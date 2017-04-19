@@ -9,38 +9,38 @@
 
 /* Static. */
 
-static constexpr size_t ReadBufferSize = 65536;
+static constexpr size_t ReadBufferSize{ 65536 };
 static uint8_t ReadBuffer[ReadBufferSize];
 
 /* Static methods for UV callbacks. */
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	static_cast<UdpSocket*>(handle->data)->onUvRecvAlloc(suggestedSize, buf);
+	static_cast<UdpSocket*>(handle->data)->OnUvRecvAlloc(suggestedSize, buf);
 }
 
 inline static void onRecv(
     uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
-	static_cast<UdpSocket*>(handle->data)->onUvRecv(nread, buf, addr, flags);
+	static_cast<UdpSocket*>(handle->data)->OnUvRecv(nread, buf, addr, flags);
 }
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
-	UdpSocket::UvSendData* sendData = static_cast<UdpSocket::UvSendData*>(req->data);
-	UdpSocket* socket               = sendData->socket;
+	auto* sendData    = static_cast<UdpSocket::UvSendData*>(req->data);
+	UdpSocket* socket = sendData->socket;
 
 	// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 	std::free(sendData);
 
 	// Just notify the UdpSocket when error.
-	if (status)
-		socket->onUvSendError(status);
+	if (status != 0)
+		socket->OnUvSendError(status);
 }
 
 inline static void onClose(uv_handle_t* handle)
 {
-	static_cast<UdpSocket*>(handle->data)->onUvClosed();
+	static_cast<UdpSocket*>(handle->data)->OnUvClosed();
 }
 
 inline static void onErrorClose(uv_handle_t* handle)
@@ -61,7 +61,7 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	this->uvHandle->data = (void*)this;
 
 	err = uv_udp_init(DepLibUV::GetLoop(), this->uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -69,48 +69,53 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 		MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
 	}
 
-	struct sockaddr_storage bind_addr;
+	// clang-format off
+	struct sockaddr_storage bindAddr{};
+	// clang-format on
 
 	switch (Utils::IP::GetFamily(ip))
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bind_addr);
-			if (err)
+			err = uv_ip4_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
-			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&bind_addr);
-			if (err)
+			err = uv_ip6_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			// Don't also bind into IPv4 when listening in IPv6.
 			flags |= UV_UDP_IPV6ONLY;
 			break;
 
 		default:
-			uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 			MS_THROW_ERROR("invalid binding IP '%s'", ip.c_str());
 			break;
 	}
 
-	err = uv_udp_bind(this->uvHandle, (const struct sockaddr*)&bind_addr, flags);
-	if (err)
+	err = uv_udp_bind(this->uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
+	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_udp_bind() failed: %s", uv_strerror(err));
 	}
 
-	err = uv_udp_recv_start(this->uvHandle, (uv_alloc_cb)onAlloc, (uv_udp_recv_cb)onRecv);
-	if (err)
+	err = uv_udp_recv_start(
+	    this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
+	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -123,17 +128,18 @@ UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 
 	this->uvHandle->data = (void*)this;
 
-	err = uv_udp_recv_start(this->uvHandle, (uv_alloc_cb)onAlloc, (uv_udp_recv_cb)onRecv);
-	if (err)
+	err = uv_udp_recv_start(
+	    this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
+	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -142,8 +148,7 @@ UdpSocket::~UdpSocket()
 {
 	MS_TRACE();
 
-	if (this->uvHandle)
-		delete this->uvHandle;
+	delete this->uvHandle;
 }
 
 void UdpSocket::Destroy()
@@ -159,10 +164,10 @@ void UdpSocket::Destroy()
 
 	// Don't read more.
 	err = uv_udp_recv_stop(this->uvHandle);
-	if (err)
+	if (err != 0)
 		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
 
-	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
 
 void UdpSocket::Dump() const
@@ -171,7 +176,7 @@ void UdpSocket::Dump() const
 	MS_DUMP(
 	    "  [UDP, local:%s :%" PRIu16 ", status:%s]",
 	    this->localIP.c_str(),
-	    (uint16_t)this->localPort,
+	    static_cast<uint16_t>(this->localPort),
 	    (!this->isClosing) ? "open" : "closed");
 	MS_DUMP("</UdpSocket>");
 }
@@ -186,29 +191,29 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	if (len == 0)
 		return;
 
-	uv_buf_t buffer;
+	uv_buf_t buffer{};
 	int sent;
 	int err;
 
 	// First try uv_udp_try_send(). In case it can not directly send the datagram
 	// then build a uv_req_t and use uv_udp_send().
 
-	buffer = uv_buf_init((char*)data, len);
+	buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
 	sent   = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
 
 	// Entire datagram was sent. Done.
-	if (sent == (int)len)
+	if (sent == static_cast<int>(len))
 	{
 		return;
 	}
-	else if (sent >= 0)
+	if (sent >= 0)
 	{
 		MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 
 		return;
 	}
 	// Error,
-	else if (sent != UV_EAGAIN)
+	if (sent != UV_EAGAIN)
 	{
 		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
 
@@ -219,16 +224,17 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.
-	UvSendData* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
+	auto* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
 
 	sendData->socket = this;
 	std::memcpy(sendData->store, data, len);
 	sendData->req.data = (void*)sendData;
 
-	buffer = uv_buf_init((char*)sendData->store, len);
+	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
 
-	err = uv_udp_send(&sendData->req, this->uvHandle, &buffer, 1, addr, (uv_udp_send_cb)onSend);
-	if (err)
+	err = uv_udp_send(
+	    &sendData->req, this->uvHandle, &buffer, 1, addr, static_cast<uv_udp_send_cb>(onSend));
+	if (err != 0)
 	{
 		// NOTE: uv_udp_send() returns error if a wrong INET family is given
 		// (IPv6 destination on a IPv4 binded socket), so be ready.
@@ -251,19 +257,23 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 	if (len == 0)
 		return;
 
-	struct sockaddr_storage addr;
+	// clang-format off
+	struct sockaddr_storage addr{};
+	// clang-format on
 
 	switch (Utils::IP::GetFamily(ip))
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&addr);
-			if (err)
+			err = uv_ip4_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&addr));
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
-			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&addr);
-			if (err)
+			err = uv_ip6_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&addr));
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			break;
 
@@ -273,7 +283,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 			return;
 	}
 
-	Send(data, len, (struct sockaddr*)&addr);
+	Send(data, len, reinterpret_cast<struct sockaddr*>(&addr));
 }
 
 bool UdpSocket::SetLocalAddress()
@@ -283,8 +293,9 @@ bool UdpSocket::SetLocalAddress()
 	int err;
 	int len = sizeof(this->localAddr);
 
-	err = uv_udp_getsockname(this->uvHandle, (struct sockaddr*)&this->localAddr, &len);
-	if (err)
+	err =
+	    uv_udp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
+	if (err != 0)
 	{
 		MS_ERROR("uv_udp_getsockname() failed: %s", uv_strerror(err));
 
@@ -293,22 +304,25 @@ bool UdpSocket::SetLocalAddress()
 
 	int family;
 	Utils::IP::GetAddressInfo(
-	    (const struct sockaddr*)&this->localAddr, &family, this->localIP, &this->localPort);
+	    reinterpret_cast<const struct sockaddr*>(&this->localAddr),
+	    &family,
+	    this->localIP,
+	    &this->localPort);
 
 	return true;
 }
 
-inline void UdpSocket::onUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf)
+inline void UdpSocket::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
 	// Tell UV to write into the static buffer.
-	buf->base = (char*)ReadBuffer;
+	buf->base = reinterpret_cast<char*>(ReadBuffer);
 	// Give UV all the buffer space.
 	buf->len = ReadBufferSize;
 }
 
-inline void UdpSocket::onUvRecv(
+inline void UdpSocket::OnUvRecv(
     ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
 	MS_TRACE();
@@ -322,7 +336,7 @@ inline void UdpSocket::onUvRecv(
 		return;
 
 	// Check flags.
-	if (flags & UV_UDP_PARTIAL)
+	if ((flags & UV_UDP_PARTIAL) != 0u)
 	{
 		MS_ERROR("received datagram was truncated due to insufficient buffer, ignoring it");
 
@@ -333,7 +347,7 @@ inline void UdpSocket::onUvRecv(
 	if (nread > 0)
 	{
 		// Notify the subclass.
-		userOnUdpDatagramRecv((uint8_t*)buf->base, nread, addr);
+		UserOnUdpDatagramRecv(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
 	}
 	// Some error.
 	else
@@ -342,7 +356,7 @@ inline void UdpSocket::onUvRecv(
 	}
 }
 
-inline void UdpSocket::onUvSendError(int error)
+inline void UdpSocket::OnUvSendError(int /*error*/)
 {
 	MS_TRACE();
 
@@ -352,12 +366,12 @@ inline void UdpSocket::onUvSendError(int error)
 	MS_DEBUG_DEV("send error: %s", uv_strerror(error));
 }
 
-inline void UdpSocket::onUvClosed()
+inline void UdpSocket::OnUvClosed()
 {
 	MS_TRACE();
 
 	// Notify the subclass.
-	userOnUdpSocketClosed();
+	UserOnUdpSocketClosed();
 
 	// And delete this.
 	delete this;

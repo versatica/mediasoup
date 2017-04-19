@@ -23,7 +23,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			return new FeedbackPsVbcmItem(header);
 		}
@@ -35,11 +35,11 @@ namespace RTC
 			this->raw    = new uint8_t[8 + length];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
-			this->header->ssrc           = htonl(ssrc);
+			this->header->ssrc           = uint32_t{ htonl(ssrc) };
 			this->header->sequenceNumber = sequenceNumber;
 			this->header->zero           = 0;
 			this->header->payloadType    = payloadType;
-			this->header->length         = htons(length);
+			this->header->length         = uint16_t{ htons(length) };
 			std::memcpy(this->header->value, value, sizeof(length));
 		}
 
@@ -54,10 +54,10 @@ namespace RTC
 			std::memcpy(buffer + 8, this->header->value, this->header->length);
 
 			size_t offset = 8 + this->header->length;
-
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
-			for (size_t i = 0; i < padding; ++i)
+
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}
@@ -76,5 +76,5 @@ namespace RTC
 			MS_DUMP("  length          : %" PRIu16, this->GetLength());
 			MS_DUMP("</FeedbackPsVbcmItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

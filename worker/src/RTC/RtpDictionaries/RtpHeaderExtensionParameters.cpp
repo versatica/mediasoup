@@ -13,19 +13,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_uri("uri");
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_encrypt("encrypt");
-		static const Json::StaticString k_parameters("parameters");
+		static const Json::StaticString JsonStringUri{ "uri" };
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringEncrypt{ "encrypt" };
+		static const Json::StaticString JsonStringParameters{ "parameters" };
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpHeaderExtensionParameters is not an object");
 
 		// `uri` is mandatory.
-		if (!data[k_uri].isString())
+		if (!data[JsonStringUri].isString())
 			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.uri");
 
-		this->uri = data[k_uri].asString();
+		this->uri = data[JsonStringUri].asString();
 		if (this->uri.empty())
 			MS_THROW_ERROR("empty RtpHeaderExtensionParameters.uri");
 
@@ -33,43 +33,43 @@ namespace RTC
 		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
 
 		// `id` is mandatory.
-		if (!data[k_id].isUInt())
+		if (!data[JsonStringId].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.id");
 
-		this->id = (uint8_t)data[k_id].asUInt();
+		this->id = static_cast<uint8_t>(data[JsonStringId].asUInt());
 
 		// `encrypt` is optional.
-		if (data[k_encrypt].isBool())
-			this->encrypt = data[k_encrypt].asBool();
+		if (data[JsonStringEncrypt].isBool())
+			this->encrypt = data[JsonStringEncrypt].asBool();
 
 		// `parameters` is optional.
-		if (data[k_parameters].isObject())
-			this->parameters.Set(data[k_parameters]);
+		if (data[JsonStringParameters].isObject())
+			this->parameters.Set(data[JsonStringParameters]);
 	}
 
-	Json::Value RtpHeaderExtensionParameters::toJson() const
+	Json::Value RtpHeaderExtensionParameters::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_uri("uri");
-		static const Json::StaticString k_id("id");
-		static const Json::StaticString k_encrypt("encrypt");
-		static const Json::StaticString k_parameters("parameters");
+		static const Json::StaticString JsonStringUri{ "uri" };
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringEncrypt{ "encrypt" };
+		static const Json::StaticString JsonStringParameters{ "parameters" };
 
 		Json::Value json(Json::objectValue);
 
 		// Add `uri`.
-		json[k_uri] = this->uri;
+		json[JsonStringUri] = this->uri;
 
 		// Add `id`.
-		json[k_id] = (Json::UInt)this->id;
+		json[JsonStringId] = Json::UInt{ this->id };
 
 		// Add `encrypt`.
-		json[k_encrypt] = this->encrypt;
+		json[JsonStringEncrypt] = this->encrypt;
 
 		// Add `parameters`.
-		json[k_parameters] = this->parameters.toJson();
+		json[JsonStringParameters] = this->parameters.ToJson();
 
 		return json;
 	}
-}
+} // namespace RTC

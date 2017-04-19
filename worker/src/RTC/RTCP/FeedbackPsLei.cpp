@@ -23,7 +23,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			return new FeedbackPsLeiItem(header);
 		}
@@ -35,7 +35,7 @@ namespace RTC
 
 			this->raw          = new uint8_t[sizeof(Header)];
 			this->header       = reinterpret_cast<Header*>(this->raw);
-			this->header->ssrc = htonl(ssrc);
+			this->header->ssrc = uint32_t{ htonl(ssrc) };
 		}
 
 		size_t FeedbackPsLeiItem::Serialize(uint8_t* buffer)
@@ -56,5 +56,5 @@ namespace RTC
 			MS_DUMP("  ssrc : %" PRIu32, this->GetSsrc());
 			MS_DUMP("</FeedbackPsLeiItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

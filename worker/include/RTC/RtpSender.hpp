@@ -27,7 +27,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRtpSenderClosed(RtpSender* rtpSender) = 0;
+			virtual void OnRtpSenderClosed(RtpSender* rtpSender) = 0;
 		};
 
 	public:
@@ -39,7 +39,7 @@ namespace RTC
 
 	public:
 		void Destroy();
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		void SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities);
 		void Send(RTC::RtpParameters* rtpParameters);
@@ -61,27 +61,27 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t rtpSenderId;
+		uint32_t rtpSenderId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:
 		// Passed by argument.
-		Listener* listener                     = nullptr;
-		Channel::Notifier* notifier            = nullptr;
-		RTC::Transport* transport              = nullptr;
-		RTC::RtpCapabilities* peerCapabilities = nullptr;
+		Listener* listener{ nullptr };
+		Channel::Notifier* notifier{ nullptr };
+		RTC::Transport* transport{ nullptr };
+		RTC::RtpCapabilities* peerCapabilities{ nullptr };
 		// Allocated by this.
-		RTC::RtpParameters* rtpParameters = nullptr;
-		RTC::RtpStreamSend* rtpStream     = nullptr;
+		RTC::RtpParameters* rtpParameters{ nullptr };
+		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedPayloadTypes;
 		// Whether this RtpSender is valid according to Peer capabilities.
-		bool available = false;
+		bool available{ false };
 		// Whether this RtpSender has been disabled by the app.
-		bool disabled = false;
+		bool disabled{ false };
 		// Timestamp when last RTCP was sent.
-		uint64_t lastRtcpSentTime = 0;
-		uint16_t maxRtcpInterval;
+		uint64_t lastRtcpSentTime{ 0 };
+		uint16_t maxRtcpInterval{ 0 };
 		// RTP counters.
 		RTC::RtpDataCounter transmittedCounter;
 		// TODO: keep track of retransmitted data too.
@@ -130,6 +130,6 @@ namespace RTC
 	{
 		return this->transmittedCounter.GetRate(now);
 	}
-}
+} // namespace RTC
 
 #endif

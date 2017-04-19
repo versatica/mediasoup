@@ -13,14 +13,14 @@ namespace RTC
 		class ByePacket : public Packet
 		{
 		public:
-			typedef std::vector<uint32_t>::iterator Iterator;
+			using Iterator = std::vector<uint32_t>::iterator;
 
 		public:
 			static ByePacket* Parse(const uint8_t* data, size_t len);
 
 		public:
 			ByePacket();
-			virtual ~ByePacket(){};
+			~ByePacket() override = default;
 
 			void AddSsrc(uint32_t ssrc);
 			void SetReason(const std::string& reason);
@@ -30,10 +30,10 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetCount() const override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetCount() const override;
+			size_t GetSize() const override;
 
 		private:
 			std::vector<uint32_t> ssrcs;
@@ -92,7 +92,7 @@ namespace RTC
 		{
 			return this->ssrcs.end();
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

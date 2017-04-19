@@ -641,7 +641,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
-		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::UNKNOWN);
+		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::Application::UNKNOWN);
 
 		delete packet;
 	}
@@ -661,7 +661,7 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		packet.SetSsrcs(ssrcs);
 
 		// Serialize.
-		uint8_t rtcpBuffer[RTC::RTCP::bufferSize];
+		uint8_t rtcpBuffer[RTC::RTCP::BufferSize];
 
 		packet.Serialize(rtcpBuffer);
 

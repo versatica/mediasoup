@@ -17,31 +17,31 @@ namespace Channel
 	public:
 		enum class MethodId
 		{
-			worker_dump = 1,
-			worker_updateSettings,
-			worker_createRoom,
-			room_close,
-			room_dump,
-			room_createPeer,
-			peer_close,
-			peer_dump,
-			peer_setCapabilities,
-			peer_createTransport,
-			peer_createRtpReceiver,
-			transport_close,
-			transport_dump,
-			transport_setRemoteDtlsParameters,
-			transport_setMaxBitrate,
-			transport_changeUfragPwd,
-			rtpReceiver_close,
-			rtpReceiver_dump,
-			rtpReceiver_receive,
-			rtpReceiver_setTransport,
-			rtpReceiver_setRtpRawEvent,
-			rtpReceiver_setRtpObjectEvent,
-			rtpSender_dump,
-			rtpSender_setTransport,
-			rtpSender_disable
+			WORKER_DUMP = 1,
+			WORKER_UPDATE_SETTINGS,
+			WORKER_CREATE_ROOM,
+			ROOM_CLOSE,
+			ROOM_DUMP,
+			ROOM_CREATE_PEER,
+			PEER_CLOSE,
+			PEER_DUMP,
+			PEER_SET_CAPABILITIES,
+			PEER_CREATE_TRANSPORT,
+			PEER_CREATE_RTP_RECEIVER,
+			TRANSPORT_CLOSE,
+			TRANSPORT_DUMP,
+			TRANSPORT_SET_REMOTE_DTLS_PARAMETERS,
+			TRANSPORT_SET_MAX_BITRATE,
+			TRANSPORT_CHANGE_UFRAG_PWD,
+			RTP_RECEIVER_CLOSE,
+			RTP_RECEIVER_DUMP,
+			RTP_RECEIVER_RECEIVE,
+			RTP_RECEIVER_SET_TRANSPORT,
+			RTP_RECEIVER_SET_RTP_RAW_EVENT,
+			RTP_RECEIVER_SET_RTP_OBJECT_EVENT,
+			RTP_SENDER_DUMP,
+			RTP_SENDER_SET_TRANSPORT,
+			RTP_SENDER_DISABLE
 		};
 
 	private:
@@ -58,15 +58,15 @@ namespace Channel
 
 	public:
 		// Passed by argument.
-		Channel::UnixStreamSocket* channel = nullptr;
-		uint32_t id;
+		Channel::UnixStreamSocket* channel{ nullptr };
+		uint32_t id{ 0 };
 		std::string method;
 		MethodId methodId;
 		Json::Value internal;
 		Json::Value data;
 		// Others.
-		bool replied = false;
+		bool replied{ false };
 	};
-}
+} // namespace Channel
 
 #endif

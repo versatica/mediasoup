@@ -16,10 +16,10 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener(){};
+			virtual ~Listener() = default;
 
 		public:
-			virtual void onRtcTcpConnectionClosed(
+			virtual void OnRtcTcpConnectionClosed(
 			    RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) = 0;
 		};
 
@@ -41,20 +41,20 @@ namespace RTC
 		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int addressFamily);
 
 	private:
-		virtual ~TcpServer(){};
+		~TcpServer() override = default;
 
 		/* Pure virtual methods inherited from ::TcpServer. */
 	public:
-		virtual void userOnTcpConnectionAlloc(::TcpConnection** connection) override;
-		virtual void userOnNewTcpConnection(::TcpConnection* connection) override;
-		virtual void userOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer) override;
-		virtual void userOnTcpServerClosed() override;
+		void UserOnTcpConnectionAlloc(::TcpConnection** connection) override;
+		void UserOnNewTcpConnection(::TcpConnection* connection) override;
+		void UserOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer) override;
+		void UserOnTcpServerClosed() override;
 
 	private:
 		// Passed by argument.
-		Listener* listener                         = nullptr;
-		RTC::TcpConnection::Listener* connListener = nullptr;
+		Listener* listener{ nullptr };
+		RTC::TcpConnection::Listener* connListener{ nullptr };
 	};
-}
+} // namespace RTC
 
 #endif

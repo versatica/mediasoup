@@ -39,13 +39,17 @@
     "sdp-transform": "^2.3.0"
   },
   "devDependencies": {
-    "gulp": "git://github.com/gulpjs/gulp.git#4.0",
+    "gulp": "gulpjs/gulp.git#4.0",
     "gulp-clang-format": "^1.0.23",
     "gulp-eslint": "^3.0.1",
+    "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.5.4",
     "gulp-shell": "^0.6.3",
     "gulp-touch-cmd": "0.0.1",
     "tap": "^10.3.2"
+  },
+  "optionalDependencies": {
+    "clang-tools-prebuilt": "^0.1.4"
   },
   "scripts": {
     "test": "gulp test",

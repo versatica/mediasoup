@@ -7,7 +7,7 @@
 
 /* Static variables. */
 
-uv_loop_t* DepLibUV::loop = nullptr;
+uv_loop_t* DepLibUV::loop{ nullptr };
 
 /* Static methods. */
 
@@ -19,7 +19,7 @@ void DepLibUV::ClassInit()
 
 	DepLibUV::loop = new uv_loop_t;
 	err            = uv_loop_init(DepLibUV::loop);
-	if (err)
+	if (err != 0)
 		MS_ABORT("libuv initialization failed");
 }
 
@@ -28,7 +28,7 @@ void DepLibUV::ClassDestroy()
 	MS_TRACE();
 
 	// This should never happen.
-	if (!DepLibUV::loop)
+	if (DepLibUV::loop == nullptr)
 		MS_ABORT("DepLibUV::loop was not allocated");
 
 	uv_loop_close(DepLibUV::loop);
@@ -47,7 +47,7 @@ void DepLibUV::RunLoop()
 	MS_TRACE();
 
 	// This should never happen.
-	if (!DepLibUV::loop)
+	if (DepLibUV::loop == nullptr)
 		MS_ABORT("DepLibUV::loop was not allocated");
 
 	uv_run(DepLibUV::loop, UV_RUN_DEFAULT);

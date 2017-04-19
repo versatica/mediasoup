@@ -11,12 +11,12 @@
 
 inline static void onConnection(uv_stream_t* handle, int status)
 {
-	static_cast<TcpServer*>(handle->data)->onUvConnection(status);
+	static_cast<TcpServer*>(handle->data)->OnUvConnection(status);
 }
 
 inline static void onClose(uv_handle_t* handle)
 {
-	static_cast<TcpServer*>(handle->data)->onUvClosed();
+	static_cast<TcpServer*>(handle->data)->OnUvClosed();
 }
 
 inline static void onErrorClose(uv_handle_t* handle)
@@ -37,7 +37,7 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 	this->uvHandle->data = (void*)this;
 
 	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -45,48 +45,55 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 	}
 
-	struct sockaddr_storage bindAddr;
+	// clang-format off
+	struct sockaddr_storage bindAddr{};
+	// clang-format on
 
 	switch (Utils::IP::GetFamily(ip))
 	{
 		case AF_INET:
-			err = uv_ip4_addr(ip.c_str(), (int)port, (struct sockaddr_in*)&bindAddr);
-			if (err)
+			err = uv_ip4_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 			break;
 
 		case AF_INET6:
-			err = uv_ip6_addr(ip.c_str(), (int)port, (struct sockaddr_in6*)&bindAddr);
-			if (err)
+			err = uv_ip6_addr(
+			    ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			// Don't also bind into IPv4 when listening in IPv6.
 			flags |= UV_TCP_IPV6ONLY;
 			break;
 
 		default:
-			uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 			MS_THROW_ERROR("invalid binding IP '%s'", ip.c_str());
 			break;
 	}
 
-	err = uv_tcp_bind(this->uvHandle, (const struct sockaddr*)&bindAddr, flags);
-	if (err)
+	err = uv_tcp_bind(this->uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
+	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_tcp_bind() failed: %s", uv_strerror(err));
 	}
 
-	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
-	if (err)
+	err = uv_listen(
+	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	    backlog,
+	    static_cast<uv_connection_cb>(onConnection));
+	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -99,17 +106,20 @@ TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
 
 	this->uvHandle->data = (void*)this;
 
-	err = uv_listen((uv_stream_t*)this->uvHandle, backlog, (uv_connection_cb)onConnection);
-	if (err)
+	err = uv_listen(
+	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	    backlog,
+	    static_cast<uv_connection_cb>(onConnection));
+	if (err != 0)
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onErrorClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -118,8 +128,7 @@ TcpServer::~TcpServer()
 {
 	MS_TRACE();
 
-	if (this->uvHandle)
-		delete this->uvHandle;
+	delete this->uvHandle;
 }
 
 void TcpServer::Destroy()
@@ -134,17 +143,15 @@ void TcpServer::Destroy()
 	// If there are no connections then close now.
 	if (this->connections.empty())
 	{
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 	}
 	// Otherwise close all the connections (but not the TCP server).
 	else
 	{
 		MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
 
-		for (auto it = this->connections.begin(); it != this->connections.end(); ++it)
+		for (auto connection : this->connections)
 		{
-			TcpConnection* connection = *it;
-
 			connection->Destroy();
 		}
 	}
@@ -156,7 +163,7 @@ void TcpServer::Dump() const
 	MS_DUMP(
 	    "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 	    this->localIP.c_str(),
-	    (uint16_t)this->localPort,
+	    static_cast<uint16_t>(this->localPort),
 	    (!this->isClosing) ? "open" : "closed",
 	    this->connections.size());
 	MS_DUMP("</TcpServer>");
@@ -169,8 +176,9 @@ bool TcpServer::SetLocalAddress()
 	int err;
 	int len = sizeof(this->localAddr);
 
-	err = uv_tcp_getsockname(this->uvHandle, (struct sockaddr*)&this->localAddr, &len);
-	if (err)
+	err =
+	    uv_tcp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
+	if (err != 0)
 	{
 		MS_ERROR("uv_tcp_getsockname() failed: %s", uv_strerror(err));
 
@@ -179,12 +187,15 @@ bool TcpServer::SetLocalAddress()
 
 	int family;
 	Utils::IP::GetAddressInfo(
-	    (const struct sockaddr*)&this->localAddr, &family, this->localIP, &this->localPort);
+	    reinterpret_cast<const struct sockaddr*>(&this->localAddr),
+	    &family,
+	    this->localIP,
+	    &this->localPort);
 
 	return true;
 }
 
-inline void TcpServer::onUvConnection(int status)
+inline void TcpServer::OnUvConnection(int status)
 {
 	MS_TRACE();
 
@@ -193,7 +204,7 @@ inline void TcpServer::onUvConnection(int status)
 
 	int err;
 
-	if (status)
+	if (status != 0)
 	{
 		MS_ERROR("error while receiving a new TCP connection: %s", uv_strerror(status));
 
@@ -202,7 +213,7 @@ inline void TcpServer::onUvConnection(int status)
 
 	// Notify the subclass so it provides an allocated derived class of TCPConnection.
 	TcpConnection* connection = nullptr;
-	userOnTcpConnectionAlloc(&connection);
+	UserOnTcpConnectionAlloc(&connection);
 
 	MS_ASSERT(connection != nullptr, "TcpConnection pointer was not allocated by the user");
 
@@ -218,8 +229,10 @@ inline void TcpServer::onUvConnection(int status)
 	}
 
 	// Accept the connection.
-	err = uv_accept((uv_stream_t*)this->uvHandle, (uv_stream_t*)connection->GetUvHandle());
-	if (err)
+	err = uv_accept(
+	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	    reinterpret_cast<uv_stream_t*>(connection->GetUvHandle()));
+	if (err != 0)
 		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
 
 	// Insert the TcpConnection in the set.
@@ -241,28 +254,28 @@ inline void TcpServer::onUvConnection(int status)
 	}
 
 	// Notify the subclass.
-	userOnNewTcpConnection(connection);
+	UserOnNewTcpConnection(connection);
 }
 
-inline void TcpServer::onUvClosed()
+inline void TcpServer::OnUvClosed()
 {
 	MS_TRACE();
 
 	// Motify the subclass.
-	userOnTcpServerClosed();
+	UserOnTcpServerClosed();
 
 	// And delete this.
 	delete this;
 }
 
-inline void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
+inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
 {
 	MS_TRACE();
 
 	// NOTE:
 	// Worst scenario is that in which this is the latest connection,
 	// which is remotely closed (no TcpServer.Destroy() was called) and the user
-	// call TcpServer.Destroy() on userOnTcpConnectionClosed() callback, so Destroy()
+	// call TcpServer.Destroy() on UserOnTcpConnectionClosed() callback, so Destroy()
 	// is called with zero connections and calls uv_close(), but then
 	// onTcpConnectionClosed() continues and finds that isClosing is true and
 	// there are zero connections, so calls uv_close() again and get a crash.
@@ -278,10 +291,10 @@ inline void TcpServer::onTcpConnectionClosed(TcpConnection* connection, bool isC
 	this->connections.erase(connection);
 
 	// Notify the subclass.
-	userOnTcpConnectionClosed(connection, isClosedByPeer);
+	UserOnTcpConnectionClosed(connection, isClosedByPeer);
 
 	// Check if the server was closing connections, and if this is the last
 	// connection then close the server now.
 	if (wasClosing && this->connections.empty())
-		uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }

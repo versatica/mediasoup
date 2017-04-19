@@ -13,7 +13,7 @@ namespace RTC
 	class RtpListener
 	{
 	public:
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		bool HasSsrc(uint32_t ssrc, const RTC::RtpReceiver* rtpReceiver) const;
 		bool HasMuxId(std::string& muxId, const RTC::RtpReceiver* rtpReceiver) const;
 		bool HasPayloadType(uint8_t payloadType, const RTC::RtpReceiver* rtpReceiver) const;
@@ -81,6 +81,6 @@ namespace RTC
 			return (it->second != rtpReceiver);
 		}
 	}
-}
+} // namespace RTC
 
 #endif

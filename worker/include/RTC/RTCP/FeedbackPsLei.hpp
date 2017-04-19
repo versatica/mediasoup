@@ -26,7 +26,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::PSLEI;
+			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::PSLEI };
 
 		public:
 			static FeedbackPsLeiItem* Parse(const uint8_t* data, size_t len);
@@ -35,22 +35,22 @@ namespace RTC
 			explicit FeedbackPsLeiItem(Header* header);
 			explicit FeedbackPsLeiItem(FeedbackPsLeiItem* item);
 			explicit FeedbackPsLeiItem(uint32_t ssrc);
-			virtual ~FeedbackPsLeiItem(){};
+			~FeedbackPsLeiItem() override = default;
 
 			uint32_t GetSsrc() const;
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{ nullptr };
 		};
 
 		// Lei packet declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsLeiItem> FeedbackPsLeiPacket;
+		using FeedbackPsLeiPacket = FeedbackPsItemsPacket<FeedbackPsLeiItem>;
 
 		/* Inline instance methods. */
 
@@ -69,9 +69,9 @@ namespace RTC
 
 		inline uint32_t FeedbackPsLeiItem::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->ssrc);
+			return uint32_t{ ntohl(this->header->ssrc) };
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

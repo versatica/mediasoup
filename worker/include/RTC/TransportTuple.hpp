@@ -22,7 +22,7 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void Dump() const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
@@ -33,10 +33,10 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::UdpSocket* udpSocket      = nullptr;
-		struct sockaddr* udpRemoteAddr = nullptr;
+		RTC::UdpSocket* udpSocket{ nullptr };
+		struct sockaddr* udpRemoteAddr{ nullptr };
 		sockaddr_storage udpRemoteAddrStorage;
-		RTC::TcpConnection* tcpConnection = nullptr;
+		RTC::TcpConnection* tcpConnection{ nullptr };
 		// Others.
 		Protocol protocol;
 	};
@@ -107,6 +107,6 @@ namespace RTC
 		else
 			return this->tcpConnection->GetPeerAddress();
 	}
-}
+} // namespace RTC
 
 #endif

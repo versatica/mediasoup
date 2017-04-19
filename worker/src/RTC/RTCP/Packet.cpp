@@ -15,7 +15,7 @@ namespace RTC
 	{
 		/* Namespace variables. */
 
-		uint8_t buffer[bufferSize];
+		uint8_t Buffer[BufferSize];
 
 		/* Class variables. */
 
@@ -54,9 +54,8 @@ namespace RTC
 					return first;
 				}
 
-				CommonHeader* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-
-				size_t packetLlen = (size_t)(ntohs(header->length) + 1) * 4;
+				auto* header      = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+				size_t packetLlen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
 
 				if (len < packetLlen)
 				{
@@ -76,13 +75,14 @@ namespace RTC
 					{
 						current = SenderReportPacket::Parse(data, len);
 
-						if (!current)
+						if (current == nullptr)
 							break;
 
-						if ((uint8_t)header->count > 0)
+						if (header->count > 0)
 						{
 							Packet* rr = ReceiverReportPacket::Parse(data, len, current->GetSize());
-							if (!rr)
+
+							if (rr == nullptr)
 								break;
 
 							current->SetNext(rr);
@@ -135,7 +135,7 @@ namespace RTC
 					}
 				}
 
-				if (!current)
+				if (current == nullptr)
 				{
 					std::string packetType = Type2String(Type(header->packetType));
 
@@ -158,12 +158,12 @@ namespace RTC
 				data += packetLlen;
 				len -= packetLlen;
 
-				if (!first)
+				if (first == nullptr)
 					first = current;
 				else
 					last->SetNext(current);
 
-				last = current->GetNext() ? current->GetNext() : current;
+				last = current->GetNext() != nullptr ? current->GetNext() : current;
 			}
 
 			return first;
@@ -171,10 +171,10 @@ namespace RTC
 
 		const std::string& Packet::Type2String(Type type)
 		{
-			static const std::string unknown("UNKNOWN");
+			static const std::string Unknown("UNKNOWN");
 
 			if (Packet::type2String.find(type) == Packet::type2String.end())
-				return unknown;
+				return Unknown;
 
 			return Packet::type2String[type];
 		}
@@ -192,11 +192,11 @@ namespace RTC
 			// Fill the common header.
 			this->header->version    = 2;
 			this->header->padding    = 0;
-			this->header->count      = (uint8_t)this->GetCount();
-			this->header->packetType = (uint8_t)this->type;
-			this->header->length     = htons(length);
+			this->header->count      = static_cast<uint8_t>(this->GetCount());
+			this->header->packetType = static_cast<uint8_t>(this->type);
+			this->header->length     = uint16_t{ htons(length) };
 
 			return sizeof(CommonHeader);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

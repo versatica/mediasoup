@@ -55,7 +55,7 @@ void Loop::Close()
 	this->closed = true;
 
 	// Close the SignalsHandler.
-	if (this->signalsHandler)
+	if (this->signalsHandler != nullptr)
 		this->signalsHandler->Destroy();
 
 	// Close all the Rooms.
@@ -74,7 +74,7 @@ void Loop::Close()
 	delete this->notifier;
 
 	// Close the Channel socket.
-	if (this->channel)
+	if (this->channel != nullptr)
 		this->channel->Destroy();
 }
 
@@ -82,15 +82,15 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 {
 	MS_TRACE();
 
-	static const Json::StaticString k_roomId("roomId");
+	static const Json::StaticString JsonStringRoomId{ "roomId" };
 
-	auto jsonRoomId = request->internal[k_roomId];
+	auto jsonRoomId = request->internal[JsonStringRoomId];
 
 	if (!jsonRoomId.isUInt())
 		MS_THROW_ERROR("Request has not numeric internal.roomId");
 
 	// If given, fill roomId.
-	if (roomId)
+	if (roomId != nullptr)
 		*roomId = jsonRoomId.asUInt();
 
 	auto it = this->rooms.find(jsonRoomId.asUInt());
@@ -100,13 +100,11 @@ RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
 
 		return room;
 	}
-	else
-	{
-		return nullptr;
-	}
+
+	return nullptr;
 }
 
-void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
+void Loop::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
 	MS_TRACE();
 
@@ -127,7 +125,7 @@ void Loop::onSignal(SignalsHandler* signalsHandler, int signum)
 	}
 }
 
-void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request)
+void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();
 
@@ -135,40 +133,40 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::worker_dump:
+		case Channel::Request::MethodId::WORKER_DUMP:
 		{
-			static const Json::StaticString k_workerId("workerId");
-			static const Json::StaticString k_rooms("rooms");
+			static const Json::StaticString JsonStringWorkerId{ "workerId" };
+			static const Json::StaticString JsonStringRooms{ "rooms" };
 
 			Json::Value json(Json::objectValue);
 			Json::Value jsonRooms(Json::arrayValue);
 
-			json[k_workerId] = Logger::id;
+			json[JsonStringWorkerId] = Logger::id;
 
 			for (auto& kv : this->rooms)
 			{
 				auto room = kv.second;
 
-				jsonRooms.append(room->toJson());
+				jsonRooms.append(room->ToJson());
 			}
 
-			json[k_rooms] = jsonRooms;
+			json[JsonStringRooms] = jsonRooms;
 
 			request->Accept(json);
 
 			break;
 		}
 
-		case Channel::Request::MethodId::worker_updateSettings:
+		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{
 			Settings::HandleRequest(request);
 
 			break;
 		}
 
-		case Channel::Request::MethodId::worker_createRoom:
+		case Channel::Request::MethodId::WORKER_CREATE_ROOM:
 		{
-			static const Json::StaticString k_capabilities("capabilities");
+			static const Json::StaticString JsonStringCapabilities{ "capabilities" };
 
 			RTC::Room* room;
 			uint32_t roomId;
@@ -184,7 +182,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 				return;
 			}
 
-			if (room)
+			if (room != nullptr)
 			{
 				request->Reject("Room already exists");
 
@@ -209,35 +207,35 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 			Json::Value data(Json::objectValue);
 
 			// Add `capabilities`.
-			data[k_capabilities] = room->GetCapabilities().toJson();
+			data[JsonStringCapabilities] = room->GetCapabilities().ToJson();
 
 			request->Accept(data);
 
 			break;
 		}
 
-		case Channel::Request::MethodId::room_close:
-		case Channel::Request::MethodId::room_dump:
-		case Channel::Request::MethodId::room_createPeer:
-		case Channel::Request::MethodId::peer_close:
-		case Channel::Request::MethodId::peer_dump:
-		case Channel::Request::MethodId::peer_setCapabilities:
-		case Channel::Request::MethodId::peer_createTransport:
-		case Channel::Request::MethodId::peer_createRtpReceiver:
-		case Channel::Request::MethodId::transport_close:
-		case Channel::Request::MethodId::transport_dump:
-		case Channel::Request::MethodId::transport_setRemoteDtlsParameters:
-		case Channel::Request::MethodId::transport_setMaxBitrate:
-		case Channel::Request::MethodId::transport_changeUfragPwd:
-		case Channel::Request::MethodId::rtpReceiver_close:
-		case Channel::Request::MethodId::rtpReceiver_dump:
-		case Channel::Request::MethodId::rtpReceiver_receive:
-		case Channel::Request::MethodId::rtpReceiver_setTransport:
-		case Channel::Request::MethodId::rtpReceiver_setRtpRawEvent:
-		case Channel::Request::MethodId::rtpReceiver_setRtpObjectEvent:
-		case Channel::Request::MethodId::rtpSender_dump:
-		case Channel::Request::MethodId::rtpSender_setTransport:
-		case Channel::Request::MethodId::rtpSender_disable:
+		case Channel::Request::MethodId::ROOM_CLOSE:
+		case Channel::Request::MethodId::ROOM_DUMP:
+		case Channel::Request::MethodId::ROOM_CREATE_PEER:
+		case Channel::Request::MethodId::PEER_CLOSE:
+		case Channel::Request::MethodId::PEER_DUMP:
+		case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
+		case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
+		case Channel::Request::MethodId::PEER_CREATE_RTP_RECEIVER:
+		case Channel::Request::MethodId::TRANSPORT_CLOSE:
+		case Channel::Request::MethodId::TRANSPORT_DUMP:
+		case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
+		case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
+		case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
+		case Channel::Request::MethodId::RTP_RECEIVER_CLOSE:
+		case Channel::Request::MethodId::RTP_RECEIVER_DUMP:
+		case Channel::Request::MethodId::RTP_RECEIVER_RECEIVE:
+		case Channel::Request::MethodId::RTP_RECEIVER_SET_TRANSPORT:
+		case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT:
+		case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT:
+		case Channel::Request::MethodId::RTP_SENDER_DUMP:
+		case Channel::Request::MethodId::RTP_SENDER_SET_TRANSPORT:
+		case Channel::Request::MethodId::RTP_SENDER_DISABLE:
 		{
 			RTC::Room* room;
 
@@ -252,7 +250,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 				return;
 			}
 
-			if (!room)
+			if (room == nullptr)
 			{
 				request->Reject("Room does not exist");
 
@@ -273,7 +271,7 @@ void Loop::onChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request
 	}
 }
 
-void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* socket)
+void Loop::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
@@ -287,7 +285,7 @@ void Loop::onChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* so
 	Close();
 }
 
-void Loop::onRoomClosed(RTC::Room* room)
+void Loop::OnRoomClosed(RTC::Room* room)
 {
 	MS_TRACE();
 

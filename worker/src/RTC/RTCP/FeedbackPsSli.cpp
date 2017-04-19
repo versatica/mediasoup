@@ -23,7 +23,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			return new FeedbackPsSliItem(header);
 		}
@@ -36,7 +36,7 @@ namespace RTC
 
 			this->header = header;
 
-			uint32_t compact = (uint32_t)ntohl(header->compact);
+			auto compact = uint32_t{ ntohl(header->compact) };
 
 			this->first     = compact >> 19;           /* first 13 bits */
 			this->number    = (compact >> 6) & 0x1fff; /* next  13 bits */
@@ -46,9 +46,9 @@ namespace RTC
 		size_t FeedbackPsSliItem::Serialize(uint8_t* buffer)
 		{
 			uint32_t compact = (this->first << 19) | (this->number << 6) | this->pictureId;
-			Header* header   = reinterpret_cast<Header*>(buffer);
+			auto* header     = reinterpret_cast<Header*>(buffer);
 
-			header->compact = htonl(compact);
+			header->compact = uint32_t{ htonl(compact) };
 			std::memcpy(buffer, header, sizeof(Header));
 
 			return sizeof(Header);
@@ -64,5 +64,5 @@ namespace RTC
 			MS_DUMP("  picture id : %" PRIu8, this->pictureId);
 			MS_DUMP("</FeedbackPsSliItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

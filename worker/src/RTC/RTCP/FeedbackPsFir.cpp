@@ -4,7 +4,7 @@
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "Logger.hpp"
 #include <cstring>
-#include <string.h> // std::memset()
+#include <cstring> // std::memset()
 
 namespace RTC
 {
@@ -24,7 +24,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			return new FeedbackPsFirItem(header);
 		}
@@ -41,7 +41,7 @@ namespace RTC
 			// Set reserved bits to zero.
 			std::memset(this->header, 0, sizeof(Header));
 
-			this->header->ssrc           = htonl(ssrc);
+			this->header->ssrc           = uint32_t{ htonl(ssrc) };
 			this->header->sequenceNumber = sequenceNumber;
 		}
 
@@ -63,5 +63,5 @@ namespace RTC
 			MS_DUMP("  sequence number : %" PRIu8, this->GetSequenceNumber());
 			MS_DUMP("</FeedbackPsFirItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

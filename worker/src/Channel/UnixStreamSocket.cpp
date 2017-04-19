@@ -17,8 +17,8 @@ namespace Channel
 	/* Static. */
 
 	// netstring length for a 65536 bytes payload.
-	static constexpr size_t MaxSize        = 65543;
-	static constexpr size_t MessageMaxSize = 65536;
+	static constexpr size_t MaxSize{ 65543 };
+	static constexpr size_t MessageMaxSize{ 65536 };
 	static uint8_t WriteBuffer[MaxSize];
 
 	/* Instance methods. */
@@ -104,8 +104,8 @@ namespace Channel
 		}
 		else
 		{
-			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
-			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
+			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
 			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload.c_str(), nsPayloadLen);
 			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
@@ -141,8 +141,8 @@ namespace Channel
 		}
 		else
 		{
-			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
-			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
+			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
 			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
 			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
@@ -176,8 +176,8 @@ namespace Channel
 		}
 		else
 		{
-			nsNumLen = (size_t)std::ceil(std::log10((double)nsPayloadLen + 1));
-			std::sprintf((char*)WriteBuffer, "%zu:", nsPayloadLen);
+			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
+			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
 			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
 			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
@@ -187,7 +187,7 @@ namespace Channel
 		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::userOnUnixStreamRead()
+	void UnixStreamSocket::UserOnUnixStreamRead()
 	{
 		MS_TRACE_STD();
 
@@ -200,8 +200,8 @@ namespace Channel
 			size_t readLen  = this->bufferDataLen - this->msgStart;
 			char* jsonStart = nullptr;
 			size_t jsonLen;
-			int nsRet =
-			    netstring_read((char*)(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
+			int nsRet = netstring_read(
+			    reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
 
 			if (nsRet != 0)
 			{
@@ -266,7 +266,8 @@ namespace Channel
 
 			// If here it means that jsonStart points to the beginning of a JSON string
 			// with jsonLen bytes length, so recalculate readLen.
-			readLen = (const uint8_t*)jsonStart - (this->buffer + this->msgStart) + jsonLen + 1;
+			readLen = reinterpret_cast<const uint8_t*>(jsonStart) - (this->buffer + this->msgStart) +
+			          jsonLen + 1;
 
 			Json::Value json;
 			std::string jsonParseError;
@@ -285,10 +286,10 @@ namespace Channel
 					MS_ERROR_STD("discarding wrong Channel request");
 				}
 
-				if (request)
+				if (request != nullptr)
 				{
 					// Notify the listener.
-					this->listener->onChannelRequest(this, request);
+					this->listener->OnChannelRequest(this, request);
 
 					// Delete the Request.
 					delete request;
@@ -319,14 +320,12 @@ namespace Channel
 			{
 				continue;
 			}
-			else
-			{
-				break;
-			}
+
+			break;
 		}
 	}
 
-	void UnixStreamSocket::userOnUnixStreamSocketClosed(bool isClosedByPeer)
+	void UnixStreamSocket::UserOnUnixStreamSocketClosed(bool isClosedByPeer)
 	{
 		MS_TRACE_STD();
 
@@ -335,7 +334,7 @@ namespace Channel
 		if (isClosedByPeer)
 		{
 			// Notify the listener.
-			this->listener->onChannelUnixStreamSocketRemotelyClosed(this);
+			this->listener->OnChannelUnixStreamSocketRemotelyClosed(this);
 		}
 	}
-}
+} // namespace Channel

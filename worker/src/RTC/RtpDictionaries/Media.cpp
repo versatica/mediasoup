@@ -50,4 +50,4 @@ namespace RTC
 
 		return Media::kind2Json.at(kind);
 	}
-}
+} // namespace RTC

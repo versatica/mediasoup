@@ -11,7 +11,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr size_t EncryptBufferSize = 65536;
+	static constexpr size_t EncryptBufferSize{ 65536 };
 	static uint8_t EncryptBuffer[EncryptBufferSize];
 
 	/* Class methods. */
@@ -22,12 +22,12 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_install_event_handler((srtp_event_handler_func_t*)onSrtpEvent);
+		err = srtp_install_event_handler(static_cast<srtp_event_handler_func_t*>(OnSrtpEvent));
 		if (DepLibSRTP::IsError(err))
 			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
 	}
 
-	void SrtpSession::onSrtpEvent(srtp_event_data_t* data)
+	void SrtpSession::OnSrtpEvent(srtp_event_data_t* data)
 	{
 		MS_TRACE();
 
@@ -55,7 +55,7 @@ namespace RTC
 		MS_TRACE();
 
 		srtp_err_status_t err;
-		srtp_policy_t policy;
+		srtp_policy_t policy{};
 
 		// Set all policy fields to 0.
 		std::memset(&policy, 0, sizeof(srtp_policy_t));
@@ -105,7 +105,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->session)
+		if (this->session != nullptr)
 		{
 			srtp_err_status_t err;
 
@@ -138,7 +138,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_protect(this->session, (void*)EncryptBuffer, (int*)len);
+		err = srtp_protect(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -158,7 +158,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_unprotect(this->session, (void*)data, (int*)len);
+		err = srtp_unprotect(this->session, (void*)data, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_DEBUG_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -185,7 +185,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_protect_rtcp(this->session, (void*)EncryptBuffer, (int*)len);
+		err = srtp_protect_rtcp(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_WARN_TAG(srtp, "srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -205,7 +205,7 @@ namespace RTC
 
 		srtp_err_status_t err;
 
-		err = srtp_unprotect_rtcp(this->session, (void*)data, (int*)len);
+		err = srtp_unprotect_rtcp(this->session, (void*)data, reinterpret_cast<int*>(len));
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_DEBUG_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -215,4 +215,4 @@ namespace RTC
 
 		return true;
 	}
-}
+} // namespace RTC

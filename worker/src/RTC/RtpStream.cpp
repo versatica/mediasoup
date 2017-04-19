@@ -10,10 +10,10 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t MinSequential = 0;
-	static constexpr uint16_t MaxDropout    = 3000;
-	static constexpr uint16_t MaxMisorder   = 100;
-	static constexpr uint32_t RtpSeqMod     = 1 << 16;
+	static constexpr uint32_t MinSequential{ 0 };
+	static constexpr uint16_t MaxDropout{ 3000 };
+	static constexpr uint16_t MaxMisorder{ 100 };
+	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 
 	/* Instance methods. */
 
@@ -45,7 +45,7 @@ namespace RTC
 		// If not a valid packet ignore it.
 		if (!UpdateSeq(packet))
 		{
-			if (!this->probation)
+			if (this->probation == 0u)
 			{
 				MS_WARN_TAG(
 				    rtp,
@@ -58,7 +58,8 @@ namespace RTC
 		}
 
 		// Set the extended sequence number into the packet.
-		packet->SetExtendedSequenceNumber(this->cycles + (uint32_t)packet->GetSequenceNumber());
+		packet->SetExtendedSequenceNumber(
+		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Update highest seen RTP timestamp.
 		if (packet->GetTimestamp() > this->maxTimestamp)
@@ -82,8 +83,8 @@ namespace RTC
 		// Also reset the highest seen RTP timestamp.
 		this->maxTimestamp = 0;
 
-		// Call the onInitSeq method of the child.
-		onInitSeq();
+		// Call the OnInitSeq method of the child.
+		OnInitSeq();
 	}
 
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)
@@ -97,7 +98,7 @@ namespace RTC
 		 * Source is not valid until MinSequential packets with
 		 * sequential sequence numbers have been received.
 		 */
-		if (this->probation)
+		if (this->probation != 0u)
 		{
 			// Packet is in sequence.
 			if (seq == this->maxSeq + 1)
@@ -121,7 +122,7 @@ namespace RTC
 
 			return false;
 		}
-		else if (udelta < MaxDropout)
+		if (udelta < MaxDropout)
 		{
 			// In order, with permissible gap.
 			if (seq < this->maxSeq)
@@ -169,28 +170,28 @@ namespace RTC
 		return true;
 	}
 
-	Json::Value RtpStream::Params::toJson() const
+	Json::Value RtpStream::Params::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_ssrc("ssrc");
-		static const Json::StaticString k_payloadType("payloadType");
-		static const Json::StaticString k_mime("mime");
-		static const Json::StaticString k_clockRate("clockRate");
-		static const Json::StaticString k_useNack("useNack");
-		static const Json::StaticString k_usePli("usePli");
-		static const Json::StaticString k_absSendTimeId("absSendTimeId");
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
+		static const Json::StaticString JsonStringMime{ "mime" };
+		static const Json::StaticString JsonStringClockRate{ "clockRate" };
+		static const Json::StaticString JsonStringUseNack{ "useNack" };
+		static const Json::StaticString JsonStringUsePli{ "usePli" };
+		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 
 		Json::Value json(Json::objectValue);
 
-		json[k_ssrc]          = (Json::UInt)this->ssrc;
-		json[k_payloadType]   = (Json::UInt)this->payloadType;
-		json[k_mime]          = this->mime.name;
-		json[k_clockRate]     = (Json::UInt)this->clockRate;
-		json[k_useNack]       = this->useNack;
-		json[k_usePli]        = this->usePli;
-		json[k_absSendTimeId] = (Json::UInt)this->absSendTimeId;
+		json[JsonStringSsrc]          = Json::UInt{ this->ssrc };
+		json[JsonStringPayloadType]   = Json::UInt{ this->payloadType };
+		json[JsonStringMime]          = this->mime.name;
+		json[JsonStringClockRate]     = Json::UInt{ this->clockRate };
+		json[JsonStringUseNack]       = this->useNack;
+		json[JsonStringUsePli]        = this->usePli;
+		json[JsonStringAbsSendTimeId] = Json::UInt{ this->absSendTimeId };
 
 		return json;
 	}
-}
+} // namespace RTC

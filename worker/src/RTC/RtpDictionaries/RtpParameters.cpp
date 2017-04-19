@@ -14,30 +14,30 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_muxId("muxId");
-		static const Json::StaticString k_codecs("codecs");
-		static const Json::StaticString k_encodings("encodings");
-		static const Json::StaticString k_headerExtensions("headerExtensions");
-		static const Json::StaticString k_rtcp("rtcp");
-		static const Json::StaticString k_userParameters("userParameters");
+		static const Json::StaticString JsonStringMuxId{ "muxId" };
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringEncodings{ "encodings" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringRtcp{ "rtcp" };
+		static const Json::StaticString JsonStringUserParameters{ "userParameters" };
 
 		// `muxId` is optional.
-		if (data[k_muxId].isString())
+		if (data[JsonStringMuxId].isString())
 		{
-			this->muxId = data[k_muxId].asString();
+			this->muxId = data[JsonStringMuxId].asString();
 
 			if (this->muxId.empty())
 				MS_THROW_ERROR("empty RtpParameters.muxId");
 		}
 
 		// `codecs` is mandatory.
-		if (data[k_codecs].isArray())
+		if (data[JsonStringCodecs].isArray())
 		{
-			auto& jsonCodecs = data[k_codecs];
+			auto& jsonCodecs = data[JsonStringCodecs];
 
-			for (Json::UInt i = 0; i < jsonCodecs.size(); ++i)
+			for (auto& jsonCodec : jsonCodecs)
 			{
-				RTC::RtpCodecParameters codec(jsonCodecs[i], RTC::Scope::RECEIVE);
+				RTC::RtpCodecParameters codec(jsonCodec, RTC::Scope::RECEIVE);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -49,13 +49,13 @@ namespace RTC
 		}
 
 		// `encodings` is optional.
-		if (data[k_encodings].isArray())
+		if (data[JsonStringEncodings].isArray())
 		{
-			auto& jsonArray = data[k_encodings];
+			auto& jsonArray = data[JsonStringEncodings];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (auto& i : jsonArray)
 			{
-				RTC::RtpEncodingParameters encoding(jsonArray[i]);
+				RTC::RtpEncodingParameters encoding(i);
 
 				// Append to the encodings vector.
 				this->encodings.push_back(encoding);
@@ -63,13 +63,13 @@ namespace RTC
 		}
 
 		// `headerExtensions` is optional.
-		if (data[k_headerExtensions].isArray())
+		if (data[JsonStringHeaderExtensions].isArray())
 		{
-			auto& jsonArray = data[k_headerExtensions];
+			auto& jsonArray = data[JsonStringHeaderExtensions];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (auto& i : jsonArray)
 			{
-				RTC::RtpHeaderExtensionParameters headerExtension(jsonArray[i]);
+				RTC::RtpHeaderExtensionParameters headerExtension(i);
 
 				// If a known header extension, append to the headerExtensions vector.
 				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)
@@ -78,15 +78,15 @@ namespace RTC
 		}
 
 		// `rtcp` is optional.
-		if (data[k_rtcp].isObject())
+		if (data[JsonStringRtcp].isObject())
 		{
-			this->rtcp    = RTC::RtcpParameters(data[k_rtcp]);
+			this->rtcp    = RTC::RtcpParameters(data[JsonStringRtcp]);
 			this->hasRtcp = true;
 		}
 
 		// `userParameters` is optional.
-		if (data[k_userParameters].isObject())
-			this->userParameters = data[k_userParameters];
+		if (data[JsonStringUserParameters].isObject())
+			this->userParameters = data[JsonStringUserParameters];
 		else
 			this->userParameters = Json::objectValue;
 
@@ -104,53 +104,53 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpParameters::toJson() const
+	Json::Value RtpParameters::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_muxId("muxId");
-		static const Json::StaticString k_codecs("codecs");
-		static const Json::StaticString k_encodings("encodings");
-		static const Json::StaticString k_headerExtensions("headerExtensions");
-		static const Json::StaticString k_rtcp("rtcp");
-		static const Json::StaticString k_userParameters("userParameters");
+		static const Json::StaticString JsonStringMuxId{ "muxId" };
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringEncodings{ "encodings" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringRtcp{ "rtcp" };
+		static const Json::StaticString JsonStringUserParameters{ "userParameters" };
 
 		Json::Value json(Json::objectValue);
 
 		// Add `muxId`.
 		if (!this->muxId.empty())
-			json[k_muxId] = this->muxId;
+			json[JsonStringMuxId] = this->muxId;
 
 		// Add `codecs`.
-		json[k_codecs] = Json::arrayValue;
+		json[JsonStringCodecs] = Json::arrayValue;
 
 		for (auto& entry : this->codecs)
 		{
-			json[k_codecs].append(entry.toJson());
+			json[JsonStringCodecs].append(entry.ToJson());
 		}
 
 		// Add `encodings`.
-		json[k_encodings] = Json::arrayValue;
+		json[JsonStringEncodings] = Json::arrayValue;
 
 		for (auto& entry : this->encodings)
 		{
-			json[k_encodings].append(entry.toJson());
+			json[JsonStringEncodings].append(entry.ToJson());
 		}
 
 		// Add `headerExtensions`.
-		json[k_headerExtensions] = Json::arrayValue;
+		json[JsonStringHeaderExtensions] = Json::arrayValue;
 
 		for (auto& entry : this->headerExtensions)
 		{
-			json[k_headerExtensions].append(entry.toJson());
+			json[JsonStringHeaderExtensions].append(entry.ToJson());
 		}
 
 		// Add `rtcp`.
 		if (this->hasRtcp)
-			json[k_rtcp] = this->rtcp.toJson();
+			json[JsonStringRtcp] = this->rtcp.ToJson();
 
 		// Add `userParameters`.
-		json[k_userParameters] = this->userParameters;
+		json[JsonStringUserParameters] = this->userParameters;
 
 		return json;
 	}
@@ -251,6 +251,7 @@ namespace RTC
 		MS_TRACE();
 
 		static RTC::RtpCodecParameters fakeCodec;
+
 		uint8_t payloadType = encoding.codecPayloadType;
 
 		auto it = this->codecs.begin();
@@ -274,10 +275,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string k_apt = "apt";
+		static std::string jsonStringApt{ "apt" };
 
 		// Must be at least one codec.
-		if (this->codecs.size() == 0)
+		if (this->codecs.empty())
 			MS_THROW_ERROR("empty RtpParameters.codecs");
 
 		std::unordered_set<uint8_t> payloadTypes;
@@ -295,14 +296,14 @@ namespace RTC
 				case RTC::RtpCodecMime::Subtype::RTX:
 				{
 					// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
-					int32_t apt = codec.parameters.GetInteger(k_apt);
+					int32_t apt = codec.parameters.GetInteger(jsonStringApt);
 					auto it     = this->codecs.begin();
 
 					for (; it != this->codecs.end(); ++it)
 					{
 						auto codec = *it;
 
-						if ((int32_t)codec.payloadType == apt)
+						if (static_cast<int32_t>(codec.payloadType) == apt)
 						{
 							if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::RTX)
 								MS_THROW_ERROR("apt in RTX codec points to a RTX codec");
@@ -327,7 +328,7 @@ namespace RTC
 
 	inline void RtpParameters::ValidateEncodings()
 	{
-		uint8_t firstMediaPayloadType;
+		uint8_t firstMediaPayloadType = 0;
 
 		{
 			auto it = this->codecs.begin();
@@ -350,7 +351,7 @@ namespace RTC
 
 		// If there are no encodings create one with `codecPayloadType` pointing to
 		// the first media codec.
-		if (this->encodings.size() == 0)
+		if (this->encodings.empty())
 		{
 			RTC::RtpEncodingParameters encoding;
 
@@ -384,8 +385,8 @@ namespace RTC
 							// Must be a media codec.
 							if (codec.mime.IsMediaCodec())
 								break;
-							else
-								MS_THROW_ERROR("invalid encoding.codecPayloadType");
+
+							MS_THROW_ERROR("invalid encoding.codecPayloadType");
 						}
 					}
 					if (it == this->codecs.end())
@@ -394,4 +395,4 @@ namespace RTC
 			}
 		}
 	}
-}
+} // namespace RTC

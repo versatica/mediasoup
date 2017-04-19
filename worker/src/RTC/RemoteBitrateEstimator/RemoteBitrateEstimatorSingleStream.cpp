@@ -31,15 +31,13 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->umaRecorded)
-		{
 			this->umaRecorded = true;
-		}
 
 		uint32_t ssrc         = packet.GetSsrc();
 		uint32_t rtpTimestamp = packet.GetTimestamp() + transmissionTimeOffset;
 		int64_t nowMs         = DepLibUV::GetTime();
 
-		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.find(ssrc);
+		auto it = this->overuseDetectors.find(ssrc);
 		if (it == this->overuseDetectors.end())
 		{
 			// This is a new SSRC. Adding to map.
@@ -59,7 +57,7 @@ namespace RTC
 		// Check if incoming bitrate estimate is valid, and if it needs to be reset.
 		uint32_t incomingBitrate = this->incomingBitrate.GetRate(nowMs);
 
-		if (incomingBitrate)
+		if (incomingBitrate != 0u)
 		{
 			this->lastValidIncomingBitrate = incomingBitrate;
 		}
@@ -75,14 +73,14 @@ namespace RTC
 		this->incomingBitrate.Update(payloadSize, nowMs);
 
 		const BandwidthUsage priorState = estimator->detector.State();
-		uint32_t timestampDelta         = 0;
-		int64_t timeDelta               = 0;
-		int sizeDelta                   = 0;
+		uint32_t timestampDelta{ 0 };
+		int64_t timeDelta{ 0 };
+		int sizeDelta{ 0 };
 
 		if (estimator->interArrival.ComputeDeltas(
 		        rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
 		{
-			double timestampDeltaMs = timestampDelta * kTimestampToMs;
+			double timestampDeltaMs = timestampDelta * TimestampToMs;
 
 			estimator->estimator.Update(
 			    timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
@@ -94,12 +92,13 @@ namespace RTC
 			    nowMs);
 		}
 
-		if (estimator->detector.State() == kBwOverusing)
+		if (estimator->detector.State() == BW_OVERUSING)
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
 
-			if (incomingBitrateBps && (priorState != kBwOverusing ||
-			                           GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
+			if ((incomingBitrateBps != 0u) &&
+			    (priorState != BW_OVERUSING ||
+			     GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
 				// We also have to update the estimate immediately if we are overusing
@@ -124,15 +123,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		BandwidthUsage bwState               = kBwNormal;
-		double sumVarNoise                   = 0.0;
-		SsrcOveruseEstimatorMap::iterator it = this->overuseDetectors.begin();
+		BandwidthUsage bwState{ BW_NORMAL };
+		double sumVarNoise{ 0.0 };
+		auto it = this->overuseDetectors.begin();
 
 		while (it != this->overuseDetectors.end())
 		{
 			const int64_t timeOfLastReceivedPacket = it->second->lastPacketTimeMs;
 
-			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > kStreamTimeOutMs)
+			if (timeOfLastReceivedPacket >= 0 && nowMs - timeOfLastReceivedPacket > streamTimeOutMs)
 			{
 				// This over-use detector hasn't received packets for |kStreamTimeOutMs|
 				// milliseconds and is considered stale.
@@ -152,9 +151,7 @@ namespace RTC
 		}
 		// We can't update the estimate if we don't have any active streams.
 		if (this->overuseDetectors.empty())
-		{
 			return;
-		}
 
 		AimdRateControl* remoteRate = GetRemoteRate();
 		double meanNoiseVar         = sumVarNoise / static_cast<double>(this->overuseDetectors.size());
@@ -173,7 +170,7 @@ namespace RTC
 			std::vector<uint32_t> ssrcs;
 
 			GetSsrcs(&ssrcs);
-			this->observer->onReceiveBitrateChanged(ssrcs, targetBitrate);
+			this->observer->OnReceiveBitrateChanged(ssrcs, targetBitrate);
 		}
 	}
 
@@ -188,6 +185,7 @@ namespace RTC
 			return false;
 
 		GetSsrcs(ssrcs);
+
 		if (ssrcs->empty())
 			*bitrateBps = 0;
 		else
@@ -204,12 +202,12 @@ namespace RTC
 
 		ssrcs->resize(this->overuseDetectors.size());
 
-		int i                                      = 0;
-		SsrcOveruseEstimatorMap::const_iterator it = this->overuseDetectors.begin();
+		int i{ 0 };
+		auto it = this->overuseDetectors.begin();
 
 		for (; it != this->overuseDetectors.end(); ++it, ++i)
 		{
 			(*ssrcs)[i] = it->first;
 		}
 	}
-}
+} // namespace RTC

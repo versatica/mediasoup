@@ -10,11 +10,11 @@ namespace RTC
 {
 	struct RateControlInput
 	{
-		RateControlInput(BandwidthUsage bwState, const uint32_t incomingBitrate, double noiseVar);
+		RateControlInput(BandwidthUsage bwState, uint32_t incomingBitrate, double noiseVar);
 
 		BandwidthUsage bwState;
-		uint32_t incomingBitrate = 0;
-		double noiseVar          = 0;
+		uint32_t incomingBitrate{ 0 };
+		double noiseVar{ 0 };
 	};
 
 	/* Inline methods. */
@@ -24,6 +24,6 @@ namespace RTC
 	    : bwState(bwState), incomingBitrate(incomingBitrate), noiseVar(noiseVar)
 	{
 	}
-}
+} // namespace RTC
 
 #endif

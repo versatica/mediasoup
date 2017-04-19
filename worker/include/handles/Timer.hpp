@@ -10,10 +10,10 @@ public:
 	class Listener
 	{
 	public:
-		virtual ~Listener(){};
+		virtual ~Listener() = default;
 
 	public:
-		virtual void onTimer(Timer* timer) = 0;
+		virtual void OnTimer(Timer* timer) = 0;
 	};
 
 public:
@@ -22,7 +22,7 @@ public:
 	Timer(const Timer&)            = delete;
 
 private:
-	~Timer(){};
+	~Timer() = default;
 
 public:
 	void Destroy();
@@ -31,13 +31,13 @@ public:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvTimer();
+	void OnUvTimer();
 
 private:
 	// Passed by argument.
-	Listener* listener = nullptr;
+	Listener* listener{ nullptr };
 	// Allocated by this.
-	uv_timer_t* uvHandle = nullptr;
+	uv_timer_t* uvHandle{ nullptr };
 };
 
 #endif

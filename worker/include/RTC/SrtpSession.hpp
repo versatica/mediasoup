@@ -27,7 +27,7 @@ namespace RTC
 		static void ClassInit();
 
 	private:
-		static void onSrtpEvent(srtp_event_data_t* data);
+		static void OnSrtpEvent(srtp_event_data_t* data);
 
 	public:
 		SrtpSession(Type type, Profile profile, uint8_t* key, size_t keyLen);
@@ -45,15 +45,15 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		srtp_t session = nullptr;
+		srtp_t session{ nullptr };
 	};
 
 	/* Inline instance methods. */
 
 	inline void SrtpSession::RemoveStream(uint32_t ssrc)
 	{
-		srtp_remove_stream(this->session, htonl(ssrc));
+		srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });
 	}
-}
+} // namespace RTC
 
 #endif

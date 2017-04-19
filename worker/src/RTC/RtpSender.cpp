@@ -24,75 +24,72 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::maxAudioIntervalMs;
+			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
-			this->maxRtcpInterval = RTC::RTCP::maxVideoIntervalMs;
+			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 	}
 
 	RtpSender::~RtpSender()
 	{
 		MS_TRACE();
 
-		if (this->rtpParameters)
-			delete this->rtpParameters;
-
-		if (this->rtpStream)
-			delete this->rtpStream;
+		delete this->rtpParameters;
+		delete this->rtpStream;
 	}
 
 	void RtpSender::Destroy()
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
+		static const Json::StaticString JsonStringClass{ "class" };
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[k_class] = "RtpSender";
+		eventData[JsonStringClass] = "RtpSender";
 		this->notifier->Emit(this->rtpSenderId, "close", eventData);
 
 		// Notify the listener.
-		this->listener->onRtpSenderClosed(this);
+		this->listener->OnRtpSenderClosed(this);
 
 		delete this;
 	}
 
-	Json::Value RtpSender::toJson() const
+	Json::Value RtpSender::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_rtpSenderId("rtpSenderId");
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
-		static const Json::StaticString k_hasTransport("hasTransport");
-		static const Json::StaticString k_active("active");
-		static const Json::StaticString k_supportedPayloadTypes("supportedPayloadTypes");
-		static const Json::StaticString k_rtpStream("rtpStream");
+		static const Json::StaticString JsonStringRtpSenderId{ "rtpSenderId" };
+		static const Json::StaticString JsonStringKind{ "kind" };
+		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+		static const Json::StaticString JsonStringHasTransport{ "hasTransport" };
+		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringSupportedPayloadTypes{ "supportedPayloadTypes" };
+		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
 
 		Json::Value json(Json::objectValue);
 
-		json[k_rtpSenderId] = (Json::UInt)this->rtpSenderId;
+		json[JsonStringRtpSenderId] = Json::UInt{ this->rtpSenderId };
 
-		json[k_kind] = RTC::Media::GetJsonString(this->kind);
+		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
-		if (this->rtpParameters)
-			json[k_rtpParameters] = this->rtpParameters->toJson();
+		if (this->rtpParameters != nullptr)
+			json[JsonStringRtpParameters] = this->rtpParameters->ToJson();
 		else
-			json[k_rtpParameters] = Json::nullValue;
+			json[JsonStringRtpParameters] = Json::nullValue;
 
-		json[k_hasTransport] = this->transport ? true : false;
+		json[JsonStringHasTransport] = this->transport != nullptr;
 
-		json[k_active] = this->GetActive();
+		json[JsonStringActive] = this->GetActive();
 
-		json[k_supportedPayloadTypes] = Json::arrayValue;
+		json[JsonStringSupportedPayloadTypes] = Json::arrayValue;
 
 		for (auto payloadType : this->supportedPayloadTypes)
 		{
-			json[k_supportedPayloadTypes].append((Json::UInt)payloadType);
+			json[JsonStringSupportedPayloadTypes].append(Json::UInt{ payloadType });
 		}
 
-		if (this->rtpStream)
-			json[k_rtpStream] = this->rtpStream->toJson();
+		if (this->rtpStream != nullptr)
+			json[JsonStringRtpStream] = this->rtpStream->ToJson();
 
 		return json;
 	}
@@ -103,27 +100,27 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::rtpSender_dump:
+			case Channel::Request::MethodId::RTP_SENDER_DUMP:
 			{
-				Json::Value json = toJson();
+				auto json = ToJson();
 
 				request->Accept(json);
 
 				break;
 			}
 
-			case Channel::Request::MethodId::rtpSender_disable:
+			case Channel::Request::MethodId::RTP_SENDER_DISABLE:
 			{
-				static const Json::StaticString k_disabled("disabled");
+				static const Json::StaticString JsonStringDisabled{ "disabled" };
 
-				if (!request->data[k_disabled].isBool())
+				if (!request->data[JsonStringDisabled].isBool())
 				{
 					request->Reject("Request has invalid data.disabled");
 
 					return;
 				}
 
-				bool disabled = request->data[k_disabled].asBool();
+				bool disabled = request->data[JsonStringDisabled].asBool();
 
 				// Nothing changed.
 				if (this->disabled == disabled)
@@ -167,21 +164,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
-		static const Json::StaticString k_rtpParameters("rtpParameters");
-		static const Json::StaticString k_active("active");
+		static const Json::StaticString JsonStringClass{ "class" };
+		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+		static const Json::StaticString JsonStringActive{ "active" };
 
 		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
-		bool hadParameters = this->rtpParameters ? true : false;
+		bool hadParameters = this->rtpParameters != nullptr;
 
 		// Free the previous rtpParameters.
 		if (hadParameters)
 			delete this->rtpParameters;
 
 		// Delete previous RtpStreamSend (if any).
-		if (this->rtpStream)
+		if (this->rtpStream != nullptr)
 		{
 			delete this->rtpStream;
 			this->rtpStream = nullptr;
@@ -270,9 +267,9 @@ namespace RTC
 		{
 			Json::Value eventData(Json::objectValue);
 
-			eventData[k_class]         = "RtpSender";
-			eventData[k_rtpParameters] = this->rtpParameters->toJson();
-			eventData[k_active]        = this->GetActive();
+			eventData[JsonStringClass]         = "RtpSender";
+			eventData[JsonStringRtpParameters] = this->rtpParameters->ToJson();
+			eventData[JsonStringActive]        = this->GetActive();
 
 			this->notifier->Emit(this->rtpSenderId, "parameterschange", eventData);
 		}
@@ -326,14 +323,14 @@ namespace RTC
 
 	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
-		if (!this->rtpStream)
+		if (this->rtpStream == nullptr)
 			return;
 
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		RTC::RTCP::SenderReport* report = this->rtpStream->GetRtcpSenderReport(now);
-		if (!report)
+		auto* report = this->rtpStream->GetRtcpSenderReport(now);
+		if (report == nullptr)
 			return;
 
 		// NOTE: This assumes a single stream.
@@ -344,8 +341,8 @@ namespace RTC
 		packet->AddSenderReport(report);
 
 		// Build SDES chunk for this sender.
-		RTC::RTCP::SdesChunk* sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		RTC::RTCP::SdesItem* sdesItem =
+		auto sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
+		auto sdesItem =
 		    new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
 		sdesChunk->AddItem(sdesItem);
@@ -358,7 +355,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->rtpStream)
+		if (this->rtpStream == nullptr)
 		{
 			MS_WARN_TAG(rtp, "no RtpStreamSend");
 
@@ -389,7 +386,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->rtpStream)
+		if (this->rtpStream == nullptr)
 		{
 			MS_WARN_TAG(rtp, "no RtpStreamSend");
 
@@ -405,10 +402,10 @@ namespace RTC
 
 		uint32_t ssrc = encoding.ssrc;
 		// Get the codec of the stream/encoding.
-		auto& codec           = this->rtpParameters->GetCodecForEncoding(encoding);
-		bool useNack          = false;
-		bool usePli           = false;
-		uint8_t absSendTimeId = 0; // 0 means no abs-send-time id.
+		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+		bool useNack{ false };
+		bool usePli{ false };
+		uint8_t absSendTimeId{ 0 }; // 0 means no abs-send-time id.
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
@@ -428,7 +425,7 @@ namespace RTC
 
 		for (auto& exten : this->rtpParameters->headerExtensions)
 		{
-			if (!absSendTimeId && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
 				absSendTimeId = exten.id;
 			}
@@ -473,14 +470,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_class("class");
-		static const Json::StaticString k_active("active");
+		static const Json::StaticString JsonStringClass{ "class" };
+		static const Json::StaticString JsonStringActive{ "active" };
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[k_class]  = "RtpSender";
-		eventData[k_active] = this->GetActive();
+		eventData[JsonStringClass]  = "RtpSender";
+		eventData[JsonStringActive] = this->GetActive();
 
 		this->notifier->Emit(this->rtpSenderId, "activechange", eventData);
 	}
-}
+} // namespace RTC

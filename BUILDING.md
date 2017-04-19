@@ -66,29 +66,43 @@ $ npm install -g gulp-cli
 
 The default task runs the `gulp:lint` and `gulp:test` tasks.
 
+### `gulp rtpcapabilities`
+
+Reads **mediasoup** [supported RTP capabilities](https://github.com/versatica/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
+
+### `gulp lint`
+
+Runs both the `lint:node` and `lint:worker` gulp tasks.
+
 ### `gulp lint:node`
 
 Validates the Node.js JavaScript code/syntax.
 
 ### `gulp lint:worker`
 
-Validates the worker C++ code/syntax against the `worker/.clang-format` rules.
-
-### `gulp lint`
-
-Runs both the `lint:node` and `lint:worker` gulp tasks.
-
-### `gulp format:worker`
-
-Rewrites all the worker source files and include files in order to satisfy the rules at `worker/.clang-format`.
+Validates the worker C++ code/syntax using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) following `worker/.clang-format` rules.
 
 ### `gulp format`
 
 Runs the `format:worker` gulp task.
 
-### `gulp rtpcapabilities`
+### `gulp format:worker`
 
-Reads **mediasoup** [supported RTP capabilities](https://github.com/versatica/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
+Rewrites worker source and include files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
+
+### `gulp tidy`
+
+Runs the `tidy:worker` gulp task.
+
+### `gulp tidy:worker`
+
+Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) following following `worker/.clang-tidy` rules.
+
+*NOTE:* It just works on Linux and OSX.
+
+### `gulp test`
+
+Runs both the `test:node` and `test:worker` gulp tasks.
 
 ### `gulp test:node`
 
@@ -109,7 +123,3 @@ In order to run the worker test units with the mediasoup worker in `Debug` mode 
 ```bash
 $ MEDIASOUP_BUILDTYPE=Debug gulp test:worker
 ```
-
-### `gulp test`
-
-Runs both the `test:node` and `test:worker` gulp tasks.

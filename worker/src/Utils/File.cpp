@@ -14,12 +14,14 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		struct stat fileStat;
+		// clang-format off
+		struct stat fileStat{};
+		// clang-format on
 		int err;
 
 		// Ensure the given file exists.
 		err = stat(file, &fileStat);
-		if (err)
+		if (err != 0)
 			MS_THROW_ERROR("cannot read file '%s': %s", file, std::strerror(errno));
 
 		// Ensure it is a regular file.
@@ -28,7 +30,7 @@ namespace Utils
 
 		// Ensure it is readable.
 		err = access(file, R_OK);
-		if (err)
+		if (err != 0)
 			MS_THROW_ERROR("cannot read file '%s': %s", file, std::strerror(errno));
 	}
-}
+} // namespace Utils

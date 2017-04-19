@@ -27,7 +27,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackRtp::MessageType MessageType = FeedbackRtp::MessageType::TLLEI;
+			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::TLLEI };
 
 		public:
 			static FeedbackRtpTlleiItem* Parse(const uint8_t* data, size_t len);
@@ -36,23 +36,23 @@ namespace RTC
 			explicit FeedbackRtpTlleiItem(Header* header);
 			explicit FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item);
 			FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
-			virtual ~FeedbackRtpTlleiItem(){};
+			~FeedbackRtpTlleiItem() override = default;
 
 			uint16_t GetPacketId() const;
 			uint16_t GetLostPacketBitmask() const;
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{ nullptr };
 		};
 
-		// Nack packet declaration.
-		typedef FeedbackRtpItemsPacket<FeedbackRtpTlleiItem> FeedbackRtpTlleiPacket;
+		// Tllei packet declaration.
+		using FeedbackRtpTlleiPacket = FeedbackRtpItemsPacket<FeedbackRtpTlleiItem>;
 
 		/* Inline instance methods. */
 
@@ -72,14 +72,14 @@ namespace RTC
 
 		inline uint16_t FeedbackRtpTlleiItem::GetPacketId() const
 		{
-			return (uint16_t)ntohs(this->header->packetId);
+			return uint16_t{ ntohs(this->header->packetId) };
 		}
 
 		inline uint16_t FeedbackRtpTlleiItem::GetLostPacketBitmask() const
 		{
-			return (uint16_t)ntohs(this->header->lostPacketBitmask);
+			return uint16_t{ ntohs(this->header->lostPacketBitmask) };
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

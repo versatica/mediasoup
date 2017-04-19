@@ -23,8 +23,8 @@ namespace RTC
 	{
 		class FeedbackPsRpsiItem : public FeedbackItem
 		{
-			const static size_t MaxBitStringSize = 6;
-			const static size_t BitStringOffset  = 2;
+			const static size_t maxBitStringSize{ 6 };
+			const static size_t bitStringOffset{ 2 };
 
 		private:
 			struct Header
@@ -32,11 +32,11 @@ namespace RTC
 				uint8_t paddingBits;
 				uint8_t zero : 1;
 				uint8_t payloadType : 7;
-				uint8_t bitString[MaxBitStringSize];
+				uint8_t bitString[maxBitStringSize];
 			};
 
 		public:
-			static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::RPSI;
+			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::RPSI };
 
 		public:
 			static FeedbackPsRpsiItem* Parse(const uint8_t* data, size_t len);
@@ -45,7 +45,7 @@ namespace RTC
 			explicit FeedbackPsRpsiItem(Header* header);
 			explicit FeedbackPsRpsiItem(FeedbackPsRpsiItem* item);
 			FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length);
-			virtual ~FeedbackPsRpsiItem(){};
+			~FeedbackPsRpsiItem() override = default;
 
 			bool IsCorrect() const;
 			uint8_t GetPayloadType() const;
@@ -54,17 +54,17 @@ namespace RTC
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
-			size_t length  = 0;
+			Header* header{ nullptr };
+			size_t length{ 0 };
 		};
 
 		// Rpsi packet declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsRpsiItem> FeedbackPsRpsiPacket;
+		using FeedbackPsRpsiPacket = FeedbackPsItemsPacket<FeedbackPsRpsiItem>;
 
 		/* Inline instance methods. */
 
@@ -96,7 +96,7 @@ namespace RTC
 		{
 			return this->isCorrect;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

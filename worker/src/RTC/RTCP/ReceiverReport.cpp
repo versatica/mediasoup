@@ -17,7 +17,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// Packet size must be >= header size.
 			if (sizeof(Header) > len)
@@ -70,19 +70,22 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Packet::CommonHeader* header = (Packet::CommonHeader*)data;
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
 
-			packet->SetSsrc(Utils::Byte::Get4Bytes((uint8_t*)header, sizeof(CommonHeader)));
+			packet->SetSsrc(
+			    Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), sizeof(CommonHeader)));
 
 			if (offset == 0)
 				offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;
 
 			uint8_t count = header->count;
-			while ((count--) && (len - offset > 0))
+
+			while (((count--) != 0u) && (len - offset > 0))
 			{
 				ReceiverReport* report = ReceiverReport::Parse(data + offset, len - offset);
-				if (report)
+
+				if (report != nullptr)
 				{
 					packet->AddReport(report);
 					offset += report->GetSize();
@@ -122,12 +125,12 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<ReceiverReportPacket>");
-			MS_DUMP("  ssrc: %" PRIu32, (uint32_t)ntohl(this->ssrc));
+			MS_DUMP("  ssrc: %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
 			for (auto report : this->reports)
 			{
 				report->Dump();
 			}
 			MS_DUMP("</ReceiverReportPacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

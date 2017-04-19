@@ -14,18 +14,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_codecs("codecs");
-		static const Json::StaticString k_headerExtensions("headerExtensions");
-		static const Json::StaticString k_fecMechanisms("fecMechanisms");
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringFecMechanisms{ "fecMechanisms" };
 
 		// `codecs` is optional.
-		if (data[k_codecs].isArray())
+		if (data[JsonStringCodecs].isArray())
 		{
-			auto& jsonCodecs = data[k_codecs];
+			auto& jsonCodecs = data[JsonStringCodecs];
 
-			for (Json::UInt i = 0; i < jsonCodecs.size(); ++i)
+			for (auto& jsonCodec : jsonCodecs)
 			{
-				RtpCodecParameters codec(jsonCodecs[i], scope);
+				RtpCodecParameters codec(jsonCodec, scope);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -33,13 +33,13 @@ namespace RTC
 		}
 
 		// `headerExtensions` is optional.
-		if (data[k_headerExtensions].isArray())
+		if (data[JsonStringHeaderExtensions].isArray())
 		{
-			auto& jsonArray = data[k_headerExtensions];
+			auto& jsonArray = data[JsonStringHeaderExtensions];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (auto& i : jsonArray)
 			{
-				RtpHeaderExtension headerExtension(jsonArray[i]);
+				RtpHeaderExtension headerExtension(i);
 
 				// If a known header extension, append to the headerExtensions vector.
 				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)
@@ -48,17 +48,17 @@ namespace RTC
 		}
 
 		// `fecMechanisms` is optional.
-		if (data[k_fecMechanisms].isArray())
+		if (data[JsonStringFecMechanisms].isArray())
 		{
-			auto& jsonArray = data[k_fecMechanisms];
+			auto& jsonArray = data[JsonStringFecMechanisms];
 
-			for (Json::UInt i = 0; i < jsonArray.size(); ++i)
+			for (const auto& i : jsonArray)
 			{
-				if (!jsonArray[i].isString())
+				if (!i.isString())
 					MS_THROW_ERROR("invalid RtpCapabilities.fecMechanisms");
 
 				// Append to the fecMechanisms vector.
-				this->fecMechanisms.push_back(jsonArray[i].asString());
+				this->fecMechanisms.push_back(i.asString());
 			}
 		}
 
@@ -67,38 +67,38 @@ namespace RTC
 		ValidateCodecs(scope);
 	}
 
-	Json::Value RtpCapabilities::toJson() const
+	Json::Value RtpCapabilities::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_codecs("codecs");
-		static const Json::StaticString k_headerExtensions("headerExtensions");
-		static const Json::StaticString k_fecMechanisms("fecMechanisms");
+		static const Json::StaticString JsonStringCodecs{ "codecs" };
+		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
+		static const Json::StaticString JsonStringFecMechanisms{ "fecMechanisms" };
 
 		Json::Value json(Json::objectValue);
 
 		// Add `codecs`.
-		json[k_codecs] = Json::arrayValue;
+		json[JsonStringCodecs] = Json::arrayValue;
 
 		for (auto& entry : this->codecs)
 		{
-			json[k_codecs].append(entry.toJson());
+			json[JsonStringCodecs].append(entry.ToJson());
 		}
 
 		// Add `headerExtensions`.
-		json[k_headerExtensions] = Json::arrayValue;
+		json[JsonStringHeaderExtensions] = Json::arrayValue;
 
 		for (auto& entry : this->headerExtensions)
 		{
-			json[k_headerExtensions].append(entry.toJson());
+			json[JsonStringHeaderExtensions].append(entry.ToJson());
 		}
 
 		// Add `fecMechanisms`.
-		json[k_fecMechanisms] = Json::arrayValue;
+		json[JsonStringFecMechanisms] = Json::arrayValue;
 
 		for (auto& entry : this->fecMechanisms)
 		{
-			json[k_fecMechanisms].append(entry);
+			json[JsonStringFecMechanisms].append(entry);
 		}
 
 		return json;
@@ -174,4 +174,4 @@ namespace RTC
 			}
 		}
 	}
-}
+} // namespace RTC

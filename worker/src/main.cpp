@@ -33,7 +33,7 @@ static void exitWithError();
 int main(int argc, char* argv[])
 {
 	// Ensure we are called by our Node library.
-	if (argc == 1 || !std::getenv("MEDIASOUP_CHANNEL_FD"))
+	if (argc == 1 || (std::getenv("MEDIASOUP_CHANNEL_FD") == nullptr))
 	{
 		std::cerr << "ERROR: you don't seem to be my real father" << std::endl;
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 	DepLibUV::ClassInit();
 
 	// Set the Channel socket (this will be handled and deleted by the Loop).
-	Channel::UnixStreamSocket* channel = new Channel::UnixStreamSocket(channelFd);
+	auto* channel = new Channel::UnixStreamSocket(channelFd);
 
 	// Initialize the Logger.
 	Logger::Init(id, channel);
@@ -126,23 +126,32 @@ void ignoreSignals()
 	MS_TRACE();
 
 	int err;
-	struct sigaction act;
-	std::map<std::string, int> ignoredSignals = {
-	    {"PIPE", SIGPIPE}, {"HUP", SIGHUP}, {"ALRM", SIGALRM}, {"USR1", SIGUSR2}, {"USR2", SIGUSR1}};
+	// clang-format off
+	struct sigaction act{};
+	std::map<std::string, int> ignoredSignals =
+	{
+		{ "PIPE", SIGPIPE },
+		{ "HUP",  SIGHUP  },
+		{ "ALRM", SIGALRM },
+		{ "USR1", SIGUSR2 },
+		{ "USR2", SIGUSR1}
+	};
+	// clang-format on
 
-	act.sa_handler = SIG_IGN;
+	// Ignore clang-tidy cppcoreguidelines-pro-type-cstyle-cast.
+	act.sa_handler = SIG_IGN; // NOLINT
 	act.sa_flags   = 0;
 	err            = sigfillset(&act.sa_mask);
-	if (err)
+	if (err != 0)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
-	for (auto it = ignoredSignals.begin(); it != ignoredSignals.end(); ++it)
+	for (auto& ignoredSignal : ignoredSignals)
 	{
-		auto& sigName = it->first;
-		int sigId     = it->second;
+		auto& sigName = ignoredSignal.first;
+		int sigId     = ignoredSignal.second;
 
 		err = sigaction(sigId, &act, nullptr);
-		if (err)
+		if (err != 0)
 		{
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 		}

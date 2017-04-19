@@ -11,7 +11,7 @@ public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
-		UdpSocket* socket;
+		UdpSocket* socket{ nullptr };
 		uv_udp_send_t req;
 		uint8_t store[1];
 	};
@@ -45,48 +45,48 @@ private:
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
-	void onUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	void onUvSendError(int error);
-	void onUvClosed();
+	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
+	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
+	void OnUvSendError(int error);
+	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
-	virtual void userOnUdpSocketClosed() = 0;
+	virtual void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
+	virtual void UserOnUdpSocketClosed() = 0;
 
 private:
 	// Allocated by this (may be passed by argument).
-	uv_udp_t* uvHandle = nullptr;
+	uv_udp_t* uvHandle{ nullptr };
 	// Others.
-	bool isClosing = false;
+	bool isClosing{ false };
 
 protected:
 	struct sockaddr_storage localAddr;
 	std::string localIP;
-	uint16_t localPort = 0;
+	uint16_t localPort{ 0 };
 };
 
 /* Inline methods. */
 
 inline void UdpSocket::Send(const std::string& data, const struct sockaddr* addr)
 {
-	Send((const uint8_t*)data.c_str(), data.size(), addr);
+	Send(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(), addr);
 }
 
 inline void UdpSocket::Send(const std::string& data, const std::string& ip, uint16_t port)
 {
-	Send((const uint8_t*)data.c_str(), data.size(), ip, port);
+	Send(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(), ip, port);
 }
 
 inline const struct sockaddr* UdpSocket::GetLocalAddress() const
 {
-	return (const struct sockaddr*)&this->localAddr;
+	return reinterpret_cast<const struct sockaddr*>(&this->localAddr);
 }
 
 inline int UdpSocket::GetLocalFamily() const
 {
-	return ((const struct sockaddr*)&this->localAddr)->sa_family;
+	return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
 }
 
 inline const std::string& UdpSocket::GetLocalIP() const

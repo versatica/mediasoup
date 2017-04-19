@@ -12,28 +12,28 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
+			virtual void OnPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
 		TcpConnection(Listener* listener, size_t bufferSize);
 
 	private:
-		virtual ~TcpConnection(){};
+		~TcpConnection() override = default;
 
 	public:
 		void Send(const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from ::TcpConnection. */
 	public:
-		virtual void userOnTcpConnectionRead() override;
+		void UserOnTcpConnectionRead() override;
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
+		Listener* listener{ nullptr };
 		// Others.
-		size_t frameStart = 0; // Where the latest frame starts.
+		size_t frameStart{ 0 }; // Where the latest frame starts.
 	};
-}
+} // namespace RTC
 
 #endif

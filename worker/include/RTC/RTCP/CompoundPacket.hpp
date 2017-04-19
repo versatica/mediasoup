@@ -22,11 +22,11 @@ namespace RTC
 			void AddSenderReport(SenderReport* report);
 			void AddReceiverReport(ReceiverReport* report);
 			void AddSdesChunk(SdesChunk* chunk);
-			void Serialize(uint8_t* buffer);
+			void Serialize(uint8_t* data);
 
 		private:
-			uint8_t* header = nullptr;
-			size_t size     = 0;
+			uint8_t* header{ nullptr };
+			size_t size{ 0 };
 			SenderReportPacket senderReportPacket;
 			ReceiverReportPacket receiverReportPacket;
 			SdesPacket sdesPacket;
@@ -63,7 +63,7 @@ namespace RTC
 		{
 			this->sdesPacket.AddChunk(chunk);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

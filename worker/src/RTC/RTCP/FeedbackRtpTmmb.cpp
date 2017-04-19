@@ -45,7 +45,6 @@ namespace RTC
 			uint64_t mantissa = (compact >> 9) & 0x1ffff; // 17 bits.
 
 			this->overhead = compact & 0x1ff; // 9 bits.
-
 			// Get the bitrate out of exponent and mantissa.
 			this->bitrate = (mantissa << exponent);
 
@@ -60,10 +59,10 @@ namespace RTC
 		template<typename T>
 		size_t FeedbackRtpTmmbItem<T>::Serialize(uint8_t* buffer)
 		{
-			static constexpr uint32_t MaxMantissa = 0x1ffff; // 17 bits.
+			static constexpr uint32_t MaxMantissa{ 0x1ffff }; // 17 bits.
 
 			uint64_t mantissa = this->bitrate;
-			uint32_t exponent = 0;
+			uint32_t exponent{ 0 };
 
 			while (mantissa > MaxMantissa)
 			{
@@ -95,17 +94,17 @@ namespace RTC
 		/* Specialization for Tmmbr class. */
 
 		template<>
-		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbr>::MessageType =
+		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbr>::messageType =
 		    FeedbackRtp::MessageType::TMMBR;
 
 		/* Specialization for Tmmbn class. */
 
 		template<>
-		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbn>::MessageType =
+		const FeedbackRtp::MessageType FeedbackRtpTmmbItem<FeedbackRtpTmmbn>::messageType =
 		    FeedbackRtp::MessageType::TMMBN;
 
 		// Explicit instantiation to have all FeedbackRtpTmmbItem definitions in this file.
 		template class FeedbackRtpTmmbItem<FeedbackRtpTmmbr>;
 		template class FeedbackRtpTmmbItem<FeedbackRtpTmmbn>;
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

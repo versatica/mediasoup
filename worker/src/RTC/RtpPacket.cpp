@@ -16,19 +16,19 @@ namespace RTC
 		if (!RtpPacket::IsRtp(data, len))
 			return nullptr;
 
-		uint8_t* ptr = (uint8_t*)data;
+		auto* ptr = const_cast<uint8_t*>(data);
 
 		// Get the header.
-		Header* header = reinterpret_cast<Header*>(ptr);
+		auto* header = reinterpret_cast<Header*>(ptr);
 
 		// Inspect data after the minimum header size.
 		// size_t pos = sizeof(Header);
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		size_t csrcListSize = 0;
+		size_t csrcListSize{ 0 };
 
-		if (header->csrcCount)
+		if (header->csrcCount != 0u)
 		{
 			csrcListSize = header->csrcCount * sizeof(header->ssrc);
 
@@ -43,13 +43,13 @@ namespace RTC
 		}
 
 		// Check header extension.
-		ExtensionHeader* extensionHeader = nullptr;
-		size_t extensionValueSize        = 0;
+		ExtensionHeader* extensionHeader{ nullptr };
+		size_t extensionValueSize{ 0 };
 
-		if (header->extension)
+		if (header->extension != 0u)
 		{
 			// The extension header is at least 4 bytes.
-			if (len < size_t(ptr - data) + 4)
+			if (len < static_cast<size_t>(ptr - data) + 4)
 			{
 				MS_WARN_TAG(rtp, "not enough space for the announced extension header, packet discarded");
 
@@ -60,7 +60,7 @@ namespace RTC
 
 			// The header extension contains a 16-bit length field that counts the number of
 			// 32-bit words in the extension, excluding the four-octet extension header.
-			extensionValueSize = (size_t)(ntohs(extensionHeader->length) * 4);
+			extensionValueSize = static_cast<size_t>(ntohs(extensionHeader->length) * 4);
 
 			// Packet size must be >= header size + CSRC list + header extension size.
 			if (len < (ptr - data) + 4 + extensionValueSize)
@@ -74,14 +74,14 @@ namespace RTC
 		}
 
 		// Get payload.
-		uint8_t* payload       = ptr;
-		size_t payloadLength   = len - (ptr - data);
-		uint8_t payloadPadding = 0;
+		uint8_t* payload     = ptr;
+		size_t payloadLength = len - (ptr - data);
+		uint8_t payloadPadding{ 0 };
 
-		MS_ASSERT(len >= size_t(ptr - data), "payload has negative size");
+		MS_ASSERT(len >= static_cast<size_t>(ptr - data), "payload has negative size");
 
 		// Check padding field.
-		if (header->padding)
+		if (header->padding != 0u)
 		{
 			// Must be at least a single payload byte.
 			if (payloadLength == 0)
@@ -99,7 +99,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (payloadLength < (size_t)payloadPadding)
+			if (payloadLength < static_cast<size_t>(payloadPadding))
 			{
 				MS_WARN_TAG(
 				    rtp,
@@ -108,7 +108,7 @@ namespace RTC
 
 				return nullptr;
 			}
-			payloadLength -= (size_t)payloadPadding;
+			payloadLength -= size_t{ payloadPadding };
 		}
 
 		if (payloadLength == 0)
@@ -116,11 +116,10 @@ namespace RTC
 
 		MS_ASSERT(
 		    len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 + extensionValueSize : 0) +
-		               payloadLength + (size_t)payloadPadding,
+		               payloadLength + static_cast<size_t>(payloadPadding),
 		    "packet's computed size does not match received size");
 
-		RtpPacket* packet =
-		    new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
+		auto packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
@@ -137,13 +136,13 @@ namespace RTC
 	    size_t payloadLength,
 	    uint8_t payloadPadding,
 	    size_t size)
-	    : header(header), extensionHeader(extensionHeader), payload((uint8_t*)payload),
+	    : header(header), extensionHeader(extensionHeader), payload(const_cast<uint8_t*>(payload)),
 	      payloadLength(payloadLength), payloadPadding(payloadPadding), size(size)
 	{
 		MS_TRACE();
 
-		if (this->header->csrcCount)
-			this->csrcList = (uint8_t*)header + sizeof(Header);
+		if (this->header->csrcCount != 0u)
+			this->csrcList = reinterpret_cast<uint8_t*>(header) + sizeof(Header);
 	}
 
 	RtpPacket::~RtpPacket()
@@ -180,16 +179,16 @@ namespace RTC
 		// First calculate the total required size for the entire message.
 		this->size = sizeof(Header); // Minimum header.
 
-		if (this->csrcList)
+		if (this->csrcList != nullptr)
 			this->size += this->header->csrcCount * sizeof(header->ssrc);
 
 		size_t extensionValueSize = GetExtensionHeaderLength();
 
-		if (this->extensionHeader)
+		if (this->extensionHeader != nullptr)
 			this->size += 4 + extensionValueSize;
 
 		this->size += this->payloadLength;
-		this->size += (size_t)this->payloadPadding;
+		this->size += size_t{ this->payloadPadding };
 
 		uint8_t* ptr = buffer;
 
@@ -201,7 +200,7 @@ namespace RTC
 		ptr += sizeof(Header);
 
 		// Add CSRC list.
-		if (this->csrcList)
+		if (this->csrcList != nullptr)
 		{
 			std::memcpy(ptr, this->csrcList, this->header->csrcCount * sizeof(this->header->ssrc));
 
@@ -211,7 +210,7 @@ namespace RTC
 		}
 
 		// Add extension header.
-		if (this->extensionHeader)
+		if (this->extensionHeader != nullptr)
 		{
 			std::memcpy(ptr, this->extensionHeader, 4 + extensionValueSize);
 
@@ -224,7 +223,7 @@ namespace RTC
 		ParseExtensions();
 
 		// Add payload.
-		if (this->payload)
+		if (this->payload != nullptr)
 		{
 			std::memcpy(ptr, this->payload, this->payloadLength);
 
@@ -234,13 +233,13 @@ namespace RTC
 		}
 
 		// Add payload padding.
-		if (this->payloadPadding)
+		if (this->payloadPadding != 0u)
 		{
-			*(ptr + (size_t)this->payloadPadding - 1) = this->payloadPadding;
-			ptr += (size_t)this->payloadPadding;
+			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
+			ptr += size_t{ this->payloadPadding };
 		}
 
-		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
+		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
 	}
 
 	RtpPacket* RtpPacket::Clone(uint8_t* buffer) const
@@ -253,17 +252,17 @@ namespace RTC
 		std::memcpy(buffer, GetData(), GetSize());
 
 		// Set header pointer pointing to the given buffer.
-		Header* header = reinterpret_cast<Header*>(ptr);
+		auto* header = reinterpret_cast<Header*>(ptr);
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		if (this->csrcList)
+		if (this->csrcList != nullptr)
 			ptr += header->csrcCount * sizeof(header->ssrc);
 
 		// Check extension header.
-		ExtensionHeader* extensionHeader = nullptr;
+		ExtensionHeader* extensionHeader{ nullptr };
 
-		if (this->extensionHeader)
+		if (this->extensionHeader != nullptr)
 		{
 			// Set the header extension pointer.
 			extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
@@ -271,9 +270,9 @@ namespace RTC
 		}
 
 		// Check payload.
-		uint8_t* payload = nullptr;
+		uint8_t* payload{ nullptr };
 
-		if (this->payload)
+		if (this->payload != nullptr)
 		{
 			// Set the payload pointer.
 			payload = ptr;
@@ -281,16 +280,16 @@ namespace RTC
 		}
 
 		// Check payload padding.
-		if (this->payloadPadding)
+		if (this->payloadPadding != 0u)
 		{
-			*(ptr + (size_t)this->payloadPadding - 1) = this->payloadPadding;
-			ptr += (size_t)this->payloadPadding;
+			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
+			ptr += size_t{ this->payloadPadding };
 		}
 
-		MS_ASSERT(size_t(ptr - buffer) == this->size, "size_t(ptr - buffer) == this->size");
+		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
 
 		// Create the new RtpPacket instance and return it.
-		RtpPacket* packet = new RtpPacket(
+		auto packet = new RtpPacket(
 		    header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Parse RFC 5285 extension header.
@@ -312,14 +311,14 @@ namespace RTC
 			// Clear the One-Byte extension elements map.
 			this->oneByteExtensions.clear();
 
-			uint8_t* extensionStart = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
 			while (ptr < extensionEnd)
 			{
 				uint8_t id = (*ptr & 0xF0) >> 4;
-				size_t len = (*ptr & 0x0F) + 1;
+				size_t len = static_cast<size_t>(*ptr & 0x0F) + 1;
 
 				if (ptr + 1 + len > extensionEnd)
 				{
@@ -345,7 +344,7 @@ namespace RTC
 			// Clear the Two-Bytes extension elements map.
 			this->twoBytesExtensions.clear();
 
-			uint8_t* extensionStart = (uint8_t*)this->extensionHeader + 4;
+			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
@@ -373,4 +372,4 @@ namespace RTC
 			}
 		}
 	}
-}
+} // namespace RTC

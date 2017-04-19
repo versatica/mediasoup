@@ -23,7 +23,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			return new FeedbackRtpEcnItem(header);
 		}
@@ -52,5 +52,5 @@ namespace RTC
 			MS_DUMP("  duplicated packets : %" PRIu16, this->GetDuplicatedPackets());
 			MS_DUMP("</FeedbackRtpEcnItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

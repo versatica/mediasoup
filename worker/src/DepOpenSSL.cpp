@@ -10,8 +10,8 @@
 /* Static attributes. */
 
 // This array will store all of the mutex available for OpenSSL.
-uv_mutex_t* DepOpenSSL::mutexes = nullptr;
-uint32_t DepOpenSSL::numMutexes = 0;
+uv_mutex_t* DepOpenSSL::mutexes{ nullptr };
+uint32_t DepOpenSSL::numMutexes{ 0 };
 
 /* Static methods. */
 
@@ -28,15 +28,16 @@ void DepOpenSSL::ClassInit()
 
 	// Make OpenSSL thread-safe (even if we are single thread).
 	DepOpenSSL::mutexes = new uv_mutex_t[CRYPTO_num_locks()];
-	if (!DepOpenSSL::mutexes)
+
+	if (DepOpenSSL::mutexes == nullptr)
 		MS_THROW_ERROR("allocation of mutexes failed");
 
 	DepOpenSSL::numMutexes = CRYPTO_num_locks();
 
-	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
+	for (uint32_t i{ 0 }; i < DepOpenSSL::numMutexes; ++i)
 	{
 		int err = uv_mutex_init(&DepOpenSSL::mutexes[i]);
-		if (err)
+		if (err != 0)
 			MS_THROW_ERROR("uv_mutex_init() failed with return code %d\n", err);
 	}
 
@@ -66,15 +67,15 @@ void DepOpenSSL::ClassDestroy()
 	CRYPTO_cleanup_all_ex_data();
 
 	// https://bugs.launchpad.net/percona-server/+bug/1341067.
-	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
+	sk_SSL_COMP_free(SSL_COMP_get_compression_methods()); // NOLINT
 
 	// Free mutexes.
-	for (uint32_t i = 0; i < DepOpenSSL::numMutexes; ++i)
+	for (uint32_t i{ 0 }; i < DepOpenSSL::numMutexes; ++i)
 	{
 		uv_mutex_destroy(&DepOpenSSL::mutexes[i]);
 	}
-	if (DepOpenSSL::mutexes)
-		delete[] DepOpenSSL::mutexes;
+
+	delete[] DepOpenSSL::mutexes;
 
 	// Reset callbacks.
 	CRYPTO_THREADID_set_callback(nullptr);
@@ -88,10 +89,10 @@ void DepOpenSSL::SetThreadId(CRYPTO_THREADID* id)
 {
 	// MS_TRACE();
 
-	CRYPTO_THREADID_set_numeric(id, (unsigned long)uv_thread_self());
+	CRYPTO_THREADID_set_numeric(id, (unsigned long)uv_thread_self()); // NOLINT
 }
 
-void DepOpenSSL::LockingFunction(int mode, int n, const char* file, int line)
+void DepOpenSSL::LockingFunction(int mode, int n, const char* /*file*/, int /*line*/)
 {
 	// MS_TRACE();
 
@@ -110,18 +111,19 @@ void DepOpenSSL::LockingFunction(int mode, int n, const char* file, int line)
 	// 	mode & CRYPTO_LOCK ? "LOCK" : "UNLOCK", mode & CRYPTO_READ ? "READ" : "WRITE",
 	// 	n, file, line);
 
-	if (mode & CRYPTO_LOCK)
+	if ((mode & CRYPTO_LOCK) != 0)
 		uv_mutex_lock(&DepOpenSSL::mutexes[n]);
 	else
 		uv_mutex_unlock(&DepOpenSSL::mutexes[n]);
 }
 
-CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* file, int line)
+CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* /*file*/, int /*line*/)
 {
 	// MS_TRACE();
 
-	CRYPTO_dynlock_value* value = new CRYPTO_dynlock_value;
-	if (!value)
+	auto* value = new CRYPTO_dynlock_value;
+
+	if (value == nullptr)
 	{
 		MS_ABORT("new CRYPTO_dynlock_value failed");
 
@@ -132,17 +134,17 @@ CRYPTO_dynlock_value* DepOpenSSL::DynCreateFunction(const char* file, int line)
 	return value;
 }
 
-void DepOpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* file, int line)
+void DepOpenSSL::DynLockFunction(int mode, CRYPTO_dynlock_value* v, const char* /*file*/, int /*line*/)
 {
 	// MS_TRACE();
 
-	if (mode & CRYPTO_LOCK)
+	if ((mode & CRYPTO_LOCK) != 0)
 		uv_mutex_lock(&v->mutex);
 	else
 		uv_mutex_unlock(&v->mutex);
 }
 
-void DepOpenSSL::DynDestroyFunction(CRYPTO_dynlock_value* v, const char* file, int line)
+void DepOpenSSL::DynDestroyFunction(CRYPTO_dynlock_value* v, const char* /*file*/, int /*line*/)
 {
 	// MS_TRACE();
 

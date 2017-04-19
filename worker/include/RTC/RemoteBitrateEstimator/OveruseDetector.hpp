@@ -20,7 +20,7 @@ namespace RTC
 	class OveruseDetector
 	{
 	private:
-		static constexpr double kOverUsingTimeThreshold = 10;
+		static constexpr double OverUsingTimeThreshold{ 10 };
 
 	public:
 		OveruseDetector() = default;
@@ -31,7 +31,7 @@ namespace RTC
 		// offset was based on, representing the time between detector updates.
 		// |numOfDeltas| is the number of deltas the offset estimate is based on.
 		// Returns the state after the detection update.
-		BandwidthUsage Detect(double offset, double timestampDelta, int numOfDeltas, int64_t nowMs);
+		BandwidthUsage Detect(double offset, double tsDelta, int numOfDeltas, int64_t nowMs);
 		// Returns the current detector state.
 		BandwidthUsage State() const;
 
@@ -39,21 +39,21 @@ namespace RTC
 		void UpdateThreshold(double modifiedOffset, int64_t nowMs);
 
 	private:
-		double kUp                    = 0.0087;
-		double kDown                  = 0.039;
-		double overusingTimeThreshold = kOverUsingTimeThreshold;
-		double threshold              = 12.5;
-		int64_t lastUpdateMs          = -1;
-		double prevOffset             = 0.0;
-		double timeOverUsing          = -1;
-		int overuseCounter            = 0;
-		BandwidthUsage hypothesis     = kBwNormal;
+		double up{ 0.0087 };
+		double down{ 0.039 };
+		double overusingTimeThreshold{ OverUsingTimeThreshold };
+		double threshold{ 12.5 };
+		int64_t lastUpdateMs{ -1 };
+		double prevOffset{ 0.0 };
+		double timeOverUsing{ -1 };
+		int overuseCounter{ 0 };
+		BandwidthUsage hypothesis{ BW_NORMAL };
 	};
 
 	inline BandwidthUsage OveruseDetector::State() const
 	{
 		return this->hypothesis;
 	}
-}
+} // namespace RTC
 
 #endif

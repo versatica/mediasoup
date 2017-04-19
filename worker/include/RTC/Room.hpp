@@ -26,7 +26,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onRoomClosed(RTC::Room* room) = 0;
+			virtual void OnRoomClosed(RTC::Room* room) = 0;
 		};
 
 	public:
@@ -44,7 +44,7 @@ namespace RTC
 
 	public:
 		void Destroy();
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		const RTC::RtpCapabilities& GetCapabilities() const;
 
@@ -55,32 +55,31 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
-		virtual void onPeerClosed(const RTC::Peer* peer) override;
-		virtual void onPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) override;
-		virtual void onPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
-		virtual void onPeerRtpReceiverClosed(
-		    const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver) override;
-		virtual void onPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
-		virtual void onPeerRtpPacket(
+		void OnPeerClosed(const RTC::Peer* peer) override;
+		void OnPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) override;
+		void OnPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver) override;
+		void OnPeerRtpReceiverClosed(const RTC::Peer* peer, const RTC::RtpReceiver* rtpReceiver) override;
+		void OnPeerRtpSenderClosed(const RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
+		void OnPeerRtpPacket(
 		    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) override;
-		virtual void onPeerRtcpReceiverReport(
+		void OnPeerRtcpReceiverReport(
 		    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report) override;
-		virtual void onPeerRtcpFeedback(
+		void OnPeerRtcpFeedback(
 		    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet) override;
-		virtual void onPeerRtcpFeedback(
+		void OnPeerRtcpFeedback(
 		    const RTC::Peer* peer, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet) override;
-		virtual void onPeerRtcpSenderReport(
+		void OnPeerRtcpSenderReport(
 		    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) override;
-		virtual void onFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
+		void OnFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 
 	public:
 		// Passed by argument.
-		uint32_t roomId;
+		uint32_t roomId{ 0 };
 
 	private:
 		// Passed by argument.
-		Listener* listener          = nullptr;
-		Channel::Notifier* notifier = nullptr;
+		Listener* listener{ nullptr };
+		Channel::Notifier* notifier{ nullptr };
 		// Others.
 		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
@@ -94,6 +93,6 @@ namespace RTC
 	{
 		return this->capabilities;
 	}
-}
+} // namespace RTC
 
 #endif

@@ -15,8 +15,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
-			virtual void onFullFrameRequired()                                   = 0;
+			virtual void OnNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
+			virtual void OnFullFrameRequired()                                   = 0;
 		};
 
 	private:
@@ -25,10 +25,10 @@ namespace RTC
 			NackInfo(){};
 			explicit NackInfo(uint32_t seq32, uint32_t sendAtSeqNum);
 
-			uint32_t seq32        = 0;
-			uint32_t sendAtSeqNum = 0;
-			uint64_t sentAtTime   = 0;
-			uint8_t retries       = 0;
+			uint32_t seq32{ 0 };
+			uint32_t sendAtSeqNum{ 0 };
+			uint64_t sentAtTime{ 0 };
+			uint8_t retries{ 0 };
 		};
 
 		enum class NackFilter
@@ -39,7 +39,7 @@ namespace RTC
 
 	public:
 		explicit NackGenerator(Listener* listener);
-		virtual ~NackGenerator();
+		~NackGenerator() override;
 
 		void ReceivePacket(RTC::RtpPacket* packet);
 
@@ -50,18 +50,18 @@ namespace RTC
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
-		virtual void onTimer(Timer* timer) override;
+		void OnTimer(Timer* timer) override;
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
+		Listener* listener{ nullptr };
 		// Allocated by this.
-		Timer* timer = nullptr;
+		Timer* timer{ nullptr };
 		// Others.
 		std::map<uint32_t, NackInfo> nackList;
-		bool started       = false;
-		uint32_t lastSeq32 = 0; // Extended seq number of last valid packet.
-		uint32_t rtt       = 0; // Round trip time (ms).
+		bool started{ false };
+		uint32_t lastSeq32{ 0 }; // Extended seq number of last valid packet.
+		uint32_t rtt{ 0 };       // Round trip time (ms).
 	};
 
 	// Inline instance methods.
@@ -70,6 +70,6 @@ namespace RTC
 	    : seq32(seq32), sendAtSeqNum(sendAtSeqNum)
 	{
 	}
-}
+} // namespace RTC
 
 #endif

@@ -11,29 +11,29 @@ public:
 	class Listener
 	{
 	public:
-		virtual ~Listener(){};
+		virtual ~Listener() = default;
 
 	public:
-		virtual void onSignal(SignalsHandler* signalsHandler, int signum) = 0;
+		virtual void OnSignal(SignalsHandler* signalsHandler, int signum) = 0;
 	};
 
 public:
 	explicit SignalsHandler(Listener* listener);
 
 private:
-	~SignalsHandler(){};
+	~SignalsHandler() = default;
 
 public:
 	void Destroy();
-	void AddSignal(int signum, std::string name);
+	void AddSignal(int signum, const std::string& name);
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvSignal(int signum);
+	void OnUvSignal(int signum);
 
 private:
 	// Passed by argument.
-	Listener* listener = nullptr;
+	Listener* listener{ nullptr };
 	// Allocated by this.
 	std::vector<uv_signal_t*> uvHandles;
 };

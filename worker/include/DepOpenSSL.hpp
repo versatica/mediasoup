@@ -7,7 +7,7 @@
 #include <uv.h>
 
 /* OpenSSL doc: struct CRYPTO_dynlock_value has to be defined by the application. */
-struct CRYPTO_dynlock_value
+struct CRYPTO_dynlock_value // NOLINT
 {
 	uv_mutex_t mutex;
 };

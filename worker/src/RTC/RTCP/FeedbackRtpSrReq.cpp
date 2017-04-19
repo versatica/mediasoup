@@ -21,7 +21,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			CommonHeader* commonHeader = (CommonHeader*)data;
+			auto* commonHeader = reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(data));
 
 			return new FeedbackRtpSrReqPacket(commonHeader);
 		}
@@ -34,5 +34,5 @@ namespace RTC
 			FeedbackRtpPacket::Dump();
 			MS_DUMP("</FeedbackRtpSrReqPacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

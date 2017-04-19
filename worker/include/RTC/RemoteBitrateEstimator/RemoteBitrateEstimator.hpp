@@ -41,15 +41,15 @@ namespace RTC
 		{
 		public:
 			// Called when a receive channel group has a new bitrate estimate for the incoming streams.
-			virtual void onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
+			virtual void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
 		};
 
 	protected:
-		static const int64_t kProcessIntervalMs = 500;
-		static const int64_t kStreamTimeOutMs   = 2000;
+		static const int64_t processIntervalMs{ 500 };
+		static const int64_t streamTimeOutMs{ 2000 };
 
 	public:
-		virtual ~RemoteBitrateEstimator() = default;
+		~RemoteBitrateEstimator() override = default;
 
 		// Called for each incoming packet. Updates the incoming payload bitrate
 		// estimate and the over-use detector. If an over-use is detected the
@@ -57,10 +57,7 @@ namespace RTC
 		// packet size excluding headers.
 		// Note that |arrivalTimeMs| can be of an arbitrary time base.
 		virtual void IncomingPacket(
-		    int64_t arrivalTimeMs,
-		    size_t payloadSize,
-		    const RtpPacket& packet,
-		    const uint32_t absSendTime) = 0;
+		    int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, uint32_t absSendTime) = 0;
 
 		// Removes all data for |ssrc|.
 		virtual void RemoveStream(uint32_t ssrc) = 0;
@@ -85,6 +82,6 @@ namespace RTC
 		// Called on a worker thread.
 		virtual void Process() = 0;
 	};
-}
+} // namespace RTC
 
 #endif

@@ -37,7 +37,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType MessageType = FeedbackPs::MessageType::FIR;
+			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::FIR };
 
 		public:
 			static FeedbackPsVbcmItem* Parse(const uint8_t* data, size_t len);
@@ -47,7 +47,7 @@ namespace RTC
 			explicit FeedbackPsVbcmItem(FeedbackPsVbcmItem* item);
 			FeedbackPsVbcmItem(
 			    uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value);
-			virtual ~FeedbackPsVbcmItem(){};
+			~FeedbackPsVbcmItem() override = default;
 
 			uint32_t GetSsrc() const;
 			uint8_t GetSequenceNumber() const;
@@ -57,16 +57,16 @@ namespace RTC
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{ nullptr };
 		};
 
 		// Vbcm packet declaration
-		typedef FeedbackPsItemsPacket<FeedbackPsVbcmItem> FeedbackPsVbcmPacket;
+		using FeedbackPsVbcmPacket = FeedbackPsItemsPacket<FeedbackPsVbcmItem>;
 
 		/* Inline instance methods. */
 
@@ -80,7 +80,7 @@ namespace RTC
 
 		inline size_t FeedbackPsVbcmItem::GetSize() const
 		{
-			size_t size = 8 + size_t(this->header->length);
+			size_t size = 8 + static_cast<size_t>(this->header->length);
 
 			// Consider pading to 32 bits (4 bytes) boundary.
 			return (size + 3) & ~3;
@@ -88,29 +88,29 @@ namespace RTC
 
 		inline uint32_t FeedbackPsVbcmItem::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->ssrc);
+			return uint32_t{ ntohl(this->header->ssrc) };
 		}
 
 		inline uint8_t FeedbackPsVbcmItem::GetSequenceNumber() const
 		{
-			return (uint8_t)this->header->sequenceNumber;
+			return uint8_t{ this->header->sequenceNumber };
 		}
 
 		inline uint8_t FeedbackPsVbcmItem::GetPayloadType() const
 		{
-			return (uint8_t)this->header->payloadType;
+			return uint8_t{ this->header->payloadType };
 		}
 
 		inline uint16_t FeedbackPsVbcmItem::GetLength() const
 		{
-			return (uint16_t)ntohs(this->header->length);
+			return uint16_t{ ntohs(this->header->length) };
 		}
 
 		inline uint8_t* FeedbackPsVbcmItem::GetValue() const
 		{
 			return this->header->value;
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

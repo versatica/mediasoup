@@ -33,7 +33,7 @@ namespace RTC
 
 		if (it != RtpHeaderExtensionUri::string2Type.end())
 			return it->second;
-		else
-			return RtpHeaderExtensionUri::Type::UNKNOWN;
+
+		return RtpHeaderExtensionUri::Type::UNKNOWN;
 	}
-}
+} // namespace RTC

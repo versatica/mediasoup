@@ -36,21 +36,21 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void onTransportConnected(RTC::Transport* transport)                             = 0;
-			virtual void onTransportClosed(RTC::Transport* transport)                                = 0;
-			virtual void onTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) = 0;
-			virtual void onTransportFullFrameRequired(RTC::Transport* transport)                     = 0;
+			virtual void OnTransportConnected(RTC::Transport* transport)                             = 0;
+			virtual void OnTransportClosed(RTC::Transport* transport)                                = 0;
+			virtual void OnTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) = 0;
+			virtual void OnTransportFullFrameRequired(RTC::Transport* transport)                     = 0;
 		};
 
 	public:
 		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data);
 
 	private:
-		virtual ~Transport();
+		~Transport() override;
 
 	public:
 		void Destroy();
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
 		void RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver);
@@ -67,15 +67,15 @@ namespace RTC
 
 		/* Private methods to unify UDP and TCP behavior. */
 	private:
-		void onPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void onStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void onDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void onRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void onRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
-		virtual void onPacketRecv(
+		void OnPacketRecv(
 		    RTC::UdpSocket* socket,
 		    const uint8_t* data,
 		    size_t len,
@@ -83,28 +83,28 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
-		virtual void onRtcTcpConnectionClosed(
+		void OnRtcTcpConnectionClosed(
 		    RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) override;
 
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
-		virtual void onPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
+		void OnPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
-		virtual void onOutgoingStunMessage(
+		void OnOutgoingStunMessage(
 		    const RTC::IceServer* iceServer,
 		    const RTC::StunMessage* msg,
 		    RTC::TransportTuple* tuple) override;
-		virtual void onIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		virtual void onIceConnected(const RTC::IceServer* iceServer) override;
-		virtual void onIceCompleted(const RTC::IceServer* iceServer) override;
-		virtual void onIceDisconnected(const RTC::IceServer* iceServer) override;
+		void OnIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		void OnIceConnected(const RTC::IceServer* iceServer) override;
+		void OnIceCompleted(const RTC::IceServer* iceServer) override;
+		void OnIceDisconnected(const RTC::IceServer* iceServer) override;
 
 		/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
-		virtual void onDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) override;
-		virtual void onDtlsConnected(
+		void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsConnected(
 		    const RTC::DtlsTransport* dtlsTransport,
 		    RTC::SrtpSession::Profile srtpProfile,
 		    uint8_t* srtpLocalKey,
@@ -112,47 +112,47 @@ namespace RTC
 		    uint8_t* srtpRemoteKey,
 		    size_t srtpRemoteKeyLen,
 		    std::string& remoteCert) override;
-		virtual void onDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
-		virtual void onDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
-		virtual void onOutgoingDtlsData(
+		void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnOutgoingDtlsData(
 		    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
-		virtual void onDtlsApplicationData(
+		void OnDtlsApplicationData(
 		    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
 	public:
-		virtual void onReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
+		void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
 
 	public:
 		// Passed by argument.
-		uint32_t transportId;
+		uint32_t transportId{ 0 };
 
 	private:
 		// Passed by argument.
-		Listener* listener          = nullptr;
-		Channel::Notifier* notifier = nullptr;
+		Listener* listener{ nullptr };
+		Channel::Notifier* notifier{ nullptr };
 		// Allocated by this.
-		RTC::IceServer* iceServer = nullptr;
+		RTC::IceServer* iceServer{ nullptr };
 		std::vector<RTC::UdpSocket*> udpSockets;
 		std::vector<RTC::TcpServer*> tcpServers;
-		RTC::DtlsTransport* dtlsTransport = nullptr;
-		RTC::SrtpSession* srtpRecvSession = nullptr;
-		RTC::SrtpSession* srtpSendSession = nullptr;
+		RTC::DtlsTransport* dtlsTransport{ nullptr };
+		RTC::SrtpSession* srtpRecvSession{ nullptr };
+		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
-		bool allocated = false;
+		bool allocated{ false };
 		// Others (ICE).
 		std::vector<IceCandidate> iceLocalCandidates;
-		RTC::TransportTuple* selectedTuple = nullptr;
+		RTC::TransportTuple* selectedTuple{ nullptr };
 		// Others (DTLS).
-		bool remoteDtlsParametersGiven         = false;
-		RTC::DtlsTransport::Role dtlsLocalRole = RTC::DtlsTransport::Role::AUTO;
+		bool remoteDtlsParametersGiven{ false };
+		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		// REMB and bitrate stuff.
 		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
-		uint32_t maxBitrate                = 0;
-		uint32_t effectiveMaxBitrate       = 0;
-		uint64_t lastEffectiveMaxBitrateAt = 0;
+		uint32_t maxBitrate{ 0 };
+		uint32_t effectiveMaxBitrate{ 0 };
+		uint64_t lastEffectiveMaxBitrateAt{ 0 };
 	};
 
 	/* Inline instance methods. */
@@ -192,6 +192,6 @@ namespace RTC
 		else
 			return false;
 	}
-}
+} // namespace RTC
 
 #endif

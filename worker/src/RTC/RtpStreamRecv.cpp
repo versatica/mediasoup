@@ -20,23 +20,23 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::toJson() const
+	Json::Value RtpStreamRecv::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_params("params");
-		static const Json::StaticString k_received("received");
-		static const Json::StaticString k_maxTimestamp("maxTimestamp");
-		static const Json::StaticString k_transit("transit");
-		static const Json::StaticString k_jitter("jitter");
+		static const Json::StaticString JsonStringParams{ "params" };
+		static const Json::StaticString JsonStringReceived{ "received" };
+		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
+		static const Json::StaticString JsonStringTransit{ "transit" };
+		static const Json::StaticString JsonStringJitter{ "jitter" };
 
 		Json::Value json(Json::objectValue);
 
-		json[k_params]       = this->params.toJson();
-		json[k_received]     = (Json::UInt)this->received;
-		json[k_maxTimestamp] = (Json::UInt)this->maxTimestamp;
-		json[k_transit]      = (Json::UInt)this->transit;
-		json[k_jitter]       = (Json::UInt)this->jitter;
+		json[JsonStringParams]       = this->params.ToJson();
+		json[JsonStringReceived]     = Json::UInt{ this->received };
+		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
+		json[JsonStringTransit]      = Json::UInt{ this->transit };
+		json[JsonStringJitter]       = Json::UInt{ this->jitter };
 
 		return json;
 	}
@@ -53,7 +53,7 @@ namespace RTC
 		CalculateJitter(packet->GetTimestamp());
 
 		// Set RTP header extension ids.
-		if (this->params.absSendTimeId)
+		if (this->params.absSendTimeId != 0u)
 		{
 			packet->AddExtensionMapping(
 			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
@@ -70,7 +70,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RTCP::ReceiverReport* report = new RTC::RTCP::ReceiverReport();
+		auto report = new RTC::RTCP::ReceiverReport();
 
 		// Calculate Packets Expected and Lost.
 		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
@@ -98,17 +98,17 @@ namespace RTC
 		report->SetFractionLost(fractionLost);
 
 		// Fill the rest of the report.
-		report->SetLastSeq((uint32_t)this->maxSeq + this->cycles);
+		report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
 		report->SetJitter(this->jitter);
 
-		if (this->lastSrReceived)
+		if (this->lastSrReceived != 0u)
 		{
 			// Get delay in milliseconds.
-			uint32_t delayMs = (DepLibUV::GetTime() - this->lastSrReceived);
+			auto delayMs = static_cast<uint32_t>(DepLibUV::GetTime() - this->lastSrReceived);
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlsr = (delayMs / 1000) << 16;
 
-			dlsr |= (uint32_t)((delayMs % 1000) * 65536 / 1000);
+			dlsr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
 			report->SetDelaySinceLastSenderReport(dlsr);
 			report->SetLastSenderReport(this->lastSrTimestamp);
 		}
@@ -140,7 +140,7 @@ namespace RTC
 			if (this->params.useNack)
 				this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-			this->listener->onPliRequired(this);
+			this->listener->OnPliRequired(this);
 		}
 	}
 
@@ -148,19 +148,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->params.clockRate)
+		if (this->params.clockRate == 0u)
 			return;
 
-		int transit = DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate);
-		int d       = transit - this->transit;
+		auto transit =
+		    static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		int d = transit - this->transit;
 
 		this->transit = transit;
 		if (d < 0)
 			d = -d;
-		this->jitter += (1. / 16.) * ((double)d - this->jitter);
+		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
 	}
 
-	void RtpStreamRecv::onInitSeq()
+	void RtpStreamRecv::OnInitSeq()
 	{
 		MS_TRACE();
 
@@ -173,11 +174,11 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
-			this->listener->onPliRequired(this);
+			this->listener->OnPliRequired(this);
 		}
 	}
 
-	void RtpStreamRecv::onNackRequired(const std::vector<uint16_t>& seqNumbers)
+	void RtpStreamRecv::OnNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
@@ -190,10 +191,10 @@ namespace RTC
 		    seqNumbers[0],
 		    seqNumbers.size());
 
-		this->listener->onNackRequired(this, seqNumbers);
+		this->listener->OnNackRequired(this, seqNumbers);
 	}
 
-	void RtpStreamRecv::onFullFrameRequired()
+	void RtpStreamRecv::OnFullFrameRequired()
 	{
 		MS_TRACE();
 
@@ -206,6 +207,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
-		this->listener->onPliRequired(this);
+		this->listener->OnPliRequired(this);
 	}
-}
+} // namespace RTC

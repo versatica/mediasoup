@@ -17,14 +17,12 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Packet::CommonHeader* header = (Packet::CommonHeader*)data;
-
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 			std::unique_ptr<ByePacket> packet(new ByePacket());
-
 			size_t offset = sizeof(Packet::CommonHeader);
-
 			uint8_t count = header->count;
-			while ((count--) && (len - offset > 0))
+
+			while (((count--) != 0u) && (len - offset > 0))
 			{
 				if (sizeof(uint32_t) > len - offset)
 				{
@@ -39,11 +37,12 @@ namespace RTC
 
 			if (len - offset > 0)
 			{
-				size_t length = size_t(Utils::Byte::Get1Byte(data, offset));
+				auto length = size_t{ Utils::Byte::Get1Byte(data, offset) };
+
 				offset += sizeof(uint8_t);
 				if (length <= len - offset)
 				{
-					packet->SetReason(std::string((char*)data + offset, length));
+					packet->SetReason(std::string(reinterpret_cast<const char*>(data) + offset, length));
 				}
 			}
 
@@ -78,7 +77,8 @@ namespace RTC
 
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
-			for (size_t i = 0; i < padding; ++i)
+
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}
@@ -99,5 +99,5 @@ namespace RTC
 				MS_DUMP("  reason : %s", this->reason.c_str());
 			MS_DUMP("</ByePacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

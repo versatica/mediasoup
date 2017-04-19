@@ -3,6 +3,7 @@
 
 #include "RTC/RtpDataCounter.hpp"
 #include "Logger.hpp"
+#include <cmath> // std::trunc()
 
 namespace RTC
 {
@@ -36,7 +37,7 @@ namespace RTC
 		int64_t nominalWindowSize = now - this->oldestTime;
 		float scale               = this->scale / nominalWindowSize;
 
-		return static_cast<uint32_t>(this->totalCount * scale + 0.5f);
+		return static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
 	}
 
 	void RateCalculator::RemoveOldData(uint64_t now)
@@ -85,4 +86,4 @@ namespace RTC
 		this->bytes += packet->GetSize();
 		this->rate.Update(packet->GetSize(), now);
 	}
-}
+} // namespace RTC

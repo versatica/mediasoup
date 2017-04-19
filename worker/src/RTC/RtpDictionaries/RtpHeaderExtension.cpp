@@ -13,28 +13,28 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_uri("uri");
-		static const Json::StaticString k_preferredId("preferredId");
-		static const Json::StaticString k_preferredEncrypt("preferredEncrypt");
+		static const Json::StaticString JsonStringKind{ "kind" };
+		static const Json::StaticString JsonStringUri{ "uri" };
+		static const Json::StaticString JsonStringPreferredId{ "preferredId" };
+		static const Json::StaticString JsonStringPreferredEncrypt{ "preferredEncrypt" };
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpHeaderExtension is not an object");
 
 		// `kind` is mandatory.
-		if (!data[k_kind].isString())
+		if (!data[JsonStringKind].isString())
 			MS_THROW_ERROR("missing RtpCodecCapability.kind");
 
-		std::string kind = data[k_kind].asString();
+		std::string kind = data[JsonStringKind].asString();
 
 		// NOTE: This may throw.
 		this->kind = RTC::Media::GetKind(kind);
 
 		// `uri` is mandatory.
-		if (!data[k_uri].isString())
+		if (!data[JsonStringUri].isString())
 			MS_THROW_ERROR("missing RtpHeaderExtension.uri");
 
-		this->uri = data[k_uri].asString();
+		this->uri = data[JsonStringUri].asString();
 		if (this->uri.empty())
 			MS_THROW_ERROR("empty RtpHeaderExtension.uri");
 
@@ -42,39 +42,39 @@ namespace RTC
 		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
 
 		// `preferredId` is mandatory.
-		if (!data[k_preferredId].isUInt())
+		if (!data[JsonStringPreferredId].isUInt())
 			MS_THROW_ERROR("missing RtpHeaderExtension.preferredId");
 
-		this->preferredId = (uint8_t)data[k_preferredId].asUInt();
+		this->preferredId = static_cast<uint8_t>(data[JsonStringPreferredId].asUInt());
 
 		// `preferredEncrypt` is optional.
-		if (data[k_preferredEncrypt].isBool())
-			this->preferredEncrypt = data[k_preferredEncrypt].asBool();
+		if (data[JsonStringPreferredEncrypt].isBool())
+			this->preferredEncrypt = data[JsonStringPreferredEncrypt].asBool();
 	}
 
-	Json::Value RtpHeaderExtension::toJson() const
+	Json::Value RtpHeaderExtension::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_kind("kind");
-		static const Json::StaticString k_uri("uri");
-		static const Json::StaticString k_preferredId("preferredId");
-		static const Json::StaticString k_preferredEncrypt("preferredEncrypt");
+		static const Json::StaticString JsonStringKind{ "kind" };
+		static const Json::StaticString JsonStringUri{ "uri" };
+		static const Json::StaticString JsonStringPreferredId{ "preferredId" };
+		static const Json::StaticString JsonStringPreferredEncrypt{ "preferredEncrypt" };
 
 		Json::Value json(Json::objectValue);
 
 		// Add `kind`.
-		json[k_kind] = RTC::Media::GetJsonString(this->kind);
+		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
 		// Add `uri`.
-		json[k_uri] = this->uri;
+		json[JsonStringUri] = this->uri;
 
 		// Add `preferredId`.
-		json[k_preferredId] = (Json::UInt)this->preferredId;
+		json[JsonStringPreferredId] = Json::UInt{ this->preferredId };
 
 		// Add `preferredEncrypt`.
-		json[k_preferredEncrypt] = this->preferredEncrypt;
+		json[JsonStringPreferredEncrypt] = this->preferredEncrypt;
 
 		return json;
 	}
-}
+} // namespace RTC

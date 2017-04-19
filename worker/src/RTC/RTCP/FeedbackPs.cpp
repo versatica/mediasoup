@@ -28,8 +28,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			CommonHeader* commonHeader =
-			    const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<FeedbackPsItemsPacket<Item>> packet(
 			    new FeedbackPsItemsPacket<Item>(commonHeader));
@@ -76,13 +75,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
+			MS_DUMP("<%s>", FeedbackPsPacket::MessageType2String(Item::messageType).c_str());
 			FeedbackPsPacket::Dump();
 			for (auto item : this->items)
 			{
 				item->Dump();
 			}
-			MS_DUMP("</%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
+			MS_DUMP("</%s>", FeedbackPsPacket::MessageType2String(Item::messageType).c_str());
 		}
 
 		// explicit instantiation to have all FeedbackRtpPacket definitions in this file.
@@ -93,5 +92,5 @@ namespace RTC
 		template class FeedbackPsItemsPacket<FeedbackPsTstnItem>;
 		template class FeedbackPsItemsPacket<FeedbackPsVbcmItem>;
 		template class FeedbackPsItemsPacket<FeedbackPsLeiItem>;
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

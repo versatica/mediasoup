@@ -15,10 +15,11 @@
 #include "Logger.hpp"
 #include "Utils.hpp" // LatestTimestamp
 #include <algorithm>
+#include <cmath> // std::lround()
 
 namespace RTC
 {
-	static const int kBurstDeltaThresholdMs = 5;
+	static const int BurstDeltaThresholdMs{ 5 };
 
 	bool InterArrival::ComputeDeltas(
 	    uint32_t timestamp,
@@ -35,7 +36,7 @@ namespace RTC
 		MS_ASSERT(arrivalTimeDeltaMs, "'arrivalTimeDeltaMs' missing");
 		MS_ASSERT(packetSizeDelta, "'packetSizeDelta' missing");
 
-		bool calculatedDeltas = false;
+		bool calculatedDeltas{ false };
 
 		if (this->currentTimestampGroup.IsFirstPacket())
 		{
@@ -62,7 +63,7 @@ namespace RTC
 				int64_t systemTimeDeltaMs =
 				    this->currentTimestampGroup.lastSystemTimeMs - this->prevTimestampGroup.lastSystemTimeMs;
 
-				if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= kArrivalTimeOffsetThresholdMs)
+				if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= ArrivalTimeOffsetThresholdMs)
 				{
 					MS_WARN_TAG(
 					    rbe,
@@ -71,6 +72,7 @@ namespace RTC
 					    *arrivalTimeDeltaMs - systemTimeDeltaMs);
 
 					Reset();
+
 					return false;
 				}
 
@@ -79,7 +81,7 @@ namespace RTC
 					// The group of packets has been reordered since receiving its local
 					// arrival timestamp.
 					++this->numConsecutiveReorderedPackets;
-					if (this->numConsecutiveReorderedPackets >= kReorderedResetThreshold)
+					if (this->numConsecutiveReorderedPackets >= ReorderedResetThreshold)
 					{
 						MS_WARN_TAG(
 						    rbe,
@@ -91,10 +93,8 @@ namespace RTC
 
 					return false;
 				}
-				else
-				{
-					this->numConsecutiveReorderedPackets = 0;
-				}
+
+				this->numConsecutiveReorderedPackets = 0;
 
 				MS_ASSERT(*arrivalTimeDeltaMs >= 0, "invalid arrivalTimeDeltaMs value");
 
@@ -114,6 +114,7 @@ namespace RTC
 			this->currentTimestampGroup.timestamp =
 			    Utils::Time::LatestTimestamp(this->currentTimestampGroup.timestamp, timestamp);
 		}
+
 		// Accumulate the frame size.
 		this->currentTimestampGroup.size += packetSize;
 		this->currentTimestampGroup.completeTimeMs   = arrivalTimeMs;
@@ -127,18 +128,14 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->currentTimestampGroup.IsFirstPacket())
-		{
 			return true;
-		}
-		else
-		{
-			// Assume that a diff which is bigger than half the timestamp interval
-			// (32 bits) must be due to reordering. This code is almost identical to
-			// that in IsNewerTimestamp() in module_common_types.h.
-			uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
 
-			return timestampDiff < 0x80000000;
-		}
+		// Assume that a diff which is bigger than half the timestamp interval
+		// (32 bits) must be due to reordering. This code is almost identical to
+		// that in IsNewerTimestamp() in module_common_types.h.
+		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
+
+		return timestampDiff < 0x80000000;
 	}
 
 	// Assumes that |timestamp| is not reordered compared to
@@ -148,19 +145,14 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->currentTimestampGroup.IsFirstPacket())
-		{
 			return false;
-		}
-		else if (BelongsToBurst(arrivalTimeMs, timestamp))
-		{
-			return false;
-		}
-		else
-		{
-			uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
 
-			return timestampDiff > kTimestampGroupLengthTicks;
-		}
+		if (BelongsToBurst(arrivalTimeMs, timestamp))
+			return false;
+
+		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.firstTimestamp;
+
+		return timestampDiff > this->timestampGroupLengthTicks;
 	}
 
 	bool InterArrival::BelongsToBurst(int64_t arrivalTimeMs, uint32_t timestamp) const
@@ -168,23 +160,21 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->burstGrouping)
-		{
 			return false;
-		}
 
 		MS_ASSERT(this->currentTimestampGroup.completeTimeMs >= 0, "invalid completeTimeMs value");
 
 		int64_t arrivalTimeDeltaMs = arrivalTimeMs - this->currentTimestampGroup.completeTimeMs;
-
-		uint32_t timestampDiff = timestamp - this->currentTimestampGroup.timestamp;
-		int64_t tsDeltaMs      = this->timestampToMsCoeff * timestampDiff + 0.5;
+		uint32_t timestampDiff     = timestamp - this->currentTimestampGroup.timestamp;
+		auto tsDeltaMs =
+		    static_cast<int64_t>(std::lround(this->timestampToMsCoeff * timestampDiff + 0.5));
 
 		if (tsDeltaMs == 0)
 			return true;
 
 		int propagationDeltaMs = arrivalTimeDeltaMs - tsDeltaMs;
 
-		return propagationDeltaMs < 0 && arrivalTimeDeltaMs <= kBurstDeltaThresholdMs;
+		return propagationDeltaMs < 0 && arrivalTimeDeltaMs <= BurstDeltaThresholdMs;
 	}
 
 	void InterArrival::Reset()
@@ -195,4 +185,4 @@ namespace RTC
 		this->currentTimestampGroup          = TimestampGroup();
 		this->prevTimestampGroup             = TimestampGroup();
 	}
-}
+} // namespace RTC

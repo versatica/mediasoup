@@ -20,16 +20,16 @@ namespace RTC
 	private:
 		struct BufferItem
 		{
-			uint32_t seq32         = 0; // RTP seq in 32 bytes plus 16 bits cycles.
-			uint64_t resentAtTime  = 0;
-			RTC::RtpPacket* packet = nullptr;
+			uint32_t seq32{ 0 }; // RTP seq in 32 bytes plus 16 bits cycles.
+			uint64_t resentAtTime{ 0 };
+			RTC::RtpPacket* packet{ nullptr };
 		};
 
 	public:
 		RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize);
-		virtual ~RtpStreamSend();
+		~RtpStreamSend() override;
 
-		virtual Json::Value toJson() const override;
+		Json::Value ToJson() const override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(
@@ -43,24 +43,24 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
-		virtual void onInitSeq() override;
+		void OnInitSeq() override;
 
 	private:
 		std::vector<StorageItem> storage;
-		typedef std::list<BufferItem> Buffer;
+		using Buffer = std::list<BufferItem>;
 		Buffer buffer;
 
 	private:
-		size_t receivedBytes            = 0; // Bytes received.
-		uint64_t lastPacketTimeMs       = 0; // Time (MS) when the last packet was received.
-		uint32_t lastPacketRtpTimestamp = 0; // RTP Timestamp of the last packet.
-		uint32_t rtt                    = 0; // Round trip time.
+		size_t receivedBytes{ 0 };            // Bytes received.
+		uint64_t lastPacketTimeMs{ 0 };       // Time (MS) when the last packet was received.
+		uint32_t lastPacketRtpTimestamp{ 0 }; // RTP Timestamp of the last packet.
+		uint32_t rtt{ 0 };                    // Round trip time.
 	};
 
 	inline uint32_t RtpStreamSend::GetRtt() const
 	{
 		return this->rtt;
 	}
-}
+} // namespace RTC
 
 #endif

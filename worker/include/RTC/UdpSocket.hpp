@@ -14,10 +14,10 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener(){};
+			virtual ~Listener() = default;
 
 		public:
-			virtual void onPacketRecv(
+			virtual void OnPacketRecv(
 			    RTC::UdpSocket* socket,
 			    const uint8_t* data,
 			    size_t len,
@@ -42,18 +42,17 @@ namespace RTC
 		UdpSocket(Listener* listener, int addressFamily);
 
 	private:
-		virtual ~UdpSocket(){};
+		~UdpSocket() override = default;
 
 		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
-		virtual void userOnUdpDatagramRecv(
-		    const uint8_t* data, size_t len, const struct sockaddr* addr) override;
-		virtual void userOnUdpSocketClosed() override;
+		void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
+		void UserOnUdpSocketClosed() override;
 
 	private:
 		// Passed by argument.
-		Listener* listener = nullptr;
+		Listener* listener{ nullptr };
 	};
-}
+} // namespace RTC
 
 #endif

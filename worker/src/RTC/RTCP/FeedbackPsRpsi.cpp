@@ -23,13 +23,14 @@ namespace RTC
 				return nullptr;
 			}
 
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+
 			std::unique_ptr<FeedbackPsRpsiItem> item(new FeedbackPsRpsiItem(header));
 
 			if (item->IsCorrect())
 				return item.release();
-			else
-				return nullptr;
+
+			return nullptr;
 		}
 
 		/* Instance methods. */
@@ -50,14 +51,14 @@ namespace RTC
 
 			size_t paddingBytes = this->header->paddingBits / 8;
 
-			if (paddingBytes > FeedbackPsRpsiItem::MaxBitStringSize)
+			if (paddingBytes > FeedbackPsRpsiItem::maxBitStringSize)
 			{
 				MS_WARN_TAG(rtcp, "invalid Rpsi packet with too many padding bytes");
 
 				isCorrect = false;
 			}
 
-			this->length = FeedbackPsRpsiItem::MaxBitStringSize - paddingBytes;
+			this->length = FeedbackPsRpsiItem::maxBitStringSize - paddingBytes;
 		}
 
 		FeedbackPsRpsiItem::FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length)
@@ -66,7 +67,7 @@ namespace RTC
 
 			MS_ASSERT(payloadType <= 0x7f, "rpsi payload type exceeds the maximum value");
 			MS_ASSERT(
-			    length <= FeedbackPsRpsiItem::MaxBitStringSize,
+			    length <= FeedbackPsRpsiItem::maxBitStringSize,
 			    "rpsi bit string length exceeds the maximum value");
 
 			this->raw    = new uint8_t[sizeof(Header)];
@@ -80,7 +81,7 @@ namespace RTC
 			std::memcpy(this->header->bitString, bitString, length);
 
 			// Fill padding.
-			for (size_t i = 0; i < padding; ++i)
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				this->raw[sizeof(Header) + i - 1] = 0;
 			}
@@ -105,5 +106,5 @@ namespace RTC
 			MS_DUMP("  length       : %zu", this->GetLength());
 			MS_DUMP("</FeedbackPsRpsiItem>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

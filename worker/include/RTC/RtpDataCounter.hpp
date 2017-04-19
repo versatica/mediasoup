@@ -12,13 +12,13 @@ namespace RTC
 	class RateCalculator
 	{
 	public:
-		static constexpr float BpsScale           = 8000.0f;
-		static constexpr float BpsScale2          = 1000.0f;
-		static constexpr size_t DefaultWindowSize = 1000;
+		static constexpr float BpsScale{ 8000.0f };
+		static constexpr float BpsScale2{ 1000.0f };
+		static constexpr size_t DefaultWindowSize{ 1000 };
 
 	public:
 		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = BpsScale);
-		void Update(size_t count, uint64_t now);
+		void Update(size_t size, uint64_t now);
 		uint32_t GetRate(uint64_t now);
 		void Reset();
 
@@ -29,22 +29,22 @@ namespace RTC
 	private:
 		struct BufferItem
 		{
-			size_t count = 0;
+			size_t count{ 0 };
 		};
 
 	private:
 		std::unique_ptr<BufferItem[]> buffer;
 
 		// Time (in milliseconds) for oldest item in the time window.
-		uint64_t oldestTime = 0;
+		uint64_t oldestTime{ 0 };
 		// Index for the oldest item in the time window.
-		uint32_t oldestIndex = 0;
+		uint32_t oldestIndex{ 0 };
 		// Total count in the time window.
-		size_t totalCount = 0;
+		size_t totalCount{ 0 };
 		// Window Size (in milliseconds).
-		size_t windowSize = DefaultWindowSize;
+		size_t windowSize{ DefaultWindowSize };
 		// Scale in which the rate is represented.
-		const float scale = BpsScale;
+		const float scale{ BpsScale };
 	};
 
 	class RtpDataCounter
@@ -57,8 +57,8 @@ namespace RTC
 
 	private:
 		RateCalculator rate;
-		size_t packets = 0;
-		size_t bytes   = 0;
+		size_t packets{ 0 };
+		size_t bytes{ 0 };
 	};
 
 	/* Inline instance methods. */
@@ -98,6 +98,6 @@ namespace RTC
 	{
 		return this->bytes;
 	}
-}
+} // namespace RTC
 
 #endif

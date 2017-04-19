@@ -7,10 +7,10 @@ namespace RTC
 {
 	enum RateControlRegion
 	{
-		kRcNearMax,
-		kRcAboveMax,
-		kRcMaxUnknown
+		RC_NEAR_MAX,
+		RC_ABOVE_MAX,
+		RC_MAX_UNKNOWN
 	};
-}
+} // namespace RTC
 
 #endif

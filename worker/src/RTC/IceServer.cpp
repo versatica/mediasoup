@@ -1,20 +1,23 @@
 #define MS_CLASS "RTC::IceServer"
 // #define MS_LOG_DEV
 
-#include "RTC/IceServer.hpp"
+#include <utility>
+
 #include "Logger.hpp"
+#include "RTC/IceServer.hpp"
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr size_t StunSerializeBufferSize = 65536;
+	static constexpr size_t StunSerializeBufferSize{ 65536 };
 	static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
 
 	/* Instance methods. */
 
-	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password)
-	    : listener(listener), usernameFragment(usernameFragment), password(password)
+	IceServer::IceServer(Listener* listener, std::string usernameFragment, std::string password)
+	    : listener(listener), usernameFragment(std::move(usernameFragment)),
+	      password(std::move(password))
 	{
 		MS_TRACE();
 
@@ -37,9 +40,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Must be a Binding method.
-		if (msg->GetMethod() != RTC::StunMessage::Method::Binding)
+		if (msg->GetMethod() != RTC::StunMessage::Method::BINDING)
 		{
-			if (msg->GetClass() == RTC::StunMessage::Class::Request)
+			if (msg->GetClass() == RTC::StunMessage::Class::REQUEST)
 			{
 				MS_WARN_TAG(
 				    ice, "unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
@@ -48,7 +51,7 @@ namespace RTC
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 				response->Serialize(StunSerializeBuffer);
-				this->listener->onOutgoingStunMessage(this, response, tuple);
+				this->listener->OnOutgoingStunMessage(this, response, tuple);
 				delete response;
 			}
 			else
@@ -63,9 +66,9 @@ namespace RTC
 		}
 
 		// Must use FINGERPRINT (optional for ICE STUN indications).
-		if (!msg->HasFingerprint() && msg->GetClass() != RTC::StunMessage::Class::Indication)
+		if (!msg->HasFingerprint() && msg->GetClass() != RTC::StunMessage::Class::INDICATION)
 		{
-			if (msg->GetClass() == RTC::StunMessage::Class::Request)
+			if (msg->GetClass() == RTC::StunMessage::Class::REQUEST)
 			{
 				MS_WARN_TAG(ice, "STUN Binding Request without FINGERPRINT => 400");
 
@@ -73,7 +76,7 @@ namespace RTC
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 				response->Serialize(StunSerializeBuffer);
-				this->listener->onOutgoingStunMessage(this, response, tuple);
+				this->listener->OnOutgoingStunMessage(this, response, tuple);
 				delete response;
 			}
 			else
@@ -86,10 +89,10 @@ namespace RTC
 
 		switch (msg->GetClass())
 		{
-			case RTC::StunMessage::Class::Request:
+			case RTC::StunMessage::Class::REQUEST:
 			{
 				// USERNAME, MESSAGE-INTEGRITY and PRIORITY are required.
-				if (!msg->HasMessageIntegrity() || !msg->GetPriority() || msg->GetUsername().empty())
+				if (!msg->HasMessageIntegrity() || (msg->GetPriority() == 0u) || msg->GetUsername().empty())
 				{
 					MS_WARN_TAG(ice, "mising required attributes in STUN Binding Request => 400");
 
@@ -97,7 +100,7 @@ namespace RTC
 					RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 					response->Serialize(StunSerializeBuffer);
-					this->listener->onOutgoingStunMessage(this, response, tuple);
+					this->listener->OnOutgoingStunMessage(this, response, tuple);
 					delete response;
 
 					return;
@@ -109,7 +112,7 @@ namespace RTC
 					case RTC::StunMessage::Authentication::OK:
 						break;
 
-					case RTC::StunMessage::Authentication::Unauthorized:
+					case RTC::StunMessage::Authentication::UNAUTHORIZED:
 					{
 						MS_WARN_TAG(ice, "wrong authentication in STUN Binding Request => 401");
 
@@ -117,13 +120,13 @@ namespace RTC
 						RTC::StunMessage* response = msg->CreateErrorResponse(401);
 
 						response->Serialize(StunSerializeBuffer);
-						this->listener->onOutgoingStunMessage(this, response, tuple);
+						this->listener->OnOutgoingStunMessage(this, response, tuple);
 						delete response;
 
 						return;
 					}
 
-					case RTC::StunMessage::Authentication::BadRequest:
+					case RTC::StunMessage::Authentication::BAD_REQUEST:
 					{
 						MS_WARN_TAG(ice, "cannot check authentication in STUN Binding Request => 400");
 
@@ -131,7 +134,7 @@ namespace RTC
 						RTC::StunMessage* response = msg->CreateErrorResponse(400);
 
 						response->Serialize(StunSerializeBuffer);
-						this->listener->onOutgoingStunMessage(this, response, tuple);
+						this->listener->OnOutgoingStunMessage(this, response, tuple);
 						delete response;
 
 						return;
@@ -149,7 +152,7 @@ namespace RTC
 				// 	RTC::StunMessage* response = msg->CreateErrorResponse(487);
 
 				// 	response->Serialize(StunSerializeBuffer);
-				// 	this->listener->onOutgoingStunMessage(this, response, tuple);
+				// 	this->listener->OnOutgoingStunMessage(this, response, tuple);
 				// 	delete response;
 
 				// 	return;
@@ -157,7 +160,7 @@ namespace RTC
 
 				MS_DEBUG_DEV(
 				    "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]",
-				    (uint32_t)msg->GetPriority(),
+				    static_cast<uint32_t>(msg->GetPriority()),
 				    msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
@@ -171,7 +174,7 @@ namespace RTC
 
 				// Send back.
 				response->Serialize(StunSerializeBuffer);
-				this->listener->onOutgoingStunMessage(this, response, tuple);
+				this->listener->OnOutgoingStunMessage(this, response, tuple);
 				delete response;
 
 				// Handle the tuple.
@@ -180,21 +183,21 @@ namespace RTC
 				break;
 			}
 
-			case RTC::StunMessage::Class::Indication:
+			case RTC::StunMessage::Class::INDICATION:
 			{
 				MS_DEBUG_TAG(ice, "STUN Binding Indication processed");
 
 				break;
 			}
 
-			case RTC::StunMessage::Class::SuccessResponse:
+			case RTC::StunMessage::Class::SUCCESS_RESPONSE:
 			{
 				MS_DEBUG_TAG(ice, "STUN Binding Success Response processed");
 
 				break;
 			}
 
-			case RTC::StunMessage::Class::ErrorResponse:
+			case RTC::StunMessage::Class::ERROR_RESPONSE:
 			{
 				MS_DEBUG_TAG(ice, "STUN Binding Error Response processed");
 
@@ -207,12 +210,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return HasTuple(tuple) ? true : false;
+		return HasTuple(tuple) != nullptr;
 	}
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
 	{
-		RTC::TransportTuple* removedTuple = nullptr;
+		RTC::TransportTuple* removedTuple{ nullptr };
 
 		// Find the removed tuple.
 		auto it = this->tuples.begin();
@@ -228,7 +231,7 @@ namespace RTC
 		}
 
 		// If not found, ignore.
-		if (!removedTuple)
+		if (removedTuple == nullptr)
 			return;
 
 		// If this is not the selected tuple just remove it.
@@ -239,24 +242,22 @@ namespace RTC
 			return;
 		}
 		// Otherwise this was the selected tuple.
+
+		this->tuples.erase(it);
+		this->selectedTuple = nullptr;
+
+		// Mark the first tuple as selected tuple (if any).
+		if (this->tuples.begin() != this->tuples.end())
+		{
+			SetSelectedTuple(std::addressof(*this->tuples.begin()));
+		}
+		// Or just emit 'disconnected'.
 		else
 		{
-			this->tuples.erase(it);
-			this->selectedTuple = nullptr;
-
-			// Mark the first tuple as selected tuple (if any).
-			if (this->tuples.begin() != this->tuples.end())
-			{
-				SetSelectedTuple(std::addressof(*this->tuples.begin()));
-			}
-			// Or just emit 'disconnected'.
-			else
-			{
-				// Update state.
-				this->state = IceState::DISCONNECTED;
-				// Notify the listener.
-				this->listener->onIceDisconnected(this);
-			}
+			// Update state.
+			this->state = IceState::DISCONNECTED;
+			// Notify the listener.
+			this->listener->OnIceDisconnected(this);
 		}
 	}
 
@@ -288,7 +289,7 @@ namespace RTC
 			{
 				// There should be no tuples.
 				MS_ASSERT(
-				    this->tuples.size() == 0, "state is 'new' but there are %zu tuples", this->tuples.size());
+				    this->tuples.empty(), "state is 'new' but there are %zu tuples", this->tuples.size());
 
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(this->selectedTuple == nullptr, "state is 'new' but there is selected tuple");
@@ -305,7 +306,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::CONNECTED;
 					// Notify the listener.
-					this->listener->onIceConnected(this);
+					this->listener->OnIceConnected(this);
 				}
 				else
 				{
@@ -319,7 +320,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::COMPLETED;
 					// Notify the listener.
-					this->listener->onIceCompleted(this);
+					this->listener->OnIceCompleted(this);
 				}
 
 				break;
@@ -329,7 +330,7 @@ namespace RTC
 			{
 				// There should be no tuples.
 				MS_ASSERT(
-				    this->tuples.size() == 0,
+				    this->tuples.empty(),
 				    "state is 'disconnected' but there are %zu tuples",
 				    this->tuples.size());
 
@@ -349,7 +350,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::CONNECTED;
 					// Notify the listener.
-					this->listener->onIceConnected(this);
+					this->listener->OnIceConnected(this);
 				}
 				else
 				{
@@ -363,7 +364,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::COMPLETED;
 					// Notify the listener.
-					this->listener->onIceCompleted(this);
+					this->listener->OnIceCompleted(this);
 				}
 
 				break;
@@ -372,7 +373,7 @@ namespace RTC
 			case IceState::CONNECTED:
 			{
 				// There should be some tuples.
-				MS_ASSERT(this->tuples.size() > 0, "state is 'connected' but there are no tuples");
+				MS_ASSERT(!this->tuples.empty(), "state is 'connected' but there are no tuples");
 
 				// There should be a selected tuple.
 				MS_ASSERT(
@@ -381,7 +382,7 @@ namespace RTC
 				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
-					if (!HasTuple(tuple))
+					if (HasTuple(tuple) == nullptr)
 						AddTuple(tuple);
 				}
 				else
@@ -391,7 +392,7 @@ namespace RTC
 					auto storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (!storedTuple)
+					if (storedTuple == nullptr)
 						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
@@ -399,7 +400,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::COMPLETED;
 					// Notify the listener.
-					this->listener->onIceCompleted(this);
+					this->listener->OnIceCompleted(this);
 				}
 
 				break;
@@ -408,7 +409,7 @@ namespace RTC
 			case IceState::COMPLETED:
 			{
 				// There should be some tuples.
-				MS_ASSERT(this->tuples.size() > 0, "state is 'completed' but there are no tuples");
+				MS_ASSERT(!this->tuples.empty(), "state is 'completed' but there are no tuples");
 
 				// There should be a selected tuple.
 				MS_ASSERT(
@@ -417,7 +418,7 @@ namespace RTC
 				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
-					if (!HasTuple(tuple))
+					if (HasTuple(tuple) == nullptr)
 						AddTuple(tuple);
 				}
 				else
@@ -425,7 +426,7 @@ namespace RTC
 					auto storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (!storedTuple)
+					if (storedTuple == nullptr)
 						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
@@ -461,7 +462,7 @@ namespace RTC
 
 		// If there is no selected tuple yet then we know that the tuples list
 		// is empty.
-		if (!this->selectedTuple)
+		if (this->selectedTuple == nullptr)
 			return nullptr;
 
 		// Check the current selected tuple.
@@ -469,9 +470,9 @@ namespace RTC
 			return this->selectedTuple;
 
 		// Otherwise check other stored tuples.
-		for (auto it = this->tuples.begin(); it != this->tuples.end(); ++it)
+		for (const auto& it : this->tuples)
 		{
-			RTC::TransportTuple* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(*it));
+			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
 
 			if (storedTuple->Compare(tuple))
 				return storedTuple;
@@ -491,6 +492,6 @@ namespace RTC
 		this->selectedTuple = storedTuple;
 
 		// Notify the listener.
-		this->listener->onIceSelectedTuple(this, this->selectedTuple);
+		this->listener->OnIceSelectedTuple(this, this->selectedTuple);
 	}
-}
+} // namespace RTC

@@ -11,7 +11,7 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void on_error_close(uv_handle_t* handle)
+static inline void onErrorClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -20,7 +20,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint16_t MaxBindAttempts = 20;
+	static constexpr uint16_t MaxBindAttempts{ 20 };
 
 	/* Class variables. */
 
@@ -44,9 +44,9 @@ namespace RTC
 			err = uv_ip4_addr(
 			    Settings::configuration.rtcIPv4.c_str(),
 			    0,
-			    (struct sockaddr_in*)&RTC::UdpSocket::sockaddrStorageIPv4);
+			    reinterpret_cast<struct sockaddr_in*>(&RTC::UdpSocket::sockaddrStorageIPv4));
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -55,9 +55,9 @@ namespace RTC
 			err = uv_ip6_addr(
 			    Settings::configuration.rtcIPv6.c_str(),
 			    0,
-			    (struct sockaddr_in6*)&RTC::UdpSocket::sockaddrStorageIPv6);
+			    reinterpret_cast<struct sockaddr_in6*>(&RTC::UdpSocket::sockaddrStorageIPv6));
 
-			if (err)
+			if (err != 0)
 				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
 		}
 
@@ -83,14 +83,16 @@ namespace RTC
 			MS_THROW_ERROR("IPv6 family not available for RTC");
 
 		int err;
-		uv_udp_t* uvHandle = nullptr;
-		struct sockaddr_storage bindAddr;
+		uv_udp_t* uvHandle{ nullptr };
+		// clang-format off
+		struct sockaddr_storage bindAddr{};
+		// clang-format on
 		const char* listenIp;
 		uint16_t initialPort;
 		uint16_t iteratingPort;
-		uint16_t attempt     = 0;
-		uint16_t bindAttempt = 0;
-		int flags            = 0;
+		uint16_t attempt{ 0 };
+		uint16_t bindAttempt{ 0 };
+		int flags{ 0 };
 		std::unordered_map<uint16_t, bool>* availablePorts;
 
 		switch (addressFamily)
@@ -115,8 +117,9 @@ namespace RTC
 		}
 
 		// Choose a random port to start from.
-		initialPort = (uint16_t)Utils::Crypto::GetRandomUInt(
-		    (uint32_t)RTC::UdpSocket::minPort, (uint32_t)RTC::UdpSocket::maxPort);
+		initialPort = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(
+		    static_cast<uint32_t>(RTC::UdpSocket::minPort),
+		    static_cast<uint32_t>(RTC::UdpSocket::maxPort)));
 
 		iteratingPort = initialPort;
 
@@ -154,10 +157,10 @@ namespace RTC
 			switch (addressFamily)
 			{
 				case AF_INET:
-					((struct sockaddr_in*)&bindAddr)->sin_port = htons(iteratingPort);
+					(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(iteratingPort);
 					break;
 				case AF_INET6:
-					((struct sockaddr_in6*)&bindAddr)->sin6_port = htons(iteratingPort);
+					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(iteratingPort);
 					break;
 			}
 
@@ -167,14 +170,14 @@ namespace RTC
 			uvHandle = new uv_udp_t();
 
 			err = uv_udp_init(DepLibUV::GetLoop(), uvHandle);
-			if (err)
+			if (err != 0)
 			{
 				delete uvHandle;
 				MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
 			}
 
-			err = uv_udp_bind(uvHandle, (const struct sockaddr*)&bindAddr, flags);
-			if (err)
+			err = uv_udp_bind(uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
+			if (err != 0)
 			{
 				MS_WARN_DEV(
 				    "uv_udp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s",
@@ -182,7 +185,7 @@ namespace RTC
 				    iteratingPort,
 				    uv_strerror(err));
 
-				uv_close((uv_handle_t*)uvHandle, (uv_close_cb)on_error_close);
+				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onErrorClose));
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
@@ -225,11 +228,11 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void UdpSocket::userOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
+	void UdpSocket::UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
 	{
 		MS_TRACE();
 
-		if (!this->listener)
+		if (this->listener == nullptr)
 		{
 			MS_ERROR("no listener set");
 
@@ -237,10 +240,10 @@ namespace RTC
 		}
 
 		// Notify the reader.
-		this->listener->onPacketRecv(this, data, len, addr);
+		this->listener->OnPacketRecv(this, data, len, addr);
 	}
 
-	void UdpSocket::userOnUdpSocketClosed()
+	void UdpSocket::UserOnUdpSocketClosed()
 	{
 		MS_TRACE();
 
@@ -250,4 +253,4 @@ namespace RTC
 		else if (this->localAddr.ss_family == AF_INET6)
 			RTC::UdpSocket::availableIPv6Ports[this->localPort] = true;
 	}
-}
+} // namespace RTC

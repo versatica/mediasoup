@@ -117,8 +117,8 @@ namespace RTC
 		}
 
 	public:
-		Type type       = Type::UNSET;
-		Subtype subtype = Subtype::UNSET;
+		Type type{ Type::UNSET };
+		Subtype subtype{ Subtype::UNSET };
 		std::string name;
 	};
 
@@ -147,7 +147,7 @@ namespace RTC
 	public:
 		explicit RtcpFeedback(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string type;
@@ -160,7 +160,7 @@ namespace RTC
 		RtpCodecParameters(){};
 		RtpCodecParameters(Json::Value& data, RTC::Scope scope);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		bool Matches(RtpCodecParameters& codec, bool checkPayloadType = false);
 		void ReduceRtcpFeedback(std::vector<RtcpFeedback>& supportedRtcpFeedback);
 
@@ -168,17 +168,17 @@ namespace RTC
 		void CheckCodec();
 
 	private:
-		RTC::Scope scope = RTC::Scope::ROOM_CAPABILITY;
+		RTC::Scope scope{ RTC::Scope::ROOM_CAPABILITY };
 
 	public:
-		Media::Kind kind = Media::Kind::ALL;
+		Media::Kind kind{ Media::Kind::ALL };
 		RtpCodecMime mime;
-		uint8_t payloadType  = 0;
-		bool hasPayloadType  = false;
-		uint32_t clockRate   = 0;
-		uint32_t maxptime    = 0;
-		uint32_t ptime       = 0;
-		uint32_t numChannels = 1;
+		uint8_t payloadType{ 0 };
+		bool hasPayloadType{ false };
+		uint32_t clockRate{ 0 };
+		uint32_t maxptime{ 0 };
+		uint32_t ptime{ 0 };
+		uint32_t numChannels{ 1 };
 		RTC::Parameters parameters;
 		std::vector<RtcpFeedback> rtcpFeedback;
 	};
@@ -188,14 +188,14 @@ namespace RTC
 	public:
 		explicit RtpHeaderExtension(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
-		Media::Kind kind = Media::Kind::ALL;
+		Media::Kind kind{ Media::Kind::ALL };
 		std::string uri;
 		RtpHeaderExtensionUri::Type type;
-		uint8_t preferredId   = 0;
-		bool preferredEncrypt = false;
+		uint8_t preferredId{ 0 };
+		bool preferredEncrypt{ false };
 	};
 
 	class RtpCapabilities
@@ -204,7 +204,7 @@ namespace RTC
 		RtpCapabilities(){};
 		RtpCapabilities(Json::Value& data, RTC::Scope scope);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		void ReduceFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
 
@@ -223,11 +223,11 @@ namespace RTC
 		RtpFecParameters(){};
 		explicit RtpFecParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string mechanism;
-		uint32_t ssrc = 0;
+		uint32_t ssrc{ 0 };
 	};
 
 	class RtpRtxParameters
@@ -236,10 +236,10 @@ namespace RTC
 		RtpRtxParameters(){};
 		explicit RtpRtxParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
-		uint32_t ssrc = 0;
+		uint32_t ssrc{ 0 };
 	};
 
 	class RtpEncodingParameters
@@ -248,20 +248,20 @@ namespace RTC
 		RtpEncodingParameters(){};
 		explicit RtpEncodingParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
-		uint32_t ssrc            = 0;
-		uint8_t codecPayloadType = 0;
-		bool hasCodecPayloadType = false;
+		uint32_t ssrc{ 0 };
+		uint8_t codecPayloadType{ 0 };
+		bool hasCodecPayloadType{ false };
 		RtpFecParameters fec;
-		bool hasFec = false;
+		bool hasFec{ false };
 		RtpRtxParameters rtx;
-		bool hasRtx            = false;
-		double resolutionScale = 1.0;
-		double framerateScale  = 1.0;
-		uint32_t maxFramerate  = 0;
-		bool active            = true;
+		bool hasRtx{ false };
+		double resolutionScale{ 1.0 };
+		double framerateScale{ 1.0 };
+		uint32_t maxFramerate{ 0 };
+		bool active{ true };
 		std::string encodingId;
 		std::vector<std::string> dependencyEncodingIds;
 	};
@@ -271,13 +271,13 @@ namespace RTC
 	public:
 		explicit RtpHeaderExtensionParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string uri;
 		RtpHeaderExtensionUri::Type type;
-		uint8_t id   = 0;
-		bool encrypt = false;
+		uint8_t id{ 0 };
+		bool encrypt{ false };
 		RTC::Parameters parameters;
 	};
 
@@ -287,21 +287,21 @@ namespace RTC
 		RtcpParameters(){};
 		explicit RtcpParameters(Json::Value& data);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 
 	public:
 		std::string cname;
-		uint32_t ssrc    = 0;
-		bool reducedSize = true;
+		uint32_t ssrc{ 0 };
+		bool reducedSize{ true };
 	};
 
 	class RtpParameters
 	{
 	public:
 		explicit RtpParameters(Json::Value& data);
-		explicit RtpParameters(const RtpParameters* RtpParameters);
+		explicit RtpParameters(const RtpParameters* rtpParameters);
 
-		Json::Value toJson() const;
+		Json::Value ToJson() const;
 		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		RTC::RtpCodecParameters& GetCodecForEncoding(RtpEncodingParameters& encoding);
@@ -316,9 +316,9 @@ namespace RTC
 		std::vector<RtpEncodingParameters> encodings;
 		std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		RtcpParameters rtcp;
-		bool hasRtcp = false;
+		bool hasRtcp{ false };
 		Json::Value userParameters;
 	};
-}
+} // namespace RTC
 
 #endif

@@ -17,7 +17,7 @@ public:
 	TcpServer(uv_tcp_t* uvHandle, int backlog);
 
 protected:
-	virtual ~TcpServer();
+	~TcpServer() override;
 
 public:
 	void Destroy();
@@ -34,31 +34,31 @@ private:
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void userOnTcpConnectionAlloc(TcpConnection** connection)                      = 0;
-	virtual void userOnNewTcpConnection(TcpConnection* connection)                         = 0;
-	virtual void userOnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
-	virtual void userOnTcpServerClosed()                                                   = 0;
+	virtual void UserOnTcpConnectionAlloc(TcpConnection** connection)                      = 0;
+	virtual void UserOnNewTcpConnection(TcpConnection* connection)                         = 0;
+	virtual void UserOnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
+	virtual void UserOnTcpServerClosed()                                                   = 0;
 
 	/* Callbacks fired by UV events. */
 public:
-	void onUvConnection(int status);
-	void onUvClosed();
+	void OnUvConnection(int status);
+	void OnUvClosed();
 
 	/* Methods inherited from TcpConnection::Listener. */
 public:
-	virtual void onTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer);
+	void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) override;
 
 private:
 	// Allocated by this (may be passed by argument).
-	uv_tcp_t* uvHandle = nullptr;
+	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
 	std::unordered_set<TcpConnection*> connections;
-	bool isClosing = false;
+	bool isClosing{ false };
 
 protected:
 	struct sockaddr_storage localAddr;
 	std::string localIP;
-	uint16_t localPort = 0;
+	uint16_t localPort{ 0 };
 };
 
 /* Inline methods. */
@@ -75,12 +75,12 @@ inline size_t TcpServer::GetNumConnections() const
 
 inline const struct sockaddr* TcpServer::GetLocalAddress() const
 {
-	return (const struct sockaddr*)&this->localAddr;
+	return reinterpret_cast<const struct sockaddr*>(&this->localAddr);
 }
 
 inline int TcpServer::GetLocalFamily() const
 {
-	return ((const struct sockaddr*)&this->localAddr)->sa_family;
+	return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
 }
 
 inline const std::string& TcpServer::GetLocalIP() const

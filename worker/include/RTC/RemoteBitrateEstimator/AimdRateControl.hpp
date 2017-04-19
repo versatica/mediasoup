@@ -27,16 +27,16 @@ namespace RTC
 	class AimdRateControl
 	{
 	private:
-		static constexpr int64_t kDefaultRttMs = 200;
+		static constexpr int64_t DefaultRttMs{ 200 };
 		// (jmillan) replacement from 'congestion_controller::GetMinBitrateBps()'.
-		static constexpr int kMinBitrateBps = 10000;
+		static constexpr int MinBitrateBps{ 10000 };
 
 	private:
 		enum RateControlState
 		{
-			kRcHold,
-			kRcIncrease,
-			kRcDecrease
+			RC_HOLD,
+			RC_INCREASE,
+			RC_DECREASE
 		};
 
 	public:
@@ -74,7 +74,7 @@ namespace RTC
 		// in the "decrease" state the bitrate will be decreased to slightly below the
 		// incoming bitrate. When in the "hold" state the bitrate will be kept
 		// constant to allow built up queues to drain.
-		uint32_t ChangeBitrate(uint32_t currentBitrate, uint32_t incomingBitrate, int64_t nowMs);
+		uint32_t ChangeBitrate(uint32_t newBitrateBps, uint32_t incomingBitrateBps, int64_t nowMs);
 		// Clamps newBitrateBps to within the configured min bitrate and a linear
 		// function of the incoming bitrate, so that the new bitrate can't grow too
 		// large compared to the bitrate actually being received by the other end.
@@ -82,32 +82,32 @@ namespace RTC
 		uint32_t MultiplicativeRateIncrease(int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const;
 		uint32_t AdditiveRateIncrease(int64_t nowMs, int64_t lastMs) const;
 		void UpdateChangePeriod(int64_t nowMs);
-		void UpdateMaxBitRateEstimate(float incomingBitRateKbps);
+		void UpdateMaxBitRateEstimate(float incomingBitrateKbps);
 		void ChangeState(const RateControlInput& input, int64_t nowMs);
 		void ChangeState(RateControlState newState);
 		void ChangeRegion(RateControlRegion region);
 
 	private:
-		uint32_t minConfiguredBitrateBps    = kMinBitrateBps;
-		uint32_t maxConfiguredBitrateBps    = 30000000;
-		uint32_t currentBitrateBps          = this->maxConfiguredBitrateBps;
-		float avgMaxBitrateKbps             = -1.0f;
-		float varMaxBitrateKbps             = 0.4f;
-		RateControlState rateControlState   = kRcHold;
-		RateControlRegion rateControlRegion = kRcMaxUnknown;
-		int64_t timeLastBitrateChange       = -1;
+		uint32_t minConfiguredBitrateBps{ MinBitrateBps };
+		uint32_t maxConfiguredBitrateBps{ 30000000 };
+		uint32_t currentBitrateBps{ this->maxConfiguredBitrateBps };
+		float avgMaxBitrateKbps{ -1.0f };
+		float varMaxBitrateKbps{ 0.4f };
+		RateControlState rateControlState{ RC_HOLD };
+		RateControlRegion rateControlRegion{ RC_MAX_UNKNOWN };
+		int64_t timeLastBitrateChange{ -1 };
 		RateControlInput currentInput;
-		bool updated                      = false;
-		int64_t timeFirstIncomingEstimate = -1;
-		bool bitrateIsInitialized         = false;
-		float beta                        = 0.85f;
-		int64_t rtt                       = kDefaultRttMs;
-		int lastDecrease                  = 0;
+		bool updated{ false };
+		int64_t timeFirstIncomingEstimate{ -1 };
+		bool bitrateIsInitialized{ false };
+		float beta{ 0.85f };
+		int64_t rtt{ DefaultRttMs };
+		int lastDecrease{ 0 };
 	};
 
 	/* Inline methods. */
 
-	inline AimdRateControl::AimdRateControl() : currentInput(kBwNormal, 0, 1.0)
+	inline AimdRateControl::AimdRateControl() : currentInput(BW_NORMAL, 0, 1.0)
 	{
 	}
 
@@ -137,6 +137,7 @@ namespace RTC
 	{
 		this->currentBitrateBps =
 		    ChangeBitrate(this->currentBitrateBps, this->currentInput.incomingBitrate, nowMs);
+
 		return this->currentBitrateBps;
 	}
 
@@ -172,6 +173,6 @@ namespace RTC
 	{
 		this->rateControlState = newState;
 	}
-}
+} // namespace RTC
 
 #endif

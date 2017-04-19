@@ -44,7 +44,7 @@ namespace RTC
 			explicit SdesItem(Header* header);
 			explicit SdesItem(SdesItem* item);
 			SdesItem(SdesItem::Type type, size_t len, const char* value);
-			~SdesItem();
+			~SdesItem() = default;
 
 			void Dump() const;
 			size_t Serialize(uint8_t* buffer);
@@ -56,7 +56,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Header* header = nullptr;
+			Header* header{ nullptr };
 			std::unique_ptr<uint8_t> raw;
 
 		private:
@@ -66,13 +66,13 @@ namespace RTC
 		class SdesChunk
 		{
 		public:
-			typedef std::vector<SdesItem*>::iterator Iterator;
+			using Iterator = std::vector<SdesItem*>::iterator;
 
 		public:
 			static SdesChunk* Parse(const uint8_t* data, size_t len);
 
 		public:
-			explicit SdesChunk(const uint32_t ssrc);
+			explicit SdesChunk(uint32_t ssrc);
 			explicit SdesChunk(SdesChunk* chunk);
 			~SdesChunk();
 
@@ -87,21 +87,21 @@ namespace RTC
 			Iterator End();
 
 		private:
-			uint32_t ssrc;
+			uint32_t ssrc{ 0 };
 			std::vector<SdesItem*> items;
 		};
 
 		class SdesPacket : public Packet
 		{
 		public:
-			typedef std::vector<SdesChunk*>::iterator Iterator;
+			using Iterator = std::vector<SdesChunk*>::iterator;
 
 		public:
 			static SdesPacket* Parse(const uint8_t* data, size_t len);
 
 		public:
 			SdesPacket();
-			virtual ~SdesPacket();
+			~SdesPacket() override;
 
 			void AddChunk(SdesChunk* chunk);
 			Iterator Begin();
@@ -109,10 +109,10 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetCount() const override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetCount() const override;
+			size_t GetSize() const override;
 
 		private:
 			std::vector<SdesChunk*> chunks;
@@ -128,13 +128,9 @@ namespace RTC
 		{
 		}
 
-		inline SdesItem::~SdesItem()
-		{
-		}
-
 		inline size_t SdesItem::GetSize() const
 		{
-			return 2 + size_t(this->header->length);
+			return 2 + size_t{ this->header->length };
 		}
 
 		inline SdesItem::Type SdesItem::GetType() const
@@ -156,14 +152,14 @@ namespace RTC
 
 		inline SdesChunk::SdesChunk(uint32_t ssrc)
 		{
-			this->ssrc = htonl(ssrc);
+			this->ssrc = uint32_t{ htonl(ssrc) };
 		}
 
 		inline SdesChunk::SdesChunk(SdesChunk* chunk)
 		{
 			this->ssrc = chunk->ssrc;
 
-			for (Iterator it = chunk->Begin(); it != chunk->End(); ++it)
+			for (auto it = chunk->Begin(); it != chunk->End(); ++it)
 			{
 				this->AddItem(new SdesItem(*it));
 			}
@@ -193,12 +189,12 @@ namespace RTC
 
 		inline uint32_t SdesChunk::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->ssrc);
+			return uint32_t{ ntohl(this->ssrc) };
 		}
 
 		inline void SdesChunk::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = (uint32_t)htonl(ssrc);
+			this->ssrc = uint32_t{ htonl(ssrc) };
 		}
 
 		inline void SdesChunk::AddItem(SdesItem* item)
@@ -261,7 +257,7 @@ namespace RTC
 		{
 			return this->chunks.end();
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

@@ -33,7 +33,7 @@ namespace RTC
 		{
 		public:
 			// 'R' 'E' 'M' 'B'.
-			static uint32_t UniqueIdentifier;
+			static uint32_t uniqueIdentifier;
 
 		public:
 			static FeedbackPsRembPacket* Parse(const uint8_t* data, size_t len);
@@ -42,7 +42,7 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsRembPacket(CommonHeader* commonHeader);
 			FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
-			virtual ~FeedbackPsRembPacket(){};
+			~FeedbackPsRembPacket() override = default;
 
 			bool IsCorrect();
 			void SetBitrate(uint64_t bitrate);
@@ -52,15 +52,15 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
 			std::vector<uint32_t> ssrcs;
 			// Bitrate represented in bps.
-			uint64_t bitrate = 0;
-			bool isCorrect   = true;
+			uint64_t bitrate{ 0 };
+			bool isCorrect{ true };
 		};
 
 		/* Inline instance methods. */
@@ -99,7 +99,7 @@ namespace RTC
 		{
 			return FeedbackPsPacket::GetSize() + 8 + (sizeof(uint32_t) * this->ssrcs.size());
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

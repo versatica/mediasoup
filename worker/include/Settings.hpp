@@ -13,35 +13,35 @@ class Settings
 public:
 	struct LogTags
 	{
-		bool info{false};
-		bool ice{false};
-		bool dtls{false};
-		bool rtp{false};
-		bool srtp{false};
-		bool rtcp{false};
-		bool rtx{false};
-		bool rbe{false};
+		bool info{ false };
+		bool ice{ false };
+		bool dtls{ false };
+		bool rtp{ false };
+		bool srtp{ false };
+		bool rtcp{ false };
+		bool rtx{ false };
+		bool rbe{ false };
 	};
 
 public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		LogLevel logLevel{LogLevel::LOG_DEBUG};
+		LogLevel logLevel{ LogLevel::LOG_DEBUG };
 		struct LogTags logTags;
 		std::string rtcIPv4;
 		std::string rtcIPv6;
 		std::string rtcAnnouncedIPv4;
 		std::string rtcAnnouncedIPv6;
-		uint16_t rtcMinPort{10000};
-		uint16_t rtcMaxPort{59999};
+		uint16_t rtcMinPort{ 10000 };
+		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
 		// Private fields.
-		bool hasIPv4{false};
-		bool hasIPv6{false};
-		bool hasAnnouncedIPv4{false};
-		bool hasAnnouncedIPv6{false};
+		bool hasIPv4{ false };
+		bool hasIPv6{ false };
+		bool hasAnnouncedIPv4{ false };
+		bool hasAnnouncedIPv6{ false };
 	};
 
 public:

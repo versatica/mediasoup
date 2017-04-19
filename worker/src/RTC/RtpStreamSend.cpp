@@ -10,10 +10,10 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t RtpSeqMod = 1 << 16;
+	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionAge = 500;
-	static constexpr uint32_t DefaultRtt           = 100;
+	static constexpr uint32_t MaxRetransmissionAge{ 500 };
+	static constexpr uint32_t DefaultRtt{ 100 };
 
 	/* Instance methods. */
 
@@ -31,23 +31,23 @@ namespace RTC
 		ClearBuffer();
 	}
 
-	Json::Value RtpStreamSend::toJson() const
+	Json::Value RtpStreamSend::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString k_params("params");
-		static const Json::StaticString k_received("received");
-		static const Json::StaticString k_maxTimestamp("maxTimestamp");
-		static const Json::StaticString k_receivedBytes("receivedBytes");
-		static const Json::StaticString k_rtt("rtt");
+		static const Json::StaticString JsonStringParams{ "params" };
+		static const Json::StaticString JsonStringReceived{ "received" };
+		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
+		static const Json::StaticString JsonStringReceivedBytes{ "receivedBytes" };
+		static const Json::StaticString JsonStringRtt{ "rtt" };
 
 		Json::Value json(Json::objectValue);
 
-		json[k_params]        = this->params.toJson();
-		json[k_received]      = (Json::UInt)this->received;
-		json[k_maxTimestamp]  = (Json::UInt)this->maxTimestamp;
-		json[k_receivedBytes] = (Json::UInt)this->receivedBytes;
-		json[k_rtt]           = (Json::UInt)this->rtt;
+		json[JsonStringParams]        = this->params.ToJson();
+		json[JsonStringReceived]      = Json::UInt{ this->received };
+		json[JsonStringMaxTimestamp]  = Json::UInt{ this->maxTimestamp };
+		json[JsonStringReceivedBytes] = static_cast<Json::UInt>(this->receivedBytes);
+		json[JsonStringRtt]           = Json::UInt{ this->rtt };
 
 		return json;
 	}
@@ -61,7 +61,7 @@ namespace RTC
 			return false;
 
 		// If bufferSize was given, store the packet into the buffer.
-		if (this->storage.size() > 0)
+		if (!this->storage.empty())
 			StorePacket(packet);
 
 		// Increase packet counters.
@@ -81,7 +81,7 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the compact NTP representation of the current timestamp.
-		Utils::Time::Ntp nowNtp;
+		Utils::Time::Ntp nowNtp{};
 		Utils::Time::CurrentTimeNtp(nowNtp);
 		uint32_t nowCompactNtp = (nowNtp.seconds & 0x0000FFFF) << 16;
 
@@ -105,7 +105,7 @@ namespace RTC
 		MS_TRACE();
 
 		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets = 17;
+		static constexpr size_t MaxRequestedPackets{ 17 };
 
 		// Ensure the container's first element is 0.
 		container[0] = nullptr;
@@ -119,11 +119,11 @@ namespace RTC
 		}
 
 		// If the buffer is empty just return.
-		if (this->buffer.size() == 0)
+		if (this->buffer.empty())
 			return;
 
 		// Convert the given sequence numbers to 32 bits.
-		uint32_t firstSeq32 = (uint32_t)seq + this->cycles;
+		uint32_t firstSeq32 = uint32_t{ seq } + this->cycles;
 		uint32_t lastSeq32  = firstSeq32 + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
@@ -161,19 +161,19 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t now        = DepLibUV::GetTime();
-		uint32_t rtt        = (this->rtt ? this->rtt : DefaultRtt);
-		uint32_t seq32      = firstSeq32;
-		bool requested      = true;
-		size_t containerIdx = 0;
+		uint64_t now   = DepLibUV::GetTime();
+		uint32_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint32_t seq32 = firstSeq32;
+		bool requested{ true };
+		size_t containerIdx{ 0 };
 
 		// Some variables for debugging.
-		uint16_t origBitmask   = bitmask;
-		uint16_t sentBitmask   = 0b0000000000000000;
-		bool isFirstPacket     = true;
-		bool firstPacketSent   = false;
-		uint8_t bitmaskCounter = 0;
-		bool tooOldPacketFound = false;
+		uint16_t origBitmask = bitmask;
+		uint16_t sentBitmask{ 0b0000000000000000 };
+		bool isFirstPacket{ true };
+		bool firstPacketSent{ false };
+		uint8_t bitmaskCounter{ 0 };
+		bool tooOldPacketFound{ false };
 
 		while (requested || bitmask != 0)
 		{
@@ -214,7 +214,7 @@ namespace RTC
 						// Don't resent the packet if it was resent in the last RTT ms.
 						uint32_t resentAtTime = (*bufferIt).resentAtTime;
 
-						if (resentAtTime && now - resentAtTime < static_cast<uint64_t>(rtt))
+						if ((resentAtTime != 0u) && now - resentAtTime < static_cast<uint64_t>(rtt))
 						{
 							MS_WARN_TAG(
 							    rtx,
@@ -239,14 +239,12 @@ namespace RTC
 						break;
 					}
 					// It can not be after this packet.
-					else if (currentSeq32 > seq32)
-					{
+					if (currentSeq32 > seq32)
 						break;
-					}
 				}
 			}
 
-			requested = (bitmask & 1) ? true : false;
+			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
 			++seq32;
 
@@ -291,15 +289,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!received)
+		if (received == 0u)
 			return nullptr;
 
-		RTC::RTCP::SenderReport* report = new RTC::RTCP::SenderReport();
+		auto report = new RTC::RTCP::SenderReport();
 
 		report->SetPacketCount(this->received);
 		report->SetOctetCount(this->receivedBytes);
 
-		Utils::Time::Ntp ntp;
+		Utils::Time::Ntp ntp{};
 		Utils::Time::CurrentTimeNtp(ntp);
 
 		report->SetNtpSec(ntp.seconds);
@@ -333,13 +331,13 @@ namespace RTC
 		MS_TRACE();
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packetSeq32 = (uint32_t)packet->GetSequenceNumber() + this->cycles;
+		uint32_t packetSeq32 = uint32_t{ packet->GetSequenceNumber() } + this->cycles;
 		BufferItem bufferItem;
 
 		bufferItem.seq32 = packetSeq32;
 
 		// If empty do it easy.
-		if (this->buffer.size() == 0)
+		if (this->buffer.empty())
 		{
 			auto store = this->storage[0].store;
 
@@ -352,7 +350,7 @@ namespace RTC
 		// Otherwise, do the stuff.
 
 		Buffer::iterator newBufferIt;
-		uint8_t* store = nullptr;
+		uint8_t* store{ nullptr };
 
 		// Iterate the buffer in reverse order and find the proper place to store the
 		// packet.
@@ -397,7 +395,7 @@ namespace RTC
 			auto firstPacket      = firstBufferItem.packet;
 
 			// Store points to the store used by the first packet.
-			store = (uint8_t*)firstPacket->GetData();
+			store = const_cast<uint8_t*>(firstPacket->GetData());
 			// Free the first packet.
 			delete firstPacket;
 			// Remove the first element in the list.
@@ -408,11 +406,11 @@ namespace RTC
 		(*newBufferIt).packet = packet->Clone(store);
 	}
 
-	void RtpStreamSend::onInitSeq()
+	void RtpStreamSend::OnInitSeq()
 	{
 		MS_TRACE();
 
 		// Clear the RTP buffer.
 		ClearBuffer();
 	}
-}
+} // namespace RTC

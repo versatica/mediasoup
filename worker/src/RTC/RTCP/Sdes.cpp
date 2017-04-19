@@ -34,7 +34,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Header* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// data size must be >= header + length value.
 			if (sizeof(uint8_t) * 2 + header->length > len)
@@ -49,10 +49,10 @@ namespace RTC
 
 		const std::string& SdesItem::Type2String(SdesItem::Type type)
 		{
-			static const std::string unknown("UNKNOWN");
+			static const std::string Unknown("UNKNOWN");
 
 			if (type2String.find(type) == type2String.end())
-				return unknown;
+				return Unknown;
 
 			return type2String[type];
 		}
@@ -121,7 +121,8 @@ namespace RTC
 			while (len - offset > 0)
 			{
 				SdesItem* item = SdesItem::Parse(data + offset, len - offset);
-				if (item)
+
+				if (item != nullptr)
 				{
 					if (item->GetType() == SdesItem::Type::END)
 						return chunk.release();
@@ -155,7 +156,8 @@ namespace RTC
 
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
-			for (size_t i = 0; i < padding; ++i)
+
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}
@@ -168,7 +170,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<SdesChunk>");
-			MS_DUMP("  ssrc : %" PRIu32, (uint32_t)ntohl(this->ssrc));
+			MS_DUMP("  ssrc : %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
 			for (auto item : this->items)
 			{
 				item->Dump();
@@ -183,15 +185,16 @@ namespace RTC
 			MS_TRACE();
 
 			// Get the header.
-			Packet::CommonHeader* header = (Packet::CommonHeader*)data;
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 			std::unique_ptr<SdesPacket> packet(new SdesPacket());
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 
-			while ((count--) && (len - offset > 0))
+			while (((count--) != 0u) && (len - offset > 0))
 			{
 				SdesChunk* chunk = SdesChunk::Parse(data + offset, len - offset);
-				if (chunk)
+
+				if (chunk != nullptr)
 				{
 					packet->AddChunk(chunk);
 					offset += chunk->GetSize();
@@ -232,5 +235,5 @@ namespace RTC
 			}
 			MS_DUMP("</SdesPacket>");
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC

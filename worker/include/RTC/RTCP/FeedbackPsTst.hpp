@@ -21,7 +21,7 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		template<typename T>
+		template<typename t>
 		class FeedbackPsTstItem : public FeedbackItem
 		{
 		private:
@@ -34,7 +34,7 @@ namespace RTC
 			};
 
 		public:
-			static const FeedbackPs::MessageType MessageType;
+			static const FeedbackPs::MessageType messageType;
 
 		public:
 			static FeedbackPsTstItem* Parse(const uint8_t* data, size_t len);
@@ -43,7 +43,7 @@ namespace RTC
 			explicit FeedbackPsTstItem(Header* header);
 			explicit FeedbackPsTstItem(FeedbackPsTstItem* item);
 			FeedbackPsTstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
-			virtual ~FeedbackPsTstItem(){};
+			~FeedbackPsTstItem() override = default;
 
 			uint32_t GetSsrc() const;
 			uint8_t GetSequenceNumber() const;
@@ -51,12 +51,12 @@ namespace RTC
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
-			virtual void Dump() const override;
-			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
 
 		private:
-			Header* header = nullptr;
+			Header* header{ nullptr };
 		};
 
 		class Tstr
@@ -67,49 +67,49 @@ namespace RTC
 		};
 
 		// Tst classes declaration.
-		typedef FeedbackPsTstItem<Tstr> FeedbackPsTstrItem;
-		typedef FeedbackPsTstItem<Tstn> FeedbackPsTstnItem;
+		using FeedbackPsTstrItem = FeedbackPsTstItem<Tstr>;
+		using FeedbackPsTstnItem = FeedbackPsTstItem<Tstn>;
 
 		// Tst packets declaration.
-		typedef FeedbackPsItemsPacket<FeedbackPsTstrItem> FeedbackPsTstrPacket;
-		typedef FeedbackPsItemsPacket<FeedbackPsTstnItem> FeedbackPsTstnPacket;
+		using FeedbackPsTstrPacket = FeedbackPsItemsPacket<FeedbackPsTstrItem>;
+		using FeedbackPsTstnPacket = FeedbackPsItemsPacket<FeedbackPsTstnItem>;
 
 		/* Inline instance methods. */
 
 		template<typename T>
-		FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header) : header(header)
+		inline FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header) : header(header)
 		{
 		}
 
 		template<typename T>
-		FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item) : header(item->header)
+		inline FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item) : header(item->header)
 		{
 		}
 
 		template<typename T>
-		size_t FeedbackPsTstItem<T>::GetSize() const
+		inline size_t FeedbackPsTstItem<T>::GetSize() const
 		{
 			return sizeof(Header);
 		}
 
 		template<typename T>
-		uint32_t FeedbackPsTstItem<T>::GetSsrc() const
+		inline uint32_t FeedbackPsTstItem<T>::GetSsrc() const
 		{
-			return (uint32_t)ntohl(this->header->ssrc);
+			return uint32_t{ ntohl(this->header->ssrc) };
 		}
 
 		template<typename T>
-		uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
+		inline uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
 		{
-			return (uint8_t)this->header->sequenceNumber;
+			return static_cast<uint8_t>(this->header->sequenceNumber);
 		}
 
 		template<typename T>
-		uint8_t FeedbackPsTstItem<T>::GetIndex() const
+		inline uint8_t FeedbackPsTstItem<T>::GetIndex() const
 		{
-			return (uint8_t)this->header->index;
+			return static_cast<uint8_t>(this->header->index);
 		}
-	}
-}
+	} // namespace RTCP
+} // namespace RTC
 
 #endif

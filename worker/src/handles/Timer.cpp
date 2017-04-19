@@ -10,7 +10,7 @@
 
 inline static void onTimer(uv_timer_t* handle)
 {
-	static_cast<Timer*>(handle->data)->onUvTimer();
+	static_cast<Timer*>(handle->data)->OnUvTimer();
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -30,7 +30,7 @@ Timer::Timer(Listener* listener) : listener(listener)
 	uvHandle->data = (void*)this;
 
 	err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
-	if (err)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 		this->uvHandle = nullptr;
@@ -43,7 +43,7 @@ void Timer::Destroy()
 {
 	MS_TRACE();
 
-	uv_close((uv_handle_t*)this->uvHandle, (uv_close_cb)onClose);
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 
 	// Delete this.
 	delete this;
@@ -55,11 +55,11 @@ void Timer::Start(uint64_t timeout)
 
 	int err;
 
-	if (uv_is_active((uv_handle_t*)this->uvHandle))
+	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
 		Stop();
 
-	err = uv_timer_start(this->uvHandle, (uv_timer_cb)onTimer, timeout, 0);
-	if (err)
+	err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), timeout, 0);
+	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
 }
 
@@ -70,14 +70,14 @@ void Timer::Stop()
 	int err;
 
 	err = uv_timer_stop(this->uvHandle);
-	if (err)
+	if (err != 0)
 		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
 }
 
-inline void Timer::onUvTimer()
+inline void Timer::OnUvTimer()
 {
 	MS_TRACE();
 
 	// Notify the listener.
-	this->listener->onTimer(this);
+	this->listener->OnTimer(this);
 }
