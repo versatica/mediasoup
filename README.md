@@ -5,9 +5,6 @@
 [![][codacy-grade-shield-mediasoup]][codacy-grade-mediasoup]
 
 
-**Status:** v1.0.0 coming soon.
-
-
 ## Website and documentation
 
 * [mediasoup.org][mediasoup-website]
