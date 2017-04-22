@@ -9,7 +9,7 @@
 #include "Utils.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include <cmath>    // std::pow()
-#include <iterator> // std::ostream_iterator<>()
+#include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
 /* Consts. */
@@ -1228,8 +1228,11 @@ namespace RTC
 		{
 			std::ostringstream ssrcsStream;
 
-			std::copy(ssrcs.begin(), ssrcs.end() - 1, std::ostream_iterator<int>(ssrcsStream, ","));
-			ssrcsStream << ssrcs.back();
+			if (!ssrcs.empty())
+			{
+				std::copy(ssrcs.begin(), ssrcs.end() - 1, std::ostream_iterator<uint32_t>(ssrcsStream, ","));
+				ssrcsStream << ssrcs.back();
+			}
 
 			MS_DEBUG_TAG(
 			    rbe,

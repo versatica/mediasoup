@@ -45,6 +45,7 @@ namespace RTC
 			if (Utils::Byte::Get4Bytes(data, 8) != uniqueIdentifier)
 			{
 				MS_WARN_TAG(rtcp, "invalid unique indentifier in REMB packet");
+
 				this->isCorrect = false;
 				return;
 			}
@@ -70,17 +71,14 @@ namespace RTC
 			               (numSsrcs * sizeof(uint32_t)))
 			{
 				MS_WARN_TAG(
-				    rtcp,
-				    "invalid payload size: %zu for the given number of ssrcs: "
-				    "%zu",
-				    len,
-				    numSsrcs);
+				    rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
 
 				this->isCorrect = false;
 				return;
 			}
 
 			size_t index{ 16 };
+
 			this->ssrcs.reserve(numSsrcs);
 			for (size_t n{ 0 }; n < numSsrcs; ++n)
 			{
@@ -130,9 +128,11 @@ namespace RTC
 
 			MS_DUMP("<FeedbackPsRembPacket>");
 			FeedbackPsPacket::Dump();
-			MS_DUMP("\t bitrate (bps): %" PRIu64, this->bitrate);
+			MS_DUMP("  bitrate (bps): %" PRIu64, this->bitrate);
 			for (auto ssrc : this->ssrcs)
-				MS_DUMP("\t ssrc: %" PRIu32, ssrc);
+			{
+				MS_DUMP("  ssrc: %" PRIu32, ssrc);
+			}
 			MS_DUMP("</FeedbackPsRembPacket>");
 		}
 	} // namespace RTCP

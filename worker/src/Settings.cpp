@@ -8,6 +8,8 @@
 #include <uv.h>
 #include <cctype> // isprint()
 #include <cerrno>
+#include <iterator> // std::ostream_iterator
+#include <sstream>  // std::ostringstream
 #include <unistd.h> // close()
 extern "C" {
 #include <getopt.h>
@@ -180,6 +182,7 @@ void Settings::PrintConfiguration()
 	MS_TRACE();
 
 	std::vector<std::string> logTags;
+	std::ostringstream logTagsStream;
 
 	if (Settings::configuration.logTags.info)
 		logTags.emplace_back("info");
@@ -198,16 +201,20 @@ void Settings::PrintConfiguration()
 	if (Settings::configuration.logTags.rtx)
 		logTags.emplace_back("rtx");
 
+	if (!logTags.empty())
+	{
+		std::copy(
+		    logTags.begin(), logTags.end() - 1, std::ostream_iterator<std::string>(logTagsStream, ","));
+		logTagsStream << logTags.back();
+	}
+
 	MS_DEBUG_TAG(info, "<configuration>");
 
 	MS_DEBUG_TAG(
 	    info,
 	    "  logLevel            : \"%s\"",
 	    Settings::logLevel2String[Settings::configuration.logLevel].c_str());
-	for (auto& tag : logTags)
-	{
-		MS_DEBUG_TAG(info, "  logTag              : \"%s\"", tag.c_str());
-	}
+	MS_DEBUG_TAG(info, "  logTags             : \"%s\"", logTagsStream.str().c_str());
 	if (Settings::configuration.hasIPv4)
 	{
 		MS_DEBUG_TAG(info, "  rtcIPv4             : \"%s\"", Settings::configuration.rtcIPv4.c_str());
