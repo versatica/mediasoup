@@ -14,7 +14,7 @@ namespace RTC
 	private:
 		struct StorageItem
 		{
-			uint8_t store[65536];
+			uint8_t store[RTC::MtuSize];
 		};
 
 	private:

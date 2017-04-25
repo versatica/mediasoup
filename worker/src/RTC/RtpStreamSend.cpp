@@ -330,6 +330,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (packet->GetSize() > RTC::MtuSize)
+		{
+			MS_WARN_TAG(
+			    rtp,
+			    "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
+			    packet->GetSsrc(),
+			    packet->GetSequenceNumber(),
+			    packet->GetSize());
+
+			return;
+		}
+
 		// Sum the packet seq number and the number of 16 bits cycles.
 		uint32_t packetSeq32 = uint32_t{ packet->GetSequenceNumber() } + this->cycles;
 		BufferItem bufferItem;

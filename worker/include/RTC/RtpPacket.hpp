@@ -8,6 +8,9 @@
 
 namespace RTC
 {
+	// Max MTU size.
+	constexpr size_t MtuSize{ 1500 };
+
 	class RtpPacket
 	{
 	public:
