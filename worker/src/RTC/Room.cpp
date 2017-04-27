@@ -14,7 +14,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t AudioLevelsInterval{ 1000 }; // In ms.
+	static constexpr uint64_t AudioLevelsInterval{ 500 }; // In ms.
 
 	/* Class variables. */
 
