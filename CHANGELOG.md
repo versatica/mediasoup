@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.1.0
+
+* Add `Room.on('audiolevels')` event.
+
+
 ### 1.0.2
 
 * Set a maximum value of 1500 bytes for packet storage in `RtpStreamSend`.
