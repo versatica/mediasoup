@@ -660,7 +660,7 @@ namespace RTC
 	}
 
 	void Room::OnPeerRtpPacket(
-	    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
+	    const RTC::Peer* /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -776,7 +776,7 @@ namespace RTC
 				auto& dBovs = kv.second;
 				int8_t avgdBov{ -127 };
 
-				if (dBovs.size() > 0)
+				if (!dBovs.empty())
 				{
 					int16_t sumdBovs{ 0 };
 
