@@ -26,8 +26,9 @@ private:
 
 public:
 	void Destroy();
-	void Start(uint64_t timeout);
+	void Start(uint64_t timeout, uint64_t repeat = 0);
 	void Stop();
+	bool IsActive() const;
 
 	/* Callbacks fired by UV events. */
 public:
@@ -39,5 +40,12 @@ private:
 	// Allocated by this.
 	uv_timer_t* uvHandle{ nullptr };
 };
+
+/* Inline methods. */
+
+inline bool Timer::IsActive() const
+{
+	return uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0;
+}
 
 #endif

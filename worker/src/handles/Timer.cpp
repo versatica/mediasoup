@@ -49,7 +49,7 @@ void Timer::Destroy()
 	delete this;
 }
 
-void Timer::Start(uint64_t timeout)
+void Timer::Start(uint64_t timeout, uint64_t repeat)
 {
 	MS_TRACE();
 
@@ -58,7 +58,7 @@ void Timer::Start(uint64_t timeout)
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
 		Stop();
 
-	err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), timeout, 0);
+	err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), timeout, repeat);
 	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
 }

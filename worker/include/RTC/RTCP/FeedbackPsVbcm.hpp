@@ -65,7 +65,7 @@ namespace RTC
 			Header* header{ nullptr };
 		};
 
-		// Vbcm packet declaration
+		// Vbcm packet declaration.
 		using FeedbackPsVbcmPacket = FeedbackPsItemsPacket<FeedbackPsVbcmItem>;
 
 		/* Inline instance methods. */

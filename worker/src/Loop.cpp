@@ -217,6 +217,7 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		case Channel::Request::MethodId::ROOM_CLOSE:
 		case Channel::Request::MethodId::ROOM_DUMP:
 		case Channel::Request::MethodId::ROOM_CREATE_PEER:
+		case Channel::Request::MethodId::ROOM_SET_AUDIO_LEVELS_EVENT:
 		case Channel::Request::MethodId::PEER_CLOSE:
 		case Channel::Request::MethodId::PEER_DUMP:
 		case Channel::Request::MethodId::PEER_SET_CAPABILITIES:

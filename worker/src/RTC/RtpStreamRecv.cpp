@@ -53,6 +53,12 @@ namespace RTC
 		CalculateJitter(packet->GetTimestamp());
 
 		// Set RTP header extension ids.
+		if (this->params.ssrcAudioLevelId != 0u)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
+		}
+
 		if (this->params.absSendTimeId != 0u)
 		{
 			packet->AddExtensionMapping(

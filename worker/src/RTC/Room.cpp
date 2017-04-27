@@ -5,12 +5,17 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include <cmath> // std::lround()
 #include <set>
 #include <string>
 #include <vector>
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint64_t AudioLevelsInterval{ 500 }; // In ms.
+
 	/* Class variables. */
 
 	RTC::RtpCapabilities Room::supportedRtpCapabilities;
@@ -106,6 +111,9 @@ namespace RTC
 			// NOTE: This may throw.
 			SetCapabilities(mediaCodecs);
 		}
+
+		// Set the audio levels timer.
+		this->audioLevelsTimer = new Timer(this);
 	}
 
 	Room::~Room()
@@ -133,6 +141,9 @@ namespace RTC
 			peer->Destroy();
 		}
 
+		// Close the audio level timer.
+		this->audioLevelsTimer->Destroy();
+
 		// Notify.
 		eventData[JsonStringClass] = "Room";
 		this->notifier->Emit(this->roomId, "close", eventData);
@@ -152,6 +163,7 @@ namespace RTC
 		static const Json::StaticString JsonStringPeers{ "peers" };
 		static const Json::StaticString JsonStringMapRtpReceiverRtpSenders{ "mapRtpReceiverRtpSenders" };
 		static const Json::StaticString JsonStringMapRtpSenderRtpReceiver{ "mapRtpSenderRtpReceiver" };
+		static const Json::StaticString JsonStringAudioLevelsEventEnabled{ "audioLevelsEventEnabled" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonPeers(Json::arrayValue);
@@ -199,6 +211,8 @@ namespace RTC
 			    std::to_string(rtpReceiver->rtpReceiverId);
 		}
 		json[JsonStringMapRtpSenderRtpReceiver] = jsonMapRtpSenderRtpReceiver;
+
+		json[JsonStringAudioLevelsEventEnabled] = this->audioLevelsEventEnabled;
 
 		return json;
 	}
@@ -283,6 +297,38 @@ namespace RTC
 				this->peers[peerId] = peer;
 
 				MS_DEBUG_DEV("Peer created [peerId:%u, peerName:'%s']", peerId, peerName.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::ROOM_SET_AUDIO_LEVELS_EVENT:
+			{
+				static const Json::StaticString JsonStringEnabled{ "enabled" };
+
+				if (!request->data[JsonStringEnabled].isBool())
+				{
+					request->Reject("Request has invalid data.enabled");
+
+					return;
+				}
+
+				bool audioLevelsEventEnabled = request->data[JsonStringEnabled].asBool();
+
+				if (audioLevelsEventEnabled == this->audioLevelsEventEnabled)
+					return;
+
+				// Clear map of audio levels.
+				this->mapRtpReceiverAudioLevels.clear();
+
+				// Start or stop audio levels periodic timer.
+				if (audioLevelsEventEnabled)
+					this->audioLevelsTimer->Start(AudioLevelsInterval, AudioLevelsInterval);
+				else
+					this->audioLevelsTimer->Stop();
+
+				this->audioLevelsEventEnabled = audioLevelsEventEnabled;
 
 				request->Accept();
 
@@ -630,6 +676,20 @@ namespace RTC
 		{
 			rtpSender->SendRtpPacket(packet);
 		}
+
+		// Update audio levels.
+		if (this->audioLevelsEventEnabled)
+		{
+			uint8_t volume;
+			bool voice;
+
+			if (packet->ReadAudioLevel(&volume, &voice))
+			{
+				int8_t dBov = volume * -1;
+
+				this->mapRtpReceiverAudioLevels[rtpReceiver].push_back(dBov);
+			}
+		}
 	}
 
 	void Room::OnPeerRtcpReceiverReport(
@@ -696,5 +756,64 @@ namespace RTC
 		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
 
 		rtpReceiver->RequestFullFrame();
+	}
+
+	inline void Room::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringClass{ "class" };
+		static const Json::StaticString JsonStringEntries{ "entries" };
+
+		// Audio levels timer.
+		if (timer == this->audioLevelsTimer)
+		{
+			std::unordered_map<RTC::RtpReceiver*, int8_t> mapRtpReceiverAudioLevel;
+
+			for (auto& kv : this->mapRtpReceiverAudioLevels)
+			{
+				auto rtpReceiver = kv.first;
+				auto& dBovs = kv.second;
+				int8_t avgdBov{ -127 };
+
+				if (!dBovs.empty())
+				{
+					int16_t sumdBovs{ 0 };
+
+					for (auto& dBov : dBovs)
+					{
+						sumdBovs += dBov;
+					}
+
+					avgdBov = static_cast<int8_t>(
+						std::lround(sumdBovs / static_cast<int16_t>(dBovs.size())));
+				}
+
+				mapRtpReceiverAudioLevel[rtpReceiver] = avgdBov;
+			}
+
+			// Clear map.
+			this->mapRtpReceiverAudioLevels.clear();
+
+			// Emit event.
+			Json::Value eventData(Json::objectValue);
+
+			eventData[JsonStringClass] = "Room";
+			eventData[JsonStringEntries] = Json::arrayValue;
+
+			for (auto& kv : mapRtpReceiverAudioLevel)
+			{
+				auto& rtpReceiverId = kv.first->rtpReceiverId;
+				auto& audioLevel = kv.second;
+				Json::Value entry(Json::arrayValue);
+
+				entry.append(Json::UInt{ rtpReceiverId });
+				entry.append(Json::Int{ audioLevel });
+
+				eventData[JsonStringEntries].append(entry);
+			}
+
+			this->notifier->Emit(this->roomId, "audiolevels", eventData);
+		}
 	}
 } // namespace RTC
