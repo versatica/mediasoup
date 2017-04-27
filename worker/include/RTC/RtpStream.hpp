@@ -21,7 +21,8 @@ namespace RTC
 			uint32_t clockRate{ 0 };
 			bool useNack{ false };
 			bool usePli{ false };
-			uint8_t absSendTimeId{ 0 }; // 0 means no abs-send-time id.
+			uint8_t ssrcAudioLevelId{ 0 }; // 0 means no ssrc-audio-level id.
+			uint8_t absSendTimeId{ 0 };    // 0 means no abs-send-time id.
 		};
 
 	public:

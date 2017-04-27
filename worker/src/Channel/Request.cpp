@@ -18,6 +18,7 @@ namespace Channel
 		{ "room.close",                        Request::MethodId::ROOM_CLOSE                           },
 		{ "room.dump",                         Request::MethodId::ROOM_DUMP                            },
 		{ "room.createPeer",                   Request::MethodId::ROOM_CREATE_PEER                     },
+		{ "room.setAudioLevelsEvent",          Request::MethodId::ROOM_SET_AUDIO_LEVELS_EVENT          },
 		{ "peer.close",                        Request::MethodId::PEER_CLOSE                           },
 		{ "peer.dump",                         Request::MethodId::PEER_DUMP                            },
 		{ "peer.setCapabilities",              Request::MethodId::PEER_SET_CAPABILITIES                },

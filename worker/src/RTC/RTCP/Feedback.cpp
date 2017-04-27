@@ -94,7 +94,7 @@ namespace RTC
 		/* Specialization for Ps class. */
 
 		template<>
-		Type FeedbackPacket<FeedbackPs>::rtcpType = RTCP::Type::PSFB;
+		RTCP::Type FeedbackPacket<FeedbackPs>::rtcpType = RTCP::Type::PSFB;
 
 		// clang-format off
 		template<>

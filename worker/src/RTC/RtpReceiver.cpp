@@ -378,6 +378,7 @@ namespace RTC
 		bool useNack{ false };
 		bool usePli{ false };
 		bool useRemb{ false };
+		uint8_t ssrcAudioLevelId{ 0 };
 		uint8_t absSendTimeId{ 0 };
 
 		for (auto& fb : codec.rtcpFeedback)
@@ -404,6 +405,12 @@ namespace RTC
 
 		for (auto& exten : this->rtpParameters->headerExtensions)
 		{
+			if (this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
+			    exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			{
+				ssrcAudioLevelId = exten.id;
+			}
+
 			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
 				absSendTimeId = exten.id;
@@ -413,13 +420,14 @@ namespace RTC
 		// Create stream params.
 		RTC::RtpStream::Params params;
 
-		params.ssrc          = ssrc;
-		params.payloadType   = codec.payloadType;
-		params.mime          = codec.mime;
-		params.clockRate     = codec.clockRate;
-		params.useNack       = useNack;
-		params.usePli        = usePli;
-		params.absSendTimeId = absSendTimeId;
+		params.ssrc             = ssrc;
+		params.payloadType      = codec.payloadType;
+		params.mime             = codec.mime;
+		params.clockRate        = codec.clockRate;
+		params.useNack          = useNack;
+		params.usePli           = usePli;
+		params.ssrcAudioLevelId = ssrcAudioLevelId;
+		params.absSendTimeId    = absSendTimeId;
 
 		// Create a RtpStreamRecv for receiving a media stream.
 		this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, params);

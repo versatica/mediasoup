@@ -180,17 +180,19 @@ namespace RTC
 		static const Json::StaticString JsonStringClockRate{ "clockRate" };
 		static const Json::StaticString JsonStringUseNack{ "useNack" };
 		static const Json::StaticString JsonStringUsePli{ "usePli" };
+		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
 		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringSsrc]          = Json::UInt{ this->ssrc };
-		json[JsonStringPayloadType]   = Json::UInt{ this->payloadType };
-		json[JsonStringMime]          = this->mime.name;
-		json[JsonStringClockRate]     = Json::UInt{ this->clockRate };
-		json[JsonStringUseNack]       = this->useNack;
-		json[JsonStringUsePli]        = this->usePli;
-		json[JsonStringAbsSendTimeId] = Json::UInt{ this->absSendTimeId };
+		json[JsonStringSsrc]             = Json::UInt{ this->ssrc };
+		json[JsonStringPayloadType]      = Json::UInt{ this->payloadType };
+		json[JsonStringMime]             = this->mime.name;
+		json[JsonStringClockRate]        = Json::UInt{ this->clockRate };
+		json[JsonStringUseNack]          = this->useNack;
+		json[JsonStringUsePli]           = this->usePli;
+		json[JsonStringSsrcAudioLevelId] = Json::UInt{ this->ssrcAudioLevelId };
+		json[JsonStringAbsSendTimeId]    = Json::UInt{ this->absSendTimeId };
 
 		return json;
 	}

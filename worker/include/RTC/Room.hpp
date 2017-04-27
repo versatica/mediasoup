@@ -13,6 +13,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpReceiver.hpp"
 #include "RTC/RtpSender.hpp"
+#include "handles/Timer.hpp"
 #include <json/json.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -20,7 +21,7 @@
 
 namespace RTC
 {
-	class Room : public RTC::Peer::Listener
+	class Room : public RTC::Peer::Listener, public Timer::Listener
 	{
 	public:
 		class Listener
@@ -72,6 +73,10 @@ namespace RTC
 		    const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report) override;
 		void OnFullFrameRequired(RTC::Peer* peer, RTC::RtpSender* rtpSender) override;
 
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
+
 	public:
 		// Passed by argument.
 		uint32_t roomId{ 0 };
@@ -80,11 +85,15 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		Channel::Notifier* notifier{ nullptr };
+		// Allocated by this.
+		Timer* audioLevelsTimer{ nullptr };
 		// Others.
 		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<const RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 		std::unordered_map<const RTC::RtpSender*, const RTC::RtpReceiver*> mapRtpSenderRtpReceiver;
+		std::unordered_map<RTC::RtpReceiver*, std::vector<int8_t>> mapRtpReceiverAudioLevels;
+		bool audioLevelsEventEnabled{ false };
 	};
 
 	/* Inline static methods. */
