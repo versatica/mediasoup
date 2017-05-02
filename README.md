@@ -12,6 +12,8 @@
 
 ## Demo online
 
+![mediasoup-demo-screenshot]
+
 * Try it at [demo.mediasoup.org](https://demo.mediasoup.org) ([source code](https://github.com/versatica/mediasoup-demo)).
 
 
@@ -73,6 +75,7 @@ Prior to that, ensure your host satisfies the following **requirements**:
 
 
 [mediasoup-banner]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup_banner.png
+[mediasoup-demo-screenshot]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup-opensips-summit-2017.jpg
 [mediasoup-website]: https://mediasoup.org
 [travis-ci-shield-mediasoup]: https://img.shields.io/travis/versatica/mediasoup/master.svg
 [travis-ci-mediasoup]: http://travis-ci.org/versatica/mediasoup
