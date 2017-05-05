@@ -97,6 +97,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::RtpSender::Listener. */
 	public:
 		void OnRtpSenderClosed(RTC::RtpSender* rtpSender) override;
+		void OnRtpSenderFullFrameRequired(RTC::RtpSender* rtpSender) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

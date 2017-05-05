@@ -112,6 +112,7 @@ namespace RTC
 			case Channel::Request::MethodId::RTP_SENDER_DISABLE:
 			{
 				static const Json::StaticString JsonStringDisabled{ "disabled" };
+				static const Json::StaticString JsonStringEmit{ "emit" };
 
 				if (!request->data[JsonStringDisabled].isBool())
 				{
@@ -121,6 +122,10 @@ namespace RTC
 				}
 
 				bool disabled = request->data[JsonStringDisabled].asBool();
+				bool emit     = true;
+
+				if (request->data[JsonStringEmit].isBool())
+					emit = request->data[JsonStringEmit].asBool();
 
 				// Nothing changed.
 				if (this->disabled == disabled)
@@ -135,7 +140,13 @@ namespace RTC
 				this->disabled = disabled;
 
 				if (wasActive != this->GetActive())
-					EmitActiveChange();
+				{
+					if (emit)
+						EmitActiveChange();
+
+					if (this->GetActive())
+						this->listener->OnRtpSenderFullFrameRequired(this);
+				}
 
 				request->Accept();
 

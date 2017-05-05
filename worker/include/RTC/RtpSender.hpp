@@ -27,7 +27,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpSenderClosed(RtpSender* rtpSender) = 0;
+			virtual void OnRtpSenderClosed(RtpSender* rtpSender)            = 0;
+			virtual void OnRtpSenderFullFrameRequired(RtpSender* rtpSender) = 0;
 		};
 
 	public:

@@ -950,6 +950,10 @@ namespace RTC
 
 							if (rtpSender != nullptr)
 							{
+								// If the RtpSender is not active, drop the packet.
+								if (!rtpSender->GetActive())
+									break;
+
 								if (feedback->GetMessageType() == RTCP::FeedbackPs::MessageType::PLI)
 								{
 									MS_DEBUG_TAG(rtx, "PLI received [media ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
@@ -1148,6 +1152,13 @@ namespace RTC
 
 		// Notify the listener (Room) so it can remove this RtpSender from its map.
 		this->listener->OnPeerRtpSenderClosed(this, rtpSender);
+	}
+
+	void Peer::OnRtpSenderFullFrameRequired(RTC::RtpSender* rtpSender)
+	{
+		MS_TRACE();
+
+		this->listener->OnFullFrameRequired(this, rtpSender);
 	}
 
 	void Peer::OnTimer(Timer* /*timer*/)
