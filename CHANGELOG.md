@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.0
+
+* `RtpSender`: allow `disable()`/`enable()` without forcing SDP renegotiation (#114).
+
+
 ### 1.1.0
 
 * Add `Room.on('audiolevels')` event.
