@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.1
+
+* `RtpReceiver`: fix an error producing packets when "rtpobject" event is set.
+
+
 ### 1.2.0
 
 * `RtpSender`: allow `disable()`/`enable()` without forcing SDP renegotiation (#114).
