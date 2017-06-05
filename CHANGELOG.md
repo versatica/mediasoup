@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.2
+
+* `RtpReceiver`: generate RTCP PLI when "rtpraw" or "rtpobject" event listener is set.
+
+
 ### 1.2.1
 
 * `RtpReceiver`: fix an error producing packets when "rtpobject" event is set.
