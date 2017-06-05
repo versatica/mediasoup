@@ -192,6 +192,10 @@ namespace RTC
 
 				request->Accept();
 
+				// If set, require a full frame.
+				if (this->rtpRawEventEnabled)
+					this->RequestFullFrame();
+
 				break;
 			}
 
@@ -209,6 +213,10 @@ namespace RTC
 				this->rtpObjectEventEnabled = request->data[JsonStringEnabled].asBool();
 
 				request->Accept();
+
+				// If set, require a full frame.
+				if (this->rtpObjectEventEnabled)
+					this->RequestFullFrame();
 
 				break;
 			}
