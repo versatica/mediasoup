@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.3
+
+* Add video codecs supported by Microsoft Edge.
+
+
 ### 1.2.2
 
 * `RtpReceiver`: generate RTCP PLI when "rtpraw" or "rtpobject" event listener is set.
