@@ -35,6 +35,7 @@ namespace RTC
 		{ "vp8",             RtpCodecMime::Subtype::VP8             },
 		{ "vp9",             RtpCodecMime::Subtype::VP9             },
 		{ "h264",            RtpCodecMime::Subtype::H264            },
+		{ "x-h264uc",        RtpCodecMime::Subtype::X_H264UC        },
 		{ "h265",            RtpCodecMime::Subtype::H265            },
 		// Complementary codecs:
 		{ "cn",              RtpCodecMime::Subtype::CN              },
@@ -43,6 +44,7 @@ namespace RTC
 		{ "rtx",             RtpCodecMime::Subtype::RTX             },
 		{ "ulpfec",          RtpCodecMime::Subtype::ULPFEC          },
 		{ "flexfec",         RtpCodecMime::Subtype::FLEXFEC         },
+		{ "x-ulpfecuc",      RtpCodecMime::Subtype::X_ULPFECUC      },
 		{ "red",             RtpCodecMime::Subtype::RED             }
 	};
 	std::map<RtpCodecMime::Subtype, std::string> RtpCodecMime::subtype2String =
@@ -59,6 +61,7 @@ namespace RTC
 		{ RtpCodecMime::Subtype::VP8,             "VP8"             },
 		{ RtpCodecMime::Subtype::VP9,             "VP9"             },
 		{ RtpCodecMime::Subtype::H264,            "H264"            },
+		{ RtpCodecMime::Subtype::X_H264UC,        "X-H264UC"        },
 		{ RtpCodecMime::Subtype::H265,            "H265"            },
 		// Complementary codecs:
 		{ RtpCodecMime::Subtype::CN,              "CN"              },
@@ -67,6 +70,7 @@ namespace RTC
 		{ RtpCodecMime::Subtype::RTX,             "rtx"             },
 		{ RtpCodecMime::Subtype::ULPFEC,          "ulpfec"          },
 		{ RtpCodecMime::Subtype::FLEXFEC,         "flexfec"         },
+		{ RtpCodecMime::Subtype::X_ULPFECUC,      "x-ulpfecuc"      },
 		{ RtpCodecMime::Subtype::RED,             "red"             }
 	};
 	// clang-format on
@@ -96,7 +100,7 @@ namespace RTC
 			if (it != RtpCodecMime::string2Type.end())
 				this->type = it->second;
 			else
-				MS_THROW_ERROR("unknown codec MIME type");
+				MS_THROW_ERROR("unknown codec MIME type '%s'", type.c_str());
 		}
 
 		// Set MIME subtype.
@@ -106,7 +110,7 @@ namespace RTC
 			if (it != RtpCodecMime::string2Subtype.end())
 				this->subtype = it->second;
 			else
-				MS_THROW_ERROR("unknown codec MIME subtype");
+				MS_THROW_ERROR("unknown codec MIME subtype '%s'", subtype.c_str());
 		}
 
 		// Set name.

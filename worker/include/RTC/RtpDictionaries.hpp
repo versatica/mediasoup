@@ -64,6 +64,7 @@ namespace RTC
 			VP8 = 200,
 			VP9,
 			H264,
+			X_H264UC,
 			H265,
 			// Complementary codecs:
 			CN = 300,
@@ -71,6 +72,7 @@ namespace RTC
 			// Feature codecs:
 			RTX = 400,
 			ULPFEC,
+			X_ULPFECUC,
 			FLEXFEC,
 			RED
 		};
