@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.4
+
+* Fix a SDP negotiation issue when the remote peer does not have compatible codecs.
+
+
 ### 1.2.3
 
 * Add video codecs supported by Microsoft Edge.
