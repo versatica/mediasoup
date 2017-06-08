@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.5
+
+* Add support for [ICE renomination](https://tools.ietf.org/html/draft-thatcher-ice-renomination).
+
+
 ### 1.2.4
 
 * Fix a SDP negotiation issue when the remote peer does not have compatible codecs.
