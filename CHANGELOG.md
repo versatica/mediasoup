@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 1.2.6
+
+* Fix an issue in `buffer.toString()` that makes mediasoup fail in Node 8.
+* Update libuv to version 1.12.0.
+
+
 ### 1.2.5
 
 * Add support for [ICE renomination](https://tools.ietf.org/html/draft-thatcher-ice-renomination).
