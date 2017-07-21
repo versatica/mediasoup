@@ -96,7 +96,7 @@ namespace RTC
 			return !(*this == other);
 		}
 
-		void SetName(std::string& name);
+		void SetName(const std::string& name);
 
 		const std::string& GetName() const
 		{
