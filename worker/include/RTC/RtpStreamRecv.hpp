@@ -25,8 +25,11 @@ namespace RTC
 
 		Json::Value ToJson() const override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
+		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+		void SetRtx(uint8_t payloadType, uint32_t ssrc);
+
 		void RequestFullFrame();
 
 	private:
@@ -52,6 +55,12 @@ namespace RTC
 		uint32_t transit{ 0 };         // Relative trans time for prev pkt.
 		uint32_t jitter{ 0 };          // Estimated jitter.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
+
+		// RTX related.
+		bool hasRtx { false };
+		uint8_t rtxPayloadType{ 0 };
+		uint32_t rtxSsrc{ 0 };
+		uint16_t rtxSeq{ 0 };
 	};
 } // namespace RTC
 

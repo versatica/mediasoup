@@ -307,6 +307,7 @@ namespace RTC
 		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
 		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		RTC::RtpCodecParameters& GetCodecForEncoding(RtpEncodingParameters& encoding);
+		RTC::RtpCodecParameters& GetRtxCodecForEncoding(RtpEncodingParameters& encoding);
 
 	private:
 		void ValidateCodecs();

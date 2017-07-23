@@ -72,6 +72,70 @@ namespace RTC
 		return true;
 	}
 
+	bool RtpStreamRecv::ReceiveRtxPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on rtx packet");
+
+		// RTP packet sanity check.
+		if (packet->GetPayloadLength() < 2)
+		{
+			MS_WARN_TAG(rtx, "ignoring rtx packet with no space for a rtx header field [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
+					packet->GetSsrc(),
+					packet->GetSequenceNumber(),
+					packet->GetPayloadType());
+
+			return false;
+		}
+
+		// Check that the payload type corresponds to the one negotiated.
+		if (packet->GetPayloadType() != this->rtxPayloadType)
+		{
+			MS_WARN_TAG(rtx, "ignoring rtx packet with invalid payload type [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
+					packet->GetSsrc(),
+					packet->GetSequenceNumber(),
+					packet->GetPayloadType());
+
+			return false;
+		}
+
+		// Get the rtx packet sequence number for logging purposes.
+		this->rtxSeq = packet->GetSequenceNumber();
+
+		// Get the original rtp packet.
+		packet->RtxDecode(this->params.payloadType, this->params.ssrc);
+
+		MS_DEBUG_TAG(rtx, "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+				this->rtxSsrc,
+				this->rtxSeq,
+				packet->GetSsrc(),
+				packet->GetSequenceNumber());
+
+		// Set the extended sequence number into the packet.
+		packet->SetExtendedSequenceNumber(
+		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+
+		// Set RTP header extension ids.
+		if (this->params.ssrcAudioLevelId != 0u)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
+		}
+
+		if (this->params.absSendTimeId != 0u)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
+		}
+
+		// Pass the packet to the NackGenerator.
+		if (this->params.useNack)
+			this->nackGenerator->ReceivePacket(packet);
+
+		return true;
+	}
+
 	RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtcpReceiverReport()
 	{
 		MS_TRACE();
@@ -214,5 +278,13 @@ namespace RTC
 		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 		this->listener->OnPliRequired(this);
+	}
+
+	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	{
+		this->hasRtx = true;
+
+		this->rtxPayloadType = payloadType;
+		this->rtxSsrc = ssrc;
 	}
 } // namespace RTC

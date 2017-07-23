@@ -89,6 +89,7 @@ namespace RTC
 		Timer* audioLevelsTimer{ nullptr };
 		// Others.
 		RTC::RtpCapabilities capabilities;
+		std::unordered_map<uint8_t, RTC::RtpCodecParameters> mapPayloadRtxCodecParameters;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<const RTC::RtpReceiver*, std::unordered_set<RTC::RtpSender*>> mapRtpReceiverRtpSenders;
 		std::unordered_map<const RTC::RtpSender*, const RTC::RtpReceiver*> mapRtpSenderRtpReceiver;
