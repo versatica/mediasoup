@@ -323,8 +323,7 @@ namespace RTC
 		this->payloadLength += 2;
 
 		// Fix the packet size.
-		if (this->size != 0)
-			this->size += 2;
+		this->size += 2;
 
 		// Remove padding.
 		this->payloadPadding = 0u;
@@ -350,8 +349,7 @@ namespace RTC
 		this->payloadLength -= 2;
 
 		// Fix the packet size.
-		if (this->size != 0)
-			this->size -= 2;
+		this->size -= 2;
 
 		// Remove padding.
 		this->payloadPadding = 0u;
