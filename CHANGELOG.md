@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.7
+
+* Habemus RTX ([RFC 4588](https://tools.ietf.org/html/rfc4588)) for proper RTP retransmission.
+
+
 ### 1.2.6
 
 * Fix an issue in `buffer.toString()` that makes mediasoup fail in Node 8.
