@@ -282,8 +282,9 @@ namespace RTC
 
 	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)
 	{
-		this->hasRtx = true;
+		MS_TRACE();
 
+		this->hasRtx = true;
 		this->rtxPayloadType = payloadType;
 		this->rtxSsrc = ssrc;
 	}

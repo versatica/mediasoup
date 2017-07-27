@@ -29,7 +29,7 @@ namespace RTC
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
-
+		void SetHeaderExtensions(RTC::RtpPacket* packet) const;
 		void RequestFullFrame();
 
 	private:

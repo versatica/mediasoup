@@ -431,7 +431,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->hasRtx = true;
-
 		this->rtxPayloadType = payloadType;
 		this->rtxSsrc = ssrc;
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);

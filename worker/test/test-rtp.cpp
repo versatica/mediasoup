@@ -319,6 +319,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		static uint8_t RtxBuffer[MtuSize];
 
 		auto rtxPacket = packet->Clone(RtxBuffer);
+
 		rtxPacket->RtxEncode(rtxPayloadType, rtxSsrc, rtxSeq);
 
 		REQUIRE(rtxPacket->HasMarker() == false);
