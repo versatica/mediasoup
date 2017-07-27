@@ -477,6 +477,44 @@ namespace RTC
 						MS_THROW_ERROR("no more available dynamic payload types for given media codecs");
 				}
 
+				// Build the RTX codec parameters for the video codec.
+				if (mediaCodec.kind == RTC::Media::Kind::VIDEO)
+				{
+					RTC::RtpCodecParameters rtxCodec;
+
+					// Get the next available payload type.
+					while (dynamicPayloadTypeIt != DynamicPayloadTypes.end())
+					{
+						uint8_t payloadType = *dynamicPayloadTypeIt;
+
+						++dynamicPayloadTypeIt;
+
+						if (roomPayloadTypes.find(payloadType) == roomPayloadTypes.end())
+						{
+							// Assign PT.
+							rtxCodec.payloadType    = payloadType;
+							rtxCodec.hasPayloadType = true;
+
+							break;
+						}
+					}
+
+					// If no one found, throw.
+					if (!rtxCodec.hasPayloadType)
+						MS_THROW_ERROR("no more available dynamic payload types for given RTX codec");
+
+					static const std::string associatedPayloadType = "apt";
+					static const std::string videoRtx = "video/rtx";
+
+					rtxCodec.kind = RTC::Media::Kind::VIDEO;
+					rtxCodec.mime.SetName(videoRtx);
+					rtxCodec.clockRate = mediaCodec.clockRate;
+					rtxCodec.parameters.SetInteger(associatedPayloadType, mediaCodec.payloadType);
+
+					// Associate the RTX codec with the original's payload type.
+					this->mapPayloadRtxCodecParameters[mediaCodec.payloadType] = rtxCodec;
+				}
+
 				// Store the selected PT.
 				roomPayloadTypes.insert(mediaCodec.payloadType);
 
@@ -524,6 +562,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		std::vector<RTC::RtpCodecParameters> rtxCodecs;
+
 		// Remove those peer's capabilities not supported by the room.
 
 		// Remove unsupported codecs and set the same PT.
@@ -545,6 +585,20 @@ namespace RTC
 					// Remove the unsupported RTCP feedback from the given codec.
 					peerCodecCapability.ReduceRtcpFeedback(roomCodecCapability.rtcpFeedback);
 
+					// Add RTX codec parameters.
+					// TODO: We should not add rtx codecs in case the peer does not support it.
+					// Must be done by the time we generate answers.
+					if (it->kind == RTC::Media::Kind::VIDEO)
+					{
+						auto payloadType = peerCodecCapability.payloadType;
+
+						MS_ASSERT(this->mapPayloadRtxCodecParameters.find(payloadType) != this->mapPayloadRtxCodecParameters.end(), "missing RTX codec parameters");
+
+						auto& rtxCodec = this->mapPayloadRtxCodecParameters[payloadType];
+
+						rtxCodecs.push_back(rtxCodec);
+					}
+
 					break;
 				}
 			}
@@ -553,6 +607,14 @@ namespace RTC
 				++it;
 			else
 				it = capabilities->codecs.erase(it);
+		}
+
+		// Add the RTX codecs.
+		for (auto it = rtxCodecs.begin(); it != rtxCodecs.end(); ++it)
+		{
+			auto& codec = *it;
+
+			capabilities->codecs.push_back(codec);
 		}
 
 		// Remove unsupported header extensions.

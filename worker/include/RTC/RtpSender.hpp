@@ -85,8 +85,7 @@ namespace RTC
 		uint16_t maxRtcpInterval{ 0 };
 		// RTP counters.
 		RTC::RtpDataCounter transmittedCounter;
-		// TODO: keep track of retransmitted data too.
-		// RTC::RtpDataCounter retransmitted;
+		RTC::RtpDataCounter retransmittedCounter;
 	};
 
 	/* Inline methods. */
@@ -129,7 +128,7 @@ namespace RTC
 
 	inline uint32_t RtpSender::GetTransmissionRate(uint64_t now)
 	{
-		return this->transmittedCounter.GetRate(now);
+		return this->transmittedCounter.GetRate(now) + this->retransmittedCounter.GetRate(now);
 	}
 } // namespace RTC
 

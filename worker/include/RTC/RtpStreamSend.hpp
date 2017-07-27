@@ -36,6 +36,9 @@ namespace RTC
 		    uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
 		uint32_t GetRtt() const;
+		void SetRtx(uint8_t payloadType, uint32_t ssrc);
+		bool HasRtx() const;
+		void RtxEncode(RtpPacket* packet);
 
 	private:
 		void ClearBuffer();
@@ -55,11 +58,22 @@ namespace RTC
 		uint64_t lastPacketTimeMs{ 0 };       // Time (MS) when the last packet was received.
 		uint32_t lastPacketRtpTimestamp{ 0 }; // RTP Timestamp of the last packet.
 		uint32_t rtt{ 0 };                    // Round trip time.
+
+		// RTX related.
+		bool hasRtx { false };
+		uint8_t rtxPayloadType{ 0 };
+		uint32_t rtxSsrc{ 0 };
+		uint16_t rtxSeq{ 0 };
 	};
 
 	inline uint32_t RtpStreamSend::GetRtt() const
 	{
 		return this->rtt;
+	}
+
+	inline bool RtpStreamSend::HasRtx() const
+	{
+		return this->hasRtx;
 	}
 } // namespace RTC
 

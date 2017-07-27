@@ -247,20 +247,36 @@ namespace RTC
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
 
+		RTC::RtpStreamRecv* rtpStream { nullptr };
+
 		if (this->rtpStreams.find(ssrc) == this->rtpStreams.end())
 		{
-			MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
+			if (this->rtxStreamMap.find(ssrc) == this->rtxStreamMap.end())
+			{
 
-			return;
+				MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
+
+				return;
+			}
+
+			else
+			{
+				rtpStream = this->rtxStreamMap[ssrc];
+
+				// Process the packet.
+				if (!rtpStream->ReceiveRtxPacket(packet))
+					return;
+			}
 		}
 
-		auto rtpStream = this->rtpStreams[ssrc];
+		else
+		{
+			rtpStream = this->rtpStreams[ssrc];
 
-		// Process the packet.
-		// TODO: Must check what kind of packet we are checking. For example, RTX
-		// packets (once implemented) should have a different handling.
-		if (!rtpStream->ReceivePacket(packet))
-			return;
+			// Process the packet.
+			if (!rtpStream->ReceivePacket(packet))
+				return;
+		}
 
 		// Notify the listener.
 		this->listener->OnRtpPacket(this, packet);
@@ -443,6 +459,23 @@ namespace RTC
 		// Enable REMB in the transport if requested.
 		if (useRemb)
 			this->transport->EnableRemb();
+
+		// Check rtx capabilities.
+		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
+		{
+			if (this->rtxStreamMap.find(encoding.rtx.ssrc) != this->rtxStreamMap.end())
+				return;
+
+			auto& codec = this->rtpParameters->GetRtxCodecForEncoding(encoding);
+
+			if (codec.hasPayloadType)
+			{
+				auto rtpStream = this->rtpStreams[ssrc];
+
+				rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
+				this->rtxStreamMap[encoding.rtx.ssrc] = rtpStream;
+			}
+		}
 	}
 
 	void RtpReceiver::ClearRtpStreams()

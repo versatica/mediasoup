@@ -282,4 +282,71 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		delete packet;
 	}
+
+	SECTION("rtx encryption-decryption")
+	{
+		uint8_t buffer[] =
+		{
+			0b10010000, 0b00000001, 0, 8,
+			0, 0, 0, 4,
+			0, 0, 0, 5,
+			0b00010000, 0, 0, 3, // Extension header
+			1, 0, 2, 1,
+			0xFF, 0, 3, 4,
+			0xFF, 0xFF, 0xFF, 0xFF
+		};
+
+		uint8_t rtxPayloadType = 102;
+		uint32_t rtxSsrc = 6;
+		uint16_t rtxSeq = 80;
+
+		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+
+		if (!packet)
+			FAIL("not a RTP packet");
+
+		REQUIRE(packet->HasMarker() == false);
+		REQUIRE(packet->HasExtensionHeader() == true);
+		REQUIRE(packet->GetExtensionHeaderLength() == 12);
+		REQUIRE(packet->GetPayloadType() == 1);
+		REQUIRE(packet->GetSequenceNumber() == 8);
+		REQUIRE(packet->GetTimestamp() == 4);
+		REQUIRE(packet->GetSsrc() == 5);
+		REQUIRE(packet->GetPayloadLength() == 0);
+		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions());
+
+		static uint8_t RtxBuffer[MtuSize];
+
+		auto rtxPacket = packet->Clone(RtxBuffer);
+
+		rtxPacket->RtxEncode(rtxPayloadType, rtxSsrc, rtxSeq);
+
+		REQUIRE(rtxPacket->HasMarker() == false);
+		REQUIRE(rtxPacket->HasExtensionHeader() == true);
+		REQUIRE(rtxPacket->GetExtensionHeaderLength() == 12);
+		REQUIRE(rtxPacket->GetPayloadType() == rtxPayloadType);
+		REQUIRE(rtxPacket->GetSequenceNumber() == rtxSeq);
+		REQUIRE(rtxPacket->GetTimestamp() == 4);
+		REQUIRE(rtxPacket->GetSsrc() == rtxSsrc);
+		REQUIRE(rtxPacket->GetPayloadLength() == 2);
+		REQUIRE(!rtxPacket->HasOneByteExtensions());
+		REQUIRE(rtxPacket->HasTwoBytesExtensions());
+
+		rtxPacket->RtxDecode(1, 5);
+
+		REQUIRE(rtxPacket->HasMarker() == false);
+		REQUIRE(rtxPacket->HasExtensionHeader() == true);
+		REQUIRE(rtxPacket->GetExtensionHeaderLength() == 12);
+		REQUIRE(rtxPacket->GetPayloadType() == 1);
+		REQUIRE(rtxPacket->GetSequenceNumber() == 8);
+		REQUIRE(rtxPacket->GetTimestamp() == 4);
+		REQUIRE(rtxPacket->GetSsrc() == 5);
+		REQUIRE(rtxPacket->GetPayloadLength() == 0);
+		REQUIRE(!rtxPacket->HasOneByteExtensions());
+		REQUIRE(rtxPacket->HasTwoBytesExtensions());
+
+		delete packet;
+		delete rtxPacket;
+	}
 }

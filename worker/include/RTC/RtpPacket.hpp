@@ -117,6 +117,8 @@ namespace RTC
 		size_t GetPayloadLength() const;
 		void Serialize(uint8_t* buffer);
 		RtpPacket* Clone(uint8_t* buffer) const;
+		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
+		bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
 
 	private:
 		void ParseExtensions();

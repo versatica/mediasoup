@@ -146,7 +146,7 @@ namespace RTC
 		}
 	}
 
-	bool Parameters::GetBoolean(std::string& key)
+	bool Parameters::GetBoolean(const std::string& key)
 	{
 		MS_TRACE();
 
@@ -158,7 +158,7 @@ namespace RTC
 		return this->mapKeyValues[key].booleanValue;
 	}
 
-	int32_t Parameters::GetInteger(std::string& key)
+	int32_t Parameters::GetInteger(const std::string& key)
 	{
 		MS_TRACE();
 
@@ -170,7 +170,7 @@ namespace RTC
 		return this->mapKeyValues[key].integerValue;
 	}
 
-	double Parameters::GetDouble(std::string& key)
+	double Parameters::GetDouble(const std::string& key)
 	{
 		MS_TRACE();
 
@@ -182,7 +182,7 @@ namespace RTC
 		return this->mapKeyValues[key].doubleValue;
 	}
 
-	std::string& Parameters::GetString(std::string& key)
+	std::string& Parameters::GetString(const std::string& key)
 	{
 		MS_TRACE();
 
@@ -194,7 +194,7 @@ namespace RTC
 		return this->mapKeyValues[key].stringValue;
 	}
 
-	std::vector<int32_t>& Parameters::GetArrayOfIntegers(std::string& key)
+	std::vector<int32_t>& Parameters::GetArrayOfIntegers(const std::string& key)
 	{
 		MS_TRACE();
 

@@ -271,6 +271,30 @@ namespace RTC
 		return fakeCodec;
 	}
 
+	RTC::RtpCodecParameters& RtpParameters::GetRtxCodecForEncoding(RtpEncodingParameters& encoding)
+	{
+		MS_TRACE();
+
+		static const std::string associatedPayloadType = "apt";
+		static RTC::RtpCodecParameters fakeCodec;
+
+		uint8_t payloadType = encoding.codecPayloadType;
+
+		auto it = this->codecs.begin();
+		for (; it != this->codecs.end(); ++it)
+		{
+			auto& codec = *it;
+
+			if (codec.mime.IsFeatureCodec() &&
+					codec.parameters.GetInteger(associatedPayloadType) == payloadType)
+			{
+				return codec;
+			}
+		}
+
+		return fakeCodec;
+	}
+
 	inline void RtpParameters::ValidateCodecs()
 	{
 		MS_TRACE();

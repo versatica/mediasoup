@@ -320,15 +320,13 @@ namespace RTC
 		}
 
 		// Process the packet.
-		// TODO: Must check what kind of packet we are checking. For example, RTX
-		// packets (once implemented) should have a different handling.
 		if (!this->rtpStream->ReceivePacket(packet))
 			return;
 
 		// Send the packet.
 		this->transport->SendRtpPacket(packet);
 
-		// Save RTP data.
+		// Update transmitted RTP data counter.
 		this->transmittedCounter.Update(packet);
 	}
 
@@ -466,6 +464,16 @@ namespace RTC
 			this->rtpStream = new RTC::RtpStreamSend(params, 750);
 		else
 			this->rtpStream = new RTC::RtpStreamSend(params, 0);
+
+		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
+		{
+			auto& codec = this->rtpParameters->GetRtxCodecForEncoding(encoding);
+
+			if (codec.hasPayloadType)
+			{
+				this->rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
+			}
+		}
 	}
 
 	void RtpSender::RetransmitRtpPacket(RTC::RtpPacket* packet)
@@ -475,14 +483,41 @@ namespace RTC
 		if (!this->GetActive())
 			return;
 
-		// If the peer supports RTX create a RTX packet and insert the given media
-		// packet as payload. Otherwise just send the packet as usual.
-		// TODO: No RTX for now so just send as usual.
-
 		MS_ASSERT(this->rtpStream, "no RtpStream set");
 
+		RTC::RtpPacket* rtxPacket = { nullptr };
+
+		if (this->rtpStream->HasRtx())
+		{
+			static uint8_t RtxBuffer[MtuSize];
+
+			rtxPacket = packet->Clone(RtxBuffer);
+			this->rtpStream->RtxEncode(rtxPacket);
+
+			MS_DEBUG_TAG(rtx, "sending rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+					rtxPacket->GetSsrc(),
+					rtxPacket->GetSequenceNumber(),
+					packet->GetSsrc(),
+					packet->GetSequenceNumber());
+		}
+
+		else
+		{
+			rtxPacket = packet;
+			MS_DEBUG_TAG(rtx, "retransmitting packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+					rtxPacket->GetSsrc(),
+					rtxPacket->GetSequenceNumber());
+		}
+
+		// Update retransmitted RTP data counter.
+		this->retransmittedCounter.Update(rtxPacket);
+
 		// Send the packet.
-		this->transport->SendRtpPacket(packet);
+		this->transport->SendRtpPacket(rtxPacket);
+
+		// Delete the RTX RtpPacket if it was created.
+		if (rtxPacket != packet)
+			delete rtxPacket;
 	}
 
 	inline void RtpSender::EmitActiveChange() const

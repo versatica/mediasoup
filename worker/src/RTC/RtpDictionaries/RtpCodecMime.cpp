@@ -77,7 +77,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	void RtpCodecMime::SetName(std::string& name)
+	void RtpCodecMime::SetName(const std::string& name)
 	{
 		MS_TRACE();
 

@@ -111,9 +111,6 @@ namespace RTC
 			payloadLength -= size_t{ payloadPadding };
 		}
 
-		if (payloadLength == 0)
-			payload = nullptr;
-
 		MS_ASSERT(
 		    len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 + extensionValueSize : 0) +
 		               payloadLength + static_cast<size_t>(payloadPadding),
@@ -169,6 +166,10 @@ namespace RTC
 		MS_DUMP("  timestamp        : %" PRIu32, GetTimestamp());
 		MS_DUMP("  ssrc             : %" PRIu32, GetSsrc());
 		MS_DUMP("  payload size     : %zu bytes", GetPayloadLength());
+		if (this->header->padding)
+		{
+			MS_DUMP("  padding size   : %" PRIu8 " bytes", this->payloadPadding);
+		}
 		MS_DUMP("</RtpPacket>");
 	}
 
@@ -299,6 +300,65 @@ namespace RTC
 		packet->extensionMap = this->extensionMap;
 
 		return packet;
+	}
+
+	void RtpPacket::RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq)
+	{
+		MS_TRACE();
+
+		// Rewrite the payload type.
+		this->SetPayloadType(payloadType);
+
+		// Rewrite the SSRC.
+		this->SetSsrc(ssrc);
+
+		// Write the original sequence number at the begining of the payload.
+		std::memmove(this->payload+2, this->payload, this->payloadLength);
+		Utils::Byte::Set2Bytes(this->payload, 0, this->GetSequenceNumber());
+
+		// Rewrite the sequence number.
+		this->SetSequenceNumber(seq);
+
+		// Fix the payload length.
+		this->payloadLength += 2;
+
+		// Fix the packet size.
+		this->size += 2;
+
+		// Remove padding.
+		this->payloadPadding = 0u;
+	}
+
+	bool RtpPacket::RtxDecode(uint8_t payloadType, uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		if (this->payloadLength < 2)
+		{
+			MS_WARN_TAG(rtx, "not enough space for a RTX header field");
+			return false;
+		}
+
+		// Rewrite the payload type.
+		this->SetPayloadType(payloadType);
+
+		// Rewrite the SSRC.
+		this->SetSsrc(ssrc);
+
+		// Rewrite the sequence number.
+		this->SetSequenceNumber(Utils::Byte::Get2Bytes(this->payload, 0));
+
+		// Fix the payload and payload length.
+		this->payload += 2;
+		this->payloadLength -= 2;
+
+		// Fix the packet size.
+		this->size -= 2;
+
+		// Remove padding.
+		this->payloadPadding = 0u;
+
+		return true;
 	}
 
 	void RtpPacket::ParseExtensions()

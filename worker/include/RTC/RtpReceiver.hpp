@@ -79,6 +79,7 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters{ nullptr };
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
+		std::map<uint32_t, RTC::RtpStreamRecv*> rtxStreamMap;
 		// Others.
 		bool rtpRawEventEnabled{ false };
 		bool rtpObjectEventEnabled{ false };

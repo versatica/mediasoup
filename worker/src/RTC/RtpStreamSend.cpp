@@ -425,4 +425,24 @@ namespace RTC
 		// Clear the RTP buffer.
 		ClearBuffer();
 	}
+
+	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		this->hasRtx = true;
+		this->rtxPayloadType = payloadType;
+		this->rtxSsrc = ssrc;
+		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
+	}
+
+	void RtpStreamSend::RtxEncode(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->hasRtx, "rtx is not enabled on this stream");
+
+		packet->RtxEncode(this->rtxPayloadType, this->rtxSsrc, ++this->rtxSeq);
+	}
+
 } // namespace RTC

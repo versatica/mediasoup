@@ -53,17 +53,58 @@ namespace RTC
 		CalculateJitter(packet->GetTimestamp());
 
 		// Set RTP header extension ids.
-		if (this->params.ssrcAudioLevelId != 0u)
+		this->SetHeaderExtensions(packet);
+
+		// Pass the packet to the NackGenerator.
+		if (this->params.useNack)
+			this->nackGenerator->ReceivePacket(packet);
+
+		return true;
+	}
+
+	bool RtpStreamRecv::ReceiveRtxPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on rtx packet");
+
+		// Check that the payload type corresponds to the one negotiated.
+		if (packet->GetPayloadType() != this->rtxPayloadType)
 		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
+			MS_WARN_TAG(rtx, "ignoring rtx packet with invalid payload type [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
+					packet->GetSsrc(),
+					packet->GetSequenceNumber(),
+					packet->GetPayloadType());
+
+			return false;
 		}
 
-		if (this->params.absSendTimeId != 0u)
+		// Get the rtx packet sequence number for logging purposes.
+		auto rtxSeq = packet->GetSequenceNumber();
+
+		// Get the original rtp packet.
+		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
+			MS_WARN_TAG(rtx, "ignoring malformed rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
+					packet->GetSsrc(),
+					packet->GetSequenceNumber(),
+					packet->GetPayloadType());
+
+			return false;
 		}
+
+		MS_DEBUG_TAG(rtx, "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+				this->rtxSsrc,
+				rtxSeq,
+				packet->GetSsrc(),
+				packet->GetSequenceNumber());
+
+		// Set the extended sequence number into the packet.
+		packet->SetExtendedSequenceNumber(
+		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+
+		// Set RTP header extension ids.
+		this->SetHeaderExtensions(packet);
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -214,5 +255,31 @@ namespace RTC
 		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 		this->listener->OnPliRequired(this);
+	}
+
+	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		this->hasRtx = true;
+		this->rtxPayloadType = payloadType;
+		this->rtxSsrc = ssrc;
+	}
+
+	void RtpStreamRecv::SetHeaderExtensions(RTC::RtpPacket* packet) const
+	{
+		MS_TRACE();
+
+		if (this->params.ssrcAudioLevelId != 0u)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
+		}
+
+		if (this->params.absSendTimeId != 0u)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
+		}
 	}
 } // namespace RTC
