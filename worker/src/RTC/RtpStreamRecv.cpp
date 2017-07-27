@@ -68,17 +68,6 @@ namespace RTC
 
 		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on rtx packet");
 
-		// RTP packet sanity check.
-		if (packet->GetPayloadLength() < 2)
-		{
-			MS_WARN_TAG(rtx, "ignoring rtx packet with no space for a rtx header field [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
-					packet->GetSsrc(),
-					packet->GetSequenceNumber(),
-					packet->GetPayloadType());
-
-			return false;
-		}
-
 		// Check that the payload type corresponds to the one negotiated.
 		if (packet->GetPayloadType() != this->rtxPayloadType)
 		{
@@ -90,11 +79,20 @@ namespace RTC
 			return false;
 		}
 
-		// Get the rtx packet sequence number for logging purposes.
-		this->rtxSeq = packet->GetSequenceNumber();
 
 		// Get the original rtp packet.
-		packet->RtxDecode(this->params.payloadType, this->params.ssrc);
+		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
+		{
+			MS_WARN_TAG(rtx, "ignoring malformed rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
+					packet->GetSsrc(),
+					packet->GetSequenceNumber(),
+					packet->GetPayloadType());
+
+			return false;
+		}
+
+		// Get the rtx packet sequence number for logging purposes.
+		this->rtxSeq = packet->GetSequenceNumber();
 
 		MS_DEBUG_TAG(rtx, "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
 				this->rtxSsrc,

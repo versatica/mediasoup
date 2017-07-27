@@ -329,11 +329,15 @@ namespace RTC
 		this->payloadPadding = 0u;
 	}
 
-	void RtpPacket::RtxDecode(uint8_t payloadType, uint32_t ssrc)
+	bool RtpPacket::RtxDecode(uint8_t payloadType, uint32_t ssrc)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->payloadLength >= 2, "not enough space for a RTX header field");
+		if (this->payloadLength < 2)
+		{
+			MS_WARN_TAG(rtx, "not enough space for a RTX header field");
+			return false;
+		}
 
 		// Rewrite the payload type.
 		this->SetPayloadType(payloadType);
@@ -353,6 +357,8 @@ namespace RTC
 
 		// Remove padding.
 		this->payloadPadding = 0u;
+
+		return true;
 	}
 
 	void RtpPacket::ParseExtensions()
