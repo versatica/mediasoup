@@ -53,17 +53,7 @@ namespace RTC
 		CalculateJitter(packet->GetTimestamp());
 
 		// Set RTP header extension ids.
-		if (this->params.ssrcAudioLevelId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
-		}
-
-		if (this->params.absSendTimeId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
-		}
+		this->SetHeaderExtensions(packet);
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -117,17 +107,7 @@ namespace RTC
 		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Set RTP header extension ids.
-		if (this->params.ssrcAudioLevelId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
-		}
-
-		if (this->params.absSendTimeId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
-		}
+		this->SetHeaderExtensions(packet);
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -287,5 +267,22 @@ namespace RTC
 		this->hasRtx = true;
 		this->rtxPayloadType = payloadType;
 		this->rtxSsrc = ssrc;
+	}
+
+	void RtpStreamRecv::SetHeaderExtensions(RTC::RtpPacket* packet) const
+	{
+		MS_TRACE();
+
+		if (this->params.ssrcAudioLevelId != 0u)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
+		}
+
+		if (this->params.absSendTimeId != 0u)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
+		}
 	}
 } // namespace RTC
