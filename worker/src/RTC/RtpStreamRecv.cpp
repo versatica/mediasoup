@@ -71,10 +71,13 @@ namespace RTC
 		// Check that the payload type corresponds to the one negotiated.
 		if (packet->GetPayloadType() != this->rtxPayloadType)
 		{
-			MS_WARN_TAG(rtx, "ignoring rtx packet with invalid payload type [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
-					packet->GetSsrc(),
-					packet->GetSequenceNumber(),
-					packet->GetPayloadType());
+			MS_WARN_TAG(
+			    rtx,
+			    "ignoring rtx packet with invalid payload type [ssrc: %" PRIu32 " seqnr: %" PRIu16
+			    " payload type: %" PRIu8 "]",
+			    packet->GetSsrc(),
+			    packet->GetSequenceNumber(),
+			    packet->GetPayloadType());
 
 			return false;
 		}
@@ -85,19 +88,25 @@ namespace RTC
 		// Get the original rtp packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			MS_WARN_TAG(rtx, "ignoring malformed rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 " payload type: %" PRIu8 "]",
-					packet->GetSsrc(),
-					packet->GetSequenceNumber(),
-					packet->GetPayloadType());
+			MS_WARN_TAG(
+			    rtx,
+			    "ignoring malformed rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
+			    " payload type: %" PRIu8 "]",
+			    packet->GetSsrc(),
+			    packet->GetSequenceNumber(),
+			    packet->GetPayloadType());
 
 			return false;
 		}
 
-		MS_DEBUG_TAG(rtx, "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
-				this->rtxSsrc,
-				rtxSeq,
-				packet->GetSsrc(),
-				packet->GetSequenceNumber());
+		MS_DEBUG_TAG(
+		    rtx,
+		    "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
+		    "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+		    this->rtxSsrc,
+		    rtxSeq,
+		    packet->GetSsrc(),
+		    packet->GetSequenceNumber());
 
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
@@ -261,9 +270,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->hasRtx = true;
+		this->hasRtx         = true;
 		this->rtxPayloadType = payloadType;
-		this->rtxSsrc = ssrc;
+		this->rtxSsrc        = ssrc;
 	}
 
 	void RtpStreamRecv::SetHeaderExtensions(RTC::RtpPacket* packet) const

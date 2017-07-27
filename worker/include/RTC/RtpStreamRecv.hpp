@@ -57,7 +57,7 @@ namespace RTC
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 
 		// RTX related.
-		bool hasRtx { false };
+		bool hasRtx{ false };
 		uint8_t rtxPayloadType{ 0 };
 		uint32_t rtxSsrc{ 0 };
 	};

@@ -494,19 +494,24 @@ namespace RTC
 			rtxPacket = packet->Clone(RtxBuffer);
 			this->rtpStream->RtxEncode(rtxPacket);
 
-			MS_DEBUG_TAG(rtx, "sending rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
-					rtxPacket->GetSsrc(),
-					rtxPacket->GetSequenceNumber(),
-					packet->GetSsrc(),
-					packet->GetSequenceNumber());
+			MS_DEBUG_TAG(
+			    rtx,
+			    "sending rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
+			    "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			    rtxPacket->GetSsrc(),
+			    rtxPacket->GetSequenceNumber(),
+			    packet->GetSsrc(),
+			    packet->GetSequenceNumber());
 		}
 
 		else
 		{
 			rtxPacket = packet;
-			MS_DEBUG_TAG(rtx, "retransmitting packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
-					rtxPacket->GetSsrc(),
-					rtxPacket->GetSequenceNumber());
+			MS_DEBUG_TAG(
+			    rtx,
+			    "retransmitting packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			    rtxPacket->GetSsrc(),
+			    rtxPacket->GetSequenceNumber());
 		}
 
 		// Update retransmitted RTP data counter.

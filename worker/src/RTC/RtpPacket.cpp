@@ -313,7 +313,7 @@ namespace RTC
 		this->SetSsrc(ssrc);
 
 		// Write the original sequence number at the begining of the payload.
-		std::memmove(this->payload+2, this->payload, this->payloadLength);
+		std::memmove(this->payload + 2, this->payload, this->payloadLength);
 		Utils::Byte::Set2Bytes(this->payload, 0, this->GetSequenceNumber());
 
 		// Rewrite the sequence number.

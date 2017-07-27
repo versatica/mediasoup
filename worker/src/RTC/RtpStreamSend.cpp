@@ -430,10 +430,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->hasRtx = true;
+		this->hasRtx         = true;
 		this->rtxPayloadType = payloadType;
-		this->rtxSsrc = ssrc;
-		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
+		this->rtxSsrc        = ssrc;
+		this->rtxSeq         = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
 	void RtpStreamSend::RtxEncode(RTC::RtpPacket* packet)

@@ -286,7 +286,7 @@ namespace RTC
 			auto& codec = *it;
 
 			if (codec.mime.IsFeatureCodec() &&
-					codec.parameters.GetInteger(associatedPayloadType) == payloadType)
+			    codec.parameters.GetInteger(associatedPayloadType) == payloadType)
 			{
 				return codec;
 			}

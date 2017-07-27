@@ -60,7 +60,7 @@ namespace RTC
 		uint32_t rtt{ 0 };                    // Round trip time.
 
 		// RTX related.
-		bool hasRtx { false };
+		bool hasRtx{ false };
 		uint8_t rtxPayloadType{ 0 };
 		uint32_t rtxSsrc{ 0 };
 		uint16_t rtxSeq{ 0 };

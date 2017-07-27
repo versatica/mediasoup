@@ -247,13 +247,12 @@ namespace RTC
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
 
-		RTC::RtpStreamRecv* rtpStream { nullptr };
+		RTC::RtpStreamRecv* rtpStream{ nullptr };
 
 		if (this->rtpStreams.find(ssrc) == this->rtpStreams.end())
 		{
 			if (this->rtxStreamMap.find(ssrc) == this->rtxStreamMap.end())
 			{
-
 				MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
 
 				return;
