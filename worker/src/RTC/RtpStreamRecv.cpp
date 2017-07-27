@@ -79,6 +79,8 @@ namespace RTC
 			return false;
 		}
 
+		// Get the rtx packet sequence number for logging purposes.
+		auto rtxSeq = packet->GetSequenceNumber();
 
 		// Get the original rtp packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
@@ -91,12 +93,9 @@ namespace RTC
 			return false;
 		}
 
-		// Get the rtx packet sequence number for logging purposes.
-		this->rtxSeq = packet->GetSequenceNumber();
-
 		MS_DEBUG_TAG(rtx, "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
 				this->rtxSsrc,
-				this->rtxSeq,
+				rtxSeq,
 				packet->GetSsrc(),
 				packet->GetSequenceNumber());
 

@@ -60,7 +60,6 @@ namespace RTC
 		bool hasRtx { false };
 		uint8_t rtxPayloadType{ 0 };
 		uint32_t rtxSsrc{ 0 };
-		uint16_t rtxSeq{ 0 };
 	};
 } // namespace RTC
 
