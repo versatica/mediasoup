@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 1.2.8
+
+* Fix a crash due to RTX packet processing while the associated `NackGenerator` is not yet created.
+
+
 ### 1.2.7
 
 * Habemus RTX ([RFC 4588](https://tools.ietf.org/html/rfc4588)) for proper RTP retransmission.
