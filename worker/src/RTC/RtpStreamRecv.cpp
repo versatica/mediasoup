@@ -116,7 +116,7 @@ namespace RTC
 		this->SetHeaderExtensions(packet);
 
 		// Pass the packet to the NackGenerator.
-		if (this->params.useNack)
+		if (this->params.useNack && this->nackGenerator)
 			this->nackGenerator->ReceivePacket(packet);
 
 		return true;
