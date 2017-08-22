@@ -455,7 +455,7 @@ namespace RTC
 			FingerprintAlgorithm algorithm = it->second;
 			uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size{ 0 };
-			char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
+			char hexFingerprint[(EVP_MAX_MD_SIZE * 3) + 1];
 			const EVP_MD* hashFunction;
 			int ret;
 
@@ -487,12 +487,12 @@ namespace RTC
 				MS_THROW_ERROR("Fingerprints generation failed");
 			}
 
-			// Convert to hexadecimal format in lowecase without colons.
+			// Convert to hexadecimal format in uppercase with colons.
 			for (unsigned int i{ 0 }; i < size; ++i)
 			{
-				std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
+				std::sprintf(hexFingerprint + (i * 3), "%.2X:", binaryFingerprint[i]);
 			}
-			hexFingerprint[size * 2] = '\0';
+			hexFingerprint[(size * 3) - 1] = '\0';
 
 			MS_DEBUG_TAG(dtls, "%-7s fingerprint: %s", algorithmString.c_str(), hexFingerprint);
 
@@ -1014,7 +1014,7 @@ namespace RTC
 		X509* certificate;
 		uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
 		unsigned int size{ 0 };
-		char hexFingerprint[(EVP_MAX_MD_SIZE * 2) + 1];
+		char hexFingerprint[(EVP_MAX_MD_SIZE * 3) + 1];
 		const EVP_MD* hashFunction;
 		int ret;
 
@@ -1048,7 +1048,6 @@ namespace RTC
 		}
 
 		// Compare the remote fingerprint with the value given via signaling.
-
 		ret = X509_digest(certificate, hashFunction, binaryFingerprint, &size);
 		if (ret == 0)
 		{
@@ -1059,12 +1058,12 @@ namespace RTC
 			return false;
 		}
 
-		// Convert to hexadecimal format in lowecase without colons.
+		// Convert to hexadecimal format in uppercase with colons.
 		for (unsigned int i{ 0 }; i < size; ++i)
 		{
-			std::sprintf(hexFingerprint + (i * 2), "%.2x", binaryFingerprint[i]);
+			std::sprintf(hexFingerprint + (i * 3), "%.2X:", binaryFingerprint[i]);
 		}
-		hexFingerprint[size * 2] = '\0';
+		hexFingerprint[(size * 3) - 1] = '\0';
 
 		if (this->remoteFingerprint.value != hexFingerprint)
 		{
