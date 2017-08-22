@@ -455,30 +455,6 @@ tap.test(
 						});
 				});
 
-				// TODO: uncomment when RTX implemented
-				// funcs.push(function()
-				// {
-				// 	return rtpReceiver.receive(
-				// 		{
-				// 			codecs :
-				// 			[
-				// 				{
-				// 					name        : 'audio/opus',
-				// 					payloadType : 100,
-				// 					clockRate   : 48000,
-				// 					rtx         : {}
-				// 				}
-				// 			]
-				// 		})
-				// 		.then(() => t.fail('rtpReceiver.receive() succeeded'))
-				// 		.catch((error) =>
-				// 		{
-				// 			t.pass(
-				// 				'rtpReceiver.receive() without codec.rtx.payloadType failed: ' +
-				// 				`${error}`);
-				// 		});
-				// });
-
 				funcs.push(function()
 				{
 					return rtpReceiver.receive(
@@ -506,7 +482,7 @@ tap.test(
 						});
 				});
 
-				// TODO: uncomment when RTX implemented
+				// TODO: Must fix this.
 				// funcs.push(function()
 				// {
 				// 	return rtpReceiver.receive(
@@ -514,27 +490,27 @@ tap.test(
 				// 			codecs :
 				// 			[
 				// 				{
-				// 					name        : 'audio/opus',
-				// 					payloadType : 100,
-				// 					clockRate   : 48000,
-				// 					rtx :
-				// 					{
-				// 						payloadType : 0
-				// 					}
+				// 					kind        : 'video',
+				// 					name        : 'video/vp8',
+				// 					payloadType : 110,
+				// 					clockRate   : 90000
 				// 				},
 				// 				{
-				// 					name        : 'audio/PCMU',
-				// 					payloadType : 0,
-				// 					clockRate   : 8000
+				// 					kind        : 'video',
+				// 					name        : 'video/rtx',
+				// 					payloadType : 97,
+				// 					clockRate   : 90000,
+				// 					parameters  :
+				// 					{
+				// 						apt : 111 // Wrong apt!
+				// 					}
 				// 				}
 				// 			]
 				// 		})
 				// 		.then(() => t.fail('rtpReceiver.receive() succeeded'))
 				// 		.catch((error) =>
 				// 		{
-				// 			t.pass(
-				// 			'rtpReceiver.receive() with duplicated RTX payloadType failed: ' +
-				// 			`${error}`);
+				// 			t.pass(`rtpReceiver.receive() wih wrong RTX apt failed: ${error}`);
 				// 		});
 				// });
 
