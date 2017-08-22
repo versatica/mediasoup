@@ -15,26 +15,42 @@ with message:
   yay
 
 -------------------------------------------------------------------------------
-#542
+#748 - captures with unexpected exceptions
+  outside assertions
 -------------------------------------------------------------------------------
-CompilationTests.cpp:<line number>
+ExceptionTests.cpp:<line number>
 ...............................................................................
 
-CompilationTests.cpp:<line number>:
-PASSED:
-  CHECK_THROWS_AS( throws_int(true), int )
+ExceptionTests.cpp:<line number>: FAILED:
+due to unexpected exception with messages:
+  answer := 42
+  expected exception
 
-CompilationTests.cpp:<line number>:
-PASSED:
-  CHECK_THROWS_AS( throws_int(true), int& )
+-------------------------------------------------------------------------------
+#748 - captures with unexpected exceptions
+  inside REQUIRE_NOTHROW
+-------------------------------------------------------------------------------
+ExceptionTests.cpp:<line number>
+...............................................................................
 
-CompilationTests.cpp:<line number>:
-PASSED:
-  CHECK_THROWS_AS( throws_int(true), const int )
+ExceptionTests.cpp:<line number>: FAILED:
+  REQUIRE_NOTHROW( thisThrows() )
+due to unexpected exception with messages:
+  answer := 42
+  expected exception
 
-CompilationTests.cpp:<line number>:
+-------------------------------------------------------------------------------
+#748 - captures with unexpected exceptions
+  inside REQUIRE_THROWS
+-------------------------------------------------------------------------------
+ExceptionTests.cpp:<line number>
+...............................................................................
+
+ExceptionTests.cpp:<line number>:
 PASSED:
-  CHECK_THROWS_AS( throws_int(true), const int& )
+  REQUIRE_THROWS( thisThrows() )
+with message:
+  answer := 42
 
 -------------------------------------------------------------------------------
 #809
@@ -49,6 +65,48 @@ with expansion:
   42 == {?}
 
 -------------------------------------------------------------------------------
+#833
+-------------------------------------------------------------------------------
+CompilationTests.cpp:<line number>
+...............................................................................
+
+CompilationTests.cpp:<line number>:
+PASSED:
+  REQUIRE( a == t )
+with expansion:
+  3 == 3
+
+CompilationTests.cpp:<line number>:
+PASSED:
+  CHECK( a == t )
+with expansion:
+  3 == 3
+
+CompilationTests.cpp:<line number>:
+PASSED:
+  REQUIRE_THROWS( throws_int(true) )
+
+CompilationTests.cpp:<line number>:
+PASSED:
+  CHECK_THROWS_AS( throws_int(true), const int& )
+
+CompilationTests.cpp:<line number>:
+PASSED:
+  REQUIRE_NOTHROW( throws_int(false) )
+
+CompilationTests.cpp:<line number>:
+PASSED:
+  REQUIRE_THAT( "aaa", Catch::EndsWith("aaa") )
+with expansion:
+  "aaa" ends with: "aaa"
+
+CompilationTests.cpp:<line number>:
+PASSED:
+  REQUIRE( templated_tests<int>(3) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
 #835 -- errno should not be touched by Catch
 -------------------------------------------------------------------------------
 MiscTests.cpp:<line number>
@@ -61,9 +119,69 @@ with expansion:
 
 MiscTests.cpp:<line number>:
 PASSED:
-  REQUIRE( (*__error()) == 1 )
+  REQUIRE( errno == 1 )
 with expansion:
   1 == 1
+
+-------------------------------------------------------------------------------
+#961 -- Dynamically created sections should all be reported
+  Looped section 0
+-------------------------------------------------------------------------------
+MiscTests.cpp:<line number>
+...............................................................................
+
+MiscTests.cpp:<line number>:
+PASSED:
+with message:
+  Everything is OK
+
+-------------------------------------------------------------------------------
+#961 -- Dynamically created sections should all be reported
+  Looped section 1
+-------------------------------------------------------------------------------
+MiscTests.cpp:<line number>
+...............................................................................
+
+MiscTests.cpp:<line number>:
+PASSED:
+with message:
+  Everything is OK
+
+-------------------------------------------------------------------------------
+#961 -- Dynamically created sections should all be reported
+  Looped section 2
+-------------------------------------------------------------------------------
+MiscTests.cpp:<line number>
+...............................................................................
+
+MiscTests.cpp:<line number>:
+PASSED:
+with message:
+  Everything is OK
+
+-------------------------------------------------------------------------------
+#961 -- Dynamically created sections should all be reported
+  Looped section 3
+-------------------------------------------------------------------------------
+MiscTests.cpp:<line number>
+...............................................................................
+
+MiscTests.cpp:<line number>:
+PASSED:
+with message:
+  Everything is OK
+
+-------------------------------------------------------------------------------
+#961 -- Dynamically created sections should all be reported
+  Looped section 4
+-------------------------------------------------------------------------------
+MiscTests.cpp:<line number>
+...............................................................................
+
+MiscTests.cpp:<line number>:
+PASSED:
+with message:
+  Everything is OK
 
 -------------------------------------------------------------------------------
 'Not' checks that should fail
@@ -761,7 +879,7 @@ TrickyTests.cpp:<line number>:
 PASSED:
   REQUIRE( a )
 with expansion:
-  true
+  0x<hex digits>
 
 TrickyTests.cpp:<line number>:
 PASSED:
@@ -2659,14 +2777,17 @@ MessageTests.cpp:<line number>: FAILED:
   CHECK( a == 1 )
 with expansion:
   2 == 1
-with message:
+with messages:
+  this message may be logged later
   this message should be logged
 
 MessageTests.cpp:<line number>: FAILED:
   CHECK( a == 0 )
 with expansion:
   2 == 0
-with message:
+with messages:
+  this message may be logged later
+  this message should be logged
   and this, but later
 
 MessageTests.cpp:<line number>:
@@ -2674,7 +2795,10 @@ PASSED:
   CHECK( a == 2 )
 with expansion:
   2 == 2
-with message:
+with messages:
+  this message may be logged later
+  this message should be logged
+  and this, but later
   but not this
 
 -------------------------------------------------------------------------------
@@ -4507,7 +4631,7 @@ TrickyTests.cpp:<line number>:
 PASSED:
   CHECK( True )
 with expansion:
-  true
+  1
 
 TrickyTests.cpp:<line number>:
 PASSED:
@@ -4519,7 +4643,7 @@ TrickyTests.cpp:<line number>:
 PASSED:
   CHECK_FALSE( False )
 with expansion:
-  !false
+  !0
 
 -------------------------------------------------------------------------------
 Operators at different namespace levels not hijacked by Koenig lookup
@@ -6374,6 +6498,17 @@ PASSED:
   REQUIRE_THROWS_WITH( parseIntoConfig( argv, config ), Contains( "colour mode must be one of" ) )
 
 -------------------------------------------------------------------------------
+Reconstruction should be based on stringification: #914
+-------------------------------------------------------------------------------
+DecompositionTests.cpp:<line number>
+...............................................................................
+
+DecompositionTests.cpp:<line number>: FAILED:
+  CHECK( truthy(false) )
+with expansion:
+  Hey, its truthy!
+
+-------------------------------------------------------------------------------
 SCOPED_INFO is reset for each loop
 -------------------------------------------------------------------------------
 MessageTests.cpp:<line number>
@@ -6711,6 +6846,39 @@ PASSED:
 with expansion:
   Approx( 1.23 ) != 1.24
 
+Write to std::cerr
+-------------------------------------------------------------------------------
+Standard error is reported and redirected
+  std::cerr
+-------------------------------------------------------------------------------
+MessageTests.cpp:<line number>
+...............................................................................
+
+
+No assertions in section 'std::cerr'
+
+Write to std::clog
+-------------------------------------------------------------------------------
+Standard error is reported and redirected
+  std::clog
+-------------------------------------------------------------------------------
+MessageTests.cpp:<line number>
+...............................................................................
+
+
+No assertions in section 'std::clog'
+
+Interleaved writes to error streams
+-------------------------------------------------------------------------------
+Standard error is reported and redirected
+  Interleaved writes to cerr and clog
+-------------------------------------------------------------------------------
+MessageTests.cpp:<line number>
+...............................................................................
+
+
+No assertions in section 'Interleaved writes to cerr and clog'
+
 Message from section one
 -------------------------------------------------------------------------------
 Standard output from all sections is reported
@@ -6807,7 +6975,8 @@ PASSED:
 with expansion:
   "error: tag alias, "[@zzz]" already registered.
   	First seen at file:2
-  	Redefined at file:10" contains: "[@zzz]"
+  	Redefined at file:10
+  " contains: "[@zzz]"
 
 TagAliasTests.cpp:<line number>:
 PASSED:
@@ -6815,7 +6984,8 @@ PASSED:
 with expansion:
   "error: tag alias, "[@zzz]" already registered.
   	First seen at file:2
-  	Redefined at file:10" contains: "file"
+  	Redefined at file:10
+  " contains: "file"
 
 TagAliasTests.cpp:<line number>:
 PASSED:
@@ -6823,7 +6993,8 @@ PASSED:
 with expansion:
   "error: tag alias, "[@zzz]" already registered.
   	First seen at file:2
-  	Redefined at file:10" contains: "2"
+  	Redefined at file:10
+  " contains: "2"
 
 TagAliasTests.cpp:<line number>:
 PASSED:
@@ -6831,7 +7002,8 @@ PASSED:
 with expansion:
   "error: tag alias, "[@zzz]" already registered.
   	First seen at file:2
-  	Redefined at file:10" contains: "10"
+  	Redefined at file:10
+  " contains: "10"
 
 -------------------------------------------------------------------------------
 Tag alias can be registered against tag patterns
@@ -9404,6 +9576,6 @@ MiscTests.cpp:<line number>:
 PASSED:
 
 ===============================================================================
-test cases: 166 | 118 passed | 45 failed |  3 failed as expected
-assertions: 963 | 855 passed | 89 failed | 19 failed as expected
+test cases: 170 | 119 passed | 47 failed |  4 failed as expected
+assertions: 978 | 864 passed | 93 failed | 21 failed as expected
 

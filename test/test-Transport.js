@@ -6,7 +6,7 @@ const roomOptions = require('./data/options').roomOptions;
 
 function initTest(t)
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 	let peer;
 
 	t.tearDown(() => server.close());
@@ -29,7 +29,7 @@ tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', 
 	return initTest(t)
 		.then((data) =>
 		{
-			let transport = data.transport;
+			const transport = data.transport;
 
 			t.equal(transport.dtlsLocalParameters.role, 'auto', 'default local DTLS role must be "auto"');
 
@@ -49,10 +49,10 @@ tap.test('transport.setRemoteDtlsParameters() with "server" role must succeed', 
 
 					return transport.dump();
 				})
-				.then((data) =>
+				.then((data2) =>
 				{
 					t.pass('transport.dump() succeeded');
-					t.equal(data.dtlsLocalParameters.role, 'client', 'local DTLS role must be "client"');
+					t.equal(data2.dtlsLocalParameters.role, 'client', 'local DTLS role must be "client"');
 				});
 		});
 });
@@ -62,7 +62,7 @@ tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { 
 	return initTest(t)
 		.then((data) =>
 		{
-			let transport = data.transport;
+			const transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
 				{
@@ -80,10 +80,10 @@ tap.test('transport.setRemoteDtlsParameters() with "auto" role must succeed', { 
 
 					return transport.dump();
 				})
-				.then((data) =>
+				.then((data2) =>
 				{
 					t.pass('transport.dump() succeeded');
-					t.equal(data.dtlsLocalParameters.role, 'client', 'local DTLS role must be "client"');
+					t.equal(data2.dtlsLocalParameters.role, 'client', 'local DTLS role must be "client"');
 				});
 		});
 });
@@ -93,7 +93,7 @@ tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { time
 	return initTest(t)
 		.then((data) =>
 		{
-			let transport = data.transport;
+			const transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
 				{
@@ -110,10 +110,10 @@ tap.test('transport.setRemoteDtlsParameters() with no role must succeed', { time
 
 					return transport.dump();
 				})
-				.then((data) =>
+				.then((data2) =>
 				{
 					t.pass('transport.dump() succeeded');
-					t.equal(data.dtlsLocalParameters.role, 'client', 'local DTLS role must be "client"');
+					t.equal(data2.dtlsLocalParameters.role, 'client', 'local DTLS role must be "client"');
 				});
 		});
 });
@@ -123,7 +123,7 @@ tap.test('transport.setRemoteDtlsParameters() with invalid role must fail', { ti
 	return initTest(t)
 		.then((data) =>
 		{
-			let transport = data.transport;
+			const transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
 				{
@@ -148,7 +148,7 @@ tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { 
 	return initTest(t)
 		.then((data) =>
 		{
-			let transport = data.transport;
+			const transport = data.transport;
 
 			return transport.setRemoteDtlsParameters(
 				{
@@ -165,7 +165,7 @@ tap.test('transport.setRemoteDtlsParameters() without fingerprint must fail', { 
 
 tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.plan(6);
 	t.tearDown(() => server.close());
@@ -173,7 +173,7 @@ tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 	server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			let peer = room.Peer('alice');
+			const peer = room.Peer('alice');
 
 			peer.createTransport({ tcp: false })
 				.then((transport) =>
@@ -192,7 +192,7 @@ tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 								t.pass('peer.dump() succeeded');
 								t.equal(Object.keys(data.transports).length, 0, 'peer.dump() must retrieve zero transports');
 							})
-							.catch((error) => t.fail(`peer.dump() failed: ${error}`));
+							.catch((error2) => t.fail(`peer.dump() failed: ${error2}`));
 					});
 
 					setTimeout(() => transport.close(), 100);
@@ -203,7 +203,7 @@ tap.test('transport.close() must succeed', { timeout: 2000 }, (t) =>
 
 tap.test('create transport in a server with rtcAnnouncedIPv4', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server(
+	const server = mediasoup.Server(
 		{
 			rtcIPv4          : true,
 			rtcIPv6          : false,
@@ -224,8 +224,8 @@ tap.test('create transport in a server with rtcAnnouncedIPv4', { timeout: 2000 }
 		})
 		.then((transport) =>
 		{
-			let candidates = transport.iceLocalCandidates;
-			let candidate = candidates[0];
+			const candidates = transport.iceLocalCandidates;
+			const candidate = candidates[0];
 
 			t.equal(candidates.length, 1, 'transport has 1 ICE local candidate');
 			t.equal(candidate.protocol, 'udp', 'candidate.protocol must be udp');
@@ -238,8 +238,8 @@ tap.test('create transport in a server with rtcAnnouncedIPv4', { timeout: 2000 }
 		})
 		.then((transport) =>
 		{
-			let candidates = transport.iceLocalCandidates;
-			let candidate = candidates[0];
+			const candidates = transport.iceLocalCandidates;
+			const candidate = candidates[0];
 
 			t.equal(candidates.length, 1, 'transport has 1 ICE local candidate');
 			t.equal(candidate.protocol, 'tcp', 'candidate.protocol must be tcp');

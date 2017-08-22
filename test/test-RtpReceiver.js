@@ -8,7 +8,7 @@ const promiseSeries = require('./utils/promiseSeries');
 
 function initTest(t)
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 	let peer;
 
 	t.tearDown(() => server.close());
@@ -35,9 +35,9 @@ tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 2000
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('audio', transport);
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('audio', transport);
 
 			t.equal(rtpReceiver.peer, peer, 'associated peer must match');
 
@@ -56,7 +56,7 @@ tap.test('rtpReceiver.receive() with no encodings must succeed', { timeout: 2000
 				{
 					t.pass('rtpReceiver.receive() succeeded');
 
-					let rtpParameters = rtpReceiver.rtpParameters;
+					const rtpParameters = rtpReceiver.rtpParameters;
 
 					t.assert(rtpParameters.encodings, 'computed rtpParameters has encodings');
 					t.equal(rtpParameters.encodings.length, 1, 'encodings has 1 encoding');
@@ -71,19 +71,19 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('video', transport);
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('video', transport);
 
 			return rtpReceiver.receive(
 				{
 					codecs :
 					[
 						{
-							kind      : 'video',
-							name      : 'video/vp8',
+							kind        : 'video',
+							name        : 'video/vp8',
 							payloadType : 110,
-							clockRate : 90000
+							clockRate   : 90000
 						},
 						{
 							name        : 'video/H264',
@@ -112,7 +112,7 @@ tap.test('rtpReceiver.receive() with encodings without codecPayloadType must suc
 				{
 					t.pass('rtpReceiver.receive() succeeded');
 
-					let rtpParameters = rtpReceiver.rtpParameters;
+					const rtpParameters = rtpReceiver.rtpParameters;
 
 					t.equal(rtpParameters.encodings.length, 3, 'computed rtpParameters has 3 encodings');
 					t.equal(rtpParameters.encodings[0].codecPayloadType, 110, 'first encoding has codecPayloadType 110');
@@ -128,10 +128,10 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('video', transport);
-			let rtpParameters =
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('video', transport);
+			const rtpParameters =
 			{
 				muxId  : 'abcd',
 				codecs :
@@ -145,14 +145,14 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 						numChannels  : 2,
 						rtcpFeedback :
 						[
-							{ type: 'nack', parameter: null   },
-							{ type: 'nack', parameter: 'pli'  },
-							{ type: 'nack', parameter: 'sli'  },
+							{ type: 'nack', parameter: null },
+							{ type: 'nack', parameter: 'pli' },
+							{ type: 'nack', parameter: 'sli' },
 							{ type: 'nack', parameter: 'rpsi' },
-							{ type: 'nack', parameter: 'app'  },
-							{ type: 'ccm',  parameter: 'fir'  },
-							{ type: 'ack',  parameter: 'rpsi' },
-							{ type: 'ack',  parameter: 'app'  }
+							{ type: 'nack', parameter: 'app' },
+							{ type: 'ccm', parameter: 'fir' },
+							{ type: 'ack', parameter: 'rpsi' },
+							{ type: 'ack', parameter: 'app' }
 						],
 						parameters :
 						{
@@ -172,7 +172,7 @@ tap.test('rtpReceiver.receive() with full rtpParameters must succeed', { timeout
 					{
 						ssrc             : 100000,
 						codecPayloadType : 110,
-						fec :
+						fec              :
 						{
 							ssrc      : 200000,
 							mechanism : 'foo'
@@ -226,11 +226,11 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver1 = peer.RtpReceiver('audio', transport);
-			let rtpReceiver2 = peer.RtpReceiver('audio', transport);
-			let promises = [];
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver1 = peer.RtpReceiver('audio', transport);
+			const rtpReceiver2 = peer.RtpReceiver('audio', transport);
+			const promises = [];
 
 			promises.push(rtpReceiver1.receive(
 				{
@@ -285,9 +285,9 @@ tap.test('rtpReceiver.receive() without rtpParameters must fail', { timeout: 200
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('audio', transport);
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('audio', transport);
 
 			return rtpReceiver.receive()
 				.then(() => t.fail('rtpReceiver.receive() succeeded'))
@@ -303,10 +303,10 @@ tap.test('rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 },
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('audio', transport);
-			let funcs = [];
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('audio', transport);
+			const funcs = [];
 
 			funcs.push(function()
 			{
@@ -510,10 +510,10 @@ tap.test('rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('audio', transport);
-			let funcs = [];
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('audio', transport);
+			const funcs = [];
 
 			funcs.push(function()
 			{
@@ -550,11 +550,11 @@ tap.test('two rtpReceiver.receive() over the same transport sharing PT values mu
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver1 = peer.RtpReceiver('audio', transport);
-			let rtpReceiver2 = peer.RtpReceiver('audio', transport);
-			let promises = [];
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver1 = peer.RtpReceiver('audio', transport);
+			const rtpReceiver2 = peer.RtpReceiver('audio', transport);
+			const promises = [];
 
 			promises.push(rtpReceiver1.receive(
 				{
@@ -598,10 +598,10 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('audio', transport);
-			let funcs = [];
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('audio', transport);
+			const funcs = [];
 
 			funcs.push(function()
 			{
@@ -620,18 +620,18 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 					{
 						return transport.dump();
 					})
-					.then((data) =>
+					.then((data2) =>
 					{
-						let id = rtpReceiver._internal.rtpReceiverId;
+						const id = rtpReceiver._internal.rtpReceiverId;
 
-						t.same(data.rtpListener,
+						t.same(data2.rtpListener,
 							{
 								muxIdTable : {},
 								ptTable    :
 								{
 									100 : id
 								},
-								ssrcTable  : {}
+								ssrcTable : {}
 							},
 							'rtpListener tables match expected ones');
 					});
@@ -660,22 +660,22 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 					{
 						return transport.dump();
 					})
-					.then((data) =>
+					.then((data2) =>
 					{
-						let id = rtpReceiver._internal.rtpReceiverId;
+						const id = rtpReceiver._internal.rtpReceiverId;
 
-						t.same(data.rtpListener,
+						t.same(data2.rtpListener,
 							{
 								muxIdTable :
 								{
 									'qwerty1234' : id
 								},
-								ptTable    :
+								ptTable :
 								{
 									100 : id,
 									0   : id
 								},
-								ssrcTable  : {}
+								ssrcTable : {}
 							},
 							'rtpListener tables match expected ones');
 					});
@@ -713,11 +713,11 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 					{
 						return transport.dump();
 					})
-					.then((data) =>
+					.then((data2) =>
 					{
-						let id = rtpReceiver._internal.rtpReceiverId;
+						const id = rtpReceiver._internal.rtpReceiverId;
 
-						t.same(data.rtpListener,
+						t.same(data2.rtpListener,
 							{
 								muxIdTable : {},
 								ptTable    :
@@ -725,7 +725,7 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 									100 : id,
 									0   : id
 								},
-								ssrcTable  :
+								ssrcTable :
 								{
 									1111 : id
 								}
@@ -767,11 +767,11 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 					{
 						return transport.dump();
 					})
-					.then((data) =>
+					.then((data2) =>
 					{
-						let id = rtpReceiver._internal.rtpReceiverId;
+						const id = rtpReceiver._internal.rtpReceiverId;
 
-						t.same(data.rtpListener,
+						t.same(data2.rtpListener,
 							{
 								muxIdTable : {},
 								ptTable    : {},
@@ -824,11 +824,11 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 					{
 						return transport.dump();
 					})
-					.then((data) =>
+					.then((data2) =>
 					{
-						let id = rtpReceiver._internal.rtpReceiverId;
+						const id = rtpReceiver._internal.rtpReceiverId;
 
-						t.same(data.rtpListener,
+						t.same(data2.rtpListener,
 							{
 								muxIdTable : {},
 								ptTable    :
@@ -836,7 +836,7 @@ tap.test('rtpReceiver.receive() should produce the expected RTP listener routing
 									100 : id,
 									0   : id
 								},
-								ssrcTable  :
+								ssrcTable :
 								{
 									1111 : id,
 									2222 : id,
@@ -856,9 +856,9 @@ tap.test('rtpReceiver.close() must succeed', { timeout: 2000 }, (t) =>
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
-			let transport = data.transport;
-			let rtpReceiver = peer.RtpReceiver('audio', transport);
+			const peer = data.peer;
+			const transport = data.transport;
+			const rtpReceiver = peer.RtpReceiver('audio', transport);
 
 			setTimeout(() => rtpReceiver.close(), 100);
 

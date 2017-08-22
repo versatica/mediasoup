@@ -16,7 +16,7 @@
 
 /*
  *	
- * Copyright (c) 2001-2006, Cisco Systems, Inc.
+ * Copyright (c) 2001-2017, Cisco Systems, Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,8 +51,8 @@
  */
 
 
-#ifndef RTP_H
-#define RTP_H
+#ifndef SRTP_RTP_H
+#define SRTP_RTP_H
 
 #ifdef HAVE_NETINET_IN_H
 # include <netinet/in.h>
@@ -60,8 +60,7 @@
 # include <winsock2.h>
 #endif
 
-//#include "srtp_priv.h"
-#include "srtp.h"
+#include "srtp_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -167,4 +166,4 @@ rtp_receiver_dealloc(rtp_receiver_t rtp_ctx);
 }
 #endif
 
-#endif /* RTP_H */
+#endif /* SRTP_RTP_H */

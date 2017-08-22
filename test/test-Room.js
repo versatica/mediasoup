@@ -7,14 +7,14 @@ const peerOptions = require('./data/options').peerOptions;
 
 tap.test('room.Peer() with peerName must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
 	server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			let peer = room.Peer('alice', peerOptions);
+			const peer = room.Peer('alice', peerOptions);
 
 			peer.on('close', (error) =>
 			{
@@ -30,7 +30,7 @@ tap.test('room.Peer() with peerName must succeed', { timeout: 2000 }, (t) =>
 
 tap.test('room.Peer() without peerName must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -51,7 +51,7 @@ tap.test('room.Peer() without peerName must fail', { timeout: 2000 }, (t) =>
 
 tap.test('room.Peer() with same peerName must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -73,14 +73,14 @@ tap.test('room.Peer() with same peerName must fail', { timeout: 2000 }, (t) =>
 
 tap.test('room.Peer() with same peerName must succeed if previous peer was closed before', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
 	server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			let peer1 = room.Peer('alice', peerOptions);
+			const peer1 = room.Peer('alice', peerOptions);
 
 			t.equal(room.getPeer('alice'), peer1, 'room.getPeer() must retrieve the first "alice"');
 			t.equal(room.peers.length, 1, 'room.peers must retrieve one peer');
@@ -90,7 +90,7 @@ tap.test('room.Peer() with same peerName must succeed if previous peer was close
 			t.notOk(room.getPeer('alice'), 'room.getPeer() must retrieve nothing');
 			t.equal(room.peers.length, 0, 'room.peers must retrieve zero peers');
 
-			let peer2 = room.Peer('alice', peerOptions);
+			const peer2 = room.Peer('alice', peerOptions);
 
 			t.equal(room.getPeer('alice'), peer2, 'room.getPeer() must retrieve the new "alice"');
 			t.equal(room.peers.length, 1, 'room.peers must retrieve one peer');
@@ -109,16 +109,16 @@ tap.test('room.Peer() with same peerName must succeed if previous peer was close
 
 tap.test('room.peers must retrieve existing peers', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
 	server.createRoom(roomOptions)
 		.then((room) =>
 		{
-			let alice = room.Peer('alice', peerOptions);
-			let bob = room.Peer('bob', peerOptions);
-			let carol = room.Peer('carol', peerOptions);
+			const alice = room.Peer('alice', peerOptions);
+			const bob = room.Peer('bob', peerOptions);
+			const carol = room.Peer('carol', peerOptions);
 
 			bob.close();
 
@@ -131,7 +131,7 @@ tap.test('room.peers must retrieve existing peers', { timeout: 2000 }, (t) =>
 
 tap.test('room.getCapabilities() must retrieve current room capabilities', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -148,7 +148,7 @@ tap.test('room.getCapabilities() must retrieve current room capabilities', { tim
 
 tap.test('room.dump() must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 

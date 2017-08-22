@@ -6,7 +6,7 @@ const mediasoup = require('../');
 
 tap.test('mediasoup.Server() with no options must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	server.on('close', (error) =>
 	{
@@ -19,7 +19,7 @@ tap.test('mediasoup.Server() with no options must succeed', { timeout: 2000 }, (
 
 tap.test('mediasoup.Server() with valid options must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server(
+	const server = mediasoup.Server(
 		{
 			numWorkers : 1,
 			logLevel   : 'warn'
@@ -36,7 +36,7 @@ tap.test('mediasoup.Server() with valid options must succeed', { timeout: 2000 }
 
 tap.test('mediasoup.Server() with valid DTLS certificate must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server(
+	const server = mediasoup.Server(
 		{
 			numWorkers          : 1,
 			dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
@@ -54,7 +54,7 @@ tap.test('mediasoup.Server() with valid DTLS certificate must succeed', { timeou
 
 tap.test('mediasoup.Server() with wrong options must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server({ logLevel: 'WRONG_VALUE' });
+	const server = mediasoup.Server({ logLevel: 'WRONG_VALUE' });
 
 	server.on('close', (error) =>
 	{
@@ -65,7 +65,7 @@ tap.test('mediasoup.Server() with wrong options must fail', { timeout: 2000 }, (
 
 tap.test('mediasoup.Server() with non existing rtcIPv4 IP must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server({ rtcIPv4: '1.2.3.4' });
+	const server = mediasoup.Server({ rtcIPv4: '1.2.3.4' });
 
 	server.on('close', (error) =>
 	{
@@ -76,7 +76,7 @@ tap.test('mediasoup.Server() with non existing rtcIPv4 IP must fail', { timeout:
 
 tap.test('mediasoup.Server() with too narrow RTC ports range must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server({ rtcMinPort: 2000, rtcMaxPort: 2050 });
+	const server = mediasoup.Server({ rtcMinPort: 2000, rtcMaxPort: 2050 });
 
 	server.on('close', (error) =>
 	{

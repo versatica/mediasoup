@@ -6,7 +6,7 @@ const roomOptions = require('./data/options').roomOptions;
 
 tap.test('server.updateSettings() with no options must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -21,7 +21,7 @@ tap.test('server.updateSettings() with no options must succeed', { timeout: 2000
 
 tap.test('server.updateSettings() with valid options must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -36,7 +36,7 @@ tap.test('server.updateSettings() with valid options must succeed', { timeout: 2
 
 tap.test('server.updateSettings() with invalid options must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -51,7 +51,7 @@ tap.test('server.updateSettings() with invalid options must fail', { timeout: 20
 
 tap.test('server.updateSettings() in a closed server must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -72,7 +72,7 @@ tap.test('server.updateSettings() in a closed server must fail', { timeout: 2000
 
 tap.test('server.createRoom() must succeed', { _timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	t.tearDown(() => server.close());
 
@@ -95,7 +95,7 @@ tap.test('server.createRoom() must succeed', { _timeout: 2000 }, (t) =>
 
 tap.test('server.createRoom() in a closed server must fail', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 
 	server.close();
 
@@ -111,7 +111,7 @@ tap.test('server.createRoom() in a closed server must fail', { timeout: 2000 }, 
 
 tap.test('server.dump() must succeed', { timeout: 2000 }, (t) =>
 {
-	let server = mediasoup.Server({ numWorkers: 2 });
+	const server = mediasoup.Server({ numWorkers: 2 });
 
 	t.tearDown(() => server.close());
 

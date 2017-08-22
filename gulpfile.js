@@ -40,7 +40,7 @@ const numCpus = os.cpus().length;
 
 gulp.task('rtpcapabilities', () =>
 {
-	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
+	const supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
 
 	return gulp.src('worker/src/RTC/Room.cpp')
 		// Let's generate valid syntax as expected by clang-format rules.
@@ -60,7 +60,7 @@ gulp.task('lint:node', () =>
 
 gulp.task('lint:worker', () =>
 {
-	let src = workerFiles.concat(
+	const src = workerFiles.concat(
 		// Remove Ragel generated files.
 		'!worker/src/Utils/IP.cpp'
 	);
@@ -71,7 +71,7 @@ gulp.task('lint:worker', () =>
 
 gulp.task('format:worker', () =>
 {
-	let src = workerFiles.concat(
+	const src = workerFiles.concat(
 		// Remove Ragel generated files.
 		'!worker/src/Utils/IP.cpp'
 	);

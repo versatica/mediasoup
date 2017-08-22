@@ -7,7 +7,7 @@ const peerCapabilities = require('./data/options').peerCapabilities;
 
 function initTest(t)
 {
-	let server = mediasoup.Server();
+	const server = mediasoup.Server();
 	let peer;
 
 	t.tearDown(() => server.close());
@@ -30,7 +30,7 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 2000 
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
+			const peer = data.peer;
 
 			t.equal(peer.name, 'alice', 'peer.name must be "alice"');
 
@@ -40,10 +40,10 @@ tap.test('peer.createTransport() with no options must succeed', { timeout: 2000 
 					t.pass('peer.createTransport() succeeded');
 
 					return peer.dump()
-						.then((data) =>
+						.then((data2) =>
 						{
 							t.pass('peer.dump() succeeded');
-							t.equal(Object.keys(data.transports).length, 1, 'peer.dump() must retrieve one transport');
+							t.equal(Object.keys(data2.transports).length, 1, 'peer.dump() must retrieve one transport');
 							t.end();
 						})
 						.catch((error) => t.fail(`peer.dump() failed: ${error}`));
@@ -56,7 +56,7 @@ tap.test('peer.createTransport() with no udp nor tcp must fail', { timeout: 2000
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
+			const peer = data.peer;
 
 			return peer.createTransport({ udp: false, tcp: false })
 				.then(() => t.fail('peer.createTransport() succeeded'))
@@ -72,7 +72,7 @@ tap.test('peer.RtpReceiver() with valid transport must succeed', { timeout: 2000
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
+			const peer = data.peer;
 			let rtpReceiver;
 
 			return peer.createTransport({ tcp: false })
@@ -87,10 +87,10 @@ tap.test('peer.RtpReceiver() with valid transport must succeed', { timeout: 2000
 
 					return peer.dump();
 				})
-				.then((data) =>
+				.then((data2) =>
 				{
 					t.pass('peer.dump() succeeded');
-					t.equal(Object.keys(data.rtpReceivers).length, 1, 'peer.dump() must retrieve one rtpReceiver');
+					t.equal(Object.keys(data2.rtpReceivers).length, 1, 'peer.dump() must retrieve one rtpReceiver');
 					t.same(peer.rtpReceivers[0], rtpReceiver, 'peer.rtpReceivers[0] must retrieve the previous rtpReceiver');
 				});
 		});
@@ -101,7 +101,7 @@ tap.test('peer.RtpReceiver() with a closed transport must fail', { timeout: 2000
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
+			const peer = data.peer;
 
 			return peer.createTransport({ tcp: false })
 				.then((transport) =>
@@ -125,7 +125,7 @@ tap.test('peer.RtpReceiver() with invalid kind must fail', { timeout: 2000 }, (t
 	return initTest(t)
 		.then((data) =>
 		{
-			let peer = data.peer;
+			const peer = data.peer;
 
 			return peer.createTransport({ tcp: false })
 				.then((transport) =>

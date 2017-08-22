@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "1.2.8",
+  "version": "2.0.0-alpha",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "author": "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
   "contributors": [
@@ -30,15 +30,16 @@
   },
   "main": "lib/mediasoup.js",
   "dependencies": {
-    "check-types": "^7.2.0",
+    "check-types": "^7.3.0",
     "clone": "^2.1.1",
-    "debug": "^2.6.8",
+    "debug": "^3.0.0",
     "netstring": "^0.3.0",
-    "random-number": "0.0.7",
+    "random-number": "0.0.9",
     "randomatic": "^1.1.7",
     "sdp-transform": "^2.3.0"
   },
   "devDependencies": {
+    "eslint": "^4.5.0",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-clang-format": "^1.0.23",
     "gulp-eslint": "^4.0.0",
@@ -46,7 +47,7 @@
     "gulp-replace": "^0.6.1",
     "gulp-shell": "^0.6.3",
     "gulp-touch-cmd": "0.0.1",
-    "tap": "^10.7.0"
+    "tap": "^10.7.2"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
