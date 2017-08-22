@@ -95,7 +95,8 @@ gulp.task('tidy:worker:run', shell.task(
 		'cd worker && ' +
 		'./scripts/clang-tidy.py ' +
 		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
-		'-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements ' +
+		'-clang-apply-replacements-binary=' +
+		'../node_modules/.bin/clang-apply-replacements ' +
 		`-header-filter='${workerHeaderFilterRegex}' ` +
 		'-p=. ' +
 		`-j=${numCpus} ` +

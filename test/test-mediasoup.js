@@ -4,83 +4,92 @@ const path = require('path');
 const tap = require('tap');
 const mediasoup = require('../');
 
-tap.test('mediasoup.Server() with no options must succeed', { timeout: 2000 }, (t) =>
-{
-	const server = mediasoup.Server();
-
-	server.on('close', (error) =>
+tap.test(
+	'mediasoup.Server() with no options must succeed', { timeout: 2000 }, (t) =>
 	{
-		t.error(error, 'server must close cleanly');
-		t.end();
-	});
+		const server = mediasoup.Server();
 
-	setTimeout(() => server.close(), 100);
-});
-
-tap.test('mediasoup.Server() with valid options must succeed', { timeout: 2000 }, (t) =>
-{
-	const server = mediasoup.Server(
+		server.on('close', (error) =>
 		{
-			numWorkers : 1,
-			logLevel   : 'warn'
+			t.error(error, 'server must close cleanly');
+			t.end();
 		});
 
-	server.on('close', (error) =>
-	{
-		t.error(error, 'server must close cleanly');
-		t.end();
+		setTimeout(() => server.close(), 100);
 	});
 
-	setTimeout(() => server.close(), 100);
-});
+tap.test(
+	'mediasoup.Server() with valid options must succeed', { timeout: 2000 }, (t) =>
+	{
+		const server = mediasoup.Server(
+			{
+				numWorkers : 1,
+				logLevel   : 'warn'
+			});
 
-tap.test('mediasoup.Server() with valid DTLS certificate must succeed', { timeout: 2000 }, (t) =>
-{
-	const server = mediasoup.Server(
+		server.on('close', (error) =>
 		{
-			numWorkers          : 1,
-			dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
-			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem')
+			t.error(error, 'server must close cleanly');
+			t.end();
 		});
 
-	server.on('close', (error) =>
-	{
-		t.error(error, 'server must close cleanly');
-		t.end();
+		setTimeout(() => server.close(), 100);
 	});
 
-	setTimeout(() => server.close(), 100);
-});
-
-tap.test('mediasoup.Server() with wrong options must fail', { timeout: 2000 }, (t) =>
-{
-	const server = mediasoup.Server({ logLevel: 'WRONG_VALUE' });
-
-	server.on('close', (error) =>
+tap.test(
+	'mediasoup.Server() with valid DTLS certificate must succeed',
+	{ timeout: 2000 }, (t) =>
 	{
-		t.type(error, Error, 'server must close with error');
-		t.end();
+		const server = mediasoup.Server(
+			{
+				numWorkers          : 1,
+				dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
+				dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem')
+			});
+
+		server.on('close', (error) =>
+		{
+			t.error(error, 'server must close cleanly');
+			t.end();
+		});
+
+		setTimeout(() => server.close(), 100);
 	});
-});
 
-tap.test('mediasoup.Server() with non existing rtcIPv4 IP must fail', { timeout: 2000 }, (t) =>
-{
-	const server = mediasoup.Server({ rtcIPv4: '1.2.3.4' });
-
-	server.on('close', (error) =>
+tap.test(
+	'mediasoup.Server() with wrong options must fail', { timeout: 2000 }, (t) =>
 	{
-		t.type(error, Error, 'server must close with error');
-		t.end();
+		const server = mediasoup.Server({ logLevel: 'WRONG_VALUE' });
+
+		server.on('close', (error) =>
+		{
+			t.type(error, Error, 'server must close with error');
+			t.end();
+		});
 	});
-});
 
-tap.test('mediasoup.Server() with too narrow RTC ports range must fail', { timeout: 2000 }, (t) =>
-{
-	const server = mediasoup.Server({ rtcMinPort: 2000, rtcMaxPort: 2050 });
-
-	server.on('close', (error) =>
+tap.test(
+	'mediasoup.Server() with non existing rtcIPv4 IP must fail',
+	{ timeout: 2000 }, (t) =>
 	{
-		t.type(error, Error, 'server must close with error');
-		t.end();
+		const server = mediasoup.Server({ rtcIPv4: '1.2.3.4' });
+
+		server.on('close', (error) =>
+		{
+			t.type(error, Error, 'server must close with error');
+			t.end();
+		});
 	});
-});
+
+tap.test(
+	'mediasoup.Server() with too narrow RTC ports range must fail',
+	{ timeout: 2000 }, (t) =>
+	{
+		const server = mediasoup.Server({ rtcMinPort: 2000, rtcMaxPort: 2050 });
+
+		server.on('close', (error) =>
+		{
+			t.type(error, Error, 'server must close with error');
+			t.end();
+		});
+	});

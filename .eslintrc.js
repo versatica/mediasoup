@@ -63,14 +63,14 @@ module.exports =
 			beforeBlockComment: true,
 			beforeLineComment: false
 		}],
-		'max-len': [ 2, 90,
+		'max-len': [ 2, 86,
 		{
 			tabWidth: 2,
-			comments: 110,
-			ignoreUrls: true,
-			ignoreStrings: true,
-			ignoreTemplateLiterals: true,
-			ignoreRegExpLiterals: true
+			comments: 86,
+			ignoreUrls: false,
+			ignoreStrings: false,
+			ignoreTemplateLiterals: false,
+			ignoreRegExpLiterals: false
 		}],
 		'newline-after-var': 2,
 		'newline-before-return': 2,

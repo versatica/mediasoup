@@ -167,7 +167,7 @@ module.exports =
 			},
 			{
 				kind             : '',
-				uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
 				preferredId      : 3,
 				preferredEncrypt : false
 			},
