@@ -113,7 +113,7 @@ module.exports =
 		'no-mixed-spaces-and-tabs': 2,
 		'no-multi-spaces': 2,
 		'no-multi-str': 2,
-		'no-multiple-empty-lines': 2,
+		'no-multiple-empty-lines': [ 2, { max: 1, maxEOF: 0, maxBOF: 0 } ],
 		'no-native-reassign': 2,
 		'no-negated-in-lhs': 2,
 		'no-new': 2,

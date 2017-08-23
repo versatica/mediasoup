@@ -3,6 +3,7 @@
 const Logger = require('./Logger');
 const Server = require('./Server');
 const errors = require('./errors');
+const webrtc = require('./webrtc');
 const PKG = require('../package.json');
 
 const logger = new Logger();
@@ -53,7 +54,12 @@ module.exports =
 	/**
 	 * Export mediasoup custom errors.
 	 */
-	errors : errors
+	errors : errors,
+
+	/**
+	 * Export the webrtc module.
+	 */
+	webrtc : webrtc
 };
 
 // On process exit close all the Servers.

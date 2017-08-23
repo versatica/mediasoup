@@ -6,6 +6,8 @@ const utils = require('./utils');
 const errors = require('./errors');
 const Peer = require('./Peer');
 
+const KINDS = [ 'audio', 'video', 'depth' ];
+
 const logger = new Logger('Room');
 
 class Room extends EventEmitter
@@ -21,12 +23,11 @@ class Room extends EventEmitter
 		// - .roomId
 		this._internal = internal;
 
-		// Room data.
-		// - .capabilities
-		this._data = data;
-
 		// Channel instance.
 		this._channel = channel;
+
+		// RTP capabilities splitted into supported kinds.
+		this._capabilities = {};
 
 		// Map of Peer instances indexed by `peerName`.
 		this._peers = new Map();
@@ -145,6 +146,9 @@ class Room extends EventEmitter
 				}
 			}
 		});
+
+		// Set room's capabilities.
+		this._setCapabilities(data.capabilities);
 	}
 
 	get id()
@@ -155,11 +159,6 @@ class Room extends EventEmitter
 	get closed()
 	{
 		return this._closed;
-	}
-
-	get capabilities()
-	{
-		return this._data.capabilities;
 	}
 
 	/**
@@ -241,6 +240,22 @@ class Room extends EventEmitter
 	}
 
 	/**
+	 * Get room's capabilities per kind.
+	 *
+	 * @return {RtpCapabilities}
+	 */
+	getCapabilities(kind)
+	{
+		logger.debug('getCapabilities() [kind:%s]', kind);
+
+		// Ensure `kind` is 'audio' / 'video' / 'depth'.
+		if (KINDS.indexOf(kind) === -1)
+			throw new TypeError(`unsupported kind: ${kind}`);
+
+		return this._capabilities[kind];
+	}
+
+	/**
 	 * Create a Peer instance.
 	 *
 	 * @param {String} peerName - Peer identificator.
@@ -317,65 +332,59 @@ class Room extends EventEmitter
 	 *
 	 * @return {Peer}
 	 */
-	getPeerByName(peerName)
+	getPeer(peerName)
 	{
 		return this._peers.get(peerName);
 	}
 
-	receiveRequest(request)
+	_setCapabilities(capabilities)
 	{
-		if (this._closed)
-			return Promise.reject(new errors.InvalidStateError('Room closed'));
-		else if (typeof request !== 'object')
-			return Promise.reject(new TypeError('wrong request Object'));
-		else if (request.notification)
-			return Promise.reject(new TypeError('not a request'));
-		else if (typeof request.method !== 'string')
-			return Promise.reject(new TypeError('wrong/missing request method'));
-
-		const { method } = request;
-
-		logger.debug('receiveRequest() [method:%s]', method);
-
-		switch (method)
+		for (const kind of KINDS)
 		{
-			case 'queryRoom':
+			this._capabilities[kind] =
 			{
-				const response =
+				codecs           : [],
+				headerExtensions : [],
+				fecMechanisms    : []
+			};
+
+			const kindCapabilities = this._capabilities[kind];
+
+			for (const codec of capabilities.codecs)
+			{
+				if (codec.kind === kind)
 				{
-					rtpCapabilities            : this.capabilities,
-					mandatoryCodecPayloadTypes : [] // TODO
-				};
+					kindCapabilities.codecs.push(codec);
+				}
+				else if (codec.kind === '')
+				{
+					const clonedCodec = utils.clone(codec);
 
-				return Promise.resolve(response);
+					clonedCodec.kind = kind;
+					kindCapabilities.codecs.push(clonedCodec);
+				}
 			}
 
-			case 'join':
+			// Ignore if there are no media codecs of this kind.
+			if (kindCapabilities.codecs.length > 0)
 			{
-				// TODO: Use appData.
-				// eslint-disable-next-line no-unused-vars
-				const { peerName, rtpCapabilities, appData } = request;
-
-				return Promise.resolve()
-					.then(() =>
+				for (const headerExtension of capabilities.headerExtensions)
+				{
+					if (headerExtension.kind === kind)
 					{
-						const peer = this.Peer(peerName);
-
-						return peer.setCapabilities(rtpCapabilities);
-					})
-					.then(() =>
+						kindCapabilities.headerExtensions.push(headerExtension);
+					}
+					else if (headerExtension.kind === '')
 					{
-						const response =
-						{
-							peers : [] // TODO
-						};
+						const clonedHeaderExtension = utils.clone(headerExtension);
 
-						return response;
-					});
+						clonedHeaderExtension.kind = kind;
+						kindCapabilities.headerExtensions.push(clonedHeaderExtension);
+					}
+				}
+
+				kindCapabilities.fecMechanisms = capabilities.fecMechanisms;
 			}
-
-			default:
-				return Promise.reject(new Error(`unknown request method "${method}"`));
 		}
 	}
 }
