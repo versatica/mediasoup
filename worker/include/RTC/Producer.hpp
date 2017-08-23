@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTP_RECEIVER_HPP
-#define MS_RTC_RTP_RECEIVER_HPP
+#ifndef MS_RTC_PRODUCER_HPP
+#define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
@@ -20,7 +20,7 @@ namespace RTC
 	// the corresponding header files.
 	class Transport;
 
-	class RtpReceiver : public RtpStreamRecv::Listener
+	class Producer : public RtpStreamRecv::Listener
 	{
 	public:
 		/**
@@ -29,18 +29,17 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpReceiverParameters(RTC::RtpReceiver* rtpReceiver)             = 0;
-			virtual void OnRtpReceiverParametersDone(RTC::RtpReceiver* rtpReceiver)         = 0;
-			virtual void OnRtpPacket(RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet) = 0;
-			virtual void OnRtpReceiverClosed(const RTC::RtpReceiver* rtpReceiver)           = 0;
+			virtual void OnProducerParameters(RTC::Producer* producer)                = 0;
+			virtual void OnProducerParametersDone(RTC::Producer* producer)            = 0;
+			virtual void OnRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			virtual void OnProducerClosed(const RTC::Producer* producer)              = 0;
 		};
 
 	public:
-		RtpReceiver(
-		    Listener* listener, Channel::Notifier* notifier, uint32_t rtpReceiverId, RTC::Media::Kind kind);
+		Producer(Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind);
 
 	private:
-		virtual ~RtpReceiver();
+		virtual ~Producer();
 
 	public:
 		void Destroy();
@@ -68,7 +67,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t rtpReceiverId{ 0 };
+		uint32_t producerId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:
@@ -90,28 +89,28 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline void RtpReceiver::SetTransport(RTC::Transport* transport)
+	inline void Producer::SetTransport(RTC::Transport* transport)
 	{
 		this->transport = transport;
 	}
 
-	inline RTC::Transport* RtpReceiver::GetTransport() const
+	inline RTC::Transport* Producer::GetTransport() const
 	{
 		return this->transport;
 	}
 
-	inline void RtpReceiver::RemoveTransport(RTC::Transport* transport)
+	inline void Producer::RemoveTransport(RTC::Transport* transport)
 	{
 		if (this->transport == transport)
 			this->transport = nullptr;
 	}
 
-	inline RTC::RtpParameters* RtpReceiver::GetParameters() const
+	inline RTC::RtpParameters* Producer::GetParameters() const
 	{
 		return this->rtpParameters;
 	}
 
-	inline void RtpReceiver::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
+	inline void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		auto it = this->rtpStreams.find(report->GetSsrc());
 		if (it != this->rtpStreams.end())

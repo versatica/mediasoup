@@ -25,20 +25,20 @@ namespace RTC
 		// Add `ssrcTable`.
 		for (auto& kv : this->ssrcTable)
 		{
-			auto ssrc        = kv.first;
-			auto rtpReceiver = kv.second;
+			auto ssrc     = kv.first;
+			auto producer = kv.second;
 
-			jsonSsrcTable[std::to_string(ssrc)] = std::to_string(rtpReceiver->rtpReceiverId);
+			jsonSsrcTable[std::to_string(ssrc)] = std::to_string(producer->producerId);
 		}
 		json[JsonStringSsrcTable] = jsonSsrcTable;
 
 		// Add `muxIdTable`.
 		for (auto& kv : this->muxIdTable)
 		{
-			auto muxId       = kv.first;
-			auto rtpReceiver = kv.second;
+			auto muxId    = kv.first;
+			auto producer = kv.second;
 
-			jsonMuxIdTable[muxId] = std::to_string(rtpReceiver->rtpReceiverId);
+			jsonMuxIdTable[muxId] = std::to_string(producer->producerId);
 		}
 		json[JsonStringMuxIdTable] = jsonMuxIdTable;
 
@@ -46,20 +46,20 @@ namespace RTC
 		for (auto& kv : this->ptTable)
 		{
 			auto payloadType = kv.first;
-			auto rtpReceiver = kv.second;
+			auto producer    = kv.second;
 
-			jsonPtTable[std::to_string(payloadType)] = std::to_string(rtpReceiver->rtpReceiverId);
+			jsonPtTable[std::to_string(payloadType)] = std::to_string(producer->producerId);
 		}
 		json[JsonStringPtTable] = jsonPtTable;
 
 		return json;
 	}
 
-	void RtpListener::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver)
+	void RtpListener::AddProducer(RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		auto rtpParameters = rtpReceiver->GetParameters();
+		auto rtpParameters = producer->GetParameters();
 
 		MS_ASSERT(rtpParameters, "no RtpParameters");
 
@@ -71,19 +71,19 @@ namespace RTC
 
 		for (auto& kv : this->ssrcTable)
 		{
-			auto ssrc                 = kv.first;
-			auto& existingRtpReceiver = kv.second;
+			auto ssrc              = kv.first;
+			auto& existingProducer = kv.second;
 
-			if (existingRtpReceiver == rtpReceiver)
+			if (existingProducer == producer)
 				previousSsrcs.push_back(ssrc);
 		}
 
 		for (auto& kv : this->muxIdTable)
 		{
-			auto& muxId               = kv.first;
-			auto& existingRtpReceiver = kv.second;
+			auto& muxId            = kv.first;
+			auto& existingProducer = kv.second;
 
-			if (existingRtpReceiver == rtpReceiver)
+			if (existingProducer == producer)
 			{
 				previousMuxId = muxId;
 				break;
@@ -92,16 +92,16 @@ namespace RTC
 
 		for (auto& kv : this->ptTable)
 		{
-			auto payloadType          = kv.first;
-			auto& existingRtpReceiver = kv.second;
+			auto payloadType       = kv.first;
+			auto& existingProducer = kv.second;
 
-			if (existingRtpReceiver == rtpReceiver)
+			if (existingProducer == producer)
 				previousPayloadTypes.push_back(payloadType);
 		}
 
 		// First remove from the listener tables all the entries pointing to
-		// the given RtpReceiver.
-		RemoveRtpReceiver(rtpReceiver);
+		// the given Producer.
+		RemoveProducer(producer);
 
 		// Add entries into the ssrcTable.
 		{
@@ -115,14 +115,14 @@ namespace RTC
 
 				if (ssrc != 0u)
 				{
-					if (!this->HasSsrc(ssrc, rtpReceiver))
+					if (!this->HasSsrc(ssrc, producer))
 					{
-						this->ssrcTable[ssrc] = rtpReceiver;
+						this->ssrcTable[ssrc] = producer;
 					}
 					else
 					{
-						RemoveRtpReceiver(rtpReceiver);
-						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+						RemoveProducer(producer);
+						RollbackProducer(producer, previousSsrcs, previousMuxId, previousPayloadTypes);
 
 						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 					}
@@ -134,14 +134,14 @@ namespace RTC
 
 				if (ssrc != 0u)
 				{
-					if (!this->HasSsrc(ssrc, rtpReceiver))
+					if (!this->HasSsrc(ssrc, producer))
 					{
-						this->ssrcTable[ssrc] = rtpReceiver;
+						this->ssrcTable[ssrc] = producer;
 					}
 					else
 					{
-						RemoveRtpReceiver(rtpReceiver);
-						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+						RemoveProducer(producer);
+						RollbackProducer(producer, previousSsrcs, previousMuxId, previousPayloadTypes);
 
 						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 					}
@@ -153,14 +153,14 @@ namespace RTC
 
 				if (ssrc != 0u)
 				{
-					if (!this->HasSsrc(ssrc, rtpReceiver))
+					if (!this->HasSsrc(ssrc, producer))
 					{
-						this->ssrcTable[ssrc] = rtpReceiver;
+						this->ssrcTable[ssrc] = producer;
 					}
 					else
 					{
-						RemoveRtpReceiver(rtpReceiver);
-						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+						RemoveProducer(producer);
+						RollbackProducer(producer, previousSsrcs, previousMuxId, previousPayloadTypes);
 
 						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 					}
@@ -174,14 +174,14 @@ namespace RTC
 			{
 				auto& muxId = rtpParameters->muxId;
 
-				if (!this->HasMuxId(muxId, rtpReceiver))
+				if (!this->HasMuxId(muxId, producer))
 				{
-					this->muxIdTable[muxId] = rtpReceiver;
+					this->muxIdTable[muxId] = producer;
 				}
 				else
 				{
-					RemoveRtpReceiver(rtpReceiver);
-					RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+					RemoveProducer(producer);
+					RollbackProducer(producer, previousSsrcs, previousMuxId, previousPayloadTypes);
 
 					MS_THROW_ERROR("muxId already exists in RTP listener [muxId:'%s']", muxId.c_str());
 				}
@@ -212,14 +212,14 @@ namespace RTC
 				{
 					uint8_t payloadType = codec.payloadType;
 
-					if (!this->HasPayloadType(payloadType, rtpReceiver))
+					if (!this->HasPayloadType(payloadType, producer))
 					{
-						this->ptTable[payloadType] = rtpReceiver;
+						this->ptTable[payloadType] = producer;
 					}
 					else
 					{
-						RemoveRtpReceiver(rtpReceiver);
-						RollbackRtpReceiver(rtpReceiver, previousSsrcs, previousMuxId, previousPayloadTypes);
+						RemoveProducer(producer);
+						RollbackProducer(producer, previousSsrcs, previousMuxId, previousPayloadTypes);
 
 						MS_THROW_ERROR(
 						    "payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
@@ -229,16 +229,16 @@ namespace RTC
 		}
 	}
 
-	void RtpListener::RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver)
+	void RtpListener::RemoveProducer(const RTC::Producer* producer)
 	{
 		MS_TRACE();
 
 		// Remove from the listener tables all the entries pointing to the given
-		// RtpReceiver.
+		// Producer.
 
 		for (auto it = this->ssrcTable.begin(); it != this->ssrcTable.end();)
 		{
-			if (it->second == rtpReceiver)
+			if (it->second == producer)
 				it = this->ssrcTable.erase(it);
 			else
 				++it;
@@ -246,7 +246,7 @@ namespace RTC
 
 		for (auto it = this->muxIdTable.begin(); it != this->muxIdTable.end();)
 		{
-			if (it->second == rtpReceiver)
+			if (it->second == producer)
 				it = this->muxIdTable.erase(it);
 			else
 				++it;
@@ -254,14 +254,14 @@ namespace RTC
 
 		for (auto it = this->ptTable.begin(); it != this->ptTable.end();)
 		{
-			if (it->second == rtpReceiver)
+			if (it->second == producer)
 				it = this->ptTable.erase(it);
 			else
 				++it;
 		}
 	}
 
-	RTC::RtpReceiver* RtpListener::GetRtpReceiver(RTC::RtpPacket* packet)
+	RTC::Producer* RtpListener::GetProducer(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -271,15 +271,15 @@ namespace RTC
 
 			if (it != this->ssrcTable.end())
 			{
-				auto rtpReceiver   = it->second;
-				auto rtpParameters = rtpReceiver->GetParameters();
+				auto producer      = it->second;
+				auto rtpParameters = producer->GetParameters();
 
 				// Ensure the RTP PT is present in RtpParameters.
 				for (auto& codec : rtpParameters->codecs)
 				{
 					// Check payloads.
 					if (codec.payloadType == packet->GetPayloadType())
-						return rtpReceiver;
+						return producer;
 				}
 
 				// RTP PT not present.
@@ -301,12 +301,12 @@ namespace RTC
 
 			if (it != this->ptTable.end())
 			{
-				auto rtpReceiver = it->second;
+				auto producer = it->second;
 
 				// Update SSRC table.
-				this->ssrcTable[packet->GetSsrc()] = rtpReceiver;
+				this->ssrcTable[packet->GetSsrc()] = producer;
 
-				return rtpReceiver;
+				return producer;
 			}
 		}
 
@@ -314,7 +314,7 @@ namespace RTC
 		return nullptr;
 	}
 
-	RTC::RtpReceiver* RtpListener::GetRtpReceiver(uint32_t ssrc)
+	RTC::Producer* RtpListener::GetProducer(uint32_t ssrc)
 	{
 		MS_TRACE();
 
@@ -329,8 +329,8 @@ namespace RTC
 		return nullptr;
 	}
 
-	void RtpListener::RollbackRtpReceiver(
-	    RTC::RtpReceiver* rtpReceiver,
+	void RtpListener::RollbackProducer(
+	    RTC::Producer* producer,
 	    std::vector<uint32_t>& previousSsrcs,
 	    std::string& previousMuxId,
 	    std::vector<uint8_t>& previousPayloadTypes)
@@ -339,15 +339,15 @@ namespace RTC
 
 		for (auto ssrc : previousSsrcs)
 		{
-			this->ssrcTable[ssrc] = rtpReceiver;
+			this->ssrcTable[ssrc] = producer;
 		}
 
 		if (!previousMuxId.empty())
-			this->muxIdTable[previousMuxId] = rtpReceiver;
+			this->muxIdTable[previousMuxId] = producer;
 
 		for (auto payloadType : previousPayloadTypes)
 		{
-			this->ptTable[payloadType] = rtpReceiver;
+			this->ptTable[payloadType] = producer;
 		}
 	}
 } // namespace RTC

@@ -7,12 +7,12 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpReceiver.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunMessage.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -52,12 +52,12 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
-		void RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver);
+		void AddProducer(RTC::Producer* producer);
+		void RemoveProducer(const RTC::Producer* producer);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
-		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
+		RTC::Producer* GetProducer(uint32_t ssrc);
 		bool IsConnected() const;
 		void EnableRemb();
 		bool HasRemb();
@@ -157,19 +157,19 @@ namespace RTC
 
 	/* Inline instance methods. */
 
-	inline void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver)
+	inline void Transport::AddProducer(RTC::Producer* producer)
 	{
-		this->rtpListener.AddRtpReceiver(rtpReceiver);
+		this->rtpListener.AddProducer(producer);
 	}
 
-	inline void Transport::RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver)
+	inline void Transport::RemoveProducer(const RTC::Producer* producer)
 	{
-		this->rtpListener.RemoveRtpReceiver(rtpReceiver);
+		this->rtpListener.RemoveProducer(producer);
 	}
 
-	inline RTC::RtpReceiver* Transport::GetRtpReceiver(uint32_t ssrc)
+	inline RTC::Producer* Transport::GetProducer(uint32_t ssrc)
 	{
-		return this->rtpListener.GetRtpReceiver(ssrc);
+		return this->rtpListener.GetProducer(ssrc);
 	}
 
 	inline bool Transport::IsConnected() const

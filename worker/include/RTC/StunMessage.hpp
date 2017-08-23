@@ -123,9 +123,8 @@ namespace RTC
 		    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
 		    (data[0] < 3) &&
 		    // Magic cookie must match.
-		    (data[4] == StunMessage::magicCookie[0]) &&
-		    (data[5] == StunMessage::magicCookie[1]) && (data[6] == StunMessage::magicCookie[2]) &&
-		    (data[7] == StunMessage::magicCookie[3]));
+		    (data[4] == StunMessage::magicCookie[0]) && (data[5] == StunMessage::magicCookie[1]) &&
+		    (data[6] == StunMessage::magicCookie[2]) && (data[7] == StunMessage::magicCookie[3]));
 	}
 
 	/* Inline instance methods. */

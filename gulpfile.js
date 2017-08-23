@@ -28,7 +28,7 @@ const nodeTests =
 	'test/test-Room.js',
 	'test/test-Peer.js',
 	'test/test-Transport.js',
-	'test/test-RtpReceiver.js',
+	'test/test-Producer.js',
 	'test/test-utils.js'
 ];
 const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';

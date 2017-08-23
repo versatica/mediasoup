@@ -72,25 +72,25 @@ tap.test(
 	});
 
 tap.test(
-	'peer.RtpReceiver() with valid transport must succeed', { timeout: 2000 }, (t) =>
+	'peer.Producer() with valid transport must succeed', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
 			{
 				const peer = data.peer;
-				let rtpReceiver;
+				let producer;
 
 				return peer.createTransport({ tcp: false })
 					.then((transport) =>
 					{
 						t.pass('peer.createTransport() succeeded');
 
-						rtpReceiver = peer.RtpReceiver('audio', transport);
-						t.pass('peer.RtpReceiver() succeeded');
+						producer = peer.Producer('audio', transport);
+						t.pass('peer.Producer() succeeded');
 
 						t.equal(
-							rtpReceiver.transport, transport,
-							'rtpReceiver.transport must retrieve the given transport');
+							producer.transport, transport,
+							'producer.transport must retrieve the given transport');
 
 						return peer.dump();
 					})
@@ -98,17 +98,17 @@ tap.test(
 					{
 						t.pass('peer.dump() succeeded');
 						t.equal(
-							Object.keys(data2.rtpReceivers).length, 1,
-							'peer.dump() must retrieve one rtpReceiver');
+							Object.keys(data2.producers).length, 1,
+							'peer.dump() must retrieve one producer');
 						t.same(
-							peer.rtpReceivers[0], rtpReceiver,
-							'peer.rtpReceivers[0] must retrieve the previous rtpReceiver');
+							peer.producers[0], producer,
+							'peer.producers[0] must retrieve the previous producer');
 					});
 			});
 	});
 
 tap.test(
-	'peer.RtpReceiver() with a closed transport must fail', { timeout: 2000 }, (t) =>
+	'peer.Producer() with a closed transport must fail', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
@@ -124,16 +124,16 @@ tap.test(
 
 						t.throws(() =>
 						{
-							peer.RtpReceiver('audio', transport);
+							peer.Producer('audio', transport);
 						},
 						mediasoup.errors.InvalidStateError,
-						'peer.RtpReceiver() must throw InvalidStateError');
+						'peer.Producer() must throw InvalidStateError');
 					});
 			});
 	});
 
 tap.test(
-	'peer.RtpReceiver() with invalid kind must fail', { timeout: 2000 }, (t) =>
+	'peer.Producer() with invalid kind must fail', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
@@ -147,10 +147,10 @@ tap.test(
 
 						t.throws(() =>
 						{
-							peer.RtpReceiver('chicken', transport);
+							peer.Producer('chicken', transport);
 						},
 						TypeError,
-						'peer.RtpReceiver() must throw TypeError');
+						'peer.Producer() must throw TypeError');
 					});
 			});
 	});

@@ -161,14 +161,14 @@ namespace RTC
 		static const Json::StaticString JsonStringRoomId{ "roomId" };
 		static const Json::StaticString JsonStringCapabilities{ "capabilities" };
 		static const Json::StaticString JsonStringPeers{ "peers" };
-		static const Json::StaticString JsonStringMapRtpReceiverRtpSenders{ "mapRtpReceiverRtpSenders" };
-		static const Json::StaticString JsonStringMapRtpSenderRtpReceiver{ "mapRtpSenderRtpReceiver" };
+		static const Json::StaticString JsonStringMapProducerConsumers{ "mapProducerConsumers" };
+		static const Json::StaticString JsonStringMapConsumerProducer{ "mapConsumerProducer" };
 		static const Json::StaticString JsonStringAudioLevelsEventEnabled{ "audioLevelsEventEnabled" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonPeers(Json::arrayValue);
-		Json::Value jsonMapRtpReceiverRtpSenders(Json::objectValue);
-		Json::Value jsonMapRtpSenderRtpReceiver(Json::objectValue);
+		Json::Value jsonMapProducerConsumers(Json::objectValue);
+		Json::Value jsonMapConsumerProducer(Json::objectValue);
 
 		// Add `roomId`.
 		json[JsonStringRoomId] = Json::UInt{ this->roomId };
@@ -185,32 +185,32 @@ namespace RTC
 		}
 		json[JsonStringPeers] = jsonPeers;
 
-		// Add `mapRtpReceiverRtpSenders`.
-		for (auto& kv : this->mapRtpReceiverRtpSenders)
+		// Add `mapProducerConsumers`.
+		for (auto& kv : this->mapProducerConsumers)
 		{
-			auto rtpReceiver = kv.first;
-			auto& rtpSenders = kv.second;
-			Json::Value jsonRtpReceivers(Json::arrayValue);
+			auto producer   = kv.first;
+			auto& consumers = kv.second;
+			Json::Value jsonProducers(Json::arrayValue);
 
-			for (auto& rtpSender : rtpSenders)
+			for (auto& consumer : consumers)
 			{
-				jsonRtpReceivers.append(std::to_string(rtpSender->rtpSenderId));
+				jsonProducers.append(std::to_string(consumer->consumerId));
 			}
 
-			jsonMapRtpReceiverRtpSenders[std::to_string(rtpReceiver->rtpReceiverId)] = jsonRtpReceivers;
+			jsonMapProducerConsumers[std::to_string(producer->producerId)] = jsonProducers;
 		}
-		json[JsonStringMapRtpReceiverRtpSenders] = jsonMapRtpReceiverRtpSenders;
+		json[JsonStringMapProducerConsumers] = jsonMapProducerConsumers;
 
-		// Add `mapRtpSenderRtpReceiver`.
-		for (auto& kv : this->mapRtpSenderRtpReceiver)
+		// Add `mapConsumerProducer`.
+		for (auto& kv : this->mapConsumerProducer)
 		{
-			auto rtpSender   = kv.first;
-			auto rtpReceiver = kv.second;
+			auto consumer = kv.first;
+			auto producer = kv.second;
 
-			jsonMapRtpSenderRtpReceiver[std::to_string(rtpSender->rtpSenderId)] =
-			    std::to_string(rtpReceiver->rtpReceiverId);
+			jsonMapConsumerProducer[std::to_string(consumer->consumerId)] =
+			    std::to_string(producer->producerId);
 		}
-		json[JsonStringMapRtpSenderRtpReceiver] = jsonMapRtpSenderRtpReceiver;
+		json[JsonStringMapConsumerProducer] = jsonMapConsumerProducer;
 
 		json[JsonStringAudioLevelsEventEnabled] = this->audioLevelsEventEnabled;
 
@@ -320,7 +320,7 @@ namespace RTC
 					return;
 
 				// Clear map of audio levels.
-				this->mapRtpReceiverAudioLevels.clear();
+				this->mapProducerAudioLevels.clear();
 
 				// Start or stop audio levels periodic timer.
 				if (audioLevelsEventEnabled)
@@ -339,21 +339,21 @@ namespace RTC
 			case Channel::Request::MethodId::PEER_DUMP:
 			case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
 			case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
-			case Channel::Request::MethodId::PEER_CREATE_RTP_RECEIVER:
+			case Channel::Request::MethodId::PEER_CREATE_PRODUCER:
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
 			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
 			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
 			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
-			case Channel::Request::MethodId::RTP_RECEIVER_CLOSE:
-			case Channel::Request::MethodId::RTP_RECEIVER_DUMP:
-			case Channel::Request::MethodId::RTP_RECEIVER_RECEIVE:
-			case Channel::Request::MethodId::RTP_RECEIVER_SET_TRANSPORT:
-			case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT:
-			case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT:
-			case Channel::Request::MethodId::RTP_SENDER_DUMP:
-			case Channel::Request::MethodId::RTP_SENDER_SET_TRANSPORT:
-			case Channel::Request::MethodId::RTP_SENDER_DISABLE:
+			case Channel::Request::MethodId::PRODUCER_CLOSE:
+			case Channel::Request::MethodId::PRODUCER_DUMP:
+			case Channel::Request::MethodId::PRODUCER_RECEIVE:
+			case Channel::Request::MethodId::PRODUCER_SET_TRANSPORT:
+			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
+			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
+			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_SET_TRANSPORT:
+			case Channel::Request::MethodId::CONSUMER_DISABLE:
 			{
 				RTC::Peer* peer;
 
@@ -530,25 +530,25 @@ namespace RTC
 		this->capabilities.fecMechanisms = Room::supportedRtpCapabilities.fecMechanisms;
 	}
 
-	inline void Room::AddRtpSenderForRtpReceiver(RTC::Peer* senderPeer, const RTC::RtpReceiver* rtpReceiver)
+	inline void Room::AddConsumerForProducer(RTC::Peer* senderPeer, const RTC::Producer* producer)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(senderPeer->HasCapabilities(), "sender peer has no capabilities");
-		MS_ASSERT(rtpReceiver->GetParameters(), "rtpReceiver has no parameters");
+		MS_ASSERT(producer->GetParameters(), "producer has no parameters");
 
-		uint32_t rtpSenderId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-		auto rtpSender = new RTC::RtpSender(senderPeer, this->notifier, rtpSenderId, rtpReceiver->kind);
+		uint32_t consumerId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+		auto consumer = new RTC::Consumer(senderPeer, this->notifier, consumerId, producer->kind);
 
 		// Store into the maps.
-		this->mapRtpReceiverRtpSenders[rtpReceiver].insert(rtpSender);
-		this->mapRtpSenderRtpReceiver[rtpSender] = rtpReceiver;
+		this->mapProducerConsumers[producer].insert(consumer);
+		this->mapConsumerProducer[consumer] = producer;
 
-		auto rtpParameters           = rtpReceiver->GetParameters();
-		auto associatedRtpReceiverId = rtpReceiver->rtpReceiverId;
+		auto rtpParameters           = producer->GetParameters();
+		auto associatedProducerId = producer->producerId;
 
-		// Attach the RtpSender to the peer.
-		senderPeer->AddRtpSender(rtpSender, rtpParameters, associatedRtpReceiverId);
+		// Attach the Consumer to the peer.
+		senderPeer->AddConsumer(consumer, rtpParameters, associatedProducerId);
 	}
 
 	void Room::OnPeerClosed(const RTC::Peer* peer)
@@ -623,35 +623,35 @@ namespace RTC
 		// Remove unsupported FEC mechanisms.
 		capabilities->ReduceFecMechanisms(this->capabilities.fecMechanisms);
 
-		// Get all the ready RtpReceivers of the others Peers in the Room and
-		// create RtpSenders for this new Peer.
+		// Get all the ready Producers of the others Peers in the Room and
+		// create Consumers for this new Peer.
 		for (auto& kv : this->peers)
 		{
 			auto* receiverPeer = kv.second;
 
-			for (auto rtpReceiver : receiverPeer->GetRtpReceivers())
+			for (auto producer : receiverPeer->GetProducers())
 			{
-				// Skip if the RtpReceiver has not parameters.
-				if (rtpReceiver->GetParameters() == nullptr)
+				// Skip if the Producer has not parameters.
+				if (producer->GetParameters() == nullptr)
 					continue;
 
-				AddRtpSenderForRtpReceiver(peer, rtpReceiver);
+				AddConsumerForProducer(peer, producer);
 			}
 		}
 	}
 
-	void Room::OnPeerRtpReceiverParameters(const RTC::Peer* peer, RTC::RtpReceiver* rtpReceiver)
+	void Room::OnPeerProducerParameters(const RTC::Peer* peer, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(rtpReceiver->GetParameters(), "rtpReceiver->GetParameters() returns no RtpParameters");
+		MS_ASSERT(producer->GetParameters(), "producer->GetParameters() returns no RtpParameters");
 
-		// If this is a new RtpReceiver, iterate all the peers but this one and
-		// create a RtpSender associated to this RtpReceiver for each Peer.
-		if (this->mapRtpReceiverRtpSenders.find(rtpReceiver) == this->mapRtpReceiverRtpSenders.end())
+		// If this is a new Producer, iterate all the peers but this one and
+		// create a Consumer associated to this Producer for each Peer.
+		if (this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end())
 		{
 			// Ensure the entry will exist even with an empty array.
-			this->mapRtpReceiverRtpSenders[rtpReceiver];
+			this->mapProducerConsumers[producer];
 
 			for (auto& kv : this->peers)
 			{
@@ -665,78 +665,78 @@ namespace RTC
 				if (!senderPeer->HasCapabilities())
 					continue;
 
-				AddRtpSenderForRtpReceiver(senderPeer, rtpReceiver);
+				AddConsumerForProducer(senderPeer, producer);
 			}
 		}
-		// If this is not a new RtpReceiver let's retrieve its updated parameters
-		// and update with them all the associated RtpSenders.
+		// If this is not a new Producer let's retrieve its updated parameters
+		// and update with them all the associated Consumers.
 		else
 		{
-			for (auto rtpSender : this->mapRtpReceiverRtpSenders[rtpReceiver])
+			for (auto consumer : this->mapProducerConsumers[producer])
 			{
-				// Provide the RtpSender with the parameters of the RtpReceiver.
-				rtpSender->Send(rtpReceiver->GetParameters());
+				// Provide the Consumer with the parameters of the Producer.
+				consumer->Send(producer->GetParameters());
 			}
 		}
 	}
 
-	void Room::OnPeerRtpReceiverClosed(const RTC::Peer* /*peer*/, const RTC::RtpReceiver* rtpReceiver)
+	void Room::OnPeerProducerClosed(const RTC::Peer* /*peer*/, const RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		// If the RtpReceiver is in the map, iterate the map and close all the
-		// RtpSenders associated to the closed RtpReceiver.
-		if (this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end())
+		// If the Producer is in the map, iterate the map and close all the
+		// Consumers associated to the closed Producer.
+		if (this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end())
 		{
-			// Make a copy of the set of RtpSenders given that Destroy() will be called
-			// in all of them, producing onPeerRtpSenderClosed() that will remove it
+			// Make a copy of the set of Consumers given that Destroy() will be called
+			// in all of them, producing onPeerConsumerClosed() that will remove it
 			// from the map.
-			auto rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+			auto consumers = this->mapProducerConsumers[producer];
 
 			// Safely iterate the copy of the set.
-			for (auto& rtpSender : rtpSenders)
+			for (auto& consumer : consumers)
 			{
-				rtpSender->Destroy();
+				consumer->Destroy();
 			}
 
-			// Finally delete the RtpReceiver entry in the map.
-			this->mapRtpReceiverRtpSenders.erase(rtpReceiver);
+			// Finally delete the Producer entry in the map.
+			this->mapProducerConsumers.erase(producer);
 		}
 	}
 
-	void Room::OnPeerRtpSenderClosed(const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender)
+	void Room::OnPeerConsumerClosed(const RTC::Peer* /*peer*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
-		// Iterate all the receiver/senders map and remove the closed RtpSender from all the
-		// RtpReceiver entries.
-		for (auto& kv : this->mapRtpReceiverRtpSenders)
+		// Iterate all the receiver/senders map and remove the closed Consumer from all the
+		// Producer entries.
+		for (auto& kv : this->mapProducerConsumers)
 		{
-			auto& rtpSenders = kv.second;
+			auto& consumers = kv.second;
 
-			rtpSenders.erase(rtpSender);
+			consumers.erase(consumer);
 		}
 
 		// Also remove the entry from the sender/receiver map.
-		this->mapRtpSenderRtpReceiver.erase(rtpSender);
+		this->mapConsumerProducer.erase(consumer);
 	}
 
 	void Room::OnPeerRtpPacket(
-	    const RTC::Peer* /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RtpPacket* packet)
+	    const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(),
-		    "RtpReceiver not present in the map");
+		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		    "Producer not present in the map");
 
-		auto& rtpSenders = this->mapRtpReceiverRtpSenders[rtpReceiver];
+		auto& consumers = this->mapProducerConsumers[producer];
 
-		// Send the RtpPacket to all the RtpSenders associated to the RtpReceiver
+		// Send the RtpPacket to all the Consumers associated to the Producer
 		// from which it was received.
-		for (auto& rtpSender : rtpSenders)
+		for (auto& consumer : consumers)
 		{
-			rtpSender->SendRtpPacket(packet);
+			consumer->SendRtpPacket(packet);
 		}
 
 		// Update audio levels.
@@ -749,75 +749,75 @@ namespace RTC
 			{
 				int8_t dBov = volume * -1;
 
-				this->mapRtpReceiverAudioLevels[rtpReceiver].push_back(dBov);
+				this->mapProducerAudioLevels[producer].push_back(dBov);
 			}
 		}
 	}
 
 	void Room::OnPeerRtcpReceiverReport(
-	    const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::ReceiverReport* report)
+	    const RTC::Peer* /*peer*/, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
-		    "RtpSender not present in the map");
+		    this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
+		    "Consumer not present in the map");
 
-		rtpSender->ReceiveRtcpReceiverReport(report);
+		consumer->ReceiveRtcpReceiverReport(report);
 	}
 
 	void Room::OnPeerRtcpFeedback(
-	    const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackPsPacket* packet)
+	    const RTC::Peer* /*peer*/, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
-		    "RtpSender not present in the map");
+		    this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
+		    "Consumer not present in the map");
 
-		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+		auto& producer = this->mapConsumerProducer[consumer];
 
-		rtpReceiver->ReceiveRtcpFeedback(packet);
+		producer->ReceiveRtcpFeedback(packet);
 	}
 
 	void Room::OnPeerRtcpFeedback(
-	    const RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender, RTC::RTCP::FeedbackRtpPacket* packet)
+	    const RTC::Peer* /*peer*/, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
-		    "RtpSender not present in the map");
+		    this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
+		    "Consumer not present in the map");
 
-		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+		auto& producer = this->mapConsumerProducer[consumer];
 
-		rtpReceiver->ReceiveRtcpFeedback(packet);
+		producer->ReceiveRtcpFeedback(packet);
 	}
 
 	void Room::OnPeerRtcpSenderReport(
-	    const RTC::Peer* /*peer*/, RTC::RtpReceiver* rtpReceiver, RTC::RTCP::SenderReport* report)
+	    const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
 
-		// RtpReceiver needs the sender report in order to generate it's receiver report.
-		rtpReceiver->ReceiveRtcpSenderReport(report);
+		// Producer needs the sender report in order to generate it's receiver report.
+		producer->ReceiveRtcpSenderReport(report);
 
 		MS_ASSERT(
-		    this->mapRtpReceiverRtpSenders.find(rtpReceiver) != this->mapRtpReceiverRtpSenders.end(),
-		    "RtpReceiver not present in the map");
+		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		    "Producer not present in the map");
 	}
 
-	void Room::OnFullFrameRequired(RTC::Peer* /*peer*/, RTC::RtpSender* rtpSender)
+	void Room::OnFullFrameRequired(RTC::Peer* /*peer*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapRtpSenderRtpReceiver.find(rtpSender) != this->mapRtpSenderRtpReceiver.end(),
-		    "RtpSender not present in the map");
+		    this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
+		    "Consumer not present in the map");
 
-		auto& rtpReceiver = this->mapRtpSenderRtpReceiver[rtpSender];
+		auto& producer = this->mapConsumerProducer[consumer];
 
-		rtpReceiver->RequestFullFrame();
+		producer->RequestFullFrame();
 	}
 
 	inline void Room::OnTimer(Timer* timer)
@@ -830,11 +830,11 @@ namespace RTC
 		// Audio levels timer.
 		if (timer == this->audioLevelsTimer)
 		{
-			std::unordered_map<RTC::RtpReceiver*, int8_t> mapRtpReceiverAudioLevel;
+			std::unordered_map<RTC::Producer*, int8_t> mapProducerAudioLevel;
 
-			for (auto& kv : this->mapRtpReceiverAudioLevels)
+			for (auto& kv : this->mapProducerAudioLevels)
 			{
-				auto rtpReceiver = kv.first;
+				auto producer = kv.first;
 				auto& dBovs = kv.second;
 				int8_t avgdBov{ -127 };
 
@@ -851,11 +851,11 @@ namespace RTC
 						std::lround(sumdBovs / static_cast<int16_t>(dBovs.size())));
 				}
 
-				mapRtpReceiverAudioLevel[rtpReceiver] = avgdBov;
+				mapProducerAudioLevel[producer] = avgdBov;
 			}
 
 			// Clear map.
-			this->mapRtpReceiverAudioLevels.clear();
+			this->mapProducerAudioLevels.clear();
 
 			// Emit event.
 			Json::Value eventData(Json::objectValue);
@@ -863,13 +863,13 @@ namespace RTC
 			eventData[JsonStringClass] = "Room";
 			eventData[JsonStringEntries] = Json::arrayValue;
 
-			for (auto& kv : mapRtpReceiverAudioLevel)
+			for (auto& kv : mapProducerAudioLevel)
 			{
-				auto& rtpReceiverId = kv.first->rtpReceiverId;
+				auto& producerId = kv.first->producerId;
 				auto& audioLevel = kv.second;
 				Json::Value entry(Json::arrayValue);
 
-				entry.append(Json::UInt{ rtpReceiverId });
+				entry.append(Json::UInt{ producerId });
 				entry.append(Json::Int{ audioLevel });
 
 				eventData[JsonStringEntries].append(entry);

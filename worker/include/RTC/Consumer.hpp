@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTP_SENDER_HPP
-#define MS_RTC_RTP_SENDER_HPP
+#ifndef MS_RTC_CONSUMER_HPP
+#define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
@@ -18,7 +18,7 @@
 
 namespace RTC
 {
-	class RtpSender
+	class Consumer
 	{
 	public:
 		/**
@@ -27,16 +27,15 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpSenderClosed(RtpSender* rtpSender)            = 0;
-			virtual void OnRtpSenderFullFrameRequired(RtpSender* rtpSender) = 0;
+			virtual void OnConsumerClosed(Consumer* consumer)            = 0;
+			virtual void OnConsumerFullFrameRequired(Consumer* consumer) = 0;
 		};
 
 	public:
-		RtpSender(
-		    Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind);
+		Consumer(Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind);
 
 	private:
-		virtual ~RtpSender();
+		virtual ~Consumer();
 
 	public:
 		void Destroy();
@@ -62,7 +61,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t rtpSenderId{ 0 };
+		uint32_t consumerId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:
@@ -76,9 +75,9 @@ namespace RTC
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedPayloadTypes;
-		// Whether this RtpSender is valid according to Peer capabilities.
+		// Whether this Consumer is valid according to Peer capabilities.
 		bool available{ false };
-		// Whether this RtpSender has been disabled by the app.
+		// Whether this Consumer has been disabled by the app.
 		bool disabled{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
@@ -90,7 +89,7 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline void RtpSender::SetTransport(RTC::Transport* transport)
+	inline void Consumer::SetTransport(RTC::Transport* transport)
 	{
 		bool wasActive = this->GetActive();
 
@@ -100,12 +99,12 @@ namespace RTC
 			EmitActiveChange();
 	}
 
-	inline RTC::Transport* RtpSender::GetTransport() const
+	inline RTC::Transport* Consumer::GetTransport() const
 	{
 		return this->transport;
 	}
 
-	inline void RtpSender::RemoveTransport(RTC::Transport* transport)
+	inline void Consumer::RemoveTransport(RTC::Transport* transport)
 	{
 		bool wasActive = this->GetActive();
 
@@ -116,17 +115,17 @@ namespace RTC
 			EmitActiveChange();
 	}
 
-	inline RTC::RtpParameters* RtpSender::GetParameters() const
+	inline RTC::RtpParameters* Consumer::GetParameters() const
 	{
 		return this->rtpParameters;
 	}
 
-	inline bool RtpSender::GetActive() const
+	inline bool Consumer::GetActive() const
 	{
 		return (this->available && this->transport && !this->disabled);
 	}
 
-	inline uint32_t RtpSender::GetTransmissionRate(uint64_t now)
+	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
 	{
 		return this->transmittedCounter.GetRate(now) + this->retransmittedCounter.GetRate(now);
 	}

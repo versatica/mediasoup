@@ -23,21 +23,21 @@ namespace Channel
 		{ "peer.dump",                         Request::MethodId::PEER_DUMP                            },
 		{ "peer.setCapabilities",              Request::MethodId::PEER_SET_CAPABILITIES                },
 		{ "peer.createTransport",              Request::MethodId::PEER_CREATE_TRANSPORT                },
-		{ "peer.createRtpReceiver",            Request::MethodId::PEER_CREATE_RTP_RECEIVER             },
+		{ "peer.createProducer",               Request::MethodId::PEER_CREATE_PRODUCER                 },
 		{ "transport.close",                   Request::MethodId::TRANSPORT_CLOSE                      },
 		{ "transport.dump",                    Request::MethodId::TRANSPORT_DUMP                       },
 		{ "transport.setRemoteDtlsParameters", Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS },
 		{ "transport.setMaxBitrate",           Request::MethodId::TRANSPORT_SET_MAX_BITRATE            },
 		{ "transport.changeUfragPwd",          Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD           },
-		{ "rtpReceiver.close",                 Request::MethodId::RTP_RECEIVER_CLOSE                   },
-		{ "rtpReceiver.dump",                  Request::MethodId::RTP_RECEIVER_DUMP                    },
-		{ "rtpReceiver.receive",               Request::MethodId::RTP_RECEIVER_RECEIVE                 },
-		{ "rtpReceiver.setTransport",          Request::MethodId::RTP_RECEIVER_SET_TRANSPORT           },
-		{ "rtpReceiver.setRtpRawEvent",        Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT       },
-		{ "rtpReceiver.setRtpObjectEvent",     Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT    },
-		{ "rtpSender.dump",                    Request::MethodId::RTP_SENDER_DUMP                      },
-		{ "rtpSender.setTransport",            Request::MethodId::RTP_SENDER_SET_TRANSPORT             },
-		{ "rtpSender.disable",                 Request::MethodId::RTP_SENDER_DISABLE                   }
+		{ "producer.close",                    Request::MethodId::PRODUCER_CLOSE                       },
+		{ "producer.dump",                     Request::MethodId::PRODUCER_DUMP                        },
+		{ "producer.receive",                  Request::MethodId::PRODUCER_RECEIVE                     },
+		{ "producer.setTransport",             Request::MethodId::PRODUCER_SET_TRANSPORT               },
+		{ "producer.setRtpRawEvent",           Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT           },
+		{ "producer.setRtpObjectEvent",        Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT        },
+		{ "consumer.dump",                     Request::MethodId::CONSUMER_DUMP                        },
+		{ "consumer.setTransport",             Request::MethodId::CONSUMER_SET_TRANSPORT               },
+		{ "consumer.disable",                  Request::MethodId::CONSUMER_DISABLE                     }
 	};
 	// clang-format on
 

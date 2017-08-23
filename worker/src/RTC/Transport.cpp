@@ -835,15 +835,14 @@ namespace RTC
 			return;
 		}
 
-		// Get the associated RtpReceiver.
-		RTC::RtpReceiver* rtpReceiver = this->rtpListener.GetRtpReceiver(packet);
+		// Get the associated Producer.
+		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
 
-		if (rtpReceiver == nullptr)
+		if (producer == nullptr)
 		{
 			MS_WARN_TAG(
 			    rtp,
-			    "no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8
-			    "]",
+			    "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
 			    packet->GetSsrc(),
 			    packet->GetPayloadType());
 
@@ -852,16 +851,16 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV(
-		    "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", rtpReceiver:%" PRIu32 "]",
+		    "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producer:%" PRIu32 "]",
 		    packet->GetSsrc(),
 		    packet->GetPayloadType(),
-		    rtpReceiver->rtpReceiverId);
+		    producer->producerId);
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
 
-		// Pass the RTP packet to the corresponding RtpReceiver.
-		rtpReceiver->ReceiveRtpPacket(packet);
+		// Pass the RTP packet to the corresponding Producer.
+		producer->ReceiveRtpPacket(packet);
 
 		// Feed the remote bitrate estimator (REMB).
 		if (this->remoteBitrateEstimator)

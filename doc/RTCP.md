@@ -154,26 +154,26 @@ REMB RTCP is generated locally based on the remote bitrate estimation.
 
 ### Generic RTCP
 
-|             | SR | RR | SDES | BYE | APP |
-| ----------- | -- | -- | ---- | --- | --- |
-| RtpSender   |  G |  C |      |     |     |
-| RtpReceiver |  C |  G |  B   |  B  |  B  |
+|           | SR | RR | SDES | BYE | APP |
+| --------- | -- | -- | ---- | --- | --- |
+| Consumer  |  G |  C |      |     |     |
+| Producer  |  C |  G |  B   |  B  |  B  |
 
 ### RTP Feedback RTCP
 
-|              | NACK | TMMBR | TMMBN | TLLEI | ECN-FB | PAUSE-RESUME | TCC |
-| ------------ | ---- | ----- | ----- | ----- | ------ | ------------ | --- |
-| RtpSender    |   C  |   I   |       |       |    I   |       C      |     |
-| RtpReceiver  |   G  |       |   I   |   I   |        |              |     |
-| RtpTransport |      |       |       |       |        |              | CG  |
+|           | NACK | TMMBR | TMMBN | TLLEI | ECN-FB | PAUSE-RESUME | TCC |
+| --------- | ---- | ----- | ----- | ----- | ------ | ------------ | --- |
+| Consumer  |   C  |   I   |       |       |    I   |       C      |     |
+| Producer  |   G  |       |   I   |   I   |        |              |     |
+| Transport |      |       |       |       |        |              | CG  |
 
 ## PS Feedback RTCP
 
-|              | PLI | SLI | RPSI | FIR | TSTR | TSTN | VBCM | PSLI | ROI | REMB |
-| ------------ | --- | --- | ---- | --- | ---- | ---- | ---- | ---- | --- | ---- |
-| RtpSender    |  B  |  B  |  B   |  B  |  I   |      |  I   |      |     |  C   |
-| RtpReceiver  |     |     |      |     |      |  I   |      |   I  |     |      |
-| RtpTransport |     |     |      |     |      |      |      |      |     |  G   |
+|           | PLI | SLI | RPSI | FIR | TSTR | TSTN | VBCM | PSLI | ROI | REMB |
+| --------- | --- | --- | ---- | --- | ---- | ---- | ---- | ---- | --- | ---- |
+| Consumer  |  B  |  B  |  B   |  B  |  I   |      |  I   |      |     |  C   |
+| Producer  |     |     |      |     |      |  I   |      |   I  |     |      |
+| Transport |     |     |      |     |      |      |      |      |     |  G   |
 
 
 ( ): Does not apply.

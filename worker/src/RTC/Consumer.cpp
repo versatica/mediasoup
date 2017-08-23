@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::RtpSender"
+#define MS_CLASS "RTC::Consumer"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpSender.hpp"
+#include "RTC/Consumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
@@ -17,9 +17,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpSender::RtpSender(
-	    Listener* listener, Channel::Notifier* notifier, uint32_t rtpSenderId, RTC::Media::Kind kind)
-	    : rtpSenderId(rtpSenderId), kind(kind), listener(listener), notifier(notifier)
+	Consumer::Consumer(
+	    Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind)
+	    : consumerId(consumerId), kind(kind), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -29,7 +29,7 @@ namespace RTC
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 	}
 
-	RtpSender::~RtpSender()
+	Consumer::~Consumer()
 	{
 		MS_TRACE();
 
@@ -37,7 +37,7 @@ namespace RTC
 		delete this->rtpStream;
 	}
 
-	void RtpSender::Destroy()
+	void Consumer::Destroy()
 	{
 		MS_TRACE();
 
@@ -45,20 +45,20 @@ namespace RTC
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[JsonStringClass] = "RtpSender";
-		this->notifier->Emit(this->rtpSenderId, "close", eventData);
+		eventData[JsonStringClass] = "Consumer";
+		this->notifier->Emit(this->consumerId, "close", eventData);
 
 		// Notify the listener.
-		this->listener->OnRtpSenderClosed(this);
+		this->listener->OnConsumerClosed(this);
 
 		delete this;
 	}
 
-	Json::Value RtpSender::ToJson() const
+	Json::Value Consumer::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRtpSenderId{ "rtpSenderId" };
+		static const Json::StaticString JsonStringConsumerId{ "consumerId" };
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringHasTransport{ "hasTransport" };
@@ -68,7 +68,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringRtpSenderId] = Json::UInt{ this->rtpSenderId };
+		json[JsonStringConsumerId] = Json::UInt{ this->consumerId };
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
@@ -94,13 +94,13 @@ namespace RTC
 		return json;
 	}
 
-	void RtpSender::HandleRequest(Channel::Request* request)
+	void Consumer::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::RTP_SENDER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_DUMP:
 			{
 				auto json = ToJson();
 
@@ -109,7 +109,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::RTP_SENDER_DISABLE:
+			case Channel::Request::MethodId::CONSUMER_DISABLE:
 			{
 				static const Json::StaticString JsonStringDisabled{ "disabled" };
 				static const Json::StaticString JsonStringEmit{ "emit" };
@@ -145,7 +145,7 @@ namespace RTC
 						EmitActiveChange();
 
 					if (this->GetActive())
-						this->listener->OnRtpSenderFullFrameRequired(this);
+						this->listener->OnConsumerFullFrameRequired(this);
 				}
 
 				request->Accept();
@@ -162,7 +162,7 @@ namespace RTC
 		}
 	}
 
-	void RtpSender::SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities)
+	void Consumer::SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities)
 	{
 		MS_TRACE();
 
@@ -171,7 +171,7 @@ namespace RTC
 		this->peerCapabilities = peerCapabilities;
 	}
 
-	void RtpSender::Send(RTC::RtpParameters* rtpParameters)
+	void Consumer::Send(RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
@@ -278,15 +278,15 @@ namespace RTC
 		{
 			Json::Value eventData(Json::objectValue);
 
-			eventData[JsonStringClass]         = "RtpSender";
+			eventData[JsonStringClass]         = "Consumer";
 			eventData[JsonStringRtpParameters] = this->rtpParameters->ToJson();
 			eventData[JsonStringActive]        = this->GetActive();
 
-			this->notifier->Emit(this->rtpSenderId, "parameterschange", eventData);
+			this->notifier->Emit(this->consumerId, "parameterschange", eventData);
 		}
 	}
 
-	void RtpSender::SendRtpPacket(RTC::RtpPacket* packet)
+	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -330,7 +330,7 @@ namespace RTC
 		this->transmittedCounter.Update(packet);
 	}
 
-	void RtpSender::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
+	void Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
 		if (this->rtpStream == nullptr)
 			return;
@@ -360,7 +360,7 @@ namespace RTC
 		this->lastRtcpSentTime = now;
 	}
 
-	void RtpSender::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
+	void Consumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
 	{
 		MS_TRACE();
 
@@ -391,7 +391,7 @@ namespace RTC
 		}
 	}
 
-	void RtpSender::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	void Consumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
@@ -405,7 +405,7 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	void RtpSender::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
+	void Consumer::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
 	{
 		MS_TRACE();
 
@@ -476,7 +476,7 @@ namespace RTC
 		}
 	}
 
-	void RtpSender::RetransmitRtpPacket(RTC::RtpPacket* packet)
+	void Consumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -525,7 +525,7 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	inline void RtpSender::EmitActiveChange() const
+	inline void Consumer::EmitActiveChange() const
 	{
 		MS_TRACE();
 
@@ -534,9 +534,9 @@ namespace RTC
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[JsonStringClass]  = "RtpSender";
+		eventData[JsonStringClass]  = "Consumer";
 		eventData[JsonStringActive] = this->GetActive();
 
-		this->notifier->Emit(this->rtpSenderId, "activechange", eventData);
+		this->notifier->Emit(this->consumerId, "activechange", eventData);
 	}
 } // namespace RTC

@@ -31,18 +31,18 @@ function initTest(t)
 }
 
 tap.test(
-	'rtpReceiver.receive() with no encodings must succeed', { timeout: 2000 }, (t) =>
+	'producer.receive() with no encodings must succeed', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('audio', transport);
+				const producer = peer.Producer('audio', transport);
 
-				t.equal(rtpReceiver.peer, peer, 'associated peer must match');
+				t.equal(producer.peer, peer, 'associated peer must match');
 
-				return rtpReceiver.receive(
+				return producer.receive(
 					{
 						codecs :
 						[
@@ -55,9 +55,9 @@ tap.test(
 					})
 					.then(() =>
 					{
-						t.pass('rtpReceiver.receive() succeeded');
+						t.pass('producer.receive() succeeded');
 
-						const rtpParameters = rtpReceiver.rtpParameters;
+						const rtpParameters = producer.rtpParameters;
 
 						t.assert(
 							rtpParameters.encodings,
@@ -69,12 +69,12 @@ tap.test(
 							rtpParameters.encodings[0].codecPayloadType, 100,
 							'encoding has codecPayloadType 100');
 					})
-					.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
+					.catch((error) => t.fail(`producer.receive() failed: ${error}`));
 			});
 	});
 
 tap.test(
-	'rtpReceiver.receive() with encodings without codecPayloadType must succeed',
+	'producer.receive() with encodings without codecPayloadType must succeed',
 	{ timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
@@ -82,9 +82,9 @@ tap.test(
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('video', transport);
+				const producer = peer.Producer('video', transport);
 
-				return rtpReceiver.receive(
+				return producer.receive(
 					{
 						codecs :
 						[
@@ -119,9 +119,9 @@ tap.test(
 					})
 					.then(() =>
 					{
-						t.pass('rtpReceiver.receive() succeeded');
+						t.pass('producer.receive() succeeded');
 
-						const rtpParameters = rtpReceiver.rtpParameters;
+						const rtpParameters = producer.rtpParameters;
 
 						t.equal(
 							rtpParameters.encodings.length, 3,
@@ -136,12 +136,12 @@ tap.test(
 							rtpParameters.encodings[2].codecPayloadType,
 							110, 'third encoding has codecPayloadType 110');
 					})
-					.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
+					.catch((error) => t.fail(`producer.receive() failed: ${error}`));
 			});
 	});
 
 tap.test(
-	'rtpReceiver.receive() with full rtpParameters must succeed',
+	'producer.receive() with full rtpParameters must succeed',
 	{ timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
@@ -149,7 +149,7 @@ tap.test(
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('video', transport);
+				const producer = peer.Producer('video', transport);
 				const rtpParameters =
 				{
 					muxId  : 'abcd',
@@ -229,21 +229,21 @@ tap.test(
 					}
 				};
 
-				return rtpReceiver.receive(rtpParameters)
+				return producer.receive(rtpParameters)
 					.then(() =>
 					{
-						t.pass('rtpReceiver.receive() succeeded');
+						t.pass('producer.receive() succeeded');
 
 						t.same(
-							rtpReceiver.rtpParameters, rtpParameters,
+							producer.rtpParameters, rtpParameters,
 							'computed rtpParameters match given ones');
 					})
-					.catch((error) => t.fail(`rtpReceiver.receive() failed: ${error}`));
+					.catch((error) => t.fail(`producer.receive() failed: ${error}`));
 			});
 	});
 
 tap.test(
-	'two rtpReceiver.receive() over the same transport sharing PT values must ' +
+	'two producer.receive() over the same transport sharing PT values must ' +
 	'succeed if ssrc are given',
 	{ timeout: 2000 }, (t) =>
 	{
@@ -252,11 +252,11 @@ tap.test(
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver1 = peer.RtpReceiver('audio', transport);
-				const rtpReceiver2 = peer.RtpReceiver('audio', transport);
+				const producer1 = peer.Producer('audio', transport);
+				const producer2 = peer.Producer('audio', transport);
 				const promises = [];
 
-				promises.push(rtpReceiver1.receive(
+				promises.push(producer1.receive(
 					{
 						codecs :
 						[
@@ -275,10 +275,10 @@ tap.test(
 					})
 					.then(() =>
 					{
-						t.pass('rtpReceiver1.receive() succeeded');
+						t.pass('producer1.receive() succeeded');
 					}));
 
-				promises.push(rtpReceiver2.receive(
+				promises.push(producer2.receive(
 					{
 						codecs :
 						[
@@ -297,7 +297,7 @@ tap.test(
 					})
 					.then(() =>
 					{
-						t.pass('rtpReceiver2.receive() succeeded');
+						t.pass('producer2.receive() succeeded');
 					}));
 
 				return Promise.all(promises);
@@ -305,38 +305,38 @@ tap.test(
 	});
 
 tap.test(
-	'rtpReceiver.receive() without rtpParameters must fail', { timeout: 2000 }, (t) =>
+	'producer.receive() without rtpParameters must fail', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('audio', transport);
+				const producer = peer.Producer('audio', transport);
 
-				return rtpReceiver.receive()
-					.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				return producer.receive()
+					.then(() => t.fail('producer.receive() succeeded'))
 					.catch((error) =>
 					{
-						t.pass(`rtpReceiver.receive() failed: ${error}`);
+						t.pass(`producer.receive() failed: ${error}`);
 					});
 			});
 	});
 
 tap.test(
-	'rtpReceiver.receive() with wrong codecs must fail', { timeout: 2000 }, (t) =>
+	'producer.receive() with wrong codecs must fail', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('audio', transport);
+				const producer = peer.Producer('audio', transport);
 				const funcs = [];
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -346,17 +346,17 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
 							t.pass(
-								`rtpReceiver.receive() with an invalid codec.name failed: ${error}`);
+								`producer.receive() with an invalid codec.name failed: ${error}`);
 						});
 				});
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -367,17 +367,17 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
 							t.pass(
-								`rtpReceiver.receive() with an invalid codec.name failed: ${error}`);
+								`producer.receive() with an invalid codec.name failed: ${error}`);
 						});
 				});
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -388,17 +388,17 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
 							t.pass(
-								`rtpReceiver.receive() with an invalid codec.name failed: ${error}`);
+								`producer.receive() with an invalid codec.name failed: ${error}`);
 						});
 				});
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -408,16 +408,16 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
-							t.pass(`rtpReceiver.receive() without codec.name failed: ${error}`);
+							t.pass(`producer.receive() without codec.name failed: ${error}`);
 						});
 				});
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -427,17 +427,17 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
 							t.pass(
-								`rtpReceiver.receive() without codec.payloadType failed: ${error}`);
+								`producer.receive() without codec.payloadType failed: ${error}`);
 						});
 				});
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -447,17 +447,17 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
 							t.pass(
-								`rtpReceiver.receive() without codec.clockRate failed: ${error}`);
+								`producer.receive() without codec.clockRate failed: ${error}`);
 						});
 				});
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -473,11 +473,11 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
 							t.pass(
-								'rtpReceiver.receive() with duplicated codec.payloadType failed: ' +
+								'producer.receive() with duplicated codec.payloadType failed: ' +
 								`${error}`);
 						});
 				});
@@ -485,7 +485,7 @@ tap.test(
 				// TODO: Must fix this.
 				// funcs.push(function()
 				// {
-				// 	return rtpReceiver.receive(
+				// 	return producer.receive(
 				// 		{
 				// 			codecs :
 				// 			[
@@ -507,10 +507,10 @@ tap.test(
 				// 				}
 				// 			]
 				// 		})
-				// 		.then(() => t.fail('rtpReceiver.receive() succeeded'))
+				// 		.then(() => t.fail('producer.receive() succeeded'))
 				// 		.catch((error) =>
 				// 		{
-				// 			t.pass(`rtpReceiver.receive() wih wrong RTX apt failed: ${error}`);
+				// 			t.pass(`producer.receive() wih wrong RTX apt failed: ${error}`);
 				// 		});
 				// });
 
@@ -519,19 +519,19 @@ tap.test(
 	});
 
 tap.test(
-	'rtpReceiver.receive() with wrong encodings must fail', { timeout: 2000 }, (t) =>
+	'producer.receive() with wrong encodings must fail', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('audio', transport);
+				const producer = peer.Producer('audio', transport);
 				const funcs = [];
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -548,11 +548,11 @@ tap.test(
 								}
 							]
 						})
-						.then(() => t.fail('rtpReceiver.receive() succeeded'))
+						.then(() => t.fail('producer.receive() succeeded'))
 						.catch((error) =>
 						{
 							t.pass(
-								'rtpReceiver.receive() with unknown encoding.codecPayloadType ' +
+								'producer.receive() with unknown encoding.codecPayloadType ' +
 								`failed: ${error}`);
 						});
 				});
@@ -562,7 +562,7 @@ tap.test(
 	});
 
 tap.test(
-	'two rtpReceiver.receive() over the same transport sharing PT values must fail ' +
+	'two producer.receive() over the same transport sharing PT values must fail ' +
 	'if ssrc are not given',
 	{ timeout: 2000 }, (t) =>
 	{
@@ -571,11 +571,11 @@ tap.test(
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver1 = peer.RtpReceiver('audio', transport);
-				const rtpReceiver2 = peer.RtpReceiver('audio', transport);
+				const producer1 = peer.Producer('audio', transport);
+				const producer2 = peer.Producer('audio', transport);
 				const promises = [];
 
-				promises.push(rtpReceiver1.receive(
+				promises.push(producer1.receive(
 					{
 						codecs :
 						[
@@ -588,10 +588,10 @@ tap.test(
 					})
 					.then(() =>
 					{
-						t.pass('rtpReceiver1.receive() succeeded');
+						t.pass('producer1.receive() succeeded');
 					}));
 
-				promises.push(rtpReceiver2.receive(
+				promises.push(producer2.receive(
 					{
 						codecs :
 						[
@@ -602,10 +602,10 @@ tap.test(
 							}
 						]
 					})
-					.then(() => t.fail('rtpReceiver2.receive() succeeded'))
+					.then(() => t.fail('producer2.receive() succeeded'))
 					.catch((error) =>
 					{
-						t.pass(`rtpReceiver2.receive() failed: ${error}`);
+						t.pass(`producer2.receive() failed: ${error}`);
 					}));
 
 				return Promise.all(promises);
@@ -613,7 +613,7 @@ tap.test(
 	});
 
 tap.test(
-	'rtpReceiver.receive() should produce the expected RTP listener routing tables',
+	'producer.receive() should produce the expected RTP listener routing tables',
 	{ timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
@@ -621,12 +621,12 @@ tap.test(
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('audio', transport);
+				const producer = peer.Producer('audio', transport);
 				const funcs = [];
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -643,7 +643,7 @@ tap.test(
 						})
 						.then((data2) =>
 						{
-							const id = rtpReceiver._internal.rtpReceiverId;
+							const id = producer._internal.producerId;
 
 							t.same(data2.rtpListener,
 								{
@@ -660,7 +660,7 @@ tap.test(
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							muxId  : 'qwerty1234',
 							codecs :
@@ -683,7 +683,7 @@ tap.test(
 						})
 						.then((data2) =>
 						{
-							const id = rtpReceiver._internal.rtpReceiverId;
+							const id = producer._internal.producerId;
 
 							t.same(data2.rtpListener,
 								{
@@ -704,7 +704,7 @@ tap.test(
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -736,7 +736,7 @@ tap.test(
 						})
 						.then((data2) =>
 						{
-							const id = rtpReceiver._internal.rtpReceiverId;
+							const id = producer._internal.producerId;
 
 							t.same(data2.rtpListener,
 								{
@@ -757,7 +757,7 @@ tap.test(
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -790,7 +790,7 @@ tap.test(
 						})
 						.then((data2) =>
 						{
-							const id = rtpReceiver._internal.rtpReceiverId;
+							const id = producer._internal.producerId;
 
 							t.same(data2.rtpListener,
 								{
@@ -808,7 +808,7 @@ tap.test(
 
 				funcs.push(function()
 				{
-					return rtpReceiver.receive(
+					return producer.receive(
 						{
 							codecs :
 							[
@@ -847,7 +847,7 @@ tap.test(
 						})
 						.then((data2) =>
 						{
-							const id = rtpReceiver._internal.rtpReceiverId;
+							const id = producer._internal.producerId;
 
 							t.same(data2.rtpListener,
 								{
@@ -873,23 +873,23 @@ tap.test(
 	});
 
 tap.test(
-	'rtpReceiver.close() must succeed', { timeout: 2000 }, (t) =>
+	'producer.close() must succeed', { timeout: 2000 }, (t) =>
 	{
 		return initTest(t)
 			.then((data) =>
 			{
 				const peer = data.peer;
 				const transport = data.transport;
-				const rtpReceiver = peer.RtpReceiver('audio', transport);
+				const producer = peer.Producer('audio', transport);
 
-				setTimeout(() => rtpReceiver.close(), 100);
+				setTimeout(() => producer.close(), 100);
 
 				return new Promise((accept, reject) => // eslint-disable-line no-unused-vars
 				{
-					rtpReceiver.on('close', (error) =>
+					producer.on('close', (error) =>
 					{
-						t.error(error, 'rtpReceiver must close cleanly');
-						t.equal(peer.rtpReceivers.length, 0, 'peer must have 0 rtpReceivers');
+						t.error(error, 'producer must close cleanly');
+						t.equal(peer.producers.length, 0, 'peer must have 0 producers');
 
 						accept();
 					});

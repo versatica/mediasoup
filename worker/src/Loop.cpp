@@ -222,21 +222,21 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		case Channel::Request::MethodId::PEER_DUMP:
 		case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
 		case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
-		case Channel::Request::MethodId::PEER_CREATE_RTP_RECEIVER:
+		case Channel::Request::MethodId::PEER_CREATE_PRODUCER:
 		case Channel::Request::MethodId::TRANSPORT_CLOSE:
 		case Channel::Request::MethodId::TRANSPORT_DUMP:
 		case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
 		case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
 		case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
-		case Channel::Request::MethodId::RTP_RECEIVER_CLOSE:
-		case Channel::Request::MethodId::RTP_RECEIVER_DUMP:
-		case Channel::Request::MethodId::RTP_RECEIVER_RECEIVE:
-		case Channel::Request::MethodId::RTP_RECEIVER_SET_TRANSPORT:
-		case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT:
-		case Channel::Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT:
-		case Channel::Request::MethodId::RTP_SENDER_DUMP:
-		case Channel::Request::MethodId::RTP_SENDER_SET_TRANSPORT:
-		case Channel::Request::MethodId::RTP_SENDER_DISABLE:
+		case Channel::Request::MethodId::PRODUCER_CLOSE:
+		case Channel::Request::MethodId::PRODUCER_DUMP:
+		case Channel::Request::MethodId::PRODUCER_RECEIVE:
+		case Channel::Request::MethodId::PRODUCER_SET_TRANSPORT:
+		case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
+		case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
+		case Channel::Request::MethodId::CONSUMER_DUMP:
+		case Channel::Request::MethodId::CONSUMER_SET_TRANSPORT:
+		case Channel::Request::MethodId::CONSUMER_DISABLE:
 		{
 			RTC::Room* room;
 
