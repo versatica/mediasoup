@@ -166,8 +166,6 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 
 		case Channel::Request::MethodId::WORKER_CREATE_ROOM:
 		{
-			static const Json::StaticString JsonStringCapabilities{ "capabilities" };
-
 			RTC::Room* room;
 			uint32_t roomId;
 
@@ -191,7 +189,7 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 
 			try
 			{
-				room = new RTC::Room(this, this->notifier, roomId, request->data);
+				room = new RTC::Room(this, this->notifier, roomId);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -206,9 +204,6 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 
 			Json::Value data(Json::objectValue);
 
-			// Add `capabilities`.
-			data[JsonStringCapabilities] = room->GetCapabilities().ToJson();
-
 			request->Accept(data);
 
 			break;
@@ -220,7 +215,6 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		case Channel::Request::MethodId::ROOM_SET_AUDIO_LEVELS_EVENT:
 		case Channel::Request::MethodId::PEER_CLOSE:
 		case Channel::Request::MethodId::PEER_DUMP:
-		case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
 		case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
 		case Channel::Request::MethodId::PEER_CREATE_PRODUCER:
 		case Channel::Request::MethodId::TRANSPORT_CLOSE:

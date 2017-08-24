@@ -87,7 +87,6 @@ namespace RTC
 
 		static const Json::StaticString JsonStringPeerId{ "peerId" };
 		static const Json::StaticString JsonStringPeerName{ "peerName" };
-		static const Json::StaticString JsonStringCapabilities{ "capabilities" };
 		static const Json::StaticString JsonStringTransports{ "transports" };
 		static const Json::StaticString JsonStringProducers{ "producers" };
 		static const Json::StaticString JsonStringConsumers{ "consumers" };
@@ -102,10 +101,6 @@ namespace RTC
 
 		// Add `peerName`.
 		json[JsonStringPeerName] = this->peerName;
-
-		// Add `capabilities`.
-		if (this->hasCapabilities)
-			json[JsonStringCapabilities] = this->capabilities.ToJson();
 
 		// Add `transports`.
 		for (auto& kv : this->transports)
@@ -167,45 +162,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
-			{
-				// Capabilities must not be set.
-				if (this->hasCapabilities)
-				{
-					request->Reject("peer capabilities already set");
-
-					return;
-				}
-
-				try
-				{
-					this->capabilities = RTC::RtpCapabilities(request->data);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				this->hasCapabilities = true;
-
-				// Notify the listener (Room) who will remove capabilities to make them
-				// a subset of the room capabilities.
-				this->listener->OnPeerCapabilities(this, std::addressof(this->capabilities));
-
-				Json::Value data = this->capabilities.ToJson();
-
-				// NOTE: We accept the request *after* calling onPeerCapabilities(). This
-				// guarantees that the Peer will receive a "newconsumer" event for all its
-				// associated Consumers *before* the setCapabilities() Promise resolves.
-				// In other words, at the time setCapabilities() resolves, the Peer already
-				// has set all its current Consumers.
-				request->Accept(data);
-
-				break;
-			}
-
 			case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
 			{
 				RTC::Transport* transport;
@@ -258,14 +214,6 @@ namespace RTC
 				RTC::Producer* producer;
 				RTC::Transport* transport{ nullptr };
 				uint32_t producerId;
-
-				// Capabilities must be set.
-				if (!this->hasCapabilities)
-				{
-					request->Reject("peer capabilities are not yet set");
-
-					return;
-				}
 
 				try
 				{
@@ -584,15 +532,12 @@ namespace RTC
 		static const Json::StaticString JsonStringConsumerId{ "consumerId" };
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringEnabled{ "enabled" };
 		static const Json::StaticString JsonStringAssociatedProducerId{ "associatedProducerId" };
 
 		MS_ASSERT(
 		    this->consumers.find(consumer->consumerId) == this->consumers.end(),
 		    "given Consumer already exists in this Peer");
-
-		// Provide the Consumer with peer's capabilities.
-		consumer->SetPeerCapabilities(std::addressof(this->capabilities));
 
 		// Provide the Consumer with the received RTP parameters.
 		consumer->Send(rtpParameters);
@@ -607,7 +552,7 @@ namespace RTC
 		eventData[JsonStringConsumerId]           = Json::UInt{ consumer->consumerId };
 		eventData[JsonStringKind]                 = RTC::Media::GetJsonString(consumer->kind);
 		eventData[JsonStringRtpParameters]        = consumer->GetParameters()->ToJson();
-		eventData[JsonStringActive]               = consumer->GetActive();
+		eventData[JsonStringEnabled]               = consumer->GetEnabled();
 		eventData[JsonStringAssociatedProducerId] = Json::UInt{ associatedProducerId };
 
 		this->notifier->Emit(this->peerId, "newconsumer", eventData);
@@ -858,13 +803,6 @@ namespace RTC
 		MS_TRACE();
 
 		auto rtpParameters = producer->GetParameters();
-
-		// Remove unsupported codecs and their associated encodings.
-		rtpParameters->ReduceCodecsAndEncodings(this->capabilities);
-
-		// Remove unsupported header extensions.
-		rtpParameters->ReduceHeaderExtensions(this->capabilities.headerExtensions);
-
 		auto transport = producer->GetTransport();
 
 		// NOTE: This may throw.
@@ -949,8 +887,8 @@ namespace RTC
 
 							if (consumer != nullptr)
 							{
-								// If the Consumer is not active, drop the packet.
-								if (!consumer->GetActive())
+								// If the Consumer is not enabled, drop the packet.
+								if (!consumer->GetEnabled())
 									break;
 
 								if (feedback->GetMessageType() == RTCP::FeedbackPs::MessageType::PLI)

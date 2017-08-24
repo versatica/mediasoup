@@ -62,7 +62,7 @@ namespace RTC
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringHasTransport{ "hasTransport" };
-		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringEnabled{ "enabled" };
 		static const Json::StaticString JsonStringSupportedPayloadTypes{ "supportedPayloadTypes" };
 		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
 
@@ -79,7 +79,7 @@ namespace RTC
 
 		json[JsonStringHasTransport] = this->transport != nullptr;
 
-		json[JsonStringActive] = this->GetActive();
+		json[JsonStringEnabled] = this->GetEnabled();
 
 		json[JsonStringSupportedPayloadTypes] = Json::arrayValue;
 
@@ -109,50 +109,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_DISABLE:
-			{
-				static const Json::StaticString JsonStringDisabled{ "disabled" };
-				static const Json::StaticString JsonStringEmit{ "emit" };
-
-				if (!request->data[JsonStringDisabled].isBool())
-				{
-					request->Reject("Request has invalid data.disabled");
-
-					return;
-				}
-
-				bool disabled = request->data[JsonStringDisabled].asBool();
-				bool emit     = true;
-
-				if (request->data[JsonStringEmit].isBool())
-					emit = request->data[JsonStringEmit].asBool();
-
-				// Nothing changed.
-				if (this->disabled == disabled)
-				{
-					request->Accept();
-
-					return;
-				}
-
-				bool wasActive = this->GetActive();
-
-				this->disabled = disabled;
-
-				if (wasActive != this->GetActive())
-				{
-					if (emit)
-						EmitActiveChange();
-
-					if (this->GetActive())
-						this->listener->OnConsumerFullFrameRequired(this);
-				}
-
-				request->Accept();
-
-				break;
-			}
-
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -162,24 +118,14 @@ namespace RTC
 		}
 	}
 
-	void Consumer::SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(peerCapabilities, "given peerCapabilities are null");
-
-		this->peerCapabilities = peerCapabilities;
-	}
-
 	void Consumer::Send(RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
 
 		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-		static const Json::StaticString JsonStringActive{ "active" };
+		static const Json::StaticString JsonStringEnabled{ "enabled" };
 
-		MS_ASSERT(this->peerCapabilities, "peer capabilities unset");
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
 		bool hadParameters = this->rtpParameters != nullptr;
@@ -195,83 +141,11 @@ namespace RTC
 			this->rtpStream = nullptr;
 		}
 
-		// Clone given RTP parameters so we manage our own sender parameters.
+		// Clone given RTP parameters so we manage our own parameters.
 		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
 
-		// Remove RTP parameters not supported by this Peer.
-
-		// Remove unsupported codecs.
-		auto& codecs = this->rtpParameters->codecs;
-
-		for (auto it = codecs.begin(); it != this->rtpParameters->codecs.end();)
-		{
-			auto& codec = *it;
-			auto it2    = codecs.begin();
-
-			for (; it2 != codecs.end(); ++it2)
-			{
-				auto& codecCapability = *it2;
-
-				if (codecCapability.Matches(codec))
-					break;
-			}
-
-			if (it2 != codecs.end())
-			{
-				this->supportedPayloadTypes.insert(codec.payloadType);
-				++it;
-			}
-			else
-			{
-				it = codecs.erase(it);
-			}
-		}
-
-		// Remove unsupported encodings.
-		auto& encodings = this->rtpParameters->encodings;
-
-		for (auto it = encodings.begin(); it != encodings.end();)
-		{
-			auto& encoding = *it;
-
-			if (supportedPayloadTypes.find(encoding.codecPayloadType) != supportedPayloadTypes.end())
-			{
-				++it;
-			}
-			else
-			{
-				it = encodings.erase(it);
-			}
-		}
-
-		// TODO: Temporal. To be refactored.
-		// Remove all the encodings but the first one.
-		if (encodings.size() > 1)
-		{
-			RTC::RtpEncodingParameters encoding = encodings[0];
-
-			encodings.clear();
-			encodings.push_back(encoding);
-		}
-
-		// Remove unsupported header extensions.
-		this->rtpParameters->ReduceHeaderExtensions(this->peerCapabilities->headerExtensions);
-
-		// Set a random muxId.
-		this->rtpParameters->muxId = Utils::Crypto::GetRandomString(8);
-
-		// If there are no encodings set not available.
-		if (!encodings.empty())
-		{
-			this->available = true;
-
-			// NOTE: We assume a single stream/encoding when sending to remote peers.
-			CreateRtpStream(encodings[0]);
-		}
-		else
-		{
-			this->available = false;
-		}
+		// NOTE: We assume a single stream/encoding when sending to remote peers.
+		// CreateRtpStream(encodings[0]);
 
 		// Emit "parameterschange" if these are updated parameters.
 		if (hadParameters)
@@ -280,7 +154,7 @@ namespace RTC
 
 			eventData[JsonStringClass]         = "Consumer";
 			eventData[JsonStringRtpParameters] = this->rtpParameters->ToJson();
-			eventData[JsonStringActive]        = this->GetActive();
+			eventData[JsonStringEnabled]        = this->GetEnabled();
 
 			this->notifier->Emit(this->consumerId, "parameterschange", eventData);
 		}
@@ -290,7 +164,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->GetActive())
+		if (!this->GetEnabled())
 			return;
 
 		MS_ASSERT(this->rtpStream, "no RtpStream set");
@@ -477,7 +351,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->GetActive())
+		if (!this->GetEnabled())
 			return;
 
 		MS_ASSERT(this->rtpStream, "no RtpStream set");
@@ -522,17 +396,15 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	inline void Consumer::EmitActiveChange() const
+	void Consumer::EmitEnabledChange() const
 	{
 		MS_TRACE();
 
 		static const Json::StaticString JsonStringClass{ "class" };
-		static const Json::StaticString JsonStringActive{ "active" };
 
 		Json::Value eventData(Json::objectValue);
 
 		eventData[JsonStringClass]  = "Consumer";
-		eventData[JsonStringActive] = this->GetActive();
 
 		this->notifier->Emit(this->consumerId, "activechange", eventData);
 	}

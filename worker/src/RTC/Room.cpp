@@ -16,101 +16,12 @@ namespace RTC
 
 	static constexpr uint64_t AudioLevelsInterval{ 500 }; // In ms.
 
-	/* Class variables. */
-
-	RTC::RtpCapabilities Room::supportedRtpCapabilities;
-
-	/* Class methods. */
-
-	void Room::ClassInit()
-	{
-		MS_TRACE();
-
-		// Parse all RTP capabilities.
-		{
-			// NOTE: These lines are auto-generated from data/supportedCapabilities.js.
-			const std::string supportedRtpCapabilities =
-			    R"({"codecs":[{"kind":"audio","name":"opus","mimeType":"audio/opus","clockRate":48000,"channels":2,"rtcpFeedback":[]},{"kind":"audio","name":"PCMU","mimeType":"audio/PCMU","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"PCMA","mimeType":"audio/PCMA","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"ISAC","mimeType":"audio/ISAC","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"ISAC","mimeType":"audio/ISAC","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"G722","mimeType":"audio/G722","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"LBC","mimeType":"audio/iLBC","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"SILK","mimeType":"audio/SILK","clockRate":24000,"rtcpFeedback":[]},{"kind":"audio","name":"SILK","mimeType":"audio/SILK","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"SILK","mimeType":"audio/SILK","clockRate":12000,"rtcpFeedback":[]},{"kind":"audio","name":"SILK","mimeType":"audio/SILK","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"CN","mimeType":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"CN","mimeType":"audio/CN","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"CN","mimeType":"audio/CN","clockRate":8000,"rtcpFeedback":[]},{"kind":"audio","name":"CN","mimeType":"audio/CN","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"telephone-event","mimeType":"audio/telephone-event","clockRate":48000,"rtcpFeedback":[]},{"kind":"audio","name":"telephone-event","mimeType":"audio/telephone-event","clockRate":32000,"rtcpFeedback":[]},{"kind":"audio","name":"telephone-event","mimeType":"audio/telephone-event","clockRate":16000,"rtcpFeedback":[]},{"kind":"audio","name":"telephone-event","mimeType":"audio/telephone-event","clockRate":8000,"rtcpFeedback":[]},{"kind":"video","name":"VP8","mimeType":"video/VP8","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"VP9","mimeType":"video/VP9","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"H264","mimeType":"video/H264","clockRate":90000,"parameters":{"packetizationMode":0},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"H264","mimeType":"video/H264","clockRate":90000,"parameters":{"packetizationMode":1},"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]},{"kind":"video","name":"H265","mimeType":"video/H265","clockRate":90000,"rtcpFeedback":[{"type":"nack"},{"type":"nack","parameter":"pli"},{"type":"nack","parameter":"sli"},{"type":"nack","parameter":"rpsi"},{"type":"nack","parameter":"app"},{"type":"ccm","parameter":"fir"},{"type":"ack","parameter":"rpsi"},{"type":"ack","parameter":"app"},{"type":"goog-remb"}]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":1,"preferredEncrypt":false},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":2,"preferredEncrypt":false},{"kind":"","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":3,"preferredEncrypt":false},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":4,"preferredEncrypt":false},{"kind":"","uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","preferredId":5,"preferredEncrypt":false}],"fecMechanisms":[]})";
-
-			Json::CharReaderBuilder builder;
-			Json::Value settings = Json::nullValue;
-
-			builder.strictMode(&settings);
-
-			Json::CharReader* jsonReader = builder.newCharReader();
-			Json::Value json;
-			std::string jsonParseError;
-
-			if (!jsonReader->parse(
-			        supportedRtpCapabilities.c_str(),
-			        supportedRtpCapabilities.c_str() + supportedRtpCapabilities.length(),
-			        &json,
-			        &jsonParseError))
-			{
-				delete jsonReader;
-
-				MS_THROW_ERROR_STD(
-				    "JSON parsing error in supported RTP capabilities: %s", jsonParseError.c_str());
-			}
-			else
-			{
-				delete jsonReader;
-			}
-
-			try
-			{
-				Room::supportedRtpCapabilities = RTC::RtpCapabilities(json);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR_STD("wrong supported RTP capabilities: %s", error.what());
-			}
-		}
-	}
-
 	/* Instance methods. */
 
-	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data)
+	Room::Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId)
 	    : roomId(roomId), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
-
-		static const Json::StaticString JsonStringMediaCodecs{ "mediaCodecs" };
-
-		// `mediaCodecs` is optional.
-		if (data[JsonStringMediaCodecs].isArray())
-		{
-			auto& jsonMediaCodecs = data[JsonStringMediaCodecs];
-			std::vector<RTC::RtpCodecParameters> mediaCodecs;
-
-			for (auto& jsonMediaCodec : jsonMediaCodecs)
-			{
-				RTC::RtpCodecParameters mediaCodec(jsonMediaCodec);
-
-				// Ignore feature codecs.
-				if (mediaCodec.mime.IsFeatureCodec())
-					continue;
-
-				// Check whether the given media codec is supported by mediasoup. If not
-				// ignore it.
-				for (auto& supportedMediaCodec : Room::supportedRtpCapabilities.codecs)
-				{
-					if (supportedMediaCodec.Matches(mediaCodec))
-					{
-						// Copy the RTCP feedback.
-						mediaCodec.rtcpFeedback = supportedMediaCodec.rtcpFeedback;
-
-						mediaCodecs.push_back(mediaCodec);
-
-						break;
-					}
-				}
-			}
-
-			// Set room RTP capabilities.
-			// NOTE: This may throw.
-			SetCapabilities(mediaCodecs);
-		}
 
 		// Set the audio levels timer.
 		this->audioLevelsTimer = new Timer(this);
@@ -159,7 +70,6 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString JsonStringRoomId{ "roomId" };
-		static const Json::StaticString JsonStringCapabilities{ "capabilities" };
 		static const Json::StaticString JsonStringPeers{ "peers" };
 		static const Json::StaticString JsonStringMapProducerConsumers{ "mapProducerConsumers" };
 		static const Json::StaticString JsonStringMapConsumerProducer{ "mapConsumerProducer" };
@@ -172,9 +82,6 @@ namespace RTC
 
 		// Add `roomId`.
 		json[JsonStringRoomId] = Json::UInt{ this->roomId };
-
-		// Add `capabilities`.
-		json[JsonStringCapabilities] = this->capabilities.ToJson();
 
 		// Add `peers`.
 		for (auto& kv : this->peers)
@@ -337,7 +244,6 @@ namespace RTC
 
 			case Channel::Request::MethodId::PEER_CLOSE:
 			case Channel::Request::MethodId::PEER_DUMP:
-			case Channel::Request::MethodId::PEER_SET_CAPABILITIES:
 			case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
 			case Channel::Request::MethodId::PEER_CREATE_PRODUCER:
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
@@ -415,130 +321,14 @@ namespace RTC
 		return nullptr;
 	}
 
-	void Room::SetCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs)
+	inline void Room::AddConsumerForProducer(RTC::Peer* consumerPeer, const RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		// Set codecs.
-		{
-			// Available dynamic payload types.
-			// clang-format off
-			static const std::vector<uint8_t> DynamicPayloadTypes =
-			{
-				100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
-				118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 96,  97,  98,  99,  77,  78,  79,  80,
-				81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  35,  36,  37,
-				38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,
-				56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71
-			};
-			// clang-format om
-			// Iterator for available dynamic payload types.
-			auto dynamicPayloadTypeIt = DynamicPayloadTypes.begin();
-			// Payload types used by the room.
-			std::set<uint8_t> roomPayloadTypes;
-			// Given media kinds.
-			std::set<RTC::Media::Kind> roomKinds;
-
-			// Set the given room codecs.
-			for (auto& mediaCodec : mediaCodecs)
-			{
-				// The room has this kind.
-				roomKinds.insert(mediaCodec.kind);
-
-				// Set unique PT.
-
-				// If the codec has PT and it's not already used, let it untouched.
-				if (mediaCodec.hasPayloadType &&
-				    roomPayloadTypes.find(mediaCodec.payloadType) == roomPayloadTypes.end())
-				{
-					;
-				}
-				// Otherwise assign an available PT.
-				else
-				{
-					while (dynamicPayloadTypeIt != DynamicPayloadTypes.end())
-					{
-						uint8_t payloadType = *dynamicPayloadTypeIt;
-
-						++dynamicPayloadTypeIt;
-
-						if (roomPayloadTypes.find(payloadType) == roomPayloadTypes.end())
-						{
-							// Assign PT.
-							mediaCodec.payloadType    = payloadType;
-							mediaCodec.hasPayloadType = true;
-
-							break;
-						}
-					}
-
-					// If no one found, throw.
-					if (!mediaCodec.hasPayloadType)
-						MS_THROW_ERROR("no more available dynamic payload types for given media codecs");
-				}
-
-				// Build the RTX codec parameters for the video codec.
-				if (mediaCodec.kind == RTC::Media::Kind::VIDEO)
-				{
-					RTC::RtpCodecParameters rtxCodec;
-
-					// Get the next available payload type.
-					while (dynamicPayloadTypeIt != DynamicPayloadTypes.end())
-					{
-						uint8_t payloadType = *dynamicPayloadTypeIt;
-
-						++dynamicPayloadTypeIt;
-
-						if (roomPayloadTypes.find(payloadType) == roomPayloadTypes.end())
-						{
-							// Assign PT.
-							rtxCodec.payloadType    = payloadType;
-							rtxCodec.hasPayloadType = true;
-
-							break;
-						}
-					}
-
-					// If no one found, throw.
-					if (!rtxCodec.hasPayloadType)
-						MS_THROW_ERROR("no more available dynamic payload types for given RTX codec");
-
-					static const std::string associatedPayloadType = "apt";
-					static const std::string videoRtx = "video/rtx";
-
-					rtxCodec.kind = RTC::Media::Kind::VIDEO;
-					rtxCodec.mime.SetMimeType(videoRtx);
-					rtxCodec.clockRate = mediaCodec.clockRate;
-					rtxCodec.parameters.SetInteger(associatedPayloadType, mediaCodec.payloadType);
-
-					// Associate the RTX codec with the original's payload type.
-					this->mapPayloadRtxCodecParameters[mediaCodec.payloadType] = rtxCodec;
-				}
-
-				// Store the selected PT.
-				roomPayloadTypes.insert(mediaCodec.payloadType);
-
-				// Append the codec to the room capabilities.
-				this->capabilities.codecs.push_back(mediaCodec);
-			}
-		}
-
-		// Add supported RTP header extensions.
-		this->capabilities.headerExtensions = Room::supportedRtpCapabilities.headerExtensions;
-
-		// Add supported FEC mechanisms.
-		this->capabilities.fecMechanisms = Room::supportedRtpCapabilities.fecMechanisms;
-	}
-
-	inline void Room::AddConsumerForProducer(RTC::Peer* senderPeer, const RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(senderPeer->HasCapabilities(), "sender peer has no capabilities");
 		MS_ASSERT(producer->GetParameters(), "producer has no parameters");
 
 		uint32_t consumerId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-		auto consumer = new RTC::Consumer(senderPeer, this->notifier, consumerId, producer->kind);
+		auto consumer = new RTC::Consumer(consumerPeer, this->notifier, consumerId, producer->kind);
 
 		// Store into the maps.
 		this->mapProducerConsumers[producer].insert(consumer);
@@ -548,7 +338,7 @@ namespace RTC
 		auto associatedProducerId = producer->producerId;
 
 		// Attach the Consumer to the peer.
-		senderPeer->AddConsumer(consumer, rtpParameters, associatedProducerId);
+		consumerPeer->AddConsumer(consumer, rtpParameters, associatedProducerId);
 	}
 
 	void Room::OnPeerClosed(const RTC::Peer* peer)
@@ -556,88 +346,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->peers.erase(peer->peerId);
-	}
-
-	void Room::OnPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities)
-	{
-		MS_TRACE();
-
-		std::vector<RTC::RtpCodecParameters> rtxCodecs;
-
-		// Remove those peer's capabilities not supported by the room.
-
-		// Remove unsupported codecs and set the same PT.
-		for (auto it = capabilities->codecs.begin(); it != capabilities->codecs.end();)
-		{
-			auto& peerCodecCapability = *it;
-			auto it2                  = this->capabilities.codecs.begin();
-
-			for (; it2 != this->capabilities.codecs.end(); ++it2)
-			{
-				auto& roomCodecCapability = *it2;
-
-				if (roomCodecCapability.Matches(peerCodecCapability))
-				{
-					// Set the same payload type.
-					peerCodecCapability.payloadType    = roomCodecCapability.payloadType;
-					peerCodecCapability.hasPayloadType = true;
-
-					// Remove the unsupported RTCP feedback from the given codec.
-					peerCodecCapability.ReduceRtcpFeedback(roomCodecCapability.rtcpFeedback);
-
-					// Add RTX codec parameters.
-					// TODO: We should not add rtx codecs in case the peer does not support it.
-					// Must be done by the time we generate answers.
-					if (it->kind == RTC::Media::Kind::VIDEO)
-					{
-						auto payloadType = peerCodecCapability.payloadType;
-
-						MS_ASSERT(this->mapPayloadRtxCodecParameters.find(payloadType) != this->mapPayloadRtxCodecParameters.end(), "missing RTX codec parameters");
-
-						auto& rtxCodec = this->mapPayloadRtxCodecParameters[payloadType];
-
-						rtxCodecs.push_back(rtxCodec);
-					}
-
-					break;
-				}
-			}
-
-			if (it2 != this->capabilities.codecs.end())
-				++it;
-			else
-				it = capabilities->codecs.erase(it);
-		}
-
-		// Add the RTX codecs.
-		for (auto it = rtxCodecs.begin(); it != rtxCodecs.end(); ++it)
-		{
-			auto& codec = *it;
-
-			capabilities->codecs.push_back(codec);
-		}
-
-		// Remove unsupported header extensions.
-		capabilities->ReduceHeaderExtensions(this->capabilities.headerExtensions);
-
-		// Remove unsupported FEC mechanisms.
-		capabilities->ReduceFecMechanisms(this->capabilities.fecMechanisms);
-
-		// Get all the ready Producers of the others Peers in the Room and
-		// create Consumers for this new Peer.
-		for (auto& kv : this->peers)
-		{
-			auto* receiverPeer = kv.second;
-
-			for (auto producer : receiverPeer->GetProducers())
-			{
-				// Skip if the Producer has not parameters.
-				if (producer->GetParameters() == nullptr)
-					continue;
-
-				AddConsumerForProducer(peer, producer);
-			}
-		}
 	}
 
 	void Room::OnPeerProducerParameters(const RTC::Peer* peer, RTC::Producer* producer)
@@ -655,17 +363,13 @@ namespace RTC
 
 			for (auto& kv : this->peers)
 			{
-				auto* senderPeer = kv.second;
+				auto* consumerPeer = kv.second;
 
 				// Skip receiver Peer.
-				if (senderPeer == peer)
+				if (consumerPeer == peer)
 					continue;
 
-				// Skip Peer with capabilities not set yet.
-				if (!senderPeer->HasCapabilities())
-					continue;
-
-				AddConsumerForProducer(senderPeer, producer);
+				AddConsumerForProducer(consumerPeer, producer);
 			}
 		}
 		// If this is not a new Producer let's retrieve its updated parameters
@@ -708,8 +412,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Iterate all the receiver/senders map and remove the closed Consumer from all the
-		// Producer entries.
 		for (auto& kv : this->mapProducerConsumers)
 		{
 			auto& consumers = kv.second;
@@ -717,7 +419,6 @@ namespace RTC
 			consumers.erase(consumer);
 		}
 
-		// Also remove the entry from the sender/receiver map.
 		this->mapConsumerProducer.erase(consumer);
 	}
 

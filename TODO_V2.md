@@ -1,8 +1,8 @@
 # TODO in mediasoup v2 (server-side)
 
-* `transport.iceLocalParameters` must include `iceLite: true`.
+* If the transport of a consumer is closed, and the consumer was "enabled", it should become "disabled" and emit event? I think yes. Enabled should mean "it has a transport". Period.
 
-* `transport.dtlsLocalParameters` must have an array of `fingerprints` as in ORTC (rather than the current `Object`). Also, `transportsetRemoteDtlsParameters()` should accept the same format.
+* `transport.setRemoteDtlsParameters()` should accept an array of `fingerprints` as in ORTC (rather than the current cusot object).
 
 * Should accept `peer.createTransport()` by passing a `transportId` number. The same for `Producer`.
 

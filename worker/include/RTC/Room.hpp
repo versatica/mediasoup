@@ -31,7 +31,7 @@ namespace RTC
 		};
 
 	public:
-		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data);
+		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId);
 
 	private:
 		virtual ~Room();
@@ -40,17 +40,14 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		const RTC::RtpCapabilities& GetCapabilities() const;
 
 	private:
 		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr) const;
-		void SetCapabilities(std::vector<RTC::RtpCodecParameters>& mediaCodecs);
-		void AddConsumerForProducer(RTC::Peer* senderPeer, const RTC::Producer* producer);
+		void AddConsumerForProducer(RTC::Peer* consumerPeer, const RTC::Producer* producer);
 
 		/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
 		void OnPeerClosed(const RTC::Peer* peer) override;
-		void OnPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities) override;
 		void OnPeerProducerParameters(const RTC::Peer* peer, RTC::Producer* producer) override;
 		void OnPeerProducerClosed(const RTC::Peer* peer, const RTC::Producer* producer) override;
 		void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer) override;
@@ -80,21 +77,12 @@ namespace RTC
 		// Allocated by this.
 		Timer* audioLevelsTimer{ nullptr };
 		// Others.
-		RTC::RtpCapabilities capabilities;
-		std::unordered_map<uint8_t, RTC::RtpCodecParameters> mapPayloadRtxCodecParameters;
 		std::unordered_map<uint32_t, RTC::Peer*> peers;
 		std::unordered_map<const RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
 		std::unordered_map<const RTC::Consumer*, const RTC::Producer*> mapConsumerProducer;
 		std::unordered_map<RTC::Producer*, std::vector<int8_t>> mapProducerAudioLevels;
 		bool audioLevelsEventEnabled{ false };
 	};
-
-	/* Inline static methods. */
-
-	inline const RTC::RtpCapabilities& Room::GetCapabilities() const
-	{
-		return this->capabilities;
-	}
 } // namespace RTC
 
 #endif

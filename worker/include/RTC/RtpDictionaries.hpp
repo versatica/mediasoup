@@ -157,65 +157,6 @@ namespace RTC
 		std::string parameter;
 	};
 
-	class RtpCodecCapability
-	{
-	public:
-		RtpCodecCapability(){};
-		RtpCodecCapability(Json::Value& data);
-
-		Json::Value ToJson() const;
-		bool Matches(RtpCodecCapability& codec, bool checkPayloadType = false);
-		void ReduceRtcpFeedback(std::vector<RtcpFeedback>& supportedRtcpFeedback);
-
-	private:
-		void CheckCodec();
-
-	public:
-		Media::Kind kind{ Media::Kind::ALL };
-		RtpCodecMimeType mime;
-		uint8_t payloadType{ 0 };
-		uint32_t clockRate{ 0 };
-		uint32_t maxptime{ 0 };
-		uint32_t ptime{ 0 };
-		uint32_t channels{ 1 };
-		RTC::Parameters parameters;
-		std::vector<RtcpFeedback> rtcpFeedback;
-	};
-
-	class RtpHeaderExtension
-	{
-	public:
-		explicit RtpHeaderExtension(Json::Value& data);
-
-		Json::Value ToJson() const;
-
-	public:
-		Media::Kind kind{ Media::Kind::ALL };
-		std::string uri;
-		RtpHeaderExtensionUri::Type type;
-		uint8_t preferredId{ 0 };
-		bool preferredEncrypt{ false };
-	};
-
-	class RtpCapabilities
-	{
-	public:
-		RtpCapabilities(){};
-		RtpCapabilities(Json::Value& data);
-
-		Json::Value ToJson() const;
-		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
-		void ReduceFecMechanisms(std::vector<std::string>& supportedFecMechanisms);
-
-	private:
-		void ValidateCodecs();
-
-	public:
-		std::vector<RtpCodecCapability> codecs;
-		std::vector<RtpHeaderExtension> headerExtensions;
-		std::vector<std::string> fecMechanisms;
-	};
-
 	class RtpCodecParameters
 	{
 	public:
@@ -326,8 +267,6 @@ namespace RTC
 		explicit RtpParameters(const RtpParameters* rtpParameters);
 
 		Json::Value ToJson() const;
-		void ReduceCodecsAndEncodings(RtpCapabilities& capabilities);
-		void ReduceHeaderExtensions(std::vector<RtpHeaderExtension>& supportedHeaderExtensions);
 		RTC::RtpCodecParameters& GetCodecForEncoding(RtpEncodingParameters& encoding);
 		RTC::RtpCodecParameters& GetRtxCodecForEncoding(RtpEncodingParameters& encoding);
 

@@ -41,13 +41,12 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		void SetPeerCapabilities(RTC::RtpCapabilities* peerCapabilities);
 		void Send(RTC::RtpParameters* rtpParameters);
 		void SetTransport(RTC::Transport* transport);
 		RTC::Transport* GetTransport() const;
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters() const;
-		bool GetActive() const;
+		bool GetEnabled() const;
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -57,7 +56,7 @@ namespace RTC
 	private:
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void EmitActiveChange() const;
+		void EmitEnabledChange() const;
 
 	public:
 		// Passed by argument.
@@ -69,16 +68,11 @@ namespace RTC
 		Listener* listener{ nullptr };
 		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
-		RTC::RtpCapabilities* peerCapabilities{ nullptr };
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters{ nullptr };
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedPayloadTypes;
-		// Whether this Consumer is valid according to Peer capabilities.
-		bool available{ false };
-		// Whether this Consumer has been disabled by the app.
-		bool disabled{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
@@ -91,12 +85,12 @@ namespace RTC
 
 	inline void Consumer::SetTransport(RTC::Transport* transport)
 	{
-		bool wasActive = this->GetActive();
+		bool wasEnabled = this->GetEnabled();
 
 		this->transport = transport;
 
-		if (wasActive != this->GetActive())
-			EmitActiveChange();
+		if (wasEnabled != this->GetEnabled())
+			EmitEnabledChange();
 	}
 
 	inline RTC::Transport* Consumer::GetTransport() const
@@ -106,13 +100,13 @@ namespace RTC
 
 	inline void Consumer::RemoveTransport(RTC::Transport* transport)
 	{
-		bool wasActive = this->GetActive();
+		bool wasEnabled = this->GetEnabled();
 
 		if (this->transport == transport)
 			this->transport = nullptr;
 
-		if (wasActive != this->GetActive())
-			EmitActiveChange();
+		if (wasEnabled != this->GetEnabled())
+			EmitEnabledChange();
 	}
 
 	inline RTC::RtpParameters* Consumer::GetParameters() const
@@ -120,9 +114,9 @@ namespace RTC
 		return this->rtpParameters;
 	}
 
-	inline bool Consumer::GetActive() const
+	inline bool Consumer::GetEnabled() const
 	{
-		return (this->available && this->transport && !this->disabled);
+		return this->transport;
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)

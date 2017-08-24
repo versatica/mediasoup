@@ -30,7 +30,6 @@ namespace RTC
 		{
 		public:
 			virtual void OnPeerClosed(const RTC::Peer* peer)                                        = 0;
-			virtual void OnPeerCapabilities(RTC::Peer* peer, RTC::RtpCapabilities* capabilities)    = 0;
 			virtual void OnPeerProducerParameters(const RTC::Peer* peer, RTC::Producer* producer)   = 0;
 			virtual void OnPeerProducerClosed(const RTC::Peer* peer, const RTC::Producer* producer) = 0;
 			virtual void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer)       = 0;
@@ -57,7 +56,6 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		bool HasCapabilities() const;
 		std::vector<RTC::Producer*> GetProducers() const;
 		std::vector<RTC::Consumer*> GetConsumers() const;
 		const std::unordered_map<uint32_t, RTC::Transport*>& GetTransports() const;
@@ -111,19 +109,12 @@ namespace RTC
 		Channel::Notifier* notifier{ nullptr };
 		// Others.
 		Timer* timer{ nullptr };
-		bool hasCapabilities{ false };
-		RTC::RtpCapabilities capabilities;
 		std::unordered_map<uint32_t, RTC::Transport*> transports;
 		std::unordered_map<uint32_t, RTC::Producer*> producers;
 		std::unordered_map<uint32_t, RTC::Consumer*> consumers;
 	};
 
 	/* Inline methods. */
-
-	inline bool Peer::HasCapabilities() const
-	{
-		return this->hasCapabilities;
-	}
 
 	inline std::vector<RTC::Producer*> Peer::GetProducers() const
 	{

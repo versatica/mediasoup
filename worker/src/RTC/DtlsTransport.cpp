@@ -79,7 +79,7 @@ namespace RTC
 		{ "server", DtlsTransport::Role::SERVER }
 	};
 	// clang-format on
-	Json::Value DtlsTransport::localFingerprints = Json::Value(Json::objectValue);
+	Json::Value DtlsTransport::localFingerprints = Json::Value(Json::arrayValue);
 	// clang-format off
 	std::vector<DtlsTransport::SrtpProfileMapEntry> DtlsTransport::srtpProfiles =
 	{
@@ -497,7 +497,12 @@ namespace RTC
 			MS_DEBUG_TAG(dtls, "%-7s fingerprint: %s", algorithmString.c_str(), hexFingerprint);
 
 			// Store in the JSON.
-			DtlsTransport::localFingerprints[algorithmString] = hexFingerprint;
+
+			Json::Value fingerprint(Json::objectValue);
+
+			fingerprint["algorithm"] = algorithmString;
+			fingerprint["value"] = hexFingerprint;
+			DtlsTransport::localFingerprints.append(fingerprint);
 		}
 	}
 

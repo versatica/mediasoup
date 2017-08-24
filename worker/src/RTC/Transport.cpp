@@ -262,6 +262,7 @@ namespace RTC
 		static const Json::StaticString JsonStringIceLocalParameters{ "iceLocalParameters" };
 		static const Json::StaticString JsonStringUsernameFragment{ "usernameFragment" };
 		static const Json::StaticString JsonStringPassword{ "password" };
+		static const Json::StaticString JsonStringIceLite{ "iceLite" };
 		static const Json::StaticString JsonStringIceLocalCandidates{ "iceLocalCandidates" };
 		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
@@ -295,6 +296,7 @@ namespace RTC
 		json[JsonStringIceLocalParameters][JsonStringUsernameFragment] =
 		    this->iceServer->GetUsernameFragment();
 		json[JsonStringIceLocalParameters][JsonStringPassword] = this->iceServer->GetPassword();
+		json[JsonStringIceLocalParameters][JsonStringIceLite] = true;
 
 		// Add `iceLocalCandidates`.
 		json[JsonStringIceLocalCandidates] = Json::arrayValue;

@@ -50,7 +50,6 @@
       'src/RTC/RtpDictionaries/RtpCodecParameters.cpp',
       'src/RTC/RtpDictionaries/RtpEncodingParameters.cpp',
       'src/RTC/RtpDictionaries/RtpFecParameters.cpp',
-      'src/RTC/RtpDictionaries/RtpHeaderExtension.cpp',
       'src/RTC/RtpDictionaries/RtpHeaderExtensionParameters.cpp',
       'src/RTC/RtpDictionaries/RtpHeaderExtensionUri.cpp',
       'src/RTC/RtpDictionaries/RtpParameters.cpp',
