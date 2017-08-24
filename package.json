@@ -32,7 +32,7 @@
   "dependencies": {
     "check-types": "^7.3.0",
     "clone": "^2.1.1",
-    "debug": "^3.0.0",
+    "debug": "^3.0.1",
     "netstring": "^0.3.0",
     "random-number": "0.0.9",
     "randomatic": "^1.1.7",
