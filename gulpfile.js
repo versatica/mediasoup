@@ -23,13 +23,13 @@ const workerFiles =
 ];
 const nodeTests =
 [
-	'test/test-mediasoup.js',
+	// 'test/test-mediasoup.js',
 	'test/test-Server.js',
-	'test/test-Room.js',
-	'test/test-Peer.js',
-	'test/test-Transport.js',
-	'test/test-Producer.js',
-	'test/test-utils.js'
+	// 'test/test-Room.js',
+	// 'test/test-Peer.js',
+	// 'test/test-Transport.js',
+	// 'test/test-Producer.js',
+	// 'test/test-utils.js'
 ];
 const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const workerHeaderFilterRegex =
@@ -37,18 +37,6 @@ const workerHeaderFilterRegex =
 	'|Loop.hpp|MediaSoupError.hpp|Settings.hpp|Utils.hpp' +
 	'|handles/*.hpp|Channel/*.hpp|RTC/**/*.hpp)';
 const numCpus = os.cpus().length;
-
-gulp.task('rtpcapabilities', () =>
-{
-	const supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
-
-	return gulp.src('worker/src/RTC/Room.cpp')
-		// Let's generate valid syntax as expected by clang-format rules.
-		.pipe(replace(/(const std::string supportedRtpCapabilities =).*\r?\n.*/,
-			`$1\n\t\t\t    R"(${JSON.stringify(supportedRtpCapabilities)})";`))
-		.pipe(gulp.dest('worker/src/RTC/'))
-		.pipe(touch());
-});
 
 gulp.task('lint:node', () =>
 {

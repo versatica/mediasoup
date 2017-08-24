@@ -37,7 +37,7 @@ namespace RTC
 
 			for (auto& jsonCodec : jsonCodecs)
 			{
-				RTC::RtpCodecParameters codec(jsonCodec, RTC::Scope::RECEIVE);
+				RTC::RtpCodecParameters codec(jsonCodec);
 
 				// Append to the codecs vector.
 				this->codecs.push_back(codec);
@@ -184,7 +184,7 @@ namespace RTC
 				MS_WARN_DEV(
 				    "no matching peer codec capability found [payloadType:%" PRIu8 ", mime:%s]",
 				    codec.payloadType,
-				    codec.mime.GetName().c_str());
+				    codec.mime.ToString().c_str());
 
 				removedCodecPayloadTypes.push_back(codec.payloadType);
 				it = this->codecs.erase(it);
@@ -317,7 +317,7 @@ namespace RTC
 			switch (codec.mime.subtype)
 			{
 				// A RTX codec must have 'apt' parameter pointing to a non RTX codec.
-				case RTC::RtpCodecMime::Subtype::RTX:
+				case RTC::RtpCodecMimeType::Subtype::RTX:
 				{
 					// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
 					int32_t apt = codec.parameters.GetInteger(jsonStringApt);
@@ -329,11 +329,11 @@ namespace RTC
 
 						if (static_cast<int32_t>(codec.payloadType) == apt)
 						{
-							if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::RTX)
+							if (codec.mime.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
 								MS_THROW_ERROR("apt in RTX codec points to a RTX codec");
-							else if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::ULPFEC)
+							else if (codec.mime.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
 								MS_THROW_ERROR("apt in RTX codec points to a ULPFEC codec");
-							else if (codec.mime.subtype == RTC::RtpCodecMime::Subtype::FLEXFEC)
+							else if (codec.mime.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
 								MS_THROW_ERROR("apt in RTX codec points to a FLEXFEC codec");
 							else
 								break;

@@ -469,10 +469,7 @@ namespace RTC
 		{
 			auto& codec = this->rtpParameters->GetRtxCodecForEncoding(encoding);
 
-			if (codec.hasPayloadType)
-			{
-				this->rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
-			}
+			this->rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
 		}
 	}
 

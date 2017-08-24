@@ -179,7 +179,7 @@ namespace RTC
 
 				try
 				{
-					this->capabilities = RTC::RtpCapabilities(request->data, RTC::Scope::PEER_CAPABILITY);
+					this->capabilities = RTC::RtpCapabilities(request->data);
 				}
 				catch (const MediaSoupError& error)
 				{

@@ -118,7 +118,6 @@ void init()
 	RTC::TcpServer::ClassInit();
 	RTC::DtlsTransport::ClassInit();
 	RTC::SrtpSession::ClassInit();
-	RTC::Room::ClassInit();
 }
 
 void ignoreSignals()

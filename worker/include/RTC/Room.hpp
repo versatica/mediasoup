@@ -31,13 +31,6 @@ namespace RTC
 		};
 
 	public:
-		static void ClassInit();
-
-	private:
-		static RTC::RtpCapabilities supportedRtpCapabilities;
-		static std::vector<uint8_t> availablePayloadTypes;
-
-	public:
 		Room(Listener* listener, Channel::Notifier* notifier, uint32_t roomId, Json::Value& data);
 
 	private:

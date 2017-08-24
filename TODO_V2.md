@@ -1,5 +1,7 @@
 # TODO in mediasoup v2 (server-side)
 
+* Remove `gulp rtpcapabilities`.
+
 * Should accept `peer.createTransport()` by passing a `transportId` number. The same for `Producer`.
 
 * May have to react on DTLS ALERT CLOSE in the server and make it "really" close the Transport and notify the client. Bufff... I don't like this...

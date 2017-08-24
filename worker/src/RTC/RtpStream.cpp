@@ -187,7 +187,7 @@ namespace RTC
 
 		json[JsonStringSsrc]             = Json::UInt{ this->ssrc };
 		json[JsonStringPayloadType]      = Json::UInt{ this->payloadType };
-		json[JsonStringMime]             = this->mime.name;
+		json[JsonStringMime]             = this->mime.ToString();
 		json[JsonStringClockRate]        = Json::UInt{ this->clockRate };
 		json[JsonStringUseNack]          = this->useNack;
 		json[JsonStringUsePli]           = this->usePli;

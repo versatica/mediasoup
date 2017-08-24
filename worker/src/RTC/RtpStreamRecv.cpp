@@ -226,7 +226,7 @@ namespace RTC
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
 		// Request a full frame so dropped video packets don't cause lag.
-		if (this->params.mime.type == RTC::RtpCodecMime::Type::VIDEO)
+		if (this->params.mime.type == RTC::RtpCodecMimeType::Type::VIDEO)
 		{
 			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
 

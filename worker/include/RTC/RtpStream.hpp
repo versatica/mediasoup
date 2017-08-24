@@ -17,7 +17,7 @@ namespace RTC
 
 			uint32_t ssrc{ 0 };
 			uint8_t payloadType{ 0 };
-			RTC::RtpCodecMime mime;
+			RTC::RtpCodecMimeType mime;
 			uint32_t clockRate{ 0 };
 			bool useNack{ false };
 			bool usePli{ false };

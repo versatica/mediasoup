@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RtpCodecParameters"
+#define MS_CLASS "RTC::RtpCodecCapability"
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
@@ -9,7 +9,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpCodecParameters::RtpCodecParameters(Json::Value& data)
+	RtpCodecCapability::RtpCodecCapability(Json::Value& data)
 	{
 		MS_TRACE();
 
@@ -24,11 +24,11 @@ namespace RTC
 		static const Json::StaticString JsonStringRtcpFeedback{ "rtcpFeedback" };
 
 		if (!data.isObject())
-			MS_THROW_ERROR("RtpCodecParameters is not an object");
+			MS_THROW_ERROR("RtpCodecCapability is not an object");
 
 		// `kind` is mandatory.
 		if (!data[JsonStringKind].isString())
-			MS_THROW_ERROR("missing RtpCodecParameters.kind");
+			MS_THROW_ERROR("missing RtpCodecCapability.kind");
 
 		std::string kind = data[JsonStringKind].asString();
 
@@ -46,13 +46,13 @@ namespace RTC
 		this->mime.SetMimeType(mimeType);
 
 		if (!data[JsonStringPayloadType].isUInt())
-			MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
+			MS_THROW_ERROR("missing RtpCodecCapability.payloadType");
 
 		this->payloadType = static_cast<uint8_t>(data[JsonStringPayloadType].asUInt());
 
 		// `clockRate` is mandatory.
 		if (!data[JsonStringClockRate].isUInt())
-			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
+			MS_THROW_ERROR("missing RtpCodecCapability.clockRate");
 
 		this->clockRate = uint32_t{ data[JsonStringClockRate].asUInt() };
 
@@ -90,7 +90,7 @@ namespace RTC
 		CheckCodec();
 	}
 
-	Json::Value RtpCodecParameters::ToJson() const
+	Json::Value RtpCodecCapability::ToJson() const
 	{
 		MS_TRACE();
 
@@ -148,7 +148,7 @@ namespace RTC
 		return json;
 	}
 
-	bool RtpCodecParameters::Matches(RtpCodecParameters& codec, bool checkPayloadType)
+	bool RtpCodecCapability::Matches(RtpCodecCapability& codec, bool checkPayloadType)
 	{
 		MS_TRACE();
 
@@ -203,7 +203,7 @@ namespace RTC
 		return true;
 	}
 
-	void RtpCodecParameters::ReduceRtcpFeedback(std::vector<RTC::RtcpFeedback>& supportedRtcpFeedback)
+	void RtpCodecCapability::ReduceRtcpFeedback(std::vector<RTC::RtcpFeedback>& supportedRtcpFeedback)
 	{
 		MS_TRACE();
 
@@ -226,7 +226,7 @@ namespace RTC
 		this->rtcpFeedback = updatedRtcpFeedback;
 	}
 
-	inline void RtpCodecParameters::CheckCodec()
+	inline void RtpCodecCapability::CheckCodec()
 	{
 		MS_TRACE();
 
@@ -240,7 +240,7 @@ namespace RTC
 			{
 				// A RTX codec must have 'apt' parameter.
 				if (!this->parameters.HasInteger(jsonStringApt))
-					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
+					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecCapability");
 
 				break;
 			}

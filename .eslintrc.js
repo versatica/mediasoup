@@ -66,7 +66,7 @@ module.exports =
 		'max-len': [ 2, 86,
 		{
 			tabWidth: 2,
-			comments: 86,
+			comments: 90,
 			ignoreUrls: false,
 			ignoreStrings: false,
 			ignoreTemplateLiterals: false,
