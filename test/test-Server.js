@@ -5,7 +5,7 @@ const mediasoup = require('../');
 // const roomOptions = require('./data/options').roomOptions;
 
 tap.test(
-	'server.Room() with valid media codecs', { timeout: 2000 }, (t) =>
+	'server.Room() with valid media codecs must succeed', { timeout: 2000 }, (t) =>
 	{
 		const server = mediasoup.Server();
 
@@ -26,7 +26,7 @@ tap.test(
 			},
 			{
 				kind       : 'video',
-				name       : 'VP8',
+				name       : 'vp8',
 				clockRate  : 90000,
 				parameters :
 				{
@@ -89,6 +89,26 @@ tap.test(
 			});
 
 		t.same(reducedCodecs, expectedCodecs, 'room codecs match');
+		t.end();
+	});
+
+tap.test(
+	'server.Room() with empty media codecs must fail', { timeout: 2000 }, (t) =>
+	{
+		const server = mediasoup.Server();
+
+		t.tearDown(() => server.close());
+
+		const mediaCodecs = [];
+
+		t.throws(() =>
+		{
+			// eslint-disable-next-line no-unused-vars
+			const room = server.Room(mediaCodecs);
+		},
+		TypeError,
+		'server.Room() must throw TypeError');
+
 		t.end();
 	});
 

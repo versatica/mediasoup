@@ -1,6 +1,8 @@
 # TODO in mediasoup v2 (server-side)
 
-* Remove `gulp rtpcapabilities`.
+* `transport.iceLocalParameters` must include `iceLite: true`.
+
+* `transport.dtlsLocalParameters` must have an array of `fingerprints` as in ORTC (rather than the current `Object`). Also, `transportsetRemoteDtlsParameters()` should accept the same format.
 
 * Should accept `peer.createTransport()` by passing a `transportId` number. The same for `Producer`.
 
