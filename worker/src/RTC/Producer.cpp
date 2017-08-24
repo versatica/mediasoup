@@ -465,7 +465,7 @@ namespace RTC
 			if (this->rtxStreamMap.find(encoding.rtx.ssrc) != this->rtxStreamMap.end())
 				return;
 
-			auto& codec = this->rtpParameters->GetRtxCodecForEncoding(encoding);
+			auto& codec    = this->rtpParameters->GetRtxCodecForEncoding(encoding);
 			auto rtpStream = this->rtpStreams[ssrc];
 
 			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);

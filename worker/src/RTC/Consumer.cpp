@@ -154,7 +154,7 @@ namespace RTC
 
 			eventData[JsonStringClass]         = "Consumer";
 			eventData[JsonStringRtpParameters] = this->rtpParameters->ToJson();
-			eventData[JsonStringEnabled]        = this->GetEnabled();
+			eventData[JsonStringEnabled]       = this->GetEnabled();
 
 			this->notifier->Emit(this->consumerId, "parameterschange", eventData);
 		}
@@ -404,7 +404,7 @@ namespace RTC
 
 		Json::Value eventData(Json::objectValue);
 
-		eventData[JsonStringClass]  = "Consumer";
+		eventData[JsonStringClass] = "Consumer";
 
 		this->notifier->Emit(this->consumerId, "activechange", eventData);
 	}

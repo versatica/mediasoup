@@ -501,7 +501,7 @@ namespace RTC
 			Json::Value fingerprint(Json::objectValue);
 
 			fingerprint["algorithm"] = algorithmString;
-			fingerprint["value"] = hexFingerprint;
+			fingerprint["value"]     = hexFingerprint;
 			DtlsTransport::localFingerprints.append(fingerprint);
 		}
 	}

@@ -296,7 +296,7 @@ namespace RTC
 		json[JsonStringIceLocalParameters][JsonStringUsernameFragment] =
 		    this->iceServer->GetUsernameFragment();
 		json[JsonStringIceLocalParameters][JsonStringPassword] = this->iceServer->GetPassword();
-		json[JsonStringIceLocalParameters][JsonStringIceLite] = true;
+		json[JsonStringIceLocalParameters][JsonStringIceLite]  = true;
 
 		// Add `iceLocalCandidates`.
 		json[JsonStringIceLocalCandidates] = Json::arrayValue;
@@ -416,13 +416,16 @@ namespace RTC
 				static const Json::StaticString JsonStringRole{ "role" };
 				static const Json::StaticString JsonStringClient{ "client" };
 				static const Json::StaticString JsonStringServer{ "server" };
-				static const Json::StaticString JsonStringFingerprint{ "fingerprint" };
+				static const Json::StaticString JsonStringFingerprints{ "fingerprints" };
 				static const Json::StaticString JsonStringAlgorithm{ "algorithm" };
 				static const Json::StaticString JsonStringValue{ "value" };
 
 				RTC::DtlsTransport::Fingerprint remoteFingerprint;
 				RTC::DtlsTransport::Role remoteRole =
 				    RTC::DtlsTransport::Role::AUTO; // Default value if missing.
+
+				// Just in case.
+				remoteFingerprint.algorithm = RTC::DtlsTransport::FingerprintAlgorithm::NONE;
 
 				// Ensure this method is not called twice.
 				if (this->remoteDtlsParametersGiven)
@@ -434,25 +437,45 @@ namespace RTC
 
 				this->remoteDtlsParametersGiven = true;
 
-				// Validate request data.
-
-				if (!request->data[JsonStringFingerprint].isObject())
+				if (!request->data[JsonStringFingerprints].isArray())
 				{
-					request->Reject("missing data.fingerprint");
+					request->Reject("missing data.fingerprints");
 
 					return;
 				}
 
-				if (!request->data[JsonStringFingerprint][JsonStringAlgorithm].isString() ||
-				    !request->data[JsonStringFingerprint][JsonStringValue].isString())
+				auto& jsonArray = request->data[JsonStringFingerprints];
+
+				for (Json::Value::ArrayIndex i = jsonArray.size() - 1; static_cast<int32_t>(i) >= 0; --i)
 				{
-					request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
+					auto& jsonFingerprint = jsonArray[i];
 
-					return;
+					if (!jsonFingerprint.isObject())
+					{
+						request->Reject("wrong fingerprint");
+
+						return;
+					}
+					else if (
+					    !jsonFingerprint[JsonStringAlgorithm].isString() ||
+					    !jsonFingerprint[JsonStringValue].isString())
+					{
+						request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
+
+						return;
+					}
+
+					auto algorithm = jsonFingerprint[JsonStringAlgorithm].asString();
+
+					remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(algorithm);
+
+					if (remoteFingerprint.algorithm != RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+					{
+						remoteFingerprint.value = jsonFingerprint[JsonStringValue].asString();
+
+						break;
+					}
 				}
-
-				remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(
-				    request->data[JsonStringFingerprint][JsonStringAlgorithm].asString());
 
 				if (remoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 				{
@@ -460,8 +483,6 @@ namespace RTC
 
 					return;
 				}
-
-				remoteFingerprint.value = request->data[JsonStringFingerprint][JsonStringValue].asString();
 
 				if (request->data[JsonStringRole].isString())
 					remoteRole = RTC::DtlsTransport::StringToRole(request->data[JsonStringRole].asString());

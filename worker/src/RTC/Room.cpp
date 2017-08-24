@@ -334,7 +334,7 @@ namespace RTC
 		this->mapProducerConsumers[producer].insert(consumer);
 		this->mapConsumerProducer[consumer] = producer;
 
-		auto rtpParameters           = producer->GetParameters();
+		auto rtpParameters        = producer->GetParameters();
 		auto associatedProducerId = producer->producerId;
 
 		// Attach the Consumer to the peer.
@@ -422,8 +422,7 @@ namespace RTC
 		this->mapConsumerProducer.erase(consumer);
 	}
 
-	void Room::OnPeerRtpPacket(
-	    const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RtpPacket* packet)
+	void Room::OnPeerRtpPacket(const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -536,7 +535,7 @@ namespace RTC
 			for (auto& kv : this->mapProducerAudioLevels)
 			{
 				auto producer = kv.first;
-				auto& dBovs = kv.second;
+				auto& dBovs   = kv.second;
 				int8_t avgdBov{ -127 };
 
 				if (!dBovs.empty())
@@ -548,8 +547,7 @@ namespace RTC
 						sumdBovs += dBov;
 					}
 
-					avgdBov = static_cast<int8_t>(
-						std::lround(sumdBovs / static_cast<int16_t>(dBovs.size())));
+					avgdBov = static_cast<int8_t>(std::lround(sumdBovs / static_cast<int16_t>(dBovs.size())));
 				}
 
 				mapProducerAudioLevel[producer] = avgdBov;
@@ -561,7 +559,7 @@ namespace RTC
 			// Emit event.
 			Json::Value eventData(Json::objectValue);
 
-			eventData[JsonStringClass] = "Room";
+			eventData[JsonStringClass]   = "Room";
 			eventData[JsonStringEntries] = Json::arrayValue;
 
 			for (auto& kv : mapProducerAudioLevel)

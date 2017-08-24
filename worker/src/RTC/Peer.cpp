@@ -552,7 +552,7 @@ namespace RTC
 		eventData[JsonStringConsumerId]           = Json::UInt{ consumer->consumerId };
 		eventData[JsonStringKind]                 = RTC::Media::GetJsonString(consumer->kind);
 		eventData[JsonStringRtpParameters]        = consumer->GetParameters()->ToJson();
-		eventData[JsonStringEnabled]               = consumer->GetEnabled();
+		eventData[JsonStringEnabled]              = consumer->GetEnabled();
 		eventData[JsonStringAssociatedProducerId] = Json::UInt{ associatedProducerId };
 
 		this->notifier->Emit(this->peerId, "newconsumer", eventData);
@@ -803,7 +803,7 @@ namespace RTC
 		MS_TRACE();
 
 		auto rtpParameters = producer->GetParameters();
-		auto transport = producer->GetTransport();
+		auto transport     = producer->GetTransport();
 
 		// NOTE: This may throw.
 		if (transport != nullptr)

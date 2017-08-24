@@ -83,9 +83,7 @@ namespace RTC
 
 		auto slashPos = mimeType.find('/');
 
-		if (
-			slashPos == std::string::npos ||
-			slashPos == 0 || slashPos == mimeType.length() - 1)
+		if (slashPos == std::string::npos || slashPos == 0 || slashPos == mimeType.length() - 1)
 		{
 			MS_THROW_ERROR("wrong codec MIME");
 		}
@@ -119,6 +117,6 @@ namespace RTC
 
 		// Set mimeType and name.
 		this->mimeType = type2String[this->type] + "/" + subtype2String[this->subtype];
-		this->name = subtype;
+		this->name     = subtype;
 	}
 } // namespace RTC
