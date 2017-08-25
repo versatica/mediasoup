@@ -1,5 +1,7 @@
 # TODO in mediasoup v2 (server-side)
 
+* Use "@xxxxx" for private events and `safeEmit("xxxx")` for public events.
+
 * If the transport of a consumer is closed, and the consumer was "enabled", it should become "disabled" and emit event? I think yes. Enabled should mean "it has a transport". Period.
 
 * Should accept `peer.createTransport()` by passing a `transportId` number. The same for `Producer`.
