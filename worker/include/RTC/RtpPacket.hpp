@@ -293,7 +293,7 @@ namespace RTC
 			if (this->twoBytesExtensions.find(id) == this->twoBytesExtensions.end())
 				return nullptr;
 
-			*len = this->oneByteExtensions.at(id)->len;
+			*len = this->twoByteExtensions.at(id)->len;
 
 			return this->twoBytesExtensions.at(id)->value;
 		}
