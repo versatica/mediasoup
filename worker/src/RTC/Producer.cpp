@@ -423,8 +423,7 @@ namespace RTC
 			auto sourceHeaderExtensionId = static_cast<uint8_t>(pair[0].asUInt());
 			auto mappedHeaderExtensionId = static_cast<uint8_t>(pair[1].asUInt());
 
-			this->rtpMapping.headerExtensionIds[sourceHeaderExtensionId] =
-				mappedHeaderExtensionId;
+			this->rtpMapping.headerExtensionIds[sourceHeaderExtensionId] = mappedHeaderExtensionId;
 		}
 
 		// Also, fill the id of well known RTP header extensions with the mapped ids
@@ -507,12 +506,12 @@ namespace RTC
 		// Create stream params.
 		RTC::RtpStream::Params params;
 
-		params.ssrc             = ssrc;
-		params.payloadType      = codec.payloadType;
-		params.mime             = codec.mime;
-		params.clockRate        = codec.clockRate;
-		params.useNack          = useNack;
-		params.usePli           = usePli;
+		params.ssrc        = ssrc;
+		params.payloadType = codec.payloadType;
+		params.mime        = codec.mime;
+		params.clockRate   = codec.clockRate;
+		params.useNack     = useNack;
+		params.usePli      = usePli;
 
 		// Create a RtpStreamRecv for receiving a media stream.
 		this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, params);
@@ -616,9 +615,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& codecPayloadTypeMap = this->rtpMapping.codecPayloadTypes;
+		auto& codecPayloadTypeMap  = this->rtpMapping.codecPayloadTypes;
 		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
-		auto payloadType = packet->GetPayloadType();
+		auto payloadType           = packet->GetPayloadType();
 
 		// Mangle payload type.
 
@@ -641,8 +640,7 @@ namespace RTC
 		if (this->knownHeaderExtensions.absSendTimeId)
 		{
 			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
-			    this->knownHeaderExtensions.absSendTimeId);
+			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
 		}
 	}
 } // namespace RTC

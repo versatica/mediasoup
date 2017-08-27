@@ -3,10 +3,10 @@
 
 #include "RTC/RtpPacket.hpp"
 #include "Logger.hpp"
-#include <vector>
+#include <cstring>  // std::memcpy()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
-#include <cstring> // std::memcpy()
+#include <vector>
 
 namespace RTC
 {
@@ -214,7 +214,7 @@ namespace RTC
 		{
 			for (const auto& pair : this->oneByteExtensions)
 			{
-				auto& id = pair.first;
+				auto& id               = pair.first;
 				auto& oneByteExtension = pair.second;
 
 				if (idMapping.find(id) != idMapping.end())
@@ -227,7 +227,7 @@ namespace RTC
 		{
 			for (const auto& pair : this->twoBytesExtensions)
 			{
-				auto& id = pair.first;
+				auto& id                = pair.first;
 				auto& twoBytesExtension = pair.second;
 
 				if (idMapping.find(id) != idMapping.end())

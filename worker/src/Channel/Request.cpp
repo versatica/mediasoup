@@ -54,7 +54,7 @@ namespace Channel
 		if (json[JsonStringId].isUInt())
 			this->id = json[JsonStringId].asUInt();
 		else
-			MS_THROW_ERROR("json has no numeric .id field");
+			MS_THROW_ERROR("json has no numeric id field");
 
 		if (json[JsonStringMethod].isString())
 			this->method = json[JsonStringMethod].asString();
@@ -69,9 +69,9 @@ namespace Channel
 		}
 		else
 		{
-			Reject("method not allowed");
+			Reject("unknown method");
 
-			MS_THROW_ERROR("unknown .method '%s'", this->method.c_str());
+			MS_THROW_ERROR("unknown request.method '%s'", this->method.c_str());
 		}
 
 		if (json[JsonStringInternal].isObject())

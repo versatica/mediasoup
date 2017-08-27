@@ -308,12 +308,12 @@ namespace RTC
 		// Create stream params.
 		RTC::RtpStream::Params params;
 
-		params.ssrc             = ssrc;
-		params.payloadType      = codec.payloadType;
-		params.mime             = codec.mime;
-		params.clockRate        = codec.clockRate;
-		params.useNack          = useNack;
-		params.usePli           = usePli;
+		params.ssrc        = ssrc;
+		params.payloadType = codec.payloadType;
+		params.mime        = codec.mime;
+		params.clockRate   = codec.clockRate;
+		params.useNack     = useNack;
+		params.usePli      = usePli;
 
 		// Create a RtpStreamSend for sending a single media stream.
 		if (useNack)

@@ -29,10 +29,10 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnPeerClosed(const RTC::Peer* peer)                                        = 0;
-			virtual void OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer)   = 0;
-			virtual void OnPeerProducerClosed(const RTC::Peer* peer, const RTC::Producer* producer) = 0;
-			virtual void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer)       = 0;
+			virtual void OnPeerClosed(const RTC::Peer* peer)                                         = 0;
+			virtual void OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer) = 0;
+			virtual void OnPeerProducerClosed(const RTC::Peer* peer, const RTC::Producer* producer)  = 0;
+			virtual void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer)        = 0;
 			virtual void OnPeerRtpPacket(
 			    const RTC::Peer* peer, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnPeerRtcpReceiverReport(
