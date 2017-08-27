@@ -264,31 +264,27 @@ namespace RTC
 
 		RTC::RtpStreamRecv* rtpStream{ nullptr };
 
-		if (this->rtpStreams.find(ssrc) == this->rtpStreams.end())
-		{
-			if (this->rtxStreamMap.find(ssrc) == this->rtxStreamMap.end())
-			{
-				MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
-
-				return;
-			}
-
-			else
-			{
-				rtpStream = this->rtxStreamMap[ssrc];
-
-				// Process the packet.
-				if (!rtpStream->ReceiveRtxPacket(packet))
-					return;
-			}
-		}
-		else
+		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
 		{
 			rtpStream = this->rtpStreams[ssrc];
 
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
 				return;
+		}
+		else if (this->rtxStreamMap.find(ssrc) != this->rtxStreamMap.end())
+		{
+			rtpStream = this->rtxStreamMap[ssrc];
+
+			// Process the packet.
+			if (!rtpStream->ReceiveRtxPacket(packet))
+				return;
+		}
+		else
+		{
+			MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
+
+			return;
 		}
 
 		// Apply the Producer RTP mapping before dispatching the packet to the Room.
@@ -410,14 +406,8 @@ namespace RTC
 
 		for (auto& pair : rtpMapping[JsonStringCodecPayloadTypes])
 		{
-			if (
-				!pair.isArray() ||
-				pair.size() != 2 ||
-				!pair[0].isUInt() ||
-				!pair[1].isUInt())
-			{
+			if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
 				MS_THROW_ERROR("wrong rtpMapping entry");
-			}
 
 			auto sourcePayloadType = static_cast<uint8_t>(pair[0].asUInt());
 			auto mappedPayloadType = static_cast<uint8_t>(pair[1].asUInt());
@@ -427,14 +417,8 @@ namespace RTC
 
 		for (auto& pair : rtpMapping[JsonStringHeaderExtensionIds])
 		{
-			if (
-				!pair.isArray() ||
-				pair.size() != 2 ||
-				!pair[0].isUInt() ||
-				!pair[1].isUInt())
-			{
+			if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
 				MS_THROW_ERROR("wrong rtpMapping entry");
-			}
 
 			auto sourceHeaderExtensionId = static_cast<uint8_t>(pair[0].asUInt());
 			auto mappedHeaderExtensionId = static_cast<uint8_t>(pair[1].asUInt());
@@ -443,9 +427,10 @@ namespace RTC
 				mappedHeaderExtensionId;
 		}
 
-		// Also, fill the RTP header extensions ids with the mapped valules.
+		// Also, fill the id of well known RTP header extensions with the mapped ids
+		// (if any).
 
-		auto& headerExtensionIds = this->rtpMapping.headerExtensionIds;
+		auto& idMapping = this->rtpMapping.headerExtensionIds;
 		uint8_t ssrcAudioLevelId{ 0 };
 		uint8_t absSendTimeId{ 0 };
 
@@ -454,8 +439,8 @@ namespace RTC
 			if (this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
 			    exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
-				if (headerExtensionIds.find(exten.id) != headerExtensionIds.end())
-					ssrcAudioLevelId = headerExtensionIds[exten.id];
+				if (idMapping.find(exten.id) != idMapping.end())
+					ssrcAudioLevelId = idMapping[exten.id];
 				else
 					ssrcAudioLevelId = exten.id;
 
@@ -464,8 +449,8 @@ namespace RTC
 
 			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
-				if (headerExtensionIds.find(exten.id) != headerExtensionIds.end())
-					absSendTimeId = headerExtensionIds[exten.id];
+				if (idMapping.find(exten.id) != idMapping.end())
+					absSendTimeId = idMapping[exten.id];
 				else
 					absSendTimeId = exten.id;
 
@@ -631,15 +616,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& codecPayloadTypes = this->rtpMapping.codecPayloadTypes;
-		auto& headerExtensionIds = this->rtpMapping.headerExtensionIds;
+		auto& codecPayloadTypeMap = this->rtpMapping.codecPayloadTypes;
+		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
 		auto payloadType = packet->GetPayloadType();
 
-		if (codecPayloadTypes.find(payloadType) != codecPayloadTypes.end())
+		// Mangle payload type.
+
+		if (codecPayloadTypeMap.find(payloadType) != codecPayloadTypeMap.end())
 		{
-			packet->SetPayloadType(codecPayloadTypes[payloadType]);
+			packet->SetPayloadType(codecPayloadTypeMap[payloadType]);
 		}
 
-		// TODO: Mangle header extension ids.
+		// Mangle header extension ids.
+
+		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
+
+		if (this->knownHeaderExtensions.ssrcAudioLevelId)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
+			    this->knownHeaderExtensions.ssrcAudioLevelId);
+		}
+
+		if (this->knownHeaderExtensions.absSendTimeId)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
+			    this->knownHeaderExtensions.absSendTimeId);
+		}
 	}
 } // namespace RTC

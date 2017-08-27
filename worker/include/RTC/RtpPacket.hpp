@@ -107,6 +107,7 @@ namespace RTC
 		uint16_t GetExtensionHeaderId() const;
 		size_t GetExtensionHeaderLength() const;
 		uint8_t* GetExtensionHeaderValue() const;
+		void MangleExtensionHeaderIds(std::map<uint8_t, uint8_t>& idMapping);
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
 		void AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id);
@@ -293,7 +294,7 @@ namespace RTC
 			if (this->twoBytesExtensions.find(id) == this->twoBytesExtensions.end())
 				return nullptr;
 
-			*len = this->twoByteExtensions.at(id)->len;
+			*len = this->twoBytesExtensions.at(id)->len;
 
 			return this->twoBytesExtensions.at(id)->value;
 		}

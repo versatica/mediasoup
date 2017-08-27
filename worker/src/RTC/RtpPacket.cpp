@@ -1,8 +1,11 @@
 #define MS_CLASS "RTC::RtpPacket"
-#define MS_LOG_DEV
+#define MS_LOG_DEV // TODO: TMP
 
 #include "RTC/RtpPacket.hpp"
 #include "Logger.hpp"
+#include <vector>
+#include <iterator> // std::ostream_iterator
+#include <sstream>  // std::ostringstream
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -152,25 +155,93 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DUMP("<RtpPacket>");
-		MS_DUMP("  padding          : %s", this->header->padding ? "true" : "false");
-		MS_DUMP("  extension header : %s", HasExtensionHeader() ? "true" : "false");
+		MS_DUMP("  padding           : %s", this->header->padding ? "true" : "false");
+		MS_DUMP("  extension header  : %s", HasExtensionHeader() ? "true" : "false");
 		if (HasExtensionHeader())
 		{
-			MS_DUMP("    id     : %" PRIu16, GetExtensionHeaderId());
-			MS_DUMP("    length : %zu bytes", GetExtensionHeaderLength());
+			MS_DUMP("    id      : %" PRIu16, GetExtensionHeaderId());
+			MS_DUMP("    length  : %zu bytes", GetExtensionHeaderLength());
 		}
-		MS_DUMP("  csrc count       : %" PRIu8, this->header->csrcCount);
-		MS_DUMP("  marker           : %s", HasMarker() ? "true" : "false");
-		MS_DUMP("  payload type     : %" PRIu8, GetPayloadType());
-		MS_DUMP("  sequence number  : %" PRIu16, GetSequenceNumber());
-		MS_DUMP("  timestamp        : %" PRIu32, GetTimestamp());
-		MS_DUMP("  ssrc             : %" PRIu32, GetSsrc());
-		MS_DUMP("  payload size     : %zu bytes", GetPayloadLength());
+		if (HasOneByteExtensions())
+		{
+			MS_DUMP("  RFC5285 ext style : One-Byte Header");
+		}
+		if (HasTwoBytesExtensions())
+		{
+			MS_DUMP("  RFC5285 ext style : Two-Bytes Header");
+		}
+		if (HasOneByteExtensions() || HasTwoBytesExtensions())
+		{
+			std::vector<std::string> extIds;
+			std::ostringstream extIdsStream;
+
+			if (HasOneByteExtensions())
+			{
+				for (const auto& pair : this->oneByteExtensions)
+					extIds.push_back(std::to_string(pair.first));
+			}
+			else
+			{
+				for (const auto& pair : this->twoBytesExtensions)
+					extIds.push_back(std::to_string(pair.first));
+			}
+
+			std::copy(
+			    extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ","));
+			extIdsStream << extIds.back();
+
+			MS_DUMP("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
+		}
+		MS_DUMP("  csrc count        : %" PRIu8, this->header->csrcCount);
+		MS_DUMP("  marker            : %s", HasMarker() ? "true" : "false");
+		MS_DUMP("  payload type      : %" PRIu8, GetPayloadType());
+		MS_DUMP("  sequence number   : %" PRIu16, GetSequenceNumber());
+		MS_DUMP("  timestamp         : %" PRIu32, GetTimestamp());
+		MS_DUMP("  ssrc              : %" PRIu32, GetSsrc());
+		MS_DUMP("  payload size      : %zu bytes", GetPayloadLength());
 		if (this->header->padding)
 		{
-			MS_DUMP("  padding size   : %" PRIu8 " bytes", this->payloadPadding);
+			MS_DUMP("  padding size    : %" PRIu8 " bytes", this->payloadPadding);
 		}
 		MS_DUMP("</RtpPacket>");
+	}
+
+	void RtpPacket::MangleExtensionHeaderIds(std::map<uint8_t, uint8_t>& idMapping)
+	{
+		MS_TRACE();
+
+		if (HasOneByteExtensions())
+		{
+			for (const auto& pair : this->oneByteExtensions)
+			{
+				auto& id = pair.first;
+				auto& oneByteExtension = pair.second;
+
+				if (idMapping.find(id) != idMapping.end())
+				{
+					oneByteExtension->id = idMapping[id];
+				}
+			}
+		}
+		else if (HasTwoBytesExtensions())
+		{
+			for (const auto& pair : this->twoBytesExtensions)
+			{
+				auto& id = pair.first;
+				auto& twoBytesExtension = pair.second;
+
+				if (idMapping.find(id) != idMapping.end())
+				{
+					twoBytesExtension->id = idMapping[id];
+				}
+			}
+		}
+
+		// Clear the URI to id map.
+		this->extensionMap.clear();
+
+		// Parse extensions again.
+		ParseExtensions();
 	}
 
 	void RtpPacket::Serialize(uint8_t* buffer)
