@@ -521,7 +521,7 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Pass the remote fingerprint to the DTLS transport-
+				// Pass the remote fingerprint to the DTLS transport.
 				this->dtlsTransport->SetRemoteFingerprint(remoteFingerprint);
 
 				// Run the DTLS transport if ready.

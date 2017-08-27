@@ -254,7 +254,6 @@ namespace RTC
 			case Channel::Request::MethodId::PRODUCER_CLOSE:
 			case Channel::Request::MethodId::PRODUCER_DUMP:
 			case Channel::Request::MethodId::PRODUCER_RECEIVE:
-			case Channel::Request::MethodId::PRODUCER_SET_TRANSPORT:
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
 			case Channel::Request::MethodId::CONSUMER_DUMP:
