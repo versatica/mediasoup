@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpPacket"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/RtpPacket.hpp"
 #include "Logger.hpp"

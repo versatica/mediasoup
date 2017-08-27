@@ -52,9 +52,6 @@ namespace RTC
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
 
-		// Set RTP header extension ids.
-		this->SetHeaderExtensions(packet);
-
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
 			this->nackGenerator->ReceivePacket(packet);
@@ -111,9 +108,6 @@ namespace RTC
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
 		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
-
-		// Set RTP header extension ids.
-		this->SetHeaderExtensions(packet);
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack && this->nackGenerator)
@@ -273,22 +267,5 @@ namespace RTC
 		this->hasRtx         = true;
 		this->rtxPayloadType = payloadType;
 		this->rtxSsrc        = ssrc;
-	}
-
-	void RtpStreamRecv::SetHeaderExtensions(RTC::RtpPacket* packet) const
-	{
-		MS_TRACE();
-
-		if (this->params.ssrcAudioLevelId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
-		}
-
-		if (this->params.absSendTimeId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
-		}
 	}
 } // namespace RTC

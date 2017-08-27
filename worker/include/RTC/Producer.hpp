@@ -29,10 +29,23 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnProducerParameters(RTC::Producer* producer)                = 0;
-			virtual void OnProducerParametersDone(RTC::Producer* producer)            = 0;
+			virtual void OnProducerRtpParameters(RTC::Producer* producer)             = 0;
 			virtual void OnRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnProducerClosed(const RTC::Producer* producer)              = 0;
+		};
+
+	private:
+		struct RtpMapping
+		{
+			std::map<uint8_t, uint8_t> codecPayloadTypes;
+			std::map<uint8_t, uint8_t> headerExtensionIds;
+		};
+
+	private:
+		struct KnownHeaderExtensions
+		{
+			uint8_t ssrcAudioLevelId{ 0 }; // 0 means no ssrc-audio-level id.
+			uint8_t absSendTimeId{ 0 };    // 0 means no abs-send-time id.
 		};
 
 	public:
@@ -57,8 +70,10 @@ namespace RTC
 		void RequestFullFrame() const;
 
 	private:
+		void CreateRtpMapping(Json::Value& rtpMapping);
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ClearRtpStreams();
+		void ApplyRtpMapping(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -80,6 +95,8 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtxStreamMap;
 		// Others.
+		struct RtpMapping rtpMapping;
+		struct KnownHeaderExtensions knownHeaderExtensions;
 		bool rtpRawEventEnabled{ false };
 		bool rtpObjectEventEnabled{ false };
 		// Timestamp when last RTCP was sent.
@@ -113,6 +130,7 @@ namespace RTC
 	inline void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		auto it = this->rtpStreams.find(report->GetSsrc());
+
 		if (it != this->rtpStreams.end())
 		{
 			auto rtpStream = it->second;

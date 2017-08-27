@@ -310,6 +310,7 @@ namespace RTC
 			*peerId = jsonPeerId.asUInt();
 
 		auto it = this->peers.find(jsonPeerId.asUInt());
+
 		if (it != this->peers.end())
 		{
 			auto* peer = it->second;
@@ -324,7 +325,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(producer->GetParameters(), "producer has no parameters");
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
 
 		uint32_t consumerId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
 		auto consumer = new RTC::Consumer(consumerPeer, this->notifier, consumerId, producer->kind);
@@ -347,11 +348,12 @@ namespace RTC
 		this->peers.erase(peer->peerId);
 	}
 
-	void Room::OnPeerProducerParameters(const RTC::Peer* peer, RTC::Producer* producer)
+	// TODO: No. Instead let's producer.broadcast() or producer.connect(peer) in JS.
+	void Room::OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(producer->GetParameters(), "producer->GetParameters() returns no RtpParameters");
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
 
 		// If this is a new Producer, iterate all the peers but this one and
 		// create a Consumer associated to this Producer for each Peer.
@@ -360,26 +362,26 @@ namespace RTC
 			// Ensure the entry will exist even with an empty array.
 			this->mapProducerConsumers[producer];
 
-			for (auto& kv : this->peers)
-			{
-				auto* consumerPeer = kv.second;
+			// for (auto& kv : this->peers)
+			// {
+			// 	auto* consumerPeer = kv.second;
 
-				// Skip receiver Peer.
-				if (consumerPeer == peer)
-					continue;
+			// 	// Skip producing Peer.
+			// 	if (consumerPeer == peer)
+			// 		continue;
 
-				AddConsumerForProducer(consumerPeer, producer);
-			}
+			// 	AddConsumerForProducer(consumerPeer, producer);
+			// }
 		}
 		// If this is not a new Producer let's retrieve its updated parameters
 		// and update with them all the associated Consumers.
 		else
 		{
-			for (auto consumer : this->mapProducerConsumers[producer])
-			{
-				// Provide the Consumer with the parameters of the Producer.
-				consumer->Send(producer->GetParameters());
-			}
+			// for (auto consumer : this->mapProducerConsumers[producer])
+			// {
+			// 	// Provide the Consumer with the parameters of the Producer.
+			// 	consumer->Send(producer->GetParameters());
+			// }
 		}
 	}
 

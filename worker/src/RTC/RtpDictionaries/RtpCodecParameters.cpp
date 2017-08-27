@@ -13,7 +13,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringMimeType{ "mimeType" };
 		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
 		static const Json::StaticString JsonStringClockRate{ "clockRate" };
@@ -25,15 +24,6 @@ namespace RTC
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
-
-		// `kind` is mandatory.
-		if (!data[JsonStringKind].isString())
-			MS_THROW_ERROR("missing RtpCodecParameters.kind");
-
-		std::string kind = data[JsonStringKind].asString();
-
-		// NOTE: This may throw.
-		this->kind = RTC::Media::GetKind(kind);
 
 		// `mimeType` is mandatory.
 		if (!data[JsonStringMimeType].isString())
@@ -94,7 +84,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringMimeType{ "mimeType" };
 		static const Json::StaticString JsonStringName{ "name" };
 		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
@@ -106,9 +95,6 @@ namespace RTC
 		static const Json::StaticString JsonStringRtcpFeedback{ "rtcpFeedback" };
 
 		Json::Value json(Json::objectValue);
-
-		// Add `kind`.
-		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
 		// Add `mimeType`.
 		json[JsonStringMimeType] = this->mime.ToString();
@@ -148,90 +134,11 @@ namespace RTC
 		return json;
 	}
 
-	bool RtpCodecParameters::Matches(RtpCodecParameters& codec, bool checkPayloadType)
-	{
-		MS_TRACE();
-
-		static std::string jsonStringPacketizationMode{ "packetizationMode" };
-
-		// MIME must match.
-		if (this->mime != codec.mime)
-			return false;
-
-		if (checkPayloadType)
-		{
-			if (this->payloadType != codec.payloadType)
-				return false;
-		}
-
-		// Clock rate must match.
-		if (this->clockRate != codec.clockRate)
-			return false;
-
-		// Per kind checks.
-		switch (this->kind)
-		{
-			case RTC::Media::Kind::AUDIO:
-			{
-				// Num channels must match.
-				if (this->channels != codec.channels)
-					return false;
-
-				break;
-			}
-
-			default:;
-		}
-
-		// Per MIME checks.
-		switch (this->mime.subtype)
-		{
-			case RTC::RtpCodecMimeType::Subtype::H264:
-			{
-				int32_t packetizationMode      = this->parameters.GetInteger(jsonStringPacketizationMode);
-				int32_t givenPacketizationMode = codec.parameters.GetInteger(jsonStringPacketizationMode);
-
-				if (packetizationMode != givenPacketizationMode)
-					return false;
-
-				break;
-			}
-
-			default:;
-		}
-
-		return true;
-	}
-
-	void RtpCodecParameters::ReduceRtcpFeedback(std::vector<RTC::RtcpFeedback>& supportedRtcpFeedback)
-	{
-		MS_TRACE();
-
-		std::vector<RTC::RtcpFeedback> updatedRtcpFeedback;
-
-		for (auto& rtcpFeedbackItem : this->rtcpFeedback)
-		{
-			for (auto& supportedRtcpFeedbackItem : supportedRtcpFeedback)
-			{
-				if (rtcpFeedbackItem.type == supportedRtcpFeedbackItem.type &&
-				    rtcpFeedbackItem.parameter == supportedRtcpFeedbackItem.parameter)
-				{
-					updatedRtcpFeedback.push_back(supportedRtcpFeedbackItem);
-
-					break;
-				}
-			}
-		}
-
-		this->rtcpFeedback = updatedRtcpFeedback;
-	}
-
 	inline void RtpCodecParameters::CheckCodec()
 	{
 		MS_TRACE();
 
 		static std::string jsonStringApt{ "apt" };
-		static std::string jsonStringPacketizationMode{ "packetizationMode" };
 
 		// Check per MIME parameters and set default values.
 		switch (this->mime.subtype)
@@ -241,24 +148,6 @@ namespace RTC
 				// A RTX codec must have 'apt' parameter.
 				if (!this->parameters.HasInteger(jsonStringApt))
 					MS_THROW_ERROR("missing apt parameter in RTX RtpCodecParameters");
-
-				break;
-			}
-
-			case RTC::RtpCodecMimeType::Subtype::OPUS:
-			{
-				// Opus default channels is 2.
-				if (this->channels < 2)
-					this->channels = 2;
-
-				break;
-			}
-
-			case RTC::RtpCodecMimeType::Subtype::H264:
-			{
-				// H264 default packetizationMode is 0.
-				if (!this->parameters.HasInteger(jsonStringPacketizationMode))
-					this->parameters.SetInteger(jsonStringPacketizationMode, 0);
 
 				break;
 			}

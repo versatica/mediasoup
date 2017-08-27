@@ -62,7 +62,7 @@ namespace RTC
 
 		// Close all the Transports.
 		// NOTE: It is critical to close Transports after Producers/Consumers
-		// because RtcReceiver.Destroy() fires an event in the Transport.
+		// because Producer.Destroy() fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
 			auto* transport = it->second;
@@ -731,24 +731,19 @@ namespace RTC
 		}
 	}
 
-	void Peer::OnProducerParameters(RTC::Producer* producer)
+	void Peer::OnProducerRtpParameters(RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		auto rtpParameters = producer->GetParameters();
-		auto transport     = producer->GetTransport();
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
+
+		auto transport = producer->GetTransport();
 
 		// NOTE: This may throw.
 		if (transport != nullptr)
 			transport->AddProducer(producer);
-	}
 
-	void Peer::OnProducerParametersDone(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		// Notify the listener (Room).
-		this->listener->OnPeerProducerParameters(this, producer);
+		this->listener->OnPeerProducerRtpParameters(this, producer);
 	}
 
 	void Peer::OnRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
@@ -1036,7 +1031,7 @@ namespace RTC
 		uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
 		uint32_t now      = DepLibUV::GetTime();
 
-		this->SendRtcp(now);
+		SendRtcp(now);
 
 		// Recalculate next RTCP interval.
 		if (!this->consumers.empty())
@@ -1052,7 +1047,7 @@ namespace RTC
 				rate += consumer->GetTransmissionRate(now) / 1000;
 			}
 
-			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
+			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s.
 			if (rate != 0u)
 				interval = 360000 / rate;
 

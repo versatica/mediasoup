@@ -144,7 +144,7 @@ namespace RTC
 		std::vector<IceCandidate> iceLocalCandidates;
 		RTC::TransportTuple* selectedTuple{ nullptr };
 		// Others (DTLS).
-		bool remoteDtlsParametersGiven{ false };
+		bool hasRemoteDtlsParameters{ false };
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others (RtpListener).
 		RtpListener rtpListener;

@@ -164,14 +164,11 @@ namespace RTC
 		RtpCodecParameters(Json::Value& data);
 
 		Json::Value ToJson() const;
-		bool Matches(RtpCodecParameters& codec, bool checkPayloadType = false);
-		void ReduceRtcpFeedback(std::vector<RtcpFeedback>& supportedRtcpFeedback);
 
 	private:
 		void CheckCodec();
 
 	public:
-		Media::Kind kind{ Media::Kind::ALL };
 		RtpCodecMimeType mime;
 		uint8_t payloadType{ 0 };
 		uint32_t clockRate{ 0 };
@@ -281,7 +278,6 @@ namespace RTC
 		std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		RtcpParameters rtcp;
 		bool hasRtcp{ false };
-		Json::Value userParameters;
 	};
 } // namespace RTC
 

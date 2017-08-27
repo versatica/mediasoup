@@ -180,8 +180,6 @@ namespace RTC
 		static const Json::StaticString JsonStringClockRate{ "clockRate" };
 		static const Json::StaticString JsonStringUseNack{ "useNack" };
 		static const Json::StaticString JsonStringUsePli{ "usePli" };
-		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
-		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 
 		Json::Value json(Json::objectValue);
 
@@ -191,8 +189,6 @@ namespace RTC
 		json[JsonStringClockRate]        = Json::UInt{ this->clockRate };
 		json[JsonStringUseNack]          = this->useNack;
 		json[JsonStringUsePli]           = this->usePli;
-		json[JsonStringSsrcAudioLevelId] = Json::UInt{ this->ssrcAudioLevelId };
-		json[JsonStringAbsSendTimeId]    = Json::UInt{ this->absSendTimeId };
 
 		return json;
 	}

@@ -48,7 +48,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
 		void OnPeerClosed(const RTC::Peer* peer) override;
-		void OnPeerProducerParameters(const RTC::Peer* peer, RTC::Producer* producer) override;
+		void OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer) override;
 		void OnPeerProducerClosed(const RTC::Peer* peer, const RTC::Producer* producer) override;
 		void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer) override;
 		void OnPeerRtpPacket(const RTC::Peer* peer, RTC::Producer* producer, RTC::RtpPacket* packet) override;

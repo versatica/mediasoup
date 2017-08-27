@@ -60,6 +60,8 @@ namespace RTC
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringHasTransport{ "hasTransport" };
+		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
+		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 		static const Json::StaticString JsonStringRtpRawEventEnabled{ "rtpRawEventEnabled" };
 		static const Json::StaticString JsonStringRtpObjectEventEnabled{ "rtpObjectEventEnabled" };
 		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
@@ -78,6 +80,12 @@ namespace RTC
 			json[JsonStringRtpParameters] = Json::nullValue;
 
 		json[JsonStringHasTransport] = this->transport != nullptr;
+
+		if (this->knownHeaderExtensions.ssrcAudioLevelId)
+			json[JsonStringSsrcAudioLevelId] = this->knownHeaderExtensions.ssrcAudioLevelId;
+
+		if (this->knownHeaderExtensions.absSendTimeId)
+			json[JsonStringAbsSendTimeId] = this->knownHeaderExtensions.absSendTimeId;
 
 		json[JsonStringRtpRawEventEnabled] = this->rtpRawEventEnabled;
 
@@ -126,53 +134,60 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_RECEIVE:
 			{
-				// Keep a reference to the previous rtpParameters.
-				auto previousRtpParameters = this->rtpParameters;
+				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+				static const Json::StaticString JsonStringRtpMapping{ "rtpMapping" };
 
-				try
+				if (!request->data[JsonStringRtpParameters].isObject())
 				{
-					this->rtpParameters = new RTC::RtpParameters(request->data);
+					request->Reject("missing data.rtpParameters");
+
+					return;
 				}
-				catch (const MediaSoupError& error)
+				else if (!request->data[JsonStringRtpMapping].isObject())
 				{
-					request->Reject(error.what());
+					request->Reject("missing data.rtpMapping");
 
 					return;
 				}
 
-				// NOTE: this may throw. If so keep the current parameters.
+				if (this->rtpParameters)
+				{
+					request->Reject("Producer already has RTP parameters");
+
+					return;
+				}
+
 				try
 				{
-					this->listener->OnProducerParameters(this);
+					// This may throw.
+					this->rtpParameters = new RTC::RtpParameters(request->data[JsonStringRtpParameters]);
+
+					// This may throw.
+					CreateRtpMapping(request->data[JsonStringRtpMapping]);
+
+					// This may throw.
+					this->listener->OnProducerRtpParameters(this);
 				}
 				catch (const MediaSoupError& error)
 				{
-					// Rollback previous parameters.
-					this->rtpParameters = previousRtpParameters;
+					if (this->rtpParameters)
+					{
+						delete this->rtpParameters;
+						this->rtpParameters = nullptr;
+					}
 
 					request->Reject(error.what());
 
 					return;
 				}
-
-				// Free the previous parameters.
-				delete previousRtpParameters;
-
-				// Free previous RTP streams.
-				ClearRtpStreams();
-
-				auto data = this->rtpParameters->ToJson();
-
-				request->Accept(data);
-
-				// And notify again.
-				this->listener->OnProducerParametersDone(this);
 
 				// Create RtpStreamRecv instances.
 				for (auto& encoding : this->rtpParameters->encodings)
 				{
 					CreateRtpStream(encoding);
 				}
+
+				request->Accept();
 
 				break;
 			}
@@ -242,7 +257,7 @@ namespace RTC
 		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 
-		// TODO: Check if stopped, etc (not yet done).
+		// TODO: Check if paused, etc (not yet done).
 
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
@@ -267,7 +282,6 @@ namespace RTC
 					return;
 			}
 		}
-
 		else
 		{
 			rtpStream = this->rtpStreams[ssrc];
@@ -276,6 +290,9 @@ namespace RTC
 			if (!rtpStream->ReceivePacket(packet))
 				return;
 		}
+
+		// Apply the Producer RTP mapping before dispatching the packet to the Room.
+		ApplyRtpMapping(packet);
 
 		// Notify the listener.
 		this->listener->OnRtpPacket(this, packet);
@@ -379,6 +396,84 @@ namespace RTC
 		}
 	}
 
+	void Producer::CreateRtpMapping(Json::Value& rtpMapping)
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringCodecPayloadTypes{ "codecPayloadTypes" };
+		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
+
+		if (!rtpMapping[JsonStringCodecPayloadTypes].isArray())
+			MS_THROW_ERROR("missing rtpMapping.codecPayloadTypes");
+		else if (!rtpMapping[JsonStringHeaderExtensionIds].isArray())
+			MS_THROW_ERROR("missing rtpMapping.headerExtensionIds");
+
+		for (auto& pair : rtpMapping[JsonStringCodecPayloadTypes])
+		{
+			if (
+				!pair.isArray() ||
+				pair.size() != 2 ||
+				!pair[0].isUInt() ||
+				!pair[1].isUInt())
+			{
+				MS_THROW_ERROR("wrong rtpMapping entry");
+			}
+
+			auto sourcePayloadType = static_cast<uint8_t>(pair[0].asUInt());
+			auto mappedPayloadType = static_cast<uint8_t>(pair[1].asUInt());
+
+			this->rtpMapping.codecPayloadTypes[sourcePayloadType] = mappedPayloadType;
+		}
+
+		for (auto& pair : rtpMapping[JsonStringHeaderExtensionIds])
+		{
+			if (
+				!pair.isArray() ||
+				pair.size() != 2 ||
+				!pair[0].isUInt() ||
+				!pair[1].isUInt())
+			{
+				MS_THROW_ERROR("wrong rtpMapping entry");
+			}
+
+			auto sourceHeaderExtensionId = static_cast<uint8_t>(pair[0].asUInt());
+			auto mappedHeaderExtensionId = static_cast<uint8_t>(pair[1].asUInt());
+
+			this->rtpMapping.headerExtensionIds[sourceHeaderExtensionId] =
+				mappedHeaderExtensionId;
+		}
+
+		// Also, fill the RTP header extensions ids with the mapped valules.
+
+		auto& headerExtensionIds = this->rtpMapping.headerExtensionIds;
+		uint8_t ssrcAudioLevelId{ 0 };
+		uint8_t absSendTimeId{ 0 };
+
+		for (auto& exten : this->rtpParameters->headerExtensions)
+		{
+			if (this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
+			    exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			{
+				if (headerExtensionIds.find(exten.id) != headerExtensionIds.end())
+					ssrcAudioLevelId = headerExtensionIds[exten.id];
+				else
+					ssrcAudioLevelId = exten.id;
+
+				this->knownHeaderExtensions.ssrcAudioLevelId = ssrcAudioLevelId;
+			}
+
+			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			{
+				if (headerExtensionIds.find(exten.id) != headerExtensionIds.end())
+					absSendTimeId = headerExtensionIds[exten.id];
+				else
+					absSendTimeId = exten.id;
+
+				this->knownHeaderExtensions.absSendTimeId = absSendTimeId;
+			}
+		}
+	}
+
 	void Producer::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
 	{
 		MS_TRACE();
@@ -401,8 +496,6 @@ namespace RTC
 		bool useNack{ false };
 		bool usePli{ false };
 		bool useRemb{ false };
-		uint8_t ssrcAudioLevelId{ 0 };
-		uint8_t absSendTimeId{ 0 };
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
@@ -426,20 +519,6 @@ namespace RTC
 			}
 		}
 
-		for (auto& exten : this->rtpParameters->headerExtensions)
-		{
-			if (this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
-			    exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
-			{
-				ssrcAudioLevelId = exten.id;
-			}
-
-			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
-			{
-				absSendTimeId = exten.id;
-			}
-		}
-
 		// Create stream params.
 		RTC::RtpStream::Params params;
 
@@ -449,8 +528,6 @@ namespace RTC
 		params.clockRate        = codec.clockRate;
 		params.useNack          = useNack;
 		params.usePli           = usePli;
-		params.ssrcAudioLevelId = ssrcAudioLevelId;
-		params.absSendTimeId    = absSendTimeId;
 
 		// Create a RtpStreamRecv for receiving a media stream.
 		this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, params);
@@ -548,5 +625,21 @@ namespace RTC
 		// Send two, because it's free.
 		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
+	}
+
+	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		auto& codecPayloadTypes = this->rtpMapping.codecPayloadTypes;
+		auto& headerExtensionIds = this->rtpMapping.headerExtensionIds;
+		auto payloadType = packet->GetPayloadType();
+
+		if (codecPayloadTypes.find(payloadType) != codecPayloadTypes.end())
+		{
+			packet->SetPayloadType(codecPayloadTypes[payloadType]);
+		}
+
+		// TODO: Mangle header extension ids.
 	}
 } // namespace RTC

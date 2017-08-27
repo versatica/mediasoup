@@ -33,7 +33,6 @@ namespace RTC
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
-		void SetHeaderExtensions(RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:

@@ -288,8 +288,6 @@ namespace RTC
 		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
 		bool useNack{ false };
 		bool usePli{ false };
-		uint8_t ssrcAudioLevelId{ 0 };
-		uint8_t absSendTimeId{ 0 };
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
@@ -307,20 +305,6 @@ namespace RTC
 			}
 		}
 
-		for (auto& exten : this->rtpParameters->headerExtensions)
-		{
-			if (this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
-			    exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
-			{
-				ssrcAudioLevelId = exten.id;
-			}
-
-			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
-			{
-				absSendTimeId = exten.id;
-			}
-		}
-
 		// Create stream params.
 		RTC::RtpStream::Params params;
 
@@ -330,8 +314,6 @@ namespace RTC
 		params.clockRate        = codec.clockRate;
 		params.useNack          = useNack;
 		params.usePli           = usePli;
-		params.ssrcAudioLevelId = ssrcAudioLevelId;
-		params.absSendTimeId    = absSendTimeId;
 
 		// Create a RtpStreamSend for sending a single media stream.
 		if (useNack)

@@ -428,14 +428,14 @@ namespace RTC
 				remoteFingerprint.algorithm = RTC::DtlsTransport::FingerprintAlgorithm::NONE;
 
 				// Ensure this method is not called twice.
-				if (this->remoteDtlsParametersGiven)
+				if (this->hasRemoteDtlsParameters)
 				{
-					request->Reject("method already called");
+					request->Reject("Transport already has remote DTLS parameters");
 
 					return;
 				}
 
-				this->remoteDtlsParametersGiven = true;
+				this->hasRemoteDtlsParameters = true;
 
 				if (!request->data[JsonStringFingerprints].isArray())
 				{
