@@ -323,68 +323,11 @@ namespace RTC
 		return nullptr;
 	}
 
-	inline void Room::AddConsumerForProducer(RTC::Peer* consumerPeer, const RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
-
-		uint32_t consumerId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-		auto consumer = new RTC::Consumer(consumerPeer, this->notifier, consumerId, producer->kind);
-
-		// Store into the maps.
-		this->mapProducerConsumers[producer].insert(consumer);
-		this->mapConsumerProducer[consumer] = producer;
-
-		auto rtpParameters        = producer->GetParameters();
-		auto associatedProducerId = producer->producerId;
-
-		// Attach the Consumer to the peer.
-		consumerPeer->AddConsumer(consumer, rtpParameters, associatedProducerId);
-	}
-
 	void Room::OnPeerClosed(const RTC::Peer* peer)
 	{
 		MS_TRACE();
 
 		this->peers.erase(peer->peerId);
-	}
-
-	// TODO: No. Instead let's producer.broadcast() or producer.connect(peer) in JS.
-	void Room::OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
-
-		// If this is a new Producer, iterate all the peers but this one and
-		// create a Consumer associated to this Producer for each Peer.
-		if (this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end())
-		{
-			// Ensure the entry will exist even with an empty array.
-			this->mapProducerConsumers[producer];
-
-			// for (auto& kv : this->peers)
-			// {
-			// 	auto* consumerPeer = kv.second;
-
-			// 	// Skip producing Peer.
-			// 	if (consumerPeer == peer)
-			// 		continue;
-
-			// 	AddConsumerForProducer(consumerPeer, producer);
-			// }
-		}
-		// If this is not a new Producer let's retrieve its updated parameters
-		// and update with them all the associated Consumers.
-		else
-		{
-			// for (auto consumer : this->mapProducerConsumers[producer])
-			// {
-			// 	// Provide the Consumer with the parameters of the Producer.
-			// 	consumer->Send(producer->GetParameters());
-			// }
-		}
 	}
 
 	void Room::OnPeerProducerClosed(const RTC::Peer* /*peer*/, const RTC::Producer* producer)
@@ -411,21 +354,60 @@ namespace RTC
 		}
 	}
 
-	void Room::OnPeerConsumerClosed(const RTC::Peer* /*peer*/, RTC::Consumer* consumer)
+	void Room::OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapProducerConsumers)
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
+		MS_ASSERT(
+		    this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end(),
+		    "Producer already in mapProducerConsumers");
+
+		// Iterate all the peers but this one and create a Consumer associated to this
+		// Producer for each Peer.
+
+		// Ensure the entry will exist even with an empty array.
+		this->mapProducerConsumers[producer];
+
+		for (auto& kv : this->peers)
 		{
-			auto& consumers = kv.second;
+			auto* consumerPeer = kv.second;
 
-			consumers.erase(consumer);
+			// Skip producing Peer.
+			if (consumerPeer == peer)
+				continue;
+
+			uint32_t consumerId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+			auto consumer = new RTC::Consumer(consumerPeer, this->notifier, consumerId, producer->kind);
+
+			// Store into the maps.
+			this->mapProducerConsumers[producer].insert(consumer);
+			this->mapConsumerProducer[consumer] = producer;
+
+			auto rtpParameters        = producer->GetParameters();
+			auto associatedProducerId = producer->producerId;
+
+			// Attach the Consumer to the peer.
+			consumerPeer->AddConsumer(consumer, rtpParameters, associatedProducerId);
 		}
-
-		this->mapConsumerProducer.erase(consumer);
 	}
 
-	void Room::OnPeerRtpPacket(const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RtpPacket* packet)
+	void Room::OnPeerProducerPaused(const RTC::Peer* peer, const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Room::OnPeerProducerResumed(const RTC::Peer* peer, const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Room::OnPeerProducerRtpPacket(
+	    const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -457,7 +439,34 @@ namespace RTC
 		}
 	}
 
-	void Room::OnPeerRtcpReceiverReport(
+	void Room::OnPeerProducerRtcpSenderReport(
+	    const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RTCP::SenderReport* report)
+	{
+		MS_TRACE();
+
+		// Producer needs the sender report in order to generate it's receiver report.
+		producer->ReceiveRtcpSenderReport(report);
+
+		MS_ASSERT(
+		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		    "Producer not present in the map");
+	}
+
+	void Room::OnPeerConsumerClosed(const RTC::Peer* /*peer*/, RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		for (auto& kv : this->mapProducerConsumers)
+		{
+			auto& consumers = kv.second;
+
+			consumers.erase(consumer);
+		}
+
+		this->mapConsumerProducer.erase(consumer);
+	}
+
+	void Room::OnPeerConsumerRtcpReceiverReport(
 	    const RTC::Peer* /*peer*/, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
@@ -469,7 +478,7 @@ namespace RTC
 		consumer->ReceiveRtcpReceiverReport(report);
 	}
 
-	void Room::OnPeerRtcpFeedback(
+	void Room::OnPeerConsumerRtcpFeedback(
 	    const RTC::Peer* /*peer*/, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
@@ -483,7 +492,7 @@ namespace RTC
 		producer->ReceiveRtcpFeedback(packet);
 	}
 
-	void Room::OnPeerRtcpFeedback(
+	void Room::OnPeerConsumerRtcpFeedback(
 	    const RTC::Peer* /*peer*/, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet)
 	{
 		MS_TRACE();
@@ -497,20 +506,7 @@ namespace RTC
 		producer->ReceiveRtcpFeedback(packet);
 	}
 
-	void Room::OnPeerRtcpSenderReport(
-	    const RTC::Peer* /*peer*/, RTC::Producer* producer, RTC::RTCP::SenderReport* report)
-	{
-		MS_TRACE();
-
-		// Producer needs the sender report in order to generate it's receiver report.
-		producer->ReceiveRtcpSenderReport(report);
-
-		MS_ASSERT(
-		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		    "Producer not present in the map");
-	}
-
-	void Room::OnFullFrameRequired(RTC::Peer* /*peer*/, RTC::Consumer* consumer)
+	void Room::OnPeerConsumerFullFrameRequired(RTC::Peer* /*peer*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 

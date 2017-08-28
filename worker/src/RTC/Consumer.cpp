@@ -128,10 +128,8 @@ namespace RTC
 
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 
-		bool hadParameters = this->rtpParameters != nullptr;
-
-		// Free the previous rtpParameters.
-		if (hadParameters)
+		// Free the previous RTP parameters.
+		if (this->rtpParameters)
 			delete this->rtpParameters;
 
 		// Delete previous RtpStreamSend (if any).
@@ -145,19 +143,8 @@ namespace RTC
 		this->rtpParameters = new RTC::RtpParameters(rtpParameters);
 
 		// NOTE: We assume a single stream/encoding when sending to remote peers.
+		// TODO
 		// CreateRtpStream(encodings[0]);
-
-		// Emit "parameterschange" if these are updated parameters.
-		if (hadParameters)
-		{
-			Json::Value eventData(Json::objectValue);
-
-			eventData[JsonStringClass]         = "Consumer";
-			eventData[JsonStringRtpParameters] = this->rtpParameters->ToJson();
-			eventData[JsonStringEnabled]       = this->GetEnabled();
-
-			this->notifier->Emit(this->consumerId, "parameterschange", eventData);
-		}
 	}
 
 	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -376,18 +363,5 @@ namespace RTC
 		// Delete the RTX RtpPacket if it was created.
 		if (rtxPacket != packet)
 			delete rtxPacket;
-	}
-
-	void Consumer::EmitEnabledChange() const
-	{
-		MS_TRACE();
-
-		static const Json::StaticString JsonStringClass{ "class" };
-
-		Json::Value eventData(Json::objectValue);
-
-		eventData[JsonStringClass] = "Consumer";
-
-		this->notifier->Emit(this->consumerId, "activechange", eventData);
 	}
 } // namespace RTC

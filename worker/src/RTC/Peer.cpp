@@ -666,28 +666,6 @@ namespace RTC
 		return nullptr;
 	}
 
-	void Peer::OnTransportConnected(RTC::Transport* transport)
-	{
-		MS_TRACE();
-
-		// If the transport is used by any Consumer (video/depth) notify the
-		// listener.
-		for (auto& kv : this->consumers)
-		{
-			auto* consumer = kv.second;
-
-			if (consumer->kind != RTC::Media::Kind::VIDEO && consumer->kind != RTC::Media::Kind::DEPTH)
-			{
-				continue;
-			}
-
-			if (consumer->GetTransport() != transport)
-				continue;
-
-			this->listener->OnFullFrameRequired(this, consumer);
-		}
-	}
-
 	void Peer::OnTransportClosed(RTC::Transport* transport)
 	{
 		MS_TRACE();
@@ -711,43 +689,26 @@ namespace RTC
 		this->transports.erase(transport->transportId);
 	}
 
-	void Peer::OnTransportFullFrameRequired(RTC::Transport* transport)
+	void Peer::OnTransportConnected(RTC::Transport* transport)
 	{
 		MS_TRACE();
 
-		// If the transport is used by any Producer (video/depth) notify the
+		// If the transport is used by any Consumer (video/depth) notify the
 		// listener.
-		for (auto& kv : this->producers)
+		for (auto& kv : this->consumers)
 		{
-			auto* producer = kv.second;
+			auto* consumer = kv.second;
 
-			if (producer->kind != RTC::Media::Kind::VIDEO && producer->kind != RTC::Media::Kind::DEPTH)
+			if (consumer->kind != RTC::Media::Kind::VIDEO && consumer->kind != RTC::Media::Kind::DEPTH)
 			{
 				continue;
 			}
 
-			if (producer->GetTransport() != transport)
+			if (consumer->GetTransport() != transport)
 				continue;
 
-			producer->RequestFullFrame();
+			this->listener->OnPeerConsumerFullFrameRequired(this, consumer);
 		}
-	}
-
-	void Peer::OnProducerRtpParameters(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
-
-		this->listener->OnPeerProducerRtpParameters(this, producer);
-	}
-
-	void Peer::OnRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		// Notify the listener.
-		this->listener->OnPeerRtpPacket(this, producer, packet);
 	}
 
 	void Peer::OnTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet)
@@ -773,7 +734,7 @@ namespace RTC
 
 						if (consumer != nullptr)
 						{
-							this->listener->OnPeerRtcpReceiverReport(this, consumer, report);
+							this->listener->OnPeerConsumerRtcpReceiverReport(this, consumer, report);
 						}
 						else
 						{
@@ -820,7 +781,7 @@ namespace RTC
 									MS_DEBUG_TAG(rtx, "PLI received [media ssrc:%" PRIu32 "]", feedback->GetMediaSsrc());
 								}
 
-								this->listener->OnPeerRtcpFeedback(this, consumer, feedback);
+								this->listener->OnPeerConsumerRtcpFeedback(this, consumer, feedback);
 							}
 							else
 							{
@@ -930,7 +891,7 @@ namespace RTC
 
 						if (producer != nullptr)
 						{
-							this->listener->OnPeerRtcpSenderReport(this, producer, report);
+							this->listener->OnPeerProducerRtcpSenderReport(this, producer, report);
 						}
 						else
 						{
@@ -985,6 +946,28 @@ namespace RTC
 		}
 	}
 
+	void Peer::OnTransportFullFrameRequired(RTC::Transport* transport)
+	{
+		MS_TRACE();
+
+		// If the transport is used by any Producer (video/depth) notify the
+		// listener.
+		for (auto& kv : this->producers)
+		{
+			auto* producer = kv.second;
+
+			if (producer->kind != RTC::Media::Kind::VIDEO && producer->kind != RTC::Media::Kind::DEPTH)
+			{
+				continue;
+			}
+
+			if (producer->GetTransport() != transport)
+				continue;
+
+			producer->RequestFullFrame();
+		}
+	}
+
 	void Peer::OnProducerClosed(const RTC::Producer* producer)
 	{
 		MS_TRACE();
@@ -1004,6 +987,37 @@ namespace RTC
 		this->listener->OnPeerProducerClosed(this, producer);
 	}
 
+	void Peer::OnProducerRtpParameters(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
+
+		this->listener->OnPeerProducerRtpParameters(this, producer);
+	}
+
+	void Peer::OnProducerPaused(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		this->listener->OnPeerProducerPaused(this, producer);
+	}
+
+	void Peer::OnProducerResumed(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		this->listener->OnPeerProducerResumed(this, producer);
+	}
+
+	void Peer::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// Notify the listener.
+		this->listener->OnPeerProducerRtpPacket(this, producer, packet);
+	}
+
 	void Peer::OnConsumerClosed(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
@@ -1019,7 +1033,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->listener->OnFullFrameRequired(this, consumer);
+		this->listener->OnPeerConsumerFullFrameRequired(this, consumer);
 	}
 
 	void Peer::OnTimer(Timer* /*timer*/)

@@ -200,9 +200,14 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			{
+				bool wasPaused = this->paused;
+
 				this->paused = true;
 
 				request->Accept();
+
+				if (!wasPaused)
+					this->listener->OnProducerPaused(this);
 
 				break;
 			}
@@ -216,7 +221,10 @@ namespace RTC
 				request->Accept();
 
 				if (wasPaused)
+				{
+					this->listener->OnProducerResumed(this);
 					RequestFullFrame();
+				}
 
 				break;
 			}
@@ -353,7 +361,7 @@ namespace RTC
 		ApplyRtpMapping(packet);
 
 		// Notify the listener.
-		this->listener->OnRtpPacket(this, packet);
+		this->listener->OnProducerRtpPacket(this, packet);
 	}
 
 	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)

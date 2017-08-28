@@ -30,20 +30,22 @@ namespace RTC
 		{
 		public:
 			virtual void OnPeerClosed(const RTC::Peer* peer)                                         = 0;
-			virtual void OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer) = 0;
 			virtual void OnPeerProducerClosed(const RTC::Peer* peer, const RTC::Producer* producer)  = 0;
-			virtual void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer)        = 0;
-			virtual void OnPeerRtpPacket(
+			virtual void OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer) = 0;
+			virtual void OnPeerProducerPaused(const RTC::Peer* peer, const RTC::Producer* producer)  = 0;
+			virtual void OnPeerProducerResumed(const RTC::Peer* peer, const RTC::Producer* producer) = 0;
+			virtual void OnPeerProducerRtpPacket(
 			    const RTC::Peer* peer, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual void OnPeerRtcpReceiverReport(
-			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report) = 0;
-			virtual void OnPeerRtcpFeedback(
-			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) = 0;
-			virtual void OnPeerRtcpFeedback(
-			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
-			virtual void OnPeerRtcpSenderReport(
+			virtual void OnPeerProducerRtcpSenderReport(
 			    const RTC::Peer* peer, RTC::Producer* producer, RTC::RTCP::SenderReport* report) = 0;
-			virtual void OnFullFrameRequired(RTC::Peer* peer, RTC::Consumer* consumer)           = 0;
+			virtual void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer)    = 0;
+			virtual void OnPeerConsumerRtcpReceiverReport(
+			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report) = 0;
+			virtual void OnPeerConsumerRtcpFeedback(
+			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) = 0;
+			virtual void OnPeerConsumerRtcpFeedback(
+			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
+			virtual void OnPeerConsumerFullFrameRequired(RTC::Peer* peer, RTC::Consumer* consumer)    = 0;
 		};
 
 	public:
@@ -77,16 +79,18 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		void OnTransportConnected(RTC::Transport* transport) override;
 		void OnTransportClosed(RTC::Transport* transport) override;
+		void OnTransportConnected(RTC::Transport* transport) override;
 		void OnTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) override;
 		void OnTransportFullFrameRequired(RTC::Transport* transport) override;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
-		void OnProducerRtpParameters(RTC::Producer* producer) override;
-		void OnRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnProducerClosed(const RTC::Producer* producer) override;
+		void OnProducerRtpParameters(RTC::Producer* producer) override;
+		void OnProducerPaused(RTC::Producer* producer) override;
+		void OnProducerResumed(RTC::Producer* producer) override;
+		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:

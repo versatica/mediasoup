@@ -885,9 +885,6 @@ namespace RTC
 		// Pass the RTP packet to the corresponding Producer.
 		producer->ReceiveRtpPacket(packet);
 
-		// TODO: If the Producer is paused, should we pass the packet to the
-		// BWE?
-
 		// Feed the remote bitrate estimator (REMB).
 		if (this->remoteBitrateEstimator)
 		{

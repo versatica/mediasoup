@@ -29,9 +29,11 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnProducerRtpParameters(RTC::Producer* producer)             = 0;
-			virtual void OnRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual void OnProducerClosed(const RTC::Producer* producer)              = 0;
+			virtual void OnProducerClosed(const RTC::Producer* producer)                      = 0;
+			virtual void OnProducerRtpParameters(RTC::Producer* producer)                     = 0;
+			virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
+			virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 		};
 
 	private:

@@ -43,24 +43,26 @@ namespace RTC
 
 	private:
 		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr) const;
-		void AddConsumerForProducer(RTC::Peer* consumerPeer, const RTC::Producer* producer);
 
 		/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
 		void OnPeerClosed(const RTC::Peer* peer) override;
-		void OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer) override;
 		void OnPeerProducerClosed(const RTC::Peer* peer, const RTC::Producer* producer) override;
-		void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer) override;
-		void OnPeerRtpPacket(const RTC::Peer* peer, RTC::Producer* producer, RTC::RtpPacket* packet) override;
-		void OnPeerRtcpReceiverReport(
-		    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report) override;
-		void OnPeerRtcpFeedback(
-		    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) override;
-		void OnPeerRtcpFeedback(
-		    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet) override;
-		void OnPeerRtcpSenderReport(
+		void OnPeerProducerRtpParameters(const RTC::Peer* peer, RTC::Producer* producer) override;
+		void OnPeerProducerPaused(const RTC::Peer* peer, const RTC::Producer* producer) override;
+		void OnPeerProducerResumed(const RTC::Peer* peer, const RTC::Producer* producer) override;
+		void OnPeerProducerRtpPacket(
+		    const RTC::Peer* peer, RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		void OnPeerProducerRtcpSenderReport(
 		    const RTC::Peer* peer, RTC::Producer* producer, RTC::RTCP::SenderReport* report) override;
-		void OnFullFrameRequired(RTC::Peer* peer, RTC::Consumer* consumer) override;
+		void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer) override;
+		void OnPeerConsumerRtcpReceiverReport(
+		    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report) override;
+		void OnPeerConsumerRtcpFeedback(
+		    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) override;
+		void OnPeerConsumerRtcpFeedback(
+		    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet) override;
+		void OnPeerConsumerFullFrameRequired(RTC::Peer* peer, RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

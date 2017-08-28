@@ -56,7 +56,6 @@ namespace RTC
 	private:
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void EmitEnabledChange() const;
 
 	public:
 		// Passed by argument.
@@ -85,12 +84,7 @@ namespace RTC
 
 	inline void Consumer::SetTransport(RTC::Transport* transport)
 	{
-		bool wasEnabled = this->GetEnabled();
-
 		this->transport = transport;
-
-		if (wasEnabled != this->GetEnabled())
-			EmitEnabledChange();
 	}
 
 	inline RTC::Transport* Consumer::GetTransport() const
@@ -100,13 +94,8 @@ namespace RTC
 
 	inline void Consumer::RemoveTransport(RTC::Transport* transport)
 	{
-		bool wasEnabled = this->GetEnabled();
-
 		if (this->transport == transport)
 			this->transport = nullptr;
-
-		if (wasEnabled != this->GetEnabled())
-			EmitEnabledChange();
 	}
 
 	inline RTC::RtpParameters* Consumer::GetParameters() const

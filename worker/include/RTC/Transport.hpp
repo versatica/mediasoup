@@ -36,8 +36,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnTransportConnected(RTC::Transport* transport)                             = 0;
 			virtual void OnTransportClosed(RTC::Transport* transport)                                = 0;
+			virtual void OnTransportConnected(RTC::Transport* transport)                             = 0;
 			virtual void OnTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) = 0;
 			virtual void OnTransportFullFrameRequired(RTC::Transport* transport)                     = 0;
 		};
