@@ -159,13 +159,19 @@ namespace RTC
 
 				try
 				{
-					// This may throw.
+					// NOTE: This may throw.
 					this->rtpParameters = new RTC::RtpParameters(request->data[JsonStringRtpParameters]);
 
-					// This may throw.
+					auto transport = GetTransport();
+
+					// NOTE: This may throw.
+					if (transport != nullptr)
+						transport->AddProducer(this);
+
+					// NOTE: This may throw.
 					CreateRtpMapping(request->data[JsonStringRtpMapping]);
 
-					// This may throw.
+					// NOTE: This may throw.
 					this->listener->OnProducerRtpParameters(this);
 				}
 				catch (const MediaSoupError& error)
@@ -192,6 +198,29 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::PRODUCER_PAUSE:
+			{
+				this->paused = true;
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_RESUME:
+			{
+				bool wasPaused = this->paused;
+
+				this->paused = false;
+
+				request->Accept();
+
+				if (wasPaused)
+					RequestFullFrame();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
 			{
 				static const Json::StaticString JsonStringEnabled{ "enabled" };
@@ -209,7 +238,7 @@ namespace RTC
 
 				// If set, require a full frame.
 				if (this->rtpRawEventEnabled)
-					this->RequestFullFrame();
+					RequestFullFrame();
 
 				break;
 			}
@@ -231,7 +260,7 @@ namespace RTC
 
 				// If set, require a full frame.
 				if (this->rtpObjectEventEnabled)
-					this->RequestFullFrame();
+					RequestFullFrame();
 
 				break;
 			}
@@ -256,8 +285,6 @@ namespace RTC
 		static const Json::StaticString JsonStringSequenceNumber{ "sequenceNumber" };
 		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-
-		// TODO: Check if paused, etc (not yet done).
 
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
@@ -287,11 +314,9 @@ namespace RTC
 			return;
 		}
 
-		// Apply the Producer RTP mapping before dispatching the packet to the Room.
-		ApplyRtpMapping(packet);
-
-		// Notify the listener.
-		this->listener->OnRtpPacket(this, packet);
+		// If paused stop here.
+		if (this->paused)
+			return;
 
 		// Emit "rtpraw" if enabled.
 		if (this->rtpRawEventEnabled)
@@ -323,6 +348,12 @@ namespace RTC
 			this->notifier->EmitWithBinary(
 			    this->producerId, "rtpobject", eventData, packet->GetPayload(), packet->GetPayloadLength());
 		}
+
+		// Apply the Producer RTP mapping before dispatching the packet to the Room.
+		ApplyRtpMapping(packet);
+
+		// Notify the listener.
+		this->listener->OnRtpPacket(this, packet);
 	}
 
 	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)

@@ -94,6 +94,7 @@ namespace RTC
 		RTC::RtpParameters* rtpParameters{ nullptr };
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtxStreamMap;
+		bool paused{ false };
 		// Others.
 		struct RtpMapping rtpMapping;
 		struct KnownHeaderExtensions knownHeaderExtensions;

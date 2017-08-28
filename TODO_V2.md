@@ -1,9 +1,6 @@
 # TODO in mediasoup v2 (server-side)
 
-
-* Before the Producer dispacthes a RTP packet to the room (via `onRtpPacket()`, we call `ApplyRtpMapping(packet)` to mangle RTP payload type and header extension ids. However, we are breaking the previously established Id mapping in the `RtpPacket` (generated via `packet->AddExtensionMapping()`). The fact is that, most probably, we should set the mapping once the `RtpStreamRecv` processes the packet. The problem is that, currently, the information to set the mapping is hold into the `RtpStreamRecv`...
-
-* May be problems with `RtpPacket` RTX stuff due to RTP mapping in Producers? Sure, the decoded RTX packet must also be mapped (once decoded).
+* If the Producer is paused, should we pass the packet to the BWE?
 
 * Use "@xxxxx" for private events and `safeEmit("xxxx")` for public events (already done except for Producer and Consumer).
 
