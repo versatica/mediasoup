@@ -35,7 +35,6 @@ namespace Channel
 		{ "producer.setRtpObjectEvent",        Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT        },
 		{ "consumer.close",                    Request::MethodId::CONSUMER_CLOSE                       },
 		{ "consumer.dump",                     Request::MethodId::CONSUMER_DUMP                        },
-		{ "consumer.enable",                   Request::MethodId::CONSUMER_ENABLE                      },
 		{ "consumer.pause",                    Request::MethodId::CONSUMER_PAUSE                       },
 		{ "consumer.resume",                   Request::MethodId::CONSUMER_RESUME                      }
 	};

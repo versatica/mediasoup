@@ -161,21 +161,6 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::ROUTER_CLOSE:
-			{
-#ifdef MS_LOG_DEV
-				uint32_t routerId = this->routerId;
-#endif
-
-				Destroy();
-
-				MS_DEBUG_DEV("Router closed [routerId:%" PRIu32 "]", routerId);
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::ROUTER_DUMP:
 			{
 				auto json = ToJson();
@@ -230,6 +215,87 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::ROUTER_CREATE_PRODUCER:
+			{
+				static const Json::StaticString JsonStringKind{ "kind" };
+
+				RTC::Producer* producer;
+				RTC::Transport* transport;
+				uint32_t producerId;
+
+				try
+				{
+					producer = GetProducerFromRequest(request, &producerId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer != nullptr)
+				{
+					request->Reject("Producer already exists");
+
+					return;
+				}
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (transport == nullptr)
+				{
+					request->Reject("Transport does not exist");
+
+					return;
+				}
+
+				// kind is mandatory.
+				if (!request->data[JsonStringKind].isString())
+					MS_THROW_ERROR("missing kind");
+
+				std::string kind = request->data[JsonStringKind].asString();
+
+				// Create a Producer instance.
+				try
+				{
+					producer = new RTC::Producer(this, this->notifier, producerId, RTC::Media::GetKind(kind));
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				this->producers[producerId] = producer;
+
+				MS_DEBUG_DEV("Producer created [producerId:%" PRIu32 "]", producerId);
+
+				// Set the Transport.
+				producer->SetTransport(transport);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::ROUTER_CREATE_CONSUMER:
+			{
+				// TODO
+
+				break;
+			}
+
 			case Channel::Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT:
 			{
 				static const Json::StaticString JsonStringEnabled{ "enabled" };
@@ -263,28 +329,12 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
-			case Channel::Request::MethodId::TRANSPORT_DUMP:
-			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
-			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
-			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
-			case Channel::Request::MethodId::PRODUCER_CLOSE:
-			case Channel::Request::MethodId::PRODUCER_DUMP:
-			case Channel::Request::MethodId::PRODUCER_RECEIVE:
-			case Channel::Request::MethodId::PRODUCER_PAUSE:
-			case Channel::Request::MethodId::PRODUCER_RESUME:
-			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
-			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
-			case Channel::Request::MethodId::CONSUMER_CLOSE:
-			case Channel::Request::MethodId::CONSUMER_DUMP:
-			case Channel::Request::MethodId::CONSUMER_ENABLE:
-			case Channel::Request::MethodId::CONSUMER_PAUSE:
-			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
-				RTC::Peer* peer;
+				RTC::Transport* transport;
 
 				try
 				{
-					peer = GetPeerFromRequest(request);
+					transport = GetTransportFromRequest(request);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -293,14 +343,159 @@ namespace RTC
 					return;
 				}
 
-				if (peer == nullptr)
+				if (transport == nullptr)
 				{
-					request->Reject("Peer does not exist");
+					request->Reject("Transport does not exist");
 
 					return;
 				}
 
-				peer->HandleRequest(request);
+				transport->Destroy();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_DUMP:
+			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
+			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
+			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
+			{
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (transport == nullptr)
+				{
+					request->Reject("Transport does not exist");
+
+					return;
+				}
+
+				transport->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_CLOSE:
+			{
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+
+				producer->Destroy();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_DUMP:
+			case Channel::Request::MethodId::PRODUCER_RECEIVE:
+			case Channel::Request::MethodId::PRODUCER_PAUSE:
+			case Channel::Request::MethodId::PRODUCER_RESUME:
+			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
+			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
+			{
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+
+				producer->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_CLOSE:
+			{
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (consumer == nullptr)
+				{
+					request->Reject("Consumer does not exist");
+
+					return;
+				}
+
+				consumer->Destroy();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_PAUSE:
+			case Channel::Request::MethodId::CONSUMER_RESUME:
+			{
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (consumer == nullptr)
+				{
+					request->Reject("Consumer does not exist");
+
+					return;
+				}
+
+				consumer->HandleRequest(request);
 
 				break;
 			}

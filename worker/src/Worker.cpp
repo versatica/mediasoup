@@ -1,7 +1,7 @@
-#define MS_CLASS "Loop"
+#define MS_CLASS "Worker"
 // #define MS_LOG_DEV
 
-#include "Loop.hpp"
+#include "Worker.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
@@ -14,7 +14,7 @@
 
 /* Instance methods. */
 
-Loop::Loop(Channel::UnixStreamSocket* channel) : channel(channel)
+Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
 {
 	MS_TRACE();
 
@@ -36,12 +36,12 @@ Loop::Loop(Channel::UnixStreamSocket* channel) : channel(channel)
 	MS_DEBUG_DEV("libuv loop ended");
 }
 
-Loop::~Loop()
+Worker::~Worker()
 {
 	MS_TRACE();
 }
 
-void Loop::Close()
+void Worker::Close()
 {
 	MS_TRACE();
 
@@ -78,7 +78,7 @@ void Loop::Close()
 		this->channel->Destroy();
 }
 
-RTC::Router* Loop::GetRouterFromRequest(Channel::Request* request, uint32_t* routerId)
+RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request, uint32_t* routerId)
 {
 	MS_TRACE();
 
@@ -104,7 +104,7 @@ RTC::Router* Loop::GetRouterFromRequest(Channel::Request* request, uint32_t* rou
 	return nullptr;
 }
 
-void Loop::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
+void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
 	MS_TRACE();
 
@@ -125,7 +125,7 @@ void Loop::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 	}
 }
 
-void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
+void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();
 
@@ -210,6 +210,32 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		}
 
 		case Channel::Request::MethodId::ROUTER_CLOSE:
+		{
+			RTC::Router* router;
+
+			try
+			{
+				router = GetRouterFromRequest(request);
+			}
+			catch (const MediaSoupError& error)
+			{
+				request->Reject(error.what());
+
+				return;
+			}
+
+			if (router == nullptr)
+			{
+				request->Reject("Router does not exist");
+
+				return;
+			}
+
+			router->Destroy();
+
+			break;
+		}
+
 		case Channel::Request::MethodId::ROUTER_DUMP:
 		case Channel::Request::MethodId::ROUTER_CREATE_TRANSPORT:
 		case Channel::Request::MethodId::ROUTER_CREATE_PRODUCER:
@@ -229,7 +255,6 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
 		case Channel::Request::MethodId::CONSUMER_CLOSE:
 		case Channel::Request::MethodId::CONSUMER_DUMP:
-		case Channel::Request::MethodId::CONSUMER_ENABLE:
 		case Channel::Request::MethodId::CONSUMER_PAUSE:
 		case Channel::Request::MethodId::CONSUMER_RESUME:
 		{
@@ -267,7 +292,7 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 	}
 }
 
-void Loop::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
+void Worker::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
@@ -282,7 +307,7 @@ void Loop::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*
 	Close();
 }
 
-void Loop::OnRouterClosed(RTC::Router* router)
+void Worker::OnRouterClosed(RTC::Router* router)
 {
 	MS_TRACE();
 

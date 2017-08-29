@@ -341,55 +341,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_ENABLE:
-			{
-				// RTC::Consumer* consumer;
-
-				// try
-				// {
-				// 	consumer = GetConsumerFromRequest(request);
-				// }
-				// catch (const MediaSoupError& error)
-				// {
-				// 	request->Reject(error.what());
-
-				// 	return;
-				// }
-
-				// if (consumer == nullptr)
-				// {
-				// 	request->Reject("Consumer does not exist");
-
-				// 	return;
-				// }
-
-				// RTC::Transport* transport;
-
-				// try
-				// {
-				// 	transport = GetTransportFromRequest(request);
-				// }
-				// catch (const MediaSoupError& error)
-				// {
-				// 	request->Reject(error.what());
-
-				// 	return;
-				// }
-
-				// if (transport == nullptr)
-				// {
-				// 	request->Reject("Transport does not exist");
-
-				// 	return;
-				// }
-
-				// consumer->SetTransport(transport);
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::CONSUMER_DUMP:
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:

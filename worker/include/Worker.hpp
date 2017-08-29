@@ -1,5 +1,5 @@
-#ifndef MS_LOOP_HPP
-#define MS_LOOP_HPP
+#ifndef MS_WORKER_HPP
+#define MS_WORKER_HPP
 
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
@@ -9,13 +9,13 @@
 #include "handles/SignalsHandler.hpp"
 #include <unordered_map>
 
-class Loop : public SignalsHandler::Listener,
-             public Channel::UnixStreamSocket::Listener,
-             public RTC::Router::Listener
+class Worker : public SignalsHandler::Listener,
+               public Channel::UnixStreamSocket::Listener,
+               public RTC::Router::Listener
 {
 public:
-	explicit Loop(Channel::UnixStreamSocket* channel);
-	~Loop() override;
+	explicit Worker(Channel::UnixStreamSocket* channel);
+	~Worker() override;
 
 private:
 	void Close();

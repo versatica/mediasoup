@@ -1,4 +1,10 @@
-# BUGS
+# TODO in mediasoup v2 (server-side)
+
+* Does `CONSUMER_ENABLE` makes sense? IMHO it's better to keep the Consumer just in JS and call `CREATE_CONSUMER` (by passing `rtpParameters` and `transportId`) once enabled for reception in JS.
+
+* Handle all the XXXXX_CLOSE in the parent by calling `xxxxx->Destroy()`.
+
+* Remove all the "close" events in C++.
 
 * Move the RTCP timer from Peer to Transport.
 
@@ -9,11 +15,6 @@
   - DOC: https://stackoverflow.com/questions/36726890/why-are-javascript-promises-asynchronous-when-calling-only-synchronous-functions
     + I must avoid unnecesary `Promise.resolve()`.
   - "The callback passed to a Promise constructor is always called synchronously, but the callbacks passed into then are always called asynchronously"
-
-
-# TODO in mediasoup v2 (server-side)
-
-* It's hard that `join` returns an array of `Peers` since, upon creation of the new `Peer`, it will receive `newconsumer` events which will try to send a `newPeer` mediasoup notification to the client.
 
 * worker: If a `Producer` is paused and a new `Peer` joins (so a new `Consumer` is generated) such a new `Consumer` does not know that its associated `Producer` is paused. When creating a `Consumer` the `Room` should check `producer->IsPaused()` and call `consumer->setSourcePaused(true)` or similar.
 

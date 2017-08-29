@@ -6,7 +6,7 @@
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "Logger.hpp"
-#include "Loop.hpp"
+#include "Worker.hpp"
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
-	// Set the Channel socket (this will be handled and deleted by the Loop).
+	// Set the Channel socket (this will be handled and deleted by the Worker).
 	auto* channel = new Channel::UnixStreamSocket(channelFd);
 
 	// Initialize the Logger.
@@ -87,10 +87,10 @@ int main(int argc, char* argv[])
 	{
 		init();
 
-		// Run the Loop.
-		Loop loop(channel);
+		// Run the Worker.
+		Worker worker(channel);
 
-		// Loop ended.
+		// Worker ended.
 		destroy();
 		exitSuccess();
 	}
