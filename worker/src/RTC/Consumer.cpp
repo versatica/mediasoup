@@ -18,8 +18,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind)
-	    : consumerId(consumerId), kind(kind), listener(listener), notifier(notifier)
+	    Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, RTC::Transport* transport)
+	    : consumerId(consumerId), kind(kind), listener(listener), notifier(notifier), transport(transport)
 	{
 		MS_TRACE();
 
@@ -40,8 +40,6 @@ namespace RTC
 	void Consumer::Destroy()
 	{
 		MS_TRACE();
-
-		this->notifier->Emit(this->consumerId, "close");
 
 		// Notify the listener.
 		this->listener->OnConsumerClosed(this);

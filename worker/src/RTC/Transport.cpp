@@ -7,6 +7,8 @@
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "RTC/Producer.hpp"
+#include "RTC/Consumer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
@@ -46,6 +48,16 @@ namespace RTC
 	    : transportId(transportId), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
+
+		// TODO: TMP
+		for (auto& producer : this->producers)
+		{
+			producer->GetParameters();
+		}
+		for (auto& consumer : this->consumers)
+		{
+			consumer->GetParameters();
+		}
 
 		static const Json::StaticString JsonStringUdp{ "udp" };
 		static const Json::StaticString JsonStringTcp{ "tcp" };
@@ -581,6 +593,23 @@ namespace RTC
 				request->Reject("unknown method");
 			}
 		}
+	}
+
+	void Transport::HandleProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// NOTE: This may throw.
+		this->rtpListener.AddProducer(producer);
+
+		// TODO: add to the map
+	}
+
+	void Transport::HandleConsumer(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// TODO
 	}
 
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)

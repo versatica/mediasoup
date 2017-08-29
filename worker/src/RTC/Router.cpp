@@ -277,6 +277,21 @@ namespace RTC
 					return;
 				}
 
+				// Tell the Transport to handle the new Producer.
+				try
+				{
+					// NOTE: This may throw.
+					transport->HandleProducer(producer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete producer;
+
+					request->Reject(error.what());
+
+					return;
+				}
+
 				this->producers[producerId] = producer;
 
 				MS_DEBUG_DEV("Producer created [producerId:%" PRIu32 "]", producerId);

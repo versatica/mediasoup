@@ -7,7 +7,6 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
-#include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
@@ -21,10 +20,16 @@
 #include "RTC/UdpSocket.hpp"
 #include <json/json.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace RTC
 {
+	// Avoid cyclic #include problem by declaring classes instead of including
+	// the corresponding header files.
+	class Producer;
+	class Consumer;
+
 	class Transport : public RTC::UdpSocket::Listener,
 	                  public RTC::TcpServer::Listener,
 	                  public RTC::TcpConnection::Listener,
@@ -49,8 +54,8 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		void AddProducer(RTC::Producer* producer);
-		void RemoveProducer(const RTC::Producer* producer);
+		void HandleProducer(RTC::Producer* producer);
+		void HandleConsumer(RTC::Consumer* consumer);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
@@ -137,6 +142,9 @@ namespace RTC
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
 		bool allocated{ false };
+		// Others (Producers and Consumers).
+		std::unordered_set<RTC::Producer*> producers;
+		std::unordered_set<RTC::Consumer*> consumers;
 		// Others (ICE).
 		std::vector<IceCandidate> iceLocalCandidates;
 		RTC::TransportTuple* selectedTuple{ nullptr };
@@ -145,7 +153,7 @@ namespace RTC
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others (RtpListener).
 		RtpListener rtpListener;
-		// REMB and bitrate stuff.
+		// Others (REMB and bitrate stuff).
 		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 		uint32_t maxBitrate{ 0 };
 		uint32_t effectiveMaxBitrate{ 0 };
@@ -153,16 +161,6 @@ namespace RTC
 	};
 
 	/* Inline instance methods. */
-
-	inline void Transport::AddProducer(RTC::Producer* producer)
-	{
-		this->rtpListener.AddProducer(producer);
-	}
-
-	inline void Transport::RemoveProducer(const RTC::Producer* producer)
-	{
-		this->rtpListener.RemoveProducer(producer);
-	}
 
 	inline RTC::Producer* Transport::GetProducer(uint32_t ssrc)
 	{

@@ -2,7 +2,6 @@
 #define MS_RTC_LISTENER_HPP
 
 #include "common.hpp"
-#include "RTC/Producer.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <string>
 #include <unordered_map>
@@ -10,6 +9,10 @@
 
 namespace RTC
 {
+	// Avoid cyclic #include problem by declaring classes instead of including
+	// the corresponding header files.
+	class Producer;
+
 	class RtpListener
 	{
 	public:

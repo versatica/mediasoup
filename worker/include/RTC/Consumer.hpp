@@ -32,7 +32,7 @@ namespace RTC
 		};
 
 	public:
-		Consumer(Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind);
+		Consumer(Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, RTC::Transport* transport);
 
 	private:
 		virtual ~Consumer();
@@ -42,10 +42,7 @@ namespace RTC
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		void Send(RTC::RtpParameters* rtpParameters);
-		void SetTransport(RTC::Transport* transport);
-		RTC::Transport* GetTransport() const;
-		void RemoveTransport(RTC::Transport* transport);
-		RTC::RtpParameters* GetParameters() const;
+		RTC::RtpParameters* GetParameters() const; // TODO: What for?
 		bool GetEnabled() const;
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -83,25 +80,6 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline void Consumer::SetTransport(RTC::Transport* transport)
-	{
-		this->transport = transport;
-	}
-
-	inline RTC::Transport* Consumer::GetTransport() const
-	{
-		return this->transport;
-	}
-
-	inline void Consumer::RemoveTransport(RTC::Transport* transport)
-	{
-		if (this->transport == transport)
-			this->transport = nullptr;
-
-		// TODO: More. Remove rtpParameters.
-	}
-
-	// TODO: What for?
 	inline RTC::RtpParameters* Consumer::GetParameters() const
 	{
 		return this->rtpParameters;

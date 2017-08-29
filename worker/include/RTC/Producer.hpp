@@ -10,16 +10,13 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
+#include "RTC/Transport.hpp"
 #include <json/json.h>
 #include <map>
 #include <string>
 
 namespace RTC
 {
-	// Avoid cyclic #include problem by declaring classes instead of including
-	// the corresponding header files.
-	class Transport;
-
 	class Producer : public RtpStreamRecv::Listener
 	{
 	public:
@@ -50,16 +47,15 @@ namespace RTC
 	public:
 		Producer(Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind, RTC::Transport* transport);
 
-	private:
+	public:
+		// Must be public because Router needs to call it.
 		virtual ~Producer();
 
 	public:
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		RTC::Transport* GetTransport() const; // TODO: YES?
-		void RemoveTransport(RTC::Transport* transport); // TODO: better close this.
-		RTC::RtpParameters* GetParameters() const; // TODO: What for?
+		RTC::RtpParameters* GetParameters() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -104,17 +100,6 @@ namespace RTC
 	};
 
 	/* Inline methods. */
-
-	inline RTC::Transport* Producer::GetTransport() const
-	{
-		return this->transport;
-	}
-
-	inline void Producer::RemoveTransport(RTC::Transport* transport)
-	{
-		if (this->transport == transport)
-			this->transport = nullptr;
-	}
 
 	inline RTC::RtpParameters* Producer::GetParameters() const
 	{

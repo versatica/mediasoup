@@ -7,7 +7,6 @@
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/Transport.hpp"
 
 namespace RTC
 {
@@ -38,9 +37,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify.
-		this->notifier->Emit(this->producerId, "close");
-
 		// Notify the listener.
 		this->listener->OnProducerClosed(this);
 
@@ -54,13 +50,11 @@ namespace RTC
 		static const Json::StaticString JsonStringProducerId{ "producerId" };
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-		static const Json::StaticString JsonStringHasTransport{ "hasTransport" };
 		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
 		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 		static const Json::StaticString JsonStringRtpRawEventEnabled{ "rtpRawEventEnabled" };
 		static const Json::StaticString JsonStringRtpObjectEventEnabled{ "rtpObjectEventEnabled" };
 		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
-		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonRtpStreams(Json::arrayValue);
@@ -73,8 +67,6 @@ namespace RTC
 			json[JsonStringRtpParameters] = this->rtpParameters->ToJson();
 		else
 			json[JsonStringRtpParameters] = Json::nullValue;
-
-		json[JsonStringHasTransport] = this->transport != nullptr;
 
 		if (this->knownHeaderExtensions.ssrcAudioLevelId)
 			json[JsonStringSsrcAudioLevelId] = this->knownHeaderExtensions.ssrcAudioLevelId;
@@ -156,12 +148,6 @@ namespace RTC
 				{
 					// NOTE: This may throw.
 					this->rtpParameters = new RTC::RtpParameters(request->data[JsonStringRtpParameters]);
-
-					auto transport = GetTransport();
-
-					// NOTE: This may throw.
-					if (transport != nullptr)
-						transport->AddProducer(this);
 
 					// NOTE: This may throw.
 					CreateRtpMapping(request->data[JsonStringRtpMapping]);
