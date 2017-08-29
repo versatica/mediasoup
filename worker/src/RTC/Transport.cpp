@@ -936,7 +936,10 @@ namespace RTC
 			return;
 		}
 
-		this->listener->OnTransportRtcpPacket(this, packet);
+		// TODO: No. Instead, process here the packet, get corresponding producers/consumers
+		// and do stuff here. We may need another listener callback to forward certain
+		// RTCP messages between consumers and is producers. Let's see.
+		// this->listener->OnTransportRtcpPacket(this, packet);
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		// this->iceServer->ForceSelectedTuple(tuple);
@@ -1148,7 +1151,8 @@ namespace RTC
 		eventData[JsonStringDtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
-		this->listener->OnTransportConnected(this);
+		// TODO: No. Instead iterate consumers and request full frame.
+		// this->listener->OnTransportConnected(this);
 	}
 
 	void Transport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1260,7 +1264,8 @@ namespace RTC
 			{
 				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting full frames");
 
-				this->listener->OnTransportFullFrameRequired(this);
+				// TODO: No. Iterate producers and call RequestFullFrame() on them.
+				// this->listener->OnTransportFullFrameRequired(this);
 			}
 
 			this->lastEffectiveMaxBitrateAt = now;

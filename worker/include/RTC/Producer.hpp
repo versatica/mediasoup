@@ -30,9 +30,6 @@ namespace RTC
 		{
 		public:
 			virtual void OnProducerClosed(RTC::Producer* producer)                      = 0;
-			virtual void OnProducerRtpParameters(RTC::Producer* producer)                     = 0;
-			virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
 			virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 		};
 
@@ -51,7 +48,7 @@ namespace RTC
 		};
 
 	public:
-		Producer(Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind);
+		Producer(Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind, RTC::Transport* transport);
 
 	private:
 		virtual ~Producer();
@@ -60,11 +57,9 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		void SetTransport(RTC::Transport* transport);
-		RTC::Transport* GetTransport() const;
-		void RemoveTransport(RTC::Transport* transport);
-		RTC::RtpParameters* GetParameters() const;
-		bool IsPaused() const;
+		RTC::Transport* GetTransport() const; // TODO: YES?
+		void RemoveTransport(RTC::Transport* transport); // TODO: better close this.
+		RTC::RtpParameters* GetParameters() const; // TODO: What for?
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -110,11 +105,6 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline void Producer::SetTransport(RTC::Transport* transport)
-	{
-		this->transport = transport;
-	}
-
 	inline RTC::Transport* Producer::GetTransport() const
 	{
 		return this->transport;
@@ -129,11 +119,6 @@ namespace RTC
 	inline RTC::RtpParameters* Producer::GetParameters() const
 	{
 		return this->rtpParameters;
-	}
-
-	inline bool Producer::IsPaused() const
-	{
-		return this->paused;
 	}
 
 	inline void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)

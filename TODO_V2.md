@@ -1,6 +1,9 @@
 # TODO in mediasoup v2 (server-side)
 
+* Does `PRODUCER_SEND` makes sense? why not just requiring RTP parameters (and mapping) in the constructor?
+
 * Does `CONSUMER_ENABLE` makes sense? IMHO it's better to keep the Consumer just in JS and call `CREATE_CONSUMER` (by passing `rtpParameters` and `transportId`) once enabled for reception in JS.
+  - I've removed it.
 
 * Handle all the XXXXX_CLOSE in the parent by calling `xxxxx->Destroy()`.
 

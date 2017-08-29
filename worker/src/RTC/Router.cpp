@@ -268,7 +268,7 @@ namespace RTC
 				// Create a Producer instance.
 				try
 				{
-					producer = new RTC::Producer(this, this->notifier, producerId, RTC::Media::GetKind(kind));
+					producer = new RTC::Producer(this, this->notifier, producerId, RTC::Media::GetKind(kind), transport);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -280,9 +280,6 @@ namespace RTC
 				this->producers[producerId] = producer;
 
 				MS_DEBUG_DEV("Producer created [producerId:%" PRIu32 "]", producerId);
-
-				// Set the Transport.
-				producer->SetTransport(transport);
 
 				request->Accept();
 
@@ -602,23 +599,23 @@ namespace RTC
 
 		this->producers.erase(producer->producerId);
 
-		// If the Producer is not in the map, do nothing.
-		if (this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end())
-			return;
-
-		// Iterate the map and close all the Consumers associated to it.
-		auto& consumers = this->mapProducerConsumers[producer];
-
-		for (auto it = this->consumers.begin(); it != this->consumers.end();)
+		// Remove the Producer from the map.
+		if (this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end())
 		{
-			auto* consumer = it->second;
+			// Iterate the map and close all the Consumers associated to it.
+			auto& consumers = this->mapProducerConsumers[producer];
 
-			it = consumers.erase(it);
-			consumer->Destroy();
+			for (auto it = consumers.begin(); it != consumers.end();)
+			{
+				auto* consumer = *it;
+
+				it = consumers.erase(it);
+				consumer->Destroy();
+			}
+
+			// Finally delete the Producer entry in the map.
+			this->mapProducerConsumers.erase(producer);
 		}
-
-		// Finally delete the Producer entry in the map.
-		this->mapProducerConsumers.erase(producer);
 
 		// Also delete it from the map of audio levels.
 		this->mapProducerAudioLevelContainer.erase(producer);
@@ -639,6 +636,7 @@ namespace RTC
 		for (auto& consumer : consumers)
 		{
 			// TODO: just if enabled?
+			// Mmmm, can it be "non" enabled? how?
 
 			consumer->SendRtpPacket(packet);
 		}
@@ -679,7 +677,7 @@ namespace RTC
 		this->mapConsumerProducer.erase(consumer);
 	}
 
-	void Peer::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
+	void Router::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -720,7 +718,7 @@ namespace RTC
 
 				Json::Value entry(Json::arrayValue);
 
-				entry.append(Json::UInt{ producer.producerId });
+				entry.append(Json::UInt{ producer->producerId });
 				entry.append(Json::Int{ avgdBov });
 
 				eventData[JsonStringEntries].append(entry);

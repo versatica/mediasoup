@@ -14,8 +14,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	    Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind)
-	    : producerId(producerId), kind(kind), listener(listener), notifier(notifier)
+	    Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind, RTC::Transport* transport)
+	    : producerId(producerId), kind(kind), listener(listener), notifier(notifier), transport(transport)
 	{
 		MS_TRACE();
 
@@ -165,9 +165,6 @@ namespace RTC
 
 					// NOTE: This may throw.
 					CreateRtpMapping(request->data[JsonStringRtpMapping]);
-
-					// NOTE: This may throw.
-					this->listener->OnProducerRtpParameters(this);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -195,14 +192,9 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			{
-				bool wasPaused = this->paused;
-
 				this->paused = true;
 
 				request->Accept();
-
-				if (!wasPaused)
-					this->listener->OnProducerPaused(this);
 
 				break;
 			}
@@ -216,10 +208,7 @@ namespace RTC
 				request->Accept();
 
 				if (wasPaused)
-				{
-					this->listener->OnProducerResumed(this);
 					RequestFullFrame();
-				}
 
 				break;
 			}
@@ -626,6 +615,7 @@ namespace RTC
 
 	void Producer::OnPliRequired(RTC::RtpStreamRecv* rtpStream)
 	{
+		// TODO: Can this happen?
 		if (this->transport == nullptr)
 			return;
 
