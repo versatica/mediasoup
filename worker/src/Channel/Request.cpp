@@ -37,8 +37,9 @@ namespace Channel
 		{ "producer.setRtpRawEvent",           Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT           },
 		{ "producer.setRtpObjectEvent",        Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT        },
 		{ "consumer.dump",                     Request::MethodId::CONSUMER_DUMP                        },
-		{ "consumer.setTransport",             Request::MethodId::CONSUMER_SET_TRANSPORT               },
-		{ "consumer.disable",                  Request::MethodId::CONSUMER_DISABLE                     }
+		{ "consumer.enable",                   Request::MethodId::CONSUMER_ENABLE                      },
+		{ "consumer.pause",                    Request::MethodId::CONSUMER_PAUSE                       },
+		{ "consumer.resume",                   Request::MethodId::CONSUMER_RESUME                      }
 	};
 	// clang-format on
 

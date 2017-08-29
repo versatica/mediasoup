@@ -36,10 +36,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
-
-		Json::Value eventData(Json::objectValue);
-
 		// Close all the Peers.
 		// NOTE: Upon Peer closure the onPeerClosed() method is called which
 		// removes it from the map, so this is the safe way to iterate the map
@@ -56,8 +52,7 @@ namespace RTC
 		this->audioLevelsTimer->Destroy();
 
 		// Notify.
-		eventData[JsonStringClass] = "Room";
-		this->notifier->Emit(this->roomId, "close", eventData);
+		this->notifier->Emit(this->roomId, "close");
 
 		// Notify the listener.
 		this->listener->OnRoomClosed(this);
@@ -207,6 +202,27 @@ namespace RTC
 
 				request->Accept();
 
+
+				for (auto& kv : this->peers)
+				{
+					auto* otherPeer = kv.second;
+
+					// Skip new Peer.
+					if (otherPeer == peer)
+						continue;
+
+					// Get all the ready Producers of the others Peers in the Room and create
+					// Consumers for this new Peer.
+					for (auto producer : otherPeer->GetProducers())
+					{
+						// Skip if the Producer has not RTP parameters.
+						if (producer->GetParameters() == nullptr)
+							continue;
+
+						AddConsumerForProducer(peer, producer);
+					}
+				}
+
 				break;
 			}
 
@@ -259,8 +275,9 @@ namespace RTC
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
 			case Channel::Request::MethodId::CONSUMER_DUMP:
-			case Channel::Request::MethodId::CONSUMER_SET_TRANSPORT:
-			case Channel::Request::MethodId::CONSUMER_DISABLE:
+			case Channel::Request::MethodId::CONSUMER_ENABLE:
+			case Channel::Request::MethodId::CONSUMER_PAUSE:
+			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
 				RTC::Peer* peer;
 
@@ -323,6 +340,30 @@ namespace RTC
 		return nullptr;
 	}
 
+	inline void Room::AddConsumerForProducer(RTC::Peer* consumerPeer, const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
+
+		uint32_t consumerId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
+		auto consumer = new RTC::Consumer(consumerPeer, this->notifier, consumerId, producer->kind);
+
+		// Store into the maps.
+		this->mapProducerConsumers[producer].insert(consumer);
+		this->mapConsumerProducer[consumer] = producer;
+
+		// TODO: NO
+		auto rtpParameters = producer->GetParameters();
+		// TODO: Maybe, not sure
+		auto associatedProducerId = producer->producerId;
+
+		// TODO: Check producer->IsPaused() and, if so, set consumer->SetSourcePaused(true).
+
+		// Attach the Consumer to the peer.
+		consumerPeer->AddConsumer(consumer, rtpParameters, associatedProducerId);
+	}
+
 	void Room::OnPeerClosed(const RTC::Peer* peer)
 	{
 		MS_TRACE();
@@ -358,13 +399,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Iterate all the peers but this one and create a Consumer associated to this
+		// Producer for each Peer.
+
 		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
 		MS_ASSERT(
 		    this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end(),
 		    "Producer already in mapProducerConsumers");
-
-		// Iterate all the peers but this one and create a Consumer associated to this
-		// Producer for each Peer.
 
 		// Ensure the entry will exist even with an empty array.
 		this->mapProducerConsumers[producer];
@@ -377,18 +418,7 @@ namespace RTC
 			if (consumerPeer == peer)
 				continue;
 
-			uint32_t consumerId = Utils::Crypto::GetRandomUInt(10000000, 99999999);
-			auto consumer = new RTC::Consumer(consumerPeer, this->notifier, consumerId, producer->kind);
-
-			// Store into the maps.
-			this->mapProducerConsumers[producer].insert(consumer);
-			this->mapConsumerProducer[consumer] = producer;
-
-			auto rtpParameters        = producer->GetParameters();
-			auto associatedProducerId = producer->producerId;
-
-			// Attach the Consumer to the peer.
-			consumerPeer->AddConsumer(consumer, rtpParameters, associatedProducerId);
+			AddConsumerForProducer(consumerPeer, producer);
 		}
 	}
 
@@ -523,7 +553,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringEntries{ "entries" };
 
 		// Audio levels timer.
@@ -558,7 +587,6 @@ namespace RTC
 			// Emit event.
 			Json::Value eventData(Json::objectValue);
 
-			eventData[JsonStringClass]   = "Room";
 			eventData[JsonStringEntries] = Json::arrayValue;
 
 			for (auto& kv : mapProducerAudioLevel)

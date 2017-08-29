@@ -1,10 +1,22 @@
+# BUGS
+
+* `CREATE_PEER` is emitting `newconsumer` but does not emit `newpeer`. Who must do that?
+
+* `then()` of Promises is async so if we create an instance (Peer, Producer, Transport, etc) within the `channel.request().then(....)` and an event happens for that instance immediately, such an event may be lost.
+  - The solution is creating the instance before calling `channel.request()`.
+  - DOC: https://stackoverflow.com/questions/36726890/why-are-javascript-promises-asynchronous-when-calling-only-synchronous-functions
+    + I must avoid unnecesary `Promise.resolve()`.
+  - "The callback passed to a Promise constructor is always called synchronously, but the callbacks passed into then are always called asynchronously"
+
+
 # TODO in mediasoup v2 (server-side)
 
-* If the Producer is paused, should we pass the packet to the BWE?
+* It's hard that `join` returns an array of `Peers` since, upon creation of the new `Peer`, it will receive `newconsumer` events which will try to send a `newPeer` mediasoup notification to the client.
 
-* Use "@xxxxx" for private events and `safeEmit("xxxx")` for public events (already done except for Producer and Consumer).
+* worker: If a `Producer` is paused and a new `Peer` joins (so a new `Consumer` is generated) such a new `Consumer` does not know that its associated `Producer` is paused. When creating a `Consumer` the `Room` should check `producer->IsPaused()` and call `consumer->setSourcePaused(true)` or similar.
 
-* If the transport of a consumer is closed, and the consumer was "enabled", it should become "disabled" and emit event? I think yes. Enabled should mean "it has a transport". Period.
+* If the transport of a consumer is closed, and the consumer was "enabled", it should become "disabled" and emit event (and send `consumerDisabled` notification? I think yes. Enabled should mean "it has a transport and RTP parameters.
+  - NOTE: We don't need `consumerDisabled` since we already receive `transportClosed` which fires `unhandled` in the client's `Consumer`.
 
 * May have to react on DTLS ALERT CLOSE in the server and make it "really" close the Transport and notify the client. Bufff... I don't like this...
 

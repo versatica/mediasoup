@@ -38,10 +38,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
-
-		Json::Value eventData(Json::objectValue);
-
 		// Close all the Producers.
 		for (auto it = this->producers.begin(); it != this->producers.end();)
 		{
@@ -72,8 +68,7 @@ namespace RTC
 		}
 
 		// Notify.
-		eventData[JsonStringClass] = "Peer";
-		this->notifier->Emit(this->peerId, "close", eventData);
+		this->notifier->Emit(this->peerId, "close");
 
 		// Notify the listener.
 		this->listener->OnPeerClosed(this);
@@ -346,83 +341,58 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_ENABLE:
 			{
-				RTC::Consumer* consumer;
+				// RTC::Consumer* consumer;
 
-				try
-				{
-					consumer = GetConsumerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
+				// try
+				// {
+				// 	consumer = GetConsumerFromRequest(request);
+				// }
+				// catch (const MediaSoupError& error)
+				// {
+				// 	request->Reject(error.what());
 
-					return;
-				}
+				// 	return;
+				// }
 
-				if (consumer == nullptr)
-				{
-					request->Reject("Consumer does not exist");
+				// if (consumer == nullptr)
+				// {
+				// 	request->Reject("Consumer does not exist");
 
-					return;
-				}
+				// 	return;
+				// }
 
-				consumer->HandleRequest(request);
+				// RTC::Transport* transport;
 
-				break;
-			}
+				// try
+				// {
+				// 	transport = GetTransportFromRequest(request);
+				// }
+				// catch (const MediaSoupError& error)
+				// {
+				// 	request->Reject(error.what());
 
-			case Channel::Request::MethodId::CONSUMER_SET_TRANSPORT:
-			{
-				RTC::Consumer* consumer;
+				// 	return;
+				// }
 
-				try
-				{
-					consumer = GetConsumerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
+				// if (transport == nullptr)
+				// {
+				// 	request->Reject("Transport does not exist");
 
-					return;
-				}
+				// 	return;
+				// }
 
-				if (consumer == nullptr)
-				{
-					request->Reject("Consumer does not exist");
-
-					return;
-				}
-
-				RTC::Transport* transport;
-
-				try
-				{
-					transport = GetTransportFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
-
-					return;
-				}
-
-				consumer->SetTransport(transport);
+				// consumer->SetTransport(transport);
 
 				request->Accept();
 
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_DISABLE:
+			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_PAUSE:
+			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
 				RTC::Consumer* consumer;
 
@@ -463,7 +433,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringConsumerId{ "consumerId" };
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
@@ -483,7 +452,6 @@ namespace RTC
 		// Notify.
 		Json::Value eventData = consumer->ToJson();
 
-		eventData[JsonStringClass]                = "Peer";
 		eventData[JsonStringConsumerId]           = Json::UInt{ consumer->consumerId };
 		eventData[JsonStringKind]                 = RTC::Media::GetJsonString(consumer->kind);
 		eventData[JsonStringRtpParameters]        = consumer->GetParameters()->ToJson();

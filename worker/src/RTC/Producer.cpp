@@ -38,13 +38,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
-
-		Json::Value eventData(Json::objectValue);
-
 		// Notify.
-		eventData[JsonStringClass] = "Producer";
-		this->notifier->Emit(this->producerId, "close", eventData);
+		this->notifier->Emit(this->producerId, "close");
 
 		// Notify the listener.
 		this->listener->OnProducerClosed(this);
@@ -286,7 +281,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringObject{ "object" };
 		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
 		static const Json::StaticString JsonStringMarker{ "marker" };
@@ -307,9 +301,9 @@ namespace RTC
 			if (!rtpStream->ReceivePacket(packet))
 				return;
 		}
-		else if (this->rtxStreamMap.find(ssrc) != this->rtxStreamMap.end())
+		else if (this->mapRtxStreams.find(ssrc) != this->mapRtxStreams.end())
 		{
-			rtpStream = this->rtxStreamMap[ssrc];
+			rtpStream = this->mapRtxStreams[ssrc];
 
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
@@ -329,12 +323,8 @@ namespace RTC
 		// Emit "rtpraw" if enabled.
 		if (this->rtpRawEventEnabled)
 		{
-			Json::Value eventData(Json::objectValue);
-
-			eventData[JsonStringClass] = "Producer";
-
 			this->notifier->EmitWithBinary(
-			    this->producerId, "rtpraw", eventData, packet->GetData(), packet->GetSize());
+			    this->producerId, "rtpraw", packet->GetData(), packet->GetSize());
 		}
 
 		// Emit "rtpobject" is enabled.
@@ -342,8 +332,6 @@ namespace RTC
 		{
 			Json::Value eventData(Json::objectValue);
 			Json::Value jsonObject(Json::objectValue);
-
-			eventData[JsonStringClass] = "Producer";
 
 			jsonObject[JsonStringPayloadType]    = Json::UInt{ packet->GetPayloadType() };
 			jsonObject[JsonStringMarker]         = packet->HasMarker();
@@ -354,7 +342,7 @@ namespace RTC
 			eventData[JsonStringObject] = jsonObject;
 
 			this->notifier->EmitWithBinary(
-			    this->producerId, "rtpobject", eventData, packet->GetPayload(), packet->GetPayloadLength());
+			    this->producerId, "rtpobject", packet->GetPayload(), packet->GetPayloadLength(), eventData);
 		}
 
 		// Apply the Producer RTP mapping before dispatching the packet to the Room.
@@ -562,14 +550,14 @@ namespace RTC
 		// Check rtx capabilities.
 		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
 		{
-			if (this->rtxStreamMap.find(encoding.rtx.ssrc) != this->rtxStreamMap.end())
+			if (this->mapRtxStreams.find(encoding.rtx.ssrc) != this->mapRtxStreams.end())
 				return;
 
 			auto& codec    = this->rtpParameters->GetRtxCodecForEncoding(encoding);
 			auto rtpStream = this->rtpStreams[ssrc];
 
 			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
-			this->rtxStreamMap[encoding.rtx.ssrc] = rtpStream;
+			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
 		}
 	}
 

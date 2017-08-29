@@ -230,8 +230,9 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
 		case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
 		case Channel::Request::MethodId::CONSUMER_DUMP:
-		case Channel::Request::MethodId::CONSUMER_SET_TRANSPORT:
-		case Channel::Request::MethodId::CONSUMER_DISABLE:
+		case Channel::Request::MethodId::CONSUMER_ENABLE:
+		case Channel::Request::MethodId::CONSUMER_PAUSE:
+		case Channel::Request::MethodId::CONSUMER_RESUME:
 		{
 			RTC::Room* room;
 

@@ -18,9 +18,14 @@ namespace Channel
 		void EmitWithBinary(
 		    uint32_t targetId,
 		    const std::string& event,
-		    Json::Value& data,
 		    const uint8_t* binaryData,
 		    size_t binaryLen);
+		void EmitWithBinary(
+		    uint32_t targetId,
+		    const std::string& event,
+		    const uint8_t* binaryData,
+		    size_t binaryLen,
+		    Json::Value& data);
 
 	public:
 		// Passed by argument.

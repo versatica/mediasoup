@@ -41,12 +41,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
-
-		Json::Value eventData(Json::objectValue);
-
-		eventData[JsonStringClass] = "Consumer";
-		this->notifier->Emit(this->consumerId, "close", eventData);
+		this->notifier->Emit(this->consumerId, "close");
 
 		// Notify the listener.
 		this->listener->OnConsumerClosed(this);
@@ -109,6 +104,29 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_PAUSE:
+			{
+				this->paused = true;
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_RESUME:
+			{
+				bool wasPaused = this->paused;
+
+				this->paused = false;
+
+				request->Accept();
+
+				if (wasPaused)
+					this->listener->OnConsumerFullFrameRequired(this);
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -121,10 +139,6 @@ namespace RTC
 	void Consumer::Send(RTC::RtpParameters* rtpParameters)
 	{
 		MS_TRACE();
-
-		static const Json::StaticString JsonStringClass{ "class" };
-		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-		static const Json::StaticString JsonStringEnabled{ "enabled" };
 
 		MS_ASSERT(rtpParameters, "no RTP parameters given");
 

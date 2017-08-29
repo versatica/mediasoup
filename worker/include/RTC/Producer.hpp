@@ -64,6 +64,7 @@ namespace RTC
 		RTC::Transport* GetTransport() const;
 		void RemoveTransport(RTC::Transport* transport);
 		RTC::RtpParameters* GetParameters() const;
+		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -95,11 +96,11 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpParameters* rtpParameters{ nullptr };
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
-		std::map<uint32_t, RTC::RtpStreamRecv*> rtxStreamMap;
-		bool paused{ false };
+		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		// Others.
 		struct RtpMapping rtpMapping;
 		struct KnownHeaderExtensions knownHeaderExtensions;
+		bool paused{ false };
 		bool rtpRawEventEnabled{ false };
 		bool rtpObjectEventEnabled{ false };
 		// Timestamp when last RTCP was sent.
@@ -128,6 +129,11 @@ namespace RTC
 	inline RTC::RtpParameters* Producer::GetParameters() const
 	{
 		return this->rtpParameters;
+	}
+
+	inline bool Producer::IsPaused() const
+	{
+		return this->paused;
 	}
 
 	inline void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)

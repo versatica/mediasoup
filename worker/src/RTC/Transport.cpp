@@ -211,10 +211,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
-
-		Json::Value eventData(Json::objectValue);
-
 		if (this->srtpRecvSession != nullptr)
 			this->srtpRecvSession->Destroy();
 
@@ -238,8 +234,7 @@ namespace RTC
 		this->selectedTuple = nullptr;
 
 		// Notify.
-		eventData[JsonStringClass] = "Transport";
-		this->notifier->Emit(this->transportId, "close", eventData);
+		this->notifier->Emit(this->transportId, "close");
 
 		// If this was allocated (it did not throw in the constructor) notify the
 		// listener and delete it.
@@ -999,7 +994,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
 
 		Json::Value eventData(Json::objectValue);
@@ -1015,7 +1009,6 @@ namespace RTC
 		this->selectedTuple = tuple;
 
 		// Notify.
-		eventData[JsonStringClass]            = "Transport";
 		eventData[JsonStringIceSelectedTuple] = tuple->ToJson();
 		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
 	}
@@ -1024,7 +1017,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringConnected{ "connected" };
 
@@ -1033,7 +1025,6 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE connected");
 
 		// Notify.
-		eventData[JsonStringClass]    = "Transport";
 		eventData[JsonStringIceState] = JsonStringConnected;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 
@@ -1045,7 +1036,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringCompleted{ "completed" };
 
@@ -1054,7 +1044,6 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE completed");
 
 		// Notify.
-		eventData[JsonStringClass]    = "Transport";
 		eventData[JsonStringIceState] = JsonStringCompleted;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 
@@ -1066,7 +1055,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringDisconnected{ "disconnected" };
 
@@ -1078,7 +1066,6 @@ namespace RTC
 		this->selectedTuple = nullptr;
 
 		// Notify.
-		eventData[JsonStringClass]    = "Transport";
 		eventData[JsonStringIceState] = JsonStringDisconnected;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 
@@ -1090,7 +1077,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringConnecting{ "connecting" };
 
@@ -1099,7 +1085,6 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
 		// Notify.
-		eventData[JsonStringClass]     = "Transport";
 		eventData[JsonStringDtlsState] = JsonStringConnecting;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
@@ -1115,7 +1100,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringConnected{ "connected" };
 		static const Json::StaticString JsonStringDtlsRemoteCert{ "dtlsRemoteCert" };
@@ -1160,7 +1144,6 @@ namespace RTC
 		}
 
 		// Notify.
-		eventData[JsonStringClass]          = "Transport";
 		eventData[JsonStringDtlsState]      = JsonStringConnected;
 		eventData[JsonStringDtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
@@ -1172,7 +1155,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringFailed{ "failed" };
 
@@ -1181,7 +1163,6 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS failed");
 
 		// Notify.
-		eventData[JsonStringClass]     = "Transport";
 		eventData[JsonStringDtlsState] = JsonStringFailed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
@@ -1193,7 +1174,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringClosed{ "closed" };
 
@@ -1202,7 +1182,6 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS remotely closed");
 
 		// Notify.
-		eventData[JsonStringClass]     = "Transport";
 		eventData[JsonStringDtlsState] = JsonStringClosed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 

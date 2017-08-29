@@ -71,7 +71,8 @@ namespace RTC
 		RTC::RtpParameters* rtpParameters{ nullptr };
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
-		std::unordered_set<uint8_t> supportedPayloadTypes;
+		bool paused{ false };
+		std::unordered_set<uint8_t> supportedPayloadTypes; // TODO: NO
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
@@ -96,8 +97,11 @@ namespace RTC
 	{
 		if (this->transport == transport)
 			this->transport = nullptr;
+
+		// TODO: More. Remove rtpParameters.
 	}
 
+	// TODO: What for?
 	inline RTC::RtpParameters* Consumer::GetParameters() const
 	{
 		return this->rtpParameters;

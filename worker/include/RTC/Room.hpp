@@ -43,6 +43,7 @@ namespace RTC
 
 	private:
 		RTC::Peer* GetPeerFromRequest(Channel::Request* request, uint32_t* peerId = nullptr) const;
+		void AddConsumerForProducer(RTC::Peer* consumerPeer, const RTC::Producer* producer);
 
 		/* Pure virtual methods inherited from RTC::Peer::Listener. */
 	public:
