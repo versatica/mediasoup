@@ -29,14 +29,14 @@ namespace RTC
 	Peer::~Peer()
 	{
 		MS_TRACE();
-
-		// Destroy the RTCP timer.
-		this->timer->Destroy();
 	}
 
 	void Peer::Destroy()
 	{
 		MS_TRACE();
+
+		// Destroy the RTCP timer.
+		this->timer->Destroy();
 
 		// Close all the Producers.
 		for (auto it = this->producers.begin(); it != this->producers.end();)

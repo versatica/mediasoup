@@ -58,16 +58,16 @@ void Loop::Close()
 	if (this->signalsHandler != nullptr)
 		this->signalsHandler->Destroy();
 
-	// Close all the Rooms.
-	// NOTE: Upon Room closure the onRoomClosed() method is called which
+	// Close all the Routers.
+	// NOTE: Upon Router closure the onRouterClosed() method is called, which
 	// removes it from the map, so this is the safe way to iterate the map
 	// and remove elements.
-	for (auto it = this->rooms.begin(); it != this->rooms.end();)
+	for (auto it = this->routers.begin(); it != this->routers.end();)
 	{
-		RTC::Room* room = it->second;
+		RTC::Router* router = it->second;
 
-		it = this->rooms.erase(it);
-		room->Destroy();
+		it = this->routers.erase(it);
+		router->Destroy();
 	}
 
 	// Delete the Notifier.
@@ -78,27 +78,27 @@ void Loop::Close()
 		this->channel->Destroy();
 }
 
-RTC::Room* Loop::GetRoomFromRequest(Channel::Request* request, uint32_t* roomId)
+RTC::Router* Loop::GetRouterFromRequest(Channel::Request* request, uint32_t* routerId)
 {
 	MS_TRACE();
 
-	static const Json::StaticString JsonStringRoomId{ "roomId" };
+	static const Json::StaticString JsonStringRouterId{ "routerId" };
 
-	auto jsonRoomId = request->internal[JsonStringRoomId];
+	auto jsonRouterId = request->internal[JsonStringRouterId];
 
-	if (!jsonRoomId.isUInt())
-		MS_THROW_ERROR("Request has not numeric internal.roomId");
+	if (!jsonRouterId.isUInt())
+		MS_THROW_ERROR("Request has not numeric internal.routerId");
 
-	// If given, fill roomId.
-	if (roomId != nullptr)
-		*roomId = jsonRoomId.asUInt();
+	// If given, fill routerId.
+	if (routerId != nullptr)
+		*routerId = jsonRouterId.asUInt();
 
-	auto it = this->rooms.find(jsonRoomId.asUInt());
-	if (it != this->rooms.end())
+	auto it = this->routers.find(jsonRouterId.asUInt());
+	if (it != this->routers.end())
 	{
-		RTC::Room* room = it->second;
+		RTC::Router* router = it->second;
 
-		return room;
+		return router;
 	}
 
 	return nullptr;
@@ -136,21 +136,21 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		case Channel::Request::MethodId::WORKER_DUMP:
 		{
 			static const Json::StaticString JsonStringWorkerId{ "workerId" };
-			static const Json::StaticString JsonStringRooms{ "rooms" };
+			static const Json::StaticString JsonStringRouters{ "routers" };
 
 			Json::Value json(Json::objectValue);
-			Json::Value jsonRooms(Json::arrayValue);
+			Json::Value jsonRouters(Json::arrayValue);
 
 			json[JsonStringWorkerId] = Logger::id;
 
-			for (auto& kv : this->rooms)
+			for (auto& kv : this->routers)
 			{
-				auto room = kv.second;
+				auto router = kv.second;
 
-				jsonRooms.append(room->ToJson());
+				jsonRouters.append(router->ToJson());
 			}
 
-			json[JsonStringRooms] = jsonRooms;
+			json[JsonStringRouters] = jsonRouters;
 
 			request->Accept(json);
 
@@ -164,14 +164,14 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 			break;
 		}
 
-		case Channel::Request::MethodId::WORKER_CREATE_ROOM:
+		case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
 		{
-			RTC::Room* room;
-			uint32_t roomId;
+			RTC::Router* router;
+			uint32_t routerId;
 
 			try
 			{
-				room = GetRoomFromRequest(request, &roomId);
+				router = GetRouterFromRequest(request, &routerId);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -180,16 +180,16 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 				return;
 			}
 
-			if (room != nullptr)
+			if (router != nullptr)
 			{
-				request->Reject("Room already exists");
+				request->Reject("Router already exists");
 
 				return;
 			}
 
 			try
 			{
-				room = new RTC::Room(this, this->notifier, roomId);
+				router = new RTC::Router(this, this->notifier, routerId);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -198,9 +198,9 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 				return;
 			}
 
-			this->rooms[roomId] = room;
+			this->routers[routerId] = router;
 
-			MS_DEBUG_DEV("Room created [roomId:%" PRIu32 "]", roomId);
+			MS_DEBUG_DEV("Router created [routerId:%" PRIu32 "]", routerId);
 
 			Json::Value data(Json::objectValue);
 
@@ -209,14 +209,12 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 			break;
 		}
 
-		case Channel::Request::MethodId::ROOM_CLOSE:
-		case Channel::Request::MethodId::ROOM_DUMP:
-		case Channel::Request::MethodId::ROOM_CREATE_PEER:
-		case Channel::Request::MethodId::ROOM_SET_AUDIO_LEVELS_EVENT:
-		case Channel::Request::MethodId::PEER_CLOSE:
-		case Channel::Request::MethodId::PEER_DUMP:
-		case Channel::Request::MethodId::PEER_CREATE_TRANSPORT:
-		case Channel::Request::MethodId::PEER_CREATE_PRODUCER:
+		case Channel::Request::MethodId::ROUTER_CLOSE:
+		case Channel::Request::MethodId::ROUTER_DUMP:
+		case Channel::Request::MethodId::ROUTER_CREATE_TRANSPORT:
+		case Channel::Request::MethodId::ROUTER_CREATE_PRODUCER:
+		case Channel::Request::MethodId::ROUTER_CREATE_CONSUMER:
+		case Channel::Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT:
 		case Channel::Request::MethodId::TRANSPORT_CLOSE:
 		case Channel::Request::MethodId::TRANSPORT_DUMP:
 		case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
@@ -229,16 +227,17 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 		case Channel::Request::MethodId::PRODUCER_RESUME:
 		case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
 		case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
+		case Channel::Request::MethodId::CONSUMER_CLOSE:
 		case Channel::Request::MethodId::CONSUMER_DUMP:
 		case Channel::Request::MethodId::CONSUMER_ENABLE:
 		case Channel::Request::MethodId::CONSUMER_PAUSE:
 		case Channel::Request::MethodId::CONSUMER_RESUME:
 		{
-			RTC::Room* room;
+			RTC::Router* router;
 
 			try
 			{
-				room = GetRoomFromRequest(request);
+				router = GetRouterFromRequest(request);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -247,14 +246,14 @@ void Loop::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Req
 				return;
 			}
 
-			if (room == nullptr)
+			if (router == nullptr)
 			{
-				request->Reject("Room does not exist");
+				request->Reject("Router does not exist");
 
 				return;
 			}
 
-			room->HandleRequest(request);
+			router->HandleRequest(request);
 
 			break;
 		}
@@ -272,19 +271,20 @@ void Loop::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*
 {
 	MS_TRACE_STD();
 
-	// When mediasoup Node process ends it sends a SIGTERM to us so we close this
+	// When mediasoup Node process ends, it sends a SIGTERM to us so we close this
 	// pipe and then exit.
 	// If the pipe is remotely closed it means that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("Channel remotely closed, killing myself");
 
 	this->channel = nullptr;
+
 	Close();
 }
 
-void Loop::OnRoomClosed(RTC::Room* room)
+void Loop::OnRouterClosed(RTC::Router* router)
 {
 	MS_TRACE();
 
-	this->rooms.erase(room->roomId);
+	this->routers.erase(router->routerId);
 }

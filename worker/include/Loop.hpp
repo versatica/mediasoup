@@ -5,13 +5,13 @@
 #include "Channel/Notifier.hpp"
 #include "Channel/Request.hpp"
 #include "Channel/UnixStreamSocket.hpp"
-#include "RTC/Room.hpp"
+#include "RTC/Router.hpp"
 #include "handles/SignalsHandler.hpp"
 #include <unordered_map>
 
 class Loop : public SignalsHandler::Listener,
              public Channel::UnixStreamSocket::Listener,
-             public RTC::Room::Listener
+             public RTC::Router::Listener
 {
 public:
 	explicit Loop(Channel::UnixStreamSocket* channel);
@@ -19,7 +19,7 @@ public:
 
 private:
 	void Close();
-	RTC::Room* GetRoomFromRequest(Channel::Request* request, uint32_t* roomId = nullptr);
+	RTC::Router* GetRouterFromRequest(Channel::Request* request, uint32_t* routerId = nullptr);
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
@@ -30,9 +30,9 @@ public:
 	void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
 	void OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
 
-	/* Methods inherited from RTC::Room::Listener. */
+	/* Methods inherited from RTC::Router::Listener. */
 public:
-	void OnRoomClosed(RTC::Room* room) override;
+	void OnRouterClosed(RTC::Router* router) override;
 
 private:
 	// Passed by argument.
@@ -42,7 +42,7 @@ private:
 	SignalsHandler* signalsHandler{ nullptr };
 	// Others.
 	bool closed{ false };
-	std::unordered_map<uint32_t, RTC::Room*> rooms;
+	std::unordered_map<uint32_t, RTC::Router*> routers;
 };
 
 #endif

@@ -1,6 +1,8 @@
 # BUGS
 
-* `CREATE_PEER` is emitting `newconsumer` but does not emit `newpeer`. Who must do that?
+* Move the RTCP timer from Peer to Transport.
+
+* worker `Producer` / `Consumer` may need various listeners, so `Add/RemoveListener(listener)` is required.
 
 * `then()` of Promises is async so if we create an instance (Peer, Producer, Transport, etc) within the `channel.request().then(....)` and an event happens for that instance immediately, such an event may be lost.
   - The solution is creating the instance before calling `channel.request()`.

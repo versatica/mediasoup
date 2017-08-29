@@ -345,7 +345,7 @@ namespace RTC
 			    this->producerId, "rtpobject", packet->GetPayload(), packet->GetPayloadLength(), eventData);
 		}
 
-		// Apply the Producer RTP mapping before dispatching the packet to the Room.
+		// Apply the Producer RTP mapping before dispatching the packet to the Router.
 		ApplyRtpMapping(packet);
 
 		// Notify the listener.

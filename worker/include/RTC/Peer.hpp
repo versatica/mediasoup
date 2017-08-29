@@ -86,7 +86,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
-		void OnProducerClosed(const RTC::Producer* producer) override;
+		void OnProducerClosed(RTC::Producer* producer) override;
 		void OnProducerRtpParameters(RTC::Producer* producer) override;
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;

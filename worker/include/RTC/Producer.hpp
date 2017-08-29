@@ -29,7 +29,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnProducerClosed(const RTC::Producer* producer)                      = 0;
+			virtual void OnProducerClosed(RTC::Producer* producer)                      = 0;
 			virtual void OnProducerRtpParameters(RTC::Producer* producer)                     = 0;
 			virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
