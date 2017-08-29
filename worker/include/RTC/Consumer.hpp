@@ -32,7 +32,12 @@ namespace RTC
 		};
 
 	public:
-		Consumer(Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, RTC::Transport* transport);
+		Consumer(
+		    Listener* listener,
+		    Channel::Notifier* notifier,
+		    uint32_t consumerId,
+		    RTC::Media::Kind kind,
+		    RTC::Transport* transport);
 
 	private:
 		virtual ~Consumer();

@@ -535,7 +535,7 @@ namespace RTC
 		if (transportId != nullptr)
 			*transportId = jsonTransportId.asUInt();
 
-		auto it = this->transports.find(*transportId);
+		auto it = this->transports.find(jsonTransportId.asUInt());
 		if (it != this->transports.end())
 		{
 			auto* transport = it->second;
@@ -560,7 +560,7 @@ namespace RTC
 		if (producerId != nullptr)
 			*producerId = jsonProducerId.asUInt();
 
-		auto it = this->producers.find(*producerId);
+		auto it = this->producers.find(jsonProducerId.asUInt());
 		if (it != this->producers.end())
 		{
 			auto* producer = it->second;
@@ -585,7 +585,7 @@ namespace RTC
 		if (consumerId != nullptr)
 			*consumerId = jsonConsumerId.asUInt();
 
-		auto it = this->consumers.find(*consumerId);
+		auto it = this->consumers.find(jsonConsumerId.asUInt());
 		if (it != this->consumers.end())
 		{
 			auto* consumer = it->second;

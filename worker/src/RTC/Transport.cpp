@@ -7,8 +7,8 @@
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/Producer.hpp"
 #include "RTC/Consumer.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
@@ -599,17 +599,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// NOTE: This may throw.
-		this->rtpListener.AddProducer(producer);
+		// TODO: add to the set.
 
-		// TODO: add to the map
+		// If it has RTP parameters pass it to the RTP listener.
+		if (producer->GetParameters())
+			this->rtpListener.AddProducer(producer);
 	}
 
 	void Transport::HandleConsumer(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: add to the set.
 	}
 
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)

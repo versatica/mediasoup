@@ -18,8 +18,13 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    Listener* listener, Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, RTC::Transport* transport)
-	    : consumerId(consumerId), kind(kind), listener(listener), notifier(notifier), transport(transport)
+	    Listener* listener,
+	    Channel::Notifier* notifier,
+	    uint32_t consumerId,
+	    RTC::Media::Kind kind,
+	    RTC::Transport* transport)
+	    : consumerId(consumerId), kind(kind), listener(listener), notifier(notifier),
+	      transport(transport)
 	{
 		MS_TRACE();
 

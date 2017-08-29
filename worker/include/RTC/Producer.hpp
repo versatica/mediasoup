@@ -26,7 +26,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnProducerClosed(RTC::Producer* producer)                      = 0;
+			virtual void OnProducerClosed(RTC::Producer* producer)                            = 0;
 			virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 		};
 
@@ -45,7 +45,12 @@ namespace RTC
 		};
 
 	public:
-		Producer(Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind, RTC::Transport* transport);
+		Producer(
+		    Listener* listener,
+		    Channel::Notifier* notifier,
+		    uint32_t producerId,
+		    RTC::Media::Kind kind,
+		    RTC::Transport* transport);
 
 	public:
 		// Must be public because Router needs to call it.

@@ -13,8 +13,13 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	    Listener* listener, Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind, RTC::Transport* transport)
-	    : producerId(producerId), kind(kind), listener(listener), notifier(notifier), transport(transport)
+	    Listener* listener,
+	    Channel::Notifier* notifier,
+	    uint32_t producerId,
+	    RTC::Media::Kind kind,
+	    RTC::Transport* transport)
+	    : producerId(producerId), kind(kind), listener(listener), notifier(notifier),
+	      transport(transport)
 	{
 		MS_TRACE();
 
@@ -151,6 +156,9 @@ namespace RTC
 
 					// NOTE: This may throw.
 					CreateRtpMapping(request->data[JsonStringRtpMapping]);
+
+					// NOTE: This may throw.
+					this->transport->HandleProducer(this);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -298,8 +306,7 @@ namespace RTC
 		// Emit "rtpraw" if enabled.
 		if (this->rtpRawEventEnabled)
 		{
-			this->notifier->EmitWithBinary(
-			    this->producerId, "rtpraw", packet->GetData(), packet->GetSize());
+			this->notifier->EmitWithBinary(this->producerId, "rtpraw", packet->GetData(), packet->GetSize());
 		}
 
 		// Emit "rtpobject" is enabled.

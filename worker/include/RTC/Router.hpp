@@ -4,10 +4,10 @@
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/Request.hpp"
-#include "RTC/Transport.hpp"
-#include "RTC/Producer.hpp"
 #include "RTC/Consumer.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/Transport.hpp"
 // TODO: Let's see.
 // #include "RTC/RTCP/Feedback.hpp"
 // #include "RTC/RTCP/ReceiverReport.hpp"
@@ -51,7 +51,8 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 
 	private:
-		RTC::Transport* GetTransportFromRequest(Channel::Request* request, uint32_t* transportId = nullptr) const;
+		RTC::Transport* GetTransportFromRequest(
+		    Channel::Request* request, uint32_t* transportId = nullptr) const;
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request, uint32_t* producerId = nullptr) const;
 		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request, uint32_t* consumerId = nullptr) const;
 
