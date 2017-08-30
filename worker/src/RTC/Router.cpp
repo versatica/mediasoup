@@ -268,7 +268,10 @@ namespace RTC
 				// Create a Producer instance.
 				try
 				{
-					producer = new RTC::Producer(this, this->notifier, producerId, RTC::Media::GetKind(kind), transport);
+					producer = new RTC::Producer(this->notifier, producerId, RTC::Media::GetKind(kind), transport);
+
+					// Add us as listener.
+					producer->AddListener(this);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -644,9 +647,6 @@ namespace RTC
 			MS_TRACE();
 
 			MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
-			MS_ASSERT(
-			    this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end(),
-			    "Producer already in mapProducerConsumers");
 
 			// Ensure the entry will exist even with an empty array.
 			this->mapProducerConsumers[producer];

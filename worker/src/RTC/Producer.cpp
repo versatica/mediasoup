@@ -13,12 +13,11 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	    ProducerListener* listener,
 	    Channel::Notifier* notifier,
 	    uint32_t producerId,
 	    RTC::Media::Kind kind,
 	    RTC::Transport* transport)
-	    : producerId(producerId), kind(kind), listener(listener), notifier(notifier),
+	    : producerId(producerId), kind(kind), notifier(notifier),
 	      transport(transport)
 	{
 		MS_TRACE();
@@ -42,8 +41,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the listener.
-		this->listener->OnProducerClosed(this);
+		// Notify the listeners.
+		for (auto& listener : this->listeners)
+		{
+			listener->OnProducerClosed(this);
+		}
 
 		delete this;
 	}
@@ -142,8 +144,11 @@ namespace RTC
 					// NOTE: This may throw.
 					CreateRtpMapping(request->data[JsonStringRtpMapping]);
 
-					// NOTE: This may throw.
-					this->transport->HandleProducer(this);
+					// NOTE: This may throw (due RtpListener->AddProducer()).
+					for (auto& listener : this->listeners)
+					{
+						listener->OnProducerRtpParameters(this);
+					}
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -163,8 +168,6 @@ namespace RTC
 				{
 					CreateRtpStream(encoding);
 				}
-
-				this->listener->OnProducerRtpParameters(this);
 
 				request->Accept();
 
@@ -318,7 +321,10 @@ namespace RTC
 		ApplyRtpMapping(packet);
 
 		// Notify the listener.
-		this->listener->OnProducerRtpPacket(this, packet);
+		for (auto& listener : this->listeners)
+		{
+			listener->OnProducerRtpPacket(this, packet);
+		}
 	}
 
 	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)

@@ -7,6 +7,8 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
+#include "RTC/ProducerListener.hpp"
+#include "RTC/ConsumerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
@@ -35,7 +37,9 @@ namespace RTC
 	                  public RTC::TcpConnection::Listener,
 	                  public RTC::IceServer::Listener,
 	                  public RTC::DtlsTransport::Listener,
-	                  public RTC::RemoteBitrateEstimator::Listener
+	                  public RTC::RemoteBitrateEstimator::Listener,
+	                  public RTC::ProducerListener,
+	                  public RTC::ConsumerListener
 	{
 	public:
 		class Listener
@@ -124,6 +128,17 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
 	public:
 		void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
+
+		/* Pure virtual methods inherited from RTC::ProducerListener. */
+	public:
+		void OnProducerClosed(RTC::Producer* producer) override;
+		void OnProducerRtpParameters(RTC::Producer* producer) override;
+		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
+
+		/* Pure virtual methods inherited from RTC::ConsumerListener. */
+	public:
+		void OnConsumerClosed(RTC::Consumer* consumer) override;
+		void OnConsumerFullFrameRequired(RTC::Consumer* consumer) override;
 
 	public:
 		// Passed by argument.

@@ -37,7 +37,6 @@ namespace RTC
 
 	public:
 		Producer(
-		    RTC::ProducerListener* listener,
 		    Channel::Notifier* notifier,
 		    uint32_t producerId,
 		    RTC::Media::Kind kind,
@@ -51,6 +50,8 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
+		void AddListener(RTC::ProducerListener* listener);
+		void RemoveListener(RTC::ProducerListener* listener);
 		RTC::RtpParameters* GetParameters() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
@@ -77,8 +78,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		// std::unordered_set<
-		RTC::ProducerListener* listener{ nullptr };
+		std::unordered_set<RTC::ProducerListener*> listeners;
 		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
 		// Allocated by this.
@@ -97,6 +97,16 @@ namespace RTC
 	};
 
 	/* Inline methods. */
+
+	inline void Producer::AddListener(RTC::ProducerListener* listener)
+	{
+		this->listeners.insert(listener);
+	}
+
+	inline void Producer::RemoveListener(RTC::ProducerListener* listener)
+	{
+		this->listeners.erase(listener);
+	}
 
 	inline RTC::RtpParameters* Producer::GetParameters() const
 	{

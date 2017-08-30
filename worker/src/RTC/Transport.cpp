@@ -49,16 +49,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: TMP
-		for (auto& producer : this->producers)
-		{
-			producer->GetParameters();
-		}
-		for (auto& consumer : this->consumers)
-		{
-			consumer->GetParameters();
-		}
-
 		static const Json::StaticString JsonStringUdp{ "udp" };
 		static const Json::StaticString JsonStringTcp{ "tcp" };
 		static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
@@ -245,6 +235,19 @@ namespace RTC
 
 		this->selectedTuple = nullptr;
 
+		// Remove us from as listener in our handled Producers and Consumers.
+		for (auto& producer : this->producers)
+		{
+			producer->RemoveListener(this);
+		}
+
+		for (auto& consumer : this->consumers)
+		{
+			consumer->RemoveListener(this);
+		}
+
+		// TODO: yes? May be since we allow Transport being closed from on DtlsTransport
+		// events...
 		// Notify.
 		this->notifier->Emit(this->transportId, "close");
 
@@ -584,18 +587,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: add to the set.
+		// Add to the map.
+		this->producers.insert(producer);
 
-		// If it has RTP parameters pass it to the RTP listener.
-		if (producer->GetParameters())
-			this->rtpListener.AddProducer(producer);
+		// Add us as listener.
+		producer->AddListener(this);
 	}
 
 	void Transport::HandleConsumer(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
-		// TODO: add to the set.
+		// Add to the map.
+		this->consumers.insert(consumer);
 	}
 
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -1286,5 +1290,44 @@ namespace RTC
 			this->lastEffectiveMaxBitrateAt = now;
 			this->effectiveMaxBitrate       = effectiveBitrate;
 		}
+	}
+
+	void Transport::OnProducerClosed(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Remove from the map.
+		this->producers.erase(producer);
+
+		// If it was handled by the RtpListener, remove it.
+		if (producer->GetParameters())
+			this->rtpListener.RemoveProducer(producer);
+	}
+
+	void Transport::OnProducerRtpParameters(RTC::Producer* producer)
+	{
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
+
+		// Pass it to the RtpListener.
+		if (producer->GetParameters())
+			this->rtpListener.AddProducer(producer);
+	}
+
+	void Transport::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnConsumerClosed(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Remove from the map.
+		this->consumers.erase(consumer);
+	}
+
+	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
+	{
+		// Do nothing.
 	}
 } // namespace RTC

@@ -23,7 +23,6 @@ namespace RTC
 	{
 	public:
 		Consumer(
-		    RTC::ConsumerListener* listener,
 		    Channel::Notifier* notifier,
 		    uint32_t consumerId,
 		    RTC::Media::Kind kind,
@@ -36,6 +35,8 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
+		void AddListener(RTC::ConsumerListener* listener);
+		void RemoveListener(RTC::ConsumerListener* listener);
 		void Send(RTC::RtpParameters* rtpParameters);
 		RTC::RtpParameters* GetParameters() const; // TODO: What for?
 		bool GetEnabled() const;
@@ -56,7 +57,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::ConsumerListener* listener{ nullptr };
+		std::unordered_set<RTC::ConsumerListener*> listeners;
 		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
 		// Allocated by this.
@@ -74,6 +75,16 @@ namespace RTC
 	};
 
 	/* Inline methods. */
+
+	inline void Consumer::AddListener(RTC::ConsumerListener* listener)
+	{
+		this->listeners.insert(listener);
+	}
+
+	inline void Consumer::RemoveListener(RTC::ConsumerListener* listener)
+	{
+		this->listeners.erase(listener);
+	}
 
 	inline RTC::RtpParameters* Consumer::GetParameters() const
 	{

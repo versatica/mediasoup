@@ -18,12 +18,11 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    RTC::ConsumerListener* listener,
 	    Channel::Notifier* notifier,
 	    uint32_t consumerId,
 	    RTC::Media::Kind kind,
 	    RTC::Transport* transport)
-	    : consumerId(consumerId), kind(kind), listener(listener), notifier(notifier),
+	    : consumerId(consumerId), kind(kind), notifier(notifier),
 	      transport(transport)
 	{
 		MS_TRACE();
@@ -46,8 +45,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the listener.
-		this->listener->OnConsumerClosed(this);
+		// Notify the listeners.
+		for (auto& listener : this->listeners)
+		{
+			listener->OnConsumerClosed(this);
+		}
 
 		delete this;
 	}
@@ -125,7 +127,12 @@ namespace RTC
 				request->Accept();
 
 				if (wasPaused)
-					this->listener->OnConsumerFullFrameRequired(this);
+				{
+					for (auto& listener : this->listeners)
+					{
+						listener->OnConsumerFullFrameRequired(this);
+					}
+				}
 
 				break;
 			}

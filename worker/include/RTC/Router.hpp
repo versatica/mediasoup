@@ -63,13 +63,13 @@ namespace RTC
 		void OnTransportClosed(RTC::Transport* transport) override;
 		// TODO: RTCP listener to route RTCP feedback from Consumer to its Producer.
 
-		/* Pure virtual methods inherited from RTC::Producer::Listener. */
+		/* Pure virtual methods inherited from RTC::ProducerListener. */
 	public:
 		void OnProducerClosed(RTC::Producer* producer) override;
 		void OnProducerRtpParameters(RTC::Producer* producer) override;
 		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 
-		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
+		/* Pure virtual methods inherited from RTC::ConsumerListener. */
 	public:
 		void OnConsumerClosed(RTC::Consumer* consumer) override;
 		void OnConsumerFullFrameRequired(RTC::Consumer* consumer) override;
