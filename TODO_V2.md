@@ -1,27 +1,9 @@
 # TODO in mediasoup v2 (server-side)
 
+* Redo the compile_commands_template.json.
+
 * worker: All the RTC emthods in Producer and Consumer do a `MS_ASSERT(Enabled();` (meaning that they already have `transport` and `rtpParameters`). Producers/Consumers without them are not present in the Router `mapProducerConsumers`/`mapConsumerProducer` maps. However *THEY DO EXIST* in the Sets of `producers` and `consumers` of the Transport.
   - So: before calling any RTC method on a Producer/Consumer, the Transport must check `producer/consumer->IsEnabled()` and ignore if not.
-
-* JS: Do we need to close Producers/Consumers in Peer.close? If we close Transports then Producers and Consumers get also closed in the worker. The C++ Transport closes all its Producers and Consumers, and the client side gets producer.on('unhandled'), there is no need to close/destroy its local Producer.
-  - So, do we need to `producerClosed` notification? I don't think so...
-
-  ```js
-  // On Transport closure close the Producer.
-  transport.on('@close', () =>
-  {
-    if (!producer.closed)
-      producer.close();
-  });
-  ```
-
-* If a Transport is closed, Producers using it do not realize, and will crash if they try to send RTCP or whatever.
-  - Yep, we'd should just close Producers if their Transport is closed.
-  - Not sure if the same for Consumers. Let's see.
-
-* Does `CONSUMER_ENABLE` makes sense? IMHO it's better to keep the Consumer just in JS and call `CREATE_CONSUMER` (by passing `rtpParameters` and `transportId`) once enabled for reception in JS.
-  - I've removed it.
-  - mmm... not sure.
 
 * Remove all the "close" events in C++. May be leave the `transport.on('close')`.
 

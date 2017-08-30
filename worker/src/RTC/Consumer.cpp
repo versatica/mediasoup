@@ -18,8 +18,13 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId, RTC::Transport* transport)
-	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier), transport(transport)
+	    Channel::Notifier* notifier,
+	    uint32_t consumerId,
+	    RTC::Media::Kind kind,
+	    uint32_t sourceProducerId,
+	    RTC::Transport* transport)
+	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier),
+	      transport(transport)
 	{
 		MS_TRACE();
 
@@ -59,7 +64,9 @@ namespace RTC
 		static const Json::StaticString JsonStringSourceProducerId{ "sourceProducerId" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
-		static const Json::StaticString JsonStringSupportedCodecPayloadTypes{ "supportedCodecPayloadTypes" };
+		static const Json::StaticString JsonStringSupportedCodecPayloadTypes{
+			"supportedCodecPayloadTypes"
+		};
 		static const Json::StaticString JsonStringPaused{ "paused" };
 
 		Json::Value json(Json::objectValue);
@@ -210,8 +217,7 @@ namespace RTC
 		// TODO: We should just ignore those packets as they have non been negotiated.
 		if (it == this->supportedCodecPayloadTypes.end())
 		{
-			MS_WARN_DEV(
-				"payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
 		}

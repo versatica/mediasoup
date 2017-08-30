@@ -265,7 +265,7 @@ namespace RTC
 					MS_THROW_ERROR("missing kind");
 
 				std::string kindStr = request->data[JsonStringKind].asString();
-				auto kind = RTC::Media::GetKind(kindStr);
+				auto kind           = RTC::Media::GetKind(kindStr);
 
 				// Create a Producer instance.
 				try
@@ -380,7 +380,7 @@ namespace RTC
 					MS_THROW_ERROR("missing kind");
 
 				std::string kindStr = request->data[JsonStringKind].asString();
-				auto kind = RTC::Media::GetKind(kindStr);
+				auto kind           = RTC::Media::GetKind(kindStr);
 
 				if (kind != producer->kind)
 					MS_THROW_ERROR("not matching kind");
@@ -388,7 +388,8 @@ namespace RTC
 				// Create a Consumer instance.
 				try
 				{
-					consumer = new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId, transport);
+					consumer =
+					    new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId, transport);
 
 					// Add us as listener.
 					consumer->AddListener(this);
@@ -782,7 +783,7 @@ namespace RTC
 
 			if (packet->ReadAudioLevel(&volume, &voice))
 			{
-				int8_t dBov = volume * -1;
+				int8_t dBov               = volume * -1;
 				auto& audioLevelContainer = this->mapProducerAudioLevelContainer[producer];
 
 				audioLevelContainer.numdBovs++;
