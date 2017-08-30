@@ -13,12 +13,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	    Channel::Notifier* notifier,
-	    uint32_t producerId,
-	    RTC::Media::Kind kind,
-	    RTC::Transport* transport)
-	    : producerId(producerId), kind(kind), notifier(notifier),
-	      transport(transport)
+	    Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind, RTC::Transport* transport)
+	    : producerId(producerId), kind(kind), notifier(notifier), transport(transport)
 	{
 		MS_TRACE();
 

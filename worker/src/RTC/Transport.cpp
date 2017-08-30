@@ -600,6 +600,9 @@ namespace RTC
 
 		// Add to the map.
 		this->consumers.insert(consumer);
+
+		// Add us as listener.
+		consumer->AddListener(this);
 	}
 
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -1170,8 +1173,11 @@ namespace RTC
 		eventData[JsonStringDtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
-		// TODO: No. Instead iterate consumers and request full frame.
-		// this->listener->OnTransportConnected(this);
+		// Iterate all the Consumers and request full frame.
+		for (auto& consumer : this->consumers)
+		{
+			consumer->RequestFullFrame();
+		}
 	}
 
 	void Transport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)

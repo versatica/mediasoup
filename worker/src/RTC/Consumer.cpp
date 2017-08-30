@@ -18,12 +18,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    Channel::Notifier* notifier,
-	    uint32_t consumerId,
-	    RTC::Media::Kind kind,
-	    RTC::Transport* transport)
-	    : consumerId(consumerId), kind(kind), notifier(notifier),
-	      transport(transport)
+	    Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, RTC::Transport* transport)
+	    : consumerId(consumerId), kind(kind), notifier(notifier), transport(transport)
 	{
 		MS_TRACE();
 
@@ -288,6 +284,16 @@ namespace RTC
 		}
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void Consumer::RequestFullFrame()
+	{
+		MS_TRACE();
+
+		for (auto& listener : this->listeners)
+		{
+			listener->OnConsumerFullFrameRequired(this);
+		}
 	}
 
 	void Consumer::CreateRtpStream(RTC::RtpEncodingParameters& encoding)

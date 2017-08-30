@@ -268,7 +268,8 @@ namespace RTC
 				// Create a Producer instance.
 				try
 				{
-					producer = new RTC::Producer(this->notifier, producerId, RTC::Media::GetKind(kind), transport);
+					producer =
+					    new RTC::Producer(this->notifier, producerId, RTC::Media::GetKind(kind), transport);
 
 					// Add us as listener.
 					producer->AddListener(this);
@@ -643,14 +644,14 @@ namespace RTC
 	}
 
 	void Router::OnProducerRtpParameters(RTC::Producer* producer)
-		{
-			MS_TRACE();
+	{
+		MS_TRACE();
 
-			MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
+		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
 
-			// Ensure the entry will exist even with an empty array.
-			this->mapProducerConsumers[producer];
-		}
+		// Ensure the entry will exist even with an empty array.
+		this->mapProducerConsumers[producer];
+	}
 
 	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
@@ -680,7 +681,7 @@ namespace RTC
 
 			if (packet->ReadAudioLevel(&volume, &voice))
 			{
-				int8_t dBov = volume * -1;
+				int8_t dBov               = volume * -1;
 				auto& audioLevelContainer = this->mapProducerAudioLevelContainer[producer];
 
 				audioLevelContainer.numdBovs++;
