@@ -138,6 +138,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::ConsumerListener. */
 	public:
 		void OnConsumerClosed(RTC::Consumer* consumer) override;
+		void OnConsumerRtpParameters(RTC::Consumer* consumer) override;
 		void OnConsumerFullFrameRequired(RTC::Consumer* consumer) override;
 
 	public:

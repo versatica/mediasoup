@@ -1343,6 +1343,11 @@ namespace RTC
 		this->consumers.erase(consumer);
 	}
 
+	void Transport::OnConsumerRtpParameters(RTC::Consumer* consumer)
+	{
+		// Do nothing.
+	}
+
 	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
 	{
 		// Do nothing.

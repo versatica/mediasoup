@@ -268,8 +268,7 @@ namespace RTC
 				// Create a Producer instance.
 				try
 				{
-					producer =
-					    new RTC::Producer(this->notifier, producerId, RTC::Media::GetKind(kind), transport);
+					producer = new RTC::Producer(this->notifier, producerId, RTC::Media::GetKind(kind), transport);
 
 					// Add us as listener.
 					producer->AddListener(this);
@@ -681,7 +680,7 @@ namespace RTC
 
 			if (packet->ReadAudioLevel(&volume, &voice))
 			{
-				int8_t dBov               = volume * -1;
+				int8_t dBov = volume * -1;
 				auto& audioLevelContainer = this->mapProducerAudioLevelContainer[producer];
 
 				audioLevelContainer.numdBovs++;
@@ -707,6 +706,15 @@ namespace RTC
 
 		// Finally delete the Consumer entry in the map.
 		this->mapConsumerProducer.erase(consumer);
+	}
+
+	void Router::OnConsumerRtpParameters(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(consumer->GetParameters(), "Consumer has no parameters");
+
+		// TODO: Fill the mapConsumerProducer, so we need the associated Producer id.
 	}
 
 	void Router::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
