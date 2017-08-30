@@ -249,7 +249,6 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
 		case Channel::Request::MethodId::PRODUCER_CLOSE:
 		case Channel::Request::MethodId::PRODUCER_DUMP:
-		case Channel::Request::MethodId::PRODUCER_RECEIVE:
 		case Channel::Request::MethodId::PRODUCER_PAUSE:
 		case Channel::Request::MethodId::PRODUCER_RESUME:
 		case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:

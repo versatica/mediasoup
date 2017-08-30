@@ -21,13 +21,19 @@ namespace RTC
 	    Channel::Notifier* notifier,
 	    uint32_t consumerId,
 	    RTC::Media::Kind kind,
-	    uint32_t sourceProducerId,
-	    RTC::Transport* transport)
-	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier),
-	      transport(transport)
+	    RTC::Transport* transport,
+	    RTC::RtpParameters& rtpParameters,
+	    uint32_t sourceProducerId)
+	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier), transport(transport), rtpParameters(rtpParameters)
 	{
 		MS_TRACE();
 
+		FillSupportedCodecPayloadTypes();
+
+		// Create RtpStreamSend instance.
+		CreateRtpStream(this->rtpParameters.encodings[0]);
+
+		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
@@ -38,7 +44,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		delete this->rtpParameters;
 		delete this->rtpStream;
 	}
 
@@ -77,13 +82,9 @@ namespace RTC
 
 		json[JsonStringSourceProducerId] = Json::UInt{ this->sourceProducerId };
 
-		if (this->rtpParameters != nullptr)
-			json[JsonStringRtpParameters] = this->rtpParameters->ToJson();
-		else
-			json[JsonStringRtpParameters] = Json::nullValue;
+		json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
 
-		if (this->rtpStream != nullptr)
-			json[JsonStringRtpStream] = this->rtpStream->ToJson();
+		json[JsonStringRtpStream] = this->rtpStream->ToJson();
 
 		json[JsonStringSupportedCodecPayloadTypes] = Json::arrayValue;
 
@@ -108,49 +109,6 @@ namespace RTC
 				auto json = ToJson();
 
 				request->Accept(json);
-
-				break;
-			}
-
-			case Channel::Request::MethodId::CONSUMER_SEND:
-			{
-				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-
-				if (!request->data[JsonStringRtpParameters].isObject())
-				{
-					request->Reject("missing data.rtpParameters");
-
-					return;
-				}
-
-				if (this->rtpParameters)
-				{
-					request->Reject("Consumer already has RTP parameters");
-
-					return;
-				}
-
-				try
-				{
-					// NOTE: This may throw.
-					this->rtpParameters = new RTC::RtpParameters(request->data[JsonStringRtpParameters]);
-
-					for (auto& listener : this->listeners)
-					{
-						listener->OnConsumerRtpParameters(this);
-					}
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				// Create RtpStreamSend instance.
-				CreateRtpStream(this->rtpParameters->encodings[0]);
-
-				request->Accept();
 
 				break;
 			}
@@ -196,12 +154,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(IsEnabled(), "Consumer not enabled");
-
 		// TODO: Must refactor for simulcast.
 		// Ignore the packet if the SSRC is not the single one in the sender
 		// RTP parameters.
-		if (packet->GetSsrc() != this->rtpParameters->encodings[0].ssrc)
+		if (packet->GetSsrc() != this->rtpParameters.encodings[0].ssrc)
 		{
 			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
@@ -209,15 +165,13 @@ namespace RTC
 		}
 
 		// Map the payload type.
-		uint8_t payloadType = packet->GetPayloadType();
-		auto it             = this->supportedCodecPayloadTypes.find(payloadType);
+		auto payloadType = packet->GetPayloadType();
 
-		// NOTE: This may happen if this peer supports just some codecs from the
-		// given RtpParameters.
-		// TODO: We should just ignore those packets as they have non been negotiated.
-		if (it == this->supportedCodecPayloadTypes.end())
+		// NOTE: This may happen if this Consumer supports just some codecs of those
+		// in the corresponding Producer.
+		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
 		{
-			MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
 		}
@@ -237,18 +191,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(IsEnabled(), "Consumer not enabled");
-
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
 		auto* report = this->rtpStream->GetRtcpSenderReport(now);
+
 		if (report == nullptr)
 			return;
 
 		// NOTE: This assumes a single stream.
-		uint32_t ssrc     = this->rtpParameters->encodings[0].ssrc;
-		std::string cname = this->rtpParameters->rtcp.cname;
+		uint32_t ssrc     = this->rtpParameters.encodings[0].ssrc;
+		std::string cname = this->rtpParameters.rtcp.cname;
 
 		report->SetSsrc(ssrc);
 		packet->AddSenderReport(report);
@@ -260,15 +213,12 @@ namespace RTC
 
 		sdesChunk->AddItem(sdesItem);
 		packet->AddSdesChunk(sdesChunk);
-
 		this->lastRtcpSentTime = now;
 	}
 
 	void Consumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(IsEnabled(), "Consumer not enabled");
 
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
@@ -294,8 +244,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(IsEnabled(), "Consumer not enabled");
-
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
@@ -303,11 +251,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(IsEnabled(), "Consumer not enabled");
-
 		for (auto& listener : this->listeners)
 		{
 			listener->OnConsumerFullFrameRequired(this);
+		}
+	}
+
+	void Consumer::FillSupportedCodecPayloadTypes()
+	{
+		MS_TRACE();
+
+		for (auto& codec : this->rtpParameters.codecs)
+		{
+			this->supportedCodecPayloadTypes.insert(codec.payloadType);
 		}
 	}
 
@@ -317,7 +273,7 @@ namespace RTC
 
 		uint32_t ssrc = encoding.ssrc;
 		// Get the codec of the stream/encoding.
-		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+		auto& codec = this->rtpParameters.GetCodecForEncoding(encoding);
 		bool useNack{ false };
 		bool usePli{ false };
 
@@ -355,7 +311,7 @@ namespace RTC
 
 		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
 		{
-			auto& codec = this->rtpParameters->GetRtxCodecForEncoding(encoding);
+			auto& codec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 			this->rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
 		}
@@ -364,8 +320,6 @@ namespace RTC
 	void Consumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(IsEnabled(), "Consumer not enabled");
 
 		RTC::RtpPacket* rtxPacket{ nullptr };
 
@@ -385,7 +339,6 @@ namespace RTC
 			    packet->GetSsrc(),
 			    packet->GetSequenceNumber());
 		}
-
 		else
 		{
 			rtxPacket = packet;

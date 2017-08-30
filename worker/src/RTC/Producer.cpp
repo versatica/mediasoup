@@ -13,11 +13,28 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	    Channel::Notifier* notifier, uint32_t producerId, RTC::Media::Kind kind, RTC::Transport* transport)
-	    : producerId(producerId), kind(kind), notifier(notifier), transport(transport)
+	    Channel::Notifier* notifier,
+	    uint32_t producerId,
+	    RTC::Media::Kind kind,
+	    RTC::Transport* transport,
+	    RTC::RtpParameters& rtpParameters,
+	    struct RtpMapping& rtpMapping)
+	    : producerId(producerId), kind(kind), notifier(notifier), transport(transport), rtpParameters(rtpParameters)
 	{
 		MS_TRACE();
 
+		this->rtpMapping = rtpMapping;
+
+		// Fill ids of well known RTP header extensions with the mapped ids (if any).
+		FillKnownHeaderExtensions();
+
+		// Create RtpStreamRecv instances.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			CreateRtpStream(encoding);
+		}
+
+		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
@@ -27,8 +44,6 @@ namespace RTC
 	Producer::~Producer()
 	{
 		MS_TRACE();
-
-		delete this->rtpParameters;
 
 		for (auto& kv : this->rtpStreams)
 		{
@@ -74,10 +89,7 @@ namespace RTC
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
-		if (this->rtpParameters != nullptr)
-			json[JsonStringRtpParameters] = this->rtpParameters->ToJson();
-		else
-			json[JsonStringRtpParameters] = Json::nullValue;
+		json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
 
 		for (auto& kv : this->rtpStreams)
 		{
@@ -113,69 +125,6 @@ namespace RTC
 				auto json = ToJson();
 
 				request->Accept(json);
-
-				break;
-			}
-
-			case Channel::Request::MethodId::PRODUCER_RECEIVE:
-			{
-				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-				static const Json::StaticString JsonStringRtpMapping{ "rtpMapping" };
-
-				if (!request->data[JsonStringRtpParameters].isObject())
-				{
-					request->Reject("missing data.rtpParameters");
-
-					return;
-				}
-				else if (!request->data[JsonStringRtpMapping].isObject())
-				{
-					request->Reject("missing data.rtpMapping");
-
-					return;
-				}
-
-				if (this->rtpParameters)
-				{
-					request->Reject("Producer already has RTP parameters");
-
-					return;
-				}
-
-				try
-				{
-					// NOTE: This may throw.
-					this->rtpParameters = new RTC::RtpParameters(request->data[JsonStringRtpParameters]);
-
-					// NOTE: This may throw.
-					CreateRtpMapping(request->data[JsonStringRtpMapping]);
-
-					// NOTE: This may throw (due RtpListener->AddProducer()).
-					for (auto& listener : this->listeners)
-					{
-						listener->OnProducerRtpParameters(this);
-					}
-				}
-				catch (const MediaSoupError& error)
-				{
-					if (this->rtpParameters)
-					{
-						delete this->rtpParameters;
-						this->rtpParameters = nullptr;
-					}
-
-					request->Reject(error.what());
-
-					return;
-				}
-
-				// Create RtpStreamRecv instances.
-				for (auto& encoding : this->rtpParameters->encodings)
-				{
-					CreateRtpStream(encoding);
-				}
-
-				request->Accept();
 
 				break;
 			}
@@ -259,8 +208,6 @@ namespace RTC
 	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(IsEnabled(), "Producer not enabled");
 
 		static const Json::StaticString JsonStringObject{ "object" };
 		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
@@ -356,11 +303,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(IsEnabled(), "Producer not enabled");
-
-		if (this->transport == nullptr)
-			return;
-
 		// Ensure that the RTCP packet fits into the RTCP buffer.
 		if (packet->GetSize() > RTC::RTCP::BufferSize)
 		{
@@ -376,11 +318,6 @@ namespace RTC
 	void Producer::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const
 	{
 		MS_TRACE();
-
-		MS_ASSERT(IsEnabled(), "Producer not enabled");
-
-		if (this->transport == nullptr)
-			return;
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
 		if (packet->GetSize() > RTC::RTCP::BufferSize)
@@ -398,8 +335,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(IsEnabled(), "Producer not enabled");
-
 		for (auto& kv : this->rtpStreams)
 		{
 			auto rtpStream = kv.second;
@@ -408,48 +343,15 @@ namespace RTC
 		}
 	}
 
-	void Producer::CreateRtpMapping(Json::Value& rtpMapping)
+	void Producer::FillKnownHeaderExtensions()
 	{
 		MS_TRACE();
-
-		static const Json::StaticString JsonStringCodecPayloadTypes{ "codecPayloadTypes" };
-		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
-
-		if (!rtpMapping[JsonStringCodecPayloadTypes].isArray())
-			MS_THROW_ERROR("missing rtpMapping.codecPayloadTypes");
-		else if (!rtpMapping[JsonStringHeaderExtensionIds].isArray())
-			MS_THROW_ERROR("missing rtpMapping.headerExtensionIds");
-
-		for (auto& pair : rtpMapping[JsonStringCodecPayloadTypes])
-		{
-			if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
-				MS_THROW_ERROR("wrong rtpMapping entry");
-
-			auto sourcePayloadType = static_cast<uint8_t>(pair[0].asUInt());
-			auto mappedPayloadType = static_cast<uint8_t>(pair[1].asUInt());
-
-			this->rtpMapping.codecPayloadTypes[sourcePayloadType] = mappedPayloadType;
-		}
-
-		for (auto& pair : rtpMapping[JsonStringHeaderExtensionIds])
-		{
-			if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
-				MS_THROW_ERROR("wrong rtpMapping entry");
-
-			auto sourceHeaderExtensionId = static_cast<uint8_t>(pair[0].asUInt());
-			auto mappedHeaderExtensionId = static_cast<uint8_t>(pair[1].asUInt());
-
-			this->rtpMapping.headerExtensionIds[sourceHeaderExtensionId] = mappedHeaderExtensionId;
-		}
-
-		// Also, fill the id of well known RTP header extensions with the mapped ids
-		// (if any).
 
 		auto& idMapping = this->rtpMapping.headerExtensionIds;
 		uint8_t ssrcAudioLevelId{ 0 };
 		uint8_t absSendTimeId{ 0 };
 
-		for (auto& exten : this->rtpParameters->headerExtensions)
+		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
 			if (this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
 			    exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
@@ -492,7 +394,7 @@ namespace RTC
 			return;
 
 		// Get the codec of the stream/encoding.
-		auto& codec = this->rtpParameters->GetCodecForEncoding(encoding);
+		auto& codec = this->rtpParameters.GetCodecForEncoding(encoding);
 		bool useNack{ false };
 		bool usePli{ false };
 		bool useRemb{ false };
@@ -542,7 +444,7 @@ namespace RTC
 			if (this->mapRtxStreams.find(encoding.rtx.ssrc) != this->mapRtxStreams.end())
 				return;
 
-			auto& codec    = this->rtpParameters->GetRtxCodecForEncoding(encoding);
+			auto& codec    = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 			auto rtpStream = this->rtpStreams[ssrc];
 
 			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
@@ -586,11 +488,6 @@ namespace RTC
 	void Producer::OnNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(IsEnabled(), "Producer not enabled");
-
-		if (this->transport == nullptr)
-			return;
 
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
 		auto it        = seqNumbers.begin();
@@ -639,8 +536,6 @@ namespace RTC
 	void Producer::OnPliRequired(RTC::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(IsEnabled(), "Producer not enabled");
 
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
 

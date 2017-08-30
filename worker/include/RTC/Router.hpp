@@ -66,13 +66,11 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::ProducerListener. */
 	public:
 		void OnProducerClosed(RTC::Producer* producer) override;
-		void OnProducerRtpParameters(RTC::Producer* producer) override;
 		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 
 		/* Pure virtual methods inherited from RTC::ConsumerListener. */
 	public:
 		void OnConsumerClosed(RTC::Consumer* consumer) override;
-		void OnConsumerRtpParameters(RTC::Consumer* consumer) override;
 		void OnConsumerFullFrameRequired(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */

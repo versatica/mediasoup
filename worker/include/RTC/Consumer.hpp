@@ -26,8 +26,9 @@ namespace RTC
 		    Channel::Notifier* notifier,
 		    uint32_t consumerId,
 		    RTC::Media::Kind kind,
-		    uint32_t sourceProducerId,
-		    RTC::Transport* transport);
+		    RTC::Transport* transport,
+		    RTC::RtpParameters& rtpParameters,
+		    uint32_t sourceProducerId);
 
 	private:
 		virtual ~Consumer();
@@ -38,8 +39,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void AddListener(RTC::ConsumerListener* listener);
 		void RemoveListener(RTC::ConsumerListener* listener);
-		bool IsEnabled() const;
-		RTC::RtpParameters* GetParameters() const;
+		const RTC::RtpParameters& GetParameters() const;
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -48,6 +48,7 @@ namespace RTC
 		void RequestFullFrame();
 
 	private:
+		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 
@@ -59,11 +60,11 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		std::unordered_set<RTC::ConsumerListener*> listeners;
 		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
+		RTC::RtpParameters rtpParameters;
+		std::unordered_set<RTC::ConsumerListener*> listeners;
 		// Allocated by this.
-		RTC::RtpParameters* rtpParameters{ nullptr };
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
@@ -88,12 +89,7 @@ namespace RTC
 		this->listeners.erase(listener);
 	}
 
-	inline bool Consumer::IsEnabled() const
-	{
-		return this->transport && this->rtpParameters && this->rtpStream;
-	}
-
-	inline RTC::RtpParameters* Consumer::GetParameters() const
+	inline const RTC::RtpParameters& Consumer::GetParameters() const
 	{
 		return this->rtpParameters;
 	}

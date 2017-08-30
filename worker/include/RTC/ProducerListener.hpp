@@ -13,7 +13,6 @@ namespace RTC
 	{
 	public:
 		virtual void OnProducerClosed(RTC::Producer* producer)                            = 0;
-		virtual void OnProducerRtpParameters(RTC::Producer* producer)                     = 0;
 		virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 	};
 } // namespace RTC

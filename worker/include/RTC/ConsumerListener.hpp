@@ -13,7 +13,6 @@ namespace RTC
 	{
 	public:
 		virtual void OnConsumerClosed(RTC::Consumer* consumer)            = 0;
-		virtual void OnConsumerRtpParameters(RTC::Consumer* consumer)     = 0;
 		virtual void OnConsumerFullFrameRequired(RTC::Consumer* consumer) = 0;
 	};
 } // namespace RTC

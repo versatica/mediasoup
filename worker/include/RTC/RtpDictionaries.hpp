@@ -260,6 +260,7 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
+		RtpParameters(){};
 		explicit RtpParameters(Json::Value& data);
 		explicit RtpParameters(const RtpParameters* rtpParameters);
 

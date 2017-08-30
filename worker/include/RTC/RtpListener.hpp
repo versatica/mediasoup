@@ -18,7 +18,7 @@ namespace RTC
 	public:
 		Json::Value ToJson() const;
 		bool HasSsrc(uint32_t ssrc, const RTC::Producer* producer) const;
-		bool HasMuxId(std::string& muxId, const RTC::Producer* producer) const;
+		bool HasMuxId(const std::string& muxId, const RTC::Producer* producer) const;
 		bool HasPayloadType(uint8_t payloadType, const RTC::Producer* producer) const;
 		void AddProducer(RTC::Producer* producer);
 		void RemoveProducer(const RTC::Producer* producer);
@@ -57,7 +57,7 @@ namespace RTC
 		}
 	}
 
-	inline bool RtpListener::HasMuxId(std::string& muxId, const RTC::Producer* producer) const
+	inline bool RtpListener::HasMuxId(const std::string& muxId, const RTC::Producer* producer) const
 	{
 		auto it = this->muxIdTable.find(muxId);
 

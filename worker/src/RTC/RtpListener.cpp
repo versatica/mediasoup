@@ -60,9 +60,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpParameters = producer->GetParameters();
-
-		MS_ASSERT(rtpParameters, "no RtpParameters");
+		auto& rtpParameters = producer->GetParameters();
 
 		// Keep a copy of the previous entries so we can rollback.
 
@@ -106,7 +104,7 @@ namespace RTC
 
 		// Add entries into the ssrcTable.
 		{
-			for (auto& encoding : rtpParameters->encodings)
+			for (auto& encoding : rtpParameters.encodings)
 			{
 				uint32_t ssrc;
 
@@ -171,9 +169,9 @@ namespace RTC
 
 		// Add entries into muxIdTable.
 		{
-			if (!rtpParameters->muxId.empty())
+			if (!rtpParameters.muxId.empty())
 			{
-				auto& muxId = rtpParameters->muxId;
+				auto& muxId = rtpParameters.muxId;
 
 				if (!this->HasMuxId(muxId, producer))
 				{
@@ -194,9 +192,9 @@ namespace RTC
 		// - Not all the encoding.rtx.ssrc are given, or
 		// - Not all the encoding.fec.ssrc are given.
 		{
-			auto it = rtpParameters->encodings.begin();
+			auto it = rtpParameters.encodings.begin();
 
-			for (; it != rtpParameters->encodings.end(); ++it)
+			for (; it != rtpParameters.encodings.end(); ++it)
 			{
 				auto& encoding = *it;
 
@@ -207,9 +205,9 @@ namespace RTC
 				}
 			}
 
-			if (it != rtpParameters->encodings.end())
+			if (it != rtpParameters.encodings.end())
 			{
-				for (auto& codec : rtpParameters->codecs)
+				for (auto& codec : rtpParameters.codecs)
 				{
 					uint8_t payloadType = codec.payloadType;
 
@@ -272,11 +270,11 @@ namespace RTC
 
 			if (it != this->ssrcTable.end())
 			{
-				auto producer      = it->second;
-				auto rtpParameters = producer->GetParameters();
+				auto producer       = it->second;
+				auto& rtpParameters = producer->GetParameters();
 
 				// Ensure the RTP PT is present in RtpParameters.
-				for (auto& codec : rtpParameters->codecs)
+				for (auto& codec : rtpParameters.codecs)
 				{
 					// Check payloads.
 					if (codec.payloadType == packet->GetPayloadType())

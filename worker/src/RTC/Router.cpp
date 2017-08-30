@@ -219,6 +219,10 @@ namespace RTC
 			case Channel::Request::MethodId::ROUTER_CREATE_PRODUCER:
 			{
 				static const Json::StaticString JsonStringKind{ "kind" };
+				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+				static const Json::StaticString JsonStringRtpMapping{ "rtpMapping" };
+				static const Json::StaticString JsonStringCodecPayloadTypes{ "codecPayloadTypes" };
+				static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 
 				RTC::Producer* producer;
 				RTC::Transport* transport;
@@ -260,17 +264,36 @@ namespace RTC
 					return;
 				}
 
-				// kind is mandatory.
 				if (!request->data[JsonStringKind].isString())
-					MS_THROW_ERROR("missing kind");
+				{
+					request->Reject("missing data.kind");
 
+					return;
+				}
+				else if (!request->data[JsonStringRtpParameters].isObject())
+				{
+					request->Reject("missing data.rtpParameters");
+
+					return;
+				}
+				else if (!request->data[JsonStringRtpMapping].isObject())
+				{
+					request->Reject("missing data.rtpMapping");
+
+					return;
+				}
+
+				RTC::Media::Kind kind;
 				std::string kindStr = request->data[JsonStringKind].asString();
-				auto kind           = RTC::Media::GetKind(kindStr);
+				RTC::RtpParameters rtpParameters;
 
-				// Create a Producer instance.
 				try
 				{
-					producer = new RTC::Producer(this->notifier, producerId, kind, transport);
+					// NOTE: This may throw.
+					kind = RTC::Media::GetKind(kindStr);
+
+					// NOTE: This may throw.
+					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -279,25 +302,74 @@ namespace RTC
 					return;
 				}
 
+				if (kind == RTC::Media::Kind::ALL)
+					MS_THROW_ERROR("invalid empty kind");
+
+				RTC::Producer::RtpMapping rtpMapping;
+
+				try
+				{
+					auto& jsonRtpMapping = request->data[JsonStringRtpMapping];
+
+					if (!jsonRtpMapping[JsonStringCodecPayloadTypes].isArray())
+						MS_THROW_ERROR("missing rtpMapping.codecPayloadTypes");
+					else if (!jsonRtpMapping[JsonStringHeaderExtensionIds].isArray())
+						MS_THROW_ERROR("missing rtpMapping.headerExtensionIds");
+
+					for (auto& pair : jsonRtpMapping[JsonStringCodecPayloadTypes])
+					{
+						if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
+							MS_THROW_ERROR("wrong rtpMapping.codecPayloadTypes entry");
+
+						auto sourcePayloadType = static_cast<uint8_t>(pair[0].asUInt());
+						auto mappedPayloadType = static_cast<uint8_t>(pair[1].asUInt());
+
+						rtpMapping.codecPayloadTypes[sourcePayloadType] = mappedPayloadType;
+					}
+
+					for (auto& pair : jsonRtpMapping[JsonStringHeaderExtensionIds])
+					{
+						if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
+							MS_THROW_ERROR("wrong rtpMapping entry");
+
+						auto sourceHeaderExtensionId = static_cast<uint8_t>(pair[0].asUInt());
+						auto mappedHeaderExtensionId = static_cast<uint8_t>(pair[1].asUInt());
+
+						rtpMapping.headerExtensionIds[sourceHeaderExtensionId] = mappedHeaderExtensionId;
+					}
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Create a Producer instance.
+				producer = new RTC::Producer(
+				    this->notifier, producerId, kind, transport, rtpParameters, rtpMapping);
+
 				// Add us as listener.
 				producer->AddListener(this);
 
-				// Tell the Transport to handle the new Producer.
 				try
 				{
+					// Tell the Transport to handle the new Producer.
 					// NOTE: This may throw.
 					transport->HandleProducer(producer);
 				}
 				catch (const MediaSoupError& error)
 				{
 					delete producer;
-
 					request->Reject(error.what());
 
 					return;
 				}
 
+				// Insert into the maps.
 				this->producers[producerId] = producer;
+				// Ensure the entry will exist even with an empty array.
+				this->mapProducerConsumers[producer];
 
 				MS_DEBUG_DEV("Producer created [producerId:%" PRIu32 "]", producerId);
 
@@ -309,6 +381,7 @@ namespace RTC
 			case Channel::Request::MethodId::ROUTER_CREATE_CONSUMER:
 			{
 				static const Json::StaticString JsonStringKind{ "kind" };
+				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 
 				RTC::Consumer* consumer;
 				RTC::Transport* transport;
@@ -368,31 +441,31 @@ namespace RTC
 
 					return;
 				}
-				else if (!producer->GetParameters())
+
+				if (!request->data[JsonStringKind].isString())
 				{
-					request->Reject("Producer has no parameters");
+					request->Reject("missing data.kind");
+
+					return;
+				}
+				else if (!request->data[JsonStringRtpParameters].isObject())
+				{
+					request->Reject("missing data.rtpParameters");
 
 					return;
 				}
 
-				// kind is mandatory.
-				if (!request->data[JsonStringKind].isString())
-					MS_THROW_ERROR("missing kind");
-
+				RTC::Media::Kind kind;
 				std::string kindStr = request->data[JsonStringKind].asString();
-				auto kind           = RTC::Media::GetKind(kindStr);
+				RTC::RtpParameters rtpParameters;
 
-				if (kind != producer->kind)
-					MS_THROW_ERROR("not matching kind");
-
-				// Create a Consumer instance.
 				try
 				{
-					consumer =
-					    new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId, transport);
+					// NOTE: This may throw.
+					kind = RTC::Media::GetKind(kindStr);
 
-					// Add us as listener.
-					consumer->AddListener(this);
+					// NOTE: This may throw.
+					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -401,10 +474,24 @@ namespace RTC
 					return;
 				}
 
+				if (kind == RTC::Media::Kind::ALL)
+					MS_THROW_ERROR("invalid empty kind");
+				else if (kind != producer->kind)
+					MS_THROW_ERROR("not matching kind");
+
+				consumer = new RTC::Consumer(
+				    this->notifier, consumerId, kind, transport, rtpParameters, producer->producerId);
+
+				// Add us as listener.
+				consumer->AddListener(this);
+
 				// Tell the Transport to handle the new Consumer.
 				transport->HandleConsumer(consumer);
 
+				// Insert into the maps.
 				this->consumers[consumerId] = consumer;
+				this->mapProducerConsumers[producer].insert(consumer);
+				this->mapConsumerProducer[consumer] = producer;
 
 				MS_DEBUG_DEV("Consumer created [consumerId:%" PRIu32 "]", consumerId);
 
@@ -532,7 +619,6 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::PRODUCER_DUMP:
-			case Channel::Request::MethodId::PRODUCER_RECEIVE:
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			case Channel::Request::MethodId::PRODUCER_RESUME:
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
@@ -592,7 +678,6 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::CONSUMER_DUMP:
-			case Channel::Request::MethodId::CONSUMER_SEND:
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
@@ -745,16 +830,6 @@ namespace RTC
 		this->mapProducerAudioLevelContainer.erase(producer);
 	}
 
-	void Router::OnProducerRtpParameters(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
-
-		// Ensure the entry will exist even with an empty array.
-		this->mapProducerConsumers[producer];
-	}
-
 	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -809,28 +884,6 @@ namespace RTC
 
 		// Finally delete the Consumer entry in the map.
 		this->mapConsumerProducer.erase(consumer);
-	}
-
-	void Router::OnConsumerRtpParameters(RTC::Consumer* consumer)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(consumer->GetParameters(), "Consumer has no parameters");
-
-		// TODO: Fill the mapConsumerProducer, so we need the associated Producer id.
-
-		auto producerId = consumer->sourceProducerId;
-
-		MS_ASSERT(this->producers.find(producerId) != this->producers.end(), "Producer not found");
-
-		auto* producer = this->producers[producerId];
-
-		MS_ASSERT(
-		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		    "Producer not present in mapProducerConsumers");
-
-		this->mapProducerConsumers[producer].insert(consumer);
-		this->mapConsumerProducer[consumer] = producer;
 	}
 
 	void Router::OnConsumerFullFrameRequired(RTC::Consumer* consumer)

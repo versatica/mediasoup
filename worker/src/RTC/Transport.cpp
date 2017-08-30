@@ -601,6 +601,9 @@ namespace RTC
 		// Add to the map.
 		this->producers.insert(producer);
 
+		// Pass it to the RtpListener.
+		this->rtpListener.AddProducer(producer);
+
 		// Add us as listener.
 		producer->AddListener(this);
 	}
@@ -1313,21 +1316,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Remove from the map.
+		// Remove it from the map.
 		this->producers.erase(producer);
 
-		// If it was handled by the RtpListener, remove it.
-		if (producer->GetParameters())
-			this->rtpListener.RemoveProducer(producer);
-	}
-
-	void Transport::OnProducerRtpParameters(RTC::Producer* producer)
-	{
-		MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
-
-		// Pass it to the RtpListener.
-		if (producer->GetParameters())
-			this->rtpListener.AddProducer(producer);
+		// Remove it from the RtpListener.
+		this->rtpListener.RemoveProducer(producer);
 	}
 
 	void Transport::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
@@ -1341,11 +1334,6 @@ namespace RTC
 
 		// Remove from the map.
 		this->consumers.erase(consumer);
-	}
-
-	void Transport::OnConsumerRtpParameters(RTC::Consumer* consumer)
-	{
-		// Do nothing.
 	}
 
 	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* consumer)

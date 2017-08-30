@@ -21,7 +21,7 @@ namespace RTC
 {
 	class Producer : public RtpStreamRecv::Listener
 	{
-	private:
+	public:
 		struct RtpMapping
 		{
 			std::map<uint8_t, uint8_t> codecPayloadTypes;
@@ -40,7 +40,9 @@ namespace RTC
 		    Channel::Notifier* notifier,
 		    uint32_t producerId,
 		    RTC::Media::Kind kind,
-		    RTC::Transport* transport);
+		    RTC::Transport* transport,
+		    RTC::RtpParameters& rtpParameters,
+		    struct RtpMapping& rtpMapping);
 
 	public:
 		// Must be public because Router needs to call it.
@@ -52,8 +54,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void AddListener(RTC::ProducerListener* listener);
 		void RemoveListener(RTC::ProducerListener* listener);
-		bool IsEnabled() const;
-		RTC::RtpParameters* GetParameters() const;
+		const RTC::RtpParameters& GetParameters() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -62,7 +63,7 @@ namespace RTC
 		void RequestFullFrame() const;
 
 	private:
-		void CreateRtpMapping(Json::Value& rtpMapping);
+		void FillKnownHeaderExtensions();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ApplyRtpMapping(RTC::RtpPacket* packet);
 
@@ -78,15 +79,15 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		std::unordered_set<RTC::ProducerListener*> listeners;
 		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
+		RTC::RtpParameters rtpParameters;
+		struct RtpMapping rtpMapping;
+		std::unordered_set<RTC::ProducerListener*> listeners;
 		// Allocated by this.
-		RTC::RtpParameters* rtpParameters{ nullptr };
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		// Others.
-		struct RtpMapping rtpMapping;
 		struct KnownHeaderExtensions knownHeaderExtensions;
 		bool paused{ false };
 		bool rtpRawEventEnabled{ false };
@@ -108,12 +109,7 @@ namespace RTC
 		this->listeners.erase(listener);
 	}
 
-	inline bool Producer::IsEnabled() const
-	{
-		return this->transport && this->rtpParameters && this->rtpStreams.size();
-	}
-
-	inline RTC::RtpParameters* Producer::GetParameters() const
+	inline const RTC::RtpParameters& Producer::GetParameters() const
 	{
 		return this->rtpParameters;
 	}

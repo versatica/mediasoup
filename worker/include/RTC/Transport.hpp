@@ -63,7 +63,6 @@ namespace RTC
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
-		RTC::Producer* GetProducer(uint32_t ssrc);
 		bool IsConnected() const;
 		void EnableRemb();
 		bool HasRemb();
@@ -132,13 +131,11 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::ProducerListener. */
 	public:
 		void OnProducerClosed(RTC::Producer* producer) override;
-		void OnProducerRtpParameters(RTC::Producer* producer) override;
 		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 
 		/* Pure virtual methods inherited from RTC::ConsumerListener. */
 	public:
 		void OnConsumerClosed(RTC::Consumer* consumer) override;
-		void OnConsumerRtpParameters(RTC::Consumer* consumer) override;
 		void OnConsumerFullFrameRequired(RTC::Consumer* consumer) override;
 
 	public:
@@ -178,11 +175,7 @@ namespace RTC
 
 	/* Inline instance methods. */
 
-	inline RTC::Producer* Transport::GetProducer(uint32_t ssrc)
-	{
-		return this->rtpListener.GetProducer(ssrc);
-	}
-
+	// TODO: Used?
 	inline bool Transport::IsConnected() const
 	{
 		return this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED;
