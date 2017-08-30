@@ -13,7 +13,7 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	    Listener* listener,
+	    ProducerListener* listener,
 	    Channel::Notifier* notifier,
 	    uint32_t producerId,
 	    RTC::Media::Kind kind,
@@ -100,21 +100,6 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::PRODUCER_CLOSE:
-			{
-#ifdef MS_LOG_DEV
-				uint32_t producerId = this->producerId;
-#endif
-
-				Destroy();
-
-				MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producerId);
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::PRODUCER_DUMP:
 			{
 				auto json = ToJson();
@@ -178,6 +163,8 @@ namespace RTC
 				{
 					CreateRtpStream(encoding);
 				}
+
+				this->listener->OnProducerRtpParameters(this);
 
 				request->Accept();
 

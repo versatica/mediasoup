@@ -394,21 +394,6 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::TRANSPORT_CLOSE:
-			{
-#ifdef MS_LOG_DEV
-				uint32_t transportId = this->transportId;
-#endif
-
-				Destroy();
-
-				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transportId);
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
 			{
 				auto json = ToJson();

@@ -363,6 +363,7 @@ namespace RTC
 				}
 
 				transport->Destroy();
+				request->Accept();
 
 				break;
 			}
@@ -420,6 +421,7 @@ namespace RTC
 				}
 
 				producer->Destroy();
+				request->Accept();
 
 				break;
 			}
@@ -479,6 +481,7 @@ namespace RTC
 				}
 
 				consumer->Destroy();
+				request->Accept();
 
 				break;
 			}
@@ -635,6 +638,19 @@ namespace RTC
 		// Also delete it from the map of audio levels.
 		this->mapProducerAudioLevelContainer.erase(producer);
 	}
+
+	void Router::OnProducerRtpParameters(RTC::Producer* producer)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(producer->GetParameters(), "Producer has no parameters");
+			MS_ASSERT(
+			    this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end(),
+			    "Producer already in mapProducerConsumers");
+
+			// Ensure the entry will exist even with an empty array.
+			this->mapProducerConsumers[producer];
+		}
 
 	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{

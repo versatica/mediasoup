@@ -4,8 +4,10 @@
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/Request.hpp"
-#include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
+#include "RTC/ProducerListener.hpp"
+#include "RTC/Consumer.hpp"
+#include "RTC/ConsumerListener.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/Transport.hpp"
 // TODO: Let's see.
@@ -21,8 +23,8 @@
 namespace RTC
 {
 	class Router : public RTC::Transport::Listener,
-	               public RTC::Producer::Listener,
-	               public RTC::Consumer::Listener,
+	               public RTC::ProducerListener,
+	               public RTC::ConsumerListener,
 	               public Timer::Listener
 	{
 	public:
@@ -64,6 +66,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
 		void OnProducerClosed(RTC::Producer* producer) override;
+		void OnProducerRtpParameters(RTC::Producer* producer) override;
 		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */

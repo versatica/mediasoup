@@ -1,5 +1,8 @@
 # TODO in mediasoup v2 (server-side)
 
+* When a producer is locally closed, the remote `RtpListener.RemoveProducer()` is not called. The question is: how to tell the transport of the producer about this?
+  - Yes, double listeners...
+
 * Does `PRODUCER_SEND` makes sense? why not just requiring RTP parameters (and mapping) in the constructor?
 
 * Does `CONSUMER_ENABLE` makes sense? IMHO it's better to keep the Consumer just in JS and call `CREATE_CONSUMER` (by passing `rtpParameters` and `transportId`) once enabled for reception in JS.

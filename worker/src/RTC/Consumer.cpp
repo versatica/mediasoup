@@ -18,7 +18,7 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    Listener* listener,
+	    RTC::ConsumerListener* listener,
 	    Channel::Notifier* notifier,
 	    uint32_t consumerId,
 	    RTC::Media::Kind kind,

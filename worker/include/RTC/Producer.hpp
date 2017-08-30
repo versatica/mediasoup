@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/Request.hpp"
+#include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -12,6 +13,7 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Transport.hpp"
 #include <json/json.h>
+#include <unordered_set>
 #include <map>
 #include <string>
 
@@ -19,17 +21,6 @@ namespace RTC
 {
 	class Producer : public RtpStreamRecv::Listener
 	{
-	public:
-		/**
-		 * RTC::Peer is the Listener.
-		 */
-		class Listener
-		{
-		public:
-			virtual void OnProducerClosed(RTC::Producer* producer)                            = 0;
-			virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-		};
-
 	private:
 		struct RtpMapping
 		{
@@ -46,7 +37,7 @@ namespace RTC
 
 	public:
 		Producer(
-		    Listener* listener,
+		    RTC::ProducerListener* listener,
 		    Channel::Notifier* notifier,
 		    uint32_t producerId,
 		    RTC::Media::Kind kind,
@@ -86,7 +77,8 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
+		// std::unordered_set<
+		RTC::ProducerListener* listener{ nullptr };
 		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
 		// Allocated by this.

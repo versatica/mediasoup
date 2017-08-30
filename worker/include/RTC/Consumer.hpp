@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/Request.hpp"
+#include "RTC/ConsumerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -21,19 +22,8 @@ namespace RTC
 	class Consumer
 	{
 	public:
-		/**
-		 * RTC::Peer is the Listener.
-		 */
-		class Listener
-		{
-		public:
-			virtual void OnConsumerClosed(Consumer* consumer)            = 0;
-			virtual void OnConsumerFullFrameRequired(Consumer* consumer) = 0;
-		};
-
-	public:
 		Consumer(
-		    Listener* listener,
+		    RTC::ConsumerListener* listener,
 		    Channel::Notifier* notifier,
 		    uint32_t consumerId,
 		    RTC::Media::Kind kind,
@@ -66,7 +56,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
+		RTC::ConsumerListener* listener{ nullptr };
 		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
 		// Allocated by this.

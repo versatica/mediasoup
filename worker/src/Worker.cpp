@@ -232,6 +232,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 			}
 
 			router->Destroy();
+			request->Accept();
 
 			break;
 		}
