@@ -26,6 +26,7 @@ namespace RTC
 		    Channel::Notifier* notifier,
 		    uint32_t consumerId,
 		    RTC::Media::Kind kind,
+		    uint32_t sourceProducerId,
 		    RTC::Transport* transport);
 
 	private:
@@ -37,9 +38,8 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void AddListener(RTC::ConsumerListener* listener);
 		void RemoveListener(RTC::ConsumerListener* listener);
-		void Send(RTC::RtpParameters* rtpParameters);
-		RTC::RtpParameters* GetParameters() const; // TODO: What for?
-		bool GetEnabled() const;
+		bool IsEnabled() const;
+		RTC::RtpParameters* GetParameters() const;
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -55,6 +55,7 @@ namespace RTC
 		// Passed by argument.
 		uint32_t consumerId{ 0 };
 		RTC::Media::Kind kind;
+		uint32_t sourceProducerId{ 0 };
 
 	private:
 		// Passed by argument.
@@ -65,8 +66,8 @@ namespace RTC
 		RTC::RtpParameters* rtpParameters{ nullptr };
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
+		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		bool paused{ false };
-		std::unordered_set<uint8_t> supportedPayloadTypes; // TODO: NO
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
@@ -87,14 +88,14 @@ namespace RTC
 		this->listeners.erase(listener);
 	}
 
+	inline bool Consumer::IsEnabled() const
+	{
+		return this->transport && this->rtpParameters && this->rtpStream;
+	}
+
 	inline RTC::RtpParameters* Consumer::GetParameters() const
 	{
 		return this->rtpParameters;
-	}
-
-	inline bool Consumer::GetEnabled() const
-	{
-		return this->transport;
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)

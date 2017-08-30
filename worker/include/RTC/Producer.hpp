@@ -13,9 +13,9 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Transport.hpp"
 #include <json/json.h>
+#include <unordered_set>
 #include <map>
 #include <string>
-#include <unordered_set>
 
 namespace RTC
 {
@@ -52,6 +52,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void AddListener(RTC::ProducerListener* listener);
 		void RemoveListener(RTC::ProducerListener* listener);
+		bool IsEnabled() const;
 		RTC::RtpParameters* GetParameters() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
@@ -63,7 +64,6 @@ namespace RTC
 	private:
 		void CreateRtpMapping(Json::Value& rtpMapping);
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
-		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
@@ -106,6 +106,11 @@ namespace RTC
 	inline void Producer::RemoveListener(RTC::ProducerListener* listener)
 	{
 		this->listeners.erase(listener);
+	}
+
+	inline bool Producer::IsEnabled() const
+	{
+		return this->transport && this->rtpParameters && this->rtpStreams.size();
 	}
 
 	inline RTC::RtpParameters* Producer::GetParameters() const

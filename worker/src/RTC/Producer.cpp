@@ -30,7 +30,14 @@ namespace RTC
 
 		delete this->rtpParameters;
 
-		ClearRtpStreams();
+		for (auto& kv : this->rtpStreams)
+		{
+			auto rtpStream = kv.second;
+
+			delete rtpStream;
+		}
+
+		this->rtpStreams.clear();
 	}
 
 	void Producer::Destroy()
@@ -53,11 +60,12 @@ namespace RTC
 		static const Json::StaticString JsonStringProducerId{ "producerId" };
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
 		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
 		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
+		static const Json::StaticString JsonStringPaused{ "paused" };
 		static const Json::StaticString JsonStringRtpRawEventEnabled{ "rtpRawEventEnabled" };
 		static const Json::StaticString JsonStringRtpObjectEventEnabled{ "rtpObjectEventEnabled" };
-		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonRtpStreams(Json::arrayValue);
@@ -71,16 +79,6 @@ namespace RTC
 		else
 			json[JsonStringRtpParameters] = Json::nullValue;
 
-		if (this->knownHeaderExtensions.ssrcAudioLevelId)
-			json[JsonStringSsrcAudioLevelId] = this->knownHeaderExtensions.ssrcAudioLevelId;
-
-		if (this->knownHeaderExtensions.absSendTimeId)
-			json[JsonStringAbsSendTimeId] = this->knownHeaderExtensions.absSendTimeId;
-
-		json[JsonStringRtpRawEventEnabled] = this->rtpRawEventEnabled;
-
-		json[JsonStringRtpObjectEventEnabled] = this->rtpObjectEventEnabled;
-
 		for (auto& kv : this->rtpStreams)
 		{
 			auto rtpStream = kv.second;
@@ -88,6 +86,18 @@ namespace RTC
 			jsonRtpStreams.append(rtpStream->ToJson());
 		}
 		json[JsonStringRtpStreams] = jsonRtpStreams;
+
+		if (this->knownHeaderExtensions.ssrcAudioLevelId)
+			json[JsonStringSsrcAudioLevelId] = this->knownHeaderExtensions.ssrcAudioLevelId;
+
+		if (this->knownHeaderExtensions.absSendTimeId)
+			json[JsonStringAbsSendTimeId] = this->knownHeaderExtensions.absSendTimeId;
+
+		json[JsonStringPaused] = this->paused;
+
+		json[JsonStringRtpRawEventEnabled] = this->rtpRawEventEnabled;
+
+		json[JsonStringRtpObjectEventEnabled] = this->rtpObjectEventEnabled;
 
 		return json;
 	}
@@ -250,6 +260,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(IsEnabled(), "Producer not enabled");
+
 		static const Json::StaticString JsonStringObject{ "object" };
 		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
 		static const Json::StaticString JsonStringMarker{ "marker" };
@@ -344,6 +356,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(IsEnabled(), "Producer not enabled");
+
 		if (this->transport == nullptr)
 			return;
 
@@ -363,6 +377,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(IsEnabled(), "Producer not enabled");
+
 		if (this->transport == nullptr)
 			return;
 
@@ -381,6 +397,8 @@ namespace RTC
 	void Producer::RequestFullFrame() const
 	{
 		MS_TRACE();
+
+		MS_ASSERT(IsEnabled(), "Producer not enabled");
 
 		for (auto& kv : this->rtpStreams)
 		{
@@ -532,22 +550,45 @@ namespace RTC
 		}
 	}
 
-	void Producer::ClearRtpStreams()
+	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->rtpStreams)
-		{
-			auto rtpStream = kv.second;
+		auto& codecPayloadTypeMap  = this->rtpMapping.codecPayloadTypes;
+		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
+		auto payloadType           = packet->GetPayloadType();
 
-			delete rtpStream;
+		// Mangle payload type.
+
+		if (codecPayloadTypeMap.find(payloadType) != codecPayloadTypeMap.end())
+		{
+			packet->SetPayloadType(codecPayloadTypeMap[payloadType]);
 		}
 
-		this->rtpStreams.clear();
+		// Mangle header extension ids.
+
+		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
+
+		if (this->knownHeaderExtensions.ssrcAudioLevelId)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
+			    this->knownHeaderExtensions.ssrcAudioLevelId);
+		}
+
+		if (this->knownHeaderExtensions.absSendTimeId)
+		{
+			packet->AddExtensionMapping(
+			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
+		}
 	}
 
 	void Producer::OnNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
 	{
+		MS_TRACE();
+
+		MS_ASSERT(IsEnabled(), "Producer not enabled");
+
 		if (this->transport == nullptr)
 			return;
 
@@ -597,9 +638,9 @@ namespace RTC
 
 	void Producer::OnPliRequired(RTC::RtpStreamRecv* rtpStream)
 	{
-		// TODO: Can this happen?
-		if (this->transport == nullptr)
-			return;
+		MS_TRACE();
+
+		MS_ASSERT(IsEnabled(), "Producer not enabled");
 
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
 
@@ -608,38 +649,5 @@ namespace RTC
 		// Send two, because it's free.
 		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
-	}
-
-	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		auto& codecPayloadTypeMap  = this->rtpMapping.codecPayloadTypes;
-		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
-		auto payloadType           = packet->GetPayloadType();
-
-		// Mangle payload type.
-
-		if (codecPayloadTypeMap.find(payloadType) != codecPayloadTypeMap.end())
-		{
-			packet->SetPayloadType(codecPayloadTypeMap[payloadType]);
-		}
-
-		// Mangle header extension ids.
-
-		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
-
-		if (this->knownHeaderExtensions.ssrcAudioLevelId)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
-			    this->knownHeaderExtensions.ssrcAudioLevelId);
-		}
-
-		if (this->knownHeaderExtensions.absSendTimeId)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
-		}
 	}
 } // namespace RTC

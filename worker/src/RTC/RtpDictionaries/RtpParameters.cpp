@@ -20,7 +20,7 @@ namespace RTC
 		static const Json::StaticString JsonStringHeaderExtensions{ "headerExtensions" };
 		static const Json::StaticString JsonStringRtcp{ "rtcp" };
 
-		// `muxId` is optional.
+		// muxId is optional.
 		if (data[JsonStringMuxId].isString())
 		{
 			this->muxId = data[JsonStringMuxId].asString();
@@ -29,7 +29,7 @@ namespace RTC
 				MS_THROW_ERROR("empty rtpParameters.muxId");
 		}
 
-		// `codecs` is mandatory.
+		// codecs is mandatory.
 		if (!data[JsonStringCodecs].isArray())
 			MS_THROW_ERROR("missing rtpParameters.codecs");
 
@@ -46,7 +46,7 @@ namespace RTC
 			this->codecs.push_back(codec);
 		}
 
-		// `encodings` is mandatory.
+		// encodings is mandatory.
 		if (!data[JsonStringEncodings].isArray())
 			MS_THROW_ERROR("missing rtpParameters.encodings");
 
@@ -63,7 +63,7 @@ namespace RTC
 			this->encodings.push_back(encoding);
 		}
 
-		// `headerExtensions` is optional.
+		// headerExtensions is optional.
 		if (data[JsonStringHeaderExtensions].isArray())
 		{
 			auto& jsonArray = data[JsonStringHeaderExtensions];
@@ -78,7 +78,7 @@ namespace RTC
 			}
 		}
 
-		// `rtcp` is optional.
+		// rtcp is optional.
 		if (data[JsonStringRtcp].isObject())
 		{
 			this->rtcp    = RTC::RtcpParameters(data[JsonStringRtcp]);
@@ -110,11 +110,11 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		// Add `muxId`.
+		// Add muxId.
 		if (!this->muxId.empty())
 			json[JsonStringMuxId] = this->muxId;
 
-		// Add `codecs`.
+		// Add codecs.
 		json[JsonStringCodecs] = Json::arrayValue;
 
 		for (auto& entry : this->codecs)
@@ -122,7 +122,7 @@ namespace RTC
 			json[JsonStringCodecs].append(entry.ToJson());
 		}
 
-		// Add `encodings`.
+		// Add encodings.
 		json[JsonStringEncodings] = Json::arrayValue;
 
 		for (auto& entry : this->encodings)
@@ -130,7 +130,7 @@ namespace RTC
 			json[JsonStringEncodings].append(entry.ToJson());
 		}
 
-		// Add `headerExtensions`.
+		// Add headerExtensions.
 		json[JsonStringHeaderExtensions] = Json::arrayValue;
 
 		for (auto& entry : this->headerExtensions)
@@ -138,7 +138,7 @@ namespace RTC
 			json[JsonStringHeaderExtensions].append(entry.ToJson());
 		}
 
-		// Add `rtcp`.
+		// Add rtcp.
 		if (this->hasRtcp)
 			json[JsonStringRtcp] = this->rtcp.ToJson();
 

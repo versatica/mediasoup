@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <cmath> // std::lround()
 #include <set>
 #include <string>
@@ -263,15 +264,13 @@ namespace RTC
 				if (!request->data[JsonStringKind].isString())
 					MS_THROW_ERROR("missing kind");
 
-				std::string kind = request->data[JsonStringKind].asString();
+				std::string kindStr = request->data[JsonStringKind].asString();
+				auto kind = RTC::Media::GetKind(kindStr);
 
 				// Create a Producer instance.
 				try
 				{
-					producer = new RTC::Producer(this->notifier, producerId, RTC::Media::GetKind(kind), transport);
-
-					// Add us as listener.
-					producer->AddListener(this);
+					producer = new RTC::Producer(this->notifier, producerId, kind, transport);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -279,6 +278,9 @@ namespace RTC
 
 					return;
 				}
+
+				// Add us as listener.
+				producer->AddListener(this);
 
 				// Tell the Transport to handle the new Producer.
 				try
@@ -306,7 +308,106 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROUTER_CREATE_CONSUMER:
 			{
-				// TODO
+				static const Json::StaticString JsonStringKind{ "kind" };
+
+				RTC::Consumer* consumer;
+				RTC::Transport* transport;
+				RTC::Producer* producer;
+				uint32_t consumerId;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request, &consumerId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (consumer != nullptr)
+				{
+					request->Reject("Consumer already exists");
+
+					return;
+				}
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (transport == nullptr)
+				{
+					request->Reject("Transport does not exist");
+
+					return;
+				}
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+				else if (!producer->GetParameters())
+				{
+					request->Reject("Producer has no parameters");
+
+					return;
+				}
+
+				// kind is mandatory.
+				if (!request->data[JsonStringKind].isString())
+					MS_THROW_ERROR("missing kind");
+
+				std::string kindStr = request->data[JsonStringKind].asString();
+				auto kind = RTC::Media::GetKind(kindStr);
+
+				if (kind != producer->kind)
+					MS_THROW_ERROR("not matching kind");
+
+				// Create a Consumer instance.
+				try
+				{
+					consumer = new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId, transport);
+
+					// Add us as listener.
+					consumer->AddListener(this);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Tell the Transport to handle the new Consumer.
+				transport->HandleConsumer(consumer);
+
+				this->consumers[consumerId] = consumer;
+
+				MS_DEBUG_DEV("Consumer created [consumerId:%" PRIu32 "]", consumerId);
+
+				request->Accept();
 
 				break;
 			}
@@ -490,6 +591,7 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_SEND:
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
@@ -658,7 +760,7 @@ namespace RTC
 
 		MS_ASSERT(
 		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		    "Producer not present in the map");
+		    "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
@@ -715,6 +817,19 @@ namespace RTC
 		MS_ASSERT(consumer->GetParameters(), "Consumer has no parameters");
 
 		// TODO: Fill the mapConsumerProducer, so we need the associated Producer id.
+
+		auto producerId = consumer->sourceProducerId;
+
+		MS_ASSERT(this->producers.find(producerId) != this->producers.end(), "Producer not found");
+
+		auto* producer = this->producers[producerId];
+
+		MS_ASSERT(
+		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		    "Producer not present in mapProducerConsumers");
+
+		this->mapProducerConsumers[producer].insert(consumer);
+		this->mapConsumerProducer[consumer] = producer;
 	}
 
 	void Router::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
@@ -723,7 +838,7 @@ namespace RTC
 
 		MS_ASSERT(
 		    this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
-		    "Consumer not present in the map");
+		    "Consumer not present in mapConsumerProducer");
 
 		auto& producer = this->mapConsumerProducer[consumer];
 
