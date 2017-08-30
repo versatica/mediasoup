@@ -235,15 +235,15 @@ namespace RTC
 
 		this->selectedTuple = nullptr;
 
-		// Remove us from as listener in our handled Producers and Consumers.
+		// Close all the handled Producers and Consumers.
 		for (auto& producer : this->producers)
 		{
-			producer->RemoveListener(this);
+			producer->Destroy();
 		}
 
 		for (auto& consumer : this->consumers)
 		{
-			consumer->RemoveListener(this);
+			consumer->Destroy();
 		}
 
 		// TODO: yes? May be since we allow Transport being closed from on DtlsTransport
