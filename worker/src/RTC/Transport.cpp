@@ -226,23 +226,34 @@ namespace RTC
 			this->iceServer->Destroy();
 
 		for (auto socket : this->udpSockets)
+		{
 			socket->Destroy();
+		}
 		this->udpSockets.clear();
 
 		for (auto server : this->tcpServers)
+		{
 			server->Destroy();
+		}
 		this->tcpServers.clear();
 
 		this->selectedTuple = nullptr;
 
-		// Close all the handled Producers and Consumers.
-		for (auto& producer : this->producers)
+		// Close all the handled Producers.
+		for (auto it = this->producers.begin(); it != this->producers.end();)
 		{
+			auto* producer = *it;
+
+			it = this->producers.erase(it);
 			producer->Destroy();
 		}
 
-		for (auto& consumer : this->consumers)
+		// Close all the handled Consumers.
+		for (auto it = this->consumers.begin(); it != this->consumers.end();)
 		{
+			auto* consumer = *it;
+
+			it = this->consumers.erase(it);
 			consumer->Destroy();
 		}
 
