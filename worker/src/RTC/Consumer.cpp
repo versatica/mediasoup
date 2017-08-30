@@ -24,7 +24,8 @@ namespace RTC
 	    RTC::Transport* transport,
 	    RTC::RtpParameters& rtpParameters,
 	    uint32_t sourceProducerId)
-	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier), transport(transport), rtpParameters(rtpParameters)
+	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier),
+	      transport(transport), rtpParameters(rtpParameters)
 	{
 		MS_TRACE();
 
@@ -56,6 +57,8 @@ namespace RTC
 		{
 			listener->OnConsumerClosed(this);
 		}
+
+		this->notifier->Emit(this->consumerId, "close");
 
 		delete this;
 	}

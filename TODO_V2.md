@@ -1,5 +1,10 @@
 # TODO in mediasoup v2 (server-side)
 
+* Revisar appData en todos los mensajes.
+
+* Implement `consumer.sourcePause/Resume()`.
+  - No. This should be done in the Worker. When the Producer gets paused it should call `Router::OnProducerPaused()` so it calls `Consumer::SourcePause()` to all its Consumers, and each Consumer emits "paused/resumed".
+
 * Remove DEPTH stuff.
 
 * Redo the compile_commands_template.json.

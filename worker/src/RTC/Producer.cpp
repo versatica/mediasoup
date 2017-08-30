@@ -19,7 +19,8 @@ namespace RTC
 	    RTC::Transport* transport,
 	    RTC::RtpParameters& rtpParameters,
 	    struct RtpMapping& rtpMapping)
-	    : producerId(producerId), kind(kind), notifier(notifier), transport(transport), rtpParameters(rtpParameters)
+	    : producerId(producerId), kind(kind), notifier(notifier), transport(transport),
+	      rtpParameters(rtpParameters)
 	{
 		MS_TRACE();
 
