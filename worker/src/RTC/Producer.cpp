@@ -18,9 +18,10 @@ namespace RTC
 	    RTC::Media::Kind kind,
 	    RTC::Transport* transport,
 	    RTC::RtpParameters& rtpParameters,
-	    struct RtpMapping& rtpMapping)
+	    struct RtpMapping& rtpMapping,
+	    bool paused)
 	    : producerId(producerId), kind(kind), notifier(notifier), transport(transport),
-	      rtpParameters(rtpParameters)
+	      rtpParameters(rtpParameters), paused(paused)
 	{
 		MS_TRACE();
 

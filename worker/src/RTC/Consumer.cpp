@@ -23,9 +23,10 @@ namespace RTC
 	    RTC::Media::Kind kind,
 	    RTC::Transport* transport,
 	    RTC::RtpParameters& rtpParameters,
+	    bool paused,
 	    uint32_t sourceProducerId)
 	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier),
-	      transport(transport), rtpParameters(rtpParameters)
+	      transport(transport), rtpParameters(rtpParameters), paused(paused)
 	{
 		MS_TRACE();
 
@@ -75,6 +76,7 @@ namespace RTC
 			"supportedCodecPayloadTypes"
 		};
 		static const Json::StaticString JsonStringPaused{ "paused" };
+		static const Json::StaticString JsonStringSourcePaused{ "sourcePaused" };
 
 		Json::Value json(Json::objectValue);
 
@@ -96,6 +98,8 @@ namespace RTC
 		}
 
 		json[JsonStringPaused] = this->paused;
+
+		json[JsonStringSourcePaused] = this->sourcePaused;
 
 		return json;
 	}

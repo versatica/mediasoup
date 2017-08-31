@@ -42,7 +42,8 @@ namespace RTC
 		    RTC::Media::Kind kind,
 		    RTC::Transport* transport,
 		    RTC::RtpParameters& rtpParameters,
-		    struct RtpMapping& rtpMapping);
+		    struct RtpMapping& rtpMapping,
+		    bool paused);
 
 	public:
 		// Must be public because Router needs to call it.
@@ -55,6 +56,7 @@ namespace RTC
 		void AddListener(RTC::ProducerListener* listener);
 		void RemoveListener(RTC::ProducerListener* listener);
 		const RTC::RtpParameters& GetParameters() const;
+		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -112,6 +114,11 @@ namespace RTC
 	inline const RTC::RtpParameters& Producer::GetParameters() const
 	{
 		return this->rtpParameters;
+	}
+
+	inline bool Producer::IsPaused() const
+	{
+		return this->paused;
 	}
 
 	inline void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)

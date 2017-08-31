@@ -28,6 +28,7 @@ namespace RTC
 		    RTC::Media::Kind kind,
 		    RTC::Transport* transport,
 		    RTC::RtpParameters& rtpParameters,
+		    bool paused,
 		    uint32_t sourceProducerId);
 
 	private:

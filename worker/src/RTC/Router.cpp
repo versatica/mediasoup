@@ -221,6 +221,7 @@ namespace RTC
 				static const Json::StaticString JsonStringKind{ "kind" };
 				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 				static const Json::StaticString JsonStringRtpMapping{ "rtpMapping" };
+				static const Json::StaticString JsonStringPaused{ "paused" };
 				static const Json::StaticString JsonStringCodecPayloadTypes{ "codecPayloadTypes" };
 				static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 
@@ -345,9 +346,14 @@ namespace RTC
 					return;
 				}
 
+				bool paused = false;
+
+				if (request->data[JsonStringPaused].isBool())
+					paused = request->data[JsonStringPaused].asBool();
+
 				// Create a Producer instance.
 				producer = new RTC::Producer(
-				    this->notifier, producerId, kind, transport, rtpParameters, rtpMapping);
+				    this->notifier, producerId, kind, transport, rtpParameters, rtpMapping, paused);
 
 				// Add us as listener.
 				producer->AddListener(this);
@@ -382,6 +388,7 @@ namespace RTC
 			{
 				static const Json::StaticString JsonStringKind{ "kind" };
 				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+				static const Json::StaticString JsonStringPaused{ "paused" };
 
 				RTC::Consumer* consumer;
 				RTC::Transport* transport;
@@ -479,8 +486,17 @@ namespace RTC
 				else if (kind != producer->kind)
 					MS_THROW_ERROR("not matching kind");
 
+				bool paused = false;
+
+				if (request->data[JsonStringPaused].isBool())
+					paused = request->data[JsonStringPaused].asBool();
+
 				consumer = new RTC::Consumer(
-				    this->notifier, consumerId, kind, transport, rtpParameters, producer->producerId);
+				    this->notifier, consumerId, kind, transport, rtpParameters, paused, producer->producerId);
+
+				// If the Producer is paused tell it to the new Consumer.
+				if (producer->IsPaused())
+					consumer->SetSourcePaused();
 
 				// Add us as listener.
 				consumer->AddListener(this);
@@ -876,9 +892,6 @@ namespace RTC
 		// from which it was received.
 		for (auto& consumer : consumers)
 		{
-			// TODO: just if enabled?
-			// Mmmm, can it be "non" enabled? how?
-
 			consumer->SendRtpPacket(packet);
 		}
 
