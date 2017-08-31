@@ -41,6 +41,7 @@ namespace RTC
 		void AddListener(RTC::ConsumerListener* listener);
 		void RemoveListener(RTC::ConsumerListener* listener);
 		const RTC::RtpParameters& GetParameters() const;
+		bool IsPaused() const;
 		void SetSourcePaused();
 		void SetSourceResumed();
 		void SendRtpPacket(RTC::RtpPacket* packet);
@@ -96,6 +97,11 @@ namespace RTC
 	inline const RTC::RtpParameters& Consumer::GetParameters() const
 	{
 		return this->rtpParameters;
+	}
+
+	inline bool Consumer::IsPaused() const
+	{
+		return this->paused || this->sourcePaused;
 	}
 
 	inline void Consumer::SetSourcePaused()

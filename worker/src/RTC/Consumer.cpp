@@ -130,13 +130,13 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
-				bool wasPaused = this->paused;
+				bool wasPaused = IsPaused();
 
 				this->paused = false;
 
 				request->Accept();
 
-				if (wasPaused)
+				if (wasPaused && !IsPaused())
 				{
 					for (auto& listener : this->listeners)
 					{
@@ -161,7 +161,7 @@ namespace RTC
 		MS_TRACE();
 
 		// If paused don't forward RTP.
-		if (this->paused || this->sourcePaused)
+		if (IsPaused())
 			return;
 
 		// Ignore the packet if the SSRC is not the single one in the sender

@@ -161,6 +161,8 @@ namespace RTC
 
 				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
 
+				// TODO: This avois a full frame to pass when the Consumer was paused and later
+				// resumed. No. Period. We should allow the packet (return true here).
 				return false;
 			}
 		}
