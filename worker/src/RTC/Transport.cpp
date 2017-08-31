@@ -1323,6 +1323,16 @@ namespace RTC
 		this->rtpListener.RemoveProducer(producer);
 	}
 
+	void Transport::OnProducerPaused(RTC::Producer* producer)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerResumed(RTC::Producer* producer)
+	{
+		// Do nothing.
+	}
+
 	void Transport::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		// Do nothing.

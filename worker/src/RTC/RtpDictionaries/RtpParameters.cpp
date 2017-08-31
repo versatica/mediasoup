@@ -269,7 +269,7 @@ namespace RTC
 		}
 
 		// Iterate all the encodings, set the first payloadType in all of them with
-		// `codecPayloadType` unset, and check that others point to a media codec.
+		// codecPayloadType unset, and check that others point to a media codec.
 		for (auto& encoding : this->encodings)
 		{
 			if (!encoding.hasCodecPayloadType)

@@ -25,7 +25,7 @@ namespace RTC
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpCodecParameters is not an object");
 
-		// `mimeType` is mandatory.
+		// mimeType is mandatory.
 		if (!data[JsonStringMimeType].isString())
 			MS_THROW_ERROR("missing RtpCodec.mimeType");
 
@@ -40,29 +40,29 @@ namespace RTC
 
 		this->payloadType = static_cast<uint8_t>(data[JsonStringPayloadType].asUInt());
 
-		// `clockRate` is mandatory.
+		// clockRate is mandatory.
 		if (!data[JsonStringClockRate].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.clockRate");
 
 		this->clockRate = uint32_t{ data[JsonStringClockRate].asUInt() };
 
-		// `maxptime` is optional.
+		// maxptime is optional.
 		if (data[JsonStringMaxptime].isUInt())
 			this->maxptime = uint32_t{ data[JsonStringMaxptime].asUInt() };
 
-		// `ptime` is optional.
+		// ptime is optional.
 		if (data[JsonStringPtime].isUInt())
 			this->ptime = uint32_t{ data[JsonStringPtime].asUInt() };
 
-		// `channels` is optional.
+		// channels is optional.
 		if (data[JsonStringNumChannels].isUInt())
 			this->channels = uint32_t{ data[JsonStringNumChannels].asUInt() };
 
-		// `parameters` is optional.
+		// parameters is optional.
 		if (data[JsonStringParameters].isObject())
 			this->parameters.Set(data[JsonStringParameters]);
 
-		// `rtcpFeedback` is optional.
+		// rtcpFeedback is optional.
 		if (data[JsonStringRtcpFeedback].isArray())
 		{
 			auto& jsonRtcpFeedback = data[JsonStringRtcpFeedback];
@@ -96,34 +96,34 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		// Add `mimeType`.
+		// Add mimeType.
 		json[JsonStringMimeType] = this->mime.ToString();
 
-		// Add `name`.
+		// Add name.
 		json[JsonStringName] = this->mime.GetName();
 
-		// Add `payloadType`.
+		// Add payloadType.
 		json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
 
-		// Add `clockRate`.
+		// Add clockRate.
 		json[JsonStringClockRate] = Json::UInt{ this->clockRate };
 
-		// Add `maxptime`.
+		// Add maxptime.
 		if (this->maxptime != 0u)
 			json[JsonStringMaxptime] = Json::UInt{ this->maxptime };
 
-		// Add `ptime`.
+		// Add ptime.
 		if (this->ptime != 0u)
 			json[JsonStringPtime] = Json::UInt{ this->ptime };
 
-		// Add `channels`.
+		// Add channels.
 		if (this->channels > 1)
 			json[JsonStringNumChannels] = Json::UInt{ this->channels };
 
-		// Add `parameters`.
+		// Add parameters.
 		json[JsonStringParameters] = this->parameters.ToJson();
 
-		// Add `rtcpFeedback`.
+		// Add rtcpFeedback.
 		json[JsonStringRtcpFeedback] = Json::arrayValue;
 
 		for (auto& entry : this->rtcpFeedback)

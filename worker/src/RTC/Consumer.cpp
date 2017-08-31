@@ -52,7 +52,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the listeners.
 		for (auto& listener : this->listeners)
 		{
 			listener->OnConsumerClosed(this);

@@ -830,6 +830,38 @@ namespace RTC
 		this->mapProducerAudioLevelContainer.erase(producer);
 	}
 
+	void Router::OnProducerPaused(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		    "Producer not present in mapProducerConsumers");
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto& consumer : consumers)
+		{
+			consumer->SetSourcePaused();
+		}
+	}
+
+	void Router::OnProducerResumed(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		    "Producer not present in mapProducerConsumers");
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto& consumer : consumers)
+		{
+			consumer->SetSourceResumed();
+		}
+	}
+
 	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -870,8 +902,6 @@ namespace RTC
 	void Router::OnConsumerClosed(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
-
-		// TODO: How to tell the Transport using this Consumer.
 
 		this->consumers.erase(consumer->consumerId);
 

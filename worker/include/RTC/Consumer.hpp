@@ -40,6 +40,8 @@ namespace RTC
 		void AddListener(RTC::ConsumerListener* listener);
 		void RemoveListener(RTC::ConsumerListener* listener);
 		const RTC::RtpParameters& GetParameters() const;
+		void SetSourcePaused();
+		void SetSourceResumed();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -69,6 +71,7 @@ namespace RTC
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		bool paused{ false };
+		bool sourcePaused{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
@@ -92,6 +95,24 @@ namespace RTC
 	inline const RTC::RtpParameters& Consumer::GetParameters() const
 	{
 		return this->rtpParameters;
+	}
+
+	inline void Consumer::SetSourcePaused()
+	{
+		if (this->sourcePaused)
+			return;
+
+		this->sourcePaused = true;
+		this->notifier->Emit(this->consumerId, "sourcepaused");
+	}
+
+	inline void Consumer::SetSourceResumed()
+	{
+		if (!this->sourcePaused)
+			return;
+
+		this->sourcePaused = false;
+		this->notifier->Emit(this->consumerId, "sourceresumed");
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)

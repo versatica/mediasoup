@@ -1,9 +1,11 @@
 # TODO in mediasoup v2 (server-side)
 
-* Revisar appData en todos los mensajes.
+* When a Peer disconnect, others receive `peerClosed` and later `consumerClosed` for each Consumer associated to the closed Peer, so the client side complains ("peer not found"). We should avoid sending `consumerClosed` if its Peer left.
 
-* Implement `consumer.sourcePause/Resume()`.
-  - No. This should be done in the Worker. When the Producer gets paused it should call `Router::OnProducerPaused()` so it calls `Consumer::SourcePause()` to all its Consumers, and each Consumer emits "paused/resumed".
+* Revisar que si un Producer JS empieza pausado, esté tb pausado en el worker y en el Consumer JS asociado. Y que si un Consumer JS se habilita pausado, que se entere tb el Consumer del worker.
+  - Y que si un Producer se pausa (y, por lo tanto, sus Consumers están "sourcePaused") al hacer `enable()` en esos Consumers se le diga al cliente que están pausados.
+
+* Revisar appData en todos los mensajes.
 
 * Remove DEPTH stuff.
 
@@ -18,9 +20,6 @@
   - DOC: https://stackoverflow.com/questions/36726890/why-are-javascript-promises-asynchronous-when-calling-only-synchronous-functions
     + I must avoid unnecesary `Promise.resolve()`.
   - "The callback passed to a Promise constructor is always called synchronously, but the callbacks passed into then are always called asynchronously"
-
-* worker: If a `Producer` is paused and a new `Peer` joins (so a new `Consumer` is generated) such a new `Consumer` does not know that its associated `Producer` is paused. When creating a `Consumer` the `Room` should check `producer->IsPaused()` and call `consumer->setSourcePaused(true)` or similar.
-  - NOTE: Won't happen with the new design since that's done in JS land.
 
 * May have to react on DTLS ALERT CLOSE in the server and make it "really" close the Transport and notify the client. Bufff... I don't like this...
 

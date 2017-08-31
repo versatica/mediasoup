@@ -60,7 +60,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the listeners.
 		for (auto& listener : this->listeners)
 		{
 			listener->OnProducerClosed(this);
@@ -132,9 +131,19 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			{
+				bool wasPaused = this->paused;
+
 				this->paused = true;
 
 				request->Accept();
+
+				if (!wasPaused)
+				{
+					for (auto& listener : this->listeners)
+					{
+						listener->OnProducerPaused(this);
+					}
+				}
 
 				break;
 			}
@@ -148,7 +157,14 @@ namespace RTC
 				request->Accept();
 
 				if (wasPaused)
+				{
+					for (auto& listener : this->listeners)
+					{
+						listener->OnProducerResumed(this);
+					}
+
 					RequestFullFrame();
+				}
 
 				break;
 			}
@@ -276,7 +292,6 @@ namespace RTC
 		// Apply the Producer RTP mapping before dispatching the packet to the Router.
 		ApplyRtpMapping(packet);
 
-		// Notify the listener.
 		for (auto& listener : this->listeners)
 		{
 			listener->OnProducerRtpPacket(this, packet);

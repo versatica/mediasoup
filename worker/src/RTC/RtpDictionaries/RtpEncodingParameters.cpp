@@ -27,52 +27,52 @@ namespace RTC
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpEncodingParameters is not an object");
 
-		// `codecPayloadType` is optional.
+		// codecPayloadType is optional.
 		if (data[JsonStringCodecPayloadType].isUInt())
 		{
 			this->codecPayloadType    = static_cast<uint8_t>(data[JsonStringCodecPayloadType].asUInt());
 			this->hasCodecPayloadType = true;
 		}
 
-		// `ssrc` is optional.
+		// ssrc is optional.
 		if (data[JsonStringSsrc].isUInt())
 			this->ssrc = uint32_t{ data[JsonStringSsrc].asUInt() };
 
-		// `fec` is optional.
+		// fec is optional.
 		if (data[JsonStringFec].isObject())
 		{
 			this->fec    = RtpFecParameters(data[JsonStringFec]);
 			this->hasFec = true;
 		}
 
-		// `rtx` is optional.
+		// rtx is optional.
 		if (data[JsonStringRtx].isObject())
 		{
 			this->rtx    = RtpRtxParameters(data[JsonStringRtx]);
 			this->hasRtx = true;
 		}
 
-		// `resolutionScale` is optional.
+		// resolutionScale is optional.
 		if (data[JsonStringResolutionScale].isDouble())
 			this->resolutionScale = data[JsonStringResolutionScale].asDouble();
 
-		// `framerateScale` is optional.
+		// framerateScale is optional.
 		if (data[JsonStringFramerateScale].isDouble())
 			this->framerateScale = data[JsonStringFramerateScale].asDouble();
 
-		// `maxFramerate` is optional.
+		// maxFramerate is optional.
 		if (data[JsonStringMaxFramerate].isUInt())
 			this->maxFramerate = uint32_t{ data[JsonStringMaxFramerate].asUInt() };
 
-		// `active` is optional.
+		// active is optional.
 		if (data[JsonStringActive].isBool())
 			this->active = data[JsonStringActive].asBool();
 
-		// `encodingId` is optional.
+		// encodingId is optional.
 		if (data[JsonStringEncodingId].isString())
 			this->encodingId = data[JsonStringEncodingId].asString();
 
-		// `dependencyEncodingIds` is optional.
+		// dependencyEncodingIds is optional.
 		if (data[JsonStringDependencyEncodingIds].isArray())
 		{
 			auto& jsonArray = data[JsonStringDependencyEncodingIds];
@@ -103,38 +103,38 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		// Add `codecPayloadType`.
+		// Add codecPayloadType.
 		if (this->hasCodecPayloadType)
 			json[JsonStringCodecPayloadType] = Json::UInt{ this->codecPayloadType };
 
-		// Add `ssrc`.
+		// Add ssrc.
 		if (this->ssrc != 0u)
 			json[JsonStringSsrc] = Json::UInt{ this->ssrc };
 
-		// Add `fec`
+		// Add fec
 		if (this->hasFec)
 			json[JsonStringFec] = this->fec.ToJson();
 
-		// Add `rtx`
+		// Add rtx
 		if (this->hasRtx)
 			json[JsonStringRtx] = this->rtx.ToJson();
 
-		// Add `resolutionScale` (if different than the default value).
+		// Add resolutionScale (if different than the default value).
 		if (this->resolutionScale != 1.0)
 			json[JsonStringResolutionScale] = this->resolutionScale;
 
-		// Add `framerateScale` (if different than the default value).
+		// Add framerateScale (if different than the default value).
 		if (this->framerateScale != 1.0)
 			json[JsonStringFramerateScale] = this->framerateScale;
 
-		// Add `maxFramerate`.
+		// Add maxFramerate.
 		if (this->maxFramerate != 0u)
 			json[JsonStringMaxFramerate] = Json::UInt{ this->maxFramerate };
 
-		// Add `active`.
+		// Add active.
 		json[JsonStringActive] = this->active;
 
-		// Add `encodingId`.
+		// Add encodingId.
 		if (!this->encodingId.empty())
 			json[JsonStringEncodingId] = this->encodingId;
 
