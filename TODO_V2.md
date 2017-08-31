@@ -1,3 +1,8 @@
+# BUGS
+
+* When a Consumer is paused and then resumed, Router calls to Producer::RequestFullFrame(), the browser does receive receive a PLI, but the Consumer does not see the video.
+
+
 # TODO in mediasoup v2 (server-side)
 
 * Add a `fullFrrameRequestBlockTimer` and a `isFullFrameRequested` flag in `Producer`, so `Producer::RequestFullFrame()` check it and decides whether ask for a full frame to its streams or not.
