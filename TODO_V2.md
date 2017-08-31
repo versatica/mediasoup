@@ -1,5 +1,8 @@
 # TODO in mediasoup v2 (server-side)
 
+* If a Consumer is paused it should not receive RTP!!!! So `Consumer.SendRtpPacket()` should check `this->paused` (and `this->sourcePaused`?).
+  - Done, but we must also check whether the RTCP reports/stats we are generating are ok when paused and later resumed.
+
 * When a Peer disconnect, others receive `peerClosed` and later `consumerClosed` for each Consumer associated to the closed Peer, so the client side complains ("peer not found"). We should avoid sending `consumerClosed` if its Peer left.
 
 * Revisar que si un Producer JS empieza pausado, esté tb pausado en el worker y en el Consumer JS asociado. Y que si un Consumer JS se habilita pausado, que se entere tb el Consumer del worker.

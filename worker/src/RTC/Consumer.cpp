@@ -156,7 +156,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Must refactor for simulcast.
+		// If paused don't forward RTP.
+		if (this->paused || this->sourcePaused)
+			return;
+
 		// Ignore the packet if the SSRC is not the single one in the sender
 		// RTP parameters.
 		if (packet->GetSsrc() != this->rtpParameters.encodings[0].ssrc)
