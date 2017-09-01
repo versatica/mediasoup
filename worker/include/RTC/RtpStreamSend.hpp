@@ -39,6 +39,7 @@ namespace RTC
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		bool HasRtx() const;
 		void RtxEncode(RtpPacket* packet);
+		void Reset();
 
 	private:
 		void ClearBuffer();
@@ -74,6 +75,15 @@ namespace RTC
 	inline bool RtpStreamSend::HasRtx() const
 	{
 		return this->hasRtx;
+	}
+
+	inline void RtpStreamSend::Reset()
+	{
+		this->receivedBytes          = 0;
+		this->lastPacketTimeMs       = 0;
+		this->lastPacketRtpTimestamp = 0;
+
+		InitSeq(0);
 	}
 } // namespace RTC
 

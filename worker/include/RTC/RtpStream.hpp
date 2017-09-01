@@ -31,8 +31,10 @@ namespace RTC
 		uint32_t GetSsrc();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 
-	private:
+	protected:
 		void InitSeq(uint16_t seq);
+
+	private:
 		bool UpdateSeq(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods that must be implemented by the subclass. */

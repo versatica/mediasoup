@@ -1,5 +1,9 @@
 # TODO in mediasoup v2 (server-side)
 
+* Should RtpStream::InitSeq() reset `received` to 0? We do it but it may break RTCP reports in both RtpStreamRecv and RtpStreamSend.
+  - NOTE: We have removed `received = 0` from `InitSeq()`, so we still send RTCP SenderReports on paused Consumers.
+  - Also check whether expectedPrior and receivedPrior should just belong to RtpStreamRecv rather than RtpStream (yes).
+
 * When a video Consumer is paused and later resumed, it requests a Full Frame to the Producer. The sending browser does receive the PLI and (obviously) sends a full frame. The problem is that the `RtpStreamSend` of the Consumer ignores that full frame due to "bad sequence number":
 
 ```

@@ -77,11 +77,9 @@ namespace RTC
 		this->maxSeq        = seq;
 		this->badSeq        = RtpSeqMod + 1; // So seq == badSeq is false.
 		this->cycles        = 0;
-		this->received      = 0;
 		this->receivedPrior = 0;
 		this->expectedPrior = 0;
-		// Also reset the highest seen RTP timestamp.
-		this->maxTimestamp = 0;
+		this->maxTimestamp  = 0; // Also reset the highest seen RTP timestamp.
 
 		// Call the OnInitSeq method of the child.
 		OnInitSeq();

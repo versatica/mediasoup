@@ -104,7 +104,7 @@ namespace RTC
 	{
 		rate.Reset();
 		this->packets = 0;
-		this->bytes = 0;
+		this->bytes   = 0;
 	}
 } // namespace RTC
 

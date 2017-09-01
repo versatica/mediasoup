@@ -55,6 +55,8 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+		void Pause();
+		void Resume();
 
 	public:
 		// Passed by argument.
@@ -114,8 +116,13 @@ namespace RTC
 		if (this->sourcePaused)
 			return;
 
+		bool wasPaused = IsPaused();
+
 		this->sourcePaused = true;
 		this->notifier->Emit(this->consumerId, "sourcepaused");
+
+		if (!wasPaused)
+			Pause();
 	}
 
 	inline void Consumer::SetSourceResumed()
@@ -123,13 +130,37 @@ namespace RTC
 		if (!this->sourcePaused)
 			return;
 
+		bool wasPaused = IsPaused();
+
 		this->sourcePaused = false;
 		this->notifier->Emit(this->consumerId, "sourceresumed");
+
+		if (wasPaused)
+			Resume();
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
 	{
 		return this->transmittedCounter.GetRate(now) + this->retransmittedCounter.GetRate(now);
+	}
+
+	inline void Consumer::Pause()
+	{
+		if (!IsEnabled())
+			return;
+
+		this->rtpStream->Reset();
+	}
+
+	inline void Consumer::Resume()
+	{
+		if (!IsEnabled())
+			return;
+
+		for (auto& listener : this->listeners)
+		{
+			listener->OnConsumerFullFrameRequired(this);
+		}
 	}
 } // namespace RTC
 

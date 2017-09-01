@@ -103,28 +103,34 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			{
+				if (this->paused)
+					return;
+
+				bool wasPaused = IsPaused();
+
 				this->paused = true;
 
 				request->Accept();
+
+				if (!wasPaused)
+					Pause();
 
 				break;
 			}
 
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
+				if (!this->paused)
+					return;
+
 				bool wasPaused = IsPaused();
 
 				this->paused = false;
 
 				request->Accept();
 
-				if (IsEnabled() && wasPaused && !IsPaused())
-				{
-					for (auto& listener : this->listeners)
-					{
-						listener->OnConsumerFullFrameRequired(this);
-					}
-				}
+				if (wasPaused)
+					Resume();
 
 				break;
 			}

@@ -289,7 +289,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (received == 0u)
+		if (this->received == 0u)
 			return nullptr;
 
 		auto report = new RTC::RTCP::SenderReport();
