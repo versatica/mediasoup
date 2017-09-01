@@ -94,7 +94,7 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::Producer*> producers;
 		std::unordered_map<uint32_t, RTC::Consumer*> consumers;
 		std::unordered_map<const RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
-		std::unordered_map<const RTC::Consumer*, const RTC::Producer*> mapConsumerProducer;
+		std::unordered_map<const RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
 		std::unordered_map<RTC::Producer*, struct AudioLevelContainer> mapProducerAudioLevelContainer;
 		bool audioLevelsEventEnabled{ false };
 	};

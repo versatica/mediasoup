@@ -291,6 +291,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->kind == RTC::Media::Kind::AUDIO)
+			return;
+
 		for (auto& listener : this->listeners)
 		{
 			listener->OnConsumerFullFrameRequired(this);

@@ -10,6 +10,11 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	// TODO: Set a proper value.
+	static constexpr uint64_t FullFrameRequestBlockTimeout{ 1000 }; // In ms.
+
 	/* Instance methods. */
 
 	Producer::Producer(
@@ -41,6 +46,9 @@ namespace RTC
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+
+		// Set the RTP fullframe request block timer.
+		this->fullFrameRequestBlockTimer = new Timer(this);
 	}
 
 	Producer::~Producer()
@@ -65,6 +73,9 @@ namespace RTC
 		{
 			listener->OnProducerClosed(this);
 		}
+
+		// Close the RTP fullframe request block timer.
+		this->fullFrameRequestBlockTimer->Destroy();
 
 		delete this;
 	}
@@ -159,12 +170,12 @@ namespace RTC
 
 				if (wasPaused)
 				{
+					RequestFullFrame(true);
+
 					for (auto& listener : this->listeners)
 					{
 						listener->OnProducerResumed(this);
 					}
-
-					RequestFullFrame();
 				}
 
 				break;
@@ -187,7 +198,7 @@ namespace RTC
 
 				// If set, require a full frame.
 				if (this->rtpRawEventEnabled)
-					RequestFullFrame();
+					RequestFullFrame(true);
 
 				break;
 			}
@@ -209,7 +220,7 @@ namespace RTC
 
 				// If set, require a full frame.
 				if (this->rtpObjectEventEnabled)
-					RequestFullFrame();
+					RequestFullFrame(true);
 
 				break;
 			}
@@ -348,9 +359,32 @@ namespace RTC
 		this->transport->SendRtcpPacket(packet);
 	}
 
-	void Producer::RequestFullFrame() const
+	void Producer::RequestFullFrame(bool force)
 	{
 		MS_TRACE();
+
+		if (this->kind == RTC::Media::Kind::AUDIO)
+			return;
+
+		if (force)
+		{
+			// Stop the timer.
+			this->fullFrameRequestBlockTimer->Stop();
+		}
+		else if (this->fullFrameRequestBlockTimer->IsActive())
+		{
+			MS_DEBUG_TAG(rtx, "blocking fullframe request until timer expires");
+
+			// Set flag.
+			this->isFullFrameRequested = true;
+
+			return;
+		}
+		else
+		{
+			// Run the timer.
+			this->fullFrameRequestBlockTimer->Start(FullFrameRequestBlockTimeout);
+		}
 
 		for (auto& kv : this->rtpStreams)
 		{
@@ -358,6 +392,9 @@ namespace RTC
 
 			rtpStream->RequestFullFrame();
 		}
+
+		// Reset flag.
+		this->isFullFrameRequested = false;
 	}
 
 	void Producer::FillKnownHeaderExtensions()
@@ -561,5 +598,21 @@ namespace RTC
 		// Send two, because it's free.
 		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
+	}
+
+	inline void Producer::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->fullFrameRequestBlockTimer)
+		{
+			// Nobody asked for a fullframe since the timer was started.
+			if (!this->isFullFrameRequested)
+				return;
+
+			MS_DEBUG_TAG(rtx, "requesting fullframe after timer expires");
+
+			RequestFullFrame();
+		}
 	}
 } // namespace RTC

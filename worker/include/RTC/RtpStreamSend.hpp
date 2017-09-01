@@ -76,15 +76,6 @@ namespace RTC
 	{
 		return this->hasRtx;
 	}
-
-	inline void RtpStreamSend::Reset()
-	{
-		this->receivedBytes          = 0;
-		this->lastPacketTimeMs       = 0;
-		this->lastPacketRtpTimestamp = 0;
-
-		InitSeq(0);
-	}
 } // namespace RTC
 
 #endif

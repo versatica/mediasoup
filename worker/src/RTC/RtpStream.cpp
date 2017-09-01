@@ -120,6 +120,7 @@ namespace RTC
 
 			return false;
 		}
+
 		if (udelta < MaxDropout)
 		{
 			// In order, with permissible gap.

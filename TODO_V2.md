@@ -1,31 +1,12 @@
 # TODO in mediasoup v2 (server-side)
 
+* Set a proper value for Producer::FullFrameRequestBlockTimeout (currently 1 second).
+
 * Should RtpStream::InitSeq() reset `received` to 0? We do it but it may break RTCP reports in both RtpStreamRecv and RtpStreamSend.
   - NOTE: We have removed `received = 0` from `InitSeq()`, so we still send RTCP SenderReports on paused Consumers.
   - Also check whether expectedPrior and receivedPrior should just belong to RtpStreamRecv rather than RtpStream (yes).
 
-* When a video Consumer is paused and later resumed, it requests a Full Frame to the Producer. The sending browser does receive the PLI and (obviously) sends a full frame. The problem is that the `RtpStreamSend` of the Consumer ignores that full frame due to "bad sequence number":
-
-```
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- paused !!! +2ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- paused !!! +1ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- paused !!! +0ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::HandleRequest() | ---- CONSUMER REQUESTING FULL FRAME ---- +0ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::HandleRequest() | ---- CONSUMER REQUESTING FULL FRAME ---- +0ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- ok go go RTP :) +18ms
-mediasoup:WARN:mediasoup-worker [id:vdcuccoq#1] RTC::RtpStream::UpdateSeq() | bad sequence number, ignoring packet [ssrc:1945391646, seq:13041] +19s
-mediasoup:WARN:mediasoup-worker [id:vdcuccoq#1] RTC::RtpStream::ReceivePacket() | invalid packet [ssrc:1945391646, seq:13041] +0ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- ok go go RTP :) +1ms
-mediasoup:WARN:mediasoup-worker [id:vdcuccoq#1] RTC::RtpStream::UpdateSeq() | too bad sequence number, re-syncing RTP [ssrc:1945391646, seq:13042] +1ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- ok go go RTP :) +11ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- ok go go RTP :) +1ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- ok go go RTP :) +0ms
-mediasoup:ERROR:mediasoup-worker [id:vdcuccoq#1] RTC::Consumer::SendRtpPacket() | ---- ok go go RTP :) +0ms
-```
-
-In fact, if the `RtpStreamSend` does not return false, the video automatically works, so we must refactor the `RtpStream::UpdateSeq()` method.
-
-* Add a `fullFrrameRequestBlockTimer` and a `isFullFrameRequested` flag in `Producer`, so `Producer::RequestFullFrame()` check it and decides whether ask for a full frame to its streams or not.
+* Add a `fullFrameRequestBlockTimer` and a `isFullFrameRequested` flag in `Producer`, so `Producer::RequestFullFrame()` check it and decides whether ask for a full frame to its streams or not.
 
 * If a worker Consumer is paused (or sourcePaused), should the RTCP checks or report generations behave differently?
 

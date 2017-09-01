@@ -157,10 +157,7 @@ namespace RTC
 		if (!IsEnabled())
 			return;
 
-		for (auto& listener : this->listeners)
-		{
-			listener->OnConsumerFullFrameRequired(this);
-		}
+		RequestFullFrame();
 	}
 } // namespace RTC
 

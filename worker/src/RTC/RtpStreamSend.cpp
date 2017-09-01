@@ -312,6 +312,20 @@ namespace RTC
 		return report;
 	}
 
+	void RtpStreamSend::Reset()
+	{
+		MS_TRACE();
+
+		// By setting started to 0, on next packet the RtpStream will call
+		// InitSeq(seq).
+		this->started = 0;
+
+		// Also reset RtpStreamSend own members.
+		this->receivedBytes          = 0;
+		this->lastPacketTimeMs       = 0;
+		this->lastPacketRtpTimestamp = 0;
+	}
+
 	void RtpStreamSend::ClearBuffer()
 	{
 		MS_TRACE();

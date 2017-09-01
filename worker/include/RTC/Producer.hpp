@@ -12,6 +12,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Transport.hpp"
+#include "handles/Timer.hpp"
 #include <json/json.h>
 #include <map>
 #include <string>
@@ -19,7 +20,7 @@
 
 namespace RTC
 {
-	class Producer : public RtpStreamRecv::Listener
+	class Producer : public RtpStreamRecv::Listener, public Timer::Listener
 	{
 	public:
 		struct RtpMapping
@@ -62,7 +63,7 @@ namespace RTC
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
-		void RequestFullFrame() const;
+		void RequestFullFrame(bool force = false);
 
 	private:
 		void FillKnownHeaderExtensions();
@@ -73,6 +74,10 @@ namespace RTC
 	public:
 		void OnNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnPliRequired(RTC::RtpStreamRecv* rtpStream) override;
+
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
 
 	public:
 		// Passed by argument.
@@ -89,11 +94,13 @@ namespace RTC
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
+		Timer* fullFrameRequestBlockTimer{ nullptr };
 		// Others.
 		struct KnownHeaderExtensions knownHeaderExtensions;
 		bool paused{ false };
 		bool rtpRawEventEnabled{ false };
 		bool rtpObjectEventEnabled{ false };
+		bool isFullFrameRequested{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
