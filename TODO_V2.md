@@ -6,10 +6,6 @@
   - NOTE: We have removed `received = 0` from `InitSeq()`, so we still send RTCP SenderReports on paused Consumers.
   - Also check whether expectedPrior and receivedPrior should just belong to RtpStreamRecv rather than RtpStream (yes).
 
-* Add a `fullFrameRequestBlockTimer` and a `isFullFrameRequested` flag in `Producer`, so `Producer::RequestFullFrame()` check it and decides whether ask for a full frame to its streams or not.
-
-* If a worker Consumer is paused (or sourcePaused), should the RTCP checks or report generations behave differently?
-
 * Check `appData` everywhere.
 
 * Remove DEPTH stuff.
