@@ -138,6 +138,9 @@ namespace RTC
 		}
 	}
 
+	/**
+	 * A Transport has been assigned, and hence sending RTP parameters.
+	 */
 	void Consumer::Enable(RTC::Transport* transport, RTC::RtpParameters& rtpParameters)
 	{
 		MS_TRACE();
@@ -154,6 +157,10 @@ namespace RTC
 		CreateRtpStream(this->rtpParameters.encodings[0]);
 	}
 
+	/**
+	 * Called when the Transport assigned to this Consumer has been closed, so this
+	 * Consumer becomes unhandled.
+	 */
 	void Consumer::Disable()
 	{
 		MS_TRACE();
