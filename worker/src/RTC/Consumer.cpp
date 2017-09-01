@@ -18,14 +18,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    Channel::Notifier* notifier,
-	    uint32_t consumerId,
-	    RTC::Media::Kind kind,
-	    uint32_t sourceProducerId)
-	    : consumerId(consumerId),
-	      kind(kind),
-	      sourceProducerId(sourceProducerId),
-	      notifier(notifier)
+	    Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId)
+	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -151,7 +145,7 @@ namespace RTC
 		if (IsEnabled())
 			Disable();
 
-		this->transport = transport;
+		this->transport     = transport;
 		this->rtpParameters = rtpParameters;
 
 		FillSupportedCodecPayloadTypes();
