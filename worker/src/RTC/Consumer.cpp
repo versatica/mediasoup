@@ -168,11 +168,10 @@ namespace RTC
 			this->rtpStream = nullptr;
 		}
 
-		// TODO: Probably reset all this stuff:
-		// uint64_t lastRtcpSentTime{ 0 };
-		// uint16_t maxRtcpInterval{ 0 };
-		// RTC::RtpDataCounter transmittedCounter;
-		// RTC::RtpDataCounter retransmittedCounter;
+		// Reset RTCP and RTP counter stuff.
+		this->lastRtcpSentTime = 0;
+		this->transmittedCounter.Reset();
+		this->retransmittedCounter.Reset();
 	}
 
 	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)

@@ -43,8 +43,9 @@ namespace RTC
 		// Given as argument.
 		RtpStream::Params params;
 		// Others.
-		bool started{ false }; // Whether at least a RTP packet has been received.
-		// https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
+		// Whether at least a RTP packet has been received.
+		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
+		bool started{ false };
 		uint16_t maxSeq{ 0 };        // Highest seq. number seen.
 		uint32_t cycles{ 0 };        // Shifted count of seq. number cycles.
 		uint32_t baseSeq{ 0 };       // Base seq number.
