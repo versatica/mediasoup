@@ -170,12 +170,12 @@ namespace RTC
 
 				if (wasPaused)
 				{
-					RequestFullFrame(true);
-
 					for (auto& listener : this->listeners)
 					{
 						listener->OnProducerResumed(this);
 					}
+
+					RequestFullFrame(true);
 				}
 
 				break;

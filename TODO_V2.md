@@ -23,3 +23,5 @@
 * Check H246 parameters.
 
 * JS: Remove tons of useless debugs (for example in `Peer._createProducer()`).
+
+* Producer JS API to request fullframe.

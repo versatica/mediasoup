@@ -56,7 +56,7 @@ namespace RTC
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		void Pause();
-		void Resume();
+		void Resume(bool sourceWasResumed = false);
 
 	public:
 		// Passed by argument.
@@ -136,7 +136,7 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourceresumed");
 
 		if (wasPaused)
-			Resume();
+			Resume(true);
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
@@ -152,12 +152,13 @@ namespace RTC
 		this->rtpStream->Reset();
 	}
 
-	inline void Consumer::Resume()
+	inline void Consumer::Resume(bool sourceWasResumed)
 	{
 		if (!IsEnabled())
 			return;
 
-		RequestFullFrame();
+		if (!sourceWasResumed)
+			RequestFullFrame();
 	}
 } // namespace RTC
 
