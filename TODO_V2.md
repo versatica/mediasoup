@@ -1,8 +1,5 @@
 # TODO in mediasoup v2 (server-side)
 
-* If a Producer is closed, those Peers non having a compatible Consumer (due to codecs) won't receive any notification. This is because the "close" event comes from the worker Consumer (which just exists upon succesful `enableConsumer`).
-  - So it seems that we should create the Consumer in C++ always, being disabled at the beginning.
-
 * When a video Consumer is paused and later resumed, it requests a Full Frame to the Producer. The sending browser does receive the PLI and (obviously) sends a full frame. The problem is that the `RtpStreamSend` of the Consumer ignores that full frame due to "bad sequence number":
 
 ```
@@ -43,3 +40,5 @@ In fact, if the `RtpStreamSend` does not return false, the video automatically w
 * Implement `mandatoryCodecPayloadTypes`.
 
 * Check H246 parameters.
+
+* JS: Remove tons of useless debugs (for example in `Peer._createProducer()`).

@@ -255,6 +255,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
 		case Channel::Request::MethodId::CONSUMER_CLOSE:
 		case Channel::Request::MethodId::CONSUMER_DUMP:
+		case Channel::Request::MethodId::CONSUMER_ENABLE:
 		case Channel::Request::MethodId::CONSUMER_PAUSE:
 		case Channel::Request::MethodId::CONSUMER_RESUME:
 		{

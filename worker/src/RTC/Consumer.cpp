@@ -21,19 +21,13 @@ namespace RTC
 	    Channel::Notifier* notifier,
 	    uint32_t consumerId,
 	    RTC::Media::Kind kind,
-	    RTC::Transport* transport,
-	    RTC::RtpParameters& rtpParameters,
-	    bool paused,
 	    uint32_t sourceProducerId)
-	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier),
-	      transport(transport), rtpParameters(rtpParameters), paused(paused)
+	    : consumerId(consumerId),
+	      kind(kind),
+	      sourceProducerId(sourceProducerId),
+	      notifier(notifier)
 	{
 		MS_TRACE();
-
-		FillSupportedCodecPayloadTypes();
-
-		// Create RtpStreamSend instance.
-		CreateRtpStream(this->rtpParameters.encodings[0]);
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -46,7 +40,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		delete this->rtpStream;
+		if (this->rtpStream)
+			delete this->rtpStream;
 	}
 
 	void Consumer::Destroy()
@@ -72,9 +67,7 @@ namespace RTC
 		static const Json::StaticString JsonStringSourceProducerId{ "sourceProducerId" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
-		static const Json::StaticString JsonStringSupportedCodecPayloadTypes{
-			"supportedCodecPayloadTypes"
-		};
+		static const Json::StaticString JsonStringEnabled{ "enabled" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
 		static const Json::StaticString JsonStringSourcePaused{ "sourcePaused" };
 
@@ -86,16 +79,11 @@ namespace RTC
 
 		json[JsonStringSourceProducerId] = Json::UInt{ this->sourceProducerId };
 
-		json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
+		if (this->transport)
+			json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
 
-		json[JsonStringRtpStream] = this->rtpStream->ToJson();
-
-		json[JsonStringSupportedCodecPayloadTypes] = Json::arrayValue;
-
-		for (auto payloadType : this->supportedCodecPayloadTypes)
-		{
-			json[JsonStringSupportedCodecPayloadTypes].append(Json::UInt{ payloadType });
-		}
+		if (this->rtpStream)
+			json[JsonStringRtpStream] = this->rtpStream->ToJson();
 
 		json[JsonStringPaused] = this->paused;
 
@@ -136,7 +124,7 @@ namespace RTC
 
 				request->Accept();
 
-				if (wasPaused && !IsPaused())
+				if (IsEnabled() && wasPaused && !IsPaused())
 				{
 					for (auto& listener : this->listeners)
 					{
@@ -154,6 +142,43 @@ namespace RTC
 				request->Reject("unknown method");
 			}
 		}
+	}
+
+	void Consumer::Enable(RTC::Transport* transport, RTC::RtpParameters& rtpParameters)
+	{
+		MS_TRACE();
+
+		if (IsEnabled())
+			Disable();
+
+		this->transport = transport;
+		this->rtpParameters = rtpParameters;
+
+		FillSupportedCodecPayloadTypes();
+
+		// Create RtpStreamSend instance.
+		CreateRtpStream(this->rtpParameters.encodings[0]);
+	}
+
+	void Consumer::Disable()
+	{
+		MS_TRACE();
+
+		this->transport = nullptr;
+
+		this->supportedCodecPayloadTypes.clear();
+
+		if (this->rtpStream)
+		{
+			delete this->rtpStream;
+			this->rtpStream = nullptr;
+		}
+
+		// TODO: Probably reset all this stuff:
+		// uint64_t lastRtcpSentTime{ 0 };
+		// uint16_t maxRtcpInterval{ 0 };
+		// RTC::RtpDataCounter transmittedCounter;
+		// RTC::RtpDataCounter retransmittedCounter;
 	}
 
 	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)

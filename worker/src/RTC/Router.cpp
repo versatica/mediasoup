@@ -293,6 +293,9 @@ namespace RTC
 					// NOTE: This may throw.
 					kind = RTC::Media::GetKind(kindStr);
 
+					if (kind == RTC::Media::Kind::ALL)
+						MS_THROW_ERROR("invalid empty kind");
+
 					// NOTE: This may throw.
 					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
 				}
@@ -302,9 +305,6 @@ namespace RTC
 
 					return;
 				}
-
-				if (kind == RTC::Media::Kind::ALL)
-					MS_THROW_ERROR("invalid empty kind");
 
 				RTC::Producer::RtpMapping rtpMapping;
 
@@ -387,11 +387,8 @@ namespace RTC
 			case Channel::Request::MethodId::ROUTER_CREATE_CONSUMER:
 			{
 				static const Json::StaticString JsonStringKind{ "kind" };
-				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-				static const Json::StaticString JsonStringPaused{ "paused" };
 
 				RTC::Consumer* consumer;
-				RTC::Transport* transport;
 				RTC::Producer* producer;
 				uint32_t consumerId;
 
@@ -409,24 +406,6 @@ namespace RTC
 				if (consumer != nullptr)
 				{
 					request->Reject("Consumer already exists");
-
-					return;
-				}
-
-				try
-				{
-					transport = GetTransportFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
 
 					return;
 				}
@@ -455,24 +434,19 @@ namespace RTC
 
 					return;
 				}
-				else if (!request->data[JsonStringRtpParameters].isObject())
-				{
-					request->Reject("missing data.rtpParameters");
-
-					return;
-				}
 
 				RTC::Media::Kind kind;
 				std::string kindStr = request->data[JsonStringKind].asString();
-				RTC::RtpParameters rtpParameters;
 
 				try
 				{
 					// NOTE: This may throw.
 					kind = RTC::Media::GetKind(kindStr);
 
-					// NOTE: This may throw.
-					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
+					if (kind == RTC::Media::Kind::ALL)
+						MS_THROW_ERROR("invalid empty kind");
+					else if (kind != producer->kind)
+						MS_THROW_ERROR("not matching kind");
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -481,18 +455,8 @@ namespace RTC
 					return;
 				}
 
-				if (kind == RTC::Media::Kind::ALL)
-					MS_THROW_ERROR("invalid empty kind");
-				else if (kind != producer->kind)
-					MS_THROW_ERROR("not matching kind");
-
-				bool paused = false;
-
-				if (request->data[JsonStringPaused].isBool())
-					paused = request->data[JsonStringPaused].asBool();
-
 				consumer = new RTC::Consumer(
-				    this->notifier, consumerId, kind, transport, rtpParameters, paused, producer->producerId);
+				    this->notifier, consumerId, kind, producer->producerId);
 
 				// If the Producer is paused tell it to the new Consumer.
 				if (producer->IsPaused())
@@ -500,9 +464,6 @@ namespace RTC
 
 				// Add us as listener.
 				consumer->AddListener(this);
-
-				// Tell the Transport to handle the new Consumer.
-				transport->HandleConsumer(consumer);
 
 				// Insert into the maps.
 				this->consumers[consumerId] = consumer;
@@ -694,6 +655,80 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_ENABLE:
+			{
+				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+
+				RTC::Consumer* consumer;
+				RTC::Transport* transport;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (consumer == nullptr)
+				{
+					request->Reject("Consumer does not exist");
+
+					return;
+				}
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (transport == nullptr)
+				{
+					request->Reject("Transport does not exist");
+
+					return;
+				}
+
+				if (!request->data[JsonStringRtpParameters].isObject())
+				{
+					request->Reject("missing data.rtpParameters");
+
+					return;
+				}
+
+				RTC::RtpParameters rtpParameters;
+
+				try
+				{
+					// NOTE: This may throw.
+					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				consumer->Enable(transport, rtpParameters);
+
+				// Tell the Transport to handle the new Consumer.
+				transport->HandleConsumer(consumer);
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
@@ -892,7 +927,8 @@ namespace RTC
 		// from which it was received.
 		for (auto& consumer : consumers)
 		{
-			consumer->SendRtpPacket(packet);
+			if (consumer->IsEnabled())
+				consumer->SendRtpPacket(packet);
 		}
 
 		// Update audio levels.

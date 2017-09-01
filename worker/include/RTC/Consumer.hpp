@@ -26,9 +26,6 @@ namespace RTC
 		    Channel::Notifier* notifier,
 		    uint32_t consumerId,
 		    RTC::Media::Kind kind,
-		    RTC::Transport* transport,
-		    RTC::RtpParameters& rtpParameters,
-		    bool paused,
 		    uint32_t sourceProducerId);
 
 	private:
@@ -40,6 +37,9 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void AddListener(RTC::ConsumerListener* listener);
 		void RemoveListener(RTC::ConsumerListener* listener);
+		void Enable(RTC::Transport* transport, RTC::RtpParameters& rtpParameters);
+		void Disable();
+		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
 		void SetSourcePaused();
@@ -92,6 +92,11 @@ namespace RTC
 	inline void Consumer::RemoveListener(RTC::ConsumerListener* listener)
 	{
 		this->listeners.erase(listener);
+	}
+
+	inline bool Consumer::IsEnabled() const
+	{
+		return this->transport != nullptr;
 	}
 
 	inline const RTC::RtpParameters& Consumer::GetParameters() const

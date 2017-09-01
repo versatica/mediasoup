@@ -248,13 +248,13 @@ namespace RTC
 			producer->Destroy();
 		}
 
-		// Close all the handled Consumers.
-		for (auto it = this->consumers.begin(); it != this->consumers.end();)
+		// Disable all the handled Consumers.
+		for (auto& consumer : this->consumers)
 		{
-			auto* consumer = *it;
+			consumer->Disable();
 
-			it = this->consumers.erase(it);
-			consumer->Destroy();
+			// Add us as listener.
+			consumer->RemoveListener(this);
 		}
 
 		// TODO: yes? May be since we allow Transport being closed from on DtlsTransport
