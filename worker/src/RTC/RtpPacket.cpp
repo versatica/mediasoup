@@ -404,11 +404,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: This happens often for first RTX packets. May be the browser sends empty
-		// RTX packets (for any reason). If so, we should move this to MS_DEBUG_TAG.
+		// Chrome sends some RTX packets with no payload when the stream is started.
+		// Just ignore them.
 		if (this->payloadLength < 2)
 		{
-			MS_WARN_TAG(rtx, "not enough space for a RTX header field");
+			MS_DEBUG_TAG(rtx, "ignoring RTX packet with empty payload");
 
 			return false;
 		}

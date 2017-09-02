@@ -11,6 +11,7 @@
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -69,6 +70,8 @@ namespace RTC
 
 	private:
 		void MayRunDtlsTransport();
+		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
+		RTC::Consumer* GetConsumer(uint32_t ssrc) const;
 
 		/* Private methods to unify UDP and TCP behavior. */
 	private:

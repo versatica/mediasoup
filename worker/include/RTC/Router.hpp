@@ -61,7 +61,6 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
 		void OnTransportClosed(RTC::Transport* transport) override;
-		// TODO: RTCP listener to route RTCP feedback from Consumer to its Producer.
 
 		/* Pure virtual methods inherited from RTC::ProducerListener. */
 	public:

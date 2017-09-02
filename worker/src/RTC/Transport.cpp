@@ -749,6 +749,75 @@ namespace RTC
 		}
 	}
 
+	inline void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		switch (packet->GetType())
+		{
+			case RTCP::Type::RR:
+			{
+				auto* rr = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
+				auto it  = rr->Begin();
+
+				for (; it != rr->End(); ++it)
+				{
+					auto& report   = (*it);
+					auto* consumer = GetConsumer(report->GetSsrc());
+
+					if (consumer)
+					{
+						consumer->ReceiveRtcpReceiverReport(report);
+					}
+					else
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
+						    report->GetSsrc());
+					}
+				}
+
+				break;
+			}
+
+			default:
+			{
+				MS_WARN_TAG(
+				    rtcp,
+				    "unhandled RTCP type received [type:%" PRIu8 "]",
+				    static_cast<uint8_t>(packet->GetType()));
+			}
+		}
+	}
+
+	inline RTC::Consumer* Transport::GetConsumer(uint32_t ssrc) const
+	{
+		MS_TRACE();
+
+		for (auto consumer : this->consumers)
+		{
+			// Ignore if not enabled.
+			if (!consumer->IsEnabled())
+				continue;
+
+			// NOTE: Use & since, otherwise, a full copy will be retrieved.
+			auto& rtpParameters = consumer->GetParameters();
+
+			for (auto& encoding : rtpParameters.encodings)
+			{
+				if (encoding.ssrc == ssrc)
+					return consumer;
+				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
+					return consumer;
+				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
+					return consumer;
+			}
+		}
+
+		return nullptr;
+	}
+
 	inline void Transport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -972,21 +1041,15 @@ namespace RTC
 			return;
 		}
 
-		// TODO: No. Instead, process here the packet, get corresponding producers/consumers
-		// and do stuff here. We may need another listener callback to forward certain
-		// RTCP messages between consumers and is producers. Let's see.
-		// this->listener->OnTransportRtcpPacket(this, packet);
-
-		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
-		// this->iceServer->ForceSelectedTuple(tuple);
-
-		// Delete the whole packet.
+		// Handle each RTCP packet.
 		while (packet != nullptr)
 		{
-			RTC::RTCP::Packet* nextPacket = packet->GetNext();
+			HandleRtcpPacket(packet);
 
-			delete packet;
-			packet = nextPacket;
+			RTC::RTCP::Packet* previousPacket = packet;
+
+			packet = packet->GetNext();
+			delete previousPacket;
 		}
 	}
 
