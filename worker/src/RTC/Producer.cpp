@@ -47,7 +47,7 @@ namespace RTC
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 
-		// Set the RTP fullframe request block timer.
+		// Set the RTP full frame request block timer.
 		this->fullFrameRequestBlockTimer = new Timer(this);
 	}
 
@@ -74,7 +74,7 @@ namespace RTC
 			listener->OnProducerClosed(this);
 		}
 
-		// Close the RTP fullframe request block timer.
+		// Close the RTP full frame request block timer.
 		this->fullFrameRequestBlockTimer->Destroy();
 
 		delete this;
@@ -373,7 +373,7 @@ namespace RTC
 		}
 		else if (this->fullFrameRequestBlockTimer->IsActive())
 		{
-			MS_DEBUG_TAG(rtx, "blocking fullframe request until timer expires");
+			MS_DEBUG_TAG(rtx, "blocking full frame request until timer expires");
 
 			// Set flag.
 			this->isFullFrameRequested = true;
@@ -539,7 +539,7 @@ namespace RTC
 		}
 	}
 
-	void Producer::OnNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
+	void Producer::OnRtpStreamRecvNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
@@ -587,7 +587,7 @@ namespace RTC
 		this->transport->SendRtcpPacket(&packet);
 	}
 
-	void Producer::OnPliRequired(RTC::RtpStreamRecv* rtpStream)
+	void Producer::OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
@@ -606,11 +606,11 @@ namespace RTC
 
 		if (timer == this->fullFrameRequestBlockTimer)
 		{
-			// Nobody asked for a fullframe since the timer was started.
+			// Nobody asked for a full frame since the timer was started.
 			if (!this->isFullFrameRequested)
 				return;
 
-			MS_DEBUG_TAG(rtx, "requesting fullframe after timer expires");
+			MS_DEBUG_TAG(rtx, "requesting full frame after timer expires");
 
 			RequestFullFrame();
 		}

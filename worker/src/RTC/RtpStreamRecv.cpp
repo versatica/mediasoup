@@ -47,7 +47,11 @@ namespace RTC
 
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
+		{
+			MS_DEBUG_TAG(rtp, "packet discarded");
+
 			return false;
+		}
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
@@ -203,7 +207,7 @@ namespace RTC
 			if (this->params.useNack)
 				this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-			this->listener->OnPliRequired(this);
+			this->listener->OnRtpStreamRecvPliRequired(this);
 		}
 	}
 
@@ -228,20 +232,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Reset NackGenerator.
-		if (this->params.useNack)
-			this->nackGenerator.reset(new RTC::NackGenerator(this));
-
 		// Request a full frame so dropped video packets don't cause lag.
-		if (this->params.mime.type == RTC::RtpCodecMimeType::Type::VIDEO)
-		{
-			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
-
-			this->listener->OnPliRequired(this);
-		}
+		RequestFullFrame();
 	}
 
-	void RtpStreamRecv::OnNackRequired(const std::vector<uint16_t>& seqNumbers)
+	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
@@ -254,23 +249,14 @@ namespace RTC
 		  seqNumbers[0],
 		  seqNumbers.size());
 
-		this->listener->OnNackRequired(this, seqNumbers);
+		this->listener->OnRtpStreamRecvNackRequired(this, seqNumbers);
 	}
 
-	void RtpStreamRecv::OnFullFrameRequired()
+	void RtpStreamRecv::OnNackGeneratorFullFrameRequired()
 	{
 		MS_TRACE();
 
-		if (!this->params.usePli)
-		{
-			MS_WARN_TAG(rtx, "PLI required but not supported by the endpoint");
-
-			return;
-		}
-
-		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
-
-		this->listener->OnPliRequired(this);
+		RequestFullFrame();
 	}
 
 	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)

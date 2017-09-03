@@ -96,7 +96,7 @@ namespace RTC
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
 
 		if (!nackBatch.empty())
-			this->listener->OnNackRequired(nackBatch);
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
 		MayRunTimer();
 	}
@@ -118,7 +118,7 @@ namespace RTC
 			MS_DEBUG_TAG(rtx, "nack list too large, clearing it and requesting a full frame");
 
 			this->nackList.clear();
-			this->listener->OnFullFrameRequired();
+			this->listener->OnNackGeneratorFullFrameRequired();
 
 			return;
 		}
@@ -215,7 +215,7 @@ namespace RTC
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::TIME);
 
 		if (!nackBatch.empty())
-			this->listener->OnNackRequired(nackBatch);
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
 		MayRunTimer();
 	}
