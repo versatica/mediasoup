@@ -180,7 +180,6 @@ namespace RTC
 
 	/* Inline instance methods. */
 
-	// TODO: Used?
 	inline bool Transport::IsConnected() const
 	{
 		return this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED;

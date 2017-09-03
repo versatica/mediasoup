@@ -617,6 +617,19 @@ namespace RTC
 
 		// Add us as listener.
 		consumer->AddListener(this);
+
+		// If we are connected, ask a fullrequest for this enabled Consumer.
+		if (IsConnected())
+		{
+			if (consumer->kind == RTC::Media::Kind::VIDEO)
+			{
+				MS_DEBUG_TAG(
+					rtx,
+					"requesting fullframe for new Consumer since Transport already connected");
+			}
+
+			consumer->RequestFullFrame();
+		}
 	}
 
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -1256,6 +1269,9 @@ namespace RTC
 		// Iterate all the Consumers and request full frame.
 		for (auto* consumer : this->consumers)
 		{
+			if (consumer->kind == RTC::Media::Kind::VIDEO)
+				MS_DEBUG_TAG(rtx, "Transport connected, requesting fullframe for Consumers");
+
 			consumer->RequestFullFrame();
 		}
 	}

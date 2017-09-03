@@ -324,6 +324,9 @@ namespace RTC
 		this->receivedBytes          = 0;
 		this->lastPacketTimeMs       = 0;
 		this->lastPacketRtpTimestamp = 0;
+
+		// Clear the buffer.
+		ClearBuffer();
 	}
 
 	void RtpStreamSend::ClearBuffer()

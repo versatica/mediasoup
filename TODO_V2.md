@@ -1,3 +1,20 @@
+# BUGS in mediasoup v2 (server-side)
+
+* PeerA is joined. Later PeerB joins with audio+video. PeerA does not render the video from PeerB (note: we are not relaying PLI yet, but it should work). Suspecting logs:
+
+```
+mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::Transport::HandleConsumer() | requesting fullframe for new Consumer since Transport already connected +20s
+  mediasoup-demo-server:INFO:Room mediaPeer "newconsumer" event [id:50465828] +31ms
+  mediasoup-demo-server:INFO:Room mediaPeer "newproducer" event [id:91290656] +0ms
+  mediasoup-demo-server:INFO:Room mediaPeer "newconsumer" event [id:13942695] +179ms
+  mediasoup-demo-server:INFO:Room mediaPeer "newproducer" event [id:24688710] +1ms
+  mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::Transport::HandleConsumer() | requesting fullframe for new Consumer since Transport already connected +365ms
+  mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::RtpStreamSend::StorePacket() | ignoring packet older than anything in the buffer [ssrc:1815865740, seq:18175] +7ms
+  mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::RtpStreamSend::StorePacket() | ignoring packet older than anything in the buffer [ssrc:1815865740, seq:18175] +10ms
+```
+
+
+
 # TODO in mediasoup v2 (server-side)
 
 * Set a proper value for Producer::FullFrameRequestBlockTimeout (currently 1 second).
