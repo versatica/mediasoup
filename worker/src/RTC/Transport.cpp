@@ -622,7 +622,8 @@ namespace RTC
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
 			{
 				MS_DEBUG_TAG(
-				  rtx, "requesting full frame for new Consumer since Transport already connected");
+				  rtcp,
+				  "requesting full frame for new Consumer since Transport already connected");
 			}
 
 			consumer->RequestFullFrame();
@@ -721,7 +722,8 @@ namespace RTC
 				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG_TAG(
-					  dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
+					  dtls,
+					  "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
 
 					this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
 					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
@@ -1267,7 +1269,7 @@ namespace RTC
 		for (auto* consumer : this->consumers)
 		{
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
-				MS_DEBUG_TAG(rtx, "Transport connected, requesting full frame for Consumers");
+				MS_DEBUG_TAG(rtcp, "Transport connected, requesting full frame for Consumers");
 
 			consumer->RequestFullFrame();
 		}

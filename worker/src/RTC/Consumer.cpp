@@ -336,13 +336,13 @@ namespace RTC
 		{
 			if (!useNack && fb.type == "nack")
 			{
-				MS_DEBUG_TAG(rtcp, "enabling NACK reception");
+				MS_DEBUG_2TAGS(rtcp, rtx, "NACK supported");
 
 				useNack = true;
 			}
 			if (!usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
-				MS_DEBUG_TAG(rtcp, "enabling PLI reception");
+				MS_DEBUG_TAG(rtcp, "PLI supported");
 
 				usePli = true;
 			}

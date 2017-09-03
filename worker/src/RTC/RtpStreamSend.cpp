@@ -461,7 +461,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->hasRtx, "rtx is not enabled on this stream");
+		MS_ASSERT(this->hasRtx, "RTX not enabled on this stream");
 
 		packet->RtxEncode(this->rtxPayloadType, this->rtxSsrc, ++this->rtxSeq);
 	}

@@ -69,7 +69,7 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(
 				  rtx,
-				  "nacked packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
 
@@ -80,7 +80,7 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(
 				  rtx,
-				  "out of order packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  "out of order RTX packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
 			}
@@ -115,7 +115,7 @@ namespace RTC
 
 		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
-			MS_DEBUG_TAG(rtx, "nack list too large, clearing it and requesting a full frame");
+			MS_DEBUG_TAG(rtx, "NACK list too large, clearing it and requesting a full frame");
 
 			this->nackList.clear();
 			this->listener->OnNackGeneratorFullFrameRequired();

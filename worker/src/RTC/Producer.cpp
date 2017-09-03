@@ -373,7 +373,7 @@ namespace RTC
 		}
 		else if (this->fullFrameRequestBlockTimer->IsActive())
 		{
-			MS_DEBUG_TAG(rtx, "blocking full frame request until timer expires");
+			MS_DEBUG_TAG(rtcp, "blocking full frame request until timer expires");
 
 			// Set flag.
 			this->isFullFrameRequested = true;
@@ -458,19 +458,19 @@ namespace RTC
 		{
 			if (!useNack && fb.type == "nack")
 			{
-				MS_DEBUG_TAG(rtcp, "enabling NACK generation");
+				MS_DEBUG_2TAGS(rtcp, rtx, "NACK supported");
 
 				useNack = true;
 			}
 			if (!usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
-				MS_DEBUG_TAG(rtcp, "enabling PLI generation");
+				MS_DEBUG_TAG(rtcp, "PLI supported");
 
 				usePli = true;
 			}
 			else if (!useRemb && fb.type == "goog-remb")
 			{
-				MS_DEBUG_TAG(rbe, "enabling REMB");
+				MS_DEBUG_TAG(rbe, "REMB supported");
 
 				useRemb = true;
 			}
@@ -592,6 +592,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_DEBUG_TAG(rtcp, "sending PLI");
+
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
 
 		packet.Serialize(RTC::RTCP::Buffer);
@@ -611,7 +613,7 @@ namespace RTC
 			if (!this->isFullFrameRequested)
 				return;
 
-			MS_DEBUG_TAG(rtx, "requesting full frame after timer expires");
+			MS_DEBUG_TAG(rtcp, "requesting full frame after timer expires");
 
 			RequestFullFrame();
 		}
