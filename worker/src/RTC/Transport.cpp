@@ -781,12 +781,15 @@ namespace RTC
 				break;
 			}
 
+			// TODO: Handle tons of RTCP types.
+
 			default:
 			{
-				MS_WARN_TAG(
-				    rtcp,
-				    "unhandled RTCP type received [type:%" PRIu8 "]",
-				    static_cast<uint8_t>(packet->GetType()));
+				// TODO: Uncomment when RTCP handling above is completed.
+				// MS_WARN_TAG(
+				//     rtcp,
+				//     "unhandled RTCP type received [type:%" PRIu8 "]",
+				//     static_cast<uint8_t>(packet->GetType()));
 			}
 		}
 	}
