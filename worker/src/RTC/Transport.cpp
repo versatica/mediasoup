@@ -249,7 +249,7 @@ namespace RTC
 		}
 
 		// Disable all the handled Consumers.
-		for (auto& consumer : this->consumers)
+		for (auto* consumer : this->consumers)
 		{
 			consumer->Disable();
 
@@ -798,7 +798,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto consumer : this->consumers)
+		for (auto* consumer : this->consumers)
 		{
 			// Ignore if not enabled.
 			if (!consumer->IsEnabled())
@@ -1254,7 +1254,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// Iterate all the Consumers and request full frame.
-		for (auto& consumer : this->consumers)
+		for (auto* consumer : this->consumers)
 		{
 			consumer->RequestFullFrame();
 		}
@@ -1369,8 +1369,11 @@ namespace RTC
 			{
 				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting full frames");
 
-				// TODO: No. Iterate producers and call RequestFullFrame() on them.
-				// this->listener->OnTransportFullFrameRequired(this);
+				// Request full frame for all the Producers.
+				for (auto* producer : this->producers)
+				{
+					producer->RequestFullFrame();
+				}
 			}
 
 			this->lastEffectiveMaxBitrateAt = now;

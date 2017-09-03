@@ -191,6 +191,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsEnabled())
+			return;
+
 		// If paused don't forward RTP.
 		if (IsPaused())
 			return;
@@ -260,6 +263,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsEnabled())
+			return;
+
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
@@ -284,12 +290,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsEnabled())
+			return;
+
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
 	void Consumer::RequestFullFrame()
 	{
 		MS_TRACE();
+
+		if (!IsEnabled())
+			return;
 
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			return;

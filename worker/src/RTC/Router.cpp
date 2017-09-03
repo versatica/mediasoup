@@ -127,11 +127,11 @@ namespace RTC
 		// Add mapProducerConsumers.
 		for (auto& kv : this->mapProducerConsumers)
 		{
-			auto producer   = kv.first;
+			auto* producer  = kv.first;
 			auto& consumers = kv.second;
 			Json::Value jsonProducers(Json::arrayValue);
 
-			for (auto& consumer : consumers)
+			for (auto* consumer : consumers)
 			{
 				jsonProducers.append(std::to_string(consumer->consumerId));
 			}
@@ -143,8 +143,8 @@ namespace RTC
 		// Add mapConsumerProducer.
 		for (auto& kv : this->mapConsumerProducer)
 		{
-			auto consumer = kv.first;
-			auto producer = kv.second;
+			auto* consumer = kv.first;
+			auto* producer = kv.second;
 
 			jsonMapConsumerProducer[std::to_string(consumer->consumerId)] =
 			    std::to_string(producer->producerId);
@@ -653,7 +653,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_DUMP:
 			case Channel::Request::MethodId::CONSUMER_ENABLE:
 			{
 				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
@@ -728,6 +727,7 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_DUMP:
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
@@ -890,7 +890,7 @@ namespace RTC
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
-		for (auto& consumer : consumers)
+		for (auto* consumer : consumers)
 		{
 			consumer->SetSourcePaused();
 		}
@@ -906,7 +906,7 @@ namespace RTC
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
-		for (auto& consumer : consumers)
+		for (auto* consumer : consumers)
 		{
 			consumer->SetSourceResumed();
 		}
@@ -924,7 +924,7 @@ namespace RTC
 
 		// Send the RtpPacket to all the Consumers associated to the Producer
 		// from which it was received.
-		for (auto& consumer : consumers)
+		for (auto* consumer : consumers)
 		{
 			if (consumer->IsEnabled())
 				consumer->SendRtpPacket(packet);
@@ -972,7 +972,7 @@ namespace RTC
 		    this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
 		    "Consumer not present in mapConsumerProducer");
 
-		auto& producer = this->mapConsumerProducer[consumer];
+		auto* producer = this->mapConsumerProducer[consumer];
 
 		producer->RequestFullFrame();
 	}
@@ -992,7 +992,7 @@ namespace RTC
 
 			for (auto& kv : this->mapProducerAudioLevelContainer)
 			{
-				auto producer             = kv.first;
+				auto* producer            = kv.first;
 				auto& audioLevelContainer = kv.second;
 				auto numdBovs             = audioLevelContainer.numdBovs;
 				auto sumdBovs             = audioLevelContainer.sumdBovs;
