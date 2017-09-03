@@ -1,6 +1,8 @@
 # BUGS in mediasoup v2 (server-side)
 
-* PeerA is joined. Later PeerB joins with audio+video. PeerA does not render the video from PeerB (note: we are not relaying PLI yet, but it should work). Suspecting logs:
+* PeerA is joined. Later PeerB joins with audio+video. PeerA does not render the video from PeerB (note: we are not relaying PLI yet, but it should work).
+  - To reproduce it,: Have to peers in the room (sending video) and restart the server.
+  - Suspecting logs:
 
 ```
 mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::Transport::HandleConsumer() | requesting fullframe for new Consumer since Transport already connected +20s
