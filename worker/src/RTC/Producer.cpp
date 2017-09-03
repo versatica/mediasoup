@@ -111,10 +111,10 @@ namespace RTC
 		}
 		json[JsonStringRtpStreams] = jsonRtpStreams;
 
-		if (this->knownHeaderExtensions.ssrcAudioLevelId)
+		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
 			json[JsonStringSsrcAudioLevelId] = this->knownHeaderExtensions.ssrcAudioLevelId;
 
-		if (this->knownHeaderExtensions.absSendTimeId)
+		if (this->knownHeaderExtensions.absSendTimeId != 0u)
 			json[JsonStringAbsSendTimeId] = this->knownHeaderExtensions.absSendTimeId;
 
 		json[JsonStringPaused] = this->paused;
@@ -526,13 +526,13 @@ namespace RTC
 
 		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
 
-		if (this->knownHeaderExtensions.ssrcAudioLevelId)
+		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
 		{
 			packet->AddExtensionMapping(
 			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->knownHeaderExtensions.ssrcAudioLevelId);
 		}
 
-		if (this->knownHeaderExtensions.absSendTimeId)
+		if (this->knownHeaderExtensions.absSendTimeId != 0u)
 		{
 			packet->AddExtensionMapping(
 			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);

@@ -271,13 +271,13 @@ namespace RTC
 
 					return;
 				}
-				else if (!request->data[JsonStringRtpParameters].isObject())
+				if (!request->data[JsonStringRtpParameters].isObject())
 				{
 					request->Reject("missing data.rtpParameters");
 
 					return;
 				}
-				else if (!request->data[JsonStringRtpMapping].isObject())
+				if (!request->data[JsonStringRtpMapping].isObject())
 				{
 					request->Reject("missing data.rtpMapping");
 
@@ -844,17 +844,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: How to tell all the Producers/Consumers using this Transport.
-		// Probably using multiple listeners (or not).
-
 		this->transports.erase(transport->transportId);
 	}
 
 	void Router::OnProducerClosed(RTC::Producer* producer)
 	{
 		MS_TRACE();
-
-		// TODO: How to tell the Transport using this Producer.
 
 		this->producers.erase(producer->producerId);
 

@@ -35,7 +35,7 @@ namespace RTC
 
 		auto& jsonCodecs = data[JsonStringCodecs];
 
-		if (jsonCodecs.size() == 0)
+		if (jsonCodecs.empty())
 			MS_THROW_ERROR("empty rtpParameters.codecs");
 
 		for (auto& jsonCodec : jsonCodecs)
@@ -52,7 +52,7 @@ namespace RTC
 
 		auto& jsonEncodings = data[JsonStringEncodings];
 
-		if (jsonEncodings.size() == 0)
+		if (jsonEncodings.empty())
 			MS_THROW_ERROR("empty rtpParameters.encodings");
 
 		for (auto& i : jsonEncodings)
@@ -174,7 +174,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const std::string associatedPayloadType = "apt";
+		static const std::string AssociatedPayloadType = "apt";
 		static RTC::RtpCodecParameters fakeCodec;
 
 		uint8_t payloadType = encoding.codecPayloadType;
@@ -184,7 +184,7 @@ namespace RTC
 		{
 			auto& codec = *it;
 
-			if (codec.mime.IsFeatureCodec() && codec.parameters.GetInteger(associatedPayloadType) == payloadType)
+			if (codec.mime.IsFeatureCodec() && codec.parameters.GetInteger(AssociatedPayloadType) == payloadType)
 			{
 				return codec;
 			}

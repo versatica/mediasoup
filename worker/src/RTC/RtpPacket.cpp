@@ -199,7 +199,7 @@ namespace RTC
 		MS_DUMP("  timestamp         : %" PRIu32, GetTimestamp());
 		MS_DUMP("  ssrc              : %" PRIu32, GetSsrc());
 		MS_DUMP("  payload size      : %zu bytes", GetPayloadLength());
-		if (this->header->padding)
+		if (this->header->padding != 0u)
 		{
 			MS_DUMP("  padding size    : %" PRIu8 " bytes", this->payloadPadding);
 		}

@@ -318,7 +318,7 @@ namespace RTC
 
 		// By setting started to 0, on next packet the RtpStream will call
 		// InitSeq(seq).
-		this->started = 0;
+		this->started = false;
 
 		// Also reset RtpStreamSend own members.
 		this->receivedBytes          = 0;

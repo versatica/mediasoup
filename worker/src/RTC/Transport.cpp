@@ -462,7 +462,7 @@ namespace RTC
 
 						return;
 					}
-					else if (
+					if (
 					  !jsonFingerprint[JsonStringAlgorithm].isString() ||
 					  !jsonFingerprint[JsonStringValue].isString())
 					{
@@ -775,7 +775,7 @@ namespace RTC
 					auto& report   = (*it);
 					auto* consumer = GetConsumer(report->GetSsrc());
 
-					if (consumer)
+					if (consumer != nullptr)
 					{
 						consumer->ReceiveRtcpReceiverReport(report);
 					}
@@ -1409,17 +1409,17 @@ namespace RTC
 		this->rtpListener.RemoveProducer(producer);
 	}
 
-	void Transport::OnProducerPaused(RTC::Producer* producer)
+	void Transport::OnProducerPaused(RTC::Producer* /*producer*/)
 	{
 		// Do nothing.
 	}
 
-	void Transport::OnProducerResumed(RTC::Producer* producer)
+	void Transport::OnProducerResumed(RTC::Producer* /*producer*/)
 	{
 		// Do nothing.
 	}
 
-	void Transport::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void Transport::OnProducerRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* /*packet*/)
 	{
 		// Do nothing.
 	}
@@ -1432,7 +1432,7 @@ namespace RTC
 		this->consumers.erase(consumer);
 	}
 
-	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
+	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* /*consumer*/)
 	{
 		// Do nothing.
 	}

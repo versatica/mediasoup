@@ -34,7 +34,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->rtpStream)
+		if (this->rtpStream != nullptr)
 			delete this->rtpStream;
 	}
 
@@ -73,10 +73,10 @@ namespace RTC
 
 		json[JsonStringSourceProducerId] = Json::UInt{ this->sourceProducerId };
 
-		if (this->transport)
+		if (this->transport != nullptr)
 			json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
 
-		if (this->rtpStream)
+		if (this->rtpStream != nullptr)
 			json[JsonStringRtpStream] = this->rtpStream->ToJson();
 
 		json[JsonStringPaused] = this->paused;
@@ -175,7 +175,7 @@ namespace RTC
 
 		this->supportedCodecPayloadTypes.clear();
 
-		if (this->rtpStream)
+		if (this->rtpStream != nullptr)
 		{
 			delete this->rtpStream;
 			this->rtpStream = nullptr;
@@ -380,9 +380,9 @@ namespace RTC
 
 		if (this->rtpStream->HasRtx())
 		{
-			static uint8_t RtxBuffer[MtuSize];
+			static uint8_t rtxBuffer[MtuSize];
 
-			rtxPacket = packet->Clone(RtxBuffer);
+			rtxPacket = packet->Clone(rtxBuffer);
 			this->rtpStream->RtxEncode(rtxPacket);
 
 			MS_DEBUG_TAG(
