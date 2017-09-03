@@ -25,9 +25,9 @@
         "file": "PATH/worker/src/Logger.cpp"
     },
     {
-        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/Loop.o PATH/worker/src/Loop.cpp",
+        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/Worker.o PATH/worker/src/Worker.cpp",
         "directory": "PATH/worker/out",
-        "file": "PATH/worker/src/Loop.cpp"
+        "file": "PATH/worker/src/Worker.cpp"
     },
     {
         "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/Settings.o PATH/worker/src/Settings.cpp",
@@ -70,14 +70,9 @@
         "file": "PATH/worker/src/RTC/NackGenerator.cpp"
     },
     {
-        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/Peer.o PATH/worker/src/RTC/Peer.cpp",
+        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/Router.o PATH/worker/src/RTC/Router.cpp",
         "directory": "PATH/worker/out",
-        "file": "PATH/worker/src/RTC/Peer.cpp"
-    },
-    {
-        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/Room.o PATH/worker/src/RTC/Room.cpp",
-        "directory": "PATH/worker/out",
-        "file": "PATH/worker/src/RTC/Room.cpp"
+        "file": "PATH/worker/src/RTC/Router.cpp"
     },
     {
         "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpListener.o PATH/worker/src/RTC/RtpListener.cpp",
@@ -175,14 +170,9 @@
         "file": "PATH/worker/src/RTC/RtpDictionaries/RtcpParameters.cpp"
     },
     {
-        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpDictionaries/RtpCapabilities.o PATH/worker/src/RTC/RtpDictionaries/RtpCapabilities.cpp",
+        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpDictionaries/RtpCodecMimeType.o PATH/worker/src/RTC/RtpDictionaries/RtpCodecMimeType.cpp",
         "directory": "PATH/worker/out",
-        "file": "PATH/worker/src/RTC/RtpDictionaries/RtpCapabilities.cpp"
-    },
-    {
-        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpDictionaries/RtpCodecMime.o PATH/worker/src/RTC/RtpDictionaries/RtpCodecMime.cpp",
-        "directory": "PATH/worker/out",
-        "file": "PATH/worker/src/RTC/RtpDictionaries/RtpCodecMime.cpp"
+        "file": "PATH/worker/src/RTC/RtpDictionaries/RtpCodecMimeType.cpp"
     },
     {
         "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpDictionaries/RtpCodecParameters.o PATH/worker/src/RTC/RtpDictionaries/RtpCodecParameters.cpp",
@@ -198,11 +188,6 @@
         "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpDictionaries/RtpFecParameters.o PATH/worker/src/RTC/RtpDictionaries/RtpFecParameters.cpp",
         "directory": "PATH/worker/out",
         "file": "PATH/worker/src/RTC/RtpDictionaries/RtpFecParameters.cpp"
-    },
-    {
-        "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpDictionaries/RtpHeaderExtension.o PATH/worker/src/RTC/RtpDictionaries/RtpHeaderExtension.cpp",
-        "directory": "PATH/worker/out",
-        "file": "PATH/worker/src/RTC/RtpDictionaries/RtpHeaderExtension.cpp"
     },
     {
         "command": "c++ -c -DMS_LITTLE_ENDIAN -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_INT8_T -DHAVE_UINT16_T -DHAVE_UINT32_T -DHAVE_UINT64_T -DHAVE_UINT8_T -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DCPU_CISC -IPATH/worker/include -IPATH/worker/deps/jsoncpp/jsoncpp/bundled -IPATH/worker/deps/netstring/netstring-c -IPATH/worker/deps/libuv/include -IPATH/worker/deps/openssl/openssl/include -IPATH/worker/deps/libsrtp/srtp/include -std=c++11 -Wall -Wextra -Wno-unused-parameter -m64 -g -o PATH/worker/out/Release/obj.target/mediasoup-worker/src/RTC/RtpDictionaries/RtpHeaderExtensionParameters.o PATH/worker/src/RTC/RtpDictionaries/RtpHeaderExtensionParameters.cpp",
