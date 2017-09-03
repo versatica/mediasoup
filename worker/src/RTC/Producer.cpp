@@ -539,7 +539,8 @@ namespace RTC
 		}
 	}
 
-	void Producer::OnRtpStreamRecvNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
+	void Producer::OnRtpStreamRecvNackRequired(
+	  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 

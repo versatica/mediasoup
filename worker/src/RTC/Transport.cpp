@@ -462,9 +462,7 @@ namespace RTC
 
 						return;
 					}
-					if (
-					  !jsonFingerprint[JsonStringAlgorithm].isString() ||
-					  !jsonFingerprint[JsonStringValue].isString())
+					if (!jsonFingerprint[JsonStringAlgorithm].isString() || !jsonFingerprint[JsonStringValue].isString())
 					{
 						request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
 
@@ -623,7 +621,8 @@ namespace RTC
 		{
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
 			{
-				MS_DEBUG_TAG(rtx, "requesting full frame for new Consumer since Transport already connected");
+				MS_DEBUG_TAG(
+				  rtx, "requesting full frame for new Consumer since Transport already connected");
 			}
 
 			consumer->RequestFullFrame();
