@@ -22,13 +22,13 @@ namespace RTC
 	static const int BurstDeltaThresholdMs{ 5 };
 
 	bool InterArrival::ComputeDeltas(
-	    uint32_t timestamp,
-	    int64_t arrivalTimeMs,
-	    int64_t systemTimeMs,
-	    size_t packetSize,
-	    uint32_t* timestampDelta,
-	    int64_t* arrivalTimeDeltaMs,
-	    int* packetSizeDelta)
+	  uint32_t timestamp,
+	  int64_t arrivalTimeMs,
+	  int64_t systemTimeMs,
+	  size_t packetSize,
+	  uint32_t* timestampDelta,
+	  int64_t* arrivalTimeDeltaMs,
+	  int* packetSizeDelta)
 	{
 		MS_TRACE();
 
@@ -56,20 +56,20 @@ namespace RTC
 			{
 				*timestampDelta = this->currentTimestampGroup.timestamp - this->prevTimestampGroup.timestamp;
 				*arrivalTimeDeltaMs =
-				    this->currentTimestampGroup.completeTimeMs - this->prevTimestampGroup.completeTimeMs;
+				  this->currentTimestampGroup.completeTimeMs - this->prevTimestampGroup.completeTimeMs;
 
 				// Check system time differences to see if we have an unproportional jump
 				// in arrival time. In that case reset the inter-arrival computations.
 				int64_t systemTimeDeltaMs =
-				    this->currentTimestampGroup.lastSystemTimeMs - this->prevTimestampGroup.lastSystemTimeMs;
+				  this->currentTimestampGroup.lastSystemTimeMs - this->prevTimestampGroup.lastSystemTimeMs;
 
 				if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= ArrivalTimeOffsetThresholdMs)
 				{
 					MS_WARN_TAG(
-					    rbe,
-					    "the arrival time clock offset has changed, resetting"
-					    "[diff:%" PRId64 "ms]",
-					    *arrivalTimeDeltaMs - systemTimeDeltaMs);
+					  rbe,
+					  "the arrival time clock offset has changed, resetting"
+					  "[diff:%" PRId64 "ms]",
+					  *arrivalTimeDeltaMs - systemTimeDeltaMs);
 
 					Reset();
 
@@ -84,10 +84,10 @@ namespace RTC
 					if (this->numConsecutiveReorderedPackets >= ReorderedResetThreshold)
 					{
 						MS_WARN_TAG(
-						    rbe,
-						    "packets are being reordered on the path from the "
-						    "socket to the bandwidth estimator, ignoring this "
-						    "packet for bandwidth estimation, resetting");
+						  rbe,
+						  "packets are being reordered on the path from the "
+						  "socket to the bandwidth estimator, ignoring this "
+						  "packet for bandwidth estimation, resetting");
 						Reset();
 					}
 
@@ -112,7 +112,7 @@ namespace RTC
 		else
 		{
 			this->currentTimestampGroup.timestamp =
-			    Utils::Time::LatestTimestamp(this->currentTimestampGroup.timestamp, timestamp);
+			  Utils::Time::LatestTimestamp(this->currentTimestampGroup.timestamp, timestamp);
 		}
 
 		// Accumulate the frame size.
@@ -167,7 +167,7 @@ namespace RTC
 		int64_t arrivalTimeDeltaMs = arrivalTimeMs - this->currentTimestampGroup.completeTimeMs;
 		uint32_t timestampDiff     = timestamp - this->currentTimestampGroup.timestamp;
 		auto tsDeltaMs =
-		    static_cast<int64_t>(std::lround(this->timestampToMsCoeff * timestampDiff + 0.5));
+		  static_cast<int64_t>(std::lround(this->timestampToMsCoeff * timestampDiff + 0.5));
 
 		if (tsDeltaMs == 0)
 			return true;

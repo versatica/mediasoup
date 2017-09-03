@@ -60,11 +60,11 @@ namespace RTC
 				if (len < packetLlen)
 				{
 					MS_WARN_TAG(
-					    rtcp,
-					    "packet length exceeds remaining data [len:%zu, "
-					    "packet len:%zu]",
-					    len,
-					    packetLlen);
+					  rtcp,
+					  "packet length exceeds remaining data [len:%zu, "
+					  "packet len:%zu]",
+					  len,
+					  packetLlen);
 
 					return first;
 				}
@@ -142,12 +142,12 @@ namespace RTC
 					if (Type(header->packetType) == Type::PSFB)
 					{
 						packetType +=
-						    " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
+						  " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
 					}
 					else if (Type(header->packetType) == Type::RTPFB)
 					{
 						packetType +=
-						    " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
+						  " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
 					}
 
 					MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());

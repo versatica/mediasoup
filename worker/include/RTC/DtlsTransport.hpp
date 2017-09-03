@@ -72,13 +72,13 @@ namespace RTC
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
 			virtual void OnDtlsConnected(
-			    const RTC::DtlsTransport* dtlsTransport,
-			    RTC::SrtpSession::Profile srtpProfile,
-			    uint8_t* srtpLocalKey,
-			    size_t srtpLocalKeyLen,
-			    uint8_t* srtpRemoteKey,
-			    size_t srtpRemoteKeyLen,
-			    std::string& remoteCert) = 0;
+			  const RTC::DtlsTransport* dtlsTransport,
+			  RTC::SrtpSession::Profile srtpProfile,
+			  uint8_t* srtpLocalKey,
+			  size_t srtpLocalKeyLen,
+			  uint8_t* srtpRemoteKey,
+			  size_t srtpRemoteKeyLen,
+			  std::string& remoteCert) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
@@ -89,11 +89,11 @@ namespace RTC
 			// Need to send DTLS data to the peer.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void OnOutgoingDtlsData(
-			    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void OnDtlsApplicationData(
-			    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
@@ -190,7 +190,7 @@ namespace RTC
 	}
 
 	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(
-	    const std::string& fingerprint)
+	  const std::string& fingerprint)
 	{
 		auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
 
@@ -203,10 +203,10 @@ namespace RTC
 	inline bool DtlsTransport::IsDtls(const uint8_t* data, size_t len)
 	{
 		return (
-		    // Minimum DTLS record length is 13 bytes.
-		    (len >= 13) &&
-		    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		    (data[0] > 19 && data[0] < 64));
+		  // Minimum DTLS record length is 13 bytes.
+		  (len >= 13) &&
+		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+		  (data[0] > 19 && data[0] < 64));
 	}
 
 	/* Inline instance methods. */

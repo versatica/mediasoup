@@ -13,7 +13,7 @@ namespace Utils
 	HMAC_CTX Crypto::hmacSha1Ctx;
 	uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
 	const uint32_t Crypto::crc32Table[] =
-	    // clang-format off
+	  // clang-format off
 	{
 		0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
 		0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988, 0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91,
@@ -84,20 +84,17 @@ namespace Utils
 		ret = HMAC_Update(&Crypto::hmacSha1Ctx, data, static_cast<int>(len));
 
 		MS_ASSERT(
-		    ret == 1,
-		    "OpenSSL HMAC_Update() failed with key '%s' and data length %zu bytes",
-		    key.c_str(),
-		    len);
+		  ret == 1,
+		  "OpenSSL HMAC_Update() failed with key '%s' and data length %zu bytes",
+		  key.c_str(),
+		  len);
 
 		uint32_t resultLen;
 
 		ret = HMAC_Final(&Crypto::hmacSha1Ctx, (uint8_t*)Crypto::hmacSha1Buffer, &resultLen);
 
 		MS_ASSERT(
-		    ret == 1,
-		    "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes",
-		    key.c_str(),
-		    len);
+		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key.c_str(), len);
 		MS_ASSERT(resultLen == 20, "OpenSSL HMAC_Final() resultLen is %u instead of 20", resultLen);
 
 		return Crypto::hmacSha1Buffer;

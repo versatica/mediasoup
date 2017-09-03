@@ -23,10 +23,10 @@ namespace RTC
 	{
 	public:
 		Consumer(
-		    Channel::Notifier* notifier,
-		    uint32_t consumerId,
-		    RTC::Media::Kind kind,
-		    uint32_t sourceProducerId);
+		  Channel::Notifier* notifier,
+		  uint32_t consumerId,
+		  RTC::Media::Kind kind,
+		  uint32_t sourceProducerId);
 
 	private:
 		virtual ~Consumer();

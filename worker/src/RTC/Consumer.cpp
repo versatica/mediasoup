@@ -18,8 +18,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	    Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId)
-	    : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier)
+	  Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId)
+	  : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -252,7 +252,7 @@ namespace RTC
 		// Build SDES chunk for this sender.
 		auto sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
 		auto sdesItem =
-		    new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
 		sdesChunk->AddItem(sdesItem);
 		packet->AddSdesChunk(sdesChunk);
@@ -271,7 +271,7 @@ namespace RTC
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
 			this->rtpStream->RequestRtpRetransmission(
-			    item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
+			  item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
 
 			auto it2 = RtpRetransmissionContainer.begin();
 			for (; it2 != RtpRetransmissionContainer.end(); ++it2)
@@ -386,22 +386,22 @@ namespace RTC
 			this->rtpStream->RtxEncode(rtxPacket);
 
 			MS_DEBUG_TAG(
-			    rtx,
-			    "sending rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
-			    "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
-			    rtxPacket->GetSsrc(),
-			    rtxPacket->GetSequenceNumber(),
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber());
+			  rtx,
+			  "sending rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
+			  "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			  rtxPacket->GetSsrc(),
+			  rtxPacket->GetSequenceNumber(),
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
 		}
 		else
 		{
 			rtxPacket = packet;
 			MS_DEBUG_TAG(
-			    rtx,
-			    "retransmitting packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
-			    rtxPacket->GetSsrc(),
-			    rtxPacket->GetSequenceNumber());
+			  rtx,
+			  "retransmitting packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			  rtxPacket->GetSsrc(),
+			  rtxPacket->GetSequenceNumber());
 		}
 
 		// Update retransmitted RTP data counter.

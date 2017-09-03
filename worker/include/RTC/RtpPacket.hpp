@@ -80,12 +80,12 @@ namespace RTC
 
 	public:
 		RtpPacket(
-		    Header* header,
-		    ExtensionHeader* extensionHeader,
-		    const uint8_t* payload,
-		    size_t payloadLength,
-		    uint8_t payloadPadding,
-		    size_t size);
+		  Header* header,
+		  ExtensionHeader* extensionHeader,
+		  const uint8_t* payload,
+		  size_t payloadLength,
+		  uint8_t payloadPadding,
+		  size_t size);
 		~RtpPacket();
 
 		void Dump() const;
@@ -148,11 +148,11 @@ namespace RTC
 		auto header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return (
-		    (len >= sizeof(Header)) &&
-		    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		    (data[0] > 127 && data[0] < 192) &&
-		    // RTP Version must be 2.
-		    (header->version == 2));
+		  (len >= sizeof(Header)) &&
+		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+		  (data[0] > 127 && data[0] < 192) &&
+		  // RTP Version must be 2.
+		  (header->version == 2));
 	}
 
 	/* Inline instance methods. */

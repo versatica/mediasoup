@@ -25,12 +25,12 @@ namespace RTC
 		/* Inline instance methods. */
 
 		inline FeedbackRtpSrReqPacket::FeedbackRtpSrReqPacket(CommonHeader* commonHeader)
-		    : FeedbackRtpPacket(commonHeader)
+		  : FeedbackRtpPacket(commonHeader)
 		{
 		}
 
 		inline FeedbackRtpSrReqPacket::FeedbackRtpSrReqPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : FeedbackRtpPacket(FeedbackRtp::MessageType::SR_REQ, senderSsrc, mediaSsrc)
+		  : FeedbackRtpPacket(FeedbackRtp::MessageType::SR_REQ, senderSsrc, mediaSsrc)
 		{
 		}
 	} // namespace RTCP

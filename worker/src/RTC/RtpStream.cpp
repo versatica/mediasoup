@@ -48,10 +48,10 @@ namespace RTC
 			if (this->probation == 0u)
 			{
 				MS_WARN_TAG(
-				    rtp,
-				    "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 			}
 
 			return false;
@@ -59,7 +59,7 @@ namespace RTC
 
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
-		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Update highest seen RTP timestamp.
 		if (packet->GetTimestamp() > this->maxTimestamp)
@@ -143,20 +143,20 @@ namespace RTC
 				 * (i.e., pretend this was the first packet).
 				 */
 				MS_WARN_TAG(
-				    rtp,
-				    "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				InitSeq(seq);
 			}
 			else
 			{
 				MS_WARN_TAG(
-				    rtp,
-				    "bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
 

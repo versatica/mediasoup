@@ -27,10 +27,10 @@ namespace RTC
 
 	private:
 		void RollbackProducer(
-		    RTC::Producer* producer,
-		    std::vector<uint32_t>& previousSsrcs,
-		    std::string& previousMuxId,
-		    std::vector<uint8_t>& previousPayloadTypes);
+		  RTC::Producer* producer,
+		  std::vector<uint32_t>& previousSsrcs,
+		  std::string& previousMuxId,
+		  std::vector<uint8_t>& previousPayloadTypes);
 
 	public:
 		// Table of SSRC / Producer pairs.

@@ -44,7 +44,7 @@ namespace RTC
 			}
 
 			explicit Value(std::vector<int32_t>& arrayOfIntegers)
-			    : type(Type::ARRAY_OF_INTEGERS), arrayOfIntegers(arrayOfIntegers)
+			  : type(Type::ARRAY_OF_INTEGERS), arrayOfIntegers(arrayOfIntegers)
 			{
 			}
 

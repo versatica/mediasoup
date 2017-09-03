@@ -52,9 +52,9 @@ namespace RTC
 				{
 					// Fix header length field.
 					size_t length =
-					    ((sizeof(SenderReport::Header) +
-					      (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount())) /
-					     4);
+					  ((sizeof(SenderReport::Header) +
+					    (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount())) /
+					   4);
 
 					header->length = uint16_t{ htons(length) };
 

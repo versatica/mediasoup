@@ -198,8 +198,9 @@ namespace RTC
 			{
 				auto& encoding = *it;
 
-				if ((encoding.ssrc == 0u) || (encoding.hasRtx && (encoding.rtx.ssrc == 0u)) ||
-				    (encoding.hasFec && (encoding.fec.ssrc == 0u)))
+				if (
+				  (encoding.ssrc == 0u) || (encoding.hasRtx && (encoding.rtx.ssrc == 0u)) ||
+				  (encoding.hasFec && (encoding.fec.ssrc == 0u)))
 				{
 					break;
 				}
@@ -221,7 +222,7 @@ namespace RTC
 						RollbackProducer(producer, previousSsrcs, previousMuxId, previousPayloadTypes);
 
 						MS_THROW_ERROR(
-						    "payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
+						  "payloadType already exists in RTP listener [payloadType:%" PRIu8 "]", payloadType);
 					}
 				}
 			}
@@ -329,10 +330,10 @@ namespace RTC
 	}
 
 	void RtpListener::RollbackProducer(
-	    RTC::Producer* producer,
-	    std::vector<uint32_t>& previousSsrcs,
-	    std::string& previousMuxId,
-	    std::vector<uint8_t>& previousPayloadTypes)
+	  RTC::Producer* producer,
+	  std::vector<uint32_t>& previousSsrcs,
+	  std::string& previousMuxId,
+	  std::vector<uint8_t>& previousPayloadTypes)
 	{
 		MS_TRACE();
 

@@ -51,14 +51,14 @@ namespace RTC
 	uint32_t convertMsTo24Bits(int64_t timeMs)
 	{
 		uint32_t time24Bits =
-		    static_cast<uint32_t>(((static_cast<uint64_t>(timeMs) << AbsSendTimeFraction) + 500) / 1000) &
-		    0x00FFFFFF;
+		  static_cast<uint32_t>(((static_cast<uint64_t>(timeMs) << AbsSendTimeFraction) + 500) / 1000) &
+		  0x00FFFFFF;
 
 		return time24Bits;
 	}
 
 	bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
-	    int sendDeltaMs, const Cluster& clusterAggregate)
+	  int sendDeltaMs, const Cluster& clusterAggregate)
 	{
 		MS_TRACE();
 
@@ -123,7 +123,7 @@ namespace RTC
 	}
 
 	std::list<Cluster>::const_iterator RemoteBitrateEstimatorAbsSendTime::FindBestProbe(
-	    const std::list<Cluster>& clusters) const
+	  const std::list<Cluster>& clusters) const
 	{
 		MS_TRACE();
 
@@ -136,8 +136,9 @@ namespace RTC
 			if (it->sendMeanMs == 0 || it->recvMeanMs == 0)
 				continue;
 
-			if (it->numAboveMinDelta > it->count / 2 &&
-			    (it->recvMeanMs - it->sendMeanMs <= 2.0f && it->sendMeanMs - it->recvMeanMs <= 5.0f))
+			if (
+			  it->numAboveMinDelta > it->count / 2 &&
+			  (it->recvMeanMs - it->sendMeanMs <= 2.0f && it->sendMeanMs - it->recvMeanMs <= 5.0f))
 			{
 				int probeBitrateBps = std::min(it->GetSendBitrateBps(), it->GetRecvBitrateBps());
 
@@ -153,14 +154,14 @@ namespace RTC
 				int recvBitrateBps = it->meanSize * 8 * 1000 / it->recvMeanMs;
 
 				MS_DEBUG_TAG(
-				    rbe,
-				    "probe failed, sent at %d bps, received at %d bps [mean "
-				    "send delta:%fms, mean recv delta:%fms, num probes:%d]",
-				    sendBitrateBps,
-				    recvBitrateBps,
-				    it->sendMeanMs,
-				    it->recvMeanMs,
-				    it->count);
+				  rbe,
+				  "probe failed, sent at %d bps, received at %d bps [mean "
+				  "send delta:%fms, mean recv delta:%fms, num probes:%d]",
+				  sendBitrateBps,
+				  recvBitrateBps,
+				  it->sendMeanMs,
+				  it->recvMeanMs,
+				  it->count);
 
 				break;
 			}
@@ -170,7 +171,7 @@ namespace RTC
 	}
 
 	RemoteBitrateEstimatorAbsSendTime::ProbeResult RemoteBitrateEstimatorAbsSendTime::ProcessClusters(
-	    int64_t nowMs)
+	  int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -197,15 +198,15 @@ namespace RTC
 			if (IsBitrateImproving(probeBitrateBps))
 			{
 				MS_DEBUG_TAG(
-				    rbe,
-				    "probe successful, sent at %d bps, received at %d bps "
-				    "[mean send delta:%fms, mean recv delta: %f ms, "
-				    "num probes:%d",
-				    bestIt->GetSendBitrateBps(),
-				    bestIt->GetRecvBitrateBps(),
-				    bestIt->sendMeanMs,
-				    bestIt->recvMeanMs,
-				    bestIt->count);
+				  rbe,
+				  "probe successful, sent at %d bps, received at %d bps "
+				  "[mean send delta:%fms, mean recv delta: %f ms, "
+				  "num probes:%d",
+				  bestIt->GetSendBitrateBps(),
+				  bestIt->GetRecvBitrateBps(),
+				  bestIt->sendMeanMs,
+				  bestIt->recvMeanMs,
+				  bestIt->count);
 
 				this->remoteRate.SetEstimate(probeBitrateBps, nowMs);
 
@@ -233,7 +234,7 @@ namespace RTC
 	}
 
 	void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(
-	    int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t absSendTime)
+	  int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, const uint32_t absSendTime)
 	{
 		MS_TRACE();
 
@@ -241,7 +242,7 @@ namespace RTC
 	}
 
 	void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
-	    int64_t arrivalTimeMs, uint32_t sendTime24bits, size_t payloadSize, uint32_t ssrc)
+	  int64_t arrivalTimeMs, uint32_t sendTime24bits, size_t payloadSize, uint32_t ssrc)
 	{
 		MS_TRACE();
 
@@ -298,9 +299,10 @@ namespace RTC
 			// the sender.
 			const size_t minProbePacketSize{ 200 };
 
-			if (payloadSize > minProbePacketSize &&
-			    (!this->remoteRate.ValidEstimate() ||
-			     nowMs - this->firstPacketTimeMs < InitialProbingIntervalMs))
+			if (
+			  payloadSize > minProbePacketSize &&
+			  (!this->remoteRate.ValidEstimate() ||
+			   nowMs - this->firstPacketTimeMs < InitialProbingIntervalMs))
 			{
 				// TODO(holmer): Use a map instead to get correct order?
 				if (this->totalProbesReceived < MaxProbePackets)
@@ -315,14 +317,14 @@ namespace RTC
 					}
 
 					MS_DEBUG_TAG(
-					    rbe,
-					    "probe packet received [send time:%" PRId64
-					    "ms, recv "
-					    "time:%" PRId64 "ms, send delta:%dms, recv delta:%d ms]",
-					    sendTimeMs,
-					    arrivalTimeMs,
-					    sendDeltaMs,
-					    recvDeltaMs);
+					  rbe,
+					  "probe packet received [send time:%" PRId64
+					  "ms, recv "
+					  "time:%" PRId64 "ms, send delta:%dms, recv delta:%d ms]",
+					  sendTimeMs,
+					  arrivalTimeMs,
+					  sendDeltaMs,
+					  recvDeltaMs);
 				}
 
 				this->probes.emplace_back(sendTimeMs, arrivalTimeMs, payloadSize);
@@ -335,21 +337,20 @@ namespace RTC
 			}
 
 			if (this->interArrival->ComputeDeltas(
-			        timestamp, arrivalTimeMs, nowMs, payloadSize, &tsDelta, &tDelta, &sizeDelta))
+			      timestamp, arrivalTimeMs, nowMs, payloadSize, &tsDelta, &tDelta, &sizeDelta))
 			{
 				double tsDeltaMs = (1000.0 * tsDelta) / (1 << InterArrivalShift);
 
 				this->estimator->Update(tDelta, tsDeltaMs, sizeDelta, this->detector.State(), arrivalTimeMs);
 				this->detector.Detect(
-				    this->estimator->GetOffset(), tsDeltaMs, this->estimator->GetNumOfDeltas(), arrivalTimeMs);
+				  this->estimator->GetOffset(), tsDeltaMs, this->estimator->GetNumOfDeltas(), arrivalTimeMs);
 			}
 
 			if (!updateEstimate)
 			{
 				// Check if it's time for a periodic update or if we should update because
 				// of an over-use.
-				if (this->lastUpdateMs == -1 ||
-				    nowMs - this->lastUpdateMs > this->remoteRate.GetFeedbackInterval())
+				if (this->lastUpdateMs == -1 || nowMs - this->lastUpdateMs > this->remoteRate.GetFeedbackInterval())
 				{
 					updateEstimate = true;
 				}
@@ -368,9 +369,9 @@ namespace RTC
 				// We also have to update the estimate immediately if we are overusing
 				// and the target bitrate is too high compared to what we are receiving.
 				const RateControlInput input(
-				    this->detector.State(),
-				    this->incomingBitrate.GetRate(arrivalTimeMs),
-				    this->estimator->GetVarNoise());
+				  this->detector.State(),
+				  this->incomingBitrate.GetRate(arrivalTimeMs),
+				  this->estimator->GetVarNoise());
 
 				this->remoteRate.Update(&input, nowMs);
 				targetBitrateBps = this->remoteRate.UpdateBandwidthEstimate(nowMs);
@@ -402,7 +403,7 @@ namespace RTC
 		{
 			// We can't update the estimate if we don't have any active streams.
 			this->interArrival.reset(new InterArrival(
-			    (TimestampGroupLengthMs << InterArrivalShift) / 1000, TimestampToMs, true));
+			  (TimestampGroupLengthMs << InterArrivalShift) / 1000, TimestampToMs, true));
 			this->estimator.reset(new OveruseEstimator(OverUseDetectorOptions()));
 			// We deliberately don't reset the this->firstPacketTimeMs here for now since
 			// we only probe for bandwidth in the beginning of a call right now.
@@ -410,7 +411,7 @@ namespace RTC
 	}
 
 	bool RemoteBitrateEstimatorAbsSendTime::LatestEstimate(
-	    std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
+	  std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
 	{
 		MS_TRACE();
 

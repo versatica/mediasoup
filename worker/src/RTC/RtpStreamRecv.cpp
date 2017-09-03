@@ -10,7 +10,7 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
-	    : RtpStream::RtpStream(params), listener(listener)
+	  : RtpStream::RtpStream(params), listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -69,12 +69,12 @@ namespace RTC
 		if (packet->GetPayloadType() != this->rtxPayloadType)
 		{
 			MS_WARN_TAG(
-			    rtx,
-			    "ignoring RTX packet with invalid payload type [ssrc: %" PRIu32 " seq: %" PRIu16
-			    " payload type: %" PRIu8 "]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber(),
-			    packet->GetPayloadType());
+			  rtx,
+			  "ignoring RTX packet with invalid payload type [ssrc: %" PRIu32 " seq: %" PRIu16
+			  " payload type: %" PRIu8 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetPayloadType());
 
 			return false;
 		}
@@ -89,39 +89,38 @@ namespace RTC
 			if (packet->GetPayloadLength() < 2)
 			{
 				MS_DEBUG_TAG(
-				    rtx,
-				    "ignoring empty RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16
-				    " payload type: %" PRIu8 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber(),
-				    packet->GetPayloadType());
+				  rtx,
+				  "ignoring empty RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  packet->GetPayloadType());
 
 				return false;
 			}
 
 			MS_WARN_TAG(
-			    rtx,
-			    "ignoring malformed RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16
-			    " payload type: %" PRIu8 "]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber(),
-			    packet->GetPayloadType());
+			  rtx,
+			  "ignoring malformed RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8
+			  "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetPayloadType());
 
 			return false;
 		}
 
 		MS_DEBUG_TAG(
-		    rtx,
-		    "received RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16
-		    "] recovering original [ssrc: %" PRIu32 " seq: %" PRIu16 "]",
-		    this->rtxSsrc,
-		    rtxSeq,
-		    packet->GetSsrc(),
-		    packet->GetSequenceNumber());
+		  rtx,
+		  "received RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 "] recovering original [ssrc: %" PRIu32
+		  " seq: %" PRIu16 "]",
+		  this->rtxSsrc,
+		  rtxSeq,
+		  packet->GetSsrc(),
+		  packet->GetSequenceNumber());
 
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
-		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack && this->nackGenerator)
@@ -216,7 +215,7 @@ namespace RTC
 			return;
 
 		auto transit =
-		    static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		  static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
 
 		this->transit = transit;
@@ -249,11 +248,11 @@ namespace RTC
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
 		MS_WARN_TAG(
-		    rtx,
-		    "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
-		    this->params.ssrc,
-		    seqNumbers[0],
-		    seqNumbers.size());
+		  rtx,
+		  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
+		  this->params.ssrc,
+		  seqNumbers[0],
+		  seqNumbers.size());
 
 		this->listener->OnNackRequired(this, seqNumbers);
 	}

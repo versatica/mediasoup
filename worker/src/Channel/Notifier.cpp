@@ -46,7 +46,7 @@ namespace Channel
 	}
 
 	void Notifier::EmitWithBinary(
-	    uint32_t targetId, const std::string& event, const uint8_t* binaryData, size_t binaryLen)
+	  uint32_t targetId, const std::string& event, const uint8_t* binaryData, size_t binaryLen)
 	{
 		MS_TRACE();
 
@@ -65,11 +65,11 @@ namespace Channel
 	}
 
 	void Notifier::EmitWithBinary(
-	    uint32_t targetId,
-	    const std::string& event,
-	    const uint8_t* binaryData,
-	    size_t binaryLen,
-	    Json::Value& data)
+	  uint32_t targetId,
+	  const std::string& event,
+	  const uint8_t* binaryData,
+	  size_t binaryLen,
+	  Json::Value& data)
 	{
 		MS_TRACE();
 

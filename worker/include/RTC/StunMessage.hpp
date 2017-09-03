@@ -61,7 +61,7 @@ namespace RTC
 
 	public:
 		StunMessage(
-		    Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
+		  Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
 		~StunMessage();
 
 		void Dump() const;
@@ -87,7 +87,7 @@ namespace RTC
 		bool HasMessageIntegrity() const;
 		bool HasFingerprint() const;
 		Authentication CheckAuthentication(
-		    const std::string& localUsername, const std::string& localPassword);
+		  const std::string& localUsername, const std::string& localPassword);
 		StunMessage* CreateSuccessResponse();
 		StunMessage* CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string& password);
@@ -118,13 +118,13 @@ namespace RTC
 	inline bool StunMessage::IsStun(const uint8_t* data, size_t len)
 	{
 		return (
-		    // STUN headers are 20 bytes.
-		    (len >= 20) &&
-		    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		    (data[0] < 3) &&
-		    // Magic cookie must match.
-		    (data[4] == StunMessage::magicCookie[0]) && (data[5] == StunMessage::magicCookie[1]) &&
-		    (data[6] == StunMessage::magicCookie[2]) && (data[7] == StunMessage::magicCookie[3]));
+		  // STUN headers are 20 bytes.
+		  (len >= 20) &&
+		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+		  (data[0] < 3) &&
+		  // Magic cookie must match.
+		  (data[4] == StunMessage::magicCookie[0]) && (data[5] == StunMessage::magicCookie[1]) &&
+		  (data[6] == StunMessage::magicCookie[2]) && (data[7] == StunMessage::magicCookie[3]));
 	}
 
 	/* Inline instance methods. */

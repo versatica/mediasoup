@@ -91,9 +91,9 @@ namespace RTC
 	}
 
 	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
-	    : muxId(rtpParameters->muxId), codecs(rtpParameters->codecs),
-	      encodings(rtpParameters->encodings), headerExtensions(rtpParameters->headerExtensions),
-	      rtcp(rtpParameters->rtcp), hasRtcp(rtpParameters->hasRtcp)
+	  : muxId(rtpParameters->muxId), codecs(rtpParameters->codecs),
+	    encodings(rtpParameters->encodings), headerExtensions(rtpParameters->headerExtensions),
+	    rtcp(rtpParameters->rtcp), hasRtcp(rtpParameters->hasRtcp)
 	{
 		MS_TRACE();
 	}
@@ -184,8 +184,7 @@ namespace RTC
 		{
 			auto& codec = *it;
 
-			if (codec.mime.IsFeatureCodec() &&
-			    codec.parameters.GetInteger(associatedPayloadType) == payloadType)
+			if (codec.mime.IsFeatureCodec() && codec.parameters.GetInteger(associatedPayloadType) == payloadType)
 			{
 				return codec;
 			}

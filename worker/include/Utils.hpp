@@ -29,8 +29,7 @@ namespace Utils
 	inline bool IP::CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2)
 	{
 		// Compare family.
-		if (addr1->sa_family != addr2->sa_family ||
-		    (addr1->sa_family != AF_INET && addr1->sa_family != AF_INET6))
+		if (addr1->sa_family != addr2->sa_family || (addr1->sa_family != AF_INET && addr1->sa_family != AF_INET6))
 		{
 			return false;
 		}
@@ -43,18 +42,13 @@ namespace Utils
 		switch (addr1->sa_family)
 		{
 			case AF_INET:
-				if (std::memcmp(
-				        &((struct sockaddr_in*)addr1)->sin_addr, &((struct sockaddr_in*)addr2)->sin_addr, 4) ==
-				    0)
+				if (std::memcmp(&((struct sockaddr_in*)addr1)->sin_addr, &((struct sockaddr_in*)addr2)->sin_addr, 4) == 0)
 				{
 					return true;
 				}
 				break;
 			case AF_INET6:
-				if (std::memcmp(
-				        &((struct sockaddr_in6*)addr1)->sin6_addr,
-				        &((struct sockaddr_in6*)addr2)->sin6_addr,
-				        16) == 0)
+				if (std::memcmp(&((struct sockaddr_in6*)addr1)->sin6_addr, &((struct sockaddr_in6*)addr2)->sin6_addr, 16) == 0)
 				{
 					return true;
 				}
@@ -290,7 +284,7 @@ namespace Utils
 
 		ntp.seconds = tv.tv_sec + UnixNtpOffset;
 		ntp.fractions =
-		    static_cast<uint32_t>(static_cast<double>(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
+		  static_cast<uint32_t>(static_cast<double>(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
 	}
 
 	inline bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)

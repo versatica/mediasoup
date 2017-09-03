@@ -35,17 +35,17 @@ namespace RTC
 			virtual void OnPeerProducerPaused(const RTC::Peer* peer, const RTC::Producer* producer)  = 0;
 			virtual void OnPeerProducerResumed(const RTC::Peer* peer, const RTC::Producer* producer) = 0;
 			virtual void OnPeerProducerRtpPacket(
-			    const RTC::Peer* peer, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			  const RTC::Peer* peer, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnPeerProducerRtcpSenderReport(
-			    const RTC::Peer* peer, RTC::Producer* producer, RTC::RTCP::SenderReport* report) = 0;
-			virtual void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer)    = 0;
+			  const RTC::Peer* peer, RTC::Producer* producer, RTC::RTCP::SenderReport* report) = 0;
+			virtual void OnPeerConsumerClosed(const RTC::Peer* peer, RTC::Consumer* consumer)  = 0;
 			virtual void OnPeerConsumerRtcpReceiverReport(
-			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report) = 0;
+			  const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::ReceiverReport* report) = 0;
 			virtual void OnPeerConsumerRtcpFeedback(
-			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) = 0;
+			  const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) = 0;
 			virtual void OnPeerConsumerRtcpFeedback(
-			    const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
-			virtual void OnPeerConsumerFullFrameRequired(RTC::Peer* peer, RTC::Consumer* consumer)    = 0;
+			  const RTC::Peer* peer, RTC::Consumer* consumer, RTC::RTCP::FeedbackRtpPacket* packet) = 0;
+			virtual void OnPeerConsumerFullFrameRequired(RTC::Peer* peer, RTC::Consumer* consumer)  = 0;
 		};
 
 	public:
@@ -67,13 +67,13 @@ namespace RTC
 		 * @param peerName - Name of the receiver Peer.
 		 */
 		void AddConsumer(
-		    RTC::Consumer* consumer, RTC::RtpParameters* rtpParameters, uint32_t associatedProducerId);
+		  RTC::Consumer* consumer, RTC::RtpParameters* rtpParameters, uint32_t associatedProducerId);
 		RTC::Consumer* GetConsumer(uint32_t ssrc) const;
 		void SendRtcp(uint64_t now);
 
 	private:
 		RTC::Transport* GetTransportFromRequest(
-		    Channel::Request* request, uint32_t* transportId = nullptr) const;
+		  Channel::Request* request, uint32_t* transportId = nullptr) const;
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request, uint32_t* producerId = nullptr) const;
 		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request, uint32_t* consumerId = nullptr) const;
 

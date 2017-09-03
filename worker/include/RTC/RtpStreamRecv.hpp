@@ -15,8 +15,8 @@ namespace RTC
 		{
 		public:
 			virtual void OnNackRequired(
-			    RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
-			virtual void OnPliRequired(RTC::RtpStreamRecv* rtpStream)                   = 0;
+			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
+			virtual void OnPliRequired(RTC::RtpStreamRecv* rtpStream)                 = 0;
 		};
 
 	public:

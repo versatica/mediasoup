@@ -204,16 +204,16 @@ void Settings::PrintConfiguration()
 	if (!logTags.empty())
 	{
 		std::copy(
-		    logTags.begin(), logTags.end() - 1, std::ostream_iterator<std::string>(logTagsStream, ","));
+		  logTags.begin(), logTags.end() - 1, std::ostream_iterator<std::string>(logTagsStream, ","));
 		logTagsStream << logTags.back();
 	}
 
 	MS_DEBUG_TAG(info, "<configuration>");
 
 	MS_DEBUG_TAG(
-	    info,
-	    "  logLevel            : \"%s\"",
-	    Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	  info,
+	  "  logLevel            : \"%s\"",
+	  Settings::logLevel2String[Settings::configuration.logLevel].c_str());
 	MS_DEBUG_TAG(info, "  logTags             : \"%s\"", logTagsStream.str().c_str());
 	if (Settings::configuration.hasIPv4)
 	{
@@ -234,7 +234,7 @@ void Settings::PrintConfiguration()
 	if (Settings::configuration.hasAnnouncedIPv4)
 	{
 		MS_DEBUG_TAG(
-		    info, "  rtcAnnouncedIPv4    : \"%s\"", Settings::configuration.rtcAnnouncedIPv4.c_str());
+		  info, "  rtcAnnouncedIPv4    : \"%s\"", Settings::configuration.rtcAnnouncedIPv4.c_str());
 	}
 	else
 	{
@@ -243,7 +243,7 @@ void Settings::PrintConfiguration()
 	if (Settings::configuration.hasAnnouncedIPv6)
 	{
 		MS_DEBUG_TAG(
-		    info, "  rtcAnnouncedIPv6    : \"%s\"", Settings::configuration.rtcAnnouncedIPv6.c_str());
+		  info, "  rtcAnnouncedIPv6    : \"%s\"", Settings::configuration.rtcAnnouncedIPv6.c_str());
 	}
 	else
 	{
@@ -254,9 +254,9 @@ void Settings::PrintConfiguration()
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
 		MS_DEBUG_TAG(
-		    info, "  dtlsCertificateFile : \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
+		  info, "  dtlsCertificateFile : \"%s\"", Settings::configuration.dtlsCertificateFile.c_str());
 		MS_DEBUG_TAG(
-		    info, "  dtlsPrivateKeyFile  : \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
+		  info, "  dtlsPrivateKeyFile  : \"%s\"", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
 	MS_DEBUG_TAG(info, "</configuration>");
@@ -344,7 +344,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 		std::string ip;
 
 		Utils::IP::GetAddressInfo(
-		    reinterpret_cast<struct sockaddr*>(&address.address.address4), &family, ip, &port);
+		  reinterpret_cast<struct sockaddr*>(&address.address.address4), &family, ip, &port);
 
 		if (family != requestedFamily)
 			continue;
@@ -506,8 +506,9 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 {
 	MS_TRACE();
 
-	if (Settings::configuration.dtlsCertificateFile.empty() ||
-	    Settings::configuration.dtlsPrivateKeyFile.empty())
+	if (
+	  Settings::configuration.dtlsCertificateFile.empty() ||
+	  Settings::configuration.dtlsPrivateKeyFile.empty())
 	{
 		Settings::configuration.dtlsCertificateFile = "";
 		Settings::configuration.dtlsPrivateKeyFile  = "";
@@ -610,7 +611,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
 			err = bind(
-			    bindSocket, reinterpret_cast<const struct sockaddr*>(&bindAddr), sizeof(struct sockaddr_in));
+			  bindSocket, reinterpret_cast<const struct sockaddr*>(&bindAddr), sizeof(struct sockaddr_in));
 			break;
 
 		case AF_INET6:
@@ -622,9 +623,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 				MS_ABORT("socket() failed: %s", std::strerror(errno));
 
 			err = bind(
-			    bindSocket,
-			    reinterpret_cast<const struct sockaddr*>(&bindAddr),
-			    sizeof(struct sockaddr_in6));
+			  bindSocket, reinterpret_cast<const struct sockaddr*>(&bindAddr), sizeof(struct sockaddr_in6));
 			break;
 
 		default:

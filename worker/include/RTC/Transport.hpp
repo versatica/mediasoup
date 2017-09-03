@@ -84,15 +84,12 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnPacketRecv(
-		    RTC::UdpSocket* socket,
-		    const uint8_t* data,
-		    size_t len,
-		    const struct sockaddr* remoteAddr) override;
+		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
 		void OnRtcTcpConnectionClosed(
-		    RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) override;
+		  RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) override;
 
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
@@ -101,9 +98,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
 		void OnOutgoingStunMessage(
-		    const RTC::IceServer* iceServer,
-		    const RTC::StunMessage* msg,
-		    RTC::TransportTuple* tuple) override;
+		  const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) override;
 		void OnIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
 		void OnIceConnected(const RTC::IceServer* iceServer) override;
 		void OnIceCompleted(const RTC::IceServer* iceServer) override;
@@ -113,19 +108,19 @@ namespace RTC
 	public:
 		void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsConnected(
-		    const RTC::DtlsTransport* dtlsTransport,
-		    RTC::SrtpSession::Profile srtpProfile,
-		    uint8_t* srtpLocalKey,
-		    size_t srtpLocalKeyLen,
-		    uint8_t* srtpRemoteKey,
-		    size_t srtpRemoteKeyLen,
-		    std::string& remoteCert) override;
+		  const RTC::DtlsTransport* dtlsTransport,
+		  RTC::SrtpSession::Profile srtpProfile,
+		  uint8_t* srtpLocalKey,
+		  size_t srtpLocalKeyLen,
+		  uint8_t* srtpRemoteKey,
+		  size_t srtpRemoteKeyLen,
+		  std::string& remoteCert) override;
 		void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnOutgoingDtlsData(
-		    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		void OnDtlsApplicationData(
-		    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
 	public:
@@ -182,7 +177,9 @@ namespace RTC
 
 	inline bool Transport::IsConnected() const
 	{
-		return this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED;
+		return (
+		  this->selectedTuple != nullptr &&
+		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
 	inline void Transport::EnableRemb()

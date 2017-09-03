@@ -38,13 +38,13 @@ namespace RTC
 
 	public:
 		Producer(
-		    Channel::Notifier* notifier,
-		    uint32_t producerId,
-		    RTC::Media::Kind kind,
-		    RTC::Transport* transport,
-		    RTC::RtpParameters& rtpParameters,
-		    struct RtpMapping& rtpMapping,
-		    bool paused);
+		  Channel::Notifier* notifier,
+		  uint32_t producerId,
+		  RTC::Media::Kind kind,
+		  RTC::Transport* transport,
+		  RTC::RtpParameters& rtpParameters,
+		  struct RtpMapping& rtpMapping,
+		  bool paused);
 
 	public:
 		// Must be public because Router needs to call it.

@@ -44,12 +44,12 @@ namespace RTC
 	/* Inline methods. */
 
 	inline TransportTuple::TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
-	    : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
+	  : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
 	{
 	}
 
 	inline TransportTuple::TransportTuple(RTC::TcpConnection* tcpConnection)
-	    : tcpConnection(tcpConnection), protocol(Protocol::TCP)
+	  : tcpConnection(tcpConnection), protocol(Protocol::TCP)
 	{
 	}
 
@@ -71,8 +71,8 @@ namespace RTC
 		if (this->protocol == Protocol::UDP && tuple->GetProtocol() == Protocol::UDP)
 		{
 			return (
-			    this->udpSocket == tuple->udpSocket &&
-			    Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
+			  this->udpSocket == tuple->udpSocket &&
+			  Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
 		}
 		else if (this->protocol == Protocol::TCP && tuple->GetProtocol() == Protocol::TCP)
 		{

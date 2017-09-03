@@ -67,7 +67,7 @@ namespace RTC
 	// Inline instance methods.
 
 	inline NackGenerator::NackInfo::NackInfo(uint32_t seq32, uint32_t sendAtSeqNum)
-	    : seq32(seq32), sendAtSeqNum(sendAtSeqNum)
+	  : seq32(seq32), sendAtSeqNum(sendAtSeqNum)
 	{
 	}
 } // namespace RTC

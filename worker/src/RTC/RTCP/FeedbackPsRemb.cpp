@@ -38,7 +38,7 @@ namespace RTC
 		}
 
 		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader)
-		    : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
+		  : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
 			auto* data = reinterpret_cast<uint8_t*>(commonHeader + 1);
 
@@ -53,7 +53,7 @@ namespace RTC
 			size_t numSsrcs  = data[12];
 			uint8_t exponent = data[13] >> 2;
 			uint64_t mantissa =
-			    (static_cast<uint32_t>(data[13] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 14);
+			  (static_cast<uint32_t>(data[13] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 14);
 
 			this->bitrate = (mantissa << exponent);
 			if ((this->bitrate >> exponent) != mantissa)
@@ -67,11 +67,10 @@ namespace RTC
 			// Check length.
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
 
-			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + sizeof(Header) +
-			               (numSsrcs * sizeof(uint32_t)))
+			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + sizeof(Header) + (numSsrcs * sizeof(uint32_t)))
 			{
 				MS_WARN_TAG(
-				    rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
+				  rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
 
 				this->isCorrect = false;
 				return;

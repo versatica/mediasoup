@@ -69,7 +69,7 @@ namespace RTC
 			if (len < (ptr - data) + 4 + extensionValueSize)
 			{
 				MS_WARN_TAG(
-				    rtp, "not enough space for the announced header extension value, packet discarded");
+				  rtp, "not enough space for the announced header extension value, packet discarded");
 
 				return nullptr;
 			}
@@ -105,9 +105,9 @@ namespace RTC
 			if (payloadLength < static_cast<size_t>(payloadPadding))
 			{
 				MS_WARN_TAG(
-				    rtp,
-				    "number of padding octets is greater than available space for payload, packet "
-				    "discarded");
+				  rtp,
+				  "number of padding octets is greater than available space for payload, packet "
+				  "discarded");
 
 				return nullptr;
 			}
@@ -115,9 +115,9 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		    len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 + extensionValueSize : 0) +
-		               payloadLength + static_cast<size_t>(payloadPadding),
-		    "packet's computed size does not match received size");
+		  len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 + extensionValueSize : 0) +
+		           payloadLength + static_cast<size_t>(payloadPadding),
+		  "packet's computed size does not match received size");
 
 		auto packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
 
@@ -130,14 +130,14 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpPacket::RtpPacket(
-	    Header* header,
-	    ExtensionHeader* extensionHeader,
-	    const uint8_t* payload,
-	    size_t payloadLength,
-	    uint8_t payloadPadding,
-	    size_t size)
-	    : header(header), extensionHeader(extensionHeader), payload(const_cast<uint8_t*>(payload)),
-	      payloadLength(payloadLength), payloadPadding(payloadPadding), size(size)
+	  Header* header,
+	  ExtensionHeader* extensionHeader,
+	  const uint8_t* payload,
+	  size_t payloadLength,
+	  uint8_t payloadPadding,
+	  size_t size)
+	  : header(header), extensionHeader(extensionHeader), payload(const_cast<uint8_t*>(payload)),
+	    payloadLength(payloadLength), payloadPadding(payloadPadding), size(size)
 	{
 		MS_TRACE();
 
@@ -187,7 +187,7 @@ namespace RTC
 			}
 
 			std::copy(
-			    extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ","));
+			  extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ","));
 			extIdsStream << extIds.back();
 
 			MS_DUMP("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
@@ -362,7 +362,7 @@ namespace RTC
 
 		// Create the new RtpPacket instance and return it.
 		auto packet = new RtpPacket(
-		    header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
+		  header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
@@ -457,7 +457,7 @@ namespace RTC
 				if (ptr + 1 + len > extensionEnd)
 				{
 					MS_WARN_TAG(
-					    rtp, "not enough space for the announced One-Byte header extension element value");
+					  rtp, "not enough space for the announced One-Byte header extension element value");
 
 					break;
 				}
@@ -490,7 +490,7 @@ namespace RTC
 				if (ptr + len > extensionEnd)
 				{
 					MS_WARN_TAG(
-					    rtp, "not enough space for the announced Two-Bytes header extension element value");
+					  rtp, "not enough space for the announced Two-Bytes header extension element value");
 
 					break;
 				}

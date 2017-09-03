@@ -18,15 +18,15 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	    Channel::Notifier* notifier,
-	    uint32_t producerId,
-	    RTC::Media::Kind kind,
-	    RTC::Transport* transport,
-	    RTC::RtpParameters& rtpParameters,
-	    struct RtpMapping& rtpMapping,
-	    bool paused)
-	    : producerId(producerId), kind(kind), notifier(notifier), transport(transport),
-	      rtpParameters(rtpParameters), paused(paused)
+	  Channel::Notifier* notifier,
+	  uint32_t producerId,
+	  RTC::Media::Kind kind,
+	  RTC::Transport* transport,
+	  RTC::RtpParameters& rtpParameters,
+	  struct RtpMapping& rtpMapping,
+	  bool paused)
+	  : producerId(producerId), kind(kind), notifier(notifier), transport(transport),
+	    rtpParameters(rtpParameters), paused(paused)
 	{
 		MS_TRACE();
 
@@ -298,7 +298,7 @@ namespace RTC
 			eventData[JsonStringObject] = jsonObject;
 
 			this->notifier->EmitWithBinary(
-			    this->producerId, "rtpobject", packet->GetPayload(), packet->GetPayloadLength(), eventData);
+			  this->producerId, "rtpobject", packet->GetPayload(), packet->GetPayloadLength(), eventData);
 		}
 
 		// Apply the Producer RTP mapping before dispatching the packet to the Router.
@@ -407,8 +407,9 @@ namespace RTC
 
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
-			if (this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
-			    exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			if (
+			  this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
+			  exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
 				if (idMapping.find(exten.id) != idMapping.end())
 					ssrcAudioLevelId = idMapping[exten.id];
@@ -528,14 +529,13 @@ namespace RTC
 		if (this->knownHeaderExtensions.ssrcAudioLevelId)
 		{
 			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
-			    this->knownHeaderExtensions.ssrcAudioLevelId);
+			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->knownHeaderExtensions.ssrcAudioLevelId);
 		}
 
 		if (this->knownHeaderExtensions.absSendTimeId)
 		{
 			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
+			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
 		}
 	}
 

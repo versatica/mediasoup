@@ -65,7 +65,7 @@ TcpConnection::~TcpConnection()
 }
 
 void TcpConnection::Setup(
-    Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIP, uint16_t localPort)
+  Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIP, uint16_t localPort)
 {
 	MS_TRACE();
 
@@ -114,7 +114,7 @@ void TcpConnection::Destroy()
 		auto req  = new uv_shutdown_t;
 		req->data = (void*)this;
 		err       = uv_shutdown(
-        req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
+      req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 		if (err != 0)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
@@ -129,12 +129,12 @@ void TcpConnection::Dump() const
 {
 	MS_DUMP("<TcpConnection>");
 	MS_DUMP(
-	    "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
-	    this->localIP.c_str(),
-	    static_cast<uint16_t>(this->localPort),
-	    this->peerIP.c_str(),
-	    static_cast<uint16_t>(this->peerPort),
-	    (!this->isClosing) ? "open" : "closed");
+	  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
+	  this->localIP.c_str(),
+	  static_cast<uint16_t>(this->localPort),
+	  this->peerIP.c_str(),
+	  static_cast<uint16_t>(this->peerPort),
+	  (!this->isClosing) ? "open" : "closed");
 	MS_DUMP("</TcpConnection>");
 }
 
@@ -148,9 +148,9 @@ void TcpConnection::Start()
 	int err;
 
 	err = uv_read_start(
-	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	    static_cast<uv_alloc_cb>(onAlloc),
-	    static_cast<uv_read_cb>(onRead));
+	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	  static_cast<uv_alloc_cb>(onAlloc),
+	  static_cast<uv_read_cb>(onRead));
 	if (err != 0)
 		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
 
@@ -215,11 +215,11 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	err = uv_write(
-	    &writeData->req,
-	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	    &buffer,
-	    1,
-	    static_cast<uv_write_cb>(onWrite));
+	  &writeData->req,
+	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	  &buffer,
+	  1,
+	  static_cast<uv_write_cb>(onWrite));
 	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
@@ -280,27 +280,27 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	if (static_cast<size_t>(written) < len1)
 	{
 		std::memcpy(
-		    writeData->store, data1 + static_cast<size_t>(written), len1 - static_cast<size_t>(written));
+		  writeData->store, data1 + static_cast<size_t>(written), len1 - static_cast<size_t>(written));
 		std::memcpy(writeData->store + (len1 - static_cast<size_t>(written)), data2, len2);
 	}
 	// Otherwise just take the pending data in the second buffer.
 	else
 	{
 		std::memcpy(
-		    writeData->store,
-		    data2 + (static_cast<size_t>(written) - len1),
-		    len2 - (static_cast<size_t>(written) - len1));
+		  writeData->store,
+		  data2 + (static_cast<size_t>(written) - len1),
+		  len2 - (static_cast<size_t>(written) - len1));
 	}
 	writeData->req.data = (void*)writeData;
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	err = uv_write(
-	    &writeData->req,
-	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	    &buffer,
-	    1,
-	    static_cast<uv_write_cb>(onWrite));
+	  &writeData->req,
+	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	  &buffer,
+	  1,
+	  static_cast<uv_write_cb>(onWrite));
 	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
@@ -322,7 +322,7 @@ bool TcpConnection::SetPeerAddress()
 
 	int family;
 	Utils::IP::GetAddressInfo(
-	    reinterpret_cast<const struct sockaddr*>(&this->peerAddr), &family, this->peerIP, &this->peerPort);
+	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), &family, this->peerIP, &this->peerPort);
 
 	return true;
 }

@@ -19,7 +19,7 @@ namespace RTC
 	/* Instance methods. */
 
 	Router::Router(Listener* listener, Channel::Notifier* notifier, uint32_t routerId)
-	    : routerId(routerId), listener(listener), notifier(notifier)
+	  : routerId(routerId), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -147,7 +147,7 @@ namespace RTC
 			auto* producer = kv.second;
 
 			jsonMapConsumerProducer[std::to_string(consumer->consumerId)] =
-			    std::to_string(producer->producerId);
+			  std::to_string(producer->producerId);
 		}
 		json[JsonStringMapConsumerProducer] = jsonMapConsumerProducer;
 
@@ -353,7 +353,7 @@ namespace RTC
 
 				// Create a Producer instance.
 				producer = new RTC::Producer(
-				    this->notifier, producerId, kind, transport, rtpParameters, rtpMapping, paused);
+				  this->notifier, producerId, kind, transport, rtpParameters, rtpMapping, paused);
 
 				// Add us as listener.
 				producer->AddListener(this);
@@ -885,8 +885,8 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		    "Producer not present in mapProducerConsumers");
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
@@ -901,8 +901,8 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		    "Producer not present in mapProducerConsumers");
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
@@ -917,8 +917,8 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		    "Producer not present in mapProducerConsumers");
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
@@ -969,8 +969,8 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
-		    "Consumer not present in mapConsumerProducer");
+		  this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
+		  "Consumer not present in mapConsumerProducer");
 
 		auto* producer = this->mapConsumerProducer[consumer];
 
