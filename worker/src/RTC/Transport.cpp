@@ -670,15 +670,188 @@ namespace RTC
 				break;
 			}
 
-			// TODO: Handle tons of RTCP types.
+			case RTCP::Type::PSFB:
+			{
+				auto* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
+
+				switch (feedback->GetMessageType())
+				{
+					case RTCP::FeedbackPs::MessageType::PLI:
+					case RTCP::FeedbackPs::MessageType::FIR:
+					{
+						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+						if (consumer == nullptr)
+						{
+							MS_WARN_TAG(
+									rtcp,
+									"no Consumer found for received %s Feedback packet "
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+									feedback->GetMediaSsrc(),
+									feedback->GetMediaSsrc());
+
+							break;
+						}
+
+						consumer->RequestFullFrame();
+
+						break;
+					}
+
+					case RTCP::FeedbackPs::MessageType::AFB:
+					{
+						auto* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+
+						// Ignore REMB requests.
+						if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
+							break;
+					}
+
+					// [[fallthrough]]; (C++17)
+					case RTCP::FeedbackPs::MessageType::SLI:
+					case RTCP::FeedbackPs::MessageType::RPSI:
+					{
+						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+						if (consumer == nullptr)
+						{
+							MS_WARN_TAG(
+									rtcp,
+									"no Consumer found for received %s Feedback packet "
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+									feedback->GetMediaSsrc(),
+									feedback->GetMediaSsrc());
+
+							break;
+						}
+
+						listener->OnTransportReceiveRtcpFeedback(this, feedback, consumer);
+
+						break;
+					}
+
+					default:
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "ignoring unsupported %s Feedback packet "
+						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						    RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						    feedback->GetMediaSsrc(),
+						    feedback->GetMediaSsrc());
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::RTPFB:
+			{
+				auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
+
+				auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+				if (consumer == nullptr)
+				{
+					MS_WARN_TAG(
+							rtcp,
+							"no Consumer found for received NACK Feedback packet "
+							"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							feedback->GetMediaSsrc(),
+							feedback->GetMediaSsrc());
+				}
+
+				switch (feedback->GetMessageType())
+				{
+					case RTCP::FeedbackRtp::MessageType::NACK:
+					{
+						auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+						consumer->ReceiveNack(nackPacket);
+					}
+
+					break;
+
+					default:
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "ignoring unsupported %s Feedback packet "
+						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						    RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						    feedback->GetMediaSsrc(),
+						    feedback->GetMediaSsrc());
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::SR:
+			{
+				auto* sr = dynamic_cast<RTCP::SenderReportPacket*>(packet);
+				auto it  = sr->Begin();
+
+				// Even if Sender Report packet can only contain one report..
+				for (; it != sr->End(); ++it)
+				{
+					auto& report = (*it);
+					// Get the producer associated to the SSRC indicated in the report.
+					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
+
+					if (producer == nullptr)
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
+						    report->GetSsrc());
+					}
+					else
+						producer->ReceiveRtcpSenderReport(report);
+				}
+
+				break;
+			}
+
+			case RTCP::Type::SDES:
+			{
+				auto* sdes = dynamic_cast<RTCP::SdesPacket*>(packet);
+				auto it    = sdes->Begin();
+
+				for (; it != sdes->End(); ++it)
+				{
+					auto& chunk = (*it);
+					// Get the producer associated to the SSRC indicated in the report.
+					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
+
+					if (producer == nullptr)
+					{
+						MS_WARN_TAG(
+						    rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::BYE:
+			{
+				MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
+
+				break;
+			}
 
 			default:
 			{
-				// TODO: Uncomment when RTCP handling above is completed.
-				// MS_WARN_TAG(
-				//     rtcp,
-				//     "unhandled RTCP type received [type:%" PRIu8 "]",
-				//     static_cast<uint8_t>(packet->GetType()));
+				MS_WARN_TAG(
+						rtcp,
+						"unhandled RTCP type received [type:%" PRIu8 "]",
+						static_cast<uint8_t>(packet->GetType()));
 			}
 		}
 	}
