@@ -30,7 +30,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->rtpMapping = rtpMapping;
+		this->outputEncodings = this->rtpParameters.encodings;
+		this->rtpMapping      = rtpMapping;
 
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
 		FillKnownHeaderExtensions();
@@ -145,9 +146,6 @@ namespace RTC
 					return;
 				}
 
-				// Keep the previous RTP encodings (copy them).
-				auto oldEncodings = this->rtpParameters.encodings;
-
 				try
 				{
 					// Update our RTP parameters.
@@ -180,27 +178,31 @@ namespace RTC
 
 					auto& newEncodings = this->rtpParameters.encodings;
 
-					for (size_t i = 0; i != oldEncodings.size(); ++i)
+					for (size_t i = 0; i != this->outputEncodings.size(); ++i)
 					{
 						if (i == newEncodings.size())
 							break;
 
-						auto& oldEncoding = oldEncodings[i];
-						auto& newEncoding = newEncodings[i];
+						auto& newEncoding    = newEncodings[i];
+						auto& outputEncoding = this->outputEncodings[i];
 
-						if (oldEncoding.ssrc != newEncoding.ssrc)
+						if (outputEncoding.ssrc != newEncoding.ssrc)
 						{
-							this->ssrcMapping[newEncoding.ssrc] = oldEncoding.ssrc;
+							this->ssrcMapping[newEncoding.ssrc] = outputEncoding.ssrc;
 						}
 
-						if (oldEncoding.hasRtx && newEncoding.hasRtx && oldEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
+						if (
+						  outputEncoding.hasRtx && newEncoding.hasRtx &&
+						  outputEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
 						{
-							this->ssrcMapping[newEncoding.rtx.ssrc] = oldEncoding.rtx.ssrc;
+							this->ssrcMapping[newEncoding.rtx.ssrc] = outputEncoding.rtx.ssrc;
 						}
 
-						if (oldEncoding.hasFec && newEncoding.hasFec && oldEncoding.fec.ssrc != newEncoding.fec.ssrc)
+						if (
+						  outputEncoding.hasFec && newEncoding.hasFec &&
+						  outputEncoding.fec.ssrc != newEncoding.fec.ssrc)
 						{
-							this->ssrcMapping[newEncoding.fec.ssrc] = oldEncoding.fec.ssrc;
+							this->ssrcMapping[newEncoding.fec.ssrc] = outputEncoding.fec.ssrc;
 						}
 					}
 				}
@@ -630,11 +632,8 @@ namespace RTC
 		auto ssrc = packet->GetSsrc();
 
 		// Mangle SSRC.
-
 		if (this->ssrcMapping.find(ssrc) != this->ssrcMapping.end())
-		{
 			packet->SetSsrc(this->ssrcMapping[ssrc]);
-		}
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(

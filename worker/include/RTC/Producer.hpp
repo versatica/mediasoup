@@ -17,6 +17,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace RTC
 {
@@ -99,6 +100,7 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		Timer* fullFrameRequestBlockTimer{ nullptr };
 		// Others.
+		std::vector<RtpEncodingParameters> outputEncodings;
 		struct KnownHeaderExtensions knownHeaderExtensions;
 		std::map<uint32_t, uint32_t> ssrcMapping;
 		bool paused{ false };
