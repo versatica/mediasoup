@@ -1,11 +1,23 @@
 sudo: false
 language: c
+cache: ccache
+osx_image: xcode8.2
 compiler:
   - clang
   - gcc
 os:
   - linux
   - osx
+env:
+  - CONFIGURE_FLAGS=
+  - CONFIGURE_FLAGS=--enable-openssl
+matrix:
+  exclude:
+    - os: osx
+      env: CONFIGURE_FLAGS=--enable-openssl
+before_script:
+  - if [ $TRAVIS_OS_NAME == osx ]; then brew install ccache; fi
 script:
-  - ./configure && make && make runtest
-  - ./configure --enable-openssl && make && make runtest
+  - ./configure $CONFIGURE_FLAGS
+  - make
+  - make runtest

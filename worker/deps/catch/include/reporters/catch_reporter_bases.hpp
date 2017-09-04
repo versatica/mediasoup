@@ -28,7 +28,7 @@ namespace Catch {
             // + 1 for null terminator
             const size_t maxDoubleSize = DBL_MAX_10_EXP + 1 + 1 + 3 + 1;
             char buffer[maxDoubleSize];
-            
+
             // Save previous errno, to prevent sprintf from overwriting it
             ErrnoGuard guard;
 #ifdef _MSC_VER
@@ -137,7 +137,8 @@ namespace Catch {
             BySectionInfo( SectionInfo const& other ) : m_other( other ) {}
             BySectionInfo( BySectionInfo const& other ) : m_other( other.m_other ) {}
             bool operator() ( Ptr<SectionNode> const& node ) const {
-                return node->stats.sectionInfo.lineInfo == m_other.lineInfo;
+                return ((node->stats.sectionInfo.name == m_other.name) &&
+                        (node->stats.sectionInfo.lineInfo == m_other.lineInfo));
             }
         private:
             void operator=( BySectionInfo const& );

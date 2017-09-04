@@ -6,10 +6,10 @@
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "Logger.hpp"
-#include "Loop.hpp"
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "Worker.hpp"
 #include "Channel/UnixStreamSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
-	// Set the Channel socket (this will be handled and deleted by the Loop).
+	// Set the Channel socket (this will be handled and deleted by the Worker).
 	auto* channel = new Channel::UnixStreamSocket(channelFd);
 
 	// Initialize the Logger.
@@ -87,10 +87,10 @@ int main(int argc, char* argv[])
 	{
 		init();
 
-		// Run the Loop.
-		Loop loop(channel);
+		// Run the Worker.
+		Worker worker(channel);
 
-		// Loop ended.
+		// Worker ended.
 		destroy();
 		exitSuccess();
 	}
@@ -118,7 +118,6 @@ void init()
 	RTC::TcpServer::ClassInit();
 	RTC::DtlsTransport::ClassInit();
 	RTC::SrtpSession::ClassInit();
-	RTC::Room::ClassInit();
 }
 
 void ignoreSignals()

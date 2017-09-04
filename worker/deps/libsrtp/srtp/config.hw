@@ -12,17 +12,14 @@
 /* Define if building for a RISC machine (assume slow byte access). */
 /* #undef CPU_RISC */
 
-/* Define to compile in dynamic debugging system. */
-#define ENABLE_DEBUGGING 1
+/* Define to enabled debug logging for all mudules. */
+#undef ENABLE_DEBUG_LOGGING
 
-/* Report errors to this file. */
+/* Logging statments will be writen to this file. */
 /* #undef ERR_REPORTING_FILE */
 
-/* Define to use logging to stdout. */
-#define ERR_REPORTING_STDOUT 1
-
-/* Define this to use ISMAcryp code. */
-/* #undef GENERIC_AESICM */
+/* Define to redirect logging to stdout. */
+#undef ERR_REPORTING_STDOUT
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 /* #undef HAVE_ARPA_INET_H */
@@ -71,9 +68,6 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
-
-/* Define to 1 if you have the <syslog.h> header file. */
-/* #undef HAVE_SYSLOG_H */
 
 /* Define to 1 if you have the <sys/int_types.h> header file. */
 /* #undef HAVE_SYS_INT_TYPES_H */
@@ -149,12 +143,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
-
-/* Write errors to this file */
-/* #undef USE_ERR_REPORTING_FILE */
-
-/* Define to use syslog logging. */
-/* #undef USE_SYSLOG */
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

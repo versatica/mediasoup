@@ -83,9 +83,9 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(buffe
 
 	// Start reading.
 	err = uv_read_start(
-	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	    static_cast<uv_alloc_cb>(onAlloc),
-	    static_cast<uv_read_cb>(onRead));
+	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	  static_cast<uv_alloc_cb>(onAlloc),
+	  static_cast<uv_read_cb>(onRead));
 	if (err != 0)
 	{
 		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
@@ -127,7 +127,7 @@ void UnixStreamSocket::Destroy()
 		auto req  = new uv_shutdown_t;
 		req->data = (void*)this;
 		err       = uv_shutdown(
-        req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
+      req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 		if (err != 0)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
@@ -189,11 +189,11 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	err = uv_write(
-	    &writeData->req,
-	    reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	    &buffer,
-	    1,
-	    static_cast<uv_write_cb>(onWrite));
+	  &writeData->req,
+	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	  &buffer,
+	  1,
+	  static_cast<uv_write_cb>(onWrite));
 	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }

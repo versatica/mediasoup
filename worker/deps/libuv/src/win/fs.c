@@ -556,9 +556,14 @@ void fs__read(uv_fs_t* req) {
   DWORD error;
   int result;
   unsigned int index;
+  LARGE_INTEGER original_position;
+  LARGE_INTEGER zero_offset;
+  int restore_position;
 
   VERIFY_FD(fd, req);
 
+  zero_offset.QuadPart = 0;
+  restore_position = 0;
   handle = uv__get_osfhandle(fd);
 
   if (handle == INVALID_HANDLE_VALUE) {
@@ -569,6 +574,10 @@ void fs__read(uv_fs_t* req) {
   if (offset != -1) {
     memset(&overlapped, 0, sizeof overlapped);
     overlapped_ptr = &overlapped;
+    if (SetFilePointerEx(handle, zero_offset, &original_position,
+                         FILE_CURRENT)) {
+      restore_position = 1;
+    }
   } else {
     overlapped_ptr = NULL;
   }
@@ -593,6 +602,9 @@ void fs__read(uv_fs_t* req) {
     ++index;
   } while (result && index < req->fs.info.nbufs);
 
+  if (restore_position)
+    SetFilePointerEx(handle, original_position, NULL, FILE_BEGIN);
+
   if (result || bytes > 0) {
     SET_REQ_RESULT(req, bytes);
   } else {
@@ -615,9 +627,14 @@ void fs__write(uv_fs_t* req) {
   DWORD bytes;
   int result;
   unsigned int index;
+  LARGE_INTEGER original_position;
+  LARGE_INTEGER zero_offset;
+  int restore_position;
 
   VERIFY_FD(fd, req);
 
+  zero_offset.QuadPart = 0;
+  restore_position = 0;
   handle = uv__get_osfhandle(fd);
   if (handle == INVALID_HANDLE_VALUE) {
     SET_REQ_WIN32_ERROR(req, ERROR_INVALID_HANDLE);
@@ -627,6 +644,10 @@ void fs__write(uv_fs_t* req) {
   if (offset != -1) {
     memset(&overlapped, 0, sizeof overlapped);
     overlapped_ptr = &overlapped;
+    if (SetFilePointerEx(handle, zero_offset, &original_position,
+                         FILE_CURRENT)) {
+      restore_position = 1;
+    }
   } else {
     overlapped_ptr = NULL;
   }
@@ -650,6 +671,9 @@ void fs__write(uv_fs_t* req) {
     bytes += incremental_bytes;
     ++index;
   } while (result && index < req->fs.info.nbufs);
+
+  if (restore_position)
+    SetFilePointerEx(handle, original_position, NULL, FILE_BEGIN);
 
   if (result || bytes > 0) {
     SET_REQ_RESULT(req, bytes);
@@ -1094,8 +1118,6 @@ INLINE static int fs__stat_handle(HANDLE handle, uv_stat_t* statbuf) {
      */
     if (fs__readlink_handle(handle, NULL, &statbuf->st_size) == 0) {
       statbuf->st_mode |= S_IFLNK;
-    } else if (GetLastError() != ERROR_NOT_A_REPARSE_POINT) {
-      return -1;
     }
   }
 
@@ -1306,6 +1328,22 @@ static void fs__ftruncate(uv_fs_t* req) {
   } else {
     SET_REQ_WIN32_ERROR(req, pRtlNtStatusToDosError(status));
   }
+}
+
+
+static void fs__copyfile(uv_fs_t* req) {
+  int flags;
+  int overwrite;
+
+  flags = req->fs.info.file_flags;
+  overwrite = flags & UV_FS_COPYFILE_EXCL;
+
+  if (CopyFileW(req->file.pathw, req->fs.info.new_pathw, overwrite) == 0) {
+    SET_REQ_WIN32_ERROR(req, GetLastError());
+    return;
+  }
+
+  SET_REQ_RESULT(req, 0);
 }
 
 
@@ -1831,6 +1869,7 @@ static void uv__fs_work(struct uv__work* w) {
     XX(CLOSE, close)
     XX(READ, read)
     XX(WRITE, write)
+    XX(COPYFILE, copyfile)
     XX(SENDFILE, sendfile)
     XX(STAT, stat)
     XX(LSTAT, lstat)
@@ -2364,6 +2403,31 @@ int uv_fs_ftruncate(uv_loop_t* loop, uv_fs_t* req, uv_file fd,
   }
 }
 
+
+int uv_fs_copyfile(uv_loop_t* loop,
+                   uv_fs_t* req,
+                   const char* path,
+                   const char* new_path,
+                   int flags,
+                   uv_fs_cb cb) {
+  int err;
+
+  uv_fs_req_init(loop, req, UV_FS_COPYFILE, cb);
+  err = fs__capture_path(req, path, new_path, cb != NULL);
+
+  if (err)
+    return uv_translate_sys_error(err);
+
+  req->fs.info.file_flags = flags;
+
+  if (cb != NULL) {
+    QUEUE_FS_TP_JOB(loop, req);
+    return 0;
+  }
+
+  fs__copyfile(req);
+  return req->result;
+}
 
 
 int uv_fs_sendfile(uv_loop_t* loop, uv_fs_t* req, uv_file fd_out,

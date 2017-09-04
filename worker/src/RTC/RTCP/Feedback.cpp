@@ -42,17 +42,17 @@ namespace RTC
 
 		template<typename T>
 		FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader)
-		    : Packet(RTCP::Type(commonHeader->packetType)),
-		      messageType(typename T::MessageType(commonHeader->count))
+		  : Packet(RTCP::Type(commonHeader->packetType)),
+		    messageType(typename T::MessageType(commonHeader->count))
 		{
 			this->header =
-			    reinterpret_cast<Header*>(reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader));
+			  reinterpret_cast<Header*>(reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader));
 		}
 
 		template<typename T>
 		FeedbackPacket<T>::FeedbackPacket(
-		    typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : Packet(rtcpType), messageType(messageType)
+		  typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc)
+		  : Packet(rtcpType), messageType(messageType)
 		{
 			this->raw                = new uint8_t[sizeof(Header)];
 			this->header             = reinterpret_cast<Header*>(this->raw);
@@ -177,9 +177,7 @@ namespace RTC
 
 				default:
 					MS_WARN_TAG(
-					    rtcp,
-					    "unknown RTCP PS Feedback message type [packetType:%" PRIu8 "]",
-					    commonHeader->count);
+					  rtcp, "unknown RTCP PS Feedback message type [packetType:%" PRIu8 "]", commonHeader->count);
 			}
 
 			return packet;
@@ -260,9 +258,9 @@ namespace RTC
 
 				default:
 					MS_WARN_TAG(
-					    rtcp,
-					    "unknown RTCP RTP Feedback message type [packetType:%" PRIu8 "]",
-					    commonHeader->count);
+					  rtcp,
+					  "unknown RTCP RTP Feedback message type [packetType:%" PRIu8 "]",
+					  commonHeader->count);
 			}
 
 			return packet;

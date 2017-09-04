@@ -51,9 +51,9 @@ namespace RTC
 		if ((static_cast<size_t>(msgLength) != len - 20) || ((msgLength & 0x03) != 0))
 		{
 			MS_WARN_TAG(
-			    ice,
-			    "length field + 20 does not match total size (or it is not multiple of 4 bytes), "
-			    "message discarded");
+			  ice,
+			  "length field + 20 does not match total size (or it is not multiple of 4 bytes), "
+			  "message discarded");
 
 			return nullptr;
 		}
@@ -66,7 +66,7 @@ namespace RTC
 
 		// Create a new StunMessage (data + 8 points to the received TransactionID field).
 		auto msg = new StunMessage(
-		    static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
+		  static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
 
 		/*
 		    STUN Attributes
@@ -125,9 +125,9 @@ namespace RTC
 			if (hasMessageIntegrity && attrType != Attribute::FINGERPRINT)
 			{
 				MS_WARN_TAG(
-				    ice,
-				    "attribute after MESSAGE_INTEGRITY other than FINGERPRINT is not allowed, "
-				    "message discarded");
+				  ice,
+				  "attribute after MESSAGE_INTEGRITY other than FINGERPRINT is not allowed, "
+				  "message discarded");
 
 				delete msg;
 				return nullptr;
@@ -140,7 +140,7 @@ namespace RTC
 				case Attribute::USERNAME:
 				{
 					msg->SetUsername(
-					    reinterpret_cast<const char*>(attrValuePos), static_cast<size_t>(attrLength));
+					  reinterpret_cast<const char*>(attrValuePos), static_cast<size_t>(attrLength));
 
 					break;
 				}
@@ -199,7 +199,7 @@ namespace RTC
 
 			// Set next attribute position.
 			pos =
-			    static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(pos + 4 + attrLength)));
+			  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(pos + 4 + attrLength)));
 		}
 
 		// Ensure current position matches the total length.
@@ -222,9 +222,9 @@ namespace RTC
 			if (fingerprint != computedFingerprint)
 			{
 				MS_WARN_TAG(
-				    ice,
-				    "computed FINGERPRINT value does not match the value in the message, "
-				    "message discarded");
+				  ice,
+				  "computed FINGERPRINT value does not match the value in the message, "
+				  "message discarded");
 
 				delete msg;
 				return nullptr;
@@ -237,9 +237,9 @@ namespace RTC
 	/* Instance methods. */
 
 	StunMessage::StunMessage(
-	    Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size)
-	    : klass(klass), method(method), transactionId(transactionId),
-	      data(const_cast<uint8_t*>(data)), size(size)
+	  Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size)
+	  : klass(klass), method(method), transactionId(transactionId), data(const_cast<uint8_t*>(data)),
+	    size(size)
 	{
 		MS_TRACE();
 	}
@@ -330,7 +330,7 @@ namespace RTC
 	}
 
 	StunMessage::Authentication StunMessage::CheckAuthentication(
-	    const std::string& localUsername, const std::string& localPassword)
+	  const std::string& localUsername, const std::string& localPassword)
 	{
 		MS_TRACE();
 
@@ -346,9 +346,9 @@ namespace RTC
 				// Check that USERNAME attribute begins with our local username plus ":".
 				size_t localUsernameLen = localUsername.length();
 
-				if (this->username.length() <= localUsernameLen ||
-				    this->username.at(localUsernameLen) != ':' ||
-				    (this->username.compare(0, localUsernameLen, localUsername) != 0))
+				if (
+				  this->username.length() <= localUsernameLen || this->username.at(localUsernameLen) != ':' ||
+				  (this->username.compare(0, localUsernameLen, localUsername) != 0))
 					return Authentication::UNAUTHORIZED;
 
 				break;
@@ -372,7 +372,7 @@ namespace RTC
 
 		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
 		const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacShA1(
-		    localPassword, this->data, (this->messageIntegrity - 4) - this->data);
+		  localPassword, this->data, (this->messageIntegrity - 4) - this->data);
 
 		Authentication result;
 
@@ -394,8 +394,8 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->klass == Class::REQUEST,
-		    "attempt to create a success response for a non Request STUN message");
+		  this->klass == Class::REQUEST,
+		  "attempt to create a success response for a non Request STUN message");
 
 		return new StunMessage(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
 	}
@@ -405,11 +405,11 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->klass == Class::REQUEST,
-		    "attempt to create an error response for a non Request STUN message");
+		  this->klass == Class::REQUEST,
+		  "attempt to create an error response for a non Request STUN message");
 
 		auto response =
-		    new StunMessage(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
+		  new StunMessage(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);
 
@@ -437,8 +437,8 @@ namespace RTC
 		uint16_t usernamePaddedLen{ 0 };
 		uint16_t xorMappedAddressPaddedLen{ 0 };
 		bool addXorMappedAddress =
-		    ((this->xorMappedAddress != nullptr) && this->method == StunMessage::Method::BINDING &&
-		     this->klass == Class::SUCCESS_RESPONSE);
+		  ((this->xorMappedAddress != nullptr) && this->method == StunMessage::Method::BINDING &&
+		   this->klass == Class::SUCCESS_RESPONSE);
 		bool addErrorCode        = ((this->errorCode != 0u) && this->klass == Class::ERROR_RESPONSE);
 		bool addMessageIntegrity = (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
 		bool addFingerprint{ true }; // Do always.
@@ -591,16 +591,16 @@ namespace RTC
 					attrValue[1] = 0x01;
 					// Set port and XOR it.
 					std::memcpy(
-					    attrValue + 2,
-					    &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_port,
-					    2);
+					  attrValue + 2,
+					  &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_port,
+					  2);
 					attrValue[2] ^= StunMessage::magicCookie[0];
 					attrValue[3] ^= StunMessage::magicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
-					    attrValue + 4,
-					    &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_addr.s_addr,
-					    4);
+					  attrValue + 4,
+					  &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_addr.s_addr,
+					  4);
 					attrValue[4] ^= StunMessage::magicCookie[0];
 					attrValue[5] ^= StunMessage::magicCookie[1];
 					attrValue[6] ^= StunMessage::magicCookie[2];
@@ -618,16 +618,16 @@ namespace RTC
 					attrValue[1] = 0x02;
 					// Set port and XOR it.
 					std::memcpy(
-					    attrValue + 2,
-					    &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_port,
-					    2);
+					  attrValue + 2,
+					  &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_port,
+					  2);
 					attrValue[2] ^= StunMessage::magicCookie[0];
 					attrValue[3] ^= StunMessage::magicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
-					    attrValue + 4,
-					    &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_addr.s6_addr,
-					    16);
+					  attrValue + 4,
+					  &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_addr.s6_addr,
+					  16);
 					attrValue[4] ^= StunMessage::magicCookie[0];
 					attrValue[5] ^= StunMessage::magicCookie[1];
 					attrValue[6] ^= StunMessage::magicCookie[2];
@@ -676,7 +676,7 @@ namespace RTC
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
 			const uint8_t* computedMessageIntegrity =
-			    Utils::Crypto::GetHmacShA1(this->password, buffer, pos);
+			  Utils::Crypto::GetHmacShA1(this->password, buffer, pos);
 
 			Utils::Byte::Set2Bytes(buffer, pos, static_cast<uint16_t>(Attribute::MESSAGE_INTEGRITY));
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 20);

@@ -10,12 +10,12 @@ The JsonCpp library's source code, including accompanying documentation,
 tests and demonstration applications, are licensed under the following
 conditions...
 
-The author (Baptiste Lepilleur) explicitly disclaims copyright in all 
+The JsonCpp Authors explicitly disclaim copyright in all 
 jurisdictions which recognize such a disclaimer. In such jurisdictions, 
 this software is released into the Public Domain.
 
 In jurisdictions which do not recognize Public Domain property (e.g. Germany as of
-2010), this software is Copyright (c) 2007-2010 by Baptiste Lepilleur, and is
+2010), this software is Copyright (c) 2007-2010 by The JsonCpp Authors, and is
 released under the terms of the MIT License (see below).
 
 In jurisdictions which recognize Public Domain property, the user of this 
@@ -31,7 +31,7 @@ described in clear, concise terms at:
 The full text of the MIT License follows:
 
 ========================================================================
-Copyright (c) 2007-2010 Baptiste Lepilleur
+Copyright (c) 2007-2010 The JsonCpp Authors
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -87,10 +87,10 @@ license you like.
 #ifndef JSON_VERSION_H_INCLUDED
 # define JSON_VERSION_H_INCLUDED
 
-# define JSONCPP_VERSION_STRING "1.8.0"
+# define JSONCPP_VERSION_STRING "1.8.1"
 # define JSONCPP_VERSION_MAJOR 1
 # define JSONCPP_VERSION_MINOR 8
-# define JSONCPP_VERSION_PATCH 0
+# define JSONCPP_VERSION_PATCH 1
 # define JSONCPP_VERSION_QUALIFIER
 # define JSONCPP_VERSION_HEXA ((JSONCPP_VERSION_MAJOR << 24) | (JSONCPP_VERSION_MINOR << 16) | (JSONCPP_VERSION_PATCH << 8))
 

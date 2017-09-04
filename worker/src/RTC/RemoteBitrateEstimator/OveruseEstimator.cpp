@@ -24,7 +24,7 @@ namespace RTC
 	constexpr uint16_t DeltaCounterMax{ 1000 };
 
 	void OveruseEstimator::Update(
-	    int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs)
+	  int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -42,8 +42,9 @@ namespace RTC
 		this->e[0][0] += this->processNoise[0];
 		this->e[1][1] += this->processNoise[1];
 
-		if ((currentHypothesis == BW_OVERUSING && this->offset < this->prevOffset) ||
-		    (currentHypothesis == BW_UNDERUSING && this->offset > this->prevOffset))
+		if (
+		  (currentHypothesis == BW_OVERUSING && this->offset < this->prevOffset) ||
+		  (currentHypothesis == BW_UNDERUSING && this->offset > this->prevOffset))
 		{
 			this->e[1][1] += 10 * this->processNoise[1];
 		}
@@ -135,8 +136,8 @@ namespace RTC
 		const double beta = pow(1 - alpha, tsDelta * 30.0 / 1000.0);
 
 		this->avgNoise = beta * this->avgNoise + (1 - beta) * residual;
-		this->varNoise = beta * this->varNoise +
-		                 (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
+		this->varNoise =
+		  beta * this->varNoise + (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
 		if (this->varNoise < 1)
 			this->varNoise = 1;
 	}

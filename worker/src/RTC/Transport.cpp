@@ -7,6 +7,8 @@
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "RTC/Consumer.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
@@ -42,8 +44,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Transport::Transport(
-	    Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data)
-	    : transportId(transportId), listener(listener), notifier(notifier)
+	  Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data)
+	  : transportId(transportId), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
 
@@ -81,7 +83,7 @@ namespace RTC
 
 		// Create a ICE server.
 		this->iceServer = new RTC::IceServer(
-		    this, Utils::Crypto::GetRandomString(16), Utils::Crypto::GetRandomString(32));
+		  this, Utils::Crypto::GetRandomString(16), Utils::Crypto::GetRandomString(32));
 
 		// Open a IPv4 UDP socket.
 		if (tryIPv4udp && Settings::configuration.hasIPv4)
@@ -211,10 +213,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
-
-		Json::Value eventData(Json::objectValue);
-
 		if (this->srtpRecvSession != nullptr)
 			this->srtpRecvSession->Destroy();
 
@@ -228,18 +226,41 @@ namespace RTC
 			this->iceServer->Destroy();
 
 		for (auto socket : this->udpSockets)
+		{
 			socket->Destroy();
+		}
 		this->udpSockets.clear();
 
 		for (auto server : this->tcpServers)
+		{
 			server->Destroy();
+		}
 		this->tcpServers.clear();
 
 		this->selectedTuple = nullptr;
 
+		// Close all the handled Producers.
+		for (auto it = this->producers.begin(); it != this->producers.end();)
+		{
+			auto* producer = *it;
+
+			it = this->producers.erase(it);
+			producer->Destroy();
+		}
+
+		// Disable all the handled Consumers.
+		for (auto* consumer : this->consumers)
+		{
+			consumer->Disable();
+
+			// Add us as listener.
+			consumer->RemoveListener(this);
+		}
+
+		// TODO: yes? May be since we allow Transport being closed from on DtlsTransport
+		// events...
 		// Notify.
-		eventData[JsonStringClass] = "Transport";
-		this->notifier->Emit(this->transportId, "close", eventData);
+		this->notifier->Emit(this->transportId, "close");
 
 		// If this was allocated (it did not throw in the constructor) notify the
 		// listener and delete it.
@@ -262,6 +283,7 @@ namespace RTC
 		static const Json::StaticString JsonStringIceLocalParameters{ "iceLocalParameters" };
 		static const Json::StaticString JsonStringUsernameFragment{ "usernameFragment" };
 		static const Json::StaticString JsonStringPassword{ "password" };
+		static const Json::StaticString JsonStringIceLite{ "iceLite" };
 		static const Json::StaticString JsonStringIceLocalCandidates{ "iceLocalCandidates" };
 		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
@@ -293,8 +315,9 @@ namespace RTC
 
 		// Add `iceLocalParameters`.
 		json[JsonStringIceLocalParameters][JsonStringUsernameFragment] =
-		    this->iceServer->GetUsernameFragment();
+		  this->iceServer->GetUsernameFragment();
 		json[JsonStringIceLocalParameters][JsonStringPassword] = this->iceServer->GetPassword();
+		json[JsonStringIceLocalParameters][JsonStringIceLite]  = true;
 
 		// Add `iceLocalCandidates`.
 		json[JsonStringIceLocalCandidates] = Json::arrayValue;
@@ -326,7 +349,7 @@ namespace RTC
 
 		// Add `dtlsLocalParameters.fingerprints`.
 		json[JsonStringDtlsLocalParameters][JsonStringFingerprints] =
-		    RTC::DtlsTransport::GetLocalFingerprints();
+		  RTC::DtlsTransport::GetLocalFingerprints();
 
 		// Add `dtlsLocalParameters.role`.
 		switch (this->dtlsLocalRole)
@@ -385,21 +408,6 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::TRANSPORT_CLOSE:
-			{
-#ifdef MS_LOG_DEV
-				uint32_t transportId = this->transportId;
-#endif
-
-				Destroy();
-
-				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transportId);
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
 			{
 				auto json = ToJson();
@@ -414,43 +422,64 @@ namespace RTC
 				static const Json::StaticString JsonStringRole{ "role" };
 				static const Json::StaticString JsonStringClient{ "client" };
 				static const Json::StaticString JsonStringServer{ "server" };
-				static const Json::StaticString JsonStringFingerprint{ "fingerprint" };
+				static const Json::StaticString JsonStringFingerprints{ "fingerprints" };
 				static const Json::StaticString JsonStringAlgorithm{ "algorithm" };
 				static const Json::StaticString JsonStringValue{ "value" };
 
 				RTC::DtlsTransport::Fingerprint remoteFingerprint;
 				RTC::DtlsTransport::Role remoteRole =
-				    RTC::DtlsTransport::Role::AUTO; // Default value if missing.
+				  RTC::DtlsTransport::Role::AUTO; // Default value if missing.
+
+				// Just in case.
+				remoteFingerprint.algorithm = RTC::DtlsTransport::FingerprintAlgorithm::NONE;
 
 				// Ensure this method is not called twice.
-				if (this->remoteDtlsParametersGiven)
+				if (this->hasRemoteDtlsParameters)
 				{
-					request->Reject("method already called");
+					request->Reject("Transport already has remote DTLS parameters");
 
 					return;
 				}
 
-				this->remoteDtlsParametersGiven = true;
+				this->hasRemoteDtlsParameters = true;
 
-				// Validate request data.
-
-				if (!request->data[JsonStringFingerprint].isObject())
+				if (!request->data[JsonStringFingerprints].isArray())
 				{
-					request->Reject("missing data.fingerprint");
+					request->Reject("missing data.fingerprints");
 
 					return;
 				}
 
-				if (!request->data[JsonStringFingerprint][JsonStringAlgorithm].isString() ||
-				    !request->data[JsonStringFingerprint][JsonStringValue].isString())
+				auto& jsonArray = request->data[JsonStringFingerprints];
+
+				for (Json::Value::ArrayIndex i = jsonArray.size() - 1; static_cast<int32_t>(i) >= 0; --i)
 				{
-					request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
+					auto& jsonFingerprint = jsonArray[i];
 
-					return;
+					if (!jsonFingerprint.isObject())
+					{
+						request->Reject("wrong fingerprint");
+
+						return;
+					}
+					if (!jsonFingerprint[JsonStringAlgorithm].isString() || !jsonFingerprint[JsonStringValue].isString())
+					{
+						request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
+
+						return;
+					}
+
+					auto algorithm = jsonFingerprint[JsonStringAlgorithm].asString();
+
+					remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(algorithm);
+
+					if (remoteFingerprint.algorithm != RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+					{
+						remoteFingerprint.value = jsonFingerprint[JsonStringValue].asString();
+
+						break;
+					}
 				}
-
-				remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(
-				    request->data[JsonStringFingerprint][JsonStringAlgorithm].asString());
 
 				if (remoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 				{
@@ -458,8 +487,6 @@ namespace RTC
 
 					return;
 				}
-
-				remoteFingerprint.value = request->data[JsonStringFingerprint][JsonStringValue].asString();
 
 				if (request->data[JsonStringRole].isString())
 					remoteRole = RTC::DtlsTransport::StringToRole(request->data[JsonStringRole].asString());
@@ -498,7 +525,7 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Pass the remote fingerprint to the DTLS transport-
+				// Pass the remote fingerprint to the DTLS transport.
 				this->dtlsTransport->SetRemoteFingerprint(remoteFingerprint);
 
 				// Run the DTLS transport if ready.
@@ -565,12 +592,58 @@ namespace RTC
 		}
 	}
 
+	void Transport::HandleProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Add to the map.
+		this->producers.insert(producer);
+
+		// Pass it to the RtpListener.
+		this->rtpListener.AddProducer(producer);
+
+		// Add us as listener.
+		producer->AddListener(this);
+	}
+
+	void Transport::HandleUpdatedProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->producers.find(producer) != this->producers.end(), "Producer not handled");
+
+		// Pass it to the RtpListener.
+		this->rtpListener.AddProducer(producer);
+	}
+
+	void Transport::HandleConsumer(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Add to the map.
+		this->consumers.insert(consumer);
+
+		// Add us as listener.
+		consumer->AddListener(this);
+
+		// If we are connected, ask a fullrequest for this enabled Consumer.
+		if (IsConnected())
+		{
+			if (consumer->kind == RTC::Media::Kind::VIDEO)
+			{
+				MS_DEBUG_TAG(
+				  rtcp, "requesting full frame for new Consumer since Transport already connected");
+			}
+
+			consumer->RequestFullFrame();
+		}
+	}
+
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		// If there is no selected tuple do nothing.
-		if (this->selectedTuple == nullptr)
+		if (!IsConnected())
 			return;
 
 		// Ensure there is sending SRTP session.
@@ -594,8 +667,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// If there is no selected tuple do nothing.
-		if (this->selectedTuple == nullptr)
+		if (!IsConnected())
 			return;
 
 		// Ensure there is sending SRTP session.
@@ -619,8 +691,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// If there is no selected tuple do nothing.
-		if (this->selectedTuple == nullptr)
+		if (!IsConnected())
 			return;
 
 		// Ensure there is sending SRTP session.
@@ -655,11 +726,12 @@ namespace RTC
 			// If still 'auto' then transition to 'server' if ICE is 'connected' or
 			// 'completed'.
 			case RTC::DtlsTransport::Role::AUTO:
-				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				if (
+				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG_TAG(
-					    dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
+					  dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
 
 					this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
 					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
@@ -681,8 +753,9 @@ namespace RTC
 			// If 'server' then run the DTLS transport if ICE is 'connected' (not yet
 			// USE-CANDIDATE) or 'completed'.
 			case RTC::DtlsTransport::Role::SERVER:
-				if (this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				    this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				if (
+				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'server'");
 
@@ -693,6 +766,251 @@ namespace RTC
 			case RTC::DtlsTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
 		}
+	}
+
+	inline void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		switch (packet->GetType())
+		{
+			case RTCP::Type::RR:
+			{
+				auto* rr = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
+				auto it  = rr->Begin();
+
+				for (; it != rr->End(); ++it)
+				{
+					auto& report   = (*it);
+					auto* consumer = GetConsumer(report->GetSsrc());
+
+					if (consumer != nullptr)
+					{
+						consumer->ReceiveRtcpReceiverReport(report);
+					}
+					else
+					{
+						MS_WARN_TAG(
+						  rtcp,
+						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
+						  report->GetSsrc());
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::PSFB:
+			{
+				auto* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
+
+				switch (feedback->GetMessageType())
+				{
+					case RTCP::FeedbackPs::MessageType::PLI:
+					case RTCP::FeedbackPs::MessageType::FIR:
+					{
+						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+						if (consumer == nullptr)
+						{
+							MS_WARN_TAG(
+									rtcp,
+									"no Consumer found for received %s Feedback packet "
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+									feedback->GetMediaSsrc(),
+									feedback->GetMediaSsrc());
+
+							break;
+						}
+
+						consumer->RequestFullFrame();
+
+						break;
+					}
+
+					case RTCP::FeedbackPs::MessageType::AFB:
+					{
+						auto* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+
+						// Ignore REMB requests.
+						if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
+							break;
+					}
+
+					// [[fallthrough]]; (C++17)
+					case RTCP::FeedbackPs::MessageType::SLI:
+					case RTCP::FeedbackPs::MessageType::RPSI:
+					{
+						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+						if (consumer == nullptr)
+						{
+							MS_WARN_TAG(
+									rtcp,
+									"no Consumer found for received %s Feedback packet "
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+									feedback->GetMediaSsrc(),
+									feedback->GetMediaSsrc());
+
+							break;
+						}
+
+						listener->OnTransportReceiveRtcpFeedback(this, feedback, consumer);
+
+						break;
+					}
+
+					default:
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "ignoring unsupported %s Feedback packet "
+						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						    RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						    feedback->GetMediaSsrc(),
+						    feedback->GetMediaSsrc());
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::RTPFB:
+			{
+				auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
+
+				auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+				if (consumer == nullptr)
+				{
+					MS_WARN_TAG(
+							rtcp,
+							"no RtpSender found for received NACK Feedback packet "
+							"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							feedback->GetMediaSsrc(),
+							feedback->GetMediaSsrc());
+				}
+
+				switch (feedback->GetMessageType())
+				{
+					case RTCP::FeedbackRtp::MessageType::NACK:
+					{
+						auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+						consumer->ReceiveNack(nackPacket);
+					}
+
+					break;
+
+					default:
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "ignoring unsupported %s Feedback packet "
+						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						    RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						    feedback->GetMediaSsrc(),
+						    feedback->GetMediaSsrc());
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::SR:
+			{
+				auto* sr = dynamic_cast<RTCP::SenderReportPacket*>(packet);
+				auto it  = sr->Begin();
+
+				// Even if Sender Report packet can only contain one report..
+				for (; it != sr->End(); ++it)
+				{
+					auto& report = (*it);
+					// Get the producer associated to the SSRC indicated in the report.
+					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
+
+					if (producer == nullptr)
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
+						    report->GetSsrc());
+					}
+					else
+						producer->ReceiveRtcpSenderReport(report);
+				}
+
+				break;
+			}
+
+			case RTCP::Type::SDES:
+			{
+				auto* sdes = dynamic_cast<RTCP::SdesPacket*>(packet);
+				auto it    = sdes->Begin();
+
+				for (; it != sdes->End(); ++it)
+				{
+					auto& chunk = (*it);
+					// Get the producer associated to the SSRC indicated in the report.
+					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
+
+					if (producer == nullptr)
+					{
+						MS_WARN_TAG(
+						    rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::BYE:
+			{
+				MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
+
+				break;
+			}
+
+			default:
+			{
+				MS_WARN_TAG(
+						rtcp,
+						"unhandled RTCP type received [type:%" PRIu8 "]",
+						static_cast<uint8_t>(packet->GetType()));
+			}
+		}
+	}
+
+	inline RTC::Consumer* Transport::GetConsumer(uint32_t ssrc) const
+	{
+		MS_TRACE();
+
+		for (auto* consumer : this->consumers)
+		{
+			// Ignore if not enabled.
+			if (!consumer->IsEnabled())
+				continue;
+
+			// NOTE: Use & since, otherwise, a full copy will be retrieved.
+			auto& rtpParameters = consumer->GetParameters();
+
+			for (auto& encoding : rtpParameters.encodings)
+			{
+				if (encoding.ssrc == ssrc)
+					return consumer;
+				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
+					return consumer;
+				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
+					return consumer;
+			}
+		}
+
+		return nullptr;
 	}
 
 	inline void Transport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
@@ -759,8 +1077,9 @@ namespace RTC
 		this->iceServer->ForceSelectedTuple(tuple);
 
 		// Check that DTLS status is 'connecting' or 'connected'.
-		if (this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTING ||
-		    this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTED)
+		if (
+		  this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTING ||
+		  this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTED)
 		{
 			MS_DEBUG_DEV("DTLS data received, passing it to the DTLS transport");
 
@@ -814,11 +1133,11 @@ namespace RTC
 			else
 			{
 				MS_WARN_TAG(
-				    srtp,
-				    "DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetPayloadType(),
-				    packet->GetSequenceNumber());
+				  srtp,
+				  "DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetPayloadType(),
+				  packet->GetSequenceNumber());
 
 				delete packet;
 			}
@@ -835,33 +1154,32 @@ namespace RTC
 			return;
 		}
 
-		// Get the associated RtpReceiver.
-		RTC::RtpReceiver* rtpReceiver = this->rtpListener.GetRtpReceiver(packet);
+		// Get the associated Producer.
+		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
 
-		if (rtpReceiver == nullptr)
+		if (producer == nullptr)
 		{
 			MS_WARN_TAG(
-			    rtp,
-			    "no suitable RtpReceiver for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8
-			    "]",
-			    packet->GetSsrc(),
-			    packet->GetPayloadType());
+			  rtp,
+			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
+			  packet->GetSsrc(),
+			  packet->GetPayloadType());
 
 			delete packet;
 			return;
 		}
 
 		MS_DEBUG_DEV(
-		    "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", rtpReceiver:%" PRIu32 "]",
-		    packet->GetSsrc(),
-		    packet->GetPayloadType(),
-		    rtpReceiver->rtpReceiverId);
+		  "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producer:%" PRIu32 "]",
+		  packet->GetSsrc(),
+		  packet->GetPayloadType(),
+		  producer->producerId);
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
 
-		// Pass the RTP packet to the corresponding RtpReceiver.
-		rtpReceiver->ReceiveRtpPacket(packet);
+		// Pass the RTP packet to the corresponding Producer.
+		producer->ReceiveRtpPacket(packet);
 
 		// Feed the remote bitrate estimator (REMB).
 		if (this->remoteBitrateEstimator)
@@ -871,7 +1189,7 @@ namespace RTC
 			if (packet->ReadAbsSendTime(&absSendTime))
 			{
 				this->remoteBitrateEstimator->IncomingPacket(
-				    DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
+				  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 			}
 		}
 
@@ -919,23 +1237,20 @@ namespace RTC
 			return;
 		}
 
-		this->listener->OnTransportRtcpPacket(this, packet);
-
-		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
-		// this->iceServer->ForceSelectedTuple(tuple);
-
-		// Delete the whole packet.
+		// Handle each RTCP packet.
 		while (packet != nullptr)
 		{
-			RTC::RTCP::Packet* nextPacket = packet->GetNext();
+			HandleRtcpPacket(packet);
 
-			delete packet;
-			packet = nextPacket;
+			RTC::RTCP::Packet* previousPacket = packet;
+
+			packet = packet->GetNext();
+			delete previousPacket;
 		}
 	}
 
 	void Transport::OnPacketRecv(
-	    RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
+	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
@@ -945,7 +1260,7 @@ namespace RTC
 	}
 
 	void Transport::OnRtcTcpConnectionClosed(
-	    RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection, bool isClosedByPeer)
+	  RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
 
@@ -965,7 +1280,7 @@ namespace RTC
 	}
 
 	void Transport::OnOutgoingStunMessage(
-	    const RTC::IceServer* /*iceServer*/, const RTC::StunMessage* msg, RTC::TransportTuple* tuple)
+	  const RTC::IceServer* /*iceServer*/, const RTC::StunMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -977,7 +1292,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
 
 		Json::Value eventData(Json::objectValue);
@@ -993,7 +1307,6 @@ namespace RTC
 		this->selectedTuple = tuple;
 
 		// Notify.
-		eventData[JsonStringClass]            = "Transport";
 		eventData[JsonStringIceSelectedTuple] = tuple->ToJson();
 		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
 	}
@@ -1002,7 +1315,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringConnected{ "connected" };
 
@@ -1011,7 +1323,6 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE connected");
 
 		// Notify.
-		eventData[JsonStringClass]    = "Transport";
 		eventData[JsonStringIceState] = JsonStringConnected;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 
@@ -1023,7 +1334,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringCompleted{ "completed" };
 
@@ -1032,7 +1342,6 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE completed");
 
 		// Notify.
-		eventData[JsonStringClass]    = "Transport";
 		eventData[JsonStringIceState] = JsonStringCompleted;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 
@@ -1044,7 +1353,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringIceState{ "iceState" };
 		static const Json::StaticString JsonStringDisconnected{ "disconnected" };
 
@@ -1056,7 +1364,6 @@ namespace RTC
 		this->selectedTuple = nullptr;
 
 		// Notify.
-		eventData[JsonStringClass]    = "Transport";
 		eventData[JsonStringIceState] = JsonStringDisconnected;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
 
@@ -1068,7 +1375,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringConnecting{ "connecting" };
 
@@ -1077,23 +1383,21 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
 		// Notify.
-		eventData[JsonStringClass]     = "Transport";
 		eventData[JsonStringDtlsState] = JsonStringConnecting;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
 	void Transport::OnDtlsConnected(
-	    const RTC::DtlsTransport* /*dtlsTransport*/,
-	    RTC::SrtpSession::Profile srtpProfile,
-	    uint8_t* srtpLocalKey,
-	    size_t srtpLocalKeyLen,
-	    uint8_t* srtpRemoteKey,
-	    size_t srtpRemoteKeyLen,
-	    std::string& remoteCert)
+	  const RTC::DtlsTransport* /*dtlsTransport*/,
+	  RTC::SrtpSession::Profile srtpProfile,
+	  uint8_t* srtpLocalKey,
+	  size_t srtpLocalKeyLen,
+	  uint8_t* srtpRemoteKey,
+	  size_t srtpRemoteKeyLen,
+	  std::string& remoteCert)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringConnected{ "connected" };
 		static const Json::StaticString JsonStringDtlsRemoteCert{ "dtlsRemoteCert" };
@@ -1117,7 +1421,7 @@ namespace RTC
 		try
 		{
 			this->srtpSendSession = new RTC::SrtpSession(
-			    RTC::SrtpSession::Type::OUTBOUND, srtpProfile, srtpLocalKey, srtpLocalKeyLen);
+			  RTC::SrtpSession::Type::OUTBOUND, srtpProfile, srtpLocalKey, srtpLocalKeyLen);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -1127,7 +1431,7 @@ namespace RTC
 		try
 		{
 			this->srtpRecvSession = new RTC::SrtpSession(
-			    SrtpSession::Type::INBOUND, srtpProfile, srtpRemoteKey, srtpRemoteKeyLen);
+			  SrtpSession::Type::INBOUND, srtpProfile, srtpRemoteKey, srtpRemoteKeyLen);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -1138,19 +1442,24 @@ namespace RTC
 		}
 
 		// Notify.
-		eventData[JsonStringClass]          = "Transport";
 		eventData[JsonStringDtlsState]      = JsonStringConnected;
 		eventData[JsonStringDtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
-		this->listener->OnTransportConnected(this);
+		// Iterate all the Consumers and request full frame.
+		for (auto* consumer : this->consumers)
+		{
+			if (consumer->kind == RTC::Media::Kind::VIDEO)
+				MS_DEBUG_TAG(rtcp, "Transport connected, requesting full frame for Consumers");
+
+			consumer->RequestFullFrame();
+		}
 	}
 
 	void Transport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringFailed{ "failed" };
 
@@ -1159,7 +1468,6 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS failed");
 
 		// Notify.
-		eventData[JsonStringClass]     = "Transport";
 		eventData[JsonStringDtlsState] = JsonStringFailed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
@@ -1171,7 +1479,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringClass{ "class" };
 		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
 		static const Json::StaticString JsonStringClosed{ "closed" };
 
@@ -1180,7 +1487,6 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS remotely closed");
 
 		// Notify.
-		eventData[JsonStringClass]     = "Transport";
 		eventData[JsonStringDtlsState] = JsonStringClosed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
@@ -1189,7 +1495,7 @@ namespace RTC
 	}
 
 	void Transport::OnOutgoingDtlsData(
-	    const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
+	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1204,11 +1510,13 @@ namespace RTC
 	}
 
 	void Transport::OnDtlsApplicationData(
-	    const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t len)
+	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t len)
 	{
 		MS_TRACE();
 
 		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
+
+		// NOTE: No DataChannel support, si just ignore it.
 	}
 
 	void Transport::OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate)
@@ -1235,11 +1543,11 @@ namespace RTC
 			}
 
 			MS_DEBUG_TAG(
-			    rbe,
-			    "sending RTCP REMB packet [estimated:%" PRIu32 "bps, effective:%" PRIu32 "bps, ssrcs:%s]",
-			    bitrate,
-			    effectiveBitrate,
-			    ssrcsStream.str().c_str());
+			  rbe,
+			  "sending RTCP REMB packet [estimated:%" PRIu32 "bps, effective:%" PRIu32 "bps, ssrcs:%s]",
+			  bitrate,
+			  effectiveBitrate,
+			  ssrcsStream.str().c_str());
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
@@ -1253,17 +1561,61 @@ namespace RTC
 		// has decreased abruptly.
 		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
 		{
-			if ((bitrate != 0u) && (this->effectiveMaxBitrate != 0u) &&
-			    static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
-			        EffectiveMaxBitrateThresholdBeforeFullFrame)
+			if (
+			  (bitrate != 0u) && (this->effectiveMaxBitrate != 0u) &&
+			  static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
+			    EffectiveMaxBitrateThresholdBeforeFullFrame)
 			{
 				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting full frames");
 
-				this->listener->OnTransportFullFrameRequired(this);
+				// Request full frame for all the Producers.
+				for (auto* producer : this->producers)
+				{
+					producer->RequestFullFrame();
+				}
 			}
 
 			this->lastEffectiveMaxBitrateAt = now;
 			this->effectiveMaxBitrate       = effectiveBitrate;
 		}
+	}
+
+	void Transport::OnProducerClosed(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Remove it from the map.
+		this->producers.erase(producer);
+
+		// Remove it from the RtpListener.
+		this->rtpListener.RemoveProducer(producer);
+	}
+
+	void Transport::OnProducerPaused(RTC::Producer* /*producer*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerResumed(RTC::Producer* /*producer*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* /*packet*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnConsumerClosed(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Remove from the map.
+		this->consumers.erase(consumer);
+	}
+
+	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* /*consumer*/)
+	{
+		// Do nothing.
 	}
 } // namespace RTC

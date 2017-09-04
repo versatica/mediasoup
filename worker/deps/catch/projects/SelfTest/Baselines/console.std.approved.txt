@@ -4,6 +4,31 @@
 Run with -? for options
 
 -------------------------------------------------------------------------------
+#748 - captures with unexpected exceptions
+  outside assertions
+-------------------------------------------------------------------------------
+ExceptionTests.cpp:<line number>
+...............................................................................
+
+ExceptionTests.cpp:<line number>: FAILED:
+due to unexpected exception with messages:
+  answer := 42
+  expected exception
+
+-------------------------------------------------------------------------------
+#748 - captures with unexpected exceptions
+  inside REQUIRE_NOTHROW
+-------------------------------------------------------------------------------
+ExceptionTests.cpp:<line number>
+...............................................................................
+
+ExceptionTests.cpp:<line number>: FAILED:
+  REQUIRE_NOTHROW( thisThrows() )
+due to unexpected exception with messages:
+  answer := 42
+  expected exception
+
+-------------------------------------------------------------------------------
 #835 -- errno should not be touched by Catch
 -------------------------------------------------------------------------------
 MiscTests.cpp:<line number>
@@ -343,7 +368,9 @@ MessageTests.cpp:<line number>: FAILED:
   CHECK( a == 0 )
 with expansion:
   2 == 0
-with message:
+with messages:
+  this message may be logged later
+  this message should be logged
   and this, but later
 
 -------------------------------------------------------------------------------
@@ -569,6 +596,17 @@ warning:
   toString(p): 0x<hex digits>
 
 -------------------------------------------------------------------------------
+Reconstruction should be based on stringification: #914
+-------------------------------------------------------------------------------
+DecompositionTests.cpp:<line number>
+...............................................................................
+
+DecompositionTests.cpp:<line number>: FAILED:
+  CHECK( truthy(false) )
+with expansion:
+  Hey, its truthy!
+
+-------------------------------------------------------------------------------
 SCOPED_INFO is reset for each loop
 -------------------------------------------------------------------------------
 MessageTests.cpp:<line number>
@@ -584,6 +622,9 @@ with messages:
 
 A string sent directly to stdout
 A string sent directly to stderr
+Write to std::cerr
+Write to std::clog
+Interleaved writes to error streams
 Message from section one
 Message from section two
 -------------------------------------------------------------------------------
@@ -915,6 +956,6 @@ with expansion:
   "first" == "second"
 
 ===============================================================================
-test cases: 166 | 119 passed | 44 failed |  3 failed as expected
-assertions: 961 | 855 passed | 87 failed | 19 failed as expected
+test cases: 170 | 121 passed | 45 failed |  4 failed as expected
+assertions: 973 | 864 passed | 88 failed | 21 failed as expected
 

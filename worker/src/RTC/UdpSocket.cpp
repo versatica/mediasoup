@@ -42,9 +42,9 @@ namespace RTC
 		if (Settings::configuration.hasIPv4)
 		{
 			err = uv_ip4_addr(
-			    Settings::configuration.rtcIPv4.c_str(),
-			    0,
-			    reinterpret_cast<struct sockaddr_in*>(&RTC::UdpSocket::sockaddrStorageIPv4));
+			  Settings::configuration.rtcIPv4.c_str(),
+			  0,
+			  reinterpret_cast<struct sockaddr_in*>(&RTC::UdpSocket::sockaddrStorageIPv4));
 
 			if (err != 0)
 				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
@@ -53,9 +53,9 @@ namespace RTC
 		if (Settings::configuration.hasIPv6)
 		{
 			err = uv_ip6_addr(
-			    Settings::configuration.rtcIPv6.c_str(),
-			    0,
-			    reinterpret_cast<struct sockaddr_in6*>(&RTC::UdpSocket::sockaddrStorageIPv6));
+			  Settings::configuration.rtcIPv6.c_str(),
+			  0,
+			  reinterpret_cast<struct sockaddr_in6*>(&RTC::UdpSocket::sockaddrStorageIPv6));
 
 			if (err != 0)
 				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
@@ -118,8 +118,7 @@ namespace RTC
 
 		// Choose a random port to start from.
 		initialPort = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(
-		    static_cast<uint32_t>(RTC::UdpSocket::minPort),
-		    static_cast<uint32_t>(RTC::UdpSocket::maxPort)));
+		  static_cast<uint32_t>(RTC::UdpSocket::minPort), static_cast<uint32_t>(RTC::UdpSocket::maxPort)));
 
 		iteratingPort = initialPort;
 
@@ -139,9 +138,7 @@ namespace RTC
 			if (!(*availablePorts)[iteratingPort])
 			{
 				MS_DEBUG_DEV(
-				    "port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]",
-				    iteratingPort,
-				    attempt);
+				  "port in use, trying again [port:%" PRIu16 ", attempt:%" PRIu16 "]", iteratingPort, attempt);
 
 				// If we have tried all the ports in the range raise an error.
 				if (iteratingPort == initialPort)
@@ -180,10 +177,10 @@ namespace RTC
 			if (err != 0)
 			{
 				MS_WARN_DEV(
-				    "uv_udp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s",
-				    attempt,
-				    iteratingPort,
-				    uv_strerror(err));
+				  "uv_udp_bind() failed [port:%" PRIu16 ", attempt:%" PRIu16 "]: %s",
+				  attempt,
+				  iteratingPort,
+				  uv_strerror(err));
 
 				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onErrorClose));
 
@@ -194,7 +191,7 @@ namespace RTC
 				// If bind() fails for more that MaxBindAttempts then raise an error.
 				if (bindAttempt > MaxBindAttempts)
 					MS_THROW_ERROR(
-					    "uv_udp_bind() fails more than %" PRIu16 " times for IP '%s'", MaxBindAttempts, listenIp);
+					  "uv_udp_bind() fails more than %" PRIu16 " times for IP '%s'", MaxBindAttempts, listenIp);
 
 				// If we have tried all the ports in the range raise an error.
 				if (iteratingPort == initialPort)
@@ -207,10 +204,7 @@ namespace RTC
 			(*availablePorts)[iteratingPort] = false;
 
 			MS_DEBUG_DEV(
-			    "bind success [ip:%s, port:%" PRIu16 ", attempt:%" PRIu16 "]",
-			    listenIp,
-			    iteratingPort,
-			    attempt);
+			  "bind success [ip:%s, port:%" PRIu16 ", attempt:%" PRIu16 "]", listenIp, iteratingPort, attempt);
 
 			return uvHandle;
 		};
@@ -219,11 +213,10 @@ namespace RTC
 	/* Instance methods. */
 
 	UdpSocket::UdpSocket(Listener* listener, int addressFamily)
-	    : // Provide the parent class constructor with a UDP uv handle.
-	      // NOTE: This may throw a MediaSoupError exception if the address family is not available
-	      // or there are no available ports.
-	      ::UdpSocket::UdpSocket(GetRandomPort(addressFamily)),
-	      listener(listener)
+	  : // Provide the parent class constructor with a UDP uv handle.
+	    // NOTE: This may throw a MediaSoupError exception if the address family is not available
+	    // or there are no available ports.
+	    ::UdpSocket::UdpSocket(GetRandomPort(addressFamily)), listener(listener)
 	{
 		MS_TRACE();
 	}

@@ -303,7 +303,7 @@ bool Value::CZString::operator<(const CZString& other) const {
   // Assume both are strings.
   unsigned this_len = this->storage_.length_;
   unsigned other_len = other.storage_.length_;
-  unsigned min_len = std::min(this_len, other_len);
+  unsigned min_len = std::min<unsigned>(this_len, other_len);
   JSON_ASSERT(this->cstr_ && other.cstr_);
   int comp = memcmp(this->cstr_, other.cstr_, min_len);
   if (comp < 0) return true;
@@ -398,6 +398,7 @@ Value::Value(double value) {
 
 Value::Value(const char* value) {
   initBasic(stringValue, true);
+  JSON_ASSERT_MESSAGE(value != NULL, "Null Value Passed to Value Constructor");	
   value_.string_ = duplicateAndPrefixStringValue(value, static_cast<unsigned>(strlen(value)));
 }
 
@@ -566,7 +567,7 @@ bool Value::operator<(const Value& other) const {
     char const* other_str;
     decodePrefixedString(this->allocated_, this->value_.string_, &this_len, &this_str);
     decodePrefixedString(other.allocated_, other.value_.string_, &other_len, &other_str);
-    unsigned min_len = std::min(this_len, other_len);
+    unsigned min_len = std::min<unsigned>(this_len, other_len);
     JSON_ASSERT(this_str && other_str);
     int comp = memcmp(this_str, other_str, min_len);
     if (comp < 0) return true;
@@ -879,7 +880,7 @@ bool Value::isConvertibleTo(ValueType other) const {
   case nullValue:
     return (isNumeric() && asDouble() == 0.0) ||
            (type_ == booleanValue && value_.bool_ == false) ||
-           (type_ == stringValue && asString() == "") ||
+           (type_ == stringValue && asString().empty()) ||
            (type_ == arrayValue && value_.map_->size() == 0) ||
            (type_ == objectValue && value_.map_->size() == 0) ||
            type_ == nullValue;
@@ -1359,11 +1360,23 @@ bool Value::isUInt64() const {
 }
 
 bool Value::isIntegral() const {
+  switch (type_) {
+    case intValue:
+    case uintValue:
+      return true;
+    case realValue:
 #if defined(JSON_HAS_INT64)
-  return isInt64() || isUInt64();
+      // Note that maxUInt64 (= 2^64 - 1) is not exactly representable as a
+      // double, so double(maxUInt64) will be rounded up to 2^64. Therefore we
+      // require the value to be strictly less than the limit.
+      return value_.real_ >= double(minInt64) && value_.real_ < maxUInt64AsDouble && IsIntegral(value_.real_);
 #else
-  return isInt() || isUInt();
-#endif
+      return value_.real_ >= minInt && value_.real_ <= maxUInt && IsIntegral(value_.real_);
+#endif // JSON_HAS_INT64
+    default:
+      break;
+  }
+  return false;
 }
 
 bool Value::isDouble() const { return type_ == intValue || type_ == uintValue || type_ == realValue; }
@@ -1493,6 +1506,7 @@ Path::Path(const JSONCPP_STRING& path,
            const PathArgument& a4,
            const PathArgument& a5) {
   InArgs in;
+  in.reserve(5);
   in.push_back(&a1);
   in.push_back(&a2);
   in.push_back(&a3);

@@ -66,7 +66,7 @@ namespace RTC
 		/* Inline instance methods. */
 
 		inline FeedbackPsRembPacket::FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : FeedbackPsAfbPacket(senderSsrc, mediaSsrc, FeedbackPsAfbPacket::Application::REMB)
+		  : FeedbackPsAfbPacket(senderSsrc, mediaSsrc, FeedbackPsAfbPacket::Application::REMB)
 		{
 		}
 

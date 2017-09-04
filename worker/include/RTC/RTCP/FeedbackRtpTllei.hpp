@@ -61,7 +61,7 @@ namespace RTC
 		}
 
 		inline FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item)
-		    : header(item->header)
+		  : header(item->header)
 		{
 		}
 
