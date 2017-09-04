@@ -36,8 +36,6 @@ mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::Transport::HandleConsumer()
 
 * Move the RTCP timer from Peer to Transport.
 
-* Upon a `updateProducer` notification, map the new SSRCs of the `Producer` and send a PLI back to the browser (otherwise, consumers will get frozen video).
-
 * Implement `mandatoryCodecPayloadTypes`.
 
 * JS: Remove tons of useless debugs (for example in `Peer._createProducer()`).

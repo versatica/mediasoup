@@ -70,6 +70,7 @@ namespace RTC
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet);
+		void ApplySsrcMapping(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -99,6 +100,7 @@ namespace RTC
 		Timer* fullFrameRequestBlockTimer{ nullptr };
 		// Others.
 		struct KnownHeaderExtensions knownHeaderExtensions;
+		std::map<uint32_t, uint32_t> ssrcMapping;
 		bool paused{ false };
 		bool rtpRawEventEnabled{ false };
 		bool rtpObjectEventEnabled{ false };

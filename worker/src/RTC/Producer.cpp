@@ -145,6 +145,9 @@ namespace RTC
 					return;
 				}
 
+				// Keep the previous RTP encodings (copy them).
+				auto oldEncodings = this->rtpParameters.encodings;
+
 				try
 				{
 					// Update our RTP parameters.
@@ -169,6 +172,37 @@ namespace RTC
 					request->Reject(error.what());
 
 					return;
+				}
+
+				// Fill the SSRC mapping table.
+				{
+					this->ssrcMapping.clear();
+
+					auto& newEncodings = this->rtpParameters.encodings;
+
+					for (size_t i = 0; i != oldEncodings.size(); ++i)
+					{
+						if (i == newEncodings.size())
+							break;
+
+						auto& oldEncoding = oldEncodings[i];
+						auto& newEncoding = newEncodings[i];
+
+						if (oldEncoding.ssrc != newEncoding.ssrc)
+						{
+							this->ssrcMapping[newEncoding.ssrc] = oldEncoding.ssrc;
+						}
+
+						if (oldEncoding.hasRtx && newEncoding.hasRtx && oldEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
+						{
+							this->ssrcMapping[newEncoding.rtx.ssrc] = oldEncoding.rtx.ssrc;
+						}
+
+						if (oldEncoding.hasFec && newEncoding.hasFec && oldEncoding.fec.ssrc != newEncoding.fec.ssrc)
+						{
+							this->ssrcMapping[newEncoding.fec.ssrc] = oldEncoding.fec.ssrc;
+						}
+					}
 				}
 
 				request->Accept();
@@ -312,6 +346,15 @@ namespace RTC
 		if (this->paused)
 			return;
 
+		// Apply the Producer RTP and SSRC mapping before dispatching the packet.
+		ApplyRtpMapping(packet);
+		ApplySsrcMapping(packet);
+
+		for (auto& listener : this->listeners)
+		{
+			listener->OnProducerRtpPacket(this, packet);
+		}
+
 		// Emit "rtpraw" if enabled.
 		if (this->rtpRawEventEnabled)
 		{
@@ -334,14 +377,6 @@ namespace RTC
 
 			this->notifier->EmitWithBinary(
 			  this->producerId, "rtpobject", packet->GetPayload(), packet->GetPayloadLength(), eventData);
-		}
-
-		// Apply the Producer RTP mapping before dispatching the packet to the Router.
-		ApplyRtpMapping(packet);
-
-		for (auto& listener : this->listeners)
-		{
-			listener->OnProducerRtpPacket(this, packet);
 		}
 	}
 
@@ -585,6 +620,20 @@ namespace RTC
 		{
 			packet->AddExtensionMapping(
 			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
+		}
+	}
+
+	void Producer::ApplySsrcMapping(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		auto ssrc = packet->GetSsrc();
+
+		// Mangle SSRC.
+
+		if (this->ssrcMapping.find(ssrc) != this->ssrcMapping.end())
+		{
+			packet->SetSsrc(this->ssrcMapping[ssrc]);
 		}
 	}
 
