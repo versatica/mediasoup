@@ -40,8 +40,6 @@ mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::Transport::HandleConsumer()
 
 * Implement `mandatoryCodecPayloadTypes`.
 
-* Check H246 parameters.
-
 * JS: Remove tons of useless debugs (for example in `Peer._createProducer()`).
 
 * Producer JS API to request fullframe.
