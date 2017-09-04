@@ -50,7 +50,18 @@ namespace RTC
 		};
 
 	public:
-		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data);
+		struct TransportOptions
+		{
+			bool udp{ true };
+			bool tcp{ true };
+			bool preferIPv4{ true };
+			bool preferIPv6{ true };
+			bool preferUdp{ true };
+			bool preferTcp{ true };
+		};
+
+	public:
+		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, TransportOptions& options);
 
 	private:
 		~Transport() override;
@@ -61,6 +72,10 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void HandleProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
+		RTC::DtlsTransport::Role setRemoteDtlsParameters(
+			RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
+		void SetMaxBitrate(uint32_t bitrate);
+		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);

@@ -44,42 +44,15 @@ namespace RTC
 	/* Instance methods. */
 
 	Transport::Transport(
-	  Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data)
+	  Listener* listener, Channel::Notifier* notifier, uint32_t transportId, TransportOptions& options)
 	  : transportId(transportId), listener(listener), notifier(notifier)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringUdp{ "udp" };
-		static const Json::StaticString JsonStringTcp{ "tcp" };
-		static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
-		static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
-		static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
-		static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
-
-		bool tryIPv4udp{ true };
-		bool tryIPv6udp{ true };
-		bool tryIPv4tcp{ true };
-		bool tryIPv6tcp{ true };
-
-		bool preferIPv4{ false };
-		bool preferIPv6{ false };
-		bool preferUdp{ false };
-		bool preferTcp{ false };
-
-		if (data[JsonStringUdp].isBool())
-			tryIPv4udp = tryIPv6udp = data[JsonStringUdp].asBool();
-
-		if (data[JsonStringTcp].isBool())
-			tryIPv4tcp = tryIPv6tcp = data[JsonStringTcp].asBool();
-
-		if (data[JsonStringPreferIPv4].isBool())
-			preferIPv4 = data[JsonStringPreferIPv4].asBool();
-		if (data[JsonStringPreferIPv6].isBool())
-			preferIPv6 = data[JsonStringPreferIPv6].asBool();
-		if (data[JsonStringPreferUdp].isBool())
-			preferUdp = data[JsonStringPreferUdp].asBool();
-		if (data[JsonStringPreferTcp].isBool())
-			preferTcp = data[JsonStringPreferTcp].asBool();
+		bool tryIPv4udp{ options.udp };
+		bool tryIPv6udp{ options.udp };
+		bool tryIPv4tcp{ options.tcp };
+		bool tryIPv6tcp{ options.tcp };
 
 		// Create a ICE server.
 		this->iceServer = new RTC::IceServer(
@@ -90,9 +63,9 @@ namespace RTC
 		{
 			uint16_t localPreference = IceCandidateDefaultLocalPriority;
 
-			if (preferIPv4)
+			if (options.preferIPv4)
 				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (preferUdp)
+			if (options.preferUdp)
 				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
 
 			uint32_t priority = generateIceCandidatePriority(localPreference);
@@ -116,9 +89,9 @@ namespace RTC
 		{
 			uint16_t localPreference = IceCandidateDefaultLocalPriority;
 
-			if (preferIPv6)
+			if (options.preferIPv6)
 				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (preferUdp)
+			if (options.preferUdp)
 				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
 
 			uint32_t priority = generateIceCandidatePriority(localPreference);
@@ -142,9 +115,9 @@ namespace RTC
 		{
 			uint16_t localPreference = IceCandidateDefaultLocalPriority;
 
-			if (preferIPv4)
+			if (options.preferIPv4)
 				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (preferTcp)
+			if (options.preferTcp)
 				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
 
 			uint32_t priority = generateIceCandidatePriority(localPreference);
@@ -168,9 +141,9 @@ namespace RTC
 		{
 			uint16_t localPreference = IceCandidateDefaultLocalPriority;
 
-			if (preferIPv6)
+			if (options.preferIPv6)
 				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (preferTcp)
+			if (options.preferTcp)
 				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
 
 			uint32_t priority = generateIceCandidatePriority(localPreference);
@@ -417,172 +390,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
-			{
-				static const Json::StaticString JsonStringRole{ "role" };
-				static const Json::StaticString JsonStringClient{ "client" };
-				static const Json::StaticString JsonStringServer{ "server" };
-				static const Json::StaticString JsonStringFingerprints{ "fingerprints" };
-				static const Json::StaticString JsonStringAlgorithm{ "algorithm" };
-				static const Json::StaticString JsonStringValue{ "value" };
-
-				RTC::DtlsTransport::Fingerprint remoteFingerprint;
-				RTC::DtlsTransport::Role remoteRole =
-				  RTC::DtlsTransport::Role::AUTO; // Default value if missing.
-
-				// Just in case.
-				remoteFingerprint.algorithm = RTC::DtlsTransport::FingerprintAlgorithm::NONE;
-
-				// Ensure this method is not called twice.
-				if (this->hasRemoteDtlsParameters)
-				{
-					request->Reject("Transport already has remote DTLS parameters");
-
-					return;
-				}
-
-				this->hasRemoteDtlsParameters = true;
-
-				if (!request->data[JsonStringFingerprints].isArray())
-				{
-					request->Reject("missing data.fingerprints");
-
-					return;
-				}
-
-				auto& jsonArray = request->data[JsonStringFingerprints];
-
-				for (Json::Value::ArrayIndex i = jsonArray.size() - 1; static_cast<int32_t>(i) >= 0; --i)
-				{
-					auto& jsonFingerprint = jsonArray[i];
-
-					if (!jsonFingerprint.isObject())
-					{
-						request->Reject("wrong fingerprint");
-
-						return;
-					}
-					if (!jsonFingerprint[JsonStringAlgorithm].isString() || !jsonFingerprint[JsonStringValue].isString())
-					{
-						request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
-
-						return;
-					}
-
-					auto algorithm = jsonFingerprint[JsonStringAlgorithm].asString();
-
-					remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(algorithm);
-
-					if (remoteFingerprint.algorithm != RTC::DtlsTransport::FingerprintAlgorithm::NONE)
-					{
-						remoteFingerprint.value = jsonFingerprint[JsonStringValue].asString();
-
-						break;
-					}
-				}
-
-				if (remoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
-				{
-					request->Reject("unsupported data.fingerprint.algorithm");
-
-					return;
-				}
-
-				if (request->data[JsonStringRole].isString())
-					remoteRole = RTC::DtlsTransport::StringToRole(request->data[JsonStringRole].asString());
-
-				// Set local DTLS role.
-				switch (remoteRole)
-				{
-					case RTC::DtlsTransport::Role::CLIENT:
-						this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
-						break;
-					case RTC::DtlsTransport::Role::SERVER:
-						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
-						break;
-					// If the peer has "auto" we become "client" since we are ICE controlled.
-					case RTC::DtlsTransport::Role::AUTO:
-						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
-						break;
-					case RTC::DtlsTransport::Role::NONE:
-						request->Reject("invalid data.role");
-						return;
-				}
-
-				Json::Value data(Json::objectValue);
-
-				switch (this->dtlsLocalRole)
-				{
-					case RTC::DtlsTransport::Role::CLIENT:
-						data[JsonStringRole] = JsonStringClient;
-						break;
-					case RTC::DtlsTransport::Role::SERVER:
-						data[JsonStringRole] = JsonStringServer;
-						break;
-					default:
-						MS_ABORT("invalid local DTLS role");
-				}
-
-				request->Accept(data);
-
-				// Pass the remote fingerprint to the DTLS transport.
-				this->dtlsTransport->SetRemoteFingerprint(remoteFingerprint);
-
-				// Run the DTLS transport if ready.
-				MayRunDtlsTransport();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
-			{
-				static const Json::StaticString JsonStringBitrate{ "bitrate" };
-				static constexpr uint32_t MinBitrate{ 10000 };
-
-				// Validate request data.
-
-				if (!request->data[JsonStringBitrate].isUInt())
-				{
-					request->Reject("missing data.bitrate");
-
-					return;
-				}
-
-				auto bitrate = uint32_t{ request->data[JsonStringBitrate].asUInt() };
-
-				if (bitrate < MinBitrate)
-					bitrate = MinBitrate;
-
-				this->maxBitrate = bitrate;
-
-				MS_DEBUG_TAG(rbe, "transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
-			{
-				static const Json::StaticString JsonStringUsernameFragment{ "usernameFragment" };
-				static const Json::StaticString JsonStringPassword{ "password" };
-
-				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
-				std::string password         = Utils::Crypto::GetRandomString(32);
-
-				this->iceServer->SetUsernameFragment(usernameFragment);
-				this->iceServer->SetPassword(password);
-
-				Json::Value data(Json::objectValue);
-
-				data[JsonStringUsernameFragment] = this->iceServer->GetUsernameFragment();
-				data[JsonStringPassword]         = this->iceServer->GetPassword();
-
-				request->Accept(data);
-
-				break;
-			}
-
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -627,6 +434,79 @@ namespace RTC
 
 			consumer->RequestFullFrame();
 		}
+	}
+
+	RTC::DtlsTransport::Role Transport::setRemoteDtlsParameters(
+		RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role)
+	{
+		MS_TRACE();
+
+		// Ensure this method is not called twice.
+		if (this->hasRemoteDtlsParameters)
+			MS_THROW_ERROR("Transport already has remote DTLS parameters");
+
+		if (fingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+			MS_THROW_ERROR("unsupported remote fingerprint algorithm");
+
+		// Set local DTLS role.
+		switch (role)
+		{
+			case RTC::DtlsTransport::Role::CLIENT:
+			{
+				this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
+
+				break;
+			}
+			case RTC::DtlsTransport::Role::SERVER:
+			{
+				this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
+
+				break;
+			}
+			// If the peer has "auto" we become "client" since we are ICE controlled.
+			case RTC::DtlsTransport::Role::AUTO:
+			{
+				this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
+
+				break;
+			}
+			case RTC::DtlsTransport::Role::NONE:
+			{
+				MS_THROW_ERROR("invalid remote role");
+			}
+		}
+
+		this->hasRemoteDtlsParameters = true;
+
+		// Pass the remote fingerprint to the DTLS transport.
+		this->dtlsTransport->SetRemoteFingerprint(fingerprint);
+
+		// Run the DTLS transport if ready.
+		MayRunDtlsTransport();
+
+		return this->dtlsLocalRole;
+	}
+
+	void Transport::SetMaxBitrate(uint32_t bitrate)
+	{
+		MS_TRACE();
+
+		static constexpr uint32_t MinBitrate{ 10000 };
+
+		if (bitrate < MinBitrate)
+			bitrate = MinBitrate;
+
+		this->maxBitrate = bitrate;
+
+		MS_DEBUG_TAG(rbe, "transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
+	}
+
+	void Transport::ChangeUfragPwd(std::string& usernameFragment, std::string& password)
+	{
+		MS_TRACE();
+
+		this->iceServer->SetUsernameFragment(usernameFragment);
+		this->iceServer->SetPassword(password);
 	}
 
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)

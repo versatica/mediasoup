@@ -49,7 +49,7 @@ namespace RTC
 	public:
 		struct Fingerprint
 		{
-			FingerprintAlgorithm algorithm;
+			FingerprintAlgorithm algorithm{ FingerprintAlgorithm::NONE };
 			std::string value;
 		};
 
@@ -166,7 +166,7 @@ namespace RTC
 		// Others.
 		DtlsState state{ DtlsState::NEW };
 		Role localRole{ Role::NONE };
-		Fingerprint remoteFingerprint{ FingerprintAlgorithm::NONE, "" };
+		Fingerprint remoteFingerprint;
 		bool handshakeDone{ false };
 		bool handshakeDoneNow{ false };
 		std::string remoteCert;

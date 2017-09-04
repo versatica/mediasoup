@@ -173,6 +173,13 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROUTER_CREATE_TRANSPORT:
 			{
+				static const Json::StaticString JsonStringUdp{ "udp" };
+				static const Json::StaticString JsonStringTcp{ "tcp" };
+				static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
+				static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
+				static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
+				static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
+
 				RTC::Transport* transport;
 				uint32_t transportId;
 
@@ -194,9 +201,24 @@ namespace RTC
 					return;
 				}
 
+				RTC::Transport::TransportOptions options;
+
+				if (request->data[JsonStringUdp].isBool())
+					options.udp = request->data[JsonStringUdp].asBool();
+				if (request->data[JsonStringTcp].isBool())
+					options.tcp = request->data[JsonStringTcp].asBool();
+				if (request->data[JsonStringPreferIPv4].isBool())
+					options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
+				if (request->data[JsonStringPreferIPv6].isBool())
+					options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
+				if (request->data[JsonStringPreferUdp].isBool())
+					options.preferUdp = request->data[JsonStringPreferUdp].asBool();
+				if (request->data[JsonStringPreferTcp].isBool())
+					options.preferTcp = request->data[JsonStringPreferTcp].asBool();
+
 				try
 				{
-					transport = new RTC::Transport(this, this->notifier, transportId, request->data);
+					transport = new RTC::Transport(this, this->notifier, transportId, options);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -538,9 +560,14 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
 			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
-			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
-			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
 			{
+				static const Json::StaticString JsonStringRole{ "role" };
+				static const Json::StaticString JsonStringClient{ "client" };
+				static const Json::StaticString JsonStringServer{ "server" };
+				static const Json::StaticString JsonStringFingerprints{ "fingerprints" };
+				static const Json::StaticString JsonStringAlgorithm{ "algorithm" };
+				static const Json::StaticString JsonStringValue{ "value" };
+
 				RTC::Transport* transport;
 
 				try
@@ -561,7 +588,167 @@ namespace RTC
 					return;
 				}
 
-				transport->HandleRequest(request);
+				if (!request->data[JsonStringFingerprints].isArray())
+				{
+					request->Reject("missing data.fingerprints");
+
+					return;
+				}
+
+				RTC::DtlsTransport::Fingerprint remoteFingerprint;
+				// Default value if missing.
+				RTC::DtlsTransport::Role remoteRole{ RTC::DtlsTransport::Role::AUTO };
+
+				auto& jsonArray = request->data[JsonStringFingerprints];
+
+				for (Json::Value::ArrayIndex i = jsonArray.size() - 1; static_cast<int32_t>(i) >= 0; --i)
+				{
+					auto& jsonFingerprint = jsonArray[i];
+
+					if (!jsonFingerprint.isObject())
+					{
+						request->Reject("wrong fingerprint");
+
+						return;
+					}
+					if (!jsonFingerprint[JsonStringAlgorithm].isString() || !jsonFingerprint[JsonStringValue].isString())
+					{
+						request->Reject("missing data.fingerprint.algorithm and/or data.fingerprint.value");
+
+						return;
+					}
+
+					remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(jsonFingerprint[JsonStringAlgorithm].asString());
+
+					if (remoteFingerprint.algorithm != RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+					{
+						remoteFingerprint.value = jsonFingerprint[JsonStringValue].asString();
+
+						break;
+					}
+				}
+
+				if (request->data[JsonStringRole].isString())
+					remoteRole = RTC::DtlsTransport::StringToRole(request->data[JsonStringRole].asString());
+
+				RTC::DtlsTransport::Role localRole;
+
+				try
+				{
+					// This may throw.
+					localRole = transport->setRemoteDtlsParameters(
+						remoteFingerprint, remoteRole);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				Json::Value data(Json::objectValue);
+
+				switch (localRole)
+				{
+					case RTC::DtlsTransport::Role::CLIENT:
+					{
+						data[JsonStringRole] = JsonStringClient;
+
+						break;
+					}
+					case RTC::DtlsTransport::Role::SERVER:
+					{
+						data[JsonStringRole] = JsonStringServer;
+
+						break;
+					}
+					default:
+					{
+						MS_ABORT("invalid local DTLS role");
+					}
+				}
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
+			{
+				static const Json::StaticString JsonStringBitrate{ "bitrate" };
+
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (transport == nullptr)
+				{
+					request->Reject("Transport does not exist");
+
+					return;
+				}
+
+				if (!request->data[JsonStringBitrate].isUInt())
+				{
+					request->Reject("missing data.bitrate");
+
+					return;
+				}
+
+				auto bitrate = uint32_t{ request->data[JsonStringBitrate].asUInt() };
+
+				transport->SetMaxBitrate(bitrate);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
+			{
+				static const Json::StaticString JsonStringUsernameFragment{ "usernameFragment" };
+				static const Json::StaticString JsonStringPassword{ "password" };
+
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (transport == nullptr)
+				{
+					request->Reject("Transport does not exist");
+
+					return;
+				}
+
+				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
+				std::string password         = Utils::Crypto::GetRandomString(32);
+
+				transport->ChangeUfragPwd(usernameFragment, password);
+
+				Json::Value data(Json::objectValue);
+
+				data[JsonStringUsernameFragment] = usernameFragment;
+				data[JsonStringPassword]         = password;
+
+				request->Accept(data);
 
 				break;
 			}
