@@ -42,8 +42,8 @@ namespace RTC
 		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
-		void SetSourcePaused();
-		void SetSourceResumed();
+		void SourcePaused();
+		void SourceResumed();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -111,7 +111,7 @@ namespace RTC
 		return this->paused || this->sourcePaused;
 	}
 
-	inline void Consumer::SetSourcePaused()
+	inline void Consumer::SourcePaused()
 	{
 		if (this->sourcePaused)
 			return;
@@ -125,7 +125,7 @@ namespace RTC
 			Pause();
 	}
 
-	inline void Consumer::SetSourceResumed()
+	inline void Consumer::SourceResumed()
 	{
 		if (!this->sourcePaused)
 			return;

@@ -459,7 +459,7 @@ namespace RTC
 
 				// If the Producer is paused tell it to the new Consumer.
 				if (producer->IsPaused())
-					consumer->SetSourcePaused();
+					consumer->SourcePaused();
 
 				// Add us as listener.
 				consumer->AddListener(this);
@@ -888,7 +888,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->SetSourcePaused();
+			consumer->SourcePaused();
 		}
 	}
 
@@ -904,7 +904,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->SetSourceResumed();
+			consumer->SourceResumed();
 		}
 	}
 
