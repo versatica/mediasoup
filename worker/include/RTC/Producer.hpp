@@ -68,6 +68,7 @@ namespace RTC
 	private:
 		void FillKnownHeaderExtensions();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
+		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */

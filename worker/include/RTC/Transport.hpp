@@ -60,6 +60,7 @@ namespace RTC
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		void HandleProducer(RTC::Producer* producer);
+		void HandleUpdatedProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);

@@ -55,14 +55,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->rtpStreams)
-		{
-			auto rtpStream = kv.second;
-
-			delete rtpStream;
-		}
-
-		this->rtpStreams.clear();
+		ClearRtpStreams();
 	}
 
 	void Producer::Destroy()
@@ -137,6 +130,48 @@ namespace RTC
 				auto json = ToJson();
 
 				request->Accept(json);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
+			{
+				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+
+				if (!request->data[JsonStringRtpParameters].isObject())
+				{
+					request->Reject("missing data.rtpParameters");
+
+					return;
+				}
+
+				try
+				{
+					// Update our RTP parameters.
+					// NOTE: This may throw.
+					this->rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
+
+					// Clear previous RtpStreamRecv instances.
+					ClearRtpStreams();
+
+					// Create new RtpStreamRecv instances.
+					for (auto& encoding : this->rtpParameters.encodings)
+					{
+						CreateRtpStream(encoding);
+					}
+
+					// Tell our Transport about the update.
+					// NOTE: This may throw.
+					this->transport->HandleUpdatedProducer(this);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				request->Accept();
 
 				break;
 			}
@@ -505,6 +540,20 @@ namespace RTC
 			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
 			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
 		}
+	}
+
+	void Producer::ClearRtpStreams()
+	{
+		MS_TRACE();
+
+		for (auto& kv : this->rtpStreams)
+		{
+			auto rtpStream = kv.second;
+
+			delete rtpStream;
+		}
+
+		this->rtpStreams.clear();
 	}
 
 	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet)

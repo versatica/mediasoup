@@ -606,6 +606,17 @@ namespace RTC
 		producer->AddListener(this);
 	}
 
+	void Transport::HandleUpdatedProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+			this->producers.find(producer) != this->producers.end(), "Producer not handled");
+
+		// Pass it to the RtpListener.
+		this->rtpListener.AddProducer(producer);
+	}
+
 	void Transport::HandleConsumer(RTC::Consumer* consumer)
 	{
 		MS_TRACE();

@@ -28,6 +28,7 @@ namespace Channel
 		{ "transport.changeUfragPwd",          Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD           },
 		{ "producer.close",                    Request::MethodId::PRODUCER_CLOSE                       },
 		{ "producer.dump",                     Request::MethodId::PRODUCER_DUMP                        },
+		{ "producer.updateRtpParameters",      Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS       },
 		{ "producer.pause",                    Request::MethodId::PRODUCER_PAUSE                       },
 		{ "producer.resume" ,                  Request::MethodId::PRODUCER_RESUME                      },
 		{ "producer.setRtpRawEvent",           Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT           },

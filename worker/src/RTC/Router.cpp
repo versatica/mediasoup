@@ -595,6 +595,7 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::PRODUCER_DUMP:
+			case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			case Channel::Request::MethodId::PRODUCER_RESUME:
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
