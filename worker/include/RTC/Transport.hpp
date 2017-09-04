@@ -21,6 +21,7 @@
 #include "RTC/TcpServer.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include <json/json.h>
 #include <string>
 #include <unordered_set>
@@ -47,6 +48,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnTransportClosed(RTC::Transport* transport) = 0;
+			virtual void OnTransportReceiveRtcpFeedback(RTC::Transport* transport, RTC::RTCP::FeedbackPsPacket* packet, RTC::Consumer* consumer) = 0;
 		};
 
 	public:
