@@ -44,6 +44,7 @@ namespace RTC
 		bool IsPaused() const;
 		void SourcePaused();
 		void SourceResumed();
+		void SourceRtpParametersUpdated();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -137,6 +138,11 @@ namespace RTC
 
 		if (wasPaused)
 			Resume(true);
+	}
+
+	inline void Consumer::SourceRtpParametersUpdated()
+	{
+		// TODO: Set special flag to be ready for random seq numbers.
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)

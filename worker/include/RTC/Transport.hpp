@@ -60,7 +60,6 @@ namespace RTC
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 		void HandleProducer(RTC::Producer* producer);
-		void HandleUpdatedProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
@@ -130,6 +129,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::ProducerListener. */
 	public:
 		void OnProducerClosed(RTC::Producer* producer) override;
+		void OnProducerRtpParametersUpdated(RTC::Producer* producer) override;
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
 		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;

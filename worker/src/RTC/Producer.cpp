@@ -161,9 +161,11 @@ namespace RTC
 						CreateRtpStream(encoding);
 					}
 
-					// Tell our Transport about the update.
-					// NOTE: This may throw.
-					this->transport->HandleUpdatedProducer(this);
+					for (auto& listener : this->listeners)
+					{
+						// NOTE: This may throw.
+						listener->OnProducerRtpParametersUpdated(this);
+					}
 				}
 				catch (const MediaSoupError& error)
 				{

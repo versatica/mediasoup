@@ -876,6 +876,20 @@ namespace RTC
 		this->mapProducerAudioLevelContainer.erase(producer);
 	}
 
+	void Router::OnProducerRtpParametersUpdated(RTC::Producer* producer)
+	{
+		MS_ASSERT(
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto* consumer : consumers)
+		{
+			consumer->SourceRtpParametersUpdated();
+		}
+	}
+
 	void Router::OnProducerPaused(RTC::Producer* producer)
 	{
 		MS_TRACE();
