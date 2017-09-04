@@ -19,6 +19,12 @@ mediasoup:WARN:mediasoup-worker [id:bnicjuxw#1] RTC::Transport::HandleConsumer()
 
 # TODO in mediasoup v2 (server-side)
 
+* Must mangle RTP sequence numbers in Consumers:
+  - After paused.
+  - After the Producer gets `updateRtpParameters()` called (so a `OnProducerRtpParametersUpdated` listener is required in Producer for the Router to call `SourceRtpParametersUpdated()` on all its Concumers).
+
+* After `updateProducer` (which changes receiving SSRCs), should we do something in Transport between `producer->ReceiveRtpPacket(packet)` and `this->remoteBitrateEstimator->IncomingPacket`?
+
 * Set a proper value for Producer::FullFrameRequestBlockTimeout (currently 1 second).
 
 * Should RtpStream::InitSeq() reset `received` to 0? We do it but it may break RTCP reports in both RtpStreamRecv and RtpStreamSend.
