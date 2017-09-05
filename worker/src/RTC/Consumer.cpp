@@ -193,6 +193,9 @@ namespace RTC
 
 	void Consumer::SourceRtpParametersUpdated()
 	{
+		if (!IsEnabled())
+			return;
+
 		// TODO: Set special flag to be ready for random seq numbers.
 	}
 

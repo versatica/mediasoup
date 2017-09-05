@@ -1361,7 +1361,8 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->SourceResume();
+			if (consumer->IsEnabled())
+				consumer->SourceResume();
 		}
 	}
 
