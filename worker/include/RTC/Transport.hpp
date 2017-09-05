@@ -10,6 +10,7 @@
 #include "RTC/IceServer.hpp"
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
@@ -21,6 +22,7 @@
 #include "RTC/TcpServer.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "handles/Timer.hpp"
 #include <json/json.h>
 #include <string>
 #include <unordered_set>
@@ -40,13 +42,15 @@ namespace RTC
 	                  public RTC::DtlsTransport::Listener,
 	                  public RTC::RemoteBitrateEstimator::Listener,
 	                  public RTC::ProducerListener,
-	                  public RTC::ConsumerListener
+	                  public RTC::ConsumerListener,
+	                  public Timer::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
 			virtual void OnTransportClosed(RTC::Transport* transport) = 0;
+			virtual void OnTransportReceiveRtcpFeedback(RTC::Transport* transport, RTC::RTCP::FeedbackPsPacket* packet, RTC::Consumer* consumer) = 0;
 		};
 
 	public:
@@ -78,14 +82,15 @@ namespace RTC
 		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
-		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
 		bool IsConnected() const;
 		void EnableRemb();
 		bool HasRemb();
+		void SendRtcp(uint64_t now);
 
 	private:
 		void MayRunDtlsTransport();
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
+		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
 		RTC::Consumer* GetConsumer(uint32_t ssrc) const;
 
 		/* Private methods to unify UDP and TCP behavior. */
@@ -154,6 +159,10 @@ namespace RTC
 		void OnConsumerClosed(RTC::Consumer* consumer) override;
 		void OnConsumerFullFrameRequired(RTC::Consumer* consumer) override;
 
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
+
 	public:
 		// Passed by argument.
 		uint32_t transportId{ 0 };
@@ -170,6 +179,7 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
+		Timer* timer{ nullptr };
 		bool allocated{ false };
 		// Others (Producers and Consumers).
 		std::unordered_set<RTC::Producer*> producers;

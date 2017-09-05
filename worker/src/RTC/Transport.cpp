@@ -173,6 +173,12 @@ namespace RTC
 		// Create a DTLS agent.
 		this->dtlsTransport = new RTC::DtlsTransport(this);
 
+		// Create the RTCP timer.
+		this->timer = new Timer(this);
+
+		// Start the RTCP timer.
+		this->timer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+
 		// Hack to avoid that Destroy() above attempts to delete this.
 		this->allocated = true;
 	}
@@ -180,6 +186,9 @@ namespace RTC
 	Transport::~Transport()
 	{
 		MS_TRACE();
+
+		// Destroy the RTCP timer.
+		this->timer->Destroy();
 	}
 
 	void Transport::Destroy()
@@ -670,16 +679,242 @@ namespace RTC
 				break;
 			}
 
-			// TODO: Handle tons of RTCP types.
+			case RTCP::Type::PSFB:
+			{
+				auto* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
+
+				switch (feedback->GetMessageType())
+				{
+					case RTCP::FeedbackPs::MessageType::PLI:
+					case RTCP::FeedbackPs::MessageType::FIR:
+					{
+						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+						if (consumer == nullptr)
+						{
+							MS_WARN_TAG(
+									rtcp,
+									"no Consumer found for received %s Feedback packet "
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+									feedback->GetMediaSsrc(),
+									feedback->GetMediaSsrc());
+
+							break;
+						}
+
+						consumer->RequestFullFrame();
+
+						break;
+					}
+
+					case RTCP::FeedbackPs::MessageType::AFB:
+					{
+						auto* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+
+						// Ignore REMB requests.
+						if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
+							break;
+					}
+
+					// [[fallthrough]]; (C++17)
+					case RTCP::FeedbackPs::MessageType::SLI:
+					case RTCP::FeedbackPs::MessageType::RPSI:
+					{
+						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+						if (consumer == nullptr)
+						{
+							MS_WARN_TAG(
+									rtcp,
+									"no Consumer found for received %s Feedback packet "
+									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+									feedback->GetMediaSsrc(),
+									feedback->GetMediaSsrc());
+
+							break;
+						}
+
+						listener->OnTransportReceiveRtcpFeedback(this, feedback, consumer);
+
+						break;
+					}
+
+					default:
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "ignoring unsupported %s Feedback packet "
+						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						    RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						    feedback->GetMediaSsrc(),
+						    feedback->GetMediaSsrc());
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::RTPFB:
+			{
+				auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
+
+				auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+
+				if (consumer == nullptr)
+				{
+					MS_WARN_TAG(
+							rtcp,
+							"no Consumer found for received NACK Feedback packet "
+							"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							feedback->GetMediaSsrc(),
+							feedback->GetMediaSsrc());
+				}
+
+				switch (feedback->GetMessageType())
+				{
+					case RTCP::FeedbackRtp::MessageType::NACK:
+					{
+						auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+						consumer->ReceiveNack(nackPacket);
+					}
+
+					break;
+
+					default:
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "ignoring unsupported %s Feedback packet "
+						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						    RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						    feedback->GetMediaSsrc(),
+						    feedback->GetMediaSsrc());
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::SR:
+			{
+				auto* sr = dynamic_cast<RTCP::SenderReportPacket*>(packet);
+				auto it  = sr->Begin();
+
+				// Even if Sender Report packet can only contain one report..
+				for (; it != sr->End(); ++it)
+				{
+					auto& report = (*it);
+					// Get the producer associated to the SSRC indicated in the report.
+					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
+
+					if (producer == nullptr)
+					{
+						MS_WARN_TAG(
+						    rtcp,
+						    "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
+						    report->GetSsrc());
+					}
+					else
+						producer->ReceiveRtcpSenderReport(report);
+				}
+
+				break;
+			}
+
+			case RTCP::Type::SDES:
+			{
+				auto* sdes = dynamic_cast<RTCP::SdesPacket*>(packet);
+				auto it    = sdes->Begin();
+
+				for (; it != sdes->End(); ++it)
+				{
+					auto& chunk = (*it);
+					// Get the producer associated to the SSRC indicated in the report.
+					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
+
+					if (producer == nullptr)
+					{
+						MS_WARN_TAG(
+						    rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+					}
+				}
+
+				break;
+			}
+
+			case RTCP::Type::BYE:
+			{
+				MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
+
+				break;
+			}
 
 			default:
 			{
-				// TODO: Uncomment when RTCP handling above is completed.
-				// MS_WARN_TAG(
-				//     rtcp,
-				//     "unhandled RTCP type received [type:%" PRIu8 "]",
-				//     static_cast<uint8_t>(packet->GetType()));
+				MS_WARN_TAG(
+						rtcp,
+						"unhandled RTCP type received [type:%" PRIu8 "]",
+						static_cast<uint8_t>(packet->GetType()));
 			}
+		}
+	}
+
+	void Transport::SendRtcp(uint64_t now)
+	{
+		MS_TRACE();
+
+		// - Create a CompoundPacket.
+		// - Request every Consumer and Producer their RTCP data.
+		// - Send the CompoundPacket.
+
+		std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
+
+		for (auto& consumer : this->consumers)
+		{
+			consumer->GetRtcp(packet.get(), now);
+
+			// Send the RTCP compound packet if there is a sender report.
+			if (packet->GetSenderReportCount() != 0u)
+			{
+				// Ensure that the RTCP packet fits into the RTCP buffer.
+				if (packet->GetSize() > RTC::RTCP::BufferSize)
+				{
+					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+
+					return;
+				}
+
+				packet->Serialize(RTC::RTCP::Buffer);
+				SendRtcpCompoundPacket(packet.get());
+				// Reset the Compound packet.
+				packet.reset(new RTC::RTCP::CompoundPacket());
+			}
+		}
+
+		for (auto& producer : this->producers)
+		{
+			producer->GetRtcp(packet.get(), now);
+		}
+
+		// Send the RTCP compound with all receiver reports.
+		if (packet->GetReceiverReportCount() != 0u)
+		{
+			// Ensure that the RTCP packet fits into the RTCP buffer.
+			if (packet->GetSize() > RTC::RTCP::BufferSize)
+			{
+				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+
+				return;
+			}
+
+			packet->Serialize(RTC::RTCP::Buffer);
+			SendRtcpCompoundPacket(packet.get());
 		}
 	}
 
@@ -1323,5 +1558,41 @@ namespace RTC
 	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* /*consumer*/)
 	{
 		// Do nothing.
+	}
+
+	void Transport::OnTimer(Timer* /*timer*/)
+	{
+		uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
+		uint32_t now      = DepLibUV::GetTime();
+
+		this->SendRtcp(now);
+
+		// Recalculate next RTCP interval.
+		if (!this->consumers.empty())
+		{
+			// Transmission rate in kbps.
+			uint32_t rate = 0;
+
+			// Get the RTP sending rate.
+			for (auto& consumer : this->consumers)
+			{
+				rate += consumer->GetTransmissionRate(now) / 1000;
+			}
+
+			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
+			if (rate != 0u)
+				interval = 360000 / rate;
+
+			if (interval > RTC::RTCP::MaxVideoIntervalMs)
+				interval = RTC::RTCP::MaxVideoIntervalMs;
+		}
+
+		/*
+		 * The interval between RTCP packets is varied randomly over the range
+		 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
+		 * of all participants.
+		 */
+		interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+		this->timer->Start(interval);
 	}
 } // namespace RTC
