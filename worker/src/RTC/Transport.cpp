@@ -821,11 +821,11 @@ namespace RTC
 						  rtcp,
 						  "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
 						  report->GetSsrc());
+
+						continue;
 					}
-					else
-					{
-						producer->ReceiveRtcpSenderReport(report);
-					}
+
+					producer->ReceiveRtcpSenderReport(report);
 				}
 
 				break;
@@ -846,7 +846,11 @@ namespace RTC
 					{
 						MS_WARN_TAG(
 						  rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+
+						continue;
 					}
+
+					// TODO: Should we do something with the SDES packet?
 				}
 
 				break;
