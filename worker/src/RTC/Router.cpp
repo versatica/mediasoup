@@ -920,8 +920,9 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
-			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
 			{
+				static const Json::StaticString JsonStringEnabled{ "enabled" };
+
 				RTC::Producer* producer;
 
 				try
@@ -942,7 +943,58 @@ namespace RTC
 					return;
 				}
 
-				producer->HandleRequest(request);
+				if (!request->data[JsonStringEnabled].isBool())
+				{
+					request->Reject("Request has invalid data.enabled");
+
+					return;
+				}
+
+				bool enabled = request->data[JsonStringEnabled].asBool();
+
+				producer->SetRtpRawEvent(enabled);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
+			{
+				static const Json::StaticString JsonStringEnabled{ "enabled" };
+
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+
+				if (!request->data[JsonStringEnabled].isBool())
+				{
+					request->Reject("Request has invalid data.enabled");
+
+					return;
+				}
+
+				bool enabled = request->data[JsonStringEnabled].asBool();
+
+				producer->SetRtpObjectEvent(enabled);
+
+				request->Accept();
 
 				break;
 			}

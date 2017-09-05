@@ -135,50 +135,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
-			{
-				static const Json::StaticString JsonStringEnabled{ "enabled" };
-
-				if (!request->data[JsonStringEnabled].isBool())
-				{
-					request->Reject("Request has invalid data.enabled");
-
-					return;
-				}
-
-				this->rtpRawEventEnabled = request->data[JsonStringEnabled].asBool();
-
-				request->Accept();
-
-				// If set, require a full frame.
-				if (this->rtpRawEventEnabled)
-					RequestFullFrame(true);
-
-				break;
-			}
-
-			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
-			{
-				static const Json::StaticString JsonStringEnabled{ "enabled" };
-
-				if (!request->data[JsonStringEnabled].isBool())
-				{
-					request->Reject("Request has invalid data.enabled");
-
-					return;
-				}
-
-				this->rtpObjectEventEnabled = request->data[JsonStringEnabled].asBool();
-
-				request->Accept();
-
-				// If set, require a full frame.
-				if (this->rtpObjectEventEnabled)
-					RequestFullFrame(true);
-
-				break;
-			}
-
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -274,6 +230,28 @@ namespace RTC
 		}
 
 		RequestFullFrame(true);
+	}
+
+	void Producer::SetRtpRawEvent(bool enabled)
+	{
+		MS_TRACE();
+
+		this->rtpRawEventEnabled = enabled;
+
+		// If set (and not paused), require a full frame.
+		if (this->rtpRawEventEnabled && !this->paused)
+			RequestFullFrame(true);
+	}
+
+	void Producer::SetRtpObjectEvent(bool enabled)
+	{
+		MS_TRACE();
+
+		this->rtpObjectEventEnabled = enabled;
+
+		// If set (and not paused), require a full frame.
+		if (this->rtpObjectEventEnabled && !this->paused)
+			RequestFullFrame(true);
 	}
 
 	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)

@@ -60,6 +60,8 @@ namespace RTC
 		void UpdateRtpParameters(RTC::RtpParameters& rtpParameters);
 		void Pause();
 		void Resume();
+		void SetRtpRawEvent(bool enabled);
+		void SetRtpObjectEvent(bool enabled);
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
