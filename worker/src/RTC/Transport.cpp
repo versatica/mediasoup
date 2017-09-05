@@ -173,6 +173,12 @@ namespace RTC
 		// Create a DTLS agent.
 		this->dtlsTransport = new RTC::DtlsTransport(this);
 
+		// Create the RTCP timer.
+		this->timer = new Timer(this);
+
+		// Start the RTCP timer.
+		this->timer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+
 		// Hack to avoid that Destroy() above attempts to delete this.
 		this->allocated = true;
 	}
@@ -180,6 +186,9 @@ namespace RTC
 	Transport::~Transport()
 	{
 		MS_TRACE();
+
+		// Destroy the RTCP timer.
+		this->timer->Destroy();
 	}
 
 	void Transport::Destroy()
@@ -856,6 +865,59 @@ namespace RTC
 		}
 	}
 
+	void Transport::SendRtcp(uint64_t now)
+	{
+		MS_TRACE();
+
+		// - Create a CompoundPacket.
+		// - Request every Consumer and Producer their RTCP data.
+		// - Send the CompoundPacket.
+
+		std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
+
+		for (auto& consumer : this->consumers)
+		{
+			consumer->GetRtcp(packet.get(), now);
+
+			// Send the RTCP compound packet if there is a sender report.
+			if (packet->GetSenderReportCount() != 0u)
+			{
+				// Ensure that the RTCP packet fits into the RTCP buffer.
+				if (packet->GetSize() > RTC::RTCP::BufferSize)
+				{
+					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+
+					return;
+				}
+
+				packet->Serialize(RTC::RTCP::Buffer);
+				SendRtcpCompoundPacket(packet.get());
+				// Reset the Compound packet.
+				packet.reset(new RTC::RTCP::CompoundPacket());
+			}
+		}
+
+		for (auto& producer : this->producers)
+		{
+			producer->GetRtcp(packet.get(), now);
+		}
+
+		// Send the RTCP compound with all receiver reports.
+		if (packet->GetReceiverReportCount() != 0u)
+		{
+			// Ensure that the RTCP packet fits into the RTCP buffer.
+			if (packet->GetSize() > RTC::RTCP::BufferSize)
+			{
+				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
+
+				return;
+			}
+
+			packet->Serialize(RTC::RTCP::Buffer);
+			SendRtcpCompoundPacket(packet.get());
+		}
+	}
+
 	inline RTC::Consumer* Transport::GetConsumer(uint32_t ssrc) const
 	{
 		MS_TRACE();
@@ -1496,5 +1558,41 @@ namespace RTC
 	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* /*consumer*/)
 	{
 		// Do nothing.
+	}
+
+	void Transport::OnTimer(Timer* /*timer*/)
+	{
+		uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
+		uint32_t now      = DepLibUV::GetTime();
+
+		this->SendRtcp(now);
+
+		// Recalculate next RTCP interval.
+		if (!this->consumers.empty())
+		{
+			// Transmission rate in kbps.
+			uint32_t rate = 0;
+
+			// Get the RTP sending rate.
+			for (auto& consumer : this->consumers)
+			{
+				rate += consumer->GetTransmissionRate(now) / 1000;
+			}
+
+			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
+			if (rate != 0u)
+				interval = 360000 / rate;
+
+			if (interval > RTC::RTCP::MaxVideoIntervalMs)
+				interval = RTC::RTCP::MaxVideoIntervalMs;
+		}
+
+		/*
+		 * The interval between RTCP packets is varied randomly over the range
+		 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
+		 * of all participants.
+		 */
+		interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+		this->timer->Start(interval);
 	}
 } // namespace RTC
