@@ -771,6 +771,8 @@ namespace RTC
 					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 					  feedback->GetMediaSsrc(),
 					  feedback->GetMediaSsrc());
+
+					break;
 				}
 
 				switch (feedback->GetMessageType())
