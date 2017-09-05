@@ -48,10 +48,12 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 
 	private:
-		RTC::Transport* GetTransportFromRequest(
-		  Channel::Request* request, uint32_t* transportId = nullptr) const;
-		RTC::Producer* GetProducerFromRequest(Channel::Request* request, uint32_t* producerId = nullptr) const;
-		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request, uint32_t* consumerId = nullptr) const;
+		uint32_t GetNewTransportIdFromRequest(Channel::Request* request) const;
+		RTC::Transport* GetTransportFromRequest(Channel::Request* request) const;
+		uint32_t GetNewProducerIdFromRequest(Channel::Request* request) const;
+		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
+		uint32_t GetNewConsumerIdFromRequest(Channel::Request* request) const;
+		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:

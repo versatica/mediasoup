@@ -180,23 +180,15 @@ namespace RTC
 				static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
 				static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
 
-				RTC::Transport* transport;
 				uint32_t transportId;
 
 				try
 				{
-					transport = GetTransportFromRequest(request, &transportId);
+					transportId = GetNewTransportIdFromRequest(request);
 				}
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (transport != nullptr)
-				{
-					request->Reject("Transport already exists");
 
 					return;
 				}
@@ -216,8 +208,11 @@ namespace RTC
 				if (request->data[JsonStringPreferTcp].isBool())
 					options.preferTcp = request->data[JsonStringPreferTcp].asBool();
 
+				RTC::Transport* transport;
+
 				try
 				{
+					// NOTE: This may throw.
 					transport = new RTC::Transport(this, this->notifier, transportId, options);
 				}
 				catch (const MediaSoupError& error)
@@ -227,6 +222,7 @@ namespace RTC
 					return;
 				}
 
+				// Insert into the map.
 				this->transports[transportId] = transport;
 
 				MS_DEBUG_DEV("Transport created [transportId:%" PRIu32 "]", transportId);
@@ -247,13 +243,11 @@ namespace RTC
 				static const Json::StaticString JsonStringCodecPayloadTypes{ "codecPayloadTypes" };
 				static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 
-				RTC::Producer* producer;
-				RTC::Transport* transport;
 				uint32_t producerId;
 
 				try
 				{
-					producer = GetProducerFromRequest(request, &producerId);
+					producerId = GetNewProducerIdFromRequest(request);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -262,12 +256,7 @@ namespace RTC
 					return;
 				}
 
-				if (producer != nullptr)
-				{
-					request->Reject("Producer already exists");
-
-					return;
-				}
+				RTC::Transport* transport;
 
 				try
 				{
@@ -276,13 +265,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
 
 					return;
 				}
@@ -374,7 +356,7 @@ namespace RTC
 					paused = request->data[JsonStringPaused].asBool();
 
 				// Create a Producer instance.
-				producer = new RTC::Producer(
+				RTC::Producer* producer = new RTC::Producer(
 				  this->notifier, producerId, kind, transport, rtpParameters, rtpMapping, paused);
 
 				// Add us as listener.
@@ -410,13 +392,11 @@ namespace RTC
 			{
 				static const Json::StaticString JsonStringKind{ "kind" };
 
-				RTC::Consumer* consumer;
-				RTC::Producer* producer;
 				uint32_t consumerId;
 
 				try
 				{
-					consumer = GetConsumerFromRequest(request, &consumerId);
+					consumerId = GetNewConsumerIdFromRequest(request);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -425,12 +405,7 @@ namespace RTC
 					return;
 				}
 
-				if (consumer != nullptr)
-				{
-					request->Reject("Consumer already exists");
-
-					return;
-				}
+				RTC::Producer* producer;
 
 				try
 				{
@@ -439,13 +414,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
 
 					return;
 				}
@@ -477,7 +445,8 @@ namespace RTC
 					return;
 				}
 
-				consumer = new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId);
+				RTC::Consumer* consumer =
+				  new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId);
 
 				// If the Producer is paused tell it to the new Consumer.
 				if (producer->IsPaused())
@@ -545,20 +514,33 @@ namespace RTC
 					return;
 				}
 
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
-
-					return;
-				}
-
 				transport->Destroy();
+
 				request->Accept();
 
 				break;
 			}
 
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
+			{
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				transport->HandleRequest(request);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
 			{
 				static const Json::StaticString JsonStringRole{ "role" };
@@ -577,13 +559,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
 
 					return;
 				}
@@ -690,13 +665,6 @@ namespace RTC
 					return;
 				}
 
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
-
-					return;
-				}
-
 				if (!request->data[JsonStringBitrate].isUInt())
 				{
 					request->Reject("missing data.bitrate");
@@ -731,13 +699,6 @@ namespace RTC
 					return;
 				}
 
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
-
-					return;
-				}
-
 				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
 				std::string password         = Utils::Crypto::GetRandomString(32);
 
@@ -768,14 +729,8 @@ namespace RTC
 					return;
 				}
 
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
-
-					return;
-				}
-
 				producer->Destroy();
+
 				request->Accept();
 
 				break;
@@ -792,13 +747,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
 
 					return;
 				}
@@ -821,13 +769,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
 
 					return;
 				}
@@ -876,13 +817,6 @@ namespace RTC
 					return;
 				}
 
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
-
-					return;
-				}
-
 				producer->Pause();
 
 				request->Accept();
@@ -901,13 +835,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
 
 					return;
 				}
@@ -932,13 +859,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
 
 					return;
 				}
@@ -976,13 +896,6 @@ namespace RTC
 					return;
 				}
 
-				if (producer == nullptr)
-				{
-					request->Reject("Producer does not exist");
-
-					return;
-				}
-
 				if (!request->data[JsonStringEnabled].isBool())
 				{
 					request->Reject("Request has invalid data.enabled");
@@ -1014,14 +927,8 @@ namespace RTC
 					return;
 				}
 
-				if (consumer == nullptr)
-				{
-					request->Reject("Consumer does not exist");
-
-					return;
-				}
-
 				consumer->Destroy();
+
 				request->Accept();
 
 				break;
@@ -1032,7 +939,6 @@ namespace RTC
 				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 
 				RTC::Consumer* consumer;
-				RTC::Transport* transport;
 
 				try
 				{
@@ -1045,12 +951,7 @@ namespace RTC
 					return;
 				}
 
-				if (consumer == nullptr)
-				{
-					request->Reject("Consumer does not exist");
-
-					return;
-				}
+				RTC::Transport* transport;
 
 				try
 				{
@@ -1059,13 +960,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (transport == nullptr)
-				{
-					request->Reject("Transport does not exist");
 
 					return;
 				}
@@ -1116,13 +1010,6 @@ namespace RTC
 					return;
 				}
 
-				if (consumer == nullptr)
-				{
-					request->Reject("Consumer does not exist");
-
-					return;
-				}
-
 				consumer->HandleRequest(request);
 
 				break;
@@ -1139,13 +1026,6 @@ namespace RTC
 				catch (const MediaSoupError& error)
 				{
 					request->Reject(error.what());
-
-					return;
-				}
-
-				if (consumer == nullptr)
-				{
-					request->Reject("Consumer does not exist");
 
 					return;
 				}
@@ -1172,13 +1052,6 @@ namespace RTC
 					return;
 				}
 
-				if (consumer == nullptr)
-				{
-					request->Reject("Consumer does not exist");
-
-					return;
-				}
-
 				consumer->Resume();
 
 				request->Accept();
@@ -1195,7 +1068,12 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Router::GetTransportFromRequest(Channel::Request* request, uint32_t* transportId) const
+	/**
+	 * Looks for internal.transportId numeric field and ensures no Transport exists
+	 * with such a id.
+	 * NOTE: It may throw if invalid request or Transport already exists.
+	 */
+	uint32_t Router::GetNewTransportIdFromRequest(Channel::Request* request) const
 	{
 		MS_TRACE();
 
@@ -1206,21 +1084,47 @@ namespace RTC
 		if (!jsonTransportId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.transportId");
 
-		if (transportId != nullptr)
-			*transportId = jsonTransportId.asUInt();
+		uint32_t transportId = jsonTransportId.asUInt();
 
-		auto it = this->transports.find(jsonTransportId.asUInt());
-		if (it != this->transports.end())
-		{
-			auto* transport = it->second;
+		if (this->transports.find(transportId) != this->transports.end())
+			MS_THROW_ERROR("a Transport with same transportId already exists");
 
-			return transport;
-		}
-
-		return nullptr;
+		return transportId;
 	}
 
-	RTC::Producer* Router::GetProducerFromRequest(Channel::Request* request, uint32_t* producerId) const
+	/**
+	 * Looks for internal.transportId numeric field and returns the corresponding
+	 * Transport.
+	 * NOTE: It may throw if invalid request or Transport does not exist.
+	 */
+	RTC::Transport* Router::GetTransportFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringTransportId{ "transportId" };
+
+		auto jsonTransportId = request->internal[JsonStringTransportId];
+
+		if (!jsonTransportId.isUInt())
+			MS_THROW_ERROR("Request has not numeric internal.transportId");
+
+		uint32_t transportId = jsonTransportId.asUInt();
+
+		auto it = this->transports.find(transportId);
+		if (it == this->transports.end())
+			MS_THROW_ERROR("Transport not found");
+
+		auto* transport = it->second;
+
+		return transport;
+	}
+
+	/**
+	 * Looks for internal.producerId numeric field and ensures no Producer exists
+	 * with such a id.
+	 * NOTE: It may throw if invalid request or Producer already exists.
+	 */
+	uint32_t Router::GetNewProducerIdFromRequest(Channel::Request* request) const
 	{
 		MS_TRACE();
 
@@ -1231,21 +1135,47 @@ namespace RTC
 		if (!jsonProducerId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.producerId");
 
-		if (producerId != nullptr)
-			*producerId = jsonProducerId.asUInt();
+		uint32_t producerId = jsonProducerId.asUInt();
 
-		auto it = this->producers.find(jsonProducerId.asUInt());
-		if (it != this->producers.end())
-		{
-			auto* producer = it->second;
+		if (this->producers.find(producerId) != this->producers.end())
+			MS_THROW_ERROR("a Producer with same producerId already exists");
 
-			return producer;
-		}
-
-		return nullptr;
+		return producerId;
 	}
 
-	RTC::Consumer* Router::GetConsumerFromRequest(Channel::Request* request, uint32_t* consumerId) const
+	/**
+	 * Looks for internal.producerId numeric field and returns the corresponding
+	 * Producer.
+	 * NOTE: It may throw if invalid request or Producer does not exist.
+	 */
+	RTC::Producer* Router::GetProducerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringProducerId{ "producerId" };
+
+		auto jsonProducerId = request->internal[JsonStringProducerId];
+
+		if (!jsonProducerId.isUInt())
+			MS_THROW_ERROR("Request has not numeric internal.producerId");
+
+		uint32_t producerId = jsonProducerId.asUInt();
+
+		auto it = this->producers.find(producerId);
+		if (it == this->producers.end())
+			MS_THROW_ERROR("Producer not found");
+
+		auto* producer = it->second;
+
+		return producer;
+	}
+
+	/**
+	 * Looks for internal.consumerId numeric field and ensures no Consumer exists
+	 * with such a id.
+	 * NOTE: It may throw if invalid request or Consumer already exists.
+	 */
+	uint32_t Router::GetNewConsumerIdFromRequest(Channel::Request* request) const
 	{
 		MS_TRACE();
 
@@ -1256,18 +1186,39 @@ namespace RTC
 		if (!jsonConsumerId.isUInt())
 			MS_THROW_ERROR("Request has not numeric internal.consumerId");
 
-		if (consumerId != nullptr)
-			*consumerId = jsonConsumerId.asUInt();
+		uint32_t consumerId = jsonConsumerId.asUInt();
 
-		auto it = this->consumers.find(jsonConsumerId.asUInt());
-		if (it != this->consumers.end())
-		{
-			auto* consumer = it->second;
+		if (this->consumers.find(consumerId) != this->consumers.end())
+			MS_THROW_ERROR("a Consumer with same consumerId already exists");
 
-			return consumer;
-		}
+		return consumerId;
+	}
 
-		return nullptr;
+	/**
+	 * Looks for internal.consumerId numeric field and returns the corresponding
+	 * Consumer.
+	 * NOTE: It may throw if invalid request or Consumer does not exist.
+	 */
+	RTC::Consumer* Router::GetConsumerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringConsumerId{ "consumerId" };
+
+		auto jsonConsumerId = request->internal[JsonStringConsumerId];
+
+		if (!jsonConsumerId.isUInt())
+			MS_THROW_ERROR("Request has not numeric internal.consumerId");
+
+		uint32_t consumerId = jsonConsumerId.asUInt();
+
+		auto it = this->consumers.find(consumerId);
+		if (it == this->consumers.end())
+			MS_THROW_ERROR("Consumer not found");
+
+		auto* consumer = it->second;
+
+		return consumer;
 	}
 
 	void Router::OnTransportClosed(RTC::Transport* transport)
