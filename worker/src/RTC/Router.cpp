@@ -490,9 +490,17 @@ namespace RTC
 
 				// Start or stop audio levels periodic timer.
 				if (enabled)
+				{
+					MS_DEBUG_DEV("audiolevels event enabled");
+
 					this->audioLevelsTimer->Start(AudioLevelsInterval, AudioLevelsInterval);
+				}
 				else
+				{
+					MS_DEBUG_DEV("audiolevels event disabled");
+
 					this->audioLevelsTimer->Stop();
+				}
 
 				request->Accept();
 
@@ -515,6 +523,8 @@ namespace RTC
 				}
 
 				transport->Destroy();
+
+				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transport->transportId);
 
 				request->Accept();
 
@@ -730,6 +740,8 @@ namespace RTC
 				}
 
 				producer->Destroy();
+
+				MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producer->producerId);
 
 				request->Accept();
 

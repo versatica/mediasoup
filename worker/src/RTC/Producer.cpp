@@ -194,6 +194,8 @@ namespace RTC
 				this->ssrcMapping[newEncoding.fec.ssrc] = outputEncoding.fec.ssrc;
 			}
 		}
+
+		MS_DEBUG_DEV("Producer RTP parameters updated [producerId:%" PRIu32 "]", this->producerId);
 	}
 
 	void Producer::Pause()
@@ -204,6 +206,8 @@ namespace RTC
 			return;
 
 		this->paused = true;
+
+		MS_DEBUG_DEV("Producer paused [producerId:%" PRIu32 "]", this->producerId);
 
 		for (auto& listener : this->listeners)
 		{
@@ -220,6 +224,8 @@ namespace RTC
 
 		this->paused = false;
 
+		MS_DEBUG_DEV("Producer resumed [producerId:%" PRIu32 "]", this->producerId);
+
 		for (auto& listener : this->listeners)
 		{
 			listener->OnProducerResumed(this);
@@ -232,7 +238,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (enabled == this->rtpRawEventEnabled)
+			return;
+
 		this->rtpRawEventEnabled = enabled;
+
+		if (enabled)
+		{
+			MS_DEBUG_DEV("Producer rtpraw event enabled [producerId:%" PRIu32 "]", this->producerId);
+		}
+		else
+		{
+			MS_DEBUG_DEV("Producer rtpraw event disabled [producerId:%" PRIu32 "]", this->producerId);
+		}
 
 		// If set (and not paused), require a full frame.
 		if (this->rtpRawEventEnabled && !this->paused)
@@ -243,7 +261,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (enabled == this->rtpObjectEventEnabled)
+			return;
+
 		this->rtpObjectEventEnabled = enabled;
+
+		if (enabled)
+		{
+			MS_DEBUG_DEV("Producer rtpobject event enabled [producerId:%" PRIu32 "]", this->producerId);
+		}
+		else
+		{
+			MS_DEBUG_DEV("Producer rtpobject event disabled [producerId:%" PRIu32 "]", this->producerId);
+		}
 
 		// If set (and not paused), require a full frame.
 		if (this->rtpObjectEventEnabled && !this->paused)

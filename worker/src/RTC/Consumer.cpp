@@ -127,6 +127,8 @@ namespace RTC
 
 		// Create RtpStreamSend instance.
 		CreateRtpStream(this->rtpParameters.encodings[0]);
+
+		MS_DEBUG_DEV("Consumer enabled [consumerId:%" PRIu32 "]", this->consumerId);
 	}
 
 	void Consumer::Pause()
@@ -137,6 +139,8 @@ namespace RTC
 			return;
 
 		this->paused = true;
+
+		MS_DEBUG_DEV("Consumer paused [consumerId:%" PRIu32 "]", this->consumerId);
 
 		if (IsEnabled() && !this->sourcePaused)
 		{
@@ -153,6 +157,8 @@ namespace RTC
 
 		this->paused = false;
 
+		MS_DEBUG_DEV("Consumer resumed [consumerId:%" PRIu32 "]", this->consumerId);
+
 		if (IsEnabled() && !this->sourcePaused)
 		{
 			RequestFullFrame();
@@ -167,6 +173,9 @@ namespace RTC
 			return;
 
 		this->sourcePaused = true;
+
+		MS_DEBUG_DEV("Consumer source paused [consumerId:%" PRIu32 "]", this->consumerId);
+
 		this->notifier->Emit(this->consumerId, "sourcepaused");
 
 		if (IsEnabled() && !this->paused)
@@ -183,6 +192,9 @@ namespace RTC
 			return;
 
 		this->sourcePaused = false;
+
+		MS_DEBUG_DEV("Consumer source resumed [consumerId:%" PRIu32 "]", this->consumerId);
+
 		this->notifier->Emit(this->consumerId, "sourceresumed");
 
 		if (IsEnabled() && !this->paused)

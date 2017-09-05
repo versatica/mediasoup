@@ -493,6 +493,8 @@ namespace RTC
 		// Run the DTLS transport if ready.
 		MayRunDtlsTransport();
 
+		MS_DEBUG_DEV("Transport remote DTLS parameters set [transportId:%" PRIu32 "]", this->transportId);
+
 		return this->dtlsLocalRole;
 	}
 
@@ -507,7 +509,7 @@ namespace RTC
 
 		this->maxBitrate = bitrate;
 
-		MS_DEBUG_TAG(rbe, "transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
+		MS_DEBUG_TAG(rbe, "Transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
 	}
 
 	void Transport::ChangeUfragPwd(std::string& usernameFragment, std::string& password)
@@ -516,6 +518,8 @@ namespace RTC
 
 		this->iceServer->SetUsernameFragment(usernameFragment);
 		this->iceServer->SetPassword(password);
+
+		MS_DEBUG_DEV("Transport ICE ufrag&pwd changed [transportId:%" PRIu32 "]", this->transportId);
 	}
 
 	void Transport::SendRtpPacket(RTC::RtpPacket* packet)
