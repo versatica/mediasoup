@@ -1278,7 +1278,7 @@ namespace RTC
 	}
 
 	void Router::OnTransportReceiveRtcpFeedback(
-	  RTC::Transport* transport, RTC::RTCP::FeedbackPsPacket* packet, RTC::Consumer* consumer)
+	  RTC::Transport* transport, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
 
