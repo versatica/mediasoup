@@ -191,6 +191,11 @@ namespace RTC
 		}
 	}
 
+	void Consumer::SourceRtpParametersUpdated()
+	{
+		// TODO: Set special flag to be ready for random seq numbers.
+	}
+
 	/**
 	 * Called when the Transport assigned to this Consumer has been closed, so this
 	 * Consumer becomes unhandled.
@@ -331,7 +336,7 @@ namespace RTC
 		if (!IsEnabled())
 			return;
 
-		if (this->kind == RTC::Media::Kind::AUDIO)
+		if (this->kind == RTC::Media::Kind::AUDIO || IsPaused())
 			return;
 
 		for (auto& listener : this->listeners)

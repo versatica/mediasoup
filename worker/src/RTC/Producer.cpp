@@ -184,12 +184,16 @@ namespace RTC
 				this->ssrcMapping[newEncoding.ssrc] = outputEncoding.ssrc;
 			}
 
-			if (outputEncoding.hasRtx && newEncoding.hasRtx && outputEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
+			if (
+			  outputEncoding.hasRtx && newEncoding.hasRtx &&
+			  outputEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
 			{
 				this->ssrcMapping[newEncoding.rtx.ssrc] = outputEncoding.rtx.ssrc;
 			}
 
-			if (outputEncoding.hasFec && newEncoding.hasFec && outputEncoding.fec.ssrc != newEncoding.fec.ssrc)
+			if (
+			  outputEncoding.hasFec && newEncoding.hasFec &&
+			  outputEncoding.fec.ssrc != newEncoding.fec.ssrc)
 			{
 				this->ssrcMapping[newEncoding.fec.ssrc] = outputEncoding.fec.ssrc;
 			}
@@ -402,7 +406,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->kind == RTC::Media::Kind::AUDIO)
+		if (this->kind == RTC::Media::Kind::AUDIO || this->paused)
 			return;
 
 		if (force)
@@ -564,8 +568,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& codecPayloadTypeMap = this->rtpMapping.codecPayloadTypes;
-		auto payloadType          = packet->GetPayloadType();
+		auto& codecPayloadTypeMap  = this->rtpMapping.codecPayloadTypes;
+		auto payloadType           = packet->GetPayloadType();
 
 		if (codecPayloadTypeMap.find(payloadType) != codecPayloadTypeMap.end())
 		{
