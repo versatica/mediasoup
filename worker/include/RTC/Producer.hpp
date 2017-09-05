@@ -57,6 +57,9 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void AddListener(RTC::ProducerListener* listener);
 		void RemoveListener(RTC::ProducerListener* listener);
+		void UpdateRtpParameters(RTC::RtpParameters& rtpParameters);
+		void Pause();
+		void Resume();
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);

@@ -101,40 +101,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_PAUSE:
-			{
-				if (this->paused)
-					return;
-
-				bool wasPaused = IsPaused();
-
-				this->paused = true;
-
-				request->Accept();
-
-				if (!wasPaused)
-					Pause();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::CONSUMER_RESUME:
-			{
-				if (!this->paused)
-					return;
-
-				bool wasPaused = IsPaused();
-
-				this->paused = false;
-
-				request->Accept();
-
-				if (wasPaused)
-					Resume();
-
-				break;
-			}
-
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -161,6 +127,68 @@ namespace RTC
 
 		// Create RtpStreamSend instance.
 		CreateRtpStream(this->rtpParameters.encodings[0]);
+	}
+
+	void Consumer::Pause()
+	{
+		MS_TRACE();
+
+		if (this->paused)
+			return;
+
+		this->paused = true;
+
+		if (IsEnabled() && !this->sourcePaused)
+		{
+			this->rtpStream->Reset();
+		}
+	}
+
+	void Consumer::Resume()
+	{
+		MS_TRACE();
+
+		if (!this->paused)
+			return;
+
+		this->paused = false;
+
+		if (IsEnabled() && !this->sourcePaused)
+		{
+			RequestFullFrame();
+		}
+	}
+
+	void Consumer::SourcePause()
+	{
+		MS_TRACE();
+
+		if (this->sourcePaused)
+			return;
+
+		this->sourcePaused = true;
+		this->notifier->Emit(this->consumerId, "sourcepaused");
+
+		if (IsEnabled() && !this->paused)
+		{
+			this->rtpStream->Reset();
+		}
+	}
+
+	void Consumer::SourceResume()
+	{
+		MS_TRACE();
+
+		if (!this->sourcePaused)
+			return;
+
+		this->sourcePaused = false;
+		this->notifier->Emit(this->consumerId, "sourceresumed");
+
+		if (IsEnabled() && !this->paused)
+		{
+			RequestFullFrame();
+		}
 	}
 
 	/**

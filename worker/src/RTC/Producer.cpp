@@ -135,125 +135,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
-			{
-				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-
-				if (!request->data[JsonStringRtpParameters].isObject())
-				{
-					request->Reject("missing data.rtpParameters");
-
-					return;
-				}
-
-				try
-				{
-					// Update our RTP parameters.
-					// NOTE: This may throw.
-					this->rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
-
-					// Clear previous RtpStreamRecv instances.
-					ClearRtpStreams();
-
-					// Create new RtpStreamRecv instances.
-					for (auto& encoding : this->rtpParameters.encodings)
-					{
-						CreateRtpStream(encoding);
-					}
-
-					for (auto& listener : this->listeners)
-					{
-						// NOTE: This may throw.
-						listener->OnProducerRtpParametersUpdated(this);
-					}
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				// Fill the SSRC mapping table.
-				{
-					this->ssrcMapping.clear();
-
-					auto& newEncodings = this->rtpParameters.encodings;
-
-					for (size_t i = 0; i != this->outputEncodings.size(); ++i)
-					{
-						if (i == newEncodings.size())
-							break;
-
-						auto& newEncoding    = newEncodings[i];
-						auto& outputEncoding = this->outputEncodings[i];
-
-						if (outputEncoding.ssrc != newEncoding.ssrc)
-						{
-							this->ssrcMapping[newEncoding.ssrc] = outputEncoding.ssrc;
-						}
-
-						if (
-						  outputEncoding.hasRtx && newEncoding.hasRtx &&
-						  outputEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
-						{
-							this->ssrcMapping[newEncoding.rtx.ssrc] = outputEncoding.rtx.ssrc;
-						}
-
-						if (
-						  outputEncoding.hasFec && newEncoding.hasFec &&
-						  outputEncoding.fec.ssrc != newEncoding.fec.ssrc)
-						{
-							this->ssrcMapping[newEncoding.fec.ssrc] = outputEncoding.fec.ssrc;
-						}
-					}
-				}
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::PRODUCER_PAUSE:
-			{
-				bool wasPaused = this->paused;
-
-				this->paused = true;
-
-				request->Accept();
-
-				if (!wasPaused)
-				{
-					for (auto& listener : this->listeners)
-					{
-						listener->OnProducerPaused(this);
-					}
-				}
-
-				break;
-			}
-
-			case Channel::Request::MethodId::PRODUCER_RESUME:
-			{
-				bool wasPaused = this->paused;
-
-				this->paused = false;
-
-				request->Accept();
-
-				if (wasPaused)
-				{
-					for (auto& listener : this->listeners)
-					{
-						listener->OnProducerResumed(this);
-					}
-
-					RequestFullFrame(true);
-				}
-
-				break;
-			}
-
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
 			{
 				static const Json::StaticString JsonStringEnabled{ "enabled" };
@@ -305,6 +186,94 @@ namespace RTC
 				request->Reject("unknown method");
 			}
 		}
+	}
+
+	void Producer::UpdateRtpParameters(RTC::RtpParameters& rtpParameters)
+	{
+		MS_TRACE();
+
+		this->rtpParameters = rtpParameters;
+
+		// Clear previous RtpStreamRecv instances.
+		ClearRtpStreams();
+
+		// Create new RtpStreamRecv instances.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			CreateRtpStream(encoding);
+		}
+
+		for (auto& listener : this->listeners)
+		{
+			// NOTE: This may throw.
+			listener->OnProducerRtpParametersUpdated(this);
+		}
+
+		// Fill the SSRC mapping table.
+
+		this->ssrcMapping.clear();
+
+		auto& newEncodings = this->rtpParameters.encodings;
+
+		for (size_t i = 0; i != this->outputEncodings.size(); ++i)
+		{
+			if (i == newEncodings.size())
+				break;
+
+			auto& newEncoding    = newEncodings[i];
+			auto& outputEncoding = this->outputEncodings[i];
+
+			if (outputEncoding.ssrc != newEncoding.ssrc)
+			{
+				this->ssrcMapping[newEncoding.ssrc] = outputEncoding.ssrc;
+			}
+
+			if (
+			  outputEncoding.hasRtx && newEncoding.hasRtx &&
+			  outputEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
+			{
+				this->ssrcMapping[newEncoding.rtx.ssrc] = outputEncoding.rtx.ssrc;
+			}
+
+			if (
+			  outputEncoding.hasFec && newEncoding.hasFec &&
+			  outputEncoding.fec.ssrc != newEncoding.fec.ssrc)
+			{
+				this->ssrcMapping[newEncoding.fec.ssrc] = outputEncoding.fec.ssrc;
+			}
+		}
+	}
+
+	void Producer::Pause()
+	{
+		MS_TRACE();
+
+		if (this->paused)
+			return;
+
+		this->paused = true;
+
+		for (auto& listener : this->listeners)
+		{
+			listener->OnProducerPaused(this);
+		}
+	}
+
+	void Producer::Resume()
+	{
+		MS_TRACE();
+
+		if (!this->paused)
+			return;
+
+		this->paused = false;
+
+		for (auto& listener : this->listeners)
+		{
+			listener->OnProducerResumed(this);
+		}
+
+		RequestFullFrame(true);
 	}
 
 	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)

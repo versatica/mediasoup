@@ -481,7 +481,7 @@ namespace RTC
 
 				// If the Producer is paused tell it to the new Consumer.
 				if (producer->IsPaused())
-					consumer->SourcePaused();
+					consumer->SourcePause();
 
 				// Add us as listener.
 				consumer->AddListener(this);
@@ -782,9 +782,143 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::PRODUCER_DUMP:
+			{
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+
+				producer->HandleRequest(request);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
+			{
+				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
+
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+
+				if (!request->data[JsonStringRtpParameters].isObject())
+				{
+					request->Reject("missing data.rtpParameters");
+
+					return;
+				}
+
+				RTC::RtpParameters rtpParameters;
+
+				try
+				{
+					// NOTE: This may throw.
+					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
+
+					// NOTE: This may throw.
+					producer->UpdateRtpParameters(rtpParameters);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
+			{
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+
+				producer->Pause();
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_RESUME:
+			{
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (producer == nullptr)
+				{
+					request->Reject("Producer does not exist");
+
+					return;
+				}
+
+				producer->Resume();
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
 			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
 			{
@@ -916,8 +1050,6 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::CONSUMER_DUMP:
-			case Channel::Request::MethodId::CONSUMER_PAUSE:
-			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
 				RTC::Consumer* consumer;
 
@@ -940,6 +1072,64 @@ namespace RTC
 				}
 
 				consumer->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_PAUSE:
+			{
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (consumer == nullptr)
+				{
+					request->Reject("Consumer does not exist");
+
+					return;
+				}
+
+				consumer->Pause();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_RESUME:
+			{
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (consumer == nullptr)
+				{
+					request->Reject("Consumer does not exist");
+
+					return;
+				}
+
+				consumer->Resume();
+
+				request->Accept();
 
 				break;
 			}
@@ -1089,7 +1279,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->SourcePaused();
+			consumer->SourcePause();
 		}
 	}
 
@@ -1105,7 +1295,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->SourceResumed();
+			consumer->SourceResume();
 		}
 	}
 

@@ -38,12 +38,14 @@ namespace RTC
 		void AddListener(RTC::ConsumerListener* listener);
 		void RemoveListener(RTC::ConsumerListener* listener);
 		void Enable(RTC::Transport* transport, RTC::RtpParameters& rtpParameters);
+		void Pause();
+		void Resume();
+		void SourcePause();
+		void SourceResume();
 		void Disable();
 		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
-		void SourcePaused();
-		void SourceResumed();
 		void SourceRtpParametersUpdated();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -56,8 +58,6 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void Pause();
-		void Resume(bool sourceWasResumed = false);
 
 	public:
 		// Passed by argument.
@@ -112,34 +112,6 @@ namespace RTC
 		return this->paused || this->sourcePaused;
 	}
 
-	inline void Consumer::SourcePaused()
-	{
-		if (this->sourcePaused)
-			return;
-
-		bool wasPaused = IsPaused();
-
-		this->sourcePaused = true;
-		this->notifier->Emit(this->consumerId, "sourcepaused");
-
-		if (!wasPaused)
-			Pause();
-	}
-
-	inline void Consumer::SourceResumed()
-	{
-		if (!this->sourcePaused)
-			return;
-
-		bool wasPaused = IsPaused();
-
-		this->sourcePaused = false;
-		this->notifier->Emit(this->consumerId, "sourceresumed");
-
-		if (wasPaused)
-			Resume(true);
-	}
-
 	inline void Consumer::SourceRtpParametersUpdated()
 	{
 		// TODO: Set special flag to be ready for random seq numbers.
@@ -148,23 +120,6 @@ namespace RTC
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
 	{
 		return this->transmittedCounter.GetRate(now) + this->retransmittedCounter.GetRate(now);
-	}
-
-	inline void Consumer::Pause()
-	{
-		if (!IsEnabled())
-			return;
-
-		this->rtpStream->Reset();
-	}
-
-	inline void Consumer::Resume(bool sourceWasResumed)
-	{
-		if (!IsEnabled())
-			return;
-
-		if (!sourceWasResumed)
-			RequestFullFrame();
 	}
 } // namespace RTC
 
