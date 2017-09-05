@@ -206,7 +206,7 @@ namespace RTC
 		MS_DUMP("</RtpPacket>");
 	}
 
-	void RtpPacket::MangleExtensionHeaderIds(std::map<uint8_t, uint8_t>& idMapping)
+	void RtpPacket::MangleExtensionHeaderIds(const std::map<uint8_t, uint8_t>& idMapping)
 	{
 		MS_TRACE();
 
@@ -219,7 +219,7 @@ namespace RTC
 
 				if (idMapping.find(id) != idMapping.end())
 				{
-					oneByteExtension->id = idMapping[id];
+					oneByteExtension->id = idMapping.at(id);
 				}
 			}
 		}
@@ -232,7 +232,7 @@ namespace RTC
 
 				if (idMapping.find(id) != idMapping.end())
 				{
-					twoBytesExtension->id = idMapping[id];
+					twoBytesExtension->id = idMapping.at(id);
 				}
 			}
 		}

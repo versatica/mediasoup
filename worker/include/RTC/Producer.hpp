@@ -64,6 +64,7 @@ namespace RTC
 		void SetRtpObjectEvent(bool enabled);
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
+		void ApplyExtensionIdMapping(RTC::RtpPacket* packet) const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -75,8 +76,8 @@ namespace RTC
 		void FillKnownHeaderExtensions();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ClearRtpStreams();
-		void ApplyRtpMapping(RTC::RtpPacket* packet);
-		void ApplySsrcMapping(RTC::RtpPacket* packet);
+		void ApplyPayloadTypeMapping(RTC::RtpPacket* packet) const;
+		void ApplySsrcMapping(RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:

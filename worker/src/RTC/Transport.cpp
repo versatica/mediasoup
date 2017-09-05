@@ -1112,8 +1112,9 @@ namespace RTC
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
 
-		// Pass the RTP packet to the corresponding Producer.
-		producer->ReceiveRtpPacket(packet);
+		// Apply the RTP header extension mapping into the packet (we need it for the
+		// bitrate estimator).
+		producer->ApplyExtensionIdMapping(packet);
 
 		// Feed the remote bitrate estimator (REMB).
 		if (this->remoteBitrateEstimator)
@@ -1126,6 +1127,9 @@ namespace RTC
 				  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 			}
 		}
+
+		// Pass the RTP packet to the corresponding Producer.
+		producer->ReceiveRtpPacket(packet);
 
 		delete packet;
 	}
