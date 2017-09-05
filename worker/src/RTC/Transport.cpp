@@ -446,7 +446,7 @@ namespace RTC
 	}
 
 	RTC::DtlsTransport::Role Transport::setRemoteDtlsParameters(
-		RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role)
+	  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role)
 	{
 		MS_TRACE();
 
@@ -693,12 +693,12 @@ namespace RTC
 						if (consumer == nullptr)
 						{
 							MS_WARN_TAG(
-									rtcp,
-									"no Consumer found for received %s Feedback packet "
-									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-									feedback->GetMediaSsrc(),
-									feedback->GetMediaSsrc());
+							  rtcp,
+							  "no Consumer found for received %s Feedback packet "
+							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							  feedback->GetMediaSsrc(),
+							  feedback->GetMediaSsrc());
 
 							break;
 						}
@@ -726,12 +726,12 @@ namespace RTC
 						if (consumer == nullptr)
 						{
 							MS_WARN_TAG(
-									rtcp,
-									"no Consumer found for received %s Feedback packet "
-									"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-									RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-									feedback->GetMediaSsrc(),
-									feedback->GetMediaSsrc());
+							  rtcp,
+							  "no Consumer found for received %s Feedback packet "
+							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							  feedback->GetMediaSsrc(),
+							  feedback->GetMediaSsrc());
 
 							break;
 						}
@@ -744,12 +744,12 @@ namespace RTC
 					default:
 					{
 						MS_WARN_TAG(
-						    rtcp,
-						    "ignoring unsupported %s Feedback packet "
-						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						    RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-						    feedback->GetMediaSsrc(),
-						    feedback->GetMediaSsrc());
+						  rtcp,
+						  "ignoring unsupported %s Feedback packet "
+						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  feedback->GetMediaSsrc(),
+						  feedback->GetMediaSsrc());
 
 						break;
 					}
@@ -761,17 +761,16 @@ namespace RTC
 			case RTCP::Type::RTPFB:
 			{
 				auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
-
 				auto* consumer = GetConsumer(feedback->GetMediaSsrc());
 
 				if (consumer == nullptr)
 				{
 					MS_WARN_TAG(
-							rtcp,
-							"no Consumer found for received NACK Feedback packet "
-							"[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							feedback->GetMediaSsrc(),
-							feedback->GetMediaSsrc());
+					  rtcp,
+					  "no Consumer found for received NACK Feedback packet "
+					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+					  feedback->GetMediaSsrc(),
+					  feedback->GetMediaSsrc());
 				}
 
 				switch (feedback->GetMessageType())
@@ -779,20 +778,21 @@ namespace RTC
 					case RTCP::FeedbackRtp::MessageType::NACK:
 					{
 						auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
-						consumer->ReceiveNack(nackPacket);
-					}
 
-					break;
+						consumer->ReceiveNack(nackPacket);
+
+						break;
+					}
 
 					default:
 					{
 						MS_WARN_TAG(
-						    rtcp,
-						    "ignoring unsupported %s Feedback packet "
-						    "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						    RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-						    feedback->GetMediaSsrc(),
-						    feedback->GetMediaSsrc());
+						  rtcp,
+						  "ignoring unsupported %s Feedback packet "
+						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						  RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  feedback->GetMediaSsrc(),
+						  feedback->GetMediaSsrc());
 
 						break;
 					}
@@ -816,12 +816,14 @@ namespace RTC
 					if (producer == nullptr)
 					{
 						MS_WARN_TAG(
-						    rtcp,
-						    "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
-						    report->GetSsrc());
+						  rtcp,
+						  "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
+						  report->GetSsrc());
 					}
 					else
+					{
 						producer->ReceiveRtcpSenderReport(report);
+					}
 				}
 
 				break;
@@ -841,7 +843,7 @@ namespace RTC
 					if (producer == nullptr)
 					{
 						MS_WARN_TAG(
-						    rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+						  rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
 					}
 				}
 
@@ -858,9 +860,9 @@ namespace RTC
 			default:
 			{
 				MS_WARN_TAG(
-						rtcp,
-						"unhandled RTCP type received [type:%" PRIu8 "]",
-						static_cast<uint8_t>(packet->GetType()));
+				  rtcp,
+				  "unhandled RTCP type received [type:%" PRIu8 "]",
+				  static_cast<uint8_t>(packet->GetType()));
 			}
 		}
 	}
@@ -1565,7 +1567,7 @@ namespace RTC
 		uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
 		uint32_t now      = DepLibUV::GetTime();
 
-		this->SendRtcp(now);
+		SendRtcp(now);
 
 		// Recalculate next RTCP interval.
 		if (!this->consumers.empty())

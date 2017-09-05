@@ -50,7 +50,8 @@ namespace RTC
 		{
 		public:
 			virtual void OnTransportClosed(RTC::Transport* transport) = 0;
-			virtual void OnTransportReceiveRtcpFeedback(RTC::Transport* transport, RTC::RTCP::FeedbackPsPacket* packet, RTC::Consumer* consumer) = 0;
+			virtual void OnTransportReceiveRtcpFeedback(
+			  RTC::Transport* transport, RTC::RTCP::FeedbackPsPacket* packet, RTC::Consumer* consumer) = 0;
 		};
 
 	public:
@@ -65,7 +66,8 @@ namespace RTC
 		};
 
 	public:
-		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, TransportOptions& options);
+		Transport(
+		  Listener* listener, Channel::Notifier* notifier, uint32_t transportId, TransportOptions& options);
 
 	private:
 		~Transport() override;
@@ -77,14 +79,13 @@ namespace RTC
 		void HandleProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
 		RTC::DtlsTransport::Role setRemoteDtlsParameters(
-			RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
+		  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
 		void SetMaxBitrate(uint32_t bitrate);
 		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		bool IsConnected() const;
 		void EnableRemb();
-		bool HasRemb();
 		void SendRtcp(uint64_t now);
 
 	private:
@@ -214,14 +215,6 @@ namespace RTC
 		{
 			this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
 		}
-	}
-
-	inline bool Transport::HasRemb()
-	{
-		if (this->remoteBitrateEstimator)
-			return true;
-		else
-			return false;
 	}
 } // namespace RTC
 

@@ -618,7 +618,8 @@ namespace RTC
 						return;
 					}
 
-					remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(jsonFingerprint[JsonStringAlgorithm].asString());
+					remoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(
+					  jsonFingerprint[JsonStringAlgorithm].asString());
 
 					if (remoteFingerprint.algorithm != RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 					{
@@ -636,8 +637,7 @@ namespace RTC
 				try
 				{
 					// This may throw.
-					localRole = transport->setRemoteDtlsParameters(
-						remoteFingerprint, remoteRole);
+					localRole = transport->setRemoteDtlsParameters(remoteFingerprint, remoteRole);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -1277,7 +1277,8 @@ namespace RTC
 		this->transports.erase(transport->transportId);
 	}
 
-	void Router::OnTransportReceiveRtcpFeedback(RTC::Transport* transport, RTC::RTCP::FeedbackPsPacket* packet, RTC::Consumer* consumer)
+	void Router::OnTransportReceiveRtcpFeedback(
+	  RTC::Transport* transport, RTC::RTCP::FeedbackPsPacket* packet, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
