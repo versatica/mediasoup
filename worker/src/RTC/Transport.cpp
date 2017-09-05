@@ -663,17 +663,17 @@ namespace RTC
 					auto& report   = (*it);
 					auto* consumer = GetConsumer(report->GetSsrc());
 
-					if (consumer != nullptr)
-					{
-						consumer->ReceiveRtcpReceiverReport(report);
-					}
-					else
+					if (consumer == nullptr)
 					{
 						MS_WARN_TAG(
 						  rtcp,
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
 						  report->GetSsrc());
+
+						 break;
 					}
+
+					consumer->ReceiveRtcpReceiverReport(report);
 				}
 
 				break;
