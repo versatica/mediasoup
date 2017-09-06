@@ -67,7 +67,7 @@ namespace RTC
 
 		float clusterMean = clusterAggregate.sendMeanMs / static_cast<float>(clusterAggregate.count);
 
-		return fabs(static_cast<float>(sendDeltaMs) - clusterMean) < 2.5f;
+		return std::fabs(static_cast<float>(sendDeltaMs) - clusterMean) < 2.5f;
 	}
 
 	void RemoteBitrateEstimatorAbsSendTime::AddCluster(std::list<Cluster>* clusters, Cluster* cluster)

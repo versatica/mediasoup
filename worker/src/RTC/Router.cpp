@@ -356,7 +356,7 @@ namespace RTC
 					paused = request->data[JsonStringPaused].asBool();
 
 				// Create a Producer instance.
-				RTC::Producer* producer = new RTC::Producer(
+				auto* producer = new RTC::Producer(
 				  this->notifier, producerId, kind, transport, rtpParameters, rtpMapping, paused);
 
 				// Add us as listener.
@@ -445,7 +445,7 @@ namespace RTC
 					return;
 				}
 
-				RTC::Consumer* consumer =
+				auto* consumer =
 				  new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId);
 
 				// If the Producer is paused tell it to the new Consumer.
@@ -622,7 +622,7 @@ namespace RTC
 				try
 				{
 					// This may throw.
-					localRole = transport->setRemoteDtlsParameters(remoteFingerprint, remoteRole);
+					localRole = transport->SetRemoteDtlsParameters(remoteFingerprint, remoteRole);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -1241,7 +1241,7 @@ namespace RTC
 	}
 
 	void Router::OnTransportReceiveRtcpFeedback(
-	  RTC::Transport* transport, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet)
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet)
 	{
 		MS_TRACE();
 

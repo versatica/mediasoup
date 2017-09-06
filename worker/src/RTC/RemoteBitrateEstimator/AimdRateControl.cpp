@@ -135,7 +135,7 @@ namespace RTC
 		const float incomingBitrateKbps = incomingBitrateBps / 1000.0f;
 		// Calculate the max bit rate std dev given the normalized
 		// variance and the current incoming bit rate.
-		const float stdMaxBitRate = sqrt(this->varMaxBitrateKbps * this->avgMaxBitrateKbps);
+		const float stdMaxBitRate = std::sqrt(this->varMaxBitrateKbps * this->avgMaxBitrateKbps);
 
 		switch (this->rateControlState)
 		{

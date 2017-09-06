@@ -78,7 +78,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		void HandleProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
-		RTC::DtlsTransport::Role setRemoteDtlsParameters(
+		RTC::DtlsTransport::Role SetRemoteDtlsParameters(
 		  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
 		void SetMaxBitrate(uint32_t bitrate);
 		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);

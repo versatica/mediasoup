@@ -445,7 +445,7 @@ namespace RTC
 		}
 	}
 
-	RTC::DtlsTransport::Role Transport::setRemoteDtlsParameters(
+	RTC::DtlsTransport::Role Transport::SetRemoteDtlsParameters(
 	  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role)
 	{
 		MS_TRACE();
