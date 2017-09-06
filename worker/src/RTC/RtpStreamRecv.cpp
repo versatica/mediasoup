@@ -13,6 +13,9 @@ namespace RTC
 	  : RtpStream::RtpStream(params), listener(listener)
 	{
 		MS_TRACE();
+
+		if (this->params.useNack)
+			this->nackGenerator.reset(new RTC::NackGenerator(this));
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()
@@ -127,7 +130,7 @@ namespace RTC
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Pass the packet to the NackGenerator.
-		if (this->params.useNack && this->nackGenerator)
+		if (this->params.useNack)
 			this->nackGenerator->ReceivePacket(packet);
 
 		return true;
@@ -230,10 +233,7 @@ namespace RTC
 
 	void RtpStreamRecv::OnInitSeq()
 	{
-		MS_TRACE();
-
-		// Request a full frame so dropped video packets don't cause lag.
-		RequestFullFrame();
+		// Do nothing.
 	}
 
 	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)

@@ -117,8 +117,7 @@ gulp.task('test:worker', shell.task(
 			'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes`
 	],
 	{
-		verbose : true,
-		env     : { DEBUG: '*ABORT* *WARN*' }
+		verbose : true
 	}
 ));
 

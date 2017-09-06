@@ -4,7 +4,6 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include "Logger.hpp"
 #include <vector>
 
 using namespace RTC;

@@ -37,6 +37,7 @@ namespace RTC
 		if (!this->started)
 		{
 			InitSeq(seq);
+
 			this->started   = true;
 			this->maxSeq    = seq - 1;
 			this->probation = MinSequential;
