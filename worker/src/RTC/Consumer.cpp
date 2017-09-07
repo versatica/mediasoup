@@ -283,8 +283,6 @@ namespace RTC
 				this->rtpTimestamp = now;
 
 			this->syncRequired = false;
-
-			RequestFullFrame();
 		}
 		else
 		{

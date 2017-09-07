@@ -196,6 +196,8 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV("Producer RTP parameters updated [producerId:%" PRIu32 "]", this->producerId);
+
+		RequestFullFrame(true);
 	}
 
 	void Producer::Pause()
