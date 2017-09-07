@@ -37,8 +37,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->rtpStream != nullptr)
-			delete this->rtpStream;
+		delete this->rtpStream;
 	}
 
 	void Consumer::Destroy()
@@ -277,7 +276,7 @@ namespace RTC
 		{
 			this->seqNum += 1;
 
-			uint32_t now = static_cast<uint32_t>(DepLibUV::GetTime());
+			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
 
 			if (now > this->rtpTimestamp)
 				this->rtpTimestamp = now;
