@@ -305,14 +305,14 @@ namespace RTC
 		packet->SetTimestamp(this->rtpTimestamp);
 
 		// Process the packet.
-		if (!this->rtpStream->ReceivePacket(packet))
-			return;
+		if (this->rtpStream->ReceivePacket(packet))
+		{
+			// Send the packet.
+			this->transport->SendRtpPacket(packet);
 
-		// Send the packet.
-		this->transport->SendRtpPacket(packet);
-
-		// Update transmitted RTP data counter.
-		this->transmittedCounter.Update(packet);
+			// Update transmitted RTP data counter.
+			this->transmittedCounter.Update(packet);
+		}
 
 		// Restore the original sequence number.
 		packet->SetSequenceNumber(this->lastRecvSeqNum);
