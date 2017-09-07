@@ -277,7 +277,7 @@ namespace RTC
 		{
 			this->seqNum += 1;
 
-			uint64_t now = static_cast<uint32_t>(DepLibUV::GetTime());
+			uint32_t now = static_cast<uint32_t>(DepLibUV::GetTime());
 
 			if (now > this->rtpTimestamp)
 				this->rtpTimestamp = now;
