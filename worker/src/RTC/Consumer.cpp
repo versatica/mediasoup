@@ -23,6 +23,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Initialize sequence number.
+		this->seqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
+
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
@@ -205,10 +208,12 @@ namespace RTC
 
 	void Consumer::SourceRtpParametersUpdated()
 	{
+		MS_TRACE();
+
 		if (!IsEnabled())
 			return;
 
-		// TODO: Set special flag to be ready for random seq numbers.
+		this->syncRequired = true;
 	}
 
 	/**
@@ -267,15 +272,53 @@ namespace RTC
 			return;
 		}
 
+		// Check whether sequence number and timestamp sync is required.
+		if (this->syncRequired)
+		{
+			this->seqNum += 1;
+
+			uint64_t now = DepLibUV::GetTime();
+
+			if (now > this->rtpTimestamp)
+				this->rtpTimestamp = now;
+
+			this->syncRequired = false;
+
+			RequestFullFrame();
+		}
+		else
+		{
+			this->seqNum += packet->GetSequenceNumber() - this->lastRecvSeqNum;
+			this->rtpTimestamp += packet->GetTimestamp() - this->lastRecvRtpTimestamp;
+		}
+
+		// Save the received sequence number.
+		this->lastRecvSeqNum = packet->GetSequenceNumber();
+
+		// Save the received timestamp.
+		this->lastRecvRtpTimestamp = packet->GetTimestamp();
+
+		// Update packet sequence number.
+		packet->SetSequenceNumber(this->seqNum);
+
+		// Update packet timestamp.
+		packet->SetTimestamp(this->rtpTimestamp);
+
 		// Process the packet.
-		if (!this->rtpStream->ReceivePacket(packet))
-			return;
+		if (this->rtpStream->ReceivePacket(packet))
+		{
+			// Send the packet.
+			this->transport->SendRtpPacket(packet);
 
-		// Send the packet.
-		this->transport->SendRtpPacket(packet);
+			// Update transmitted RTP data counter.
+			this->transmittedCounter.Update(packet);
+		}
 
-		// Update transmitted RTP data counter.
-		this->transmittedCounter.Update(packet);
+		// Restore the original sequence number.
+		packet->SetSequenceNumber(this->lastRecvSeqNum);
+
+		// Restore the original timestamp.
+		packet->SetTimestamp(this->lastRecvRtpTimestamp);
 	}
 
 	void Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
