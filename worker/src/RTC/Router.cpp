@@ -445,8 +445,7 @@ namespace RTC
 					return;
 				}
 
-				auto* consumer =
-				  new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId);
+				auto* consumer = new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId);
 
 				// If the Producer is paused tell it to the new Consumer.
 				if (producer->IsPaused())
