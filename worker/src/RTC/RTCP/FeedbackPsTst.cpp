@@ -71,13 +71,13 @@ namespace RTC
 
 		template<>
 		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::messageType =
-		    FeedbackPs::MessageType::TSTR;
+		  FeedbackPs::MessageType::TSTR;
 
 		/* Specialization for Tstn class. */
 
 		template<>
 		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::messageType =
-		    FeedbackPs::MessageType::TSTN;
+		  FeedbackPs::MessageType::TSTN;
 
 		// Explicit instantiation to have all definitions in this file.
 		template class FeedbackPsTstItem<Tstr>;

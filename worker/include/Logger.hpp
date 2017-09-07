@@ -43,7 +43,7 @@
  *
  * 	 Logs if the current source file defines the MS_LOG_DEV macro.
  * 	 Example:
- * 	   MS_DEBUG_DEV("Room closed [roomId:%" PRIu32 "]", roomId);
+ * 	   MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producerId);
  *
  * MS_DUMP(...)
  *

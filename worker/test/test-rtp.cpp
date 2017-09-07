@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <map>
 
 using namespace RTC;
 
@@ -158,6 +159,16 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(voice == true);
 		REQUIRE(packet->ReadAbsSendTime(&absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
+
+		std::map<uint8_t, uint8_t> idMapping;
+
+		idMapping[1] = 11;
+		idMapping[3] = 13;
+
+		packet->MangleExtensionHeaderIds(idMapping);
+
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 11);
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 13);
 
 		auto clonedPacket = packet->Clone(buffer2);
 

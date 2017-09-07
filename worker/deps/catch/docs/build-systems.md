@@ -1,4 +1,4 @@
-# Integration with build systems
+# CI and build system integration
 
 Build Systems may refer to low-level tools, like CMake, or larger systems that run on servers, like Jenkins or TeamCity. This page will talk about both.
 
@@ -56,8 +56,26 @@ Because of the incremental nature of Catch's test suites and ability to run spec
 
 ## CMake
 
-You can use the following CMake script to automatically fetch Catch from github and configure it as an external project:
+In general we recommend "vendoring" Catch's single-include releases inside your own repository. If you do this, the following example shows a minimal CMake project:
+```CMake
+cmake_minimum_required(VERSION 3.0)
 
+project(cmake_test)
+
+# Prepare "Catch" library for other executables
+set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/catch)
+add_library(Catch INTERFACE)
+target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
+
+# Make test executable
+set(TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+add_executable(tests ${TEST_SOURCES})
+target_link_libraries(tests Catch)
+```
+Note that it assumes that the path to the Catch's header is `catch/catch.hpp` from the `CMakeLists.txt` file.
+
+
+You can also use the following CMake snippet to automatically fetch the entire Catch repository from github and configure it as an external project:
 ```CMake
 cmake_minimum_required(VERSION 2.8.8)
 project(catch_builder CXX)
@@ -89,6 +107,36 @@ add_subdirectory(${EXT_PROJECTS_DIR}/catch)
 include_directories(${CATCH_INCLUDE_DIR} ${COMMON_INCLUDES})
 enable_testing(true)  # Enables unit-testing.
 ```
+
+The advantage of this approach is that you can always automatically update Catch to the latest release. The disadvantage is that it means bringing in lot more than you need.
+
+
+### Automatic test registration
+If you are also using ctest, `contrib/ParseAndAddCatchTests.cmake` is a CMake script that attempts to parse your test files and automatically register all test cases, using tags as labels. This means that these
+```cpp
+TEST_CASE("Test1", "[unit]") {
+    int a = 1;
+    int b = 2;
+    REQUIRE(a == b);
+}
+
+TEST_CASE("Test2") {
+    int a = 1;
+    int b = 2;
+    REQUIRE(a == b);
+}
+
+TEST_CASE("Test3", "[a][b][c]") {
+    int a = 1;
+    int b = 2;
+    REQUIRE(a == b);
+}
+```
+would be registered as 3 tests, `Test1`, `Test2` and `Test3`, and ctest 4 labels would be created, `a`, `b`, `c` and `unit`.
+
+### CodeCoverage module (GCOV, LCOV...)
+
+If you are using GCOV tool to get testing coverage of your code, and are not sure how to integrate it with CMake and Catch, there should be an external example over at https://github.com/fkromer/catch_cmake_coverage
 
 ---
 

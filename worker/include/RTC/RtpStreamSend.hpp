@@ -33,12 +33,13 @@ namespace RTC
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(
-		    uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
+		  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
 		uint32_t GetRtt() const;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		bool HasRtx() const;
 		void RtxEncode(RtpPacket* packet);
+		void Reset();
 
 	private:
 		void ClearBuffer();

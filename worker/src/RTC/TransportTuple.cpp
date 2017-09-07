@@ -58,11 +58,11 @@ namespace RTC
 
 				MS_DUMP("<TransportTuple>");
 				MS_DUMP(
-				    "  [UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-				    this->udpSocket->GetLocalIP().c_str(),
-				    this->udpSocket->GetLocalPort(),
-				    remoteIp.c_str(),
-				    remotePort);
+				  "  [UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+				  this->udpSocket->GetLocalIP().c_str(),
+				  this->udpSocket->GetLocalPort(),
+				  remoteIp.c_str(),
+				  remotePort);
 				MS_DUMP("</TransportTuple>");
 				break;
 			}
@@ -71,11 +71,11 @@ namespace RTC
 			{
 				MS_DUMP("<TransportTuple>");
 				MS_DUMP(
-				    "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-				    this->tcpConnection->GetLocalIP().c_str(),
-				    this->tcpConnection->GetLocalPort(),
-				    this->tcpConnection->GetPeerIP().c_str(),
-				    this->tcpConnection->GetPeerPort());
+				  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+				  this->tcpConnection->GetLocalIP().c_str(),
+				  this->tcpConnection->GetLocalPort(),
+				  this->tcpConnection->GetPeerIP().c_str(),
+				  this->tcpConnection->GetPeerPort());
 				MS_DUMP("</TransportTuple>");
 				break;
 			}

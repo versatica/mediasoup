@@ -9,7 +9,7 @@
 
 /*
  *
- * Copyright (c) 2001-2006,2013 Cisco Systems, Inc.
+ * Copyright (c) 2001-2017 Cisco Systems, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,8 @@ srtp_debug_module_t srtp_mod_aes_icm = {
     0,               /* debugging is off by default */
     "aes icm"        /* printable module name       */
 };
+extern const srtp_cipher_type_t srtp_aes_icm_128;
+extern const srtp_cipher_type_t srtp_aes_icm_256;
 
 /*
  * integer counter mode works as follows:
@@ -92,24 +94,20 @@ srtp_debug_module_t srtp_mod_aes_icm = {
  *
  */
 
-static srtp_err_status_t srtp_aes_icm_alloc_ismacryp (srtp_cipher_t **c, int key_len, int forIsmacryp)
+static srtp_err_status_t srtp_aes_icm_alloc (srtp_cipher_t **c, int key_len, int tlen)
 {
-    extern const srtp_cipher_type_t srtp_aes_icm;
     srtp_aes_icm_ctx_t *icm;
 
     debug_print(srtp_mod_aes_icm,
                 "allocating cipher with key length %d", key_len);
 
     /*
-     * Ismacryp, for example, uses 16 byte key + 8 byte
-     * salt  so this function is called with key_len = 24.
-     * The check for key_len = 30/38/46 does not apply. Our usage
+     * The check for key_len = 30/46 does not apply. Our usage
      * of aes functions with key_len = values other than 30
      * has not broken anything. Don't know what would be the
      * effect of skipping this check for srtp in general.
      */
-    if (!(forIsmacryp && key_len > 16 && key_len < 30) &&
-        key_len != 30 && key_len != 38 && key_len != 46) {
+    if (key_len != SRTP_AES_ICM_128_KEY_LEN_WSALT && key_len != SRTP_AES_ICM_256_KEY_LEN_WSALT) {
         return srtp_err_status_bad_param;
     }
 
@@ -129,17 +127,15 @@ static srtp_err_status_t srtp_aes_icm_alloc_ismacryp (srtp_cipher_t **c, int key
 
     /* set pointers */
     (*c)->state = icm;
-    (*c)->type = &srtp_aes_icm;
 
     switch (key_len) {
-    case 46:
-        (*c)->algorithm = SRTP_AES_256_ICM;
-        break;
-    case 38:
-        (*c)->algorithm = SRTP_AES_192_ICM;
+    case SRTP_AES_ICM_256_KEY_LEN_WSALT:
+        (*c)->algorithm = SRTP_AES_ICM_256;
+        (*c)->type = &srtp_aes_icm_256;
         break;
     default:
-        (*c)->algorithm = SRTP_AES_128_ICM;
+        (*c)->algorithm = SRTP_AES_ICM_128;
+        (*c)->type = &srtp_aes_icm_128;
         break;
     }
 
@@ -148,11 +144,6 @@ static srtp_err_status_t srtp_aes_icm_alloc_ismacryp (srtp_cipher_t **c, int key
     (*c)->key_len = key_len;
 
     return srtp_err_status_ok;
-}
-
-static srtp_err_status_t srtp_aes_icm_alloc (srtp_cipher_t **c, int key_len, int forIsmacryp)
-{
-    return srtp_aes_icm_alloc_ismacryp(c, key_len, 0);
 }
 
 static srtp_err_status_t srtp_aes_icm_dealloc (srtp_cipher_t *c)
@@ -165,9 +156,9 @@ static srtp_err_status_t srtp_aes_icm_dealloc (srtp_cipher_t *c)
 
     ctx = (srtp_aes_icm_ctx_t *)c->state;
     if (ctx) {
-	/* zeroize the key material */
-	octet_string_set_to_zero((uint8_t*)ctx, sizeof(srtp_aes_icm_ctx_t));
-	srtp_crypto_free(ctx);
+        /* zeroize the key material */
+        octet_string_set_to_zero(ctx, sizeof(srtp_aes_icm_ctx_t));
+        srtp_crypto_free(ctx);
     }
 
     /* free the cipher context */
@@ -193,10 +184,8 @@ static srtp_err_status_t srtp_aes_icm_context_init (void *cv, const uint8_t *key
     srtp_err_status_t status;
     int base_key_len, copy_len;
 
-    if (c->key_size > 16 && c->key_size < 30) { /* Ismacryp */
-        base_key_len = 16;
-    } else if (c->key_size == 30 || c->key_size == 38 || c->key_size == 46) {
-        base_key_len = c->key_size - 14;
+    if (c->key_size == SRTP_AES_ICM_128_KEY_LEN_WSALT || c->key_size == SRTP_AES_ICM_256_KEY_LEN_WSALT) {
+        base_key_len = c->key_size - SRTP_SALT_LEN;
     } else{
         return srtp_err_status_bad_param;
     }
@@ -210,8 +199,8 @@ static srtp_err_status_t srtp_aes_icm_context_init (void *cv, const uint8_t *key
 
     copy_len = c->key_size - base_key_len;
     /* force last two octets of the offset to be left zero (for srtp compatibility) */
-    if (copy_len > 14) {
-        copy_len = 14;
+    if (copy_len > SRTP_SALT_LEN) {
+        copy_len = SRTP_SALT_LEN;
     }
 
     memcpy(&c->counter, key + base_key_len, copy_len);
@@ -271,7 +260,7 @@ static srtp_err_status_t srtp_aes_icm_set_iv (void *cv, uint8_t *iv, srtp_cipher
  *
  * this is an internal, hopefully inlined function
  */
-static void srtp_aes_icm_advance_ismacryp (srtp_aes_icm_ctx_t *c, uint8_t forIsmacryp)
+static void srtp_aes_icm_advance (srtp_aes_icm_ctx_t *c)
 {
     /* fill buffer with new keystream */
     v128_copy(&c->keystream_buffer, &c->counter);
@@ -284,17 +273,8 @@ static void srtp_aes_icm_advance_ismacryp (srtp_aes_icm_ctx_t *c, uint8_t forIsm
                 v128_hex_string(&c->keystream_buffer));
 
     /* clock counter forward */
-
-    if (forIsmacryp) {
-        uint32_t temp;
-        //alex's clock counter forward
-        temp = ntohl(c->counter.v32[3]);
-	++temp;
-        c->counter.v32[3] = htonl(temp);
-    } else {
-        if (!++(c->counter.v8[15])) {
-            ++(c->counter.v8[14]);
-        }
+    if (!++(c->counter.v8[15])) {
+        ++(c->counter.v8[14]);
     }
 }
 
@@ -311,16 +291,16 @@ static void srtp_aes_icm_advance_ismacryp (srtp_aes_icm_ctx_t *c, uint8_t forIsm
  *  - fill buffer then add in remaining (< 16) bytes of keystream
  */
 
-static srtp_err_status_t srtp_aes_icm_encrypt_ismacryp (srtp_aes_icm_ctx_t *c,
-                                                 unsigned char *buf, unsigned int *enc_len,
-                                                 int forIsmacryp)
+static srtp_err_status_t srtp_aes_icm_encrypt (void *cv,
+                                               unsigned char *buf, unsigned int *enc_len)
 {
+    srtp_aes_icm_ctx_t *c = (srtp_aes_icm_ctx_t*)cv;
     unsigned int bytes_to_encr = *enc_len;
     unsigned int i;
     uint32_t *b;
 
-    /* check that there's enough segment left but not for ismacryp*/
-    if (!forIsmacryp && (bytes_to_encr + htons(c->counter.v16[7])) > 0xffff) {
+    /* check that there's enough segment left*/
+    if ((bytes_to_encr + htons(c->counter.v16[7])) > 0xffff) {
         return srtp_err_status_terminus;
     }
 
@@ -355,7 +335,7 @@ static srtp_err_status_t srtp_aes_icm_encrypt_ismacryp (srtp_aes_icm_ctx_t *c,
     for (i = 0; i < (bytes_to_encr / sizeof(v128_t)); i++) {
 
         /* fill buffer with new keystream */
-        srtp_aes_icm_advance_ismacryp(c, forIsmacryp);
+        srtp_aes_icm_advance(c);
 
         /*
          * add keystream into the data buffer (this would be a lot faster
@@ -403,7 +383,7 @@ static srtp_err_status_t srtp_aes_icm_encrypt_ismacryp (srtp_aes_icm_ctx_t *c,
     if ((bytes_to_encr & 0xf) != 0) {
 
         /* fill buffer with new keystream */
-        srtp_aes_icm_advance_ismacryp(c, forIsmacryp);
+        srtp_aes_icm_advance(c);
 
         for (i = 0; i < (bytes_to_encr & 0xf); i++) {
             *buf++ ^= c->keystream_buffer.v8[i];
@@ -421,55 +401,50 @@ static srtp_err_status_t srtp_aes_icm_encrypt_ismacryp (srtp_aes_icm_ctx_t *c,
     return srtp_err_status_ok;
 }
 
-static srtp_err_status_t srtp_aes_icm_encrypt (void *cv, unsigned char *buf, unsigned int *enc_len)
-{
-    srtp_aes_icm_ctx_t *c = (srtp_aes_icm_ctx_t *)cv;
-    return srtp_aes_icm_encrypt_ismacryp(c, buf, enc_len, 0);
-}
+static const char srtp_aes_icm_128_description[] = "AES-128 integer counter mode";
+static const char srtp_aes_icm_256_description[] = "AES-256 integer counter mode";
 
-static const char srtp_aes_icm_description[] = "aes integer counter mode";
-
-static const uint8_t srtp_aes_icm_test_case_0_key[30] = {
+static const uint8_t srtp_aes_icm_128_test_case_0_key[SRTP_AES_ICM_128_KEY_LEN_WSALT] = {
     0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
     0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
     0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd
 };
 
-static uint8_t srtp_aes_icm_test_case_0_nonce[16] = {
+static uint8_t srtp_aes_icm_128_test_case_0_nonce[16] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-static const uint8_t srtp_aes_icm_test_case_0_plaintext[32] =  {
+static const uint8_t srtp_aes_icm_128_test_case_0_plaintext[32] =  {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-static const uint8_t srtp_aes_icm_test_case_0_ciphertext[32] = {
+static const uint8_t srtp_aes_icm_128_test_case_0_ciphertext[32] = {
     0xe0, 0x3e, 0xad, 0x09, 0x35, 0xc9, 0x5e, 0x80,
     0xe1, 0x66, 0xb1, 0x6d, 0xd9, 0x2b, 0x4e, 0xb4,
     0xd2, 0x35, 0x13, 0x16, 0x2b, 0x02, 0xd0, 0xf7,
     0x2a, 0x43, 0xa2, 0xfe, 0x4a, 0x5f, 0x97, 0xab
 };
 
-static const srtp_cipher_test_case_t srtp_aes_icm_test_case_0 = {
-    30,                                  /* octets in key            */
-    srtp_aes_icm_test_case_0_key,        /* key                      */
-    srtp_aes_icm_test_case_0_nonce,      /* packet index             */
+static const srtp_cipher_test_case_t srtp_aes_icm_128_test_case_0 = {
+    SRTP_AES_ICM_128_KEY_LEN_WSALT,              /* octets in key            */
+    srtp_aes_icm_128_test_case_0_key,        /* key                      */
+    srtp_aes_icm_128_test_case_0_nonce,      /* packet index             */
     32,                                  /* octets in plaintext      */
-    srtp_aes_icm_test_case_0_plaintext,  /* plaintext                */
+    srtp_aes_icm_128_test_case_0_plaintext,  /* plaintext                */
     32,                                  /* octets in ciphertext     */
-    srtp_aes_icm_test_case_0_ciphertext, /* ciphertext               */
+    srtp_aes_icm_128_test_case_0_ciphertext, /* ciphertext               */
     0,
     NULL,
     0,
     NULL                                 /* pointer to next testcase */
 };
 
-static const uint8_t srtp_aes_icm_test_case_1_key[46] = {
+static const uint8_t srtp_aes_icm_256_test_case_0_key[SRTP_AES_ICM_256_KEY_LEN_WSALT] = {
     0x57, 0xf8, 0x2f, 0xe3, 0x61, 0x3f, 0xd1, 0x70,
     0xa8, 0x5e, 0xc9, 0x3c, 0x40, 0xb1, 0xf0, 0x92,
     0x2e, 0xc4, 0xcb, 0x0d, 0xc0, 0x25, 0xb5, 0x82,
@@ -478,37 +453,37 @@ static const uint8_t srtp_aes_icm_test_case_1_key[46] = {
     0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd
 };
 
-static uint8_t srtp_aes_icm_test_case_1_nonce[16] = {
+static uint8_t srtp_aes_icm_256_test_case_0_nonce[16] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-static const uint8_t srtp_aes_icm_test_case_1_plaintext[32] =  {
+static const uint8_t srtp_aes_icm_256_test_case_0_plaintext[32] =  {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-static const uint8_t srtp_aes_icm_test_case_1_ciphertext[32] = {
+static const uint8_t srtp_aes_icm_256_test_case_0_ciphertext[32] = {
     0x92, 0xbd, 0xd2, 0x8a, 0x93, 0xc3, 0xf5, 0x25,
     0x11, 0xc6, 0x77, 0xd0, 0x8b, 0x55, 0x15, 0xa4,
     0x9d, 0xa7, 0x1b, 0x23, 0x78, 0xa8, 0x54, 0xf6,
     0x70, 0x50, 0x75, 0x6d, 0xed, 0x16, 0x5b, 0xac
 };
 
-static const srtp_cipher_test_case_t srtp_aes_icm_test_case_1 = {
-    46,                                  /* octets in key            */
-    srtp_aes_icm_test_case_1_key,        /* key                      */
-    srtp_aes_icm_test_case_1_nonce,      /* packet index             */
+static const srtp_cipher_test_case_t srtp_aes_icm_256_test_case_0 = {
+    SRTP_AES_ICM_256_KEY_LEN_WSALT,              /* octets in key            */
+    srtp_aes_icm_256_test_case_0_key,        /* key                      */
+    srtp_aes_icm_256_test_case_0_nonce,      /* packet index             */
     32,                                  /* octets in plaintext      */
-    srtp_aes_icm_test_case_1_plaintext,  /* plaintext                */
+    srtp_aes_icm_256_test_case_0_plaintext,  /* plaintext                */
     32,                                  /* octets in ciphertext     */
-    srtp_aes_icm_test_case_1_ciphertext, /* ciphertext               */
+    srtp_aes_icm_256_test_case_0_ciphertext, /* ciphertext               */
     0,
     NULL,
     0,
-    &srtp_aes_icm_test_case_0                 /* pointer to next testcase */
+    NULL,                 /* pointer to next testcase */
 };
 
 
@@ -517,7 +492,7 @@ static const srtp_cipher_test_case_t srtp_aes_icm_test_case_1 = {
  * note: the encrypt function is identical to the decrypt function
  */
 
-const srtp_cipher_type_t srtp_aes_icm = {
+const srtp_cipher_type_t srtp_aes_icm_128 = {
     srtp_aes_icm_alloc,
     srtp_aes_icm_dealloc,
     srtp_aes_icm_context_init,
@@ -526,8 +501,21 @@ const srtp_cipher_type_t srtp_aes_icm = {
     srtp_aes_icm_encrypt,
     srtp_aes_icm_set_iv,
     0,                          /* get_tag */
-    srtp_aes_icm_description,
-    &srtp_aes_icm_test_case_1,
-    SRTP_AES_ICM
+    srtp_aes_icm_128_description,
+    &srtp_aes_icm_128_test_case_0,
+    SRTP_AES_ICM_128
 };
 
+const srtp_cipher_type_t srtp_aes_icm_256 = {
+    srtp_aes_icm_alloc,
+    srtp_aes_icm_dealloc,
+    srtp_aes_icm_context_init,
+    0,                          /* set_aad */
+    srtp_aes_icm_encrypt,
+    srtp_aes_icm_encrypt,
+    srtp_aes_icm_set_iv,
+    0,                          /* get_tag */
+    srtp_aes_icm_256_description,
+    &srtp_aes_icm_256_test_case_0,
+    SRTP_AES_ICM_256
+};

@@ -23,13 +23,13 @@ const workerFiles =
 ];
 const nodeTests =
 [
-	'test/test-mediasoup.js',
-	'test/test-Server.js',
-	'test/test-Room.js',
-	'test/test-Peer.js',
-	'test/test-Transport.js',
-	'test/test-RtpReceiver.js',
-	'test/test-extra.js'
+	// 'test/test-mediasoup.js',
+	'test/test-Server.js'
+	// 'test/test-Room.js',
+	// 'test/test-Peer.js',
+	// 'test/test-Transport.js',
+	// 'test/test-Producer.js',
+	// 'test/test-utils.js'
 ];
 const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const workerHeaderFilterRegex =
@@ -37,18 +37,6 @@ const workerHeaderFilterRegex =
 	'|Loop.hpp|MediaSoupError.hpp|Settings.hpp|Utils.hpp' +
 	'|handles/*.hpp|Channel/*.hpp|RTC/**/*.hpp)';
 const numCpus = os.cpus().length;
-
-gulp.task('rtpcapabilities', () =>
-{
-	let supportedRtpCapabilities = require('./lib/supportedRtpCapabilities');
-
-	return gulp.src('worker/src/RTC/Room.cpp')
-		// Let's generate valid syntax as expected by clang-format rules.
-		.pipe(replace(/(const std::string supportedRtpCapabilities =).*\r?\n.*/,
-			`$1\n\t\t\t    R"(${JSON.stringify(supportedRtpCapabilities)})";`))
-		.pipe(gulp.dest('worker/src/RTC/'))
-		.pipe(touch());
-});
 
 gulp.task('lint:node', () =>
 {
@@ -60,7 +48,7 @@ gulp.task('lint:node', () =>
 
 gulp.task('lint:worker', () =>
 {
-	let src = workerFiles.concat(
+	const src = workerFiles.concat(
 		// Remove Ragel generated files.
 		'!worker/src/Utils/IP.cpp'
 	);
@@ -71,7 +59,7 @@ gulp.task('lint:worker', () =>
 
 gulp.task('format:worker', () =>
 {
-	let src = workerFiles.concat(
+	const src = workerFiles.concat(
 		// Remove Ragel generated files.
 		'!worker/src/Utils/IP.cpp'
 	);
@@ -95,7 +83,8 @@ gulp.task('tidy:worker:run', shell.task(
 		'cd worker && ' +
 		'./scripts/clang-tidy.py ' +
 		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
-		'-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements ' +
+		'-clang-apply-replacements-binary=' +
+		'../node_modules/.bin/clang-apply-replacements ' +
 		`-header-filter='${workerHeaderFilterRegex}' ` +
 		'-p=. ' +
 		`-j=${numCpus} ` +
@@ -128,8 +117,7 @@ gulp.task('test:worker', shell.task(
 			'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes`
 	],
 	{
-		verbose : true,
-		env     : { DEBUG: '*ABORT* *WARN*' }
+		verbose : true
 	}
 ));
 

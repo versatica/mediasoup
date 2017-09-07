@@ -80,12 +80,12 @@ namespace RTC
 
 	public:
 		RtpPacket(
-		    Header* header,
-		    ExtensionHeader* extensionHeader,
-		    const uint8_t* payload,
-		    size_t payloadLength,
-		    uint8_t payloadPadding,
-		    size_t size);
+		  Header* header,
+		  ExtensionHeader* extensionHeader,
+		  const uint8_t* payload,
+		  size_t payloadLength,
+		  uint8_t payloadPadding,
+		  size_t size);
 		~RtpPacket();
 
 		void Dump() const;
@@ -107,6 +107,7 @@ namespace RTC
 		uint16_t GetExtensionHeaderId() const;
 		size_t GetExtensionHeaderLength() const;
 		uint8_t* GetExtensionHeaderValue() const;
+		void MangleExtensionHeaderIds(const std::map<uint8_t, uint8_t>& idMapping);
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
 		void AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id);
@@ -147,11 +148,11 @@ namespace RTC
 		auto header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return (
-		    (len >= sizeof(Header)) &&
-		    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		    (data[0] > 127 && data[0] < 192) &&
-		    // RTP Version must be 2.
-		    (header->version == 2));
+		  (len >= sizeof(Header)) &&
+		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+		  (data[0] > 127 && data[0] < 192) &&
+		  // RTP Version must be 2.
+		  (header->version == 2));
 	}
 
 	/* Inline instance methods. */
@@ -293,7 +294,7 @@ namespace RTC
 			if (this->twoBytesExtensions.find(id) == this->twoBytesExtensions.end())
 				return nullptr;
 
-			*len = this->oneByteExtensions.at(id)->len;
+			*len = this->twoBytesExtensions.at(id)->len;
 
 			return this->twoBytesExtensions.at(id)->value;
 		}

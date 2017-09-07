@@ -1,14 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuitesspanner>
-  <testsuite name="<exe-name>" errors="13" failures="77" tests="964" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
+  <testsuite name="<exe-name>" errors="13" failures="81" tests="979" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
     <testcase classname="global" name="# A test name that starts with a #" time="{duration}"/>
-    <testcase classname="global" name="#542" time="{duration}"/>
+    <testcase classname="#748 - captures with unexpected exceptions" name="outside assertions" time="{duration}">
+      <error type="TEST_CASE">
+expected exception
+answer := 42
+ExceptionTests.cpp:<line number>
+      </error>
+    </testcase>
+    <testcase classname="#748 - captures with unexpected exceptions" name="inside REQUIRE_NOTHROW" time="{duration}">
+      <error message="thisThrows()" type="REQUIRE_NOTHROW">
+expected exception
+answer := 42
+ExceptionTests.cpp:<line number>
+      </error>
+    </testcase>
+    <testcase classname="#748 - captures with unexpected exceptions" name="inside REQUIRE_THROWS" time="{duration}"/>
     <testcase classname="global" name="#809" time="{duration}"/>
+    <testcase classname="global" name="#833" time="{duration}"/>
     <testcase classname="global" name="#835 -- errno should not be touched by Catch" time="{duration}">
       <failure message="1 == 0" type="CHECK">
 MiscTests.cpp:<line number>
       </failure>
     </testcase>
+    <testcase classname="#961 -- Dynamically created sections should all be reported" name="Looped section 0" time="{duration}"/>
+    <testcase classname="#961 -- Dynamically created sections should all be reported" name="Looped section 1" time="{duration}"/>
+    <testcase classname="#961 -- Dynamically created sections should all be reported" name="Looped section 2" time="{duration}"/>
+    <testcase classname="#961 -- Dynamically created sections should all be reported" name="Looped section 3" time="{duration}"/>
+    <testcase classname="#961 -- Dynamically created sections should all be reported" name="Looped section 4" time="{duration}"/>
     <testcase classname="global" name="'Not' checks that should fail" time="{duration}">
       <failure message="false != false" type="CHECK">
 ConditionTests.cpp:<line number>
@@ -222,10 +242,13 @@ MessageTests.cpp:<line number>
     </testcase>
     <testcase classname="global" name="INFO gets logged on failure, even if captured before successful assertions" time="{duration}">
       <failure message="2 == 1" type="CHECK">
+this message may be logged later
 this message should be logged
 MessageTests.cpp:<line number>
       </failure>
       <failure message="2 == 0" type="CHECK">
+this message may be logged later
+this message should be logged
 and this, but later
 MessageTests.cpp:<line number>
       </failure>
@@ -425,6 +448,11 @@ MessageTests.cpp:<line number>
     <testcase classname="Process can be configured on command line" name="use-colour/yes" time="{duration}"/>
     <testcase classname="Process can be configured on command line" name="use-colour/no" time="{duration}"/>
     <testcase classname="Process can be configured on command line" name="use-colour/error" time="{duration}"/>
+    <testcase classname="global" name="Reconstruction should be based on stringification: #914" time="{duration}">
+      <failure message="Hey, its truthy!" type="CHECK">
+DecompositionTests.cpp:<line number>
+      </failure>
+    </testcase>
     <testcase classname="global" name="SCOPED_INFO is reset for each loop" time="{duration}">
       <failure message="10 &lt; 10" type="REQUIRE">
 current counter 10
@@ -452,6 +480,13 @@ A string sent directly to stderr
       </system-err>
     </testcase>
     <testcase classname="global" name="Some simple comparisons between doubles" time="{duration}"/>
+    <testcase classname="Standard error is reported and redirected" name="Interleaved writes to cerr and clog" time="{duration}">
+      <system-err>
+Write to std::cerr
+Write to std::clog
+Interleaved writes to error streams
+      </system-err>
+    </testcase>
     <testcase classname="Standard output from all sections is reported" name="two" time="{duration}">
       <system-out>
 Message from section one
@@ -727,6 +762,9 @@ hello
     </system-out>
     <system-err>
 A string sent directly to stderr
+Write to std::cerr
+Write to std::clog
+Interleaved writes to error streams
     </system-err>
   </testsuite>
 </testsuites>

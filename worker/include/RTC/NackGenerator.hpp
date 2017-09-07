@@ -15,8 +15,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
-			virtual void OnFullFrameRequired()                                   = 0;
+			virtual void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
+			virtual void OnNackGeneratorFullFrameRequired()                                   = 0;
 		};
 
 	private:
@@ -67,7 +67,7 @@ namespace RTC
 	// Inline instance methods.
 
 	inline NackGenerator::NackInfo::NackInfo(uint32_t seq32, uint32_t sendAtSeqNum)
-	    : seq32(seq32), sendAtSeqNum(sendAtSeqNum)
+	  : seq32(seq32), sendAtSeqNum(sendAtSeqNum)
 	{
 	}
 } // namespace RTC

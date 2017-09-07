@@ -10,9 +10,12 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
-	    : RtpStream::RtpStream(params), listener(listener)
+	  : RtpStream::RtpStream(params), listener(listener)
 	{
 		MS_TRACE();
+
+		if (this->params.useNack)
+			this->nackGenerator.reset(new RTC::NackGenerator(this));
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()
@@ -47,13 +50,14 @@ namespace RTC
 
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
+		{
+			MS_DEBUG_TAG(rtp, "packet discarded");
+
 			return false;
+		}
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
-
-		// Set RTP header extension ids.
-		this->SetHeaderExtensions(packet);
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -66,57 +70,67 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on rtx packet");
+		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on RTX packet");
 
 		// Check that the payload type corresponds to the one negotiated.
 		if (packet->GetPayloadType() != this->rtxPayloadType)
 		{
 			MS_WARN_TAG(
-			    rtx,
-			    "ignoring rtx packet with invalid payload type [ssrc: %" PRIu32 " seqnr: %" PRIu16
-			    " payload type: %" PRIu8 "]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber(),
-			    packet->GetPayloadType());
+			  rtx,
+			  "ignoring RTX packet with invalid payload type [ssrc: %" PRIu32 " seq: %" PRIu16
+			  " payload type: %" PRIu8 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetPayloadType());
 
 			return false;
 		}
 
-		// Get the rtx packet sequence number for logging purposes.
+		// Get the RTX packet sequence number for logging purposes.
 		auto rtxSeq = packet->GetSequenceNumber();
 
-		// Get the original rtp packet.
+		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
+			// Ignore RTX packets with no payload.
+			if (packet->GetPayloadLength() < 2)
+			{
+				MS_DEBUG_TAG(
+				  rtx,
+				  "ignoring empty RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  packet->GetPayloadType());
+
+				return false;
+			}
+
 			MS_WARN_TAG(
-			    rtx,
-			    "ignoring malformed rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
-			    " payload type: %" PRIu8 "]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber(),
-			    packet->GetPayloadType());
+			  rtx,
+			  "ignoring malformed RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8
+			  "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetPayloadType());
 
 			return false;
 		}
 
 		MS_DEBUG_TAG(
-		    rtx,
-		    "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
-		    "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
-		    this->rtxSsrc,
-		    rtxSeq,
-		    packet->GetSsrc(),
-		    packet->GetSequenceNumber());
+		  rtx,
+		  "received RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 "] recovering original [ssrc: %" PRIu32
+		  " seq: %" PRIu16 "]",
+		  this->rtxSsrc,
+		  rtxSeq,
+		  packet->GetSsrc(),
+		  packet->GetSequenceNumber());
 
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
-		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
-
-		// Set RTP header extension ids.
-		this->SetHeaderExtensions(packet);
+		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Pass the packet to the NackGenerator.
-		if (this->params.useNack && this->nackGenerator)
+		if (this->params.useNack)
 			this->nackGenerator->ReceivePacket(packet);
 
 		return true;
@@ -196,7 +210,7 @@ namespace RTC
 			if (this->params.useNack)
 				this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-			this->listener->OnPliRequired(this);
+			this->listener->OnRtpStreamRecvPliRequired(this);
 		}
 	}
 
@@ -208,7 +222,7 @@ namespace RTC
 			return;
 
 		auto transit =
-		    static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		  static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
 
 		this->transit = transit;
@@ -219,51 +233,30 @@ namespace RTC
 
 	void RtpStreamRecv::OnInitSeq()
 	{
-		MS_TRACE();
-
-		// Reset NackGenerator.
-		if (this->params.useNack)
-			this->nackGenerator.reset(new RTC::NackGenerator(this));
-
-		// Request a full frame so dropped video packets don't cause lag.
-		if (this->params.mime.type == RTC::RtpCodecMime::Type::VIDEO)
-		{
-			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
-
-			this->listener->OnPliRequired(this);
-		}
+		// Do nothing.
 	}
 
-	void RtpStreamRecv::OnNackRequired(const std::vector<uint16_t>& seqNumbers)
+	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
 		MS_WARN_TAG(
-		    rtx,
-		    "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
-		    this->params.ssrc,
-		    seqNumbers[0],
-		    seqNumbers.size());
+		  rtx,
+		  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
+		  this->params.ssrc,
+		  seqNumbers[0],
+		  seqNumbers.size());
 
-		this->listener->OnNackRequired(this, seqNumbers);
+		this->listener->OnRtpStreamRecvNackRequired(this, seqNumbers);
 	}
 
-	void RtpStreamRecv::OnFullFrameRequired()
+	void RtpStreamRecv::OnNackGeneratorFullFrameRequired()
 	{
 		MS_TRACE();
 
-		if (!this->params.usePli)
-		{
-			MS_WARN_TAG(rtx, "PLI required but not supported by the endpoint");
-
-			return;
-		}
-
-		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
-
-		this->listener->OnPliRequired(this);
+		RequestFullFrame();
 	}
 
 	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)
@@ -273,22 +266,5 @@ namespace RTC
 		this->hasRtx         = true;
 		this->rtxPayloadType = payloadType;
 		this->rtxSsrc        = ssrc;
-	}
-
-	void RtpStreamRecv::SetHeaderExtensions(RTC::RtpPacket* packet) const
-	{
-		MS_TRACE();
-
-		if (this->params.ssrcAudioLevelId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
-		}
-
-		if (this->params.absSendTimeId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
-		}
 	}
 } // namespace RTC

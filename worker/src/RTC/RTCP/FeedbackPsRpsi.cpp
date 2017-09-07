@@ -67,8 +67,8 @@ namespace RTC
 
 			MS_ASSERT(payloadType <= 0x7f, "rpsi payload type exceeds the maximum value");
 			MS_ASSERT(
-			    length <= FeedbackPsRpsiItem::maxBitStringSize,
-			    "rpsi bit string length exceeds the maximum value");
+			  length <= FeedbackPsRpsiItem::maxBitStringSize,
+			  "rpsi bit string length exceeds the maximum value");
 
 			this->raw    = new uint8_t[sizeof(Header)];
 			this->header = reinterpret_cast<Header*>(this->raw);

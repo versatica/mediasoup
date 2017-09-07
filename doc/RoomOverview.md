@@ -1,6 +1,6 @@
 # Room Overview
 
-This documentation details how *mediasoup* rooms are created, how peers are added to the room, how `RtpReceiver` and `RtpSender` instances are created/generated, and how RTP parameters are handled.
+This documentation details how *mediasoup* rooms are created, how peers are added to the room, how `Producer` and `Consumer` instances are created/generated, and how RTP parameters are handled.
 
 
 ## Creating a Room
@@ -34,7 +34,7 @@ And the room is done.
 
 A `Peer` is created by calling `room.Peer(name)`.
 
-Once created, peer's capabilities must be set (otherwise no `RtpReceiver` can be created) by calling `peer.setCapabilities(capabilities)`. Those capabilities include codecs, RTP header extensions and FEC mechanisms.
+Once created, peer's capabilities must be set (otherwise no `Producer` can be created) by calling `peer.setCapabilities(capabilities)`. Those capabilities include codecs, RTP header extensions and FEC mechanisms.
 
 These codecs have the same fields as the room codecs, with some variations:
 
@@ -46,11 +46,11 @@ After that, C++ `Room::onPeerCapabilities(capabilities)` is called. This method 
 This is, peer's capabilities are a subset of the mediasoup capabilities and the room capabilities.
 
 
-## Creating a RtpReceiver
+## Creating a Producer
 
-A `RtpReceiver` is created by calling `peer.RtpReceiver(kind, transport)` where `kind` can be "audio", "video" or "depth", and `transport` must be a `Transport` instance previously created by the peer.
+A `Producer` is created by calling `peer.Producer(kind, transport)` where `kind` can be "audio", "video" or "depth", and `transport` must be a `Transport` instance previously created by the peer.
 
-Once created, `rtpReceiver.receive(parameters)` must be called (otherwise the `RtpReceiver` is ignored by the room. `parameters` is a `RtpParameters` object which the following fields:
+Once created, `producer.receive(parameters)` must be called (otherwise the `Producer` is ignored by the room. `parameters` is a `RtpParameters` object which the following fields:
 
 * `muxId` is optional.
 * `codecs` is mandatory.
@@ -69,10 +69,10 @@ Unsupported RTCP feedback mechanisms and RTP header extensions not supported by 
 
 Effective RTP parameters are returned to the `receive()` promise.
 
-`Room::onPeerRtpReceiverParameters()` creates `RtpSenders` associated to this `RtpReceiver` (for every other `Peer` with its capabilities already set) by calling `Peer::AddRtpSender()` on them.
+`Room::onPeerProducerParameters()` creates `Consumers` associated to this `Producer` (for every other `Peer` with its capabilities already set) by calling `Peer::AddConsumer()` on them.
 
-`Peer::AddRtpSender()` takes the associated `RtpParameters` of the `RtpReceiver` as parameter and call `RtpSender::Send(parameters)`.
+`Peer::AddConsumer()` takes the associated `RtpParameters` of the `Producer` as parameter and call `Consumer::Send(parameters)`.
 
-`RtpSender::Send(parameters)` clones the given parameters and removes non supported codecs and non supported RTP header extensions.
+`Consumer::Send(parameters)` clones the given parameters and removes non supported codecs and non supported RTP header extensions.
 
 *TODO:* This must be analyzed.

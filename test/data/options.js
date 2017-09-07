@@ -26,11 +26,11 @@ module.exports =
 				clockRate   : 90000
 			},
 			{
-				kind       : 'video',
-				name       : 'video/h264',
-				clockRate  : 90000,
+				kind        : 'video',
+				name        : 'video/h264',
+				clockRate   : 90000,
 				payloadType : 112,
-				parameters :
+				parameters  :
 				{
 					packetizationMode : 1
 				}
@@ -68,14 +68,14 @@ module.exports =
 				clockRate    : 90000,
 				rtcpFeedback :
 				[
-					{ type: 'nack'                    },
-					{ type: 'nack', parameter: 'pli'  },
-					{ type: 'nack', parameter: 'sli'  },
+					{ type: 'nack' },
+					{ type: 'nack', parameter: 'pli' },
+					{ type: 'nack', parameter: 'sli' },
 					{ type: 'nack', parameter: 'rpsi' },
-					{ type: 'nack', parameter: 'app'  },
-					{ type: 'ccm',  parameter: 'fir'  },
-					{ type: 'ack',  parameter: 'rpsi' },
-					{ type: 'ack',  parameter: 'app'  }
+					{ type: 'nack', parameter: 'app' },
+					{ type: 'ccm', parameter: 'fir' },
+					{ type: 'ack', parameter: 'rpsi' },
+					{ type: 'ack', parameter: 'app' }
 				]
 			},
 			{
@@ -83,30 +83,30 @@ module.exports =
 				name        : 'video/rtx',
 				payloadType : 97,
 				clockRate   : 90000,
-				parameters :
+				parameters  :
 				{
 					apt : 110
 				}
 			},
 			{
-				kind         : 'video',
-				name         : 'video/H264',
-				payloadType  : 111,
-				clockRate    : 90000,
-				parameters   :
+				kind        : 'video',
+				name        : 'video/H264',
+				payloadType : 111,
+				clockRate   : 90000,
+				parameters  :
 				{
 					packetizationMode : 0
 				},
 				rtcpFeedback :
 				[
-					{ type: 'nack'                    },
-					{ type: 'nack', parameter: 'pli'  },
-					{ type: 'nack', parameter: 'sli'  },
+					{ type: 'nack' },
+					{ type: 'nack', parameter: 'pli' },
+					{ type: 'nack', parameter: 'sli' },
 					{ type: 'nack', parameter: 'rpsi' },
-					{ type: 'nack', parameter: 'app'  },
-					{ type: 'ccm',  parameter: 'fir'  },
-					{ type: 'ack',  parameter: 'rpsi' },
-					{ type: 'ack',  parameter: 'app'  }
+					{ type: 'nack', parameter: 'app' },
+					{ type: 'ccm', parameter: 'fir' },
+					{ type: 'ack', parameter: 'rpsi' },
+					{ type: 'ack', parameter: 'app' }
 				]
 			},
 			{
@@ -120,24 +120,24 @@ module.exports =
 				}
 			},
 			{
-				kind         : 'video',
-				name         : 'video/H264',
-				payloadType  : 112,
-				clockRate    : 90000,
-				parameters   :
+				kind        : 'video',
+				name        : 'video/H264',
+				payloadType : 112,
+				clockRate   : 90000,
+				parameters  :
 				{
 					packetizationMode : 1
 				},
 				rtcpFeedback :
 				[
-					{ type: 'nack'                    },
-					{ type: 'nack', parameter: 'pli'  },
-					{ type: 'nack', parameter: 'sli'  },
+					{ type: 'nack' },
+					{ type: 'nack', parameter: 'pli' },
+					{ type: 'nack', parameter: 'sli' },
 					{ type: 'nack', parameter: 'rpsi' },
-					{ type: 'nack', parameter: 'app'  },
-					{ type: 'ccm',  parameter: 'fir'  },
-					{ type: 'ack',  parameter: 'rpsi' },
-					{ type: 'ack',  parameter: 'app'  }
+					{ type: 'nack', parameter: 'app' },
+					{ type: 'ccm', parameter: 'fir' },
+					{ type: 'ack', parameter: 'rpsi' },
+					{ type: 'ack', parameter: 'app' }
 				]
 			},
 			{
@@ -167,7 +167,7 @@ module.exports =
 			},
 			{
 				kind             : '',
-				uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
 				preferredId      : 3,
 				preferredEncrypt : false
 			},

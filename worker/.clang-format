@@ -37,8 +37,8 @@ BreakStringLiterals: false
 ColumnLimit: 100
 CommentPragmas: 'NOLINT'
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
-ConstructorInitializerIndentWidth: 4
-ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 2
 Cpp11BracedListStyle: false
 DerivePointerAlignment: false
 DisableFormat: false

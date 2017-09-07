@@ -4,46 +4,70 @@
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/Request.hpp"
+#include "RTC/ConsumerListener.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
+#include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpReceiver.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunMessage.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "handles/Timer.hpp"
 #include <json/json.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace RTC
 {
+	// Avoid cyclic #include problem by declaring classes instead of including
+	// the corresponding header files.
+	class Producer;
+	class Consumer;
+
 	class Transport : public RTC::UdpSocket::Listener,
 	                  public RTC::TcpServer::Listener,
 	                  public RTC::TcpConnection::Listener,
 	                  public RTC::IceServer::Listener,
 	                  public RTC::DtlsTransport::Listener,
-	                  public RTC::RemoteBitrateEstimator::Listener
+	                  public RTC::RemoteBitrateEstimator::Listener,
+	                  public RTC::ProducerListener,
+	                  public RTC::ConsumerListener,
+	                  public Timer::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnTransportConnected(RTC::Transport* transport)                             = 0;
-			virtual void OnTransportClosed(RTC::Transport* transport)                                = 0;
-			virtual void OnTransportRtcpPacket(RTC::Transport* transport, RTC::RTCP::Packet* packet) = 0;
-			virtual void OnTransportFullFrameRequired(RTC::Transport* transport)                     = 0;
+			virtual void OnTransportClosed(RTC::Transport* transport) = 0;
+			virtual void OnTransportReceiveRtcpFeedback(
+			  RTC::Transport* transport, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) = 0;
 		};
 
 	public:
-		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId, Json::Value& data);
+		struct TransportOptions
+		{
+			bool udp{ true };
+			bool tcp{ true };
+			bool preferIPv4{ true };
+			bool preferIPv6{ true };
+			bool preferUdp{ true };
+			bool preferTcp{ true };
+		};
+
+	public:
+		Transport(
+		  Listener* listener, Channel::Notifier* notifier, uint32_t transportId, TransportOptions& options);
 
 	private:
 		~Transport() override;
@@ -52,18 +76,23 @@ namespace RTC
 		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
-		void AddRtpReceiver(RTC::RtpReceiver* rtpReceiver);
-		void RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver);
+		void HandleProducer(RTC::Producer* producer);
+		void HandleConsumer(RTC::Consumer* consumer);
+		RTC::DtlsTransport::Role SetRemoteDtlsParameters(
+		  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
+		void SetMaxBitrate(uint32_t bitrate);
+		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
-		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
-		RTC::RtpReceiver* GetRtpReceiver(uint32_t ssrc);
 		bool IsConnected() const;
 		void EnableRemb();
-		bool HasRemb();
+		void SendRtcp(uint64_t now);
 
 	private:
 		void MayRunDtlsTransport();
+		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
+		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
+		RTC::Consumer* GetConsumer(uint32_t ssrc) const;
 
 		/* Private methods to unify UDP and TCP behavior. */
 	private:
@@ -76,15 +105,12 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnPacketRecv(
-		    RTC::UdpSocket* socket,
-		    const uint8_t* data,
-		    size_t len,
-		    const struct sockaddr* remoteAddr) override;
+		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
 		void OnRtcTcpConnectionClosed(
-		    RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) override;
+		  RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) override;
 
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
@@ -93,9 +119,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
 		void OnOutgoingStunMessage(
-		    const RTC::IceServer* iceServer,
-		    const RTC::StunMessage* msg,
-		    RTC::TransportTuple* tuple) override;
+		  const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) override;
 		void OnIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
 		void OnIceConnected(const RTC::IceServer* iceServer) override;
 		void OnIceCompleted(const RTC::IceServer* iceServer) override;
@@ -105,23 +129,40 @@ namespace RTC
 	public:
 		void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsConnected(
-		    const RTC::DtlsTransport* dtlsTransport,
-		    RTC::SrtpSession::Profile srtpProfile,
-		    uint8_t* srtpLocalKey,
-		    size_t srtpLocalKeyLen,
-		    uint8_t* srtpRemoteKey,
-		    size_t srtpRemoteKeyLen,
-		    std::string& remoteCert) override;
+		  const RTC::DtlsTransport* dtlsTransport,
+		  RTC::SrtpSession::Profile srtpProfile,
+		  uint8_t* srtpLocalKey,
+		  size_t srtpLocalKeyLen,
+		  uint8_t* srtpRemoteKey,
+		  size_t srtpRemoteKeyLen,
+		  std::string& remoteCert) override;
 		void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnOutgoingDtlsData(
-		    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		void OnDtlsApplicationData(
-		    const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
 	public:
 		void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
+
+		/* Pure virtual methods inherited from RTC::ProducerListener. */
+	public:
+		void OnProducerClosed(RTC::Producer* producer) override;
+		void OnProducerRtpParametersUpdated(RTC::Producer* producer) override;
+		void OnProducerPaused(RTC::Producer* producer) override;
+		void OnProducerResumed(RTC::Producer* producer) override;
+		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
+
+		/* Pure virtual methods inherited from RTC::ConsumerListener. */
+	public:
+		void OnConsumerClosed(RTC::Consumer* consumer) override;
+		void OnConsumerFullFrameRequired(RTC::Consumer* consumer) override;
+
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
 
 	public:
 		// Passed by argument.
@@ -139,16 +180,20 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
+		Timer* timer{ nullptr };
 		bool allocated{ false };
+		// Others (Producers and Consumers).
+		std::unordered_set<RTC::Producer*> producers;
+		std::unordered_set<RTC::Consumer*> consumers;
 		// Others (ICE).
 		std::vector<IceCandidate> iceLocalCandidates;
 		RTC::TransportTuple* selectedTuple{ nullptr };
 		// Others (DTLS).
-		bool remoteDtlsParametersGiven{ false };
+		bool hasRemoteDtlsParameters{ false };
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others (RtpListener).
 		RtpListener rtpListener;
-		// REMB and bitrate stuff.
+		// Others (REMB and bitrate stuff).
 		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 		uint32_t maxBitrate{ 0 };
 		uint32_t effectiveMaxBitrate{ 0 };
@@ -157,24 +202,11 @@ namespace RTC
 
 	/* Inline instance methods. */
 
-	inline void Transport::AddRtpReceiver(RTC::RtpReceiver* rtpReceiver)
-	{
-		this->rtpListener.AddRtpReceiver(rtpReceiver);
-	}
-
-	inline void Transport::RemoveRtpReceiver(const RTC::RtpReceiver* rtpReceiver)
-	{
-		this->rtpListener.RemoveRtpReceiver(rtpReceiver);
-	}
-
-	inline RTC::RtpReceiver* Transport::GetRtpReceiver(uint32_t ssrc)
-	{
-		return this->rtpListener.GetRtpReceiver(ssrc);
-	}
-
 	inline bool Transport::IsConnected() const
 	{
-		return this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED;
+		return (
+		  this->selectedTuple != nullptr &&
+		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
 	inline void Transport::EnableRemb()
@@ -183,14 +215,6 @@ namespace RTC
 		{
 			this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
 		}
-	}
-
-	inline bool Transport::HasRemb()
-	{
-		if (this->remoteBitrateEstimator)
-			return true;
-		else
-			return false;
 	}
 } // namespace RTC
 

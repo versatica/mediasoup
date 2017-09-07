@@ -57,7 +57,7 @@ namespace RTC
 		// packet size excluding headers.
 		// Note that |arrivalTimeMs| can be of an arbitrary time base.
 		virtual void IncomingPacket(
-		    int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, uint32_t absSendTime) = 0;
+		  int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, uint32_t absSendTime) = 0;
 
 		// Removes all data for |ssrc|.
 		virtual void RemoveStream(uint32_t ssrc) = 0;

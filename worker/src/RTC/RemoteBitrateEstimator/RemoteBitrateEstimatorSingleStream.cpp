@@ -23,10 +23,10 @@
 namespace RTC
 {
 	void RemoteBitrateEstimatorSingleStream::IncomingPacket(
-	    int64_t arrivalTimeMs,
-	    size_t payloadSize,
-	    const RtpPacket& packet,
-	    const uint32_t transmissionTimeOffset)
+	  int64_t arrivalTimeMs,
+	  size_t payloadSize,
+	  const RtpPacket& packet,
+	  const uint32_t transmissionTimeOffset)
 	{
 		MS_TRACE();
 
@@ -47,7 +47,7 @@ namespace RTC
 			// automatically cleaned up when we have one RemoteBitrateEstimator per REMB
 			// group.
 			std::pair<SsrcOveruseEstimatorMap::iterator, bool> insertResult = this->overuseDetectors.insert(
-			    std::make_pair(ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
+			  std::make_pair(ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
 			it = insertResult.first;
 		}
 
@@ -78,27 +78,28 @@ namespace RTC
 		int sizeDelta{ 0 };
 
 		if (estimator->interArrival.ComputeDeltas(
-		        rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
+		      rtpTimestamp, arrivalTimeMs, nowMs, payloadSize, &timestampDelta, &timeDelta, &sizeDelta))
 		{
 			double timestampDeltaMs = timestampDelta * TimestampToMs;
 
 			estimator->estimator.Update(
-			    timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
+			  timeDelta, timestampDeltaMs, sizeDelta, estimator->detector.State(), nowMs);
 
 			estimator->detector.Detect(
-			    estimator->estimator.GetOffset(),
-			    timestampDeltaMs,
-			    estimator->estimator.GetNumOfDeltas(),
-			    nowMs);
+			  estimator->estimator.GetOffset(),
+			  timestampDeltaMs,
+			  estimator->estimator.GetNumOfDeltas(),
+			  nowMs);
 		}
 
 		if (estimator->detector.State() == BW_OVERUSING)
 		{
 			uint32_t incomingBitrateBps = this->incomingBitrate.GetRate(nowMs);
 
-			if ((incomingBitrateBps != 0u) &&
-			    (priorState != BW_OVERUSING ||
-			     GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
+			if (
+			  (incomingBitrateBps != 0u) &&
+			  (priorState != BW_OVERUSING ||
+			   GetRemoteRate()->TimeToReduceFurther(nowMs, incomingBitrateBps)))
 			{
 				// The first overuse should immediately trigger a new estimate.
 				// We also have to update the estimate immediately if we are overusing
@@ -175,7 +176,7 @@ namespace RTC
 	}
 
 	bool RemoteBitrateEstimatorSingleStream::LatestEstimate(
-	    std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
+	  std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const
 	{
 		MS_TRACE();
 

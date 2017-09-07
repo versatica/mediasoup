@@ -14,9 +14,9 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnNackRequired(
-			    RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
-			virtual void OnPliRequired(RTC::RtpStreamRecv* rtpStream)                   = 0;
+			virtual void OnRtpStreamRecvNackRequired(
+			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
+			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
 		};
 
 	public:
@@ -33,7 +33,6 @@ namespace RTC
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
-		void SetHeaderExtensions(RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
@@ -41,8 +40,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
-		void OnNackRequired(const std::vector<uint16_t>& seqNumbers) override;
-		void OnFullFrameRequired() override;
+		void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) override;
+		void OnNackGeneratorFullFrameRequired() override;
 
 	private:
 		// Passed by argument.

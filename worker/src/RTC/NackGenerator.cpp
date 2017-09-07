@@ -68,10 +68,10 @@ namespace RTC
 			if (it != this->nackList.end())
 			{
 				MS_DEBUG_TAG(
-				    rtx,
-				    "nacked packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtx,
+				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				this->nackList.erase(it);
 			}
@@ -79,10 +79,10 @@ namespace RTC
 			else
 			{
 				MS_DEBUG_TAG(
-				    rtx,
-				    "out of order packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtx,
+				  "out of order RTX packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 			}
 
 			return;
@@ -96,7 +96,7 @@ namespace RTC
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
 
 		if (!nackBatch.empty())
-			this->listener->OnNackRequired(nackBatch);
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
 		MayRunTimer();
 	}
@@ -115,10 +115,10 @@ namespace RTC
 
 		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
-			MS_DEBUG_TAG(rtx, "nack list too large, clearing it and requesting a full frame");
+			MS_DEBUG_TAG(rtx, "NACK list too large, clearing it and requesting a full frame");
 
 			this->nackList.clear();
-			this->listener->OnFullFrameRequired();
+			this->listener->OnNackGeneratorFullFrameRequired();
 
 			return;
 		}
@@ -133,7 +133,7 @@ namespace RTC
 			NackInfo nackInfo(seq32, sendAtSeqNum);
 
 			MS_ASSERT(
-			    this->nackList.find(seq32) == this->nackList.end(), "packet already in the NACK list");
+			  this->nackList.find(seq32) == this->nackList.end(), "packet already in the NACK list");
 
 			this->nackList[seq32] = nackInfo;
 		}
@@ -150,8 +150,7 @@ namespace RTC
 			NackInfo& nackInfo = it->second;
 			uint16_t seq       = nackInfo.seq32 % (1 << 16);
 
-			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
-			    this->lastSeq32 >= nackInfo.sendAtSeqNum)
+			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 && this->lastSeq32 >= nackInfo.sendAtSeqNum)
 			{
 				nackInfo.retries++;
 				nackInfo.sentAtTime = now;
@@ -159,9 +158,9 @@ namespace RTC
 				if (nackInfo.retries >= MaxNackRetries)
 				{
 					MS_WARN_TAG(
-					    rtx,
-					    "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
-					    seq);
+					  rtx,
+					  "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					  seq);
 
 					it = this->nackList.erase(it);
 				}
@@ -182,9 +181,9 @@ namespace RTC
 				if (nackInfo.retries >= MaxNackRetries)
 				{
 					MS_WARN_TAG(
-					    rtx,
-					    "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
-					    seq);
+					  rtx,
+					  "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					  seq);
 
 					it = this->nackList.erase(it);
 				}
@@ -216,7 +215,7 @@ namespace RTC
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::TIME);
 
 		if (!nackBatch.empty())
-			this->listener->OnNackRequired(nackBatch);
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
 		MayRunTimer();
 	}

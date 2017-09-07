@@ -23,9 +23,9 @@ namespace RTC
 		public:
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsAfbPacket(
-			    CommonHeader* commonHeader, Application application = Application::UNKNOWN);
+			  CommonHeader* commonHeader, Application application = Application::UNKNOWN);
 			FeedbackPsAfbPacket(
-			    uint32_t senderSsrc, uint32_t mediaSsrc, Application application = Application::UNKNOWN);
+			  uint32_t senderSsrc, uint32_t mediaSsrc, Application application = Application::UNKNOWN);
 			~FeedbackPsAfbPacket() override = default;
 
 			Application GetApplication() const;
@@ -45,7 +45,7 @@ namespace RTC
 		/* Inline instance methods. */
 
 		inline FeedbackPsAfbPacket::FeedbackPsAfbPacket(CommonHeader* commonHeader, Application application)
-		    : FeedbackPsPacket(commonHeader)
+		  : FeedbackPsPacket(commonHeader)
 		{
 			this->size = ((static_cast<size_t>(ntohs(commonHeader->length)) + 1) * 4) -
 			             (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header));
@@ -56,8 +56,8 @@ namespace RTC
 		}
 
 		inline FeedbackPsAfbPacket::FeedbackPsAfbPacket(
-		    uint32_t senderSsrc, uint32_t mediaSsrc, Application application)
-		    : FeedbackPsPacket(FeedbackPs::MessageType::AFB, senderSsrc, mediaSsrc)
+		  uint32_t senderSsrc, uint32_t mediaSsrc, Application application)
+		  : FeedbackPsPacket(FeedbackPs::MessageType::AFB, senderSsrc, mediaSsrc)
 		{
 			this->application = application;
 		}

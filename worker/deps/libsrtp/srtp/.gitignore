@@ -47,3 +47,4 @@ test/roc_driver
 test/rtp_decoder
 test/rtpw
 test/srtp_driver
+test/test_srtp

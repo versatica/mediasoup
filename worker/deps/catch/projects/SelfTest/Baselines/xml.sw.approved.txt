@@ -4,39 +4,47 @@
     <TestCase name="# A test name that starts with a #" filename="projects/<exe-name>/MiscTests.cpp" >
       <OverallResult success="true"/>
     </TestCase>
-    <TestCase name="#542" filename="projects/<exe-name>/CompilationTests.cpp" >
-      <Expression success="true" type="CHECK_THROWS_AS" filename="projects/<exe-name>/CompilationTests.cpp" >
-        <Original>
-          throws_int(true), int
-        </Original>
-        <Expanded>
-          throws_int(true), int
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK_THROWS_AS" filename="projects/<exe-name>/CompilationTests.cpp" >
-        <Original>
-          throws_int(true), int&amp;
-        </Original>
-        <Expanded>
-          throws_int(true), int&amp;
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK_THROWS_AS" filename="projects/<exe-name>/CompilationTests.cpp" >
-        <Original>
-          throws_int(true), const int
-        </Original>
-        <Expanded>
-          throws_int(true), const int
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK_THROWS_AS" filename="projects/<exe-name>/CompilationTests.cpp" >
-        <Original>
-          throws_int(true), const int&amp;
-        </Original>
-        <Expanded>
-          throws_int(true), const int&amp;
-        </Expanded>
-      </Expression>
+    <TestCase name="#748 - captures with unexpected exceptions" tags="[!shouldfail][!throws]" filename="projects/<exe-name>/ExceptionTests.cpp" >
+      <Section name="outside assertions" filename="projects/<exe-name>/ExceptionTests.cpp" >
+        <Info>
+          answer := 42
+        </Info>
+        <Exception filename="projects/<exe-name>/ExceptionTests.cpp" >
+          expected exception
+        </Exception>
+        <OverallResults successes="0" failures="1" expectedFailures="0"/>
+      </Section>
+      <Section name="inside REQUIRE_NOTHROW" filename="projects/<exe-name>/ExceptionTests.cpp" >
+        <Info>
+          answer := 42
+        </Info>
+        <Expression success="false" type="REQUIRE_NOTHROW" filename="projects/<exe-name>/ExceptionTests.cpp" >
+          <Original>
+            thisThrows()
+          </Original>
+          <Expanded>
+            thisThrows()
+          </Expanded>
+          <Exception filename="projects/<exe-name>/ExceptionTests.cpp" >
+            expected exception
+          </Exception>
+        </Expression>
+        <OverallResults successes="0" failures="1" expectedFailures="0"/>
+      </Section>
+      <Section name="inside REQUIRE_THROWS" filename="projects/<exe-name>/ExceptionTests.cpp" >
+        <Info>
+          answer := 42
+        </Info>
+        <Expression success="true" type="REQUIRE_THROWS" filename="projects/<exe-name>/ExceptionTests.cpp" >
+          <Original>
+            thisThrows()
+          </Original>
+          <Expanded>
+            thisThrows()
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="#809" filename="projects/<exe-name>/CompilationTests.cpp" >
@@ -46,6 +54,65 @@
         </Original>
         <Expanded>
           42 == {?}
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#833" filename="projects/<exe-name>/CompilationTests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/CompilationTests.cpp" >
+        <Original>
+          a == t
+        </Original>
+        <Expanded>
+          3 == 3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="CHECK" filename="projects/<exe-name>/CompilationTests.cpp" >
+        <Original>
+          a == t
+        </Original>
+        <Expanded>
+          3 == 3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_THROWS" filename="projects/<exe-name>/CompilationTests.cpp" >
+        <Original>
+          throws_int(true)
+        </Original>
+        <Expanded>
+          throws_int(true)
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="CHECK_THROWS_AS" filename="projects/<exe-name>/CompilationTests.cpp" >
+        <Original>
+          throws_int(true), const int&amp;
+        </Original>
+        <Expanded>
+          throws_int(true), const int&amp;
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_NOTHROW" filename="projects/<exe-name>/CompilationTests.cpp" >
+        <Original>
+          throws_int(false)
+        </Original>
+        <Expanded>
+          throws_int(false)
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_THAT" filename="projects/<exe-name>/CompilationTests.cpp" >
+        <Original>
+          "aaa", Catch::EndsWith("aaa")
+        </Original>
+        <Expanded>
+          "aaa" ends with: "aaa"
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/CompilationTests.cpp" >
+        <Original>
+          templated_tests&lt;int>(3)
+        </Original>
+        <Expanded>
+          true
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
@@ -61,12 +128,30 @@
       </Expression>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/MiscTests.cpp" >
         <Original>
-          (*__error()) == 1
+          errno == 1
         </Original>
         <Expanded>
           1 == 1
         </Expanded>
       </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#961 -- Dynamically created sections should all be reported" tags="[.][hide]" filename="projects/<exe-name>/MiscTests.cpp" >
+      <Section name="Looped section 0" filename="projects/<exe-name>/MiscTests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Looped section 1" filename="projects/<exe-name>/MiscTests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Looped section 2" filename="projects/<exe-name>/MiscTests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Looped section 3" filename="projects/<exe-name>/MiscTests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Looped section 4" filename="projects/<exe-name>/MiscTests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="'Not' checks that should fail" tags="[.][failing][hide]" filename="projects/<exe-name>/ConditionTests.cpp" >
@@ -823,7 +908,7 @@
           a
         </Original>
         <Expanded>
-          true
+          0x<hex digits>
         </Expanded>
       </Expression>
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/TrickyTests.cpp" >
@@ -2678,6 +2763,9 @@
         </Expanded>
       </Expression>
       <Info>
+        this message may be logged later
+      </Info>
+      <Info>
         this message should be logged
       </Info>
       <Expression success="false" type="CHECK" filename="projects/<exe-name>/MessageTests.cpp" >
@@ -2689,6 +2777,12 @@
         </Expanded>
       </Expression>
       <Info>
+        this message may be logged later
+      </Info>
+      <Info>
+        this message should be logged
+      </Info>
+      <Info>
         and this, but later
       </Info>
       <Expression success="false" type="CHECK" filename="projects/<exe-name>/MessageTests.cpp" >
@@ -2699,6 +2793,15 @@
           2 == 0
         </Expanded>
       </Expression>
+      <Info>
+        this message may be logged later
+      </Info>
+      <Info>
+        this message should be logged
+      </Info>
+      <Info>
+        and this, but later
+      </Info>
       <Info>
         but not this
       </Info>
@@ -4610,7 +4713,7 @@ re>"
           True
         </Original>
         <Expanded>
-          true
+          1
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/TrickyTests.cpp" >
@@ -4626,7 +4729,7 @@ re>"
           !False
         </Original>
         <Expanded>
-          !false
+          !0
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
@@ -6827,6 +6930,17 @@ re>"
       </Section>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="Reconstruction should be based on stringification: #914" tags="[.][Decomposition][failing][hide]" filename="projects/<exe-name>/DecompositionTests.cpp" >
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/DecompositionTests.cpp" >
+        <Original>
+          truthy(false)
+        </Original>
+        <Expanded>
+          Hey, its truthy!
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
     <TestCase name="SCOPED_INFO is reset for each loop" tags="[.][failing][hide][messages]" filename="projects/<exe-name>/MessageTests.cpp" >
       <Info>
         current counter 0
@@ -7213,6 +7327,24 @@ A string sent directly to stderr
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="Standard error is reported and redirected" tags="[.][hide][messages]" filename="projects/<exe-name>/MessageTests.cpp" >
+      <Section name="std::cerr" filename="projects/<exe-name>/MessageTests.cpp" >
+        <OverallResults successes="0" failures="1" expectedFailures="0"/>
+      </Section>
+      <Section name="std::clog" filename="projects/<exe-name>/MessageTests.cpp" >
+        <OverallResults successes="0" failures="1" expectedFailures="0"/>
+      </Section>
+      <Section name="Interleaved writes to cerr and clog" filename="projects/<exe-name>/MessageTests.cpp" >
+        <OverallResults successes="0" failures="1" expectedFailures="0"/>
+      </Section>
+      <OverallResult success="false">
+        <StdErr>
+Write to std::cerr
+Write to std::clog
+Interleaved writes to error streams
+        </StdErr>
+      </OverallResult>
+    </TestCase>
     <TestCase name="Standard output from all sections is reported" tags="[.][hide][messages]" filename="projects/<exe-name>/MessageTests.cpp" >
       <Section name="one" filename="projects/<exe-name>/MessageTests.cpp" >
         <OverallResults successes="0" failures="1" expectedFailures="0"/>
@@ -7308,7 +7440,8 @@ hello
           <Expanded>
             "error: tag alias, "[@zzz]" already registered.
 	First seen at file:2
-	Redefined at file:10" contains: "[@zzz]"
+	Redefined at file:10
+" contains: "[@zzz]"
           </Expanded>
         </Expression>
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/TagAliasTests.cpp" >
@@ -7318,7 +7451,8 @@ hello
           <Expanded>
             "error: tag alias, "[@zzz]" already registered.
 	First seen at file:2
-	Redefined at file:10" contains: "file"
+	Redefined at file:10
+" contains: "file"
           </Expanded>
         </Expression>
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/TagAliasTests.cpp" >
@@ -7328,7 +7462,8 @@ hello
           <Expanded>
             "error: tag alias, "[@zzz]" already registered.
 	First seen at file:2
-	Redefined at file:10" contains: "2"
+	Redefined at file:10
+" contains: "2"
           </Expanded>
         </Expression>
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/TagAliasTests.cpp" >
@@ -7338,7 +7473,8 @@ hello
           <Expanded>
             "error: tag alias, "[@zzz]" already registered.
 	First seen at file:2
-	Redefined at file:10" contains: "10"
+	Redefined at file:10
+" contains: "10"
           </Expanded>
         </Expression>
         <OverallResults successes="4" failures="0" expectedFailures="0"/>
@@ -10043,7 +10179,7 @@ spanner      <OverallResult success="true"/>
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="855" failures="90" expectedFailures="19"/>
+    <OverallResults successes="864" failures="94" expectedFailures="21"/>
   </Group>
-  <OverallResults successes="855" failures="89" expectedFailures="19"/>
+  <OverallResults successes="864" failures="93" expectedFailures="21"/>
 </Catch>

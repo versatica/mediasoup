@@ -31,7 +31,7 @@ namespace RTC
 
 		const int64_t minFeedbackIntervalMs{ 200 };
 		auto interval =
-		    int64_t{ std::lround((RtcpSize * 8.0 * 1000.0) / (0.05 * this->currentBitrateBps) + 0.5) };
+		  int64_t{ std::lround((RtcpSize * 8.0 * 1000.0) / (0.05 * this->currentBitrateBps) + 0.5) };
 
 		return std::min(std::max(interval, minFeedbackIntervalMs), MaxFeedbackIntervalMs);
 	}
@@ -115,7 +115,7 @@ namespace RTC
 	}
 
 	uint32_t AimdRateControl::ChangeBitrate(
-	    uint32_t newBitrateBps, uint32_t incomingBitrateBps, int64_t nowMs)
+	  uint32_t newBitrateBps, uint32_t incomingBitrateBps, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -135,7 +135,7 @@ namespace RTC
 		const float incomingBitrateKbps = incomingBitrateBps / 1000.0f;
 		// Calculate the max bit rate std dev given the normalized
 		// variance and the current incoming bit rate.
-		const float stdMaxBitRate = sqrt(this->varMaxBitrateKbps * this->avgMaxBitrateKbps);
+		const float stdMaxBitRate = std::sqrt(this->varMaxBitrateKbps * this->avgMaxBitrateKbps);
 
 		switch (this->rateControlState)
 		{
@@ -143,8 +143,7 @@ namespace RTC
 				break;
 
 			case RC_INCREASE:
-				if (this->avgMaxBitrateKbps >= 0 &&
-				    incomingBitrateKbps > this->avgMaxBitrateKbps + 3 * stdMaxBitRate)
+				if (this->avgMaxBitrateKbps >= 0 && incomingBitrateKbps > this->avgMaxBitrateKbps + 3 * stdMaxBitRate)
 				{
 					ChangeRegion(RC_MAX_UNKNOWN);
 					this->avgMaxBitrateKbps = -1.0;
@@ -158,7 +157,7 @@ namespace RTC
 				else
 				{
 					uint32_t multiplicativeIncreaseBps =
-					    MultiplicativeRateIncrease(nowMs, this->timeLastBitrateChange, newBitrateBps);
+					  MultiplicativeRateIncrease(nowMs, this->timeLastBitrateChange, newBitrateBps);
 
 					newBitrateBps += multiplicativeIncreaseBps;
 				}
@@ -177,8 +176,8 @@ namespace RTC
 					// Avoid increasing the rate when over-using.
 					if (this->rateControlRegion != RC_MAX_UNKNOWN)
 					{
-						newBitrateBps = static_cast<uint32_t>(
-						    std::lround(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f));
+						newBitrateBps =
+						  static_cast<uint32_t>(std::lround(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f));
 					}
 
 					newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);
@@ -223,7 +222,7 @@ namespace RTC
 	}
 
 	uint32_t AimdRateControl::MultiplicativeRateIncrease(
-	    int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const
+	  int64_t nowMs, int64_t lastMs, uint32_t currentBitrateBps) const
 	{
 		MS_TRACE();
 
@@ -262,7 +261,7 @@ namespace RTC
 
 		this->varMaxBitrateKbps = (1 - alpha) * this->varMaxBitrateKbps +
 		                          alpha * (this->avgMaxBitrateKbps - incomingBitrateKbps) *
-		                              (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
+		                            (this->avgMaxBitrateKbps - incomingBitrateKbps) / norm;
 
 		// 0.4 ~= 14 kbit/s at 500 kbit/s
 		if (this->varMaxBitrateKbps < 0.4f)

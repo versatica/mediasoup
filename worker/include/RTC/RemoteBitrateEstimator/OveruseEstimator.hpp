@@ -46,7 +46,7 @@ namespace RTC
 		// |currentHypothesis| should be the hypothesis of the over-use detector at
 		// this time.
 		void Update(
-		    int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs);
+		  int64_t tDelta, double tsDelta, int sizeDelta, BandwidthUsage currentHypothesis, int64_t nowMs);
 		// Returns the estimated noise/jitter variance in ms^2.
 		double GetVarNoise() const;
 		// Returns the estimated inter-arrival time delta offset in ms.
@@ -76,8 +76,8 @@ namespace RTC
 	/* Inline methods. */
 
 	inline OverUseDetectorOptions::OverUseDetectorOptions()
-	    : initialSlope(8.0 / 512.0), initialOffset(0), initialE(), initialProcessNoise(),
-	      initialAvgNoise(0.0), initialVarNoise(50)
+	  : initialSlope(8.0 / 512.0), initialOffset(0), initialE(), initialProcessNoise(),
+	    initialAvgNoise(0.0), initialVarNoise(50)
 	{
 		initialE[0][0] = 100;
 		initialE[1][1] = 1e-1;
@@ -87,10 +87,10 @@ namespace RTC
 	}
 
 	inline OveruseEstimator::OveruseEstimator(OverUseDetectorOptions options)
-	    : options(std::move(options)), numOfDeltas(0), slope(this->options.initialSlope),
-	      offset(this->options.initialOffset), prevOffset(this->options.initialOffset), e(),
-	      processNoise(), avgNoise(this->options.initialAvgNoise),
-	      varNoise(this->options.initialVarNoise), tsDeltaHist()
+	  : options(std::move(options)), numOfDeltas(0), slope(this->options.initialSlope),
+	    offset(this->options.initialOffset), prevOffset(this->options.initialOffset), e(),
+	    processNoise(), avgNoise(this->options.initialAvgNoise),
+	    varNoise(this->options.initialVarNoise), tsDeltaHist()
 	{
 		std::memcpy(this->e, this->options.initialE, sizeof(this->e));
 		std::memcpy(this->processNoise, this->options.initialProcessNoise, sizeof(this->processNoise));

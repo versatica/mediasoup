@@ -59,7 +59,7 @@ namespace RTC
 		~RemoteBitrateEstimatorAbsSendTime() override = default;
 
 		void IncomingPacket(
-		    int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, uint32_t absSendTime) override;
+		  int64_t arrivalTimeMs, size_t payloadSize, const RtpPacket& packet, uint32_t absSendTime) override;
 		// This class relies on Process() being called periodically (at least once
 		// every other second) for streams to be timed out properly.
 		void Process() override;
@@ -80,7 +80,7 @@ namespace RTC
 
 	private:
 		void IncomingPacketInfo(
-		    int64_t arrivalTimeMs, uint32_t sendTime24bits, size_t payloadSize, uint32_t ssrc);
+		  int64_t arrivalTimeMs, uint32_t sendTime24bits, size_t payloadSize, uint32_t ssrc);
 
 		void ComputeClusters(std::list<Cluster>* clusters) const;
 		std::list<Cluster>::const_iterator FindBestProbe(const std::list<Cluster>& clusters) const;
@@ -110,7 +110,7 @@ namespace RTC
 	/* Inline Methods. */
 
 	inline Probe::Probe(int64_t sendTimeMs, int64_t recvTimeMs, size_t payloadSize)
-	    : sendTimeMs(sendTimeMs), recvTimeMs(recvTimeMs), payloadSize(payloadSize)
+	  : sendTimeMs(sendTimeMs), recvTimeMs(recvTimeMs), payloadSize(payloadSize)
 	{
 	}
 
@@ -129,7 +129,7 @@ namespace RTC
 	}
 
 	inline RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* observer)
-	    : observer(observer), interArrival(), estimator(), detector(), incomingBitrate()
+	  : observer(observer), interArrival(), estimator(), detector(), incomingBitrate()
 	{
 	}
 

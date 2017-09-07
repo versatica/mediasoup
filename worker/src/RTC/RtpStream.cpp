@@ -37,6 +37,7 @@ namespace RTC
 		if (!this->started)
 		{
 			InitSeq(seq);
+
 			this->started   = true;
 			this->maxSeq    = seq - 1;
 			this->probation = MinSequential;
@@ -48,10 +49,10 @@ namespace RTC
 			if (this->probation == 0u)
 			{
 				MS_WARN_TAG(
-				    rtp,
-				    "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 			}
 
 			return false;
@@ -59,7 +60,7 @@ namespace RTC
 
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
-		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Update highest seen RTP timestamp.
 		if (packet->GetTimestamp() > this->maxTimestamp)
@@ -77,11 +78,9 @@ namespace RTC
 		this->maxSeq        = seq;
 		this->badSeq        = RtpSeqMod + 1; // So seq == badSeq is false.
 		this->cycles        = 0;
-		this->received      = 0;
 		this->receivedPrior = 0;
 		this->expectedPrior = 0;
-		// Also reset the highest seen RTP timestamp.
-		this->maxTimestamp = 0;
+		this->maxTimestamp  = 0; // Also reset the highest seen RTP timestamp.
 
 		// Call the OnInitSeq method of the child.
 		OnInitSeq();
@@ -122,6 +121,7 @@ namespace RTC
 
 			return false;
 		}
+
 		if (udelta < MaxDropout)
 		{
 			// In order, with permissible gap.
@@ -144,20 +144,20 @@ namespace RTC
 				 * (i.e., pretend this was the first packet).
 				 */
 				MS_WARN_TAG(
-				    rtp,
-				    "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				InitSeq(seq);
 			}
 			else
 			{
 				MS_WARN_TAG(
-				    rtp,
-				    "bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
 
@@ -180,19 +180,15 @@ namespace RTC
 		static const Json::StaticString JsonStringClockRate{ "clockRate" };
 		static const Json::StaticString JsonStringUseNack{ "useNack" };
 		static const Json::StaticString JsonStringUsePli{ "usePli" };
-		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
-		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringSsrc]             = Json::UInt{ this->ssrc };
-		json[JsonStringPayloadType]      = Json::UInt{ this->payloadType };
-		json[JsonStringMime]             = this->mime.name;
-		json[JsonStringClockRate]        = Json::UInt{ this->clockRate };
-		json[JsonStringUseNack]          = this->useNack;
-		json[JsonStringUsePli]           = this->usePli;
-		json[JsonStringSsrcAudioLevelId] = Json::UInt{ this->ssrcAudioLevelId };
-		json[JsonStringAbsSendTimeId]    = Json::UInt{ this->absSendTimeId };
+		json[JsonStringSsrc]        = Json::UInt{ this->ssrc };
+		json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
+		json[JsonStringMime]        = this->mime.ToString();
+		json[JsonStringClockRate]   = Json::UInt{ this->clockRate };
+		json[JsonStringUseNack]     = this->useNack;
+		json[JsonStringUsePli]      = this->usePli;
 
 		return json;
 	}

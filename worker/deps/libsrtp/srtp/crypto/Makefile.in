@@ -37,9 +37,9 @@ endif
 
 .PHONY: dummy all runtest clean superclean
 
-dummy : all runtest 
+dummy : all runtest
 
-# test applications 
+# test applications
 ifneq (1, $(USE_OPENSSL))
 AES_CALC = test/aes_calc$(EXE)
 endif
@@ -89,7 +89,7 @@ all: $(testapp)
 # housekeeping functions
 
 clean:
-	rm -f $(testapp) *.o */*.o 
+	rm -f $(testapp) *.o */*.o
 	for a in * .* */*; do if [ -f "$$a~" ] ; then rm $$a~; fi; done;
 	rm -f `find . -name "*.[ch]~*~"`
 	rm -rf latex

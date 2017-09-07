@@ -151,9 +151,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		    "key does not exist [key:%s]",
-		    key.c_str());
+		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		  "key does not exist [key:%s]",
+		  key.c_str());
 
 		return this->mapKeyValues[key].booleanValue;
 	}
@@ -163,9 +163,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		    "key does not exist [key:%s]",
-		    key.c_str());
+		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		  "key does not exist [key:%s]",
+		  key.c_str());
 
 		return this->mapKeyValues[key].integerValue;
 	}
@@ -175,9 +175,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		    "key does not exist [key:%s]",
-		    key.c_str());
+		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		  "key does not exist [key:%s]",
+		  key.c_str());
 
 		return this->mapKeyValues[key].doubleValue;
 	}
@@ -187,9 +187,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		    "key does not exist [key:%s]",
-		    key.c_str());
+		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		  "key does not exist [key:%s]",
+		  key.c_str());
 
 		return this->mapKeyValues[key].stringValue;
 	}
@@ -199,9 +199,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		    "key does not exist [key:%s]",
-		    key.c_str());
+		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
+		  "key does not exist [key:%s]",
+		  key.c_str());
 
 		return this->mapKeyValues[key].arrayOfIntegers;
 	}

@@ -30,7 +30,7 @@ namespace RTC
 
 		/* Instance methods. */
 		FeedbackPsVbcmItem::FeedbackPsVbcmItem(
-		    uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value)
+		  uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value)
 		{
 			this->raw    = new uint8_t[8 + length];
 			this->header = reinterpret_cast<Header*>(this->raw);

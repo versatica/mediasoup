@@ -10,7 +10,7 @@
  */
 /*
  *	
- * Copyright (c) 2001-2006 Cisco Systems, Inc.
+ * Copyright (c) 2001-2017 Cisco Systems, Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,6 @@
 #define RTP_DECODER_H
 
 #include "srtp_priv.h"
-#include "rtp_priv.h"
 #include "rtp.h"
 
 #define DEFAULT_RTP_OFFSET 42

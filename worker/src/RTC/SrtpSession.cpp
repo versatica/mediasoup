@@ -75,8 +75,8 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		    (int)keyLen == policy.rtp.cipher_key_len,
-		    "given keyLen does not match policy.rtp.cipher_keyLen");
+		  (int)keyLen == policy.rtp.cipher_key_len,
+		  "given keyLen does not match policy.rtp.cipher_keyLen");
 
 		switch (type)
 		{

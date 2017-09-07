@@ -17,12 +17,10 @@ namespace RTC
 
 			uint32_t ssrc{ 0 };
 			uint8_t payloadType{ 0 };
-			RTC::RtpCodecMime mime;
+			RTC::RtpCodecMimeType mime;
 			uint32_t clockRate{ 0 };
 			bool useNack{ false };
 			bool usePli{ false };
-			uint8_t ssrcAudioLevelId{ 0 }; // 0 means no ssrc-audio-level id.
-			uint8_t absSendTimeId{ 0 };    // 0 means no abs-send-time id.
 		};
 
 	public:
@@ -33,8 +31,10 @@ namespace RTC
 		uint32_t GetSsrc();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 
-	private:
+	protected:
 		void InitSeq(uint16_t seq);
+
+	private:
 		bool UpdateSeq(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods that must be implemented by the subclass. */
@@ -45,8 +45,9 @@ namespace RTC
 		// Given as argument.
 		RtpStream::Params params;
 		// Others.
-		bool started{ false }; // Whether at least a RTP packet has been received.
-		// https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
+		// Whether at least a RTP packet has been received.
+		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
+		bool started{ false };
 		uint16_t maxSeq{ 0 };        // Highest seq. number seen.
 		uint32_t cycles{ 0 };        // Shifted count of seq. number cycles.
 		uint32_t baseSeq{ 0 };       // Base seq number.
