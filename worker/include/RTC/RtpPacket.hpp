@@ -110,8 +110,8 @@ namespace RTC
 		void MangleExtensionHeaderIds(const std::map<uint8_t, uint8_t>& idMapping);
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
-		void AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id);
-		uint8_t* GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
+		void AddExtensionMapping(RTC::RtpHeaderExtensionUri::Type uri, uint8_t id);
+		uint8_t* GetExtension(RTC::RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
 		bool ReadAudioLevel(uint8_t* volume, bool* voice) const;
 		bool ReadAbsSendTime(uint32_t* time) const;
 		uint8_t* GetPayload() const;
@@ -131,7 +131,7 @@ namespace RTC
 		ExtensionHeader* extensionHeader{ nullptr };
 		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
 		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
-		std::map<RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
+		std::map<RTC::RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0 };
 		uint8_t payloadPadding{ 0 };
@@ -266,12 +266,12 @@ namespace RTC
 		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
 	}
 
-	inline void RtpPacket::AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id)
+	inline void RtpPacket::AddExtensionMapping(RTC::RtpHeaderExtensionUri::Type uri, uint8_t id)
 	{
 		this->extensionMap[uri] = id;
 	}
 
-	inline uint8_t* RtpPacket::GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const
+	inline uint8_t* RtpPacket::GetExtension(RTC::RtpHeaderExtensionUri::Type uri, uint8_t* len) const
 	{
 		*len = 0;
 
@@ -309,7 +309,7 @@ namespace RTC
 		uint8_t extenLen;
 		uint8_t* extenValue;
 
-		extenValue = GetExtension(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &extenLen);
+		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &extenLen);
 
 		if (!extenValue || extenLen != 1)
 			return false;
@@ -326,7 +326,7 @@ namespace RTC
 		uint8_t extenLen;
 		uint8_t* extenValue;
 
-		extenValue = GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
+		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
 
 		if (!extenValue || extenLen != 3)
 			return false;

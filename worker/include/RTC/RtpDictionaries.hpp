@@ -31,6 +31,14 @@ namespace RTC
 		static std::map<Kind, Json::StaticString> kind2Json;
 	};
 
+	enum class RtpProfile : uint8_t
+	{
+		DEFAULT = 0,
+		LOW,
+		MEDIUM,
+		HIGH
+	};
+
 	class RtpCodecMimeType
 	{
 	public:

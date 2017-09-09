@@ -1,6 +1,8 @@
 # TODO in mediasoup v2 (server-side)
 
-* Remote `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
+* `RtpListener`: Remove `ptTable` (period) and add `ridTable`.
+
+* Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
 
 * Must avoid passing JSON data to Transport/Producer/Consumer instance methods. Instead, create API methods that receive "nice" C++ params and do all the JSON decode work in `Router::HandleRequest()`.
 

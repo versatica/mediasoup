@@ -36,12 +36,6 @@ namespace RTC
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
 		FillKnownHeaderExtensions();
 
-		// Create RtpStreamRecv instances.
-		for (auto& encoding : this->rtpParameters.encodings)
-		{
-			CreateRtpStream(encoding);
-		}
-
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
@@ -153,12 +147,6 @@ namespace RTC
 		// Clear previous RtpStreamRecv instances.
 		ClearRtpStreams();
 
-		// Create new RtpStreamRecv instances.
-		for (auto& encoding : this->rtpParameters.encodings)
-		{
-			CreateRtpStream(encoding);
-		}
-
 		for (auto& listener : this->listeners)
 		{
 			// NOTE: This may throw.
@@ -166,8 +154,6 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV("Producer RTP parameters updated [producerId:%" PRIu32 "]", this->producerId);
-
-		RequestFullFrame(true);
 	}
 
 	void Producer::Pause()
@@ -265,6 +251,28 @@ namespace RTC
 
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
+
+		if (
+		  this->rtpStreams.find(ssrc) == this->rtpStreams.end() &&
+		  this->mapRtxStreams.find(ssrc) == this->mapRtxStreams.end())
+		{
+			for (auto& encoding : this->rtpParameters.encodings)
+			{
+				// TODO: This is not ready for RID usage (without SSRC in encodings).
+				if (
+				  encoding.ssrc == ssrc || (encoding.hasRtx && encoding.rtx.ssrc == ssrc) ||
+				  (encoding.hasFec && encoding.fec.ssrc == ssrc))
+				{
+					CreateRtpStream(encoding);
+
+					// If this is the first media packet for this stream request a full frame.
+					if (encoding.ssrc == ssrc)
+						RequestFullFrame(true);
+
+					break;
+				}
+			}
+		}
 
 		RTC::RtpStreamRecv* rtpStream{ nullptr };
 

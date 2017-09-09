@@ -412,11 +412,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Pass it to the RtpListener.
+		// NOTE: This may throw.
+		this->rtpListener.AddProducer(producer);
+
 		// Add to the map.
 		this->producers.insert(producer);
-
-		// Pass it to the RtpListener.
-		this->rtpListener.AddProducer(producer);
 
 		// Add us as listener.
 		producer->AddListener(this);
