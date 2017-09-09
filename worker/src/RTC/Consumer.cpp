@@ -119,6 +119,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Must have a single encoding.
+		if (rtpParameters.encodings.empty())
+			MS_THROW_ERROR("invalid empty rtpParameters.encodings");
+		else if (rtpParameters.encodings[0].ssrc == 0)
+			MS_THROW_ERROR("missing rtpParameters.encodings[0].ssrc");
+
 		if (IsEnabled())
 			Disable();
 
@@ -250,15 +256,6 @@ namespace RTC
 		if (IsPaused())
 			return;
 
-		// Ignore the packet if the SSRC is not the single one in the sender
-		// RTP parameters.
-		if (packet->GetSsrc() != this->rtpParameters.encodings[0].ssrc)
-		{
-			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
-
-			return;
-		}
-
 		// Map the payload type.
 		auto payloadType = packet->GetPayloadType();
 
@@ -295,10 +292,16 @@ namespace RTC
 		// Save the received timestamp.
 		this->lastRecvRtpTimestamp = packet->GetTimestamp();
 
-		// Update packet sequence number.
+		// Save real SSRC.
+		auto ssrc = packet->GetSsrc();
+
+		// Rewrite packet SSRC.
+		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
+
+		// Rewrite packet sequence number.
 		packet->SetSequenceNumber(this->seqNum);
 
-		// Update packet timestamp.
+		// Rewrite packet timestamp.
 		packet->SetTimestamp(this->rtpTimestamp);
 
 		// Process the packet.
@@ -310,6 +313,9 @@ namespace RTC
 			// Update transmitted RTP data counter.
 			this->transmittedCounter.Update(packet);
 		}
+
+		// Restore packet SSRC.
+		packet->SetSsrc(ssrc);
 
 		// Restore the original sequence number.
 		packet->SetSequenceNumber(this->lastRecvSeqNum);

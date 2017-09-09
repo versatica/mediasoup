@@ -988,6 +988,9 @@ namespace RTC
 				{
 					// NOTE: This may throw.
 					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
+
+					// NOTE: This may throw.
+					consumer->Enable(transport, rtpParameters);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -995,8 +998,6 @@ namespace RTC
 
 					return;
 				}
-
-				consumer->Enable(transport, rtpParameters);
 
 				// Tell the Transport to handle the new Consumer.
 				transport->HandleConsumer(consumer);

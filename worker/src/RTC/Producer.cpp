@@ -165,36 +165,6 @@ namespace RTC
 			listener->OnProducerRtpParametersUpdated(this);
 		}
 
-		// Fill the SSRC mapping table.
-
-		this->ssrcMapping.clear();
-
-		auto& newEncodings = this->rtpParameters.encodings;
-
-		for (size_t i = 0; i != this->outputEncodings.size(); ++i)
-		{
-			if (i == newEncodings.size())
-				break;
-
-			auto& newEncoding    = newEncodings[i];
-			auto& outputEncoding = this->outputEncodings[i];
-
-			if (outputEncoding.ssrc != newEncoding.ssrc)
-			{
-				this->ssrcMapping[newEncoding.ssrc] = outputEncoding.ssrc;
-			}
-
-			if (outputEncoding.hasRtx && newEncoding.hasRtx && outputEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
-			{
-				this->ssrcMapping[newEncoding.rtx.ssrc] = outputEncoding.rtx.ssrc;
-			}
-
-			if (outputEncoding.hasFec && newEncoding.hasFec && outputEncoding.fec.ssrc != newEncoding.fec.ssrc)
-			{
-				this->ssrcMapping[newEncoding.fec.ssrc] = outputEncoding.fec.ssrc;
-			}
-		}
-
 		MS_DEBUG_DEV("Producer RTP parameters updated [producerId:%" PRIu32 "]", this->producerId);
 
 		RequestFullFrame(true);
@@ -325,10 +295,9 @@ namespace RTC
 		if (this->paused)
 			return;
 
-		// Apply the Producer codec payload type and SSRC mapping before dispatching
-		// the packet.
-		ApplyPayloadTypeMapping(packet);
-		ApplySsrcMapping(packet);
+		// Apply the Producer codec payload type and extension header mapping before
+		// dispatching the packet.
+		ApplyRtpMapping(packet);
 
 		for (auto& listener : this->listeners)
 		{
@@ -375,27 +344,6 @@ namespace RTC
 		}
 
 		this->lastRtcpSentTime = now;
-	}
-
-	void Producer::ApplyExtensionIdMapping(RTC::RtpPacket* packet) const
-	{
-		MS_TRACE();
-
-		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
-
-		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
-
-		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->knownHeaderExtensions.ssrcAudioLevelId);
-		}
-
-		if (this->knownHeaderExtensions.absSendTimeId != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
-		}
 	}
 
 	void Producer::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const
@@ -592,7 +540,7 @@ namespace RTC
 		this->rtpStreams.clear();
 	}
 
-	void Producer::ApplyPayloadTypeMapping(RTC::RtpPacket* packet) const
+	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
 	{
 		MS_TRACE();
 
@@ -603,16 +551,22 @@ namespace RTC
 		{
 			packet->SetPayloadType(codecPayloadTypeMap.at(payloadType));
 		}
-	}
 
-	void Producer::ApplySsrcMapping(RTC::RtpPacket* packet) const
-	{
-		MS_TRACE();
+		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
 
-		auto ssrc = packet->GetSsrc();
+		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
 
-		if (this->ssrcMapping.find(ssrc) != this->ssrcMapping.end())
-			packet->SetSsrc(this->ssrcMapping.at(ssrc));
+		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->knownHeaderExtensions.ssrcAudioLevelId);
+		}
+
+		if (this->knownHeaderExtensions.absSendTimeId != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
+		}
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
