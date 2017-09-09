@@ -44,6 +44,11 @@ namespace RTC
 				return nullptr;
 			}
 
+			if (header->type == SdesItem::Type::END)
+			{
+				return nullptr;
+			}
+
 			return new SdesItem(header);
 		}
 
@@ -122,17 +127,14 @@ namespace RTC
 			{
 				SdesItem* item = SdesItem::Parse(data + offset, len - offset);
 
-				if (item != nullptr)
+				if (item == nullptr)
 				{
-					if (item->GetType() == SdesItem::Type::END)
-						return chunk.release();
-
-					chunk->AddItem(item);
-					offset += item->GetSize();
+					break;
 				}
 				else
 				{
-					return chunk.release();
+					chunk->AddItem(item);
+					offset += item->GetSize();
 				}
 			}
 
