@@ -1329,7 +1329,7 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpProfile profile)
 	{
 		MS_TRACE();
 
@@ -1344,7 +1344,7 @@ namespace RTC
 		for (auto* consumer : consumers)
 		{
 			if (consumer->IsEnabled())
-				consumer->SendRtpPacket(packet);
+				consumer->SendRtpPacket(packet, profile);
 		}
 
 		// Update audio levels.

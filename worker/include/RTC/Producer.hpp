@@ -76,6 +76,7 @@ namespace RTC
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
+		RTC::RtpProfile GetRtpProfile(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -102,6 +103,7 @@ namespace RTC
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
+		std::map<uint32_t, RTC::RtpProfile> rtpProfiles;
 		Timer* fullFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;

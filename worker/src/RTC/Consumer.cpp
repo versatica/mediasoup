@@ -245,7 +245,7 @@ namespace RTC
 		this->retransmittedCounter.Reset();
 	}
 
-	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void Consumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpProfile profile)
 	{
 		MS_TRACE();
 
@@ -267,6 +267,11 @@ namespace RTC
 
 			return;
 		}
+
+		// If the packet belongs to different profile than the one being sent, drop it.
+		// NOTE: This is specific to simulcast with no temporal layers.
+		if (profile != this->effectiveProfile)
+			return;
 
 		// Check whether sequence number and timestamp sync is required.
 		if (this->syncRequired)

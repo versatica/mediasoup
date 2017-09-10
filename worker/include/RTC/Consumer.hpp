@@ -47,7 +47,7 @@ namespace RTC
 		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
-		void SendRtpPacket(RTC::RtpPacket* packet);
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpProfile profile);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
@@ -89,6 +89,8 @@ namespace RTC
 		uint16_t lastRecvSeqNum{ 0 };
 		uint32_t lastRecvRtpTimestamp{ 0 };
 		bool syncRequired{ true };
+		// RTP profiles.
+		RTC::RtpProfile effectiveProfile{ RTC::RtpProfile::DEFAULT };
 	};
 
 	/* Inline methods. */

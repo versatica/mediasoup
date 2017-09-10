@@ -1555,7 +1555,7 @@ namespace RTC
 		// Do nothing.
 	}
 
-	void Transport::OnProducerRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* /*packet*/)
+	void Transport::OnProducerRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* /*packet*/, RTC::RtpProfile /*profile*/)
 	{
 		// Do nothing.
 	}

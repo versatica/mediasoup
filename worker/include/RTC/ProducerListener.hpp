@@ -16,7 +16,7 @@ namespace RTC
 		virtual void OnProducerRtpParametersUpdated(RTC::Producer* producer)              = 0;
 		virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
 		virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
-		virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+		virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpProfile profile) = 0;
 	};
 } // namespace RTC
 

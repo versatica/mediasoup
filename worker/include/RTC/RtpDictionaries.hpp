@@ -234,6 +234,7 @@ namespace RTC
 		bool active{ true };
 		std::string encodingId;
 		std::vector<std::string> dependencyEncodingIds;
+		RTC::RtpProfile profile{ RTC::RtpProfile::DEFAULT };
 	};
 
 	class RtpHeaderExtensionParameters

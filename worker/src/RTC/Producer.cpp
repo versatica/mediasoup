@@ -303,13 +303,24 @@ namespace RTC
 		if (this->paused)
 			return;
 
+		RTC::RtpProfile profile;
+
+		try
+		{
+			profile = GetRtpProfile(packet);
+		}
+		catch(const MediaSoupError& error)
+		{
+			return;
+		}
+
 		// Apply the Producer codec payload type and extension header mapping before
 		// dispatching the packet.
 		ApplyRtpMapping(packet);
 
 		for (auto& listener : this->listeners)
 		{
-			listener->OnProducerRtpPacket(this, packet);
+			listener->OnProducerRtpPacket(this, packet, profile);
 		}
 
 		// Emit "rtpraw" if enabled.
@@ -575,6 +586,31 @@ namespace RTC
 			packet->AddExtensionMapping(
 			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
 		}
+	}
+
+	RTC::RtpProfile Producer::GetRtpProfile(RTC::RtpPacket* packet)
+	{
+		auto ssrc = packet->GetSsrc();
+
+		// The SSRC is already mapped to a profile.
+		if (this->rtpProfiles.find(ssrc) != this->rtpProfiles.end())
+		{
+			return this->rtpProfiles[ssrc];
+		}
+
+		// Look for the encoding associated with the SSRC.
+		// NOTE: This is specific to simulcast with no temporal layers.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.ssrc == ssrc)
+			{
+				this->rtpProfiles[ssrc] = encoding.profile;
+
+				return encoding.profile;
+			}
+		}
+
+		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", ssrc);
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
