@@ -303,13 +303,13 @@ namespace RTC
 		if (this->paused)
 			return;
 
-		RTC::RtpProfile profile;
+		RTC::RtpEncodingParameters::Profile profile;
 
 		try
 		{
 			profile = GetRtpProfile(packet);
 		}
-		catch(const MediaSoupError& error)
+		catch (const MediaSoupError& error)
 		{
 			return;
 		}
@@ -418,11 +418,9 @@ namespace RTC
 
 			return;
 		}
-		else
-		{
-			// Run the timer.
-			this->fullFrameRequestBlockTimer->Start(FullFrameRequestBlockTimeout);
-		}
+
+		// Run the timer.
+		this->fullFrameRequestBlockTimer->Start(FullFrameRequestBlockTimeout);
 
 		for (auto& kv : this->rtpStreams)
 		{
@@ -588,7 +586,7 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpProfile Producer::GetRtpProfile(RTC::RtpPacket* packet)
+	RTC::RtpEncodingParameters::Profile Producer::GetRtpProfile(RTC::RtpPacket* packet)
 	{
 		auto ssrc = packet->GetSsrc();
 

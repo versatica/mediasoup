@@ -31,14 +31,6 @@ namespace RTC
 		static std::map<Kind, Json::StaticString> kind2Json;
 	};
 
-	enum class RtpProfile : uint8_t
-	{
-		DEFAULT = 0,
-		LOW,
-		MEDIUM,
-		HIGH
-	};
-
 	class RtpCodecMimeType
 	{
 	public:
@@ -215,6 +207,19 @@ namespace RTC
 	class RtpEncodingParameters
 	{
 	public:
+		enum class Profile : uint8_t
+		{
+			DEFAULT = 0,
+			LOW,
+			MEDIUM,
+			HIGH
+		};
+
+	public:
+		static std::map<std::string, Profile> string2Profile;
+		static std::map<Profile, std::string> profile2String;
+
+	public:
 		RtpEncodingParameters(){};
 		explicit RtpEncodingParameters(Json::Value& data);
 
@@ -234,7 +239,7 @@ namespace RTC
 		bool active{ true };
 		std::string encodingId;
 		std::vector<std::string> dependencyEncodingIds;
-		RTC::RtpProfile profile{ RTC::RtpProfile::DEFAULT };
+		Profile profile{ Profile::DEFAULT };
 	};
 
 	class RtpHeaderExtensionParameters

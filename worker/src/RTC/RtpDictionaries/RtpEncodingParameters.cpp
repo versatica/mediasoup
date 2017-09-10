@@ -7,6 +7,26 @@
 
 namespace RTC
 {
+	/* Class static data. */
+
+	// clang-format off
+	std::map<std::string, RTC::RtpEncodingParameters::Profile> RTC::RtpEncodingParameters::string2Profile =
+		{
+			{ "default", RTC::RtpEncodingParameters::Profile::DEFAULT },
+			{ "low",     RTC::RtpEncodingParameters::Profile::LOW     },
+			{ "medium",  RTC::RtpEncodingParameters::Profile::MEDIUM  },
+			{ "high",    RTC::RtpEncodingParameters::Profile::HIGH    }
+		};
+
+	std::map<RTC::RtpEncodingParameters::Profile, std::string> RTC::RtpEncodingParameters::profile2String =
+		{
+			{ RTC::RtpEncodingParameters::Profile::DEFAULT, "default" },
+			{ RTC::RtpEncodingParameters::Profile::LOW,     "low"     },
+			{ RTC::RtpEncodingParameters::Profile::MEDIUM,  "medium"  },
+			{ RTC::RtpEncodingParameters::Profile::HIGH,    "high"    }
+		};
+	// clang-format on
+
 	/* Instance methods. */
 
 	RtpEncodingParameters::RtpEncodingParameters(Json::Value& data)
@@ -23,6 +43,7 @@ namespace RTC
 		static const Json::StaticString JsonStringActive{ "active" };
 		static const Json::StaticString JsonStringEncodingId{ "encodingId" };
 		static const Json::StaticString JsonStringDependencyEncodingIds{ "dependencyEncodingIds" };
+		static const Json::StaticString JsonStringProfile{ "profile" };
 
 		if (!data.isObject())
 			MS_THROW_ERROR("RtpEncodingParameters is not an object");
@@ -84,6 +105,17 @@ namespace RTC
 					this->dependencyEncodingIds.push_back(entry.asString());
 			}
 		}
+
+		// profile is optional.
+		if (data[JsonStringProfile].isString())
+		{
+			std::string profileStr = data[JsonStringProfile].asString();
+
+			if (string2Profile.find(profileStr) == string2Profile.end())
+				MS_THROW_ERROR("unknown profile");
+
+			this->profile = string2Profile[profileStr];
+		}
 	}
 
 	Json::Value RtpEncodingParameters::ToJson() const
@@ -100,6 +132,7 @@ namespace RTC
 		static const Json::StaticString JsonStringActive{ "active" };
 		static const Json::StaticString JsonStringEncodingId{ "encodingId" };
 		static const Json::StaticString JsonStringDependencyEncodingIds{ "dependencyEncodingIds" };
+		static const Json::StaticString JsonStringProfile{ "profile" };
 
 		Json::Value json(Json::objectValue);
 
@@ -148,6 +181,8 @@ namespace RTC
 				json[JsonStringDependencyEncodingIds].append(entry);
 			}
 		}
+
+		json[JsonStringProfile] = RtpEncodingParameters::profile2String[this->profile];
 
 		return json;
 	}

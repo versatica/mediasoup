@@ -47,12 +47,13 @@ namespace RTC
 		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpProfile profile);
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetTransmissionRate(uint64_t now);
 		void RequestFullFrame();
+		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 
 	private:
 		void FillSupportedCodecPayloadTypes();
@@ -90,7 +91,8 @@ namespace RTC
 		uint32_t lastRecvRtpTimestamp{ 0 };
 		bool syncRequired{ true };
 		// RTP profiles.
-		RTC::RtpProfile effectiveProfile{ RTC::RtpProfile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 	};
 
 	/* Inline methods. */
@@ -123,6 +125,19 @@ namespace RTC
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
 	{
 		return this->transmittedCounter.GetRate(now) + this->retransmittedCounter.GetRate(now);
+	}
+
+	inline void Consumer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		if (this->preferredProfile == profile)
+			return;
+
+		this->preferredProfile = profile;
+
+		// TODO: Set it dynamically dynamic.
+		this->effectiveProfile = profile;
+		this->syncRequired = true;
+		RequestFullFrame();
 	}
 } // namespace RTC
 

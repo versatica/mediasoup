@@ -1071,6 +1071,47 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_PROFILE:
+			{
+				static const Json::StaticString JsonStringProfile{ "profile" };
+
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (!request->data[JsonStringProfile].isString())
+				{
+					request->Reject("missing data.profile");
+
+					return;
+				}
+
+				std::string profileStr = request->data[JsonStringProfile].asString();
+				auto it                = RTC::RtpEncodingParameters::string2Profile.find(profileStr);
+
+				if (it == RTC::RtpEncodingParameters::string2Profile.end())
+				{
+					request->Reject("unknown profile");
+
+					return;
+				}
+
+				consumer->SetPreferredProfile(it->second);
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");
@@ -1329,7 +1370,8 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpProfile profile)
+	void Router::OnProducerRtpPacket(
+	  RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
 

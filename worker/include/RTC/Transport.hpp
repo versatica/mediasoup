@@ -153,7 +153,10 @@ namespace RTC
 		void OnProducerRtpParametersUpdated(RTC::Producer* producer) override;
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
-		void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpProfile profile) override;
+		void OnProducerRtpPacket(
+		  RTC::Producer* producer,
+		  RTC::RtpPacket* packet,
+		  RTC::RtpEncodingParameters::Profile profile) override;
 
 		/* Pure virtual methods inherited from RTC::ConsumerListener. */
 	public:

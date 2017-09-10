@@ -66,6 +66,8 @@ namespace RTC
 		static const Json::StaticString JsonStringEnabled{ "enabled" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
 		static const Json::StaticString JsonStringSourcePaused{ "sourcePaused" };
+		static const Json::StaticString JsonStringPreferredProfile{ "preferredProfile" };
+		static const Json::StaticString JsonStringEffectiveProfile{ "effectiveProfile" };
 
 		Json::Value json(Json::objectValue);
 
@@ -84,6 +86,12 @@ namespace RTC
 		json[JsonStringPaused] = this->paused;
 
 		json[JsonStringSourcePaused] = this->sourcePaused;
+
+		json[JsonStringPreferredProfile] =
+		  RTC::RtpEncodingParameters::profile2String[this->preferredProfile];
+
+		json[JsonStringEffectiveProfile] =
+		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
 
 		return json;
 	}
@@ -245,7 +253,7 @@ namespace RTC
 		this->retransmittedCounter.Reset();
 	}
 
-	void Consumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpProfile profile)
+	void Consumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
 
