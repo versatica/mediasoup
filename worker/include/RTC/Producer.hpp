@@ -30,6 +30,17 @@ namespace RTC
 			std::map<uint8_t, uint8_t> headerExtensionIds;
 		};
 
+	public:
+		// RTP header extension ids that must be shared by all the Producers using
+		// the same Transport.
+		// NOTE: These ids are the original ids in the RTP packet (before the Producer
+		// maps them to the corresponding ids in the room).
+		struct HeaderExtensionsForTransport
+		{
+			uint8_t absSendTimeId{ 0 }; // 0 means no abs-send-time id.
+			uint8_t ridId{ 0 };         // 0 means no abs-send-time id.
+		};
+
 	private:
 		struct KnownHeaderExtensions
 		{
