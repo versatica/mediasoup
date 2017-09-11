@@ -315,7 +315,7 @@ namespace RTC
 
 		try
 		{
-			profile = GetRtpProfile(packet);
+			profile = GetRtpProfile(rtpStream, packet);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -612,14 +612,16 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpEncodingParameters::Profile Producer::GetRtpProfile(RTC::RtpPacket* packet)
+	RTC::RtpEncodingParameters::Profile Producer::GetRtpProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
 	{
 		auto ssrc = packet->GetSsrc();
 
-		// The SSRC is already mapped to a profile.
-		if (this->rtpProfiles.find(ssrc) != this->rtpProfiles.end())
+		// The stream is already mapped to a profile.
+		if (this->rtpProfiles.find(rtpStream) != this->rtpProfiles.end())
 		{
-			return this->rtpProfiles[ssrc];
+			auto it = this->rtpProfiles[rtpStream].begin();
+
+			return *it;
 		}
 
 		// Look for the encoding associated with the SSRC.
@@ -628,7 +630,7 @@ namespace RTC
 		{
 			if (encoding.ssrc == ssrc)
 			{
-				this->rtpProfiles[ssrc] = encoding.profile;
+				this->rtpProfiles[rtpStream].insert(encoding.profile);
 
 				return encoding.profile;
 			}
