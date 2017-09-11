@@ -226,11 +226,6 @@ namespace RTC
 
 	void Consumer::AddProfile(const RTC::RtpEncodingParameters::Profile profile)
 	{
-		// If this is the first enabled profile, remove the NONE entry from the set.
-		if (this->profiles.size() == 1 &&
-				(*(this->profiles.begin()) == RTC::RtpEncodingParameters::Profile::NONE))
-			this->profiles.clear();
-
 		// Insert profile.
 		this->profiles.insert(profile);
 
