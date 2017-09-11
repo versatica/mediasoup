@@ -53,7 +53,7 @@ namespace RTC
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
 		{
-			MS_DEBUG_TAG(rtp, "packet discarded");
+			MS_WARN_TAG(rtp, "packet discarded");
 
 			return false;
 		}
