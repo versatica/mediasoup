@@ -454,6 +454,16 @@ namespace RTC
 				// Add us as listener.
 				consumer->AddListener(this);
 
+				auto profiles = producer->GetProfiles();
+				std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
+
+				for (it = profiles.rbegin(); it != profiles.rend(); ++it)
+				{
+					auto profile = *it;
+
+					consumer->AddProfile(profile);
+				}
+
 				// Insert into the maps.
 				this->consumers[consumerId] = consumer;
 				this->mapProducerConsumers[producer].insert(consumer);
@@ -1403,6 +1413,39 @@ namespace RTC
 				audioLevelContainer.numdBovs++;
 				audioLevelContainer.sumdBovs += dBov;
 			}
+		}
+	}
+
+	void Router::OnProducerProfileEnabled(RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto* consumer : consumers)
+		{
+			consumer->AddProfile(profile);
+		}
+	}
+
+	void Router::OnProducerProfileDisabled(RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	{
+
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto* consumer : consumers)
+		{
+			consumer->RemoveProfile(profile);
 		}
 	}
 

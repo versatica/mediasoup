@@ -84,13 +84,14 @@ namespace RTC
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
 		void RequestFullFrame(bool force = false);
+		const std::set<RTC::RtpEncodingParameters::Profile> GetProfiles() const;
 
 	private:
 		void FillHeaderExtensionIds();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
-		RTC::RtpEncodingParameters::Profile GetRtpProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet);
+		RTC::RtpEncodingParameters::Profile GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -164,6 +165,23 @@ namespace RTC
 
 			rtpStream->ReceiveRtcpSenderReport(report);
 		}
+	}
+
+	inline const std::set<RTC::RtpEncodingParameters::Profile> Producer::GetProfiles() const
+	{
+		std::set<RTC::RtpEncodingParameters::Profile> profiles;
+
+		for (const auto& it : this->rtpProfiles)
+		{
+			for (const auto& it2 : it.second)
+			{
+				auto profile = it2;
+
+				profiles.insert(profile);
+			}
+		}
+
+		return profiles;
 	}
 } // namespace RTC
 

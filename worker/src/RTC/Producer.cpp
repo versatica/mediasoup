@@ -315,7 +315,7 @@ namespace RTC
 
 		try
 		{
-			profile = GetRtpProfile(rtpStream, packet);
+			profile = GetProfile(rtpStream, packet);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -612,7 +612,7 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpEncodingParameters::Profile Producer::GetRtpProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
+	RTC::RtpEncodingParameters::Profile Producer::GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
 	{
 		auto ssrc = packet->GetSsrc();
 
@@ -631,6 +631,11 @@ namespace RTC
 			if (encoding.ssrc == ssrc)
 			{
 				this->rtpProfiles[rtpStream].insert(encoding.profile);
+
+				for (auto& listener : this->listeners)
+				{
+					listener->OnProducerProfileEnabled(this, encoding.profile);
+				}
 
 				return encoding.profile;
 			}
@@ -707,8 +712,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!healthy)
-			MS_DEBUG_TAG(rtp, "stream is not healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
+		auto& profiles = this->rtpProfiles[rtpStreamRecv];
+
+		// The stream has transitioned to non healthy.
+		if (rtpStream->IsHealthy() && !healthy)
+		{
+				MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+			// Notify about the profiles being disabled.
+			for (auto& profile : profiles)
+			{
+				for (auto& listener : this->listeners)
+					listener->OnProducerProfileDisabled(this, profile);
+			}
+		}
+		// The stream has transitioned to healthy.
+		if (!rtpStream->IsHealthy() && healthy)
+		{
+				MS_DEBUG_TAG(rtp, "stream is now healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+			// Notify about the profiles being disabled.
+			for (auto& profile : profiles)
+			{
+				for (auto& listener : this->listeners)
+					listener->OnProducerProfileDisabled(this, profile);
+			}
+		}
 	}
 
 	inline void Producer::OnTimer(Timer* timer)

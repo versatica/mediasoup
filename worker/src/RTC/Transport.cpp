@@ -1563,6 +1563,18 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void Transport::OnProducerProfileEnabled(RTC::Producer* /*producer*/,
+			RTC::RtpEncodingParameters::Profile /*profile*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerProfileDisabled(RTC::Producer* /*producer*/,
+			RTC::RtpEncodingParameters::Profile /*profile*/)
+	{
+		// Do nothing.
+	}
+
 	void Transport::OnConsumerClosed(RTC::Consumer* consumer)
 	{
 		MS_TRACE();

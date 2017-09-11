@@ -224,6 +224,31 @@ namespace RTC
 		this->rtpStream->ClearRetransmissionBuffer();
 	}
 
+	void Consumer::AddProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		// If this is the first enabled profile, remove the NONE entry from the set.
+		if (this->profiles.size() == 1 &&
+				(*(this->profiles.begin()) == RTC::RtpEncodingParameters::Profile::NONE))
+			this->profiles.clear();
+
+		// Insert profile.
+		this->profiles.insert(profile);
+
+		MS_DEBUG_TAG(rtp, "profile added: %s", RTC::RtpEncodingParameters::profile2String[profile].c_str());;
+
+		RecalculateEffectiveProfile();
+	}
+
+	void Consumer::RemoveProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		// Remove profile.
+		this->profiles.erase(profile);
+
+		MS_DEBUG_TAG(rtp, "profile removed: %s", RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());;
+
+		RecalculateEffectiveProfile();
+	}
+
 	void Consumer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
@@ -233,16 +258,7 @@ namespace RTC
 
 		this->preferredProfile = profile;
 
-		// TODO: Set it dynamically.
-		this->effectiveProfile = profile;
-
-		if (IsEnabled() && !IsPaused())
-		{
-			this->syncRequired = true;
-			this->rtpStream->ClearRetransmissionBuffer();
-
-			RequestFullFrame();
-		}
+		RecalculateEffectiveProfile();
 	}
 
 	/**
@@ -566,5 +582,47 @@ namespace RTC
 		// Delete the RTX RtpPacket if it was created.
 		if (rtxPacket != packet)
 			delete rtxPacket;
+	}
+
+	void Consumer::RecalculateEffectiveProfile()
+	{
+		static const Json::StaticString JsonStringProfile{ "profile" };
+
+		Json::Value eventData(Json::objectValue);
+
+		RTC::RtpEncodingParameters::Profile newProfile;
+
+		// If there is no preferred profile, take the best one available.
+		if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::NONE)
+		{
+			auto it = this->profiles.crbegin();
+			newProfile = *it;
+		}
+		// Otherwise take the highest available profile equal or lower than the preferred.
+		else
+		{
+			auto it = this->profiles.lower_bound(this->preferredProfile);
+			newProfile = *it;
+		}
+
+		if (newProfile == this->effectiveProfile)
+			return;
+
+		this->effectiveProfile = newProfile;
+
+		MS_DEBUG_TAG(rtp, "new effective profile: %s", RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());;
+
+		// Notify.
+		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
+		this->notifier->Emit(this->consumerId, "effectiveprofilechange", eventData);
+
+		if (IsEnabled() && !IsPaused())
+		{
+			this->rtpStream->ClearRetransmissionBuffer();
+
+			RequestFullFrame();
+		}
+
+		this->syncRequired = true;
 	}
 } // namespace RTC

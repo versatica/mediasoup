@@ -18,6 +18,8 @@ namespace RTC
 		virtual void OnProducerResumed(RTC::Producer* producer)              = 0;
 		virtual void OnProducerRtpPacket(
 		  RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile) = 0;
+		virtual void OnProducerProfileEnabled(RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) = 0;
+		virtual void OnProducerProfileDisabled(RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) = 0;
 	};
 } // namespace RTC
 

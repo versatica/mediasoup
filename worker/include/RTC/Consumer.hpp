@@ -16,6 +16,7 @@
 #include "RTC/Transport.hpp"
 #include <json/json.h>
 #include <unordered_set>
+#include <set>
 
 namespace RTC
 {
@@ -42,6 +43,8 @@ namespace RTC
 		void Resume();
 		void SourcePause();
 		void SourceResume();
+		void AddProfile(const RTC::RtpEncodingParameters::Profile profile);
+		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SourceRtpParametersUpdated();
 		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void Disable();
@@ -59,6 +62,7 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+		void RecalculateEffectiveProfile();
 
 	/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
 	public:
@@ -95,8 +99,9 @@ namespace RTC
 		uint32_t lastRecvRtpTimestamp{ 0 };
 		bool syncRequired{ true };
 		// RTP profiles.
-		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		std::set<RTC::RtpEncodingParameters::Profile> profiles;
+		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::NONE };
+		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
 	};
 
 	/* Inline methods. */

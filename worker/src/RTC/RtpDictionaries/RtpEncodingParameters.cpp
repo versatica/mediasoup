@@ -12,18 +12,18 @@ namespace RTC
 	// clang-format off
 	std::map<std::string, RTC::RtpEncodingParameters::Profile> RTC::RtpEncodingParameters::string2Profile =
 		{
-			{ "default", RTC::RtpEncodingParameters::Profile::DEFAULT },
-			{ "low",     RTC::RtpEncodingParameters::Profile::LOW     },
-			{ "medium",  RTC::RtpEncodingParameters::Profile::MEDIUM  },
-			{ "high",    RTC::RtpEncodingParameters::Profile::HIGH    }
+			{ "none",   RTC::RtpEncodingParameters::Profile::NONE   },
+			{ "low",    RTC::RtpEncodingParameters::Profile::LOW    },
+			{ "medium", RTC::RtpEncodingParameters::Profile::MEDIUM },
+			{ "high",   RTC::RtpEncodingParameters::Profile::HIGH   }
 		};
 
 	std::map<RTC::RtpEncodingParameters::Profile, std::string> RTC::RtpEncodingParameters::profile2String =
 		{
-			{ RTC::RtpEncodingParameters::Profile::DEFAULT, "default" },
-			{ RTC::RtpEncodingParameters::Profile::LOW,     "low"     },
-			{ RTC::RtpEncodingParameters::Profile::MEDIUM,  "medium"  },
-			{ RTC::RtpEncodingParameters::Profile::HIGH,    "high"    }
+			{ RTC::RtpEncodingParameters::Profile::NONE,   "none"   },
+			{ RTC::RtpEncodingParameters::Profile::LOW,    "low"     },
+			{ RTC::RtpEncodingParameters::Profile::MEDIUM, "medium"  },
+			{ RTC::RtpEncodingParameters::Profile::HIGH,   "high"    }
 		};
 	// clang-format on
 
