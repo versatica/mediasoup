@@ -27,7 +27,7 @@ namespace RTC
 		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
-		virtual Json::Value ToJson() const = 0;
+		virtual Json::Value ToJson() = 0;
 		uint32_t GetSsrc();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 

@@ -23,7 +23,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::ToJson() const
+	Json::Value RtpStreamRecv::ToJson()
 	{
 		MS_TRACE();
 
@@ -32,6 +32,7 @@ namespace RTC
 		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
 		static const Json::StaticString JsonStringTransit{ "transit" };
 		static const Json::StaticString JsonStringJitter{ "jitter" };
+		static const Json::StaticString JsonStringBitRate{ "bitrate" };
 
 		Json::Value json(Json::objectValue);
 
@@ -40,6 +41,7 @@ namespace RTC
 		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
 		json[JsonStringTransit]      = Json::UInt{ this->transit };
 		json[JsonStringJitter]       = Json::UInt{ this->jitter };
+		json[JsonStringBitRate]      = Json::UInt{ GetBitRate() };
 
 		return json;
 	}
@@ -55,6 +57,8 @@ namespace RTC
 
 			return false;
 		}
+
+		this->receivedCounter.Update(packet);
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
@@ -214,6 +218,13 @@ namespace RTC
 		}
 	}
 
+	uint32_t RtpStreamRecv::GetBitRate()
+	{
+		uint64_t now = DepLibUV::GetTime();
+
+		return this->receivedCounter.GetRate(now);
+	}
+
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
 	{
 		MS_TRACE();
@@ -242,7 +253,7 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_WARN_TAG(
+		MS_DEBUG_TAG(
 		  rtx,
 		  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
 		  this->params.ssrc,
