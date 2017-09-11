@@ -15,9 +15,9 @@
 #include "handles/Timer.hpp"
 #include <json/json.h>
 #include <map>
-#include <set>
 #include <string>
 #include <unordered_set>
+#include <set>
 #include <vector>
 
 namespace RTC
@@ -176,6 +176,9 @@ namespace RTC
 			for (const auto& it2 : it.second)
 			{
 				auto profile = it2;
+
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
 
 				profiles.insert(profile);
 			}
