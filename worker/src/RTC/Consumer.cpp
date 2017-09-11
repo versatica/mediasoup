@@ -596,8 +596,20 @@ namespace RTC
 		// Otherwise take the highest available profile equal or lower than the preferred.
 		else
 		{
-			auto it = this->profiles.lower_bound(this->preferredProfile);
-			newProfile = *it;
+			std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
+
+			newProfile = RtpEncodingParameters::Profile::NONE;
+
+			for (it = this->profiles.rbegin(); it != this->profiles.rend(); ++it)
+			{
+				auto profile = *it;
+
+				if (profile <= this->preferredProfile)
+				{
+					newProfile = *it;
+					break;
+				}
+			}
 		}
 
 		if (newProfile == this->effectiveProfile)
