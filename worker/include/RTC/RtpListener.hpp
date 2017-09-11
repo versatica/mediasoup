@@ -42,13 +42,9 @@ namespace RTC
 		auto it = this->ssrcTable.find(ssrc);
 
 		if (it == this->ssrcTable.end())
-		{
 			return false;
-		}
 		else
-		{
 			return (it->second != producer);
-		}
 	}
 
 	inline bool RtpListener::HasMuxId(const std::string& muxId, const RTC::Producer* producer) const
@@ -56,13 +52,9 @@ namespace RTC
 		auto it = this->muxIdTable.find(muxId);
 
 		if (it == this->muxIdTable.end())
-		{
 			return false;
-		}
 		else
-		{
 			return (it->second != producer);
-		}
 	}
 } // namespace RTC
 

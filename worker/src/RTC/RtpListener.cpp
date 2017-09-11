@@ -72,6 +72,7 @@ namespace RTC
 			if (existingProducer == producer)
 			{
 				previousMuxId = muxId;
+
 				break;
 			}
 		}
@@ -236,9 +237,7 @@ namespace RTC
 		auto it = this->ssrcTable.find(ssrc);
 
 		if (it != this->ssrcTable.end())
-		{
 			return it->second;
-		}
 
 		return nullptr;
 	}
