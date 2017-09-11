@@ -50,6 +50,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->profiles.clear();
+
 		ClearRtpStreams();
 	}
 
@@ -151,24 +153,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpParameters = rtpParameters;
-
-		// Notify about all profiles being disabled.
-		for (auto& kv : this->profiles)
-		{
-			auto& profiles = kv.second;
-
-			for (auto profile : profiles)
-			{
-				// Don't announce default profile, but just those for simulcast/SVC.
-				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-					break;
-
-				for (auto& listener : this->listeners)
-				{
-					listener->OnProducerProfileDisabled(this, profile);
-				}
-			}
-		}
 
 		// Clear previous RtpStreamRecv instances.
 		ClearRtpStreams();
@@ -325,10 +309,6 @@ namespace RTC
 			return;
 		}
 
-		// If paused stop here.
-		if (this->paused)
-			return;
-
 		RTC::RtpEncodingParameters::Profile profile;
 
 		try
@@ -339,6 +319,10 @@ namespace RTC
 		{
 			return;
 		}
+
+		// If paused stop here.
+		if (this->paused)
+			return;
 
 		// Apply the Producer codec payload type and extension header mapping before
 		// dispatching the packet.
@@ -508,12 +492,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Don't create an RtpStreamRecv if the encoding has no SSRC.
-		// TODO: For simulcast or, if not announced, this would be done
-		// dynamicall by the RtpListener when matching a RID with its SSRC.
-		if (encoding.ssrc == 0u)
-			return;
-
 		uint32_t ssrc = encoding.ssrc;
 
 		// Don't create a RtpStreamRecv if there is already one for the same SSRC.
@@ -560,7 +538,9 @@ namespace RTC
 		params.usePli      = usePli;
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, params);
+		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
+
+		this->rtpStreams[ssrc] = rtpStream;
 
 		// Enable REMB in the transport if requested.
 		if (useRemb)
@@ -578,6 +558,21 @@ namespace RTC
 			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
 			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
 		}
+
+		// Enter the stream into the profiles map.
+		// NOTE: This is specific to simulcast with no temporal layers.
+		auto profile = encoding.profile;
+
+		this->profiles[rtpStream].insert(profile);
+
+		// Don't announce default profile, but just those for simulcast/SVC.
+		if (profile != RTC::RtpEncodingParameters::Profile::DEFAULT)
+		{
+			for (auto& listener : this->listeners)
+			{
+				listener->OnProducerProfileEnabled(this, profile);
+			}
+		}
 	}
 
 	void Producer::ClearRtpStreams()
@@ -589,6 +584,24 @@ namespace RTC
 			auto rtpStream = kv.second;
 
 			delete rtpStream;
+		}
+
+		// Notify about all profiles being disabled.
+		for (auto& kv : this->profiles)
+		{
+			auto& profiles = kv.second;
+
+			for (auto profile : profiles)
+			{
+				// Don't announce default profile, but just those for simulcast/SVC.
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
+
+				for (auto& listener : this->listeners)
+				{
+					listener->OnProducerProfileDisabled(this, profile);
+				}
+			}
 		}
 
 		this->rtpStreams.clear();
@@ -643,32 +656,7 @@ namespace RTC
 			return profile;
 		}
 
-		auto ssrc = packet->GetSsrc();
-
-		// Look for the encoding associated with the SSRC.
-		// NOTE: This is specific to simulcast with no temporal layers.
-		for (auto& encoding : this->rtpParameters.encodings)
-		{
-			if (encoding.ssrc == ssrc)
-			{
-				auto profile = encoding.profile;
-
-				this->profiles[rtpStream].insert(profile);
-
-				// Don't announce default profile, but just those for simulcast/SVC.
-				if (profile != RTC::RtpEncodingParameters::Profile::DEFAULT)
-				{
-					for (auto& listener : this->listeners)
-					{
-						listener->OnProducerProfileEnabled(this, profile);
-					}
-				}
-
-				return profile;
-			}
-		}
-
-		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", ssrc);
+		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", packet->GetSsrc());
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
@@ -740,7 +728,10 @@ namespace RTC
 		MS_TRACE();
 
 		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
-		auto& profiles     = this->profiles[rtpStreamRecv];
+
+		MS_ASSERT(this->profiles.find(rtpStreamRecv) != this->profiles.end(), "stream not present in profiles map");
+
+		auto& profiles = this->profiles[rtpStreamRecv];
 
 		// The stream has transitioned to non healthy.
 		if (rtpStream->IsHealthy() && !healthy)
