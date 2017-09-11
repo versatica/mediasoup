@@ -28,7 +28,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Clear the RTP buffer.
-		ClearBuffer();
+		ClearRetransmissionBuffer();
 	}
 
 	Json::Value RtpStreamSend::ToJson() const
@@ -137,6 +137,7 @@ namespace RTC
 		auto bufferItReverse      = this->buffer.rbegin();
 		uint32_t bufferFirstSeq32 = (*bufferIt).seq32;
 		uint32_t bufferLastSeq32  = (*bufferItReverse).seq32;
+		bool inRange              = true;
 
 		// Requested packet range not found.
 		if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
@@ -150,18 +151,30 @@ namespace RTC
 				// Try again.
 				if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
 				{
-					MS_WARN_TAG(rtx, "requested packet range not in the buffer");
-
-					return;
+					firstSeq32 += RtpSeqMod;
+					lastSeq32 += RtpSeqMod;
+					inRange = false;
 				}
 			}
 			// Otherwise just return.
 			else
 			{
-				MS_WARN_TAG(rtx, "requested packet range not in the buffer");
-
-				return;
+				inRange = false;
 			}
+		}
+
+		if (!inRange)
+		{
+			MS_WARN_TAG(
+			  rtx,
+			  "requested packet range not in the buffer [seq:%" PRIu16 ", seq32:%" PRIu32
+			  ", bufferFirstSeq32:%" PRIu32 ", bufferLastSeq32:%" PRIu32 "]",
+			  seq,
+			  firstSeq32,
+			  bufferFirstSeq32,
+			  bufferLastSeq32);
+
+			return;
 		}
 
 		// Look for each requested packet.
@@ -316,24 +329,7 @@ namespace RTC
 		return report;
 	}
 
-	void RtpStreamSend::Reset()
-	{
-		MS_TRACE();
-
-		// By setting started to 0, on next packet the RtpStream will call
-		// InitSeq(seq).
-		this->started = false;
-
-		// Also reset RtpStreamSend own members.
-		this->receivedBytes          = 0;
-		this->lastPacketTimeMs       = 0;
-		this->lastPacketRtpTimestamp = 0;
-
-		// Clear the buffer.
-		ClearBuffer();
-	}
-
-	void RtpStreamSend::ClearBuffer()
+	void RtpStreamSend::ClearRetransmissionBuffer()
 	{
 		MS_TRACE();
 
@@ -444,7 +440,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Clear the RTP buffer.
-		ClearBuffer();
+		ClearRetransmissionBuffer();
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)

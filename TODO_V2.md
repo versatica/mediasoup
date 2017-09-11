@@ -1,5 +1,7 @@
 # TODO in mediasoup v2 (server-side)
 
+* `Producer`: Clearn RTX mapping when streams are updated/modified.
+
 * `RtpListener`: Remove `ptTable` (period) and add `ridTable`.
 
 * Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.

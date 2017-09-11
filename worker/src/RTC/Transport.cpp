@@ -772,7 +772,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  rtcp,
-					  "no Consumer found for received NACK Feedback packet "
+					  "no Consumer found for received Feedback packet "
 					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 					  feedback->GetMediaSsrc(),
 					  feedback->GetMediaSsrc());

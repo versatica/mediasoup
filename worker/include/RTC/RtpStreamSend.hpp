@@ -39,10 +39,9 @@ namespace RTC
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		bool HasRtx() const;
 		void RtxEncode(RtpPacket* packet);
-		void Reset();
+		void ClearRetransmissionBuffer();
 
 	private:
-		void ClearBuffer();
 		void StorePacket(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RtpStream. */

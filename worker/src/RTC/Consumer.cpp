@@ -159,9 +159,7 @@ namespace RTC
 		MS_DEBUG_DEV("Consumer paused [consumerId:%" PRIu32 "]", this->consumerId);
 
 		if (IsEnabled() && !this->sourcePaused)
-		{
-			this->rtpStream->Reset();
-		}
+			this->rtpStream->ClearRetransmissionBuffer();
 	}
 
 	void Consumer::Resume()
@@ -195,9 +193,7 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourcepaused");
 
 		if (IsEnabled() && !this->paused)
-		{
-			this->rtpStream->Reset();
-		}
+			this->rtpStream->ClearRetransmissionBuffer();
 	}
 
 	void Consumer::SourceResume()
@@ -214,9 +210,7 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourceresumed");
 
 		if (IsEnabled() && !this->paused)
-		{
 			RequestFullFrame();
-		}
 	}
 
 	void Consumer::SourceRtpParametersUpdated()
@@ -227,6 +221,28 @@ namespace RTC
 			return;
 
 		this->syncRequired = true;
+		this->rtpStream->ClearRetransmissionBuffer();
+	}
+
+	void Consumer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_TRACE();
+
+		if (this->preferredProfile == profile)
+			return;
+
+		this->preferredProfile = profile;
+
+		// TODO: Set it dynamically.
+		this->effectiveProfile = profile;
+
+		if (IsEnabled() && !IsPaused())
+		{
+			this->syncRequired = true;
+			this->rtpStream->ClearRetransmissionBuffer();
+
+			RequestFullFrame();
+		}
 	}
 
 	/**
@@ -284,6 +300,17 @@ namespace RTC
 		// Check whether sequence number and timestamp sync is required.
 		if (this->syncRequired)
 		{
+			// TODO
+			MS_ERROR("------------ syncRequired IS TRUE !!!!!");
+
+			// TODO
+			MS_ERROR(
+			  "--- [profile:%s, effectiveProfile:%s, ssrc:%" PRIu32 ", packet->seq:%" PRIu16 "]",
+			  RTC::RtpEncodingParameters::profile2String[profile].c_str(),
+			  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str(),
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
+
 			this->seqNum += 1;
 
 			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
@@ -325,6 +352,17 @@ namespace RTC
 
 			// Update transmitted RTP data counter.
 			this->transmittedCounter.Update(packet);
+		}
+		else
+		{
+			// TODO
+			MS_ERROR(
+			  "--- rtpStream->ReceivePacket() failed [profile:%s, effectiveProfile:%s, ssrc:%" PRIu32
+			  ", packet->seq:%" PRIu16 "]",
+			  RTC::RtpEncodingParameters::profile2String[profile].c_str(),
+			  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str(),
+			  ssrc,
+			  this->lastRecvSeqNum);
 		}
 
 		// Restore packet SSRC.
@@ -494,8 +532,8 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  rtx,
-			  "sending rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
-			  "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			  "sending rtx packet [ssrc: %" PRIu32 ", seq: %" PRIu16
+			  "] recovering original [ssrc: %" PRIu32 ", seq: %" PRIu16 "]",
 			  rtxPacket->GetSsrc(),
 			  rtxPacket->GetSequenceNumber(),
 			  packet->GetSsrc(),
@@ -506,7 +544,7 @@ namespace RTC
 			rtxPacket = packet;
 			MS_DEBUG_TAG(
 			  rtx,
-			  "retransmitting packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			  "retransmitting packet [ssrc: %" PRIu32 ", seq: %" PRIu16 "]",
 			  rtxPacket->GetSsrc(),
 			  rtxPacket->GetSequenceNumber());
 		}
