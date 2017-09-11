@@ -574,6 +574,7 @@ namespace RTC
 		}
 
 		this->rtpStreams.clear();
+		this->mapRtxStreams.clear();
 	}
 
 	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
