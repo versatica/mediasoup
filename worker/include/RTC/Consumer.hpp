@@ -19,7 +19,7 @@
 
 namespace RTC
 {
-	class Consumer
+	class Consumer: public RtpStream::Listener
 	{
 	public:
 		Consumer(
@@ -59,6 +59,10 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+
+	/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
+	public:
+		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override;
 
 	public:
 		// Passed by argument.

@@ -47,6 +47,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
 		void OnInitSeq() override;
+		void CheckHealth() override;
 
 	private:
 		std::vector<StorageItem> storage;

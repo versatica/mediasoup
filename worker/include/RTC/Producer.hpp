@@ -96,6 +96,7 @@ namespace RTC
 		void OnRtpStreamRecvNackRequired(
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
+		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

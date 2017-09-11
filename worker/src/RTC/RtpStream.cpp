@@ -14,17 +14,27 @@ namespace RTC
 	static constexpr uint16_t MaxDropout{ 3000 };
 	static constexpr uint16_t MaxMisorder{ 100 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+	static constexpr uint16_t HealthCheckPeriod { 1000 };
 
 	/* Instance methods. */
 
 	RtpStream::RtpStream(RTC::RtpStream::Params& params) : params(params)
 	{
 		MS_TRACE();
+
+		// Set the health check timer.
+		this->healthCheckTimer = new Timer(this);
+
+		// Run the timer.
+		this->healthCheckTimer->Start(HealthCheckPeriod, HealthCheckPeriod);
 	}
 
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
+
+		// Close the health check timer.
+		this->healthCheckTimer->Destroy();
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -191,5 +201,15 @@ namespace RTC
 		json[JsonStringUsePli]      = this->usePli;
 
 		return json;
+	}
+
+	void RtpStream::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->healthCheckTimer)
+		{
+			this->CheckHealth();
+		}
 	}
 } // namespace RTC

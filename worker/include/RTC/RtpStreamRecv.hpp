@@ -12,7 +12,7 @@ namespace RTC
 	class RtpStreamRecv : public RtpStream, public RTC::NackGenerator::Listener
 	{
 	public:
-		class Listener
+		class Listener : public RtpStream::Listener
 		{
 		public:
 			virtual void OnRtpStreamRecvNackRequired(
@@ -39,6 +39,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
 		void OnInitSeq() override;
+		virtual void CheckHealth() override;
 
 		/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:

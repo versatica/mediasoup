@@ -4,12 +4,20 @@
 #include "common.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "handles/Timer.hpp"
 #include <json/json.h>
 
 namespace RTC
 {
-	class RtpStream
+	class RtpStream: public Timer::Listener
 	{
+	public:
+		class Listener
+		{
+		public:
+			virtual void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) = 0;
+		};
+
 	public:
 		struct Params
 		{
@@ -40,6 +48,11 @@ namespace RTC
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
 		virtual void OnInitSeq() = 0;
+		virtual void CheckHealth() = 0;
+
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
 
 	protected:
 		// Given as argument.
@@ -58,6 +71,7 @@ namespace RTC
 		uint32_t receivedPrior{ 0 }; // Packet received at last interval.
 		// Others.
 		uint32_t maxTimestamp{ 0 }; // Highest timestamp seen.
+		Timer* healthCheckTimer{ nullptr };
 	};
 
 	/* Inline instance methods. */

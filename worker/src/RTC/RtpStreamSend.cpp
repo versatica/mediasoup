@@ -443,6 +443,11 @@ namespace RTC
 		ClearRetransmissionBuffer();
 	}
 
+	void RtpStreamSend::CheckHealth()
+	{
+		MS_TRACE();
+	}
+
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
 	{
 		MS_TRACE();

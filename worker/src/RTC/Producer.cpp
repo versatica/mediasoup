@@ -700,6 +700,14 @@ namespace RTC
 		this->transport->SendRtcpPacket(&packet);
 	}
 
+	void Producer::OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy)
+	{
+		MS_TRACE();
+
+		if (!healthy)
+			MS_DEBUG_TAG(rtp, "stream is not healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+	}
+
 	inline void Producer::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
