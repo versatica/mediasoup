@@ -21,9 +21,9 @@ namespace RTC
 	std::map<RTC::RtpEncodingParameters::Profile, std::string> RTC::RtpEncodingParameters::profile2String =
 		{
 			{ RTC::RtpEncodingParameters::Profile::NONE,   "none"   },
-			{ RTC::RtpEncodingParameters::Profile::LOW,    "low"     },
-			{ RTC::RtpEncodingParameters::Profile::MEDIUM, "medium"  },
-			{ RTC::RtpEncodingParameters::Profile::HIGH,   "high"    }
+			{ RTC::RtpEncodingParameters::Profile::LOW,    "low"    },
+			{ RTC::RtpEncodingParameters::Profile::MEDIUM, "medium" },
+			{ RTC::RtpEncodingParameters::Profile::HIGH,   "high"   }
 		};
 	// clang-format on
 
