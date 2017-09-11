@@ -269,9 +269,7 @@ namespace RTC
 			for (auto& encoding : this->rtpParameters.encodings)
 			{
 				// TODO: This is not ready for RID usage (without SSRC in encodings).
-				if (
-				  encoding.ssrc == ssrc || (encoding.hasRtx && encoding.rtx.ssrc == ssrc) ||
-				  (encoding.hasFec && encoding.fec.ssrc == ssrc))
+				if (encoding.ssrc == ssrc)
 				{
 					CreateRtpStream(encoding);
 
@@ -494,10 +492,7 @@ namespace RTC
 
 		uint32_t ssrc = encoding.ssrc;
 
-		// Don't create a RtpStreamRecv if there is already one for the same SSRC.
-		// TODO: This may not work for SVC codecs.
-		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
-			return;
+		MS_ASSERT(this->rtpStreams.find(ssrc) == this->rtpStreams.end(), "stream already exists");
 
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -573,6 +568,45 @@ namespace RTC
 				listener->OnProducerProfileEnabled(this, profile);
 			}
 		}
+	}
+
+	void Producer::ClearRtpStream(RTC::RtpStreamRecv* rtpStream)
+	{
+		MS_TRACE();
+
+		auto& profiles = this->profiles[rtpStream];
+
+		// Notify about the profiles being disabled.
+		for (auto& profile : profiles)
+		{
+			// Don't announce default profile, but just those for simulcast/SVC.
+			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				break;
+
+			for (auto& listener : this->listeners)
+			{
+				listener->OnProducerProfileDisabled(this, profile);
+			}
+		}
+
+		this->rtpStreams.erase(rtpStream->GetSsrc());
+
+		for (auto& kv : this->mapRtxStreams)
+		{
+			auto rtxSsrc = kv.first;
+			auto* mediaStream = kv.second;
+
+			if (mediaStream == rtpStream)
+			{
+				this->mapRtxStreams.erase(rtxSsrc);
+
+				break;
+			}
+		}
+
+		this->profiles.erase(rtpStream);
+
+		delete rtpStream;
 	}
 
 	void Producer::ClearRtpStreams()
@@ -738,18 +772,8 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
-			// Notify about the profiles being disabled.
-			for (auto& profile : profiles)
-			{
-				// Don't announce default profile, but just those for simulcast/SVC.
-				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-					break;
-
-				for (auto& listener : this->listeners)
-				{
-					listener->OnProducerProfileDisabled(this, profile);
-				}
-			}
+			// Completely destroy the stream.
+			ClearRtpStream(rtpStreamRecv);
 		}
 
 		// The stream has transitioned to healthy.

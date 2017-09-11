@@ -89,6 +89,7 @@ namespace RTC
 	private:
 		void FillHeaderExtensionIds();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
+		void ClearRtpStream(RTC::RtpStreamRecv* rtpStream);
 		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
 		RTC::RtpEncodingParameters::Profile GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet);
