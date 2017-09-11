@@ -226,20 +226,40 @@ namespace RTC
 
 	void Consumer::AddProfile(const RTC::RtpEncodingParameters::Profile profile)
 	{
+		MS_ASSERT(
+		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
+		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
+		  "invalid profile");
+
+		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile already exists");
+
 		// Insert profile.
 		this->profiles.insert(profile);
 
-		MS_DEBUG_TAG(rtp, "profile added: %s", RTC::RtpEncodingParameters::profile2String[profile].c_str());;
+		MS_DEBUG_TAG(
+		  rtp, "profile added: %s", RTC::RtpEncodingParameters::profile2String[profile].c_str());
+		;
 
 		RecalculateEffectiveProfile();
 	}
 
 	void Consumer::RemoveProfile(const RTC::RtpEncodingParameters::Profile profile)
 	{
+		MS_ASSERT(
+		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
+		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
+		  "invalid profile");
+
+		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile not found");
+
 		// Remove profile.
 		this->profiles.erase(profile);
 
-		MS_DEBUG_TAG(rtp, "profile removed: %s", RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());;
+		MS_DEBUG_TAG(
+		  rtp,
+		  "profile removed: %s",
+		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
+		;
 
 		RecalculateEffectiveProfile();
 	}
@@ -311,17 +331,6 @@ namespace RTC
 		// Check whether sequence number and timestamp sync is required.
 		if (this->syncRequired)
 		{
-			// TODO
-			MS_ERROR("------------ syncRequired IS TRUE !!!!!");
-
-			// TODO
-			MS_ERROR(
-			  "--- [profile:%s, effectiveProfile:%s, ssrc:%" PRIu32 ", packet->seq:%" PRIu16 "]",
-			  RTC::RtpEncodingParameters::profile2String[profile].c_str(),
-			  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str(),
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
-
 			this->seqNum += 1;
 
 			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
@@ -363,17 +372,6 @@ namespace RTC
 
 			// Update transmitted RTP data counter.
 			this->transmittedCounter.Update(packet);
-		}
-		else
-		{
-			// TODO
-			MS_ERROR(
-			  "--- rtpStream->ReceivePacket() failed [profile:%s, effectiveProfile:%s, ssrc:%" PRIu32
-			  ", packet->seq:%" PRIu16 "]",
-			  RTC::RtpEncodingParameters::profile2String[profile].c_str(),
-			  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str(),
-			  ssrc,
-			  this->lastRecvSeqNum);
 		}
 
 		// Restore packet SSRC.
@@ -587,10 +585,19 @@ namespace RTC
 
 		RTC::RtpEncodingParameters::Profile newProfile;
 
-		// If there is no preferred profile, take the best one available.
-		if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::NONE)
+		// If there are no profiles, select none or default, depending on whether this
+		// is single stream or simulcast/SVC.
+		if (this->profiles.empty())
 		{
-			auto it = this->profiles.crbegin();
+			if (this->effectiveProfile != RtpEncodingParameters::Profile::DEFAULT)
+				newProfile = RtpEncodingParameters::Profile::NONE;
+			else
+				newProfile = RtpEncodingParameters::Profile::DEFAULT;
+		}
+		// If there is no preferred profile, take the best one available.
+		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+		{
+			auto it    = this->profiles.crbegin();
 			newProfile = *it;
 		}
 		// Otherwise take the highest available profile equal or lower than the preferred.
@@ -617,7 +624,11 @@ namespace RTC
 
 		this->effectiveProfile = newProfile;
 
-		MS_DEBUG_TAG(rtp, "new effective profile: %s", RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());;
+		MS_DEBUG_TAG(
+		  rtp,
+		  "new effective profile: %s",
+		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
+		;
 
 		// Notify.
 		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];

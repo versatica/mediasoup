@@ -9,7 +9,7 @@
 
 namespace RTC
 {
-	class RtpStream: public Timer::Listener
+	class RtpStream : public Timer::Listener
 	{
 	public:
 		class Listener
@@ -48,7 +48,7 @@ namespace RTC
 
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
-		virtual void OnInitSeq() = 0;
+		virtual void OnInitSeq()   = 0;
 		virtual void CheckHealth() = 0;
 
 		/* Pure virtual methods inherited from Timer::Listener. */

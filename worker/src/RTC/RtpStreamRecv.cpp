@@ -249,7 +249,7 @@ namespace RTC
 
 	void RtpStreamRecv::CheckHealth()
 	{
-		auto now = DepLibUV::GetTime();
+		auto now     = DepLibUV::GetTime();
 		bool healthy = true;
 
 		if (this->receivedCounter.GetRate(now) == 0)

@@ -15,12 +15,12 @@
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/Transport.hpp"
 #include <json/json.h>
-#include <unordered_set>
 #include <set>
+#include <unordered_set>
 
 namespace RTC
 {
-	class Consumer: public RtpStream::Listener
+	class Consumer : public RtpStream::Listener
 	{
 	public:
 		Consumer(
@@ -64,7 +64,7 @@ namespace RTC
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		void RecalculateEffectiveProfile();
 
-	/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
+		/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
 	public:
 		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override;
 
@@ -100,8 +100,8 @@ namespace RTC
 		bool syncRequired{ true };
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
-		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::NONE };
-		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
+		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 	};
 
 	/* Inline methods. */

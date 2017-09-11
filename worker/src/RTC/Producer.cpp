@@ -575,6 +575,7 @@ namespace RTC
 
 		this->rtpStreams.clear();
 		this->mapRtxStreams.clear();
+		this->profiles.clear();
 	}
 
 	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
@@ -612,17 +613,19 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpEncodingParameters::Profile Producer::GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
+	RTC::RtpEncodingParameters::Profile Producer::GetProfile(
+	  RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
 	{
-		auto ssrc = packet->GetSsrc();
-
 		// The stream is already mapped to a profile.
-		if (this->rtpProfiles.find(rtpStream) != this->rtpProfiles.end())
+		if (this->profiles.find(rtpStream) != this->profiles.end())
 		{
-			auto it = this->rtpProfiles[rtpStream].begin();
+			auto it      = this->profiles[rtpStream].begin();
+			auto profile = *it;
 
-			return *it;
+			return profile;
 		}
+
+		auto ssrc = packet->GetSsrc();
 
 		// Look for the encoding associated with the SSRC.
 		// NOTE: This is specific to simulcast with no temporal layers.
@@ -630,14 +633,20 @@ namespace RTC
 		{
 			if (encoding.ssrc == ssrc)
 			{
-				this->rtpProfiles[rtpStream].insert(encoding.profile);
+				auto profile = encoding.profile;
 
-				for (auto& listener : this->listeners)
+				this->profiles[rtpStream].insert(profile);
+
+				// Don't announce default profile, but just those for simulcast/SVC.
+				if (profile != RTC::RtpEncodingParameters::Profile::DEFAULT)
 				{
-					listener->OnProducerProfileEnabled(this, encoding.profile);
+					for (auto& listener : this->listeners)
+					{
+						listener->OnProducerProfileEnabled(this, profile);
+					}
 				}
 
-				return encoding.profile;
+				return profile;
 			}
 		}
 
@@ -713,7 +722,7 @@ namespace RTC
 		MS_TRACE();
 
 		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
-		auto& profiles = this->rtpProfiles[rtpStreamRecv];
+		auto& profiles     = this->profiles[rtpStreamRecv];
 
 		// The stream has transitioned to non healthy.
 		if (rtpStream->IsHealthy() && !healthy)
@@ -723,8 +732,14 @@ namespace RTC
 			// Notify about the profiles being disabled.
 			for (auto& profile : profiles)
 			{
+				// Don't announce default profile, but just those for simulcast/SVC.
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
+
 				for (auto& listener : this->listeners)
+				{
 					listener->OnProducerProfileDisabled(this, profile);
+				}
 			}
 		}
 
@@ -736,8 +751,14 @@ namespace RTC
 			// Notify about the profiles being disabled.
 			for (auto& profile : profiles)
 			{
+				// Don't announce default profile, but just those for simulcast/SVC.
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
+
 				for (auto& listener : this->listeners)
+				{
 					listener->OnProducerProfileEnabled(this, profile);
+				}
 			}
 		}
 	}

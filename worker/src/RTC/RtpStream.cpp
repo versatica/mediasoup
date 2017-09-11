@@ -14,7 +14,7 @@ namespace RTC
 	static constexpr uint16_t MaxDropout{ 3000 };
 	static constexpr uint16_t MaxMisorder{ 100 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
-	static constexpr uint16_t HealthCheckPeriod { 1000 };
+	static constexpr uint16_t HealthCheckPeriod{ 1000 };
 
 	/* Instance methods. */
 

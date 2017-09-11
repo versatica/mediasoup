@@ -15,9 +15,9 @@
 #include "handles/Timer.hpp"
 #include <json/json.h>
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_set>
-#include <set>
 #include <vector>
 
 namespace RTC
@@ -119,7 +119,7 @@ namespace RTC
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
-		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> rtpProfiles;
+		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> profiles;
 		Timer* fullFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
@@ -171,7 +171,7 @@ namespace RTC
 	{
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
 
-		for (const auto& it : this->rtpProfiles)
+		for (const auto& it : this->profiles)
 		{
 			for (const auto& it2 : it.second)
 			{

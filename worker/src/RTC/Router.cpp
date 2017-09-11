@@ -1115,7 +1115,16 @@ namespace RTC
 					return;
 				}
 
-				consumer->SetPreferredProfile(it->second);
+				auto profile = it->second;
+
+				if (profile == RTC::RtpEncodingParameters::Profile::NONE || profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				{
+					request->Reject("invalid profile");
+
+					return;
+				}
+
+				consumer->SetPreferredProfile(profile);
 
 				request->Accept();
 
@@ -1416,7 +1425,8 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerProfileEnabled(RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	void Router::OnProducerProfileEnabled(
+	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
 
@@ -1432,9 +1442,9 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerProfileDisabled(RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	void Router::OnProducerProfileDisabled(
+	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
 	{
-
 		MS_TRACE();
 
 		MS_ASSERT(

@@ -1563,14 +1563,14 @@ namespace RTC
 		// Do nothing.
 	}
 
-	void Transport::OnProducerProfileEnabled(RTC::Producer* /*producer*/,
-			RTC::RtpEncodingParameters::Profile /*profile*/)
+	void Transport::OnProducerProfileEnabled(
+	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
 	{
 		// Do nothing.
 	}
 
-	void Transport::OnProducerProfileDisabled(RTC::Producer* /*producer*/,
-			RTC::RtpEncodingParameters::Profile /*profile*/)
+	void Transport::OnProducerProfileDisabled(
+	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
 	{
 		// Do nothing.
 	}

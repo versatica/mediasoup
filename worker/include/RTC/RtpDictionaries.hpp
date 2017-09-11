@@ -210,6 +210,7 @@ namespace RTC
 		enum class Profile : uint8_t
 		{
 			NONE = 0,
+			DEFAULT,
 			LOW,
 			MEDIUM,
 			HIGH
@@ -239,7 +240,7 @@ namespace RTC
 		bool active{ true };
 		std::string encodingId;
 		std::vector<std::string> dependencyEncodingIds;
-		Profile profile{ Profile::NONE };
+		Profile profile{ Profile::DEFAULT };
 	};
 
 	class RtpHeaderExtensionParameters
