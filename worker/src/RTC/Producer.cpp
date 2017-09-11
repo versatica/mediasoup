@@ -737,7 +737,7 @@ namespace RTC
 			for (auto& profile : profiles)
 			{
 				for (auto& listener : this->listeners)
-					listener->OnProducerProfileDisabled(this, profile);
+					listener->OnProducerProfileEnabled(this, profile);
 			}
 		}
 	}
