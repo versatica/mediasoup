@@ -718,7 +718,7 @@ namespace RTC
 		// The stream has transitioned to non healthy.
 		if (rtpStream->IsHealthy() && !healthy)
 		{
-				MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+			MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 			// Notify about the profiles being disabled.
 			for (auto& profile : profiles)
@@ -727,10 +727,11 @@ namespace RTC
 					listener->OnProducerProfileDisabled(this, profile);
 			}
 		}
+
 		// The stream has transitioned to healthy.
 		if (!rtpStream->IsHealthy() && healthy)
 		{
-				MS_DEBUG_TAG(rtp, "stream is now healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+			MS_DEBUG_TAG(rtp, "stream is now healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 			// Notify about the profiles being disabled.
 			for (auto& profile : profiles)
