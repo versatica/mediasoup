@@ -34,7 +34,7 @@ namespace RTC
 		this->rtpMapping      = rtpMapping;
 
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
-		FillKnownHeaderExtensions();
+		FillHeaderExtensionIds();
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -76,13 +76,16 @@ namespace RTC
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
-		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
-		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
+		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
+		static const Json::StaticString JsonStringSsrcAudioLevel{ "ssrcAudioLevel" };
+		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
+		static const Json::StaticString JsonStringRid{ "rid" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
 		static const Json::StaticString JsonStringRtpRawEventEnabled{ "rtpRawEventEnabled" };
 		static const Json::StaticString JsonStringRtpObjectEventEnabled{ "rtpObjectEventEnabled" };
 
 		Json::Value json(Json::objectValue);
+		Json::Value jsonHeaderExtensionIds(Json::objectValue);
 		Json::Value jsonRtpStreams(Json::arrayValue);
 
 		json[JsonStringProducerId] = Json::UInt{ this->producerId };
@@ -99,11 +102,16 @@ namespace RTC
 		}
 		json[JsonStringRtpStreams] = jsonRtpStreams;
 
-		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
-			json[JsonStringSsrcAudioLevelId] = this->knownHeaderExtensions.ssrcAudioLevelId;
+		if (this->headerExtensionIds.ssrcAudioLevel != 0u)
+			jsonHeaderExtensionIds[JsonStringSsrcAudioLevel] = this->headerExtensionIds.ssrcAudioLevel;
 
-		if (this->knownHeaderExtensions.absSendTimeId != 0u)
-			json[JsonStringAbsSendTimeId] = this->knownHeaderExtensions.absSendTimeId;
+		if (this->headerExtensionIds.absSendTime != 0u)
+			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->headerExtensionIds.absSendTime;
+
+		if (this->headerExtensionIds.rid != 0u)
+			jsonHeaderExtensionIds[JsonStringRid] = this->headerExtensionIds.rid;
+
+		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
 
 		json[JsonStringPaused] = this->paused;
 
@@ -433,13 +441,14 @@ namespace RTC
 		this->isFullFrameRequested = false;
 	}
 
-	void Producer::FillKnownHeaderExtensions()
+	void Producer::FillHeaderExtensionIds()
 	{
 		MS_TRACE();
 
 		auto& idMapping = this->rtpMapping.headerExtensionIds;
 		uint8_t ssrcAudioLevelId{ 0 };
 		uint8_t absSendTimeId{ 0 };
+		uint8_t ridId{ 0 };
 
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
@@ -452,7 +461,7 @@ namespace RTC
 				else
 					ssrcAudioLevelId = exten.id;
 
-				this->knownHeaderExtensions.ssrcAudioLevelId = ssrcAudioLevelId;
+				this->headerExtensionIds.ssrcAudioLevel = ssrcAudioLevelId;
 			}
 
 			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
@@ -462,7 +471,17 @@ namespace RTC
 				else
 					absSendTimeId = exten.id;
 
-				this->knownHeaderExtensions.absSendTimeId = absSendTimeId;
+				this->headerExtensionIds.absSendTime = absSendTimeId;
+			}
+
+			if ((ridId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
+			{
+				if (idMapping.find(exten.id) != idMapping.end())
+					ridId = idMapping[exten.id];
+				else
+					ridId = exten.id;
+
+				this->headerExtensionIds.rid = ridId;
 			}
 		}
 	}
@@ -573,16 +592,22 @@ namespace RTC
 
 		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
 
-		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
+		if (this->headerExtensionIds.ssrcAudioLevel != 0u)
 		{
 			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->knownHeaderExtensions.ssrcAudioLevelId);
+			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->headerExtensionIds.ssrcAudioLevel);
 		}
 
-		if (this->knownHeaderExtensions.absSendTimeId != 0u)
+		if (this->headerExtensionIds.absSendTime != 0u)
 		{
 			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
+			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
+		}
+
+		if (this->headerExtensionIds.rid != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
 		}
 	}
 
