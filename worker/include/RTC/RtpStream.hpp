@@ -36,8 +36,9 @@ namespace RTC
 		virtual ~RtpStream();
 
 		virtual Json::Value ToJson() = 0;
-		uint32_t GetSsrc();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
+		uint32_t GetSsrc();
+		bool IsHealthy();
 
 	protected:
 		void InitSeq(uint16_t seq);
@@ -72,6 +73,7 @@ namespace RTC
 		// Others.
 		uint32_t maxTimestamp{ 0 }; // Highest timestamp seen.
 		Timer* healthCheckTimer{ nullptr };
+		bool healthy{ true };
 	};
 
 	/* Inline instance methods. */
@@ -79,6 +81,11 @@ namespace RTC
 	inline uint32_t RtpStream::GetSsrc()
 	{
 		return this->params.ssrc;
+	}
+
+	inline bool RtpStream::IsHealthy()
+	{
+		return this->healthy;
 	}
 } // namespace RTC
 

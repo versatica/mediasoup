@@ -250,12 +250,13 @@ namespace RTC
 	void RtpStreamRecv::CheckHealth()
 	{
 		auto now = DepLibUV::GetTime();
-		bool healthy = true;
 
 		if (this->receivedCounter.GetRate(now) == 0)
-			healthy = false;
+			this->healthy = false;
+		else
+			this->healthy = true;
 
-		this->listener->OnRtpStreamHealthReport(this, healthy);
+		this->listener->OnRtpStreamHealthReport(this, this->healthy);
 	}
 
 	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)
