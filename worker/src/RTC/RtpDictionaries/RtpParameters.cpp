@@ -5,6 +5,7 @@
 #include "MediaSoupError.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <unordered_set>
+#include <set>
 
 namespace RTC
 {
@@ -296,6 +297,18 @@ namespace RTC
 				if (it == this->codecs.end())
 					MS_THROW_ERROR("unknown encoding.codecPayloadType");
 			}
+		}
+
+		// Iterate all the encodings and ensure that profile is not repeated.
+		std::set<RTC::RtpEncodingParameters::Profile> profiles;
+
+		for (auto& encoding : this->encodings)
+		{
+			auto profile = encoding.profile;
+			auto pair = profiles.insert(profile);
+
+			if (!pair.second)
+				MS_THROW_ERROR("duplicated encoding.profile");
 		}
 	}
 } // namespace RTC

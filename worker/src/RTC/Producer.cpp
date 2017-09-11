@@ -152,6 +152,24 @@ namespace RTC
 
 		this->rtpParameters = rtpParameters;
 
+		// Notify about all profiles being disabled.
+		for (auto& kv : this->profiles)
+		{
+			auto& profiles = kv.second;
+
+			for (auto profile : profiles)
+			{
+				// Don't announce default profile, but just those for simulcast/SVC.
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
+
+				for (auto& listener : this->listeners)
+				{
+					listener->OnProducerProfileDisabled(this, profile);
+				}
+			}
+		}
+
 		// Clear previous RtpStreamRecv instances.
 		ClearRtpStreams();
 

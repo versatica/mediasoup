@@ -231,7 +231,7 @@ namespace RTC
 		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
 		  "invalid profile");
 
-		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile already exists");
+		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile already exists");
 
 		// Insert profile.
 		this->profiles.insert(profile);
@@ -250,7 +250,7 @@ namespace RTC
 		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
 		  "invalid profile");
 
-		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile not found");
+		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile not found");
 
 		// Remove profile.
 		this->profiles.erase(profile);
