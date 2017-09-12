@@ -24,7 +24,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Initialize sequence number.
-		this->seqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
+		this->maxSeqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -331,19 +331,38 @@ namespace RTC
 		// Check whether sequence number and timestamp sync is required.
 		if (this->syncRequired)
 		{
-			this->seqNum = this->maxRecvSeqNum + 1;
+			this->seqNum = ++this->maxSeqNum;
 
 			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
 
 			if (now > this->rtpTimestamp)
 				this->rtpTimestamp = now;
 
+			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
+			this->maxRecvSeqNum         = packet->GetSequenceNumber();
+
 			this->syncRequired = false;
+
+			MS_DEBUG_TAG(
+			  rtp,
+			  "re-syncing Consumer stream [seqNum:%" PRIu16 ", maxRecvSeqNum:%" PRIu16
+			  ", maxRecvExtendedSeqNum:%" PRIu32 "]",
+			  this->seqNum,
+			  this->maxRecvSeqNum,
+			  this->maxRecvExtendedSeqNum);
 		}
 		else
 		{
 			this->seqNum += packet->GetSequenceNumber() - this->lastRecvSeqNum;
 			this->rtpTimestamp += packet->GetTimestamp() - this->lastRecvRtpTimestamp;
+
+			// Update the max received sequence number if required.
+			if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
+			{
+				this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
+				this->maxRecvSeqNum         = packet->GetSequenceNumber();
+				this->maxSeqNum             = this->seqNum;
+			}
 		}
 
 		// Save the received sequence number.
@@ -354,13 +373,6 @@ namespace RTC
 
 		// Save real SSRC.
 		auto ssrc = packet->GetSsrc();
-
-		// Update the max received sequence number if required.
-		if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
-		{
-			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
-			this->maxRecvSeqNum         = this->lastRecvSeqNum;
-		}
 
 		// Rewrite packet SSRC.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);

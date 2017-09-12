@@ -7,6 +7,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
@@ -132,6 +136,25 @@ namespace RTC
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+
+		// Set the extended sequence number into the packet.
+		// Ensure that the NACKed packet sequence is not higher than the one of
+		// the media stream.
+		//
+		// We are in the same cycle.
+		if (packet->GetSequenceNumber() <= this->maxSeq)
+		{
+			packet->SetExtendedSequenceNumber(
+			  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		}
+		// The nacket packet belongs to the previous cycle.
+		else
+		{
+			MS_DEBUG_TAG(rtx, "nacked packet belongs to previous seq cycle");
+
+			packet->SetExtendedSequenceNumber(
+			  this->cycles - RtpSeqMod + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		}
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
