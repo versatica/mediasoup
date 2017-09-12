@@ -331,7 +331,7 @@ namespace RTC
 		// Check whether sequence number and timestamp sync is required.
 		if (this->syncRequired)
 		{
-			this->seqNum += 1;
+			this->seqNum = this->maxRecvSeqNum + 1;
 
 			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
 
@@ -354,6 +354,13 @@ namespace RTC
 
 		// Save real SSRC.
 		auto ssrc = packet->GetSsrc();
+
+		// Update the max received sequence number if required.
+		if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
+		{
+			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
+			this->maxRecvSeqNum = this->lastRecvSeqNum;
+		}
 
 		// Rewrite packet SSRC.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);

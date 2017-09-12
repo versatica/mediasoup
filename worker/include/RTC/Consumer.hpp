@@ -97,6 +97,8 @@ namespace RTC
 		uint32_t rtpTimestamp{ 0 };
 		uint16_t lastRecvSeqNum{ 0 };
 		uint32_t lastRecvRtpTimestamp{ 0 };
+		uint32_t maxRecvExtendedSeqNum{ 0 };
+		uint16_t maxRecvSeqNum{ 0 };
 		bool syncRequired{ true };
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
