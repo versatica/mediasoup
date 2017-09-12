@@ -10,6 +10,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
@@ -19,9 +20,9 @@
 static constexpr uint16_t IceCandidateDefaultLocalPriority{ 20000 };
 static constexpr uint16_t IceCandidateLocalPriorityPreferFamilyIncrement{ 10000 };
 static constexpr uint16_t IceCandidateLocalPriorityPreferProtocolIncrement{ 5000 };
-// We just provide "host" candidates so `type preference` is fixed.
+// We just provide "host" candidates so type preference is fixed.
 static constexpr uint16_t IceTypePreference{ 64 };
-// We do not support non rtcp-mux so `component` is always 1.
+// We do not support non rtcp-mux so component is always 1.
 static constexpr uint16_t IceComponent{ 1 };
 
 /* Static helpers. */
@@ -283,36 +284,40 @@ namespace RTC
 		static const Json::StaticString JsonStringConnecting{ "connecting" };
 		static const Json::StaticString JsonStringClosed{ "closed" };
 		static const Json::StaticString JsonStringFailed{ "failed" };
+		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
+		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
+		static const Json::StaticString JsonStringRid{ "rid" };
 		static const Json::StaticString JsonStringUseRemb{ "useRemb" };
 		static const Json::StaticString JsonStringMaxBitrate{ "maxBitrate" };
 		static const Json::StaticString JsonStringEffectiveMaxBitrate{ "effectiveMaxBitrate" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
 
 		Json::Value json(Json::objectValue);
+		Json::Value jsonHeaderExtensionIds(Json::objectValue);
 
 		json[JsonStringTransportId] = Json::UInt{ this->transportId };
 
-		// Add `iceRole` (we are always "controlled").
+		// Add iceRole (we are always "controlled").
 		json[JsonStringIceRole] = JsonStringControlled;
 
-		// Add `iceLocalParameters`.
+		// Add iceLocalParameters.
 		json[JsonStringIceLocalParameters][JsonStringUsernameFragment] =
 		  this->iceServer->GetUsernameFragment();
 		json[JsonStringIceLocalParameters][JsonStringPassword] = this->iceServer->GetPassword();
 		json[JsonStringIceLocalParameters][JsonStringIceLite]  = true;
 
-		// Add `iceLocalCandidates`.
+		// Add iceLocalCandidates.
 		json[JsonStringIceLocalCandidates] = Json::arrayValue;
 		for (const auto& iceCandidate : this->iceLocalCandidates)
 		{
 			json[JsonStringIceLocalCandidates].append(iceCandidate.ToJson());
 		}
 
-		// Add `iceSelectedTuple`.
+		// Add iceSelectedTuple.
 		if (this->selectedTuple != nullptr)
 			json[JsonStringIceSelectedTuple] = this->selectedTuple->ToJson();
 
-		// Add `iceState`.
+		// Add iceState.
 		switch (this->iceServer->GetState())
 		{
 			case RTC::IceServer::IceState::NEW:
@@ -329,11 +334,11 @@ namespace RTC
 				break;
 		}
 
-		// Add `dtlsLocalParameters.fingerprints`.
+		// Add dtlsLocalParameters.fingerprints.
 		json[JsonStringDtlsLocalParameters][JsonStringFingerprints] =
 		  RTC::DtlsTransport::GetLocalFingerprints();
 
-		// Add `dtlsLocalParameters.role`.
+		// Add dtlsLocalParameters.role.
 		switch (this->dtlsLocalRole)
 		{
 			case RTC::DtlsTransport::Role::AUTO:
@@ -349,7 +354,7 @@ namespace RTC
 				MS_ABORT("invalid local DTLS role");
 		}
 
-		// Add `dtlsState`.
+		// Add dtlsState.
 		switch (this->dtlsTransport->GetState())
 		{
 			case DtlsTransport::DtlsState::NEW:
@@ -369,16 +374,26 @@ namespace RTC
 				break;
 		}
 
-		// Add `useRemb`.
+		// Add headerExtensionIds.
+
+		if (this->headerExtensionIds.absSendTime != 0u)
+			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->headerExtensionIds.absSendTime;
+
+		if (this->headerExtensionIds.rid != 0u)
+			jsonHeaderExtensionIds[JsonStringRid] = this->headerExtensionIds.rid;
+
+		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
+
+		// Add useRemb.
 		json[JsonStringUseRemb] = (static_cast<bool>(this->remoteBitrateEstimator));
 
-		// Add `maxBitrate`.
+		// Add maxBitrate.
 		json[JsonStringMaxBitrate] = Json::UInt{ this->maxBitrate };
 
-		// Add `effectiveMaxBitrate`.
+		// Add effectiveMaxBitrate.
 		json[JsonStringEffectiveMaxBitrate] = Json::UInt{ this->effectiveMaxBitrate };
 
-		// Add `rtpListener`.
+		// Add rtpListener.
 		json[JsonStringRtpListener] = this->rtpListener.ToJson();
 
 		return json;
@@ -421,6 +436,19 @@ namespace RTC
 
 		// Add us as listener.
 		producer->AddListener(this);
+
+		// Take the transport related RTP header extension ids of the Producer
+		// and add them to the Transport.
+
+		if (producer->GetTransportHeaderExtensionIds().absSendTime != 0u)
+		{
+			this->headerExtensionIds.absSendTime = producer->GetTransportHeaderExtensionIds().absSendTime;
+		}
+
+		if (producer->GetTransportHeaderExtensionIds().rid != 0u)
+		{
+			this->headerExtensionIds.rid = producer->GetTransportHeaderExtensionIds().rid;
+		}
 	}
 
 	void Transport::HandleConsumer(RTC::Consumer* consumer)
@@ -1098,6 +1126,26 @@ namespace RTC
 
 			return;
 		}
+
+		// Apply the Transport RTP header extension ids so the RTP listener can use them.
+
+		if (this->headerExtensionIds.rid != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
+		}
+
+		// TODO: test getting RID.
+
+		// const uint8_t* rid;
+		// size_t ridLen;
+
+		// if (packet->ReadRid(&rid, &ridLen))
+		// {
+		// 	std::string ridStr((const char*)rid, ridLen);
+
+		// 	MS_ERROR("---------- HABEMUS RID !!!: %s", ridStr.c_str());
+		// }
 
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);

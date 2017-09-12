@@ -31,18 +31,6 @@ namespace RTC
 			std::map<uint8_t, uint8_t> headerExtensionIds;
 		};
 
-	public:
-		// TODO: YES?
-		// RTP header extension ids that must be shared by all the Producers using
-		// the same Transport.
-		// NOTE: These ids are the original ids in the RTP packet (before the Producer
-		// maps them to the corresponding ids in the room).
-		struct HeaderExtensionIdsForTransport
-		{
-			uint8_t absSendTime{ 0 }; // 0 means no abs-send-time id.
-			uint8_t rid{ 0 };         // 0 means no RID id.
-		};
-
 	private:
 		struct HeaderExtensionIds
 		{
@@ -77,6 +65,7 @@ namespace RTC
 		void SetRtpRawEvent(bool enabled);
 		void SetRtpObjectEvent(bool enabled);
 		const RTC::RtpParameters& GetParameters() const;
+		const struct RTC::Transport::HeaderExtensionIds& GetTransportHeaderExtensionIds() const;
 		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
@@ -124,6 +113,7 @@ namespace RTC
 		Timer* fullFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
+		struct RTC::Transport::HeaderExtensionIds transportHeaderExtensionIds;
 		struct HeaderExtensionIds headerExtensionIds;
 		bool paused{ false };
 		bool rtpRawEventEnabled{ false };
@@ -149,6 +139,11 @@ namespace RTC
 	inline const RTC::RtpParameters& Producer::GetParameters() const
 	{
 		return this->rtpParameters;
+	}
+
+	inline const struct RTC::Transport::HeaderExtensionIds& Producer::GetTransportHeaderExtensionIds() const
+	{
+		return this->transportHeaderExtensionIds;
 	}
 
 	inline bool Producer::IsPaused() const

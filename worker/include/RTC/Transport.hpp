@@ -55,6 +55,17 @@ namespace RTC
 		};
 
 	public:
+		// RTP header extension ids that must be shared by all the Producers using
+		// the same Transport.
+		// NOTE: These ids are the original ids in the RTP packet (before the Producer
+		// maps them to the corresponding ids in the room).
+		struct HeaderExtensionIds
+		{
+			uint8_t absSendTime{ 0 }; // 0 means no abs-send-time id.
+			uint8_t rid{ 0 };         // 0 means no RID id.
+		};
+
+	public:
 		struct TransportOptions
 		{
 			bool udp{ true };
@@ -200,6 +211,7 @@ namespace RTC
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others (RtpListener).
 		RtpListener rtpListener;
+		struct HeaderExtensionIds headerExtensionIds;
 		// Others (REMB and bitrate stuff).
 		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 		uint32_t maxBitrate{ 0 };

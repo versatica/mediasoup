@@ -471,7 +471,8 @@ namespace RTC
 				else
 					absSendTimeId = exten.id;
 
-				this->headerExtensionIds.absSendTime = absSendTimeId;
+				this->headerExtensionIds.absSendTime          = absSendTimeId;
+				this->transportHeaderExtensionIds.absSendTime = exten.id;
 			}
 
 			if ((ridId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
@@ -481,7 +482,8 @@ namespace RTC
 				else
 					ridId = exten.id;
 
-				this->headerExtensionIds.rid = ridId;
+				this->headerExtensionIds.rid          = ridId;
+				this->transportHeaderExtensionIds.rid = exten.id;
 			}
 		}
 	}
