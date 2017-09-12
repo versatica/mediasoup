@@ -360,7 +360,7 @@ namespace RTC
 		}
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packetSeq32 = uint32_t{ packet->GetSequenceNumber() } + this->cycles;
+		uint32_t packetSeq32 = packet->GetExtendedSequenceNumber();
 		BufferItem bufferItem;
 
 		bufferItem.seq32 = packetSeq32;
