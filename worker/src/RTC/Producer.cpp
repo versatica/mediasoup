@@ -259,29 +259,11 @@ namespace RTC
 		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 
+		// May need to create a new RtpStreamRecv.
+		MayNeedNewStream(packet);
+
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
-
-		if (
-		  this->rtpStreams.find(ssrc) == this->rtpStreams.end() &&
-		  this->mapRtxStreams.find(ssrc) == this->mapRtxStreams.end())
-		{
-			for (auto& encoding : this->rtpParameters.encodings)
-			{
-				// TODO: This is not ready for RID usage (without SSRC in encodings).
-				if (encoding.ssrc == ssrc)
-				{
-					CreateRtpStream(encoding);
-
-					// If this is the first media packet for this stream request a full frame.
-					if (encoding.ssrc == ssrc)
-						RequestFullFrame(true);
-
-					break;
-				}
-			}
-		}
-
 		RTC::RtpStreamRecv* rtpStream{ nullptr };
 
 		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
@@ -488,11 +470,61 @@ namespace RTC
 		}
 	}
 
-	void Producer::CreateRtpStream(RTC::RtpEncodingParameters& encoding)
+	void Producer::MayNeedNewStream(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		uint32_t ssrc = encoding.ssrc;
+		uint32_t ssrc = packet->GetSsrc();
+
+		// If already exists, do nothing.
+		if (
+		  this->rtpStreams.find(ssrc) != this->rtpStreams.end() ||
+		  this->mapRtxStreams.find(ssrc) != this->mapRtxStreams.end())
+		{
+			return;
+		}
+
+		// First look for encodings with ssrc field.
+		{
+			for (auto& encoding : this->rtpParameters.encodings)
+			{
+				if (encoding.ssrc == ssrc)
+				{
+					CreateRtpStream(encoding, ssrc);
+
+					return;
+				}
+			}
+		}
+
+		// TODO: Look for muxId.
+
+		// If not found, look for encodings with encodingId (RID) field.
+		{
+			const uint8_t* ridPtr;
+			size_t ridLen;
+
+			if (packet->ReadRid(&ridPtr, &ridLen))
+			{
+				auto* charRidPtr = const_cast<char*>(reinterpret_cast<const char*>(ridPtr));
+				std::string rid(charRidPtr, ridLen);
+
+				for (auto& encoding : this->rtpParameters.encodings)
+				{
+					if (encoding.encodingId == rid)
+					{
+						CreateRtpStream(encoding, ssrc);
+
+						return;
+					}
+				}
+			}
+		}
+	}
+
+	void Producer::CreateRtpStream(RTC::RtpEncodingParameters& encoding, uint32_t ssrc)
+	{
+		MS_TRACE();
 
 		MS_ASSERT(this->rtpStreams.find(ssrc) == this->rtpStreams.end(), "stream already exists");
 
@@ -543,7 +575,7 @@ namespace RTC
 		if (useRemb)
 			this->transport->EnableRemb();
 
-		// Check rtx capabilities.
+		// Check RTX capabilities.
 		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
 		{
 			if (this->mapRtxStreams.find(encoding.rtx.ssrc) != this->mapRtxStreams.end())
@@ -570,6 +602,9 @@ namespace RTC
 				listener->OnProducerProfileEnabled(this, profile);
 			}
 		}
+
+		// Request a full frame since we may have lost the first packets of this stream.
+		RequestFullFrame(true);
 	}
 
 	void Producer::ClearRtpStream(RTC::RtpStreamRecv* rtpStream)
