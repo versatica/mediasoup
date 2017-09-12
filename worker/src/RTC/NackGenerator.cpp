@@ -59,7 +59,8 @@ namespace RTC
 			return;
 		}
 
-		// May be an out of order packet or a retransmitted packet (without RTX).
+		// May be an out of order packet, or already handled retransmitted packet,
+		// or a retransmitted packet.
 		if (seq32 < this->lastSeq32)
 		{
 			auto it = this->nackList.find(seq32);
@@ -75,12 +76,13 @@ namespace RTC
 
 				this->nackList.erase(it);
 			}
-			// Out of order packet.
+			// Out of order packet or already handled NACKed packet.
 			else
 			{
 				MS_DEBUG_TAG(
 				  rtx,
-				  "out of order RTX packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  "ignoring out of order packet or already handled NACKed packet [ssrc:%" PRIu32
+				  ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
 			}
