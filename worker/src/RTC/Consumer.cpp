@@ -568,7 +568,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  rtx,
-			  "sending rtx packet [ssrc: %" PRIu32 ", seq: %" PRIu16
+			  "sending RTX packet [ssrc: %" PRIu32 ", seq: %" PRIu16
 			  "] recovering original [ssrc: %" PRIu32 ", seq: %" PRIu16 "]",
 			  rtxPacket->GetSsrc(),
 			  rtxPacket->GetSequenceNumber(),
