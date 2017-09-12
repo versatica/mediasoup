@@ -15,11 +15,12 @@
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/Transport.hpp"
 #include <json/json.h>
+#include <set>
 #include <unordered_set>
 
 namespace RTC
 {
-	class Consumer
+	class Consumer : public RtpStream::Listener
 	{
 	public:
 		Consumer(
@@ -42,12 +43,15 @@ namespace RTC
 		void Resume();
 		void SourcePause();
 		void SourceResume();
+		void AddProfile(const RTC::RtpEncodingParameters::Profile profile);
+		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SourceRtpParametersUpdated();
+		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void Disable();
 		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
-		void SendRtpPacket(RTC::RtpPacket* packet);
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
@@ -58,6 +62,11 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+		void RecalculateEffectiveProfile();
+
+		/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
+	public:
+		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override;
 
 	public:
 		// Passed by argument.
@@ -85,10 +94,17 @@ namespace RTC
 		RTC::RtpDataCounter retransmittedCounter;
 		// RTP sequence number and timestamp.
 		uint16_t seqNum{ 0 };
+		uint16_t maxSeqNum{ 0 };
 		uint32_t rtpTimestamp{ 0 };
 		uint16_t lastRecvSeqNum{ 0 };
 		uint32_t lastRecvRtpTimestamp{ 0 };
+		uint32_t maxRecvExtendedSeqNum{ 0 };
+		uint16_t maxRecvSeqNum{ 0 };
 		bool syncRequired{ true };
+		// RTP profiles.
+		std::set<RTC::RtpEncodingParameters::Profile> profiles;
+		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 	};
 
 	/* Inline methods. */

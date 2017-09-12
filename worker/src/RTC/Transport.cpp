@@ -412,11 +412,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Pass it to the RtpListener.
+		// NOTE: This may throw.
+		this->rtpListener.AddProducer(producer);
+
 		// Add to the map.
 		this->producers.insert(producer);
-
-		// Pass it to the RtpListener.
-		this->rtpListener.AddProducer(producer);
 
 		// Add us as listener.
 		producer->AddListener(this);
@@ -771,7 +772,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  rtcp,
-					  "no Consumer found for received NACK Feedback packet "
+					  "no Consumer found for received Feedback packet "
 					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 					  feedback->GetMediaSsrc(),
 					  feedback->GetMediaSsrc());
@@ -1122,9 +1123,8 @@ namespace RTC
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
 
-		// Apply the RTP header extension mapping into the packet (we need it for the
-		// bitrate estimator).
-		producer->ApplyExtensionIdMapping(packet);
+		// Pass the RTP packet to the corresponding Producer.
+		producer->ReceiveRtpPacket(packet);
 
 		// Feed the remote bitrate estimator (REMB).
 		if (this->remoteBitrateEstimator)
@@ -1137,9 +1137,6 @@ namespace RTC
 				  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 			}
 		}
-
-		// Pass the RTP packet to the corresponding Producer.
-		producer->ReceiveRtpPacket(packet);
 
 		delete packet;
 	}
@@ -1558,7 +1555,22 @@ namespace RTC
 		// Do nothing.
 	}
 
-	void Transport::OnProducerRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* /*packet*/)
+	void Transport::OnProducerRtpPacket(
+	  RTC::Producer* /*producer*/,
+	  RTC::RtpPacket* /*packet*/,
+	  RTC::RtpEncodingParameters::Profile /*profile*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerProfileEnabled(
+	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerProfileDisabled(
+	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
 	{
 		// Do nothing.
 	}

@@ -1,13 +1,10 @@
 # TODO in mediasoup v2 (server-side)
 
-* Must avoid passing JSON data to Transport/Producer/Consumer instance methods. Instead, create API methods that receive "nice" C++ params and do all the JSON decode work in `Router::HandleRequest()`.
+* Properly set extended seq32 for nacked packets.
 
-* Must mangle RTP sequence numbers in Consumers:
-  - After paused.
-  - After the Producer gets `updateRtpParameters()` called (so a `OnProducerRtpParametersUpdated` listener is required in Producer for the Router to call `SourceRtpParametersUpdated()` on all its Concumers).
-  - NOTE: We may also need to mangle RTP timestamps!
+* Check NackGenerator intervals.
 
-* After `updateProducer` (which changes receiving SSRCs), should we do something in Transport between `producer->ReceiveRtpPacket(packet)` and `this->remoteBitrateEstimator->IncomingPacket`?
+* Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
 
 * Set a proper value for Producer::FullFrameRequestBlockTimeout (currently 1 second).
 

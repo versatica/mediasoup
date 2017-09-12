@@ -207,6 +207,20 @@ namespace RTC
 	class RtpEncodingParameters
 	{
 	public:
+		enum class Profile : uint8_t
+		{
+			NONE = 0,
+			DEFAULT,
+			LOW,
+			MEDIUM,
+			HIGH
+		};
+
+	public:
+		static std::map<std::string, Profile> string2Profile;
+		static std::map<Profile, std::string> profile2String;
+
+	public:
 		RtpEncodingParameters(){};
 		explicit RtpEncodingParameters(Json::Value& data);
 
@@ -226,6 +240,7 @@ namespace RTC
 		bool active{ true };
 		std::string encodingId;
 		std::vector<std::string> dependencyEncodingIds;
+		Profile profile{ Profile::DEFAULT };
 	};
 
 	class RtpHeaderExtensionParameters

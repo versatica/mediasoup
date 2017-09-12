@@ -4,12 +4,20 @@
 #include "common.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "handles/Timer.hpp"
 #include <json/json.h>
 
 namespace RTC
 {
-	class RtpStream
+	class RtpStream : public Timer::Listener
 	{
+	public:
+		class Listener
+		{
+		public:
+			virtual void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) = 0;
+		};
+
 	public:
 		struct Params
 		{
@@ -27,9 +35,10 @@ namespace RTC
 		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
-		virtual Json::Value ToJson() const = 0;
-		uint32_t GetSsrc();
+		virtual Json::Value ToJson() = 0;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
+		uint32_t GetSsrc();
+		bool IsHealthy();
 
 	protected:
 		void InitSeq(uint16_t seq);
@@ -39,7 +48,12 @@ namespace RTC
 
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
-		virtual void OnInitSeq() = 0;
+		virtual void OnInitSeq()   = 0;
+		virtual void CheckHealth() = 0;
+
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
 
 	protected:
 		// Given as argument.
@@ -52,12 +66,13 @@ namespace RTC
 		uint32_t cycles{ 0 };        // Shifted count of seq. number cycles.
 		uint32_t baseSeq{ 0 };       // Base seq number.
 		uint32_t badSeq{ 0 };        // Last 'bad' seq number + 1.
-		uint32_t probation{ 0 };     // Seq. packets till source is valid.
 		uint32_t received{ 0 };      // Packets received.
 		uint32_t expectedPrior{ 0 }; // Packet expected at last interval.
 		uint32_t receivedPrior{ 0 }; // Packet received at last interval.
 		// Others.
 		uint32_t maxTimestamp{ 0 }; // Highest timestamp seen.
+		Timer* healthCheckTimer{ nullptr };
+		bool healthy{ true };
 	};
 
 	/* Inline instance methods. */
@@ -65,6 +80,11 @@ namespace RTC
 	inline uint32_t RtpStream::GetSsrc()
 	{
 		return this->params.ssrc;
+	}
+
+	inline bool RtpStream::IsHealthy()
+	{
+		return this->healthy;
 	}
 } // namespace RTC
 

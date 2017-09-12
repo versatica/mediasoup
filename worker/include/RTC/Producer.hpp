@@ -15,6 +15,7 @@
 #include "handles/Timer.hpp"
 #include <json/json.h>
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -30,11 +31,24 @@ namespace RTC
 			std::map<uint8_t, uint8_t> headerExtensionIds;
 		};
 
-	private:
-		struct KnownHeaderExtensions
+	public:
+		// TODO: YES?
+		// RTP header extension ids that must be shared by all the Producers using
+		// the same Transport.
+		// NOTE: These ids are the original ids in the RTP packet (before the Producer
+		// maps them to the corresponding ids in the room).
+		struct HeaderExtensionIdsForTransport
 		{
-			uint8_t ssrcAudioLevelId{ 0 }; // 0 means no ssrc-audio-level id.
-			uint8_t absSendTimeId{ 0 };    // 0 means no abs-send-time id.
+			uint8_t absSendTime{ 0 }; // 0 means no abs-send-time id.
+			uint8_t rid{ 0 };         // 0 means no RID id.
+		};
+
+	private:
+		struct HeaderExtensionIds
+		{
+			uint8_t ssrcAudioLevel{ 0 }; // 0 means no ssrc-audio-level id.
+			uint8_t absSendTime{ 0 };    // 0 means no abs-send-time id.
+			uint8_t rid{ 0 };            // 0 means no RID id.
 		};
 
 	public:
@@ -64,26 +78,28 @@ namespace RTC
 		void SetRtpObjectEvent(bool enabled);
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
-		void ApplyExtensionIdMapping(RTC::RtpPacket* packet) const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
 		void RequestFullFrame(bool force = false);
+		const std::set<RTC::RtpEncodingParameters::Profile> GetProfiles() const;
 
 	private:
-		void FillKnownHeaderExtensions();
+		void FillHeaderExtensionIds();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
+		void ClearRtpStream(RTC::RtpStreamRecv* rtpStream);
 		void ClearRtpStreams();
-		void ApplyPayloadTypeMapping(RTC::RtpPacket* packet) const;
-		void ApplySsrcMapping(RTC::RtpPacket* packet) const;
+		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
+		RTC::RtpEncodingParameters::Profile GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
 		void OnRtpStreamRecvNackRequired(
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
+		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -104,11 +120,11 @@ namespace RTC
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
+		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> profiles;
 		Timer* fullFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
-		struct KnownHeaderExtensions knownHeaderExtensions;
-		std::map<uint32_t, uint32_t> ssrcMapping;
+		struct HeaderExtensionIds headerExtensionIds;
 		bool paused{ false };
 		bool rtpRawEventEnabled{ false };
 		bool rtpObjectEventEnabled{ false };
@@ -150,6 +166,26 @@ namespace RTC
 
 			rtpStream->ReceiveRtcpSenderReport(report);
 		}
+	}
+
+	inline const std::set<RTC::RtpEncodingParameters::Profile> Producer::GetProfiles() const
+	{
+		std::set<RTC::RtpEncodingParameters::Profile> profiles;
+
+		for (const auto& it : this->profiles)
+		{
+			for (const auto& it2 : it.second)
+			{
+				auto profile = it2;
+
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
+
+				profiles.insert(profile);
+			}
+		}
+
+		return profiles;
 	}
 } // namespace RTC
 

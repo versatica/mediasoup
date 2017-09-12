@@ -454,6 +454,16 @@ namespace RTC
 				// Add us as listener.
 				consumer->AddListener(this);
 
+				auto profiles = producer->GetProfiles();
+				std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
+
+				for (it = profiles.rbegin(); it != profiles.rend(); ++it)
+				{
+					auto profile = *it;
+
+					consumer->AddProfile(profile);
+				}
+
 				// Insert into the maps.
 				this->consumers[consumerId] = consumer;
 				this->mapProducerConsumers[producer].insert(consumer);
@@ -988,6 +998,9 @@ namespace RTC
 				{
 					// NOTE: This may throw.
 					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
+
+					// NOTE: This may throw.
+					consumer->Enable(transport, rtpParameters);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -995,8 +1008,6 @@ namespace RTC
 
 					return;
 				}
-
-				consumer->Enable(transport, rtpParameters);
 
 				// Tell the Transport to handle the new Consumer.
 				transport->HandleConsumer(consumer);
@@ -1064,6 +1075,56 @@ namespace RTC
 				}
 
 				consumer->Resume();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_PROFILE:
+			{
+				static const Json::StaticString JsonStringProfile{ "profile" };
+
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (!request->data[JsonStringProfile].isString())
+				{
+					request->Reject("missing data.profile");
+
+					return;
+				}
+
+				std::string profileStr = request->data[JsonStringProfile].asString();
+				auto it                = RTC::RtpEncodingParameters::string2Profile.find(profileStr);
+
+				if (it == RTC::RtpEncodingParameters::string2Profile.end())
+				{
+					request->Reject("unknown profile");
+
+					return;
+				}
+
+				auto profile = it->second;
+
+				if (profile == RTC::RtpEncodingParameters::Profile::NONE || profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				{
+					request->Reject("invalid profile");
+
+					return;
+				}
+
+				consumer->SetPreferredProfile(profile);
 
 				request->Accept();
 
@@ -1328,7 +1389,8 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void Router::OnProducerRtpPacket(
+	  RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
 
@@ -1343,7 +1405,7 @@ namespace RTC
 		for (auto* consumer : consumers)
 		{
 			if (consumer->IsEnabled())
-				consumer->SendRtpPacket(packet);
+				consumer->SendRtpPacket(packet, profile);
 		}
 
 		// Update audio levels.
@@ -1360,6 +1422,40 @@ namespace RTC
 				audioLevelContainer.numdBovs++;
 				audioLevelContainer.sumdBovs += dBov;
 			}
+		}
+	}
+
+	void Router::OnProducerProfileEnabled(
+	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto* consumer : consumers)
+		{
+			consumer->AddProfile(profile);
+		}
+	}
+
+	void Router::OnProducerProfileDisabled(
+	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto* consumer : consumers)
+		{
+			consumer->RemoveProfile(profile);
 		}
 	}
 

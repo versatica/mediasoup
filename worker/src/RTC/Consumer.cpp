@@ -24,7 +24,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Initialize sequence number.
-		this->seqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
+		this->maxSeqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -66,6 +66,8 @@ namespace RTC
 		static const Json::StaticString JsonStringEnabled{ "enabled" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
 		static const Json::StaticString JsonStringSourcePaused{ "sourcePaused" };
+		static const Json::StaticString JsonStringPreferredProfile{ "preferredProfile" };
+		static const Json::StaticString JsonStringEffectiveProfile{ "effectiveProfile" };
 
 		Json::Value json(Json::objectValue);
 
@@ -84,6 +86,12 @@ namespace RTC
 		json[JsonStringPaused] = this->paused;
 
 		json[JsonStringSourcePaused] = this->sourcePaused;
+
+		json[JsonStringPreferredProfile] =
+		  RTC::RtpEncodingParameters::profile2String[this->preferredProfile];
+
+		json[JsonStringEffectiveProfile] =
+		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
 
 		return json;
 	}
@@ -119,6 +127,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Must have a single encoding.
+		if (rtpParameters.encodings.empty())
+			MS_THROW_ERROR("invalid empty rtpParameters.encodings");
+		else if (rtpParameters.encodings[0].ssrc == 0)
+			MS_THROW_ERROR("missing rtpParameters.encodings[0].ssrc");
+
 		if (IsEnabled())
 			Disable();
 
@@ -145,9 +159,7 @@ namespace RTC
 		MS_DEBUG_DEV("Consumer paused [consumerId:%" PRIu32 "]", this->consumerId);
 
 		if (IsEnabled() && !this->sourcePaused)
-		{
-			this->rtpStream->Reset();
-		}
+			this->rtpStream->ClearRetransmissionBuffer();
 	}
 
 	void Consumer::Resume()
@@ -181,9 +193,7 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourcepaused");
 
 		if (IsEnabled() && !this->paused)
-		{
-			this->rtpStream->Reset();
-		}
+			this->rtpStream->ClearRetransmissionBuffer();
 	}
 
 	void Consumer::SourceResume()
@@ -200,9 +210,7 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourceresumed");
 
 		if (IsEnabled() && !this->paused)
-		{
 			RequestFullFrame();
-		}
 	}
 
 	void Consumer::SourceRtpParametersUpdated()
@@ -213,6 +221,59 @@ namespace RTC
 			return;
 
 		this->syncRequired = true;
+		this->rtpStream->ClearRetransmissionBuffer();
+	}
+
+	void Consumer::AddProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_ASSERT(
+		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
+		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
+		  "invalid profile");
+
+		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile already exists");
+
+		// Insert profile.
+		this->profiles.insert(profile);
+
+		MS_DEBUG_TAG(
+		  rtp, "profile added: %s", RTC::RtpEncodingParameters::profile2String[profile].c_str());
+		;
+
+		RecalculateEffectiveProfile();
+	}
+
+	void Consumer::RemoveProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_ASSERT(
+		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
+		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
+		  "invalid profile");
+
+		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile not found");
+
+		// Remove profile.
+		this->profiles.erase(profile);
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "profile removed: %s",
+		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
+		;
+
+		RecalculateEffectiveProfile();
+	}
+
+	void Consumer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_TRACE();
+
+		if (this->preferredProfile == profile)
+			return;
+
+		this->preferredProfile = profile;
+
+		RecalculateEffectiveProfile();
 	}
 
 	/**
@@ -239,7 +300,7 @@ namespace RTC
 		this->retransmittedCounter.Reset();
 	}
 
-	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void Consumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
 
@@ -249,15 +310,6 @@ namespace RTC
 		// If paused don't forward RTP.
 		if (IsPaused())
 			return;
-
-		// Ignore the packet if the SSRC is not the single one in the sender
-		// RTP parameters.
-		if (packet->GetSsrc() != this->rtpParameters.encodings[0].ssrc)
-		{
-			MS_WARN_TAG(rtp, "ignoring packet with unknown SSRC [ssrc:%" PRIu32 "]", packet->GetSsrc());
-
-			return;
-		}
 
 		// Map the payload type.
 		auto payloadType = packet->GetPayloadType();
@@ -271,22 +323,46 @@ namespace RTC
 			return;
 		}
 
+		// If the packet belongs to different profile than the one being sent, drop it.
+		// NOTE: This is specific to simulcast with no temporal layers.
+		if (profile != this->effectiveProfile)
+			return;
+
 		// Check whether sequence number and timestamp sync is required.
 		if (this->syncRequired)
 		{
-			this->seqNum += 1;
+			this->seqNum = ++this->maxSeqNum;
 
 			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
 
 			if (now > this->rtpTimestamp)
 				this->rtpTimestamp = now;
 
+			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
+			this->maxRecvSeqNum         = packet->GetSequenceNumber();
+
 			this->syncRequired = false;
+
+			MS_DEBUG_TAG(
+			  rtp,
+			  "re-syncing Consumer stream [seqNum:%" PRIu16 ", maxRecvSeqNum:%" PRIu16
+			  ", maxRecvExtendedSeqNum:%" PRIu32 "]",
+			  this->seqNum,
+			  this->maxRecvSeqNum,
+			  this->maxRecvExtendedSeqNum);
 		}
 		else
 		{
 			this->seqNum += packet->GetSequenceNumber() - this->lastRecvSeqNum;
 			this->rtpTimestamp += packet->GetTimestamp() - this->lastRecvRtpTimestamp;
+
+			// Update the max received sequence number if required.
+			if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
+			{
+				this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
+				this->maxRecvSeqNum         = packet->GetSequenceNumber();
+				this->maxSeqNum             = this->seqNum;
+			}
 		}
 
 		// Save the received sequence number.
@@ -295,10 +371,16 @@ namespace RTC
 		// Save the received timestamp.
 		this->lastRecvRtpTimestamp = packet->GetTimestamp();
 
-		// Update packet sequence number.
+		// Save real SSRC.
+		auto ssrc = packet->GetSsrc();
+
+		// Rewrite packet SSRC.
+		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
+
+		// Rewrite packet sequence number.
 		packet->SetSequenceNumber(this->seqNum);
 
-		// Update packet timestamp.
+		// Rewrite packet timestamp.
 		packet->SetTimestamp(this->rtpTimestamp);
 
 		// Process the packet.
@@ -310,6 +392,9 @@ namespace RTC
 			// Update transmitted RTP data counter.
 			this->transmittedCounter.Update(packet);
 		}
+
+		// Restore packet SSRC.
+		packet->SetSsrc(ssrc);
 
 		// Restore the original sequence number.
 		packet->SetSequenceNumber(this->lastRecvSeqNum);
@@ -400,6 +485,14 @@ namespace RTC
 		}
 	}
 
+	void Consumer::OnRtpStreamHealthReport(RtpStream* stream, bool healthy)
+	{
+		MS_TRACE();
+
+		if (!IsEnabled())
+			return;
+	}
+
 	void Consumer::FillSupportedCodecPayloadTypes()
 	{
 		MS_TRACE();
@@ -475,8 +568,8 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  rtx,
-			  "sending rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
-			  "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			  "sending RTX packet [ssrc: %" PRIu32 ", seq: %" PRIu16
+			  "] recovering original [ssrc: %" PRIu32 ", seq: %" PRIu16 "]",
 			  rtxPacket->GetSsrc(),
 			  rtxPacket->GetSequenceNumber(),
 			  packet->GetSsrc(),
@@ -487,7 +580,7 @@ namespace RTC
 			rtxPacket = packet;
 			MS_DEBUG_TAG(
 			  rtx,
-			  "retransmitting packet [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
+			  "retransmitting packet [ssrc: %" PRIu32 ", seq: %" PRIu16 "]",
 			  rtxPacket->GetSsrc(),
 			  rtxPacket->GetSequenceNumber());
 		}
@@ -501,5 +594,72 @@ namespace RTC
 		// Delete the RTX RtpPacket if it was created.
 		if (rtxPacket != packet)
 			delete rtxPacket;
+	}
+
+	void Consumer::RecalculateEffectiveProfile()
+	{
+		static const Json::StaticString JsonStringProfile{ "profile" };
+
+		Json::Value eventData(Json::objectValue);
+
+		RTC::RtpEncodingParameters::Profile newProfile;
+
+		// If there are no profiles, select none or default, depending on whether this
+		// is single stream or simulcast/SVC.
+		if (this->profiles.empty())
+		{
+			if (this->effectiveProfile != RtpEncodingParameters::Profile::DEFAULT)
+				newProfile = RtpEncodingParameters::Profile::NONE;
+			else
+				newProfile = RtpEncodingParameters::Profile::DEFAULT;
+		}
+		// If there is no preferred profile, take the best one available.
+		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+		{
+			auto it    = this->profiles.crbegin();
+			newProfile = *it;
+		}
+		// Otherwise take the highest available profile equal or lower than the preferred.
+		else
+		{
+			std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
+
+			newProfile = RtpEncodingParameters::Profile::NONE;
+
+			for (it = this->profiles.rbegin(); it != this->profiles.rend(); ++it)
+			{
+				auto profile = *it;
+
+				if (profile <= this->preferredProfile)
+				{
+					newProfile = *it;
+					break;
+				}
+			}
+		}
+
+		if (newProfile == this->effectiveProfile)
+			return;
+
+		this->effectiveProfile = newProfile;
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "new effective profile: %s",
+		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
+		;
+
+		// Notify.
+		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
+		this->notifier->Emit(this->consumerId, "effectiveprofilechange", eventData);
+
+		if (IsEnabled() && !IsPaused())
+		{
+			this->rtpStream->ClearRetransmissionBuffer();
+
+			RequestFullFrame();
+		}
+
+		this->syncRequired = true;
 	}
 } // namespace RTC

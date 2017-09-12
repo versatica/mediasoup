@@ -34,13 +34,7 @@ namespace RTC
 		this->rtpMapping      = rtpMapping;
 
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
-		FillKnownHeaderExtensions();
-
-		// Create RtpStreamRecv instances.
-		for (auto& encoding : this->rtpParameters.encodings)
-		{
-			CreateRtpStream(encoding);
-		}
+		FillHeaderExtensionIds();
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -55,6 +49,8 @@ namespace RTC
 	Producer::~Producer()
 	{
 		MS_TRACE();
+
+		this->profiles.clear();
 
 		ClearRtpStreams();
 	}
@@ -82,13 +78,16 @@ namespace RTC
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
-		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
-		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
+		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
+		static const Json::StaticString JsonStringSsrcAudioLevel{ "ssrcAudioLevel" };
+		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
+		static const Json::StaticString JsonStringRid{ "rid" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
 		static const Json::StaticString JsonStringRtpRawEventEnabled{ "rtpRawEventEnabled" };
 		static const Json::StaticString JsonStringRtpObjectEventEnabled{ "rtpObjectEventEnabled" };
 
 		Json::Value json(Json::objectValue);
+		Json::Value jsonHeaderExtensionIds(Json::objectValue);
 		Json::Value jsonRtpStreams(Json::arrayValue);
 
 		json[JsonStringProducerId] = Json::UInt{ this->producerId };
@@ -105,11 +104,16 @@ namespace RTC
 		}
 		json[JsonStringRtpStreams] = jsonRtpStreams;
 
-		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
-			json[JsonStringSsrcAudioLevelId] = this->knownHeaderExtensions.ssrcAudioLevelId;
+		if (this->headerExtensionIds.ssrcAudioLevel != 0u)
+			jsonHeaderExtensionIds[JsonStringSsrcAudioLevel] = this->headerExtensionIds.ssrcAudioLevel;
 
-		if (this->knownHeaderExtensions.absSendTimeId != 0u)
-			json[JsonStringAbsSendTimeId] = this->knownHeaderExtensions.absSendTimeId;
+		if (this->headerExtensionIds.absSendTime != 0u)
+			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->headerExtensionIds.absSendTime;
+
+		if (this->headerExtensionIds.rid != 0u)
+			jsonHeaderExtensionIds[JsonStringRid] = this->headerExtensionIds.rid;
+
+		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
 
 		json[JsonStringPaused] = this->paused;
 
@@ -153,51 +157,13 @@ namespace RTC
 		// Clear previous RtpStreamRecv instances.
 		ClearRtpStreams();
 
-		// Create new RtpStreamRecv instances.
-		for (auto& encoding : this->rtpParameters.encodings)
-		{
-			CreateRtpStream(encoding);
-		}
-
 		for (auto& listener : this->listeners)
 		{
 			// NOTE: This may throw.
 			listener->OnProducerRtpParametersUpdated(this);
 		}
 
-		// Fill the SSRC mapping table.
-
-		this->ssrcMapping.clear();
-
-		auto& newEncodings = this->rtpParameters.encodings;
-
-		for (size_t i = 0; i != this->outputEncodings.size(); ++i)
-		{
-			if (i == newEncodings.size())
-				break;
-
-			auto& newEncoding    = newEncodings[i];
-			auto& outputEncoding = this->outputEncodings[i];
-
-			if (outputEncoding.ssrc != newEncoding.ssrc)
-			{
-				this->ssrcMapping[newEncoding.ssrc] = outputEncoding.ssrc;
-			}
-
-			if (outputEncoding.hasRtx && newEncoding.hasRtx && outputEncoding.rtx.ssrc != newEncoding.rtx.ssrc)
-			{
-				this->ssrcMapping[newEncoding.rtx.ssrc] = outputEncoding.rtx.ssrc;
-			}
-
-			if (outputEncoding.hasFec && newEncoding.hasFec && outputEncoding.fec.ssrc != newEncoding.fec.ssrc)
-			{
-				this->ssrcMapping[newEncoding.fec.ssrc] = outputEncoding.fec.ssrc;
-			}
-		}
-
 		MS_DEBUG_DEV("Producer RTP parameters updated [producerId:%" PRIu32 "]", this->producerId);
-
-		RequestFullFrame(true);
 	}
 
 	void Producer::Pause()
@@ -296,6 +262,26 @@ namespace RTC
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
 
+		if (
+		  this->rtpStreams.find(ssrc) == this->rtpStreams.end() &&
+		  this->mapRtxStreams.find(ssrc) == this->mapRtxStreams.end())
+		{
+			for (auto& encoding : this->rtpParameters.encodings)
+			{
+				// TODO: This is not ready for RID usage (without SSRC in encodings).
+				if (encoding.ssrc == ssrc)
+				{
+					CreateRtpStream(encoding);
+
+					// If this is the first media packet for this stream request a full frame.
+					if (encoding.ssrc == ssrc)
+						RequestFullFrame(true);
+
+					break;
+				}
+			}
+		}
+
 		RTC::RtpStreamRecv* rtpStream{ nullptr };
 
 		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
@@ -321,18 +307,28 @@ namespace RTC
 			return;
 		}
 
+		RTC::RtpEncodingParameters::Profile profile;
+
+		try
+		{
+			profile = GetProfile(rtpStream, packet);
+		}
+		catch (const MediaSoupError& error)
+		{
+			return;
+		}
+
 		// If paused stop here.
 		if (this->paused)
 			return;
 
-		// Apply the Producer codec payload type and SSRC mapping before dispatching
-		// the packet.
-		ApplyPayloadTypeMapping(packet);
-		ApplySsrcMapping(packet);
+		// Apply the Producer codec payload type and extension header mapping before
+		// dispatching the packet.
+		ApplyRtpMapping(packet);
 
 		for (auto& listener : this->listeners)
 		{
-			listener->OnProducerRtpPacket(this, packet);
+			listener->OnProducerRtpPacket(this, packet, profile);
 		}
 
 		// Emit "rtpraw" if enabled.
@@ -375,27 +371,6 @@ namespace RTC
 		}
 
 		this->lastRtcpSentTime = now;
-	}
-
-	void Producer::ApplyExtensionIdMapping(RTC::RtpPacket* packet) const
-	{
-		MS_TRACE();
-
-		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
-
-		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
-
-		if (this->knownHeaderExtensions.ssrcAudioLevelId != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->knownHeaderExtensions.ssrcAudioLevelId);
-		}
-
-		if (this->knownHeaderExtensions.absSendTimeId != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->knownHeaderExtensions.absSendTimeId);
-		}
 	}
 
 	void Producer::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const
@@ -451,11 +426,9 @@ namespace RTC
 
 			return;
 		}
-		else
-		{
-			// Run the timer.
-			this->fullFrameRequestBlockTimer->Start(FullFrameRequestBlockTimeout);
-		}
+
+		// Run the timer.
+		this->fullFrameRequestBlockTimer->Start(FullFrameRequestBlockTimeout);
 
 		for (auto& kv : this->rtpStreams)
 		{
@@ -468,13 +441,14 @@ namespace RTC
 		this->isFullFrameRequested = false;
 	}
 
-	void Producer::FillKnownHeaderExtensions()
+	void Producer::FillHeaderExtensionIds()
 	{
 		MS_TRACE();
 
 		auto& idMapping = this->rtpMapping.headerExtensionIds;
 		uint8_t ssrcAudioLevelId{ 0 };
 		uint8_t absSendTimeId{ 0 };
+		uint8_t ridId{ 0 };
 
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
@@ -487,7 +461,7 @@ namespace RTC
 				else
 					ssrcAudioLevelId = exten.id;
 
-				this->knownHeaderExtensions.ssrcAudioLevelId = ssrcAudioLevelId;
+				this->headerExtensionIds.ssrcAudioLevel = ssrcAudioLevelId;
 			}
 
 			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
@@ -497,7 +471,17 @@ namespace RTC
 				else
 					absSendTimeId = exten.id;
 
-				this->knownHeaderExtensions.absSendTimeId = absSendTimeId;
+				this->headerExtensionIds.absSendTime = absSendTimeId;
+			}
+
+			if ((ridId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
+			{
+				if (idMapping.find(exten.id) != idMapping.end())
+					ridId = idMapping[exten.id];
+				else
+					ridId = exten.id;
+
+				this->headerExtensionIds.rid = ridId;
 			}
 		}
 	}
@@ -506,18 +490,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Don't create an RtpStreamRecv if the encoding has no SSRC.
-		// TODO: For simulcast or, if not announced, this would be done
-		// dynamicall by the RtpListener when matching a RID with its SSRC.
-		if (encoding.ssrc == 0u)
-			return;
-
 		uint32_t ssrc = encoding.ssrc;
 
-		// Don't create a RtpStreamRecv if there is already one for the same SSRC.
-		// TODO: This may not work for SVC codecs.
-		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
-			return;
+		MS_ASSERT(this->rtpStreams.find(ssrc) == this->rtpStreams.end(), "stream already exists");
 
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -558,7 +533,9 @@ namespace RTC
 		params.usePli      = usePli;
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		this->rtpStreams[ssrc] = new RTC::RtpStreamRecv(this, params);
+		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
+
+		this->rtpStreams[ssrc] = rtpStream;
 
 		// Enable REMB in the transport if requested.
 		if (useRemb)
@@ -576,6 +553,60 @@ namespace RTC
 			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
 			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
 		}
+
+		// Enter the stream into the profiles map.
+		// NOTE: This is specific to simulcast with no temporal layers.
+		auto profile = encoding.profile;
+
+		this->profiles[rtpStream].insert(profile);
+
+		// Don't announce default profile, but just those for simulcast/SVC.
+		if (profile != RTC::RtpEncodingParameters::Profile::DEFAULT)
+		{
+			for (auto& listener : this->listeners)
+			{
+				listener->OnProducerProfileEnabled(this, profile);
+			}
+		}
+	}
+
+	void Producer::ClearRtpStream(RTC::RtpStreamRecv* rtpStream)
+	{
+		MS_TRACE();
+
+		auto& profiles = this->profiles[rtpStream];
+
+		// Notify about the profiles being disabled.
+		for (auto& profile : profiles)
+		{
+			// Don't announce default profile, but just those for simulcast/SVC.
+			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				break;
+
+			for (auto& listener : this->listeners)
+			{
+				listener->OnProducerProfileDisabled(this, profile);
+			}
+		}
+
+		this->rtpStreams.erase(rtpStream->GetSsrc());
+
+		for (auto& kv : this->mapRtxStreams)
+		{
+			auto rtxSsrc      = kv.first;
+			auto* mediaStream = kv.second;
+
+			if (mediaStream == rtpStream)
+			{
+				this->mapRtxStreams.erase(rtxSsrc);
+
+				break;
+			}
+		}
+
+		this->profiles.erase(rtpStream);
+
+		delete rtpStream;
 	}
 
 	void Producer::ClearRtpStreams()
@@ -589,10 +620,30 @@ namespace RTC
 			delete rtpStream;
 		}
 
+		// Notify about all profiles being disabled.
+		for (auto& kv : this->profiles)
+		{
+			auto& profiles = kv.second;
+
+			for (auto profile : profiles)
+			{
+				// Don't announce default profile, but just those for simulcast/SVC.
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
+
+				for (auto& listener : this->listeners)
+				{
+					listener->OnProducerProfileDisabled(this, profile);
+				}
+			}
+		}
+
 		this->rtpStreams.clear();
+		this->mapRtxStreams.clear();
+		this->profiles.clear();
 	}
 
-	void Producer::ApplyPayloadTypeMapping(RTC::RtpPacket* packet) const
+	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
 	{
 		MS_TRACE();
 
@@ -603,16 +654,43 @@ namespace RTC
 		{
 			packet->SetPayloadType(codecPayloadTypeMap.at(payloadType));
 		}
+
+		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
+
+		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
+
+		if (this->headerExtensionIds.ssrcAudioLevel != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->headerExtensionIds.ssrcAudioLevel);
+		}
+
+		if (this->headerExtensionIds.absSendTime != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
+		}
+
+		if (this->headerExtensionIds.rid != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
+		}
 	}
 
-	void Producer::ApplySsrcMapping(RTC::RtpPacket* packet) const
+	RTC::RtpEncodingParameters::Profile Producer::GetProfile(
+	  RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
 	{
-		MS_TRACE();
+		// The stream is already mapped to a profile.
+		if (this->profiles.find(rtpStream) != this->profiles.end())
+		{
+			auto it      = this->profiles[rtpStream].begin();
+			auto profile = *it;
 
-		auto ssrc = packet->GetSsrc();
+			return profile;
+		}
 
-		if (this->ssrcMapping.find(ssrc) != this->ssrcMapping.end())
-			packet->SetSsrc(this->ssrcMapping.at(ssrc));
+		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", packet->GetSsrc());
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
@@ -677,6 +755,47 @@ namespace RTC
 		// Send two, because it's free.
 		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
+	}
+
+	void Producer::OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy)
+	{
+		MS_TRACE();
+
+		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
+
+		MS_ASSERT(
+		  this->profiles.find(rtpStreamRecv) != this->profiles.end(),
+		  "stream not present in profiles map");
+
+		auto& profiles = this->profiles[rtpStreamRecv];
+
+		// The stream has transitioned to non healthy.
+		if (rtpStream->IsHealthy() && !healthy)
+		{
+			MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+			// Completely destroy the stream.
+			ClearRtpStream(rtpStreamRecv);
+		}
+
+		// The stream has transitioned to healthy.
+		if (!rtpStream->IsHealthy() && healthy)
+		{
+			MS_DEBUG_TAG(rtp, "stream is now healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+			// Notify about the profiles being disabled.
+			for (auto& profile : profiles)
+			{
+				// Don't announce default profile, but just those for simulcast/SVC.
+				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+					break;
+
+				for (auto& listener : this->listeners)
+				{
+					listener->OnProducerProfileEnabled(this, profile);
+				}
+			}
+		}
 	}
 
 	inline void Producer::OnTimer(Timer* timer)

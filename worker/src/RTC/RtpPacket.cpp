@@ -364,6 +364,9 @@ namespace RTC
 		auto packet = new RtpPacket(
 		  header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
 
+		// Clone seq32.
+		packet->seq32 = this->seq32;
+
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
 

@@ -7,6 +7,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
@@ -23,7 +27,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::ToJson() const
+	Json::Value RtpStreamRecv::ToJson()
 	{
 		MS_TRACE();
 
@@ -32,6 +36,7 @@ namespace RTC
 		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
 		static const Json::StaticString JsonStringTransit{ "transit" };
 		static const Json::StaticString JsonStringJitter{ "jitter" };
+		static const Json::StaticString JsonStringBitRate{ "bitrate" };
 
 		Json::Value json(Json::objectValue);
 
@@ -40,6 +45,7 @@ namespace RTC
 		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
 		json[JsonStringTransit]      = Json::UInt{ this->transit };
 		json[JsonStringJitter]       = Json::UInt{ this->jitter };
+		json[JsonStringBitRate]      = Json::UInt{ GetBitRate() };
 
 		return json;
 	}
@@ -51,10 +57,12 @@ namespace RTC
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
 		{
-			MS_DEBUG_TAG(rtp, "packet discarded");
+			MS_WARN_TAG(rtp, "packet discarded");
 
 			return false;
 		}
+
+		this->receivedCounter.Update(packet);
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
@@ -128,6 +136,25 @@ namespace RTC
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+
+		// Set the extended sequence number into the packet.
+		// Ensure that the NACKed packet sequence is not higher than the one of
+		// the media stream.
+		//
+		// We are in the same cycle.
+		if (packet->GetSequenceNumber() <= this->maxSeq)
+		{
+			packet->SetExtendedSequenceNumber(
+			  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		}
+		// The nacket packet belongs to the previous cycle.
+		else
+		{
+			MS_DEBUG_TAG(rtx, "nacked packet belongs to previous seq cycle");
+
+			packet->SetExtendedSequenceNumber(
+			  this->cycles - RtpSeqMod + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		}
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -214,6 +241,13 @@ namespace RTC
 		}
 	}
 
+	uint32_t RtpStreamRecv::GetBitRate()
+	{
+		uint64_t now = DepLibUV::GetTime();
+
+		return this->receivedCounter.GetRate(now);
+	}
+
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
 	{
 		MS_TRACE();
@@ -236,13 +270,26 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void RtpStreamRecv::CheckHealth()
+	{
+		auto now     = DepLibUV::GetTime();
+		bool healthy = true;
+
+		if (this->receivedCounter.GetRate(now) == 0)
+			healthy = false;
+
+		// NOTE: Update the 'healthy' value after notification.
+		this->listener->OnRtpStreamHealthReport(this, healthy);
+		this->healthy = healthy;
+	}
+
 	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_WARN_TAG(
+		MS_DEBUG_TAG(
 		  rtx,
 		  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
 		  this->params.ssrc,

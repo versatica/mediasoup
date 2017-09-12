@@ -10,21 +10,30 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t MinSequential{ 0 };
 	static constexpr uint16_t MaxDropout{ 3000 };
-	static constexpr uint16_t MaxMisorder{ 100 };
+	static constexpr uint16_t MaxMisorder{ 300 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+	static constexpr uint16_t HealthCheckPeriod{ 1000 };
 
 	/* Instance methods. */
 
 	RtpStream::RtpStream(RTC::RtpStream::Params& params) : params(params)
 	{
 		MS_TRACE();
+
+		// Set the health check timer.
+		this->healthCheckTimer = new Timer(this);
+
+		// Run the timer.
+		this->healthCheckTimer->Start(HealthCheckPeriod, HealthCheckPeriod);
 	}
 
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
+
+		// Close the health check timer.
+		this->healthCheckTimer->Destroy();
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -38,22 +47,18 @@ namespace RTC
 		{
 			InitSeq(seq);
 
-			this->started   = true;
-			this->maxSeq    = seq - 1;
-			this->probation = MinSequential;
+			this->started = true;
+			this->maxSeq  = seq - 1;
 		}
 
 		// If not a valid packet ignore it.
 		if (!UpdateSeq(packet))
 		{
-			if (this->probation == 0u)
-			{
-				MS_WARN_TAG(
-				  rtp,
-				  "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber());
-			}
+			MS_WARN_TAG(
+			  rtp,
+			  "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
 
 			return false;
 		}
@@ -93,35 +98,10 @@ namespace RTC
 		uint16_t seq    = packet->GetSequenceNumber();
 		uint16_t udelta = seq - this->maxSeq;
 
-		/*
-		 * Source is not valid until MinSequential packets with
-		 * sequential sequence numbers have been received.
-		 */
-		if (this->probation != 0u)
-		{
-			// Packet is in sequence.
-			if (seq == this->maxSeq + 1)
-			{
-				this->probation--;
-				this->maxSeq = seq;
-
-				if (this->probation == 0)
-				{
-					InitSeq(seq);
-					this->received++;
-
-					return true;
-				}
-			}
-			else
-			{
-				this->probation = MinSequential - 1;
-				this->maxSeq    = seq;
-			}
-
-			return false;
-		}
-
+		// If the new packet sequence number is greater than the max seen but not
+		// "so much bigger", accept it.
+		// NOTE: udelta also handles the case of a new cycle, this is:
+		//    maxSeq:65536, seq:0 => udelta:1
 		if (udelta < MaxDropout)
 		{
 			// In order, with permissible gap.
@@ -133,16 +113,16 @@ namespace RTC
 
 			this->maxSeq = seq;
 		}
+		// Too old packet received (older than the allowed misorder).
+		// Or to new packet (more than acceptable dropout).
 		else if (udelta <= RtpSeqMod - MaxMisorder)
 		{
-			// The sequence number made a very large jump.
+			// The sequence number made a very large jump. If two sequential packets
+			// arrive, accept the latter.
 			if (seq == this->badSeq)
 			{
-				/*
-				 * Two sequential packets -- assume that the other side
-				 * restarted without telling us so just re-sync
-				 * (i.e., pretend this was the first packet).
-				 */
+				// Two sequential packets. Assume that the other side restarted without
+				// telling us so just re-sync (i.e., pretend this was the first packet).
 				MS_WARN_TAG(
 				  rtp,
 				  "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
@@ -163,6 +143,11 @@ namespace RTC
 
 				return false;
 			}
+		}
+		// Acceptable misorder.
+		else
+		{
+			// Do nothing.
 		}
 
 		this->received++;
@@ -191,5 +176,15 @@ namespace RTC
 		json[JsonStringUsePli]      = this->usePli;
 
 		return json;
+	}
+
+	void RtpStream::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->healthCheckTimer)
+		{
+			this->CheckHealth();
+		}
 	}
 } // namespace RTC
