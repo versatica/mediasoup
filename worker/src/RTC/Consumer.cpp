@@ -359,7 +359,7 @@ namespace RTC
 		if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
 		{
 			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
-			this->maxRecvSeqNum = this->lastRecvSeqNum;
+			this->maxRecvSeqNum         = this->lastRecvSeqNum;
 		}
 
 		// Rewrite packet SSRC.

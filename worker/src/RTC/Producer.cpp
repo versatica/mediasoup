@@ -593,7 +593,7 @@ namespace RTC
 
 		for (auto& kv : this->mapRtxStreams)
 		{
-			auto rtxSsrc = kv.first;
+			auto rtxSsrc      = kv.first;
 			auto* mediaStream = kv.second;
 
 			if (mediaStream == rtpStream)
@@ -763,7 +763,9 @@ namespace RTC
 
 		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
 
-		MS_ASSERT(this->profiles.find(rtpStreamRecv) != this->profiles.end(), "stream not present in profiles map");
+		MS_ASSERT(
+		  this->profiles.find(rtpStreamRecv) != this->profiles.end(),
+		  "stream not present in profiles map");
 
 		auto& profiles = this->profiles[rtpStreamRecv];
 

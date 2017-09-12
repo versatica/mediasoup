@@ -4,8 +4,8 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <unordered_set>
 #include <set>
+#include <unordered_set>
 
 namespace RTC
 {
@@ -305,7 +305,7 @@ namespace RTC
 		for (auto& encoding : this->encodings)
 		{
 			auto profile = encoding.profile;
-			auto pair = profiles.insert(profile);
+			auto pair    = profiles.insert(profile);
 
 			if (!pair.second)
 				MS_THROW_ERROR("duplicated encoding.profile");

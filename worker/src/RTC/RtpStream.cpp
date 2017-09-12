@@ -10,9 +10,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t MinSequential{ 0 };
 	static constexpr uint16_t MaxDropout{ 3000 };
-	static constexpr uint16_t MaxMisorder{ 100 };
+	static constexpr uint16_t MaxMisorder{ 300 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	static constexpr uint16_t HealthCheckPeriod{ 1000 };
 
@@ -48,22 +47,18 @@ namespace RTC
 		{
 			InitSeq(seq);
 
-			this->started   = true;
-			this->maxSeq    = seq - 1;
-			this->probation = MinSequential;
+			this->started = true;
+			this->maxSeq  = seq - 1;
 		}
 
 		// If not a valid packet ignore it.
 		if (!UpdateSeq(packet))
 		{
-			if (this->probation == 0u)
-			{
-				MS_WARN_TAG(
-				  rtp,
-				  "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber());
-			}
+			MS_WARN_TAG(
+			  rtp,
+			  "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
 
 			return false;
 		}
@@ -102,35 +97,6 @@ namespace RTC
 
 		uint16_t seq    = packet->GetSequenceNumber();
 		uint16_t udelta = seq - this->maxSeq;
-
-		/*
-		 * Source is not valid until MinSequential packets with
-		 * sequential sequence numbers have been received.
-		 */
-		if (this->probation != 0u)
-		{
-			// Packet is in sequence.
-			if (seq == this->maxSeq + 1)
-			{
-				this->probation--;
-				this->maxSeq = seq;
-
-				if (this->probation == 0)
-				{
-					InitSeq(seq);
-					this->received++;
-
-					return true;
-				}
-			}
-			else
-			{
-				this->probation = MinSequential - 1;
-				this->maxSeq    = seq;
-			}
-
-			return false;
-		}
 
 		if (udelta < MaxDropout)
 		{
