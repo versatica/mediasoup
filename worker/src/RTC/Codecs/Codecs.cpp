@@ -9,7 +9,7 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		bool isKnown(const RTC::RtpCodecMimeType& mimeType)
+		bool IsKnown(const RTC::RtpCodecMimeType& mimeType)
 		{
 			MS_TRACE();
 
@@ -25,11 +25,11 @@ namespace RTC
 			}
 		}
 
-		bool isKeyFrame(const RTC::RtpCodecMimeType& mimeType, const RTC::RtpPacket* packet)
+		bool IsKeyFrame(const RTC::RtpCodecMimeType& mimeType, const RTC::RtpPacket* packet)
 		{
 			MS_TRACE();
 
-			if (!isKnown(mimeType))
+			if (!IsKnown(mimeType))
 				return false;
 
 			auto data = packet->GetPayload();
@@ -38,7 +38,7 @@ namespace RTC
 			switch (mimeType.subtype)
 			{
 				case RTC::RtpCodecMimeType::Subtype::VP8:
-					return VP8::isKeyFrame(data, len);
+					return VP8::IsKeyFrame(data, len);
 
 				default:
 					MS_DEBUG_TAG(

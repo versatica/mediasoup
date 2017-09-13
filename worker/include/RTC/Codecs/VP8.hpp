@@ -10,7 +10,7 @@ namespace RTC
 		class VP8
 		{
 		public:
-			static bool isKeyFrame(const uint8_t* data, size_t len);
+			static bool IsKeyFrame(const uint8_t* data, size_t len);
 		};
 	} // namespace Codecs
 } // namespace RTC

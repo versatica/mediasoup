@@ -10,8 +10,8 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		bool isKnown(const RTC::RtpCodecMimeType& mimeType);
-		bool isKeyFrame(const RTC::RtpCodecMimeType& mimeType, const RTC::RtpPacket* packet);
+		bool IsKnown(const RTC::RtpCodecMimeType& mimeType);
+		bool IsKeyFrame(const RTC::RtpCodecMimeType& mimeType, const RTC::RtpPacket* packet);
 	} // namespace Codecs
 } // namespace RTC
 

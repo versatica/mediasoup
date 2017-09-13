@@ -175,9 +175,7 @@ namespace RTC
 		MS_DEBUG_DEV("Consumer resumed [consumerId:%" PRIu32 "]", this->consumerId);
 
 		if (IsEnabled() && !this->sourcePaused)
-		{
 			RequestFullFrame();
-		}
 	}
 
 	void Consumer::SourcePause()
@@ -239,7 +237,6 @@ namespace RTC
 
 		MS_DEBUG_TAG(
 		  rtp, "profile added [profile:%s]", RTC::RtpEncodingParameters::profile2String[profile].c_str());
-		;
 
 		RecalculateTargetProfile();
 	}
@@ -260,7 +257,6 @@ namespace RTC
 		  rtp,
 		  "profile removed [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
-		;
 
 		RecalculateTargetProfile();
 	}
@@ -278,7 +274,6 @@ namespace RTC
 		  rtp,
 		  "preferred profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
-		;
 
 		RecalculateTargetProfile();
 	}
@@ -339,8 +334,8 @@ namespace RTC
 		{
 			bool isKeyFrame = false;
 
-			if (Codecs::isKnown(this->rtpStream->GetMymeType()) &&
-				Codecs::isKeyFrame(this->rtpStream->GetMymeType(), packet))
+			if (Codecs::IsKnown(this->rtpStream->GetMymeType()) &&
+				Codecs::IsKeyFrame(this->rtpStream->GetMymeType(), packet))
 			{
 				isKeyFrame = true;
 
@@ -348,7 +343,7 @@ namespace RTC
 					RTC::RtpEncodingParameters::profile2String[profile].c_str());
 			}
 
-			if (!Codecs::isKnown(this->rtpStream->GetMymeType()) || isKeyFrame )
+			if (!Codecs::IsKnown(this->rtpStream->GetMymeType()) || isKeyFrame )
 			{
 				SetEffectiveProfile(this->targetProfile);
 
@@ -357,9 +352,6 @@ namespace RTC
 
 				// Resynchronize the stream.
 				this->syncRequired = true;
-
-				// Calculate the new target profile.
-				RecalculateTargetProfile();
 			}
 		}
 
@@ -696,12 +688,9 @@ namespace RTC
 		  rtp,
 		  "target profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
-		;
 
 		if (IsEnabled() && !IsPaused())
-		{
 			RequestFullFrame();
-		}
 	}
 
 	void Consumer::SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile)
@@ -718,7 +707,6 @@ namespace RTC
 		  rtp,
 		  "effective profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
-		;
 
 		// Notify.
 		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];

@@ -9,7 +9,7 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		bool VP8::isKeyFrame(const uint8_t* data, size_t len)
+		bool VP8::IsKeyFrame(const uint8_t* data, size_t len)
 		{
 			if (len < 1)
 				return false;
