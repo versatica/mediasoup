@@ -63,6 +63,7 @@ namespace RTC
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		void RecalculateEffectiveProfile();
+		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
 
 		/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
 	public:

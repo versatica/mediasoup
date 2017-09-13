@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include "RTC/Codecs/Codecs.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include <vector>
@@ -237,7 +238,7 @@ namespace RTC
 		this->profiles.insert(profile);
 
 		MS_DEBUG_TAG(
-		  rtp, "profile added: %s", RTC::RtpEncodingParameters::profile2String[profile].c_str());
+		  rtp, "profile added [profile:%s]", RTC::RtpEncodingParameters::profile2String[profile].c_str());
 		;
 
 		RecalculateEffectiveProfile();
@@ -257,8 +258,8 @@ namespace RTC
 
 		MS_DEBUG_TAG(
 		  rtp,
-		  "profile removed: %s",
-		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
+		  "profile removed [profile:%s]",
+		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 		;
 
 		RecalculateEffectiveProfile();
@@ -272,6 +273,12 @@ namespace RTC
 			return;
 
 		this->preferredProfile = profile;
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "preferred profile set [profile:%s]",
+		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+		;
 
 		RecalculateEffectiveProfile();
 	}
@@ -321,6 +328,26 @@ namespace RTC
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
+		}
+
+		// Whether we want to re-transmit the packet.
+		bool retransmissionNeeded = false;
+
+		// Check whether this is the key frame we are waiting for in order to update the effective
+		// profile.
+		if (
+		  this->effectiveProfile != this->preferredProfile && profile == this->preferredProfile &&
+		  Codecs::isKeyFrame(this->rtpStream->GetMymeType(), packet))
+		{
+			MS_DEBUG_TAG(rtp, "changing effective profile after receiving a key frame");
+
+			this->syncRequired = true;
+			this->rtpStream->ClearRetransmissionBuffer();
+
+			// Send this packet twice.
+			retransmissionNeeded = true;
+
+			SetEffectiveProfile(this->preferredProfile);
 		}
 
 		// If the packet belongs to different profile than the one being sent, drop it.
@@ -391,6 +418,17 @@ namespace RTC
 
 			// Update transmitted RTP data counter.
 			this->transmittedCounter.Update(packet);
+
+			if (retransmissionNeeded)
+			{
+				MS_DEBUG_TAG(
+				  rtp,
+				  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
+
+				RetransmitRtpPacket(packet);
+			}
 		}
 
 		// Restore packet SSRC.
@@ -568,8 +606,8 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  rtx,
-			  "sending RTX packet [ssrc: %" PRIu32 ", seq: %" PRIu16
-			  "] recovering original [ssrc: %" PRIu32 ", seq: %" PRIu16 "]",
+			  "sending RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
+			  ", seq:%" PRIu16 "]",
 			  rtxPacket->GetSsrc(),
 			  rtxPacket->GetSequenceNumber(),
 			  packet->GetSsrc(),
@@ -580,7 +618,7 @@ namespace RTC
 			rtxPacket = packet;
 			MS_DEBUG_TAG(
 			  rtx,
-			  "retransmitting packet [ssrc: %" PRIu32 ", seq: %" PRIu16 "]",
+			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  rtxPacket->GetSsrc(),
 			  rtxPacket->GetSequenceNumber());
 		}
@@ -598,10 +636,6 @@ namespace RTC
 
 	void Consumer::RecalculateEffectiveProfile()
 	{
-		static const Json::StaticString JsonStringProfile{ "profile" };
-
-		Json::Value eventData(Json::objectValue);
-
 		RTC::RtpEncodingParameters::Profile newProfile;
 
 		// If there are no profiles, select none or default, depending on whether this
@@ -641,7 +675,43 @@ namespace RTC
 		if (newProfile == this->effectiveProfile)
 			return;
 
-		this->effectiveProfile = newProfile;
+		if (IsEnabled() && !IsPaused())
+		{
+			/*
+			 * - This is the first time we are setting the effective profile.
+			 * - The current effective profile is no longer available.
+			 * - We don't handle the key frames for the used codec.
+			 */
+			if (
+			  this->effectiveProfile == RTC::RtpEncodingParameters::Profile::DEFAULT ||
+			  this->profiles.find(this->effectiveProfile) == this->profiles.end() ||
+			  !RTC::Codecs::isKnown(this->rtpStream->GetMymeType()))
+			{
+				this->syncRequired = true;
+				this->rtpStream->ClearRetransmissionBuffer();
+
+				SetEffectiveProfile(newProfile);
+			}
+			// Otherwise set the effective profile upon reception of a key frame.
+			else
+			{
+			}
+
+			RequestFullFrame();
+		}
+		else
+		{
+			SetEffectiveProfile(newProfile);
+		}
+	}
+
+	void Consumer::SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile)
+	{
+		static const Json::StaticString JsonStringProfile{ "profile" };
+
+		Json::Value eventData(Json::objectValue);
+
+		this->effectiveProfile = profile;
 
 		MS_DEBUG_TAG(
 		  rtp,
@@ -652,14 +722,5 @@ namespace RTC
 		// Notify.
 		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
 		this->notifier->Emit(this->consumerId, "effectiveprofilechange", eventData);
-
-		if (IsEnabled() && !IsPaused())
-		{
-			this->rtpStream->ClearRetransmissionBuffer();
-
-			RequestFullFrame();
-		}
-
-		this->syncRequired = true;
 	}
 } // namespace RTC
