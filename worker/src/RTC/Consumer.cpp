@@ -649,6 +649,8 @@ namespace RTC
 		// is single stream or simulcast/SVC.
 		if (this->profiles.empty())
 		{
+			this->effectiveProfile = RtpEncodingParameters::Profile::NONE;
+
 			if (this->effectiveProfile != RtpEncodingParameters::Profile::DEFAULT)
 				newProfile = RtpEncodingParameters::Profile::NONE;
 			else
@@ -681,6 +683,9 @@ namespace RTC
 
 		this->targetProfile = newProfile;
 
+		if (IsEnabled() && !IsPaused())
+			RequestFullFrame();
+
 		if (this->targetProfile == this->effectiveProfile)
 			return;
 
@@ -688,9 +693,6 @@ namespace RTC
 		  rtp,
 		  "target profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
-
-		if (IsEnabled() && !IsPaused())
-			RequestFullFrame();
 	}
 
 	void Consumer::SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile)
