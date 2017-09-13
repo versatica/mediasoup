@@ -658,7 +658,7 @@ namespace RTC
 			else
 				newProfile = RtpEncodingParameters::Profile::DEFAULT;
 
-			this->effectiveProfile = RtpEncodingParameters::Profile::NONE;
+			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 		}
 		// If there is no preferred profile, take the best one available.
 		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
