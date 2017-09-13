@@ -4,6 +4,7 @@
 #include "RTC/Producer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
+#include "RTC/Codecs/Codecs.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -287,6 +288,11 @@ namespace RTC
 			MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
 
 			return;
+		}
+
+		if (Codecs::IsKeyFrame(rtpStream->GetMimeType(), packet))
+		{
+			MS_DEBUG_TAG(rtp, "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16"]", packet->GetSsrc(), packet->GetSequenceNumber());
 		}
 
 		RTC::RtpEncodingParameters::Profile profile;
