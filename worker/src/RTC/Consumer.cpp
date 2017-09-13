@@ -683,11 +683,11 @@ namespace RTC
 
 		this->targetProfile = newProfile;
 
-		if (IsEnabled() && !IsPaused())
-			RequestFullFrame();
-
 		if (this->targetProfile == this->effectiveProfile)
 			return;
+
+		if (IsEnabled() && !IsPaused())
+			RequestFullFrame();
 
 		MS_DEBUG_TAG(
 		  rtp,
