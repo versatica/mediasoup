@@ -783,7 +783,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(rtcp, "sending PLI");
+		MS_DEBUG_TAG(rtcp, "sending PLI [ssrc: %" PRIu32 "]", rtpStream->GetSsrc());
 
 		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
 
