@@ -381,7 +381,6 @@ namespace RTC
 			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
 			this->maxRecvSeqNum         = packet->GetSequenceNumber();
 
-			this->rtpStream->ClearRetransmissionBuffer();
 			this->syncRequired = false;
 
 			MS_DEBUG_TAG(
