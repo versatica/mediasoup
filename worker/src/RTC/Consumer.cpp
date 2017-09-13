@@ -334,8 +334,8 @@ namespace RTC
 		{
 			bool isKeyFrame = false;
 
-			if (Codecs::IsKnown(this->rtpStream->GetMymeType()) &&
-				Codecs::IsKeyFrame(this->rtpStream->GetMymeType(), packet))
+			if (Codecs::IsKnown(this->rtpStream->GetMimeType()) &&
+				Codecs::IsKeyFrame(this->rtpStream->GetMimeType(), packet))
 			{
 				isKeyFrame = true;
 
@@ -343,7 +343,7 @@ namespace RTC
 					RTC::RtpEncodingParameters::profile2String[profile].c_str());
 			}
 
-			if (!Codecs::IsKnown(this->rtpStream->GetMymeType()) || isKeyFrame )
+			if (!Codecs::IsKnown(this->rtpStream->GetMimeType()) || isKeyFrame)
 			{
 				SetEffectiveProfile(this->targetProfile);
 
@@ -432,7 +432,11 @@ namespace RTC
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
 
-				RetransmitRtpPacket(packet);
+				// Send the packet.
+				this->transport->SendRtpPacket(packet);
+
+				// Update transmitted RTP data counter.
+				this->transmittedCounter.Update(packet);
 			}
 		}
 
