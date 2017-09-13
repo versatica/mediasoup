@@ -38,6 +38,7 @@ namespace RTC
 		virtual Json::Value ToJson() = 0;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		uint32_t GetSsrc();
+		const RTC::RtpCodecMimeType& GetMymeType() const;
 		bool IsHealthy();
 
 	protected:
@@ -80,6 +81,11 @@ namespace RTC
 	inline uint32_t RtpStream::GetSsrc()
 	{
 		return this->params.ssrc;
+	}
+
+	inline const RTC::RtpCodecMimeType& RtpStream::GetMymeType() const
+	{
+		return this->params.mime;
 	}
 
 	inline bool RtpStream::IsHealthy()
