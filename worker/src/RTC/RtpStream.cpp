@@ -129,8 +129,7 @@ namespace RTC
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
 
-				// TODO: TEMPORAL (uncomment)
-				// InitSeq(seq);
+				InitSeq(seq);
 			}
 			else
 			{
@@ -142,11 +141,7 @@ namespace RTC
 
 				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
 
-				// TODO: TEMPORAL (remove)
-				MS_WARN_TAG(rtp, "let the packet go");
-
-				// TODO: TEMPORAL (uncomment)
-				// return false;
+				return false;
 			}
 		}
 		// Acceptable misorder.
