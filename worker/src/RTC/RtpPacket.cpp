@@ -410,11 +410,7 @@ namespace RTC
 		// Chrome sends some RTX packets with no payload when the stream is started.
 		// Just ignore them.
 		if (this->payloadLength < 2)
-		{
-			MS_DEBUG_TAG(rtx, "ignoring RTX packet with empty payload");
-
 			return false;
-		}
 
 		// Rewrite the payload type.
 		this->SetPayloadType(payloadType);

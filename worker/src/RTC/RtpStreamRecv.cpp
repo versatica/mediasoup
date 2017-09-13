@@ -100,23 +100,9 @@ namespace RTC
 		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			// Ignore RTX packets with no payload.
-			if (packet->GetPayloadLength() < 2)
-			{
-				MS_DEBUG_TAG(
-				  rtx,
-				  "ignoring empty RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber(),
-				  packet->GetPayloadType());
-
-				return false;
-			}
-
-			MS_WARN_TAG(
+			MS_DEBUG_TAG(
 			  rtx,
-			  "ignoring malformed RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8
-			  "]",
+			  "ignoring empty RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetPayloadType());
