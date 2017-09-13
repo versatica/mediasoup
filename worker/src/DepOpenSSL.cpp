@@ -107,7 +107,7 @@ void DepOpenSSL::LockingFunction(int mode, int n, const char* /*file*/, int /*li
 	 * - line:  line in the source file calling this function.
 	 */
 
-	// MS_DEBUG_DEV("[mode: %s+%s, mutex id: %d, file: %s, line: %d]",
+	// MS_DEBUG_DEV("[mode:%s+%s, mutex id:%d, file:%s, line:%d]",
 	// 	mode & CRYPTO_LOCK ? "LOCK" : "UNLOCK", mode & CRYPTO_READ ? "READ" : "WRITE",
 	// 	n, file, line);
 

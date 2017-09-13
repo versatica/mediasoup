@@ -85,8 +85,8 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  rtx,
-			  "ignoring RTX packet with invalid payload type [ssrc: %" PRIu32 " seq: %" PRIu16
-			  " payload type: %" PRIu8 "]",
+			  "ignoring RTX packet with invalid payload type [ssrc:%" PRIu32 ", seq:%" PRIu16
+			  ", pt:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetPayloadType());
@@ -102,7 +102,7 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(
 			  rtx,
-			  "ignoring empty RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 " payload type: %" PRIu8 "]",
+			  "ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetPayloadType());
@@ -112,8 +112,8 @@ namespace RTC
 
 		MS_DEBUG_TAG(
 		  rtx,
-		  "received RTX packet [ssrc: %" PRIu32 " seq: %" PRIu16 "] recovering original [ssrc: %" PRIu32
-		  " seq: %" PRIu16 "]",
+		  "received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
+		  ", seq:%" PRIu16 "]",
 		  this->rtxSsrc,
 		  rtxSeq,
 		  packet->GetSsrc(),

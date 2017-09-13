@@ -200,7 +200,7 @@ namespace RTC
 				MS_DEBUG_TAG(
 				  rbe,
 				  "probe successful, sent at %d bps, received at %d bps "
-				  "[mean send delta:%fms, mean recv delta: %f ms, "
+				  "[mean send delta:%fms, mean recv delta:%f ms, "
 				  "num probes:%d",
 				  bestIt->GetSendBitrateBps(),
 				  bestIt->GetRecvBitrateBps(),
