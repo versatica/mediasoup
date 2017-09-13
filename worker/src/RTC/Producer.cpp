@@ -305,7 +305,7 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(
 			  rtp,
-			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ",profile:%s]",
+			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", profile:%s]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
