@@ -290,11 +290,6 @@ namespace RTC
 			return;
 		}
 
-		if (Codecs::IsKeyFrame(rtpStream->GetMimeType(), packet))
-		{
-			MS_DEBUG_TAG(rtp, "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16"]", packet->GetSsrc(), packet->GetSequenceNumber());
-		}
-
 		RTC::RtpEncodingParameters::Profile profile;
 
 		try
@@ -304,6 +299,16 @@ namespace RTC
 		catch (const MediaSoupError& error)
 		{
 			return;
+		}
+
+		if (Codecs::IsKeyFrame(rtpStream->GetMimeType(), packet))
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ",profile:%s]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 		}
 
 		// If paused stop here.

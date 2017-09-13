@@ -334,13 +334,14 @@ namespace RTC
 		{
 			bool isKeyFrame = false;
 
-			if (Codecs::IsKnown(this->rtpStream->GetMimeType()) &&
-				Codecs::IsKeyFrame(this->rtpStream->GetMimeType(), packet))
+			if (Codecs::IsKnown(this->rtpStream->GetMimeType()) && Codecs::IsKeyFrame(this->rtpStream->GetMimeType(), packet))
 			{
 				isKeyFrame = true;
 
-				MS_DEBUG_TAG(rtp, "key frame received [profile:%s]",
-					RTC::RtpEncodingParameters::profile2String[profile].c_str());
+				MS_DEBUG_TAG(
+				  rtp,
+				  "key frame received [profile:%s]",
+				  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 			}
 
 			if (!Codecs::IsKnown(this->rtpStream->GetMimeType()) || isKeyFrame)
