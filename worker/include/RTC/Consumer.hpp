@@ -62,7 +62,7 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void RecalculateEffectiveProfile();
+		void RecalculateTargetProfile();
 		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
 
 		/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
@@ -105,6 +105,7 @@ namespace RTC
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
 		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 	};
 
