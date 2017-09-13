@@ -649,12 +649,12 @@ namespace RTC
 		// is single stream or simulcast/SVC.
 		if (this->profiles.empty())
 		{
-			this->effectiveProfile = RtpEncodingParameters::Profile::NONE;
-
 			if (this->effectiveProfile != RtpEncodingParameters::Profile::DEFAULT)
 				newProfile = RtpEncodingParameters::Profile::NONE;
 			else
 				newProfile = RtpEncodingParameters::Profile::DEFAULT;
+
+			this->effectiveProfile = RtpEncodingParameters::Profile::NONE;
 		}
 		// If there is no preferred profile, take the best one available.
 		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
