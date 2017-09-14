@@ -72,9 +72,9 @@ namespace RTC
 		this->rtt = ((rtt >> 16) * 1000);
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
-		this->totalLost = report->GetTotalLost();
+		this->totalLost    = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
-		this->jitter = report->GetJitter();
+		this->jitter       = report->GetJitter();
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
