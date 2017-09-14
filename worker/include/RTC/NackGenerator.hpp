@@ -45,7 +45,7 @@ namespace RTC
 
 	private:
 		void AddPacketsToNackList(uint32_t seq32Start, uint32_t seq32End);
-		void RemoveFromNackListOlderThan(uint32_t seq32);
+		void RemoveFromNackListOlderThan(RTC::RtpPacket* packet);
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
 		void MayRunTimer() const;
 

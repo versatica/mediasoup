@@ -49,7 +49,7 @@ namespace RTC
 
 		// If a key frame remove all the items in the nack list older than this seq.
 		if (packet->IsKeyFrame())
-			RemoveFromNackListOlderThan(seq32);
+			RemoveFromNackListOlderThan(packet);
 
 		// Obviously never nacked, so ignore.
 		if (seq32 == this->lastSeq32)
@@ -145,20 +145,29 @@ namespace RTC
 		}
 	}
 
-	void NackGenerator::RemoveFromNackListOlderThan(uint32_t seq32)
+	// Delete all the entries in the NACK list whose key (seq32) is older than
+	// the given one.
+	void NackGenerator::RemoveFromNackListOlderThan(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		// Delete all the entries in the NACK list whose key (seq32) is older than
-		// the given one.
-
-		MS_ERROR("---- PRE,  nackList.size:%zu", this->nackList.size());
+		uint32_t seq32          = packet->GetExtendedSequenceNumber();
+		uint32_t numItemsBefore = this->nackList.size();
 
 		auto it = this->nackList.lower_bound(seq32);
 
 		this->nackList.erase(this->nackList.begin(), it);
 
-		MS_ERROR("---- POST,  nackList.size:%zu", this->nackList.size());
+		uint32_t numItemsRemoved = numItemsBefore - this->nackList.size();
+
+		if (numItemsRemoved > 0)
+		{
+			MS_DEBUG_TAG(
+			  rtx,
+			  "removed %" PRIu32 " old NACK items older than received key frame [seq:%" PRIu16 "]",
+			  numItemsRemoved,
+			  packet->GetSequenceNumber());
+		}
 	}
 
 	std::vector<uint16_t> NackGenerator::GetNackBatch(NackFilter filter)
