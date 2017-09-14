@@ -365,9 +365,14 @@ namespace RTC
 		if (profile != this->effectiveProfile)
 			return;
 
+		// Whether this is the first packet after re-sync.
+		bool isSyncPacket = false;
+
 		// Check whether sequence number and timestamp sync is required.
 		if (this->syncRequired)
 		{
+			isSyncPacket = true;
+
 			this->seqNum = ++this->maxSeqNum;
 
 			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
@@ -420,6 +425,21 @@ namespace RTC
 		// Rewrite packet timestamp.
 		packet->SetTimestamp(this->rtpTimestamp);
 
+		if (isSyncPacket)
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "], from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 ", profile:%s]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  ssrc,
+			  this->lastRecvSeqNum,
+			  this->lastRecvRtpTimestamp,
+			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+		}
+
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
@@ -431,12 +451,6 @@ namespace RTC
 
 			if (retransmissionNeeded)
 			{
-				MS_DEBUG_TAG(
-				  rtp,
-				  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber());
-
 				// Send the packet.
 				this->transport->SendRtpPacket(packet);
 
@@ -449,7 +463,7 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  rtp,
 			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "], from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "], profile:%s",
+			  "], from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 ", profile:%s]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
