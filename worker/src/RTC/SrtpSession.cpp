@@ -91,7 +91,7 @@ namespace RTC
 		policy.ssrc.value = 0;
 		policy.key        = key;
 		// Required for sending RTP retransmission without RTX.
-		policy.allow_repeat_tx = 0; // TODO: Set to 1.
+		policy.allow_repeat_tx = 1;
 		policy.window_size     = 1024;
 		policy.next            = nullptr;
 
