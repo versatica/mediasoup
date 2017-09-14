@@ -27,6 +27,9 @@ namespace RTC
 		// Initialize sequence number.
 		this->maxSeqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
 
+		// Initialize RTP timestamp.
+		this->rtpTimestamp = Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF);
+
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
@@ -376,10 +379,8 @@ namespace RTC
 
 			this->seqNum = ++this->maxSeqNum;
 
-			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
-
-			if (now > this->rtpTimestamp)
-				this->rtpTimestamp = now;
+			this->rtpTimestampPreviousBase = this->rtpTimestamp;
+			this->rtpTimestampBase         = packet->GetTimestamp();
 
 			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
 			this->maxRecvSeqNum         = packet->GetSequenceNumber();
@@ -397,7 +398,6 @@ namespace RTC
 		else
 		{
 			this->seqNum += packet->GetSequenceNumber() - this->lastRecvSeqNum;
-			this->rtpTimestamp += packet->GetTimestamp() - this->lastRecvRtpTimestamp;
 
 			// Update the max received sequence number if required.
 			if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
@@ -407,6 +407,14 @@ namespace RTC
 				this->maxSeqNum             = this->seqNum;
 			}
 		}
+
+		this->rtpTimestamp =
+		  (packet->GetTimestamp() - this->rtpTimestampBase) + this->rtpTimestampPreviousBase;
+
+		if (this->kind == RTC::Media::Kind::VIDEO)
+			this->rtpTimestamp += 4500;
+		else if (this->kind == RTC::Media::Kind::AUDIO)
+			this->rtpTimestamp += 960;
 
 		// Save the received sequence number.
 		this->lastRecvSeqNum = packet->GetSequenceNumber();
