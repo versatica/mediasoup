@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_STREAM_HPP
 
 #include "common.hpp"
+#include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "handles/Timer.hpp"
@@ -35,8 +36,9 @@ namespace RTC
 		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
-		virtual Json::Value ToJson() = 0;
+		virtual Json::Value ToJson();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
+		uint32_t GetBitRate();
 		uint32_t GetSsrc();
 		uint8_t GetPayloadType();
 		const RTC::RtpCodecMimeType& GetMimeType() const;
@@ -68,13 +70,18 @@ namespace RTC
 		uint32_t cycles{ 0 };        // Shifted count of seq. number cycles.
 		uint32_t baseSeq{ 0 };       // Base seq number.
 		uint32_t badSeq{ 0 };        // Last 'bad' seq number + 1.
-		uint32_t received{ 0 };      // Packets received.
 		uint32_t expectedPrior{ 0 }; // Packet expected at last interval.
 		uint32_t receivedPrior{ 0 }; // Packet received at last interval.
 		// Others.
 		uint32_t maxTimestamp{ 0 }; // Highest timestamp seen.
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
+		uint32_t totalLost{ 0 };
+		uint8_t fractionLost{ 0 };
+		uint32_t jitter{ 0 };
+		uint32_t rtt{ 0 };
+		// RTP counters.
+		RTC::RtpDataCounter counter;
 	};
 
 	/* Inline instance methods. */

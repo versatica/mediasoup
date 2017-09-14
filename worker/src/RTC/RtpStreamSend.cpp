@@ -31,27 +31,6 @@ namespace RTC
 		ClearRetransmissionBuffer();
 	}
 
-	Json::Value RtpStreamSend::ToJson()
-	{
-		MS_TRACE();
-
-		static const Json::StaticString JsonStringParams{ "params" };
-		static const Json::StaticString JsonStringReceived{ "received" };
-		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
-		static const Json::StaticString JsonStringReceivedBytes{ "receivedBytes" };
-		static const Json::StaticString JsonStringRtt{ "rtt" };
-
-		Json::Value json(Json::objectValue);
-
-		json[JsonStringParams]        = this->params.ToJson();
-		json[JsonStringReceived]      = Json::UInt{ this->received };
-		json[JsonStringMaxTimestamp]  = Json::UInt{ this->maxTimestamp };
-		json[JsonStringReceivedBytes] = static_cast<Json::UInt>(this->receivedBytes);
-		json[JsonStringRtt]           = Json::UInt{ this->rtt };
-
-		return json;
-	}
-
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -63,9 +42,6 @@ namespace RTC
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
 			StorePacket(packet);
-
-		// Increase packet counters.
-		this->receivedBytes += packet->GetPayloadLength();
 
 		// Record current time and RTP timestamp.
 		this->lastPacketTimeMs       = DepLibUV::GetTime();
@@ -95,6 +71,10 @@ namespace RTC
 		// RTT in milliseconds.
 		this->rtt = ((rtt >> 16) * 1000);
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+
+		this->totalLost = report->GetTotalLost();
+		this->fractionLost = report->GetFractionLost();
+		this->jitter = report->GetJitter();
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -302,13 +282,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->received == 0u)
+		if (this->counter.GetPacketCount() == 0u)
 			return nullptr;
 
 		auto report = new RTC::RTCP::SenderReport();
 
-		report->SetPacketCount(this->received);
-		report->SetOctetCount(this->receivedBytes);
+		report->SetPacketCount(this->counter.GetPacketCount());
+		report->SetOctetCount(this->counter.GetBytes());
 
 		Utils::Time::Ntp ntp{};
 		Utils::Time::CurrentTimeNtp(ntp);

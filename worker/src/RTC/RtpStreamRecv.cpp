@@ -27,29 +27,6 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::ToJson()
-	{
-		MS_TRACE();
-
-		static const Json::StaticString JsonStringParams{ "params" };
-		static const Json::StaticString JsonStringReceived{ "received" };
-		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
-		static const Json::StaticString JsonStringTransit{ "transit" };
-		static const Json::StaticString JsonStringJitter{ "jitter" };
-		static const Json::StaticString JsonStringBitRate{ "bitrate" };
-
-		Json::Value json(Json::objectValue);
-
-		json[JsonStringParams]       = this->params.ToJson();
-		json[JsonStringReceived]     = Json::UInt{ this->received };
-		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
-		json[JsonStringTransit]      = Json::UInt{ this->transit };
-		json[JsonStringJitter]       = Json::UInt{ this->jitter };
-		json[JsonStringBitRate]      = Json::UInt{ GetBitRate() };
-
-		return json;
-	}
-
 	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -61,8 +38,6 @@ namespace RTC
 
 			return false;
 		}
-
-		this->receivedCounter.Update(packet);
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
@@ -157,7 +132,7 @@ namespace RTC
 
 		// Calculate Packets Expected and Lost.
 		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
-		int32_t totalLost = expected - this->received;
+		this->totalLost   = expected - this->counter.GetPacketCount();
 
 		report->SetTotalLost(totalLost);
 
@@ -166,19 +141,18 @@ namespace RTC
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->received - this->receivedPrior;
+		uint32_t receivedInterval = this->counter.GetPacketCount() - this->receivedPrior;
 
-		this->receivedPrior = this->received;
+		this->receivedPrior = counter.GetPacketCount();
 
 		int32_t lostInterval = expectedInterval - receivedInterval;
-		uint8_t fractionLost;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
-			fractionLost = 0;
+			this->fractionLost = 0;
 		else
-			fractionLost = (lostInterval << 8) / expectedInterval;
+			this->fractionLost = (lostInterval << 8) / expectedInterval;
 
-		report->SetFractionLost(fractionLost);
+		report->SetFractionLost(this->fractionLost);
 
 		// Fill the rest of the report.
 		report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
@@ -227,13 +201,6 @@ namespace RTC
 		}
 	}
 
-	uint32_t RtpStreamRecv::GetBitRate()
-	{
-		uint64_t now = DepLibUV::GetTime();
-
-		return this->receivedCounter.GetRate(now);
-	}
-
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
 	{
 		MS_TRACE();
@@ -261,7 +228,7 @@ namespace RTC
 		auto now     = DepLibUV::GetTime();
 		bool healthy = true;
 
-		if (this->receivedCounter.GetRate(now) == 0)
+		if (this->counter.GetRate(now) == 0)
 			healthy = false;
 
 		// NOTE: Update the 'healthy' value after notification.

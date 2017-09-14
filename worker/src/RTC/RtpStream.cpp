@@ -4,6 +4,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStream.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -34,6 +35,35 @@ namespace RTC
 
 		// Close the health check timer.
 		this->healthCheckTimer->Destroy();
+	}
+
+	Json::Value RtpStream::ToJson()
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringBitRate{ "bitrate" };
+		static const Json::StaticString JsonStringJitter{ "jitter" };
+		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
+		static const Json::StaticString JsonStringParams{ "params" };
+		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
+		static const Json::StaticString JsonStringOctetCount{ "octetCount" };
+		static const Json::StaticString JsonStringRtt{ "rtt" };
+		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
+		static const Json::StaticString JsonStringTotalLost{ "totalLost" };
+
+		Json::Value json(Json::objectValue);
+
+		json[JsonStringBitRate]      = Json::UInt{ GetBitRate() };
+		json[JsonStringJitter]       = Json::UInt{ this->jitter };
+		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
+		json[JsonStringParams]       = this->params.ToJson();
+		json[JsonStringPacketCount]  = static_cast<Json::UInt>(this->counter.GetPacketCount());
+		json[JsonStringOctetCount]   = static_cast<Json::UInt>(this->counter.GetBytes());
+		json[JsonStringRtt]          = Json::UInt{ this->rtt };
+		json[JsonStringFractionLost] = Json::UInt{ this->fractionLost };
+		json[JsonStringTotalLost]    = Json::UInt{ this->totalLost };
+
+		return json;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -72,6 +102,13 @@ namespace RTC
 			this->maxTimestamp = packet->GetTimestamp();
 
 		return true;
+	}
+
+	uint32_t RtpStream::GetBitRate()
+	{
+		uint64_t now = DepLibUV::GetTime();
+
+		return this->counter.GetRate(now);
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
@@ -150,7 +187,8 @@ namespace RTC
 			// Do nothing.
 		}
 
-		this->received++;
+		// Increase counters.
+		this->counter.Update(packet);
 
 		return true;
 	}

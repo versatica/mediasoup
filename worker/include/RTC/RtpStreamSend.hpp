@@ -29,13 +29,11 @@ namespace RTC
 		RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
 
-		Json::Value ToJson() override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(
 		  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
-		uint32_t GetRtt() const;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		bool HasRtx() const;
 		void RtxEncode(RtpPacket* packet);
@@ -55,10 +53,8 @@ namespace RTC
 		Buffer buffer;
 
 	private:
-		size_t receivedBytes{ 0 };            // Bytes received.
 		uint64_t lastPacketTimeMs{ 0 };       // Time (MS) when the last packet was received.
 		uint32_t lastPacketRtpTimestamp{ 0 }; // RTP Timestamp of the last packet.
-		uint32_t rtt{ 0 };                    // Round trip time.
 
 		// RTX related.
 		bool hasRtx{ false };
@@ -66,11 +62,6 @@ namespace RTC
 		uint32_t rtxSsrc{ 0 };
 		uint16_t rtxSeq{ 0 };
 	};
-
-	inline uint32_t RtpStreamSend::GetRtt() const
-	{
-		return this->rtt;
-	}
 
 	inline bool RtpStreamSend::HasRtx() const
 	{
