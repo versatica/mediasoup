@@ -359,6 +359,18 @@ namespace RTC
 				this->syncRequired = true;
 			}
 		}
+		else if (this->effectiveProfile != this->targetProfile && profile == this->effectiveProfile)
+		{
+			if (Codecs::IsKnown(this->rtpStream->GetMimeType()) && Codecs::IsKeyFrame(this->rtpStream->GetMimeType(), packet))
+			{
+				MS_DEBUG_TAG(
+				  rtp,
+				  "ignoring key frame received for the temporal effective profile [profile:%s]",
+				  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+
+				return;
+			}
+		}
 
 		// If the packet belongs to different profile than the one being sent, drop it.
 		// NOTE: This is specific to simulcast with no temporal layers.
