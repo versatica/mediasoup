@@ -253,6 +253,10 @@ namespace RTC
 		// Remove profile.
 		this->profiles.erase(profile);
 
+		// If it was our effective profile, set it to none.
+		if (this->effectiveProfile == profile)
+			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
+
 		MS_DEBUG_TAG(
 		  rtp,
 		  "profile removed [profile:%s]",
@@ -662,31 +666,34 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RtpEncodingParameters::Profile newProfile;
+		RTC::RtpEncodingParameters::Profile newEffectiveProfile;
 
 		// If there are no profiles, select none or default, depending on whether this
 		// is single stream or simulcast/SVC.
 		if (this->profiles.empty())
 		{
-			if (this->effectiveProfile != RtpEncodingParameters::Profile::DEFAULT)
-				newProfile = RtpEncodingParameters::Profile::NONE;
-			else
-				newProfile = RtpEncodingParameters::Profile::DEFAULT;
+			MS_ASSERT(
+				this->effectiveProfile == RtpEncodingParameters::Profile::NONE ||
+				this->effectiveProfile == RtpEncodingParameters::Profile::DEFAULT,
+				"no profiles, but effective profile is not none nor default");
 
-			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
+			if (this->effectiveProfile == RtpEncodingParameters::Profile::NONE)
+				newEffectiveProfile = RtpEncodingParameters::Profile::NONE;
+			else
+				newEffectiveProfile = RtpEncodingParameters::Profile::DEFAULT;
 		}
 		// If there is no preferred profile, take the best one available.
 		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
 		{
 			auto it    = this->profiles.crbegin();
-			newProfile = *it;
+			newEffectiveProfile = *it;
 		}
 		// Otherwise take the highest available profile equal or lower than the preferred.
 		else
 		{
 			std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
 
-			newProfile = RtpEncodingParameters::Profile::NONE;
+			newEffectiveProfile = RtpEncodingParameters::Profile::NONE;
 
 			for (it = this->profiles.rbegin(); it != this->profiles.rend(); ++it)
 			{
@@ -694,13 +701,13 @@ namespace RTC
 
 				if (profile <= this->preferredProfile)
 				{
-					newProfile = *it;
+					newEffectiveProfile = *it;
 					break;
 				}
 			}
 		}
 
-		this->targetProfile = newProfile;
+		this->targetProfile = newEffectiveProfile;
 
 		if (this->targetProfile == this->effectiveProfile)
 			return;
