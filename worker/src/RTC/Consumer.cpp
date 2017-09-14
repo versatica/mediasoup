@@ -666,7 +666,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RtpEncodingParameters::Profile newEffectiveProfile;
+		RTC::RtpEncodingParameters::Profile newTargetProfile;
 
 		// If there are no profiles, select none or default, depending on whether this
 		// is single stream or simulcast/SVC.
@@ -678,22 +678,22 @@ namespace RTC
 				"no profiles, but effective profile is not none nor default");
 
 			if (this->effectiveProfile == RtpEncodingParameters::Profile::NONE)
-				newEffectiveProfile = RtpEncodingParameters::Profile::NONE;
+				newTargetProfile = RtpEncodingParameters::Profile::NONE;
 			else
-				newEffectiveProfile = RtpEncodingParameters::Profile::DEFAULT;
+				newTargetProfile = RtpEncodingParameters::Profile::DEFAULT;
 		}
 		// If there is no preferred profile, take the best one available.
 		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
 		{
 			auto it    = this->profiles.crbegin();
-			newEffectiveProfile = *it;
+			newTargetProfile = *it;
 		}
 		// Otherwise take the highest available profile equal or lower than the preferred.
 		else
 		{
 			std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
 
-			newEffectiveProfile = RtpEncodingParameters::Profile::NONE;
+			newTargetProfile = RtpEncodingParameters::Profile::NONE;
 
 			for (it = this->profiles.rbegin(); it != this->profiles.rend(); ++it)
 			{
@@ -701,13 +701,13 @@ namespace RTC
 
 				if (profile <= this->preferredProfile)
 				{
-					newEffectiveProfile = *it;
+					newTargetProfile = *it;
 					break;
 				}
 			}
 		}
 
-		this->targetProfile = newEffectiveProfile;
+		this->targetProfile = newTargetProfile;
 
 		if (this->targetProfile == this->effectiveProfile)
 			return;
