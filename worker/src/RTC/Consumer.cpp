@@ -336,7 +336,7 @@ namespace RTC
 		// profile.
 		if (this->effectiveProfile != this->targetProfile && profile == this->targetProfile)
 		{
-			bool isKeyFrame = false;
+			bool isKeyFrame    = false;
 			bool canBeKeyFrame = Codecs::CanBeKeyFrame(this->rtpStream->GetMimeType());
 
 			if (canBeKeyFrame && packet->IsKeyFrame())
@@ -688,9 +688,9 @@ namespace RTC
 		if (this->profiles.empty())
 		{
 			MS_ASSERT(
-				this->effectiveProfile == RtpEncodingParameters::Profile::NONE ||
-				this->effectiveProfile == RtpEncodingParameters::Profile::DEFAULT,
-				"no profiles, but effective profile is not none nor default");
+			  this->effectiveProfile == RtpEncodingParameters::Profile::NONE ||
+			    this->effectiveProfile == RtpEncodingParameters::Profile::DEFAULT,
+			  "no profiles, but effective profile is not none nor default");
 
 			if (this->effectiveProfile == RtpEncodingParameters::Profile::NONE)
 				newTargetProfile = RtpEncodingParameters::Profile::NONE;
@@ -700,7 +700,7 @@ namespace RTC
 		// If there is no preferred profile, take the best one available.
 		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
 		{
-			auto it    = this->profiles.crbegin();
+			auto it          = this->profiles.crbegin();
 			newTargetProfile = *it;
 		}
 		// Otherwise take the highest available profile equal or lower than the preferred.

@@ -16,7 +16,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
-			virtual void OnNackGeneratorKeyFrameRequired()                                   = 0;
+			virtual void OnNackGeneratorKeyFrameRequired()                                    = 0;
 		};
 
 	private:
@@ -45,6 +45,7 @@ namespace RTC
 
 	private:
 		void AddPacketsToNackList(uint32_t seq32Start, uint32_t seq32End);
+		void RemoveFromNackListOlderThan(uint32_t seq32);
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
 		void MayRunTimer() const;
 

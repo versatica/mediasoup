@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/Codecs/VP8.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpPacket.hpp"
 
 namespace RTC
 {

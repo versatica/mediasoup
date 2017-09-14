@@ -47,6 +47,10 @@ namespace RTC
 			return;
 		}
 
+		// If a key frame remove all the items in the nack list older than this seq.
+		if (packet->IsKeyFrame())
+			RemoveFromNackListOlderThan(seq32);
+
 		// Obviously never nacked, so ignore.
 		if (seq32 == this->lastSeq32)
 		{
@@ -141,8 +145,26 @@ namespace RTC
 		}
 	}
 
+	void NackGenerator::RemoveFromNackListOlderThan(uint32_t seq32)
+	{
+		MS_TRACE();
+
+		// Delete all the entries in the NACK list whose key (seq32) is older than
+		// the given one.
+
+		MS_ERROR("---- PRE,  nackList.size:%zu", this->nackList.size());
+
+		auto it = this->nackList.lower_bound(seq32);
+
+		this->nackList.erase(this->nackList.begin(), it);
+
+		MS_ERROR("---- POST,  nackList.size:%zu", this->nackList.size());
+	}
+
 	std::vector<uint16_t> NackGenerator::GetNackBatch(NackFilter filter)
 	{
+		MS_TRACE();
+
 		uint64_t now = DepLibUV::GetTime();
 		std::vector<uint16_t> nackBatch;
 		auto it = this->nackList.begin();

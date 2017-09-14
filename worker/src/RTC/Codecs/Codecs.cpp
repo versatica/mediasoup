@@ -22,8 +22,7 @@ namespace RTC
 					break;
 				}
 
-				default:
-					;
+				default:;
 			}
 		}
 	} // namespace Codecs

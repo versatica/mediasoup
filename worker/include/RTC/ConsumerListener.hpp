@@ -12,7 +12,7 @@ namespace RTC
 	class ConsumerListener
 	{
 	public:
-		virtual void OnConsumerClosed(RTC::Consumer* consumer)            = 0;
+		virtual void OnConsumerClosed(RTC::Consumer* consumer)           = 0;
 		virtual void OnConsumerKeyFrameRequired(RTC::Consumer* consumer) = 0;
 	};
 } // namespace RTC

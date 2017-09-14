@@ -39,7 +39,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{ 2000 };         // In ms.
+	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{ 2000 };        // In ms.
 	static constexpr double EffectiveMaxBitrateThresholdBeforeKeyFrame{ 0.6 }; // 0.0 - 1.0.
 
 	/* Instance methods. */

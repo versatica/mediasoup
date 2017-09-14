@@ -138,8 +138,8 @@ namespace RTC
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0 };
 		uint8_t payloadPadding{ 0 };
-		size_t size{ 0 };    // Full size of the packet in bytes.
-		uint32_t seq32{ 0 }; // Extended seq number.
+		size_t size{ 0 };         // Full size of the packet in bytes.
+		uint32_t seq32{ 0 };      // Extended seq number.
 		bool isKeyFrame{ false }; // Whether this packet contains a key frame.
 	};
 

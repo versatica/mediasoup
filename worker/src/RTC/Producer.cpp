@@ -270,6 +270,10 @@ namespace RTC
 		{
 			rtpStream = this->rtpStreams[ssrc];
 
+			// Process the packet at codec level.
+			if (packet->GetPayloadType() == rtpStream->GetPayloadType())
+				Codecs::ProcessRtpPacket(packet, rtpStream->GetMimeType());
+
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
 				return;
@@ -277,6 +281,10 @@ namespace RTC
 		else if (this->mapRtxStreams.find(ssrc) != this->mapRtxStreams.end())
 		{
 			rtpStream = this->mapRtxStreams[ssrc];
+
+			// Process the packet at codec level.
+			if (packet->GetPayloadType() == rtpStream->GetPayloadType())
+				Codecs::ProcessRtpPacket(packet, rtpStream->GetMimeType());
 
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
@@ -299,9 +307,6 @@ namespace RTC
 		{
 			return;
 		}
-
-		// Process the packet at codec level.
-		Codecs::ProcessRtpPacket(packet, rtpStream->GetMimeType());
 
 		if (packet->IsKeyFrame())
 		{

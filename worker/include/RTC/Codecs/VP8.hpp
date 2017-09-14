@@ -2,8 +2,8 @@
 #define MS_RTC_CODECS_VP8_HPP
 
 #include "common.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpPacket.hpp"
 
 namespace RTC
 {
