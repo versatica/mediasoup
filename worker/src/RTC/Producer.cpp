@@ -40,7 +40,7 @@ namespace RTC
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
-			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 
 		// Set the RTP key frame request block timer.
 		this->keyFrameRequestBlockTimer = new Timer(this);
