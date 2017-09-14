@@ -58,11 +58,7 @@ namespace RTC
 
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
-		{
-			MS_WARN_TAG(rtp, "packet discarded");
-
 			return false;
-		}
 
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())

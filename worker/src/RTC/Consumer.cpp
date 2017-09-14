@@ -440,6 +440,20 @@ namespace RTC
 				this->transmittedCounter.Update(packet);
 			}
 		}
+		else
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "], from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "], profile:%s",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  ssrc,
+			  this->lastRecvSeqNum,
+			  this->lastRecvRtpTimestamp,
+			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+		}
 
 		// Restore packet SSRC.
 		packet->SetSsrc(ssrc);
