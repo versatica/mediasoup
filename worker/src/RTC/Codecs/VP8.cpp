@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::VP8"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/Codecs/VP8.hpp"
 #include "Logger.hpp"
@@ -9,10 +9,15 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		bool VP8::IsKeyFrame(const uint8_t* data, size_t len)
+		void VP8::ProcessRtpPacket(RTC::RtpPacket* packet)
 		{
+			MS_TRACE();
+
+			auto data = packet->GetPayload();
+			auto len  = packet->GetPayloadLength();
+
 			if (len < 1)
-				return false;
+				return;
 
 			size_t offset = 0;
 			uint8_t byte  = data[offset++];
@@ -28,10 +33,8 @@ namespace RTC
 
 			if (x)
 			{
-				{
-					if (len < offset + 1)
-						return false;
-				}
+				if (len < offset + 1)
+					return;
 
 				byte = data[offset++];
 
@@ -44,34 +47,29 @@ namespace RTC
 			if (i)
 			{
 				if (len < offset++)
-				{
-					return false;
-				}
+					return;
 
 				if ((byte >> 7) & 0x1)
 				{
 					if (len < offset++)
-						return false;
+						return;
 				}
 			}
 
 			if (l)
 			{
 				if (len < offset++)
-				{
-					return false;
-				}
+					return;
 			}
 
 			if (t || k)
 			{
 				if (len < offset++)
-				{
-					return false;
-				}
+					return;
 			}
 
-			return start && pid == 0 && (!(data[offset] & 0x1));
+			if (start && pid == 0 && (!(data[offset] & 0x1)))
+				packet->SetKeyFrame(true);
 		}
 	} // namespace Codecs
 } // namespace RTC

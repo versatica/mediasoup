@@ -2,6 +2,8 @@
 #define MS_RTC_CODECS_VP8_HPP
 
 #include "common.hpp"
+#include "RTC/RtpPacket.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
@@ -10,7 +12,7 @@ namespace RTC
 		class VP8
 		{
 		public:
-			static bool IsKeyFrame(const uint8_t* data, size_t len);
+			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 		};
 	} // namespace Codecs
 } // namespace RTC

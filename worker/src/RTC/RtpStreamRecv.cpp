@@ -213,7 +213,7 @@ namespace RTC
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 	}
 
-	void RtpStreamRecv::RequestFullFrame()
+	void RtpStreamRecv::RequestKeyFrame()
 	{
 		MS_TRACE();
 
@@ -285,11 +285,11 @@ namespace RTC
 		this->listener->OnRtpStreamRecvNackRequired(this, seqNumbers);
 	}
 
-	void RtpStreamRecv::OnNackGeneratorFullFrameRequired()
+	void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()
 	{
 		MS_TRACE();
 
-		RequestFullFrame();
+		RequestKeyFrame();
 	}
 
 	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)

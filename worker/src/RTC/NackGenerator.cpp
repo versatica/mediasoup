@@ -112,15 +112,15 @@ namespace RTC
 
 		this->nackList.erase(this->nackList.begin(), it);
 
-		// If the nack list is too large, clear it and request a full frame.
+		// If the nack list is too large, clear it and request a key frame.
 		uint32_t numNewNacks = seq32End - seq32Start;
 
 		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
-			MS_DEBUG_TAG(rtx, "NACK list too large, clearing it and requesting a full frame");
+			MS_DEBUG_TAG(rtx, "NACK list too large, clearing it and requesting a key frame");
 
 			this->nackList.clear();
-			this->listener->OnNackGeneratorFullFrameRequired();
+			this->listener->OnNackGeneratorKeyFrameRequired();
 
 			return;
 		}

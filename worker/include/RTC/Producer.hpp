@@ -72,7 +72,7 @@ namespace RTC
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
-		void RequestFullFrame(bool force = false);
+		void RequestKeyFrame(bool force = false);
 		const std::set<RTC::RtpEncodingParameters::Profile> GetProfiles() const;
 
 	private:
@@ -111,7 +111,7 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> profiles;
-		Timer* fullFrameRequestBlockTimer{ nullptr };
+		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
 		struct RTC::Transport::HeaderExtensionIds transportHeaderExtensionIds;
@@ -119,7 +119,7 @@ namespace RTC
 		bool paused{ false };
 		bool rtpRawEventEnabled{ false };
 		bool rtpObjectEventEnabled{ false };
-		bool isFullFrameRequested{ false };
+		bool isKeyFrameRequested{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };

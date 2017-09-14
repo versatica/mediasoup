@@ -13,8 +13,7 @@ namespace RTC
 {
 	/* Static. */
 
-	// TODO: Set a proper value.
-	static constexpr uint64_t FullFrameRequestBlockTimeout{ 1000 }; // In ms.
+	static constexpr uint64_t KeyFrameRequestBlockTimeout{ 1000 }; // In ms.
 
 	/* Instance methods. */
 
@@ -43,8 +42,8 @@ namespace RTC
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 
-		// Set the RTP full frame request block timer.
-		this->fullFrameRequestBlockTimer = new Timer(this);
+		// Set the RTP key frame request block timer.
+		this->keyFrameRequestBlockTimer = new Timer(this);
 	}
 
 	Producer::~Producer()
@@ -65,8 +64,8 @@ namespace RTC
 			listener->OnProducerClosed(this);
 		}
 
-		// Close the RTP full frame request block timer.
-		this->fullFrameRequestBlockTimer->Destroy();
+		// Close the RTP key frame request block timer.
+		this->keyFrameRequestBlockTimer->Destroy();
 
 		delete this;
 	}
@@ -200,7 +199,7 @@ namespace RTC
 			listener->OnProducerResumed(this);
 		}
 
-		RequestFullFrame(true);
+		RequestKeyFrame(true);
 	}
 
 	void Producer::SetRtpRawEvent(bool enabled)
@@ -221,9 +220,9 @@ namespace RTC
 			MS_DEBUG_DEV("Producer rtpraw event disabled [producerId:%" PRIu32 "]", this->producerId);
 		}
 
-		// If set (and not paused), require a full frame.
+		// If set (and not paused), require a key frame.
 		if (this->rtpRawEventEnabled && !this->paused)
-			RequestFullFrame(true);
+			RequestKeyFrame(true);
 	}
 
 	void Producer::SetRtpObjectEvent(bool enabled)
@@ -244,9 +243,9 @@ namespace RTC
 			MS_DEBUG_DEV("Producer rtpobject event disabled [producerId:%" PRIu32 "]", this->producerId);
 		}
 
-		// If set (and not paused), require a full frame.
+		// If set (and not paused), require a key frame.
 		if (this->rtpObjectEventEnabled && !this->paused)
-			RequestFullFrame(true);
+			RequestKeyFrame(true);
 	}
 
 	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
@@ -301,7 +300,10 @@ namespace RTC
 			return;
 		}
 
-		if (Codecs::IsKeyFrame(rtpStream->GetMimeType(), packet))
+		// Process the packet at codec level.
+		Codecs::ProcessRtpPacket(packet, rtpStream->GetMimeType());
+
+		if (packet->IsKeyFrame())
 		{
 			MS_DEBUG_TAG(
 			  rtp,
@@ -398,7 +400,7 @@ namespace RTC
 		this->transport->SendRtcpPacket(packet);
 	}
 
-	void Producer::RequestFullFrame(bool force)
+	void Producer::RequestKeyFrame(bool force)
 	{
 		MS_TRACE();
 
@@ -408,30 +410,30 @@ namespace RTC
 		if (force)
 		{
 			// Stop the timer.
-			this->fullFrameRequestBlockTimer->Stop();
+			this->keyFrameRequestBlockTimer->Stop();
 		}
-		else if (this->fullFrameRequestBlockTimer->IsActive())
+		else if (this->keyFrameRequestBlockTimer->IsActive())
 		{
-			MS_DEBUG_TAG(rtcp, "blocking full frame request until timer expires");
+			MS_DEBUG_TAG(rtcp, "blocking key frame request until timer expires");
 
 			// Set flag.
-			this->isFullFrameRequested = true;
+			this->isKeyFrameRequested = true;
 
 			return;
 		}
 
 		// Run the timer.
-		this->fullFrameRequestBlockTimer->Start(FullFrameRequestBlockTimeout);
+		this->keyFrameRequestBlockTimer->Start(KeyFrameRequestBlockTimeout);
 
 		for (auto& kv : this->rtpStreams)
 		{
 			auto rtpStream = kv.second;
 
-			rtpStream->RequestFullFrame();
+			rtpStream->RequestKeyFrame();
 		}
 
 		// Reset flag.
-		this->isFullFrameRequested = false;
+		this->isKeyFrameRequested = false;
 	}
 
 	void Producer::FillHeaderExtensionIds()
@@ -614,8 +616,8 @@ namespace RTC
 			}
 		}
 
-		// Request a full frame since we may have lost the first packets of this stream.
-		RequestFullFrame(true);
+		// Request a key frame since we may have lost the first packets of this stream.
+		RequestKeyFrame(true);
 	}
 
 	void Producer::ClearRtpStream(RTC::RtpStreamRecv* rtpStream)
@@ -850,15 +852,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (timer == this->fullFrameRequestBlockTimer)
+		if (timer == this->keyFrameRequestBlockTimer)
 		{
-			// Nobody asked for a full frame since the timer was started.
-			if (!this->isFullFrameRequested)
+			// Nobody asked for a key frame since the timer was started.
+			if (!this->isKeyFrameRequested)
 				return;
 
-			MS_DEBUG_TAG(rtcp, "requesting full frame after timer expires");
+			MS_DEBUG_TAG(rtcp, "requesting key frame after timer expires");
 
-			RequestFullFrame();
+			RequestKeyFrame();
 		}
 	}
 } // namespace RTC

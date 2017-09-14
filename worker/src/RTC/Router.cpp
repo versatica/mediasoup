@@ -1476,7 +1476,7 @@ namespace RTC
 		this->mapConsumerProducer.erase(consumer);
 	}
 
-	void Router::OnConsumerFullFrameRequired(RTC::Consumer* consumer)
+	void Router::OnConsumerKeyFrameRequired(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -1486,7 +1486,7 @@ namespace RTC
 
 		auto* producer = this->mapConsumerProducer[consumer];
 
-		producer->RequestFullFrame();
+		producer->RequestKeyFrame();
 	}
 
 	inline void Router::OnTimer(Timer* timer)

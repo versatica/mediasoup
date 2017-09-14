@@ -40,7 +40,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{ 2000 };         // In ms.
-	static constexpr double EffectiveMaxBitrateThresholdBeforeFullFrame{ 0.6 }; // 0.0 - 1.0.
+	static constexpr double EffectiveMaxBitrateThresholdBeforeKeyFrame{ 0.6 }; // 0.0 - 1.0.
 
 	/* Instance methods. */
 
@@ -461,16 +461,16 @@ namespace RTC
 		// Add us as listener.
 		consumer->AddListener(this);
 
-		// If we are connected, ask a fullrequest for this enabled Consumer.
+		// If we are connected, ask a key request for this enabled Consumer.
 		if (IsConnected())
 		{
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
 			{
 				MS_DEBUG_TAG(
-				  rtcp, "requesting full frame for new Consumer since Transport already connected");
+				  rtcp, "requesting key frame for new Consumer since Transport already connected");
 			}
 
-			consumer->RequestFullFrame();
+			consumer->RequestKeyFrame();
 		}
 	}
 
@@ -736,7 +736,7 @@ namespace RTC
 							break;
 						}
 
-						consumer->RequestFullFrame();
+						consumer->RequestKeyFrame();
 
 						break;
 					}
@@ -1439,13 +1439,13 @@ namespace RTC
 		eventData[JsonStringDtlsRemoteCert] = remoteCert;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
-		// Iterate all the Consumers and request full frame.
+		// Iterate all the Consumers and request key frame.
 		for (auto* consumer : this->consumers)
 		{
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
-				MS_DEBUG_TAG(rtcp, "Transport connected, requesting full frame for Consumers");
+				MS_DEBUG_TAG(rtcp, "Transport connected, requesting key frame for Consumers");
 
-			consumer->RequestFullFrame();
+			consumer->RequestKeyFrame();
 		}
 	}
 
@@ -1550,21 +1550,21 @@ namespace RTC
 		packet.Serialize(RTC::RTCP::Buffer);
 		this->SendRtcpPacket(&packet);
 
-		// Trigger a full frame for all the suitable strams if the effective max bitrate
+		// Trigger a key frame for all the suitable streams if the effective max bitrate
 		// has decreased abruptly.
 		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
 		{
 			if (
 			  (bitrate != 0u) && (this->effectiveMaxBitrate != 0u) &&
 			  static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
-			    EffectiveMaxBitrateThresholdBeforeFullFrame)
+			    EffectiveMaxBitrateThresholdBeforeKeyFrame)
 			{
-				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting full frames");
+				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting key frames");
 
-				// Request full frame for all the Producers.
+				// Request key frame for all the Producers.
 				for (auto* producer : this->producers)
 				{
-					producer->RequestFullFrame();
+					producer->RequestKeyFrame();
 				}
 			}
 
@@ -1631,7 +1631,7 @@ namespace RTC
 		this->consumers.erase(consumer);
 	}
 
-	void Transport::OnConsumerFullFrameRequired(RTC::Consumer* /*consumer*/)
+	void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* /*consumer*/)
 	{
 		// Do nothing.
 	}

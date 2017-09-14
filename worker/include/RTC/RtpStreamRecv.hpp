@@ -30,7 +30,7 @@ namespace RTC
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
-		void RequestFullFrame();
+		void RequestKeyFrame();
 		uint32_t GetBitRate();
 
 	private:
@@ -44,7 +44,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
 		void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) override;
-		void OnNackGeneratorFullFrameRequired() override;
+		void OnNackGeneratorKeyFrameRequired() override;
 
 	private:
 		// Passed by argument.

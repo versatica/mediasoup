@@ -291,9 +291,6 @@ namespace RTC
 			ptr += 4 + extensionValueSize;
 		}
 
-		// Parse and regenerate RFC 5285 extension header.
-		ParseExtensions();
-
 		// Add payload.
 		if (this->payload != nullptr)
 		{
@@ -366,6 +363,9 @@ namespace RTC
 
 		// Clone seq32.
 		packet->seq32 = this->seq32;
+
+		// Copy isKeyFrame.
+		packet->isKeyFrame = this->isKeyFrame;
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();

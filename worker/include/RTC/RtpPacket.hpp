@@ -117,6 +117,8 @@ namespace RTC
 		bool ReadRid(const uint8_t** data, size_t* len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
+		void SetKeyFrame(bool flag);
+		bool IsKeyFrame() const;
 		void Serialize(uint8_t* buffer);
 		RtpPacket* Clone(uint8_t* buffer) const;
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
@@ -138,6 +140,7 @@ namespace RTC
 		uint8_t payloadPadding{ 0 };
 		size_t size{ 0 };    // Full size of the packet in bytes.
 		uint32_t seq32{ 0 }; // Extended seq number.
+		bool isKeyFrame{ false }; // Whether this packet contains a key frame.
 	};
 
 	/* Inline static methods. */
@@ -361,6 +364,16 @@ namespace RTC
 	inline size_t RtpPacket::GetPayloadLength() const
 	{
 		return this->payloadLength;
+	}
+
+	inline void RtpPacket::SetKeyFrame(bool flag)
+	{
+		this->isKeyFrame = flag;
+	}
+
+	inline bool RtpPacket::IsKeyFrame() const
+	{
+		return this->isKeyFrame;
 	}
 } // namespace RTC
 

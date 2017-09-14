@@ -175,7 +175,7 @@ namespace RTC
 		MS_DEBUG_DEV("Consumer resumed [consumerId:%" PRIu32 "]", this->consumerId);
 
 		if (IsEnabled() && !this->sourcePaused)
-			RequestFullFrame();
+			RequestKeyFrame();
 	}
 
 	void Consumer::SourcePause()
@@ -209,7 +209,7 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourceresumed");
 
 		if (IsEnabled() && !this->paused)
-			RequestFullFrame();
+			RequestKeyFrame();
 	}
 
 	void Consumer::SourceRtpParametersUpdated()
@@ -337,8 +337,9 @@ namespace RTC
 		if (this->effectiveProfile != this->targetProfile && profile == this->targetProfile)
 		{
 			bool isKeyFrame = false;
+			bool canBeKeyFrame = Codecs::CanBeKeyFrame(this->rtpStream->GetMimeType());
 
-			if (Codecs::IsKnown(this->rtpStream->GetMimeType()) && Codecs::IsKeyFrame(this->rtpStream->GetMimeType(), packet))
+			if (canBeKeyFrame && packet->IsKeyFrame())
 			{
 				isKeyFrame = true;
 
@@ -348,7 +349,7 @@ namespace RTC
 				  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 			}
 
-			if (!Codecs::IsKnown(this->rtpStream->GetMimeType()) || isKeyFrame)
+			if (isKeyFrame || !canBeKeyFrame)
 			{
 				SetEffectiveProfile(this->targetProfile);
 
@@ -549,7 +550,7 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	void Consumer::RequestFullFrame()
+	void Consumer::RequestKeyFrame()
 	{
 		MS_TRACE();
 
@@ -561,7 +562,7 @@ namespace RTC
 
 		for (auto& listener : this->listeners)
 		{
-			listener->OnConsumerFullFrameRequired(this);
+			listener->OnConsumerKeyFrameRequired(this);
 		}
 	}
 
@@ -727,7 +728,7 @@ namespace RTC
 			return;
 
 		if (IsEnabled() && !IsPaused())
-			RequestFullFrame();
+			RequestKeyFrame();
 
 		MS_DEBUG_TAG(
 		  rtp,
