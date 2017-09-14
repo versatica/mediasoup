@@ -196,10 +196,12 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("srtp");
 	if (Settings::configuration.logTags.rtcp)
 		logTags.emplace_back("rtcp");
-	if (Settings::configuration.logTags.rbe)
-		logTags.emplace_back("rbe");
 	if (Settings::configuration.logTags.rtx)
 		logTags.emplace_back("rtx");
+	if (Settings::configuration.logTags.rbe)
+		logTags.emplace_back("rbe");
+	if (Settings::configuration.logTags.tmp)
+		logTags.emplace_back("tmp");
 
 	if (!logTags.empty())
 	{
@@ -564,10 +566,12 @@ void Settings::SetLogTags(std::vector<std::string>& tags)
 			Settings::configuration.logTags.srtp = true;
 		else if (tag == "rtcp")
 			Settings::configuration.logTags.rtcp = true;
-		else if (tag == "rbe")
-			Settings::configuration.logTags.rbe = true;
 		else if (tag == "rtx")
 			Settings::configuration.logTags.rtx = true;
+		else if (tag == "rbe")
+			Settings::configuration.logTags.rbe = true;
+		else if (tag == "tmp")
+			Settings::configuration.logTags.tmp = true;
 	}
 }
 
