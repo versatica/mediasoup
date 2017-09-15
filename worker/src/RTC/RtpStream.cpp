@@ -93,6 +93,9 @@ namespace RTC
 			return false;
 		}
 
+		// Increase counters.
+		this->counter.Update(packet);
+
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
@@ -186,9 +189,6 @@ namespace RTC
 		{
 			// Do nothing.
 		}
-
-		// Increase counters.
-		this->counter.Update(packet);
 
 		return true;
 	}
