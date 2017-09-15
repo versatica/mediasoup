@@ -375,11 +375,7 @@ namespace RTC
 			isSyncPacket = true;
 
 			this->seqNum = ++this->maxSeqNum;
-
-			auto now = static_cast<uint32_t>(DepLibUV::GetTime());
-
-			if (now > this->rtpTimestamp)
-				this->rtpTimestamp = now;
+			this->rtpTimestamp += 1;
 
 			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
 			this->maxRecvSeqNum         = packet->GetSequenceNumber();
