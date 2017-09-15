@@ -12,7 +12,7 @@ namespace RTC
 
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionAge{ 1000 };
+	static constexpr uint32_t MaxRetransmissionDelay{ 5000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 
 	/* Instance methods. */
@@ -185,8 +185,8 @@ namespace RTC
 						uint32_t diff =
 						  (this->maxTimestamp - currentPacket->GetTimestamp()) * 1000 / this->params.clockRate;
 
-						// Just provide the packet if no older than MaxRetransmissionAge ms.
-						if (diff > MaxRetransmissionAge)
+						// Just provide the packet if no older than MaxRetransmissionDelay ms.
+						if (diff > MaxRetransmissionDelay)
 						{
 							if (!tooOldPacketFound)
 							{
@@ -195,7 +195,7 @@ namespace RTC
 								  "ignoring retransmission for too old packet "
 								  "[seq:%" PRIu16 ", max age:%" PRIu32 "ms, packet age:%" PRIu32 "ms]",
 								  currentPacket->GetSequenceNumber(),
-								  MaxRetransmissionAge,
+								  MaxRetransmissionDelay,
 								  diff);
 
 								tooOldPacketFound = true;
