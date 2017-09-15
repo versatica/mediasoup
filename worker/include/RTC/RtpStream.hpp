@@ -45,12 +45,13 @@ namespace RTC
 		bool IsHealthy();
 
 	protected:
-		void InitSeq(uint16_t seq);
 		bool UpdateSeq(RTC::RtpPacket* packet);
+
+	private:
+		void InitSeq(uint16_t seq);
 
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
-		virtual void OnInitSeq()   = 0;
 		virtual void CheckHealth() = 0;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
@@ -68,8 +69,6 @@ namespace RTC
 		uint32_t cycles{ 0 };        // Shifted count of seq. number cycles.
 		uint32_t baseSeq{ 0 };       // Base seq number.
 		uint32_t badSeq{ 0 };        // Last 'bad' seq number + 1.
-		uint32_t expectedPrior{ 0 }; // Packet expected at last interval.
-		uint32_t receivedPrior{ 0 }; // Packet received at last interval.
 		// Others.
 		uint32_t maxTimestamp{ 0 }; // Highest timestamp seen.
 		Timer* healthCheckTimer{ nullptr };

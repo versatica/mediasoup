@@ -207,11 +207,6 @@ namespace RTC
 		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
 	}
 
-	void RtpStreamRecv::OnInitSeq()
-	{
-		// Do nothing.
-	}
-
 	void RtpStreamRecv::CheckHealth()
 	{
 		auto now     = DepLibUV::GetTime();

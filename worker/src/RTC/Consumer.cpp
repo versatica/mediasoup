@@ -223,7 +223,6 @@ namespace RTC
 			return;
 
 		this->syncRequired = true;
-		this->rtpStream->ClearRetransmissionBuffer();
 	}
 
 	void Consumer::AddProfile(const RTC::RtpEncodingParameters::Profile profile)
@@ -361,6 +360,11 @@ namespace RTC
 
 				// Resynchronize the stream.
 				this->syncRequired = true;
+
+				// Clear RTP retransmission buffer to avoid congesting the receiver by
+				// sending useless retransmissions (now that we are sending a newer key
+				// frame).
+				this->rtpStream->ClearRetransmissionBuffer();
 			}
 		}
 

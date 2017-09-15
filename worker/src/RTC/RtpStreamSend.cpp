@@ -410,14 +410,6 @@ namespace RTC
 		(*newBufferIt).packet = packet->Clone(store);
 	}
 
-	void RtpStreamSend::OnInitSeq()
-	{
-		MS_TRACE();
-
-		// Clear the RTP buffer.
-		ClearRetransmissionBuffer();
-	}
-
 	void RtpStreamSend::CheckHealth()
 	{
 		MS_TRACE();
