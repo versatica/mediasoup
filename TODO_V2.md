@@ -1,5 +1,7 @@
 # TODO in mediasoup v2 (server-side)
 
+* In `RtpStreamSend::RequestRtpRetransmission()` we may have to request a key frame (new listener needed for that) if we couldn't resend all the requested packets.
+
 * In `RtpStreamSend::StorePacket()` we should remove old packets (as `NackGenerator` does).
 
 * Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
