@@ -25,7 +25,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Initialize sequence number.
-		this->maxSeqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
+		this->seqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
 
 		// Initialize RTP timestamp.
 		this->rtpTimestamp = Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF);
@@ -377,53 +377,37 @@ namespace RTC
 		{
 			isSyncPacket = true;
 
-			this->seqNum = ++this->maxSeqNum;
+			this->seqNumPreviousBase = this->seqNum;
+			this->seqNumBase         = packet->GetSequenceNumber();
 
 			this->rtpTimestampPreviousBase = this->rtpTimestamp;
 			this->rtpTimestampBase         = packet->GetTimestamp();
-
-			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
-			this->maxRecvSeqNum         = packet->GetSequenceNumber();
 
 			this->syncRequired = false;
 
 			MS_DEBUG_TAG(
 			  rtp,
-			  "re-syncing Consumer stream [seqNum:%" PRIu16 ", maxRecvSeqNum:%" PRIu16
-			  ", maxRecvExtendedSeqNum:%" PRIu32 "]",
-			  this->seqNum,
-			  this->maxRecvSeqNum,
-			  this->maxRecvExtendedSeqNum);
+			  "re-syncing Consumer stream [seqNum:%" PRIu16 "]", this->seqNum);
 		}
 		else
 		{
-			this->seqNum += packet->GetSequenceNumber() - this->lastRecvSeqNum;
-
-			// Update the max received sequence number if required.
-			if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
-			{
-				this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
-				this->maxRecvSeqNum         = packet->GetSequenceNumber();
-				this->maxSeqNum             = this->seqNum;
-			}
+			MS_ASSERT(this->lastReceivedSsrc == packet->GetSsrc(), "new SSRC requires re-syncing");
 		}
 
 		this->rtpTimestamp =
-		  (packet->GetTimestamp() - this->rtpTimestampBase) + this->rtpTimestampPreviousBase;
+		  (packet->GetTimestamp() - this->rtpTimestampBase) + this->rtpTimestampPreviousBase + 1;
 
-		if (this->kind == RTC::Media::Kind::VIDEO)
-			this->rtpTimestamp += 4500;
-		else if (this->kind == RTC::Media::Kind::AUDIO)
-			this->rtpTimestamp += 960;
+		this->seqNum =
+		  (packet->GetSequenceNumber() - this->seqNumBase) + this->seqNumPreviousBase + 1;
+
+		// Save the received SSRC.
+		this->lastReceivedSsrc = packet->GetSsrc();
 
 		// Save the received sequence number.
-		this->lastRecvSeqNum = packet->GetSequenceNumber();
+		auto seqNum = packet->GetSequenceNumber();
 
 		// Save the received timestamp.
-		this->lastRecvRtpTimestamp = packet->GetTimestamp();
-
-		// Save real SSRC.
-		auto ssrc = packet->GetSsrc();
+		auto rtpTimestamp = packet->GetTimestamp();
 
 		// Rewrite packet SSRC.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
@@ -443,9 +427,9 @@ namespace RTC
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  ssrc,
-			  this->lastRecvSeqNum,
-			  this->lastRecvRtpTimestamp,
+			  this->lastReceivedSsrc,
+			  seqNum,
+			  rtpTimestamp,
 			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 		}
 
@@ -476,20 +460,20 @@ namespace RTC
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  ssrc,
-			  this->lastRecvSeqNum,
-			  this->lastRecvRtpTimestamp,
+			  this->lastReceivedSsrc,
+			  seqNum,
+			  rtpTimestamp,
 			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 		}
 
 		// Restore packet SSRC.
-		packet->SetSsrc(ssrc);
+		packet->SetSsrc(this->lastReceivedSsrc);
 
 		// Restore the original sequence number.
-		packet->SetSequenceNumber(this->lastRecvSeqNum);
+		packet->SetSequenceNumber(seqNum);
 
 		// Restore the original timestamp.
-		packet->SetTimestamp(this->lastRecvRtpTimestamp);
+		packet->SetTimestamp(rtpTimestamp);
 	}
 
 	void Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
