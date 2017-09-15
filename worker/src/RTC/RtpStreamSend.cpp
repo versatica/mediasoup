@@ -12,7 +12,8 @@ namespace RTC
 
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionDelay{ 250 };
+	// TODO: This must be tunned.
+	static constexpr uint32_t MaxRetransmissionDelay{ 1000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 
 	/* Instance methods. */
@@ -42,10 +43,6 @@ namespace RTC
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
 			StorePacket(packet);
-
-		// Record current time and RTP timestamp.
-		this->lastPacketTimeMs       = DepLibUV::GetTime();
-		this->lastPacketRtpTimestamp = packet->GetTimestamp();
 
 		return true;
 	}
@@ -182,13 +179,18 @@ namespace RTC
 					if (currentSeq32 == seq32)
 					{
 						auto currentPacket = (*bufferIt).packet;
-						uint32_t diffMs    = now - this->lastPacketTimeMs;
+						// Calculate how the elapsed time between the max timestampt seen and
+						// the requested packet's timestampt (in ms).
+						uint32_t diffTs = this->maxPacketTs - currentPacket->GetTimestamp();
+						uint32_t diffMs = diffTs * 1000 / this->params.clockRate;
 
 						// Just provide the packet if no older than MaxRetransmissionDelay ms.
 						if (diffMs > MaxRetransmissionDelay)
 						{
 							if (!tooOldPacketFound)
 							{
+								// TODO: May we ask for a key frame in this case?
+
 								MS_WARN_TAG(
 								  rtx,
 								  "ignoring retransmission for too old packet "
@@ -230,6 +232,7 @@ namespace RTC
 
 						break;
 					}
+
 					// It can not be after this packet.
 					if (currentSeq32 > seq32)
 						break;
@@ -296,10 +299,10 @@ namespace RTC
 		report->SetNtpFrac(ntp.fractions);
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
-		uint32_t diffMs           = now - this->lastPacketTimeMs;
-		uint32_t diffRtpTimestamp = diffMs * this->params.clockRate / 1000;
+		auto diffMs = static_cast<uint32_t>(now - this->maxPacketMs);
+		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
 
-		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
+		report->SetRtpTs(this->maxPacketTs + diffTs);
 
 		return report;
 	}

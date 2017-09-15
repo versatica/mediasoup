@@ -52,10 +52,7 @@ namespace RTC
 		Buffer buffer;
 
 	private:
-		uint64_t lastPacketTimeMs{ 0 };       // Time (MS) when the last packet was received.
-		uint32_t lastPacketRtpTimestamp{ 0 }; // RTP Timestamp of the last packet.
-
-		// RTX related.
+		// Retransmittion related.
 		bool hasRtx{ false };
 		uint8_t rtxPayloadType{ 0 };
 		uint32_t rtxSsrc{ 0 };

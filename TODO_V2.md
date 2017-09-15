@@ -1,5 +1,7 @@
 # TODO in mediasoup v2 (server-side)
 
+* In `RtpStreamSend::StorePacket()` we should remove old packets (as `NackGenerator` does).
+
 * Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
 
 * Set a proper value for Producer::FullFrameRequestBlockTimeout (currently 1 second).

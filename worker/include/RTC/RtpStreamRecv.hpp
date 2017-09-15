@@ -46,8 +46,8 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
-		uint32_t expectedPrior{ 0 }; // Packet expected at last interval.
-		uint32_t receivedPrior{ 0 }; // Packet received at last interval.
+		uint32_t expectedPrior{ 0 };   // Packet expected at last interval.
+		uint32_t receivedPrior{ 0 };   // Packet received at last interval.
 		uint32_t lastSrTimestamp{ 0 }; // The middle 32 bits out of 64 in the NTP timestamp received in
 		                               // the most recent sender report.
 		uint64_t lastSrReceived{ 0 };  // Wallclock time representing the most recent sender report

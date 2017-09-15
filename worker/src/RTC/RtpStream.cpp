@@ -43,7 +43,6 @@ namespace RTC
 
 		static const Json::StaticString JsonStringBitRate{ "bitrate" };
 		static const Json::StaticString JsonStringJitter{ "jitter" };
-		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
 		static const Json::StaticString JsonStringParams{ "params" };
 		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
 		static const Json::StaticString JsonStringOctetCount{ "octetCount" };
@@ -55,7 +54,6 @@ namespace RTC
 
 		json[JsonStringBitRate]      = Json::UInt{ GetBitRate() };
 		json[JsonStringJitter]       = Json::UInt{ this->jitter };
-		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
 		json[JsonStringParams]       = this->params.ToJson();
 		json[JsonStringPacketCount]  = static_cast<Json::UInt>(this->counter.GetPacketCount());
 		json[JsonStringOctetCount]   = static_cast<Json::UInt>(this->counter.GetBytes());
@@ -101,8 +99,11 @@ namespace RTC
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Update highest seen RTP timestamp.
-		if (packet->GetTimestamp() > this->maxTimestamp)
-			this->maxTimestamp = packet->GetTimestamp();
+		if (packet->GetTimestamp() > this->maxPacketTs)
+		{
+			this->maxPacketTs = packet->GetTimestamp();
+			this->maxPacketMs = DepLibUV::GetTime();
+		}
 
 		return true;
 	}
@@ -119,10 +120,10 @@ namespace RTC
 		MS_TRACE();
 
 		// Initialize/reset RTP counters.
-		this->baseSeq       = seq;
-		this->maxSeq        = seq;
-		this->badSeq        = RtpSeqMod + 1; // So seq == badSeq is false.
-		this->maxTimestamp  = 0; // Also reset the highest seen RTP timestamp.
+		this->baseSeq      = seq;
+		this->maxSeq       = seq;
+		this->badSeq       = RtpSeqMod + 1; // So seq == badSeq is false.
+		this->maxPacketTs = 0;             // Also reset the highest seen RTP timestamp.
 	}
 
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)

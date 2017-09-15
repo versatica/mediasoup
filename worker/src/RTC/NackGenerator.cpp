@@ -9,10 +9,10 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr uint32_t MaxPacketAge{ 1500 };
-	constexpr size_t MaxNackPackets{ 500 };
+	constexpr uint32_t MaxPacketAge{ 10000 };
+	constexpr size_t MaxNackPackets{ 1000 };
 	constexpr uint32_t DefaultRtt{ 100 };
-	constexpr uint8_t MaxNackRetries{ 8 };
+	constexpr uint8_t MaxNackRetries{ 10 };
 	constexpr uint64_t TimerInterval{ 50 };
 
 	/* Instance methods. */
@@ -111,22 +111,25 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint32_t numItemsBefore = this->nackList.size();
-
-		// Remove old packets.
-		auto it = this->nackList.lower_bound(seq32End - MaxPacketAge);
-
-		this->nackList.erase(this->nackList.begin(), it);
-
-		uint32_t numItemsRemoved = numItemsBefore - this->nackList.size();
-
-		if (numItemsRemoved > 0)
+		if (seq32End > MaxPacketAge)
 		{
-			MS_DEBUG_TAG(
-			  rtx,
-			  "removed %" PRIu32 " NACK items due to too old seq number [seq32End:%" PRIu32 "]",
-			  numItemsRemoved,
-			  seq32End);
+			uint32_t numItemsBefore = this->nackList.size();
+
+			// Remove old packets.
+			auto it = this->nackList.lower_bound(seq32End - MaxPacketAge);
+
+			this->nackList.erase(this->nackList.begin(), it);
+
+			uint32_t numItemsRemoved = numItemsBefore - this->nackList.size();
+
+			if (numItemsRemoved > 0)
+			{
+				MS_DEBUG_TAG(
+				  rtx,
+				  "removed %" PRIu32 " NACK items due to too old seq number [seq32End:%" PRIu32 "]",
+				  numItemsRemoved,
+				  seq32End);
+			}
 		}
 
 		// If the nack list is too large, clear it and request a key frame.

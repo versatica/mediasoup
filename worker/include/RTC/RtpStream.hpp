@@ -65,12 +65,13 @@ namespace RTC
 		// Whether at least a RTP packet has been received.
 		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
 		bool started{ false };
-		uint16_t maxSeq{ 0 };        // Highest seq. number seen.
-		uint32_t cycles{ 0 };        // Shifted count of seq. number cycles.
-		uint32_t baseSeq{ 0 };       // Base seq number.
-		uint32_t badSeq{ 0 };        // Last 'bad' seq number + 1.
+		uint16_t maxSeq{ 0 };  // Highest seq. number seen.
+		uint32_t cycles{ 0 };  // Shifted count of seq. number cycles.
+		uint32_t baseSeq{ 0 }; // Base seq number.
+		uint32_t badSeq{ 0 };  // Last 'bad' seq number + 1.
 		// Others.
-		uint32_t maxTimestamp{ 0 }; // Highest timestamp seen.
+		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
+		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
 		uint32_t totalLost{ 0 };
