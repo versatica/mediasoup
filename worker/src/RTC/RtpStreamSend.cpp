@@ -13,7 +13,7 @@ namespace RTC
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	// Don't retransmit packets older than this (ms).
 	// TODO: This must be tunned.
-	static constexpr uint32_t MaxRetransmissionDelay{ 1000 };
+	static constexpr uint32_t MaxRetransmissionDelay{ 4000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 
 	/* Instance methods. */
