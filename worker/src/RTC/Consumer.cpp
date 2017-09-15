@@ -378,7 +378,9 @@ namespace RTC
 			isSyncPacket = true;
 
 			this->seqNum = ++this->maxSeqNum;
-			this->rtpTimestamp += 1;
+
+			this->rtpTimestampPreviousBase = this->rtpTimestamp;
+			this->rtpTimestampBase         = packet->GetTimestamp();
 
 			this->maxRecvExtendedSeqNum = packet->GetExtendedSequenceNumber();
 			this->maxRecvSeqNum         = packet->GetSequenceNumber();
@@ -396,7 +398,6 @@ namespace RTC
 		else
 		{
 			this->seqNum += packet->GetSequenceNumber() - this->lastRecvSeqNum;
-			this->rtpTimestamp += packet->GetTimestamp() - this->lastRecvRtpTimestamp;
 
 			// Update the max received sequence number if required.
 			if (packet->GetExtendedSequenceNumber() > this->maxRecvExtendedSeqNum)
@@ -406,6 +407,14 @@ namespace RTC
 				this->maxSeqNum             = this->seqNum;
 			}
 		}
+
+		this->rtpTimestamp =
+		  (packet->GetTimestamp() - this->rtpTimestampBase) + this->rtpTimestampPreviousBase;
+
+		if (this->kind == RTC::Media::Kind::VIDEO)
+			this->rtpTimestamp += 4500;
+		else if (this->kind == RTC::Media::Kind::AUDIO)
+			this->rtpTimestamp += 960;
 
 		// Save the received sequence number.
 		this->lastRecvSeqNum = packet->GetSequenceNumber();
