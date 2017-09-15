@@ -33,7 +33,8 @@ namespace RTC
 		this->timer->Destroy();
 	}
 
-	void NackGenerator::ReceivePacket(RTC::RtpPacket* packet)
+	// Returns true if this is a found nacked packet. False otherwise.
+	bool NackGenerator::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -44,7 +45,7 @@ namespace RTC
 			this->lastSeq32 = seq32;
 			this->started   = true;
 
-			return;
+			return false;
 		}
 
 		// If a key frame remove all the items in the nack list older than this seq.
@@ -54,13 +55,13 @@ namespace RTC
 		// Obviously never nacked, so ignore.
 		if (seq32 == this->lastSeq32)
 		{
-			return;
+			return false;
 		}
 		if (seq32 == this->lastSeq32 + 1)
 		{
 			this->lastSeq32++;
 
-			return;
+			return false;
 		}
 
 		// May be an out of order packet, or already handled retransmitted packet,
@@ -79,6 +80,8 @@ namespace RTC
 				  packet->GetSequenceNumber());
 
 				this->nackList.erase(it);
+
+				return true;
 			}
 			// Out of order packet or already handled NACKed packet.
 			else
@@ -89,9 +92,9 @@ namespace RTC
 				  ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
-			}
 
-			return;
+				return false;
+			}
 		}
 
 		// Otherwise we may have lost some packets.
@@ -105,6 +108,8 @@ namespace RTC
 			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
 		MayRunTimer();
+
+		return false;
 	}
 
 	void NackGenerator::AddPacketsToNackList(uint32_t seq32Start, uint32_t seq32End)

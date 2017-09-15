@@ -41,7 +41,7 @@ namespace RTC
 		explicit NackGenerator(Listener* listener);
 		~NackGenerator() override;
 
-		void ReceivePacket(RTC::RtpPacket* packet);
+		bool ReceivePacket(RTC::RtpPacket* packet);
 
 	private:
 		void AddPacketsToNackList(uint32_t seq32Start, uint32_t seq32End);

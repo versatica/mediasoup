@@ -106,11 +106,12 @@ namespace RTC
 		packet->SetExtendedSequenceNumber(
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
-		// Pass the packet to the NackGenerator.
+		// Pass the packet to the NackGenerator and return true just if this was a
+		// NACked packet.
 		if (this->params.useNack)
-			this->nackGenerator->ReceivePacket(packet);
+			return this->nackGenerator->ReceivePacket(packet);
 
-		return true;
+		return false;
 	}
 
 	RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtcpReceiverReport()
