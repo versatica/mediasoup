@@ -182,11 +182,10 @@ namespace RTC
 					if (currentSeq32 == seq32)
 					{
 						auto currentPacket = (*bufferIt).packet;
-						uint32_t diff =
-						  (this->maxTimestamp - currentPacket->GetTimestamp()) * 1000 / this->params.clockRate;
+						uint32_t diffMs    = now - this->lastPacketTimeMs;
 
 						// Just provide the packet if no older than MaxRetransmissionDelay ms.
-						if (diff > MaxRetransmissionDelay)
+						if (diffMs > MaxRetransmissionDelay)
 						{
 							if (!tooOldPacketFound)
 							{
@@ -196,7 +195,7 @@ namespace RTC
 								  "[seq:%" PRIu16 ", max age:%" PRIu32 "ms, packet age:%" PRIu32 "ms]",
 								  currentPacket->GetSequenceNumber(),
 								  MaxRetransmissionDelay,
-								  diff);
+								  diffMs);
 
 								tooOldPacketFound = true;
 							}

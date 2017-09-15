@@ -135,8 +135,8 @@ namespace RTC
 		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
 			MS_DEBUG_TAG(
-				rtx,
-				"NACK list too large, clearing it and requesting a key frame [seq32End:%" PRIu32 "]",
+			  rtx,
+			  "NACK list too large, clearing it and requesting a key frame [seq32End:%" PRIu32 "]",
 			  seq32End);
 
 			this->nackList.clear();
