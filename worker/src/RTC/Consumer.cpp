@@ -27,6 +27,9 @@ namespace RTC
 		// Initialize sequence number.
 		this->maxSeqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
 
+		// Initialize RTP timestamp.
+		this->rtpTimestamp = Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF);
+
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
