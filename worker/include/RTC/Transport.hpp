@@ -198,7 +198,7 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
-		Timer* timer{ nullptr };
+		Timer* rtcpTimer{ nullptr };
 		bool allocated{ false };
 		// Others (Producers and Consumers).
 		std::unordered_set<RTC::Producer*> producers;

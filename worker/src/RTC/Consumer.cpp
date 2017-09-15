@@ -385,9 +385,7 @@ namespace RTC
 
 			this->syncRequired = false;
 
-			MS_DEBUG_TAG(
-			  rtp,
-			  "re-syncing Consumer stream [seqNum:%" PRIu16 "]", this->seqNum);
+			MS_DEBUG_TAG(rtp, "re-syncing Consumer stream [seqNum:%" PRIu16 "]", this->seqNum);
 		}
 		else
 		{
@@ -397,8 +395,7 @@ namespace RTC
 		this->rtpTimestamp =
 		  (packet->GetTimestamp() - this->rtpTimestampBase) + this->rtpTimestampPreviousBase + 1;
 
-		this->seqNum =
-		  (packet->GetSequenceNumber() - this->seqNumBase) + this->seqNumPreviousBase + 1;
+		this->seqNum = (packet->GetSequenceNumber() - this->seqNumBase) + this->seqNumPreviousBase + 1;
 
 		// Save the received SSRC.
 		this->lastReceivedSsrc = packet->GetSsrc();

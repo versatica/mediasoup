@@ -245,6 +245,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_DEBUG_TAG(rtx, "requesting key frame [ssrc:%" PRIu32 "]", this->params.ssrc);
+
 		RequestKeyFrame();
 	}
 

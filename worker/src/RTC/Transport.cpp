@@ -175,10 +175,10 @@ namespace RTC
 		this->dtlsTransport = new RTC::DtlsTransport(this);
 
 		// Create the RTCP timer.
-		this->timer = new Timer(this);
+		this->rtcpTimer = new Timer(this);
 
 		// Start the RTCP timer.
-		this->timer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
 		// Hack to avoid that Destroy() above attempts to delete this.
 		this->allocated = true;
@@ -189,7 +189,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Destroy the RTCP timer.
-		this->timer->Destroy();
+		this->rtcpTimer->Destroy();
 	}
 
 	void Transport::Destroy()
@@ -735,6 +735,14 @@ namespace RTC
 
 							break;
 						}
+
+						MS_DEBUG_TAG(
+						  rtcp,
+						  "%s received, requesting key frame for Consumer "
+						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  feedback->GetMediaSsrc(),
+						  feedback->GetMediaSsrc());
 
 						consumer->RequestKeyFrame();
 
@@ -1559,7 +1567,7 @@ namespace RTC
 			  static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
 			    EffectiveMaxBitrateThresholdBeforeKeyFrame)
 			{
-				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decrease, requesting key frames");
+				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decreased, requesting key frames");
 
 				// Request key frame for all the Producers.
 				for (auto* producer : this->producers)
@@ -1636,39 +1644,42 @@ namespace RTC
 		// Do nothing.
 	}
 
-	void Transport::OnTimer(Timer* /*timer*/)
+	void Transport::OnTimer(Timer* timer)
 	{
-		uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
-		uint32_t now      = DepLibUV::GetTime();
-
-		SendRtcp(now);
-
-		// Recalculate next RTCP interval.
-		if (!this->consumers.empty())
+		if (timer == this->rtcpTimer)
 		{
-			// Transmission rate in kbps.
-			uint32_t rate = 0;
+			uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
+			uint32_t now      = DepLibUV::GetTime();
 
-			// Get the RTP sending rate.
-			for (auto& consumer : this->consumers)
+			SendRtcp(now);
+
+			// Recalculate next RTCP interval.
+			if (!this->consumers.empty())
 			{
-				rate += consumer->GetTransmissionRate(now) / 1000;
+				// Transmission rate in kbps.
+				uint32_t rate = 0;
+
+				// Get the RTP sending rate.
+				for (auto& consumer : this->consumers)
+				{
+					rate += consumer->GetTransmissionRate(now) / 1000;
+				}
+
+				// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
+				if (rate != 0u)
+					interval = 360000 / rate;
+
+				if (interval > RTC::RTCP::MaxVideoIntervalMs)
+					interval = RTC::RTCP::MaxVideoIntervalMs;
 			}
 
-			// Calculate bandwidth: 360 / transmission bandwidth in kbit/s
-			if (rate != 0u)
-				interval = 360000 / rate;
-
-			if (interval > RTC::RTCP::MaxVideoIntervalMs)
-				interval = RTC::RTCP::MaxVideoIntervalMs;
+			/*
+			 * The interval between RTCP packets is varied randomly over the range
+			 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
+			 * of all participants.
+			 */
+			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+			this->rtcpTimer->Start(interval);
 		}
-
-		/*
-		 * The interval between RTCP packets is varied randomly over the range
-		 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
-		 * of all participants.
-		 */
-		interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
-		this->timer->Start(interval);
 	}
 } // namespace RTC
