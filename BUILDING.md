@@ -98,6 +98,25 @@ Runs the `tidy:worker` gulp task.
 
 Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) following following `worker/.clang-tidy` rules.
 
+clang-tidy uses a [JSON compilation database](http://clang.llvm.org/docs/JSONCompilationDatabase.html) to get the information on how a single compilation unit is processed.
+
+In order to generate this file we use [Bear](https://github.com/rizsotto/Bear). This works on linux only.
+
+Once installed, compile mediasoup as follows:
+
+```bash
+$ bear make
+```
+An output file `compile_commands.json` is generated which must be copied to the [worker](worker/) directory after making the following changes:
+
+Replace the references of the current directory by the keywork 'PATH':
+
+```bash
+$  sed -i "s|$PWD|PATH|g" compile_commands.json
+```
+
+Edit the file and remove the entry related to Utils/IP.cpp compilation unit, which is automatically created and does not follow the clang-tidy rules.
+
 *NOTE:* It just works on Linux and OSX.
 
 ### `gulp test`
