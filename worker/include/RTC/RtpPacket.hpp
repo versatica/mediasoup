@@ -95,6 +95,7 @@ namespace RTC
 		void SetPayloadType(uint8_t payloadType);
 		bool HasMarker() const;
 		void SetMarker(bool marker);
+		void SetPayloadPaddingFlag(bool flag);
 		uint16_t GetSequenceNumber() const;
 		void SetSequenceNumber(uint16_t seq);
 		uint32_t GetExtendedSequenceNumber() const;
@@ -188,6 +189,11 @@ namespace RTC
 	inline void RtpPacket::SetMarker(bool marker)
 	{
 		this->header->marker = marker;
+	}
+
+	inline void RtpPacket::SetPayloadPaddingFlag(bool flag)
+	{
+		this->header->padding = flag;
 	}
 
 	inline uint16_t RtpPacket::GetSequenceNumber() const

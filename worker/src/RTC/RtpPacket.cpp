@@ -3,7 +3,7 @@
 
 #include "RTC/RtpPacket.hpp"
 #include "Logger.hpp"
-#include <cstring>  // std::memcpy()
+#include <cstring>  // std::memcpy(), std::memmove()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 #include <vector>
@@ -334,31 +334,34 @@ namespace RTC
 		return packet;
 	}
 
+	// NOTE: The caller must ensure that the buffer/memmory of the packet has
+	// space enough for adding 2 extra bytes.
 	void RtpPacket::RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq)
 	{
 		MS_TRACE();
 
 		// Rewrite the payload type.
-		this->SetPayloadType(payloadType);
+		SetPayloadType(payloadType);
 
 		// Rewrite the SSRC.
-		this->SetSsrc(ssrc);
+		SetSsrc(ssrc);
 
 		// Write the original sequence number at the begining of the payload.
 		std::memmove(this->payload + 2, this->payload, this->payloadLength);
-		Utils::Byte::Set2Bytes(this->payload, 0, this->GetSequenceNumber());
+		Utils::Byte::Set2Bytes(this->payload, 0, GetSequenceNumber());
 
 		// Rewrite the sequence number.
-		this->SetSequenceNumber(seq);
+		SetSequenceNumber(seq);
 
 		// Fix the payload length.
 		this->payloadLength += 2;
 
+		// Remove padding.
+		SetPayloadPaddingFlag(false);
+		this->payloadPadding = 0u;
+
 		// Fix the packet size.
 		this->size += 2;
-
-		// Remove padding.
-		this->payloadPadding = 0u;
 	}
 
 	bool RtpPacket::RtxDecode(uint8_t payloadType, uint32_t ssrc)
@@ -371,23 +374,26 @@ namespace RTC
 			return false;
 
 		// Rewrite the payload type.
-		this->SetPayloadType(payloadType);
-
-		// Rewrite the SSRC.
-		this->SetSsrc(ssrc);
+		SetPayloadType(payloadType);
 
 		// Rewrite the sequence number.
-		this->SetSequenceNumber(Utils::Byte::Get2Bytes(this->payload, 0));
+		SetSequenceNumber(Utils::Byte::Get2Bytes(this->payload, 0));
 
-		// Fix the payload and payload length.
-		this->payload += 2;
+		// Rewrite the SSRC.
+		SetSsrc(ssrc);
+
+		// Shift the payload to its original place.
+		std::memmove(this->payload, this->payload + 2, this->payloadLength - 2);
+
+		// Fix the payload length.
 		this->payloadLength -= 2;
+
+		// Remove padding.
+		SetPayloadPaddingFlag(false);
+		this->payloadPadding = 0u;
 
 		// Fix the packet size.
 		this->size -= 2;
-
-		// Remove padding.
-		this->payloadPadding = 0u;
 
 		return true;
 	}
