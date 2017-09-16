@@ -347,7 +347,7 @@ namespace RTC
 
 				MS_DEBUG_TAG(
 				  rtp,
-				  "key frame received [profile:%s]",
+				  "key frame received for target profile [profile:%s]",
 				  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 			}
 
@@ -396,6 +396,15 @@ namespace RTC
 			MS_ASSERT(this->lastReceivedSsrc == packet->GetSsrc(), "new SSRC requires re-syncing");
 		}
 
+		if (isSyncPacket)
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "before re-syncing [seqNum:%" PRIu16 ", rtpTimestamp:%" PRIu32 "]",
+			  this->seqNum,
+			  this->rtpTimestamp);
+		}
+
 		this->rtpTimestamp =
 		  (packet->GetTimestamp() - this->rtpTimestampBase) + this->rtpTimestampPreviousBase + 1;
 
@@ -424,7 +433,7 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "], from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 ", profile:%s]",
+			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 ", profile:%s]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
