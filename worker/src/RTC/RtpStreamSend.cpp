@@ -299,7 +299,7 @@ namespace RTC
 		report->SetNtpFrac(ntp.fractions);
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
-		auto diffMs = static_cast<uint32_t>(now - this->maxPacketMs);
+		auto diffMs     = static_cast<uint32_t>(now - this->maxPacketMs);
 		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
 
 		report->SetRtpTs(this->maxPacketTs + diffTs);

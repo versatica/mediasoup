@@ -737,7 +737,8 @@ namespace RTC
 						}
 
 						MS_DEBUG_2TAGS(
-						  rtcp, rtx,
+						  rtcp,
+						  rtx,
 						  "%s received, requesting key frame for Consumer "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
@@ -1567,7 +1568,8 @@ namespace RTC
 			  static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
 			    EffectiveMaxBitrateThresholdBeforeKeyFrame)
 			{
-				MS_WARN_2TAGS(rbe, rtx, "uplink effective max bitrate abruptly decreased, requesting key frames");
+				MS_WARN_2TAGS(
+				  rbe, rtx, "uplink effective max bitrate abruptly decreased, requesting key frames");
 
 				// Request key frame for all the Producers.
 				for (auto* producer : this->producers)
