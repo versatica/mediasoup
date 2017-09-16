@@ -1,6 +1,6 @@
 # TODO in mediasoup v2 (server-side)
 
-* In `RtpStreamSend::RequestRtpRetransmission()` we may have to request a key frame (new listener needed for that) if we couldn't resend all the requested packets.
+* Improve `RtpPacket::Clone()` so it does not assume pointers position but, instead, make `ptr` point to the corresponding next pointer (such as `this->payload`). REQUIRED FOR RTX FIX.
 
 * In `RtpStreamSend::StorePacket()` we should remove old packets (as `NackGenerator` does).
 

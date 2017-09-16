@@ -56,30 +56,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenLen == 0);
 		REQUIRE(extenValue == nullptr);
 
-		packet->Serialize(buffer2);
-
-		REQUIRE(packet->HasMarker() == false);
-		REQUIRE(packet->HasExtensionHeader() == true);
-		REQUIRE(packet->GetExtensionHeaderId() == 0xBEDE);
-		REQUIRE(packet->GetExtensionHeaderLength() == 4);
-		REQUIRE(packet->GetPayloadType() == 111);
-		REQUIRE(packet->GetSequenceNumber() == 23617);
-		REQUIRE(packet->GetTimestamp() == 1660241882);
-		REQUIRE(packet->GetSsrc() == 2674985186);
-		REQUIRE(packet->HasOneByteExtensions());
-		REQUIRE(!packet->HasTwoBytesExtensions());
-
-		extenValue = packet->GetExtension(RtpHeaderExtensionUri::Type::TO_OFFSET, &extenLen);
-
-		REQUIRE(extenLen == 1);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0xff);
-
-		extenValue = packet->GetExtension(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, &extenLen);
-
-		REQUIRE(extenLen == 0);
-		REQUIRE(extenValue == nullptr);
-
 		delete packet;
 	}
 
