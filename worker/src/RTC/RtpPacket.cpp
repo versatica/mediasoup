@@ -249,39 +249,64 @@ namespace RTC
 		MS_TRACE();
 
 		uint8_t* ptr = buffer;
+		size_t numBytes{ 0 };
 
-		// Copy the full packet into the given buffer.
-		std::memcpy(buffer, GetData(), GetSize());
+		// Copy the minimum header.
 
-		// Set header pointer pointing to the given buffer.
-		auto* header = reinterpret_cast<Header*>(ptr);
-		ptr += sizeof(Header);
+		numBytes = sizeof(Header);
+		std::memcpy(ptr, GetData(), numBytes);
 
-		// Check CSRC list.
+		// Set header pointer.
+		auto* newHeader = reinterpret_cast<Header*>(ptr);
+
+		// Update pointer.
+		ptr += numBytes;
+
+		// Copy CSRC list.
+
 		if (this->csrcList != nullptr)
-			ptr += header->csrcCount * sizeof(header->ssrc);
+		{
+			numBytes = this->header->csrcCount * sizeof(this->header->ssrc);
+			std::memcpy(ptr, this->csrcList, numBytes);
 
-		// Check extension header.
-		ExtensionHeader* extensionHeader{ nullptr };
+			// Update pointer.
+			ptr += numBytes;
+		}
+
+		// Copy extension header.
+
+		ExtensionHeader* newExtensionHeader{ nullptr };
 
 		if (this->extensionHeader != nullptr)
 		{
+			numBytes = 4 + GetExtensionHeaderLength();
+			std::memcpy(ptr, this->extensionHeader, numBytes);
+
 			// Set the header extension pointer.
-			extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
-			ptr += 4 + GetExtensionHeaderLength();
+			newExtensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
+
+			// Update pointer.
+			ptr += numBytes;
 		}
 
-		// Check payload.
-		uint8_t* payload{ nullptr };
+		// Copy payload.
+
+		uint8_t* newPayload{ nullptr };
 
 		if (this->payload != nullptr)
 		{
+			numBytes = GetPayloadLength();
+			std::memcpy(ptr, this->payload, numBytes);
+
 			// Set the payload pointer.
-			payload = ptr;
-			ptr += this->payloadLength;
+			newPayload = ptr;
+
+			// Update pointer.
+			ptr += numBytes;
 		}
 
-		// Check payload padding.
+		// Copy payload padding.
+
 		if (this->payloadPadding != 0u)
 		{
 			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
@@ -292,7 +317,7 @@ namespace RTC
 
 		// Create the new RtpPacket instance and return it.
 		auto packet = new RtpPacket(
-		  header, extensionHeader, payload, this->payloadLength, this->payloadPadding, this->size);
+		  newHeader, newExtensionHeader, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Clone seq32.
 		packet->seq32 = this->seq32;

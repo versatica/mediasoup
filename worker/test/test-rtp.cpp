@@ -4,6 +4,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <map>
+#include <cstring> // std::memcmp()
 
 using namespace RTC;
 
@@ -180,6 +181,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(voice == true);
 		REQUIRE(clonedPacket->ReadAbsSendTime(&absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
+
+		REQUIRE(std::memcmp(clonedPacket->GetPayload(), packet->GetPayload(), packet->GetPayloadLength()) == 0);
 
 		delete clonedPacket;
 	}

@@ -1,7 +1,5 @@
 # TODO in mediasoup v2 (server-side)
 
-* Improve `RtpPacket::Clone()` so it does not assume pointers position but, instead, make `ptr` point to the corresponding next pointer (such as `this->payload`). REQUIRED FOR RTX FIX.
-
 * In `RtpStreamSend::StorePacket()` we should remove old packets (as `NackGenerator` does).
 
 * Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
