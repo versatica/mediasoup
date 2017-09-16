@@ -124,30 +124,6 @@ namespace RTC
 		return json;
 	}
 
-	void Producer::HandleRequest(Channel::Request* request)
-	{
-		MS_TRACE();
-
-		switch (request->methodId)
-		{
-			case Channel::Request::MethodId::PRODUCER_DUMP:
-			{
-				auto json = ToJson();
-
-				request->Accept(json);
-
-				break;
-			}
-
-			default:
-			{
-				MS_ERROR("unknown method");
-
-				request->Reject("unknown method");
-			}
-		}
-	}
-
 	void Producer::UpdateRtpParameters(RTC::RtpParameters& rtpParameters)
 	{
 		MS_TRACE();

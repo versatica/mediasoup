@@ -555,7 +555,9 @@ namespace RTC
 					return;
 				}
 
-				transport->HandleRequest(request);
+				auto json = transport->ToJson();
+
+				request->Accept(json);
 
 				break;
 			}
@@ -772,7 +774,9 @@ namespace RTC
 					return;
 				}
 
-				producer->HandleRequest(request);
+				auto json = producer->ToJson();
+
+				request->Accept(json);
 
 				break;
 			}
@@ -1032,7 +1036,9 @@ namespace RTC
 					return;
 				}
 
-				consumer->HandleRequest(request);
+				auto json = consumer->ToJson();
+
+				request->Accept(json);
 
 				break;
 			}

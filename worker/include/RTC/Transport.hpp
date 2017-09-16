@@ -86,7 +86,6 @@ namespace RTC
 	public:
 		void Destroy();
 		Json::Value ToJson() const;
-		void HandleRequest(Channel::Request* request);
 		void HandleProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
 		RTC::DtlsTransport::Role SetRemoteDtlsParameters(

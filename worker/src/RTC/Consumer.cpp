@@ -100,30 +100,6 @@ namespace RTC
 		return json;
 	}
 
-	void Consumer::HandleRequest(Channel::Request* request)
-	{
-		MS_TRACE();
-
-		switch (request->methodId)
-		{
-			case Channel::Request::MethodId::CONSUMER_DUMP:
-			{
-				auto json = ToJson();
-
-				request->Accept(json);
-
-				break;
-			}
-
-			default:
-			{
-				MS_ERROR("unknown method");
-
-				request->Reject("unknown method");
-			}
-		}
-	}
-
 	/**
 	 * A Transport has been assigned, and hence sending RTP parameters.
 	 */

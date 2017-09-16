@@ -399,30 +399,6 @@ namespace RTC
 		return json;
 	}
 
-	void Transport::HandleRequest(Channel::Request* request)
-	{
-		MS_TRACE();
-
-		switch (request->methodId)
-		{
-			case Channel::Request::MethodId::TRANSPORT_DUMP:
-			{
-				auto json = ToJson();
-
-				request->Accept(json);
-
-				break;
-			}
-
-			default:
-			{
-				MS_ERROR("unknown method");
-
-				request->Reject("unknown method");
-			}
-		}
-	}
-
 	void Transport::HandleProducer(RTC::Producer* producer)
 	{
 		MS_TRACE();
