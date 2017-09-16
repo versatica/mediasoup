@@ -199,7 +199,7 @@ namespace RTC
 			listener->OnProducerResumed(this);
 		}
 
-		MS_DEBUG_TAG(rtcp, "requesting full frame after resumed");
+		MS_DEBUG_2TAGS(rtcp, rtx, "requesting full frame after resumed");
 
 		RequestKeyFrame(true);
 	}
@@ -422,7 +422,7 @@ namespace RTC
 		}
 		else if (this->keyFrameRequestBlockTimer->IsActive())
 		{
-			MS_DEBUG_TAG(rtcp, "blocking key frame due to flood protection");
+			MS_DEBUG_2TAGS(rtcp, rtx, "blocking key frame request due to flood protection");
 
 			// Set flag.
 			this->isKeyFrameRequested = true;
@@ -866,7 +866,7 @@ namespace RTC
 			if (!this->isKeyFrameRequested)
 				return;
 
-			MS_DEBUG_TAG(rtcp, "key frame requested during flood protection, requesting it now");
+			MS_DEBUG_2TAGS(rtcp, rtx, "key frame requested during flood protection, requesting it now");
 
 			RequestKeyFrame();
 		}

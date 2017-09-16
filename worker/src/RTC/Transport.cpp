@@ -466,8 +466,8 @@ namespace RTC
 		{
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
 			{
-				MS_DEBUG_TAG(
-				  rtcp, "requesting key frame for new Consumer since Transport already connected");
+				MS_DEBUG_2TAGS(
+				  rtcp, rtx, "requesting key frame for new Consumer since Transport already connected");
 			}
 
 			consumer->RequestKeyFrame();
@@ -736,8 +736,8 @@ namespace RTC
 							break;
 						}
 
-						MS_DEBUG_TAG(
-						  rtcp,
+						MS_DEBUG_2TAGS(
+						  rtcp, rtx,
 						  "%s received, requesting key frame for Consumer "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
@@ -1451,7 +1451,7 @@ namespace RTC
 		for (auto* consumer : this->consumers)
 		{
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
-				MS_DEBUG_TAG(rtcp, "Transport connected, requesting key frame for Consumers");
+				MS_DEBUG_2TAGS(rtcp, rtx, "Transport connected, requesting key frame for Consumers");
 
 			consumer->RequestKeyFrame();
 		}
@@ -1567,7 +1567,7 @@ namespace RTC
 			  static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
 			    EffectiveMaxBitrateThresholdBeforeKeyFrame)
 			{
-				MS_WARN_TAG(rbe, "uplink effective max bitrate abruptly decreased, requesting key frames");
+				MS_WARN_2TAGS(rbe, rtx, "uplink effective max bitrate abruptly decreased, requesting key frames");
 
 				// Request key frame for all the Producers.
 				for (auto* producer : this->producers)
