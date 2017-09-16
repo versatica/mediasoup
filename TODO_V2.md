@@ -1,9 +1,5 @@
 # TODO in mediasoup v2 (server-side)
 
-* `RtpPacket::RtxEncode()` should remove the original padding (also the header flag by using `SetPayloadPaddingFlag(false)`), then set the RTX payload, then check whether padding is required and, if so, set the padding flag and bytes.
-  - Similar stuff (inverse) with `RtxDecode()`.
-  - NOTE: Nobody does this. Also, it's dangerous since after `RtxDecode()` it may happen that N bytes of padding are needed, but those exceed the original RTX packet size.
-
 * In `RtpStreamSend::StorePacket()` we should remove old packets (as `NackGenerator` does).
 
 * Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
