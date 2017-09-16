@@ -331,7 +331,7 @@ namespace RTC
 				++this->totalProbesReceived;
 
 				// Make sure that a probe which updated the bitrate immediately has an
-				// effect by calling the onReceiveBitrateChanged callback.
+				// effect by calling the OnRemoteBitrateEstimatorValue callback.
 				if (ProcessClusters(nowMs) == ProbeResult::BITRATE_UPDATED)
 					updateEstimate = true;
 			}
@@ -383,7 +383,7 @@ namespace RTC
 		if (updateEstimate)
 		{
 			this->lastUpdateMs = nowMs;
-			this->observer->OnReceiveBitrateChanged(ssrcs, targetBitrateBps);
+			this->observer->OnRemoteBitrateEstimatorValue(ssrcs, targetBitrateBps);
 		}
 	}
 

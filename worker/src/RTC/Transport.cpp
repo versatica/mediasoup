@@ -1521,7 +1521,79 @@ namespace RTC
 		// NOTE: No DataChannel support, si just ignore it.
 	}
 
-	void Transport::OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate)
+	void Transport::OnProducerClosed(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Remove it from the map.
+		this->producers.erase(producer);
+
+		// Remove it from the RtpListener.
+		this->rtpListener.RemoveProducer(producer);
+	}
+
+	void Transport::OnProducerHasRemb(RTC::Producer* /*producer*/)
+	{
+		// If already running, do nothing.
+		if (this->remoteBitrateEstimator)
+			return;
+
+		this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
+	}
+
+	void Transport::OnProducerRtpParametersUpdated(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Update our RtpListener.
+		// NOTE: This may throw.
+		this->rtpListener.AddProducer(producer);
+	}
+
+	void Transport::OnProducerPaused(RTC::Producer* /*producer*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerResumed(RTC::Producer* /*producer*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerRtpPacket(
+	  RTC::Producer* /*producer*/,
+	  RTC::RtpPacket* /*packet*/,
+	  RTC::RtpEncodingParameters::Profile /*profile*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerProfileEnabled(
+	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnProducerProfileDisabled(
+	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnConsumerClosed(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Remove from the map.
+		this->consumers.erase(consumer);
+	}
+
+	void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* /*consumer*/)
+	{
+		// Do nothing.
+	}
+
+	void Transport::OnRemoteBitrateEstimatorValue(const std::vector<uint32_t>& ssrcs, uint32_t bitrate)
 	{
 		MS_TRACE();
 
@@ -1581,69 +1653,6 @@ namespace RTC
 			this->lastEffectiveMaxBitrateAt = now;
 			this->effectiveMaxBitrate       = effectiveBitrate;
 		}
-	}
-
-	void Transport::OnProducerClosed(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		// Remove it from the map.
-		this->producers.erase(producer);
-
-		// Remove it from the RtpListener.
-		this->rtpListener.RemoveProducer(producer);
-	}
-
-	void Transport::OnProducerRtpParametersUpdated(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		// Update our RtpListener.
-		// NOTE: This may throw.
-		this->rtpListener.AddProducer(producer);
-	}
-
-	void Transport::OnProducerPaused(RTC::Producer* /*producer*/)
-	{
-		// Do nothing.
-	}
-
-	void Transport::OnProducerResumed(RTC::Producer* /*producer*/)
-	{
-		// Do nothing.
-	}
-
-	void Transport::OnProducerRtpPacket(
-	  RTC::Producer* /*producer*/,
-	  RTC::RtpPacket* /*packet*/,
-	  RTC::RtpEncodingParameters::Profile /*profile*/)
-	{
-		// Do nothing.
-	}
-
-	void Transport::OnProducerProfileEnabled(
-	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
-	{
-		// Do nothing.
-	}
-
-	void Transport::OnProducerProfileDisabled(
-	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
-	{
-		// Do nothing.
-	}
-
-	void Transport::OnConsumerClosed(RTC::Consumer* consumer)
-	{
-		MS_TRACE();
-
-		// Remove from the map.
-		this->consumers.erase(consumer);
-	}
-
-	void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* /*consumer*/)
-	{
-		// Do nothing.
 	}
 
 	void Transport::OnTimer(Timer* timer)

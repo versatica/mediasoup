@@ -95,9 +95,8 @@ namespace RTC
 		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
-		bool IsConnected() const;
-		void EnableRemb();
 		void SendRtcp(uint64_t now);
+		bool IsConnected() const;
 
 	private:
 		void MayRunDtlsTransport();
@@ -154,13 +153,10 @@ namespace RTC
 		void OnDtlsApplicationData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
-		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
-	public:
-		void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
-
 		/* Pure virtual methods inherited from RTC::ProducerListener. */
 	public:
 		void OnProducerClosed(RTC::Producer* producer) override;
+		void OnProducerHasRemb(RTC::Producer* producer) override;
 		void OnProducerRtpParametersUpdated(RTC::Producer* producer) override;
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
@@ -177,6 +173,10 @@ namespace RTC
 	public:
 		void OnConsumerClosed(RTC::Consumer* consumer) override;
 		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer) override;
+
+		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
+	public:
+		void OnRemoteBitrateEstimatorValue(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -226,14 +226,6 @@ namespace RTC
 		return (
 		  this->selectedTuple != nullptr &&
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
-	}
-
-	inline void Transport::EnableRemb()
-	{
-		if (!this->remoteBitrateEstimator)
-		{
-			this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
-		}
 	}
 } // namespace RTC
 

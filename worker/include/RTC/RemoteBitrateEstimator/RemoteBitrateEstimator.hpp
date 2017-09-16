@@ -41,7 +41,8 @@ namespace RTC
 		{
 		public:
 			// Called when a receive channel group has a new bitrate estimate for the incoming streams.
-			virtual void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
+			virtual void OnRemoteBitrateEstimatorValue(
+			  const std::vector<uint32_t>& ssrcs, uint32_t bitrate) = 0;
 		};
 
 	protected:

@@ -594,7 +594,12 @@ namespace RTC
 
 		// Enable REMB in the transport if requested.
 		if (useRemb)
-			this->transport->EnableRemb();
+		{
+			for (auto& listener : this->listeners)
+			{
+				listener->OnProducerHasRemb(this);
+			}
+		}
 
 		// Check RTX capabilities.
 		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
