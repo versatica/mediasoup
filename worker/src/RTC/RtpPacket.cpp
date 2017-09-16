@@ -102,7 +102,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (payloadLength < static_cast<size_t>(payloadPadding))
+			if (payloadLength < size_t{ payloadPadding })
 			{
 				MS_WARN_TAG(
 				  rtp,
@@ -116,7 +116,7 @@ namespace RTC
 
 		MS_ASSERT(
 		  len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 + extensionValueSize : 0) +
-		           payloadLength + static_cast<size_t>(payloadPadding),
+		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
 		auto packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
@@ -356,12 +356,17 @@ namespace RTC
 		// Fix the payload length.
 		this->payloadLength += 2;
 
-		// Remove padding.
-		SetPayloadPaddingFlag(false);
-		this->payloadPadding = 0u;
-
 		// Fix the packet size.
 		this->size += 2;
+
+		// Remove padding if present.
+		if (this->payloadPadding != 0u)
+		{
+			SetPayloadPaddingFlag(false);
+
+			this->size -= size_t{ this->payloadPadding };
+			this->payloadPadding = 0u;
+		}
 	}
 
 	bool RtpPacket::RtxDecode(uint8_t payloadType, uint32_t ssrc)
@@ -388,12 +393,17 @@ namespace RTC
 		// Fix the payload length.
 		this->payloadLength -= 2;
 
-		// Remove padding.
-		SetPayloadPaddingFlag(false);
-		this->payloadPadding = 0u;
-
 		// Fix the packet size.
 		this->size -= 2;
+
+		// Remove padding if present.
+		if (this->payloadPadding != 0u)
+		{
+			SetPayloadPaddingFlag(false);
+
+			this->size -= size_t{ this->payloadPadding };
+			this->payloadPadding = 0u;
+		}
 
 		return true;
 	}
