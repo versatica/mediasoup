@@ -1,5 +1,7 @@
 # TODO in mediasoup v2 (server-side)
 
+* Instead of using `static_cast<size_t>(number)` use `size_t{ number }`. NOTE: Investigate it.
+
 * In `RtpStreamSend::StorePacket()` we should remove old packets (as `NackGenerator` does).
 
 * Remove `producer.on('rtprawpacket')` and, instead, create a special `RtpConsumer` or something like that.
