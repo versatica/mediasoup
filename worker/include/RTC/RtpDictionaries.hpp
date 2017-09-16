@@ -18,8 +18,7 @@ namespace RTC
 		{
 			ALL = 0,
 			AUDIO,
-			VIDEO,
-			DEPTH
+			VIDEO
 		};
 
 	public:
@@ -169,7 +168,7 @@ namespace RTC
 		void CheckCodec();
 
 	public:
-		RtpCodecMimeType mime;
+		RtpCodecMimeType mimeType;
 		uint8_t payloadType{ 0 };
 		uint32_t clockRate{ 0 };
 		uint32_t maxptime{ 0 };

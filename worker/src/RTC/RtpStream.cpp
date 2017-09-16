@@ -194,7 +194,7 @@ namespace RTC
 
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
-		static const Json::StaticString JsonStringMime{ "mime" };
+		static const Json::StaticString JsonStringMimeType{ "mimeType" };
 		static const Json::StaticString JsonStringClockRate{ "clockRate" };
 		static const Json::StaticString JsonStringUseNack{ "useNack" };
 		static const Json::StaticString JsonStringUsePli{ "usePli" };
@@ -203,7 +203,7 @@ namespace RTC
 
 		json[JsonStringSsrc]        = Json::UInt{ this->ssrc };
 		json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
-		json[JsonStringMime]        = this->mime.ToString();
+		json[JsonStringMimeType]    = this->mimeType.ToString();
 		json[JsonStringClockRate]   = Json::UInt{ this->clockRate };
 		json[JsonStringUseNack]     = this->useNack;
 		json[JsonStringUsePli]      = this->usePli;

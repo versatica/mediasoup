@@ -185,7 +185,7 @@ namespace RTC
 		{
 			auto& codec = *it;
 
-			if (codec.mime.IsFeatureCodec() && codec.parameters.GetInteger(AssociatedPayloadType) == payloadType)
+			if (codec.mimeType.IsFeatureCodec() && codec.parameters.GetInteger(AssociatedPayloadType) == payloadType)
 			{
 				return codec;
 			}
@@ -209,7 +209,7 @@ namespace RTC
 			else
 				payloadTypes.insert(codec.payloadType);
 
-			switch (codec.mime.subtype)
+			switch (codec.mimeType.subtype)
 			{
 				// A RTX codec must have 'apt' parameter pointing to a non RTX codec.
 				case RTC::RtpCodecMimeType::Subtype::RTX:
@@ -224,11 +224,11 @@ namespace RTC
 
 						if (static_cast<int32_t>(codec.payloadType) == apt)
 						{
-							if (codec.mime.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
+							if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
 								MS_THROW_ERROR("apt in RTX codec points to a RTX codec");
-							else if (codec.mime.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
+							else if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
 								MS_THROW_ERROR("apt in RTX codec points to a ULPFEC codec");
-							else if (codec.mime.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
+							else if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
 								MS_THROW_ERROR("apt in RTX codec points to a FLEXFEC codec");
 							else
 								break;
@@ -257,7 +257,7 @@ namespace RTC
 				auto& codec = *it;
 
 				// Must be a media codec.
-				if (codec.mime.IsMediaCodec())
+				if (codec.mimeType.IsMediaCodec())
 				{
 					firstMediaPayloadType = codec.payloadType;
 
@@ -288,7 +288,7 @@ namespace RTC
 					if (codec.payloadType == encoding.codecPayloadType)
 					{
 						// Must be a media codec.
-						if (codec.mime.IsMediaCodec())
+						if (codec.mimeType.IsMediaCodec())
 							break;
 
 						MS_THROW_ERROR("invalid encoding.codecPayloadType");

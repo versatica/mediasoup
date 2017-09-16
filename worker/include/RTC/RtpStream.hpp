@@ -26,7 +26,7 @@ namespace RTC
 
 			uint32_t ssrc{ 0 };
 			uint8_t payloadType{ 0 };
-			RTC::RtpCodecMimeType mime;
+			RTC::RtpCodecMimeType mimeType;
 			uint32_t clockRate{ 0 };
 			bool useNack{ false };
 			bool usePli{ false };
@@ -96,7 +96,7 @@ namespace RTC
 
 	inline const RTC::RtpCodecMimeType& RtpStream::GetMimeType() const
 	{
-		return this->params.mime;
+		return this->params.mimeType;
 	}
 
 	inline bool RtpStream::IsHealthy()

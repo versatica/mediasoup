@@ -33,7 +33,7 @@ namespace RTC
 
 		// Set MIME field.
 		// NOTE: This may throw.
-		this->mime.SetMimeType(mimeType);
+		this->mimeType.SetMimeType(mimeType);
 
 		if (!data[JsonStringPayloadType].isUInt())
 			MS_THROW_ERROR("missing RtpCodecParameters.payloadType");
@@ -97,10 +97,10 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		// Add mimeType.
-		json[JsonStringMimeType] = this->mime.ToString();
+		json[JsonStringMimeType] = this->mimeType.ToString();
 
 		// Add name.
-		json[JsonStringName] = this->mime.GetName();
+		json[JsonStringName] = this->mimeType.GetName();
 
 		// Add payloadType.
 		json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
@@ -141,7 +141,7 @@ namespace RTC
 		static std::string jsonStringApt{ "apt" };
 
 		// Check per MIME parameters and set default values.
-		switch (this->mime.subtype)
+		switch (this->mimeType.subtype)
 		{
 			case RTC::RtpCodecMimeType::Subtype::RTX:
 			{

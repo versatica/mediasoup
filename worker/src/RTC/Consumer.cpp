@@ -608,7 +608,7 @@ namespace RTC
 
 		params.ssrc        = ssrc;
 		params.payloadType = codec.payloadType;
-		params.mime        = codec.mime;
+		params.mimeType    = codec.mimeType;
 		params.clockRate   = codec.clockRate;
 		params.useNack     = useNack;
 		params.usePli      = usePli;
