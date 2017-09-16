@@ -9,10 +9,10 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr uint32_t MaxPacketAge{ 10000 };
+	constexpr uint32_t MaxPacketAge{ 5000 };
 	constexpr size_t MaxNackPackets{ 1000 };
 	constexpr uint32_t DefaultRtt{ 100 };
-	constexpr uint8_t MaxNackRetries{ 10 };
+	constexpr uint8_t MaxNackRetries{ 8 };
 	constexpr uint64_t TimerInterval{ 50 };
 
 	/* Instance methods. */
