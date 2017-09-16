@@ -283,7 +283,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0b00010000, 0, 0, 3, // Extension header
 			1, 0, 2, 1,
 			0xFF, 0, 3, 4,
-			0xFF, 0xFF, 0xFF, 0xFF
+			0xFF, 0xFF, 0xFF, 0xFF,
+			0x11, 0x11, 0x11, 0x11 // Payload
 		};
 
 		uint8_t rtxPayloadType = 102;
@@ -302,7 +303,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(packet->GetPayloadLength() == 0);
+		REQUIRE(packet->GetPayloadLength() == 4);
 		REQUIRE(!packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions());
 
@@ -319,7 +320,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->GetSequenceNumber() == rtxSeq);
 		REQUIRE(rtxPacket->GetTimestamp() == 4);
 		REQUIRE(rtxPacket->GetSsrc() == rtxSsrc);
-		REQUIRE(rtxPacket->GetPayloadLength() == 2);
+		REQUIRE(rtxPacket->GetPayloadLength() == 6);
 		REQUIRE(!rtxPacket->HasOneByteExtensions());
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
 
@@ -332,7 +333,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->GetSequenceNumber() == 8);
 		REQUIRE(rtxPacket->GetTimestamp() == 4);
 		REQUIRE(rtxPacket->GetSsrc() == 5);
-		REQUIRE(rtxPacket->GetPayloadLength() == 0);
+		REQUIRE(rtxPacket->GetPayloadLength() == 4);
 		REQUIRE(!rtxPacket->HasOneByteExtensions());
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
 

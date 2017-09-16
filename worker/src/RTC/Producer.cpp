@@ -14,8 +14,6 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t KeyFrameRequestBlockTimeout{ 1000 }; // In ms.
-	static constexpr size_t ClonedPacketBufferSize{ 65536 };
-	static uint8_t ClonedPacketBuffer[ClonedPacketBufferSize];
 
 	/* Instance methods. */
 
@@ -294,14 +292,6 @@ namespace RTC
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
 				return;
-
-			// We need to clone the RTX decoded packet so it becomes later serializable
-			// by just taking its GetData() and GetSize(), so clone it and reassign the
-			// new RtpPacket to the packet pointer (so the rest of the code below doesn't
-			// need any change) and assign it to the unique_ptr to be automatically
-			// freed once this method returns.
-			packet = packet->Clone(ClonedPacketBuffer);
-			rtxDecodedPacket.reset(packet);
 		}
 		else
 		{
