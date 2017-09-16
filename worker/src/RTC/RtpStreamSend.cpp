@@ -210,7 +210,7 @@ namespace RTC
 
 						if ((resentAtTime != 0u) && now - resentAtTime < static_cast<uint64_t>(rtt))
 						{
-							MS_WARN_TAG(
+							MS_DEBUG_TAG(
 							  rtx,
 							  "ignoring retransmission for a packet already resent in the last RTT ms "
 							  "[seq:%" PRIu16 ", rtt:%" PRIu32 "]",
