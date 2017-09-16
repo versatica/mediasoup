@@ -206,7 +206,7 @@ namespace RTC
 						}
 
 						// Don't resent the packet if it was resent in the last RTT ms.
-						uint32_t resentAtTime = (*bufferIt).resentAtTime;
+						auto resentAtTime = (*bufferIt).resentAtTime;
 
 						if ((resentAtTime != 0u) && now - resentAtTime < static_cast<uint64_t>(rtt))
 						{
