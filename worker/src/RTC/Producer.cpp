@@ -507,7 +507,8 @@ namespace RTC
 			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
 		}
 
-		// TODO: For SVC, the dependencyEncodingIds must be checked and their respective profiles must be also added into mapRtpStreamProfiles.
+		// TODO: For SVC, the dependencyEncodingIds must be checked and their respective profiles must
+		// be also added into mapRtpStreamProfiles.
 		auto profile = encoding.profile;
 
 		// Add the stream to the profiles map.
@@ -644,7 +645,7 @@ namespace RTC
 				break;
 
 			// Add the profile to the healthy profiles set.
-			const auto& result = this->healthyProfiles.insert(profile);
+			const auto& result  = this->healthyProfiles.insert(profile);
 			bool profileExisted = !result.second;
 			MS_ASSERT(!profileExisted, "profile already in headltyProfiles set");
 
@@ -667,7 +668,7 @@ namespace RTC
 				break;
 
 			// Remove the profile from the healthy profiles set.
-			auto result = this->healthyProfiles.erase(profile);
+			auto result         = this->healthyProfiles.erase(profile);
 			bool profileExisted = (result == 1);
 			MS_ASSERT(profileExisted, "profile not present in headltyProfiles set");
 
