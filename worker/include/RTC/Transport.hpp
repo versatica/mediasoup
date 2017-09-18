@@ -94,9 +94,9 @@ namespace RTC
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcp(uint64_t now);
-		bool IsConnected() const;
 
 	private:
+		bool IsConnected() const;
 		void MayRunDtlsTransport();
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
