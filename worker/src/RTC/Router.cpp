@@ -1282,11 +1282,6 @@ namespace RTC
 		this->mapProducerAudioLevelContainer.erase(producer);
 	}
 
-	void Router::OnProducerHasRemb(RTC::Producer* /*producer*/)
-	{
-		// Do nothing.
-	}
-
 	void Router::OnProducerRtpParametersUpdated(RTC::Producer* producer)
 	{
 		MS_ASSERT(
