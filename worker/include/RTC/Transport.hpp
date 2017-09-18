@@ -195,8 +195,8 @@ namespace RTC
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
-		// Others.
 		Timer* rtcpTimer{ nullptr };
+		// Others.
 		bool allocated{ false };
 		// Others (Producers and Consumers).
 		std::unordered_set<RTC::Producer*> producers;
