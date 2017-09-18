@@ -83,8 +83,6 @@ namespace RTC
 		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
 		static const Json::StaticString JsonStringRid{ "rid" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
-		static const Json::StaticString JsonStringRtpRawEventEnabled{ "rtpRawEventEnabled" };
-		static const Json::StaticString JsonStringRtpObjectEventEnabled{ "rtpObjectEventEnabled" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonHeaderExtensionIds(Json::objectValue);
@@ -116,10 +114,6 @@ namespace RTC
 		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
 
 		json[JsonStringPaused] = this->paused;
-
-		json[JsonStringRtpRawEventEnabled] = this->rtpRawEventEnabled;
-
-		json[JsonStringRtpObjectEventEnabled] = this->rtpObjectEventEnabled;
 
 		return json;
 	}
@@ -180,62 +174,9 @@ namespace RTC
 		RequestKeyFrame(true);
 	}
 
-	void Producer::SetRtpRawEvent(bool enabled)
-	{
-		MS_TRACE();
-
-		if (enabled == this->rtpRawEventEnabled)
-			return;
-
-		this->rtpRawEventEnabled = enabled;
-
-		if (enabled)
-		{
-			MS_DEBUG_DEV("Producer rtpraw event enabled [producerId:%" PRIu32 "]", this->producerId);
-		}
-		else
-		{
-			MS_DEBUG_DEV("Producer rtpraw event disabled [producerId:%" PRIu32 "]", this->producerId);
-		}
-
-		// If set (and not paused), require a key frame.
-		if (this->rtpRawEventEnabled && !this->paused)
-			RequestKeyFrame(true);
-	}
-
-	void Producer::SetRtpObjectEvent(bool enabled)
-	{
-		MS_TRACE();
-
-		if (enabled == this->rtpObjectEventEnabled)
-			return;
-
-		this->rtpObjectEventEnabled = enabled;
-
-		if (enabled)
-		{
-			MS_DEBUG_DEV("Producer rtpobject event enabled [producerId:%" PRIu32 "]", this->producerId);
-		}
-		else
-		{
-			MS_DEBUG_DEV("Producer rtpobject event disabled [producerId:%" PRIu32 "]", this->producerId);
-		}
-
-		// If set (and not paused), require a key frame.
-		if (this->rtpObjectEventEnabled && !this->paused)
-			RequestKeyFrame(true);
-	}
-
 	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
-		static const Json::StaticString JsonStringObject{ "object" };
-		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
-		static const Json::StaticString JsonStringMarker{ "marker" };
-		static const Json::StaticString JsonStringSequenceNumber{ "sequenceNumber" };
-		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 
 		// May need to create a new RtpStreamRecv.
 		MayNeedNewStream(packet);
@@ -308,30 +249,6 @@ namespace RTC
 		for (auto& listener : this->listeners)
 		{
 			listener->OnProducerRtpPacket(this, packet, profile);
-		}
-
-		// Emit "rtpraw" if enabled.
-		if (this->rtpRawEventEnabled)
-		{
-			this->notifier->EmitWithBinary(this->producerId, "rtpraw", packet->GetData(), packet->GetSize());
-		}
-
-		// Emit "rtpobject" is enabled.
-		if (this->rtpObjectEventEnabled)
-		{
-			Json::Value eventData(Json::objectValue);
-			Json::Value jsonObject(Json::objectValue);
-
-			jsonObject[JsonStringPayloadType]    = Json::UInt{ packet->GetPayloadType() };
-			jsonObject[JsonStringMarker]         = packet->HasMarker();
-			jsonObject[JsonStringSequenceNumber] = Json::UInt{ packet->GetSequenceNumber() };
-			jsonObject[JsonStringTimestamp]      = Json::UInt{ packet->GetTimestamp() };
-			jsonObject[JsonStringSsrc]           = Json::UInt{ packet->GetSsrc() };
-
-			eventData[JsonStringObject] = jsonObject;
-
-			this->notifier->EmitWithBinary(
-			  this->producerId, "rtpobject", packet->GetPayload(), packet->GetPayloadLength(), eventData);
 		}
 	}
 

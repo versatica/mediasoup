@@ -871,72 +871,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PRODUCER_SET_RTP_RAW_EVENT:
-			{
-				static const Json::StaticString JsonStringEnabled{ "enabled" };
-
-				RTC::Producer* producer;
-
-				try
-				{
-					producer = GetProducerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				if (!request->data[JsonStringEnabled].isBool())
-				{
-					request->Reject("Request has invalid data.enabled");
-
-					return;
-				}
-
-				bool enabled = request->data[JsonStringEnabled].asBool();
-
-				producer->SetRtpRawEvent(enabled);
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::PRODUCER_SET_RTP_OBJECT_EVENT:
-			{
-				static const Json::StaticString JsonStringEnabled{ "enabled" };
-
-				RTC::Producer* producer;
-
-				try
-				{
-					producer = GetProducerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				if (!request->data[JsonStringEnabled].isBool())
-				{
-					request->Reject("Request has invalid data.enabled");
-
-					return;
-				}
-
-				bool enabled = request->data[JsonStringEnabled].asBool();
-
-				producer->SetRtpObjectEvent(enabled);
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::CONSUMER_CLOSE:
 			{
 				RTC::Consumer* consumer;
@@ -1420,7 +1354,7 @@ namespace RTC
 		}
 
 		// Update audio levels.
-		if (this->audioLevelsEventEnabled)
+		if (this->audioLevelsEventEnabled && producer->kind == RTC::Media::Kind::AUDIO)
 		{
 			uint8_t volume;
 			bool voice;

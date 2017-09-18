@@ -61,8 +61,6 @@ namespace RTC
 		void UpdateRtpParameters(RTC::RtpParameters& rtpParameters);
 		void Pause();
 		void Resume();
-		void SetRtpRawEvent(bool enabled);
-		void SetRtpObjectEvent(bool enabled);
 		const RTC::RtpParameters& GetParameters() const;
 		const struct RTC::Transport::HeaderExtensionIds& GetTransportHeaderExtensionIds() const;
 		bool IsPaused() const;
@@ -116,8 +114,6 @@ namespace RTC
 		struct RTC::Transport::HeaderExtensionIds transportHeaderExtensionIds;
 		struct HeaderExtensionIds headerExtensionIds;
 		bool paused{ false };
-		bool rtpRawEventEnabled{ false };
-		bool rtpObjectEventEnabled{ false };
 		bool isKeyFrameRequested{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
