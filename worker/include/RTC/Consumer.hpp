@@ -66,7 +66,9 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
 	public:
-		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override;
+		void OnRtpStreamDied(RTC::RtpStream* rtpStream) override;
+		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
+		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
 
 	public:
 		// Passed by argument.

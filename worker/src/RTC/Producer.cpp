@@ -50,7 +50,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->profiles.clear();
+		this->mapRtpStreamProfiles.clear();
 
 		ClearRtpStreams();
 	}
@@ -507,20 +507,14 @@ namespace RTC
 			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
 		}
 
-		// Enter the stream into the profiles map.
-		// NOTE: This is specific to simulcast with no temporal layers.
+		// TODO: For SVC, the dependencyEncodingIds must be checked and their respective profiles must be also added into mapRtpStreamProfiles.
 		auto profile = encoding.profile;
 
-		this->profiles[rtpStream].insert(profile);
+		// Add the stream to the profiles map.
+		this->mapRtpStreamProfiles[rtpStream].insert(profile);
 
-		// Don't announce default profile, but just those for simulcast/SVC.
-		if (profile != RTC::RtpEncodingParameters::Profile::DEFAULT)
-		{
-			for (auto& listener : this->listeners)
-			{
-				listener->OnProducerProfileEnabled(this, profile);
-			}
-		}
+		// Add new profile/s into healthyProfiles and notify the listener.
+		AddHealthyProfiles(rtpStream);
 
 		// Request a key frame since we may have lost the first packets of this stream.
 		RequestKeyFrame(true);
@@ -530,20 +524,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& profiles = this->profiles[rtpStream];
-
-		// Notify about the profiles being disabled.
-		for (auto& profile : profiles)
-		{
-			// Don't announce default profile, but just those for simulcast/SVC.
-			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-				break;
-
-			for (auto& listener : this->listeners)
-			{
-				listener->OnProducerProfileDisabled(this, profile);
-			}
-		}
+		// Remove the profiles related to this stream from healthyProfiles and notify the listener.
+		RemoveHealthyProfiles(rtpStream);
 
 		this->rtpStreams.erase(rtpStream->GetSsrc());
 
@@ -560,7 +542,7 @@ namespace RTC
 			}
 		}
 
-		this->profiles.erase(rtpStream);
+		this->mapRtpStreamProfiles.erase(rtpStream);
 
 		delete rtpStream;
 	}
@@ -577,7 +559,7 @@ namespace RTC
 		}
 
 		// Notify about all profiles being disabled.
-		for (auto& kv : this->profiles)
+		for (auto& kv : this->mapRtpStreamProfiles)
 		{
 			auto& profiles = kv.second;
 
@@ -596,7 +578,8 @@ namespace RTC
 
 		this->rtpStreams.clear();
 		this->mapRtxStreams.clear();
-		this->profiles.clear();
+		this->mapRtpStreamProfiles.clear();
+		this->healthyProfiles.clear();
 	}
 
 	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
@@ -638,15 +621,61 @@ namespace RTC
 	  RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
 	{
 		// The stream is already mapped to a profile.
-		if (this->profiles.find(rtpStream) != this->profiles.end())
+		if (this->mapRtpStreamProfiles.find(rtpStream) != this->mapRtpStreamProfiles.end())
 		{
-			auto it      = this->profiles[rtpStream].begin();
+			auto it      = this->mapRtpStreamProfiles[rtpStream].begin();
 			auto profile = *it;
 
 			return profile;
 		}
 
 		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", packet->GetSsrc());
+	}
+
+	void Producer::AddHealthyProfiles(RTC::RtpStreamRecv* rtpStream)
+	{
+		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
+
+		// Notify about the profiles being enabled.
+		for (auto& profile : profiles)
+		{
+			// Don't announce default profile, but just those for simulcast/SVC.
+			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				break;
+
+			// Add the profile to the healthy profiles set.
+			const auto& result = this->healthyProfiles.insert(profile);
+			bool profileExisted = !result.second;
+			MS_ASSERT(!profileExisted, "profile already in headltyProfiles set");
+
+			for (auto& listener : this->listeners)
+			{
+				listener->OnProducerProfileEnabled(this, profile);
+			}
+		}
+	}
+
+	void Producer::RemoveHealthyProfiles(RTC::RtpStreamRecv* rtpStream)
+	{
+		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
+
+		// Notify about the profiles being disabled.
+		for (auto& profile : profiles)
+		{
+			// Don't announce default profile, but just those for simulcast/SVC.
+			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				break;
+
+			// Remove the profile from the healthy profiles set.
+			auto result = this->healthyProfiles.erase(profile);
+			bool profileExisted = (result == 1);
+			MS_ASSERT(profileExisted, "profile not present in headltyProfiles set");
+
+			for (auto& listener : this->listeners)
+			{
+				listener->OnProducerProfileDisabled(this, profile);
+			}
+		}
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
@@ -713,45 +742,52 @@ namespace RTC
 		this->transport->SendRtcpPacket(&packet);
 	}
 
-	void Producer::OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy)
+	void Producer::OnRtpStreamDied(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
 		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
 
 		MS_ASSERT(
-		  this->profiles.find(rtpStreamRecv) != this->profiles.end(),
-		  "stream not present in profiles map");
+		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
+		  "stream not present in mapRtpStreamProfiles");
 
-		auto& profiles = this->profiles[rtpStreamRecv];
+		MS_DEBUG_TAG(rtp, "stream is dead [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
-		// The stream has transitioned to non healthy.
-		if (rtpStream->IsHealthy() && !healthy)
-		{
-			MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		// Completely destroy the stream.
+		ClearRtpStream(rtpStreamRecv);
+	}
 
-			// Completely destroy the stream.
-			ClearRtpStream(rtpStreamRecv);
-		}
+	void Producer::OnRtpStreamHealthy(RTC::RtpStream* rtpStream)
+	{
+		MS_TRACE();
 
-		// The stream has transitioned to healthy.
-		if (!rtpStream->IsHealthy() && healthy)
-		{
-			MS_DEBUG_TAG(rtp, "stream is now healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
 
-			// Notify about the profiles being disabled.
-			for (auto& profile : profiles)
-			{
-				// Don't announce default profile, but just those for simulcast/SVC.
-				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-					break;
+		MS_ASSERT(
+		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
+		  "stream not present in mapRtpStreamProfiles");
 
-				for (auto& listener : this->listeners)
-				{
-					listener->OnProducerProfileEnabled(this, profile);
-				}
-			}
-		}
+		MS_DEBUG_TAG(rtp, "stream is now healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+		// Add the profiles related to this stream into healthyProfiles and notify the listener.
+		AddHealthyProfiles(rtpStreamRecv);
+	}
+
+	void Producer::OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)
+	{
+		MS_TRACE();
+
+		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
+
+		MS_ASSERT(
+		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
+		  "stream not present in mapRtpStreamProfiles");
+
+		MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+		// Remove the profiles related to this stream from healthyProfiles and notify the listener.
+		RemoveHealthyProfiles(rtpStreamRecv);
 	}
 
 	inline void Producer::OnTimer(Timer* timer)

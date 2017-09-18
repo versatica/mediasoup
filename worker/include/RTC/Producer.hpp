@@ -70,7 +70,7 @@ namespace RTC
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
 		void RequestKeyFrame(bool force = false);
-		const std::set<RTC::RtpEncodingParameters::Profile> GetProfiles() const;
+		const std::set<RTC::RtpEncodingParameters::Profile>& GetHealthyProfiles() const;
 
 	private:
 		void FillHeaderExtensionIds();
@@ -80,13 +80,17 @@ namespace RTC
 		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
 		RTC::RtpEncodingParameters::Profile GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet);
+		void AddHealthyProfiles(RTC::RtpStreamRecv* rtpStream);
+		void RemoveHealthyProfiles(RTC::RtpStreamRecv* rtpStream);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
 		void OnRtpStreamRecvNackRequired(
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
-		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override;
+		void OnRtpStreamDied(RTC::RtpStream* rtpStream) override;
+		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
+		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -107,7 +111,8 @@ namespace RTC
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
-		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> profiles;
+		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> mapRtpStreamProfiles;
+		std::set<RTC::RtpEncodingParameters::Profile> healthyProfiles;
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
@@ -159,24 +164,9 @@ namespace RTC
 		}
 	}
 
-	inline const std::set<RTC::RtpEncodingParameters::Profile> Producer::GetProfiles() const
+	inline const std::set<RTC::RtpEncodingParameters::Profile>& Producer::GetHealthyProfiles() const
 	{
-		std::set<RTC::RtpEncodingParameters::Profile> profiles;
-
-		for (const auto& it : this->profiles)
-		{
-			for (const auto& it2 : it.second)
-			{
-				auto profile = it2;
-
-				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-					break;
-
-				profiles.insert(profile);
-			}
-		}
-
-		return profiles;
+		return this->healthyProfiles;
 	}
 } // namespace RTC
 

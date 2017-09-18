@@ -544,12 +544,19 @@ namespace RTC
 		}
 	}
 
-	void Consumer::OnRtpStreamHealthReport(RtpStream* stream, bool healthy)
+	void Consumer::OnRtpStreamDied(RtpStream* /*stream*/)
 	{
 		MS_TRACE();
+	}
 
-		if (!IsEnabled())
-			return;
+	void Consumer::OnRtpStreamHealthy(RtpStream* /*stream*/)
+	{
+		MS_TRACE();
+	}
+
+	void Consumer::OnRtpStreamUnhealthy(RtpStream* /*stream*/)
+	{
+		MS_TRACE();
 	}
 
 	void Consumer::FillSupportedCodecPayloadTypes()

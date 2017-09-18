@@ -454,7 +454,7 @@ namespace RTC
 				// Add us as listener.
 				consumer->AddListener(this);
 
-				auto profiles = producer->GetProfiles();
+				auto profiles = producer->GetHealthyProfiles();
 				std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
 
 				for (it = profiles.rbegin(); it != profiles.rend(); ++it)

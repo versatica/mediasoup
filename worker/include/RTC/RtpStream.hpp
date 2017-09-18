@@ -16,7 +16,9 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) = 0;
+			virtual void OnRtpStreamDied(RTC::RtpStream* rtpStream) = 0;
+			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) = 0;
+			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) = 0;
 		};
 
 	public:
