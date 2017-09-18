@@ -239,7 +239,7 @@ namespace RTC
 		{
 			consumer->Disable();
 
-			// Add us as listener.
+			// Remove us as listener.
 			consumer->RemoveListener(this);
 		}
 
