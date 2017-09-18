@@ -10,7 +10,18 @@
 
 namespace RTC
 {
-	class RtpStream : public Timer::Listener
+	class RtpStreamInfo
+	{
+	public:
+		uint32_t totalLost{ 0 };
+		uint8_t fractionLost{ 0 };
+		uint32_t jitter{ 0 };
+		uint32_t rtt{ 0 };
+		size_t numPlis{ 0 };
+		size_t numNacks{ 0 };
+	};
+
+	class RtpStream : public Timer::Listener, public RtpStreamInfo
 	{
 	public:
 		class Listener
@@ -45,6 +56,7 @@ namespace RTC
 		uint8_t GetPayloadType();
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		bool IsHealthy();
+		void ResetHealthCheckTimer();
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -76,10 +88,7 @@ namespace RTC
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
-		uint32_t totalLost{ 0 };
-		uint8_t fractionLost{ 0 };
-		uint32_t jitter{ 0 };
-		uint32_t rtt{ 0 };
+		bool notifyHealth{ true };
 		// RTP counters.
 		RTC::RtpDataCounter counter;
 	};

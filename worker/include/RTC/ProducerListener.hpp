@@ -2,6 +2,7 @@
 #define MS_RTC_PRODUCER_LISTENER_HPP
 
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpStream.hpp"
 
 namespace RTC
 {
@@ -19,7 +20,9 @@ namespace RTC
 		virtual void OnProducerRtpPacket(
 		  RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile) = 0;
 		virtual void OnProducerProfileEnabled(
-		  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) = 0;
+		  RTC::Producer* producer,
+		  RTC::RtpEncodingParameters::Profile profile,
+		  const RTC::RtpStreamInfo* info) = 0;
 		virtual void OnProducerProfileDisabled(
 		  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) = 0;
 	};

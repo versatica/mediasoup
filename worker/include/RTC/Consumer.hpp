@@ -21,7 +21,7 @@
 
 namespace RTC
 {
-	class Consumer : public RtpStream::Listener
+	class Consumer : public RTC::RtpStream::Listener
 	{
 	public:
 		Consumer(
@@ -43,7 +43,7 @@ namespace RTC
 		void Resume();
 		void SourcePause();
 		void SourceResume();
-		void AddProfile(const RTC::RtpEncodingParameters::Profile profile);
+		void AddProfile(const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStreamInfo* info);
 		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SourceRtpParametersUpdated();
 		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
@@ -62,8 +62,9 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void RecalculateTargetProfile();
+		void RecalculateTargetProfile(bool forcePreferred = false);
 		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
+		void MayRunProbation();
 
 		/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
 	public:
@@ -103,9 +104,14 @@ namespace RTC
 
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
+		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStreamInfo*> mapProfileRtpStreamInfo;
 		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
+		// RTP probation
+		bool isProbing{ false };
+		uint16_t rtpPacketsBeforeProbation{ 0 };
 	};
 
 	/* Inline methods. */

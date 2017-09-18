@@ -26,7 +26,7 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize);
+		RtpStreamSend(RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
 
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
@@ -47,6 +47,8 @@ namespace RTC
 		void CheckHealth() override;
 
 	private:
+		// Passed by argument.
+		RTC::RtpStream::Listener* listener{ nullptr };
 		std::vector<StorageItem> storage;
 		using Buffer = std::list<BufferItem>;
 		Buffer buffer;

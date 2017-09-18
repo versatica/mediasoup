@@ -15,11 +15,13 @@ namespace RTC
 	// TODO: This must be tunned.
 	static constexpr uint32_t MaxRetransmissionDelay{ 1000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
+	static constexpr uint8_t MaxHealthLossPercentage{ 20 };
 
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize)
-	  : RtpStream::RtpStream(params), storage(bufferSize)
+	RtpStreamSend::RtpStreamSend(
+	  RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
+	  : RtpStream::RtpStream(params), listener(listener), storage(bufferSize)
 	{
 		MS_TRACE();
 	}
@@ -416,6 +418,25 @@ namespace RTC
 	void RtpStreamSend::CheckHealth()
 	{
 		MS_TRACE();
+
+		uint16_t currentLossPercentage = this->fractionLost * 100 / 256;
+
+		if (currentLossPercentage >= MaxHealthLossPercentage)
+		{
+			MS_DEBUG_TAG(rtp, "last period loss percentage: %" PRIu16, currentLossPercentage);
+			if (this->notifyHealth || this->healthy)
+			{
+				this->healthy = false;
+				this->listener->OnRtpStreamUnhealthy(this);
+			}
+		}
+		else if (this->notifyHealth || !this->healthy)
+		{
+			this->healthy = true;
+			this->listener->OnRtpStreamHealthy(this);
+		}
+
+		this->notifyHealth = false;
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)

@@ -636,14 +636,16 @@ namespace RTC
 			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
 				break;
 
+			MS_ASSERT(
+			  this->healthyProfiles.find(profile) == this->healthyProfiles.end(),
+			  "profile already in headltyProfiles set");
+
 			// Add the profile to the healthy profiles set.
-			const auto& result  = this->healthyProfiles.insert(profile);
-			bool profileExisted = !result.second;
-			MS_ASSERT(!profileExisted, "profile already in headltyProfiles set");
+			this->healthyProfiles[profile] = rtpStream;
 
 			for (auto& listener : this->listeners)
 			{
-				listener->OnProducerProfileEnabled(this, profile);
+				listener->OnProducerProfileEnabled(this, profile, rtpStream);
 			}
 		}
 	}
@@ -659,10 +661,12 @@ namespace RTC
 			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
 				break;
 
+			MS_ASSERT(
+			  this->healthyProfiles.find(profile) != this->healthyProfiles.end(),
+			  "profile already in headltyProfiles set");
+
 			// Remove the profile from the healthy profiles set.
-			auto result         = this->healthyProfiles.erase(profile);
-			bool profileExisted = (result == 1);
-			MS_ASSERT(profileExisted, "profile not present in headltyProfiles set");
+			this->healthyProfiles.erase(profile);
 
 			for (auto& listener : this->listeners)
 			{

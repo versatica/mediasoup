@@ -49,6 +49,7 @@ namespace RTC
 		static const Json::StaticString JsonStringRtt{ "rtt" };
 		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
 		static const Json::StaticString JsonStringTotalLost{ "totalLost" };
+		static const Json::StaticString JsonStringHealthy{ "healthy" };
 
 		Json::Value json(Json::objectValue);
 
@@ -62,6 +63,7 @@ namespace RTC
 		json[JsonStringRtt]          = Json::UInt{ this->rtt };
 		json[JsonStringFractionLost] = Json::UInt{ this->fractionLost };
 		json[JsonStringTotalLost]    = Json::UInt{ this->totalLost };
+		json[JsonStringHealthy]      = this->healthy ? "true" : "false";
 
 		return json;
 	}
@@ -113,6 +115,13 @@ namespace RTC
 	uint32_t RtpStream::GetRate(uint64_t now)
 	{
 		return this->counter.GetRate(now);
+	}
+
+	void RtpStream::ResetHealthCheckTimer()
+	{
+		// Notify about next health status.
+		this->notifyHealth = true;
+		this->healthCheckTimer->Start(HealthCheckPeriod, HealthCheckPeriod);
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)

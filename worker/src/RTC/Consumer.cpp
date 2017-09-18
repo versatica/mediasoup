@@ -14,6 +14,8 @@ namespace RTC
 {
 	/* Static. */
 
+	static constexpr uint16_t RtpPacketsBeforeProbation{ 2000 };
+
 	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
 
 	/* Instance methods. */
@@ -133,7 +135,10 @@ namespace RTC
 		MS_DEBUG_DEV("Consumer paused [consumerId:%" PRIu32 "]", this->consumerId);
 
 		if (IsEnabled() && !this->sourcePaused)
+		{
 			this->rtpStream->ClearRetransmissionBuffer();
+			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
+		}
 	}
 
 	void Consumer::Resume()
@@ -165,7 +170,10 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourcepaused");
 
 		if (IsEnabled() && !this->paused)
+		{
 			this->rtpStream->ClearRetransmissionBuffer();
+			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
+		}
 	}
 
 	void Consumer::SourceResume()
@@ -195,7 +203,8 @@ namespace RTC
 		this->syncRequired = true;
 	}
 
-	void Consumer::AddProfile(const RTC::RtpEncodingParameters::Profile profile)
+	void Consumer::AddProfile(
+	  const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStreamInfo* info)
 	{
 		MS_ASSERT(
 		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
@@ -204,13 +213,15 @@ namespace RTC
 
 		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile already exists");
 
-		// Insert profile.
+		// Insert the new profile.
+		this->mapProfileRtpStreamInfo[profile] = info;
 		this->profiles.insert(profile);
 
 		MS_DEBUG_TAG(
 		  rtp, "profile added [profile:%s]", RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		RecalculateTargetProfile();
+		if (profile > this->targetProfile)
+			RecalculateTargetProfile();
 	}
 
 	void Consumer::RemoveProfile(const RTC::RtpEncodingParameters::Profile profile)
@@ -222,19 +233,53 @@ namespace RTC
 
 		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile not found");
 
-		// Remove profile.
+		// Remove the profile.
+		this->mapProfileRtpStreamInfo.erase(profile);
 		this->profiles.erase(profile);
-
-		// If it was our effective profile, set it to none.
-		if (this->effectiveProfile == profile)
-			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 
 		MS_DEBUG_TAG(
 		  rtp,
 		  "profile removed [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		RecalculateTargetProfile();
+		if (this->profiles.empty())
+		{
+			RecalculateTargetProfile();
+		}
+		// If there is an ongoing probation for this profile, disable it.
+		else if (this->isProbing && this->probingProfile == profile)
+		{
+			// Disable probation flag.
+			this->isProbing      = false;
+			this->probingProfile = RtpEncodingParameters::Profile::NONE;
+
+			// Reset the health check timer so this probation doesn't affect the effective profile.
+			this->rtpStream->ResetHealthCheckTimer();
+
+			return;
+		}
+		// If it is the effective profile, try to downgrade, or upgrade it to the next higher profile if the removed profile was lower than other existing ones.
+		else if (this->effectiveProfile == profile)
+		{
+			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
+
+			auto it               = this->profiles.begin();
+			auto newTargetProfile = *it;
+
+			while (++it != this->profiles.end())
+			{
+				auto candidateTargetProfile = *it;
+
+				if (candidateTargetProfile < profile)
+					newTargetProfile = candidateTargetProfile;
+				else
+					break;
+			}
+
+			this->targetProfile = newTargetProfile;
+
+			return;
+		}
 	}
 
 	void Consumer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
@@ -251,7 +296,7 @@ namespace RTC
 		  "preferred profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		RecalculateTargetProfile();
+		RecalculateTargetProfile(true /*forcePreferred*/);
 	}
 
 	/**
@@ -401,6 +446,20 @@ namespace RTC
 		{
 			// Send the packet.
 			this->transport->SendRtpPacket(packet);
+
+			// Send a fake RTP packet if probing.
+			if (this->isProbing)
+			{
+				packet->SetSsrc(0xFFFF);
+
+				// TODO: Remove log.
+				MS_DEBUG_TAG(rtp, " probation..., sending fake rtp packet");
+
+				// Send the packet.
+				this->transport->SendRtpPacket(packet);
+
+				// TODO: Update transmitted RTP data counter.
+			}
 		}
 		else
 		{
@@ -428,6 +487,13 @@ namespace RTC
 		// Restore the original payload if needed.
 		if (this->encodingContext)
 			packet->RestorePayload();
+
+		// Run probation if needed.
+		if (this->kind == RTC::Media::Kind::VIDEO && --this->rtpPacketsBeforeProbation == 0)
+		{
+			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
+			MayRunProbation();
+		}
 	}
 
 	void Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
@@ -512,19 +578,119 @@ namespace RTC
 		}
 	}
 
-	void Consumer::OnRtpStreamDied(RtpStream* /*stream*/)
+	void Consumer::OnRtpStreamDied(RtpStream* stream)
 	{
 		MS_TRACE();
+
+		OnRtpStreamUnhealthy(stream);
 	}
 
 	void Consumer::OnRtpStreamHealthy(RtpStream* /*stream*/)
 	{
 		MS_TRACE();
+
+		if (!this->isProbing)
+			return;
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "successful probation [profile:%s]",
+		  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
+
+		// Promote probing profile.
+		this->targetProfile = this->probingProfile;
+
+		// Disable probation flag.
+		this->isProbing      = false;
+		this->probingProfile = RtpEncodingParameters::Profile::NONE;
+
+		if (IsEnabled() && !IsPaused())
+			RequestKeyFrame();
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "target profile set [profile:%s]",
+		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
 	}
 
 	void Consumer::OnRtpStreamUnhealthy(RtpStream* /*stream*/)
 	{
 		MS_TRACE();
+
+		// Probation failed.
+		if (this->isProbing)
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "unsuccessful probation [profile:%s]",
+			  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
+
+			// Disable probation flag.
+			this->isProbing      = false;
+			this->probingProfile = RtpEncodingParameters::Profile::NONE;
+
+			return;
+		}
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "effective profile unhealthy [profile:%s]",
+		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
+
+		// No simulcast/SVC.
+		if (this->effectiveProfile == RtpEncodingParameters::Profile::DEFAULT)
+		{
+			// TODO: Notify the user.
+			MS_WARN_TAG(rtp, "unhealthy rtp stream");
+
+			return;
+		}
+
+		auto it = this->profiles.find(this->effectiveProfile);
+
+		// This is already the lowest profile.
+		if (it == this->profiles.begin())
+		{
+			// TODO: Notify the user.
+			MS_WARN_TAG(rtp, "no healthy profile to serve");
+
+			return;
+		}
+
+		// Downgrade the target profile.
+		this->targetProfile = *(std::prev(it));
+
+		if (IsEnabled() && !IsPaused())
+			RequestKeyFrame();
+
+		// We want to be notified about this new profile's health.
+		this->rtpStream->ResetHealthCheckTimer();
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "target profile set [profile:%s]",
+		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
+	}
+
+	void Consumer::MayRunProbation()
+	{
+		// No simulcast or SVC.
+		if (this->profiles.empty())
+			return;
+
+		// There is an ongoing profile upgrade. Do not interfere.
+		if (this->effectiveProfile != this->targetProfile)
+			return;
+
+		// Ongoing probation.
+		if (this->isProbing)
+			return;
+
+		// Current health status is not good.
+		if (!this->rtpStream->IsHealthy())
+			return;
+
+		RecalculateTargetProfile();
 	}
 
 	void Consumer::FillSupportedCodecPayloadTypes()
@@ -575,9 +741,9 @@ namespace RTC
 
 		// Create a RtpStreamSend for sending a single media stream.
 		if (useNack)
-			this->rtpStream = new RTC::RtpStreamSend(params, 1500);
+			this->rtpStream = new RTC::RtpStreamSend(this, params, 1500);
 		else
-			this->rtpStream = new RTC::RtpStreamSend(params, 0);
+			this->rtpStream = new RTC::RtpStreamSend(this, params, 0);
 
 		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
 		{
@@ -632,7 +798,7 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	void Consumer::RecalculateTargetProfile()
+	void Consumer::RecalculateTargetProfile(bool forcePreferred)
 	{
 		MS_TRACE();
 
@@ -652,32 +818,89 @@ namespace RTC
 			else
 				newTargetProfile = RtpEncodingParameters::Profile::DEFAULT;
 		}
-		// If there is no preferred profile, take the best one available.
+		// If there is no preferred profile, try the next higher profile.
 		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+		{
+			newTargetProfile = this->effectiveProfile;
+			auto it          = this->profiles.upper_bound(this->effectiveProfile);
+
+			if (it != this->profiles.end())
+				newTargetProfile = *it;
+		}
+		// If the preferred profile is forced, try with the closest profile to it.
+		else if (forcePreferred)
 		{
 			auto it          = this->profiles.crbegin();
 			newTargetProfile = *it;
-		}
-		// Otherwise take the highest available profile equal or lower than the preferred.
-		else
-		{
-			std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
 
-			newTargetProfile = RtpEncodingParameters::Profile::NONE;
-
-			for (it = this->profiles.rbegin(); it != this->profiles.rend(); ++it)
+			for (; it != this->profiles.crend(); ++it)
 			{
 				auto profile = *it;
 
 				if (profile <= this->preferredProfile)
 				{
-					newTargetProfile = *it;
+					newTargetProfile = profile;
 					break;
 				}
 			}
 		}
+		// Try with the next higher profile which is lower or equal to the preferred.
+		else
+		{
+			newTargetProfile = this->effectiveProfile;
+			auto it          = this->profiles.upper_bound(this->effectiveProfile);
 
-		this->targetProfile = newTargetProfile;
+			if (it != this->profiles.end() && *it <= this->preferredProfile)
+				newTargetProfile = *it;
+		}
+
+		// Ongoing probation.
+		if (this->isProbing)
+		{
+			// New profile higher or equal than the one being probed. Do not upgrade.
+			if (newTargetProfile >= this->probingProfile)
+			{
+				return;
+			}
+			// New profile lower than the one begin probed. Stop probation.
+			else
+			{
+				this->isProbing      = false;
+				this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
+				this->targetProfile  = newTargetProfile;
+			}
+		}
+		// New profile is higher than current target.
+		else if (newTargetProfile > this->targetProfile)
+		{
+			// No specific profile is being sent.
+			if (
+			  this->targetProfile == RTC::RtpEncodingParameters::Profile::NONE ||
+			  this->targetProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+			{
+				this->targetProfile = newTargetProfile;
+			}
+			// Probe it before promotion.
+			// TODO: If we are receiving REMB, consider such value and avoid probation.
+			else
+			{
+				this->isProbing      = true;
+				this->probingProfile = newTargetProfile;
+				this->rtpStream->ResetHealthCheckTimer();
+
+				MS_DEBUG_TAG(
+						rtp,
+						"probing profile [%s]",
+						RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
+
+				return;
+			}
+		}
+		// New profile is lower than the targe profile.
+		else
+		{
+			this->targetProfile = newTargetProfile;
+		}
 
 		if (this->targetProfile == this->effectiveProfile)
 			return;

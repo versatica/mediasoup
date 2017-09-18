@@ -9,6 +9,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #include <cmath> // std::lround()
+#include <map>
 #include <set>
 #include <string>
 
@@ -511,14 +512,15 @@ namespace RTC
 				// Add us as listener.
 				consumer->AddListener(this);
 
-				auto profiles = producer->GetHealthyProfiles();
-				std::set<RtpEncodingParameters::Profile>::reverse_iterator it;
+				auto healthyProfiles = producer->GetHealthyProfiles();
+				std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStreamInfo*>::reverse_iterator it;
 
-				for (it = profiles.rbegin(); it != profiles.rend(); ++it)
+				for (it = healthyProfiles.rbegin(); it != healthyProfiles.rend(); ++it)
 				{
-					auto profile = *it;
+					auto profile = it->first;
+					auto info    = it->second;
 
-					consumer->AddProfile(profile);
+					consumer->AddProfile(profile, info);
 				}
 
 				// Insert into the maps.
@@ -1530,7 +1532,7 @@ namespace RTC
 	}
 
 	void Router::OnProducerProfileEnabled(
-	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStreamInfo* info)
 	{
 		MS_TRACE();
 
@@ -1542,7 +1544,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->AddProfile(profile);
+			consumer->AddProfile(profile, info);
 		}
 	}
 

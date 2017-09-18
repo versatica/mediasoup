@@ -542,7 +542,9 @@ namespace RTC
 	}
 
 	void Transport::OnProducerProfileEnabled(
-	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
+	  RTC::Producer* /*producer*/,
+	  RTC::RtpEncodingParameters::Profile /*profile*/,
+	  const RTC::RtpStreamInfo* /*info*/)
 	{
 		// Do nothing.
 	}
