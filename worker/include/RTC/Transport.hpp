@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
-#include "Channel/Request.hpp"
 #include "RTC/ConsumerListener.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"

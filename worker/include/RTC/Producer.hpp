@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
-#include "Channel/Request.hpp"
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Feedback.hpp"
