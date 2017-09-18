@@ -575,30 +575,6 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
-	void Transport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
-	{
-		MS_TRACE();
-
-		if (!IsConnected())
-			return;
-
-		// Ensure there is sending SRTP session.
-		if (this->srtpSendSession == nullptr)
-		{
-			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
-
-			return;
-		}
-
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
-
-		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
-			return;
-
-		this->selectedTuple->Send(data, len);
-	}
-
 	inline void Transport::MayRunDtlsTransport()
 	{
 		MS_TRACE();
@@ -918,6 +894,7 @@ namespace RTC
 
 				packet->Serialize(RTC::RTCP::Buffer);
 				SendRtcpCompoundPacket(packet.get());
+
 				// Reset the Compound packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
 			}
@@ -942,6 +919,30 @@ namespace RTC
 			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}
+	}
+
+	void Transport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+			return;
+
+		// Ensure there is sending SRTP session.
+		if (this->srtpSendSession == nullptr)
+		{
+			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
+
+			return;
+		}
+
+		const uint8_t* data = packet->GetData();
+		size_t len          = packet->GetSize();
+
+		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
+
+		this->selectedTuple->Send(data, len);
 	}
 
 	inline RTC::Consumer* Transport::GetConsumer(uint32_t ssrc) const

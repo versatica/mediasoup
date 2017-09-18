@@ -93,12 +93,12 @@ namespace RTC
 		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void SendRtcpPacket(RTC::RTCP::Packet* packet);
-		void SendRtcp(uint64_t now);
 
 	private:
 		bool IsConnected() const;
 		void MayRunDtlsTransport();
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
+		void SendRtcp(uint64_t now);
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet);
 		RTC::Consumer* GetConsumer(uint32_t ssrc) const;
 
