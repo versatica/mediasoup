@@ -1120,18 +1120,6 @@ namespace RTC
 			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
 		}
 
-		// TODO: test getting RID.
-
-		// const uint8_t* rid;
-		// size_t ridLen;
-
-		// if (packet->ReadRid(&rid, &ridLen))
-		// {
-		// 	std::string ridStr((const char*)rid, ridLen);
-
-		// 	MS_ERROR("---------- HABEMUS RID !!!: %s", ridStr.c_str());
-		// }
-
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
 
