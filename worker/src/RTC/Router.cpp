@@ -1078,6 +1078,28 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			{
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				consumer->RequestKeyFrame();
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				MS_ERROR("unknown method");

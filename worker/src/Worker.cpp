@@ -258,6 +258,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		case Channel::Request::MethodId::CONSUMER_PAUSE:
 		case Channel::Request::MethodId::CONSUMER_RESUME:
 		case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_PROFILE:
+		case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 		{
 			RTC::Router* router;
 
