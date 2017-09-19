@@ -209,6 +209,8 @@ namespace RTC
 		enum class Profile : uint8_t
 		{
 			NONE = 0,
+			CURRENT,
+			ALL,
 			DEFAULT,
 			LOW,
 			MEDIUM,

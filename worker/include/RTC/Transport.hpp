@@ -9,6 +9,7 @@
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "handles/Timer.hpp"
@@ -85,7 +86,8 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::ConsumerListener. */
 	public:
 		void OnConsumerClosed(RTC::Consumer* consumer) override;
-		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer) override;
+		void OnConsumerKeyFrameRequired(
+		  RTC::Consumer* consumer, RTC::RtpEncodingParameters::Profile profile) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

@@ -8,7 +8,6 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RtpDictionaries.hpp"
 
 /* Consts. */
 
@@ -112,7 +111,7 @@ namespace RTC
 				  rtcp, rtx, "requesting key frame for new Consumer since Transport already connected");
 			}
 
-			consumer->RequestKeyFrame();
+			consumer->RequestKeyFrame(RTC::RtpEncodingParameters::Profile::ALL);
 		}
 	}
 
@@ -490,7 +489,8 @@ namespace RTC
 		this->consumers.erase(consumer);
 	}
 
-	void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* /*consumer*/)
+	void Transport::OnConsumerKeyFrameRequired(
+	  RTC::Consumer* /*consumer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
 	{
 		// Do nothing.
 	}

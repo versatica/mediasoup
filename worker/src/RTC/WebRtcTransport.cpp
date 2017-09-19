@@ -10,7 +10,6 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
@@ -1007,7 +1006,7 @@ namespace RTC
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
 				MS_DEBUG_2TAGS(rtcp, rtx, "Transport connected, requesting key frame for Consumers");
 
-			consumer->RequestKeyFrame();
+			consumer->RequestKeyFrame(RTC::RtpEncodingParameters::Profile::ALL);
 		}
 	}
 
@@ -1127,7 +1126,7 @@ namespace RTC
 				// Request key frame for all the Producers.
 				for (auto* producer : this->producers)
 				{
-					producer->RequestKeyFrame();
+					producer->RequestKeyFrame(RTC::RtpEncodingParameters::Profile::ALL);
 				}
 			}
 

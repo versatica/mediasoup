@@ -171,7 +171,7 @@ namespace RTC
 
 		MS_DEBUG_2TAGS(rtcp, rtx, "requesting full frame after resumed");
 
-		RequestKeyFrame(true);
+		RequestKeyFrame(RTC::RtpEncodingParameters::Profile::ALL, true);
 	}
 
 	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
@@ -301,7 +301,7 @@ namespace RTC
 		this->transport->SendRtcpPacket(packet);
 	}
 
-	void Producer::RequestKeyFrame(bool force)
+	void Producer::RequestKeyFrame(RTC::RtpEncodingParameters::Profile profile, bool force)
 	{
 		MS_TRACE();
 
@@ -326,11 +326,15 @@ namespace RTC
 		// Run the timer.
 		this->keyFrameRequestBlockTimer->Start(KeyFrameRequestBlockTimeout);
 
-		for (auto& kv : this->rtpStreams)
+		for (auto& kv : this->mapRtpStreamProfiles)
 		{
-			auto rtpStream = kv.second;
+			auto* rtpStream      = kv.first;
+			auto& streamProfiles = kv.second;
 
-			rtpStream->RequestKeyFrame();
+			if (profile == RTC::RtpEncodingParameters::Profile::ALL)
+				rtpStream->RequestKeyFrame();
+			else if (streamProfiles.find(profile) != streamProfiles.end())
+				rtpStream->RequestKeyFrame();
 		}
 
 		// Reset flag.
@@ -509,7 +513,7 @@ namespace RTC
 		AddHealthyProfiles(rtpStream);
 
 		// Request a key frame since we may have lost the first packets of this stream.
-		RequestKeyFrame(true);
+		RequestKeyFrame(RTC::RtpEncodingParameters::Profile::ALL, true);
 	}
 
 	void Producer::ClearRtpStream(RTC::RtpStreamRecv* rtpStream)
@@ -792,9 +796,11 @@ namespace RTC
 			if (!this->isKeyFrameRequested)
 				return;
 
+			MS_ASSERT(!this->keyFrameRequestBlockTimer->IsActive(), "timer is still active");
+
 			MS_DEBUG_2TAGS(rtcp, rtx, "key frame requested during flood protection, requesting it now");
 
-			RequestKeyFrame();
+			RequestKeyFrame(RTC::RtpEncodingParameters::Profile::ALL);
 		}
 	}
 } // namespace RTC

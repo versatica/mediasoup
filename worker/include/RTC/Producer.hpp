@@ -68,7 +68,7 @@ namespace RTC
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
-		void RequestKeyFrame(bool force = false);
+		void RequestKeyFrame(RTC::RtpEncodingParameters::Profile profile, bool force = false);
 		const std::set<RTC::RtpEncodingParameters::Profile>& GetHealthyProfiles() const;
 
 	private:

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_CONSUMER_LISTENER_HPP
 #define MS_RTC_CONSUMER_LISTENER_HPP
 
+#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 
 namespace RTC
@@ -12,8 +13,9 @@ namespace RTC
 	class ConsumerListener
 	{
 	public:
-		virtual void OnConsumerClosed(RTC::Consumer* consumer)           = 0;
-		virtual void OnConsumerKeyFrameRequired(RTC::Consumer* consumer) = 0;
+		virtual void OnConsumerClosed(RTC::Consumer* consumer) = 0;
+		virtual void OnConsumerKeyFrameRequired(
+		  RTC::Consumer* consumer, RTC::RtpEncodingParameters::Profile profile) = 0;
 	};
 } // namespace RTC
 
