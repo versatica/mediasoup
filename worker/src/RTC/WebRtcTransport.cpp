@@ -179,6 +179,9 @@ namespace RTC
 
 		// Set remote bitrate estimator.
 		this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
+
+		// Start the RTCP timer.
+		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	WebRtcTransport::~WebRtcTransport()

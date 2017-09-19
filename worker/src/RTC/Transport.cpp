@@ -23,9 +23,6 @@ namespace RTC
 
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
-
-		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	Transport::~Transport()
