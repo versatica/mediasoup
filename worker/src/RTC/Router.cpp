@@ -6,7 +6,6 @@
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
 #include "RTC/PlainRtpTransport.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #include <cmath> // std::lround()
 #include <set>
@@ -1501,7 +1500,8 @@ namespace RTC
 		this->mapConsumerProducer.erase(consumer);
 	}
 
-	void Router::OnConsumerKeyFrameRequired(RTC::Consumer* consumer)
+	void Router::OnConsumerKeyFrameRequired(
+	  RTC::Consumer* consumer, RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
 
@@ -1511,7 +1511,7 @@ namespace RTC
 
 		auto* producer = this->mapConsumerProducer[consumer];
 
-		producer->RequestKeyFrame();
+		producer->RequestKeyFrame(profile);
 	}
 
 	inline void Router::OnTimer(Timer* timer)

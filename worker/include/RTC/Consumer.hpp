@@ -54,7 +54,8 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetTransmissionRate(uint64_t now);
-		void RequestKeyFrame();
+		void RequestKeyFrame(
+		  RTC::RtpEncodingParameters::Profile profile = RTC::RtpEncodingParameters::Profile::CURRENT);
 
 	private:
 		void FillSupportedCodecPayloadTypes();

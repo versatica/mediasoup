@@ -528,7 +528,7 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	void Consumer::RequestKeyFrame()
+	void Consumer::RequestKeyFrame(RTC::RtpEncodingParameters::Profile profile)
 	{
 		MS_TRACE();
 
@@ -538,9 +538,36 @@ namespace RTC
 		if (this->kind == RTC::Media::Kind::AUDIO || IsPaused())
 			return;
 
+		// If profile is 'none' do nothing.
+		if (profile == RTC::RtpEncodingParameters::Profile::NONE)
+			return;
+
+		// If profile is 'current' (default value) chose a profile.
+		if (profile == RTC::RtpEncodingParameters::Profile::CURRENT)
+		{
+			// If the effective profile is not 'none' request a key frame for it.
+			if (this->effectiveProfile != RTC::RtpEncodingParameters::Profile::NONE)
+			{
+				profile = this->effectiveProfile;
+			}
+			// Otherwise, ask a key frame for the target profile (unless also 'none').
+			else if (this->targetProfile != RTC::RtpEncodingParameters::Profile::NONE)
+			{
+				profile = this->targetProfile;
+			}
+			// If 'none', do nothing.
+			else
+			{
+				return;
+			}
+		}
+
+		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::NONE, "profile cannot be NONE");
+		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::CURRENT, "profile cannot be CURRENT");
+
 		for (auto& listener : this->listeners)
 		{
-			listener->OnConsumerKeyFrameRequired(this);
+			listener->OnConsumerKeyFrameRequired(this, profile);
 		}
 	}
 
@@ -713,7 +740,7 @@ namespace RTC
 			return;
 
 		if (IsEnabled() && !IsPaused())
-			RequestKeyFrame();
+			RequestKeyFrame(this->targetProfile);
 
 		MS_DEBUG_TAG(
 		  rtp,
