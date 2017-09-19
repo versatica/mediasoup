@@ -36,7 +36,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 			this->seqNumbers = seqNumbers;
 		}
 
-		virtual void OnRtpStreamRecvPliRequired(RtpStreamRecv* rtpStream, RTC::RtpEncodingParameters::Profile profile) override
+		virtual void OnRtpStreamRecvPliRequired(RtpStreamRecv* rtpStream) override
 		{
 			INFO("PLI required");
 
