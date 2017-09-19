@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include "RTC/PlainRtpTransport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #include <cmath> // std::lround()
@@ -229,6 +230,61 @@ namespace RTC
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%" PRIu32 "]", transportId);
 
 				auto data = webrtcTransport->ToJson();
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT:
+			{
+				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
+				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
+
+				uint32_t transportId;
+
+				try
+				{
+					transportId = GetNewTransportIdFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				RTC::PlainRtpTransport::TransportOptions options;
+
+				if (!request->data[JsonStringRemoteIP].isString())
+					MS_THROW_ERROR("missing remoteIP");
+
+				options.remoteIP = request->data[JsonStringRemoteIP].asString();
+
+				if (!request->data[JsonStringRemotePort].isUInt())
+					MS_THROW_ERROR("missing remotePort");
+				options.remotePort = request->data[JsonStringRemotePort].asUInt();
+
+				RTC::PlainRtpTransport* plainRtpTransport;
+
+				try
+				{
+					// NOTE: This may throw.
+					plainRtpTransport = new RTC::PlainRtpTransport(this, this->notifier, transportId, options);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Insert into the map.
+				this->transports[transportId] = plainRtpTransport;
+
+				MS_DEBUG_DEV("PlainRtpTransport created [transportId:%" PRIu32 "]", transportId);
+
+				auto data = plainRtpTransport->ToJson();
 
 				request->Accept(data);
 

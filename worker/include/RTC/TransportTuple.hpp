@@ -35,9 +35,9 @@ namespace RTC
 		// Passed by argument.
 		RTC::UdpSocket* udpSocket{ nullptr };
 		struct sockaddr* udpRemoteAddr{ nullptr };
-		sockaddr_storage udpRemoteAddrStorage;
 		RTC::TcpConnection* tcpConnection{ nullptr };
 		// Others.
+		struct sockaddr_storage udpRemoteAddrStorage;
 		Protocol protocol;
 	};
 
