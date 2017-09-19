@@ -6,6 +6,7 @@
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/WebRtcTransport.hpp"
 #include <cmath> // std::lround()
 #include <set>
 #include <string>
@@ -171,7 +172,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_TRANSPORT:
+			case Channel::Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
 			{
 				static const Json::StaticString JsonStringUdp{ "udp" };
 				static const Json::StaticString JsonStringTcp{ "tcp" };
@@ -193,7 +194,7 @@ namespace RTC
 					return;
 				}
 
-				RTC::Transport::TransportOptions options;
+				RTC::WebRtcTransport::TransportOptions options;
 
 				if (request->data[JsonStringUdp].isBool())
 					options.udp = request->data[JsonStringUdp].asBool();
@@ -208,12 +209,12 @@ namespace RTC
 				if (request->data[JsonStringPreferTcp].isBool())
 					options.preferTcp = request->data[JsonStringPreferTcp].asBool();
 
-				RTC::Transport* transport;
+				RTC::WebRtcTransport* webrtcTransport;
 
 				try
 				{
 					// NOTE: This may throw.
-					transport = new RTC::Transport(this, this->notifier, transportId, options);
+					webrtcTransport = new RTC::WebRtcTransport(this, this->notifier, transportId, options);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -223,11 +224,11 @@ namespace RTC
 				}
 
 				// Insert into the map.
-				this->transports[transportId] = transport;
+				this->transports[transportId] = webrtcTransport;
 
-				MS_DEBUG_DEV("Transport created [transportId:%" PRIu32 "]", transportId);
+				MS_DEBUG_DEV("WebRtcTransport created [transportId:%" PRIu32 "]", transportId);
 
-				auto data = transport->ToJson();
+				auto data = webrtcTransport->ToJson();
 
 				request->Accept(data);
 
@@ -632,8 +633,10 @@ namespace RTC
 
 				try
 				{
+					auto* webrtcTransport = dynamic_cast<RTC::WebRtcTransport*>(transport);
+
 					// This may throw.
-					localRole = transport->SetRemoteDtlsParameters(remoteFingerprint, remoteRole);
+					localRole = webrtcTransport->SetRemoteDtlsParameters(remoteFingerprint, remoteRole);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -695,7 +698,9 @@ namespace RTC
 
 				auto bitrate = uint32_t{ request->data[JsonStringBitrate].asUInt() };
 
-				transport->SetMaxBitrate(bitrate);
+				auto* webrtcTransport = dynamic_cast<RTC::WebRtcTransport*>(transport);
+
+				webrtcTransport->SetMaxBitrate(bitrate);
 
 				request->Accept();
 
@@ -723,7 +728,9 @@ namespace RTC
 				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
 				std::string password         = Utils::Crypto::GetRandomString(32);
 
-				transport->ChangeUfragPwd(usernameFragment, password);
+				auto* webrtcTransport = dynamic_cast<RTC::WebRtcTransport*>(transport);
+
+				webrtcTransport->ChangeUfragPwd(usernameFragment, password);
 
 				Json::Value data(Json::objectValue);
 

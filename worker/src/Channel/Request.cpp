@@ -17,7 +17,7 @@ namespace Channel
 		{ "worker.createRouter",               Request::MethodId::WORKER_CREATE_ROUTER                 },
 		{ "router.close",                      Request::MethodId::ROUTER_CLOSE                         },
 		{ "router.dump",                       Request::MethodId::ROUTER_DUMP                          },
-		{ "router.createTransport",            Request::MethodId::ROUTER_CREATE_TRANSPORT              },
+		{ "router.createWebRtcTransport",      Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT       },
 		{ "router.createProducer",             Request::MethodId::ROUTER_CREATE_PRODUCER               },
 		{ "router.createConsumer",             Request::MethodId::ROUTER_CREATE_CONSUMER               },
 		{ "router.setAudioLevelsEvent",        Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT        },

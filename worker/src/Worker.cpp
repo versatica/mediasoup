@@ -238,7 +238,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		}
 
 		case Channel::Request::MethodId::ROUTER_DUMP:
-		case Channel::Request::MethodId::ROUTER_CREATE_TRANSPORT:
+		case Channel::Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
 		case Channel::Request::MethodId::ROUTER_CREATE_PRODUCER:
 		case Channel::Request::MethodId::ROUTER_CREATE_CONSUMER:
 		case Channel::Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT:
