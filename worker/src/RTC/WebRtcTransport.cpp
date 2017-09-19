@@ -15,32 +15,27 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
-/* Consts. */
-
-static constexpr uint16_t IceCandidateDefaultLocalPriority{ 20000 };
-static constexpr uint16_t IceCandidateLocalPriorityPreferFamilyIncrement{ 10000 };
-static constexpr uint16_t IceCandidateLocalPriorityPreferProtocolIncrement{ 5000 };
-// We just provide "host" candidates so type preference is fixed.
-static constexpr uint16_t IceTypePreference{ 64 };
-// We do not support non rtcp-mux so component is always 1.
-static constexpr uint16_t IceComponent{ 1 };
-
-/* Static helpers. */
-
-static inline uint32_t generateIceCandidatePriority(uint16_t localPreference)
-{
-	MS_TRACE();
-
-	return std::pow(2, 24) * IceTypePreference + std::pow(2, 8) * localPreference +
-	       std::pow(2, 0) * (256 - IceComponent);
-}
-
 namespace RTC
 {
 	/* Static. */
 
+	static constexpr uint16_t IceCandidateDefaultLocalPriority{ 20000 };
+	static constexpr uint16_t IceCandidateLocalPriorityPreferFamilyIncrement{ 10000 };
+	static constexpr uint16_t IceCandidateLocalPriorityPreferProtocolIncrement{ 5000 };
+	// We just provide "host" candidates so type preference is fixed.
+	static constexpr uint16_t IceTypePreference{ 64 };
+	// We do not support non rtcp-mux so component is always 1.
+	static constexpr uint16_t IceComponent{ 1 };
 	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{ 2000 };        // In ms.
 	static constexpr double EffectiveMaxBitrateThresholdBeforeKeyFrame{ 0.6 }; // 0.0 - 1.0.
+
+	static inline uint32_t generateIceCandidatePriority(uint16_t localPreference)
+	{
+		MS_TRACE();
+
+		return std::pow(2, 24) * IceTypePreference + std::pow(2, 8) * localPreference +
+		       std::pow(2, 0) * (256 - IceComponent);
+	}
 
 	/* Instance methods. */
 
@@ -76,7 +71,7 @@ namespace RTC
 
 			try
 			{
-				auto udpSocket = new RTC::UdpSocket(this, AF_INET);
+				auto* udpSocket = new RTC::UdpSocket(this, AF_INET);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
@@ -102,7 +97,7 @@ namespace RTC
 
 			try
 			{
-				auto udpSocket = new RTC::UdpSocket(this, AF_INET6);
+				auto* udpSocket = new RTC::UdpSocket(this, AF_INET6);
 				RTC::IceCandidate iceCandidate(udpSocket, priority);
 
 				this->udpSockets.push_back(udpSocket);
@@ -128,7 +123,7 @@ namespace RTC
 
 			try
 			{
-				auto tcpServer = new RTC::TcpServer(this, this, AF_INET);
+				auto* tcpServer = new RTC::TcpServer(this, this, AF_INET);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
@@ -154,7 +149,7 @@ namespace RTC
 
 			try
 			{
-				auto tcpServer = new RTC::TcpServer(this, this, AF_INET6);
+				auto* tcpServer = new RTC::TcpServer(this, this, AF_INET6);
 				RTC::IceCandidate iceCandidate(tcpServer, priority);
 
 				this->tcpServers.push_back(tcpServer);
@@ -200,13 +195,13 @@ namespace RTC
 		if (this->iceServer != nullptr)
 			this->iceServer->Destroy();
 
-		for (auto socket : this->udpSockets)
+		for (auto* socket : this->udpSockets)
 		{
 			socket->Destroy();
 		}
 		this->udpSockets.clear();
 
-		for (auto server : this->tcpServers)
+		for (auto* server : this->tcpServers)
 		{
 			server->Destroy();
 		}
