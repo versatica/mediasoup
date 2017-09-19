@@ -14,6 +14,18 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		public RtpStreamRecv::Listener
 	{
 	public:
+		virtual void OnRtpStreamDied(RTC::RtpStream* rtpStream) override
+		{
+		}
+
+		virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override
+		{
+		}
+
+		virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override
+		{
+		}
+
 		virtual void OnRtpStreamRecvNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override
 		{
 			INFO("NACK required");
@@ -32,10 +44,6 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 
 			this->shouldTriggerKeyFrame = false;
 			this->seqNumbers.clear();
-		}
-
-		void OnRtpStreamHealthReport(RTC::RtpStream* rtpStream, bool healthy) override
-		{
 		}
 
 	public:
