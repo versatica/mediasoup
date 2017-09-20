@@ -14,7 +14,7 @@ namespace RTC
 	class PlainRtpTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
 	public:
-		struct TransportOptions
+		struct Options
 		{
 			std::string remoteIP;
 			uint16_t remotePort;
@@ -25,7 +25,7 @@ namespace RTC
 		  RTC::Transport::Listener* listener,
 		  Channel::Notifier* notifier,
 		  uint32_t transportId,
-		  TransportOptions& options);
+		  Options& options);
 
 	private:
 		~PlainRtpTransport();

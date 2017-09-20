@@ -29,7 +29,7 @@ namespace RTC
 	                        public RTC::RemoteBitrateEstimator::Listener
 	{
 	public:
-		struct TransportOptions
+		struct Options
 		{
 			bool udp{ true };
 			bool tcp{ true };
@@ -44,7 +44,7 @@ namespace RTC
 		  RTC::Transport::Listener* listener,
 		  Channel::Notifier* notifier,
 		  uint32_t transportId,
-		  TransportOptions& options);
+		  Options& options);
 
 	private:
 		~WebRtcTransport();

@@ -43,7 +43,7 @@ namespace RTC
 	  RTC::Transport::Listener* listener,
 	  Channel::Notifier* notifier,
 	  uint32_t transportId,
-	  TransportOptions& options)
+	  Options& options)
 	  : RTC::Transport::Transport(listener, notifier, transportId)
 	{
 		MS_TRACE();

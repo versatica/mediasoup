@@ -195,7 +195,7 @@ namespace RTC
 					return;
 				}
 
-				RTC::WebRtcTransport::TransportOptions options;
+				RTC::WebRtcTransport::Options options;
 
 				if (request->data[JsonStringUdp].isBool())
 					options.udp = request->data[JsonStringUdp].asBool();
@@ -254,7 +254,7 @@ namespace RTC
 					return;
 				}
 
-				RTC::PlainRtpTransport::TransportOptions options;
+				RTC::PlainRtpTransport::Options options;
 
 				if (!request->data[JsonStringRemoteIP].isString())
 					MS_THROW_ERROR("missing remoteIP");
