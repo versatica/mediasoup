@@ -383,9 +383,6 @@ namespace RTC
 		// Clone seq32.
 		packet->seq32 = this->seq32;
 
-		// Copy isKeyFrame.
-		packet->isKeyFrame = this->isKeyFrame;
-
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
 
@@ -467,6 +464,22 @@ namespace RTC
 		}
 
 		return true;
+	}
+
+	void RtpPacket::EncodePayload(RTC::Codecs::EncodingContext* context)
+	{
+		if (!this->payloadDescriptorHandler)
+			return;
+
+		this->payloadDescriptorHandler->Encode(context, this->payload);
+	}
+
+	void RtpPacket::RestorePayload()
+	{
+		if (!this->payloadDescriptorHandler)
+			return;
+
+		this->payloadDescriptorHandler->Restore(this->payload);
 	}
 
 	void RtpPacket::ParseExtensions()

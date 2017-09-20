@@ -136,6 +136,7 @@
       'include/RTC/UdpSocket.hpp',
       'include/RTC/WebRtcTransport.hpp',
       'include/RTC/Codecs/Codecs.hpp',
+      'include/RTC/Codecs/PayloadDescriptionHandler.hpp',
       'include/RTC/Codecs/VP8.hpp',
       'include/RTC/RTCP/Packet.hpp',
       'include/RTC/RTCP/CompoundPacket.hpp',

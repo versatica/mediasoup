@@ -359,6 +359,9 @@ namespace RTC
 
 			this->syncRequired = false;
 
+			if (this->encodingContext)
+				this->encodingContext->SyncRequired();
+
 			MS_DEBUG_TAG(rtp, "re-syncing Consumer stream [rtpLastSeq:%" PRIu16 "]", this->rtpLastSeq);
 		}
 
@@ -395,6 +398,10 @@ namespace RTC
 
 		// Rewrite packet timestamp.
 		packet->SetTimestamp(this->rtpLastTimestamp);
+
+		// Rewrite payload if needed.
+		if (this->encodingContext)
+			packet->EncodePayload(this->encodingContext.get());
 
 		if (isSyncPacket)
 		{
@@ -441,6 +448,10 @@ namespace RTC
 
 		// Restore the original timestamp.
 		packet->SetTimestamp(origTimestamp);
+
+		// Restore the original payload if needed.
+		if (this->encodingContext)
+			packet->RestorePayload();
 	}
 
 	void Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
@@ -598,6 +609,8 @@ namespace RTC
 
 			this->rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
 		}
+
+		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(codec.mimeType));
 	}
 
 	void Consumer::RetransmitRtpPacket(RTC::RtpPacket* packet)

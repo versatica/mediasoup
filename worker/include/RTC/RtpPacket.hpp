@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <map>
 
@@ -127,6 +128,9 @@ namespace RTC
 		RtpPacket* Clone(const uint8_t* buffer) const;
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
 		bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
+		void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
+		void EncodePayload(RTC::Codecs::EncodingContext* context);
+		void RestorePayload();
 
 	private:
 		void ParseExtensions();
@@ -142,9 +146,10 @@ namespace RTC
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0 };
 		uint8_t payloadPadding{ 0 };
-		size_t size{ 0 };         // Full size of the packet in bytes.
-		uint32_t seq32{ 0 };      // Extended seq number.
-		bool isKeyFrame{ false }; // Whether this packet contains a key frame.
+		size_t size{ 0 };    // Full size of the packet in bytes.
+		uint32_t seq32{ 0 }; // Extended seq number.
+		// Codecs
+		std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 	};
 
 	/* Inline static methods. */
@@ -375,14 +380,18 @@ namespace RTC
 		return this->payloadLength;
 	}
 
-	inline void RtpPacket::SetKeyFrame(bool flag)
-	{
-		this->isKeyFrame = flag;
-	}
-
 	inline bool RtpPacket::IsKeyFrame() const
 	{
-		return this->isKeyFrame;
+		if (!this->payloadDescriptorHandler)
+			return false;
+
+		return this->payloadDescriptorHandler->IsKeyFrame();
+	}
+
+	inline void RtpPacket::SetPayloadDescriptorHandler(
+	  RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+	{
+		this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 	}
 } // namespace RTC
 

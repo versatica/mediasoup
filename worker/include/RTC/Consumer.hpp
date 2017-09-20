@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/ConsumerListener.hpp"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -101,6 +102,8 @@ namespace RTC
 		uint32_t rtpBaseTimestamp{ 0 };
 		uint32_t rtpPreviousBaseTimestamp{ 0 };
 		bool syncRequired{ true };
+		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
 		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
