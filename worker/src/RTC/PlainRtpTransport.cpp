@@ -79,7 +79,7 @@ namespace RTC
 
 		delete this->tuple;
 
-		if (this->udpSocket)
+		if (this->udpSocket != nullptr)
 			this->udpSocket->Destroy();
 	}
 
@@ -170,7 +170,7 @@ namespace RTC
 		}
 	}
 
-	inline void PlainRtpTransport::OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void PlainRtpTransport::OnRtpDataRecv(RTC::TransportTuple* /*tuple*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -219,7 +219,7 @@ namespace RTC
 	}
 
 	inline void PlainRtpTransport::OnRtcpDataRecv(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* /*tuple*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

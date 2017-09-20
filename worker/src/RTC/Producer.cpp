@@ -738,7 +738,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
+		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
 		MS_ASSERT(
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
@@ -754,7 +754,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
+		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
 		MS_ASSERT(
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
@@ -770,7 +770,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpStreamRecv = static_cast<RtpStreamRecv*>(rtpStream);
+		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
 		MS_ASSERT(
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),

@@ -55,7 +55,7 @@ namespace RTC
 		RTC::UdpSocket* udpSocket{ nullptr };
 		RTC::TransportTuple* tuple{ nullptr };
 		// Others.
-		struct sockaddr_storage remoteAddrStorage;
+		struct sockaddr_storage remoteAddrStorage{};
 	};
 } // namespace RTC
 

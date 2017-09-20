@@ -128,14 +128,10 @@ namespace RTC
 				SdesItem* item = SdesItem::Parse(data + offset, len - offset);
 
 				if (item == nullptr)
-				{
 					break;
-				}
-				else
-				{
-					chunk->AddItem(item);
-					offset += item->GetSize();
-				}
+
+				chunk->AddItem(item);
+				offset += item->GetSize();
 			}
 
 			return chunk.release();

@@ -83,18 +83,16 @@ namespace RTC
 
 				return true;
 			}
-			// Out of order packet or already handled NACKed packet.
-			else
-			{
-				MS_DEBUG_TAG(
-				  rtx,
-				  "ignoring out of order packet or already handled NACKed packet [ssrc:%" PRIu32
-				  ", seq:%" PRIu16 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber());
 
-				return false;
-			}
+			// Out of order packet or already handled NACKed packet.
+			MS_DEBUG_TAG(
+			  rtx,
+			  "ignoring out of order packet or already handled NACKed packet [ssrc:%" PRIu32
+			  ", seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
+
+			return false;
 		}
 
 		// Otherwise we may have lost some packets.

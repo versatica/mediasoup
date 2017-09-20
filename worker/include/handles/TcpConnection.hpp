@@ -98,7 +98,7 @@ protected:
 	size_t bufferDataLen{ 0 };
 	std::string localIP;
 	uint16_t localPort{ 0 };
-	struct sockaddr_storage peerAddr;
+	struct sockaddr_storage peerAddr{};
 	std::string peerIP;
 	uint16_t peerPort{ 0 };
 };

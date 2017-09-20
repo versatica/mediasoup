@@ -62,7 +62,7 @@ private:
 	bool isClosing{ false };
 
 protected:
-	struct sockaddr_storage localAddr;
+	struct sockaddr_storage localAddr{};
 	std::string localIP;
 	uint16_t localPort{ 0 };
 };
