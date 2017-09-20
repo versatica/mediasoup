@@ -170,7 +170,8 @@ namespace RTC
 		}
 	}
 
-	inline void PlainRtpTransport::OnRtpDataRecv(RTC::TransportTuple* /*tuple*/, const uint8_t* data, size_t len)
+	inline void PlainRtpTransport::OnRtpDataRecv(
+	  RTC::TransportTuple* /*tuple*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
