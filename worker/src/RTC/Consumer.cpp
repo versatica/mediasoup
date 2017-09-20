@@ -307,9 +307,6 @@ namespace RTC
 			return;
 		}
 
-		// Whether we want to re-transmit the packet.
-		bool retransmissionNeeded = false;
-
 		// Check whether this is the key frame we are waiting for in order to update the effective
 		// profile.
 		if (this->effectiveProfile != this->targetProfile && profile == this->targetProfile)
@@ -330,9 +327,6 @@ namespace RTC
 			if (isKeyFrame || !canBeKeyFrame)
 			{
 				SetEffectiveProfile(this->targetProfile);
-
-				// Send this packet twice.
-				retransmissionNeeded = true;
 
 				// Resynchronize the stream.
 				this->syncRequired = true;
@@ -427,15 +421,6 @@ namespace RTC
 
 			// Update transmitted RTP data counter.
 			this->transmittedCounter.Update(packet);
-
-			if (retransmissionNeeded)
-			{
-				// Send the packet.
-				this->transport->SendRtpPacket(packet);
-
-				// Update transmitted RTP data counter.
-				this->transmittedCounter.Update(packet);
-			}
 		}
 		else
 		{
