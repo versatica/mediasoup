@@ -80,6 +80,8 @@ out:
 * rtpLastSeq: 1008
 * rtpBaseSeq--: 4050
 
+NOTE: probation packets should just be sent (assuming same RTP timestamp) **after** a video packet with `marker` bit set to 1.
+
 ------------------------------------------------
 
 packet:
