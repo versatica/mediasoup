@@ -94,13 +94,12 @@ namespace RTC
 		RTC::RtpDataCounter transmittedCounter;
 		RTC::RtpDataCounter retransmittedCounter;
 		// RTP sequence number and timestamp.
-		uint16_t seqNum{ 0 };
-		uint16_t seqNumBase{ 0 };
-		uint16_t seqNumPreviousBase{ 0 };
-		uint32_t rtpTimestamp{ 0 };
-		uint32_t rtpTimestampBase{ 0 };
-		uint32_t rtpTimestampPreviousBase{ 0 };
-		uint32_t lastReceivedSsrc{ 0 };
+		uint16_t rtpLastSeq{ 0 };
+		uint16_t rtpBaseSeq{ 0 };
+		uint16_t rtpPreviousBaseSeq{ 0 };
+		uint32_t rtpLastTimestamp{ 0 };
+		uint32_t rtpBaseTimestamp{ 0 };
+		uint32_t rtpPreviousBaseTimestamp{ 0 };
 		bool syncRequired{ true };
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
