@@ -10,6 +10,10 @@
 
 namespace RTC
 {
+	/* Namespace variables. */
+
+	uint8_t RtpBuffer[RtpBufferSize];
+
 	/* Class methods. */
 
 	RtpPacket* RtpPacket::Parse(const uint8_t* data, size_t len)
