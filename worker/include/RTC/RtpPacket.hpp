@@ -8,6 +8,9 @@
 
 namespace RTC
 {
+	// Internal buffer for RTCP serialization.
+	constexpr size_t RtpBufferSize{ 65536 };
+	extern uint8_t RtpBuffer[RtpBufferSize];
 	// Max MTU size.
 	constexpr size_t MtuSize{ 1500 };
 
@@ -77,6 +80,7 @@ namespace RTC
 	public:
 		static bool IsRtp(const uint8_t* data, size_t len);
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
+		static RtpPacket* CreateProbationPacket(const uint8_t* buffer, uint8_t payloadPadding);
 
 	public:
 		RtpPacket(
@@ -120,7 +124,7 @@ namespace RTC
 		size_t GetPayloadLength() const;
 		void SetKeyFrame(bool flag);
 		bool IsKeyFrame() const;
-		RtpPacket* Clone(uint8_t* buffer) const;
+		RtpPacket* Clone(const uint8_t* buffer) const;
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
 		bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
 

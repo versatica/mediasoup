@@ -24,11 +24,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Initialize sequence number.
-		this->seqNum = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
+		// Initialize RTP sequence number.
+		this->rtpLastSeq = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
 
 		// Initialize RTP timestamp.
-		this->rtpTimestamp = Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF);
+		this->rtpLastTimestamp = Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF);
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -351,66 +351,63 @@ namespace RTC
 		{
 			isSyncPacket = true;
 
-			this->seqNumPreviousBase = this->seqNum;
-			this->seqNumBase         = packet->GetSequenceNumber();
+			this->rtpPreviousBaseSeq = this->rtpLastSeq;
+			this->rtpBaseSeq         = packet->GetSequenceNumber();
 
-			this->rtpTimestampPreviousBase = this->rtpTimestamp;
-			this->rtpTimestampBase         = packet->GetTimestamp();
+			this->rtpPreviousBaseTimestamp = this->rtpLastTimestamp;
+			this->rtpBaseTimestamp         = packet->GetTimestamp();
 
 			this->syncRequired = false;
 
-			MS_DEBUG_TAG(rtp, "re-syncing Consumer stream [seqNum:%" PRIu16 "]", this->seqNum);
-		}
-		else
-		{
-			MS_ASSERT(this->lastReceivedSsrc == packet->GetSsrc(), "new SSRC requires re-syncing");
+			MS_DEBUG_TAG(rtp, "re-syncing Consumer stream [rtpLastSeq:%" PRIu16 "]", this->rtpLastSeq);
 		}
 
 		if (isSyncPacket)
 		{
 			MS_DEBUG_TAG(
 			  rtp,
-			  "before re-syncing [seqNum:%" PRIu16 ", rtpTimestamp:%" PRIu32 "]",
-			  this->seqNum,
-			  this->rtpTimestamp);
+			  "before re-syncing [rtpLastSeq:%" PRIu16 ", rtpLastTimestamp:%" PRIu32 "]",
+			  this->rtpLastSeq,
+			  this->rtpLastTimestamp);
 		}
 
-		this->rtpTimestamp =
-		  (packet->GetTimestamp() - this->rtpTimestampBase) + this->rtpTimestampPreviousBase + 1;
+		// Calculate latest RTP seq number to be sent.
+		this->rtpLastSeq = packet->GetSequenceNumber() - this->rtpBaseSeq + this->rtpPreviousBaseSeq + 1;
 
-		this->seqNum = (packet->GetSequenceNumber() - this->seqNumBase) + this->seqNumPreviousBase + 1;
+		// Calculate latest RTP timestamp to be sent.
+		this->rtpLastTimestamp =
+		  packet->GetTimestamp() - this->rtpBaseTimestamp + this->rtpPreviousBaseTimestamp + 1;
 
 		// Save the received SSRC.
-		this->lastReceivedSsrc = packet->GetSsrc();
+		auto origSsrc = packet->GetSsrc();
 
 		// Save the received sequence number.
-		auto seqNum = packet->GetSequenceNumber();
+		auto origSeq = packet->GetSequenceNumber();
 
 		// Save the received timestamp.
-		auto rtpTimestamp = packet->GetTimestamp();
+		auto origTimestamp = packet->GetTimestamp();
 
 		// Rewrite packet SSRC.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 
 		// Rewrite packet sequence number.
-		packet->SetSequenceNumber(this->seqNum);
+		packet->SetSequenceNumber(this->rtpLastSeq);
 
 		// Rewrite packet timestamp.
-		packet->SetTimestamp(this->rtpTimestamp);
+		packet->SetTimestamp(this->rtpLastTimestamp);
 
 		if (isSyncPacket)
 		{
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 ", profile:%s]",
+			  ", profile:%s] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  this->lastReceivedSsrc,
-			  seqNum,
-			  rtpTimestamp,
-			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+			  RTC::RtpEncodingParameters::profile2String[profile].c_str(),
+			  origSeq,
+			  origTimestamp);
 		}
 
 		// Process the packet.
@@ -424,27 +421,26 @@ namespace RTC
 		}
 		else
 		{
-			MS_DEBUG_TAG(
+			MS_WARN_TAG(
 			  rtp,
 			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "], from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 ", profile:%s]",
+			  ", profile:%s] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  this->lastReceivedSsrc,
-			  seqNum,
-			  rtpTimestamp,
-			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+			  RTC::RtpEncodingParameters::profile2String[profile].c_str(),
+			  origSeq,
+			  origTimestamp);
 		}
 
 		// Restore packet SSRC.
-		packet->SetSsrc(this->lastReceivedSsrc);
+		packet->SetSsrc(origSsrc);
 
 		// Restore the original sequence number.
-		packet->SetSequenceNumber(seqNum);
+		packet->SetSequenceNumber(origSeq);
 
 		// Restore the original timestamp.
-		packet->SetTimestamp(rtpTimestamp);
+		packet->SetTimestamp(origTimestamp);
 	}
 
 	void Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
