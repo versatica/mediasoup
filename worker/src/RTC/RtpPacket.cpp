@@ -172,7 +172,7 @@ namespace RTC
 		Utils::Byte::Set1Byte(ptr++, 0, payloadPadding);
 
 		// Set the packet size.
-		size_t size = static_cast<size_t>(ptr - buffer);
+		auto size = static_cast<size_t>(ptr - buffer);
 
 		MS_ASSERT(
 		  size == sizeof(Header) + payloadLength + size_t{ payloadPadding },

@@ -154,10 +154,11 @@ namespace RTC
 
 		VP8::PayloadDescriptorHandler::PayloadDescriptorHandler(VP8::PayloadDescriptor* payloadDescriptor)
 		{
-		  this->payloadDescriptor.reset(payloadDescriptor);
+			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
-		void VP8::PayloadDescriptorHandler::Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
+		void VP8::PayloadDescriptorHandler::Encode(
+		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
 			EncodingContext* context = dynamic_cast<EncodingContext*>(encodingContext);
 
@@ -174,12 +175,14 @@ namespace RTC
 			}
 
 			// Update pictureId and tl0PictureIndex values.
-			context->pictureId =
-				(this->payloadDescriptor->pictureId - context->pictureIdBase) + context->pictureIdPreviousBase + 1;
+			context->pictureId = (this->payloadDescriptor->pictureId - context->pictureIdBase) +
+			                     context->pictureIdPreviousBase + 1;
 
-			context->tl0PictureIndex = (this->payloadDescriptor->tl0PictureIndex - context->tl0PictureIndexBase) + context->tl0PictureIndexPreviousBase + 1;
+			context->tl0PictureIndex =
+			  (this->payloadDescriptor->tl0PictureIndex - context->tl0PictureIndexBase) +
+			  context->tl0PictureIndexPreviousBase + 1;
 
-			auto pictureId = context->pictureId;
+			auto pictureId       = context->pictureId;
 			auto tl0PictureIndex = context->tl0PictureIndex;
 
 			this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
