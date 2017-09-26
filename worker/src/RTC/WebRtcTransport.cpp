@@ -26,8 +26,7 @@ namespace RTC
 	static constexpr uint16_t IceTypePreference{ 64 };
 	// We do not support non rtcp-mux so component is always 1.
 	static constexpr uint16_t IceComponent{ 1 };
-	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{ 2000 };        // In ms.
-	static constexpr double EffectiveMaxBitrateThresholdBeforeKeyFrame{ 0.6 }; // 0.0 - 1.0.
+	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{ 2000 }; // In ms.
 
 	static inline uint32_t generateIceCandidatePriority(uint16_t localPreference)
 	{
@@ -1112,25 +1111,8 @@ namespace RTC
 		packet.Serialize(RTC::RTCP::Buffer);
 		this->SendRtcpPacket(&packet);
 
-		// Trigger a key frame for all the suitable streams if the effective max bitrate
-		// has decreased abruptly.
 		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
 		{
-			if (
-			  (bitrate != 0u) && (this->effectiveMaxBitrate != 0u) &&
-			  static_cast<double>(effectiveBitrate) / static_cast<double>(this->effectiveMaxBitrate) <
-			    EffectiveMaxBitrateThresholdBeforeKeyFrame)
-			{
-				MS_WARN_2TAGS(
-				  rbe, rtx, "uplink effective max bitrate abruptly decreased, requesting key frames");
-
-				// Request key frame for all the Producers.
-				for (auto* producer : this->producers)
-				{
-					producer->RequestKeyFrame();
-				}
-			}
-
 			this->lastEffectiveMaxBitrateAt = now;
 			this->effectiveMaxBitrate       = effectiveBitrate;
 		}
