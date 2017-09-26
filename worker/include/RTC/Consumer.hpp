@@ -98,6 +98,7 @@ namespace RTC
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		bool syncRequired{ true };
+		// RTP payload descriptor encoding.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 
 		// RTP profiles.
