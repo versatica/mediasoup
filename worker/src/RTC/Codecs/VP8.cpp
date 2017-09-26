@@ -50,6 +50,8 @@ namespace RTC
 					if (len < ++offset + 1)
 						return nullptr;
 
+					payloadDescriptor->hasTwoBytePictureId = true;
+
 					payloadDescriptor->pictureId = (byte & 0x7F) << 8;
 					payloadDescriptor->pictureId += data[offset];
 				}
@@ -97,9 +99,7 @@ namespace RTC
 
 			if (this->i)
 			{
-				bool twoBytePictureId = (*data >> 7) & 0x01;
-
-				if (twoBytePictureId)
+				if (this->hasTwoBytePictureId)
 				{
 					uint16_t netPictureId = htons(pictureId);
 
@@ -149,6 +149,7 @@ namespace RTC
 			MS_DUMP(" y               : %" PRIu8, this->y);
 			MS_DUMP(" keyIndex        : %" PRIu8, this->keyIndex);
 			MS_DUMP(" isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP(" hasTwoBytePictureId : %s", this->hasTwoBytePictureId ? "true" : "false");
 			MS_DUMP("</PayloadDescriptor>");
 		}
 
@@ -202,6 +203,17 @@ namespace RTC
 			  new PayloadDescriptorHandler(payloadDescriptor);
 
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+
+			// Modify the RtpPacket payload in order to always have two byte pictureId.
+			if (!payloadDescriptor->hasTwoBytePictureId)
+			{
+				// Shift the RTP payload one byte from the begining of the pictureId field.
+				packet->ShiftPayload(2, 1, true /*expand*/);
+				// Set the two byte pictureId marker bit.
+				data[2] = 0x80;
+				// Update the payloadDescriptor.
+				payloadDescriptor->hasTwoBytePictureId = true;
+			}
 		}
 	} // namespace Codecs
 } // namespace RTC
