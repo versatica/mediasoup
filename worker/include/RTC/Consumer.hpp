@@ -13,6 +13,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include "RTC/SeqManager.hpp"
 #include "RTC/Transport.hpp"
 #include <json/json.h>
 #include <set>
@@ -95,12 +96,8 @@ namespace RTC
 		RTC::RtpDataCounter transmittedCounter;
 		RTC::RtpDataCounter retransmittedCounter;
 		// RTP sequence number and timestamp.
-		uint16_t rtpLastSeq{ 0 };
-		uint16_t rtpBaseSeq{ 0 };
-		uint16_t rtpPreviousBaseSeq{ 0 };
-		uint32_t rtpLastTimestamp{ 0 };
-		uint32_t rtpBaseTimestamp{ 0 };
-		uint32_t rtpPreviousBaseTimestamp{ 0 };
+		RTC::SeqManager<uint16_t> rtpSeqManager;
+		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		bool syncRequired{ true };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 

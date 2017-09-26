@@ -24,12 +24,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Initialize RTP sequence number.
-		this->rtpLastSeq = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF));
-
-		// Initialize RTP timestamp.
-		this->rtpLastTimestamp = Utils::Crypto::GetRandomUInt(0x00FF, 0xFFFF);
-
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
@@ -351,35 +345,21 @@ namespace RTC
 		{
 			isSyncPacket = true;
 
-			this->rtpPreviousBaseSeq = this->rtpLastSeq;
-			this->rtpBaseSeq         = packet->GetSequenceNumber();
-
-			this->rtpPreviousBaseTimestamp = this->rtpLastTimestamp;
-			this->rtpBaseTimestamp         = packet->GetTimestamp();
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
+			this->rtpTimestampManager.Sync(packet->GetTimestamp());
 
 			this->syncRequired = false;
 
 			if (this->encodingContext)
 				this->encodingContext->SyncRequired();
-
-			MS_DEBUG_TAG(rtp, "re-syncing Consumer stream [rtpLastSeq:%" PRIu16 "]", this->rtpLastSeq);
 		}
 
-		if (isSyncPacket)
-		{
-			MS_DEBUG_TAG(
-			  rtp,
-			  "before re-syncing [rtpLastSeq:%" PRIu16 ", rtpLastTimestamp:%" PRIu32 "]",
-			  this->rtpLastSeq,
-			  this->rtpLastTimestamp);
-		}
+		// Update RTP seq number and timestamp.
+		uint16_t rtpSeq;
+		uint32_t rtpTimestamp;
 
-		// Calculate latest RTP seq number to be sent.
-		this->rtpLastSeq = packet->GetSequenceNumber() - this->rtpBaseSeq + this->rtpPreviousBaseSeq + 1;
-
-		// Calculate latest RTP timestamp to be sent.
-		this->rtpLastTimestamp =
-		  packet->GetTimestamp() - this->rtpBaseTimestamp + this->rtpPreviousBaseTimestamp + 1;
+		this->rtpSeqManager.Input(packet->GetSequenceNumber(), rtpSeq);
+		this->rtpTimestampManager.Input(packet->GetTimestamp(), rtpTimestamp);
 
 		// Save the received SSRC.
 		auto origSsrc = packet->GetSsrc();
@@ -394,10 +374,10 @@ namespace RTC
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 
 		// Rewrite packet sequence number.
-		packet->SetSequenceNumber(this->rtpLastSeq);
+		packet->SetSequenceNumber(rtpSeq);
 
 		// Rewrite packet timestamp.
-		packet->SetTimestamp(this->rtpLastTimestamp);
+		packet->SetTimestamp(rtpTimestamp);
 
 		// Rewrite payload if needed.
 		if (this->encodingContext)

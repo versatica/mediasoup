@@ -165,25 +165,18 @@ namespace RTC
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			if (context->syncRequired)
 			{
-				context->pictureIdPreviousBase = context->pictureId;
-				context->pictureIdBase         = this->payloadDescriptor->pictureId;
-
-				context->tl0PictureIndexPreviousBase = context->tl0PictureIndex;
-				context->tl0PictureIndexBase         = this->payloadDescriptor->tl0PictureIndex;
+				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId);
+				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex);
 
 				context->syncRequired = false;
 			}
 
 			// Update pictureId and tl0PictureIndex values.
-			context->pictureId = (this->payloadDescriptor->pictureId - context->pictureIdBase) +
-			                     context->pictureIdPreviousBase + 1;
+			uint16_t pictureId;
+			uint8_t tl0PictureIndex;
 
-			context->tl0PictureIndex =
-			  (this->payloadDescriptor->tl0PictureIndex - context->tl0PictureIndexBase) +
-			  context->tl0PictureIndexPreviousBase + 1;
-
-			auto pictureId       = context->pictureId;
-			auto tl0PictureIndex = context->tl0PictureIndex;
+			context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId);
+			context->tl0PictureIndexManager.Input(this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex);
 
 			this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
 		};

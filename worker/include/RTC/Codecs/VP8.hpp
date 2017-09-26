@@ -5,6 +5,7 @@
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/SeqManager.hpp"
 
 /* RFC 7741
  * VP8 Payload Descriptor
@@ -42,7 +43,7 @@ namespace RTC
 				~PayloadDescriptor() = default;
 				void Dump() const;
 
-				// Rewrite the buffer with the given pictureId and tl0PicutreIndex values.
+				// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
 				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex);
 				void Restore(uint8_t* data);
 
@@ -78,12 +79,8 @@ namespace RTC
 				void SyncRequired() override;
 
 			public:
-				uint16_t pictureId{ 0 };
-				uint16_t pictureIdBase{ 0 };
-				uint16_t pictureIdPreviousBase{ 0 };
-				uint8_t tl0PictureIndex{ 0 };
-				uint8_t tl0PictureIndexBase{ 0 };
-				uint8_t tl0PictureIndexPreviousBase{ 0 };
+				SeqManager<uint16_t> pictureIdManager;
+				SeqManager<uint8_t> tl0PictureIndexManager;
 				bool syncRequired{ false };
 			};
 
