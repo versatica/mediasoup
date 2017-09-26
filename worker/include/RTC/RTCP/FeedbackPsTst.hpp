@@ -21,7 +21,7 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		template<typename t>
+		template<typename T>
 		class FeedbackPsTstItem : public FeedbackItem
 		{
 		private:
@@ -62,6 +62,7 @@ namespace RTC
 		class Tstr
 		{
 		};
+
 		class Tstn
 		{
 		};
