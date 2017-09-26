@@ -93,7 +93,6 @@ namespace RTC
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
 		// RTP counters.
-		RTC::RtpDataCounter transmittedCounter;
 		RTC::RtpDataCounter retransmittedCounter;
 		// RTP sequence number and timestamp.
 		RTC::SeqManager<uint16_t> rtpSeqManager;
@@ -137,7 +136,7 @@ namespace RTC
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
 	{
-		return this->transmittedCounter.GetRate(now) + this->retransmittedCounter.GetRate(now);
+		return this->rtpStream->GetRate(now) + this->retransmittedCounter.GetRate(now);
 	}
 } // namespace RTC
 

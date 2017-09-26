@@ -40,7 +40,7 @@ namespace RTC
 
 		virtual Json::Value ToJson();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		uint32_t GetBitRate();
+		uint32_t GetRate(uint64_t now);
 		uint32_t GetSsrc();
 		uint8_t GetPayloadType();
 		const RTC::RtpCodecMimeType& GetMimeType() const;

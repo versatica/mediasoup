@@ -52,7 +52,9 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringBitRate]      = Json::UInt{ GetBitRate() };
+		uint64_t now = DepLibUV::GetTime();
+
+		json[JsonStringBitRate]      = Json::UInt{ GetRate(now) };
 		json[JsonStringJitter]       = Json::UInt{ this->jitter };
 		json[JsonStringParams]       = this->params.ToJson();
 		json[JsonStringPacketCount]  = static_cast<Json::UInt>(this->counter.GetPacketCount());
@@ -108,10 +110,8 @@ namespace RTC
 		return true;
 	}
 
-	uint32_t RtpStream::GetBitRate()
+	uint32_t RtpStream::GetRate(uint64_t now)
 	{
-		uint64_t now = DepLibUV::GetTime();
-
 		return this->counter.GetRate(now);
 	}
 

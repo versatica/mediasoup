@@ -274,7 +274,6 @@ namespace RTC
 
 		// Reset RTCP and RTP counter stuff.
 		this->lastRtcpSentTime = 0;
-		this->transmittedCounter.Reset();
 		this->retransmittedCounter.Reset();
 	}
 
@@ -402,9 +401,6 @@ namespace RTC
 		{
 			// Send the packet.
 			this->transport->SendRtpPacket(packet);
-
-			// Update transmitted RTP data counter.
-			this->transmittedCounter.Update(packet);
 		}
 		else
 		{
