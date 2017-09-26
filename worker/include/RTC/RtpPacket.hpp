@@ -122,6 +122,7 @@ namespace RTC
 		bool ReadRid(const uint8_t** data, size_t* len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
+		uint8_t GetPayloadPadding() const;
 		void SetKeyFrame(bool flag);
 		bool IsKeyFrame() const;
 		RtpPacket* Clone(const uint8_t* buffer) const;
@@ -130,6 +131,7 @@ namespace RTC
 		void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
 		void EncodePayload(RTC::Codecs::EncodingContext* context);
 		void RestorePayload();
+		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
 	private:
 		void ParseExtensions();
@@ -377,6 +379,11 @@ namespace RTC
 	inline size_t RtpPacket::GetPayloadLength() const
 	{
 		return this->payloadLength;
+	}
+
+	inline uint8_t RtpPacket::GetPayloadPadding() const
+	{
+		return this->payloadPadding;
 	}
 
 	inline bool RtpPacket::IsKeyFrame() const

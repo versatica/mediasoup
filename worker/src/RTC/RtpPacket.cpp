@@ -464,6 +464,8 @@ namespace RTC
 
 	void RtpPacket::EncodePayload(RTC::Codecs::EncodingContext* context)
 	{
+		MS_TRACE();
+
 		if (!this->payloadDescriptorHandler)
 			return;
 
@@ -472,10 +474,49 @@ namespace RTC
 
 	void RtpPacket::RestorePayload()
 	{
+		MS_TRACE();
+
 		if (!this->payloadDescriptorHandler)
 			return;
 
 		this->payloadDescriptorHandler->Restore(this->payload);
+	}
+
+	void RtpPacket::ShiftPayload(size_t payloadOffset, size_t shift, bool expand)
+	{
+		MS_TRACE();
+
+		if (shift == 0u)
+			return;
+
+		MS_ASSERT(payloadOffset < this->payloadLength, "payload offset bigger than payload size");
+
+		if (!expand)
+		{
+			MS_ASSERT(shift <= (this->payloadLength - payloadOffset), "shift to big");
+		}
+
+		uint8_t* payloadOffsetPtr = this->payload + payloadOffset;
+		size_t shiftedLen;
+
+		if (expand)
+		{
+			shiftedLen = this->payloadLength + size_t{ this->payloadPadding } - payloadOffset;
+
+			std::memmove(payloadOffsetPtr + shift, payloadOffsetPtr, shiftedLen);
+
+			this->payloadLength += shift;
+			this->size += shift;
+		}
+		else
+		{
+			shiftedLen = this->payloadLength + size_t{ this->payloadPadding } - payloadOffset - shift;
+
+			std::memmove(payloadOffsetPtr, payloadOffsetPtr + shift, shiftedLen);
+
+			this->payloadLength -= shift;
+			this->size -= shift;
+		}
 	}
 
 	void RtpPacket::ParseExtensions()

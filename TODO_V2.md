@@ -1,5 +1,7 @@
 # TODO in mediasoup v2 (server-side)
 
+* Remove `seq32` everywhere and use the new seq counter/manager utils.
+
 * `RtpStreamer` should have its own RTP capabilities rather than using the ones from the room.
 
 * Instead of using `static_cast<size_t>(number)` use `size_t{ number }`. NOTE: Investigate it.
