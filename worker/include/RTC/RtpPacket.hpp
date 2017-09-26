@@ -9,9 +9,8 @@
 
 namespace RTC
 {
-	// Internal buffer for RTCP serialization.
+	// Max RTP length.
 	constexpr size_t RtpBufferSize{ 65536 };
-	extern uint8_t RtpBuffer[RtpBufferSize];
 	// Max MTU size.
 	constexpr size_t MtuSize{ 1500 };
 

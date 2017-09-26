@@ -13,6 +13,7 @@ namespace RTC
 {
 	/* Static. */
 
+	static uint8_t ClonedPacketBuffer[RTC::RtpBufferSize];
 	static constexpr uint64_t KeyFrameRequestBlockTimeout{ 1000 }; // In ms.
 
 	/* Instance methods. */
@@ -184,6 +185,7 @@ namespace RTC
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
 		RTC::RtpStreamRecv* rtpStream{ nullptr };
+		std::unique_ptr<RTC::RtpPacket> clonedPacket;
 
 		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
 		{
@@ -207,6 +209,11 @@ namespace RTC
 
 			return;
 		}
+
+		// Let's clone the RTP packet so we can mangle the payload (if needed) and other
+		// stuff that would change its size.
+		packet = packet->Clone(ClonedPacketBuffer);
+		clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
 
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == rtpStream->GetPayloadType())
