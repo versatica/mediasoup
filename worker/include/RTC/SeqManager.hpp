@@ -46,10 +46,6 @@ namespace RTC
 		T maxInput{ 0 };
 		std::set<T, SeqLowerThan> dropped;
 	};
-
-	// Tell the compiler not to bother instantiating this template. It is done in the .cpp file.
-	extern template class SeqManager<uint16_t>;
-	extern template class SeqManager<uint32_t>;
 } // namespace RTC
 
 #endif
