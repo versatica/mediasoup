@@ -104,12 +104,6 @@ namespace RTC
 		{
 			this->maxInput = input;
 		}
-		else if (idelta != 0)
-		{
-			MS_WARN_TAG(rtp, "trying to send a too new input");
-
-			return false;
-		}
 
 		// New output is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Sync().
