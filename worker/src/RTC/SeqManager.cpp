@@ -101,9 +101,7 @@ namespace RTC
 		// New input is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Drop().
 		if (idelta < MaxValue / 2)
-		{
 			this->maxInput = input;
-		}
 
 		// New output is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Sync().
