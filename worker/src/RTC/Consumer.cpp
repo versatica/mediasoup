@@ -447,19 +447,9 @@ namespace RTC
 			// Send the packet.
 			this->transport->SendRtpPacket(packet);
 
-			// Send a fake RTP packet if probing.
+			// Retransmit the RTP packet if probing.
 			if (this->isProbing)
-			{
-				packet->SetSsrc(0xFFFF);
-
-				// TODO: Remove log.
-				MS_DEBUG_TAG(rtp, " probation..., sending fake rtp packet");
-
-				// Send the packet.
-				this->transport->SendRtpPacket(packet);
-
-				// TODO: Update transmitted RTP data counter.
-			}
+				RetransmitRtpPacket(packet);
 		}
 		else
 		{
@@ -652,7 +642,7 @@ namespace RTC
 		if (it == this->profiles.begin())
 		{
 			// TODO: Notify the user.
-			MS_WARN_TAG(rtp, "no healthy profile to serve");
+			MS_WARN_TAG(rtp, "lowest profile is unhealthy");
 
 			return;
 		}
