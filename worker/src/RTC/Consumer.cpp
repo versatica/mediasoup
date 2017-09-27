@@ -244,6 +244,7 @@ namespace RTC
 
 		if (this->profiles.empty())
 		{
+			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 			RecalculateTargetProfile();
 		}
 		// If there is an ongoing probation for this profile, disable it.
