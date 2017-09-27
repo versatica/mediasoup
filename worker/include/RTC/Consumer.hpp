@@ -109,7 +109,7 @@ namespace RTC
 		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
-		// RTP probation
+		// RTP probation.
 		bool isProbing{ false };
 		uint16_t rtpPacketsBeforeProbation{ 0 };
 	};

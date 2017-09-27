@@ -424,6 +424,7 @@ namespace RTC
 		if (currentLossPercentage >= MaxHealthLossPercentage)
 		{
 			MS_DEBUG_TAG(rtp, "last period loss percentage: %" PRIu16, currentLossPercentage);
+
 			if (this->notifyHealth || this->healthy)
 			{
 				this->healthy = false;
