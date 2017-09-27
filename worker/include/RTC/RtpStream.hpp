@@ -48,6 +48,9 @@ namespace RTC
 		};
 
 	public:
+		static constexpr uint16_t HealthCheckPeriod{ 1000 };
+
+	public:
 		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
@@ -58,7 +61,7 @@ namespace RTC
 		uint8_t GetPayloadType();
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		bool IsHealthy();
-		void ResetHealthCheckTimer();
+		void ResetHealthCheckTimer(uint16_t timeout = HealthCheckPeriod);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);

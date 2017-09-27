@@ -14,7 +14,6 @@ namespace RTC
 	static constexpr uint16_t MaxDropout{ 3000 };
 	static constexpr uint16_t MaxMisorder{ 1500 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
-	static constexpr uint16_t HealthCheckPeriod{ 1000 };
 
 	/* Instance methods. */
 
@@ -117,11 +116,11 @@ namespace RTC
 		return this->counter.GetRate(now);
 	}
 
-	void RtpStream::ResetHealthCheckTimer()
+	void RtpStream::ResetHealthCheckTimer(uint16_t timeout)
 	{
 		// Notify about next health status.
 		this->notifyHealth = true;
-		this->healthCheckTimer->Start(HealthCheckPeriod, HealthCheckPeriod);
+		this->healthCheckTimer->Start(timeout, HealthCheckPeriod);
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
