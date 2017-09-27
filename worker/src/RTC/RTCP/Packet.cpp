@@ -55,16 +55,16 @@ namespace RTC
 				}
 
 				auto* header      = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-				size_t packetLlen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
+				size_t packetLen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
 
-				if (len < packetLlen)
+				if (len < packetLen)
 				{
 					MS_WARN_TAG(
 					  rtcp,
 					  "packet length exceeds remaining data [len:%zu, "
 					  "packet len:%zu]",
 					  len,
-					  packetLlen);
+					  packetLen);
 
 					return first;
 				}
@@ -73,14 +73,14 @@ namespace RTC
 				{
 					case Type::SR:
 					{
-						current = SenderReportPacket::Parse(data, len);
+						current = SenderReportPacket::Parse(data, packetLen);
 
 						if (current == nullptr)
 							break;
 
 						if (header->count > 0)
 						{
-							Packet* rr = ReceiverReportPacket::Parse(data, len, current->GetSize());
+							Packet* rr = ReceiverReportPacket::Parse(data, packetLen, current->GetSize());
 
 							if (rr == nullptr)
 								break;
@@ -93,19 +93,19 @@ namespace RTC
 
 					case Type::RR:
 					{
-						current = ReceiverReportPacket::Parse(data, len);
+						current = ReceiverReportPacket::Parse(data, packetLen);
 						break;
 					}
 
 					case Type::SDES:
 					{
-						current = SdesPacket::Parse(data, len);
+						current = SdesPacket::Parse(data, packetLen);
 						break;
 					}
 
 					case Type::BYE:
 					{
-						current = ByePacket::Parse(data, len);
+						current = ByePacket::Parse(data, packetLen);
 						break;
 					}
 
@@ -117,13 +117,13 @@ namespace RTC
 
 					case Type::PSFB:
 					{
-						current = FeedbackPsPacket::Parse(data, len);
+						current = FeedbackPsPacket::Parse(data, packetLen);
 						break;
 					}
 
 					case Type::RTPFB:
 					{
-						current = FeedbackRtpPacket::Parse(data, len);
+						current = FeedbackRtpPacket::Parse(data, packetLen);
 						break;
 					}
 
@@ -155,8 +155,8 @@ namespace RTC
 					return first;
 				}
 
-				data += packetLlen;
-				len -= packetLlen;
+				data += packetLen;
+				len -= packetLen;
 
 				if (first == nullptr)
 					first = current;
