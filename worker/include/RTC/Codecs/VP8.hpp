@@ -88,7 +88,7 @@ namespace RTC
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
 			{
 			public:
-				PayloadDescriptorHandler(PayloadDescriptor* payloadDescriptor);
+				explicit PayloadDescriptorHandler(PayloadDescriptor* payloadDescriptor);
 				~PayloadDescriptorHandler() = default;
 
 			public:

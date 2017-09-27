@@ -48,15 +48,6 @@ namespace RTC
 		return keys;
 	}
 
-	uint32_t convertMsTo24Bits(int64_t timeMs)
-	{
-		uint32_t time24Bits =
-		  static_cast<uint32_t>(((static_cast<uint64_t>(timeMs) << AbsSendTimeFraction) + 500) / 1000) &
-		  0x00FFFFFF;
-
-		return time24Bits;
-	}
-
 	bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
 	  int sendDeltaMs, const Cluster& clusterAggregate)
 	{

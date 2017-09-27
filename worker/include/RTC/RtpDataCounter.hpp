@@ -50,6 +50,9 @@ namespace RTC
 	class RtpDataCounter
 	{
 	public:
+		RtpDataCounter() = default;
+
+	public:
 		void Update(RTC::RtpPacket* packet);
 		uint32_t GetRate(uint64_t now);
 		size_t GetPacketCount() const;

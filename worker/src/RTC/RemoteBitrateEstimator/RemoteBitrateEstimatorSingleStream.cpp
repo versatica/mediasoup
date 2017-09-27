@@ -109,17 +109,6 @@ namespace RTC
 		}
 	}
 
-	int64_t RemoteBitrateEstimatorSingleStream::TimeUntilNextProcess()
-	{
-		MS_TRACE();
-
-		if (this->lastProcessTime < 0)
-			return 0;
-
-		// MS_ASSERT(this->processIntervalMs > 0);
-		return this->lastProcessTime + this->processIntervalMs - DepLibUV::GetTime();
-	}
-
 	void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t nowMs)
 	{
 		MS_TRACE();

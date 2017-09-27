@@ -46,7 +46,6 @@ namespace RTC
 		};
 
 	protected:
-		static const int64_t processIntervalMs{ 500 };
 		static const int64_t streamTimeOutMs{ 2000 };
 
 	public:
@@ -67,18 +66,6 @@ namespace RTC
 		// currently being received and of which the bitrate estimate is based upon.
 		virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const = 0;
 		virtual void SetMinBitrate(int minBitrateBps)                                         = 0;
-		// (jmillan) borrowed from webrtc/modules/include/module.h.
-		//
-		// Returns the number of milliseconds until the module wants a worker
-		// thread to call Process.
-		// This method is called on the same worker thread as Process will
-		// be called on.
-		// TODO(tommi): Almost all implementations of this function, need to know
-		// the current tick count.  Consider passing it as an argument.  It could
-		// also improve the accuracy of when the next callback occurs since the
-		// thread that calls Process() will also have it's tick count reference
-		// which might not match with what the implementations use.
-		virtual int64_t TimeUntilNextProcess() = 0;
 		// Process any pending tasks such as timeouts.
 		// Called on a worker thread.
 		virtual void Process() = 0;

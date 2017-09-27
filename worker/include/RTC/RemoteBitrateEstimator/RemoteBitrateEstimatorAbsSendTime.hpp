@@ -63,7 +63,6 @@ namespace RTC
 		// This class relies on Process() being called periodically (at least once
 		// every other second) for streams to be timed out properly.
 		void Process() override;
-		int64_t TimeUntilNextProcess() override;
 		void OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs) override;
 		void RemoveStream(uint32_t ssrc) override;
 		bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const override;
@@ -135,13 +134,6 @@ namespace RTC
 
 	inline void RemoteBitrateEstimatorAbsSendTime::Process()
 	{
-	}
-
-	inline int64_t RemoteBitrateEstimatorAbsSendTime::TimeUntilNextProcess()
-	{
-		static const int64_t DisabledModuleTime{ 1000 };
-
-		return DisabledModuleTime;
 	}
 
 	inline void RemoteBitrateEstimatorAbsSendTime::OnRttUpdate(int64_t avgRttMs, int64_t /*maxRttMs*/)

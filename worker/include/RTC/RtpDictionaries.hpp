@@ -160,7 +160,7 @@ namespace RTC
 	{
 	public:
 		RtpCodecParameters(){};
-		RtpCodecParameters(Json::Value& data);
+		explicit RtpCodecParameters(Json::Value& data);
 
 		Json::Value ToJson() const;
 

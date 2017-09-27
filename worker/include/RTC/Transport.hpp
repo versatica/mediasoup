@@ -134,7 +134,7 @@ namespace RTC
 		RtpListener rtpListener;
 		struct HeaderExtensionIds headerExtensionIds;
 		// Others (Mirroring).
-		MirroringOptions mirroringOptions;
+		MirroringOptions mirroringOptions{};
 		struct sockaddr_storage mirrorAddrStorage
 		{
 		};

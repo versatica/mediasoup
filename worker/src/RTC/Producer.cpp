@@ -27,12 +27,11 @@ namespace RTC
 	  struct RtpMapping& rtpMapping,
 	  bool paused)
 	  : producerId(producerId), kind(kind), notifier(notifier), transport(transport),
-	    rtpParameters(rtpParameters), paused(paused)
+	    rtpParameters(rtpParameters), rtpMapping(rtpMapping), paused(paused)
 	{
 		MS_TRACE();
 
 		this->outputEncodings = this->rtpParameters.encodings;
-		this->rtpMapping      = rtpMapping;
 
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
 		FillHeaderExtensionIds();

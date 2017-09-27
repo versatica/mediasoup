@@ -39,7 +39,6 @@ namespace RTC
 		  const RtpPacket& packet,
 		  uint32_t transmissionTimeOffset) override;
 		void Process() override;
-		int64_t TimeUntilNextProcess() override;
 		void OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs) override;
 		void RemoveStream(uint32_t ssrc) override;
 		bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const override;
@@ -80,7 +79,7 @@ namespace RTC
 		std::unique_ptr<AimdRateControl> remoteRate;
 		Listener* observer{ nullptr };
 		int64_t lastProcessTime{ -1 };
-		int64_t processIntervalMs{ 0 };
+		int64_t processIntervalMs{ 500 };
 		bool umaRecorded{ false };
 	};
 
@@ -95,8 +94,7 @@ namespace RTC
 	}
 
 	inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer)
-	  : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer),
-	    processIntervalMs(RemoteBitrateEstimator::processIntervalMs)
+	  : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer)
 	{
 		// assert(this->observer);
 	}
