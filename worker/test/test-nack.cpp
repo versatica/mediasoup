@@ -11,6 +11,14 @@ using namespace RTC;
 // Can retransmit up to 17 RTP packets.
 static std::vector<RtpPacket*> rtpRetransmissionContainer(18);
 
+class RtpStreamSendListener : public RtpStream::Listener
+{
+	public:
+		void OnRtpStreamDied(RTC::RtpStream* /*rtpStream*/) {};
+		void OnRtpStreamHealthy(RTC::RtpStream* /*rtpStream*/) {};
+		void OnRtpStreamUnhealthy(RTC::RtpStream* /*rtpStream*/) {};
+} rtpStreamSendListener;
+
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 {
 	SECTION("receive NACK and get retransmitted packets")
@@ -76,7 +84,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		params.useNack = true;
 
 		// Create a RtpStreamSend.
-		RtpStreamSend* stream = new RtpStreamSend(params, 200);
+		RtpStreamSend* stream = new RtpStreamSend(&rtpStreamSendListener, params, 200);
 
 		// Receive all the packets in order into the stream.
 		stream->ReceivePacket(packet1);
