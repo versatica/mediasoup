@@ -12,8 +12,6 @@
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/Transport.hpp"
-#include "RTC/TransportTuple.hpp"
-#include "RTC/UdpSocket.hpp"
 #include <json/json.h>
 #include <string>
 #include <vector>
@@ -21,7 +19,6 @@
 namespace RTC
 {
 	class WebRtcTransport : public RTC::Transport,
-	                        public RTC::UdpSocket::Listener,
 	                        public RTC::TcpServer::Listener,
 	                        public RTC::TcpConnection::Listener,
 	                        public RTC::IceServer::Listener,

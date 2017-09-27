@@ -798,6 +798,85 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::TRANSPORT_START_MIRRORING:
+			{
+				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
+				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
+				static const Json::StaticString JsonStringRtp{ "rtp" };
+				static const Json::StaticString JsonStringRtcp{ "rtcp" };
+
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				RTC::Transport::MirroringOptions options;
+
+				if (!request->data[JsonStringRemoteIP].isString())
+					MS_THROW_ERROR("missing remoteIP");
+
+				options.remoteIP = request->data[JsonStringRemoteIP].asString();
+
+				if (!request->data[JsonStringRemotePort].isUInt())
+					MS_THROW_ERROR("missing remotePort");
+
+				options.remotePort = request->data[JsonStringRemotePort].asUInt();
+
+				if (request->data[JsonStringRtp].isBool())
+					options.rtp = request->data[JsonStringRtp].asBool();
+				if (request->data[JsonStringRtcp].isBool())
+					options.rtcp = request->data[JsonStringRtcp].asBool();
+
+				try
+				{
+					transport->StartMirroring(options);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				MS_DEBUG_DEV("Transport mirroring started [transportId:%" PRIu32 "]", transport->transportId);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_STOP_MIRRORING:
+			{
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				transport->StopMirroring();
+
+				MS_DEBUG_DEV("Transport mirroring stopped [transportId:%" PRIu32 "]", transport->transportId);
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_CLOSE:
 			{
 				RTC::Producer* producer;

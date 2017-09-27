@@ -27,6 +27,8 @@ namespace Channel
 		{ "transport.setRemoteDtlsParameters", Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS },
 		{ "transport.setMaxBitrate",           Request::MethodId::TRANSPORT_SET_MAX_BITRATE            },
 		{ "transport.changeUfragPwd",          Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD           },
+		{ "transport.startMirroring",          Request::MethodId::TRANSPORT_START_MIRRORING            },
+		{ "transport.stopMirroring",           Request::MethodId::TRANSPORT_STOP_MIRRORING             },
 		{ "producer.close",                    Request::MethodId::PRODUCER_CLOSE                       },
 		{ "producer.dump",                     Request::MethodId::PRODUCER_DUMP                        },
 		{ "producer.updateRtpParameters",      Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS       },

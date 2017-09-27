@@ -4,14 +4,12 @@
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Transport.hpp"
-#include "RTC/TransportTuple.hpp"
-#include "RTC/UdpSocket.hpp"
 #include <json/json.h>
 #include <string>
 
 namespace RTC
 {
-	class PlainRtpTransport : public RTC::Transport, public RTC::UdpSocket::Listener
+	class PlainRtpTransport : public RTC::Transport
 	{
 	public:
 		struct Options

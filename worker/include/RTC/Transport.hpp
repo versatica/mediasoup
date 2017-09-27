@@ -11,6 +11,8 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/TransportTuple.hpp"
+#include "RTC/UdpSocket.hpp"
 #include "handles/Timer.hpp"
 #include <json/json.h>
 #include <unordered_set>
@@ -22,7 +24,10 @@ namespace RTC
 	class Producer;
 	class Consumer;
 
-	class Transport : public RTC::ProducerListener, public RTC::ConsumerListener, public Timer::Listener
+	class Transport : public RTC::ProducerListener,
+	                  public RTC::ConsumerListener,
+	                  public Timer::Listener,
+	                  public RTC::UdpSocket::Listener
 	{
 	public:
 		class Listener
@@ -45,6 +50,17 @@ namespace RTC
 		};
 
 	public:
+		// Mirroring options.
+		// Determines which incoming traffic to mirror and where.
+		struct MirroringOptions
+		{
+			std::string remoteIP;
+			uint16_t remotePort;
+			bool rtp{ true };
+			bool rtcp{ true };
+		};
+
+	public:
 		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId);
 
 	protected:
@@ -57,6 +73,8 @@ namespace RTC
 		void HandleConsumer(RTC::Consumer* consumer);
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)     = 0;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet) = 0;
+		void StartMirroring(MirroringOptions& options);
+		void StopMirroring();
 
 	protected:
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
@@ -91,6 +109,11 @@ namespace RTC
 	public:
 		void OnTimer(Timer* timer) override;
 
+		/* Pure virtual methods inherited from UdpSocket::Listener. Mirroring. */
+	public:
+		void OnPacketRecv(
+		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
+
 	public:
 		// Passed by argument.
 		uint32_t transportId{ 0 };
@@ -101,12 +124,20 @@ namespace RTC
 		Channel::Notifier* notifier{ nullptr };
 		// Allocated by this.
 		Timer* rtcpTimer{ nullptr };
+		// Allocated (Mirroring).
+		RTC::UdpSocket* mirrorSocket{ nullptr };
+		RTC::TransportTuple* mirrorTuple{ nullptr };
 		// Others (Producers and Consumers).
 		std::unordered_set<RTC::Producer*> producers;
 		std::unordered_set<RTC::Consumer*> consumers;
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		struct HeaderExtensionIds headerExtensionIds;
+		// Others (Mirroring).
+		MirroringOptions mirroringOptions;
+		struct sockaddr_storage mirrorAddrStorage
+		{
+		};
 	};
 } // namespace RTC
 

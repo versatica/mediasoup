@@ -248,6 +248,8 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
 		case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
 		case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
+		case Channel::Request::MethodId::TRANSPORT_START_MIRRORING:
+		case Channel::Request::MethodId::TRANSPORT_STOP_MIRRORING:
 		case Channel::Request::MethodId::PRODUCER_CLOSE:
 		case Channel::Request::MethodId::PRODUCER_DUMP:
 		case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
