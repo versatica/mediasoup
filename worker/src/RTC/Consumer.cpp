@@ -153,7 +153,13 @@ namespace RTC
 		MS_DEBUG_DEV("Consumer resumed [consumerId:%" PRIu32 "]", this->consumerId);
 
 		if (IsEnabled() && !this->sourcePaused)
+		{
+			// We need to sync and wait for a key frame. Otherwise the receiver will
+			// request lot of NACKs due to unknown RTP packets.
+			this->syncRequired = true;
+
 			RequestKeyFrame();
+		}
 	}
 
 	void Consumer::SourcePause()
@@ -190,7 +196,11 @@ namespace RTC
 		this->notifier->Emit(this->consumerId, "sourceresumed");
 
 		if (IsEnabled() && !this->paused)
-			RequestKeyFrame();
+		{
+			// We need to sync. However we don't need to request a key frame since the source
+			// (Producer) already requested it.
+			this->syncRequired = true;
+		}
 	}
 
 	void Consumer::SourceRtpParametersUpdated()
