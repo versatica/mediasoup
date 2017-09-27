@@ -19,6 +19,8 @@ namespace RTC
 		uint32_t rtt{ 0 };
 		size_t numPlis{ 0 };
 		size_t numNacks{ 0 };
+		// RTP counters.
+		RTC::RtpDataCounter counter;
 	};
 
 	class RtpStream : public Timer::Listener, public RtpStreamInfo
@@ -89,8 +91,6 @@ namespace RTC
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
 		bool notifyHealth{ true };
-		// RTP counters.
-		RTC::RtpDataCounter counter;
 	};
 
 	/* Inline instance methods. */
