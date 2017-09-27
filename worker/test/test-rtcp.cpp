@@ -293,6 +293,74 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(report2.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	}
 
+	SECTION("parse SenderReport")
+	{
+		uint8_t buffer[] =
+		{
+			0x81, 0xc8, 0x00, 0x0c, // Type: 200 (Sender Report), Count: 1, Length: 12
+			0x5d, 0x93, 0x15, 0x34, // SSRC: 0x5d931534
+			0xdd, 0x3a, 0xc1, 0xb4, // NTP Sec: 3711615412
+			0x76, 0x54, 0x71, 0x71, // NTP Frac: 1985245553
+			0x00, 0x08, 0xcf, 0x00, // RTP timestamp: 577280
+			0x00, 0x00, 0x0e, 0x18, // Packet count: 3608
+			0x00, 0x08, 0xcf, 0x00, // Octed count: 577280
+			                        // Receiver Report
+			0x01, 0x93, 0x2d, 0xb4, // SSRC. 0x01932db4
+			0x00, 0x00, 0x00, 0x01, // Fraction lost: 0, Total lost: 1
+			0x00, 0x00, 0x00, 0x00, // Extended highest sequence number: 0
+			0x00, 0x00, 0x00, 0x00, // Jitter: 0
+			0x00, 0x00, 0x00, 0x00, // Last SR: 0
+			0x00, 0x00, 0x00, 0x05  // DLSR: 0
+		};
+
+		uint32_t ssrc = 0x5d931534;
+		uint32_t ntpSec = 3711615412;
+		uint32_t ntpFrac = 1985245553;
+		uint32_t rtpTs = 577280;
+		uint32_t packetCount = 3608;
+		uint32_t octetCount = 577280;
+
+		auto packet = Packet::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(packet);
+
+		auto sr = dynamic_cast<SenderReportPacket*>(packet);
+
+		auto sIt = sr->Begin();
+		auto sReport = *sIt;
+
+		REQUIRE(sReport->GetSsrc() == ssrc);
+		REQUIRE(sReport->GetNtpSec() == ntpSec);
+		REQUIRE(sReport->GetNtpFrac() == ntpFrac);
+		REQUIRE(sReport->GetRtpTs() == rtpTs);
+		REQUIRE(sReport->GetPacketCount() == packetCount);
+		REQUIRE(sReport->GetOctetCount() == octetCount);
+
+		REQUIRE(packet->GetNext());
+
+		auto rr = dynamic_cast<ReceiverReportPacket*>(packet->GetNext());
+		auto rIt = rr->Begin();
+		auto rReport = *rIt;
+
+
+		ssrc = 0x01932db4;
+		auto fractionLost = 0;
+		auto totalLost = 1;
+		auto lastSeq = 0;
+		auto jitter = 0;
+		auto lastSenderReport = 0;
+		auto delaySinceLastSenderReport = 5;
+
+		REQUIRE(rReport);
+		REQUIRE(rReport->GetSsrc() == ssrc);
+		REQUIRE(rReport->GetFractionLost() == fractionLost);
+		REQUIRE(rReport->GetTotalLost() == totalLost);
+		REQUIRE(rReport->GetLastSeq() == lastSeq);
+		REQUIRE(rReport->GetJitter() == jitter);
+		REQUIRE(rReport->GetLastSenderReport() == lastSenderReport);
+		REQUIRE(rReport->GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
+	}
+
 	SECTION("create ByePacket")
 	{
 		uint32_t ssrc1 = 1111;
