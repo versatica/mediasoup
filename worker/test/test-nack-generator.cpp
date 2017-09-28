@@ -1,0 +1,134 @@
+#include "include/catch.hpp"
+#include "common.hpp"
+#include "RTC/NackGenerator.hpp"
+#include "RTC/RtpPacket.hpp"
+#include <vector>
+
+using namespace RTC;
+
+struct Input
+{
+	Input() = default;
+	Input(uint16_t seq, uint16_t firstNacked, size_t numNacked)
+		: seq(seq), firstNacked(firstNacked), numNacked(numNacked)
+		{}
+
+	uint16_t seq{ 0 };
+	uint16_t firstNacked{ 0 };
+	size_t numNacked{ 0 };
+} currentInput;
+
+
+class TestNackGeneratorListener : public NackGenerator::Listener
+{
+	void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) override
+	{
+		auto it = seqNumbers.begin();
+		auto firstNacked = *it;
+
+		auto numNacked = seqNumbers.size();
+
+		REQUIRE(currentInput.firstNacked == firstNacked);
+		REQUIRE(currentInput.numNacked == numNacked);
+	};
+
+	void OnNackGeneratorKeyFrameRequired() override
+	{
+	}
+};
+
+uint8_t rtpBuffer[] =
+{
+	0b10000000, 0b01111011, 0b01010010, 0b00001110,
+	0b01011011, 0b01101011, 0b11001010, 0b10110101,
+	0, 0, 0, 2
+};
+
+// [pt:123, seq:21006, timestamp:1533790901]
+RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
+
+void validate(std::vector<Input>& inputs)
+{
+	TestNackGeneratorListener* listener = new TestNackGeneratorListener();
+	NackGenerator* nackGenerator = new NackGenerator(listener);
+
+	for (auto input : inputs)
+	{
+		currentInput = input;
+		packet->SetSequenceNumber(input.seq);
+		nackGenerator->ReceivePacket(packet);
+	}
+};
+
+
+SCENARIO("NACK generator", "[rtp][rtcp]")
+{
+	SECTION("ignore too old packets")
+	{
+		std::vector<Input> inputs =
+		{
+			{ 2371, 0, 0 },
+			{ 2372, 0, 0 },
+			{ 2373, 0, 0 },
+			{ 2374, 0, 0 },
+			{ 2375, 0, 0 },
+			{ 2376, 0, 0 },
+			{ 2377, 0, 0 },
+			{ 2378, 0, 0 },
+			{ 2379, 0, 0 },
+			{ 2380, 0, 0 },
+			{ 2254, 0, 0 },
+			{ 2250, 0, 0 },
+		};
+
+		validate(inputs);
+	}
+
+	SECTION("generate NACK for missing ordered packet")
+	{
+		std::vector<Input> inputs =
+		{
+			{ 2381, 0, 0 },
+			{ 2383, 2382, 1 }
+		};
+
+		validate(inputs);
+	}
+
+	SECTION("sequence wrap generates no NACK")
+	{
+		std::vector<Input> inputs =
+		{
+			{ 65534, 0, 0 },
+			{ 65535, 0, 0 },
+			{     0, 0, 0 }
+		};
+
+		validate(inputs);
+	}
+
+	SECTION("generate NACK after sequence wrap")
+	{
+		std::vector<Input> inputs =
+		{
+			{ 65534, 0, 0 },
+			{ 65535, 0, 0 },
+			{     1, 0, 1 }
+		};
+
+		validate(inputs);
+	}
+
+	SECTION("generate NACK after sequence wrap, and yet another NACK")
+	{
+		std::vector<Input> inputs =
+		{
+			{ 65534, 0, 0 },
+			{ 65535, 0, 0 },
+			{     1, 0, 1 },
+			{    11, 2, 9 }
+		};
+
+		validate(inputs);
+	}
+}

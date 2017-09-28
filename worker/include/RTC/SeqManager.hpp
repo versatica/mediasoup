@@ -13,7 +13,7 @@ namespace RTC
 	public:
 		static constexpr T MaxValue = std::numeric_limits<T>::max();
 
-	private:
+	public:
 		struct SeqLowerThan
 		{
 			bool operator()(const T& lhs, const T& rhs) const;

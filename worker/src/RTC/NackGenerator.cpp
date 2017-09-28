@@ -38,11 +38,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint32_t seq32 = packet->GetExtendedSequenceNumber();
+		uint16_t seq = packet->GetSequenceNumber();
 
 		if (!this->started)
 		{
-			this->lastSeq32 = seq32;
+			this->lastSeq = seq;
 			this->started   = true;
 
 			return false;
@@ -53,22 +53,22 @@ namespace RTC
 			RemoveFromNackListOlderThan(packet);
 
 		// Obviously never nacked, so ignore.
-		if (seq32 == this->lastSeq32)
+		if (seq == this->lastSeq)
 		{
 			return false;
 		}
-		if (seq32 == this->lastSeq32 + 1)
+		if (seq == this->lastSeq + 1)
 		{
-			this->lastSeq32++;
+			this->lastSeq++;
 
 			return false;
 		}
 
 		// May be an out of order packet, or already handled retransmitted packet,
 		// or a retransmitted packet.
-		if (seq32 < this->lastSeq32)
+		if (SeqManager<uint16_t>::IsSeqLowerThan(seq, this->lastSeq))
 		{
-			auto it = this->nackList.find(seq32);
+			auto it = this->nackList.find(seq);
 
 			// It was a nacked packet.
 			if (it != this->nackList.end())
@@ -87,7 +87,7 @@ namespace RTC
 			// Out of order packet or already handled NACKed packet.
 			MS_DEBUG_TAG(
 			  rtx,
-			  "ignoring out of order packet or already handled NACKed packet [ssrc:%" PRIu32
+			  "ignoring old packet not present in the NACK list [ssrc:%" PRIu32
 			  ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
@@ -96,8 +96,8 @@ namespace RTC
 		}
 
 		// Otherwise we may have lost some packets.
-		AddPacketsToNackList(this->lastSeq32 + 1, seq32);
-		this->lastSeq32 = seq32;
+		AddPacketsToNackList(this->lastSeq + 1, seq);
+		this->lastSeq = seq;
 
 		// Check if there are any nacks that are waiting for this seq number.
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
@@ -110,16 +110,16 @@ namespace RTC
 		return false;
 	}
 
-	void NackGenerator::AddPacketsToNackList(uint32_t seq32Start, uint32_t seq32End)
+	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)
 	{
 		MS_TRACE();
 
-		if (seq32End > MaxPacketAge)
+		if (seqEnd > MaxPacketAge)
 		{
 			uint32_t numItemsBefore = this->nackList.size();
 
 			// Remove old packets.
-			auto it = this->nackList.lower_bound(seq32End - MaxPacketAge);
+			auto it = this->nackList.lower_bound(seqEnd - MaxPacketAge);
 
 			this->nackList.erase(this->nackList.begin(), it);
 
@@ -129,21 +129,21 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(
 				  rtx,
-				  "removed %" PRIu32 " NACK items due to too old seq number [seq32End:%" PRIu32 "]",
+				  "removed %" PRIu32 " NACK items due to too old seq number [seqEnd:%" PRIu16 "]",
 				  numItemsRemoved,
-				  seq32End);
+				  seqEnd);
 			}
 		}
 
 		// If the nack list is too large, clear it and request a key frame.
-		uint32_t numNewNacks = seq32End - seq32Start;
+		uint16_t numNewNacks = seqEnd - seqStart;
 
 		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
 			MS_DEBUG_TAG(
 			  rtx,
-			  "NACK list too large, clearing it and requesting a key frame [seq32End:%" PRIu32 "]",
-			  seq32End);
+			  "NACK list too large, clearing it and requesting a key frame [seqEnd:%" PRIu16 "]",
+			  seqEnd);
 
 			this->nackList.clear();
 			this->listener->OnNackGeneratorKeyFrameRequired();
@@ -151,31 +151,31 @@ namespace RTC
 			return;
 		}
 
-		for (uint32_t seq32 = seq32Start; seq32 != seq32End; ++seq32)
+		for (uint16_t seq = seqStart; seq != seqEnd; ++seq)
 		{
 			// NOTE: Let the packet become out of order for a while without requesting
 			// it into a NACK.
 			// TODO: To be done.
-			uint32_t sendAtSeq32 = seq32 + 0;
-			NackInfo nackInfo(seq32, sendAtSeq32);
+			uint16_t sendAtSeq = seq + 0;
+			NackInfo nackInfo(seq, sendAtSeq);
 
 			MS_ASSERT(
-			  this->nackList.find(seq32) == this->nackList.end(), "packet already in the NACK list");
+			  this->nackList.find(seq) == this->nackList.end(), "packet already in the NACK list");
 
-			this->nackList[seq32] = nackInfo;
+			this->nackList[seq] = nackInfo;
 		}
 	}
 
-	// Delete all the entries in the NACK list whose key (seq32) is older than
+	// Delete all the entries in the NACK list whose key (seq) is older than
 	// the given one.
 	void NackGenerator::RemoveFromNackListOlderThan(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		uint32_t seq32          = packet->GetExtendedSequenceNumber();
+		uint16_t seq          = packet->GetSequenceNumber();
 		uint32_t numItemsBefore = this->nackList.size();
 
-		auto it = this->nackList.lower_bound(seq32);
+		auto it = this->nackList.lower_bound(seq);
 
 		this->nackList.erase(this->nackList.begin(), it);
 
@@ -202,9 +202,10 @@ namespace RTC
 		while (it != this->nackList.end())
 		{
 			NackInfo& nackInfo = it->second;
-			uint16_t seq       = nackInfo.seq32 % (1 << 16);
+			uint16_t seq       = nackInfo.seq;
 
-			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 && this->lastSeq32 >= nackInfo.sendAtSeq32)
+			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
+				SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq))
 			{
 				nackInfo.retries++;
 				nackInfo.sentAtTime = now;

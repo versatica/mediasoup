@@ -107,7 +107,7 @@ namespace RTC
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
 		// Pass the packet to the NackGenerator and return true just if this was a
-		// NACked packet.
+		// NACKed packet.
 		if (this->params.useNack)
 			return this->nackGenerator->ReceivePacket(packet);
 

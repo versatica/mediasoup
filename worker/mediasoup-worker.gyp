@@ -263,6 +263,7 @@
         # C++ source files
         'test/tests.cpp',
         'test/test-nack.cpp',
+        'test/test-nack-generator.cpp',
         'test/test-rtp.cpp',
         'test/test-rtcp.cpp',
         'test/test-bitrate.cpp',
