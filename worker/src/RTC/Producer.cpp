@@ -645,7 +645,8 @@ namespace RTC
 
 			for (auto& listener : this->listeners)
 			{
-				listener->OnProducerProfileEnabled(this, profile, dynamic_cast<RTC::RtpStreamInfo*>(rtpStream));
+				listener->OnProducerProfileEnabled(
+				  this, profile, dynamic_cast<RTC::RtpStreamInfo*>(rtpStream));
 			}
 		}
 	}
