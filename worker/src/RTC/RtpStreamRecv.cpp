@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStreamRecv.hpp"
+#include "RTC/Codecs/Codecs.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 
@@ -37,6 +38,10 @@ namespace RTC
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
+
+		// Process the packet at codec level.
+		if (packet->GetPayloadType() == GetPayloadType())
+			Codecs::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -105,6 +110,10 @@ namespace RTC
 		// Set the extended sequence number into the packet.
 		packet->SetExtendedSequenceNumber(
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+
+		// Process the packet at codec level.
+		if (packet->GetPayloadType() == GetPayloadType())
+			Codecs::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator and return true just if this was a
 		// NACKed packet.

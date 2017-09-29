@@ -4,7 +4,6 @@
 #include "RTC/Producer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
-#include "RTC/Codecs/Codecs.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -190,6 +189,11 @@ namespace RTC
 		{
 			rtpStream = this->rtpStreams[ssrc];
 
+			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
+			// stuff that would change its size.
+			packet = packet->Clone(ClonedPacketBuffer);
+			clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
+
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
 				return;
@@ -197,6 +201,11 @@ namespace RTC
 		else if (this->mapRtxStreams.find(ssrc) != this->mapRtxStreams.end())
 		{
 			rtpStream = this->mapRtxStreams[ssrc];
+
+			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
+			// stuff that would change its size.
+			packet = packet->Clone(ClonedPacketBuffer);
+			clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
 
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
@@ -208,15 +217,6 @@ namespace RTC
 
 			return;
 		}
-
-		// Let's clone the RTP packet so we can mangle the payload (if needed) and other
-		// stuff that would change its size.
-		packet = packet->Clone(ClonedPacketBuffer);
-		clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
-
-		// Process the packet at codec level.
-		if (packet->GetPayloadType() == rtpStream->GetPayloadType())
-			Codecs::ProcessRtpPacket(packet, rtpStream->GetMimeType());
 
 		RTC::RtpEncodingParameters::Profile profile;
 
