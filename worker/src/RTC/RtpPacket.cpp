@@ -196,9 +196,6 @@ namespace RTC
 
 		if (this->header->csrcCount != 0u)
 			this->csrcList = reinterpret_cast<uint8_t*>(header) + sizeof(Header);
-
-		// Initial value for seq32.
-		this->seq32 = uint32_t{ GetSequenceNumber() };
 	}
 
 	RtpPacket::~RtpPacket()
@@ -375,9 +372,6 @@ namespace RTC
 		// Create the new RtpPacket instance and return it.
 		auto packet = new RtpPacket(
 		  newHeader, newExtensionHeader, newPayload, this->payloadLength, this->payloadPadding, this->size);
-
-		// Clone seq32.
-		packet->seq32 = this->seq32;
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
