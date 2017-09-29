@@ -14,6 +14,7 @@ namespace RTC
 {
 	/* Static. */
 
+	static uint8_t RtxPacketBuffer[RtpBufferSize];
 	static constexpr uint16_t RtpPacketsBeforeProbation{ 2000 };
 
 	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
@@ -783,9 +784,7 @@ namespace RTC
 
 		if (this->rtpStream->HasRtx())
 		{
-			static uint8_t rtxBuffer[MtuSize];
-
-			rtxPacket = packet->Clone(rtxBuffer);
+			rtxPacket = packet->Clone(RtxPacketBuffer);
 			this->rtpStream->RtxEncode(rtxPacket);
 
 			MS_DEBUG_TAG(
