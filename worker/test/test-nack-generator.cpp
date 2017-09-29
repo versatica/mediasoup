@@ -87,10 +87,9 @@ void validate(std::vector<Input>& inputs)
 	}
 };
 
-
 SCENARIO("NACK generator", "[rtp][rtcp]")
 {
-	SECTION("ignore too old packets")
+	SECTION("no NACKs required")
 	{
 		std::vector<Input> inputs =
 		{
