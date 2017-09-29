@@ -7,14 +7,14 @@
 namespace RTC
 {
 	template<typename T>
-	bool SeqManager<T>::SeqLowerThan::operator()(const T& lhs, const T& rhs) const
+	bool SeqManager<T>::SeqLowerThan::operator()(const T lhs, const T rhs) const
 	{
 		return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 		       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
 	}
 
 	template<typename T>
-	bool SeqManager<T>::SeqHigherThan::operator()(const T& lhs, const T& rhs) const
+	bool SeqManager<T>::SeqHigherThan::operator()(const T lhs, const T rhs) const
 	{
 		return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
 		       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
@@ -27,13 +27,13 @@ namespace RTC
 	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan;
 
 	template<typename T>
-	bool SeqManager<T>::IsSeqLowerThan(const T& lhs, const T& rhs)
+	bool SeqManager<T>::IsSeqLowerThan(const T lhs, const T rhs)
 	{
 		return isSeqLowerThan(lhs, rhs);
 	}
 
 	template<typename T>
-	bool SeqManager<T>::IsSeqHigherThan(const T& lhs, const T& rhs)
+	bool SeqManager<T>::IsSeqHigherThan(const T lhs, const T rhs)
 	{
 		return isSeqHigherThan(lhs, rhs);
 	}

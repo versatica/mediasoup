@@ -16,12 +16,12 @@ namespace RTC
 	public:
 		struct SeqLowerThan
 		{
-			bool operator()(const T& lhs, const T& rhs) const;
+			bool operator()(const T lhs, const T rhs) const;
 		};
 
 		struct SeqHigherThan
 		{
-			bool operator()(const T& lhs, const T& rhs) const;
+			bool operator()(const T lhs, const T rhs) const;
 		};
 
 	private:
@@ -29,8 +29,8 @@ namespace RTC
 		static const SeqHigherThan isSeqHigherThan;
 
 	public:
-		static bool IsSeqLowerThan(const T& lhs, const T& rhs);
-		static bool IsSeqHigherThan(const T& lhs, const T& rhs);
+		static bool IsSeqLowerThan(const T lhs, const T rhs);
+		static bool IsSeqHigherThan(const T lhs, const T rhs);
 
 	public:
 		SeqManager();
