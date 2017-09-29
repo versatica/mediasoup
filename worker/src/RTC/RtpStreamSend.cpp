@@ -359,18 +359,9 @@ namespace RTC
 			}
 		}
 
-		// If the packet was older than anything in the buffer, just ignore it.
-		// NOTE: This should never happen.
+		// The packet was older than anything in the buffer, store it at the beginning.
 		if (bufferItReverse == this->buffer.rend())
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "ignoring packet older than anything in the buffer [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
-
-			return;
-		}
+			newBufferIt = this->buffer.insert(this->buffer.begin(), bufferItem);
 
 		// If the buffer is not full use the next free storage item.
 		if (this->buffer.size() - 1 < this->storage.size())
