@@ -17,26 +17,51 @@ struct Input
 	uint16_t firstNacked{ 0 };
 	size_t numNacked{ 0 };
 	bool keyFrameRequired{ false };
-} currentInput;
-
+};
 
 class TestNackGeneratorListener : public NackGenerator::Listener
 {
 	void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) override
 	{
+		this->nackRequiredTriggered = true;
+
 		auto it = seqNumbers.begin();
 		auto firstNacked = *it;
 
 		auto numNacked = seqNumbers.size();
 
-		REQUIRE(currentInput.firstNacked == firstNacked);
-		REQUIRE(currentInput.numNacked == numNacked);
+		REQUIRE(this->currentInput.firstNacked == firstNacked);
+		REQUIRE(this->currentInput.numNacked == numNacked);
 	};
 
 	void OnNackGeneratorKeyFrameRequired() override
 	{
-		REQUIRE(currentInput.keyFrameRequired);
+		this->keyFrameRequiredTriggered = true;
+
+		REQUIRE(this->currentInput.keyFrameRequired);
 	}
+
+public:
+	void Reset(Input input)
+	{
+		this->currentInput = input;
+		this->nackRequiredTriggered = false;
+		this->keyFrameRequiredTriggered = false;
+	}
+
+	void Check()
+	{
+		if (this->currentInput.numNacked)
+			REQUIRE(this->nackRequiredTriggered);
+
+		if (this->currentInput.keyFrameRequired)
+			REQUIRE(this->keyFrameRequiredTriggered);
+	}
+
+private:
+	Input currentInput{};
+	bool nackRequiredTriggered = false;
+	bool keyFrameRequiredTriggered = false;
 };
 
 uint8_t rtpBuffer[] =
@@ -56,9 +81,12 @@ void validate(std::vector<Input>& inputs)
 
 	for (auto input : inputs)
 	{
-		currentInput = input;
+		listener.Reset(input);
+
 		packet->SetSequenceNumber(input.seq);
 		nackGenerator.ReceivePacket(packet);
+
+		listener.Check();
 	}
 };
 
