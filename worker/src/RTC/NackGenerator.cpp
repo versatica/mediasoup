@@ -9,7 +9,6 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr uint32_t MaxPacketAge{ 5000 };
 	constexpr size_t MaxNackPackets{ 1000 };
 	constexpr uint32_t DefaultRtt{ 100 };
 	constexpr uint8_t MaxNackRetries{ 8 };
@@ -112,27 +111,6 @@ namespace RTC
 	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)
 	{
 		MS_TRACE();
-
-		if (seqEnd > MaxPacketAge)
-		{
-			uint32_t numItemsBefore = this->nackList.size();
-
-			// Remove old packets.
-			auto it = this->nackList.lower_bound(seqEnd - MaxPacketAge);
-
-			this->nackList.erase(this->nackList.begin(), it);
-
-			uint32_t numItemsRemoved = numItemsBefore - this->nackList.size();
-
-			if (numItemsRemoved > 0)
-			{
-				MS_DEBUG_TAG(
-				  rtx,
-				  "removed %" PRIu32 " NACK items due to too old seq number [seqEnd:%" PRIu16 "]",
-				  numItemsRemoved,
-				  seqEnd);
-			}
-		}
 
 		// If the nack list is too large, clear it and request a key frame.
 		uint16_t numNewNacks = seqEnd - seqStart;
