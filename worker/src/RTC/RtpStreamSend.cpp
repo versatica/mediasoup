@@ -350,10 +350,15 @@ namespace RTC
 
 				newBufferIt = this->buffer.insert(it, bufferItem);
 
-				// Exit the loop.
 				break;
 			}
+			// Packet is already stored.
+			else if (packetSeq == currentSeq)
+			{
+				return;
+			}
 		}
+
 		// If the packet was older than anything in the buffer, just ignore it.
 		// NOTE: This should never happen.
 		if (bufferItReverse == this->buffer.rend())
