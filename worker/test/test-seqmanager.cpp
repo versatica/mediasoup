@@ -5,9 +5,9 @@
 
 using namespace RTC;
 
-struct Input
+struct TestSeqManagerInput
 {
-	Input(uint16_t input, uint16_t output, bool sync=false, bool drop=false)
+	TestSeqManagerInput(uint16_t input, uint16_t output, bool sync=false, bool drop=false)
 		: input(input), output(output), sync(sync), drop(drop)
 		{}
 
@@ -17,7 +17,7 @@ struct Input
 	bool drop{ false };
 };
 
-void validate(RTC::SeqManager<uint16_t>& seqManager, std::vector<Input>& inputs)
+void validate(RTC::SeqManager<uint16_t>& seqManager, std::vector<TestSeqManagerInput>& inputs)
 {
 	for (auto& element : inputs)
 	{
@@ -47,7 +47,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered numbers, no sync, no drop")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{  0,  0, false, false },
 			{  1,  1, false, false },
@@ -69,7 +69,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered numbers, sync, no drop")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{  0,  0, false, false },
 			{  1,  1, false, false },
@@ -87,7 +87,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered numbers, sync, drop")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{  0,  0, false, false },
 			{  1,  1, false, false },
@@ -110,7 +110,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered wrapped numbers")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{ 65533,  65533, false, false },
 			{ 65534,  65534, false, false },
@@ -125,7 +125,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive sequence numbers with a big jump")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{    0,   0, false, false },
 			{    1,   1, false, false },
@@ -139,7 +139,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive mixed numbers with a big jump, drop before jump")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{   0,   0, false, false },
 			{   1,   0, false,  true }, // drop.
@@ -155,7 +155,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive mixed numbers with a big jump, drop after jump")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{   0,   0, false, false },
 			{   1,   1, false, false },
@@ -170,7 +170,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("drop, receive numbers newer and older than the one dropped")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{ 0,  0, false, false },
 			{ 2,  0, false,  true }, // drop.
@@ -185,7 +185,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive mixed numbers, sync, drop")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestSeqManagerInput> inputs =
 		{
 			{     0,  0, false, false },
 			{     1,  1, false, false },

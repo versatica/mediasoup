@@ -6,10 +6,10 @@
 
 using namespace RTC;
 
-struct Input
+struct TestNackGeneratorInput
 {
-	Input() = default;
-	Input(uint16_t seq, uint16_t firstNacked, size_t numNacked, bool keyFrameRequired = false)
+	TestNackGeneratorInput() = default;
+	TestNackGeneratorInput(uint16_t seq, uint16_t firstNacked, size_t numNacked, bool keyFrameRequired = false)
 		: seq(seq), firstNacked(firstNacked), numNacked(numNacked), keyFrameRequired(keyFrameRequired)
 		{}
 
@@ -42,7 +42,7 @@ class TestNackGeneratorListener : public NackGenerator::Listener
 	}
 
 public:
-	void Reset(Input input)
+	void Reset(TestNackGeneratorInput input)
 	{
 		this->currentInput = input;
 		this->nackRequiredTriggered = false;
@@ -56,7 +56,7 @@ public:
 	}
 
 private:
-	Input currentInput{};
+	TestNackGeneratorInput currentInput{};
 	bool nackRequiredTriggered = false;
 	bool keyFrameRequiredTriggered = false;
 };
@@ -71,7 +71,7 @@ uint8_t rtpBuffer[] =
 // [pt:123, seq:21006, timestamp:1533790901]
 RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
 
-void validate(std::vector<Input>& inputs)
+void validate(std::vector<TestNackGeneratorInput>& inputs)
 {
 	TestNackGeneratorListener listener;
 	NackGenerator nackGenerator = NackGenerator(&listener);
@@ -91,7 +91,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 {
 	SECTION("no NACKs required")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 2371, 0, 0 },
 			{ 2372, 0, 0 },
@@ -112,7 +112,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("generate NACK for missing ordered packet")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 2381, 0, 0 },
 			{ 2383, 2382, 1 }
@@ -123,7 +123,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("sequence wrap generates no NACK")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 65534, 0, 0 },
 			{ 65535, 0, 0 },
@@ -135,7 +135,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("generate NACK after sequence wrap")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 65534, 0, 0 },
 			{ 65535, 0, 0 },
@@ -147,7 +147,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("generate NACK after sequence wrap, and yet another NACK")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 65534, 0, 0 },
 			{ 65535, 0, 0 },
@@ -160,7 +160,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("intercalated missing packets")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 1, 0, 0 },
 			{ 3, 2, 1 },
@@ -174,7 +174,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("non contiguous intercalated missing packets")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 1, 0, 0 },
 			{ 3, 2, 1 },
@@ -187,7 +187,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("big jump")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{   1, 0,   0 },
 			{ 300, 2, 298 },
@@ -201,7 +201,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 	SECTION("Key Frame required. Nack list too large to be requested")
 	{
-		std::vector<Input> inputs =
+		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{    1, 0, 0 },
 			{ 3000, 0, 0, true}
