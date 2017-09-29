@@ -4,6 +4,7 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "RTC/Codecs/Codecs.hpp"
 
 namespace RTC
 {
@@ -37,6 +38,10 @@ namespace RTC
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
+
+		// Process the packet at codec level.
+		if (packet->GetPayloadType() == GetPayloadType())
+			Codecs::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -106,8 +111,12 @@ namespace RTC
 		packet->SetExtendedSequenceNumber(
 		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
 
+		// Process the packet at codec level.
+		if (packet->GetPayloadType() == GetPayloadType())
+			Codecs::ProcessRtpPacket(packet, GetMimeType());
+
 		// Pass the packet to the NackGenerator and return true just if this was a
-		// NACked packet.
+		// NACKed packet.
 		if (this->params.useNack)
 			return this->nackGenerator->ReceivePacket(packet);
 

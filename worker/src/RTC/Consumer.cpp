@@ -281,7 +281,8 @@ namespace RTC
 
 			return;
 		}
-		// If it is the effective profile, try to downgrade, or upgrade it to the next higher profile if the removed profile was lower than other existing ones.
+		// If it is the effective profile, try to downgrade, or upgrade it to the next higher profile if
+		// the removed profile was lower than other existing ones.
 		else if (this->effectiveProfile == profile)
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
@@ -913,9 +914,9 @@ namespace RTC
 				this->rtpStream->ResetHealthCheckTimer();
 
 				MS_DEBUG_TAG(
-						rtp,
-						"probing profile [%s]",
-						RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
+				  rtp,
+				  "probing profile [%s]",
+				  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
 
 				return;
 			}
