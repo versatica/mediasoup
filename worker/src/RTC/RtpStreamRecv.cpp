@@ -107,10 +107,6 @@ namespace RTC
 			return false;
 		}
 
-		// Set the extended sequence number into the packet.
-		packet->SetExtendedSequenceNumber(
-		  this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
-
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 			Codecs::ProcessRtpPacket(packet, GetMimeType());
