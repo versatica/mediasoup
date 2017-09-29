@@ -5,12 +5,12 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	// Don't retransmit packets older than this (ms).
 	// TODO: This must be tunned.
 	static constexpr uint32_t MaxRetransmissionDelay{ 1000 };
@@ -101,61 +101,36 @@ namespace RTC
 		if (this->buffer.empty())
 			return;
 
-		// Convert the given sequence numbers to 32 bits.
-		uint32_t firstSeq32 = uint32_t{ seq } + this->cycles;
-		uint32_t lastSeq32  = firstSeq32 + MaxRequestedPackets - 1;
+		uint16_t firstSeq = seq;
+		uint16_t lastSeq  = firstSeq + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
 		MS_ASSERT(container.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
 
-		auto bufferIt             = this->buffer.begin();
-		auto bufferItReverse      = this->buffer.rbegin();
-		uint32_t bufferFirstSeq32 = (*bufferIt).seq32;
-		uint32_t bufferLastSeq32  = (*bufferItReverse).seq32;
-		bool inRange              = true;
+		auto bufferIt           = this->buffer.begin();
+		auto bufferItReverse    = this->buffer.rbegin();
+		uint16_t bufferFirstSeq = (*bufferIt).seq;
+		uint16_t bufferLastSeq  = (*bufferItReverse).seq;
 
 		// Requested packet range not found.
-		if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
-		{
-			// Let's try with sequence numbers in the previous 16 cycle.
-			if (this->cycles > 0)
-			{
-				firstSeq32 -= RtpSeqMod;
-				lastSeq32 -= RtpSeqMod;
-
-				// Try again.
-				if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
-				{
-					firstSeq32 += RtpSeqMod;
-					lastSeq32 += RtpSeqMod;
-					inRange = false;
-				}
-			}
-			// Otherwise just return.
-			else
-			{
-				inRange = false;
-			}
-		}
-
-		if (!inRange)
+		if (
+		  SeqManager<uint16_t>::IsSeqHigherThan(firstSeq, bufferLastSeq) ||
+		  SeqManager<uint16_t>::IsSeqLowerThan(lastSeq, bufferFirstSeq))
 		{
 			MS_WARN_TAG(
 			  rtx,
-			  "requested packet range not in the buffer [seq:%" PRIu16 ", seq32:%" PRIu32
-			  ", bufferFirstSeq32:%" PRIu32 ", bufferLastSeq32:%" PRIu32 "]",
+			  "requested packet range not in the buffer [seq:%" PRIu16 ", bufferFirstseq:%" PRIu16
+			  ", bufferLastseq:%" PRIu16 "]",
 			  seq,
-			  firstSeq32,
-			  bufferFirstSeq32,
-			  bufferLastSeq32);
+			  bufferFirstSeq,
+			  bufferLastSeq);
 
 			return;
 		}
 
 		// Look for each requested packet.
-		uint64_t now   = DepLibUV::GetTime();
-		uint32_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
-		uint32_t seq32 = firstSeq32;
+		uint64_t now = DepLibUV::GetTime();
+		uint16_t rtt = (this->rtt != 0u ? this->rtt : DefaultRtt);
 		bool requested{ true };
 		size_t containerIdx{ 0 };
 
@@ -175,10 +150,10 @@ namespace RTC
 			{
 				for (; bufferIt != this->buffer.end(); ++bufferIt)
 				{
-					auto currentSeq32 = (*bufferIt).seq32;
+					auto currentSeq = (*bufferIt).seq;
 
 					// Found.
-					if (currentSeq32 == seq32)
+					if (currentSeq == seq)
 					{
 						auto currentPacket = (*bufferIt).packet;
 						// Calculate how the elapsed time between the max timestampt seen and
@@ -236,14 +211,14 @@ namespace RTC
 					}
 
 					// It can not be after this packet.
-					if (currentSeq32 > seq32)
+					if (SeqManager<uint16_t>::IsSeqHigherThan(currentSeq, seq))
 						break;
 				}
 			}
 
 			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
-			++seq32;
+			++seq;
 
 			if (!isFirstPacket)
 			{
@@ -340,10 +315,10 @@ namespace RTC
 		}
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packetSeq32 = packet->GetExtendedSequenceNumber();
+		auto packetSeq = packet->GetSequenceNumber();
 		BufferItem bufferItem;
 
-		bufferItem.seq32 = packetSeq32;
+		bufferItem.seq = packetSeq;
 
 		// If empty do it easy.
 		if (this->buffer.empty())
@@ -366,9 +341,9 @@ namespace RTC
 		auto bufferItReverse = this->buffer.rbegin();
 		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
 		{
-			auto currentSeq32 = (*bufferItReverse).seq32;
+			auto currentSeq = (*bufferItReverse).seq;
 
-			if (packetSeq32 > currentSeq32)
+			if (SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
 			{
 				// Get a forward iterator pointing to the same element.
 				auto it = bufferItReverse.base();
