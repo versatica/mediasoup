@@ -19,7 +19,7 @@ struct Input
 
 void validate(RTC::SeqManager<uint16_t>& seqManager, std::vector<Input>& inputs)
 {
-	for (auto element : inputs)
+	for (auto& element : inputs)
 	{
 		if (element.sync)
 			seqManager.Sync(element.input);
