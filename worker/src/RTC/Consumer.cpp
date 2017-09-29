@@ -141,7 +141,7 @@ namespace RTC
 
 			if (this->isProbing)
 			{
-				this->isProbing = false;
+				this->isProbing      = false;
 				this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
 			}
 		}
@@ -188,7 +188,7 @@ namespace RTC
 
 			if (this->isProbing)
 			{
-				this->isProbing = false;
+				this->isProbing      = false;
 				this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
 			}
 		}
@@ -347,7 +347,7 @@ namespace RTC
 		// Reset probation.
 		if (this->isProbing)
 		{
-			this->isProbing = false;
+			this->isProbing      = false;
 			this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
 		}
 	}
