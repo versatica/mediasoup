@@ -39,7 +39,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq = packet->GetSequenceNumber();
+		uint16_t seq    = packet->GetSequenceNumber();
 		bool isKeyFrame = packet->IsKeyFrame();
 
 		if (!this->started)
@@ -178,10 +178,10 @@ namespace RTC
 		if (this->keyFrameList.empty())
 			return;
 
-		auto it = this->keyFrameList.begin();
-		auto seq = *it;
+		auto it               = this->keyFrameList.begin();
+		auto seq              = *it;
 		size_t numItemsBefore = this->nackList.size();
-		auto it2 = this->nackList.lower_bound(seq);
+		auto it2              = this->nackList.lower_bound(seq);
 
 		this->nackList.erase(this->nackList.begin(), it2);
 		this->keyFrameList.erase(seq);
