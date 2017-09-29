@@ -131,4 +131,56 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 		validate(inputs);
 	}
+
+	SECTION("intercalated missing packets")
+	{
+		std::vector<Input> inputs =
+		{
+			{ 1, 0, 0 },
+			{ 3, 2, 1 },
+			{ 5, 4, 1 },
+			{ 7, 6, 1 },
+			{ 9, 8, 1 }
+		};
+
+		validate(inputs);
+	}
+
+	SECTION("non contiguous intercalated missing packets")
+	{
+		std::vector<Input> inputs =
+		{
+			{ 1, 0, 0 },
+			{ 3, 2, 1 },
+			{ 7, 4, 3 },
+			{ 9, 8, 1 }
+		};
+
+		validate(inputs);
+	}
+
+	SECTION("big jump")
+	{
+		std::vector<Input> inputs =
+		{
+			{   1, 0,   0 },
+			{ 300, 2, 298 },
+			{   3, 0,   0 },
+			{   4, 0,   0 },
+			{   5, 0,   0 }
+		};
+
+		validate(inputs);
+	}
+
+	SECTION("big jump. Nack list too large to be requested")
+	{
+		std::vector<Input> inputs =
+		{
+			{    1, 0, 0 },
+			{ 3000, 0, 0 }
+		};
+
+		validate(inputs);
+	}
 }
