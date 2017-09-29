@@ -43,6 +43,7 @@ namespace RTC
 		~NackGenerator() override;
 
 		bool ReceivePacket(RTC::RtpPacket* packet);
+		size_t GetNackListLength() const;
 
 	private:
 		void AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd);
@@ -71,6 +72,11 @@ namespace RTC
 	inline NackGenerator::NackInfo::NackInfo(uint16_t seq, uint16_t sendAtSeq)
 	  : seq(seq), sendAtSeq(sendAtSeq)
 	{
+	}
+
+	inline size_t NackGenerator::GetNackListLength() const
+	{
+		return this->nackList.size();
 	}
 } // namespace RTC
 
