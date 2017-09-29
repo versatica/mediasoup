@@ -43,7 +43,7 @@ namespace RTC
 		if (!this->started)
 		{
 			this->lastSeq = seq;
-			this->started   = true;
+			this->started = true;
 
 			return false;
 		}
@@ -87,8 +87,7 @@ namespace RTC
 			// Out of order packet or already handled NACKed packet.
 			MS_DEBUG_TAG(
 			  rtx,
-			  "ignoring old packet not present in the NACK list [ssrc:%" PRIu32
-			  ", seq:%" PRIu16 "]",
+			  "ignoring old packet not present in the NACK list [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
 
@@ -159,8 +158,7 @@ namespace RTC
 			uint16_t sendAtSeq = seq + 0;
 			NackInfo nackInfo(seq, sendAtSeq);
 
-			MS_ASSERT(
-			  this->nackList.find(seq) == this->nackList.end(), "packet already in the NACK list");
+			MS_ASSERT(this->nackList.find(seq) == this->nackList.end(), "packet already in the NACK list");
 
 			this->nackList[seq] = nackInfo;
 		}
@@ -172,7 +170,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq          = packet->GetSequenceNumber();
+		uint16_t seq            = packet->GetSequenceNumber();
 		uint32_t numItemsBefore = this->nackList.size();
 
 		auto it = this->nackList.lower_bound(seq);
@@ -204,8 +202,9 @@ namespace RTC
 			NackInfo& nackInfo = it->second;
 			uint16_t seq       = nackInfo.seq;
 
-			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
-				SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq))
+			if (
+			  filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
+			  SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq))
 			{
 				nackInfo.retries++;
 				nackInfo.sentAtTime = now;
