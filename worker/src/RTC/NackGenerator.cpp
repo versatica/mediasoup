@@ -4,11 +4,13 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include <utility> // std::make_pair()
 
 namespace RTC
 {
 	/* Static. */
 
+	constexpr size_t MaxPacketAge{ 5000 };
 	constexpr size_t MaxNackPackets{ 1000 };
 	constexpr uint32_t DefaultRtt{ 100 };
 	constexpr uint8_t MaxNackRetries{ 8 };
@@ -38,30 +40,22 @@ namespace RTC
 		MS_TRACE();
 
 		uint16_t seq = packet->GetSequenceNumber();
+		bool isKeyFrame = packet->IsKeyFrame();
 
 		if (!this->started)
 		{
 			this->lastSeq = seq;
 			this->started = true;
 
+			if (isKeyFrame)
+				this->keyFrameList.insert(seq);
+
 			return false;
 		}
-
-		// If a key frame remove all the items in the nack list older than this seq.
-		if (packet->IsKeyFrame())
-			RemoveFromNackListOlderThan(packet);
 
 		// Obviously never nacked, so ignore.
 		if (seq == this->lastSeq)
-		{
 			return false;
-		}
-		if (seq == this->lastSeq + 1)
-		{
-			this->lastSeq++;
-
-			return false;
-		}
 
 		// May be an out of order packet, or already handled retransmitted packet,
 		// or a retransmitted packet.
@@ -93,7 +87,28 @@ namespace RTC
 			return false;
 		}
 
-		// Otherwise we may have lost some packets.
+		// If we are here it means that we may have lost some packets so seq
+		// is newer than the latest seq seen.
+
+		CleanOldNackItems(seq);
+
+		// If a key frame remove all the items in the nack list older than our
+		// previous key frame seq.
+		if (isKeyFrame)
+		{
+			RemoveNackItemsUntilKeyFrame();
+
+			this->keyFrameList.insert(seq);
+		}
+
+		// Expected seq number so nothing else to do.
+		if (seq == this->lastSeq + 1)
+		{
+			this->lastSeq++;
+
+			return false;
+		}
+
 		AddPacketsToNackList(this->lastSeq + 1, seq);
 		this->lastSeq = seq;
 
@@ -106,6 +121,19 @@ namespace RTC
 		MayRunTimer();
 
 		return false;
+	}
+
+	void NackGenerator::CleanOldNackItems(uint16_t seq)
+	{
+		MS_TRACE();
+
+		auto it = this->nackList.lower_bound(seq - MaxPacketAge);
+
+		this->nackList.erase(this->nackList.begin(), it);
+
+		auto it2 = this->keyFrameList.lower_bound(seq - MaxPacketAge);
+
+		this->keyFrameList.erase(this->keyFrameList.begin(), it2);
 	}
 
 	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)
@@ -123,6 +151,7 @@ namespace RTC
 			  seqEnd);
 
 			this->nackList.clear();
+			this->keyFrameList.clear();
 			this->listener->OnNackGeneratorKeyFrameRequired();
 
 			return;
@@ -130,40 +159,42 @@ namespace RTC
 
 		for (uint16_t seq = seqStart; seq != seqEnd; ++seq)
 		{
-			// NOTE: Let the packet become out of order for a while without requesting
-			// it into a NACK.
-			// TODO: To be done.
-			uint16_t sendAtSeq = seq + 0;
-			NackInfo nackInfo(seq, sendAtSeq);
-
 			MS_ASSERT(this->nackList.find(seq) == this->nackList.end(), "packet already in the NACK list");
 
-			this->nackList[seq] = nackInfo;
+			// NOTE: We may not generate a NACK for this seq right now, but wait a bit
+			// assuming that this packet may be in its way.
+			// TODO: To be done.
+			uint16_t sendAtSeq = seq + 0;
+
+			this->nackList.emplace(std::make_pair(seq, NackInfo{ seq, sendAtSeq }));
 		}
 	}
 
-	// Delete all the entries in the NACK list whose key (seq) is older than
-	// the given one.
-	void NackGenerator::RemoveFromNackListOlderThan(RTC::RtpPacket* packet)
+	void NackGenerator::RemoveNackItemsUntilKeyFrame()
 	{
 		MS_TRACE();
 
-		uint16_t seq            = packet->GetSequenceNumber();
-		uint32_t numItemsBefore = this->nackList.size();
+		// No previous key frame, so do nothing.
+		if (this->keyFrameList.empty())
+			return;
 
-		auto it = this->nackList.lower_bound(seq);
+		auto it = this->keyFrameList.begin();
+		auto seq = *it;
+		size_t numItemsBefore = this->nackList.size();
+		auto it2 = this->nackList.lower_bound(seq);
 
-		this->nackList.erase(this->nackList.begin(), it);
+		this->nackList.erase(this->nackList.begin(), it2);
+		this->keyFrameList.erase(seq);
 
-		uint32_t numItemsRemoved = numItemsBefore - this->nackList.size();
+		size_t numItemsRemoved = numItemsBefore - this->nackList.size();
 
 		if (numItemsRemoved > 0)
 		{
 			MS_DEBUG_TAG(
 			  rtx,
-			  "removed %" PRIu32 " old NACK items older than received key frame [seq:%" PRIu16 "]",
+			  "removed %zu old NACK items older than received key frame [seq:%" PRIu16 "]",
 			  numItemsRemoved,
-			  packet->GetSequenceNumber());
+			  seq);
 		}
 	}
 

@@ -6,6 +6,7 @@
 #include "RTC/SeqManager.hpp"
 #include "handles/Timer.hpp"
 #include <map>
+#include <set>
 #include <vector>
 
 namespace RTC
@@ -46,8 +47,9 @@ namespace RTC
 		size_t GetNackListLength() const;
 
 	private:
+		void CleanOldNackItems(uint16_t seq);
 		void AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd);
-		void RemoveFromNackListOlderThan(RTC::RtpPacket* packet);
+		void RemoveNackItemsUntilKeyFrame();
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
 		void MayRunTimer() const;
 
@@ -62,6 +64,8 @@ namespace RTC
 		Timer* timer{ nullptr };
 		// Others.
 		std::map<uint16_t, NackInfo, SeqManager<uint16_t>::SeqLowerThan> nackList;
+		// This set is just supposed to hold zero or one entries.
+		std::set<uint16_t, SeqManager<uint16_t>::SeqLowerThan> keyFrameList;
 		bool started{ false };
 		uint16_t lastSeq{ 0 }; // Seq number of last valid packet.
 		uint32_t rtt{ 0 };     // Round trip time (ms).
