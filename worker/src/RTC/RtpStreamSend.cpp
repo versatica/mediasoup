@@ -352,11 +352,10 @@ namespace RTC
 
 				break;
 			}
+
 			// Packet is already stored.
-			else if (packetSeq == currentSeq)
-			{
+			if (packetSeq == currentSeq)
 				return;
-			}
 		}
 
 		// The packet was older than anything in the buffer, store it at the beginning.

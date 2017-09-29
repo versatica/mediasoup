@@ -599,14 +599,14 @@ namespace RTC
 		}
 	}
 
-	void Consumer::OnRtpStreamDied(RtpStream* stream)
+	void Consumer::OnRtpStreamDied(RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
-		OnRtpStreamUnhealthy(stream);
+		OnRtpStreamUnhealthy(rtpStream);
 	}
 
-	void Consumer::OnRtpStreamHealthy(RtpStream* /*stream*/)
+	void Consumer::OnRtpStreamHealthy(RtpStream* /*rtpStream*/)
 	{
 		MS_TRACE();
 
@@ -634,7 +634,7 @@ namespace RTC
 		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
 	}
 
-	void Consumer::OnRtpStreamUnhealthy(RtpStream* /*stream*/)
+	void Consumer::OnRtpStreamUnhealthy(RtpStream* /*rtpStream*/)
 	{
 		MS_TRACE();
 
@@ -883,16 +883,12 @@ namespace RTC
 		{
 			// New profile higher or equal than the one being probed. Do not upgrade.
 			if (newTargetProfile >= this->probingProfile)
-			{
 				return;
-			}
+
 			// New profile lower than the one begin probed. Stop probation.
-			else
-			{
-				this->isProbing      = false;
-				this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
-				this->targetProfile  = newTargetProfile;
-			}
+			this->isProbing      = false;
+			this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
+			this->targetProfile  = newTargetProfile;
 		}
 		// New profile is higher than current target.
 		else if (newTargetProfile > this->targetProfile)

@@ -72,7 +72,7 @@ namespace RTC
 
 		int err;
 
-		if (this->mirrorTuple)
+		if (this->mirrorTuple != nullptr)
 			MS_THROW_ERROR("Transport is already mirroring");
 
 		switch (Utils::IP::GetFamily(options.remoteIP))
@@ -129,7 +129,7 @@ namespace RTC
 	{
 		delete this->mirrorTuple;
 
-		if (this->mirrorSocket)
+		if (this->mirrorSocket != nullptr)
 			this->mirrorSocket->Destroy();
 
 		this->mirrorTuple  = nullptr;

@@ -176,7 +176,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Mirror RTP if needed.
-		if (this->mirrorTuple && this->mirroringOptions.rtp)
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.rtp)
 			this->mirrorTuple->Send(data, len);
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
@@ -229,7 +229,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Mirror RTCP if needed.
-		if (this->mirrorTuple && this->mirroringOptions.rtcp)
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.rtcp)
 			this->mirrorTuple->Send(data, len);
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
