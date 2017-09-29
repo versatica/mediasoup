@@ -138,6 +138,12 @@ namespace RTC
 		{
 			this->rtpStream->ClearRetransmissionBuffer();
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
+
+			if (this->isProbing)
+			{
+				this->isProbing = false;
+				this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
+			}
 		}
 	}
 
@@ -179,6 +185,12 @@ namespace RTC
 		{
 			this->rtpStream->ClearRetransmissionBuffer();
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
+
+			if (this->isProbing)
+			{
+				this->isProbing = false;
+				this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
+			}
 		}
 	}
 
@@ -332,8 +344,11 @@ namespace RTC
 		this->lastRtcpSentTime = 0;
 
 		// Reset probation.
-		this->isProbing = false;
-		this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
+		if (this->isProbing)
+		{
+			this->isProbing = false;
+			this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
+		}
 	}
 
 	void Consumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
