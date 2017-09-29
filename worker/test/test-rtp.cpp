@@ -355,7 +355,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetExtensionHeaderLength() == 0);
 		REQUIRE(packet->GetPayloadType() == 0);
 		REQUIRE(packet->GetSequenceNumber() == 0);
-		REQUIRE(packet->GetExtendedSequenceNumber() == 0);
 		REQUIRE(packet->GetTimestamp() == 0);
 		REQUIRE(packet->GetSsrc() == 0);
 		REQUIRE(packet->GetPayloadLength() == 0);
@@ -371,7 +370,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->GetExtensionHeaderLength() == 0);
 		REQUIRE(clonedPacket->GetPayloadType() == 0);
 		REQUIRE(clonedPacket->GetSequenceNumber() == 0);
-		REQUIRE(clonedPacket->GetExtendedSequenceNumber() == 0);
 		REQUIRE(clonedPacket->GetTimestamp() == 0);
 		REQUIRE(clonedPacket->GetSsrc() == 0);
 		REQUIRE(clonedPacket->GetPayloadLength() == 0);
@@ -393,7 +391,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetExtensionHeaderLength() == 0);
 		REQUIRE(packet->GetPayloadType() == 0);
 		REQUIRE(packet->GetSequenceNumber() == 0);
-		REQUIRE(packet->GetExtendedSequenceNumber() == 0);
 		REQUIRE(packet->GetTimestamp() == 0);
 		REQUIRE(packet->GetSsrc() == 0);
 		REQUIRE(packet->GetPayloadLength() == 0);
