@@ -51,11 +51,8 @@ public:
 
 	void Check()
 	{
-		if (this->currentInput.numNacked)
-			REQUIRE(this->nackRequiredTriggered);
-
-		if (this->currentInput.keyFrameRequired)
-			REQUIRE(this->keyFrameRequiredTriggered);
+		REQUIRE(this->nackRequiredTriggered == static_cast<bool>(this->currentInput.numNacked));
+		REQUIRE(this->keyFrameRequiredTriggered == this->currentInput.keyFrameRequired);
 	}
 
 private:
