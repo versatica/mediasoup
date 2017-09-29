@@ -328,9 +328,12 @@ namespace RTC
 			this->rtpStream = nullptr;
 		}
 
-		// Reset RTCP and RTP counter stuff.
+		// Reset last RTCP sent time counter.
 		this->lastRtcpSentTime = 0;
-		this->retransmittedCounter.Reset();
+
+		// Reset probation.
+		this->isProbing = false;
+		this->probingProfile = RTC::RtpEncodingParameters::Profile::NONE;
 	}
 
 	void Consumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
@@ -855,8 +858,13 @@ namespace RTC
 				newTargetProfile = *it;
 		}
 
+		// Not enabled. Make this the target profile.
+		if (!IsEnabled())
+		{
+			this->targetProfile = newTargetProfile;
+		}
 		// Ongoing probation.
-		if (this->isProbing)
+		else if (this->isProbing)
 		{
 			// New profile higher or equal than the one being probed. Do not upgrade.
 			if (newTargetProfile >= this->probingProfile)
