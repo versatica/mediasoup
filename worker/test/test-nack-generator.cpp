@@ -9,13 +9,14 @@ using namespace RTC;
 struct Input
 {
 	Input() = default;
-	Input(uint16_t seq, uint16_t firstNacked, size_t numNacked)
-		: seq(seq), firstNacked(firstNacked), numNacked(numNacked)
+	Input(uint16_t seq, uint16_t firstNacked, size_t numNacked, bool keyFrameRequired = false)
+		: seq(seq), firstNacked(firstNacked), numNacked(numNacked), keyFrameRequired(keyFrameRequired)
 		{}
 
 	uint16_t seq{ 0 };
 	uint16_t firstNacked{ 0 };
 	size_t numNacked{ 0 };
+	bool keyFrameRequired{ false };
 } currentInput;
 
 
@@ -34,6 +35,7 @@ class TestNackGeneratorListener : public NackGenerator::Listener
 
 	void OnNackGeneratorKeyFrameRequired() override
 	{
+		REQUIRE(currentInput.keyFrameRequired);
 	}
 };
 
@@ -49,14 +51,14 @@ RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
 
 void validate(std::vector<Input>& inputs)
 {
-	TestNackGeneratorListener* listener = new TestNackGeneratorListener();
-	NackGenerator* nackGenerator = new NackGenerator(listener);
+	TestNackGeneratorListener listener;
+	NackGenerator nackGenerator = NackGenerator(&listener);
 
 	for (auto input : inputs)
 	{
 		currentInput = input;
 		packet->SetSequenceNumber(input.seq);
-		nackGenerator->ReceivePacket(packet);
+		nackGenerator.ReceivePacket(packet);
 	}
 };
 
@@ -173,12 +175,12 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		validate(inputs);
 	}
 
-	SECTION("big jump. Nack list too large to be requested")
+	SECTION("Key Frame required. Nack list too large to be requested")
 	{
 		std::vector<Input> inputs =
 		{
 			{    1, 0, 0 },
-			{ 3000, 0, 0 }
+			{ 3000, 0, 0, true}
 		};
 
 		validate(inputs);
