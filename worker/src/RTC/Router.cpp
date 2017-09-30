@@ -57,10 +57,9 @@ namespace RTC
 			consumer->Destroy();
 		}
 
-		// TODO: Is this warning still true?
 		// Close all the Transports.
 		// NOTE: It is critical to close Transports after Producers/Consumers
-		// because Producer.Destroy() fires an event in the Transport.
+		// because their Destroy() method fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
 			auto* transport = it->second;
