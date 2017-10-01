@@ -1,6 +1,7 @@
 #include "include/catch.hpp"
 #include "common.hpp"
 #include "RTC/NackGenerator.hpp"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <vector>
 
@@ -9,14 +10,30 @@ using namespace RTC;
 struct TestNackGeneratorInput
 {
 	TestNackGeneratorInput() = default;
-	TestNackGeneratorInput(uint16_t seq, uint16_t firstNacked, size_t numNacked, bool keyFrameRequired = false)
-		: seq(seq), firstNacked(firstNacked), numNacked(numNacked), keyFrameRequired(keyFrameRequired)
+	TestNackGeneratorInput(uint16_t seq, bool isKeyFrame, uint16_t firstNacked, size_t numNacked, bool keyFrameRequired = false, size_t nackListSize = 0)
+		: seq(seq), isKeyFrame(isKeyFrame), firstNacked(firstNacked), numNacked(numNacked), keyFrameRequired(keyFrameRequired), nackListSize(nackListSize)
 		{}
 
 	uint16_t seq{ 0 };
+	bool isKeyFrame{ false };
 	uint16_t firstNacked{ 0 };
 	size_t numNacked{ 0 };
 	bool keyFrameRequired{ false };
+	size_t nackListSize{ 0 };
+};
+
+class TestPayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
+{
+	public:
+		TestPayloadDescriptorHandler(bool isKeyFrame): isKeyFrame(isKeyFrame) {};
+		~TestPayloadDescriptorHandler() = default;
+		void Dump() const { return; };
+		void Encode(RTC::Codecs::EncodingContext* /*context*/, uint8_t* /*data*/) { return; };
+		void Restore(uint8_t* /*data*/) { return; };
+		bool IsKeyFrame() const { return this->isKeyFrame; };
+
+	private:
+		bool isKeyFrame { false };
 };
 
 class TestNackGeneratorListener : public NackGenerator::Listener
@@ -49,10 +66,12 @@ public:
 		this->keyFrameRequiredTriggered = false;
 	}
 
-	void Check()
+	void Check(NackGenerator& nackGenerator)
 	{
 		REQUIRE(this->nackRequiredTriggered == static_cast<bool>(this->currentInput.numNacked));
 		REQUIRE(this->keyFrameRequiredTriggered == this->currentInput.keyFrameRequired);
+
+		REQUIRE(nackGenerator.GetNackListLength() == this->currentInput.nackListSize);
 	}
 
 private:
@@ -80,10 +99,13 @@ void validate(std::vector<TestNackGeneratorInput>& inputs)
 	{
 		listener.Reset(input);
 
+		TestPayloadDescriptorHandler* tpdh = new TestPayloadDescriptorHandler(input.isKeyFrame);
+
+		packet->SetPayloadDescriptorHandler(tpdh);
 		packet->SetSequenceNumber(input.seq);
 		nackGenerator.ReceivePacket(packet);
 
-		listener.Check();
+		listener.Check(nackGenerator);
 	}
 };
 
@@ -93,18 +115,18 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{ 2371, 0, 0 },
-			{ 2372, 0, 0 },
-			{ 2373, 0, 0 },
-			{ 2374, 0, 0 },
-			{ 2375, 0, 0 },
-			{ 2376, 0, 0 },
-			{ 2377, 0, 0 },
-			{ 2378, 0, 0 },
-			{ 2379, 0, 0 },
-			{ 2380, 0, 0 },
-			{ 2254, 0, 0 },
-			{ 2250, 0, 0 },
+			{ 2371, false, 0, 0, false, 0 },
+			{ 2372, false, 0, 0, false, 0 },
+			{ 2373, false, 0, 0, false, 0 },
+			{ 2374, false, 0, 0, false, 0 },
+			{ 2375, false, 0, 0, false, 0 },
+			{ 2376, false, 0, 0, false, 0 },
+			{ 2377, false, 0, 0, false, 0 },
+			{ 2378, false, 0, 0, false, 0 },
+			{ 2379, false, 0, 0, false, 0 },
+			{ 2380, false, 0, 0, false, 0 },
+			{ 2254, false, 0, 0, false, 0 },
+			{ 2250, false, 0, 0, false, 0 },
 		};
 
 		validate(inputs);
@@ -114,8 +136,8 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{ 2381, 0, 0 },
-			{ 2383, 2382, 1 }
+			{ 2381, false,    0, 0, false, 0 },
+			{ 2383, false, 2382, 1, false, 1 }
 		};
 
 		validate(inputs);
@@ -125,9 +147,9 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{ 65534, 0, 0 },
-			{ 65535, 0, 0 },
-			{     0, 0, 0 }
+			{ 65534, false, 0, 0, false, 0 },
+			{ 65535, false, 0, 0, false, 0 },
+			{     0, false, 0, 0, false, 0 }
 		};
 
 		validate(inputs);
@@ -137,9 +159,9 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{ 65534, 0, 0 },
-			{ 65535, 0, 0 },
-			{     1, 0, 1 }
+			{ 65534, false, 0, 0, false, 0 },
+			{ 65535, false, 0, 0, false, 0 },
+			{     1, false, 0, 1, false, 1 }
 		};
 
 		validate(inputs);
@@ -149,10 +171,12 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{ 65534, 0, 0 },
-			{ 65535, 0, 0 },
-			{     1, 0, 1 },
-			{    11, 2, 9 }
+			{ 65534, false, 0, 0, false,  0 },
+			{ 65535, false, 0, 0, false,  0 },
+			{     1, false, 0, 1, false,  1 },
+			{    11, false, 2, 9, false, 10 },
+			{    12,  true, 0, 0, false, 10 },
+			{    13,  true, 0, 0, false,  0 }
 		};
 
 		validate(inputs);
@@ -162,11 +186,11 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{ 1, 0, 0 },
-			{ 3, 2, 1 },
-			{ 5, 4, 1 },
-			{ 7, 6, 1 },
-			{ 9, 8, 1 }
+			{ 1, false, 0, 0, false, 0 },
+			{ 3, false, 2, 1, false, 1 },
+			{ 5, false, 4, 1, false, 2 },
+			{ 7, false, 6, 1, false, 3 },
+			{ 9, false, 8, 1, false, 4 }
 		};
 
 		validate(inputs);
@@ -176,10 +200,10 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{ 1, 0, 0 },
-			{ 3, 2, 1 },
-			{ 7, 4, 3 },
-			{ 9, 8, 1 }
+			{ 1, false, 0, 0, false, 0 },
+			{ 3, false, 2, 1, false, 1 },
+			{ 7, false, 4, 3, false, 4 },
+			{ 9, false, 8, 1, false, 5 }
 		};
 
 		validate(inputs);
@@ -189,11 +213,11 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{   1, 0,   0 },
-			{ 300, 2, 298 },
-			{   3, 0,   0 },
-			{   4, 0,   0 },
-			{   5, 0,   0 }
+			{   1, false, 0,   0, false,   0 },
+			{ 300, false, 2, 298, false, 298 },
+			{   3, false, 0,   0, false, 297 },
+			{   4, false, 0,   0, false, 296 },
+			{   5, false, 0,   0, false, 295 }
 		};
 
 		validate(inputs);
@@ -203,8 +227,8 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 	{
 		std::vector<TestNackGeneratorInput> inputs =
 		{
-			{    1, 0, 0 },
-			{ 3000, 0, 0, true}
+			{    1, false, 0, 0, false, 0 },
+			{ 3000, false, 0, 0,  true, 0 }
 		};
 
 		validate(inputs);
