@@ -1,6 +1,6 @@
+#include "common.hpp"
 #include "include/catch.hpp"
 #include "include/helpers.hpp"
-#include "common.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
@@ -10,8 +10,7 @@ using namespace RTC;
 
 SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 {
-	class RtpStreamRecvListener :
-		public RtpStreamRecv::Listener
+	class RtpStreamRecvListener : public RtpStreamRecv::Listener
 	{
 	public:
 		virtual void OnRtpStreamDied(RTC::RtpStream* rtpStream) override
@@ -26,14 +25,15 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		{
 		}
 
-		virtual void OnRtpStreamRecvNackRequired(RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override
+		virtual void OnRtpStreamRecvNackRequired(
+		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override
 		{
 			INFO("NACK required");
 
 			REQUIRE(this->shouldTriggerNack == true);
 
 			this->shouldTriggerNack = false;
-			this->seqNumbers = seqNumbers;
+			this->seqNumbers        = seqNumbers;
 		}
 
 		virtual void OnRtpStreamRecvPliRequired(RtpStreamRecv* rtpStream) override
@@ -47,7 +47,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		}
 
 	public:
-		bool shouldTriggerNack = false;
+		bool shouldTriggerNack     = false;
 		bool shouldTriggerKeyFrame = false;
 		std::vector<uint16_t> seqNumbers;
 	};
@@ -65,10 +65,10 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 
 	RtpStream::Params params;
 
-	params.ssrc = packet->GetSsrc();
+	params.ssrc      = packet->GetSsrc();
 	params.clockRate = 90000;
-	params.useNack = true;
-	params.usePli = true;
+	params.useNack   = true;
+	params.usePli    = true;
 
 	SECTION("NACK one packet")
 	{

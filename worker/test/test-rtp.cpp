@@ -1,10 +1,10 @@
+#include "common.hpp"
 #include "include/catch.hpp"
 #include "include/helpers.hpp"
-#include "common.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <map>
+#include "RTC/RtpPacket.hpp"
 #include <cstring> // std::memcmp()
+#include <map>
 
 using namespace RTC;
 
@@ -182,7 +182,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->ReadAbsSendTime(&absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		REQUIRE(std::memcmp(clonedPacket->GetPayload(), packet->GetPayload(), packet->GetPayloadLength()) == 0);
+		REQUIRE(
+		  std::memcmp(clonedPacket->GetPayload(), packet->GetPayload(), packet->GetPayloadLength()) == 0);
 
 		delete clonedPacket;
 	}
@@ -288,8 +289,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		};
 
 		uint8_t rtxPayloadType = 102;
-		uint32_t rtxSsrc = 6;
-		uint16_t rtxSeq = 80;
+		uint32_t rtxSsrc       = 6;
+		uint16_t rtxSeq        = 80;
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
@@ -421,7 +422,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00
 		};
-		size_t len = 40;
+		size_t len        = 40;
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)

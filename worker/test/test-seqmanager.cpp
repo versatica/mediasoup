@@ -1,15 +1,16 @@
-#include "include/catch.hpp"
 #include "common.hpp"
-#include <vector>
+#include "include/catch.hpp"
 #include "RTC/SeqManager.hpp"
+#include <vector>
 
 using namespace RTC;
 
 struct TestSeqManagerInput
 {
-	TestSeqManagerInput(uint16_t input, uint16_t output, bool sync=false, bool drop=false)
-		: input(input), output(output), sync(sync), drop(drop)
-		{}
+	TestSeqManagerInput(uint16_t input, uint16_t output, bool sync = false, bool drop = false)
+	  : input(input), output(output), sync(sync), drop(drop)
+	{
+	}
 
 	uint16_t input{ 0 };
 	uint16_t output{ 0 };

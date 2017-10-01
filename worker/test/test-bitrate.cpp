@@ -1,6 +1,6 @@
-#include "include/catch.hpp"
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "include/catch.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include <vector>
 
@@ -13,7 +13,7 @@ struct data
 	uint32_t rate;
 };
 
-void validate(RateCalculator& rate, uint64_t timeBase,  std::vector<data>& input)
+void validate(RateCalculator& rate, uint64_t timeBase, std::vector<data>& input)
 {
 	for (auto it = input.begin(); it != input.end(); ++it)
 	{

@@ -1,7 +1,7 @@
-#include "include/catch.hpp"
 #include "common.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "include/catch.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include <vector>
@@ -79,9 +79,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 
 		RtpStream::Params params;
 
-		params.ssrc = packet1->GetSsrc();
+		params.ssrc      = packet1->GetSsrc();
 		params.clockRate = 90000;
-		params.useNack = true;
+		params.useNack   = true;
 
 		// Create a RtpStreamSend.
 		RtpStreamSend* stream = new RtpStreamSend(&rtpStreamSendListener, params, 200);
@@ -100,7 +100,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(nackItem.GetLostPacketBitmask() == 0b0000000000001111);
 
 		stream->RequestRtpRetransmission(
-			nackItem.GetPacketId(), nackItem.GetLostPacketBitmask(), rtpRetransmissionContainer);
+		  nackItem.GetPacketId(), nackItem.GetLostPacketBitmask(), rtpRetransmissionContainer);
 
 		auto rtxPacket1 = rtpRetransmissionContainer[0];
 		auto rtxPacket2 = rtpRetransmissionContainer[1];

@@ -1,7 +1,7 @@
-#include "include/catch.hpp"
 #include "common.hpp"
-#include "RTC/NackGenerator.hpp"
+#include "include/catch.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/NackGenerator.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <vector>
 
@@ -10,9 +10,17 @@ using namespace RTC;
 struct TestNackGeneratorInput
 {
 	TestNackGeneratorInput() = default;
-	TestNackGeneratorInput(uint16_t seq, bool isKeyFrame, uint16_t firstNacked, size_t numNacked, bool keyFrameRequired = false, size_t nackListSize = 0)
-		: seq(seq), isKeyFrame(isKeyFrame), firstNacked(firstNacked), numNacked(numNacked), keyFrameRequired(keyFrameRequired), nackListSize(nackListSize)
-		{}
+	TestNackGeneratorInput(
+	  uint16_t seq,
+	  bool isKeyFrame,
+	  uint16_t firstNacked,
+	  size_t numNacked,
+	  bool keyFrameRequired = false,
+	  size_t nackListSize   = 0)
+	  : seq(seq), isKeyFrame(isKeyFrame), firstNacked(firstNacked), numNacked(numNacked),
+	    keyFrameRequired(keyFrameRequired), nackListSize(nackListSize)
+	{
+	}
 
 	uint16_t seq{ 0 };
 	bool isKeyFrame{ false };
@@ -24,16 +32,28 @@ struct TestNackGeneratorInput
 
 class TestPayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
 {
-	public:
-		TestPayloadDescriptorHandler(bool isKeyFrame): isKeyFrame(isKeyFrame) {};
-		~TestPayloadDescriptorHandler() = default;
-		void Dump() const { return; };
-		void Encode(RTC::Codecs::EncodingContext* /*context*/, uint8_t* /*data*/) { return; };
-		void Restore(uint8_t* /*data*/) { return; };
-		bool IsKeyFrame() const { return this->isKeyFrame; };
+public:
+	TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame){};
+	~TestPayloadDescriptorHandler() = default;
+	void Dump() const
+	{
+		return;
+	};
+	void Encode(RTC::Codecs::EncodingContext* /*context*/, uint8_t* /*data*/)
+	{
+		return;
+	};
+	void Restore(uint8_t* /*data*/)
+	{
+		return;
+	};
+	bool IsKeyFrame() const
+	{
+		return this->isKeyFrame;
+	};
 
-	private:
-		bool isKeyFrame { false };
+private:
+	bool isKeyFrame{ false };
 };
 
 class TestNackGeneratorListener : public NackGenerator::Listener
@@ -42,7 +62,7 @@ class TestNackGeneratorListener : public NackGenerator::Listener
 	{
 		this->nackRequiredTriggered = true;
 
-		auto it = seqNumbers.begin();
+		auto it          = seqNumbers.begin();
 		auto firstNacked = *it;
 
 		auto numNacked = seqNumbers.size();
@@ -61,8 +81,8 @@ class TestNackGeneratorListener : public NackGenerator::Listener
 public:
 	void Reset(TestNackGeneratorInput input)
 	{
-		this->currentInput = input;
-		this->nackRequiredTriggered = false;
+		this->currentInput              = input;
+		this->nackRequiredTriggered     = false;
 		this->keyFrameRequiredTriggered = false;
 	}
 
