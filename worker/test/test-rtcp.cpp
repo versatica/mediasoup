@@ -325,7 +325,6 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		REQUIRE(packet);
 
 		auto sr = dynamic_cast<SenderReportPacket*>(packet);
-
 		auto sIt     = sr->Begin();
 		auto sReport = *sIt;
 
@@ -342,13 +341,14 @@ SCENARIO("parse RTCP packets", "[parser][rtcp]")
 		auto rIt     = rr->Begin();
 		auto rReport = *rIt;
 
-		ssrc                            = 0x01932db4;
-		auto fractionLost               = 0;
-		auto totalLost                  = 1;
-		auto lastSeq                    = 0;
-		auto jitter                     = 0;
-		auto lastSenderReport           = 0;
-		auto delaySinceLastSenderReport = 5;
+		ssrc                                = 0x01932db4;
+
+		uint8_t fractionLost                = 0;
+		uint8_t totalLost                   = 1;
+		uint32_t lastSeq                    = 0;
+		uint32_t jitter                     = 0;
+		uint32_t lastSenderReport           = 0;
+		uint32_t delaySinceLastSenderReport = 5;
 
 		REQUIRE(rReport);
 		REQUIRE(rReport->GetSsrc() == ssrc);
