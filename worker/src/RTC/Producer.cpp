@@ -210,6 +210,8 @@ namespace RTC
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
 				return;
+
+			rtpStream->packetsRepaired++;
 		}
 		else
 		{
@@ -645,8 +647,7 @@ namespace RTC
 
 			for (auto& listener : this->listeners)
 			{
-				listener->OnProducerProfileEnabled(
-				  this, profile, dynamic_cast<RTC::RtpStreamInfo*>(rtpStream));
+				listener->OnProducerProfileEnabled(this, profile, rtpStream);
 			}
 		}
 	}
@@ -723,6 +724,8 @@ namespace RTC
 
 		packet.Serialize(RTC::RTCP::Buffer);
 		this->transport->SendRtcpPacket(&packet);
+
+		rtpStream->nackCount++;
 	}
 
 	void Producer::OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)
@@ -738,6 +741,8 @@ namespace RTC
 		// Send two, because it's free.
 		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
+
+		rtpStream->pliCount++;
 	}
 
 	void Producer::OnRtpStreamDied(RTC::RtpStream* rtpStream)

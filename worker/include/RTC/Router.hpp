@@ -74,7 +74,7 @@ namespace RTC
 		void OnProducerProfileEnabled(
 		  RTC::Producer* producer,
 		  RTC::RtpEncodingParameters::Profile profile,
-		  const RTC::RtpStreamInfo* info) override;
+		  const RTC::RtpStream* rtpStream) override;
 		void OnProducerProfileDisabled(
 		  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) override;
 

@@ -69,8 +69,7 @@ namespace RTC
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
 		void RequestKeyFrame(bool force = false);
-		const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStreamInfo*>& GetHealthyProfiles()
-		  const;
+		const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& GetHealthyProfiles() const;
 
 	private:
 		void FillHeaderExtensionIds();
@@ -112,7 +111,7 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> mapRtpStreamProfiles;
-		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStreamInfo*> healthyProfiles;
+		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> healthyProfiles;
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
@@ -164,7 +163,7 @@ namespace RTC
 		}
 	}
 
-	inline const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStreamInfo*>& Producer::
+	inline const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& Producer::
 	  GetHealthyProfiles() const
 	{
 		return this->healthyProfiles;

@@ -69,7 +69,7 @@ namespace RTC
 			RED
 		};
 
-	private:
+	public:
 		static std::unordered_map<std::string, Type> string2Type;
 		static std::map<Type, std::string> type2String;
 		static std::unordered_map<std::string, Subtype> string2Subtype;
