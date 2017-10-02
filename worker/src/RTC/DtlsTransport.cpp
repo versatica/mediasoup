@@ -134,6 +134,8 @@ namespace RTC
 		RSA* rsaKey{ nullptr };
 		int numBits{ 1024 };
 		X509_NAME* certName{ nullptr };
+		std::string subject =
+		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
 		// Create a big number object.
 		bne = BN_new();
@@ -219,9 +221,9 @@ namespace RTC
 			goto error;
 		}
 		X509_NAME_add_entry_by_txt(
-		  certName, "O", MBSTRING_ASC, reinterpret_cast<const uint8_t*>("mediasoup"), -1, -1, 0);
+		  certName, "O", MBSTRING_ASC, reinterpret_cast<const uint8_t*>(subject.c_str()), -1, -1, 0);
 		X509_NAME_add_entry_by_txt(
-		  certName, "CN", MBSTRING_ASC, reinterpret_cast<const uint8_t*>("mediasoup"), -1, -1, 0);
+		  certName, "CN", MBSTRING_ASC, reinterpret_cast<const uint8_t*>(subject.c_str()), -1, -1, 0);
 
 		// It is self-signed so set the issuer name to be the same as the subject.
 		ret = X509_set_issuer_name(DtlsTransport::certificate, certName);
