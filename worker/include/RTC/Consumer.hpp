@@ -57,6 +57,7 @@ namespace RTC
 		void ReceiveKeyFrameRequest(RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetTransmissionRate(uint64_t now);
+		float GetLossPercentage() const;
 		void RequestKeyFrame();
 
 	private:

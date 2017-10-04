@@ -82,6 +82,7 @@ namespace RTC
 		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
 		static const Json::StaticString JsonStringRid{ "rid" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
+		static const Json::StaticString JsonStringLossPercentage{ "lossPercentage" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonHeaderExtensionIds(Json::objectValue);
@@ -93,13 +94,22 @@ namespace RTC
 
 		json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
 
+		float lossPercentage = 0;
+
 		for (auto& kv : this->rtpStreams)
 		{
 			auto rtpStream = kv.second;
 
 			jsonRtpStreams.append(rtpStream->ToJson());
+			lossPercentage += rtpStream->GetLossPercentage();
 		}
+
 		json[JsonStringRtpStreams] = jsonRtpStreams;
+
+		if (!this->rtpStreams.empty())
+			lossPercentage = lossPercentage / this->rtpStreams.size();
+
+		json[JsonStringLossPercentage] = lossPercentage;
 
 		if (this->headerExtensionIds.ssrcAudioLevel != 0u)
 			jsonHeaderExtensionIds[JsonStringSsrcAudioLevel] = this->headerExtensionIds.ssrcAudioLevel;

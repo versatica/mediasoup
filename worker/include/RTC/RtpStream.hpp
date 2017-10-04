@@ -48,6 +48,7 @@ namespace RTC
 		uint32_t GetSsrc();
 		uint8_t GetPayloadType();
 		const RTC::RtpCodecMimeType& GetMimeType() const;
+		float GetLossPercentage() const;
 		bool IsHealthy();
 		void ResetHealthCheckTimer(uint16_t timeout = HealthCheckPeriod);
 
@@ -67,6 +68,8 @@ namespace RTC
 
 	public:
 		// Stats.
+		uint32_t packetsLost{ 0 };
+		uint8_t fractionLost{ 0 };
 		size_t packetsDiscarded{ 0 };
 		size_t packetsRepaired{ 0 };
 		size_t firCount{ 0 };
@@ -94,9 +97,6 @@ namespace RTC
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
 		bool notifyHealth{ true };
-		// Stats.
-		uint32_t packetsLost{ 0 };
-		uint8_t fractionLost{ 0 };
 	};
 
 	/* Inline instance methods. */
@@ -114,6 +114,11 @@ namespace RTC
 	inline const RTC::RtpCodecMimeType& RtpStream::GetMimeType() const
 	{
 		return this->params.mimeType;
+	}
+
+	inline float RtpStream::GetLossPercentage() const
+	{
+		return static_cast<float>(this->fractionLost) * 100 / 256;
 	}
 
 	inline bool RtpStream::IsHealthy()

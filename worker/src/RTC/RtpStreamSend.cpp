@@ -402,11 +402,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t currentLossPercentage = this->fractionLost * 100 / 256;
+		auto lossPercentage = GetLossPercentage();
 
-		if (currentLossPercentage >= MaxHealthLossPercentage)
+		if (lossPercentage >= MaxHealthLossPercentage)
 		{
-			MS_DEBUG_TAG(rtp, "last period loss percentage: %" PRIu16, currentLossPercentage);
+			MS_DEBUG_TAG(rtp, "last period loss percentage: %.2f", lossPercentage);
 
 			if (this->notifyHealth || this->healthy)
 			{

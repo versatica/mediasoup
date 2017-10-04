@@ -69,6 +69,7 @@ namespace RTC
 		static const Json::StaticString JsonStringSourcePaused{ "sourcePaused" };
 		static const Json::StaticString JsonStringPreferredProfile{ "preferredProfile" };
 		static const Json::StaticString JsonStringEffectiveProfile{ "effectiveProfile" };
+		static const Json::StaticString JsonStringLossPercentage{ "lossPercentage" };
 
 		Json::Value json(Json::objectValue);
 
@@ -93,6 +94,8 @@ namespace RTC
 
 		json[JsonStringEffectiveProfile] =
 		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
+
+		json[JsonStringLossPercentage] = GetLossPercentage();
 
 		return json;
 	}
@@ -613,6 +616,28 @@ namespace RTC
 			return;
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	float Consumer::GetLossPercentage() const
+	{
+		float lossPercentage = 0;
+
+		if (this->effectiveProfile != RTC::RtpEncodingParameters::Profile::NONE)
+		{
+			auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
+
+			MS_ASSERT(
+			  it != this->mapProfileRtpStream.end(), "no RtpStream associated with current profile");
+
+			auto rtpStream = it->second;
+
+			if (rtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
+				lossPercentage = 0;
+			else
+				lossPercentage = (this->rtpStream->GetLossPercentage() - rtpStream->GetLossPercentage());
+		}
+
+		return lossPercentage;
 	}
 
 	void Consumer::RequestKeyFrame()
