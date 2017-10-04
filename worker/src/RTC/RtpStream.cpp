@@ -209,6 +209,8 @@ namespace RTC
 				  packet->GetSequenceNumber());
 
 				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
+
+				// Packet discarded due to late or early arriving.
 				this->packetsDiscarded++;
 
 				return false;

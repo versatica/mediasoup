@@ -211,6 +211,7 @@ namespace RTC
 			if (!rtpStream->ReceiveRtxPacket(packet))
 				return;
 
+			// Packet repaired after applying RTX.
 			rtpStream->packetsRepaired++;
 		}
 		else

@@ -571,6 +571,8 @@ namespace RTC
 					break;
 
 				RetransmitRtpPacket(packet);
+
+				// Packet repaired after applying RTX.
 				this->rtpStream->packetsRepaired++;
 			}
 		}
