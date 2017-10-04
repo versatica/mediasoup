@@ -67,8 +67,6 @@ namespace RTC
 
 	public:
 		// Stats.
-		uint32_t packetsLost{ 0 };
-		uint8_t fractionLost{ 0 };
 		size_t packetsDiscarded{ 0 };
 		size_t packetsRepaired{ 0 };
 		size_t firCount{ 0 };
@@ -96,6 +94,9 @@ namespace RTC
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
 		bool notifyHealth{ true };
+		// Stats.
+		uint32_t packetsLost{ 0 };
+		uint8_t fractionLost{ 0 };
 	};
 
 	/* Inline instance methods. */
