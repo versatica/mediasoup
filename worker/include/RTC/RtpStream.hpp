@@ -67,8 +67,6 @@ namespace RTC
 
 	public:
 		// Stats.
-		size_t packetCount{ 0 };
-		size_t byteCount{ 0 };
 		uint32_t packetsLost{ 0 };
 		uint8_t fractionLost{ 0 };
 		size_t packetsDiscarded{ 0 };
