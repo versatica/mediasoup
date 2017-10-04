@@ -229,12 +229,13 @@ namespace RTC
 	void Consumer::AddProfile(
 	  const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStream* rtpStream)
 	{
-		MS_ASSERT(
-		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
-		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
-		  "invalid profile");
+		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::NONE, "invalid profile");
 
 		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile already exists");
+
+		MS_ASSERT(
+		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && this->profiles.size() != 0),
+		  "default profile cannot coexist with others");
 
 		// Insert the new profile.
 		this->mapProfileRtpStream[profile] = rtpStream;
@@ -249,12 +250,13 @@ namespace RTC
 
 	void Consumer::RemoveProfile(const RTC::RtpEncodingParameters::Profile profile)
 	{
-		MS_ASSERT(
-		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
-		    profile != RTC::RtpEncodingParameters::Profile::DEFAULT,
-		  "invalid profile");
+		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::NONE, "invalid profile");
 
 		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile not found");
+
+		MS_ASSERT(
+		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && this->profiles.size() != 1),
+		  "default profile cannot coexist with others");
 
 		// Remove the profile.
 		this->mapProfileRtpStream.erase(profile);

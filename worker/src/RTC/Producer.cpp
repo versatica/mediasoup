@@ -635,10 +635,6 @@ namespace RTC
 		// Notify about the profiles being enabled.
 		for (auto& profile : profiles)
 		{
-			// Don't announce default profile, but just those for simulcast/SVC.
-			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-				break;
-
 			MS_ASSERT(
 			  this->healthyProfiles.find(profile) == this->healthyProfiles.end(),
 			  "profile already in headltyProfiles set");
@@ -660,10 +656,6 @@ namespace RTC
 		// Notify about the profiles being disabled.
 		for (auto& profile : profiles)
 		{
-			// Don't announce default profile, but just those for simulcast/SVC.
-			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-				break;
-
 			MS_ASSERT(
 			  this->healthyProfiles.find(profile) != this->healthyProfiles.end(),
 			  "profile already in headltyProfiles set");
