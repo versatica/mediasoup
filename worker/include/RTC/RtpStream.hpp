@@ -73,8 +73,6 @@ namespace RTC
 		uint8_t fractionLost{ 0 };
 		size_t packetsDiscarded{ 0 };
 		size_t packetsRepaired{ 0 };
-		uint32_t jitter{ 0 };
-		uint32_t rtt{ 0 };
 		size_t firCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t nackCount{ 0 };

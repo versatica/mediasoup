@@ -64,8 +64,6 @@ namespace RTC
 		static const Json::StaticString JsonStringBitRate{ "bitrate" };
 		static const Json::StaticString JsonStringPacketsLost{ "packetsLost" };
 		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
-		static const Json::StaticString JsonStringJitter{ "jitter" };
-		static const Json::StaticString JsonStringRtt{ "rtt" };
 		static const Json::StaticString JsonStringPacketsDiscarded{ "packetsDiscarded" };
 		static const Json::StaticString JsonStringPacketsRepaired{ "packetsRepaired" };
 		static const Json::StaticString JsonStringFirCount{ "firCount" };
@@ -85,8 +83,6 @@ namespace RTC
 		json[JsonStringBitRate]     = Json::UInt{ this->transmissionCounter.GetRate(now) };
 		json[JsonStringPacketsLost]      = Json::UInt{ this->packetsLost };
 		json[JsonStringFractionLost]     = Json::UInt{ this->fractionLost };
-		json[JsonStringJitter]           = Json::UInt{ this->jitter };
-		json[JsonStringRtt]              = Json::UInt{ this->rtt };
 		json[JsonStringPacketsDiscarded] = static_cast<Json::UInt>(this->packetsDiscarded);
 		json[JsonStringPacketsRepaired]  = static_cast<Json::UInt>(this->packetsRepaired);
 		json[JsonStringFirCount]         = static_cast<Json::UInt>(this->firCount);

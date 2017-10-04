@@ -59,6 +59,8 @@ namespace RTC
 		bool hasRtx{ false };
 		uint8_t rtxPayloadType{ 0 };
 		uint32_t rtxSsrc{ 0 };
+		// Stats.
+		uint32_t jitter{ 0 };
 	};
 } // namespace RTC
 

@@ -38,10 +38,12 @@ namespace RTC
 	{
 		static const std::string Type = "outboundrtp";
 		static const Json::StaticString JsonStringType{ "type" };
+		static const Json::StaticString JsonStringRtt{ "rtt" };
 
 		Json::Value json = RtpStream::GetStats();
 
 		json[JsonStringType] = Type;
+		json[JsonStringRtt]  = Json::UInt{  this->rtt};
 
 		return json;
 	}
@@ -85,7 +87,6 @@ namespace RTC
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
-		this->jitter       = report->GetJitter();
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the

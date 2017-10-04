@@ -28,10 +28,12 @@ namespace RTC
 	{
 		static const std::string Type = "inboundrtp";
 		static const Json::StaticString JsonStringType{ "type" };
+		static const Json::StaticString JsonStringJitter{ "jitter" };
 
 		Json::Value json = RtpStream::GetStats();
 
-		json[JsonStringType] = Type;
+		json[JsonStringType]   = Type;
+		json[JsonStringJitter] = Json::UInt{ this->jitter };
 
 		return json;
 	}

@@ -53,6 +53,8 @@ namespace RTC
 		std::vector<StorageItem> storage;
 		using Buffer = std::list<BufferItem>;
 		Buffer buffer;
+		// Stats.
+		uint32_t rtt{ 0 };
 
 	private:
 		// Retransmittion related.
