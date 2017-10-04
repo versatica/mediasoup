@@ -24,6 +24,20 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	Json::Value RtpStreamRecv::GetStats()
+	{
+		static const std::string Type = "inboundrtp";
+		static const Json::StaticString JsonStringType{ "type" };
+		static const Json::StaticString JsonStringJitter{ "jitter" };
+
+		Json::Value json = RtpStream::GetStats();
+
+		json[JsonStringType]   = Type;
+		json[JsonStringJitter] = Json::UInt{ this->jitter };
+
+		return json;
+	}
+
 	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -127,18 +141,18 @@ namespace RTC
 
 		// Calculate Packets Expected and Lost.
 		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
-		this->totalLost   = expected - this->counter.GetPacketCount();
+		this->packetsLost = expected - this->transmissionCounter.GetPacketCount();
 
-		report->SetTotalLost(totalLost);
+		report->SetTotalLost(this->packetsLost);
 
 		// Calculate Fraction Lost.
 		uint32_t expectedInterval = expected - this->expectedPrior;
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->counter.GetPacketCount() - this->receivedPrior;
+		uint32_t receivedInterval = this->transmissionCounter.GetPacketCount() - this->receivedPrior;
 
-		this->receivedPrior = counter.GetPacketCount();
+		this->receivedPrior = transmissionCounter.GetPacketCount();
 
 		int32_t lostInterval = expectedInterval - receivedInterval;
 
@@ -217,7 +231,7 @@ namespace RTC
 	{
 		auto now = DepLibUV::GetTime();
 
-		if (this->counter.GetRate(now) == 0)
+		if (this->transmissionCounter.GetRate(now) == 0)
 			this->listener->OnRtpStreamDied(this);
 	}
 

@@ -22,7 +22,7 @@ namespace RTC
 		virtual void OnProducerProfileEnabled(
 		  RTC::Producer* producer,
 		  RTC::RtpEncodingParameters::Profile profile,
-		  const RTC::RtpStreamInfo* info) = 0;
+		  const RTC::RtpStream* rtpStream) = 0;
 		virtual void OnProducerProfileDisabled(
 		  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) = 0;
 	};

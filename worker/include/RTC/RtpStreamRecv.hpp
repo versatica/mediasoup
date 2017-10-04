@@ -23,6 +23,7 @@ namespace RTC
 		RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params);
 		~RtpStreamRecv() override;
 
+		Json::Value GetStats() override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
@@ -58,6 +59,8 @@ namespace RTC
 		bool hasRtx{ false };
 		uint8_t rtxPayloadType{ 0 };
 		uint32_t rtxSsrc{ 0 };
+		// Stats.
+		uint32_t jitter{ 0 };
 	};
 } // namespace RTC
 

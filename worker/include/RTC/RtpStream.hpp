@@ -10,20 +10,7 @@
 
 namespace RTC
 {
-	class RtpStreamInfo
-	{
-	public:
-		uint32_t totalLost{ 0 };
-		uint8_t fractionLost{ 0 };
-		uint32_t jitter{ 0 };
-		uint32_t rtt{ 0 };
-		size_t numPlis{ 0 };
-		size_t numNacks{ 0 };
-		// RTP counters.
-		RTC::RtpDataCounter counter;
-	};
-
-	class RtpStream : public Timer::Listener, public RtpStreamInfo
+	class RtpStream : public Timer::Listener
 	{
 	public:
 		class Listener
@@ -55,6 +42,7 @@ namespace RTC
 		virtual ~RtpStream();
 
 		virtual Json::Value ToJson();
+		virtual Json::Value GetStats();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		uint32_t GetRate(uint64_t now);
 		uint32_t GetSsrc();
@@ -77,6 +65,18 @@ namespace RTC
 	public:
 		void OnTimer(Timer* timer) override;
 
+	public:
+		// Stats.
+		size_t packetsDiscarded{ 0 };
+		size_t packetsRepaired{ 0 };
+		size_t firCount{ 0 };
+		size_t pliCount{ 0 };
+		size_t nackCount{ 0 };
+		size_t sliCount{ 0 };
+
+		RtpDataCounter transmissionCounter;
+		RtpDataCounter retransmissionCounter;
+
 	protected:
 		// Given as argument.
 		RtpStream::Params params;
@@ -94,6 +94,9 @@ namespace RTC
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
 		bool notifyHealth{ true };
+		// Stats.
+		uint32_t packetsLost{ 0 };
+		uint8_t fractionLost{ 0 };
 	};
 
 	/* Inline instance methods. */

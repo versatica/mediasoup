@@ -34,6 +34,20 @@ namespace RTC
 		ClearRetransmissionBuffer();
 	}
 
+	Json::Value RtpStreamSend::GetStats()
+	{
+		static const std::string Type = "outboundrtp";
+		static const Json::StaticString JsonStringType{ "type" };
+		static const Json::StaticString JsonStringRtt{ "rtt" };
+
+		Json::Value json = RtpStream::GetStats();
+
+		json[JsonStringType] = Type;
+		json[JsonStringRtt]  = Json::UInt{  this->rtt};
+
+		return json;
+	}
+
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -71,9 +85,8 @@ namespace RTC
 		this->rtt = ((rtt >> 16) * 1000);
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
-		this->totalLost    = report->GetTotalLost();
+		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
-		this->jitter       = report->GetJitter();
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -261,13 +274,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->counter.GetPacketCount() == 0u)
+		if (this->transmissionCounter.GetPacketCount() == 0u)
 			return nullptr;
 
 		auto report = new RTC::RTCP::SenderReport();
 
-		report->SetPacketCount(this->counter.GetPacketCount());
-		report->SetOctetCount(this->counter.GetBytes());
+		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
+		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
 		Utils::Time::Ntp ntp{};
 		Utils::Time::CurrentTimeNtp(ntp);

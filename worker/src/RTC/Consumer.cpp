@@ -227,7 +227,7 @@ namespace RTC
 	}
 
 	void Consumer::AddProfile(
-	  const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStreamInfo* info)
+	  const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStream* rtpStream)
 	{
 		MS_ASSERT(
 		  profile != RTC::RtpEncodingParameters::Profile::NONE &&
@@ -237,7 +237,7 @@ namespace RTC
 		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile already exists");
 
 		// Insert the new profile.
-		this->mapProfileRtpStreamInfo[profile] = info;
+		this->mapProfileRtpStream[profile] = rtpStream;
 		this->profiles.insert(profile);
 
 		MS_DEBUG_TAG(
@@ -257,7 +257,7 @@ namespace RTC
 		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile not found");
 
 		// Remove the profile.
-		this->mapProfileRtpStreamInfo.erase(profile);
+		this->mapProfileRtpStream.erase(profile);
 		this->profiles.erase(profile);
 
 		MS_DEBUG_TAG(
@@ -553,6 +553,8 @@ namespace RTC
 		if (!IsEnabled())
 			return;
 
+		this->rtpStream->nackCount++;
+
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
@@ -569,8 +571,36 @@ namespace RTC
 					break;
 
 				RetransmitRtpPacket(packet);
+
+				// Packet repaired after applying RTX.
+				this->rtpStream->packetsRepaired++;
 			}
 		}
+	}
+
+	void Consumer::ReceiveKeyFrameRequest(RTCP::FeedbackPs::MessageType messageType)
+	{
+		MS_TRACE();
+
+		if (!IsEnabled())
+			return;
+
+		switch (messageType)
+		{
+			case RTCP::FeedbackPs::MessageType::PLI:
+				this->rtpStream->pliCount++;
+				break;
+
+			case RTCP::FeedbackPs::MessageType::FIR:
+				this->rtpStream->firCount++;
+				break;
+
+			default:
+				MS_ASSERT(false, "invalid messageType");
+				break;
+		}
+
+		RequestKeyFrame();
 	}
 
 	void Consumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)

@@ -512,14 +512,14 @@ namespace RTC
 				consumer->AddListener(this);
 
 				auto healthyProfiles = producer->GetHealthyProfiles();
-				std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStreamInfo*>::reverse_iterator it;
+				std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>::reverse_iterator it;
 
 				for (it = healthyProfiles.rbegin(); it != healthyProfiles.rend(); ++it)
 				{
 					auto profile = it->first;
-					auto info    = it->second;
+					auto stats   = it->second;
 
-					consumer->AddProfile(profile, info);
+					consumer->AddProfile(profile, stats);
 				}
 
 				// Insert into the maps.
@@ -1531,7 +1531,9 @@ namespace RTC
 	}
 
 	void Router::OnProducerProfileEnabled(
-	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStreamInfo* info)
+	  RTC::Producer* producer,
+	  RTC::RtpEncodingParameters::Profile profile,
+	  const RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
@@ -1543,7 +1545,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->AddProfile(profile, info);
+			consumer->AddProfile(profile, rtpStream);
 		}
 	}
 

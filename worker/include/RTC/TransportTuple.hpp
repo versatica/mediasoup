@@ -30,6 +30,8 @@ namespace RTC
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
 		const struct sockaddr* GetRemoteAddress() const;
+		size_t GetRecvBytes() const;
+		size_t GetSentBytes() const;
 
 	private:
 		// Passed by argument.
@@ -106,6 +108,22 @@ namespace RTC
 			return (const struct sockaddr*)this->udpRemoteAddr;
 		else
 			return this->tcpConnection->GetPeerAddress();
+	}
+
+	inline size_t TransportTuple::GetRecvBytes() const
+	{
+		if (this->protocol == Protocol::UDP)
+			return this->udpSocket->GetRecvBytes();
+		else
+			return this->tcpConnection->GetRecvBytes();
+	}
+
+	inline size_t TransportTuple::GetSentBytes() const
+	{
+		if (this->protocol == Protocol::UDP)
+			return this->udpSocket->GetSentBytes();
+		else
+			return this->tcpConnection->GetSentBytes();
 	}
 } // namespace RTC
 

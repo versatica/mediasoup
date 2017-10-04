@@ -43,7 +43,7 @@ namespace RTC
 		void Resume();
 		void SourcePause();
 		void SourceResume();
-		void AddProfile(const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStreamInfo* info);
+		void AddProfile(const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStream* rtpStream);
 		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SourceRtpParametersUpdated();
 		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
@@ -54,6 +54,7 @@ namespace RTC
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
+		void ReceiveKeyFrameRequest(RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetTransmissionRate(uint64_t now);
 		void RequestKeyFrame();
@@ -104,7 +105,7 @@ namespace RTC
 
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
-		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStreamInfo*> mapProfileRtpStreamInfo;
+		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
 		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };

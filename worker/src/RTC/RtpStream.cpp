@@ -40,29 +40,55 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringBitRate{ "bitrate" };
-		static const Json::StaticString JsonStringJitter{ "jitter" };
 		static const Json::StaticString JsonStringParams{ "params" };
-		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
-		static const Json::StaticString JsonStringOctetCount{ "octetCount" };
-		static const Json::StaticString JsonStringRtt{ "rtt" };
-		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
-		static const Json::StaticString JsonStringTotalLost{ "totalLost" };
-		static const Json::StaticString JsonStringHealthy{ "healthy" };
+		static const Json::StaticString JsonStringStats{ "stats" };
 
 		Json::Value json(Json::objectValue);
 
+		json[JsonStringParams] = this->params.ToJson();
+		json[JsonStringStats]  = GetStats();
+
+		return json;
+	}
+
+	Json::Value RtpStream::GetStats()
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		static const Json::StaticString JsonStringMediaType{ "mediaType" };
+		static const Json::StaticString JsonStringHealthy{ "healthy" };
+		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
+		static const Json::StaticString JsonStringByteCount{ "byteCount" };
+		static const Json::StaticString JsonStringBitRate{ "bitrate" };
+		static const Json::StaticString JsonStringPacketsLost{ "packetsLost" };
+		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
+		static const Json::StaticString JsonStringPacketsDiscarded{ "packetsDiscarded" };
+		static const Json::StaticString JsonStringPacketsRepaired{ "packetsRepaired" };
+		static const Json::StaticString JsonStringFirCount{ "firCount" };
+		static const Json::StaticString JsonStringPliCount{ "pliCount" };
+		static const Json::StaticString JsonStringNackCount{ "nackCount" };
+		static const Json::StaticString JsonStringSliCount{ "sliCount" };
+
+		Json::Value json(Json::objectValue);
 		uint64_t now = DepLibUV::GetTime();
 
-		json[JsonStringBitRate]      = Json::UInt{ GetRate(now) };
-		json[JsonStringJitter]       = Json::UInt{ this->jitter };
-		json[JsonStringParams]       = this->params.ToJson();
-		json[JsonStringPacketCount]  = static_cast<Json::UInt>(this->counter.GetPacketCount());
-		json[JsonStringOctetCount]   = static_cast<Json::UInt>(this->counter.GetBytes());
-		json[JsonStringRtt]          = Json::UInt{ this->rtt };
-		json[JsonStringFractionLost] = Json::UInt{ this->fractionLost };
-		json[JsonStringTotalLost]    = Json::UInt{ this->totalLost };
-		json[JsonStringHealthy]      = this->healthy ? "true" : "false";
+		json[JsonStringTimestamp]   = Json::UInt64{ now };
+		json[JsonStringSsrc]        = Json::UInt{ this->params.ssrc };
+		json[JsonStringMediaType]   = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		json[JsonStringHealthy]     = this->healthy ? "true" : "false";
+		json[JsonStringPacketCount] = static_cast<Json::UInt>(this->transmissionCounter.GetPacketCount());
+		json[JsonStringByteCount]   = static_cast<Json::UInt>(this->transmissionCounter.GetBytes());
+		json[JsonStringBitRate]     = Json::UInt{ this->transmissionCounter.GetRate(now) };
+		json[JsonStringPacketsLost]      = Json::UInt{ this->packetsLost };
+		json[JsonStringFractionLost]     = Json::UInt{ this->fractionLost };
+		json[JsonStringPacketsDiscarded] = static_cast<Json::UInt>(this->packetsDiscarded);
+		json[JsonStringPacketsRepaired]  = static_cast<Json::UInt>(this->packetsRepaired);
+		json[JsonStringFirCount]         = static_cast<Json::UInt>(this->firCount);
+		json[JsonStringPliCount]         = static_cast<Json::UInt>(this->pliCount);
+		json[JsonStringNackCount]        = static_cast<Json::UInt>(this->nackCount);
+		json[JsonStringSliCount]         = static_cast<Json::UInt>(this->sliCount);
 
 		return json;
 	}
@@ -95,7 +121,7 @@ namespace RTC
 		}
 
 		// Increase counters.
-		this->counter.Update(packet);
+		this->transmissionCounter.Update(packet);
 
 		// Update highest seen RTP timestamp.
 		if (packet->GetTimestamp() > this->maxPacketTs)
@@ -109,7 +135,7 @@ namespace RTC
 
 	uint32_t RtpStream::GetRate(uint64_t now)
 	{
-		return this->counter.GetRate(now);
+		return this->transmissionCounter.GetRate(now);
 	}
 
 	void RtpStream::ResetHealthCheckTimer(uint16_t timeout)
@@ -179,6 +205,9 @@ namespace RTC
 				  packet->GetSequenceNumber());
 
 				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
+
+				// Packet discarded due to late or early arriving.
+				this->packetsDiscarded++;
 
 				return false;
 			}

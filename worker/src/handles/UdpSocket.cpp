@@ -204,11 +204,17 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	// Entire datagram was sent. Done.
 	if (sent == static_cast<int>(len))
 	{
+		// Update sent bytes.
+		this->sentBytes += sent;
+
 		return;
 	}
 	if (sent >= 0)
 	{
 		MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
+
+		// Update sent bytes.
+		this->sentBytes += sent;
 
 		return;
 	}
@@ -242,6 +248,11 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(sendData);
+	}
+	else
+	{
+		// Update sent bytes.
+		this->sentBytes += len;
 	}
 }
 
@@ -346,6 +357,9 @@ inline void UdpSocket::OnUvRecv(
 	// Data received.
 	if (nread > 0)
 	{
+		// Update received bytes.
+		this->recvBytes += nread;
+
 		// Notify the subclass.
 		UserOnUdpDatagramRecv(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
 	}

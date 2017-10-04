@@ -252,7 +252,7 @@ namespace RTC
 						  feedback->GetMediaSsrc(),
 						  feedback->GetMediaSsrc());
 
-						consumer->RequestKeyFrame();
+						consumer->ReceiveKeyFrameRequest(feedback->GetMessageType());
 
 						break;
 					}
@@ -544,7 +544,7 @@ namespace RTC
 	void Transport::OnProducerProfileEnabled(
 	  RTC::Producer* /*producer*/,
 	  RTC::RtpEncodingParameters::Profile /*profile*/,
-	  const RTC::RtpStreamInfo* /*info*/)
+	  const RTC::RtpStream* /*rtpStream*/)
 	{
 		// Do nothing.
 	}
