@@ -43,7 +43,7 @@ namespace RTC
 		Json::Value json = RtpStream::GetStats();
 
 		json[JsonStringType] = Type;
-		json[JsonStringRtt]  = Json::UInt{  this->rtt};
+		json[JsonStringRtt]  = Json::UInt{ this->rtt };
 
 		return json;
 	}

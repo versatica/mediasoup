@@ -40,8 +40,8 @@ namespace RTC
 		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ipFamily, ip, &port);
 		json[JsonStringRemoteIp]   = ip;
 		json[JsonStringRemotePort] = Json::UInt{ port };
-		json[JsonStringRecvBytes] = Json::UInt64{ GetRecvBytes() };
-		json[JsonStringSentBytes] = Json::UInt64{ GetSentBytes() };
+		json[JsonStringRecvBytes]  = Json::UInt64{ GetRecvBytes() };
+		json[JsonStringSentBytes]  = Json::UInt64{ GetSentBytes() };
 
 		return json;
 	}
