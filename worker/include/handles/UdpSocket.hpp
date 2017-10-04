@@ -39,6 +39,8 @@ public:
 	int GetLocalFamily() const;
 	const std::string& GetLocalIP() const;
 	uint16_t GetLocalPort() const;
+	size_t GetRecvBytes() const;
+	size_t GetSentBytes() const;
 
 private:
 	bool SetLocalAddress();
@@ -60,6 +62,8 @@ private:
 	uv_udp_t* uvHandle{ nullptr };
 	// Others.
 	bool isClosing{ false };
+	size_t recvBytes{ 0 };
+	size_t sentBytes{ 0 };
 
 protected:
 	struct sockaddr_storage localAddr
@@ -99,6 +103,16 @@ inline const std::string& UdpSocket::GetLocalIP() const
 inline uint16_t UdpSocket::GetLocalPort() const
 {
 	return this->localPort;
+}
+
+inline size_t UdpSocket::GetRecvBytes() const
+{
+	return this->recvBytes;
+}
+
+inline size_t UdpSocket::GetSentBytes() const
+{
+	return this->sentBytes;
 }
 
 #endif

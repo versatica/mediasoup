@@ -63,9 +63,12 @@ namespace RTC
 			{
 				const uint8_t* packet = this->buffer + this->frameStart + 2;
 
-				// Notify the listener.
+				// Update received bytes and notify the listener.
 				if (packetLen != 0)
+				{
+					this->recvBytes += packetLen;
 					this->listener->OnPacketRecv(this, packet, packetLen);
+				}
 
 				// If there is no more space available in the buffer and that is because
 				// the latest parsed frame filled it, then empty the full buffer.
@@ -139,6 +142,9 @@ namespace RTC
 	void TcpConnection::Send(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// Update sent bytes.
+		this->sentBytes += len;
 
 		// Write according to Framing RFC 4571.
 
