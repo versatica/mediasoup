@@ -240,8 +240,13 @@ namespace RTC
 		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
 		static const Json::StaticString JsonStringRid{ "rid" };
-		static const Json::StaticString JsonStringMaxBitrate{ "maxBitrate" };
-		static const Json::StaticString JsonStringEffectiveMaxBitrate{ "effectiveMaxBitrate" };
+		static const Json::StaticString JsonStringSentRemb{ "sentRemb" };
+		static const Json::StaticString JsonStringSentRembMaxBitrate{ "maxBitrate" };
+		static const Json::StaticString JsonStringSentRembBitrate{ "bitrate" };
+		static const Json::StaticString JsonStringSentRembSsrcs{ "ssrcs" };
+		static const Json::StaticString JsonStringRecvRemb{ "recvRemb" };
+		static const Json::StaticString JsonStringRecvRembBitrate{ "bitrate" };
+		static const Json::StaticString JsonStringRecvRembSsrcs{ "ssrcs" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
 
 		Json::Value json(Json::objectValue);
@@ -336,11 +341,33 @@ namespace RTC
 
 		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
 
-		// Add maxBitrate.
-		json[JsonStringMaxBitrate] = Json::UInt{ this->maxBitrate };
+		// Add sendRemb
+		Json::Value jsonSentRemb(Json::objectValue);
+		Json::Value jsonSentRembSsrcs(Json::arrayValue);
 
-		// Add effectiveMaxBitrate.
-		json[JsonStringEffectiveMaxBitrate] = Json::UInt{ this->effectiveMaxBitrate };
+		jsonSentRemb[JsonStringSentRembMaxBitrate] = Json::UInt{ this->maxBitrate };
+
+		jsonSentRemb[JsonStringSentRembBitrate] = Json::UInt64{ std::get<0>(this->sentRemb) };
+
+		for (auto ssrc : std::get<1>(this->sentRemb))
+			jsonSentRembSsrcs.append(ssrc);
+
+		jsonSentRemb[JsonStringSentRembSsrcs] = jsonSentRembSsrcs;
+
+		json[JsonStringSentRemb] = jsonSentRemb;
+
+		// Add recvRemb
+		Json::Value jsonRecvRemb(Json::objectValue);
+		Json::Value jsonRecvRembSsrcs(Json::arrayValue);
+
+		jsonRecvRemb[JsonStringRecvRembBitrate] = Json::UInt64{ std::get<0>(this->recvRemb) };
+
+		for (auto ssrc : std::get<1>(this->recvRemb))
+			jsonRecvRembSsrcs.append(ssrc);
+
+		jsonRecvRemb[JsonStringRecvRembSsrcs] = jsonRecvRembSsrcs;
+
+		json[JsonStringRecvRemb] = jsonRecvRemb;
 
 		// Add rtpListener.
 		json[JsonStringRtpListener] = this->rtpListener.ToJson();
@@ -1126,7 +1153,7 @@ namespace RTC
 		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
 		{
 			this->lastEffectiveMaxBitrateAt = now;
-			this->effectiveMaxBitrate       = effectiveBitrate;
+			this->sentRemb                  = std::make_tuple(effectiveBitrate, ssrcs);
 		}
 	}
 } // namespace RTC

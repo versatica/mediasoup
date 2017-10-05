@@ -261,9 +261,14 @@ namespace RTC
 					{
 						auto* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
 
-						// Ignore REMB requests.
+						// Store REMB info.
 						if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
+						{
+							auto* remb = dynamic_cast<RTCP::FeedbackPsRembPacket*>(afb);
+
+							this->recvRemb = std::make_tuple(remb->GetBitrate(), remb->GetSsrcs());
 							break;
+						}
 					}
 
 					// [[fallthrough]]; (C++17)

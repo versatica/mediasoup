@@ -7,6 +7,7 @@
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpListener.hpp"
@@ -15,7 +16,9 @@
 #include "RTC/UdpSocket.hpp"
 #include "handles/Timer.hpp"
 #include <json/json.h>
+#include <tuple>
 #include <unordered_set>
+#include <vector>
 
 namespace RTC
 {
@@ -78,6 +81,7 @@ namespace RTC
 
 	protected:
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
+		void ReceiveRtcpRemb(RTC::RTCP::FeedbackPsRembPacket* remb);
 
 	private:
 		virtual bool IsConnected() const = 0;
@@ -140,6 +144,8 @@ namespace RTC
 		struct sockaddr_storage mirrorAddrStorage
 		{
 		};
+		// Others (REMB)
+		std::tuple<uint64_t, std::vector<uint32_t>> recvRemb;
 	};
 } // namespace RTC
 

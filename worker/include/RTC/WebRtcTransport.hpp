@@ -130,7 +130,7 @@ namespace RTC
 		// Others (REMB and bitrate stuff).
 		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 		uint32_t maxBitrate{ 0 };
-		uint32_t effectiveMaxBitrate{ 0 };
+		std::tuple<uint64_t, std::vector<uint32_t>> sentRemb;
 		uint64_t lastEffectiveMaxBitrateAt{ 0 };
 	};
 } // namespace RTC
