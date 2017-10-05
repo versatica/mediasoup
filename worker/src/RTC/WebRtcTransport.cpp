@@ -708,11 +708,24 @@ namespace RTC
 		}
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-
 		if (this->headerExtensionIds.rid != 0u)
 		{
 			packet->AddExtensionMapping(
 			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
+		}
+		if (this->headerExtensionIds.absSendTime != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
+		}
+
+		// Feed the remote bitrate estimator (REMB).
+		uint32_t absSendTime;
+
+		if (packet->ReadAbsSendTime(&absSendTime))
+		{
+			this->remoteBitrateEstimator->IncomingPacket(
+			  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 		}
 
 		// Get the associated Producer.
@@ -741,15 +754,6 @@ namespace RTC
 
 		// Pass the RTP packet to the corresponding Producer.
 		producer->ReceiveRtpPacket(packet);
-
-		// Feed the remote bitrate estimator (REMB).
-		uint32_t absSendTime;
-
-		if (packet->ReadAbsSendTime(&absSendTime))
-		{
-			this->remoteBitrateEstimator->IncomingPacket(
-			  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
-		}
 
 		delete packet;
 	}

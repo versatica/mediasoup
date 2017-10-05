@@ -201,8 +201,8 @@ namespace RTC
 
 			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
 			// stuff that would change its size.
-			packet = packet->Clone(ClonedPacketBuffer);
 			clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
+			packet = clonedPacket.get();
 
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
@@ -214,8 +214,8 @@ namespace RTC
 
 			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
 			// stuff that would change its size.
-			packet = packet->Clone(ClonedPacketBuffer);
 			clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
+			packet = clonedPacket.get();
 
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
