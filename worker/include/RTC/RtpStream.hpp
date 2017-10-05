@@ -45,11 +45,11 @@ namespace RTC
 		virtual Json::Value GetStats();
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		uint32_t GetRate(uint64_t now);
-		uint32_t GetSsrc();
-		uint8_t GetPayloadType();
+		uint32_t GetSsrc() const;
+		uint8_t GetPayloadType() const;
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		float GetLossPercentage() const;
-		bool IsHealthy();
+		bool IsHealthy() const;
 		void ResetHealthCheckTimer(uint16_t timeout = HealthCheckPeriod);
 
 	protected:
@@ -101,12 +101,12 @@ namespace RTC
 
 	/* Inline instance methods. */
 
-	inline uint32_t RtpStream::GetSsrc()
+	inline uint32_t RtpStream::GetSsrc() const
 	{
 		return this->params.ssrc;
 	}
 
-	inline uint8_t RtpStream::GetPayloadType()
+	inline uint8_t RtpStream::GetPayloadType() const
 	{
 		return this->params.payloadType;
 	}
@@ -121,7 +121,7 @@ namespace RTC
 		return static_cast<float>(this->fractionLost) * 100 / 256;
 	}
 
-	inline bool RtpStream::IsHealthy()
+	inline bool RtpStream::IsHealthy() const
 	{
 		return this->healthy;
 	}
