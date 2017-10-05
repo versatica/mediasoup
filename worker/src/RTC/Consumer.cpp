@@ -665,7 +665,7 @@ namespace RTC
 		OnRtpStreamUnhealthy(rtpStream);
 	}
 
-	void Consumer::OnRtpStreamHealthy(RtpStream* /*rtpStream*/)
+	void Consumer::OnRtpStreamHealthy(RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
@@ -674,7 +674,8 @@ namespace RTC
 
 		MS_DEBUG_TAG(
 		  rtp,
-		  "successful probation [profile:%s]",
+		  "successful probation [ssrc:%" PRIu32 ", profile:%s]",
+		  rtpStream->GetSsrc(),
 		  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
 
 		// Promote probing profile.
@@ -689,11 +690,12 @@ namespace RTC
 
 		MS_DEBUG_TAG(
 		  rtp,
-		  "target profile set [profile:%s]",
+		  "target profile set [ssrc:%" PRIu32 ", profile:%s]",
+		  rtpStream->GetSsrc(),
 		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
 	}
 
-	void Consumer::OnRtpStreamUnhealthy(RtpStream* /*rtpStream*/)
+	void Consumer::OnRtpStreamUnhealthy(RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
@@ -702,7 +704,8 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(
 			  rtp,
-			  "unsuccessful probation [profile:%s]",
+			  "unsuccessful probation [ssrc:%" PRIu32 ", profile:%s]",
+			  rtpStream->GetSsrc(),
 			  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
 
 			// Disable probation flag.
@@ -714,7 +717,8 @@ namespace RTC
 
 		MS_DEBUG_TAG(
 		  rtp,
-		  "effective profile unhealthy [profile:%s]",
+		  "effective profile unhealthy [ssrc:%" PRIu32 ", profile:%s]",
+		  rtpStream->GetSsrc(),
 		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
 
 		// No simulcast/SVC.
@@ -748,7 +752,8 @@ namespace RTC
 
 		MS_DEBUG_TAG(
 		  rtp,
-		  "target profile set [profile:%s]",
+		  "target profile set [ssrc:%" PRIu32 ", profile:%s]",
+		  rtpStream->GetSsrc(),
 		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
 	}
 
