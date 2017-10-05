@@ -1200,7 +1200,7 @@ namespace RTC
 
 				auto profile = it->second;
 
-				if (profile == RTC::RtpEncodingParameters::Profile::NONE || profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				if (profile == RTC::RtpEncodingParameters::Profile::NONE)
 				{
 					request->Reject("invalid profile");
 
