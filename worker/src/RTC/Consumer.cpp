@@ -308,6 +308,8 @@ namespace RTC
 
 			this->targetProfile = newTargetProfile;
 
+			RequestKeyFrame();
+
 			return;
 		}
 	}
@@ -973,7 +975,7 @@ namespace RTC
 				return;
 			}
 		}
-		// New profile is lower than the targe profile.
+		// New profile is lower than the target profile.
 		else
 		{
 			this->targetProfile = newTargetProfile;
