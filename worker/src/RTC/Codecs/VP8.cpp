@@ -158,7 +158,7 @@ namespace RTC
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
-		void VP8::PayloadDescriptorHandler::Encode(
+		bool VP8::PayloadDescriptorHandler::Encode(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
 			EncodingContext* context = dynamic_cast<EncodingContext*>(encodingContext);
@@ -172,14 +172,35 @@ namespace RTC
 				context->syncRequired = false;
 			}
 
+			// Incremental pictureId. Check the temporal layer.
+			if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(
+			      this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
+			{
+				if (this->payloadDescriptor->t && this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
+				{
+					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+
+					return false;
+				}
+			}
+
 			// Update pictureId and tl0PictureIndex values.
 			uint16_t pictureId;
 			uint8_t tl0PictureIndex;
 
-			context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId);
-			context->tl0PictureIndexManager.Input(this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex);
+			// Do not send a dropped pictureId.
+			if (!context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId))
+				return false;
+
+			// Do not send a dropped tl0PicutreIndex.
+			if (!context->tl0PictureIndexManager.Input(
+			      this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex))
+				return false;
 
 			this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
+
+			return true;
 		};
 
 		void VP8::PayloadDescriptorHandler::Restore(uint8_t* data)

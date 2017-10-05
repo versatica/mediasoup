@@ -49,6 +49,7 @@ namespace RTC
 		void SourceRtpParametersUpdated();
 		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
+		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
 		void Disable();
 		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;

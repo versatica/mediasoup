@@ -1343,6 +1343,41 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_SET_ENCODING_PREFERENCES:
+			{
+				static const Json::StaticString JsonStringQualityLayer{ "qualityLayer" };
+				static const Json::StaticString JsonStringSpatialLayer{ "spatialLayer" };
+				static const Json::StaticString JsonStringTemporalLayer{ "temporalLayer" };
+
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				RTC::Codecs::EncodingContext::Preferences preferences;
+
+				if (request->data[JsonStringQualityLayer].isUInt())
+					preferences.qualityLayer = request->data[JsonStringQualityLayer].asUInt();
+				if (request->data[JsonStringSpatialLayer].isUInt())
+					preferences.spatialLayer = request->data[JsonStringSpatialLayer].asUInt();
+				if (request->data[JsonStringTemporalLayer].isUInt())
+					preferences.temporalLayer = request->data[JsonStringTemporalLayer].asUInt();
+
+				consumer->SetEncodingPreferences(preferences);
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				RTC::Consumer* consumer;

@@ -93,7 +93,7 @@ namespace RTC
 
 			public:
 				void Dump() const;
-				void Encode(RTC::Codecs::EncodingContext* context, uint8_t* data);
+				bool Encode(RTC::Codecs::EncodingContext* context, uint8_t* data);
 				void Restore(uint8_t* data);
 				bool IsKeyFrame() const;
 

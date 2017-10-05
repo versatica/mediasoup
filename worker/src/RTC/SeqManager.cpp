@@ -111,6 +111,18 @@ namespace RTC
 		return true;
 	}
 
+	template<typename T>
+	T SeqManager<T>::GetMaxInput() const
+	{
+		return this->maxInput;
+	}
+
+	template<typename T>
+	T SeqManager<T>::GetMaxOutput() const
+	{
+		return this->maxOutput;
+	}
+
 	// Explicit instantiation to have all SeqManager definitions in this file.
 	template class SeqManager<uint8_t>;
 	template class SeqManager<uint16_t>;

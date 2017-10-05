@@ -44,6 +44,7 @@ namespace Channel
 		{ "consumer.pause",                    Request::MethodId::CONSUMER_PAUSE                       },
 		{ "consumer.resume",                   Request::MethodId::CONSUMER_RESUME                      },
 		{ "consumer.setPreferredProfile",      Request::MethodId::CONSUMER_SET_PREFERRED_PROFILE       },
+		{ "consumer.setEncodingPreferences",   Request::MethodId::CONSUMER_SET_ENCODING_PREFERENCES    },
 		{ "consumer.requestKeyFrame",          Request::MethodId::CONSUMER_REQUEST_KEY_FRAME           }
 	};
 	// clang-format on

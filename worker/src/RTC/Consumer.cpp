@@ -372,6 +372,24 @@ namespace RTC
 		RecalculateTargetProfile(true /*forcePreferred*/);
 	}
 
+	void Consumer::SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences)
+	{
+		MS_TRACE();
+
+		if (!this->encodingContext)
+			return;
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "setting encoding preferences [qualityLayer:%" PRIu8 ", spatialLayer:%" PRIu8
+		  ", temporalLayer:%" PRIu8 "]",
+		  preferences.qualityLayer,
+		  preferences.spatialLayer,
+		  preferences.temporalLayer);
+
+		this->encodingContext->SetPreferences(preferences);
+	}
+
 	/**
 	 * Called when the Transport assigned to this Consumer has been closed, so this
 	 * Consumer becomes unhandled.
@@ -477,6 +495,15 @@ namespace RTC
 				this->encodingContext->SyncRequired();
 		}
 
+		// Rewrite payload if needed. Drop packet if necessary.
+		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+			this->rtpTimestampManager.Drop(packet->GetTimestamp());
+
+			return;
+		}
+
 		// Update RTP seq number and timestamp.
 		uint16_t rtpSeq;
 		uint32_t rtpTimestamp;
@@ -501,10 +528,6 @@ namespace RTC
 
 		// Rewrite packet timestamp.
 		packet->SetTimestamp(rtpTimestamp);
-
-		// Rewrite payload if needed.
-		if (this->encodingContext)
-			packet->EncodePayload(this->encodingContext.get());
 
 		if (isSyncPacket)
 		{

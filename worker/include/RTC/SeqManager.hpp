@@ -39,6 +39,8 @@ namespace RTC
 		void Sync(T input);
 		void Drop(T input);
 		bool Input(const T input, T& output);
+		T GetMaxInput() const;
+		T GetMaxOutput() const;
 
 	private:
 		T base{ 0 };

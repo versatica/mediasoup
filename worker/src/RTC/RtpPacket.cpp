@@ -456,14 +456,14 @@ namespace RTC
 		return true;
 	}
 
-	void RtpPacket::EncodePayload(RTC::Codecs::EncodingContext* context)
+	bool RtpPacket::EncodePayload(RTC::Codecs::EncodingContext* context)
 	{
 		MS_TRACE();
 
 		if (!this->payloadDescriptorHandler)
-			return;
+			return true;
 
-		this->payloadDescriptorHandler->Encode(context, this->payload);
+		return this->payloadDescriptorHandler->Encode(context, this->payload);
 	}
 
 	void RtpPacket::RestorePayload()
