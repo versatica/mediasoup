@@ -47,10 +47,12 @@ namespace RTC
 		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SourceRtpParametersUpdated();
 		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
+		void SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void Disable();
 		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
+		RTC::RtpEncodingParameters::Profile GetPreferredProfile() const;
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
@@ -103,11 +105,13 @@ namespace RTC
 		bool syncRequired{ true };
 		// RTP payload descriptor encoding.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-
 		// RTP profiles.
 		std::set<RTC::RtpEncodingParameters::Profile> profiles;
 		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
 		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile sourcePreferredProfile{
+			RTC::RtpEncodingParameters::Profile::DEFAULT
+		};
 		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
@@ -141,6 +145,20 @@ namespace RTC
 	inline bool Consumer::IsPaused() const
 	{
 		return this->paused || this->sourcePaused;
+	}
+
+	inline RTC::RtpEncodingParameters::Profile Consumer::GetPreferredProfile() const
+	{
+		if (this->preferredProfile == this->sourcePreferredProfile)
+			return this->preferredProfile;
+
+		if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+			return this->sourcePreferredProfile;
+
+		if (this->sourcePreferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+			return this->preferredProfile;
+
+		return std::min(this->preferredProfile, this->sourcePreferredProfile);
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)

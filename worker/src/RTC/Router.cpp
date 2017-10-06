@@ -508,6 +508,9 @@ namespace RTC
 				if (producer->IsPaused())
 					consumer->SourcePause();
 
+				// Provide the preferred RTP profile of the Producer.
+				consumer->SetSourcePreferredProfile(producer->GetPreferredProfile());
+
 				// Add us as listener.
 				consumer->AddListener(this);
 
@@ -1008,6 +1011,66 @@ namespace RTC
 				}
 
 				producer->Resume();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_SET_PREFERRED_PROFILE:
+			{
+				static const Json::StaticString JsonStringProfile{ "profile" };
+
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (!request->data[JsonStringProfile].isString())
+				{
+					request->Reject("missing data.profile");
+
+					return;
+				}
+
+				std::string profileStr = request->data[JsonStringProfile].asString();
+				auto it                = RTC::RtpEncodingParameters::string2Profile.find(profileStr);
+
+				if (it == RTC::RtpEncodingParameters::string2Profile.end())
+				{
+					request->Reject("unknown profile");
+
+					return;
+				}
+
+				auto profile = it->second;
+
+				if (profile == RTC::RtpEncodingParameters::Profile::NONE)
+				{
+					request->Reject("invalid profile");
+
+					return;
+				}
+
+				if (profile != producer->GetPreferredProfile())
+				{
+					producer->SetPreferredProfile(profile);
+
+					auto& consumers = this->mapProducerConsumers[producer];
+
+					for (auto* consumer : consumers)
+					{
+						consumer->SetSourcePreferredProfile(profile);
+					}
+				}
 
 				request->Accept();
 
