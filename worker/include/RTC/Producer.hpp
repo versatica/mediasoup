@@ -60,9 +60,11 @@ namespace RTC
 		void UpdateRtpParameters(RTC::RtpParameters& rtpParameters);
 		void Pause();
 		void Resume();
+		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		const RTC::RtpParameters& GetParameters() const;
 		const struct RTC::Transport::HeaderExtensionIds& GetTransportHeaderExtensionIds() const;
 		bool IsPaused() const;
+		RTC::RtpEncodingParameters::Profile GetPreferredProfile() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -122,6 +124,8 @@ namespace RTC
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
+		// RTP preferred profile.
+		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 	};
 
 	/* Inline methods. */
@@ -136,9 +140,19 @@ namespace RTC
 		this->listeners.erase(listener);
 	}
 
+	inline void Producer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		this->preferredProfile = profile;
+	}
+
 	inline const RTC::RtpParameters& Producer::GetParameters() const
 	{
 		return this->rtpParameters;
+	}
+
+	inline RTC::RtpEncodingParameters::Profile Producer::GetPreferredProfile() const
+	{
+		return this->preferredProfile;
 	}
 
 	inline const struct RTC::Transport::HeaderExtensionIds& Producer::GetTransportHeaderExtensionIds() const

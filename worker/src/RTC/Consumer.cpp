@@ -90,7 +90,7 @@ namespace RTC
 		json[JsonStringSourcePaused] = this->sourcePaused;
 
 		json[JsonStringPreferredProfile] =
-		  RTC::RtpEncodingParameters::profile2String[this->preferredProfile];
+		  RTC::RtpEncodingParameters::profile2String[GetPreferredProfile()];
 
 		json[JsonStringEffectiveProfile] =
 		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
@@ -326,6 +326,23 @@ namespace RTC
 		MS_DEBUG_TAG(
 		  rtp,
 		  "preferred profile set [profile:%s]",
+		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+
+		RecalculateTargetProfile(true /*forcePreferred*/);
+	}
+
+	void Consumer::SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
+	{
+		MS_TRACE();
+
+		if (this->sourcePreferredProfile == profile)
+			return;
+
+		this->sourcePreferredProfile = profile;
+
+		MS_DEBUG_TAG(
+		  rtp,
+		  "source preferred profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
 		RecalculateTargetProfile(true /*forcePreferred*/);
@@ -902,7 +919,7 @@ namespace RTC
 				newTargetProfile = RtpEncodingParameters::Profile::DEFAULT;
 		}
 		// If there is no preferred profile, try the next higher profile.
-		else if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+		else if (GetPreferredProfile() == RTC::RtpEncodingParameters::Profile::DEFAULT)
 		{
 			newTargetProfile = this->effectiveProfile;
 			auto it          = this->profiles.upper_bound(this->effectiveProfile);
@@ -920,7 +937,7 @@ namespace RTC
 			{
 				auto profile = *it;
 
-				if (profile <= this->preferredProfile)
+				if (profile <= GetPreferredProfile())
 				{
 					newTargetProfile = profile;
 					break;
@@ -933,7 +950,7 @@ namespace RTC
 			newTargetProfile = this->effectiveProfile;
 			auto it          = this->profiles.upper_bound(this->effectiveProfile);
 
-			if (it != this->profiles.end() && *it <= this->preferredProfile)
+			if (it != this->profiles.end() && *it <= GetPreferredProfile())
 				newTargetProfile = *it;
 		}
 

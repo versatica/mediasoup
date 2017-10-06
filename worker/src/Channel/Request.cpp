@@ -34,6 +34,7 @@ namespace Channel
 		{ "producer.updateRtpParameters",      Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS       },
 		{ "producer.pause",                    Request::MethodId::PRODUCER_PAUSE                       },
 		{ "producer.resume" ,                  Request::MethodId::PRODUCER_RESUME                      },
+		{ "producer.setPreferredProfile",      Request::MethodId::PRODUCER_SET_PREFERRED_PROFILE       },
 		{ "consumer.close",                    Request::MethodId::CONSUMER_CLOSE                       },
 		{ "consumer.dump",                     Request::MethodId::CONSUMER_DUMP                        },
 		{ "consumer.enable",                   Request::MethodId::CONSUMER_ENABLE                      },

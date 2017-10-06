@@ -255,6 +255,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
 		case Channel::Request::MethodId::PRODUCER_PAUSE:
 		case Channel::Request::MethodId::PRODUCER_RESUME:
+		case Channel::Request::MethodId::PRODUCER_SET_PREFERRED_PROFILE:
 		case Channel::Request::MethodId::CONSUMER_CLOSE:
 		case Channel::Request::MethodId::CONSUMER_DUMP:
 		case Channel::Request::MethodId::CONSUMER_ENABLE:
