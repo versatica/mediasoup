@@ -48,6 +48,7 @@ namespace RTC
 
 	public:
 		Json::Value ToJson() const override;
+		Json::Value GetStats() const override;
 		RTC::DtlsTransport::Role SetRemoteDtlsParameters(
 		  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
 		void SetMaxBitrate(uint32_t bitrate);

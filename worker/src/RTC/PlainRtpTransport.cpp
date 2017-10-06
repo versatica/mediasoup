@@ -106,6 +106,15 @@ namespace RTC
 		return json;
 	}
 
+	Json::Value PlainRtpTransport::GetStats() const
+	{
+		MS_TRACE();
+
+		Json::Value json(Json::objectValue);
+
+		return json;
+	}
+
 	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

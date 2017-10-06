@@ -21,6 +21,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Generate a random rtpStreamId.
+		this->rtpStreamId = Utils::Crypto::GetRandomString(16);
+
 		// Set the health check timer.
 		this->healthCheckTimer = new Timer(this);
 
@@ -41,12 +44,10 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString JsonStringParams{ "params" };
-		static const Json::StaticString JsonStringStats{ "stats" };
 
 		Json::Value json(Json::objectValue);
 
 		json[JsonStringParams] = this->params.ToJson();
-		json[JsonStringStats]  = GetStats();
 
 		return json;
 	}
@@ -55,9 +56,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static const Json::StaticString JsonStringId{ "id" };
 		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 		static const Json::StaticString JsonStringMediaType{ "mediaType" };
+		static const Json::StaticString JsonStringMimeType{ "mimeType" };
 		static const Json::StaticString JsonStringHealthy{ "healthy" };
 		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
 		static const Json::StaticString JsonStringByteCount{ "byteCount" };
@@ -74,9 +77,11 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 		uint64_t now = DepLibUV::GetTime();
 
+		json[JsonStringId]          = this->rtpStreamId;
 		json[JsonStringTimestamp]   = Json::UInt64{ now };
 		json[JsonStringSsrc]        = Json::UInt{ this->params.ssrc };
 		json[JsonStringMediaType]   = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		json[JsonStringMimeType]    = this->params.mimeType.ToString();
 		json[JsonStringHealthy]     = this->healthy ? "true" : "false";
 		json[JsonStringPacketCount] = static_cast<Json::UInt>(this->transmissionCounter.GetPacketCount());
 		json[JsonStringByteCount]   = static_cast<Json::UInt>(this->transmissionCounter.GetBytes());

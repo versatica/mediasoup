@@ -21,8 +21,6 @@ namespace RTC
 		static const Json::StaticString JsonStringProtocol{ "protocol" };
 		static const Json::StaticString JsonStringUdp{ "udp" };
 		static const Json::StaticString JsonStringTcp{ "tcp" };
-		static const Json::StaticString JsonStringRecvBytes{ "recvBytes" };
-		static const Json::StaticString JsonStringSentBytes{ "sentBytes" };
 
 		Json::Value json(Json::objectValue);
 		int ipFamily;
@@ -40,8 +38,6 @@ namespace RTC
 		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ipFamily, ip, &port);
 		json[JsonStringRemoteIp]   = ip;
 		json[JsonStringRemotePort] = Json::UInt{ port };
-		json[JsonStringRecvBytes]  = Json::UInt64{ GetRecvBytes() };
-		json[JsonStringSentBytes]  = Json::UInt64{ GetSentBytes() };
 
 		return json;
 	}

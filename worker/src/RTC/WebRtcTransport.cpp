@@ -240,13 +240,6 @@ namespace RTC
 		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
 		static const Json::StaticString JsonStringRid{ "rid" };
-		static const Json::StaticString JsonStringSentRemb{ "sentRemb" };
-		static const Json::StaticString JsonStringSentRembMaxBitrate{ "maxBitrate" };
-		static const Json::StaticString JsonStringSentRembBitrate{ "bitrate" };
-		static const Json::StaticString JsonStringSentRembSsrcs{ "ssrcs" };
-		static const Json::StaticString JsonStringRecvRemb{ "recvRemb" };
-		static const Json::StaticString JsonStringRecvRembBitrate{ "bitrate" };
-		static const Json::StaticString JsonStringRecvRembSsrcs{ "ssrcs" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
 
 		Json::Value json(Json::objectValue);
@@ -341,38 +334,131 @@ namespace RTC
 
 		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
 
-		// Add sendRemb
-		Json::Value jsonSentRemb(Json::objectValue);
-		Json::Value jsonSentRembSsrcs(Json::arrayValue);
-
-		jsonSentRemb[JsonStringSentRembMaxBitrate] = Json::UInt{ this->maxBitrate };
-
-		jsonSentRemb[JsonStringSentRembBitrate] = Json::UInt64{ std::get<0>(this->sentRemb) };
-
-		for (auto ssrc : std::get<1>(this->sentRemb))
-			jsonSentRembSsrcs.append(ssrc);
-
-		jsonSentRemb[JsonStringSentRembSsrcs] = jsonSentRembSsrcs;
-
-		json[JsonStringSentRemb] = jsonSentRemb;
-
-		// Add recvRemb
-		Json::Value jsonRecvRemb(Json::objectValue);
-		Json::Value jsonRecvRembSsrcs(Json::arrayValue);
-
-		jsonRecvRemb[JsonStringRecvRembBitrate] = Json::UInt64{ std::get<0>(this->recvRemb) };
-
-		for (auto ssrc : std::get<1>(this->recvRemb))
-			jsonRecvRembSsrcs.append(ssrc);
-
-		jsonRecvRemb[JsonStringRecvRembSsrcs] = jsonRecvRembSsrcs;
-
-		json[JsonStringRecvRemb] = jsonRecvRemb;
-
 		// Add rtpListener.
 		json[JsonStringRtpListener] = this->rtpListener.ToJson();
 
 		return json;
+	}
+
+	Json::Value WebRtcTransport::GetStats() const
+	{
+		MS_TRACE();
+
+		static const std::string type("transport");
+		static const Json::StaticString JsonStringType{ "type" };
+		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringBytesReceived{ "bytesReceived" };
+		static const Json::StaticString JsonStringBytesSent{ "bytesSent" };
+		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
+		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
+		static const Json::StaticString JsonStringIceConnectionState{ "iceConnectionState" };
+		// DTLS states.
+		static const Json::StaticString JsonStringNew{ "new" };
+		static const Json::StaticString JsonStringConnecting{ "connecting" };
+		static const Json::StaticString JsonStringConnected{ "connected" };
+		static const Json::StaticString JsonStringClosed{ "closed" };
+		static const Json::StaticString JsonStringFailed{ "failed" };
+		// ICE connection states.
+		static const Json::StaticString JsonStringCompleted{ "completed" };
+		static const Json::StaticString JsonStringDisconnected{ "disconnected" };
+		// Available send bandwidth.
+		static const Json::StaticString JsonStringLocalAvailableSendBw{ "localAvailableSendBw" };
+		static const Json::StaticString JsonStringLocalAvailableSendBwMaxValue{ "maxBitrate" };
+		static const Json::StaticString JsonStringLocalAvailableSendBwValue{ "bitrate" };
+		static const Json::StaticString JsonStringLocalAvailableSendBwSsrcs{ "ssrcs" };
+		static const Json::StaticString JsonStringRemoteAvailableSendBw{ "remoteAvailableSendBw" };
+		static const Json::StaticString JsonStringRemoteAvailableSendBwValue{ "bitrate" };
+		static const Json::StaticString JsonStringRemoteAvailableSendBwSsrcs{ "ssrcs" };
+
+		Json::Value json(Json::objectValue);
+
+		json[JsonStringType]      = type;
+		json[JsonStringTimestamp] = Json::UInt64{ DepLibUV::GetTime() };
+		json[JsonStringId]        = Json::UInt{ this->transportId };
+
+		if (this->selectedTuple != nullptr)
+		{
+			// 'bytesReceived'.
+			json[JsonStringBytesReceived] = Json::UInt64{ this->selectedTuple->GetRecvBytes() };
+			// 'bytesSent'.
+			json[JsonStringBytesSent] = Json::UInt64{ this->selectedTuple->GetSentBytes() };
+
+			json[JsonStringIceSelectedTuple] = this->selectedTuple->ToJson();
+		}
+
+		// 'dtlsState'.
+		switch (this->dtlsTransport->GetState())
+		{
+			case DtlsTransport::DtlsState::NEW:
+				json[JsonStringDtlsState] = JsonStringNew;
+				break;
+			case DtlsTransport::DtlsState::CONNECTING:
+				json[JsonStringDtlsState] = JsonStringConnecting;
+				break;
+			case DtlsTransport::DtlsState::CONNECTED:
+				json[JsonStringDtlsState] = JsonStringConnected;
+				break;
+			case DtlsTransport::DtlsState::FAILED:
+				json[JsonStringDtlsState] = JsonStringFailed;
+				break;
+			case DtlsTransport::DtlsState::CLOSED:
+				json[JsonStringDtlsState] = JsonStringClosed;
+				break;
+		}
+
+		// 'iceConnectionState'.
+		switch (this->iceServer->GetState())
+		{
+			case RTC::IceServer::IceState::NEW:
+				json[JsonStringIceConnectionState] = JsonStringNew;
+				break;
+			case RTC::IceServer::IceState::CONNECTED:
+				json[JsonStringIceConnectionState] = JsonStringConnected;
+				break;
+			case RTC::IceServer::IceState::COMPLETED:
+				json[JsonStringIceConnectionState] = JsonStringCompleted;
+				break;
+			case RTC::IceServer::IceState::DISCONNECTED:
+				json[JsonStringIceConnectionState] = JsonStringDisconnected;
+				break;
+		}
+
+		// Add local available send bandwidth.
+		Json::Value jsonLocalAvailableSendBw(Json::objectValue);
+		Json::Value jsonLocalAvailableSendBwSsrcs(Json::arrayValue);
+
+		jsonLocalAvailableSendBw[JsonStringLocalAvailableSendBwMaxValue] = Json::UInt{ this->maxBitrate };
+
+		jsonLocalAvailableSendBw[JsonStringLocalAvailableSendBwValue] =
+		  Json::UInt64{ std::get<0>(this->sentRemb) };
+
+		for (auto ssrc : std::get<1>(this->sentRemb))
+			jsonLocalAvailableSendBwSsrcs.append(ssrc);
+
+		jsonLocalAvailableSendBw[JsonStringLocalAvailableSendBwSsrcs] = jsonLocalAvailableSendBwSsrcs;
+
+		json[JsonStringLocalAvailableSendBw] = jsonLocalAvailableSendBw;
+
+		// Add remote available send bandwidth.
+		Json::Value jsonRemoteAvailableSendBw(Json::objectValue);
+		Json::Value jsonRemoteAvailableSendBwSsrcs(Json::arrayValue);
+
+		jsonRemoteAvailableSendBw[JsonStringRemoteAvailableSendBwValue] =
+		  Json::UInt64{ std::get<0>(this->recvRemb) };
+
+		for (auto ssrc : std::get<1>(this->recvRemb))
+			jsonRemoteAvailableSendBwSsrcs.append(ssrc);
+
+		jsonRemoteAvailableSendBw[JsonStringRemoteAvailableSendBwSsrcs] = jsonRemoteAvailableSendBwSsrcs;
+
+		json[JsonStringRemoteAvailableSendBw] = jsonRemoteAvailableSendBw;
+
+		Json::Value array(Json::arrayValue);
+
+		array.append(json);
+
+		return array;
 	}
 
 	RTC::DtlsTransport::Role WebRtcTransport::SetRemoteDtlsParameters(

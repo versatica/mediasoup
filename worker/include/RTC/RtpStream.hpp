@@ -97,6 +97,9 @@ namespace RTC
 		Timer* healthCheckTimer{ nullptr };
 		bool healthy{ true };
 		bool notifyHealth{ true };
+
+	private:
+		std::string rtpStreamId{};
 	};
 
 	/* Inline instance methods. */
