@@ -245,6 +245,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		case Channel::Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT:
 		case Channel::Request::MethodId::TRANSPORT_CLOSE:
 		case Channel::Request::MethodId::TRANSPORT_DUMP:
+		case Channel::Request::MethodId::TRANSPORT_GET_STATS:
 		case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
 		case Channel::Request::MethodId::TRANSPORT_SET_MAX_BITRATE:
 		case Channel::Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD:
@@ -252,12 +253,14 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		case Channel::Request::MethodId::TRANSPORT_STOP_MIRRORING:
 		case Channel::Request::MethodId::PRODUCER_CLOSE:
 		case Channel::Request::MethodId::PRODUCER_DUMP:
+		case Channel::Request::MethodId::PRODUCER_GET_STATS:
 		case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
 		case Channel::Request::MethodId::PRODUCER_PAUSE:
 		case Channel::Request::MethodId::PRODUCER_RESUME:
 		case Channel::Request::MethodId::PRODUCER_SET_PREFERRED_PROFILE:
 		case Channel::Request::MethodId::CONSUMER_CLOSE:
 		case Channel::Request::MethodId::CONSUMER_DUMP:
+		case Channel::Request::MethodId::CONSUMER_GET_STATS:
 		case Channel::Request::MethodId::CONSUMER_ENABLE:
 		case Channel::Request::MethodId::CONSUMER_PAUSE:
 		case Channel::Request::MethodId::CONSUMER_RESUME:

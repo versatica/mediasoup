@@ -127,6 +127,30 @@ namespace RTC
 		return json;
 	}
 
+	Json::Value Producer::GetStats() const
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringTransportId{ "transportId" };
+
+		Json::Value json(Json::arrayValue);
+
+		for (auto it : this->rtpStreams)
+		{
+			auto rtpStream     = it.second;
+			auto jsonRtpStream = rtpStream->GetStats();
+
+			if (this->transport != nullptr)
+			{
+				jsonRtpStream[JsonStringTransportId] = this->transport->transportId;
+			}
+
+			json.append(jsonRtpStream);
+		}
+
+		return json;
+	}
+
 	void Producer::UpdateRtpParameters(RTC::RtpParameters& rtpParameters)
 	{
 		MS_TRACE();

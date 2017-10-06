@@ -36,9 +36,9 @@ namespace RTC
 
 	Json::Value RtpStreamSend::GetStats()
 	{
-		static const std::string Type = "outboundrtp";
+		static const std::string Type = "outbound-rtp";
 		static const Json::StaticString JsonStringType{ "type" };
-		static const Json::StaticString JsonStringRtt{ "rtt" };
+		static const Json::StaticString JsonStringRtt{ "roundTripTime" };
 
 		Json::Value json = RtpStream::GetStats();
 

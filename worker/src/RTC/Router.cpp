@@ -623,6 +623,28 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
+			{
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				auto json = transport->GetStats();
+
+				request->Accept(json);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS:
 			{
 				static const Json::StaticString JsonStringRole{ "role" };
@@ -927,6 +949,28 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::PRODUCER_GET_STATS:
+			{
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				auto json = producer->GetStats();
+
+				request->Accept(json);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
 			{
 				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
@@ -1177,6 +1221,28 @@ namespace RTC
 				}
 
 				auto json = consumer->ToJson();
+
+				request->Accept(json);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_GET_STATS:
+			{
+				RTC::Consumer* consumer;
+
+				try
+				{
+					consumer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				auto json = consumer->GetStats();
 
 				request->Accept(json);
 
