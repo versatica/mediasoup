@@ -84,7 +84,7 @@ namespace RTC
 
 		if (this->rtpStream != nullptr)
 		{
-			json[JsonStringRtpStream] = this->rtpStream->ToJson();
+			json[JsonStringRtpStream]      = this->rtpStream->ToJson();
 			json[JsonStringLossPercentage] = GetLossPercentage();
 		}
 
