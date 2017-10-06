@@ -83,7 +83,10 @@ namespace RTC
 			json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
 
 		if (this->rtpStream != nullptr)
+		{
 			json[JsonStringRtpStream] = this->rtpStream->ToJson();
+			json[JsonStringLossPercentage] = GetLossPercentage();
+		}
 
 		json[JsonStringPaused] = this->paused;
 
@@ -94,8 +97,6 @@ namespace RTC
 
 		json[JsonStringEffectiveProfile] =
 		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
-
-		json[JsonStringLossPercentage] = GetLossPercentage();
 
 		return json;
 	}
@@ -237,7 +238,7 @@ namespace RTC
 		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile already exists");
 
 		MS_ASSERT(
-		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && this->profiles.size() != 0),
+		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && !this->profiles.empty()),
 		  "default profile cannot coexist with others");
 
 		// Insert the new profile.
