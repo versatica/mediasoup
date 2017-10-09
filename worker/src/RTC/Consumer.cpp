@@ -101,6 +101,29 @@ namespace RTC
 		return json;
 	}
 
+	Json::Value Consumer::GetStats() const
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringTransportId{ "transportId" };
+
+		Json::Value json(Json::arrayValue);
+
+		if (this->rtpStream != nullptr)
+		{
+			auto jsonRtpStream = this->rtpStream->GetStats();
+
+			if (this->transport != nullptr)
+			{
+				jsonRtpStream[JsonStringTransportId] = this->transport->transportId;
+			}
+
+			json.append(jsonRtpStream);
+		}
+
+		return json;
+	}
+
 	/**
 	 * A Transport has been assigned, and hence sending RTP parameters.
 	 */

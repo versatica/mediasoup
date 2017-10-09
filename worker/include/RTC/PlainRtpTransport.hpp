@@ -30,6 +30,7 @@ namespace RTC
 
 	public:
 		Json::Value ToJson() const override;
+		Json::Value GetStats() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 

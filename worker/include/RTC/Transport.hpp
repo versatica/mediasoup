@@ -71,7 +71,8 @@ namespace RTC
 
 	public:
 		void Destroy();
-		virtual Json::Value ToJson() const = 0;
+		virtual Json::Value ToJson() const   = 0;
+		virtual Json::Value GetStats() const = 0;
 		void HandleProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)     = 0;

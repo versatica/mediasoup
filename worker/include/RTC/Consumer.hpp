@@ -36,6 +36,7 @@ namespace RTC
 	public:
 		void Destroy();
 		Json::Value ToJson() const;
+		Json::Value GetStats() const;
 		void AddListener(RTC::ConsumerListener* listener);
 		void RemoveListener(RTC::ConsumerListener* listener);
 		void Enable(RTC::Transport* transport, RTC::RtpParameters& rtpParameters);

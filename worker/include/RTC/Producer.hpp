@@ -55,6 +55,7 @@ namespace RTC
 	public:
 		void Destroy();
 		Json::Value ToJson() const;
+		Json::Value GetStats() const;
 		void AddListener(RTC::ProducerListener* listener);
 		void RemoveListener(RTC::ProducerListener* listener);
 		void UpdateRtpParameters(RTC::RtpParameters& rtpParameters);

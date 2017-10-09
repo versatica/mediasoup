@@ -24,6 +24,7 @@ namespace Channel
 		{ "router.setAudioLevelsEvent",        Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT        },
 		{ "transport.close",                   Request::MethodId::TRANSPORT_CLOSE                      },
 		{ "transport.dump",                    Request::MethodId::TRANSPORT_DUMP                       },
+		{ "transport.getStats",                Request::MethodId::TRANSPORT_GET_STATS                  },
 		{ "transport.setRemoteDtlsParameters", Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS },
 		{ "transport.setMaxBitrate",           Request::MethodId::TRANSPORT_SET_MAX_BITRATE            },
 		{ "transport.changeUfragPwd",          Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD           },
@@ -31,12 +32,14 @@ namespace Channel
 		{ "transport.stopMirroring",           Request::MethodId::TRANSPORT_STOP_MIRRORING             },
 		{ "producer.close",                    Request::MethodId::PRODUCER_CLOSE                       },
 		{ "producer.dump",                     Request::MethodId::PRODUCER_DUMP                        },
+		{ "producer.getStats",                 Request::MethodId::PRODUCER_GET_STATS                   },
 		{ "producer.updateRtpParameters",      Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS       },
 		{ "producer.pause",                    Request::MethodId::PRODUCER_PAUSE                       },
 		{ "producer.resume" ,                  Request::MethodId::PRODUCER_RESUME                      },
 		{ "producer.setPreferredProfile",      Request::MethodId::PRODUCER_SET_PREFERRED_PROFILE       },
 		{ "consumer.close",                    Request::MethodId::CONSUMER_CLOSE                       },
 		{ "consumer.dump",                     Request::MethodId::CONSUMER_DUMP                        },
+		{ "consumer.getStats",                 Request::MethodId::CONSUMER_GET_STATS                   },
 		{ "consumer.enable",                   Request::MethodId::CONSUMER_ENABLE                      },
 		{ "consumer.pause",                    Request::MethodId::CONSUMER_PAUSE                       },
 		{ "consumer.resume",                   Request::MethodId::CONSUMER_RESUME                      },
@@ -122,7 +125,7 @@ namespace Channel
 		json[JsonStringId]       = Json::UInt{ this->id };
 		json[JsonStringAccepted] = true;
 
-		if (data.isObject())
+		if (data.isObject() || data.isArray())
 			json[JsonStringData] = data;
 		else
 			json[JsonStringData] = emptyData;

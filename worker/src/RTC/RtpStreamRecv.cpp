@@ -26,7 +26,7 @@ namespace RTC
 
 	Json::Value RtpStreamRecv::GetStats()
 	{
-		static const std::string Type = "inboundrtp";
+		static const std::string Type = "inbound-rtp";
 		static const Json::StaticString JsonStringType{ "type" };
 		static const Json::StaticString JsonStringJitter{ "jitter" };
 
