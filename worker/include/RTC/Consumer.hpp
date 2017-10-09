@@ -149,16 +149,23 @@ namespace RTC
 
 	inline RTC::RtpEncodingParameters::Profile Consumer::GetPreferredProfile() const
 	{
+		// If Consumer preferred profile and source (Producer) preferred profile
+		// are the same, that's.
 		if (this->preferredProfile == this->sourcePreferredProfile)
 			return this->preferredProfile;
 
+		// If Consumer preferred profile is 'default', use whichever the source
+		// preferred profile is.
 		if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
 			return this->sourcePreferredProfile;
 
+		// If source preferred profile is 'default', use whichever the Consumer
+		// preferred profile is.
 		if (this->sourcePreferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
 			return this->preferredProfile;
 
-		return std::min(this->preferredProfile, this->sourcePreferredProfile);
+		// Otherwise the Consumer preferred profile is chosen.
+		return this->preferredProfile;
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
