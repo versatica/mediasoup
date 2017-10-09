@@ -27,7 +27,8 @@ namespace RTC
 			BYE   = 203,
 			APP   = 204,
 			RTPFB = 205,
-			PSFB  = 206
+			PSFB  = 206,
+			XR    = 207
 		};
 
 		class Packet

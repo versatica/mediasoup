@@ -30,7 +30,8 @@ namespace RTC
 		{ Type::BYE,   "BYE"   },
 		{ Type::APP,   "APP"   },
 		{ Type::RTPFB, "RTPFB" },
-		{ Type::PSFB,  "PSFB"  }
+		{ Type::PSFB,  "PSFB"  },
+		{ Type::XR,    "XR"    }
 	};
 		// clang-format on
 
@@ -115,15 +116,21 @@ namespace RTC
 						break;
 					}
 
+					case Type::RTPFB:
+					{
+						current = FeedbackRtpPacket::Parse(data, packetLen);
+						break;
+					}
+
 					case Type::PSFB:
 					{
 						current = FeedbackPsPacket::Parse(data, packetLen);
 						break;
 					}
 
-					case Type::RTPFB:
+					case Type::XR:
 					{
-						current = FeedbackRtpPacket::Parse(data, packetLen);
+						current = nullptr;
 						break;
 					}
 
