@@ -232,7 +232,7 @@ namespace RTC
 		auto now = DepLibUV::GetTime();
 
 		if (this->transmissionCounter.GetRate(now) == 0)
-			this->listener->OnRtpStreamDied(this);
+			this->listener->OnRtpStreamInactivity(this);
 	}
 
 	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)

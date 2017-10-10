@@ -699,7 +699,7 @@ namespace RTC
 		}
 	}
 
-	void Consumer::OnRtpStreamDied(RtpStream* rtpStream)
+	void Consumer::OnRtpStreamInactivity(RtpStream* rtpStream)
 	{
 		MS_TRACE();
 

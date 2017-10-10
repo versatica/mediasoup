@@ -16,9 +16,9 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpStreamDied(RTC::RtpStream* rtpStream)      = 0;
-			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)   = 0;
-			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) = 0;
+			virtual void OnRtpStreamInactivity(RTC::RtpStream* rtpStream) = 0;
+			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)    = 0;
+			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)  = 0;
 		};
 
 	public:
@@ -50,6 +50,7 @@ namespace RTC
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		float GetLossPercentage() const;
 		bool IsHealthy() const;
+		void SetUnhealthy();
 		void ResetHealthCheckTimer(uint16_t timeout = HealthCheckPeriod);
 
 	protected:
@@ -127,6 +128,11 @@ namespace RTC
 	inline bool RtpStream::IsHealthy() const
 	{
 		return this->healthy;
+	}
+
+	inline void RtpStream::SetUnhealthy()
+	{
+		this->healthy = false;
 	}
 } // namespace RTC
 

@@ -772,7 +772,7 @@ namespace RTC
 		rtpStream->pliCount++;
 	}
 
-	void Producer::OnRtpStreamDied(RTC::RtpStream* rtpStream)
+	void Producer::OnRtpStreamInactivity(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
@@ -782,10 +782,42 @@ namespace RTC
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
 		  "stream not present in mapRtpStreamProfiles");
 
-		MS_DEBUG_TAG(rtp, "stream is dead [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		// Single healthy profile present. Ignore.
+		if (this->healthyProfiles.size() == 1)
+			return;
 
-		// Completely destroy the stream.
-		ClearRtpStream(rtpStreamRecv);
+		// Simulcast. Check whether any RTP is being received at all.
+		uint32_t totalBitrate = 0;
+		uint64_t now = DepLibUV::GetTime();
+
+		for (auto it : this->healthyProfiles)
+		{
+			auto healthyRtpStream = it.second;
+			auto ssrc = healthyRtpStream->GetSsrc();
+
+			totalBitrate += this->rtpStreams[ssrc]->GetRate(now);
+		}
+
+		// No RTP is being received at all. Ignore.
+		if (totalBitrate == 0)
+			return;
+
+		// Simulcast. Remove the stream from healthy profiles.
+		MS_DEBUG_TAG(rtp,
+			"rtp inactivity detected [ssrc:%" PRIu32,
+			rtpStream->GetSsrc());
+
+		rtpStream->SetUnhealthy();
+		RemoveHealthyProfiles(rtpStreamRecv);
+
+		// Reset health check timer on every healthy stream.
+		for (auto it : this->healthyProfiles)
+		{
+			auto healthyRtpStream = it.second;
+			auto ssrc = healthyRtpStream->GetSsrc();
+
+			this->rtpStreams[ssrc]->ResetHealthCheckTimer(RTC::RtpStream::HealthCheckPeriod * 2);
+		}
 	}
 
 	void Producer::OnRtpStreamHealthy(RTC::RtpStream* rtpStream)

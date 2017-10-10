@@ -90,7 +90,7 @@ namespace RTC
 		void OnRtpStreamRecvNackRequired(
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
-		void OnRtpStreamDied(RTC::RtpStream* rtpStream) override;
+		void OnRtpStreamInactivity(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
 
