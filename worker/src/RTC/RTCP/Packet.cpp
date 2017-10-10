@@ -157,7 +157,11 @@ namespace RTC
 						  " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
 					}
 
-					MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
+					// TMP: Do not log XR parsing error until it is implemented.
+					if (Type(header->packetType) != Type::XR)
+					{
+						MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
+					}
 
 					return first;
 				}
