@@ -231,7 +231,7 @@ namespace RTC
 	{
 		auto now = DepLibUV::GetTime();
 
-		if (this->transmissionCounter.GetRate(now) == 0)
+		if (this->transmissionCounter.GetRate(now) == 0 && IsHealthy())
 			this->listener->OnRtpStreamInactivity(this);
 	}
 

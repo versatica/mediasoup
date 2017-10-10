@@ -692,7 +692,7 @@ namespace RTC
 		{
 			MS_ASSERT(
 			  this->healthyProfiles.find(profile) != this->healthyProfiles.end(),
-			  "profile already in headltyProfiles set");
+			  "profile not in headltyProfiles");
 
 			// Remove the profile from the healthy profiles set.
 			this->healthyProfiles.erase(profile);
