@@ -113,7 +113,7 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> mapRtpStreamProfiles;
-		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> activeProfiles;
+		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapActiveProfiles;
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
@@ -180,7 +180,7 @@ namespace RTC
 	inline const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& Producer::
 	  GetActiveProfiles() const
 	{
-		return this->activeProfiles;
+		return this->mapActiveProfiles;
 	}
 } // namespace RTC
 

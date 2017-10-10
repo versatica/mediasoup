@@ -543,7 +543,7 @@ namespace RTC
 		// Add the stream to the profiles map.
 		this->mapRtpStreamProfiles[rtpStream].insert(profile);
 
-		// Add new profile/s into activeProfiles and notify the listener.
+		// Add new profile/s into active profiles map and notify the listener.
 		AddActiveProfiles(rtpStream);
 
 		// Request a key frame since we may have lost the first packets of this stream.
@@ -554,7 +554,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Remove the profiles related to this stream from activeProfiles and notify the listener.
+		// Remove the profiles related to this stream from active profiles map and notify the listener.
 		RemoveActiveProfiles(rtpStream);
 
 		this->rtpStreams.erase(rtpStream->GetSsrc());
@@ -609,7 +609,7 @@ namespace RTC
 		this->rtpStreams.clear();
 		this->mapRtxStreams.clear();
 		this->mapRtpStreamProfiles.clear();
-		this->activeProfiles.clear();
+		this->mapActiveProfiles.clear();
 	}
 
 	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
@@ -670,11 +670,11 @@ namespace RTC
 		for (auto& profile : profiles)
 		{
 			MS_ASSERT(
-			  this->activeProfiles.find(profile) == this->activeProfiles.end(),
+			  this->mapActiveProfiles.find(profile) == this->mapActiveProfiles.end(),
 			  "profile already in headltyProfiles set");
 
 			// Add the profile to the active profiles map.
-			this->activeProfiles[profile] = rtpStream;
+			this->mapActiveProfiles[profile] = rtpStream;
 
 			for (auto& listener : this->listeners)
 			{
@@ -691,11 +691,11 @@ namespace RTC
 		for (auto& profile : profiles)
 		{
 			MS_ASSERT(
-			  this->activeProfiles.find(profile) != this->activeProfiles.end(),
+			  this->mapActiveProfiles.find(profile) != this->mapActiveProfiles.end(),
 			  "profile not in headltyProfiles");
 
 			// Remove the profile from the active profiles map.
-			this->activeProfiles.erase(profile);
+			this->mapActiveProfiles.erase(profile);
 
 			for (auto& listener : this->listeners)
 			{
@@ -783,14 +783,14 @@ namespace RTC
 		  "stream not present in mapRtpStreamProfiles");
 
 		// Single active profile present. Ignore.
-		if (this->activeProfiles.size() == 1)
+		if (this->mapActiveProfiles.size() == 1)
 			return;
 
 		// Simulcast. Check whether any RTP is being received at all.
 		uint32_t totalBitrate = 0;
 		uint64_t now          = DepLibUV::GetTime();
 
-		for (auto it : this->activeProfiles)
+		for (auto it : this->mapActiveProfiles)
 		{
 			auto activeRtpStream = it.second;
 			auto ssrc             = activeRtpStream->GetSsrc();
@@ -808,7 +808,7 @@ namespace RTC
 		RemoveActiveProfiles(rtpStreamRecv);
 
 		// Reset stream check timer on every active stream.
-		for (auto it : this->activeProfiles)
+		for (auto it : this->mapActiveProfiles)
 		{
 			auto activeRtpStream = it.second;
 			auto ssrc             = activeRtpStream->GetSsrc();
@@ -832,7 +832,7 @@ namespace RTC
 		// Check whether the stream is active.
 		const RtpStream* activeRtpStream = nullptr;
 
-		for (auto it : this->activeProfiles)
+		for (auto it : this->mapActiveProfiles)
 		{
 			activeRtpStream = it.second;
 
@@ -840,7 +840,7 @@ namespace RTC
 				break;
 		}
 
-		// Add the profiles related to this stream into activeProfiles and notify the listener.
+		// Add the profiles related to this stream into active profiles map and notify the listener.
 		if (!activeRtpStream)
 			AddActiveProfiles(rtpStreamRecv);
 	}
