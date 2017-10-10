@@ -24,19 +24,19 @@ namespace RTC
 		// Generate a random rtpStreamId.
 		this->rtpStreamId = Utils::Crypto::GetRandomString(16);
 
-		// Set the health check timer.
-		this->healthCheckTimer = new Timer(this);
+		// Set the status check timer.
+		this->statusCheckTimer = new Timer(this);
 
 		// Run the timer.
-		this->healthCheckTimer->Start(HealthCheckPeriod, HealthCheckPeriod);
+		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
 	}
 
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
 
-		// Close the health check timer.
-		this->healthCheckTimer->Destroy();
+		// Close the status check timer.
+		this->statusCheckTimer->Destroy();
 	}
 
 	Json::Value RtpStream::ToJson()
@@ -61,7 +61,6 @@ namespace RTC
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 		static const Json::StaticString JsonStringMediaType{ "mediaType" };
 		static const Json::StaticString JsonStringMimeType{ "mimeType" };
-		static const Json::StaticString JsonStringHealthy{ "healthy" };
 		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
 		static const Json::StaticString JsonStringByteCount{ "byteCount" };
 		static const Json::StaticString JsonStringBitRate{ "bitrate" };
@@ -82,7 +81,6 @@ namespace RTC
 		json[JsonStringSsrc]        = Json::UInt{ this->params.ssrc };
 		json[JsonStringMediaType]   = RtpCodecMimeType::type2String[this->params.mimeType.type];
 		json[JsonStringMimeType]    = this->params.mimeType.ToString();
-		json[JsonStringHealthy]     = this->healthy ? "true" : "false";
 		json[JsonStringPacketCount] = static_cast<Json::UInt>(this->transmissionCounter.GetPacketCount());
 		json[JsonStringByteCount]   = static_cast<Json::UInt>(this->transmissionCounter.GetBytes());
 		json[JsonStringBitRate]     = Json::UInt{ this->transmissionCounter.GetRate(now) };
@@ -143,11 +141,11 @@ namespace RTC
 		return this->transmissionCounter.GetRate(now);
 	}
 
-	void RtpStream::ResetHealthCheckTimer(uint16_t timeout)
+	void RtpStream::ResetStatusCheckTimer(uint16_t timeout)
 	{
-		// Notify about next health status.
-		this->notifyHealth = true;
-		this->healthCheckTimer->Start(timeout, HealthCheckPeriod);
+		// Notify about status on next check.
+		this->notifyStatus = true;
+		this->statusCheckTimer->Start(timeout, StatusCheckPeriod);
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
@@ -253,9 +251,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (timer == this->healthCheckTimer)
+		if (timer == this->statusCheckTimer)
 		{
-			this->CheckHealth();
+			this->CheckStatus();
 		}
 	}
 } // namespace RTC

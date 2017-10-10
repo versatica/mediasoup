@@ -72,7 +72,7 @@ namespace RTC
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const;
 		void ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const;
 		void RequestKeyFrame(bool force = false);
-		const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& GetHealthyProfiles() const;
+		const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& GetActiveProfiles() const;
 
 	private:
 		void FillHeaderExtensionIds();
@@ -82,17 +82,16 @@ namespace RTC
 		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
 		RTC::RtpEncodingParameters::Profile GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet);
-		void AddHealthyProfiles(RTC::RtpStreamRecv* rtpStream);
-		void RemoveHealthyProfiles(RTC::RtpStreamRecv* rtpStream);
+		void AddActiveProfiles(RTC::RtpStreamRecv* rtpStream);
+		void RemoveActiveProfiles(RTC::RtpStreamRecv* rtpStream);
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
 		void OnRtpStreamRecvNackRequired(
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
-		void OnRtpStreamInactivity(RTC::RtpStream* rtpStream) override;
-		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
-		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
+		void OnRtpStreamInactive(RTC::RtpStream* rtpStream) override;
+		void OnRtpStreamActive(RTC::RtpStream* rtpStream) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -114,7 +113,7 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> mapRtpStreamProfiles;
-		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> healthyProfiles;
+		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> activeProfiles;
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
@@ -179,9 +178,9 @@ namespace RTC
 	}
 
 	inline const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& Producer::
-	  GetHealthyProfiles() const
+	  GetActiveProfiles() const
 	{
-		return this->healthyProfiles;
+		return this->activeProfiles;
 	}
 } // namespace RTC
 

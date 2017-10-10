@@ -11,12 +11,14 @@ namespace RTC
 	class RtpStreamRecv : public RtpStream, public RTC::NackGenerator::Listener
 	{
 	public:
-		class Listener : public RtpStream::Listener
+		class Listener
 		{
 		public:
 			virtual void OnRtpStreamRecvNackRequired(
 			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
+			virtual void OnRtpStreamInactive(RTC::RtpStream* rtpStream) = 0;
+			virtual void OnRtpStreamActive(RTC::RtpStream* rtpStream) = 0;
 		};
 
 	public:
@@ -30,13 +32,14 @@ namespace RTC
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		void RequestKeyFrame();
+		bool IsActive() const;
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
-		virtual void CheckHealth() override;
+		virtual void CheckStatus() override;
 
 		/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
@@ -61,7 +64,14 @@ namespace RTC
 		uint32_t rtxSsrc{ 0 };
 		// Stats.
 		uint32_t jitter{ 0 };
+		// Others.
+		bool active { true };
 	};
+
+	inline bool RtpStreamRecv::IsActive() const
+	{
+		return this->active;
+	}
 } // namespace RTC
 
 #endif

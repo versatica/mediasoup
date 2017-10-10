@@ -13,15 +13,6 @@ namespace RTC
 	class RtpStream : public Timer::Listener
 	{
 	public:
-		class Listener
-		{
-		public:
-			virtual void OnRtpStreamInactivity(RTC::RtpStream* rtpStream) = 0;
-			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)    = 0;
-			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)  = 0;
-		};
-
-	public:
 		struct Params
 		{
 			Json::Value ToJson() const;
@@ -35,7 +26,7 @@ namespace RTC
 		};
 
 	public:
-		static constexpr uint16_t HealthCheckPeriod{ 1000 };
+		static constexpr uint16_t StatusCheckPeriod{ 1000 };
 
 	public:
 		explicit RtpStream(RTC::RtpStream::Params& params);
@@ -49,9 +40,7 @@ namespace RTC
 		uint8_t GetPayloadType() const;
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		float GetLossPercentage() const;
-		bool IsHealthy() const;
-		void SetUnhealthy();
-		void ResetHealthCheckTimer(uint16_t timeout = HealthCheckPeriod);
+		void ResetStatusCheckTimer(uint16_t timeout = StatusCheckPeriod);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -61,7 +50,7 @@ namespace RTC
 
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
-		virtual void CheckHealth() = 0;
+		virtual void CheckStatus() = 0;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -95,9 +84,8 @@ namespace RTC
 		// Others.
 		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
-		Timer* healthCheckTimer{ nullptr };
-		bool healthy{ true };
-		bool notifyHealth{ true };
+		Timer* statusCheckTimer{ nullptr };
+		bool notifyStatus{ true };
 
 	private:
 		std::string rtpStreamId{};
@@ -123,16 +111,6 @@ namespace RTC
 	inline float RtpStream::GetLossPercentage() const
 	{
 		return static_cast<float>(this->fractionLost) * 100 / 256;
-	}
-
-	inline bool RtpStream::IsHealthy() const
-	{
-		return this->healthy;
-	}
-
-	inline void RtpStream::SetUnhealthy()
-	{
-		this->healthy = false;
 	}
 } // namespace RTC
 

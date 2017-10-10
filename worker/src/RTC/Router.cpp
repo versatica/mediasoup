@@ -514,10 +514,10 @@ namespace RTC
 				// Add us as listener.
 				consumer->AddListener(this);
 
-				auto healthyProfiles = producer->GetHealthyProfiles();
+				auto activeProfiles = producer->GetActiveProfiles();
 				std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>::reverse_iterator it;
 
-				for (it = healthyProfiles.rbegin(); it != healthyProfiles.rend(); ++it)
+				for (it = activeProfiles.rbegin(); it != activeProfiles.rend(); ++it)
 				{
 					auto profile = it->first;
 					auto stats   = it->second;

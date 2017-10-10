@@ -11,6 +11,14 @@ namespace RTC
 {
 	class RtpStreamSend : public RtpStream
 	{
+	public:
+		class Listener
+		{
+		public:
+			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)   = 0;
+			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) = 0;
+		};
+
 	private:
 		struct StorageItem
 		{
@@ -26,7 +34,7 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamSend(RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
+		RtpStreamSend(Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
 
 		Json::Value GetStats() override;
@@ -39,22 +47,25 @@ namespace RTC
 		bool HasRtx() const;
 		void RtxEncode(RtpPacket* packet);
 		void ClearRetransmissionBuffer();
+		bool IsHealthy() const;
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
-		void CheckHealth() override;
+		void CheckStatus() override;
 
 	private:
 		// Passed by argument.
-		RTC::RtpStream::Listener* listener{ nullptr };
+		Listener* listener{ nullptr };
 		std::vector<StorageItem> storage;
 		using Buffer = std::list<BufferItem>;
 		Buffer buffer;
 		// Stats.
 		uint32_t rtt{ 0 };
+		// Others.
+		bool healthy{ true };
 
 	private:
 		// Retransmittion related.
@@ -67,6 +78,11 @@ namespace RTC
 	inline bool RtpStreamSend::HasRtx() const
 	{
 		return this->hasRtx;
+	}
+
+	inline bool RtpStreamSend::IsHealthy() const
+	{
+		return this->healthy;
 	}
 } // namespace RTC
 

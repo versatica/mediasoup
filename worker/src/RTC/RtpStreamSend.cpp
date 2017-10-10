@@ -20,7 +20,7 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamSend::RtpStreamSend(
-	  RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
+	  Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
 	  : RtpStream::RtpStream(params), listener(listener), storage(bufferSize)
 	{
 		MS_TRACE();
@@ -398,7 +398,7 @@ namespace RTC
 		(*newBufferIt).packet = packet->Clone(store);
 	}
 
-	void RtpStreamSend::CheckHealth()
+	void RtpStreamSend::CheckStatus()
 	{
 		MS_TRACE();
 
@@ -408,19 +408,19 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(rtp, "last period loss percentage: %.2f", lossPercentage);
 
-			if (this->notifyHealth || this->healthy)
+			if (this->notifyStatus || this->healthy)
 			{
 				this->healthy = false;
 				this->listener->OnRtpStreamUnhealthy(this);
 			}
 		}
-		else if (this->notifyHealth || !this->healthy)
+		else if (this->notifyStatus || !this->healthy)
 		{
 			this->healthy = true;
 			this->listener->OnRtpStreamHealthy(this);
 		}
 
-		this->notifyHealth = false;
+		this->notifyStatus = false;
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)

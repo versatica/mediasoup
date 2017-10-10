@@ -307,7 +307,7 @@ namespace RTC
 			this->probingProfile = RtpEncodingParameters::Profile::NONE;
 
 			// Reset the health check timer so this probation doesn't affect the effective profile.
-			this->rtpStream->ResetHealthCheckTimer();
+			this->rtpStream->ResetStatusCheckTimer();
 
 			return;
 		}
@@ -699,13 +699,6 @@ namespace RTC
 		}
 	}
 
-	void Consumer::OnRtpStreamInactivity(RtpStream* rtpStream)
-	{
-		MS_TRACE();
-
-		OnRtpStreamUnhealthy(rtpStream);
-	}
-
 	void Consumer::OnRtpStreamHealthy(RtpStream* rtpStream)
 	{
 		MS_TRACE();
@@ -789,7 +782,7 @@ namespace RTC
 			RequestKeyFrame();
 
 		// We want to be notified about this new profile's health.
-		this->rtpStream->ResetHealthCheckTimer();
+		this->rtpStream->ResetStatusCheckTimer();
 
 		MS_DEBUG_TAG(
 		  rtp,
@@ -1011,7 +1004,7 @@ namespace RTC
 			{
 				this->isProbing      = true;
 				this->probingProfile = newTargetProfile;
-				this->rtpStream->ResetHealthCheckTimer();
+				this->rtpStream->ResetStatusCheckTimer();
 
 				MS_DEBUG_TAG(
 				  rtp,

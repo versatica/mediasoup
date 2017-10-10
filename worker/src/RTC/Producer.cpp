@@ -543,8 +543,8 @@ namespace RTC
 		// Add the stream to the profiles map.
 		this->mapRtpStreamProfiles[rtpStream].insert(profile);
 
-		// Add new profile/s into healthyProfiles and notify the listener.
-		AddHealthyProfiles(rtpStream);
+		// Add new profile/s into activeProfiles and notify the listener.
+		AddActiveProfiles(rtpStream);
 
 		// Request a key frame since we may have lost the first packets of this stream.
 		RequestKeyFrame(true);
@@ -554,8 +554,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Remove the profiles related to this stream from healthyProfiles and notify the listener.
-		RemoveHealthyProfiles(rtpStream);
+		// Remove the profiles related to this stream from activeProfiles and notify the listener.
+		RemoveActiveProfiles(rtpStream);
 
 		this->rtpStreams.erase(rtpStream->GetSsrc());
 
@@ -609,7 +609,7 @@ namespace RTC
 		this->rtpStreams.clear();
 		this->mapRtxStreams.clear();
 		this->mapRtpStreamProfiles.clear();
-		this->healthyProfiles.clear();
+		this->activeProfiles.clear();
 	}
 
 	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
@@ -662,7 +662,7 @@ namespace RTC
 		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", packet->GetSsrc());
 	}
 
-	void Producer::AddHealthyProfiles(RTC::RtpStreamRecv* rtpStream)
+	void Producer::AddActiveProfiles(RTC::RtpStreamRecv* rtpStream)
 	{
 		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
 
@@ -670,11 +670,11 @@ namespace RTC
 		for (auto& profile : profiles)
 		{
 			MS_ASSERT(
-			  this->healthyProfiles.find(profile) == this->healthyProfiles.end(),
+			  this->activeProfiles.find(profile) == this->activeProfiles.end(),
 			  "profile already in headltyProfiles set");
 
-			// Add the profile to the healthy profiles set.
-			this->healthyProfiles[profile] = rtpStream;
+			// Add the profile to the active profiles map.
+			this->activeProfiles[profile] = rtpStream;
 
 			for (auto& listener : this->listeners)
 			{
@@ -683,7 +683,7 @@ namespace RTC
 		}
 	}
 
-	void Producer::RemoveHealthyProfiles(RTC::RtpStreamRecv* rtpStream)
+	void Producer::RemoveActiveProfiles(RTC::RtpStreamRecv* rtpStream)
 	{
 		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
 
@@ -691,11 +691,11 @@ namespace RTC
 		for (auto& profile : profiles)
 		{
 			MS_ASSERT(
-			  this->healthyProfiles.find(profile) != this->healthyProfiles.end(),
+			  this->activeProfiles.find(profile) != this->activeProfiles.end(),
 			  "profile not in headltyProfiles");
 
-			// Remove the profile from the healthy profiles set.
-			this->healthyProfiles.erase(profile);
+			// Remove the profile from the active profiles map.
+			this->activeProfiles.erase(profile);
 
 			for (auto& listener : this->listeners)
 			{
@@ -772,7 +772,7 @@ namespace RTC
 		rtpStream->pliCount++;
 	}
 
-	void Producer::OnRtpStreamInactivity(RTC::RtpStream* rtpStream)
+	void Producer::OnRtpStreamInactive(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
@@ -782,18 +782,18 @@ namespace RTC
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
 		  "stream not present in mapRtpStreamProfiles");
 
-		// Single healthy profile present. Ignore.
-		if (this->healthyProfiles.size() == 1)
+		// Single active profile present. Ignore.
+		if (this->activeProfiles.size() == 1)
 			return;
 
 		// Simulcast. Check whether any RTP is being received at all.
 		uint32_t totalBitrate = 0;
 		uint64_t now          = DepLibUV::GetTime();
 
-		for (auto it : this->healthyProfiles)
+		for (auto it : this->activeProfiles)
 		{
-			auto healthyRtpStream = it.second;
-			auto ssrc             = healthyRtpStream->GetSsrc();
+			auto activeRtpStream = it.second;
+			auto ssrc             = activeRtpStream->GetSsrc();
 
 			totalBitrate += this->rtpStreams[ssrc]->GetRate(now);
 		}
@@ -802,23 +802,22 @@ namespace RTC
 		if (totalBitrate == 0)
 			return;
 
-		// Simulcast. Remove the stream from healthy profiles.
+		// Simulcast. Remove the stream from active profiles.
 		MS_DEBUG_TAG(rtp, "rtp inactivity detected [ssrc:%" PRIu32, rtpStream->GetSsrc());
 
-		rtpStream->SetUnhealthy();
-		RemoveHealthyProfiles(rtpStreamRecv);
+		RemoveActiveProfiles(rtpStreamRecv);
 
-		// Reset health check timer on every healthy stream.
-		for (auto it : this->healthyProfiles)
+		// Reset stream check timer on every active stream.
+		for (auto it : this->activeProfiles)
 		{
-			auto healthyRtpStream = it.second;
-			auto ssrc             = healthyRtpStream->GetSsrc();
+			auto activeRtpStream = it.second;
+			auto ssrc             = activeRtpStream->GetSsrc();
 
-			this->rtpStreams[ssrc]->ResetHealthCheckTimer(RTC::RtpStream::HealthCheckPeriod * 2);
+			this->rtpStreams[ssrc]->ResetStatusCheckTimer(RTC::RtpStream::StatusCheckPeriod * 2);
 		}
 	}
 
-	void Producer::OnRtpStreamHealthy(RTC::RtpStream* rtpStream)
+	void Producer::OnRtpStreamActive(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
@@ -828,26 +827,22 @@ namespace RTC
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
 		  "stream not present in mapRtpStreamProfiles");
 
-		MS_DEBUG_TAG(rtp, "stream is now healthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
-		// Add the profiles related to this stream into healthyProfiles and notify the listener.
-		AddHealthyProfiles(rtpStreamRecv);
-	}
+		// Check whether the stream is active.
+		const RtpStream* activeRtpStream = nullptr;
 
-	void Producer::OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)
-	{
-		MS_TRACE();
+		for (auto it : this->activeProfiles)
+		{
+			activeRtpStream = it.second;
 
-		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+			if (activeRtpStream != nullptr)
+				break;
+		}
 
-		MS_ASSERT(
-		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
-		  "stream not present in mapRtpStreamProfiles");
-
-		MS_DEBUG_TAG(rtp, "stream is now unhealthy [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
-
-		// Remove the profiles related to this stream from healthyProfiles and notify the listener.
-		RemoveHealthyProfiles(rtpStreamRecv);
+		// Add the profiles related to this stream into activeProfiles and notify the listener.
+		if (!activeRtpStream)
+			AddActiveProfiles(rtpStreamRecv);
 	}
 
 	inline void Producer::OnTimer(Timer* timer)

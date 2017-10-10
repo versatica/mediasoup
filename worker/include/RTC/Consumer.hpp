@@ -21,7 +21,7 @@
 
 namespace RTC
 {
-	class Consumer : public RTC::RtpStream::Listener
+	class Consumer : public RTC::RtpStreamSend::Listener
 	{
 	public:
 		Consumer(
@@ -71,9 +71,8 @@ namespace RTC
 		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
 		void MayRunProbation();
 
-		/* Pure virtual methods inherited from RTC::RtpStream::Listener. */
+		/* Pure virtual methods inherited from RTC::RtpStreamSend::Listener. */
 	public:
-		void OnRtpStreamInactivity(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
 

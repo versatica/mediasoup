@@ -227,20 +227,24 @@ namespace RTC
 		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
 	}
 
-	void RtpStreamRecv::CheckHealth()
+	void RtpStreamRecv::CheckStatus()
 	{
 		MS_TRACE();
 
 		auto now = DepLibUV::GetTime();
 
-		if (this->transmissionCounter.GetRate(now) == 0 && this->healthy)
+		if (this->transmissionCounter.GetRate(now) == 0)
 		{
-			this->listener->OnRtpStreamInactivity(this);
+			if (this->active)
+			{
+				this->active = false;
+				this->listener->OnRtpStreamInactive(this);
+			}
 		}
-		else if (!this->healthy)
+		else if (!this->active)
 		{
-			this->healthy = true;
-			this->listener->OnRtpStreamHealthy(this);
+			this->active = true;
+			this->listener->OnRtpStreamActive(this);
 		}
 	}
 
