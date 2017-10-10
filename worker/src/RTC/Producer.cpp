@@ -827,9 +827,7 @@ namespace RTC
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
 		  "stream not present in mapRtpStreamProfiles");
 
-		MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
-
-		// Check whether the stream is active.
+		// Check whether the stream is already active.
 		const RtpStream* activeRtpStream = nullptr;
 
 		for (auto it : this->mapActiveProfiles)
@@ -842,7 +840,11 @@ namespace RTC
 
 		// Add the profiles related to this stream into active profiles map and notify the listener.
 		if (!activeRtpStream)
+		{
 			AddActiveProfiles(rtpStreamRecv);
+
+			MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		}
 	}
 
 	inline void Producer::OnTimer(Timer* timer)
