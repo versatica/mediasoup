@@ -17,8 +17,8 @@ namespace RTC
 			virtual void OnRtpStreamRecvNackRequired(
 			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
-			virtual void OnRtpStreamInactive(RTC::RtpStream* rtpStream) = 0;
-			virtual void OnRtpStreamActive(RTC::RtpStream* rtpStream) = 0;
+			virtual void OnRtpStreamInactive(RTC::RtpStream* rtpStream)               = 0;
+			virtual void OnRtpStreamActive(RTC::RtpStream* rtpStream)                 = 0;
 		};
 
 	public:
@@ -65,7 +65,7 @@ namespace RTC
 		// Stats.
 		uint32_t jitter{ 0 };
 		// Others.
-		bool active { true };
+		bool active{ true };
 	};
 
 	inline bool RtpStreamRecv::IsActive() const

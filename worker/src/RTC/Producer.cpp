@@ -793,7 +793,7 @@ namespace RTC
 		for (auto it : this->mapActiveProfiles)
 		{
 			auto activeRtpStream = it.second;
-			auto ssrc             = activeRtpStream->GetSsrc();
+			auto ssrc            = activeRtpStream->GetSsrc();
 
 			totalBitrate += this->rtpStreams[ssrc]->GetRate(now);
 		}
@@ -811,7 +811,7 @@ namespace RTC
 		for (auto it : this->mapActiveProfiles)
 		{
 			auto activeRtpStream = it.second;
-			auto ssrc             = activeRtpStream->GetSsrc();
+			auto ssrc            = activeRtpStream->GetSsrc();
 
 			this->rtpStreams[ssrc]->ResetStatusCheckTimer(RTC::RtpStream::StatusCheckPeriod * 2);
 		}
