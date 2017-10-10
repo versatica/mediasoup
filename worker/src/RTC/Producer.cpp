@@ -788,12 +788,12 @@ namespace RTC
 
 		// Simulcast. Check whether any RTP is being received at all.
 		uint32_t totalBitrate = 0;
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now          = DepLibUV::GetTime();
 
 		for (auto it : this->healthyProfiles)
 		{
 			auto healthyRtpStream = it.second;
-			auto ssrc = healthyRtpStream->GetSsrc();
+			auto ssrc             = healthyRtpStream->GetSsrc();
 
 			totalBitrate += this->rtpStreams[ssrc]->GetRate(now);
 		}
@@ -803,9 +803,7 @@ namespace RTC
 			return;
 
 		// Simulcast. Remove the stream from healthy profiles.
-		MS_DEBUG_TAG(rtp,
-			"rtp inactivity detected [ssrc:%" PRIu32,
-			rtpStream->GetSsrc());
+		MS_DEBUG_TAG(rtp, "rtp inactivity detected [ssrc:%" PRIu32, rtpStream->GetSsrc());
 
 		rtpStream->SetUnhealthy();
 		RemoveHealthyProfiles(rtpStreamRecv);
@@ -814,7 +812,7 @@ namespace RTC
 		for (auto it : this->healthyProfiles)
 		{
 			auto healthyRtpStream = it.second;
-			auto ssrc = healthyRtpStream->GetSsrc();
+			auto ssrc             = healthyRtpStream->GetSsrc();
 
 			this->rtpStreams[ssrc]->ResetHealthCheckTimer(RTC::RtpStream::HealthCheckPeriod * 2);
 		}
