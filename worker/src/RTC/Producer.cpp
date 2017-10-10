@@ -671,7 +671,7 @@ namespace RTC
 		{
 			MS_ASSERT(
 			  this->mapActiveProfiles.find(profile) == this->mapActiveProfiles.end(),
-			  "profile already in headltyProfiles set");
+			  "profile already in active profiles map");
 
 			// Add the profile to the active profiles map.
 			this->mapActiveProfiles[profile] = rtpStream;
@@ -692,7 +692,7 @@ namespace RTC
 		{
 			MS_ASSERT(
 			  this->mapActiveProfiles.find(profile) != this->mapActiveProfiles.end(),
-			  "profile not in headltyProfiles");
+			  "profile not in active profiles map");
 
 			// Remove the profile from the active profiles map.
 			this->mapActiveProfiles.erase(profile);
@@ -802,16 +802,28 @@ namespace RTC
 		if (totalBitrate == 0)
 			return;
 
-		// Simulcast. Remove the stream from active profiles.
-		MS_DEBUG_TAG(rtp, "rtp inactivity detected [ssrc:%" PRIu32, rtpStream->GetSsrc());
+		// Check whether the stream is already active.
+		const RtpStream* activeRtpStream = nullptr;
 
-		RemoveActiveProfiles(rtpStreamRecv);
+		for (auto it : this->mapActiveProfiles)
+		{
+			activeRtpStream = it.second;
+
+			// Remove stream from the active profiles map.
+			if (activeRtpStream == rtpStream)
+			{
+				MS_DEBUG_TAG(rtp, "rtp inactivity detected [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+				RemoveActiveProfiles(rtpStreamRecv);
+				break;
+			}
+		}
 
 		// Reset stream check timer on every active stream.
 		for (auto it : this->mapActiveProfiles)
 		{
-			auto activeRtpStream = it.second;
-			auto ssrc            = activeRtpStream->GetSsrc();
+			activeRtpStream = it.second;
+			auto ssrc       = activeRtpStream->GetSsrc();
 
 			this->rtpStreams[ssrc]->ResetStatusCheckTimer(RTC::RtpStream::StatusCheckPeriod * 2);
 		}
