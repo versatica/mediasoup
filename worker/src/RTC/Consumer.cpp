@@ -757,23 +757,13 @@ namespace RTC
 
 		// No simulcast/SVC.
 		if (this->effectiveProfile == RtpEncodingParameters::Profile::DEFAULT)
-		{
-			// TODO: Notify the user.
-			MS_WARN_TAG(rtp, "unhealthy rtp stream");
-
 			return;
-		}
 
 		auto it = this->profiles.find(this->effectiveProfile);
 
 		// This is already the lowest profile.
 		if (it == this->profiles.begin())
-		{
-			// TODO: Notify the user.
-			MS_WARN_TAG(rtp, "lowest profile is unhealthy");
-
 			return;
-		}
 
 		// Downgrade the target profile.
 		this->targetProfile = *(std::prev(it));
