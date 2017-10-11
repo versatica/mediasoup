@@ -82,8 +82,9 @@ namespace RTC
 		void ClearRtpStreams();
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
 		RTC::RtpEncodingParameters::Profile GetProfile(RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet);
-		void AddActiveProfiles(RTC::RtpStreamRecv* rtpStream);
-		void RemoveActiveProfiles(RTC::RtpStreamRecv* rtpStream);
+		void ActivateStreamProfiles(RTC::RtpStreamRecv* rtpStream);
+		void DeactivateStreamProfiles(RTC::RtpStreamRecv* rtpStream);
+		bool IsStreamActive(const RTC::RtpStream* rtpStream) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:

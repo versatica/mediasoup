@@ -544,7 +544,7 @@ namespace RTC
 		this->mapRtpStreamProfiles[rtpStream].insert(profile);
 
 		// Add new profile/s into active profiles map and notify the listener.
-		AddActiveProfiles(rtpStream);
+		ActivateStreamProfiles(rtpStream);
 
 		// Request a key frame since we may have lost the first packets of this stream.
 		RequestKeyFrame(true);
@@ -555,7 +555,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Remove the profiles related to this stream from active profiles map and notify the listener.
-		RemoveActiveProfiles(rtpStream);
+		DeactivateStreamProfiles(rtpStream);
 
 		this->rtpStreams.erase(rtpStream->GetSsrc());
 
@@ -662,7 +662,7 @@ namespace RTC
 		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", packet->GetSsrc());
 	}
 
-	void Producer::AddActiveProfiles(RTC::RtpStreamRecv* rtpStream)
+	void Producer::ActivateStreamProfiles(RTC::RtpStreamRecv* rtpStream)
 	{
 		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
 
@@ -683,7 +683,7 @@ namespace RTC
 		}
 	}
 
-	void Producer::RemoveActiveProfiles(RTC::RtpStreamRecv* rtpStream)
+	void Producer::DeactivateStreamProfiles(RTC::RtpStreamRecv* rtpStream)
 	{
 		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
 
@@ -702,6 +702,19 @@ namespace RTC
 				listener->OnProducerProfileDisabled(this, profile);
 			}
 		}
+	}
+
+	bool Producer::IsStreamActive(const RTC::RtpStream* rtpStream) const
+	{
+		for (auto it : this->mapActiveProfiles)
+		{
+			auto activeRtpStream = it.second;
+
+			if (activeRtpStream == rtpStream)
+				return true;
+		}
+
+		return false;
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
@@ -802,27 +815,14 @@ namespace RTC
 		if (totalBitrate == 0)
 			return;
 
-		// Check whether the stream is already active.
-		const RtpStream* activeRtpStream = nullptr;
+		// Deactivate stream profiles if active.
+		if (IsStreamActive(rtpStream))
+			DeactivateStreamProfiles(rtpStreamRecv);
 
+		// Reset stream check timer on every stream whose profiles are active.
 		for (auto it : this->mapActiveProfiles)
 		{
-			activeRtpStream = it.second;
-
-			// Remove stream from the active profiles map.
-			if (activeRtpStream == rtpStream)
-			{
-				MS_DEBUG_TAG(rtp, "rtp inactivity detected [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
-
-				RemoveActiveProfiles(rtpStreamRecv);
-				break;
-			}
-		}
-
-		// Reset stream check timer on every active stream.
-		for (auto it : this->mapActiveProfiles)
-		{
-			activeRtpStream = it.second;
+			auto activeRtpStream = it.second;
 			auto ssrc       = activeRtpStream->GetSsrc();
 
 			this->rtpStreams[ssrc]->ResetStatusCheckTimer(RTC::RtpStream::StatusCheckPeriod * 2);
@@ -839,21 +839,9 @@ namespace RTC
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
 		  "stream not present in mapRtpStreamProfiles");
 
-		// Check whether the stream is already active.
-		const RtpStream* activeRtpStream = nullptr;
-
-		for (auto it : this->mapActiveProfiles)
+		if (!IsStreamActive(rtpStream))
 		{
-			activeRtpStream = it.second;
-
-			if (activeRtpStream != nullptr)
-				break;
-		}
-
-		// Add the profiles related to this stream into active profiles map and notify the listener.
-		if (!activeRtpStream)
-		{
-			AddActiveProfiles(rtpStreamRecv);
+			ActivateStreamProfiles(rtpStreamRecv);
 
 			MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 		}
