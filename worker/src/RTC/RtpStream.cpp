@@ -6,6 +6,7 @@
 #include "RTC/RtpStream.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
@@ -127,7 +128,7 @@ namespace RTC
 		this->transmissionCounter.Update(packet);
 
 		// Update highest seen RTP timestamp.
-		if (packet->GetTimestamp() > this->maxPacketTs)
+		if (SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
 			this->maxPacketTs = packet->GetTimestamp();
 			this->maxPacketMs = DepLibUV::GetTime();
