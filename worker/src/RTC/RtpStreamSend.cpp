@@ -405,7 +405,8 @@ namespace RTC
 
 		if (lossPercentage >= MaxHealthLossPercentage)
 		{
-			MS_DEBUG_TAG(rtp, "last period loss percentage: %.2f", lossPercentage);
+			MS_DEBUG_TAG(
+			  rtp, "rtp stream packet loss [ssrc:%" PRIu32 ", %.2f%%]", GetSsrc(), lossPercentage);
 
 			if (this->notifyStatus || this->healthy)
 			{
