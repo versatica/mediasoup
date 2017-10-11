@@ -690,7 +690,7 @@ namespace RTC
 		if (!IsEnabled())
 			return;
 
-		if (this->kind == RTC::Media::Kind::AUDIO || IsPaused())
+		if (this->kind != RTC::Media::Kind::VIDEO || IsPaused())
 			return;
 
 		for (auto& listener : this->listeners)

@@ -202,9 +202,12 @@ namespace RTC
 			listener->OnProducerResumed(this);
 		}
 
-		MS_DEBUG_2TAGS(rtcp, rtx, "requesting full frame after resumed");
+		if (this->kind == RTC::Media::Kind::VIDEO)
+		{
+			MS_DEBUG_2TAGS(rtcp, rtx, "requesting key frame after resumed");
 
-		RequestKeyFrame(true);
+			RequestKeyFrame(true);
+		}
 	}
 
 	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
@@ -343,7 +346,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->kind == RTC::Media::Kind::AUDIO || this->paused)
+		if (this->kind != RTC::Media::Kind::VIDEO || this->paused)
 			return;
 
 		if (force)
