@@ -39,9 +39,9 @@ public:
 	{
 		return;
 	};
-	void Encode(RTC::Codecs::EncodingContext* /*context*/, uint8_t* /*data*/)
+	bool Encode(RTC::Codecs::EncodingContext* /*context*/, uint8_t* /*data*/)
 	{
-		return;
+		return true;
 	};
 	void Restore(uint8_t* /*data*/)
 	{

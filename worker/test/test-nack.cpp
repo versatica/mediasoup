@@ -11,10 +11,9 @@ using namespace RTC;
 // Can retransmit up to 17 RTP packets.
 static std::vector<RtpPacket*> rtpRetransmissionContainer(18);
 
-class RtpStreamSendListener : public RtpStream::Listener
+class RtpStreamSendListener : public RtpStreamSend::Listener
 {
 	public:
-		void OnRtpStreamDied(RTC::RtpStream* /*rtpStream*/) {};
 		void OnRtpStreamHealthy(RTC::RtpStream* /*rtpStream*/) {};
 		void OnRtpStreamUnhealthy(RTC::RtpStream* /*rtpStream*/) {};
 } rtpStreamSendListener;
