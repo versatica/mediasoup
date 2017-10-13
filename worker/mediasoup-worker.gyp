@@ -276,11 +276,10 @@
      'xcode_settings':
      {
        'OTHER_CPLUSPLUSFLAGS': [
-         '-fprofile-instr-generate',
-         '-fcoverage-mapping'
+         '--coverage'
        ],
        'OTHER_LDFLAGS': [
-         '-fprofile-instr-generate'
+         '--coverage'
        ]
      }
     }
