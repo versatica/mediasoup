@@ -4,7 +4,6 @@ current_dir=${PWD##*/}
 
 LCOV="./deps/lcov/bin/lcov"
 GENHTML="./deps/lcov/bin/genhtml"
-OBJECTS_DIR="./out/Release/obj.target/mediasoup-worker-test/"
 HTML_REPORT_DIR="/tmp/mediasoup-worker-lcov-report"
 COVERAGE_INFO="/tmp/mediasoup-worker-lcov-report.info"
 
@@ -13,8 +12,8 @@ if [ "${current_dir}" != "worker" ] ; then
 	exit 1
 fi
 
-echo ">>> [INFO] Clearing *.gcda files ..."
-find ${OBJECTS_DIR} -name *.gcda -exec rm -rf {} \;
+echo ">>> [INFO] Clearing counters ..."
+$LCOV --directory ./ --zerocounters
 
 echo ">>> [INFO] running tests ..."
 gulp test:worker
