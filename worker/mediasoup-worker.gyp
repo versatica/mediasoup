@@ -272,7 +272,17 @@
         # C++ include files
         'test/catch.hpp',
         'test/helpers.hpp'
-      ]
+      ],
+     'xcode_settings':
+     {
+       'OTHER_CPLUSPLUSFLAGS': [
+         '-fprofile-instr-generate',
+         '-fcoverage-mapping'
+       ],
+       'OTHER_LDFLAGS': [
+         '-fprofile-instr-generate'
+       ]
+     }
     }
   ]
 }
