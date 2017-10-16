@@ -29,9 +29,9 @@ $LCOV -r ${COVERAGE_INFO} "`pwd`/deps/*" -o ${COVERAGE_INFO}
 
 echo ">>> [INFO] Clearing previous report data ..."
 if [[ -d ${HTML_REPORT_DIR} ]] ; then
-   rm -rf ${HTML_REPORT_DIR}
+	rm -rf ${HTML_REPORT_DIR}
 else
-   mkdir ${HTML_REPORT_DIR}
+	mkdir ${HTML_REPORT_DIR}
 fi
 
 echo ">>> [INFO] Generating HTML report ..."
