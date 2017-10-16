@@ -281,11 +281,13 @@ namespace RTC
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
-		uint32_t diffMs = static_cast<uint32_t>(now - this->maxPacketMs);
+		auto diffMs     = static_cast<uint32_t>(now - this->maxPacketMs);
 		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
 
 		Utils::Time::Ntp ntp{};
-		struct timeval unixTime;
+		struct timeval unixTime
+		{
+		};
 		uint64_t unixTimeMs;
 
 		gettimeofday(&unixTime, nullptr);
