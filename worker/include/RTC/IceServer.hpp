@@ -32,7 +32,7 @@ namespace RTC
 			 * returns, so the given pointers are still usable.
 			 */
 			virtual void OnOutgoingStunMessage(
-			    const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
+			  const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
 			virtual void OnIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
 			virtual void OnIceConnected(const RTC::IceServer* iceServer)    = 0;
 			virtual void OnIceCompleted(const RTC::IceServer* iceServer)    = 0;
@@ -40,7 +40,7 @@ namespace RTC
 		};
 
 	public:
-		IceServer(Listener* listener, std::string usernameFragment, std::string password);
+		IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password);
 
 		void Destroy();
 		void ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple);

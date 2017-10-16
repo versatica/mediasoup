@@ -30,7 +30,8 @@ namespace RTC
 		{ Type::BYE,   "BYE"   },
 		{ Type::APP,   "APP"   },
 		{ Type::RTPFB, "RTPFB" },
-		{ Type::PSFB,  "PSFB"  }
+		{ Type::PSFB,  "PSFB"  },
+		{ Type::XR,    "XR"    }
 	};
 		// clang-format on
 
@@ -54,17 +55,17 @@ namespace RTC
 					return first;
 				}
 
-				auto* header      = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-				size_t packetLlen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
+				auto* header     = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+				size_t packetLen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
 
-				if (len < packetLlen)
+				if (len < packetLen)
 				{
 					MS_WARN_TAG(
-					    rtcp,
-					    "packet length exceeds remaining data [len:%zu, "
-					    "packet len:%zu]",
-					    len,
-					    packetLlen);
+					  rtcp,
+					  "packet length exceeds remaining data [len:%zu, "
+					  "packet len:%zu]",
+					  len,
+					  packetLen);
 
 					return first;
 				}
@@ -73,14 +74,14 @@ namespace RTC
 				{
 					case Type::SR:
 					{
-						current = SenderReportPacket::Parse(data, len);
+						current = SenderReportPacket::Parse(data, packetLen);
 
 						if (current == nullptr)
 							break;
 
 						if (header->count > 0)
 						{
-							Packet* rr = ReceiverReportPacket::Parse(data, len, current->GetSize());
+							Packet* rr = ReceiverReportPacket::Parse(data, packetLen, current->GetSize());
 
 							if (rr == nullptr)
 								break;
@@ -93,19 +94,19 @@ namespace RTC
 
 					case Type::RR:
 					{
-						current = ReceiverReportPacket::Parse(data, len);
+						current = ReceiverReportPacket::Parse(data, packetLen);
 						break;
 					}
 
 					case Type::SDES:
 					{
-						current = SdesPacket::Parse(data, len);
+						current = SdesPacket::Parse(data, packetLen);
 						break;
 					}
 
 					case Type::BYE:
 					{
-						current = ByePacket::Parse(data, len);
+						current = ByePacket::Parse(data, packetLen);
 						break;
 					}
 
@@ -115,15 +116,21 @@ namespace RTC
 						break;
 					}
 
-					case Type::PSFB:
+					case Type::RTPFB:
 					{
-						current = FeedbackPsPacket::Parse(data, len);
+						current = FeedbackRtpPacket::Parse(data, packetLen);
 						break;
 					}
 
-					case Type::RTPFB:
+					case Type::PSFB:
 					{
-						current = FeedbackRtpPacket::Parse(data, len);
+						current = FeedbackPsPacket::Parse(data, packetLen);
+						break;
+					}
+
+					case Type::XR:
+					{
+						current = nullptr;
 						break;
 					}
 
@@ -142,21 +149,25 @@ namespace RTC
 					if (Type(header->packetType) == Type::PSFB)
 					{
 						packetType +=
-						    " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
+						  " " + FeedbackPsPacket::MessageType2String(FeedbackPs::MessageType(header->count));
 					}
 					else if (Type(header->packetType) == Type::RTPFB)
 					{
 						packetType +=
-						    " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
+						  " " + FeedbackRtpPacket::MessageType2String(FeedbackRtp::MessageType(header->count));
 					}
 
-					MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
+					// TMP: Do not log XR parsing error until it is implemented.
+					if (Type(header->packetType) != Type::XR)
+					{
+						MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
+					}
 
 					return first;
 				}
 
-				data += packetLlen;
-				len -= packetLlen;
+				data += packetLen;
+				len -= packetLen;
 
 				if (first == nullptr)
 					first = current;

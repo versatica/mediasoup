@@ -1,0 +1,131 @@
+#define MS_CLASS "RTC::SeqManager"
+// #define MS_LOG_DEV
+
+#include "RTC/SeqManager.hpp"
+#include "Logger.hpp"
+
+namespace RTC
+{
+	template<typename T>
+	bool SeqManager<T>::SeqLowerThan::operator()(const T lhs, const T rhs) const
+	{
+		return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
+		       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+	}
+
+	template<typename T>
+	bool SeqManager<T>::SeqHigherThan::operator()(const T lhs, const T rhs) const
+	{
+		return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
+		       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
+	}
+
+	template<typename T>
+	const typename SeqManager<T>::SeqLowerThan SeqManager<T>::isSeqLowerThan;
+
+	template<typename T>
+	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan;
+
+	template<typename T>
+	bool SeqManager<T>::IsSeqLowerThan(const T lhs, const T rhs)
+	{
+		return isSeqLowerThan(lhs, rhs);
+	}
+
+	template<typename T>
+	bool SeqManager<T>::IsSeqHigherThan(const T lhs, const T rhs)
+	{
+		return isSeqHigherThan(lhs, rhs);
+	}
+
+	template<typename T>
+	SeqManager<T>::SeqManager()
+	{
+	}
+
+	template<typename T>
+	void SeqManager<T>::Sync(T input)
+	{
+		// Update base.
+		this->base = this->maxOutput - input + 1;
+
+		// Update maxInput.
+		this->maxInput = input;
+
+		// Clear dropped set.
+		this->dropped.clear();
+	}
+
+	template<typename T>
+	void SeqManager<T>::Drop(T input)
+	{
+		// Mark as dropped if 'input' is higher than anyone already processed.
+		if (SeqManager<T>::IsSeqHigherThan(input, this->maxInput))
+			this->dropped.insert(input);
+	}
+
+	template<typename T>
+	bool SeqManager<T>::Input(const T input, T& output)
+	{
+		auto base = this->base;
+
+		// There are dropped inputs. Synchronize.
+		if (!this->dropped.empty())
+		{
+			// Delete dropped inputs older than input - MaxValue/2.
+			auto it = this->dropped.lower_bound(input - MaxValue / 2);
+			this->dropped.erase(this->dropped.begin(), it);
+
+			// Check whether this input was dropped.
+			it = this->dropped.find(input);
+
+			if (it != this->dropped.end())
+			{
+				MS_WARN_TAG(rtp, "trying to send a dropped input");
+
+				return false;
+			}
+
+			// Count dropped entries before 'input' in order to adapt the base.
+			size_t dropped = std::count_if(
+			  this->dropped.begin(), this->dropped.end(), [&input](T i) { return i < input; });
+
+			base -= dropped;
+		}
+
+		output = input + base;
+
+		T idelta = input - this->maxInput;
+		T odelta = output - this->maxOutput;
+
+		// New input is higher than the maximum seen. But less than acceptable units higher.
+		// Keep it as the maximum seen. See Drop().
+		if (idelta < MaxValue / 2)
+			this->maxInput = input;
+
+		// New output is higher than the maximum seen. But less than acceptable units higher.
+		// Keep it as the maximum seen. See Sync().
+		if (odelta < MaxValue / 2)
+			this->maxOutput = output;
+
+		return true;
+	}
+
+	template<typename T>
+	T SeqManager<T>::GetMaxInput() const
+	{
+		return this->maxInput;
+	}
+
+	template<typename T>
+	T SeqManager<T>::GetMaxOutput() const
+	{
+		return this->maxOutput;
+	}
+
+	// Explicit instantiation to have all SeqManager definitions in this file.
+	template class SeqManager<uint8_t>;
+	template class SeqManager<uint16_t>;
+	template class SeqManager<uint32_t>;
+
+} // namespace RTC

@@ -29,7 +29,7 @@ namespace RTC
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<FeedbackRtpItemsPacket<Item>> packet(
-			    new FeedbackRtpItemsPacket<Item>(commonHeader));
+			  new FeedbackRtpItemsPacket<Item>(commonHeader));
 
 			size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
 

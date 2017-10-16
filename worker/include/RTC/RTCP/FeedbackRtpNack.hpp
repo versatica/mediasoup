@@ -61,7 +61,7 @@ namespace RTC
 		}
 
 		inline FeedbackRtpNackItem::FeedbackRtpNackItem(FeedbackRtpNackItem* item)
-		    : header(item->header)
+		  : header(item->header)
 		{
 		}
 

@@ -15,17 +15,16 @@ namespace RTC
 
 	/* Instance methods. */
 
-	IceServer::IceServer(Listener* listener, std::string usernameFragment, std::string password)
-	    : listener(listener), usernameFragment(std::move(usernameFragment)),
-	      password(std::move(password))
+	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password)
+	  : listener(listener), usernameFragment(usernameFragment), password(password)
 	{
 		MS_TRACE();
 
 		MS_DEBUG_TAG(
-		    ice,
-		    "[usernameFragment:%s, password:%s]",
-		    this->usernameFragment.c_str(),
-		    this->password.c_str());
+		  ice,
+		  "[usernameFragment:%s, password:%s]",
+		  this->usernameFragment.c_str(),
+		  this->password.c_str());
 	}
 
 	void IceServer::Destroy()
@@ -45,7 +44,7 @@ namespace RTC
 			if (msg->GetClass() == RTC::StunMessage::Class::REQUEST)
 			{
 				MS_WARN_TAG(
-				    ice, "unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
+				  ice, "unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
 
 				// Reply 400.
 				RTC::StunMessage* response = msg->CreateErrorResponse(400);
@@ -57,9 +56,9 @@ namespace RTC
 			else
 			{
 				MS_WARN_TAG(
-				    ice,
-				    "ignoring STUN Indication or Response with unknown method %#.3x",
-				    (unsigned int)msg->GetMethod());
+				  ice,
+				  "ignoring STUN Indication or Response with unknown method %#.3x",
+				  (unsigned int)msg->GetMethod());
 			}
 
 			return;
@@ -159,9 +158,9 @@ namespace RTC
 				// }
 
 				MS_DEBUG_DEV(
-				    "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]",
-				    static_cast<uint32_t>(msg->GetPriority()),
-				    msg->HasUseCandidate() ? "true" : "false");
+				  "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]",
+				  static_cast<uint32_t>(msg->GetPriority()),
+				  msg->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
 				RTC::StunMessage* response = msg->CreateSuccessResponse();
@@ -266,14 +265,14 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		    this->selectedTuple != nullptr,
-		    "cannot force the selected tuple if there was not a selected tuple");
+		  this->selectedTuple != nullptr,
+		  "cannot force the selected tuple if there was not a selected tuple");
 
 		auto storedTuple = HasTuple(tuple);
 
 		MS_ASSERT(
-		    storedTuple,
-		    "cannot force the selected tuple if the given tuple was not already a valid tuple");
+		  storedTuple,
+		  "cannot force the selected tuple if the given tuple was not already a valid tuple");
 
 		// Mark it as selected tuple.
 		SetSelectedTuple(storedTuple);
@@ -289,7 +288,7 @@ namespace RTC
 			{
 				// There should be no tuples.
 				MS_ASSERT(
-				    this->tuples.empty(), "state is 'new' but there are %zu tuples", this->tuples.size());
+				  this->tuples.empty(), "state is 'new' but there are %zu tuples", this->tuples.size());
 
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(this->selectedTuple == nullptr, "state is 'new' but there is selected tuple");
@@ -330,13 +329,13 @@ namespace RTC
 			{
 				// There should be no tuples.
 				MS_ASSERT(
-				    this->tuples.empty(),
-				    "state is 'disconnected' but there are %zu tuples",
-				    this->tuples.size());
+				  this->tuples.empty(),
+				  "state is 'disconnected' but there are %zu tuples",
+				  this->tuples.size());
 
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(
-				    this->selectedTuple == nullptr, "state is 'disconnected' but there is selected tuple");
+				  this->selectedTuple == nullptr, "state is 'disconnected' but there is selected tuple");
 
 				if (!hasUseCandidate)
 				{
@@ -377,7 +376,7 @@ namespace RTC
 
 				// There should be a selected tuple.
 				MS_ASSERT(
-				    this->selectedTuple != nullptr, "state is 'connected' but there is not selected tuple");
+				  this->selectedTuple != nullptr, "state is 'connected' but there is not selected tuple");
 
 				if (!hasUseCandidate)
 				{
@@ -413,7 +412,7 @@ namespace RTC
 
 				// There should be a selected tuple.
 				MS_ASSERT(
-				    this->selectedTuple != nullptr, "state is 'completed' but there is not selected tuple");
+				  this->selectedTuple != nullptr, "state is 'completed' but there is not selected tuple");
 
 				if (!hasUseCandidate)
 				{

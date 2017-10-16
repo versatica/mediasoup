@@ -4,16 +4,17 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include <utility> // std::make_pair()
 
 namespace RTC
 {
 	/* Static. */
 
-	constexpr uint32_t MaxPacketAge{ 10000 };
-	constexpr size_t MaxNackPackets{ 500 };
+	constexpr size_t MaxPacketAge{ 5000 };
+	constexpr size_t MaxNackPackets{ 1000 };
 	constexpr uint32_t DefaultRtt{ 100 };
 	constexpr uint8_t MaxNackRetries{ 8 };
-	constexpr uint64_t TimerInterval{ 25 };
+	constexpr uint64_t TimerInterval{ 50 };
 
 	/* Instance methods. */
 
@@ -33,114 +34,174 @@ namespace RTC
 		this->timer->Destroy();
 	}
 
-	void NackGenerator::ReceivePacket(RTC::RtpPacket* packet)
+	// Returns true if this is a found nacked packet. False otherwise.
+	bool NackGenerator::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		uint32_t seq32 = packet->GetExtendedSequenceNumber();
+		uint16_t seq    = packet->GetSequenceNumber();
+		bool isKeyFrame = packet->IsKeyFrame();
 
 		if (!this->started)
 		{
-			this->lastSeq32 = seq32;
-			this->started   = true;
+			this->lastSeq = seq;
+			this->started = true;
 
-			return;
+			if (isKeyFrame)
+				this->keyFrameList.insert(seq);
+
+			return false;
 		}
 
 		// Obviously never nacked, so ignore.
-		if (seq32 == this->lastSeq32)
-		{
-			return;
-		}
-		if (seq32 == this->lastSeq32 + 1)
-		{
-			this->lastSeq32++;
+		if (seq == this->lastSeq)
+			return false;
 
-			return;
-		}
-
-		// May be an out of order packet or a retransmitted packet (without RTX).
-		if (seq32 < this->lastSeq32)
+		// May be an out of order packet, or already handled retransmitted packet,
+		// or a retransmitted packet.
+		if (SeqManager<uint16_t>::IsSeqLowerThan(seq, this->lastSeq))
 		{
-			auto it = this->nackList.find(seq32);
+			auto it = this->nackList.find(seq);
 
 			// It was a nacked packet.
 			if (it != this->nackList.end())
 			{
 				MS_DEBUG_TAG(
-				    rtx,
-				    "nacked packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtx,
+				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				this->nackList.erase(it);
-			}
-			// Out of order packet.
-			else
-			{
-				MS_DEBUG_TAG(
-				    rtx,
-				    "out of order packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+
+				return true;
 			}
 
-			return;
+			// Out of order packet or already handled NACKed packet.
+			MS_DEBUG_TAG(
+			  rtx,
+			  "ignoring old packet not present in the NACK list [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
+
+			return false;
 		}
 
-		// Otherwise we may have lost some packets.
-		AddPacketsToNackList(this->lastSeq32 + 1, seq32);
-		this->lastSeq32 = seq32;
+		// If we are here it means that we may have lost some packets so seq
+		// is newer than the latest seq seen.
+
+		CleanOldNackItems(seq);
+
+		// If a key frame remove all the items in the nack list older than our
+		// previous key frame seq.
+		if (isKeyFrame)
+		{
+			RemoveNackItemsUntilKeyFrame();
+
+			this->keyFrameList.insert(seq);
+		}
+
+		// Expected seq number so nothing else to do.
+		if (seq == this->lastSeq + 1)
+		{
+			this->lastSeq++;
+
+			return false;
+		}
+
+		AddPacketsToNackList(this->lastSeq + 1, seq);
+		this->lastSeq = seq;
 
 		// Check if there are any nacks that are waiting for this seq number.
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
 
 		if (!nackBatch.empty())
-			this->listener->OnNackRequired(nackBatch);
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
 		MayRunTimer();
+
+		return false;
 	}
 
-	void NackGenerator::AddPacketsToNackList(uint32_t seq32Start, uint32_t seq32End)
+	void NackGenerator::CleanOldNackItems(uint16_t seq)
 	{
 		MS_TRACE();
 
-		// Remove old packets.
-		auto it = this->nackList.lower_bound(seq32End - MaxPacketAge);
+		auto it = this->nackList.lower_bound(seq - MaxPacketAge);
 
 		this->nackList.erase(this->nackList.begin(), it);
 
-		// If the nack list is too large, clear it and request a full frame.
-		uint32_t numNewNacks = seq32End - seq32Start;
+		auto it2 = this->keyFrameList.lower_bound(seq - MaxPacketAge);
+
+		this->keyFrameList.erase(this->keyFrameList.begin(), it2);
+	}
+
+	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)
+	{
+		MS_TRACE();
+
+		// If the nack list is too large, clear it and request a key frame.
+		uint16_t numNewNacks = seqEnd - seqStart;
 
 		if (this->nackList.size() + numNewNacks > MaxNackPackets)
 		{
-			MS_DEBUG_TAG(rtx, "nack list too large, clearing it and requesting a full frame");
+			MS_DEBUG_TAG(
+			  rtx,
+			  "NACK list too large, clearing it and requesting a key frame [seqEnd:%" PRIu16 "]",
+			  seqEnd);
 
 			this->nackList.clear();
-			this->listener->OnFullFrameRequired();
+			this->keyFrameList.clear();
+			this->listener->OnNackGeneratorKeyFrameRequired();
 
 			return;
 		}
 
-		for (uint32_t seq32 = seq32Start; seq32 != seq32End; ++seq32)
+		for (uint16_t seq = seqStart; seq != seqEnd; ++seq)
 		{
-			// NOTE: Let the packet become out of order for a while without requesting
-			// it into a NACK.
+			MS_ASSERT(this->nackList.find(seq) == this->nackList.end(), "packet already in the NACK list");
+
+			// NOTE: We may not generate a NACK for this seq right now, but wait a bit
+			// assuming that this packet may be in its way.
 			// TODO: To be done.
-			uint32_t sendAtSeqNum = seq32 + 0;
+			uint16_t sendAtSeq = seq + 0;
 
-			NackInfo nackInfo(seq32, sendAtSeqNum);
+			this->nackList.emplace(std::make_pair(seq, NackInfo{ seq, sendAtSeq }));
+		}
+	}
 
-			MS_ASSERT(
-			    this->nackList.find(seq32) == this->nackList.end(), "packet already in the NACK list");
+	void NackGenerator::RemoveNackItemsUntilKeyFrame()
+	{
+		MS_TRACE();
 
-			this->nackList[seq32] = nackInfo;
+		// No previous key frame, so do nothing.
+		if (this->keyFrameList.empty())
+			return;
+
+		auto it               = this->keyFrameList.begin();
+		auto seq              = *it;
+		size_t numItemsBefore = this->nackList.size();
+		auto it2              = this->nackList.lower_bound(seq);
+
+		this->nackList.erase(this->nackList.begin(), it2);
+		this->keyFrameList.erase(seq);
+
+		size_t numItemsRemoved = numItemsBefore - this->nackList.size();
+
+		if (numItemsRemoved > 0)
+		{
+			MS_DEBUG_TAG(
+			  rtx,
+			  "removed %zu old NACK items older than received key frame [seq:%" PRIu16 "]",
+			  numItemsRemoved,
+			  seq);
 		}
 	}
 
 	std::vector<uint16_t> NackGenerator::GetNackBatch(NackFilter filter)
 	{
+		MS_TRACE();
+
 		uint64_t now = DepLibUV::GetTime();
 		std::vector<uint16_t> nackBatch;
 		auto it = this->nackList.begin();
@@ -148,10 +209,11 @@ namespace RTC
 		while (it != this->nackList.end())
 		{
 			NackInfo& nackInfo = it->second;
-			uint16_t seq       = nackInfo.seq32 % (1 << 16);
+			uint16_t seq       = nackInfo.seq;
 
-			if (filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
-			    this->lastSeq32 >= nackInfo.sendAtSeqNum)
+			if (
+			  filter == NackFilter::SEQ && nackInfo.sentAtTime == 0 &&
+			  SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq))
 			{
 				nackInfo.retries++;
 				nackInfo.sentAtTime = now;
@@ -159,9 +221,9 @@ namespace RTC
 				if (nackInfo.retries >= MaxNackRetries)
 				{
 					MS_WARN_TAG(
-					    rtx,
-					    "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
-					    seq);
+					  rtx,
+					  "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					  seq);
 
 					it = this->nackList.erase(it);
 				}
@@ -182,9 +244,9 @@ namespace RTC
 				if (nackInfo.retries >= MaxNackRetries)
 				{
 					MS_WARN_TAG(
-					    rtx,
-					    "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
-					    seq);
+					  rtx,
+					  "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					  seq);
 
 					it = this->nackList.erase(it);
 				}
@@ -216,7 +278,7 @@ namespace RTC
 		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::TIME);
 
 		if (!nackBatch.empty())
-			this->listener->OnNackRequired(nackBatch);
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
 		MayRunTimer();
 	}

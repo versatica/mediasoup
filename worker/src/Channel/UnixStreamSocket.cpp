@@ -201,7 +201,7 @@ namespace Channel
 			char* jsonStart = nullptr;
 			size_t jsonLen;
 			int nsRet = netstring_read(
-			    reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
+			  reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
 
 			if (nsRet != 0)
 			{
@@ -224,8 +224,8 @@ namespace Channel
 							else
 							{
 								MS_ERROR_STD(
-								    "no more space in the buffer for the unfinished message being parsed, "
-								    "discarding it");
+								  "no more space in the buffer for the unfinished message being parsed, "
+								  "discarding it");
 
 								this->msgStart      = 0;
 								this->bufferDataLen = 0;
@@ -266,14 +266,14 @@ namespace Channel
 
 			// If here it means that jsonStart points to the beginning of a JSON string
 			// with jsonLen bytes length, so recalculate readLen.
-			readLen = reinterpret_cast<const uint8_t*>(jsonStart) - (this->buffer + this->msgStart) +
-			          jsonLen + 1;
+			readLen =
+			  reinterpret_cast<const uint8_t*>(jsonStart) - (this->buffer + this->msgStart) + jsonLen + 1;
 
 			Json::Value json;
 			std::string jsonParseError;
 
 			if (this->jsonReader->parse(
-			        (const char*)jsonStart, (const char*)jsonStart + jsonLen, &json, &jsonParseError))
+			      (const char*)jsonStart, (const char*)jsonStart + jsonLen, &json, &jsonParseError))
 			{
 				Channel::Request* request = nullptr;
 

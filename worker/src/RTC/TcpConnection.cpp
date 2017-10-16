@@ -11,7 +11,7 @@ namespace RTC
 	/* Instance methods. */
 
 	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
-	    : ::TcpConnection::TcpConnection(bufferSize), listener(listener)
+	  : ::TcpConnection::TcpConnection(bufferSize), listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -21,11 +21,11 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DEBUG_DEV(
-		    "data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-		    GetLocalIP().c_str(),
-		    GetLocalPort(),
-		    GetPeerIP().c_str(),
-		    GetPeerPort());
+		  "data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
+		  GetLocalIP().c_str(),
+		  GetLocalPort(),
+		  GetPeerIP().c_str(),
+		  GetPeerPort());
 
 		/*
 		 * Framing RFC 4571
@@ -63,9 +63,12 @@ namespace RTC
 			{
 				const uint8_t* packet = this->buffer + this->frameStart + 2;
 
-				// Notify the listener.
+				// Update received bytes and notify the listener.
 				if (packetLen != 0)
+				{
+					this->recvBytes += packetLen;
 					this->listener->OnPacketRecv(this, packet, packetLen);
+				}
 
 				// If there is no more space available in the buffer and that is because
 				// the latest parsed frame filled it, then empty the full buffer.
@@ -105,11 +108,11 @@ namespace RTC
 				if (this->frameStart != 0)
 				{
 					MS_DEBUG_DEV(
-					    "no more space in the buffer, moving parsed bytes to the beginning of "
-					    "the buffer and wait for more data");
+					  "no more space in the buffer, moving parsed bytes to the beginning of "
+					  "the buffer and wait for more data");
 
 					std::memmove(
-					    this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
+					  this->buffer, this->buffer + this->frameStart, this->bufferSize - this->frameStart);
 					this->bufferDataLen = this->bufferSize - this->frameStart;
 					this->frameStart    = 0;
 				}
@@ -118,8 +121,8 @@ namespace RTC
 				else
 				{
 					MS_WARN_DEV(
-					    "no more space in the buffer for the unfinished frame being parsed, closing the "
-					    "connection");
+					  "no more space in the buffer for the unfinished frame being parsed, closing the "
+					  "connection");
 
 					// Close the socket.
 					Destroy();
@@ -139,6 +142,9 @@ namespace RTC
 	void TcpConnection::Send(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// Update sent bytes.
+		this->sentBytes += len;
 
 		// Write according to Framing RFC 4571.
 

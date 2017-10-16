@@ -40,13 +40,13 @@ namespace RTC
 		// |arrivalTimeDeltaMs| (output) is the computed arrival-time delta.
 		// |packetSizeDelta| (output) is the computed size delta.
 		bool ComputeDeltas(
-		    uint32_t timestamp,
-		    int64_t arrivalTimeMs,
-		    int64_t systemTimeMs,
-		    size_t packetSize,
-		    uint32_t* timestampDelta,
-		    int64_t* arrivalTimeDeltaMs,
-		    int* packetSizeDelta);
+		  uint32_t timestamp,
+		  int64_t arrivalTimeMs,
+		  int64_t systemTimeMs,
+		  size_t packetSize,
+		  uint32_t* timestampDelta,
+		  int64_t* arrivalTimeDeltaMs,
+		  int* packetSizeDelta);
 
 	private:
 		struct TimestampGroup
@@ -80,7 +80,7 @@ namespace RTC
 	/* Inline methods. */
 
 	inline InterArrival::TimestampGroup::TimestampGroup()
-	    : size(0), firstTimestamp(0), timestamp(0), completeTimeMs(-1)
+	  : size(0), firstTimestamp(0), timestamp(0), completeTimeMs(-1)
 	{
 	}
 
@@ -90,10 +90,10 @@ namespace RTC
 	}
 
 	inline InterArrival::InterArrival(
-	    uint32_t timestampGroupLengthTicks, double timestampToMsCoeff, bool enableBurstGrouping)
-	    : timestampGroupLengthTicks(timestampGroupLengthTicks), currentTimestampGroup(),
-	      prevTimestampGroup(), timestampToMsCoeff(timestampToMsCoeff),
-	      burstGrouping(enableBurstGrouping), numConsecutiveReorderedPackets(0)
+	  uint32_t timestampGroupLengthTicks, double timestampToMsCoeff, bool enableBurstGrouping)
+	  : timestampGroupLengthTicks(timestampGroupLengthTicks), currentTimestampGroup(),
+	    prevTimestampGroup(), timestampToMsCoeff(timestampToMsCoeff),
+	    burstGrouping(enableBurstGrouping), numConsecutiveReorderedPackets(0)
 	{
 	}
 } // namespace RTC

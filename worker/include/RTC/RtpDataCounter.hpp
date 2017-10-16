@@ -50,10 +50,14 @@ namespace RTC
 	class RtpDataCounter
 	{
 	public:
+		RtpDataCounter() = default;
+
+	public:
 		void Update(RTC::RtpPacket* packet);
 		uint32_t GetRate(uint64_t now);
 		size_t GetPacketCount() const;
 		size_t GetBytes() const;
+		void Reset();
 
 	private:
 		RateCalculator rate;
@@ -64,16 +68,16 @@ namespace RTC
 	/* Inline instance methods. */
 
 	inline RateCalculator::RateCalculator(size_t windowSize, float scale)
-	    : windowSize(windowSize), scale(scale)
+	  : windowSize(windowSize), scale(scale)
 	{
 		uint64_t now = DepLibUV::GetTime();
 
-		this->Reset(now);
+		Reset(now);
 	}
 
 	inline void RateCalculator::Reset()
 	{
-		this->Reset(this->oldestTime);
+		Reset(this->oldestTime);
 	}
 
 	inline void RateCalculator::Reset(uint64_t now)
@@ -97,6 +101,13 @@ namespace RTC
 	inline size_t RtpDataCounter::GetBytes() const
 	{
 		return this->bytes;
+	}
+
+	inline void RtpDataCounter::Reset()
+	{
+		rate.Reset();
+		this->packets = 0;
+		this->bytes   = 0;
 	}
 } // namespace RTC
 

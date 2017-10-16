@@ -20,7 +20,7 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		template<typename t>
+		template<typename T>
 		class FeedbackRtpTmmbItem : public FeedbackItem
 		{
 		private:

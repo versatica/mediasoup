@@ -34,12 +34,11 @@ namespace RTC
 		~RemoteBitrateEstimatorSingleStream() override;
 
 		void IncomingPacket(
-		    int64_t arrivalTimeMs,
-		    size_t payloadSize,
-		    const RtpPacket& packet,
-		    uint32_t transmissionTimeOffset) override;
+		  int64_t arrivalTimeMs,
+		  size_t payloadSize,
+		  const RtpPacket& packet,
+		  uint32_t transmissionTimeOffset) override;
 		void Process() override;
-		int64_t TimeUntilNextProcess() override;
 		void OnRttUpdate(int64_t avgRttMs, int64_t maxRttMs) override;
 		void RemoveStream(uint32_t ssrc) override;
 		bool LatestEstimate(std::vector<uint32_t>* ssrcs, uint32_t* bitrateBps) const override;
@@ -53,7 +52,7 @@ namespace RTC
 				TIMESTAMP_GROUP_LENGTH_MS = 5
 			};
 			explicit Detector(
-			    int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping);
+			  int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping);
 
 			int64_t lastPacketTimeMs;
 			InterArrival interArrival;
@@ -80,23 +79,22 @@ namespace RTC
 		std::unique_ptr<AimdRateControl> remoteRate;
 		Listener* observer{ nullptr };
 		int64_t lastProcessTime{ -1 };
-		int64_t processIntervalMs{ 0 };
+		int64_t processIntervalMs{ 500 };
 		bool umaRecorded{ false };
 	};
 
 	/* Inline Methods. */
 
 	inline RemoteBitrateEstimatorSingleStream::Detector::Detector(
-	    int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping)
-	    : lastPacketTimeMs(lastPacketTimeMs),
-	      interArrival(90 * TIMESTAMP_GROUP_LENGTH_MS, TimestampToMs, enableBurstGrouping),
-	      estimator(options), detector()
+	  int64_t lastPacketTimeMs, const OverUseDetectorOptions& options, bool enableBurstGrouping)
+	  : lastPacketTimeMs(lastPacketTimeMs),
+	    interArrival(90 * TIMESTAMP_GROUP_LENGTH_MS, TimestampToMs, enableBurstGrouping),
+	    estimator(options), detector()
 	{
 	}
 
 	inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer)
-	    : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer),
-	      processIntervalMs(RemoteBitrateEstimator::processIntervalMs)
+	  : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer)
 	{
 		// assert(this->observer);
 	}

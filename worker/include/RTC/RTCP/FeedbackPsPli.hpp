@@ -26,12 +26,12 @@ namespace RTC
 		/* Inline instance methods. */
 
 		inline FeedbackPsPliPacket::FeedbackPsPliPacket(CommonHeader* commonHeader)
-		    : FeedbackPsPacket(commonHeader)
+		  : FeedbackPsPacket(commonHeader)
 		{
 		}
 
 		inline FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : FeedbackPsPacket(FeedbackPs::MessageType::PLI, senderSsrc, mediaSsrc)
+		  : FeedbackPsPacket(FeedbackPs::MessageType::PLI, senderSsrc, mediaSsrc)
 		{
 		}
 	} // namespace RTCP

@@ -14,30 +14,38 @@ namespace Channel
 	{
 		{ "worker.dump",                       Request::MethodId::WORKER_DUMP                          },
 		{ "worker.updateSettings",             Request::MethodId::WORKER_UPDATE_SETTINGS               },
-		{ "worker.createRoom",                 Request::MethodId::WORKER_CREATE_ROOM                   },
-		{ "room.close",                        Request::MethodId::ROOM_CLOSE                           },
-		{ "room.dump",                         Request::MethodId::ROOM_DUMP                            },
-		{ "room.createPeer",                   Request::MethodId::ROOM_CREATE_PEER                     },
-		{ "room.setAudioLevelsEvent",          Request::MethodId::ROOM_SET_AUDIO_LEVELS_EVENT          },
-		{ "peer.close",                        Request::MethodId::PEER_CLOSE                           },
-		{ "peer.dump",                         Request::MethodId::PEER_DUMP                            },
-		{ "peer.setCapabilities",              Request::MethodId::PEER_SET_CAPABILITIES                },
-		{ "peer.createTransport",              Request::MethodId::PEER_CREATE_TRANSPORT                },
-		{ "peer.createRtpReceiver",            Request::MethodId::PEER_CREATE_RTP_RECEIVER             },
+		{ "worker.createRouter",               Request::MethodId::WORKER_CREATE_ROUTER                 },
+		{ "router.close",                      Request::MethodId::ROUTER_CLOSE                         },
+		{ "router.dump",                       Request::MethodId::ROUTER_DUMP                          },
+		{ "router.createWebRtcTransport",      Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT       },
+		{ "router.createPlainRtpTransport",    Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT    },
+		{ "router.createProducer",             Request::MethodId::ROUTER_CREATE_PRODUCER               },
+		{ "router.createConsumer",             Request::MethodId::ROUTER_CREATE_CONSUMER               },
+		{ "router.setAudioLevelsEvent",        Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT        },
 		{ "transport.close",                   Request::MethodId::TRANSPORT_CLOSE                      },
 		{ "transport.dump",                    Request::MethodId::TRANSPORT_DUMP                       },
+		{ "transport.getStats",                Request::MethodId::TRANSPORT_GET_STATS                  },
 		{ "transport.setRemoteDtlsParameters", Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS },
 		{ "transport.setMaxBitrate",           Request::MethodId::TRANSPORT_SET_MAX_BITRATE            },
 		{ "transport.changeUfragPwd",          Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD           },
-		{ "rtpReceiver.close",                 Request::MethodId::RTP_RECEIVER_CLOSE                   },
-		{ "rtpReceiver.dump",                  Request::MethodId::RTP_RECEIVER_DUMP                    },
-		{ "rtpReceiver.receive",               Request::MethodId::RTP_RECEIVER_RECEIVE                 },
-		{ "rtpReceiver.setTransport",          Request::MethodId::RTP_RECEIVER_SET_TRANSPORT           },
-		{ "rtpReceiver.setRtpRawEvent",        Request::MethodId::RTP_RECEIVER_SET_RTP_RAW_EVENT       },
-		{ "rtpReceiver.setRtpObjectEvent",     Request::MethodId::RTP_RECEIVER_SET_RTP_OBJECT_EVENT    },
-		{ "rtpSender.dump",                    Request::MethodId::RTP_SENDER_DUMP                      },
-		{ "rtpSender.setTransport",            Request::MethodId::RTP_SENDER_SET_TRANSPORT             },
-		{ "rtpSender.disable",                 Request::MethodId::RTP_SENDER_DISABLE                   }
+		{ "transport.startMirroring",          Request::MethodId::TRANSPORT_START_MIRRORING            },
+		{ "transport.stopMirroring",           Request::MethodId::TRANSPORT_STOP_MIRRORING             },
+		{ "producer.close",                    Request::MethodId::PRODUCER_CLOSE                       },
+		{ "producer.dump",                     Request::MethodId::PRODUCER_DUMP                        },
+		{ "producer.getStats",                 Request::MethodId::PRODUCER_GET_STATS                   },
+		{ "producer.updateRtpParameters",      Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS       },
+		{ "producer.pause",                    Request::MethodId::PRODUCER_PAUSE                       },
+		{ "producer.resume" ,                  Request::MethodId::PRODUCER_RESUME                      },
+		{ "producer.setPreferredProfile",      Request::MethodId::PRODUCER_SET_PREFERRED_PROFILE       },
+		{ "consumer.close",                    Request::MethodId::CONSUMER_CLOSE                       },
+		{ "consumer.dump",                     Request::MethodId::CONSUMER_DUMP                        },
+		{ "consumer.getStats",                 Request::MethodId::CONSUMER_GET_STATS                   },
+		{ "consumer.enable",                   Request::MethodId::CONSUMER_ENABLE                      },
+		{ "consumer.pause",                    Request::MethodId::CONSUMER_PAUSE                       },
+		{ "consumer.resume",                   Request::MethodId::CONSUMER_RESUME                      },
+		{ "consumer.setPreferredProfile",      Request::MethodId::CONSUMER_SET_PREFERRED_PROFILE       },
+		{ "consumer.setEncodingPreferences",   Request::MethodId::CONSUMER_SET_ENCODING_PREFERENCES    },
+		{ "consumer.requestKeyFrame",          Request::MethodId::CONSUMER_REQUEST_KEY_FRAME           }
 	};
 	// clang-format on
 
@@ -55,7 +63,7 @@ namespace Channel
 		if (json[JsonStringId].isUInt())
 			this->id = json[JsonStringId].asUInt();
 		else
-			MS_THROW_ERROR("json has no numeric .id field");
+			MS_THROW_ERROR("json has no numeric id field");
 
 		if (json[JsonStringMethod].isString())
 			this->method = json[JsonStringMethod].asString();
@@ -70,9 +78,9 @@ namespace Channel
 		}
 		else
 		{
-			Reject("method not allowed");
+			Reject("unknown method");
 
-			MS_THROW_ERROR("unknown .method '%s'", this->method.c_str());
+			MS_THROW_ERROR("unknown request.method '%s'", this->method.c_str());
 		}
 
 		if (json[JsonStringInternal].isObject())
@@ -118,7 +126,7 @@ namespace Channel
 		json[JsonStringId]       = Json::UInt{ this->id };
 		json[JsonStringAccepted] = true;
 
-		if (data.isObject())
+		if (data.isObject() || data.isArray())
 			json[JsonStringData] = data;
 		else
 			json[JsonStringData] = emptyData;

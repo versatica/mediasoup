@@ -1,12 +1,12 @@
 #define CATCH_CONFIG_RUNNER
 
-#include "include/catch.hpp"
-#include "Settings.hpp"
-#include "LogLevel.hpp"
-#include "Logger.hpp"
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
+#include "LogLevel.hpp"
+#include "Logger.hpp"
+#include "Settings.hpp"
 #include "Utils.hpp"
+#include "include/catch.hpp"
 #include <string>
 
 static void init();

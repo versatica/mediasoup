@@ -14,6 +14,9 @@ namespace RTC
 		class CompoundPacket
 		{
 		public:
+			CompoundPacket() = default;
+
+		public:
 			const uint8_t* GetData() const;
 			size_t GetSize() const;
 			size_t GetSenderReportCount() const;

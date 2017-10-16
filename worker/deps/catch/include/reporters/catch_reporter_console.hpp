@@ -138,7 +138,11 @@ namespace Catch {
                     case ResultWas::ThrewException:
                         colour = Colour::Error;
                         passOrFail = "FAILED";
-                        messageLabel = "due to unexpected exception with message";
+                        messageLabel = "due to unexpected exception with ";
+                        if (_stats.infoMessages.size() == 1)
+                            messageLabel += "message";
+                        if (_stats.infoMessages.size() > 1)
+                            messageLabel += "messages";
                         break;
                     case ResultWas::FatalErrorCondition:
                         colour = Colour::Error;
@@ -254,7 +258,7 @@ namespace Catch {
             stream  << '\n' << getLineOfChars<'~'>() << '\n';
             Colour colour( Colour::SecondaryText );
             stream  << currentTestRunInfo->name
-                    << " is a Catch v"  << libraryVersion << " host application.\n"
+                    << " is a Catch v"  << libraryVersion() << " host application.\n"
                     << "Run with -? for options\n\n";
 
             if( m_config->rngSeed() != 0 )

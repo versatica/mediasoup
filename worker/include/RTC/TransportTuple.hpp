@@ -30,26 +30,28 @@ namespace RTC
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
 		const struct sockaddr* GetRemoteAddress() const;
+		size_t GetRecvBytes() const;
+		size_t GetSentBytes() const;
 
 	private:
 		// Passed by argument.
 		RTC::UdpSocket* udpSocket{ nullptr };
 		struct sockaddr* udpRemoteAddr{ nullptr };
-		sockaddr_storage udpRemoteAddrStorage;
 		RTC::TcpConnection* tcpConnection{ nullptr };
 		// Others.
+		struct sockaddr_storage udpRemoteAddrStorage;
 		Protocol protocol;
 	};
 
 	/* Inline methods. */
 
 	inline TransportTuple::TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
-	    : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
+	  : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
 	{
 	}
 
 	inline TransportTuple::TransportTuple(RTC::TcpConnection* tcpConnection)
-	    : tcpConnection(tcpConnection), protocol(Protocol::TCP)
+	  : tcpConnection(tcpConnection), protocol(Protocol::TCP)
 	{
 	}
 
@@ -71,8 +73,8 @@ namespace RTC
 		if (this->protocol == Protocol::UDP && tuple->GetProtocol() == Protocol::UDP)
 		{
 			return (
-			    this->udpSocket == tuple->udpSocket &&
-			    Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
+			  this->udpSocket == tuple->udpSocket &&
+			  Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->GetRemoteAddress()));
 		}
 		else if (this->protocol == Protocol::TCP && tuple->GetProtocol() == Protocol::TCP)
 		{
@@ -106,6 +108,22 @@ namespace RTC
 			return (const struct sockaddr*)this->udpRemoteAddr;
 		else
 			return this->tcpConnection->GetPeerAddress();
+	}
+
+	inline size_t TransportTuple::GetRecvBytes() const
+	{
+		if (this->protocol == Protocol::UDP)
+			return this->udpSocket->GetRecvBytes();
+		else
+			return this->tcpConnection->GetRecvBytes();
+	}
+
+	inline size_t TransportTuple::GetSentBytes() const
+	{
+		if (this->protocol == Protocol::UDP)
+			return this->udpSocket->GetSentBytes();
+		else
+			return this->tcpConnection->GetSentBytes();
 	}
 } // namespace RTC
 

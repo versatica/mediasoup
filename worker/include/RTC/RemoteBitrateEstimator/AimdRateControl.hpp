@@ -136,7 +136,7 @@ namespace RTC
 	inline uint32_t AimdRateControl::UpdateBandwidthEstimate(int64_t nowMs)
 	{
 		this->currentBitrateBps =
-		    ChangeBitrate(this->currentBitrateBps, this->currentInput.incomingBitrate, nowMs);
+		  ChangeBitrate(this->currentBitrateBps, this->currentInput.incomingBitrate, nowMs);
 
 		return this->currentBitrateBps;
 	}

@@ -11,6 +11,14 @@ namespace RTC
 {
 	class RtpStreamSend : public RtpStream
 	{
+	public:
+		class Listener
+		{
+		public:
+			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)   = 0;
+			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) = 0;
+		};
+
 	private:
 		struct StorageItem
 		{
@@ -20,60 +28,61 @@ namespace RTC
 	private:
 		struct BufferItem
 		{
-			uint32_t seq32{ 0 }; // RTP seq in 32 bytes plus 16 bits cycles.
+			uint16_t seq{ 0 }; // RTP seq.
 			uint64_t resentAtTime{ 0 };
 			RTC::RtpPacket* packet{ nullptr };
 		};
 
 	public:
-		RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize);
+		RtpStreamSend(Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
 
-		Json::Value ToJson() const override;
+		Json::Value GetStats() override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(
-		    uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
+		  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
-		uint32_t GetRtt() const;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		bool HasRtx() const;
 		void RtxEncode(RtpPacket* packet);
+		void ClearRetransmissionBuffer();
+		bool IsHealthy() const;
 
 	private:
-		void ClearBuffer();
 		void StorePacket(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
-		void OnInitSeq() override;
+		void CheckStatus() override;
 
 	private:
+		// Passed by argument.
+		Listener* listener{ nullptr };
 		std::vector<StorageItem> storage;
 		using Buffer = std::list<BufferItem>;
 		Buffer buffer;
+		// Stats.
+		uint32_t rtt{ 0 };
+		// Others.
+		bool healthy{ true };
 
 	private:
-		size_t receivedBytes{ 0 };            // Bytes received.
-		uint64_t lastPacketTimeMs{ 0 };       // Time (MS) when the last packet was received.
-		uint32_t lastPacketRtpTimestamp{ 0 }; // RTP Timestamp of the last packet.
-		uint32_t rtt{ 0 };                    // Round trip time.
-
-		// RTX related.
+		// Retransmittion related.
 		bool hasRtx{ false };
 		uint8_t rtxPayloadType{ 0 };
 		uint32_t rtxSsrc{ 0 };
 		uint16_t rtxSeq{ 0 };
 	};
 
-	inline uint32_t RtpStreamSend::GetRtt() const
-	{
-		return this->rtt;
-	}
-
 	inline bool RtpStreamSend::HasRtx() const
 	{
 		return this->hasRtx;
+	}
+
+	inline bool RtpStreamSend::IsHealthy() const
+	{
+		return this->healthy;
 	}
 } // namespace RTC
 

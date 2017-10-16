@@ -45,10 +45,10 @@ public:
 	void Destroy();
 	virtual void Dump() const;
 	void Setup(
-	    Listener* listener,
-	    struct sockaddr_storage* localAddr,
-	    const std::string& localIP,
-	    uint16_t localPort);
+	  Listener* listener,
+	  struct sockaddr_storage* localAddr,
+	  const std::string& localIP,
+	  uint16_t localPort);
 	bool IsClosing() const;
 	uv_tcp_t* GetUvHandle() const;
 	void Start();
@@ -98,7 +98,9 @@ protected:
 	size_t bufferDataLen{ 0 };
 	std::string localIP;
 	uint16_t localPort{ 0 };
-	struct sockaddr_storage peerAddr;
+	struct sockaddr_storage peerAddr
+	{
+	};
 	std::string peerIP;
 	uint16_t peerPort{ 0 };
 };

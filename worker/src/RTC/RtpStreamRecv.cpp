@@ -4,15 +4,19 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "RTC/Codecs/Codecs.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
-	    : RtpStream::RtpStream(params), listener(listener)
+	  : RtpStream::RtpStream(params), listener(listener)
 	{
 		MS_TRACE();
+
+		if (this->params.useNack)
+			this->nackGenerator.reset(new RTC::NackGenerator(this));
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()
@@ -20,23 +24,16 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::ToJson() const
+	Json::Value RtpStreamRecv::GetStats()
 	{
-		MS_TRACE();
-
-		static const Json::StaticString JsonStringParams{ "params" };
-		static const Json::StaticString JsonStringReceived{ "received" };
-		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
-		static const Json::StaticString JsonStringTransit{ "transit" };
+		static const std::string Type = "inbound-rtp";
+		static const Json::StaticString JsonStringType{ "type" };
 		static const Json::StaticString JsonStringJitter{ "jitter" };
 
-		Json::Value json(Json::objectValue);
+		Json::Value json = RtpStream::GetStats();
 
-		json[JsonStringParams]       = this->params.ToJson();
-		json[JsonStringReceived]     = Json::UInt{ this->received };
-		json[JsonStringMaxTimestamp] = Json::UInt{ this->maxTimestamp };
-		json[JsonStringTransit]      = Json::UInt{ this->transit };
-		json[JsonStringJitter]       = Json::UInt{ this->jitter };
+		json[JsonStringType]   = Type;
+		json[JsonStringJitter] = Json::UInt{ this->jitter };
 
 		return json;
 	}
@@ -47,13 +44,18 @@ namespace RTC
 
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
+		{
+			MS_WARN_TAG(rtp, "packet discarded");
+
 			return false;
+		}
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
 
-		// Set RTP header extension ids.
-		this->SetHeaderExtensions(packet);
+		// Process the packet at codec level.
+		if (packet->GetPayloadType() == GetPayloadType())
+			Codecs::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -66,60 +68,69 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on rtx packet");
+		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on RTX packet");
 
 		// Check that the payload type corresponds to the one negotiated.
 		if (packet->GetPayloadType() != this->rtxPayloadType)
 		{
 			MS_WARN_TAG(
-			    rtx,
-			    "ignoring rtx packet with invalid payload type [ssrc: %" PRIu32 " seqnr: %" PRIu16
-			    " payload type: %" PRIu8 "]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber(),
-			    packet->GetPayloadType());
+			  rtx,
+			  "ignoring RTX packet with invalid payload type [ssrc:%" PRIu32 ", seq:%" PRIu16
+			  ", pt:%" PRIu8 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetPayloadType());
 
 			return false;
 		}
 
-		// Get the rtx packet sequence number for logging purposes.
+		// Get the RTX packet sequence number for logging purposes.
 		auto rtxSeq = packet->GetSequenceNumber();
 
-		// Get the original rtp packet.
+		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			MS_WARN_TAG(
-			    rtx,
-			    "ignoring malformed rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
-			    " payload type: %" PRIu8 "]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber(),
-			    packet->GetPayloadType());
+			MS_DEBUG_TAG(
+			  rtx,
+			  "ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetPayloadType());
 
 			return false;
 		}
 
 		MS_DEBUG_TAG(
-		    rtx,
-		    "received rtx packet [ssrc: %" PRIu32 " seqnr: %" PRIu16
-		    "] recovering original [ssrc: %" PRIu32 " seqnr: %" PRIu16 "]",
-		    this->rtxSsrc,
-		    rtxSeq,
-		    packet->GetSsrc(),
-		    packet->GetSequenceNumber());
+		  rtx,
+		  "received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
+		  ", seq:%" PRIu16 "]",
+		  this->rtxSsrc,
+		  rtxSeq,
+		  packet->GetSsrc(),
+		  packet->GetSequenceNumber());
 
-		// Set the extended sequence number into the packet.
-		packet->SetExtendedSequenceNumber(
-		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		// If not a valid packet ignore it.
+		if (!UpdateSeq(packet))
+		{
+			MS_WARN_TAG(
+			  rtx,
+			  "invalid RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
 
-		// Set RTP header extension ids.
-		this->SetHeaderExtensions(packet);
+			return false;
+		}
 
-		// Pass the packet to the NackGenerator.
-		if (this->params.useNack && this->nackGenerator)
-			this->nackGenerator->ReceivePacket(packet);
+		// Process the packet at codec level.
+		if (packet->GetPayloadType() == GetPayloadType())
+			Codecs::ProcessRtpPacket(packet, GetMimeType());
 
-		return true;
+		// Pass the packet to the NackGenerator and return true just if this was a
+		// NACKed packet.
+		if (this->params.useNack)
+			return this->nackGenerator->ReceivePacket(packet);
+
+		return false;
 	}
 
 	RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtcpReceiverReport()
@@ -130,28 +141,27 @@ namespace RTC
 
 		// Calculate Packets Expected and Lost.
 		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
-		int32_t totalLost = expected - this->received;
+		this->packetsLost = expected - this->transmissionCounter.GetPacketCount();
 
-		report->SetTotalLost(totalLost);
+		report->SetTotalLost(this->packetsLost);
 
 		// Calculate Fraction Lost.
 		uint32_t expectedInterval = expected - this->expectedPrior;
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->received - this->receivedPrior;
+		uint32_t receivedInterval = this->transmissionCounter.GetPacketCount() - this->receivedPrior;
 
-		this->receivedPrior = this->received;
+		this->receivedPrior = transmissionCounter.GetPacketCount();
 
 		int32_t lostInterval = expectedInterval - receivedInterval;
-		uint8_t fractionLost;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
-			fractionLost = 0;
+			this->fractionLost = 0;
 		else
-			fractionLost = (lostInterval << 8) / expectedInterval;
+			this->fractionLost = (lostInterval << 8) / expectedInterval;
 
-		report->SetFractionLost(fractionLost);
+		report->SetFractionLost(this->fractionLost);
 
 		// Fill the rest of the report.
 		report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
@@ -186,7 +196,7 @@ namespace RTC
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 	}
 
-	void RtpStreamRecv::RequestFullFrame()
+	void RtpStreamRecv::RequestKeyFrame()
 	{
 		MS_TRACE();
 
@@ -196,7 +206,7 @@ namespace RTC
 			if (this->params.useNack)
 				this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-			this->listener->OnPliRequired(this);
+			this->listener->OnRtpStreamRecvPliRequired(this);
 		}
 	}
 
@@ -208,7 +218,7 @@ namespace RTC
 			return;
 
 		auto transit =
-		    static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		  static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
 
 		this->transit = transit;
@@ -217,53 +227,50 @@ namespace RTC
 		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
 	}
 
-	void RtpStreamRecv::OnInitSeq()
+	void RtpStreamRecv::CheckStatus()
 	{
 		MS_TRACE();
 
-		// Reset NackGenerator.
-		if (this->params.useNack)
-			this->nackGenerator.reset(new RTC::NackGenerator(this));
+		auto now = DepLibUV::GetTime();
 
-		// Request a full frame so dropped video packets don't cause lag.
-		if (this->params.mime.type == RTC::RtpCodecMime::Type::VIDEO)
+		if (this->transmissionCounter.GetRate(now) == 0)
 		{
-			MS_DEBUG_TAG(rtx, "stream initialized, triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
-
-			this->listener->OnPliRequired(this);
+			if (this->active)
+			{
+				this->active = false;
+				this->listener->OnRtpStreamInactive(this);
+			}
+		}
+		else if (!this->active)
+		{
+			this->active = true;
+			this->listener->OnRtpStreamActive(this);
 		}
 	}
 
-	void RtpStreamRecv::OnNackRequired(const std::vector<uint16_t>& seqNumbers)
+	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_WARN_TAG(
-		    rtx,
-		    "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
-		    this->params.ssrc,
-		    seqNumbers[0],
-		    seqNumbers.size());
+		MS_DEBUG_TAG(
+		  rtx,
+		  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
+		  this->params.ssrc,
+		  seqNumbers[0],
+		  seqNumbers.size());
 
-		this->listener->OnNackRequired(this, seqNumbers);
+		this->listener->OnRtpStreamRecvNackRequired(this, seqNumbers);
 	}
 
-	void RtpStreamRecv::OnFullFrameRequired()
+	void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()
 	{
 		MS_TRACE();
 
-		if (!this->params.usePli)
-		{
-			MS_WARN_TAG(rtx, "PLI required but not supported by the endpoint");
+		MS_DEBUG_TAG(rtx, "requesting key frame [ssrc:%" PRIu32 "]", this->params.ssrc);
 
-			return;
-		}
-
-		MS_DEBUG_TAG(rtx, "triggering PLI [ssrc:%" PRIu32 "]", this->params.ssrc);
-
-		this->listener->OnPliRequired(this);
+		RequestKeyFrame();
 	}
 
 	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)
@@ -273,22 +280,5 @@ namespace RTC
 		this->hasRtx         = true;
 		this->rtxPayloadType = payloadType;
 		this->rtxSsrc        = ssrc;
-	}
-
-	void RtpStreamRecv::SetHeaderExtensions(RTC::RtpPacket* packet) const
-	{
-		MS_TRACE();
-
-		if (this->params.ssrcAudioLevelId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->params.ssrcAudioLevelId);
-		}
-
-		if (this->params.absSendTimeId != 0u)
-		{
-			packet->AddExtensionMapping(
-			    RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->params.absSendTimeId);
-		}
 	}
 } // namespace RTC

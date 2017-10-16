@@ -1,8 +1,10 @@
+#include "common.hpp"
 #include "include/catch.hpp"
 #include "include/helpers.hpp"
-#include "common.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpPacket.hpp"
+#include <cstring> // std::memcmp()
+#include <map>
 
 using namespace RTC;
 
@@ -37,7 +39,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetTimestamp() == 1660241882);
 		REQUIRE(packet->GetSsrc() == 2674985186);
 		REQUIRE(packet->HasOneByteExtensions());
-		REQUIRE(!packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
 		extenValue = packet->GetExtension(RtpHeaderExtensionUri::Type::TO_OFFSET, &extenLen);
 
@@ -51,30 +53,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue == nullptr);
 
 		extenValue = packet->GetExtension(RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, &extenLen);
-
-		REQUIRE(extenLen == 0);
-		REQUIRE(extenValue == nullptr);
-
-		packet->Serialize(buffer2);
-
-		REQUIRE(packet->HasMarker() == false);
-		REQUIRE(packet->HasExtensionHeader() == true);
-		REQUIRE(packet->GetExtensionHeaderId() == 0xBEDE);
-		REQUIRE(packet->GetExtensionHeaderLength() == 4);
-		REQUIRE(packet->GetPayloadType() == 111);
-		REQUIRE(packet->GetSequenceNumber() == 23617);
-		REQUIRE(packet->GetTimestamp() == 1660241882);
-		REQUIRE(packet->GetSsrc() == 2674985186);
-		REQUIRE(packet->HasOneByteExtensions());
-		REQUIRE(!packet->HasTwoBytesExtensions());
-
-		extenValue = packet->GetExtension(RtpHeaderExtensionUri::Type::TO_OFFSET, &extenLen);
-
-		REQUIRE(extenLen == 1);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0xff);
-
-		extenValue = packet->GetExtension(RtpHeaderExtensionUri::Type::RTP_STREAM_ID, &extenLen);
 
 		REQUIRE(extenLen == 0);
 		REQUIRE(extenValue == nullptr);
@@ -102,8 +80,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 28478);
 		REQUIRE(packet->GetTimestamp() == 172320136);
 		REQUIRE(packet->GetSsrc() == 3316375386);
-		REQUIRE(!packet->HasOneByteExtensions());
-		REQUIRE(!packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasOneByteExtensions() == false);
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
 		delete packet;
 	}
@@ -137,7 +115,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetTimestamp() == 863466045);
 		REQUIRE(packet->GetSsrc() == 235797202);
 		REQUIRE(packet->HasOneByteExtensions());
-		REQUIRE(!packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
 		extenValue = packet->GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
 
@@ -159,6 +137,16 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadAbsSendTime(&absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
+		std::map<uint8_t, uint8_t> idMapping;
+
+		idMapping[1] = 11;
+		idMapping[3] = 13;
+
+		packet->MangleExtensionHeaderIds(idMapping);
+
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 11);
+		packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 13);
+
 		auto clonedPacket = packet->Clone(buffer2);
 
 		delete packet;
@@ -172,7 +160,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->GetTimestamp() == 863466045);
 		REQUIRE(clonedPacket->GetSsrc() == 235797202);
 		REQUIRE(clonedPacket->HasOneByteExtensions());
-		REQUIRE(!clonedPacket->HasTwoBytesExtensions());
+		REQUIRE(clonedPacket->HasTwoBytesExtensions() == false);
 
 		extenValue = clonedPacket->GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
 
@@ -193,6 +181,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(voice == true);
 		REQUIRE(clonedPacket->ReadAbsSendTime(&absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
+
+		REQUIRE(
+		  std::memcmp(clonedPacket->GetPayload(), packet->GetPayload(), packet->GetPayloadLength()) == 0);
 
 		delete clonedPacket;
 	}
@@ -215,8 +206,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadType() == 1);
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
-		REQUIRE(!packet->HasOneByteExtensions());
-		REQUIRE(!packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasOneByteExtensions() == false);
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetSsrc() == 5);
 
 		delete packet;
@@ -248,7 +239,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
 		REQUIRE(packet->HasOneByteExtensions());
-		REQUIRE(!packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
 		delete packet;
 	}
@@ -277,7 +268,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		delete packet;
@@ -293,12 +284,13 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0b00010000, 0, 0, 3, // Extension header
 			1, 0, 2, 1,
 			0xFF, 0, 3, 4,
-			0xFF, 0xFF, 0xFF, 0xFF
+			0xFF, 0xFF, 0xFF, 0xFF,
+			0x11, 0x11, 0x11, 0x11 // Payload
 		};
 
 		uint8_t rtxPayloadType = 102;
-		uint32_t rtxSsrc = 6;
-		uint16_t rtxSeq = 80;
+		uint32_t rtxSsrc       = 6;
+		uint16_t rtxSeq        = 80;
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
@@ -312,8 +304,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetSequenceNumber() == 8);
 		REQUIRE(packet->GetTimestamp() == 4);
 		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(packet->GetPayloadLength() == 0);
-		REQUIRE(!packet->HasOneByteExtensions());
+		REQUIRE(packet->GetPayloadLength() == 4);
+		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		static uint8_t RtxBuffer[MtuSize];
@@ -329,8 +321,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->GetSequenceNumber() == rtxSeq);
 		REQUIRE(rtxPacket->GetTimestamp() == 4);
 		REQUIRE(rtxPacket->GetSsrc() == rtxSsrc);
-		REQUIRE(rtxPacket->GetPayloadLength() == 2);
-		REQUIRE(!rtxPacket->HasOneByteExtensions());
+		REQUIRE(rtxPacket->GetPayloadLength() == 6);
+		REQUIRE(rtxPacket->HasOneByteExtensions() == false);
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
 
 		rtxPacket->RtxDecode(1, 5);
@@ -342,11 +334,167 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->GetSequenceNumber() == 8);
 		REQUIRE(rtxPacket->GetTimestamp() == 4);
 		REQUIRE(rtxPacket->GetSsrc() == 5);
-		REQUIRE(rtxPacket->GetPayloadLength() == 0);
-		REQUIRE(!rtxPacket->HasOneByteExtensions());
+		REQUIRE(rtxPacket->GetPayloadLength() == 4);
+		REQUIRE(rtxPacket->HasOneByteExtensions() == false);
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
 
 		delete packet;
 		delete rtxPacket;
+	}
+
+	SECTION("create probation RtpPacket")
+	{
+		auto packet = RtpPacket::CreateProbationPacket(buffer, 4);
+
+		if (!packet)
+			FAIL("not a RTP packet");
+
+		auto size = packet->GetSize();
+
+		REQUIRE(packet->HasMarker() == false);
+		REQUIRE(packet->HasExtensionHeader() == false);
+		REQUIRE(packet->GetExtensionHeaderLength() == 0);
+		REQUIRE(packet->GetPayloadType() == 0);
+		REQUIRE(packet->GetSequenceNumber() == 0);
+		REQUIRE(packet->GetTimestamp() == 0);
+		REQUIRE(packet->GetSsrc() == 0);
+		REQUIRE(packet->GetPayloadLength() == 0);
+		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetSize() == 16);
+		REQUIRE(packet->HasOneByteExtensions() == false);
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
+
+		auto* clonedPacket = packet->Clone(buffer2);
+
+		REQUIRE(clonedPacket->HasMarker() == false);
+		REQUIRE(clonedPacket->HasExtensionHeader() == false);
+		REQUIRE(clonedPacket->GetExtensionHeaderLength() == 0);
+		REQUIRE(clonedPacket->GetPayloadType() == 0);
+		REQUIRE(clonedPacket->GetSequenceNumber() == 0);
+		REQUIRE(clonedPacket->GetTimestamp() == 0);
+		REQUIRE(clonedPacket->GetSsrc() == 0);
+		REQUIRE(clonedPacket->GetPayloadLength() == 0);
+		REQUIRE(clonedPacket->GetPayloadPadding() == 4);
+		REQUIRE(clonedPacket->GetSize() == 16);
+		REQUIRE(clonedPacket->HasOneByteExtensions() == false);
+		REQUIRE(clonedPacket->HasTwoBytesExtensions() == false);
+
+		delete packet;
+		delete clonedPacket;
+
+		packet = RtpPacket::Parse(buffer2, size);
+
+		if (!packet)
+			FAIL("not a RTP packet");
+
+		REQUIRE(packet->HasMarker() == false);
+		REQUIRE(packet->HasExtensionHeader() == false);
+		REQUIRE(packet->GetExtensionHeaderLength() == 0);
+		REQUIRE(packet->GetPayloadType() == 0);
+		REQUIRE(packet->GetSequenceNumber() == 0);
+		REQUIRE(packet->GetTimestamp() == 0);
+		REQUIRE(packet->GetSsrc() == 0);
+		REQUIRE(packet->GetPayloadLength() == 0);
+		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetSize() == 16);
+		REQUIRE(packet->HasOneByteExtensions() == false);
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
+
+		delete packet;
+	}
+
+	SECTION("create RtpPacket and apply payload shift to it")
+	{
+		uint8_t buffer[] =
+		{
+			0b10110000, 0b00000001, 0, 8,
+			0, 0, 0, 4,
+			0, 0, 0, 5,
+			0xBE, 0xDE, 0, 3, // Extension header
+			0b00010000, 0xFF, 0b00100001, 0xFF,
+			0xFF, 0, 0, 0b00110011,
+			0xFF, 0xFF, 0xFF, 0xFF,
+			0x00, 0x01, 0x02, 0x03, // Payload
+			0x04, 0x05, 0x06, 0x07,
+			0x00, 0x00, 0x00, 0x04, // 4 padding bytes
+			0x00, 0x00, 0x00, 0x00, // Free buffer
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
+		};
+		size_t len        = 40;
+		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+
+		if (!packet)
+			FAIL("not a RTP packet");
+
+		REQUIRE(packet->HasMarker() == false);
+		REQUIRE(packet->GetPayloadType() == 1);
+		REQUIRE(packet->GetSequenceNumber() == 8);
+		REQUIRE(packet->GetTimestamp() == 4);
+		REQUIRE(packet->GetSsrc() == 5);
+		REQUIRE(packet->HasExtensionHeader() == true);
+		REQUIRE(packet->GetExtensionHeaderId() == 0xBEDE);
+		REQUIRE(packet->GetExtensionHeaderLength() == 12);
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
+		REQUIRE(packet->GetPayloadLength() == 8);
+		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetSize() == 40);
+
+		auto* payload = packet->GetPayload();
+
+		REQUIRE(payload[0] == 0x00);
+		REQUIRE(payload[1] == 0x01);
+		REQUIRE(payload[2] == 0x02);
+		REQUIRE(payload[3] == 0x03);
+		REQUIRE(payload[4] == 0x04);
+		REQUIRE(payload[5] == 0x05);
+		REQUIRE(payload[6] == 0x06);
+		REQUIRE(payload[7] == 0x07);
+
+		packet->ShiftPayload(0, 2, true);
+
+		REQUIRE(packet->GetPayloadLength() == 10);
+		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetSize() == 42);
+		REQUIRE(payload[2] == 0x00);
+		REQUIRE(payload[3] == 0x01);
+		REQUIRE(payload[4] == 0x02);
+		REQUIRE(payload[5] == 0x03);
+		REQUIRE(payload[6] == 0x04);
+		REQUIRE(payload[7] == 0x05);
+		REQUIRE(payload[8] == 0x06);
+		REQUIRE(payload[9] == 0x07);
+
+		packet->ShiftPayload(0, 2, false);
+
+		REQUIRE(packet->GetPayloadLength() == 8);
+		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetSize() == 40);
+		REQUIRE(payload[0] == 0x00);
+		REQUIRE(payload[1] == 0x01);
+		REQUIRE(payload[2] == 0x02);
+		REQUIRE(payload[3] == 0x03);
+		REQUIRE(payload[4] == 0x04);
+		REQUIRE(payload[5] == 0x05);
+		REQUIRE(payload[6] == 0x06);
+		REQUIRE(payload[7] == 0x07);
+
+		packet->ShiftPayload(4, 4, true);
+
+		REQUIRE(packet->GetPayloadLength() == 12);
+		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetSize() == 44);
+		REQUIRE(payload[0] == 0x00);
+		REQUIRE(payload[1] == 0x01);
+		REQUIRE(payload[2] == 0x02);
+		REQUIRE(payload[3] == 0x03);
+		REQUIRE(payload[8] == 0x04);
+		REQUIRE(payload[9] == 0x05);
+		REQUIRE(payload[10] == 0x06);
+		REQUIRE(payload[11] == 0x07);
+
+		delete packet;
 	}
 }

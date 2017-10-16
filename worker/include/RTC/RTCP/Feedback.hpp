@@ -9,7 +9,7 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		template<typename t>
+		template<typename T>
 		class FeedbackPacket : public Packet
 		{
 		public:
@@ -22,14 +22,14 @@ namespace RTC
 
 		public:
 			static RTCP::Type rtcpType;
-			static FeedbackPacket<t>* Parse(const uint8_t* data, size_t len);
-			static const std::string& MessageType2String(typename t::MessageType type);
+			static FeedbackPacket<T>* Parse(const uint8_t* data, size_t len);
+			static const std::string& MessageType2String(typename T::MessageType type);
 
 		private:
-			static std::map<typename t::MessageType, std::string> type2String;
+			static std::map<typename T::MessageType, std::string> type2String;
 
 		public:
-			typename t::MessageType GetMessageType() const;
+			typename T::MessageType GetMessageType() const;
 			uint32_t GetSenderSsrc() const;
 			void SetSenderSsrc(uint32_t ssrc);
 			uint32_t GetMediaSsrc() const;
@@ -44,13 +44,13 @@ namespace RTC
 
 		protected:
 			explicit FeedbackPacket(CommonHeader* commonHeader);
-			FeedbackPacket(typename t::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc);
+			FeedbackPacket(typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc);
 			~FeedbackPacket() override;
 
 		private:
 			Header* header{ nullptr };
 			uint8_t* raw{ nullptr };
-			typename t::MessageType messageType;
+			typename T::MessageType messageType;
 		};
 
 		class FeedbackPs

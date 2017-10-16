@@ -42,13 +42,13 @@ namespace RTC
 
 		template<typename Item>
 		inline FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(CommonHeader* commonHeader)
-		    : FeedbackRtpPacket(commonHeader)
+		  : FeedbackRtpPacket(commonHeader)
 		{
 		}
 
 		template<typename Item>
 		inline FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		    : FeedbackRtpPacket(Item::messageType, senderSsrc, mediaSsrc)
+		  : FeedbackRtpPacket(Item::messageType, senderSsrc, mediaSsrc)
 		{
 		}
 

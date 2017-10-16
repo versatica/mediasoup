@@ -5,20 +5,22 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionAge{ 500 };
+	// TODO: This must be tunned.
+	static constexpr uint32_t MaxRetransmissionDelay{ 1000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
+	static constexpr uint8_t MaxHealthLossPercentage{ 20 };
 
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize)
-	    : RtpStream::RtpStream(params), storage(bufferSize)
+	RtpStreamSend::RtpStreamSend(Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
+	  : RtpStream::RtpStream(params), listener(listener), storage(bufferSize)
 	{
 		MS_TRACE();
 	}
@@ -28,26 +30,19 @@ namespace RTC
 		MS_TRACE();
 
 		// Clear the RTP buffer.
-		ClearBuffer();
+		ClearRetransmissionBuffer();
 	}
 
-	Json::Value RtpStreamSend::ToJson() const
+	Json::Value RtpStreamSend::GetStats()
 	{
-		MS_TRACE();
+		static const std::string Type = "outbound-rtp";
+		static const Json::StaticString JsonStringType{ "type" };
+		static const Json::StaticString JsonStringRtt{ "roundTripTime" };
 
-		static const Json::StaticString JsonStringParams{ "params" };
-		static const Json::StaticString JsonStringReceived{ "received" };
-		static const Json::StaticString JsonStringMaxTimestamp{ "maxTimestamp" };
-		static const Json::StaticString JsonStringReceivedBytes{ "receivedBytes" };
-		static const Json::StaticString JsonStringRtt{ "rtt" };
+		Json::Value json = RtpStream::GetStats();
 
-		Json::Value json(Json::objectValue);
-
-		json[JsonStringParams]        = this->params.ToJson();
-		json[JsonStringReceived]      = Json::UInt{ this->received };
-		json[JsonStringMaxTimestamp]  = Json::UInt{ this->maxTimestamp };
-		json[JsonStringReceivedBytes] = static_cast<Json::UInt>(this->receivedBytes);
-		json[JsonStringRtt]           = Json::UInt{ this->rtt };
+		json[JsonStringType] = Type;
+		json[JsonStringRtt]  = Json::UInt{ this->rtt };
 
 		return json;
 	}
@@ -63,13 +58,6 @@ namespace RTC
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
 			StorePacket(packet);
-
-		// Increase packet counters.
-		this->receivedBytes += packet->GetPayloadLength();
-
-		// Record current time and RTP timestamp.
-		this->lastPacketTimeMs       = DepLibUV::GetTime();
-		this->lastPacketRtpTimestamp = packet->GetTimestamp();
 
 		return true;
 	}
@@ -95,12 +83,15 @@ namespace RTC
 		// RTT in milliseconds.
 		this->rtt = ((rtt >> 16) * 1000);
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+
+		this->packetsLost  = report->GetTotalLost();
+		this->fractionLost = report->GetFractionLost();
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
 	// given container (and set to null the next container position).
 	void RtpStreamSend::RequestRtpRetransmission(
-	    uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
+	  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
 	{
 		MS_TRACE();
 
@@ -122,48 +113,36 @@ namespace RTC
 		if (this->buffer.empty())
 			return;
 
-		// Convert the given sequence numbers to 32 bits.
-		uint32_t firstSeq32 = uint32_t{ seq } + this->cycles;
-		uint32_t lastSeq32  = firstSeq32 + MaxRequestedPackets - 1;
+		uint16_t firstSeq = seq;
+		uint16_t lastSeq  = firstSeq + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
 		MS_ASSERT(container.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
 
-		auto bufferIt             = this->buffer.begin();
-		auto bufferItReverse      = this->buffer.rbegin();
-		uint32_t bufferFirstSeq32 = (*bufferIt).seq32;
-		uint32_t bufferLastSeq32  = (*bufferItReverse).seq32;
+		auto bufferIt           = this->buffer.begin();
+		auto bufferItReverse    = this->buffer.rbegin();
+		uint16_t bufferFirstSeq = (*bufferIt).seq;
+		uint16_t bufferLastSeq  = (*bufferItReverse).seq;
 
 		// Requested packet range not found.
-		if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
+		if (
+		  SeqManager<uint16_t>::IsSeqHigherThan(firstSeq, bufferLastSeq) ||
+		  SeqManager<uint16_t>::IsSeqLowerThan(lastSeq, bufferFirstSeq))
 		{
-			// Let's try with sequence numbers in the previous 16 cycle.
-			if (this->cycles > 0)
-			{
-				firstSeq32 -= RtpSeqMod;
-				lastSeq32 -= RtpSeqMod;
+			MS_WARN_TAG(
+			  rtx,
+			  "requested packet range not in the buffer [seq:%" PRIu16 ", bufferFirstseq:%" PRIu16
+			  ", bufferLastseq:%" PRIu16 "]",
+			  seq,
+			  bufferFirstSeq,
+			  bufferLastSeq);
 
-				// Try again.
-				if (firstSeq32 > bufferLastSeq32 || lastSeq32 < bufferFirstSeq32)
-				{
-					MS_WARN_TAG(rtx, "requested packet range not in the buffer");
-
-					return;
-				}
-			}
-			// Otherwise just return.
-			else
-			{
-				MS_WARN_TAG(rtx, "requested packet range not in the buffer");
-
-				return;
-			}
+			return;
 		}
 
 		// Look for each requested packet.
-		uint64_t now   = DepLibUV::GetTime();
-		uint32_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
-		uint32_t seq32 = firstSeq32;
+		uint64_t now = DepLibUV::GetTime();
+		uint16_t rtt = (this->rtt != 0u ? this->rtt : DefaultRtt);
 		bool requested{ true };
 		size_t containerIdx{ 0 };
 
@@ -183,27 +162,31 @@ namespace RTC
 			{
 				for (; bufferIt != this->buffer.end(); ++bufferIt)
 				{
-					auto currentSeq32 = (*bufferIt).seq32;
+					auto currentSeq = (*bufferIt).seq;
 
 					// Found.
-					if (currentSeq32 == seq32)
+					if (currentSeq == seq)
 					{
 						auto currentPacket = (*bufferIt).packet;
-						uint32_t diff =
-						    (this->maxTimestamp - currentPacket->GetTimestamp()) * 1000 / this->params.clockRate;
+						// Calculate how the elapsed time between the max timestampt seen and
+						// the requested packet's timestampt (in ms).
+						uint32_t diffTs = this->maxPacketTs - currentPacket->GetTimestamp();
+						uint32_t diffMs = diffTs * 1000 / this->params.clockRate;
 
-						// Just provide the packet if no older than MaxRetransmissionAge ms.
-						if (diff > MaxRetransmissionAge)
+						// Just provide the packet if no older than MaxRetransmissionDelay ms.
+						if (diffMs > MaxRetransmissionDelay)
 						{
 							if (!tooOldPacketFound)
 							{
+								// TODO: May we ask for a key frame in this case?
+
 								MS_WARN_TAG(
-								    rtx,
-								    "ignoring retransmission for too old packet "
-								    "[seq:%" PRIu16 ", max age:%" PRIu32 "ms, packet age:%" PRIu32 "ms]",
-								    currentPacket->GetSequenceNumber(),
-								    MaxRetransmissionAge,
-								    diff);
+								  rtx,
+								  "ignoring retransmission for too old packet "
+								  "[seq:%" PRIu16 ", max age:%" PRIu32 "ms, packet age:%" PRIu32 "ms]",
+								  currentPacket->GetSequenceNumber(),
+								  MaxRetransmissionDelay,
+								  diffMs);
 
 								tooOldPacketFound = true;
 							}
@@ -212,16 +195,16 @@ namespace RTC
 						}
 
 						// Don't resent the packet if it was resent in the last RTT ms.
-						uint32_t resentAtTime = (*bufferIt).resentAtTime;
+						auto resentAtTime = (*bufferIt).resentAtTime;
 
-						if ((resentAtTime != 0u) && now - resentAtTime < static_cast<uint64_t>(rtt))
+						if ((resentAtTime != 0u) && now - resentAtTime <= static_cast<uint64_t>(rtt))
 						{
-							MS_WARN_TAG(
-							    rtx,
-							    "ignoring retransmission for a packet already resent in the last RTT ms "
-							    "[seq:%" PRIu16 ", rtt:%" PRIu32 "]",
-							    currentPacket->GetSequenceNumber(),
-							    rtt);
+							MS_DEBUG_TAG(
+							  rtx,
+							  "ignoring retransmission for a packet already resent in the last RTT ms "
+							  "[seq:%" PRIu16 ", rtt:%" PRIu32 "]",
+							  currentPacket->GetSequenceNumber(),
+							  rtt);
 
 							break;
 						}
@@ -238,15 +221,16 @@ namespace RTC
 
 						break;
 					}
+
 					// It can not be after this packet.
-					if (currentSeq32 > seq32)
+					if (SeqManager<uint16_t>::IsSeqHigherThan(currentSeq, seq))
 						break;
 				}
 			}
 
 			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
-			++seq32;
+			++seq;
 
 			if (!isFirstPacket)
 			{
@@ -263,22 +247,22 @@ namespace RTC
 		if (!firstPacketSent || origBitmask != sentBitmask)
 		{
 			MS_DEBUG_TAG(
-			    rtx,
-			    "could not resend all packets [seq:%" PRIu16
-			    ", first:%s, "
-			    "bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-			    seq,
-			    firstPacketSent ? "yes" : "no",
-			    MS_UINT16_TO_BINARY(origBitmask),
-			    MS_UINT16_TO_BINARY(sentBitmask));
+			  rtx,
+			  "could not resend all packets [seq:%" PRIu16
+			  ", first:%s, "
+			  "bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+			  seq,
+			  firstPacketSent ? "yes" : "no",
+			  MS_UINT16_TO_BINARY(origBitmask),
+			  MS_UINT16_TO_BINARY(sentBitmask));
 		}
 		else
 		{
 			MS_DEBUG_TAG(
-			    rtx,
-			    "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-			    seq,
-			    MS_UINT16_TO_BINARY(origBitmask));
+			  rtx,
+			  "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+			  seq,
+			  MS_UINT16_TO_BINARY(origBitmask));
 		}
 
 		// Set the next container element to null.
@@ -289,30 +273,51 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (received == 0u)
+		if (this->transmissionCounter.GetPacketCount() == 0u)
 			return nullptr;
 
 		auto report = new RTC::RTCP::SenderReport();
+		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
+		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
-		report->SetPacketCount(this->received);
-		report->SetOctetCount(this->receivedBytes);
+		// Calculate RTP timestamp diff between now and last received RTP packet.
+		uint32_t diffMs = static_cast<uint32_t>(now - this->maxPacketMs);
+		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
 
 		Utils::Time::Ntp ntp{};
-		Utils::Time::CurrentTimeNtp(ntp);
+		struct timeval unixTime;
+		uint64_t unixTimeMs;
+
+		gettimeofday(&unixTime, nullptr);
+
+		// Convert unix time to millisecods.
+		unixTimeMs = unixTime.tv_sec * 1000 + unixTime.tv_usec / 1000;
+
+		if (now >= this->maxPacketMs)
+		{
+			unixTimeMs += diffMs;
+			report->SetRtpTs(this->maxPacketTs + diffTs);
+		}
+		else
+		{
+			unixTimeMs -= diffMs;
+			report->SetRtpTs(this->maxPacketTs - diffTs);
+		}
+
+		// Convert milliseconds to unix time.
+		unixTime.tv_sec  = unixTimeMs / 1000;
+		unixTime.tv_usec = (unixTimeMs % 1000) * 1000;
+
+		// Convert unix time to NTP.
+		Utils::Time::UnixTime2Ntp(&unixTime, ntp);
 
 		report->SetNtpSec(ntp.seconds);
 		report->SetNtpFrac(ntp.fractions);
 
-		// Calculate RTP timestamp diff between now and last received RTP packet.
-		uint32_t diffMs           = now - this->lastPacketTimeMs;
-		uint32_t diffRtpTimestamp = diffMs * this->params.clockRate / 1000;
-
-		report->SetRtpTs(this->lastPacketRtpTimestamp + diffRtpTimestamp);
-
 		return report;
 	}
 
-	void RtpStreamSend::ClearBuffer()
+	void RtpStreamSend::ClearRetransmissionBuffer()
 	{
 		MS_TRACE();
 
@@ -333,20 +338,20 @@ namespace RTC
 		if (packet->GetSize() > RTC::MtuSize)
 		{
 			MS_WARN_TAG(
-			    rtp,
-			    "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber(),
-			    packet->GetSize());
+			  rtp,
+			  "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetSize());
 
 			return;
 		}
 
 		// Sum the packet seq number and the number of 16 bits cycles.
-		uint32_t packetSeq32 = uint32_t{ packet->GetSequenceNumber() } + this->cycles;
+		auto packetSeq = packet->GetSequenceNumber();
 		BufferItem bufferItem;
 
-		bufferItem.seq32 = packetSeq32;
+		bufferItem.seq = packetSeq;
 
 		// If empty do it easy.
 		if (this->buffer.empty())
@@ -369,31 +374,26 @@ namespace RTC
 		auto bufferItReverse = this->buffer.rbegin();
 		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
 		{
-			auto currentSeq32 = (*bufferItReverse).seq32;
+			auto currentSeq = (*bufferItReverse).seq;
 
-			if (packetSeq32 > currentSeq32)
+			if (SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
 			{
 				// Get a forward iterator pointing to the same element.
 				auto it = bufferItReverse.base();
 
 				newBufferIt = this->buffer.insert(it, bufferItem);
 
-				// Exit the loop.
 				break;
 			}
-		}
-		// If the packet was older than anything in the buffer, just ignore it.
-		// NOTE: This should never happen.
-		if (bufferItReverse == this->buffer.rend())
-		{
-			MS_WARN_TAG(
-			    rtp,
-			    "ignoring packet older than anything in the buffer [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			    packet->GetSsrc(),
-			    packet->GetSequenceNumber());
 
-			return;
+			// Packet is already stored.
+			if (packetSeq == currentSeq)
+				return;
 		}
+
+		// The packet was older than anything in the buffer, store it at the beginning.
+		if (bufferItReverse == this->buffer.rend())
+			newBufferIt = this->buffer.insert(this->buffer.begin(), bufferItem);
 
 		// If the buffer is not full use the next free storage item.
 		if (this->buffer.size() - 1 < this->storage.size())
@@ -418,12 +418,30 @@ namespace RTC
 		(*newBufferIt).packet = packet->Clone(store);
 	}
 
-	void RtpStreamSend::OnInitSeq()
+	void RtpStreamSend::CheckStatus()
 	{
 		MS_TRACE();
 
-		// Clear the RTP buffer.
-		ClearBuffer();
+		auto lossPercentage = GetLossPercentage();
+
+		if (lossPercentage >= MaxHealthLossPercentage)
+		{
+			if (this->notifyStatus || this->healthy)
+			{
+				MS_DEBUG_TAG(
+				  rtp, "rtp stream packet loss [ssrc:%" PRIu32 ", %.2f%%]", GetSsrc(), lossPercentage);
+
+				this->healthy = false;
+				this->listener->OnRtpStreamUnhealthy(this);
+			}
+		}
+		else if (this->notifyStatus || !this->healthy)
+		{
+			this->healthy = true;
+			this->listener->OnRtpStreamHealthy(this);
+		}
+
+		this->notifyStatus = false;
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
@@ -440,7 +458,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->hasRtx, "rtx is not enabled on this stream");
+		MS_ASSERT(this->hasRtx, "RTX not enabled on this stream");
 
 		packet->RtxEncode(this->rtxPayloadType, this->rtxSsrc, ++this->rtxSeq);
 	}

@@ -12,7 +12,7 @@ language: node_js
 # DOC: http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 matrix:
   include:
-    - node_js: 4
+    - node_js: 6
       compiler: gcc
       addons:
         apt:
@@ -21,7 +21,7 @@ matrix:
           packages:
             - g++-4.8
       env: COMPILER=g++-4.8
-    - node_js: 6
+    - node_js: 7
       compiler: gcc
       addons:
         apt:
@@ -30,7 +30,7 @@ matrix:
           packages:
             - g++-4.9
       env: COMPILER=g++-4.9
-    - node_js: 7
+    - node_js: 8
       compiler: gcc
       addons:
         apt:

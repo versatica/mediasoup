@@ -5,14 +5,14 @@ module.exports = function(funcs)
 	return new Promise((resolve, reject) =>
 	{
 		let i = 0;
-		let len = funcs.length;
+		const len = funcs.length;
 
 		function next()
 		{
 			if (i >= len)
 				return resolve();
 
-			let func = funcs[i];
+			const func = funcs[i];
 
 			func()
 				.then(() =>

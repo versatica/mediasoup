@@ -21,6 +21,7 @@ public:
 		bool rtcp{ false };
 		bool rtx{ false };
 		bool rbe{ false };
+		bool tmp{ false }; // For debugging during development..
 	};
 
 public:

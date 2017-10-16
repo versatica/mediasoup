@@ -27,7 +27,8 @@ namespace RTC
 			BYE   = 203,
 			APP   = 204,
 			RTPFB = 205,
-			PSFB  = 206
+			PSFB  = 206,
+			XR    = 207
 		};
 
 		class Packet
@@ -87,15 +88,15 @@ namespace RTC
 			auto header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			return (
-			    (len >= sizeof(CommonHeader)) &&
-			    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-			    (data[0] > 127 && data[0] < 192) &&
-			    // RTP Version must be 2.
-			    (header->version == 2) &&
-			    // RTCP packet types defined by IANA:
-			    // http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
-			    // RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
-			    (header->packetType >= 192 && header->packetType <= 223));
+			  (len >= sizeof(CommonHeader)) &&
+			  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+			  (data[0] > 127 && data[0] < 192) &&
+			  // RTP Version must be 2.
+			  (header->version == 2) &&
+			  // RTCP packet types defined by IANA:
+			  // http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
+			  // RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
+			  (header->packetType >= 192 && header->packetType <= 223));
 		}
 
 		/* Inline instance methods. */

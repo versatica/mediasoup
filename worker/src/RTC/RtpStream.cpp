@@ -4,15 +4,16 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStream.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t MinSequential{ 0 };
 	static constexpr uint16_t MaxDropout{ 3000 };
-	static constexpr uint16_t MaxMisorder{ 100 };
+	static constexpr uint16_t MaxMisorder{ 1500 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 
 	/* Instance methods. */
@@ -20,11 +21,80 @@ namespace RTC
 	RtpStream::RtpStream(RTC::RtpStream::Params& params) : params(params)
 	{
 		MS_TRACE();
+
+		// Generate a random rtpStreamId.
+		this->rtpStreamId = Utils::Crypto::GetRandomString(16);
+
+		// Set the status check timer.
+		this->statusCheckTimer = new Timer(this);
+
+		// Run the timer.
+		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
 	}
 
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
+
+		// Close the status check timer.
+		this->statusCheckTimer->Destroy();
+	}
+
+	Json::Value RtpStream::ToJson()
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringParams{ "params" };
+
+		Json::Value json(Json::objectValue);
+
+		json[JsonStringParams] = this->params.ToJson();
+
+		return json;
+	}
+
+	Json::Value RtpStream::GetStats()
+	{
+		MS_TRACE();
+
+		static const Json::StaticString JsonStringId{ "id" };
+		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
+		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		static const Json::StaticString JsonStringMediaType{ "mediaType" };
+		static const Json::StaticString JsonStringMimeType{ "mimeType" };
+		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
+		static const Json::StaticString JsonStringByteCount{ "byteCount" };
+		static const Json::StaticString JsonStringBitRate{ "bitrate" };
+		static const Json::StaticString JsonStringPacketsLost{ "packetsLost" };
+		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
+		static const Json::StaticString JsonStringPacketsDiscarded{ "packetsDiscarded" };
+		static const Json::StaticString JsonStringPacketsRepaired{ "packetsRepaired" };
+		static const Json::StaticString JsonStringFirCount{ "firCount" };
+		static const Json::StaticString JsonStringPliCount{ "pliCount" };
+		static const Json::StaticString JsonStringNackCount{ "nackCount" };
+		static const Json::StaticString JsonStringSliCount{ "sliCount" };
+
+		Json::Value json(Json::objectValue);
+		uint64_t now = DepLibUV::GetTime();
+
+		json[JsonStringId]          = this->rtpStreamId;
+		json[JsonStringTimestamp]   = Json::UInt64{ now };
+		json[JsonStringSsrc]        = Json::UInt{ this->params.ssrc };
+		json[JsonStringMediaType]   = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		json[JsonStringMimeType]    = this->params.mimeType.ToString();
+		json[JsonStringPacketCount] = static_cast<Json::UInt>(this->transmissionCounter.GetPacketCount());
+		json[JsonStringByteCount]   = static_cast<Json::UInt>(this->transmissionCounter.GetBytes());
+		json[JsonStringBitRate]     = Json::UInt{ this->transmissionCounter.GetRate(now) };
+		json[JsonStringPacketsLost]      = Json::UInt{ this->packetsLost };
+		json[JsonStringFractionLost]     = Json::UInt{ this->fractionLost };
+		json[JsonStringPacketsDiscarded] = static_cast<Json::UInt>(this->packetsDiscarded);
+		json[JsonStringPacketsRepaired]  = static_cast<Json::UInt>(this->packetsRepaired);
+		json[JsonStringFirCount]         = static_cast<Json::UInt>(this->firCount);
+		json[JsonStringPliCount]         = static_cast<Json::UInt>(this->pliCount);
+		json[JsonStringNackCount]        = static_cast<Json::UInt>(this->nackCount);
+		json[JsonStringSliCount]         = static_cast<Json::UInt>(this->sliCount);
+
+		return json;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -37,35 +107,53 @@ namespace RTC
 		if (!this->started)
 		{
 			InitSeq(seq);
-			this->started   = true;
-			this->maxSeq    = seq - 1;
-			this->probation = MinSequential;
+
+			this->started = true;
+			this->maxSeq  = seq - 1;
+
+			this->maxPacketTs = packet->GetTimestamp();
+			this->maxPacketMs = DepLibUV::GetTime();
 		}
 
 		// If not a valid packet ignore it.
 		if (!UpdateSeq(packet))
 		{
-			if (this->probation == 0u)
-			{
-				MS_WARN_TAG(
-				    rtp,
-				    "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
-			}
+			MS_WARN_TAG(
+			  rtp,
+			  "invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
 
 			return false;
 		}
 
-		// Set the extended sequence number into the packet.
-		packet->SetExtendedSequenceNumber(
-		    this->cycles + static_cast<uint32_t>(packet->GetSequenceNumber()));
+		// Increase counters.
+		this->transmissionCounter.Update(packet);
 
 		// Update highest seen RTP timestamp.
-		if (packet->GetTimestamp() > this->maxTimestamp)
-			this->maxTimestamp = packet->GetTimestamp();
+		if (SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
+		{
+			// Calculate time diff between this and previous highest RTP timestamp.
+			uint32_t diffTs = packet->GetTimestamp() - this->maxPacketTs;
+			uint32_t diffMs = diffTs * 1000 / this->params.clockRate;
+
+			this->maxPacketTs = packet->GetTimestamp();
+			this->maxPacketMs += diffMs;
+		}
 
 		return true;
+	}
+
+	uint32_t RtpStream::GetRate(uint64_t now)
+	{
+		return this->transmissionCounter.GetRate(now);
+	}
+
+	void RtpStream::ResetStatusCheckTimer(uint16_t timeout)
+	{
+		// Notify about status on next check.
+		this->notifyStatus = true;
+		this->statusCheckTimer->Start(timeout, StatusCheckPeriod);
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
@@ -73,18 +161,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Initialize/reset RTP counters.
-		this->baseSeq       = seq;
-		this->maxSeq        = seq;
-		this->badSeq        = RtpSeqMod + 1; // So seq == badSeq is false.
-		this->cycles        = 0;
-		this->received      = 0;
-		this->receivedPrior = 0;
-		this->expectedPrior = 0;
-		// Also reset the highest seen RTP timestamp.
-		this->maxTimestamp = 0;
-
-		// Call the OnInitSeq method of the child.
-		OnInitSeq();
+		this->baseSeq = seq;
+		this->maxSeq  = seq;
+		this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
 	}
 
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)
@@ -94,34 +173,10 @@ namespace RTC
 		uint16_t seq    = packet->GetSequenceNumber();
 		uint16_t udelta = seq - this->maxSeq;
 
-		/*
-		 * Source is not valid until MinSequential packets with
-		 * sequential sequence numbers have been received.
-		 */
-		if (this->probation != 0u)
-		{
-			// Packet is in sequence.
-			if (seq == this->maxSeq + 1)
-			{
-				this->probation--;
-				this->maxSeq = seq;
-
-				if (this->probation == 0)
-				{
-					InitSeq(seq);
-					this->received++;
-
-					return true;
-				}
-			}
-			else
-			{
-				this->probation = MinSequential - 1;
-				this->maxSeq    = seq;
-			}
-
-			return false;
-		}
+		// If the new packet sequence number is greater than the max seen but not
+		// "so much bigger", accept it.
+		// NOTE: udelta also handles the case of a new cycle, this is:
+		//    maxSeq:65536, seq:0 => udelta:1
 		if (udelta < MaxDropout)
 		{
 			// In order, with permissible gap.
@@ -133,39 +188,48 @@ namespace RTC
 
 			this->maxSeq = seq;
 		}
+		// Too old packet received (older than the allowed misorder).
+		// Or to new packet (more than acceptable dropout).
 		else if (udelta <= RtpSeqMod - MaxMisorder)
 		{
-			// The sequence number made a very large jump.
+			// The sequence number made a very large jump. If two sequential packets
+			// arrive, accept the latter.
 			if (seq == this->badSeq)
 			{
-				/*
-				 * Two sequential packets -- assume that the other side
-				 * restarted without telling us so just re-sync
-				 * (i.e., pretend this was the first packet).
-				 */
+				// Two sequential packets. Assume that the other side restarted without
+				// telling us so just re-sync (i.e., pretend this was the first packet).
 				MS_WARN_TAG(
-				    rtp,
-				    "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				InitSeq(seq);
+
+				this->maxPacketTs = packet->GetTimestamp();
+				this->maxPacketMs = DepLibUV::GetTime();
 			}
 			else
 			{
 				MS_WARN_TAG(
-				    rtp,
-				    "bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				    packet->GetSsrc(),
-				    packet->GetSequenceNumber());
+				  rtp,
+				  "bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
 
 				this->badSeq = (seq + 1) & (RtpSeqMod - 1);
+
+				// Packet discarded due to late or early arriving.
+				this->packetsDiscarded++;
 
 				return false;
 			}
 		}
-
-		this->received++;
+		// Acceptable misorder.
+		else
+		{
+			// Do nothing.
+		}
 
 		return true;
 	}
@@ -176,24 +240,30 @@ namespace RTC
 
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
-		static const Json::StaticString JsonStringMime{ "mime" };
+		static const Json::StaticString JsonStringMimeType{ "mimeType" };
 		static const Json::StaticString JsonStringClockRate{ "clockRate" };
 		static const Json::StaticString JsonStringUseNack{ "useNack" };
 		static const Json::StaticString JsonStringUsePli{ "usePli" };
-		static const Json::StaticString JsonStringSsrcAudioLevelId{ "ssrcAudioLevelId" };
-		static const Json::StaticString JsonStringAbsSendTimeId{ "absSendTimeId" };
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringSsrc]             = Json::UInt{ this->ssrc };
-		json[JsonStringPayloadType]      = Json::UInt{ this->payloadType };
-		json[JsonStringMime]             = this->mime.name;
-		json[JsonStringClockRate]        = Json::UInt{ this->clockRate };
-		json[JsonStringUseNack]          = this->useNack;
-		json[JsonStringUsePli]           = this->usePli;
-		json[JsonStringSsrcAudioLevelId] = Json::UInt{ this->ssrcAudioLevelId };
-		json[JsonStringAbsSendTimeId]    = Json::UInt{ this->absSendTimeId };
+		json[JsonStringSsrc]        = Json::UInt{ this->ssrc };
+		json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
+		json[JsonStringMimeType]    = this->mimeType.ToString();
+		json[JsonStringClockRate]   = Json::UInt{ this->clockRate };
+		json[JsonStringUseNack]     = this->useNack;
+		json[JsonStringUsePli]      = this->usePli;
 
 		return json;
+	}
+
+	void RtpStream::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->statusCheckTimer)
+		{
+			this->CheckStatus();
+		}
 	}
 } // namespace RTC

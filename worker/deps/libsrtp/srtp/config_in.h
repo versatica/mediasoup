@@ -9,17 +9,14 @@
 /* Define if building for a RISC machine (assume slow byte access). */
 #undef CPU_RISC
 
-/* Define to compile in dynamic debugging system. */
-#undef ENABLE_DEBUGGING
+/* Define to enabled debug logging for all mudules. */
+#undef ENABLE_DEBUG_LOGGING
 
-/* Report errors to this file. */
+/* Logging statments will be writen to this file. */
 #undef ERR_REPORTING_FILE
 
-/* Define to use logging to stdout. */
+/* Define to redirect logging to stdout. */
 #undef ERR_REPORTING_STDOUT
-
-/* Define this to use ISMAcryp code. */
-#undef GENERIC_AESICM
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
@@ -41,9 +38,6 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
-
-/* Define to 1 if you have the `crypto' library (-lcrypto). */
-#undef HAVE_LIBCRYPTO
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
@@ -158,9 +152,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Write errors to this file */
-#undef USE_ERR_REPORTING_FILE
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

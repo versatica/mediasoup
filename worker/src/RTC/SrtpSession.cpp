@@ -75,8 +75,8 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		    (int)keyLen == policy.rtp.cipher_key_len,
-		    "given keyLen does not match policy.rtp.cipher_keyLen");
+		  (int)keyLen == policy.rtp.cipher_key_len,
+		  "given keyLen does not match policy.rtp.cipher_keyLen");
 
 		switch (type)
 		{
@@ -92,7 +92,7 @@ namespace RTC
 		policy.key        = key;
 		// Required for sending RTP retransmission without RTX.
 		policy.allow_repeat_tx = 1;
-		policy.window_size     = 2048;
+		policy.window_size     = 1024;
 		policy.next            = nullptr;
 
 		// Set the SRTP session.

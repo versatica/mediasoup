@@ -3,11 +3,14 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <map>
 
 namespace RTC
 {
+	// Max RTP length.
+	constexpr size_t RtpBufferSize{ 65536 };
 	// Max MTU size.
 	constexpr size_t MtuSize{ 1500 };
 
@@ -77,15 +80,16 @@ namespace RTC
 	public:
 		static bool IsRtp(const uint8_t* data, size_t len);
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
+		static RtpPacket* CreateProbationPacket(const uint8_t* buffer, uint8_t payloadPadding);
 
 	public:
 		RtpPacket(
-		    Header* header,
-		    ExtensionHeader* extensionHeader,
-		    const uint8_t* payload,
-		    size_t payloadLength,
-		    uint8_t payloadPadding,
-		    size_t size);
+		  Header* header,
+		  ExtensionHeader* extensionHeader,
+		  const uint8_t* payload,
+		  size_t payloadLength,
+		  uint8_t payloadPadding,
+		  size_t size);
 		~RtpPacket();
 
 		void Dump() const;
@@ -95,10 +99,9 @@ namespace RTC
 		void SetPayloadType(uint8_t payloadType);
 		bool HasMarker() const;
 		void SetMarker(bool marker);
+		void SetPayloadPaddingFlag(bool flag);
 		uint16_t GetSequenceNumber() const;
 		void SetSequenceNumber(uint16_t seq);
-		uint32_t GetExtendedSequenceNumber() const;
-		void SetExtendedSequenceNumber(uint32_t seq32);
 		uint32_t GetTimestamp() const;
 		void SetTimestamp(uint32_t timestamp);
 		uint32_t GetSsrc() const;
@@ -107,18 +110,26 @@ namespace RTC
 		uint16_t GetExtensionHeaderId() const;
 		size_t GetExtensionHeaderLength() const;
 		uint8_t* GetExtensionHeaderValue() const;
+		void MangleExtensionHeaderIds(const std::map<uint8_t, uint8_t>& idMapping);
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
-		void AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id);
-		uint8_t* GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
+		void AddExtensionMapping(RTC::RtpHeaderExtensionUri::Type uri, uint8_t id);
+		uint8_t* GetExtension(RTC::RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
 		bool ReadAudioLevel(uint8_t* volume, bool* voice) const;
 		bool ReadAbsSendTime(uint32_t* time) const;
+		bool ReadRid(const uint8_t** data, size_t* len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
-		void Serialize(uint8_t* buffer);
-		RtpPacket* Clone(uint8_t* buffer) const;
+		uint8_t GetPayloadPadding() const;
+		void SetKeyFrame(bool flag);
+		bool IsKeyFrame() const;
+		RtpPacket* Clone(const uint8_t* buffer) const;
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
 		bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
+		void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
+		bool EncodePayload(RTC::Codecs::EncodingContext* context);
+		void RestorePayload();
+		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
 	private:
 		void ParseExtensions();
@@ -130,12 +141,13 @@ namespace RTC
 		ExtensionHeader* extensionHeader{ nullptr };
 		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
 		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
-		std::map<RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
+		std::map<RTC::RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0 };
 		uint8_t payloadPadding{ 0 };
-		size_t size{ 0 };    // Full size of the packet in bytes.
-		uint32_t seq32{ 0 }; // Extended seq number.
+		size_t size{ 0 }; // Full size of the packet in bytes.
+		// Codecs
+		std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 	};
 
 	/* Inline static methods. */
@@ -147,11 +159,11 @@ namespace RTC
 		auto header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 		return (
-		    (len >= sizeof(Header)) &&
-		    // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		    (data[0] > 127 && data[0] < 192) &&
-		    // RTP Version must be 2.
-		    (header->version == 2));
+		  (len >= sizeof(Header)) &&
+		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+		  (data[0] > 127 && data[0] < 192) &&
+		  // RTP Version must be 2.
+		  (header->version == 2));
 	}
 
 	/* Inline instance methods. */
@@ -186,6 +198,11 @@ namespace RTC
 		this->header->marker = marker;
 	}
 
+	inline void RtpPacket::SetPayloadPaddingFlag(bool flag)
+	{
+		this->header->padding = flag;
+	}
+
 	inline uint16_t RtpPacket::GetSequenceNumber() const
 	{
 		return uint16_t{ ntohs(this->header->sequenceNumber) };
@@ -194,16 +211,6 @@ namespace RTC
 	inline void RtpPacket::SetSequenceNumber(uint16_t seq)
 	{
 		this->header->sequenceNumber = uint16_t{ htons(seq) };
-	}
-
-	inline uint32_t RtpPacket::GetExtendedSequenceNumber() const
-	{
-		return this->seq32;
-	}
-
-	inline void RtpPacket::SetExtendedSequenceNumber(uint32_t seq32)
-	{
-		this->seq32 = seq32;
 	}
 
 	inline uint32_t RtpPacket::GetTimestamp() const
@@ -265,12 +272,12 @@ namespace RTC
 		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
 	}
 
-	inline void RtpPacket::AddExtensionMapping(RtpHeaderExtensionUri::Type uri, uint8_t id)
+	inline void RtpPacket::AddExtensionMapping(RTC::RtpHeaderExtensionUri::Type uri, uint8_t id)
 	{
 		this->extensionMap[uri] = id;
 	}
 
-	inline uint8_t* RtpPacket::GetExtension(RtpHeaderExtensionUri::Type uri, uint8_t* len) const
+	inline uint8_t* RtpPacket::GetExtension(RTC::RtpHeaderExtensionUri::Type uri, uint8_t* len) const
 	{
 		*len = 0;
 
@@ -293,7 +300,7 @@ namespace RTC
 			if (this->twoBytesExtensions.find(id) == this->twoBytesExtensions.end())
 				return nullptr;
 
-			*len = this->oneByteExtensions.at(id)->len;
+			*len = this->twoBytesExtensions.at(id)->len;
 
 			return this->twoBytesExtensions.at(id)->value;
 		}
@@ -308,7 +315,7 @@ namespace RTC
 		uint8_t extenLen;
 		uint8_t* extenValue;
 
-		extenValue = GetExtension(RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &extenLen);
+		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &extenLen);
 
 		if (!extenValue || extenLen != 1)
 			return false;
@@ -325,12 +332,28 @@ namespace RTC
 		uint8_t extenLen;
 		uint8_t* extenValue;
 
-		extenValue = GetExtension(RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
+		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
 
 		if (!extenValue || extenLen != 3)
 			return false;
 
 		*time = Utils::Byte::Get3Bytes(extenValue, 0);
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadRid(const uint8_t** data, size_t* len) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue;
+
+		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, &extenLen);
+
+		if (!extenValue || extenLen == 0)
+			return false;
+
+		*data = extenValue;
+		*len  = static_cast<size_t>(extenLen);
 
 		return true;
 	}
@@ -343,6 +366,25 @@ namespace RTC
 	inline size_t RtpPacket::GetPayloadLength() const
 	{
 		return this->payloadLength;
+	}
+
+	inline uint8_t RtpPacket::GetPayloadPadding() const
+	{
+		return this->payloadPadding;
+	}
+
+	inline bool RtpPacket::IsKeyFrame() const
+	{
+		if (!this->payloadDescriptorHandler)
+			return false;
+
+		return this->payloadDescriptorHandler->IsKeyFrame();
+	}
+
+	inline void RtpPacket::SetPayloadDescriptorHandler(
+	  RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+	{
+		this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 	}
 } // namespace RTC
 

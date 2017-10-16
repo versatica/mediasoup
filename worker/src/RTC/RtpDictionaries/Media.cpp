@@ -15,15 +15,13 @@ namespace RTC
 	{
 		{ "",      Media::Kind::ALL   },
 		{ "audio", Media::Kind::AUDIO },
-		{ "video", Media::Kind::VIDEO },
-		{ "depth", Media::Kind::DEPTH }
+		{ "video", Media::Kind::VIDEO }
 	};
 	std::map<Media::Kind, Json::StaticString> Media::kind2Json =
 	{
 		{ Media::Kind::ALL,   Json::StaticString("")      },
 		{ Media::Kind::AUDIO, Json::StaticString("audio") },
-		{ Media::Kind::VIDEO, Json::StaticString("video") },
-		{ Media::Kind::DEPTH, Json::StaticString("depth") }
+		{ Media::Kind::VIDEO, Json::StaticString("video") }
 	};
 	// clang-format on
 

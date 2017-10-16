@@ -7,6 +7,10 @@
 /worker/out/
 /worker/**/*.xcodeproj/
 
+# vim temporal files
+*.swp
+*.swo
+
 # Others
 /npm-debug.log
 /NO_GIT/

@@ -55,7 +55,7 @@ function get_gyp()
 function get_jsoncpp()
 {
 	GIT_REPO="https://github.com/open-source-parsers/jsoncpp.git"
-	GIT_TAG="1.8.0"
+	GIT_TAG="1.8.1"
 	DEST="deps/jsoncpp/jsoncpp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -78,7 +78,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.12.0"
+	GIT_TAG="v1.14.0"
 	DEST="deps/libuv"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -93,7 +93,7 @@ function get_openssl()
 function get_libsrtp()
 {
 	GIT_REPO="https://github.com/cisco/libsrtp.git"
-	GIT_TAG="master"
+	GIT_TAG="v2.1.0"
 	DEST="deps/libsrtp/srtp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -102,7 +102,7 @@ function get_libsrtp()
 function get_catch()
 {
 	GIT_REPO="https://github.com/philsquared/Catch.git"
-	GIT_TAG="v1.8.2"
+	GIT_TAG="v1.9.7"
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -112,10 +112,19 @@ function get_catch()
 	cp ${DEST}/single_include/catch.hpp test/include/
 }
 
+function get_lcov()
+{
+	GIT_REPO="https://github.com/linux-test-project/lcov.git"
+	GIT_TAG="master"
+	DEST="deps/lcov"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch]"
+		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch|lcov]"
 		echo
 		;;
 	gyp)
@@ -138,6 +147,9 @@ case "${DEP}" in
 		;;
 	catch)
 		get_catch
+		;;
+	lcov)
+		get_lcov
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
