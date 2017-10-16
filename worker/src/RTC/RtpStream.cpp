@@ -161,9 +161,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Initialize/reset RTP counters.
-		this->baseSeq     = seq;
-		this->maxSeq      = seq;
-		this->badSeq      = RtpSeqMod + 1; // So seq == badSeq is false.
+		this->baseSeq = seq;
+		this->maxSeq  = seq;
+		this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
 	}
 
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)

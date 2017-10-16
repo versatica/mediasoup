@@ -280,7 +280,6 @@ namespace RTC
 		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
-
 		// Calculate RTP timestamp diff between now and last received RTP packet.
 		uint32_t diffMs = static_cast<uint32_t>(now - this->maxPacketMs);
 		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
@@ -306,7 +305,7 @@ namespace RTC
 		}
 
 		// Convert milliseconds to unix time.
-		unixTime.tv_sec = unixTimeMs / 1000;
+		unixTime.tv_sec  = unixTimeMs / 1000;
 		unixTime.tv_usec = (unixTimeMs % 1000) * 1000;
 
 		// Convert unix time to NTP.
