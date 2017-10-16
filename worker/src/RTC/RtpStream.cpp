@@ -110,6 +110,9 @@ namespace RTC
 
 			this->started = true;
 			this->maxSeq  = seq - 1;
+
+			this->maxPacketTs = packet->GetTimestamp();
+			this->maxPacketMs = DepLibUV::GetTime();
 		}
 
 		// If not a valid packet ignore it.
@@ -130,8 +133,12 @@ namespace RTC
 		// Update highest seen RTP timestamp.
 		if (SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
+			// Calculate time diff between this and previous highest RTP timestamp.
+			uint32_t diffTs = packet->GetTimestamp() - this->maxPacketTs;
+			uint32_t diffMs = diffTs * 1000 / this->params.clockRate;
+
 			this->maxPacketTs = packet->GetTimestamp();
-			this->maxPacketMs = DepLibUV::GetTime();
+			this->maxPacketMs += diffMs;
 		}
 
 		return true;
@@ -157,7 +164,6 @@ namespace RTC
 		this->baseSeq     = seq;
 		this->maxSeq      = seq;
 		this->badSeq      = RtpSeqMod + 1; // So seq == badSeq is false.
-		this->maxPacketTs = 0;             // Also reset the highest seen RTP timestamp.
 	}
 
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)
@@ -199,6 +205,9 @@ namespace RTC
 				  packet->GetSequenceNumber());
 
 				InitSeq(seq);
+
+				this->maxPacketTs = packet->GetTimestamp();
+				this->maxPacketMs = DepLibUV::GetTime();
 			}
 			else
 			{

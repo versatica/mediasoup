@@ -272,6 +272,7 @@ namespace Utils
 		};
 
 		static void CurrentTimeNtp(Ntp& ntp);
+		static void UnixTime2Ntp(struct timeval* unixTime, Ntp& ntp);
 		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp);
 		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2);
 	};
@@ -282,9 +283,14 @@ namespace Utils
 
 		gettimeofday(&tv, nullptr);
 
-		ntp.seconds = tv.tv_sec + UnixNtpOffset;
+		UnixTime2Ntp(&tv, ntp);
+	}
+
+	inline void Time::UnixTime2Ntp(struct timeval* unixTime, Ntp& ntp)
+	{
+		ntp.seconds = unixTime->tv_sec + UnixNtpOffset;
 		ntp.fractions =
-		  static_cast<uint32_t>(static_cast<double>(tv.tv_usec) * NtpFractionalUnit * 1.0e-6);
+		  static_cast<uint32_t>(static_cast<double>(unixTime->tv_usec) * NtpFractionalUnit * 1.0e-6);
 	}
 
 	inline bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)

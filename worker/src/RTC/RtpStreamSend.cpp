@@ -277,21 +277,43 @@ namespace RTC
 			return nullptr;
 
 		auto report = new RTC::RTCP::SenderReport();
-
 		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
+
+		// Calculate RTP timestamp diff between now and last received RTP packet.
+		uint32_t diffMs = static_cast<uint32_t>(now - this->maxPacketMs);
+		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
+
 		Utils::Time::Ntp ntp{};
-		Utils::Time::CurrentTimeNtp(ntp);
+		struct timeval unixTime;
+		uint64_t unixTimeMs;
+
+		gettimeofday(&unixTime, nullptr);
+
+		// Convert unix time to millisecods.
+		unixTimeMs = unixTime.tv_sec * 1000 + unixTime.tv_usec / 1000;
+
+		if (now >= this->maxPacketMs)
+		{
+			unixTimeMs += diffMs;
+			report->SetRtpTs(this->maxPacketTs + diffTs);
+		}
+		else
+		{
+			unixTimeMs -= diffMs;
+			report->SetRtpTs(this->maxPacketTs - diffTs);
+		}
+
+		// Convert milliseconds to unix time.
+		unixTime.tv_sec = unixTimeMs / 1000;
+		unixTime.tv_usec = (unixTimeMs % 1000) * 1000;
+
+		// Convert unix time to NTP.
+		Utils::Time::UnixTime2Ntp(&unixTime, ntp);
 
 		report->SetNtpSec(ntp.seconds);
 		report->SetNtpFrac(ntp.fractions);
-
-		// Calculate RTP timestamp diff between now and last received RTP packet.
-		auto diffMs     = static_cast<uint32_t>(now - this->maxPacketMs);
-		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
-
-		report->SetRtpTs(this->maxPacketTs + diffTs);
 
 		return report;
 	}
