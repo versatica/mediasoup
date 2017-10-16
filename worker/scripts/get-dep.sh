@@ -112,10 +112,19 @@ function get_catch()
 	cp ${DEST}/single_include/catch.hpp test/include/
 }
 
+function get_lcov()
+{
+	GIT_REPO="https://github.com/linux-test-project/lcov.git"
+	GIT_TAG="master"
+	DEST="deps/lcov"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch]"
+		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch|lcov]"
 		echo
 		;;
 	gyp)
@@ -138,6 +147,9 @@ case "${DEP}" in
 		;;
 	catch)
 		get_catch
+		;;
+	lcov)
+		get_lcov
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
