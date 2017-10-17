@@ -22,10 +22,10 @@ echo ">>> [INFO] generating coverage info file ..."
 $LCOV --no-external --capture --directory ./ --output-file ${COVERAGE_INFO}
 
 echo ">>> [INFO] removing tests from coverage info file ..."
-$LCOV -r ${COVERAGE_INFO} "`pwd`/test/*" -o ${COVERAGE_INFO}
+$LCOV -r ${COVERAGE_INFO} "$(pwd)/test/*" -o ${COVERAGE_INFO}
 
 echo ">>> [INFO] removing deps from coverage info file ..."
-$LCOV -r ${COVERAGE_INFO} "`pwd`/deps/*" -o ${COVERAGE_INFO}
+$LCOV -r ${COVERAGE_INFO} "$(pwd)/deps/*" -o ${COVERAGE_INFO}
 
 echo ">>> [INFO] Clearing previous report data ..."
 if [[ -d ${HTML_REPORT_DIR} ]] ; then
