@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "include/catch.hpp"
+#include "catch.hpp"
 #include "RTC/SeqManager.hpp"
 #include <vector>
 

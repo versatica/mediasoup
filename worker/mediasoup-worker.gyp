@@ -262,16 +262,20 @@
       [
         # C++ source files
         'test/tests.cpp',
-        'test/test-nack.cpp',
-        'test/test-nack-generator.cpp',
-        'test/test-rtp.cpp',
-        'test/test-rtcp.cpp',
-        'test/test-bitrate.cpp',
-        'test/test-rtpstreamrecv.cpp',
-        'test/test-seqmanager.cpp',
+        'test/RTC/TestRtpStreamSend.cpp',
+        'test/RTC/TestNackGenerator.cpp',
+        'test/RTC/TestRtpPacket.cpp',
+        'test/RTC/TestRtcp.cpp',
+        'test/RTC/TestRtpDataCounter.cpp',
+        'test/RTC/TestRtpStreamRecv.cpp',
+        'test/RTC/TestSeqManager.cpp',
         # C++ include files
-        'test/catch.hpp',
-        'test/helpers.hpp'
+        'include/catch.hpp',
+        'include/helpers.hpp'
+      ],
+      'include_dirs':
+      [
+        'test/include'
       ],
      'xcode_settings':
      {

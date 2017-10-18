@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "include/catch.hpp"
-#include "include/helpers.hpp"
+#include "catch.hpp"
+#include "helpers.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <cstring> // std::memcmp()

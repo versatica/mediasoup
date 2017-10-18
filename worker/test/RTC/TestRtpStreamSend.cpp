@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "include/catch.hpp"
+#include "catch.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"

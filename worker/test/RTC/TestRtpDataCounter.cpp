@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "include/catch.hpp"
+#include "catch.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include <vector>
 

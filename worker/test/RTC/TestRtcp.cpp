@@ -1,6 +1,5 @@
 #include "common.hpp"
-#include "include/catch.hpp"
-#include "include/helpers.hpp"
+#include "catch.hpp"
 #include "RTC/RTCP/Bye.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"

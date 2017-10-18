@@ -40,6 +40,9 @@ $GENHTML -o ${HTML_REPORT_DIR} ${COVERAGE_INFO}
 echo ">>> [INFO] Clearing coverage info file ..."
 rm ${COVERAGE_INFO}
 
+echo ">>> [INFO] Clearing counters ..."
+$LCOV --directory ./ --zerocounters
+
 if type "open" &> /dev/null; then
 	echo ">>> [INFO] opening HTML report ..."
 	open ${HTML_REPORT_DIR}/index.html
