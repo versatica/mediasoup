@@ -1,34 +1,44 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/SenderReport.hpp" // sizeof(SenderReport::Header)
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
+namespace TestReceiverReport
 {
-	SECTION("parse ReceiverReport")
+	// RTCP Packet. Sender Report and Receiver Report.
+	uint8_t buffer[] =
 	{
-		uint8_t buffer[] =
-		{
-			0x00, 0x00, 0x04, 0xD2,	// ssrc
-			0x01,                   // fractionLost
-			0x00, 0x00, 0x04,       // totalLost
-			0x00, 0x00, 0x04, 0xD2,	// lastSeq
-			0x00, 0x00, 0x04, 0xD2,	// jitter
-			0x00, 0x00, 0x04, 0xD2,	// lsr
-			0x00, 0x00, 0x04, 0xD2  // dlsr
-		};
+		0x81, 0xc8, 0x00, 0x0c, // Type: 200 (Sender Report), Count: 1, Length: 12
+		0x5d, 0x93, 0x15, 0x34, // SSRC: 0x5d931534
+		0xdd, 0x3a, 0xc1, 0xb4, // NTP Sec: 3711615412
+		0x76, 0x54, 0x71, 0x71, // NTP Frac: 1985245553
+		0x00, 0x08, 0xcf, 0x00, // RTP timestamp: 577280
+		0x00, 0x00, 0x0e, 0x18, // Packet count: 3608
+		0x00, 0x08, 0xcf, 0x00, // Octed count: 577280
+		// Receiver Report
+		0x01, 0x93, 0x2d, 0xb4, // SSRC. 0x01932db4
+		0x00, 0x00, 0x00, 0x01, // Fraction lost: 0, Total lost: 1
+		0x00, 0x00, 0x00, 0x00, // Extended highest sequence number: 0
+		0x00, 0x00, 0x00, 0x00, // Jitter: 0
+		0x00, 0x00, 0x00, 0x00, // Last SR: 0
+		0x00, 0x00, 0x00, 0x05  // DLSR: 0
+	};
 
-		uint32_t ssrc                       = 1234;
-		uint8_t fractionLost                = 1;
-		int32_t totalLost                   = 4;
-		uint32_t lastSeq                    = 1234;
-		uint32_t jitter                     = 1234;
-		uint32_t lastSenderReport           = 1234;
-		uint32_t delaySinceLastSenderReport = 1234;
-		ReceiverReport* report = ReceiverReport::Parse(buffer, sizeof(ReceiverReport::Header));
+	// Receiver Report buffer start point.
+	uint8_t* rrBuffer = buffer + sizeof(Packet::CommonHeader) + sizeof(SenderReport::Header);
 
-		REQUIRE(report);
+	uint32_t ssrc                       = 0x01932db4;
+	uint8_t fractionLost                = 0;
+	uint8_t totalLost                   = 1;
+	uint32_t lastSeq                    = 0;
+	uint32_t jitter                     = 0;
+	uint32_t lastSenderReport           = 0;
+	uint32_t delaySinceLastSenderReport = 5;
+
+	void verifyReceiverReport(ReceiverReport* report)
+	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetFractionLost() == fractionLost);
 		REQUIRE(report->GetTotalLost() == totalLost);
@@ -37,18 +47,26 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 		REQUIRE(report->GetLastSenderReport() == lastSenderReport);
 		REQUIRE(report->GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	}
+}
+
+using namespace TestReceiverReport;
+
+SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
+{
+	SECTION("parse ReceiverReport")
+	{
+		ReceiverReport* report = ReceiverReport::Parse(rrBuffer, sizeof(ReceiverReport::Header));
+
+		REQUIRE(report);
+
+		verifyReceiverReport(report);
+
+		delete report;
+	}
 
 	SECTION("create ReceiverReport")
 	{
-		uint32_t ssrc                       = 1234;
-		uint8_t fractionLost                = 1;
-		int32_t totalLost                   = 4;
-		uint32_t lastSeq                    = 1234;
-		uint32_t jitter                     = 1234;
-		uint32_t lastSenderReport           = 1234;
-		uint32_t delaySinceLastSenderReport = 1234;
 		// Create local report and check content.
-		// ReceiverReport();
 		ReceiverReport report1;
 
 		report1.SetSsrc(ssrc);
@@ -59,24 +77,13 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 		report1.SetLastSenderReport(lastSenderReport);
 		report1.SetDelaySinceLastSenderReport(delaySinceLastSenderReport);
 
-		REQUIRE(report1.GetSsrc() == ssrc);
-		REQUIRE(report1.GetFractionLost() == fractionLost);
-		REQUIRE(report1.GetTotalLost() == totalLost);
-		REQUIRE(report1.GetLastSeq() == lastSeq);
-		REQUIRE(report1.GetJitter() == jitter);
-		REQUIRE(report1.GetLastSenderReport() == lastSenderReport);
-		REQUIRE(report1.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
+		verifyReceiverReport(&report1);
 
-		// Create report out of the existing one and check content.
-		// ReceiverReport(ReceiverReport* report);
-		ReceiverReport report2(&report1);
+		SECTION("create a report out of the existing one")
+		{
+			ReceiverReport report2(&report1);
 
-		REQUIRE(report2.GetSsrc() == ssrc);
-		REQUIRE(report2.GetFractionLost() == fractionLost);
-		REQUIRE(report2.GetTotalLost() == totalLost);
-		REQUIRE(report2.GetLastSeq() == lastSeq);
-		REQUIRE(report2.GetJitter() == jitter);
-		REQUIRE(report2.GetLastSenderReport() == lastSenderReport);
-		REQUIRE(report2.GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
+			verifyReceiverReport(&report2);
+		}
 	}
 }
