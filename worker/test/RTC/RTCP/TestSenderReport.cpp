@@ -1,7 +1,7 @@
-#include <cstring> // std::memcmp.
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include <cstring> // std::memcmp()
 
 using namespace RTC::RTCP;
 

@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/Bye.hpp"
+#include <cstring> // std::memcmp()
 #include <string>
 
 using namespace RTC::RTCP;
