@@ -5,41 +5,86 @@
 
 using namespace RTC::RTCP;
 
+namespace TestBye
+{
+	// RCTP BYE packet.
+	uint8_t buffer[] =
+	{
+		0x82, 0xcb, 0x00, 0x06, // Type: 203 (Bye), Count: 2, length: 2
+		0x62, 0x42, 0x76, 0xe0, // SSRC: 0x624276e0
+		0x26, 0x24, 0x67, 0x0e, // SSRC: 0x2624670e
+		0x0e, 0x48, 0x61, 0x73, // Length: 14, Text: "Hasta la vista"
+		0x74, 0x61, 0x20, 0x6c,
+		0x61, 0x20, 0x76, 0x69,
+		0x73, 0x74, 0x61, 0x00
+	};
+
+	uint32_t ssrc1 = 0x624276e0;
+	uint32_t ssrc2 = 0x2624670e;
+	std::string reason("Hasta la vista");
+
+	void verifyPacket(ByePacket* packet)
+	{
+		REQUIRE(packet->GetReason() == reason);
+
+		ByePacket::Iterator it = packet->Begin();
+
+		REQUIRE(*it == ssrc1);
+
+		it++;
+
+		REQUIRE(*it == ssrc2);
+	}
+}
+
+using namespace TestBye;
+
 SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 {
+	SECTION("parse BYE packet")
+	{
+		ByePacket* packet = ByePacket::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(packet);
+
+		verifyPacket(packet);
+
+		SECTION("serialize packet instance")
+		{
+			uint8_t serialized[sizeof(buffer)] = {0};
+
+			packet->Serialize(serialized);
+
+			SECTION("compare serialized instance with original buffer")
+			{
+				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
+			}
+		}
+
+		delete packet;
+	}
+
 	SECTION("create ByePacket")
 	{
-		uint32_t ssrc1 = 1111;
-		uint32_t ssrc2 = 2222;
-		std::string reason("hasta la vista");
 		// Create local Bye packet and check content.
-		// ByePacket();
-		ByePacket bye1;
+		ByePacket packet;
 
-		bye1.AddSsrc(ssrc1);
-		bye1.AddSsrc(ssrc2);
-		bye1.SetReason(reason);
+		packet.AddSsrc(ssrc1);
+		packet.AddSsrc(ssrc2);
+		packet.SetReason(reason);
 
-		ByePacket::Iterator it = bye1.Begin();
+		verifyPacket(&packet);
 
-		REQUIRE(*it == ssrc1);
-		it++;
-		REQUIRE(*it == ssrc2);
-		REQUIRE(bye1.GetReason() == reason);
+		SECTION("serialize packet instance")
+		{
+			uint8_t serialized[sizeof(buffer)] = {0};
 
-		// Locally store the content of the packet.
-		uint8_t buffer[bye1.GetSize()];
+			packet.Serialize(serialized);
 
-		bye1.Serialize(buffer);
-
-		// Parse the buffer of the previous packet and check content.
-		ByePacket* bye2 = ByePacket::Parse(buffer, sizeof(buffer));
-
-		it = bye2->Begin();
-
-		REQUIRE(*it == ssrc1);
-		it++;
-		REQUIRE(*it == ssrc2);
-		REQUIRE(bye2->GetReason() == reason);
+			SECTION("compare serialized instance with original buffer")
+			{
+				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
+			}
+		}
 	}
 }

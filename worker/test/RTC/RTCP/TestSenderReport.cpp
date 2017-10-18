@@ -61,7 +61,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		verifySenderReport(report);
 
-		SECTION("serialize SenderReport object")
+		SECTION("serialize SenderReport instance")
 		{
 			uint8_t serialized[sizeof(SenderReport::Header)] = {0};
 
