@@ -6,13 +6,15 @@ using namespace RTC::RTCP;
 
 SCENARIO("RTCP parsing", "[parser][rtcp][packet]")
 {
+	// RTCP common header
+	// Version:2, Padding:false, Count:0, Type:200(SR), Lengh:0
+	uint8_t buffer[] =
+	{
+		0x80, 0xc8, 0x00, 0x00
+	};
+
 	SECTION("a RTCP packet may only contain the RTCP common header")
 	{
-		uint8_t buffer[] =
-		{
-			0x81, 0xca, 0x00, 0x00 // RTCP common header
-		};
-
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
@@ -22,12 +24,10 @@ SCENARIO("RTCP parsing", "[parser][rtcp][packet]")
 
 	SECTION("a too small RTCP packet should fail")
 	{
-		uint8_t buffer[] =
-		{
-			0x81, 0xca, 0x00
-		};
+		// Provide a wrong packet length.
+		size_t length = sizeof(buffer) - 1;
 
-		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
+		Packet* packet = Packet::Parse(buffer, length);
 
 		REQUIRE_FALSE(packet);
 
@@ -36,11 +36,8 @@ SCENARIO("RTCP parsing", "[parser][rtcp][packet]")
 
 	SECTION("a RTCP packet with incorrect version should fail")
 	{
-		uint8_t buffer[] =
-		{
-			0x00, 0xca, 0x00, 0x01,
-			0x00, 0x00, 0x00, 0x00
-		};
+		// Set an incorrect version value (0).
+		buffer[0] &= 0b00111111;
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
 
@@ -51,11 +48,8 @@ SCENARIO("RTCP parsing", "[parser][rtcp][packet]")
 
 	SECTION("a RTCP packet with incorrect length should fail")
 	{
-		uint8_t buffer[] =
-		{
-			0x81, 0xca, 0x00, 0x04,
-			0x00, 0x00, 0x00, 0x00
-		};
+		// Set the packet length to zero.
+		buffer[3] = 1;
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
 
@@ -66,11 +60,8 @@ SCENARIO("RTCP parsing", "[parser][rtcp][packet]")
 
 	SECTION("a RTCP packet with unknown type should fail")
 	{
-		uint8_t buffer[] =
-		{
-			0x81, 0x00, 0x00, 0x01,
-			0x00, 0x00, 0x00, 0x00
-		};
+		// Set and unknown packet type (0).
+		buffer[1] = 0;
 
 		Packet* packet = Packet::Parse(buffer, sizeof(buffer));
 
