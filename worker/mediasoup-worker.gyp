@@ -265,10 +265,16 @@
         'test/RTC/TestRtpStreamSend.cpp',
         'test/RTC/TestNackGenerator.cpp',
         'test/RTC/TestRtpPacket.cpp',
-        'test/RTC/TestRtcp.cpp',
         'test/RTC/TestRtpDataCounter.cpp',
         'test/RTC/TestRtpStreamRecv.cpp',
         'test/RTC/TestSeqManager.cpp',
+        'test/RTC/RTCP/TestFeedbackPs.cpp',
+        'test/RTC/RTCP/TestFeedbackRtp.cpp',
+        'test/RTC/RTCP/TestBye.cpp',
+        'test/RTC/RTCP/TestReceiverReport.cpp',
+        'test/RTC/RTCP/TestSdes.cpp',
+        'test/RTC/RTCP/TestSenderReport.cpp',
+        'test/RTC/RTCP/TestPacket.cpp',
         # C++ include files
         'include/catch.hpp',
         'include/helpers.hpp'

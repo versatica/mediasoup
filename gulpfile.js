@@ -114,7 +114,8 @@ gulp.task('test:worker', shell.task(
 	[
 		'if type make &> /dev/null; then make test; fi',
 		`cd worker && ./out/${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ?
-			'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes`
+			'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes ` +
+		`${process.env.MEDIASOUP_TEST_TAGS || ''}`
 	],
 	{
 		verbose : true
