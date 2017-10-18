@@ -19,18 +19,9 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-4.8
-      env: COMPILER=g++-4.8
-    - node_js: 7
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
             - g++-4.9
       env: COMPILER=g++-4.9
-    - node_js: 8
+    - node_js: 7
       compiler: gcc
       addons:
         apt:
@@ -39,6 +30,15 @@ matrix:
           packages:
             - g++-5
       env: COMPILER=g++-5
+    - node_js: 8
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env: COMPILER=g++-6
     # TODO: This currently fails:
     # https://github.com/travis-ci/travis-ci/issues/6120#issuecomment-224072540
     # - node_js: 6
