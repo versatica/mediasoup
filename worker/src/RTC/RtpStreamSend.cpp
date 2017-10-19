@@ -12,10 +12,10 @@ namespace RTC
 	/* Static. */
 
 	// Don't retransmit packets older than this (ms).
-	// TODO: This must be tunned.
-	static constexpr uint32_t MaxRetransmissionDelay{ 1000 };
+	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 	static constexpr uint8_t MaxHealthLossPercentage{ 20 };
+	static constexpr uint16_t StatusCheckPeriod{ 1000 };
 
 	/* Instance methods. */
 
@@ -23,6 +23,9 @@ namespace RTC
 	  : RtpStream::RtpStream(params), listener(listener), storage(bufferSize)
 	{
 		MS_TRACE();
+
+		// Run the timer.
+		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
 	}
 
 	RtpStreamSend::~RtpStreamSend()

@@ -28,6 +28,7 @@ public:
 	void Destroy();
 	void Start(uint64_t timeout, uint64_t repeat = 0);
 	void Stop();
+	void Reset();
 	bool IsActive() const;
 
 	/* Callbacks fired by UV events. */

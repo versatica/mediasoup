@@ -821,15 +821,6 @@ namespace RTC
 		// Deactivate stream profiles if active.
 		if (IsStreamActive(rtpStream))
 			DeactivateStreamProfiles(rtpStreamRecv);
-
-		// Reset stream check timer on every stream whose profiles are active.
-		for (auto it : this->mapActiveProfiles)
-		{
-			auto activeRtpStream = it.second;
-			auto ssrc            = activeRtpStream->GetSsrc();
-
-			this->rtpStreams[ssrc]->ResetStatusCheckTimer(RTC::RtpStream::StatusCheckPeriod * 2);
-		}
 	}
 
 	void Producer::OnRtpStreamActive(RTC::RtpStream* rtpStream)

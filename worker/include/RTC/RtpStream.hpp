@@ -26,9 +26,6 @@ namespace RTC
 		};
 
 	public:
-		static constexpr uint16_t StatusCheckPeriod{ 1000 };
-
-	public:
 		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
@@ -40,7 +37,7 @@ namespace RTC
 		uint8_t GetPayloadType() const;
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		float GetLossPercentage() const;
-		void ResetStatusCheckTimer(uint16_t timeout = StatusCheckPeriod);
+		void ResetStatusCheckTimer();
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);

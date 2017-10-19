@@ -8,6 +8,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint16_t StatusCheckPeriod{ 250 };
+
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
@@ -17,6 +21,9 @@ namespace RTC
 
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
+
+		// Run the timer.
+		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()

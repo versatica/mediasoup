@@ -27,9 +27,6 @@ namespace RTC
 
 		// Set the status check timer.
 		this->statusCheckTimer = new Timer(this);
-
-		// Run the timer.
-		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
 	}
 
 	RtpStream::~RtpStream()
@@ -149,11 +146,11 @@ namespace RTC
 		return this->transmissionCounter.GetRate(now);
 	}
 
-	void RtpStream::ResetStatusCheckTimer(uint16_t timeout)
+	void RtpStream::ResetStatusCheckTimer()
 	{
 		// Notify about status on next check.
 		this->notifyStatus = true;
-		this->statusCheckTimer->Start(timeout, StatusCheckPeriod);
+		this->statusCheckTimer->Reset();
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
