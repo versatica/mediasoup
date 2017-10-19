@@ -4,57 +4,78 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTllei.hpp"
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
+#include <cstring> // std::memcmp()
 
 using namespace RTC::RTCP;
+
+namespace TestFeedbackRtpNack
+{
+	// RTCP NACK packet.
+	uint8_t buffer[] =
+	{
+		0x81, 0xcd, 0x00, 0x03, // Type: 205 (Generic RTP Feedback), Length: 3
+		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
+		0x03, 0x30, 0xbd, 0xee, // Media source SSRC: 0x0330bdee
+		0x0b, 0x8f, 0x00, 0x03  // NACK PID: 2959, NACK BLP: 0x00000003
+	};
+
+	// NACK values.
+	uint32_t senderSsrc = 0x00000001;
+	uint32_t mediaSsrc = 0x0330bdee;
+	uint16_t pid = 2959;
+	uint16_t lostPacketBitmask = 0x00000003;
+
+	void verifyNackPacket(FeedbackRtpNackPacket* packet)
+	{
+		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
+		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
+
+		auto it = packet->Begin();
+		auto item = *it;
+
+		REQUIRE(item->GetPacketId() == pid);
+		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
+	}
+}
 
 SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 {
 	SECTION("parse FeedbackRtpNackItem")
 	{
-		uint8_t buffer[] =
+		using namespace TestFeedbackRtpNack;
+
+		FeedbackRtpNackPacket* packet = FeedbackRtpNackPacket::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(packet);
+
+		verifyNackPacket(packet);
+
+		SECTION("serialize packet instance")
 		{
-			0x09, 0xc4, 0b10101010, 0b01010101
-		};
-		uint16_t packetId = 2500;
-		uint16_t lostPacketBitmask = 0b1010101001010101;
-		FeedbackRtpNackItem* item  = FeedbackRtpNackItem::Parse(buffer, sizeof(buffer));
+			uint8_t serialized[sizeof(buffer)] = {0};
 
-		REQUIRE(item);
-		REQUIRE(item->GetPacketId() == packetId);
-		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
+			packet->Serialize(serialized);
 
-		delete item;
+			SECTION("compare serialized packet with original buffer")
+			{
+				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
+			}
+		}
+
+		delete packet;
 	}
 
-	SECTION("create FeedbackRtpNackItem")
+	SECTION("create FeedbackRtpNackPacket")
 	{
-		uint16_t packetId          = 1;
-		uint16_t lostPacketBitmask = 0b1010101001010101;
-		// Create local NackItem and check content.
-		// FeedbackRtpNackItem();
-		FeedbackRtpNackItem item1(packetId, lostPacketBitmask);
+		using namespace TestFeedbackRtpNack;
 
-		REQUIRE(item1.GetPacketId() == packetId);
-		REQUIRE(item1.GetLostPacketBitmask() == lostPacketBitmask);
+		// Create local packet and check content.
+		FeedbackRtpNackPacket packet(senderSsrc, mediaSsrc);
+		FeedbackRtpNackItem* item = new FeedbackRtpNackItem(pid, lostPacketBitmask);
 
-		// Create local NackItem out of existing one and check content.
-		// FeedbackRtpNackItem(FeedbackRtpNackItem*);
-		FeedbackRtpNackItem item2(&item1);
+		packet.AddItem(item);
 
-		REQUIRE(item2.GetPacketId() == packetId);
-		REQUIRE(item2.GetLostPacketBitmask() == lostPacketBitmask);
-
-		// Locally store the content of the packet.
-		uint8_t buffer[item2.GetSize()];
-
-		item2.Serialize(buffer);
-
-		// Create local NackItem out of previous packet buffer and check content.
-		// FeedbackRtpNackItem(FeedbackRtpNackItem::Header*);
-		FeedbackRtpNackItem item3((FeedbackRtpNackItem::Header*)buffer);
-
-		REQUIRE(item3.GetPacketId() == packetId);
-		REQUIRE(item3.GetLostPacketBitmask() == lostPacketBitmask);
+		verifyNackPacket(&packet);
 	}
 
 	SECTION("create FeedbackRtpTmmbrItem")
@@ -93,9 +114,11 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 			0xba, 0xac, 0x8c, 0xcd,
 			0x18, 0x2c, 0x9e, 0x00
 		};
+
 		uint32_t ssrc     = 3131870413;
 		uint64_t bitrate  = 365504;
 		uint16_t overhead = 0;
+
 		FeedbackRtpTmmbrItem* item = FeedbackRtpTmmbrItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -108,7 +131,6 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 	SECTION("parse FeedbackRtpTmmbrPacket")
 	{
-
 		uint8_t buffer[] =
 		{
 			0x83, 0xcd, 0x00, 0x04,
@@ -117,9 +139,11 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 			0xba, 0xac, 0x8c, 0xcd,
 			0x18, 0x2c, 0x9e, 0x00
 		};
+
 		uint32_t ssrc     = 3131870413;
 		uint64_t bitrate  = 365504;
 		uint16_t overhead = 0;
+
 		FeedbackRtpTmmbrPacket* packet = FeedbackRtpTmmbrPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
@@ -140,8 +164,10 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 		{
 			0x00, 0x01, 0b10101010, 0b01010101
 		};
+
 		uint16_t packetId = 1;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
+
 		FeedbackRtpTlleiItem* item = FeedbackRtpTlleiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
@@ -163,6 +189,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 			0x00, 0x01,             // Lost Packets Counter
 			0x00, 0x01              // Duplication Counter
 		};
+
 		uint32_t sequenceNumber = 1;
 		uint32_t ect0Counter = 1;
 		uint32_t ect1Counter = 1;
@@ -170,6 +197,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 		uint16_t notEctCounter = 1;
 		uint16_t lostPackets = 1;
 		uint16_t duplicatedPackets = 1;
+
 		FeedbackRtpEcnItem* item = FeedbackRtpEcnItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
