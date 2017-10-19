@@ -21,7 +21,6 @@ const workerFiles =
 	'worker/src/**/*.cpp',
 	'worker/include/**/*.hpp',
 	'worker/test/**/*.cpp'
-
 ];
 const nodeTests =
 [

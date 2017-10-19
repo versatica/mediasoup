@@ -1,6 +1,5 @@
 #include "common.hpp"
 #include "catch.hpp"
-#include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsLei.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -19,7 +18,7 @@ namespace TestFeedbackPsRemb
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		0x8f, 0xce, 0x00, 0x06, // Type: 206 (Payload Specific), Length: 6
+		0x8f, 0xce, 0x00, 0x06, // Type: 206 (Payload Specific), Count: 15 (AFB), Length: 6
 		0xfa, 0x17, 0xfa, 0x17, // Sender SSRC: 0xfa17fa17
 		0x00, 0x00, 0x00, 0x00, // Media source SSRC: 0x00000000
 		0x52, 0x45, 0x4d, 0x42, // Unique Identifier: REMB
@@ -191,29 +190,6 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 		REQUIRE(item->GetSsrc() == ssrc);
 
 		delete item;
-	}
-
-	SECTION("parse FeedbackPsAfbPacket")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x8F, 0xce, 0x00, 0x03, // RTCP common header
-			0x00, 0x00, 0x00, 0x00, // Sender SSRC
-			0x00, 0x00, 0x00, 0x00, // Media SSRC
-			0x00, 0x00, 0x00, 0x01  // Data
-		};
-		// clang-format on
-
-		size_t dataSize     = 4;
-		uint8_t dataBitmask = 1;
-
-		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(packet);
-		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::Application::UNKNOWN);
-
-		delete packet;
 	}
 
 	SECTION("parse FeedbackPsRembPacket")
