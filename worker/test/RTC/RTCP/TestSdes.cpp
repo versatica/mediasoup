@@ -1,61 +1,82 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/Sdes.hpp"
+#include <cstring> // std::memcmp()
 #include <string>
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
+namespace TestSdes
 {
-	SECTION("parse SdesChunk")
+	// RTCP Sdes Packet.
+	uint8_t buffer[] =
 	{
-		uint8_t buffer[] =
-		{
-			0x00, 0x00, 0x00, 0x00, // SDES SSRC
-			0x01, 0x0a, 0x6f, 0x75, // SDES Item
-			0x74, 0x43, 0x68, 0x61,
-			0x6e, 0x6e, 0x65, 0x6c
-		};
+		0x81, 0xca, 0x00, 0x06, // Type: 202 (SDES), Count: 1, Length: 6
+		0x9f, 0x65, 0xe7, 0x42, // SSRC: 0x9f65e742
+		0x01, 0x10, 0x74, 0x37, // Item Type: 1 (CNAME), Length: 16, Value: t7mkYnCm46OcINy/
+		0x6d, 0x6b, 0x59, 0x6e,
+		0x43, 0x6d, 0x34, 0x36,
+		0x4f, 0x63, 0x49, 0x4e,
+		0x79, 0x2f, 0x00, 0x00
+	};
 
-		uint32_t ssrc       = 0;
-		SdesItem::Type type = SdesItem::Type::CNAME;
-		std::string value   = "outChannel";
-		size_t len          = value.size();
-		SdesChunk* chunk    = SdesChunk::Parse(buffer, sizeof(buffer));
+	uint8_t* chunkBuffer = buffer + sizeof(Packet::CommonHeader);
 
+	// SDES values.
+	uint32_t ssrc = 0x9f65e742;
+	SdesItem::Type type = SdesItem::Type::CNAME;
+	std::string value("t7mkYnCm46OcINy/");
+	size_t length = 16;
+
+	void verifyChunk(SdesChunk* chunk)
+	{
 		REQUIRE(chunk->GetSsrc() == ssrc);
 
 		SdesItem* item = *(chunk->Begin());
 
 		REQUIRE(item->GetType() == type);
-		REQUIRE(item->GetLength() == len);
-		REQUIRE(std::string(item->GetValue(), len) == "outChannel");
+		REQUIRE(item->GetLength() == length);
+		REQUIRE(std::string(item->GetValue(), length) == value);
+	}
+}
 
-		delete chunk;
+using namespace TestSdes;
+
+SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
+{
+	SECTION("parse packet")
+	{
+		SdesPacket* packet = SdesPacket::Parse(buffer, sizeof(buffer));
+
+		SdesChunk* chunk = *(packet->Begin());
+
+		REQUIRE(chunk);
+
+		verifyChunk(chunk);
+
+		SECTION("serialize SdesChunk instance")
+		{
+			uint8_t serialized[sizeof(buffer) - sizeof(Packet::CommonHeader)] = {0};
+
+			chunk->Serialize(serialized);
+
+			SECTION("compare serialized SdesChunk with original buffer")
+			{
+				REQUIRE(std::memcmp(chunkBuffer, serialized, sizeof(buffer) - sizeof(Packet::CommonHeader)) == 0);
+			}
+		}
+		delete packet;
 	}
 
 	SECTION("create SdesChunk")
 	{
-		uint32_t ssrc       = 0;
-		SdesItem::Type type = SdesItem::Type::CNAME;
-		std::string value   = "outChannel";
-		size_t len          = value.size();
-		// Create sdes item.
-		SdesItem* item = new SdesItem(type, len, value.c_str());
+		SdesItem* item = new SdesItem(type, length, value.c_str());
 
 		// Create sdes chunk.
 		SdesChunk chunk(ssrc);
 
 		chunk.AddItem(item);
 
-		// Check chunk content.
-		REQUIRE(chunk.GetSsrc() == ssrc);
-
-		// Check item content.
-		item = *(chunk.Begin());
-
-		REQUIRE(item->GetType() == type);
-		REQUIRE(item->GetLength() == len);
-		REQUIRE(std::string(item->GetValue(), len) == "outChannel");
+		verifyChunk(&chunk);
 	}
 }
