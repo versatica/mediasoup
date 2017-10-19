@@ -164,6 +164,7 @@ namespace RTC
 
 		if (IsEnabled() && !this->sourcePaused)
 		{
+			this->rtpStream->StopStatusCheckTimer();
 			this->rtpStream->ClearRetransmissionBuffer();
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
 
@@ -188,6 +189,8 @@ namespace RTC
 
 		if (IsEnabled() && !this->sourcePaused)
 		{
+			this->rtpStream->RestartStatusCheckTimer();
+
 			// We need to sync and wait for a key frame. Otherwise the receiver will
 			// request lot of NACKs due to unknown RTP packets.
 			this->syncRequired = true;
@@ -211,6 +214,7 @@ namespace RTC
 
 		if (IsEnabled() && !this->paused)
 		{
+			this->rtpStream->StopStatusCheckTimer();
 			this->rtpStream->ClearRetransmissionBuffer();
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
 
@@ -237,6 +241,8 @@ namespace RTC
 
 		if (IsEnabled() && !this->paused)
 		{
+			this->rtpStream->RestartStatusCheckTimer();
+
 			// We need to sync. However we don't need to request a key frame since the source
 			// (Producer) already requested it.
 			this->syncRequired = true;
@@ -306,8 +312,9 @@ namespace RTC
 			this->isProbing      = false;
 			this->probingProfile = RtpEncodingParameters::Profile::NONE;
 
-			// Reset the health check timer so this probation doesn't affect the effective profile.
-			this->rtpStream->ResetStatusCheckTimer();
+			// Restart the health check timer so this probation doesn't affect the effective
+			// profile.
+			this->rtpStream->RestartStatusCheckTimer();
 
 			return;
 		}
@@ -795,7 +802,7 @@ namespace RTC
 			RequestKeyFrame();
 
 		// We want to be notified about this new profile's health.
-		this->rtpStream->ResetStatusCheckTimer();
+		this->rtpStream->RestartStatusCheckTimer();
 
 		MS_DEBUG_TAG(
 		  rtp,
@@ -1017,7 +1024,7 @@ namespace RTC
 			{
 				this->isProbing      = true;
 				this->probingProfile = newTargetProfile;
-				this->rtpStream->ResetStatusCheckTimer();
+				this->rtpStream->RestartStatusCheckTimer();
 
 				MS_DEBUG_TAG(
 				  rtp,

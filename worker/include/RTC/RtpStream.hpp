@@ -37,7 +37,8 @@ namespace RTC
 		uint8_t GetPayloadType() const;
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		float GetLossPercentage() const;
-		void ResetStatusCheckTimer();
+		void RestartStatusCheckTimer();
+		void StopStatusCheckTimer();
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);

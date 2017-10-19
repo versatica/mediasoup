@@ -53,6 +53,9 @@ void Timer::Start(uint64_t timeout, uint64_t repeat)
 {
 	MS_TRACE();
 
+	this->timeout = timeout;
+	this->repeat  = repeat;
+
 	int err;
 
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
@@ -83,12 +86,25 @@ void Timer::Reset()
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) == 0)
 		return;
 
-	auto repeat = uv_timer_get_repeat(this->uvHandle);
-
-	if (repeat == 0u)
+	if (this->repeat == 0u)
 		return;
 
-	err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), repeat, repeat);
+	err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->repeat, this->repeat);
+	if (err != 0)
+		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
+}
+
+void Timer::Restart()
+{
+	MS_TRACE();
+
+	int err;
+
+	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
+		Stop();
+
+	err =
+	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->timeout, this->repeat);
 	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
 }

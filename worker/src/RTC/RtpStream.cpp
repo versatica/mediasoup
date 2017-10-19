@@ -146,11 +146,16 @@ namespace RTC
 		return this->transmissionCounter.GetRate(now);
 	}
 
-	void RtpStream::ResetStatusCheckTimer()
+	void RtpStream::RestartStatusCheckTimer()
 	{
 		// Notify about status on next check.
 		this->notifyStatus = true;
-		this->statusCheckTimer->Reset();
+		this->statusCheckTimer->Restart();
+	}
+
+	void RtpStream::StopStatusCheckTimer()
+	{
+		this->statusCheckTimer->Stop();
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
