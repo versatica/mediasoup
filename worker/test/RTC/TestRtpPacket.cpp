@@ -190,12 +190,15 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 	SECTION("create RtpPacket without extension header")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0b10000000, 0b00000001, 0, 8,
 			0, 0, 0, 4,
 			0, 0, 0, 5
 		};
+		// clang-format on
+
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
@@ -215,6 +218,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 	SECTION("create RtpPacket with One-Byte extension header")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0b10010000, 0b00000001, 0, 8,
@@ -225,6 +229,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0xFF, 0, 0, 0b00110011,
 			0xFF, 0xFF, 0xFF, 0xFF
 		};
+		// clang-format on
+
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
@@ -246,6 +252,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 	SECTION("create RtpPacket with Two-Bytes extension header")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0b10010000, 0b00000001, 0, 8,
@@ -256,6 +263,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0xFF, 0, 3, 4,
 			0xFF, 0xFF, 0xFF, 0xFF
 		};
+		// clang-format on
+
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
@@ -276,6 +285,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 	SECTION("rtx encryption-decryption")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0b10010000, 0b00000001, 0, 8,
@@ -287,6 +297,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0xFF, 0xFF, 0xFF, 0xFF,
 			0x11, 0x11, 0x11, 0x11 // Payload
 		};
+		// clang-format on
 
 		uint8_t rtxPayloadType = 102;
 		uint32_t rtxSsrc       = 6;
@@ -405,6 +416,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 	SECTION("create RtpPacket and apply payload shift to it")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0b10110000, 0b00000001, 0, 8,
@@ -422,6 +434,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00
 		};
+		// clang-format on
+
 		size_t len        = 40;
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 

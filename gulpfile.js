@@ -19,7 +19,9 @@ const nodeFiles =
 const workerFiles =
 [
 	'worker/src/**/*.cpp',
-	'worker/include/**/*.hpp'
+	'worker/include/**/*.hpp',
+	'worker/test/**/*.cpp'
+
 ];
 const nodeTests =
 [

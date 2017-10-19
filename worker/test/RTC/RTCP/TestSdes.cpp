@@ -9,6 +9,8 @@ using namespace RTC::RTCP;
 namespace TestSdes
 {
 	// RTCP Sdes Packet.
+
+	// clang-format off
 	uint8_t buffer[] =
 	{
 		0x81, 0xca, 0x00, 0x06, // Type: 202 (SDES), Count: 1, Length: 6
@@ -19,11 +21,12 @@ namespace TestSdes
 		0x4f, 0x63, 0x49, 0x4e,
 		0x79, 0x2f, 0x00, 0x00
 	};
+	// clang-format on
 
 	uint8_t* chunkBuffer = buffer + sizeof(Packet::CommonHeader);
 
 	// SDES values.
-	uint32_t ssrc = 0x9f65e742;
+	uint32_t ssrc       = 0x9f65e742;
 	SdesItem::Type type = SdesItem::Type::CNAME;
 	std::string value("t7mkYnCm46OcINy/");
 	size_t length = 16;
@@ -56,13 +59,14 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		SECTION("serialize SdesChunk instance")
 		{
-			uint8_t serialized[sizeof(buffer) - sizeof(Packet::CommonHeader)] = {0};
+			uint8_t serialized[sizeof(buffer) - sizeof(Packet::CommonHeader)] = { 0 };
 
 			chunk->Serialize(serialized);
 
 			SECTION("compare serialized SdesChunk with original buffer")
 			{
-				REQUIRE(std::memcmp(chunkBuffer, serialized, sizeof(buffer) - sizeof(Packet::CommonHeader)) == 0);
+				REQUIRE(
+				  std::memcmp(chunkBuffer, serialized, sizeof(buffer) - sizeof(Packet::CommonHeader)) == 0);
 			}
 		}
 		delete packet;

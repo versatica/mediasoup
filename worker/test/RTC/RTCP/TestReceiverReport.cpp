@@ -8,6 +8,8 @@ using namespace RTC::RTCP;
 namespace TestReceiverReport
 {
 	// RTCP Packet. Sender Report and Receiver Report.
+
+	// clang-format off
 	uint8_t buffer[] =
 	{
 		0x81, 0xc8, 0x00, 0x0c, // Type: 200 (Sender Report), Count: 1, Length: 12
@@ -25,6 +27,7 @@ namespace TestReceiverReport
 		0x00, 0x00, 0x00, 0x00, // Last SR: 0
 		0x00, 0x00, 0x00, 0x05  // DLSR: 0
 	};
+	// clang-format on
 
 	// Receiver Report buffer start point.
 	uint8_t* rrBuffer = buffer + sizeof(Packet::CommonHeader) + sizeof(SenderReport::Header);

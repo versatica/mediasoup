@@ -15,7 +15,10 @@ using namespace RTC::RTCP;
 namespace TestFeedbackPsRemb
 {
 	// RTCP REMB packet.
-	uint8_t buffer[] = {
+
+	// clang-format off
+	uint8_t buffer[] =
+	{
 		0x8f, 0xce, 0x00, 0x06, // Type: 206 (Payload Specific), Length: 6
 		0xfa, 0x17, 0xfa, 0x17, // Sender SSRC: 0xfa17fa17
 		0x00, 0x00, 0x00, 0x00, // Media source SSRC: 0x00000000
@@ -24,12 +27,13 @@ namespace TestFeedbackPsRemb
 		0x02, 0xd0, 0x37, 0x02, // SSRC1: 0x02d03702
 		0x04, 0xa7, 0x67, 0x47  // SSRC2: 0x04a76747
 	};
+	// clang-format on
 
 	// REMB values.
 	uint32_t senderSsrc = 0xfa17fa17;
-	uint32_t mediaSsrc = 0;
-	uint64_t bitrate = 122754;
-	std::vector<uint32_t> ssrcs { 0x02d03702, 0x04a76747 };
+	uint32_t mediaSsrc  = 0;
+	uint64_t bitrate    = 122754;
+	std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
 	void verifyRembPacket(FeedbackPsRembPacket* packet)
 	{
@@ -44,13 +48,15 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 {
 	SECTION("parse FeedbackPsSliItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x08, 0x01, 0x01
 		};
+		// clang-format on
 
-		uint16_t first = 1;
-		uint16_t number = 4;
+		uint16_t first    = 1;
+		uint16_t number   = 4;
 		uint8_t pictureId = 1;
 
 		FeedbackPsSliItem* item = FeedbackPsSliItem::Parse(buffer, sizeof(buffer));
@@ -65,6 +71,7 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 
 	SECTION("parse FeedbackPsRpsiItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x08,                   // Padding Bits
@@ -72,31 +79,34 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 			0x00, 0x00,             // Native RPSI bit string
 			0x00, 0x00, 0x01, 0x00
 		};
+		// clang-format on
 
 		uint8_t payloadType = 1;
 		uint8_t payloadMask = 1;
-		size_t length = 5;
+		size_t length       = 5;
 
 		FeedbackPsRpsiItem* item = FeedbackPsRpsiItem::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(item);
 		REQUIRE(item->GetPayloadType() == payloadType);
 		REQUIRE(item->GetLength() == length);
-		REQUIRE((item->GetBitString()[item->GetLength()-1] & 1) == payloadMask);
+		REQUIRE((item->GetBitString()[item->GetLength() - 1] & 1) == payloadMask);
 
 		delete item;
 	}
 
 	SECTION("parse FeedbackPsFirItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x00, 0x00, // SSRC
 			0x08, 0x00, 0x00, 0x00 // Seq nr.
 		};
+		// clang-format on
 
 		uint32_t ssrc = 0;
-		uint8_t seq = 8;
+		uint8_t seq   = 8;
 
 		FeedbackPsFirItem* item = FeedbackPsFirItem::Parse(buffer, sizeof(buffer));
 
@@ -109,15 +119,17 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 
 	SECTION("parse FeedbackPsTstnItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x00, 0x00, // SSRC
 			0x08,                   // Seq nr.
 			0x00, 0x00, 0x08        // Reserved | Index
 		};
+		// clang-format on
 
 		uint32_t ssrc = 0;
-		uint8_t seq = 8;
+		uint8_t seq   = 8;
 		uint8_t index = 1;
 
 		FeedbackPsTstnItem* item = FeedbackPsTstnItem::Parse(buffer, sizeof(buffer));
@@ -132,6 +144,7 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 
 	SECTION("parse FeedbackPsVbcmItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x00, 0x00, // SSRC
@@ -141,12 +154,13 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 			0x01,                   // VBCM Octet String
 			0x00, 0x00, 0x00        // Padding
 		};
+		// clang-format on
 
-		uint32_t ssrc = 0;
-		uint8_t seq = 8;
+		uint32_t ssrc       = 0;
+		uint8_t seq         = 8;
 		uint8_t payloadType = 1;
-		uint16_t length = 1;
-		uint8_t valueMask = 1;
+		uint16_t length     = 1;
+		uint8_t valueMask   = 1;
 
 		FeedbackPsVbcmItem* item = FeedbackPsVbcmItem::Parse(buffer, sizeof(buffer));
 
@@ -155,17 +169,19 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 		REQUIRE(item->GetSequenceNumber() == seq);
 		REQUIRE(item->GetPayloadType() == payloadType);
 		REQUIRE(item->GetLength() == length);
-		REQUIRE((item->GetValue()[item->GetLength() -1] & 1) == valueMask);
+		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
 
 		delete item;
 	}
 
 	SECTION("parse FeedbackPsLeiItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x00, 0x01 // SSRC
 		};
+		// clang-format on
 
 		uint32_t ssrc = 1;
 
@@ -179,6 +195,7 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 
 	SECTION("parse FeedbackPsAfbPacket")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x8F, 0xce, 0x00, 0x03, // RTCP common header
@@ -186,8 +203,9 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 			0x00, 0x00, 0x00, 0x00, // Media SSRC
 			0x00, 0x00, 0x00, 0x01  // Data
 		};
+		// clang-format on
 
-		size_t dataSize = 4;
+		size_t dataSize     = 4;
 		uint8_t dataBitmask = 1;
 
 		FeedbackPsAfbPacket* packet = FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer));
@@ -210,7 +228,7 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = {0};
+			uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 

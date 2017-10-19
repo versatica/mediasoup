@@ -9,6 +9,8 @@ using namespace RTC::RTCP;
 namespace TestBye
 {
 	// RCTP BYE packet.
+
+	// clang-format off
 	uint8_t buffer[] =
 	{
 		0x82, 0xcb, 0x00, 0x06, // Type: 203 (Bye), Count: 2, length: 2
@@ -19,6 +21,7 @@ namespace TestBye
 		0x61, 0x20, 0x76, 0x69,
 		0x73, 0x74, 0x61, 0x00
 	};
+	// clang-format on
 
 	uint32_t ssrc1 = 0x624276e0;
 	uint32_t ssrc2 = 0x2624670e;
@@ -52,7 +55,7 @@ SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = {0};
+			uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 
@@ -78,7 +81,7 @@ SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = {0};
+			uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet.Serialize(serialized);
 

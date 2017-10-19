@@ -13,21 +13,24 @@ static std::vector<RtpPacket*> rtpRetransmissionContainer(18);
 
 class RtpStreamSendListener : public RtpStreamSend::Listener
 {
-	public:
-		void OnRtpStreamHealthy(RTC::RtpStream* /*rtpStream*/) {};
-		void OnRtpStreamUnhealthy(RTC::RtpStream* /*rtpStream*/) {};
+public:
+	void OnRtpStreamHealthy(RTC::RtpStream* /*rtpStream*/){};
+	void OnRtpStreamUnhealthy(RTC::RtpStream* /*rtpStream*/){};
 } rtpStreamSendListener;
 
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 {
 	SECTION("receive NACK and get retransmitted packets")
 	{
+		// clang-format off
 		uint8_t rtpBuffer1[] =
 		{
 			0b10000000, 0b01111011, 0b01010010, 0b00001110,
 			0b01011011, 0b01101011, 0b11001010, 0b10110101,
 			0, 0, 0, 2
 		};
+		// clang-format on
+
 		uint8_t rtpBuffer2[65536];
 		uint8_t rtpBuffer3[65536];
 		uint8_t rtpBuffer4[65536];

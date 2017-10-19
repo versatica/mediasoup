@@ -31,10 +31,13 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 	SECTION("receive single item per 1000 ms")
 	{
 		RateCalculator rate;
+
+		// clang-format off
 		std::vector<data> input =
 		{
 			{ 0, 5, 40 }
 		};
+		// clang-format on
 
 		validate(rate, now, input);
 	}
@@ -42,6 +45,8 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 	SECTION("receive multiple items per 1000 ms")
 	{
 		RateCalculator rate;
+
+		// clang-format off
 		std::vector<data> input =
 		{
 			{ 0,   5, 40  },
@@ -49,6 +54,7 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 			{ 300, 2, 72  },
 			{ 999, 4, 104 }
 		};
+		// clang-format on
 
 		validate(rate, now, input);
 	}
@@ -56,6 +62,8 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 	SECTION("slide")
 	{
 		RateCalculator rate;
+
+		// clang-format off
 		std::vector<data> input =
 		{
 			{ 0,    5, 40 },
@@ -64,6 +72,7 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 			{ 1001, 1, 32 },
 			{ 2000, 1, 24 }
 		};
+		// clang-format on
 
 		validate(rate, now, input);
 

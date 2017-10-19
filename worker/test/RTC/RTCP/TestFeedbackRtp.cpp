@@ -11,6 +11,8 @@ using namespace RTC::RTCP;
 namespace TestFeedbackRtpNack
 {
 	// RTCP NACK packet.
+
+	// clang-format off
 	uint8_t buffer[] =
 	{
 		0x81, 0xcd, 0x00, 0x03, // Type: 205 (Generic RTP Feedback), Length: 3
@@ -18,11 +20,12 @@ namespace TestFeedbackRtpNack
 		0x03, 0x30, 0xbd, 0xee, // Media source SSRC: 0x0330bdee
 		0x0b, 0x8f, 0x00, 0x03  // NACK PID: 2959, NACK BLP: 0x00000003
 	};
+	// clang-format on
 
 	// NACK values.
-	uint32_t senderSsrc = 0x00000001;
-	uint32_t mediaSsrc = 0x0330bdee;
-	uint16_t pid = 2959;
+	uint32_t senderSsrc        = 0x00000001;
+	uint32_t mediaSsrc         = 0x0330bdee;
+	uint16_t pid               = 2959;
 	uint16_t lostPacketBitmask = 0x00000003;
 
 	void verifyNackPacket(FeedbackRtpNackPacket* packet)
@@ -30,7 +33,7 @@ namespace TestFeedbackRtpNack
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		auto it = packet->Begin();
+		auto it   = packet->Begin();
 		auto item = *it;
 
 		REQUIRE(item->GetPacketId() == pid);
@@ -52,7 +55,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = {0};
+			uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 
@@ -109,11 +112,13 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 	SECTION("parse FeedbackRtpTmmbrItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0xba, 0xac, 0x8c, 0xcd,
 			0x18, 0x2c, 0x9e, 0x00
 		};
+		// clang-format on
 
 		uint32_t ssrc     = 3131870413;
 		uint64_t bitrate  = 365504;
@@ -131,6 +136,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 	SECTION("parse FeedbackRtpTmmbrPacket")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x83, 0xcd, 0x00, 0x04,
@@ -139,6 +145,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 			0xba, 0xac, 0x8c, 0xcd,
 			0x18, 0x2c, 0x9e, 0x00
 		};
+		// clang-format on
 
 		uint32_t ssrc     = 3131870413;
 		uint64_t bitrate  = 365504;
@@ -160,12 +167,14 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 	SECTION("parse FeedbackRtpTlleiItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x01, 0b10101010, 0b01010101
 		};
+		// clang-format on
 
-		uint16_t packetId = 1;
+		uint16_t packetId          = 1;
 		uint16_t lostPacketBitmask = 0b1010101001010101;
 
 		FeedbackRtpTlleiItem* item = FeedbackRtpTlleiItem::Parse(buffer, sizeof(buffer));
@@ -179,6 +188,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 	SECTION("parse FeedbackRtpEcnItem")
 	{
+		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x00, 0x00, 0x01, // Extended Highest Sequence Number
@@ -189,13 +199,14 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 			0x00, 0x01,             // Lost Packets Counter
 			0x00, 0x01              // Duplication Counter
 		};
+		// clang-format on
 
-		uint32_t sequenceNumber = 1;
-		uint32_t ect0Counter = 1;
-		uint32_t ect1Counter = 1;
-		uint16_t ecnCeCounter = 1;
-		uint16_t notEctCounter = 1;
-		uint16_t lostPackets = 1;
+		uint32_t sequenceNumber    = 1;
+		uint32_t ect0Counter       = 1;
+		uint32_t ect1Counter       = 1;
+		uint16_t ecnCeCounter      = 1;
+		uint16_t notEctCounter     = 1;
+		uint16_t lostPackets       = 1;
 		uint16_t duplicatedPackets = 1;
 
 		FeedbackRtpEcnItem* item = FeedbackRtpEcnItem::Parse(buffer, sizeof(buffer));

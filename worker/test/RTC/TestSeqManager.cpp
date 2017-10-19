@@ -48,6 +48,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered numbers, no sync, no drop")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{  0,  0, false, false },
@@ -63,6 +64,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{ 10, 10, false, false },
 			{ 11, 11, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -70,6 +72,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered numbers, sync, no drop")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{  0,  0, false, false },
@@ -81,6 +84,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{ 83,  6, false, false },
 			{ 84,  7, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -88,6 +92,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered numbers, sync, drop")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{  0,  0, false, false },
@@ -104,6 +109,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{ 10,  9, false, false },
 			{ 12, 10, false, false },
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -111,6 +117,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive ordered wrapped numbers")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{ 65533,  65533, false, false },
@@ -119,6 +126,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{     0,      0, false, false },
 			{     1,      1, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -126,6 +134,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive sequence numbers with a big jump")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{    0,   0, false, false },
@@ -133,6 +142,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{ 1000, 1000, false, false },
 			{ 1001, 1001, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -140,6 +150,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive mixed numbers with a big jump, drop before jump")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{   0,   0, false, false },
@@ -149,6 +160,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{ 103,   0, false,  true }, // drop.
 			{ 101, 100, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -156,6 +168,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive mixed numbers with a big jump, drop after jump")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{   0,   0, false, false },
@@ -164,6 +177,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{ 103,   0, false,  true }, // drop.
 			{ 101, 100, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -171,6 +185,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("drop, receive numbers newer and older than the one dropped")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{ 0,  0, false, false },
@@ -179,6 +194,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{ 4,  3, false, false },
 			{ 1,  1, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
@@ -186,6 +202,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 
 	SECTION("receive mixed numbers, sync, drop")
 	{
+		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
 			{     0,  0, false, false },
@@ -235,6 +252,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{     6, 46, false, false },
 			{     7, 47, false, false }
 		};
+		// clang-format on
 
 		RTC::SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);

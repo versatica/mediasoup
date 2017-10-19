@@ -48,12 +48,15 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		std::vector<uint16_t> seqNumbers;
 	};
 
+	// clang-format off
 	uint8_t buffer[] =
 	{
 		0b10000000, 0b00000001, 0, 1,
 		0, 0, 0, 4,
 		0, 0, 0, 5
 	};
+	// clang-format on
+
 	RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 	if (!packet)

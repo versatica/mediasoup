@@ -96,16 +96,18 @@ public:
 
 private:
 	TestNackGeneratorInput currentInput{};
-	bool nackRequiredTriggered = false;
+	bool nackRequiredTriggered     = false;
 	bool keyFrameRequiredTriggered = false;
 };
 
+// clang-format off
 uint8_t rtpBuffer[] =
 {
 	0b10000000, 0b01111011, 0b01010010, 0b00001110,
 	0b01011011, 0b01101011, 0b11001010, 0b10110101,
 	0, 0, 0, 2
 };
+// clang-format on
 
 // [pt:123, seq:21006, timestamp:1533790901]
 RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
@@ -133,6 +135,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 {
 	SECTION("no NACKs required")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 2371, false, 0, 0, false, 0 },
@@ -148,47 +151,55 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 			{ 2254, false, 0, 0, false, 0 },
 			{ 2250, false, 0, 0, false, 0 },
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("generate NACK for missing ordered packet")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 2381, false,    0, 0, false, 0 },
 			{ 2383, false, 2382, 1, false, 1 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("sequence wrap generates no NACK")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 65534, false, 0, 0, false, 0 },
 			{ 65535, false, 0, 0, false, 0 },
 			{     0, false, 0, 0, false, 0 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("generate NACK after sequence wrap")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 65534, false, 0, 0, false, 0 },
 			{ 65535, false, 0, 0, false, 0 },
 			{     1, false, 0, 1, false, 1 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("generate NACK after sequence wrap, and yet another NACK")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 65534, false, 0, 0, false,  0 },
@@ -198,12 +209,14 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 			{    12,  true, 0, 0, false, 10 },
 			{    13,  true, 0, 0, false,  0 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("intercalated missing packets")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 1, false, 0, 0, false, 0 },
@@ -212,12 +225,14 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 			{ 7, false, 6, 1, false, 3 },
 			{ 9, false, 8, 1, false, 4 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("non contiguous intercalated missing packets")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{ 1, false, 0, 0, false, 0 },
@@ -225,12 +240,14 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 			{ 7, false, 4, 3, false, 4 },
 			{ 9, false, 8, 1, false, 5 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("big jump")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{   1, false, 0,   0, false,   0 },
@@ -239,17 +256,20 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 			{   4, false, 0,   0, false, 296 },
 			{   5, false, 0,   0, false, 295 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}
 
 	SECTION("Key Frame required. Nack list too large to be requested")
 	{
+		// clang-format off
 		std::vector<TestNackGeneratorInput> inputs =
 		{
 			{    1, false, 0, 0, false, 0 },
 			{ 3000, false, 0, 0,  true, 0 }
 		};
+		// clang-format on
 
 		validate(inputs);
 	}

@@ -7,8 +7,9 @@ using namespace RTC::RTCP;
 
 namespace TestSenderReport
 {
-
 	// RTCP Packet. Sender Report and Receiver Report.
+
+	// clang-format off
 	uint8_t buffer[] =
 	{
 		0x81, 0xc8, 0x00, 0x0c, // Type: 200 (Sender Report), Count: 1, Length: 12
@@ -26,6 +27,7 @@ namespace TestSenderReport
 		0x00, 0x00, 0x00, 0x00, // Last SR: 0
 		0x00, 0x00, 0x00, 0x05  // DLSR: 0
 	};
+	// clang-format on
 
 	// Sender Report buffer start point.
 	uint8_t* srBuffer = buffer + sizeof(Packet::CommonHeader);
@@ -63,7 +65,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		SECTION("serialize SenderReport instance")
 		{
-			uint8_t serialized[sizeof(SenderReport::Header)] = {0};
+			uint8_t serialized[sizeof(SenderReport::Header)] = { 0 };
 
 			report->Serialize(serialized);
 
@@ -105,8 +107,8 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		REQUIRE(packet);
 		REQUIRE(packet->GetType() == Type::SR);
 
-		auto sr      = dynamic_cast<SenderReportPacket*>(packet);
-		auto it      = sr->Begin();
+		auto sr     = dynamic_cast<SenderReportPacket*>(packet);
+		auto it     = sr->Begin();
 		auto report = *it;
 
 		verifySenderReport(report);
