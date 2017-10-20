@@ -27,7 +27,7 @@ namespace TestBye
 	uint32_t ssrc2 = 0x2624670e;
 	std::string reason("Hasta la vista");
 
-	void verifyPacket(ByePacket* packet)
+	void verify(ByePacket* packet)
 	{
 		REQUIRE(packet->GetReason() == reason);
 
@@ -51,7 +51,7 @@ SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 
 		REQUIRE(packet);
 
-		verifyPacket(packet);
+		verify(packet);
 
 		SECTION("serialize packet instance")
 		{
@@ -77,7 +77,7 @@ SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 		packet.AddSsrc(ssrc2);
 		packet.SetReason(reason);
 
-		verifyPacket(&packet);
+		verify(&packet);
 
 		SECTION("serialize packet instance")
 		{

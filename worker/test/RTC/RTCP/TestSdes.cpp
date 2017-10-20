@@ -31,7 +31,7 @@ namespace TestSdes
 	std::string value("t7mkYnCm46OcINy/");
 	size_t length = 16;
 
-	void verifyChunk(SdesChunk* chunk)
+	void verify(SdesChunk* chunk)
 	{
 		REQUIRE(chunk->GetSsrc() == ssrc);
 
@@ -55,7 +55,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		REQUIRE(chunk);
 
-		verifyChunk(chunk);
+		verify(chunk);
 
 		SECTION("serialize SdesChunk instance")
 		{
@@ -81,6 +81,6 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		chunk.AddItem(item);
 
-		verifyChunk(&chunk);
+		verify(&chunk);
 	}
 }

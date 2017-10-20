@@ -25,7 +25,7 @@ namespace TestFeedbackPsAfb
 	size_t dataSize     = 4;
 	uint8_t dataBitmask = 1;
 
-	void verifyAfbPacket(FeedbackPsAfbPacket* packet)
+	void verify(FeedbackPsAfbPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -43,7 +43,7 @@ SCENARIO("RTCP Feedback PS AFB parsing", "[parser][rtcp][feedback-ps][afb]")
 
 		REQUIRE(packet);
 
-		verifyAfbPacket(packet);
+		verify(packet);
 
 		SECTION("serialize packet instance")
 		{

@@ -40,7 +40,7 @@ namespace TestSenderReport
 	uint32_t packetCount = 3608;
 	uint32_t octetCount  = 577280;
 
-	void verifySenderReport(SenderReport* report)
+	void verify(SenderReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetNtpSec() == ntpSec);
@@ -61,7 +61,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		REQUIRE(report);
 
-		verifySenderReport(report);
+		verify(report);
 
 		SECTION("serialize SenderReport instance")
 		{
@@ -90,13 +90,13 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		report1.SetPacketCount(packetCount);
 		report1.SetOctetCount(octetCount);
 
-		verifySenderReport(&report1);
+		verify(&report1);
 
 		SECTION("create a report out of the existing one")
 		{
 			SenderReport report2(&report1);
 
-			verifySenderReport(&report2);
+			verify(&report2);
 		}
 	}
 
@@ -111,7 +111,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		auto it     = sr->Begin();
 		auto report = *it;
 
-		verifySenderReport(report);
+		verify(report);
 
 		REQUIRE(packet->GetNext());
 		REQUIRE(packet->GetNext()->GetType() == Type::RR);

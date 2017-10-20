@@ -28,7 +28,7 @@ namespace TestFeedbackRtpNack
 	uint16_t pid               = 2959;
 	uint16_t lostPacketBitmask = 0x00000003;
 
-	void verifyNackPacket(FeedbackRtpNackPacket* packet)
+	void verify(FeedbackRtpNackPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -51,7 +51,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 		REQUIRE(packet);
 
-		verifyNackPacket(packet);
+		verify(packet);
 
 		SECTION("serialize packet instance")
 		{
@@ -78,7 +78,7 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 		packet.AddItem(item);
 
-		verifyNackPacket(&packet);
+		verify(&packet);
 	}
 
 	SECTION("create FeedbackRtpTmmbrItem")

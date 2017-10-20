@@ -34,7 +34,7 @@ namespace TestFeedbackPsRemb
 	uint64_t bitrate    = 122754;
 	std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
-	void verifyRembPacket(FeedbackPsRembPacket* packet)
+	void verify(FeedbackPsRembPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -200,7 +200,7 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 
 		REQUIRE(packet);
 
-		verifyRembPacket(packet);
+		verify(packet);
 
 		SECTION("serialize packet instance")
 		{
@@ -227,6 +227,6 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 		packet.SetSsrcs(ssrcs);
 		packet.SetBitrate(bitrate);
 
-		verifyRembPacket(&packet);
+		verify(&packet);
 	}
 }

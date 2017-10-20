@@ -40,7 +40,7 @@ namespace TestReceiverReport
 	uint32_t lastSenderReport           = 0;
 	uint32_t delaySinceLastSenderReport = 5;
 
-	void verifyReceiverReport(ReceiverReport* report)
+	void verify(ReceiverReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetFractionLost() == fractionLost);
@@ -62,7 +62,7 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 
 		REQUIRE(report);
 
-		verifyReceiverReport(report);
+		verify(report);
 
 		delete report;
 	}
@@ -80,13 +80,13 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 		report1.SetLastSenderReport(lastSenderReport);
 		report1.SetDelaySinceLastSenderReport(delaySinceLastSenderReport);
 
-		verifyReceiverReport(&report1);
+		verify(&report1);
 
 		SECTION("create a report out of the existing one")
 		{
 			ReceiverReport report2(&report1);
 
-			verifyReceiverReport(&report2);
+			verify(&report2);
 		}
 	}
 }
