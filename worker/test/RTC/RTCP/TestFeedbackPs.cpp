@@ -1,6 +1,5 @@
 #include "common.hpp"
 #include "catch.hpp"
-#include "RTC/RTCP/FeedbackPsLei.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackPsRpsi.hpp"
 #include "RTC/RTCP/FeedbackPsSli.hpp"
@@ -146,25 +145,6 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 		REQUIRE(item->GetPayloadType() == payloadType);
 		REQUIRE(item->GetLength() == length);
 		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
-
-		delete item;
-	}
-
-	SECTION("parse FeedbackPsLeiItem")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x00, 0x00, 0x00, 0x01 // SSRC
-		};
-		// clang-format on
-
-		uint32_t ssrc = 1;
-
-		FeedbackPsLeiItem* item = FeedbackPsLeiItem::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(item);
-		REQUIRE(item->GetSsrc() == ssrc);
 
 		delete item;
 	}
