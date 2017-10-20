@@ -271,6 +271,7 @@
         'test/RTC/RTCP/TestFeedbackPsAfb.cpp',
         'test/RTC/RTCP/TestFeedbackPsFir.cpp',
         'test/RTC/RTCP/TestFeedbackPsLei.cpp',
+        'test/RTC/RTCP/TestFeedbackPsPli.cpp',
         'test/RTC/RTCP/TestFeedbackPsRemb.cpp',
         'test/RTC/RTCP/TestFeedbackPsRpsi.cpp',
         'test/RTC/RTCP/TestFeedbackPsSli.cpp',
