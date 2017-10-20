@@ -38,11 +38,12 @@ namespace TestFeedbackRtpNack
 	}
 }
 
-SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
+SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
 {
+	using namespace TestFeedbackRtpNack;
+
 	SECTION("parse FeedbackRtpNackItem")
 	{
-		using namespace TestFeedbackRtpNack;
 
 		FeedbackRtpNackPacket* packet = FeedbackRtpNackPacket::Parse(buffer, sizeof(buffer));
 
@@ -67,9 +68,6 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 
 	SECTION("create FeedbackRtpNackPacket")
 	{
-		using namespace TestFeedbackRtpNack;
-
-		// Create local packet and check content.
 		FeedbackRtpNackPacket packet(senderSsrc, mediaSsrc);
 		FeedbackRtpNackItem* item = new FeedbackRtpNackItem(pid, lostPacketBitmask);
 
