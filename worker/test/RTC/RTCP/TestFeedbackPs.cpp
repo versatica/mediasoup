@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RTCP/FeedbackPsRpsi.hpp"
 #include "RTC/RTCP/FeedbackPsSli.hpp"
 #include "RTC/RTCP/FeedbackPsTst.hpp"
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
@@ -62,32 +61,6 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 		REQUIRE(item->GetFirst() == first);
 		REQUIRE(item->GetNumber() == number);
 		REQUIRE(item->GetPictureId() == pictureId);
-
-		delete item;
-	}
-
-	SECTION("parse FeedbackPsRpsiItem")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x08,                   // Padding Bits
-			0x02,                   // Zero | Payload Type
-			0x00, 0x00,             // Native RPSI bit string
-			0x00, 0x00, 0x01, 0x00
-		};
-		// clang-format on
-
-		uint8_t payloadType = 1;
-		uint8_t payloadMask = 1;
-		size_t length       = 5;
-
-		FeedbackPsRpsiItem* item = FeedbackPsRpsiItem::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(item);
-		REQUIRE(item->GetPayloadType() == payloadType);
-		REQUIRE(item->GetLength() == length);
-		REQUIRE((item->GetBitString()[item->GetLength() - 1] & 1) == payloadMask);
 
 		delete item;
 	}
