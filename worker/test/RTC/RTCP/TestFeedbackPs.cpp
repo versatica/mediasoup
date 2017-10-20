@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RTCP/FeedbackPsVbcm.hpp"
 #include <cstring> // std::memcmp()
 
 using namespace RTC::RTCP;
@@ -40,42 +39,10 @@ namespace TestFeedbackPsRemb
 
 SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 {
-	SECTION("parse FeedbackPsVbcmItem")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x00, 0x00, 0x00, 0x00, // SSRC
-			0x08,                   // Seq nr.
-			0x02,                   // Zero | Payload Vbcm
-			0x00, 0x01,             // Length
-			0x01,                   // VBCM Octet String
-			0x00, 0x00, 0x00        // Padding
-		};
-		// clang-format on
-
-		uint32_t ssrc       = 0;
-		uint8_t seq         = 8;
-		uint8_t payloadType = 1;
-		uint16_t length     = 1;
-		uint8_t valueMask   = 1;
-
-		FeedbackPsVbcmItem* item = FeedbackPsVbcmItem::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(item);
-		REQUIRE(item->GetSsrc() == ssrc);
-		REQUIRE(item->GetSequenceNumber() == seq);
-		REQUIRE(item->GetPayloadType() == payloadType);
-		REQUIRE(item->GetLength() == length);
-		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
-
-		delete item;
-	}
+	using namespace TestFeedbackPsRemb;
 
 	SECTION("parse FeedbackPsRembPacket")
 	{
-		using namespace TestFeedbackPsRemb;
-
 		FeedbackPsRembPacket* packet = FeedbackPsRembPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
@@ -99,9 +66,6 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 
 	SECTION("create FeedbackPsRembPacket")
 	{
-		using namespace TestFeedbackPsRemb;
-
-		// Create local report and check content.
 		FeedbackPsRembPacket packet(senderSsrc, mediaSsrc);
 
 		packet.SetSsrcs(ssrcs);

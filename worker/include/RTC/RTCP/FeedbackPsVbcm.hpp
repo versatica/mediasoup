@@ -80,7 +80,7 @@ namespace RTC
 
 		inline size_t FeedbackPsVbcmItem::GetSize() const
 		{
-			size_t size = 8 + static_cast<size_t>(this->header->length);
+			size_t size = 8 + static_cast<size_t>(GetLength());
 
 			// Consider pading to 32 bits (4 bytes) boundary.
 			return (size + 3) & ~3;
