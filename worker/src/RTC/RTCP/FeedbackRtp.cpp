@@ -35,7 +35,7 @@ namespace RTC
 
 			while (static_cast<ssize_t>(len - offset) > 0)
 			{
-				Item* item = Item::Parse(data + offset, len - offset);
+				Item* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
 
 				if (item)
 				{

@@ -10,29 +10,13 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		/* Class methods. */
+		/* Instance methods. */
 		template<typename T>
-		FeedbackRtpTmmbItem<T>* FeedbackRtpTmmbItem<T>::Parse(const uint8_t* data, size_t len)
+		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const Header* header)
+		 : FeedbackRtpTmmbItem<T>(reinterpret_cast<const uint8_t*>(header))
 		{
-			MS_TRACE();
-
-			// data size must be >= header + length value.
-			if (HeaderSize > len)
-			{
-				MS_WARN_TAG(rtcp, "not enough space for Tmmb item, discarded");
-
-				return nullptr;
-			}
-
-			std::unique_ptr<FeedbackRtpTmmbItem> item(new FeedbackRtpTmmbItem(data));
-
-			if (!item->IsCorrect())
-				return nullptr;
-
-			return item.release();
 		}
 
-		/* Instance methods. */
 		template<typename T>
 		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const uint8_t* data)
 		{
@@ -76,7 +60,7 @@ namespace RTC
 
 			Utils::Byte::Set4Bytes(buffer, 4, compact);
 
-			return HeaderSize;
+			return sizeof(Header);
 		}
 
 		template<typename T>

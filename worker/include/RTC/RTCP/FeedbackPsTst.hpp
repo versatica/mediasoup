@@ -24,7 +24,7 @@ namespace RTC
 		template<typename T>
 		class FeedbackPsTstItem : public FeedbackItem
 		{
-		private:
+		public:
 			struct Header
 			{
 				uint32_t ssrc;
@@ -35,9 +35,6 @@ namespace RTC
 
 		public:
 			static const FeedbackPs::MessageType messageType;
-
-		public:
-			static FeedbackPsTstItem* Parse(const uint8_t* data, size_t len);
 
 		public:
 			explicit FeedbackPsTstItem(Header* header);

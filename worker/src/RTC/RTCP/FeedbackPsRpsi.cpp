@@ -9,30 +9,6 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		/* Class methods. */
-
-		FeedbackPsRpsiItem* FeedbackPsRpsiItem::Parse(const uint8_t* data, size_t len)
-		{
-			MS_TRACE();
-
-			// data size must be >= header.
-			if (sizeof(Header) > len)
-			{
-				MS_WARN_TAG(rtcp, "not enough space for Rpsi item, discarded");
-
-				return nullptr;
-			}
-
-			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
-
-			std::unique_ptr<FeedbackPsRpsiItem> item(new FeedbackPsRpsiItem(header));
-
-			if (item->IsCorrect())
-				return item.release();
-
-			return nullptr;
-		}
-
 		/* Instance methods. */
 
 		FeedbackPsRpsiItem::FeedbackPsRpsiItem(Header* header)

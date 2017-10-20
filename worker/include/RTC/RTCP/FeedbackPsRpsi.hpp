@@ -26,7 +26,7 @@ namespace RTC
 			const static size_t maxBitStringSize{ 6 };
 			const static size_t bitStringOffset{ 2 };
 
-		private:
+		public:
 			struct Header
 			{
 				uint8_t paddingBits;
@@ -37,9 +37,6 @@ namespace RTC
 
 		public:
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::RPSI };
-
-		public:
-			static FeedbackPsRpsiItem* Parse(const uint8_t* data, size_t len);
 
 		public:
 			explicit FeedbackPsRpsiItem(Header* header);

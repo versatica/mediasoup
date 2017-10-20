@@ -30,7 +30,7 @@ namespace RTC
 	{
 		class FeedbackRtpEcnItem : public FeedbackItem
 		{
-		private:
+		public:
 			struct Header
 			{
 				uint32_t sequenceNumber;
@@ -44,9 +44,6 @@ namespace RTC
 
 		public:
 			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::ECN };
-
-		public:
-			static FeedbackRtpEcnItem* Parse(const uint8_t* data, size_t len);
 
 		public:
 			explicit FeedbackRtpEcnItem(Header* header);

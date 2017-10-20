@@ -9,25 +9,6 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		/* Class methods. */
-
-		FeedbackPsVbcmItem* FeedbackPsVbcmItem::Parse(const uint8_t* data, size_t len)
-		{
-			MS_TRACE();
-
-			// data size must be >= header + length value.
-			if (sizeof(Header) > len)
-			{
-				MS_WARN_TAG(rtcp, "not enough space for Vbcm item, discarded");
-
-				return nullptr;
-			}
-
-			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
-
-			return new FeedbackPsVbcmItem(header);
-		}
-
 		/* Instance methods. */
 		FeedbackPsVbcmItem::FeedbackPsVbcmItem(
 		  uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value)

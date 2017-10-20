@@ -23,17 +23,19 @@ namespace RTC
 		template<typename T>
 		class FeedbackRtpTmmbItem : public FeedbackItem
 		{
-		private:
-			static constexpr size_t HeaderSize{ 8 };
+		public:
+			struct Header
+			{
+				uint32_t ssrc;
+				uint32_t compact;
+			};
 
 		public:
 			static const FeedbackRtp::MessageType messageType;
 
 		public:
-			static FeedbackRtpTmmbItem* Parse(const uint8_t* data, size_t len);
-
-		public:
 			explicit FeedbackRtpTmmbItem(const uint8_t* data);
+			explicit FeedbackRtpTmmbItem(const Header* header);
 			FeedbackRtpTmmbItem();
 			~FeedbackRtpTmmbItem() override = default;
 
@@ -80,7 +82,7 @@ namespace RTC
 		template<typename T>
 		inline size_t FeedbackRtpTmmbItem<T>::GetSize() const
 		{
-			return HeaderSize;
+			return sizeof(Header);
 		}
 
 		template<typename T>

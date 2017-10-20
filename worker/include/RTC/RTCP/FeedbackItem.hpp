@@ -10,6 +10,10 @@ namespace RTC
 		class FeedbackItem
 		{
 		public:
+			template<typename Item>
+			static Item* Parse(const uint8_t* data, size_t len);
+
+		public:
 			bool IsCorrect() const;
 
 		protected:
@@ -25,6 +29,19 @@ namespace RTC
 			uint8_t* raw{ nullptr };
 			bool isCorrect{ true };
 		};
+
+		/* Inline static methods */
+		template<typename Item>
+		Item* FeedbackItem::Parse(const uint8_t* data, size_t len)
+		{
+			// data size must be >= header.
+			if (sizeof(typename Item::Header) > len)
+				return nullptr;
+
+			auto* header = const_cast<typename Item::Header*>(reinterpret_cast<const typename Item::Header*>(data));
+
+			return new Item(header);
+		}
 
 		/* Inline instance methods */
 

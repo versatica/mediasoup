@@ -30,9 +30,6 @@ namespace RTC
 			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::NACK };
 
 		public:
-			static FeedbackRtpNackItem* Parse(const uint8_t* data, size_t len);
-
-		public:
 			explicit FeedbackRtpNackItem(Header* header);
 			explicit FeedbackRtpNackItem(FeedbackRtpNackItem* item);
 			FeedbackRtpNackItem(uint16_t packetId, uint16_t lostPacketBitmask);

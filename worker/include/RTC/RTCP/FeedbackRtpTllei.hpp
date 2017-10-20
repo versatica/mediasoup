@@ -19,7 +19,7 @@ namespace RTC
 	{
 		class FeedbackRtpTlleiItem : public FeedbackItem
 		{
-		private:
+		public:
 			struct Header
 			{
 				uint16_t packetId;
@@ -28,9 +28,6 @@ namespace RTC
 
 		public:
 			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::TLLEI };
-
-		public:
-			static FeedbackRtpTlleiItem* Parse(const uint8_t* data, size_t len);
 
 		public:
 			explicit FeedbackRtpTlleiItem(Header* header);

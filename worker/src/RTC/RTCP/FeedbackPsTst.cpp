@@ -9,26 +9,6 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		/* Class methods. */
-
-		template<typename T>
-		FeedbackPsTstItem<T>* FeedbackPsTstItem<T>::Parse(const uint8_t* data, size_t len)
-		{
-			MS_TRACE();
-
-			// data size must be >= header + length value.
-			if (sizeof(Header) > len)
-			{
-				MS_WARN_TAG(rtcp, "not enough space for Tst item, discarded");
-
-				return nullptr;
-			}
-
-			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
-
-			return new FeedbackPsTstItem(header);
-		}
-
 		template<typename T>
 		FeedbackPsTstItem<T>::FeedbackPsTstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index)
 		{

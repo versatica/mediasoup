@@ -19,7 +19,7 @@ namespace RTC
 	{
 		class FeedbackPsSliItem : public FeedbackItem
 		{
-		private:
+		public:
 			struct Header
 			{
 				uint32_t compact;
@@ -27,9 +27,6 @@ namespace RTC
 
 		public:
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::SLI };
-
-		public:
-			static FeedbackPsSliItem* Parse(const uint8_t* data, size_t len);
 
 		public:
 			explicit FeedbackPsSliItem(Header* header);

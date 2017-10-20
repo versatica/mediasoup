@@ -19,7 +19,7 @@ namespace RTC
 	{
 		class FeedbackPsLeiItem : public FeedbackItem
 		{
-		private:
+		public:
 			struct Header
 			{
 				uint32_t ssrc;
@@ -27,9 +27,6 @@ namespace RTC
 
 		public:
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::PSLEI };
-
-		public:
-			static FeedbackPsLeiItem* Parse(const uint8_t* data, size_t len);
 
 		public:
 			explicit FeedbackPsLeiItem(Header* header);

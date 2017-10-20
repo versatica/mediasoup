@@ -3,6 +3,7 @@
 
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "Logger.hpp"
+#include "RTC/RTCP/FeedbackItem.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsLei.hpp"
 #include "RTC/RTCP/FeedbackPsRpsi.hpp"
@@ -37,10 +38,16 @@ namespace RTC
 
 			while (static_cast<ssize_t>(len - offset) > 0)
 			{
-				Item* item = Item::Parse(data + offset, len - offset);
+				Item* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
 
 				if (item)
 				{
+					if (!item->IsCorrect())
+					{
+						delete item;
+						break;
+					}
+
 					packet->AddItem(item);
 					offset += item->GetSize();
 				}

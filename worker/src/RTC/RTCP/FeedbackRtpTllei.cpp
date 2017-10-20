@@ -9,25 +9,6 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		/* Class methods. */
-
-		FeedbackRtpTlleiItem* FeedbackRtpTlleiItem::Parse(const uint8_t* data, size_t len)
-		{
-			MS_TRACE();
-
-			// data size must be >= header + length value.
-			if (sizeof(Header) > len)
-			{
-				MS_WARN_TAG(rtcp, "not enough space for Tllei item, discarded");
-
-				return nullptr;
-			}
-
-			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
-
-			return new FeedbackRtpTlleiItem(header);
-		}
-
 		/* Instance methods. */
 		FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask)
 		{
