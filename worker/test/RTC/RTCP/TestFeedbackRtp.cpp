@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/FeedbackRtpTllei.hpp"
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
 #include <cstring> // std::memcmp()
 
@@ -162,26 +161,5 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 		REQUIRE(item->GetOverhead() == overhead);
 
 		delete packet;
-	}
-
-	SECTION("parse FeedbackRtpTlleiItem")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x00, 0x01, 0b10101010, 0b01010101
-		};
-		// clang-format on
-
-		uint16_t packetId          = 1;
-		uint16_t lostPacketBitmask = 0b1010101001010101;
-
-		FeedbackRtpTlleiItem* item = FeedbackRtpTlleiItem::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(item);
-		REQUIRE(item->GetPacketId() == packetId);
-		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
-
-		delete item;
 	}
 }
