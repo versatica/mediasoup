@@ -37,7 +37,7 @@ namespace TestFeedbackPsRemb
 	}
 }
 
-SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
+SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps][remb]")
 {
 	using namespace TestFeedbackPsRemb;
 
