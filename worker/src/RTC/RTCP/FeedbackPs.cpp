@@ -36,7 +36,7 @@ namespace RTC
 
 			size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
 
-			while (static_cast<ssize_t>(len - offset) > 0)
+			while (len > offset)
 			{
 				Item* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
 

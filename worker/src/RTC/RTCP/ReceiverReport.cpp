@@ -81,7 +81,7 @@ namespace RTC
 
 			uint8_t count = header->count;
 
-			while (((count--) != 0u) && (static_cast<ssize_t>(len - offset) > 0))
+			while (((count--) != 0u) && (len > offset))
 			{
 				ReceiverReport* report = ReceiverReport::Parse(data + offset, len - offset);
 

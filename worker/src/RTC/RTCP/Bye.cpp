@@ -22,7 +22,7 @@ namespace RTC
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 
-			while (((count--) != 0u) && (static_cast<ssize_t>(len - offset) > 0))
+			while (((count--) != 0u) && (len > offset))
 			{
 				if (sizeof(uint32_t) > len - offset)
 				{
@@ -35,7 +35,7 @@ namespace RTC
 				offset += sizeof(uint32_t);
 			}
 
-			if (static_cast<ssize_t>(len - offset) > 0)
+			if (len > offset)
 			{
 				auto length = size_t{ Utils::Byte::Get1Byte(data, offset) };
 

@@ -123,7 +123,7 @@ namespace RTC
 
 			size_t offset = sizeof(uint32_t) /* ssrc */;
 
-			while (static_cast<ssize_t>(len - offset) > 0)
+			while (len > offset)
 			{
 				SdesItem* item = SdesItem::Parse(data + offset, len - offset);
 
@@ -188,7 +188,7 @@ namespace RTC
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 
-			while (((count--) != 0u) && (static_cast<ssize_t>(len - offset) > 0))
+			while (((count--) != 0u) && (len > offset))
 			{
 				SdesChunk* chunk = SdesChunk::Parse(data + offset, len - offset);
 
