@@ -35,7 +35,6 @@ SCENARIO("RTCP Feeback RTP PLI parsing", "[parser][rtcp][feedback-ps][pli]")
 
 	SECTION("parse FeedbackPsPliPacket")
 	{
-
 		FeedbackPsPliPacket* packet = FeedbackPsPliPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);

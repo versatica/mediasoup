@@ -35,7 +35,6 @@ SCENARIO("RTCP Feeback RTP SR-REQ parsing", "[parser][rtcp][feedback-rtp][sr-req
 
 	SECTION("parse FeedbackRtpSrReqPacket")
 	{
-
 		FeedbackRtpSrReqPacket* packet = FeedbackRtpSrReqPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);

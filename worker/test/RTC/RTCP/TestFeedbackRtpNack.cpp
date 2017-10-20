@@ -44,7 +44,6 @@ SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
 
 	SECTION("parse FeedbackRtpNackItem")
 	{
-
 		FeedbackRtpNackPacket* packet = FeedbackRtpNackPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);

@@ -21,11 +21,11 @@ namespace TestFeedbackRtpTmmbr
 	// clang-format on
 
 	// TMMBR values.
-	uint32_t senderSsrc        = 0x00000001;
-	uint32_t mediaSsrc         = 0x0330bdee;
-	uint32_t ssrc              = 0x02d03702;
-	uint64_t bitrate           = 365504;
-	uint16_t overhead          = 0;
+	uint32_t senderSsrc = 0x00000001;
+	uint32_t mediaSsrc  = 0x0330bdee;
+	uint32_t ssrc       = 0x02d03702;
+	uint64_t bitrate    = 365504;
+	uint16_t overhead   = 0;
 
 	void verify(FeedbackRtpTmmbrPacket* packet)
 	{
@@ -48,7 +48,6 @@ SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
 
 	SECTION("parse FeedbackRtpTmmbrPacket")
 	{
-
 		FeedbackRtpTmmbrPacket* packet = FeedbackRtpTmmbrPacket::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(packet);
@@ -65,7 +64,6 @@ SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
 			// represent the same content.
 			SECTION("create a packet out of the serialized buffer")
 			{
-
 				FeedbackRtpTmmbrPacket* packet = FeedbackRtpTmmbrPacket::Parse(buffer, sizeof(buffer));
 
 				verify(packet);
