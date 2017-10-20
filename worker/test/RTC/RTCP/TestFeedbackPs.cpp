@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RTCP/FeedbackPsSli.hpp"
 #include "RTC/RTCP/FeedbackPsTst.hpp"
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
 #include <cstring> // std::memcmp()
@@ -42,29 +41,6 @@ namespace TestFeedbackPsRemb
 
 SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps]")
 {
-	SECTION("parse FeedbackPsSliItem")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x00, 0x08, 0x01, 0x01
-		};
-		// clang-format on
-
-		uint16_t first    = 1;
-		uint16_t number   = 4;
-		uint8_t pictureId = 1;
-
-		FeedbackPsSliItem* item = FeedbackPsSliItem::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(item);
-		REQUIRE(item->GetFirst() == first);
-		REQUIRE(item->GetNumber() == number);
-		REQUIRE(item->GetPictureId() == pictureId);
-
-		delete item;
-	}
-
 	SECTION("parse FeedbackPsTstnItem")
 	{
 		// clang-format off
