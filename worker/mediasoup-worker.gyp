@@ -279,6 +279,7 @@
         'test/RTC/RTCP/TestFeedbackRtp.cpp',
         'test/RTC/RTCP/TestFeedbackRtpEcn.cpp',
         'test/RTC/RTCP/TestFeedbackRtpTllei.cpp',
+        'test/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
         'test/RTC/RTCP/TestBye.cpp',
         'test/RTC/RTCP/TestReceiverReport.cpp',
         'test/RTC/RTCP/TestSdes.cpp',
