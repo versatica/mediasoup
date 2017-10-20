@@ -178,7 +178,7 @@ namespace RTC
 
 		inline size_t SenderReportPacket::GetCount() const
 		{
-			return this->reports.size();
+			return 0;
 		}
 
 		inline size_t SenderReportPacket::GetSize() const

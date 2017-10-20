@@ -7,18 +7,13 @@ using namespace RTC::RTCP;
 
 namespace TestReceiverReport
 {
-	// RTCP Packet. Sender Report and Receiver Report.
+	// RTCP Receiver Report Packet.
 
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		0x81, 0xc8, 0x00, 0x0c, // Type: 200 (Sender Report), Count: 1, Length: 12
-		0x5d, 0x93, 0x15, 0x34, // SSRC: 0x5d931534
-		0xdd, 0x3a, 0xc1, 0xb4, // NTP Sec: 3711615412
-		0x76, 0x54, 0x71, 0x71, // NTP Frac: 1985245553
-		0x00, 0x08, 0xcf, 0x00, // RTP timestamp: 577280
-		0x00, 0x00, 0x0e, 0x18, // Packet count: 3608
-		0x00, 0x08, 0xcf, 0x00, // Octed count: 577280
+		0x81, 0xc9, 0x00, 0x07, // Type: 201 (Receiver Report), Count: 1, Length: 7
+		0x5d, 0x93, 0x15, 0x34, // Sender SSRC: 0x5d931534
 		// Receiver Report
 		0x01, 0x93, 0x2d, 0xb4, // SSRC. 0x01932db4
 		0x00, 0x00, 0x00, 0x01, // Fraction lost: 0, Total lost: 1
@@ -30,7 +25,7 @@ namespace TestReceiverReport
 	// clang-format on
 
 	// Receiver Report buffer start point.
-	uint8_t* rrBuffer = buffer + sizeof(Packet::CommonHeader) + sizeof(SenderReport::Header);
+	uint8_t* rrBuffer = buffer + sizeof(Packet::CommonHeader) + sizeof(uint32_t) /*Sender SSRC*/;
 
 	uint32_t ssrc                       = 0x01932db4;
 	uint8_t fractionLost                = 0;
@@ -56,7 +51,30 @@ using namespace TestReceiverReport;
 
 SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 {
-	SECTION("parse ReceiverReport")
+	SECTION("parse RR packet")
+	{
+		ReceiverReportPacket* packet = ReceiverReportPacket::Parse(buffer, sizeof(buffer));
+
+		auto* report = *(packet->Begin());
+
+		verify(report);
+
+		SECTION("serialize packet instance")
+		{
+			uint8_t serialized[sizeof(buffer)] = { 0 };
+
+			packet->Serialize(serialized);
+
+			SECTION("compare serialized packet with original buffer")
+			{
+				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
+			}
+		}
+
+		delete packet;
+	}
+
+	SECTION("parse RR")
 	{
 		ReceiverReport* report = ReceiverReport::Parse(rrBuffer, sizeof(ReceiverReport::Header));
 
@@ -67,7 +85,7 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 		delete report;
 	}
 
-	SECTION("create ReceiverReport")
+	SECTION("create RR")
 	{
 		// Create local report and check content.
 		ReceiverReport report1;
