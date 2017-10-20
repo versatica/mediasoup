@@ -270,6 +270,7 @@
         'test/RTC/TestSeqManager.cpp',
         'test/RTC/RTCP/TestFeedbackPs.cpp',
         'test/RTC/RTCP/TestFeedbackPsAfb.cpp',
+        'test/RTC/RTCP/TestFeedbackPsFir.cpp',
         'test/RTC/RTCP/TestFeedbackRtp.cpp',
         'test/RTC/RTCP/TestBye.cpp',
         'test/RTC/RTCP/TestReceiverReport.cpp',
