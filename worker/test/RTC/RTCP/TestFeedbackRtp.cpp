@@ -1,6 +1,5 @@
 #include "common.hpp"
 #include "catch.hpp"
-#include "RTC/RTCP/FeedbackRtpEcn.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTllei.hpp"
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
@@ -182,43 +181,6 @@ SCENARIO("RTCP Feeback RTP parsing", "[parser][rtcp][feedback-rtp]")
 		REQUIRE(item);
 		REQUIRE(item->GetPacketId() == packetId);
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
-
-		delete item;
-	}
-
-	SECTION("parse FeedbackRtpEcnItem")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x00, 0x00, 0x00, 0x01, // Extended Highest Sequence Number
-			0x00, 0x00, 0x00, 0x01, // ECT (0) Counter
-			0x00, 0x00, 0x00, 0x01, // ECT (1) Counter
-			0x00, 0x01,             // ECN-CE Counter
-			0x00, 0x01,             // not-ECT Counter
-			0x00, 0x01,             // Lost Packets Counter
-			0x00, 0x01              // Duplication Counter
-		};
-		// clang-format on
-
-		uint32_t sequenceNumber    = 1;
-		uint32_t ect0Counter       = 1;
-		uint32_t ect1Counter       = 1;
-		uint16_t ecnCeCounter      = 1;
-		uint16_t notEctCounter     = 1;
-		uint16_t lostPackets       = 1;
-		uint16_t duplicatedPackets = 1;
-
-		FeedbackRtpEcnItem* item = FeedbackRtpEcnItem::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(item);
-		REQUIRE(item->GetSequenceNumber() == sequenceNumber);
-		REQUIRE(item->GetEct0Counter() == ect0Counter);
-		REQUIRE(item->GetEct1Counter() == ect1Counter);
-		REQUIRE(item->GetEcnCeCounter() == ecnCeCounter);
-		REQUIRE(item->GetNotEctCounter() == notEctCounter);
-		REQUIRE(item->GetLostPackets() == lostPackets);
-		REQUIRE(item->GetDuplicatedPackets() == duplicatedPackets);
 
 		delete item;
 	}
