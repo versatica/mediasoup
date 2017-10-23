@@ -38,7 +38,8 @@ namespace RTC
 			if (sizeof(typename Item::Header) > len)
 				return nullptr;
 
-			auto* header = const_cast<typename Item::Header*>(reinterpret_cast<const typename Item::Header*>(data));
+			auto* header =
+			  const_cast<typename Item::Header*>(reinterpret_cast<const typename Item::Header*>(data));
 
 			return new Item(header);
 		}

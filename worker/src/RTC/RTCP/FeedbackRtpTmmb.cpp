@@ -13,7 +13,7 @@ namespace RTC
 		/* Instance methods. */
 		template<typename T>
 		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const Header* header)
-		 : FeedbackRtpTmmbItem<T>(reinterpret_cast<const uint8_t*>(header))
+		  : FeedbackRtpTmmbItem<T>(reinterpret_cast<const uint8_t*>(header))
 		{
 		}
 
