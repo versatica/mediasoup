@@ -17,7 +17,7 @@ namespace RTC
 			this->header = data;
 
 			// Calculate the total required size for the entire message.
-			if (this->senderReportPacket.GetCount() != 0u)
+			if (HasSenderReport())
 			{
 				this->size = this->senderReportPacket.GetSize();
 
@@ -39,7 +39,7 @@ namespace RTC
 			// Fill it.
 			size_t offset{ 0 };
 
-			if (this->senderReportPacket.GetCount() != 0u)
+			if (HasSenderReport())
 			{
 				this->senderReportPacket.Serialize(this->header);
 				offset = this->senderReportPacket.GetSize();
@@ -81,13 +81,13 @@ namespace RTC
 				this->sdesPacket.Serialize(this->header + offset);
 		}
 
-		void CompoundPacket::Dump() const
+		void CompoundPacket::Dump()
 		{
 			MS_TRACE();
 
 			MS_DUMP("<CompoundPacket>");
 
-			if (this->senderReportPacket.GetCount() != 0u)
+			if (HasSenderReport())
 			{
 				this->senderReportPacket.Dump();
 
@@ -105,7 +105,7 @@ namespace RTC
 
 		void CompoundPacket::AddSenderReport(SenderReport* report)
 		{
-			MS_ASSERT(this->senderReportPacket.GetCount() == 0, "a sender report is already present");
+			MS_ASSERT(!HasSenderReport(), "a sender report is already present");
 
 			this->senderReportPacket.AddReport(report);
 		}

@@ -21,10 +21,11 @@ namespace RTC
 			size_t GetSize() const;
 			size_t GetSenderReportCount() const;
 			size_t GetReceiverReportCount() const;
-			void Dump() const;
+			void Dump();
 			void AddSenderReport(SenderReport* report);
 			void AddReceiverReport(ReceiverReport* report);
 			void AddSdesChunk(SdesChunk* chunk);
+			bool HasSenderReport();
 			void Serialize(uint8_t* data);
 
 		private:
@@ -65,6 +66,11 @@ namespace RTC
 		inline void CompoundPacket::AddSdesChunk(SdesChunk* chunk)
 		{
 			this->sdesPacket.AddChunk(chunk);
+		}
+
+		inline bool CompoundPacket::HasSenderReport()
+		{
+			return this->senderReportPacket.Begin() != this->senderReportPacket.End();
 		}
 	} // namespace RTCP
 } // namespace RTC

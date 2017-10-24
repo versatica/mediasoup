@@ -442,7 +442,7 @@ namespace RTC
 			consumer->GetRtcp(packet.get(), now);
 
 			// Send the RTCP compound packet if there is a sender report.
-			if (packet->GetSenderReportCount() != 0u)
+			if (packet->HasSenderReport())
 			{
 				// Ensure that the RTCP packet fits into the RTCP buffer.
 				if (packet->GetSize() > RTC::RTCP::BufferSize)
