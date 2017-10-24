@@ -556,6 +556,10 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
+		// Mirror RTP if needed.
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtp)
+			this->mirrorTuple->Send(data, len);
+
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
 			return;
 
@@ -569,6 +573,13 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
+		const uint8_t* data = packet->GetData();
+		size_t len          = packet->GetSize();
+
+		// Mirror RTCP if needed.
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
+			this->mirrorTuple->Send(data, len);
+
 		// Ensure there is sending SRTP session.
 		if (this->srtpSendSession == nullptr)
 		{
@@ -576,9 +587,6 @@ namespace RTC
 
 			return;
 		}
-
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
@@ -657,6 +665,13 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
+		const uint8_t* data = packet->GetData();
+		size_t len          = packet->GetSize();
+
+		// Mirror RTCP if needed.
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
+			this->mirrorTuple->Send(data, len);
+
 		// Ensure there is sending SRTP session.
 		if (this->srtpSendSession == nullptr)
 		{
@@ -664,9 +679,6 @@ namespace RTC
 
 			return;
 		}
-
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
@@ -808,7 +820,7 @@ namespace RTC
 		}
 
 		// Mirror RTP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.rtp)
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtp)
 			this->mirrorTuple->Send(data, len);
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
@@ -904,7 +916,7 @@ namespace RTC
 			return;
 
 		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.rtcp)
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtcp)
 			this->mirrorTuple->Send(data, len);
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);

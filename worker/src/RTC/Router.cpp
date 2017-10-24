@@ -828,8 +828,10 @@ namespace RTC
 			{
 				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
 				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
-				static const Json::StaticString JsonStringRtp{ "rtp" };
-				static const Json::StaticString JsonStringRtcp{ "rtcp" };
+				static const Json::StaticString JsonStringSendRtp{ "sendRtp" };
+				static const Json::StaticString JsonStringSendRtcp{ "sendRtcp" };
+				static const Json::StaticString JsonStringRecvRtp{ "recvRtp" };
+				static const Json::StaticString JsonStringRecvRtcp{ "recvRtcp" };
 
 				RTC::Transport* transport;
 
@@ -856,10 +858,14 @@ namespace RTC
 
 				options.remotePort = request->data[JsonStringRemotePort].asUInt();
 
-				if (request->data[JsonStringRtp].isBool())
-					options.rtp = request->data[JsonStringRtp].asBool();
-				if (request->data[JsonStringRtcp].isBool())
-					options.rtcp = request->data[JsonStringRtcp].asBool();
+				if (request->data[JsonStringSendRtp].isBool())
+					options.sendRtp = request->data[JsonStringSendRtp].asBool();
+				if (request->data[JsonStringSendRtcp].isBool())
+					options.sendRtcp = request->data[JsonStringSendRtcp].asBool();
+				if (request->data[JsonStringRecvRtp].isBool())
+					options.recvRtp = request->data[JsonStringRecvRtp].asBool();
+				if (request->data[JsonStringRecvRtcp].isBool())
+					options.recvRtcp = request->data[JsonStringRecvRtcp].asBool();
 
 				try
 				{

@@ -125,6 +125,10 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
+		// Mirror RTP if needed.
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtp)
+			this->mirrorTuple->Send(data, len);
+
 		this->tuple->Send(data, len);
 	}
 
@@ -137,6 +141,10 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
+
+		// Mirror RTCP if needed.
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
+			this->mirrorTuple->Send(data, len);
 
 		this->tuple->Send(data, len);
 	}
@@ -155,6 +163,10 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
+
+		// Mirror RTCP if needed.
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
+			this->mirrorTuple->Send(data, len);
 
 		this->tuple->Send(data, len);
 	}
@@ -185,7 +197,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Mirror RTP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.rtp)
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtp)
 			this->mirrorTuple->Send(data, len);
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
@@ -243,7 +255,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.rtcp)
+		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtcp)
 			this->mirrorTuple->Send(data, len);
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
