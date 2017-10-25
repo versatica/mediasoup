@@ -63,7 +63,7 @@ namespace RTC
 		using Buffer = std::list<BufferItem>;
 		Buffer buffer;
 		// Stats.
-		uint32_t rtt{ 0 };
+		float rtt{ 0 };
 		// Others.
 		bool healthy{ true };
 

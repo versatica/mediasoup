@@ -262,7 +262,7 @@ namespace Utils
 		// Seconds from Jan 1, 1900 to Jan 1, 1970.
 		static constexpr uint32_t UnixNtpOffset{ 0x83AA7E80 };
 		// NTP fractional unit.
-		static constexpr double NtpFractionalUnit{ 1LL << 32 };
+		static constexpr uint64_t NtpFractionalUnit{ 1LL << 32 };
 
 	public:
 		struct Ntp
@@ -271,26 +271,20 @@ namespace Utils
 			uint32_t fractions;
 		};
 
-		static void CurrentTimeNtp(Ntp& ntp);
-		static void UnixTime2Ntp(struct timeval* unixTime, Ntp& ntp);
+		static Time::Ntp TimeMs2Ntp(uint64_t ms);
 		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp);
 		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2);
 	};
 
-	inline void Time::CurrentTimeNtp(Ntp& ntp)
+	inline Time::Ntp Time::TimeMs2Ntp(uint64_t ms)
 	{
-		struct timeval tv;
+		Ntp ntp;
 
-		gettimeofday(&tv, nullptr);
-
-		UnixTime2Ntp(&tv, ntp);
-	}
-
-	inline void Time::UnixTime2Ntp(struct timeval* unixTime, Ntp& ntp)
-	{
-		ntp.seconds = unixTime->tv_sec + UnixNtpOffset;
+		ntp.seconds = ms / 1000;
 		ntp.fractions =
-		  static_cast<uint32_t>(static_cast<double>(unixTime->tv_usec) * NtpFractionalUnit * 1.0e-6);
+		  static_cast<uint32_t>(static_cast<double>(ms % 1000) / 1000 * Utils::Time::NtpFractionalUnit);
+
+		return ntp;
 	}
 
 	inline bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)

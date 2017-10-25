@@ -578,7 +578,7 @@ namespace RTC
 		if (timer == this->rtcpTimer)
 		{
 			uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
-			uint32_t now      = DepLibUV::GetTime();
+			uint64_t now      = DepLibUV::GetTime();
 
 			SendRtcp(now);
 

@@ -45,7 +45,7 @@ namespace RTC
 		Json::Value json = RtpStream::GetStats();
 
 		json[JsonStringType] = Type;
-		json[JsonStringRtt]  = Json::UInt{ this->rtt };
+		json[JsonStringRtt]  = Json::UInt{ static_cast<uint32_t>(this->rtt) };
 
 		return json;
 	}
@@ -71,20 +71,27 @@ namespace RTC
 
 		/* Calculate RTT. */
 
-		// Get the compact NTP representation of the current timestamp.
-		Utils::Time::Ntp nowNtp{};
-		Utils::Time::CurrentTimeNtp(nowNtp);
-		uint32_t nowCompactNtp = (nowNtp.seconds & 0x0000FFFF) << 16;
+		// Get the NTP representation of the current timestamp.
+		uint64_t now = DepLibUV::GetTime();
+		auto ntp     = Utils::Time::TimeMs2Ntp(now);
 
-		nowCompactNtp |= (nowNtp.fractions & 0xFFFF0000) >> 16;
+		// Get the compact NTP representation of the current timestamp.
+		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
+		compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
 
 		uint32_t lastSr = report->GetLastSenderReport();
 		uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
-		// RTT in 1/2^16 seconds.
-		uint32_t rtt = nowCompactNtp - dlsr - lastSr;
+
+		// RTT in 1/2^16 second fractions.
+		uint32_t rtt = 0;
+
+		if (compactNtp > dlsr + lastSr)
+			rtt = compactNtp - dlsr - lastSr;
+		else
+			rtt = 0;
 
 		// RTT in milliseconds.
-		this->rtt = ((rtt >> 16) * 1000);
+		this->rtt = (rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		this->packetsLost  = report->GetTotalLost();
@@ -284,38 +291,12 @@ namespace RTC
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
-		auto diffMs     = static_cast<uint32_t>(now - this->maxPacketMs);
-		uint32_t diffTs = diffMs * this->params.clockRate / 1000;
+		int32_t diffMs = static_cast<int32_t>(now - this->maxPacketMs);
+		int32_t diffTs = diffMs * this->params.clockRate / 1000;
+		// Get the NTP representation of the current timestamp.
+		auto ntp = Utils::Time::TimeMs2Ntp(now);
 
-		Utils::Time::Ntp ntp{};
-		struct timeval unixTime
-		{
-		};
-		uint64_t unixTimeMs;
-
-		gettimeofday(&unixTime, nullptr);
-
-		// Convert unix time to millisecods.
-		unixTimeMs = unixTime.tv_sec * 1000 + unixTime.tv_usec / 1000;
-
-		if (now >= this->maxPacketMs)
-		{
-			unixTimeMs += diffMs;
-			report->SetRtpTs(this->maxPacketTs + diffTs);
-		}
-		else
-		{
-			unixTimeMs -= diffMs;
-			report->SetRtpTs(this->maxPacketTs - diffTs);
-		}
-
-		// Convert milliseconds to unix time.
-		unixTime.tv_sec  = unixTimeMs / 1000;
-		unixTime.tv_usec = (unixTimeMs % 1000) * 1000;
-
-		// Convert unix time to NTP.
-		Utils::Time::UnixTime2Ntp(&unixTime, ntp);
-
+		report->SetRtpTs(this->maxPacketTs + diffTs);
 		report->SetNtpSec(ntp.seconds);
 		report->SetNtpFrac(ntp.fractions);
 
