@@ -599,7 +599,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsEnabled())
+		if (!IsEnabled() || IsPaused())
 			return;
 
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
