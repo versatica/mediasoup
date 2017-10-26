@@ -291,8 +291,8 @@ namespace RTC
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
 		// Calculate RTP timestamp diff between now and last received RTP packet.
-		int32_t diffMs = static_cast<int32_t>(now - this->maxPacketMs);
-		int32_t diffTs = diffMs * this->params.clockRate / 1000;
+		auto diffMs = static_cast<int64_t>(now - this->maxPacketMs);
+		int64_t diffTs = diffMs * this->params.clockRate / 1000;
 		// Get the NTP representation of the current timestamp.
 		auto ntp = Utils::Time::TimeMs2Ntp(now);
 
