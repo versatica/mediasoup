@@ -599,7 +599,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsEnabled() || IsPaused())
+		if (!IsEnabled() || IsPaused() || this->effectiveProfile == RTC::RtpEncodingParameters::Profile::NONE)
 			return;
 
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
