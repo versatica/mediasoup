@@ -35,8 +35,10 @@ namespace RTC
 		uint32_t GetRate(uint64_t now);
 		uint32_t GetSsrc() const;
 		uint8_t GetPayloadType() const;
+		uint32_t GetClockRate() const;
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		float GetLossPercentage() const;
+		uint64_t GetMaxPacketMs() const;
 		void RestartStatusCheckTimer();
 		void StopStatusCheckTimer();
 
@@ -101,6 +103,11 @@ namespace RTC
 		return this->params.payloadType;
 	}
 
+	inline uint32_t RtpStream::GetClockRate() const
+	{
+		return this->params.clockRate;
+	}
+
 	inline const RTC::RtpCodecMimeType& RtpStream::GetMimeType() const
 	{
 		return this->params.mimeType;
@@ -109,6 +116,11 @@ namespace RTC
 	inline float RtpStream::GetLossPercentage() const
 	{
 		return static_cast<float>(this->fractionLost) * 100 / 256;
+	}
+
+	inline uint64_t RtpStream::GetMaxPacketMs() const
+	{
+		return this->maxPacketMs;
 	}
 } // namespace RTC
 

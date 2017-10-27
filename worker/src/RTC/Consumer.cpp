@@ -494,7 +494,13 @@ namespace RTC
 			isSyncPacket = true;
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
-			this->rtpTimestampManager.Sync(packet->GetTimestamp());
+
+			// Calculate RTP timestamp diff between now and last sent RTP packet.
+			auto now    = DepLibUV::GetTime();
+			auto diffMs = now - this->rtpStream->GetMaxPacketMs();
+			auto diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
+
+			this->rtpTimestampManager.Sync(packet->GetTimestamp() + diffTs);
 
 			this->syncRequired = false;
 
