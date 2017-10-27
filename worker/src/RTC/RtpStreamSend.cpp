@@ -279,7 +279,7 @@ namespace RTC
 		container[containerIdx] = nullptr;
 	}
 
-	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t /*now*/)
+	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
 	{
 		MS_TRACE();
 
@@ -290,10 +290,13 @@ namespace RTC
 		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
 
-		// Get the NTP representation of the highest received RTP packet timestamp.
-		auto ntp = Utils::Time::TimeMs2Ntp(this->maxPacketMs);
+		// Calculate RTP timestamp diff between now and last received RTP packet.
+		auto diffMs = static_cast<int64_t>(now - this->maxPacketMs);
+		int64_t diffTs = diffMs * this->params.clockRate / 1000;
+		// Get the NTP representation of the current timestamp.
+		auto ntp = Utils::Time::TimeMs2Ntp(now);
 
-		report->SetRtpTs(this->maxPacketTs);
+		report->SetRtpTs(this->maxPacketTs + diffTs);
 		report->SetNtpSec(ntp.seconds);
 		report->SetNtpFrac(ntp.fractions);
 
