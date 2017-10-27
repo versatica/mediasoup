@@ -130,12 +130,8 @@ namespace RTC
 		// Update highest seen RTP timestamp.
 		if (SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
-			// Calculate time diff between this and previous highest RTP timestamp.
-			uint32_t diffTs = packet->GetTimestamp() - this->maxPacketTs;
-			uint32_t diffMs = diffTs * 1000 / this->params.clockRate;
-
 			this->maxPacketTs = packet->GetTimestamp();
-			this->maxPacketMs += diffMs;
+			this->maxPacketMs = DepLibUV::GetTime();
 		}
 
 		return true;

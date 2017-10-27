@@ -286,17 +286,12 @@ namespace RTC
 		if (this->transmissionCounter.GetPacketCount() == 0u)
 			return nullptr;
 
+		auto ntp    = Utils::Time::TimeMs2Ntp(now);
 		auto report = new RTC::RTCP::SenderReport();
+
 		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
-
-		// Calculate RTP timestamp diff between now and last received RTP packet.
-		auto diffMs    = static_cast<int64_t>(now - this->maxPacketMs);
-		int64_t diffTs = diffMs * this->params.clockRate / 1000;
-		// Get the NTP representation of the current timestamp.
-		auto ntp = Utils::Time::TimeMs2Ntp(now);
-
-		report->SetRtpTs(this->maxPacketTs + diffTs);
+		report->SetRtpTs(this->maxPacketTs);
 		report->SetNtpSec(ntp.seconds);
 		report->SetNtpFrac(ntp.fractions);
 
