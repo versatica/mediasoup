@@ -1,7 +1,8 @@
 # Documentation
 
-Internal documentation for developming purposes. Get the *mediasoup* public documentetation at [mediasoup.org](https://mediasoup.org).
+Internal documentation for developming purposes. Get the **mediasoup** public documentation at [mediasoup.org](https://mediasoup.org).
 
-* [Room Overview](RoomOverview.md)
+* [Building](Building.md)
 * [RTCP](RTCP.md)
+* [Consumer](Consumer.md)
 

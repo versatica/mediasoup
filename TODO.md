@@ -1,12 +1,6 @@
 # TODO in mediasoup v2 (server-side)
 
-* Remove `seq32` everywhere and use the new seq counter/manager utils.
-
 * `RtpStreamer` should have its own RTP capabilities rather than using the ones from the room.
-
-* Instead of using `static_cast<size_t>(number)` use `size_t{ number }`. NOTE: Investigate it.
-
-* Set a proper value for `Producer::FullFrameRequestBlockTimeout` (currently 1 second).
 
 * Add `gulp lint/format/tidy` also for `worker/test/*`.
 
@@ -14,6 +8,4 @@
 
 * Implement `mandatoryCodecPayloadTypes`.
 
-* JS: Remove tons of useless debugs (for example in `Peer._createProducer()`).
-
-* Update `compile_commands_template.json`.
+* Automate `compile_commands_template.json` generation.
