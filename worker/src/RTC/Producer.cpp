@@ -591,6 +591,9 @@ namespace RTC
 			delete rtpStream;
 		}
 
+		this->rtpStreams.clear();
+		this->mapRtxStreams.clear();
+
 		// Notify about all profiles being disabled.
 		for (auto& kv : this->mapRtpStreamProfiles)
 		{
@@ -609,8 +612,6 @@ namespace RTC
 			}
 		}
 
-		this->rtpStreams.clear();
-		this->mapRtxStreams.clear();
 		this->mapRtpStreamProfiles.clear();
 		this->mapActiveProfiles.clear();
 	}
