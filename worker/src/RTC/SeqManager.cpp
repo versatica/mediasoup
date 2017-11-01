@@ -65,6 +65,12 @@ namespace RTC
 	}
 
 	template<typename T>
+	void SeqManager<T>::Offset(T offset)
+	{
+		this->base += offset;
+	}
+
+	template<typename T>
 	bool SeqManager<T>::Input(const T input, T& output)
 	{
 		auto base = this->base;

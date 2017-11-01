@@ -7,8 +7,9 @@ using namespace RTC;
 
 struct TestSeqManagerInput
 {
-	TestSeqManagerInput(uint16_t input, uint16_t output, bool sync = false, bool drop = false)
-	  : input(input), output(output), sync(sync), drop(drop)
+	TestSeqManagerInput(
+	  uint16_t input, uint16_t output, bool sync = false, bool drop = false, uint16_t offset = 0)
+	  : input(input), output(output), sync(sync), drop(drop), offset(offset)
 	{
 	}
 
@@ -16,6 +17,7 @@ struct TestSeqManagerInput
 	uint16_t output{ 0 };
 	bool sync{ false };
 	bool drop{ false };
+	uint16_t offset{ 0 };
 };
 
 void validate(RTC::SeqManager<uint16_t>& seqManager, std::vector<TestSeqManagerInput>& inputs)
@@ -24,6 +26,9 @@ void validate(RTC::SeqManager<uint16_t>& seqManager, std::vector<TestSeqManagerI
 	{
 		if (element.sync)
 			seqManager.Sync(element.input);
+
+		if (element.offset)
+			seqManager.Offset(element.offset);
 
 		if (element.drop)
 		{
@@ -251,6 +256,26 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 			{     5, 45, false, false },
 			{     6, 46, false, false },
 			{     7, 47, false, false }
+		};
+		// clang-format on
+
+		RTC::SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("receive ordered numbers, sync, no drop, increase input")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput> inputs =
+		{
+			{  0,   0, false, false     },
+			{  1,   1, false, false     },
+			{  2,   2, false, false     },
+			{ 80,  23,  true, false, 20 },
+			{ 81,  24, false, false     },
+			{ 82,  25, false, false     },
+			{ 83,  26, false, false     },
+			{ 84,  27, false, false     }
 		};
 		// clang-format on
 
