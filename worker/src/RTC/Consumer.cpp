@@ -1080,8 +1080,12 @@ namespace RTC
 		  "effective profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[this->effectiveProfile].c_str());
 
+		if (!IsEnabled())
+			return;
+
 		// Notify.
 		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
+
 		this->notifier->Emit(this->consumerId, "effectiveprofilechange", eventData);
 	}
 } // namespace RTC
