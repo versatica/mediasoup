@@ -560,8 +560,6 @@ namespace RTC
 		// Remove the profiles related to this stream from active profiles map and notify the listener.
 		DeactivateStreamProfiles(rtpStream);
 
-		this->rtpStreams.erase(rtpStream->GetSsrc());
-
 		for (auto& kv : this->mapRtxStreams)
 		{
 			auto rtxSsrc      = kv.first;
@@ -584,34 +582,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->rtpStreams)
-		{
-			auto rtpStream = kv.second;
+		auto it = this->rtpStreams.begin();
 
-			delete rtpStream;
+		while (it != this->rtpStreams.end())
+		{
+			auto rtpStream = it->second;
+
+			ClearRtpStream(rtpStream);
+			it = this->rtpStreams.erase(it);
 		}
 
 		this->rtpStreams.clear();
 		this->mapRtxStreams.clear();
-
-		// Notify about all profiles being disabled.
-		for (auto& kv : this->mapRtpStreamProfiles)
-		{
-			auto& profiles = kv.second;
-
-			for (auto profile : profiles)
-			{
-				// Don't announce default profile, but just those for simulcast/SVC.
-				if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-					break;
-
-				for (auto& listener : this->listeners)
-				{
-					listener->OnProducerProfileDisabled(this, profile);
-				}
-			}
-		}
-
 		this->mapRtpStreamProfiles.clear();
 		this->mapActiveProfiles.clear();
 	}
@@ -700,6 +682,10 @@ namespace RTC
 
 			// Remove the profile from the active profiles map.
 			this->mapActiveProfiles.erase(profile);
+
+			// Don't announce default profile, but just those for simulcast/SVC.
+			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+				break;
 
 			for (auto& listener : this->listeners)
 			{
