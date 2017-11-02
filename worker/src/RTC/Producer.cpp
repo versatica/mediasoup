@@ -683,10 +683,6 @@ namespace RTC
 			// Remove the profile from the active profiles map.
 			this->mapActiveProfiles.erase(profile);
 
-			// Don't announce default profile, but just those for simulcast/SVC.
-			if (profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-				break;
-
 			for (auto& listener : this->listeners)
 			{
 				listener->OnProducerProfileDisabled(this, profile);
