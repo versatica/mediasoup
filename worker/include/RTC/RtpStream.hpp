@@ -39,6 +39,7 @@ namespace RTC
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
+		const std::string& GetId() const;
 		void RestartStatusCheckTimer();
 		void StopStatusCheckTimer();
 
@@ -121,6 +122,11 @@ namespace RTC
 	inline uint64_t RtpStream::GetMaxPacketMs() const
 	{
 		return this->maxPacketMs;
+	}
+
+	inline const std::string& RtpStream::GetId() const
+	{
+		return this->rtpStreamId;
 	}
 } // namespace RTC
 

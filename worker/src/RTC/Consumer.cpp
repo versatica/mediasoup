@@ -106,6 +106,7 @@ namespace RTC
 		MS_TRACE();
 
 		static const Json::StaticString JsonStringTransportId{ "transportId" };
+		static const Json::StaticString JsonStringInboundRtpId{ "inboundRtpId" };
 
 		Json::Value json(Json::arrayValue);
 
@@ -116,6 +117,20 @@ namespace RTC
 			if (this->transport != nullptr)
 			{
 				jsonRtpStream[JsonStringTransportId] = this->transport->transportId;
+			}
+
+			if (this->effectiveProfile != RTC::RtpEncodingParameters::Profile::NONE)
+			{
+				auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
+
+				MS_ASSERT(it != this->mapProfileRtpStream.end(), "effective profile does not map to a rtp stream");
+
+				auto inboundRtpStream = const_cast<RTC::RtpStream*>(it->second);
+				auto jsonInboundRtpStream = inboundRtpStream->GetStats();
+
+				jsonRtpStream[JsonStringInboundRtpId] = inboundRtpStream->GetId();
+
+				json.append(jsonInboundRtpStream);
 			}
 
 			json.append(jsonRtpStream);
