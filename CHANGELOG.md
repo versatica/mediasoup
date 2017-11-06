@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.1
+
+* Update README file.
+
+
 ### 2.0.0
 
 * New design based on `Producers` and `Consumer` plus a mediasoup protocol and the **mediasoup-client** client side SDK.
