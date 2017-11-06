@@ -31,13 +31,13 @@
   "main": "lib/mediasoup.js",
   "dependencies": {
     "check-types": "^7.3.0",
-    "debug": "^3.0.1",
+    "debug": "^3.1.0",
     "netstring": "^0.3.0",
     "random-number": "0.0.9",
-    "randomatic": "^1.1.7"
+    "randomatic": "^2.0.0"
   },
   "devDependencies": {
-    "eslint": "^4.7.2",
+    "eslint": "^4.10.0",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-clang-format": "^1.0.23",
     "gulp-eslint": "^4.0.0",

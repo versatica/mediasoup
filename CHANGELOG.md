@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.0
+
+* New design based on `Producers` and `Consumer` plus a mediasoup protocol and the **mediasoup-client** client side SDK.
+
+
 ### 1.2.8
 
 * Fix a crash due to RTX packet processing while the associated `NackGenerator` is not yet created.

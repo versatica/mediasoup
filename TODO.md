@@ -9,3 +9,5 @@
 * Implement `mandatoryCodecPayloadTypes`.
 
 * Automate `compile_commands_template.json` generation.
+
+* Complete RTC stats of a `Consumer` by including stats related to the source stream.
