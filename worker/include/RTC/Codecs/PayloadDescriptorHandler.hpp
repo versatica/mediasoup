@@ -15,7 +15,7 @@ namespace RTC
 			virtual void Dump() const    = 0;
 		};
 
-		// Encoding context used by PayloadDescriptionHandler to properly rewrite the PayloadDescriptor.
+		// Encoding context used by PayloadDescriptorHandler to properly rewrite the PayloadDescriptor.
 		class EncodingContext
 		{
 		public:
