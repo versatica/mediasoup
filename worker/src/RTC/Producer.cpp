@@ -673,19 +673,18 @@ namespace RTC
 	{
 		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
 
-		// Notify about the profiles being disabled.
+		// Notify about the active profiles being disabled.
 		for (auto& profile : profiles)
 		{
-			MS_ASSERT(
-			  this->mapActiveProfiles.find(profile) != this->mapActiveProfiles.end(),
-			  "profile not in active profiles map");
-
-			// Remove the profile from the active profiles map.
-			this->mapActiveProfiles.erase(profile);
-
-			for (auto& listener : this->listeners)
+			if (this->mapActiveProfiles.find(profile) != this->mapActiveProfiles.end())
 			{
-				listener->OnProducerProfileDisabled(this, profile);
+				// Remove the profile from the active profiles map.
+				this->mapActiveProfiles.erase(profile);
+
+				for (auto& listener : this->listeners)
+				{
+					listener->OnProducerProfileDisabled(this, profile);
+				}
 			}
 		}
 	}
