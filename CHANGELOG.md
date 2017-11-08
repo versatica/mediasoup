@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.2
+
+* worker: Remove wrong `assert` on `Producer::DeactivateStreamProfiles()`.
+
+
 ### 2.0.1
 
 * Update README file.
