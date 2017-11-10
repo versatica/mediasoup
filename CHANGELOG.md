@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.3
+
+* worker: Fix crash when VP8 payload has no `PictureId`.
+
+
 ### 2.0.2
 
 * worker: Remove wrong `assert` on `Producer::DeactivateStreamProfiles()`.
