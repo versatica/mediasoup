@@ -50,13 +50,15 @@ namespace RTC
 					if (len < ++offset + 1)
 						return nullptr;
 
-					payloadDescriptor->hasTwoBytePictureId = true;
+					payloadDescriptor->hasTwoBytesPictureId = true;
 
 					payloadDescriptor->pictureId = (byte & 0x7F) << 8;
 					payloadDescriptor->pictureId += data[offset];
 				}
 				else
 				{
+					payloadDescriptor->hasOneBytePictureId = true;
+
 					payloadDescriptor->pictureId = byte & 0x7F;
 				}
 			}
@@ -99,7 +101,7 @@ namespace RTC
 
 			if (this->i)
 			{
-				if (this->hasTwoBytePictureId)
+				if (this->hasTwoBytesPictureId)
 				{
 					uint16_t netPictureId = htons(pictureId);
 
@@ -107,7 +109,7 @@ namespace RTC
 					data[0] |= 0x80;
 					data += 2;
 				}
-				else
+				else if (this->hasOneBytePictureId)
 				{
 					*data = pictureId;
 					data++;
@@ -133,23 +135,24 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<PayloadDescriptor>");
-			MS_DUMP(" extended        : %" PRIu8, this->extended);
-			MS_DUMP(" nonReference    : %" PRIu8, this->nonReference);
-			MS_DUMP(" start           : %" PRIu8, this->start);
-			MS_DUMP(" partitionIndex  : %" PRIu8, this->partitionIndex);
+			MS_DUMP("  extended        : %" PRIu8, this->extended);
+			MS_DUMP("  nonReference    : %" PRIu8, this->nonReference);
+			MS_DUMP("  start           : %" PRIu8, this->start);
+			MS_DUMP("  partitionIndex  : %" PRIu8, this->partitionIndex);
 			MS_DUMP(
-			  " i|l|t|k         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
+			  "  i|l|t|k         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
 			  this->i,
 			  this->l,
 			  this->t,
 			  this->k);
-			MS_DUMP(" pictureId       : %" PRIu16, this->pictureId);
-			MS_DUMP(" tl0PictureIndex : %" PRIu8, this->tl0PictureIndex);
-			MS_DUMP(" tlIndex         : %" PRIu8, this->tlIndex);
-			MS_DUMP(" y               : %" PRIu8, this->y);
-			MS_DUMP(" keyIndex        : %" PRIu8, this->keyIndex);
-			MS_DUMP(" isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP(" hasTwoBytePictureId : %s", this->hasTwoBytePictureId ? "true" : "false");
+			MS_DUMP("  pictureId       : %" PRIu16, this->pictureId);
+			MS_DUMP("  tl0PictureIndex : %" PRIu8, this->tl0PictureIndex);
+			MS_DUMP("  tlIndex         : %" PRIu8, this->tlIndex);
+			MS_DUMP("  y               : %" PRIu8, this->y);
+			MS_DUMP("  keyIndex        : %" PRIu8, this->keyIndex);
+			MS_DUMP("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
+			MS_DUMP("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
 			MS_DUMP("</PayloadDescriptor>");
 		}
 
@@ -226,14 +229,15 @@ namespace RTC
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 
 			// Modify the RtpPacket payload in order to always have two byte pictureId.
-			if (payloadDescriptor->i && !payloadDescriptor->hasTwoBytePictureId)
+			if (payloadDescriptor->hasOneBytePictureId)
 			{
 				// Shift the RTP payload one byte from the begining of the pictureId field.
 				packet->ShiftPayload(2, 1, true /*expand*/);
 				// Set the two byte pictureId marker bit.
 				data[2] = 0x80;
 				// Update the payloadDescriptor.
-				payloadDescriptor->hasTwoBytePictureId = true;
+				payloadDescriptor->hasOneBytePictureId  = false;
+				payloadDescriptor->hasTwoBytesPictureId = true;
 			}
 		}
 	} // namespace Codecs
