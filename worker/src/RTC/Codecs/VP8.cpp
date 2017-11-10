@@ -226,7 +226,7 @@ namespace RTC
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 
 			// Modify the RtpPacket payload in order to always have two byte pictureId.
-			if (!payloadDescriptor->hasTwoBytePictureId)
+			if (payloadDescriptor->i && !payloadDescriptor->hasTwoBytePictureId)
 			{
 				// Shift the RTP payload one byte from the begining of the pictureId field.
 				packet->ShiftPayload(2, 1, true /*expand*/);
