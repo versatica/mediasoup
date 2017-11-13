@@ -319,12 +319,18 @@ namespace RTC
 		  "profile removed [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
+		// No profiles available.
 		if (this->mapProfileRtpStream.empty())
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 			RecalculateTargetProfile();
 		}
-		// If there is an ongoing probation for this profile, disable it.
+		// Target profile removed. Recalculate.
+		else if (this->targetProfile == profile)
+		{
+			RecalculateTargetProfile();
+		}
+		// There is an ongoing probation for this profile, disable it.
 		else if (this->isProbing && this->probingProfile == profile)
 		{
 			// Disable probation flag.
@@ -337,8 +343,8 @@ namespace RTC
 
 			return;
 		}
-		// If it is the effective profile, try to downgrade, or upgrade it to the next higher profile if
-		// the removed profile was lower than other existing ones.
+		// Effective profile removed. Try to downgrade.
+		// If there is no profile lower than the removed one then upgrade to the next higher profile.
 		else if (this->effectiveProfile == profile)
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
