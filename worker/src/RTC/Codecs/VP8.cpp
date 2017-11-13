@@ -25,7 +25,10 @@ namespace RTC
 			payloadDescriptor->start          = (byte >> 4) & 0x01;
 			payloadDescriptor->partitionIndex = byte & 0x07;
 
-			if (payloadDescriptor->extended)
+			if (!payloadDescriptor->extended)
+				return nullptr;
+
+			else
 			{
 				if (len < ++offset + 1)
 					return nullptr;
