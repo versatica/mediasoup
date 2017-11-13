@@ -22,6 +22,7 @@ namespace RTC
 			uint8_t byte  = data[offset];
 
 			payloadDescriptor->extended       = (byte >> 7) & 0x01;
+			payloadDescriptor->nonReference   = (byte >> 5) & 0x01;
 			payloadDescriptor->start          = (byte >> 4) & 0x01;
 			payloadDescriptor->partitionIndex = byte & 0x07;
 
