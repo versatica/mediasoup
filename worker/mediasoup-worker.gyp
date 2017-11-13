@@ -268,6 +268,7 @@
         'test/RTC/TestRtpDataCounter.cpp',
         'test/RTC/TestRtpStreamRecv.cpp',
         'test/RTC/TestSeqManager.cpp',
+        'test/RTC/Codecs/TestVP8.cpp',
         'test/RTC/RTCP/TestFeedbackPsAfb.cpp',
         'test/RTC/RTCP/TestFeedbackPsFir.cpp',
         'test/RTC/RTCP/TestFeedbackPsLei.cpp',
