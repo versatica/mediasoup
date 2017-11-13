@@ -107,7 +107,6 @@ namespace RTC
 		// RTP payload descriptor encoding.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		// RTP profiles.
-		std::set<RTC::RtpEncodingParameters::Profile> profiles;
 		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
 		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile sourcePreferredProfile{

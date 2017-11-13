@@ -280,15 +280,14 @@ namespace RTC
 	{
 		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::NONE, "invalid profile");
 
-		MS_ASSERT(this->profiles.find(profile) == this->profiles.end(), "profile already exists");
+		MS_ASSERT(this->mapProfileRtpStream.find(profile) == this->mapProfileRtpStream.end(), "profile already exists");
 
 		MS_ASSERT(
-		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && !this->profiles.empty()),
+		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && !this->mapProfileRtpStream.empty()),
 		  "default profile cannot coexist with others");
 
 		// Insert the new profile.
 		this->mapProfileRtpStream[profile] = rtpStream;
-		this->profiles.insert(profile);
 
 		MS_DEBUG_TAG(
 		  rtp, "profile added [profile:%s]", RTC::RtpEncodingParameters::profile2String[profile].c_str());
@@ -301,22 +300,21 @@ namespace RTC
 	{
 		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::NONE, "invalid profile");
 
-		MS_ASSERT(this->profiles.find(profile) != this->profiles.end(), "profile not found");
+		MS_ASSERT(this->mapProfileRtpStream.find(profile) != this->mapProfileRtpStream.end(), "profile not found");
 
 		MS_ASSERT(
-		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && this->profiles.size() != 1),
+		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && this->mapProfileRtpStream.size() != 1),
 		  "default profile cannot coexist with others");
 
 		// Remove the profile.
 		this->mapProfileRtpStream.erase(profile);
-		this->profiles.erase(profile);
 
 		MS_DEBUG_TAG(
 		  rtp,
 		  "profile removed [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		if (this->profiles.empty())
+		if (this->mapProfileRtpStream.empty())
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 			RecalculateTargetProfile();
@@ -340,12 +338,12 @@ namespace RTC
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 
-			auto it               = this->profiles.begin();
-			auto newTargetProfile = *it;
+			auto it               = this->mapProfileRtpStream.begin();
+			auto newTargetProfile = it->first;
 
-			while (++it != this->profiles.end())
+			while (++it != this->mapProfileRtpStream.end())
 			{
-				auto candidateTargetProfile = *it;
+				auto candidateTargetProfile = it->first;
 
 				if (candidateTargetProfile < profile)
 					newTargetProfile = candidateTargetProfile;
@@ -818,14 +816,14 @@ namespace RTC
 		if (this->effectiveProfile == RtpEncodingParameters::Profile::DEFAULT)
 			return;
 
-		auto it = this->profiles.find(this->effectiveProfile);
+		auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
 
 		// This is already the lowest profile.
-		if (it == this->profiles.begin())
+		if (it == this->mapProfileRtpStream.begin())
 			return;
 
 		// Downgrade the target profile.
-		this->targetProfile = *(std::prev(it));
+		this->targetProfile = (std::prev(it))->first;
 
 		if (IsEnabled() && !IsPaused())
 			RequestKeyFrame();
@@ -843,7 +841,7 @@ namespace RTC
 	void Consumer::MayRunProbation()
 	{
 		// No simulcast or SVC.
-		if (this->profiles.empty())
+		if (this->mapProfileRtpStream.empty())
 			return;
 
 		// There is an ongoing profile upgrade. Do not interfere.
@@ -972,7 +970,7 @@ namespace RTC
 
 		// If there are no profiles, select none or default, depending on whether this
 		// is single stream or simulcast/SVC.
-		if (this->profiles.empty())
+		if (this->mapProfileRtpStream.empty())
 		{
 			MS_ASSERT(
 			  this->effectiveProfile == RtpEncodingParameters::Profile::NONE ||
@@ -988,20 +986,20 @@ namespace RTC
 		else if (GetPreferredProfile() == RTC::RtpEncodingParameters::Profile::DEFAULT)
 		{
 			newTargetProfile = this->effectiveProfile;
-			auto it          = this->profiles.upper_bound(this->effectiveProfile);
+			auto it          = this->mapProfileRtpStream.upper_bound(this->effectiveProfile);
 
-			if (it != this->profiles.end())
-				newTargetProfile = *it;
+			if (it != this->mapProfileRtpStream.end())
+				newTargetProfile = it->first;
 		}
 		// If the preferred profile is forced, try with the closest profile to it.
 		else if (forcePreferred)
 		{
-			auto it          = this->profiles.crbegin();
-			newTargetProfile = *it;
+			auto it          = this->mapProfileRtpStream.crbegin();
+			newTargetProfile = it->first;
 
-			for (; it != this->profiles.crend(); ++it)
+			for (; it != this->mapProfileRtpStream.crend(); ++it)
 			{
-				auto profile = *it;
+				auto profile = it->first;
 
 				if (profile <= GetPreferredProfile())
 				{
@@ -1014,10 +1012,10 @@ namespace RTC
 		else
 		{
 			newTargetProfile = this->effectiveProfile;
-			auto it          = this->profiles.upper_bound(this->effectiveProfile);
+			auto it          = this->mapProfileRtpStream.upper_bound(this->effectiveProfile);
 
-			if (it != this->profiles.end() && *it <= GetPreferredProfile())
-				newTargetProfile = *it;
+			if (it != this->mapProfileRtpStream.end() && it->first <= GetPreferredProfile())
+				newTargetProfile = it->first;
 		}
 
 		// Not enabled. Make this the target profile.
