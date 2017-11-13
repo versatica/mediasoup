@@ -65,8 +65,11 @@ namespace RTC
 				uint8_t keyIndex : 5;
 
 				bool isKeyFrame           = { false };
+				bool hasPictureId         = { false };
 				bool hasOneBytePictureId  = { false };
 				bool hasTwoBytesPictureId = { false };
+				bool hasTl0PictureIndex   = { false };
+				bool hasTlIndex           = { false };
 			};
 
 		public:

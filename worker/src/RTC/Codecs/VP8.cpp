@@ -64,12 +64,16 @@ namespace RTC
 
 					payloadDescriptor->pictureId = byte & 0x7F;
 				}
+
+				payloadDescriptor->hasPictureId = true;
 			}
 
 			if (payloadDescriptor->l)
 			{
 				if (len < ++offset + 1)
 					return nullptr;
+
+				payloadDescriptor->hasTl0PictureIndex = true;
 
 				payloadDescriptor->tl0PictureIndex = data[offset];
 			}
@@ -80,6 +84,8 @@ namespace RTC
 					return nullptr;
 
 				byte = data[offset];
+
+				payloadDescriptor->hasTlIndex = true;
 
 				payloadDescriptor->tlIndex  = (byte >> 6) & 0x03;
 				payloadDescriptor->y        = (byte >> 5) & 0x01;
@@ -154,8 +160,11 @@ namespace RTC
 			MS_DUMP("  y               : %" PRIu8, this->y);
 			MS_DUMP("  keyIndex        : %" PRIu8, this->keyIndex);
 			MS_DUMP("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP("  hasPictureId    : %s", this->hasPictureId ? "true" : "false");
 			MS_DUMP("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
 			MS_DUMP("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
+			MS_DUMP("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
+			MS_DUMP("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
 			MS_DUMP("</PayloadDescriptor>");
 		}
 
@@ -179,15 +188,20 @@ namespace RTC
 			}
 
 			// Incremental pictureId. Check the temporal layer.
-			if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(
-			      this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
+			if (
+			  this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTlIndex &&
+			  this->payloadDescriptor->hasTl0PictureIndex)
 			{
-				if (this->payloadDescriptor->t && this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
+				if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(
+				      this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
 				{
-					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					if (this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
+					{
+						context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
 
-					return false;
+						return false;
+					}
 				}
 			}
 
