@@ -280,7 +280,9 @@ namespace RTC
 	{
 		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::NONE, "invalid profile");
 
-		MS_ASSERT(this->mapProfileRtpStream.find(profile) == this->mapProfileRtpStream.end(), "profile already exists");
+		MS_ASSERT(
+		  this->mapProfileRtpStream.find(profile) == this->mapProfileRtpStream.end(),
+		  "profile already exists");
 
 		MS_ASSERT(
 		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && !this->mapProfileRtpStream.empty()),
@@ -300,10 +302,13 @@ namespace RTC
 	{
 		MS_ASSERT(profile != RTC::RtpEncodingParameters::Profile::NONE, "invalid profile");
 
-		MS_ASSERT(this->mapProfileRtpStream.find(profile) != this->mapProfileRtpStream.end(), "profile not found");
+		MS_ASSERT(
+		  this->mapProfileRtpStream.find(profile) != this->mapProfileRtpStream.end(),
+		  "profile not found");
 
 		MS_ASSERT(
-		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT && this->mapProfileRtpStream.size() != 1),
+		  !(profile == RTC::RtpEncodingParameters::Profile::DEFAULT &&
+		    this->mapProfileRtpStream.size() != 1),
 		  "default profile cannot coexist with others");
 
 		// Remove the profile.

@@ -67,7 +67,8 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 
 		SECTION("encode payload descriptor")
 		{
-			payloadDescriptor->Encode(buffer, payloadDescriptor->pictureId, payloadDescriptor->tl0PictureIndex);
+			payloadDescriptor->Encode(
+			  buffer, payloadDescriptor->pictureId, payloadDescriptor->tl0PictureIndex);
 
 			SECTION("compare encoded payloadDescriptor with original buffer")
 			{
@@ -95,7 +96,7 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		 * 11 = Temporal layer Index (TID): 3
 		 * 1 = 1 Lay Sync Bit (Y): True
 		 * ...0 0100 = Temporal Key Frame Index (KEYIDX): 4
-		*/
+		 */
 
 		// clang-format off
 		uint8_t originalBuffer[] =
@@ -141,7 +142,8 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 
 		SECTION("encode payload descriptor")
 		{
-			payloadDescriptor->Encode(buffer, payloadDescriptor->pictureId, payloadDescriptor->tl0PictureIndex);
+			payloadDescriptor->Encode(
+			  buffer, payloadDescriptor->pictureId, payloadDescriptor->tl0PictureIndex);
 
 			SECTION("compare encoded payloadDescriptor with original buffer")
 			{
