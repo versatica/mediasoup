@@ -1,5 +1,10 @@
 # Changelog
 
+### 2.0.4
+
+* [Fix #159](https://github.com/versatica/mediasoup/issues/159): Don’t rely on VP8 payload descriptor flags to assure the existence of data.
+* [Fix #160](https://github.com/versatica/mediasoup/issues/160): Reset `targetProfile` when the corresponding profile is removed.
+
 
 ### 2.0.3
 
