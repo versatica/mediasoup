@@ -328,6 +328,10 @@ namespace RTC
 		// Target profile removed. Recalculate.
 		else if (this->targetProfile == profile)
 		{
+			// It may also be the effective profile, so set it to none.
+			if (this->effectiveProfile == profile)
+				SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
+
 			RecalculateTargetProfile();
 		}
 		// There is an ongoing probation for this profile, disable it.
