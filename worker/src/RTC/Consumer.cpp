@@ -110,32 +110,38 @@ namespace RTC
 
 		Json::Value json(Json::arrayValue);
 
-		if (this->rtpStream != nullptr)
+		if (this->rtpStream == nullptr)
 		{
-			auto jsonRtpStream = this->rtpStream->GetStats();
-
-			if (this->transport != nullptr)
-			{
-				jsonRtpStream[JsonStringTransportId] = this->transport->transportId;
-			}
-
-			if (this->effectiveProfile != RTC::RtpEncodingParameters::Profile::NONE)
-			{
-				auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
-
-				MS_ASSERT(
-				  it != this->mapProfileRtpStream.end(), "effective profile does not map to a rtp stream");
-
-				auto inboundRtpStream     = const_cast<RTC::RtpStream*>(it->second);
-				auto jsonInboundRtpStream = inboundRtpStream->GetStats();
-
-				jsonRtpStream[JsonStringInboundRtpId] = inboundRtpStream->GetId();
-
-				json.append(jsonInboundRtpStream);
-			}
-
-			json.append(jsonRtpStream);
+			return json;
 		}
+
+		auto jsonRtpStream = this->rtpStream->GetStats();
+
+		if (this->transport != nullptr)
+		{
+			jsonRtpStream[JsonStringTransportId] = this->transport->transportId;
+		}
+
+		if (this->effectiveProfile == RTC::RtpEncodingParameters::Profile::NONE)
+		{
+			json.append(jsonRtpStream);
+
+			return json;
+		}
+
+		auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
+
+		MS_ASSERT(
+				it != this->mapProfileRtpStream.end(), "effective profile does not map to a rtp stream");
+
+		auto inboundRtpStream     = const_cast<RTC::RtpStream*>(it->second);
+		auto jsonInboundRtpStream = inboundRtpStream->GetStats();
+
+		jsonRtpStream[JsonStringInboundRtpId] = inboundRtpStream->GetId();
+
+		json.append(jsonInboundRtpStream);
+
+		json.append(jsonRtpStream);
 
 		return json;
 	}
