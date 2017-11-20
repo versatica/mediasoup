@@ -33,7 +33,7 @@ struct TestNackGeneratorInput
 class TestPayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
 {
 public:
-	TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame){};
+	explicit TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame){};
 	~TestPayloadDescriptorHandler() = default;
 	void Dump() const
 	{
