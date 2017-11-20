@@ -361,7 +361,7 @@ namespace RTC
 		  "preferred profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		RecalculateTargetProfile(true /*forcePreferred*/);
+		RecalculateTargetProfile();
 	}
 
 	void Consumer::SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
@@ -378,7 +378,7 @@ namespace RTC
 		  "source preferred profile set [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		RecalculateTargetProfile(true /*forcePreferred*/);
+		RecalculateTargetProfile();
 	}
 
 	void Consumer::SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences)
@@ -950,7 +950,7 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	void Consumer::RecalculateTargetProfile(bool forcePreferred)
+	void Consumer::RecalculateTargetProfile()
 	{
 		MS_TRACE();
 
