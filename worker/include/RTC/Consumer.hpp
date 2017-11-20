@@ -68,7 +68,7 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void RecalculateTargetProfile(bool forcePreferred = false);
+		void RecalculateTargetProfile();
 		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
 		void MayRunProbation();
 
