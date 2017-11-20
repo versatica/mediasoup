@@ -325,23 +325,8 @@ namespace RTC
 		  "profile removed [profile:%s]",
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		// No profiles available.
-		if (this->mapProfileRtpStream.empty())
-		{
-			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
-			RecalculateTargetProfile();
-		}
-		// Target profile removed. Recalculate.
-		else if (this->targetProfile == profile)
-		{
-			// It may also be the effective profile, so set it to none.
-			if (this->effectiveProfile == profile)
-				SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
-
-			RecalculateTargetProfile();
-		}
 		// There is an ongoing probation for this profile, disable it.
-		else if (this->isProbing && this->probingProfile == profile)
+		if (this->isProbing && this->probingProfile == profile)
 		{
 			// Disable probation flag.
 			this->isProbing      = false;
@@ -353,31 +338,13 @@ namespace RTC
 
 			return;
 		}
-		// Effective profile removed. Try to downgrade.
-		// If there is no profile lower than the removed one then upgrade to the next higher profile.
-		else if (this->effectiveProfile == profile)
+
+		if (this->mapProfileRtpStream.empty() || this->effectiveProfile == profile)
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
-
-			auto it               = this->mapProfileRtpStream.begin();
-			auto newTargetProfile = it->first;
-
-			while (++it != this->mapProfileRtpStream.end())
-			{
-				auto candidateTargetProfile = it->first;
-
-				if (candidateTargetProfile < profile)
-					newTargetProfile = candidateTargetProfile;
-				else
-					break;
-			}
-
-			this->targetProfile = newTargetProfile;
-
-			RequestKeyFrame();
-
-			return;
 		}
+
+		RecalculateTargetProfile();
 	}
 
 	void Consumer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
@@ -1003,17 +970,15 @@ namespace RTC
 			else
 				newTargetProfile = RtpEncodingParameters::Profile::DEFAULT;
 		}
-		// If there is no preferred profile, try the next higher profile.
+		// If there is no preferred profile, get the highest one.
 		else if (GetPreferredProfile() == RTC::RtpEncodingParameters::Profile::DEFAULT)
 		{
-			newTargetProfile = this->effectiveProfile;
-			auto it          = this->mapProfileRtpStream.upper_bound(this->effectiveProfile);
+			auto it = this->mapProfileRtpStream.crbegin();
 
-			if (it != this->mapProfileRtpStream.end())
-				newTargetProfile = it->first;
+			newTargetProfile = it->first;
 		}
-		// If the preferred profile is forced, try with the closest profile to it.
-		else if (forcePreferred)
+		// Try with the closest profile to the preferred one.
+		else
 		{
 			auto it          = this->mapProfileRtpStream.crbegin();
 			newTargetProfile = it->first;
@@ -1028,15 +993,6 @@ namespace RTC
 					break;
 				}
 			}
-		}
-		// Try with the next higher profile which is lower or equal to the preferred.
-		else
-		{
-			newTargetProfile = this->effectiveProfile;
-			auto it          = this->mapProfileRtpStream.upper_bound(this->effectiveProfile);
-
-			if (it != this->mapProfileRtpStream.end() && it->first <= GetPreferredProfile())
-				newTargetProfile = it->first;
 		}
 
 		// Not enabled. Make this the target profile.
