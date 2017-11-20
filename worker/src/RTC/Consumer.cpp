@@ -300,8 +300,7 @@ namespace RTC
 		MS_DEBUG_TAG(
 		  rtp, "profile added [profile:%s]", RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
-		if (profile > this->targetProfile)
-			RecalculateTargetProfile();
+		RecalculateTargetProfile();
 	}
 
 	void Consumer::RemoveProfile(const RTC::RtpEncodingParameters::Profile profile)
