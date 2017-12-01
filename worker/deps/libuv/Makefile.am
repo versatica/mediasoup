@@ -212,6 +212,7 @@ test_run_tests_SOURCES = test/blackhole-server.c \
                          test/test-pipe-server-close.c \
                          test/test-pipe-close-stdout-read-stdin.c \
                          test/test-pipe-set-non-blocking.c \
+                         test/test-pipe-set-fchmod.c \
                          test/test-platform-output.c \
                          test/test-poll.c \
                          test/test-poll-close.c \
@@ -328,7 +329,7 @@ libuv_la_CFLAGS += -D_ALL_SOURCE \
                    -D_THREAD_SAFE \
                    -DHAVE_SYS_AHAFS_EVPRODS_H
 include_HEADERS += include/uv-aix.h
-libuv_la_SOURCES += src/unix/aix.c
+libuv_la_SOURCES += src/unix/aix.c src/unix/aix-common.c
 endif
 
 if ANDROID
@@ -339,6 +340,7 @@ libuv_la_SOURCES += src/unix/android-ifaddrs.c \
 endif
 
 if CYGWIN
+include_HEADERS += include/uv-posix.h
 libuv_la_CFLAGS += -D_GNU_SOURCE
 libuv_la_SOURCES += src/unix/cygwin.c \
                     src/unix/bsd-ifaddrs.c \

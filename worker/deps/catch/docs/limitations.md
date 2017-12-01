@@ -1,6 +1,21 @@
+<a id="top"></a>
 # Known limitations
 
 Catch has some known limitations, that we are not planning to change. Some of these are caused by our desire to support C++98 compilers, some of these are caused by our desire to keep Catch crossplatform, some exist because their priority is seen as low compared to the development effort they would need and some other yet are compiler/runtime bugs.
+
+## Implementation limits
+### Sections nested in loops
+
+If you are using `SECTION`s inside loops, you have to create them with different name per loop's iteration. The recommended way to do so is to incorporate the loop's counter into section's name, like so
+```cpp
+TEST_CASE( "Looped section" ) {
+    for (char i = '0'; i < '5'; ++i) {
+        SECTION(std::string("Looped section ") + i) {
+            SUCCEED( "Everything is OK" );
+        }
+    }
+}
+```
 
 ## Features
 This section outlines some missing features, what is their status and their possible workarounds.
@@ -49,6 +64,38 @@ Both of these solutions have their problems, but should let you wring parallelis
 
 ## 3rd party bugs
 This section outlines known bugs in 3rd party components (this means compilers, standard libraries, standard runtimes).
+
+### Visual Studio 2017 -- raw string literal in assert fails to compile
+There is a known bug in Visual Studio 2017 (VC 15), that causes compilation error when preprocessor attempts to stringize a raw string literal (`#` preprocessor is applied to it). This snippet is sufficient to trigger the compilation error:
+```cpp
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+
+TEST_CASE("test") {
+    CHECK(std::string(R"("\)") == "\"\\");
+}
+```
+
+Catch provides a workaround, it is possible to disable stringification of original expressions by defining `CATCH_CONFIG_DISABLE_STRINGIFICATION`:
+```cpp
+#define CATCH_CONFIG_FAST_COMPILE
+#define CATCH_CONFIG_DISABLE_STRINGIFICATION
+#include "catch.hpp"
+
+TEST_CASE("test") {
+    CHECK(std::string(R"("\)") == "\"\\");
+}
+```
+
+_Do note that this changes the output somewhat_
+```
+catchwork\test1.cpp(6):
+PASSED:
+  CHECK( Disabled by CATCH_CONFIG_DISABLE_STRINGIFICATION )
+with expansion:
+  ""\" == ""\"
+```
+
 
 ### Visual Studio 2013 -- do-while loop withing range based for fails to compile (C2059)
 There is a known bug in Visual Studio 2013 (VC 12), that causes compilation error if range based for is followed by an assertion macro, without enclosing the block in braces. This snippet is sufficient to trigger the error

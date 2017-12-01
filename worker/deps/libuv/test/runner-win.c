@@ -212,18 +212,8 @@ int process_copy_output(process_info_t* p, FILE* stream) {
   char buf[1024];
   int fd, r;
   FILE* f;
-  HANDLE stdio_out_copy;
 
-  if (!DuplicateHandle(GetCurrentProcess(),
-                       p->stdio_out,
-                       GetCurrentProcess(),
-                       &stdio_out_copy,
-                       0,
-                       FALSE,
-                       0))
-    return -1;
-
-  fd = _open_osfhandle((intptr_t)stdio_out_copy, _O_RDONLY | _O_TEXT);
+  fd = _open_osfhandle((intptr_t)p->stdio_out, _O_RDONLY | _O_TEXT);
   if (fd == -1)
     return -1;
   f = _fdopen(fd, "rt");
@@ -310,7 +300,6 @@ int process_reap(process_info_t *p) {
 void process_cleanup(process_info_t *p) {
   CloseHandle(p->process);
   CloseHandle(p->stdio_in);
-  CloseHandle(p->stdio_out);
 }
 
 

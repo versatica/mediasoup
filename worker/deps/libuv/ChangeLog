@@ -1,4 +1,214 @@
-2017.08.17, Version 1.14.0 (Stable)
+2017.12.02, Version 1.18.0 (Stable)
+
+Changes since version 1.17.0:
+
+* aix: fix -Wmaybe-uninitialized warning (cjihrig)
+
+* doc: remove note about SIGWINCH on Windows (Bartosz Sosnowski)
+
+* Revert "unix,win: wait for threads to start" (Ben Noordhuis)
+
+* unix,win: add uv_os_getpid() (Bartosz Sosnowski)
+
+* unix: remove incorrect assertion in uv_shutdown() (Jameson Nash)
+
+* doc: fix IRC URL in CONTRIBUTING.md (Matt Harrison)
+
+
+2017.11.25, Version 1.17.0 (Stable), 1344d2bb82e195d0eafc0b40ba103f18dfd04cc5
+
+Changes since version 1.16.1:
+
+* unix: avoid malloc() call in uv_spawn() (Ben Noordhuis)
+
+* doc: clarify the description of uv_loop_alive() (Ed Schouten)
+
+* win: map UV_FS_O_EXLOCK to a share mode of 0 (Joran Dirk Greef)
+
+* win: fix build on case-sensitive file systems (Ben Noordhuis)
+
+* win: fix test runner build with mingw64 (Ben Noordhuis)
+
+* win: remove unused variable in test/test-fs.c (Ben Noordhuis)
+
+* zos: add strnlen() implementation (jBarz)
+
+* unix: keep track of bound sockets sent via spawn (jBarz)
+
+* unix,win: wait for threads to start (Ben Noordhuis)
+
+* test: add threadpool init/teardown test (Bartosz Sosnowski)
+
+* test: avoid malloc() in threadpool test (Ben Noordhuis)
+
+* test: lower number of tasks in threadpool test (Ben Noordhuis)
+
+* win: issue memory barrier in uv_thread_join() (Ben Noordhuis)
+
+* ibmi: add support for new platform (Xu Meng)
+
+* test: fix test-spawn compilation (Bartosz Sosnowski)
+
+
+2017.11.11, Version 1.16.1 (Stable), 4056fbe46493ef87237e307e0025e551db875e13
+
+Changes since version 1.16.0:
+
+* unix: move net/if.h include (cjihrig)
+
+* win: fix undeclared NDIS_IF_MAX_STRING_SIZE (Nick Logan)
+
+
+2017.11.07, Version 1.16.0 (Stable), d68779f0ea742918f653b9c20237460271c39aeb
+
+Changes since version 1.15.0:
+
+* win: change st_blksize from `2048` to `4096` (Joran Dirk Greef)
+
+* unix,win: add fs open flags, map O_DIRECT|O_DSYNC (Joran Dirk Greef)
+
+* win, fs: fix non-symlink reparse points (Wade Brainerd)
+
+* test: fix -Wstrict-prototypes warnings (Ben Noordhuis)
+
+* unix, windows: map ENOTTY errno (Ben Noordhuis)
+
+* unix: fall back to fsync() if F_FULLFSYNC fails (Joran Dirk Greef)
+
+* unix: do not close invalid kqueue fd after fork (jBarz)
+
+* zos: reset epoll data after fork (jBarz)
+
+* zos: skip fork_threadpool_queue_work_simple (jBarz)
+
+* test: keep platform_output as first test (Bartosz Sosnowski)
+
+* win: fix non-English dlopen error message (Bartosz Sosnowski)
+
+* unix,win: add uv_os_getppid() (cjihrig)
+
+* test: fix const qualification compiler warning (Ben Noordhuis)
+
+* doc: mark uv_default_loop() as not thread safe (rayrase)
+
+* win, pipe: null-initialize stream->shutdown_req (Jameson Nash)
+
+* tty, win: get SetWinEventHook pointer at startup (Bartosz Sosnowski)
+
+* test: no extra new line in skipped test output (Bartosz Sosnowski)
+
+* pipe: allow access from other users (Bartosz Sosnowski)
+
+* unix,win: add uv_if_{indextoname,indextoiid} (Pekka Nikander)
+
+
+2017.10.03, Version 1.15.0 (Stable), 8b69ce1419d2958011d415a636810705c36c2cc2
+
+Changes since version 1.14.1:
+
+* unix: limit uv__has_forked_with_cfrunloop to macOS (Kamil Rytarowski)
+
+* win: fix buffer size in uv__getpwuid_r() (tux.uudiin)
+
+* win,tty: improve SIGWINCH support (Bartosz Sosnowski)
+
+* unix: use fchmod() in uv_fs_copyfile() (cjihrig)
+
+* unix: support copying empty files (cjihrig)
+
+* unix: truncate destination in uv_fs_copyfile() (Nick Logan)
+
+* win,build: keep cwd when setting build environment (darobs)
+
+* test: add NetBSD support to test-udp-ipv6.c (Kamil Rytarowski)
+
+* unix: add NetBSD support in core.c (Kamil Rytarowski)
+
+* linux: increase thread stack size with musl libc (Ben Noordhuis)
+
+* netbsd: correct uv_exepath() on NetBSD (Kamil Rytarowski)
+
+* test: clean up semaphore after use (jBarz)
+
+* win,build: bump vswhere_usability_wrapper to 2.0.0 (Refael Ackermann)
+
+* win: let UV_PROCESS_WINDOWS_HIDE hide consoles (cjihrig)
+
+* zos: lock protect global epoll list in epoll_ctl (jBarz)
+
+* zos: change platform name to match python (jBarz)
+
+* android: fix getifaddrs() (Zheng, Lei)
+
+* netbsd: implement uv__tty_is_slave() (Kamil Rytarowski)
+
+* zos: fix readlink for mounts with system variables (jBarz)
+
+* test: sort the tests alphabetically (Sakthipriyan Vairamani)
+
+* windows: fix compilation warnings (Carlo Marcelo Arenas Belón)
+
+* build: avoid -fstrict-aliasing compile option (jBarz)
+
+* win: remove unused variables (Carlo Marcelo Arenas Belón)
+
+* unix: remove unused variables (Sakthipriyan Vairamani)
+
+* netbsd: disable poll_bad_fdtype on NetBSD (Kamil Rytarowski)
+
+* netbsd: use uv__cloexec and uv__nonblock (Kamil Rytarowski)
+
+* test: fix udp_multicast_join6 on NetBSD (Kamil Rytarowski)
+
+* unix,win: add uv_mutex_init_recursive() (Scott Parker)
+
+* netbsd: do not exclude IPv6 functionality (Kamil Rytarowski)
+
+* fsevents: watch files with fsevents on macos 10.7+ (Ben Noordhuis)
+
+* unix: retry on ENOBUFS in sendmsg(2) (Kamil Rytarowski)
+
+
+2017.09.07, Version 1.14.1 (Stable), b0f9fb2a07a5e638b1580fe9a42a356c3ab35f37
+
+Changes since version 1.14.0:
+
+* fs, win: add support for user symlinks (Bartosz Sosnowski)
+
+* cygwin: include uv-posix.h header (Joel Winarske)
+
+* zos: fix semaphore initialization (jBarz)
+
+* zos: improve loop_count benchmark performance (jBarz)
+
+* zos, test: flush out the oob data in callback (jBarz)
+
+* unix,win: check for bad flags in uv_fs_copyfile() (cjihrig)
+
+* unix: modify argv[0] when process title is set (Matthew Taylor)
+
+* unix: don't use req->loop in uv__fs_copyfile() (cjihrig)
+
+* doc: fix a trivial typo (Vladimír Čunát)
+
+* android: fix uv_cond_timedwait on API level < 21 (Gergely Nagy)
+
+* win: add uv__once_init() calls (Bartosz Sosnowski)
+
+* unix,windows: init all requests in fs calls (cjihrig)
+
+* unix,windows: return UV_EINVAL on NULL fs reqs (cjihrig)
+
+* windows: add POST macro to fs functions (cjihrig)
+
+* unix: handle partial sends in uv_fs_copyfile() (A. Hauptmann)
+
+* Revert "win, test: fix double close in test runner" (Bartosz Sosnowski)
+
+* win, test: remove surplus CloseHandle (Bartosz Sosnowski)
+
+
+2017.08.17, Version 1.14.0 (Stable), e0d31e9e21870f88277746b6d59cf07b977cdfea
 
 Changes since version 1.13.1:
 

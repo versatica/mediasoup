@@ -66,6 +66,8 @@
 
 #define INIT(subtype)                                                         \
   do {                                                                        \
+    if (req == NULL)                                                          \
+      return -EINVAL;                                                         \
     req->type = UV_FS;                                                        \
     if (cb != NULL)                                                           \
       uv__req_init(loop, req, UV_FS);                                         \
@@ -130,26 +132,33 @@
   while (0)
 
 
-static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
-#if defined(__linux__) || defined(__sun) || defined(__NetBSD__)
-  return fdatasync(req->file);
-#elif defined(__APPLE__)
+static ssize_t uv__fs_fsync(uv_fs_t* req) {
+#if defined(__APPLE__)
   /* Apple's fdatasync and fsync explicitly do NOT flush the drive write cache
    * to the drive platters. This is in contrast to Linux's fdatasync and fsync
    * which do, according to recent man pages. F_FULLFSYNC is Apple's equivalent
-   * for flushing buffered data to permanent storage.
+   * for flushing buffered data to permanent storage. If F_FULLFSYNC is not
+   * supported by the file system we should fall back to fsync(). This is the
+   * same approach taken by sqlite.
    */
-  return fcntl(req->file, F_FULLFSYNC);
+  int r;
+
+  r = fcntl(req->file, F_FULLFSYNC);
+  if (r != 0 && errno == ENOTTY)
+    r = fsync(req->file);
+  return r;
 #else
   return fsync(req->file);
 #endif
 }
 
 
-static ssize_t uv__fs_fsync(uv_fs_t* req) {
-#if defined(__APPLE__)
-  /* See the comment in uv__fs_fdatasync. */
-  return fcntl(req->file, F_FULLFSYNC);
+static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
+#if defined(__linux__) || defined(__sun) || defined(__NetBSD__)
+  return fdatasync(req->file);
+#elif defined(__APPLE__)
+  /* See the comment in uv__fs_fsync. */
+  return uv__fs_fsync(req);
 #else
   return fsync(req->file);
 #endif
@@ -436,7 +445,12 @@ static ssize_t uv__fs_readlink(uv_fs_t* req) {
     return -1;
   }
 
+#if defined(__MVS__)
+  len = os390_readlink(req->path, buf, len);
+#else
   len = readlink(req->path, buf, len);
+#endif
+
 
   if (len == -1) {
     uv__free(buf);
@@ -789,11 +803,14 @@ static ssize_t uv__fs_copyfile(uv_fs_t* req) {
   int dst_flags;
   int result;
   int err;
+  size_t bytes_to_send;
+  int64_t in_offset;
 
   dstfd = -1;
+  err = 0;
 
   /* Open the source file. */
-  srcfd = uv_fs_open(req->loop, &fs_req, req->path, O_RDONLY, 0, NULL);
+  srcfd = uv_fs_open(NULL, &fs_req, req->path, O_RDONLY, 0, NULL);
   uv_fs_req_cleanup(&fs_req);
 
   if (srcfd < 0)
@@ -805,13 +822,13 @@ static ssize_t uv__fs_copyfile(uv_fs_t* req) {
     goto out;
   }
 
-  dst_flags = O_WRONLY | O_CREAT;
+  dst_flags = O_WRONLY | O_CREAT | O_TRUNC;
 
   if (req->flags & UV_FS_COPYFILE_EXCL)
     dst_flags |= O_EXCL;
 
   /* Open the destination file. */
-  dstfd = uv_fs_open(req->loop,
+  dstfd = uv_fs_open(NULL,
                      &fs_req,
                      req->new_path,
                      dst_flags,
@@ -824,14 +841,27 @@ static ssize_t uv__fs_copyfile(uv_fs_t* req) {
     goto out;
   }
 
-  err = uv_fs_sendfile(req->loop,
-                       &fs_req,
-                       dstfd,
-                       srcfd,
-                       0,
-                       statsbuf.st_size,
-                       NULL);
-  uv_fs_req_cleanup(&fs_req);
+  if (fchmod(dstfd, statsbuf.st_mode) == -1) {
+    err = -errno;
+    goto out;
+  }
+
+  bytes_to_send = statsbuf.st_size;
+  in_offset = 0;
+  while (bytes_to_send != 0) {
+    err = uv_fs_sendfile(NULL,
+                         &fs_req,
+                         dstfd,
+                         srcfd,
+                         in_offset,
+                         bytes_to_send,
+                         NULL);
+    uv_fs_req_cleanup(&fs_req);
+    if (err < 0)
+      break;
+    bytes_to_send -= fs_req.result;
+    in_offset += fs_req.result;
+  }
 
 out:
   if (err < 0)
@@ -1287,10 +1317,11 @@ int uv_fs_read(uv_loop_t* loop, uv_fs_t* req,
                unsigned int nbufs,
                int64_t off,
                uv_fs_cb cb) {
+  INIT(READ);
+
   if (bufs == NULL || nbufs == 0)
     return -EINVAL;
 
-  INIT(READ);
   req->file = file;
 
   req->nbufs = nbufs;
@@ -1425,10 +1456,11 @@ int uv_fs_write(uv_loop_t* loop,
                 unsigned int nbufs,
                 int64_t off,
                 uv_fs_cb cb) {
+  INIT(WRITE);
+
   if (bufs == NULL || nbufs == 0)
     return -EINVAL;
 
-  INIT(WRITE);
   req->file = file;
 
   req->nbufs = nbufs;
@@ -1450,6 +1482,9 @@ int uv_fs_write(uv_loop_t* loop,
 
 
 void uv_fs_req_cleanup(uv_fs_t* req) {
+  if (req == NULL)
+    return;
+
   /* Only necessary for asychronous requests, i.e., requests with a callback.
    * Synchronous ones don't copy their arguments and have req->path and
    * req->new_path pointing to user-owned memory.  UV_FS_MKDTEMP is the
@@ -1477,6 +1512,10 @@ int uv_fs_copyfile(uv_loop_t* loop,
                    int flags,
                    uv_fs_cb cb) {
   INIT(COPYFILE);
+
+  if (flags & ~UV_FS_COPYFILE_EXCL)
+    return -EINVAL;
+
   PATH2;
   req->flags = flags;
   POST;
