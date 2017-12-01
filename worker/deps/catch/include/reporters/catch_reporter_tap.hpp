@@ -19,29 +19,32 @@
 
 namespace Catch {
 
-    struct TAPReporter : StreamingReporterBase<TAPReporter> {
+    struct TAPReporter : StreamingReporterBase {
 
-        using StreamingReporterBase::StreamingReporterBase;
+        TAPReporter( ReporterConfig const& _config )
+        : StreamingReporterBase( _config ),
+          counter(0)
+        {}
 
-        ~TAPReporter() override;
+        virtual ~TAPReporter();
 
         static std::string getDescription() {
             return "Reports test results in TAP format, suitable for test harneses";
         }
 
-        ReporterPreferences getPreferences() const override {
+        virtual ReporterPreferences getPreferences() const {
             ReporterPreferences prefs;
             prefs.shouldRedirectStdOut = false;
             return prefs;
         }
 
-        void noMatchingTestCases( std::string const& spec ) override {
+        virtual void noMatchingTestCases( std::string const& spec ) {
             stream << "# No test cases matched '" << spec << "'" << std::endl;
         }
 
-        void assertionStarting( AssertionInfo const& ) override {}
+        virtual void assertionStarting( AssertionInfo const& ) {}
 
-        bool assertionEnded( AssertionStats const& _assertionStats ) override {
+        virtual bool assertionEnded( AssertionStats const& _assertionStats ) {
             ++counter;
 
             AssertionPrinter printer( stream, _assertionStats, counter );
@@ -52,25 +55,25 @@ namespace Catch {
             return true;
         }
 
-        void testRunEnded( TestRunStats const& _testRunStats ) override {
+        virtual void testRunEnded( TestRunStats const& _testRunStats ) {
             printTotals( _testRunStats.totals );
             stream << "\n" << std::endl;
             StreamingReporterBase::testRunEnded( _testRunStats );
         }
 
     private:
-        std::size_t counter = 0;
+        size_t counter;
         class AssertionPrinter {
+            void operator= ( AssertionPrinter const& );
         public:
-            AssertionPrinter& operator= ( AssertionPrinter const& ) = delete;
-            AssertionPrinter( AssertionPrinter const& ) = delete;
-            AssertionPrinter( std::ostream& _stream, AssertionStats const& _stats, std::size_t _counter )
+            AssertionPrinter( std::ostream& _stream, AssertionStats const& _stats, size_t counter )
             : stream( _stream )
+            , stats( _stats )
             , result( _stats.assertionResult )
             , messages( _stats.infoMessages )
             , itMessage( _stats.infoMessages.begin() )
             , printInfoMessages( true )
-            , counter(_counter)
+            , counter(counter)
             {}
 
             void print() {
@@ -205,7 +208,7 @@ namespace Catch {
                     return;
                 }
 
-                // using messages.end() directly (or auto) yields compilation error:
+                // using messages.end() directly yields compilation error:
                 std::vector<MessageInfo>::const_iterator itEnd = messages.end();
                 const std::size_t N = static_cast<std::size_t>( std::distance( itMessage, itEnd ) );
 
@@ -228,11 +231,12 @@ namespace Catch {
 
         private:
             std::ostream& stream;
+            AssertionStats const& stats;
             AssertionResult const& result;
             std::vector<MessageInfo> messages;
             std::vector<MessageInfo>::const_iterator itMessage;
             bool printInfoMessages;
-            std::size_t counter;
+            size_t counter;
         };
 
         void printTotals( const Totals& totals ) const {
@@ -248,7 +252,7 @@ namespace Catch {
     TAPReporter::~TAPReporter() {}
 #endif
 
-    CATCH_REGISTER_REPORTER( "tap", TAPReporter )
+    INTERNAL_CATCH_REGISTER_REPORTER( "tap", TAPReporter )
 
 } // end namespace Catch
 

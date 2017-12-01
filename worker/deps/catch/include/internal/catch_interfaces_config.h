@@ -8,20 +8,19 @@
 #ifndef TWOBLUECUBES_CATCH_INTERFACES_CONFIG_H_INCLUDED
 #define TWOBLUECUBES_CATCH_INTERFACES_CONFIG_H_INCLUDED
 
-#include "catch_common.h"
-
 #include <iosfwd>
 #include <string>
 #include <vector>
-#include <memory>
+
+#include "catch_ptr.hpp"
 
 namespace Catch {
 
-    enum class Verbosity {
-        Quiet = 0,
-        Normal,
-        High
-    };
+    struct Verbosity { enum Level {
+        NoOutput = 0,
+        Quiet,
+        Normal
+    }; };
 
     struct WarnAbout { enum What {
         Nothing = 0x00,
@@ -52,7 +51,7 @@ namespace Catch {
 
     class TestSpec;
 
-    struct IConfig : NonCopyable {
+    struct IConfig : IShared {
 
         virtual ~IConfig();
 
@@ -68,13 +67,10 @@ namespace Catch {
         virtual TestSpec const& testSpec() const = 0;
         virtual RunTests::InWhatOrder runOrder() const = 0;
         virtual unsigned int rngSeed() const = 0;
-        virtual int benchmarkResolutionMultiple() const = 0;
         virtual UseColour::YesOrNo useColour() const = 0;
         virtual std::vector<std::string> const& getSectionsToRun() const = 0;
-        virtual Verbosity verbosity() const = 0;
-    };
 
-    using IConfigPtr = std::shared_ptr<IConfig const>;
+    };
 }
 
 #endif // TWOBLUECUBES_CATCH_INTERFACES_CONFIG_H_INCLUDED

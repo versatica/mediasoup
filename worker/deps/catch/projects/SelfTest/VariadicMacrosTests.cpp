@@ -8,6 +8,7 @@
 
 #include "catch.hpp"
 
+#ifdef CATCH_CONFIG_VARIADIC_MACROS
 
 TEST_CASE()
 {
@@ -27,3 +28,4 @@ TEST_CASE( "Variadic macros", "[variadic][sections]" )
     }
 }
 
+#endif

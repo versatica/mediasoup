@@ -19,13 +19,16 @@
 #ifdef __clang__
 #   pragma clang diagnostic push
 #   pragma clang diagnostic ignored "-Wpadded"
+#   pragma clang diagnostic ignored "-Wc++98-compat"
+#   pragma clang diagnostic ignored "-Wc++98-compat-pedantic"
 #endif
 
 namespace Catch {
 
-    struct TeamCityReporter : StreamingReporterBase<TeamCityReporter> {
+    struct TeamCityReporter : StreamingReporterBase {
         TeamCityReporter( ReporterConfig const& _config )
-        :   StreamingReporterBase( _config )
+        :   StreamingReporterBase( _config ),
+            m_headerPrintedForThisSection( false )
         {
             m_reporterPrefs.shouldRedirectStdOut = true;
         }
@@ -40,32 +43,33 @@ namespace Catch {
             replaceInPlace( escaped, "]", "|]" );
             return escaped;
         }
-        ~TeamCityReporter() override;
+        virtual ~TeamCityReporter() CATCH_OVERRIDE;
 
         static std::string getDescription() {
             return "Reports test results as TeamCity service messages";
         }
 
-        void skipTest( TestCaseInfo const& /* testInfo */ ) override {
+        virtual void skipTest( TestCaseInfo const& /* testInfo */ ) CATCH_OVERRIDE {
         }
 
-        void noMatchingTestCases( std::string const& /* spec */ ) override {}
+        virtual void noMatchingTestCases( std::string const& /* spec */ ) CATCH_OVERRIDE {}
 
-        void testGroupStarting( GroupInfo const& groupInfo ) override {
+        virtual void testGroupStarting( GroupInfo const& groupInfo ) CATCH_OVERRIDE {
             StreamingReporterBase::testGroupStarting( groupInfo );
             stream << "##teamcity[testSuiteStarted name='"
                 << escape( groupInfo.name ) << "']\n";
         }
-        void testGroupEnded( TestGroupStats const& testGroupStats ) override {
+        virtual void testGroupEnded( TestGroupStats const& testGroupStats ) CATCH_OVERRIDE {
             StreamingReporterBase::testGroupEnded( testGroupStats );
             stream << "##teamcity[testSuiteFinished name='"
                 << escape( testGroupStats.groupInfo.name ) << "']\n";
         }
 
 
-        void assertionStarting( AssertionInfo const& ) override {}
+        virtual void assertionStarting( AssertionInfo const& ) CATCH_OVERRIDE {
+        }
 
-        bool assertionEnded( AssertionStats const& assertionStats ) override {
+        virtual bool assertionEnded( AssertionStats const& assertionStats ) CATCH_OVERRIDE {
             AssertionResult const& result = assertionStats.assertionResult;
             if( !result.isOk() ) {
 
@@ -97,19 +101,23 @@ namespace Catch {
                     case ResultWas::Ok:
                     case ResultWas::Info:
                     case ResultWas::Warning:
-                        CATCH_ERROR( "Internal error in TeamCity reporter" );
+
                     // These cases are here to prevent compiler warnings
                     case ResultWas::Unknown:
                     case ResultWas::FailureBit:
                     case ResultWas::Exception:
-                        CATCH_ERROR( "Not implemented" );
+                        CATCH_NOT_IMPLEMENTED;
                 }
                 if( assertionStats.infoMessages.size() == 1 )
                     msg << " with message:";
                 if( assertionStats.infoMessages.size() > 1 )
                     msg << " with messages:";
-                for( auto const& messageInfo : assertionStats.infoMessages )
-                    msg << "\n  \"" << messageInfo.message << "\"";
+                for( std::vector<MessageInfo>::const_iterator
+                        it = assertionStats.infoMessages.begin(),
+                        itEnd = assertionStats.infoMessages.end();
+                    it != itEnd;
+                    ++it )
+                    msg << "\n  \"" << it->message << "\"";
 
 
                 if( result.hasExpression() ) {
@@ -137,12 +145,12 @@ namespace Catch {
             return true;
         }
 
-        void sectionStarting( SectionInfo const& sectionInfo ) override {
+        virtual void sectionStarting( SectionInfo const& sectionInfo ) CATCH_OVERRIDE {
             m_headerPrintedForThisSection = false;
             StreamingReporterBase::sectionStarting( sectionInfo );
         }
 
-        void testCaseStarting( TestCaseInfo const& testInfo ) override {
+        virtual void testCaseStarting( TestCaseInfo const& testInfo ) CATCH_OVERRIDE {
             m_testTimer.start();
             StreamingReporterBase::testCaseStarting( testInfo );
             stream << "##teamcity[testStarted name='"
@@ -150,7 +158,7 @@ namespace Catch {
             stream.flush();
         }
 
-        void testCaseEnded( TestCaseStats const& testCaseStats ) override {
+        virtual void testCaseEnded( TestCaseStats const& testCaseStats ) CATCH_OVERRIDE {
             StreamingReporterBase::testCaseEnded( testCaseStats );
             if( !testCaseStats.stdOut.empty() )
                 stream << "##teamcity[testStdOut name='"
@@ -190,18 +198,18 @@ namespace Catch {
 
         // if string has a : in first line will set indent to follow it on
         // subsequent lines
-        static void printHeaderString( std::ostream& os, std::string const& _string, std::size_t indent = 0 ) {
+        void printHeaderString( std::ostream& os, std::string const& _string, std::size_t indent = 0 ) {
             std::size_t i = _string.find( ": " );
             if( i != std::string::npos )
                 i+=2;
             else
                 i = 0;
-            os << Column( _string )
-                           .indent( indent+i)
-                           .initialIndent( indent ) << "\n";
+            os << Text( _string, TextAttributes()
+                           .setIndent( indent+i)
+                           .setInitialIndent( indent ) ) << "\n";
         }
     private:
-        bool m_headerPrintedForThisSection = false;
+        bool m_headerPrintedForThisSection;
         Timer m_testTimer;
     };
 
@@ -209,7 +217,7 @@ namespace Catch {
     TeamCityReporter::~TeamCityReporter() {}
 #endif
 
-    CATCH_REGISTER_REPORTER( "teamcity", TeamCityReporter )
+    INTERNAL_CATCH_REGISTER_REPORTER( "teamcity", TeamCityReporter )
 
 } // end namespace Catch
 

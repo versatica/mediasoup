@@ -8,22 +8,17 @@
 #ifndef TWOBLUECUBES_CATCH_INTERFACES_EXCEPTION_H_INCLUDED
 #define TWOBLUECUBES_CATCH_INTERFACES_EXCEPTION_H_INCLUDED
 
-#include "catch_interfaces_registry_hub.h"
-
-#if defined(CATCH_CONFIG_DISABLE)
-    #define INTERNAL_CATCH_TRANSLATE_EXCEPTION_NO_REG( translatorName, signature) \
-        static std::string translatorName( signature )
-#endif
-
-#include <exception>
 #include <string>
 #include <vector>
 
+#include "catch_interfaces_registry_hub.h"
+
 namespace Catch {
-    using exceptionTranslateFunction = std::string(*)();
+
+    typedef std::string(*exceptionTranslateFunction)();
 
     struct IExceptionTranslator;
-    using ExceptionTranslators = std::vector<std::unique_ptr<IExceptionTranslator const>>;
+    typedef std::vector<const IExceptionTranslator*> ExceptionTranslators;
 
     struct IExceptionTranslator {
         virtual ~IExceptionTranslator();
@@ -45,10 +40,10 @@ namespace Catch {
             : m_translateFunction( translateFunction )
             {}
 
-            std::string translate( ExceptionTranslators::const_iterator it, ExceptionTranslators::const_iterator itEnd ) const override {
+            virtual std::string translate( ExceptionTranslators::const_iterator it, ExceptionTranslators::const_iterator itEnd ) const CATCH_OVERRIDE {
                 try {
                     if( it == itEnd )
-                        std::rethrow_exception(std::current_exception());
+                        throw;
                     else
                         return (*it)->translate( it+1, itEnd );
                 }

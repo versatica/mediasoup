@@ -102,7 +102,7 @@ function get_libsrtp()
 function get_catch()
 {
 	GIT_REPO="https://github.com/philsquared/Catch.git"
-	GIT_TAG="v2.0.1"
+	GIT_TAG="v1.11.0"
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"

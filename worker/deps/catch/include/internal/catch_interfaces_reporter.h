@@ -10,42 +10,46 @@
 
 #include "catch_section_info.h"
 #include "catch_common.h"
+#include "catch_totals.hpp"
+#include "catch_ptr.hpp"
 #include "catch_config.hpp"
-#include "catch_totals.h"
 #include "catch_test_case_info.h"
 #include "catch_assertionresult.h"
 #include "catch_message.h"
 #include "catch_option.hpp"
-#include "catch_stringref.h"
-
 
 #include <string>
-#include <iosfwd>
+#include <ostream>
 #include <map>
-#include <set>
-#include <memory>
 
-namespace Catch {
-
+namespace Catch
+{
     struct ReporterConfig {
-        explicit ReporterConfig( IConfigPtr const& _fullConfig );
+        explicit ReporterConfig( Ptr<IConfig const> const& _fullConfig )
+        :   m_stream( &_fullConfig->stream() ), m_fullConfig( _fullConfig ) {}
 
-        ReporterConfig( IConfigPtr const& _fullConfig, std::ostream& _stream );
+        ReporterConfig( Ptr<IConfig const> const& _fullConfig, std::ostream& _stream )
+        :   m_stream( &_stream ), m_fullConfig( _fullConfig ) {}
 
-        std::ostream& stream() const;
-        IConfigPtr fullConfig() const;
+        std::ostream& stream() const    { return *m_stream; }
+        Ptr<IConfig const> fullConfig() const { return m_fullConfig; }
 
     private:
         std::ostream* m_stream;
-        IConfigPtr m_fullConfig;
+        Ptr<IConfig const> m_fullConfig;
     };
 
     struct ReporterPreferences {
-        bool shouldRedirectStdOut = false;
+        ReporterPreferences()
+        : shouldRedirectStdOut( false )
+        {}
+
+        bool shouldRedirectStdOut;
     };
 
     template<typename T>
     struct LazyStat : Option<T> {
+        LazyStat() : used( false ) {}
         LazyStat& operator=( T const& _value ) {
             Option<T>::operator=( _value );
             used = false;
@@ -55,17 +59,21 @@ namespace Catch {
             Option<T>::reset();
             used = false;
         }
-        bool used = false;
+        bool used;
     };
 
     struct TestRunInfo {
-        TestRunInfo( std::string const& _name );
+        TestRunInfo( std::string const& _name ) : name( _name ) {}
         std::string name;
     };
     struct GroupInfo {
         GroupInfo(  std::string const& _name,
                     std::size_t _groupIndex,
-                    std::size_t _groupsCount );
+                    std::size_t _groupsCount )
+        :   name( _name ),
+            groupIndex( _groupIndex ),
+            groupsCounts( _groupsCount )
+        {}
 
         std::string name;
         std::size_t groupIndex;
@@ -75,13 +83,29 @@ namespace Catch {
     struct AssertionStats {
         AssertionStats( AssertionResult const& _assertionResult,
                         std::vector<MessageInfo> const& _infoMessages,
-                        Totals const& _totals );
+                        Totals const& _totals )
+        :   assertionResult( _assertionResult ),
+            infoMessages( _infoMessages ),
+            totals( _totals )
+        {
+            if( assertionResult.hasMessage() ) {
+                // Copy message into messages list.
+                // !TBD This should have been done earlier, somewhere
+                MessageBuilder builder( assertionResult.getTestMacroName(), assertionResult.getSourceInfo(), assertionResult.getResultType() );
+                builder << assertionResult.getMessage();
+                builder.m_info.message = builder.m_stream.str();
 
+                infoMessages.push_back( builder.m_info );
+            }
+        }
+        virtual ~AssertionStats();
+
+#  ifdef CATCH_CONFIG_CPP11_GENERATED_METHODS
         AssertionStats( AssertionStats const& )              = default;
         AssertionStats( AssertionStats && )                  = default;
         AssertionStats& operator = ( AssertionStats const& ) = default;
         AssertionStats& operator = ( AssertionStats && )     = default;
-        virtual ~AssertionStats();
+#  endif
 
         AssertionResult assertionResult;
         std::vector<MessageInfo> infoMessages;
@@ -92,12 +116,19 @@ namespace Catch {
         SectionStats(   SectionInfo const& _sectionInfo,
                         Counts const& _assertions,
                         double _durationInSeconds,
-                        bool _missingAssertions );
+                        bool _missingAssertions )
+        :   sectionInfo( _sectionInfo ),
+            assertions( _assertions ),
+            durationInSeconds( _durationInSeconds ),
+            missingAssertions( _missingAssertions )
+        {}
+        virtual ~SectionStats();
+#  ifdef CATCH_CONFIG_CPP11_GENERATED_METHODS
         SectionStats( SectionStats const& )              = default;
         SectionStats( SectionStats && )                  = default;
         SectionStats& operator = ( SectionStats const& ) = default;
         SectionStats& operator = ( SectionStats && )     = default;
-        virtual ~SectionStats();
+#  endif
 
         SectionInfo sectionInfo;
         Counts assertions;
@@ -110,13 +141,21 @@ namespace Catch {
                         Totals const& _totals,
                         std::string const& _stdOut,
                         std::string const& _stdErr,
-                        bool _aborting );
+                        bool _aborting )
+        : testInfo( _testInfo ),
+            totals( _totals ),
+            stdOut( _stdOut ),
+            stdErr( _stdErr ),
+            aborting( _aborting )
+        {}
+        virtual ~TestCaseStats();
 
+#  ifdef CATCH_CONFIG_CPP11_GENERATED_METHODS
         TestCaseStats( TestCaseStats const& )              = default;
         TestCaseStats( TestCaseStats && )                  = default;
         TestCaseStats& operator = ( TestCaseStats const& ) = default;
         TestCaseStats& operator = ( TestCaseStats && )     = default;
-        virtual ~TestCaseStats();
+#  endif
 
         TestCaseInfo testInfo;
         Totals totals;
@@ -128,14 +167,23 @@ namespace Catch {
     struct TestGroupStats {
         TestGroupStats( GroupInfo const& _groupInfo,
                         Totals const& _totals,
-                        bool _aborting );
-        TestGroupStats( GroupInfo const& _groupInfo );
+                        bool _aborting )
+        :   groupInfo( _groupInfo ),
+            totals( _totals ),
+            aborting( _aborting )
+        {}
+        TestGroupStats( GroupInfo const& _groupInfo )
+        :   groupInfo( _groupInfo ),
+            aborting( false )
+        {}
+        virtual ~TestGroupStats();
 
+#  ifdef CATCH_CONFIG_CPP11_GENERATED_METHODS
         TestGroupStats( TestGroupStats const& )              = default;
         TestGroupStats( TestGroupStats && )                  = default;
         TestGroupStats& operator = ( TestGroupStats const& ) = default;
         TestGroupStats& operator = ( TestGroupStats && )     = default;
-        virtual ~TestGroupStats();
+#  endif
 
         GroupInfo groupInfo;
         Totals totals;
@@ -145,34 +193,38 @@ namespace Catch {
     struct TestRunStats {
         TestRunStats(   TestRunInfo const& _runInfo,
                         Totals const& _totals,
-                        bool _aborting );
+                        bool _aborting )
+        :   runInfo( _runInfo ),
+            totals( _totals ),
+            aborting( _aborting )
+        {}
+        virtual ~TestRunStats();
 
+#  ifndef CATCH_CONFIG_CPP11_GENERATED_METHODS
+        TestRunStats( TestRunStats const& _other )
+        :   runInfo( _other.runInfo ),
+            totals( _other.totals ),
+            aborting( _other.aborting )
+        {}
+#  else
         TestRunStats( TestRunStats const& )              = default;
         TestRunStats( TestRunStats && )                  = default;
         TestRunStats& operator = ( TestRunStats const& ) = default;
         TestRunStats& operator = ( TestRunStats && )     = default;
-        virtual ~TestRunStats();
+#  endif
 
         TestRunInfo runInfo;
         Totals totals;
         bool aborting;
     };
 
-    struct BenchmarkInfo {
-        std::string name;
-    };
-    struct BenchmarkStats {
-        BenchmarkInfo info;
-        std::size_t iterations;
-        uint64_t elapsedTimeInNanoseconds;
-    };
+    class MultipleReporters;
 
-    struct IStreamingReporter {
-        virtual ~IStreamingReporter() = default;
+    struct IStreamingReporter : IShared {
+        virtual ~IStreamingReporter();
 
-        // Implementing class must also provide the following static methods:
+        // Implementing class must also provide the following static method:
         // static std::string getDescription();
-        // static std::set<Verbosity> getSupportedVerbosities()
 
         virtual ReporterPreferences getPreferences() const = 0;
 
@@ -184,16 +236,10 @@ namespace Catch {
         virtual void testCaseStarting( TestCaseInfo const& testInfo ) = 0;
         virtual void sectionStarting( SectionInfo const& sectionInfo ) = 0;
 
-        // *** experimental ***
-        virtual void benchmarkStarting( BenchmarkInfo const& ) {}
-
         virtual void assertionStarting( AssertionInfo const& assertionInfo ) = 0;
 
         // The return value indicates if the messages buffer should be cleared:
         virtual bool assertionEnded( AssertionStats const& assertionStats ) = 0;
-
-        // *** experimental ***
-        virtual void benchmarkEnded( BenchmarkStats const& ) {}
 
         virtual void sectionEnded( SectionStats const& sectionStats ) = 0;
         virtual void testCaseEnded( TestCaseStats const& testCaseStats ) = 0;
@@ -202,32 +248,28 @@ namespace Catch {
 
         virtual void skipTest( TestCaseInfo const& testInfo ) = 0;
 
-        // Default empty implementation provided
-        virtual void fatalErrorEncountered( StringRef name );
-
-        virtual bool isMulti() const;
+        virtual MultipleReporters* tryAsMulti() { return CATCH_NULL; }
     };
-    using IStreamingReporterPtr = std::unique_ptr<IStreamingReporter>;
 
-    struct IReporterFactory {
+
+    struct IReporterFactory : IShared {
         virtual ~IReporterFactory();
-        virtual IStreamingReporterPtr create( ReporterConfig const& config ) const = 0;
+        virtual IStreamingReporter* create( ReporterConfig const& config ) const = 0;
         virtual std::string getDescription() const = 0;
     };
-    using IReporterFactoryPtr = std::shared_ptr<IReporterFactory>;
 
     struct IReporterRegistry {
-        using FactoryMap = std::map<std::string, IReporterFactoryPtr>;
-        using Listeners = std::vector<IReporterFactoryPtr>;
+        typedef std::map<std::string, Ptr<IReporterFactory> > FactoryMap;
+        typedef std::vector<Ptr<IReporterFactory> > Listeners;
 
         virtual ~IReporterRegistry();
-        virtual IStreamingReporterPtr create( std::string const& name, IConfigPtr const& config ) const = 0;
+        virtual IStreamingReporter* create( std::string const& name, Ptr<IConfig const> const& config ) const = 0;
         virtual FactoryMap const& getFactories() const = 0;
         virtual Listeners const& getListeners() const = 0;
     };
 
-    void addReporter( IStreamingReporterPtr& existingReporter, IStreamingReporterPtr&& additionalReporter );
+    Ptr<IStreamingReporter> addReporter( Ptr<IStreamingReporter> const& existingReporter, Ptr<IStreamingReporter> const& additionalReporter );
 
-} // end namespace Catch
+}
 
 #endif // TWOBLUECUBES_CATCH_INTERFACES_REPORTER_H_INCLUDED

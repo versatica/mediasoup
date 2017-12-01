@@ -9,7 +9,6 @@
 #define TWOBLUECUBES_CATCH_MESSAGE_H_INCLUDED
 
 #include <string>
-#include <sstream>
 #include "catch_result_type.h"
 #include "catch_common.h"
 
@@ -21,33 +20,27 @@ namespace Catch {
                         ResultWas::OfType _type );
 
         std::string macroName;
-        std::string message;
         SourceLineInfo lineInfo;
         ResultWas::OfType type;
+        std::string message;
         unsigned int sequence;
 
-        bool operator == ( MessageInfo const& other ) const;
-        bool operator < ( MessageInfo const& other ) const;
+        bool operator == ( MessageInfo const& other ) const {
+            return sequence == other.sequence;
+        }
+        bool operator < ( MessageInfo const& other ) const {
+            return sequence < other.sequence;
+        }
     private:
         static unsigned int globalCount;
     };
 
-    struct MessageStream {
-
-        template<typename T>
-        MessageStream& operator << ( T const& value ) {
-            m_stream << value;
-            return *this;
-        }
-
-        // !TBD reuse a global/ thread-local stream
-        std::ostringstream m_stream;
-    };
-
-    struct MessageBuilder : MessageStream {
+    struct MessageBuilder {
         MessageBuilder( std::string const& macroName,
                         SourceLineInfo const& lineInfo,
-                        ResultWas::OfType type );
+                        ResultWas::OfType type )
+        : m_info( macroName, lineInfo, type )
+        {}
 
         template<typename T>
         MessageBuilder& operator << ( T const& value ) {
@@ -56,11 +49,13 @@ namespace Catch {
         }
 
         MessageInfo m_info;
+        std::ostringstream m_stream;
     };
 
     class ScopedMessage {
     public:
         ScopedMessage( MessageBuilder const& builder );
+        ScopedMessage( ScopedMessage const& other );
         ~ScopedMessage();
 
         MessageInfo m_info;

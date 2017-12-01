@@ -9,6 +9,7 @@
 #define TWOBLUECUBES_CATCH_INTERFACES_RUNNER_H_INCLUDED
 
 namespace Catch {
+    class TestCase;
 
     struct IRunner {
         virtual ~IRunner();

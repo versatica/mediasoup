@@ -1,4 +1,3 @@
-<a id="top"></a>
 # Open Source projects using Catch
 
 Catch is great for open source. With its [liberal license](../LICENSE.txt) and single-header, dependency-free, distribution 
@@ -84,4 +83,4 @@ Standardese aims to be a nextgen Doxygen
 
 ---
 
-[Home](Readme.md#top)
+[Home](Readme.md)

@@ -16,22 +16,22 @@
 
 namespace Catch {
 
-    struct AutomakeReporter : StreamingReporterBase<AutomakeReporter> {
+    struct AutomakeReporter : StreamingReporterBase {
         AutomakeReporter( ReporterConfig const& _config )
           :   StreamingReporterBase( _config )
         {}
 
-        ~AutomakeReporter() override;
+        virtual ~AutomakeReporter();
 
         static std::string getDescription() {
             return "Reports test results in the format of Automake .trs files";
         }
 
-        void assertionStarting( AssertionInfo const& ) override {}
+        virtual void assertionStarting( AssertionInfo const& ) CATCH_OVERRIDE {}
 
-        bool assertionEnded( AssertionStats const& /*_assertionStats*/ ) override { return true; }
+        virtual bool assertionEnded( AssertionStats const& /*_assertionStats*/ ) CATCH_OVERRIDE { return true; }
 
-        void testCaseEnded( TestCaseStats const& _testCaseStats ) override {
+        virtual void testCaseEnded( TestCaseStats const& _testCaseStats ) CATCH_OVERRIDE {
             // Possible values to emit are PASS, XFAIL, SKIP, FAIL, XPASS and ERROR.
             stream << ":test-result: ";
             if (_testCaseStats.totals.assertions.allPassed()) {
@@ -45,7 +45,7 @@ namespace Catch {
             StreamingReporterBase::testCaseEnded( _testCaseStats );
         }
 
-        void skipTest( TestCaseInfo const& testInfo ) override {
+        virtual void skipTest( TestCaseInfo const& testInfo ) CATCH_OVERRIDE {
             stream << ":test-result: SKIP " << testInfo.name << '\n';
         }
 
@@ -55,7 +55,7 @@ namespace Catch {
     AutomakeReporter::~AutomakeReporter() {}
 #endif
 
-    CATCH_REGISTER_REPORTER( "automake", AutomakeReporter)
+    INTERNAL_CATCH_REGISTER_REPORTER( "automake", AutomakeReporter)
 
 } // end namespace Catch
 

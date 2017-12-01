@@ -1,4 +1,3 @@
-<a id="top"></a>
 # Logging macros
 
 Additional messages can be logged during a test case. Note that the messages are scoped and thus will not be reported if failure occurs in scope preceding the message declaration. An example:
@@ -80,4 +79,4 @@ These macros are now deprecated and are just aliases for INFO and CAPTURE (which
 
 ---
 
-[Home](Readme.md#top)
+[Home](Readme.md)

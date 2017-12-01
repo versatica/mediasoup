@@ -6,22 +6,27 @@
  *  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #ifdef __clang__
-#   pragma clang diagnostic push
 #   pragma clang diagnostic ignored "-Wpadded"
-#   pragma clang diagnostic ignored "-Wdouble-promotion"
+#   pragma clang diagnostic ignored "-Wc++98-compat"
 #endif
 
 #include "catch.hpp"
 
 #include <string>
 #include <limits>
-#include <cstdint>
 
 struct TestData {
-    int int_seven = 7;
-    std::string str_hello = "hello";
-    float float_nine_point_one = 9.1f;
-    double double_pi = 3.1415926535;
+    TestData()
+    :   int_seven( 7 ),
+        str_hello( "hello" ),
+        float_nine_point_one( 9.1f ),
+        double_pi( 3.1415926535 )
+    {}
+
+    int int_seven;
+    std::string str_hello;
+    float float_nine_point_one;
+    double double_pi;
 };
 
 
@@ -32,13 +37,14 @@ struct TestDef {
     TestDef& operator[]( const std::string& ) {
         return *this;
     }
+
 };
 
 // The "failing" tests all use the CHECK macro, which continues if the specific test fails.
 // This allows us to see all results, even if an earlier check fails
 
 // Equality tests
-TEST_CASE( "Equality checks that should succeed" )
+TEST_CASE( "Equality checks that should succeed", "" )
 {
 
     TestDef td;
@@ -78,7 +84,7 @@ TEST_CASE( "Equality checks that should fail", "[.][failing][!mayfail]" )
     CHECK( x == Approx( 1.301 ) );
 }
 
-TEST_CASE( "Inequality checks that should succeed" )
+TEST_CASE( "Inequality checks that should succeed", "" )
 {
     TestData data;
 
@@ -107,7 +113,7 @@ TEST_CASE( "Inequality checks that should fail", "[.][failing][!shouldfail]" )
 }
 
 // Ordering comparison tests
-TEST_CASE( "Ordering comparison checks that should succeed" )
+TEST_CASE( "Ordering comparison checks that should succeed", "" )
 {
     TestData data;
 
@@ -163,13 +169,8 @@ TEST_CASE( "Ordering comparison checks that should fail", "[.][failing]" )
     CHECK( data.str_hello <= "a" );
 }
 
-#ifdef __clang__
-#   pragma clang diagnostic pop
-#endif
-
-
 // Comparisons with int literals
-TEST_CASE( "Comparisons with int literals don't warn when mixing signed/ unsigned" )
+TEST_CASE( "Comparisons with int literals don't warn when mixing signed/ unsigned", "" )
 {
     int i = 1;
     unsigned int ui = 2;
@@ -192,7 +193,7 @@ TEST_CASE( "Comparisons with int literals don't warn when mixing signed/ unsigne
     REQUIRE( 5 == c );
     REQUIRE( 6 == uc );
 
-    REQUIRE( (std::numeric_limits<uint32_t>::max)() > ul );
+    REQUIRE( (std::numeric_limits<unsigned long>::max)() > ul );
 }
 
 // Disable warnings about sign conversions for the next two tests
@@ -207,7 +208,7 @@ TEST_CASE( "Comparisons with int literals don't warn when mixing signed/ unsigne
 #pragma warning(disable:4389) // '==' : signed/unsigned mismatch
 #endif
 
-TEST_CASE( "comparisons between int variables" )
+TEST_CASE( "comparisons between int variables", "" )
 {
     long            long_var = 1L;
     unsigned char    unsigned_char_var = 1;
@@ -221,7 +222,7 @@ TEST_CASE( "comparisons between int variables" )
     REQUIRE( long_var == unsigned_long_var );
 }
 
-TEST_CASE( "comparisons between const int variables" )
+TEST_CASE( "comparisons between const int variables", "" )
 {
     const unsigned char     unsigned_char_var = 1;
     const unsigned short    unsigned_short_var = 1;
@@ -234,7 +235,7 @@ TEST_CASE( "comparisons between const int variables" )
     REQUIRE( unsigned_long_var == 1 );
 }
 
-TEST_CASE( "Comparisons between unsigned ints and negative signed ints match c++ standard behaviour" )
+TEST_CASE( "Comparisons between unsigned ints and negative signed ints match c++ standard behaviour", "" )
 {
     CHECK( ( -1 > 2u ) );
     CHECK( -1 > 2u );
@@ -247,7 +248,7 @@ TEST_CASE( "Comparisons between unsigned ints and negative signed ints match c++
     CHECK( minInt > 2u );
 }
 
-TEST_CASE( "Comparisons between ints where one side is computed" )
+TEST_CASE( "Comparisons between ints where one side is computed", "" )
 {
      CHECK( 54 == 6*9 );
 }
@@ -256,32 +257,32 @@ TEST_CASE( "Comparisons between ints where one side is computed" )
 #pragma GCC diagnostic pop
 #endif
 
-inline const char* returnsConstNull(){ return nullptr; }
-inline char* returnsNull(){ return nullptr; }
+inline const char* returnsConstNull(){ return CATCH_NULL; }
+inline char* returnsNull(){ return CATCH_NULL; }
 
-TEST_CASE( "Pointers can be compared to null" )
+TEST_CASE( "Pointers can be compared to null", "" )
 {
-    TestData* p = nullptr;
-    TestData* pNULL = nullptr;
+    TestData* p = CATCH_NULL;
+    TestData* pNULL = CATCH_NULL;
 
-    REQUIRE( p == nullptr );
+    REQUIRE( p == CATCH_NULL );
     REQUIRE( p == pNULL );
 
     TestData data;
     p = &data;
 
-    REQUIRE( p != nullptr );
+    REQUIRE( p != CATCH_NULL );
 
     const TestData* cp = p;
-    REQUIRE( cp != nullptr );
+    REQUIRE( cp != CATCH_NULL );
 
     const TestData* const cpc = p;
-    REQUIRE( cpc != nullptr );
+    REQUIRE( cpc != CATCH_NULL );
 
-    REQUIRE( returnsNull() == nullptr );
-    REQUIRE( returnsConstNull() == nullptr );
+    REQUIRE( returnsNull() == CATCH_NULL );
+    REQUIRE( returnsConstNull() == CATCH_NULL );
 
-    REQUIRE( nullptr != p );
+    REQUIRE( CATCH_NULL != p );
 }
 
 // Not (!) tests
@@ -291,7 +292,7 @@ TEST_CASE( "Pointers can be compared to null" )
 // is detected and a warning issued.
 // An alternative form of the macros (CHECK_FALSE and REQUIRE_FALSE) can be used instead to capture
 // the operand value.
-TEST_CASE( "'Not' checks that should succeed" )
+TEST_CASE( "'Not' checks that should succeed", "" )
 {
     bool falseValue = false;
 
