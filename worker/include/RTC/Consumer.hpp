@@ -11,6 +11,7 @@
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpMonitor.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
@@ -21,7 +22,7 @@
 
 namespace RTC
 {
-	class Consumer : public RTC::RtpStreamSend::Listener
+	class Consumer : public RTC::RtpMonitor::Listener
 	{
 	public:
 		Consumer(
@@ -72,10 +73,10 @@ namespace RTC
 		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
 		void MayRunProbation();
 
-		/* Pure virtual methods inherited from RTC::RtpStreamSend::Listener. */
+		/* Pure virtual methods inherited from RTC::RtpMonitor::Listener. */
 	public:
-		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
-		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
+		void OnRtpMonitorHealthy() override;
+		void OnRtpMonitorUnhealthy() override;
 
 	public:
 		// Passed by argument.
@@ -91,6 +92,7 @@ namespace RTC
 		std::unordered_set<RTC::ConsumerListener*> listeners;
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
+		RtpMonitor* rtpMonitor{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		bool paused{ false };

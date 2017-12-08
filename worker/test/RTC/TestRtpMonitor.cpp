@@ -11,14 +11,14 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 	class TestRtpMonitorListener : public RtpMonitor::Listener
 	{
 	public:
-		virtual void OnHealthy(RTC::RtpMonitor* /*rtpMonitor*/) override
+		virtual void OnRtpMonitorHealthy() override
 		{
 			INFO("OnHealthy");
 
 			this->healthyTriggered = true;
 		}
 
-		virtual void OnUnhealthy(RTC::RtpMonitor* /*rtpMonitor*/) override
+		virtual void OnRtpMonitorUnhealthy() override
 		{
 			INFO("OnUnhealthy");
 

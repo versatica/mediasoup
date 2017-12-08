@@ -14,18 +14,13 @@ namespace RTC
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
-	static constexpr uint8_t MaxHealthLossPercentage{ 20 };
-	static constexpr uint16_t StatusCheckPeriod{ 1000 };
 
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
-	  : RtpStream::RtpStream(params), listener(listener), storage(bufferSize)
+	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize)
+	  : RtpStream::RtpStream(params), storage(bufferSize)
 	{
 		MS_TRACE();
-
-		// Run the timer.
-		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
 	}
 
 	RtpStreamSend::~RtpStreamSend()
@@ -397,32 +392,6 @@ namespace RTC
 
 		// Update the new buffer item so it points to the cloned packed.
 		(*newBufferIt).packet = packet->Clone(store);
-	}
-
-	void RtpStreamSend::CheckStatus()
-	{
-		MS_TRACE();
-
-		auto lossPercentage = GetLossPercentage();
-
-		if (lossPercentage >= MaxHealthLossPercentage)
-		{
-			if (this->notifyStatus || this->healthy)
-			{
-				MS_DEBUG_TAG(
-				  rtp, "rtp stream packet loss [ssrc:%" PRIu32 ", %.2f%%]", GetSsrc(), lossPercentage);
-
-				this->healthy = false;
-				this->listener->OnRtpStreamUnhealthy(this);
-			}
-		}
-		else if (this->notifyStatus || !this->healthy)
-		{
-			this->healthy = true;
-			this->listener->OnRtpStreamHealthy(this);
-		}
-
-		this->notifyStatus = false;
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)

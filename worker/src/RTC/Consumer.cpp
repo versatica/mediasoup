@@ -32,6 +32,8 @@ namespace RTC
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
+
+		this->rtpMonitor = new RTC::RtpMonitor(this);
 	}
 
 	Consumer::~Consumer()
@@ -39,6 +41,7 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->rtpStream;
+		delete this->rtpMonitor;
 	}
 
 	void Consumer::Destroy()
@@ -186,7 +189,7 @@ namespace RTC
 
 		if (IsEnabled() && !this->sourcePaused)
 		{
-			this->rtpStream->StopStatusCheckTimer();
+			this->rtpMonitor->Reset();
 			this->rtpStream->ClearRetransmissionBuffer();
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
 
@@ -211,8 +214,6 @@ namespace RTC
 
 		if (IsEnabled() && !this->sourcePaused)
 		{
-			this->rtpStream->RestartStatusCheckTimer();
-
 			// We need to sync and wait for a key frame. Otherwise the receiver will
 			// request lot of NACKs due to unknown RTP packets.
 			this->syncRequired = true;
@@ -236,7 +237,7 @@ namespace RTC
 
 		if (IsEnabled() && !this->paused)
 		{
-			this->rtpStream->StopStatusCheckTimer();
+			this->rtpMonitor->Reset();
 			this->rtpStream->ClearRetransmissionBuffer();
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
 
@@ -263,8 +264,6 @@ namespace RTC
 
 		if (IsEnabled() && !this->paused)
 		{
-			this->rtpStream->RestartStatusCheckTimer();
-
 			// We need to sync. However we don't need to request a key frame since the source
 			// (Producer) already requested it.
 			this->syncRequired = true;
@@ -331,9 +330,8 @@ namespace RTC
 			this->isProbing      = false;
 			this->probingProfile = RtpEncodingParameters::Profile::NONE;
 
-			// Restart the health check timer so this probation doesn't affect the effective
-			// profile.
-			this->rtpStream->RestartStatusCheckTimer();
+			// Reset the RTP monitor so this probation doesn't affect the current profile.
+			this->rtpMonitor->Reset();
 
 			return;
 		}
@@ -703,6 +701,7 @@ namespace RTC
 			return;
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
+		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
 	}
 
 	float Consumer::GetLossPercentage() const
@@ -743,7 +742,7 @@ namespace RTC
 		}
 	}
 
-	void Consumer::OnRtpStreamHealthy(RtpStream* rtpStream)
+	void Consumer::OnRtpMonitorHealthy()
 	{
 		MS_TRACE();
 
@@ -773,7 +772,7 @@ namespace RTC
 		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
 	}
 
-	void Consumer::OnRtpStreamUnhealthy(RtpStream* rtpStream)
+	void Consumer::OnRtpMonitorUnhealthy()
 	{
 		MS_TRACE();
 
@@ -815,8 +814,8 @@ namespace RTC
 		if (IsEnabled() && !IsPaused())
 			RequestKeyFrame();
 
-		// We want to be notified about this new profile's health.
-		this->rtpStream->RestartStatusCheckTimer();
+		// Reset the RTP monitor to have clear data about the new profile.
+		this->rtpMonitor->Reset();
 
 		MS_DEBUG_TAG(
 		  rtp,
@@ -840,7 +839,7 @@ namespace RTC
 			return;
 
 		// Current health status is not good.
-		if (!this->rtpStream->IsHealthy())
+		if (!this->rtpMonitor->IsHealthy())
 			return;
 
 		RecalculateTargetProfile();
@@ -894,9 +893,9 @@ namespace RTC
 
 		// Create a RtpStreamSend for sending a single media stream.
 		if (useNack)
-			this->rtpStream = new RTC::RtpStreamSend(this, params, 1500);
+			this->rtpStream = new RTC::RtpStreamSend(params, 1500);
 		else
-			this->rtpStream = new RTC::RtpStreamSend(this, params, 0);
+			this->rtpStream = new RTC::RtpStreamSend(params, 0);
 
 		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
 		{
@@ -1027,7 +1026,6 @@ namespace RTC
 			{
 				this->isProbing      = true;
 				this->probingProfile = newTargetProfile;
-				this->rtpStream->RestartStatusCheckTimer();
 
 				MS_DEBUG_TAG(
 				  rtp,
