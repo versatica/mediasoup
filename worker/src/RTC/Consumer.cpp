@@ -700,6 +700,9 @@ namespace RTC
 		if (!IsEnabled())
 			return;
 
+		if (IsPaused())
+			return;
+
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
 	}
