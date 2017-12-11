@@ -986,18 +986,23 @@ namespace RTC
 		// Try with the closest profile to the preferred one.
 		else
 		{
-			auto it          = this->mapProfileRtpStream.crbegin();
-			newTargetProfile = it->first;
+			auto it = this->mapProfileRtpStream.lower_bound(this->preferredProfile);
 
-			for (; it != this->mapProfileRtpStream.crend(); ++it)
+			// Preferred profile is actually present.
+			if (it->first == this->preferredProfile)
 			{
-				auto profile = it->first;
+				newTargetProfile = it->first;
+			}
 
-				if (profile <= GetPreferredProfile())
-				{
-					newTargetProfile = profile;
-					break;
-				}
+			// The lowest profile is already higher than the preferred. Use it.
+			else if (it == this->mapProfileRtpStream.begin())
+			{
+				newTargetProfile = it->first;
+			}
+			// There is a lower profile available. Prefer it over any higher one.
+			else
+			{
+				newTargetProfile = (--it)->first;
 			}
 		}
 
