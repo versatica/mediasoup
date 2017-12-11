@@ -749,30 +749,35 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->isProbing)
-			return;
+		if (this->isProbing)
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "successful probation [ssrc:%" PRIu32 ", profile:%s]",
+			  rtpStream->GetSsrc(),
+			  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
 
-		MS_DEBUG_TAG(
-		  rtp,
-		  "successful probation [ssrc:%" PRIu32 ", profile:%s]",
-		  rtpStream->GetSsrc(),
-		  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
+			// Promote probing profile.
+			this->targetProfile = this->probingProfile;
 
-		// Promote probing profile.
-		this->targetProfile = this->probingProfile;
+			// Disable probation flag.
+			this->isProbing      = false;
+			this->probingProfile = RtpEncodingParameters::Profile::NONE;
 
-		// Disable probation flag.
-		this->isProbing      = false;
-		this->probingProfile = RtpEncodingParameters::Profile::NONE;
+			if (IsEnabled() && !IsPaused())
+				RequestKeyFrame();
 
-		if (IsEnabled() && !IsPaused())
-			RequestKeyFrame();
+			MS_DEBUG_TAG(
+			  rtp,
+			  "target profile set [ssrc:%" PRIu32 ", profile:%s]",
+			  rtpStream->GetSsrc(),
+			  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
+		}
 
-		MS_DEBUG_TAG(
-		  rtp,
-		  "target profile set [ssrc:%" PRIu32 ", profile:%s]",
-		  rtpStream->GetSsrc(),
-		  RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
+		else if (this->targetProfile < this->preferredProfile)
+		{
+			RecalculateTargetProfile();
+		}
 	}
 
 	void Consumer::OnRtpMonitorUnhealthy()
