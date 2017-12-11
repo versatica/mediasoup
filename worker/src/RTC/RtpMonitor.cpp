@@ -35,8 +35,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it           = this->scores.crbegin();
-		auto lastScore    = MaxScore;
+		auto it        = this->scores.crbegin();
+		auto lastScore = MaxScore;
 
 		if (it != this->scores.crend())
 		{
