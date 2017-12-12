@@ -24,6 +24,10 @@ namespace RTC
 {
 	class Consumer : public RTC::RtpMonitor::Listener
 	{
+		static constexpr uint16_t RtpPacketsBeforeProbation{ 2000 };
+		// Must be a power of 2.
+		static constexpr uint16_t ProbationPacketNumber{ 256 };
+
 	public:
 		Consumer(
 		  Channel::Notifier* notifier,
@@ -69,9 +73,13 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void RecalculateTargetProfile();
+		void RecalculateTargetProfile(bool force = false);
 		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
 		void MayRunProbation();
+		bool IsProbing() const;
+		void StartProbation(RTC::RtpEncodingParameters::Profile profile);
+		void StopProbation();
+		void SendProbation(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpMonitor::Listener. */
 	public:
@@ -118,8 +126,8 @@ namespace RTC
 		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
 		// RTP probation.
-		bool isProbing{ false };
-		uint16_t rtpPacketsBeforeProbation{ 0 };
+		uint16_t rtpPacketsBeforeProbation{ RtpPacketsBeforeProbation };
+		uint16_t probationPackets{ 0 };
 	};
 
 	/* Inline methods. */
@@ -173,6 +181,23 @@ namespace RTC
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
 	{
 		return this->rtpStream->GetRate(now) + this->retransmittedCounter.GetRate(now);
+	}
+
+	inline bool Consumer::IsProbing() const
+	{
+		return this->probationPackets != 0;
+	}
+
+	inline void Consumer::StartProbation(RTC::RtpEncodingParameters::Profile profile)
+	{
+		this->probationPackets = ProbationPacketNumber;
+		this->probingProfile   = profile;
+	}
+
+	inline void Consumer::StopProbation()
+	{
+		this->probationPackets = 0;
+		this->probingProfile   = RTC::RtpEncodingParameters::Profile::NONE;
 	}
 } // namespace RTC
 
