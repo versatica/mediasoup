@@ -17,7 +17,7 @@ namespace RTC
 			virtual void OnRtpMonitorUnhealthy() = 0;
 		};
 
-		RtpMonitor(Listener* listener);
+		explicit RtpMonitor(Listener* listener);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		bool IsHealthy() const;
 		void Reset();
