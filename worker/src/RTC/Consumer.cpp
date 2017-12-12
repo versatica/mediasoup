@@ -994,12 +994,12 @@ namespace RTC
 				newTargetProfile = it->first;
 			}
 
-			// The lowest profile is already higher than the preferred. Use it.
+			// The lowest profile is already higher than the preferred, use it.
 			else if (it == this->mapProfileRtpStream.begin())
 			{
 				newTargetProfile = it->first;
 			}
-			// There is a lower profile available. Prefer it over any higher one.
+			// There is a lower profile available, prefer it over any higher one.
 			else
 			{
 				newTargetProfile = (--it)->first;
