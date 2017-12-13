@@ -11,31 +11,20 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 	class TestRtpMonitorListener : public RtpMonitor::Listener
 	{
 	public:
-		virtual void OnRtpMonitorHealthy() override
+		virtual void OnRtpMonitorScore(uint8_t /*score*/) override
 		{
-			INFO("OnHealthy");
-
-			this->healthyTriggered = true;
+			this->scoreTriggered = true;
 		}
 
-		virtual void OnRtpMonitorUnhealthy() override
+		void Check(bool shouldHaveTriggeredScore)
 		{
-			INFO("OnUnhealthy");
+			REQUIRE(shouldHaveTriggeredScore == this->scoreTriggered);
 
-			this->unhealthyTriggered = true;
-		}
-
-		void Check(bool shouldHaveTriggeredHealthy, bool shouldHaveTriggeredUnhealthy)
-		{
-			REQUIRE(shouldHaveTriggeredHealthy == this->healthyTriggered);
-			REQUIRE(shouldHaveTriggeredUnhealthy == this->unhealthyTriggered);
-
-			this->healthyTriggered = this->unhealthyTriggered = false;
+			this->scoreTriggered = false;
 		}
 
 	public:
-		bool healthyTriggered   = false;
-		bool unhealthyTriggered = false;
+		bool scoreTriggered   = false;
 	};
 
 	// RTCP Receiver Report Packet.
@@ -58,63 +47,56 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 	if (!report)
 		FAIL("failed parsing RTCP::ReceiverReport");
 
-	SECTION("Four consecutive bad reports trigger unhealthy state")
+	RtpStream::Params params;
+
+	params.ssrc      = report->GetSsrc();
+	params.clockRate = 90000;
+	params.useNack   = true;
+
+	// Create a RtpStreamSend.
+	RtpStreamSend* rtpStream = new RtpStreamSend(params, 200);
+
+	// clang-format off
+	uint8_t rtpBuffer[] =
+	{
+		0b10000000, 0b01111011, 0b01010010, 0b00001110,
+		0b01011011, 0b01101011, 0b11001010, 0b10110101,
+		0, 0, 0, 2
+	};
+	// clang-format on
+
+	// packet1 [pt:123, seq:21006, timestamp:1533790901]
+	RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
+
+	REQUIRE(packet);
+
+	SECTION("The eighth report triggers the score")
 	{
 		TestRtpMonitorListener listener;
-		RtpMonitor rtpMonitor(&listener);
+		RtpMonitor rtpMonitor(&listener, rtpStream);
 
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
+		auto sequenceNumber = packet->GetSequenceNumber();
 
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-		report->SetFractionLost(255); /* 100% */
-		rtpMonitor.ReceiveRtcpReceiverReport(report);
-		listener.Check(false, true);
-
-		SECTION("Good report after unhealth triggers healty state")
+		for (size_t counter = 0; counter < RtpMonitor::ScoreTriggerCount; counter++)
 		{
-			report->SetFractionLost(0);
+			packet->SetSequenceNumber(sequenceNumber++);
+			rtpStream->ReceivePacket(packet);
 			rtpMonitor.ReceiveRtcpReceiverReport(report);
+		}
 
-			report->SetFractionLost(0);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
+		listener.Check(true);
 
-			report->SetFractionLost(0);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
+		SECTION("Next eighth consecutive reports trigger the score")
+		{
 
-			report->SetFractionLost(0);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
+			for (size_t counter = 0; counter < RtpMonitor::ScoreTriggerCount; counter++)
+			{
+				packet->SetSequenceNumber(sequenceNumber++);
+				rtpStream->ReceivePacket(packet);
+				rtpMonitor.ReceiveRtcpReceiverReport(report);
+			}
 
-			report->SetFractionLost(0);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-			report->SetFractionLost(0);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-			report->SetFractionLost(0);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-			report->SetFractionLost(0);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-			listener.Check(true, false);
+			listener.Check(true);
 		}
 	}
 

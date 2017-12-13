@@ -31,8 +31,6 @@ namespace RTC
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
-
-		this->rtpMonitor = new RTC::RtpMonitor(this);
 	}
 
 	Consumer::~Consumer()
@@ -659,6 +657,8 @@ namespace RTC
 
 				RetransmitRtpPacket(packet);
 
+				this->rtpMonitor->RtpPacketRepaired(packet);
+
 				// Packet repaired after applying RTX.
 				this->rtpStream->packetsRepaired++;
 			}
@@ -700,8 +700,14 @@ namespace RTC
 		if (IsPaused())
 			return;
 
+		// Ignore reports that do not refer to the main RTP stream. Ie: RTX stream.
+		if (report->GetSsrc() != this->rtpStream->GetSsrc())
+			return;
+
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
-		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
+
+		if (this->kind == RTC::Media::Kind::VIDEO)
+			this->rtpMonitor->ReceiveRtcpReceiverReport(report);
 	}
 
 	float Consumer::GetLossPercentage() const
@@ -742,14 +748,7 @@ namespace RTC
 		}
 	}
 
-	void Consumer::OnRtpMonitorHealthy()
-	{
-		MS_TRACE();
-
-		RecalculateTargetProfile();
-	}
-
-	void Consumer::OnRtpMonitorUnhealthy()
+	void Consumer::OnRtpMonitorScore(uint8_t /*score*/)
 	{
 		MS_TRACE();
 
@@ -837,6 +836,8 @@ namespace RTC
 		}
 
 		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(codec.mimeType));
+
+		this->rtpMonitor = new RTC::RtpMonitor(this, this->rtpStream);
 	}
 
 	void Consumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
@@ -909,7 +910,7 @@ namespace RTC
 				newTargetProfile = RtpEncodingParameters::Profile::DEFAULT;
 		}
 		// RTP state is unhealty.
-		else if (!this->rtpMonitor->IsHealthy())
+		else if (IsEnabled() && !this->rtpMonitor->IsHealthy())
 		{
 			// Ongoing probation, abort.
 			if (IsProbing())
