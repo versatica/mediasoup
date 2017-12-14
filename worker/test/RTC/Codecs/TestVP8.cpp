@@ -27,12 +27,12 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			0xd0, 0x80, 0x11
+			0xd0, 0x80, 0x11, 0x00
 		};
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[3] = { 0 };
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
@@ -101,12 +101,12 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-		  0x88, 0x3e, 0xe4
+		  0x88, 0x3e, 0xe4, 0x00
 		};
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[3] = { 0 };
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
