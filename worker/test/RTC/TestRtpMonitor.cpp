@@ -100,4 +100,6 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 	}
 
 	delete report;
+	delete rtpStream;
+	delete packet;
 }
