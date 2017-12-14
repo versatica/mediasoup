@@ -83,8 +83,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpMonitor::Listener. */
 	public:
-		void OnRtpMonitorHealthy() override;
-		void OnRtpMonitorUnhealthy() override;
+		void OnRtpMonitorScore(uint8_t score) override;
 
 	public:
 		// Passed by argument.
