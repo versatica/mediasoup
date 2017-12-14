@@ -24,7 +24,7 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 		}
 
 	public:
-		bool scoreTriggered   = false;
+		bool scoreTriggered = false;
 	};
 
 	// RTCP Receiver Report Packet.
@@ -88,7 +88,6 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 
 		SECTION("Next eighth consecutive reports trigger the score")
 		{
-
 			for (size_t counter = 0; counter < RtpMonitor::ScoreTriggerCount; counter++)
 			{
 				packet->SetSequenceNumber(sequenceNumber++);
