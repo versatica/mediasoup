@@ -1049,6 +1049,8 @@ namespace RTC
 		if (!IsEnabled())
 			return;
 
+		this->rtpMonitor->Reset();
+
 		// Notify.
 		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
 
