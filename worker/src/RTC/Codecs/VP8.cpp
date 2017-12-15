@@ -93,7 +93,9 @@ namespace RTC
 				payloadDescriptor->keyIndex = byte & 0x1F;
 			}
 
-			if (payloadDescriptor->start && payloadDescriptor->partitionIndex == 0 && (!(data[++offset] & 0x01)))
+			if (
+			  (len >= ++offset + 1) && payloadDescriptor->start &&
+			  payloadDescriptor->partitionIndex == 0 && (!(data[offset] & 0x01)))
 				payloadDescriptor->isKeyFrame = true;
 
 			return payloadDescriptor.release();
