@@ -489,7 +489,7 @@ namespace RTC
 			this->rtpTimestampManager.Sync(packet->GetTimestamp());
 
 			// Calculate RTP timestamp diff between now and last sent RTP packet.
-			if (this->rtpStream->GetMaxPacketMs())
+			if (this->rtpStream->GetMaxPacketMs() != 0u)
 			{
 				auto now    = DepLibUV::GetTime();
 				auto diffMs = now - this->rtpStream->GetMaxPacketMs();

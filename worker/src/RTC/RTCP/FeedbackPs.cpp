@@ -38,7 +38,7 @@ namespace RTC
 
 			while (len > offset)
 			{
-				Item* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
+				auto* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
 
 				if (item)
 				{
