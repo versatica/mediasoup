@@ -36,7 +36,7 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		auto payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -111,7 +111,7 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
 		// Parse the buffer.
-		auto payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 

@@ -44,8 +44,8 @@ namespace RTC
 				void Dump() const;
 
 				// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
-				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex);
-				void Restore(uint8_t* data);
+				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
+				void Restore(uint8_t* data) const;
 
 				// mandatory fields.
 				uint8_t extended : 1;

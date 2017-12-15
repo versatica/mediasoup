@@ -99,7 +99,7 @@ namespace RTC
 			return payloadDescriptor.release();
 		}
 
-		void VP8::PayloadDescriptor::Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex)
+		void VP8::PayloadDescriptor::Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const
 		{
 			MS_TRACE();
 
@@ -135,7 +135,7 @@ namespace RTC
 			}
 		}
 
-		void VP8::PayloadDescriptor::Restore(uint8_t* data)
+		void VP8::PayloadDescriptor::Restore(uint8_t* data) const
 		{
 			this->Encode(data, this->pictureId, this->tl0PictureIndex);
 		}
