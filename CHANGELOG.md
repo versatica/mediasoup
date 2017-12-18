@@ -1,5 +1,12 @@
 # Changelog
 
+
+### 2.0.6
+
+* [Fix #173](https://github.com/versatica/mediasoup/issues/173): Avoid buffer overflow in `()` (thanks @lightmare).
+* Improve stream layers management in `Consumer` by using the new `RtpMonitor` class.
+
+
 ### 2.0.5
 
 * [Fix #164](https://github.com/versatica/mediasoup/issues/164): Sometimes video freezes forever (no RTP received in browser at all).
