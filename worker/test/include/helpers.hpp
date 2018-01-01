@@ -5,10 +5,9 @@
 #include <string>
 #include <fstream>
 
-class Helpers
+namespace helpers
 {
-public:
-	static bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len)
+	inline bool readBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
 		std::string filePath = "test/" + std::string(file);
 
@@ -23,6 +22,6 @@ public:
 
 		return true;
 	}
-};
+}
 
 #endif
