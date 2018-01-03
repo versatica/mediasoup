@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.7
+
+* [Fix #180](https://github.com/versatica/mediasoup/issues/180): Added missing include `cmath` so that `std::round` can be used (thanks @jacobEAdamson).
+
+
 ### 2.0.6
 
 * [Fix #173](https://github.com/versatica/mediasoup/issues/173): Avoid buffer overflow in `()` (thanks @lightmare).
