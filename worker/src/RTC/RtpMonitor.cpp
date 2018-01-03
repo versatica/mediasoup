@@ -3,6 +3,8 @@
 
 #include "RTC/RtpMonitor.hpp"
 #include "Logger.hpp"
+#include <cmath>
+
 
 namespace RTC
 {
