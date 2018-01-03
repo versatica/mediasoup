@@ -3,6 +3,7 @@
 
 #include "RTC/RtpMonitor.hpp"
 #include "Logger.hpp"
+#include <cmath> // std::round()
 
 namespace RTC
 {
