@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.8
+
+* Disable stats periodic retrieval also on remote closure of `Producer` and `WebRtcTransport`.
+
+
 ### 2.0.7
 
 * [Fix #180](https://github.com/versatica/mediasoup/issues/180): Added missing include `cmath` so that `std::round` can be used (thanks @jacobEAdamson).
