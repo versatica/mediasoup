@@ -27,7 +27,7 @@ namespace TestFeedbackPsPli
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 	}
-}
+} // namespace TestFeedbackPsPli
 
 SCENARIO("RTCP Feeback RTP PLI parsing", "[parser][rtcp][feedback-ps][pli]")
 {

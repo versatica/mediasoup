@@ -42,7 +42,7 @@ namespace TestSenderReport
 		REQUIRE(report->GetPacketCount() == packetCount);
 		REQUIRE(report->GetOctetCount() == octetCount);
 	}
-}
+} // namespace TestSenderReport
 
 using namespace TestSenderReport;
 

@@ -31,7 +31,7 @@ namespace TestFeedbackPsAfb
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::Application::UNKNOWN);
 	}
-}
+} // namespace TestFeedbackPsAfb
 
 SCENARIO("RTCP Feedback PS AFB parsing", "[parser][rtcp][feedback-ps][afb]")
 {

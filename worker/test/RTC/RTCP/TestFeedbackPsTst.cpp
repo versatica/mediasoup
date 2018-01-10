@@ -38,7 +38,7 @@ namespace TestFeedbackPsTstn
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetSequenceNumber() == seq);
 	}
-}
+} // namespace TestFeedbackPsTstn
 
 SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
 {

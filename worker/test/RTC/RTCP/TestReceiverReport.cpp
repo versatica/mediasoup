@@ -45,7 +45,7 @@ namespace TestReceiverReport
 		REQUIRE(report->GetLastSenderReport() == lastSenderReport);
 		REQUIRE(report->GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	}
-}
+} // namespace TestReceiverReport
 
 using namespace TestReceiverReport;
 

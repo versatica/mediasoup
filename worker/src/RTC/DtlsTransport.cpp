@@ -388,7 +388,7 @@ namespace RTC
 #if (OPENSSL_VERSION_NUMBER >= 0x10002000L)
 		SSL_CTX_set_ecdh_auto(DtlsTransport::sslCtx, 1);
 #else
-		ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+		ecdh                  = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
 
 		if (!ecdh)
 		{

@@ -41,7 +41,7 @@ namespace TestFeedbackPsRpsi
 		REQUIRE(item->GetLength() == length);
 		REQUIRE((item->GetBitString()[item->GetLength() - 1] & 1) == payloadMask);
 	}
-}
+} // namespace TestFeedbackPsRpsi
 
 SCENARIO("RTCP Feedback PS RPSI parsing", "[parser][rtcp][feedback-ps][rpsi]")
 {

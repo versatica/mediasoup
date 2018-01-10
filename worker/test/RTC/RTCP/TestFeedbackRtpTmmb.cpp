@@ -40,7 +40,7 @@ namespace TestFeedbackRtpTmmbr
 		REQUIRE(item->GetBitrate() == bitrate);
 		REQUIRE(item->GetOverhead() == overhead);
 	}
-}
+} // namespace TestFeedbackRtpTmmbr
 
 SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
 {

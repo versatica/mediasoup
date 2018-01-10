@@ -39,7 +39,7 @@ namespace TestBye
 
 		REQUIRE(*it == ssrc2);
 	}
-}
+} // namespace TestBye
 
 using namespace TestBye;
 

@@ -53,7 +53,7 @@ namespace TestFeedbackRtpEcn
 		REQUIRE(item->GetLostPackets() == lostPackets);
 		REQUIRE(item->GetDuplicatedPackets() == duplicatedPackets);
 	}
-}
+} // namespace TestFeedbackRtpEcn
 
 SCENARIO("RTCP Feeback RTP ECN parsing", "[parser][rtcp][feedback-rtp][ecn]")
 {

@@ -38,7 +38,7 @@ namespace TestFeedbackPsSli
 		REQUIRE(item->GetNumber() == number);
 		REQUIRE(item->GetPictureId() == pictureId);
 	}
-}
+} // namespace TestFeedbackPsSli
 
 SCENARIO("RTCP Feedback PS SLI parsing", "[parser][rtcp][feedback-ps][sli]")
 {

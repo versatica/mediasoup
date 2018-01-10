@@ -41,7 +41,7 @@ namespace TestSdes
 		REQUIRE(item->GetLength() == length);
 		REQUIRE(std::string(item->GetValue(), length) == value);
 	}
-}
+} // namespace TestSdes
 
 using namespace TestSdes;
 

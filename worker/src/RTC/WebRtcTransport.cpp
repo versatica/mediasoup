@@ -631,8 +631,13 @@ namespace RTC
 			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
 			// received with remote DTLS role 'server'.
 			// If 'client' then wait for ICE to be 'completed' (got USE-CANDIDATE).
+			//
+			// NOTE: This is the theory, however let's be mor eflexible as told here:
+			//   https://bugs.chromium.org/p/webrtc/issues/detail?id=3661
 			case RTC::DtlsTransport::Role::CLIENT:
-				if (this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				if (
+				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'client'");
 

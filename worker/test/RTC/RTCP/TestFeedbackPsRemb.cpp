@@ -35,7 +35,7 @@ namespace TestFeedbackPsRemb
 		REQUIRE(packet->GetBitrate() == bitrate);
 		REQUIRE(packet->GetSsrcs() == ssrcs);
 	}
-}
+} // namespace TestFeedbackPsRemb
 
 SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps][remb]")
 {

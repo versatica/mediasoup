@@ -33,7 +33,7 @@ namespace TestFeedbackPsLei
 
 		REQUIRE(item->GetSsrc() == ssrc);
 	}
-}
+} // namespace TestFeedbackPsLei
 
 SCENARIO("RTCP Feedback PS LEI parsing", "[parser][rtcp][feedback-ps][lei]")
 {

@@ -37,7 +37,7 @@ namespace TestFeedbackRtpTllei
 		REQUIRE(item->GetPacketId() == packetId);
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 	}
-}
+} // namespace TestFeedbackRtpTllei
 
 SCENARIO("RTCP Feeback RTP TLLEI parsing", "[parser][rtcp][feedback-rtp][tllei]")
 {

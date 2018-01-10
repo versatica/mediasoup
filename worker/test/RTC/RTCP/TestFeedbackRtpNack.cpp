@@ -36,7 +36,7 @@ namespace TestFeedbackRtpNack
 		REQUIRE(item->GetPacketId() == pid);
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 	}
-}
+} // namespace TestFeedbackRtpNack
 
 SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
 {

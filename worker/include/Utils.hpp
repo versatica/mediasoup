@@ -304,6 +304,6 @@ namespace Utils
 	{
 		return IsNewerTimestamp(timestamp1, timestamp2) ? timestamp1 : timestamp2;
 	}
-}
+} // namespace Utils
 
 #endif

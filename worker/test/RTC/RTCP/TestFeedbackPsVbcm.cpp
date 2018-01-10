@@ -47,7 +47,7 @@ namespace TestFeedbackPsVbcm
 		REQUIRE(item->GetLength() == length);
 		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
 	}
-}
+} // namespace TestFeedbackPsVbcm
 
 SCENARIO("RTCP Feedback PS VBCM parsing", "[parser][rtcp][feedback-ps][vbcm]")
 {

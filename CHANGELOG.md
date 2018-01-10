@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.9
+
+* Make ICE+DTLS more flexible by allowing sending DTLS handshake when ICE is just connected.
+
+
 ### 2.0.8
 
 * Disable stats periodic retrieval also on remote closure of `Producer` and `WebRtcTransport`.

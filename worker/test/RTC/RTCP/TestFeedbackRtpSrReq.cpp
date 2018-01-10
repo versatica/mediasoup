@@ -27,7 +27,7 @@ namespace TestFeedbackRtpSrReq
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 	}
-}
+} // namespace TestFeedbackRtpSrReq
 
 SCENARIO("RTCP Feeback RTP SR-REQ parsing", "[parser][rtcp][feedback-rtp][sr-req]")
 {

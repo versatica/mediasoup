@@ -36,7 +36,7 @@ namespace TestFeedbackPsFir
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetSequenceNumber() == seq);
 	}
-}
+} // namespace TestFeedbackPsFir
 
 SCENARIO("RTCP Feedback PS FIR parsing", "[parser][rtcp][feedback-ps][fir]")
 {
