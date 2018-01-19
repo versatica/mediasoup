@@ -330,7 +330,7 @@ namespace RTC
 			return;
 		}
 
-		if (this->mapProfileRtpStream.empty() || this->effectiveProfile == profile)
+		if (this->effectiveProfile == profile)
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 		}
