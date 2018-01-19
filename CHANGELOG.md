@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.10
+
+* [Fix #183](https://github.com/versatica/mediasoup/issues/183): Always reset the effective `Consumer` profile when removed (thanks @thehappycoder).
+
+
 ### 2.0.9
 
 * Make ICE+DTLS more flexible by allowing sending DTLS handshake when ICE is just connected.
