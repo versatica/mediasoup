@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.0.11
+
+* [Fix #185](https://github.com/versatica/mediasoup/issues/185) Consumer: initialize effective profile to 'NONE' (thanks @artushin).
+* [Fix #186](https://github.com/versatica/mediasoup/issues/186) NackGenerator code being executed after instance deletion (thanks @baiyufei).
+
+
 ### 2.0.10
 
 * [Fix #183](https://github.com/versatica/mediasoup/issues/183): Always reset the effective `Consumer` profile when removed (thanks @thehappycoder).
