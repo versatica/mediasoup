@@ -122,7 +122,7 @@ namespace RTC
 			RTC::RtpEncodingParameters::Profile::DEFAULT
 		};
 		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
 		RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
 		// RTP probation.
 		uint16_t rtpPacketsBeforeProbation{ RtpPacketsBeforeProbation };
