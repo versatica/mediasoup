@@ -45,6 +45,7 @@ namespace RTC
 
 		bool ReceivePacket(RTC::RtpPacket* packet);
 		size_t GetNackListLength() const;
+		void Reset();
 
 	private:
 		void CleanOldNackItems(uint16_t seq);
@@ -81,6 +82,18 @@ namespace RTC
 	inline size_t NackGenerator::GetNackListLength() const
 	{
 		return this->nackList.size();
+	}
+
+	inline void NackGenerator::Reset()
+	{
+		this->started = false;
+		this->lastSeq = 0;
+		this->rtt     = 0;
+
+		this->nackList.clear();
+		this->keyFrameList.clear();
+
+		this->timer->Stop();
 	}
 } // namespace RTC
 

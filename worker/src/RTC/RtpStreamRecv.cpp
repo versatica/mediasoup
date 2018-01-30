@@ -211,7 +211,7 @@ namespace RTC
 		{
 			// Reset NackGenerator.
 			if (this->params.useNack)
-				this->nackGenerator.reset(new RTC::NackGenerator(this));
+				this->nackGenerator->Reset();
 
 			this->listener->OnRtpStreamRecvPliRequired(this);
 		}

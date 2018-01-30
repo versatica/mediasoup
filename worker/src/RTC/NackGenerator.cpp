@@ -110,6 +110,11 @@ namespace RTC
 		}
 
 		AddPacketsToNackList(this->lastSeq + 1, seq);
+
+		// NackGenerator instance may have been reseted.
+		if (!this->started)
+			return false;
+
 		this->lastSeq = seq;
 
 		// Check if there are any nacks that are waiting for this seq number.
