@@ -57,7 +57,7 @@ namespace RTC
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (newOldestTime > this->oldestTime + this->windowSize)
 		{
-			this->Reset(newOldestTime);
+			this->Reset(now);
 
 			return;
 		}
