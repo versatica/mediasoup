@@ -34,8 +34,7 @@ namespace RTC
 
 		this->RemoveOldData(now);
 
-		int64_t nominalWindowSize = now - this->oldestTime;
-		float scale               = this->scale / nominalWindowSize;
+		float scale = this->scale / this->windowSize;
 
 		return static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
 	}
