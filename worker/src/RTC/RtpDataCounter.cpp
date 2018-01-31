@@ -47,7 +47,13 @@ namespace RTC
 
 		// Should never happen.
 		if (newOldestTime < this->oldestTime)
+		{
+			MS_ERROR(
+			  "current time [%" PRIu64 "] is older than a previous [%" PRIu64 "]",
+			  newOldestTime,
+			  this->oldestTime);
 			return;
+		}
 
 		// We are in the same time unit (ms) as the last entry.
 		if (newOldestTime == this->oldestTime)
