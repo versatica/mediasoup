@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.12
+
+* Add `handled` and `unhandled` events to `Consumer`.
+
+
 ### 2.0.11
 
 * [Fix #185](https://github.com/versatica/mediasoup/issues/185) Consumer: initialize effective profile to 'NONE' (thanks @artushin).
