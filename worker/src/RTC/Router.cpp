@@ -257,12 +257,21 @@ namespace RTC
 				RTC::PlainRtpTransport::Options options;
 
 				if (!request->data[JsonStringRemoteIP].isString())
-					MS_THROW_ERROR("missing remoteIP");
+				{
+					request->Reject("missing remoteIP");
+
+					return;
+				}
 
 				options.remoteIP = request->data[JsonStringRemoteIP].asString();
 
 				if (!request->data[JsonStringRemotePort].isUInt())
-					MS_THROW_ERROR("missing remotePort");
+				{
+					request->Reject("missing remotePort");
+
+					return;
+				}
+
 				options.remotePort = request->data[JsonStringRemotePort].asUInt();
 
 				RTC::PlainRtpTransport* plainRtpTransport;
@@ -849,12 +858,20 @@ namespace RTC
 				RTC::Transport::MirroringOptions options;
 
 				if (!request->data[JsonStringRemoteIP].isString())
-					MS_THROW_ERROR("missing remoteIP");
+				{
+					request->Reject("missing remoteIP");
+
+					return;
+				}
 
 				options.remoteIP = request->data[JsonStringRemoteIP].asString();
 
 				if (!request->data[JsonStringRemotePort].isUInt())
-					MS_THROW_ERROR("missing remotePort");
+				{
+					request->Reject("missing remotePort");
+
+					return;
+				}
 
 				options.remotePort = request->data[JsonStringRemotePort].asUInt();
 

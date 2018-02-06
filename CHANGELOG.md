@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.13
+
+* Avoid crash when no remote IP/port is given.
+
+
 ### 2.0.12
 
 * Add `handled` and `unhandled` events to `Consumer`.
