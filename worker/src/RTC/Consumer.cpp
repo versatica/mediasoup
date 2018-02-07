@@ -934,12 +934,15 @@ namespace RTC
 			// Downgrade the target profile.
 			newTargetProfile = (std::prev(it))->first;
 		}
-		// If there is no preferred profile, get the highest one.
+		// If there is no preferred profile, get the next higher one available.
 		else if (GetPreferredProfile() == RTC::RtpEncodingParameters::Profile::DEFAULT)
 		{
-			auto it = this->mapProfileRtpStream.crbegin();
+			auto it = this->mapProfileRtpStream.upper_bound(this->effectiveProfile);
 
-			newTargetProfile = it->first;
+			if (it != this->mapProfileRtpStream.end())
+				newTargetProfile = it->first;
+			else
+				newTargetProfile = this->effectiveProfile;
 		}
 		// Try with the closest profile to the preferred one.
 		else
