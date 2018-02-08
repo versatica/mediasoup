@@ -15,7 +15,7 @@ namespace RTC
 		if (now < this->oldestTime)
 			return;
 
-		this->RemoveOldData(now);
+		RemoveOldData(now);
 
 		// Set data in the index before the oldest index.
 		uint32_t offset = this->windowSize - 1;
@@ -32,7 +32,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->RemoveOldData(now);
+		RemoveOldData(now);
 
 		float scale = this->scale / this->windowSize;
 
@@ -62,7 +62,7 @@ namespace RTC
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (newOldestTime > this->oldestTime + this->windowSize)
 		{
-			this->Reset(now);
+			Reset(now);
 
 			return;
 		}
