@@ -119,7 +119,7 @@ namespace RTC
 
 				if (ssrc != 0u)
 				{
-					if (!this->HasSsrc(ssrc, producer))
+					if (!HasSsrc(ssrc, producer))
 					{
 						this->ssrcTable[ssrc] = producer;
 					}
@@ -138,7 +138,7 @@ namespace RTC
 
 				if (ssrc != 0u)
 				{
-					if (!this->HasSsrc(ssrc, producer))
+					if (!HasSsrc(ssrc, producer))
 					{
 						this->ssrcTable[ssrc] = producer;
 					}
@@ -157,7 +157,7 @@ namespace RTC
 
 				if (ssrc != 0u)
 				{
-					if (!this->HasSsrc(ssrc, producer))
+					if (!HasSsrc(ssrc, producer))
 					{
 						this->ssrcTable[ssrc] = producer;
 					}
@@ -178,7 +178,7 @@ namespace RTC
 			{
 				auto& muxId = rtpParameters.muxId;
 
-				if (!this->HasMuxId(muxId, producer))
+				if (!HasMuxId(muxId, producer))
 				{
 					this->muxIdTable[muxId] = producer;
 				}
@@ -201,7 +201,7 @@ namespace RTC
 				if (rid.empty())
 					continue;
 
-				if (!this->HasRid(rid, producer))
+				if (!HasRid(rid, producer))
 				{
 					this->ridTable[rid] = producer;
 				}

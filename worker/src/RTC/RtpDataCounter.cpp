@@ -15,7 +15,7 @@ namespace RTC
 		if (now < this->oldestTime)
 			return;
 
-		this->RemoveOldData(now);
+		RemoveOldData(now);
 
 		// Set data in the index before the oldest index.
 		uint32_t offset = this->windowSize - 1;
@@ -32,10 +32,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->RemoveOldData(now);
+		RemoveOldData(now);
 
-		int64_t nominalWindowSize = now - this->oldestTime;
-		float scale               = this->scale / nominalWindowSize;
+		float scale = this->scale / this->windowSize;
 
 		return static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
 	}
@@ -48,7 +47,13 @@ namespace RTC
 
 		// Should never happen.
 		if (newOldestTime < this->oldestTime)
+		{
+			MS_ERROR(
+			  "current time [%" PRIu64 "] is older than a previous [%" PRIu64 "]",
+			  newOldestTime,
+			  this->oldestTime);
 			return;
+		}
 
 		// We are in the same time unit (ms) as the last entry.
 		if (newOldestTime == this->oldestTime)
@@ -57,7 +62,7 @@ namespace RTC
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (newOldestTime > this->oldestTime + this->windowSize)
 		{
-			this->Reset(newOldestTime);
+			Reset(now);
 
 			return;
 		}

@@ -1251,7 +1251,7 @@ namespace RTC
 		packet.SetBitrate(effectiveBitrate);
 		packet.SetSsrcs(ssrcs);
 		packet.Serialize(RTC::RTCP::Buffer);
-		this->SendRtcpPacket(&packet);
+		SendRtcpPacket(&packet);
 
 		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
 		{

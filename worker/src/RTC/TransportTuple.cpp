@@ -27,15 +27,15 @@ namespace RTC
 		std::string ip;
 		uint16_t port;
 
-		Utils::IP::GetAddressInfo(this->GetLocalAddress(), &ipFamily, ip, &port);
+		Utils::IP::GetAddressInfo(GetLocalAddress(), &ipFamily, ip, &port);
 		json[JsonStringLocalIp]   = ip;
 		json[JsonStringLocalPort] = Json::UInt{ port };
-		if (this->GetProtocol() == RTC::TransportTuple::Protocol::UDP)
+		if (GetProtocol() == RTC::TransportTuple::Protocol::UDP)
 			json[JsonStringProtocol] = JsonStringUdp;
 		else
 			json[JsonStringProtocol] = JsonStringTcp;
 
-		Utils::IP::GetAddressInfo(this->GetRemoteAddress(), &ipFamily, ip, &port);
+		Utils::IP::GetAddressInfo(GetRemoteAddress(), &ipFamily, ip, &port);
 		json[JsonStringRemoteIp]   = ip;
 		json[JsonStringRemotePort] = Json::UInt{ port };
 

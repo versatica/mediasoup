@@ -261,7 +261,7 @@ namespace RTC
 
 		if (timer == this->statusCheckTimer)
 		{
-			this->CheckStatus();
+			CheckStatus();
 		}
 	}
 } // namespace RTC
