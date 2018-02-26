@@ -30,10 +30,10 @@ namespace RTC
 		{
 			bool udp{ true };
 			bool tcp{ true };
-			bool preferIPv4{ true };
-			bool preferIPv6{ true };
-			bool preferUdp{ true };
-			bool preferTcp{ true };
+			bool preferIPv4{ false };
+			bool preferIPv6{ false };
+			bool preferUdp{ false };
+			bool preferTcp{ false };
 		};
 
 	public:
