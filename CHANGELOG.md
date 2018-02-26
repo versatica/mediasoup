@@ -1,6 +1,10 @@
 # Changelog
 
 
+### 2.0.14
+
+* [Fix #193](https://github.com/versatica/mediasoup/issues/193) `preferTcp` not honored (thanks @artushin).
+
 ### 2.0.13
 
 * Avoid crash when no remote IP/port is given.
