@@ -69,8 +69,12 @@ namespace RTC
 			}
 		}
 
+		// Create a single tuple.
 		this->tuple = new RTC::TransportTuple(
 		  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
+
+		// Start the RTCP timer.
+		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	PlainRtpTransport::~PlainRtpTransport()
