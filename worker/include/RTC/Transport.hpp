@@ -144,9 +144,7 @@ namespace RTC
 		struct HeaderExtensionIds headerExtensionIds;
 		// Others (Mirroring).
 		MirroringOptions mirroringOptions{};
-		struct sockaddr_storage mirrorAddrStorage
-		{
-		};
+		struct sockaddr_storage mirrorAddrStorage;
 		// Others (REMB)
 		std::tuple<uint64_t, std::vector<uint32_t>> recvRemb;
 	};

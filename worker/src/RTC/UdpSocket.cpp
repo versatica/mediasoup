@@ -84,9 +84,7 @@ namespace RTC
 
 		int err;
 		uv_udp_t* uvHandle{ nullptr };
-		// clang-format off
-		struct sockaddr_storage bindAddr{};
-		// clang-format on
+		struct sockaddr_storage bindAddr;
 		const char* listenIp;
 		uint16_t initialPort;
 		uint16_t iteratingPort;

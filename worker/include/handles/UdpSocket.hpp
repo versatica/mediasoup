@@ -66,9 +66,7 @@ private:
 	size_t sentBytes{ 0 };
 
 protected:
-	struct sockaddr_storage localAddr
-	{
-	};
+	struct sockaddr_storage localAddr;
 	std::string localIP;
 	uint16_t localPort{ 0 };
 };

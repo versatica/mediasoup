@@ -55,7 +55,7 @@ namespace RTC
 		MS_TRACE();
 
 		srtp_err_status_t err;
-		srtp_policy_t policy{};
+		srtp_policy_t policy;
 
 		// Set all policy fields to 0.
 		std::memset(&policy, 0, sizeof(srtp_policy_t));

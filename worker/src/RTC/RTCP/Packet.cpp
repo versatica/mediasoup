@@ -20,19 +20,19 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-	std::map<Type, std::string> Packet::type2String =
-	{
-		{ Type::FIR,   "FIR"   },
-		{ Type::NACK,  "NACK"  },
-		{ Type::SR,    "SR"    },
-		{ Type::RR,    "RR"    },
-		{ Type::SDES,  "SDES"  },
-		{ Type::BYE,   "BYE"   },
-		{ Type::APP,   "APP"   },
-		{ Type::RTPFB, "RTPFB" },
-		{ Type::PSFB,  "PSFB"  },
-		{ Type::XR,    "XR"    }
-	};
+		std::map<Type, std::string> Packet::type2String =
+		{
+			{ Type::FIR,   "FIR"   },
+			{ Type::NACK,  "NACK"  },
+			{ Type::SR,    "SR"    },
+			{ Type::RR,    "RR"    },
+			{ Type::SDES,  "SDES"  },
+			{ Type::BYE,   "BYE"   },
+			{ Type::APP,   "APP"   },
+			{ Type::RTPFB, "RTPFB" },
+			{ Type::PSFB,  "PSFB"  },
+			{ Type::XR,    "XR"    }
+		};
 		// clang-format on
 
 		/* Class methods. */

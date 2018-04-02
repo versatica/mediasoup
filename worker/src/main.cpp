@@ -125,8 +125,8 @@ void ignoreSignals()
 	MS_TRACE();
 
 	int err;
+	struct sigaction act;
 	// clang-format off
-	struct sigaction act{};
 	std::map<std::string, int> ignoredSignals =
 	{
 		{ "PIPE", SIGPIPE },

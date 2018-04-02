@@ -13,18 +13,18 @@ namespace RTC
 		/* Item Class variables. */
 
 		// clang-format off
-	std::map<SdesItem::Type, std::string> SdesItem::type2String =
-	{
-		{ SdesItem::Type::END,   "END"   },
-		{ SdesItem::Type::CNAME, "CNAME" },
-		{ SdesItem::Type::NAME,  "NAME"  },
-		{ SdesItem::Type::EMAIL, "EMAIL" },
-		{ SdesItem::Type::PHONE, "PHONE" },
-		{ SdesItem::Type::LOC,   "LOC"   },
-		{ SdesItem::Type::TOOL,  "TOOL"  },
-		{ SdesItem::Type::NOTE,  "NOTE"  },
-		{ SdesItem::Type::PRIV,  "PRIV"  }
-	};
+		std::map<SdesItem::Type, std::string> SdesItem::type2String =
+		{
+			{ SdesItem::Type::END,   "END"   },
+			{ SdesItem::Type::CNAME, "CNAME" },
+			{ SdesItem::Type::NAME,  "NAME"  },
+			{ SdesItem::Type::EMAIL, "EMAIL" },
+			{ SdesItem::Type::PHONE, "PHONE" },
+			{ SdesItem::Type::LOC,   "LOC"   },
+			{ SdesItem::Type::TOOL,  "TOOL"  },
+			{ SdesItem::Type::NOTE,  "NOTE"  },
+			{ SdesItem::Type::PRIV,  "PRIV"  }
+		};
 		// clang-format on
 
 		/* Class methods. */

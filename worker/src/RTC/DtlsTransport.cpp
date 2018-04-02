@@ -922,9 +922,7 @@ namespace RTC
 		MS_TRACE();
 
 		int64_t ret;
-		// clang-format off
-		struct timeval dtlsTimeout{};
-		// clang-format on
+		struct timeval dtlsTimeout;
 		uint64_t timeoutMs;
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.

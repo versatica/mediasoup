@@ -596,9 +596,7 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 {
 	MS_TRACE();
 
-	// clang-format off
-	struct sockaddr_storage bindAddr{};
-	// clang-format on
+	struct sockaddr_storage bindAddr;
 	int bindSocket;
 	int err{ 0 };
 	bool success;

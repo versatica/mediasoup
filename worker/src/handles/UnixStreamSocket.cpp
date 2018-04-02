@@ -146,7 +146,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	if (len == 0)
 		return;
 
-	uv_buf_t buffer{};
+	uv_buf_t buffer;
 	int written;
 	int err;
 
