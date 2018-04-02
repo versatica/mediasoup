@@ -12,55 +12,39 @@ language: node_js
 # DOC: http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 matrix:
   include:
-    - node_js: 6
-      compiler: gcc
+    - os: linux
+      node_js: 8
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
-      env: COMPILER=g++-4.9
-    - node_js: 7
-      compiler: gcc
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    - os: linux
+      node_js: 9
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-5
-      env: COMPILER=g++-5
-    - node_js: 8
-      compiler: gcc
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+    - os: linux
+      node_js: 8
       addons:
         apt:
           sources:
-            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
           packages:
-            - g++-6
-      env: COMPILER=g++-6
-    # TODO: This currently fails:
-    # https://github.com/travis-ci/travis-ci/issues/6120#issuecomment-224072540
-    # - node_js: 6
-    #   compiler: clang
-    #   addons:
-    #     apt:
-    #       sources:
-    #         - ubuntu-toolchain-r-test
-    #         - llvm-toolchain-precise-3.6
-    #       packages:
-    #         - clang-3.6
-    #   env: COMPILER=clang++-3.6
-    # - node_js: 6
-    #   compiler: clang
-    #   addons:
-    #     apt:
-    #       sources:
-    #         - ubuntu-toolchain-r-test
-    #         - llvm-toolchain-precise-3.7
-    #       packages:
-    #         - clang-3.7
-    #   env: COMPILER=clang++-3.7
+            - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+
+before_install:
+  - eval "${MATRIX_EVAL}"
 
 install:
   - npm install
