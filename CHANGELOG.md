@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.0.16
+
+* Improve C++ usage (remove "warning: missing initializer for member" [-Wmissing-field-initializers]).
+* Update Travis-CI settings.
+
+
 ### 2.0.15
 
 * Make `PlainRtpTransport` also send RTCP SR/RR reports (thanks @artushin for reporting).
