@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.0.15
+
+* Make `PlainRtpTransport` also send RTCP SR/RR reports (thanks @artushin for reporting).
+
+
 ### 2.0.14
 
 * [Fix #193](https://github.com/versatica/mediasoup/issues/193) `preferTcp` not honored (thanks @artushin).
