@@ -89,7 +89,10 @@ namespace RTC
 				if (err != 0)
 					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
-				this->mirrorSocket = new RTC::UdpSocket(this, AF_INET);
+				if (options.localIP.empty())
+					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET);
+				else
+					this->mirrorSocket = new RTC::UdpSocket(this, options.localIP);
 
 				break;
 			}
@@ -106,7 +109,10 @@ namespace RTC
 				if (err != 0)
 					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 
-				this->mirrorSocket = new RTC::UdpSocket(this, AF_INET6);
+				if (options.localIP.empty())
+					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET6);
+				else
+					this->mirrorSocket = new RTC::UdpSocket(this, options.localIP);
 
 				break;
 			}
