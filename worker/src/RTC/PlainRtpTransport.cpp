@@ -29,7 +29,7 @@ namespace RTC
 		{
 			case AF_INET:
 			{
-				if (!Settings::configuration.hasIPv4)
+				if (!Settings::configuration.hasIPv4 && options.localIP.empty())
 					MS_THROW_ERROR("IPv4 disabled");
 
 				err = uv_ip4_addr(
@@ -49,7 +49,7 @@ namespace RTC
 
 			case AF_INET6:
 			{
-				if (!Settings::configuration.hasIPv6)
+				if (!Settings::configuration.hasIPv6 && options.localIP.empty())
 					MS_THROW_ERROR("IPv6 disabled");
 
 				err = uv_ip6_addr(
@@ -58,8 +58,6 @@ namespace RTC
 				  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
 				if (err != 0)
 					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
-
-				this->udpSocket = new RTC::UdpSocket(this, AF_INET6);
 
 				if (options.localIP.empty())
 					this->udpSocket = new RTC::UdpSocket(this, AF_INET6);

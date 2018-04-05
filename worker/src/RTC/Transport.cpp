@@ -79,7 +79,7 @@ namespace RTC
 		{
 			case AF_INET:
 			{
-				if (!Settings::configuration.hasIPv4)
+				if (!Settings::configuration.hasIPv4 && options.localIP.empty())
 					MS_THROW_ERROR("IPv4 disabled");
 
 				err = uv_ip4_addr(
@@ -99,7 +99,7 @@ namespace RTC
 
 			case AF_INET6:
 			{
-				if (!Settings::configuration.hasIPv6)
+				if (!Settings::configuration.hasIPv6 && options.localIP.empty())
 					MS_THROW_ERROR("IPv6 disabled");
 
 				err = uv_ip6_addr(
