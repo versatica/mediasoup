@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.1.0
+
+* Add `localIP` option for `room.createRtpStreamer()` and `transport.startMirroring()` [PR #199](https://github.com/versatica/mediasoup/pull/199).
+
+
 ### 2.0.16
 
 * Improve C++ usage (remove "warning: missing initializer for member" [-Wmissing-field-initializers]).
