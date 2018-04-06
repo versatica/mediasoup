@@ -214,7 +214,15 @@ namespace RTC
 	  : // Provide the parent class constructor with a UDP uv handle.
 	    // NOTE: This may throw a MediaSoupError exception if the address family is not available
 	    // or there are no available ports.
-	    ::UdpSocket::UdpSocket(GetRandomPort(addressFamily)), listener(listener)
+	    ::UdpSocket::UdpSocket(UdpSocket::GetRandomPort(addressFamily)), listener(listener)
+	{
+		MS_TRACE();
+	}
+
+	UdpSocket::UdpSocket(Listener* listener, const std::string& ip)
+	  : // Provide the parent class constructor with an IP and port 0.
+	    // NOTE: This may throw a MediaSoupError exception if the given IP is invalid.
+	    ::UdpSocket::UdpSocket(ip, 0), listener(listener)
 	{
 		MS_TRACE();
 	}

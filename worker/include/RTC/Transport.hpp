@@ -59,6 +59,7 @@ namespace RTC
 		{
 			std::string remoteIP;
 			uint16_t remotePort;
+			std::string localIP;
 			bool sendRtp{ true };
 			bool sendRtcp{ true };
 			bool recvRtp{ true };

@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "handles/UdpSocket.hpp"
 #include <uv.h>
+#include <string>
 #include <unordered_map>
 
 namespace RTC
@@ -37,6 +38,7 @@ namespace RTC
 
 	public:
 		UdpSocket(Listener* listener, int addressFamily);
+		UdpSocket(Listener* listener, const std::string& ip);
 
 	private:
 		~UdpSocket() override = default;

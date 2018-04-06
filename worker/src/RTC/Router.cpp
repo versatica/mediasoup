@@ -240,6 +240,7 @@ namespace RTC
 			{
 				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
 				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
+				static const Json::StaticString JsonStringLocalIP{ "localIP" };
 
 				uint32_t transportId;
 
@@ -273,6 +274,9 @@ namespace RTC
 				}
 
 				options.remotePort = request->data[JsonStringRemotePort].asUInt();
+
+				if (request->data[JsonStringLocalIP].isString())
+					options.localIP = request->data[JsonStringLocalIP].asString();
 
 				RTC::PlainRtpTransport* plainRtpTransport;
 
@@ -837,6 +841,7 @@ namespace RTC
 			{
 				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
 				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
+				static const Json::StaticString JsonStringLocalIP{ "localIP" };
 				static const Json::StaticString JsonStringSendRtp{ "sendRtp" };
 				static const Json::StaticString JsonStringSendRtcp{ "sendRtcp" };
 				static const Json::StaticString JsonStringRecvRtp{ "recvRtp" };
@@ -874,6 +879,9 @@ namespace RTC
 				}
 
 				options.remotePort = request->data[JsonStringRemotePort].asUInt();
+
+				if (request->data[JsonStringLocalIP].isString())
+					options.localIP = request->data[JsonStringLocalIP].asString();
 
 				if (request->data[JsonStringSendRtp].isBool())
 					options.sendRtp = request->data[JsonStringSendRtp].asBool();

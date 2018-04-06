@@ -79,7 +79,7 @@ namespace RTC
 		{
 			case AF_INET:
 			{
-				if (!Settings::configuration.hasIPv4)
+				if (!Settings::configuration.hasIPv4 && options.localIP.empty())
 					MS_THROW_ERROR("IPv4 disabled");
 
 				err = uv_ip4_addr(
@@ -89,14 +89,17 @@ namespace RTC
 				if (err != 0)
 					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
-				this->mirrorSocket = new RTC::UdpSocket(this, AF_INET);
+				if (options.localIP.empty())
+					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET);
+				else
+					this->mirrorSocket = new RTC::UdpSocket(this, options.localIP);
 
 				break;
 			}
 
 			case AF_INET6:
 			{
-				if (!Settings::configuration.hasIPv6)
+				if (!Settings::configuration.hasIPv6 && options.localIP.empty())
 					MS_THROW_ERROR("IPv6 disabled");
 
 				err = uv_ip6_addr(
@@ -106,7 +109,10 @@ namespace RTC
 				if (err != 0)
 					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 
-				this->mirrorSocket = new RTC::UdpSocket(this, AF_INET6);
+				if (options.localIP.empty())
+					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET6);
+				else
+					this->mirrorSocket = new RTC::UdpSocket(this, options.localIP);
 
 				break;
 			}

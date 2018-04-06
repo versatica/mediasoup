@@ -16,6 +16,7 @@ namespace RTC
 		{
 			std::string remoteIP;
 			uint16_t remotePort;
+			std::string localIP;
 		};
 
 	public:
