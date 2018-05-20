@@ -58,6 +58,7 @@ namespace RTC
 		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
 		static const Json::StaticString JsonStringSsrc{ "ssrc" };
 		static const Json::StaticString JsonStringMediaType{ "mediaType" };
+		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringMimeType{ "mimeType" };
 		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
 		static const Json::StaticString JsonStringByteCount{ "byteCount" };
@@ -78,6 +79,7 @@ namespace RTC
 		json[JsonStringTimestamp]   = Json::UInt64{ now };
 		json[JsonStringSsrc]        = Json::UInt{ this->params.ssrc };
 		json[JsonStringMediaType]   = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		json[JsonStringKind]        = RtpCodecMimeType::type2String[this->params.mimeType.type];
 		json[JsonStringMimeType]    = this->params.mimeType.ToString();
 		json[JsonStringPacketCount] = static_cast<Json::UInt>(this->transmissionCounter.GetPacketCount());
 		json[JsonStringByteCount]   = static_cast<Json::UInt>(this->transmissionCounter.GetBytes());
