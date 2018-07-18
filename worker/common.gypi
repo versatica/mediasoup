@@ -25,7 +25,7 @@
       },
       'Debug':
       {
-        'defines': [ 'DEBUG', 'MS_LOG_FILE_LINE' ],
+        'defines': [ 'DEBUG', 'MS_LOG_TRACE', 'MS_LOG_FILE_LINE' ],
         'cflags': [ '-g', '-O0', '-fwrapv', '-Wno-parentheses-equality' ],
         'xcode_settings':
         {
