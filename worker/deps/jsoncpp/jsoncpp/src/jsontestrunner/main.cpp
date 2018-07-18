@@ -1,7 +1,14 @@
-// Copyright 2007-2010 Baptiste Lepilleur
+// Copyright 2007-2010 Baptiste Lepilleur and The JsonCpp Authors
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#pragma warning(disable : 4996)
+#endif
 
 /* This executable is used for testing parser/writer using real JSON files.
  */
@@ -10,10 +17,6 @@
 #include <algorithm> // sort
 #include <sstream>
 #include <stdio.h>
-
-#if defined(_MSC_VER) && _MSC_VER >= 1310
-#pragma warning(disable : 4996) // disable fopen deprecation warning
-#endif
 
 struct Options
 {
@@ -324,3 +327,7 @@ int main(int argc, const char* argv[]) {
     return 1;
   }
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif

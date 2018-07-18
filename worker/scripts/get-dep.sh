@@ -55,7 +55,7 @@ function get_gyp()
 function get_jsoncpp()
 {
 	GIT_REPO="https://github.com/open-source-parsers/jsoncpp.git"
-	GIT_TAG="1.8.1"
+	GIT_TAG="1.8.4"
 	DEST="deps/jsoncpp/jsoncpp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -78,7 +78,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.18.0"
+	GIT_TAG="v1.22.0"
 	DEST="deps/libuv"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -93,7 +93,7 @@ function get_openssl()
 function get_libsrtp()
 {
 	GIT_REPO="https://github.com/cisco/libsrtp.git"
-	GIT_TAG="v2.1.0"
+	GIT_TAG="v2.2.0"
 	DEST="deps/libsrtp/srtp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -102,7 +102,7 @@ function get_libsrtp()
 function get_catch()
 {
 	GIT_REPO="https://github.com/philsquared/Catch.git"
-	GIT_TAG="v1.11.0"
+	GIT_TAG="v1.12.2"
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"

@@ -65,10 +65,17 @@
 #define RDWR_BUF_SIZE   4096
 #define EQ(a,b)         (strcmp(a,b) == 0)
 
+static uv_mutex_t process_title_mutex;
+static uv_once_t process_title_mutex_once = UV_ONCE_INIT;
 static void* args_mem = NULL;
 static char** process_argv = NULL;
 static int process_argc = 0;
 static char* process_title_ptr = NULL;
+
+static void init_process_title_mutex_once(void) {
+  uv_mutex_init(&process_title_mutex);
+}
+
 
 int uv__platform_loop_init(uv_loop_t* loop) {
   loop->fs_fd = -1;
@@ -112,7 +119,7 @@ int uv__io_check_fd(uv_loop_t* loop, int fd) {
   pc.fd = fd;
 
   if (pollset_ctl(loop->backend_fd, &pc, 1))
-    return -errno;
+    return UV__ERR(errno);
 
   pc.cmd = PS_DELETE;
   if (pollset_ctl(loop->backend_fd, &pc, 1))
@@ -402,22 +409,22 @@ static int uv__is_ahafs_mounted(void){
 
   p = uv__malloc(siz);
   if (p == NULL)
-    return -errno;
+    return UV__ERR(errno);
 
   /* Retrieve all mounted filesystems */
   rv = mntctl(MCTL_QUERY, siz, (char*)p);
   if (rv < 0)
-    return -errno;
+    return UV__ERR(errno);
   if (rv == 0) {
     /* buffer was not large enough, reallocate to correct size */
     siz = *(int*)p;
     uv__free(p);
     p = uv__malloc(siz);
     if (p == NULL)
-      return -errno;
+      return UV__ERR(errno);
     rv = mntctl(MCTL_QUERY, siz, (char*)p);
     if (rv < 0)
-      return -errno;
+      return UV__ERR(errno);
   }
 
   /* Look for dev in filesystems mount info */
@@ -488,7 +495,7 @@ static int uv__make_subdirs_p(const char *filename) {
   rc = uv__makedir_p(cmd);
 
   if (rc == -1 && errno != EEXIST){
-    return -errno;
+    return UV__ERR(errno);
   }
 
   return rc;
@@ -515,7 +522,7 @@ static int uv__setup_ahafs(const char* filename, int *fd) {
     sprintf(mon_file, "/aha/fs/modFile.monFactory");
 
   if ((strlen(mon_file) + strlen(filename) + 5) > PATH_MAX)
-    return -ENAMETOOLONG;
+    return UV_ENAMETOOLONG;
 
   /* Make the necessary subdirectories for the monitor file */
   rc = uv__make_subdirs_p(filename);
@@ -530,7 +537,7 @@ static int uv__setup_ahafs(const char* filename, int *fd) {
   /* Open the monitor file, creating it if necessary */
   *fd = open(mon_file, O_CREAT|O_RDWR);
   if (*fd < 0)
-    return -errno;
+    return UV__ERR(errno);
 
   /* Write out the monitoring specifications.
    * In this case, we are monitoring for a state change event type
@@ -551,7 +558,7 @@ static int uv__setup_ahafs(const char* filename, int *fd) {
 
   rc = write(*fd, mon_file_write_string, strlen(mon_file_write_string)+1);
   if (rc < 0)
-    return -errno;
+    return UV__ERR(errno);
 
   return 0;
 }
@@ -709,7 +716,7 @@ int uv_fs_event_init(uv_loop_t* loop, uv_fs_event_t* handle) {
   uv__handle_init(loop, (uv_handle_t*)handle, UV_FS_EVENT);
   return 0;
 #else
-  return -ENOSYS;
+  return UV_ENOSYS;
 #endif
 }
 
@@ -764,7 +771,7 @@ int uv_fs_event_start(uv_fs_event_t* handle,
 
   return 0;
 #else
-  return -ENOSYS;
+  return UV_ENOSYS;
 #endif
 }
 
@@ -789,7 +796,7 @@ int uv_fs_event_stop(uv_fs_event_t* handle) {
 
   return 0;
 #else
-  return -ENOSYS;
+  return UV_ENOSYS;
 #endif
 }
 
@@ -854,7 +861,10 @@ int uv_set_process_title(const char* title) {
    */
   new_title = uv__strdup(title);
   if (new_title == NULL)
-    return -ENOMEM;
+    return UV_ENOMEM;
+
+  uv_once(&process_title_mutex_once, init_process_title_mutex_once);
+  uv_mutex_lock(&process_title_mutex);
 
   /* If this is the first time this is set,
    * don't free and set argv[1] to NULL.
@@ -868,6 +878,8 @@ int uv_set_process_title(const char* title) {
   if (process_argc > 1)
      process_argv[1] = NULL;
 
+  uv_mutex_unlock(&process_title_mutex);
+
   return 0;
 }
 
@@ -876,11 +888,16 @@ int uv_get_process_title(char* buffer, size_t size) {
   size_t len;
   len = strlen(process_argv[0]);
   if (buffer == NULL || size == 0)
-    return -EINVAL;
+    return UV_EINVAL;
   else if (size <= len)
-    return -ENOBUFS;
+    return UV_ENOBUFS;
+
+  uv_once(&process_title_mutex_once, init_process_title_mutex_once);
+  uv_mutex_lock(&process_title_mutex);
 
   memcpy(buffer, process_argv[0], len + 1);
+
+  uv_mutex_unlock(&process_title_mutex);
 
   return 0;
 }
@@ -902,10 +919,10 @@ int uv_resident_set_memory(size_t* rss) {
 
   fd = open(pp, O_RDONLY);
   if (fd == -1)
-    return -errno;
+    return UV__ERR(errno);
 
   /* FIXME(bnoordhuis) Handle EINTR. */
-  err = -EINVAL;
+  err = UV_EINVAL;
   if (read(fd, &psinfo, sizeof(psinfo)) == sizeof(psinfo)) {
     *rss = (size_t)psinfo.pr_rssize * 1024;
     err = 0;
@@ -936,7 +953,7 @@ int uv_uptime(double* uptime) {
   endutent();
 
   if (boot_time == 0)
-    return -ENOSYS;
+    return UV_ENOSYS;
 
   *uptime = time(NULL) - boot_time;
   return 0;
@@ -952,30 +969,30 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
 
   result = perfstat_cpu_total(NULL, &ps_total, sizeof(ps_total), 1);
   if (result == -1) {
-    return -ENOSYS;
+    return UV_ENOSYS;
   }
 
   ncpus = result = perfstat_cpu(NULL, NULL, sizeof(perfstat_cpu_t), 0);
   if (result == -1) {
-    return -ENOSYS;
+    return UV_ENOSYS;
   }
 
   ps_cpus = (perfstat_cpu_t*) uv__malloc(ncpus * sizeof(perfstat_cpu_t));
   if (!ps_cpus) {
-    return -ENOMEM;
+    return UV_ENOMEM;
   }
 
   strcpy(cpu_id.name, FIRST_CPU);
   result = perfstat_cpu(&cpu_id, ps_cpus, sizeof(perfstat_cpu_t), ncpus);
   if (result == -1) {
     uv__free(ps_cpus);
-    return -ENOSYS;
+    return UV_ENOSYS;
   }
 
   *cpu_infos = (uv_cpu_info_t*) uv__malloc(ncpus * sizeof(uv_cpu_info_t));
   if (!*cpu_infos) {
     uv__free(ps_cpus);
-    return -ENOMEM;
+    return UV_ENOMEM;
   }
 
   *count = ncpus;

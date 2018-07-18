@@ -1,4 +1,4 @@
-/// Json-cpp amalgated source (http://jsoncpp.sourceforge.net/).
+/// Json-cpp amalgamated source (http://jsoncpp.sourceforge.net/).
 /// It is intended to be used with #include "json/json.h"
 
 // //////////////////////////////////////////////////////////////////////
@@ -10,13 +10,13 @@ The JsonCpp library's source code, including accompanying documentation,
 tests and demonstration applications, are licensed under the following
 conditions...
 
-The JsonCpp Authors explicitly disclaim copyright in all 
+Baptiste Lepilleur and The JsonCpp Authors explicitly disclaim copyright in all 
 jurisdictions which recognize such a disclaimer. In such jurisdictions, 
 this software is released into the Public Domain.
 
 In jurisdictions which do not recognize Public Domain property (e.g. Germany as of
-2010), this software is Copyright (c) 2007-2010 by The JsonCpp Authors, and is
-released under the terms of the MIT License (see below).
+2010), this software is Copyright (c) 2007-2010 by Baptiste Lepilleur and
+The JsonCpp Authors, and is released under the terms of the MIT License (see below).
 
 In jurisdictions which recognize Public Domain property, the user of this 
 software may choose to accept it either as 1) Public Domain, 2) under the 
@@ -31,7 +31,7 @@ described in clear, concise terms at:
 The full text of the MIT License follows:
 
 ========================================================================
-Copyright (c) 2007-2010 The JsonCpp Authors
+Copyright (c) 2007-2010 Baptiste Lepilleur and The JsonCpp Authors
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -84,7 +84,7 @@ license you like.
 // Beginning of content of file: src/lib_json/json_tool.h
 // //////////////////////////////////////////////////////////////////////
 
-// Copyright 2007-2010 Baptiste Lepilleur
+// Copyright 2007-2010 Baptiste Lepilleur and The JsonCpp Authors
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
@@ -147,9 +147,6 @@ static inline JSONCPP_STRING codePointToUTF8(unsigned int cp) {
   return result;
 }
 
-/// Returns true if ch is a control character (in range [1,31]).
-static inline bool isControlCharacter(char ch) { return ch > 0 && ch <= 0x1F; }
-
 enum {
   /// Constant that specify the size of the buffer that must be passed to
   /// uintToString.
@@ -160,7 +157,7 @@ enum {
 typedef char UIntToStringBuffer[uintToStringBufferSize];
 
 /** Converts an unsigned integer to string.
- * @param value Unsigned interger to convert to string
+ * @param value Unsigned integer to convert to string
  * @param current Input/Output string buffer.
  *        Must have at least uintToStringBufferSize chars free.
  */
@@ -215,7 +212,7 @@ static inline void fixNumericLocaleInput(char* begin, char* end) {
 // Beginning of content of file: src/lib_json/json_reader.cpp
 // //////////////////////////////////////////////////////////////////////
 
-// Copyright 2007-2011 Baptiste Lepilleur
+// Copyright 2007-2011 Baptiste Lepilleur and The JsonCpp Authors
 // Copyright (C) 2016 InfoTeCS JSC. All rights reserved.
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
@@ -298,7 +295,7 @@ Features Features::strictMode() {
 // Implementation of class Reader
 // ////////////////////////////////
 
-static bool containsNewLine(Reader::Location begin, Reader::Location end) {
+bool Reader::containsNewLine(Reader::Location begin, Reader::Location end) {
   for (; begin < end; ++begin)
     if (*begin == '\n' || *begin == '\r')
       return true;
@@ -320,8 +317,7 @@ Reader::Reader(const Features& features)
 
 bool
 Reader::parse(const std::string& document, Value& root, bool collectComments) {
-  JSONCPP_STRING documentCopy(document.data(), document.data() + document.capacity());
-  std::swap(documentCopy, document_);
+  document_.assign(document.begin(), document.end());
   const char* begin = document_.c_str();
   const char* end = begin + document_.length();
   return parse(begin, end, root, collectComments);
@@ -587,7 +583,7 @@ bool Reader::readComment() {
   return true;
 }
 
-static JSONCPP_STRING normalizeEOL(Reader::Location begin, Reader::Location end) {
+JSONCPP_STRING Reader::normalizeEOL(Reader::Location begin, Reader::Location end) {
   JSONCPP_STRING normalized;
   normalized.reserve(static_cast<size_t>(end - begin));
   Reader::Location current = begin;
@@ -1236,6 +1232,9 @@ private:
   void addComment(Location begin, Location end, CommentPlacement placement);
   void skipCommentTokens(Token& token);
 
+  static JSONCPP_STRING normalizeEOL(Location begin, Location end);
+  static bool containsNewLine(Location begin, Location end);
+
   typedef std::stack<Value*> Nodes;
   Nodes nodes_;
   Errors errors_;
@@ -1252,6 +1251,13 @@ private:
 };  // OurReader
 
 // complete copy of Read impl, for OurReader
+
+bool OurReader::containsNewLine(OurReader::Location begin, OurReader::Location end) {
+  for (; begin < end; ++begin)
+    if (*begin == '\n' || *begin == '\r')
+      return true;
+  return false;
+}
 
 OurReader::OurReader(OurFeatures const& features)
     : errors_(), document_(), begin_(), end_(), current_(), lastValueEnd_(),
@@ -1445,7 +1451,7 @@ bool OurReader::readToken(Token& token) {
     token.type_ = tokenString;
     ok = readStringSingleQuote();
     break;
-    } // else continue
+    } // else fall through
   case '/':
     token.type_ = tokenComment;
     ok = readComment();
@@ -1560,6 +1566,25 @@ bool OurReader::readComment() {
     addComment(commentBegin, current_, placement);
   }
   return true;
+}
+
+JSONCPP_STRING OurReader::normalizeEOL(OurReader::Location begin, OurReader::Location end) {
+  JSONCPP_STRING normalized;
+  normalized.reserve(static_cast<size_t>(end - begin));
+  OurReader::Location current = begin;
+  while (current != end) {
+    char c = *current++;
+    if (c == '\r') {
+      if (current != end && *current == '\n')
+         // convert dos EOL
+         ++current;
+      // convert Mac EOL
+      normalized += '\n';
+    } else {
+      normalized += c;
+    }
+  }
+  return normalized;
 }
 
 void
@@ -2241,10 +2266,6 @@ JSONCPP_ISTREAM& operator>>(JSONCPP_ISTREAM& sin, Value& root) {
   JSONCPP_STRING errs;
   bool ok = parseFromStream(b, sin, &root, &errs);
   if (!ok) {
-    fprintf(stderr,
-            "Error from reader: %s",
-            errs.c_str());
-
     throwRuntimeError(errs);
   }
   return sin;
@@ -2265,7 +2286,7 @@ JSONCPP_ISTREAM& operator>>(JSONCPP_ISTREAM& sin, Value& root) {
 // Beginning of content of file: src/lib_json/json_valueiterator.inl
 // //////////////////////////////////////////////////////////////////////
 
-// Copyright 2007-2010 Baptiste Lepilleur
+// Copyright 2007-2010 Baptiste Lepilleur and The JsonCpp Authors
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
@@ -2446,7 +2467,7 @@ ValueIterator& ValueIterator::operator=(const SelfType& other) {
 // Beginning of content of file: src/lib_json/json_value.cpp
 // //////////////////////////////////////////////////////////////////////
 
-// Copyright 2011 Baptiste Lepilleur
+// Copyright 2011 Baptiste Lepilleur and The JsonCpp Authors
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
@@ -2740,10 +2761,20 @@ void Value::CZString::swap(CZString& other) {
   std::swap(index_, other.index_);
 }
 
-Value::CZString& Value::CZString::operator=(CZString other) {
-  swap(other);
+Value::CZString& Value::CZString::operator=(const CZString& other) {
+  cstr_ = other.cstr_;
+  index_ = other.index_;
   return *this;
 }
+
+#if JSON_HAS_RVALUE_REFERENCES
+Value::CZString& Value::CZString::operator=(CZString&& other) {
+  cstr_ = other.cstr_;
+  index_ = other.index_;
+  other.cstr_ = nullptr;
+  return *this;
+}
+#endif
 
 bool Value::CZString::operator<(const CZString& other) const {
   if (!cstr_) return index_ < other.index_;
@@ -2846,7 +2877,7 @@ Value::Value(double value) {
 
 Value::Value(const char* value) {
   initBasic(stringValue, true);
-  JSON_ASSERT_MESSAGE(value != NULL, "Null Value Passed to Value Constructor");	
+  JSON_ASSERT_MESSAGE(value != NULL, "Null Value Passed to Value Constructor");
   value_.string_ = duplicateAndPrefixStringValue(value, static_cast<unsigned>(strlen(value)));
 }
 
@@ -2971,11 +3002,24 @@ void Value::swapPayload(Value& other) {
   other.allocated_ = temp2 & 0x1;
 }
 
+void Value::copyPayload(const Value& other) {
+  type_ = other.type_;
+  value_ = other.value_;
+  allocated_ = other.allocated_;
+}
+
 void Value::swap(Value& other) {
   swapPayload(other);
   std::swap(comments_, other.comments_);
   std::swap(start_, other.start_);
   std::swap(limit_, other.limit_);
+}
+
+void Value::copy(const Value& other) {
+  copyPayload(other);
+  comments_ = other.comments_;
+  start_ = other.start_;
+  limit_ = other.limit_;
 }
 
 ValueType Value::type() const { return type_; }
@@ -3387,7 +3431,7 @@ bool Value::empty() const {
     return false;
 }
 
-bool Value::operator!() const { return isNull(); }
+Value::operator bool() const { return ! isNull(); }
 
 void Value::clear() {
   JSON_ASSERT_MESSAGE(type_ == nullValue || type_ == arrayValue ||
@@ -3572,6 +3616,10 @@ Value const& Value::operator[](CppTL::ConstString const& key) const
 
 Value& Value::append(const Value& value) { return (*this)[size()] = value; }
 
+#if JSON_HAS_RVALUE_REFERENCES
+  Value& Value::append(Value&& value) { return (*this)[size()] = std::move(value); }
+#endif
+
 Value Value::get(char const* key, char const* cend, Value const& defaultValue) const
 {
   Value const* found = find(key, cend);
@@ -3608,20 +3656,19 @@ bool Value::removeMember(JSONCPP_STRING const& key, Value* removed)
 {
   return removeMember(key.data(), key.data() + key.length(), removed);
 }
-Value Value::removeMember(const char* key)
+void Value::removeMember(const char* key)
 {
   JSON_ASSERT_MESSAGE(type_ == nullValue || type_ == objectValue,
                       "in Json::Value::removeMember(): requires objectValue");
   if (type_ == nullValue)
-    return nullSingleton();
+    return;
 
-  Value removed;  // null
-  removeMember(key, key + strlen(key), &removed);
-  return removed; // still null if removeMember() did nothing
+  CZString actualKey(key, unsigned(strlen(key)), CZString::noDuplication);
+  value_.map_->erase(actualKey);
 }
-Value Value::removeMember(const JSONCPP_STRING& key)
+void Value::removeMember(const JSONCPP_STRING& key)
 {
-  return removeMember(key.c_str());
+  removeMember(key.c_str());
 }
 
 bool Value::removeIndex(ArrayIndex index, Value* removed) {
@@ -3874,8 +3921,13 @@ ptrdiff_t Value::getOffsetStart() const { return start_; }
 ptrdiff_t Value::getOffsetLimit() const { return limit_; }
 
 JSONCPP_STRING Value::toStyledString() const {
-  StyledWriter writer;
-  return writer.write(*this);
+  StreamWriterBuilder builder;
+
+  JSONCPP_STRING out = this->hasComment(commentBefore) ? "\n" : "";
+  out += Json::writeString(builder, *this);
+  out += "\n";
+
+  return out;
 }
 
 Value::const_iterator Value::begin() const {
@@ -4090,7 +4142,7 @@ Value& Path::make(Value& root) const {
 // Beginning of content of file: src/lib_json/json_writer.cpp
 // //////////////////////////////////////////////////////////////////////
 
-// Copyright 2011 Baptiste Lepilleur
+// Copyright 2011 Baptiste Lepilleur and The JsonCpp Authors
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
@@ -4173,24 +4225,6 @@ typedef std::unique_ptr<StreamWriter> StreamWriterPtr;
 typedef std::auto_ptr<StreamWriter>   StreamWriterPtr;
 #endif
 
-static bool containsControlCharacter(const char* str) {
-  while (*str) {
-    if (isControlCharacter(*(str++)))
-      return true;
-  }
-  return false;
-}
-
-static bool containsControlCharacter0(const char* str, unsigned len) {
-  char const* end = str + len;
-  while (end != str) {
-    if (isControlCharacter(*str) || 0==*str)
-      return true;
-    ++str;
-  }
-  return false;
-}
-
 JSONCPP_STRING valueToString(LargestInt value) {
   UIntToStringBuffer buffer;
   char* current = buffer + sizeof(buffer);
@@ -4235,17 +4269,17 @@ JSONCPP_STRING valueToString(double value, bool useSpecialFloats, unsigned int p
   int len = -1;
 
   char formatString[15];
-  snprintf(formatString, sizeof(formatString), "%%.%dg", precision);
+  snprintf(formatString, sizeof(formatString), "%%.%ug", precision);
 
   // Print into the buffer. We need not request the alternative representation
-  // that always has a decimal point because JSON doesn't distingish the
+  // that always has a decimal point because JSON doesn't distinguish the
   // concepts of reals and integers.
   if (isfinite(value)) {
     len = snprintf(buffer, sizeof(buffer), formatString, value);
     fixNumericLocale(buffer, buffer + len);
 
     // try to ensure we preserve the fact that this was given to us as a double on input
-    if (!strstr(buffer, ".") && !strstr(buffer, "e")) {
+    if (!strchr(buffer, '.') && !strchr(buffer, 'e')) {
       strcat(buffer, ".0");
     }
 
@@ -4268,89 +4302,103 @@ JSONCPP_STRING valueToString(double value) { return valueToString(value, false, 
 
 JSONCPP_STRING valueToString(bool value) { return value ? "true" : "false"; }
 
-JSONCPP_STRING valueToQuotedString(const char* value) {
-  if (value == NULL)
-    return "";
-  // Not sure how to handle unicode...
-  if (strpbrk(value, "\"\\\b\f\n\r\t") == NULL &&
-      !containsControlCharacter(value))
-    return JSONCPP_STRING("\"") + value + "\"";
-  // We have to walk value and escape any special characters.
-  // Appending to JSONCPP_STRING is not efficient, but this should be rare.
-  // (Note: forward slashes are *not* rare, but I am not escaping them.)
-  JSONCPP_STRING::size_type maxsize =
-      strlen(value) * 2 + 3; // allescaped+quotes+NULL
-  JSONCPP_STRING result;
-  result.reserve(maxsize); // to avoid lots of mallocs
-  result += "\"";
-  for (const char* c = value; *c != 0; ++c) {
-    switch (*c) {
-    case '\"':
-      result += "\\\"";
-      break;
-    case '\\':
-      result += "\\\\";
-      break;
-    case '\b':
-      result += "\\b";
-      break;
-    case '\f':
-      result += "\\f";
-      break;
-    case '\n':
-      result += "\\n";
-      break;
-    case '\r':
-      result += "\\r";
-      break;
-    case '\t':
-      result += "\\t";
-      break;
-    // case '/':
-    // Even though \/ is considered a legal escape in JSON, a bare
-    // slash is also legal, so I see no reason to escape it.
-    // (I hope I am not misunderstanding something.
-    // blep notes: actually escaping \/ may be useful in javascript to avoid </
-    // sequence.
-    // Should add a flag to allow this compatibility mode and prevent this
-    // sequence from occurring.
-    default:
-      if (isControlCharacter(*c)) {
-        JSONCPP_OSTRINGSTREAM oss;
-        oss << "\\u" << std::hex << std::uppercase << std::setfill('0')
-            << std::setw(4) << static_cast<int>(*c);
-        result += oss.str();
-      } else {
-        result += *c;
-      }
-      break;
-    }
-  }
-  result += "\"";
-  return result;
-}
-
-// https://github.com/upcaste/upcaste/blob/master/src/upcore/src/cstring/strnpbrk.cpp
-static char const* strnpbrk(char const* s, char const* accept, size_t n) {
-  assert((s || !n) && accept);
+static bool isAnyCharRequiredQuoting(char const* s, size_t n) {
+  assert(s || !n);
 
   char const* const end = s + n;
   for (char const* cur = s; cur < end; ++cur) {
-    int const c = *cur;
-    for (char const* a = accept; *a; ++a) {
-      if (*a == c) {
-        return cur;
-      }
-    }
+    if (*cur == '\\' || *cur == '\"' || *cur < ' '
+      || static_cast<unsigned char>(*cur) < 0x80)
+      return true;
   }
-  return NULL;
+  return false;
 }
+
+static unsigned int utf8ToCodepoint(const char*& s, const char* e) {
+  const unsigned int REPLACEMENT_CHARACTER = 0xFFFD;
+
+  unsigned int firstByte = static_cast<unsigned char>(*s);
+
+  if (firstByte < 0x80)
+    return firstByte;
+
+  if (firstByte < 0xE0) {
+    if (e - s < 2)
+      return REPLACEMENT_CHARACTER;
+
+    unsigned int calculated = ((firstByte & 0x1F) << 6)
+      | (static_cast<unsigned int>(s[1]) & 0x3F);
+    s += 1;
+    // oversized encoded characters are invalid
+    return calculated < 0x80 ? REPLACEMENT_CHARACTER : calculated;
+  }
+
+  if (firstByte < 0xF0) {
+    if (e - s < 3)
+      return REPLACEMENT_CHARACTER;
+
+    unsigned int calculated = ((firstByte & 0x0F) << 12)
+      | ((static_cast<unsigned int>(s[1]) & 0x3F) << 6)
+      |  (static_cast<unsigned int>(s[2]) & 0x3F);
+    s += 2;
+    // surrogates aren't valid codepoints itself
+    // shouldn't be UTF-8 encoded
+    if (calculated >= 0xD800 && calculated <= 0xDFFF)
+      return REPLACEMENT_CHARACTER;
+    // oversized encoded characters are invalid
+    return calculated < 0x800 ? REPLACEMENT_CHARACTER : calculated;
+  }
+
+  if (firstByte < 0xF8) {
+    if (e - s < 4)
+      return REPLACEMENT_CHARACTER;
+
+    unsigned int calculated = ((firstByte & 0x07) << 24)
+      | ((static_cast<unsigned int>(s[1]) & 0x3F) << 12)
+      | ((static_cast<unsigned int>(s[2]) & 0x3F) << 6)
+      |  (static_cast<unsigned int>(s[3]) & 0x3F);
+    s += 3;
+    // oversized encoded characters are invalid
+    return calculated < 0x10000 ? REPLACEMENT_CHARACTER : calculated;
+  }
+
+  return REPLACEMENT_CHARACTER;
+}
+
+static const char hex2[] =
+  "000102030405060708090a0b0c0d0e0f"
+  "101112131415161718191a1b1c1d1e1f"
+  "202122232425262728292a2b2c2d2e2f"
+  "303132333435363738393a3b3c3d3e3f"
+  "404142434445464748494a4b4c4d4e4f"
+  "505152535455565758595a5b5c5d5e5f"
+  "606162636465666768696a6b6c6d6e6f"
+  "707172737475767778797a7b7c7d7e7f"
+  "808182838485868788898a8b8c8d8e8f"
+  "909192939495969798999a9b9c9d9e9f"
+  "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf"
+  "b0b1b2b3b4b5b6b7b8b9babbbcbdbebf"
+  "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf"
+  "d0d1d2d3d4d5d6d7d8d9dadbdcdddedf"
+  "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
+  "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff";
+
+static JSONCPP_STRING toHex16Bit(unsigned int x) {
+  const unsigned int hi = (x >> 8) & 0xff;
+  const unsigned int lo = x & 0xff;
+  JSONCPP_STRING result(4, ' ');
+  result[0] = hex2[2 * hi];
+  result[1] = hex2[2 * hi + 1];
+  result[2] = hex2[2 * lo];
+  result[3] = hex2[2 * lo + 1];
+  return result;
+}
+
 static JSONCPP_STRING valueToQuotedStringN(const char* value, unsigned length) {
   if (value == NULL)
     return "";
-  // Not sure how to handle unicode...
-  if (strnpbrk(value, "\"\\\b\f\n\r\t", length) == NULL &&
-      !containsControlCharacter0(value, length))
+
+  if (!isAnyCharRequiredQuoting(value, length))
     return JSONCPP_STRING("\"") + value + "\"";
   // We have to walk value and escape any special characters.
   // Appending to JSONCPP_STRING is not efficient, but this should be rare.
@@ -4392,20 +4440,34 @@ static JSONCPP_STRING valueToQuotedStringN(const char* value, unsigned length) {
     // sequence.
     // Should add a flag to allow this compatibility mode and prevent this
     // sequence from occurring.
-    default:
-      if ((isControlCharacter(*c)) || (*c == 0)) {
-        JSONCPP_OSTRINGSTREAM oss;
-        oss << "\\u" << std::hex << std::uppercase << std::setfill('0')
-            << std::setw(4) << static_cast<int>(*c);
-        result += oss.str();
-      } else {
-        result += *c;
+    default: {
+        unsigned int cp = utf8ToCodepoint(c, end);
+        // don't escape non-control characters
+        // (short escape sequence are applied above)
+        if (cp < 0x80 && cp >= 0x20)
+          result += static_cast<char>(cp);
+        else if (cp < 0x10000) { // codepoint is in Basic Multilingual Plane
+          result += "\\u";
+          result += toHex16Bit(cp);
+        }
+        else { // codepoint is not in Basic Multilingual Plane
+               // convert to surrogate pair first
+          cp -= 0x10000;
+          result += "\\u";
+          result += toHex16Bit((cp >> 10) + 0xD800);
+          result += "\\u";
+          result += toHex16Bit((cp & 0x3FF) + 0xDC00);
+        }
       }
       break;
     }
   }
   result += "\"";
   return result;
+}
+
+JSONCPP_STRING valueToQuotedString(const char* value) {
+  return valueToQuotedStringN(value, static_cast<unsigned int>(strlen(value)));
 }
 
 // Class Writer
@@ -4416,10 +4478,10 @@ Writer::~Writer() {}
 // //////////////////////////////////////////////////////////////////
 
 FastWriter::FastWriter()
-    : yamlCompatiblityEnabled_(false), dropNullPlaceholders_(false),
+    : yamlCompatibilityEnabled_(false), dropNullPlaceholders_(false),
       omitEndingLineFeed_(false) {}
 
-void FastWriter::enableYAMLCompatibility() { yamlCompatiblityEnabled_ = true; }
+void FastWriter::enableYAMLCompatibility() { yamlCompatibilityEnabled_ = true; }
 
 void FastWriter::dropNullPlaceholders() { dropNullPlaceholders_ = true; }
 
@@ -4479,7 +4541,7 @@ void FastWriter::writeValue(const Value& value) {
       if (it != members.begin())
         document_ += ',';
       document_ += valueToQuotedStringN(name.data(), static_cast<unsigned>(name.length()));
-      document_ += yamlCompatiblityEnabled_ ? ": " : ":";
+      document_ += yamlCompatibilityEnabled_ ? ": " : ":";
       writeValue(value[name]);
     }
     document_ += '}';
@@ -4568,7 +4630,7 @@ void StyledWriter::writeArrayValue(const Value& value) {
   if (size == 0)
     pushValue("[]");
   else {
-    bool isArrayMultiLine = isMultineArray(value);
+    bool isArrayMultiLine = isMultilineArray(value);
     if (isArrayMultiLine) {
       writeWithIndent("[");
       indent();
@@ -4606,7 +4668,7 @@ void StyledWriter::writeArrayValue(const Value& value) {
   }
 }
 
-bool StyledWriter::isMultineArray(const Value& value) {
+bool StyledWriter::isMultilineArray(const Value& value) {
   ArrayIndex const size = value.size();
   bool isMultiLine = size * 3 >= rightMargin_;
   childValues_.clear();
@@ -4674,7 +4736,7 @@ void StyledWriter::writeCommentBeforeValue(const Value& root) {
   while (iter != comment.end()) {
     document_ += *iter;
     if (*iter == '\n' &&
-       (iter != comment.end() && *(iter + 1) == '/'))
+       ((iter+1) != comment.end() && *(iter + 1) == '/'))
       writeIndent();
     ++iter;
   }
@@ -4785,7 +4847,7 @@ void StyledStreamWriter::writeArrayValue(const Value& value) {
   if (size == 0)
     pushValue("[]");
   else {
-    bool isArrayMultiLine = isMultineArray(value);
+    bool isArrayMultiLine = isMultilineArray(value);
     if (isArrayMultiLine) {
       writeWithIndent("[");
       indent();
@@ -4825,7 +4887,7 @@ void StyledStreamWriter::writeArrayValue(const Value& value) {
   }
 }
 
-bool StyledStreamWriter::isMultineArray(const Value& value) {
+bool StyledStreamWriter::isMultilineArray(const Value& value) {
   ArrayIndex const size = value.size();
   bool isMultiLine = size * 3 >= rightMargin_;
   childValues_.clear();
@@ -4890,7 +4952,7 @@ void StyledStreamWriter::writeCommentBeforeValue(const Value& root) {
   while (iter != comment.end()) {
     *document_ << *iter;
     if (*iter == '\n' &&
-       (iter != comment.end() && *(iter + 1) == '/'))
+       ((iter+1) != comment.end() && *(iter + 1) == '/'))
       // writeIndent();  // would include newline
       *document_ << indentString_;
     ++iter;
@@ -4942,7 +5004,7 @@ struct BuiltStyledStreamWriter : public StreamWriter
 private:
   void writeValue(Value const& value);
   void writeArrayValue(Value const& value);
-  bool isMultineArray(Value const& value);
+  bool isMultilineArray(Value const& value);
   void pushValue(JSONCPP_STRING const& value);
   void writeIndent();
   void writeWithIndent(JSONCPP_STRING const& value);
@@ -5066,7 +5128,7 @@ void BuiltStyledStreamWriter::writeArrayValue(Value const& value) {
   if (size == 0)
     pushValue("[]");
   else {
-    bool isMultiLine = (cs_ == CommentStyle::All) || isMultineArray(value);
+    bool isMultiLine = (cs_ == CommentStyle::All) || isMultilineArray(value);
     if (isMultiLine) {
       writeWithIndent("[");
       indent();
@@ -5108,7 +5170,7 @@ void BuiltStyledStreamWriter::writeArrayValue(Value const& value) {
   }
 }
 
-bool BuiltStyledStreamWriter::isMultineArray(Value const& value) {
+bool BuiltStyledStreamWriter::isMultilineArray(Value const& value) {
   ArrayIndex const size = value.size();
   bool isMultiLine = size * 3 >= rightMargin_;
   childValues_.clear();
@@ -5178,7 +5240,7 @@ void BuiltStyledStreamWriter::writeCommentBeforeValue(Value const& root) {
   while (iter != comment.end()) {
     *sout_ << *iter;
     if (*iter == '\n' &&
-       (iter != comment.end() && *(iter + 1) == '/'))
+       ((iter+1) != comment.end() && *(iter + 1) == '/'))
       // writeIndent();  // would write extra newline
       *sout_ << indentString_;
     ++iter;

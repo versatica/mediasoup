@@ -370,6 +370,7 @@
     <ClInclude Include="crypto\include\alloc.h" />
     <ClInclude Include="crypto\include\auth.h" />
     <ClInclude Include="crypto\include\cipher.h" />
+    <ClInclude Include="crypto\include\cipher_types.h" />
     <ClInclude Include="crypto\include\config.h" />
     <ClInclude Include="crypto\include\crypto.h" />
     <ClInclude Include="crypto\include\cryptoalg.h" />

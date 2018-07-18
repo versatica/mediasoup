@@ -165,7 +165,6 @@ void destroy()
 	RTC::DtlsTransport::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
 	DepLibUV::ClassDestroy();
-	DepOpenSSL::ClassDestroy();
 	DepLibSRTP::ClassDestroy();
 }
 

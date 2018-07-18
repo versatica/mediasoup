@@ -1,4 +1,4 @@
-/* config_in.h.  Generated from configure.in by autoheader.  */
+/* config_in.h.  Generated from configure.ac by autoheader.  */
 
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
@@ -57,7 +57,7 @@
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
 
-/* Define to 1 if you have the `pcap' library (-lpcap) */
+/* Define to 1 if you have the `winpcap' library (-lwpcap) */
 #undef HAVE_PCAP
 
 /* Define to 1 if you have the `sigaction' function. */

@@ -6,6 +6,7 @@
 # targets:
 #
 # runtest       runs test applications
+# runtest-valgrind runs test applications with valgrind
 # test		builds test applications
 # libsrtp2.a	static library implementing srtp
 # libsrtp2.so	shared library implementing srtp
@@ -30,12 +31,18 @@ runtest: test
 	test/roc_driver$(EXE) -v >/dev/null
 	test/replay_driver$(EXE) -v >/dev/null
 	test/dtls_srtp_driver$(EXE) >/dev/null
-	cd test; $(abspath $(srcdir))/test/rtpw_test.sh >/dev/null
+	cd test; $(abspath $(srcdir))/test/rtpw_test.sh -w $(abspath $(srcdir))/test/words.txt >/dev/null
 ifeq (1, $(USE_OPENSSL))
-	cd test; $(abspath $(srcdir))/test/rtpw_test_gcm.sh >/dev/null
+	cd test; $(abspath $(srcdir))/test/rtpw_test_gcm.sh -w $(abspath $(srcdir))/test/words.txt >/dev/null
 endif
 	@echo "libsrtp2 test applications passed."
 	$(MAKE) -C crypto runtest
+
+runtest-valgrind: test
+	@echo "running libsrtp2 test applications... (valgrind)"
+	valgrind --error-exitcode=1 --leak-check=full test/test_srtp$(EXE) -v >/dev/null
+	valgrind --error-exitcode=1 --leak-check=full test/srtp_driver$(EXE) -v >/dev/null
+	@echo "libsrtp2 test applications passed. (valgrind)"
 
 # makefile variables
 
@@ -48,6 +55,7 @@ LIBS	= @LIBS@
 LDFLAGS	= -L. @LDFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCDIR) $(CPPFLAGS) $(CFLAGS)
 SRTPLIB	= -lsrtp2
+PCAP_LIB = @PCAP_LIB@
 
 AR      = @AR@
 RANLIB	= @RANLIB@
@@ -149,8 +157,8 @@ endif
 
 crypto_testapp = $(AES_CALC) crypto/test/cipher_driver$(EXE) \
 	crypto/test/datatypes_driver$(EXE) crypto/test/kernel_driver$(EXE) \
-	crypto/test/sha1_driver$(EXE) \
-	crypto/test/stat_driver$(EXE)
+	crypto/test/sha1_driver$(EXE) crypto/test/stat_driver$(EXE) \
+	crypto/test/env$(EXE)
 
 testapp = $(crypto_testapp) test/srtp_driver$(EXE) test/replay_driver$(EXE) \
 	  test/roc_driver$(EXE) test/rdbx_driver$(EXE) test/rtpw$(EXE) \
@@ -169,7 +177,7 @@ test/rtpw$(EXE): test/rtpw.c test/rtp.c test/util.c test/getopt_s.c \
 ifeq (1, $(HAVE_PCAP))
 test/rtp_decoder$(EXE): test/rtp_decoder.c test/rtp.c test/util.c test/getopt_s.c \
 		crypto/math/datatypes.c
-	$(COMPILE) $(LDFLAGS) -o $@ $^ $(LIBS) $(SRTPLIB)
+	$(COMPILE) $(LDFLAGS) -o $@ $^ $(PCAP_LIB) $(LIBS) $(SRTPLIB)
 endif
 
 crypto/test/aes_calc$(EXE): crypto/test/aes_calc.c test/util.c
@@ -199,10 +207,7 @@ crypto/test/cipher_driver$(EXE): crypto/test/cipher_driver.c test/getopt_s.c
 crypto/test/kernel_driver$(EXE): crypto/test/kernel_driver.c test/getopt_s.c
 	$(COMPILE) $(LDFLAGS) -o $@ $^ $(LIBS) $(SRTPLIB)
 
-crypto/test/rand_gen$(EXE): crypto/test/rand_gen.c test/getopt_s.c
-	$(COMPILE) $(LDFLAGS) -o $@ $^ $(LIBS) $(SRTPLIB)
-
-crypto/test/rand_gen_soak$(EXE): crypto/test/rand_gen_soak.c test/getopt_s.c
+crypto/test/env$(EXE): crypto/test/env.c test/getopt_s.c
 	$(COMPILE) $(LDFLAGS) -o $@ $^ $(LIBS) $(SRTPLIB)
 
 test: $(testapp)

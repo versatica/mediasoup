@@ -200,7 +200,7 @@ namespace Utils
 
 	private:
 		static uint32_t seed;
-		static HMAC_CTX hmacSha1Ctx;
+		static HMAC_CTX* hmacSha1Ctx;
 		static uint8_t hmacSha1Buffer[];
 		static const uint32_t crc32Table[256];
 	};

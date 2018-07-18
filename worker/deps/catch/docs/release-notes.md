@@ -1,3 +1,24 @@
+# 1.12.2
+### Fixes
+* Fixed missing <cassert> include
+
+# 1.12.1
+
+### Fixes
+* Fixed deprecation warning in `ScopedMessage::~ScopedMessage`
+* All uses of `min` or `max` identifiers are now wrapped in parentheses
+  * This avoids problems when Windows headers define `min` and `max` macros
+
+
+
+# 1.12.0
+
+### Fixes
+* Fixed compilation for strict C++98 mode (ie not gnu++98) and older compilers (#1103)
+* `INFO` messages are included in the `xml` reporter output even without `-s` specified.
+
+
+
 # 1.11.0
 
 ### Fixes

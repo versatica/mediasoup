@@ -317,8 +317,7 @@ TEST_IMPL(fork_signal_to_child_closed) {
     printf("Waiting for child in parent\n");
     assert_wait_child(child_pid);
   } else {
-    /* child */
-    /* Our signal handler should still be installed. */
+    /* Child. Our signal handler should still be installed. */
     ASSERT(0 == uv_loop_fork(uv_default_loop()));
     printf("Checking loop in child\n");
     ASSERT(0 != uv_loop_alive(uv_default_loop()));
@@ -335,7 +334,7 @@ TEST_IMPL(fork_signal_to_child_closed) {
     /* Note that we're deliberately not running the loop
      * in the child, and also not closing the loop's handles,
      * so the child default loop can't be cleanly closed.
-     * We need te explicitly exit to avoid an automatic failure
+     * We need to explicitly exit to avoid an automatic failure
      * in that case.
      */
     exit(0);
@@ -533,10 +532,12 @@ TEST_IMPL(fork_fs_events_file_parent_child) {
 #if defined(NO_FS_EVENTS)
   RETURN_SKIP(NO_FS_EVENTS);
 #endif
-#if defined(__sun) || defined(_AIX)
+#if defined(__sun) || defined(_AIX) || defined(__MVS__)
   /* It's not possible to implement this without additional
    * bookkeeping on SunOS. For AIX it is possible, but has to be
    * written. See https://github.com/libuv/libuv/pull/846#issuecomment-287170420
+   * TODO: On z/OS, we need to open another message queue and subscribe to the
+   * same events as the parent.
    */
   return 0;
 #else
@@ -650,13 +651,11 @@ TEST_IMPL(fork_threadpool_queue_work_simple) {
   ASSERT(child_pid != -1);
 
   if (child_pid != 0) {
-    /* parent */
-    /* We can still run work. */
+    /* Parent. We can still run work. */
     assert_run_work(uv_default_loop());
     assert_wait_child(child_pid);
   } else {
-    /* child */
-    /* We can work in a new loop. */
+    /* Child. We can work in a new loop. */
     printf("Running child in %d\n", getpid());
     uv_loop_init(&loop);
     printf("Child first watch\n");

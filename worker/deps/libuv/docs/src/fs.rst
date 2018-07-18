@@ -93,7 +93,8 @@ Data types
             UV_FS_CHOWN,
             UV_FS_FCHOWN,
             UV_FS_REALPATH,
-            UV_FS_COPYFILE
+            UV_FS_COPYFILE,
+            UV_FS_LCHOWN
         } uv_fs_type;
 
 .. c:type:: uv_dirent_t
@@ -148,8 +149,8 @@ Public members
 
 .. c:member:: void* uv_fs_t.ptr
 
-    Stores the result of :c:func:`uv_fs_readlink` and serves as an alias to
-    `statbuf`.
+    Stores the result of :c:func:`uv_fs_readlink` and
+    :c:func:`uv_fs_realpath` and serves as an alias to `statbuf`.
 
 .. seealso:: The :c:type:`uv_req_t` members also apply.
 
@@ -234,6 +235,10 @@ API
 
     Equivalent to :man:`fsync(2)`.
 
+    .. note::
+        For AIX, `uv_fs_fsync` returns `UV_EBADF` on file descriptors referencing
+        non regular files.
+
 .. c:function:: int uv_fs_fdatasync(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb)
 
     Equivalent to :man:`fdatasync(2)`.
@@ -249,6 +254,12 @@ API
     - `UV_FS_COPYFILE_EXCL`: If present, `uv_fs_copyfile()` will fail with
       `UV_EEXIST` if the destination path already exists. The default behavior
       is to overwrite the destination if it exists.
+    - `UV_FS_COPYFILE_FICLONE`: If present, `uv_fs_copyfile()` will attempt to
+      create a copy-on-write reflink. If the underlying platform does not
+      support copy-on-write, then a fallback copy mechanism is used.
+    - `UV_FS_COPYFILE_FICLONE_FORCE`: If present, `uv_fs_copyfile()` will
+      attempt to create a copy-on-write reflink. If the underlying platform does
+      not support copy-on-write, then an error is returned.
 
     .. warning::
         If the destination path is created, but an error occurs while copying
@@ -257,6 +268,9 @@ API
         could access the file.
 
     .. versionadded:: 1.14.0
+
+    .. versionchanged:: 1.20.0 `UV_FS_COPYFILE_FICLONE` and
+        `UV_FS_COPYFILE_FICLONE_FORCE` are supported.
 
 .. c:function:: int uv_fs_sendfile(uv_loop_t* loop, uv_fs_t* req, uv_file out_fd, uv_file in_fd, int64_t in_offset, size_t length, uv_fs_cb cb)
 
@@ -302,10 +316,12 @@ API
 .. c:function:: int uv_fs_readlink(uv_loop_t* loop, uv_fs_t* req, const char* path, uv_fs_cb cb)
 
     Equivalent to :man:`readlink(2)`.
+    The resulting string is stored in `req->ptr`.
 
 .. c:function:: int uv_fs_realpath(uv_loop_t* loop, uv_fs_t* req, const char* path, uv_fs_cb cb)
 
     Equivalent to :man:`realpath(3)` on Unix. Windows uses `GetFinalPathNameByHandle <https://msdn.microsoft.com/en-us/library/windows/desktop/aa364962(v=vs.85).aspx>`_.
+    The resulting string is stored in `req->ptr`.
 
     .. warning::
         This function has certain platform-specific caveats that were discovered when used in Node.
@@ -334,11 +350,44 @@ API
 
 .. c:function:: int uv_fs_chown(uv_loop_t* loop, uv_fs_t* req, const char* path, uv_uid_t uid, uv_gid_t gid, uv_fs_cb cb)
 .. c:function:: int uv_fs_fchown(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_uid_t uid, uv_gid_t gid, uv_fs_cb cb)
+.. c:function:: int uv_fs_lchown(uv_loop_t* loop, uv_fs_t* req, const char* path, uv_uid_t uid, uv_gid_t gid, uv_fs_cb cb)
 
-    Equivalent to :man:`chown(2)` and :man:`fchown(2)` respectively.
+    Equivalent to :man:`chown(2)`, :man:`fchown(2)` and :man:`lchown(2)` respectively.
 
     .. note::
         These functions are not implemented on Windows.
+
+    .. versionchanged:: 1.21.0 implemented uv_fs_lchown
+
+.. c:function:: uv_fs_type uv_fs_get_type(const uv_fs_t* req)
+
+    Returns `req->fs_type`.
+
+    .. versionadded:: 1.19.0
+
+.. c:function:: ssize_t uv_fs_get_result(const uv_fs_t* req)
+
+    Returns `req->result`.
+
+    .. versionadded:: 1.19.0
+
+.. c:function:: void* uv_fs_get_ptr(const uv_fs_t* req)
+
+    Returns `req->ptr`.
+
+    .. versionadded:: 1.19.0
+
+.. c:function:: const char* uv_fs_get_path(const uv_fs_t* req)
+
+    Returns `req->path`.
+
+    .. versionadded:: 1.19.0
+
+.. c:function:: uv_stat_t* uv_fs_get_statbuf(uv_fs_t* req)
+
+    Returns `&req->statbuf`.
+
+    .. versionadded:: 1.19.0
 
 .. seealso:: The :c:type:`uv_req_t` API functions also apply.
 

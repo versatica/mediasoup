@@ -29,7 +29,7 @@
 #include <stdlib.h>
 
 #if defined(_MSC_VER) && _MSC_VER < 1600
-# include "stdint-msvc2008.h"
+# include "uv/stdint-msvc2008.h"
 #else
 # include <stdint.h>
 #endif
@@ -209,7 +209,7 @@ UNUSED static int can_ipv6(void) {
   return supported;
 }
 
-#if defined(__MVS__) || defined(__CYGWIN__) || defined(__MSYS__)
+#if defined(__CYGWIN__) || defined(__MSYS__)
 # define NO_FS_EVENTS "Filesystem watching not supported on this platform."
 #endif
 

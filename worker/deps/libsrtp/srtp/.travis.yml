@@ -1,23 +1,131 @@
+dist: trusty
 sudo: false
 language: c
-cache: ccache
-osx_image: xcode8.2
-compiler:
-  - clang
-  - gcc
-os:
-  - linux
-  - osx
+
 env:
-  - CONFIGURE_FLAGS=
-  - CONFIGURE_FLAGS=--enable-openssl
+  global:
+    - secure: "QD09MuUxftXRXtz7ZrB7S0NV/3O9yVhjvIlCSbXN8B87rNSDC8wxMThKMT7iZewnqGk53m+Up19PiMw5ERlHose5tm2cmY1FO/l+c9oAyWZaAL+4XNXryq6zI5F5FX5I61NbfqV3xcnfLTI2QIJF6WqDojNxhPjTbNzQGxIDuqw="
+
 matrix:
-  exclude:
+  include:
+
+    # default linux build with gcc
+    - os: linux
+      env:
+        - TEST="linux gcc"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+      script:
+        - CC=gcc-6 EXTRA_CFLAGS=-Werror ./configure
+        - make
+        - make runtest
+
+    # linux build with openssl and gcc
+    - os: linux
+      env:
+        - TEST="linux gcc (openssl)"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+      script:
+        - CC=gcc-6 EXTRA_CFLAGS=-Werror ./configure --enable-openssl
+        - make
+        - make runtest
+
+    # linux build with openssl and clang
+    - os: linux
+      env:
+        - TEST="linux clang (openssl)"
+      addons:
+        apt:
+          packages:
+            - clang
+      script:
+        - CC=clang EXTRA_CFLAGS=-Werror ./configure --enable-openssl
+        - make
+        - make runtest
+
+    # default osx build with xcode (clang)
     - os: osx
-      env: CONFIGURE_FLAGS=--enable-openssl
-before_script:
-  - if [ $TRAVIS_OS_NAME == osx ]; then brew install ccache; fi
-script:
-  - ./configure $CONFIGURE_FLAGS
-  - make
-  - make runtest
+      env:
+        - TEST="osx XCode 8.2"
+      osx_image: xcode8.2
+      script:
+        - EXTRA_CFLAGS=-Werror ./configure
+        - make
+        - make runtest
+
+    # code format check
+    - os: linux
+      env:
+        - TEST="clang-format"
+      addons:
+        apt:
+          packages:
+            - clang-format-3.9
+      script:
+        - CLANG_FORMAT=clang-format-3.9 ./format.sh -d
+
+    # valgrind
+    - os: linux
+      env:
+        - TEST="valgrind (openssl)"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - valgrind
+      script:
+        - CC=gcc-6 ./configure --enable-openssl
+        - make
+        - make runtest-valgrind
+
+    # big-endian
+    - os: linux
+      sudo: true
+      env:
+        - TEST="big-endian"
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - qemu-user-static
+            - qemu-system-mips
+      before_install:
+        - sudo docker run --volume $(pwd):/src --workdir /src --name mipsX --tty --detach ubuntu:16.04 tail
+        - sudo docker exec --tty mipsX apt-get update
+        - sudo docker exec --tty mipsX apt-get install build-essential -y
+        - sudo docker exec --tty mipsX apt-get install gcc-mips-linux-gnu -y
+      script:
+        - sudo docker exec --tty mipsX bash -c 'EXTRA_CFLAGS=-static CC=mips-linux-gnu-gcc ./configure --host=mips-linux-gnu'
+        - sudo docker exec --tty mipsX make
+        - sudo docker kill mipsX
+        - file test/srtp_driver
+        - make runtest
+
+    # coverity scan
+    - os: linux
+      env:
+        - TEST="Coverity Scan"
+      addons:
+        coverity_scan:
+          project:
+            name: "cisco-libSRTP"
+            description: "Build submitted via Travis CI"
+            version: 2
+          notification_email: pabuhler@cisco.com
+          build_command_prepend: "./configure"
+          build_command: "make"
+          branch_pattern: master
+      script:
+        - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-

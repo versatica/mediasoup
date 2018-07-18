@@ -30,18 +30,18 @@
   },
   "main": "lib/mediasoup.js",
   "dependencies": {
-    "check-types": "^7.3.0",
+    "check-types": "^7.4.0",
     "debug": "^3.1.0",
     "netstring": "^0.3.0",
     "random-number": "0.0.9",
     "randomatic": "^3.0.0"
   },
   "devDependencies": {
-    "eslint": "^4.19.1",
+    "eslint": "^5.1.0",
     "gulp": "^4.0.0",
     "gulp-clang-format": "^1.0.25",
-    "gulp-eslint": "^4.0.2",
-    "gulp-rename": "^1.2.3",
+    "gulp-eslint": "^5.0.0",
+    "gulp-rename": "^1.3.0",
     "gulp-replace": "^1.0.0",
     "gulp-shell": "^0.6.5",
     "gulp-touch-cmd": "0.0.1",

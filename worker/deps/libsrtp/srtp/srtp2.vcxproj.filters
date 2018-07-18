@@ -107,6 +107,9 @@
     <ClInclude Include="crypto\include\cipher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="crypto\include\cipher_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="crypto\include\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>

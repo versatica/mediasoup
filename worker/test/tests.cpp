@@ -42,6 +42,5 @@ void destroy()
 {
 	// Free static stuff.
 	Utils::Crypto::ClassDestroy();
-	DepOpenSSL::ClassDestroy();
 	DepLibUV::ClassDestroy();
 }

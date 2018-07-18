@@ -84,6 +84,7 @@ static int chmod_cb_count;
 static int fchmod_cb_count;
 static int chown_cb_count;
 static int fchown_cb_count;
+static int lchown_cb_count;
 static int link_cb_count;
 static int symlink_cb_count;
 static int readlink_cb_count;
@@ -253,6 +254,13 @@ static void chown_cb(uv_fs_t* req) {
   uv_fs_req_cleanup(req);
 }
 
+static void lchown_cb(uv_fs_t* req) {
+  ASSERT(req->fs_type == UV_FS_LCHOWN);
+  ASSERT(req->result == 0);
+  lchown_cb_count++;
+  uv_fs_req_cleanup(req);
+}
+
 static void chown_root_cb(uv_fs_t* req) {
   ASSERT(req->fs_type == UV_FS_CHOWN);
 #if defined(_WIN32) || defined(__MSYS__)
@@ -319,6 +327,9 @@ static void ftruncate_cb(uv_fs_t* req) {
   ASSERT(r == 0);
 }
 
+static void fail_cb(uv_fs_t* req) {
+  FATAL("fail_cb should not have been called");
+}
 
 static void read_cb(uv_fs_t* req) {
   int r;
@@ -1471,6 +1482,64 @@ TEST_IMPL(fs_unlink_readonly) {
   return 0;
 }
 
+#ifdef _WIN32
+TEST_IMPL(fs_unlink_archive_readonly) {
+  int r;
+  uv_fs_t req;
+  uv_file file;
+
+  /* Setup. */
+  unlink("test_file");
+
+  loop = uv_default_loop();
+
+  r = uv_fs_open(NULL,
+                 &req,
+                 "test_file",
+                 O_RDWR | O_CREAT,
+                 S_IWUSR | S_IRUSR,
+                 NULL);
+  ASSERT(r >= 0);
+  ASSERT(req.result >= 0);
+  file = req.result;
+  uv_fs_req_cleanup(&req);
+
+  iov = uv_buf_init(test_buf, sizeof(test_buf));
+  r = uv_fs_write(NULL, &req, file, &iov, 1, -1, NULL);
+  ASSERT(r == sizeof(test_buf));
+  ASSERT(req.result == sizeof(test_buf));
+  uv_fs_req_cleanup(&req);
+
+  close(file);
+
+  /* Make the file read-only and clear archive flag */
+  r = SetFileAttributes("test_file", FILE_ATTRIBUTE_READONLY);
+  ASSERT(r != 0);
+  uv_fs_req_cleanup(&req);
+
+  check_permission("test_file", 0400);
+
+  /* Try to unlink the file */
+  r = uv_fs_unlink(NULL, &req, "test_file", NULL);
+  ASSERT(r == 0);
+  ASSERT(req.result == 0);
+  uv_fs_req_cleanup(&req);
+
+  /*
+  * Run the loop just to check we don't have make any extraneous uv_ref()
+  * calls. This should drop out immediately.
+  */
+  uv_run(loop, UV_RUN_DEFAULT);
+
+  /* Cleanup. */
+  uv_fs_chmod(NULL, &req, "test_file", 0600, NULL);
+  uv_fs_req_cleanup(&req);
+  unlink("test_file");
+
+  MAKE_VALGRIND_HAPPY();
+  return 0;
+}
+#endif
 
 TEST_IMPL(fs_chown) {
   int r;
@@ -1479,6 +1548,7 @@ TEST_IMPL(fs_chown) {
 
   /* Setup. */
   unlink("test_file");
+  unlink("test_file_link");
 
   loop = uv_default_loop();
 
@@ -1522,7 +1592,29 @@ TEST_IMPL(fs_chown) {
   uv_run(loop, UV_RUN_DEFAULT);
   ASSERT(fchown_cb_count == 1);
 
-  close(file);
+  /* sync link */
+  r = uv_fs_link(NULL, &req, "test_file", "test_file_link", NULL);
+  ASSERT(r == 0);
+  ASSERT(req.result == 0);
+  uv_fs_req_cleanup(&req);
+
+  /* sync lchown */
+  r = uv_fs_lchown(NULL, &req, "test_file_link", -1, -1, NULL);
+  ASSERT(r == 0);
+  ASSERT(req.result == 0);
+  uv_fs_req_cleanup(&req);
+
+  /* async lchown */
+  r = uv_fs_lchown(loop, &req, "test_file_link", -1, -1, lchown_cb);
+  ASSERT(r == 0);
+  uv_run(loop, UV_RUN_DEFAULT);
+  ASSERT(lchown_cb_count == 1);
+
+  /* Close file */
+  r = uv_fs_close(NULL, &req, file, NULL);
+  ASSERT(r == 0);
+  ASSERT(req.result == 0);
+  uv_fs_req_cleanup(&req);
 
   /*
    * Run the loop just to check we don't have make any extraneous uv_ref()
@@ -1532,6 +1624,7 @@ TEST_IMPL(fs_chown) {
 
   /* Cleanup. */
   unlink("test_file");
+  unlink("test_file_link");
 
   MAKE_VALGRIND_HAPPY();
   return 0;
@@ -1861,7 +1954,7 @@ TEST_IMPL(fs_symlink) {
 }
 
 
-TEST_IMPL(fs_symlink_dir) {
+int test_symlink_dir_impl(int type) {
   uv_fs_t req;
   int r;
   char* test_dir;
@@ -1895,8 +1988,12 @@ TEST_IMPL(fs_symlink_dir) {
   test_dir = "test_dir";
 #endif
 
-  r = uv_fs_symlink(NULL, &req, test_dir, "test_dir_symlink",
-    UV_FS_SYMLINK_JUNCTION, NULL);
+  r = uv_fs_symlink(NULL, &req, test_dir, "test_dir_symlink", type, NULL);
+  if (type == UV_FS_SYMLINK_DIR && (r == UV_ENOTSUP || r == UV_EPERM)) {
+    uv_fs_req_cleanup(&req);
+    RETURN_SKIP("this version of Windows doesn't support unprivileged "
+                "creation of directory symlinks");
+  }
   fprintf(stderr, "r == %i\n", r);
   ASSERT(r == 0);
   ASSERT(req.result == 0);
@@ -2005,6 +2102,13 @@ TEST_IMPL(fs_symlink_dir) {
   return 0;
 }
 
+TEST_IMPL(fs_symlink_dir) {
+  return test_symlink_dir_impl(UV_FS_SYMLINK_DIR);
+}
+
+TEST_IMPL(fs_symlink_junction) {
+  return test_symlink_dir_impl(UV_FS_SYMLINK_JUNCTION);
+}
 
 #ifdef _WIN32
 TEST_IMPL(fs_non_symlink_reparse_point) {
@@ -2873,7 +2977,19 @@ TEST_IMPL(fs_read_write_null_arguments) {
   uv_fs_req_cleanup(&read_req);
 
   r = uv_fs_write(NULL, &write_req, 0, NULL, 0, -1, NULL);
+  /* Validate some memory management on failed input validation before sending
+     fs work to the thread pool. */
   ASSERT(r == UV_EINVAL);
+  ASSERT(write_req.path == NULL);
+  ASSERT(write_req.ptr == NULL);
+#ifdef _WIN32
+  ASSERT(write_req.file.pathw == NULL);
+  ASSERT(write_req.fs.info.new_pathw == NULL);
+  ASSERT(write_req.fs.info.bufs == NULL);
+#else
+  ASSERT(write_req.new_path == NULL);
+  ASSERT(write_req.bufs == NULL);
+#endif
   uv_fs_req_cleanup(&write_req);
 
   iov = uv_buf_init(NULL, 0);
@@ -2884,6 +3000,31 @@ TEST_IMPL(fs_read_write_null_arguments) {
   iov = uv_buf_init(NULL, 0);
   r = uv_fs_write(NULL, &write_req, 0, &iov, 0, -1, NULL);
   ASSERT(r == UV_EINVAL);
+  uv_fs_req_cleanup(&write_req);
+
+  /* If the arguments are invalid, the loop should not be kept open */
+  loop = uv_default_loop();
+
+  r = uv_fs_read(loop, &read_req, 0, NULL, 0, -1, fail_cb);
+  ASSERT(r == UV_EINVAL);
+  uv_run(loop, UV_RUN_DEFAULT);
+  uv_fs_req_cleanup(&read_req);
+
+  r = uv_fs_write(loop, &write_req, 0, NULL, 0, -1, fail_cb);
+  ASSERT(r == UV_EINVAL);
+  uv_run(loop, UV_RUN_DEFAULT);
+  uv_fs_req_cleanup(&write_req);
+
+  iov = uv_buf_init(NULL, 0);
+  r = uv_fs_read(loop, &read_req, 0, &iov, 0, -1, fail_cb);
+  ASSERT(r == UV_EINVAL);
+  uv_run(loop, UV_RUN_DEFAULT);
+  uv_fs_req_cleanup(&read_req);
+
+  iov = uv_buf_init(NULL, 0);
+  r = uv_fs_write(loop, &write_req, 0, &iov, 0, -1, fail_cb);
+  ASSERT(r == UV_EINVAL);
+  uv_run(loop, UV_RUN_DEFAULT);
   uv_fs_req_cleanup(&write_req);
 
   return 0;
@@ -3073,7 +3214,7 @@ TEST_IMPL(fs_exclusive_sharing_mode) {
   unlink("test_file");
 
   ASSERT(UV_FS_O_EXLOCK > 0);
-  
+
   r = uv_fs_open(NULL,
                  &open_req1,
                  "test_file",
@@ -3119,5 +3260,140 @@ TEST_IMPL(fs_exclusive_sharing_mode) {
 
   MAKE_VALGRIND_HAPPY();
   return 0;
+}
+#endif
+
+#ifdef _WIN32
+int call_icacls(const char* command, ...) {
+    char icacls_command[1024];
+    va_list args;
+    
+    va_start(args, command);
+    vsnprintf(icacls_command, ARRAYSIZE(icacls_command), command, args);
+    va_end(args);
+    return system(icacls_command);
+}
+
+TEST_IMPL(fs_open_readonly_acl) {
+    uv_passwd_t pwd;
+    uv_fs_t req;
+    int r;
+
+    /*
+        Based on Node.js test from
+        https://github.com/nodejs/node/commit/3ba81e34e86a5c32658e218cb6e65b13e8326bc5
+
+        If anything goes wrong, you can delte the test_fle_icacls with:
+
+            icacls test_file_icacls /remove "%USERNAME%" /inheritance:e
+            attrib -r test_file_icacls
+            del test_file_icacls
+    */
+    
+    /* Setup - clear the ACL and remove the file */
+    loop = uv_default_loop();
+    r = uv_os_get_passwd(&pwd);
+    ASSERT(r == 0);
+    call_icacls("icacls test_file_icacls /remove \"%s\" /inheritance:e",
+                pwd.username);
+    uv_fs_chmod(loop, &req, "test_file_icacls", S_IWUSR, NULL);
+    unlink("test_file_icacls");
+
+    /* Create the file */    
+    r = uv_fs_open(loop,
+                   &open_req1,
+                   "test_file_icacls",
+                   O_RDONLY | O_CREAT,
+                   S_IRUSR,
+                   NULL);
+    ASSERT(r >= 0);
+    ASSERT(open_req1.result >= 0);
+    uv_fs_req_cleanup(&open_req1);
+    r = uv_fs_close(NULL, &close_req, open_req1.result, NULL);
+    ASSERT(r == 0);
+    ASSERT(close_req.result == 0);
+    uv_fs_req_cleanup(&close_req);
+
+    /* Set up ACL */
+    r = call_icacls("icacls test_file_icacls /inheritance:r /remove \"%s\"",
+                    pwd.username);
+    if (r != 0) {
+        goto acl_cleanup;
+    }
+    r = call_icacls("icacls test_file_icacls /grant \"%s\":RX", pwd.username);
+    if (r != 0) {
+        goto acl_cleanup;
+    }
+    
+    /* Try opening the file */
+    r = uv_fs_open(NULL, &open_req1, "test_file_icacls", O_RDONLY, 0, NULL);
+    if (r < 0) {
+        goto acl_cleanup;
+    }
+    uv_fs_req_cleanup(&open_req1);
+    r = uv_fs_close(NULL, &close_req, open_req1.result, NULL);
+    if (r != 0) {
+        goto acl_cleanup;
+    }
+    uv_fs_req_cleanup(&close_req);
+
+ acl_cleanup:
+    /* Cleanup */
+    call_icacls("icacls test_file_icacls /remove \"%s\" /inheritance:e",
+                pwd.username);
+    unlink("test_file_icacls");
+    uv_os_free_passwd(&pwd);
+    ASSERT(r == 0);
+    MAKE_VALGRIND_HAPPY();
+    return 0;
+}
+#endif
+
+#ifdef _WIN32
+TEST_IMPL(fs_fchmod_archive_readonly) {
+    uv_fs_t req;
+    uv_file file;
+    int r;
+    /* Test clearing read-only flag from files with Archive flag cleared */
+
+    /* Setup*/
+    unlink("test_file");
+    r = uv_fs_open(NULL,
+                   &req,
+                   "test_file",
+                   O_WRONLY | O_CREAT,
+                   S_IWUSR | S_IRUSR,
+                   NULL);
+    ASSERT(r >= 0);
+    ASSERT(req.result >= 0);
+    file = req.result;
+    uv_fs_req_cleanup(&req);
+    r = uv_fs_close(NULL, &req, file, NULL);
+    ASSERT(r == 0);
+    uv_fs_req_cleanup(&req);
+    /* Make the file read-only and clear archive flag */
+    r = SetFileAttributes("test_file", FILE_ATTRIBUTE_READONLY);
+    ASSERT(r != 0);
+    check_permission("test_file", 0400);
+    /* Try fchmod */
+    r = uv_fs_open(NULL, &req, "test_file", O_RDONLY, 0, NULL);
+    ASSERT(r >= 0);
+    ASSERT(req.result >= 0);
+    file = req.result;
+    uv_fs_req_cleanup(&req);
+    r = uv_fs_fchmod(NULL, &req, file, S_IWUSR, NULL);
+    ASSERT(r == 0);
+    ASSERT(req.result == 0);
+    uv_fs_req_cleanup(&req);
+    r = uv_fs_close(NULL, &req, file, NULL);
+    ASSERT(r == 0);
+    uv_fs_req_cleanup(&req);
+    check_permission("test_file", S_IWUSR);
+
+    /* Restore Archive flag for rest of the tests */
+    r = SetFileAttributes("test_file", FILE_ATTRIBUTE_ARCHIVE);
+    ASSERT(r != 0);
+
+    return 0;
 }
 #endif

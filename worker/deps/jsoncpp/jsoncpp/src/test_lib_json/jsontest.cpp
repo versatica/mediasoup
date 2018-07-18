@@ -1,4 +1,4 @@
-// Copyright 2007-2010 Baptiste Lepilleur
+// Copyright 2007-2010 Baptiste Lepilleur and The JsonCpp Authors
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
@@ -398,7 +398,7 @@ void Runner::preventDialogOnCrash() {
   _CrtSetReportHook(&msvcrtSilentReportHook);
 #endif // if defined(_MSC_VER)
 
-// @todo investiguate this handler (for buffer overflow)
+// @todo investigate this handler (for buffer overflow)
 // _set_security_error_handler
 
 #if defined(_WIN32)
