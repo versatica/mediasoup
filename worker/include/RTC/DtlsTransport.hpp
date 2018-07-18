@@ -142,7 +142,7 @@ namespace RTC
 		bool CheckStatus(int returnCode);
 		void SendPendingOutgoingDtlsData();
 		bool SetTimeout();
-		void ProcessHandshake();
+		bool ProcessHandshake();
 		bool CheckRemoteFingerprint();
 		void ExtractSrtpKeys(RTC::SrtpSession::Profile srtpProfile);
 		RTC::SrtpSession::Profile GetNegotiatedSrtpProfile();

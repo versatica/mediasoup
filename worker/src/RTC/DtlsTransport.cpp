@@ -859,8 +859,10 @@ namespace RTC
 			this->timer->Stop();
 
 			// Process the handshake just once (ignore if DTLS renegotiation).
-			if (!wasHandshakeDone)
-				ProcessHandshake();
+			if (!wasHandshakeDone && this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE)
+				return ProcessHandshake();
+			else
+				return true;
 		}
 		// Check if the peer sent close alert or a fatal error happened.
 		else if (((SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN) != 0) || err == SSL_ERROR_SSL || err == SSL_ERROR_SYSCALL)
@@ -888,8 +890,10 @@ namespace RTC
 
 			return false;
 		}
-
-		return true;
+		else
+		{
+			return true;
+		}
 	}
 
 	inline void DtlsTransport::SendPendingOutgoingDtlsData()
@@ -920,6 +924,10 @@ namespace RTC
 	inline bool DtlsTransport::SetTimeout()
 	{
 		MS_TRACE();
+
+		MS_ASSERT(
+		  this->state == DtlsState::CONNECTING || this->state == DtlsState::CONNECTED,
+		  "invalid DTLS state");
 
 		int64_t ret;
 		struct timeval dtlsTimeout;
@@ -957,20 +965,13 @@ namespace RTC
 		return false;
 	}
 
-	inline void DtlsTransport::ProcessHandshake()
+	inline bool DtlsTransport::ProcessHandshake()
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->handshakeDone, "handshake not done yet");
-
-		// If the remote fingerprint is not yet set then do nothing (this method
-		// will be called when the fingerprint is set).
-		if (this->remoteFingerprint.algorithm == FingerprintAlgorithm::NONE)
-		{
-			MS_DEBUG_TAG(dtls, "remote fingerprint not yet set, waiting for it");
-
-			return;
-		}
+		MS_ASSERT(
+		  this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE, "remote fingerprint not set");
 
 		// Validate the remote fingerprint.
 		if (!CheckRemoteFingerprint())
@@ -981,7 +982,7 @@ namespace RTC
 			this->state = DtlsState::FAILED;
 			this->listener->OnDtlsFailed(this);
 
-			return;
+			return false;
 		}
 
 		// Get the negotiated SRTP profile.
@@ -992,6 +993,8 @@ namespace RTC
 		{
 			// Extract the SRTP keys (will notify the listener with them).
 			ExtractSrtpKeys(srtpProfile);
+
+			return true;
 		}
 		else
 		{
@@ -1004,6 +1007,8 @@ namespace RTC
 			// Set state and notify the listener.
 			this->state = DtlsState::FAILED;
 			this->listener->OnDtlsFailed(this);
+
+			return false;
 		}
 	}
 
@@ -1051,6 +1056,7 @@ namespace RTC
 		}
 
 		// Compare the remote fingerprint with the value given via signaling.
+
 		ret = X509_digest(certificate, hashFunction, binaryFingerprint, &size);
 		if (ret == 0)
 		{
