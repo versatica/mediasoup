@@ -1,6 +1,16 @@
 # Changelog
 
 
+### 2.2.1
+
+* [Fix #209](https://github.com/versatica/mediasoup/issues/209) `DtlsTransport`: don't crash when signaled fingerprint and DTLS fingerprint do not match (thanks @yangjinecho for reporting it).
+
+
+### 2.2.0
+
+* Update Node and C/C++ dependencies.
+
+
 ### 2.1.0
 
 * Add `localIP` option for `room.createRtpStreamer()` and `transport.startMirroring()` [PR #199](https://github.com/versatica/mediasoup/pull/199).
