@@ -504,12 +504,14 @@ namespace RTC
 		this->hasRemoteDtlsParameters = true;
 
 		// Pass the remote fingerprint to the DTLS transport.
-		this->dtlsTransport->SetRemoteFingerprint(fingerprint);
+		if (this->dtlsTransport->SetRemoteFingerprint(fingerprint))
+		{
+			// If everything is fine, we may run the DTLS transport if ready.
+			MayRunDtlsTransport();
 
-		// Run the DTLS transport if ready.
-		MayRunDtlsTransport();
-
-		MS_DEBUG_DEV("Transport remote DTLS parameters set [transportId:%" PRIu32 "]", this->transportId);
+			MS_DEBUG_DEV(
+			  "Transport remote DTLS parameters set [transportId:%" PRIu32 "]", this->transportId);
+		}
 
 		return this->dtlsLocalRole;
 	}

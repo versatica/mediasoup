@@ -130,7 +130,7 @@ namespace RTC
 		void Destroy();
 		void Dump() const;
 		void Run(Role localRole);
-		void SetRemoteFingerprint(Fingerprint fingerprint);
+		bool SetRemoteFingerprint(Fingerprint fingerprint);
 		void ProcessDtlsData(const uint8_t* data, size_t len);
 		DtlsState GetState() const;
 		Role GetLocalRole() const;

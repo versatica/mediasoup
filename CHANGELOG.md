@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.2.2
+
+* Improve [issue #209](https://github.com/versatica/mediasoup/issues/209).
+
+
 ### 2.2.1
 
 * [Fix #209](https://github.com/versatica/mediasoup/issues/209) `DtlsTransport`: don't crash when signaled fingerprint and DTLS fingerprint do not match (thanks @yangjinecho for reporting it).

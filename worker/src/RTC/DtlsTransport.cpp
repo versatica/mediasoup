@@ -665,7 +665,7 @@ namespace RTC
 		}
 	}
 
-	void DtlsTransport::SetRemoteFingerprint(Fingerprint fingerprint)
+	bool DtlsTransport::SetRemoteFingerprint(Fingerprint fingerprint)
 	{
 		MS_TRACE();
 
@@ -680,8 +680,10 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(dtls, "handshake already done, processing it right now");
 
-			ProcessHandshake();
+			return ProcessHandshake();
 		}
+
+		return true;
 	}
 
 	void DtlsTransport::ProcessDtlsData(const uint8_t* data, size_t len)
