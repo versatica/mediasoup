@@ -34,6 +34,8 @@ namespace RTC
 			bool preferIPv6{ false };
 			bool preferUdp{ false };
 			bool preferTcp{ false };
+			std::string ipv4;
+			std::string ipv6;
 		};
 
 	public:

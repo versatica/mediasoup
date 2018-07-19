@@ -34,6 +34,8 @@ public:
 		std::string rtcIPv6;
 		std::string rtcAnnouncedIPv4;
 		std::string rtcAnnouncedIPv6;
+		std::map<std::string, bool> rtcMultiIPv4s;
+		std::map<std::string, bool> rtcMultiIPv6s;
 		uint16_t rtcMinPort{ 10000 };
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
@@ -52,6 +54,7 @@ public:
 
 private:
 	static void SetDefaultRtcIP(int requestedFamily);
+	static void SetMultiRtcIPs(int requestedFamily);
 	static void SetLogLevel(std::string& level);
 	static void SetRtcIPv4(const std::string& ip);
 	static void SetRtcIPv6(const std::string& ip);

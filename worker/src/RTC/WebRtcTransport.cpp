@@ -51,10 +51,64 @@ namespace RTC
 		bool tryIPv6udp{ options.udp };
 		bool tryIPv4tcp{ options.tcp };
 		bool tryIPv6tcp{ options.tcp };
+		std::string ipv4{ options.ipv4 };
+		std::string ipv6{ options.ipv6 };
 
 		// Create a ICE server.
 		this->iceServer = new RTC::IceServer(
 		  this, Utils::Crypto::GetRandomString(16), Utils::Crypto::GetRandomString(32));
+
+		// Open a IPv4 UDP socket with ipv4.
+		if (tryIPv4udp && !ipv4.empty())
+		{
+			uint16_t localPreference = IceCandidateDefaultLocalPriority;
+
+			if (options.preferIPv4)
+				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
+			if (options.preferUdp)
+				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
+
+			uint32_t priority = generateIceCandidatePriority(localPreference);
+
+			try
+			{
+				auto* udpSocket = new RTC::UdpSocket(this, AF_INET, ipv4);
+				RTC::IceCandidate iceCandidate(udpSocket, priority);
+
+				this->udpSockets.push_back(udpSocket);
+				this->iceLocalCandidates.push_back(iceCandidate);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("error adding IPv4 UDP socket: %s", error.what());
+			}
+		}
+
+		// Open a IPv6 UDP socket with ipv6.
+		if (tryIPv6udp && !ipv6.empty())
+		{
+			uint16_t localPreference = IceCandidateDefaultLocalPriority;
+
+			if (options.preferIPv6)
+				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
+			if (options.preferUdp)
+				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
+
+			uint32_t priority = generateIceCandidatePriority(localPreference);
+
+			try
+			{
+				auto* udpSocket = new RTC::UdpSocket(this, AF_INET6, ipv6);
+				RTC::IceCandidate iceCandidate(udpSocket, priority);
+
+				this->udpSockets.push_back(udpSocket);
+				this->iceLocalCandidates.push_back(iceCandidate);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("error adding IPv6 UDP socket: %s", error.what());
+			}
+		}
 
 		// Open a IPv4 UDP socket.
 		if (tryIPv4udp && Settings::configuration.hasIPv4)
@@ -105,6 +159,58 @@ namespace RTC
 			catch (const MediaSoupError& error)
 			{
 				MS_ERROR("error adding IPv6 UDP socket: %s", error.what());
+			}
+		}
+
+		// Open a IPv4 TCP server with ipv4.
+		if (tryIPv4tcp && !ipv4.empty())
+		{
+			uint16_t localPreference = IceCandidateDefaultLocalPriority;
+
+			if (options.preferIPv4)
+				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
+			if (options.preferTcp)
+				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
+
+			uint32_t priority = generateIceCandidatePriority(localPreference);
+
+			try
+			{
+				auto* tcpServer = new RTC::TcpServer(this, this, AF_INET, ipv4);
+				RTC::IceCandidate iceCandidate(tcpServer, priority);
+
+				this->tcpServers.push_back(tcpServer);
+				this->iceLocalCandidates.push_back(iceCandidate);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("error adding IPv4 TCP server: %s", error.what());
+			}
+		}
+
+		// Open a IPv6 TCP server with ipv6.
+		if (tryIPv6tcp && !ipv6.empty())
+		{
+			uint16_t localPreference = IceCandidateDefaultLocalPriority;
+
+			if (options.preferIPv6)
+				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
+			if (options.preferTcp)
+				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
+
+			uint32_t priority = generateIceCandidatePriority(localPreference);
+
+			try
+			{
+				auto* tcpServer = new RTC::TcpServer(this, this, AF_INET6, ipv6);
+				RTC::IceCandidate iceCandidate(tcpServer, priority);
+
+				this->tcpServers.push_back(tcpServer);
+				this->iceLocalCandidates.push_back(iceCandidate);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("error adding IPv6 TCP server: %s", error.what());
 			}
 		}
 

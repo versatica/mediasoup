@@ -181,6 +181,8 @@ namespace RTC
 				static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
 				static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
 				static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
+				static const Json::StaticString JsonStringIPv4{ "ipv4" };
+				static const Json::StaticString JsonStringIPv6{ "ipv6" };
 
 				uint32_t transportId;
 
@@ -209,6 +211,10 @@ namespace RTC
 					options.preferUdp = request->data[JsonStringPreferUdp].asBool();
 				if (request->data[JsonStringPreferTcp].isBool())
 					options.preferTcp = request->data[JsonStringPreferTcp].asBool();
+				if (request->data[JsonStringIPv4].isString())
+					options.ipv4 = request->data[JsonStringIPv4].asString();
+				if (request->data[JsonStringIPv6].isBool())
+					options.ipv6 = request->data[JsonStringIPv6].asString();
 
 				RTC::WebRtcTransport* webrtcTransport;
 

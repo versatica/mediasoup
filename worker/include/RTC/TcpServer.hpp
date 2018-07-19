@@ -6,6 +6,8 @@
 #include "handles/TcpConnection.hpp"
 #include "handles/TcpServer.hpp"
 #include <uv.h>
+#include <map>
+#include <string>
 #include <unordered_map>
 
 namespace RTC
@@ -28,17 +30,29 @@ namespace RTC
 
 	private:
 		static uv_tcp_t* GetRandomPort(int addressFamily);
+		static uv_tcp_t* GetRandomPort(int addressFamily, const std::string& ip);
 
 	private:
 		static struct sockaddr_storage sockaddrStorageIPv4;
 		static struct sockaddr_storage sockaddrStorageIPv6;
+		static std::map<std::string, struct sockaddr_storage> sockaddrStorageMultiIPv4s;
+		static std::map<std::string, struct sockaddr_storage> sockaddrStorageMultiIPv6s;
 		static uint16_t minPort;
 		static uint16_t maxPort;
 		static std::unordered_map<uint16_t, bool> availableIPv4Ports;
 		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
+		static std::map<std::string, std::unordered_map<uint16_t, bool>> availableMultiIPv4sPorts;
+		static std::map<std::string, std::unordered_map<uint16_t, bool>> availableMultiIPv6sPorts;
+		int addressFamily;
+		std::string ip;
 
 	public:
 		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int addressFamily);
+		TcpServer(
+		  Listener* listener,
+		  RTC::TcpConnection::Listener* connListener,
+		  int addressFamily,
+		  const std::string& ip);
 
 	private:
 		~TcpServer() override = default;
