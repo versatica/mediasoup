@@ -334,6 +334,10 @@ namespace RTC
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 		}
+		else if (this->targetProfile == profile)
+		{
+			this->targetProfile = this->effectiveProfile;
+		}
 
 		RecalculateTargetProfile();
 	}
