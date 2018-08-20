@@ -72,8 +72,7 @@ namespace RTC
 
 		auto sentPackets = this->totalSentPackets - previousTotalSentPackets;
 
-		MS_ASSERT(
-		  this->totalSentPackets >= previousTotalSentPackets, "less packets sent now than before");
+		MS_ASSERT(this->totalSentPackets >= previousTotalSentPackets, "less packets sent now than before");
 
 		// No packet was sent. Consider lost and repaired packets though.
 		if (sentPackets == 0)

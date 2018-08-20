@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.2.3
+
+* [Fix #196](https://github.com/versatica/mediasoup/issues/196): Crash in `Consumer::getStats()` due to wrong `targetProfile`.
+
+
 ### 2.2.2
 
 * Improve [issue #209](https://github.com/versatica/mediasoup/issues/209).
@@ -8,7 +13,7 @@
 
 ### 2.2.1
 
-* [Fix #209](https://github.com/versatica/mediasoup/issues/209) `DtlsTransport`: don't crash when signaled fingerprint and DTLS fingerprint do not match (thanks @yangjinecho for reporting it).
+* [Fix #209](https://github.com/versatica/mediasoup/issues/209): `DtlsTransport`: don't crash when signaled fingerprint and DTLS fingerprint do not match (thanks @yangjinecho for reporting it).
 
 
 ### 2.2.0
@@ -34,7 +39,7 @@
 
 ### 2.0.14
 
-* [Fix #193](https://github.com/versatica/mediasoup/issues/193) `preferTcp` not honored (thanks @artushin).
+* [Fix #193](https://github.com/versatica/mediasoup/issues/193): `preferTcp` not honored (thanks @artushin).
 
 ### 2.0.13
 
@@ -48,8 +53,8 @@
 
 ### 2.0.11
 
-* [Fix #185](https://github.com/versatica/mediasoup/issues/185) Consumer: initialize effective profile to 'NONE' (thanks @artushin).
-* [Fix #186](https://github.com/versatica/mediasoup/issues/186) NackGenerator code being executed after instance deletion (thanks @baiyufei).
+* [Fix #185](https://github.com/versatica/mediasoup/issues/185): Consumer: initialize effective profile to 'NONE' (thanks @artushin).
+* [Fix #186](https://github.com/versatica/mediasoup/issues/186): NackGenerator code being executed after instance deletion (thanks @baiyufei).
 
 
 ### 2.0.10

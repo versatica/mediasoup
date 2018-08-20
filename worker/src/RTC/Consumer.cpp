@@ -131,8 +131,7 @@ namespace RTC
 
 		auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
 
-		MS_ASSERT(
-		  it != this->mapProfileRtpStream.end(), "effective profile does not map to a rtp stream");
+		MS_ASSERT(it != this->mapProfileRtpStream.end(), "effective profile does not map to a rtp stream");
 
 		auto inboundRtpStream     = const_cast<RTC::RtpStream*>(it->second);
 		auto jsonInboundRtpStream = inboundRtpStream->GetStats();
@@ -722,8 +721,7 @@ namespace RTC
 		{
 			auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
 
-			MS_ASSERT(
-			  it != this->mapProfileRtpStream.end(), "no RtpStream associated with current profile");
+			MS_ASSERT(it != this->mapProfileRtpStream.end(), "no RtpStream associated with current profile");
 
 			auto rtpStream = it->second;
 
