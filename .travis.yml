@@ -23,7 +23,7 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     - os: linux
-      node_js: 9
+      node_js: 10
       addons:
         apt:
           sources:
