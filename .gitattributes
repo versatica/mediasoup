@@ -1,0 +1,2 @@
+# Tell GitHub to ignore worker dependencies when detecting the project language.
+worker/deps/* linguist-vendored
