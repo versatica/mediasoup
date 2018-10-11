@@ -353,7 +353,9 @@ namespace RTC
 		// Set options.
 		SSL_CTX_set_options(
 		  DtlsTransport::sslCtx,
-		  SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_NO_TICKET | SSL_OP_SINGLE_ECDH_USE);
+		  SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_NO_TICKET | SSL_OP_SINGLE_ECDH_USE |
+		  SSL_OP_NO_QUERY_MTU
+		);
 
 		// Don't use sessions cache.
 		SSL_CTX_set_session_cache_mode(DtlsTransport::sslCtx, SSL_SESS_CACHE_OFF);
@@ -542,7 +544,11 @@ namespace RTC
 			goto error;
 		}
 
+		
 		SSL_set_bio(this->ssl, this->sslBioFromNetwork, this->sslBioToNetwork);
+		// Set the MTU so that we don't send packets that are too large, with no fragmentation.
+		SSL_set_mtu(this->ssl, 1200);
+		DTLS_set_link_mtu(this->ssl, 1200);
 
 		/* Set the DTLS timer. */
 
