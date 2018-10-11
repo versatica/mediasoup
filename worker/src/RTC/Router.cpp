@@ -269,10 +269,10 @@ namespace RTC
 					options.localIP = request->data[JsonStringLocalIP].asString();
 
 				if (request->data[JsonStringPreferIPv4].isBool())
-					options.preferIPv4 = request->data[JsonStringLocalIP].asBool();
+					options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
 
 				if (request->data[JsonStringPreferIPv6].isBool())
-					options.preferIPv6 = request->data[JsonStringLocalIP].asBool();
+					options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
 
 				RTC::PlainRtpTransport* plainRtpTransport;
 
