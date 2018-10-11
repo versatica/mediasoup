@@ -211,7 +211,7 @@ namespace RTC
 
 	bool PlainRtpTransport::IsConnected() const
 	{
-		return true;
+		return this->tuple ? true : false;
 	}
 
 	void PlainRtpTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
