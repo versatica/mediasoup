@@ -1,6 +1,16 @@
 # Changelog
 
 
+### 2.2.5
+
+* Avoid calling deprecated (NOOP) `SSL_CTX_set_ecdh_auto()` function in OpenSSL >= 1.1.0.
+
+
+### 2.2.4
+
+* [Fix #4](https://github.com/versatica/mediasoup/issues/4): Avoid DTLS handshake fragmentation.
+
+
 ### 2.2.3
 
 * [Fix #196](https://github.com/versatica/mediasoup/issues/196): Crash in `Consumer::getStats()` due to wrong `targetProfile`.

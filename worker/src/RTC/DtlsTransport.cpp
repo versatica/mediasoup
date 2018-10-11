@@ -314,10 +314,10 @@ namespace RTC
 
 /* Set the global DTLS context. */
 
-// - Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
+// Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
 		DtlsTransport::sslCtx = SSL_CTX_new(DTLS_method());
-// - Just DTLS 1.0 (requires OpenSSL >= 1.0.1).
+// Just DTLS 1.0 (requires OpenSSL >= 1.0.1).
 #elif (OPENSSL_VERSION_NUMBER >= 0x10001000L)
 		DtlsTransport::sslCtx = SSL_CTX_new(DTLSv1_method());
 #else
@@ -386,11 +386,16 @@ namespace RTC
 // Enable ECDH ciphers.
 // DOC: http://en.wikibooks.org/wiki/OpenSSL/Diffie-Hellman_parameters
 // NOTE: https://code.google.com/p/chromium/issues/detail?id=406458
-// For OpenSSL >= 1.0.2:
-#if (OPENSSL_VERSION_NUMBER >= 0x10002000L)
+// NOTE: https://bugs.ruby-lang.org/issues/12324
+//
+// Nothing to be done in OpenSSL >= 1.1.0.
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+// For OpenSSL >= 1.0.2.
+#elif (OPENSSL_VERSION_NUMBER >= 0x10002000L)
 		SSL_CTX_set_ecdh_auto(DtlsTransport::sslCtx, 1);
+// Older versions.
 #else
-		ecdh                  = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+		ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
 
 		if (!ecdh)
 		{
