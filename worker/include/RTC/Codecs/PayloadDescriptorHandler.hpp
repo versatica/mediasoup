@@ -33,6 +33,9 @@ namespace RTC
 			virtual void SetPreferences(Preferences preferences);
 
 		public:
+			virtual ~EncodingContext() = default;
+
+		public:
 			Preferences preferences;
 		};
 
