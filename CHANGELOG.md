@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.2.6
+
+* Add H264 simulcast capability.
+
+
 ### 2.2.5
 
 * Avoid calling deprecated (NOOP) `SSL_CTX_set_ecdh_auto()` function in OpenSSL >= 1.1.0.
