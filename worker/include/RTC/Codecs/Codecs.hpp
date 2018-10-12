@@ -2,8 +2,8 @@
 #define MS_RTC_CODECS_HPP
 
 #include "common.hpp"
-#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Codecs/H264.hpp"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Codecs/VP8.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"

@@ -20,12 +20,11 @@ namespace RTC
 				return nullptr;
 
 			uint8_t fragment = *data & 0x1F;
-			uint8_t nal = *(data+1) & 0x1F;
-			uint8_t startBit = *(data+1) & 0x80;
+			uint8_t nal      = *(data + 1) & 0x1F;
+			uint8_t startBit = *(data + 1) & 0x80;
 
-			if (fragment == 5 ||
-					((fragment == 28 || fragment == 29) && nal == 5 && startBit == 128))
-			payloadDescriptor->isKeyFrame = true;
+			if (fragment == 5 || ((fragment == 28 || fragment == 29) && nal == 5 && startBit == 128))
+				payloadDescriptor->isKeyFrame = true;
 
 			return payloadDescriptor.release();
 		}

@@ -53,9 +53,7 @@ namespace RTC
 
 		/* Inline EncondingContext methods */
 
-		inline void H264::EncodingContext::SyncRequired()
-		{
-		};
+		inline void H264::EncodingContext::SyncRequired(){};
 
 		/* Inline PayloadDescriptorHandler methods */
 
