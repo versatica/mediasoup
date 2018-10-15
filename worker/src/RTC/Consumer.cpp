@@ -953,7 +953,6 @@ namespace RTC
 			{
 				newTargetProfile = it->first;
 			}
-
 			// The lowest profile is already higher than the preferred, use it.
 			else if (it == this->mapProfileRtpStream.begin())
 			{
