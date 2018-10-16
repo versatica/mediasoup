@@ -37,6 +37,7 @@ namespace RTC
 				size_t offset = 1;
 				len -= 1;
 
+				// Iterate NAL units.
 				while (len >= 3)
 				{
 					auto naluSize = Utils::Byte::Get2Bytes(data, offset);
