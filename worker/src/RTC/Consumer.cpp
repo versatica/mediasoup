@@ -318,8 +318,7 @@ namespace RTC
 			// Reset the RTP monitor so this probation doesn't affect the current profile.
 			this->rtpMonitor->Reset();
 		}
-
-		if (this->effectiveProfile == profile)
+		else if (this->effectiveProfile == profile)
 		{
 			SetEffectiveProfile(RtpEncodingParameters::Profile::NONE);
 		}
@@ -460,6 +459,10 @@ namespace RTC
 				// sending useless retransmissions (now that we are sending a newer key
 				// frame).
 				this->rtpStream->ClearRetransmissionBuffer();
+
+				// Stop probation if probing profile is the new effective profile.
+				if (IsProbing() && this->probingProfile == this->effectiveProfile)
+					StopProbation();
 			}
 		}
 
