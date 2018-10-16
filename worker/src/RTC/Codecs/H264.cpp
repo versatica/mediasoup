@@ -19,12 +19,36 @@ namespace RTC
 			if (len < 2)
 				return nullptr;
 
-			uint8_t fragment = *data & 0x1F;
-			uint8_t nal      = *(data + 1) & 0x1F;
-			uint8_t startBit = *(data + 1) & 0x80;
+			uint8_t nal = *data & 0x1F;
 
-			if (fragment == 5 || ((fragment == 28 || fragment == 29) && nal == 5 && startBit == 128))
+			/** Single NAL unit packet **/
+
+			// nal == 5: IDR (instantaneous decoding picture).
+			// nal == 7: PSP (sequence parameter set).
+			if (nal == 5 || nal == 7)
+			{
 				payloadDescriptor->isKeyFrame = true;
+			}
+
+			/** Aggreation packet **/
+
+			// STAP-A.
+			else if (nal == 24)
+			{
+				nal = *(data + 3) & 0x1F;
+
+				if (nal == 5 || nal == 7)
+					payloadDescriptor->isKeyFrame = true;
+			}
+			// FU-A, FU-B.
+			else if (nal == 28 || nal == 29)
+			{
+				nal              = *(data + 1) & 0x1F;
+				uint8_t startBit = *(data + 1) & 0x80;
+
+				if ((nal == 5 || nal == 7) && startBit == 128)
+					payloadDescriptor->isKeyFrame = true;
+			}
 
 			return payloadDescriptor.release();
 		}
