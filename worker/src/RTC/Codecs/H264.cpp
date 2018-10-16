@@ -35,10 +35,24 @@ namespace RTC
 			// STAP-A.
 			else if (nal == 24)
 			{
-				nal = *(data + 3) & 0x1F;
+				size_t offset = 1;
+				len -= 1;
 
-				if (nal == 5 || nal == 7)
-					payloadDescriptor->isKeyFrame = true;
+				while (len >= 3)
+				{
+					auto naluSize = Utils::Byte::Get2Bytes(data, offset);
+					nal           = *(data + offset + sizeof(naluSize)) & 0x1F;
+
+					if (nal == 5 || nal == 7)
+					{
+						payloadDescriptor->isKeyFrame = true;
+
+						break;
+					}
+
+					offset += naluSize + sizeof(naluSize);
+					len -= naluSize + sizeof(naluSize);
+				}
 			}
 			// FU-A, FU-B.
 			else if (nal == 28 || nal == 29)
