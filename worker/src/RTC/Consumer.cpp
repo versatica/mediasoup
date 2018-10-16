@@ -325,8 +325,6 @@ namespace RTC
 
 			// Reset the RTP monitor so this probation doesn't affect the current profile.
 			this->rtpMonitor->Reset();
-
-			return;
 		}
 
 		if (this->effectiveProfile == profile)
