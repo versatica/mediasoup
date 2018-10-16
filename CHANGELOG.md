@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.2.7
+
+* Fix H264 simulcast by properly detecting when the profile switching should be done.
+* Fix a crash in `Consumer::GetStats()` (see related issue [#196](https://github.com/versatica/mediasoup/issues/196)).
+
+
 ### 2.2.6
 
 * Add H264 simulcast capability.
