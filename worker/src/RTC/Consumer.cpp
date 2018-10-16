@@ -111,9 +111,7 @@ namespace RTC
 		Json::Value json(Json::arrayValue);
 
 		if (this->rtpStream == nullptr)
-		{
 			return json;
-		}
 
 		auto jsonRtpStream = this->rtpStream->GetStats();
 
@@ -137,9 +135,7 @@ namespace RTC
 		auto jsonInboundRtpStream = inboundRtpStream->GetStats();
 
 		jsonRtpStream[JsonStringInboundRtpId] = inboundRtpStream->GetId();
-
 		json.append(jsonInboundRtpStream);
-
 		json.append(jsonRtpStream);
 
 		return json;
@@ -190,9 +186,7 @@ namespace RTC
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
 
 			if (IsProbing())
-			{
 				StopProbation();
-			}
 		}
 	}
 
@@ -237,9 +231,7 @@ namespace RTC
 			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
 
 			if (IsProbing())
-			{
 				StopProbation();
-			}
 		}
 	}
 
@@ -414,9 +406,7 @@ namespace RTC
 
 		// Reset probation.
 		if (IsProbing())
-		{
 			StopProbation();
-		}
 	}
 
 	void Consumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
@@ -561,9 +551,7 @@ namespace RTC
 
 			// Retransmit the RTP packet if probing.
 			if (IsProbing())
-			{
 				SendProbation(packet);
-			}
 		}
 		else
 		{
@@ -863,6 +851,7 @@ namespace RTC
 		else
 		{
 			rtxPacket = packet;
+
 			MS_DEBUG_TAG(
 			  rtx,
 			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
@@ -916,14 +905,13 @@ namespace RTC
 			if (IsProbing())
 			{
 				StopProbation();
+
 				return;
 			}
 
 			// Probated profile did not succeed.
 			if (probatedProfile != RtpEncodingParameters::Profile::NONE)
-			{
 				return;
-			}
 
 			auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
 
@@ -1082,8 +1070,6 @@ namespace RTC
 		}
 
 		if (this->probationPackets == 0)
-		{
 			RecalculateTargetProfile();
-		}
 	}
 } // namespace RTC
