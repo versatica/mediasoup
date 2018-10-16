@@ -23,9 +23,8 @@ namespace RTC
 
 			/** Single NAL unit packet **/
 
-			// nal == 5: IDR (instantaneous decoding picture).
-			// nal == 7: PSP (sequence parameter set).
-			if (nal == 5 || nal == 7)
+			// IDR (instantaneous decoding picture).
+			if (nal == 7)
 			{
 				payloadDescriptor->isKeyFrame = true;
 			}
@@ -43,7 +42,7 @@ namespace RTC
 					auto naluSize = Utils::Byte::Get2Bytes(data, offset);
 					nal           = *(data + offset + sizeof(naluSize)) & 0x1F;
 
-					if (nal == 5 || nal == 7)
+					if (nal == 7)
 					{
 						payloadDescriptor->isKeyFrame = true;
 
@@ -60,7 +59,7 @@ namespace RTC
 				nal              = *(data + 1) & 0x1F;
 				uint8_t startBit = *(data + 1) & 0x80;
 
-				if ((nal == 5 || nal == 7) && startBit == 128)
+				if (nal == 7 && startBit == 128)
 					payloadDescriptor->isKeyFrame = true;
 			}
 
