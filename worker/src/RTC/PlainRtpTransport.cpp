@@ -38,7 +38,6 @@ namespace RTC
 			// This may throw.
 			SetRemoteParameters(options.remoteIP.c_str(), options.remotePort);
 		}
-
 		// No remote IP address is provided.
 		else
 		{
@@ -50,7 +49,6 @@ namespace RTC
 
 				this->CreateSocket(AF_INET, options.localIP);
 			}
-
 			// IPv6 is preferred.
 			else if (options.preferIPv6)
 			{
@@ -59,13 +57,11 @@ namespace RTC
 
 				this->CreateSocket(AF_INET6, options.localIP);
 			}
-
 			// No IP family preference, try with IPv4 and then IPv6.
 			else if (Settings::configuration.hasIPv4)
 			{
 				this->CreateSocket(AF_INET, options.localIP);
 			}
-
 			else
 			{
 				this->CreateSocket(AF_INET6, options.localIP);
