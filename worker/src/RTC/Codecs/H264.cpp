@@ -50,6 +50,10 @@ namespace RTC
 						break;
 					}
 
+					// Check if there is room for the indicated NAL unit size.
+					if (len <= naluSize)
+						break;
+
 					offset += naluSize + sizeof(naluSize);
 					len -= naluSize + sizeof(naluSize);
 				}
