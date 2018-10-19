@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.3.0
+
+* Add new "spy" feature. A "spy" peer cannot produce media and is invisible for other peers in the room.
+
+
 ### 2.2.7
 
 * Fix H264 simulcast by properly detecting when the profile switching should be done.
