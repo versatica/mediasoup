@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.3.1
+
+* H264: Check if there is room for the indicated NAL unit size (thanks @ggarber).
+* H264: Code cleanup.
+
+
 ### 2.3.0
 
 * Add new "spy" feature. A "spy" peer cannot produce media and is invisible for other peers in the room.

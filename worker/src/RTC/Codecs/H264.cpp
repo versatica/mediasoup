@@ -21,51 +21,61 @@ namespace RTC
 
 			uint8_t nal = *data & 0x1F;
 
-			/** Single NAL unit packet **/
-
-			// IDR (instantaneous decoding picture).
-			if (nal == 7)
+			switch (nal)
 			{
-				payloadDescriptor->isKeyFrame = true;
-			}
-
-			/** Aggreation packet **/
-
-			// STAP-A.
-			else if (nal == 24)
-			{
-				size_t offset = 1;
-				len -= 1;
-
-				// Iterate NAL units.
-				while (len >= 3)
+				// Single NAL unit packet.
+				// IDR (instantaneous decoding picture).
+				case 7:
 				{
-					auto naluSize = Utils::Byte::Get2Bytes(data, offset);
-					nal           = *(data + offset + sizeof(naluSize)) & 0x1F;
+					payloadDescriptor->isKeyFrame = true;
 
-					if (nal == 7)
+					break;
+				}
+
+				// Aggreation packet.
+				// STAP-A.
+				case 24:
+				{
+					size_t offset = 1;
+					len -= 1;
+
+					// Iterate NAL units.
+					while (len >= 3)
 					{
-						payloadDescriptor->isKeyFrame = true;
+						auto naluSize = Utils::Byte::Get2Bytes(data, offset);
+						nal           = *(data + offset + sizeof(naluSize)) & 0x1F;
 
-						break;
+						if (nal == 7)
+						{
+							payloadDescriptor->isKeyFrame = true;
+
+							break;
+						}
+
+						// Check if there is room for the indicated NAL unit size.
+						if (len < (naluSize + sizeof(naluSize)))
+							break;
+
+						offset += naluSize + sizeof(naluSize);
+						len -= naluSize + sizeof(naluSize);
 					}
 
-					// Check if there is room for the indicated NAL unit size.
-					if (len < (naluSize + sizeof(naluSize)))
-						break;
-
-					offset += naluSize + sizeof(naluSize);
-					len -= naluSize + sizeof(naluSize);
+					break;
 				}
-			}
-			// FU-A, FU-B.
-			else if (nal == 28 || nal == 29)
-			{
-				nal              = *(data + 1) & 0x1F;
-				uint8_t startBit = *(data + 1) & 0x80;
 
-				if (nal == 7 && startBit == 128)
-					payloadDescriptor->isKeyFrame = true;
+				// Aggreation packet.
+				// FU-A, FU-B.
+				case 28:
+				case 29:
+				{
+					nal              = *(data + 1) & 0x1F;
+					uint8_t startBit = *(data + 1) & 0x80;
+
+					if (nal == 7 && startBit == 128)
+						payloadDescriptor->isKeyFrame = true;
+
+					break;
+				}
 			}
 
 			return payloadDescriptor.release();

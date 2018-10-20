@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "author": "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
   "contributors": [
@@ -36,7 +36,7 @@
     "randomatic": "^3.1.0"
   },
   "devDependencies": {
-    "eslint": "^5.6.1",
+    "eslint": "^5.7.0",
     "gulp": "^4.0.0",
     "gulp-clang-format": "^1.0.27",
     "gulp-eslint": "^5.0.0",
@@ -50,6 +50,7 @@
     "clang-tools-prebuilt": "^0.1.4"
   },
   "scripts": {
+    "lint": "gulp lint",
     "test": "gulp test",
     "postinstall": "make Release"
   }
