@@ -24,7 +24,7 @@ const workerFiles =
 ];
 const nodeTests =
 [
-	// 'test/test-mediasoup.js',
+	'test/test-mediasoup.js',
 	'test/test-Server.js'
 	// 'test/test-Room.js',
 	// 'test/test-Peer.js',
