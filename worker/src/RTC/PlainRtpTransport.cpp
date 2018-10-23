@@ -86,6 +86,8 @@ namespace RTC
 		static const Json::StaticString JsonStringTransportId{ "transportId" };
 		static const Json::StaticString JsonStringTuple{ "tuple" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
+		static const Json::StaticString JsonStringLocalIP{ "localIP" };
+		static const Json::StaticString JsonStringLocalPort{ "localPort" };
 
 		Json::Value json(Json::objectValue);
 
@@ -95,6 +97,10 @@ namespace RTC
 		// Add tuple.
 		if (this->tuple != nullptr)
 			json[JsonStringTuple] = this->tuple->ToJson();
+
+		// Local IP address and port.
+		json[JsonStringLocalIP]   = this->udpSocket->GetLocalIP();
+		json[JsonStringLocalPort] = Json::UInt{ this->udpSocket->GetLocalPort() };
 
 		// Add rtpListener.
 		json[JsonStringRtpListener] = this->rtpListener.ToJson();
