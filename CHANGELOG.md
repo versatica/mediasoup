@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.3.2
+
+* `Channel.js`: Upgrade `REQUEST_TIMEOUT` to 20 seconds to avoid timeout errors when the the Node or worker thread usage is too high (related to this [issue](https://github.com/versatica/mediasoup-client/issues/48)).
+
+
 ### 2.3.1
 
 * H264: Check if there is room for the indicated NAL unit size (thanks @ggarber).
