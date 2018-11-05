@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = function(funcs)
 {
 	return new Promise((resolve, reject) =>
