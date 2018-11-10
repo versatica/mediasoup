@@ -8,8 +8,7 @@ tap.test(
 		const server = mediasoup.Server();
 
 		server.on('close', () => t.end());
-
-		setTimeout(() => server.close(), 10);
+		server.close();
 	});
 
 tap.test(
@@ -22,8 +21,7 @@ tap.test(
 			});
 
 		server.on('close', () => t.end());
-
-		setTimeout(() => server.close(), 100);
+		server.close();
 	});
 
 tap.test(
@@ -38,8 +36,7 @@ tap.test(
 			});
 
 		server.on('close', () => t.end());
-
-		setTimeout(() => server.close(), 100);
+		server.close();
 	});
 
 tap.test(

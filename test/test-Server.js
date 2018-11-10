@@ -96,13 +96,14 @@ tap.test(
 
 		t.tearDown(() => server.close());
 
-		t.throws(() =>
-		{
-			// eslint-disable-next-line no-unused-vars
-			const room = server.Room([]);
-		},
-		TypeError,
-		'server.Room() must throw TypeError');
+		t.throws(
+			() =>
+			{
+				// eslint-disable-next-line no-unused-vars
+				const room = server.Room([]);
+			},
+			TypeError,
+			'server.Room() must throw TypeError');
 
 		t.end();
 	});
