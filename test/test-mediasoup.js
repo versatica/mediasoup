@@ -9,7 +9,7 @@ tap.test(
 
 		server.on('close', () => t.end());
 
-		setTimeout(() => server.close(), 100);
+		setTimeout(() => server.close(), 10);
 	});
 
 tap.test(
