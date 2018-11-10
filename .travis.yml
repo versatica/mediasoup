@@ -53,8 +53,7 @@ before_script:
   - npm install -g gulp-cli
 
 script:
-  - gulp lint:node
-  - gulp tidy
+  - gulp lint
   - gulp test
 
 notifications:
