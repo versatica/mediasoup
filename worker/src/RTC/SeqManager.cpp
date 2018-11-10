@@ -21,10 +21,10 @@ namespace RTC
 	}
 
 	template<typename T>
-	const typename SeqManager<T>::SeqLowerThan SeqManager<T>::isSeqLowerThan;
+	const typename SeqManager<T>::SeqLowerThan SeqManager<T>::isSeqLowerThan{};
 
 	template<typename T>
-	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan;
+	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan{};
 
 	template<typename T>
 	bool SeqManager<T>::IsSeqLowerThan(const T lhs, const T rhs)
