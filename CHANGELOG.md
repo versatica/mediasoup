@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.3.3
+
+* Fix C++ syntax to avoid an error when building the worker with clang 8.0.0 (OSX 10.11.6).
+
+
 ### 2.3.2
 
 * `Channel.js`: Upgrade `REQUEST_TIMEOUT` to 20 seconds to avoid timeout errors when the the Node or worker thread usage is too high (related to this [issue](https://github.com/versatica/mediasoup-client/issues/48)).
