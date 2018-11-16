@@ -70,6 +70,8 @@
         'include/uv/version.h',
         'src/fs-poll.c',
         'src/heap-inl.h',
+        'src/idna.c',
+        'src/idna.h',
         'src/inet.c',
         'src/queue.h',
         'src/threadpool.c',
@@ -116,7 +118,6 @@
             'src/win/poll.c',
             'src/win/process.c',
             'src/win/process-stdio.c',
-            'src/win/req.c',
             'src/win/req-inl.h',
             'src/win/signal.c',
             'src/win/snprintf.c',
@@ -327,7 +328,10 @@
           'sources': [ 'src/unix/netbsd.c' ],
         }],
         [ 'OS in "freebsd dragonflybsd openbsd netbsd".split()', {
-          'sources': [ 'src/unix/posix-hrtime.c' ],
+          'sources': [
+            'src/unix/posix-hrtime.c',
+            'src/unix/bsd-proctitle.c'
+          ],
         }],
         [ 'OS in "ios mac freebsd dragonflybsd openbsd netbsd".split()', {
           'sources': [

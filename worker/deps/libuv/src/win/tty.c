@@ -941,20 +941,15 @@ void uv_process_tty_read_line_req(uv_loop_t* loop, uv_tty_t* handle,
       handle->read_cb((uv_stream_t*) handle,
                       uv_translate_sys_error(GET_REQ_ERROR(req)),
                       &buf);
-    } else {
-      /* The read was cancelled, or whatever we don't care */
-      handle->read_cb((uv_stream_t*) handle, 0, &buf);
     }
-
   } else {
-    if (!(handle->flags & UV_HANDLE_CANCELLATION_PENDING)) {
+    if (!(handle->flags & UV_HANDLE_CANCELLATION_PENDING) &&
+        req->u.io.overlapped.InternalHigh != 0) {
       /* Read successful. TODO: read unicode, convert to utf-8 */
       DWORD bytes = req->u.io.overlapped.InternalHigh;
       handle->read_cb((uv_stream_t*) handle, bytes, &buf);
-    } else {
-      handle->flags &= ~UV_HANDLE_CANCELLATION_PENDING;
-      handle->read_cb((uv_stream_t*) handle, 0, &buf);
     }
+    handle->flags &= ~UV_HANDLE_CANCELLATION_PENDING;
   }
 
   /* Wait for more input events. */
@@ -1033,6 +1028,7 @@ int uv_tty_read_stop(uv_tty_t* handle) {
     /* Cancel raw read. Write some bullshit event to force the console wait to
      * return. */
     memset(&record, 0, sizeof record);
+    record.EventType = FOCUS_EVENT;
     if (!WriteConsoleInputW(handle->handle, &record, 1, &written)) {
       return GetLastError();
     }
@@ -2179,13 +2175,13 @@ void uv_process_tty_write_req(uv_loop_t* loop, uv_tty_t* handle,
 
 void uv_tty_close(uv_tty_t* handle) {
   assert(handle->u.fd == -1 || handle->u.fd > 2);
+  if (handle->flags & UV_HANDLE_READING)
+    uv_tty_read_stop(handle);
+
   if (handle->u.fd == -1)
     CloseHandle(handle->handle);
   else
     close(handle->u.fd);
-
-  if (handle->flags & UV_HANDLE_READING)
-    uv_tty_read_stop(handle);
 
   handle->u.fd = -1;
   handle->handle = INVALID_HANDLE_VALUE;

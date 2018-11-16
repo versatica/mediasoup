@@ -37,6 +37,8 @@ TEST_DECLARE   (default_loop_close)
 TEST_DECLARE   (barrier_1)
 TEST_DECLARE   (barrier_2)
 TEST_DECLARE   (barrier_3)
+TEST_DECLARE   (barrier_serial_thread)
+TEST_DECLARE   (barrier_serial_thread_single)
 TEST_DECLARE   (condvar_1)
 TEST_DECLARE   (condvar_2)
 TEST_DECLARE   (condvar_3)
@@ -50,6 +52,7 @@ TEST_DECLARE   (tty)
 TEST_DECLARE   (tty_raw)
 TEST_DECLARE   (tty_empty_write)
 TEST_DECLARE   (tty_large_write)
+TEST_DECLARE   (tty_raw_cancel)
 #endif
 TEST_DECLARE   (tty_file)
 TEST_DECLARE   (tty_pty)
@@ -339,8 +342,11 @@ TEST_DECLARE   (get_osfhandle_valid_handle)
 TEST_DECLARE   (open_osfhandle_valid_handle)
 TEST_DECLARE   (fs_write_alotof_bufs)
 TEST_DECLARE   (fs_write_alotof_bufs_with_offset)
+TEST_DECLARE   (fs_partial_read)
+TEST_DECLARE   (fs_partial_write)
 TEST_DECLARE   (fs_file_pos_after_op_with_offset)
 TEST_DECLARE   (fs_null_req)
+TEST_DECLARE   (fs_read_dir)
 #ifdef _WIN32
 TEST_DECLARE   (fs_exclusive_sharing_mode)
 TEST_DECLARE   (fs_open_readonly_acl)
@@ -436,6 +442,9 @@ TEST_DECLARE  (fork_threadpool_queue_work_simple)
 #endif
 #endif
 
+TEST_DECLARE  (idna_toascii)
+TEST_DECLARE  (utf8_decode1)
+
 TASK_LIST_START
   TEST_ENTRY_CUSTOM (platform_output, 0, 1, 5000)
 
@@ -456,6 +465,8 @@ TASK_LIST_START
   TEST_ENTRY  (barrier_1)
   TEST_ENTRY  (barrier_2)
   TEST_ENTRY  (barrier_3)
+  TEST_ENTRY  (barrier_serial_thread)
+  TEST_ENTRY  (barrier_serial_thread_single)
   TEST_ENTRY  (condvar_1)
   TEST_ENTRY  (condvar_2)
   TEST_ENTRY  (condvar_3)
@@ -480,6 +491,7 @@ TASK_LIST_START
   TEST_ENTRY  (tty_raw)
   TEST_ENTRY  (tty_empty_write)
   TEST_ENTRY  (tty_large_write)
+  TEST_ENTRY  (tty_raw_cancel)
 #endif
   TEST_ENTRY  (tty_file)
   TEST_ENTRY  (tty_pty)
@@ -884,9 +896,12 @@ TASK_LIST_START
   TEST_ENTRY  (fs_write_multiple_bufs)
   TEST_ENTRY  (fs_write_alotof_bufs)
   TEST_ENTRY  (fs_write_alotof_bufs_with_offset)
+  TEST_ENTRY  (fs_partial_read)
+  TEST_ENTRY  (fs_partial_write)
   TEST_ENTRY  (fs_read_write_null_arguments)
   TEST_ENTRY  (fs_file_pos_after_op_with_offset)
   TEST_ENTRY  (fs_null_req)
+  TEST_ENTRY  (fs_read_dir)
 #ifdef _WIN32
   TEST_ENTRY  (fs_exclusive_sharing_mode)
   TEST_ENTRY  (fs_open_readonly_acl)
@@ -932,6 +947,13 @@ TASK_LIST_START
 #ifndef __MVS__
   TEST_ENTRY  (fork_threadpool_queue_work_simple)
 #endif
+#endif
+
+  TEST_ENTRY  (utf8_decode1)
+
+/* Doesn't work on z/OS because that platform uses EBCDIC, not ASCII. */
+#ifndef __MVS__
+  TEST_ENTRY  (idna_toascii)
 #endif
 
 #if 0
