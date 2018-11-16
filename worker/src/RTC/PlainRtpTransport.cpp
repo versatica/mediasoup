@@ -23,64 +23,50 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int err;
-
-		switch (Utils::IP::GetFamily(options.remoteIP))
+		// Remote IP address is provided.
+		if (!options.remoteIP.empty())
 		{
-			case AF_INET:
-			{
-				if (!Settings::configuration.hasIPv4 && options.localIP.empty())
-					MS_THROW_ERROR("IPv4 disabled");
+			int addressFamily = Utils::IP::GetFamily(options.remoteIP);
 
-				err = uv_ip4_addr(
-				  options.remoteIP.c_str(),
-				  static_cast<int>(options.remotePort),
-				  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
-				if (err != 0)
-					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
-
-				if (options.localIP.empty())
-					this->udpSocket = new RTC::UdpSocket(this, AF_INET);
-				else
-					this->udpSocket = new RTC::UdpSocket(this, options.localIP);
-
-				break;
-			}
-
-			case AF_INET6:
-			{
-				if (!Settings::configuration.hasIPv6 && options.localIP.empty())
-					MS_THROW_ERROR("IPv6 disabled");
-
-				err = uv_ip6_addr(
-				  options.remoteIP.c_str(),
-				  static_cast<int>(options.remotePort),
-				  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
-				if (err != 0)
-					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
-
-				if (options.localIP.empty())
-					this->udpSocket = new RTC::UdpSocket(this, AF_INET6);
-				else
-					this->udpSocket = new RTC::UdpSocket(this, options.localIP);
-
-				break;
-			}
-
-			default:
-			{
+			if (addressFamily == AF_INET)
+				this->CreateSocket(AF_INET, options.localIP);
+			else if (addressFamily == AF_INET6)
+				this->CreateSocket(AF_INET6, options.localIP);
+			else
 				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIP.c_str());
 
-				break;
+			// This may throw.
+			SetRemoteParameters(options.remoteIP.c_str(), options.remotePort);
+		}
+		// No remote IP address is provided.
+		else
+		{
+			// IPv4 is preferred.
+			if (options.preferIPv4)
+			{
+				if (!Settings::configuration.hasIPv4)
+					MS_THROW_ERROR("IPv4 disabled");
+
+				this->CreateSocket(AF_INET, options.localIP);
+			}
+			// IPv6 is preferred.
+			else if (options.preferIPv6)
+			{
+				if (!Settings::configuration.hasIPv6)
+					MS_THROW_ERROR("IPv6 disabled");
+
+				this->CreateSocket(AF_INET6, options.localIP);
+			}
+			// No IP family preference, try with IPv4 and then IPv6.
+			else if (Settings::configuration.hasIPv4)
+			{
+				this->CreateSocket(AF_INET, options.localIP);
+			}
+			else
+			{
+				this->CreateSocket(AF_INET6, options.localIP);
 			}
 		}
-
-		// Create a single tuple.
-		this->tuple = new RTC::TransportTuple(
-		  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
-
-		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	PlainRtpTransport::~PlainRtpTransport()
@@ -100,6 +86,8 @@ namespace RTC
 		static const Json::StaticString JsonStringTransportId{ "transportId" };
 		static const Json::StaticString JsonStringTuple{ "tuple" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
+		static const Json::StaticString JsonStringLocalIP{ "localIP" };
+		static const Json::StaticString JsonStringLocalPort{ "localPort" };
 
 		Json::Value json(Json::objectValue);
 
@@ -109,6 +97,10 @@ namespace RTC
 		// Add tuple.
 		if (this->tuple != nullptr)
 			json[JsonStringTuple] = this->tuple->ToJson();
+
+		// Local IP address and port.
+		json[JsonStringLocalIP]   = this->udpSocket->GetLocalIP();
+		json[JsonStringLocalPort] = Json::UInt{ this->udpSocket->GetLocalPort() };
 
 		// Add rtpListener.
 		json[JsonStringRtpListener] = this->rtpListener.ToJson();
@@ -123,6 +115,58 @@ namespace RTC
 		Json::Value json(Json::objectValue);
 
 		return json;
+	}
+
+	void PlainRtpTransport::SetRemoteParameters(const std::string& ip, const uint16_t port)
+	{
+		int err;
+
+		switch (Utils::IP::GetFamily(ip))
+		{
+			case AF_INET:
+			{
+				if (!Settings::configuration.hasIPv4)
+					MS_THROW_ERROR("IPv4 disabled");
+
+				err = uv_ip4_addr(
+				  ip.c_str(),
+				  static_cast<int>(port),
+				  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
+				if (err != 0)
+					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				if (!Settings::configuration.hasIPv6)
+					MS_THROW_ERROR("IPv6 disabled");
+
+				err = uv_ip6_addr(
+				  ip.c_str(),
+				  static_cast<int>(port),
+				  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
+				if (err != 0)
+					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_ERROR("invalid destination IP '%s'", ip.c_str());
+
+				break;
+			}
+		}
+
+		// Create a single tuple.
+		this->tuple = new RTC::TransportTuple(
+		  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
+
+		// Start the RTCP timer.
+		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -159,9 +203,17 @@ namespace RTC
 		this->tuple->Send(data, len);
 	}
 
+	void PlainRtpTransport::CreateSocket(int addressFamily, const std::string& localIP)
+	{
+		if (localIP.empty())
+			this->udpSocket = new RTC::UdpSocket(this, addressFamily);
+		else
+			this->udpSocket = new RTC::UdpSocket(this, localIP);
+	}
+
 	bool PlainRtpTransport::IsConnected() const
 	{
-		return true;
+		return this->tuple ? true : false;
 	}
 
 	void PlainRtpTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)

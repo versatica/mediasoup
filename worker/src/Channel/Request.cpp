@@ -26,6 +26,7 @@ namespace Channel
 		{ "transport.dump",                    Request::MethodId::TRANSPORT_DUMP                       },
 		{ "transport.getStats",                Request::MethodId::TRANSPORT_GET_STATS                  },
 		{ "transport.setRemoteDtlsParameters", Request::MethodId::TRANSPORT_SET_REMOTE_DTLS_PARAMETERS },
+		{ "transport.setRemoteParameters",     Request::MethodId::TRANSPORT_SET_REMOTE_PARAMETERS      },
 		{ "transport.setMaxBitrate",           Request::MethodId::TRANSPORT_SET_MAX_BITRATE            },
 		{ "transport.changeUfragPwd",          Request::MethodId::TRANSPORT_CHANGE_UFRAG_PWD           },
 		{ "transport.startMirroring",          Request::MethodId::TRANSPORT_START_MIRRORING            },

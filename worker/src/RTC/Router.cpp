@@ -241,6 +241,8 @@ namespace RTC
 				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
 				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
 				static const Json::StaticString JsonStringLocalIP{ "localIP" };
+				static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
+				static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
 
 				uint32_t transportId;
 
@@ -257,26 +259,20 @@ namespace RTC
 
 				RTC::PlainRtpTransport::Options options;
 
-				if (!request->data[JsonStringRemoteIP].isString())
-				{
-					request->Reject("missing remoteIP");
+				if (request->data[JsonStringRemoteIP].isString())
+					options.remoteIP = request->data[JsonStringRemoteIP].asString();
 
-					return;
-				}
-
-				options.remoteIP = request->data[JsonStringRemoteIP].asString();
-
-				if (!request->data[JsonStringRemotePort].isUInt())
-				{
-					request->Reject("missing remotePort");
-
-					return;
-				}
-
-				options.remotePort = request->data[JsonStringRemotePort].asUInt();
+				if (request->data[JsonStringRemotePort].isUInt())
+					options.remotePort = request->data[JsonStringRemotePort].asUInt();
 
 				if (request->data[JsonStringLocalIP].isString())
 					options.localIP = request->data[JsonStringLocalIP].asString();
+
+				if (request->data[JsonStringPreferIPv4].isBool())
+					options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
+
+				if (request->data[JsonStringPreferIPv6].isBool())
+					options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
 
 				RTC::PlainRtpTransport* plainRtpTransport;
 
@@ -763,6 +759,60 @@ namespace RTC
 				}
 
 				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_PARAMETERS:
+			{
+				static const Json::StaticString JsonStringIP{ "ip" };
+				static const Json::StaticString JsonStringPort{ "port" };
+
+				RTC::Transport* transport;
+
+				try
+				{
+					transport = GetTransportFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				if (!request->data[JsonStringIP].isString())
+				{
+					request->Reject("missing data.ip");
+
+					return;
+				}
+
+				if (!request->data[JsonStringPort].isUInt())
+				{
+					request->Reject("missing data.port");
+
+					return;
+				}
+
+				auto ip   = std::string{ request->data[JsonStringIP].asString() };
+				auto port = uint32_t{ request->data[JsonStringPort].asUInt() };
+
+				try
+				{
+					auto* plainRtpTransport = dynamic_cast<RTC::PlainRtpTransport*>(transport);
+
+					// This may throw.
+					plainRtpTransport->SetRemoteParameters(ip, port);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				request->Accept();
 
 				break;
 			}
