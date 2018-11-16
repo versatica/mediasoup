@@ -1,5 +1,5 @@
-#ifndef MS_RTC_PLAIN_RTPWEBRTC_TRANSPORT_HPP
-#define MS_RTC_PLAIN_RTPWEBRTC_TRANSPORT_HPP
+#ifndef MS_RTC_PLAIN_RTP_TRANSPORT_HPP
+#define MS_RTC_PLAIN_RTP_TRANSPORT_HPP
 
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
@@ -17,6 +17,8 @@ namespace RTC
 			std::string remoteIP;
 			uint16_t remotePort;
 			std::string localIP;
+			bool preferIPv4;
+			bool preferIPv6;
 		};
 
 	public:
@@ -32,10 +34,12 @@ namespace RTC
 	public:
 		Json::Value ToJson() const override;
 		Json::Value GetStats() const override;
+		void SetRemoteParameters(const std::string& ip, uint16_t port);
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 
 	private:
+		void CreateSocket(int addressFamily, const std::string& localIP);
 		bool IsConnected() const override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 
