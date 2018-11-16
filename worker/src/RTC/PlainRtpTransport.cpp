@@ -117,7 +117,7 @@ namespace RTC
 		return json;
 	}
 
-	void PlainRtpTransport::SetRemoteParameters(const std::string &ip, const uint16_t port)
+	void PlainRtpTransport::SetRemoteParameters(const std::string& ip, const uint16_t port)
 	{
 		int err;
 

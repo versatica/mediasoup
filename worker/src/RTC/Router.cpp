@@ -795,7 +795,7 @@ namespace RTC
 					return;
 				}
 
-				auto ip = std::string{ request->data[JsonStringIP].asString() };
+				auto ip   = std::string{ request->data[JsonStringIP].asString() };
 				auto port = uint32_t{ request->data[JsonStringPort].asUInt() };
 
 				try

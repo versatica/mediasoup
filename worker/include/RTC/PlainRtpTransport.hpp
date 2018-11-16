@@ -1,5 +1,5 @@
-#ifndef MS_RTC_PLAIN_RTPWEBRTC_TRANSPORT_HPP
-#define MS_RTC_PLAIN_RTPWEBRTC_TRANSPORT_HPP
+#ifndef MS_RTC_PLAIN_RTP_TRANSPORT_HPP
+#define MS_RTC_PLAIN_RTP_TRANSPORT_HPP
 
 #include "common.hpp"
 #include "Channel/Notifier.hpp"
@@ -34,7 +34,7 @@ namespace RTC
 	public:
 		Json::Value ToJson() const override;
 		Json::Value GetStats() const override;
-		void SetRemoteParameters(const std::string &ip, uint16_t port);
+		void SetRemoteParameters(const std::string& ip, uint16_t port);
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 
