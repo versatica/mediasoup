@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.4.0
+
+* Allow non WebRTC peers to create plain RTP transports (no ICE/DTLS/SRTP but just plain RTP and RTCP) for sending and receiving media.
+
+
 ### 2.3.3
 
 * Fix C++ syntax to avoid an error when building the worker with clang 8.0.0 (OSX 10.11.6).
