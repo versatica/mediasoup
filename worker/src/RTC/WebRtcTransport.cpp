@@ -163,7 +163,23 @@ namespace RTC
 		// Ensure there is at least one IP:port binding.
 		if (this->udpSockets.empty() && this->tcpServers.empty())
 		{
-			delete this;
+			// NOTE: We must manually delete above allocated objects. We cannot call `delete this`
+			// here since it would call the parent ~Transport destructor, and it would be called
+			// again after throwing the exception here.
+			//
+			// See: https://github.com/versatica/mediasoup/issues/222
+
+			this->iceServer->Destroy();
+
+			for (auto* socket : this->udpSockets)
+			{
+				socket->Destroy();
+			}
+
+			for (auto* server : this->tcpServers)
+			{
+				server->Destroy();
+			}
 
 			MS_THROW_ERROR("could not open any IP:port");
 		}
