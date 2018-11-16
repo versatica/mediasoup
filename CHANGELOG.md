@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.4.1
+
+* Update dependencies.
+
+
 ### 2.4.0
 
 * Allow non WebRTC peers to create plain RTP transports (no ICE/DTLS/SRTP but just plain RTP and RTCP) for sending and receiving media.
