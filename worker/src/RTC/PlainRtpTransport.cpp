@@ -29,9 +29,9 @@ namespace RTC
 			int addressFamily = Utils::IP::GetFamily(options.remoteIP);
 
 			if (addressFamily == AF_INET)
-				this->CreateSocket(AF_INET, options.localIP);
+				CreateSocket(AF_INET, options.localIP);
 			else if (addressFamily == AF_INET6)
-				this->CreateSocket(AF_INET6, options.localIP);
+				CreateSocket(AF_INET6, options.localIP);
 			else
 				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIP.c_str());
 
@@ -47,7 +47,7 @@ namespace RTC
 				if (!Settings::configuration.hasIPv4)
 					MS_THROW_ERROR("IPv4 disabled");
 
-				this->CreateSocket(AF_INET, options.localIP);
+				CreateSocket(AF_INET, options.localIP);
 			}
 			// IPv6 is preferred.
 			else if (options.preferIPv6)
@@ -55,16 +55,16 @@ namespace RTC
 				if (!Settings::configuration.hasIPv6)
 					MS_THROW_ERROR("IPv6 disabled");
 
-				this->CreateSocket(AF_INET6, options.localIP);
+				CreateSocket(AF_INET6, options.localIP);
 			}
 			// No IP family preference, try with IPv4 and then IPv6.
 			else if (Settings::configuration.hasIPv4)
 			{
-				this->CreateSocket(AF_INET, options.localIP);
+				CreateSocket(AF_INET, options.localIP);
 			}
 			else
 			{
-				this->CreateSocket(AF_INET6, options.localIP);
+				CreateSocket(AF_INET6, options.localIP);
 			}
 		}
 	}
