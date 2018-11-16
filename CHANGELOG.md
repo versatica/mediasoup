@@ -1,6 +1,12 @@
 # Changelog
 
 
+
+### 2.4.2
+
+* Fix a crash in when no more RTP ports were available (see related issue [#222](https://github.com/versatica/mediasoup/issues/222)).
+
+
 ### 2.4.1
 
 * Update dependencies.
