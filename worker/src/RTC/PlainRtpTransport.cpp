@@ -38,7 +38,7 @@ namespace RTC
 			// This may throw.
 			try
 			{
-				SetRemoteParameters(options.remoteIP.c_str(), options.remotePort);
+				SetRemoteParameters(options.remoteIP, options.remotePort);
 			}
 			catch (const MediaSoupError& error)
 			{
