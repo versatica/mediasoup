@@ -119,7 +119,7 @@ namespace RTC
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
 		  rtp,
-		  "sentPackets: %zu, currentLoss: %zu, repairedPacketCount: %zu, lossPercentage: %f, repairedPercentage: %f, score: %f ",
+		  "sentPackets: %zu, currentLoss: %zu, repairedPacketCount: %zu, lossPercentage: %f, repairedPercentage: %f, score: %f",
 		  sentPackets,
 		  currentLoss,
 		  repairedPacketCount,
