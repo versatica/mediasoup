@@ -1,65 +1,54 @@
-# Just apply Travis-CI for these branches
 branches:
   only:
   - master
   - experimental
-
-# Use Ubuntu 14.04 Trusty
 dist: trusty
-
 language: node_js
-
-# DOC: http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 matrix:
   include:
-    - os: linux
-      node_js: 8
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-4.9
-      env:
-        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-    - os: linux
-      node_js: 10
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-    - os: linux
-      node_js: 8
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
-          packages:
-            - clang-5.0
-      env:
-        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-
+  - os: linux
+    node_js: 8
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-4.9
+    env:
+    - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+  - os: linux
+    node_js: 10
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-7
+    env:
+    - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+  - os: linux
+    node_js: 8
+    addons:
+      apt:
+        sources:
+        - llvm-toolchain-trusty-5.0
+        packages:
+        - clang-5.0
+    env:
+    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 before_install:
-  - eval "${MATRIX_EVAL}"
-
+- eval "${MATRIX_EVAL}"
 install:
-  - npm install
-
+- npm install
 before_script:
-  - npm install -g gulp-cli
-
+- npm install -g gulp-cli
 script:
-  - gulp lint
-  - gulp test
-
+- gulp lint
+- gulp test
 notifications:
   email:
     recipients:
-      - ibc@aliax.net
-      - jmillan@aliax.net
+    - secure: foUoGDMyhU89TRM4ivj1VdNamvNu0lOU/z3ca5sT7vmyqyVN54efC/g0glXKyPx8UgiV1fsYUcgnjUz3UABvenloMe4bMbt7whq1WzLYizIoaUFxX79xEAsTJ6IQbqyXUkUoClAUOxsiat+nohF6jbfwukJfpkFqVi53CxnCFG0=
+    - secure: Xhcxa2H3pBGd7pn6G7UPntdlhCoF6dULRmJGlqwwB+Pthz4ZpGGiI8LWh56A2lZcIjJjpmOKYHPFKN8kyyoYdcfrIY0DdiBKJiKfVObpLYm4+o9V8q6J7VxZ9MJ0YAY87aLM9oj+xKe6iWdccVAKNLph/J8Ux8R/0+41dbbHqic=
     on_success: change
     on_failure: always
