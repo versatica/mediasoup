@@ -1,6 +1,10 @@
 # Changelog
 
 
+### 2.4.3
+
+* Make `PlainRtpTransport` not leak if port allocation fails (related issue [#224](https://github.com/versatica/mediasoup/issues/224)).
+
 
 ### 2.4.2
 
