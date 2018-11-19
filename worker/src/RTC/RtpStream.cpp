@@ -18,12 +18,10 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStream::RtpStream(RTC::RtpStream::Params& params) : params(params)
+	RtpStream::RtpStream(RTC::RtpStream::Params& params)
+	  : params(params), rtpStreamId(Utils::Crypto::GetRandomString(16))
 	{
 		MS_TRACE();
-
-		// Generate a random rtpStreamId.
-		this->rtpStreamId = Utils::Crypto::GetRandomString(16);
 
 		// Set the status check timer.
 		this->statusCheckTimer = new Timer(this);
