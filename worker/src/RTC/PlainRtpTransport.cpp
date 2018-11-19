@@ -36,7 +36,17 @@ namespace RTC
 				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIP.c_str());
 
 			// This may throw.
-			SetRemoteParameters(options.remoteIP.c_str(), options.remotePort);
+			try
+			{
+				SetRemoteParameters(options.remoteIP.c_str(), options.remotePort);
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Destroy UdpSocket since ~PlainRtpTransport() will not be called.
+				this->udpSocket->Destroy();
+
+				throw;
+			}
 		}
 		// No remote IP address is provided.
 		else
@@ -73,7 +83,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		delete this->tuple;
+		if (this->tuple != nullptr)
+			delete this->tuple;
 
 		if (this->udpSocket != nullptr)
 			this->udpSocket->Destroy();
