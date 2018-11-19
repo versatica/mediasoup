@@ -62,7 +62,7 @@ if __name__ == '__main__':
   if sys.platform == 'win32':
     args.append(os.path.join(root, 'mediasoup-worker.gyp'))
     common_fn  = os.path.join(root, 'common.gypi')
-    # we force vs 2010 over 2008 which would otherwise be the default for gyp
+    # we force vs 2010 over 2008 which would otherwise be the default for gyp.
     if not os.environ.get('GYP_MSVS_VERSION'):
       os.environ['GYP_MSVS_VERSION'] = '2010'
   else:
