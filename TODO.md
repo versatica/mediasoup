@@ -8,6 +8,5 @@
 
 * Implement `mandatoryCodecPayloadTypes`.
 
-* Automate `compile_commands_template.json` generation.
-
-* Complete RTC stats of a `Consumer` by including stats related to the source stream.
+* Use encrypted emails in `.travis.yml` to avoid notifications produced by mediasoup forks:
+  - https://travis-ci.community/t/use-travis-encrypt-to-set-multiple-notifications-email-recipients/976
