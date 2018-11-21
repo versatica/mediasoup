@@ -13,16 +13,16 @@ Scenario:
 
 #### Bandwidth out (Mbps) / number of viewers
 
-![charts/mediasoup_SFU_BW_out.png]
+![](charts/mediasoup_SFU_BW_out.png)
 
 #### Packets per second / number of viewers
 
-![charts/mediasoup_SFU_packetspersec.png]
+![](charts/mediasoup_SFU_packetspersec.png)
 
 #### Average bitrate (bps) and googRTT (ms) / number of viewers
 
-![charts/mediasoup_clients_getstats.png]
+![](charts/mediasoup_clients_getstats.png)
 
 #### CPU usage / number of viewers
 
-![charts/mediasoup_SFU_cpu.png]
+![](charts/mediasoup_SFU_cpu.png)
