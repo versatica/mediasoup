@@ -5,4 +5,5 @@ Internal documentation for developming purposes. Get the **mediasoup** public do
 * [Building](Building.md)
 * [RTCP](RTCP.md)
 * [Consumer](Consumer.md)
+* [Charts](Charts.md)
 
