@@ -19,6 +19,7 @@ tap.test(
 			{
 				kind      : 'audio',
 				name      : 'PCMU',
+				channels  : 1,
 				clockRate : 8000
 			},
 			{
