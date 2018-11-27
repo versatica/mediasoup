@@ -1,6 +1,16 @@
 # Changelog
 
 
+### 2.4.5
+
+* Improve codec matching.
+
+
+### 2.4.4
+
+* Fix audio codec matching when `channels` parameter is not given.
+
+
 ### 2.4.3
 
 * Make `PlainRtpTransport` not leak if port allocation fails (related issue [#224](https://github.com/versatica/mediasoup/issues/224)).
