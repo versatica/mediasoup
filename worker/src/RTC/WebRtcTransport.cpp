@@ -1080,9 +1080,6 @@ namespace RTC
 		// Notify.
 		eventData[JsonStringIceState] = JsonStringDisconnected;
 		this->notifier->Emit(this->transportId, "icestatechange", eventData);
-
-		// This is a fatal error so close the transport.
-		Destroy();
 	}
 
 	void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
