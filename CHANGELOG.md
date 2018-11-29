@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.4.6
+
+* Do not close `Transport` on ICE disconnected (as it would prevent ICE restart on "recv" TCP transports).
+
+
 ### 2.4.5
 
 * Improve codec matching.
