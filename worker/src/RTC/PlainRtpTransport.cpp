@@ -283,16 +283,19 @@ namespace RTC
 		}
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-
-		if (this->headerExtensionIds.rid != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
-		}
 		if (this->headerExtensionIds.absSendTime != 0u)
 		{
 			packet->AddExtensionMapping(
 			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
+		}
+		if (this->headerExtensionIds.mid != 0u)
+		{
+			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::MID, this->headerExtensionIds.mid);
+		}
+		if (this->headerExtensionIds.rid != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
 		}
 
 		// Get the associated Producer.

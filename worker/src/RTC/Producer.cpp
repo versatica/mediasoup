@@ -385,6 +385,7 @@ namespace RTC
 		auto& idMapping = this->rtpMapping.headerExtensionIds;
 		uint8_t ssrcAudioLevelId{ 0 };
 		uint8_t absSendTimeId{ 0 };
+		uint8_t midId{ 0 };
 		uint8_t ridId{ 0 };
 
 		for (auto& exten : this->rtpParameters.headerExtensions)
@@ -410,6 +411,17 @@ namespace RTC
 
 				this->headerExtensionIds.absSendTime          = absSendTimeId;
 				this->transportHeaderExtensionIds.absSendTime = exten.id;
+			}
+
+			if ((midId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
+			{
+				if (idMapping.find(exten.id) != idMapping.end())
+					midId = idMapping[exten.id];
+				else
+					midId = exten.id;
+
+				this->headerExtensionIds.mid          = midId;
+				this->transportHeaderExtensionIds.mid = exten.id;
 			}
 
 			if ((ridId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
@@ -451,8 +463,6 @@ namespace RTC
 				}
 			}
 		}
-
-		// TODO: Look for muxId.
 
 		// If not found, look for encodings with encodingId (RID) field.
 		{

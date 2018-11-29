@@ -255,6 +255,7 @@ namespace RTC
 		static const Json::StaticString JsonStringFailed{ "failed" };
 		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
+		static const Json::StaticString JsonStringMid{ "mid" };
 		static const Json::StaticString JsonStringRid{ "rid" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
 
@@ -344,6 +345,9 @@ namespace RTC
 
 		if (this->headerExtensionIds.absSendTime != 0u)
 			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->headerExtensionIds.absSendTime;
+
+		if (this->headerExtensionIds.mid != 0u)
+			jsonHeaderExtensionIds[JsonStringMid] = this->headerExtensionIds.mid;
 
 		if (this->headerExtensionIds.rid != 0u)
 			jsonHeaderExtensionIds[JsonStringRid] = this->headerExtensionIds.rid;
@@ -856,15 +860,19 @@ namespace RTC
 		}
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-		if (this->headerExtensionIds.rid != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
-		}
 		if (this->headerExtensionIds.absSendTime != 0u)
 		{
 			packet->AddExtensionMapping(
 			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
+		}
+		if (this->headerExtensionIds.mid != 0u)
+		{
+			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::MID, this->headerExtensionIds.mid);
+		}
+		if (this->headerExtensionIds.rid != 0u)
+		{
+			packet->AddExtensionMapping(
+			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
 		}
 
 		// Feed the remote bitrate estimator (REMB).

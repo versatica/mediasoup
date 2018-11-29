@@ -16,6 +16,7 @@ namespace RTC
 		{ "urn:ietf:params:rtp-hdrext:toffset",                         RtpHeaderExtensionUri::Type::TO_OFFSET         },
 		{ "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time", RtpHeaderExtensionUri::Type::ABS_SEND_TIME     },
 		{ "urn:3gpp:video-orientation",                                 RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION },
+		{ "urn:ietf:params:rtp-hdrext:sdes:mid",                        RtpHeaderExtensionUri::Type::MID               },
 		{ "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",              RtpHeaderExtensionUri::Type::RTP_STREAM_ID     }
 	};
 	// clang-format on

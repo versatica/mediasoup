@@ -134,7 +134,8 @@ namespace RTC
 			TO_OFFSET         = 2,
 			ABS_SEND_TIME     = 3,
 			VIDEO_ORIENTATION = 4,
-			RTP_STREAM_ID     = 5
+			MID               = 5,
+			RTP_STREAM_ID     = 6
 		};
 
 	private:
