@@ -18,6 +18,7 @@ about: Report a bug in mediasoup
 - npm version:
 - gcc/clang version:
 - mediasoup version:
+- mediasoup-client version:
 
 
 ### Issue description
