@@ -270,7 +270,7 @@ namespace RTC
 
 			if (packet->ReadMid(&muxIdPtr, &muxIdLen))
 			{
-				auto* charMuxIdPtr = const_cast<char*>(reinterpret_cast<const char*>(muxIdPtr));
+				auto* charMuxIdPtr = reinterpret_cast<const char*>(muxIdPtr);
 				std::string muxId(charMuxIdPtr, muxIdLen);
 
 				auto it = this->muxIdTable.find(muxId);
@@ -293,7 +293,7 @@ namespace RTC
 
 			if (packet->ReadRid(&ridPtr, &ridLen))
 			{
-				auto* charRidPtr = const_cast<char*>(reinterpret_cast<const char*>(ridPtr));
+				auto* charRidPtr = reinterpret_cast<const char*>(ridPtr);
 				std::string rid(charRidPtr, ridLen);
 
 				auto it = this->ridTable.find(rid);
