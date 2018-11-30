@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.5.1
+
+* Disable RTP MID extension until [#230](https://github.com/versatica/mediasoup/issues/230) is fixed.
+
+
 ### 2.5.0
 
 * Add RTP MID extension support.
