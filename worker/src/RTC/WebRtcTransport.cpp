@@ -364,7 +364,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const std::string type("transport");
+		static const std::string Type("transport");
 		static const Json::StaticString JsonStringType{ "type" };
 		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
 		static const Json::StaticString JsonStringId{ "id" };
@@ -393,7 +393,7 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringType]      = type;
+		json[JsonStringType]      = Type;
 		json[JsonStringTimestamp] = Json::UInt64{ DepLibUV::GetTime() };
 		json[JsonStringId]        = Json::UInt{ this->transportId };
 

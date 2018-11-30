@@ -328,9 +328,9 @@ namespace RTC
 
 	void RtpListener::RollbackProducer(
 	  RTC::Producer* producer,
-	  std::vector<uint32_t>& previousSsrcs,
-	  std::string& previousMuxId,
-	  std::string& previousRid)
+	  const std::vector<uint32_t>& previousSsrcs,
+	  const std::string& previousMuxId,
+	  const std::string& previousRid)
 	{
 		MS_TRACE();
 

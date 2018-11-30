@@ -57,7 +57,7 @@ private:
 	static void SetRtcIPv6(const std::string& ip);
 	static void SetRtcPorts();
 	static void SetDtlsCertificateAndPrivateKeyFiles();
-	static void SetLogTags(std::vector<std::string>& tags);
+	static void SetLogTags(const std::vector<std::string>& tags);
 	static void SetLogTags(Json::Value& json);
 
 public:

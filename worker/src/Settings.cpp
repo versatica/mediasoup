@@ -543,7 +543,7 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
 }
 
-void Settings::SetLogTags(std::vector<std::string>& tags)
+void Settings::SetLogTags(const std::vector<std::string>& tags)
 {
 	MS_TRACE();
 

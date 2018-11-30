@@ -83,8 +83,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->tuple != nullptr)
-			delete this->tuple;
+		delete this->tuple;
 
 		if (this->udpSocket != nullptr)
 			this->udpSocket->Destroy();
@@ -224,7 +223,7 @@ namespace RTC
 
 	bool PlainRtpTransport::IsConnected() const
 	{
-		return this->tuple ? true : false;
+		return this->tuple != nullptr;
 	}
 
 	void PlainRtpTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
