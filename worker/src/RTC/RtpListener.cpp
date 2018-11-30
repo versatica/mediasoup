@@ -265,26 +265,25 @@ namespace RTC
 
 		// Otherwise lookup into the muxId table.
 		{
-			// TODO: https://github.com/versatica/mediasoup/issues/230
-			// const uint8_t* muxIdPtr;
-			// size_t muxIdLen;
+			const uint8_t* muxIdPtr;
+			size_t muxIdLen;
 
-			// if (packet->ReadMid(&muxIdPtr, &muxIdLen))
-			// {
-			// 	auto* charMuxIdPtr = reinterpret_cast<const char*>(muxIdPtr);
-			// 	std::string muxId(charMuxIdPtr, muxIdLen);
+			if (packet->ReadMid(&muxIdPtr, &muxIdLen))
+			{
+				auto* charMuxIdPtr = reinterpret_cast<const char*>(muxIdPtr);
+				std::string muxId(charMuxIdPtr, muxIdLen);
 
-			// 	auto it = this->muxIdTable.find(muxId);
-			// 	if (it != this->muxIdTable.end())
-			// 	{
-			// 		auto producer = it->second;
+				auto it = this->muxIdTable.find(muxId);
+				if (it != this->muxIdTable.end())
+				{
+					auto producer = it->second;
 
-			// 		// Fill the ssrc table.
-			// 		this->ssrcTable[packet->GetSsrc()] = producer;
+					// Fill the ssrc table.
+					this->ssrcTable[packet->GetSsrc()] = producer;
 
-			// 		return producer;
-			// 	}
-			// }
+					return producer;
+				}
+			}
 		}
 
 		// Otherwise lookup into the RID table.
