@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.5.3
+
+* Don't announce `muxId` nor RTP MID extension support in `Consumer` RTP parameters.
+
+
 ### 2.5.2
 
 * Enable RTP MID extension again.
