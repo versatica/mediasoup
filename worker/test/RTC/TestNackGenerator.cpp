@@ -79,7 +79,7 @@ class TestNackGeneratorListener : public NackGenerator::Listener
 	}
 
 public:
-	void Reset(TestNackGeneratorInput input)
+	void Reset(TestNackGeneratorInput& input)
 	{
 		this->currentInput              = input;
 		this->nackRequiredTriggered     = false;
