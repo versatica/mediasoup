@@ -34,14 +34,14 @@ def uploadFiles():
         'code': main_file,
         'codes': [{
             'file': 'catch.hpp',
-            'code': open(os.path.join(catchPath, 'single_include', 'catch.hpp')).read()
+            'code': open(os.path.join(catchPath, 'single_include', 'catch2', 'catch.hpp')).read()
         }],
         'options': 'c++11,cpp-no-pedantic,boost-nothing',
         'compiler-option-raw': '-DCATCH_CONFIG_FAST_COMPILE',
         'save': True
     })
 
-    if 'status' in response and not 'compiler_error' in response:
+    if 'status' in response and 'compiler_error' not in response:
         return True, response['url']
     else:
         return False, response

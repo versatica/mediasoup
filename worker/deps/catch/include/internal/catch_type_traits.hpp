@@ -1,47 +1,38 @@
 /*
- *  Created by Martin on 08/02/2017.
+ *  Created by Jozef on 12/11/2018.
+ *  Copyright 2017 Two Blue Cubes Ltd. All rights reserved.
  *
  *  Distributed under the Boost Software License, Version 1.0. (See accompanying
  *  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
+
 #ifndef TWOBLUECUBES_CATCH_TYPE_TRAITS_HPP_INCLUDED
 #define TWOBLUECUBES_CATCH_TYPE_TRAITS_HPP_INCLUDED
 
-#if defined(CATCH_CONFIG_CPP11_TYPE_TRAITS)
-#include <type_traits>
-#endif
+namespace Catch{
 
+#ifdef CATCH_CPP17_OR_GREATER
+	template <typename...>
+	inline constexpr auto is_unique = std::true_type{};
 
-namespace Catch {
-
-#if defined(CATCH_CONFIG_CPP11_TYPE_TRAITS)
-
-     template <typename T>
-     using add_lvalue_reference = std::add_lvalue_reference<T>;
-
-     template <typename T>
-     using add_const = std::add_const<T>;
-
+	template <typename T, typename... Rest>
+	inline constexpr auto is_unique<T, Rest...> = std::bool_constant<
+		(!std::is_same_v<T, Rest> && ...) && is_unique<Rest...>
+	>{};
 #else
 
-    template <typename T>
-    struct add_const {
-        typedef const T type;
-    };
+template <typename...>
+struct is_unique : std::true_type{};
 
-    template <typename T>
-    struct add_lvalue_reference {
-        typedef T& type;
-    };
-    template <typename T>
-    struct add_lvalue_reference<T&> {
-        typedef T& type;
-    };
-    // No && overload, because that is C++11, in which case we have
-    // proper type_traits implementation from the standard library
+template <typename T0, typename T1, typename... Rest>
+struct is_unique<T0, T1, Rest...> : std::integral_constant
+<bool,
+     !std::is_same<T0, T1>::value 
+     && is_unique<T0, Rest...>::value 
+     && is_unique<T1, Rest...>::value
+>{};
 
 #endif
-
 }
 
 #endif // TWOBLUECUBES_CATCH_TYPE_TRAITS_HPP_INCLUDED

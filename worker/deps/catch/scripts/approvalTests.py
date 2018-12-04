@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from  __future__ import print_function
+from __future__ import print_function
 
+import io
 import os
 import sys
 import subprocess
@@ -11,9 +12,13 @@ import difflib
 import scriptCommon
 from scriptCommon import catchPath
 
+if os.name == 'nt':
+    # Enable console colours on windows
+    os.system('')
+
 rootPath = os.path.join(catchPath, 'projects/SelfTest/Baselines')
 
-
+langFilenameParser = re.compile(r'(.+\.[ch]pp)')
 filelocParser = re.compile(r'''
     .*/
     (.+\.[ch]pp)  # filename
@@ -24,7 +29,7 @@ filelocParser = re.compile(r'''
 lineNumberParser = re.compile(r' line="[0-9]*"')
 hexParser = re.compile(r'\b(0[xX][0-9a-fA-F]+)\b')
 durationsParser = re.compile(r' time="[0-9]*\.[0-9]*"')
-timestampsParser = re.compile(r' timestamp="\d{4}-\d{2}-\d{2}T\d{2}\:\d{2}\:\d{2}Z"')
+timestampsParser = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}\:\d{2}\:\d{2}Z')
 versionParser = re.compile(r'Catch v[0-9]+\.[0-9]+\.[0-9]+(-develop\.[0-9]+)?')
 nullParser = re.compile(r'\b(__null|nullptr)\b')
 exeNameParser = re.compile(r'''
@@ -41,7 +46,29 @@ errnoParser = re.compile(r'''
     \(\*__errno_location\ \(\)\)
     |
     \(\*__error\(\)\)
+    |
+    \(\*_errno\(\)\)
 ''', re.VERBOSE)
+sinceEpochParser = re.compile(r'\d+ .+ since epoch')
+infParser = re.compile(r'''
+    \(\(float\)\(1e\+300\ \*\ 1e\+300\)\) # MSVC INFINITY macro
+    |
+    \(__builtin_inff\(\)\)                # Linux (ubuntu) INFINITY macro
+    |
+    \(__builtin_inff\ \(\)\)              # Fedora INFINITY macro
+    |
+    __builtin_huge_valf\(\)               # OSX macro
+''', re.VERBOSE)
+nanParser = re.compile(r'''
+    \(\(float\)\(\(\(float\)\(1e\+300\ \*\ 1e\+300\)\)\ \*\ 0\.0F\)\) # MSVC NAN macro
+    |
+    \(\(float\)\(INFINITY\ \*\ 0\.0F\)\) # Yet another MSVC NAN macro
+    |
+    \(__builtin_nanf\ \(""\)\)           # Linux (ubuntu) NAN macro
+    |
+    __builtin_nanf\("0x<hex\ digits>"\)  # The weird content of the brackets is there because a different parser has already ran before this one
+''', re.VERBOSE)
+
 
 if len(sys.argv) == 2:
     cmdPath = sys.argv[1]
@@ -50,10 +77,11 @@ else:
 
 overallResult = 0
 
+
 def diffFiles(fileA, fileB):
-    with open(fileA, 'r') as file:
+    with io.open(fileA, 'r', encoding='utf-8', errors='surrogateescape') as file:
         aLines = [line.rstrip() for line in file.readlines()]
-    with open(fileB, 'r') as file:
+    with io.open(fileB, 'r', encoding='utf-8', errors='surrogateescape') as file:
         bLines = [line.rstrip() for line in file.readlines()]
 
     shortenedFilenameA = fileA.rsplit(os.sep, 1)[-1]
@@ -63,13 +91,24 @@ def diffFiles(fileA, fileB):
     return [line for line in diff if line[0] in ('+', '-')]
 
 
-def filterLine(line):
+def normalizeFilepath(line):
     if catchPath in line:
         # make paths relative to Catch root
         line = line.replace(catchPath + os.sep, '')
-        # go from \ in windows paths to /
-        line = line.replace('\\', '/')
 
+    m = langFilenameParser.match(line)
+    if m:
+        filepath = m.group(0)
+        # go from \ in windows paths to /
+        filepath = filepath.replace('\\', '/')
+        # remove start of relative path
+        filepath = filepath.replace('../', '')
+        line = line[:m.start()] + filepath + line[m.end():]
+
+    return line
+
+def filterLine(line, isCompact):
+    line = normalizeFilepath(line)
 
     # strip source line numbers
     m = filelocParser.match(line)
@@ -80,6 +119,10 @@ def filterLine(line):
         line = filename + lnum + line[m.end():]
     else:
         line = lineNumberParser.sub(" ", line)
+
+    if isCompact:
+        line = line.replace(': FAILED', ': failed')
+        line = line.replace(': PASSED', ': passed')
 
     # strip Catch version number
     line = versionParser.sub("<version>", line)
@@ -95,9 +138,12 @@ def filterLine(line):
 
     # strip durations and timestamps
     line = durationsParser.sub(' time="{duration}"', line)
-    line = timestampsParser.sub(' timestamp="{iso8601-timestamp}"', line)
+    line = timestampsParser.sub('{iso8601-timestamp}', line)
     line = specialCaseParser.sub('file:\g<1>', line)
     line = errnoParser.sub('errno', line)
+    line = sinceEpochParser.sub('{since-epoch-report}', line)
+    line = infParser.sub('INFINITY', line)
+    line = nanParser.sub('NAN', line)
     return line
 
 
@@ -114,10 +160,10 @@ def approve(baseName, args):
     subprocess.call(args, stdout=f, stderr=f)
     f.close()
 
-    rawFile = open(rawResultsPath, 'r')
-    filteredFile = open(filteredResultsPath, 'w')
+    rawFile = io.open(rawResultsPath, 'r', encoding='utf-8', errors='surrogateescape')
+    filteredFile = io.open(filteredResultsPath, 'w', encoding='utf-8', errors='surrogateescape')
     for line in rawFile:
-        filteredFile.write(filterLine(line).rstrip() + "\n")
+        filteredFile.write(filterLine(line, 'compact' in baseName).rstrip() + "\n")
     filteredFile.close()
     rawFile.close()
 
@@ -144,16 +190,20 @@ def approve(baseName, args):
 print("Running approvals against executable:")
 print("  " + cmdPath)
 
+
+# ## Keep default reporters here ##
 # Standard console reporter
-approve("console.std", ["~[c++11]~[!nonportable]", "--order", "lex"])
+approve("console.std", ["~[!nonportable]~[!benchmark]~[approvals]", "--order", "lex", "--rng-seed", "1"])
 # console reporter, include passes, warn about No Assertions
-approve("console.sw", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "--order", "lex"])
+approve("console.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "--order", "lex", "--rng-seed", "1"])
 # console reporter, include passes, warn about No Assertions, limit failures to first 4
-approve("console.swa4", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "-x", "4", "--order", "lex"])
+approve("console.swa4", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-x", "4", "--order", "lex", "--rng-seed", "1"])
 # junit reporter, include passes, warn about No Assertions
-approve("junit.sw", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "-r", "junit", "--order", "lex"])
+approve("junit.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-r", "junit", "--order", "lex", "--rng-seed", "1"])
 # xml reporter, include passes, warn about No Assertions
-approve("xml.sw", ["~[c++11]~[!nonportable]", "-s", "-w", "NoAssertions", "-r", "xml", "--order", "lex"])
+approve("xml.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-r", "xml", "--order", "lex", "--rng-seed", "1"])
+# compact reporter, include passes, warn about No Assertions
+approve('compact.sw', ['~[!nonportable]~[!benchmark]~[approvals]', '-s', '-w', 'NoAssertions', '-r', 'compact', '--order', 'lex', "--rng-seed", "1"])
 
 if overallResult != 0:
     print("If these differences are expected, run approve.py to approve new baselines.")

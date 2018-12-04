@@ -1,3 +1,4 @@
+<a id="top"></a>
 # Matchers
 
 Matchers are an alternative way to do assertions which are easily extensible and composable.
@@ -35,9 +36,40 @@ REQUIRE_THAT( str,
 ```
 
 ## Built in matchers
-Currently Catch has some string matchers and some vector matchers. They are in the `Catch::Matchers` and `Catch` namespaces.
-The string matchers are `StartsWith`, `EndsWith`, `Contains` and `Equals`. Each of them also takes an optional second argument, that decides case sensitivity (by-default, they are case sensitive).
+Catch currently provides some matchers, they are in the `Catch::Matchers` and `Catch` namespaces.
+
+### String matchers
+The string matchers are `StartsWith`, `EndsWith`, `Contains`, `Equals` and `Matches`. The first four match a literal (sub)string against a result, while `Matches` takes and matches an ECMAScript regex. Do note that `Matches` matches the string as a whole, meaning that "abc" will not match against "abcd", but "abc.*" will.
+
+Each of the provided `std::string` matchers also takes an optional second argument, that decides case sensitivity (by-default, they are case sensitive).
+
+
+### Vector matchers
 The vector matchers are `Contains`, `VectorContains` and `Equals`. `VectorContains` looks for a single element in the matched vector, `Contains` looks for a set (vector) of elements inside the matched vector.
+
+### Floating point matchers
+The floating point matchers are `WithinULP` and `WithinAbs`. `WithinAbs` accepts floating point numbers that are within a certain margin of target. `WithinULP` performs an [ULP](https://en.wikipedia.org/wiki/Unit_in_the_last_place)-based comparison of two floating point numbers and accepts them if they are less than certain number of ULPs apart.
+
+Do note that ULP-based checks only make sense when both compared numbers are of the same type and `WithinULP` will use type of its argument as the target type. This means that `WithinULP(1.f, 1)` will expect to compare `float`s, but `WithinULP(1., 1)` will expect to compare `double`s.
+
+
+### Generic matchers
+Catch also aims to provide a set of generic matchers. Currently this set
+contains only a matcher that takes arbitrary callable predicate and applies
+it onto the provided object.
+
+Because of type inference limitations, the argument type of the predicate
+has to be provided explicitly. Example:
+```cpp
+REQUIRE_THAT("Hello olleH",
+             Predicate<std::string>(
+                 [] (std::string const& str) -> bool { return str.front() == str.back(); },
+                 "First and last character should be equal")
+);
+```
+
+The second argument is an optional description of the predicate, and is
+used only during reporting of the result.
 
 
 ## Custom matchers
@@ -101,4 +133,4 @@ with expansion:
 
 ---
 
-[Home](Readme.md)
+[Home](Readme.md#top)

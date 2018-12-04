@@ -1,10 +1,13 @@
 # version string format -- This will be overwritten later anyway
 version: "{build}"
 
+branches:
+  except:
+    - /dev-travis.+/
+
 os:
   - Visual Studio 2017
   - Visual Studio 2015
-  - Visual Studio 2013
 
 environment:
     matrix:
@@ -16,23 +19,51 @@ environment:
 
         - additional_flags: "/D_UNICODE /DUNICODE"
           wmain: 1
+          coverage: 0
+
+        # Have a coverage dimension
+        - additional_flags: ""
+          wmain: 0
+          coverage: 1
+
+        # Have an examples dimension
+        - additional_flags: ""
+          wmain: 0
+          examples: 1
+
 
 matrix:
     exclude:
-        -
-            additional_flags: "/permissive- /std:c++latest"
-            os: Visual Studio 2015
-        -
-            additional_flags: "/permissive- /std:c++latest"
-            os: Visual Studio 2013
+        - os: Visual Studio 2015
+          additional_flags: "/permissive- /std:c++latest"
 
-init:
-  - git config --global core.autocrlf input
-  # Set build version to git commit-hash
-  - ps: Update-AppveyorBuild -Version "$($env:APPVEYOR_REPO_BRANCH) - $($env:APPVEYOR_REPO_COMMIT)"
+        - os: Visual Studio 2015
+          additional_flags: "/D_UNICODE /DUNICODE"
 
-# fetch repository as zip archive
-shallow_clone: true
+        # Exclude unwanted coverage configurations
+        - coverage: 1
+          platform: Win32
+
+        - coverage: 1
+          os: Visual Studio 2015
+
+        - coverage: 1
+          configuration: Release
+
+        # Exclude unwanted examples configurations
+        - examples: 1
+          platform: Win32
+
+        - examples: 1
+          os: Visual Studio 2015
+
+        - examples: 1
+          configuration: Release
+
+
+install:
+  - ps: if (($env:CONFIGURATION) -eq "Debug" -And ($env:coverage) -eq "1" ) { python -m pip --disable-pip-version-check install codecov }
+  - ps: if (($env:CONFIGURATION) -eq "Debug" -And ($env:coverage) -eq "1" ) { .\misc\installOpenCppCoverage.ps1 }
 
 # Win32 and x64 are CMake-compatible solution platform names.
 # This allows us to pass %PLATFORM% to CMake -A.
@@ -48,14 +79,18 @@ configuration:
 #Cmake will autodetect the compiler, but we set the arch
 before_build:
   - set CXXFLAGS=%additional_flags%
-  - cmake -H. -BBuild -A%PLATFORM% -DUSE_WMAIN=%wmain%
+  # Indirection because appveyor doesn't handle multiline batch scripts properly
+  # https://stackoverflow.com/questions/37627248/how-to-split-a-command-over-multiple-lines-in-appveyor-yml/37647169#37647169
+  # https://help.appveyor.com/discussions/questions/3888-multi-line-cmd-or-powershell-warning-ignore
+  - cmd: .\misc\appveyorBuildConfigurationScript.bat
+
 
 # build with MSBuild
 build:
-  project: Build\CatchSelfTest.sln      # path to Visual Studio solution or project
+  project: Build\Catch2.sln             # path to Visual Studio solution or project
   parallel: true                        # enable MSBuild parallel builds
   verbosity: normal                     # MSBuild verbosity level {quiet|minimal|normal|detailed}
 
 test_script:
-  - cd Build
-  - ctest -V -j 2 -C %CONFIGURATION%
+  - set CTEST_OUTPUT_ON_FAILURE=1
+  - cmd: .\misc\appveyorTestRunScript.bat

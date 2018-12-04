@@ -24,6 +24,7 @@ DerivedData
 *.xccheckout
 Build
 .idea
-cmake-build-debug
-cmake-build-release
 .vs
+cmake-build-*
+benchmark-dir
+.conan/test_package/build

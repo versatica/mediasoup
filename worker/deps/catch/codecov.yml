@@ -1,0 +1,24 @@
+coverage:
+  precision: 2
+  round: nearest
+  range: "60...90"
+  status:
+    project:
+      default:
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+  ignore:
+    - "projects/SelfTest"
+    - "**/catch_reporter_tap.hpp"
+    - "**/catch_reporter_automake.hpp"
+    - "**/catch_reporter_teamcity.hpp"
+    - "**/external/clara.hpp"
+
+
+codecov:
+  branch: master
+
+comment:
+  layout: "diff"
