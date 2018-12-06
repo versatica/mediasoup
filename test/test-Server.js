@@ -1,37 +1,108 @@
 const tap = require('tap');
 const mediasoup = require('../');
 
+const mediaCodecs =
+[
+	{
+		kind      : 'audio',
+		name      : 'opus',
+		clockRate : 48000,
+		channels  : 2
+	},
+	{
+		kind      : 'audio',
+		name      : 'PCMU',
+		channels  : 1,
+		clockRate : 8000
+	},
+	{
+		kind       : 'video',
+		name       : 'vp8',
+		clockRate  : 90000,
+		parameters :
+		{
+			foo : 123
+		}
+	}
+];
+
+tap.test('server.Room() allocates workers incrementally', (t) =>
+{
+	const server = mediasoup.Server({ numWorkers: 6 });
+
+	t.equal(server.numWorkers, 6, 'server.numWorkers matches numWorkers in settings');
+
+	t.tearDown(() => server.close());
+
+	// NOTE: Testing private properties here.
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 1, 'selected worker is the next one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 2, 'selected worker is the next one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 3, 'selected worker is the next one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 4, 'selected worker is the next one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 5, 'selected worker is the next one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 0, 'selected worker is the next one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 1, 'selected worker is the next one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 2, 'selected worker is the next one');
+
+	t.end();
+});
+
+tap.test('server.Room() with workerIdx uses the specified worker', (t) =>
+{
+	const server = mediasoup.Server({ numWorkers: 6 });
+
+	t.tearDown(() => server.close());
+
+	// NOTE: Testing private properties here.
+
+	server.Room(mediaCodecs, { workerIdx: 3 });
+	t.equal(server._latestWorkerIdx, 3, 'selected worker is the specified one');
+
+	server.Room(mediaCodecs, { workerIdx: 0 });
+	t.equal(server._latestWorkerIdx, 0, 'selected worker is the specified one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 1, 'selected worker is the next one');
+
+	server.Room(mediaCodecs, { workerIdx: 0 });
+	t.equal(server._latestWorkerIdx, 0, 'selected worker is the specified one');
+
+	server.Room(mediaCodecs);
+	t.equal(server._latestWorkerIdx, 1, 'selected worker is the next one');
+
+	t.throws(
+		() => server.Room(mediaCodecs, { workerIdx: 6 }),
+		'out of range workerIdx throws Error');
+
+	t.throws(
+		() => server.Room(mediaCodecs, { workerIdx: -1 }),
+		'out of range workerIdx throws Error');
+
+	t.end();
+});
+
 tap.test(
 	'server.Room() with valid media codecs must succeed', { timeout: 2000 }, (t) =>
 	{
 		const server = mediasoup.Server();
 
 		t.tearDown(() => server.close());
-
-		const mediaCodecs =
-		[
-			{
-				kind      : 'audio',
-				name      : 'opus',
-				clockRate : 48000,
-				channels  : 2
-			},
-			{
-				kind      : 'audio',
-				name      : 'PCMU',
-				channels  : 1,
-				clockRate : 8000
-			},
-			{
-				kind       : 'video',
-				name       : 'vp8',
-				clockRate  : 90000,
-				parameters :
-				{
-					foo : 123
-				}
-			}
-		];
 
 		const expectedCodecs =
 		[
