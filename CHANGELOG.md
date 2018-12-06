@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.5.4
+
+* `server.Room()`: Assign workers incrementally or explicitely via new `workerIdx` argument.
+* Add `server.numWorkers` getter.
+
+
 ### 2.5.3
 
 * Don't announce `muxId` nor RTP MID extension support in `Consumer` RTP parameters.
