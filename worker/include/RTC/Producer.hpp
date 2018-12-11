@@ -112,7 +112,7 @@ namespace RTC
 		struct RtpMapping rtpMapping;
 		std::unordered_set<RTC::ProducerListener*> listeners;
 		// Allocated by this.
-		std::map<uint32_t, RTC::RtpStreamRecv*> rtpStreams;
+		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtpStreams;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxStreams;
 		std::map<RTC::RtpStreamRecv*, std::set<RTC::RtpEncodingParameters::Profile>> mapRtpStreamProfiles;
 		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapActiveProfiles;
@@ -169,9 +169,9 @@ namespace RTC
 
 	inline void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
-		auto it = this->rtpStreams.find(report->GetSsrc());
+		auto it = this->mapRtpStreams.find(report->GetSsrc());
 
-		if (it != this->rtpStreams.end())
+		if (it != this->mapRtpStreams.end())
 		{
 			auto rtpStream = it->second;
 

@@ -96,9 +96,9 @@ namespace RTC
 
 		float lossPercentage = 0;
 
-		for (auto& kv : this->rtpStreams)
+		for (auto& kv : this->mapRtpStreams)
 		{
-			auto rtpStream = kv.second;
+			auto* rtpStream = kv.second;
 
 			jsonRtpStreams.append(rtpStream->ToJson());
 			lossPercentage += rtpStream->GetLossPercentage();
@@ -106,8 +106,8 @@ namespace RTC
 
 		json[JsonStringRtpStreams] = jsonRtpStreams;
 
-		if (!this->rtpStreams.empty())
-			lossPercentage = lossPercentage / this->rtpStreams.size();
+		if (!this->mapRtpStreams.empty())
+			lossPercentage = lossPercentage / this->mapRtpStreams.size();
 
 		json[JsonStringLossPercentage] = lossPercentage;
 
@@ -135,9 +135,9 @@ namespace RTC
 
 		Json::Value json(Json::arrayValue);
 
-		for (auto it : this->rtpStreams)
+		for (auto it : this->mapRtpStreams)
 		{
-			auto rtpStream     = it.second;
+			auto* rtpStream    = it.second;
 			auto jsonRtpStream = rtpStream->GetStats();
 
 			if (this->transport != nullptr)
@@ -222,9 +222,9 @@ namespace RTC
 		RTC::RtpStreamRecv* rtpStream{ nullptr };
 		std::unique_ptr<RTC::RtpPacket> clonedPacket;
 
-		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
+		if (this->mapRtpStreams.find(ssrc) != this->mapRtpStreams.end())
 		{
-			rtpStream = this->rtpStreams[ssrc];
+			rtpStream = this->mapRtpStreams[ssrc];
 
 			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
 			// stuff that would change its size.
@@ -298,10 +298,10 @@ namespace RTC
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		for (auto& kv : this->rtpStreams)
+		for (auto& kv : this->mapRtpStreams)
 		{
-			auto rtpStream = kv.second;
-			auto* report   = rtpStream->GetRtcpReceiverReport();
+			auto* rtpStream = kv.second;
+			auto* report    = rtpStream->GetRtcpReceiverReport();
 
 			report->SetSsrc(rtpStream->GetSsrc());
 			packet->AddReceiverReport(report);
@@ -367,9 +367,9 @@ namespace RTC
 		// Run the timer.
 		this->keyFrameRequestBlockTimer->Start(KeyFrameRequestBlockTimeout);
 
-		for (auto& kv : this->rtpStreams)
+		for (auto& kv : this->mapRtpStreams)
 		{
-			auto rtpStream = kv.second;
+			auto* rtpStream = kv.second;
 
 			rtpStream->RequestKeyFrame();
 		}
@@ -445,7 +445,7 @@ namespace RTC
 
 		// If already exists, do nothing.
 		if (
-		  this->rtpStreams.find(ssrc) != this->rtpStreams.end() ||
+		  this->mapRtpStreams.find(ssrc) != this->mapRtpStreams.end() ||
 		  this->mapRtxStreams.find(ssrc) != this->mapRtxStreams.end())
 		{
 			return;
@@ -464,7 +464,7 @@ namespace RTC
 			}
 		}
 
-		// If not found, look for encodings with encodingId (RID) field.
+		// If SSRC not found, look for encodings with encodingId (RID) field.
 		{
 			const uint8_t* ridPtr;
 			size_t ridLen;
@@ -478,6 +478,12 @@ namespace RTC
 				{
 					if (encoding.encodingId == rid)
 					{
+						// Ignore if RTX.
+						auto& rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+
+						if (packet->GetPayloadType() == rtxCodec.payloadType)
+							continue;
+
 						CreateRtpStream(encoding, ssrc);
 
 						return;
@@ -485,13 +491,17 @@ namespace RTC
 				}
 			}
 		}
+
+		// TODO: If no SSRCs are signaled and RID are signaled in RtpParameters, we
+		// need to read RID in RTX packets and fill the corresponding RTX params in
+		// the existing (if any) media RtpStream.
 	}
 
 	void Producer::CreateRtpStream(RTC::RtpEncodingParameters& encoding, uint32_t ssrc)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->rtpStreams.find(ssrc) == this->rtpStreams.end(), "stream already exists");
+		MS_ASSERT(this->mapRtpStreams.find(ssrc) == this->mapRtpStreams.end(), "stream already exists");
 
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -534,24 +544,49 @@ namespace RTC
 		// Create a RtpStreamRecv for receiving a media stream.
 		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
 
-		this->rtpStreams[ssrc] = rtpStream;
+		this->mapRtpStreams[ssrc] = rtpStream;
 
-		// Check RTX capabilities.
-		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
+		// Check RTX capabilities and fill them.
+		if (
+		  encoding.hasRtx && encoding.rtx.ssrc != 0u &&
+		  this->mapRtxStreams.find(encoding.rtx.ssrc) == this->mapRtxStreams.end())
 		{
-			if (this->mapRtxStreams.find(encoding.rtx.ssrc) != this->mapRtxStreams.end())
-				return;
+			auto& rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
-			auto& codec    = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			auto rtpStream = this->rtpStreams[ssrc];
-
-			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
+			rtpStream->SetRtx(rtxCodec.payloadType, encoding.rtx.ssrc);
 			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
 		}
 
 		// TODO: For SVC, the dependencyEncodingIds must be checked and their respective profiles must
 		// be also added into mapRtpStreamProfiles.
 		auto profile = encoding.profile;
+
+		// If no SSRCs are signaled and RID are signaled in RtpParameters, we may
+		// have here a packet with same RID as seen before but with a new SSRC. If
+		// so, we need to remove the previous RtpStream from all the maps and replace
+		// it with the new one.
+		for (auto& kv : this->mapRtpStreamProfiles)
+		{
+			auto* otherRtpStream = kv.first;
+			auto& otherProfiles  = kv.second;
+
+			for (auto& otherProfile : otherProfiles)
+			{
+				if (otherProfile == profile)
+				{
+					// So the profile is duplicated, meaning that we must remove the existing
+					// stream and replace it with the new one in all the maps.
+
+					// TODO: This is too complex as we are iterating a map and a set, and we
+					// want to remove an element from them while iterating and so on...
+
+					// TODO: Do it.
+
+					// Done, sine we know that profiles are unique in mapRtpStreamProfiles.
+					break;
+				}
+			}
+		}
 
 		// Add the stream to the profiles map.
 		this->mapRtpStreamProfiles[rtpStream].insert(profile);
@@ -577,12 +612,20 @@ namespace RTC
 
 			if (mediaStream == rtpStream)
 			{
+				// Remove the stream from the mapRtxStreams map.
 				this->mapRtxStreams.erase(rtxSsrc);
 
 				break;
 			}
 		}
 
+		// TODO: We should remove the stream from mapRtpStreams here, but we cannot
+		// do it because ClearRtpStreams() iterates the same map, calls to us and
+		// would crash (the it given to map.erase(it) must point to a valid and
+		// dereferenceable element).
+		// this->mapRtpStreams.erase(rtpStream->GetSsrc());
+
+		// Remove the stream from the mapRtpStreamProfiles map.
 		this->mapRtpStreamProfiles.erase(rtpStream);
 
 		delete rtpStream;
@@ -592,17 +635,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->rtpStreams.begin();
+		auto it = this->mapRtpStreams.begin();
 
-		while (it != this->rtpStreams.end())
+		while (it != this->mapRtpStreams.end())
 		{
-			auto rtpStream = it->second;
+			auto* rtpStream = it->second;
 
 			ClearRtpStream(rtpStream);
-			it = this->rtpStreams.erase(it);
+			it = this->mapRtpStreams.erase(it);
 		}
 
-		this->rtpStreams.clear();
+		this->mapRtpStreams.clear();
 		this->mapRtxStreams.clear();
 		this->mapRtpStreamProfiles.clear();
 		this->mapActiveProfiles.clear();
@@ -703,7 +746,7 @@ namespace RTC
 	{
 		for (auto it : this->mapActiveProfiles)
 		{
-			auto activeRtpStream = it.second;
+			auto* activeRtpStream = it.second;
 
 			if (activeRtpStream == rtpStream)
 				return true;
@@ -744,7 +787,7 @@ namespace RTC
 				}
 			}
 
-			auto nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+			auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
 			packet.AddItem(nackItem);
 		}
@@ -784,7 +827,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+		auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
 		MS_ASSERT(
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
@@ -800,10 +843,10 @@ namespace RTC
 
 		for (auto it : this->mapActiveProfiles)
 		{
-			auto activeRtpStream = it.second;
-			auto ssrc            = activeRtpStream->GetSsrc();
+			auto* activeRtpStream = it.second;
+			auto ssrc             = activeRtpStream->GetSsrc();
 
-			totalBitrate += this->rtpStreams[ssrc]->GetRate(now);
+			totalBitrate += this->mapRtpStreams[ssrc]->GetRate(now);
 		}
 
 		// No RTP is being received at all. Ignore.
@@ -819,7 +862,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+		auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
 		MS_ASSERT(
 		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
