@@ -1,6 +1,10 @@
 # Changelog
 
 
+### 2.5.5
+
+* `Server.js`: If a worker crashes make sure `_latestWorkerIdx` becomes 0.
+
 ### 2.5.4
 
 * `server.Room()`: Assign workers incrementally or explicitely via new `workerIdx` argument.
