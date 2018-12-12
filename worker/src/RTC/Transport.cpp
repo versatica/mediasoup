@@ -524,15 +524,6 @@ namespace RTC
 		this->rtpListener.RemoveProducer(producer);
 	}
 
-	void Transport::OnProducerRtpParametersUpdated(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		// Update our RtpListener.
-		// NOTE: This may throw.
-		this->rtpListener.AddProducer(producer);
-	}
-
 	void Transport::OnProducerPaused(RTC::Producer* /*producer*/)
 	{
 		// Do nothing.
