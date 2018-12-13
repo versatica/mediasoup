@@ -1052,52 +1052,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PRODUCER_UPDATE_RTP_PARAMETERS:
-			{
-				static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-
-				RTC::Producer* producer;
-
-				try
-				{
-					producer = GetProducerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				if (!request->data[JsonStringRtpParameters].isObject())
-				{
-					request->Reject("missing data.rtpParameters");
-
-					return;
-				}
-
-				RTC::RtpParameters rtpParameters;
-
-				try
-				{
-					// NOTE: This may throw.
-					rtpParameters = RTC::RtpParameters(request->data[JsonStringRtpParameters]);
-
-					// NOTE: This may throw.
-					producer->UpdateRtpParameters(rtpParameters);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			{
 				RTC::Producer* producer;
@@ -1690,20 +1644,6 @@ namespace RTC
 
 		// Also delete it from the map of audio levels.
 		this->mapProducerAudioLevelContainer.erase(producer);
-	}
-
-	void Router::OnProducerRtpParametersUpdated(RTC::Producer* producer)
-	{
-		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		  "Producer not present in mapProducerConsumers");
-
-		auto& consumers = this->mapProducerConsumers[producer];
-
-		for (auto* consumer : consumers)
-		{
-			consumer->SourceRtpParametersUpdated();
-		}
 	}
 
 	void Router::OnProducerPaused(RTC::Producer* producer)

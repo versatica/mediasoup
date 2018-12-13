@@ -256,16 +256,6 @@ namespace RTC
 		}
 	}
 
-	void Consumer::SourceRtpParametersUpdated()
-	{
-		MS_TRACE();
-
-		if (!IsEnabled())
-			return;
-
-		this->syncRequired = true;
-	}
-
 	void Consumer::AddProfile(
 	  const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStream* rtpStream)
 	{

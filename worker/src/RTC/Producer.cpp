@@ -49,9 +49,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapRtpStreamProfiles.clear();
+		// Must delete all the RecvRtpStream instances.
+		for (auto& kv : this->mapSsrcRtpStreamInfo)
+		{
+			auto& info      = kv.second;
+			auto* rtpStream = info.rtpStream;
 
-		ClearRtpStreams();
+			delete rtpStream;
+		}
 	}
 
 	void Producer::Destroy()
@@ -76,17 +81,26 @@ namespace RTC
 		static const Json::StaticString JsonStringProducerId{ "producerId" };
 		static const Json::StaticString JsonStringKind{ "kind" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-		static const Json::StaticString JsonStringRtpStreams{ "rtpStreams" };
+		static const Json::StaticString JsonStringRtpStreamInfos{ "rtpStreamInfos" };
+		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
+		static const Json::StaticString JsonStringRid{ "rid" };
+		static const Json::StaticString JsonStringProfile{ "profile" };
+		static const Json::StaticString JsonStringNone{ "none" };
+		static const Json::StaticString JsonStringDefault{ "default" };
+		static const Json::StaticString JsonStringLow{ "low" };
+		static const Json::StaticString JsonStringMedium{ "medium" };
+		static const Json::StaticString JsonStringHigh{ "high" };
+		static const Json::StaticString JsonStringRtxSsrc{ "rtxSsrc" };
+		static const Json::StaticString JsonStringActive{ "active" };
 		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 		static const Json::StaticString JsonStringSsrcAudioLevel{ "ssrcAudioLevel" };
 		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
-		static const Json::StaticString JsonStringRid{ "rid" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
 		static const Json::StaticString JsonStringLossPercentage{ "lossPercentage" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonHeaderExtensionIds(Json::objectValue);
-		Json::Value jsonRtpStreams(Json::arrayValue);
+		Json::Value jsonRtpStreamInfos(Json::arrayValue);
 
 		json[JsonStringProducerId] = Json::UInt{ this->producerId };
 
@@ -96,18 +110,47 @@ namespace RTC
 
 		float lossPercentage = 0;
 
-		for (auto& kv : this->rtpStreams)
+		for (auto& kv : this->mapSsrcRtpStreamInfo)
 		{
-			auto rtpStream = kv.second;
+			Json::Value jsonRtpStreamInfo(Json::objectValue);
 
-			jsonRtpStreams.append(rtpStream->ToJson());
-			lossPercentage += rtpStream->GetLossPercentage();
+			auto& info = kv.second;
+
+			jsonRtpStreamInfo[JsonStringRtpStream] = info.rtpStream->ToJson();
+
+			jsonRtpStreamInfo[JsonStringRid] = info.rid;
+
+			jsonRtpStreamInfo[JsonStringRtxSsrc] = info.rtxSsrc;
+			jsonRtpStreamInfo[JsonStringActive]  = info.active;
+
+			switch (info.profile)
+			{
+				case RTC::RtpEncodingParameters::Profile::NONE:
+					jsonRtpStreamInfo[JsonStringProfile] = JsonStringNone;
+					break;
+				case RTC::RtpEncodingParameters::Profile::DEFAULT:
+					jsonRtpStreamInfo[JsonStringProfile] = JsonStringDefault;
+					break;
+				case RTC::RtpEncodingParameters::Profile::LOW:
+					jsonRtpStreamInfo[JsonStringProfile] = JsonStringLow;
+					break;
+				case RTC::RtpEncodingParameters::Profile::MEDIUM:
+					jsonRtpStreamInfo[JsonStringProfile] = JsonStringMedium;
+					break;
+				case RTC::RtpEncodingParameters::Profile::HIGH:
+					jsonRtpStreamInfo[JsonStringProfile] = JsonStringHigh;
+					break;
+			}
+
+			jsonRtpStreamInfos.append(jsonRtpStreamInfo);
+
+			lossPercentage += info.rtpStream->GetLossPercentage();
 		}
 
-		json[JsonStringRtpStreams] = jsonRtpStreams;
+		json[JsonStringRtpStreamInfos] = jsonRtpStreamInfos;
 
-		if (!this->rtpStreams.empty())
-			lossPercentage = lossPercentage / this->rtpStreams.size();
+		if (!this->mapSsrcRtpStreamInfo.empty())
+			lossPercentage = lossPercentage / this->mapSsrcRtpStreamInfo.size();
 
 		json[JsonStringLossPercentage] = lossPercentage;
 
@@ -135,38 +178,19 @@ namespace RTC
 
 		Json::Value json(Json::arrayValue);
 
-		for (auto it : this->rtpStreams)
+		for (auto& kv : this->mapSsrcRtpStreamInfo)
 		{
-			auto rtpStream     = it.second;
+			auto& info         = kv.second;
+			auto* rtpStream    = info.rtpStream;
 			auto jsonRtpStream = rtpStream->GetStats();
 
 			if (this->transport != nullptr)
-			{
 				jsonRtpStream[JsonStringTransportId] = this->transport->transportId;
-			}
 
 			json.append(jsonRtpStream);
 		}
 
 		return json;
-	}
-
-	void Producer::UpdateRtpParameters(RTC::RtpParameters& rtpParameters)
-	{
-		MS_TRACE();
-
-		this->rtpParameters = rtpParameters;
-
-		// Clear previous RtpStreamRecv instances.
-		ClearRtpStreams();
-
-		for (auto& listener : this->listeners)
-		{
-			// NOTE: This may throw.
-			listener->OnProducerRtpParametersUpdated(this);
-		}
-
-		MS_DEBUG_DEV("Producer RTP parameters updated [producerId:%" PRIu32 "]", this->producerId);
 	}
 
 	void Producer::Pause()
@@ -220,11 +244,17 @@ namespace RTC
 		// Find the corresponding RtpStreamRecv.
 		uint32_t ssrc = packet->GetSsrc();
 		RTC::RtpStreamRecv* rtpStream{ nullptr };
+		RTC::RtpEncodingParameters::Profile profile;
 		std::unique_ptr<RTC::RtpPacket> clonedPacket;
 
-		if (this->rtpStreams.find(ssrc) != this->rtpStreams.end())
+		// Media RTP stream found.
+		if (this->mapSsrcRtpStreamInfo.find(ssrc) != this->mapSsrcRtpStreamInfo.end())
 		{
-			rtpStream = this->rtpStreams[ssrc];
+			rtpStream = this->mapSsrcRtpStreamInfo[ssrc].rtpStream;
+
+			auto& info = this->mapSsrcRtpStreamInfo[ssrc];
+			rtpStream  = info.rtpStream;
+			profile    = info.profile;
 
 			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
 			// stuff that would change its size.
@@ -235,40 +265,44 @@ namespace RTC
 			if (!rtpStream->ReceivePacket(packet))
 				return;
 		}
-		else if (this->mapRtxStreams.find(ssrc) != this->mapRtxStreams.end())
-		{
-			rtpStream = this->mapRtxStreams[ssrc];
-
-			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
-			// stuff that would change its size.
-			clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
-			packet = clonedPacket.get();
-
-			// Process the packet.
-			if (!rtpStream->ReceiveRtxPacket(packet))
-				return;
-
-			// Packet repaired after applying RTX.
-			rtpStream->packetsRepaired++;
-		}
+		// Otherwise look for RTX SSRCs.
 		else
+		{
+			for (auto& kv : this->mapSsrcRtpStreamInfo)
+			{
+				auto& info = kv.second;
+
+				if (info.rtxSsrc != 0u && info.rtxSsrc == ssrc)
+				{
+					rtpStream = info.rtpStream;
+					profile   = info.profile;
+
+					// Let's clone the RTP packet so we can mangle the payload (if needed) and
+					// other stuff that would change its size.
+					clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
+					packet = clonedPacket.get();
+
+					// Process the packet.
+					if (!rtpStream->ReceiveRtxPacket(packet))
+						return;
+
+					// Packet repaired after applying RTX.
+					rtpStream->packetsRepaired++;
+
+					break;
+				}
+			}
+		}
+
+		// Not found.
+		if (!rtpStream)
 		{
 			MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
 
 			return;
 		}
 
-		RTC::RtpEncodingParameters::Profile profile;
-
-		try
-		{
-			profile = GetProfile(rtpStream, packet);
-		}
-		catch (const MediaSoupError& error)
-		{
-			return;
-		}
-
+		// TODO: Remove this, it's CPU consuming and provides nothing.
 		if (packet->IsKeyFrame())
 		{
 			MS_DEBUG_TAG(
@@ -298,10 +332,11 @@ namespace RTC
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		for (auto& kv : this->rtpStreams)
+		for (auto& kv : this->mapSsrcRtpStreamInfo)
 		{
-			auto rtpStream = kv.second;
-			auto* report   = rtpStream->GetRtcpReceiverReport();
+			auto& info      = kv.second;
+			auto* rtpStream = info.rtpStream;
+			auto* report    = rtpStream->GetRtcpReceiverReport();
 
 			report->SetSsrc(rtpStream->GetSsrc());
 			packet->AddReceiverReport(report);
@@ -367,9 +402,10 @@ namespace RTC
 		// Run the timer.
 		this->keyFrameRequestBlockTimer->Start(KeyFrameRequestBlockTimeout);
 
-		for (auto& kv : this->rtpStreams)
+		for (auto& kv : this->mapSsrcRtpStreamInfo)
 		{
-			auto rtpStream = kv.second;
+			auto& info      = kv.second;
+			auto* rtpStream = info.rtpStream;
 
 			rtpStream->RequestKeyFrame();
 		}
@@ -443,47 +479,67 @@ namespace RTC
 
 		uint32_t ssrc = packet->GetSsrc();
 
-		// If already exists, do nothing.
-		if (
-		  this->rtpStreams.find(ssrc) != this->rtpStreams.end() ||
-		  this->mapRtxStreams.find(ssrc) != this->mapRtxStreams.end())
-		{
+		// If this is an already known media SSRC, we are done.
+		if (this->mapSsrcRtpStreamInfo.find(ssrc) != this->mapSsrcRtpStreamInfo.end())
 			return;
+
+		// Otherwise, first look for encodings with ssrc field.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.ssrc == ssrc)
+			{
+				CreateRtpStream(encoding, ssrc);
+
+				return;
+			}
 		}
 
-		// First look for encodings with ssrc field.
+		// If not found, look for an encoding with encodingId (RID) field.
+		const uint8_t* ridPtr;
+		size_t ridLen;
+
+		if (!packet->ReadRid(&ridPtr, &ridLen))
+			return;
+
+		auto* charRidPtr = reinterpret_cast<const char*>(ridPtr);
+		std::string rid(charRidPtr, ridLen);
+
+		for (auto& encoding : this->rtpParameters.encodings)
 		{
-			for (auto& encoding : this->rtpParameters.encodings)
+			if (encoding.encodingId != rid)
+				continue;
+
+			// Ignore if RTX.
+			auto& rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+
+			if (rtxCodec.payloadType != 0u && packet->GetPayloadType() == rtxCodec.payloadType)
 			{
-				if (encoding.ssrc == ssrc)
+				// TODO: Here we should fill rtxSsrc in the corresponding RtpStreamInfo with
+				// same profile (if it exists in the map).
+				//
+				// https://github.com/versatica/mediasoup/issues/237
+
+				return;
+			}
+
+			// If the matching encoding.profile is already present in the map, it means
+			// that the sender is using a new SSRC for the same profile, so ignore it.
+			for (auto& kv : this->mapSsrcRtpStreamInfo)
+			{
+				auto& info   = kv.second;
+				auto profile = info.profile;
+
+				if (profile == encoding.profile)
 				{
-					CreateRtpStream(encoding, ssrc);
+					MS_WARN_TAG(rtp, "ignoring media packet with RID already handled [ssrc:%" PRIu32 "]", ssrc);
 
 					return;
 				}
 			}
-		}
 
-		// If not found, look for encodings with encodingId (RID) field.
-		{
-			const uint8_t* ridPtr;
-			size_t ridLen;
+			CreateRtpStream(encoding, ssrc);
 
-			if (packet->ReadRid(&ridPtr, &ridLen))
-			{
-				auto* charRidPtr = const_cast<char*>(reinterpret_cast<const char*>(ridPtr));
-				std::string rid(charRidPtr, ridLen);
-
-				for (auto& encoding : this->rtpParameters.encodings)
-				{
-					if (encoding.encodingId == rid)
-					{
-						CreateRtpStream(encoding, ssrc);
-
-						return;
-					}
-				}
-			}
+			return;
 		}
 	}
 
@@ -491,7 +547,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->rtpStreams.find(ssrc) == this->rtpStreams.end(), "stream already exists");
+		MS_ASSERT(
+		  this->mapSsrcRtpStreamInfo.find(ssrc) == this->mapSsrcRtpStreamInfo.end(),
+		  "stream already exists");
 
 		// Get the codec of the stream/encoding.
 		auto& codec = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -534,78 +592,40 @@ namespace RTC
 		// Create a RtpStreamRecv for receiving a media stream.
 		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
 
-		this->rtpStreams[ssrc] = rtpStream;
+		// Create a RtpStreamInfo struct.
+		struct RtpStreamInfo info;
 
-		// Check RTX capabilities.
+		info.rtpStream = rtpStream;
+		info.rid       = encoding.encodingId;
+		info.profile   = encoding.profile;
+		info.rtxSsrc   = 0;
+		info.active    = false;
+
+		// Insert into the map.
+		//
+		// TODO: Could this be optimized by using some exotic C++ "struct move instead
+		// of copy"?
+		this->mapSsrcRtpStreamInfo[ssrc] = info;
+
+		// Check RTX capabilities and fill them.
+		//
+		// TODO: Not valid for RID+RTX:
+		// https://github.com/versatica/mediasoup/issues/237
 		if (encoding.hasRtx && encoding.rtx.ssrc != 0u)
 		{
-			if (this->mapRtxStreams.find(encoding.rtx.ssrc) != this->mapRtxStreams.end())
-				return;
+			auto& rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
-			auto& codec    = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			auto rtpStream = this->rtpStreams[ssrc];
+			rtpStream->SetRtx(rtxCodec.payloadType, encoding.rtx.ssrc);
 
-			rtpStream->SetRtx(codec.payloadType, encoding.rtx.ssrc);
-			this->mapRtxStreams[encoding.rtx.ssrc] = rtpStream;
+			// Set the info rtxSsrc field.
+			this->mapSsrcRtpStreamInfo[ssrc].rtxSsrc = encoding.rtx.ssrc;
 		}
 
-		// TODO: For SVC, the dependencyEncodingIds must be checked and their respective profiles must
-		// be also added into mapRtpStreamProfiles.
-		auto profile = encoding.profile;
-
-		// Add the stream to the profiles map.
-		this->mapRtpStreamProfiles[rtpStream].insert(profile);
-
-		// Add new profile/s into active profiles map and notify the listener.
-		ActivateStreamProfiles(rtpStream);
+		// Activate the stream.
+		ActivateStream(rtpStream);
 
 		// Request a key frame since we may have lost the first packets of this stream.
 		RequestKeyFrame(true);
-	}
-
-	void Producer::ClearRtpStream(RTC::RtpStreamRecv* rtpStream)
-	{
-		MS_TRACE();
-
-		// Remove the profiles related to this stream from active profiles map and notify the listener.
-		DeactivateStreamProfiles(rtpStream);
-
-		for (auto& kv : this->mapRtxStreams)
-		{
-			auto rtxSsrc      = kv.first;
-			auto* mediaStream = kv.second;
-
-			if (mediaStream == rtpStream)
-			{
-				this->mapRtxStreams.erase(rtxSsrc);
-
-				break;
-			}
-		}
-
-		this->mapRtpStreamProfiles.erase(rtpStream);
-
-		delete rtpStream;
-	}
-
-	void Producer::ClearRtpStreams()
-	{
-		MS_TRACE();
-
-		auto it = this->rtpStreams.begin();
-
-		while (it != this->rtpStreams.end())
-		{
-			auto rtpStream = it->second;
-
-			ClearRtpStream(rtpStream);
-			it = this->rtpStreams.erase(it);
-		}
-
-		this->rtpStreams.clear();
-		this->mapRtxStreams.clear();
-		this->mapRtpStreamProfiles.clear();
-		this->mapActiveProfiles.clear();
 	}
 
 	void Producer::ApplyRtpMapping(RTC::RtpPacket* packet) const
@@ -643,73 +663,56 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpEncodingParameters::Profile Producer::GetProfile(
-	  RTC::RtpStreamRecv* rtpStream, RTC::RtpPacket* packet)
+	void Producer::ActivateStream(RTC::RtpStreamRecv* rtpStream)
 	{
-		// The stream is already mapped to a profile.
-		if (this->mapRtpStreamProfiles.find(rtpStream) != this->mapRtpStreamProfiles.end())
+		auto ssrc = rtpStream->GetSsrc();
+
+		MS_ASSERT(
+		  this->mapSsrcRtpStreamInfo.find(ssrc) != this->mapSsrcRtpStreamInfo.end(),
+		  "stream not present in the map");
+
+		auto& info   = this->mapSsrcRtpStreamInfo[ssrc];
+		auto profile = info.profile;
+
+		MS_ASSERT(info.profile != RTC::RtpEncodingParameters::Profile::NONE, "stream has no profile");
+		MS_ASSERT(info.active == false, "stream already active");
+
+		info.active = true;
+
+		// Update the active profiles map.
+		this->mapActiveProfiles[profile] = rtpStream;
+
+		// Notify about the profile being enabled.
+		for (auto& listener : this->listeners)
 		{
-			auto it      = this->mapRtpStreamProfiles[rtpStream].begin();
-			auto profile = *it;
-
-			return profile;
-		}
-
-		MS_THROW_ERROR("unknown RTP packet received [ssrc:%" PRIu32 "]", packet->GetSsrc());
-	}
-
-	void Producer::ActivateStreamProfiles(RTC::RtpStreamRecv* rtpStream)
-	{
-		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
-
-		// Notify about the profiles being enabled.
-		for (auto& profile : profiles)
-		{
-			MS_ASSERT(
-			  this->mapActiveProfiles.find(profile) == this->mapActiveProfiles.end(),
-			  "profile already in active profiles map");
-
-			// Add the profile to the active profiles map.
-			this->mapActiveProfiles[profile] = rtpStream;
-
-			for (auto& listener : this->listeners)
-			{
-				listener->OnProducerProfileEnabled(this, profile, rtpStream);
-			}
+			listener->OnProducerProfileEnabled(this, profile, rtpStream);
 		}
 	}
 
-	void Producer::DeactivateStreamProfiles(RTC::RtpStreamRecv* rtpStream)
+	void Producer::DeactivateStream(RTC::RtpStreamRecv* rtpStream)
 	{
-		auto& profiles = this->mapRtpStreamProfiles[rtpStream];
+		auto ssrc = rtpStream->GetSsrc();
 
-		// Notify about the active profiles being disabled.
-		for (auto& profile : profiles)
+		MS_ASSERT(
+		  this->mapSsrcRtpStreamInfo.find(ssrc) != this->mapSsrcRtpStreamInfo.end(),
+		  "stream not present in the map");
+
+		auto& info   = this->mapSsrcRtpStreamInfo[ssrc];
+		auto profile = info.profile;
+
+		MS_ASSERT(info.profile != RTC::RtpEncodingParameters::Profile::NONE, "stream has no profile");
+		MS_ASSERT(info.active == true, "stream already inactive");
+
+		info.active = false;
+
+		// Update the active profiles map.
+		this->mapActiveProfiles.erase(profile);
+
+		// Notify about the profile being disabled.
+		for (auto& listener : this->listeners)
 		{
-			if (this->mapActiveProfiles.find(profile) != this->mapActiveProfiles.end())
-			{
-				// Remove the profile from the active profiles map.
-				this->mapActiveProfiles.erase(profile);
-
-				for (auto& listener : this->listeners)
-				{
-					listener->OnProducerProfileDisabled(this, profile);
-				}
-			}
+			listener->OnProducerProfileDisabled(this, profile);
 		}
-	}
-
-	bool Producer::IsStreamActive(const RTC::RtpStream* rtpStream) const
-	{
-		for (auto it : this->mapActiveProfiles)
-		{
-			auto activeRtpStream = it.second;
-
-			if (activeRtpStream == rtpStream)
-				return true;
-		}
-
-		return false;
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
@@ -744,7 +747,7 @@ namespace RTC
 				}
 			}
 
-			auto nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+			auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
 			packet.AddItem(nackItem);
 		}
@@ -773,8 +776,6 @@ namespace RTC
 
 		packet.Serialize(RTC::RTCP::Buffer);
 
-		// Send two, because it's free.
-		this->transport->SendRtcpPacket(&packet);
 		this->transport->SendRtcpPacket(&packet);
 
 		rtpStream->pliCount++;
@@ -784,52 +785,59 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+		size_t numActiveStreams = 0;
+		uint32_t totalBitrate   = 0;
+		uint64_t now            = DepLibUV::GetTime();
 
-		MS_ASSERT(
-		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
-		  "stream not present in mapRtpStreamProfiles");
-
-		// Single active profile present. Ignore.
-		if (this->mapActiveProfiles.size() == 1)
-			return;
-
-		// Simulcast. Check whether any RTP is being received at all.
-		uint32_t totalBitrate = 0;
-		uint64_t now          = DepLibUV::GetTime();
-
-		for (auto it : this->mapActiveProfiles)
+		for (auto& kv : this->mapSsrcRtpStreamInfo)
 		{
-			auto activeRtpStream = it.second;
-			auto ssrc            = activeRtpStream->GetSsrc();
+			auto& info           = kv.second;
+			auto* otherRtpStream = info.rtpStream;
 
-			totalBitrate += this->rtpStreams[ssrc]->GetRate(now);
+			if (info.active)
+			{
+				numActiveStreams++;
+				totalBitrate += otherRtpStream->GetRate(now);
+			}
 		}
 
-		// No RTP is being received at all. Ignore.
+		// If there is a single active stream, do nothing.
+		if (numActiveStreams <= 1)
+			return;
+
+		// Simulcast. No RTP is being received at all. Ignore.
 		if (totalBitrate == 0)
 			return;
 
-		// Deactivate stream profiles if active.
-		if (IsStreamActive(rtpStream))
-			DeactivateStreamProfiles(rtpStreamRecv);
+		auto ssrc   = rtpStream->GetSsrc();
+		auto active = this->mapSsrcRtpStreamInfo[ssrc].active;
+
+		// Deactivate stream if active.
+		if (active)
+		{
+			MS_DEBUG_TAG(rtp, "stream is now inactive [ssrc:%" PRIu32 "]", ssrc);
+
+			auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+
+			DeactivateStream(rtpStreamRecv);
+		}
 	}
 
 	void Producer::OnRtpStreamActive(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
-		auto rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+		auto ssrc   = rtpStream->GetSsrc();
+		auto active = this->mapSsrcRtpStreamInfo[ssrc].active;
 
-		MS_ASSERT(
-		  this->mapRtpStreamProfiles.find(rtpStreamRecv) != this->mapRtpStreamProfiles.end(),
-		  "stream not present in mapRtpStreamProfiles");
-
-		if (!IsStreamActive(rtpStream))
+		// Activate stream if inactive.
+		if (!active)
 		{
-			ActivateStreamProfiles(rtpStreamRecv);
+			MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", ssrc);
 
-			MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+			auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+
+			ActivateStream(rtpStreamRecv);
 		}
 	}
 

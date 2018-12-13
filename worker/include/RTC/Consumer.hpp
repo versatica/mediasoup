@@ -51,7 +51,6 @@ namespace RTC
 		void SourceResume();
 		void AddProfile(const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStream* rtpStream);
 		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
-		void SourceRtpParametersUpdated();
 		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
