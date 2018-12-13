@@ -560,7 +560,7 @@ namespace RTC
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
-			while (ptr + sizeof(size_t) < extensionEnd)
+			while (ptr + 1 < extensionEnd)
 			{
 				uint8_t id = *ptr;
 				size_t len = *(++ptr);
