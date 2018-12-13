@@ -121,10 +121,31 @@ function get_lcov()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
+function get_clang_fuzzer()
+{
+	NAME="clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04"
+	TAR_FILE="${NAME}.tar.xz"
+	TAR_URL="http://releases.llvm.org/7.0.0/${TAR_FILE}"
+	DEST="deps/clang-fuzzer"
+
+	set -x
+
+	rm -rf ${DEST}
+	mkdir ${DEST}
+	cd ${DEST}
+	mkdir bin lib
+	wget ${TAR_URL}
+	tar xfJ ${TAR_FILE}
+	rm -f ${TAR_FILE}
+	mv ${NAME}/bin/* bin/
+	mv ${NAME}/lib/clang lib/
+	rm -rf ${NAME}
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch|lcov]"
+		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer]"
 		echo
 		;;
 	gyp)
@@ -150,6 +171,9 @@ case "${DEP}" in
 		;;
 	lcov)
 		get_lcov
+		;;
+	clang-fuzzer)
+		get_clang_fuzzer
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2

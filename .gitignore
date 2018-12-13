@@ -7,6 +7,9 @@
 /worker/out/
 /worker/**/*.xcodeproj/
 
+# clang+fuzzer stuff is too big.
+/worker/deps/clang-fuzzer
+
 # Vim temporal files.
 *.swp
 *.swo

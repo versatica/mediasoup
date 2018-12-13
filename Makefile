@@ -41,6 +41,17 @@ test-Debug:
 xcode:
 	cd worker && $(PYTHON) ./scripts/configure.py --format=xcode
 
+build-fuzzer:
+ifeq ($(DOCKER_NO_CACHE),true)
+	cd worker && docker build -f fuzzer/Dockerfile --no-cache --tag mediasoup/fuzzer:latest .
+else
+	cd worker && docker build -f fuzzer/Dockerfile --tag mediasoup/fuzzer:latest .
+endif
+
+# TODO: Remove the volume. Not needed.
+run-fuzzer:
+	cd worker/fuzzer && docker run --name=mediasoupFuzzer -v $(shell pwd)/worker/fuzzer/deleteme:/volume -it --rm mediasoup/fuzzer:latest
+
 clean:
 	$(RM) -rf worker/out/Release/mediasoup-worker
 	$(RM) -rf worker/out/Release/obj.target/mediasoup-worker

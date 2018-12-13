@@ -54,6 +54,7 @@
         '-Wno-parentheses-equality',
       ],
     },
+
     'conditions':
     [
       [ 'target_arch == "ia32"', {
@@ -66,7 +67,7 @@
         'target_conditions':
         [
           [ '_type == "static_library"', {
-            'standalone_static_library': 1, # disable thin archive which needs binutils >= 2.19
+            'standalone_static_library': 1, # Disable thin archive which needs binutils >= 2.19
           }]
         ],
         'conditions':
