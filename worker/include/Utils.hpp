@@ -5,7 +5,6 @@
 #include <openssl/hmac.h>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <string>
-#include <sys/time.h> // gettimeofday
 
 namespace Utils
 {
