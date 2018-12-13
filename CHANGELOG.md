@@ -1,9 +1,22 @@
 # Changelog
 
 
+### 2.5.6
+
+* `Producer.cpp`: Remove `UpdateRtpParameters()`. It was broken since Consumers
+  were not notified about profile removed and so on, so they may crash.
+* `Producer.cpp: Remove some maps and simplify streams handling by having a
+  single `mapSsrcRtpStreamInfo`. Just keep `mapActiveProfiles` because
+  `GetActiveProfiles()` method needs it.
+* `Producer::MayNeedNewStream()`: Ignore new media streams with new SSRC if
+  its RID is already in use by other media stream (fixes #235).
+* Fix a bad memory access when using two byte RTP header extensions.
+
+
 ### 2.5.5
 
 * `Server.js`: If a worker crashes make sure `_latestWorkerIdx` becomes 0.
+
 
 ### 2.5.4
 
