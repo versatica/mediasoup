@@ -91,7 +91,7 @@ Some environment variables than `fuzzer-run` are supported. However:
 Example:
 
 ```bash
-$ FUZZER_CORPUS_DIRS="fuzzer/corpora/rtp-corpus" make fuzzer-docker-run
+$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/corpora/stun-corpus fuzzer/corpora/rtp-corpus fuzzer/corpora/rtcp-corpus" make fuzzer-docker-run
 ```
 
 
