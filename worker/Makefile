@@ -7,7 +7,7 @@
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 
 .PHONY:	\
-	default Release Debug test test-Release test-Debug fuzzer fuzzer-exec fuzzer-fake \
+	default Release Debug test test-Release test-Debug fuzzer fuzzer-run fuzzer-fake \
 	fuzzer-docker-build fuzzer-docker-run xcode clean clean-all
 
 default:
@@ -44,7 +44,7 @@ fuzzer:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
 	$(MAKE) BUILDTYPE=Release -C out
 
-fuzzer-exec:
+fuzzer-run:
 	./out/Release/mediasoup-worker-fuzzer \
 		${FUZZER_OPTIONS} \
 		./fuzzer/new-corpus \

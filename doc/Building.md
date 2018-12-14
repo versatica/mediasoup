@@ -53,7 +53,7 @@ Builds the `mediasoup-worker-fuzzer` target (which uses [libFuzzer](http://llvm.
 **NOTE:** Linux is required with `fuzzer` capable `clang++`. `CC` environment variable must point to `clang` and `CXX` to `clang++`.
 
 
-### `fuzzer-exec`
+### `fuzzer-run`
 
 Executes the `worker/out/mediasoup-worker-fuzzer` binary.
 
@@ -64,7 +64,7 @@ Executes the `worker/out/mediasoup-worker-fuzzer` binary.
 Regardless value of `FUZZER_CORPUS_DIRS`, the first corpus directory will always be `./worker/fuzzer/new-corpus`, so new generated test inputs will be written there.
 
 ```bash
-$ FUZZER_CORPUS_DIRS="fuzzer/corpora/rtp-corpus" make fuzzer-exec
+$ FUZZER_CORPUS_DIRS="fuzzer/corpora/rtp-corpus" make fuzzer-run
 ```
 
 
@@ -84,7 +84,7 @@ $ ./scripts/get-dep.sh clang-fuzzer
 
 Runs a container of the Docker image created with `fuzzer-docker-build` and executes `worker/out/mediasoup-worker-fuzzer` binary.
 
-Some environment variables than `fuzzer-exec` are supported. However:
+Some environment variables than `fuzzer-run` are supported. However:
 
 * `FUZZER_CORPUS_DIRS` must be relative to the `worker` directory.
 
