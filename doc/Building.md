@@ -64,6 +64,13 @@ Fuzzer command line options can be set via the `FUZZER_OPTIONS` environment vari
 
 Builds a Linux image with `fuzzer` capable `clang++` that builds the `mediasoup-worker-fuzzer` target.
 
+**NOTE:** Before running this command, a specific version of Linux `clang` must be downloaded. To get it, run:
+
+```bash
+$ cd worker
+$ ./scripts/get-dep.sh clang-fuzzer
+```
+
 
 ### `fuzzer-docker-run`
 
