@@ -47,7 +47,6 @@ fuzzer:
 fuzzer-run:
 	./out/Release/mediasoup-worker-fuzzer \
 		${FUZZER_OPTIONS} -artifact_prefix=./fuzzer/reports/ \
-		./fuzzer/new-corpus \
 		${FUZZER_CORPUS_DIRS}
 
 # Temporal: Just for making sure that fuzzer/fuzzer.cpp compiles in OSX

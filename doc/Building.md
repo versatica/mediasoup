@@ -61,10 +61,14 @@ Executes the `worker/out/mediasoup-worker-fuzzer` binary.
 * Set `FUZZER_CORPUS_DIRS` environment variable to set Fuzzer corpus directories.
 * Set `LSAN_OPTIONS` environment variable for LSAN options.
 
-Regardless value of `FUZZER_CORPUS_DIRS`, the first corpus directory will always be `./worker/fuzzer/new-corpus` so new generated test inputs will be written there, and crash reports will be written in the `worker/fuzzer/reports` directory (hardcoded `-artifact_prefix=./fuzzer/reports/` fuzzer option).
+It's recommended to set `fuzzer/new-corpus` as first entry in `FUZZER_CORPUS_DIRS` so generated inputs are written there.
+
+Crash reports will be written in the `worker/fuzzer/reports` directory (hardcoded `-artifact_prefix=./fuzzer/reports/` fuzzer option).
+
+Example:
 
 ```bash
-$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/corpora/rtp-corpus" make fuzzer-run
+$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/new-corpus fuzzer/corpora/rtp-corpus" make fuzzer-run
 ```
 
 
@@ -86,12 +90,12 @@ Runs a container of the Docker image created with `fuzzer-docker-build` and exec
 
 Some environment variables than `fuzzer-run` are supported (with same constraints). However:
 
-* `FUZZER_CORPUS_DIRS` must be relative to the `worker` directory.
+* `FUZZER_CORPUS_DIRS` must be relative to the `worker`. If we want to write generated test inputs in `worker/fuzzer/new-corpus` folder, `fuzzer/new-corpus` must be the first entry in `FUZZER_CORPUS_DIRS`.
 
 Example:
 
 ```bash
-$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/corpora/stun-corpus fuzzer/corpora/rtp-corpus fuzzer/corpora/rtcp-corpus" make fuzzer-docker-run
+$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/new-corpus fuzzer/corpora/stun-corpus fuzzer/corpora/rtp-corpus fuzzer/corpora/rtcp-corpus" make fuzzer-docker-run
 ```
 
 
