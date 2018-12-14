@@ -46,7 +46,7 @@ fuzzer:
 
 fuzzer-run:
 	./out/Release/mediasoup-worker-fuzzer \
-		${FUZZER_OPTIONS} \
+		${FUZZER_OPTIONS} -artifact_prefix=./fuzzer/reports/ \
 		./fuzzer/new-corpus \
 		${FUZZER_CORPUS_DIRS}
 
@@ -59,15 +59,16 @@ fuzzer-fake:
 
 fuzzer-docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
-	docker build -f fuzzer/Dockerfile --no-cache --tag mediasoup/fuzzer:latest .
+	docker build -f Dockerfile.fuzzer --no-cache --tag mediasoup/fuzzer:latest .
 else
-	docker build -f fuzzer/Dockerfile --tag mediasoup/fuzzer:latest .
+	docker build -f Dockerfile.fuzzer --tag mediasoup/fuzzer:latest .
 endif
 
 fuzzer-docker-run:
 	docker run \
 		--init --name=mediasoupFuzzer -it --rm \
 		-v $(shell pwd)/fuzzer/new-corpus:/new-corpus \
+		-v $(shell pwd)/fuzzer/reports:/reports \
 		-e FUZZER_OPTIONS \
 		-e FUZZER_CORPUS_DIRS \
 		-e LSAN_OPTIONS \

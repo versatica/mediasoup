@@ -43,6 +43,6 @@ CMD \
 	set -x \
 	&& cd /mediasoup/worker \
 	&& ./out/Release/mediasoup-worker-fuzzer \
-	   ${FUZZER_OPTIONS} \
+	   ${FUZZER_OPTIONS} -artifact_prefix=/reports/ \
 	   /new-corpus \
 	   ${FUZZER_CORPUS_DIRS}

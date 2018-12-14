@@ -61,10 +61,10 @@ Executes the `worker/out/mediasoup-worker-fuzzer` binary.
 * Set `FUZZER_CORPUS_DIRS` environment variable to set Fuzzer corpus directories.
 * Set `LSAN_OPTIONS` environment variable for LSAN options.
 
-Regardless value of `FUZZER_CORPUS_DIRS`, the first corpus directory will always be `./worker/fuzzer/new-corpus`, so new generated test inputs will be written there.
+Regardless value of `FUZZER_CORPUS_DIRS`, the first corpus directory will always be `./worker/fuzzer/new-corpus` so new generated test inputs will be written there, and crash reports will be written in the `worker/fuzzer/reports` directory (hardcoded `-artifact_prefix=./fuzzer/reports/` fuzzer option).
 
 ```bash
-$ FUZZER_CORPUS_DIRS="fuzzer/corpora/rtp-corpus" make fuzzer-run
+$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/corpora/rtp-corpus" make fuzzer-run
 ```
 
 
@@ -84,7 +84,7 @@ $ ./scripts/get-dep.sh clang-fuzzer
 
 Runs a container of the Docker image created with `fuzzer-docker-build` and executes `worker/out/mediasoup-worker-fuzzer` binary.
 
-Some environment variables than `fuzzer-run` are supported. However:
+Some environment variables than `fuzzer-run` are supported (with same constraints). However:
 
 * `FUZZER_CORPUS_DIRS` must be relative to the `worker` directory.
 

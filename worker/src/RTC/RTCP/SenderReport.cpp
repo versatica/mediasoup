@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::SenderReport"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/SenderReport.hpp"
 #include "Logger.hpp"

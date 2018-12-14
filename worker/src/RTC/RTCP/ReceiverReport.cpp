@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::ReceiverReport"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "Logger.hpp"
@@ -71,6 +71,14 @@ namespace RTC
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+
+			if (sizeof(CommonHeader) > len)
+			{
+				MS_WARN_TAG(rtcp, "not enough space for receiver report packet, packet discarded");
+
+				return nullptr;
+			}
+
 			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
 
 			packet->SetSsrc(
