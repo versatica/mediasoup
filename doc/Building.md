@@ -7,13 +7,16 @@ This document is intended for **mediasoup** developers.
 
 The `worker` folder contains a `Makefile` to build the mediasoup worker subproject.
 
+
 ### `make`
 
 The default task runs the `Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `Debug` task).
 
+
 ### `make Release`
 
 Builds the production ready mediasoup worker binary at `worker/out/Release/`. This is the binary used in production when installing the **mediasoup** NPM module with `npm install mediasoup`.
+
 
 ### `make Debug`
 
@@ -27,25 +30,57 @@ In order to instruct the **mediasoup** Node.js module to use the `Debug` mediaso
 $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
 ```
 
+
 ### `make test`
 
 Runs the `test-Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `test-Debug` task).
+
 
 ### `make test-Release`
 
 Builds the `mediasoup-worker-test` test unit binary at `worker/out/Release/`.
 
+
 ### `make test-Debug`
 
 Builds the `mediasoup-worker-test` test unit binary in `Debug` mode at `worker/out/Debug/`.
+
+
+### `fuzzer`
+
+Builds the `mediasoup-worker-fuzzer` target (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) and generates the `worker/out/mediasoup-worker-fuzzer` binary.
+
+**NOTE:** Linux is required with `fuzzer` capable `clang++`. `CC` environment variable must point to `clang` and `CXX` to `clang++`.
+
+
+### `fuzzer-exec`
+
+Executes the `worker/out/mediasoup-worker-fuzzer` binary.
+
+Fuzzer command line options can be set via the `FUZZER_OPTIONS` environment variable. The `LSAN_OPTIONS` environment variable can also be used.
+
+
+### `fuzzer-docker-build`
+
+Builds a Linux image with `fuzzer` capable `clang++` that builds the `mediasoup-worker-fuzzer` target.
+
+
+### `fuzzer-docker-run`
+
+Runs a container of the Docker image created with `fuzzer-docker-build` and executes `worker/out/mediasoup-worker-fuzzer` binary.
+
+Fuzzer command line options can be set via the `FUZZER_OPTIONS` environment variable. The `LSAN_OPTIONS` environment variable can also be used.
+
 
 ### `make xcode`
 
 Builds a Xcode project for the mediasoup worker subproject.
 
+
 ### `make clean`
 
 Cleans objects and binaries related to the mediasoup worker.
+
 
 ### `make clean-all`
 
@@ -62,33 +97,42 @@ In order to tun these tasks, `gulp-cli` (version >= 1.2.2) must be globally inst
 $ npm install -g gulp-cli
 ```
 
+
 ### `gulp`
 
 The default task runs the `gulp:lint` and `gulp:test` tasks.
+
 
 ### `gulp lint`
 
 Runs both the `lint:node` and `lint:worker` gulp tasks.
 
+
 ### `gulp lint:node`
 
 Validates the Node.js JavaScript code/syntax.
+
 
 ### `gulp lint:worker`
 
 Validates the worker C++ code/syntax using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) following `worker/.clang-format` rules.
 
+
 ### `gulp format`
 
 Runs the `format:worker` gulp task.
+
 
 ### `gulp format:worker`
 
 Rewrites worker source and include files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
 
+
 ### `gulp tidy`
 
+
 Runs the `tidy:worker` gulp task.
+
 
 ### `gulp tidy:worker`
 
@@ -115,9 +159,11 @@ Edit the file and remove the entry related to Utils/IP.cpp compilation unit, whi
 
 *NOTE:* It just works on Linux and OSX.
 
+
 ### `gulp test`
 
 Runs both the `test:node` and `test:worker` gulp tasks.
+
 
 ### `gulp test:node`
 
@@ -128,6 +174,7 @@ In order to run the JavaScript test units with the mediasoup worker in `Debug` m
 ```bash
 $ MEDIASOUP_BUILDTYPE=Debug gulp test:node
 ```
+
 
 ### `gulp test:worker`
 

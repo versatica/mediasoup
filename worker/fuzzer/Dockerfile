@@ -27,9 +27,16 @@ COPY mediasoup-worker.gyp mediasoup-worker.gyp
 COPY common.gypi common.gypi
 COPY fips.gypi fips.gypi
 
+# Set environment variables. It's important that CC and CXX point to the
+# clang/clang++ installed above.
 ENV LANG="C.UTF-8"
 ENV CC="clang"
 ENV CXX="clang++"
 
-# CMD ["/bin/bash"]
-CMD ["make", "fuzzer-run"]
+# Build the mediasoup-worker-fuzzer target.
+RUN \
+	set -x \
+	&& make fuzzer
+
+# Eecute the mediasoup-worker-fuzzer binary.
+CMD /mediasoup/worker/out/Release/mediasoup-worker-fuzzer ${FUZZER_OPTIONS}

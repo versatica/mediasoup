@@ -7,7 +7,7 @@
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 
 .PHONY:	\
-	default Release Debug test test-Release test-Debug fuzzer-run \
+	default Release Debug test test-Release test-Debug fuzzer fuzzer-exec fuzzer-fake \
 	fuzzer-docker-build fuzzer-docker-run xcode clean clean-all
 
 default:
@@ -40,12 +40,19 @@ test-Debug:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
 	$(MAKE) BUILDTYPE=Debug -C out
 
-xcode:
-	$(PYTHON) ./scripts/configure.py --format=xcode
-
-fuzzer-run:
+fuzzer:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) BUILDTYPE=Fuzzer -C out
+	$(MAKE) BUILDTYPE=Release -C out
+
+fuzzer-exec:
+	./out/Release/mediasoup-worker-fuzzer ${FUZZER_OPTIONS}
+
+# Temporal: Just for making sure that fuzzer/fuzzer.cpp compiles in OSX
+# (which does not have fuzzer support).
+fuzzer-fake:
+	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer-fake
+	$(MAKE) BUILDTYPE=Release -C out
+	./out/Release/mediasoup-worker-fuzzer-fake
 
 fuzzer-docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
@@ -54,11 +61,13 @@ else
 	docker build -f fuzzer/Dockerfile --tag mediasoup/fuzzer:latest .
 endif
 
-# TODO: Remove the volume. Not needed.
 fuzzer-docker-run:
-	docker run --name=mediasoupFuzzer -v $(shell pwd)/fuzzer/deleteme:/volume -it --rm mediasoup/fuzzer:latest
+	docker run \
+		--init --name=mediasoupFuzzer -it --rm -e FUZZER_OPTIONS -e LSAN_OPTIONS \
+		mediasoup/fuzzer:latest
 
-# docker exec mediasoupFuzzer CC=clang CXX=clang++ make fuzzer-run
+xcode:
+	$(PYTHON) ./scripts/configure.py --format=xcode
 
 clean:
 	$(RM) -rf out/Release/mediasoup-worker
