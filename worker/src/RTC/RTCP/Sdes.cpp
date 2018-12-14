@@ -37,7 +37,7 @@ namespace RTC
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// data size must be >= header + length value.
-			if (sizeof(uint8_t) * 2 + header->length > len)
+			if (sizeof(Header) > len || sizeof(uint8_t) * 2 + header->length > len)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES item, discarded");
 
