@@ -39,4 +39,10 @@ RUN \
 	&& make fuzzer
 
 # Eecute the mediasoup-worker-fuzzer binary.
-CMD /mediasoup/worker/out/Release/mediasoup-worker-fuzzer ${FUZZER_OPTIONS}
+CMD \
+	set -x \
+	&& cd /mediasoup/worker \
+	&& ./out/Release/mediasoup-worker-fuzzer \
+	   ${FUZZER_OPTIONS} \
+	   /new-corpus \
+	   ${FUZZER_CORPUS_DIRS}

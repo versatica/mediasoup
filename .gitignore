@@ -10,6 +10,10 @@
 # clang+fuzzer stuff is too big.
 /worker/deps/clang-fuzzer
 
+# Ignore all fuzzer generated test inputs.
+/worker/fuzzer/new-corpus/*
+!/worker/fuzzer/new-corpus/.placeholder
+
 # Vim temporal files.
 *.swp
 *.swo

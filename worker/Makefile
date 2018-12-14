@@ -45,7 +45,10 @@ fuzzer:
 	$(MAKE) BUILDTYPE=Release -C out
 
 fuzzer-exec:
-	./out/Release/mediasoup-worker-fuzzer ${FUZZER_OPTIONS}
+	./out/Release/mediasoup-worker-fuzzer \
+		${FUZZER_OPTIONS} \
+		./fuzzer/new-corpus \
+		${FUZZER_CORPUS_DIRS}
 
 # Temporal: Just for making sure that fuzzer/fuzzer.cpp compiles in OSX
 # (which does not have fuzzer support).
@@ -63,7 +66,11 @@ endif
 
 fuzzer-docker-run:
 	docker run \
-		--init --name=mediasoupFuzzer -it --rm -e FUZZER_OPTIONS -e LSAN_OPTIONS \
+		--init --name=mediasoupFuzzer -it --rm \
+		-v $(shell pwd)/fuzzer/new-corpus:/new-corpus \
+		-e FUZZER_OPTIONS \
+		-e FUZZER_CORPUS_DIRS \
+		-e LSAN_OPTIONS \
 		mediasoup/fuzzer:latest
 
 xcode:
