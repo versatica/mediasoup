@@ -52,6 +52,6 @@
   "scripts": {
     "lint": "gulp lint",
     "test": "gulp test",
-    "postinstall": "make Release"
+    "postinstall": "make Release -C worker"
   }
 }

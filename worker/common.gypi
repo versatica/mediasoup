@@ -31,6 +31,11 @@
         {
           'GCC_OPTIMIZATION_LEVEL': '0'
         }
+      },
+      'Fuzzer':
+      {
+        'defines': [ 'DEBUG' ],
+        'cflags': [ '-g', '-O0', '-fsanitize=address,fuzzer' ]
       }
     },
 

@@ -261,7 +261,7 @@
     },
     {
       'target_name': 'mediasoup-worker-test',
-      'defines': [ 'MS_TEST', 'MS_LOG_STD' ],
+      'defines': [ 'MS_LOG_STD' ],
       'sources':
       [
         # C++ source files
@@ -301,15 +301,25 @@
       [
         'test/include'
       ],
-     'xcode_settings':
-     {
-       'OTHER_CPLUSPLUSFLAGS': [
-         '--coverage'
-       ],
-       'OTHER_LDFLAGS': [
-         '--coverage'
-       ]
-     }
+      'xcode_settings':
+      {
+        'OTHER_CPLUSPLUSFLAGS': [
+          '--coverage'
+        ],
+        'OTHER_LDFLAGS': [
+          '--coverage'
+        ]
+      }
+    },
+    {
+      'target_name': 'mediasoup-worker-fuzzer',
+      'defines': [ 'MS_LOG_STD' ],
+      'sources':
+      [
+        # C++ source files
+        'fuzzer/fuzzer.cpp'
+      ],
+      'include_dirs': []
     }
   ]
 }

@@ -100,7 +100,7 @@ gulp.task('tidy:worker', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
 
 gulp.task('test:node', shell.task(
 	[
-		'if type make &> /dev/null; then make; fi',
+		'if type make &> /dev/null; then make -C worker; fi',
 		`tap --bail --color --reporter=spec ${nodeTests.join(' ')}`
 	],
 	{
@@ -112,7 +112,7 @@ gulp.task('test:node', shell.task(
 gulp.task('test:worker', shell.task(
 	[
 		'./worker/deps/lcov/bin/lcov --directory ./ --zerocounters',
-		'if type make &> /dev/null; then make test; fi',
+		'if type make &> /dev/null; then make test -C worker; fi',
 		`cd worker && ./out/${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ?
 			'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes ` +
 		`${process.env.MEDIASOUP_TEST_TAGS || ''}`

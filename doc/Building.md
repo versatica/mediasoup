@@ -5,7 +5,7 @@ This document is intended for **mediasoup** developers.
 
 ## Makefile
 
-The root folder of the project contains a `Makefile` to build the mediasoup worker subproject (under the `worker/` folder).
+The `worker` folder contains a `Makefile` to build the mediasoup worker subproject.
 
 ### `make`
 
@@ -65,10 +65,6 @@ $ npm install -g gulp-cli
 ### `gulp`
 
 The default task runs the `gulp:lint` and `gulp:test` tasks.
-
-### `gulp rtpcapabilities`
-
-Reads **mediasoup** [supported RTP capabilities](https://github.com/versatica/mediasoup/blob/master/lib/supportedRtpCapabilities.js) and inserts them into the worker C++ code. After that, `make Release` and/or `make Debug` must be called.
 
 ### `gulp lint`
 
