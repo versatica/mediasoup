@@ -7,7 +7,7 @@
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 
 .PHONY:	\
-	default Release Debug test test-Release test-Debug fuzzer fuzzer-run fuzzer-fake \
+	default Release Debug test test-Release test-Debug fuzzer \
 	fuzzer-docker-build fuzzer-docker-run xcode clean clean-all
 
 default:
@@ -44,18 +44,6 @@ fuzzer:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
 	$(MAKE) BUILDTYPE=Release -C out
 
-fuzzer-run:
-	./out/Release/mediasoup-worker-fuzzer \
-		${FUZZER_OPTIONS} -artifact_prefix=./fuzzer/reports/ \
-		${FUZZER_CORPUS_DIRS}
-
-# Temporal: Just for making sure that fuzzer/fuzzer.cpp compiles in OSX
-# (which does not have fuzzer support).
-fuzzer-fake:
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer-fake
-	$(MAKE) BUILDTYPE=Release -C out
-	./out/Release/mediasoup-worker-fuzzer-fake
-
 fuzzer-docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
 	docker build -f Dockerfile.fuzzer --no-cache --tag mediasoup/fuzzer:latest .
@@ -66,11 +54,7 @@ endif
 fuzzer-docker-run:
 	docker run \
 		--init --name=mediasoupFuzzer -it --rm \
-		-v $(shell pwd)/fuzzer/new-corpus:/new-corpus \
-		-v $(shell pwd)/fuzzer/reports:/reports \
-		-e FUZZER_OPTIONS \
-		-e FUZZER_CORPUS_DIRS \
-		-e LSAN_OPTIONS \
+		-v $(shell pwd):/mediasoup/worker \
 		mediasoup/fuzzer:latest
 
 xcode:

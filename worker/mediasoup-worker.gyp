@@ -327,16 +327,6 @@
           'ldflags': [ '-fsanitize=address,fuzzer' ]
         }]
       ]
-    },
-    # Like 'mediasoup-worker-fuzzer' target but without fuzzer (to test in OSX).
-    {
-      'target_name': 'mediasoup-worker-fuzzer-fake',
-      'defines': [ 'MS_LOG_STD', 'MS_FUZZER_FAKE' ],
-      'sources':
-      [
-        # C++ source files
-        'fuzzer/fuzzer.cpp'
-      ]
     }
   ]
 }

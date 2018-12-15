@@ -52,23 +52,17 @@ Builds the `mediasoup-worker-fuzzer` target (which uses [libFuzzer](http://llvm.
 
 **NOTE:** Linux is required with `fuzzer` capable `clang++`. `CC` environment variable must point to `clang` and `CXX` to `clang++`.
 
+It's recommended to pass the following fuzzer options:
 
-### `fuzzer-run`
+* `-artifact_prefix=fuzzer/reports/`: To tell fuzzer store crash reports in the `fuzzer/reports` folder.
+* `-max_len=1400`: We don't need much more input size.
 
-Executes the `worker/out/mediasoup-worker-fuzzer` binary.
-
-* Set `FUZZER_OPTIONS` environment variable to set Fuzzer command line options.
-* Set `FUZZER_CORPUS_DIRS` environment variable to set Fuzzer corpus directories.
-* Set `LSAN_OPTIONS` environment variable for LSAN options.
-
-It's recommended to set `fuzzer/new-corpus` as first entry in `FUZZER_CORPUS_DIRS` so generated inputs are written there.
-
-Crash reports will be written in the `worker/fuzzer/reports` directory (hardcoded `-artifact_prefix=./fuzzer/reports/` fuzzer option).
+Also, there are corpus folders in `fuzzer/corpora`. If used, it's recommended to use `fuzzer/new-corpus` as first directory, so fuzzer generated test inputs are saved in there.
 
 Example:
 
 ```bash
-$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/new-corpus fuzzer/corpora/rtp-corpus" make fuzzer-run
+$ ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/rtp-corpus fuzzer/corpora/rtcp-corpus fuzzer/corpora/stun-corpus
 ```
 
 
@@ -86,17 +80,7 @@ $ ./scripts/get-dep.sh clang-fuzzer
 
 ### `fuzzer-docker-run`
 
-Runs a container of the Docker image created with `fuzzer-docker-build` and executes `worker/out/mediasoup-worker-fuzzer` binary.
-
-Some environment variables than `fuzzer-run` are supported (with same constraints). However:
-
-* `FUZZER_CORPUS_DIRS` must be relative to the `worker`. If we want to write generated test inputs in `worker/fuzzer/new-corpus` folder, `fuzzer/new-corpus` must be the first entry in `FUZZER_CORPUS_DIRS`.
-
-Example:
-
-```bash
-$ FUZZER_OPTIONS="-max_len=1800" FUZZER_CORPUS_DIRS="fuzzer/new-corpus fuzzer/corpora/stun-corpus fuzzer/corpora/rtp-corpus fuzzer/corpora/rtcp-corpus" make fuzzer-docker-run
-```
+Runs a container of the Docker image created with `fuzzer-docker-build`. It automatically executes a `bash` session in `/mediasoup/worker` volume to run `make fuzzer` and `make fuzzer-run`, etc.
 
 
 ### `make xcode`
