@@ -1269,7 +1269,8 @@ namespace RTC
 			  ssrcsStream.str().c_str());
 		}
 
-		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+		// Avoid ambiguous constructor.
+		RTC::RTCP::FeedbackPsRembPacket packet(static_cast<uint32_t>(0), 0);
 
 		packet.SetBitrate(effectiveBitrate);
 		packet.SetSsrcs(ssrcs);

@@ -40,7 +40,7 @@ namespace RTC
 
 		public:
 			// Parsed Report. Points to an external data.
-			explicit FeedbackPsRembPacket(CommonHeader* commonHeader);
+			explicit FeedbackPsRembPacket(CommonHeader* commonHeader, size_t totalLen);
 			FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
 			~FeedbackPsRembPacket() override = default;
 
