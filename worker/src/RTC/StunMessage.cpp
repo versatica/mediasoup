@@ -126,7 +126,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "attribute after MESSAGE_INTEGRITY other than FINGERPRINT is not allowed, "
+				  "attribute after MESSAGE-INTEGRITY other than FINGERPRINT is not allowed, "
 				  "message discarded");
 
 				delete msg;
@@ -144,30 +144,79 @@ namespace RTC
 
 					break;
 				}
+
 				case Attribute::PRIORITY:
 				{
+					// Ensure attribute length is 4 bytes.
+					if (attrLength != 4)
+					{
+						MS_WARN_TAG(
+						  ice,
+						  "attribute PRIORITY must be 4 bytes length, message discarded");
+
+						delete msg;
+						return nullptr;
+					}
+
 					msg->SetPriority(Utils::Byte::Get4Bytes(attrValuePos, 0));
 
 					break;
 				}
+
 				case Attribute::ICE_CONTROLLING:
 				{
+					// Ensure attribute length is 8 bytes.
+					if (attrLength != 8)
+					{
+						MS_WARN_TAG(
+						  ice,
+						  "attribute ICE-CONTROLLING must be 8 bytes length, message discarded");
+
+						delete msg;
+						return nullptr;
+					}
+
 					msg->SetIceControlling(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
+
 				case Attribute::ICE_CONTROLLED:
 				{
+					// Ensure attribute length is 8 bytes.
+					if (attrLength != 8)
+					{
+						MS_WARN_TAG(
+						  ice,
+						  "attribute ICE-CONTROLLED must be 8 bytes length, message discarded");
+
+						delete msg;
+						return nullptr;
+					}
+
 					msg->SetIceControlled(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
+
 				case Attribute::USE_CANDIDATE:
 				{
+					// Ensure attribute length is 0 bytes.
+					if (attrLength != 0)
+					{
+						MS_WARN_TAG(
+						  ice,
+						  "attribute USE-CANDIDATE must be 0 bytes length, message discarded");
+
+						delete msg;
+						return nullptr;
+					}
+
 					msg->SetUseCandidate();
 
 					break;
 				}
+
 				case Attribute::MESSAGE_INTEGRITY:
 				{
 					hasMessageIntegrity = true;
@@ -175,8 +224,20 @@ namespace RTC
 
 					break;
 				}
+
 				case Attribute::FINGERPRINT:
 				{
+					// Ensure attribute length is 4 bytes.
+					if (attrLength != 4)
+					{
+						MS_WARN_TAG(
+						  ice,
+						  "attribute FINGERPRINT must be 4 bytes length, message discarded");
+
+						delete msg;
+						return nullptr;
+					}
+
 					hasFingerprint     = true;
 					fingerprintAttrPos = pos;
 					fingerprint        = Utils::Byte::Get4Bytes(attrValuePos, 0);
@@ -184,8 +245,20 @@ namespace RTC
 
 					break;
 				}
+
 				case Attribute::ERROR_CODE:
 				{
+					// Ensure attribute length >= 4bytes.
+					if (attrLength < 4)
+					{
+						MS_WARN_TAG(
+						  ice,
+						  "attribute ERROR-CODE must be >= 4bytes length, message discarded");
+
+						delete msg;
+						return nullptr;
+					}
+
 					uint8_t errorClass  = Utils::Byte::Get1Byte(attrValuePos, 2);
 					uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
 					auto errorCode      = static_cast<uint16_t>(errorClass * 100 + errorNumber);
@@ -194,6 +267,7 @@ namespace RTC
 
 					break;
 				}
+
 				default:;
 			}
 
