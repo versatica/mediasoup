@@ -6,7 +6,7 @@
 #include "RTC/RTCP/Packet.hpp"
 #include <stdint.h>
 #include <stddef.h>
-#include <iostream>
+#include <iostream> // TODO: Remove.
 
 using namespace RTC;
 
@@ -24,8 +24,7 @@ void fuzz(const uint8_t* data, size_t len)
 {
 	// TODO: Test everything here.
 	// If a RTP packet clone it, read properties, set stuff, etc.
-	// If RTCP the same.
-	// If ICE too.
+	// If RTCP or STUN the same, etc.
 	//
 	// NOTE: This code could be split in different files under a new src/ folder
 	// with its corresponding new include/ folder.
@@ -58,18 +57,10 @@ void fuzz(const uint8_t* data, size_t len)
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 {
+	// Trick to initialize our stuff just once.
 	static int unused = init();
 
 	fuzz(data, len);
 
 	return 0;
 }
-
-#ifdef MS_FUZZER_FAKE
-int main(int argc, char* argv[])
-{
-	std::cout << "OK, it compiles. Now go to Linux and run `make fuzzer-run." << std::endl;
-
-	return 0;
-}
-#endif

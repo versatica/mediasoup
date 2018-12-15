@@ -59,10 +59,12 @@ It's recommended to pass the following fuzzer options:
 
 Also, there are corpus folders in `fuzzer/corpora`. If used, it's recommended to use `fuzzer/new-corpus` as first directory, so fuzzer generated test inputs are saved in there.
 
+For memory leak detection, set `LSAN_OPTIONS=verbosity=1:log_threads=1` environment variable.
+
 Example:
 
 ```bash
-$ ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/rtp-corpus fuzzer/corpora/rtcp-corpus fuzzer/corpora/stun-corpus
+$ LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1800 -workers=1 fuzzer/new-corpus fuzzer/corpora/rtcp-corpus
 ```
 
 
