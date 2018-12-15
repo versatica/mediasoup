@@ -150,9 +150,7 @@ namespace RTC
 					// Ensure attribute length is 4 bytes.
 					if (attrLength != 4)
 					{
-						MS_WARN_TAG(
-						  ice,
-						  "attribute PRIORITY must be 4 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute PRIORITY must be 4 bytes length, message discarded");
 
 						delete msg;
 						return nullptr;
@@ -168,9 +166,7 @@ namespace RTC
 					// Ensure attribute length is 8 bytes.
 					if (attrLength != 8)
 					{
-						MS_WARN_TAG(
-						  ice,
-						  "attribute ICE-CONTROLLING must be 8 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute ICE-CONTROLLING must be 8 bytes length, message discarded");
 
 						delete msg;
 						return nullptr;
@@ -186,9 +182,7 @@ namespace RTC
 					// Ensure attribute length is 8 bytes.
 					if (attrLength != 8)
 					{
-						MS_WARN_TAG(
-						  ice,
-						  "attribute ICE-CONTROLLED must be 8 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute ICE-CONTROLLED must be 8 bytes length, message discarded");
 
 						delete msg;
 						return nullptr;
@@ -204,9 +198,7 @@ namespace RTC
 					// Ensure attribute length is 0 bytes.
 					if (attrLength != 0)
 					{
-						MS_WARN_TAG(
-						  ice,
-						  "attribute USE-CANDIDATE must be 0 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute USE-CANDIDATE must be 0 bytes length, message discarded");
 
 						delete msg;
 						return nullptr;
@@ -230,9 +222,7 @@ namespace RTC
 					// Ensure attribute length is 4 bytes.
 					if (attrLength != 4)
 					{
-						MS_WARN_TAG(
-						  ice,
-						  "attribute FINGERPRINT must be 4 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute FINGERPRINT must be 4 bytes length, message discarded");
 
 						delete msg;
 						return nullptr;
@@ -251,9 +241,7 @@ namespace RTC
 					// Ensure attribute length >= 4bytes.
 					if (attrLength < 4)
 					{
-						MS_WARN_TAG(
-						  ice,
-						  "attribute ERROR-CODE must be >= 4bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute ERROR-CODE must be >= 4bytes length, message discarded");
 
 						delete msg;
 						return nullptr;
