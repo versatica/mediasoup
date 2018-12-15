@@ -20,7 +20,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
+			// Check that there is space for CommonHeader, FeedbackPacket::Header and 8 bytes for
+			// REMB (unique identifier and basic fields).
+			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 > len)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -40,34 +42,16 @@ namespace RTC
 		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader)
 		  : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
-			auto* data = reinterpret_cast<uint8_t*>(commonHeader + 1);
-
-			if (Utils::Byte::Get4Bytes(data, 8) != uniqueIdentifier)
-			{
-				MS_WARN_TAG(rtcp, "invalid unique indentifier in REMB packet");
-
-				this->isCorrect = false;
-				return;
-			}
-
-			size_t numSsrcs  = data[12];
-			uint8_t exponent = data[13] >> 2;
-			uint64_t mantissa =
-			  (static_cast<uint32_t>(data[13] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 14);
-
-			this->bitrate = (mantissa << exponent);
-			if ((this->bitrate >> exponent) != mantissa)
-			{
-				MS_WARN_TAG(rtcp, "invalid REMB bitrate value : %" PRIu64 " *2^%u", mantissa, exponent);
-
-				this->isCorrect = false;
-				return;
-			}
-
-			// Check length.
+			// TODO: We should verify that this len matches the the len in Parse() function
+			// above.
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
+			// Make data point to the 4 bytes that must containt the "REMB" identifier.
+			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader) +
+			             sizeof(FeedbackPacket::Header);
+			size_t numSsrcs = data[4];
 
-			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + sizeof(Header) + (numSsrcs * sizeof(uint32_t)))
+			// Ensure there is space for the the announced number of SSRC feedbacks.
+			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 + (numSsrcs * sizeof(uint32_t)))
 			{
 				MS_WARN_TAG(
 				  rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
@@ -76,7 +60,31 @@ namespace RTC
 				return;
 			}
 
-			size_t index{ 16 };
+			// Verify the "REMB" unique identifier.
+			if (Utils::Byte::Get4Bytes(data, 0) != FeedbackPsRembPacket::uniqueIdentifier)
+			{
+				MS_WARN_TAG(rtcp, "invalid unique indentifier in REMB packet");
+
+				this->isCorrect = false;
+				return;
+			}
+
+			// size_t numSsrcs  = data[12];
+			uint8_t exponent = data[5] >> 2;
+			uint64_t mantissa =
+			  (static_cast<uint32_t>(data[5] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 6);
+
+			this->bitrate = (mantissa << exponent);
+			if ((this->bitrate >> exponent) != mantissa)
+			{
+				MS_WARN_TAG(rtcp, "invalid REMB bitrate value: %" PRIu64 " *2^%u", mantissa, exponent);
+
+				this->isCorrect = false;
+				return;
+			}
+
+			// Make index point to the first SSRC feedback item.
+			size_t index{ 8 };
 
 			this->ssrcs.reserve(numSsrcs);
 			for (size_t n{ 0 }; n < numSsrcs; ++n)
@@ -100,8 +108,8 @@ namespace RTC
 				++exponent;
 			}
 
-			Utils::Byte::Set4Bytes(buffer, offset, uniqueIdentifier);
-			offset += sizeof(uniqueIdentifier);
+			Utils::Byte::Set4Bytes(buffer, offset, FeedbackPsRembPacket::uniqueIdentifier);
+			offset += sizeof(FeedbackPsRembPacket::uniqueIdentifier);
 
 			buffer[offset] = this->ssrcs.size();
 			offset += 1;
