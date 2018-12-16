@@ -27,7 +27,7 @@ When the fuzzer detects an issue it generates a crash report file which contains
 The `fuzzer/reports` directory should be used to store those new crash reports. In order to use it, the following option must be given to the fuzzer executable:
 
 ```bash
-`-artifact_prefix=fuzzer/reports/`
+-artifact_prefix=fuzzer/reports/
 ```
 
 ## Others

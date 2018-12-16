@@ -20,8 +20,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Check that there is space for CommonHeader, FeedbackPacket::Header and 8 bytes for
-			// REMB (unique identifier and basic fields).
+			// Check that there is space for the REMB unique identifier and basic fields.
+			// NOTE: Feedback.cpp already checked that there is space for CommonHeader and
+			// Feedback Header.
 			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 > len)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
@@ -31,7 +32,7 @@ namespace RTC
 
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader, len));
+			std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader));
 
 			if (!packet->IsCorrect())
 				return nullptr;
@@ -39,20 +40,10 @@ namespace RTC
 			return packet.release();
 		}
 
-		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader, size_t totalLen)
+		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader)
 		  : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
-
-			if (len != totalLen)
-			{
-				MS_WARN_TAG(
-				  rtcp, "packet total size (%zu) does not match total available length (%zu)", len, totalLen);
-
-				this->isCorrect = false;
-				return;
-			}
-
 			// Make data point to the 4 bytes that must containt the "REMB" identifier.
 			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader) +
 			             sizeof(FeedbackPacket::Header);

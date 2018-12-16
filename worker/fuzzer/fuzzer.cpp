@@ -74,8 +74,13 @@ void fuzz(const uint8_t* data, size_t len)
 	{
 		RTCP::Packet* packet = RTCP::Packet::Parse(data, len);
 
-		if (packet)
-			delete packet;
+		while (packet != nullptr)
+		{
+			auto* previousPacket = packet;
+
+			packet = packet->GetNext();
+			delete previousPacket;
+		}
 	}
 
 	if (fuzzRtp && RtpPacket::IsRtp(data, len))
