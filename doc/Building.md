@@ -48,29 +48,18 @@ Builds the `mediasoup-worker-test` test unit binary in `Debug` mode at `worker/o
 
 ### `fuzzer`
 
-Builds the `mediasoup-worker-fuzzer` target (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) and generates the `worker/out/mediasoup-worker-fuzzer` binary.
+Builds the `mediasoup-worker-fuzzer` target (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) and generates the `worker/out/Release/mediasoup-worker-fuzzer` binary.
 
-**NOTE:** Linux is required with `fuzzer` capable `clang++`. `CC` environment variable must point to `clang` and `CXX` to `clang++`.
+* Linux is required with `fuzzer` capable `clang++`.
+* `CC` environment variable must point to `clang`.
+* `CXX` environment variable must point to `clang++`.
 
-It's recommended to pass the following fuzzer options:
-
-* `-artifact_prefix=fuzzer/reports/`: To tell fuzzer store crash reports in the `fuzzer/reports` folder.
-* `-max_len=1400`: We don't need much more input size.
-
-Also, there are corpus folders in `fuzzer/corpora`. If used, it's recommended to use `fuzzer/new-corpus` as first directory, so fuzzer generated test inputs are saved in there.
-
-For memory leak detection, set `LSAN_OPTIONS=verbosity=1:log_threads=1` environment variable.
-
-Example:
-
-```bash
-$ LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1800 -workers=1 fuzzer/new-corpus fuzzer/corpora/rtcp-corpus
-```
+Read the [Fuzzer](Fuzzer.md) documentation to run the fuzzer binary.
 
 
 ### `fuzzer-docker-build`
 
-Builds a Linux image with `fuzzer` capable `clang++` that builds the `mediasoup-worker-fuzzer` target.
+Builds a Linux image with `fuzzer` capable `clang++`.
 
 **NOTE:** Before running this command, a specific version of Linux `clang` must be downloaded. To get it, run:
 
@@ -82,7 +71,7 @@ $ ./scripts/get-dep.sh clang-fuzzer
 
 ### `fuzzer-docker-run`
 
-Runs a container of the Docker image created with `fuzzer-docker-build`. It automatically executes a `bash` session in `/mediasoup/worker` volume to run `make fuzzer` and `make fuzzer-run`, etc.
+Runs a container of the Docker image created with `fuzzer-docker-build`. It automatically executes a `bash` session in the `/mediasoup/worker` directory, which is a Docker volume that points to the real `mediasoup/worker` directory (so we can do `make fuzzer`, etc).
 
 
 ### `make xcode`
