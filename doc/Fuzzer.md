@@ -1,8 +1,8 @@
 # Fuzzer
 
-Once we have built the `mediasoup-worker-fuzzer` in a Linux environment with `fuzzer` capable `clang` (see `make fuzzer` documentation) we can execute the buffer binary at `worker/out/Release/mediasoup-worker-fuzzer`.
+Once we have built the `mediasoup-worker-fuzzer` target in a Linux environment with `fuzzer` capable `clang` (see `make fuzzer` documentation in [Building](Building.md)) we can then execute the fuzzer binary at `worker/out/Release/mediasoup-worker-fuzzer`.
 
-*NOTE:* From now on, we assume we are in the `worker` directory.
+*NOTE:* From now on, we assume we are in the mediasoup `worker` directory.
 
 
 ## Related documentation
