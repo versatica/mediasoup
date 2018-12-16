@@ -56,6 +56,12 @@ The `fuzzer/fuzzer.cpp` file reads some custom environment variables to decide w
 $ MS_FUZZ_STUN=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/stun-corpus
 ```
 
+* Detect memory leaks and just check RTCP:
+
+```bash
+$ MS_FUZZ_RTCP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/rtcp-corpus
+```
+
 * Detect memory leaks and check everything:
 
 ```bash
