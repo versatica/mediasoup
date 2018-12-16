@@ -22,7 +22,7 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsItemsPacket(CommonHeader* commonHeader);
 			explicit FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0);
-			~FeedbackPsItemsPacket() override = default;
+			~FeedbackPsItemsPacket();
 
 			void AddItem(Item* item);
 			Iterator Begin();
@@ -50,6 +50,13 @@ namespace RTC
 		inline FeedbackPsItemsPacket<Item>::FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
 		  : FeedbackPsPacket(Item::messageType, senderSsrc, mediaSsrc)
 		{
+		}
+
+		template<typename Item>
+		FeedbackPsItemsPacket<Item>::~FeedbackPsItemsPacket()
+		{
+			for (auto& item : this->items)
+				delete (item);
 		}
 
 		template<typename Item>
