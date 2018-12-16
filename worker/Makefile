@@ -53,8 +53,8 @@ endif
 
 fuzzer-docker-run:
 	docker run \
+		--name=mediasoupFuzzer -it --rm \
 		--cap-add SYS_PTRACE \
-		--init --name=mediasoupFuzzer -it --rm \
 		-v $(shell pwd):/mediasoup/worker \
 		mediasoup/fuzzer:latest
 
