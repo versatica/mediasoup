@@ -313,7 +313,7 @@
     },
     {
       'target_name': 'mediasoup-worker-fuzzer',
-      'defines': [ 'MS_LOG_STD' ],
+      'defines': [ 'DEBUG', 'MS_LOG_STD' ],
       'sources':
       [
         # C++ source files
@@ -322,7 +322,6 @@
       'conditions':
       [
         [ 'OS == "linux"', {
-          'defines': [ 'DEBUG' ],
           'cflags': [ '-g', '-O0', '-fsanitize=address,fuzzer' ],
           'ldflags': [ '-fsanitize=address,fuzzer' ]
         }]

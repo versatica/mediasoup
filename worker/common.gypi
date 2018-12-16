@@ -52,7 +52,7 @@
         '-Wno-unused-parameter',
         '-Wundeclared-selector',
         '-Wno-parentheses-equality',
-      ],
+      ]
     },
 
     'conditions':
@@ -80,7 +80,7 @@
             'cflags': [ '-m64' ],
             'ldflags': [ '-m64' ]
           }],
-        ],
+        ]
       }]
     ]
   }
