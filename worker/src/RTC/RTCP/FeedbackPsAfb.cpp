@@ -29,7 +29,10 @@ namespace RTC
 			std::unique_ptr<FeedbackPsAfbPacket> packet;
 
 			constexpr size_t Offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
-			if (Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::uniqueIdentifier)
+
+			if (
+			  sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 4 <= len &&
+			  Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::uniqueIdentifier)
 			{
 				packet.reset(FeedbackPsRembPacket::Parse(data, len));
 			}
