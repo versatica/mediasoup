@@ -62,13 +62,6 @@ int init()
 
 void fuzz(const uint8_t* data, size_t len)
 {
-	// TODO: Test everything here.
-	// If a RTP packet clone it, read properties, set stuff, etc.
-	// If RTCP or STUN the same, etc.
-	//
-	// NOTE: This code could be split in different files under a new src/ folder
-	// with its corresponding new include/ folder.
-
 	if (fuzzStun && StunMessage::IsStun(data, len))
 	{
 		StunMessage* msg = StunMessage::Parse(data, len);
