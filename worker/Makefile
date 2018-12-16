@@ -66,10 +66,14 @@ clean:
 	$(RM) -rf out/Release/obj.target/mediasoup-worker
 	$(RM) -rf out/Release/mediasoup-worker-test
 	$(RM) -rf out/Release/obj.target/mediasoup-worker-test
+	$(RM) -rf out/Release/mediasoup-worker-fuzzer
+	$(RM) -rf out/Release/obj.target/mediasoup-worker-fuzzer
 	$(RM) -rf out/Debug/mediasoup-worker
 	$(RM) -rf out/Debug/obj.target/mediasoup-worker
 	$(RM) -rf out/Debug/mediasoup-worker-test
 	$(RM) -rf out/Debug/obj.target/mediasoup-worker-test
+	$(RM) -rf out/Debug/mediasoup-worker-fuzzer
+	$(RM) -rf out/Debug/obj.target/mediasoup-worker-fuzzer
 
 clean-all:
 	$(RM) -rf out
