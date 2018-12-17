@@ -13,8 +13,8 @@
 #include <iostream>
 
 bool fuzzStun = false;
-bool fuzzRtcp = false;
 bool fuzzRtp = false;
+bool fuzzRtcp = false;
 
 int init()
 {
@@ -33,25 +33,25 @@ int init()
 
 		fuzzStun = true;
 	}
-	if (std::getenv("MS_FUZZ_RTCP") && std::string(std::getenv("MS_FUZZ_RTCP")) == "1")
-	{
-		std::cout << "[fuzzer] RTCP checks enabled" << std::endl;
-
-		fuzzRtcp = true;
-	}
 	if (std::getenv("MS_FUZZ_RTP") && std::string(std::getenv("MS_FUZZ_RTP")) == "1")
 	{
 		std::cout << "[fuzzer] RTP checks enabled" << std::endl;
 
 		fuzzRtp = true;
 	}
+	if (std::getenv("MS_FUZZ_RTCP") && std::string(std::getenv("MS_FUZZ_RTCP")) == "1")
+	{
+		std::cout << "[fuzzer] RTCP checks enabled" << std::endl;
+
+		fuzzRtcp = true;
+	}
 	if (!fuzzStun && !fuzzRtcp && !fuzzRtp)
 	{
 		std::cout << "[fuzzer] all checks enabled" << std::endl;
 
 		fuzzStun = true;
-		fuzzRtcp = true;
 		fuzzRtp = true;
+		fuzzRtcp = true;
 	}
 
 	return 0;
