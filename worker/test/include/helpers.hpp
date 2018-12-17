@@ -1,5 +1,5 @@
 #ifndef MS_TEST_HELPERS_HPP
-#define	MS_TEST_HELPERS_HPP
+#define MS_TEST_HELPERS_HPP
 
 #include "common.hpp"
 #include <string>

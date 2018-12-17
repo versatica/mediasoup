@@ -1,5 +1,5 @@
 #ifndef MS_FUZZER_RTC_STUN_MESSAGE_HPP
-#define	MS_FUZZER_RTC_STUN_MESSAGE_HPP
+#define MS_FUZZER_RTC_STUN_MESSAGE_HPP
 
 #include "common.hpp"
 
