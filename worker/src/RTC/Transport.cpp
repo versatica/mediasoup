@@ -274,30 +274,18 @@ namespace RTC
 							this->recvRemb = std::make_tuple(remb->GetBitrate(), remb->GetSsrcs());
 							break;
 						}
-					}
-
-					// [[fallthrough]]; (C++17)
-					case RTCP::FeedbackPs::MessageType::SLI:
-					case RTCP::FeedbackPs::MessageType::RPSI:
-					{
-						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
-
-						if (consumer == nullptr)
+						else
 						{
 							MS_WARN_TAG(
-							  rtcp,
-							  "no Consumer found for received %s Feedback packet "
-							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-							  feedback->GetMediaSsrc(),
-							  feedback->GetMediaSsrc());
+								  rtcp,
+								  "ignoring unsupported %s Feedback PS AFB packet "
+								  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+								  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+									feedback->GetMediaSsrc(),
+									feedback->GetMediaSsrc());
 
 							break;
 						}
-
-						listener->OnTransportReceiveRtcpFeedback(this, consumer, feedback);
-
-						break;
 					}
 
 					default:
