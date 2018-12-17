@@ -1,5 +1,6 @@
 #include "fuzzers.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <cstring> // std::memory()
 
 using namespace RTC;
 
@@ -10,7 +11,13 @@ namespace fuzzers
 		if (!RtpPacket::IsRtp(data, len))
 			return;
 
-		RtpPacket* packet = RtpPacket::Parse(data, len);
+		// We need to clone the given data into a separate buffer because setters
+		// below will try to write into the packet memory.
+		static uint8_t data2[524288];
+
+		std::memcpy(data2, data, len);
+
+		RtpPacket* packet = RtpPacket::Parse(data2, len);
 
 		if (!packet)
 			return;
