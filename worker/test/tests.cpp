@@ -14,7 +14,7 @@ static void destroy();
 
 int main(int argc, char* argv[])
 {
-	Settings::configuration.logLevel = LogLevel::LOG_DEBUG;
+	Settings::configuration.logLevel = LogLevel::LOG_NONE;
 
 	std::string loggerId = "tests";
 

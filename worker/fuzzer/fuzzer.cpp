@@ -20,7 +20,7 @@ int init()
 {
 	std::string loggerId = "fuzzer";
 
-	Settings::configuration.logLevel = LogLevel::LOG_DEBUG;
+	Settings::configuration.logLevel = LogLevel::LOG_NONE;
 	Logger::Init(loggerId);
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();

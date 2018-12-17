@@ -28,7 +28,7 @@ public:
 	// Struct holding the configuration.
 	struct Configuration
 	{
-		LogLevel logLevel{ LogLevel::LOG_DEBUG }; // TODO: Should be LOG_ERROR IMHO.
+		LogLevel logLevel{ LogLevel::LOG_ERROR };
 		struct LogTags logTags;
 		std::string rtcIPv4;
 		std::string rtcIPv6;
