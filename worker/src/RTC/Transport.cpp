@@ -391,8 +391,6 @@ namespace RTC
 
 						continue;
 					}
-
-					// TODO: Should we do something with the SDES packet?
 				}
 
 				break;
