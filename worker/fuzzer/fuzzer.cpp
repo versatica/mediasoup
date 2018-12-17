@@ -29,25 +29,25 @@ int init()
 	// Select what to fuzz.
 	if (std::getenv("MS_FUZZ_STUN") && std::string(std::getenv("MS_FUZZ_STUN")) == "1")
 	{
-		std::cout << "[fuzzer] STUN checks enabled" << std::endl;
+		std::cout << "[fuzzer] STUN fuzzers enabled" << std::endl;
 
 		fuzzStun = true;
 	}
 	if (std::getenv("MS_FUZZ_RTP") && std::string(std::getenv("MS_FUZZ_RTP")) == "1")
 	{
-		std::cout << "[fuzzer] RTP checks enabled" << std::endl;
+		std::cout << "[fuzzer] RTP fuzzers enabled" << std::endl;
 
 		fuzzRtp = true;
 	}
 	if (std::getenv("MS_FUZZ_RTCP") && std::string(std::getenv("MS_FUZZ_RTCP")) == "1")
 	{
-		std::cout << "[fuzzer] RTCP checks enabled" << std::endl;
+		std::cout << "[fuzzer] RTCP fuzzers enabled" << std::endl;
 
 		fuzzRtcp = true;
 	}
 	if (!fuzzStun && !fuzzRtcp && !fuzzRtp)
 	{
-		std::cout << "[fuzzer] all checks enabled" << std::endl;
+		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
 		fuzzStun = true;
 		fuzzRtp = true;
