@@ -90,14 +90,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<ByePacket>");
+			MS_DEBUG_DEV("<ByePacket>");
 			for (auto ssrc : this->ssrcs)
 			{
-				MS_DUMP("  ssrc   : %" PRIu32, ssrc);
+				MS_DEBUG_DEV("  ssrc   : %" PRIu32, ssrc);
 			}
 			if (!this->reason.empty())
-				MS_DUMP("  reason : %s", this->reason.c_str());
-			MS_DUMP("</ByePacket>");
+				MS_DEBUG_DEV("  reason : %s", this->reason.c_str());
+			MS_DEBUG_DEV("</ByePacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

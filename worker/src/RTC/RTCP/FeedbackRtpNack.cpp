@@ -36,10 +36,10 @@ namespace RTC
 
 			std::bitset<16> nackBitset(this->GetLostPacketBitmask());
 
-			MS_DUMP("<FeedbackRtpNackItem>");
-			MS_DUMP("  pid : %" PRIu16, this->GetPacketId());
-			MS_DUMP("  bpl : %s", nackBitset.to_string().c_str());
-			MS_DUMP("</FeedbackRtpNackItem>");
+			MS_DEBUG_DEV("<FeedbackRtpNackItem>");
+			MS_DEBUG_DEV("  pid : %" PRIu16, this->GetPacketId());
+			MS_DEBUG_DEV("  bpl : %s", nackBitset.to_string().c_str());
+			MS_DEBUG_DEV("</FeedbackRtpNackItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

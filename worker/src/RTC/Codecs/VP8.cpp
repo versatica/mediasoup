@@ -146,29 +146,29 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<PayloadDescriptor>");
-			MS_DUMP("  extended        : %" PRIu8, this->extended);
-			MS_DUMP("  nonReference    : %" PRIu8, this->nonReference);
-			MS_DUMP("  start           : %" PRIu8, this->start);
-			MS_DUMP("  partitionIndex  : %" PRIu8, this->partitionIndex);
-			MS_DUMP(
+			MS_DEBUG_DEV("<PayloadDescriptor>");
+			MS_DEBUG_DEV("  extended        : %" PRIu8, this->extended);
+			MS_DEBUG_DEV("  nonReference    : %" PRIu8, this->nonReference);
+			MS_DEBUG_DEV("  start           : %" PRIu8, this->start);
+			MS_DEBUG_DEV("  partitionIndex  : %" PRIu8, this->partitionIndex);
+			MS_DEBUG_DEV(
 			  "  i|l|t|k         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
 			  this->i,
 			  this->l,
 			  this->t,
 			  this->k);
-			MS_DUMP("  pictureId       : %" PRIu16, this->pictureId);
-			MS_DUMP("  tl0PictureIndex : %" PRIu8, this->tl0PictureIndex);
-			MS_DUMP("  tlIndex         : %" PRIu8, this->tlIndex);
-			MS_DUMP("  y               : %" PRIu8, this->y);
-			MS_DUMP("  keyIndex        : %" PRIu8, this->keyIndex);
-			MS_DUMP("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("  hasPictureId    : %s", this->hasPictureId ? "true" : "false");
-			MS_DUMP("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
-			MS_DUMP("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
-			MS_DUMP("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
-			MS_DUMP("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
-			MS_DUMP("</PayloadDescriptor>");
+			MS_DEBUG_DEV("  pictureId       : %" PRIu16, this->pictureId);
+			MS_DEBUG_DEV("  tl0PictureIndex : %" PRIu8, this->tl0PictureIndex);
+			MS_DEBUG_DEV("  tlIndex         : %" PRIu8, this->tlIndex);
+			MS_DEBUG_DEV("  y               : %" PRIu8, this->y);
+			MS_DEBUG_DEV("  keyIndex        : %" PRIu8, this->keyIndex);
+			MS_DEBUG_DEV("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
+			MS_DEBUG_DEV("  hasPictureId    : %s", this->hasPictureId ? "true" : "false");
+			MS_DEBUG_DEV("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
+			MS_DEBUG_DEV("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
+			MS_DEBUG_DEV("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
+			MS_DEBUG_DEV("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
+			MS_DEBUG_DEV("</PayloadDescriptor>");
 		}
 
 		VP8::PayloadDescriptorHandler::PayloadDescriptorHandler(VP8::PayloadDescriptor* payloadDescriptor)

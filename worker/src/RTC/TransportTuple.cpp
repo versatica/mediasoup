@@ -56,27 +56,27 @@ namespace RTC
 
 				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remoteFamily, remoteIp, &remotePort);
 
-				MS_DUMP("<TransportTuple>");
-				MS_DUMP(
+				MS_DEBUG_DEV("<TransportTuple>");
+				MS_DEBUG_DEV(
 				  "  [UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 				  this->udpSocket->GetLocalIP().c_str(),
 				  this->udpSocket->GetLocalPort(),
 				  remoteIp.c_str(),
 				  remotePort);
-				MS_DUMP("</TransportTuple>");
+				MS_DEBUG_DEV("</TransportTuple>");
 				break;
 			}
 
 			case Protocol::TCP:
 			{
-				MS_DUMP("<TransportTuple>");
-				MS_DUMP(
+				MS_DEBUG_DEV("<TransportTuple>");
+				MS_DEBUG_DEV(
 				  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
 				  this->tcpConnection->GetLocalIP().c_str(),
 				  this->tcpConnection->GetLocalPort(),
 				  this->tcpConnection->GetPeerIP().c_str(),
 				  this->tcpConnection->GetPeerPort());
-				MS_DUMP("</TransportTuple>");
+				MS_DEBUG_DEV("</TransportTuple>");
 				break;
 			}
 		}

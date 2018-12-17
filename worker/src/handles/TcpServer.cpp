@@ -157,14 +157,14 @@ void TcpServer::Destroy()
 
 void TcpServer::Dump() const
 {
-	MS_DUMP("<TcpServer>");
-	MS_DUMP(
+	MS_DEBUG_DEV("<TcpServer>");
+	MS_DEBUG_DEV(
 	  "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 	  this->localIP.c_str(),
 	  static_cast<uint16_t>(this->localPort),
 	  (!this->isClosing) ? "open" : "closed",
 	  this->connections.size());
-	MS_DUMP("</TcpServer>");
+	MS_DEBUG_DEV("</TcpServer>");
 }
 
 bool TcpServer::SetLocalAddress()

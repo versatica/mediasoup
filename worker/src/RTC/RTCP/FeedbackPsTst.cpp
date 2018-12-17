@@ -40,11 +40,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsTstItem>");
-			MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
-			MS_DUMP("  sequence number : %" PRIu32, this->GetSequenceNumber());
-			MS_DUMP("  index           : %" PRIu32, this->GetIndex());
-			MS_DUMP("</FeedbackPsTstItem>");
+			MS_DEBUG_DEV("<FeedbackPsTstItem>");
+			MS_DEBUG_DEV("  ssrc            : %" PRIu32, this->GetSsrc());
+			MS_DEBUG_DEV("  sequence number : %" PRIu32, this->GetSequenceNumber());
+			MS_DEBUG_DEV("  index           : %" PRIu32, this->GetIndex());
+			MS_DEBUG_DEV("</FeedbackPsTstItem>");
 		}
 
 		/* Specialization for Tstr class. */

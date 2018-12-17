@@ -139,12 +139,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DUMP("<RtpMonitor>");
-		MS_DUMP("  score                : %" PRIi8, GetScore());
-		MS_DUMP("  totalSourceLoss      : %" PRIi32, this->totalSourceLoss);
-		MS_DUMP("  totalReportedLoss    : %" PRIi32, this->totalReportedLoss);
-		MS_DUMP("  repairedPackets size : %zu", this->repairedPackets.size());
-		MS_DUMP("</RtpMonitor>");
+		MS_DEBUG_DEV("<RtpMonitor>");
+		MS_DEBUG_DEV("  score                : %" PRIi8, GetScore());
+		MS_DEBUG_DEV("  totalSourceLoss      : %" PRIi32, this->totalSourceLoss);
+		MS_DEBUG_DEV("  totalReportedLoss    : %" PRIi32, this->totalReportedLoss);
+		MS_DEBUG_DEV("  repairedPackets size : %zu", this->repairedPackets.size());
+		MS_DEBUG_DEV("</RtpMonitor>");
 	}
 
 	void RtpMonitor::AddScore(uint8_t score)

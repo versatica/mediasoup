@@ -27,13 +27,15 @@ std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
-	{ "error", LogLevel::LOG_ERROR }
+	{ "error", LogLevel::LOG_ERROR },
+	{ "none",  LogLevel::LOG_NONE  }
 };
 std::map<LogLevel, std::string> Settings::logLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
-	{ LogLevel::LOG_ERROR, "error" }
+	{ LogLevel::LOG_ERROR, "error" },
+	{ LogLevel::LOG_NONE,  "none"  }
 };
 // clang-format on
 

@@ -85,7 +85,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<CompoundPacket>");
+			MS_DEBUG_DEV("<CompoundPacket>");
 
 			if (HasSenderReport())
 			{
@@ -100,7 +100,7 @@ namespace RTC
 			if (this->sdesPacket.GetCount() != 0u)
 				this->sdesPacket.Dump();
 
-			MS_DUMP("</CompoundPacket>");
+			MS_DEBUG_DEV("</CompoundPacket>");
 		}
 
 		void CompoundPacket::AddSenderReport(SenderReport* report)

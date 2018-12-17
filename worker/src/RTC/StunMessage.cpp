@@ -315,7 +315,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DUMP("<StunMessage>");
+		MS_DEBUG_DEV("<StunMessage>");
 
 		std::string klass;
 		switch (this->klass)
@@ -335,14 +335,15 @@ namespace RTC
 		}
 		if (this->method == Method::BINDING)
 		{
-			MS_DUMP("  Binding %s", klass.c_str());
+			MS_DEBUG_DEV("  Binding %s", klass.c_str());
 		}
 		else
 		{
 			// This prints the unknown method number. Example: TURN Allocate => 0x003.
-			MS_DUMP("  %s with unknown method %#.3x", klass.c_str(), static_cast<uint16_t>(this->method));
+			MS_DEBUG_DEV(
+			  "  %s with unknown method %#.3x", klass.c_str(), static_cast<uint16_t>(this->method));
 		}
-		MS_DUMP("  size: %zu bytes", this->size);
+		MS_DEBUG_DEV("  size: %zu bytes", this->size);
 
 		static char transactionId[25];
 
@@ -351,19 +352,19 @@ namespace RTC
 			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
 			std::snprintf(transactionId + (i * 2), 3, "%.2x", this->transactionId[i]);
 		}
-		MS_DUMP("  transactionId: %s", transactionId);
+		MS_DEBUG_DEV("  transactionId: %s", transactionId);
 		if (this->errorCode != 0u)
-			MS_DUMP("  errorCode: %" PRIu16, this->errorCode);
+			MS_DEBUG_DEV("  errorCode: %" PRIu16, this->errorCode);
 		if (!this->username.empty())
-			MS_DUMP("  username: %s", this->username.c_str());
+			MS_DEBUG_DEV("  username: %s", this->username.c_str());
 		if (this->priority != 0u)
-			MS_DUMP("  priority: %" PRIu32, this->priority);
+			MS_DEBUG_DEV("  priority: %" PRIu32, this->priority);
 		if (this->iceControlling != 0u)
-			MS_DUMP("  iceControlling: %" PRIu64, this->iceControlling);
+			MS_DEBUG_DEV("  iceControlling: %" PRIu64, this->iceControlling);
 		if (this->iceControlled != 0u)
-			MS_DUMP("  iceControlled: %" PRIu64, this->iceControlled);
+			MS_DEBUG_DEV("  iceControlled: %" PRIu64, this->iceControlled);
 		if (this->hasUseCandidate)
-			MS_DUMP("  useCandidate");
+			MS_DEBUG_DEV("  useCandidate");
 		if (this->xorMappedAddress != nullptr)
 		{
 			int family;
@@ -372,7 +373,7 @@ namespace RTC
 
 			Utils::IP::GetAddressInfo(this->xorMappedAddress, &family, ip, &port);
 
-			MS_DUMP("  xorMappedAddress: %s : %" PRIu16, ip.c_str(), port);
+			MS_DEBUG_DEV("  xorMappedAddress: %s : %" PRIu16, ip.c_str(), port);
 		}
 		if (this->messageIntegrity != nullptr)
 		{
@@ -383,12 +384,12 @@ namespace RTC
 				std::snprintf(messageIntegrity + (i * 2), 3, "%.2x", this->messageIntegrity[i]);
 			}
 
-			MS_DUMP("  messageIntegrity: %s", messageIntegrity);
+			MS_DEBUG_DEV("  messageIntegrity: %s", messageIntegrity);
 		}
 		if (this->hasFingerprint)
-			MS_DUMP("  fingerprint");
+			MS_DEBUG_DEV("  fingerprint");
 
-		MS_DUMP("</StunMessage>");
+		MS_DEBUG_DEV("</StunMessage>");
 	}
 
 	StunMessage::Authentication StunMessage::CheckAuthentication(

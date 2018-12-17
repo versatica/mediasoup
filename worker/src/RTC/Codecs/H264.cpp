@@ -85,9 +85,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<PayloadDescriptor>");
-			MS_DUMP("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("</PayloadDescriptor>");
+			MS_DEBUG_DEV("<PayloadDescriptor>");
+			MS_DEBUG_DEV("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
+			MS_DEBUG_DEV("</PayloadDescriptor>");
 		}
 
 		H264::PayloadDescriptorHandler::PayloadDescriptorHandler(H264::PayloadDescriptor* payloadDescriptor)
