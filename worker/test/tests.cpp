@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "include/catch.hpp"
+#include "catch.hpp"
 #include <string>
 
 static void init();

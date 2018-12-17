@@ -294,8 +294,8 @@
         'test/RTC/RTCP/TestSenderReport.cpp',
         'test/RTC/RTCP/TestPacket.cpp',
         # C++ include files
-        'include/catch.hpp',
-        'include/helpers.hpp'
+        'test/include/catch.hpp',
+        'test/include/helpers.hpp'
       ],
       'include_dirs':
       [
@@ -317,7 +317,16 @@
       'sources':
       [
         # C++ source files
-        'fuzzer/fuzzer.cpp'
+        'fuzzer/fuzzer.cpp',
+        'fuzzer/src/fuzzStun.cpp',
+        'fuzzer/src/fuzzRtp.cpp',
+        'fuzzer/src/fuzzRtcp.cpp',
+        # C++ include files
+        'fuzzer/include/fuzzers.hpp'
+      ],
+      'include_dirs':
+      [
+        'fuzzer/include'
       ],
       'conditions':
       [
