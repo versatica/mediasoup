@@ -5,7 +5,7 @@ using namespace RTC;
 
 namespace fuzzers
 {
-	void fuzzRtcp(const uint8_t* data, size_t len)
+	void fuzzRtp(const uint8_t* data, size_t len)
 	{
 		if (!RtpPacket::IsRtp(data, len))
 			return;
