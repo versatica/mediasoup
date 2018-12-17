@@ -96,22 +96,29 @@ namespace RTC
 		switch (addressFamily)
 		{
 			case AF_INET:
+			{
 				availablePorts = &RTC::UdpSocket::availableIPv4Ports;
 				bindAddr       = RTC::UdpSocket::sockaddrStorageIPv4;
 				listenIp       = Settings::configuration.rtcIPv4.c_str();
+
 				break;
+			}
 
 			case AF_INET6:
+			{
 				availablePorts = &RTC::UdpSocket::availableIPv6Ports;
 				bindAddr       = RTC::UdpSocket::sockaddrStorageIPv6;
 				listenIp       = Settings::configuration.rtcIPv6.c_str();
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
+
 				break;
+			}
 
 			default:
+			{
 				MS_THROW_ERROR("invalid address family given");
-				break;
+			}
 		}
 
 		// Choose a random port to start from.
@@ -154,6 +161,7 @@ namespace RTC
 				case AF_INET:
 					(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(iteratingPort);
 					break;
+
 				case AF_INET6:
 					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(iteratingPort);
 					break;

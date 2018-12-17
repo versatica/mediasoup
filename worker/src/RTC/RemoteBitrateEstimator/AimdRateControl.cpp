@@ -140,9 +140,12 @@ namespace RTC
 		switch (this->rateControlState)
 		{
 			case RC_HOLD:
+			{
 				break;
+			}
 
 			case RC_INCREASE:
+			{
 				if (this->avgMaxBitrateKbps >= 0 && incomingBitrateKbps > this->avgMaxBitrateKbps + 3 * stdMaxBitRate)
 				{
 					ChangeRegion(RC_MAX_UNKNOWN);
@@ -163,9 +166,12 @@ namespace RTC
 				}
 
 				this->timeLastBitrateChange = nowMs;
+
 				break;
+			}
 
 			case RC_DECREASE:
+			{
 				this->bitrateIsInitialized = true;
 				// Set bit rate to something slightly lower than max to get rid
 				// of any self-induced delay.
@@ -195,10 +201,14 @@ namespace RTC
 				// Stay on hold until the pipes are cleared.
 				ChangeState(RC_HOLD);
 				this->timeLastBitrateChange = nowMs;
+
 				break;
+			}
 
 			default:
+			{
 				MS_ASSERT(false, "invalid this->rateControlState value");
+			}
 		}
 
 		return ClampBitrate(newBitrateBps, incomingBitrateBps);
@@ -280,23 +290,37 @@ namespace RTC
 		switch (this->currentInput.bwState)
 		{
 			case BW_NORMAL:
+			{
 				if (this->rateControlState == RC_HOLD)
 				{
 					this->timeLastBitrateChange = nowMs;
 					ChangeState(RC_INCREASE);
 				}
+
 				break;
+			}
+
 			case BW_OVERUSING:
+			{
 				if (this->rateControlState != RC_DECREASE)
 				{
 					ChangeState(RC_DECREASE);
 				}
+
 				break;
+			}
+
 			case BW_UNDERUSING:
+			{
 				ChangeState(RC_HOLD);
+
 				break;
+			}
+
 			default:
+			{
 				MS_ASSERT(false, "invalid RateControlInput::bwState value");
+			}
 		}
 	}
 } // namespace RTC

@@ -41,19 +41,29 @@ namespace Utils
 		switch (addr1->sa_family)
 		{
 			case AF_INET:
+			{
 				if (std::memcmp(&((struct sockaddr_in*)addr1)->sin_addr, &((struct sockaddr_in*)addr2)->sin_addr, 4) == 0)
 				{
 					return true;
 				}
+
 				break;
+			}
+
 			case AF_INET6:
+			{
 				if (std::memcmp(&((struct sockaddr_in6*)addr1)->sin6_addr, &((struct sockaddr_in6*)addr2)->sin6_addr, 16) == 0)
 				{
 					return true;
 				}
+
 				break;
+			}
+
 			default:
+			{
 				return false;
+			}
 		}
 
 		return false;

@@ -655,23 +655,31 @@ namespace RTC
 		switch (this->localRole)
 		{
 			case Role::CLIENT:
+			{
 				MS_DEBUG_TAG(dtls, "running [role:client]");
 
 				SSL_set_connect_state(this->ssl);
 				SSL_do_handshake(this->ssl);
 				SendPendingOutgoingDtlsData();
 				SetTimeout();
+
 				break;
+			}
 
 			case Role::SERVER:
+			{
 				MS_DEBUG_TAG(dtls, "running [role:server]");
 
 				SSL_set_accept_state(this->ssl);
 				SSL_do_handshake(this->ssl);
+
 				break;
+			}
 
 			default:
+			{
 				MS_ABORT("invalid local DTLS role");
+			}
 		}
 	}
 
@@ -1166,15 +1174,16 @@ namespace RTC
 				srtpRemoteSalt = srtpLocalKey + SrtpMasterKeyLength;
 				srtpLocalSalt  = srtpRemoteSalt + SrtpMasterSaltLength;
 				break;
+
 			case Role::CLIENT:
 				srtpLocalKey   = srtpMaterial;
 				srtpRemoteKey  = srtpLocalKey + SrtpMasterKeyLength;
 				srtpLocalSalt  = srtpRemoteKey + SrtpMasterKeyLength;
 				srtpRemoteSalt = srtpLocalSalt + SrtpMasterSaltLength;
 				break;
+
 			default:
 				MS_ABORT("no DTLS role set");
-				break;
 		}
 
 		// Create the SRTP local master key.

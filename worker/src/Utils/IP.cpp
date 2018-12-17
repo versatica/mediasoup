@@ -4035,7 +4035,9 @@ case 86:
 			}
 
 			default:
+			{
 				MS_ABORT("unknown network family: %d", (int)addr->sa_family);
+			}
 		}
 
 		*family = addr->sa_family;

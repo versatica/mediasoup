@@ -166,8 +166,6 @@ namespace RTC
 			default:
 			{
 				MS_THROW_ERROR("invalid destination IP '%s'", ip.c_str());
-
-				break;
 			}
 		}
 

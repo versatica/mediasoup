@@ -167,10 +167,8 @@ namespace RTC
 					break;
 
 				case FeedbackPs::MessageType::AFB:
-				{
 					packet = FeedbackPsAfbPacket::Parse(data, len);
 					break;
-				}
 
 				case FeedbackPs::MessageType::EXT:
 					break;

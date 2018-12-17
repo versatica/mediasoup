@@ -666,7 +666,6 @@ namespace RTC
 
 			default:
 				MS_ASSERT(false, "invalid messageType");
-				break;
 		}
 
 		RequestKeyFrame();

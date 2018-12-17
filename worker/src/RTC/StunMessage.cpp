@@ -541,6 +541,7 @@ namespace RTC
 
 					break;
 				}
+
 				case AF_INET6:
 				{
 					xorMappedAddressPaddedLen = 20;
@@ -548,6 +549,7 @@ namespace RTC
 
 					break;
 				}
+
 				default:
 				{
 					MS_ERROR("invalid inet family in XOR-MAPPED-ADDRESS attribute");
@@ -673,6 +675,7 @@ namespace RTC
 
 					break;
 				}
+
 				case AF_INET6:
 				{
 					// Set first byte to 0.

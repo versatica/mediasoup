@@ -84,69 +84,105 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		switch (c)
 		{
 			case 'l':
+			{
 				stringValue = std::string(optarg);
 				SetLogLevel(stringValue);
+
 				break;
+			}
 
 			case 't':
+			{
 				stringValue = std::string(optarg);
 				logTags.push_back(stringValue);
+
 				break;
+			}
 
 			case '4':
+			{
 				stringValue = std::string(optarg);
 				SetRtcIPv4(stringValue);
+
 				break;
+			}
 
 			case '6':
+			{
 				stringValue = std::string(optarg);
 				SetRtcIPv6(stringValue);
+
 				break;
+			}
 
 			case '5':
+			{
 				stringValue                              = std::string(optarg);
 				Settings::configuration.rtcAnnouncedIPv4 = stringValue;
 				Settings::configuration.hasAnnouncedIPv4 = true;
+
 				break;
+			}
 
 			case '7':
+			{
 				stringValue                              = std::string(optarg);
 				Settings::configuration.rtcAnnouncedIPv6 = stringValue;
 				Settings::configuration.hasAnnouncedIPv6 = true;
+
 				break;
+			}
 
 			case 'm':
+			{
 				Settings::configuration.rtcMinPort = std::stoi(optarg);
+
 				break;
+			}
 
 			case 'M':
+			{
 				Settings::configuration.rtcMaxPort = std::stoi(optarg);
+
 				break;
+			}
 
 			case 'c':
+			{
 				stringValue                                 = std::string(optarg);
 				Settings::configuration.dtlsCertificateFile = stringValue;
+
 				break;
+			}
 
 			case 'p':
+			{
 				stringValue                                = std::string(optarg);
 				Settings::configuration.dtlsPrivateKeyFile = stringValue;
+
 				break;
+			}
 
 			// Invalid option.
 			case '?':
+			{
 				if (isprint(optopt) != 0)
 					MS_THROW_ERROR("invalid option '-%c'", (char)optopt);
 				else
 					MS_THROW_ERROR("unknown long option given as argument");
+			}
 
 			// Valid option, but it requires and argument that is not given.
 			case ':':
+			{
 				MS_THROW_ERROR("option '%c' requires an argument", (char)optopt);
+			}
 
 			// This should never happen.
 			default:
+			{
 				MS_THROW_ERROR("'default' should never happen");
+			}
 		}
 	}
 
@@ -356,6 +392,7 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 		switch (family)
 		{
 			case AF_INET:
+			{
 				// Ignore if already got an IPv4.
 				if (!ipv4.empty())
 					continue;
@@ -365,9 +402,12 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 					continue;
 
 				ipv4 = ip;
+
 				break;
+			}
 
 			case AF_INET6:
+			{
 				// Ignore if already got an IPv6.
 				if (!ipv6.empty())
 					continue;
@@ -377,7 +417,9 @@ void Settings::SetDefaultRtcIP(int requestedFamily)
 					continue;
 
 				ipv6 = ip;
+
 				break;
+			}
 		}
 	}
 
@@ -427,15 +469,25 @@ void Settings::SetRtcIPv4(const std::string& ip)
 	switch (Utils::IP::GetFamily(ip))
 	{
 		case AF_INET:
+		{
 			if (ip == "0.0.0.0")
 				MS_THROW_ERROR("rtcIPv4 cannot be '0.0.0.0'");
+
 			Settings::configuration.rtcIPv4 = ip;
 			Settings::configuration.hasIPv4 = true;
+
 			break;
+		}
+
 		case AF_INET6:
+		{
 			MS_THROW_ERROR("invalid IPv6 '%s' for rtcIPv4", ip.c_str());
+		}
+
 		default:
+		{
 			MS_THROW_ERROR("invalid value '%s' for rtcIPv4", ip.c_str());
+		}
 	}
 
 	int bindErrno;
@@ -462,15 +514,25 @@ void Settings::SetRtcIPv6(const std::string& ip)
 	switch (Utils::IP::GetFamily(ip))
 	{
 		case AF_INET6:
+		{
 			if (ip == "::")
 				MS_THROW_ERROR("rtcIPv6 cannot be '::'");
+
 			Settings::configuration.rtcIPv6 = ip;
 			Settings::configuration.hasIPv6 = true;
+
 			break;
+		}
+
 		case AF_INET:
+		{
 			MS_THROW_ERROR("invalid IPv4 '%s' for rtcIPv6", ip.c_str());
+		}
+
 		default:
+		{
 			MS_THROW_ERROR("invalid value '%s' for rtcIPv6", ip.c_str());
+		}
 	}
 
 	int bindErrno;
@@ -606,7 +668,9 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 	switch (family)
 	{
 		case AF_INET:
+		{
 			err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+
 			if (err != 0)
 				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
@@ -616,10 +680,14 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 
 			err = bind(
 			  bindSocket, reinterpret_cast<const struct sockaddr*>(&bindAddr), sizeof(struct sockaddr_in));
+
 			break;
+		}
 
 		case AF_INET6:
+		{
 			uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+
 			if (err != 0)
 				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 			bindSocket = socket(AF_INET6, SOCK_DGRAM, 0);
@@ -628,10 +696,14 @@ bool isBindableIp(const std::string& ip, int family, int* bindErrno)
 
 			err = bind(
 			  bindSocket, reinterpret_cast<const struct sockaddr*>(&bindAddr), sizeof(struct sockaddr_in6));
+
 			break;
+		}
 
 		default:
+		{
 			MS_ABORT("unknown family");
+		}
 	}
 
 	if (err == 0)
