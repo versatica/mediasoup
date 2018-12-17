@@ -239,11 +239,14 @@ namespace RTC
 					extIds.push_back(std::to_string(pair.first));
 			}
 
-			std::copy(
-			  extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ","));
-			extIdsStream << extIds.back();
+			if (!extIds.empty())
+			{
+				std::copy(
+				  extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ","));
+				extIdsStream << extIds.back();
 
-			MS_DEBUG_DEV("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
+				MS_DEBUG_DEV("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
+			}
 		}
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
