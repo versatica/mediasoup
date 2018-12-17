@@ -40,29 +40,29 @@ For memory leak detection enable the following environment variable:
 
 * `LSAN_OPTIONS=verbosity=1:log_threads=1`
 
-The `fuzzer/fuzzer.cpp` file reads some custom environment variables to decide which kind of checks perform:
+The `fuzzer/fuzzer.cpp` file reads some custom environment variables to decide which kind of fuzzing perform:
 
-* `MS_FUZZ_STUN=1`: Do STUN checks.
-* `MS_FUZZ_RTCP=1`: Do RTCP checks.
-* `MS_FUZZ_RTP=1`: Do RTP checks.
-* If none of them is given, then **all** checks are enabled.
+* `MS_FUZZ_STUN=1`: Do STUN fuzzing.
+* `MS_FUZZ_RTP=1`: Do RTP fuzzing.
+* `MS_FUZZ_RTCP=1`: Do RTCP fuzzing.
+* If none of them is given, then **all** fuzzers are enabled.
 
 
 ## Usage examples
 
-* Detect memory leaks and just check STUN:
+* Detect memory leaks and just fuzz STUN:
 
 ```bash
 $ MS_FUZZ_STUN=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/stun-corpus
 ```
 
-* Detect memory leaks and just check RTCP:
+* Detect memory leaks and just fuzz RTCP:
 
 ```bash
 $ MS_FUZZ_RTCP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/rtcp-corpus
 ```
 
-* Detect memory leaks and check everything:
+* Detect memory leaks and fuzz everything:
 
 ```bash
 $ LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/stun-corpus fuzzer/corpora/rtcp-corpus fuzzer/corpora/rtp-corpus
