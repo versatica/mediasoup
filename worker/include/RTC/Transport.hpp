@@ -37,8 +37,6 @@ namespace RTC
 		{
 		public:
 			virtual void OnTransportClosed(RTC::Transport* transport) = 0;
-			virtual void OnTransportReceiveRtcpFeedback(
-			  RTC::Transport* transport, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet) = 0;
 		};
 
 	public:

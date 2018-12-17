@@ -1604,20 +1604,6 @@ namespace RTC
 		this->transports.erase(transport->transportId);
 	}
 
-	void Router::OnTransportReceiveRtcpFeedback(
-	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, RTC::RTCP::FeedbackPsPacket* packet)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(
-		  this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
-		  "Consumer not present in mapConsumerProducer");
-
-		auto* producer = this->mapConsumerProducer[consumer];
-
-		producer->ReceiveRtcpFeedback(packet);
-	}
-
 	void Router::OnProducerClosed(RTC::Producer* producer)
 	{
 		MS_TRACE();

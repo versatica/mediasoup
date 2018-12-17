@@ -345,38 +345,6 @@ namespace RTC
 		this->lastRtcpSentTime = now;
 	}
 
-	void Producer::ReceiveRtcpFeedback(RTC::RTCP::FeedbackPsPacket* packet) const
-	{
-		MS_TRACE();
-
-		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet->GetSize() > RTC::RTCP::BufferSize)
-		{
-			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
-
-			return;
-		}
-
-		packet->Serialize(RTC::RTCP::Buffer);
-		this->transport->SendRtcpPacket(packet);
-	}
-
-	void Producer::ReceiveRtcpFeedback(RTC::RTCP::FeedbackRtpPacket* packet) const
-	{
-		MS_TRACE();
-
-		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet->GetSize() > RTC::RTCP::BufferSize)
-		{
-			MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
-
-			return;
-		}
-
-		packet->Serialize(RTC::RTCP::Buffer);
-		this->transport->SendRtcpPacket(packet);
-	}
-
 	void Producer::RequestKeyFrame(bool force)
 	{
 		MS_TRACE();
