@@ -157,7 +157,7 @@ Replace the references of the current directory by the keywork 'PATH':
 $  sed -i "s|$PWD|PATH|g" compile_commands.json
 ```
 
-Edit the file and remove the entry related to Utils/IP.cpp compilation unit, which is automatically created and does not follow the clang-tidy rules.
+Edit the file and remove the entry related to `Utils/IP.cpp` compilation unit, which is automatically created and does not follow the clang-tidy rules.
 
 *NOTE:* It just works on Linux and OSX.
 

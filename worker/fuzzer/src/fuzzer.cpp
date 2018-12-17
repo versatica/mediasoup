@@ -6,7 +6,9 @@
 #include "Logger.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "fuzzers.hpp"
+#include "RTC/FuzzerStunMessage.hpp"
+#include "RTC/FuzzerRtpPacket.hpp"
+#include "RTC/RTCP/FuzzerPacket.hpp"
 #include <stdint.h>
 #include <stddef.h>
 #include <cstdlib> // std::getenv()
@@ -63,13 +65,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	static int unused = init();
 
 	if (fuzzStun)
-		fuzzers::fuzzStun(data, len);
+		Fuzzer::RTC::StunMessage::Fuzz(data, len);
 
 	if (fuzzRtp)
-		fuzzers::fuzzRtp(data, len);
+		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
 
 	if (fuzzRtcp)
-		fuzzers::fuzzRtcp(data, len);
+		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
 
 	return 0;
 }

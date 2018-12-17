@@ -17,7 +17,7 @@ Once we have built the `mediasoup-worker-fuzzer` target in a Linux environment w
 
 The `fuzzer/corpora` directory has corpus directories taken from Chromium projects. They should be use to feed fuzzer with appropriate input.
 
-However, given how `libFuzzer` works, the first directory given as command line parameter is not just used for reading corpus files, but also to store newly generated ones. So, it's recommended to pass `fuzzer/new-corpus` as first directory. Such a directory is gitignored (for now).
+However, given how `libFuzzer` [works](http://llvm.org/docs/LibFuzzer.html#options), the first directory given as command line parameter is not just used for reading corpus files, but also to store newly generated ones. So, it's recommended to pass `fuzzer/new-corpus` as first directory. Such a directory is gitignored (for now).
 
 
 ## Crash reports
@@ -40,7 +40,7 @@ For memory leak detection enable the following environment variable:
 
 * `LSAN_OPTIONS=verbosity=1:log_threads=1`
 
-The `fuzzer/fuzzer.cpp` file reads some custom environment variables to decide which kind of fuzzing perform:
+The mediasoup-worker fuzzer reads some custom environment variables to decide which kind of fuzzing perform:
 
 * `MS_FUZZ_STUN=1`: Do STUN fuzzing.
 * `MS_FUZZ_RTP=1`: Do RTP fuzzing.
