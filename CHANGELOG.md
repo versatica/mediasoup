@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.0
+
+* Integrate [libFuzzer](http://llvm.org/docs/LibFuzzer.html) into mediasoup (documentation in the `doc` folder). Extensive testing done. Several heap-buffer-overflow and memory leaks fixed.
+
+
 ### 2.5.6
 
 * `Producer.cpp`: Remove `UpdateRtpParameters()`. It was broken since Consumers
