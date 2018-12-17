@@ -55,8 +55,8 @@ namespace RTC
 		template<typename Item>
 		FeedbackRtpItemsPacket<Item>::~FeedbackRtpItemsPacket()
 		{
-			for (auto& item : this->items)
-				delete (item);
+			for (auto* item : this->items)
+				delete item;
 		}
 
 		template<typename Item>
