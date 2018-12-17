@@ -51,8 +51,9 @@
  *
  * MS_ERROR(...)
  *
- *   Logs an error if the current debug level is satisfied. Must just be used for
- *   internal errors that should not happen.
+ *   Logs an error if the current debug level is satisfied (or if the current
+ *   source file defines the MS_LOG_DEV macro). Must just be used for internal
+ *   errors that should not happen.
  *
  * MS_ABORT(...)
  *
@@ -309,7 +310,7 @@ public:
 #define MS_ERROR(desc, ...) \
 	do \
 	{ \
-		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR) \
+		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR || _MS_LOG_DEV_ENABLED) \
 		{ \
 			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
@@ -320,7 +321,7 @@ public:
 #define MS_ERROR_STD(desc, ...) \
 	do \
 	{ \
-		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR) \
+		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR || _MS_LOG_DEV_ENABLED) \
 		{ \
 			std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
 			std::fflush(stderr); \
