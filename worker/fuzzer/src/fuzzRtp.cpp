@@ -12,8 +12,8 @@ namespace fuzzers
 			return;
 
 		// We need to clone the given data into a separate buffer because setters
-		// below will try to write into the packet memory.
-		static uint8_t data2[524288];
+		// below will try to write into packet memory.
+		uint8_t data2[len];
 
 		std::memcpy(data2, data, len);
 
