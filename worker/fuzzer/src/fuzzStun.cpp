@@ -15,7 +15,7 @@ namespace fuzzers
 		if (!msg)
 			return;
 
-		// msg->Dump(); // NOTE: This prints to stdout.
+		msg->Dump();
 		msg->GetClass();
 		msg->GetMethod();
 		msg->GetData();

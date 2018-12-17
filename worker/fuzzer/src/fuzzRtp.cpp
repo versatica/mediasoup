@@ -22,7 +22,7 @@ namespace fuzzers
 		if (!packet)
 			return;
 
-		// packet->Dump(); // NOTE: This prints to stdout.
+		packet->Dump();
 		packet->GetData();
 		packet->GetSize();
 		packet->GetPayloadType();
