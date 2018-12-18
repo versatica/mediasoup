@@ -543,8 +543,9 @@ namespace RTC
 					break;
 				}
 
-				// Store the One-Byte extension element in a map.
-				this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
+				// Store the One-Byte extension element in a map. Ignore if 0.
+				if (id != 0u)
+					this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
 
 				ptr += 1 + len;
 
@@ -576,8 +577,9 @@ namespace RTC
 					break;
 				}
 
-				// Store the Two-Bytes extension element in a map.
-				this->twoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
+				// Store the Two-Bytes extension element in a map. Ignore if 0.
+				if (id != 0u)
+					this->twoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
 
 				ptr += len;
 
