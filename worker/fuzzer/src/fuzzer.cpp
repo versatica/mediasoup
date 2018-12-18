@@ -21,8 +21,20 @@ bool fuzzRtcp = false;
 int init()
 {
 	std::string loggerId = "fuzzer";
+	LogLevel logLevel{ LogLevel::LOG_NONE };
 
-	Settings::configuration.logLevel = LogLevel::LOG_NONE;
+	// Get logLevel from ENV variable.
+	if (std::getenv("MS_FUZZ_LOG_LEVEL"))
+	{
+		if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "debug")
+			logLevel = LogLevel::LOG_DEBUG;
+		else if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "warn")
+			logLevel = LogLevel::LOG_WARN;
+		else if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "error")
+			logLevel = LogLevel::LOG_ERROR;
+	}
+
+	Settings::configuration.logLevel = logLevel;
 	Logger::Init(loggerId);
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();

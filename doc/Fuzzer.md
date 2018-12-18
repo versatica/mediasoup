@@ -47,6 +47,8 @@ The mediasoup-worker fuzzer reads some custom environment variables to decide wh
 * `MS_FUZZ_RTCP=1`: Do RTCP fuzzing.
 * If none of them is given, then **all** fuzzers are enabled.
 
+The log level can also be set by setting the `MS_FUZZ_LOG_LEVEL` environment variable to "debug", "warn" or "error" (it is "none" if unset).
+
 
 ## Usage examples
 
@@ -62,10 +64,10 @@ $ MS_FUZZ_STUN=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-
 $ MS_FUZZ_RTCP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/rtcp-corpus
 ```
 
-* Detect memory leaks and fuzz everything:
+* Detect memory leaks and fuzz everything with log level "warn":
 
 ```bash
-$ LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/stun-corpus fuzzer/corpora/rtcp-corpus fuzzer/corpora/rtp-corpus
+$ MS_FUZZ_LOG_LEVEL=warn LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus fuzzer/corpora/stun-corpus fuzzer/corpora/rtcp-corpus fuzzer/corpora/rtp-corpus
 ```
 
 * Verify that a specific crash is fixed:
