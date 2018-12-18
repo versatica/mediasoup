@@ -211,6 +211,15 @@ namespace RTC
 
 				case Attribute::MESSAGE_INTEGRITY:
 				{
+					// Ensure attribute length is 20 bytes.
+					if (attrLength != 20)
+					{
+						MS_WARN_TAG(ice, "attribute MESSAGE-INTEGRITY must be 20 bytes length, message discarded");
+
+						delete msg;
+						return nullptr;
+					}
+
 					hasMessageIntegrity = true;
 					msg->SetMessageIntegrity(attrValuePos);
 
@@ -387,7 +396,7 @@ namespace RTC
 			MS_DEBUG_DEV("  messageIntegrity: %s", messageIntegrity);
 		}
 		if (this->hasFingerprint)
-			MS_DEBUG_DEV("  fingerprint");
+			MS_DEBUG_DEV("  has fingerprint");
 
 		MS_DEBUG_DEV("</StunMessage>");
 	}
@@ -403,7 +412,7 @@ namespace RTC
 			case Class::INDICATION:
 			{
 				// Both USERNAME and MESSAGE-INTEGRITY must be present.
-				if ((this->messageIntegrity == nullptr) || this->username.empty())
+				if (this->messageIntegrity == nullptr || this->username.empty())
 					return Authentication::BAD_REQUEST;
 
 				// Check that USERNAME attribute begins with our local username plus ":".
