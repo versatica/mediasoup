@@ -50,7 +50,7 @@ You can support **mediasoup** by making a donation [here][paypal-url]. Thanks!
 [mediasoup-demo-screenshot]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup-opensips-summit-2017.jpg
 [mediasoup-website]: https://mediasoup.org
 [travis-ci-shield-mediasoup]: https://img.shields.io/travis/versatica/mediasoup/master.svg
-[travis-ci-mediasoup]: http://travis-ci.org/versatica/mediasoup
+[travis-ci-mediasoup]: https://travis-ci.org/versatica/mediasoup
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
 [codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
