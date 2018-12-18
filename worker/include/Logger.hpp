@@ -158,8 +158,8 @@ public:
 		} \
 		while (false)
 #else
-	#define MS_TRACE() ;
-	#define MS_TRACE_STD() ;
+	#define MS_TRACE() {}
+	#define MS_TRACE_STD() {}
 #endif
 
 #define MS_HAS_DEBUG_TAG(tag) \
@@ -301,10 +301,10 @@ public:
 		} \
 		while (false)
 #else
-	#define MS_DEBUG_DEV(desc, ...) ;
-	#define MS_DEBUG_DEV_STD(desc, ...) ;
-	#define MS_WARN_DEV(desc, ...) ;
-	#define MS_WARN_DEV_STD(desc, ...) ;
+	#define MS_DEBUG_DEV(desc, ...) {}
+	#define MS_DEBUG_DEV_STD(desc, ...) {}
+	#define MS_WARN_DEV(desc, ...) {}
+	#define MS_WARN_DEV_STD(desc, ...) {}
 #endif
 
 #define MS_ERROR(desc, ...) \
