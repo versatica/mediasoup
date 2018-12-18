@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.6.1
+
+* worker: Internal refactor and code cleanup.
+* Remove announced support for certain RTCP feedback types that mediasoup does nothing with (and avoid forwarding them to the remote RTP sender).
+* fuzzer: fix some wrong memory access in `RtpPacket::Dump()` and `StunMessage::Dump()` (just used during development).
+
 ### 2.6.0
 
 * Integrate [libFuzzer](http://llvm.org/docs/LibFuzzer.html) into mediasoup (documentation in the `doc` folder). Extensive testing done. Several heap-buffer-overflow and memory leaks fixed.
