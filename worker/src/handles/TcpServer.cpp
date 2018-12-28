@@ -272,7 +272,7 @@ inline void TcpServer::OnUvClosed()
 {
 	MS_TRACE();
 
-	// Motify the subclass.
+	// Notify the subclass.
 	UserOnTcpServerClosed();
 
 	// And delete this.
