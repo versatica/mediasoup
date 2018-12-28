@@ -173,7 +173,8 @@ namespace RTC
 
 			for (auto* socket : this->udpSockets)
 			{
-				socket->Destroy();
+				socket->Close();
+				delete socket;
 			}
 
 			for (auto* server : this->tcpServers)
@@ -212,7 +213,8 @@ namespace RTC
 
 		for (auto* socket : this->udpSockets)
 		{
-			socket->Destroy();
+			socket->Close();
+			delete socket;
 		}
 		this->udpSockets.clear();
 

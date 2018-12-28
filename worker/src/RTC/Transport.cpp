@@ -134,7 +134,10 @@ namespace RTC
 		delete this->mirrorTuple;
 
 		if (this->mirrorSocket != nullptr)
-			this->mirrorSocket->Destroy();
+		{
+			this->mirrorSocket->Close();
+			delete this->mirrorSocket;
+		}
 
 		this->mirrorTuple  = nullptr;
 		this->mirrorSocket = nullptr;

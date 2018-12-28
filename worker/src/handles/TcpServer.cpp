@@ -163,7 +163,8 @@ void TcpServer::Destroy()
 
 		for (auto connection : this->connections)
 		{
-			connection->Destroy();
+			connection->Close();
+			delete connection;
 		}
 	}
 }
@@ -253,19 +254,17 @@ inline void TcpServer::OnUvConnection(int status)
 	try
 	{
 		connection->Start();
+
+		// Notify the subclass.
+		UserOnNewTcpConnection(connection);
 	}
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR("cannot run the TCP connection, closing the connection: %s", error.what());
 
-		connection->Destroy();
-
-		// NOTE: Don't return here so the user won't be notified about a TCP connection
-		// closure for which there was not a previous creation event.
+		connection->Close();
+		delete connection;
 	}
-
-	// Notify the subclass.
-	UserOnNewTcpConnection(connection);
 }
 
 inline void TcpServer::OnUvClosed()

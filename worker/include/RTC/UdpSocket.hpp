@@ -39,8 +39,6 @@ namespace RTC
 	public:
 		UdpSocket(Listener* listener, int addressFamily);
 		UdpSocket(Listener* listener, const std::string& ip);
-
-	private:
 		~UdpSocket() override = default;
 
 		/* Pure virtual methods inherited from ::UdpSocket. */

@@ -40,11 +40,7 @@ inline static void onSend(uv_udp_send_t* req, int status)
 
 inline static void onClose(uv_handle_t* handle)
 {
-	static_cast<UdpSocket*>(handle->data)->OnUvClosed();
-}
-
-inline static void onErrorClose(uv_handle_t* handle)
-{
+	MS_ERROR("---- delete handle");
 	delete handle;
 }
 
@@ -100,7 +96,7 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 
 		default:
 		{
-			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 
 			MS_THROW_ERROR("invalid binding IP '%s'", ip.c_str());
 
@@ -111,7 +107,7 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	err = uv_udp_bind(this->uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
 	if (err != 0)
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 		MS_THROW_ERROR("uv_udp_bind() failed: %s", uv_strerror(err));
 	}
 
@@ -119,14 +115,14 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 	  this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
 	if (err != 0)
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -143,14 +139,14 @@ UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	  this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
 	if (err != 0)
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 		MS_THROW_ERROR("uv_udp_recv_start() failed: %s", uv_strerror(err));
 	}
 
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onErrorClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 		MS_THROW_ERROR("error setting local IP and port");
 	}
 }
@@ -159,19 +155,20 @@ UdpSocket::~UdpSocket()
 {
 	MS_TRACE();
 
-	delete this->uvHandle;
+	if (!this->closed)
+		Close();
 }
 
-void UdpSocket::Destroy()
+void UdpSocket::Close()
 {
 	MS_TRACE();
 
-	if (this->isClosing)
+	if (this->closed)
 		return;
 
 	int err;
 
-	this->isClosing = true;
+	this->closed = true;
 
 	// Don't read more.
 	err = uv_udp_recv_stop(this->uvHandle);
@@ -179,6 +176,9 @@ void UdpSocket::Destroy()
 		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
 
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+
+	// Notify the subclass.
+	UserOnUdpSocketClosed();
 }
 
 void UdpSocket::Dump() const
@@ -188,7 +188,7 @@ void UdpSocket::Dump() const
 	  "  [UDP, local:%s :%" PRIu16 ", status:%s]",
 	  this->localIP.c_str(),
 	  static_cast<uint16_t>(this->localPort),
-	  (!this->isClosing) ? "open" : "closed");
+	  (!this->closed) ? "open" : "closed");
 	MS_DEBUG_DEV("</UdpSocket>");
 }
 
@@ -196,7 +196,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 {
 	MS_TRACE();
 
-	if (this->isClosing)
+	if (this->closed)
 		return;
 
 	if (len == 0)
@@ -271,7 +271,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 {
 	MS_TRACE();
 
-	if (this->isClosing)
+	if (this->closed)
 		return;
 
 	int err;
@@ -357,7 +357,7 @@ inline void UdpSocket::OnUvRecv(
 {
 	MS_TRACE();
 
-	if (this->isClosing)
+	if (this->closed)
 		return;
 
 	// NOTE: libuv calls twice to alloc & recv when a datagram is received, the
@@ -393,19 +393,8 @@ inline void UdpSocket::OnUvSendError(int /*error*/)
 {
 	MS_TRACE();
 
-	if (this->isClosing)
+	if (this->closed)
 		return;
 
 	MS_DEBUG_DEV("send error: %s", uv_strerror(error));
-}
-
-inline void UdpSocket::OnUvClosed()
-{
-	MS_TRACE();
-
-	// Notify the subclass.
-	UserOnUdpSocketClosed();
-
-	// And delete this.
-	delete this;
 }

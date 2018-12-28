@@ -37,19 +37,17 @@ public:
 	explicit TcpConnection(size_t bufferSize);
 	TcpConnection& operator=(const TcpConnection&) = delete;
 	TcpConnection(const TcpConnection&)            = delete;
-
-protected:
 	virtual ~TcpConnection();
 
 public:
-	void Destroy();
+	void Close();
 	virtual void Dump() const;
 	void Setup(
 	  Listener* listener,
 	  struct sockaddr_storage* localAddr,
 	  const std::string& localIP,
 	  uint16_t localPort);
-	bool IsClosing() const;
+	bool IsClosed() const;
 	uv_tcp_t* GetUvHandle() const;
 	void Start();
 	void Write(const uint8_t* data, size_t len);
@@ -71,8 +69,6 @@ public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
 	void OnUvWriteError(int error);
-	void OnUvShutdown(uv_shutdown_t* req, int status);
-	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
@@ -85,7 +81,7 @@ private:
 	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
 	struct sockaddr_storage* localAddr{ nullptr };
-	bool isClosing{ false };
+	bool closed{ false };
 	bool isClosedByPeer{ false };
 	bool hasError{ false };
 
@@ -105,9 +101,9 @@ protected:
 
 /* Inline methods. */
 
-inline bool TcpConnection::IsClosing() const
+inline bool TcpConnection::IsClosed() const
 {
-	return this->isClosing;
+	return this->closed;
 }
 
 inline uv_tcp_t* TcpConnection::GetUvHandle() const

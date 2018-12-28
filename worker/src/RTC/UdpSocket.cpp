@@ -11,7 +11,7 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void onErrorClose(uv_handle_t* handle)
+static inline void onClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -188,7 +188,7 @@ namespace RTC
 				  iteratingPort,
 				  uv_strerror(err));
 
-				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onErrorClose));
+				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)

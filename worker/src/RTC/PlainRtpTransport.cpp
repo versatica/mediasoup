@@ -43,7 +43,8 @@ namespace RTC
 			catch (const MediaSoupError& error)
 			{
 				// Destroy UdpSocket since ~PlainRtpTransport() will not be called.
-				this->udpSocket->Destroy();
+				this->udpSocket->Close();
+				delete this->udpSocket;
 
 				throw;
 			}
@@ -86,7 +87,10 @@ namespace RTC
 		delete this->tuple;
 
 		if (this->udpSocket != nullptr)
-			this->udpSocket->Destroy();
+		{
+			this->udpSocket->Close();
+			delete this->udpSocket;
+		}
 	}
 
 	Json::Value PlainRtpTransport::ToJson() const
