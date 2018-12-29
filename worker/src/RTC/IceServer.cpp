@@ -27,13 +27,6 @@ namespace RTC
 		  this->password.c_str());
 	}
 
-	void IceServer::Destroy()
-	{
-		MS_TRACE();
-
-		delete this;
-	}
-
 	void IceServer::ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();

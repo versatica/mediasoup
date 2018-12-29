@@ -33,11 +33,6 @@ namespace RTC
 	Router::~Router()
 	{
 		MS_TRACE();
-	}
-
-	void Router::Destroy()
-	{
-		MS_TRACE();
 
 		// Close all the Producers.
 		for (auto it = this->producers.begin(); it != this->producers.end();)
@@ -73,8 +68,6 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnRouterClosed(this);
-
-		delete this;
 	}
 
 	Json::Value Router::ToJson() const

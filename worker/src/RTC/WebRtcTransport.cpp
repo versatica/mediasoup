@@ -163,13 +163,7 @@ namespace RTC
 		// Ensure there is at least one IP:port binding.
 		if (this->udpSockets.empty() && this->tcpServers.empty())
 		{
-			// NOTE: We must manually delete above allocated objects. We cannot call `delete this`
-			// here since it would call the parent ~Transport destructor, and it would be called
-			// again after throwing the exception here.
-			//
-			// See: https://github.com/versatica/mediasoup/issues/222
-
-			this->iceServer->Destroy();
+			delete this->iceServer;
 
 			for (auto* socket : this->udpSockets)
 			{
@@ -198,17 +192,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->srtpRecvSession != nullptr)
-			this->srtpRecvSession->Destroy();
-
-		if (this->srtpSendSession != nullptr)
-			this->srtpSendSession->Destroy();
-
-		if (this->dtlsTransport != nullptr)
-			this->dtlsTransport->Destroy();
-
-		if (this->iceServer != nullptr)
-			this->iceServer->Destroy();
+		delete this->iceServer;
 
 		for (auto* socket : this->udpSockets)
 		{
@@ -222,7 +206,13 @@ namespace RTC
 		}
 		this->tcpServers.clear();
 
-		this->selectedTuple = nullptr;
+		delete this->dtlsTransport;
+
+		if (this->srtpRecvSession != nullptr)
+			delete this->srtpRecvSession;
+
+		if (this->srtpSendSession != nullptr)
+			delete this->srtpSendSession;
 	}
 
 	Json::Value WebRtcTransport::ToJson() const
@@ -1128,12 +1118,12 @@ namespace RTC
 		// Close it if it was already set and update it.
 		if (this->srtpSendSession != nullptr)
 		{
-			this->srtpSendSession->Destroy();
+			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
 		if (this->srtpRecvSession != nullptr)
 		{
-			this->srtpRecvSession->Destroy();
+			delete this->srtpRecvSession;
 			this->srtpRecvSession = nullptr;
 		}
 
@@ -1156,7 +1146,7 @@ namespace RTC
 		{
 			MS_ERROR("error creating SRTP receiving session: %s", error.what());
 
-			this->srtpSendSession->Destroy();
+			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
 

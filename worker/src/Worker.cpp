@@ -65,7 +65,7 @@ void Worker::Close()
 		RTC::Router* router = it->second;
 
 		it = this->routers.erase(it);
-		router->Destroy();
+		delete router;
 	}
 
 	// Delete the Notifier.
@@ -238,7 +238,8 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 				return;
 			}
 
-			router->Destroy();
+			delete router;
+
 			request->Accept();
 
 			break;

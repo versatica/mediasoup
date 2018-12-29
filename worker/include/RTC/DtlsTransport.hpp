@@ -122,12 +122,9 @@ namespace RTC
 
 	public:
 		explicit DtlsTransport(Listener* listener);
-
-	private:
 		~DtlsTransport() override;
 
 	public:
-		void Destroy();
 		void Dump() const;
 		void Run(Role localRole);
 		bool SetRemoteFingerprint(Fingerprint fingerprint);
