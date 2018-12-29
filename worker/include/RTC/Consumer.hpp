@@ -34,12 +34,9 @@ namespace RTC
 		  uint32_t consumerId,
 		  RTC::Media::Kind kind,
 		  uint32_t sourceProducerId);
-
-	private:
 		virtual ~Consumer();
 
 	public:
-		void Destroy();
 		Json::Value ToJson() const;
 		Json::Value GetStats() const;
 		void AddListener(RTC::ConsumerListener* listener);

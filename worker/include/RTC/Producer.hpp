@@ -57,13 +57,9 @@ namespace RTC
 		  RTC::RtpParameters& rtpParameters,
 		  struct RtpMapping& rtpMapping,
 		  bool paused);
+		~Producer();
 
 	public:
-		// Must be public because Router needs to call it.
-		virtual ~Producer();
-
-	public:
-		void Destroy();
 		Json::Value ToJson() const;
 		Json::Value GetStats() const;
 		void AddListener(RTC::ProducerListener* listener);

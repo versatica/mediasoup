@@ -30,13 +30,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!this->closed)
+			Close();
+	}
+
+	void Transport::Close()
+	{
+		MS_TRACE();
+
+		if (this->closed)
+			return;
+
+		this->closed = true;
+
 		// Close all the handled Producers.
 		for (auto it = this->producers.begin(); it != this->producers.end();)
 		{
 			auto* producer = *it;
 
 			it = this->producers.erase(it);
-			producer->Destroy();
+			delete producer;
 		}
 
 		// Disable all the handled Consumers.
@@ -58,19 +71,12 @@ namespace RTC
 		// Delete mirror socket.
 		if (this->mirrorSocket != nullptr)
 			delete this->mirrorSocket;
-	}
-
-	void Transport::Destroy()
-	{
-		MS_TRACE();
-
-		// Notify.
-		this->notifier->Emit(this->transportId, "close");
 
 		// Notify the listener.
 		this->listener->OnTransportClosed(this);
 
-		delete this;
+		// Notify.
+		this->notifier->Emit(this->transportId, "close");
 	}
 
 	void Transport::StartMirroring(MirroringOptions& options)

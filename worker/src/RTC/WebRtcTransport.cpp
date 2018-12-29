@@ -192,6 +192,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// It's important deleting DTLS transport first since it will generate a
+		// DTLS alert to be sent.
+		delete this->dtlsTransport;
+
 		delete this->iceServer;
 
 		for (auto* socket : this->udpSockets)
@@ -205,8 +209,6 @@ namespace RTC
 			delete server;
 		}
 		this->tcpServers.clear();
-
-		delete this->dtlsTransport;
 
 		if (this->srtpRecvSession != nullptr)
 			delete this->srtpRecvSession;
@@ -1181,7 +1183,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
-		Destroy();
+		Close();
 	}
 
 	void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1200,7 +1202,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
-		Destroy();
+		Close();
 	}
 
 	void WebRtcTransport::OnOutgoingDtlsData(

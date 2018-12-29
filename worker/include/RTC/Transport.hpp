@@ -67,12 +67,10 @@ namespace RTC
 
 	public:
 		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId);
-
-	protected:
 		virtual ~Transport();
 
 	public:
-		void Destroy();
+		void Close();
 		virtual Json::Value ToJson() const   = 0;
 		virtual Json::Value GetStats() const = 0;
 		void HandleProducer(RTC::Producer* producer);
@@ -132,9 +130,10 @@ namespace RTC
 		Channel::Notifier* notifier{ nullptr };
 		// Allocated by this.
 		Timer* rtcpTimer{ nullptr };
-		// Allocated (Mirroring).
 		RTC::UdpSocket* mirrorSocket{ nullptr };
 		RTC::TransportTuple* mirrorTuple{ nullptr };
+		// Others.
+		bool closed{ false };
 		// Others (Producers and Consumers).
 		std::unordered_set<RTC::Producer*> producers;
 		std::unordered_set<RTC::Consumer*> consumers;

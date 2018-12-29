@@ -42,7 +42,7 @@ namespace RTC
 			}
 			catch (const MediaSoupError& error)
 			{
-				// Destroy UdpSocket since ~PlainRtpTransport() will not be called.
+				// Close UdpSocket since ~PlainRtpTransport() will not be called.
 				delete this->udpSocket;
 
 				throw;
