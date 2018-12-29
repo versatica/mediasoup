@@ -32,7 +32,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Close the status check timer.
-		this->statusCheckTimer->Destroy();
+		delete this->statusCheckTimer;
 	}
 
 	Json::Value RtpStream::ToJson()
@@ -260,8 +260,6 @@ namespace RTC
 		MS_TRACE();
 
 		if (timer == this->statusCheckTimer)
-		{
 			CheckStatus();
-		}
 	}
 } // namespace RTC

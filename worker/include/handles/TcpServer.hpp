@@ -15,14 +15,11 @@ public:
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */
 	TcpServer(uv_tcp_t* uvHandle, int backlog);
-
-protected:
-	~TcpServer() override;
+	virtual ~TcpServer() override;
 
 public:
-	void Destroy();
+	void Close();
 	virtual void Dump() const;
-	bool IsClosing() const;
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIP() const;
@@ -37,12 +34,10 @@ protected:
 	virtual void UserOnTcpConnectionAlloc(TcpConnection** connection)                      = 0;
 	virtual void UserOnNewTcpConnection(TcpConnection* connection)                         = 0;
 	virtual void UserOnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
-	virtual void UserOnTcpServerClosed()                                                   = 0;
 
 	/* Callbacks fired by UV events. */
 public:
 	void OnUvConnection(int status);
-	void OnUvClosed();
 
 	/* Methods inherited from TcpConnection::Listener. */
 public:
@@ -53,7 +48,7 @@ private:
 	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
 	std::unordered_set<TcpConnection*> connections;
-	bool isClosing{ false };
+	bool closed{ false };
 
 protected:
 	struct sockaddr_storage localAddr;
@@ -62,11 +57,6 @@ protected:
 };
 
 /* Inline methods. */
-
-inline bool TcpServer::IsClosing() const
-{
-	return this->isClosing;
-}
 
 inline size_t TcpServer::GetNumConnections() const
 {

@@ -39,19 +39,32 @@ Timer::Timer(Listener* listener) : listener(listener)
 	}
 }
 
-void Timer::Destroy()
+Timer::~Timer()
 {
 	MS_TRACE();
 
-	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+	if (!this->closed)
+		Close();
+}
 
-	// Delete this.
-	delete this;
+void Timer::Close()
+{
+	MS_TRACE();
+
+	if (this->closed)
+		return;
+
+	this->closed = true;
+
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
 
 void Timer::Start(uint64_t timeout, uint64_t repeat)
 {
 	MS_TRACE();
+
+	if (this->closed)
+		MS_THROW_ERROR("closed");
 
 	this->timeout = timeout;
 	this->repeat  = repeat;
@@ -70,6 +83,9 @@ void Timer::Stop()
 {
 	MS_TRACE();
 
+	if (this->closed)
+		MS_THROW_ERROR("closed");
+
 	int err;
 
 	err = uv_timer_stop(this->uvHandle);
@@ -80,6 +96,9 @@ void Timer::Stop()
 void Timer::Reset()
 {
 	MS_TRACE();
+
+	if (this->closed)
+		MS_THROW_ERROR("closed");
 
 	int err;
 
@@ -97,6 +116,9 @@ void Timer::Reset()
 void Timer::Restart()
 {
 	MS_TRACE();
+
+	if (this->closed)
+		MS_THROW_ERROR("closed");
 
 	int err;
 

@@ -11,7 +11,7 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void onErrorClose(uv_handle_t* handle)
+static inline void onClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -188,7 +188,7 @@ namespace RTC
 				  iteratingPort,
 				  uv_strerror(err));
 
-				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onErrorClose));
+				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)
@@ -235,6 +235,17 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	UdpSocket::~UdpSocket()
+	{
+		MS_TRACE();
+
+		// Mark the port as available again.
+		if (this->localAddr.ss_family == AF_INET)
+			RTC::UdpSocket::availableIPv4Ports[this->localPort] = true;
+		else if (this->localAddr.ss_family == AF_INET6)
+			RTC::UdpSocket::availableIPv6Ports[this->localPort] = true;
+	}
+
 	void UdpSocket::UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr)
 	{
 		MS_TRACE();
@@ -248,16 +259,5 @@ namespace RTC
 
 		// Notify the reader.
 		this->listener->OnPacketRecv(this, data, len, addr);
-	}
-
-	void UdpSocket::UserOnUdpSocketClosed()
-	{
-		MS_TRACE();
-
-		// Mark the port as available again.
-		if (this->localAddr.ss_family == AF_INET)
-			RTC::UdpSocket::availableIPv4Ports[this->localPort] = true;
-		else if (this->localAddr.ss_family == AF_INET6)
-			RTC::UdpSocket::availableIPv6Ports[this->localPort] = true;
 	}
 } // namespace RTC

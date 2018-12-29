@@ -81,17 +81,13 @@ namespace RTC
 			  std::string& remoteCert) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
-			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
-			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
-			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void OnOutgoingDtlsData(
 			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
-			// NOTE: The caller MUST NOT call Destroy() during this callback.
 			virtual void OnDtlsApplicationData(
 			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
@@ -122,12 +118,9 @@ namespace RTC
 
 	public:
 		explicit DtlsTransport(Listener* listener);
-
-	private:
 		~DtlsTransport() override;
 
 	public:
-		void Destroy();
 		void Dump() const;
 		void Run(Role localRole);
 		bool SetRemoteFingerprint(Fingerprint fingerprint);

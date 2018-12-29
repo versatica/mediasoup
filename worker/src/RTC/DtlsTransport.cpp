@@ -579,19 +579,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->ssl != nullptr)
-		{
-			SSL_free(this->ssl);
-			this->ssl               = nullptr;
-			this->sslBioFromNetwork = nullptr;
-			this->sslBioToNetwork   = nullptr;
-		}
-	}
-
-	void DtlsTransport::Destroy()
-	{
-		MS_TRACE();
-
 		if (IsRunning())
 		{
 			// Send close alert to the peer.
@@ -599,10 +586,16 @@ namespace RTC
 			SendPendingOutgoingDtlsData();
 		}
 
-		// Destroy the DTLS timer.
-		this->timer->Destroy();
+		if (this->ssl != nullptr)
+		{
+			SSL_free(this->ssl);
+			this->ssl               = nullptr;
+			this->sslBioFromNetwork = nullptr;
+			this->sslBioToNetwork   = nullptr;
+		}
 
-		delete this;
+		// Close the DTLS timer.
+		delete this->timer;
 	}
 
 	void DtlsTransport::Dump() const

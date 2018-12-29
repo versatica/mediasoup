@@ -163,22 +163,16 @@ namespace RTC
 		// Ensure there is at least one IP:port binding.
 		if (this->udpSockets.empty() && this->tcpServers.empty())
 		{
-			// NOTE: We must manually delete above allocated objects. We cannot call `delete this`
-			// here since it would call the parent ~Transport destructor, and it would be called
-			// again after throwing the exception here.
-			//
-			// See: https://github.com/versatica/mediasoup/issues/222
-
-			this->iceServer->Destroy();
+			delete this->iceServer;
 
 			for (auto* socket : this->udpSockets)
 			{
-				socket->Destroy();
+				delete socket;
 			}
 
 			for (auto* server : this->tcpServers)
 			{
-				server->Destroy();
+				delete server;
 			}
 
 			MS_THROW_ERROR("could not open any IP:port");
@@ -198,31 +192,29 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->srtpRecvSession != nullptr)
-			this->srtpRecvSession->Destroy();
+		// It's important deleting DTLS transport first since it will generate a
+		// DTLS alert to be sent.
+		delete this->dtlsTransport;
 
-		if (this->srtpSendSession != nullptr)
-			this->srtpSendSession->Destroy();
-
-		if (this->dtlsTransport != nullptr)
-			this->dtlsTransport->Destroy();
-
-		if (this->iceServer != nullptr)
-			this->iceServer->Destroy();
+		delete this->iceServer;
 
 		for (auto* socket : this->udpSockets)
 		{
-			socket->Destroy();
+			delete socket;
 		}
 		this->udpSockets.clear();
 
 		for (auto* server : this->tcpServers)
 		{
-			server->Destroy();
+			delete server;
 		}
 		this->tcpServers.clear();
 
-		this->selectedTuple = nullptr;
+		if (this->srtpRecvSession != nullptr)
+			delete this->srtpRecvSession;
+
+		if (this->srtpSendSession != nullptr)
+			delete this->srtpSendSession;
 	}
 
 	Json::Value WebRtcTransport::ToJson() const
@@ -1128,12 +1120,12 @@ namespace RTC
 		// Close it if it was already set and update it.
 		if (this->srtpSendSession != nullptr)
 		{
-			this->srtpSendSession->Destroy();
+			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
 		if (this->srtpRecvSession != nullptr)
 		{
-			this->srtpRecvSession->Destroy();
+			delete this->srtpRecvSession;
 			this->srtpRecvSession = nullptr;
 		}
 
@@ -1156,7 +1148,7 @@ namespace RTC
 		{
 			MS_ERROR("error creating SRTP receiving session: %s", error.what());
 
-			this->srtpSendSession->Destroy();
+			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
 
@@ -1191,7 +1183,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
-		Destroy();
+		Close();
 	}
 
 	void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1210,7 +1202,7 @@ namespace RTC
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
-		Destroy();
+		Close();
 	}
 
 	void WebRtcTransport::OnOutgoingDtlsData(

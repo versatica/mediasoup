@@ -33,11 +33,6 @@ namespace RTC
 	Router::~Router()
 	{
 		MS_TRACE();
-	}
-
-	void Router::Destroy()
-	{
-		MS_TRACE();
 
 		// Close all the Producers.
 		for (auto it = this->producers.begin(); it != this->producers.end();)
@@ -45,7 +40,7 @@ namespace RTC
 			auto* producer = it->second;
 
 			it = this->producers.erase(it);
-			producer->Destroy();
+			delete producer;
 		}
 
 		// Close all the Consumers.
@@ -54,27 +49,25 @@ namespace RTC
 			auto* consumer = it->second;
 
 			it = this->consumers.erase(it);
-			consumer->Destroy();
+			delete consumer;
 		}
 
 		// Close all the Transports.
 		// NOTE: It is critical to close Transports after Producers/Consumers
-		// because their Destroy() method fires an event in the Transport.
+		// because their destructor fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
 			auto* transport = it->second;
 
 			it = this->transports.erase(it);
-			transport->Destroy();
+			delete transport;
 		}
 
 		// Close the audio level timer.
-		this->audioLevelsTimer->Destroy();
+		delete this->audioLevelsTimer;
 
 		// Notify the listener.
 		this->listener->OnRouterClosed(this);
-
-		delete this;
 	}
 
 	Json::Value Router::ToJson() const
@@ -601,7 +594,7 @@ namespace RTC
 					return;
 				}
 
-				transport->Destroy();
+				delete transport;
 
 				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transport->transportId);
 
@@ -999,7 +992,7 @@ namespace RTC
 					return;
 				}
 
-				producer->Destroy();
+				delete producer;
 
 				MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producer->producerId);
 
@@ -1171,7 +1164,7 @@ namespace RTC
 					return;
 				}
 
-				consumer->Destroy();
+				delete consumer;
 
 				request->Accept();
 
@@ -1611,6 +1604,7 @@ namespace RTC
 		this->producers.erase(producer->producerId);
 
 		// Remove the Producer from the map.
+		// NOTE: It may not exist if it failed before being inserted into the maps.
 		if (this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end())
 		{
 			// Iterate the map and close all the Consumers associated to it.
@@ -1621,7 +1615,7 @@ namespace RTC
 				auto* consumer = *it;
 
 				it = consumers.erase(it);
-				consumer->Destroy();
+				delete consumer;
 			}
 
 			// Finally delete the Producer entry in the map.

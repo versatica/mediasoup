@@ -92,6 +92,7 @@ int main(int argc, char* argv[])
 
 		// Worker ended.
 		destroy();
+
 		exitSuccess();
 	}
 	catch (const MediaSoupError& error)

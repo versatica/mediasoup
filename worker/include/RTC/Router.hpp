@@ -38,12 +38,9 @@ namespace RTC
 
 	public:
 		Router(Listener* listener, Channel::Notifier* notifier, uint32_t routerId);
-
-	private:
 		virtual ~Router();
 
 	public:
-		void Destroy();
 		Json::Value ToJson() const;
 		void HandleRequest(Channel::Request* request);
 

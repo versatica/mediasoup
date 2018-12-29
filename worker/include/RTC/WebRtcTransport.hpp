@@ -42,9 +42,7 @@ namespace RTC
 		  Channel::Notifier* notifier,
 		  uint32_t transportId,
 		  Options& options);
-
-	private:
-		~WebRtcTransport();
+		~WebRtcTransport() override;
 
 	public:
 		Json::Value ToJson() const override;

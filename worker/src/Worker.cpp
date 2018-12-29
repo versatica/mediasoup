@@ -39,6 +39,9 @@ Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
 Worker::~Worker()
 {
 	MS_TRACE();
+
+	if (!this->closed)
+		Close();
 }
 
 void Worker::Close()
@@ -46,17 +49,12 @@ void Worker::Close()
 	MS_TRACE();
 
 	if (this->closed)
-	{
-		MS_ERROR("already closed");
-
 		return;
-	}
 
 	this->closed = true;
 
 	// Close the SignalsHandler.
-	if (this->signalsHandler != nullptr)
-		this->signalsHandler->Destroy();
+	delete this->signalsHandler;
 
 	// Close all the Routers.
 	// NOTE: Upon Router closure the onRouterClosed() method is called, which
@@ -67,15 +65,14 @@ void Worker::Close()
 		RTC::Router* router = it->second;
 
 		it = this->routers.erase(it);
-		router->Destroy();
+		delete router;
 	}
 
 	// Delete the Notifier.
 	delete this->notifier;
 
 	// Close the Channel socket.
-	if (this->channel != nullptr)
-		this->channel->Destroy();
+	delete this->channel;
 }
 
 RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request, uint32_t* routerId)
@@ -241,7 +238,8 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 				return;
 			}
 
-			router->Destroy();
+			delete router;
+
 			request->Accept();
 
 			break;
@@ -321,8 +319,6 @@ void Worker::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* 
 	// If the pipe is remotely closed it means that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("Channel remotely closed, killing myself");
-
-	this->channel = nullptr;
 
 	Close();
 }

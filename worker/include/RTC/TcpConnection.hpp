@@ -18,9 +18,6 @@ namespace RTC
 	public:
 		TcpConnection(Listener* listener, size_t bufferSize);
 
-	private:
-		~TcpConnection() override = default;
-
 	public:
 		void Send(const uint8_t* data, size_t len);
 		size_t GetRecvBytes() const;
