@@ -229,6 +229,17 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	TcpServer::~TcpServer()
+	{
+		MS_TRACE();
+
+		// Mark the port as available again.
+		if (this->localAddr.ss_family == AF_INET)
+			RTC::TcpServer::availableIPv4Ports[this->localPort] = true;
+		else if (this->localAddr.ss_family == AF_INET6)
+			RTC::TcpServer::availableIPv6Ports[this->localPort] = true;
+	}
+
 	void TcpServer::UserOnTcpConnectionAlloc(::TcpConnection** connection)
 	{
 		MS_TRACE();
@@ -250,24 +261,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the listener.
-		// NOTE: Don't do it if closing (since at this point the listener is already freed).
-		// At the end, this is just called if the connection was remotely closed.
-		if (!IsClosing())
-		{
-			this->listener->OnRtcTcpConnectionClosed(
-			  this, dynamic_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
-		}
-	}
-
-	void TcpServer::UserOnTcpServerClosed()
-	{
-		MS_TRACE();
-
-		// Mark the port as available again.
-		if (this->localAddr.ss_family == AF_INET)
-			RTC::TcpServer::availableIPv4Ports[this->localPort] = true;
-		else if (this->localAddr.ss_family == AF_INET6)
-			RTC::TcpServer::availableIPv6Ports[this->localPort] = true;
+		this->listener->OnRtcTcpConnectionClosed(
+		  this, dynamic_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
 	}
 } // namespace RTC

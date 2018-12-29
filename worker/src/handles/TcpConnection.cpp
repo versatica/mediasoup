@@ -36,7 +36,6 @@ inline static void onWrite(uv_write_t* req, int status)
 
 inline static void onClose(uv_handle_t* handle)
 {
-	MS_ERROR("---- delete handle");
 	delete handle;
 }
 
@@ -44,10 +43,8 @@ inline static void onShutdown(uv_shutdown_t* req, int status)
 {
 	auto* handle = req->handle;
 
-	MS_ERROR("---- delete req");
 	delete req;
 
-	MS_ERROR("---- calling uv_close()");
 	// Now do close the handle.
 	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onClose));
 }
@@ -130,6 +127,14 @@ void TcpConnection::Setup(
 {
 	MS_TRACE();
 
+	// Set the listener.
+	this->listener = listener;
+
+	// Set the local address.
+	this->localAddr = localAddr;
+	this->localIP   = localIP;
+	this->localPort = localPort;
+
 	int err;
 
 	// Set the UV handle.
@@ -141,14 +146,6 @@ void TcpConnection::Setup(
 
 		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 	}
-
-	// Set the listener.
-	this->listener = listener;
-
-	// Set the local address.
-	this->localAddr = localAddr;
-	this->localIP   = localIP;
-	this->localPort = localPort;
 }
 
 void TcpConnection::Start()

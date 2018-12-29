@@ -151,7 +151,6 @@ namespace RTC
 		uint8_t frameLen[2];
 
 		Utils::Byte::Set2Bytes(frameLen, 0, len);
-
 		Write(frameLen, 2, data, len);
 	}
 } // namespace RTC

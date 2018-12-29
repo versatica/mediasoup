@@ -73,7 +73,7 @@ namespace Channel
 
 	void UnixStreamSocket::Send(Json::Value& msg)
 	{
-		if (this->closed)
+		if (IsClosed())
 			return;
 
 		// MS_TRACE_STD();
@@ -117,7 +117,7 @@ namespace Channel
 
 	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
 	{
-		if (this->closed)
+		if (IsClosed())
 			return;
 
 		// MS_TRACE_STD();
@@ -154,7 +154,7 @@ namespace Channel
 
 	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
 	{
-		if (this->closed)
+		if (IsClosed())
 			return;
 
 		size_t nsNumLen;
@@ -194,7 +194,7 @@ namespace Channel
 		// Be ready to parse more than a single message in a single TCP chunk.
 		while (true)
 		{
-			if (IsClosing())
+			if (IsClosed())
 				return;
 
 			size_t readLen  = this->bufferDataLen - this->msgStart;
@@ -329,12 +329,8 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		this->closed = true;
-
+		// Notify the listener.
 		if (isClosedByPeer)
-		{
-			// Notify the listener.
 			this->listener->OnChannelUnixStreamSocketRemotelyClosed(this);
-		}
 	}
 } // namespace Channel

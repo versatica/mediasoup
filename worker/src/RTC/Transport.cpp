@@ -51,6 +51,14 @@ namespace RTC
 		// Destroy the RTCP timer.
 		if (this->rtcpTimer != nullptr)
 			this->rtcpTimer->Destroy();
+
+		// Delete mirror tuple.
+		if (this->mirrorTuple != nullptr)
+			delete this->mirrorTuple;
+
+		// Delete mirror socket.
+		if (this->mirrorSocket != nullptr)
+			delete this->mirrorSocket;
 	}
 
 	void Transport::Destroy()
@@ -132,12 +140,7 @@ namespace RTC
 	void Transport::StopMirroring()
 	{
 		delete this->mirrorTuple;
-
-		if (this->mirrorSocket != nullptr)
-		{
-			this->mirrorSocket->Close();
-			delete this->mirrorSocket;
-		}
+		delete this->mirrorSocket;
 
 		this->mirrorTuple  = nullptr;
 		this->mirrorSocket = nullptr;

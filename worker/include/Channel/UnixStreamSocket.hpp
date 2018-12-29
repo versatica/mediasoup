@@ -20,8 +20,6 @@ namespace Channel
 
 	public:
 		explicit UnixStreamSocket(int fd);
-
-	private:
 		~UnixStreamSocket() override;
 
 	public:
@@ -42,7 +40,6 @@ namespace Channel
 		Json::CharReader* jsonReader{ nullptr };
 		Json::StreamWriter* jsonWriter{ nullptr };
 		size_t msgStart{ 0 }; // Where the latest message starts.
-		bool closed{ false };
 	};
 } // namespace Channel
 

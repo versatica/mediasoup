@@ -20,13 +20,11 @@ public:
 	UnixStreamSocket(int fd, size_t bufferSize);
 	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
 	UnixStreamSocket(const UnixStreamSocket&)            = delete;
-
-protected:
 	virtual ~UnixStreamSocket();
 
 public:
-	void Destroy();
-	bool IsClosing() const;
+	void Close();
+	bool IsClosed() const;
 	void Write(const uint8_t* data, size_t len);
 	void Write(const std::string& data);
 
@@ -35,8 +33,6 @@ public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
 	void OnUvWriteError(int error);
-	void OnUvShutdown(uv_shutdown_t* req, int status);
-	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
@@ -47,7 +43,7 @@ private:
 	// Allocated by this.
 	uv_pipe_t* uvHandle{ nullptr };
 	// Others.
-	bool isClosing{ false };
+	bool closed{ false };
 	bool isClosedByPeer{ false };
 	bool hasError{ false };
 
@@ -62,9 +58,9 @@ protected:
 
 /* Inline methods. */
 
-inline bool UnixStreamSocket::IsClosing() const
+inline bool UnixStreamSocket::IsClosed() const
 {
-	return this->isClosing;
+	return this->closed;
 }
 
 inline void UnixStreamSocket::Write(const std::string& data)

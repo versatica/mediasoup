@@ -173,13 +173,12 @@ namespace RTC
 
 			for (auto* socket : this->udpSockets)
 			{
-				socket->Close();
 				delete socket;
 			}
 
 			for (auto* server : this->tcpServers)
 			{
-				server->Destroy();
+				delete server;
 			}
 
 			MS_THROW_ERROR("could not open any IP:port");
@@ -213,14 +212,13 @@ namespace RTC
 
 		for (auto* socket : this->udpSockets)
 		{
-			socket->Close();
 			delete socket;
 		}
 		this->udpSockets.clear();
 
 		for (auto* server : this->tcpServers)
 		{
-			server->Destroy();
+			delete server;
 		}
 		this->tcpServers.clear();
 
