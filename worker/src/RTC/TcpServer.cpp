@@ -254,7 +254,7 @@ namespace RTC
 
 		// Allow just MaxTcpConnectionsPerServer.
 		if (GetNumConnections() > MaxTcpConnectionsPerServer)
-			connection->Close();
+			delete connection;
 	}
 
 	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)
