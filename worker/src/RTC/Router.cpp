@@ -5,37 +5,24 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/PlainRtpTransport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/WebRtcTransport.hpp"
-#include <cmath> // std::lround()
 #include <map>
 #include <set>
 #include <string>
 
 namespace RTC
 {
-	/* Static. */
-
-	static constexpr uint64_t AudioLevelsInterval{ 500 }; // In ms.
-
 	/* Instance methods. */
 
-	Router::Router(Listener* listener, Channel::Notifier* notifier, uint32_t routerId)
-	  : routerId(routerId), listener(listener), notifier(notifier)
+	Router::Router(const std::string& routerId) : routerId(routerId)
 	{
 		MS_TRACE();
-
-		// Set the audio levels timer.
-		this->audioLevelsTimer = new Timer(this);
 	}
 
 	Router::~Router()
-	{
-		MS_TRACE();
-	}
-
-	void Router::Destroy()
 	{
 		MS_TRACE();
 
@@ -45,7 +32,7 @@ namespace RTC
 			auto* producer = it->second;
 
 			it = this->producers.erase(it);
-			producer->Destroy();
+			delete producer;
 		}
 
 		// Close all the Consumers.
@@ -54,27 +41,19 @@ namespace RTC
 			auto* consumer = it->second;
 
 			it = this->consumers.erase(it);
-			consumer->Destroy();
+			delete consumer;
 		}
 
 		// Close all the Transports.
 		// NOTE: It is critical to close Transports after Producers/Consumers
-		// because their Destroy() method fires an event in the Transport.
+		// because their destructor fires an event in the Transport.
 		for (auto it = this->transports.begin(); it != this->transports.end();)
 		{
 			auto* transport = it->second;
 
 			it = this->transports.erase(it);
-			transport->Destroy();
+			delete transport;
 		}
-
-		// Close the audio level timer.
-		this->audioLevelsTimer->Destroy();
-
-		// Notify the listener.
-		this->listener->OnRouterClosed(this);
-
-		delete this;
 	}
 
 	Json::Value Router::ToJson() const
@@ -87,7 +66,6 @@ namespace RTC
 		static const Json::StaticString JsonStringConsumers{ "consumers" };
 		static const Json::StaticString JsonStringMapProducerConsumers{ "mapProducerConsumers" };
 		static const Json::StaticString JsonStringMapConsumerProducer{ "mapConsumerProducer" };
-		static const Json::StaticString JsonStringAudioLevelsEventEnabled{ "audioLevelsEventEnabled" };
 
 		Json::Value json(Json::objectValue);
 		Json::Value jsonTransports(Json::arrayValue);
@@ -153,8 +131,6 @@ namespace RTC
 		}
 		json[JsonStringMapConsumerProducer] = jsonMapConsumerProducer;
 
-		json[JsonStringAudioLevelsEventEnabled] = this->audioLevelsEventEnabled;
-
 		return json;
 	}
 
@@ -182,11 +158,11 @@ namespace RTC
 				static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
 				static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
 
-				uint32_t transportId;
+				std::string transportId;
 
 				try
 				{
-					transportId = GetNewTransportIdFromRequest(request);
+					SetNewTransportIdFromRequest(request, transportId);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -215,7 +191,7 @@ namespace RTC
 				try
 				{
 					// NOTE: This may throw.
-					webrtcTransport = new RTC::WebRtcTransport(this, this->notifier, transportId, options);
+					webrtcTransport = new RTC::WebRtcTransport(this, transportId, options);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -244,11 +220,11 @@ namespace RTC
 				static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
 				static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
 
-				uint32_t transportId;
+				std::string transportId;
 
 				try
 				{
-					transportId = GetNewTransportIdFromRequest(request);
+					SetNewTransportIdFromRequest(request, transportId);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -279,7 +255,7 @@ namespace RTC
 				try
 				{
 					// NOTE: This may throw.
-					plainRtpTransport = new RTC::PlainRtpTransport(this, this->notifier, transportId, options);
+					plainRtpTransport = new RTC::PlainRtpTransport(this, transportId, options);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -309,11 +285,11 @@ namespace RTC
 				static const Json::StaticString JsonStringCodecPayloadTypes{ "codecPayloadTypes" };
 				static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
 
-				uint32_t producerId;
+				std::string producerId;
 
 				try
 				{
-					producerId = GetNewProducerIdFromRequest(request);
+					SetNewProducerIdFromRequest(request, producerId);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -392,10 +368,10 @@ namespace RTC
 						if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
 							MS_THROW_ERROR("wrong rtpMapping.codecPayloadTypes entry");
 
-						auto sourcePayloadType = static_cast<uint8_t>(pair[0].asUInt());
+						auto originPayloadType = static_cast<uint8_t>(pair[0].asUInt());
 						auto mappedPayloadType = static_cast<uint8_t>(pair[1].asUInt());
 
-						rtpMapping.codecPayloadTypes[sourcePayloadType] = mappedPayloadType;
+						rtpMapping.codecPayloadTypes[originPayloadType] = mappedPayloadType;
 					}
 
 					for (auto& pair : jsonRtpMapping[JsonStringHeaderExtensionIds])
@@ -403,10 +379,10 @@ namespace RTC
 						if (!pair.isArray() || pair.size() != 2 || !pair[0].isUInt() || !pair[1].isUInt())
 							MS_THROW_ERROR("wrong rtpMapping entry");
 
-						auto sourceHeaderExtensionId = static_cast<uint8_t>(pair[0].asUInt());
+						auto originHeaderExtensionId = static_cast<uint8_t>(pair[0].asUInt());
 						auto mappedHeaderExtensionId = static_cast<uint8_t>(pair[1].asUInt());
 
-						rtpMapping.headerExtensionIds[sourceHeaderExtensionId] = mappedHeaderExtensionId;
+						rtpMapping.headerExtensionIds[originHeaderExtensionId] = mappedHeaderExtensionId;
 					}
 				}
 				catch (const MediaSoupError& error)
@@ -422,8 +398,8 @@ namespace RTC
 					paused = request->data[JsonStringPaused].asBool();
 
 				// Create a Producer instance.
-				auto* producer = new RTC::Producer(
-				  this->notifier, producerId, kind, transport, rtpParameters, rtpMapping, paused);
+				auto* producer =
+				  new RTC::Producer(producerId, kind, transport, rtpParameters, rtpMapping, paused);
 
 				// Add us as listener.
 				producer->AddListener(this);
@@ -458,11 +434,11 @@ namespace RTC
 			{
 				static const Json::StaticString JsonStringKind{ "kind" };
 
-				uint32_t consumerId;
+				std::string consumerId;
 
 				try
 				{
-					consumerId = GetNewConsumerIdFromRequest(request);
+					SetNewConsumerIdFromRequest(request, consumerId);
 				}
 				catch (const MediaSoupError& error)
 				{
@@ -511,14 +487,11 @@ namespace RTC
 					return;
 				}
 
-				auto* consumer = new RTC::Consumer(this->notifier, consumerId, kind, producer->producerId);
+				auto* consumer = new RTC::Consumer(consumerId, kind, producer->producerId);
 
 				// If the Producer is paused tell it to the new Consumer.
 				if (producer->IsPaused())
-					consumer->SourcePause();
-
-				// Provide the preferred RTP profile of the Producer.
-				consumer->SetSourcePreferredProfile(producer->GetPreferredProfile());
+					consumer->ProducerPaused();
 
 				// Add us as listener.
 				consumer->AddListener(this);
@@ -546,46 +519,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_SET_AUDIO_LEVELS_EVENT:
-			{
-				static const Json::StaticString JsonStringEnabled{ "enabled" };
-
-				if (!request->data[JsonStringEnabled].isBool())
-				{
-					request->Reject("Request has invalid data.enabled");
-
-					return;
-				}
-
-				bool enabled = request->data[JsonStringEnabled].asBool();
-
-				if (enabled == this->audioLevelsEventEnabled)
-					return;
-
-				this->audioLevelsEventEnabled = enabled;
-
-				// Clear map of audio levels.
-				this->mapProducerAudioLevelContainer.clear();
-
-				// Start or stop audio levels periodic timer.
-				if (enabled)
-				{
-					MS_DEBUG_DEV("audiolevels event enabled");
-
-					this->audioLevelsTimer->Start(AudioLevelsInterval, AudioLevelsInterval);
-				}
-				else
-				{
-					MS_DEBUG_DEV("audiolevels event disabled");
-
-					this->audioLevelsTimer->Stop();
-				}
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
 			{
 				RTC::Transport* transport;
@@ -601,7 +534,7 @@ namespace RTC
 					return;
 				}
 
-				transport->Destroy();
+				delete transport;
 
 				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transport->transportId);
 
@@ -999,7 +932,7 @@ namespace RTC
 					return;
 				}
 
-				producer->Destroy();
+				delete producer;
 
 				MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producer->producerId);
 
@@ -1096,66 +1029,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PRODUCER_SET_PREFERRED_PROFILE:
-			{
-				static const Json::StaticString JsonStringProfile{ "profile" };
-
-				RTC::Producer* producer;
-
-				try
-				{
-					producer = GetProducerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				if (!request->data[JsonStringProfile].isString())
-				{
-					request->Reject("missing data.profile");
-
-					return;
-				}
-
-				std::string profileStr = request->data[JsonStringProfile].asString();
-				auto it                = RTC::RtpEncodingParameters::string2Profile.find(profileStr);
-
-				if (it == RTC::RtpEncodingParameters::string2Profile.end())
-				{
-					request->Reject("unknown profile");
-
-					return;
-				}
-
-				auto profile = it->second;
-
-				if (profile == RTC::RtpEncodingParameters::Profile::NONE)
-				{
-					request->Reject("invalid profile");
-
-					return;
-				}
-
-				if (profile != producer->GetPreferredProfile())
-				{
-					producer->SetPreferredProfile(profile);
-
-					auto& consumers = this->mapProducerConsumers[producer];
-
-					for (auto* consumer : consumers)
-					{
-						consumer->SetSourcePreferredProfile(profile);
-					}
-				}
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::Request::MethodId::CONSUMER_CLOSE:
 			{
 				RTC::Consumer* consumer;
@@ -1171,7 +1044,7 @@ namespace RTC
 					return;
 				}
 
-				consumer->Destroy();
+				delete consumer;
 
 				request->Accept();
 
@@ -1444,35 +1317,21 @@ namespace RTC
 		}
 	}
 
-	/**
-	 * Looks for internal.transportId numeric field and ensures no Transport exists
-	 * with such a id.
-	 * NOTE: It may throw if invalid request or Transport already exists.
-	 */
-	uint32_t Router::GetNewTransportIdFromRequest(Channel::Request* request) const
+	void Router::SetNewTransportIdFromRequest(Channel::Request* request, std::string& transportId) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTransportId{ "transportId" };
+		auto jsonTransportIdIt = request->internal.find("transportId");
 
-		auto jsonTransportId = request->internal[JsonStringTransportId];
+		if (jsonTransportIdIt == request->internal.end() || !jsonTransportIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.transportId");
 
-		if (!jsonTransportId.isUInt())
-			MS_THROW_ERROR("Request has not numeric internal.transportId");
-
-		uint32_t transportId = jsonTransportId.asUInt();
+		transportId.assign(jsonTransportIdIt->get<std::string>());
 
 		if (this->transports.find(transportId) != this->transports.end())
 			MS_THROW_ERROR("a Transport with same transportId already exists");
-
-		return transportId;
 	}
 
-	/**
-	 * Looks for internal.transportId numeric field and returns the corresponding
-	 * Transport.
-	 * NOTE: It may throw if invalid request or Transport does not exist.
-	 */
 	RTC::Transport* Router::GetTransportFromRequest(Channel::Request* request) const
 	{
 		MS_TRACE();
@@ -1482,7 +1341,7 @@ namespace RTC
 		auto jsonTransportId = request->internal[JsonStringTransportId];
 
 		if (!jsonTransportId.isUInt())
-			MS_THROW_ERROR("Request has not numeric internal.transportId");
+			MS_THROW_ERROR("request has no internal.transportId");
 
 		uint32_t transportId = jsonTransportId.asUInt();
 
@@ -1495,35 +1354,21 @@ namespace RTC
 		return transport;
 	}
 
-	/**
-	 * Looks for internal.producerId numeric field and ensures no Producer exists
-	 * with such a id.
-	 * NOTE: It may throw if invalid request or Producer already exists.
-	 */
-	uint32_t Router::GetNewProducerIdFromRequest(Channel::Request* request) const
+	void Router::SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringProducerId{ "producerId" };
+		auto jsonProducerIdIt = request->internal.find("producerId");
 
-		auto jsonProducerId = request->internal[JsonStringProducerId];
+		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.producerId");
 
-		if (!jsonProducerId.isUInt())
-			MS_THROW_ERROR("Request has not numeric internal.producerId");
-
-		uint32_t producerId = jsonProducerId.asUInt();
+		producerId.assign(jsonProducerIdIt->get<std::string>());
 
 		if (this->producers.find(producerId) != this->producers.end())
 			MS_THROW_ERROR("a Producer with same producerId already exists");
-
-		return producerId;
 	}
 
-	/**
-	 * Looks for internal.producerId numeric field and returns the corresponding
-	 * Producer.
-	 * NOTE: It may throw if invalid request or Producer does not exist.
-	 */
 	RTC::Producer* Router::GetProducerFromRequest(Channel::Request* request) const
 	{
 		MS_TRACE();
@@ -1533,7 +1378,7 @@ namespace RTC
 		auto jsonProducerId = request->internal[JsonStringProducerId];
 
 		if (!jsonProducerId.isUInt())
-			MS_THROW_ERROR("Request has not numeric internal.producerId");
+			MS_THROW_ERROR("request has no internal.producerId");
 
 		uint32_t producerId = jsonProducerId.asUInt();
 
@@ -1546,35 +1391,21 @@ namespace RTC
 		return producer;
 	}
 
-	/**
-	 * Looks for internal.consumerId numeric field and ensures no Consumer exists
-	 * with such a id.
-	 * NOTE: It may throw if invalid request or Consumer already exists.
-	 */
-	uint32_t Router::GetNewConsumerIdFromRequest(Channel::Request* request) const
+	void Router::SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringConsumerId{ "consumerId" };
+		auto jsonConsumerIdIt = request->internal.find("consumerId");
 
-		auto jsonConsumerId = request->internal[JsonStringConsumerId];
+		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.consumerId");
 
-		if (!jsonConsumerId.isUInt())
-			MS_THROW_ERROR("Request has not numeric internal.consumerId");
-
-		uint32_t consumerId = jsonConsumerId.asUInt();
+		consumerId.assign(jsonConsumerIdIt->get<std::string>());
 
 		if (this->consumers.find(consumerId) != this->consumers.end())
 			MS_THROW_ERROR("a Consumer with same consumerId already exists");
-
-		return consumerId;
 	}
 
-	/**
-	 * Looks for internal.consumerId numeric field and returns the corresponding
-	 * Consumer.
-	 * NOTE: It may throw if invalid request or Consumer does not exist.
-	 */
 	RTC::Consumer* Router::GetConsumerFromRequest(Channel::Request* request) const
 	{
 		MS_TRACE();
@@ -1611,9 +1442,10 @@ namespace RTC
 		this->producers.erase(producer->producerId);
 
 		// Remove the Producer from the map.
+		// NOTE: It may not exist if it failed before being inserted into the maps.
 		if (this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end())
 		{
-			// Iterate the map and close all the Consumers associated to it.
+			// Iterate the map and close all Consumers associated to it.
 			auto& consumers = this->mapProducerConsumers[producer];
 
 			for (auto it = consumers.begin(); it != consumers.end();)
@@ -1621,15 +1453,12 @@ namespace RTC
 				auto* consumer = *it;
 
 				it = consumers.erase(it);
-				consumer->Destroy();
+				delete consumer;
 			}
 
 			// Finally delete the Producer entry in the map.
 			this->mapProducerConsumers.erase(producer);
 		}
-
-		// Also delete it from the map of audio levels.
-		this->mapProducerAudioLevelContainer.erase(producer);
 	}
 
 	void Router::OnProducerPaused(RTC::Producer* producer)
@@ -1644,7 +1473,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->SourcePause();
+			consumer->ProducerPaused();
 		}
 	}
 
@@ -1660,80 +1489,49 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			if (consumer->IsEnabled())
-				consumer->SourceResume();
+			consumer->ProducerResumed();
 		}
 	}
 
-	void Router::OnProducerRtpPacket(
-	  RTC::Producer* producer, RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile)
+	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
-		// Send the RtpPacket to all the Consumers associated to the Producer
-		// from which it was received.
+		// Send the packet to all the consumers associated to the producer.
 		for (auto* consumer : consumers)
 		{
-			if (consumer->IsEnabled())
-				consumer->SendRtpPacket(packet, profile);
-		}
-
-		// Update audio levels.
-		if (this->audioLevelsEventEnabled && producer->kind == RTC::Media::Kind::AUDIO)
-		{
-			uint8_t volume;
-			bool voice;
-
-			if (packet->ReadAudioLevel(&volume, &voice))
-			{
-				int8_t dBov               = volume * -1;
-				auto& audioLevelContainer = this->mapProducerAudioLevelContainer[producer];
-
-				audioLevelContainer.numdBovs++;
-				audioLevelContainer.sumdBovs += dBov;
-			}
+			consumer->SendRtpPacket(packet);
 		}
 	}
 
-	void Router::OnProducerProfileEnabled(
-	  RTC::Producer* producer,
-	  RTC::RtpEncodingParameters::Profile profile,
-	  const RTC::RtpStream* rtpStream)
+	void Router::OnProducerStreamEnabled(
+		RTC::Producer* producer,
+		const RTC::RtpStream* rtpStream,
+		uint32_t translatedSsrc)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
 		for (auto* consumer : consumers)
 		{
-			consumer->AddProfile(profile, rtpStream);
+			consumer->AddStream(rtpStream, translatedSsrc);
 		}
 	}
 
 	void Router::OnProducerProfileDisabled(
-	  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile)
+	  RTC::Producer* producer,
+	  const RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
 		for (auto* consumer : consumers)
 		{
-			consumer->RemoveProfile(profile);
+			consumer->RemoveStream(rtpStream, translatedSsrc);
 		}
 	}
 
@@ -1745,9 +1543,13 @@ namespace RTC
 
 		for (auto& kv : this->mapProducerConsumers)
 		{
-			auto& consumers = kv.second;
+			auto& consumers  = kv.second;
+			size_t numErased = consumers.erase(consumer);
 
-			consumers.erase(consumer);
+			// If we have really deleted a Consumer then we are done since we know
+			// that it just belongs to a single Producer.
+			if (numErased > 0)
+				break;
 		}
 
 		// Finally delete the Consumer entry in the map.
@@ -1758,54 +1560,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapConsumerProducer.find(consumer) != this->mapConsumerProducer.end(),
-		  "Consumer not present in mapConsumerProducer");
-
 		auto* producer = this->mapConsumerProducer[consumer];
 
 		producer->RequestKeyFrame();
-	}
-
-	inline void Router::OnTimer(Timer* timer)
-	{
-		MS_TRACE();
-
-		static const Json::StaticString JsonStringEntries{ "entries" };
-
-		// Audio levels timer.
-		if (timer == this->audioLevelsTimer)
-		{
-			Json::Value eventData(Json::objectValue);
-
-			eventData[JsonStringEntries] = Json::arrayValue;
-
-			for (auto& kv : this->mapProducerAudioLevelContainer)
-			{
-				auto* producer            = kv.first;
-				auto& audioLevelContainer = kv.second;
-				auto numdBovs             = audioLevelContainer.numdBovs;
-				auto sumdBovs             = audioLevelContainer.sumdBovs;
-				int8_t avgdBov{ -127 };
-
-				if (numdBovs > 0)
-					avgdBov = static_cast<int8_t>(std::lround(sumdBovs / numdBovs));
-				else
-					avgdBov = -127;
-
-				Json::Value entry(Json::arrayValue);
-
-				entry.append(Json::UInt{ producer->producerId });
-				entry.append(Json::Int{ avgdBov });
-
-				eventData[JsonStringEntries].append(entry);
-			}
-
-			// Clear map.
-			this->mapProducerAudioLevelContainer.clear();
-
-			// Emit event.
-			this->notifier->Emit(this->routerId, "audiolevels", eventData);
-		}
 	}
 } // namespace RTC

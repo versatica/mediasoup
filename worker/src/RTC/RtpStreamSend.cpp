@@ -31,18 +31,14 @@ namespace RTC
 		ClearRetransmissionBuffer();
 	}
 
-	Json::Value RtpStreamSend::GetStats()
+	void RtpStreamSend::FillJsonStats(json& jsonObject)
 	{
-		static const std::string Type = "outbound-rtp";
-		static const Json::StaticString JsonStringType{ "type" };
-		static const Json::StaticString JsonStringRtt{ "roundTripTime" };
+		MS_TRACE();
 
-		Json::Value json = RtpStream::GetStats();
+		RtpStream::FillJsonStats(jsonObject);
 
-		json[JsonStringType] = Type;
-		json[JsonStringRtt]  = Json::UInt{ static_cast<uint32_t>(this->rtt) };
-
-		return json;
+		jsonObject["type"] = "outbound-rtp";
+		jsonObject["roundTripTime"] = this->rtt;
 	}
 
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)

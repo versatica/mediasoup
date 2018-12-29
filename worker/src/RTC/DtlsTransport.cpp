@@ -472,18 +472,23 @@ namespace RTC
 				case FingerprintAlgorithm::SHA1:
 					hashFunction = EVP_sha1();
 					break;
+
 				case FingerprintAlgorithm::SHA224:
 					hashFunction = EVP_sha224();
 					break;
+
 				case FingerprintAlgorithm::SHA256:
 					hashFunction = EVP_sha256();
 					break;
+
 				case FingerprintAlgorithm::SHA384:
 					hashFunction = EVP_sha384();
 					break;
+
 				case FingerprintAlgorithm::SHA512:
 					hashFunction = EVP_sha512();
 					break;
+
 				default:
 					MS_THROW_ERROR("unknown algorithm");
 			}
@@ -510,6 +515,7 @@ namespace RTC
 
 			fingerprint["algorithm"] = algorithmString;
 			fingerprint["value"]     = hexFingerprint;
+
 			DtlsTransport::localFingerprints.append(fingerprint);
 		}
 	}
@@ -579,19 +585,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->ssl != nullptr)
-		{
-			SSL_free(this->ssl);
-			this->ssl               = nullptr;
-			this->sslBioFromNetwork = nullptr;
-			this->sslBioToNetwork   = nullptr;
-		}
-	}
-
-	void DtlsTransport::Destroy()
-	{
-		MS_TRACE();
-
 		if (IsRunning())
 		{
 			// Send close alert to the peer.
@@ -599,10 +592,16 @@ namespace RTC
 			SendPendingOutgoingDtlsData();
 		}
 
-		// Destroy the DTLS timer.
-		this->timer->Destroy();
+		if (this->ssl != nullptr)
+		{
+			SSL_free(this->ssl);
+			this->ssl               = nullptr;
+			this->sslBioFromNetwork = nullptr;
+			this->sslBioToNetwork   = nullptr;
+		}
 
-		delete this;
+		// Close the DTLS timer.
+		delete this->timer;
 	}
 
 	void DtlsTransport::Dump() const
@@ -720,6 +719,7 @@ namespace RTC
 
 		// Write the received DTLS data into the sslBioFromNetwork.
 		written = BIO_write(this->sslBioFromNetwork, (const void*)data, static_cast<int>(len));
+
 		if (written != static_cast<int>(len))
 		{
 			MS_WARN_TAG(
@@ -782,6 +782,7 @@ namespace RTC
 		int written;
 
 		written = SSL_write(this->ssl, (const void*)data, static_cast<int>(len));
+
 		if (written < 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_write() failed");
@@ -843,28 +844,37 @@ namespace RTC
 		{
 			case SSL_ERROR_NONE:
 				break;
+
 			case SSL_ERROR_SSL:
 				LOG_OPENSSL_ERROR("SSL status: SSL_ERROR_SSL");
 				break;
+
 			case SSL_ERROR_WANT_READ:
 				break;
+
 			case SSL_ERROR_WANT_WRITE:
 				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_WRITE");
 				break;
+
 			case SSL_ERROR_WANT_X509_LOOKUP:
 				MS_DEBUG_TAG(dtls, "SSL status: SSL_ERROR_WANT_X509_LOOKUP");
 				break;
+
 			case SSL_ERROR_SYSCALL:
 				LOG_OPENSSL_ERROR("SSL status: SSL_ERROR_SYSCALL");
 				break;
+
 			case SSL_ERROR_ZERO_RETURN:
 				break;
+
 			case SSL_ERROR_WANT_CONNECT:
 				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_CONNECT");
 				break;
+
 			case SSL_ERROR_WANT_ACCEPT:
 				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_ACCEPT");
 				break;
+
 			default:
 				MS_WARN_TAG(dtls, "SSL status: unknown error");
 		}
@@ -960,11 +970,12 @@ namespace RTC
 			return true;
 
 		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
+
 		if (timeoutMs == 0)
 		{
 			return true;
 		}
-		if (timeoutMs < 30000)
+		else if (timeoutMs < 30000)
 		{
 			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeoutMs);
 
@@ -1057,18 +1068,23 @@ namespace RTC
 			case FingerprintAlgorithm::SHA1:
 				hashFunction = EVP_sha1();
 				break;
+
 			case FingerprintAlgorithm::SHA224:
 				hashFunction = EVP_sha224();
 				break;
+
 			case FingerprintAlgorithm::SHA256:
 				hashFunction = EVP_sha256();
 				break;
+
 			case FingerprintAlgorithm::SHA384:
 				hashFunction = EVP_sha384();
 				break;
+
 			case FingerprintAlgorithm::SHA512:
 				hashFunction = EVP_sha512();
 				break;
+
 			default:
 				MS_ABORT("unknown algorithm");
 		}
@@ -1169,21 +1185,29 @@ namespace RTC
 		switch (this->localRole)
 		{
 			case Role::SERVER:
+			{
 				srtpRemoteKey  = srtpMaterial;
 				srtpLocalKey   = srtpRemoteKey + SrtpMasterKeyLength;
 				srtpRemoteSalt = srtpLocalKey + SrtpMasterKeyLength;
 				srtpLocalSalt  = srtpRemoteSalt + SrtpMasterSaltLength;
+
 				break;
+			}
 
 			case Role::CLIENT:
+			{
 				srtpLocalKey   = srtpMaterial;
 				srtpRemoteKey  = srtpLocalKey + SrtpMasterKeyLength;
 				srtpLocalSalt  = srtpRemoteKey + SrtpMasterKeyLength;
 				srtpRemoteSalt = srtpLocalSalt + SrtpMasterSaltLength;
+
 				break;
+			}
 
 			default:
+			{
 				MS_ABORT("no DTLS role set");
+			}
 		}
 
 		// Create the SRTP local master key.
@@ -1266,9 +1290,11 @@ namespace RTC
 				case 'W':
 					alertType = "warning";
 					break;
+
 				case 'F':
 					alertType = "fatal";
 					break;
+
 				default:
 					alertType = "undefined";
 			}
@@ -1313,8 +1339,10 @@ namespace RTC
 		MS_TRACE();
 
 		DTLSv1_handle_timeout(this->ssl);
+
 		// If required, send DTLS data.
 		SendPendingOutgoingDtlsData();
+
 		// Set the DTLS timer again.
 		SetTimeout();
 	}

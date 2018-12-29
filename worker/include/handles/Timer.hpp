@@ -20,12 +20,10 @@ public:
 	explicit Timer(Listener* listener);
 	Timer& operator=(const Timer&) = delete;
 	Timer(const Timer&)            = delete;
-
-private:
-	~Timer() = default;
+	~Timer();
 
 public:
-	void Destroy();
+	void Close();
 	void Start(uint64_t timeout, uint64_t repeat = 0);
 	void Stop();
 	void Reset();
@@ -42,6 +40,7 @@ private:
 	// Allocated by this.
 	uv_timer_t* uvHandle{ nullptr };
 	// Others.
+	bool closed{ false };
 	uint64_t timeout{ 0 };
 	uint64_t repeat{ 0 };
 };

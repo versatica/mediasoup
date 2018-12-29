@@ -15,11 +15,8 @@ namespace RTC
 	/* Instance methods. */
 
 	PlainRtpTransport::PlainRtpTransport(
-	  RTC::Transport::Listener* listener,
-	  Channel::Notifier* notifier,
-	  uint32_t transportId,
-	  Options& options)
-	  : RTC::Transport::Transport(listener, notifier, transportId)
+	  RTC::Transport::Listener* listener, uint32_t transportId, Options& options)
+	  : RTC::Transport::Transport(listener, transportId)
 	{
 		MS_TRACE();
 
@@ -42,8 +39,8 @@ namespace RTC
 			}
 			catch (const MediaSoupError& error)
 			{
-				// Destroy UdpSocket since ~PlainRtpTransport() will not be called.
-				this->udpSocket->Destroy();
+				// Close UdpSocket since ~PlainRtpTransport() will not be called.
+				delete this->udpSocket;
 
 				throw;
 			}
@@ -84,9 +81,7 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->tuple;
-
-		if (this->udpSocket != nullptr)
-			this->udpSocket->Destroy();
+		delete this->udpSocket;
 	}
 
 	Json::Value PlainRtpTransport::ToJson() const

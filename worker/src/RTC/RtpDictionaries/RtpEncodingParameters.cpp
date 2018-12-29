@@ -10,22 +10,22 @@ namespace RTC
 	/* Class static data. */
 
 	// clang-format off
-	std::map<std::string, RTC::RtpEncodingParameters::Profile> RTC::RtpEncodingParameters::string2Profile =
+	std::map<std::string, RTC::RtpEncodingParameters::SpatialLayer> RTC::RtpEncodingParameters::string2SpatialLayer =
 		{
-			{ "none",    RTC::RtpEncodingParameters::Profile::NONE    },
-			{ "default", RTC::RtpEncodingParameters::Profile::DEFAULT },
-			{ "low",     RTC::RtpEncodingParameters::Profile::LOW     },
-			{ "medium",  RTC::RtpEncodingParameters::Profile::MEDIUM  },
-			{ "high",    RTC::RtpEncodingParameters::Profile::HIGH    }
+			{ "none",    RTC::RtpEncodingParameters::SpatialLayer::NONE    },
+			{ "default", RTC::RtpEncodingParameters::SpatialLayer::DEFAULT },
+			{ "low",     RTC::RtpEncodingParameters::SpatialLayer::LOW     },
+			{ "medium",  RTC::RtpEncodingParameters::SpatialLayer::MEDIUM  },
+			{ "high",    RTC::RtpEncodingParameters::SpatialLayer::HIGH    }
 		};
 
-	std::map<RTC::RtpEncodingParameters::Profile, std::string> RTC::RtpEncodingParameters::profile2String =
+	std::map<RTC::RtpEncodingParameters::SpatialLayer, std::string> RTC::RtpEncodingParameters::spatialLayer2String =
 		{
-			{ RTC::RtpEncodingParameters::Profile::NONE,    "none"    },
-			{ RTC::RtpEncodingParameters::Profile::DEFAULT, "default" },
-			{ RTC::RtpEncodingParameters::Profile::LOW,     "low"     },
-			{ RTC::RtpEncodingParameters::Profile::MEDIUM,  "medium"  },
-			{ RTC::RtpEncodingParameters::Profile::HIGH,    "high"    }
+			{ RTC::RtpEncodingParameters::SpatialLayer::NONE,    "none"    },
+			{ RTC::RtpEncodingParameters::SpatialLayer::DEFAULT, "default" },
+			{ RTC::RtpEncodingParameters::SpatialLayer::LOW,     "low"     },
+			{ RTC::RtpEncodingParameters::SpatialLayer::MEDIUM,  "medium"  },
+			{ RTC::RtpEncodingParameters::SpatialLayer::HIGH,    "high"    }
 		};
 	// clang-format on
 
@@ -35,164 +35,105 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringCodecPayloadType{ "codecPayloadType" };
-		static const Json::StaticString JsonStringFec{ "fec" };
-		static const Json::StaticString JsonStringRtx{ "rtx" };
-		static const Json::StaticString JsonStringResolutionScale{ "resolutionScale" };
-		static const Json::StaticString JsonStringFramerateScale{ "framerateScale" };
-		static const Json::StaticString JsonStringMaxFramerate{ "maxFramerate" };
-		static const Json::StaticString JsonStringActive{ "active" };
-		static const Json::StaticString JsonStringEncodingId{ "encodingId" };
-		static const Json::StaticString JsonStringDependencyEncodingIds{ "dependencyEncodingIds" };
-		static const Json::StaticString JsonStringProfile{ "profile" };
+		if (!data.is_object())
+			MS_THROW_ERROR("data is not an object");
 
-		if (!data.isObject())
-			MS_THROW_ERROR("RtpEncodingParameters is not an object");
+		auto jsonSsrcIt = data.find("ssrc");
+		auto jsonRidIt = data.find("rid");
+		auto jsonCodecPayloadTypeIt = data.find("codecPayloadType");
+		auto jsonRtxIt = data.find("rtx");
+		auto jsonMaxBitrateIt = data.find("maxBitrate");
+		auto jsonMaxFramerateIt = data.find("maxFramerate");
+		auto jsonActiveIt = data.find("active");
+		auto jsonActiveIt = data.find("active");
+		auto jsonSpatialLayerIt = data.find("spatialLayer");
+
+		// ssrc is optional.
+		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
+			this->ssrc = jsonSsrcIt->get<uint32_t>();
+
+		// rid is optional.
+		if (jsonRidIt != data.end() && jsonRidIt->is_string())
+			this->rid = jsonRidIt->get<std::string>();
 
 		// codecPayloadType is optional.
-		if (data[JsonStringCodecPayloadType].isUInt())
+		if (jsonCodecPayloadTypeIt != data.end() && jsonCodecPayloadTypeIt->is_number_unsigned())
 		{
-			this->codecPayloadType    = static_cast<uint8_t>(data[JsonStringCodecPayloadType].asUInt());
+			this->codecPayloadType    = jsonCodecPayloadTypeIt->get<uint8_t>();
 			this->hasCodecPayloadType = true;
 		}
 
-		// ssrc is optional.
-		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = uint32_t{ data[JsonStringSsrc].asUInt() };
-
-		// fec is optional.
-		if (data[JsonStringFec].isObject())
-		{
-			this->fec    = RtpFecParameters(data[JsonStringFec]);
-			this->hasFec = true;
-		}
-
 		// rtx is optional.
-		if (data[JsonStringRtx].isObject())
+		// This may throw.
+		if (jsonRtxIt != data.end() && jsonRtxIt->is_object())
 		{
-			this->rtx    = RtpRtxParameters(data[JsonStringRtx]);
+			this->rtx    = RtpRtxParameters(*jsonRtxIt);
 			this->hasRtx = true;
 		}
 
-		// resolutionScale is optional.
-		if (data[JsonStringResolutionScale].isDouble())
-			this->resolutionScale = data[JsonStringResolutionScale].asDouble();
-
-		// framerateScale is optional.
-		if (data[JsonStringFramerateScale].isDouble())
-			this->framerateScale = data[JsonStringFramerateScale].asDouble();
+		// maxBitrate is optional.
+		if (jsonMaxBitrateIt != data.end() && jsonMaxBitrateIt->is_number_unsigned())
+			this->maxBitrate = jsonMaxBitrateIt->get<uint32_t>();
 
 		// maxFramerate is optional.
-		if (data[JsonStringMaxFramerate].isUInt())
-			this->maxFramerate = uint32_t{ data[JsonStringMaxFramerate].asUInt() };
+		if (jsonMaxFramerateIt != data.end() && jsonMaxFramerateIt->is_number())
+			this->maxFramerate = jsonMaxFramerateIt->get<double>();
 
 		// active is optional.
-		if (data[JsonStringActive].isBool())
-			this->active = data[JsonStringActive].asBool();
+		if (jsonActiveIt != data.end() && jsonActiveIt->is_boolean())
+			this->active = jsonActiveIt->get<bool>();
 
-		// encodingId is optional.
-		if (data[JsonStringEncodingId].isString())
-			this->encodingId = data[JsonStringEncodingId].asString();
-
-		// dependencyEncodingIds is optional.
-		if (data[JsonStringDependencyEncodingIds].isArray())
+		// spatialLayer is optional.
+		if (jsonSpatialLayerIt != data.end() && jsonSpatialLayerIt->is_string())
 		{
-			auto& jsonArray = data[JsonStringDependencyEncodingIds];
+			std::string spatialLayerStr = jsonSpatialLayerIt->get<std::string>();
 
-			for (auto& entry : jsonArray)
-			{
-				// Append to the dependencyEncodingIds vector.
-				if (entry.isString())
-					this->dependencyEncodingIds.push_back(entry.asString());
-			}
-		}
+			if (string2SpatialLayer.find(spatialLayerStr) == string2SpatialLayer.end())
+				MS_THROW_ERROR("unknown spatialLayer");
 
-		// profile is optional.
-		if (data[JsonStringProfile].isString())
-		{
-			std::string profileStr = data[JsonStringProfile].asString();
-
-			if (string2Profile.find(profileStr) == string2Profile.end())
-				MS_THROW_ERROR("unknown profile");
-
-			this->profile = string2Profile[profileStr];
+			this->spatialLayer = string2SpatialLayer[spatialLayerStr];
 
 			if (
-			  this->profile == RTC::RtpEncodingParameters::Profile::NONE ||
-			  this->profile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+			  this->spatialLayer == RTC::RtpEncodingParameters::SpatialLayer::NONE ||
+			  this->spatialLayer == RTC::RtpEncodingParameters::SpatialLayer::DEFAULT)
 			{
-				MS_THROW_ERROR("invalid profile");
+				MS_THROW_ERROR("invalid spatialLayer");
 			}
 		}
 	}
 
-	Json::Value RtpEncodingParameters::ToJson() const
+	void RtpEncodingParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringCodecPayloadType{ "codecPayloadType" };
-		static const Json::StaticString JsonStringFec{ "fec" };
-		static const Json::StaticString JsonStringRtx{ "rtx" };
-		static const Json::StaticString JsonStringResolutionScale{ "resolutionScale" };
-		static const Json::StaticString JsonStringFramerateScale{ "framerateScale" };
-		static const Json::StaticString JsonStringMaxFramerate{ "maxFramerate" };
-		static const Json::StaticString JsonStringActive{ "active" };
-		static const Json::StaticString JsonStringEncodingId{ "encodingId" };
-		static const Json::StaticString JsonStringDependencyEncodingIds{ "dependencyEncodingIds" };
-		static const Json::StaticString JsonStringProfile{ "profile" };
+		// Add ssrc.
+		if (this->ssrc != 0u)
+			jsonObject["ssrc"] = this->ssrc;
 
-		Json::Value json(Json::objectValue);
+		// Add rid.
+		if (!this->rid.empty())
+			jsonObject["rid"] = this->rid;
 
 		// Add codecPayloadType.
 		if (this->hasCodecPayloadType)
-			json[JsonStringCodecPayloadType] = Json::UInt{ this->codecPayloadType };
+			jsonObject["codecPayloadType"] = this->codecPayloadType;
 
-		// Add ssrc.
-		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = Json::UInt{ this->ssrc };
-
-		// Add fec
-		if (this->hasFec)
-			json[JsonStringFec] = this->fec.ToJson();
-
-		// Add rtx
+		// Add rtx.
 		if (this->hasRtx)
-			json[JsonStringRtx] = this->rtx.ToJson();
+			this->rtx.FillJson(jsonObject["rtx"]);
 
-		// Add resolutionScale (if different than the default value).
-		if (this->resolutionScale != 1.0)
-			json[JsonStringResolutionScale] = this->resolutionScale;
-
-		// Add framerateScale (if different than the default value).
-		if (this->framerateScale != 1.0)
-			json[JsonStringFramerateScale] = this->framerateScale;
+		// Add maxBitrate.
+		if (this->maxBitrate != 0u)
+			jsonObject["maxBitrate"] = this->maxBitrate;
 
 		// Add maxFramerate.
-		if (this->maxFramerate != 0u)
-			json[JsonStringMaxFramerate] = Json::UInt{ this->maxFramerate };
+		if (this->maxFramerate > 0)
+			jsonObject["maxFramerate"] = this->maxFramerate;
 
 		// Add active.
-		json[JsonStringActive] = this->active;
+		jsonObject["active"] = this->active;
 
-		// Add encodingId.
-		if (!this->encodingId.empty())
-			json[JsonStringEncodingId] = this->encodingId;
-
-		// Add `dependencyEncodingIds` (if any).
-		if (!this->dependencyEncodingIds.empty())
-		{
-			json[JsonStringDependencyEncodingIds] = Json::arrayValue;
-
-			for (auto& entry : this->dependencyEncodingIds)
-			{
-				json[JsonStringDependencyEncodingIds].append(entry);
-			}
-		}
-
-		json[JsonStringProfile] = RtpEncodingParameters::profile2String[this->profile];
-
-		return json;
+		// Add spatialLayer.
+		jsonObject["spatialLayer"] = RtpEncodingParameters::spatialLayer2String[this->spatialLayer];
 	}
 } // namespace RTC

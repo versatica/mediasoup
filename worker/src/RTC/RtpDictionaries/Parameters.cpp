@@ -8,11 +8,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value Parameters::ToJson() const
+	void Parameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
-
-		Json::Value json(Json::objectValue);
 
 		for (auto& kv : this->mapKeyValues)
 		{
@@ -22,121 +20,88 @@ namespace RTC
 			switch (value.type)
 			{
 				case Value::Type::BOOLEAN:
-				{
-					json[key] = value.booleanValue;
-
+					jsonObject[key] = value.booleanValue;
 					break;
-				}
 
 				case Value::Type::INTEGER:
-				{
-					json[key] = Json::Int{ value.integerValue };
-
+					jsonObject[key] = value.integerValue;
 					break;
-				}
 
 				case Value::Type::DOUBLE:
-				{
-					json[key] = value.doubleValue;
-
+					jsonObject[key] = value.doubleValue;
 					break;
-				}
 
 				case Value::Type::STRING:
-				{
-					json[key] = value.stringValue;
-
+					jsonObject[key] = value.stringValue;
 					break;
-				}
 
 				case Value::Type::ARRAY_OF_INTEGERS:
-				{
-					Json::Value array(Json::arrayValue);
-
-					for (auto& entry : value.arrayOfIntegers)
-						array.append(Json::Int{ entry });
-
-					json[key] = array;
-
+					jsonObject[key] = value.arrayOfIntegers;
 					break;
-				}
 			}
 		}
-
-		return json;
 	}
 
-	void Parameters::Set(Json::Value& data)
+	void Parameters::Set(json& data)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(data.isObject(), "data is not a JSON object");
+		MS_ASSERT(data.is_object(), "data is not an object");
 
-		for (Json::Value::iterator it = data.begin(); it != data.end(); ++it)
+		for (json::iterator it = data.begin(); it != data.end(); ++it)
 		{
-			std::string key   = it.key().asString();
-			Json::Value value = (*it);
+			std::string key = it.key();
+			auto& value =   = it.value();
 
 			switch (value.type())
 			{
-				case Json::booleanValue:
+				case json::value_t::boolean:
 				{
-					bool booleanValue = value.asBool();
-
-					this->mapKeyValues[key] = Value(booleanValue);
+					this->mapKeyValues[key] = value.get<bool>();
 
 					break;
 				}
 
-				case Json::intValue:
+				case json::value_t::number_integer:
 				{
-					auto integerValue = int32_t{ value.asInt() };
-
-					this->mapKeyValues[key] = Value(integerValue);
+					this->mapKeyValues[key] = value.get<int32_t>();
 
 					break;
 				}
 
-				case Json::realValue:
+				case json::value_t::number_float:
 				{
-					double doubleValue = value.asDouble();
-
-					this->mapKeyValues[key] = Value(doubleValue);
+					this->mapKeyValues[key] = value.get<double>();
 
 					break;
 				}
 
-				case Json::stringValue:
+				case json::value_t::string:
 				{
-					std::string stringValue = value.asString();
-
-					this->mapKeyValues[key] = Value(stringValue);
+					this->mapKeyValues[key] = value.get<std::string>();
 
 					break;
 				}
 
-				case Json::arrayValue:
+				case json::value_t::array:
 				{
 					std::vector<int32_t> arrayOfIntegers;
 					bool isValid = true;
 
-					for (Json::UInt i = 0; i < value.size() && isValid; ++i)
+					for (auto& entry : value)
 					{
-						auto& entry = value[i];
-
-						if (entry.isInt())
-						{
-							arrayOfIntegers.push_back(static_cast<int32_t>(entry.asInt()));
-						}
-						else
+						if (!entry.is_number_integer())
 						{
 							isValid = false;
+
 							break;
 						}
+
+						arrayOfIntegers.push_back(entry.get<int32_t>());
 					}
 
 					if (!arrayOfIntegers.empty() && isValid)
-						this->mapKeyValues[key] = Value(arrayOfIntegers);
+						this->mapKeyValues[key] = arrayOfIntegers;
 
 					break;
 				}

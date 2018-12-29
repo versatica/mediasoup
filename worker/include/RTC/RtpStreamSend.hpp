@@ -29,7 +29,7 @@ namespace RTC
 		RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
 
-		Json::Value GetStats() override;
+		virtual void FillJsonStats(json& jsonObject) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(

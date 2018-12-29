@@ -2,11 +2,13 @@
 #define MS_RTC_RTP_STREAM_HPP
 
 #include "common.hpp"
+#include "json.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "handles/Timer.hpp"
-#include <json/json.h>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
@@ -15,7 +17,7 @@ namespace RTC
 	public:
 		struct Params
 		{
-			Json::Value ToJson() const;
+			void FillJson(json& jsonObject) const;
 
 			uint32_t ssrc{ 0 };
 			uint8_t payloadType{ 0 };
@@ -29,8 +31,8 @@ namespace RTC
 		explicit RtpStream(RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
-		virtual Json::Value ToJson();
-		virtual Json::Value GetStats();
+		void FillJson(json& jsonObject) const;
+		virtual void FillJsonStats(json& jsonObject);
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		uint32_t GetRate(uint64_t now);
 		uint32_t GetSsrc() const;
@@ -67,7 +69,6 @@ namespace RTC
 		size_t firCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t nackCount{ 0 };
-		size_t sliCount{ 0 };
 
 		RtpDataCounter transmissionCounter;
 		RtpDataCounter retransmissionCounter;

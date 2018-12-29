@@ -19,12 +19,10 @@ public:
 
 public:
 	explicit SignalsHandler(Listener* listener);
-
-private:
-	~SignalsHandler() = default;
+	~SignalsHandler();
 
 public:
-	void Destroy();
+	void Close();
 	void AddSignal(int signum, const std::string& name);
 
 	/* Callbacks fired by UV events. */
@@ -36,6 +34,8 @@ private:
 	Listener* listener{ nullptr };
 	// Allocated by this.
 	std::vector<uv_signal_t*> uvHandles;
+	// Others.
+	bool closed{ false };
 };
 
 #endif

@@ -2,9 +2,9 @@
 #define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
+#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <json/json.h>
 
 namespace Channel
 {
@@ -20,13 +20,11 @@ namespace Channel
 
 	public:
 		explicit UnixStreamSocket(int fd);
-
-	private:
 		~UnixStreamSocket() override;
 
 	public:
 		void SetListener(Listener* listener);
-		void Send(Json::Value& msg);
+		void Send(json& body);
 		void SendLog(char* nsPayload, size_t nsPayloadLen);
 		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
 
@@ -39,10 +37,7 @@ namespace Channel
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
-		Json::CharReader* jsonReader{ nullptr };
-		Json::StreamWriter* jsonWriter{ nullptr };
 		size_t msgStart{ 0 }; // Where the latest message starts.
-		bool closed{ false };
 	};
 } // namespace Channel
 

@@ -2,10 +2,12 @@
 #define MS_RTC_PARAMETERS_HPP
 
 #include "common.hpp"
-#include <json/json.h>
+#include "json.hpp"
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
@@ -60,8 +62,8 @@ namespace RTC
 	public:
 		Parameters(){};
 
-		Json::Value ToJson() const;
-		void Set(Json::Value& data);
+		void FillJson(json& jsonObject) const;
+		void Set(json& data);
 
 		bool HasBoolean(const std::string& key);
 		bool HasInteger(const std::string& key);

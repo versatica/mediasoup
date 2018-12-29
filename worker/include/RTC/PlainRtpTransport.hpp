@@ -2,7 +2,6 @@
 #define MS_RTC_PLAIN_RTP_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/Transport.hpp"
 #include <json/json.h>
 #include <string>
@@ -22,11 +21,7 @@ namespace RTC
 		};
 
 	public:
-		PlainRtpTransport(
-		  RTC::Transport::Listener* listener,
-		  Channel::Notifier* notifier,
-		  uint32_t transportId,
-		  Options& options);
+		PlainRtpTransport(RTC::Transport::Listener* listener, uint32_t transportId, Options& options);
 
 	private:
 		~PlainRtpTransport();

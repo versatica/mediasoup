@@ -24,12 +24,10 @@ public:
 	explicit UdpSocket(uv_udp_t* uvHandle);
 	UdpSocket& operator=(const UdpSocket&) = delete;
 	UdpSocket(const UdpSocket&)            = delete;
-
-protected:
 	virtual ~UdpSocket();
 
 public:
-	void Destroy();
+	void Close();
 	virtual void Dump() const;
 	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
 	void Send(const std::string& data, const struct sockaddr* addr);
@@ -50,18 +48,16 @@ public:
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
 	void OnUvSendError(int error);
-	void OnUvClosed();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
 	virtual void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
-	virtual void UserOnUdpSocketClosed() = 0;
 
 private:
 	// Allocated by this (may be passed by argument).
 	uv_udp_t* uvHandle{ nullptr };
 	// Others.
-	bool isClosing{ false };
+	bool closed{ false };
 	size_t recvBytes{ 0 };
 	size_t sentBytes{ 0 };
 

@@ -52,18 +52,16 @@ function get_gyp()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
-function get_jsoncpp()
+function get_json()
 {
-	GIT_REPO="https://github.com/open-source-parsers/jsoncpp.git"
-	GIT_TAG="1.8.4"
-	DEST="deps/jsoncpp/jsoncpp"
+	GIT_REPO="https://github.com/nlohmann/json.git"
+	GIT_TAG="v3.5.0"
+	DEST="deps/json"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 
-	echo ">>> [INFO] running 'python amalgamate.py' ..."
-	cd ${DEST}
-	# IMPORTANT: avoid default 'dist/' directory since, somehow, it fails.
-	python amalgamate.py -s bundled/jsoncpp.cpp
+	echo ">>> [INFO] copying json.hpp to include/ directory ..."
+	cp ${DEST}/single_include/nlohmann/json.hpp include/
 }
 
 function get_netstring()
@@ -145,14 +143,14 @@ function get_clang_fuzzer()
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer]"
+		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer]"
 		echo
 		;;
 	gyp)
 		get_gyp
 		;;
-	jsoncpp)
-		get_jsoncpp
+	json)
+		get_json
 		;;
 	netstring)
 		get_netstring

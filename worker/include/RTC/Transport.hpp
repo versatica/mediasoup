@@ -2,7 +2,6 @@
 #define MS_RTC_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/ConsumerListener.hpp"
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -17,7 +16,7 @@
 #include "handles/Timer.hpp"
 #include <json/json.h>
 #include <tuple>
-#include <unordered_set>
+#include <set>
 #include <vector>
 
 namespace RTC
@@ -66,13 +65,11 @@ namespace RTC
 		};
 
 	public:
-		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId);
-
-	protected:
+		Transport(Listener* listener, uint32_t transportId);
 		virtual ~Transport();
 
 	public:
-		void Destroy();
+		void Close();
 		virtual Json::Value ToJson() const   = 0;
 		virtual Json::Value GetStats() const = 0;
 		void HandleProducer(RTC::Producer* producer);
@@ -129,15 +126,15 @@ namespace RTC
 	protected:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		Channel::Notifier* notifier{ nullptr };
 		// Allocated by this.
 		Timer* rtcpTimer{ nullptr };
-		// Allocated (Mirroring).
 		RTC::UdpSocket* mirrorSocket{ nullptr };
 		RTC::TransportTuple* mirrorTuple{ nullptr };
+		// Others.
+		bool closed{ false };
 		// Others (Producers and Consumers).
-		std::unordered_set<RTC::Producer*> producers;
-		std::unordered_set<RTC::Consumer*> consumers;
+		std::set<RTC::Producer*> producers;
+		std::set<RTC::Consumer*> consumers;
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		struct HeaderExtensionIds headerExtensionIds;

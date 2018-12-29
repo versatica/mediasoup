@@ -25,16 +25,41 @@ SignalsHandler::SignalsHandler(Listener* listener) : listener(listener)
 	MS_TRACE();
 }
 
+SignalsHandler::~SignalsHandler()
+{
+	MS_TRACE();
+
+	if (!this->closed)
+		Close();
+}
+
+void SignalsHandler::Close()
+{
+	MS_TRACE();
+
+	if (this->closed)
+		return;
+
+	this->closed = true;
+
+	for (auto uvHandle : uvHandles)
+	{
+		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+	}
+}
+
 void SignalsHandler::AddSignal(int signum, const std::string& name)
 {
 	MS_TRACE();
 
-	int err;
+	if (this->closed)
+		MS_THROW_ERROR("closed");
 
 	auto uvHandle  = new uv_signal_t;
 	uvHandle->data = (void*)this;
 
-	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
+	int err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
+
 	if (err != 0)
 	{
 		delete uvHandle;
@@ -48,19 +73,6 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 
 	// Enter the UV handle into the vector.
 	this->uvHandles.push_back(uvHandle);
-}
-
-void SignalsHandler::Destroy()
-{
-	MS_TRACE();
-
-	for (auto uvHandle : uvHandles)
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
-	}
-
-	// And delete this.
-	delete this;
 }
 
 inline void SignalsHandler::OnUvSignal(int signum)

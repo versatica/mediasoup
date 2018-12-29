@@ -110,8 +110,8 @@
 class Logger
 {
 public:
-	static void Init(const std::string &id, Channel::UnixStreamSocket* channel);
-	static void Init(const std::string &id);
+	static void ClassInit(const std::string &id, Channel::UnixStreamSocket* channel);
+	static void ClassInit(const std::string &id);
 
 public:
 	static std::string id;

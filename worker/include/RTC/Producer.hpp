@@ -2,7 +2,6 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Feedback.hpp"
@@ -50,31 +49,24 @@ namespace RTC
 
 	public:
 		Producer(
-		  Channel::Notifier* notifier,
 		  uint32_t producerId,
 		  RTC::Media::Kind kind,
 		  RTC::Transport* transport,
 		  RTC::RtpParameters& rtpParameters,
 		  struct RtpMapping& rtpMapping,
 		  bool paused);
-
-	public:
-		// Must be public because Router needs to call it.
 		virtual ~Producer();
 
 	public:
-		void Destroy();
 		Json::Value ToJson() const;
 		Json::Value GetStats() const;
 		void AddListener(RTC::ProducerListener* listener);
 		void RemoveListener(RTC::ProducerListener* listener);
 		void Pause();
 		void Resume();
-		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
 		const RTC::RtpParameters& GetParameters() const;
 		const struct RTC::Transport::HeaderExtensionIds& GetTransportHeaderExtensionIds() const;
 		bool IsPaused() const;
-		RTC::RtpEncodingParameters::Profile GetPreferredProfile() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -110,7 +102,6 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
 		RTC::RtpParameters rtpParameters;
 		struct RtpMapping rtpMapping;
@@ -128,8 +119,6 @@ namespace RTC
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
-		// RTP preferred profile.
-		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 	};
 
 	/* Inline methods. */
@@ -144,19 +133,9 @@ namespace RTC
 		this->listeners.erase(listener);
 	}
 
-	inline void Producer::SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
-	{
-		this->preferredProfile = profile;
-	}
-
 	inline const RTC::RtpParameters& Producer::GetParameters() const
 	{
 		return this->rtpParameters;
-	}
-
-	inline RTC::RtpEncodingParameters::Profile Producer::GetPreferredProfile() const
-	{
-		return this->preferredProfile;
 	}
 
 	inline const struct RTC::Transport::HeaderExtensionIds& Producer::GetTransportHeaderExtensionIds() const

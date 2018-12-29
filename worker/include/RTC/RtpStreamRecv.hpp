@@ -25,7 +25,7 @@ namespace RTC
 		RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params);
 		~RtpStreamRecv() override;
 
-		Json::Value GetStats() override;
+		virtual void FillJsonStats(json& jsonObject) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();

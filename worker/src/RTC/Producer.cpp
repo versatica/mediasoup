@@ -18,15 +18,14 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	  Channel::Notifier* notifier,
 	  uint32_t producerId,
 	  RTC::Media::Kind kind,
 	  RTC::Transport* transport,
 	  RTC::RtpParameters& rtpParameters,
 	  struct RtpMapping& rtpMapping,
 	  bool paused)
-	  : producerId(producerId), kind(kind), notifier(notifier), transport(transport),
-	    rtpParameters(rtpParameters), rtpMapping(rtpMapping), paused(paused)
+	  : producerId(producerId), kind(kind), transport(transport), rtpParameters(rtpParameters),
+	    rtpMapping(rtpMapping), paused(paused)
 	{
 		MS_TRACE();
 
@@ -57,21 +56,14 @@ namespace RTC
 
 			delete rtpStream;
 		}
-	}
 
-	void Producer::Destroy()
-	{
-		MS_TRACE();
+		// Close the RTP key frame request block timer.
+		delete this->keyFrameRequestBlockTimer;
 
 		for (auto& listener : this->listeners)
 		{
 			listener->OnProducerClosed(this);
 		}
-
-		// Close the RTP key frame request block timer.
-		this->keyFrameRequestBlockTimer->Destroy();
-
-		delete this;
 	}
 
 	Json::Value Producer::ToJson() const

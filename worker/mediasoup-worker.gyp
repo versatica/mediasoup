@@ -3,7 +3,6 @@
     'type': 'executable',
     'dependencies':
     [
-      'deps/jsoncpp/jsoncpp.gyp:jsoncpp',
       'deps/netstring/netstring.gyp:netstring',
       'deps/libuv/uv.gyp:libuv',
       'deps/openssl/openssl.gyp:openssl',
@@ -55,7 +54,6 @@
       'src/RTC/RtpDictionaries/RtpCodecMimeType.cpp',
       'src/RTC/RtpDictionaries/RtpCodecParameters.cpp',
       'src/RTC/RtpDictionaries/RtpEncodingParameters.cpp',
-      'src/RTC/RtpDictionaries/RtpFecParameters.cpp',
       'src/RTC/RtpDictionaries/RtpHeaderExtensionParameters.cpp',
       'src/RTC/RtpDictionaries/RtpHeaderExtensionUri.cpp',
       'src/RTC/RtpDictionaries/RtpParameters.cpp',

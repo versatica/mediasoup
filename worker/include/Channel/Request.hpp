@@ -2,9 +2,11 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include <json/json.h>
+#include "json.hpp"
 #include <string>
 #include <unordered_map>
+
+using json = nlohmann::json;
 
 namespace Channel
 {
@@ -26,7 +28,6 @@ namespace Channel
 			ROUTER_CREATE_PLAIN_RTP_TRANSPORT,
 			ROUTER_CREATE_PRODUCER,
 			ROUTER_CREATE_CONSUMER,
-			ROUTER_SET_AUDIO_LEVELS_EVENT,
 			TRANSPORT_CLOSE,
 			TRANSPORT_DUMP,
 			TRANSPORT_GET_STATS,
@@ -34,14 +35,11 @@ namespace Channel
 			TRANSPORT_SET_REMOTE_PARAMETERS,
 			TRANSPORT_SET_MAX_BITRATE,
 			TRANSPORT_CHANGE_UFRAG_PWD,
-			TRANSPORT_START_MIRRORING,
-			TRANSPORT_STOP_MIRRORING,
 			PRODUCER_CLOSE,
 			PRODUCER_DUMP,
 			PRODUCER_GET_STATS,
 			PRODUCER_PAUSE,
 			PRODUCER_RESUME,
-			PRODUCER_SET_PREFERRED_PROFILE,
 			CONSUMER_CLOSE,
 			CONSUMER_DUMP,
 			CONSUMER_GET_STATS,
@@ -57,22 +55,22 @@ namespace Channel
 		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
-		Request(Channel::UnixStreamSocket* channel, Json::Value& json);
+		Request(Channel::UnixStreamSocket* channel, json& body);
 		virtual ~Request();
 
 		void Accept();
-		void Accept(Json::Value& data);
+		void Accept(json& data);
 		void Reject(std::string& reason);
 		void Reject(const char* reason = nullptr);
 
 	public:
 		// Passed by argument.
 		Channel::UnixStreamSocket* channel{ nullptr };
-		uint32_t id{ 0 };
+		std::string id;
 		std::string method;
 		MethodId methodId;
-		Json::Value internal;
-		Json::Value data;
+		json internal{ json::object() };
+		json data{ json::object() };
 		// Others.
 		bool replied{ false };
 	};

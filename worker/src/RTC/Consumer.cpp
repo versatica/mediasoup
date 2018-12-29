@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
@@ -20,9 +21,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Consumer::Consumer(
-	  Channel::Notifier* notifier, uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId)
-	  : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId), notifier(notifier)
+	Consumer::Consumer(uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId)
+	  : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId)
 	{
 		MS_TRACE();
 
@@ -39,20 +39,13 @@ namespace RTC
 
 		delete this->rtpStream;
 		delete this->rtpMonitor;
-	}
-
-	void Consumer::Destroy()
-	{
-		MS_TRACE();
 
 		for (auto& listener : this->listeners)
 		{
 			listener->OnConsumerClosed(this);
 		}
 
-		this->notifier->Emit(this->consumerId, "close");
-
-		delete this;
+		Channel::Notifier::Emit(this->consumerId, "close");
 	}
 
 	Json::Value Consumer::ToJson() const
@@ -222,7 +215,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("Consumer source paused [consumerId:%" PRIu32 "]", this->consumerId);
 
-		this->notifier->Emit(this->consumerId, "sourcepaused");
+		Channel::Notifier::Emit(this->consumerId, "sourcepaused");
 
 		if (IsEnabled() && !this->paused)
 		{
@@ -246,7 +239,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("Consumer source resumed [consumerId:%" PRIu32 "]", this->consumerId);
 
-		this->notifier->Emit(this->consumerId, "sourceresumed");
+		Channel::Notifier::Emit(this->consumerId, "sourceresumed");
 
 		if (IsEnabled() && !this->paused)
 		{
@@ -1033,7 +1026,7 @@ namespace RTC
 		// Notify.
 		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
 
-		this->notifier->Emit(this->consumerId, "effectiveprofilechange", eventData);
+		Channel::Notifier::Emit(this->consumerId, "effectiveprofilechange", eventData);
 	}
 
 	void Consumer::SendProbation(RTC::RtpPacket* packet)

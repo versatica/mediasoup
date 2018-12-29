@@ -17,11 +17,11 @@ namespace RTC
 		{ "audio", Media::Kind::AUDIO },
 		{ "video", Media::Kind::VIDEO }
 	};
-	std::map<Media::Kind, Json::StaticString> Media::kind2Json =
+	std::map<Media::Kind, std::string> Media::kind2String =
 	{
-		{ Media::Kind::ALL,   Json::StaticString("")      },
-		{ Media::Kind::AUDIO, Json::StaticString("audio") },
-		{ Media::Kind::VIDEO, Json::StaticString("video") }
+		{ Media::Kind::ALL,   ""      },
+		{ Media::Kind::AUDIO, "audio" },
+		{ Media::Kind::VIDEO, "video" }
 	};
 	// clang-format on
 
@@ -42,10 +42,10 @@ namespace RTC
 		return it->second;
 	}
 
-	Json::StaticString& Media::GetJsonString(Media::Kind kind)
+	std::string& Media::GetString(Media::Kind kind)
 	{
 		MS_TRACE();
 
-		return Media::kind2Json.at(kind);
+		return Media::kind2String.at(kind);
 	}
 } // namespace RTC

@@ -7,7 +7,6 @@
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
 #include <cstring> // std::memmove()
-#include <sstream> // std::ostringstream
 extern "C" {
 #include <netstring.h>
 }
@@ -26,42 +25,6 @@ namespace Channel
 	UnixStreamSocket::UnixStreamSocket(int fd) : ::UnixStreamSocket::UnixStreamSocket(fd, MaxSize)
 	{
 		MS_TRACE_STD();
-
-		// Create the JSON reader.
-		{
-			Json::CharReaderBuilder builder;
-			Json::Value settings = Json::nullValue;
-			Json::Value invalidSettings;
-
-			builder.strictMode(&settings);
-
-			MS_ASSERT(builder.validate(&invalidSettings), "invalid Json::CharReaderBuilder");
-
-			this->jsonReader = builder.newCharReader();
-		}
-
-		// Create the JSON writer.
-		{
-			Json::StreamWriterBuilder builder;
-			Json::Value invalidSettings;
-
-			builder["commentStyle"]            = "None";
-			builder["indentation"]             = "";
-			builder["enableYAMLCompatibility"] = false;
-			builder["dropNullPlaceholders"]    = false;
-
-			MS_ASSERT(builder.validate(&invalidSettings), "invalid Json::StreamWriterBuilder");
-
-			this->jsonWriter = builder.newStreamWriter();
-		}
-	}
-
-	UnixStreamSocket::~UnixStreamSocket()
-	{
-		MS_TRACE_STD();
-
-		delete this->jsonReader;
-		delete this->jsonWriter;
 	}
 
 	void UnixStreamSocket::SetListener(Listener* listener)
@@ -71,22 +34,15 @@ namespace Channel
 		this->listener = listener;
 	}
 
-	void UnixStreamSocket::Send(Json::Value& msg)
+	void UnixStreamSocket::Send(json& jsonMessage)
 	{
-		if (this->closed)
+		if (IsClosed())
 			return;
 
-		// MS_TRACE_STD();
-
-		std::ostringstream stream;
-		std::string nsPayload;
-		size_t nsPayloadLen;
+		std::string nsPayload = jsonMessage.dump();
+		size_t nsPayloadLen = nsPayload.length();
 		size_t nsNumLen;
 		size_t nsLen;
-
-		this->jsonWriter->write(msg, &stream);
-		nsPayload    = stream.str();
-		nsPayloadLen = nsPayload.length();
 
 		if (nsPayloadLen > MessageMaxSize)
 		{
@@ -117,7 +73,7 @@ namespace Channel
 
 	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
 	{
-		if (this->closed)
+		if (IsClosed())
 			return;
 
 		// MS_TRACE_STD();
@@ -154,7 +110,7 @@ namespace Channel
 
 	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
 	{
-		if (this->closed)
+		if (IsClosed())
 			return;
 
 		size_t nsNumLen;
@@ -194,7 +150,7 @@ namespace Channel
 		// Be ready to parse more than a single message in a single TCP chunk.
 		while (true)
 		{
-			if (IsClosing())
+			if (IsClosed())
 				return;
 
 			size_t readLen  = this->bufferDataLen - this->msgStart;
@@ -269,35 +225,28 @@ namespace Channel
 			readLen =
 			  reinterpret_cast<const uint8_t*>(jsonStart) - (this->buffer + this->msgStart) + jsonLen + 1;
 
-			Json::Value json;
-			std::string jsonParseError;
-
-			if (this->jsonReader->parse(
-			      (const char*)jsonStart, (const char*)jsonStart + jsonLen, &json, &jsonParseError))
+			try
 			{
-				Channel::Request* request = nullptr;
+				json jsonRequest = json::parse(jsonStart, jsonStart + jsonLen);
 
 				try
 				{
-					request = new Channel::Request(this, json);
-				}
-				catch (const MediaSoupError& error)
-				{
-					MS_ERROR_STD("discarding wrong Channel request");
-				}
+					Channel::Request* request = new Channel::Request(this, jsonRequest);
 
-				if (request != nullptr)
-				{
 					// Notify the listener.
 					this->listener->OnChannelRequest(this, request);
 
 					// Delete the Request.
 					delete request;
 				}
+				catch (const MediaSoupError& error)
+				{
+					MS_ERROR_STD("discarding wrong channel request");
+				}
 			}
-			else
+			catch (const json::parse_error& error)
 			{
-				MS_ERROR_STD("JSON parsing error: %s", jsonParseError.c_str());
+				MS_ERROR_STD("JSON parsing error: %s", error.what());
 			}
 
 			// If there is no more space available in the buffer and that is because
@@ -329,12 +278,8 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		this->closed = true;
-
+		// Notify the listener.
 		if (isClosedByPeer)
-		{
-			// Notify the listener.
 			this->listener->OnChannelUnixStreamSocketRemotelyClosed(this);
-		}
 	}
 } // namespace Channel

@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -17,8 +18,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId)
-	  : transportId(transportId), listener(listener), notifier(notifier)
+	Transport::Transport(Listener* listener, uint32_t transportId)
+	  : transportId(transportId), listener(listener)
 	{
 		MS_TRACE();
 
@@ -30,13 +31,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!this->closed)
+			Close();
+	}
+
+	void Transport::Close()
+	{
+		MS_TRACE();
+
+		if (this->closed)
+			return;
+
+		this->closed = true;
+
 		// Close all the handled Producers.
 		for (auto it = this->producers.begin(); it != this->producers.end();)
 		{
 			auto* producer = *it;
 
 			it = this->producers.erase(it);
-			producer->Destroy();
+			delete producer;
 		}
 
 		// Disable all the handled Consumers.
@@ -48,22 +62,22 @@ namespace RTC
 			consumer->RemoveListener(this);
 		}
 
-		// Destroy the RTCP timer.
-		if (this->rtcpTimer != nullptr)
-			this->rtcpTimer->Destroy();
-	}
+		// Close the RTCP timer.
+		delete this->rtcpTimer;
 
-	void Transport::Destroy()
-	{
-		MS_TRACE();
+		// Delete mirror tuple.
+		if (this->mirrorTuple != nullptr)
+			delete this->mirrorTuple;
 
-		// Notify.
-		this->notifier->Emit(this->transportId, "close");
+		// Delete mirror socket.
+		if (this->mirrorSocket != nullptr)
+			delete this->mirrorSocket;
 
 		// Notify the listener.
 		this->listener->OnTransportClosed(this);
 
-		delete this;
+		// Notify.
+		this->notifier->Emit(this->transportId, "close");
 	}
 
 	void Transport::StartMirroring(MirroringOptions& options)
@@ -132,9 +146,7 @@ namespace RTC
 	void Transport::StopMirroring()
 	{
 		delete this->mirrorTuple;
-
-		if (this->mirrorSocket != nullptr)
-			this->mirrorSocket->Destroy();
+		delete this->mirrorSocket;
 
 		this->mirrorTuple  = nullptr;
 		this->mirrorSocket = nullptr;

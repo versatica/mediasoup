@@ -3,9 +3,12 @@
 
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
@@ -16,9 +19,9 @@ namespace RTC
 	class RtpListener
 	{
 	public:
-		Json::Value ToJson() const;
+		void FillJson(json& jsonObject) const;
 		bool HasSsrc(uint32_t ssrc, const RTC::Producer* producer) const;
-		bool HasMuxId(const std::string& muxId, const RTC::Producer* producer) const;
+		bool HasMid(const std::string& mid, const RTC::Producer* producer) const;
 		bool HasRid(const std::string& rid, const RTC::Producer* producer) const;
 		void AddProducer(RTC::Producer* producer);
 		void RemoveProducer(const RTC::Producer* producer);
@@ -29,14 +32,14 @@ namespace RTC
 		void RollbackProducer(
 		  RTC::Producer* producer,
 		  const std::vector<uint32_t>& previousSsrcs,
-		  const std::string& previousMuxId,
-		  const std::string& previousRid);
+		  const std::string& previousMid,
+		  const std::vector<std::string>& previousRids);
 
 	public:
 		// Table of SSRC / Producer pairs.
 		std::unordered_map<uint32_t, RTC::Producer*> ssrcTable;
 		//  Table of MID RTP header extension / Producer pairs.
-		std::unordered_map<std::string, RTC::Producer*> muxIdTable;
+		std::unordered_map<std::string, RTC::Producer*> midTable;
 		//  Table of RID RTP header extension / Producer pairs.
 		std::unordered_map<std::string, RTC::Producer*> ridTable;
 	};
@@ -53,11 +56,11 @@ namespace RTC
 			return (it->second != producer);
 	}
 
-	inline bool RtpListener::HasMuxId(const std::string& muxId, const RTC::Producer* producer) const
+	inline bool RtpListener::HasMid(const std::string& mid, const RTC::Producer* producer) const
 	{
-		auto it = this->muxIdTable.find(muxId);
+		auto it = this->midTable.find(mid);
 
-		if (it == this->muxIdTable.end())
+		if (it == this->midTable.end())
 			return false;
 		else
 			return (it->second != producer);

@@ -32,66 +32,39 @@ namespace RTC
 		MS_TRACE();
 
 		// Close the status check timer.
-		this->statusCheckTimer->Destroy();
+		delete this->statusCheckTimer;
 	}
 
-	Json::Value RtpStream::ToJson()
+	void RtpStream::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringParams{ "params" };
-
-		Json::Value json(Json::objectValue);
-
-		json[JsonStringParams] = this->params.ToJson();
-
-		return json;
+		this->params.FillJson(jsonObject["params"]);
 	}
 
-	Json::Value RtpStream::GetStats()
+	void RtpStream::FillJsonStats(json& jsonObject)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringId{ "id" };
-		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringMediaType{ "mediaType" };
-		static const Json::StaticString JsonStringKind{ "kind" };
-		static const Json::StaticString JsonStringMimeType{ "mimeType" };
-		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
-		static const Json::StaticString JsonStringByteCount{ "byteCount" };
-		static const Json::StaticString JsonStringBitRate{ "bitrate" };
-		static const Json::StaticString JsonStringPacketsLost{ "packetsLost" };
-		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
-		static const Json::StaticString JsonStringPacketsDiscarded{ "packetsDiscarded" };
-		static const Json::StaticString JsonStringPacketsRepaired{ "packetsRepaired" };
-		static const Json::StaticString JsonStringFirCount{ "firCount" };
-		static const Json::StaticString JsonStringPliCount{ "pliCount" };
-		static const Json::StaticString JsonStringNackCount{ "nackCount" };
-		static const Json::StaticString JsonStringSliCount{ "sliCount" };
+		MS_ASSERT(jsonObject.is_object(), "jsonObject is not an object");
 
-		Json::Value json(Json::objectValue);
 		uint64_t now = DepLibUV::GetTime();
 
-		json[JsonStringId]          = this->rtpStreamId;
-		json[JsonStringTimestamp]   = Json::UInt64{ now };
-		json[JsonStringSsrc]        = Json::UInt{ this->params.ssrc };
-		json[JsonStringMediaType]   = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		json[JsonStringKind]        = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		json[JsonStringMimeType]    = this->params.mimeType.ToString();
-		json[JsonStringPacketCount] = static_cast<Json::UInt>(this->transmissionCounter.GetPacketCount());
-		json[JsonStringByteCount]   = static_cast<Json::UInt>(this->transmissionCounter.GetBytes());
-		json[JsonStringBitRate]     = Json::UInt{ this->transmissionCounter.GetRate(now) };
-		json[JsonStringPacketsLost]      = Json::UInt{ this->packetsLost };
-		json[JsonStringFractionLost]     = Json::UInt{ this->fractionLost };
-		json[JsonStringPacketsDiscarded] = static_cast<Json::UInt>(this->packetsDiscarded);
-		json[JsonStringPacketsRepaired]  = static_cast<Json::UInt>(this->packetsRepaired);
-		json[JsonStringFirCount]         = static_cast<Json::UInt>(this->firCount);
-		json[JsonStringPliCount]         = static_cast<Json::UInt>(this->pliCount);
-		json[JsonStringNackCount]        = static_cast<Json::UInt>(this->nackCount);
-		json[JsonStringSliCount]         = static_cast<Json::UInt>(this->sliCount);
-
-		return json;
+		jsonObject["id"] = this->rtpStreamId;
+		jsonObject["timestamp"] = now;
+		jsonObject["ssrc"] = this->params.ssrc;
+		jsonObject["kind"] = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		jsonObject["mimeType"] = this->params.mimeType.ToString();
+		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"] = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"] = this->transmissionCounter.GetRate(now);
+		jsonObject["packetsLost"] = this->packetsLost;
+		jsonObject["fractionLost"] = this->fractionLost;
+		jsonObject["packetsDiscarded"] = this->packetsDiscarded;
+		jsonObject["packetsRepaired"] = this->packetsRepaired;
+		jsonObject["firCount"] = this->firCount;
+		jsonObject["pliCount"] = this->pliCount;
+		jsonObject["nackCount"] = this->nackCount;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -232,27 +205,16 @@ namespace RTC
 		return true;
 	}
 
-	Json::Value RtpStream::Params::ToJson() const
+	void RtpStream::Params::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
-		static const Json::StaticString JsonStringMimeType{ "mimeType" };
-		static const Json::StaticString JsonStringClockRate{ "clockRate" };
-		static const Json::StaticString JsonStringUseNack{ "useNack" };
-		static const Json::StaticString JsonStringUsePli{ "usePli" };
-
-		Json::Value json(Json::objectValue);
-
-		json[JsonStringSsrc]        = Json::UInt{ this->ssrc };
-		json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
-		json[JsonStringMimeType]    = this->mimeType.ToString();
-		json[JsonStringClockRate]   = Json::UInt{ this->clockRate };
-		json[JsonStringUseNack]     = this->useNack;
-		json[JsonStringUsePli]      = this->usePli;
-
-		return json;
+		jsonObject["ssrc"] = this->ssrc;
+		jsonObject["payloadType"] = this->payloadType;
+		jsonObject["mimeType"] = this->mimeType.ToString();
+		jsonObject["clockRate"] = this->clockRate;
+		jsonObject["useNack"] = this->useNack;
+		jsonObject["usePli"] = this->usePli;
 	}
 
 	void RtpStream::OnTimer(Timer* timer)
@@ -260,8 +222,6 @@ namespace RTC
 		MS_TRACE();
 
 		if (timer == this->statusCheckTimer)
-		{
 			CheckStatus();
-		}
 	}
 } // namespace RTC

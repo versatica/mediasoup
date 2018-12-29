@@ -7,6 +7,7 @@
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -39,11 +40,8 @@ namespace RTC
 	/* Instance methods. */
 
 	WebRtcTransport::WebRtcTransport(
-	  RTC::Transport::Listener* listener,
-	  Channel::Notifier* notifier,
-	  uint32_t transportId,
-	  Options& options)
-	  : RTC::Transport::Transport(listener, notifier, transportId)
+	  RTC::Transport::Listener* listener, uint32_t transportId, Options& options)
+	  : RTC::Transport::Transport(listener, transportId)
 	{
 		MS_TRACE();
 
@@ -163,22 +161,16 @@ namespace RTC
 		// Ensure there is at least one IP:port binding.
 		if (this->udpSockets.empty() && this->tcpServers.empty())
 		{
-			// NOTE: We must manually delete above allocated objects. We cannot call `delete this`
-			// here since it would call the parent ~Transport destructor, and it would be called
-			// again after throwing the exception here.
-			//
-			// See: https://github.com/versatica/mediasoup/issues/222
-
-			this->iceServer->Destroy();
+			delete this->iceServer;
 
 			for (auto* socket : this->udpSockets)
 			{
-				socket->Destroy();
+				delete socket;
 			}
 
 			for (auto* server : this->tcpServers)
 			{
-				server->Destroy();
+				delete server;
 			}
 
 			MS_THROW_ERROR("could not open any IP:port");
@@ -198,31 +190,29 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->srtpRecvSession != nullptr)
-			this->srtpRecvSession->Destroy();
+		// Must delete the DTLS transport first since it will generate a DTLS alert
+		// to be sent.
+		delete this->dtlsTransport;
 
-		if (this->srtpSendSession != nullptr)
-			this->srtpSendSession->Destroy();
-
-		if (this->dtlsTransport != nullptr)
-			this->dtlsTransport->Destroy();
-
-		if (this->iceServer != nullptr)
-			this->iceServer->Destroy();
+		delete this->iceServer;
 
 		for (auto* socket : this->udpSockets)
 		{
-			socket->Destroy();
+			delete socket;
 		}
 		this->udpSockets.clear();
 
 		for (auto* server : this->tcpServers)
 		{
-			server->Destroy();
+			delete server;
 		}
 		this->tcpServers.clear();
 
-		this->selectedTuple = nullptr;
+		if (this->srtpRecvSession != nullptr)
+			delete this->srtpRecvSession;
+
+		if (this->srtpSendSession != nullptr)
+			delete this->srtpSendSession;
 	}
 
 	Json::Value WebRtcTransport::ToJson() const
@@ -1030,7 +1020,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceSelectedTuple] = tuple->ToJson();
-		this->notifier->Emit(this->transportId, "iceselectedtuplechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "iceselectedtuplechange", eventData);
 	}
 
 	void WebRtcTransport::OnIceConnected(const RTC::IceServer* /*iceServer*/)
@@ -1046,7 +1036,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceState] = JsonStringConnected;
-		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "icestatechange", eventData);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1065,7 +1055,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceState] = JsonStringCompleted;
-		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "icestatechange", eventData);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1087,7 +1077,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceState] = JsonStringDisconnected;
-		this->notifier->Emit(this->transportId, "icestatechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "icestatechange", eventData);
 	}
 
 	void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1103,7 +1093,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringConnecting;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
 	}
 
 	void WebRtcTransport::OnDtlsConnected(
@@ -1128,12 +1118,12 @@ namespace RTC
 		// Close it if it was already set and update it.
 		if (this->srtpSendSession != nullptr)
 		{
-			this->srtpSendSession->Destroy();
+			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
 		if (this->srtpRecvSession != nullptr)
 		{
-			this->srtpRecvSession->Destroy();
+			delete this->srtpRecvSession;
 			this->srtpRecvSession = nullptr;
 		}
 
@@ -1156,14 +1146,14 @@ namespace RTC
 		{
 			MS_ERROR("error creating SRTP receiving session: %s", error.what());
 
-			this->srtpSendSession->Destroy();
+			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
 
 		// Notify.
 		eventData[JsonStringDtlsState]      = JsonStringConnected;
 		eventData[JsonStringDtlsRemoteCert] = remoteCert;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// Iterate all the Consumers and request key frame.
 		for (auto* consumer : this->consumers)
@@ -1188,10 +1178,10 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringFailed;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
-		Destroy();
+		Close();
 	}
 
 	void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1207,10 +1197,10 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringClosed;
-		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
-		Destroy();
+		Close();
 	}
 
 	void WebRtcTransport::OnOutgoingDtlsData(

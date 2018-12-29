@@ -10,48 +10,45 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value RtpListener::ToJson() const
+	void RtpListener::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrcTable{ "ssrcTable" };
-		static const Json::StaticString JsonStringMuxIdTable{ "muxIdTable" };
-		static const Json::StaticString JsonStringRidTable{ "ridTable" };
+		jsonObject["ssrcTable"] = json::object();
+		jsonObject["midTable"] = json::object();
+		jsonObject["ridTable"] = json::object();
 
-		Json::Value json(Json::objectValue);
-		Json::Value jsonSsrcTable(Json::objectValue);
-		Json::Value jsonMuxIdTable(Json::objectValue);
-		Json::Value jsonRidTable(Json::objectValue);
+		auto jsonSsrcTableIt = jsonObject.find("ssrcTable");
+		auto jsonMidTableIt = jsonObject.find("midTable");
+		auto jsonRidTableIt = jsonObject.find("ridTable");
 
 		// Add ssrcTable.
 		for (auto& kv : this->ssrcTable)
 		{
 			auto ssrc     = kv.first;
-			auto producer = kv.second;
+			auto* producer = kv.second;
 
-			jsonSsrcTable[std::to_string(ssrc)] = std::to_string(producer->producerId);
+			(*jsonSsrcTableIt)[std::to_string(ssrc)] = producer->producerId;
 		}
-		json[JsonStringSsrcTable] = jsonSsrcTable;
 
-		// Add muxIdTable.
-		for (auto& kv : this->muxIdTable)
+		// Add midTable.
+		for (auto& kv : this->midTable)
 		{
-			auto muxId    = kv.first;
-			auto producer = kv.second;
+			auto mid      = kv.first;
+			auto* producer = kv.second;
 
-			jsonMuxIdTable[muxId] = std::to_string(producer->producerId);
+			(*jsonMidTableIt)[mid] = producer->producerId;
 		}
-		json[JsonStringMuxIdTable] = jsonMuxIdTable;
 
 		// Add ridTable.
 		for (auto& kv : this->ridTable)
 		{
 			auto rid      = kv.first;
-			auto producer = kv.second;
+			auto* producer = kv.second;
 
 			jsonRidTable[rid] = std::to_string(producer->producerId);
+			(*jsonRidTableIt)[mid] = producer->producerId;
 		}
-		json[JsonStringRidTable] = jsonRidTable;
 
 		return json;
 	}
@@ -65,8 +62,8 @@ namespace RTC
 		// Keep a copy of the previous entries so we can rollback.
 
 		std::vector<uint32_t> previousSsrcs;
-		std::string previousMuxId;
-		std::string previousRid;
+		std::string previousMid;
+		std::vector<std::string> previousRids;
 
 		for (auto& kv : this->ssrcTable)
 		{
@@ -77,14 +74,14 @@ namespace RTC
 				previousSsrcs.push_back(ssrc);
 		}
 
-		for (auto& kv : this->muxIdTable)
+		for (auto& kv : this->midTable)
 		{
-			auto& muxId            = kv.first;
+			auto& mid            = kv.first;
 			auto& existingProducer = kv.second;
 
 			if (existingProducer == producer)
 			{
-				previousMuxId = muxId;
+				previousMid = mid;
 
 				break;
 			}
@@ -96,11 +93,7 @@ namespace RTC
 			auto& existingProducer = kv.second;
 
 			if (existingProducer == producer)
-			{
-				previousRid = rid;
-
-				break;
-			}
+				previousRids.push_back(rid);
 		}
 
 		// First remove from the listener tables all the entries pointing to
@@ -108,110 +101,85 @@ namespace RTC
 		RemoveProducer(producer);
 
 		// Add entries into the ssrcTable.
+		for (auto& encoding : rtpParameters.encodings)
 		{
-			for (auto& encoding : rtpParameters.encodings)
+			uint32_t ssrc;
+
+			// Check encoding.ssrc.
+
+			ssrc = encoding.ssrc;
+
+			if (ssrc != 0u)
 			{
-				uint32_t ssrc;
-
-				// Check encoding.ssrc.
-
-				ssrc = encoding.ssrc;
-
-				if (ssrc != 0u)
+				if (!HasSsrc(ssrc, producer))
 				{
-					if (!HasSsrc(ssrc, producer))
-					{
-						this->ssrcTable[ssrc] = producer;
-					}
-					else
-					{
-						RemoveProducer(producer);
-						RollbackProducer(producer, previousSsrcs, previousMuxId, previousRid);
-
-						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
-					}
-				}
-
-				// Check encoding.rtx.ssrc.
-
-				ssrc = encoding.rtx.ssrc;
-
-				if (ssrc != 0u)
-				{
-					if (!HasSsrc(ssrc, producer))
-					{
-						this->ssrcTable[ssrc] = producer;
-					}
-					else
-					{
-						RemoveProducer(producer);
-						RollbackProducer(producer, previousSsrcs, previousMuxId, previousRid);
-
-						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
-					}
-				}
-
-				// Check encoding.fec.ssrc.
-
-				ssrc = encoding.fec.ssrc;
-
-				if (ssrc != 0u)
-				{
-					if (!HasSsrc(ssrc, producer))
-					{
-						this->ssrcTable[ssrc] = producer;
-					}
-					else
-					{
-						RemoveProducer(producer);
-						RollbackProducer(producer, previousSsrcs, previousMuxId, previousRid);
-
-						MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
-					}
-				}
-			}
-		}
-
-		// Add entries into muxIdTable.
-		{
-			if (!rtpParameters.muxId.empty())
-			{
-				auto& muxId = rtpParameters.muxId;
-
-				if (!HasMuxId(muxId, producer))
-				{
-					this->muxIdTable[muxId] = producer;
+					this->ssrcTable[ssrc] = producer;
 				}
 				else
 				{
 					RemoveProducer(producer);
-					RollbackProducer(producer, previousSsrcs, previousMuxId, previousRid);
+					RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
 
-					MS_THROW_ERROR("muxId already exists in RTP listener [muxId:'%s']", muxId.c_str());
+					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 				}
+			}
+
+			// Check encoding.rtx.ssrc.
+
+			ssrc = encoding.rtx.ssrc;
+
+			if (ssrc != 0u)
+			{
+				if (!HasSsrc(ssrc, producer))
+				{
+					this->ssrcTable[ssrc] = producer;
+				}
+				else
+				{
+					RemoveProducer(producer);
+					RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
+
+					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+				}
+			}
+		}
+
+		// Add entries into midTable.
+		if (!rtpParameters.mid.empty())
+		{
+			auto& mid = rtpParameters.mid;
+
+			if (!HasMid(mid, producer))
+			{
+				this->midTable[mid] = producer;
+			}
+			else
+			{
+				RemoveProducer(producer);
+				RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
+
+				MS_THROW_ERROR("mid already exists in RTP listener [mid:'%s']", mid.c_str());
 			}
 		}
 
 		// Add entries into ridTable.
+		for (auto& encoding : rtpParameters.encodings)
 		{
-			for (auto& encoding : rtpParameters.encodings)
+			auto& rid = encoding.rid;
+
+			if (rid.empty())
+				continue;
+
+			if (!HasRid(rid, producer))
 			{
-				auto& rid = encoding.encodingId;
+				this->ridTable[rid] = producer;
+			}
+			else
+			{
+				RemoveProducer(producer);
+				RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
 
-				if (rid.empty())
-					continue;
-
-				if (!HasRid(rid, producer))
-				{
-					this->ridTable[rid] = producer;
-				}
-				else
-				{
-					RemoveProducer(producer);
-					RollbackProducer(producer, previousSsrcs, previousMuxId, previousRid);
-
-					MS_THROW_ERROR("rid already exists in RTP listener [rid:'%s']", rid.c_str());
-				}
+				MS_THROW_ERROR("rid already exists in RTP listener [rid:'%s']", rid.c_str());
 			}
 		}
 	}
@@ -231,10 +199,10 @@ namespace RTC
 				++it;
 		}
 
-		for (auto it = this->muxIdTable.begin(); it != this->muxIdTable.end();)
+		for (auto it = this->midTable.begin(); it != this->midTable.end();)
 		{
 			if (it->second == producer)
-				it = this->muxIdTable.erase(it);
+				it = this->midTable.erase(it);
 			else
 				++it;
 		}
@@ -257,26 +225,26 @@ namespace RTC
 			auto it = this->ssrcTable.find(packet->GetSsrc());
 			if (it != this->ssrcTable.end())
 			{
-				auto producer = it->second;
+				auto* producer = it->second;
 
 				return producer;
 			}
 		}
 
-		// Otherwise lookup into the muxId table.
+		// Otherwise lookup into the MID table.
 		{
-			const uint8_t* muxIdPtr;
-			size_t muxIdLen;
+			const uint8_t* midPtr;
+			size_t midLen;
 
-			if (packet->ReadMid(&muxIdPtr, &muxIdLen))
+			if (packet->ReadMid(&midPtr, &midLen))
 			{
-				auto* charMuxIdPtr = reinterpret_cast<const char*>(muxIdPtr);
-				std::string muxId(charMuxIdPtr, muxIdLen);
+				auto* charMidPtr = reinterpret_cast<const char*>(midPtr);
+				std::string mid(charMidPtr, midLen);
 
-				auto it = this->muxIdTable.find(muxId);
-				if (it != this->muxIdTable.end())
+				auto it = this->midTable.find(mid);
+				if (it != this->midTable.end())
 				{
-					auto producer = it->second;
+					auto* producer = it->second;
 
 					// Fill the ssrc table.
 					this->ssrcTable[packet->GetSsrc()] = producer;
@@ -299,7 +267,7 @@ namespace RTC
 				auto it = this->ridTable.find(rid);
 				if (it != this->ridTable.end())
 				{
-					auto producer = it->second;
+					auto* producer = it->second;
 
 					// Fill the ssrc table.
 					this->ssrcTable[packet->GetSsrc()] = producer;
@@ -309,7 +277,6 @@ namespace RTC
 			}
 		}
 
-		// TODO: We may emit "unhandledrtp" event.
 		return nullptr;
 	}
 
@@ -329,8 +296,8 @@ namespace RTC
 	void RtpListener::RollbackProducer(
 	  RTC::Producer* producer,
 	  const std::vector<uint32_t>& previousSsrcs,
-	  const std::string& previousMuxId,
-	  const std::string& previousRid)
+	  const std::vector<std::string>& previousMids,
+	  const std::vector<std::string>& previousRids)
 	{
 		MS_TRACE();
 
@@ -339,10 +306,12 @@ namespace RTC
 			this->ssrcTable[ssrc] = producer;
 		}
 
-		if (!previousMuxId.empty())
-			this->muxIdTable[previousMuxId] = producer;
+		if (!previousMid.empty())
+			this->midTable[previousMid] = producer;
 
-		if (!previousRid.empty())
-			this->ridTable[previousRid] = producer;
+		for (auto& rid : previousRids)
+		{
+			this->ridTable[prid] = producer;
+		}
 	}
 } // namespace RTC

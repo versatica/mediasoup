@@ -15,10 +15,10 @@ void DepLibUV::ClassInit()
 {
 	// NOTE: Logger depends on this so we cannot log anything here.
 
-	int err;
-
 	DepLibUV::loop = new uv_loop_t;
-	err            = uv_loop_init(DepLibUV::loop);
+
+	int err = uv_loop_init(DepLibUV::loop);
+
 	if (err != 0)
 		MS_ABORT("libuv initialization failed");
 }
@@ -28,11 +28,11 @@ void DepLibUV::ClassDestroy()
 	MS_TRACE();
 
 	// This should never happen.
-	if (DepLibUV::loop == nullptr)
-		MS_ABORT("DepLibUV::loop was not allocated");
-
-	uv_loop_close(DepLibUV::loop);
-	delete DepLibUV::loop;
+	if (DepLibUV::loop != nullptr)
+	{
+		uv_loop_close(DepLibUV::loop);
+		delete DepLibUV::loop;
+	}
 }
 
 void DepLibUV::PrintVersion()

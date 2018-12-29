@@ -12,28 +12,31 @@
     "type": "git",
     "url": "https://github.com/versatica/mediasoup.git"
   },
+  "main": "lib/mediasoup.js",
   "keywords": [
     "webrtc",
     "ortc",
     "sfu",
     "nodejs"
   ],
-  "bugs": {
-    "url": "https://github.com/versatica/mediasoup/issues"
-  },
   "os": [
     "!win32"
   ],
   "engines": {
     "node": ">=6.4"
   },
-  "main": "lib/mediasoup.js",
+  "scripts": {
+    "lint": "gulp lint",
+    "test": "gulp test",
+    "postinstall": "make Release -C worker"
+  },
   "dependencies": {
     "check-types": "^7.4.0",
     "debug": "^4.1.0",
     "netstring": "^0.3.0",
     "random-number": "0.0.9",
-    "randomatic": "^3.1.1"
+    "randomatic": "^3.1.1",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "eslint": "^5.10.0",
@@ -48,10 +51,5 @@
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
-  },
-  "scripts": {
-    "lint": "gulp lint",
-    "test": "gulp test",
-    "postinstall": "make Release -C worker"
   }
 }

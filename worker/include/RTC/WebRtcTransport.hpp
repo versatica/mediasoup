@@ -2,7 +2,6 @@
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
@@ -37,14 +36,8 @@ namespace RTC
 		};
 
 	public:
-		WebRtcTransport(
-		  RTC::Transport::Listener* listener,
-		  Channel::Notifier* notifier,
-		  uint32_t transportId,
-		  Options& options);
-
-	private:
-		~WebRtcTransport();
+		WebRtcTransport(RTC::Transport::Listener* listener, uint32_t transportId, Options& options);
+		~WebRtcTransport() override;
 
 	public:
 		Json::Value ToJson() const override;

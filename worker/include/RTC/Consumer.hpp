@@ -2,7 +2,6 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/ConsumerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -29,17 +28,10 @@ namespace RTC
 		static constexpr uint16_t ProbationPacketNumber{ 256 };
 
 	public:
-		Consumer(
-		  Channel::Notifier* notifier,
-		  uint32_t consumerId,
-		  RTC::Media::Kind kind,
-		  uint32_t sourceProducerId);
-
-	private:
+		Consumer(uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId);
 		virtual ~Consumer();
 
 	public:
-		void Destroy();
 		Json::Value ToJson() const;
 		Json::Value GetStats() const;
 		void AddListener(RTC::ConsumerListener* listener);
@@ -92,7 +84,6 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Channel::Notifier* notifier{ nullptr };
 		RTC::Transport* transport{ nullptr };
 		RTC::RtpParameters rtpParameters;
 		std::unordered_set<RTC::ConsumerListener*> listeners;

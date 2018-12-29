@@ -10,25 +10,19 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
+#include "Channel/Notifier.hpp"
 #include "Channel/UnixStreamSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
-#include "RTC/TcpServer.hpp"
-#include "RTC/UdpSocket.hpp"
-#include <uv.h>
 #include <cerrno>
 #include <csignal>  // sigaction()
 #include <cstdlib>  // std::_Exit(), std::genenv()
-#include <iostream> // std::cout, std::cerr, std::endl
+#include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
 #include <unistd.h> // getpid(), usleep()
 
-static void init();
-static void ignoreSignals();
-static void destroy();
-static void exitSuccess();
-static void exitWithError();
+void ignoreSignals();
 
 int main(int argc, char* argv[])
 {
@@ -46,26 +40,11 @@ int main(int argc, char* argv[])
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
-	// Set the Channel socket (this will be handled and deleted by the Worker).
+	// Create the Channel socket (it will be handled and deleted by the Worker).
 	auto* channel = new Channel::UnixStreamSocket(channelFd);
 
 	// Initialize the Logger.
-	Logger::Init(id, channel);
-
-	// Setup the configuration.
-	try
-	{
-		Settings::SetConfiguration(argc, argv);
-	}
-	catch (const MediaSoupError& error)
-	{
-		MS_ERROR("configuration error: %s", error.what());
-
-		exitWithError();
-	}
-
-	// Print the effective configuration.
-	Settings::PrintConfiguration();
+	Logger::ClassInit(id, channel);
 
 	MS_DEBUG_TAG(info, "starting mediasoup-worker [pid:%ld]", (long)getpid());
 
@@ -83,41 +62,59 @@ int main(int argc, char* argv[])
 	MS_WARN_TAG(info, "can not determine whether the architecture is 32 or 64 bits");
 #endif
 
+	bool successExit;
+
 	try
 	{
-		init();
+		// Setup the configuration.
+		Settings::SetConfiguration(argc, argv);
+
+		// Print the effective configuration.
+		Settings::PrintConfiguration();
+
+		// Ignore some signals.
+		ignoreSignals();
+
+		// Initialize static stuff.
+		DepLibUV::PrintVersion();
+		DepOpenSSL::ClassInit();
+		DepLibSRTP::ClassInit();
+		Utils::Crypto::ClassInit();
+		RTC::DtlsTransport::ClassInit();
+		RTC::SrtpSession::ClassInit();
+		Channel::Notifier::ClassInit(channel);
 
 		// Run the Worker.
 		Worker worker(channel);
 
 		// Worker ended.
-		destroy();
-		exitSuccess();
+		successExit = true;
 	}
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
-		destroy();
-		exitWithError();
+		successExit = false;
 	}
-}
 
-void init()
-{
-	MS_TRACE();
+	// Free static stuff.
+	DepLibUV::ClassDestroy();
+	DepLibSRTP::ClassDestroy();
+	Utils::Crypto::ClassDestroy();
+	RTC::DtlsTransport::ClassDestroy();
 
-	ignoreSignals();
-	DepLibUV::PrintVersion();
+	if (successExit)
+	{
+		// Wait a bit so peding messages to stdout/Channel arrive to the Node
+		// process.
+		usleep(100000);
 
-	// Initialize static stuff.
-	DepOpenSSL::ClassInit();
-	DepLibSRTP::ClassInit();
-	Utils::Crypto::ClassInit();
-	RTC::UdpSocket::ClassInit();
-	RTC::TcpServer::ClassInit();
-	RTC::DtlsTransport::ClassInit();
-	RTC::SrtpSession::ClassInit();
+		std::_Exit(EXIT_SUCCESS);
+	}
+	else
+	{
+		std::_Exit(EXIT_FAILURE);
+	}
 }
 
 void ignoreSignals()
@@ -141,6 +138,7 @@ void ignoreSignals()
 	act.sa_handler = SIG_IGN; // NOLINT
 	act.sa_flags   = 0;
 	err            = sigfillset(&act.sa_mask);
+
 	if (err != 0)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
@@ -150,36 +148,10 @@ void ignoreSignals()
 		int sigId     = ignoredSignal.second;
 
 		err = sigaction(sigId, &act, nullptr);
+
 		if (err != 0)
 		{
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 		}
 	}
-}
-
-void destroy()
-{
-	MS_TRACE();
-
-	// Free static stuff.
-	RTC::DtlsTransport::ClassDestroy();
-	Utils::Crypto::ClassDestroy();
-	DepLibUV::ClassDestroy();
-	DepLibSRTP::ClassDestroy();
-}
-
-void exitSuccess()
-{
-	// Wait a bit so peding messages to stdout/Channel arrive to the main process.
-	usleep(100000);
-	// And exit with success status.
-	std::_Exit(EXIT_SUCCESS);
-}
-
-void exitWithError()
-{
-	// Wait a bit so peding messages to stderr arrive to the main process.
-	usleep(100000);
-	// And exit with error status.
-	std::_Exit(EXIT_FAILURE);
 }

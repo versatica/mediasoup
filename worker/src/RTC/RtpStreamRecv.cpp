@@ -31,18 +31,14 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	Json::Value RtpStreamRecv::GetStats()
+	void RtpStreamRecv::FillJsonStats(json& jsonObject)
 	{
-		static const std::string Type = "inbound-rtp";
-		static const Json::StaticString JsonStringType{ "type" };
-		static const Json::StaticString JsonStringJitter{ "jitter" };
+		MS_TRACE();
 
-		Json::Value json = RtpStream::GetStats();
+		RtpStream::FillJsonStats(jsonObject);
 
-		json[JsonStringType]   = Type;
-		json[JsonStringJitter] = Json::UInt{ this->jitter };
-
-		return json;
+		jsonObject["type"] = "inbound-rtp";
+		jsonObject["jitter"] = this->jitter;
 	}
 
 	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)
