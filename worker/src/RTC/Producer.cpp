@@ -69,7 +69,7 @@ namespace RTC
 		}
 
 		// Close the RTP key frame request block timer.
-		this->keyFrameRequestBlockTimer->Destroy();
+		delete this->keyFrameRequestBlockTimer;
 
 		delete this;
 	}

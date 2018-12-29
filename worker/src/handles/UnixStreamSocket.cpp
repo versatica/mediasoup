@@ -53,7 +53,6 @@ inline static void onShutdown(uv_shutdown_t* req, int status)
 	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onClose));
 }
 
-
 /* Instance methods. */
 
 UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(bufferSize)

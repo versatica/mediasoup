@@ -600,7 +600,7 @@ namespace RTC
 		}
 
 		// Destroy the DTLS timer.
-		this->timer->Destroy();
+		delete this->timer;
 
 		delete this;
 	}

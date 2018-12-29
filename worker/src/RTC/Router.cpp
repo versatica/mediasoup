@@ -69,7 +69,7 @@ namespace RTC
 		}
 
 		// Close the audio level timer.
-		this->audioLevelsTimer->Destroy();
+		delete this->audioLevelsTimer;
 
 		// Notify the listener.
 		this->listener->OnRouterClosed(this);

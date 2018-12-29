@@ -39,6 +39,9 @@ Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
 Worker::~Worker()
 {
 	MS_TRACE();
+
+	if (!this->closed)
+		Close();
 }
 
 void Worker::Close()
@@ -51,8 +54,7 @@ void Worker::Close()
 	this->closed = true;
 
 	// Close the SignalsHandler.
-	if (this->signalsHandler != nullptr)
-		this->signalsHandler->Destroy();
+	delete this->signalsHandler;
 
 	// Close all the Routers.
 	// NOTE: Upon Router closure the onRouterClosed() method is called, which

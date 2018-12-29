@@ -48,9 +48,8 @@ namespace RTC
 			consumer->RemoveListener(this);
 		}
 
-		// Destroy the RTCP timer.
-		if (this->rtcpTimer != nullptr)
-			this->rtcpTimer->Destroy();
+		// Close the RTCP timer.
+		delete this->rtcpTimer;
 
 		// Delete mirror tuple.
 		if (this->mirrorTuple != nullptr)

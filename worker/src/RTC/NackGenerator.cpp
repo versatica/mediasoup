@@ -31,7 +31,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Close the timer.
-		this->timer->Destroy();
+		delete this->timer;
 	}
 
 	// Returns true if this is a found nacked packet. False otherwise.

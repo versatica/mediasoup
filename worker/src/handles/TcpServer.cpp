@@ -157,7 +157,7 @@ void TcpServer::Close()
 		delete connection;
 	}
 
- 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
 
 void TcpServer::Dump() const
