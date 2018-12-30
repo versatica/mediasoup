@@ -22,7 +22,9 @@ namespace RTC
 		srtp_err_status_t err = srtp_install_event_handler(static_cast<srtp_event_handler_func_t*>(OnSrtpEvent));
 
 		if (DepLibSRTP::IsError(err))
+		{
 			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
+		}
 	}
 
 	void SrtpSession::OnSrtpEvent(srtp_event_data_t* data)

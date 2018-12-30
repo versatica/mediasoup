@@ -27,15 +27,15 @@ void ignoreSignals();
 int main(int argc, char* argv[])
 {
 	// Ensure we are called by our Node library.
-	if (argc == 1 || (std::getenv("MEDIASOUP_CHANNEL_FD") == nullptr))
+	if (argc == 1 || std::getenv("MEDIASOUP_CHANNEL_FD") == nullptr)
 	{
-		std::cerr << "ERROR: you don't seem to be my real father" << std::endl;
+		std::cerr << "ERROR: U AIN'T MY REAL FATHER" << std::endl;
 
 		std::_Exit(EXIT_FAILURE);
 	}
 
-	std::string id = std::string(argv[1]);
-	int channelFd  = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
+	std::string workerId = std::string(argv[1]);
+	int channelFd        = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
 
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 	auto* channel = new Channel::UnixStreamSocket(channelFd);
 
 	// Initialize the Logger.
-	Logger::ClassInit(id, channel);
+	Logger::ClassInit(workerId, channel);
 
 	MS_DEBUG_TAG(info, "starting mediasoup-worker [pid:%ld]", (long)getpid());
 
@@ -62,21 +62,14 @@ int main(int argc, char* argv[])
 	MS_WARN_TAG(info, "can not determine whether the architecture is 32 or 64 bits");
 #endif
 
-	bool successExit;
-
 	try
 	{
 		// Setup the configuration.
 		Settings::SetConfiguration(argc, argv);
-
-		// Print the effective configuration.
 		Settings::PrintConfiguration();
-
-		// Ignore some signals.
-		ignoreSignals();
+		DepLibUV::PrintVersion();
 
 		// Initialize static stuff.
-		DepLibUV::PrintVersion();
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
 		Utils::Crypto::ClassInit();
@@ -84,35 +77,28 @@ int main(int argc, char* argv[])
 		RTC::SrtpSession::ClassInit();
 		Channel::Notifier::ClassInit(channel);
 
+		// Ignore some signals.
+		ignoreSignals();
+
 		// Run the Worker.
 		Worker worker(channel);
 
-		// Worker ended.
-		successExit = true;
-	}
-	catch (const MediaSoupError& error)
-	{
-		MS_ERROR_STD("failure exit: %s", error.what());
+		// Free static stuff.
+		DepLibUV::ClassDestroy();
+		DepLibSRTP::ClassDestroy();
+		Utils::Crypto::ClassDestroy();
+		RTC::DtlsTransport::ClassDestroy();
 
-		successExit = false;
-	}
-
-	// Free static stuff.
-	DepLibUV::ClassDestroy();
-	DepLibSRTP::ClassDestroy();
-	Utils::Crypto::ClassDestroy();
-	RTC::DtlsTransport::ClassDestroy();
-
-	if (successExit)
-	{
 		// Wait a bit so peding messages to stdout/Channel arrive to the Node
 		// process.
 		usleep(100000);
 
 		std::_Exit(EXIT_SUCCESS);
 	}
-	else
+	catch (const MediaSoupError& error)
 	{
+		MS_ERROR_STD("failure exit: %s", error.what());
+
 		std::_Exit(EXIT_FAILURE);
 	}
 }
