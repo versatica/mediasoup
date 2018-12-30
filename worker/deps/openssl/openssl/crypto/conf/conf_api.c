@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -9,11 +9,12 @@
 
 /* Part of the code in here was originally in conf.c, which is now removed */
 
+#include "e_os.h"
+#include "internal/cryptlib.h"
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/conf.h>
 #include <openssl/conf_api.h>
-#include "e_os.h"
 
 static void value_free_hash(const CONF_VALUE *a, LHASH_OF(CONF_VALUE) *conf);
 static void value_free_stack_doall(CONF_VALUE *a);
@@ -82,7 +83,7 @@ char *_CONF_get_string(const CONF *conf, const char *section,
             if (v != NULL)
                 return (v->value);
             if (strcmp(section, "ENV") == 0) {
-                p = getenv(name);
+                p = ossl_safe_getenv(name);
                 if (p != NULL)
                     return (p);
             }
@@ -95,7 +96,7 @@ char *_CONF_get_string(const CONF *conf, const char *section,
         else
             return (NULL);
     } else
-        return (getenv(name));
+        return ossl_safe_getenv(name);
 }
 
 static unsigned long conf_value_hash(const CONF_VALUE *v)
@@ -205,10 +206,14 @@ CONF_VALUE *_CONF_new_section(CONF *conf, const char *section)
 
     vv = lh_CONF_VALUE_insert(conf->data, v);
     OPENSSL_assert(vv == NULL);
+    if (lh_CONF_VALUE_error(conf->data) > 0)
+        goto err;
     return v;
 
  err:
     sk_CONF_VALUE_free(sk);
+    if (v != NULL)
+        OPENSSL_free(v->section);
     OPENSSL_free(v);
     return NULL;
 }

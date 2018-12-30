@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -78,7 +78,8 @@ static int dir_ctrl(X509_LOOKUP *ctx, int cmd, const char *argp, long argl,
     switch (cmd) {
     case X509_L_ADD_DIR:
         if (argl == X509_FILETYPE_DEFAULT) {
-            dir = (char *)getenv(X509_get_default_cert_dir_env());
+            dir = (char *)ossl_safe_getenv(X509_get_default_cert_dir_env());
+
             if (dir)
                 ret = add_cert_dir(ld, dir, X509_FILETYPE_PEM);
             else
@@ -111,7 +112,7 @@ static int new_dir(X509_LOOKUP *lu)
         OPENSSL_free(a);
         return 0;
     }
-    lu->method_data = (char *)a;
+    lu->method_data = a;
     return 1;
 }
 

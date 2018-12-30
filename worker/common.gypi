@@ -1,16 +1,16 @@
 {
   'variables':
   {
-  	# libuv variables:
+    # libuv variables:
     'uv_library%': 'static_library',
     # openssl variables:
     'library%': 'static_library',
+    'openssl_fips%': '',
+    'openssl_no_asm%': 1, # Must be defined in OpenSSL >= 1.1.0g.
+    'libopenssl': '<(PRODUCT_DIR)/libopenssl.a',
     # Others:
-    'gcc_version%': 'unknown',
-    'clang%': 1,
-    'mediasoup_asan%': 'false',
-    'openssl_fips%': 'false',
-    'libopenssl': '<(PRODUCT_DIR)/libopenssl.a'
+    'clang%': 0,
+    'mediasoup_asan%': 'false'
   },
 
   'target_defaults':
@@ -21,7 +21,7 @@
     {
       'Release':
       {
-      	'cflags': [ '-g' ]
+        'cflags': [ '-g' ]
       },
       'Debug':
       {
@@ -42,7 +42,7 @@
       'OTHER_CFLAGS':
       [
         '-fstrict-aliasing',
-        '-g',
+        '-g'
       ],
       'WARNING_CFLAGS':
       [
@@ -51,7 +51,7 @@
         '-W',
         '-Wno-unused-parameter',
         '-Wundeclared-selector',
-        '-Wno-parentheses-equality',
+        '-Wno-parentheses-equality'
       ]
     },
 
@@ -79,7 +79,7 @@
           [ 'target_arch == "x64"', {
             'cflags': [ '-m64' ],
             'ldflags': [ '-m64' ]
-          }],
+          }]
         ]
       }]
     ]
