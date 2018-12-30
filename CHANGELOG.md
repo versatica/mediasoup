@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 2.6.2
+
+* C++: Remove all `Destroy()` class methods and no longer do `delete this`.
+* Update libuv to 1.24.1.
+* Update OpenSSL to 1.1.0g.
+
+
 ### 2.6.1
 
 * worker: Internal refactor and code cleanup.
