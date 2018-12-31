@@ -9,9 +9,6 @@
 #include "RTC/PlainRtpTransport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/WebRtcTransport.hpp"
-#include <map>
-#include <set>
-#include <string>
 
 namespace RTC
 {
@@ -1507,9 +1504,7 @@ namespace RTC
 	}
 
 	void Router::OnProducerStreamEnabled(
-		RTC::Producer* producer,
-		const RTC::RtpStream* rtpStream,
-		uint32_t translatedSsrc)
+	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc)
 	{
 		MS_TRACE();
 
@@ -1521,9 +1516,7 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerProfileDisabled(
-	  RTC::Producer* producer,
-	  const RTC::RtpStream* rtpStream)
+	void Router::OnProducerProfileDisabled(RTC::Producer* producer, const RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 

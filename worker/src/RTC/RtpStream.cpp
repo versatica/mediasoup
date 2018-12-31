@@ -50,21 +50,21 @@ namespace RTC
 
 		uint64_t now = DepLibUV::GetTime();
 
-		jsonObject["id"] = this->rtpStreamId;
-		jsonObject["timestamp"] = now;
-		jsonObject["ssrc"] = this->params.ssrc;
-		jsonObject["kind"] = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		jsonObject["mimeType"] = this->params.mimeType.ToString();
-		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"] = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"] = this->transmissionCounter.GetRate(now);
-		jsonObject["packetsLost"] = this->packetsLost;
-		jsonObject["fractionLost"] = this->fractionLost;
+		jsonObject["id"]               = this->rtpStreamId;
+		jsonObject["timestamp"]        = now;
+		jsonObject["ssrc"]             = this->params.ssrc;
+		jsonObject["kind"]             = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		jsonObject["mimeType"]         = this->params.mimeType.ToString();
+		jsonObject["packetCount"]      = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]        = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]          = this->transmissionCounter.GetRate(now);
+		jsonObject["packetsLost"]      = this->packetsLost;
+		jsonObject["fractionLost"]     = this->fractionLost;
 		jsonObject["packetsDiscarded"] = this->packetsDiscarded;
-		jsonObject["packetsRepaired"] = this->packetsRepaired;
-		jsonObject["firCount"] = this->firCount;
-		jsonObject["pliCount"] = this->pliCount;
-		jsonObject["nackCount"] = this->nackCount;
+		jsonObject["packetsRepaired"]  = this->packetsRepaired;
+		jsonObject["firCount"]         = this->firCount;
+		jsonObject["pliCount"]         = this->pliCount;
+		jsonObject["nackCount"]        = this->nackCount;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -209,12 +209,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		jsonObject["ssrc"] = this->ssrc;
+		jsonObject["ssrc"]        = this->ssrc;
 		jsonObject["payloadType"] = this->payloadType;
-		jsonObject["mimeType"] = this->mimeType.ToString();
-		jsonObject["clockRate"] = this->clockRate;
-		jsonObject["useNack"] = this->useNack;
-		jsonObject["usePli"] = this->usePli;
+		jsonObject["mimeType"]    = this->mimeType.ToString();
+		jsonObject["clockRate"]   = this->clockRate;
+		jsonObject["useNack"]     = this->useNack;
+		jsonObject["usePli"]      = this->usePli;
 	}
 
 	void RtpStream::OnTimer(Timer* timer)

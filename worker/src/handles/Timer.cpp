@@ -103,7 +103,8 @@ void Timer::Reset()
 	if (this->repeat == 0u)
 		return;
 
-	int err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->repeat, this->repeat);
+	int err =
+	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->repeat, this->repeat);
 
 	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
@@ -119,7 +120,8 @@ void Timer::Restart()
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
 		Stop();
 
-	int err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->timeout, this->repeat);
+	int err =
+	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->timeout, this->repeat);
 
 	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));

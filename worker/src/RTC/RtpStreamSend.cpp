@@ -37,7 +37,7 @@ namespace RTC
 
 		RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["type"] = "outbound-rtp";
+		jsonObject["type"]          = "outbound-rtp";
 		jsonObject["roundTripTime"] = this->rtt;
 	}
 

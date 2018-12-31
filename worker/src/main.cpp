@@ -9,39 +9,40 @@
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "Worker.hpp"
+// #include "Worker.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/UnixStreamSocket.hpp"
-#include "RTC/DtlsTransport.hpp"
+// #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <cerrno>
 #include <csignal>  // sigaction()
-#include <cstdlib>  // std::_Exit(), std::genenv()
+#include <cstdlib>  // std::_Exit()
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
 #include <unistd.h> // getpid(), usleep()
+
+static constexpr int ChannelFd{ 3 };
 
 void ignoreSignals();
 
 int main(int argc, char* argv[])
 {
 	// Ensure we are called by our Node library.
-	if (argc == 1 || std::getenv("MEDIASOUP_CHANNEL_FD") == nullptr)
+	if (argc == 1)
 	{
 		std::cerr << "ERROR: U AIN'T MY REAL FATHER" << std::endl;
 
-		std::_Exit(EXIT_FAILURE);
+		std::_Exit(1);
 	}
 
 	std::string workerId = std::string(argv[1]);
-	int channelFd        = std::stoi(std::getenv("MEDIASOUP_CHANNEL_FD"));
 
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
 	// Create the Channel socket (it will be handled and deleted by the Worker).
-	auto* channel = new Channel::UnixStreamSocket(channelFd);
+	auto* channel = new Channel::UnixStreamSocket(ChannelFd);
 
 	// Initialize the Logger.
 	Logger::ClassInit(workerId, channel);
@@ -64,16 +65,27 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		// Setup the configuration.
 		Settings::SetConfiguration(argc, argv);
-		Settings::PrintConfiguration();
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_ERROR_STD("settings error: %s", error.what());
+
+		std::_Exit(42);
+	}
+
+	Settings::PrintConfiguration();
+	DepLibUV::PrintVersion();
+
+	try
+	{
 		DepLibUV::PrintVersion();
 
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
 		Utils::Crypto::ClassInit();
-		RTC::DtlsTransport::ClassInit();
+		// RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
 		Channel::Notifier::ClassInit(channel);
 
@@ -81,17 +93,20 @@ int main(int argc, char* argv[])
 		ignoreSignals();
 
 		// Run the Worker.
-		Worker worker(channel);
+		// Worker worker(channel);
+
+		// TODO: REMOVE:
+		Channel::Notifier::Emit(workerId, "running");
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
-		RTC::DtlsTransport::ClassDestroy();
+		// RTC::DtlsTransport::ClassDestroy();
 
 		// Wait a bit so peding messages to stdout/Channel arrive to the Node
 		// process.
-		usleep(100000);
+		usleep(200000);
 
 		std::_Exit(EXIT_SUCCESS);
 	}
@@ -99,7 +114,7 @@ int main(int argc, char* argv[])
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
-		std::_Exit(EXIT_FAILURE);
+		std::_Exit(1);
 	}
 }
 

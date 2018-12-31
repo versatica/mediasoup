@@ -19,7 +19,8 @@ namespace RTC
 	void SrtpSession::ClassInit()
 	{
 		// Set libsrtp event handler.
-		srtp_err_status_t err = srtp_install_event_handler(static_cast<srtp_event_handler_func_t*>(OnSrtpEvent));
+		srtp_err_status_t err =
+		  srtp_install_event_handler(static_cast<srtp_event_handler_func_t*>(OnSrtpEvent));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -134,7 +135,8 @@ namespace RTC
 
 		std::memcpy(EncryptBuffer, *data, *len);
 
-		srtp_err_status_t err = srtp_protect(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
+		srtp_err_status_t err =
+		  srtp_protect(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -179,7 +181,8 @@ namespace RTC
 
 		std::memcpy(EncryptBuffer, *data, *len);
 
-		srtp_err_status_t err = srtp_protect_rtcp(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
+		srtp_err_status_t err =
+		  srtp_protect_rtcp(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -198,7 +201,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		srtp_err_status_t err = srtp_unprotect_rtcp(this->session, (void*)data, reinterpret_cast<int*>(len));
+		srtp_err_status_t err =
+		  srtp_unprotect_rtcp(this->session, (void*)data, reinterpret_cast<int*>(len));
 
 		if (DepLibSRTP::IsError(err))
 		{

@@ -15,12 +15,11 @@ namespace Channel
 		{
 		public:
 			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
 		};
 
 	public:
 		explicit UnixStreamSocket(int fd);
-		~UnixStreamSocket() override;
 
 	public:
 		void SetListener(Listener* listener);

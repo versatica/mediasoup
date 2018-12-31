@@ -15,17 +15,17 @@ namespace RTC
 		MS_TRACE();
 
 		jsonObject["ssrcTable"] = json::object();
-		jsonObject["midTable"] = json::object();
-		jsonObject["ridTable"] = json::object();
+		jsonObject["midTable"]  = json::object();
+		jsonObject["ridTable"]  = json::object();
 
 		auto jsonSsrcTableIt = jsonObject.find("ssrcTable");
-		auto jsonMidTableIt = jsonObject.find("midTable");
-		auto jsonRidTableIt = jsonObject.find("ridTable");
+		auto jsonMidTableIt  = jsonObject.find("midTable");
+		auto jsonRidTableIt  = jsonObject.find("ridTable");
 
 		// Add ssrcTable.
 		for (auto& kv : this->ssrcTable)
 		{
-			auto ssrc     = kv.first;
+			auto ssrc      = kv.first;
 			auto* producer = kv.second;
 
 			(*jsonSsrcTableIt)[std::to_string(ssrc)] = producer->producerId;
@@ -34,7 +34,7 @@ namespace RTC
 		// Add midTable.
 		for (auto& kv : this->midTable)
 		{
-			auto mid      = kv.first;
+			auto mid       = kv.first;
 			auto* producer = kv.second;
 
 			(*jsonMidTableIt)[mid] = producer->producerId;
@@ -43,10 +43,10 @@ namespace RTC
 		// Add ridTable.
 		for (auto& kv : this->ridTable)
 		{
-			auto rid      = kv.first;
+			auto rid       = kv.first;
 			auto* producer = kv.second;
 
-			jsonRidTable[rid] = std::to_string(producer->producerId);
+			jsonRidTable[rid]      = std::to_string(producer->producerId);
 			(*jsonRidTableIt)[mid] = producer->producerId;
 		}
 
@@ -76,7 +76,7 @@ namespace RTC
 
 		for (auto& kv : this->midTable)
 		{
-			auto& mid            = kv.first;
+			auto& mid              = kv.first;
 			auto& existingProducer = kv.second;
 
 			if (existingProducer == producer)

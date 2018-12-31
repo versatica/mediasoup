@@ -16,7 +16,7 @@ namespace RTC
 		if (!data.is_object())
 			MS_THROW_ERROR("data is not an object");
 
-		auto jsonTypeIt = data.find("type");
+		auto jsonTypeIt      = data.find("type");
 		auto jsonParameterIt = data.find("type");
 
 		// type is mandatory.

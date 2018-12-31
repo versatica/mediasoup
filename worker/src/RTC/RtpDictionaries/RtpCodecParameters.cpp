@@ -16,11 +16,11 @@ namespace RTC
 		if (!data.is_object())
 			MS_THROW_ERROR("data is not an object");
 
-		auto jsonMimeTypeIt = data.find("mimeType");
-		auto jsonPayloadTypeIt = data.find("payloadType");
-		auto jsonClockRateIt = data.find("clockRate");
-		auto jsonChannelsIt = data.find("channels");
-		auto jsonParametersIt = data.find("parameters");
+		auto jsonMimeTypeIt     = data.find("mimeType");
+		auto jsonPayloadTypeIt  = data.find("payloadType");
+		auto jsonClockRateIt    = data.find("clockRate");
+		auto jsonChannelsIt     = data.find("channels");
+		auto jsonParametersIt   = data.find("parameters");
 		auto jsonRtcpFeedbackIt = data.find("rtcpFeedback");
 
 		// mimeType is mandatory.
@@ -92,14 +92,14 @@ namespace RTC
 
 		// Add rtcpFeedback.
 		jsonObject["rtcpFeedback"] = json::array();
-		auto jsonRtcpFeedbackIt = jsonObject.find("rtcpFeedback");
+		auto jsonRtcpFeedbackIt    = jsonObject.find("rtcpFeedback");
 
 		for (auto i = 0; i < this->rtcpFeedback.size(); ++i)
 		{
 			jsonRtcpFeedbackIt->emplace_back(json::value_t::object);
 
 			auto& jsonEntry = (*jsonRtcpFeedbackIt)[i];
-			auto& fb = this->rtcpFeedback[i];
+			auto& fb        = this->rtcpFeedback[i];
 
 			fb.FillJson(jsonEntry);
 		}

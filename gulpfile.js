@@ -20,16 +20,6 @@ const workerFiles =
 	'worker/include/**/*.hpp',
 	'worker/test/**/*.cpp'
 ];
-const nodeTests =
-[
-	'test/test-mediasoup.js',
-	'test/test-Server.js'
-	// 'test/test-Room.js',
-	// 'test/test-Peer.js',
-	// 'test/test-Transport.js',
-	// 'test/test-Producer.js',
-	// 'test/test-utils.js'
-];
 const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const workerHeaderFilterRegex =
 	'(common.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp' +
@@ -48,8 +38,10 @@ gulp.task('lint:node', () =>
 gulp.task('lint:worker', () =>
 {
 	const src = workerFiles.concat(
-		// Remove Ragel generated files.
-		'!worker/src/Utils/IP.cpp'
+		// Ignore Ragel generated files.
+		'!worker/src/Utils/IP.cpp',
+		// Ignore json.hpp.
+		'!worker/include/json.hpp'
 	);
 
 	return gulp.src(src)
@@ -59,8 +51,10 @@ gulp.task('lint:worker', () =>
 gulp.task('format:worker', () =>
 {
 	const src = workerFiles.concat(
-		// Remove Ragel generated files.
-		'!worker/src/Utils/IP.cpp'
+		// Ignore Ragel generated files.
+		'!worker/src/Utils/IP.cpp',
+		// Ignore json.hpp.
+		'!worker/include/json.hpp'
 	);
 
 	return gulp.src(src, { base: '.' })
@@ -101,11 +95,11 @@ gulp.task('tidy:worker', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
 gulp.task('test:node', shell.task(
 	[
 		'if type make &> /dev/null; then make -C worker; fi',
-		`tap --bail --color --reporter=spec ${nodeTests.join(' ')}`
+		'jest'
 	],
 	{
 		verbose : true,
-		env     : { DEBUG: '*ABORT* *WARN*' }
+		env     : { DEBUG: '*ABORT*' }
 	}
 ));
 

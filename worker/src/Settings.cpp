@@ -44,8 +44,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	int c;
 	int optionIdx{ 0 };
-	std::string stringValue;
-	std::vector<std::string> logTags;
 	// clang-format off
 	struct option options[] =
 	{
@@ -58,6 +56,8 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ nullptr, 0, nullptr, 0 }
 	};
 	// clang-format on
+	std::string stringValue;
+	std::vector<std::string> logTags;
 
 	/* Parse command line options. */
 
@@ -87,14 +87,28 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'm':
 			{
-				Settings::configuration.rtcMinPort = std::stoi(optarg);
+				try
+				{
+					Settings::configuration.rtcMinPort = static_cast<uint16_t>(std::stoi(optarg));
+				}
+				catch (const std::exception& error)
+				{
+					MS_THROW_ERROR("%s", error.what());
+				}
 
 				break;
 			}
 
 			case 'M':
 			{
-				Settings::configuration.rtcMaxPort = std::stoi(optarg);
+				try
+				{
+					Settings::configuration.rtcMaxPort = static_cast<uint16_t>(std::stoi(optarg));
+				}
+				catch (const std::exception& error)
+				{
+					MS_THROW_ERROR("%s", error.what());
+				}
 
 				break;
 			}
@@ -214,7 +228,7 @@ void Settings::HandleRequest(Channel::Request* request)
 		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{
 			auto jsonLogLevelIt = request->data.find("logLevel");
-			auto jsonLogTagsIt = request->data.find("logTags");
+			auto jsonLogTagsIt  = request->data.find("logTags");
 
 			try
 			{
@@ -264,43 +278,17 @@ void Settings::HandleRequest(Channel::Request* request)
 	}
 }
 
-void Settings::SetDtlsCertificateAndPrivateKeyFiles()
+void Settings::SetLogLevel(std::string& level)
 {
 	MS_TRACE();
 
-	if (
-	  Settings::configuration.dtlsCertificateFile.empty() ||
-	  Settings::configuration.dtlsPrivateKeyFile.empty())
-	{
-		Settings::configuration.dtlsCertificateFile = "";
-		Settings::configuration.dtlsPrivateKeyFile  = "";
+	// Lowcase given level.
+	Utils::String::ToLowerCase(level);
 
-		return;
-	}
+	if (Settings::string2LogLevel.find(level) == Settings::string2LogLevel.end())
+		MS_THROW_ERROR("invalid value '%s' for logLevel", level.c_str());
 
-	std::string& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
-	std::string& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
-
-	try
-	{
-		Utils::File::CheckFile(dtlsCertificateFile.c_str());
-	}
-	catch (const MediaSoupError& error)
-	{
-		MS_THROW_ERROR("dtlsCertificateFile: %s", error.what());
-	}
-
-	try
-	{
-		Utils::File::CheckFile(dtlsPrivateKeyFile.c_str());
-	}
-	catch (const MediaSoupError& error)
-	{
-		MS_THROW_ERROR("dtlsPrivateKeyFile: %s", error.what());
-	}
-
-	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
-	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
+	Settings::configuration.logLevel = Settings::string2LogLevel[level];
 }
 
 void Settings::SetLogTags(const std::vector<std::string>& tags)
@@ -333,4 +321,52 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 	}
 
 	Settings::configuration.logTags = newLogTags;
+}
+
+void Settings::SetDtlsCertificateAndPrivateKeyFiles()
+{
+	MS_TRACE();
+
+	if (
+	  !Settings::configuration.dtlsCertificateFile.empty() &&
+	  Settings::configuration.dtlsPrivateKeyFile.empty())
+	{
+		MS_THROW_ERROR("missing dtlsPrivateKeyFile");
+	}
+	else if (
+	  Settings::configuration.dtlsCertificateFile.empty() &&
+	  !Settings::configuration.dtlsPrivateKeyFile.empty())
+	{
+		MS_THROW_ERROR("missing dtlsCertificateFile");
+	}
+	else if (
+	  Settings::configuration.dtlsCertificateFile.empty() &&
+	  Settings::configuration.dtlsPrivateKeyFile.empty())
+	{
+		return;
+	}
+
+	std::string& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
+	std::string& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
+
+	try
+	{
+		Utils::File::CheckFile(dtlsCertificateFile.c_str());
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_THROW_ERROR("dtlsCertificateFile: %s", error.what());
+	}
+
+	try
+	{
+		Utils::File::CheckFile(dtlsPrivateKeyFile.c_str());
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_THROW_ERROR("dtlsPrivateKeyFile: %s", error.what());
+	}
+
+	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
+	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
 }

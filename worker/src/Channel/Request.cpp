@@ -51,10 +51,10 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto jsonIdIt = body.find("id");
-		auto jsonMethodIt = body.find("method");
+		auto jsonIdIt       = body.find("id");
+		auto jsonMethodIt   = body.find("method");
 		auto jsonInternalIt = body.find("internal");
-		auto jsonDataIt = body.find("data");
+		auto jsonDataIt     = body.find("data");
 
 		if (jsonIdIt == body.end() || !jsonIdIt->is_string())
 			MS_THROW_ERROR("invalid id");
@@ -93,7 +93,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static json noData( nullptr );
+		static json noData(nullptr);
 
 		Accept(noData);
 	}
@@ -108,7 +108,7 @@ namespace Channel
 
 		json jsonResponse{ json::object() };
 
-		jsonResponse["id"] = this->id;
+		jsonResponse["id"]       = this->id;
 		jsonResponse["accepted"] = true;
 
 		if (data.is_structured())
@@ -139,7 +139,7 @@ namespace Channel
 
 		json jsonResponse{ json::object() };
 
-		jsonResponse["id"] = this->id;
+		jsonResponse["id"]       = this->id;
 		jsonResponse["rejected"] = true;
 
 		if (reason != nullptr)

@@ -12,8 +12,7 @@
 
 using json = nlohmann::json;
 
-class Worker : public Channel::UnixStreamSocket::Listener,
-               public SignalsHandler::Listener
+class Worker : public Channel::UnixStreamSocket::Listener, public SignalsHandler::Listener
 {
 public:
 	explicit Worker(Channel::UnixStreamSocket* channel);
@@ -25,14 +24,14 @@ private:
 	void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
 	RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
 
-	/* Methods inherited from SignalsHandler::Listener. */
-public:
-	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
-
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
 	void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
-	void OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* channel) override;
+	void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) override;
+
+	/* Methods inherited from SignalsHandler::Listener. */
+public:
+	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
 
 private:
 	// Passed by argument.

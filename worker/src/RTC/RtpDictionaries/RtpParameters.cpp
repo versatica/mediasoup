@@ -18,11 +18,11 @@ namespace RTC
 		if (!data.is_object())
 			MS_THROW_ERROR("data is not an object");
 
-		auto jsonMidIt = data.find("mid");
-		auto jsonCodecsIt = data.find("codecs");
-		auto jsonEncodingsIt = data.find("encodings");
+		auto jsonMidIt              = data.find("mid");
+		auto jsonCodecsIt           = data.find("codecs");
+		auto jsonEncodingsIt        = data.find("encodings");
 		auto jsonHeaderExtensionsIt = data.find("headerExtensions");
-		auto jsonRtcpIt = data.find("rtcp");
+		auto jsonRtcpIt             = data.find("rtcp");
 
 		// mid is optional.
 		if (jsonMidIt != data.end() && jsonMidIt->is_number_unsigned())
@@ -89,9 +89,9 @@ namespace RTC
 	}
 
 	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
-	  : mid(rtpParameters->mid), codecs(rtpParameters->codecs),
-	    encodings(rtpParameters->encodings), headerExtensions(rtpParameters->headerExtensions),
-	    rtcp(rtpParameters->rtcp), hasRtcp(rtpParameters->hasRtcp)
+	  : mid(rtpParameters->mid), codecs(rtpParameters->codecs), encodings(rtpParameters->encodings),
+	    headerExtensions(rtpParameters->headerExtensions), rtcp(rtpParameters->rtcp),
+	    hasRtcp(rtpParameters->hasRtcp)
 	{
 		MS_TRACE();
 	}
@@ -106,41 +106,41 @@ namespace RTC
 
 		// Add codecs.
 		jsonObject["codecs"] = json::array();
-		auto jsonCodecsIt = jsonObject.find("codecs");
+		auto jsonCodecsIt    = jsonObject.find("codecs");
 
 		for (auto i = 0; i < this->codecs.size(); ++i)
 		{
 			jsonCodecsIt->emplace_back(json::value_t::object);
 
 			auto& jsonEntry = (*jsonCodecsIt)[i];
-			auto& codec = this->codecs[i];
+			auto& codec     = this->codecs[i];
 
 			codec.FillJson(jsonEntry);
 		}
 
 		// Add encodings.
 		jsonObject["encodings"] = json::array();
-		auto jsonEncodingsIt = jsonObject.find("encodings");
+		auto jsonEncodingsIt    = jsonObject.find("encodings");
 
 		for (auto i = 0; i < this->encodings.size(); ++i)
 		{
 			jsonEncodingsIt->emplace_back(json::value_t::object);
 
 			auto& jsonEntry = (*jsonEncodingsIt)[i];
-			auto& encoding = this->encodings[i];
+			auto& encoding  = this->encodings[i];
 
 			encoding.FillJson(jsonEntry);
 		}
 
 		// Add headerExtensions.
 		jsonObject["headerExtensions"] = json::array();
-		auto jsonHeaderExtensionsIt = jsonObject.find("headerExtensions");
+		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
 		for (auto i = 0; i < this->headerExtensions.size(); ++i)
 		{
 			jsonHeaderExtensionsIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry = (*jsonHeaderExtensionsIt)[i];
+			auto& jsonEntry        = (*jsonHeaderExtensionsIt)[i];
 			auto& headerExtensions = this->headerExtensionss[i];
 
 			headerExtension.FillJson(jsonEntry);

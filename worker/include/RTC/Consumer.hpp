@@ -16,7 +16,6 @@
 #include "RTC/SeqManager.hpp"
 #include "RTC/Transport.hpp"
 #include <json/json.h>
-#include <set>
 #include <unordered_set>
 
 namespace RTC

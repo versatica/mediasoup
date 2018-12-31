@@ -16,9 +16,9 @@ namespace RTC
 		if (!data.is_object())
 			MS_THROW_ERROR("data is not an object");
 
-		auto jsonUriIt = data.find("uri");
-		auto jsonIdIt = data.find("id");
-		auto jsonEncryptIt = data.find("encrypt");
+		auto jsonUriIt        = data.find("uri");
+		auto jsonIdIt         = data.find("id");
+		auto jsonEncryptIt    = data.find("encrypt");
 		auto jsonParametersIt = data.find("parameters");
 
 		// uri is mandatory.

@@ -12,7 +12,7 @@
     "type": "git",
     "url": "https://github.com/versatica/mediasoup.git"
   },
-  "main": "lib/mediasoup.js",
+  "main": "lib/index.js",
   "keywords": [
     "webrtc",
     "ortc",
@@ -26,20 +26,26 @@
     "node": ">=6.4"
   },
   "scripts": {
-    "lint": "gulp lint",
-    "test": "gulp test",
+    "lint_________________": "gulp lint",
+    "lint": "gulp lint:node",
+    "test_________________": "gulp test",
+    "test": "jest",
     "postinstall": "make Release -C worker"
   },
+  "jest": {
+    "verbose": true,
+    "testEnvironment": "node",
+    "testRegex": "test/test.*\\.js"
+  },
   "dependencies": {
-    "check-types": "^7.4.0",
     "debug": "^4.1.0",
     "netstring": "^0.3.0",
     "random-number": "0.0.9",
-    "randomatic": "^3.1.1",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
     "eslint": "^5.10.0",
+    "eslint-plugin-jest": "^22.1.2",
     "gulp": "^4.0.0",
     "gulp-clang-format": "^1.0.27",
     "gulp-eslint": "^5.0.0",
@@ -47,7 +53,9 @@
     "gulp-replace": "^1.0.0",
     "gulp-shell": "^0.6.5",
     "gulp-touch-cmd": "0.0.1",
-    "tap": "^12.1.1"
+    "jest": "^23.6.0",
+    "jest-tobetype": "^1.2.0",
+    "opn-cli": "^4.0.0"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"

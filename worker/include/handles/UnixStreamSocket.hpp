@@ -24,7 +24,7 @@ public:
 
 public:
 	void Close();
-	bool isClosed() const;
+	bool IsClosed() const;
 	void Write(const uint8_t* data, size_t len);
 	void Write(const std::string& data);
 
@@ -58,7 +58,7 @@ protected:
 
 /* Inline methods. */
 
-inline bool UnixStreamSocket::isClosed() const
+inline bool UnixStreamSocket::IsClosed() const
 {
 	return this->closed;
 }

@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
+#include "Channel/Notifier.hpp"
 
 /* Instance methods. */
 
@@ -26,6 +27,9 @@ Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
 	MS_DEBUG_DEV("libuv loop ended");
+
+	// Tell the Node process that we are running.
+	Channel::Notifier::Emit(workerId, "running");
 }
 
 Worker::~Worker()
@@ -69,7 +73,7 @@ void Worker::FillJson(json& jsonObject) const
 	MS_TRACE();
 
 	jsonObject["routers"] = json::array();
-	auto jsonRoutersIt = jsonObject.find("routers");
+	auto jsonRoutersIt    = jsonObject.find("routers");
 
 	for (auto& kv : this->routers)
 	{
@@ -211,7 +215,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 	}
 }
 
-void Worker::OnChannelUnixStreamSocketRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
+void Worker::OnChannelRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 

@@ -37,7 +37,7 @@ namespace RTC
 
 		RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["type"] = "inbound-rtp";
+		jsonObject["type"]   = "inbound-rtp";
 		jsonObject["jitter"] = this->jitter;
 	}
 

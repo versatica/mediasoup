@@ -14,18 +14,14 @@ namespace RTC
 	class ProducerListener
 	{
 	public:
-		virtual void OnProducerClosed(RTC::Producer* producer)  = 0;
-		virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
-		virtual void OnProducerResumed(RTC::Producer* producer) = 0;
+		virtual void OnProducerClosed(RTC::Producer* producer)                            = 0;
+		virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
+		virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
 		virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 		virtual void OnProducerStreamEnabled(
-		  RTC::Producer* producer,
-		  const RTC::RtpStream* rtpStream,
-		  uint32_t translatedSsrc) = 0;
+		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc) = 0;
 		virtual void OnProducerStreamDisabled(
-		  RTC::Producer* producer,
-		  const RTC::RtpStream* rtpStream,
-		  uint32_t translatedSsrc) = 0;
+		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc) = 0;
 	};
 } // namespace RTC
 

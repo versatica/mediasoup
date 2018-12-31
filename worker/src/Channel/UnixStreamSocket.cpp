@@ -40,7 +40,7 @@ namespace Channel
 			return;
 
 		std::string nsPayload = jsonMessage.dump();
-		size_t nsPayloadLen = nsPayload.length();
+		size_t nsPayloadLen   = nsPayload.length();
 		size_t nsNumLen;
 		size_t nsLen;
 
@@ -280,6 +280,6 @@ namespace Channel
 
 		// Notify the listener.
 		if (isClosedByPeer)
-			this->listener->OnChannelUnixStreamSocketRemotelyClosed(this);
+			this->listener->OnChannelRemotelyClosed(this);
 	}
 } // namespace Channel

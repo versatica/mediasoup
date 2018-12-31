@@ -15,8 +15,9 @@
 #include "RTC/UdpSocket.hpp"
 #include "handles/Timer.hpp"
 #include <json/json.h>
+#include <string>
 #include <tuple>
-#include <set>
+#include <unordered_map>
 #include <vector>
 
 namespace RTC
@@ -72,6 +73,10 @@ namespace RTC
 		void Close();
 		virtual Json::Value ToJson() const   = 0;
 		virtual Json::Value GetStats() const = 0;
+		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
+		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
+		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
+		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
 		void HandleProducer(RTC::Producer* producer);
 		void HandleConsumer(RTC::Consumer* consumer);
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)     = 0;
@@ -133,14 +138,11 @@ namespace RTC
 		// Others.
 		bool closed{ false };
 		// Others (Producers and Consumers).
-		std::set<RTC::Producer*> producers;
-		std::set<RTC::Consumer*> consumers;
+		std::unordered_map<std::string, RTC::Producer*> producers;
+		std::unordered_map<std::string, RTC::Consumer*> consumers;
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		struct HeaderExtensionIds headerExtensionIds;
-		// Others (Mirroring).
-		MirroringOptions mirroringOptions{};
-		struct sockaddr_storage mirrorAddrStorage;
 		// Others (REMB)
 		std::tuple<uint64_t, std::vector<uint32_t>> recvRemb;
 	};

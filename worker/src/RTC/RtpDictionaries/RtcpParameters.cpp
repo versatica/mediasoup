@@ -16,8 +16,8 @@ namespace RTC
 		if (!data.is_object())
 			MS_THROW_ERROR("data is not an object");
 
-		auto jsonCnameIt = data.find("cname");
-		auto jsonSsrcIt = data.find("ssrc");
+		auto jsonCnameIt       = data.find("cname");
+		auto jsonSsrcIt        = data.find("ssrc");
 		auto jsonRedicedSizeIt = data.find("reducedSize");
 
 		// cname is optional.

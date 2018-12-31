@@ -38,15 +38,15 @@ namespace RTC
 		if (!data.is_object())
 			MS_THROW_ERROR("data is not an object");
 
-		auto jsonSsrcIt = data.find("ssrc");
-		auto jsonRidIt = data.find("rid");
+		auto jsonSsrcIt             = data.find("ssrc");
+		auto jsonRidIt              = data.find("rid");
 		auto jsonCodecPayloadTypeIt = data.find("codecPayloadType");
-		auto jsonRtxIt = data.find("rtx");
-		auto jsonMaxBitrateIt = data.find("maxBitrate");
-		auto jsonMaxFramerateIt = data.find("maxFramerate");
-		auto jsonActiveIt = data.find("active");
-		auto jsonActiveIt = data.find("active");
-		auto jsonSpatialLayerIt = data.find("spatialLayer");
+		auto jsonRtxIt              = data.find("rtx");
+		auto jsonMaxBitrateIt       = data.find("maxBitrate");
+		auto jsonMaxFramerateIt     = data.find("maxFramerate");
+		auto jsonActiveIt           = data.find("active");
+		auto jsonActiveIt           = data.find("active");
+		auto jsonSpatialLayerIt     = data.find("spatialLayer");
 
 		// ssrc is optional.
 		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
