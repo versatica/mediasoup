@@ -23,7 +23,7 @@
     "!win32"
   ],
   "engines": {
-    "node": ">=6.4"
+    "node": ">=8.0.0"
   },
   "scripts": {
     "lint_________________": "gulp lint",

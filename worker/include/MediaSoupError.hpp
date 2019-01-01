@@ -22,7 +22,7 @@ inline MediaSoupError::MediaSoupError(const char* description) : std::runtime_er
 #define MS_THROW_ERROR(desc, ...) \
 	do \
 	{ \
-		MS_ERROR("throwing MediaSoupError | " desc, ##__VA_ARGS__); \
+		MS_ERROR("throwing MediaSoupError: " desc, ##__VA_ARGS__); \
 		\
 		static char buffer[2000]; \
 		\
@@ -33,7 +33,7 @@ inline MediaSoupError::MediaSoupError(const char* description) : std::runtime_er
 #define MS_THROW_ERROR_STD(desc, ...) \
 	do \
 	{ \
-		MS_ERROR_STD("throwing MediaSoupError | " desc, ##__VA_ARGS__); \
+		MS_ERROR_STD("throwing MediaSoupError: " desc, ##__VA_ARGS__); \
 		\
 		static char buffer[2000]; \
 		\
