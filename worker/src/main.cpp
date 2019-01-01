@@ -12,7 +12,7 @@
 // #include "Worker.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/UnixStreamSocket.hpp"
-// #include "RTC/DtlsTransport.hpp"
+#include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <cerrno>
 #include <csignal>  // sigaction()
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
 		Utils::Crypto::ClassInit();
-		// RTC::DtlsTransport::ClassInit();
+		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
 		Channel::Notifier::ClassInit(channel);
 
@@ -102,12 +102,11 @@ int main(int argc, char* argv[])
 		DepLibUV::ClassDestroy();
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
-		// RTC::DtlsTransport::ClassDestroy();
+		RTC::DtlsTransport::ClassDestroy();
 
 		// Wait a bit so peding messages to stdout/Channel arrive to the Node
 		// process.
 		usleep(200000);
-
 		std::_Exit(EXIT_SUCCESS);
 	}
 	catch (const MediaSoupError& error)
@@ -130,8 +129,8 @@ void ignoreSignals()
 		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },
 		{ "ALRM", SIGALRM },
-		{ "USR1", SIGUSR2 },
-		{ "USR2", SIGUSR1}
+		{ "USR1", SIGUSR1 },
+		{ "USR2", SIGUSR2 }
 	};
 	// clang-format on
 

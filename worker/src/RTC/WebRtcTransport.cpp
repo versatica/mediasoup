@@ -291,9 +291,12 @@ namespace RTC
 				break;
 		}
 
+		// TODO: Must create a json array, iterate local fingerprints and append
+		// them as objects.
+		//
 		// Add dtlsLocalParameters.fingerprints.
 		json[JsonStringDtlsLocalParameters][JsonStringFingerprints] =
-		  RTC::DtlsTransport::GetLocalFingerprints();
+		  this->dtlsTransport->GetLocalFingerprints();
 
 		// Add dtlsLocalParameters.role.
 		switch (this->dtlsLocalRole)

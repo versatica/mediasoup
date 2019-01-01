@@ -51,6 +51,10 @@ test('createWorker() with wrong settings rejects with TypeError', async () =>
 		.rejects
 		.toThrow(TypeError);
 
+	await expect(createWorker({ rtcMinPort: 'qwerty' }))
+		.rejects
+		.toThrow(TypeError);
+
 	await expect(createWorker({ dtlsCertificateFile: '/foo/cert.pem' }))
 		.rejects
 		.toThrow(TypeError);

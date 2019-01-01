@@ -23,6 +23,8 @@ namespace Channel
 	{
 		MS_TRACE();
 
+		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
+
 		json jsonNotification{ json::object() };
 
 		jsonNotification["targetId"] = targetId;
@@ -34,6 +36,8 @@ namespace Channel
 	void Notifier::Emit(const std::string& targetId, const std::string& event, json& data)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
 
 		json jsonNotification{ json::object() };
 

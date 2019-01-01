@@ -20,11 +20,11 @@ int main(int argc, char* argv[])
 	DepOpenSSL::ClassInit();
 	Utils::Crypto::ClassInit();
 
-	int ret = Catch::Session().run(argc, argv);
+	int status = Catch::Session().run(argc, argv);
 
 	// Free static stuff.
 	DepLibUV::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
 
-	return ret;
+	return status;
 }
