@@ -46,8 +46,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(jsonObject.is_object(), "jsonObject is not an object");
-
 		uint64_t now = DepLibUV::GetTime();
 
 		jsonObject["id"]               = this->rtpStreamId;

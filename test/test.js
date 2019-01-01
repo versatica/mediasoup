@@ -26,10 +26,10 @@ test('createWorker() succeeds', async () =>
 
 	worker = await createWorker(
 		{
-			logger              : 'debug',
+			logLevel            : 'debug',
 			logTags             : [ 'info' ],
-			rtcMinPort          : 2000,
-			rtcMaxPort          : 3000,
+			rtcMinPort          : 0,
+			rtcMaxPort          : 9999,
 			dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
 			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem')
 		});
@@ -51,7 +51,8 @@ test('createWorker() with wrong settings rejects with TypeError', async () =>
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(createWorker({ rtcMinPort: 'qwerty' }))
+	// Port is from 0 to 65535.
+	await expect(createWorker({ rtcMinPort: 1000, rtcMaxPort: 65536 }))
 		.rejects
 		.toThrow(TypeError);
 

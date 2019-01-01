@@ -96,6 +96,7 @@ namespace RTC
 		static void ClassDestroy();
 		static Role StringToRole(const std::string& role);
 		static FingerprintAlgorithm GetFingerprintAlgorithm(const std::string& fingerprint);
+		static std::string& GetFingerprintAlgorithmString(FingerprintAlgorithm fingerprint);
 		static bool IsDtls(const uint8_t* data, size_t len);
 
 	private:
@@ -111,6 +112,7 @@ namespace RTC
 		static uint8_t sslReadBuffer[];
 		static std::map<std::string, Role> string2Role;
 		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
+		static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
 		static std::vector<Fingerprint> localFingerprints;
 		static std::vector<SrtpProfileMapEntry> srtpProfiles;
 
@@ -185,6 +187,14 @@ namespace RTC
 			return it->second;
 		else
 			return DtlsTransport::FingerprintAlgorithm::NONE;
+	}
+
+	inline std::string& DtlsTransport::GetFingerprintAlgorithmString(
+	  DtlsTransport::FingerprintAlgorithm fingerprint)
+	{
+		auto it = DtlsTransport::fingerprintAlgorithm2String.find(fingerprint);
+
+		return it->second;
 	}
 
 	inline bool DtlsTransport::IsDtls(const uint8_t* data, size_t len)

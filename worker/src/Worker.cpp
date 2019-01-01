@@ -72,8 +72,12 @@ void Worker::FillJson(json& jsonObject) const
 {
 	MS_TRACE();
 
-	jsonObject["routers"] = json::array();
-	auto jsonRoutersIt    = jsonObject.find("routers");
+	// Add id.
+	jsonObject["id"] = Logger::id;
+
+	// Add routerIds.
+	jsonObject["routerIds"] = json::array();
+	auto jsonRoutersIt      = jsonObject.find("routerIds");
 
 	for (auto& kv : this->routers)
 	{

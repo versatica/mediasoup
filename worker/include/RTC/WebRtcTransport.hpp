@@ -2,7 +2,6 @@
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
 #include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
@@ -11,7 +10,6 @@
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/Transport.hpp"
-#include <json/json.h>
 #include <string>
 #include <vector>
 
@@ -40,8 +38,8 @@ namespace RTC
 		~WebRtcTransport() override;
 
 	public:
-		Json::Value ToJson() const override;
-		Json::Value GetStats() const override;
+		void FillJson(json& jsonObject) const;
+		void FillJsonStats(json& jsonObject) const;
 		RTC::DtlsTransport::Role SetRemoteDtlsParameters(
 		  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
 		void SetMaxBitrate(uint32_t bitrate);

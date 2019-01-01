@@ -73,6 +73,14 @@ namespace RTC
 		{ "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
 		{ "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
 	};
+	std::map<DtlsTransport::FingerprintAlgorithm, std::string> DtlsTransport::fingerprintAlgorithm2String =
+	{
+		{ DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
+		{ DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
+		{ DtlsTransport::FingerprintAlgorithm::SHA256, "sha-256" },
+		{ DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
+		{ DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
+	};
 	std::map<std::string, DtlsTransport::Role> DtlsTransport::string2Role =
 	{
 		{ "auto",   DtlsTransport::Role::AUTO   },
@@ -513,7 +521,7 @@ namespace RTC
 			DtlsTransport::Fingerprint fingerprint;
 
 			fingerprint.algorithm = DtlsTransport::GetFingerprintAlgorithm(algorithmString);
-			fingerprint.value = hexFingerprint;
+			fingerprint.value     = hexFingerprint;
 
 			DtlsTransport::localFingerprints.push_back(fingerprint);
 		}
@@ -786,7 +794,8 @@ namespace RTC
 		{
 			LOG_OPENSSL_ERROR("SSL_write() failed");
 
-			CheckStatus(written);
+			if (!CheckStatus(written))
+				return;
 		}
 		else if (written != static_cast<int>(len))
 		{

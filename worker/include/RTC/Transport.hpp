@@ -2,6 +2,7 @@
 #define MS_RTC_TRANSPORT_HPP
 
 #include "common.hpp"
+#include "json.hpp"
 #include "RTC/ConsumerListener.hpp"
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -14,11 +15,12 @@
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "handles/Timer.hpp"
-#include <json/json.h>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
@@ -71,8 +73,8 @@ namespace RTC
 
 	public:
 		void Close();
-		virtual Json::Value ToJson() const   = 0;
-		virtual Json::Value GetStats() const = 0;
+		void FillJson(json& jsonObject) const      = 0;
+		void FillJsonStats(json& jsonObject) const = 0;
 		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
 		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;

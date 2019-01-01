@@ -12,7 +12,7 @@ void DepOpenSSL::ClassInit()
 {
 	MS_TRACE();
 
-	MS_DEBUG_TAG(info, "loaded openssl version: \"%s\"", OpenSSL_version(OPENSSL_VERSION));
+	MS_DEBUG_TAG(info, "openssl version: \"%s\"", OpenSSL_version(OPENSSL_VERSION));
 
 	// Initialize some crypto stuff.
 	RAND_poll();

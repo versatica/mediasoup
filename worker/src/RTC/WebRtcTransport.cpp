@@ -215,263 +215,217 @@ namespace RTC
 			delete this->srtpSendSession;
 	}
 
-	Json::Value WebRtcTransport::ToJson() const
+	void WebRtcTransport::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTransportId{ "transportId" };
-		static const Json::StaticString JsonStringIceRole{ "iceRole" };
-		static const Json::StaticString JsonStringControlled{ "controlled" };
-		static const Json::StaticString JsonStringIceLocalParameters{ "iceLocalParameters" };
-		static const Json::StaticString JsonStringUsernameFragment{ "usernameFragment" };
-		static const Json::StaticString JsonStringPassword{ "password" };
-		static const Json::StaticString JsonStringIceLite{ "iceLite" };
-		static const Json::StaticString JsonStringIceLocalCandidates{ "iceLocalCandidates" };
-		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
-		static const Json::StaticString JsonStringIceState{ "iceState" };
-		static const Json::StaticString JsonStringNew{ "new" };
-		static const Json::StaticString JsonStringConnected{ "connected" };
-		static const Json::StaticString JsonStringCompleted{ "completed" };
-		static const Json::StaticString JsonStringDisconnected{ "disconnected" };
-		static const Json::StaticString JsonStringDtlsLocalParameters{ "dtlsLocalParameters" };
-		static const Json::StaticString JsonStringFingerprints{ "fingerprints" };
-		static const Json::StaticString JsonStringRole{ "role" };
-		static const Json::StaticString JsonStringAuto{ "auto" };
-		static const Json::StaticString JsonStringClient{ "client" };
-		static const Json::StaticString JsonStringServer{ "server" };
-		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
-		static const Json::StaticString JsonStringConnecting{ "connecting" };
-		static const Json::StaticString JsonStringClosed{ "closed" };
-		static const Json::StaticString JsonStringFailed{ "failed" };
-		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
-		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
-		static const Json::StaticString JsonStringMid{ "mid" };
-		static const Json::StaticString JsonStringRid{ "rid" };
-		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
-
-		Json::Value json(Json::objectValue);
-		Json::Value jsonHeaderExtensionIds(Json::objectValue);
-
-		json[JsonStringTransportId] = Json::UInt{ this->transportId };
+		// Add id.
+		jsonObject["id"] = this->transportId;
 
 		// Add iceRole (we are always "controlled").
-		json[JsonStringIceRole] = JsonStringControlled;
+		jsonObject["iceRole"] = "controlled";
 
 		// Add iceLocalParameters.
-		json[JsonStringIceLocalParameters][JsonStringUsernameFragment] =
-		  this->iceServer->GetUsernameFragment();
-		json[JsonStringIceLocalParameters][JsonStringPassword] = this->iceServer->GetPassword();
-		json[JsonStringIceLocalParameters][JsonStringIceLite]  = true;
+		jsonObject["iceLocalParameters"]["usernameFragment"] = this->iceServer->GetUsernameFragment();
+		jsonObject["iceLocalParameters"]["password"]         = this->iceServer->GetPassword();
+		jsonObject["iceLite"]                                = true;
 
 		// Add iceLocalCandidates.
-		json[JsonStringIceLocalCandidates] = Json::arrayValue;
-		for (const auto& iceCandidate : this->iceLocalCandidates)
+		jsonObject["iceLocalCandidates"] = json::array();
+		auto jsonIceLocalCandidatesIt    = jsonObject.find("iceLocalCandidates");
+
+		for (auto i = 0; i < this->iceLocalCandidates.size(); ++i)
 		{
-			json[JsonStringIceLocalCandidates].append(iceCandidate.ToJson());
+			jsonIceLocalCandidatesIt->emplace_back(json::value_t::object);
+
+			auto& jsonEntry    = (*jsonIceLocalCandidatesIt)[i];
+			auto& iceCandidate = this->iceLocalCandidates[i];
+
+			iceCandidate.FillJson(jsonEntry);
 		}
 
 		// Add iceSelectedTuple.
 		if (this->selectedTuple != nullptr)
-			json[JsonStringIceSelectedTuple] = this->selectedTuple->ToJson();
+			this->selectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 
 		// Add iceState.
 		switch (this->iceServer->GetState())
 		{
 			case RTC::IceServer::IceState::NEW:
-				json[JsonStringIceState] = JsonStringNew;
+				jsonObject["iceState"] = "new";
 				break;
 			case RTC::IceServer::IceState::CONNECTED:
-				json[JsonStringIceState] = JsonStringConnected;
+				jsonObject["iceState"] = "connected";
 				break;
 			case RTC::IceServer::IceState::COMPLETED:
-				json[JsonStringIceState] = JsonStringCompleted;
+				jsonObject["iceState"] = "completed";
 				break;
 			case RTC::IceServer::IceState::DISCONNECTED:
-				json[JsonStringIceState] = JsonStringDisconnected;
+				jsonObject["iceState"] = "disconnected";
 				break;
 		}
 
-		// TODO: Must create a json array, iterate local fingerprints and append
-		// them as objects.
-		//
+		// Add dtlsLocalParameters.
+		jsonObject["dtlsLocalParameters"] = json::object();
+		auto jsonDtlsLocalParametersIt    = jsonObject.find("dtlsLocalParameters");
+
 		// Add dtlsLocalParameters.fingerprints.
-		json[JsonStringDtlsLocalParameters][JsonStringFingerprints] =
-		  this->dtlsTransport->GetLocalFingerprints();
+		(*jsonDtlsLocalParametersIt)["fingerprints"] = json::array();
+		auto jsonDtlsLocalParametersFingerprintsIt   = jsonDtlsLocalParametersIt->find("fingerprints");
+		auto& fingerprints                           = this->dtlsTransport->GetLocalFingerprints();
+
+		for (auto i = 0; i < fingerprints.size(); ++i)
+		{
+			jsonDtlsLocalParametersFingerprintsIt->emplace_back(json::value_t::object);
+
+			auto& jsonEntry   = (*jsonDtlsLocalParametersFingerprintsIt)[i];
+			auto& fingerprint = fingerprints[i];
+
+			jsonEntry["algorithm"] =
+			  RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
+			jsonEntry["value"] = fingerprint.value;
+		}
 
 		// Add dtlsLocalParameters.role.
 		switch (this->dtlsLocalRole)
 		{
+			case RTC::DtlsTransport::Role::NONE:
+				(*jsonDtlsLocalParametersIt)["role"] = "none";
+				break;
 			case RTC::DtlsTransport::Role::AUTO:
-				json[JsonStringDtlsLocalParameters][JsonStringRole] = JsonStringAuto;
+				(*jsonDtlsLocalParametersIt)["role"] = "auto";
 				break;
 			case RTC::DtlsTransport::Role::CLIENT:
-				json[JsonStringDtlsLocalParameters][JsonStringRole] = JsonStringClient;
+				(*jsonDtlsLocalParametersIt)["role"] = "client";
 				break;
 			case RTC::DtlsTransport::Role::SERVER:
-				json[JsonStringDtlsLocalParameters][JsonStringRole] = JsonStringServer;
+				(*jsonDtlsLocalParametersIt)["role"] = "server";
 				break;
-			default:
-				MS_ABORT("invalid local DTLS role");
 		}
 
 		// Add dtlsState.
 		switch (this->dtlsTransport->GetState())
 		{
 			case DtlsTransport::DtlsState::NEW:
-				json[JsonStringDtlsState] = JsonStringNew;
+				jsonObject["dtlsState"] = "new";
 				break;
 			case DtlsTransport::DtlsState::CONNECTING:
-				json[JsonStringDtlsState] = JsonStringConnecting;
+				jsonObject["dtlsState"] = "connecting";
 				break;
 			case DtlsTransport::DtlsState::CONNECTED:
-				json[JsonStringDtlsState] = JsonStringConnected;
+				jsonObject["dtlsState"] = "connected";
 				break;
 			case DtlsTransport::DtlsState::FAILED:
-				json[JsonStringDtlsState] = JsonStringFailed;
+				jsonObject["dtlsState"] = "failed";
 				break;
 			case DtlsTransport::DtlsState::CLOSED:
-				json[JsonStringDtlsState] = JsonStringClosed;
+				jsonObject["dtlsState"] = "closed";
 				break;
 		}
 
 		// Add headerExtensionIds.
+		jsonObject["headerExtensions"] = json::object();
+		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
 		if (this->headerExtensionIds.absSendTime != 0u)
-			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->headerExtensionIds.absSendTime;
+			(*jsonHeaderExtensionsIt)["absSendTime"] = this->headerExtensionIds.absSendTime;
 
 		if (this->headerExtensionIds.mid != 0u)
-			jsonHeaderExtensionIds[JsonStringMid] = this->headerExtensionIds.mid;
+			(*jsonHeaderExtensionsIt)["mid"] = this->headerExtensionIds.mid;
 
 		if (this->headerExtensionIds.rid != 0u)
-			jsonHeaderExtensionIds[JsonStringRid] = this->headerExtensionIds.rid;
-
-		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
+			(*jsonHeaderExtensionsIt)["rid"] = this->headerExtensionIds.rid;
 
 		// Add rtpListener.
-		json[JsonStringRtpListener] = this->rtpListener.ToJson();
-
-		return json;
+		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	Json::Value WebRtcTransport::GetStats() const
+	void WebRtcTransport::FillJsonStats(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const std::string Type("transport");
-		static const Json::StaticString JsonStringType{ "type" };
-		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
-		static const Json::StaticString JsonStringId{ "id" };
-		static const Json::StaticString JsonStringBytesReceived{ "bytesReceived" };
-		static const Json::StaticString JsonStringBytesSent{ "bytesSent" };
-		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
-		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
-		static const Json::StaticString JsonStringIceConnectionState{ "iceConnectionState" };
-		// DTLS states.
-		static const Json::StaticString JsonStringNew{ "new" };
-		static const Json::StaticString JsonStringConnecting{ "connecting" };
-		static const Json::StaticString JsonStringConnected{ "connected" };
-		static const Json::StaticString JsonStringClosed{ "closed" };
-		static const Json::StaticString JsonStringFailed{ "failed" };
-		// ICE connection states.
-		static const Json::StaticString JsonStringCompleted{ "completed" };
-		static const Json::StaticString JsonStringDisconnected{ "disconnected" };
-		// Available send bandwidth.
-		static const Json::StaticString JsonStringLocalAvailableSendBw{ "localAvailableSendBw" };
-		static const Json::StaticString JsonStringLocalAvailableSendBwMaxValue{ "maxBitrate" };
-		static const Json::StaticString JsonStringLocalAvailableSendBwValue{ "bitrate" };
-		static const Json::StaticString JsonStringLocalAvailableSendBwSsrcs{ "ssrcs" };
-		static const Json::StaticString JsonStringRemoteAvailableSendBw{ "remoteAvailableSendBw" };
-		static const Json::StaticString JsonStringRemoteAvailableSendBwValue{ "bitrate" };
-		static const Json::StaticString JsonStringRemoteAvailableSendBwSsrcs{ "ssrcs" };
+		// Add type.
+		jsonObject["type"] = "transport";
 
-		Json::Value json(Json::objectValue);
+		// Add timestamp.
+		jsonObject["timestamp"] = DepLibUV::GetTime();
 
-		json[JsonStringType]      = Type;
-		json[JsonStringTimestamp] = Json::UInt64{ DepLibUV::GetTime() };
-		json[JsonStringId]        = Json::UInt{ this->transportId };
+		// Add id.
+		jsonObject["id"] = this->transportId;
 
-		if (this->selectedTuple != nullptr)
-		{
-			// 'bytesReceived'.
-			json[JsonStringBytesReceived] = Json::UInt64{ this->selectedTuple->GetRecvBytes() };
-			// 'bytesSent'.
-			json[JsonStringBytesSent] = Json::UInt64{ this->selectedTuple->GetSentBytes() };
-
-			json[JsonStringIceSelectedTuple] = this->selectedTuple->ToJson();
-		}
-
-		// 'dtlsState'.
-		switch (this->dtlsTransport->GetState())
-		{
-			case DtlsTransport::DtlsState::NEW:
-				json[JsonStringDtlsState] = JsonStringNew;
-				break;
-			case DtlsTransport::DtlsState::CONNECTING:
-				json[JsonStringDtlsState] = JsonStringConnecting;
-				break;
-			case DtlsTransport::DtlsState::CONNECTED:
-				json[JsonStringDtlsState] = JsonStringConnected;
-				break;
-			case DtlsTransport::DtlsState::FAILED:
-				json[JsonStringDtlsState] = JsonStringFailed;
-				break;
-			case DtlsTransport::DtlsState::CLOSED:
-				json[JsonStringDtlsState] = JsonStringClosed;
-				break;
-		}
-
-		// 'iceConnectionState'.
+		// Add iceConnectionState.
 		switch (this->iceServer->GetState())
 		{
 			case RTC::IceServer::IceState::NEW:
-				json[JsonStringIceConnectionState] = JsonStringNew;
+				jsonObject["iceConnectionState"] = "new";
 				break;
 			case RTC::IceServer::IceState::CONNECTED:
-				json[JsonStringIceConnectionState] = JsonStringConnected;
+				jsonObject["iceConnectionState"] = "connected";
 				break;
 			case RTC::IceServer::IceState::COMPLETED:
-				json[JsonStringIceConnectionState] = JsonStringCompleted;
+				jsonObject["iceConnectionState"] = "completed";
 				break;
 			case RTC::IceServer::IceState::DISCONNECTED:
-				json[JsonStringIceConnectionState] = JsonStringDisconnected;
+				jsonObject["iceConnectionState"] = "disconnected";
 				break;
 		}
 
-		// Add local available send bandwidth.
-		Json::Value jsonLocalAvailableSendBw(Json::objectValue);
-		Json::Value jsonLocalAvailableSendBwSsrcs(Json::arrayValue);
+		// Add dtlsState.
+		switch (this->dtlsTransport->GetState())
+		{
+			case DtlsTransport::DtlsState::NEW:
+				jsonObject["dtlsState"] = "new";
+				break;
+			case DtlsTransport::DtlsState::CONNECTING:
+				jsonObject["dtlsState"] = "connecting";
+				break;
+			case DtlsTransport::DtlsState::CONNECTED:
+				jsonObject["dtlsState"] = "connected";
+				break;
+			case DtlsTransport::DtlsState::FAILED:
+				jsonObject["dtlsState"] = "failed";
+				break;
+			case DtlsTransport::DtlsState::CLOSED:
+				jsonObject["dtlsState"] = "closed";
+				break;
+		}
 
-		jsonLocalAvailableSendBw[JsonStringLocalAvailableSendBwMaxValue] = Json::UInt{ this->maxBitrate };
+		if (this->selectedTuple != nullptr)
+		{
+			// Add bytesReceived.
+			jsonObject["bytesReceived"] = this->selectedTuple->GetRecvBytes();
+			// Add bytesSent.
+			jsonObject["bytesSent"] = this->selectedTuple->GetSentBytes();
+			// Add iceSelectedTuple.
+			this->selectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
+		}
 
-		jsonLocalAvailableSendBw[JsonStringLocalAvailableSendBwValue] =
-		  Json::UInt64{ std::get<0>(this->sentRemb) };
+		// Add localAvailableSendBandwidth.
+		jsonObject["localAvailableSendBandwidth"] = json::object();
+		auto jsonLocalAvailableSendBandwidthIt    = jsonObject.find("localAvailableSendBandwidth");
+
+		(*jsonLocalAvailableSendBandwidthIt)["maxBitrate"] = this->maxBitrate;
+		(*jsonLocalAvailableSendBandwidthIt)["bitrate"]    = std::get<0>(this->sentRemb);
+		(*jsonLocalAvailableSendBandwidthIt)["ssrcs"]      = json::array();
+		auto jsonLocalAvailableSendBandwidthSsrcsIt = jsonLocalAvailableSendBandwidthIt->find("ssrcs");
 
 		for (auto ssrc : std::get<1>(this->sentRemb))
-			jsonLocalAvailableSendBwSsrcs.append(ssrc);
+		{
+			jsonLocalAvailableSendBandwidthSsrcsIt->append(ssrc);
+		}
 
-		jsonLocalAvailableSendBw[JsonStringLocalAvailableSendBwSsrcs] = jsonLocalAvailableSendBwSsrcs;
+		// Add remoteAvailableSendBandwidth.
+		jsonObject["remoteAvailableSendBandwidth"] = json::object();
+		auto jsonRemoteAvailableSendBandwidthIt    = jsonObject.find("remoteAvailableSendBandwidth");
 
-		json[JsonStringLocalAvailableSendBw] = jsonLocalAvailableSendBw;
-
-		// Add remote available send bandwidth.
-		Json::Value jsonRemoteAvailableSendBw(Json::objectValue);
-		Json::Value jsonRemoteAvailableSendBwSsrcs(Json::arrayValue);
-
-		jsonRemoteAvailableSendBw[JsonStringRemoteAvailableSendBwValue] =
-		  Json::UInt64{ std::get<0>(this->recvRemb) };
+		(*jsonRemoteAvailableSendBandwidthIt)["bitrate"] = std::get<0>(this->recvRemb);
+		(*jsonRemoteAvailableSendBandwidthIt)["ssrcs"]   = json::array();
+		auto jsonRemoteAvailableSendBandwidthSsrcsIt = jsonRemoteAvailableSendBandwidthIt->find("ssrcs");
 
 		for (auto ssrc : std::get<1>(this->recvRemb))
-			jsonRemoteAvailableSendBwSsrcs.append(ssrc);
-
-		jsonRemoteAvailableSendBw[JsonStringRemoteAvailableSendBwSsrcs] = jsonRemoteAvailableSendBwSsrcs;
-
-		json[JsonStringRemoteAvailableSendBw] = jsonRemoteAvailableSendBw;
-
-		Json::Value array(Json::arrayValue);
-
-		array.append(json);
-
-		return array;
+		{
+			jsonRemoteAvailableSendBandwidthSsrcsIt->append(ssrc);
+		}
 	}
 
 	RTC::DtlsTransport::Role WebRtcTransport::SetRemoteDtlsParameters(
