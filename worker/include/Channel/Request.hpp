@@ -66,7 +66,7 @@ namespace Channel
 	public:
 		// Passed by argument.
 		Channel::UnixStreamSocket* channel{ nullptr };
-		std::string id;
+		uint32_t id;
 		std::string method;
 		MethodId methodId;
 		json internal{ json::object() };

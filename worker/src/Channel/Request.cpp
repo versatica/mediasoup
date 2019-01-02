@@ -56,10 +56,10 @@ namespace Channel
 		auto jsonInternalIt = body.find("internal");
 		auto jsonDataIt     = body.find("data");
 
-		if (jsonIdIt == body.end() || !jsonIdIt->is_string())
+		if (jsonIdIt == body.end() || !jsonIdIt->is_number_unsigned())
 			MS_THROW_ERROR("invalid id");
 
-		this->id = jsonIdIt->get<std::string>();
+		this->id = jsonIdIt->get<uint32_t>();
 
 		if (jsonMethodIt == body.end() || !jsonMethodIt->is_string())
 			MS_THROW_ERROR("invalid method");
@@ -106,15 +106,15 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse{ json::object() };
+		json body{ json::object() };
 
-		jsonResponse["id"]       = this->id;
-		jsonResponse["accepted"] = true;
+		body["id"]       = this->id;
+		body["accepted"] = true;
 
 		if (data.is_structured())
-			jsonResponse["data"] = data;
+			body["data"] = data;
 
-		this->channel->Send(jsonResponse);
+		this->channel->Send(body);
 	}
 
 	void Request::Reject(std::string& reason)
@@ -137,14 +137,14 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse{ json::object() };
+		json body{ json::object() };
 
-		jsonResponse["id"]       = this->id;
-		jsonResponse["rejected"] = true;
+		body["id"]       = this->id;
+		body["rejected"] = true;
 
 		if (reason != nullptr)
-			jsonResponse["reason"] = reason;
+			body["reason"] = reason;
 
-		this->channel->Send(jsonResponse);
+		this->channel->Send(body);
 	}
 } // namespace Channel

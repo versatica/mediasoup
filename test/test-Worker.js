@@ -10,8 +10,8 @@ expect.extend({ toBeType });
 
 let worker;
 
-beforeEach(() => worker && worker.close());
-afterEach(() => worker && worker.close());
+beforeEach(() => worker && !worker.closed && worker.close());
+afterEach(() => worker && !worker.closed && worker.close());
 
 test('mediasoup exposes a version property', () =>
 {
@@ -61,11 +61,11 @@ test('createWorker() with wrong settings rejects with TypeError', async () =>
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(createWorker({ dtlsCertificateFile: '/foo/cert.pem' }))
+	await expect(createWorker({ dtlsCertificateFile: '/notfound/cert.pem' }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(createWorker({ dtlsPrivateKeyFile: '/foo/priv.pem' }))
+	await expect(createWorker({ dtlsPrivateKeyFile: '/notfound/priv.pem' }))
 		.rejects
 		.toThrow(TypeError);
 }, 500);
@@ -157,7 +157,7 @@ test('Worker emits "died" if worker subprocess died unexpectedly', async () =>
 	});
 }, 2000);
 
-test('worker process ignores some signals', async () =>
+test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =>
 {
 	worker = await createWorker({ logLevel: 'warn' });
 
