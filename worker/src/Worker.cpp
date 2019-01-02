@@ -25,7 +25,7 @@ Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
 	this->signalsHandler->AddSignal(SIGTERM, "TERM");
 
 	// Tell the Node process that we are running.
-	Channel::Notifier::Emit(std::to_string(Logger::id), "running");
+	Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -65,24 +65,25 @@ void Worker::Close()
 	delete this->channel;
 }
 
-// void Worker::FillJson(json& jsonObject) const
-// {
-// 	MS_TRACE();
+void Worker::FillJson(json& jsonObject) const
+{
+	MS_TRACE();
 
-// 	// Add id.
-// 	jsonObject["id"] = Logger::id;
+	// Add pid.
+	jsonObject["pid"] = Logger::pid;
 
-// 	// Add routerIds.
-// 	jsonObject["routerIds"] = json::array();
-// 	auto jsonRoutersIt      = jsonObject.find("routerIds");
+	// Add routerIds.
+	jsonObject["routerIds"] = json::array();
+	auto jsonRoutersIt      = jsonObject.find("routerIds");
 
-// 	for (auto& kv : this->routers)
-// 	{
-// 		auto& routerId = kv.first;
+	// TODO
+	// for (auto& kv : this->routers)
+	// {
+	// 	auto& routerId = kv.first;
 
-// 		jsonRoutersIt->emplace_back(routerId);
-// 	}
-// }
+	// 	jsonRoutersIt->emplace_back(routerId);
+	// }
+}
 
 // void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
 // {
@@ -126,16 +127,16 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 
 	switch (request->methodId)
 	{
-		// case Channel::Request::MethodId::WORKER_DUMP:
-		// {
-		// 	json data = json::object();
+		case Channel::Request::MethodId::WORKER_DUMP:
+		{
+			json data = json::object();
 
-		// 	FillJson(data);
+			FillJson(data);
 
-		// 	request->Accept(data);
+			request->Accept(data);
 
-		// 	break;
-		// }
+			break;
+		}
 
 		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{

@@ -20,7 +20,7 @@ public:
 
 private:
 	void Close();
-	// void FillJson(json& jsonObject) const;
+	void FillJson(json& jsonObject) const;
 	// void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
 	// RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
 

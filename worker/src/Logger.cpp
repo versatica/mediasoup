@@ -6,7 +6,7 @@
 
 /* Class variables. */
 
-const long Logger::id{ static_cast<long>(getpid()) };
+const long Logger::pid{ static_cast<long>(getpid()) };
 Channel::UnixStreamSocket* Logger::channel{ nullptr };
 char Logger::buffer[Logger::bufferSize];
 

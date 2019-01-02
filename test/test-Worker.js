@@ -4,6 +4,7 @@ const { toBeType } = require('jest-tobetype');
 const pkg = require('../package.json');
 const mediasoup = require('../');
 const { version, createWorker } = mediasoup;
+const { InvalidStateError } = require('../lib/errors');
 
 expect.extend({ toBeType });
 
@@ -22,9 +23,7 @@ test('createWorker() succeeds', async () =>
 {
 	worker = await createWorker();
 	expect(worker).toBeType('object');
-	expect(worker.id).toBeType('string');
 	expect(worker.pid).toBeType('number');
-	expect(worker.id).toBe(String(worker.pid));
 	expect(worker.closed).toBe(false);
 
 	worker.close();
@@ -40,9 +39,7 @@ test('createWorker() succeeds', async () =>
 			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem')
 		});
 	expect(worker).toBeType('object');
-	expect(worker.id).toBeType('string');
 	expect(worker.pid).toBeType('number');
-	expect(worker.id).toBe(String(worker.pid));
 	expect(worker.closed).toBe(false);
 
 	worker.close();
@@ -91,6 +88,41 @@ test('worker.updateSettings() with wrong settings rejects', async () =>
 	await expect(worker.updateSettings({ logLevel: 'chicken' }))
 		.rejects
 		.toThrow(Error);
+
+	worker.close();
+}, 500);
+
+test('worker.updateSettings() rejects with InvalidStateError if closed', async () =>
+{
+	worker = await createWorker();
+	worker.close();
+
+	await expect(worker.updateSettings({ logLevel: 'error' }))
+		.rejects
+		.toThrow(InvalidStateError);
+
+	worker.close();
+}, 500);
+
+test('worker.dump() succeeds', async () =>
+{
+	worker = await createWorker();
+
+	await expect(worker.dump())
+		.resolves
+		.toEqual({ pid: worker.pid, routerIds: [] });
+
+	worker.close();
+}, 500);
+
+test('worker.dump() rejects with InvalidStateError if closed', async () =>
+{
+	worker = await createWorker();
+	worker.close();
+
+	await expect(worker.dump({ logLevel: 'error' }))
+		.rejects
+		.toThrow(InvalidStateError);
 
 	worker.close();
 }, 500);
