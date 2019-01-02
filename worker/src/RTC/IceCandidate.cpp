@@ -74,8 +74,6 @@ namespace RTC
 			case TcpCandidateType::PASSIVE:
 				jsonObject["tcpType"] = "passive";
 				break;
-
-			default:;
 		}
 	}
 } // namespace RTC

@@ -2,16 +2,16 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
-#include "RTC/ProducerListener.hpp"
+#include "json.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include "RTC/Transport.hpp"
+#include "RTC/Transport.hpp" // TODO: Must remove, but RTC::Transport::HeaderExtensionIds...
 #include "handles/Timer.hpp"
-#include <json/json.h>
 #include <map>
 #include <string>
 #include <unordered_set>
@@ -21,6 +21,22 @@ namespace RTC
 {
 	class Producer : public RtpStreamRecv::Listener, public Timer::Listener
 	{
+	public:
+		class Listener
+		{
+		public:
+			virtual ~Listener() = default;
+
+		public:
+			virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
+			virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			virtual void OnProducerStreamEnabled(
+			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc) = 0;
+			virtual void OnProducerStreamDisabled(
+			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc) = 0;
+		};
+
 	public:
 		struct RtpMapping
 		{
@@ -49,19 +65,16 @@ namespace RTC
 
 	public:
 		Producer(
+			Listener* listener,
 		  uint32_t producerId,
 		  RTC::Media::Kind kind,
-		  RTC::Transport* transport,
 		  RTC::RtpParameters& rtpParameters,
-		  struct RtpMapping& rtpMapping,
-		  bool paused);
+		  struct RtpMapping& rtpMapping);
 		virtual ~Producer();
 
 	public:
-		Json::Value ToJson() const;
-		Json::Value GetStats() const;
-		void AddListener(RTC::ProducerListener* listener);
-		void RemoveListener(RTC::ProducerListener* listener);
+		void FillJson(json& jsonObject) const;
+		void FillJsonStats(json& jsonObject) const = 0;
 		void Pause();
 		void Resume();
 		const RTC::RtpParameters& GetParameters() const;
@@ -97,15 +110,14 @@ namespace RTC
 
 	public:
 		// Passed by argument.
+		Listener* listener{ nullptr };
 		uint32_t producerId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:
 		// Passed by argument.
-		RTC::Transport* transport{ nullptr };
 		RTC::RtpParameters rtpParameters;
 		struct RtpMapping rtpMapping;
-		std::unordered_set<RTC::ProducerListener*> listeners;
 		// Allocated by this.
 		std::map<uint32_t, RtpStreamInfo> mapSsrcRtpStreamInfo;
 		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapActiveProfiles;
@@ -122,16 +134,6 @@ namespace RTC
 	};
 
 	/* Inline methods. */
-
-	inline void Producer::AddListener(RTC::ProducerListener* listener)
-	{
-		this->listeners.insert(listener);
-	}
-
-	inline void Producer::RemoveListener(RTC::ProducerListener* listener)
-	{
-		this->listeners.erase(listener);
-	}
 
 	inline const RTC::RtpParameters& Producer::GetParameters() const
 	{

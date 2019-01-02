@@ -2,8 +2,8 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
+#include "json.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/ConsumerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -14,8 +14,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
-#include "RTC/Transport.hpp"
-#include <json/json.h>
+#include <string>
 #include <unordered_set>
 
 namespace RTC
@@ -27,30 +26,38 @@ namespace RTC
 		static constexpr uint16_t ProbationPacketNumber{ 256 };
 
 	public:
-		Consumer(uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId);
+		class Listener
+		{
+		public:
+			virtual ~Listener() = default;
+
+		public:
+			virtual void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t ssrc) = 0;
+		};
+
+	public:
+		Consumer(
+			Listener* listener,
+			std::string& consumerId,
+			RTC::Media::Kind kind,
+			RTC::RtpParameters& rtpParameters);
 		virtual ~Consumer();
 
 	public:
-		Json::Value ToJson() const;
-		Json::Value GetStats() const;
-		void AddListener(RTC::ConsumerListener* listener);
-		void RemoveListener(RTC::ConsumerListener* listener);
-		void Enable(RTC::Transport* transport, RTC::RtpParameters& rtpParameters);
+		void FillJson(json& jsonObject) const;
+		void FillJsonStats(json& jsonObject) const = 0;
 		void Pause();
 		void Resume();
-		void SourcePause();
-		void SourceResume();
-		void AddProfile(const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStream* rtpStream);
-		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
-		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
-		void SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
+		void ProducerPaused();
+		void ProducerResumed();
+		void AddStream(const RTC::RtpStream* rtpStream, uint32_t translatedSsrc);
+		void RemoveStream(const RTC::RtpStream* rtpStream, uint32_t translatedSsrc);
+		// TODO: SetPreferredSpatialLayer()
+		// TODO: yes?
 		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
-		void Disable();
-		bool IsEnabled() const;
 		const RTC::RtpParameters& GetParameters() const;
 		bool IsPaused() const;
-		RTC::RtpEncodingParameters::Profile GetPreferredProfile() const;
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile);
+		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTCP::FeedbackPs::MessageType messageType);
@@ -63,13 +70,13 @@ namespace RTC
 		void FillSupportedCodecPayloadTypes();
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void RecalculateTargetProfile(bool force = false);
-		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
+		// void RecalculateTargetProfile(bool force = false);
+		// void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
 		void MayRunProbation();
 		bool IsProbing() const;
-		void StartProbation(RTC::RtpEncodingParameters::Profile profile);
-		void StopProbation();
-		void SendProbation(RTC::RtpPacket* packet);
+		// void StartProbation(RTC::RtpEncodingParameters::Profile profile);
+		// void StopProbation();
+		// void SendProbation(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RTC::RtpMonitor::Listener. */
 	public:
@@ -77,22 +84,20 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t consumerId{ 0 };
+		Listener* listener{ nullptr };
+		std::string consumerId{ 0 };
 		RTC::Media::Kind kind;
-		uint32_t sourceProducerId{ 0 };
 
 	private:
 		// Passed by argument.
-		RTC::Transport* transport{ nullptr };
 		RTC::RtpParameters rtpParameters;
-		std::unordered_set<RTC::ConsumerListener*> listeners;
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		RtpMonitor* rtpMonitor{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		bool paused{ false };
-		bool sourcePaused{ false };
+		bool producerPaused{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
@@ -105,35 +110,20 @@ namespace RTC
 		// RTP payload descriptor encoding.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		// RTP profiles.
-		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
-		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		RTC::RtpEncodingParameters::Profile sourcePreferredProfile{
-			RTC::RtpEncodingParameters::Profile::DEFAULT
-		};
-		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
-		RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
+		// std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
+		// RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		// RTC::RtpEncodingParameters::Profile sourcePreferredProfile{
+		// 	RTC::RtpEncodingParameters::Profile::DEFAULT
+		// };
+		// RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		// RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
+		// RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
 		// RTP probation.
 		uint16_t rtpPacketsBeforeProbation{ RtpPacketsBeforeProbation };
 		uint16_t probationPackets{ 0 };
 	};
 
 	/* Inline methods. */
-
-	inline void Consumer::AddListener(RTC::ConsumerListener* listener)
-	{
-		this->listeners.insert(listener);
-	}
-
-	inline void Consumer::RemoveListener(RTC::ConsumerListener* listener)
-	{
-		this->listeners.erase(listener);
-	}
-
-	inline bool Consumer::IsEnabled() const
-	{
-		return this->transport != nullptr;
-	}
 
 	inline const RTC::RtpParameters& Consumer::GetParameters() const
 	{
@@ -142,28 +132,7 @@ namespace RTC
 
 	inline bool Consumer::IsPaused() const
 	{
-		return this->paused || this->sourcePaused;
-	}
-
-	inline RTC::RtpEncodingParameters::Profile Consumer::GetPreferredProfile() const
-	{
-		// If Consumer preferred profile and source (Producer) preferred profile
-		// are the same, that's.
-		if (this->preferredProfile == this->sourcePreferredProfile)
-			return this->preferredProfile;
-
-		// If Consumer preferred profile is 'default', use whichever the source
-		// preferred profile is.
-		if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-			return this->sourcePreferredProfile;
-
-		// If source preferred profile is 'default', use whichever the Consumer
-		// preferred profile is.
-		if (this->sourcePreferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-			return this->preferredProfile;
-
-		// Otherwise the Consumer preferred profile is chosen.
-		return this->preferredProfile;
+		return this->paused || this->producerPaused;
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
@@ -176,17 +145,17 @@ namespace RTC
 		return this->probationPackets != 0;
 	}
 
-	inline void Consumer::StartProbation(RTC::RtpEncodingParameters::Profile profile)
-	{
-		this->probationPackets = ProbationPacketNumber;
-		this->probingProfile   = profile;
-	}
+	// inline void Consumer::StartProbation(RTC::RtpEncodingParameters::Profile profile)
+	// {
+	// 	this->probationPackets = ProbationPacketNumber;
+	// 	this->probingProfile   = profile;
+	// }
 
-	inline void Consumer::StopProbation()
-	{
-		this->probationPackets = 0;
-		this->probingProfile   = RTC::RtpEncodingParameters::Profile::NONE;
-	}
+	// inline void Consumer::StopProbation()
+	// {
+	// 	this->probationPackets = 0;
+	// 	this->probingProfile   = RTC::RtpEncodingParameters::Profile::NONE;
+	// }
 } // namespace RTC
 
 #endif

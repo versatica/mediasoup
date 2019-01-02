@@ -29,7 +29,6 @@ namespace RTC
 	public:
 		enum class TcpCandidateType
 		{
-			NONE    = 0,
 			PASSIVE = 1
 		};
 
@@ -49,7 +48,7 @@ namespace RTC
 		Protocol protocol;
 		uint16_t port{ 0 };
 		CandidateType type;
-		TcpCandidateType tcpType{ TcpCandidateType::NONE };
+		TcpCandidateType tcpType;
 	};
 } // namespace RTC
 
