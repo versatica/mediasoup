@@ -1,5 +1,4 @@
 const process = require('process');
-const path = require('path');
 const { toBeType } = require('jest-tobetype');
 const pkg = require('../package.json');
 const mediasoup = require('../');
@@ -35,8 +34,8 @@ test('createWorker() succeeds', async () =>
 			logTags             : [ 'info' ],
 			rtcMinPort          : 0,
 			rtcMaxPort          : 9999,
-			dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
-			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem')
+			dtlsCertificateFile : 'test/data/dtls-cert.pem',
+			dtlsPrivateKeyFile  : 'test/data/dtls-key.pem'
 		});
 	expect(worker).toBeType('object');
 	expect(worker.pid).toBeType('number');
@@ -120,14 +119,14 @@ test('worker.dump() rejects with InvalidStateError if closed', async () =>
 	worker = await createWorker();
 	worker.close();
 
-	await expect(worker.dump({ logLevel: 'error' }))
+	await expect(worker.dump())
 		.rejects
 		.toThrow(InvalidStateError);
 
 	worker.close();
 }, 500);
 
-test('Worker emits "died" if worker subprocess died unexpectedly', async () =>
+test('Worker emits "died" if worker process died unexpectedly', async () =>
 {
 	worker = await createWorker({ logLevel: 'warn' });
 
@@ -177,6 +176,6 @@ test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =
 
 			worker.close();
 			resolve();
-		}, 250);
+		}, 500);
 	});
 }, 2000);
