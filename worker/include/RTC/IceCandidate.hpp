@@ -2,10 +2,12 @@
 #define MS_RTC_ICE_CANDIDATE_HPP
 
 #include "common.hpp"
+#include "json.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/UdpSocket.hpp"
-#include <json/json.h>
 #include <string>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
@@ -27,25 +29,27 @@ namespace RTC
 	public:
 		enum class TcpCandidateType
 		{
+			NONE    = 0,
 			PASSIVE = 1
 		};
 
 	public:
 		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority);
+		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, std::string& announcedIp);
 		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority);
+		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, std::string& announcedIp);
 
-		Json::Value ToJson() const;
+		void FillJson(json& jsonObject) const;
 
 	private:
 		// Others.
 		std::string foundation;
 		uint32_t priority{ 0 };
-		int family{ 0 };
 		std::string ip;
 		Protocol protocol;
 		uint16_t port{ 0 };
 		CandidateType type;
-		TcpCandidateType tcpType{ TcpCandidateType::PASSIVE };
+		TcpCandidateType tcpType{ TcpCandidateType::NONE };
 	};
 } // namespace RTC
 
