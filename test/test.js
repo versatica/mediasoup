@@ -24,6 +24,7 @@ test('createWorker() succeeds', async () =>
 	expect(worker).toBeType('object');
 	expect(worker.id).toBeType('string');
 	expect(worker.pid).toBeType('number');
+	expect(worker.id).toBe(String(worker.pid));
 	expect(worker.closed).toBe(false);
 
 	worker.close();
@@ -41,6 +42,7 @@ test('createWorker() succeeds', async () =>
 	expect(worker).toBeType('object');
 	expect(worker.id).toBeType('string');
 	expect(worker.pid).toBeType('number');
+	expect(worker.id).toBe(String(worker.pid));
 	expect(worker.closed).toBe(false);
 
 	worker.close();
