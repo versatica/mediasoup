@@ -74,7 +74,6 @@
 #include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstdlib> // std::abort(), std::getenv()
 #include <cstring>
-#include <string>
 
 // clang-format off
 
@@ -110,11 +109,10 @@
 class Logger
 {
 public:
-	static void ClassInit(const std::string &id, Channel::UnixStreamSocket* channel);
-	static void ClassInit(const std::string &id);
+	static void ClassInit(Channel::UnixStreamSocket* channel);
 
 public:
-	static std::string id;
+	static const long id;
 	static Channel::UnixStreamSocket* channel;
 	static const size_t bufferSize {10000};
 	static char buffer[];
@@ -125,14 +123,14 @@ public:
 #define _MS_LOG_SEPARATOR_CHAR_STD "\n"
 
 #ifdef MS_LOG_FILE_LINE
-	#define _MS_LOG_STR "[%s] %s:%d | %s::%s()"
+	#define _MS_LOG_STR "[id:%ld] %s:%d | %s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
 	#define _MS_FILE (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
-	#define _MS_LOG_ARG ("id:" + Logger::id).c_str(), _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
+	#define _MS_LOG_ARG Logger::id, _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
 #else
-	#define _MS_LOG_STR "[%s] %s::%s()"
+	#define _MS_LOG_STR "[id:%ld] %s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
-	#define _MS_LOG_ARG ("id:" + Logger::id).c_str(), MS_CLASS, __FUNCTION__
+	#define _MS_LOG_ARG Logger::id, MS_CLASS, __FUNCTION__
 #endif
 
 #ifdef MS_LOG_TRACE

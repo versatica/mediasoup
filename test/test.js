@@ -1,3 +1,4 @@
+const process = require('process');
 const path = require('path');
 const { toBeType } = require('jest-tobetype');
 const pkg = require('../package.json');
@@ -8,11 +9,8 @@ expect.extend({ toBeType });
 
 let worker;
 
-afterAll(() =>
-{
-	if (worker)
-		worker.close();
-});
+beforeEach(() => worker && worker.close());
+afterEach(() => worker && worker.close());
 
 test('mediasoup exposes a version property', () =>
 {
@@ -25,6 +23,7 @@ test('createWorker() succeeds', async () =>
 	worker = await createWorker();
 	expect(worker).toBeType('object');
 	expect(worker.id).toBeType('string');
+	expect(worker.pid).toBeType('number');
 	expect(worker.closed).toBe(false);
 
 	worker.close();
@@ -41,6 +40,7 @@ test('createWorker() succeeds', async () =>
 		});
 	expect(worker).toBeType('object');
 	expect(worker.id).toBeType('string');
+	expect(worker.pid).toBeType('number');
 	expect(worker.closed).toBe(false);
 
 	worker.close();
@@ -92,3 +92,57 @@ test('worker.updateSettings() with wrong settings rejects', async () =>
 
 	worker.close();
 }, 500);
+
+test('Worker emits "died" if worker subprocess died unexpectedly', async () =>
+{
+	worker = await createWorker({ logLevel: 'warn' });
+
+	await new Promise((resolve) =>
+	{
+		worker.on('died', resolve);
+
+		process.kill(worker.pid, 'SIGINT');
+	});
+
+	worker = await createWorker({ logLevel: 'warn' });
+
+	await new Promise((resolve) =>
+	{
+		worker.on('died', resolve);
+
+		process.kill(worker.pid, 'SIGTERM');
+	});
+
+	worker = await createWorker({ logLevel: 'warn' });
+
+	await new Promise((resolve) =>
+	{
+		worker.on('died', resolve);
+
+		process.kill(worker.pid, 'SIGKILL');
+	});
+}, 2000);
+
+test('worker process ignores some signals', async () =>
+{
+	worker = await createWorker({ logLevel: 'warn' });
+
+	await new Promise((resolve, reject) =>
+	{
+		worker.on('died', reject);
+
+		process.kill(worker.pid, 'SIGPIPE');
+		process.kill(worker.pid, 'SIGHUP');
+		process.kill(worker.pid, 'SIGALRM');
+		process.kill(worker.pid, 'SIGUSR1');
+		process.kill(worker.pid, 'SIGUSR2');
+
+		setTimeout(() =>
+		{
+			expect(worker.closed).toBe(false);
+
+			worker.close();
+			resolve();
+		}, 250);
+	});
+}, 2000);

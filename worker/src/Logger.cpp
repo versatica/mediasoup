@@ -2,26 +2,19 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
+#include <unistd.h> // getpid()
 
 /* Class variables. */
 
-std::string Logger::id{ "unset" };
+const long Logger::id{ static_cast<long>(getpid()) };
 Channel::UnixStreamSocket* Logger::channel{ nullptr };
 char Logger::buffer[Logger::bufferSize];
 
 /* Class methods. */
 
-void Logger::ClassInit(const std::string& id, Channel::UnixStreamSocket* channel)
+void Logger::ClassInit(Channel::UnixStreamSocket* channel)
 {
-	Logger::id      = id;
 	Logger::channel = channel;
-
-	MS_TRACE();
-}
-
-void Logger::ClassInit(const std::string& id)
-{
-	Logger::id = id;
 
 	MS_TRACE();
 }

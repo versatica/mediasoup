@@ -25,7 +25,7 @@ Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
 	this->signalsHandler->AddSignal(SIGTERM, "TERM");
 
 	// Tell the Node process that we are running.
-	Channel::Notifier::Emit(Logger::id, "running");
+	Channel::Notifier::Emit(std::to_string(Logger::id), "running");
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();

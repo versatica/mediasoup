@@ -20,7 +20,7 @@
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
-#include <unistd.h> // getpid(), usleep()
+#include <unistd.h> // usleep()
 
 static constexpr int ChannelFd{ 3 };
 
@@ -28,26 +28,27 @@ void ignoreSignals();
 
 int main(int argc, char* argv[])
 {
-	// Ensure we are called by our Node library.
-	if (argc == 1)
-	{
-		std::cerr << "ERROR: U AIN'T MY REAL FATHER" << std::endl;
-
-		std::_Exit(1);
-	}
-
-	std::string workerId = std::string(argv[1]);
-
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
-	// Create the Channel socket (it will be handled and deleted by the Worker).
-	auto* channel = new Channel::UnixStreamSocket(ChannelFd);
+	// Channel socket (it will be handled and deleted by the Worker).
+	Channel::UnixStreamSocket* channel{ nullptr };
+
+	try
+	{
+		channel = new Channel::UnixStreamSocket(ChannelFd);
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_ERROR_STD("error creating the Channel: %s", error.what());
+
+		std::_Exit(2);
+	}
 
 	// Initialize the Logger.
-	Logger::ClassInit(workerId, channel);
+	Logger::ClassInit(channel);
 
-	MS_DEBUG_TAG(info, "starting mediasoup-worker [pid:%ld]", (long)getpid());
+	MS_DEBUG_TAG(info, "starting mediasoup-worker process");
 
 #if defined(MS_LITTLE_ENDIAN)
 	MS_DEBUG_TAG(info, "Little-Endian CPU detected");

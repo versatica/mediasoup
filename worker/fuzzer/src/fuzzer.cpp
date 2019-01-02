@@ -3,7 +3,6 @@
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "LogLevel.hpp"
-#include "Logger.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "RTC/FuzzerStunMessage.hpp"
@@ -21,7 +20,6 @@ bool fuzzRtcp = false;
 int init()
 {
 	LogLevel logLevel{ LogLevel::LOG_NONE };
-	std::string loggerId = "fuzzer";
 
 	// Get logLevel from ENV variable.
 	if (std::getenv("MS_FUZZ_LOG_LEVEL"))
@@ -65,7 +63,6 @@ int init()
 	Settings::configuration.logLevel = logLevel;
 
 	// Initialize static stuff.
-	Logger::ClassInit(loggerId);
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
 	Utils::Crypto::ClassInit();
