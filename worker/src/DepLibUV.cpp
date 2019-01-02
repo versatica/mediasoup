@@ -47,8 +47,7 @@ void DepLibUV::RunLoop()
 	MS_TRACE();
 
 	// This should never happen.
-	if (DepLibUV::loop == nullptr)
-		MS_ABORT("DepLibUV::loop was not allocated");
+	MS_ASSERT(DepLibUV::loop != nullptr, "loop unset");
 
 	uv_run(DepLibUV::loop, UV_RUN_DEFAULT);
 }

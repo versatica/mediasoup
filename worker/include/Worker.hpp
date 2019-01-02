@@ -5,7 +5,7 @@
 #include "json.hpp"
 #include "Channel/Request.hpp"
 #include "Channel/UnixStreamSocket.hpp"
-#include "RTC/Router.hpp"
+// #include "RTC/Router.hpp"
 #include "handles/SignalsHandler.hpp"
 #include <string>
 #include <unordered_map>
@@ -20,9 +20,9 @@ public:
 
 private:
 	void Close();
-	void FillJson(json& jsonObject) const;
-	void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
-	RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
+	// void FillJson(json& jsonObject) const;
+	// void SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const;
+	// RTC::Router* GetRouterFromRequest(Channel::Request* request) const;
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
@@ -40,7 +40,7 @@ private:
 	SignalsHandler* signalsHandler{ nullptr };
 	// Others.
 	bool closed{ false };
-	std::unordered_map<std::string, RTC::Router*> routers;
+	// std::unordered_map<std::string, RTC::Router*> routers;
 };
 
 #endif

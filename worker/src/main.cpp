@@ -9,7 +9,7 @@
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-// #include "Worker.hpp"
+#include "Worker.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/UnixStreamSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
@@ -91,10 +91,7 @@ int main(int argc, char* argv[])
 		ignoreSignals();
 
 		// Run the Worker.
-		// Worker worker(channel);
-
-		// TODO: REMOVE:
-		Channel::Notifier::Emit(workerId, "running");
+		Worker worker(channel);
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();

@@ -24,12 +24,12 @@ Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
 	this->signalsHandler->AddSignal(SIGINT, "INT");
 	this->signalsHandler->AddSignal(SIGTERM, "TERM");
 
+	// Tell the Node process that we are running.
+	Channel::Notifier::Emit(Logger::id, "running");
+
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
 	MS_DEBUG_DEV("libuv loop ended");
-
-	// Tell the Node process that we are running.
-	Channel::Notifier::Emit(workerId, "running");
 }
 
 Worker::~Worker()
@@ -52,74 +52,71 @@ void Worker::Close()
 	// Close the SignalsHandler.
 	delete this->signalsHandler;
 
-	// Close all the Routers.
-	// NOTE: Upon Router closure the onRouterClosed() method is called, which
-	// removes it from the map, so this is the safe way to iterate the map
-	// and remove elements.
-	for (auto it = this->routers.begin(); it != this->routers.end();)
-	{
-		RTC::Router* router = it->second;
+	// Close all Routers.
+	// for (auto& kv : this->routers)
+	// {
+	// 	auto* router = kv.second;
 
-		it = this->routers.erase(it);
-		delete router;
-	}
+	// 	delete router;
+	// }
+	// this->routers.clear();
 
-	// Close the Channel socket.
+	// Close the Channel.
 	delete this->channel;
 }
 
-void Worker::FillJson(json& jsonObject) const
-{
-	MS_TRACE();
+// void Worker::FillJson(json& jsonObject) const
+// {
+// 	MS_TRACE();
 
-	// Add id.
-	jsonObject["id"] = Logger::id;
+// 	// Add id.
+// 	jsonObject["id"] = Logger::id;
 
-	// Add routerIds.
-	jsonObject["routerIds"] = json::array();
-	auto jsonRoutersIt      = jsonObject.find("routerIds");
+// 	// Add routerIds.
+// 	jsonObject["routerIds"] = json::array();
+// 	auto jsonRoutersIt      = jsonObject.find("routerIds");
 
-	for (auto& kv : this->routers)
-	{
-		auto& routerId = kv.first;
+// 	for (auto& kv : this->routers)
+// 	{
+// 		auto& routerId = kv.first;
 
-		jsonRoutersIt->emplace_back(routerId);
-	}
-}
+// 		jsonRoutersIt->emplace_back(routerId);
+// 	}
+// }
 
-void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
-{
-	MS_TRACE();
+// void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
+// {
+// 	MS_TRACE();
 
-	auto jsonRouterIdIt = request->internal.find("routerId");
+// 	auto jsonRouterIdIt = request->internal.find("routerId");
 
-	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("request has no internal.routerId");
+// 	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
+// 		MS_THROW_ERROR("request has no internal.routerId");
 
-	routerId.assign(jsonRouterIdIt->get<std::string>());
+// 	routerId.assign(jsonRouterIdIt->get<std::string>());
 
-	if (this->routers.find(routerId) != this->routers.end())
-		MS_THROW_ERROR("a Router with same routerId already exists");
-}
+// 	if (this->routers.find(routerId) != this->routers.end())
+// 		MS_THROW_ERROR("a Router with same routerId already exists");
+// }
 
-RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
-{
-	MS_TRACE();
+// RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
+// {
+// 	MS_TRACE();
 
-	auto jsonRouterIdIt = request->internal.find("routerId");
+// 	auto jsonRouterIdIt = request->internal.find("routerId");
 
-	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("request has no internal.routerId");
+// 	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
+// 		MS_THROW_ERROR("request has no internal.routerId");
 
-	auto it = this->routers.find(jsonRouterIdIt->get<std::string>());
+// 	auto it = this->routers.find(jsonRouterIdIt->get<std::string>());
 
-	if (it == this->routers.end())
-		MS_THROW_ERROR("Router not found");
+// 	if (it == this->routers.end())
+// 		MS_THROW_ERROR("Router not found");
 
-	RTC::Router* router = it->second;
+// 	RTC::Router* router = it->second;
 
-	return router;
-}
+// 	return router;
+// }
 
 void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
 {
@@ -129,16 +126,16 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::WORKER_DUMP:
-		{
-			json data = json::object();
+		// case Channel::Request::MethodId::WORKER_DUMP:
+		// {
+		// 	json data = json::object();
 
-			FillJson(data);
+		// 	FillJson(data);
 
-			request->Accept(data);
+		// 	request->Accept(data);
 
-			break;
-		}
+		// 	break;
+		// }
 
 		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
 		{
@@ -147,75 +144,75 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 			break;
 		}
 
-		case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
-		{
-			std::string routerId;
+		// case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
+		// {
+		// 	std::string routerId;
 
-			try
-			{
-				SetNewRouterIdFromRequest(request, routerId);
-			}
-			catch (const MediaSoupError& error)
-			{
-				request->Reject(error.what());
+		// 	try
+		// 	{
+		// 		SetNewRouterIdFromRequest(request, routerId);
+		// 	}
+		// 	catch (const MediaSoupError& error)
+		// 	{
+		// 		request->Reject(error.what());
 
-				break;
-			}
+		// 		break;
+		// 	}
 
-			auto* router = new RTC::Router(routerId);
+		// 	auto* router = new RTC::Router(routerId);
 
-			this->routers[routerId] = router;
+		// 	this->routers[routerId] = router;
 
-			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
+		// 	MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
-			request->Accept();
+		// 	request->Accept();
 
-			break;
-		}
+		// 	break;
+		// }
 
-		case Channel::Request::MethodId::ROUTER_CLOSE:
-		{
-			RTC::Router* router;
+		// case Channel::Request::MethodId::ROUTER_CLOSE:
+		// {
+		// 	RTC::Router* router;
 
-			try
-			{
-				router = GetRouterFromRequest(request);
-			}
-			catch (const MediaSoupError& error)
-			{
-				request->Reject(error.what());
+		// 	try
+		// 	{
+		// 		router = GetRouterFromRequest(request);
+		// 	}
+		// 	catch (const MediaSoupError& error)
+		// 	{
+		// 		request->Reject(error.what());
 
-				break;
-			}
+		// 		break;
+		// 	}
 
-			// Remove it from the map and delete it.
-			this->routers.erase(router->routerId);
-			delete router;
+		// 	// Remove it from the map and delete it.
+		// 	this->routers.erase(router->routerId);
+		// 	delete router;
 
-			request->Accept();
+		// 	request->Accept();
 
-			break;
-		}
+		// 	break;
+		// }
 
-		default:
-		{
-			RTC::Router* router;
+		// default:
+		// {
+		// 	RTC::Router* router;
 
-			try
-			{
-				router = GetRouterFromRequest(request);
-			}
-			catch (const MediaSoupError& error)
-			{
-				request->Reject(error.what());
+		// 	try
+		// 	{
+		// 		router = GetRouterFromRequest(request);
+		// 	}
+		// 	catch (const MediaSoupError& error)
+		// 	{
+		// 		request->Reject(error.what());
 
-				break;
-			}
+		// 		break;
+		// 	}
 
-			router->HandleRequest(request);
+		// 	router->HandleRequest(request);
 
-			break;
-		}
+		// 	break;
+		// }
 	}
 }
 

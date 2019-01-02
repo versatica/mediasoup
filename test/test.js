@@ -6,6 +6,14 @@ const { version, createWorker } = mediasoup;
 
 expect.extend({ toBeType });
 
+let worker;
+
+afterAll(() =>
+{
+	if (worker)
+		worker.close();
+});
+
 test('mediasoup exposes a version property', () =>
 {
 	expect(version).toBeType('string');
@@ -14,8 +22,6 @@ test('mediasoup exposes a version property', () =>
 
 test('createWorker() succeeds', async () =>
 {
-	let worker;
-
 	worker = await createWorker();
 	expect(worker).toBeType('object');
 	expect(worker.id).toBeType('string');
@@ -65,13 +71,24 @@ test('createWorker() with wrong settings rejects with TypeError', async () =>
 		.toThrow(TypeError);
 }, 500);
 
-// test('worker.updateSettings() succeeds', async () =>
-// {
-// 	const worker = await createWorker();
+test('worker.updateSettings() succeeds', async () =>
+{
+	worker = await createWorker();
 
-// 	await expect(worker.updateSettings({ logLevel: 'debug', logTags: [ 'ice' ] }))
-// 		.resolves
-// 		.toBe(undefined);
+	await expect(worker.updateSettings({ logLevel: 'debug', logTags: [ 'ice' ] }))
+		.resolves
+		.toBe(undefined);
 
-// 	worker.close();
-// }, 500);
+	worker.close();
+}, 500);
+
+test('worker.updateSettings() with wrong settings rejects', async () =>
+{
+	worker = await createWorker();
+
+	await expect(worker.updateSettings({ logLevel: 'chicken' }))
+		.rejects
+		.toThrow(Error);
+
+	worker.close();
+}, 500);
