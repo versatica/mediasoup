@@ -525,10 +525,6 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		// Mirror RTP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtp)
-			this->mirrorTuple->Send(data, len);
-
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
 			return;
 
@@ -544,10 +540,6 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
-
-		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
-			this->mirrorTuple->Send(data, len);
 
 		// Ensure there is sending SRTP session.
 		if (this->srtpSendSession == nullptr)
@@ -641,10 +633,6 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
-
-		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
-			this->mirrorTuple->Send(data, len);
 
 		// Ensure there is sending SRTP session.
 		if (this->srtpSendSession == nullptr)
@@ -793,10 +781,6 @@ namespace RTC
 			return;
 		}
 
-		// Mirror RTP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtp)
-			this->mirrorTuple->Send(data, len);
-
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
 		if (packet == nullptr)
@@ -843,6 +827,7 @@ namespace RTC
 			  packet->GetPayloadType());
 
 			delete packet;
+
 			return;
 		}
 
@@ -892,10 +877,6 @@ namespace RTC
 		// Decrypt the SRTCP packet.
 		if (!this->srtpRecvSession->DecryptSrtcp(data, &len))
 			return;
-
-		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtcp)
-			this->mirrorTuple->Send(data, len);
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 

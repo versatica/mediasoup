@@ -65,91 +65,11 @@ namespace RTC
 		// Close the RTCP timer.
 		delete this->rtcpTimer;
 
-		// Delete mirror tuple.
-		if (this->mirrorTuple != nullptr)
-			delete this->mirrorTuple;
-
-		// Delete mirror socket.
-		if (this->mirrorSocket != nullptr)
-			delete this->mirrorSocket;
-
 		// Notify the listener.
 		this->listener->OnTransportClosed(this);
 
 		// Notify.
 		this->notifier->Emit(this->transportId, "close");
-	}
-
-	void Transport::StartMirroring(MirroringOptions& options)
-	{
-		MS_TRACE();
-
-		int err;
-
-		if (this->mirrorTuple != nullptr)
-			MS_THROW_ERROR("Transport is already mirroring");
-
-		switch (Utils::IP::GetFamily(options.remoteIp))
-		{
-			case AF_INET:
-			{
-				if (!Settings::configuration.hasIPv4 && options.localIp.empty())
-					MS_THROW_ERROR("IPv4 disabled");
-
-				err = uv_ip4_addr(
-				  options.remoteIp.c_str(),
-				  static_cast<int>(options.remotePort),
-				  reinterpret_cast<struct sockaddr_in*>(&this->mirrorAddrStorage));
-				if (err != 0)
-					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
-
-				if (options.localIp.empty())
-					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET);
-				else
-					this->mirrorSocket = new RTC::UdpSocket(this, options.localIp);
-
-				break;
-			}
-
-			case AF_INET6:
-			{
-				if (!Settings::configuration.hasIPv6 && options.localIp.empty())
-					MS_THROW_ERROR("IPv6 disabled");
-
-				err = uv_ip6_addr(
-				  options.remoteIp.c_str(),
-				  static_cast<int>(options.remotePort),
-				  reinterpret_cast<struct sockaddr_in6*>(&this->mirrorAddrStorage));
-				if (err != 0)
-					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
-
-				if (options.localIp.empty())
-					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET6);
-				else
-					this->mirrorSocket = new RTC::UdpSocket(this, options.localIp);
-
-				break;
-			}
-
-			default:
-			{
-				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIp.c_str());
-			}
-		}
-
-		this->mirrorTuple = new RTC::TransportTuple(
-		  this->mirrorSocket, reinterpret_cast<struct sockaddr*>(&this->mirrorAddrStorage));
-
-		this->mirroringOptions = options;
-	}
-
-	void Transport::StopMirroring()
-	{
-		delete this->mirrorTuple;
-		delete this->mirrorSocket;
-
-		this->mirrorTuple  = nullptr;
-		this->mirrorSocket = nullptr;
 	}
 
 	void Transport::HandleProducer(RTC::Producer* producer)
@@ -599,15 +519,5 @@ namespace RTC
 			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
 			this->rtcpTimer->Start(interval);
 		}
-	}
-
-	// Packet received from the mirror socket. Ignore.
-	void Transport::OnPacketRecv(
-	  RTC::UdpSocket* /*socket*/,
-	  const uint8_t* /*data*/,
-	  size_t /*len*/,
-	  const struct sockaddr* /*remoteAddr*/)
-	{
-		// Do nothing.
 	}
 } // namespace RTC

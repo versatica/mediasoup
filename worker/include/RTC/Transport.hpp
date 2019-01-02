@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "json.hpp"
-#include "RTC/ConsumerListener.hpp"
-#include "RTC/ProducerListener.hpp"
+#include "RTC/Consumer.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -13,7 +13,6 @@
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/TransportTuple.hpp"
-#include "RTC/UdpSocket.hpp"
 #include "handles/Timer.hpp"
 #include <string>
 #include <tuple>
@@ -29,10 +28,9 @@ namespace RTC
 	class Producer;
 	class Consumer;
 
-	class Transport : public RTC::ProducerListener,
-	                  public RTC::ConsumerListener,
-	                  public Timer::Listener,
-	                  public RTC::UdpSocket::Listener
+	class Transport : public RTC::Producer::Listener,
+	                  public RTC::Consumer::Listener,
+	                  public Timer::Listener
 	{
 	public:
 		class Listener
@@ -69,8 +67,6 @@ namespace RTC
 		void HandleConsumer(RTC::Consumer* consumer);
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)     = 0;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet) = 0;
-		void StartMirroring(MirroringOptions& options);
-		void StopMirroring();
 
 	protected:
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
@@ -107,11 +103,6 @@ namespace RTC
 	public:
 		void OnTimer(Timer* timer) override;
 
-		/* Pure virtual methods inherited from UdpSocket::Listener. Mirroring. */
-	public:
-		void OnPacketRecv(
-		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
-
 	public:
 		// Passed by argument.
 		uint32_t transportId{ 0 };
@@ -121,8 +112,6 @@ namespace RTC
 		Listener* listener{ nullptr };
 		// Allocated by this.
 		Timer* rtcpTimer{ nullptr };
-		RTC::UdpSocket* mirrorSocket{ nullptr };
-		RTC::TransportTuple* mirrorTuple{ nullptr };
 		// Others.
 		bool closed{ false };
 		// Others (Producers and Consumers).
@@ -131,7 +120,7 @@ namespace RTC
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		struct HeaderExtensionIds headerExtensionIds;
-		// Others (REMB)
+		// Others (REMB).
 		std::tuple<uint64_t, std::vector<uint32_t>> recvRemb;
 	};
 } // namespace RTC
