@@ -10,7 +10,7 @@
     ],
     'sources':
     [
-      # C++ source files
+      # C++ source files.
       'src/DepLibSRTP.cpp',
       'src/DepLibUV.cpp',
       'src/DepOpenSSL.cpp',
@@ -96,7 +96,7 @@
       # 'src/RTC/RemoteBitrateEstimator/OveruseEstimator.cpp',
       # 'src/RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.cpp',
       # 'src/RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorSingleStream.cpp',
-      # C++ include files
+      # C++ include files.
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
       'include/DepOpenSSL.hpp',
@@ -186,21 +186,21 @@
     ],
     'conditions':
     [
-      # FIPS
+      # FIPS.
       [ 'openssl_fips != ""', {
         'defines': [ 'BUD_FIPS_ENABLED=1' ]
       }],
 
-      # Endianness
+      # Endianness.
       [ 'node_byteorder=="big"', {
-          # Define Big Endian
+          # Define Big Endian.
           'defines': [ 'MS_BIG_ENDIAN' ]
         }, {
-          # Define Little Endian
+          # Define Little Endian.
           'defines': [ 'MS_LITTLE_ENDIAN' ]
       }],
 
-      # Platform-specifics
+      # Platform-specifics.
 
       [ 'OS == "mac" and mediasoup_asan == "true"', {
         'xcode_settings':
@@ -253,7 +253,7 @@
       'target_name': 'mediasoup-worker',
       'sources':
       [
-        # C++ source files
+        # C++ source files.
         'src/main.cpp'
       ]
     },
@@ -262,7 +262,7 @@
       'defines': [ 'MS_LOG_STD' ],
       'sources':
       [
-        # C++ source files
+        # C++ source files.
         'test/src/tests.cpp',
         'test/src/RTC/TestRtpStreamSend.cpp',
         'test/src/RTC/TestNackGenerator.cpp',
@@ -291,7 +291,7 @@
         'test/src/RTC/RTCP/TestSdes.cpp',
         'test/src/RTC/RTCP/TestSenderReport.cpp',
         'test/src/RTC/RTCP/TestPacket.cpp',
-        # C++ include files
+        # C++ include files.
         'test/include/catch.hpp',
         'test/include/helpers.hpp'
       ],
@@ -315,12 +315,12 @@
       'defines': [ 'DEBUG', 'MS_LOG_STD' ],
       'sources':
       [
-        # C++ source files
+        # C++ source files.
         'fuzzer/src/fuzzer.cpp',
         'fuzzer/src/RTC/FuzzerStunMessage.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
-        # C++ include files
+        # C++ include files.
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerPacket.hpp'
