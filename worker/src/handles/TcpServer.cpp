@@ -174,7 +174,7 @@ void TcpServer::Dump() const
 	MS_DEBUG_DEV("<TcpServer>");
 	MS_DEBUG_DEV(
 	  "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
-	  this->localIP.c_str(),
+	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
 	  (!this->closed) ? "open" : "closed",
 	  this->connections.size());
@@ -203,7 +203,7 @@ bool TcpServer::SetLocalAddress()
 	Utils::IP::GetAddressInfo(
 	  reinterpret_cast<const struct sockaddr*>(&this->localAddr),
 	  &family,
-	  this->localIP,
+	  this->localIp,
 	  &this->localPort);
 
 	return true;
@@ -233,7 +233,7 @@ inline void TcpServer::OnUvConnection(int status)
 
 	try
 	{
-		connection->Setup(this, &(this->localAddr), this->localIP, this->localPort);
+		connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
 	}
 	catch (const MediaSoupError& error)
 	{

@@ -190,7 +190,7 @@ void UdpSocket::Dump() const
 	MS_DEBUG_DEV("<UdpSocket>");
 	MS_DEBUG_DEV(
 	  "  [UDP, local:%s :%" PRIu16 ", status:%s]",
-	  this->localIP.c_str(),
+	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
 	  (!this->closed) ? "open" : "closed");
 	MS_DEBUG_DEV("</UdpSocket>");
@@ -339,7 +339,7 @@ bool UdpSocket::SetLocalAddress()
 	Utils::IP::GetAddressInfo(
 	  reinterpret_cast<const struct sockaddr*>(&this->localAddr),
 	  &family,
-	  this->localIP,
+	  this->localIp,
 	  &this->localPort);
 
 	return true;

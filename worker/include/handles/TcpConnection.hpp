@@ -47,7 +47,7 @@ public:
 	void Setup(
 	  Listener* listener,
 	  struct sockaddr_storage* localAddr,
-	  const std::string& localIP,
+	  const std::string& localIp,
 	  uint16_t localPort);
 	bool IsClosed() const;
 	uv_tcp_t* GetUvHandle() const;
@@ -57,10 +57,10 @@ public:
 	void Write(const std::string& data);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
-	const std::string& GetLocalIP() const;
+	const std::string& GetLocalIp() const;
 	uint16_t GetLocalPort() const;
 	const struct sockaddr* GetPeerAddress() const;
-	const std::string& GetPeerIP() const;
+	const std::string& GetPeerIp() const;
 	uint16_t GetPeerPort() const;
 
 private:
@@ -94,10 +94,10 @@ protected:
 	uint8_t* buffer{ nullptr };
 	// Others.
 	size_t bufferDataLen{ 0 };
-	std::string localIP;
+	std::string localIp;
 	uint16_t localPort{ 0 };
 	struct sockaddr_storage peerAddr;
-	std::string peerIP;
+	std::string peerIp;
 	uint16_t peerPort{ 0 };
 };
 
@@ -128,9 +128,9 @@ inline int TcpConnection::GetLocalFamily() const
 	return reinterpret_cast<const struct sockaddr*>(this->localAddr)->sa_family;
 }
 
-inline const std::string& TcpConnection::GetLocalIP() const
+inline const std::string& TcpConnection::GetLocalIp() const
 {
-	return this->localIP;
+	return this->localIp;
 }
 
 inline uint16_t TcpConnection::GetLocalPort() const
@@ -143,9 +143,9 @@ inline const struct sockaddr* TcpConnection::GetPeerAddress() const
 	return reinterpret_cast<const struct sockaddr*>(&this->peerAddr);
 }
 
-inline const std::string& TcpConnection::GetPeerIP() const
+inline const std::string& TcpConnection::GetPeerIp() const
 {
-	return this->peerIP;
+	return this->peerIp;
 }
 
 inline uint16_t TcpConnection::GetPeerPort() const

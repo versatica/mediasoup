@@ -13,9 +13,9 @@ namespace RTC
 	public:
 		struct Options
 		{
-			std::string remoteIP;
+			std::string remoteIp;
 			uint16_t remotePort;
-			std::string localIP;
+			std::string localIp;
 			bool preferIPv4;
 			bool preferIPv6;
 		};
@@ -34,7 +34,7 @@ namespace RTC
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 
 	private:
-		void CreateSocket(int addressFamily, const std::string& localIP);
+		void CreateSocket(int addressFamily, const std::string& localIp);
 		bool IsConnected() const override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 

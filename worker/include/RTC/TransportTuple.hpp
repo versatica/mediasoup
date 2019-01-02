@@ -2,6 +2,7 @@
 #define MS_RTC_TRANSPORT_TUPLE_HPP
 
 #include "common.hpp"
+#include "json.hpp"
 #include "Utils.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
@@ -22,8 +23,7 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 
-		Json::Value ToJson() const;
-		void Dump() const;
+		void FillJson(json& jsonObject) const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
 		void Send(const uint8_t* data, size_t len);

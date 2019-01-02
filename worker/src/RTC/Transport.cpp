@@ -89,51 +89,51 @@ namespace RTC
 		if (this->mirrorTuple != nullptr)
 			MS_THROW_ERROR("Transport is already mirroring");
 
-		switch (Utils::IP::GetFamily(options.remoteIP))
+		switch (Utils::IP::GetFamily(options.remoteIp))
 		{
 			case AF_INET:
 			{
-				if (!Settings::configuration.hasIPv4 && options.localIP.empty())
+				if (!Settings::configuration.hasIPv4 && options.localIp.empty())
 					MS_THROW_ERROR("IPv4 disabled");
 
 				err = uv_ip4_addr(
-				  options.remoteIP.c_str(),
+				  options.remoteIp.c_str(),
 				  static_cast<int>(options.remotePort),
 				  reinterpret_cast<struct sockaddr_in*>(&this->mirrorAddrStorage));
 				if (err != 0)
 					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
 
-				if (options.localIP.empty())
+				if (options.localIp.empty())
 					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET);
 				else
-					this->mirrorSocket = new RTC::UdpSocket(this, options.localIP);
+					this->mirrorSocket = new RTC::UdpSocket(this, options.localIp);
 
 				break;
 			}
 
 			case AF_INET6:
 			{
-				if (!Settings::configuration.hasIPv6 && options.localIP.empty())
+				if (!Settings::configuration.hasIPv6 && options.localIp.empty())
 					MS_THROW_ERROR("IPv6 disabled");
 
 				err = uv_ip6_addr(
-				  options.remoteIP.c_str(),
+				  options.remoteIp.c_str(),
 				  static_cast<int>(options.remotePort),
 				  reinterpret_cast<struct sockaddr_in6*>(&this->mirrorAddrStorage));
 				if (err != 0)
 					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
 
-				if (options.localIP.empty())
+				if (options.localIp.empty())
 					this->mirrorSocket = new RTC::UdpSocket(this, AF_INET6);
 				else
-					this->mirrorSocket = new RTC::UdpSocket(this, options.localIP);
+					this->mirrorSocket = new RTC::UdpSocket(this, options.localIp);
 
 				break;
 			}
 
 			default:
 			{
-				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIP.c_str());
+				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIp.c_str());
 			}
 		}
 

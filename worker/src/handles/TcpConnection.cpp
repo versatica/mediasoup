@@ -116,16 +116,16 @@ void TcpConnection::Dump() const
 	MS_DEBUG_DEV("<TcpConnection>");
 	MS_DEBUG_DEV(
 	  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
-	  this->localIP.c_str(),
+	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
-	  this->peerIP.c_str(),
+	  this->peerIp.c_str(),
 	  static_cast<uint16_t>(this->peerPort),
 	  (!this->closed) ? "open" : "closed");
 	MS_DEBUG_DEV("</TcpConnection>");
 }
 
 void TcpConnection::Setup(
-  Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIP, uint16_t localPort)
+  Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort)
 {
 	MS_TRACE();
 
@@ -145,7 +145,7 @@ void TcpConnection::Setup(
 
 	// Set the local address.
 	this->localAddr = localAddr;
-	this->localIP   = localIP;
+	this->localIp   = localIp;
 	this->localPort = localPort;
 }
 
@@ -331,7 +331,7 @@ bool TcpConnection::SetPeerAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), &family, this->peerIP, &this->peerPort);
+	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), &family, this->peerIp, &this->peerPort);
 
 	return true;
 }

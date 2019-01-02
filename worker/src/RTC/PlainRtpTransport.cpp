@@ -21,21 +21,21 @@ namespace RTC
 		MS_TRACE();
 
 		// Remote IP address is provided.
-		if (!options.remoteIP.empty())
+		if (!options.remoteIp.empty())
 		{
-			int addressFamily = Utils::IP::GetFamily(options.remoteIP);
+			int addressFamily = Utils::IP::GetFamily(options.remoteIp);
 
 			if (addressFamily == AF_INET)
-				CreateSocket(AF_INET, options.localIP);
+				CreateSocket(AF_INET, options.localIp);
 			else if (addressFamily == AF_INET6)
-				CreateSocket(AF_INET6, options.localIP);
+				CreateSocket(AF_INET6, options.localIp);
 			else
-				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIP.c_str());
+				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIp.c_str());
 
 			// This may throw.
 			try
 			{
-				SetRemoteParameters(options.remoteIP, options.remotePort);
+				SetRemoteParameters(options.remoteIp, options.remotePort);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -54,7 +54,7 @@ namespace RTC
 				if (!Settings::configuration.hasIPv4)
 					MS_THROW_ERROR("IPv4 disabled");
 
-				CreateSocket(AF_INET, options.localIP);
+				CreateSocket(AF_INET, options.localIp);
 			}
 			// IPv6 is preferred.
 			else if (options.preferIPv6)
@@ -62,16 +62,16 @@ namespace RTC
 				if (!Settings::configuration.hasIPv6)
 					MS_THROW_ERROR("IPv6 disabled");
 
-				CreateSocket(AF_INET6, options.localIP);
+				CreateSocket(AF_INET6, options.localIp);
 			}
 			// No IP family preference, try with IPv4 and then IPv6.
 			else if (Settings::configuration.hasIPv4)
 			{
-				CreateSocket(AF_INET, options.localIP);
+				CreateSocket(AF_INET, options.localIp);
 			}
 			else
 			{
-				CreateSocket(AF_INET6, options.localIP);
+				CreateSocket(AF_INET6, options.localIp);
 			}
 		}
 	}
@@ -88,10 +88,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Redo to have:
+		// - .tuple
+		//   - .localIp
+		//   - .remoteIp
+		//   - .localPort
+		//   - .remotePort
+		//   - .protocol
+
 		static const Json::StaticString JsonStringTransportId{ "transportId" };
 		static const Json::StaticString JsonStringTuple{ "tuple" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
-		static const Json::StaticString JsonStringLocalIP{ "localIP" };
+		static const Json::StaticString JsonStringLocalIp{ "localIp" };
 		static const Json::StaticString JsonStringLocalPort{ "localPort" };
 
 		Json::Value json(Json::objectValue);
@@ -103,8 +111,10 @@ namespace RTC
 		if (this->tuple != nullptr)
 			json[JsonStringTuple] = this->tuple->ToJson();
 
+		// TODO: This does not make any sense. This info is supposed to be in the tuple.
+		//
 		// Local IP address and port.
-		json[JsonStringLocalIP]   = this->udpSocket->GetLocalIP();
+		json[JsonStringLocalIp]   = this->udpSocket->GetLocalIp();
 		json[JsonStringLocalPort] = Json::UInt{ this->udpSocket->GetLocalPort() };
 
 		// Add rtpListener.
@@ -206,12 +216,12 @@ namespace RTC
 		this->tuple->Send(data, len);
 	}
 
-	void PlainRtpTransport::CreateSocket(int addressFamily, const std::string& localIP)
+	void PlainRtpTransport::CreateSocket(int addressFamily, const std::string& localIp)
 	{
-		if (localIP.empty())
+		if (localIp.empty())
 			this->udpSocket = new RTC::UdpSocket(this, addressFamily);
 		else
-			this->udpSocket = new RTC::UdpSocket(this, localIP);
+			this->udpSocket = new RTC::UdpSocket(this, localIp);
 	}
 
 	bool PlainRtpTransport::IsConnected() const

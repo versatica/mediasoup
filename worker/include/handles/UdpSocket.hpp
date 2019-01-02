@@ -35,7 +35,7 @@ public:
 	void Send(const std::string& data, const std::string& ip, uint16_t port);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
-	const std::string& GetLocalIP() const;
+	const std::string& GetLocalIp() const;
 	uint16_t GetLocalPort() const;
 	size_t GetRecvBytes() const;
 	size_t GetSentBytes() const;
@@ -63,7 +63,7 @@ private:
 
 protected:
 	struct sockaddr_storage localAddr;
-	std::string localIP;
+	std::string localIp;
 	uint16_t localPort{ 0 };
 };
 
@@ -89,9 +89,9 @@ inline int UdpSocket::GetLocalFamily() const
 	return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
 }
 
-inline const std::string& UdpSocket::GetLocalIP() const
+inline const std::string& UdpSocket::GetLocalIp() const
 {
-	return this->localIP;
+	return this->localIp;
 }
 
 inline uint16_t UdpSocket::GetLocalPort() const

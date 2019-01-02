@@ -211,9 +211,9 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT:
 			{
-				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
+				static const Json::StaticString JsonStringRemoteIp{ "remoteIp" };
 				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
-				static const Json::StaticString JsonStringLocalIP{ "localIP" };
+				static const Json::StaticString JsonStringLocalIp{ "localIp" };
 				static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
 				static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
 
@@ -232,14 +232,14 @@ namespace RTC
 
 				RTC::PlainRtpTransport::Options options;
 
-				if (request->data[JsonStringRemoteIP].isString())
-					options.remoteIP = request->data[JsonStringRemoteIP].asString();
+				if (request->data[JsonStringRemoteIp].isString())
+					options.remoteIp = request->data[JsonStringRemoteIp].asString();
 
 				if (request->data[JsonStringRemotePort].isUInt())
 					options.remotePort = request->data[JsonStringRemotePort].asUInt();
 
-				if (request->data[JsonStringLocalIP].isString())
-					options.localIP = request->data[JsonStringLocalIP].asString();
+				if (request->data[JsonStringLocalIp].isString())
+					options.localIp = request->data[JsonStringLocalIp].asString();
 
 				if (request->data[JsonStringPreferIPv4].isBool())
 					options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
@@ -695,7 +695,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_SET_REMOTE_PARAMETERS:
 			{
-				static const Json::StaticString JsonStringIP{ "ip" };
+				static const Json::StaticString JsonStringIp{ "ip" };
 				static const Json::StaticString JsonStringPort{ "port" };
 
 				RTC::Transport* transport;
@@ -711,7 +711,7 @@ namespace RTC
 					return;
 				}
 
-				if (!request->data[JsonStringIP].isString())
+				if (!request->data[JsonStringIp].isString())
 				{
 					request->Reject("missing data.ip");
 
@@ -725,7 +725,7 @@ namespace RTC
 					return;
 				}
 
-				auto ip   = std::string{ request->data[JsonStringIP].asString() };
+				auto ip   = std::string{ request->data[JsonStringIp].asString() };
 				auto port = uint32_t{ request->data[JsonStringPort].asUInt() };
 
 				try
@@ -813,103 +813,6 @@ namespace RTC
 				data[JsonStringPassword]         = password;
 
 				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::Request::MethodId::TRANSPORT_START_MIRRORING:
-			{
-				static const Json::StaticString JsonStringRemoteIP{ "remoteIP" };
-				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
-				static const Json::StaticString JsonStringLocalIP{ "localIP" };
-				static const Json::StaticString JsonStringSendRtp{ "sendRtp" };
-				static const Json::StaticString JsonStringSendRtcp{ "sendRtcp" };
-				static const Json::StaticString JsonStringRecvRtp{ "recvRtp" };
-				static const Json::StaticString JsonStringRecvRtcp{ "recvRtcp" };
-
-				RTC::Transport* transport;
-
-				try
-				{
-					transport = GetTransportFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				RTC::Transport::MirroringOptions options;
-
-				if (!request->data[JsonStringRemoteIP].isString())
-				{
-					request->Reject("missing remoteIP");
-
-					return;
-				}
-
-				options.remoteIP = request->data[JsonStringRemoteIP].asString();
-
-				if (!request->data[JsonStringRemotePort].isUInt())
-				{
-					request->Reject("missing remotePort");
-
-					return;
-				}
-
-				options.remotePort = request->data[JsonStringRemotePort].asUInt();
-
-				if (request->data[JsonStringLocalIP].isString())
-					options.localIP = request->data[JsonStringLocalIP].asString();
-
-				if (request->data[JsonStringSendRtp].isBool())
-					options.sendRtp = request->data[JsonStringSendRtp].asBool();
-				if (request->data[JsonStringSendRtcp].isBool())
-					options.sendRtcp = request->data[JsonStringSendRtcp].asBool();
-				if (request->data[JsonStringRecvRtp].isBool())
-					options.recvRtp = request->data[JsonStringRecvRtp].asBool();
-				if (request->data[JsonStringRecvRtcp].isBool())
-					options.recvRtcp = request->data[JsonStringRecvRtcp].asBool();
-
-				try
-				{
-					transport->StartMirroring(options);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				MS_DEBUG_DEV("Transport mirroring started [transportId:%" PRIu32 "]", transport->transportId);
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::Request::MethodId::TRANSPORT_STOP_MIRRORING:
-			{
-				RTC::Transport* transport;
-
-				try
-				{
-					transport = GetTransportFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
-
-				transport->StopMirroring();
-
-				MS_DEBUG_DEV("Transport mirroring stopped [transportId:%" PRIu32 "]", transport->transportId);
-
-				request->Accept();
 
 				break;
 			}

@@ -22,7 +22,7 @@ public:
 	virtual void Dump() const;
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
-	const std::string& GetLocalIP() const;
+	const std::string& GetLocalIp() const;
 	uint16_t GetLocalPort() const;
 	size_t GetNumConnections() const;
 
@@ -52,7 +52,7 @@ private:
 
 protected:
 	struct sockaddr_storage localAddr;
-	std::string localIP;
+	std::string localIp;
 	uint16_t localPort{ 0 };
 };
 
@@ -73,9 +73,9 @@ inline int TcpServer::GetLocalFamily() const
 	return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
 }
 
-inline const std::string& TcpServer::GetLocalIP() const
+inline const std::string& TcpServer::GetLocalIp() const
 {
-	return this->localIP;
+	return this->localIp;
 }
 
 inline uint16_t TcpServer::GetLocalPort() const

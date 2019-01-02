@@ -45,26 +45,12 @@ namespace RTC
 		// RTP header extension ids that must be shared by all the Producers using
 		// the same Transport.
 		// NOTE: These ids are the original ids in the RTP packet (before the Producer
-		// maps them to the corresponding ids in the room).
+		// maps them to the corresponding ids in the Router).
 		struct HeaderExtensionIds
 		{
 			uint8_t absSendTime{ 0 }; // 0 means no abs-send-time id.
 			uint8_t mid{ 0 };         // 0 means no MID id.
 			uint8_t rid{ 0 };         // 0 means no RID id.
-		};
-
-	public:
-		// Mirroring options.
-		// Determines which incoming traffic to mirror and where.
-		struct MirroringOptions
-		{
-			std::string remoteIP;
-			uint16_t remotePort;
-			std::string localIP;
-			bool sendRtp{ true };
-			bool sendRtcp{ true };
-			bool recvRtp{ true };
-			bool recvRtcp{ true };
 		};
 
 	public:
