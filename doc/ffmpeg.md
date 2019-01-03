@@ -68,22 +68,19 @@ Let's assume that we want to read an mp3 file (located in the mediasoup server) 
 ```js
 const transport = await router.createPlainTransport(
   { 
-    ip      : '127.0.0.1',
-    rtcpMux : false
-    rtpPort  : 2000, 
-    rtcpPort : 2001
+    ip       : '127.0.0.1',
+    rtcpMux  : false
   });
 
 // Read transport local RTP and RTCP ports.
-const rtpPort = transport.localRtpPort; // => For example 3301.
-const rtcpPort = transport.localRtpPort; // => For example 4502.
+const rtpPort = transport.tuple.localPort; // => For example 3301.
+const rtcpPort = transport.rtcpTuple.localPort; // => For example 4502.
 
 // Provide ffmpeg IP/ports.
 transport.connect(
   {
     ip       : '127.0.0.1',
-    rtcpMux  : false,
-    rtpPort  : 2000, 
+    port     : 2000, 
     rtcpPort : 2001
   });
 ```

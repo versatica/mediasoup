@@ -14,7 +14,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Router::Router(const std::string& routerId) : routerId(routerId)
+	Router::Router(const std::string& id) : id(id)
 	{
 		MS_TRACE();
 	}
@@ -57,7 +57,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRouterId{ "routerId" };
+		static const Json::StaticString JsonStringRouterId{ "id" };
 		static const Json::StaticString JsonStringTransports{ "transports" };
 		static const Json::StaticString JsonStringProducers{ "producers" };
 		static const Json::StaticString JsonStringConsumers{ "consumers" };
@@ -71,8 +71,8 @@ namespace RTC
 		Json::Value jsonMapProducerConsumers(Json::objectValue);
 		Json::Value jsonMapConsumerProducer(Json::objectValue);
 
-		// Add routerId.
-		json[JsonStringRouterId] = Json::UInt{ this->routerId };
+		// Add id.
+		json[JsonStringRouterId] = Json::UInt{ this->id };
 
 		// Add transports.
 		for (auto& kv : this->transports)

@@ -21,7 +21,7 @@ namespace RTC
 		};
 
 	public:
-		PlainRtpTransport(RTC::Transport::Listener* listener, uint32_t transportId, Options& options);
+		PlainRtpTransport(uint32_t id, RTC::Transport::Listener* listener, Options& options);
 
 	private:
 		~PlainRtpTransport();
@@ -34,7 +34,7 @@ namespace RTC
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 
 	private:
-		void CreateSocket(int addressFamily, const std::string& localIp);
+		void CreateSocket(const std::string& localIp);
 		bool IsConnected() const override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 

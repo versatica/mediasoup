@@ -6,7 +6,6 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -18,8 +17,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(Listener* listener, uint32_t transportId)
-	  : transportId(transportId), listener(listener)
+	Transport::Transport(uint32_t id, Listener* listener)
+	  : id(id), listener(listener)
 	{
 		MS_TRACE();
 
@@ -67,9 +66,6 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnTransportClosed(this);
-
-		// Notify.
-		this->notifier->Emit(this->transportId, "close");
 	}
 
 	void Transport::HandleProducer(RTC::Producer* producer)

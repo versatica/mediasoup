@@ -5,7 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
-#include "Settings.hpp"
 #include "Utils.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
@@ -15,26 +14,20 @@ namespace RTC
 	/* Instance methods. */
 
 	PlainRtpTransport::PlainRtpTransport(
-	  RTC::Transport::Listener* listener, uint32_t transportId, Options& options)
-	  : RTC::Transport::Transport(listener, transportId)
+	  uint32_t id, RTC::Transport::Listener* listener, Options& options)
+	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
 
 		// Remote IP address is provided.
 		if (!options.remoteIp.empty())
 		{
-			int addressFamily = Utils::IP::GetFamily(options.remoteIp);
-
-			if (addressFamily == AF_INET)
-				CreateSocket(AF_INET, options.localIp);
-			else if (addressFamily == AF_INET6)
-				CreateSocket(AF_INET6, options.localIp);
-			else
-				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIp.c_str());
-
-			// This may throw.
 			try
 			{
+				// This may throw.
+				CreateSocket(options.localIp);
+
+				// This may throw.
 				SetRemoteParameters(options.remoteIp, options.remotePort);
 			}
 			catch (const MediaSoupError& error)
@@ -42,7 +35,7 @@ namespace RTC
 				// Close UdpSocket since ~PlainRtpTransport() will not be called.
 				delete this->udpSocket;
 
-				throw;
+				throw error;
 			}
 		}
 		// No remote IP address is provided.
@@ -96,7 +89,7 @@ namespace RTC
 		//   - .remotePort
 		//   - .protocol
 
-		static const Json::StaticString JsonStringTransportId{ "transportId" };
+		static const Json::StaticString JsonStringTransportId{ "id" };
 		static const Json::StaticString JsonStringTuple{ "tuple" };
 		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
 		static const Json::StaticString JsonStringLocalIp{ "localIp" };
@@ -104,8 +97,8 @@ namespace RTC
 
 		Json::Value json(Json::objectValue);
 
-		// Add transportId.
-		json[JsonStringTransportId] = Json::UInt{ this->transportId };
+		// Add id.
+		json[JsonStringTransportId] = Json::UInt{ this->id };
 
 		// Add tuple.
 		if (this->tuple != nullptr)
@@ -208,12 +201,9 @@ namespace RTC
 		this->tuple->Send(data, len);
 	}
 
-	void PlainRtpTransport::CreateSocket(int addressFamily, const std::string& localIp)
+	void PlainRtpTransport::CreateSocket(const std::string& localIp)
 	{
-		if (localIp.empty())
-			this->udpSocket = new RTC::UdpSocket(this, addressFamily);
-		else
-			this->udpSocket = new RTC::UdpSocket(this, localIp);
+		this->udpSocket = new RTC::UdpSocket(this, localIp);
 	}
 
 	bool PlainRtpTransport::IsConnected() const

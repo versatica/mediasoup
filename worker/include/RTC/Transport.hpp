@@ -52,7 +52,7 @@ namespace RTC
 		};
 
 	public:
-		Transport(Listener* listener, uint32_t transportId);
+		Transport(uint32_t id, Listener* listener);
 		virtual ~Transport();
 
 	public:
@@ -105,7 +105,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		uint32_t transportId{ 0 };
+		uint32_t id{ 0 };
 
 	protected:
 		// Passed by argument.

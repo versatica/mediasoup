@@ -40,8 +40,8 @@ namespace RTC
 	/* Instance methods. */
 
 	WebRtcTransport::WebRtcTransport(
-	  RTC::Transport::Listener* listener, uint32_t transportId, Options& options)
-	  : RTC::Transport::Transport(listener, transportId)
+	  uint32_t id, RTC::Transport::Listener* listener, Options& options)
+	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
 
@@ -220,15 +220,18 @@ namespace RTC
 		MS_TRACE();
 
 		// Add id.
-		jsonObject["id"] = this->transportId;
+		jsonObject["id"] = this->id;
 
 		// Add iceRole (we are always "controlled").
 		jsonObject["iceRole"] = "controlled";
 
 		// Add iceLocalParameters.
-		jsonObject["iceLocalParameters"]["usernameFragment"] = this->iceServer->GetUsernameFragment();
-		jsonObject["iceLocalParameters"]["password"]         = this->iceServer->GetPassword();
-		jsonObject["iceLite"]                                = true;
+		jsonObject["iceLocalParameters"] = json::object();
+		auto jsonIceLocalParametersIt    = jsonObject.find("iceLocalParameters");
+
+		(*jsonIceLocalParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
+		(*jsonIceLocalParametersIt)["password"]         = this->iceServer->GetPassword();
+		(*jsonIceLocalParametersIt)["iceLite"]          = true;
 
 		// Add iceLocalCandidates.
 		jsonObject["iceLocalCandidates"] = json::array();
@@ -243,10 +246,6 @@ namespace RTC
 
 			iceCandidate.FillJson(jsonEntry);
 		}
-
-		// Add iceSelectedTuple.
-		if (this->selectedTuple != nullptr)
-			this->selectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 
 		// Add iceState.
 		switch (this->iceServer->GetState())
@@ -264,6 +263,10 @@ namespace RTC
 				jsonObject["iceState"] = "disconnected";
 				break;
 		}
+
+		// Add iceSelectedTuple.
+		if (this->selectedTuple != nullptr)
+			this->selectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 
 		// Add dtlsLocalParameters.
 		jsonObject["dtlsLocalParameters"] = json::object();
@@ -351,7 +354,7 @@ namespace RTC
 		jsonObject["timestamp"] = DepLibUV::GetTime();
 
 		// Add id.
-		jsonObject["id"] = this->transportId;
+		jsonObject["id"] = this->id;
 
 		// Add iceConnectionState.
 		switch (this->iceServer->GetState())
@@ -428,7 +431,7 @@ namespace RTC
 		}
 	}
 
-	RTC::DtlsTransport::Role WebRtcTransport::SetRemoteDtlsParameters(
+	RTC::DtlsTransport::Role WebRtcTransport::Connect(
 	  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role)
 	{
 		MS_TRACE();
@@ -477,7 +480,7 @@ namespace RTC
 			MayRunDtlsTransport();
 
 			MS_DEBUG_DEV(
-			  "Transport remote DTLS parameters set [transportId:%" PRIu32 "]", this->transportId);
+			  "Transport remote DTLS parameters set [id:%" PRIu32 "]", this->id);
 		}
 
 		return this->dtlsLocalRole;
@@ -497,14 +500,16 @@ namespace RTC
 		MS_DEBUG_TAG(rbe, "Transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
 	}
 
-	void WebRtcTransport::ChangeUfragPwd(std::string& usernameFragment, std::string& password)
+	// TODO: No, the new ICE username and password must be decided by this method.
+	// TODO: This must return the new local RTCIceParameters, including iceLite: true.
+	void WebRtcTransport::RestartIce(std::string& usernameFragment, std::string& password)
 	{
 		MS_TRACE();
 
 		this->iceServer->SetUsernameFragment(usernameFragment);
 		this->iceServer->SetPassword(password);
 
-		MS_DEBUG_DEV("Transport ICE ufrag&pwd changed [transportId:%" PRIu32 "]", this->transportId);
+		MS_DEBUG_DEV("Transport ICE ufrag&pwd changed [id:%" PRIu32 "]", this->id);
 	}
 
 	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -958,7 +963,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceSelectedTuple] = tuple->ToJson();
-		Channel::Notifier::Emit(this->transportId, "iceselectedtuplechange", eventData);
+		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", eventData);
 	}
 
 	void WebRtcTransport::OnIceConnected(const RTC::IceServer* /*iceServer*/)
@@ -974,7 +979,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceState] = JsonStringConnected;
-		Channel::Notifier::Emit(this->transportId, "icestatechange", eventData);
+		Channel::Notifier::Emit(this->id, "icestatechange", eventData);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -993,7 +998,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceState] = JsonStringCompleted;
-		Channel::Notifier::Emit(this->transportId, "icestatechange", eventData);
+		Channel::Notifier::Emit(this->id, "icestatechange", eventData);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1015,7 +1020,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringIceState] = JsonStringDisconnected;
-		Channel::Notifier::Emit(this->transportId, "icestatechange", eventData);
+		Channel::Notifier::Emit(this->id, "icestatechange", eventData);
 	}
 
 	void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1031,7 +1036,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringConnecting;
-		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
 	}
 
 	void WebRtcTransport::OnDtlsConnected(
@@ -1091,7 +1096,7 @@ namespace RTC
 		// Notify.
 		eventData[JsonStringDtlsState]      = JsonStringConnected;
 		eventData[JsonStringDtlsRemoteCert] = remoteCert;
-		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
 
 		// Iterate all the Consumers and request key frame.
 		for (auto* consumer : this->consumers)
@@ -1116,7 +1121,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringFailed;
-		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
 		Close();
@@ -1135,7 +1140,7 @@ namespace RTC
 
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringClosed;
-		Channel::Notifier::Emit(this->transportId, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
 
 		// This is a fatal error so close the transport.
 		Close();

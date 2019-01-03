@@ -34,7 +34,7 @@ namespace RTC
 		};
 
 	public:
-		WebRtcTransport(RTC::Transport::Listener* listener, uint32_t transportId, Options& options);
+		WebRtcTransport(uint32_t id, RTC::Transport::Listener* listener, Options& options);
 		~WebRtcTransport() override;
 
 	public:

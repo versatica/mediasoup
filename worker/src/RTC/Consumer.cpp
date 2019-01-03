@@ -21,8 +21,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Consumer::Consumer(uint32_t consumerId, RTC::Media::Kind kind, uint32_t sourceProducerId)
-	  : consumerId(consumerId), kind(kind), sourceProducerId(sourceProducerId)
+	Consumer::Consumer(std::string& id, Listener* listener, RTC::Media::Kind kind, RTC::RtpParameters& rtpParameters)
+	  : id(id), listener(listener), kind(kind), rtpParameters(rtpParameters)
 	{
 		MS_TRACE();
 
@@ -45,32 +45,32 @@ namespace RTC
 			listener->OnConsumerClosed(this);
 		}
 
-		Channel::Notifier::Emit(this->consumerId, "close");
+		Channel::Notifier::Emit(this->id, "close");
 	}
 
 	Json::Value Consumer::ToJson() const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringConsumerId{ "consumerId" };
+		static const Json::StaticString JsonStringConsumerId{ "id" };
 		static const Json::StaticString JsonStringKind{ "kind" };
-		static const Json::StaticString JsonStringSourceProducerId{ "sourceProducerId" };
+		static const Json::StaticString JsonStringProducerId{ "producerId" };
 		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
 		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
 		static const Json::StaticString JsonStringEnabled{ "enabled" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
-		static const Json::StaticString JsonStringSourcePaused{ "sourcePaused" };
+		static const Json::StaticString JsonStringProducerPaused{ "producerPaused" };
 		static const Json::StaticString JsonStringPreferredProfile{ "preferredProfile" };
 		static const Json::StaticString JsonStringEffectiveProfile{ "effectiveProfile" };
 		static const Json::StaticString JsonStringLossPercentage{ "lossPercentage" };
 
 		Json::Value json(Json::objectValue);
 
-		json[JsonStringConsumerId] = Json::UInt{ this->consumerId };
+		json[JsonStringConsumerId] = Json::UInt{ this->id };
 
 		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
 
-		json[JsonStringSourceProducerId] = Json::UInt{ this->sourceProducerId };
+		json[JsonStringProducerId] = Json::UInt{ this->producerId };
 
 		if (this->transport != nullptr)
 			json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
@@ -83,7 +83,7 @@ namespace RTC
 
 		json[JsonStringPaused] = this->paused;
 
-		json[JsonStringSourcePaused] = this->sourcePaused;
+		json[JsonStringProducerPaused] = this->producerPaused;
 
 		json[JsonStringPreferredProfile] =
 		  RTC::RtpEncodingParameters::profile2String[GetPreferredProfile()];
@@ -158,7 +158,7 @@ namespace RTC
 		// Create RtpStreamSend instance.
 		CreateRtpStream(this->rtpParameters.encodings[0]);
 
-		MS_DEBUG_DEV("Consumer enabled [consumerId:%" PRIu32 "]", this->consumerId);
+		MS_DEBUG_DEV("Consumer enabled [id:%" PRIu32 "]", this->id);
 	}
 
 	void Consumer::Pause()
@@ -170,9 +170,9 @@ namespace RTC
 
 		this->paused = true;
 
-		MS_DEBUG_DEV("Consumer paused [consumerId:%" PRIu32 "]", this->consumerId);
+		MS_DEBUG_DEV("Consumer paused [id:%" PRIu32 "]", this->id);
 
-		if (IsEnabled() && !this->sourcePaused)
+		if (IsEnabled() && !this->producerPaused)
 		{
 			this->rtpMonitor->Reset();
 			this->rtpStream->ClearRetransmissionBuffer();
@@ -192,9 +192,9 @@ namespace RTC
 
 		this->paused = false;
 
-		MS_DEBUG_DEV("Consumer resumed [consumerId:%" PRIu32 "]", this->consumerId);
+		MS_DEBUG_DEV("Consumer resumed [id:%" PRIu32 "]", this->id);
 
-		if (IsEnabled() && !this->sourcePaused)
+		if (IsEnabled() && !this->producerPaused)
 		{
 			// We need to sync and wait for a key frame. Otherwise the receiver will
 			// request lot of NACKs due to unknown RTP packets.
@@ -204,18 +204,18 @@ namespace RTC
 		}
 	}
 
-	void Consumer::SourcePause()
+	void Consumer::ProducerPaused()
 	{
 		MS_TRACE();
 
-		if (this->sourcePaused)
+		if (this->producerPaused)
 			return;
 
-		this->sourcePaused = true;
+		this->producerPaused = true;
 
-		MS_DEBUG_DEV("Consumer source paused [consumerId:%" PRIu32 "]", this->consumerId);
+		MS_DEBUG_DEV("Producer paused [id:%" PRIu32 "]", this->id);
 
-		Channel::Notifier::Emit(this->consumerId, "sourcepaused");
+		Channel::Notifier::Emit(this->id, "producerpaused");
 
 		if (IsEnabled() && !this->paused)
 		{
@@ -228,23 +228,23 @@ namespace RTC
 		}
 	}
 
-	void Consumer::SourceResume()
+	void Consumer::ProducerResumed()
 	{
 		MS_TRACE();
 
-		if (!this->sourcePaused)
+		if (!this->producerPaused)
 			return;
 
-		this->sourcePaused = false;
+		this->producerPaused = false;
 
-		MS_DEBUG_DEV("Consumer source resumed [consumerId:%" PRIu32 "]", this->consumerId);
+		MS_DEBUG_DEV("Producer resumed [id:%" PRIu32 "]", this->id);
 
-		Channel::Notifier::Emit(this->consumerId, "sourceresumed");
+		Channel::Notifier::Emit(this->id, "producerresumed");
 
 		if (IsEnabled() && !this->paused)
 		{
-			// We need to sync. However we don't need to request a key frame since the source
-			// (Producer) already requested it.
+			// We need to sync. However we don't need to request a key frame since the
+			// Producer already requested it.
 			this->syncRequired = true;
 		}
 	}
@@ -328,23 +328,6 @@ namespace RTC
 		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
 
 		RecalculateTargetProfile(true /*force*/);
-	}
-
-	void Consumer::SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile)
-	{
-		MS_TRACE();
-
-		if (this->sourcePreferredProfile == profile)
-			return;
-
-		this->sourcePreferredProfile = profile;
-
-		MS_DEBUG_TAG(
-		  rtp,
-		  "source preferred profile set [profile:%s]",
-		  RTC::RtpEncodingParameters::profile2String[profile].c_str());
-
-		RecalculateTargetProfile();
 	}
 
 	void Consumer::SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences)
@@ -1026,7 +1009,7 @@ namespace RTC
 		// Notify.
 		eventData[JsonStringProfile] = RTC::RtpEncodingParameters::profile2String[this->effectiveProfile];
 
-		Channel::Notifier::Emit(this->consumerId, "effectiveprofilechange", eventData);
+		Channel::Notifier::Emit(this->id, "effectiveprofilechange", eventData);
 	}
 
 	void Consumer::SendProbation(RTC::RtpPacket* packet)

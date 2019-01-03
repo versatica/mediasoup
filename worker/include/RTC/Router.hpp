@@ -20,7 +20,7 @@ namespace RTC
 	class Router : public RTC::Transport::Listener
 	{
 	public:
-		Router(const std::string& routerId);
+		Router(const std::string& id);
 		virtual ~Router();
 
 	public:
@@ -57,7 +57,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string routerId;
+		std::string id;
 
 	private:
 		// Others.

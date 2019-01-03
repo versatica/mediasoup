@@ -65,8 +65,8 @@ namespace RTC
 
 	public:
 		Producer(
+			std::string& id,
 			Listener* listener,
-		  uint32_t producerId,
 		  RTC::Media::Kind kind,
 		  RTC::RtpParameters& rtpParameters,
 		  struct RtpMapping& rtpMapping);
@@ -110,8 +110,8 @@ namespace RTC
 
 	public:
 		// Passed by argument.
+		std::string id{ 0 };
 		Listener* listener{ nullptr };
-		uint32_t producerId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:

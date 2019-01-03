@@ -37,8 +37,8 @@ namespace RTC
 
 	public:
 		Consumer(
+			std::string& id,
 			Listener* listener,
-			std::string& consumerId,
 			RTC::Media::Kind kind,
 			RTC::RtpParameters& rtpParameters);
 		virtual ~Consumer();
@@ -84,8 +84,8 @@ namespace RTC
 
 	public:
 		// Passed by argument.
+		std::string id{ 0 };
 		Listener* listener{ nullptr };
-		std::string consumerId{ 0 };
 		RTC::Media::Kind kind;
 
 	private:
@@ -112,9 +112,6 @@ namespace RTC
 		// RTP profiles.
 		// std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
 		// RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		// RTC::RtpEncodingParameters::Profile sourcePreferredProfile{
-		// 	RTC::RtpEncodingParameters::Profile::DEFAULT
-		// };
 		// RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
 		// RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
 		// RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
