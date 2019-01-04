@@ -22,7 +22,7 @@ namespace Channel
 		{ "transport.dump",                    Request::MethodId::TRANSPORT_DUMP                       },
 		{ "transport.connect",                 Request::MethodId::TRANSPORT_CONNECT                    },
 		{ "transport.getStats",                Request::MethodId::TRANSPORT_GET_STATS                  },
-		{ "transport.setMaxBitrate",           Request::MethodId::TRANSPORT_SET_MAX_BITRATE            },
+		{ "transport.setReceiveMaxBitrate",    Request::MethodId::TRANSPORT_SET_RECEIVE_MAX_BITRATE    },
 		{ "transport.restartIce",              Request::MethodId::TRANSPORT_RESTART_ICE                },
 		{ "transport.produce",                 Request::MethodId::TRANSPORT_PRODUCE                    },
 		{ "transport.consume",                 Request::MethodId::TRANSPORT_CONSUME                    },
