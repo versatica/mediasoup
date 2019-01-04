@@ -11,7 +11,7 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void onErrorClose(uv_handle_t* handle)
+static inline void onClose(uv_handle_t* handle)
 {
 	delete handle;
 }
@@ -48,7 +48,7 @@ namespace RTC
 			  reinterpret_cast<struct sockaddr_in*>(&RTC::TcpServer::sockaddrStorageIPv4));
 
 			if (err != 0)
-				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
+				MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
 		}
 
 		if (!Settings::configuration.rtcIPv6.empty())
@@ -59,7 +59,7 @@ namespace RTC
 			  reinterpret_cast<struct sockaddr_in6*>(&RTC::TcpServer::sockaddrStorageIPv6));
 
 			if (err != 0)
-				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
+				MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
 		}
 
 		TcpServer::minPort = Settings::configuration.rtcMinPort;
@@ -189,7 +189,7 @@ namespace RTC
 				  iteratingPort,
 				  uv_strerror(err));
 
-				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onErrorClose));
+				uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 
 				// If bind() fails due to "too many open files" stop here.
 				if (err == UV_EMFILE)

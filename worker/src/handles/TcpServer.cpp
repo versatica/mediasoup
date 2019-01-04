@@ -51,7 +51,7 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 
 			if (err != 0)
-				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
+				MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
 
 			break;
 		}
@@ -62,7 +62,7 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
 			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 
 			if (err != 0)
-				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
+				MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
 
 			// Don't also bind into IPv4 when listening in IPv6.
 			flags |= UV_TCP_IPV6ONLY;

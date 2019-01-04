@@ -3,6 +3,7 @@
 
 #include "Utils.hpp"
 #include "Logger.hpp"
+#include "MediaSoupError.hpp"
 #include <uv.h>
 
 namespace Utils
@@ -112,5 +113,66 @@ namespace Utils
 
 		*family = addr->sa_family;
 		ip.assign(ipBuffer);
+	}
+
+	void IP::NormalizeIp(std::string& ip)
+	{
+		static sockaddr_storage addrStorage;
+		char ipBuffer[INET6_ADDRSTRLEN+1];
+		int err;
+
+		switch (IP::GetFamily(ip))
+		{
+			case AF_INET:
+			{
+				err = uv_ip4_addr(
+				  ip.c_str(),
+				  0,
+				  reinterpret_cast<struct sockaddr_in*>(&addrStorage));
+
+				if (err != 0)
+					MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+
+				err = uv_ip4_name(
+					(const struct sockaddr_in*)&addrStorage,
+					ipBuffer,
+					INET6_ADDRSTRLEN+1);
+
+				if (err != 0)
+					MS_ABORT("uv_ipv4_name() failed: %s", uv_strerror(err));
+
+				ip.assign(ipBuffer);
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				err = uv_ip6_addr(
+					ip.c_str(),
+					0,
+				  reinterpret_cast<struct sockaddr_in6*>(&addrStorage));
+
+				if (err != 0)
+					MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+
+				err = uv_ip6_name(
+					(const struct sockaddr_in6*)&addrStorage,
+					ipBuffer,
+					INET6_ADDRSTRLEN+1);
+
+				if (err != 0)
+					MS_ABORT("uv_ip6_name() failed: %s", uv_strerror(err));
+
+				ip.assign(ipBuffer);
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_ERROR("invalid ip '%s'", ip.c_str());
+			}
+		}
 	}
 }

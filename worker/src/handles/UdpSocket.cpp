@@ -75,7 +75,7 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 
 			if (err != 0)
-				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
+				MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
 
 			break;
 		}
@@ -86,7 +86,7 @@ UdpSocket::UdpSocket(const std::string& ip, uint16_t port)
 			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 
 			if (err != 0)
-				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
+				MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
 
 			// Don't also bind into IPv4 when listening in IPv6.
 			flags |= UV_UDP_IPV6ONLY;
@@ -290,7 +290,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&addr));
 
 			if (err != 0)
-				MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
+				MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
 
 			break;
 		}
@@ -301,7 +301,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uin
 			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&addr));
 
 			if (err != 0)
-				MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
+				MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
 
 			break;
 		}

@@ -35,6 +35,7 @@
       # 'src/RTC/IceServer.cpp',
       # 'src/RTC/NackGenerator.cpp',
       # 'src/RTC/PlainRtpTransport.cpp',
+      'src/RTC/PortManager.cpp',
       # 'src/RTC/Producer.cpp',
       # 'src/RTC/Router.cpp',
       # 'src/RTC/RtpListener.cpp',
@@ -123,6 +124,7 @@
       # 'include/RTC/NackGenerator.hpp',
       # 'include/RTC/Parameters.hpp',
       # 'include/RTC/PlainRtpTransport.hpp',
+      'include/RTC/PortManager.hpp',
       # 'include/RTC/Producer.hpp',
       # 'include/RTC/Router.hpp',
       # 'include/RTC/RtpDictionaries.hpp',
@@ -233,14 +235,14 @@
       }],
 
       [ 'OS != "win"', {
-        'cflags': [ '-std=c++11', '-Wall', '-Wextra', '-Wno-unused-parameter' ]
+        'cflags': [ '-std=c++14', '-Wall', '-Wextra', '-Wno-unused-parameter' ]
       }],
 
       [ 'OS == "mac"', {
         'xcode_settings':
         {
           'WARNING_CFLAGS': [ '-Wall', '-Wextra', '-Wno-unused-parameter' ],
-          'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++11' ]
+          'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++14' ]
         }
       }]
     ]
@@ -262,33 +264,35 @@
       [
         # C++ source files.
         'test/src/tests.cpp',
-        'test/src/RTC/TestRtpStreamSend.cpp',
-        'test/src/RTC/TestNackGenerator.cpp',
-        'test/src/RTC/TestRtpPacket.cpp',
-        'test/src/RTC/TestRtpDataCounter.cpp',
-        'test/src/RTC/TestRtpMonitor.cpp',
-        'test/src/RTC/TestRtpStreamRecv.cpp',
-        'test/src/RTC/TestSeqManager.cpp',
-        'test/src/RTC/Codecs/TestVP8.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsLei.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsPli.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsRemb.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsRpsi.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsSli.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsTst.cpp',
-        'test/src/RTC/RTCP/TestFeedbackPsVbcm.cpp',
-        'test/src/RTC/RTCP/TestFeedbackRtpEcn.cpp',
-        'test/src/RTC/RTCP/TestFeedbackRtpNack.cpp',
-        'test/src/RTC/RTCP/TestFeedbackRtpSrReq.cpp',
-        'test/src/RTC/RTCP/TestFeedbackRtpTllei.cpp',
-        'test/src/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
-        'test/src/RTC/RTCP/TestBye.cpp',
-        'test/src/RTC/RTCP/TestReceiverReport.cpp',
-        'test/src/RTC/RTCP/TestSdes.cpp',
-        'test/src/RTC/RTCP/TestSenderReport.cpp',
-        'test/src/RTC/RTCP/TestPacket.cpp',
+        # 'test/src/RTC/TestRtpStreamSend.cpp',
+        # 'test/src/RTC/TestNackGenerator.cpp',
+        # 'test/src/RTC/TestRtpPacket.cpp',
+        # 'test/src/RTC/TestRtpDataCounter.cpp',
+        # 'test/src/RTC/TestRtpMonitor.cpp',
+        # 'test/src/RTC/TestRtpStreamRecv.cpp',
+        # 'test/src/RTC/TestSeqManager.cpp',
+        # 'test/src/RTC/Codecs/TestVP8.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsLei.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsPli.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsRemb.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsRpsi.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsSli.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsTst.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackPsVbcm.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackRtpEcn.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackRtpNack.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackRtpSrReq.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackRtpTllei.cpp',
+        # 'test/src/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
+        # 'test/src/RTC/RTCP/TestBye.cpp',
+        # 'test/src/RTC/RTCP/TestReceiverReport.cpp',
+        # 'test/src/RTC/RTCP/TestSdes.cpp',
+        # 'test/src/RTC/RTCP/TestSenderReport.cpp',
+        # 'test/src/RTC/RTCP/TestPacket.cpp',
+        'test/src/Utils/TestIP.cpp',
+        'test/src/Utils/TestString.cpp',
         # C++ include files.
         'test/include/catch.hpp',
         'test/include/helpers.hpp'

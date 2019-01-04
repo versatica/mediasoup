@@ -47,7 +47,7 @@ namespace RTC
 			  reinterpret_cast<struct sockaddr_in*>(&RTC::UdpSocket::sockaddrStorageIPv4));
 
 			if (err != 0)
-				MS_THROW_ERROR("uv_ipv4_addr() failed: %s", uv_strerror(err));
+				MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
 		}
 
 		if (Settings::configuration.hasIPv6)
@@ -58,7 +58,7 @@ namespace RTC
 			  reinterpret_cast<struct sockaddr_in6*>(&RTC::UdpSocket::sockaddrStorageIPv6));
 
 			if (err != 0)
-				MS_THROW_ERROR("uv_ipv6_addr() failed: %s", uv_strerror(err));
+				MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
 		}
 
 		UdpSocket::minPort = Settings::configuration.rtcMinPort;

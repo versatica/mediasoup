@@ -16,6 +16,7 @@ namespace Utils
 		static void GetAddressInfo(const struct sockaddr* addr, int* family, std::string& ip, uint16_t* port);
 		static bool CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2);
 		static struct sockaddr_storage CopyAddress(const struct sockaddr* addr);
+		static void NormalizeIp(std::string& ip);
 	};
 
 	/* Inline static methods. */

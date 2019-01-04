@@ -140,8 +140,9 @@ namespace RTC
 				  ip.c_str(),
 				  static_cast<int>(port),
 				  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
+
 				if (err != 0)
-					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
+					MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
 
 				break;
 			}
@@ -155,8 +156,9 @@ namespace RTC
 				  ip.c_str(),
 				  static_cast<int>(port),
 				  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
+
 				if (err != 0)
-					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
+					MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
 
 				break;
 			}
