@@ -7,8 +7,8 @@
 #include "MediaSoupError.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-
-#include <utility>
+#include <utility> // std::piecewise_construct
+#include <tuple> // std:make_tuple()
 
 /* Static methods for UV callbacks. */
 
@@ -65,16 +65,40 @@ namespace RTC
 			{
 				// If the IP is already handled, return its ports vector.
 				if (PortManager::udpBindings.find(ip) != PortManager::udpBindings.end())
-					return PortManager::udpBindings[ip];
+					return PortManager::udpBindings.at(ip);
 
 				// Otherwise add an entry in the map.
-				// PortManager::udpBindings.emplace(
-				// 	std::make_pair<std::string, std::vector<bool>>(ip, 10, false));
 
-				PortManager::udpBindings.emplace(
-					std::piecewise_construct, std::make_tuple(ip), std::make_tuple(10, false));
+				size_t numPorts =
+					Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
 
-				// return pair.second;
+				// Emplace a new vector of bools filled with numPorts false values,
+				// meaning that all ports are unused.
+				auto pair = PortManager::udpBindings.emplace(
+					std::piecewise_construct, std::make_tuple(ip), std::make_tuple(numPorts, false));
+
+				// pair.first is an iterator to the inserted value.
+				return pair.first->second;
+			}
+
+			case Transport::TCP:
+			{
+				// If the IP is already handled, return its ports vector.
+				if (PortManager::tcpBindings.find(ip) != PortManager::tcpBindings.end())
+					return PortManager::tcpBindings.at(ip);
+
+				// Otherwise add an entry in the map.
+
+				size_t numPorts =
+					Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
+
+				// Emplace a new vector of bools filled with numPorts false values,
+				// meaning that all ports are unused.
+				auto pair = PortManager::tcpBindings.emplace(
+					std::piecewise_construct, std::make_tuple(ip), std::make_tuple(numPorts, false));
+
+				// pair.first is an iterator to the inserted value.
+				return pair.first->second;
 			}
 		}
 	}
