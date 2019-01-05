@@ -74,14 +74,14 @@ void Worker::FillJson(json& jsonObject) const
 
 	// Add routerIds.
 	jsonObject["routerIds"] = json::array();
-	auto jsonRoutersIt      = jsonObject.find("routerIds");
+	auto jsonRouterIdsIt    = jsonObject.find("routerIds");
 
 	// TODO
 	// for (auto& kv : this->routers)
 	// {
 	// 	auto& routerId = kv.first;
 
-	// 	jsonRoutersIt->emplace_back(routerId);
+	// 	jsonRouterIdsIt->emplace_back(routerId);
 	// }
 }
 
@@ -123,7 +123,8 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 {
 	MS_TRACE();
 
-	MS_DEBUG_DEV("'%s' request", request->method.c_str());
+	MS_DEBUG_DEV(
+		"Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
 
 	switch (request->methodId)
 	{
@@ -221,8 +222,6 @@ void Worker::OnChannelRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
-	// When mediasoup Node process ends it sends a SIGTERM to us so we close this
-	// pipe and then exit.
 	// If the pipe is remotely closed it means that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("channel remotely closed, closing myself");

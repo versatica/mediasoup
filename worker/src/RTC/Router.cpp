@@ -53,82 +53,53 @@ namespace RTC
 		}
 	}
 
-	Json::Value Router::ToJson() const
+	void Router::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringRouterId{ "id" };
-		static const Json::StaticString JsonStringTransports{ "transports" };
-		static const Json::StaticString JsonStringProducers{ "producers" };
-		static const Json::StaticString JsonStringConsumers{ "consumers" };
-		static const Json::StaticString JsonStringMapProducerConsumers{ "mapProducerConsumers" };
-		static const Json::StaticString JsonStringMapConsumerProducer{ "mapConsumerProducer" };
-
-		Json::Value json(Json::objectValue);
-		Json::Value jsonTransports(Json::arrayValue);
-		Json::Value jsonProducers(Json::arrayValue);
-		Json::Value jsonConsumers(Json::arrayValue);
-		Json::Value jsonMapProducerConsumers(Json::objectValue);
-		Json::Value jsonMapConsumerProducer(Json::objectValue);
-
 		// Add id.
-		json[JsonStringRouterId] = Json::UInt{ this->id };
+		jsonObject["id"] = this->id;
 
-		// Add transports.
+		// Add transportIds.
+		jsonObject["transportIds"] = json::array();
+		auto jsonTransportIdsIt    = jsonObject.find("transportIds");
+
 		for (auto& kv : this->transports)
 		{
-			auto* transport = kv.second;
+			auto& transportId = kv.first;
 
-			jsonTransports.append(transport->ToJson());
+			jsonTransportIdsIt->emplace_back(transportId);
 		}
-		json[JsonStringTransports] = jsonTransports;
-
-		// Add producers.
-		for (auto& kv : this->producers)
-		{
-			auto* producer = kv.second;
-
-			jsonProducers.append(producer->ToJson());
-		}
-		json[JsonStringProducers] = jsonProducers;
-
-		// Add consumers.
-		for (auto& kv : this->consumers)
-		{
-			auto* consumer = kv.second;
-
-			jsonConsumers.append(consumer->ToJson());
-		}
-		json[JsonStringConsumers] = jsonConsumers;
 
 		// Add mapProducerConsumers.
+		jsonObject["mapProducerConsumers"] = json::object();
+		auto jsonMapProducerConsumersIt    = jsonObject.find("mapProducerConsumers");
+
 		for (auto& kv : this->mapProducerConsumers)
 		{
 			auto* producer  = kv.first;
 			auto& consumers = kv.second;
-			Json::Value jsonProducers(Json::arrayValue);
+
+			(*jsonMapProducerConsumersIt)[producer.id] = json::array();
+			auto jsonProducerIdIt = jsonMapProducerConsumersIt->find(producer.id);
 
 			for (auto* consumer : consumers)
 			{
-				jsonProducers.append(std::to_string(consumer->consumerId));
+				jsonProducerIdIt->emplace_back(consumer.id)
 			}
-
-			jsonMapProducerConsumers[std::to_string(producer->producerId)] = jsonProducers;
 		}
-		json[JsonStringMapProducerConsumers] = jsonMapProducerConsumers;
 
 		// Add mapConsumerProducer.
+		jsonObject["mapConsumerProducer"] = json::object();
+		auto jsonMapConsumerProducerIt    = jsonObject.find("mapConsumerProducer");
+
 		for (auto& kv : this->mapConsumerProducer)
 		{
 			auto* consumer = kv.first;
 			auto* producer = kv.second;
 
-			jsonMapConsumerProducer[std::to_string(consumer->consumerId)] =
-			  std::to_string(producer->producerId);
+			(*jsonMapConsumerProducerIt)[consumer.id] = producer.id;
 		}
-		json[JsonStringMapConsumerProducer] = jsonMapConsumerProducer;
-
-		return json;
 	}
 
 	void Router::HandleRequest(Channel::Request* request)
@@ -139,9 +110,11 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::ROUTER_DUMP:
 			{
-				auto json = ToJson();
+				json data = json::object();
 
-				request->Accept(json);
+				FillJson(data);
+
+				request->Accept(data);
 
 				break;
 			}
