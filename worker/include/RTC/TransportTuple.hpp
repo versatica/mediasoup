@@ -6,7 +6,6 @@
 #include "Utils.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
-#include <json/json.h>
 
 namespace RTC
 {
