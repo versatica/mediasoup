@@ -37,8 +37,6 @@ public:
 	explicit TcpConnection(size_t bufferSize);
 	TcpConnection& operator=(const TcpConnection&) = delete;
 	TcpConnection(const TcpConnection&)            = delete;
-
-protected:
 	virtual ~TcpConnection();
 
 public:

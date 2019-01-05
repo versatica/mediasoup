@@ -3,14 +3,13 @@
 
 #include "common.hpp"
 #include "handles/TcpConnection.hpp"
-#include <uv.h>
 #include <string>
 #include <unordered_set>
+#include <uv.h>
 
 class TcpServer : public TcpConnection::Listener
 {
 public:
-	TcpServer(const std::string& ip, uint16_t port, int backlog);
 	/**
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */

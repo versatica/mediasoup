@@ -108,7 +108,7 @@ namespace RTC
 		jsonObject["codecs"] = json::array();
 		auto jsonCodecsIt    = jsonObject.find("codecs");
 
-		for (auto i = 0; i < this->codecs.size(); ++i)
+		for (size_t i = 0; i < this->codecs.size(); ++i)
 		{
 			jsonCodecsIt->emplace_back(json::value_t::object);
 
@@ -122,7 +122,7 @@ namespace RTC
 		jsonObject["encodings"] = json::array();
 		auto jsonEncodingsIt    = jsonObject.find("encodings");
 
-		for (auto i = 0; i < this->encodings.size(); ++i)
+		for (size_t i = 0; i < this->encodings.size(); ++i)
 		{
 			jsonEncodingsIt->emplace_back(json::value_t::object);
 
@@ -136,12 +136,12 @@ namespace RTC
 		jsonObject["headerExtensions"] = json::array();
 		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
-		for (auto i = 0; i < this->headerExtensions.size(); ++i)
+		for (size_t i = 0; i < this->headerExtensions.size(); ++i)
 		{
 			jsonHeaderExtensionsIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry        = (*jsonHeaderExtensionsIt)[i];
-			auto& headerExtensions = this->headerExtensionss[i];
+			auto& jsonEntry       = (*jsonHeaderExtensionsIt)[i];
+			auto& headerExtension = this->headerExtensions[i];
 
 			headerExtension.FillJson(jsonEntry);
 		}

@@ -31,7 +31,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpEncodingParameters::RtpEncodingParameters(Json::Value& data)
+	RtpEncodingParameters::RtpEncodingParameters(json& data)
 	{
 		MS_TRACE();
 
@@ -44,7 +44,6 @@ namespace RTC
 		auto jsonRtxIt              = data.find("rtx");
 		auto jsonMaxBitrateIt       = data.find("maxBitrate");
 		auto jsonMaxFramerateIt     = data.find("maxFramerate");
-		auto jsonActiveIt           = data.find("active");
 		auto jsonActiveIt           = data.find("active");
 		auto jsonSpatialLayerIt     = data.find("spatialLayer");
 

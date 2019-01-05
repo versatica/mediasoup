@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::PortManager"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/PortManager.hpp"
 #include "DepLibUV.hpp"

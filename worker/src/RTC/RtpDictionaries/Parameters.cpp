@@ -51,34 +51,34 @@ namespace RTC
 		for (json::iterator it = data.begin(); it != data.end(); ++it)
 		{
 			std::string key = it.key();
-			auto& value = = it.value();
+			auto& value = it.value();
 
 			switch (value.type())
 			{
 				case json::value_t::boolean:
 				{
-					this->mapKeyValues[key] = value.get<bool>();
+					this->mapKeyValues[key] = Value(value.get<bool>());
 
 					break;
 				}
 
 				case json::value_t::number_integer:
 				{
-					this->mapKeyValues[key] = value.get<int32_t>();
+					this->mapKeyValues[key] = Value(value.get<int32_t>());
 
 					break;
 				}
 
 				case json::value_t::number_float:
 				{
-					this->mapKeyValues[key] = value.get<double>();
+					this->mapKeyValues[key] = Value(value.get<double>());
 
 					break;
 				}
 
 				case json::value_t::string:
 				{
-					this->mapKeyValues[key] = value.get<std::string>();
+					this->mapKeyValues[key] = Value(value.get<std::string>());
 
 					break;
 				}
@@ -101,7 +101,7 @@ namespace RTC
 					}
 
 					if (!arrayOfIntegers.empty() && isValid)
-						this->mapKeyValues[key] = arrayOfIntegers;
+						this->mapKeyValues[key] = Value(arrayOfIntegers);
 
 					break;
 				}

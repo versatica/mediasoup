@@ -94,7 +94,7 @@ namespace RTC
 		jsonObject["rtcpFeedback"] = json::array();
 		auto jsonRtcpFeedbackIt    = jsonObject.find("rtcpFeedback");
 
-		for (auto i = 0; i < this->rtcpFeedback.size(); ++i)
+		for (size_t i = 0; i < this->rtcpFeedback.size(); ++i)
 		{
 			jsonRtcpFeedbackIt->emplace_back(json::value_t::object);
 

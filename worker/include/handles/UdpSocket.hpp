@@ -2,8 +2,8 @@
 #define MS_UDP_SOCKET_HPP
 
 #include "common.hpp"
-#include <uv.h>
 #include <string>
+#include <uv.h>
 
 class UdpSocket
 {
@@ -17,11 +17,10 @@ public:
 	};
 
 public:
-	UdpSocket(const std::string& ip, uint16_t port);
 	/**
 	 * uvHandle must be an already initialized and binded uv_udp_t pointer.
 	 */
-	explicit UdpSocket(uv_udp_t* uvHandle);
+	UdpSocket(uv_udp_t* uvHandle);
 	UdpSocket& operator=(const UdpSocket&) = delete;
 	UdpSocket(const UdpSocket&)            = delete;
 	virtual ~UdpSocket();

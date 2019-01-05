@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "handles/TcpServer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
@@ -20,95 +19,6 @@ inline static void onClose(uv_handle_t* handle)
 }
 
 /* Instance methods. */
-
-TcpServer::TcpServer(const std::string& ip, uint16_t port, int backlog)
-{
-	MS_TRACE();
-
-	int err;
-	int flags = 0;
-
-	this->uvHandle       = new uv_tcp_t;
-	this->uvHandle->data = (void*)this;
-
-	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
-
-	if (err != 0)
-	{
-		delete this->uvHandle;
-		this->uvHandle = nullptr;
-
-		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
-	}
-
-	struct sockaddr_storage bindAddr;
-
-	switch (Utils::IP::GetFamily(ip))
-	{
-		case AF_INET:
-		{
-			err = uv_ip4_addr(
-			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&bindAddr));
-
-			if (err != 0)
-				MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
-
-			break;
-		}
-
-		case AF_INET6:
-		{
-			err = uv_ip6_addr(
-			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
-
-			if (err != 0)
-				MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
-
-			// Don't also bind into IPv4 when listening in IPv6.
-			flags |= UV_TCP_IPV6ONLY;
-
-			break;
-		}
-
-		default:
-		{
-			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
-
-			MS_THROW_ERROR("invalid binding IP '%s'", ip.c_str());
-
-			break;
-		}
-	}
-
-	err = uv_tcp_bind(this->uvHandle, reinterpret_cast<const struct sockaddr*>(&bindAddr), flags);
-
-	if (err != 0)
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
-
-		MS_THROW_ERROR("uv_tcp_bind() failed: %s", uv_strerror(err));
-	}
-
-	err = uv_listen(
-	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  backlog,
-	  static_cast<uv_connection_cb>(onConnection));
-
-	if (err != 0)
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
-
-		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
-	}
-
-	// Set local address.
-	if (!SetLocalAddress())
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
-
-		MS_THROW_ERROR("error setting local IP and port");
-	}
-}
 
 TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
 {

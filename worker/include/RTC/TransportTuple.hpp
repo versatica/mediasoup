@@ -7,6 +7,8 @@
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 
+using json = nlohmann::json;
+
 namespace RTC
 {
 	class TransportTuple
