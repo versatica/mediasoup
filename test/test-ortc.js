@@ -336,7 +336,7 @@ test('assertCapabilitiesSubset() throws UnsupportedError if non compatible codec
 		.toThrow(UnsupportedError);
 });
 
-test('translateProducerRtpParameters() succeeds', () =>
+test('getProducerRtpParametersMapping() succeeds', () =>
 {
 	const mediaCodecs =
 	[
@@ -410,54 +410,8 @@ test('translateProducerRtpParameters() succeeds', () =>
 		}
 	};
 
-	const {
-		translatedRtpParameters,
-		mapping
-	} = ortc.translateProducerRtpParameters(rtpParameters, routerRtpCapabilities);
-
-	expect(translatedRtpParameters.codecs.length).toBe(2);
-	expect(translatedRtpParameters.codecs[0].name).toBe('H264');
-	expect(translatedRtpParameters.codecs[0].mimeType).toBe('video/H264');
-	expect(translatedRtpParameters.codecs[0].clockRate).toBe(90000);
-	expect(translatedRtpParameters.codecs[0].payloadType).toBe(101);
-	expect(translatedRtpParameters.codecs[0].parameters).toEqual(
-		{
-			foo                  : 1234,
-			'packetization-mode' : 1
-		});
-
-	expect(translatedRtpParameters.codecs[1].name).toBe('rtx');
-	expect(translatedRtpParameters.codecs[1].mimeType).toBe('video/rtx');
-	expect(translatedRtpParameters.codecs[1].clockRate).toBe(90000);
-	expect(translatedRtpParameters.codecs[1].payloadType).toBe(102);
-	expect(translatedRtpParameters.codecs[1].parameters).toEqual({ apt: 101 });
-
-	expect(translatedRtpParameters.headerExtensions).toEqual(
-		[
-			{
-				uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				id  : 5
-			}
-		]);
-
-	expect(translatedRtpParameters.encodings.length).toBe(3);
-
-	// Read dynamically generated SSRCs.
-	const translatedSsrc1 = translatedRtpParameters.encodings[0].ssrc;
-	const translatedRtxSsrc1 = translatedRtpParameters.encodings[0].rtx.ssrc;
-	const translatedSsrc2 = translatedRtpParameters.encodings[1].ssrc;
-	const translatedRtxSsrc2 = translatedRtpParameters.encodings[1].rtx.ssrc;
-	const translatedSsrc3 = translatedRtpParameters.encodings[2].ssrc;
-	const translatedRtxSsrc3 = translatedRtpParameters.encodings[2].rtx.ssrc;
-
-	expect(translatedSsrc1).toBeType('number');
-	expect(translatedRtxSsrc1).toBeType('number');
-	expect(translatedSsrc2).toBeType('number');
-	expect(translatedRtxSsrc2).toBeType('number');
-	expect(translatedSsrc3).toBeType('number');
-	expect(translatedRtxSsrc3).toBeType('number');
-
-	expect(translatedRtpParameters.rtcp).toEqual({ cname: 'qwerty1234' });
+	const mapping =
+		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
 
 	expect(mapping.codecs).toEqual(
 		[
@@ -470,29 +424,24 @@ test('translateProducerRtpParameters() succeeds', () =>
 			{ id: 1, mappedId: 5 }
 		]);
 
-	expect(mapping.encodings).toEqual(
-		[
-			{
-				ssrc          : 11111111,
-				rtxSsrc       : 11111112,
-				mappedSsrc    : translatedSsrc1,
-				mappedRtxSsrc : translatedRtxSsrc1
-			},
-			{
-				ssrc          : 21111111,
-				rtxSsrc       : 21111112,
-				mappedSsrc    : translatedSsrc2,
-				mappedRtxSsrc : translatedRtxSsrc2
-			},
-			{
-				rid           : 'high',
-				mappedSsrc    : translatedSsrc3,
-				mappedRtxSsrc : translatedRtxSsrc3
-			}
-		]);
+	expect(mapping.encodings[0].ssrc).toBe(11111111);
+	expect(mapping.encodings[0].rtxSsrc).toBe(11111112);
+	expect(mapping.encodings[0].rid).toBe(undefined);
+	expect(mapping.encodings[0].mappedSsrc).toBeType('number');
+	expect(mapping.encodings[0].mappedRtxSsrc).toBeType('number');
+	expect(mapping.encodings[1].ssrc).toBe(21111111);
+	expect(mapping.encodings[1].rtxSsrc).toBe(21111112);
+	expect(mapping.encodings[1].rid).toBe(undefined);
+	expect(mapping.encodings[1].mappedSsrc).toBeType('number');
+	expect(mapping.encodings[1].mappedRtxSsrc).toBeType('number');
+	expect(mapping.encodings[2].ssrc).toBe(undefined);
+	expect(mapping.encodings[2].rtxSsrc).toBe(undefined);
+	expect(mapping.encodings[2].rid).toBe('high');
+	expect(mapping.encodings[2].mappedSsrc).toBeType('number');
+	expect(mapping.encodings[2].mappedRtxSsrc).toBeType('number');
 });
 
-test('translateProducerRtpParameters() throws UnsupportedError if non compatible params', () =>
+test('getProducerRtpParametersMapping() throws UnsupportedError if non compatible params', () =>
 {
 	const mediaCodecs =
 	[
@@ -544,6 +493,6 @@ test('translateProducerRtpParameters() throws UnsupportedError if non compatible
 	};
 
 	expect(
-		() => ortc.translateProducerRtpParameters(rtpParameters, routerRtpCapabilities))
+		() => ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities))
 		.toThrow(UnsupportedError);
 });
