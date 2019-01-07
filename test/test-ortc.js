@@ -200,7 +200,7 @@ test('generateRouterRtpCapabilities() with too many codecs throws', () =>
 		.toThrow('cannot allocate');
 });
 
-test('assertCapabilitiesSubset() succeeds', () =>
+test('assertCapabilities() succeeds', () =>
 {
 	const mediaCodecs =
 	[
@@ -258,11 +258,11 @@ test('assertCapabilitiesSubset() succeeds', () =>
 		]
 	};
 
-	expect(ortc.assertCapabilitiesSubset(deviceRtpCapabilities, routerRtpCapabilities))
+	expect(ortc.assertCapabilities(deviceRtpCapabilities, routerRtpCapabilities))
 		.toBe(undefined);
 });
 
-test('assertCapabilitiesSubset() throws UnsupportedError if non compatible codecs', () =>
+test('assertCapabilities() throws UnsupportedError if non compatible codecs', () =>
 {
 	const mediaCodecs =
 	[
@@ -309,8 +309,7 @@ test('assertCapabilitiesSubset() throws UnsupportedError if non compatible codec
 		]
 	};
 
-	expect(
-		() => ortc.assertCapabilitiesSubset(deviceRtpCapabilities, routerRtpCapabilities))
+	expect(() => ortc.assertCapabilities(deviceRtpCapabilities, routerRtpCapabilities))
 		.toThrow(UnsupportedError);
 
 	deviceRtpCapabilities =
@@ -331,8 +330,7 @@ test('assertCapabilitiesSubset() throws UnsupportedError if non compatible codec
 		]
 	};
 
-	expect(
-		() => ortc.assertCapabilitiesSubset(deviceRtpCapabilities, routerRtpCapabilities))
+	expect(() => ortc.assertCapabilities(deviceRtpCapabilities, routerRtpCapabilities))
 		.toThrow(UnsupportedError);
 });
 
