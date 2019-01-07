@@ -923,7 +923,7 @@ namespace RTC
 		if (read <= 0)
 			return;
 
-		MS_DEBUG_DEV("%ld bytes of DTLS data ready to sent to the peer", read);
+		MS_DEBUG_DEV("%" PRIu64 " bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
 		this->listener->OnOutgoingDtlsData(
@@ -943,16 +943,21 @@ namespace RTC
 		  "invalid DTLS state");
 
 		int64_t ret;
-		struct timeval dtlsTimeout;
+		struct timeval dtlsTimeout
+		{
+			0, 0
+		};
 		uint64_t timeoutMs;
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
 		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtlsTimeout); // NOLINT
+
 		if (ret == 0)
 			return true;
 
 		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
+
 		if (timeoutMs == 0)
 		{
 			return true;
@@ -1305,9 +1310,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->handshakeDone)
+		{
+			MS_DEBUG_DEV("handshake is done, so Done so return");
+
+			return;
+		}
+
+		// Tell OpenSSL to write data to be retransmitted into the BIO mem.
+		// https://commondatastorage.googleapis.com/chromium-boringssl-docs/ssl.h.html#DTLSv1_handle_timeout
 		DTLSv1_handle_timeout(this->ssl);
+
 		// If required, send DTLS data.
 		SendPendingOutgoingDtlsData();
+
 		// Set the DTLS timer again.
 		SetTimeout();
 	}
