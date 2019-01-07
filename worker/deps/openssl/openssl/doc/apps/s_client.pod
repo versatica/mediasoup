@@ -281,9 +281,8 @@ be used as a test that session caching is working.
 
 =item B<-showcerts>
 
-Displays the server certificate list as sent by the server: it only consists of
-certificates the server has sent (in the order the server has sent them). It is
-B<not> a verified chain.
+display the whole server certificate chain: normally only the server
+certificate itself is displayed.
 
 =item B<-prexit>
 
@@ -580,8 +579,7 @@ a client certificate. Therefor merely including a client certificate
 on the command line is no guarantee that the certificate works.
 
 If there are problems verifying a server certificate then the
-B<-showcerts> option can be used to show all the certificates sent by the
-server.
+B<-showcerts> option can be used to show the whole chain.
 
 The B<s_client> utility is a test tool and is designed to continue the
 handshake after any certificate verification errors. As a result it will
@@ -611,7 +609,7 @@ The -no_alt_chains options was first added to OpenSSL 1.1.0.
 
 =head1 COPYRIGHT
 
-Copyright 2000-2018 The OpenSSL Project Authors. All Rights Reserved.
+Copyright 2000-2016 The OpenSSL Project Authors. All Rights Reserved.
 
 Licensed under the OpenSSL license (the "License").  You may not use
 this file except in compliance with the License.  You can obtain a copy

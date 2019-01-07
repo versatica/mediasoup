@@ -60,4 +60,3 @@ Conceptually the state machine component is designed as follows:
   | Non core functions common   | | Non core functions common to  |
   | to both servers and clients | | both DTLS servers and clients |
   |_____________________________| |_______________________________|
-

@@ -56,4 +56,3 @@ sub yes {
     close PIPE;
     return 0;
 }
-

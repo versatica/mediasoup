@@ -1,5 +1,5 @@
 /*
- * Copyright 1998-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1998-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -16,26 +16,27 @@
 #include <openssl/objects.h>
 #include <openssl/safestack.h>
 #include <openssl/e_os2.h>
-#include "internal/thread_once.h"
-#include "internal/lhash.h"
+#include <internal/thread_once.h>
 #include "obj_lcl.h"
-#include "e_os.h"
 
 /*
  * We define this wrapper for two reasons. Firstly, later versions of
  * DEC C add linkage information to certain functions, which makes it
  * tricky to use them as values to regular function pointers.
- * Secondly, in the EDK2 build environment, the strcasecmp function is
- * actually an external function with the Microsoft ABI, so we can't
- * transparently assign function pointers to it.
+ * Secondly, in the EDK2 build environment, the strcmp function is
+ * actually an external function (AsciiStrCmp) with the Microsoft ABI,
+ * so we can't transparently assign function pointers to it.
+ * Arguably the latter is a stupidity of the UEFI environment, but
+ * since the wrapper solves the DEC C issue too, let's just use the
+ * same solution.
  */
 #if defined(OPENSSL_SYS_VMS_DECC) || defined(OPENSSL_SYS_UEFI)
-static int obj_strcasecmp(const char *a, const char *b)
+static int obj_strcmp(const char *a, const char *b)
 {
-    return strcasecmp(a, b);
+    return strcmp(a, b);
 }
 #else
-#define obj_strcasecmp strcasecmp
+#define obj_strcmp strcmp
 #endif
 
 /*
@@ -110,8 +111,8 @@ int OBJ_NAME_new_index(unsigned long (*hash_func) (const char *),
             ret = 0;
             goto out;
         }
-        name_funcs->hash_func = openssl_lh_strcasehash;
-        name_funcs->cmp_func = obj_strcasecmp;
+        name_funcs->hash_func = OPENSSL_LH_strhash;
+        name_funcs->cmp_func = obj_strcmp;
         CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_DISABLE);
 
         push = sk_NAME_FUNCS_push(name_funcs_stack, name_funcs);
@@ -148,7 +149,7 @@ static int obj_name_cmp(const OBJ_NAME *a, const OBJ_NAME *b)
             ret = sk_NAME_FUNCS_value(name_funcs_stack,
                                       a->type)->cmp_func(a->name, b->name);
         } else
-            ret = strcasecmp(a->name, b->name);
+            ret = strcmp(a->name, b->name);
     }
     return ret;
 }
@@ -163,7 +164,7 @@ static unsigned long obj_name_hash(const OBJ_NAME *a)
             sk_NAME_FUNCS_value(name_funcs_stack,
                                 a->type)->hash_func(a->name);
     } else {
-        ret = openssl_lh_strcasehash(a->name);
+        ret = OPENSSL_LH_strhash(a->name);
     }
     ret ^= a->type;
     return ret;
@@ -201,7 +202,7 @@ const char *OBJ_NAME_get(const char *name, int type)
         }
     }
 
-    CRYPTO_THREAD_unlock(lock);    
+    CRYPTO_THREAD_unlock(lock);
     return value;
 }
 
@@ -211,7 +212,9 @@ int OBJ_NAME_add(const char *name, int type, const char *data)
     int alias, ok = 0;
 
     if (!OBJ_NAME_init())
-        return 0;    
+        return 0;
+
+    CRYPTO_THREAD_write_lock(lock);
 
     alias = type & OBJ_NAME_ALIAS;
     type &= ~OBJ_NAME_ALIAS;
@@ -226,8 +229,6 @@ int OBJ_NAME_add(const char *name, int type, const char *data)
     onp->alias = alias;
     onp->type = type;
     onp->data = data;
-
-    CRYPTO_THREAD_write_lock(lock);
 
     ret = lh_OBJ_NAME_insert(names_lh, onp);
     if (ret != NULL) {

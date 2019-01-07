@@ -148,4 +148,3 @@ int (*EVP_CIPHER_meth_get_ctrl(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *,
 {
     return cipher->ctrl;
 }
-

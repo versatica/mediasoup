@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -67,16 +67,12 @@ void OPENSSL_showfatal(const char *fmta, ...);
 extern int OPENSSL_NONPIC_relocated;
 void crypto_cleanup_all_ex_data_int(void);
 
-char *ossl_safe_getenv(const char *name);
-
 int openssl_strerror_r(int errnum, char *buf, size_t buflen);
 # if !defined(OPENSSL_NO_STDIO)
 FILE *openssl_fopen(const char *filename, const char *mode);
 # else
 void *openssl_fopen(const char *filename, const char *mode);
 # endif
-
-unsigned long OPENSSL_rdtsc(void);
 
 #ifdef  __cplusplus
 }

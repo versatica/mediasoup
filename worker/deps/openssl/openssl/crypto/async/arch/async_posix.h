@@ -17,8 +17,7 @@
 
 # include <unistd.h>
 
-# if _POSIX_VERSION >= 200112L \
-     && (_POSIX_VERSION < 200809L || defined(__GLIBC__))
+# if _POSIX_VERSION >= 200112L
 
 # include <pthread.h>
 

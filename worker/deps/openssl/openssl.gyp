@@ -1,4 +1,7 @@
 {
+  'variables': {
+    'openssl_no_asm%': 0,
+  },
   'targets': [
     {
       'target_name': 'openssl',

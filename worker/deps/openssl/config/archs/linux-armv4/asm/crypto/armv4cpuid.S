@@ -104,7 +104,7 @@ CRYPTO_memcmp:
 
 	ldmia	sp!,{r4,r5}
 .Lno_data:
-	rsb	r0,ip,#0
+	neg	r0,ip
 	mov	r0,r0,lsr#31
 #if __ARM_ARCH__>=5
 	bx	lr

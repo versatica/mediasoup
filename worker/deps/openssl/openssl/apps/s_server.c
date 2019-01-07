@@ -2012,7 +2012,9 @@ static int sv_body(int s, int stype, unsigned char *context)
     SSL *con = NULL;
     BIO *sbio;
     struct timeval timeout;
-#if !(defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS))
+#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
+    struct timeval tv;
+#else
     struct timeval *timeoutp;
 #endif
 
@@ -2147,23 +2149,26 @@ static int sv_body(int s, int stype, unsigned char *context)
              * second and check for any keypress. In a proper Windows
              * application we wouldn't do this because it is inefficient.
              */
-            timeout.tv_sec = 1;
-            timeout.tv_usec = 0;
-            i = select(width, (void *)&readfds, NULL, NULL, &timeout);
+            tv.tv_sec = 1;
+            tv.tv_usec = 0;
+            i = select(width, (void *)&readfds, NULL, NULL, &tv);
             if (has_stdin_waiting())
                 read_from_terminal = 1;
             if ((i < 0) || (!i && !read_from_terminal))
                 continue;
 #else
-            if (SSL_is_dtls(con) && DTLSv1_get_timeout(con, &timeout))
+            if ((SSL_version(con) == DTLS1_VERSION) &&
+                DTLSv1_get_timeout(con, &timeout))
                 timeoutp = &timeout;
             else
                 timeoutp = NULL;
 
             i = select(width, (void *)&readfds, NULL, NULL, timeoutp);
 
-            if ((SSL_is_dtls(con)) && DTLSv1_handle_timeout(con) > 0)
+            if ((SSL_version(con) == DTLS1_VERSION)
+                && DTLSv1_handle_timeout(con) > 0) {
                 BIO_printf(bio_err, "TIMEOUT occurred\n");
+            }
 
             if (i <= 0)
                 continue;
@@ -2660,10 +2665,8 @@ static int www_body(int s, int stype, unsigned char *context)
 
     if (context
         && !SSL_set_session_id_context(con, context,
-                                       strlen((char *)context))) {
-        SSL_free(con);
+                                       strlen((char *)context)))
         goto err;
-    }
 
     sbio = BIO_new_socket(s, BIO_NOCLOSE);
     if (s_nbio_test) {
@@ -2675,7 +2678,7 @@ static int www_body(int s, int stype, unsigned char *context)
     SSL_set_bio(con, sbio, sbio);
     SSL_set_accept_state(con);
 
-    /* No need to free |con| after this. Done by BIO_free(ssl_bio) */
+    /* SSL_set_fd(con,s); */
     BIO_set_ssl(ssl_bio, con, BIO_CLOSE);
     BIO_push(io, ssl_bio);
 #ifdef CHARSET_EBCDIC
@@ -3032,7 +3035,6 @@ static int rev_body(int s, int stype, unsigned char *context)
     if (context
         && !SSL_set_session_id_context(con, context,
                                        strlen((char *)context))) {
-        SSL_free(con);
         ERR_print_errors(bio_err);
         goto err;
     }
@@ -3041,7 +3043,6 @@ static int rev_body(int s, int stype, unsigned char *context)
     SSL_set_bio(con, sbio, sbio);
     SSL_set_accept_state(con);
 
-    /* No need to free |con| after this. Done by BIO_free(ssl_bio) */
     BIO_set_ssl(ssl_bio, con, BIO_CLOSE);
     BIO_push(io, ssl_bio);
 #ifdef CHARSET_EBCDIC

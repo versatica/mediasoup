@@ -1,5 +1,5 @@
 /*
- * Copyright 2001-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2001-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -67,8 +67,7 @@ const EC_METHOD *EC_GFp_simple_method(void)
         ec_key_simple_generate_public_key,
         0, /* keycopy */
         0, /* keyfinish */
-        ecdh_simple_compute_key,
-        ec_GFp_simple_blind_coordinates
+        ecdh_simple_compute_key
     };
 
     return &ret;
@@ -353,7 +352,6 @@ int ec_GFp_simple_point_copy(EC_POINT *dest, const EC_POINT *src)
     if (!BN_copy(dest->Z, src->Z))
         return 0;
     dest->Z_is_one = src->Z_is_one;
-    dest->curve_name = src->curve_name;
 
     return 1;
 }
@@ -1368,57 +1366,4 @@ int ec_GFp_simple_field_sqr(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a,
                             BN_CTX *ctx)
 {
     return BN_mod_sqr(r, a, group->field, ctx);
-}
-
-/*-
- * Apply randomization of EC point projective coordinates:
- *
- *   (X, Y ,Z ) = (lambda^2*X, lambda^3*Y, lambda*Z)
- *   lambda = [1,group->field)
- *
- */
-int ec_GFp_simple_blind_coordinates(const EC_GROUP *group, EC_POINT *p,
-                                    BN_CTX *ctx)
-{
-    int ret = 0;
-    BIGNUM *lambda = NULL;
-    BIGNUM *temp = NULL;
-
-    BN_CTX_start(ctx);
-    lambda = BN_CTX_get(ctx);
-    temp = BN_CTX_get(ctx);
-    if (temp == NULL) {
-        ECerr(EC_F_EC_GFP_SIMPLE_BLIND_COORDINATES, ERR_R_MALLOC_FAILURE);
-        goto err;
-    }
-
-    /* make sure lambda is not zero */
-    do {
-        if (!BN_rand_range(lambda, group->field)) {
-            ECerr(EC_F_EC_GFP_SIMPLE_BLIND_COORDINATES, ERR_R_BN_LIB);
-            goto err;
-        }
-    } while (BN_is_zero(lambda));
-
-    /* if field_encode defined convert between representations */
-    if (group->meth->field_encode != NULL
-        && !group->meth->field_encode(group, lambda, lambda, ctx))
-        goto err;
-    if (!group->meth->field_mul(group, p->Z, p->Z, lambda, ctx))
-        goto err;
-    if (!group->meth->field_sqr(group, temp, lambda, ctx))
-        goto err;
-    if (!group->meth->field_mul(group, p->X, p->X, temp, ctx))
-        goto err;
-    if (!group->meth->field_mul(group, temp, temp, lambda, ctx))
-        goto err;
-    if (!group->meth->field_mul(group, p->Y, p->Y, temp, ctx))
-        goto err;
-    p->Z_is_one = 0;
-
-    ret = 1;
-
- err:
-     BN_CTX_end(ctx);
-     return ret;
 }

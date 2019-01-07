@@ -6,7 +6,7 @@ use Config;
 # we expect for the platform
 use File::Spec::Functions qw(:DEFAULT rel2abs);
 
-if (!$ENV{CONFIGURE_INSIST} && rel2abs('.') !~ m|\\|) {
+if (rel2abs('.') !~ m|\\|) {
     die <<EOF;
 
 ******************************************************************************

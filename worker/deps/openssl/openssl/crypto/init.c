@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2016-2017 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -27,28 +27,11 @@
 
 static int stopped = 0;
 
-/*
- * Since per-thread-specific-data destructors are not universally
- * available, i.e. not on Windows, only below CRYPTO_THREAD_LOCAL key
- * is assumed to have destructor associated. And then an effort is made
- * to call this single destructor on non-pthread platform[s].
- *
- * Initial value is "impossible". It is used as guard value to shortcut
- * destructor for threads terminating before libcrypto is initialized or
- * after it's de-initialized. Access to the key doesn't have to be
- * serialized for the said threads, because they didn't use libcrypto
- * and it doesn't matter if they pick "impossible" or derefernce real
- * key value and pull NULL past initialization in the first thread that
- * intends to use libcrypto.
- */
-static union {
-    long sane;
-    CRYPTO_THREAD_LOCAL value;
-} destructor_key = { -1 };
-
 static void ossl_init_thread_stop(struct thread_local_inits_st *locals);
 
-static void ossl_init_thread_destructor(void *local)
+static CRYPTO_THREAD_LOCAL threadstopkey;
+
+static void ossl_init_thread_stop_wrap(void *local)
 {
     ossl_init_thread_stop((struct thread_local_inits_st *)local);
 }
@@ -56,17 +39,17 @@ static void ossl_init_thread_destructor(void *local)
 static struct thread_local_inits_st *ossl_init_get_thread_local(int alloc)
 {
     struct thread_local_inits_st *local =
-        CRYPTO_THREAD_get_local(&destructor_key.value);
+        CRYPTO_THREAD_get_local(&threadstopkey);
 
-    if (alloc) {
-        if (local == NULL
-            && (local = OPENSSL_zalloc(sizeof(*local))) != NULL
-            && !CRYPTO_THREAD_set_local(&destructor_key.value, local)) {
+    if (local == NULL && alloc) {
+        local = OPENSSL_zalloc(sizeof(*local));
+        if (local != NULL && !CRYPTO_THREAD_set_local(&threadstopkey, local)) {
             OPENSSL_free(local);
             return NULL;
         }
-    } else {
-        CRYPTO_THREAD_set_local(&destructor_key.value, NULL);
+    }
+    if (!alloc) {
+        CRYPTO_THREAD_set_local(&threadstopkey, NULL);
     }
 
     return local;
@@ -85,42 +68,29 @@ static CRYPTO_ONCE base = CRYPTO_ONCE_STATIC_INIT;
 static int base_inited = 0;
 DEFINE_RUN_ONCE_STATIC(ossl_init_base)
 {
-    CRYPTO_THREAD_LOCAL key;
-
 #ifdef OPENSSL_INIT_DEBUG
     fprintf(stderr, "OPENSSL_INIT: ossl_init_base: Setting up stop handlers\n");
 #endif
-    if (!CRYPTO_THREAD_init_local(&key, ossl_init_thread_destructor))
-        return 0;
-    if ((init_lock = CRYPTO_THREAD_lock_new()) == NULL)
-        goto err;
+    /*
+     * We use a dummy thread local key here. We use the destructor to detect
+     * when the thread is going to stop (where that feature is available)
+     */
+    CRYPTO_THREAD_init_local(&threadstopkey, ossl_init_thread_stop_wrap);
 #ifndef OPENSSL_SYS_UEFI
-    if (atexit(OPENSSL_cleanup) != 0)
-        goto err;
+    atexit(OPENSSL_cleanup);
 #endif
+    if ((init_lock = CRYPTO_THREAD_lock_new()) == NULL)
+        return 0;
     OPENSSL_cpuid_setup();
 
-    destructor_key.value = key;
+    /*
+     * BIG FAT WARNING!
+     * Everything needed to be initialized in this function before threads
+     * come along MUST happen before base_inited is set to 1, or we will
+     * see race conditions.
+     */
     base_inited = 1;
-    return 1;
 
-err:
-#ifdef OPENSSL_INIT_DEBUG
-    fprintf(stderr, "OPENSSL_INIT: ossl_init_base not ok!\n");
-#endif
-    CRYPTO_THREAD_lock_free(init_lock);
-    init_lock = NULL;
-
-    CRYPTO_THREAD_cleanup_local(&key);
-    return 0;
-}
-
-static CRYPTO_ONCE load_crypto_nodelete = CRYPTO_ONCE_STATIC_INIT;
-DEFINE_RUN_ONCE_STATIC(ossl_init_load_crypto_nodelete)
-{
-#ifdef OPENSSL_INIT_DEBUG
-    fprintf(stderr, "OPENSSL_INIT: ossl_init_load_crypto_nodelete()\n");
-#endif
 #if !defined(OPENSSL_NO_DSO) && !defined(OPENSSL_USE_NODELETE)
 # ifdef DSO_WIN32
     {
@@ -132,10 +102,6 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_load_crypto_nodelete)
                                 | GET_MODULE_HANDLE_EX_FLAG_PIN,
                                 (void *)&base_inited, &handle);
 
-#  ifdef OPENSSL_INIT_DEBUG
-        fprintf(stderr, "OPENSSL_INIT: obtained DSO reference? %s\n",
-                (ret == TRUE ? "No!" : "Yes."));
-#  endif
         return (ret == TRUE) ? 1 : 0;
     }
 # else
@@ -144,24 +110,12 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_load_crypto_nodelete)
      * to remain loaded until the atexit() handler is run at process exit.
      */
     {
-        DSO *dso;
-        void *err;
+        DSO *dso = NULL;
 
-        if (!err_shelve_state(&err))
-            return 0;
-
+        ERR_set_mark();
         dso = DSO_dsobyaddr(&base_inited, DSO_FLAG_NO_UNLOAD_ON_FREE);
-#  ifdef OPENSSL_INIT_DEBUG
-        fprintf(stderr, "OPENSSL_INIT: obtained DSO reference? %s\n",
-                (dso == NULL ? "No!" : "Yes."));
-        /*
-         * In case of No!, it is uncertain our exit()-handlers can still be
-         * called. After dlclose() the whole library might have been unloaded
-         * already.
-         */
-#  endif
         DSO_free(dso);
-        err_unshelve_state(err);
+        ERR_pop_to_mark();
     }
 # endif
 #endif
@@ -191,7 +145,7 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_load_crypto_strings)
 # endif
     ret = err_load_crypto_strings_int();
     load_crypto_strings_inited = 1;
-#endif    
+#endif
     return ret;
 }
 
@@ -381,9 +335,9 @@ static void ossl_init_thread_stop(struct thread_local_inits_st *locals)
     if (locals->async) {
 #ifdef OPENSSL_INIT_DEBUG
         fprintf(stderr, "OPENSSL_INIT: ossl_init_thread_stop: "
-                        "async_delete_thread_state()\n");
+                        "ASYNC_cleanup_thread()\n");
 #endif
-        async_delete_thread_state();
+        ASYNC_cleanup_thread();
     }
 
     if (locals->err_state) {
@@ -399,8 +353,8 @@ static void ossl_init_thread_stop(struct thread_local_inits_st *locals)
 
 void OPENSSL_thread_stop(void)
 {
-    if (destructor_key.sane != -1)
-        ossl_init_thread_stop(ossl_init_get_thread_local(0));
+    ossl_init_thread_stop(
+        (struct thread_local_inits_st *)ossl_init_get_thread_local(0));
 }
 
 int ossl_init_thread_start(uint64_t opts)
@@ -437,7 +391,6 @@ int ossl_init_thread_start(uint64_t opts)
 void OPENSSL_cleanup(void)
 {
     OPENSSL_INIT_STOP *currhandler, *lasthandler;
-    CRYPTO_THREAD_LOCAL key;
 
     /* If we've not been inited then no need to deinit */
     if (!base_inited)
@@ -496,9 +449,7 @@ void OPENSSL_cleanup(void)
         err_free_strings_int();
     }
 
-    key = destructor_key.value;
-    destructor_key.sane = -1;
-    CRYPTO_THREAD_cleanup_local(&key);
+    CRYPTO_THREAD_cleanup_local(&threadstopkey);
 
 #ifdef OPENSSL_INIT_DEBUG
     fprintf(stderr, "OPENSSL_INIT: OPENSSL_cleanup: "
@@ -554,18 +505,22 @@ void OPENSSL_cleanup(void)
  */
 int OPENSSL_init_crypto(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings)
 {
+    static int stoperrset = 0;
+
     if (stopped) {
-        if (!(opts & OPENSSL_INIT_BASE_ONLY))
+        if (!stoperrset) {
+            /*
+             * We only ever set this once to avoid getting into an infinite
+             * loop where the error system keeps trying to init and fails so
+             * sets an error etc
+             */
+            stoperrset = 1;
             CRYPTOerr(CRYPTO_F_OPENSSL_INIT_CRYPTO, ERR_R_INIT_FAIL);
+        }
         return 0;
     }
 
-    if (!RUN_ONCE(&base, ossl_init_base))
-        return 0;
-
-    if (!(opts & OPENSSL_INIT_BASE_ONLY)
-            && !RUN_ONCE(&load_crypto_nodelete,
-                         ossl_init_load_crypto_nodelete))
+    if (!base_inited && !RUN_ONCE(&base, ossl_init_base))
         return 0;
 
     if ((opts & OPENSSL_INIT_NO_LOAD_CRYPTO_STRINGS)
@@ -702,12 +657,6 @@ int OPENSSL_atexit(void (*handler)(void))
 
             ERR_set_mark();
             dso = DSO_dsobyaddr(handlersym.sym, DSO_FLAG_NO_UNLOAD_ON_FREE);
-#  ifdef OPENSSL_INIT_DEBUG
-            fprintf(stderr,
-                    "OPENSSL_INIT: OPENSSL_atexit: obtained DSO reference? %s\n",
-                    (dso == NULL ? "No!" : "Yes."));
-            /* See same code above in ossl_init_base() for an explanation. */
-#  endif
             DSO_free(dso);
             ERR_pop_to_mark();
         }

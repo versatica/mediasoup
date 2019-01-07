@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -12,8 +12,6 @@
 #include <stdlib.h>
 #include <openssl/crypto.h>
 #include <openssl/lhash.h>
-#include <ctype.h>
-#include "internal/lhash.h"
 #include "lhash_lcl.h"
 
 /*
@@ -51,7 +49,7 @@ OPENSSL_LHASH *OPENSSL_LH_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
         return NULL;
     if ((ret->b = OPENSSL_zalloc(sizeof(*ret->b) * MIN_NODES)) == NULL)
         goto err;
-    if ((ret->retrieve_stats_lock = CRYPTO_THREAD_lock_new()) == NULL) 
+    if ((ret->retrieve_stats_lock = CRYPTO_THREAD_lock_new()) == NULL)
         goto err;
     ret->comp = ((c == NULL) ? (OPENSSL_LH_COMPFUNC)strcmp : c);
     ret->hash = ((h == NULL) ? (OPENSSL_LH_HASHFUNC)OPENSSL_LH_strhash : h);
@@ -351,27 +349,6 @@ unsigned long OPENSSL_LH_strhash(const char *c)
         c++;
     }
     return ((ret >> 16) ^ ret);
-}
-
-unsigned long openssl_lh_strcasehash(const char *c)
-{
-    unsigned long ret = 0;
-    long n;
-    unsigned long v;
-    int r;
-
-    if (c == NULL || *c == '\0')
-        return ret;
-
-    for (n = 0x100; *c != '\0'; n += 0x100) {
-        v = n | tolower(*c);
-        r = (int)((v >> 2) ^ v) & 0x0f;
-        ret = (ret << r) | (ret >> (32 - r));
-        ret &= 0xFFFFFFFFL;
-        ret ^= v * v;
-        c++;
-    }
-    return (ret >> 16) ^ ret;
 }
 
 unsigned long OPENSSL_LH_num_items(const OPENSSL_LHASH *lh)

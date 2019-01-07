@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2010-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -174,13 +174,12 @@ struct ocb128_context {
     OCB_BLOCK l_dollar;
     OCB_BLOCK *l;
     /* Must be reset for each session */
-    struct {
-        u64 blocks_hashed;
-        u64 blocks_processed;
-        OCB_BLOCK offset_aad;
-        OCB_BLOCK sum;
-        OCB_BLOCK offset;
-        OCB_BLOCK checksum;
-    } sess;
+    u64 blocks_hashed;
+    u64 blocks_processed;
+    OCB_BLOCK tag;
+    OCB_BLOCK offset_aad;
+    OCB_BLOCK sum;
+    OCB_BLOCK offset;
+    OCB_BLOCK checksum;
 };
 #endif                          /* OPENSSL_NO_OCB */

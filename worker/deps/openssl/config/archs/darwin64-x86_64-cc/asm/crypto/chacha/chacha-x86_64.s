@@ -1,4 +1,4 @@
-.text	
+.text
 
 
 
@@ -1990,4 +1990,3 @@ L$done8x:
 	vzeroall
 	movq	640(%rsp),%rsp
 	.byte	0xf3,0xc3
-

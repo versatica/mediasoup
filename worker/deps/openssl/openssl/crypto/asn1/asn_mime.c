@@ -969,14 +969,12 @@ static int strip_eol(char *linebuf, int *plen, int flags)
     p = linebuf + len - 1;
     for (p = linebuf + len - 1; len > 0; len--, p--) {
         c = *p;
-        if (c == '\n') {
+        if (c == '\n')
             is_eol = 1;
-        } else if (is_eol && flags & SMIME_ASCIICRLF && c == 32) {
-            /* Strip trailing space on a line; 32 == ASCII for ' ' */
+        else if (is_eol && flags & SMIME_ASCIICRLF && c < 33)
             continue;
-        } else if (c != '\r') {
+        else if (c != '\r')
             break;
-        }
     }
     *plen = len;
     return is_eol;

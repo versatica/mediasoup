@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -28,23 +28,23 @@ static int load_iv(char **fromp, unsigned char *to, int num);
 static int check_pem(const char *nm, const char *name);
 int pem_check_suffix(const char *pem_str, const char *suffix);
 
-int PEM_def_callback(char *buf, int num, int rwflag, void *userdata)
+int PEM_def_callback(char *buf, int num, int w, void *key)
 {
+#if defined(OPENSSL_NO_STDIO) || defined(OPENSSL_NO_UI)
     int i;
-#ifndef OPENSSL_NO_UI
-    int min_len;
+#else
+    int i, j;
     const char *prompt;
 #endif
 
-    /* We assume that the user passes a default password as userdata */
-    if (userdata) {
-        i = strlen(userdata);
+    if (key) {
+        i = strlen(key);
         i = (i > num) ? num : i;
-        memcpy(buf, userdata, i);
+        memcpy(buf, key, i);
         return i;
     }
 
-#ifdef OPENSSL_NO_UI
+#if defined(OPENSSL_NO_STDIO) || defined(OPENSSL_NO_UI)
     PEMerr(PEM_F_PEM_DEF_CALLBACK, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
     return -1;
 #else
@@ -52,22 +52,28 @@ int PEM_def_callback(char *buf, int num, int rwflag, void *userdata)
     if (prompt == NULL)
         prompt = "Enter PEM pass phrase:";
 
-    /*
-     * rwflag == 0 means decryption
-     * rwflag == 1 means encryption
-     *
-     * We assume that for encryption, we want a minimum length, while for
-     * decryption, we cannot know any minimum length, so we assume zero.
-     */
-    min_len = rwflag ? MIN_LENGTH : 0;
+    for (;;) {
+        /*
+         * We assume that w == 0 means decryption,
+         * while w == 1 means encryption
+         */
+        int min_len = w ? MIN_LENGTH : 0;
 
-    i = EVP_read_pw_string_min(buf, min_len, num, prompt, rwflag);
-    if (i != 0) {
-        PEMerr(PEM_F_PEM_DEF_CALLBACK, PEM_R_PROBLEMS_GETTING_PASSWORD);
-        memset(buf, 0, (unsigned int)num);
-        return -1;
+        i = EVP_read_pw_string_min(buf, min_len, num, prompt, w);
+        if (i != 0) {
+            PEMerr(PEM_F_PEM_DEF_CALLBACK, PEM_R_PROBLEMS_GETTING_PASSWORD);
+            memset(buf, 0, (unsigned int)num);
+            return -1;
+        }
+        j = strlen(buf);
+        if (min_len && j < min_len) {
+            fprintf(stderr,
+                    "phrase is too short, needs to be at least %d chars\n",
+                    min_len);
+        } else
+            break;
     }
-    return strlen(buf);
+    return j;
 #endif
 }
 
@@ -408,7 +414,7 @@ int PEM_do_header(EVP_CIPHER_INFO *cipher, unsigned char *data, long *plen,
         keylen = PEM_def_callback(buf, PEM_BUFSIZE, 0, u);
     else
         keylen = callback(buf, PEM_BUFSIZE, 0, u);
-    if (keylen < 0) {
+    if (keylen <= 0) {
         PEMerr(PEM_F_PEM_DO_HEADER, PEM_R_BAD_PASSWORD_READ);
         return 0;
     }
@@ -466,7 +472,6 @@ int PEM_get_EVP_CIPHER_INFO(char *header, EVP_CIPHER_INFO *cipher)
     char *dekinfostart, c;
 
     cipher->cipher = NULL;
-    memset(cipher->iv, 0, sizeof(cipher->iv));
     if ((header == NULL) || (*header == '\0') || (*header == '\n'))
         return 1;
 

@@ -444,18 +444,16 @@ L017sub:
 	leal	1(%edx),%edx
 	jge	L017sub
 	sbbl	$0,%eax
-	movl	$-1,%edx
-	xorl	%eax,%edx
-	jmp	L018copy
+	andl	%eax,%esi
+	notl	%eax
+	movl	%edi,%ebp
+	andl	%eax,%ebp
+	orl	%ebp,%esi
 .align	4,0x90
 L018copy:
-	movl	32(%esp,%ebx,4),%esi
-	movl	(%edi,%ebx,4),%ebp
+	movl	(%esi,%ebx,4),%eax
+	movl	%eax,(%edi,%ebx,4)
 	movl	%ecx,32(%esp,%ebx,4)
-	andl	%eax,%esi
-	andl	%edx,%ebp
-	orl	%esi,%ebp
-	movl	%ebp,(%edi,%ebx,4)
 	decl	%ebx
 	jge	L018copy
 	movl	24(%esp),%esp

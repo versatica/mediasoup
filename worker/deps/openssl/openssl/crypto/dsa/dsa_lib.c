@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -91,14 +91,12 @@ DSA *DSA_new_method(ENGINE *engine)
 
     if ((ret->meth->init != NULL) && !ret->meth->init(ret)) {
         DSAerr(DSA_F_DSA_NEW_METHOD, ERR_R_INIT_FAIL);
-        goto err;
+err:
+        DSA_free(ret);
+        ret = NULL;
     }
 
     return ret;
-
- err:
-    DSA_free(ret);
-    return NULL;
 }
 
 void DSA_free(DSA *r)
@@ -114,7 +112,7 @@ void DSA_free(DSA *r)
         return;
     REF_ASSERT_ISNT(i < 0);
 
-    if (r->meth != NULL && r->meth->finish != NULL)
+    if (r->meth->finish)
         r->meth->finish(r);
 #ifndef OPENSSL_NO_ENGINE
     ENGINE_finish(r->engine);

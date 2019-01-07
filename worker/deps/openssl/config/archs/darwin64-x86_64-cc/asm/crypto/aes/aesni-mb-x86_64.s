@@ -1,4 +1,4 @@
-.text	
+.text
 
 
 
@@ -1432,4 +1432,3 @@ L$dec8x_done:
 	leaq	(%rax),%rsp
 L$dec8x_epilogue:
 	.byte	0xf3,0xc3
-

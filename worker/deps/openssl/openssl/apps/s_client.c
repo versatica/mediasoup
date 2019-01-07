@@ -593,8 +593,7 @@ OPTIONS s_client_options[] = {
      "Disable name checks when matching DANE-EE(3) TLSA records"},
     {"reconnect", OPT_RECONNECT, '-',
      "Drop and re-make the connection with the same Session-ID"},
-    {"showcerts", OPT_SHOWCERTS, '-',
-     "Show all certificates sent by the server"},
+    {"showcerts", OPT_SHOWCERTS, '-', "Show all certificates in the chain"},
     {"debug", OPT_DEBUG, '-', "Extra output"},
     {"msg", OPT_MSG, '-', "Show protocol messages"},
     {"msgfile", OPT_MSGFILE, '>',
@@ -2115,7 +2114,8 @@ int s_client_main(int argc, char **argv)
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
 
-        if (SSL_is_dtls(con) && DTLSv1_get_timeout(con, &timeout))
+        if ((SSL_version(con) == DTLS1_VERSION) &&
+            DTLSv1_get_timeout(con, &timeout))
             timeoutp = &timeout;
         else
             timeoutp = NULL;
@@ -2235,8 +2235,10 @@ int s_client_main(int argc, char **argv)
             }
         }
 
-        if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)
+        if ((SSL_version(con) == DTLS1_VERSION)
+            && DTLSv1_handle_timeout(con) > 0) {
             BIO_printf(bio_err, "TIMEOUT occurred\n");
+        }
 
         if (!ssl_pending && FD_ISSET(SSL_get_fd(con), &writefds)) {
             k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);

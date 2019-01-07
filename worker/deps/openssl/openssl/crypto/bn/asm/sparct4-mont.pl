@@ -1,5 +1,5 @@
 #! /usr/bin/env perl
-# Copyright 2012-2018 The OpenSSL Project Authors. All Rights Reserved.
+# Copyright 2012-2016 The OpenSSL Project Authors. All Rights Reserved.
 #
 # Licensed under the OpenSSL license (the "License").  You may not use
 # this file except in compliance with the License.  You can obtain a copy
@@ -888,17 +888,19 @@ $code.=<<___;
 	sub	$tp,	$num,	$tp
 	sub	$rp,	$num,	$rp
 
-	subccc	$ovf,	%g0,	$ovf	! handle upmost overflow bit
+	subc	$ovf,	%g0,	$ovf	! handle upmost overflow bit
+	and	$tp,	$ovf,	$ap
+	andn	$rp,	$ovf,	$np
+	or	$np,	$ap,	$ap	! ap=borrow?tp:rp
 	ba	.Lcopy
 	sub	$num,	8,	$cnt
 
 .align	16
-.Lcopy:					! conditional copy
-	ldx	[$tp],		$tj
-	ldx	[$rp+0],	$t2
+.Lcopy:					! copy or in-place refresh
+	ldx	[$ap+0],	$t2
+	add	$ap,	8,	$ap
 	stx	%g0,	[$tp]		! zap
 	add	$tp,	8,	$tp
-	movcs	%icc,	$tj,	$t2
 	stx	$t2,	[$rp+0]
 	add	$rp,	8,	$rp
 	brnz	$cnt,	.Lcopy
@@ -1134,17 +1136,19 @@ $code.=<<___;
 	sub	$tp,	$num,	$tp
 	sub	$rp,	$num,	$rp
 
-	subccc	$ovf,	%g0,	$ovf	! handle upmost overflow bit
+	subc	$ovf,	%g0,	$ovf	! handle upmost overflow bit
+	and	$tp,	$ovf,	$ap
+	andn	$rp,	$ovf,	$np
+	or	$np,	$ap,	$ap	! ap=borrow?tp:rp
 	ba	.Lcopy_g5
 	sub	$num,	8,	$cnt
 
 .align	16
-.Lcopy_g5:				! conditional copy
-	ldx	[$tp],		$tj
-	ldx	[$rp+0],	$t2
+.Lcopy_g5:				! copy or in-place refresh
+	ldx	[$ap+0],	$t2
+	add	$ap,	8,	$ap
 	stx	%g0,	[$tp]		! zap
 	add	$tp,	8,	$tp
-	movcs	%icc,	$tj,	$t2
 	stx	$t2,	[$rp+0]
 	add	$rp,	8,	$rp
 	brnz	$cnt,	.Lcopy_g5
