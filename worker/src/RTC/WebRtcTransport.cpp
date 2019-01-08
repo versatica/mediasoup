@@ -962,7 +962,7 @@ namespace RTC
 		this->selectedTuple = tuple;
 
 		// Notify.
-		eventData[JsonStringIceSelectedTuple] = tuple->ToJson();
+		eventData["tuple"] = tuple->ToJson();
 		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", eventData);
 	}
 
