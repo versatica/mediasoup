@@ -1312,7 +1312,7 @@ namespace RTC
 
 		if (this->handshakeDone)
 		{
-			MS_DEBUG_DEV("handshake is done, so Done so return");
+			MS_DEBUG_DEV("handshake is done so return");
 
 			return;
 		}
