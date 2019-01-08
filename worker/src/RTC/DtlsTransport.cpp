@@ -948,7 +948,7 @@ namespace RTC
 		if (read <= 0)
 			return;
 
-		MS_DEBUG_DEV("%ld bytes of DTLS data ready to sent to the peer", read);
+		MS_DEBUG_DEV("%" PRIu64 " bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
 		this->listener->OnOutgoingDtlsData(
@@ -968,12 +968,13 @@ namespace RTC
 		  "invalid DTLS state");
 
 		int64_t ret;
-		struct timeval dtlsTimeout;
+		struct timeval dtlsTimeout{ 0, 0 };
 		uint64_t timeoutMs;
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
 		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtlsTimeout); // NOLINT
+
 		if (ret == 0)
 			return true;
 
@@ -1345,6 +1346,14 @@ namespace RTC
 	inline void DtlsTransport::OnTimer(Timer* /*timer*/)
 	{
 		MS_TRACE();
+
+		// Workaround for https://github.com/versatica/mediasoup/issues/257.
+		if (this->handshakeDone)
+		{
+			MS_DEBUG_DEV("handshake is done so return");
+
+			return;
+		}
 
 		DTLSv1_handle_timeout(this->ssl);
 

@@ -334,7 +334,7 @@ test('assertCapabilities() throws UnsupportedError if non compatible codecs', ()
 		.toThrow(UnsupportedError);
 });
 
-test('getProducerRtpParametersMapping() succeeds', () =>
+test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getConsumerRtpParameters() succeed', () =>
 {
 	const mediaCodecs =
 	[
@@ -352,6 +352,7 @@ test('getProducerRtpParametersMapping() succeeds', () =>
 			clockRate  : 90000,
 			parameters :
 			{
+				bar                  : 'lalala',
 				'packetization-mode' : 1
 			}
 		}
@@ -394,6 +395,10 @@ test('getProducerRtpParametersMapping() succeeds', () =>
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
 				id  : 1
+			},
+			{
+				uri : 'urn:3gpp:video-orientation',
+				id  : 2
 			}
 		],
 		encodings :
@@ -419,7 +424,8 @@ test('getProducerRtpParametersMapping() succeeds', () =>
 
 	expect(mapping.headerExtensions).toEqual(
 		[
-			{ id: 1, mappedId: 5 }
+			{ id: 1, mappedId: 5 },
+			{ id: 2, mappedId: 4 }
 		]);
 
 	expect(mapping.encodings[0].ssrc).toBe(11111111);
@@ -437,6 +443,187 @@ test('getProducerRtpParametersMapping() succeeds', () =>
 	expect(mapping.encodings[2].rid).toBe('high');
 	expect(mapping.encodings[2].mappedSsrc).toBeType('number');
 	expect(mapping.encodings[2].mappedRtxSsrc).toBeType('number');
+
+	const consumableRtpParameters = ortc.getConsumableRtpParameters(
+		'video', rtpParameters, routerRtpCapabilities, mapping);
+
+	expect(consumableRtpParameters.codecs[0].name).toBe('H264');
+	expect(consumableRtpParameters.codecs[0].mimeType).toBe('video/H264');
+	expect(consumableRtpParameters.codecs[0].payloadType).toBe(101);
+	expect(consumableRtpParameters.codecs[0].clockRate).toBe(90000);
+	expect(consumableRtpParameters.codecs[0].parameters).toEqual(
+		{
+			foo                  : 1234,
+			'packetization-mode' : 1
+		});
+
+	expect(consumableRtpParameters.codecs[1].name).toBe('rtx');
+	expect(consumableRtpParameters.codecs[1].mimeType).toBe('video/rtx');
+	expect(consumableRtpParameters.codecs[1].payloadType).toBe(102);
+	expect(consumableRtpParameters.codecs[1].clockRate).toBe(90000);
+	expect(consumableRtpParameters.codecs[1].parameters).toEqual({ apt: 101 });
+
+	expect(consumableRtpParameters.encodings[0]).toEqual(
+		{
+			ssrc : mapping.encodings[0].mappedSsrc,
+			rtx  : { ssrc: mapping.encodings[0].mappedRtxSsrc }
+		});
+	expect(consumableRtpParameters.encodings[1]).toEqual(
+		{
+			ssrc : mapping.encodings[1].mappedSsrc,
+			rtx  : { ssrc: mapping.encodings[1].mappedRtxSsrc }
+		});
+	expect(consumableRtpParameters.encodings[2]).toEqual(
+		{
+			ssrc : mapping.encodings[2].mappedSsrc,
+			rtx  : { ssrc: mapping.encodings[2].mappedRtxSsrc }
+		});
+
+	expect(consumableRtpParameters.rtcp).toEqual(
+		{
+			cname       : rtpParameters.rtcp.cname,
+			reducedSize : true,
+			mux         : true
+		});
+
+	const remoteRtpCapabilities =
+	{
+		codecs :
+		[
+			{
+				kind                 : 'audio',
+				name                 : 'opus',
+				preferredPayloadType : 100,
+				clockRate            : 48000,
+				channels             : 2
+			},
+			{
+				kind                 : 'video',
+				name                 : 'H264',
+				preferredPayloadType : 101,
+				clockRate            : 90000,
+				rtcpFeedback         :
+				[
+					{ type: 'nack' },
+					{ type: 'nack', parameter: 'pli' },
+					{ type: 'foo', parameter: 'FOO' }
+				],
+				parameters :
+				{
+					'packetization-mode' : 1,
+					baz                  : 'LOLOLO'
+				}
+			},
+			{
+				kind                 : 'video',
+				name                 : 'rtx',
+				preferredPayloadType : 102,
+				clockRate            : 90000,
+				parameters           :
+				{
+					apt : 101
+				}
+			}
+		],
+		headerExtensions :
+		[
+			{
+				kind             : 'audio',
+				uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				preferredId      : 1,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:ietf:params:rtp-hdrext:toffset',
+				preferredId      : 2,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:3gpp:video-orientation',
+				preferredId      : 4,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'audio',
+				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				preferredId      : 5,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				preferredId      : 5,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+				preferredId      : 6,
+				preferredEncrypt : false
+			}
+		]
+	};
+
+	const consumerRtpParameters =
+		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities);
+
+	expect(consumerRtpParameters.codecs[0]).toEqual(
+		{
+			name         : 'H264',
+			mimeType     : 'video/H264',
+			payloadType  : 101,
+			clockRate    : 90000,
+			rtcpFeedback :
+			[
+				{ type: 'nack' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'foo', parameter: 'FOO' }
+			],
+			parameters :
+			{
+				foo                  : 1234,
+				'packetization-mode' : 1
+			}
+		});
+
+	expect(consumerRtpParameters.codecs[1]).toEqual(
+		{
+			name         : 'rtx',
+			mimeType     : 'video/rtx',
+			payloadType  : 102,
+			clockRate    : 90000,
+			rtcpFeedback : [],
+			parameters   :
+			{
+				apt : 101
+			}
+		});
+
+	expect(consumerRtpParameters.encodings.length).toBe(1);
+	expect(consumerRtpParameters.encodings[0].ssrc).toBeType('number');
+	expect(consumerRtpParameters.encodings[0].rtx).toBeType('object');
+	expect(consumerRtpParameters.encodings[0].rtx.ssrc).toBeType('number');
+
+	expect(consumerRtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri : 'urn:ietf:params:rtp-hdrext:toffset',
+				id  : 2
+			},
+			{
+				uri : 'urn:3gpp:video-orientation',
+				id  : 4
+			}
+		]);
+
+	expect(consumerRtpParameters.rtcp).toEqual(
+		{
+			cname       : rtpParameters.rtcp.cname,
+			reducedSize : true,
+			mux         : true
+		});
 });
 
 test('getProducerRtpParametersMapping() throws UnsupportedError if non compatible params', () =>
