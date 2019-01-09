@@ -53,13 +53,13 @@ void Worker::Close()
 	delete this->signalsHandler;
 
 	// Close all Routers.
-	// for (auto& kv : this->routers)
+	// for (auto& kv : this->mapRouters)
 	// {
 	// 	auto* router = kv.second;
 
 	// 	delete router;
 	// }
-	// this->routers.clear();
+	// this->mapRouters.clear();
 
 	// Close the Channel.
 	delete this->channel;
@@ -74,10 +74,10 @@ void Worker::FillJson(json& jsonObject) const
 
 	// Add routerIds.
 	jsonObject["routerIds"] = json::array();
-	auto jsonRouterIdsIt    = jsonObject.find("routerIds");
+	// auto jsonRouterIdsIt    = jsonObject.find("routerIds");
 
 	// TODO
-	// for (auto& kv : this->routers)
+	// for (auto& kv : this->mapRouters)
 	// {
 	// 	auto& routerId = kv.first;
 
@@ -96,7 +96,7 @@ void Worker::FillJson(json& jsonObject) const
 
 // 	routerId.assign(jsonRouterIdIt->get<std::string>());
 
-// 	if (this->routers.find(routerId) != this->routers.end())
+// 	if (this->mapRouters.find(routerId) != this->mapRouters.end())
 // 		MS_THROW_ERROR("a Router with same routerId already exists");
 // }
 
@@ -109,9 +109,9 @@ void Worker::FillJson(json& jsonObject) const
 // 	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
 // 		MS_THROW_ERROR("request has no internal.routerId");
 
-// 	auto it = this->routers.find(jsonRouterIdIt->get<std::string>());
+// 	auto it = this->mapRouters.find(jsonRouterIdIt->get<std::string>());
 
-// 	if (it == this->routers.end())
+// 	if (it == this->mapRouters.end())
 // 		MS_THROW_ERROR("Router not found");
 
 // 	RTC::Router* router = it->second;
@@ -163,7 +163,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 
 		// 	auto* router = new RTC::Router(routerId);
 
-		// 	this->routers[routerId] = router;
+		// 	this->mapRouters[routerId] = router;
 
 		// 	MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
@@ -188,8 +188,10 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 		// 	}
 
 		// 	// Remove it from the map and delete it.
-		// 	this->routers.erase(router->routerId);
+		// 	this->mapRouters.erase(router->routerId);
 		// 	delete router;
+		//
+		// 	MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
 
 		// 	request->Accept();
 

@@ -48,11 +48,17 @@ namespace RTC
 		{
 			auto* producer = *it;
 
+			// TODO: Notify the Router about the closed Producer.
+
+			this->listener->onTransportProducerClosed(foo and bar);
+
 			it = this->producers.erase(it);
+
 			delete producer;
 		}
 
 		// Disable all the handled Consumers.
+		// TODO: No, call consumer->TransportClosed() and delete.
 		for (auto* consumer : this->consumers)
 		{
 			consumer->Disable();

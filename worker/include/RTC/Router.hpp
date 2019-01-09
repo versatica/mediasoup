@@ -60,10 +60,16 @@ namespace RTC
 		std::string id;
 
 	private:
+		// Allocated by this.
+		// Map of Transport* indexed by id.
+		std::unordered_map<std::string, RTC::Transport*> mapTransports;
 		// Others.
-		std::unordered_map<std::string, RTC::Transport*> transports;
+		// Map of Set<Consumers> indexed by Producer*.
 		std::unordered_map<const RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
+		// Map of Producer* indexed by Consumer*.
 		std::unordered_map<const RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
+		// Map of Producers* indexed by id.
+		std::unordered_map<std::string, RTC::Producer*> mapProducers;
 	};
 } // namespace RTC
 

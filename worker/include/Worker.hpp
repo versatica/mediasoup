@@ -40,7 +40,7 @@ private:
 	SignalsHandler* signalsHandler{ nullptr };
 	// Others.
 	bool closed{ false };
-	// std::unordered_map<std::string, RTC::Router*> routers;
+	// std::unordered_map<std::string, RTC::Router*> mapRouters;
 };
 
 #endif
