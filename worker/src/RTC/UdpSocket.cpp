@@ -2,8 +2,8 @@
 // #define MS_LOG_DEV
 
 #include "RTC/UdpSocket.hpp"
-#include "RTC/PortManager.hpp"
 #include "Logger.hpp"
+#include "RTC/PortManager.hpp"
 #include <string>
 
 namespace RTC

@@ -3,9 +3,9 @@
 
 #include "common.hpp"
 #include "handles/TcpConnection.hpp"
+#include <uv.h>
 #include <string>
 #include <unordered_set>
-#include <uv.h>
 
 class TcpServer : public TcpConnection::Listener
 {

@@ -28,9 +28,6 @@ namespace RTC
 		{
 			auto* transport = kv.second;
 
-			// NOTE: No need to call transport->Close() since we will clear our maps
-			// of Producers and Consumers anyway.
-
 			delete transport;
 		}
 		this->mapTransports.clear();
@@ -61,7 +58,7 @@ namespace RTC
 
 		// Add mapProducerIdConsumerIds.
 		jsonObject["mapProducerIdConsumerIds"] = json::object();
-		auto jsonMapProducerConsumersIt    = jsonObject.find("mapProducerIdConsumerIds");
+		auto jsonMapProducerConsumersIt        = jsonObject.find("mapProducerIdConsumerIds");
 
 		for (auto& kv : this->mapProducerConsumers)
 		{
@@ -69,7 +66,7 @@ namespace RTC
 			auto& consumers = kv.second;
 
 			(*jsonMapProducerConsumersIt)[producer.id] = json::array();
-			auto jsonProducerIdIt = jsonMapProducerConsumersIt->find(producer.id);
+			auto jsonProducerIdIt                      = jsonMapProducerConsumersIt->find(producer.id);
 
 			for (auto* consumer : consumers)
 			{
@@ -79,7 +76,7 @@ namespace RTC
 
 		// Add mapConsumerIdProducerId.
 		jsonObject["mapConsumerIdProducerId"] = json::object();
-		auto jsonMapConsumerProducerIt    = jsonObject.find("mapConsumerIdProducerId");
+		auto jsonMapConsumerProducerIt        = jsonObject.find("mapConsumerIdProducerId");
 
 		for (auto& kv : this->mapConsumerProducer)
 		{
@@ -253,11 +250,9 @@ namespace RTC
 					return;
 				}
 
-				// NOTE: Call transport->Close() so it will notify us about its closed Producers
+				// Call transport->Close() so it will notify us about its closed Producers
 				// and Consumers.
 				transport->Close();
-
-				delete transport;
 
 				// Remove it from the map and delete it.
 				this->mapTransports.erase(transport->id);
@@ -326,7 +321,7 @@ namespace RTC
 		return transport;
 	}
 
-	void Router::OnTransportNewProducer(RTC::Transport* /* transport */, RTC::Producer* producer)
+	void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -334,7 +329,7 @@ namespace RTC
 		  this->mapProducerConsumers.find(producer) == this->mapProducerConsumers.end(),
 		  "Producer already present in mapProducerConsumers");
 		MS_ASSERT(
-		  this->mapProducer.find(producer->id) == this->mapProducer.end(),
+		  this->mapProducers.find(producer->id) == this->mapProducers.end(),
 		  "Producer already present in mapProducers");
 
 		// Insert the Producer in the maps.
@@ -342,29 +337,24 @@ namespace RTC
 		this->mapProducers[producer.id] = producer;
 	}
 
-	void Router::OnTransportProducerClosed(RTC::Transport* /* transport */, RTC::Producer* producer)
+	void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
 		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
-		auto mapProducersIt = this->mapProducers.find(producer->id);
+		auto mapProducersIt         = this->mapProducers.find(producer->id);
 
 		MS_ASSERT(
 		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
 		  "Producer not present in mapProducerConsumers");
-		MS_ASSERT(
-		  mapProducersIt != this->mapProducer.end(),
-		  "Producer not present in mapProducers");
+		MS_ASSERT(mapProducersIt != this->mapProducers.end(), "Producer not present in mapProducers");
 
-		// Iterate the map and close all Consumers associated to it.
+		// Close all Consumers associated to the closed Producer.
 		auto& consumers = mapProducerConsumersIt->second;
 
 		for (auto* consumer : consumers)
 		{
-			// Remove the the Consumer from the map.
-			this->mapConsumerProducer.erase(consumer);
-
-			// NOTE: Call consumer->ProducerClosed() so it will notify the Node process,
+			// Call consumer->ProducerClosed() so it will notify the Node process,
 			// will notify its Transport, and its Transport will delete the Consumer.
 			consumer->ProducerClosed();
 		}
@@ -374,47 +364,9 @@ namespace RTC
 		this->mapProducers.erase(mapProducersIt);
 	}
 
-
-	void Router::OnTransportClosed(RTC::Transport* transport)
+	void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
-
-		this->mapTransports.erase(transport->transportId);
-	}
-
-	void Router::OnProducerClosed(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		this->producers.erase(producer->id);
-
-		// Remove the Producer from the map.
-		// NOTE: It may not exist if it failed before being inserted into the maps.
-		if (this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end())
-		{
-			// Iterate the map and close all Consumers associated to it.
-			auto& consumers = this->mapProducerConsumers[producer];
-
-			for (auto it = consumers.begin(); it != consumers.end();)
-			{
-				auto* consumer = *it;
-
-				it = consumers.erase(it);
-				delete consumer;
-			}
-
-			// Finally delete the Producer entry in the map.
-			this->mapProducerConsumers.erase(producer);
-		}
-	}
-
-	void Router::OnProducerPaused(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
@@ -424,13 +376,9 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerResumed(RTC::Producer* producer)
+	void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
-		  "Producer not present in mapProducerConsumers");
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
@@ -440,71 +388,113 @@ namespace RTC
 		}
 	}
 
-	void Router::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void Router::OnTransportProducerStreamEnabled(
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  const RTC::RtpStream* rtpStream,
+	  uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
 		auto& consumers = this->mapProducerConsumers[producer];
 
-		// Send the packet to all the consumers associated to the producer.
+		for (auto* consumer : consumers)
+		{
+			consumer->AddStream(rtpStream, mappedSsrc);
+		}
+	}
+
+	void Router::OnTransportProducerStreamDisabledEnabled(
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  const RTC::RtpStream* rtpStream,
+	  uint32_t mappedSsrc)
+	{
+		MS_TRACE();
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
+		for (auto* consumer : consumers)
+		{
+			consumer->RemoveStream(rtpStream, mappedSsrc);
+		}
+	}
+
+	void Router::OnTransportProducerRtpPacket(
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		auto& consumers = this->mapProducerConsumers[producer];
+
 		for (auto* consumer : consumers)
 		{
 			consumer->SendRtpPacket(packet);
 		}
 	}
 
-	void Router::OnProducerStreamEnabled(
-	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc)
+	void Router::OnTransportNewConsumer(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
+		MS_ASSERT(
+		  this->mapConsumerProducer.find(consumer) == this->mapConsumerProducer.end(),
+		  "Consumer already present in mapConsumerProducer");
+
+		// Get the corresponding Producer.
+		std::string& producerId = consumer->producerId;
+
+		MS_ASSERT(
+		  this->mapProducers.find(producerId) != this->mapProducers.end(),
+		  "Producer not present in mapProducers");
+
+		auto* producer = this->mapProducers[producerId];
+
+		// Insert the Consumer in the maps.
+		this->mapProducerConsumers[producer].insert(consumer);
+		this->mapConsumerProducer[consumer] = producer;
+	}
+
+	void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
+
+		MS_ASSERT(
+		  mapConsumerProducerIt != this->mapConsumerProducer.end(),
+		  "Consumer not present in mapConsumerProducer");
+
+		// Get the associated Producer.
+		auto* producer = mapConsumerProducerIt->second;
+
+		MS_ASSERT(
+		  this->mapProducerConsumers.find(producer) != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
+
+		// Remove the Consumer from the set of Consumers of the Producer.
 		auto& consumers = this->mapProducerConsumers[producer];
 
-		for (auto* consumer : consumers)
-		{
-			consumer->AddStream(rtpStream, translatedSsrc);
-		}
+		consumers.erase(consumer);
+
+		// Remove the Consumer from the map.
+		this->mapConsumerProducer.erase(mapConsumerProducerIt);
 	}
 
-	void Router::OnProducerProfileDisabled(RTC::Producer* producer, const RTC::RtpStream* rtpStream)
+	void Router::OnTransportConsumerKeyFrameRequested(
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, uint32_t ssrc)
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers[producer];
+		auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
 
-		for (auto* consumer : consumers)
-		{
-			consumer->RemoveStream(rtpStream, translatedSsrc);
-		}
-	}
+		MS_ASSERT(
+		  mapConsumerProducerIt != this->mapConsumerProducer.end(),
+		  "Consumer not present in mapConsumerProducer");
 
-	void Router::OnConsumerClosed(RTC::Consumer* consumer)
-	{
-		MS_TRACE();
+		// Get the associated Producer.
+		auto* producer = mapConsumerProducerIt->second;
 
-		this->consumers.erase(consumer->consumerId);
-
-		for (auto& kv : this->mapProducerConsumers)
-		{
-			auto& consumers  = kv.second;
-			size_t numErased = consumers.erase(consumer);
-
-			// If we have really deleted a Consumer then we are done since we know
-			// that it just belongs to a single Producer.
-			if (numErased > 0)
-				break;
-		}
-
-		// Finally delete the Consumer entry in the map.
-		this->mapConsumerProducer.erase(consumer);
-	}
-
-	void Router::OnConsumerKeyFrameRequired(RTC::Consumer* consumer)
-	{
-		MS_TRACE();
-
-		auto* producer = this->mapConsumerProducer[consumer];
-
-		producer->RequestKeyFrame();
+		producer->RequestKeyFrame(ssrc);
 	}
 } // namespace RTC

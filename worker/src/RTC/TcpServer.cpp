@@ -2,8 +2,8 @@
 // #define MS_LOG_DEV
 
 #include "RTC/TcpServer.hpp"
-#include "RTC/PortManager.hpp"
 #include "Logger.hpp"
+#include "RTC/PortManager.hpp"
 #include <string>
 
 namespace RTC
@@ -15,7 +15,7 @@ namespace RTC
 	/* Instance methods. */
 
 	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
-		: // NOTE: This may throw.
+	  : // NOTE: This may throw.
 	    ::TcpServer::TcpServer(PortManager::BindTcp(ip), 256), listener(listener),
 	    connListener(connListener)
 	{

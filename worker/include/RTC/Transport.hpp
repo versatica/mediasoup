@@ -112,11 +112,10 @@ namespace RTC
 		Listener* listener{ nullptr };
 		// Allocated by this.
 		Timer* rtcpTimer{ nullptr };
-		// Others.
-		bool closed{ false };
-		// Others (Producers and Consumers).
 		std::unordered_map<std::string, RTC::Producer*> producers;
 		std::unordered_map<std::string, RTC::Consumer*> consumers;
+		// Others.
+		bool closed{ false };
 		// Others (RtpListener).
 		RtpListener rtpListener;
 		struct HeaderExtensionIds headerExtensionIds;

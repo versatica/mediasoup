@@ -968,7 +968,10 @@ namespace RTC
 		  "invalid DTLS state");
 
 		int64_t ret;
-		struct timeval dtlsTimeout{ 0, 0 };
+		struct timeval dtlsTimeout
+		{
+			0, 0
+		};
 		uint64_t timeoutMs;
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.

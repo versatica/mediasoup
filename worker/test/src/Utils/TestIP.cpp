@@ -1,7 +1,7 @@
 #include "common.hpp"
-#include "catch.hpp"
-#include "Utils.hpp"
 #include "MediaSoupError.hpp"
+#include "Utils.hpp"
+#include "catch.hpp"
 
 using namespace Utils;
 

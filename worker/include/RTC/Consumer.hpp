@@ -37,10 +37,7 @@ namespace RTC
 
 	public:
 		Consumer(
-			std::string& id,
-			Listener* listener,
-			RTC::Media::Kind kind,
-			RTC::RtpParameters& rtpParameters);
+		  std::string& id, Listener* listener, RTC::Media::Kind kind, RTC::RtpParameters& rtpParameters);
 		virtual ~Consumer();
 
 	public:
@@ -50,8 +47,8 @@ namespace RTC
 		void Resume();
 		void ProducerPaused();
 		void ProducerResumed();
-		void AddStream(const RTC::RtpStream* rtpStream, uint32_t translatedSsrc);
-		void RemoveStream(const RTC::RtpStream* rtpStream, uint32_t translatedSsrc);
+		void AddStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
+		void RemoveStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
 		// TODO: SetPreferredSpatialLayer()
 		// TODO: yes?
 		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
@@ -111,11 +108,12 @@ namespace RTC
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		// RTP profiles.
 		// std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
-		// RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		// RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		// RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
-		// RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
-		// RTP probation.
+		// RTC::RtpEncodingParameters::Profile preferredProfile{
+		// RTC::RtpEncodingParameters::Profile::DEFAULT }; RTC::RtpEncodingParameters::Profile
+		// targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
+		// RTC::RtpEncodingParameters::Profile effectiveProfile{
+		// RTC::RtpEncodingParameters::Profile::NONE }; RTC::RtpEncodingParameters::Profile
+		// probingProfile{ RTC::RtpEncodingParameters::Profile::NONE }; RTP probation.
 		uint16_t rtpPacketsBeforeProbation{ RtpPacketsBeforeProbation };
 		uint16_t probationPackets{ 0 };
 	};

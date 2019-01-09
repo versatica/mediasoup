@@ -32,8 +32,8 @@ Some considerations:
 * Public API.
 * Sends channel request `ROUTER_CLOSE`:
   - Processed by the C++ Worker.
-  - It calls C++ `delete router`.
   - It removes the C++ Router from its map.
+  - It calls C++ `delete router`.
 * Iterates all JS Transports and calls `transport.routerClosed()`.
 * Emits private JS `router.on('@close')` (so the JS Worker cleans its map).
 
@@ -94,10 +94,9 @@ Some considerations:
 
 ## C++ Router::OnTransportConsumerClosed(transport, consumer)
 
+* Get the associated C++ Producer from `mapConsumerProducer`.
+* Remove the closed C++ Consumer from the set of Consumers in the corresponding `mapProducerConsumers` entry for the given Producer.
 * Deletes the entry in `mapConsumerProducer` with key `consumer`.
-* Reads the `consumer->producerId` string, uses it to get the corresponding C++ Producer in its `mapProducers`.
-  - *NOTE:* It may not exist! If so, end here.
-  - Otherwise, uses the obtained C++ Producer to get its associated set of Consumers in `mapProducerConsumers` and remove the closed Consumer from the set.
 
 ## JS producer.transportClosed()
 

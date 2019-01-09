@@ -39,8 +39,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcTransport::WebRtcTransport(
-	  uint32_t id, RTC::Transport::Listener* listener, Options& options)
+	WebRtcTransport::WebRtcTransport(uint32_t id, RTC::Transport::Listener* listener, Options& options)
 	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
@@ -479,8 +478,7 @@ namespace RTC
 			// If everything is fine, we may run the DTLS transport if ready.
 			MayRunDtlsTransport();
 
-			MS_DEBUG_DEV(
-			  "Transport remote DTLS parameters set [id:%" PRIu32 "]", this->id);
+			MS_DEBUG_DEV("Transport remote DTLS parameters set [id:%" PRIu32 "]", this->id);
 		}
 
 		return this->dtlsLocalRole;

@@ -33,7 +33,6 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		void OnTransportClosed(RTC::Transport* transport) override;
 		void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) override;
@@ -42,14 +41,19 @@ namespace RTC
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
 		  const RTC::RtpStream* rtpStream,
-		  uint32_t translatedSsrc) override;
+		  uint32_t mappedSsrc) override;
 		void OnTransportProducerStreamDisabled(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
 		  const RTC::RtpStream* rtpStream,
-		  uint32_t translatedSsrc) override;
+		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpPacket(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		// TODO: Rethink.
+		// void OnTransportProducerDataNeeded(
+		// 	RTC::Transport* transport,
+		// 	std::string& producerId,
+		// 	struct ProducerData& data) override;
 		void OnTransportNewConsumer(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(
@@ -61,14 +65,10 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		// Map of Transport* indexed by id.
 		std::unordered_map<std::string, RTC::Transport*> mapTransports;
 		// Others.
-		// Map of Set<Consumers> indexed by Producer*.
 		std::unordered_map<const RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
-		// Map of Producer* indexed by Consumer*.
 		std::unordered_map<const RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
-		// Map of Producers* indexed by id.
 		std::unordered_map<std::string, RTC::Producer*> mapProducers;
 	};
 } // namespace RTC

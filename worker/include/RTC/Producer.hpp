@@ -32,9 +32,9 @@ namespace RTC
 			virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
 			virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnProducerStreamEnabled(
-			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc) = 0;
+			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerStreamDisabled(
-			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t translatedSsrc) = 0;
+			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 		};
 
 	public:
@@ -65,8 +65,8 @@ namespace RTC
 
 	public:
 		Producer(
-			std::string& id,
-			Listener* listener,
+		  std::string& id,
+		  Listener* listener,
 		  RTC::Media::Kind kind,
 		  RTC::RtpParameters& rtpParameters,
 		  struct RtpMapping& rtpMapping);

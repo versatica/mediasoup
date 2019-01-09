@@ -17,8 +17,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(uint32_t id, Listener* listener)
-	  : id(id), listener(listener)
+	Transport::Transport(uint32_t id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
 

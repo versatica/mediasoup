@@ -13,8 +13,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	PlainRtpTransport::PlainRtpTransport(
-	  uint32_t id, RTC::Transport::Listener* listener, Options& options)
+	PlainRtpTransport::PlainRtpTransport(uint32_t id, RTC::Transport::Listener* listener, Options& options)
 	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();

@@ -2,8 +2,8 @@
 #define MS_UDP_SOCKET_HPP
 
 #include "common.hpp"
-#include <string>
 #include <uv.h>
+#include <string>
 
 class UdpSocket
 {

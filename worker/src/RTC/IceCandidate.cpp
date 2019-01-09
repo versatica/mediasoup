@@ -1,8 +1,8 @@
 #define MS_CLASS "RTC::IceCandidate"
 // #define MS_LOG_DEV
 
-#include "Logger.hpp"
 #include "RTC/IceCandidate.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {

@@ -2,8 +2,8 @@
 #define MS_RTC_PORT_MANAGER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Settings.hpp"
+#include "json.hpp"
 #include <uv.h>
 #include <string>
 #include <unordered_map>

@@ -124,7 +124,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 	MS_TRACE();
 
 	MS_DEBUG_DEV(
-		"Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
+	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
 
 	switch (request->methodId)
 	{
@@ -146,77 +146,77 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 			break;
 		}
 
-		// case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
-		// {
-		// 	std::string routerId;
+			// case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
+			// {
+			// 	std::string routerId;
 
-		// 	try
-		// 	{
-		// 		SetNewRouterIdFromRequest(request, routerId);
-		// 	}
-		// 	catch (const MediaSoupError& error)
-		// 	{
-		// 		request->Reject(error.what());
+			// 	try
+			// 	{
+			// 		SetNewRouterIdFromRequest(request, routerId);
+			// 	}
+			// 	catch (const MediaSoupError& error)
+			// 	{
+			// 		request->Reject(error.what());
 
-		// 		break;
-		// 	}
+			// 		break;
+			// 	}
 
-		// 	auto* router = new RTC::Router(routerId);
+			// 	auto* router = new RTC::Router(routerId);
 
-		// 	this->mapRouters[routerId] = router;
+			// 	this->mapRouters[routerId] = router;
 
-		// 	MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
+			// 	MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
-		// 	request->Accept();
+			// 	request->Accept();
 
-		// 	break;
-		// }
+			// 	break;
+			// }
 
-		// case Channel::Request::MethodId::ROUTER_CLOSE:
-		// {
-		// 	RTC::Router* router;
+			// case Channel::Request::MethodId::ROUTER_CLOSE:
+			// {
+			// 	RTC::Router* router;
 
-		// 	try
-		// 	{
-		// 		router = GetRouterFromRequest(request);
-		// 	}
-		// 	catch (const MediaSoupError& error)
-		// 	{
-		// 		request->Reject(error.what());
+			// 	try
+			// 	{
+			// 		router = GetRouterFromRequest(request);
+			// 	}
+			// 	catch (const MediaSoupError& error)
+			// 	{
+			// 		request->Reject(error.what());
 
-		// 		break;
-		// 	}
+			// 		break;
+			// 	}
 
-		// 	// Remove it from the map and delete it.
-		// 	this->mapRouters.erase(router->routerId);
-		// 	delete router;
-		//
-		// 	MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
+			// 	// Remove it from the map and delete it.
+			// 	this->mapRouters.erase(router->id);
+			// 	delete router;
+			//
+			// 	MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
 
-		// 	request->Accept();
+			// 	request->Accept();
 
-		// 	break;
-		// }
+			// 	break;
+			// }
 
-		// default:
-		// {
-		// 	RTC::Router* router;
+			// default:
+			// {
+			// 	RTC::Router* router;
 
-		// 	try
-		// 	{
-		// 		router = GetRouterFromRequest(request);
-		// 	}
-		// 	catch (const MediaSoupError& error)
-		// 	{
-		// 		request->Reject(error.what());
+			// 	try
+			// 	{
+			// 		router = GetRouterFromRequest(request);
+			// 	}
+			// 	catch (const MediaSoupError& error)
+			// 	{
+			// 		request->Reject(error.what());
 
-		// 		break;
-		// 	}
+			// 		break;
+			// 	}
 
-		// 	router->HandleRequest(request);
+			// 	router->HandleRequest(request);
 
-		// 	break;
-		// }
+			// 	break;
+			// }
 	}
 }
 
