@@ -58,7 +58,7 @@ namespace RTC
 
 		// Add mapProducerIdConsumerIds.
 		jsonObject["mapProducerIdConsumerIds"] = json::object();
-		auto jsonMapProducerConsumersIt        = jsonObject.find("mapProducerIdConsumerIds");
+		auto jsonMapProducerConsumersIt    = jsonObject.find("mapProducerIdConsumerIds");
 
 		for (auto& kv : this->mapProducerConsumers)
 		{
@@ -66,7 +66,7 @@ namespace RTC
 			auto& consumers = kv.second;
 
 			(*jsonMapProducerConsumersIt)[producer.id] = json::array();
-			auto jsonProducerIdIt                      = jsonMapProducerConsumersIt->find(producer.id);
+			auto jsonProducerIdIt = jsonMapProducerConsumersIt->find(producer.id);
 
 			for (auto* consumer : consumers)
 			{
@@ -76,7 +76,7 @@ namespace RTC
 
 		// Add mapConsumerIdProducerId.
 		jsonObject["mapConsumerIdProducerId"] = json::object();
-		auto jsonMapConsumerProducerIt        = jsonObject.find("mapConsumerIdProducerId");
+		auto jsonMapConsumerProducerIt    = jsonObject.find("mapConsumerIdProducerId");
 
 		for (auto& kv : this->mapConsumerProducer)
 		{
@@ -342,12 +342,14 @@ namespace RTC
 		MS_TRACE();
 
 		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
-		auto mapProducersIt         = this->mapProducers.find(producer->id);
+		auto mapProducersIt = this->mapProducers.find(producer->id);
 
 		MS_ASSERT(
 		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
 		  "Producer not present in mapProducerConsumers");
-		MS_ASSERT(mapProducersIt != this->mapProducers.end(), "Producer not present in mapProducers");
+		MS_ASSERT(
+		  mapProducersIt != this->mapProducers.end(),
+		  "Producer not present in mapProducers");
 
 		// Close all Consumers associated to the closed Producer.
 		auto& consumers = mapProducerConsumersIt->second;
@@ -392,7 +394,8 @@ namespace RTC
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
-	  uint32_t mappedSsrc)
+	  uint32_t mappedSsrc
+	)
 	{
 		MS_TRACE();
 
@@ -408,7 +411,8 @@ namespace RTC
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
-	  uint32_t mappedSsrc)
+	  uint32_t mappedSsrc
+	)
 	{
 		MS_TRACE();
 
@@ -432,6 +436,15 @@ namespace RTC
 			consumer->SendRtpPacket(packet);
 		}
 	}
+
+	// TODO: Rethink.
+	// void Router::OnTransportProducerDataNeeded(
+	// 	RTC::Transport* transport,
+	// 	std::string& producerId,
+	// 	struct ProducerData& data)
+	// {
+	// 	MS_TRACE();
+	// }
 
 	void Router::OnTransportNewConsumer(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
 	{
