@@ -32,7 +32,7 @@ namespace RTC
 		this->outputEncodings = this->rtpParameters.encodings;
 
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
-		FillHeaderExtensionIds();
+		FillRtpHeaderExtensionIds();
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -84,7 +84,7 @@ namespace RTC
 		static const Json::StaticString JsonStringHigh{ "high" };
 		static const Json::StaticString JsonStringRtxSsrc{ "rtxSsrc" };
 		static const Json::StaticString JsonStringActive{ "active" };
-		static const Json::StaticString JsonStringHeaderExtensionIds{ "headerExtensionIds" };
+		static const Json::StaticString JsonStringHeaderExtensionIds{ "rtpHeaderExtensionIds" };
 		static const Json::StaticString JsonStringSsrcAudioLevel{ "ssrcAudioLevel" };
 		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
 		static const Json::StaticString JsonStringPaused{ "paused" };
@@ -146,14 +146,14 @@ namespace RTC
 
 		json[JsonStringLossPercentage] = lossPercentage;
 
-		if (this->headerExtensionIds.ssrcAudioLevel != 0u)
-			jsonHeaderExtensionIds[JsonStringSsrcAudioLevel] = this->headerExtensionIds.ssrcAudioLevel;
+		if (this->rtpHeaderExtensionIds.ssrcAudioLevel != 0u)
+			jsonHeaderExtensionIds[JsonStringSsrcAudioLevel] = this->rtpHeaderExtensionIds.ssrcAudioLevel;
 
-		if (this->headerExtensionIds.absSendTime != 0u)
-			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->headerExtensionIds.absSendTime;
+		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
+			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->rtpHeaderExtensionIds.absSendTime;
 
-		if (this->headerExtensionIds.rid != 0u)
-			jsonHeaderExtensionIds[JsonStringRid] = this->headerExtensionIds.rid;
+		if (this->rtpHeaderExtensionIds.rid != 0u)
+			jsonHeaderExtensionIds[JsonStringRid] = this->rtpHeaderExtensionIds.rid;
 
 		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
 
@@ -374,7 +374,7 @@ namespace RTC
 		this->isKeyFrameRequested = false;
 	}
 
-	void Producer::FillHeaderExtensionIds()
+	void Producer::FillRtpHeaderExtensionIds()
 	{
 		MS_TRACE();
 
@@ -395,7 +395,7 @@ namespace RTC
 				else
 					ssrcAudioLevelId = exten.id;
 
-				this->headerExtensionIds.ssrcAudioLevel = ssrcAudioLevelId;
+				this->rtpHeaderExtensionIds.ssrcAudioLevel = ssrcAudioLevelId;
 			}
 
 			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
@@ -405,7 +405,7 @@ namespace RTC
 				else
 					absSendTimeId = exten.id;
 
-				this->headerExtensionIds.absSendTime          = absSendTimeId;
+				this->rtpHeaderExtensionIds.absSendTime       = absSendTimeId;
 				this->transportHeaderExtensionIds.absSendTime = exten.id;
 			}
 
@@ -416,7 +416,7 @@ namespace RTC
 				else
 					midId = exten.id;
 
-				this->headerExtensionIds.mid          = midId;
+				this->rtpHeaderExtensionIds.mid       = midId;
 				this->transportHeaderExtensionIds.mid = exten.id;
 			}
 
@@ -427,7 +427,7 @@ namespace RTC
 				else
 					ridId = exten.id;
 
-				this->headerExtensionIds.rid          = ridId;
+				this->rtpHeaderExtensionIds.rid       = ridId;
 				this->transportHeaderExtensionIds.rid = exten.id;
 			}
 		}
@@ -604,22 +604,22 @@ namespace RTC
 
 		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
 
-		if (this->headerExtensionIds.ssrcAudioLevel != 0u)
+		if (this->rtpHeaderExtensionIds.ssrcAudioLevel != 0u)
 		{
 			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->headerExtensionIds.ssrcAudioLevel);
+			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->rtpHeaderExtensionIds.ssrcAudioLevel);
 		}
 
-		if (this->headerExtensionIds.absSendTime != 0u)
+		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
 		{
 			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
+			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->rtpHeaderExtensionIds.absSendTime);
 		}
 
-		if (this->headerExtensionIds.rid != 0u)
+		if (this->rtpHeaderExtensionIds.rid != 0u)
 		{
 			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
+			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->rtpHeaderExtensionIds.rid);
 		}
 	}
 

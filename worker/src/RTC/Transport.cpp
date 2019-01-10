@@ -8,10 +8,12 @@
 #include "Utils.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
+#include "RTC/RTCP/FeedbackPs.hpp"
+#include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpDictionaries.hpp"
-
-/* Consts. */
 
 namespace RTC
 {
@@ -29,50 +31,146 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->closed)
-			Close();
+		// The destructor must delete and clear everything silently.
+
+		// Delete all Producers.
+		for (auto& kv : this->mapProducers)
+		{
+			auto* producer = kv.second;
+
+			delete producer;
+		}
+		this->mapProducers.clear();
+
+		// Delete all Consumers.
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+
+			delete consumer;
+		}
+		this->mapConsumers.clear();
+
+		// Delete the RTCP timer.
+		delete this->rtcpTimer;
 	}
 
 	void Transport::Close()
 	{
 		MS_TRACE();
 
-		if (this->closed)
-			return;
+		// This method is called by the Router and must notify him about all the
+		// Producers and Consumers that we are gonna close.
+		//
+		// The caller is supposed to delete this Transport instance after calling
+		// Close().
 
-		this->closed = true;
-
-		// Close all the handled Producers.
-		for (auto it = this->producers.begin(); it != this->producers.end();)
+		// Close all Producers.
+		for (auto& kv : this->mapProducers)
 		{
-			auto* producer = *it;
+			auto* producer = kv.second;
 
-			// TODO: Notify the Router about the closed Producer.
-
-			this->listener->onTransportProducerClosed(foo and bar);
-
-			it = this->producers.erase(it);
+			// Notify the listener.
+			this->listener->OnTransportProducerClosed(this, producer);
 
 			delete producer;
 		}
+		this->mapProducers.clear();
 
-		// Disable all the handled Consumers.
-		// TODO: No, call consumer->TransportClosed() and delete.
-		for (auto* consumer : this->consumers)
+		// Delete all Consumers.
+		for (auto& kv : this->mapConsumers)
 		{
-			consumer->Disable();
+			auto* consumer = kv.second;
 
-			// Remove us as listener.
-			consumer->RemoveListener(this);
+			// Notify the listener.
+			this->listener->OnTransportConsumerClosed(this, consumer);
+
+			delete consumer;
 		}
+		this->mapConsumers.clear();
 
 		// Close the RTCP timer.
-		delete this->rtcpTimer;
-
-		// Notify the listener.
-		this->listener->OnTransportClosed(this);
+		this->rtcpTimer->Close();
 	}
 
+	void Router::HandleRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+			case Channel::Request::MethodId::PRODUCER_CLOSE:
+			{
+				RTC::Producer* producer;
+
+				try
+				{
+					producer = GetProducerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Remove it from the map.
+				this->mapProducers.erase(producer->id);
+
+				// Notify the listener.
+				this->listener->OnTransportProducerClosed(this, producer);
+
+				// Delete it.
+				delete producer;
+
+				MS_DEBUG_DEV("Producer closed [id:%s]", producer->id.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_CLOSE:
+			{
+				RTC::Consumer* producer;
+
+				try
+				{
+					producer = GetConsumerFromRequest(request);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Remove it from the map.
+				this->mapConsumers.erase(consumer->id);
+
+				// Notify the listener.
+				this->listener->OnTransportConsumerClosed(this, consumer);
+
+				// Delete it.
+				delete consumer;
+
+				MS_DEBUG_DEV("Consumer closed [id:%s]", consumer->id.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			default:
+			{
+				MS_ERROR("unknown method '%s'", request->method);
+
+				request->Reject("unknown method");
+			}
+		}
+	}
+
+	// TODO: Not here but in HandleRequest() in TRANSPORT_PRODUCE.
 	void Transport::HandleProducer(RTC::Producer* producer)
 	{
 		MS_TRACE();
@@ -82,35 +180,40 @@ namespace RTC
 		this->rtpListener.AddProducer(producer);
 
 		// Add to the map.
-		this->producers.insert(producer);
+		this->mapProducers[producer->id] = producer;
 
 		// Add us as listener.
-		producer->AddListener(this);
+		// producer->AddListener(this);
 
 		// Take the transport related RTP header extension ids of the Producer
 		// and add them to the Transport.
 
-		if (producer->GetTransportHeaderExtensionIds().absSendTime != 0u)
-			this->headerExtensionIds.absSendTime = producer->GetTransportHeaderExtensionIds().absSendTime;
+		auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 
-		if (producer->GetTransportHeaderExtensionIds().mid != 0u)
-			this->headerExtensionIds.mid = producer->GetTransportHeaderExtensionIds().mid;
+		if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+			this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
 
-		if (producer->GetTransportHeaderExtensionIds().rid != 0u)
-			this->headerExtensionIds.rid = producer->GetTransportHeaderExtensionIds().rid;
+		if (producerRtpHeaderExtensionIds.mid != 0u)
+			this->rtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+
+		if (producerRtpHeaderExtensionIds.rid != 0u)
+			this->rtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
 	}
 
+	// TODO: Not here but in HandleRequest() in TRANSPORT_CONSUME.
 	void Transport::HandleConsumer(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
 		// Add to the map.
-		this->consumers.insert(consumer);
+		this->mapConsumers[consumer->id] = consumer;
 
 		// Add us as listener.
-		consumer->AddListener(this);
+		// consumer->AddListener(this);
 
-		// If we are connected, ask a key request for this enabled Consumer.
+		// TODO: WHAT? started here?
+		//
+		// If we are connected, ask a key request for this started Consumer.
 		if (IsConnected())
 		{
 			if (consumer->kind == RTC::Media::Kind::VIDEO)
@@ -119,8 +222,78 @@ namespace RTC
 				  rtcp, rtx, "requesting key frame for new Consumer since Transport already connected");
 			}
 
+			// TODO: NO: It must call listener->OnTransportConsumerKeyFrameRequested(this, consumer)
+			// without ssrc (so for all streams).
 			consumer->RequestKeyFrame();
 		}
+	}
+
+	void Transport::SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const
+	{
+		MS_TRACE();
+
+		auto jsonProducerIdIt = request->internal.find("producerId");
+
+		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.producerId");
+
+		producerId.assign(jsonProducerIdIt->get<std::string>());
+
+		if (this->mapProducers.find(producerId) != this->mapProducers.end())
+			MS_THROW_ERROR("a Producer with same producerId already exists");
+	}
+
+	RTC::Producer* Transport::GetProducerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonProducerIdIt = request->internal.find("producerId");
+
+		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.producerId");
+
+		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
+
+		if (it == this->mapProducers.end())
+			MS_THROW_ERROR("Producer not found");
+
+		RTC::Producer* producer = it->second;
+
+		return producer;
+	}
+
+	void Transport::SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const
+	{
+		MS_TRACE();
+
+		auto jsonConsumerIdIt = request->internal.find("consumerId");
+
+		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.consumerId");
+
+		consumerId.assign(jsonConsumerIdIt->get<std::string>());
+
+		if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
+			MS_THROW_ERROR("a Consumer with same consumerId already exists");
+	}
+
+	RTC::Consumer* Transport::GetConsumerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonConsumerIdIt = request->internal.find("consumerId");
+
+		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.consumerId");
+
+		auto it = this->mapConsumers.find(jsonConsumerIdIt->get<std::string>());
+
+		if (it == this->mapConsumers.end())
+			MS_THROW_ERROR("Consumer not found");
+
+		RTC::Consumer* consumer = it->second;
+
+		return consumer;
 	}
 
 	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
@@ -356,8 +529,10 @@ namespace RTC
 
 		std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
 
-		for (auto& consumer : this->consumers)
+		for (auto& kv : this->mapConsumers)
 		{
+			auto* consumer = kv.second;
+
 			consumer->GetRtcp(packet.get(), now);
 
 			// Send the RTCP compound packet if there is a sender report.
@@ -404,10 +579,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto* consumer : this->consumers)
+		for (auto& kv : this->mapConsumers)
 		{
-			// Ignore if not enabled.
-			if (!consumer->IsEnabled())
+			auto* consumer = kv.second;
+
+			// Ignore if not started.
+			if (!consumer->IsStarted())
 				continue;
 
 			// NOTE: Use & since, otherwise, a full copy will be retrieved.
@@ -427,6 +604,7 @@ namespace RTC
 		return nullptr;
 	}
 
+	// NO
 	void Transport::OnProducerClosed(RTC::Producer* producer)
 	{
 		MS_TRACE();
@@ -438,49 +616,46 @@ namespace RTC
 		this->rtpListener.RemoveProducer(producer);
 	}
 
-	void Transport::OnProducerPaused(RTC::Producer* /*producer*/)
+	inline void Transport::OnProducerPaused(RTC::Producer* producer)
 	{
-		// Do nothing.
+		this->OnTransportProducerPaused(this, producer);
 	}
 
-	void Transport::OnProducerResumed(RTC::Producer* /*producer*/)
+	inline void Transport::OnProducerResumed(RTC::Producer* producer)
 	{
-		// Do nothing.
+		this->OnTransportProducerResumed(this, producer);
 	}
 
-	void Transport::OnProducerRtpPacket(
-	  RTC::Producer* /*producer*/,
-	  RTC::RtpPacket* /*packet*/,
-	  RTC::RtpEncodingParameters::Profile /*profile*/)
+	inline void Transport::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
-		// Do nothing.
+		this->OnTransportProducerRtpPacket(this, producer, packet);
 	}
 
-	void Transport::OnProducerProfileEnabled(
-	  RTC::Producer* /*producer*/,
-	  RTC::RtpEncodingParameters::Profile /*profile*/,
-	  const RTC::RtpStream* /*rtpStream*/)
+	inline void Transport::OnProducerStreamEnabled(
+	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
-		// Do nothing.
+		this->OnTransportProducerStreamEnabled(this, producer, rtpStream, mappedSsrc);
 	}
 
-	void Transport::OnProducerProfileDisabled(
-	  RTC::Producer* /*producer*/, RTC::RtpEncodingParameters::Profile /*profile*/)
+	inline void Transport::OnProducerStreamDisabled(
+	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
-		// Do nothing.
+		this->OnTransportProducerStreamDisabled(this, producer, rtpStream, mappedSsrc);
 	}
 
-	void Transport::OnConsumerClosed(RTC::Consumer* consumer)
+	inline void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, RTC::RTCP::Packet* packet)
 	{
-		MS_TRACE();
-
-		// Remove from the map.
-		this->consumers.erase(consumer);
+		SendRtcpPacket(packet);
 	}
 
-	void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* /*consumer*/)
+	inline void Transport::OnConsumerSendRtpPacket(RTC::Producer* /*consumer*/, RTC::Packet* packet)
 	{
-		// Do nothing.
+		SendRtpPacket(packet);
+	}
+
+	inline void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* consumer)
+	{
+		this->OnTransportConsumerKeyFrameRequested(this, consumer);
 	}
 
 	void Transport::OnTimer(Timer* timer)
@@ -493,14 +668,16 @@ namespace RTC
 			SendRtcp(now);
 
 			// Recalculate next RTCP interval.
-			if (!this->consumers.empty())
+			if (!this->mapConsumers.empty())
 			{
 				// Transmission rate in kbps.
 				uint32_t rate = 0;
 
 				// Get the RTP sending rate.
-				for (auto& consumer : this->consumers)
+				for (auto& kv : this->mapConsumers)
 				{
+					auto* consumer = kv.second;
+
 					rate += consumer->GetTransmissionRate(now) / 1000;
 				}
 

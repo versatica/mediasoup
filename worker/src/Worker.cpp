@@ -49,10 +49,10 @@ void Worker::Close()
 
 	this->closed = true;
 
-	// Close the SignalsHandler.
+	// Delete the SignalsHandler.
 	delete this->signalsHandler;
 
-	// Close all Routers.
+	// Delete all Routers.
 	// for (auto& kv : this->mapRouters)
 	// {
 	// 	auto* router = kv.second;

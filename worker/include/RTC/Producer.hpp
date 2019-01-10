@@ -3,14 +3,15 @@
 
 #include "common.hpp"
 #include "json.hpp"
+#include "Channel/Request.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include "RTC/Transport.hpp" // TODO: Must remove, but RTC::Transport::HeaderExtensionIds...
 #include "handles/Timer.hpp"
 #include <map>
 #include <string>
@@ -45,15 +46,6 @@ namespace RTC
 		};
 
 	private:
-		struct HeaderExtensionIds
-		{
-			uint8_t ssrcAudioLevel{ 0 }; // 0 means no ssrc-audio-level id.
-			uint8_t absSendTime{ 0 };    // 0 means no abs-send-time id.
-			uint8_t mid{ 0 };            // 0 means no MID id.
-			uint8_t rid{ 0 };            // 0 means no RID id.
-		};
-
-	private:
 		struct RtpStreamInfo
 		{
 			RTC::RtpStreamRecv* rtpStream{ nullptr };
@@ -78,7 +70,7 @@ namespace RTC
 		void Pause();
 		void Resume();
 		const RTC::RtpParameters& GetParameters() const;
-		const struct RTC::Transport::HeaderExtensionIds& GetTransportHeaderExtensionIds() const;
+		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
@@ -87,7 +79,7 @@ namespace RTC
 		const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& GetActiveProfiles() const;
 
 	private:
-		void FillHeaderExtensionIds();
+		void FillRtpHeaderExtensionIds();
 		void MayNeedNewStream(RTC::RtpPacket* packet);
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding, uint32_t ssrc);
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
@@ -110,7 +102,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id{ 0 };
+		const std::string id;
 		Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
 
@@ -124,8 +116,7 @@ namespace RTC
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		std::vector<RtpEncodingParameters> outputEncodings;
-		struct RTC::Transport::HeaderExtensionIds transportHeaderExtensionIds;
-		struct HeaderExtensionIds headerExtensionIds;
+		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		bool isKeyFrameRequested{ false };
 		// Timestamp when last RTCP was sent.
@@ -140,9 +131,9 @@ namespace RTC
 		return this->rtpParameters;
 	}
 
-	inline const struct RTC::Transport::HeaderExtensionIds& Producer::GetTransportHeaderExtensionIds() const
+	inline const struct RTC::RtpHeaderExtensionIds& Producer::GetRtpHeaderExtensionIds() const
 	{
-		return this->transportHeaderExtensionIds;
+		return this->rtpHeaderExtensionIds;
 	}
 
 	inline bool Producer::IsPaused() const

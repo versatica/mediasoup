@@ -329,14 +329,14 @@ namespace RTC
 		jsonObject["headerExtensions"] = json::object();
 		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
-		if (this->headerExtensionIds.absSendTime != 0u)
-			(*jsonHeaderExtensionsIt)["absSendTime"] = this->headerExtensionIds.absSendTime;
+		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
+			(*jsonHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
 
-		if (this->headerExtensionIds.mid != 0u)
-			(*jsonHeaderExtensionsIt)["mid"] = this->headerExtensionIds.mid;
+		if (this->rtpHeaderExtensionIds.mid != 0u)
+			(*jsonHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
 
-		if (this->headerExtensionIds.rid != 0u)
-			(*jsonHeaderExtensionsIt)["rid"] = this->headerExtensionIds.rid;
+		if (this->rtpHeaderExtensionIds.rid != 0u)
+			(*jsonHeaderExtensionsIt)["rid"] = this->rtpHeaderExtensionIds.rid;
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
@@ -794,19 +794,19 @@ namespace RTC
 		}
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-		if (this->headerExtensionIds.absSendTime != 0u)
+		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
 		{
 			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
+			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->rtpHeaderExtensionIds.absSendTime);
 		}
-		if (this->headerExtensionIds.mid != 0u)
+		if (this->rtpHeaderExtensionIds.mid != 0u)
 		{
-			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::MID, this->headerExtensionIds.mid);
+			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::MID, this->rtpHeaderExtensionIds.mid);
 		}
-		if (this->headerExtensionIds.rid != 0u)
+		if (this->rtpHeaderExtensionIds.rid != 0u)
 		{
 			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
+			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->rtpHeaderExtensionIds.rid);
 		}
 
 		// Feed the remote bitrate estimator (REMB).

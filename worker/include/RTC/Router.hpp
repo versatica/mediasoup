@@ -49,19 +49,17 @@ namespace RTC
 		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpPacket(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
-		// TODO: Rethink.
-		// void OnTransportProducerDataNeeded(
-		// 	RTC::Transport* transport,
-		// 	std::string& producerId,
-		// 	struct ProducerData& data) override;
-		void OnTransportNewConsumer(RTC::Transport* transport, RTC::Consumer* consumer) override;
+		const RTC::Producer* OnTransportGetProducer(
+		  RTC::Transport* transport, std::string& producerId) override;
+		void OnTransportNewConsumer(
+		  RTC::Transport* transport, RTC::Consumer* consumer, const RTC::Producer* producer) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(
 		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t ssrc) override;
 
 	public:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 
 	private:
 		// Allocated by this.

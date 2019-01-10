@@ -128,6 +128,7 @@
       # 'include/RTC/Producer.hpp',
       # 'include/RTC/Router.hpp',
       'include/RTC/RtpDictionaries.hpp',
+      'include/RTC/RtpHeaderExtensionIds.hpp',
       # 'include/RTC/RtpListener.hpp',
       # 'include/RTC/RtpMonitor.hpp',
       # 'include/RTC/RtpPacket.hpp',

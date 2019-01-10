@@ -5,10 +5,9 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
-#include "RTC/PlainRtpTransport.hpp"
+// #include "RTC/PlainRtpTransport.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/WebRtcTransport.hpp"
+// #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
 {
@@ -58,32 +57,32 @@ namespace RTC
 
 		// Add mapProducerIdConsumerIds.
 		jsonObject["mapProducerIdConsumerIds"] = json::object();
-		auto jsonMapProducerConsumersIt    = jsonObject.find("mapProducerIdConsumerIds");
+		auto jsonMapProducerConsumersIt        = jsonObject.find("mapProducerIdConsumerIds");
 
 		for (auto& kv : this->mapProducerConsumers)
 		{
 			auto* producer  = kv.first;
 			auto& consumers = kv.second;
 
-			(*jsonMapProducerConsumersIt)[producer.id] = json::array();
-			auto jsonProducerIdIt = jsonMapProducerConsumersIt->find(producer.id);
+			(*jsonMapProducerConsumersIt)[producer->id] = json::array();
+			auto jsonProducerIdIt                       = jsonMapProducerConsumersIt->find(producer->id);
 
 			for (auto* consumer : consumers)
 			{
-				jsonProducerIdIt->emplace_back(consumer.id)
+				jsonProducerIdIt->emplace_back(consumer->id)
 			}
 		}
 
 		// Add mapConsumerIdProducerId.
 		jsonObject["mapConsumerIdProducerId"] = json::object();
-		auto jsonMapConsumerProducerIt    = jsonObject.find("mapConsumerIdProducerId");
+		auto jsonMapConsumerProducerIt        = jsonObject.find("mapConsumerIdProducerId");
 
 		for (auto& kv : this->mapConsumerProducer)
 		{
 			auto* consumer = kv.first;
 			auto* producer = kv.second;
 
-			(*jsonMapConsumerProducerIt)[consumer.id] = producer.id;
+			(*jsonMapConsumerProducerIt)[consumer->id] = producer->id;
 		}
 	}
 
@@ -104,136 +103,136 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
-			{
-				static const Json::StaticString JsonStringUdp{ "udp" };
-				static const Json::StaticString JsonStringTcp{ "tcp" };
-				static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
-				static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
-				static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
-				static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
+				// case Channel::Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
+				// {
+				// 	static const Json::StaticString JsonStringUdp{ "udp" };
+				// 	static const Json::StaticString JsonStringTcp{ "tcp" };
+				// 	static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
+				// 	static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
+				// 	static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
+				// 	static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
 
-				std::string transportId;
+				// 	std::string transportId;
 
-				try
-				{
-					SetNewTransportIdFromRequest(request, transportId);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
+				// 	try
+				// 	{
+				// 		SetNewTransportIdFromRequest(request, transportId);
+				// 	}
+				// 	catch (const MediaSoupError& error)
+				// 	{
+				// 		request->Reject(error.what());
 
-					return;
-				}
+				// 		return;
+				// 	}
 
-				RTC::WebRtcTransport::Options options;
+				// 	RTC::WebRtcTransport::Options options;
 
-				if (request->data[JsonStringUdp].isBool())
-					options.udp = request->data[JsonStringUdp].asBool();
-				if (request->data[JsonStringTcp].isBool())
-					options.tcp = request->data[JsonStringTcp].asBool();
-				if (request->data[JsonStringPreferIPv4].isBool())
-					options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
-				if (request->data[JsonStringPreferIPv6].isBool())
-					options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
-				if (request->data[JsonStringPreferUdp].isBool())
-					options.preferUdp = request->data[JsonStringPreferUdp].asBool();
-				if (request->data[JsonStringPreferTcp].isBool())
-					options.preferTcp = request->data[JsonStringPreferTcp].asBool();
+				// 	if (request->data[JsonStringUdp].isBool())
+				// 		options.udp = request->data[JsonStringUdp].asBool();
+				// 	if (request->data[JsonStringTcp].isBool())
+				// 		options.tcp = request->data[JsonStringTcp].asBool();
+				// 	if (request->data[JsonStringPreferIPv4].isBool())
+				// 		options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
+				// 	if (request->data[JsonStringPreferIPv6].isBool())
+				// 		options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
+				// 	if (request->data[JsonStringPreferUdp].isBool())
+				// 		options.preferUdp = request->data[JsonStringPreferUdp].asBool();
+				// 	if (request->data[JsonStringPreferTcp].isBool())
+				// 		options.preferTcp = request->data[JsonStringPreferTcp].asBool();
 
-				RTC::WebRtcTransport* webrtcTransport;
+				// 	RTC::WebRtcTransport* webrtcTransport;
 
-				try
-				{
-					// NOTE: This may throw.
-					webrtcTransport = new RTC::WebRtcTransport(this, transportId, options);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
+				// 	try
+				// 	{
+				// 		// NOTE: This may throw.
+				// 		webrtcTransport = new RTC::WebRtcTransport(this, transportId, options);
+				// 	}
+				// 	catch (const MediaSoupError& error)
+				// 	{
+				// 		request->Reject(error.what());
 
-					return;
-				}
+				// 		return;
+				// 	}
 
-				// Insert into the map.
-				this->mapTransports[transportId] = webrtcTransport;
+				// 	// Insert into the map.
+				// 	this->mapTransports[transportId] = webrtcTransport;
 
-				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
+				// 	MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
-				json data = json::object();
+				// 	json data = json::object();
 
-				webrtcTransport->FillJson(data);
+				// 	webrtcTransport->FillJson(data);
 
-				request->Accept(data);
+				// 	request->Accept(data);
 
-				break;
-			}
+				// 	break;
+				// }
 
-			case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT:
-			{
-				static const Json::StaticString JsonStringRemoteIp{ "remoteIp" };
-				static const Json::StaticString JsonStringRemotePort{ "remotePort" };
-				static const Json::StaticString JsonStringLocalIp{ "localIp" };
-				static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
-				static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
+				// case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT:
+				// {
+				// 	static const Json::StaticString JsonStringRemoteIp{ "remoteIp" };
+				// 	static const Json::StaticString JsonStringRemotePort{ "remotePort" };
+				// 	static const Json::StaticString JsonStringLocalIp{ "localIp" };
+				// 	static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
+				// 	static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
 
-				std::string transportId;
+				// 	std::string transportId;
 
-				try
-				{
-					SetNewTransportIdFromRequest(request, transportId);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
+				// 	try
+				// 	{
+				// 		SetNewTransportIdFromRequest(request, transportId);
+				// 	}
+				// 	catch (const MediaSoupError& error)
+				// 	{
+				// 		request->Reject(error.what());
 
-					return;
-				}
+				// 		return;
+				// 	}
 
-				RTC::PlainRtpTransport::Options options;
+				// 	RTC::PlainRtpTransport::Options options;
 
-				if (request->data[JsonStringRemoteIp].isString())
-					options.remoteIp = request->data[JsonStringRemoteIp].asString();
+				// 	if (request->data[JsonStringRemoteIp].isString())
+				// 		options.remoteIp = request->data[JsonStringRemoteIp].asString();
 
-				if (request->data[JsonStringRemotePort].isUInt())
-					options.remotePort = request->data[JsonStringRemotePort].asUInt();
+				// 	if (request->data[JsonStringRemotePort].isUInt())
+				// 		options.remotePort = request->data[JsonStringRemotePort].asUInt();
 
-				if (request->data[JsonStringLocalIp].isString())
-					options.localIp = request->data[JsonStringLocalIp].asString();
+				// 	if (request->data[JsonStringLocalIp].isString())
+				// 		options.localIp = request->data[JsonStringLocalIp].asString();
 
-				if (request->data[JsonStringPreferIPv4].isBool())
-					options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
+				// 	if (request->data[JsonStringPreferIPv4].isBool())
+				// 		options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
 
-				if (request->data[JsonStringPreferIPv6].isBool())
-					options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
+				// 	if (request->data[JsonStringPreferIPv6].isBool())
+				// 		options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
 
-				RTC::PlainRtpTransport* plainRtpTransport;
+				// 	RTC::PlainRtpTransport* plainRtpTransport;
 
-				try
-				{
-					// NOTE: This may throw.
-					plainRtpTransport = new RTC::PlainRtpTransport(this, transportId, options);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
+				// 	try
+				// 	{
+				// 		// NOTE: This may throw.
+				// 		plainRtpTransport = new RTC::PlainRtpTransport(this, transportId, options);
+				// 	}
+				// 	catch (const MediaSoupError& error)
+				// 	{
+				// 		request->Reject(error.what());
 
-					return;
-				}
+				// 		return;
+				// 	}
 
-				// Insert into the map.
-				this->mapTransports[transportId] = plainRtpTransport;
+				// 	// Insert into the map.
+				// 	this->mapTransports[transportId] = plainRtpTransport;
 
-				MS_DEBUG_DEV("PlainRtpTransport created [transportId:%s]", transportId.c_str());
+				// 	MS_DEBUG_DEV("PlainRtpTransport created [transportId:%s]", transportId.c_str());
 
-				json data = json::object();
+				// 	json data = json::object();
 
-				plainRtpTransport->FillJson(data);
+				// 	plainRtpTransport->FillJson(data);
 
-				request->Accept(data);
+				// 	request->Accept(data);
 
-				break;
-			}
+				// 	break;
+				// }
 
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
 			{
@@ -314,7 +313,7 @@ namespace RTC
 		auto it = this->mapTransports.find(jsonTransportIdIt->get<std::string>());
 
 		if (it == this->mapTransports.end())
-			MS_THROW_ERROR("Router not found");
+			MS_THROW_ERROR("Transport not found");
 
 		RTC::Transport* transport = it->second;
 
@@ -334,7 +333,7 @@ namespace RTC
 
 		// Insert the Producer in the maps.
 		this->mapProducerConsumers[producer];
-		this->mapProducers[producer.id] = producer;
+		this->mapProducers[producer->id] = producer;
 	}
 
 	void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -342,14 +341,12 @@ namespace RTC
 		MS_TRACE();
 
 		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
-		auto mapProducersIt = this->mapProducers.find(producer->id);
+		auto mapProducersIt         = this->mapProducers.find(producer->id);
 
 		MS_ASSERT(
 		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
 		  "Producer not present in mapProducerConsumers");
-		MS_ASSERT(
-		  mapProducersIt != this->mapProducers.end(),
-		  "Producer not present in mapProducers");
+		MS_ASSERT(mapProducersIt != this->mapProducers.end(), "Producer not present in mapProducers");
 
 		// Close all Consumers associated to the closed Producer.
 		auto& consumers = mapProducerConsumersIt->second;
@@ -370,7 +367,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers[producer];
+		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		for (auto* consumer : consumers)
 		{
@@ -382,7 +379,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers[producer];
+		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		for (auto* consumer : consumers)
 		{
@@ -394,42 +391,40 @@ namespace RTC
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
-	  uint32_t mappedSsrc
-	)
+	  uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers[producer];
+		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		for (auto* consumer : consumers)
 		{
-			consumer->AddStream(rtpStream, mappedSsrc);
+			consumer->EnableStream(rtpStream, mappedSsrc);
 		}
 	}
 
-	void Router::OnTransportProducerStreamDisabledEnabled(
+	void Router::OnTransportProducerStreamDisabled(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
-	  uint32_t mappedSsrc
-	)
+	  uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers[producer];
+		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		for (auto* consumer : consumers)
 		{
-			consumer->RemoveStream(rtpStream, mappedSsrc);
+			consumer->DisableStream(rtpStream, mappedSsrc);
 		}
 	}
 
-	void Router::OnTransportProducerRtpPacket(
+	void Router::OnTransportProducerRtpPacketReceived(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers[producer];
+		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		for (auto* consumer : consumers)
 		{
@@ -437,34 +432,39 @@ namespace RTC
 		}
 	}
 
-	// TODO: Rethink.
-	// void Router::OnTransportProducerDataNeeded(
-	// 	RTC::Transport* transport,
-	// 	std::string& producerId,
-	// 	struct ProducerData& data)
-	// {
-	// 	MS_TRACE();
-	// }
-
-	void Router::OnTransportNewConsumer(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
+	const RTC::Producer* Router::OnTransportGetProducer(
+	  RTC::Transport* /*transport*/, std::string& producerId)
 	{
 		MS_TRACE();
 
+		auto mapProducersIt = this->mapProducers.find(producerId);
+
+		if (mapProducersIt == this->mapProducers.end())
+			return nullptr;
+
+		auto* producer = mapProducersIt->second;
+
+		return producer;
+	}
+
+	void Router::OnTransportNewConsumer(
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
+
+		MS_ASSERT(
+		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers");
 		MS_ASSERT(
 		  this->mapConsumerProducer.find(consumer) == this->mapConsumerProducer.end(),
 		  "Consumer already present in mapConsumerProducer");
 
-		// Get the corresponding Producer.
-		std::string& producerId = consumer->producerId;
-
-		MS_ASSERT(
-		  this->mapProducers.find(producerId) != this->mapProducers.end(),
-		  "Producer not present in mapProducers");
-
-		auto* producer = this->mapProducers[producerId];
+		auto& consumers = mapProducerConsumersIt->second;
 
 		// Insert the Consumer in the maps.
-		this->mapProducerConsumers[producer].insert(consumer);
+		consumers.insert(consumer);
 		this->mapConsumerProducer[consumer] = producer;
 	}
 
@@ -486,7 +486,7 @@ namespace RTC
 		  "Producer not present in mapProducerConsumers");
 
 		// Remove the Consumer from the set of Consumers of the Producer.
-		auto& consumers = this->mapProducerConsumers[producer];
+		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		consumers.erase(consumer);
 

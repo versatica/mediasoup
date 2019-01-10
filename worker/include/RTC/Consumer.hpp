@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "json.hpp"
+#include "Channel/Request.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -43,12 +44,13 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonObject) const = 0;
+		bool IsStarted() const;
 		void Pause();
 		void Resume();
 		void ProducerPaused();
 		void ProducerResumed();
-		void AddStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
-		void RemoveStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
+		void EnableStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
+		void DisableStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
 		// TODO: SetPreferredSpatialLayer()
 		// TODO: yes?
 		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
@@ -81,7 +83,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id{ 0 };
+		const std::string id;
 		Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
 
@@ -93,6 +95,7 @@ namespace RTC
 		RtpMonitor* rtpMonitor{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
+		bool started{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
 		// Timestamp when last RTCP was sent.
@@ -120,14 +123,19 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline const RTC::RtpParameters& Consumer::GetParameters() const
+	inline bool Consumer::IsStarted() const
 	{
-		return this->rtpParameters;
+		return this->started;
 	}
 
 	inline bool Consumer::IsPaused() const
 	{
 		return this->paused || this->producerPaused;
+	}
+
+	inline const RTC::RtpParameters& Consumer::GetParameters() const
+	{
+		return this->rtpParameters;
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
