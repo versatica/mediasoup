@@ -6,8 +6,6 @@
 #include "RTC/ConsumerListener.hpp"
 #include "RTC/ProducerListener.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
-#include "RTC/RTCP/FeedbackPsAfb.hpp"
-#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpListener.hpp"
@@ -82,7 +80,6 @@ namespace RTC
 
 	protected:
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
-		void ReceiveRtcpRemb(RTC::RTCP::FeedbackPsRembPacket* remb);
 
 	private:
 		virtual bool IsConnected() const = 0;
