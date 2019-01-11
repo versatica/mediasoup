@@ -11,6 +11,8 @@
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 /* Consts. */
