@@ -191,9 +191,11 @@ namespace RTC
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
-		delete this->dtlsTransport;
+		if (this->dtlsTransport != nullptr)
+			delete this->dtlsTransport;
 
-		delete this->iceServer;
+		if (this->iceServer != nullptr)
+			delete this->iceServer;
 
 		for (auto* socket : this->udpSockets)
 		{
@@ -212,6 +214,77 @@ namespace RTC
 
 		if (this->srtpSendSession != nullptr)
 			delete this->srtpSendSession;
+	}
+
+	WebRtcTransport::Close()
+	{
+		MS_TRACE();
+
+		// Must delete the DTLS transport first since it will generate a DTLS alert
+		// to be sent.
+		if (this->dtlsTransport != nullptr)
+		{
+			delete this->dtlsTransport;
+			this->dtlsTransport == nullptr;
+		}
+
+		if (this->iceServer != nullptr)
+		{
+			delete this->iceServer;
+			this->iceServer == nullptr;
+		}
+
+		for (auto* socket : this->udpSockets)
+		{
+			delete socket;
+		}
+		this->udpSockets.clear();
+
+		for (auto* server : this->tcpServers)
+		{
+			delete server;
+		}
+		this->tcpServers.clear();
+
+		if (this->srtpRecvSession != nullptr)
+		{
+			delete this->srtpRecvSession;
+			this->srtpRecvSession = null;
+		}
+
+		if (this->srtpSendSession != nullptr)
+		{
+			delete this->srtpSendSession;
+			this->srtpSendSession = nullptr;
+		}
+
+		// Also call the parent method.
+		RTC::Transport::Close();
+	}
+
+	void Router::HandleRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+				// TODO: More.
+
+			case Channel::Request::MethodId::TRANSPORT_CONNECT:
+			{
+				// TODO
+
+				request->Accept();
+
+				break;
+			}
+
+			default:
+			{
+				// Pass it to the parent class.
+				RTC::Transport::HandleRequest(request);
+			}
+		}
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const
@@ -430,13 +503,14 @@ namespace RTC
 		}
 	}
 
+	// TODO: Move this to HandleRequest().
 	RTC::DtlsTransport::Role WebRtcTransport::Connect(
 	  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role)
 	{
 		MS_TRACE();
 
 		// Ensure this method is not called twice.
-		if (this->hasRemoteDtlsParameters)
+		if (this->dtlsLocalRole != RTC::DtlsTransport::Role::AUTO)
 			MS_THROW_ERROR("Transport already has remote DTLS parameters");
 
 		if (fingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
@@ -470,8 +544,6 @@ namespace RTC
 			}
 		}
 
-		this->hasRemoteDtlsParameters = true;
-
 		// Pass the remote fingerprint to the DTLS transport.
 		if (this->dtlsTransport->SetRemoteFingerprint(fingerprint))
 		{
@@ -484,7 +556,8 @@ namespace RTC
 		return this->dtlsLocalRole;
 	}
 
-	void WebRtcTransport::SetMaxBitrate(uint32_t bitrate)
+	// TODO: Not here but in HandleRequest().
+	void WebRtcTransport::SetReceivingMaxBitrate(uint32_t bitrate)
 	{
 		MS_TRACE();
 
@@ -498,6 +571,7 @@ namespace RTC
 		MS_DEBUG_TAG(rbe, "Transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
 	}
 
+	// TODO: Not here but in HandleRequest().
 	// TODO: No, the new ICE username and password must be decided by this method.
 	// TODO: This must return the new local RTCIceParameters, including iceLite: true.
 	void WebRtcTransport::RestartIce(std::string& usernameFragment, std::string& password)
@@ -508,6 +582,13 @@ namespace RTC
 		this->iceServer->SetPassword(password);
 
 		MS_DEBUG_DEV("Transport ICE ufrag&pwd changed [id:%" PRIu32 "]", this->id);
+	}
+
+	inline bool WebRtcTransport::IsConnected() const
+	{
+		return (
+		  this->selectedTuple != nullptr &&
+		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
 	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -558,11 +639,28 @@ namespace RTC
 		this->selectedTuple->Send(data, len);
 	}
 
-	bool WebRtcTransport::IsConnected() const
+	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
-		return (
-		  this->selectedTuple != nullptr &&
-		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
+		MS_TRACE();
+
+		if (!IsConnected())
+			return;
+
+		const uint8_t* data = packet->GetData();
+		size_t len          = packet->GetSize();
+
+		// Ensure there is sending SRTP session.
+		if (this->srtpSendSession == nullptr)
+		{
+			MS_DEBUG_DEV("ignoring RTCP compound packet due to non sending SRTP session");
+
+			return;
+		}
+
+		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
+
+		this->selectedTuple->Send(data, len);
 	}
 
 	inline void WebRtcTransport::MayRunDtlsTransport()
@@ -625,30 +723,6 @@ namespace RTC
 			case RTC::DtlsTransport::Role::NONE:
 				MS_ABORT("local DTLS role not set");
 		}
-	}
-
-	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
-	{
-		MS_TRACE();
-
-		if (!IsConnected())
-			return;
-
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
-
-		// Ensure there is sending SRTP session.
-		if (this->srtpSendSession == nullptr)
-		{
-			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
-
-			return;
-		}
-
-		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
-			return;
-
-		this->selectedTuple->Send(data, len);
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
@@ -893,7 +967,7 @@ namespace RTC
 		// Handle each RTCP packet.
 		while (packet != nullptr)
 		{
-			HandleRtcpPacket(packet);
+			ReceiveRtcpPacket(packet);
 
 			RTC::RTCP::Packet* previousPacket = packet;
 

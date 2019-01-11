@@ -17,7 +17,7 @@ namespace helpers
 
 		*len = static_cast<size_t>(in.tellg()) - 1;
 		in.seekg(0, std::ios::beg);
-		in.read(static_cast<char*>(buffer), *len);
+		in.read(reinterpret_cast<char*>(buffer), *len);
 		in.close();
 
 		return true;

@@ -269,27 +269,33 @@ namespace RTC
 
 		if (HasOneByteExtensions())
 		{
-			for (const auto& pair : this->oneByteExtensions)
+			for (const auto& kv : this->oneByteExtensions)
 			{
-				auto& id               = pair.first;
-				auto& oneByteExtension = pair.second;
+				auto& id               = kv.first;
+				auto& oneByteExtension = kv.second;
+				auto it                = idMapping.find(id);
 
-				if (idMapping.find(id) != idMapping.end())
+				if (it != idMapping.end())
 				{
-					oneByteExtension->id = idMapping.at(id);
+					auto mappedId = it->second;
+
+					oneByteExtension->id = mappedId;
 				}
 			}
 		}
 		else if (HasTwoBytesExtensions())
 		{
-			for (const auto& pair : this->twoBytesExtensions)
+			for (const auto& kv : this->twoBytesExtensions)
 			{
-				auto& id                = pair.first;
-				auto& twoBytesExtension = pair.second;
+				auto& id                = kv.first;
+				auto& twoBytesExtension = kv.second;
+				auto it                 = idMapping.find(id);
 
-				if (idMapping.find(id) != idMapping.end())
+				if (it != idMapping.end())
 				{
-					twoBytesExtension->id = idMapping.at(id);
+					auto mappedId = it->second;
+
+					twoBytesExtension->id = mappedId;
 				}
 			}
 		}

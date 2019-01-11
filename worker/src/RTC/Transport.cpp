@@ -117,6 +117,9 @@ namespace RTC
 				// Remove it from the map.
 				this->mapProducers.erase(producer->id);
 
+				// Remove it from the RtpListener.
+				this->rtpListener.RemoveProducer(producer);
+
 				// Notify the listener.
 				this->listener->OnTransportProducerClosed(this, producer);
 
@@ -296,7 +299,7 @@ namespace RTC
 		return consumer;
 	}
 
-	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
+	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -310,7 +313,7 @@ namespace RTC
 				for (; it != rr->End(); ++it)
 				{
 					auto& report   = (*it);
-					auto* consumer = GetConsumer(report->GetSsrc());
+					auto* consumer = GetStartedConsumer(report->GetSsrc());
 
 					if (consumer == nullptr)
 					{
@@ -337,7 +340,7 @@ namespace RTC
 					case RTCP::FeedbackPs::MessageType::PLI:
 					case RTCP::FeedbackPs::MessageType::FIR:
 					{
-						auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+						auto* consumer = GetStartedConsumer(feedback->GetMediaSsrc());
 
 						if (consumer == nullptr)
 						{
@@ -411,7 +414,7 @@ namespace RTC
 			case RTCP::Type::RTPFB:
 			{
 				auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
-				auto* consumer = GetConsumer(feedback->GetMediaSsrc());
+				auto* consumer = GetStartedConsumer(feedback->GetMediaSsrc());
 
 				if (consumer == nullptr)
 				{
@@ -575,7 +578,7 @@ namespace RTC
 		}
 	}
 
-	inline RTC::Consumer* Transport::GetConsumer(uint32_t ssrc) const
+	inline RTC::Consumer* Transport::GetStartedConsumer(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -587,33 +590,22 @@ namespace RTC
 			if (!consumer->IsStarted())
 				continue;
 
-			// NOTE: Use & since, otherwise, a full copy will be retrieved.
+			// TODO: I do not like this at all.
+
 			auto& rtpParameters = consumer->GetParameters();
 
 			for (auto& encoding : rtpParameters.encodings)
 			{
 				if (encoding.ssrc == ssrc)
 					return consumer;
-				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
-					return consumer;
 				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
+					return consumer;
+				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
 					return consumer;
 			}
 		}
 
 		return nullptr;
-	}
-
-	// NO
-	void Transport::OnProducerClosed(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		// Remove it from the map.
-		this->producers.erase(producer);
-
-		// Remove it from the RtpListener.
-		this->rtpListener.RemoveProducer(producer);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -626,11 +618,6 @@ namespace RTC
 		this->OnTransportProducerResumed(this, producer);
 	}
 
-	inline void Transport::OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
-	{
-		this->OnTransportProducerRtpPacket(this, producer, packet);
-	}
-
 	inline void Transport::OnProducerStreamEnabled(
 	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
@@ -641,6 +628,11 @@ namespace RTC
 	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		this->OnTransportProducerStreamDisabled(this, producer, rtpStream, mappedSsrc);
+	}
+
+	inline void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet)
+	{
+		this->OnTransportProducerRtpPacketReceived(this, producer, packet);
 	}
 
 	inline void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, RTC::RTCP::Packet* packet)

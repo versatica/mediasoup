@@ -3,14 +3,13 @@
 
 #include "common.hpp"
 #include "RTC/Transport.hpp"
-#include <json/json.h>
-#include <string>
 
 namespace RTC
 {
 	class PlainRtpTransport : public RTC::Transport
 	{
 	public:
+		// TODO
 		struct Options
 		{
 			std::string remoteIp;
@@ -21,21 +20,19 @@ namespace RTC
 		};
 
 	public:
-		PlainRtpTransport(uint32_t id, RTC::Transport::Listener* listener, Options& options);
-
-	private:
-		~PlainRtpTransport();
+		PlainRtpTransport(std::string& id, RTC::Transport::Listener* listener, Options& options);
+		~PlainRtpTransport() override;
 
 	public:
-		Json::Value ToJson() const override;
-		Json::Value GetStats() const override;
-		void SetRemoteParameters(const std::string& ip, uint16_t port);
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
+		virtual void Close();
+		void FillJson(json& jsonObject) const override;
+		void FillJsonStats(json& jsonObject) const override;
+		void HandleRequest(Channel::Request* request) override;
 
 	private:
-		void CreateSocket(const std::string& localIp);
 		bool IsConnected() const override;
+		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 
 		/* Private methods to unify UDP and TCP behavior. */
@@ -51,10 +48,13 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		RTC::UdpSocket* udpSocket{ nullptr };
-		RTC::TransportTuple* tuple{ nullptr };
+		RTC::UdpSocket* rtpUdpSocket{ nullptr };
+		RTC::UdpSocket* rtcpUdpSocket{ nullptr };
+		RTC::TransportTuple* rtpTuple{ nullptr };
+		RTC::TransportTuple* rtcpTuple{ nullptr };
 		// Others.
-		struct sockaddr_storage remoteAddrStorage;
+		struct sockaddr_storage rtpRemoteAddrStorage;
+		struct sockaddr_storage rtcpRemoteAddrStorage;
 	};
 } // namespace RTC
 

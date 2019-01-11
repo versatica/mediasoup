@@ -3,10 +3,8 @@
 
 namespace RTC
 {
-	// RTP header extension ids that must be shared by all Producers using
-	// the same Transport.
-	// NOTE: These ids are the original ids in the RTP packet (before the Producer
-	// maps them to the corresponding ids in the Router).
+	// RTP header extension ids. Some of these are shared by all Producers using
+	// the same Transport. Others are different for each Producer.
 	struct HeaderExtensionIds
 	{
 		uint8_t ssrcAudioLevel{ 0 }; // 0 means no ssrc-audio-level id.

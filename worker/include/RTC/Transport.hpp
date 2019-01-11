@@ -7,7 +7,6 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
-#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
@@ -62,7 +61,8 @@ namespace RTC
 		virtual ~Transport();
 
 	public:
-		void Close();
+		// Subclasses must also invoke the parent Close().
+		virtual void Close();
 		void FillJson(json& jsonObject) const      = 0;
 		void FillJsonStats(json& jsonObject) const = 0;
 		// Subclasses must implement this method and call the parent's one to
@@ -74,14 +74,13 @@ namespace RTC
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
 		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
 		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
-		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
-		void ReceiveRtcpRemb(RTC::RTCP::FeedbackPsRembPacket* remb);
+		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 
 	private:
-		virtual bool IsConnected() const = 0;
-		RTC::Consumer* GetConsumer(uint32_t ssrc) const;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet) = 0;
+		RTC::Consumer* GetStartedConsumer(uint32_t ssrc) const;
 		void SendRtcp(uint64_t now);
+		virtual bool IsConnected() const                                       = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet)                     = 0;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 
@@ -89,11 +88,11 @@ namespace RTC
 	public:
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
-		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnProducerStreamEnabled(
 		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerStreamDisabled(
 		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
+		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */

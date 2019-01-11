@@ -281,28 +281,38 @@ namespace RTC
 	{
 		*len = 0;
 
-		if (this->extensionMap.find(uri) == this->extensionMap.end())
+		auto it = this->extensionMap.find(uri);
+
+		if (it == this->extensionMap.end())
 			return nullptr;
 
-		uint8_t id = this->extensionMap.at(uri);
+		uint8_t id = it->second;
 
 		if (HasOneByteExtensions())
 		{
-			if (this->oneByteExtensions.find(id) == this->oneByteExtensions.end())
+			auto it = this->oneByteExtensions.find(id);
+
+			if (it == this->oneByteExtensions.end())
 				return nullptr;
 
-			*len = this->oneByteExtensions.at(id)->len + 1;
+			auto* extension = it->second;
 
-			return this->oneByteExtensions.at(id)->value;
+			*len = extension->len + 1;
+
+			return extension->value;
 		}
 		else if (HasTwoBytesExtensions())
 		{
-			if (this->twoBytesExtensions.find(id) == this->twoBytesExtensions.end())
+			auto it = this->twoBytesExtensions.find(id);
+
+			if (it == this->twoBytesExtensions.end())
 				return nullptr;
 
-			*len = this->twoBytesExtensions.at(id)->len;
+			auto* extension = it->second;
 
-			return this->twoBytesExtensions.at(id)->value;
+			*len = extension->len;
+
+			return extension->value;
 		}
 		else
 		{

@@ -10,8 +10,6 @@
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/Transport.hpp"
-#include <string>
-#include <vector>
 
 namespace RTC
 {
@@ -23,6 +21,7 @@ namespace RTC
 	                        public RTC::RemoteBitrateEstimator::Listener
 	{
 	public:
+		// TODO
 		struct Options
 		{
 			bool udp{ true };
@@ -34,22 +33,20 @@ namespace RTC
 		};
 
 	public:
-		WebRtcTransport(uint32_t id, RTC::Transport::Listener* listener, Options& options);
+		WebRtcTransport(std::string& id, RTC::Transport::Listener* listener, Options& options);
 		~WebRtcTransport() override;
 
 	public:
-		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonObject) const;
-		RTC::DtlsTransport::Role SetRemoteDtlsParameters(
-		  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
-		void SetMaxBitrate(uint32_t bitrate);
-		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
+		void Close() override;
+		void FillJson(json& jsonObject) const override;
+		void FillJsonStats(json& jsonObject) const override;
+		void HandleRequest(Channel::Request* request) override;
 
 	private:
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
+		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 
 		/* Private methods to unify UDP and TCP behavior. */
@@ -117,9 +114,8 @@ namespace RTC
 		std::vector<IceCandidate> iceLocalCandidates;
 		RTC::TransportTuple* selectedTuple{ nullptr };
 		// Others (DTLS).
-		bool hasRemoteDtlsParameters{ false };
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
-		// Others (REMB and bitrate stuff).
+		// Others.
 		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
 		uint32_t maxBitrate{ 0 };
 		std::tuple<uint64_t, std::vector<uint32_t>> sentRemb;

@@ -18,62 +18,81 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Remote IP address is provided.
-		if (!options.remoteIp.empty())
-		{
-			try
-			{
-				// This may throw.
-				CreateSocket(options.localIp);
-
-				// This may throw.
-				SetRemoteParameters(options.remoteIp, options.remotePort);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Close UdpSocket since ~PlainRtpTransport() will not be called.
-				delete this->udpSocket;
-
-				throw error;
-			}
-		}
-		// No remote IP address is provided.
-		else
-		{
-			// IPv4 is preferred.
-			if (options.preferIPv4)
-			{
-				if (!Settings::configuration.hasIPv4)
-					MS_THROW_ERROR("IPv4 disabled");
-
-				CreateSocket(AF_INET, options.localIp);
-			}
-			// IPv6 is preferred.
-			else if (options.preferIPv6)
-			{
-				if (!Settings::configuration.hasIPv6)
-					MS_THROW_ERROR("IPv6 disabled");
-
-				CreateSocket(AF_INET6, options.localIp);
-			}
-			// No IP family preference, try with IPv4 and then IPv6.
-			else if (Settings::configuration.hasIPv4)
-			{
-				CreateSocket(AF_INET, options.localIp);
-			}
-			else
-			{
-				CreateSocket(AF_INET6, options.localIp);
-			}
-		}
+		// TODO
 	}
 
 	PlainRtpTransport::~PlainRtpTransport()
 	{
 		MS_TRACE();
 
-		delete this->tuple;
-		delete this->udpSocket;
+		if (this->rtpUdpSocket != nullptr)
+			delete this->rtpUdpSocket;
+
+		if (this->rtcpUdpSocket != nullptr)
+			delete this->rtcpUdpSocket;
+
+		if (this->rtpTuple != nullptr)
+			delete this->rtpTuple;
+
+		if (this->rtcpTuple != nullptr)
+			delete this->rtcpTuple;
+	}
+
+	PlainRtpTransport::Close()
+	{
+		MS_TRACE();
+
+		if (this->rtpUdpSocket != nullptr)
+		{
+			delete this->rtpUdpSocket;
+			this->rtpUdpSocket = nullptr;
+		}
+
+		if (this->rtcpUdpSocket != nullptr)
+		{
+			delete this->rtcpUdpSocket;
+			this->rtcpUdpSocket = nullptr;
+		}
+
+		if (this->rtpTuple != nullptr)
+		{
+			delete this->rtpTuple;
+			this->rtpTuple = nullptr;
+		}
+
+		if (this->rtcpTuple != nullptr)
+		{
+			delete this->rtcpTuple;
+			this->rtcpTuple = nullptr;
+		}
+
+		// Also call the parent method.
+		RTC::Transport::Close();
+	}
+
+	void Router::HandleRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+				// TODO: More.
+
+			case Channel::Request::MethodId::TRANSPORT_CONNECT:
+			{
+				// TODO
+
+				request->Accept();
+
+				break;
+			}
+
+			default:
+			{
+				// Pass it to the parent class.
+				RTC::Transport::HandleRequest(request);
+			}
+		}
 	}
 
 	Json::Value PlainRtpTransport::ToJson() const
@@ -124,6 +143,7 @@ namespace RTC
 		return json;
 	}
 
+	// TODO: Not here but in HandleRequest().
 	void PlainRtpTransport::SetRemoteParameters(const std::string& ip, const uint16_t port)
 	{
 		int err;
@@ -176,6 +196,11 @@ namespace RTC
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
+	inline bool PlainRtpTransport::IsConnected() const
+	{
+		return this->rtpTuple != nullptr;
+	}
+
 	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -200,16 +225,6 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		this->tuple->Send(data, len);
-	}
-
-	void PlainRtpTransport::CreateSocket(const std::string& localIp)
-	{
-		this->udpSocket = new RTC::UdpSocket(this, localIp);
-	}
-
-	bool PlainRtpTransport::IsConnected() const
-	{
-		return this->tuple != nullptr;
 	}
 
 	void PlainRtpTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -320,7 +335,7 @@ namespace RTC
 		// Handle each RTCP packet.
 		while (packet != nullptr)
 		{
-			HandleRtcpPacket(packet);
+			ReceiveRtcpPacket(packet);
 
 			RTC::RTCP::Packet* previousPacket = packet;
 

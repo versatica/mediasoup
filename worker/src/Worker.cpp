@@ -235,10 +235,16 @@ void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
 	MS_TRACE();
 
+	if (this->closed)
+		return;
+
 	switch (signum)
 	{
 		case SIGINT:
 		{
+			if (this->closed)
+				return;
+
 			MS_DEBUG_DEV("INT signal received, closing myself");
 
 			Close();
@@ -248,6 +254,9 @@ void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 
 		case SIGTERM:
 		{
+			if (this->closed)
+				return;
+
 			MS_DEBUG_DEV("TERM signal received, closing myself");
 
 			Close();
