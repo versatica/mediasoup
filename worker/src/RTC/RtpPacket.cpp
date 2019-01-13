@@ -248,6 +248,14 @@ namespace RTC
 				MS_DEBUG_DEV("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
 			}
 		}
+		if (this->audioLevelExtensionId)
+			MS_DEBUG_DEV("  audioLevel extId  : %" PRIu8, this->audioLevelExtensionId);
+		if (this->absSendTimeExtensionId)
+			MS_DEBUG_DEV("  absSendTime extId : %" PRIu8, this->absSendTimeExtensionId);
+		if (this->midExtensionId)
+			MS_DEBUG_DEV("  mid extId         : %" PRIu8, this->midExtensionId);
+		if (this->ridExtensionId)
+			MS_DEBUG_DEV("  rid extId         : %" PRIu8, this->ridExtensionId);
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
 		MS_DEBUG_DEV("  payload type      : %" PRIu8, GetPayloadType());
@@ -267,12 +275,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Reset extension ids.
+		this->audioLevelExtensionId  = 0;
+		this->absSendTimeExtensionId = 0;
+		this->midExtensionId         = 0;
+		this->ridExtensionId         = 0;
+
 		if (HasOneByteExtensions())
 		{
-			for (const auto& kv : this->oneByteExtensions)
+			for (auto& kv : this->oneByteExtensions)
 			{
-				auto& id               = kv.first;
-				auto& oneByteExtension = kv.second;
+				auto id                = kv.first;
+				auto* oneByteExtension = kv.second;
 				auto it                = idMapping.find(id);
 
 				if (it != idMapping.end())
@@ -285,10 +299,10 @@ namespace RTC
 		}
 		else if (HasTwoBytesExtensions())
 		{
-			for (const auto& kv : this->twoBytesExtensions)
+			for (auto& kv : this->twoBytesExtensions)
 			{
-				auto& id                = kv.first;
-				auto& twoBytesExtension = kv.second;
+				auto id                 = kv.first;
+				auto* twoBytesExtension = kv.second;
 				auto it                 = idMapping.find(id);
 
 				if (it != idMapping.end())
@@ -299,9 +313,6 @@ namespace RTC
 				}
 			}
 		}
-
-		// Clear the URI to id map.
-		this->extensionMap.clear();
 
 		// Parse extensions again.
 		ParseExtensions();
@@ -384,9 +395,6 @@ namespace RTC
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
-
-		// Clone the extension map.
-		packet->extensionMap = this->extensionMap;
 
 		return packet;
 	}
@@ -536,6 +544,7 @@ namespace RTC
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
+			// One-Byte extensions cannot have length 0.
 			while (ptr < extensionEnd)
 			{
 				uint8_t id = (*ptr & 0xF0) >> 4;
@@ -553,7 +562,7 @@ namespace RTC
 				if (id != 0u)
 					this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
 
-				ptr += 1 + len;
+				ptr += (1 + len);
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))
@@ -570,12 +579,16 @@ namespace RTC
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
+			// ptr points to the ID field (1 byte).
+			// ptr+1 points to the length field (1 byte, can have value 0).
+
+			// Two-Byte extensions can have length 0.
 			while (ptr + 1 < extensionEnd)
 			{
-				uint8_t id = *ptr;
-				size_t len = *(++ptr);
+				uint8_t id  = *ptr;
+				uint8_t len = *(ptr + 1);
 
-				if (ptr + len > extensionEnd)
+				if (ptr + 2 + len > extensionEnd)
 				{
 					MS_WARN_TAG(
 					  rtp, "not enough space for the announced Two-Bytes header extension element value");
@@ -587,7 +600,7 @@ namespace RTC
 				if (id != 0u)
 					this->twoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
 
-				ptr += len;
+				ptr += (2 + len);
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))

@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include <map>
 
 namespace RTC
@@ -67,13 +66,8 @@ namespace RTC
 		/* Struct for Two-Bytes extension. */
 		struct TwoBytesExtension
 		{
-#if defined(MS_LITTLE_ENDIAN)
-			uint8_t len : 8;
-			uint8_t id : 8;
-#elif defined(MS_BIG_ENDIAN)
 			uint8_t id : 8;
 			uint8_t len : 8;
-#endif
 			uint8_t value[1];
 		};
 
@@ -110,15 +104,19 @@ namespace RTC
 		uint16_t GetExtensionHeaderId() const;
 		size_t GetExtensionHeaderLength() const;
 		uint8_t* GetExtensionHeaderValue() const;
+		// After calling this method, all the extIDs are reset to 0.
 		void MangleExtensionHeaderIds(const std::map<uint8_t, uint8_t>& idMapping);
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
-		void AddExtensionMapping(RTC::RtpHeaderExtensionUri::Type uri, uint8_t id);
-		uint8_t* GetExtension(RTC::RtpHeaderExtensionUri::Type uri, uint8_t* len) const;
+		void SetAudioLevelExtensionId(uint8_t id);
+		void SetAbsSendTimeExtensionId(uint8_t id);
+		void SetMidExtensionId(uint8_t id);
+		void SetRidExtensionId(uint8_t id);
 		bool ReadAudioLevel(uint8_t* volume, bool* voice) const;
 		bool ReadAbsSendTime(uint32_t* time) const;
 		bool ReadMid(const uint8_t** data, size_t* len) const;
 		bool ReadRid(const uint8_t** data, size_t* len) const;
+		uint8_t* GetExtension(uint8_t id, uint8_t* len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
 		uint8_t GetPayloadPadding() const;
@@ -141,7 +139,10 @@ namespace RTC
 		ExtensionHeader* extensionHeader{ nullptr };
 		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
 		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
-		std::map<RTC::RtpHeaderExtensionUri::Type, uint8_t> extensionMap;
+		uint8_t audioLevelExtensionId{ 0 };
+		uint8_t absSendTimeExtensionId{ 0 };
+		uint8_t midExtensionId{ 0 };
+		uint8_t ridExtensionId{ 0 };
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0 };
 		uint8_t payloadPadding{ 0 };
@@ -272,21 +273,98 @@ namespace RTC
 		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
 	}
 
-	inline void RtpPacket::AddExtensionMapping(RTC::RtpHeaderExtensionUri::Type uri, uint8_t id)
+	void SetAudioLevelExtensionId(uint8_t id);
+	void SetAbsSendTimeExtensionId(uint8_t id);
+	void SetMidExtensionId(uint8_t id);
+	void SetRidExtensionId(uint8_t id);
+
+	inline void RtpPacket::SetAudioLevelExtensionId(uint8_t id)
 	{
-		this->extensionMap[uri] = id;
+		this->audioLevelExtensionId = id;
 	}
 
-	inline uint8_t* RtpPacket::GetExtension(RTC::RtpHeaderExtensionUri::Type uri, uint8_t* len) const
+	inline void RtpPacket::SetAbsSendTimeExtensionId(uint8_t id)
+	{
+		this->absSendTimeExtensionId = id;
+	}
+
+	inline void RtpPacket::SetMidExtensionId(uint8_t id)
+	{
+		this->midExtensionId = id;
+	}
+
+	inline void RtpPacket::SetRidExtensionId(uint8_t id)
+	{
+		this->ridExtensionId = id;
+	}
+
+	inline bool RtpPacket::ReadAudioLevel(uint8_t* volume, bool* voice) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue;
+
+		extenValue = GetExtension(this->audioLevelExtensionId, &extenLen);
+
+		if (!extenValue || extenLen != 1)
+			return false;
+
+		*volume = Utils::Byte::Get1Byte(extenValue, 0);
+		*voice  = (*volume & (1 << 7)) ? true : false;
+		*volume &= ~(1 << 7);
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadAbsSendTime(uint32_t* time) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue;
+
+		extenValue = GetExtension(this->absSendTimeExtensionId, &extenLen);
+
+		if (!extenValue || extenLen != 3)
+			return false;
+
+		*time = Utils::Byte::Get3Bytes(extenValue, 0);
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadMid(const uint8_t** data, size_t* len) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue;
+
+		extenValue = GetExtension(this->midExtensionId, &extenLen);
+
+		if (!extenValue || extenLen == 0)
+			return false;
+
+		*data = extenValue;
+		*len  = static_cast<size_t>(extenLen);
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadRid(const uint8_t** data, size_t* len) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue;
+
+		extenValue = GetExtension(this->ridExtensionId, &extenLen);
+
+		if (!extenValue || extenLen == 0)
+			return false;
+
+		*data = extenValue;
+		*len  = static_cast<size_t>(extenLen);
+
+		return true;
+	}
+
+	inline uint8_t* RtpPacket::GetExtension(uint8_t id, uint8_t* len) const
 	{
 		*len = 0;
-
-		auto it = this->extensionMap.find(uri);
-
-		if (it == this->extensionMap.end())
-			return nullptr;
-
-		uint8_t id = it->second;
 
 		if (HasOneByteExtensions())
 		{
@@ -312,76 +390,16 @@ namespace RTC
 
 			*len = extension->len;
 
+			// In Two-Byte extension, value length may be zero. If so, return nullptr.
+			if (extension->len == 0)
+				return nullptr;
+
 			return extension->value;
 		}
 		else
 		{
 			return nullptr;
 		}
-	}
-
-	inline bool RtpPacket::ReadAudioLevel(uint8_t* volume, bool* voice) const
-	{
-		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, &extenLen);
-
-		if (!extenValue || extenLen != 1)
-			return false;
-
-		*volume = Utils::Byte::Get1Byte(extenValue, 0);
-		*voice  = (*volume & (1 << 7)) ? true : false;
-		*volume &= ~(1 << 7);
-
-		return true;
-	}
-
-	inline bool RtpPacket::ReadAbsSendTime(uint32_t* time) const
-	{
-		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, &extenLen);
-
-		if (!extenValue || extenLen != 3)
-			return false;
-
-		*time = Utils::Byte::Get3Bytes(extenValue, 0);
-
-		return true;
-	}
-
-	inline bool RtpPacket::ReadMid(const uint8_t** data, size_t* len) const
-	{
-		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::MID, &extenLen);
-
-		if (!extenValue || extenLen == 0)
-			return false;
-
-		*data = extenValue;
-		*len  = static_cast<size_t>(extenLen);
-
-		return true;
-	}
-
-	inline bool RtpPacket::ReadRid(const uint8_t** data, size_t* len) const
-	{
-		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, &extenLen);
-
-		if (!extenValue || extenLen == 0)
-			return false;
-
-		*data = extenValue;
-		*len  = static_cast<size_t>(extenLen);
-
-		return true;
 	}
 
 	inline uint8_t* RtpPacket::GetPayload() const
