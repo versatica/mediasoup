@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.5
+
+* RtpPacket: Fix Two-Byte header extensions parsing.
+
+
 ### 2.6.4
 
 * Upgrade again to OpenSSL 1.1.0j (20 Nov 2018) after adding a workaround for issue [#257](https://github.com/versatica/mediasoup/issues/257).
