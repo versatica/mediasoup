@@ -547,7 +547,7 @@ namespace RTC
 				if (id != 0u)
 					this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
 
-				ptr += 1 + len;
+				ptr += (1 + len);
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))
@@ -564,12 +564,16 @@ namespace RTC
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
+			// ptr points to the ID field (1 byte).
+			// ptr+1 points to the length field (1 byte, can have value 0).
+
+			// Two-Byte extensions can have length 0.
 			while (ptr + 1 < extensionEnd)
 			{
-				uint8_t id = *ptr;
-				size_t len = *(++ptr);
+				uint8_t id  = *ptr;
+				uint8_t len = *(ptr + 1);
 
-				if (ptr + len > extensionEnd)
+				if (ptr + 2 + len > extensionEnd)
 				{
 					MS_WARN_TAG(
 					  rtp, "not enough space for the announced Two-Bytes header extension element value");
@@ -581,7 +585,7 @@ namespace RTC
 				if (id != 0u)
 					this->twoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
 
-				ptr += len;
+				ptr += (2 + len);
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))

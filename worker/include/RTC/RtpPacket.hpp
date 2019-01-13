@@ -67,13 +67,8 @@ namespace RTC
 		/* Struct for Two-Bytes extension. */
 		struct TwoBytesExtension
 		{
-#if defined(MS_LITTLE_ENDIAN)
-			uint8_t len : 8;
-			uint8_t id : 8;
-#elif defined(MS_BIG_ENDIAN)
 			uint8_t id : 8;
 			uint8_t len : 8;
-#endif
 			uint8_t value[1];
 		};
 
