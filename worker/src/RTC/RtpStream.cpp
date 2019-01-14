@@ -145,7 +145,6 @@ namespace RTC
 	void RtpStream::RestartStatusCheckTimer()
 	{
 		// Notify about status on next check.
-		this->notifyStatus = true;
 		this->statusCheckTimer->Restart();
 	}
 

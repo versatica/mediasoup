@@ -87,7 +87,6 @@ namespace RTC
 		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
 		Timer* statusCheckTimer{ nullptr };
-		bool notifyStatus{ true };
 
 	private:
 		std::string rtpStreamId{};
