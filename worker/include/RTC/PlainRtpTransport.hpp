@@ -9,14 +9,17 @@ namespace RTC
 	class PlainRtpTransport : public RTC::Transport
 	{
 	public:
-		// TODO
+		struct ListenIp
+		{
+			std::string ip;
+			std::string announcedIp;
+		};
+
+	public:
 		struct Options
 		{
-			std::string remoteIp;
-			uint16_t remotePort;
-			std::string localIp;
-			bool preferIPv4;
-			bool preferIPv6;
+			ListenIp listenIp;
+			bool rtcpMux{ true };
 		};
 
 	public:
@@ -48,12 +51,13 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		RTC::UdpSocket* rtpUdpSocket{ nullptr };
+		bool rtcpMux{ true };
+		RTC::UdpSocket* udpSocket{ nullptr };
 		RTC::UdpSocket* rtcpUdpSocket{ nullptr };
-		RTC::TransportTuple* rtpTuple{ nullptr };
+		RTC::TransportTuple* tuple{ nullptr };
 		RTC::TransportTuple* rtcpTuple{ nullptr };
 		// Others.
-		struct sockaddr_storage rtpRemoteAddrStorage;
+		struct sockaddr_storage remoteAddrStorage;
 		struct sockaddr_storage rtcpRemoteAddrStorage;
 	};
 } // namespace RTC

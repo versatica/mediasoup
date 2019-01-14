@@ -15,9 +15,7 @@
 #include "RTC/TransportTuple.hpp"
 #include "handles/Timer.hpp"
 #include <string>
-#include <tuple>
 #include <unordered_map>
-#include <vector>
 
 using json = nlohmann::json;
 
@@ -57,7 +55,7 @@ namespace RTC
 		};
 
 	public:
-		Transport(uint32_t id, Listener* listener);
+		Transport(std::string id, Listener* listener);
 		virtual ~Transport();
 
 	public:
@@ -118,7 +116,9 @@ namespace RTC
 		// Others.
 		RtpListener rtpListener;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
-		std::tuple<uint64_t, std::vector<uint32_t>> recvRemb;
+		uint32_t availableIncomingBitrate{ 0 };
+		uint32_t availableOutgoingBitrate{ 0 };
+		uint32_t maxIncomingBitrate{ 0 };
 	};
 } // namespace RTC
 

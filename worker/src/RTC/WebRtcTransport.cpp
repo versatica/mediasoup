@@ -5,11 +5,8 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
-#include "Settings.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
-#include "RTC/Consumer.hpp"
-#include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <cmath>    // std::pow()
@@ -20,14 +17,11 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint16_t IceCandidateDefaultLocalPriority{ 20000 };
-	static constexpr uint16_t IceCandidateLocalPriorityPreferFamilyIncrement{ 10000 };
-	static constexpr uint16_t IceCandidateLocalPriorityPreferProtocolIncrement{ 5000 };
+	static constexpr uint16_t IceCandidateDefaultLocalPriority{ 10000 };
 	// We just provide "host" candidates so type preference is fixed.
 	static constexpr uint16_t IceTypePreference{ 64 };
 	// We do not support non rtcp-mux so component is always 1.
 	static constexpr uint16_t IceComponent{ 1 };
-	static constexpr uint64_t EffectiveMaxBitrateCheckInterval{ 2000 }; // In ms.
 
 	static inline uint32_t generateIceCandidatePriority(uint16_t localPreference)
 	{
@@ -39,150 +33,108 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcTransport::WebRtcTransport(uint32_t id, RTC::Transport::Listener* listener, Options& options)
+	WebRtcTransport::WebRtcTransport(std::string& id, RTC::Transport::Listener* listener, Options& options)
 	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
 
-		bool tryIPv4udp{ options.udp };
-		bool tryIPv6udp{ options.udp };
-		bool tryIPv4tcp{ options.tcp };
-		bool tryIPv6tcp{ options.tcp };
-
-		// Create a ICE server.
-		this->iceServer = new RTC::IceServer(
-		  this, Utils::Crypto::GetRandomString(16), Utils::Crypto::GetRandomString(32));
-
-		// Open a IPv4 UDP socket.
-		if (tryIPv4udp && Settings::configuration.hasIPv4)
+		try
 		{
-			uint16_t localPreference = IceCandidateDefaultLocalPriority;
+			uint16_t initialIceLocalPreference = IceCandidateDefaultLocalPriority;
 
-			if (options.preferIPv4)
-				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (options.preferUdp)
-				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
-
-			uint32_t priority = generateIceCandidatePriority(localPreference);
-
-			try
+			for (auto &listenIp : options.listenIps)
 			{
-				auto* udpSocket = new RTC::UdpSocket(this, AF_INET);
-				RTC::IceCandidate iceCandidate(udpSocket, priority);
+				uint16_t iceLocalPreference = initialIceLocalPreference;
 
-				this->udpSockets.push_back(udpSocket);
-				this->iceLocalCandidates.push_back(iceCandidate);
+				if (options.enableUdp)
+				{
+					if (options.preferUdp)
+						iceLocalPreference += 1000;
+
+					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+
+					// This may throw.
+					auto* udpSocket = new RTC::UdpSocket(this, listenIp.ip);
+
+					this->udpSockets.push_back(udpSocket);
+
+					if (listenIp.announcedIp.empty())
+					{
+						RTC::IceCandidate iceCandidate(udpSocket, icePriority);
+
+						this->iceLocalCandidates.push_back(iceCandidate);
+					}
+					else
+					{
+						RTC::IceCandidate iceCandidate(udpSocket, icePriority, listenIp.announcedIp);
+
+						this->iceLocalCandidates.push_back(iceCandidate);
+					}
+				}
+
+				if (options.enableTcp)
+				{
+					if (options.preferTcp)
+						iceLocalPreference += 1000;
+
+					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+
+					// This may throw.
+					auto* tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
+
+					this->tcpServers.push_back(tcpServer);
+
+					if (listenIp.announcedIp.empty())
+					{
+						RTC::IceCandidate iceCandidate(tcpServer, icePriority);
+
+						this->iceLocalCandidates.push_back(iceCandidate);
+					}
+					else
+					{
+						RTC::IceCandidate iceCandidate(tcpServer, icePriority, listenIp.announcedIp);
+
+						this->iceLocalCandidates.push_back(iceCandidate);
+					}
+				}
+
+				// Decrement initial ICE local preference for next IP.
+				initialIceLocalPreference -= 100;
 			}
-			catch (const MediaSoupError& error)
-			{
-				MS_ERROR("error adding IPv4 UDP socket: %s", error.what());
-			}
+
+			// Create a ICE server.
+			this->iceServer = new RTC::IceServer(
+			  this, Utils::Crypto::GetRandomString(16), Utils::Crypto::GetRandomString(32));
+
+			// Create a DTLS transport.
+			this->dtlsTransport = new RTC::DtlsTransport(this);
 		}
-
-		// Open a IPv6 UDP socket.
-		if (tryIPv6udp && Settings::configuration.hasIPv6)
+		catch (const MediaSoupError& error)
 		{
-			uint16_t localPreference = IceCandidateDefaultLocalPriority;
+			MS_ERROR("constructor failed: %s", error.what());
 
-			if (options.preferIPv6)
-				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (options.preferUdp)
-				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
+			// Must delete everything since the destructor won't be called.
 
-			uint32_t priority = generateIceCandidatePriority(localPreference);
+			if (this->dtlsTransport != nullptr)
+				delete this->dtlsTransport;
 
-			try
-			{
-				auto* udpSocket = new RTC::UdpSocket(this, AF_INET6);
-				RTC::IceCandidate iceCandidate(udpSocket, priority);
-
-				this->udpSockets.push_back(udpSocket);
-				this->iceLocalCandidates.push_back(iceCandidate);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_ERROR("error adding IPv6 UDP socket: %s", error.what());
-			}
-		}
-
-		// Open a IPv4 TCP server.
-		if (tryIPv4tcp && Settings::configuration.hasIPv4)
-		{
-			uint16_t localPreference = IceCandidateDefaultLocalPriority;
-
-			if (options.preferIPv4)
-				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (options.preferTcp)
-				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
-
-			uint32_t priority = generateIceCandidatePriority(localPreference);
-
-			try
-			{
-				auto* tcpServer = new RTC::TcpServer(this, this, AF_INET);
-				RTC::IceCandidate iceCandidate(tcpServer, priority);
-
-				this->tcpServers.push_back(tcpServer);
-				this->iceLocalCandidates.push_back(iceCandidate);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_ERROR("error adding IPv4 TCP server: %s", error.what());
-			}
-		}
-
-		// Open a IPv6 TCP server.
-		if (tryIPv6tcp && Settings::configuration.hasIPv6)
-		{
-			uint16_t localPreference = IceCandidateDefaultLocalPriority;
-
-			if (options.preferIPv6)
-				localPreference += IceCandidateLocalPriorityPreferFamilyIncrement;
-			if (options.preferTcp)
-				localPreference += IceCandidateLocalPriorityPreferProtocolIncrement;
-
-			uint32_t priority = generateIceCandidatePriority(localPreference);
-
-			try
-			{
-				auto* tcpServer = new RTC::TcpServer(this, this, AF_INET6);
-				RTC::IceCandidate iceCandidate(tcpServer, priority);
-
-				this->tcpServers.push_back(tcpServer);
-				this->iceLocalCandidates.push_back(iceCandidate);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_ERROR("error adding IPv6 TCP server: %s", error.what());
-			}
-		}
-
-		// Ensure there is at least one IP:port binding.
-		if (this->udpSockets.empty() && this->tcpServers.empty())
-		{
-			delete this->iceServer;
+			if (this->iceServer != nullptr)
+				delete this->iceServer;
 
 			for (auto* socket : this->udpSockets)
 			{
 				delete socket;
 			}
+			this->udpSockets.clear();
 
 			for (auto* server : this->tcpServers)
 			{
 				delete server;
 			}
+			this->tcpServers.clear();
 
-			MS_THROW_ERROR("could not open any IP:port");
+			throw error;
 		}
-
-		// Create a DTLS agent.
-		this->dtlsTransport = new RTC::DtlsTransport(this);
-
-		// Set remote bitrate estimator.
-		this->remoteBitrateEstimator.reset(new RTC::RemoteBitrateEstimatorAbsSendTime(this));
-
-		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
 	WebRtcTransport::~WebRtcTransport()
@@ -260,31 +212,6 @@ namespace RTC
 
 		// Also call the parent method.
 		RTC::Transport::Close();
-	}
-
-	void Router::HandleRequest(Channel::Request* request)
-	{
-		MS_TRACE();
-
-		switch (request->methodId)
-		{
-				// TODO: More.
-
-			case Channel::Request::MethodId::TRANSPORT_CONNECT:
-			{
-				// TODO
-
-				request->Accept();
-
-				break;
-			}
-
-			default:
-			{
-				// Pass it to the parent class.
-				RTC::Transport::HandleRequest(request);
-			}
-		}
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const
@@ -420,13 +347,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Add type.
+		// Add type.
 		jsonObject["type"] = "transport";
+
+		// Add transportId.
+		jsonObject["transportId"] = this->id;
 
 		// Add timestamp.
 		jsonObject["timestamp"] = DepLibUV::GetTime();
-
-		// Add id.
-		jsonObject["id"] = this->id;
 
 		// Add iceConnectionState.
 		switch (this->iceServer->GetState())
@@ -475,100 +403,173 @@ namespace RTC
 			this->selectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 		}
 
-		// Add localAvailableSendBandwidth.
-		jsonObject["localAvailableSendBandwidth"] = json::object();
-		auto jsonLocalAvailableSendBandwidthIt    = jsonObject.find("localAvailableSendBandwidth");
+		// Add availableIncomingBitrate.
+		if (this->availableIncomingBitrate != 0u)
+			jsonObject["availableIncomingBitrate"] = this->availableIncomingBitrate;
 
-		(*jsonLocalAvailableSendBandwidthIt)["maxBitrate"] = this->maxBitrate;
-		(*jsonLocalAvailableSendBandwidthIt)["bitrate"]    = std::get<0>(this->sentRemb);
-		(*jsonLocalAvailableSendBandwidthIt)["ssrcs"]      = json::array();
-		auto jsonLocalAvailableSendBandwidthSsrcsIt = jsonLocalAvailableSendBandwidthIt->find("ssrcs");
+		// Add availableOutgoingBitrate.
+		if (this->availableOutgoingBitrate != 0u)
+			jsonObject["availableOutgoingBitrate"] = this->availableOutgoingBitrate;
 
-		for (auto ssrc : std::get<1>(this->sentRemb))
-		{
-			jsonLocalAvailableSendBandwidthSsrcsIt->append(ssrc);
-		}
-
-		// Add remoteAvailableSendBandwidth.
-		jsonObject["remoteAvailableSendBandwidth"] = json::object();
-		auto jsonRemoteAvailableSendBandwidthIt    = jsonObject.find("remoteAvailableSendBandwidth");
-
-		(*jsonRemoteAvailableSendBandwidthIt)["bitrate"] = std::get<0>(this->recvRemb);
-		(*jsonRemoteAvailableSendBandwidthIt)["ssrcs"]   = json::array();
-		auto jsonRemoteAvailableSendBandwidthSsrcsIt = jsonRemoteAvailableSendBandwidthIt->find("ssrcs");
-
-		for (auto ssrc : std::get<1>(this->recvRemb))
-		{
-			jsonRemoteAvailableSendBandwidthSsrcsIt->append(ssrc);
-		}
+		// Add maxIncomingBitrate.
+		if (this->maxIncomingBitrate != 0u)
+			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
 	}
 
-	// TODO: Move this to HandleRequest().
-	RTC::DtlsTransport::Role WebRtcTransport::Connect(
-	  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role)
+	void Router::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
-		// Ensure this method is not called twice.
-		if (this->dtlsLocalRole != RTC::DtlsTransport::Role::AUTO)
-			MS_THROW_ERROR("Transport already has remote DTLS parameters");
-
-		if (fingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
-			MS_THROW_ERROR("unsupported remote fingerprint algorithm");
-
-		// Set local DTLS role.
-		switch (role)
+		switch (request->methodId)
 		{
-			case RTC::DtlsTransport::Role::CLIENT:
+			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
-				this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
+				// Ensure this method is not called twice.
+				if (this->dtlsLocalRole != RTC::DtlsTransport::Role::AUTO)
+				{
+					request->Reject("remote parameters already set");
+
+					return;
+				}
+
+				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
+				RTC::DtlsTransport::Role dtlsRemoteRole;
+
+				try
+				{
+					auto jsonDtlsParametersIt = request->data.find("dtlsParameters");
+
+					if (jsonDtlsParametersIt == request->data.end() || !jsonDtlsParametersIt->is_object())
+						MS_THROW_ERROR("missing dtlsParameters");
+
+					auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
+
+					if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
+						MS_THROW_ERROR("missing dtlsParameters.fingerprints");
+
+					// NOTE: Just take the first fingerprint.
+					for (auto& jsonFingerprint : *jsonFingerprintsIt)
+					{
+						if (!jsonFingerprint.is_object())
+							MS_THROW_ERROR("wrong entry in dtlsParameters.fingerprints (not an object)");
+
+						auto jsonAlgorithmIt = jsonFingerprint.find("algorithm");
+
+						if (jsonAlgorithmIt == jsonFingerprint.end())
+							MS_THROW_ERROR("missing fingerprint.algorithm");
+						else if (!jsonAlgorithmIt->is_string())
+							MS_THROW_ERROR("wrong fingerprint.algorithm (not a string)");
+
+						dtlsRemoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(
+						  jsonAlgorithmIt->get<std:string>());
+
+						if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+							MS_THROW_ERROR("invalid fingerprint.algorithm value");
+
+						auto jsonValueIt = jsonFingerprint.find("value");
+
+						if (jsonValueIt == jsonFingerprint.end())
+							MS_THROW_ERROR("missing fingerprint.value");
+						else if (!jsonValueIt->is_string())
+							MS_THROW_ERROR("wrong fingerprint.value (not a string)");
+
+						dtlsRemoteFingerprint.value = jsonValueIt->get<std::string>();
+
+						// Just use the first fingerprint.
+						break;
+					}
+
+					auto jsonRoleIt = jsonDtlsParametersIt->find("role");
+
+					if (jsonRoleIt != jsonDtlsParametersIt->end())
+					{
+						if (!jsonRoleIt->is_string())
+							MS_THROW_ERROR("wrong dtlsParameters.role (not a string)");
+
+						dtlsRemoteRole = RTC::DtlsTransport::StringToRole(jsonRoleIt->get<std::string>());
+
+						if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
+							MS_THROW_ERROR("invalid dtlsParameters.role value");
+					}
+					else
+					{
+						dtlsRemoteRole = RTC::DtlsTransport::Role::AUTO;
+					}
+
+					// Set local DTLS role.
+					switch (dtlsRemoteRole)
+					{
+						case RTC::DtlsTransport::Role::CLIENT:
+						{
+							this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
+
+							break;
+						}
+						case RTC::DtlsTransport::Role::SERVER:
+						{
+							this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
+
+							break;
+						}
+						// If the peer has role "auto" we become "client" since we are ICE controlled.
+						case RTC::DtlsTransport::Role::AUTO:
+						{
+							this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
+
+							break;
+						}
+						case RTC::DtlsTransport::Role::NONE:
+						{
+							MS_THROW_ERROR("invalid remote DTLS role");
+						}
+					}
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Pass the remote fingerprint to the DTLS transport.
+				if (this->dtlsTransport->SetRemoteFingerprint(dtlsRemoteFingerprint))
+				{
+					// If everything is fine, we may run the DTLS transport if ready.
+					MayRunDtlsTransport();
+				}
+
+				// Start the RTCP timer.
+				this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+
+				// Set remote bitrate estimator.
+				this->rembRemoteBitrateEstimator.reset(new RTC::REMB::RemoteBitrateEstimatorAbsSendTime(this));
+
+				// Tell the caller about the selected local DTLS role.
+				json data = json::object();
+
+				switch (this->dtlsLocalRole)
+				{
+					case RTC::DtlsTransport::Role::CLIENT:
+						data["dtlsLocalRole"] = "client";
+						break;
+					case RTC::DtlsTransport::Role::SERVER:
+						data["dtlsLocalRole"] = "server";
+						break;
+					default:
+						MS_ABORT("invalid local DTLS role");
+				}
+
+				request->Accept(data);
 
 				break;
 			}
-			case RTC::DtlsTransport::Role::SERVER:
-			{
-				this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
 
-				break;
-			}
-			// If the peer has "auto" we become "client" since we are ICE controlled.
-			case RTC::DtlsTransport::Role::AUTO:
+			default:
 			{
-				this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
-
-				break;
-			}
-			case RTC::DtlsTransport::Role::NONE:
-			{
-				MS_THROW_ERROR("invalid remote role");
+				// Pass it to the parent class.
+				RTC::Transport::HandleRequest(request);
 			}
 		}
-
-		// Pass the remote fingerprint to the DTLS transport.
-		if (this->dtlsTransport->SetRemoteFingerprint(fingerprint))
-		{
-			// If everything is fine, we may run the DTLS transport if ready.
-			MayRunDtlsTransport();
-
-			MS_DEBUG_DEV("Transport remote DTLS parameters set [id:%" PRIu32 "]", this->id);
-		}
-
-		return this->dtlsLocalRole;
-	}
-
-	// TODO: Not here but in HandleRequest().
-	void WebRtcTransport::SetReceivingMaxBitrate(uint32_t bitrate)
-	{
-		MS_TRACE();
-
-		static constexpr uint32_t MinBitrate{ 10000 };
-
-		if (bitrate < MinBitrate)
-			bitrate = MinBitrate;
-
-		this->maxBitrate = bitrate;
-
-		MS_DEBUG_TAG(rbe, "Transport max bitrate set to %" PRIu32 "bps", this->maxBitrate);
 	}
 
 	// TODO: Not here but in HandleRequest().
@@ -868,27 +869,16 @@ namespace RTC
 		}
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->rtpHeaderExtensionIds.absSendTime);
-		}
-		if (this->rtpHeaderExtensionIds.mid != 0u)
-		{
-			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::MID, this->rtpHeaderExtensionIds.mid);
-		}
-		if (this->rtpHeaderExtensionIds.rid != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->rtpHeaderExtensionIds.rid);
-		}
+		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
+		packet->SetMidExtensionId(this->rtpHeaderExtensionIds.mid);
+		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
 
 		// Feed the remote bitrate estimator (REMB).
 		uint32_t absSendTime;
 
 		if (packet->ReadAbsSendTime(&absSendTime))
 		{
-			this->remoteBitrateEstimator->IncomingPacket(
+			this->rembRemoteBitrateEstimator->IncomingPacket(
 			  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 		}
 
@@ -1243,18 +1233,19 @@ namespace RTC
 		// NOTE: No DataChannel support, si just ignore it.
 	}
 
-	void WebRtcTransport::OnRemoteBitrateEstimatorValue(const std::vector<uint32_t>& ssrcs, uint32_t bitrate)
+	void WebRtcTransport::OnRemoteBitrateEstimatorValue(const RemoteBitrateEstimator* /*remoteBitrateEstimator*/, const std::vector<uint32_t>& ssrcs, uint32_t availableBitrate)
 	{
 		MS_TRACE();
 
-		uint32_t effectiveBitrate;
-		uint64_t now = DepLibUV::GetTime();
+		this->availableIncomingBitrate = availableBitrate;
 
-		// Limit bitrate if requested via API.
-		if (this->maxBitrate != 0u)
-			effectiveBitrate = std::min(bitrate, this->maxBitrate);
+		uint32_t effectiveMaxBitrate{ 0u };
+
+		// Limit announced available bitrate if requested via API.
+		if (this->maxIncomingBitrate != 0u)
+			effectiveMaxBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
 		else
-			effectiveBitrate = bitrate;
+			effectiveMaxBitrate = availableBitrate;
 
 		if (MS_HAS_DEBUG_TAG(rbe))
 		{
@@ -1268,23 +1259,17 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  rbe,
-			  "sending RTCP REMB packet [estimated:%" PRIu32 "bps, effective:%" PRIu32 "bps, ssrcs:%s]",
-			  bitrate,
-			  effectiveBitrate,
+			  "sending RTCP REMB packet [available:%" PRIu32 "bps, effective:%" PRIu32 "bps, ssrcs:%s]",
+			  availableBitrate,
+			  effectiveMaxBitrate,
 			  ssrcsStream.str().c_str());
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
 
-		packet.SetBitrate(effectiveBitrate);
+		packet.SetBitrate(effectiveMaxBitrate);
 		packet.SetSsrcs(ssrcs);
 		packet.Serialize(RTC::RTCP::Buffer);
 		SendRtcpPacket(&packet);
-
-		if (now - this->lastEffectiveMaxBitrateAt > EffectiveMaxBitrateCheckInterval)
-		{
-			this->lastEffectiveMaxBitrateAt = now;
-			this->sentRemb                  = std::make_tuple(effectiveBitrate, ssrcs);
-		}
 	}
 } // namespace RTC

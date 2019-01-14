@@ -4,12 +4,14 @@
 #include "common.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
-#include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
+#include "RTC/REMB/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunMessage.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
+#include "RTC/DtlsTransport.hpp"
 #include "RTC/Transport.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -18,16 +20,21 @@ namespace RTC
 	                        public RTC::TcpConnection::Listener,
 	                        public RTC::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener,
-	                        public RTC::RemoteBitrateEstimator::Listener
+	                        public RTC::REMB::RemoteBitrateEstimator::Listener
 	{
 	public:
-		// TODO
+		struct ListenIp
+		{
+			std::string ip;
+			std::string announcedIp;
+		};
+
+	public:
 		struct Options
 		{
-			bool udp{ true };
-			bool tcp{ true };
-			bool preferIPv4{ false };
-			bool preferIPv6{ false };
+			std::vector<ListenIp> listenIps;
+			bool enableUdp{ true };
+			bool enableTcp{ false };
 			bool preferUdp{ false };
 			bool preferTcp{ false };
 		};
@@ -98,9 +105,12 @@ namespace RTC
 		void OnDtlsApplicationData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
-		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
+		/* Pure virtual methods inherited from RTC::REMB::RemoteBitrateEstimator::Listener. */
 	public:
-		void OnRemoteBitrateEstimatorValue(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
+		void OnRemoteBitrateEstimatorValue(
+			const RTC::REMB::RemoteBitrateEstimator* remoteBitrateEstimator,
+			const std::vector<uint32_t>& ssrcs,
+			uint32_t availableBitrate) override;
 
 	private:
 		// Allocated by this.
@@ -116,10 +126,7 @@ namespace RTC
 		// Others (DTLS).
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others.
-		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
-		uint32_t maxBitrate{ 0 };
-		std::tuple<uint64_t, std::vector<uint32_t>> sentRemb;
-		uint64_t lastEffectiveMaxBitrateAt{ 0 };
+		std::unique_ptr<RTC::REMB::RemoteBitrateEstimatorAbsSendTime> rembRemoteBitrateEstimator;
 	};
 } // namespace RTC
 

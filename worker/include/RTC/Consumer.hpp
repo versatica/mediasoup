@@ -30,9 +30,6 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener() = default;
-
-		public:
 			virtual void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t ssrc) = 0;
 		};
 

@@ -378,6 +378,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: What is this->transportHeaderExtensionIds for???
+
 		auto& idMapping = this->rtpMapping.headerExtensionIds;
 		uint8_t ssrcAudioLevelId{ 0 };
 		uint8_t absSendTimeId{ 0 };
@@ -390,7 +392,7 @@ namespace RTC
 			  this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
 			  exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
-				// Optimize this with iterators.
+				// TODO: Optimize this with iterators.
 
 				if (idMapping.find(exten.id) != idMapping.end())
 					ssrcAudioLevelId = idMapping[exten.id];

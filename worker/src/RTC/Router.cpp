@@ -5,9 +5,9 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "Utils.hpp"
-// #include "RTC/PlainRtpTransport.hpp"
+#include "RTC/PlainRtpTransport.hpp"
 #include "RTC/RtpDictionaries.hpp"
-// #include "RTC/WebRtcTransport.hpp"
+#include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
 {
@@ -103,136 +103,213 @@ namespace RTC
 				break;
 			}
 
-				// case Channel::Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
-				// {
-				// 	static const Json::StaticString JsonStringUdp{ "udp" };
-				// 	static const Json::StaticString JsonStringTcp{ "tcp" };
-				// 	static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
-				// 	static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
-				// 	static const Json::StaticString JsonStringPreferUdp{ "preferUdp" };
-				// 	static const Json::StaticString JsonStringPreferTcp{ "preferTcp" };
+			case Channel::Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
+			{
+				std::string transportId;
 
-				// 	std::string transportId;
+				try
+				{
+					SetNewTransportIdFromRequest(request, transportId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
 
-				// 	try
-				// 	{
-				// 		SetNewTransportIdFromRequest(request, transportId);
-				// 	}
-				// 	catch (const MediaSoupError& error)
-				// 	{
-				// 		request->Reject(error.what());
+					return;
+				}
 
-				// 		return;
-				// 	}
+				RTC::WebRtcTransport::Options options;
 
-				// 	RTC::WebRtcTransport::Options options;
+				auto jsonListenIpsIt = request->data.find("listenIps");
 
-				// 	if (request->data[JsonStringUdp].isBool())
-				// 		options.udp = request->data[JsonStringUdp].asBool();
-				// 	if (request->data[JsonStringTcp].isBool())
-				// 		options.tcp = request->data[JsonStringTcp].asBool();
-				// 	if (request->data[JsonStringPreferIPv4].isBool())
-				// 		options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
-				// 	if (request->data[JsonStringPreferIPv6].isBool())
-				// 		options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
-				// 	if (request->data[JsonStringPreferUdp].isBool())
-				// 		options.preferUdp = request->data[JsonStringPreferUdp].asBool();
-				// 	if (request->data[JsonStringPreferTcp].isBool())
-				// 		options.preferTcp = request->data[JsonStringPreferTcp].asBool();
+				if (jsonListenIpsIt == request->data.end())
+					MS_THROW_ERROR("missing listenIps");
+				else if (!jsonListenIpsIt->is_array())
+					MS_THROW_ERROR("wrong listenIps (not an array)");
+				else if (jsonListenIpsIt->size() == 0)
+					MS_THROW_ERROR("wrong listenIps (empty array)");
+				else if (jsonListenIpsIt->size() > 8)
+					MS_THROW_ERROR("wrong listenIps (too many IPs)");
 
-				// 	RTC::WebRtcTransport* webrtcTransport;
+				for (auto& jsonListenIp : *jsonListenIpsIt)
+				{
+					RTC::WebRtcTransport::ListenIp listenIp;
 
-				// 	try
-				// 	{
-				// 		// NOTE: This may throw.
-				// 		webrtcTransport = new RTC::WebRtcTransport(this, transportId, options);
-				// 	}
-				// 	catch (const MediaSoupError& error)
-				// 	{
-				// 		request->Reject(error.what());
+					if (!jsonListenIp.is_object())
+						MS_THROW_ERROR("wrong listenIp (not an object)");
 
-				// 		return;
-				// 	}
+					auto jsonIpIt = jsonListenIp.find("ip");
 
-				// 	// Insert into the map.
-				// 	this->mapTransports[transportId] = webrtcTransport;
+					if (jsonIpIt == jsonListenIp.end())
+						MS_THROW_ERROR("missing listenIp.ip");
+					else if (!jsonIpIt->is_string())
+						MS_THROW_ERROR("wrong listenIp.ip (not an string");
 
-				// 	MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
+					// This may throw.
+					listenIp.ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
 
-				// 	json data = json::object();
+					auto jsonAnnouncedIpIt = jsonListenIp.find("announcedIp");
 
-				// 	webrtcTransport->FillJson(data);
+					if (jsonAnnouncedIpIt != jsonListenIp.end())
+					{
+						if (!jsonAnnouncedIpIt->is_string())
+							MS_THROW_ERROR("wrong listenIp.announcedIp (not an string)");
 
-				// 	request->Accept(data);
+						listenIp.announcedIp = jsonAnnouncedIpIt->get<std::string>();
+					}
 
-				// 	break;
-				// }
+					options.listenIps.push_back(listenIp);
+				}
 
-				// case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT:
-				// {
-				// 	static const Json::StaticString JsonStringRemoteIp{ "remoteIp" };
-				// 	static const Json::StaticString JsonStringRemotePort{ "remotePort" };
-				// 	static const Json::StaticString JsonStringLocalIp{ "localIp" };
-				// 	static const Json::StaticString JsonStringPreferIPv4{ "preferIPv4" };
-				// 	static const Json::StaticString JsonStringPreferIPv6{ "preferIPv6" };
+				auto jsonEnableUdpIt = request->data.find("enableUdp");
 
-				// 	std::string transportId;
+				if (jsonEnableUdpIt != request->data.end())
+				{
+					if (!jsonEnableUdpIt->is_boolean())
+						MS_THROW_ERROR("wrong enableUdp (not a boolean)");
 
-				// 	try
-				// 	{
-				// 		SetNewTransportIdFromRequest(request, transportId);
-				// 	}
-				// 	catch (const MediaSoupError& error)
-				// 	{
-				// 		request->Reject(error.what());
+					options.enableUdp = jsonEnableUdpIt->get<bool>();
+				}
 
-				// 		return;
-				// 	}
+				auto jsonEnableTcpIt = request->data.find("enableTcp");
 
-				// 	RTC::PlainRtpTransport::Options options;
+				if (jsonEnableTcpIt != request->data.end())
+				{
+					if (!jsonEnableTcpIt->is_boolean())
+						MS_THROW_ERROR("wrong enableTcp (not a boolean)");
 
-				// 	if (request->data[JsonStringRemoteIp].isString())
-				// 		options.remoteIp = request->data[JsonStringRemoteIp].asString();
+					options.enableTcp = jsonEnableTcpIt->get<bool>();
+				}
 
-				// 	if (request->data[JsonStringRemotePort].isUInt())
-				// 		options.remotePort = request->data[JsonStringRemotePort].asUInt();
+				auto jsonPreferUdpIt = request->data.find("preferUdp");
 
-				// 	if (request->data[JsonStringLocalIp].isString())
-				// 		options.localIp = request->data[JsonStringLocalIp].asString();
+				if (jsonPreferUdpIt != request->data.end())
+				{
+					if (!jsonPreferUdpIt->is_boolean())
+						MS_THROW_ERROR("wrong preferUdp (not a boolean)");
 
-				// 	if (request->data[JsonStringPreferIPv4].isBool())
-				// 		options.preferIPv4 = request->data[JsonStringPreferIPv4].asBool();
+					options.preferUdp = jsonPreferUdpIt->get<bool>();
+				}
 
-				// 	if (request->data[JsonStringPreferIPv6].isBool())
-				// 		options.preferIPv6 = request->data[JsonStringPreferIPv6].asBool();
+				auto jsonPreferTcpIt = request->data.find("preferTcp");
 
-				// 	RTC::PlainRtpTransport* plainRtpTransport;
+				if (jsonPreferTcpIt != request->data.end())
+				{
+					if (!jsonPreferTcpIt->is_boolean())
+						MS_THROW_ERROR("wrong preferTcp (not a boolean)");
 
-				// 	try
-				// 	{
-				// 		// NOTE: This may throw.
-				// 		plainRtpTransport = new RTC::PlainRtpTransport(this, transportId, options);
-				// 	}
-				// 	catch (const MediaSoupError& error)
-				// 	{
-				// 		request->Reject(error.what());
+					options.preferTcp = jsonPreferTcpIt->get<bool>();
+				}
 
-				// 		return;
-				// 	}
+				RTC::WebRtcTransport* webrtcTransport;
 
-				// 	// Insert into the map.
-				// 	this->mapTransports[transportId] = plainRtpTransport;
+				try
+				{
+					// NOTE: This may throw.
+					webrtcTransport = new RTC::WebRtcTransport(transportId, this, options);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
 
-				// 	MS_DEBUG_DEV("PlainRtpTransport created [transportId:%s]", transportId.c_str());
+					return;
+				}
 
-				// 	json data = json::object();
+				// Insert into the map.
+				this->mapTransports[transportId] = webrtcTransport;
 
-				// 	plainRtpTransport->FillJson(data);
+				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
-				// 	request->Accept(data);
+				json data = json::object();
 
-				// 	break;
-				// }
+				webrtcTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT:
+			{
+				std::string transportId;
+
+				try
+				{
+					SetNewTransportIdFromRequest(request, transportId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				RTC::PlainRtpTransport::Options options;
+
+				auto jsonListenIpIt = request->data.find("listenIp");
+
+				if (jsonListenIpIt == request->data.end())
+					MS_THROW_ERROR("missing listenIp");
+				else if (!jsonListenIpIt->is_object())
+					MS_THROW_ERROR("wrong listenIp (not an object)");
+
+				auto jsonIpIt = jsonListenIpIt->find("ip");
+
+				if (jsonIpIt == jsonListenIpIt->end())
+					MS_THROW_ERROR("missing listenIp.ip");
+				else if (!jsonIpIt->is_string())
+					MS_THROW_ERROR("wrong listenIp.ip (not an string)");
+
+				// This may throw.
+				options.listenIp.ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
+
+				auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
+
+				if (jsonAnnouncedIpIt != jsonListenIpIt->end())
+				{
+					if (!jsonAnnouncedIpIt->is_string())
+						MS_THROW_ERROR("wrong listenIp.announcedIp (not an string");
+
+					options.listenIp.announcedIp = jsonAnnouncedIpIt->get<std::string>();
+				}
+
+				auto jsonRtcpMuxIt = request->data.find("rtcpMux");
+
+				if (jsonRtcpMuxIt != request->data.end())
+				{
+					if (!jsonRtcpMuxIt->is_boolean())
+						MS_THROW_ERROR("wrong rtcpMux (not a boolean)");
+
+					options.rtcpMux = jsonRtcpMuxIt->get<bool>();
+				}
+
+				RTC::PlainRtpTransport* plainRtpTransport;
+
+				try
+				{
+					// NOTE: This may throw.
+					plainRtpTransport = new RTC::PlainRtpTransport(transportId, this, options);
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Reject(error.what());
+
+					return;
+				}
+
+				// Insert into the map.
+				this->mapTransports[transportId] = plainRtpTransport;
+
+				MS_DEBUG_DEV("PlainRtpTransport created [transportId:%s]", transportId.c_str());
+
+				json data = json::object();
+
+				plainRtpTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
 
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
 			{

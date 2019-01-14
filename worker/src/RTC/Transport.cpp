@@ -52,7 +52,8 @@ namespace RTC
 		this->mapConsumers.clear();
 
 		// Delete the RTCP timer.
-		delete this->rtcpTimer;
+		if (this->rtcpTimer != nullptr)
+			delete this->rtcpTimer;
 	}
 
 	void Transport::Close()
@@ -90,7 +91,8 @@ namespace RTC
 		this->mapConsumers.clear();
 
 		// Close the RTCP timer.
-		this->rtcpTimer->Close();
+		if (this->rtcpTimer != nullptr)
+			this->rtcpTimer->Close();
 	}
 
 	void Router::HandleRequest(Channel::Request* request)
@@ -99,6 +101,33 @@ namespace RTC
 
 		switch (request->methodId)
 		{
+			case Channel::Request::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE:
+			{
+				static constexpr uint32_t MinBitrate{ 10000 };
+
+				auto jsonBitrateIt = request->data.find("bitrate");
+
+				if (jsonBitrateIt == request->data.end() || !jsonBitrateIt->is_number_unsigned())
+				{
+					request->Reject("missing bitrate");
+
+					return;
+				}
+
+				uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+
+				if (bitrate < MinBitrate)
+					bitrate = MinBitrate;
+
+				this->maxIncomingBitrate = bitrate;
+
+				MS_DEBUG_TAG(rbe, "Transport maximum incoming bitrate set to %" PRIu32 "bps", bitrate);
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_CLOSE:
 			{
 				RTC::Producer* producer;
@@ -378,7 +407,7 @@ namespace RTC
 						{
 							auto* remb = dynamic_cast<RTCP::FeedbackPsRembPacket*>(afb);
 
-							this->recvRemb = std::make_tuple(remb->GetBitrate(), remb->GetSsrcs());
+							this->availableOutgoingBitrate = remb->GetBitrate();
 
 							break;
 						}

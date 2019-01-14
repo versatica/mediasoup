@@ -15,7 +15,6 @@
 #include "handles/Timer.hpp"
 #include <map>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 namespace RTC
@@ -25,9 +24,6 @@ namespace RTC
 	public:
 		class Listener
 		{
-		public:
-			virtual ~Listener() = default;
-
 		public:
 			virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;

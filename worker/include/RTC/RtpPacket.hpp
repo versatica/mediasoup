@@ -280,21 +280,33 @@ namespace RTC
 
 	inline void RtpPacket::SetAudioLevelExtensionId(uint8_t id)
 	{
+		if (id == 0u)
+			return;
+
 		this->audioLevelExtensionId = id;
 	}
 
 	inline void RtpPacket::SetAbsSendTimeExtensionId(uint8_t id)
 	{
+		if (id == 0u)
+			return;
+
 		this->absSendTimeExtensionId = id;
 	}
 
 	inline void RtpPacket::SetMidExtensionId(uint8_t id)
 	{
+		if (id == 0u)
+			return;
+
 		this->midExtensionId = id;
 	}
 
 	inline void RtpPacket::SetRidExtensionId(uint8_t id)
 	{
+		if (id == 0u)
+			return;
+
 		this->ridExtensionId = id;
 	}
 
@@ -366,7 +378,11 @@ namespace RTC
 	{
 		*len = 0;
 
-		if (HasOneByteExtensions())
+		if (id == 0u)
+		{
+			return nullptr;
+		}
+		else if (HasOneByteExtensions())
 		{
 			auto it = this->oneByteExtensions.find(id);
 

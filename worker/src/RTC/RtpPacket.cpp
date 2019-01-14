@@ -249,13 +249,13 @@ namespace RTC
 			}
 		}
 		if (this->audioLevelExtensionId)
-			MS_DEBUG_DEV("  audioLevel extId  : %" PRIu8, this->audioLevelExtensionId);
+		  MS_DEBUG_DEV("  audioLevel extId  : %" PRIu8, this->audioLevelExtensionId);
 		if (this->absSendTimeExtensionId)
-			MS_DEBUG_DEV("  absSendTime extId : %" PRIu8, this->absSendTimeExtensionId);
+		  MS_DEBUG_DEV("  absSendTime extId : %" PRIu8, this->absSendTimeExtensionId);
 		if (this->midExtensionId)
-			MS_DEBUG_DEV("  mid extId         : %" PRIu8, this->midExtensionId);
+		  MS_DEBUG_DEV("  mid extId         : %" PRIu8, this->midExtensionId);
 		if (this->ridExtensionId)
-			MS_DEBUG_DEV("  rid extId         : %" PRIu8, this->ridExtensionId);
+		  MS_DEBUG_DEV("  rid extId         : %" PRIu8, this->ridExtensionId);
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
 		MS_DEBUG_DEV("  payload type      : %" PRIu8, GetPayloadType());
@@ -276,10 +276,10 @@ namespace RTC
 		MS_TRACE();
 
 		// Reset extension ids.
-		this->audioLevelExtensionId  = 0;
+		this->audioLevelExtensionId = 0;
 		this->absSendTimeExtensionId = 0;
-		this->midExtensionId         = 0;
-		this->ridExtensionId         = 0;
+		this->midExtensionId = 0;
+		this->ridExtensionId = 0;
 
 		if (HasOneByteExtensions())
 		{
@@ -585,7 +585,7 @@ namespace RTC
 			// Two-Byte extensions can have length 0.
 			while (ptr + 1 < extensionEnd)
 			{
-				uint8_t id  = *ptr;
+				uint8_t id = *ptr;
 				uint8_t len = *(ptr + 1);
 
 				if (ptr + 2 + len > extensionEnd)

@@ -51,7 +51,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 
 	packet->SetAudioLevelExtensionId(1);
 	packet->GetExtension(1, &extenLen);
-	// packet->ReadAudioLevel(&volume, &voice);
+	packet->ReadAudioLevel(&volume, &voice);
 
 	packet->SetAbsSendTimeExtensionId(3);
 	packet->GetExtension(3, &extenLen);

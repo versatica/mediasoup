@@ -30,6 +30,9 @@ SCENARIO("IP::GetFamily()")
 	ip = "1.2.3.1111";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
+	ip = "1.2.3.01";
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+
 	ip = "1::abcde";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
@@ -40,6 +43,9 @@ SCENARIO("IP::GetFamily()")
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
 	ip = " ::1";
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+
+	ip = "";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 }
 
@@ -55,7 +61,7 @@ SCENARIO("IP::NormalizeIp()")
 	IP::NormalizeIp(ip);
 	REQUIRE(ip == "aa::8");
 
-	ip = "aA::0:8";
+	ip = "aA::0:0008";
 	IP::NormalizeIp(ip);
 	REQUIRE(ip == "aa::8");
 
@@ -69,5 +75,8 @@ SCENARIO("IP::NormalizeIp()")
 	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
 
 	ip = "0.0.0.";
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
+
+	ip = "";
 	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
 }
