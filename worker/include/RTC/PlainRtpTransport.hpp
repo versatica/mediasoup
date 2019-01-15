@@ -27,7 +27,7 @@ namespace RTC
 		~PlainRtpTransport() override;
 
 	public:
-		virtual void Close();
+		void Close() override;
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;

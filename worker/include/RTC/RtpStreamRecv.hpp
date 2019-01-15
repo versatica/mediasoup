@@ -5,6 +5,7 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpStream.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -17,13 +18,13 @@ namespace RTC
 			virtual void OnRtpStreamRecvNackRequired(
 			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
+			virtual void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
 			virtual void OnRtpStreamInactive(RTC::RtpStream* rtpStream)               = 0;
 			virtual void OnRtpStreamActive(RTC::RtpStream* rtpStream)                 = 0;
 		};
 
 	public:
 		RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params);
-		~RtpStreamRecv() override;
 
 		virtual void FillJsonStats(json& jsonObject) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;

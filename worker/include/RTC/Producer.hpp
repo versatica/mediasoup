@@ -65,7 +65,7 @@ namespace RTC
 		void FillJsonStats(json& jsonObject) const = 0;
 		void Pause();
 		void Resume();
-		const RTC::RtpParameters& GetParameters() const;
+		const RTC::RtpParameters& GetRtpParameters() const;
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
@@ -89,6 +89,7 @@ namespace RTC
 		void OnRtpStreamRecvNackRequired(
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
+		void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamInactive(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamActive(RTC::RtpStream* rtpStream) override;
 
@@ -122,7 +123,7 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline const RTC::RtpParameters& Producer::GetParameters() const
+	inline const RTC::RtpParameters& Producer::GetRtpParameters() const
 	{
 		return this->rtpParameters;
 	}

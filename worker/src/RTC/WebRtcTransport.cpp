@@ -8,7 +8,6 @@
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
@@ -42,7 +41,7 @@ namespace RTC
 		{
 			uint16_t initialIceLocalPreference = IceCandidateDefaultLocalPriority;
 
-			for (auto &listenIp : options.listenIps)
+			for (auto& listenIp : options.listenIps)
 			{
 				uint16_t iceLocalPreference = initialIceLocalPreference;
 
@@ -264,8 +263,8 @@ namespace RTC
 		}
 
 		// Add iceSelectedTuple.
-		if (this->selectedTuple != nullptr)
-			this->selectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
+		if (this->iceSelectedTuple != nullptr)
+			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 
 		// Add dtlsLocalParameters.
 		jsonObject["dtlsLocalParameters"] = json::object();
@@ -393,14 +392,14 @@ namespace RTC
 				break;
 		}
 
-		if (this->selectedTuple != nullptr)
+		if (this->iceSelectedTuple != nullptr)
 		{
 			// Add bytesReceived.
-			jsonObject["bytesReceived"] = this->selectedTuple->GetRecvBytes();
+			jsonObject["bytesReceived"] = this->iceSelectedTuple->GetRecvBytes();
 			// Add bytesSent.
-			jsonObject["bytesSent"] = this->selectedTuple->GetSentBytes();
+			jsonObject["bytesSent"] = this->iceSelectedTuple->GetSentBytes();
 			// Add iceSelectedTuple.
-			this->selectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
+			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 		}
 
 		// Add availableIncomingBitrate.
@@ -422,12 +421,34 @@ namespace RTC
 
 		switch (request->methodId)
 		{
+			case Channel::Request::MethodId::TRANSPORT_DUMP:
+			{
+				json data{ json::object() };
+
+				FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
+			{
+				json data{ json::object() };
+
+				FillJsonStats(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->dtlsLocalRole != RTC::DtlsTransport::Role::AUTO)
 				{
-					request->Reject("remote parameters already set");
+					request->Reject("connect() already called");
 
 					return;
 				}
@@ -460,8 +481,9 @@ namespace RTC
 						else if (!jsonAlgorithmIt->is_string())
 							MS_THROW_ERROR("wrong fingerprint.algorithm (not a string)");
 
-						dtlsRemoteFingerprint.algorithm = RTC::DtlsTransport::GetFingerprintAlgorithm(
-						  jsonAlgorithmIt->get<std:string>());
+						dtlsRemoteFingerprint.algorithm =
+						  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get < std
+						                                              : string > ());
 
 						if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 							MS_THROW_ERROR("invalid fingerprint.algorithm value");
@@ -545,7 +567,7 @@ namespace RTC
 				this->rembRemoteBitrateEstimator.reset(new RTC::REMB::RemoteBitrateEstimatorAbsSendTime(this));
 
 				// Tell the caller about the selected local DTLS role.
-				json data = json::object();
+				json data{ json::object() };
 
 				switch (this->dtlsLocalRole)
 				{
@@ -564,6 +586,32 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::RESTART_ICE:
+			{
+				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
+				std::string password         = Utils::Crypto::GetRandomString(32);
+
+				this->iceServer->SetUsernameFragment(usernameFragment);
+				this->iceServer->SetPassword(password);
+
+				MS_DEBUG_DEV("WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id);
+
+				// Reply with the updated ICE local parameters.
+				json data{ json::object() };
+
+				data["iceLocalParameters"] = json::object();
+
+				auto jsonIceLocalParametersIt = data.find("iceLocalParameters");
+
+				(*jsonIceLocalParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
+				(*jsonIceLocalParametersIt)["password"]         = this->iceServer->GetPassword();
+				(*jsonIceLocalParametersIt)["iceLite"]          = true;
+
+				request->Accept(data);
+
+				break;
+			}
+
 			default:
 			{
 				// Pass it to the parent class.
@@ -572,23 +620,10 @@ namespace RTC
 		}
 	}
 
-	// TODO: Not here but in HandleRequest().
-	// TODO: No, the new ICE username and password must be decided by this method.
-	// TODO: This must return the new local RTCIceParameters, including iceLite: true.
-	void WebRtcTransport::RestartIce(std::string& usernameFragment, std::string& password)
-	{
-		MS_TRACE();
-
-		this->iceServer->SetUsernameFragment(usernameFragment);
-		this->iceServer->SetPassword(password);
-
-		MS_DEBUG_DEV("Transport ICE ufrag&pwd changed [id:%" PRIu32 "]", this->id);
-	}
-
 	inline bool WebRtcTransport::IsConnected() const
 	{
 		return (
-		  this->selectedTuple != nullptr &&
+		  this->iceSelectedTuple != nullptr &&
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
@@ -613,7 +648,7 @@ namespace RTC
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
 			return;
 
-		this->selectedTuple->Send(data, len);
+		this->iceSelectedTuple->Send(data, len);
 	}
 
 	void WebRtcTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
@@ -637,7 +672,7 @@ namespace RTC
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
 
-		this->selectedTuple->Send(data, len);
+		this->iceSelectedTuple->Send(data, len);
 	}
 
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -661,7 +696,7 @@ namespace RTC
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
 
-		this->selectedTuple->Send(data, len);
+		this->iceSelectedTuple->Send(data, len);
 	}
 
 	inline void WebRtcTransport::MayRunDtlsTransport()
@@ -731,22 +766,22 @@ namespace RTC
 		MS_TRACE();
 
 		// Check if it's STUN.
-		if (StunMessage::IsStun(data, len))
+		if (RTC::StunMessage::IsStun(data, len))
 		{
 			OnStunDataRecv(tuple, data, len);
 		}
 		// Check if it's RTCP.
-		else if (RTCP::Packet::IsRtcp(data, len))
+		else if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
 			OnRtcpDataRecv(tuple, data, len);
 		}
 		// Check if it's RTP.
-		else if (RtpPacket::IsRtp(data, len))
+		else if (RTC::RtpPacket::IsRtp(data, len))
 		{
 			OnRtpDataRecv(tuple, data, len);
 		}
 		// Check if it's DTLS.
-		else if (DtlsTransport::IsDtls(data, len))
+		else if (RTC::DtlsTransport::IsDtls(data, len))
 		{
 			OnDtlsDataRecv(tuple, data, len);
 		}
@@ -792,8 +827,8 @@ namespace RTC
 
 		// Check that DTLS status is 'connecting' or 'connected'.
 		if (
-		  this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTING ||
-		  this->dtlsTransport->GetState() == DtlsTransport::DtlsState::CONNECTED)
+		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTING ||
+		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
 			MS_DEBUG_DEV("DTLS data received, passing it to the DTLS transport");
 
@@ -1009,10 +1044,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringIceSelectedTuple{ "iceSelectedTuple" };
-
-		Json::Value eventData(Json::objectValue);
-
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
 		 *
@@ -1021,27 +1052,30 @@ namespace RTC
 		 */
 
 		// Update the selected tuple.
-		this->selectedTuple = tuple;
+		this->iceSelectedTuple = tuple;
 
-		// Notify.
-		eventData["tuple"] = tuple->ToJson();
-		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", eventData);
+		MS_DEBUG_TAG(ice, "ICE elected tuple");
+
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
+
+		this->iceSelectedTuple->FillJson(data["iceSelectedTuple"]);
+
+		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", data);
 	}
 
 	void WebRtcTransport::OnIceConnected(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringIceState{ "iceState" };
-		static const Json::StaticString JsonStringConnected{ "connected" };
-
-		Json::Value eventData(Json::objectValue);
-
 		MS_DEBUG_TAG(ice, "ICE connected");
 
-		// Notify.
-		eventData[JsonStringIceState] = JsonStringConnected;
-		Channel::Notifier::Emit(this->id, "icestatechange", eventData);
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
+
+		data["iceState"] = "connected";
+
+		Channel::Notifier::Emit(this->id, "icestatechange", data);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1051,16 +1085,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringIceState{ "iceState" };
-		static const Json::StaticString JsonStringCompleted{ "completed" };
-
-		Json::Value eventData(Json::objectValue);
-
 		MS_DEBUG_TAG(ice, "ICE completed");
 
-		// Notify.
-		eventData[JsonStringIceState] = JsonStringCompleted;
-		Channel::Notifier::Emit(this->id, "icestatechange", eventData);
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
+
+		data["iceState"] = "completed";
+
+		Channel::Notifier::Emit(this->id, "icestatechange", data);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1070,35 +1102,31 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringIceState{ "iceState" };
-		static const Json::StaticString JsonStringDisconnected{ "disconnected" };
-
-		Json::Value eventData(Json::objectValue);
+		// Unset the selected tuple.
+		this->iceSelectedTuple = nullptr;
 
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
-		// Unset the selected tuple.
-		this->selectedTuple = nullptr;
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
 
-		// Notify.
-		eventData[JsonStringIceState] = JsonStringDisconnected;
-		Channel::Notifier::Emit(this->id, "icestatechange", eventData);
+		data["iceState"] = "disconnected";
+
+		Channel::Notifier::Emit(this->id, "icestatechange", data);
 	}
 
 	void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
-		static const Json::StaticString JsonStringConnecting{ "connecting" };
-
-		Json::Value eventData(Json::objectValue);
-
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
-		// Notify.
-		eventData[JsonStringDtlsState] = JsonStringConnecting;
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
+
+		data["dtlsState"] = "connecting";
+
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
 	void WebRtcTransport::OnDtlsConnected(
@@ -1111,12 +1139,6 @@ namespace RTC
 	  std::string& remoteCert)
 	{
 		MS_TRACE();
-
-		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
-		static const Json::StaticString JsonStringConnected{ "connected" };
-		static const Json::StaticString JsonStringDtlsRemoteCert{ "dtlsRemoteCert" };
-
-		Json::Value eventData(Json::objectValue);
 
 		MS_DEBUG_TAG(dtls, "DTLS connected");
 
@@ -1145,7 +1167,7 @@ namespace RTC
 		try
 		{
 			this->srtpRecvSession = new RTC::SrtpSession(
-			  SrtpSession::Type::INBOUND, srtpProfile, srtpRemoteKey, srtpRemoteKeyLen);
+			  RTC::SrtpSession::Type::INBOUND, srtpProfile, srtpRemoteKey, srtpRemoteKeyLen);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -1155,16 +1177,18 @@ namespace RTC
 			this->srtpSendSession = nullptr;
 		}
 
-		// Notify.
-		eventData[JsonStringDtlsState]      = JsonStringConnected;
-		eventData[JsonStringDtlsRemoteCert] = remoteCert;
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
 
-		// Iterate all the Consumers and request key frame.
-		for (auto* consumer : this->consumers)
+		data["dtlsState"]      = "connected";
+		data["dtlsRemoteCert"] = remoteCert;
+
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
+
+		// Iterate all Consumers and request key frame for them.
+		for (auto& kv : this->mapConsumers)
 		{
-			if (consumer->kind == RTC::Media::Kind::VIDEO)
-				MS_DEBUG_2TAGS(rtcp, rtx, "Transport connected, requesting key frame for Consumers");
+			auto* consumer = kv.second;
 
 			consumer->RequestKeyFrame();
 		}
@@ -1174,16 +1198,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
-		static const Json::StaticString JsonStringFailed{ "failed" };
-
-		Json::Value eventData(Json::objectValue);
-
 		MS_WARN_TAG(dtls, "DTLS failed");
 
-		// Notify.
-		eventData[JsonStringDtlsState] = JsonStringFailed;
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
+
+		data["dtlsState"] = "failed";
+
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 
 		// This is a fatal error so close the transport.
 		Close();
@@ -1193,16 +1215,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringDtlsState{ "dtlsState" };
-		static const Json::StaticString JsonStringClosed{ "closed" };
+		MS_WARN_TAG(dtls, "DTLS remotely closed");
 
-		Json::Value eventData(Json::objectValue);
+		// Notify the Node WebRtcTransport.
+		json data{ json::object() };
 
-		MS_DEBUG_TAG(dtls, "DTLS remotely closed");
+		data["dtlsState"] = "closed";
 
-		// Notify.
-		eventData[JsonStringDtlsState] = JsonStringClosed;
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", eventData);
+		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 
 		// This is a fatal error so close the transport.
 		Close();
@@ -1213,14 +1233,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->selectedTuple == nullptr)
+		if (this->iceSelectedTuple == nullptr)
 		{
 			MS_WARN_TAG(dtls, "no selected tuple set, cannot send DTLS packet");
 
 			return;
 		}
 
-		this->selectedTuple->Send(data, len);
+		this->iceSelectedTuple->Send(data, len);
 	}
 
 	void WebRtcTransport::OnDtlsApplicationData(
@@ -1233,7 +1253,10 @@ namespace RTC
 		// NOTE: No DataChannel support, si just ignore it.
 	}
 
-	void WebRtcTransport::OnRemoteBitrateEstimatorValue(const RemoteBitrateEstimator* /*remoteBitrateEstimator*/, const std::vector<uint32_t>& ssrcs, uint32_t availableBitrate)
+	void WebRtcTransport::OnRemoteBitrateEstimatorValue(
+	  const RTC::REMB::RemoteBitrateEstimator* /*remoteBitrateEstimator*/,
+	  const std::vector<uint32_t>& ssrcs,
+	  uint32_t availableBitrate)
 	{
 		MS_TRACE();
 

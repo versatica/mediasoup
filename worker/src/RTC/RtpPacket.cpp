@@ -126,60 +126,6 @@ namespace RTC
 		return packet;
 	}
 
-	RtpPacket* RtpPacket::CreateProbationPacket(const uint8_t* buffer, uint8_t payloadPadding)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(buffer != nullptr, "no buffer given");
-		MS_ASSERT(payloadPadding > 0, "padding cannot be 0");
-
-		auto* ptr = const_cast<uint8_t*>(buffer);
-
-		// Set the header.
-		auto* header = reinterpret_cast<Header*>(ptr);
-
-		// Fill some header fields.
-		header->csrcCount      = 0;
-		header->extension      = 0;
-		header->padding        = 1;
-		header->version        = 2;
-		header->payloadType    = 0; // To be set by the caller.
-		header->marker         = 0;
-		header->sequenceNumber = 0; // To be set by the caller.
-		header->timestamp      = 0; // To be set by the caller.
-		header->ssrc           = 0; // To be set by the caller.
-
-		ptr += sizeof(Header);
-
-		// Header extension.
-		ExtensionHeader* extensionHeader{ nullptr };
-
-		// Set payload.
-		uint8_t* payload     = ptr;
-		size_t payloadLength = 0;
-
-		// Add padding bytes.
-		for (uint8_t i = 0; i < payloadPadding - 1; ++i)
-		{
-			Utils::Byte::Set1Byte(ptr++, 0, 0);
-		}
-
-		// Add a final byte with the padding count (including itself).
-		Utils::Byte::Set1Byte(ptr++, 0, payloadPadding);
-
-		// Set the packet size.
-		auto size = static_cast<size_t>(ptr - buffer);
-
-		MS_ASSERT(
-		  size == sizeof(Header) + payloadLength + size_t{ payloadPadding },
-		  "packet's computed size does not match received size");
-
-		auto packet =
-		  new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, size);
-
-		return packet;
-	}
-
 	/* Instance methods. */
 
 	RtpPacket::RtpPacket(
@@ -249,13 +195,13 @@ namespace RTC
 			}
 		}
 		if (this->audioLevelExtensionId)
-		  MS_DEBUG_DEV("  audioLevel extId  : %" PRIu8, this->audioLevelExtensionId);
+			MS_DEBUG_DEV("  audioLevel extId  : %" PRIu8, this->audioLevelExtensionId);
 		if (this->absSendTimeExtensionId)
-		  MS_DEBUG_DEV("  absSendTime extId : %" PRIu8, this->absSendTimeExtensionId);
+			MS_DEBUG_DEV("  absSendTime extId : %" PRIu8, this->absSendTimeExtensionId);
 		if (this->midExtensionId)
-		  MS_DEBUG_DEV("  mid extId         : %" PRIu8, this->midExtensionId);
+			MS_DEBUG_DEV("  mid extId         : %" PRIu8, this->midExtensionId);
 		if (this->ridExtensionId)
-		  MS_DEBUG_DEV("  rid extId         : %" PRIu8, this->ridExtensionId);
+			MS_DEBUG_DEV("  rid extId         : %" PRIu8, this->ridExtensionId);
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
 		MS_DEBUG_DEV("  payload type      : %" PRIu8, GetPayloadType());
@@ -276,10 +222,10 @@ namespace RTC
 		MS_TRACE();
 
 		// Reset extension ids.
-		this->audioLevelExtensionId = 0;
+		this->audioLevelExtensionId  = 0;
 		this->absSendTimeExtensionId = 0;
-		this->midExtensionId = 0;
-		this->ridExtensionId = 0;
+		this->midExtensionId         = 0;
+		this->ridExtensionId         = 0;
 
 		if (HasOneByteExtensions())
 		{
@@ -585,7 +531,7 @@ namespace RTC
 			// Two-Byte extensions can have length 0.
 			while (ptr + 1 < extensionEnd)
 			{
-				uint8_t id = *ptr;
+				uint8_t id  = *ptr;
 				uint8_t len = *(ptr + 1);
 
 				if (ptr + 2 + len > extensionEnd)

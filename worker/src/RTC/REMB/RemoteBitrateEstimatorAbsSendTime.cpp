@@ -12,8 +12,8 @@
 // #define MS_LOG_DEV
 
 #include "RTC/REMB/RemoteBitrateEstimatorAbsSendTime.hpp"
-#include "Logger.hpp"
 #include "DepLibUV.hpp"
+#include "Logger.hpp"
 #include "RTC/REMB/RemoteBitrateEstimator.hpp"
 #include <algorithm>
 #include <cmath>
@@ -25,7 +25,8 @@ namespace RTC
 		static constexpr int TimestampGroupLengthMs{ 5 };
 		static constexpr uint32_t AbsSendTimeFraction{ 18 };
 		static constexpr uint32_t AbsSendTimeInterArrivalUpshift{ 8 };
-		static constexpr uint32_t InterArrivalShift{ AbsSendTimeFraction + AbsSendTimeInterArrivalUpshift };
+		static constexpr uint32_t InterArrivalShift{ AbsSendTimeFraction +
+			                                           AbsSendTimeInterArrivalUpshift };
 		static constexpr uint32_t InitialProbingIntervalMs{ 2000 };
 		static constexpr int MinClusterSize{ 4 };
 		static constexpr size_t MaxProbePackets{ 15 };

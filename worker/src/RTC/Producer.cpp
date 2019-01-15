@@ -4,6 +4,7 @@
 #include "RTC/Producer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -519,6 +520,7 @@ namespace RTC
 		auto& codec = this->rtpParameters.GetCodecForEncoding(encoding);
 		bool useNack{ false };
 		bool usePli{ false };
+		bool useFir{ false };
 		bool useRemb{ false };
 
 		for (auto& fb : codec.rtcpFeedback)
@@ -534,6 +536,12 @@ namespace RTC
 				MS_DEBUG_TAG(rtcp, "PLI supported");
 
 				usePli = true;
+			}
+			if (!useFir && fb.type == "ccm" && fb.parameter == "fir")
+			{
+				MS_DEBUG_TAG(rtcp, "FIR supported");
+
+				useFir = true;
 			}
 			else if (!useRemb && fb.type == "goog-remb")
 			{
@@ -552,6 +560,7 @@ namespace RTC
 		params.clockRate   = codec.clockRate;
 		params.useNack     = useNack;
 		params.usePli      = usePli;
+		params.useFir      = useFir;
 
 		// Create a RtpStreamRecv for receiving a media stream.
 		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
@@ -743,6 +752,24 @@ namespace RTC
 		this->transport->SendRtcpPacket(&packet);
 
 		rtpStream->pliCount++;
+	}
+
+	// TODO: HELP!
+	void Producer::OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)
+	{
+		// MS_TRACE();
+
+		// MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+
+		// RTC::RTCP::FeedbackPsFirPacket packet(0, rtpStream->GetSsrc());
+		// FeedbackPsFirItem* item = new FeedbackPsFirItem(ssrc, seq);
+
+		// packet.AddItem(item);
+		// packet.Serialize(RTC::RTCP::Buffer);
+
+		// this->transport->SendRtcpPacket(&packet);
+
+		// rtpStream->pliCount++;
 	}
 
 	void Producer::OnRtpStreamInactive(RTC::RtpStream* rtpStream)

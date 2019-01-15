@@ -31,7 +31,8 @@ namespace RTC
 			// A timestamp group is defined as all packets with a timestamp which are at
 			// most timestampGroupLengthTicks older than the first timestamp in that
 			// group.
-			InterArrival(uint32_t timestampGroupLengthTicks, double timestampToMsCoeff, bool enableBurstGrouping);
+			InterArrival(
+			  uint32_t timestampGroupLengthTicks, double timestampToMsCoeff, bool enableBurstGrouping);
 
 			// This function returns true if a delta was computed, or false if the current
 			// group is still incomplete or if only one group has been completed.

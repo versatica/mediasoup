@@ -367,67 +367,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		delete rtxPacket;
 	}
 
-	SECTION("create probation RtpPacket")
-	{
-		auto packet = RtpPacket::CreateProbationPacket(buffer, 4);
-
-		if (!packet)
-			FAIL("not a RTP packet");
-
-		auto size = packet->GetSize();
-
-		REQUIRE(packet->HasMarker() == false);
-		REQUIRE(packet->HasExtensionHeader() == false);
-		REQUIRE(packet->GetPayloadType() == 0);
-		REQUIRE(packet->GetSequenceNumber() == 0);
-		REQUIRE(packet->GetTimestamp() == 0);
-		REQUIRE(packet->GetSsrc() == 0);
-		REQUIRE(packet->GetPayloadLength() == 0);
-		REQUIRE(packet->GetPayloadPadding() == 4);
-		REQUIRE(packet->GetSize() == 16);
-		REQUIRE(packet->GetExtensionHeaderLength() == 0);
-		REQUIRE(packet->HasOneByteExtensions() == false);
-		REQUIRE(packet->HasTwoBytesExtensions() == false);
-
-		auto* clonedPacket = packet->Clone(buffer2);
-
-		REQUIRE(clonedPacket->HasMarker() == false);
-		REQUIRE(clonedPacket->HasExtensionHeader() == false);
-		REQUIRE(clonedPacket->GetPayloadType() == 0);
-		REQUIRE(clonedPacket->GetSequenceNumber() == 0);
-		REQUIRE(clonedPacket->GetTimestamp() == 0);
-		REQUIRE(clonedPacket->GetSsrc() == 0);
-		REQUIRE(clonedPacket->GetPayloadLength() == 0);
-		REQUIRE(clonedPacket->GetPayloadPadding() == 4);
-		REQUIRE(clonedPacket->GetSize() == 16);
-		REQUIRE(clonedPacket->GetExtensionHeaderLength() == 0);
-		REQUIRE(clonedPacket->HasOneByteExtensions() == false);
-		REQUIRE(clonedPacket->HasTwoBytesExtensions() == false);
-
-		delete packet;
-		delete clonedPacket;
-
-		packet = RtpPacket::Parse(buffer2, size);
-
-		if (!packet)
-			FAIL("not a RTP packet");
-
-		REQUIRE(packet->HasMarker() == false);
-		REQUIRE(packet->HasExtensionHeader() == false);
-		REQUIRE(packet->GetPayloadType() == 0);
-		REQUIRE(packet->GetSequenceNumber() == 0);
-		REQUIRE(packet->GetTimestamp() == 0);
-		REQUIRE(packet->GetSsrc() == 0);
-		REQUIRE(packet->GetPayloadLength() == 0);
-		REQUIRE(packet->GetPayloadPadding() == 4);
-		REQUIRE(packet->GetSize() == 16);
-		REQUIRE(packet->GetExtensionHeaderLength() == 0);
-		REQUIRE(packet->HasOneByteExtensions() == false);
-		REQUIRE(packet->HasTwoBytesExtensions() == false);
-
-		delete packet;
-	}
-
 	SECTION("create RtpPacket and apply payload shift to it")
 	{
 		// clang-format off

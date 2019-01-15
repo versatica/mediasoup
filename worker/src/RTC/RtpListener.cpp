@@ -57,7 +57,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& rtpParameters = producer->GetParameters();
+		auto& rtpParameters = producer->GetRtpParameters();
 
 		// Keep a copy of the previous entries so we can rollback.
 

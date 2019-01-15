@@ -94,7 +94,7 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::ROUTER_DUMP:
 			{
-				json data = json::object();
+				json data{ json::object() };
 
 				FillJson(data);
 
@@ -220,7 +220,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
-				json data = json::object();
+				json data{ json::object() };
 
 				webrtcTransport->FillJson(data);
 
@@ -302,7 +302,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("PlainRtpTransport created [transportId:%s]", transportId.c_str());
 
-				json data = json::object();
+				json data{ json::object() };
 
 				plainRtpTransport->FillJson(data);
 

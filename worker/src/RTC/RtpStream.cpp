@@ -18,8 +18,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStream::RtpStream(RTC::RtpStream::Params& params)
-	  : params(params), rtpStreamId(Utils::Crypto::GetRandomString(16))
+	RtpStream::RtpStream(RTC::RtpStream::Params& params) : params(params)
 	{
 		MS_TRACE();
 
@@ -48,7 +47,6 @@ namespace RTC
 
 		uint64_t now = DepLibUV::GetTime();
 
-		jsonObject["id"]               = this->rtpStreamId;
 		jsonObject["timestamp"]        = now;
 		jsonObject["ssrc"]             = this->params.ssrc;
 		jsonObject["kind"]             = RtpCodecMimeType::type2String[this->params.mimeType.type];
@@ -60,9 +58,9 @@ namespace RTC
 		jsonObject["fractionLost"]     = this->fractionLost;
 		jsonObject["packetsDiscarded"] = this->packetsDiscarded;
 		jsonObject["packetsRepaired"]  = this->packetsRepaired;
-		jsonObject["firCount"]         = this->firCount;
-		jsonObject["pliCount"]         = this->pliCount;
 		jsonObject["nackCount"]        = this->nackCount;
+		jsonObject["pliCount"]         = this->pliCount;
+		jsonObject["firCount"]         = this->firCount;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -76,9 +74,8 @@ namespace RTC
 		{
 			InitSeq(seq);
 
-			this->started = true;
-			this->maxSeq  = seq - 1;
-
+			this->started     = true;
+			this->maxSeq      = seq - 1;
 			this->maxPacketTs = packet->GetTimestamp();
 			this->maxPacketMs = DepLibUV::GetTime();
 		}
@@ -116,7 +113,6 @@ namespace RTC
 	void RtpStream::RestartStatusCheckTimer()
 	{
 		// Notify about status on next check.
-		this->notifyStatus = true;
 		this->statusCheckTimer->Restart();
 	}
 
@@ -213,6 +209,7 @@ namespace RTC
 		jsonObject["clockRate"]   = this->clockRate;
 		jsonObject["useNack"]     = this->useNack;
 		jsonObject["usePli"]      = this->usePli;
+		jsonObject["useFir"]      = this->useFir;
 	}
 
 	void RtpStream::OnTimer(Timer* timer)

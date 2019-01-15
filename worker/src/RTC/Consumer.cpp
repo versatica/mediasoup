@@ -624,7 +624,7 @@ namespace RTC
 		}
 	}
 
-	void Consumer::ReceiveKeyFrameRequest(RTCP::FeedbackPs::MessageType messageType)
+	void Consumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
 	{
 		MS_TRACE();
 
@@ -633,11 +633,11 @@ namespace RTC
 
 		switch (messageType)
 		{
-			case RTCP::FeedbackPs::MessageType::PLI:
+			case RTC::RTCP::FeedbackPs::MessageType::PLI:
 				this->rtpStream->pliCount++;
 				break;
 
-			case RTCP::FeedbackPs::MessageType::FIR:
+			case RTC::RTCP::FeedbackPs::MessageType::FIR:
 				this->rtpStream->firCount++;
 				break;
 

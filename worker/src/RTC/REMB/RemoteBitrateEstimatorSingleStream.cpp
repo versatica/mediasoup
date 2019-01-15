@@ -12,8 +12,8 @@
 // #define MS_LOG_DEV
 
 #include "RTC/REMB/RemoteBitrateEstimatorSingleStream.hpp"
-#include "Logger.hpp"
 #include "DepLibUV.hpp"
+#include "Logger.hpp"
 #include "RTC/REMB/AimdRateControl.hpp"
 #include "RTC/REMB/InterArrival.hpp"
 #include "RTC/REMB/OveruseDetector.hpp"
@@ -48,8 +48,9 @@ namespace RTC
 				// callback will no longer be called for the old SSRC. This will be
 				// automatically cleaned up when we have one RemoteBitrateEstimator per REMB
 				// group.
-				std::pair<SsrcOveruseEstimatorMap::iterator, bool> insertResult = this->overuseDetectors.insert(
-				  std::make_pair(ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
+				std::pair<SsrcOveruseEstimatorMap::iterator, bool> insertResult =
+				  this->overuseDetectors.insert(
+				    std::make_pair(ssrc, new Detector(nowMs, OverUseDetectorOptions(), true)));
 				it = insertResult.first;
 			}
 
@@ -146,7 +147,7 @@ namespace RTC
 				return;
 
 			AimdRateControl* remoteRate = GetRemoteRate();
-			double meanNoiseVar         = sumVarNoise / static_cast<double>(this->overuseDetectors.size());
+			double meanNoiseVar = sumVarNoise / static_cast<double>(this->overuseDetectors.size());
 			const RateControlInput input(bwState, this->incomingBitrate.GetRate(nowMs), meanNoiseVar);
 
 			remoteRate->Update(&input, nowMs);

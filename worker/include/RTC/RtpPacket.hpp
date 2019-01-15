@@ -74,7 +74,6 @@ namespace RTC
 	public:
 		static bool IsRtp(const uint8_t* data, size_t len);
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
-		static RtpPacket* CreateProbationPacket(const uint8_t* buffer, uint8_t payloadPadding);
 
 	public:
 		RtpPacket(

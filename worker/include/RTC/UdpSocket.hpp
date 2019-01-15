@@ -13,9 +13,6 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener() = default;
-
-		public:
 			virtual void OnPacketRecv(
 			  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
 		};

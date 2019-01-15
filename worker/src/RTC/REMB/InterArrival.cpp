@@ -56,7 +56,8 @@ namespace RTC
 				// First packet of a later frame, the previous frame sample is ready.
 				if (this->prevTimestampGroup.completeTimeMs >= 0)
 				{
-					*timestampDelta = this->currentTimestampGroup.timestamp - this->prevTimestampGroup.timestamp;
+					*timestampDelta =
+					  this->currentTimestampGroup.timestamp - this->prevTimestampGroup.timestamp;
 					*arrivalTimeDeltaMs =
 					  this->currentTimestampGroup.completeTimeMs - this->prevTimestampGroup.completeTimeMs;
 

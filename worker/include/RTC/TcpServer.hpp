@@ -15,9 +15,6 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener() = default;
-
-		public:
 			virtual void OnRtcTcpConnectionClosed(
 			  RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) = 0;
 		};

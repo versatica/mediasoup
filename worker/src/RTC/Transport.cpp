@@ -13,13 +13,12 @@
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(uint32_t id, Listener* listener) : id(id), listener(listener)
+	Transport::Transport(std::string& id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
 
@@ -124,6 +123,20 @@ namespace RTC
 				MS_DEBUG_TAG(rbe, "Transport maximum incoming bitrate set to %" PRIu32 "bps", bitrate);
 
 				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_PRODUCE:
+			{
+				// TODO
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_CONSUME:
+			{
+				// TODO
 
 				break;
 			}
@@ -334,9 +347,9 @@ namespace RTC
 
 		switch (packet->GetType())
 		{
-			case RTCP::Type::RR:
+			case RTC::RTCP::Type::RR:
 			{
-				auto* rr = dynamic_cast<RTCP::ReceiverReportPacket*>(packet);
+				auto* rr = dynamic_cast<RTC::RTCP::ReceiverReportPacket*>(packet);
 				auto it  = rr->Begin();
 
 				for (; it != rr->End(); ++it)
@@ -360,14 +373,14 @@ namespace RTC
 				break;
 			}
 
-			case RTCP::Type::PSFB:
+			case RTC::RTCP::Type::PSFB:
 			{
-				auto* feedback = dynamic_cast<RTCP::FeedbackPsPacket*>(packet);
+				auto* feedback = dynamic_cast<RTC::RTCP::FeedbackPsPacket*>(packet);
 
 				switch (feedback->GetMessageType())
 				{
-					case RTCP::FeedbackPs::MessageType::PLI:
-					case RTCP::FeedbackPs::MessageType::FIR:
+					case RTC::RTCP::FeedbackPs::MessageType::PLI:
+					case RTC::RTCP::FeedbackPs::MessageType::FIR:
 					{
 						auto* consumer = GetStartedConsumer(feedback->GetMediaSsrc());
 
@@ -377,7 +390,7 @@ namespace RTC
 							  rtcp,
 							  "no Consumer found for received %s Feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 							  feedback->GetMediaSsrc(),
 							  feedback->GetMediaSsrc());
 
@@ -389,7 +402,7 @@ namespace RTC
 						  rtx,
 						  "%s received, requesting key frame for Consumer "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 						  feedback->GetMediaSsrc(),
 						  feedback->GetMediaSsrc());
 
@@ -398,14 +411,14 @@ namespace RTC
 						break;
 					}
 
-					case RTCP::FeedbackPs::MessageType::AFB:
+					case RTC::RTCP::FeedbackPs::MessageType::AFB:
 					{
-						auto* afb = dynamic_cast<RTCP::FeedbackPsAfbPacket*>(feedback);
+						auto* afb = dynamic_cast<RTC::RTCP::FeedbackPsAfbPacket*>(feedback);
 
 						// Store REMB info.
-						if (afb->GetApplication() == RTCP::FeedbackPsAfbPacket::Application::REMB)
+						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
 						{
-							auto* remb = dynamic_cast<RTCP::FeedbackPsRembPacket*>(afb);
+							auto* remb = dynamic_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
 							this->availableOutgoingBitrate = remb->GetBitrate();
 
@@ -417,7 +430,7 @@ namespace RTC
 							  rtcp,
 							  "ignoring unsupported %s Feedback PS AFB packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 							  feedback->GetMediaSsrc(),
 							  feedback->GetMediaSsrc());
 
@@ -431,7 +444,7 @@ namespace RTC
 						  rtcp,
 						  "ignoring unsupported %s Feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 						  feedback->GetMediaSsrc(),
 						  feedback->GetMediaSsrc());
 					}
@@ -440,9 +453,9 @@ namespace RTC
 				break;
 			}
 
-			case RTCP::Type::RTPFB:
+			case RTC::RTCP::Type::RTPFB:
 			{
-				auto* feedback = dynamic_cast<RTCP::FeedbackRtpPacket*>(packet);
+				auto* feedback = dynamic_cast<RTC::RTCP::FeedbackRtpPacket*>(packet);
 				auto* consumer = GetStartedConsumer(feedback->GetMediaSsrc());
 
 				if (consumer == nullptr)
@@ -459,7 +472,7 @@ namespace RTC
 
 				switch (feedback->GetMessageType())
 				{
-					case RTCP::FeedbackRtp::MessageType::NACK:
+					case RTC::RTCP::FeedbackRtp::MessageType::NACK:
 					{
 						auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
@@ -474,7 +487,7 @@ namespace RTC
 						  rtcp,
 						  "ignoring unsupported %s Feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  RTC::RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 						  feedback->GetMediaSsrc(),
 						  feedback->GetMediaSsrc());
 					}
@@ -483,9 +496,9 @@ namespace RTC
 				break;
 			}
 
-			case RTCP::Type::SR:
+			case RTC::RTCP::Type::SR:
 			{
-				auto* sr = dynamic_cast<RTCP::SenderReportPacket*>(packet);
+				auto* sr = dynamic_cast<RTC::RTCP::SenderReportPacket*>(packet);
 				auto it  = sr->Begin();
 
 				// Even if Sender Report packet can only contains one report...
@@ -511,9 +524,9 @@ namespace RTC
 				break;
 			}
 
-			case RTCP::Type::SDES:
+			case RTC::RTCP::Type::SDES:
 			{
-				auto* sdes = dynamic_cast<RTCP::SdesPacket*>(packet);
+				auto* sdes = dynamic_cast<RTC::RTCP::SdesPacket*>(packet);
 				auto it    = sdes->Begin();
 
 				for (; it != sdes->End(); ++it)
@@ -534,7 +547,7 @@ namespace RTC
 				break;
 			}
 
-			case RTCP::Type::BYE:
+			case RTC::RTCP::Type::BYE:
 			{
 				MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
 
@@ -586,8 +599,10 @@ namespace RTC
 			}
 		}
 
-		for (auto& producer : this->producers)
+		for (auto& kv : this->mapProducers)
 		{
+			auto* producer = kv.second;
+
 			producer->GetRtcp(packet.get(), now);
 		}
 
@@ -619,9 +634,7 @@ namespace RTC
 			if (!consumer->IsStarted())
 				continue;
 
-			// TODO: I do not like this at all.
-
-			auto& rtpParameters = consumer->GetParameters();
+			auto& rtpParameters = consumer->GetRtpParameters();
 
 			for (auto& encoding : rtpParameters.encodings)
 			{

@@ -26,11 +26,6 @@ namespace RTC
 		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
 	}
 
-	RtpStreamRecv::~RtpStreamRecv()
-	{
-		MS_TRACE();
-	}
-
 	void RtpStreamRecv::FillJsonStats(json& jsonObject)
 	{
 		MS_TRACE();
@@ -210,6 +205,14 @@ namespace RTC
 				this->nackGenerator->Reset();
 
 			this->listener->OnRtpStreamRecvPliRequired(this);
+		}
+		else if (this->params.useFir)
+		{
+			// Reset NackGenerator.
+			if (this->params.useNack)
+				this->nackGenerator->Reset();
+
+			this->listener->OnRtpStreamRecvFirRequired(this);
 		}
 	}
 

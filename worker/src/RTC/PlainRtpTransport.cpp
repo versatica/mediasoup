@@ -13,7 +13,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	PlainRtpTransport::PlainRtpTransport(std::string& id, RTC::Transport::Listener* listener, Options& options)
+	PlainRtpTransport::PlainRtpTransport(
+	  std::string& id, RTC::Transport::Listener* listener, Options& options)
 	  : RTC::Transport::Transport(id, listener), rtcpMux(options.rtcpMux)
 	{
 		MS_TRACE();
@@ -118,7 +119,7 @@ namespace RTC
 
 			auto jsonTupleIt = jsonObject.find("tuple");
 
-			(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+			(*jsonTupleIt)["localIp"]   = this->udpSocket->GetLocalIp();
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
 			(*jsonTupleIt)["transport"] = "udp";
 		}
@@ -136,7 +137,7 @@ namespace RTC
 
 				auto jsonRtcpTupleIt = jsonObject.find("rtcpTuple");
 
-				(*jsonRtcpTupleIt)["localIp"] = this->rtcpUdpSocket->GetLocalIp();
+				(*jsonRtcpTupleIt)["localIp"]   = this->rtcpUdpSocket->GetLocalIp();
 				(*jsonRtcpTupleIt)["localPort"] = this->rtcpUdpSocket->GetLocalPort();
 				(*jsonRtcpTupleIt)["transport"] = "udp";
 			}
@@ -193,8 +194,38 @@ namespace RTC
 
 		switch (request->methodId)
 		{
+			case Channel::Request::MethodId::TRANSPORT_DUMP:
+			{
+				json data{ json::object() };
+
+				FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
+			{
+				json data{ json::object() };
+
+				FillJsonStats(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
+				// Ensure this method is not called twice.
+				if (this->tuple != nullptr)
+				{
+					request->Reject("connect() already called");
+
+					return;
+				}
+
 				std::string ip;
 				uint16_t port{ 0u };
 				uint16_t rtcpPort{ 0u };
@@ -335,7 +366,7 @@ namespace RTC
 				this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
 				// Tell the caller about the selected local DTLS role.
-				json data = json::object();
+				json data{ json::object() };
 
 				this->tuple->FillJson(data["tuple"]);
 
@@ -410,12 +441,12 @@ namespace RTC
 		MS_TRACE();
 
 		// Check if it's RTCP.
-		if (RTCP::Packet::IsRtcp(data, len))
+		if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
 			OnRtcpDataRecv(tuple, data, len);
 		}
 		// Check if it's RTP.
-		else if (RtpPacket::IsRtp(data, len))
+		else if (RTC::RtpPacket::IsRtp(data, len))
 		{
 			OnRtpDataRecv(tuple, data, len);
 		}

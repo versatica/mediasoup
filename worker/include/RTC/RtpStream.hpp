@@ -25,6 +25,7 @@ namespace RTC
 			uint32_t clockRate{ 0 };
 			bool useNack{ false };
 			bool usePli{ false };
+			bool useFir{ false };
 		};
 
 	public:
@@ -42,7 +43,6 @@ namespace RTC
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
 		size_t GetExpectedPackets() const;
-		const std::string& GetId() const;
 		void RestartStatusCheckTimer();
 		void StopStatusCheckTimer();
 
@@ -66,16 +66,16 @@ namespace RTC
 		uint8_t fractionLost{ 0 };
 		size_t packetsDiscarded{ 0 };
 		size_t packetsRepaired{ 0 };
-		size_t firCount{ 0 };
-		size_t pliCount{ 0 };
 		size_t nackCount{ 0 };
+		size_t pliCount{ 0 };
+		size_t firCount{ 0 };
 
-		RtpDataCounter transmissionCounter;
-		RtpDataCounter retransmissionCounter;
+		RTC::RtpDataCounter transmissionCounter;
+		RTC::RtpDataCounter retransmissionCounter;
 
 	protected:
 		// Given as argument.
-		RtpStream::Params params;
+		Params params;
 		// Others.
 		// Whether at least a RTP packet has been received.
 		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
@@ -88,10 +88,6 @@ namespace RTC
 		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
 		Timer* statusCheckTimer{ nullptr };
-		bool notifyStatus{ true };
-
-	private:
-		std::string rtpStreamId{};
 	};
 
 	/* Inline instance methods. */
@@ -124,11 +120,6 @@ namespace RTC
 	inline uint64_t RtpStream::GetMaxPacketMs() const
 	{
 		return this->maxPacketMs;
-	}
-
-	inline const std::string& RtpStream::GetId() const
-	{
-		return this->rtpStreamId;
 	}
 
 	inline size_t RtpStream::GetExpectedPackets() const

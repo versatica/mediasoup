@@ -51,12 +51,12 @@ namespace RTC
 		// TODO: SetPreferredSpatialLayer()
 		// TODO: yes?
 		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
-		const RTC::RtpParameters& GetParameters() const;
+		const RTC::RtpParameters& GetRtpParameters() const;
 		bool IsPaused() const;
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
-		void ReceiveKeyFrameRequest(RTCP::FeedbackPs::MessageType messageType);
+		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetTransmissionRate(uint64_t now);
 		float GetLossPercentage() const;
@@ -130,7 +130,7 @@ namespace RTC
 		return this->paused || this->producerPaused;
 	}
 
-	inline const RTC::RtpParameters& Consumer::GetParameters() const
+	inline const RTC::RtpParameters& Consumer::GetRtpParameters() const
 	{
 		return this->rtpParameters;
 	}

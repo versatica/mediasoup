@@ -51,8 +51,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		std::vector<StorageItem> storage;
-		using Buffer = std::list<BufferItem>;
-		Buffer buffer;
+		std::list<BufferItem> buffer;
 		// Stats.
 		float rtt{ 0 };
 

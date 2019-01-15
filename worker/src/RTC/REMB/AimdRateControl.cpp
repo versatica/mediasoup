@@ -11,8 +11,8 @@
 #define MS_CLASS "RTC::REMB::AimdRateControl"
 // #define MS_LOG_DEV
 
-#include "Logger.hpp"
 #include "RTC/REMB/AimdRateControl.hpp"
+#include "Logger.hpp"
 #include "RTC/REMB/RemoteBitrateEstimator.hpp"
 #include <algorithm>
 #include <cmath> // std::lround()
@@ -42,7 +42,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const int64_t bitrateReductionInterval = std::max<int64_t>(std::min<int64_t>(this->rtt, 200), 10);
+			const int64_t bitrateReductionInterval =
+			  std::max<int64_t>(std::min<int64_t>(this->rtt, 200), 10);
 
 			if (timeNow - this->timeLastBitrateChange >= bitrateReductionInterval)
 				return true;
@@ -184,8 +185,8 @@ namespace RTC
 						// Avoid increasing the rate when over-using.
 						if (this->rateControlRegion != RC_MAX_UNKNOWN)
 						{
-							newBitrateBps =
-							  static_cast<uint32_t>(std::lround(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f));
+							newBitrateBps = static_cast<uint32_t>(
+							  std::lround(this->beta * this->avgMaxBitrateKbps * 1000 + 0.5f));
 						}
 
 						newBitrateBps = std::min(newBitrateBps, this->currentBitrateBps);

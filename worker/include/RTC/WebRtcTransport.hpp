@@ -2,6 +2,7 @@
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
 #include "common.hpp"
+#include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
 #include "RTC/REMB/RemoteBitrateEstimatorAbsSendTime.hpp"
@@ -9,7 +10,6 @@
 #include "RTC/StunMessage.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
-#include "RTC/DtlsTransport.hpp"
 #include "RTC/Transport.hpp"
 #include <vector>
 
@@ -108,9 +108,9 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::REMB::RemoteBitrateEstimator::Listener. */
 	public:
 		void OnRemoteBitrateEstimatorValue(
-			const RTC::REMB::RemoteBitrateEstimator* remoteBitrateEstimator,
-			const std::vector<uint32_t>& ssrcs,
-			uint32_t availableBitrate) override;
+		  const RTC::REMB::RemoteBitrateEstimator* remoteBitrateEstimator,
+		  const std::vector<uint32_t>& ssrcs,
+		  uint32_t availableBitrate) override;
 
 	private:
 		// Allocated by this.
@@ -122,7 +122,7 @@ namespace RTC
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others (ICE).
 		std::vector<IceCandidate> iceLocalCandidates;
-		RTC::TransportTuple* selectedTuple{ nullptr };
+		RTC::TransportTuple* iceSelectedTuple{ nullptr };
 		// Others (DTLS).
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others.

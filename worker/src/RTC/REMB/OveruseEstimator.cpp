@@ -53,7 +53,7 @@ namespace RTC
 
 			const double h[2]        = { fsDelta, 1.0 };
 			const double eh[2]       = { this->e[0][0] * h[0] + this->e[0][1] * h[1],
-	                           this->e[1][0] * h[0] + this->e[1][1] * h[1] };
+                             this->e[1][0] * h[0] + this->e[1][1] * h[1] };
 			const double residual    = tTsDelta - this->slope * h[0] - this->offset;
 			const bool inStableState = (currentHypothesis == BW_NORMAL);
 			const double maxResidual = 3.0 * sqrt(this->varNoise);
@@ -83,9 +83,9 @@ namespace RTC
 			this->e[1][1] = e01 * iKh[1][0] + this->e[1][1] * iKh[1][1];
 
 			// The covariance matrix must be positive semi-definite.
-			bool positiveSemiDefinite = this->e[0][0] + this->e[1][1] >= 0 &&
-			                            this->e[0][0] * this->e[1][1] - this->e[0][1] * this->e[1][0] >= 0 &&
-			                            this->e[0][0] >= 0;
+			bool positiveSemiDefinite =
+			  this->e[0][0] + this->e[1][1] >= 0 &&
+			  this->e[0][0] * this->e[1][1] - this->e[0][1] * this->e[1][0] >= 0 && this->e[0][0] >= 0;
 
 			MS_ASSERT(positiveSemiDefinite, "positiveSemiDefinite missing");
 
@@ -138,8 +138,8 @@ namespace RTC
 			const double beta = pow(1 - alpha, tsDelta * 30.0 / 1000.0);
 
 			this->avgNoise = beta * this->avgNoise + (1 - beta) * residual;
-			this->varNoise =
-			  beta * this->varNoise + (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
+			this->varNoise = beta * this->varNoise +
+			                 (1 - beta) * (this->avgNoise - residual) * (this->avgNoise - residual);
 			if (this->varNoise < 1)
 				this->varNoise = 1;
 		}
