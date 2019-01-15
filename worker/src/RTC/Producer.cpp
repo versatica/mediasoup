@@ -694,8 +694,10 @@ namespace RTC
 		MS_TRACE();
 
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
+
 		auto it        = seqNumbers.begin();
 		const auto end = seqNumbers.end();
+		size_t numPacketsRequested{ 0 };
 
 		while (it != end)
 		{
@@ -723,6 +725,8 @@ namespace RTC
 			auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
 			packet.AddItem(nackItem);
+
+			numPacketsRequested += nackItem->CountRequestedPackets();
 		}
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.
@@ -736,7 +740,7 @@ namespace RTC
 		packet.Serialize(RTC::RTCP::Buffer);
 		this->transport->SendRtcpPacket(&packet);
 
-		rtpStream->nackCount++;
+		rtpStream->nackCount += numPacketsRequested;
 	}
 
 	void Producer::OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)

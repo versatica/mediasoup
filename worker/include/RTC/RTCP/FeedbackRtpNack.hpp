@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
+#include "Utils.hpp"
 
 /* RFC 4585
  * Generic NACK message (NACK)
@@ -37,6 +38,7 @@ namespace RTC
 
 			uint16_t GetPacketId() const;
 			uint16_t GetLostPacketBitmask() const;
+			size_t CountRequestedPackets() const;
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
@@ -75,6 +77,11 @@ namespace RTC
 		inline uint16_t FeedbackRtpNackItem::GetLostPacketBitmask() const
 		{
 			return uint16_t{ ntohs(this->header->lostPacketBitmask) };
+		}
+
+		inline size_t FeedbackRtpNackItem::CountRequestedPackets() const
+		{
+			return Utils::Bits::CountSetBits(this->header->lostPacketBitmask) + 1;
 		}
 	} // namespace RTCP
 } // namespace RTC

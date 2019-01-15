@@ -198,6 +198,19 @@ namespace Utils
 			return size;
 	}
 
+	class Bits
+	{
+	public:
+		static size_t CountSetBits(const uint16_t mask);
+	};
+
+	/* Inline static methods. */
+
+	inline size_t Bits::CountSetBits(const uint16_t mask)
+	{
+		return static_cast<size_t>(__builtin_popcount(mask));
+	}
+
 	class Crypto
 	{
 	public:
