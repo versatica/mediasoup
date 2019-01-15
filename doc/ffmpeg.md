@@ -88,7 +88,7 @@ transport.connect(
 * Create a `Producer` in such a transport:
 
 ```js
-const producer = await transport.send(
+const producer = await transport.produce(
   {
     rtpParameters :
     {
@@ -125,6 +125,8 @@ $ ffmpeg \
   -ssrc 12345678 -payload_type 100 \
   -f rtp "rtp://127.0.0.1:3301?rtcpport=4502&localrtpport=2000&localrtcpport=2001"
 ```
+
+**NOTE:** The above JS code (`router.createPlainTransport()` and `transport.produce()`) could be included into an HTTP API server running in the same Node.js in which mediasoup runs. So the ffmpeg "client" could be easily wrapped into a Bash script that calls some `curl` commands followed by the `ffmpeg` command with the retrieved parameters.
 
 
 ## TODO

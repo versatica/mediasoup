@@ -403,9 +403,9 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 		],
 		encodings :
 		[
-			{ spatialLayer: 'low', ssrc: 11111111, rtx: { ssrc: 11111112 } },
-			{ spatialLayer: 'medium', ssrc: 21111111, rtx: { ssrc: 21111112 } },
-			{ spatialLayer: 'high', rid: 'high' }
+			{ ssrc: 11111111, rtx: { ssrc: 11111112 } },
+			{ ssrc: 21111111, rtx: { ssrc: 21111112 } },
+			{ rid: 'high' }
 		],
 		rtcp :
 		{
@@ -433,19 +433,16 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 	expect(mapping.encodings[0].rid).toBe(undefined);
 	expect(mapping.encodings[0].mappedSsrc).toBeType('number');
 	expect(mapping.encodings[0].mappedRtxSsrc).toBeType('number');
-	expect(mapping.encodings[0].spatialLayer).toBe('low');
 	expect(mapping.encodings[1].ssrc).toBe(21111111);
 	expect(mapping.encodings[1].rtxSsrc).toBe(21111112);
 	expect(mapping.encodings[1].rid).toBe(undefined);
 	expect(mapping.encodings[1].mappedSsrc).toBeType('number');
 	expect(mapping.encodings[1].mappedRtxSsrc).toBeType('number');
-	expect(mapping.encodings[1].spatialLayer).toBe('medium');
 	expect(mapping.encodings[2].ssrc).toBe(undefined);
 	expect(mapping.encodings[2].rtxSsrc).toBe(undefined);
 	expect(mapping.encodings[2].rid).toBe('high');
 	expect(mapping.encodings[2].mappedSsrc).toBeType('number');
 	expect(mapping.encodings[2].mappedRtxSsrc).toBeType('number');
-	expect(mapping.encodings[2].spatialLayer).toBe('high');
 
 	const consumableRtpParameters = ortc.getConsumableRtpParameters(
 		'video', rtpParameters, routerRtpCapabilities, mapping);
@@ -468,21 +465,18 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 
 	expect(consumableRtpParameters.encodings[0]).toEqual(
 		{
-			ssrc         : mapping.encodings[0].mappedSsrc,
-			rtx          : { ssrc: mapping.encodings[0].mappedRtxSsrc },
-			spatialLayer : 'low'
+			ssrc : mapping.encodings[0].mappedSsrc,
+			rtx  : { ssrc: mapping.encodings[0].mappedRtxSsrc }
 		});
 	expect(consumableRtpParameters.encodings[1]).toEqual(
 		{
-			ssrc         : mapping.encodings[1].mappedSsrc,
-			rtx          : { ssrc: mapping.encodings[1].mappedRtxSsrc },
-			spatialLayer : 'medium'
+			ssrc : mapping.encodings[1].mappedSsrc,
+			rtx  : { ssrc: mapping.encodings[1].mappedRtxSsrc }
 		});
 	expect(consumableRtpParameters.encodings[2]).toEqual(
 		{
-			ssrc         : mapping.encodings[2].mappedSsrc,
-			rtx          : { ssrc: mapping.encodings[2].mappedRtxSsrc },
-			spatialLayer : 'high'
+			ssrc : mapping.encodings[2].mappedSsrc,
+			rtx  : { ssrc: mapping.encodings[2].mappedRtxSsrc }
 		});
 
 	expect(consumableRtpParameters.rtcp).toEqual(
