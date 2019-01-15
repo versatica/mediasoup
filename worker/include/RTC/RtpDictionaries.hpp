@@ -194,20 +194,6 @@ namespace RTC
 	class RtpEncodingParameters
 	{
 	public:
-		enum class SpatialLayer : uint8_t
-		{
-			NONE = 0,
-			DEFAULT,
-			LOW,
-			MEDIUM,
-			HIGH
-		};
-
-	public:
-		static std::map<std::string, SpatialLayer> string2SpatialLayer;
-		static std::map<SpatialLayer, std::string> spatialLayer2String;
-
-	public:
 		RtpEncodingParameters(){};
 		explicit RtpEncodingParameters(json& data);
 
@@ -223,7 +209,6 @@ namespace RTC
 		uint32_t maxBitrate{ 0 };
 		double maxFramerate{ 0 };
 		bool active{ true };
-		SpatialLayer spatialLayer{ SpatialLayer::DEFAULT };
 	};
 
 	class RtpHeaderExtensionParameters

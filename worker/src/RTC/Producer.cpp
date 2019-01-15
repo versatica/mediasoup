@@ -759,25 +759,42 @@ namespace RTC
 		rtpStream->pliCount++;
 	}
 
-	// TODO: HELP!
 	void Producer::OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)
 	{
-		// MS_TRACE();
+		MS_TRACE();
 
-		// MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
-		// RTC::RTCP::FeedbackPsFirPacket packet(0, rtpStream->GetSsrc());
-		// FeedbackPsFirItem* item = new FeedbackPsFirItem(ssrc, seq);
+		RTC::RTCP::FeedbackPsFirPacket packet(0, rtpStream->GetSsrc());
+		FeedbackPsFirItem* item = new FeedbackPsFirItem(rtpStream->GetSsrc(), rtpStream->GetFirSeqNumber());
 
-		// packet.AddItem(item);
-		// packet.Serialize(RTC::RTCP::Buffer);
+		packet.AddItem(item);
+		packet.Serialize(RTC::RTCP::Buffer);
 
-		// this->transport->SendRtcpPacket(&packet);
+		this->transport->SendRtcpPacket(&packet);
 
-		// rtpStream->pliCount++;
+		rtpStream->pliCount++;
 	}
 
-	void Producer::OnRtpStreamInactive(RTC::RtpStream* rtpStream)
+	void Producer::OnRtpStreamHealthy(RTC::RtpStream* rtpStream)
+	{
+		MS_TRACE();
+
+		auto ssrc   = rtpStream->GetSsrc();
+		auto active = this->mapSsrcRtpStreamInfo[ssrc].active;
+
+		// Activate stream if inactive.
+		if (!active)
+		{
+			MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", ssrc);
+
+			auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+
+			ActivateStream(rtpStreamRecv);
+		}
+	}
+
+	void Producer::OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
@@ -816,24 +833,6 @@ namespace RTC
 			auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
 			DeactivateStream(rtpStreamRecv);
-		}
-	}
-
-	void Producer::OnRtpStreamActive(RTC::RtpStream* rtpStream)
-	{
-		MS_TRACE();
-
-		auto ssrc   = rtpStream->GetSsrc();
-		auto active = this->mapSsrcRtpStreamInfo[ssrc].active;
-
-		// Activate stream if inactive.
-		if (!active)
-		{
-			MS_DEBUG_TAG(rtp, "stream is now active [ssrc:%" PRIu32 "]", ssrc);
-
-			auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
-
-			ActivateStream(rtpStreamRecv);
 		}
 	}
 

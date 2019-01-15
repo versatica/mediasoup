@@ -15,7 +15,7 @@ namespace RTC
 	/* Instance methods. */
 
 	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
-	  : // NOTE: This may throw.
+	  : // This may throw.
 	    ::TcpServer::TcpServer(PortManager::BindTcp(ip), 256), listener(listener),
 	    connListener(connListener)
 	{

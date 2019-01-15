@@ -4,7 +4,6 @@
 #include "Logger.hpp"
 #include "MediaSoupError.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <set>
 #include <unordered_set>
 
 namespace RTC
@@ -297,20 +296,6 @@ namespace RTC
 				if (it == this->codecs.end())
 					MS_THROW_ERROR("unknown codecPayloadType");
 			}
-		}
-
-		// Iterate all the encodings and ensure that spatialLayer is not repeated.
-		std::set<RTC::RtpEncodingParameters::SpatialLayer> spatialLayers;
-
-		for (auto& encoding : this->encodings)
-		{
-			auto spatialLayer = encoding.spatialLayer;
-			auto pair         = spatialLayers.insert(spatialLayer);
-
-			// The pair::second element in the pair is set to true if a new element was
-			// inserted or false if an equivalent element already existed.
-			if (!pair.second)
-				MS_THROW_ERROR("duplicated spatialLayer");
 		}
 	}
 } // namespace RTC

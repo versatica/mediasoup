@@ -28,7 +28,7 @@ namespace RTC
 			MS_THROW_ERROR("missing mimeType");
 
 		// Set MIME field.
-		// NOTE: This may throw.
+		// This may throw.
 		this->mimeType.SetMimeType(jsonMimeTypeIt->get<std::string>());
 
 		// payloadType is mandatory.

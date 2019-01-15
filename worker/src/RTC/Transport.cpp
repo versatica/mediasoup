@@ -8,6 +8,7 @@
 #include "Utils.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -129,13 +130,44 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE:
 			{
-				// TODO
+				std::string producerId;
+
+				// This may throw.
+				SetNewProducerIdFromRequest(request, producerId);
+
+				auto jsonKindIt = request->data.find("kind");
+
+				if (jsonKindIt == request->data.end() || !jsonKindIt->is_string())
+					MS_THROW_ERROR("missing kind");
+
+				// This may throw.
+				RTC::Media::Kind kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
+
+				if (kind == RTC::Media::Kind::ALL)
+					MS_THROW_ERROR("invalid empty kind");
+
+				auto jsonRtpParametersIt = request->data.find("rtpParameters");
+
+				if (jsonRtpParametersIt == request->data.end() || !jsonRtpParametersIt->is_object())
+					MS_THROW_ERROR("missing rtpParameters");
+
+				// This may throw.
+				RTC::RtpParameters rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
+
+				// TODO: mapping and more.
+
+
 
 				break;
 			}
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME:
 			{
+				std::string consumerId;
+
+				// This may throw.
+				SetNewConsumerIdFromRequest(request, consumerId);
+
 				// TODO
 
 				break;
@@ -143,18 +175,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_CLOSE:
 			{
-				RTC::Producer* producer;
-
-				try
-				{
-					producer = GetProducerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				// This may throw.
+				RTC::Producer* producer = GetProducerFromRequest(request);
 
 				// Remove it from the map.
 				this->mapProducers.erase(producer->id);
@@ -177,18 +199,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_CLOSE:
 			{
-				RTC::Consumer* producer;
-
-				try
-				{
-					producer = GetConsumerFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				// This may throw.
+				RTC::Consumer* consumer = GetConsumerFromRequest(request);
 
 				// Remove it from the map.
 				this->mapConsumers.erase(consumer->id);
@@ -202,6 +214,36 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer closed [id:%s]", consumer->id.c_str());
 
 				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_DUMP:
+			case Channel::Request::MethodId::PRODUCER_GET_STATS:
+			case Channel::Request::MethodId::PRODUCER_PAUSE:
+			case Channel::Request::MethodId::PRODUCER_RESUME:
+			{
+				// This may throw.
+				RTC::Producer* producer = GetProducerFromRequest(request);
+
+				producer->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::Request::MethodId::CONSUMER_GET_STATS:
+			case Channel::Request::MethodId::CONSUMER_START:
+			case Channel::Request::MethodId::CONSUMER_PAUSE:
+			case Channel::Request::MethodId::CONSUMER_RESUME:
+			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_SPATIAL_LAYER:
+			case Channel::Request::MethodId::CONSUMER_SET_ENCODING_PREFERENCES:
+			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			{
+				// This may throw.
+				RTC::Consumer* consumer = GetConsumerFromRequest(request);
+
+				consumer->HandleRequest(request);
 
 				break;
 			}
@@ -221,7 +263,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Pass it to the RtpListener.
-		// NOTE: This may throw.
+		// This may throw.
 		this->rtpListener.AddProducer(producer);
 
 		// Add to the map.

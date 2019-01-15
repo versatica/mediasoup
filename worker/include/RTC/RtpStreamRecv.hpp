@@ -19,8 +19,8 @@ namespace RTC
 			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
 			virtual void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
-			virtual void OnRtpStreamInactive(RTC::RtpStream* rtpStream)               = 0;
-			virtual void OnRtpStreamActive(RTC::RtpStream* rtpStream)                 = 0;
+			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)                 = 0;
+			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)               = 0;
 		};
 
 	public:
@@ -33,7 +33,7 @@ namespace RTC
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		void RequestKeyFrame();
-		bool IsActive() const;
+		uint8_t GetFirSeqNumber();
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
@@ -66,12 +66,14 @@ namespace RTC
 		// Stats.
 		uint32_t jitter{ 0 };
 		// Others.
-		bool active{ true };
+		bool healthy{ true };
+		uint8_t firSeqNumber{ 0 };
 	};
 
-	inline bool RtpStreamRecv::IsActive() const
+	inline uint8_t RtpStreamRecv::GetFirSeqNumber()
 	{
-		return this->active;
+		// Increase and return it.
+		return this->firSeqNumber++;
 	}
 } // namespace RTC
 

@@ -230,35 +230,27 @@ void Settings::HandleRequest(Channel::Request* request)
 			auto jsonLogLevelIt = request->data.find("logLevel");
 			auto jsonLogTagsIt  = request->data.find("logTags");
 
-			try
+			// Update logLevel if requested.
+			if (jsonLogLevelIt != request->data.end() && jsonLogLevelIt->is_string())
 			{
-				// Update logLevel if requested.
-				if (jsonLogLevelIt != request->data.end() && jsonLogLevelIt->is_string())
-				{
-					std::string logLevel = *jsonLogLevelIt;
+				std::string logLevel = *jsonLogLevelIt;
 
-					Settings::SetLogLevel(logLevel);
-				}
-
-				// Update logTags if requested.
-				if (jsonLogTagsIt != request->data.end() && jsonLogTagsIt->is_array())
-				{
-					std::vector<std::string> logTags;
-
-					for (const auto& logTag : *jsonLogTagsIt)
-					{
-						if (logTag.is_string())
-							logTags.push_back(logTag);
-					}
-
-					Settings::SetLogTags(logTags);
-				}
+				// This may throw.
+				Settings::SetLogLevel(logLevel);
 			}
-			catch (const MediaSoupError& error)
-			{
-				request->Reject(error.what());
 
-				return;
+			// Update logTags if requested.
+			if (jsonLogTagsIt != request->data.end() && jsonLogTagsIt->is_array())
+			{
+				std::vector<std::string> logTags;
+
+				for (const auto& logTag : *jsonLogTagsIt)
+				{
+					if (logTag.is_string())
+						logTags.push_back(logTag);
+				}
+
+				Settings::SetLogTags(logTags);
 			}
 
 			// Print the new effective configuration.

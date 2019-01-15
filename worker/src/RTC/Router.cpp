@@ -107,16 +107,8 @@ namespace RTC
 			{
 				std::string transportId;
 
-				try
-				{
-					SetNewTransportIdFromRequest(request, transportId);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				// This may throw.
+				SetNewTransportIdFromRequest(request, transportId);
 
 				RTC::WebRtcTransport::Options options;
 
@@ -201,19 +193,8 @@ namespace RTC
 					options.preferTcp = jsonPreferTcpIt->get<bool>();
 				}
 
-				RTC::WebRtcTransport* webrtcTransport;
-
-				try
-				{
-					// NOTE: This may throw.
-					webrtcTransport = new RTC::WebRtcTransport(transportId, this, options);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				// This may throw.
+				RTC::WebRtcTransport* webrtcTransport = new RTC::WebRtcTransport(transportId, this, options);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = webrtcTransport;
@@ -233,16 +214,8 @@ namespace RTC
 			{
 				std::string transportId;
 
-				try
-				{
-					SetNewTransportIdFromRequest(request, transportId);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				// This may throw
+				SetNewTransportIdFromRequest(request, transportId);
 
 				RTC::PlainRtpTransport::Options options;
 
@@ -283,19 +256,7 @@ namespace RTC
 					options.rtcpMux = jsonRtcpMuxIt->get<bool>();
 				}
 
-				RTC::PlainRtpTransport* plainRtpTransport;
-
-				try
-				{
-					// NOTE: This may throw.
-					plainRtpTransport = new RTC::PlainRtpTransport(transportId, this, options);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				RTC::PlainRtpTransport* plainRtpTransport = new RTC::PlainRtpTransport(transportId, this, options);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = plainRtpTransport;
@@ -313,18 +274,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
 			{
-				RTC::Transport* transport;
-
-				try
-				{
-					transport = GetTransportFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				// This may throw.
+				RTC::Transport* transport = GetTransportFromRequest(request);
 
 				// Call transport->Close() so it will notify us about its closed Producers
 				// and Consumers.
@@ -341,20 +292,11 @@ namespace RTC
 				break;
 			}
 
+			// Any other request must be delivered to the corresponding Transport.
 			default:
 			{
-				RTC::Transport* transport;
-
-				try
-				{
-					transport = GetTransportFromRequest(request);
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
-				}
+				// This may throw.
+				RTC::Transport* transport = GetTransportFromRequest(request);
 
 				transport->HandleRequest(request);
 

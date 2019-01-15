@@ -7,28 +7,6 @@
 
 namespace RTC
 {
-	/* Class static data. */
-
-	// clang-format off
-	std::map<std::string, RTC::RtpEncodingParameters::SpatialLayer> RTC::RtpEncodingParameters::string2SpatialLayer =
-		{
-			{ "none",    RTC::RtpEncodingParameters::SpatialLayer::NONE    },
-			{ "default", RTC::RtpEncodingParameters::SpatialLayer::DEFAULT },
-			{ "low",     RTC::RtpEncodingParameters::SpatialLayer::LOW     },
-			{ "medium",  RTC::RtpEncodingParameters::SpatialLayer::MEDIUM  },
-			{ "high",    RTC::RtpEncodingParameters::SpatialLayer::HIGH    }
-		};
-
-	std::map<RTC::RtpEncodingParameters::SpatialLayer, std::string> RTC::RtpEncodingParameters::spatialLayer2String =
-		{
-			{ RTC::RtpEncodingParameters::SpatialLayer::NONE,    "none"    },
-			{ RTC::RtpEncodingParameters::SpatialLayer::DEFAULT, "default" },
-			{ RTC::RtpEncodingParameters::SpatialLayer::LOW,     "low"     },
-			{ RTC::RtpEncodingParameters::SpatialLayer::MEDIUM,  "medium"  },
-			{ RTC::RtpEncodingParameters::SpatialLayer::HIGH,    "high"    }
-		};
-	// clang-format on
-
 	/* Instance methods. */
 
 	RtpEncodingParameters::RtpEncodingParameters(json& data)
@@ -45,7 +23,6 @@ namespace RTC
 		auto jsonMaxBitrateIt       = data.find("maxBitrate");
 		auto jsonMaxFramerateIt     = data.find("maxFramerate");
 		auto jsonActiveIt           = data.find("active");
-		auto jsonSpatialLayerIt     = data.find("spatialLayer");
 
 		// ssrc is optional.
 		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
@@ -81,24 +58,6 @@ namespace RTC
 		// active is optional.
 		if (jsonActiveIt != data.end() && jsonActiveIt->is_boolean())
 			this->active = jsonActiveIt->get<bool>();
-
-		// spatialLayer is optional.
-		if (jsonSpatialLayerIt != data.end() && jsonSpatialLayerIt->is_string())
-		{
-			std::string spatialLayerStr = jsonSpatialLayerIt->get<std::string>();
-
-			if (string2SpatialLayer.find(spatialLayerStr) == string2SpatialLayer.end())
-				MS_THROW_ERROR("unknown spatialLayer");
-
-			this->spatialLayer = string2SpatialLayer[spatialLayerStr];
-
-			if (
-			  this->spatialLayer == RTC::RtpEncodingParameters::SpatialLayer::NONE ||
-			  this->spatialLayer == RTC::RtpEncodingParameters::SpatialLayer::DEFAULT)
-			{
-				MS_THROW_ERROR("invalid spatialLayer");
-			}
-		}
 	}
 
 	void RtpEncodingParameters::FillJson(json& jsonObject) const
@@ -131,8 +90,5 @@ namespace RTC
 
 		// Add active.
 		jsonObject["active"] = this->active;
-
-		// Add spatialLayer.
-		jsonObject["spatialLayer"] = RtpEncodingParameters::spatialLayer2String[this->spatialLayer];
 	}
 } // namespace RTC

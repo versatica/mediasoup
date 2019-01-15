@@ -241,16 +241,16 @@ namespace RTC
 
 		if (this->transmissionCounter.GetRate(now) == 0)
 		{
-			if (this->active)
+			if (this->healthy)
 			{
-				this->active = false;
-				this->listener->OnRtpStreamInactive(this);
+				this->healthy = false;
+				this->listener->OnRtpStreamUnhealthy(this);
 			}
 		}
-		else if (!this->active)
+		else if (!this->healthy)
 		{
-			this->active = true;
-			this->listener->OnRtpStreamActive(this);
+			this->healthy = true;
+			this->listener->OnRtpStreamHealthy(this);
 		}
 	}
 

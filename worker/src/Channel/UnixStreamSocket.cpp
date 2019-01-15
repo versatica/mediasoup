@@ -229,19 +229,31 @@ namespace Channel
 			{
 				json jsonRequest = json::parse(jsonStart, jsonStart + jsonLen);
 
+				Channel::Request* request{ nullptr };
+
 				try
 				{
-					Channel::Request* request = new Channel::Request(this, jsonRequest);
-
-					// Notify the listener.
-					this->listener->OnChannelRequest(this, request);
-
-					// Delete the Request.
-					delete request;
+					request = new Channel::Request(this, jsonRequest);
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_ERROR_STD("discarding wrong channel request");
+					MS_ERROR_STD("discarding wrong Channel request");
+				}
+
+				if (request != nullptr)
+				{
+					// Notify the listener.
+					try
+					{
+						this->listener->OnChannelRequest(this, request);
+					}
+					catch (const MediaSoupError& error)
+					{
+						request->Reject(error.what());
+					}
+
+					// Delete the Request.
+					delete request;
 				}
 			}
 			catch (const json::parse_error& error)

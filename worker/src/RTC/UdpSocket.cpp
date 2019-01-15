@@ -11,7 +11,7 @@ namespace RTC
 	/* Instance methods. */
 
 	UdpSocket::UdpSocket(Listener* listener, std::string& ip)
-	  : // NOTE: This may throw.
+	  : // This may throw.
 	    ::UdpSocket::UdpSocket(PortManager::BindUdp(ip)), listener(listener)
 	{
 		MS_TRACE();
