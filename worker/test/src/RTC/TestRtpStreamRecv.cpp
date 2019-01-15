@@ -41,6 +41,16 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 			this->seqNumbers.clear();
 		}
 
+		virtual void OnRtpStreamRecvFirRequired(RtpStreamRecv* /*rtpStream*/) override
+		{
+			INFO("FIR required");
+
+			REQUIRE(this->shouldTriggerKeyFrame == true);
+
+			this->shouldTriggerKeyFrame = false;
+			this->seqNumbers.clear();
+		}
+
 	public:
 		bool shouldTriggerNack     = false;
 		bool shouldTriggerKeyFrame = false;
@@ -67,6 +77,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	params.clockRate = 90000;
 	params.useNack   = true;
 	params.usePli    = true;
+	params.useFir    = true;
 
 	SECTION("NACK one packet")
 	{

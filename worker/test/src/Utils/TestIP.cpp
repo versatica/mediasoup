@@ -5,7 +5,7 @@
 
 using namespace Utils;
 
-SCENARIO("IP::GetFamily()")
+SCENARIO("Utils::IP::GetFamily()")
 {
 	std::string ip;
 
@@ -49,7 +49,7 @@ SCENARIO("IP::GetFamily()")
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 }
 
-SCENARIO("IP::NormalizeIp()")
+SCENARIO("Utils::IP::NormalizeIp()")
 {
 	std::string ip;
 

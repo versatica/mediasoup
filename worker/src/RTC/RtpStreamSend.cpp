@@ -338,7 +338,7 @@ namespace RTC
 
 		// Otherwise, do the stuff.
 
-		Buffer::iterator newBufferIt;
+		std::list<BufferItem>::iterator newBufferIt;
 		uint8_t* store{ nullptr };
 
 		// Iterate the buffer in reverse order and find the proper place to store the
