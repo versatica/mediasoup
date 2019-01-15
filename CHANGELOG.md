@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.6
+
+* Fix a port leak when a WebRtcTransport is remotely closed due to a DTLS close alert (thanks @artushin for reporting it in #259).
+
+
 ### 2.6.5
 
 * RtpPacket: Fix Two-Byte header extensions parsing.
