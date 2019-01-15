@@ -597,9 +597,13 @@ namespace RTC
 		if (!IsEnabled())
 			return;
 
+		this->rtpStream->nackCount++;
+
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
+
+			this->rtpStream->nackRtpPacketCount += item->CountRequestedPackets();
 
 			this->rtpStream->RequestRtpRetransmission(
 			  item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
@@ -619,8 +623,6 @@ namespace RTC
 				// Packet repaired after applying RTX.
 				this->rtpStream->packetsRepaired++;
 			}
-
-			this->rtpStream->nackCount += item->CountRequestedPackets();
 		}
 	}
 

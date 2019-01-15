@@ -67,6 +67,7 @@ namespace RTC
 		size_t packetsDiscarded{ 0 };
 		size_t packetsRepaired{ 0 };
 		size_t nackCount{ 0 };
+		size_t nackRtpPacketCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t firCount{ 0 };
 

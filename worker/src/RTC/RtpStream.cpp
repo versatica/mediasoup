@@ -47,20 +47,21 @@ namespace RTC
 
 		uint64_t now = DepLibUV::GetTime();
 
-		jsonObject["timestamp"]        = now;
-		jsonObject["ssrc"]             = this->params.ssrc;
-		jsonObject["kind"]             = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		jsonObject["mimeType"]         = this->params.mimeType.ToString();
-		jsonObject["packetCount"]      = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]        = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]          = this->transmissionCounter.GetRate(now);
-		jsonObject["packetsLost"]      = this->packetsLost;
-		jsonObject["fractionLost"]     = this->fractionLost;
-		jsonObject["packetsDiscarded"] = this->packetsDiscarded;
-		jsonObject["packetsRepaired"]  = this->packetsRepaired;
-		jsonObject["nackCount"]        = this->nackCount;
-		jsonObject["pliCount"]         = this->pliCount;
-		jsonObject["firCount"]         = this->firCount;
+		jsonObject["timestamp"]          = now;
+		jsonObject["ssrc"]               = this->params.ssrc;
+		jsonObject["kind"]               = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		jsonObject["mimeType"]           = this->params.mimeType.ToString();
+		jsonObject["packetCount"]        = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]          = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]            = this->transmissionCounter.GetRate(now);
+		jsonObject["packetsLost"]        = this->packetsLost;
+		jsonObject["fractionLost"]       = this->fractionLost;
+		jsonObject["packetsDiscarded"]   = this->packetsDiscarded;
+		jsonObject["packetsRepaired"]    = this->packetsRepaired;
+		jsonObject["nackCount"]          = this->nackCount;
+		jsonObject["nackRtpPacketCount"] = this->nackRtpPacketCount;
+		jsonObject["pliCount"]           = this->pliCount;
+		jsonObject["firCount"]           = this->firCount;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)

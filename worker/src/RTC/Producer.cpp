@@ -740,7 +740,8 @@ namespace RTC
 		packet.Serialize(RTC::RTCP::Buffer);
 		this->transport->SendRtcpPacket(&packet);
 
-		rtpStream->nackCount += numPacketsRequested;
+		rtpStream->nackCount++;
+		rtpStream->nackRtpPacketCount += numPacketsRequested;
 	}
 
 	void Producer::OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)
