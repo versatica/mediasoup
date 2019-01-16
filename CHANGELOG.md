@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.7
+
+* Fix wrong destruction of Transports in Router.cpp that generates 100% CPU usage in mediasoup-worker processes.
+
+
 ### 2.6.6
 
 * Fix a port leak when a WebRtcTransport is remotely closed due to a DTLS close alert (thanks @artushin for reporting it in #259).
