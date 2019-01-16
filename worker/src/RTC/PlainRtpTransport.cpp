@@ -69,38 +69,6 @@ namespace RTC
 			delete this->rtcpTuple;
 	}
 
-	PlainRtpTransport::Close()
-	{
-		MS_TRACE();
-
-		if (this->udpSocket != nullptr)
-		{
-			delete this->udpSocket;
-			this->udpSocket = nullptr;
-		}
-
-		if (this->rtcpUdpSocket != nullptr)
-		{
-			delete this->rtcpUdpSocket;
-			this->rtcpUdpSocket = nullptr;
-		}
-
-		if (this->tuple != nullptr)
-		{
-			delete this->tuple;
-			this->tuple = nullptr;
-		}
-
-		if (this->rtcpTuple != nullptr)
-		{
-			delete this->rtcpTuple;
-			this->rtcpTuple = nullptr;
-		}
-
-		// Also call the parent method.
-		RTC::Transport::Close();
-	}
-
 	void PlainRtpTransport::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();

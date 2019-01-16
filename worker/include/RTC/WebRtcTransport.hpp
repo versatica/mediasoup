@@ -44,7 +44,6 @@ namespace RTC
 		~WebRtcTransport() override;
 
 	public:
-		void Close() override;
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;

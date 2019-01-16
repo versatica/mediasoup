@@ -278,9 +278,9 @@ namespace RTC
 				// This may throw.
 				RTC::Transport* transport = GetTransportFromRequest(request);
 
-				// Call transport->Close() so it will notify us about its closed Producers
-				// and Consumers.
-				transport->Close();
+				// Tell the Transport to close all its Producers and Consumers so it will
+				// notify us about their closured.
+				transport->CloseProducersAndConsumers();
 
 				// Remove it from the map and delete it.
 				this->mapTransports.erase(transport->id);

@@ -167,52 +167,6 @@ namespace RTC
 			delete this->srtpSendSession;
 	}
 
-	WebRtcTransport::Close()
-	{
-		MS_TRACE();
-
-		// Must delete the DTLS transport first since it will generate a DTLS alert
-		// to be sent.
-		if (this->dtlsTransport != nullptr)
-		{
-			delete this->dtlsTransport;
-			this->dtlsTransport == nullptr;
-		}
-
-		if (this->iceServer != nullptr)
-		{
-			delete this->iceServer;
-			this->iceServer == nullptr;
-		}
-
-		for (auto* socket : this->udpSockets)
-		{
-			delete socket;
-		}
-		this->udpSockets.clear();
-
-		for (auto* server : this->tcpServers)
-		{
-			delete server;
-		}
-		this->tcpServers.clear();
-
-		if (this->srtpRecvSession != nullptr)
-		{
-			delete this->srtpRecvSession;
-			this->srtpRecvSession = null;
-		}
-
-		if (this->srtpSendSession != nullptr)
-		{
-			delete this->srtpSendSession;
-			this->srtpSendSession = nullptr;
-		}
-
-		// Also call the parent method.
-		RTC::Transport::Close();
-	}
-
 	void WebRtcTransport::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
@@ -1206,9 +1160,6 @@ namespace RTC
 		data["dtlsState"] = "failed";
 
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
-
-		// This is a fatal error so close the transport.
-		Close();
 	}
 
 	void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1223,9 +1174,6 @@ namespace RTC
 		data["dtlsState"] = "closed";
 
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
-
-		// This is a fatal error so close the transport.
-		Close();
 	}
 
 	void WebRtcTransport::OnOutgoingDtlsData(

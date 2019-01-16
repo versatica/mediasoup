@@ -57,7 +57,7 @@ namespace RTC
 			delete this->rtcpTimer;
 	}
 
-	void Transport::Close()
+	void Transport::CloseProducersAndConsumers()
 	{
 		MS_TRACE();
 
@@ -65,7 +65,7 @@ namespace RTC
 		// Producers and Consumers that we are gonna close.
 		//
 		// The caller is supposed to delete this Transport instance after calling
-		// Close().
+		// this method.
 
 		// Close all Producers.
 		for (auto& kv : this->mapProducers)
@@ -91,10 +91,6 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
-
-		// Close the RTCP timer.
-		if (this->rtcpTimer != nullptr)
-			this->rtcpTimer->Close();
 	}
 
 	void Router::HandleRequest(Channel::Request* request)

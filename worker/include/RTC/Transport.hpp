@@ -59,8 +59,8 @@ namespace RTC
 		virtual ~Transport();
 
 	public:
+		void CloseProducersAndConsumers();
 		// Subclasses must also invoke the parent Close().
-		virtual void Close();
 		void FillJson(json& jsonObject) const      = 0;
 		void FillJsonStats(json& jsonObject) const = 0;
 		// Subclasses must implement this method and call the parent's one to
