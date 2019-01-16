@@ -256,7 +256,8 @@ namespace RTC
 					options.rtcpMux = jsonRtcpMuxIt->get<bool>();
 				}
 
-				RTC::PlainRtpTransport* plainRtpTransport = new RTC::PlainRtpTransport(transportId, this, options);
+				RTC::PlainRtpTransport* plainRtpTransport =
+				  new RTC::PlainRtpTransport(transportId, this, options);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = plainRtpTransport;
@@ -377,7 +378,7 @@ namespace RTC
 			consumer->ProducerClosed();
 		}
 
-		// Remove the the Producer from the maps.
+		// Remove the Producer from the maps.
 		this->mapProducerConsumers.erase(mapProducerConsumersIt);
 		this->mapProducers.erase(mapProducersIt);
 	}
@@ -406,7 +407,7 @@ namespace RTC
 		}
 	}
 
-	void Router::OnTransportProducerStreamEnabled(
+	void Router::OnTransportProducerStreamHealthy(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
@@ -418,11 +419,11 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->EnableStream(rtpStream, mappedSsrc);
+			consumer->ProducerStreamHealthy(rtpStream, mappedSsrc);
 		}
 	}
 
-	void Router::OnTransportProducerStreamDisabled(
+	void Router::OnTransportProducerStreamUnhealthy(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
@@ -434,7 +435,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->DisableStream(rtpStream, mappedSsrc);
+			consumer->ProducerStreamUnhealthy(rtpStream, mappedSsrc);
 		}
 	}
 
@@ -514,19 +515,13 @@ namespace RTC
 	}
 
 	void Router::OnTransportConsumerKeyFrameRequested(
-	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, uint32_t ssrc)
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
 		auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
+		auto* producer             = mapConsumerProducerIt->second;
 
-		MS_ASSERT(
-		  mapConsumerProducerIt != this->mapConsumerProducer.end(),
-		  "Consumer not present in mapConsumerProducer");
-
-		// Get the associated Producer.
-		auto* producer = mapConsumerProducerIt->second;
-
-		producer->RequestKeyFrame(ssrc);
+		producer->RequestKeyFrame(mappedSsrc);
 	}
 } // namespace RTC

@@ -40,7 +40,7 @@ namespace RTC
 		};
 
 	public:
-		WebRtcTransport(std::string& id, RTC::Transport::Listener* listener, Options& options);
+		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, Options& options);
 		~WebRtcTransport() override;
 
 	public:

@@ -28,77 +28,33 @@ namespace RTC
 			auto ssrc      = kv.first;
 			auto* producer = kv.second;
 
-			(*jsonSsrcTableIt)[std::to_string(ssrc)] = producer->producerId;
+			(*jsonSsrcTableIt)[std::to_string(ssrc)] = producer->id;
 		}
 
 		// Add midTable.
 		for (auto& kv : this->midTable)
 		{
-			auto mid       = kv.first;
+			auto& mid      = kv.first;
 			auto* producer = kv.second;
 
-			(*jsonMidTableIt)[mid] = producer->producerId;
+			(*jsonMidTableIt)[mid] = producer->id;
 		}
 
 		// Add ridTable.
 		for (auto& kv : this->ridTable)
 		{
-			auto rid       = kv.first;
+			auto& rid      = kv.first;
 			auto* producer = kv.second;
 
-			jsonRidTable[rid]      = std::to_string(producer->producerId);
-			(*jsonRidTableIt)[mid] = producer->producerId;
+			(*jsonRidTableIt)[rid] = producer->id;
 		}
-
-		return json;
 	}
 
-	void RtpListener::AddProducer(RTC::Producer* producer)
+	void RtpListener::AddProducer(const RTC::Producer* producer)
 	{
 		MS_TRACE();
 
 		auto& rtpParameters = producer->GetRtpParameters();
-
-		// Keep a copy of the previous entries so we can rollback.
-
-		std::vector<uint32_t> previousSsrcs;
-		std::string previousMid;
-		std::vector<std::string> previousRids;
-
-		for (auto& kv : this->ssrcTable)
-		{
-			auto ssrc              = kv.first;
-			auto& existingProducer = kv.second;
-
-			if (existingProducer == producer)
-				previousSsrcs.push_back(ssrc);
-		}
-
-		for (auto& kv : this->midTable)
-		{
-			auto& mid              = kv.first;
-			auto& existingProducer = kv.second;
-
-			if (existingProducer == producer)
-			{
-				previousMid = mid;
-
-				break;
-			}
-		}
-
-		for (auto& kv : this->ridTable)
-		{
-			auto& rid              = kv.first;
-			auto& existingProducer = kv.second;
-
-			if (existingProducer == producer)
-				previousRids.push_back(rid);
-		}
-
-		// First remove from the listener tables all the entries pointing to
-		// the given Producer.
-		RemoveProducer(producer);
 
 		// Add entries into the ssrcTable.
 		for (auto& encoding : rtpParameters.encodings)
@@ -106,40 +62,36 @@ namespace RTC
 			uint32_t ssrc;
 
 			// Check encoding.ssrc.
-
 			ssrc = encoding.ssrc;
 
 			if (ssrc != 0u)
 			{
-				if (!HasSsrc(ssrc, producer))
+				if (this->ssrcTable.find(ssrc) == this->ssrcTable.end())
 				{
 					this->ssrcTable[ssrc] = producer;
 				}
 				else
 				{
 					RemoveProducer(producer);
-					RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
 
 					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 				}
 			}
 
 			// Check encoding.rtx.ssrc.
-
 			ssrc = encoding.rtx.ssrc;
 
 			if (ssrc != 0u)
 			{
-				if (!HasSsrc(ssrc, producer))
+				if (this->ssrcTable.find(ssrc) == this->ssrcTable.end())
 				{
 					this->ssrcTable[ssrc] = producer;
 				}
 				else
 				{
 					RemoveProducer(producer);
-					RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
 
-					MS_THROW_ERROR("ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
+					MS_THROW_ERROR("RTX ssrc already exists in RTP listener [ssrc:%" PRIu32 "]", ssrc);
 				}
 			}
 		}
@@ -149,16 +101,15 @@ namespace RTC
 		{
 			auto& mid = rtpParameters.mid;
 
-			if (!HasMid(mid, producer))
+			if (this->midTable.find(mid) == this->midTable.end())
 			{
 				this->midTable[mid] = producer;
 			}
 			else
 			{
 				RemoveProducer(producer);
-				RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
 
-				MS_THROW_ERROR("mid already exists in RTP listener [mid:'%s']", mid.c_str());
+				MS_THROW_ERROR("MID already exists in RTP listener [mid:%s]", mid.c_str());
 			}
 		}
 
@@ -170,16 +121,16 @@ namespace RTC
 			if (rid.empty())
 				continue;
 
-			if (!HasRid(rid, producer))
+			if (this->midTable.find(mid) == this->midTable.end())
 			{
 				this->ridTable[rid] = producer;
 			}
-			else
+			// Just fail if no MID is given.
+			else if (rtpParameters.mid.empty())
 			{
 				RemoveProducer(producer);
-				RollbackProducer(producer, previousSsrcs, previousMid, previousRids);
 
-				MS_THROW_ERROR("rid already exists in RTP listener [rid:'%s']", rid.c_str());
+				MS_THROW_ERROR("RID already exists in RTP listener and no MID is given [rid:%s]", rid.c_str());
 			}
 		}
 	}
@@ -188,8 +139,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Remove from the listener tables all the entries pointing to the given
-		// Producer.
+		// Remove from the listener tables all entries pointing to the Producer.
 
 		for (auto it = this->ssrcTable.begin(); it != this->ssrcTable.end();)
 		{
@@ -216,13 +166,14 @@ namespace RTC
 		}
 	}
 
-	RTC::Producer* RtpListener::GetProducer(RTC::RtpPacket* packet)
+	RTC::Producer* RtpListener::GetProducer(const RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
 		// First lookup into the SSRC table.
 		{
 			auto it = this->ssrcTable.find(packet->GetSsrc());
+
 			if (it != this->ssrcTable.end())
 			{
 				auto* producer = it->second;
@@ -242,11 +193,13 @@ namespace RTC
 				std::string mid(charMidPtr, midLen);
 
 				auto it = this->midTable.find(mid);
+
 				if (it != this->midTable.end())
 				{
 					auto* producer = it->second;
 
 					// Fill the ssrc table.
+					// NOTE: We may be overriding an exiting SSRC here, but we don't care.
 					this->ssrcTable[packet->GetSsrc()] = producer;
 
 					return producer;
@@ -265,11 +218,13 @@ namespace RTC
 				std::string rid(charRidPtr, ridLen);
 
 				auto it = this->ridTable.find(rid);
+
 				if (it != this->ridTable.end())
 				{
 					auto* producer = it->second;
 
 					// Fill the ssrc table.
+					// NOTE: We may be overriding an exiting SSRC here, but we don't care.
 					this->ssrcTable[packet->GetSsrc()] = producer;
 
 					return producer;
@@ -280,7 +235,7 @@ namespace RTC
 		return nullptr;
 	}
 
-	RTC::Producer* RtpListener::GetProducer(uint32_t ssrc)
+	RTC::Producer* RtpListener::GetProducer(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -291,27 +246,5 @@ namespace RTC
 			return it->second;
 
 		return nullptr;
-	}
-
-	void RtpListener::RollbackProducer(
-	  RTC::Producer* producer,
-	  const std::vector<uint32_t>& previousSsrcs,
-	  const std::vector<std::string>& previousMids,
-	  const std::vector<std::string>& previousRids)
-	{
-		MS_TRACE();
-
-		for (auto ssrc : previousSsrcs)
-		{
-			this->ssrcTable[ssrc] = producer;
-		}
-
-		if (!previousMid.empty())
-			this->midTable[previousMid] = producer;
-
-		for (auto& rid : previousRids)
-		{
-			this->ridTable[prid] = producer;
-		}
 	}
 } // namespace RTC

@@ -33,12 +33,12 @@ namespace RTC
 			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) = 0;
-			virtual void OnTransportProducerStreamEnabled(
+			virtual void OnTransportProducerStreamHealthy(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
 			  const RTC::RtpStream* rtpStream,
 			  uint32_t mappedSsrc) = 0;
-			virtual void OnTransportProducerStreamDisabled(
+			virtual void OnTransportProducerStreamUnhealthy(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
 			  const RTC::RtpStream* rtpStream,
@@ -51,11 +51,11 @@ namespace RTC
 			  RTC::Transport* transport, RTC::Consumer* consumer, const RTC::Producer* producer) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerKeyFrameRequested(
-			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t ssrc) = 0;
+			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 		};
 
 	public:
-		Transport(std::string id, Listener* listener);
+		Transport(const std::string& id, Listener* listener);
 		virtual ~Transport();
 
 	public:
@@ -86,9 +86,9 @@ namespace RTC
 	public:
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
-		void OnProducerStreamEnabled(
+		void OnProducerStreamHealthy(
 		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
-		void OnProducerStreamDisabled(
+		void OnProducerStreamUnhealthy(
 		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
@@ -96,7 +96,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
 		void OnConsumerSendRtpPacket(RTC::Producer* consumer, RTC::Packet* packet) override;
-		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer) override;
+		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -116,6 +116,7 @@ namespace RTC
 		// Others.
 		RtpListener rtpListener;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
+		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		uint32_t availableIncomingBitrate{ 0 };
 		uint32_t availableOutgoingBitrate{ 0 };
 		uint32_t maxIncomingBitrate{ 0 };

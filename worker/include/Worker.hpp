@@ -16,7 +16,7 @@ class Worker : public Channel::UnixStreamSocket::Listener, public SignalsHandler
 {
 public:
 	explicit Worker(Channel::UnixStreamSocket* channel);
-	~Worker() override;
+	~Worker();
 
 private:
 	void Close();

@@ -19,18 +19,15 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	  uint32_t producerId,
+	  const std::string& id,
+	  Listener* listener,
 	  RTC::Media::Kind kind,
-	  RTC::Transport* transport,
 	  RTC::RtpParameters& rtpParameters,
-	  struct RtpMapping& rtpMapping,
-	  bool paused)
-	  : producerId(producerId), kind(kind), transport(transport), rtpParameters(rtpParameters),
-	    rtpMapping(rtpMapping), paused(paused)
+	  struct RtpMapping& rtpMapping)
+	  : producerId(producerId), listener(listener), kind(kind), rtpParameters(rtpParameters),
+	    rtpMapping(rtpMapping)
 	{
 		MS_TRACE();
-
-		this->outputEncodings = this->rtpParameters.encodings;
 
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
 		FillRtpHeaderExtensionIds();
@@ -766,7 +763,8 @@ namespace RTC
 		MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 		RTC::RTCP::FeedbackPsFirPacket packet(0, rtpStream->GetSsrc());
-		FeedbackPsFirItem* item = new FeedbackPsFirItem(rtpStream->GetSsrc(), rtpStream->GetFirSeqNumber());
+		FeedbackPsFirItem* item =
+		  new FeedbackPsFirItem(rtpStream->GetSsrc(), rtpStream->GetFirSeqNumber());
 
 		packet.AddItem(item);
 		packet.Serialize(RTC::RTCP::Buffer);

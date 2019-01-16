@@ -21,7 +21,7 @@ namespace RTC
 	{
 	public:
 		Router(const std::string& id);
-		virtual ~Router();
+		~Router();
 
 	public:
 		void FillJson(json& jsonObject) const;
@@ -37,17 +37,17 @@ namespace RTC
 		void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) override;
-		void OnTransportProducerStreamEnabled(
+		void OnTransportProducerStreamHealthy(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
 		  const RTC::RtpStream* rtpStream,
 		  uint32_t mappedSsrc) override;
-		void OnTransportProducerStreamDisabled(
+		void OnTransportProducerStreamUnhealthy(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
 		  const RTC::RtpStream* rtpStream,
 		  uint32_t mappedSsrc) override;
-		void OnTransportProducerRtpPacket(
+		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		const RTC::Producer* OnTransportGetProducer(
 		  RTC::Transport* transport, std::string& producerId) override;
@@ -55,7 +55,7 @@ namespace RTC
 		  RTC::Transport* transport, RTC::Consumer* consumer, const RTC::Producer* producer) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(
-		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t ssrc) override;
+		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 
 	public:
 		// Passed by argument.

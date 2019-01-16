@@ -146,50 +146,50 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 			break;
 		}
 
-		// case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
-		// {
-		// 	std::string routerId;
+			// case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
+			// {
+			// 	std::string routerId;
 
-		// 	// This may throw.
-		// 	SetNewRouterIdFromRequest(request, routerId);
+			// 	// This may throw.
+			// 	SetNewRouterIdFromRequest(request, routerId);
 
-		// 	auto* router = new RTC::Router(routerId);
+			// 	auto* router = new RTC::Router(routerId);
 
-		// 	this->mapRouters[routerId] = router;
+			// 	this->mapRouters[routerId] = router;
 
-		// 	MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
+			// 	MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
-		// 	request->Accept();
+			// 	request->Accept();
 
-		// 	break;
-		// }
+			// 	break;
+			// }
 
-		// case Channel::Request::MethodId::ROUTER_CLOSE:
-		// {
-		// 	// This may throw.
-		// 	RTC::Router* router = GetRouterFromRequest(request);
+			// case Channel::Request::MethodId::ROUTER_CLOSE:
+			// {
+			// 	// This may throw.
+			// 	RTC::Router* router = GetRouterFromRequest(request);
 
-		// 	// Remove it from the map and delete it.
-		// 	this->mapRouters.erase(router->id);
-		// 	delete router;
+			// 	// Remove it from the map and delete it.
+			// 	this->mapRouters.erase(router->id);
+			// 	delete router;
 
-		// 	MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
+			// 	MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
 
-		// 	request->Accept();
+			// 	request->Accept();
 
-		// 	break;
-		// }
+			// 	break;
+			// }
 
-		// // Any other request must be delivered to the corresponding Router.
-		// default:
-		// {
-		// 	// This may throw.
-		// 	RTC::Router* router = GetRouterFromRequest(request);
+			// // Any other request must be delivered to the corresponding Router.
+			// default:
+			// {
+			// 	// This may throw.
+			// 	RTC::Router* router = GetRouterFromRequest(request);
 
-		// 	router->HandleRequest(request);
+			// 	router->HandleRequest(request);
 
-		// 	break;
-		// }
+			// 	break;
+			// }
 	}
 }
 

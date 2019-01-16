@@ -23,7 +23,7 @@ namespace RTC
 		};
 
 	public:
-		PlainRtpTransport(std::string& id, RTC::Transport::Listener* listener, Options& options);
+		PlainRtpTransport(const std::string& id, RTC::Transport::Listener* listener, Options& options);
 		~PlainRtpTransport() override;
 
 	public:

@@ -35,8 +35,11 @@ namespace RTC
 
 	public:
 		Consumer(
-		  std::string& id, Listener* listener, RTC::Media::Kind kind, RTC::RtpParameters& rtpParameters);
-		virtual ~Consumer();
+		  const std::string& id,
+		  Listener* listener,
+		  RTC::Media::Kind kind,
+		  RTC::RtpParameters& rtpParameters);
+		~Consumer();
 
 	public:
 		void FillJson(json& jsonObject) const;

@@ -8,12 +8,12 @@
 #include "Utils.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
@@ -50,6 +50,7 @@ namespace RTC
 			delete consumer;
 		}
 		this->mapConsumers.clear();
+		this->mapSsrcConsumer.clear();
 
 		// Delete the RTCP timer.
 		if (this->rtcpTimer != nullptr)
@@ -89,6 +90,7 @@ namespace RTC
 			delete consumer;
 		}
 		this->mapConsumers.clear();
+		this->mapSsrcConsumer.clear();
 
 		// Close the RTCP timer.
 		if (this->rtcpTimer != nullptr)
@@ -154,9 +156,144 @@ namespace RTC
 				// This may throw.
 				RTC::RtpParameters rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
-				// TODO: mapping and more.
+				RTC::Producer::RtpMapping rtpMapping;
 
+				auto jsonMappingIt = request->data.find("mapping");
 
+				if (jsonMappingIt == request->data.end() || !jsonMappingIt->is_object())
+					MS_THROW_ERROR("missing mapping");
+
+				auto jsonCodecsIt = jsonMappingIt->find("codecs");
+
+				if (jsonCodecsIt == jsonMappingIt.end() || !jsonCodecsIt->is_array())
+					MS_THROW_ERROR("missing mapping.codecs");
+
+				for (auto& codec : *jsonCodecsIt)
+				{
+					if (!codec.is_object())
+						MS_THROW_ERROR("wrong entry in mapping.codecs");
+
+					auto jsonPayloadTypeIt = codec.find("payloadType");
+
+					if (jsonPayloadTypeIt == codec.end() || !jsonPayloadTypeIt->is_number_unsigned())
+						MS_THROW_ERROR("missing payloadType in entry in mapping.codecs");
+
+					auto jsonMappedPayloadTypeIt = codec.find("mappedPayloadType");
+
+					if (jsonMappedPayloadTypeIt == codec.end() || !jsonMappedPayloadTypeIt->is_number_unsigned())
+						MS_THROW_ERROR("missing mappedPayloadType in entry in mapping.codecs");
+
+					rtpMapping.codecs[jsonPayloadTypeIt->get<uint8_t>()] =
+					  jsonMappedPayloadTypeIt->get<uint8_t>();
+				}
+
+				auto jsonHeaderExtensionsIt = jsonMappingIt->find("headerExtensions");
+
+				if (jsonHeaderExtensionsIt == jsonMappingIt.end() || !jsonHeaderExtensionsIt->is_array())
+					MS_THROW_ERROR("missing mapping.headerExtensions");
+
+				for (auto& extension : *jsonHeaderExtensionsIt)
+				{
+					if (!extension.is_object())
+						MS_THROW_ERROR("wrong entry in mapping.headerExtensions");
+
+					auto jsonIdIt = extension.find("id");
+
+					if (jsonIdIt == extension.end() || !jsonIdIt->is_number_unsigned())
+						MS_THROW_ERROR("missing id in entry in mapping.headerExtensions");
+
+					auto jsonMappedIdIt = extension.find("mappedId");
+
+					if (jsonMappedIdIt == extension.end() || !jsonMappedIdIt->is_number_unsigned())
+						MS_THROW_ERROR("missing mappedId in entry in mapping.headerExtensions");
+
+					rtpMapping.headerExtensions[jsonIdIt->get<uint8_t>()] = jsonMappedIdIt->get<uint8_t>();
+				}
+
+				auto jsonEncodingsIt = jsonMappingIt->find("encodings");
+
+				if (jsonEncodingsIt == jsonMappingIt.end() || !jsonEncodingsIt->is_array())
+					MS_THROW_ERROR("missing mapping.encodings");
+
+				for (auto& encoding : *jsonEncodingsIt)
+				{
+					if (!encoding.is_object())
+						MS_THROW_ERROR("wrong entry in mapping.encodings");
+
+					RTC::Producer::RtpEncodingMapping encodingMapping;
+
+					// mappedSsrc is mandatory.
+					auto jsonMappedSsrcIt = encoding.find("mappedSsrc");
+
+					if (jsonMappedSsrcIt == encoding.end() || !jsonMappedSsrcIt->is_number_unsigned())
+						MS_THROW_ERROR("missing mappedSsrc in entry in mapping.encodings");
+
+					encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
+
+					// ssrc is optional.
+					auto jsonSsrcIt = encoding.find("ssrc");
+
+					if (jsonSsrcIt != encoding.end() && jsonSsrcIt->is_number_unsigned())
+						encodingMapping.ssrc = jsonSsrcIt->get<uint32_t>();
+
+					// rid is optional.
+					auto jsonRidIt = encoding.find("rid");
+
+					if (jsonRidIt != encoding.end() && jsonRidIt->is_string())
+						encodingMapping.rid = jsonRidIt->get<std::string>();
+
+					// However ssrc or rid must be present.
+					if (jsonSsrcIt == encoding.end() && jsonRidIt == encoding.end())
+						MS_THROW_ERROR("missing ssrc or rid in entry in mapping.encodings");
+
+					// mappedRtxSsrc is optional.
+					auto jsonMappedRtxSsrcIt = encoding.find("mappedRtxSsrc");
+
+					if (jsonMappedRtxSsrcIt != encoding.end() && jsonMappedRtxSsrcIt->is_number_unsigned())
+						encodingMapping.mappedRtxSsrc = jsonMappedRtxSsrcIt->get<std::string>();
+
+					rtpMapping.encodings.push_back(encodingMapping);
+				}
+
+				RTC::Producer* producer =
+				  new RTC::Producer(producerId, this, kind, rtpParameters, rtpMapping);
+
+				// Insert the Producer into the RtpListener.
+				// This may throw. If so, delete the Producer and throw it out.
+				try
+				{
+					this->rtpListener.AddProducer(producer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete producer;
+
+					throw error;
+				}
+
+				// Take the transport related RTP header extensions of the Producer and
+				// add them to the Transport.
+
+				auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+
+				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+					this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
+
+				if (producerRtpHeaderExtensionIds.mid != 0u)
+					this->rtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+
+				if (producerRtpHeaderExtensionIds.rid != 0u)
+					this->rtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
+
+				// Insert into the map.
+				this->mapProducers[producerId] = producer;
+
+				// Notify the listener.
+				this->listener->OnTransportNewProducer(this, producer);
+
+				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
+
+				request->Accept();
 
 				break;
 			}
@@ -168,7 +305,55 @@ namespace RTC
 				// This may throw.
 				SetNewConsumerIdFromRequest(request, consumerId);
 
-				// TODO
+				auto jsonKindIt = request->data.find("kind");
+
+				if (jsonKindIt == request->data.end() || !jsonKindIt->is_string())
+					MS_THROW_ERROR("missing kind");
+
+				// This may throw.
+				RTC::Media::Kind kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
+
+				if (kind == RTC::Media::Kind::ALL)
+					MS_THROW_ERROR("invalid empty kind");
+
+				auto jsonRtpParametersIt = request->data.find("rtpParameters");
+
+				if (jsonRtpParametersIt == request->data.end() || !jsonRtpParametersIt->is_object())
+					MS_THROW_ERROR("missing rtpParameters");
+
+				// This may throw.
+				RTC::RtpParameters rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
+
+				// Get the associated Producer.
+				auto jsonProducerIdIt = request->internal.find("producerId");
+
+				if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+					MS_THROW_ERROR("request has no internal.producerId");
+
+				std::string& producerId = jsonProducerIdIt->get<std::string>();
+				RTC::Producer* producer = this->listener->OnTransportGetProducer(this, producerId);
+
+				if (producer == nullptr)
+					MS_THROW_ERROR("no associated Producer found");
+
+				// TODO: Read Producer type and create the corresponding Consumer subclass.
+				// Also read producerPaused and return it in the JSON response.
+
+				// Insert into the maps.
+				this->mapConsumers[consumerId] = consumer;
+
+				for (auto ssrc : consumer->GetMediaSsrcs())
+				{
+					this->mapSsrcConsumer[ssrc] = consumer;
+				}
+
+				// Notify the listener.
+				this->listener->OnTransportNewConsumer(this, consumer, producer);
+
+				MS_DEBUG_DEV(
+				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
+
+				request->Accept();
 
 				break;
 			}
@@ -178,11 +363,11 @@ namespace RTC
 				// This may throw.
 				RTC::Producer* producer = GetProducerFromRequest(request);
 
-				// Remove it from the map.
-				this->mapProducers.erase(producer->id);
-
 				// Remove it from the RtpListener.
 				this->rtpListener.RemoveProducer(producer);
+
+				// Remove it from the map.
+				this->mapProducers.erase(producer->id);
 
 				// Notify the listener.
 				this->listener->OnTransportProducerClosed(this, producer);
@@ -202,8 +387,13 @@ namespace RTC
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromRequest(request);
 
-				// Remove it from the map.
+				// Remove it from the maps.
 				this->mapConsumers.erase(consumer->id);
+
+				for (auto ssrc : consumer->GetMediaSsrcs())
+				{
+					this->mapSsrcConsumer.erase(ssrc);
+				}
 
 				// Notify the listener.
 				this->listener->OnTransportConsumerClosed(this, consumer);
@@ -236,9 +426,8 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_START:
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
-			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_SPATIAL_LAYER:
-			case Channel::Request::MethodId::CONSUMER_SET_ENCODING_PREFERENCES:
-			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::Request::MethodId::CONSUMER_REQUEST_KEYFRAME:
 			{
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromRequest(request);
@@ -254,64 +443,6 @@ namespace RTC
 
 				request->Reject("unknown method");
 			}
-		}
-	}
-
-	// TODO: Not here but in HandleRequest() in TRANSPORT_PRODUCE.
-	void Transport::HandleProducer(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		// Pass it to the RtpListener.
-		// This may throw.
-		this->rtpListener.AddProducer(producer);
-
-		// Add to the map.
-		this->mapProducers[producer->id] = producer;
-
-		// Add us as listener.
-		// producer->AddListener(this);
-
-		// Take the transport related RTP header extension ids of the Producer
-		// and add them to the Transport.
-
-		auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
-
-		if (producerRtpHeaderExtensionIds.absSendTime != 0u)
-			this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
-
-		if (producerRtpHeaderExtensionIds.mid != 0u)
-			this->rtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
-
-		if (producerRtpHeaderExtensionIds.rid != 0u)
-			this->rtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
-	}
-
-	// TODO: Not here but in HandleRequest() in TRANSPORT_CONSUME.
-	void Transport::HandleConsumer(RTC::Consumer* consumer)
-	{
-		MS_TRACE();
-
-		// Add to the map.
-		this->mapConsumers[consumer->id] = consumer;
-
-		// Add us as listener.
-		// consumer->AddListener(this);
-
-		// TODO: WHAT? started here?
-		//
-		// If we are connected, ask a key request for this started Consumer.
-		if (IsConnected())
-		{
-			if (consumer->kind == RTC::Media::Kind::VIDEO)
-			{
-				MS_DEBUG_2TAGS(
-				  rtcp, rtx, "requesting key frame for new Consumer since Transport already connected");
-			}
-
-			// TODO: NO: It must call listener->OnTransportConsumerKeyFrameRequested(this, consumer)
-			// without ssrc (so for all streams).
-			consumer->RequestKeyFrame();
 		}
 	}
 
@@ -668,55 +799,44 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapConsumers)
-		{
-			auto* consumer = kv.second;
+		auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
 
-			// Ignore if not started.
-			if (!consumer->IsStarted())
-				continue;
+		if (mapSsrcConsumerIt == this->mapSsrcConsumer.end())
+			return nullptr;
 
-			auto& rtpParameters = consumer->GetRtpParameters();
+		auto* consumer = mapSsrcConsumerIt->second;
 
-			for (auto& encoding : rtpParameters.encodings)
-			{
-				if (encoding.ssrc == ssrc)
-					return consumer;
-				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
-					return consumer;
-				if (encoding.hasFec && encoding.fec.ssrc == ssrc)
-					return consumer;
-			}
-		}
-
-		return nullptr;
+		if (consumer->IsStarted())
+			return consumer;
+		else
+			return nullptr;
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
 	{
-		this->OnTransportProducerPaused(this, producer);
+		this->listener->OnTransportProducerPaused(this, producer);
 	}
 
 	inline void Transport::OnProducerResumed(RTC::Producer* producer)
 	{
-		this->OnTransportProducerResumed(this, producer);
+		this->listener->OnTransportProducerResumed(this, producer);
 	}
 
-	inline void Transport::OnProducerStreamEnabled(
+	inline void Transport::OnProducerStreamHealthy(
 	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
-		this->OnTransportProducerStreamEnabled(this, producer, rtpStream, mappedSsrc);
+		this->listener->OnTransportProducerStreamHealthy(this, producer, rtpStream, mappedSsrc);
 	}
 
-	inline void Transport::OnProducerStreamDisabled(
+	inline void Transport::OnProducerStreamUnhealthy(
 	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
-		this->OnTransportProducerStreamDisabled(this, producer, rtpStream, mappedSsrc);
+		this->listener->OnTransportProducerStreamUnhealthy(this, producer, rtpStream, mappedSsrc);
 	}
 
 	inline void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
-		this->OnTransportProducerRtpPacketReceived(this, producer, packet);
+		this->listener->OnTransportProducerRtpPacketReceived(this, producer, packet);
 	}
 
 	inline void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, RTC::RTCP::Packet* packet)
@@ -729,9 +849,9 @@ namespace RTC
 		SendRtpPacket(packet);
 	}
 
-	inline void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* consumer)
+	inline void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
-		this->OnTransportConsumerKeyFrameRequested(this, consumer);
+		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}
 
 	void Transport::OnTimer(Timer* timer)

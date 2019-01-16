@@ -25,44 +25,45 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnProducerPaused(RTC::Producer* producer)                            = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer)                           = 0;
-			virtual void OnProducerRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual void OnProducerStreamEnabled(
+			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
+			virtual void OnProducerStreamHealthy(
 			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
-			virtual void OnProducerStreamDisabled(
-			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+			virtual void OnProducerStreamUnhealthy(
+			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)          = 0;
+			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 		};
 
 	public:
-		struct RtpMapping
+		struct RtpEncodingMapping
 		{
-			std::map<uint8_t, uint8_t> codecPayloadTypes;
-			std::map<uint8_t, uint8_t> headerExtensionIds;
-		};
-
-	private:
-		struct RtpStreamInfo
-		{
-			RTC::RtpStreamRecv* rtpStream{ nullptr };
-			std::string rid{};
-			RTC::RtpEncodingParameters::Profile profile{ RTC::RtpEncodingParameters::Profile::NONE };
+			std::string rid;
+			uint32_t ssrc{ 0 };
 			uint32_t rtxSsrc{ 0 };
-			bool active{ false };
+			uint32_t mappedSsrc{ 0 };
+			uint32_t mappedRtxSsrc{ 0 };
+		}
+
+		public : struct RtpMapping
+		{
+			std::map<uint8_t, uint8_t> codecs;
+			std::map<uint8_t, uint8_t> headerExtensions;
+			std::vector<RtpEncodingMapping> encodings;
 		};
 
 	public:
 		Producer(
-		  std::string& id,
+		  const std::string& id,
 		  Listener* listener,
 		  RTC::Media::Kind kind,
 		  RTC::RtpParameters& rtpParameters,
 		  struct RtpMapping& rtpMapping);
-		virtual ~Producer();
+		~Producer();
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonObject) const = 0;
+		void FillJsonStats(json& jsonObject) const;
 		void Pause();
 		void Resume();
 		const RTC::RtpParameters& GetRtpParameters() const;
@@ -112,7 +113,6 @@ namespace RTC
 		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapActiveProfiles;
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
-		std::vector<RtpEncodingParameters> outputEncodings;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		bool isKeyFrameRequested{ false };

@@ -19,8 +19,8 @@ namespace RTC
 			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
 			virtual void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
-			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)                 = 0;
-			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)               = 0;
+			virtual void OnRtpStreamHealthy(RTC::RtpStream* rtpStream)                = 0;
+			virtual void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)              = 0;
 		};
 
 	public:
