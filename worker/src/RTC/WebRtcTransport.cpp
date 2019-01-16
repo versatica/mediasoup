@@ -1181,9 +1181,6 @@ namespace RTC
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringFailed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
-
-		// This is a fatal error so close the transport.
-		Close();
 	}
 
 	void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1200,9 +1197,6 @@ namespace RTC
 		// Notify.
 		eventData[JsonStringDtlsState] = JsonStringClosed;
 		this->notifier->Emit(this->transportId, "dtlsstatechange", eventData);
-
-		// This is a fatal error so close the transport.
-		Close();
 	}
 
 	void WebRtcTransport::OnOutgoingDtlsData(

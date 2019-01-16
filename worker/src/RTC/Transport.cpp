@@ -34,19 +34,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->closed)
-			Close();
-	}
-
-	void Transport::Close()
-	{
-		MS_TRACE();
-
-		if (this->closed)
-			return;
-
-		this->closed = true;
-
 		// Close all the handled Producers.
 		for (auto it = this->producers.begin(); it != this->producers.end();)
 		{

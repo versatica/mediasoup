@@ -59,9 +59,8 @@ namespace RTC
 		{
 			auto* transport = it->second;
 
-			// Do not delete the Transport but call to its Close() method so it will call us
-			// on OnTransportClosed() and will delete it there.
-			transport->Close();
+			it = this->transports.erase(it);
+			delete transport;
 		}
 
 		// Close the audio level timer.
@@ -595,11 +594,9 @@ namespace RTC
 					return;
 				}
 
-				// Do not delete the Transport but call to its Close() method so it will call us
-				// on OnTransportClosed() and will delete it there.
-				transport->Close();
-
 				MS_DEBUG_DEV("Transport closed [transportId:%" PRIu32 "]", transport->transportId);
+
+				delete transport;
 
 				request->Accept();
 
@@ -995,9 +992,9 @@ namespace RTC
 					return;
 				}
 
-				delete producer;
-
 				MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producer->producerId);
+
+				delete producer;
 
 				request->Accept();
 
@@ -1166,6 +1163,8 @@ namespace RTC
 
 					return;
 				}
+
+				MS_DEBUG_DEV("Consumer closed [consumerId:%" PRIu32 "]", consumer->consumerId);
 
 				delete consumer;
 
@@ -1598,8 +1597,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->transports.erase(transport->transportId);
-
-		delete transport;
 	}
 
 	void Router::OnProducerClosed(RTC::Producer* producer)
