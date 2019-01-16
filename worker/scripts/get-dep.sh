@@ -140,10 +140,19 @@ function get_clang_fuzzer()
 	rm -rf ${NAME}
 }
 
+function get_fuzzer_corpora()
+{
+	GIT_REPO="https://github.com/RTC-Cartel/webrtc-fuzzer-corpora.git"
+	GIT_TAG="master"
+	DEST="deps/webrtc-fuzzer-corpora"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer]"
+		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer|fuzzer-corpora]"
 		echo
 		;;
 	gyp)
@@ -172,6 +181,9 @@ case "${DEP}" in
 		;;
 	clang-fuzzer)
 		get_clang_fuzzer
+		;;
+	fuzzer-corpora)
+		get_fuzzer_corpora
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
