@@ -116,7 +116,6 @@ namespace RTC
 		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapActiveProfiles;
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
-		std::vector<RtpEncodingParameters> outputEncodings;
 		struct RTC::Transport::HeaderExtensionIds transportHeaderExtensionIds;
 		struct HeaderExtensionIds headerExtensionIds;
 		bool paused{ false };

@@ -30,8 +30,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->outputEncodings = this->rtpParameters.encodings;
-
 		// Fill ids of well known RTP header extensions with the mapped ids (if any).
 		FillHeaderExtensionIds();
 
