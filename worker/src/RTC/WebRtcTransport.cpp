@@ -4,7 +4,7 @@
 #include "RTC/WebRtcTransport.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -309,20 +309,23 @@ namespace RTC
 		// Add timestamp.
 		jsonObject["timestamp"] = DepLibUV::GetTime();
 
-		// Add iceConnectionState.
+		// Add iceRole (we are always "controlled").
+		jsonObject["iceRole"] = "controlled";
+
+		// Add iceState.
 		switch (this->iceServer->GetState())
 		{
 			case RTC::IceServer::IceState::NEW:
-				jsonObject["iceConnectionState"] = "new";
+				jsonObject["iceState"] = "new";
 				break;
 			case RTC::IceServer::IceState::CONNECTED:
-				jsonObject["iceConnectionState"] = "connected";
+				jsonObject["iceState"] = "connected";
 				break;
 			case RTC::IceServer::IceState::COMPLETED:
-				jsonObject["iceConnectionState"] = "completed";
+				jsonObject["iceState"] = "completed";
 				break;
 			case RTC::IceServer::IceState::DISCONNECTED:
-				jsonObject["iceConnectionState"] = "disconnected";
+				jsonObject["iceState"] = "disconnected";
 				break;
 		}
 
@@ -401,110 +404,97 @@ namespace RTC
 			{
 				// Ensure this method is not called twice.
 				if (this->dtlsLocalRole != RTC::DtlsTransport::Role::AUTO)
-				{
-					request->Reject("connect() already called");
-
-					return;
-				}
+					MS_THROW_ERROR("connect() already called");
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
 				RTC::DtlsTransport::Role dtlsRemoteRole;
 
-				try
+				auto jsonDtlsParametersIt = request->data.find("dtlsParameters");
+
+				if (jsonDtlsParametersIt == request->data.end() || !jsonDtlsParametersIt->is_object())
+					MS_THROW_TYPE_ERROR("missing dtlsParameters");
+
+				auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
+
+				if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
+					MS_THROW_TYPE_ERROR("missing dtlsParameters.fingerprints");
+
+				// NOTE: Just take the first fingerprint.
+				for (auto& jsonFingerprint : *jsonFingerprintsIt)
 				{
-					auto jsonDtlsParametersIt = request->data.find("dtlsParameters");
+					if (!jsonFingerprint.is_object())
+						MS_THROW_TYPE_ERROR("wrong entry in dtlsParameters.fingerprints (not an object)");
 
-					if (jsonDtlsParametersIt == request->data.end() || !jsonDtlsParametersIt->is_object())
-						MS_THROW_ERROR("missing dtlsParameters");
+					auto jsonAlgorithmIt = jsonFingerprint.find("algorithm");
 
-					auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
+					if (jsonAlgorithmIt == jsonFingerprint.end())
+						MS_THROW_TYPE_ERROR("missing fingerprint.algorithm");
+					else if (!jsonAlgorithmIt->is_string())
+						MS_THROW_TYPE_ERROR("wrong fingerprint.algorithm (not a string)");
 
-					if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
-						MS_THROW_ERROR("missing dtlsParameters.fingerprints");
+					dtlsRemoteFingerprint.algorithm =
+					  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get < std
+					                                              : string > ());
 
-					// NOTE: Just take the first fingerprint.
-					for (auto& jsonFingerprint : *jsonFingerprintsIt)
+					if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+						MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
+
+					auto jsonValueIt = jsonFingerprint.find("value");
+
+					if (jsonValueIt == jsonFingerprint.end())
+						MS_THROW_TYPE_ERROR("missing fingerprint.value");
+					else if (!jsonValueIt->is_string())
+						MS_THROW_TYPE_ERROR("wrong fingerprint.value (not a string)");
+
+					dtlsRemoteFingerprint.value = jsonValueIt->get<std::string>();
+
+					// Just use the first fingerprint.
+					break;
+				}
+
+				auto jsonRoleIt = jsonDtlsParametersIt->find("role");
+
+				if (jsonRoleIt != jsonDtlsParametersIt->end())
+				{
+					if (!jsonRoleIt->is_string())
+						MS_THROW_TYPE_ERROR("wrong dtlsParameters.role (not a string)");
+
+					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(jsonRoleIt->get<std::string>());
+
+					if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
+						MS_THROW_TYPE_ERROR("invalid dtlsParameters.role value");
+				}
+				else
+				{
+					dtlsRemoteRole = RTC::DtlsTransport::Role::AUTO;
+				}
+
+				// Set local DTLS role.
+				switch (dtlsRemoteRole)
+				{
+					case RTC::DtlsTransport::Role::CLIENT:
 					{
-						if (!jsonFingerprint.is_object())
-							MS_THROW_ERROR("wrong entry in dtlsParameters.fingerprints (not an object)");
+						this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
 
-						auto jsonAlgorithmIt = jsonFingerprint.find("algorithm");
-
-						if (jsonAlgorithmIt == jsonFingerprint.end())
-							MS_THROW_ERROR("missing fingerprint.algorithm");
-						else if (!jsonAlgorithmIt->is_string())
-							MS_THROW_ERROR("wrong fingerprint.algorithm (not a string)");
-
-						dtlsRemoteFingerprint.algorithm =
-						  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get < std
-						                                              : string > ());
-
-						if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
-							MS_THROW_ERROR("invalid fingerprint.algorithm value");
-
-						auto jsonValueIt = jsonFingerprint.find("value");
-
-						if (jsonValueIt == jsonFingerprint.end())
-							MS_THROW_ERROR("missing fingerprint.value");
-						else if (!jsonValueIt->is_string())
-							MS_THROW_ERROR("wrong fingerprint.value (not a string)");
-
-						dtlsRemoteFingerprint.value = jsonValueIt->get<std::string>();
-
-						// Just use the first fingerprint.
 						break;
 					}
-
-					auto jsonRoleIt = jsonDtlsParametersIt->find("role");
-
-					if (jsonRoleIt != jsonDtlsParametersIt->end())
+					case RTC::DtlsTransport::Role::SERVER:
 					{
-						if (!jsonRoleIt->is_string())
-							MS_THROW_ERROR("wrong dtlsParameters.role (not a string)");
+						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
 
-						dtlsRemoteRole = RTC::DtlsTransport::StringToRole(jsonRoleIt->get<std::string>());
-
-						if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
-							MS_THROW_ERROR("invalid dtlsParameters.role value");
+						break;
 					}
-					else
+					// If the peer has role "auto" we become "client" since we are ICE controlled.
+					case RTC::DtlsTransport::Role::AUTO:
 					{
-						dtlsRemoteRole = RTC::DtlsTransport::Role::AUTO;
-					}
+						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
 
-					// Set local DTLS role.
-					switch (dtlsRemoteRole)
+						break;
+					}
+					case RTC::DtlsTransport::Role::NONE:
 					{
-						case RTC::DtlsTransport::Role::CLIENT:
-						{
-							this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
-
-							break;
-						}
-						case RTC::DtlsTransport::Role::SERVER:
-						{
-							this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
-
-							break;
-						}
-						// If the peer has role "auto" we become "client" since we are ICE controlled.
-						case RTC::DtlsTransport::Role::AUTO:
-						{
-							this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
-
-							break;
-						}
-						case RTC::DtlsTransport::Role::NONE:
-						{
-							MS_THROW_ERROR("invalid remote DTLS role");
-						}
+						MS_THROW_TYPE_ERROR("invalid remote DTLS role");
 					}
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Reject(error.what());
-
-					return;
 				}
 
 				// Pass the remote fingerprint to the DTLS transport.

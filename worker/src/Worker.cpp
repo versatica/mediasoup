@@ -4,7 +4,7 @@
 #include "Worker.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Channel/Notifier.hpp"
 

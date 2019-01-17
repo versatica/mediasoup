@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cerrno>
 #include <sys/stat.h> // stat()

@@ -4,7 +4,7 @@
 #include "RTC/SrtpSession.hpp"
 #include "DepLibSRTP.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include <cstring> // std::memset(), std::memcpy()
 
 namespace RTC

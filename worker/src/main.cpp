@@ -6,7 +6,7 @@
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
@@ -62,12 +62,18 @@ int main(int argc, char* argv[])
 	{
 		Settings::SetConfiguration(argc, argv);
 	}
-	catch (const MediaSoupError& error)
+	catch (const MediaSoupTypeError& error)
 	{
 		MS_ERROR_STD("settings error: %s", error.what());
 
 		// 42 is a custom exit code to notify "settings error" to the Node library.
 		std::_Exit(42);
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_ERROR_STD("unexpected settings error: %s", error.what());
+
+		std::_Exit(EXIT_FAILURE);
 	}
 
 	MS_DEBUG_TAG(info, "starting mediasoup-worker process [version:%s]", version.c_str());

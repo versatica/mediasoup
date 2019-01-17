@@ -3,7 +3,7 @@
 
 #include "DepLibSRTP.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 
 /* Static variables. */
 

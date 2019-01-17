@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -14,7 +14,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (!data.is_object())
-			MS_THROW_ERROR("data is not an object");
+			MS_THROW_TYPE_ERROR("data is not an object");
 
 		auto jsonMimeTypeIt     = data.find("mimeType");
 		auto jsonPayloadTypeIt  = data.find("payloadType");
@@ -25,7 +25,7 @@ namespace RTC
 
 		// mimeType is mandatory.
 		if (jsonMimeTypeIt == data.end() || !jsonMimeTypeIt->is_string())
-			MS_THROW_ERROR("missing mimeType");
+			MS_THROW_TYPE_ERROR("missing mimeType");
 
 		// Set MIME field.
 		// This may throw.
@@ -33,13 +33,13 @@ namespace RTC
 
 		// payloadType is mandatory.
 		if (jsonPayloadTypeIt == data.end() || !jsonPayloadTypeIt->is_number_unsigned())
-			MS_THROW_ERROR("missing payloadType");
+			MS_THROW_TYPE_ERROR("missing payloadType");
 
 		this->payloadType = jsonPayloadTypeIt->get<uint8_t>();
 
 		// clockRate is mandatory.
 		if (jsonClockRateIt == data.end() || !jsonClockRateIt->is_number_unsigned())
-			MS_THROW_ERROR("missing clockRate");
+			MS_THROW_TYPE_ERROR("missing clockRate");
 
 		this->clockRate = jsonClockRateIt->get<uint32_t>();
 
@@ -92,7 +92,8 @@ namespace RTC
 
 		// Add rtcpFeedback.
 		jsonObject["rtcpFeedback"] = json::array();
-		auto jsonRtcpFeedbackIt    = jsonObject.find("rtcpFeedback");
+
+		auto jsonRtcpFeedbackIt = jsonObject.find("rtcpFeedback");
 
 		for (size_t i = 0; i < this->rtcpFeedback.size(); ++i)
 		{
@@ -118,7 +119,7 @@ namespace RTC
 			{
 				// A RTX codec must have 'apt' parameter.
 				if (!this->parameters.HasInteger(aptString))
-					MS_THROW_ERROR("missing apt parameter in RTX codec");
+					MS_THROW_TYPE_ERROR("missing apt parameter in RTX codec");
 
 				break;
 			}

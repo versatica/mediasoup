@@ -3,7 +3,7 @@
 
 #include "handles/UdpSocket.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 
 /* Static. */

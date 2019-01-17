@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -14,14 +14,14 @@ namespace RTC
 		MS_TRACE();
 
 		if (!data.is_object())
-			MS_THROW_ERROR("data is not an object");
+			MS_THROW_TYPE_ERROR("data is not an object");
 
 		auto jsonTypeIt      = data.find("type");
 		auto jsonParameterIt = data.find("type");
 
 		// type is mandatory.
 		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
-			MS_THROW_ERROR("missing type");
+			MS_THROW_TYPE_ERROR("missing type");
 
 		this->type = jsonTypeIt->get<std::string>();
 

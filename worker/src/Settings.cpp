@@ -3,7 +3,7 @@
 
 #include "Settings.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "json.hpp"
 #include <cctype> // isprint()
@@ -65,7 +65,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
 		if (optarg == nullptr)
-			MS_THROW_ERROR("unknown configuration parameter: %s", optarg);
+			MS_THROW_TYPE_ERROR("unknown configuration parameter: %s", optarg);
 
 		switch (c)
 		{
@@ -93,7 +93,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				}
 				catch (const std::exception& error)
 				{
-					MS_THROW_ERROR("%s", error.what());
+					MS_THROW_TYPE_ERROR("%s", error.what());
 				}
 
 				break;
@@ -107,7 +107,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				}
 				catch (const std::exception& error)
 				{
-					MS_THROW_ERROR("%s", error.what());
+					MS_THROW_TYPE_ERROR("%s", error.what());
 				}
 
 				break;
@@ -133,21 +133,21 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			case '?':
 			{
 				if (isprint(optopt) != 0)
-					MS_THROW_ERROR("invalid option '-%c'", (char)optopt);
+					MS_THROW_TYPE_ERROR("invalid option '-%c'", (char)optopt);
 				else
-					MS_THROW_ERROR("unknown long option given as argument");
+					MS_THROW_TYPE_ERROR("unknown long option given as argument");
 			}
 
 			// Valid option, but it requires and argument that is not given.
 			case ':':
 			{
-				MS_THROW_ERROR("option '%c' requires an argument", (char)optopt);
+				MS_THROW_TYPE_ERROR("option '%c' requires an argument", (char)optopt);
 			}
 
 			// This should never happen.
 			default:
 			{
-				MS_THROW_ERROR("'default' should never happen");
+				MS_THROW_TYPE_ERROR("'default' should never happen");
 			}
 		}
 	}
@@ -160,7 +160,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	// Validate RTC ports.
 	if (Settings::configuration.rtcMaxPort <= Settings::configuration.rtcMinPort)
-		MS_THROW_ERROR("rtcMaxPort must be higher than rtcMinPort");
+		MS_THROW_TYPE_ERROR("rtcMaxPort must be higher than rtcMinPort");
 
 	// Set DTLS certificate files (if provided),
 	Settings::SetDtlsCertificateAndPrivateKeyFiles();
@@ -263,9 +263,7 @@ void Settings::HandleRequest(Channel::Request* request)
 
 		default:
 		{
-			MS_ERROR("unknown method");
-
-			request->Reject("unknown method");
+			MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 		}
 	}
 }
@@ -278,7 +276,7 @@ void Settings::SetLogLevel(std::string& level)
 	Utils::String::ToLowerCase(level);
 
 	if (Settings::string2LogLevel.find(level) == Settings::string2LogLevel.end())
-		MS_THROW_ERROR("invalid value '%s' for logLevel", level.c_str());
+		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
 
 	Settings::configuration.logLevel = Settings::string2LogLevel[level];
 }
@@ -323,13 +321,13 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	  !Settings::configuration.dtlsCertificateFile.empty() &&
 	  Settings::configuration.dtlsPrivateKeyFile.empty())
 	{
-		MS_THROW_ERROR("missing dtlsPrivateKeyFile");
+		MS_THROW_TYPE_ERROR("missing dtlsPrivateKeyFile");
 	}
 	else if (
 	  Settings::configuration.dtlsCertificateFile.empty() &&
 	  !Settings::configuration.dtlsPrivateKeyFile.empty())
 	{
-		MS_THROW_ERROR("missing dtlsCertificateFile");
+		MS_THROW_TYPE_ERROR("missing dtlsCertificateFile");
 	}
 	else if (
 	  Settings::configuration.dtlsCertificateFile.empty() &&
@@ -347,7 +345,7 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_THROW_ERROR("dtlsCertificateFile: %s", error.what());
+		MS_THROW_TYPE_ERROR("dtlsCertificateFile: %s", error.what());
 	}
 
 	try
@@ -356,7 +354,7 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_THROW_ERROR("dtlsPrivateKeyFile: %s", error.what());
+		MS_THROW_TYPE_ERROR("dtlsPrivateKeyFile: %s", error.what());
 	}
 
 	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;

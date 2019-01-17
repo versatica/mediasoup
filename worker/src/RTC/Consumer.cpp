@@ -3,7 +3,7 @@
 
 #include "RTC/Consumer.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
@@ -144,9 +144,9 @@ namespace RTC
 
 		// Must have a single encoding.
 		if (rtpParameters.encodings.empty())
-			MS_THROW_ERROR("invalid empty rtpParameters.encodings");
+			MS_THROW_TYPE_ERROR("invalid empty rtpParameters.encodings");
 		else if (rtpParameters.encodings[0].ssrc == 0)
-			MS_THROW_ERROR("missing rtpParameters.encodings[0].ssrc");
+			MS_THROW_TYPE_ERROR("missing rtpParameters.encodings[0].ssrc");
 
 		if (IsEnabled())
 			Disable();

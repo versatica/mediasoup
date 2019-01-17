@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -14,7 +14,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (!data.is_object())
-			MS_THROW_ERROR("data is not an object");
+			MS_THROW_TYPE_ERROR("data is not an object");
 
 		auto jsonSsrcIt = data.find("ssrc");
 

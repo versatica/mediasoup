@@ -5,7 +5,7 @@
 
 #include "Utils.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include <uv.h>
 
 namespace Utils
@@ -4101,7 +4101,7 @@ case 86:
 
 			default:
 			{
-				MS_THROW_ERROR("invalid ip '%s'", ip.c_str());
+				MS_THROW_TYPE_ERROR("invalid ip '%s'", ip.c_str());
 			}
 		}
 	}

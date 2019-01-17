@@ -3,7 +3,7 @@
 
 #include "RTC/RtpListener.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/Producer.hpp"
 
 namespace RTC

@@ -3,7 +3,7 @@
 
 #include "RTC/DtlsTransport.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include <openssl/asn1.h>

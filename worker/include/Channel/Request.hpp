@@ -57,8 +57,8 @@ namespace Channel
 
 		void Accept();
 		void Accept(json& data);
-		void Reject(std::string& reason);
-		void Reject(const char* reason = nullptr);
+		void Error(const char* reason = nullptr);
+		void TypeError(const char* reason = nullptr);
 
 	public:
 		// Passed by argument.

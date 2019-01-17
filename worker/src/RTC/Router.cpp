@@ -3,7 +3,7 @@
 
 #include "RTC/Router.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/PlainRtpTransport.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -115,27 +115,27 @@ namespace RTC
 				auto jsonListenIpsIt = request->data.find("listenIps");
 
 				if (jsonListenIpsIt == request->data.end())
-					MS_THROW_ERROR("missing listenIps");
+					MS_THROW_TYPE_ERROR("missing listenIps");
 				else if (!jsonListenIpsIt->is_array())
-					MS_THROW_ERROR("wrong listenIps (not an array)");
+					MS_THROW_TYPE_ERROR("wrong listenIps (not an array)");
 				else if (jsonListenIpsIt->size() == 0)
-					MS_THROW_ERROR("wrong listenIps (empty array)");
+					MS_THROW_TYPE_ERROR("wrong listenIps (empty array)");
 				else if (jsonListenIpsIt->size() > 8)
-					MS_THROW_ERROR("wrong listenIps (too many IPs)");
+					MS_THROW_TYPE_ERROR("wrong listenIps (too many IPs)");
 
 				for (auto& jsonListenIp : *jsonListenIpsIt)
 				{
 					RTC::WebRtcTransport::ListenIp listenIp;
 
 					if (!jsonListenIp.is_object())
-						MS_THROW_ERROR("wrong listenIp (not an object)");
+						MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
 
 					auto jsonIpIt = jsonListenIp.find("ip");
 
 					if (jsonIpIt == jsonListenIp.end())
-						MS_THROW_ERROR("missing listenIp.ip");
+						MS_THROW_TYPE_ERROR("missing listenIp.ip");
 					else if (!jsonIpIt->is_string())
-						MS_THROW_ERROR("wrong listenIp.ip (not an string");
+						MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string");
 
 					// This may throw.
 					listenIp.ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
@@ -145,7 +145,7 @@ namespace RTC
 					if (jsonAnnouncedIpIt != jsonListenIp.end())
 					{
 						if (!jsonAnnouncedIpIt->is_string())
-							MS_THROW_ERROR("wrong listenIp.announcedIp (not an string)");
+							MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string)");
 
 						listenIp.announcedIp = jsonAnnouncedIpIt->get<std::string>();
 					}
@@ -158,7 +158,7 @@ namespace RTC
 				if (jsonEnableUdpIt != request->data.end())
 				{
 					if (!jsonEnableUdpIt->is_boolean())
-						MS_THROW_ERROR("wrong enableUdp (not a boolean)");
+						MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
 
 					options.enableUdp = jsonEnableUdpIt->get<bool>();
 				}
@@ -168,7 +168,7 @@ namespace RTC
 				if (jsonEnableTcpIt != request->data.end())
 				{
 					if (!jsonEnableTcpIt->is_boolean())
-						MS_THROW_ERROR("wrong enableTcp (not a boolean)");
+						MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
 
 					options.enableTcp = jsonEnableTcpIt->get<bool>();
 				}
@@ -178,7 +178,7 @@ namespace RTC
 				if (jsonPreferUdpIt != request->data.end())
 				{
 					if (!jsonPreferUdpIt->is_boolean())
-						MS_THROW_ERROR("wrong preferUdp (not a boolean)");
+						MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
 
 					options.preferUdp = jsonPreferUdpIt->get<bool>();
 				}
@@ -188,7 +188,7 @@ namespace RTC
 				if (jsonPreferTcpIt != request->data.end())
 				{
 					if (!jsonPreferTcpIt->is_boolean())
-						MS_THROW_ERROR("wrong preferTcp (not a boolean)");
+						MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
 
 					options.preferTcp = jsonPreferTcpIt->get<bool>();
 				}
@@ -222,16 +222,16 @@ namespace RTC
 				auto jsonListenIpIt = request->data.find("listenIp");
 
 				if (jsonListenIpIt == request->data.end())
-					MS_THROW_ERROR("missing listenIp");
+					MS_THROW_TYPE_ERROR("missing listenIp");
 				else if (!jsonListenIpIt->is_object())
-					MS_THROW_ERROR("wrong listenIp (not an object)");
+					MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
 
 				auto jsonIpIt = jsonListenIpIt->find("ip");
 
 				if (jsonIpIt == jsonListenIpIt->end())
-					MS_THROW_ERROR("missing listenIp.ip");
+					MS_THROW_TYPE_ERROR("missing listenIp.ip");
 				else if (!jsonIpIt->is_string())
-					MS_THROW_ERROR("wrong listenIp.ip (not an string)");
+					MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
 
 				// This may throw.
 				options.listenIp.ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
@@ -241,7 +241,7 @@ namespace RTC
 				if (jsonAnnouncedIpIt != jsonListenIpIt->end())
 				{
 					if (!jsonAnnouncedIpIt->is_string())
-						MS_THROW_ERROR("wrong listenIp.announcedIp (not an string");
+						MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
 
 					options.listenIp.announcedIp = jsonAnnouncedIpIt->get<std::string>();
 				}
@@ -251,7 +251,7 @@ namespace RTC
 				if (jsonRtcpMuxIt != request->data.end())
 				{
 					if (!jsonRtcpMuxIt->is_boolean())
-						MS_THROW_ERROR("wrong rtcpMux (not a boolean)");
+						MS_THROW_TYPE_ERROR("wrong rtcpMux (not a boolean)");
 
 					options.rtcpMux = jsonRtcpMuxIt->get<bool>();
 				}

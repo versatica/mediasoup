@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "catch.hpp"
 
@@ -66,17 +66,17 @@ SCENARIO("Utils::IP::NormalizeIp()")
 	REQUIRE(ip == "aa::8");
 
 	ip = "001.2.3.4";
-	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 
 	ip = "1::2::3";
-	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 
 	ip = "::1 ";
-	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 
 	ip = "0.0.0.";
-	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 
 	ip = "";
-	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupError);
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 }

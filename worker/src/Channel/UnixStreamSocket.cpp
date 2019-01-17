@@ -3,7 +3,7 @@
 
 #include "Channel/UnixStreamSocket.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
 #include <cstring> // std::memmove()
@@ -247,9 +247,13 @@ namespace Channel
 					{
 						this->listener->OnChannelRequest(this, request);
 					}
+					catch (const MediaSoupTypeError& error)
+					{
+						request->TypeError(error.what());
+					}
 					catch (const MediaSoupError& error)
 					{
-						request->Reject(error.what());
+						request->Error(error.what());
 					}
 
 					// Delete the Request.

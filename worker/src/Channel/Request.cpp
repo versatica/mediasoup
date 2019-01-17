@@ -3,7 +3,7 @@
 
 #include "Channel/Request.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 
 namespace Channel
 {
@@ -54,12 +54,12 @@ namespace Channel
 		auto jsonDataIt     = body.find("data");
 
 		if (jsonIdIt == body.end() || !jsonIdIt->is_number_unsigned())
-			MS_THROW_ERROR("invalid id");
+			MS_THROW_ERROR("missing id");
 
 		this->id = jsonIdIt->get<uint32_t>();
 
 		if (jsonMethodIt == body.end() || !jsonMethodIt->is_string())
-			MS_THROW_ERROR("invalid method");
+			MS_THROW_ERROR("missing method");
 
 		this->method = jsonMethodIt->get<std::string>();
 
@@ -67,7 +67,7 @@ namespace Channel
 
 		if (methodIdIt == Request::string2MethodId.end())
 		{
-			Reject("unknown method");
+			Error("unknown method");
 
 			MS_THROW_ERROR("unknown method '%s'", this->method.c_str());
 		}
@@ -114,19 +114,7 @@ namespace Channel
 		this->channel->Send(body);
 	}
 
-	void Request::Reject(std::string& reason)
-	{
-		MS_TRACE();
-
-		Reject(reason.c_str());
-	}
-
-	/**
-	 * Reject the Request.
-	 *
-	 * @param reason  Description string.
-	 */
-	void Request::Reject(const char* reason)
+	void Request::Error(const char* reason)
 	{
 		MS_TRACE();
 
@@ -136,8 +124,27 @@ namespace Channel
 
 		json body{ json::object() };
 
-		body["id"]       = this->id;
-		body["rejected"] = true;
+		body["id"]    = this->id;
+		body["error"] = "Error";
+
+		if (reason != nullptr)
+			body["reason"] = reason;
+
+		this->channel->Send(body);
+	}
+
+	void Request::TypeError(const char* reason)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(!this->replied, "request already replied");
+
+		this->replied = true;
+
+		json body{ json::object() };
+
+		body["id"]    = this->id;
+		body["error"] = "TypeError";
 
 		if (reason != nullptr)
 			body["reason"] = reason;

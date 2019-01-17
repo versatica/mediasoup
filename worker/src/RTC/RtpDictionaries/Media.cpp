@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
@@ -37,7 +37,7 @@ namespace RTC
 		auto it = Media::string2Kind.find(str);
 
 		if (it == Media::string2Kind.end())
-			MS_THROW_ERROR("invalid media kind [kind:%s]", str.c_str());
+			MS_THROW_TYPE_ERROR("invalid media kind [kind:%s]", str.c_str());
 
 		return it->second;
 	}

@@ -4,7 +4,7 @@
 #include "RTC/PlainRtpTransport.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
@@ -188,11 +188,7 @@ namespace RTC
 			{
 				// Ensure this method is not called twice.
 				if (this->tuple != nullptr)
-				{
-					request->Reject("connect() already called");
-
-					return;
-				}
+					MS_THROW_ERROR("connect() already called");
 
 				std::string ip;
 				uint16_t port{ 0u };
@@ -203,7 +199,7 @@ namespace RTC
 					auto jsonIpIt = request->data.find("ip");
 
 					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
-						MS_THROW_ERROR("missing ip");
+						MS_THROW_TYPE_ERROR("missing ip");
 
 					// This may throw.
 					ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
@@ -211,7 +207,7 @@ namespace RTC
 					auto jsonPortIt = request->data.find("port");
 
 					if (jsonPortIt == request->data.end() || !jsonPortIt->is_number_unsigned())
-						MS_THROW_ERROR("missing port");
+						MS_THROW_TYPE_ERROR("missing port");
 
 					port = jsonPortIt->get<uint16_t>();
 
@@ -220,14 +216,14 @@ namespace RTC
 					if (jsonRtcpPortIt != request->data.end() && jsonRtcpPortIt->is_number_unsigned())
 					{
 						if (this->rtcpMux)
-							MS_THROW_ERROR("cannot set rtcpPort with rtcpMux enabled");
+							MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 
 						rtcpPort = jsonRtcpPortIt->get<uint16_t>();
 					}
 					else if (jsonRtcpPortIt == request->data.end() || !jsonRtcpPortIt->is_number_unsigned())
 					{
 						if (!this->rtcpMux)
-							MS_THROW_ERROR("missing rtcpPort (required with rtcpMux disabled)");
+							MS_THROW_TYPE_ERROR("missing rtcpPort (required with rtcpMux disabled)");
 					}
 
 					int err;
@@ -262,7 +258,7 @@ namespace RTC
 
 						default:
 						{
-							MS_THROW_ERROR("invalid destination IP '%s'", ip.c_str());
+							MS_THROW_ERROR("invalid IP '%s'", ip.c_str());
 						}
 					}
 
@@ -302,7 +298,7 @@ namespace RTC
 
 							default:
 							{
-								MS_THROW_ERROR("invalid destination IP '%s'", ip.c_str());
+								MS_THROW_ERROR("invalid IP '%s'", ip.c_str());
 							}
 						}
 
@@ -325,9 +321,7 @@ namespace RTC
 						this->rtcpTuple = nullptr;
 					}
 
-					request->Reject(error.what());
-
-					return;
+					throw error;
 				}
 
 				// Start the RTCP timer.

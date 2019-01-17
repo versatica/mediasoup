@@ -3,7 +3,7 @@
 
 #include "handles/TcpServer.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 
 /* Static methods for UV callbacks. */
