@@ -40,13 +40,6 @@ namespace RTC
 
 		delete this->rtpStream;
 		delete this->rtpMonitor;
-
-		for (auto& listener : this->listeners)
-		{
-			listener->OnConsumerClosed(this);
-		}
-
-		Channel::Notifier::Emit(this->id, "close");
 	}
 
 	Json::Value Consumer::ToJson() const

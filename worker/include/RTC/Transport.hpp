@@ -97,6 +97,7 @@ namespace RTC
 	public:
 		void OnConsumerSendRtpPacket(RTC::Producer* consumer, RTC::Packet* packet) override;
 		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
+		void onConsumerProducerClosed(RTC::Consumer* consumer);
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

@@ -70,7 +70,7 @@ Some considerations:
 
 * Iterates all C++ Producers. For each Producer:
   - Removes it from its map of Producers.
-  - Calls its `listener->OnTransportProducerClosed(this, producer)` (so the C++ Router cleans its maps and calls `consumer->ProducerClose()` on its associated Consumers).
+  - Calls its `listener->OnTransportProducerClosed(this, producer)` (so the C++ Router cleans its maps and calls `consumer->ProducerClosed()` on its associated Consumers).
   - Calls `delete producer`.
 * It clears its map of C++ Producers.
 * Iterates all C++ Consumer. For each Consumer:
@@ -142,4 +142,7 @@ Some considerations:
 * Send a channel notification `producerclose` to the JS Consumer.
   - The JS Consumer emits private JS `consumer.on('@produceclose')` (so the JS Transport cleans its map).
   - The JS Consumer emits public JS `consumer.on('produceclose')`.
-* Notifies its C++ Transport via `listener->onConsumerProducerClosed()` (so the C++ Transport cleans its map of Consumers and also notifies the Router via `listener->OnTransportConsumerClosed()`). 
+* Notifies its C++ Transport via `listener->onConsumerProducerClosed()` which:
+  - cleans its map of Consumers,
+  - notifies the Router via `listener->OnTransportConsumerClosed()`), and
+  - deletes the Consumer.
