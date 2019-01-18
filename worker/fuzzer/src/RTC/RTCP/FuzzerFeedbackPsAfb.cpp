@@ -5,6 +5,5 @@ void Fuzzer::RTC::RTCP::FeedbackPsAfb::Fuzz(::RTC::RTCP::FeedbackPsAfbPacket* pa
 	packet->Dump();
 	packet->Serialize(::RTC::RTCP::Buffer);
 	packet->GetSize();
-
 	packet->GetApplication();
 }

@@ -21,7 +21,6 @@ void Fuzzer::RTC::RTCP::FeedbackPsVbcm::Fuzz(::RTC::RTCP::FeedbackPsVbcmPacket* 
 		// Triggers a crash in fuzzer.
 		// item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSsrc();
 		item->GetSequenceNumber();
 		item->GetPayloadType();

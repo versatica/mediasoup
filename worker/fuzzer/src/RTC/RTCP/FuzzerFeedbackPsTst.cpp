@@ -18,7 +18,6 @@ void Fuzzer::RTC::RTCP::FeedbackPsTstn::Fuzz(::RTC::RTCP::FeedbackPsTstnPacket* 
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSsrc();
 		item->GetSequenceNumber();
 		item->GetIndex();
@@ -43,7 +42,6 @@ void Fuzzer::RTC::RTCP::FeedbackPsTstr::Fuzz(::RTC::RTCP::FeedbackPsTstrPacket* 
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSsrc();
 		item->GetSequenceNumber();
 		item->GetIndex();

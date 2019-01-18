@@ -18,7 +18,6 @@ void Fuzzer::RTC::RTCP::FeedbackRtpNack::Fuzz(::RTC::RTCP::FeedbackRtpNackPacket
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetPacketId();
 		item->GetLostPacketBitmask();
 	}

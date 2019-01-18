@@ -18,7 +18,6 @@ void Fuzzer::RTC::RTCP::FeedbackPsFir::Fuzz(::RTC::RTCP::FeedbackPsFirPacket* pa
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSsrc();
 		item->GetSequenceNumber();
 	}

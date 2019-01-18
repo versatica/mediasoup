@@ -18,7 +18,6 @@ void Fuzzer::RTC::RTCP::FeedbackPsSli::Fuzz(::RTC::RTCP::FeedbackPsSliPacket* pa
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetFirst();
 		item->SetFirst(1111);
 		item->GetNumber();

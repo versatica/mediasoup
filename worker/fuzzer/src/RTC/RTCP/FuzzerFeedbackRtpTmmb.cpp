@@ -18,7 +18,6 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTmmbn::Fuzz(::RTC::RTCP::FeedbackRtpTmmbnPack
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSsrc();
 		item->SetSsrc(1111);
 		item->GetBitrate();
@@ -46,7 +45,6 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTmmbr::Fuzz(::RTC::RTCP::FeedbackRtpTmmbrPack
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSsrc();
 		item->SetSsrc(1111);
 		item->GetBitrate();

@@ -18,7 +18,6 @@ void Fuzzer::RTC::RTCP::FeedbackRtpEcn::Fuzz(::RTC::RTCP::FeedbackRtpEcnPacket* 
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSequenceNumber();
 		item->GetEct0Counter();
 		item->GetEct1Counter();

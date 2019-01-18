@@ -18,7 +18,6 @@ void Fuzzer::RTC::RTCP::FeedbackPsLei::Fuzz(::RTC::RTCP::FeedbackPsLeiPacket* pa
 		item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
-
 		item->GetSsrc();
 	}
 }
