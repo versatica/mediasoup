@@ -260,7 +260,7 @@ namespace RTC
 				{
 					delete producer;
 
-					throw error;
+					throw;
 				}
 
 				// Take the transport related RTP header extensions of the Producer and
@@ -436,72 +436,20 @@ namespace RTC
 		}
 	}
 
-	void Transport::SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const
+	void Transport::Connected()
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = request->internal.find("producerId");
-
-		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.producerId");
-
-		producerId.assign(jsonProducerIdIt->get<std::string>());
-
-		if (this->mapProducers.find(producerId) != this->mapProducers.end())
-			MS_THROW_ERROR("a Producer with same producerId already exists");
+		// Start the RTCP timer.
+		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 	}
 
-	RTC::Producer* Transport::GetProducerFromRequest(Channel::Request* request) const
+	void Transport::Disconnected()
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = request->internal.find("producerId");
-
-		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.producerId");
-
-		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
-
-		if (it == this->mapProducers.end())
-			MS_THROW_ERROR("Producer not found");
-
-		RTC::Producer* producer = it->second;
-
-		return producer;
-	}
-
-	void Transport::SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const
-	{
-		MS_TRACE();
-
-		auto jsonConsumerIdIt = request->internal.find("consumerId");
-
-		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.consumerId");
-
-		consumerId.assign(jsonConsumerIdIt->get<std::string>());
-
-		if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
-			MS_THROW_ERROR("a Consumer with same consumerId already exists");
-	}
-
-	RTC::Consumer* Transport::GetConsumerFromRequest(Channel::Request* request) const
-	{
-		MS_TRACE();
-
-		auto jsonConsumerIdIt = request->internal.find("consumerId");
-
-		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.consumerId");
-
-		auto it = this->mapConsumers.find(jsonConsumerIdIt->get<std::string>());
-
-		if (it == this->mapConsumers.end())
-			MS_THROW_ERROR("Consumer not found");
-
-		RTC::Consumer* consumer = it->second;
-
-		return consumer;
+		// Stop the RTCP timer.
+		this->rtcpTimer->Stop();
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
@@ -727,6 +675,91 @@ namespace RTC
 		}
 	}
 
+	void Transport::SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const
+	{
+		MS_TRACE();
+
+		auto jsonProducerIdIt = request->internal.find("producerId");
+
+		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.producerId");
+
+		producerId.assign(jsonProducerIdIt->get<std::string>());
+
+		if (this->mapProducers.find(producerId) != this->mapProducers.end())
+			MS_THROW_ERROR("a Producer with same producerId already exists");
+	}
+
+	RTC::Producer* Transport::GetProducerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonProducerIdIt = request->internal.find("producerId");
+
+		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.producerId");
+
+		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
+
+		if (it == this->mapProducers.end())
+			MS_THROW_ERROR("Producer not found");
+
+		RTC::Producer* producer = it->second;
+
+		return producer;
+	}
+
+	void Transport::SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const
+	{
+		MS_TRACE();
+
+		auto jsonConsumerIdIt = request->internal.find("consumerId");
+
+		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.consumerId");
+
+		consumerId.assign(jsonConsumerIdIt->get<std::string>());
+
+		if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
+			MS_THROW_ERROR("a Consumer with same consumerId already exists");
+	}
+
+	RTC::Consumer* Transport::GetConsumerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonConsumerIdIt = request->internal.find("consumerId");
+
+		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.consumerId");
+
+		auto it = this->mapConsumers.find(jsonConsumerIdIt->get<std::string>());
+
+		if (it == this->mapConsumers.end())
+			MS_THROW_ERROR("Consumer not found");
+
+		RTC::Consumer* consumer = it->second;
+
+		return consumer;
+	}
+
+	inline RTC::Consumer* Transport::GetStartedConsumer(uint32_t ssrc) const
+	{
+		MS_TRACE();
+
+		auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
+
+		if (mapSsrcConsumerIt == this->mapSsrcConsumer.end())
+			return nullptr;
+
+		auto* consumer = mapSsrcConsumerIt->second;
+
+		if (consumer->IsStarted())
+			return consumer;
+		else
+			return nullptr;
+	}
+
 	void Transport::SendRtcp(uint64_t now)
 	{
 		MS_TRACE();
@@ -783,23 +816,6 @@ namespace RTC
 			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}
-	}
-
-	inline RTC::Consumer* Transport::GetStartedConsumer(uint32_t ssrc) const
-	{
-		MS_TRACE();
-
-		auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
-
-		if (mapSsrcConsumerIt == this->mapSsrcConsumer.end())
-			return nullptr;
-
-		auto* consumer = mapSsrcConsumerIt->second;
-
-		if (consumer->IsStarted())
-			return consumer;
-		else
-			return nullptr;
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -865,7 +881,7 @@ namespace RTC
 	{
 		if (timer == this->rtcpTimer)
 		{
-			uint64_t interval = RTC::RTCP::MaxVideoIntervalMs;
+			uint64_t interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
 			uint64_t now      = DepLibUV::GetTime();
 
 			SendRtcp(now);

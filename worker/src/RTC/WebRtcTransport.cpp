@@ -132,7 +132,7 @@ namespace RTC
 			}
 			this->tcpServers.clear();
 
-			throw error;
+			throw;
 		}
 	}
 
@@ -179,6 +179,7 @@ namespace RTC
 
 		// Add iceLocalParameters.
 		jsonObject["iceLocalParameters"] = json::object();
+
 		auto jsonIceLocalParametersIt    = jsonObject.find("iceLocalParameters");
 
 		(*jsonIceLocalParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
@@ -187,6 +188,7 @@ namespace RTC
 
 		// Add iceLocalCandidates.
 		jsonObject["iceLocalCandidates"] = json::array();
+
 		auto jsonIceLocalCandidatesIt    = jsonObject.find("iceLocalCandidates");
 
 		for (auto i = 0; i < this->iceLocalCandidates.size(); ++i)
@@ -222,10 +224,12 @@ namespace RTC
 
 		// Add dtlsLocalParameters.
 		jsonObject["dtlsLocalParameters"] = json::object();
+
 		auto jsonDtlsLocalParametersIt    = jsonObject.find("dtlsLocalParameters");
 
 		// Add dtlsLocalParameters.fingerprints.
 		(*jsonDtlsLocalParametersIt)["fingerprints"] = json::array();
+
 		auto jsonDtlsLocalParametersFingerprintsIt   = jsonDtlsLocalParametersIt->find("fingerprints");
 		auto& fingerprints                           = this->dtlsTransport->GetLocalFingerprints();
 
@@ -280,6 +284,7 @@ namespace RTC
 
 		// Add headerExtensionIds.
 		jsonObject["headerExtensions"] = json::object();
+
 		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
@@ -504,9 +509,6 @@ namespace RTC
 					MayRunDtlsTransport();
 				}
 
-				// Start the RTCP timer.
-				this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
-
 				// Set remote bitrate estimator.
 				this->rembRemoteBitrateEstimator.reset(new RTC::REMB::RemoteBitrateEstimatorAbsSendTime(this));
 
@@ -569,6 +571,79 @@ namespace RTC
 		return (
 		  this->iceSelectedTuple != nullptr &&
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
+	}
+
+	void WebRtcTransport::MayRunDtlsTransport()
+	{
+		MS_TRACE();
+
+		// Do nothing if we have the same local DTLS role as the DTLS transport.
+		// NOTE: local role in DTLS transport can be NONE, but not ours.
+		if (this->dtlsTransport->GetLocalRole() == this->dtlsLocalRole)
+			return;
+
+		// Check our local DTLS role.
+		switch (this->dtlsLocalRole)
+		{
+			// If still 'auto' then transition to 'server' if ICE is 'connected' or
+			// 'completed'.
+			case RTC::DtlsTransport::Role::AUTO:
+			{
+				if (
+				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				{
+					MS_DEBUG_TAG(
+					  dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
+
+					this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
+					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
+				}
+
+				break;
+			}
+
+			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
+			// received with remote DTLS role 'server'.
+			// If 'client' then wait for ICE to be 'completed' (got USE-CANDIDATE).
+			//
+			// NOTE: This is the theory, however let's be mor eflexible as told here:
+			//   https://bugs.chromium.org/p/webrtc/issues/detail?id=3661
+			case RTC::DtlsTransport::Role::CLIENT:
+			{
+				if (
+				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				{
+					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'client'");
+
+					this->dtlsTransport->Run(RTC::DtlsTransport::Role::CLIENT);
+				}
+
+				break;
+			}
+
+			// If 'server' then run the DTLS transport if ICE is 'connected' (not yet
+			// USE-CANDIDATE) or 'completed'.
+			case RTC::DtlsTransport::Role::SERVER:
+			{
+				if (
+				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+				{
+					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'server'");
+
+					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
+				}
+
+				break;
+			}
+
+			case RTC::DtlsTransport::Role::NONE:
+			{
+				MS_ABORT("local DTLS role not set");
+			}
+		}
 	}
 
 	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -643,68 +718,6 @@ namespace RTC
 		this->iceSelectedTuple->Send(data, len);
 	}
 
-	inline void WebRtcTransport::MayRunDtlsTransport()
-	{
-		MS_TRACE();
-
-		// Do nothing if we have the same local DTLS role as the DTLS transport.
-		// NOTE: local role in DTLS transport can be NONE, but not ours.
-		if (this->dtlsTransport->GetLocalRole() == this->dtlsLocalRole)
-			return;
-
-		// Check our local DTLS role.
-		switch (this->dtlsLocalRole)
-		{
-			// If still 'auto' then transition to 'server' if ICE is 'connected' or
-			// 'completed'.
-			case RTC::DtlsTransport::Role::AUTO:
-				if (
-				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
-				{
-					MS_DEBUG_TAG(
-					  dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
-
-					this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
-					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
-				}
-				break;
-
-			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
-			// received with remote DTLS role 'server'.
-			// If 'client' then wait for ICE to be 'completed' (got USE-CANDIDATE).
-			//
-			// NOTE: This is the theory, however let's be mor eflexible as told here:
-			//   https://bugs.chromium.org/p/webrtc/issues/detail?id=3661
-			case RTC::DtlsTransport::Role::CLIENT:
-				if (
-				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
-				{
-					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'client'");
-
-					this->dtlsTransport->Run(RTC::DtlsTransport::Role::CLIENT);
-				}
-				break;
-
-			// If 'server' then run the DTLS transport if ICE is 'connected' (not yet
-			// USE-CANDIDATE) or 'completed'.
-			case RTC::DtlsTransport::Role::SERVER:
-				if (
-				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
-				{
-					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'server'");
-
-					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
-				}
-				break;
-
-			case RTC::DtlsTransport::Role::NONE:
-				MS_ABORT("local DTLS role not set");
-		}
-	}
-
 	inline void WebRtcTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -740,6 +753,7 @@ namespace RTC
 		MS_TRACE();
 
 		RTC::StunMessage* msg = RTC::StunMessage::Parse(data, len);
+
 		if (msg == nullptr)
 		{
 			MS_WARN_DEV("ignoring wrong STUN message received");
@@ -1057,6 +1071,9 @@ namespace RTC
 		data["iceState"] = "disconnected";
 
 		Channel::Notifier::Emit(this->id, "icestatechange", data);
+
+		// Tell the parent class.
+		Transport::Disconnected();
 	}
 
 	void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1129,6 +1146,9 @@ namespace RTC
 
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 
+		// Tell the parent class.
+		Transport::Connected();
+
 		// Iterate all Consumers and request key frame for them.
 		for (auto& kv : this->mapConsumers)
 		{
@@ -1164,6 +1184,9 @@ namespace RTC
 		data["dtlsState"] = "closed";
 
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
+
+		// Tell the parent class.
+		Transport::Disconnected();
 	}
 
 	void WebRtcTransport::OnOutgoingDtlsData(

@@ -48,7 +48,7 @@ namespace RTC
 				this->rtcpUdpSocket = nullptr;
 			}
 
-			throw error;
+			throw;
 		}
 	}
 
@@ -113,6 +113,7 @@ namespace RTC
 
 		// Add headerExtensionIds.
 		jsonObject["headerExtensions"] = json::object();
+
 		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
@@ -190,12 +191,12 @@ namespace RTC
 				if (this->tuple != nullptr)
 					MS_THROW_ERROR("connect() already called");
 
-				std::string ip;
-				uint16_t port{ 0u };
-				uint16_t rtcpPort{ 0u };
-
 				try
 				{
+					std::string ip;
+					uint16_t port{ 0u };
+					uint16_t rtcpPort{ 0u };
+
 					auto jsonIpIt = request->data.find("ip");
 
 					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
@@ -321,11 +322,11 @@ namespace RTC
 						this->rtcpTuple = nullptr;
 					}
 
-					throw error;
+					throw;
 				}
 
-				// Start the RTCP timer.
-				this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+				// Assume we are connected and tell the parent class.
+				Transport::Connected();
 
 				// Tell the caller about the selected local DTLS role.
 				json data{ json::object() };

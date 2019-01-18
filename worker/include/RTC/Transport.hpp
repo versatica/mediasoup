@@ -68,13 +68,17 @@ namespace RTC
 		virtual void HandleRequest(Channel::Request* request);
 
 	protected:
+		// Must be called from the subclass.
+		void Connected();
+		// Must be called from the subclass.
+		void Disconnected();
+		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
+
+	private:
 		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
 		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
 		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
-		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
-
-	private:
 		RTC::Consumer* GetStartedConsumer(uint32_t ssrc) const;
 		void SendRtcp(uint64_t now);
 		virtual bool IsConnected() const                                       = 0;
@@ -108,19 +112,22 @@ namespace RTC
 		const std::string id;
 
 	protected:
-		// Passed by argument.
-		Listener* listener{ nullptr };
 		// Allocated by this.
 		std::unordered_map<std::string, RTC::Producer*> mapProducers;
 		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
-		Timer* rtcpTimer{ nullptr };
 		// Others.
 		RtpListener rtpListener;
-		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
+		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		uint32_t availableIncomingBitrate{ 0 };
 		uint32_t availableOutgoingBitrate{ 0 };
 		uint32_t maxIncomingBitrate{ 0 };
+
+	private:
+		// Passed by argument.
+		Listener* listener{ nullptr };
+		// Allocated by this.
+		Timer* rtcpTimer{ nullptr };
 	};
 } // namespace RTC
 

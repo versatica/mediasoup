@@ -20,7 +20,7 @@ namespace RTC
 	class Router : public RTC::Transport::Listener
 	{
 	public:
-		Router(const std::string& id);
+		explicit Router(const std::string& id);
 		~Router();
 
 	public:

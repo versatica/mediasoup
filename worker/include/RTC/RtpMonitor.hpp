@@ -24,7 +24,10 @@ namespace RTC
 			virtual void OnRtpMonitorScore(uint8_t score) = 0;
 		};
 
-		explicit RtpMonitor(Listener* listener, const RTC::RtpStreamSend* rtpStream);
+	public:
+		RtpMonitor(Listener* listener, const RTC::RtpStreamSend* rtpStream);
+
+	public:
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RtpPacketRepaired(RTC::RtpPacket* packet);
 		bool IsHealthy() const;
