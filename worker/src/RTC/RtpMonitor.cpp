@@ -10,10 +10,8 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t HistogramLength{ 8 };
-
 	static constexpr size_t MaxRepairedPacketRetransmission{ 2 };
 	static constexpr size_t MaxRepairedPacketsLength{ 1000 };
-
 	// Score constraints weight.
 	static constexpr float LossPercentageWeight{ -1.0f };
 	static constexpr float RepairedPercentageWeight{ 0.5f };
@@ -121,7 +119,6 @@ namespace RTC
 
 		report->Dump();
 		Dump();
-
 #endif
 	}
 

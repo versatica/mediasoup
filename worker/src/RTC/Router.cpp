@@ -373,7 +373,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			// Call consumer->ProducerClosed() so it will notify the Node process,
+			// Call consumer->ProducerClosed() so the Consumer will notify the Node process,
 			// will notify its Transport, and its Transport will delete the Consumer.
 			consumer->ProducerClosed();
 		}

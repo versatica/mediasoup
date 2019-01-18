@@ -11,11 +11,11 @@ namespace RTC
 {
 	class RtpMonitor
 	{
-		static constexpr uint8_t MaxScore{ 10 };
-		static constexpr uint8_t HealthScoreThreshold{ 7 };
-
 	public:
 		static constexpr size_t ScoreTriggerCount{ 8 };
+
+	private:
+		static constexpr uint8_t HealthScoreThreshold{ 7 };
 
 	public:
 		class Listener
