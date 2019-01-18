@@ -179,7 +179,6 @@ namespace RTC
 
 		// Add iceLocalParameters.
 		jsonObject["iceLocalParameters"] = json::object();
-
 		auto jsonIceLocalParametersIt    = jsonObject.find("iceLocalParameters");
 
 		(*jsonIceLocalParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
@@ -188,7 +187,6 @@ namespace RTC
 
 		// Add iceLocalCandidates.
 		jsonObject["iceLocalCandidates"] = json::array();
-
 		auto jsonIceLocalCandidatesIt    = jsonObject.find("iceLocalCandidates");
 
 		for (auto i = 0; i < this->iceLocalCandidates.size(); ++i)
@@ -224,12 +222,10 @@ namespace RTC
 
 		// Add dtlsLocalParameters.
 		jsonObject["dtlsLocalParameters"] = json::object();
-
 		auto jsonDtlsLocalParametersIt    = jsonObject.find("dtlsLocalParameters");
 
 		// Add dtlsLocalParameters.fingerprints.
 		(*jsonDtlsLocalParametersIt)["fingerprints"] = json::array();
-
 		auto jsonDtlsLocalParametersFingerprintsIt   = jsonDtlsLocalParametersIt->find("fingerprints");
 		auto& fingerprints                           = this->dtlsTransport->GetLocalFingerprints();
 
@@ -284,7 +280,6 @@ namespace RTC
 
 		// Add headerExtensionIds.
 		jsonObject["headerExtensions"] = json::object();
-
 		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)

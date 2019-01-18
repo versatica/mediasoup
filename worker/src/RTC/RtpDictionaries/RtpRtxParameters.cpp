@@ -27,7 +27,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Add ssrc (optional.
+		// Add ssrc (optional).
 		if (this->ssrc != 0u)
 			jsonObject["ssrc"] = this->ssrc;
 	}

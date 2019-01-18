@@ -38,6 +38,7 @@ namespace RTC
 
 		for (auto& entry : *jsonCodecsIt)
 		{
+			// This may throw.
 			RTC::RtpCodecParameters codec(entry);
 
 			// Append to the codecs vector.
@@ -53,6 +54,7 @@ namespace RTC
 
 		for (auto& entry : *jsonEncodingsIt)
 		{
+			// This may throw.
 			RTC::RtpEncodingParameters encoding(entry);
 
 			// Append to the encodings vector.
@@ -67,6 +69,7 @@ namespace RTC
 		{
 			for (auto& entry : *jsonHeaderExtensionsIt)
 			{
+				// This may throw.
 				RTC::RtpHeaderExtensionParameters headerExtension(entry);
 
 				// If a known header extension, append to the headerExtensions vector.
@@ -78,6 +81,7 @@ namespace RTC
 		// rtcp is optional.
 		if (jsonRtcpIt != data.end() && jsonRtcpIt->is_object())
 		{
+			// This may throw.
 			this->rtcp    = RTC::RtcpParameters(*jsonRtcpIt);
 			this->hasRtcp = true;
 		}
@@ -105,8 +109,7 @@ namespace RTC
 
 		// Add codecs.
 		jsonObject["codecs"] = json::array();
-
-		auto jsonCodecsIt = jsonObject.find("codecs");
+		auto jsonCodecsIt    = jsonObject.find("codecs");
 
 		for (size_t i = 0; i < this->codecs.size(); ++i)
 		{
@@ -120,8 +123,7 @@ namespace RTC
 
 		// Add encodings.
 		jsonObject["encodings"] = json::array();
-
-		auto jsonEncodingsIt = jsonObject.find("encodings");
+		auto jsonEncodingsIt    = jsonObject.find("encodings");
 
 		for (size_t i = 0; i < this->encodings.size(); ++i)
 		{
@@ -135,8 +137,7 @@ namespace RTC
 
 		// Add headerExtensions.
 		jsonObject["headerExtensions"] = json::array();
-
-		auto jsonHeaderExtensionsIt = jsonObject.find("headerExtensions");
+		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
 		for (size_t i = 0; i < this->headerExtensions.size(); ++i)
 		{
@@ -151,6 +152,8 @@ namespace RTC
 		// Add rtcp.
 		if (this->hasRtcp)
 			this->rtcp.FillJson(jsonObject["rtcp"]);
+		else
+			jsonObject["rtcp"] = json::object();
 	}
 
 	RTC::RtpCodecParameters& RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding)
@@ -160,8 +163,7 @@ namespace RTC
 		static RTC::RtpCodecParameters fakeCodec;
 
 		uint8_t payloadType = encoding.codecPayloadType;
-
-		auto it = this->codecs.begin();
+		auto it             = this->codecs.begin();
 
 		for (; it != this->codecs.end(); ++it)
 		{
@@ -212,8 +214,8 @@ namespace RTC
 		{
 			if (payloadTypes.find(codec.payloadType) != payloadTypes.end())
 				MS_THROW_TYPE_ERROR("duplicated payloadType");
-			else
-				payloadTypes.insert(codec.payloadType);
+
+			payloadTypes.insert(codec.payloadType);
 
 			switch (codec.mimeType.subtype)
 			{
@@ -239,10 +241,10 @@ namespace RTC
 							else
 								break;
 						}
-
-						if (it == this->codecs.end())
-							MS_THROW_TYPE_ERROR("apt in RTX codec points to a non existing codec");
 					}
+
+					if (it == this->codecs.end())
+						MS_THROW_TYPE_ERROR("apt in RTX codec points to a non existing codec");
 
 					break;
 				}

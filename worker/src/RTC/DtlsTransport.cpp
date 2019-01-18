@@ -485,7 +485,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin(); it != DtlsTransport::string2FingerprintAlgorithm.end(); ++it)
+		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin();
+		     it != DtlsTransport::string2FingerprintAlgorithm.end();
+		     ++it)
 		{
 			std::string algorithmString    = it->first;
 			FingerprintAlgorithm algorithm = it->second;

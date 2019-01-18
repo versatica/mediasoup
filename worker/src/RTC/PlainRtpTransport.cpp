@@ -84,8 +84,7 @@ namespace RTC
 		else
 		{
 			jsonObject["tuple"] = json::object();
-
-			auto jsonTupleIt = jsonObject.find("tuple");
+			auto jsonTupleIt    = jsonObject.find("tuple");
 
 			(*jsonTupleIt)["localIp"]   = this->udpSocket->GetLocalIp();
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
@@ -102,8 +101,7 @@ namespace RTC
 			else
 			{
 				jsonObject["rtcpTuple"] = json::object();
-
-				auto jsonRtcpTupleIt = jsonObject.find("rtcpTuple");
+				auto jsonRtcpTupleIt    = jsonObject.find("rtcpTuple");
 
 				(*jsonRtcpTupleIt)["localIp"]   = this->rtcpUdpSocket->GetLocalIp();
 				(*jsonRtcpTupleIt)["localPort"] = this->rtcpUdpSocket->GetLocalPort();
@@ -113,7 +111,6 @@ namespace RTC
 
 		// Add headerExtensionIds.
 		jsonObject["headerExtensions"] = json::object();
-
 		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
