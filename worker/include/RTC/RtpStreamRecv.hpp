@@ -26,12 +26,11 @@ namespace RTC
 	public:
 		RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params);
 
-		virtual void FillJsonStats(json& jsonObject) override;
+		void FillJsonStats(json& jsonObject) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-		void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		void RequestKeyFrame();
 		uint8_t GetFirSeqNumber();
 
@@ -40,7 +39,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStream. */
 	protected:
-		virtual void CheckStatus() override;
+		void CheckStatus() override;
 
 		/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
@@ -53,19 +52,14 @@ namespace RTC
 		// Others.
 		uint32_t expectedPrior{ 0 };   // Packet expected at last interval.
 		uint32_t receivedPrior{ 0 };   // Packet received at last interval.
-		uint32_t lastSrTimestamp{ 0 }; // The middle 32 bits out of 64 in the NTP timestamp received in
-		                               // the most recent sender report.
-		uint64_t lastSrReceived{ 0 };  // Wallclock time representing the most recent sender report
-		                               // arrival.
+		uint32_t lastSrTimestamp{ 0 }; // The middle 32 bits out of 64 in the NTP
+		                               // timestamp received in the most recent
+		                               // sender report.
+		uint64_t lastSrReceived{ 0 };  // Wallclock time representing the most recent
+		                               // sender report arrival.
 		uint32_t transit{ 0 };         // Relative trans time for prev pkt.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
-		// RTX related.
-		bool hasRtx{ false };
-		uint8_t rtxPayloadType{ 0 };
-		uint32_t rtxSsrc{ 0 };
-		// Stats.
 		uint32_t jitter{ 0 };
-		// Others.
 		bool healthy{ true };
 		uint8_t firSeqNumber{ 0 };
 	};

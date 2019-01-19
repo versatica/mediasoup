@@ -66,10 +66,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(packet->GetSsrc() == this->rtxSsrc, "invalid ssrc on RTX packet");
+		MS_ASSERT(packet->GetSsrc() == this->params.rtxSsrc, "invalid ssrc on RTX packet");
 
 		// Check that the payload type corresponds to the one negotiated.
-		if (packet->GetPayloadType() != this->rtxPayloadType)
+		if (packet->GetPayloadType() != this->params.rtxPayloadType)
 		{
 			MS_WARN_TAG(
 			  rtx,
@@ -102,7 +102,7 @@ namespace RTC
 		  rtx,
 		  "received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
 		  ", seq:%" PRIu16 "]",
-		  this->rtxSsrc,
+		  this->params.rtxSsrc,
 		  rtxSeq,
 		  packet->GetSsrc(),
 		  packet->GetSequenceNumber());
@@ -165,7 +165,7 @@ namespace RTC
 		report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
 		report->SetJitter(this->jitter);
 
-		if (this->lastSrReceived != 0u)
+		if (this->lastSrReceived != 0)
 		{
 			// Get delay in milliseconds.
 			auto delayMs = static_cast<uint32_t>(DepLibUV::GetTime() - this->lastSrReceived);
@@ -277,14 +277,5 @@ namespace RTC
 		MS_DEBUG_TAG(rtx, "requesting key frame [ssrc:%" PRIu32 "]", this->params.ssrc);
 
 		RequestKeyFrame();
-	}
-
-	void RtpStreamRecv::SetRtx(uint8_t payloadType, uint32_t ssrc)
-	{
-		MS_TRACE();
-
-		this->hasRtx         = true;
-		this->rtxPayloadType = payloadType;
-		this->rtxSsrc        = ssrc;
 	}
 } // namespace RTC

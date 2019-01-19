@@ -303,7 +303,16 @@ namespace RTC
 		this->buffer.clear();
 	}
 
-	inline void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
+	void RtpStreamSend::RtxEncode(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(HasRtx(), "RTX not enabled on this stream");
+
+		packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
+	}
+
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -344,6 +353,7 @@ namespace RTC
 		// Iterate the buffer in reverse order and find the proper place to store the
 		// packet.
 		auto bufferItReverse = this->buffer.rbegin();
+
 		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
 		{
 			auto currentSeq = (*bufferItReverse).seq;
@@ -390,23 +400,8 @@ namespace RTC
 		(*newBufferIt).packet = packet->Clone(store);
 	}
 
-	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	void RtpStreamSend::CheckStatus()
 	{
 		MS_TRACE();
-
-		this->hasRtx         = true;
-		this->rtxPayloadType = payloadType;
-		this->rtxSsrc        = ssrc;
-		this->rtxSeq         = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
-
-	void RtpStreamSend::RtxEncode(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->hasRtx, "RTX not enabled on this stream");
-
-		packet->RtxEncode(this->rtxPayloadType, this->rtxSsrc, ++this->rtxSeq);
-	}
-
 } // namespace RTC

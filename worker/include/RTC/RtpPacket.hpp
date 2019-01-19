@@ -405,7 +405,7 @@ namespace RTC
 
 			*len = extension->len;
 
-			// In Two-Byte extension, value length may be zero. If so, return nullptr.
+			// In Two-Byte extensions value length may be zero. If so, return nullptr.
 			if (extension->len == 0)
 				return nullptr;
 

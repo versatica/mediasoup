@@ -12,14 +12,13 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include "handles/Timer.hpp"
 #include <map>
 #include <string>
 #include <vector>
 
 namespace RTC
 {
-	class Producer : public RtpStreamRecv::Listener, public Timer::Listener
+	class Producer : public RtpStreamRecv::Listener
 	{
 	public:
 		class Listener
@@ -64,16 +63,15 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonObject) const;
-		void Pause();
-		void Resume();
 		const RTC::RtpParameters& GetRtpParameters() const;
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
+		void Pause();
+		void Resume();
 		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void RequestKeyFrame(bool force = false);
-		const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& GetActiveProfiles() const;
 
 	private:
 		void MayNeedNewStream(RTC::RtpPacket* packet);
@@ -81,8 +79,6 @@ namespace RTC
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
 		void ActivateStream(RTC::RtpStreamRecv* rtpStream);
 		void DeactivateStream(RTC::RtpStreamRecv* rtpStream);
-		// TODO: Remove?
-		bool IsStreamActive(const RTC::RtpStream* rtpStream) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -92,10 +88,6 @@ namespace RTC
 		void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
-
-		/* Pure virtual methods inherited from Timer::Listener. */
-	public:
-		void OnTimer(Timer* timer) override;
 
 	public:
 		// Passed by argument.
@@ -108,14 +100,10 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		struct RtpMapping rtpMapping;
 		// Allocated by this.
-		std::map<uint32_t, RtpStreamInfo> mapSsrcRtpStreamInfo;
-		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapActiveProfiles;
-		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		struct RTC::RtpHeaderExtensionIds mappedRtpHeaderExtensionIds;
 		bool paused{ false };
-		bool isKeyFrameRequested{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
@@ -136,24 +124,6 @@ namespace RTC
 	inline bool Producer::IsPaused() const
 	{
 		return this->paused;
-	}
-
-	inline void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
-	{
-		auto it = this->mapSsrcRtpStreamInfo.find(report->GetSsrc());
-		if (it != this->mapSsrcRtpStreamInfo.end())
-		{
-			auto& info      = it->second;
-			auto* rtpStream = info.rtpStream;
-
-			rtpStream->ReceiveRtcpSenderReport(report);
-		}
-	}
-
-	inline const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& Producer::
-	  GetActiveProfiles() const
-	{
-		return this->mapActiveProfiles;
 	}
 } // namespace RTC
 

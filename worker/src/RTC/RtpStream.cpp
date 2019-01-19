@@ -106,11 +106,6 @@ namespace RTC
 		return true;
 	}
 
-	uint32_t RtpStream::GetRate(uint64_t now)
-	{
-		return this->transmissionCounter.GetRate(now);
-	}
-
 	void RtpStream::RestartStatusCheckTimer()
 	{
 		// Notify about status on next check.
@@ -211,6 +206,12 @@ namespace RTC
 		jsonObject["useNack"]     = this->useNack;
 		jsonObject["usePli"]      = this->usePli;
 		jsonObject["useFir"]      = this->useFir;
+
+		if (this->rtxSsrc != 0)
+		{
+			jsonObject["rtxSsrc"]        = this->rtxSsrc;
+			jsonObject["rtxPayloadType"] = this->rtxPayloadType;
+		}
 	}
 
 	void RtpStream::OnTimer(Timer* timer)
