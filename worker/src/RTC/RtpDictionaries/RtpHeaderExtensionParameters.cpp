@@ -39,6 +39,10 @@ namespace RTC
 
 		this->id = jsonIdIt->get<uint8_t>();
 
+		// Don't allow id 0.
+		if (this->id == 0u)
+			MS_THROW_TYPE_ERROR("invalid id 0");
+
 		// encrypt is optional.
 		if (jsonEncryptIt != data.end() && jsonEncryptIt->is_boolean())
 			this->encrypt = jsonEncryptIt->get<bool>();

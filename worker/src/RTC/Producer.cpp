@@ -29,8 +29,42 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Fill ids of well known RTP header extensions with the mapped ids (if any).
-		FillRtpHeaderExtensionIds();
+		// Fill RTP header extension ids and their mapped values.
+		// This may throw.
+		for (auto& exten : this->rtpParameters.headerExtensions)
+		{
+			auto it = this->rtpMapping.headerExtensions.find(exten.id);
+
+			// This should not happen since rtpMapping has been made reading the rtpParameters.
+			if (it == this->rtpMapping.headerExtensions.end())
+				MS_THROW_TYPE_ERROR("RTP extension id not present in the RTP mapping");
+
+			auto mappedId = it->second;
+
+			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			{
+				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
+				this->mappedRtpHeaderExtensionIds.ssrcAudioLevel = mappedId;
+			}
+
+			if (this->rtpHeaderExtensionIds.absSendTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			{
+				this->rtpHeaderExtensionIds.absSendTime = exten.id;
+				this->mappedRtpHeaderExtensionIds.absSendTime = mappedId;
+			}
+
+			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
+			{
+				this->rtpHeaderExtensionIds.mid = exten.id;
+				this->mappedRtpHeaderExtensionIds.mid = mappedId;
+			}
+
+			if (this->rtpHeaderExtensionIds.rid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
+			{
+				this->rtpHeaderExtensionIds.rid = exten.id;
+				this->mappedRtpHeaderExtensionIds.rid = mappedId;
+			}
+		}
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -57,11 +91,6 @@ namespace RTC
 
 		// Close the RTP key frame request block timer.
 		delete this->keyFrameRequestBlockTimer;
-
-		for (auto& listener : this->listeners)
-		{
-			listener->OnProducerClosed(this);
-		}
 	}
 
 	Json::Value Producer::ToJson() const
@@ -192,12 +221,9 @@ namespace RTC
 
 		this->paused = true;
 
-		MS_DEBUG_DEV("Producer paused [producerId:%" PRIu32 "]", this->producerId);
+		MS_DEBUG_DEV("Producer paused [producerId:%s]", this->producerId.c_str());
 
-		for (auto& listener : this->listeners)
-		{
-			listener->OnProducerPaused(this);
-		}
+		this->listener->OnProducerPaused(this);
 	}
 
 	void Producer::Resume()
@@ -209,16 +235,13 @@ namespace RTC
 
 		this->paused = false;
 
-		MS_DEBUG_DEV("Producer resumed [producerId:%" PRIu32 "]", this->producerId);
+		MS_DEBUG_DEV("Producer resumed [producerId:%s]", this->producerId.c_str());
 
-		for (auto& listener : this->listeners)
-		{
-			listener->OnProducerResumed(this);
-		}
+		this->listener->OnProducerResumed(this);
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			MS_DEBUG_2TAGS(rtcp, rtx, "requesting key frame after resumed");
+			MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame after resumed");
 
 			RequestKeyFrame(true);
 		}
@@ -237,6 +260,7 @@ namespace RTC
 		RTC::RtpEncodingParameters::Profile profile;
 		std::unique_ptr<RTC::RtpPacket> clonedPacket;
 
+		// TODO: use iterators!!!
 		// Media RTP stream found.
 		if (this->mapSsrcRtpStreamInfo.find(ssrc) != this->mapSsrcRtpStreamInfo.end())
 		{
@@ -370,69 +394,6 @@ namespace RTC
 
 		// Reset flag.
 		this->isKeyFrameRequested = false;
-	}
-
-	void Producer::FillRtpHeaderExtensionIds()
-	{
-		MS_TRACE();
-
-		// TODO: What is this->transportHeaderExtensionIds for???
-
-		auto& idMapping = this->rtpMapping.headerExtensionIds;
-		uint8_t ssrcAudioLevelId{ 0 };
-		uint8_t absSendTimeId{ 0 };
-		uint8_t midId{ 0 };
-		uint8_t ridId{ 0 };
-
-		for (auto& exten : this->rtpParameters.headerExtensions)
-		{
-			if (
-			  this->kind == RTC::Media::Kind::AUDIO && (ssrcAudioLevelId == 0u) &&
-			  exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
-			{
-				// TODO: Optimize this with iterators.
-
-				if (idMapping.find(exten.id) != idMapping.end())
-					ssrcAudioLevelId = idMapping[exten.id];
-				else
-					ssrcAudioLevelId = exten.id;
-
-				this->rtpHeaderExtensionIds.ssrcAudioLevel = ssrcAudioLevelId;
-			}
-
-			if ((absSendTimeId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
-			{
-				if (idMapping.find(exten.id) != idMapping.end())
-					absSendTimeId = idMapping[exten.id];
-				else
-					absSendTimeId = exten.id;
-
-				this->rtpHeaderExtensionIds.absSendTime       = absSendTimeId;
-				this->transportHeaderExtensionIds.absSendTime = exten.id;
-			}
-
-			if ((midId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
-			{
-				if (idMapping.find(exten.id) != idMapping.end())
-					midId = idMapping[exten.id];
-				else
-					midId = exten.id;
-
-				this->rtpHeaderExtensionIds.mid       = midId;
-				this->transportHeaderExtensionIds.mid = exten.id;
-			}
-
-			if ((ridId == 0u) && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
-			{
-				if (idMapping.find(exten.id) != idMapping.end())
-					ridId = idMapping[exten.id];
-				else
-					ridId = exten.id;
-
-				this->rtpHeaderExtensionIds.rid       = ridId;
-				this->transportHeaderExtensionIds.rid = exten.id;
-			}
-		}
 	}
 
 	void Producer::MayNeedNewStream(RTC::RtpPacket* packet)

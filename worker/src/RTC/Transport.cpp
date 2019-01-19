@@ -265,6 +265,8 @@ namespace RTC
 
 				// Take the transport related RTP header extensions of the Producer and
 				// add them to the Transport.
+				// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
+				// header extension ids of the Producer (and not their mapped values).
 
 				auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 

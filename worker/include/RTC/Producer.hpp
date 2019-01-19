@@ -76,7 +76,6 @@ namespace RTC
 		const std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*>& GetActiveProfiles() const;
 
 	private:
-		void FillRtpHeaderExtensionIds();
 		void MayNeedNewStream(RTC::RtpPacket* packet);
 		void CreateRtpStream(RTC::RtpEncodingParameters& encoding, uint32_t ssrc);
 		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
@@ -114,6 +113,7 @@ namespace RTC
 		Timer* keyFrameRequestBlockTimer{ nullptr };
 		// Others.
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
+		struct RTC::RtpHeaderExtensionIds mappedRtpHeaderExtensionIds;
 		bool paused{ false };
 		bool isKeyFrameRequested{ false };
 		// Timestamp when last RTCP was sent.
