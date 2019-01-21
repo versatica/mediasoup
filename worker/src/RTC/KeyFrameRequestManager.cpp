@@ -46,7 +46,7 @@ RTC::KeyFrameRequestManager::~KeyFrameRequestManager()
 {
 	MS_TRACE();
 
-	for (auto kv : this->mapSsrcPendingKeyFrameInfo)
+	for (auto& kv : this->mapSsrcPendingKeyFrameInfo)
 	{
 		auto* pendingKeyFrameInfo = kv.second;
 
