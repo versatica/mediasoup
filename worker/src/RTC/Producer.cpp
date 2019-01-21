@@ -70,7 +70,7 @@ namespace RTC
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 
-		// TODO: Create a new KeyFrameRequestManager.
+		// TODO: Uncmment when done.
 		// this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this);
 	}
 
@@ -92,7 +92,8 @@ namespace RTC
 		this->mapMappedSsrcSsrc.clear();
 		this->healthyRtpStreams.clear();
 
-		// TODO: Delete the KeyFrameRequestManager().
+		// TODO: Uncmment when done.
+		// Delete the KeyFrameRequestManager().
 		// delete this->keyFrameRequestManager;
 	}
 
@@ -358,7 +359,6 @@ namespace RTC
 			MS_ABORT("found stream does not match received packet");
 		}
 
-#ifdef MS_LOG_DEV
 		if (packet->IsKeyFrame())
 		{
 			MS_DEBUG_TAG(
@@ -366,8 +366,11 @@ namespace RTC
 			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
+
+			// TODO: Uncomment when done.
+			// Tell the keyFrameRequestManager.
+			// this->keyFrameRequestManager->KeyFrameReceived(packet->GetSsrc());
 		}
-#endif
 
 		// If paused stop here.
 		if (this->paused)
@@ -423,7 +426,7 @@ namespace RTC
 
 		if (it == this->mapMappedSsrcSsrc.end())
 		{
-			MS_WARN_TAG(rtx, "given mappedSsrc not found, ignoring");
+			MS_WARN_2TAGS(rtcp, rtx, "given mappedSsrc not found, ignoring");
 
 			return;
 		}
@@ -431,7 +434,7 @@ namespace RTC
 		uint32_t ssrc = it->second;
 
 		// TODO: Uncomment when done.
-		// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
+		// this->keyFrameRequestManager->KeyFrameNeeded(ssrc);
 	}
 
 	RTC::RtpStreamRecv* Producer::GetRtpStream(RTC::RtpPacket* packet)
@@ -829,4 +832,22 @@ namespace RTC
 
 		SetUnhealthyStream(rtpStreamRecv);
 	}
+
+	// void Producer::OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
+	// {
+	// 	MS_TRACE();
+
+	// 	auto it = this->mapSsrcRtpStream.find(ssrc);
+
+	// 	if (it == this->mapSsrcRtpStream.end())
+	// 	{
+	// 		MS_WARN_2TAGS(rtcp, rtx, "no associated stream found [ssrc:%" PRIu32 "]", ssrc);
+
+	// 		return;
+	// 	}
+
+	// 	auto* rtpStream = it->second;
+
+	// 	rtpStream->RequestKeyFrame();
+	// }
 } // namespace RTC
