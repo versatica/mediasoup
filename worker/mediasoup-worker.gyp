@@ -33,6 +33,7 @@
       'src/RTC/DtlsTransport.cpp',
       'src/RTC/IceCandidate.cpp',
       'src/RTC/IceServer.cpp',
+      'src/RTC/KeyFrameRequestManager.cpp',
       'src/RTC/NackGenerator.cpp',
       'src/RTC/PlainRtpTransport.cpp',
       'src/RTC/PortManager.cpp',
@@ -121,6 +122,7 @@
       'include/RTC/DtlsTransport.hpp',
       'include/RTC/IceCandidate.hpp',
       'include/RTC/IceServer.hpp',
+      'include/RTC/KeyFrameRequestManager.hpp',
       'include/RTC/NackGenerator.hpp',
       'include/RTC/Parameters.hpp',
       'include/RTC/PlainRtpTransport.hpp',
@@ -265,6 +267,7 @@
       [
         # C++ source files.
         'test/src/tests.cpp',
+        'test/src/RTC/TestKeyFrameRequestManager.cpp',
         'test/src/RTC/TestNackGenerator.cpp',
         'test/src/RTC/TestRtpPacket.cpp',
         'test/src/RTC/TestRtpDataCounter.cpp',
