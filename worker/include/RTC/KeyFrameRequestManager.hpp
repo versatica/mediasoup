@@ -20,6 +20,9 @@ namespace RTC
 		~PendingKeyFrameInfo();
 
 		uint32_t GetSsrc() const;
+		void SetRetryOnTimeout(bool notify);
+		bool GetRetryOnTimeout();
+		void Restart();
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -29,6 +32,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		uint32_t ssrc{ 0 };
 		Timer* timer{ nullptr };
+		bool retryOnTimeout{ true };
 	};
 
 	class KeyFrameRequestManager : public PendingKeyFrameInfo::Listener
@@ -61,6 +65,21 @@ namespace RTC
 inline uint32_t RTC::PendingKeyFrameInfo::GetSsrc() const
 {
 	return this->ssrc;
+}
+
+inline void RTC::PendingKeyFrameInfo::SetRetryOnTimeout(bool notify)
+{
+	this->retryOnTimeout = notify;
+}
+
+inline bool RTC::PendingKeyFrameInfo::GetRetryOnTimeout()
+{
+	return this->retryOnTimeout;
+}
+
+inline void RTC::PendingKeyFrameInfo::Restart()
+{
+	return this->timer->Restart();
 }
 
 #endif

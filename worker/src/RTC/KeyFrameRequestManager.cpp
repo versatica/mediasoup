@@ -1,8 +1,10 @@
 #define MS_CLASS "KeyFrameRequestManager"
+// #define MS_LOG_DEV
 
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include <utility> // std::make_pair()
 
 static uint16_t KeyFrameWaitTime{ 2000 };
 
@@ -45,9 +47,9 @@ RTC::KeyFrameRequestManager::~KeyFrameRequestManager()
 {
 	MS_TRACE();
 
-	for (auto& kv : this->mapSsrcPendingKeyFrameInfo)
+	for (auto it : this->mapSsrcPendingKeyFrameInfo)
 	{
-		auto* pendingKeyFrameInfo = kv.second;
+		auto* pendingKeyFrameInfo = it.second;
 
 		delete pendingKeyFrameInfo;
 	}
@@ -63,9 +65,16 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 
 	// There is a pending key frame for the given ssrc.
 	if (it != this->mapSsrcPendingKeyFrameInfo.end())
-		return;
+	{
+		auto* pendingKeyFrameInfo = it->second;
 
-	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
+		// Re-request the key frame if not received on time.
+		pendingKeyFrameInfo->SetRetryOnTimeout(true);
+
+		return;
+	}
+
+	this->mapSsrcPendingKeyFrameInfo.insert(std::make_pair(ssrc, new PendingKeyFrameInfo(this, ssrc)));
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
@@ -80,12 +89,12 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 	if (it != this->mapSsrcPendingKeyFrameInfo.end())
 	{
 		auto* pendingKeyFrameInfo = it->second;
-		delete pendingKeyFrameInfo;
-
-		this->mapSsrcPendingKeyFrameInfo.erase(it);
+		pendingKeyFrameInfo->Restart();
 	}
-
-	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
+	else
+	{
+		this->mapSsrcPendingKeyFrameInfo.insert(std::make_pair(ssrc, new PendingKeyFrameInfo(this, ssrc)));
+	}
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
@@ -112,14 +121,20 @@ void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* 
 
 	auto it = this->mapSsrcPendingKeyFrameInfo.find(pendingKeyFrameInfo->GetSsrc());
 
-	MS_ASSERT(it != this->mapSsrcPendingKeyFrameInfo.end(), "PendingKeyFrameInfo not present in the map")
+	MS_ASSERT(it != this->mapSsrcPendingKeyFrameInfo.end(), "PendingKeyFrameInfo not present in the map");
 
-	auto ssrc = pendingKeyFrameInfo->GetSsrc();
+	if (!pendingKeyFrameInfo->GetRetryOnTimeout())
+	{
+		auto* pendingKeyFrameInfo = it->second;
+		delete pendingKeyFrameInfo;
 
-	delete pendingKeyFrameInfo;
+		this->mapSsrcPendingKeyFrameInfo.erase(it);
+		return;
+	}
 
-	this->mapSsrcPendingKeyFrameInfo.erase(it);
+	// Best effort in case the PLI/FIR was lost. Do not retry on timeout.
+	pendingKeyFrameInfo->SetRetryOnTimeout(false);
+	pendingKeyFrameInfo->Restart();
 
-	// Best effort in case the PLI/FIR was lost.
-	this->listener->OnKeyFrameNeeded(this, ssrc);
+	this->listener->OnKeyFrameNeeded(this, pendingKeyFrameInfo->GetSsrc());
 }
