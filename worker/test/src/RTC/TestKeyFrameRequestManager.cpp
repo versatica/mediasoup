@@ -14,7 +14,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	class TestKeyFrameRequestManagerListener : public KeyFrameRequestManager::Listener
 	{
 	public:
-		void OnKeyFrameNeeded(uint32_t /*ssrc*/) override
+		void OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager */, uint32_t /*ssrc*/) override
 		{
 			this->onKeyFrameNeededTimesCalled++;
 		}

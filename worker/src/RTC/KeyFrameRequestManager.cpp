@@ -8,8 +8,7 @@ static uint16_t KeyFrameWaitTime{ 2000 };
 
 /* PendingKeyFrameInfo methods */
 
-RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(
-  PendingKeyFrameInfo::Listener* listener, uint32_t ssrc)
+RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(PendingKeyFrameInfo::Listener* listener, uint32_t ssrc)
   : listener(listener), ssrc(ssrc)
 {
 	MS_TRACE();
@@ -54,7 +53,7 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 
 	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
 
-	this->listener->OnKeyFrameNeeded(ssrc);
+	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
 
 void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
@@ -74,7 +73,7 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 
 	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
 
-	this->listener->OnKeyFrameNeeded(ssrc);
+	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
 
 void RTC::KeyFrameRequestManager::KeyFrameReceived(uint32_t ssrc)
@@ -108,5 +107,5 @@ void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* 
 	this->mapSsrcPendingKeyFrameInfo.erase(it);
 
 	// Best effort in case the PLI/FIR was lost.
-	this->listener->OnKeyFrameNeeded(ssrc);
+	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
