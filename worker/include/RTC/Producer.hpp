@@ -7,6 +7,7 @@
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+// #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -19,7 +20,7 @@
 
 namespace RTC
 {
-	class Producer : public RtpStreamRecv::Listener
+	class Producer : public RtpStreamRecv::Listener //, public KeyFrameRequestManager::Listener
 	{
 	public:
 		class Listener
@@ -90,6 +91,10 @@ namespace RTC
 		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
 
+		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
+		// public:
+		// void OnKeyFrameNeeded(KeyFrameRequestManager* keyFrameRequestManager, uint32_t ssrc) override;
+
 	public:
 		// Passed by argument.
 		const std::string id;
@@ -106,6 +111,7 @@ namespace RTC
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		std::set<RTC::RtpStreamRecv*> healthyRtpStreams;
+		// RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		struct RTC::RtpHeaderExtensionIds mappedRtpHeaderExtensionIds;
