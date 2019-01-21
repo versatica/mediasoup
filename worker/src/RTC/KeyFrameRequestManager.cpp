@@ -4,7 +4,6 @@
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <utility> // std::make_pair()
 
 static uint16_t KeyFrameWaitTime{ 2000 };
 
