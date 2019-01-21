@@ -21,7 +21,7 @@ namespace RTC
 
 		uint32_t GetSsrc() const;
 		void SetRetryOnTimeout(bool notify);
-		bool GetRetryOnTimeout();
+		bool GetRetryOnTimeout() const;
 		void Restart();
 
 		/* Pure virtual methods inherited from Timer::Listener. */
@@ -72,7 +72,7 @@ inline void RTC::PendingKeyFrameInfo::SetRetryOnTimeout(bool notify)
 	this->retryOnTimeout = notify;
 }
 
-inline bool RTC::PendingKeyFrameInfo::GetRetryOnTimeout()
+inline bool RTC::PendingKeyFrameInfo::GetRetryOnTimeout() const
 {
 	return this->retryOnTimeout;
 }
