@@ -61,8 +61,8 @@ namespace RTC
 	public:
 		void CloseProducersAndConsumers();
 		// Subclasses must also invoke the parent Close().
-		void FillJson(json& jsonObject) const      = 0;
-		void FillJsonStats(json& jsonObject) const = 0;
+		void FillJson(json& jsonObject) const     = 0;
+		void FillJsonStats(json& jsonArray) const = 0;
 		// Subclasses must implement this method and call the parent's one to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
@@ -112,12 +112,8 @@ namespace RTC
 		const std::string id;
 
 	protected:
-		// Allocated by this.
-		std::unordered_map<std::string, RTC::Producer*> mapProducers;
-		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
 		// Others.
 		RtpListener rtpListener;
-		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		uint32_t availableIncomingBitrate{ 0 };
 		uint32_t availableOutgoingBitrate{ 0 };
@@ -127,6 +123,9 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
+		std::unordered_map<std::string, RTC::Producer*> mapProducers;
+		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
+		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		Timer* rtcpTimer{ nullptr };
 	};
 } // namespace RTC

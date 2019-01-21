@@ -295,11 +295,13 @@ namespace RTC
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	void WebRtcTransport::FillJsonStats(json& jsonObject) const
+	void WebRtcTransport::FillJsonStats(json& jsonArray) const
 	{
 		MS_TRACE();
 
-		// Add type.
+		jsonArray.emplace_back(json::value_t::object);
+		auto& jsonObject = jsonArray[0];
+
 		// Add type.
 		jsonObject["type"] = "transport";
 
@@ -372,7 +374,7 @@ namespace RTC
 			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
 	}
 
-	void Router::HandleRequest(Channel::Request* request)
+	void WebRtcTransport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
@@ -391,7 +393,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
 			{
-				json data{ json::object() };
+				json data{ json::array() };
 
 				FillJsonStats(data);
 
@@ -1143,14 +1145,6 @@ namespace RTC
 
 		// Tell the parent class.
 		Transport::Connected();
-
-		// Iterate all Consumers and request key frame for them.
-		for (auto& kv : this->mapConsumers)
-		{
-			auto* consumer = kv.second;
-
-			consumer->RequestKeyFrame();
-		}
 	}
 
 	void WebRtcTransport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)

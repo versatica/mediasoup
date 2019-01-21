@@ -241,6 +241,13 @@ namespace RTC
 					rtpMapping.encodings.push_back(encodingMapping);
 				}
 
+				// The number of encodings in rtpParameters must match the number of encodings
+				// in rtpMapping.
+				if (rtpParameters.encodings.size() != rtpMapping.encodings.size())
+				{
+					MS_THROW_TYPE_ERROR("rtpParameters.encodings size does not match rtpMapping.encodings size");
+				}
+
 				// This may throw.
 				RTC::Producer* producer =
 				  new RTC::Producer(producerId, this, kind, rtpParameters, rtpMapping);
@@ -439,6 +446,15 @@ namespace RTC
 
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+
+		// Iterate all Consumers and tell them that the Transport is connected, so they
+		// will request key frames.
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+
+			consumer->TransportConnected();
+		}
 	}
 
 	void Transport::Disconnected()
