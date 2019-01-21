@@ -27,13 +27,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// The number of encodings in rtpParameters must match the number of enodings
-		// in rtpMapping.
-		if (rtpParameters.encodings.size() != rtpMapping.encodings.size())
-		{
-			MS_THROW_TYPE_ERROR("rtpParameters.encodings size does not match rtpMapping.encodings size");
-		}
-
 		// Fill RTP header extension ids and their mapped values.
 		// This may throw.
 		for (auto& exten : this->rtpParameters.headerExtensions)
@@ -96,56 +89,229 @@ namespace RTC
 		this->mapSsrcRtpStream.clear();
 		this->mapRtxSsrcRtpStream.clear();
 		this->mapRtpStreamMappedSsrc.clear();
+		this->mapMappedSsrcSsrc.clear();
 		this->healthyRtpStreams.clear();
 
 		// TODO: Delete the KeyFrameRequestManager().
 		// delete this->keyFrameRequestManager;
 	}
 
-	// TODO
 	void Producer::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
-	}
 
-	// TODO
-	void Producer::FillJsonStats(json& jsonObject) const
-	{
-		MS_TRACE();
-	}
+		// Add id.
+		jsonObject["id"] = this->id;
 
-	void Producer::Pause()
-	{
-		MS_TRACE();
+		// Add kind.
+		jsonObject["kind"] = RTC::Media::GetString(this->kind);
 
-		if (this->paused)
-			return;
+		// Add rtpParameters.
+		this->rtpParameters.FillJson(jsonObject["rtpParameters"]);
 
-		this->paused = true;
+		// Add rtpMapping.
+		jsonObject["rtpMapping"] = json::object();
+		auto jsonRtpMappingIt    = jsonObject.find("rtpMapping");
 
-		MS_DEBUG_DEV("Producer paused [producerId:%s]", this->producerId.c_str());
-
-		this->listener->OnProducerPaused(this);
-	}
-
-	void Producer::Resume()
-	{
-		MS_TRACE();
-
-		if (!this->paused)
-			return;
-
-		this->paused = false;
-
-		MS_DEBUG_DEV("Producer resumed [producerId:%s]", this->producerId.c_str());
-
-		this->listener->OnProducerResumed(this);
-
-		if (this->kind == RTC::Media::Kind::VIDEO)
+		// Add rtpMapping.codecs.
 		{
-			MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame after resumed");
+			(*jsonRtpMappingIt)["codecs"] = json::array();
+			auto jsonCodecsIt             = jsonRtpMappingIt->find("codecs");
+			size_t idx                    = 0;
 
-			RequestKeyFrame(true);
+			for (auto& kv : this->rtpMapping.codecs)
+			{
+				jsonCodecsIt->emplace_back(json::value_t::object);
+
+				auto& jsonEntry        = (*jsonCodecsIt)[idx];
+				auto payloadType       = kv.first;
+				auto mappedPayloadType = kv.second;
+
+				jsonEntry[payloadType] = mappedPayloadType;
+
+				++idx;
+			}
+		}
+
+		// Add rtpMapping.headerExtensions.
+		{
+			(*jsonRtpMappingIt)["headerExtensions"] = json::array();
+			auto jsonHeaderExtensionsIt             = jsonRtpMappingIt->find("headerExtensions");
+			size_t idx                              = 0;
+
+			for (auto& kv : this->rtpMapping.headerExtensions)
+			{
+				jsonHeaderExtensionsIt->emplace_back(json::value_t::object);
+
+				auto& jsonEntry = (*jsonHeaderExtensionsIt)[idx];
+				auto id         = kv.first;
+				auto mappedId   = kv.second;
+
+				jsonEntry[id] = mappedId;
+
+				++idx;
+			}
+		}
+
+		// Add rtpMapping.encodings.
+		{
+			(*jsonRtpMappingIt)["encodings"] = json::array();
+			auto jsonEncodingsIt             = jsonRtpMappingIt->find("encodings");
+
+			for (size_t i = 0; i < this->rtpMapping.encodings.size(); ++i)
+			{
+				jsonEncodingsIt->emplace_back(json::value_t::object);
+
+				auto& jsonEntry       = (*jsonEncodingsIt)[i];
+				auto& encodingMapping = this->rtpMapping.encodings[i];
+
+				if (!encodingMapping.rid.empty())
+					jsonEntry["rid"] = encodingMapping.rid;
+				else
+					jsonEntry["rid"] = nullptr;
+
+				if (encodingMapping.ssrc != 0u)
+					jsonEntry["ssrc"] = encodingMapping.ssrc;
+				else
+					jsonEntry["ssrc"] = nullptr;
+
+				if (encodingMapping.rtxSsrc != 0u)
+					jsonEntry["rtxSsrc"] = encodingMapping.rtxSsrc;
+				else
+					jsonEntry["rtxSsrc"] = nullptr;
+
+				jsonEntry["mappedSsrc"] = encodingMapping.mappedSsrc;
+			}
+		}
+
+		// Add rtpStreams.
+		jsonObject["rtpStreams"] = json::array();
+		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
+		size_t rtpStreamIdx      = 0;
+		float lossPercentage     = 0;
+
+		for (auto& kv : this->mapSsrcRtpStream)
+		{
+			jsonRtpStreamsIt->emplace_back(json::value_t::object);
+
+			auto& jsonEntry = (*jsonRtpStreamsIt)[rtpStreamIdx];
+			auto* rtpStream = kv.second;
+
+			rtpStream->FillJson(jsonEntry);
+
+			lossPercentage += rtpStream->GetLossPercentage();
+			++rtpStreamIdx;
+		}
+
+		if (!this->mapSsrcRtpStream.empty())
+			lossPercentage = lossPercentage / this->mapSsrcRtpStream.size();
+
+		// Add lossPercentage.
+		jsonObject["lossPercentage"] = lossPercentage;
+
+		// Add paused.
+		jsonObject["paused"] = this->paused;
+	}
+
+	void Producer::FillJsonStats(json& jsonArray) const
+	{
+		MS_TRACE();
+
+		size_t rtpStreamIdx = 0;
+
+		for (auto& kv : this->mapSsrcRtpStream)
+		{
+			jsonArray.emplace_back(json::value_t::object);
+
+			auto& jsonEntry = jsonArray[rtpStreamIdx];
+			auto* rtpStream = kv.second;
+
+			rtpStream->FillJsonStats(jsonEntry);
+
+			++rtpStreamIdx;
+		}
+	}
+
+	void Producer::HandleRequest(Channel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+			case Channel::Request::MethodId::PRODUCER_DUMP:
+			{
+				json data{ json::object() };
+
+				FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_GET_STATS:
+			{
+				json data{ json::array() };
+
+				FillJsonStats(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_PAUSE:
+			{
+				if (!this->paused)
+				{
+					this->paused = true;
+
+					MS_DEBUG_DEV("Producer paused [producerId:%s]", this->producerId.c_str());
+
+					this->listener->OnProducerPaused(this);
+				}
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::PRODUCER_RESUME:
+			{
+				if (this->paused)
+				{
+					this->paused = false;
+
+					MS_DEBUG_DEV("Producer resumed [producerId:%s]", this->producerId.c_str());
+
+					this->listener->OnProducerResumed(this);
+
+					if (this->kind == RTC::Media::Kind::VIDEO)
+					{
+						MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame after resumed");
+
+						// Request a key frame for all streams.
+						for (auto& kv : this->mapSsrcRtpStream)
+						{
+							auto ssrc = kv.first;
+
+							// TODO: Uncomment when done.
+							// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
+						}
+					}
+				}
+
+				request->Accept();
+
+				break;
+			}
+
+				// TODO: More.
+
+			default:
+			{
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
 		}
 	}
 
@@ -208,7 +374,7 @@ namespace RTC
 			return;
 
 		// Mangle the packet before providing the listener with it.
-		MangleRtpPacket(packet);
+		MangleRtpPacket(packet, rtpStream);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 	}
@@ -246,14 +412,26 @@ namespace RTC
 		this->lastRtcpSentTime = now;
 	}
 
-	void Producer::RequestKeyFrame(bool force)
+	void Producer::RequestKeyFrame(uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
 		if (this->kind != RTC::Media::Kind::VIDEO || this->paused)
 			return;
 
-		// TODO: Use the new KeyFrameRequestManager.
+		auto it = this->mapMappedSsrcSsrc.find(mappedSsrc);
+
+		if (it == this->mapMappedSsrcSsrc.end())
+		{
+			MS_WARN_TAG(rtx, "given mappedSsrc not found, ignoring");
+
+			return;
+		}
+
+		uint32_t ssrc = it->second;
+
+		// TODO: Uncomment when done.
+		// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 	}
 
 	RTC::RtpStreamRecv* Producer::GetRtpStream(RTC::RtpPacket* packet)
@@ -467,13 +645,15 @@ namespace RTC
 		this->mapSsrcRtpStream[ssrc] = rtpStream;
 
 		// Set the mapped SSRC.
-		this->mapRtpStreamMappedSsrc[rtpStream] = encodingMapping.mappedSsrc;
+		this->mapRtpStreamMappedSsrc[rtpStream]             = encodingMapping.mappedSsrc;
+		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
 
 		// Set stream as healthy.
 		SetHealthyStream(rtpStream);
 
-		// Request a key frame since we may have lost the first packets of this stream.
-		RequestKeyFrame(true);
+		// Request a key frame for this stream since we may have lost the first packets.
+		// TODO: Uncomment when done.
+		// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 
 		return rtpStream;
 	}
@@ -509,39 +689,38 @@ namespace RTC
 	}
 
 	// TODO: Must set mapped ssrc!
-	void Producer::MangleRtpPacket(RTC::RtpPacket* packet) const
+	void Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
 
-		// auto& codecPayloadTypeMap = this->rtpMapping.codecPayloadTypes;
-		// auto payloadType          = packet->GetPayloadType();
+		// Mangle the payload type.
+		uint8_t payloadType = packet->GetPayloadType();
+		auto it             = this->rtpMapping.codecs.find(payloadType);
 
-		// if (codecPayloadTypeMap.find(payloadType) != codecPayloadTypeMap.end())
-		// {
-		// 	packet->SetPayloadType(codecPayloadTypeMap.at(payloadType));
-		// }
+		if (it != this->rtpMapping.codecs.end())
+		{
+			uint8_t mappedPayloadType = it->second;
 
-		// auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
+			packet->SetPayloadType(mappedPayloadType);
+		}
 
-		// packet->MangleExtensionHeaderIds(headerExtensionIdMap);
+		// Mangle RTP header extension ids.
+		if (this->mappedRtpHeaderExtensionIds.ssrcAudioLevel != 0u)
+			packet->SetAudioLevelExtensionId(this->mappedRtpHeaderExtensionIds.ssrcAudioLevel);
 
-		// if (this->rtpHeaderExtensionIds.ssrcAudioLevel != 0u)
-		// {
-		// 	packet->AddExtensionMapping(
-		// 	  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->rtpHeaderExtensionIds.ssrcAudioLevel);
-		// }
+		if (this->mappedRtpHeaderExtensionIds.absSendTime != 0u)
+			packet->SetAbsSendTimeExtensionId(this->mappedRtpHeaderExtensionIds.absSendTime);
 
-		// if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-		// {
-		// 	packet->AddExtensionMapping(
-		// 	  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->rtpHeaderExtensionIds.absSendTime);
-		// }
+		if (this->mappedRtpHeaderExtensionIds.mid != 0u)
+			packet->SetMidExtensionId(this->mappedRtpHeaderExtensionIds.mid);
 
-		// if (this->rtpHeaderExtensionIds.rid != 0u)
-		// {
-		// 	packet->AddExtensionMapping(
-		// 	  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->rtpHeaderExtensionIds.rid);
-		// }
+		if (this->mappedRtpHeaderExtensionIds.rid != 0u)
+			packet->SetRidExtensionId(this->mappedRtpHeaderExtensionIds.rid);
+
+		// Mangle the SSRC.
+		uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+
+		packet->SetSsrc(mappedSsrc);
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(

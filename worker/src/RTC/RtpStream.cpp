@@ -38,7 +38,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Add params.
 		this->params.FillJson(jsonObject["params"]);
+
+		// Add healthy.
+		jsonObject["healthy"] = this->healthy;
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
@@ -62,6 +66,9 @@ namespace RTC
 		jsonObject["nackRtpPacketCount"] = this->nackRtpPacketCount;
 		jsonObject["pliCount"]           = this->pliCount;
 		jsonObject["firCount"]           = this->firCount;
+
+		// Add healthy.
+		jsonObject["healthy"] = this->healthy;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -203,15 +210,19 @@ namespace RTC
 		jsonObject["payloadType"] = this->payloadType;
 		jsonObject["mimeType"]    = this->mimeType.ToString();
 		jsonObject["clockRate"]   = this->clockRate;
-		jsonObject["useNack"]     = this->useNack;
-		jsonObject["usePli"]      = this->usePli;
-		jsonObject["useFir"]      = this->useFir;
+
+		if (!this->rid.empty())
+			jsonObject["rid"] = this->rid;
 
 		if (this->rtxSsrc != 0)
 		{
 			jsonObject["rtxSsrc"]        = this->rtxSsrc;
 			jsonObject["rtxPayloadType"] = this->rtxPayloadType;
 		}
+
+		jsonObject["useNack"] = this->useNack;
+		jsonObject["usePli"]  = this->usePli;
+		jsonObject["useFir"]  = this->useFir;
 	}
 
 	void RtpStream::OnTimer(Timer* timer)

@@ -57,10 +57,9 @@ namespace RTC
 		                               // sender report.
 		uint64_t lastSrReceived{ 0 };  // Wallclock time representing the most recent
 		                               // sender report arrival.
-		uint32_t transit{ 0 };         // Relative trans time for prev pkt.
+		uint32_t transit{ 0 };         // Relative transit time for prev packet.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		uint32_t jitter{ 0 };
-		bool healthy{ true };
 		uint8_t firSeqNumber{ 0 };
 	};
 

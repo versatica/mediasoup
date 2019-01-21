@@ -43,7 +43,7 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonObject) const = 0;
+		void FillJsonStats(json& jsonArray) const = 0;
 		bool IsStarted() const;
 		void Pause();
 		void Resume();

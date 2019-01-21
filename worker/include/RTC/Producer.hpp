@@ -63,16 +63,15 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonObject) const;
+		void FillJsonStats(json& jsonArray) const;
+		void HandleRequest(Channel::Request* request);
 		const RTC::RtpParameters& GetRtpParameters() const;
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
-		void Pause();
-		void Resume();
 		bool IsPaused() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
-		void RequestKeyFrame(bool force = false);
+		void RequestKeyFrame(uint32_t mappedSsrc);
 
 	private:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
@@ -80,7 +79,7 @@ namespace RTC
 		  uint32_t ssrc, const RTC::RtpCodecParameters& codec, size_t encodingIdx);
 		void SetHealthyStream(RTC::RtpStreamRecv* rtpStream);
 		void SetUnhealthyStream(RTC::RtpStreamRecv* rtpStream);
-		void MangleRtpPacket(RTC::RtpPacket* packet) const;
+		void MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -105,6 +104,7 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
+		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		std::set<RTC::RtpStreamRecv*> healthyRtpStreams;
 		// Others.
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;

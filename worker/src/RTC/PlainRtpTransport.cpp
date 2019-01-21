@@ -126,9 +126,12 @@ namespace RTC
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	void PlainRtpTransport::FillJsonStats(json& jsonObject) const
+	void PlainRtpTransport::FillJsonStats(json& jsonArray) const
 	{
 		MS_TRACE();
+
+		jsonArray.emplace_back(json::value_t::object);
+		auto& jsonObject = jsonArray[0];
 
 		// Add type.
 		jsonObject["type"] = "transport";
@@ -154,7 +157,7 @@ namespace RTC
 			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
 	}
 
-	void Router::HandleRequest(Channel::Request* request)
+	void PlainRtpTransport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
@@ -173,7 +176,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
 			{
-				json data{ json::object() };
+				json data{ json::array() };
 
 				FillJsonStats(data);
 
