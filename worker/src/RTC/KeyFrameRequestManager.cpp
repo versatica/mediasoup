@@ -109,5 +109,4 @@ void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* 
 
 	// Best effort in case the PLI/FIR was lost.
 	this->listener->OnKeyFrameNeeded(ssrc);
-
 }

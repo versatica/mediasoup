@@ -29,6 +29,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		uint32_t ssrc{ 0 };
 		Timer* timer{ nullptr };
+		bool notifyOnTimeout{ true };
 	};
 
 	class KeyFrameRequestManager : public PendingKeyFrameInfo::Listener
