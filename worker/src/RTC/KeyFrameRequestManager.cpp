@@ -74,7 +74,7 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 		return;
 	}
 
-	this->mapSsrcPendingKeyFrameInfo.insert(std::make_pair(ssrc, new PendingKeyFrameInfo(this, ssrc)));
+	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
@@ -93,7 +93,7 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 	}
 	else
 	{
-		this->mapSsrcPendingKeyFrameInfo.insert(std::make_pair(ssrc, new PendingKeyFrameInfo(this, ssrc)));
+		this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
 	}
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
