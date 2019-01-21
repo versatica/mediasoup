@@ -19,14 +19,20 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 			this->onKeyFrameNeededTimesCalled++;
 		}
 
+		void Reset()
+		{
+			this->onKeyFrameNeededTimesCalled = 0;
+		}
+
 	public:
 		size_t onKeyFrameNeededTimesCalled{ 0 };
 	};
 
 	static TestKeyFrameRequestManagerListener listener;
 
-	SECTION("KeyFrame requested once, not received on time")
+	SECTION("key frame requested once, not received on time")
 	{
+		listener.Reset();
 		KeyFrameRequestManager keyFrameRequestManager(&listener);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
@@ -36,8 +42,9 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
 	}
 
-	SECTION("KeyFrame requested many times, not received on time")
+	SECTION("key frame requested many times, not received on time")
 	{
+		listener.Reset();
 		KeyFrameRequestManager keyFrameRequestManager(&listener);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
@@ -47,11 +54,12 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 
 		DepLibUV::RunLoop();
 
-		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
+		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
 	}
 
-	SECTION("KeyFrame is received on time")
+	SECTION("key frame is received on time")
 	{
+		listener.Reset();
 		KeyFrameRequestManager keyFrameRequestManager(&listener);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
@@ -59,6 +67,6 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 
 		DepLibUV::RunLoop();
 
-		REQUIRE(listener.onKeyFrameNeededTimesCalled == 3);
+		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
 	}
 }

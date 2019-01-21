@@ -4,8 +4,6 @@
 #include "handles/Timer.hpp"
 #include <map>
 
-static uint16_t KeyFrameWaitTime{ 2000 };
-
 namespace RTC
 {
 	class PendingKeyFrameInfo : public Timer::Listener
@@ -44,9 +42,9 @@ namespace RTC
 
 	public:
 		explicit KeyFrameRequestManager(Listener* listener);
-		~KeyFrameRequestManager() = default;
 
 		void KeyFrameNeeded(uint32_t ssrc);
+		void ForceKeyFrameNeeded(uint32_t ssrc);
 		void KeyFrameReceived(uint32_t ssrc);
 
 		/* Pure virtual methods inherited from PendingKeyFrameInfo::Listener. */
@@ -59,40 +57,9 @@ namespace RTC
 	};
 } // namespace RTC
 
-/* Inline PendingKeyFrameInfo methods */
-
-inline RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(
-  PendingKeyFrameInfo::Listener* listener, uint32_t ssrc)
-  : listener(listener), ssrc(ssrc)
-{
-	this->timer = new Timer(this);
-	this->timer->Start(KeyFrameWaitTime);
-}
-
-inline RTC::PendingKeyFrameInfo::~PendingKeyFrameInfo()
-{
-	this->timer->Stop();
-	delete this->timer;
-}
-
 inline uint32_t RTC::PendingKeyFrameInfo::GetSsrc() const
 {
 	return this->ssrc;
-}
-
-inline void RTC::PendingKeyFrameInfo::OnTimer(Timer* timer)
-{
-	if (timer == this->timer)
-	{
-		this->listener->OnKeyFrameRequestTimeout(this);
-	}
-}
-
-/* Inline KeyFrameRequestManager methods */
-
-inline RTC::KeyFrameRequestManager::KeyFrameRequestManager(KeyFrameRequestManager::Listener* listener)
-  : listener(listener)
-{
 }
 
 #endif
