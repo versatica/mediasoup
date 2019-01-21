@@ -101,10 +101,13 @@ void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* 
 
 	MS_ASSERT(it != this->mapSsrcPendingKeyFrameInfo.end(), "PendingKeyFrameInfo not present in the map")
 
-	// Best effort in case the PLI/FIR was lost
-	this->listener->OnKeyFrameNeeded(pendingKeyFrameInfo->GetSsrc());
+	auto ssrc = pendingKeyFrameInfo->GetSsrc();
 
 	delete pendingKeyFrameInfo;
 
 	this->mapSsrcPendingKeyFrameInfo.erase(it);
+
+	// Best effort in case the PLI/FIR was lost.
+	this->listener->OnKeyFrameNeeded(ssrc);
+
 }
