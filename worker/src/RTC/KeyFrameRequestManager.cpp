@@ -48,7 +48,7 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 
 	auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
 
-	// There is a pending keyframe for the given ssrc.
+	// There is a pending key frame for the given ssrc.
 	if (it != this->mapSsrcPendingKeyFrameInfo.end())
 		return;
 
@@ -63,7 +63,7 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 
 	auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
 
-	// There is a pending keyframe for the given ssrc.
+	// There is a pending key frame for the given ssrc.
 	if (it != this->mapSsrcPendingKeyFrameInfo.end())
 	{
 		auto* pendingKeyFrameInfo = it->second;
@@ -83,7 +83,7 @@ void RTC::KeyFrameRequestManager::KeyFrameReceived(uint32_t ssrc)
 
 	auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
 
-	// There is no pending keyframe for the given ssrc.
+	// There is no pending key frame for the given ssrc.
 	if (it == this->mapSsrcPendingKeyFrameInfo.end())
 		return;
 
@@ -100,6 +100,9 @@ void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* 
 	auto it = this->mapSsrcPendingKeyFrameInfo.find(pendingKeyFrameInfo->GetSsrc());
 
 	MS_ASSERT(it != this->mapSsrcPendingKeyFrameInfo.end(), "PendingKeyFrameInfo not present in the map")
+
+	// Best effort in case the PLI/FIR was lost
+	this->listener->OnKeyFrameNeeded(pendingKeyFrameInfo->GetSsrc());
 
 	delete pendingKeyFrameInfo;
 

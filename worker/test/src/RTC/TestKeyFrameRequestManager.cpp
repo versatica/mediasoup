@@ -39,7 +39,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 
 		DepLibUV::RunLoop();
 
-		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
+		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
 	}
 
 	SECTION("key frame requested many times, not received on time")
@@ -54,7 +54,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 
 		DepLibUV::RunLoop();
 
-		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
+		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
 	}
 
 	SECTION("key frame is received on time")
