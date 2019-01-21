@@ -111,63 +111,68 @@ namespace RTC
 		}
 	}
 
-	bool Parameters::GetBoolean(const std::string& key)
+	bool Parameters::GetBoolean(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].booleanValue;
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.booleanValue;
 	}
 
-	int32_t Parameters::GetInteger(const std::string& key)
+	int32_t Parameters::GetInteger(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].integerValue;
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.integerValue;
 	}
 
-	double Parameters::GetDouble(const std::string& key)
+	double Parameters::GetDouble(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].doubleValue;
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.doubleValue;
 	}
 
-	std::string& Parameters::GetString(const std::string& key)
+	const std::string& Parameters::GetString(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].stringValue;
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.stringValue;
 	}
 
-	std::vector<int32_t>& Parameters::GetArrayOfIntegers(const std::string& key)
+	const std::vector<int32_t>& Parameters::GetArrayOfIntegers(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].arrayOfIntegers;
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.arrayOfIntegers;
 	}
 } // namespace RTC

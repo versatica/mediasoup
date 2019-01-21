@@ -65,18 +65,18 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void Set(json& data);
 
-		bool HasBoolean(const std::string& key);
-		bool HasInteger(const std::string& key);
-		bool HasDouble(const std::string& key);
-		bool HasString(const std::string& key);
-		bool HasArrayOfIntegers(const std::string& key);
-		bool IncludesInteger(const std::string& key, int32_t integer);
+		bool HasBoolean(const std::string& key) const;
+		bool HasInteger(const std::string& key) const;
+		bool HasDouble(const std::string& key) const;
+		bool HasString(const std::string& key) const;
+		bool HasArrayOfIntegers(const std::string& key) const;
+		bool IncludesInteger(const std::string& key, int32_t integer) const;
 
-		bool GetBoolean(const std::string& key);
-		int32_t GetInteger(const std::string& key);
-		double GetDouble(const std::string& key);
-		std::string& GetString(const std::string& key);
-		std::vector<int32_t>& GetArrayOfIntegers(const std::string& key);
+		bool GetBoolean(const std::string& key) const;
+		int32_t GetInteger(const std::string& key) const;
+		double GetDouble(const std::string& key) const;
+		const std::string& GetString(const std::string& key) const;
+		const std::vector<int32_t>& GetArrayOfIntegers(const std::string& key) const;
 
 		void SetBoolean(const std::string& key, bool booleanValue);
 		void SetInteger(const std::string& key, int32_t integerValue);
@@ -90,52 +90,75 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline bool Parameters::HasBoolean(const std::string& key)
+	inline bool Parameters::HasBoolean(const std::string& key) const
 	{
-		if (this->mapKeyValues.find(key) == this->mapKeyValues.end())
+		auto it = this->mapKeyValues.find(key);
+
+		if (it == this->mapKeyValues.end())
 			return false;
 
-		return this->mapKeyValues[key].type == Value::Type::BOOLEAN;
+		auto& value = it->second;
+
+		return value.type == Value::Type::BOOLEAN;
 	}
 
-	inline bool Parameters::HasInteger(const std::string& key)
+	inline bool Parameters::HasInteger(const std::string& key) const
 	{
-		if (this->mapKeyValues.find(key) == this->mapKeyValues.end())
+		auto it = this->mapKeyValues.find(key);
+
+		if (it == this->mapKeyValues.end())
 			return false;
 
-		return this->mapKeyValues[key].type == Value::Type::INTEGER;
+		auto& value = it->second;
+
+		return value.type == Value::Type::INTEGER;
 	}
 
-	inline bool Parameters::HasDouble(const std::string& key)
+	inline bool Parameters::HasDouble(const std::string& key) const
 	{
-		if (this->mapKeyValues.find(key) == this->mapKeyValues.end())
+		auto it = this->mapKeyValues.find(key);
+
+		if (it == this->mapKeyValues.end())
 			return false;
 
-		return this->mapKeyValues[key].type == Value::Type::DOUBLE;
+		auto& value = it->second;
+
+		return value.type == Value::Type::DOUBLE;
 	}
 
-	inline bool Parameters::HasString(const std::string& key)
+	inline bool Parameters::HasString(const std::string& key) const
 	{
-		if (this->mapKeyValues.find(key) == this->mapKeyValues.end())
+		auto it = this->mapKeyValues.find(key);
+
+		if (it == this->mapKeyValues.end())
 			return false;
 
-		return this->mapKeyValues[key].type == Value::Type::STRING;
+		auto& value = it->second;
+
+		return value.type == Value::Type::STRING;
 	}
 
-	inline bool Parameters::HasArrayOfIntegers(const std::string& key)
+	inline bool Parameters::HasArrayOfIntegers(const std::string& key) const
 	{
-		if (this->mapKeyValues.find(key) == this->mapKeyValues.end())
+		auto it = this->mapKeyValues.find(key);
+
+		if (it == this->mapKeyValues.end())
 			return false;
 
-		return this->mapKeyValues[key].type == Value::Type::ARRAY_OF_INTEGERS;
+		auto& value = it->second;
+
+		return value.type == Value::Type::ARRAY_OF_INTEGERS;
 	}
 
-	inline bool Parameters::IncludesInteger(const std::string& key, int32_t integer)
+	inline bool Parameters::IncludesInteger(const std::string& key, int32_t integer) const
 	{
-		if (this->mapKeyValues.find(key) == this->mapKeyValues.end())
+		auto it = this->mapKeyValues.find(key);
+
+		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& array = this->mapKeyValues[key].arrayOfIntegers;
+		auto& value = it->second;
+		auto& array = value.arrayOfIntegers;
 
 		return std::find(array.begin(), array.end(), integer) != array.end();
 	}

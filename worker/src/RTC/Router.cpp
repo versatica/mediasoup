@@ -407,7 +407,7 @@ namespace RTC
 		}
 	}
 
-	void Router::OnTransportProducerStreamHealthy(
+	void Router::OnTransportProducerRtpStreamHealthy(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
@@ -419,11 +419,11 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->ProducerStreamHealthy(rtpStream, mappedSsrc);
+			consumer->ProducerRtpStreamHealthy(rtpStream, mappedSsrc);
 		}
 	}
 
-	void Router::OnTransportProducerStreamUnhealthy(
+	void Router::OnTransportProducerRtpStreamUnhealthy(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  const RTC::RtpStream* rtpStream,
@@ -435,7 +435,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->ProducerStreamUnhealthy(rtpStream, mappedSsrc);
+			consumer->ProducerRtpStreamUnhealthy(rtpStream, mappedSsrc);
 		}
 	}
 

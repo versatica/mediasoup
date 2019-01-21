@@ -13,6 +13,7 @@
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -26,9 +27,9 @@ namespace RTC
 		public:
 			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
-			virtual void OnProducerStreamHealthy(
+			virtual void OnProducerRtpStreamHealthy(
 			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
-			virtual void OnProducerStreamUnhealthy(
+			virtual void OnProducerRtpStreamUnhealthy(
 			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)          = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
@@ -41,7 +42,6 @@ namespace RTC
 			uint32_t ssrc{ 0 };
 			uint32_t rtxSsrc{ 0 };
 			uint32_t mappedSsrc{ 0 };
-			uint32_t mappedRtxSsrc{ 0 };
 		}
 
 		public : struct RtpMapping
@@ -74,11 +74,12 @@ namespace RTC
 		void RequestKeyFrame(bool force = false);
 
 	private:
-		void MayNeedNewStream(RTC::RtpPacket* packet);
-		void CreateRtpStream(RTC::RtpEncodingParameters& encoding, uint32_t ssrc);
-		void ApplyRtpMapping(RTC::RtpPacket* packet) const;
-		void ActivateStream(RTC::RtpStreamRecv* rtpStream);
-		void DeactivateStream(RTC::RtpStreamRecv* rtpStream);
+		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
+		RTC::RtpStreamRecv* CreateRtpStream(
+		  uint32_t ssrc, RTC::RtpCodecParameters& codec, size_t encodingIdx);
+		void SetHealthyStream(RTC::RtpStreamRecv* rtpStream);
+		void SetUnhealthyStream(RTC::RtpStreamRecv* rtpStream);
+		void MangleRtpRtpPacket(RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -100,6 +101,9 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		struct RtpMapping rtpMapping;
 		// Allocated by this.
+		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
+		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
+		std::set<RTC::RtpStreamRecv*> healthyRtpStreams;
 		// Others.
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		struct RTC::RtpHeaderExtensionIds mappedRtpHeaderExtensionIds;

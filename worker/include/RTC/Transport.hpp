@@ -33,12 +33,12 @@ namespace RTC
 			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) = 0;
-			virtual void OnTransportProducerStreamHealthy(
+			virtual void OnTransportProducerRtpStreamHealthy(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
 			  const RTC::RtpStream* rtpStream,
 			  uint32_t mappedSsrc) = 0;
-			virtual void OnTransportProducerStreamUnhealthy(
+			virtual void OnTransportProducerRtpStreamUnhealthy(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
 			  const RTC::RtpStream* rtpStream,
@@ -90,9 +90,9 @@ namespace RTC
 	public:
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
-		void OnProducerStreamHealthy(
+		void OnProducerRtpStreamHealthy(
 		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
-		void OnProducerStreamUnhealthy(
+		void OnProducerRtpStreamUnhealthy(
 		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;

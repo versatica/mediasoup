@@ -7,6 +7,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "handles/Timer.hpp"
+#include <string>
 
 using json = nlohmann::json;
 
@@ -23,6 +24,7 @@ namespace RTC
 			uint8_t payloadType{ 0 };
 			RTC::RtpCodecMimeType mimeType;
 			uint32_t clockRate{ 0 };
+			std::string rid;
 			uint32_t rtxSsrc{ 0 };
 			uint8_t rtxPayloadType{ 0 };
 			bool useNack{ false };
@@ -40,8 +42,11 @@ namespace RTC
 		uint8_t GetPayloadType() const;
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		uint32_t GetClockRate() const;
+		const std::string& GetRid() const;
 		bool HasRtx() const;
 		virtual void SetRtx(uint8_t payloadType, uint32_t ssrc);
+		uint32_t GetRtxSsrc() const;
+		uint8_t GetRtxPayloadType() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		void RestartStatusCheckTimer();
 		void StopStatusCheckTimer();
@@ -114,6 +119,11 @@ namespace RTC
 		return this->params.clockRate;
 	}
 
+	inline const std::string& RtpStream::GetRid() const
+	{
+		return this->params.rid;
+	}
+
 	inline bool RtpStream::HasRtx() const
 	{
 		return this->params.rtxSsrc != 0;
@@ -123,6 +133,16 @@ namespace RTC
 	{
 		this->params.rtxPayloadType = payloadType;
 		this->params.rtxSsrc        = ssrc;
+	}
+
+	inline uint32_t RtpStream::GetRtxSsrc() const
+	{
+		return this->params.rtxSsrc;
+	}
+
+	inline uint8_t RtpStream::GetRtxPayloadType() const
+	{
+		return this->params.rtxPayloadType;
 	}
 
 	inline uint32_t RtpStream::GetRate(uint64_t now)

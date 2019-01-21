@@ -214,14 +214,6 @@ namespace RTC
 
 					RTC::Producer::RtpEncodingMapping encodingMapping;
 
-					// mappedSsrc is mandatory.
-					auto jsonMappedSsrcIt = encoding.find("mappedSsrc");
-
-					if (jsonMappedSsrcIt == encoding.end() || !jsonMappedSsrcIt->is_number_unsigned())
-						MS_THROW_TYPE_ERROR("missing mappedSsrc in entry in mapping.encodings");
-
-					encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
-
 					// ssrc is optional.
 					auto jsonSsrcIt = encoding.find("ssrc");
 
@@ -238,15 +230,18 @@ namespace RTC
 					if (jsonSsrcIt == encoding.end() && jsonRidIt == encoding.end())
 						MS_THROW_TYPE_ERROR("missing ssrc or rid in entry in mapping.encodings");
 
-					// mappedRtxSsrc is optional.
-					auto jsonMappedRtxSsrcIt = encoding.find("mappedRtxSsrc");
+					// mappedSsrc is mandatory.
+					auto jsonMappedSsrcIt = encoding.find("mappedSsrc");
 
-					if (jsonMappedRtxSsrcIt != encoding.end() && jsonMappedRtxSsrcIt->is_number_unsigned())
-						encodingMapping.mappedRtxSsrc = jsonMappedRtxSsrcIt->get<std::string>();
+					if (jsonMappedSsrcIt == encoding.end() || !jsonMappedSsrcIt->is_number_unsigned())
+						MS_THROW_TYPE_ERROR("missing mappedSsrc in entry in mapping.encodings");
+
+					encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
 
 					rtpMapping.encodings.push_back(encodingMapping);
 				}
 
+				// This may throw.
 				RTC::Producer* producer =
 				  new RTC::Producer(producerId, this, kind, rtpParameters, rtpMapping);
 
@@ -830,16 +825,16 @@ namespace RTC
 		this->listener->OnTransportProducerResumed(this, producer);
 	}
 
-	inline void Transport::OnProducerStreamHealthy(
+	inline void Transport::OnProducerRtpStreamHealthy(
 	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
-		this->listener->OnTransportProducerStreamHealthy(this, producer, rtpStream, mappedSsrc);
+		this->listener->OnTransportProducerRtpStreamHealthy(this, producer, rtpStream, mappedSsrc);
 	}
 
-	inline void Transport::OnProducerStreamUnhealthy(
+	inline void Transport::OnProducerRtpStreamUnhealthy(
 	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
-		this->listener->OnTransportProducerStreamUnhealthy(this, producer, rtpStream, mappedSsrc);
+		this->listener->OnTransportProducerRtpStreamUnhealthy(this, producer, rtpStream, mappedSsrc);
 	}
 
 	inline void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet)

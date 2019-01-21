@@ -156,11 +156,9 @@ namespace RTC
 			jsonObject["rtcp"] = json::object();
 	}
 
-	RTC::RtpCodecParameters& RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding)
+	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const
 	{
 		MS_TRACE();
-
-		static RTC::RtpCodecParameters fakeCodec;
 
 		uint8_t payloadType = encoding.codecPayloadType;
 		auto it             = this->codecs.begin();
@@ -170,22 +168,21 @@ namespace RTC
 			auto& codec = *it;
 
 			if (codec.payloadType == payloadType)
-				return codec;
+				return std::addressof(codec);
 		}
 
 		// This should never happen.
 		if (it == this->codecs.end())
 			MS_ABORT("no valid codec payload type for the given encoding");
 
-		return fakeCodec;
+		return nullptr;
 	}
 
-	RTC::RtpCodecParameters& RtpParameters::GetRtxCodecForEncoding(RtpEncodingParameters& encoding)
+	const RTC::RtpCodecParameters* RtpParameters::GetRtxCodecForEncoding(RtpEncodingParameters& encoding) const
 	{
 		MS_TRACE();
 
 		static const std::string aptString = "apt";
-		static RTC::RtpCodecParameters fakeCodec;
 
 		uint8_t payloadType = encoding.codecPayloadType;
 
@@ -195,14 +192,14 @@ namespace RTC
 
 			if (codec.mimeType.IsFeatureCodec() && codec.parameters.GetInteger(aptString) == payloadType)
 			{
-				return codec;
+				return std::addressof(codec);
 			}
 		}
 
-		return fakeCodec;
+		return nullptr;
 	}
 
-	inline void RtpParameters::ValidateCodecs()
+	void RtpParameters::ValidateCodecs()
 	{
 		MS_TRACE();
 
@@ -254,7 +251,7 @@ namespace RTC
 		}
 	}
 
-	inline void RtpParameters::ValidateEncodings()
+	void RtpParameters::ValidateEncodings()
 	{
 		uint8_t firstMediaPayloadType = 0;
 
