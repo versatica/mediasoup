@@ -42,9 +42,10 @@ namespace RTC
 			uint32_t ssrc{ 0 };
 			uint32_t rtxSsrc{ 0 };
 			uint32_t mappedSsrc{ 0 };
-		}
+		};
 
-		public : struct RtpMapping
+	public:
+		struct RtpMapping
 		{
 			std::map<uint8_t, uint8_t> codecs;
 			std::map<uint8_t, uint8_t> headerExtensions;
@@ -76,10 +77,10 @@ namespace RTC
 	private:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
 		RTC::RtpStreamRecv* CreateRtpStream(
-		  uint32_t ssrc, RTC::RtpCodecParameters& codec, size_t encodingIdx);
+		  uint32_t ssrc, const RTC::RtpCodecParameters& codec, size_t encodingIdx);
 		void SetHealthyStream(RTC::RtpStreamRecv* rtpStream);
 		void SetUnhealthyStream(RTC::RtpStreamRecv* rtpStream);
-		void MangleRtpRtpPacket(RTC::RtpPacket* packet) const;
+		void MangleRtpPacket(RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -102,6 +103,7 @@ namespace RTC
 		struct RtpMapping rtpMapping;
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
+		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::set<RTC::RtpStreamRecv*> healthyRtpStreams;
 		// Others.

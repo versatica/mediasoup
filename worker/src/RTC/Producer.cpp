@@ -23,8 +23,7 @@ namespace RTC
 	  RTC::Media::Kind kind,
 	  RTC::RtpParameters& rtpParameters,
 	  struct RtpMapping& rtpMapping)
-	  : producerId(producerId), listener(listener), kind(kind), rtpParameters(rtpParameters),
-	    rtpMapping(rtpMapping)
+	  : id(id), listener(listener), kind(kind), rtpParameters(rtpParameters), rtpMapping(rtpMapping)
 	{
 		MS_TRACE();
 
@@ -95,6 +94,7 @@ namespace RTC
 		}
 
 		this->mapSsrcRtpStream.clear();
+		this->mapRtxSsrcRtpStream.clear();
 		this->mapRtpStreamMappedSsrc.clear();
 		this->healthyRtpStreams.clear();
 
@@ -103,121 +103,15 @@ namespace RTC
 	}
 
 	// TODO
-	Json::Value Producer::ToJson() const
+	void Producer::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
-
-		static const Json::StaticString JsonStringProducerId{ "producerId" };
-		static const Json::StaticString JsonStringKind{ "kind" };
-		static const Json::StaticString JsonStringRtpParameters{ "rtpParameters" };
-		static const Json::StaticString JsonStringRtpStreamInfos{ "rtpStreamInfos" };
-		static const Json::StaticString JsonStringRtpStream{ "rtpStream" };
-		static const Json::StaticString JsonStringRid{ "rid" };
-		static const Json::StaticString JsonStringProfile{ "profile" };
-		static const Json::StaticString JsonStringNone{ "none" };
-		static const Json::StaticString JsonStringDefault{ "default" };
-		static const Json::StaticString JsonStringLow{ "low" };
-		static const Json::StaticString JsonStringMedium{ "medium" };
-		static const Json::StaticString JsonStringHigh{ "high" };
-		static const Json::StaticString JsonStringRtxSsrc{ "rtxSsrc" };
-		static const Json::StaticString JsonStringActive{ "active" };
-		static const Json::StaticString JsonStringHeaderExtensionIds{ "rtpHeaderExtensionIds" };
-		static const Json::StaticString JsonStringSsrcAudioLevel{ "ssrcAudioLevel" };
-		static const Json::StaticString JsonStringAbsSendTime{ "absSendTime" };
-		static const Json::StaticString JsonStringPaused{ "paused" };
-		static const Json::StaticString JsonStringLossPercentage{ "lossPercentage" };
-
-		Json::Value json(Json::objectValue);
-		Json::Value jsonHeaderExtensionIds(Json::objectValue);
-		Json::Value jsonRtpStreamInfos(Json::arrayValue);
-
-		json[JsonStringProducerId] = Json::UInt{ this->producerId };
-
-		json[JsonStringKind] = RTC::Media::GetJsonString(this->kind);
-
-		json[JsonStringRtpParameters] = this->rtpParameters.ToJson();
-
-		float lossPercentage = 0;
-
-		for (auto& kv : this->mapSsrcRtpStreamInfo)
-		{
-			Json::Value jsonRtpStreamInfo(Json::objectValue);
-
-			auto& info = kv.second;
-
-			jsonRtpStreamInfo[JsonStringRtpStream] = info.rtpStream->ToJson();
-
-			jsonRtpStreamInfo[JsonStringRid] = info.rid;
-
-			jsonRtpStreamInfo[JsonStringRtxSsrc] = info.rtxSsrc;
-			jsonRtpStreamInfo[JsonStringActive]  = info.active;
-
-			switch (info.profile)
-			{
-				case RTC::RtpEncodingParameters::Profile::NONE:
-					jsonRtpStreamInfo[JsonStringProfile] = JsonStringNone;
-					break;
-				case RTC::RtpEncodingParameters::Profile::DEFAULT:
-					jsonRtpStreamInfo[JsonStringProfile] = JsonStringDefault;
-					break;
-				case RTC::RtpEncodingParameters::Profile::LOW:
-					jsonRtpStreamInfo[JsonStringProfile] = JsonStringLow;
-					break;
-				case RTC::RtpEncodingParameters::Profile::MEDIUM:
-					jsonRtpStreamInfo[JsonStringProfile] = JsonStringMedium;
-					break;
-				case RTC::RtpEncodingParameters::Profile::HIGH:
-					jsonRtpStreamInfo[JsonStringProfile] = JsonStringHigh;
-					break;
-			}
-
-			jsonRtpStreamInfos.append(jsonRtpStreamInfo);
-
-			lossPercentage += info.rtpStream->GetLossPercentage();
-		}
-
-		json[JsonStringRtpStreamInfos] = jsonRtpStreamInfos;
-
-		if (!this->mapSsrcRtpStreamInfo.empty())
-			lossPercentage = lossPercentage / this->mapSsrcRtpStreamInfo.size();
-
-		json[JsonStringLossPercentage] = lossPercentage;
-
-		if (this->rtpHeaderExtensionIds.ssrcAudioLevel != 0u)
-			jsonHeaderExtensionIds[JsonStringSsrcAudioLevel] = this->rtpHeaderExtensionIds.ssrcAudioLevel;
-
-		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-			jsonHeaderExtensionIds[JsonStringAbsSendTime] = this->rtpHeaderExtensionIds.absSendTime;
-
-		if (this->rtpHeaderExtensionIds.rid != 0u)
-			jsonHeaderExtensionIds[JsonStringRid] = this->rtpHeaderExtensionIds.rid;
-
-		json[JsonStringHeaderExtensionIds] = jsonHeaderExtensionIds;
-
-		json[JsonStringPaused] = this->paused;
-
-		return json;
 	}
 
 	// TODO
-	Json::Value Producer::GetStats() const
+	void Producer::FillJsonStats(json& jsonObject) const
 	{
 		MS_TRACE();
-
-		static const Json::StaticString JsonStringTransportId{ "transportId" };
-
-		Json::Value json(Json::arrayValue);
-
-		for (auto& kv : this->mapSsrcRtpStreamInfo)
-		{
-			auto& info         = kv.second;
-			auto* rtpStream    = info.rtpStream;
-			auto jsonRtpStream = rtpStream->GetStats();
-
-			json.append(jsonRtpStream);
-		}
-
-		return json;
 	}
 
 	void Producer::Pause()
@@ -263,108 +157,76 @@ namespace RTC
 
 		if (!rtpStream)
 		{
-			MS_WARN_TAG(rtp, "no RtpStream found for received RTP packet [ssrc:%" PRIu32 "]", ssrc);
+			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 			return;
 		}
 
-		// TODO: Here we mut check if ssrc is packet->GetSsrc() or packet->GetRtxSsrc().
-
-		// Find the corresponding RtpStreamRecv.
-		uint32_t ssrc = packet->GetSsrc();
-		RTC::RtpStreamRecv* rtpStream{ nullptr };
+		// Let's clone the RTP packet so we can mangle the payload (if needed) and other
+		// stuff that would change its size.
 		std::unique_ptr<RTC::RtpPacket> clonedPacket;
 
-		// TODO: use iterators!!!
-		// Media RTP stream found.
-		if (this->mapSsrcRtpStreamInfo.find(ssrc) != this->mapSsrcRtpStreamInfo.end())
+		clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
+		packet = clonedPacket.get();
+
+		// Media packet.
+		if (packet->GetSsrc() == rtpStream->GetSsrc())
 		{
-			rtpStream = this->mapSsrcRtpStreamInfo[ssrc].rtpStream;
-
-			auto& info = this->mapSsrcRtpStreamInfo[ssrc];
-			rtpStream  = info.rtpStream;
-			profile    = info.profile;
-
-			// Let's clone the RTP packet so we can mangle the payload (if needed) and other
-			// stuff that would change its size.
-			clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
-			packet = clonedPacket.get();
-
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
 				return;
 		}
-		// Otherwise look for RTX SSRCs.
+		// RTX packet.
+		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
+		{
+			// Process the packet.
+			if (!rtpStream->ReceiveRtxPacket(packet))
+				return;
+
+			// Packet repaired after applying RTX.
+			rtpStream->packetsRepaired++;
+		}
+		// Should not happen.
 		else
 		{
-			for (auto& kv : this->mapSsrcRtpStreamInfo)
-			{
-				auto& info = kv.second;
-
-				if (info.rtxSsrc != 0u && info.rtxSsrc == ssrc)
-				{
-					rtpStream = info.rtpStream;
-					profile   = info.profile;
-
-					// Let's clone the RTP packet so we can mangle the payload (if needed) and
-					// other stuff that would change its size.
-					clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
-					packet = clonedPacket.get();
-
-					// Process the packet.
-					if (!rtpStream->ReceiveRtxPacket(packet))
-						return;
-
-					// Packet repaired after applying RTX.
-					rtpStream->packetsRepaired++;
-
-					break;
-				}
-			}
+			MS_ABORT("found stream does not match received packet");
 		}
 
-		// Not found.
-		if (!rtpStream)
-		{
-			MS_WARN_TAG(rtp, "no RtpStream found for given RTP packet [ssrc:%" PRIu32 "]", ssrc);
-
-			return;
-		}
-
-		// TODO: Remove this, it's CPU consuming and provides nothing.
+#ifdef MS_LOG_DEV
 		if (packet->IsKeyFrame())
 		{
 			MS_DEBUG_TAG(
 			  rtp,
-			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", profile:%s]",
+			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  RTC::RtpEncodingParameters::profile2String[profile].c_str());
+			  packet->GetSequenceNumber());
 		}
+#endif
 
 		// If paused stop here.
 		if (this->paused)
 			return;
 
-		// Apply the Producer codec payload type and extension header mapping before
-		// dispatching the packet.
-		ApplyRtpMapping(packet);
+		// Mangle the packet before providing the listener with it.
+		MangleRtpPacket(packet);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 	}
 
 	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
-		// TODO
-		auto it = this->mapSsrcRtpStreamInfo.find(report->GetSsrc());
+		auto it = this->mapSsrcRtpStream.find(report->GetSsrc());
 
-		if (it != this->mapSsrcRtpStreamInfo.end())
+		if (it == this->mapSsrcRtpStream.end())
 		{
-			auto& info      = it->second;
-			auto* rtpStream = info.rtpStream;
+			MS_WARN_TAG(rtcp, "stream not found");
 
-			rtpStream->ReceiveRtcpSenderReport(report);
+			return;
 		}
+
+		auto* rtpStream = it->second;
+
+		rtpStream->ReceiveRtcpSenderReport(report);
 	}
 
 	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
@@ -372,10 +234,9 @@ namespace RTC
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		for (auto& kv : this->mapSsrcRtpStreamInfo)
+		for (auto& kv : this->mapSsrcRtpStream)
 		{
-			auto& info      = kv.second;
-			auto* rtpStream = info.rtpStream;
+			auto* rtpStream = kv.second;
 			auto* report    = rtpStream->GetRtcpReceiverReport();
 
 			report->SetSsrc(rtpStream->GetSsrc());
@@ -402,36 +263,28 @@ namespace RTC
 		uint32_t ssrc       = packet->GetSsrc();
 		uint8_t payloadType = packet->GetPayloadType();
 
-		// If stream found, return it.
-		auto it = this->mapSsrcRtpStream.find(ssrc);
-
-		if (it != this->mapSsrcRtpStream.end())
+		// If stream found in media ssrcs map, return it.
 		{
-			auto* rtpStream = it->second;
+			auto it = this->mapSsrcRtpStream.find(ssrc);
 
-			return rtpStream;
+			if (it != this->mapSsrcRtpStream.end())
+			{
+				auto* rtpStream = it->second;
+
+				return rtpStream;
+			}
 		}
 
-		// Otherwise, ensure packet has the announced media payloadType or RTX payloadType.
-
-		bool isMediaPacket = false;
-		bool isRtxPacket   = false;
-		auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-		auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-
-		if (mediaCodec->payloadType == payloadType)
+		// If stream found in RTX ssrcs map, return it.
 		{
-			isMediaPacket = true;
-		}
-		else if (rtxCodec && rtxCodec->payloadType == payloadType)
-		{
-			isRtxPacket = true;
-		}
-		else
-		{
-			MS_WARN_TAG(rtp, "ignoring packet with unknown media/RTX payloadType");
+			auto it = this->mapRtxSsrcRtpStream.find(ssrc);
 
-			return nullptr;
+			if (it != this->mapRtxSsrcRtpStream.end())
+			{
+				auto* rtpStream = it->second;
+
+				return rtpStream;
+			}
 		}
 
 		// Otherwise check our encodings and, if appropriate, create a new stream.
@@ -439,7 +292,11 @@ namespace RTC
 		// First, look for an encoding with matching media or RTX ssrc value.
 		for (size_t i = 0; i < this->rtpParameters.encodings.size(); ++i)
 		{
-			auto& encoding = this->rtpParameters.encodings[i];
+			auto& encoding     = this->rtpParameters.encodings[i];
+			auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+			auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket && encoding.ssrc == ssrc)
 			{
@@ -461,11 +318,19 @@ namespace RTC
 
 				auto* rtpStream = it->second;
 
+				// Ensure no RTX SSRC was previously detected.
+				if (rtpStream->HasRtx())
+				{
+					MS_DEBUG_2TAGS(rtp, rtx, "ignoring RTX packet with new ssrc (ssrc lookup)");
+
+					return nullptr;
+				}
+
 				// Update the stream RTX data.
 				rtpStream->SetRtx(payloadType, ssrc);
 
 				// Insert the new RTX SSRC into the map.
-				this->mapSsrcRtpStream[ssrc] = rtpStream;
+				this->mapRtxSsrcRtpStream[ssrc] = rtpStream;
 
 				return rtpStream;
 			}
@@ -486,6 +351,11 @@ namespace RTC
 
 				if (encoding.rid != rid)
 					continue;
+
+				auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+				auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+				bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+				bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 				if (isMediaPacket)
 				{
@@ -509,18 +379,26 @@ namespace RTC
 				}
 				else if (isRtxPacket)
 				{
-					// Ensure an rtpStream already exists with same RID.
+					// Ensure a stream already exists with same RID.
 					for (auto& kv : this->mapSsrcRtpStream)
 					{
 						auto* rtpStream = kv.second;
 
 						if (rtpStream->GetRid() == rid)
 						{
+							// Ensure no RTX SSRC was previously detected.
+							if (rtpStream->HasRtx())
+							{
+								MS_DEBUG_2TAGS(rtp, rtx, "ignoring RTX packet with new SSRC (RID lookup)");
+
+								return nullptr;
+							}
+
 							// Update the stream RTX data.
 							rtpStream->SetRtx(payloadType, ssrc);
 
 							// Insert the new RTX SSRC into the map.
-							this->mapSsrcRtpStream[ssrc] = rtpStream;
+							this->mapRtxSsrcRtpStream[ssrc] = rtpStream;
 
 							return rtpStream;
 						}
@@ -540,7 +418,8 @@ namespace RTC
 		return nullptr;
 	}
 
-	void Producer::CreateRtpStream(uint32_t ssrc, RTC::RtpCodecParameters& codec, size_t encodingIdx)
+	RTC::RtpStreamRecv* Producer::CreateRtpStream(
+	  uint32_t ssrc, const RTC::RtpCodecParameters& codec, size_t encodingIdx)
 	{
 		MS_TRACE();
 
@@ -579,12 +458,6 @@ namespace RTC
 
 				params.useFir = true;
 			}
-			else if (!params.useRemb && fb.type == "goog-remb")
-			{
-				MS_DEBUG_TAG(rbe, "REMB supported");
-
-				params.useRemb = true;
-			}
 		}
 
 		// Create a RtpStreamRecv for receiving a media stream.
@@ -601,6 +474,8 @@ namespace RTC
 
 		// Request a key frame since we may have lost the first packets of this stream.
 		RequestKeyFrame(true);
+
+		return rtpStream;
 	}
 
 	void Producer::SetHealthyStream(RTC::RtpStreamRecv* rtpStream)
@@ -634,39 +509,39 @@ namespace RTC
 	}
 
 	// TODO: Must set mapped ssrc!
-	void Producer::MangleRtpRtpPacket(RTC::RtpPacket* packet) const
+	void Producer::MangleRtpPacket(RTC::RtpPacket* packet) const
 	{
 		MS_TRACE();
 
-		auto& codecPayloadTypeMap = this->rtpMapping.codecPayloadTypes;
-		auto payloadType          = packet->GetPayloadType();
+		// auto& codecPayloadTypeMap = this->rtpMapping.codecPayloadTypes;
+		// auto payloadType          = packet->GetPayloadType();
 
-		if (codecPayloadTypeMap.find(payloadType) != codecPayloadTypeMap.end())
-		{
-			packet->SetPayloadType(codecPayloadTypeMap.at(payloadType));
-		}
+		// if (codecPayloadTypeMap.find(payloadType) != codecPayloadTypeMap.end())
+		// {
+		// 	packet->SetPayloadType(codecPayloadTypeMap.at(payloadType));
+		// }
 
-		auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
+		// auto& headerExtensionIdMap = this->rtpMapping.headerExtensionIds;
 
-		packet->MangleExtensionHeaderIds(headerExtensionIdMap);
+		// packet->MangleExtensionHeaderIds(headerExtensionIdMap);
 
-		if (this->rtpHeaderExtensionIds.ssrcAudioLevel != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->rtpHeaderExtensionIds.ssrcAudioLevel);
-		}
+		// if (this->rtpHeaderExtensionIds.ssrcAudioLevel != 0u)
+		// {
+		// 	packet->AddExtensionMapping(
+		// 	  RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, this->rtpHeaderExtensionIds.ssrcAudioLevel);
+		// }
 
-		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->rtpHeaderExtensionIds.absSendTime);
-		}
+		// if (this->rtpHeaderExtensionIds.absSendTime != 0u)
+		// {
+		// 	packet->AddExtensionMapping(
+		// 	  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->rtpHeaderExtensionIds.absSendTime);
+		// }
 
-		if (this->rtpHeaderExtensionIds.rid != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->rtpHeaderExtensionIds.rid);
-		}
+		// if (this->rtpHeaderExtensionIds.rid != 0u)
+		// {
+		// 	packet->AddExtensionMapping(
+		// 	  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->rtpHeaderExtensionIds.rid);
+		// }
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
@@ -720,7 +595,7 @@ namespace RTC
 
 		packet.Serialize(RTC::RTCP::Buffer);
 
-		this->listener->OnProducerSendRtcpPacket(&packet);
+		this->listener->OnProducerSendRtcpPacket(this, &packet);
 
 		rtpStream->nackCount++;
 		rtpStream->nackRtpPacketCount += numPacketsRequested;
@@ -736,7 +611,7 @@ namespace RTC
 
 		packet.Serialize(RTC::RTCP::Buffer);
 
-		this->listener->OnProducerSendRtcpPacket(&packet);
+		this->listener->OnProducerSendRtcpPacket(this, &packet);
 
 		rtpStream->pliCount++;
 	}
@@ -748,13 +623,12 @@ namespace RTC
 		MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 		RTC::RTCP::FeedbackPsFirPacket packet(0, rtpStream->GetSsrc());
-		FeedbackPsFirItem* item =
-		  new FeedbackPsFirItem(rtpStream->GetSsrc(), rtpStream->GetFirSeqNumber());
+		auto* item = new RTC::RTCP::FeedbackPsFirItem(rtpStream->GetSsrc(), rtpStream->GetFirSeqNumber());
 
 		packet.AddItem(item);
 		packet.Serialize(RTC::RTCP::Buffer);
 
-		this->listener->OnProducerSendRtcpPacket(&packet);
+		this->listener->OnProducerSendRtcpPacket(this, &packet);
 
 		rtpStream->pliCount++;
 	}

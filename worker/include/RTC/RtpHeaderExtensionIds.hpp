@@ -5,7 +5,7 @@ namespace RTC
 {
 	// RTP header extension ids. Some of these are shared by all Producers using
 	// the same Transport. Others are different for each Producer.
-	struct HeaderExtensionIds
+	struct RtpHeaderExtensionIds
 	{
 		uint8_t ssrcAudioLevel{ 0u }; // 0 means no ssrc-audio-level id.
 		uint8_t absSendTime{ 0u };    // 0 means no abs-send-time id.
