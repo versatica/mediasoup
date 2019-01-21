@@ -41,6 +41,20 @@ RTC::KeyFrameRequestManager::KeyFrameRequestManager(KeyFrameRequestManager::List
 	MS_TRACE();
 }
 
+RTC::KeyFrameRequestManager::~KeyFrameRequestManager()
+{
+	MS_TRACE();
+
+	for (auto it : this->mapSsrcPendingKeyFrameInfo)
+	{
+		auto* pendingKeyFrameInfo = it.second;
+
+		delete pendingKeyFrameInfo;
+	}
+
+	this->mapSsrcPendingKeyFrameInfo.clear();
+}
+
 void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 {
 	MS_TRACE();
