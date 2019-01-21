@@ -3,6 +3,7 @@
 [![][npm-shield-mediasoup]][npm-mediasoup]
 [![][travis-ci-shield-mediasoup]][travis-ci-mediasoup]
 [![][codacy-grade-shield-mediasoup]][codacy-grade-mediasoup]
+[![][opencollective-shield-mediasoup]][opencollective-mediasoup]
 
 
 ## Website and documentation
@@ -36,7 +37,7 @@
 
 ## Donate
 
-You can support **mediasoup** by making a donation [here][donate-url]. Thanks!
+You can support **mediasoup** by making a donation in [open collective][opencollective-mediasoup]. Thanks!
 
 
 ## License
@@ -55,4 +56,6 @@ You can support **mediasoup** by making a donation [here][donate-url]. Thanks!
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
 [codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
-[donate-url]: https://opencollective.com/mediasoup/donate
+[opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
+[opencollective-mediasoup]: https://opencollective.com/mediasoup/donate
+
