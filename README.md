@@ -36,7 +36,7 @@
 
 ## Donate
 
-You can support **mediasoup** by making a donation [here][paypal-url]. Thanks!
+You can support **mediasoup** by making a donation [here][donate-url]. Thanks!
 
 
 ## License
@@ -55,4 +55,4 @@ You can support **mediasoup** by making a donation [here][paypal-url]. Thanks!
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
 [codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
-[paypal-url]: https://paypal.me/inakibazcastillo/100
+[donate-url]: https://opencollective.com/mediasoup/donate
