@@ -50,7 +50,11 @@ afterAll(() => worker.close());
 
 beforeEach(async () =>
 {
-	transport = await router.createPlainRtpTransport({ listenIp: '127.0.0.1' });
+	transport = await router.createPlainRtpTransport(
+		{
+			listenIp : { ip: '127.0.0.1', announcedIp: '4.4.4.4' },
+			rtcpMux  : false
+		});
 });
 
 afterEach(() => transport.close());
@@ -165,16 +169,21 @@ test('plaintRtpTransport.getStats() succeeds', async () =>
 
 test('plaintRtpTransport.connect() succeeds', async () =>
 {
-	await expect(transport.connect({ ip: '1.2.3.4', port: 1234 }))
+	await expect(transport.connect({ ip: '1.2.3.4', port: 1234, rtcpPort: 1235 }))
 		.resolves
 		.toBe(undefined);
 
 	// Must fail if connected.
-	await expect(transport.connect({ ip: '1.2.3.4', port: 1234 }))
+	await expect(transport.connect({ ip: '1.2.3.4', port: 1234, rtcpPort: 1235 }))
 		.rejects
 		.toThrow(Error);
 
 	expect(transport.tuple.remoteIp).toBe('1.2.3.4');
+	expect(transport.tuple.remotePort).toBe(1234);
+	expect(transport.tuple.protocol).toBe('udp');
+	expect(transport.rtcpTuple.remoteIp).toBe('1.2.3.4');
+	expect(transport.rtcpTuple.remotePort).toBe(1235);
+	expect(transport.rtcpTuple.protocol).toBe('udp');
 }, 1000);
 
 test('plaintRtpTransport.connect() rejects with TypeError if wrong parameters', async () =>
@@ -183,15 +192,15 @@ test('plaintRtpTransport.connect() rejects with TypeError if wrong parameters', 
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(transport.connect({ listenIp: '::::1234' }))
+	await expect(transport.connect({ ip: '::::1234' }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(transport.connect({ listenIp: '127.0.0.1', announcedIp: 1234 }))
+	await expect(transport.connect({ ip: '127.0.0.1', port: 1234, __rtcpPort: 1235 }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(transport.connect({ listenIp: '127.0.0.1', rtcpMux: 'chicken' }))
+	await expect(transport.connect({ ip: '127.0.0.1', __port: 'chicken', rtcpPort: 1235 }))
 		.rejects
 		.toThrow(TypeError);
 }, 1000);
