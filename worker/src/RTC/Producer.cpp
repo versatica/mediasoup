@@ -70,8 +70,8 @@ namespace RTC
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 
-		// TODO: Uncmment when done.
-		// this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this);
+		// Create a KeyFrameRequestManager.
+		this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this);
 	}
 
 	Producer::~Producer()
@@ -92,9 +92,8 @@ namespace RTC
 		this->mapMappedSsrcSsrc.clear();
 		this->healthyRtpStreams.clear();
 
-		// TODO: Uncmment when done.
 		// Delete the KeyFrameRequestManager().
-		// delete this->keyFrameRequestManager;
+		delete this->keyFrameRequestManager;
 	}
 
 	void Producer::FillJson(json& jsonObject) const
@@ -305,8 +304,7 @@ namespace RTC
 					{
 						auto ssrc = kv.first;
 
-						// TODO: Uncomment when done.
-						// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
+						this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 					}
 				}
 
@@ -373,9 +371,8 @@ namespace RTC
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
 
-			// TODO: Uncomment when done.
 			// Tell the keyFrameRequestManager.
-			// this->keyFrameRequestManager->KeyFrameReceived(packet->GetSsrc());
+			this->keyFrameRequestManager->KeyFrameReceived(packet->GetSsrc());
 		}
 
 		// If paused stop here.
@@ -439,8 +436,7 @@ namespace RTC
 
 		uint32_t ssrc = it->second;
 
-		// TODO: Uncomment when done.
-		// this->keyFrameRequestManager->KeyFrameNeeded(ssrc);
+		this->keyFrameRequestManager->KeyFrameNeeded(ssrc);
 	}
 
 	RTC::RtpStreamRecv* Producer::GetRtpStream(RTC::RtpPacket* packet)
@@ -661,8 +657,7 @@ namespace RTC
 		SetHealthyStream(rtpStream);
 
 		// Request a key frame for this stream since we may have lost the first packets.
-		// TODO: Uncomment when done.
-		// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
+		this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 
 		return rtpStream;
 	}
@@ -839,21 +834,21 @@ namespace RTC
 		SetUnhealthyStream(rtpStreamRecv);
 	}
 
-	// void Producer::OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
-	// {
-	// 	MS_TRACE();
+	void Producer::OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
+	{
+		MS_TRACE();
 
-	// 	auto it = this->mapSsrcRtpStream.find(ssrc);
+		auto it = this->mapSsrcRtpStream.find(ssrc);
 
-	// 	if (it == this->mapSsrcRtpStream.end())
-	// 	{
-	// 		MS_WARN_2TAGS(rtcp, rtx, "no associated stream found [ssrc:%" PRIu32 "]", ssrc);
+		if (it == this->mapSsrcRtpStream.end())
+		{
+			MS_WARN_2TAGS(rtcp, rtx, "no associated stream found [ssrc:%" PRIu32 "]", ssrc);
 
-	// 		return;
-	// 	}
+			return;
+		}
 
-	// 	auto* rtpStream = it->second;
+		auto* rtpStream = it->second;
 
-	// 	rtpStream->RequestKeyFrame();
-	// }
+		rtpStream->RequestKeyFrame();
+	}
 } // namespace RTC

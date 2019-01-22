@@ -46,7 +46,7 @@ namespace RTC
 
 	public:
 		explicit KeyFrameRequestManager(Listener* listener);
-		~KeyFrameRequestManager();
+		virtual ~KeyFrameRequestManager();
 
 		void KeyFrameNeeded(uint32_t ssrc);
 		void ForceKeyFrameNeeded(uint32_t ssrc);
