@@ -17,6 +17,7 @@
 #include "RTC/SeqManager.hpp"
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace RTC
 {
@@ -30,7 +31,9 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t ssrc) = 0;
+			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
+			virtual void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t ssrc)       = 0;
+			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                        = 0;
 		};
 
 	public:
@@ -39,35 +42,33 @@ namespace RTC
 		  Listener* listener,
 		  RTC::Media::Kind kind,
 		  RTC::RtpParameters& rtpParameters);
-		~Consumer();
+		virtual ~Consumer();
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonArray) const = 0;
+		void FillJsonStats(json& jsonArray) const;
+		void HandleRequest(Channel::Request* request);
 		bool IsStarted() const;
-		void Pause();
-		void Resume();
+		bool IsPaused() const;
+		std::vector<uint32_t>& GetMediaSsrcs();
+		void TransportConnected();
 		void ProducerPaused();
 		void ProducerResumed();
-		void EnableStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
-		void DisableStream(const RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
-		// TODO: SetPreferredSpatialLayer()
-		// TODO: yes?
-		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
-		const RTC::RtpParameters& GetRtpParameters() const;
-		bool IsPaused() const;
+		void ProducerRtpStreamHealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
+		void ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc);
+		void ProducerClosed();
 		void SendRtpPacket(RTC::RtpPacket* packet);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
+
 		uint32_t GetTransmissionRate(uint64_t now);
 		float GetLossPercentage() const;
-		void RequestKeyFrame();
+		void RequestKeyFrame(); // TODO
 
 	private:
-		void FillSupportedCodecPayloadTypes();
-		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
+		void CreateRtpStream();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		// void RecalculateTargetProfile(bool force = false);
 		// void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
@@ -84,17 +85,18 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
-		Listener* listener{ nullptr };
-		RTC::Media::Kind kind;
 
 	private:
 		// Passed by argument.
+		Listener* listener{ nullptr };
+		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		RtpMonitor* rtpMonitor{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
+		std::vector<uint32_t> mediaSsrcs; // TODO
 		bool started{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
@@ -109,14 +111,6 @@ namespace RTC
 		bool syncRequired{ true };
 		// RTP payload descriptor encoding.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		// RTP profiles.
-		// std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
-		// RTC::RtpEncodingParameters::Profile preferredProfile{
-		// RTC::RtpEncodingParameters::Profile::DEFAULT }; RTC::RtpEncodingParameters::Profile
-		// targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		// RTC::RtpEncodingParameters::Profile effectiveProfile{
-		// RTC::RtpEncodingParameters::Profile::NONE }; RTC::RtpEncodingParameters::Profile
-		// probingProfile{ RTC::RtpEncodingParameters::Profile::NONE }; RTP probation.
 		uint16_t rtpPacketsBeforeProbation{ RtpPacketsBeforeProbation };
 		uint16_t probationPackets{ 0 };
 	};
@@ -133,9 +127,9 @@ namespace RTC
 		return this->paused || this->producerPaused;
 	}
 
-	inline const RTC::RtpParameters& Consumer::GetRtpParameters() const
+	inline std::vector<uint32_t>& Consumer::GetMediaSsrcs()
 	{
-		return this->rtpParameters;
+		return this->mediaSsrcs;
 	}
 
 	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)

@@ -3,10 +3,12 @@
 
 #include "common.hpp"
 #include "RTC/Transport.hpp"
+#include "RTC/TransportTuple.hpp"
+#include "RTC/UdpSocket.hpp"
 
 namespace RTC
 {
-	class PlainRtpTransport : public RTC::Transport
+	class PlainRtpTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
 	public:
 		struct ListenIp

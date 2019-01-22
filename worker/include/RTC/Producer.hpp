@@ -29,9 +29,9 @@ namespace RTC
 			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
 			virtual void OnProducerRtpStreamHealthy(
-			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamUnhealthy(
-			  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)          = 0;
+			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)                = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 		};
@@ -60,7 +60,7 @@ namespace RTC
 		  RTC::Media::Kind kind,
 		  RTC::RtpParameters& rtpParameters,
 		  struct RtpMapping& rtpMapping);
-		~Producer();
+		virtual ~Producer();
 
 	public:
 		void FillJson(json& jsonObject) const;
@@ -98,11 +98,11 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
-		Listener* listener{ nullptr };
-		RTC::Media::Kind kind;
 
 	private:
 		// Passed by argument.
+		Listener* listener{ nullptr };
+		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		struct RtpMapping rtpMapping;
 		// Allocated by this.

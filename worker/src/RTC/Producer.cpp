@@ -265,12 +265,16 @@ namespace RTC
 			{
 				if (!this->paused)
 				{
-					this->paused = true;
+					request->Accept();
 
-					MS_DEBUG_DEV("Producer paused [producerId:%s]", this->producerId.c_str());
-
-					this->listener->OnProducerPaused(this);
+					return;
 				}
+
+				this->paused = true;
+
+				MS_DEBUG_DEV("Producer paused [producerId:%s]", this->id.c_str());
+
+				this->listener->OnProducerPaused(this);
 
 				request->Accept();
 
@@ -281,24 +285,28 @@ namespace RTC
 			{
 				if (this->paused)
 				{
-					this->paused = false;
+					request->Accept();
 
-					MS_DEBUG_DEV("Producer resumed [producerId:%s]", this->producerId.c_str());
+					return;
+				}
 
-					this->listener->OnProducerResumed(this);
+				this->paused = false;
 
-					if (this->kind == RTC::Media::Kind::VIDEO)
+				MS_DEBUG_DEV("Producer resumed [producerId:%s]", this->id.c_str());
+
+				this->listener->OnProducerResumed(this);
+
+				if (this->kind == RTC::Media::Kind::VIDEO)
+				{
+					MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame after resumed");
+
+					// Request a key frame for all streams.
+					for (auto& kv : this->mapSsrcRtpStream)
 					{
-						MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame after resumed");
+						auto ssrc = kv.first;
 
-						// Request a key frame for all streams.
-						for (auto& kv : this->mapSsrcRtpStream)
-						{
-							auto ssrc = kv.first;
-
-							// TODO: Uncomment when done.
-							// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
-						}
+						// TODO: Uncomment when done.
+						// this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 					}
 				}
 
@@ -306,8 +314,6 @@ namespace RTC
 
 				break;
 			}
-
-				// TODO: More.
 
 			default:
 			{

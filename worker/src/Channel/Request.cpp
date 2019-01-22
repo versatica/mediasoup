@@ -15,6 +15,7 @@ namespace Channel
 		{ "worker.dump",                     Request::MethodId::WORKER_DUMP                        },
 		{ "worker.updateSettings",           Request::MethodId::WORKER_UPDATE_SETTINGS             },
 		{ "worker.createRouter",             Request::MethodId::WORKER_CREATE_ROUTER               },
+		{ "router.close",                    Request::MethodId::ROUTER_CLOSE                       },
 		{ "router.dump",                     Request::MethodId::ROUTER_DUMP                        },
 		{ "router.createWebRtcTransport",    Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT     },
 		{ "router.createPlainRtpTransport",  Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT  },

@@ -21,7 +21,7 @@ namespace RTC
 	{
 	public:
 		explicit Router(const std::string& id);
-		~Router();
+		virtual ~Router();
 
 	public:
 		void FillJson(json& jsonObject) const;
@@ -37,22 +37,21 @@ namespace RTC
 		void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) override;
-		void OnTransportProducerStreamHealthy(
+		void OnTransportProducerRtpStreamHealthy(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  const RTC::RtpStream* rtpStream,
+		  RTC::RtpStream* rtpStream,
 		  uint32_t mappedSsrc) override;
-		void OnTransportProducerStreamUnhealthy(
+		void OnTransportProducerRtpStreamUnhealthy(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  const RTC::RtpStream* rtpStream,
+		  RTC::RtpStream* rtpStream,
 		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
-		const RTC::Producer* OnTransportGetProducer(
-		  RTC::Transport* transport, std::string& producerId) override;
+		RTC::Producer* OnTransportGetProducer(RTC::Transport* transport, std::string& producerId) override;
 		void OnTransportNewConsumer(
-		  RTC::Transport* transport, RTC::Consumer* consumer, const RTC::Producer* producer) override;
+		  RTC::Transport* transport, RTC::Consumer* consumer, RTC::Producer* producer) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(
 		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
@@ -65,8 +64,8 @@ namespace RTC
 		// Allocated by this.
 		std::unordered_map<std::string, RTC::Transport*> mapTransports;
 		// Others.
-		std::unordered_map<const RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
-		std::unordered_map<const RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
+		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
+		std::unordered_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
 		std::unordered_map<std::string, RTC::Producer*> mapProducers;
 	};
 } // namespace RTC

@@ -53,13 +53,13 @@ void Worker::Close()
 	delete this->signalsHandler;
 
 	// Delete all Routers.
-	// for (auto& kv : this->mapRouters)
-	// {
-	// 	auto* router = kv.second;
+	for (auto& kv : this->mapRouters)
+	{
+		auto* router = kv.second;
 
-	// 	delete router;
-	// }
-	// this->mapRouters.clear();
+		delete router;
+	}
+	this->mapRouters.clear();
 
 	// Close the Channel.
 	delete this->channel;
@@ -74,50 +74,49 @@ void Worker::FillJson(json& jsonObject) const
 
 	// Add routerIds.
 	jsonObject["routerIds"] = json::array();
-	// auto jsonRouterIdsIt    = jsonObject.find("routerIds");
+	auto jsonRouterIdsIt    = jsonObject.find("routerIds");
 
-	// TODO
-	// for (auto& kv : this->mapRouters)
-	// {
-	// 	auto& routerId = kv.first;
+	for (auto& kv : this->mapRouters)
+	{
+		auto& routerId = kv.first;
 
-	// 	jsonRouterIdsIt->emplace_back(routerId);
-	// }
+		jsonRouterIdsIt->emplace_back(routerId);
+	}
 }
 
-// void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
-// {
-// 	MS_TRACE();
+void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
+{
+	MS_TRACE();
 
-// 	auto jsonRouterIdIt = request->internal.find("routerId");
+	auto jsonRouterIdIt = request->internal.find("routerId");
 
-// 	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-// 		MS_THROW_ERROR("request has no internal.routerId");
+	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
+		MS_THROW_ERROR("request has no internal.routerId");
 
-// 	routerId.assign(jsonRouterIdIt->get<std::string>());
+	routerId.assign(jsonRouterIdIt->get<std::string>());
 
-// 	if (this->mapRouters.find(routerId) != this->mapRouters.end())
-// 		MS_THROW_ERROR("a Router with same routerId already exists");
-// }
+	if (this->mapRouters.find(routerId) != this->mapRouters.end())
+		MS_THROW_ERROR("a Router with same routerId already exists");
+}
 
-// RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
-// {
-// 	MS_TRACE();
+RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
+{
+	MS_TRACE();
 
-// 	auto jsonRouterIdIt = request->internal.find("routerId");
+	auto jsonRouterIdIt = request->internal.find("routerId");
 
-// 	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-// 		MS_THROW_ERROR("request has no internal.routerId");
+	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
+		MS_THROW_ERROR("request has no internal.routerId");
 
-// 	auto it = this->mapRouters.find(jsonRouterIdIt->get<std::string>());
+	auto it = this->mapRouters.find(jsonRouterIdIt->get<std::string>());
 
-// 	if (it == this->mapRouters.end())
-// 		MS_THROW_ERROR("Router not found");
+	if (it == this->mapRouters.end())
+		MS_THROW_ERROR("Router not found");
 
-// 	RTC::Router* router = it->second;
+	RTC::Router* router = it->second;
 
-// 	return router;
-// }
+	return router;
+}
 
 void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
 {
@@ -146,50 +145,50 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 			break;
 		}
 
-			// case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
-			// {
-			// 	std::string routerId;
+		case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
+		{
+			std::string routerId;
 
-			// 	// This may throw.
-			// 	SetNewRouterIdFromRequest(request, routerId);
+			// This may throw.
+			SetNewRouterIdFromRequest(request, routerId);
 
-			// 	auto* router = new RTC::Router(routerId);
+			auto* router = new RTC::Router(routerId);
 
-			// 	this->mapRouters[routerId] = router;
+			this->mapRouters[routerId] = router;
 
-			// 	MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
+			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
-			// 	request->Accept();
+			request->Accept();
 
-			// 	break;
-			// }
+			break;
+		}
 
-			// case Channel::Request::MethodId::ROUTER_CLOSE:
-			// {
-			// 	// This may throw.
-			// 	RTC::Router* router = GetRouterFromRequest(request);
+		case Channel::Request::MethodId::ROUTER_CLOSE:
+		{
+			// This may throw.
+			RTC::Router* router = GetRouterFromRequest(request);
 
-			// 	// Remove it from the map and delete it.
-			// 	this->mapRouters.erase(router->id);
-			// 	delete router;
+			// Remove it from the map and delete it.
+			this->mapRouters.erase(router->id);
+			delete router;
 
-			// 	MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
+			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
 
-			// 	request->Accept();
+			request->Accept();
 
-			// 	break;
-			// }
+			break;
+		}
 
-			// // Any other request must be delivered to the corresponding Router.
-			// default:
-			// {
-			// 	// This may throw.
-			// 	RTC::Router* router = GetRouterFromRequest(request);
+		// Any other request must be delivered to the corresponding Router.
+		default:
+		{
+			// This may throw.
+			RTC::Router* router = GetRouterFromRequest(request);
 
-			// 	router->HandleRequest(request);
+			router->HandleRequest(request);
 
-			// 	break;
-			// }
+			break;
+		}
 	}
 }
 

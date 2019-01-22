@@ -6,15 +6,13 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Consumer.hpp"
-#include "RTC/Producer.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
 	PlainRtpTransport::PlainRtpTransport(
-	  std::string& id, RTC::Transport::Listener* listener, Options& options)
+	  const std::string& id, RTC::Transport::Listener* listener, Options& options)
 	  : RTC::Transport::Transport(id, listener), rtcpMux(options.rtcpMux)
 	{
 		MS_TRACE();
@@ -202,8 +200,10 @@ namespace RTC
 					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
 						MS_THROW_TYPE_ERROR("missing ip");
 
+					ip = jsonIpIt->get<std::string>();
+
 					// This may throw.
-					ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
+					Utils::IP::NormalizeIp(ip);
 
 					auto jsonPortIt = request->data.find("port");
 

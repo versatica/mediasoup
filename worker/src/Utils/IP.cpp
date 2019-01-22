@@ -4047,6 +4047,8 @@ case 86:
 
 	void IP::NormalizeIp(std::string& ip)
 	{
+		MS_TRACE();
+
 		static sockaddr_storage addrStorage;
 		char ipBuffer[INET6_ADDRSTRLEN+1];
 		int err;

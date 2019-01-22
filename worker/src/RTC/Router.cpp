@@ -69,7 +69,7 @@ namespace RTC
 
 			for (auto* consumer : consumers)
 			{
-				jsonProducerIdIt->emplace_back(consumer->id)
+				jsonProducerIdIt->emplace_back(consumer->id);
 			}
 		}
 
@@ -137,8 +137,10 @@ namespace RTC
 					else if (!jsonIpIt->is_string())
 						MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string");
 
+					listenIp.ip = jsonIpIt->get<std::string>();
+
 					// This may throw.
-					listenIp.ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
+					Utils::IP::NormalizeIp(listenIp.ip);
 
 					auto jsonAnnouncedIpIt = jsonListenIp.find("announcedIp");
 
@@ -233,8 +235,10 @@ namespace RTC
 				else if (!jsonIpIt->is_string())
 					MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
 
+				options.listenIp.ip = jsonIpIt->get<std::string>();
+
 				// This may throw.
-				options.listenIp.ip = Utils::IP::NormalizeIp(jsonIpIt->get<std::string>());
+				Utils::IP::NormalizeIp(options.listenIp.ip);
 
 				auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
 
@@ -408,10 +412,7 @@ namespace RTC
 	}
 
 	void Router::OnTransportProducerRtpStreamHealthy(
-	  RTC::Transport* /*transport*/,
-	  RTC::Producer* producer,
-	  const RTC::RtpStream* rtpStream,
-	  uint32_t mappedSsrc)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -424,10 +425,7 @@ namespace RTC
 	}
 
 	void Router::OnTransportProducerRtpStreamUnhealthy(
-	  RTC::Transport* /*transport*/,
-	  RTC::Producer* producer,
-	  const RTC::RtpStream* rtpStream,
-	  uint32_t mappedSsrc)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -452,8 +450,7 @@ namespace RTC
 		}
 	}
 
-	const RTC::Producer* Router::OnTransportGetProducer(
-	  RTC::Transport* /*transport*/, std::string& producerId)
+	RTC::Producer* Router::OnTransportGetProducer(RTC::Transport* /*transport*/, std::string& producerId)
 	{
 		MS_TRACE();
 
@@ -468,7 +465,7 @@ namespace RTC
 	}
 
 	void Router::OnTransportNewConsumer(
-	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, const RTC::Producer* producer)
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, RTC::Producer* producer)
 	{
 		MS_TRACE();
 

@@ -16,8 +16,8 @@ namespace RTC
 	{
 	public:
 		void FillJson(json& jsonObject) const;
-		void AddProducer(const RTC::Producer* producer);
-		void RemoveProducer(const RTC::Producer* producer);
+		void AddProducer(RTC::Producer* producer);
+		void RemoveProducer(RTC::Producer* producer);
 		RTC::Producer* GetProducer(const RTC::RtpPacket* packet);
 		RTC::Producer* GetProducer(uint32_t ssrc) const;
 

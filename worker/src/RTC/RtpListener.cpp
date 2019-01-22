@@ -50,7 +50,7 @@ namespace RTC
 		}
 	}
 
-	void RtpListener::AddProducer(const RTC::Producer* producer)
+	void RtpListener::AddProducer(RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -121,7 +121,7 @@ namespace RTC
 			if (rid.empty())
 				continue;
 
-			if (this->midTable.find(mid) == this->midTable.end())
+			if (this->ridTable.find(rid) == this->ridTable.end())
 			{
 				this->ridTable[rid] = producer;
 			}
@@ -135,7 +135,7 @@ namespace RTC
 		}
 	}
 
-	void RtpListener::RemoveProducer(const RTC::Producer* producer)
+	void RtpListener::RemoveProducer(RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -243,7 +243,11 @@ namespace RTC
 		auto it = this->ssrcTable.find(ssrc);
 
 		if (it != this->ssrcTable.end())
-			return it->second;
+		{
+			auto* producer = it->second;
+
+			return producer;
+		}
 
 		return nullptr;
 	}

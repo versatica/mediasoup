@@ -8,11 +8,9 @@
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/TransportTuple.hpp"
 #include "handles/Timer.hpp"
 #include <string>
 #include <unordered_map>
@@ -36,19 +34,19 @@ namespace RTC
 			virtual void OnTransportProducerRtpStreamHealthy(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  const RTC::RtpStream* rtpStream,
+			  RTC::RtpStream* rtpStream,
 			  uint32_t mappedSsrc) = 0;
 			virtual void OnTransportProducerRtpStreamUnhealthy(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  const RTC::RtpStream* rtpStream,
+			  RTC::RtpStream* rtpStream,
 			  uint32_t mappedSsrc) = 0;
 			virtual void OnTransportProducerRtpPacketReceived(
 			  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual const RTC::Producer* OnTransportGetProducer(
+			virtual RTC::Producer* OnTransportGetProducer(
 			  RTC::Transport* transport, std::string& producerId) = 0;
 			virtual void OnTransportNewConsumer(
-			  RTC::Transport* transport, RTC::Consumer* consumer, const RTC::Producer* producer) = 0;
+			  RTC::Transport* transport, RTC::Consumer* consumer, RTC::Producer* producer) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerKeyFrameRequested(
 			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
@@ -61,8 +59,8 @@ namespace RTC
 	public:
 		void CloseProducersAndConsumers();
 		// Subclasses must also invoke the parent Close().
-		void FillJson(json& jsonObject) const     = 0;
-		void FillJsonStats(json& jsonArray) const = 0;
+		virtual void FillJson(json& jsonObject) const     = 0;
+		virtual void FillJsonStats(json& jsonArray) const = 0;
 		// Subclasses must implement this method and call the parent's one to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
@@ -91,17 +89,17 @@ namespace RTC
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
 		void OnProducerRtpStreamHealthy(
-		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
+		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerRtpStreamUnhealthy(
-		  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
+		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerSendRtpPacket(RTC::Producer* consumer, RTC::Packet* packet) override;
+		void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) override;
 		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
-		void onConsumerProducerClosed(RTC::Consumer* consumer);
+		void onConsumerProducerClosed(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

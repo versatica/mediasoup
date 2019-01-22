@@ -32,7 +32,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcTransport::WebRtcTransport(std::string& id, RTC::Transport::Listener* listener, Options& options)
+	WebRtcTransport::WebRtcTransport(
+	  const std::string& id, RTC::Transport::Listener* listener, Options& options)
 	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
@@ -189,7 +190,7 @@ namespace RTC
 		jsonObject["iceLocalCandidates"] = json::array();
 		auto jsonIceLocalCandidatesIt    = jsonObject.find("iceLocalCandidates");
 
-		for (auto i = 0; i < this->iceLocalCandidates.size(); ++i)
+		for (size_t i = 0; i < this->iceLocalCandidates.size(); ++i)
 		{
 			jsonIceLocalCandidatesIt->emplace_back(json::value_t::object);
 
@@ -229,7 +230,7 @@ namespace RTC
 		auto jsonDtlsLocalParametersFingerprintsIt   = jsonDtlsLocalParametersIt->find("fingerprints");
 		auto& fingerprints                           = this->dtlsTransport->GetLocalFingerprints();
 
-		for (auto i = 0; i < fingerprints.size(); ++i)
+		for (size_t i = 0; i < fingerprints.size(); ++i)
 		{
 			jsonDtlsLocalParametersFingerprintsIt->emplace_back(json::value_t::object);
 
@@ -435,8 +436,7 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("wrong fingerprint.algorithm (not a string)");
 
 					dtlsRemoteFingerprint.algorithm =
-					  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get < std
-					                                              : string > ());
+					  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get<std::string>());
 
 					if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 						MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
@@ -529,7 +529,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::RESTART_ICE:
+			case Channel::Request::MethodId::TRANSPORT_RESTART_ICE:
 			{
 				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
 				std::string password         = Utils::Crypto::GetRandomString(32);

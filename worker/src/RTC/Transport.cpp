@@ -6,20 +6,19 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Consumer.hpp"
-#include "RTC/Producer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(std::string& id, Listener* listener) : id(id), listener(listener)
+	Transport::Transport(const std::string& id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
 
@@ -93,7 +92,7 @@ namespace RTC
 		this->mapSsrcConsumer.clear();
 	}
 
-	void Router::HandleRequest(Channel::Request* request)
+	void Transport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
@@ -134,8 +133,10 @@ namespace RTC
 				if (jsonKindIt == request->data.end() || !jsonKindIt->is_string())
 					MS_THROW_TYPE_ERROR("missing kind");
 
+				auto kindString = jsonKindIt->get<std::string>();
+
 				// This may throw.
-				RTC::Media::Kind kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
+				RTC::Media::Kind kind = RTC::Media::GetKind(kindString);
 
 				if (kind == RTC::Media::Kind::ALL)
 					MS_THROW_TYPE_ERROR("invalid empty kind");
@@ -157,7 +158,7 @@ namespace RTC
 
 				auto jsonCodecsIt = jsonMappingIt->find("codecs");
 
-				if (jsonCodecsIt == jsonMappingIt.end() || !jsonCodecsIt->is_array())
+				if (jsonCodecsIt == jsonMappingIt->end() || !jsonCodecsIt->is_array())
 					MS_THROW_TYPE_ERROR("missing mapping.codecs");
 
 				for (auto& codec : *jsonCodecsIt)
@@ -181,7 +182,7 @@ namespace RTC
 
 				auto jsonHeaderExtensionsIt = jsonMappingIt->find("headerExtensions");
 
-				if (jsonHeaderExtensionsIt == jsonMappingIt.end() || !jsonHeaderExtensionsIt->is_array())
+				if (jsonHeaderExtensionsIt == jsonMappingIt->end() || !jsonHeaderExtensionsIt->is_array())
 					MS_THROW_TYPE_ERROR("missing mapping.headerExtensions");
 
 				for (auto& extension : *jsonHeaderExtensionsIt)
@@ -204,7 +205,7 @@ namespace RTC
 
 				auto jsonEncodingsIt = jsonMappingIt->find("encodings");
 
-				if (jsonEncodingsIt == jsonMappingIt.end() || !jsonEncodingsIt->is_array())
+				if (jsonEncodingsIt == jsonMappingIt->end() || !jsonEncodingsIt->is_array())
 					MS_THROW_TYPE_ERROR("missing mapping.encodings");
 
 				for (auto& encoding : *jsonEncodingsIt)
@@ -306,8 +307,10 @@ namespace RTC
 				if (jsonKindIt == request->data.end() || !jsonKindIt->is_string())
 					MS_THROW_TYPE_ERROR("missing kind");
 
+				auto kindString = jsonKindIt->get<std::string>();
+
 				// This may throw.
-				RTC::Media::Kind kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
+				RTC::Media::Kind kind = RTC::Media::GetKind(kindString);
 
 				if (kind == RTC::Media::Kind::ALL)
 					MS_THROW_TYPE_ERROR("invalid empty kind");
@@ -320,13 +323,18 @@ namespace RTC
 				// This may throw.
 				RTC::RtpParameters rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
+				if (rtpParameters.encodings.empty())
+					MS_THROW_TYPE_ERROR("invalid empty rtpParameters.encodings");
+				else if (rtpParameters.encodings[0].ssrc == 0)
+					MS_THROW_TYPE_ERROR("missing rtpParameters.encodings[0].ssrc");
+
 				// Get the associated Producer.
 				auto jsonProducerIdIt = request->internal.find("producerId");
 
 				if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
 					MS_THROW_ERROR("request has no internal.producerId");
 
-				std::string& producerId = jsonProducerIdIt->get<std::string>();
+				std::string producerId  = jsonProducerIdIt->get<std::string>();
 				RTC::Producer* producer = this->listener->OnTransportGetProducer(this, producerId);
 
 				if (producer == nullptr)
@@ -334,6 +342,8 @@ namespace RTC
 
 				// TODO: Read Producer type and create the corresponding Consumer subclass.
 				// Also read producerPaused and return it in the JSON response.
+
+				RTC::Consumer* consumer = new RTC::Consumer(consumerId, this, kind, rtpParameters);
 
 				// Insert into the maps.
 				this->mapConsumers[consumerId] = consumer;
@@ -423,7 +433,7 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
-			case Channel::Request::MethodId::CONSUMER_REQUEST_KEYFRAME:
+			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromRequest(request);
@@ -842,13 +852,13 @@ namespace RTC
 	}
 
 	inline void Transport::OnProducerRtpStreamHealthy(
-	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		this->listener->OnTransportProducerRtpStreamHealthy(this, producer, rtpStream, mappedSsrc);
 	}
 
 	inline void Transport::OnProducerRtpStreamUnhealthy(
-	  RTC::Producer* producer, const RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		this->listener->OnTransportProducerRtpStreamUnhealthy(this, producer, rtpStream, mappedSsrc);
 	}
@@ -863,7 +873,7 @@ namespace RTC
 		SendRtcpPacket(packet);
 	}
 
-	inline void Transport::OnConsumerSendRtpPacket(RTC::Producer* /*consumer*/, RTC::Packet* packet)
+	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
 	{
 		SendRtpPacket(packet);
 	}
