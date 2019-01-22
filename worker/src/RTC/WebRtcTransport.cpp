@@ -570,8 +570,7 @@ namespace RTC
 				// Reply with the updated ICE local parameters.
 				json data{ json::object() };
 
-				data["iceLocalParameters"] = json::object();
-
+				data["iceLocalParameters"]    = json::object();
 				auto jsonIceLocalParametersIt = data.find("iceLocalParameters");
 
 				(*jsonIceLocalParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
