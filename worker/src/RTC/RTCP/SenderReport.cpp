@@ -85,7 +85,7 @@ namespace RTC
 			size_t offset = Packet::Serialize(buffer);
 
 			// Serialize reports.
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				offset += report->Serialize(buffer + offset);
 			}
@@ -98,7 +98,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<SenderReportPacket>");
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				report->Dump();
 			}

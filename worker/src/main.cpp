@@ -138,6 +138,7 @@ void ignoreSignals()
 
 	int err;
 	struct sigaction act;
+
 	// clang-format off
 	std::map<std::string, int> ignoredSignals =
 	{
@@ -157,10 +158,10 @@ void ignoreSignals()
 	if (err != 0)
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
 
-	for (auto& ignoredSignal : ignoredSignals)
+	for (auto& kv : ignoredSignals)
 	{
-		auto& sigName = ignoredSignal.first;
-		int sigId     = ignoredSignal.second;
+		auto& sigName = kv.first;
+		int sigId     = kv.second;
 
 		err = sigaction(sigId, &act, nullptr);
 

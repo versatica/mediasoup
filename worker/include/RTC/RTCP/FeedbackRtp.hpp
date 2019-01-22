@@ -56,7 +56,9 @@ namespace RTC
 		FeedbackRtpItemsPacket<Item>::~FeedbackRtpItemsPacket()
 		{
 			for (auto* item : this->items)
+			{
 				delete item;
+			}
 		}
 
 		template<typename Item>
@@ -64,7 +66,7 @@ namespace RTC
 		{
 			size_t size = FeedbackRtpPacket::GetSize();
 
-			for (auto item : this->items)
+			for (auto* item : this->items)
 			{
 				size += item->GetSize();
 			}

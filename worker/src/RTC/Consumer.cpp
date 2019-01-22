@@ -574,8 +574,8 @@ namespace RTC
 		packet->AddSenderReport(report);
 
 		// Build SDES chunk for this sender.
-		auto sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		auto sdesItem =
+		auto* sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
+		auto* sdesItem =
 		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
 		sdesChunk->AddItem(sdesItem);
@@ -673,7 +673,7 @@ namespace RTC
 
 			MS_ASSERT(it != this->mapProfileRtpStream.end(), "no RtpStream associated with current profile");
 
-			auto rtpStream = it->second;
+			auto* rtpStream = it->second;
 
 			if (rtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
 				lossPercentage = 0;
@@ -694,7 +694,7 @@ namespace RTC
 		if (this->kind != RTC::Media::Kind::VIDEO || IsPaused())
 			return;
 
-		for (auto& listener : this->listeners)
+		for (auto* listener : this->listeners)
 		{
 			listener->OnConsumerKeyFrameRequired(this);
 		}

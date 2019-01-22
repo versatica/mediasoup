@@ -95,42 +95,49 @@ namespace RTC
 					case Type::RR:
 					{
 						current = ReceiverReportPacket::Parse(data, packetLen);
+
 						break;
 					}
 
 					case Type::SDES:
 					{
 						current = SdesPacket::Parse(data, packetLen);
+
 						break;
 					}
 
 					case Type::BYE:
 					{
 						current = ByePacket::Parse(data, packetLen);
+
 						break;
 					}
 
 					case Type::APP:
 					{
 						current = nullptr;
+
 						break;
 					}
 
 					case Type::RTPFB:
 					{
 						current = FeedbackRtpPacket::Parse(data, packetLen);
+
 						break;
 					}
 
 					case Type::PSFB:
 					{
 						current = FeedbackPsPacket::Parse(data, packetLen);
+
 						break;
 					}
 
 					case Type::XR:
 					{
 						current = nullptr;
+
 						break;
 					}
 
@@ -159,9 +166,7 @@ namespace RTC
 
 					// TMP: Do not log XR parsing error until it is implemented.
 					if (Type(header->packetType) != Type::XR)
-					{
 						MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
-					}
 
 					return first;
 				}
@@ -184,10 +189,12 @@ namespace RTC
 		{
 			static const std::string Unknown("UNKNOWN");
 
-			if (Packet::type2String.find(type) == Packet::type2String.end())
+			auto it = Packet::type2String.find(type);
+
+			if (it == Packet::type2String.end())
 				return Unknown;
 
-			return Packet::type2String[type];
+			return it->second;
 		}
 
 		/* Instance methods. */

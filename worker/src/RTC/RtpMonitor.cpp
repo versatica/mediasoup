@@ -179,7 +179,7 @@ namespace RTC
 		size_t samples    = 0;
 		size_t totalScore = 0;
 
-		for (auto& score : this->scores)
+		for (auto score : this->scores)
 		{
 			weight++;
 			samples += weight;
@@ -199,9 +199,9 @@ namespace RTC
 
 		size_t count = 0;
 
-		for (auto& it : this->repairedPackets)
+		for (auto& kv : this->repairedPackets)
 		{
-			if (it.second <= MaxRepairedPacketRetransmission)
+			if (kv.second <= MaxRepairedPacketRetransmission)
 				count++;
 		}
 

@@ -121,7 +121,7 @@ namespace RTC
 			offset += sizeof(this->ssrc);
 
 			// Serialize reports.
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				offset += report->Serialize(buffer + offset);
 			}
@@ -135,7 +135,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("<ReceiverReportPacket>");
 			MS_DEBUG_DEV("  ssrc: %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				report->Dump();
 			}

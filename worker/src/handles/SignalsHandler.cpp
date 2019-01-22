@@ -42,7 +42,7 @@ void SignalsHandler::Close()
 
 	this->closed = true;
 
-	for (auto uvHandle : uvHandles)
+	for (auto* uvHandle : this->uvHandles)
 	{
 		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 	}
@@ -55,10 +55,12 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	if (this->closed)
 		MS_THROW_ERROR("closed");
 
-	auto uvHandle  = new uv_signal_t;
+	int err;
+	auto uvHandle = new uv_signal_t;
+
 	uvHandle->data = (void*)this;
 
-	int err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
+	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
 
 	if (err != 0)
 	{
@@ -68,6 +70,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	}
 
 	err = uv_signal_start(uvHandle, static_cast<uv_signal_cb>(onSignal), signum);
+
 	if (err != 0)
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 

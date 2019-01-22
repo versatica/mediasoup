@@ -45,6 +45,7 @@ namespace RTC
 					if (!item->IsCorrect())
 					{
 						delete item;
+
 						break;
 					}
 
@@ -69,7 +70,7 @@ namespace RTC
 
 			size_t offset = FeedbackPacket::Serialize(buffer);
 
-			for (auto item : this->items)
+			for (auto* item : this->items)
 			{
 				offset += item->Serialize(buffer + offset);
 			}
@@ -84,7 +85,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("<%s>", FeedbackPsPacket::MessageType2String(Item::messageType).c_str());
 			FeedbackPsPacket::Dump();
-			for (auto item : this->items)
+			for (auto* item : this->items)
 			{
 				item->Dump();
 			}
