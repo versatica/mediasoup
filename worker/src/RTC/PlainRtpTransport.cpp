@@ -108,17 +108,17 @@ namespace RTC
 		}
 
 		// Add headerExtensionIds.
-		jsonObject["headerExtensions"] = json::object();
-		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
+		jsonObject["rtpHeaderExtensions"] = json::object();
+		auto jsonRtpHeaderExtensionsIt    = jsonObject.find("rtpHeaderExtensions");
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-			(*jsonHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
+			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
 
 		if (this->rtpHeaderExtensionIds.mid != 0u)
-			(*jsonHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
+			(*jsonRtpHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
 
 		if (this->rtpHeaderExtensionIds.rid != 0u)
-			(*jsonHeaderExtensionsIt)["rid"] = this->rtpHeaderExtensionIds.rid;
+			(*jsonRtpHeaderExtensionsIt)["rid"] = this->rtpHeaderExtensionIds.rid;
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
