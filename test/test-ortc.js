@@ -33,7 +33,9 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			rtcpFeedback : [], // Will be ignored.
 			parameters   :
 			{
-				foo : 'bar'
+				'level-asymmetry-allowed' : 1,
+				'profile-level-id'        : '42e01f',
+				foo                       : 'bar'
 			}
 		}
 	];
@@ -109,8 +111,11 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			],
 			parameters :
 			{
-				'packetization-mode' : 0,
-				foo                  : 'bar'
+
+				'packetization-mode'      : 0,
+				'level-asymmetry-allowed' : 1,
+				'profile-level-id'        : '42e01f',
+				foo                       : 'bar'
 			}
 		});
 
@@ -352,8 +357,10 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 			clockRate  : 90000,
 			parameters :
 			{
-				bar                  : 'lalala',
-				'packetization-mode' : 1
+				'level-asymmetry-allowed' : 1,
+				'packetization-mode'      : 1,
+				'profile-level-id'        : '4d0032',
+				bar                       : 'lalala'
 			}
 		}
 	];
@@ -366,6 +373,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 		[
 			{
 				name         : 'H264',
+				mimeType     : 'video/H264',
 				payloadType  : 111,
 				clockRate    : 90000,
 				rtcpFeedback :
@@ -382,6 +390,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 			},
 			{
 				name        : 'rtx',
+				mimeType    : 'video/rtx',
 				payloadType : 112,
 				clockRate   : 90000,
 				parameters  :
@@ -651,6 +660,7 @@ test('getProducerRtpParametersMapping() throws UnsupportedError if non compatibl
 		[
 			{
 				name         : 'VP8',
+				mimeType     : 'video/VP8',
 				payloadType  : 120,
 				clockRate    : 90000,
 				rtcpFeedback :

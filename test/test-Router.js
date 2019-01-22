@@ -37,7 +37,9 @@ const mediaCodecs =
 		rtcpFeedback : [], // Will be ignored.
 		parameters   :
 		{
-			foo : 'bar'
+			'level-asymmetry-allowed' : 1,
+			'packetization-mode'      : 1,
+			'profile-level-id'        : '4d0032'
 		}
 	}
 ];
@@ -52,9 +54,29 @@ test('worker.createRouter() succeeds', async () =>
 	expect(router.closed).toBe(false);
 	expect(router.rtpCapabilities).toBeType('object');
 
+	await expect(worker.dump())
+		.resolves
+		.toEqual({ pid: worker.pid, routerIds: [ router.id ] });
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id                       : router.id,
+				transportIds             : [],
+				mapProducerIdConsumerIds : {},
+				mapConsumerIdProducerId  : {}
+			});
+
+	// Private API.
+	expect(worker._routers.size).toBe(1);
+
 	worker.close();
 
 	expect(router.closed).toBe(true);
+
+	// Private API.
+	expect(worker._routers.size).toBe(0);
 }, 1000);
 
 test('worker.createRouter() without mediaCodecs rejects with TypeError', async () =>

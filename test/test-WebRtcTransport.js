@@ -35,7 +35,10 @@ const mediaCodecs =
 		rtcpFeedback : [], // Will be ignored.
 		parameters   :
 		{
-			foo : 'bar'
+			'level-asymmetry-allowed' : 1,
+			'packetization-mode'      : 1,
+			'profile-level-id'        : '4d0032',
+			foo                       : 'bar'
 		}
 	}
 ];
@@ -61,6 +64,16 @@ afterEach(() => transport.close());
 
 test('router.createWebRtcTransport() succeeds', async () =>
 {
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id                       : router.id,
+				transportIds             : [ transport.id ],
+				mapProducerIdConsumerIds : {},
+				mapConsumerIdProducerId  : {}
+			});
+
 	// Create a separate transport here.
 	const transport1 = await router.createWebRtcTransport(
 		{

@@ -95,7 +95,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			{
-				if (!this->paused)
+				if (this->paused)
 				{
 					request->Accept();
 
@@ -124,7 +124,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			{
-				if (this->paused)
+				if (!this->paused)
 				{
 					request->Accept();
 

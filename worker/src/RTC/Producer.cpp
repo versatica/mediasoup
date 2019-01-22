@@ -127,7 +127,8 @@ namespace RTC
 				auto payloadType       = kv.first;
 				auto mappedPayloadType = kv.second;
 
-				jsonEntry[payloadType] = mappedPayloadType;
+				jsonEntry["payloadType"]       = payloadType;
+				jsonEntry["mappedPayloadType"] = mappedPayloadType;
 
 				++idx;
 			}
@@ -147,7 +148,8 @@ namespace RTC
 				auto id         = kv.first;
 				auto mappedId   = kv.second;
 
-				jsonEntry[id] = mappedId;
+				jsonEntry["id"]       = id;
+				jsonEntry["mappedId"] = mappedId;
 
 				++idx;
 			}
@@ -262,7 +264,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			{
-				if (!this->paused)
+				if (this->paused)
 				{
 					request->Accept();
 
@@ -282,7 +284,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_RESUME:
 			{
-				if (this->paused)
+				if (!this->paused)
 				{
 					request->Accept();
 
