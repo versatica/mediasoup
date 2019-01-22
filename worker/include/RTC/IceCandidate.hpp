@@ -47,8 +47,8 @@ namespace RTC
 		std::string ip;
 		Protocol protocol;
 		uint16_t port{ 0 };
-		CandidateType type;
-		TcpCandidateType tcpType;
+		CandidateType type{ CandidateType::HOST };
+		TcpCandidateType tcpType{ TcpCandidateType::PASSIVE };
 	};
 
 	/* Inline methods. */

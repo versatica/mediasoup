@@ -13,19 +13,19 @@ namespace RTC
 
 	PlainRtpTransport::PlainRtpTransport(
 	  const std::string& id, RTC::Transport::Listener* listener, Options& options)
-	  : RTC::Transport::Transport(id, listener), rtcpMux(options.rtcpMux)
+	  : RTC::Transport::Transport(id, listener), options(options)
 	{
 		MS_TRACE();
 
 		try
 		{
 			// This may throw.
-			this->udpSocket = new RTC::UdpSocket(this, options.listenIp.ip);
+			this->udpSocket = new RTC::UdpSocket(this, this->options.listenIp.ip);
 
-			if (!this->rtcpMux)
+			if (!this->options.rtcpMux)
 			{
 				// This may throw.
-				this->rtcpUdpSocket = new RTC::UdpSocket(this, options.listenIp.ip);
+				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->options.listenIp.ip);
 			}
 		}
 		catch (const MediaSoupError& error)
@@ -84,13 +84,17 @@ namespace RTC
 			jsonObject["tuple"] = json::object();
 			auto jsonTupleIt    = jsonObject.find("tuple");
 
-			(*jsonTupleIt)["localIp"]   = this->udpSocket->GetLocalIp();
+			if (this->options.listenIp.announcedIp.empty())
+				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+			else
+				(*jsonTupleIt)["localIp"] = this->options.listenIp.announcedIp;
+
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
-			(*jsonTupleIt)["transport"] = "udp";
+			(*jsonTupleIt)["protocol"]  = "udp";
 		}
 
 		// Add rtcpTuple.
-		if (!this->rtcpMux)
+		if (!this->options.rtcpMux)
 		{
 			if (this->rtcpTuple != nullptr)
 			{
@@ -101,9 +105,13 @@ namespace RTC
 				jsonObject["rtcpTuple"] = json::object();
 				auto jsonRtcpTupleIt    = jsonObject.find("rtcpTuple");
 
-				(*jsonRtcpTupleIt)["localIp"]   = this->rtcpUdpSocket->GetLocalIp();
+				if (this->options.listenIp.announcedIp.empty())
+					(*jsonRtcpTupleIt)["localIp"] = this->rtcpUdpSocket->GetLocalIp();
+				else
+					(*jsonRtcpTupleIt)["localIp"] = this->options.listenIp.announcedIp;
+
 				(*jsonRtcpTupleIt)["localPort"] = this->rtcpUdpSocket->GetLocalPort();
-				(*jsonRtcpTupleIt)["transport"] = "udp";
+				(*jsonRtcpTupleIt)["protocol"]  = "udp";
 			}
 		}
 
@@ -151,7 +159,7 @@ namespace RTC
 		}
 
 		// Add rtcpTuple.
-		if (!this->rtcpMux && this->rtcpTuple != nullptr)
+		if (!this->options.rtcpMux && this->rtcpTuple != nullptr)
 			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
 	}
 
@@ -216,14 +224,14 @@ namespace RTC
 
 					if (jsonRtcpPortIt != request->data.end() && jsonRtcpPortIt->is_number_unsigned())
 					{
-						if (this->rtcpMux)
+						if (this->options.rtcpMux)
 							MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 
 						rtcpPort = jsonRtcpPortIt->get<uint16_t>();
 					}
 					else if (jsonRtcpPortIt == request->data.end() || !jsonRtcpPortIt->is_number_unsigned())
 					{
-						if (!this->rtcpMux)
+						if (!this->options.rtcpMux)
 							MS_THROW_TYPE_ERROR("missing rtcpPort (required with rtcpMux disabled)");
 					}
 
@@ -267,7 +275,10 @@ namespace RTC
 					this->tuple = new RTC::TransportTuple(
 					  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
 
-					if (!this->rtcpMux)
+					if (!this->options.listenIp.announcedIp.empty())
+						this->tuple->SetLocalAnnouncedIp(this->options.listenIp.announcedIp);
+
+					if (!this->options.rtcpMux)
 					{
 						switch (Utils::IP::GetFamily(ip))
 						{
@@ -306,6 +317,9 @@ namespace RTC
 						// Create the tuple.
 						this->rtcpTuple = new RTC::TransportTuple(
 						  this->rtcpUdpSocket, reinterpret_cast<struct sockaddr*>(&this->rtcpRemoteAddrStorage));
+
+						if (!this->options.listenIp.announcedIp.empty())
+							this->rtcpTuple->SetLocalAnnouncedIp(this->options.listenIp.announcedIp);
 					}
 				}
 				catch (const MediaSoupError& error)
@@ -333,7 +347,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				if (!this->rtcpMux)
+				if (!this->options.rtcpMux)
 					this->rtcpTuple->FillJson(data["rtcpTuple"]);
 
 				request->Accept(data);
@@ -377,7 +391,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		if (this->rtcpMux)
+		if (this->options.rtcpMux)
 			this->tuple->Send(data, len);
 		else
 			this->rtcpTuple->Send(data, len);
@@ -393,7 +407,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		if (this->rtcpMux)
+		if (this->options.rtcpMux)
 			this->tuple->Send(data, len);
 		else
 			this->rtcpTuple->Send(data, len);

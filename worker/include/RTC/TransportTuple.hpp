@@ -6,6 +6,7 @@
 #include "json.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
+#include <string>
 
 using json = nlohmann::json;
 
@@ -27,6 +28,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
+		void SetLocalAnnouncedIp(std::string& localAnnouncedIp);
 		void Send(const uint8_t* data, size_t len);
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
@@ -39,6 +41,7 @@ namespace RTC
 		RTC::UdpSocket* udpSocket{ nullptr };
 		struct sockaddr* udpRemoteAddr{ nullptr };
 		RTC::TcpConnection* tcpConnection{ nullptr };
+		std::string localAnnouncedIp;
 		// Others.
 		struct sockaddr_storage udpRemoteAddrStorage;
 		Protocol protocol;
@@ -85,6 +88,11 @@ namespace RTC
 		{
 			return false;
 		}
+	}
+
+	inline void TransportTuple::SetLocalAnnouncedIp(std::string& localAnnouncedIp)
+	{
+		this->localAnnouncedIp = localAnnouncedIp;
 	}
 
 	inline void TransportTuple::Send(const uint8_t* data, size_t len)

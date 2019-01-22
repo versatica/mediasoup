@@ -34,21 +34,22 @@ namespace RTC
 
 	WebRtcTransport::WebRtcTransport(
 	  const std::string& id, RTC::Transport::Listener* listener, Options& options)
-	  : RTC::Transport::Transport(id, listener)
+	  : RTC::Transport::Transport(id, listener), options(options)
 	{
 		MS_TRACE();
 
 		try
 		{
-			uint16_t initialIceLocalPreference = IceCandidateDefaultLocalPriority;
+			uint16_t iceLocalPreferenceDecrement = 0;
 
-			for (auto& listenIp : options.listenIps)
+			for (auto& listenIp : this->options.listenIps)
 			{
-				uint16_t iceLocalPreference = initialIceLocalPreference;
-
-				if (options.enableUdp)
+				if (this->options.enableUdp)
 				{
-					if (options.preferUdp)
+					uint16_t iceLocalPreference =
+					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+
+					if (this->options.preferUdp)
 						iceLocalPreference += 1000;
 
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
@@ -56,25 +57,28 @@ namespace RTC
 					// This may throw.
 					auto* udpSocket = new RTC::UdpSocket(this, listenIp.ip);
 
-					this->udpSockets.push_back(udpSocket);
+					this->udpSockets[udpSocket] = listenIp.announcedIp;
 
 					if (listenIp.announcedIp.empty())
 					{
-						RTC::IceCandidate iceCandidate(udpSocket, icePriority);
+						auto* iceCandidate = new RTC::IceCandidate(udpSocket, icePriority);
 
 						this->iceLocalCandidates.push_back(iceCandidate);
 					}
 					else
 					{
-						RTC::IceCandidate iceCandidate(udpSocket, icePriority, listenIp.announcedIp);
+						auto* iceCandidate = new RTC::IceCandidate(udpSocket, icePriority, listenIp.announcedIp);
 
 						this->iceLocalCandidates.push_back(iceCandidate);
 					}
 				}
 
-				if (options.enableTcp)
+				if (this->options.enableTcp)
 				{
-					if (options.preferTcp)
+					uint16_t iceLocalPreference =
+					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+
+					if (this->options.preferTcp)
 						iceLocalPreference += 1000;
 
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
@@ -82,24 +86,24 @@ namespace RTC
 					// This may throw.
 					auto* tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
 
-					this->tcpServers.push_back(tcpServer);
+					this->tcpServers[tcpServer] = listenIp.announcedIp;
 
 					if (listenIp.announcedIp.empty())
 					{
-						RTC::IceCandidate iceCandidate(tcpServer, icePriority);
+						auto* iceCandidate = new RTC::IceCandidate(tcpServer, icePriority);
 
 						this->iceLocalCandidates.push_back(iceCandidate);
 					}
 					else
 					{
-						RTC::IceCandidate iceCandidate(tcpServer, icePriority, listenIp.announcedIp);
+						auto* iceCandidate = new RTC::IceCandidate(tcpServer, icePriority, listenIp.announcedIp);
 
 						this->iceLocalCandidates.push_back(iceCandidate);
 					}
 				}
 
 				// Decrement initial ICE local preference for next IP.
-				initialIceLocalPreference -= 100;
+				iceLocalPreferenceDecrement += 100;
 			}
 
 			// Create a ICE server.
@@ -121,17 +125,27 @@ namespace RTC
 			if (this->iceServer != nullptr)
 				delete this->iceServer;
 
-			for (auto* socket : this->udpSockets)
+			for (auto& kv : this->udpSockets)
 			{
-				delete socket;
+				auto* udpSocket = kv.first;
+
+				delete udpSocket;
 			}
 			this->udpSockets.clear();
 
-			for (auto* server : this->tcpServers)
+			for (auto& kv : this->tcpServers)
 			{
-				delete server;
+				auto* tcpServer = kv.first;
+
+				delete tcpServer;
 			}
 			this->tcpServers.clear();
+
+			for (auto* iceCandidate : this->iceLocalCandidates)
+			{
+				delete iceCandidate;
+			}
+			this->iceLocalCandidates.clear();
 
 			throw;
 		}
@@ -149,17 +163,26 @@ namespace RTC
 		if (this->iceServer != nullptr)
 			delete this->iceServer;
 
-		for (auto* socket : this->udpSockets)
+		for (auto& kv : this->udpSockets)
 		{
-			delete socket;
+			auto* udpSocket = kv.first;
+
+			delete udpSocket;
 		}
 		this->udpSockets.clear();
 
-		for (auto* server : this->tcpServers)
+		for (auto& kv : this->tcpServers)
 		{
-			delete server;
+			auto* tcpServer = kv.first;
+
+			delete tcpServer;
 		}
-		this->tcpServers.clear();
+
+		for (auto* iceCandidate : this->iceLocalCandidates)
+		{
+			delete iceCandidate;
+		}
+		this->iceLocalCandidates.clear();
 
 		if (this->srtpRecvSession != nullptr)
 			delete this->srtpRecvSession;
@@ -195,9 +218,9 @@ namespace RTC
 			jsonIceLocalCandidatesIt->emplace_back(json::value_t::object);
 
 			auto& jsonEntry    = (*jsonIceLocalCandidatesIt)[i];
-			auto& iceCandidate = this->iceLocalCandidates[i];
+			auto* iceCandidate = this->iceLocalCandidates[i];
 
-			iceCandidate.FillJson(jsonEntry);
+			iceCandidate->FillJson(jsonEntry);
 		}
 
 		// Add iceState.

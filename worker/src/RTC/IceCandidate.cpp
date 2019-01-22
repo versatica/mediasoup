@@ -45,11 +45,14 @@ namespace RTC
 		}
 
 		// Add tcpType.
-		switch (this->tcpType)
+		if (this->protocol == Protocol::TCP)
 		{
-			case TcpCandidateType::PASSIVE:
-				jsonObject["tcpType"] = "passive";
-				break;
+			switch (this->tcpType)
+			{
+				case TcpCandidateType::PASSIVE:
+					jsonObject["tcpType"] = "passive";
+					break;
+			}
 		}
 	}
 } // namespace RTC

@@ -52,12 +52,12 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		bool rtcpMux{ true };
 		RTC::UdpSocket* udpSocket{ nullptr };
 		RTC::UdpSocket* rtcpUdpSocket{ nullptr };
 		RTC::TransportTuple* tuple{ nullptr };
 		RTC::TransportTuple* rtcpTuple{ nullptr };
 		// Others.
+		Options options;
 		struct sockaddr_storage remoteAddrStorage;
 		struct sockaddr_storage rtcpRemoteAddrStorage;
 	};

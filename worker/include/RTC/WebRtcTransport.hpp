@@ -117,17 +117,17 @@ namespace RTC
 	private:
 		// Allocated by this.
 		RTC::IceServer* iceServer{ nullptr };
-		std::vector<RTC::UdpSocket*> udpSockets;
-		std::vector<RTC::TcpServer*> tcpServers;
+		// Map of UdpSocket/TcpServer and local announced IP (if any).
+		std::unordered_map<RTC::UdpSocket*, std::string> udpSockets;
+		std::unordered_map<RTC::TcpServer*, std::string> tcpServers;
+		std::vector<RTC::IceCandidate*> iceLocalCandidates;
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
-		// Others (ICE).
-		std::vector<IceCandidate> iceLocalCandidates;
-		RTC::TransportTuple* iceSelectedTuple{ nullptr };
-		// Others (DTLS).
-		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		// Others.
+		Options options;
+		RTC::TransportTuple* iceSelectedTuple{ nullptr };
+		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
 		std::unique_ptr<RTC::REMB::RemoteBitrateEstimatorAbsSendTime> rembRemoteBitrateEstimator;
 	};
 } // namespace RTC

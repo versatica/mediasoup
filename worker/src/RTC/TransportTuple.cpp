@@ -21,7 +21,10 @@ namespace RTC
 		Utils::IP::GetAddressInfo(GetLocalAddress(), &ipFamily, ip, &port);
 
 		// Add localIp.
-		jsonObject["localIp"] = ip;
+		if (this->localAnnouncedIp.empty())
+			jsonObject["localIp"] = ip;
+		else
+			jsonObject["localIp"] = this->localAnnouncedIp;
 
 		// Add localPort.
 		jsonObject["localPort"] = port;
