@@ -157,6 +157,12 @@ namespace RTC
 			// Add tuple.
 			this->tuple->FillJson(jsonObject["tuple"]);
 		}
+		{
+			// Add bytesReceived.
+			jsonObject["bytesReceived"] = 0;
+			// Add bytesSent.
+			jsonObject["bytesSent"] = 0;
+		}
 
 		// Add rtcpTuple.
 		if (!this->options.rtcpMux && this->rtcpTuple != nullptr)

@@ -384,14 +384,19 @@ namespace RTC
 			// Add iceSelectedTuple.
 			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 		}
+		else
+		{
+			// Add bytesReceived.
+			jsonObject["bytesReceived"] = 0;
+			// Add bytesSent.
+			jsonObject["bytesSent"] = 0;
+		}
 
 		// Add availableIncomingBitrate.
-		if (this->availableIncomingBitrate != 0u)
-			jsonObject["availableIncomingBitrate"] = this->availableIncomingBitrate;
+		jsonObject["availableIncomingBitrate"] = this->availableIncomingBitrate;
 
 		// Add availableOutgoingBitrate.
-		if (this->availableOutgoingBitrate != 0u)
-			jsonObject["availableOutgoingBitrate"] = this->availableOutgoingBitrate;
+		jsonObject["availableOutgoingBitrate"] = this->availableOutgoingBitrate;
 
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
