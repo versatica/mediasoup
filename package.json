@@ -30,6 +30,7 @@
     "lint": "gulp lint:node",
     "test_________________": "gulp test",
     "test": "jest",
+    "coverage": "jest --coverage && opn coverage/lcov-report/index.html",
     "postinstall": "make Release -C worker"
   },
   "jest": {

@@ -267,7 +267,7 @@ test('assertCapabilities() succeeds', () =>
 		.toBe(undefined);
 });
 
-test('assertCapabilities() throws UnsupportedError if non compatible codecs', () =>
+test('assertCapabilities() witn non compatible codecs throws UnsupportedError', () =>
 {
 	const mediaCodecs =
 	[

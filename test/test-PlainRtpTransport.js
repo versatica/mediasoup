@@ -199,7 +199,7 @@ test('plaintRtpTransport.connect() succeeds', async () =>
 	expect(transport.rtcpTuple.protocol).toBe('udp');
 }, 1000);
 
-test('plaintRtpTransport.connect() rejects with TypeError if wrong parameters', async () =>
+test('plaintRtpTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
 	await expect(transport.connect())
 		.rejects

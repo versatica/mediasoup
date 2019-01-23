@@ -196,7 +196,7 @@ test('plainRtpTransport.produce() succeeds', async () =>
 			});
 }, 1000);
 
-test('plainRtpTransport.dump() succeeds', async () =>
+test('producer.dump() succeeds', async () =>
 {
 	await expect(audioProducer.dump())
 		.resolves
@@ -221,7 +221,7 @@ test('plainRtpTransport.dump() succeeds', async () =>
 			});
 }, 1000);
 
-test('plainRtpTransport.getStats() succeeds', async () =>
+test('producer.getStats() succeeds', async () =>
 {
 	await expect(audioProducer.getStats())
 		.resolves
@@ -232,7 +232,7 @@ test('plainRtpTransport.getStats() succeeds', async () =>
 		.toEqual([]);
 }, 1000);
 
-test('plainRtpTransport.pause() and resume() succeed', async () =>
+test('producer.pause() and resume() succeed', async () =>
 {
 	await audioProducer.pause();
 	expect(audioProducer.paused).toBe(true);
@@ -249,24 +249,11 @@ test('plainRtpTransport.pause() and resume() succeed', async () =>
 		.toMatchObject({ paused: false });
 }, 1000);
 
-test('plainRtpTransport.close() succeeds', async () =>
+test('producer.close() succeeds', async () =>
 {
 	audioProducer.close();
 	expect(audioProducer.closed).toBe(true);
 	expect(webRtcTransport.getProducerById(audioProducer.id)).toBe(undefined);
-
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id                       : router.id,
-				mapProducerIdConsumerIds : {},
-				mapConsumerIdProducerId  : {}
-			});
-
-	videoProducer.close();
-	expect(videoProducer.closed).toBe(true);
-	expect(plainRtpTransport.getProducerById(videoProducer.id)).toBe(undefined);
 
 	await expect(router.dump())
 		.resolves
@@ -291,4 +278,20 @@ test('Producer methods reject if closed', async () =>
 	await expect(audioProducer.pause())
 		.rejects
 		.toThrow(Error);
+
+	await expect(audioProducer.resume())
+		.rejects
+		.toThrow(Error);
+}, 1000);
+
+test('Producer emits "transportclose" if Transport is closed', async () =>
+{
+	await new Promise((resolve) =>
+	{
+		videoProducer.on('transportclose', resolve);
+
+		plainRtpTransport.close();
+	});
+
+	expect(videoProducer.closed).toBe(true);
 }, 1000);

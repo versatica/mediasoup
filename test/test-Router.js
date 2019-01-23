@@ -90,7 +90,7 @@ test('worker.createRouter() without mediaCodecs rejects with TypeError', async (
 	worker.close();
 }, 1000);
 
-test('worker.createRouter() rejects with InvalidStateError if worker is closed', async () =>
+test('worker.createRouter() rejects with InvalidStateError if Worker is closed', async () =>
 {
 	worker = await createWorker();
 

@@ -242,7 +242,7 @@ test('webRtcTransport.connect() succeeds', async () =>
 	expect(transport.dtlsLocalParameters.role).toBe('server');
 }, 1000);
 
-test('webRtcTransport.connect() rejects with TypeError if wrong parameters', async () =>
+test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
 	let dtlsRemoteParameters;
 

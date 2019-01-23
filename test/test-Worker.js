@@ -1,8 +1,7 @@
 const process = require('process');
 const { toBeType } = require('jest-tobetype');
-const pkg = require('../package.json');
 const mediasoup = require('../');
-const { version, createWorker } = mediasoup;
+const { createWorker } = mediasoup;
 const { InvalidStateError } = require('../lib/errors');
 
 expect.extend({ toBeType });
@@ -11,12 +10,6 @@ let worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
 afterEach(() => worker && !worker.closed && worker.close());
-
-test('mediasoup exposes a version property', () =>
-{
-	expect(version).toBeType('string');
-	expect(version).toBe(pkg.version);
-}, 1000);
 
 test('createWorker() succeeds', async () =>
 {
