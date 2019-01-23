@@ -151,67 +151,67 @@ namespace RTC
 
 				RTC::Producer::RtpMapping rtpMapping;
 
-				auto jsonMappingIt = request->data.find("mapping");
+				auto jsonRtpMappingIt = request->data.find("rtpMapping");
 
-				if (jsonMappingIt == request->data.end() || !jsonMappingIt->is_object())
-					MS_THROW_TYPE_ERROR("missing mapping");
+				if (jsonRtpMappingIt == request->data.end() || !jsonRtpMappingIt->is_object())
+					MS_THROW_TYPE_ERROR("missing rtpMapping");
 
-				auto jsonCodecsIt = jsonMappingIt->find("codecs");
+				auto jsonCodecsIt = jsonRtpMappingIt->find("codecs");
 
-				if (jsonCodecsIt == jsonMappingIt->end() || !jsonCodecsIt->is_array())
-					MS_THROW_TYPE_ERROR("missing mapping.codecs");
+				if (jsonCodecsIt == jsonRtpMappingIt->end() || !jsonCodecsIt->is_array())
+					MS_THROW_TYPE_ERROR("missing rtpMapping.codecs");
 
 				for (auto& codec : *jsonCodecsIt)
 				{
 					if (!codec.is_object())
-						MS_THROW_TYPE_ERROR("wrong entry in mapping.codecs");
+						MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs");
 
 					auto jsonPayloadTypeIt = codec.find("payloadType");
 
 					if (jsonPayloadTypeIt == codec.end() || !jsonPayloadTypeIt->is_number_unsigned())
-						MS_THROW_TYPE_ERROR("missing payloadType in entry in mapping.codecs");
+						MS_THROW_TYPE_ERROR("missing payloadType in entry in rtpMapping.codecs");
 
 					auto jsonMappedPayloadTypeIt = codec.find("mappedPayloadType");
 
 					if (jsonMappedPayloadTypeIt == codec.end() || !jsonMappedPayloadTypeIt->is_number_unsigned())
-						MS_THROW_TYPE_ERROR("missing mappedPayloadType in entry in mapping.codecs");
+						MS_THROW_TYPE_ERROR("missing mappedPayloadType in entry in rtpMapping.codecs");
 
 					rtpMapping.codecs[jsonPayloadTypeIt->get<uint8_t>()] =
 					  jsonMappedPayloadTypeIt->get<uint8_t>();
 				}
 
-				auto jsonHeaderExtensionsIt = jsonMappingIt->find("headerExtensions");
+				auto jsonHeaderExtensionsIt = jsonRtpMappingIt->find("headerExtensions");
 
-				if (jsonHeaderExtensionsIt == jsonMappingIt->end() || !jsonHeaderExtensionsIt->is_array())
-					MS_THROW_TYPE_ERROR("missing mapping.headerExtensions");
+				if (jsonHeaderExtensionsIt == jsonRtpMappingIt->end() || !jsonHeaderExtensionsIt->is_array())
+					MS_THROW_TYPE_ERROR("missing rtpMapping.headerExtensions");
 
 				for (auto& extension : *jsonHeaderExtensionsIt)
 				{
 					if (!extension.is_object())
-						MS_THROW_TYPE_ERROR("wrong entry in mapping.headerExtensions");
+						MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.headerExtensions");
 
 					auto jsonIdIt = extension.find("id");
 
 					if (jsonIdIt == extension.end() || !jsonIdIt->is_number_unsigned())
-						MS_THROW_TYPE_ERROR("missing id in entry in mapping.headerExtensions");
+						MS_THROW_TYPE_ERROR("missing id in entry in rtpMapping.headerExtensions");
 
 					auto jsonMappedIdIt = extension.find("mappedId");
 
 					if (jsonMappedIdIt == extension.end() || !jsonMappedIdIt->is_number_unsigned())
-						MS_THROW_TYPE_ERROR("missing mappedId in entry in mapping.headerExtensions");
+						MS_THROW_TYPE_ERROR("missing mappedId in entry in rtpMapping.headerExtensions");
 
 					rtpMapping.headerExtensions[jsonIdIt->get<uint8_t>()] = jsonMappedIdIt->get<uint8_t>();
 				}
 
-				auto jsonEncodingsIt = jsonMappingIt->find("encodings");
+				auto jsonEncodingsIt = jsonRtpMappingIt->find("encodings");
 
-				if (jsonEncodingsIt == jsonMappingIt->end() || !jsonEncodingsIt->is_array())
-					MS_THROW_TYPE_ERROR("missing mapping.encodings");
+				if (jsonEncodingsIt == jsonRtpMappingIt->end() || !jsonEncodingsIt->is_array())
+					MS_THROW_TYPE_ERROR("missing rtpMapping.encodings");
 
 				for (auto& encoding : *jsonEncodingsIt)
 				{
 					if (!encoding.is_object())
-						MS_THROW_TYPE_ERROR("wrong entry in mapping.encodings");
+						MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings");
 
 					RTC::Producer::RtpEncodingMapping encodingMapping;
 
@@ -229,13 +229,13 @@ namespace RTC
 
 					// However ssrc or rid must be present.
 					if (jsonSsrcIt == encoding.end() && jsonRidIt == encoding.end())
-						MS_THROW_TYPE_ERROR("missing ssrc or rid in entry in mapping.encodings");
+						MS_THROW_TYPE_ERROR("missing ssrc or rid in entry in rtpMapping.encodings");
 
 					// mappedSsrc is mandatory.
 					auto jsonMappedSsrcIt = encoding.find("mappedSsrc");
 
 					if (jsonMappedSsrcIt == encoding.end() || !jsonMappedSsrcIt->is_number_unsigned())
-						MS_THROW_TYPE_ERROR("missing mappedSsrc in entry in mapping.encodings");
+						MS_THROW_TYPE_ERROR("missing mappedSsrc in entry in rtpMapping.encodings");
 
 					encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
 

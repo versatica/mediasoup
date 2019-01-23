@@ -422,36 +422,36 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 		}
 	};
 
-	const mapping =
+	const rtpMapping =
 		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
 
-	expect(mapping.codecs).toEqual(
+	expect(rtpMapping.codecs).toEqual(
 		[
 			{ payloadType: 111, mappedPayloadType: 101 },
 			{ payloadType: 112, mappedPayloadType: 102 }
 		]);
 
-	expect(mapping.headerExtensions).toEqual(
+	expect(rtpMapping.headerExtensions).toEqual(
 		[
 			{ id: 1, mappedId: 5 },
 			{ id: 2, mappedId: 4 }
 		]);
 
-	expect(mapping.encodings[0].ssrc).toBe(11111111);
-	expect(mapping.encodings[0].rtxSsrc).toBe(11111112);
-	expect(mapping.encodings[0].rid).toBe(undefined);
-	expect(mapping.encodings[0].mappedSsrc).toBeType('number');
-	expect(mapping.encodings[1].ssrc).toBe(21111111);
-	expect(mapping.encodings[1].rtxSsrc).toBe(21111112);
-	expect(mapping.encodings[1].rid).toBe(undefined);
-	expect(mapping.encodings[1].mappedSsrc).toBeType('number');
-	expect(mapping.encodings[2].ssrc).toBe(undefined);
-	expect(mapping.encodings[2].rtxSsrc).toBe(undefined);
-	expect(mapping.encodings[2].rid).toBe('high');
-	expect(mapping.encodings[2].mappedSsrc).toBeType('number');
+	expect(rtpMapping.encodings[0].ssrc).toBe(11111111);
+	expect(rtpMapping.encodings[0].rtxSsrc).toBe(11111112);
+	expect(rtpMapping.encodings[0].rid).toBe(undefined);
+	expect(rtpMapping.encodings[0].mappedSsrc).toBeType('number');
+	expect(rtpMapping.encodings[1].ssrc).toBe(21111111);
+	expect(rtpMapping.encodings[1].rtxSsrc).toBe(21111112);
+	expect(rtpMapping.encodings[1].rid).toBe(undefined);
+	expect(rtpMapping.encodings[1].mappedSsrc).toBeType('number');
+	expect(rtpMapping.encodings[2].ssrc).toBe(undefined);
+	expect(rtpMapping.encodings[2].rtxSsrc).toBe(undefined);
+	expect(rtpMapping.encodings[2].rid).toBe('high');
+	expect(rtpMapping.encodings[2].mappedSsrc).toBeType('number');
 
 	const consumableRtpParameters = ortc.getConsumableRtpParameters(
-		'video', rtpParameters, routerRtpCapabilities, mapping);
+		'video', rtpParameters, routerRtpCapabilities, rtpMapping);
 
 	expect(consumableRtpParameters.codecs[0].name).toBe('H264');
 	expect(consumableRtpParameters.codecs[0].mimeType).toBe('video/H264');
@@ -471,15 +471,15 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 
 	expect(consumableRtpParameters.encodings[0]).toEqual(
 		{
-			ssrc : mapping.encodings[0].mappedSsrc
+			ssrc : rtpMapping.encodings[0].mappedSsrc
 		});
 	expect(consumableRtpParameters.encodings[1]).toEqual(
 		{
-			ssrc : mapping.encodings[1].mappedSsrc
+			ssrc : rtpMapping.encodings[1].mappedSsrc
 		});
 	expect(consumableRtpParameters.encodings[2]).toEqual(
 		{
-			ssrc : mapping.encodings[2].mappedSsrc
+			ssrc : rtpMapping.encodings[2].mappedSsrc
 		});
 
 	expect(consumableRtpParameters.rtcp).toEqual(
