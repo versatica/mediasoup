@@ -53,6 +53,9 @@ test('worker.createRouter() succeeds', async () =>
 	expect(router.id).toBeType('string');
 	expect(router.closed).toBe(false);
 	expect(router.rtpCapabilities).toBeType('object');
+	expect(router.rtpCapabilities.codecs).toBeType('array');
+	expect(router.rtpCapabilities.headerExtensions).toBeType('array');
+	expect(router.rtpCapabilities.fecMechanisms).toEqual([]);
 
 	await expect(worker.dump())
 		.resolves

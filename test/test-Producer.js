@@ -1,6 +1,7 @@
 const { toBeType } = require('jest-tobetype');
 const mediasoup = require('../');
 const { createWorker } = mediasoup;
+const { UnsupportedError } = require('../lib/errors');
 
 expect.extend({ toBeType });
 
@@ -194,6 +195,113 @@ test('plainRtpTransport.produce() succeeds', async () =>
 				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
 				mapConsumerIdProducerId  : {}
 			});
+}, 1000);
+
+test('webRtcTransport.produce() with wrong arguments rejects with TypeError', async () =>
+{
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'chicken',
+			rtpParameters : {}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters : {}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Missing or empty rtpParameters.codecs.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				codecs           : [],
+				headerExtensions : [],
+				encodings        : [ { ssrc: '1111' } ],
+				rtcp             : { cname: 'audio' }
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Missing or empty rtpParameters.encodings.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				codecs :
+				[
+					{
+						name        : 'OPUS',
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
+					}
+				],
+				headerExtensions : [],
+				encodings        : [],
+				rtcp             : { cname: 'audio' }
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Missing rtpParameters.rtcp.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				codecs :
+				[
+					{
+						name        : 'OPUS',
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
+					}
+				],
+				headerExtensions : [],
+				encodings        : [ { ssrc: 1111 } ]
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+}, 1000);
+
+test('webRtcTransport.produce() with unsupported codecs rejects with UnsupportedError', async () =>
+{
+	// Missing or empty rtpParameters.encodings.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				codecs :
+				[
+					{
+						name        : 'ISAC',
+						mimeType    : 'audio/ISAC',
+						payloadType : 108,
+						clockRate   : 32000
+					}
+				],
+				headerExtensions : [],
+				encodings        : [ { ssrc: 1111 } ],
+				rtcp             : { cname: 'audio' }
+			}
+		}))
+		.rejects
+		.toThrow(UnsupportedError);
 }, 1000);
 
 test('producer.dump() succeeds', async () =>
