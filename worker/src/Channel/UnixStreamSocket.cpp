@@ -16,13 +16,14 @@ namespace Channel
 	/* Static. */
 
 	// netstring length for a 65536 bytes payload.
-	static constexpr size_t MaxSize{ 65543 };
-	static constexpr size_t MessageMaxSize{ 65536 };
-	static uint8_t WriteBuffer[MaxSize];
+	static constexpr size_t NsMessageMaxLen{ 65543 };
+	static constexpr size_t NsPayloadMaxLen{ 65536 };
+	static uint8_t WriteBuffer[NsMessageMaxLen];
 
 	/* Instance methods. */
 
-	UnixStreamSocket::UnixStreamSocket(int fd) : ::UnixStreamSocket::UnixStreamSocket(fd, MaxSize)
+	UnixStreamSocket::UnixStreamSocket(int fd)
+	  : ::UnixStreamSocket::UnixStreamSocket(fd, NsMessageMaxLen)
 	{
 		MS_TRACE_STD();
 	}
@@ -44,7 +45,7 @@ namespace Channel
 		size_t nsNumLen;
 		size_t nsLen;
 
-		if (nsPayloadLen > MessageMaxSize)
+		if (nsPayloadLen > NsPayloadMaxLen)
 		{
 			MS_ERROR_STD("mesage too big");
 
@@ -81,7 +82,7 @@ namespace Channel
 		size_t nsNumLen;
 		size_t nsLen;
 
-		if (nsPayloadLen > MessageMaxSize)
+		if (nsPayloadLen > NsPayloadMaxLen)
 		{
 			MS_ERROR_STD("mesage too big");
 
@@ -116,7 +117,7 @@ namespace Channel
 		size_t nsNumLen;
 		size_t nsLen;
 
-		if (nsPayloadLen > MessageMaxSize)
+		if (nsPayloadLen > NsPayloadMaxLen)
 		{
 			MS_ERROR_STD("mesage too big");
 
@@ -164,6 +165,7 @@ namespace Channel
 				switch (nsRet)
 				{
 					case NETSTRING_ERROR_TOO_SHORT:
+					{
 						// Check if the buffer is full.
 						if (this->bufferDataLen == this->bufferSize)
 						{
@@ -187,30 +189,45 @@ namespace Channel
 								this->bufferDataLen = 0;
 							}
 						}
-						// Otherwise the buffer is not full, just wait.
 
-						// Exit the parsing loop.
+						// Otherwise the buffer is not full, just wait.
 						return;
+					}
 
 					case NETSTRING_ERROR_TOO_LONG:
+					{
 						MS_ERROR_STD("NETSTRING_ERROR_TOO_LONG");
+
 						break;
+					}
 
 					case NETSTRING_ERROR_NO_COLON:
+					{
 						MS_ERROR_STD("NETSTRING_ERROR_NO_COLON");
+
 						break;
+					}
 
 					case NETSTRING_ERROR_NO_COMMA:
+					{
 						MS_ERROR_STD("NETSTRING_ERROR_NO_COMMA");
+
 						break;
+					}
 
 					case NETSTRING_ERROR_LEADING_ZERO:
+					{
 						MS_ERROR_STD("NETSTRING_ERROR_LEADING_ZERO");
+
 						break;
+					}
 
 					case NETSTRING_ERROR_NO_LENGTH:
+					{
 						MS_ERROR_STD("NETSTRING_ERROR_NO_LENGTH");
+
 						break;
+					}
 				}
 
 				// Error, so reset and exit the parsing loop.
