@@ -11,7 +11,6 @@ Verifies that CLANG_CXX_LIBRARY works.
 import TestGyp
 import TestMac
 
-import os
 import sys
 
 if sys.platform == 'darwin':
@@ -21,6 +20,11 @@ if sys.platform == 'darwin':
     sys.exit(0)
 
   test = TestGyp.TestGyp(formats=['make', 'ninja', 'xcode'])
+
+  if test.format == 'make':
+    # This is failing because of a deprecation warning for libstdc++.
+    test.skip_test()  # bug=533
+
   test.run_gyp('clang-cxx-library.gyp', chdir='clang-cxx-library')
   test.build('clang-cxx-library.gyp', test.ALL, chdir='clang-cxx-library')
 

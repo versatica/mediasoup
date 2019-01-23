@@ -18,6 +18,10 @@ import sys
 if sys.platform == 'darwin':
   test = TestGyp.TestGyp(formats=['ninja', 'xcode'])
 
+  if test.format == 'xcode':
+    # This test appears to hang flakily.
+    test.skip_test()  # bug=532
+
   test_cases = [
     ('Default', 'TestArch32Bits', ['i386']),
     ('Default-iphoneos', 'TestArch32Bits', ['armv7']),

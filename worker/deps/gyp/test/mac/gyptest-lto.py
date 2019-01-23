@@ -17,6 +17,7 @@ import sys
 
 if sys.platform == 'darwin':
   test = TestGyp.TestGyp(formats=['ninja', 'make', 'xcode'])
+
   CHDIR = 'lto'
   test.run_gyp('test.gyp', chdir=CHDIR)
 
@@ -37,14 +38,14 @@ if sys.platform == 'darwin':
 
   def ObjType(p, t_expected):
     r = re.compile(r'nsyms\s+(\d+)')
-    o = subprocess.check_output(['file', p])
+    o = subprocess.check_output(['file', p]).decode('utf-8')
     objtype = 'unknown'
     if ': Mach-O ' in o:
       objtype = 'mach-o'
-    elif ': LLVM bit-code ' in o:
+    elif ': LLVM bitcode' in o:
       objtype = 'llvm'
     if objtype != t_expected:
-      print 'Expected %s, got %s' % (t_expected, objtype)
+      print('Expected %s, got %s' % (t_expected, objtype))
       test.fail_test()
 
   ObjType(ObjPath('cfile', 'lto'), 'llvm')

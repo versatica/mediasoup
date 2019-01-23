@@ -15,6 +15,10 @@ import sys
 if sys.platform == 'darwin':
   test = TestGyp.TestGyp(formats=['make', 'ninja', 'xcode'])
 
+  if test.format == 'make':
+    # This is failing because of a deprecation warning for libstdc++.
+    test.skip_test()  # bug=533
+
   test.run_gyp('deployment-target.gyp', chdir='deployment-target')
 
   test.build('deployment-target.gyp', test.ALL, chdir='deployment-target')

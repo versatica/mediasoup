@@ -21,6 +21,8 @@
 # toplevel Makefile.  It may make sense to generate some .mk files on
 # the side to keep the the files readable.
 
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -232,6 +234,24 @@ cmd_solink_module = $(LINK.$(TOOLSET)) -shared $(GYP_LDFLAGS) $(LDFLAGS.$(TOOLSE
 """
 
 
+LINK_COMMANDS_OS390 = """\
+quiet_cmd_alink = AR($(TOOLSET)) $@
+cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
+
+quiet_cmd_alink_thin = AR($(TOOLSET)) $@
+cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crsT $@ $(filter %.o,$^)
+
+quiet_cmd_link = LINK($(TOOLSET)) $@
+cmd_link = $(LINK.$(TOOLSET)) $(GYP_LDFLAGS) $(LDFLAGS.$(TOOLSET)) -o $@ $(LD_INPUTS) $(LIBS)
+
+quiet_cmd_solink = SOLINK($(TOOLSET)) $@
+cmd_solink = $(LINK.$(TOOLSET)) $(GYP_LDFLAGS) $(LDFLAGS.$(TOOLSET)) -o $@ $(LD_INPUTS) $(LIBS) -Wl,DLL
+
+quiet_cmd_solink_module = SOLINK_MODULE($(TOOLSET)) $@
+cmd_solink_module = $(LINK.$(TOOLSET)) $(GYP_LDFLAGS) $(LDFLAGS.$(TOOLSET)) -o $@ $(filter-out FORCE_DO_CMD, $^) $(LIBS) -Wl,DLL
+"""
+
+
 # Header of toplevel Makefile.
 # This should go into the build tree, but it's easier to keep it here for now.
 SHARED_HEADER = ("""\
@@ -295,7 +315,7 @@ CFLAGS.host ?= $(CPPFLAGS_host) $(CFLAGS_host)
 CXX.host ?= %(CXX.host)s
 CXXFLAGS.host ?= $(CPPFLAGS_host) $(CXXFLAGS_host)
 LINK.host ?= %(LINK.host)s
-LDFLAGS.host ?=
+LDFLAGS.host ?= $(LDFLAGS_host)
 AR.host ?= %(AR.host)s
 
 # Define a dir function that can handle spaces.
@@ -315,7 +335,7 @@ dirx = $(call unreplace_spaces,$(dir $(call replace_spaces,$1)))
 # We write to a dep file on the side first and then rename at the end
 # so we can't end up with a broken dep file.
 depfile = $(depsdir)/$(call replace_spaces,$@).d
-DEPFLAGS = -MMD -MF $(depfile).raw
+DEPFLAGS = %(makedep_args)s -MF $(depfile).raw
 
 # We have to fixup the deps output in a few ways.
 # (1) the file output should mention the proper .o file.
@@ -650,7 +670,7 @@ def _ValidateSourcesForOSX(spec, all_sources):
     basenames.setdefault(basename, []).append(source)
 
   error = ''
-  for basename, files in basenames.iteritems():
+  for basename, files in basenames.items():
     if len(files) > 1:
       error += '  %s: %s\n' % (basename, ' '.join(files))
 
@@ -798,7 +818,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
           gyp.xcode_emulation.MacPrefixHeader(
               self.xcode_settings, lambda p: Sourceify(self.Absolutify(p)),
               self.Pchify))
-      sources = filter(Compilable, all_sources)
+      sources = [x for x in all_sources if Compilable(x)]
       if sources:
         self.WriteLn(SHARED_HEADER_SUFFIX_RULES_COMMENT1)
         extensions = set([os.path.splitext(s)[1] for s in sources])
@@ -927,7 +947,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
                    '%s%s'
                    % (name, cd_action, command))
       self.WriteLn()
-      outputs = map(self.Absolutify, outputs)
+      outputs = [self.Absolutify(o) for o in outputs]
       # The makefile rules are all relative to the top dir, but the gyp actions
       # are defined relative to their containing dir.  This replaces the obj
       # variable for the action rule with an absolute version so that the output
@@ -1017,7 +1037,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
         outputs = [gyp.xcode_emulation.ExpandEnvVars(o, env) for o in outputs]
         inputs = [gyp.xcode_emulation.ExpandEnvVars(i, env) for i in inputs]
 
-        outputs = map(self.Absolutify, outputs)
+        outputs = [self.Absolutify(o) for o in outputs]
         all_outputs += outputs
         # Only write the 'obj' and 'builddir' rules for the "primary" output
         # (:1); it's superfluous for the "extra outputs", and this avoids
@@ -1215,11 +1235,11 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
         self.WriteList(cflags_objcc, 'CFLAGS_OBJCC_%s' % configname)
       includes = config.get('include_dirs')
       if includes:
-        includes = map(Sourceify, map(self.Absolutify, includes))
+        includes = [Sourceify(self.Absolutify(include)) for include in includes]
       self.WriteList(includes, 'INCS_%s' % configname, prefix='-I')
 
     compilable = filter(Compilable, sources)
-    objs = map(self.Objectify, map(self.Absolutify, map(Target, compilable)))
+    objs = [self.Objectify(self.Absolutify(Target(x))) for x in compilable]
     self.WriteList(objs, 'OBJS')
 
     for obj in objs:
@@ -1291,7 +1311,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
 
     # If there are any object files in our input file list, link them into our
     # output.
-    extra_link_deps += filter(Linkable, sources)
+    extra_link_deps += [source for source in sources if Linkable(source)]
 
     self.WriteLn()
 
@@ -1359,8 +1379,8 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
     elif self.type == 'none':
       target = '%s.stamp' % target
     elif self.type != 'executable':
-      print ("ERROR: What output file should be generated?",
-             "type", self.type, "target", target)
+      print(("ERROR: What output file should be generated?",
+             "type", self.type, "target", target))
 
     target_prefix = spec.get('product_prefix', target_prefix)
     target = spec.get('product_name', target)
@@ -1524,9 +1544,9 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
       # Postbuilds expect to be run in the gyp file's directory, so insert an
       # implicit postbuild to cd to there.
       postbuilds.insert(0, gyp.common.EncodePOSIXShellList(['cd', self.path]))
-      for i in xrange(len(postbuilds)):
-        if not postbuilds[i].startswith('$'):
-          postbuilds[i] = EscapeShellArgument(postbuilds[i])
+      for i, postbuild in enumerate(postbuilds):
+        if not postbuild.startswith('$'):
+          postbuilds[i] = EscapeShellArgument(postbuild)
       self.WriteLn('%s: builddir := $(abs_builddir)' % QuoteSpaces(self.output))
       self.WriteLn('%s: POSTBUILDS := %s' % (
           QuoteSpaces(self.output), ' '.join(postbuilds)))
@@ -1616,7 +1636,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
       self.WriteDoCmd([self.output_binary], deps, 'touch', part_of_all,
                       postbuilds=postbuilds)
     else:
-      print "WARNING: no output for", self.type, target
+      print("WARNING: no output for", self.type, self.target)
 
     # Add an alias for each target (if there are any outputs).
     # Installable target aliases are created below.
@@ -1723,7 +1743,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
            output is just a name to run the rule
     command: (optional) command name to generate unambiguous labels
     """
-    outputs = map(QuoteSpaces, outputs)
+    outputs = [QuoteSpaces(o) for o in outputs]
     inputs = map(QuoteSpaces, inputs)
 
     if comment:
@@ -1968,7 +1988,7 @@ def PerformBuild(data, configurations, params):
     if options.toplevel_dir and options.toplevel_dir != '.':
       arguments += '-C', options.toplevel_dir
     arguments.append('BUILDTYPE=' + config)
-    print 'Building [%s]: %s' % (config, arguments)
+    print('Building [%s]: %s' % (config, arguments))
     subprocess.check_call(arguments)
 
 
@@ -2022,6 +2042,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
 
   flock_command= 'flock'
   copy_archive_arguments = '-af'
+  makedep_arguments = '-MMD'
   header_params = {
       'default_target': default_target,
       'builddir': builddir_name,
@@ -2032,6 +2053,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
       'extra_commands': '',
       'srcdir': srcdir,
       'copy_archive_args': copy_archive_arguments,
+      'makedep_args': makedep_arguments,
     }
   if flavor == 'mac':
     flock_command = './gyp-mac-tool flock'
@@ -2044,6 +2066,14 @@ def GenerateOutput(target_list, target_dicts, data, params):
   elif flavor == 'android':
     header_params.update({
         'link_commands': LINK_COMMANDS_ANDROID,
+    })
+  elif flavor == 'zos':
+    copy_archive_arguments = '-fPR'
+    makedep_arguments = '-qmakedep=gcc'
+    header_params.update({
+        'copy_archive_args': copy_archive_arguments,
+        'makedep_args': makedep_arguments,
+        'link_commands': LINK_COMMANDS_OS390,
     })
   elif flavor == 'solaris':
     header_params.update({
