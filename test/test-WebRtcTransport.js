@@ -136,6 +136,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(transport1.dtlsLocalParameters.fingerprints).toBeType('array');
 	expect(transport1.dtlsLocalParameters.role).toBe('auto');
 	expect(transport1.dtlsState).toBe('new');
+	expect(transport1.dtlsRemoteCert).toBe(undefined);
 
 	const data1 = await transport1.dump();
 
@@ -232,8 +233,6 @@ test('webRtcTransport.connect() succeeds', async () =>
 		.resolves
 		.toBe(undefined);
 
-	expect(transport.dtlsLocalParameters.role).toBe('server');
-
 	// Must fail if connected.
 	await expect(transport.connect({ dtlsParameters: dtlsRemoteParameters }))
 		.rejects
@@ -311,6 +310,58 @@ test('webRtcTransport.restartIce() succeeds', async () =>
 		.not.toBe(previousIceUsernameFragment);
 	expect(transport.iceLocalParameters.password)
 		.not.toBe(previousIcePassword);
+}, 1000);
+
+test('WebRtcTransport events succeed', async () =>
+{
+	// Private API.
+	const channel = transport._channel;
+
+	const onIceStateChange = jest.fn();
+
+	transport.on('icestatechange', onIceStateChange);
+
+	channel.emit(transport.id, 'icestatechange', { iceState: 'completed' });
+
+	expect(onIceStateChange).toHaveBeenCalledTimes(1);
+	expect(onIceStateChange).toHaveBeenCalledWith('completed');
+	expect(transport.iceState).toBe('completed');
+
+	const onIceSelectedTuple = jest.fn();
+	const iceSelectedTuple =
+	{
+		localIp    : '1.1.1.1',
+		localPort  : 1111,
+		remoteIp   : '2.2.2.2',
+		remotePort : 2222,
+		protocol   : 'udp'
+	};
+
+	transport.on('iceselectedtuplechange', onIceSelectedTuple);
+
+	channel.emit(transport.id, 'iceselectedtuplechange', { iceSelectedTuple });
+
+	expect(onIceSelectedTuple).toHaveBeenCalledTimes(1);
+	expect(onIceSelectedTuple).toHaveBeenCalledWith(iceSelectedTuple);
+	expect(transport.iceSelectedTuple).toEqual(iceSelectedTuple);
+
+	const onDtlsStateChange = jest.fn();
+
+	transport.on('dtlsstatechange', onDtlsStateChange);
+
+	channel.emit(transport.id, 'dtlsstatechange', { dtlsState: 'connecting' });
+
+	expect(onDtlsStateChange).toHaveBeenCalledTimes(1);
+	expect(onDtlsStateChange).toHaveBeenCalledWith('connecting');
+	expect(transport.dtlsState).toBe('connecting');
+
+	channel.emit(
+		transport.id, 'dtlsstatechange', { dtlsState: 'connected', dtlsRemoteCert: 'ABCD' });
+
+	expect(onDtlsStateChange).toHaveBeenCalledTimes(2);
+	expect(onDtlsStateChange).toHaveBeenCalledWith('connected');
+	expect(transport.dtlsState).toBe('connected');
+	expect(transport.dtlsRemoteCert).toBe('ABCD');
 }, 1000);
 
 test('WebRtcTransport methods reject if closed', async () =>
