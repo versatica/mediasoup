@@ -123,9 +123,13 @@ namespace RTC
 				else if (jsonListenIpsIt->size() > 8)
 					MS_THROW_TYPE_ERROR("wrong listenIps (too many IPs)");
 
+				options.listenIps.reserve(jsonListenIpsIt->size());
+
 				for (auto& jsonListenIp : *jsonListenIpsIt)
 				{
-					RTC::WebRtcTransport::ListenIp listenIp;
+					options.listenIps.emplace_back();
+
+					auto& listenIp = options.listenIps.back();
 
 					if (!jsonListenIp.is_object())
 						MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
@@ -151,8 +155,6 @@ namespace RTC
 
 						listenIp.announcedIp = jsonAnnouncedIpIt->get<std::string>();
 					}
-
-					options.listenIps.push_back(listenIp);
 				}
 
 				auto jsonEnableUdpIt = request->data.find("enableUdp");

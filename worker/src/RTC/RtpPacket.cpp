@@ -176,13 +176,21 @@ namespace RTC
 
 			if (HasOneByteExtensions())
 			{
-				for (const auto& pair : this->oneByteExtensions)
-					extIds.push_back(std::to_string(pair.first));
+				extIds.reserve(this->oneByteExtensions.size());
+
+				for (auto& kv : this->oneByteExtensions)
+				{
+					extIds.push_back(std::to_string(kv.first));
+				}
 			}
 			else
 			{
-				for (const auto& pair : this->twoBytesExtensions)
-					extIds.push_back(std::to_string(pair.first));
+				extIds.reserve(this->twoBytesExtensions.size());
+
+				for (auto& kv : this->twoBytesExtensions)
+				{
+					extIds.push_back(std::to_string(kv.first));
+				}
 			}
 
 			if (!extIds.empty())

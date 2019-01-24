@@ -209,12 +209,16 @@ namespace RTC
 				if (jsonEncodingsIt == jsonRtpMappingIt->end() || !jsonEncodingsIt->is_array())
 					MS_THROW_TYPE_ERROR("missing rtpMapping.encodings");
 
+				rtpMapping.encodings.reserve(jsonEncodingsIt->size());
+
 				for (auto& encoding : *jsonEncodingsIt)
 				{
 					if (!encoding.is_object())
 						MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings");
 
-					RTC::Producer::RtpEncodingMapping encodingMapping;
+					rtpMapping.encodings.emplace_back();
+
+					auto& encodingMapping = rtpMapping.encodings.back();
 
 					// ssrc is optional.
 					auto jsonSsrcIt = encoding.find("ssrc");
@@ -239,8 +243,6 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("missing mappedSsrc in entry in rtpMapping.encodings");
 
 					encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
-
-					rtpMapping.encodings.push_back(encodingMapping);
 				}
 
 				// The number of encodings in rtpParameters must match the number of encodings
@@ -343,15 +345,13 @@ namespace RTC
 				if (jsonConsumableRtpEncodingsIt->size() == 0)
 					MS_THROW_TYPE_ERROR("empty consumableRtpEncodings");
 
-				std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
+				std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings(
+				  jsonConsumableRtpEncodingsIt->size());
 
 				for (auto& entry : *jsonConsumableRtpEncodingsIt)
 				{
-					// This may throw.
-					RTC::RtpEncodingParameters encoding(entry);
-
-					// Append to the vector.
-					consumableRtpEncodings.push_back(encoding);
+					// This may throw due the constructor of RTC::RtpEncodingParameters.
+					consumableRtpEncodings.emplace_back(entry);
 				}
 
 				RTC::Consumer* consumer =

@@ -36,13 +36,12 @@ namespace RTC
 		if (jsonCodecsIt == data.end() || !jsonCodecsIt->is_array())
 			MS_THROW_TYPE_ERROR("missing codecs");
 
+		this->codecs.reserve(jsonCodecsIt->size());
+
 		for (auto& entry : *jsonCodecsIt)
 		{
-			// This may throw.
-			RTC::RtpCodecParameters codec(entry);
-
-			// Append to the codecs vector.
-			this->codecs.push_back(codec);
+			// This may throw due the constructor of RTC::RtpCodecParameters.
+			this->codecs.emplace_back(entry);
 		}
 
 		if (this->codecs.empty())
@@ -52,13 +51,12 @@ namespace RTC
 		if (jsonEncodingsIt == data.end() || !jsonEncodingsIt->is_array())
 			MS_THROW_TYPE_ERROR("missing encodings");
 
+		this->encodings.reserve(jsonEncodingsIt->size());
+
 		for (auto& entry : *jsonEncodingsIt)
 		{
-			// This may throw.
-			RTC::RtpEncodingParameters encoding(entry);
-
-			// Append to the encodings vector.
-			this->encodings.push_back(encoding);
+			// This may throw due the constructor of RTC::RtpEncodingParameters.
+			this->encodings.emplace_back(entry);
 		}
 
 		if (this->encodings.empty())
@@ -67,14 +65,12 @@ namespace RTC
 		// headerExtensions is optional.
 		if (jsonHeaderExtensionsIt != data.end() && jsonHeaderExtensionsIt->is_array())
 		{
+			this->headerExtensions.reserve(jsonHeaderExtensionsIt->size());
+
 			for (auto& entry : *jsonHeaderExtensionsIt)
 			{
-				// This may throw.
-				RTC::RtpHeaderExtensionParameters headerExtension(entry);
-
-				// If a known header extension, append to the headerExtensions vector.
-				if (headerExtension.type != RtpHeaderExtensionUri::Type::UNKNOWN)
-					this->headerExtensions.push_back(headerExtension);
+				// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
+				this->headerExtensions.emplace_back(entry);
 			}
 		}
 

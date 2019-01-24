@@ -97,7 +97,7 @@ namespace RTC
 							break;
 						}
 
-						arrayOfIntegers.push_back(entry.get<int32_t>());
+						arrayOfIntegers.emplace_back(entry.get<int32_t>());
 					}
 
 					if (!arrayOfIntegers.empty() && isValid)

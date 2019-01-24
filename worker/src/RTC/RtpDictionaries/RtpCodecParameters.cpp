@@ -54,12 +54,12 @@ namespace RTC
 		// rtcpFeedback is optional.
 		if (jsonRtcpFeedbackIt != data.end() && jsonRtcpFeedbackIt->is_array())
 		{
+			this->rtcpFeedback.reserve(jsonRtcpFeedbackIt->size());
+
 			for (auto& entry : *jsonRtcpFeedbackIt)
 			{
-				RTC::RtcpFeedback rtcpFeedback(entry);
-
-				// Append to the rtcpFeedback vector.
-				this->rtcpFeedback.push_back(rtcpFeedback);
+				// This may throw due the constructor of RTC::RtcpFeedback.
+				this->rtcpFeedback.emplace_back(entry);
 			}
 		}
 
