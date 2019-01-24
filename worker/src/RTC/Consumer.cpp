@@ -21,8 +21,13 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	  const std::string& id, Listener* listener, RTC::Media::Kind kind, RTC::RtpParameters& rtpParameters)
-	  : id(id), listener(listener), kind(kind), rtpParameters(rtpParameters)
+	  const std::string& id,
+	  Listener* listener,
+	  RTC::Media::Kind kind,
+	  RTC::RtpParameters& rtpParameters,
+	  std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings)
+	  : id(id), listener(listener), kind(kind), rtpParameters(rtpParameters),
+	    consumableRtpEncodings(consumableRtpEncodings)
 	{
 		MS_TRACE();
 

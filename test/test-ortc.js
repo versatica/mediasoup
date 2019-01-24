@@ -412,9 +412,9 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 		],
 		encodings :
 		[
-			{ ssrc: 11111111, rtx: { ssrc: 11111112 } },
-			{ ssrc: 21111111, rtx: { ssrc: 21111112 } },
-			{ rid: 'high' }
+			{ ssrc: 11111111, rtx: { ssrc: 11111112 }, maxBitrate: 111111 },
+			{ ssrc: 21111111, rtx: { ssrc: 21111112 }, maxBitrate: 222222 },
+			{ rid: 'high', maxBitrate: 333333 }
 		],
 		rtcp :
 		{
@@ -471,15 +471,18 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 
 	expect(consumableRtpParameters.encodings[0]).toEqual(
 		{
-			ssrc : rtpMapping.encodings[0].mappedSsrc
+			ssrc       : rtpMapping.encodings[0].mappedSsrc,
+			maxBitrate : 111111
 		});
 	expect(consumableRtpParameters.encodings[1]).toEqual(
 		{
-			ssrc : rtpMapping.encodings[1].mappedSsrc
+			ssrc       : rtpMapping.encodings[1].mappedSsrc,
+			maxBitrate : 222222
 		});
 	expect(consumableRtpParameters.encodings[2]).toEqual(
 		{
-			ssrc : rtpMapping.encodings[2].mappedSsrc
+			ssrc       : rtpMapping.encodings[2].mappedSsrc,
+			maxBitrate : 333333
 		});
 
 	expect(consumableRtpParameters.rtcp).toEqual(

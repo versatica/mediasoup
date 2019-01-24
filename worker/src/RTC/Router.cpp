@@ -450,25 +450,17 @@ namespace RTC
 		}
 	}
 
-	RTC::Producer* Router::OnTransportGetProducer(RTC::Transport* /*transport*/, std::string& producerId)
+	void Router::OnTransportNewConsumer(
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, std::string& producerId)
 	{
 		MS_TRACE();
 
 		auto mapProducersIt = this->mapProducers.find(producerId);
 
 		if (mapProducersIt == this->mapProducers.end())
-			return nullptr;
+			MS_THROW_ERROR("Producer not found [producerId:%s]", producerId.c_str());
 
-		auto* producer = mapProducersIt->second;
-
-		return producer;
-	}
-
-	void Router::OnTransportNewConsumer(
-	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, RTC::Producer* producer)
-	{
-		MS_TRACE();
-
+		auto* producer              = mapProducersIt->second;
 		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
 
 		MS_ASSERT(
@@ -478,9 +470,22 @@ namespace RTC
 		  this->mapConsumerProducer.find(consumer) == this->mapConsumerProducer.end(),
 		  "Consumer already present in mapConsumerProducer");
 
-		auto& consumers = mapProducerConsumersIt->second;
+		// Get current healthy streams in the Producer and provide the Consumer with them.
+		for (auto& kv : producer->GetHealthyRtpStreams())
+		{
+			auto* rtpStream     = kv.first;
+			uint32_t mappedSsrc = kv.second;
+
+			consumer->ProducerRtpStreamHealthy(rtpStream, mappedSsrc);
+		}
+
+		// Update the Consumer status based on the Producer status.
+		if (producer->IsPaused())
+			consumer->ProducerPaused();
 
 		// Insert the Consumer in the maps.
+		auto& consumers = mapProducerConsumersIt->second;
+
 		consumers.insert(consumer);
 		this->mapConsumerProducer[consumer] = producer;
 	}

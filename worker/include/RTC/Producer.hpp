@@ -14,7 +14,6 @@
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -69,6 +68,7 @@ namespace RTC
 		const RTC::RtpParameters& GetRtpParameters() const;
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		bool IsPaused() const;
+		std::map<RTC::RtpStreamRecv*, uint32_t>& GetHealthyRtpStreams();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -78,8 +78,8 @@ namespace RTC
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
 		RTC::RtpStreamRecv* CreateRtpStream(
 		  uint32_t ssrc, const RTC::RtpCodecParameters& codec, size_t encodingIdx);
-		void SetHealthyStream(RTC::RtpStreamRecv* rtpStream);
-		void SetUnhealthyStream(RTC::RtpStreamRecv* rtpStream);
+		void SetHealthyRtpStream(RTC::RtpStreamRecv* rtpStream);
+		void SetUnhealthyRtpStream(RTC::RtpStreamRecv* rtpStream);
 		void MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
@@ -107,12 +107,12 @@ namespace RTC
 		struct RtpMapping rtpMapping;
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
+		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
+		// Others.
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		std::set<RTC::RtpStreamRecv*> healthyRtpStreams;
-		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
-		// Others.
+		std::map<RTC::RtpStreamRecv*, uint32_t> mapHealthyRtpStreamMappedSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		struct RTC::RtpHeaderExtensionIds mappedRtpHeaderExtensionIds;
 		bool paused{ false };
@@ -136,6 +136,11 @@ namespace RTC
 	inline bool Producer::IsPaused() const
 	{
 		return this->paused;
+	}
+
+	inline std::map<RTC::RtpStreamRecv*, uint32_t>& Producer::GetHealthyRtpStreams()
+	{
+		return this->mapHealthyRtpStreamMappedSsrc;
 	}
 } // namespace RTC
 

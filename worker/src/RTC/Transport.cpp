@@ -13,6 +13,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -270,7 +271,6 @@ namespace RTC
 				// add them to the Transport.
 				// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
 				// header extension ids of the Producer (and not their mapped values).
-
 				auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 
 				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
@@ -297,6 +297,12 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME:
 			{
+				auto jsonProducerIdIt = request->internal.find("producerId");
+
+				if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+					MS_THROW_ERROR("request has no internal.producerId");
+
+				std::string producerId = jsonProducerIdIt->get<std::string>();
 				std::string consumerId;
 
 				// This may throw.
@@ -328,22 +334,41 @@ namespace RTC
 				else if (rtpParameters.encodings[0].ssrc == 0)
 					MS_THROW_TYPE_ERROR("missing rtpParameters.encodings[0].ssrc");
 
-				// Get the associated Producer.
-				auto jsonProducerIdIt = request->internal.find("producerId");
+				// consumableRtpEncodings is mandatory.
+				auto jsonConsumableRtpEncodingsIt = request->data.find("consumableRtpEncodings");
 
-				if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-					MS_THROW_ERROR("request has no internal.producerId");
+				if (jsonConsumableRtpEncodingsIt == request->data.end() || !jsonConsumableRtpEncodingsIt->is_array())
+					MS_THROW_TYPE_ERROR("missing consumableRtpEncodings");
 
-				std::string producerId  = jsonProducerIdIt->get<std::string>();
-				RTC::Producer* producer = this->listener->OnTransportGetProducer(this, producerId);
+				if (jsonConsumableRtpEncodingsIt->size() == 0)
+					MS_THROW_TYPE_ERROR("empty consumableRtpEncodings");
 
-				if (producer == nullptr)
-					MS_THROW_ERROR("no associated Producer found");
+				std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 
-				// TODO: Read Producer type and create the corresponding Consumer subclass.
-				// Also read producerPaused and return it in the JSON response.
+				for (auto& entry : *jsonConsumableRtpEncodingsIt)
+				{
+					// This may throw.
+					RTC::RtpEncodingParameters encoding(entry);
 
-				RTC::Consumer* consumer = new RTC::Consumer(consumerId, this, kind, rtpParameters);
+					// Append to the vector.
+					consumableRtpEncodings.push_back(encoding);
+				}
+
+				RTC::Consumer* consumer =
+				  new RTC::Consumer(consumerId, this, kind, rtpParameters, consumableRtpEncodings);
+
+				// Notify the listener and get the associated Producer.
+				// This may throw if no Producer is found.
+				try
+				{
+					this->listener->OnTransportNewConsumer(this, consumer, producerId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete consumer;
+
+					throw;
+				}
 
 				// Insert into the maps.
 				this->mapConsumers[consumerId] = consumer;
@@ -353,13 +378,15 @@ namespace RTC
 					this->mapSsrcConsumer[ssrc] = consumer;
 				}
 
-				// Notify the listener.
-				this->listener->OnTransportNewConsumer(this, consumer, producer);
-
 				MS_DEBUG_DEV(
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
-				request->Accept();
+				// Create status response.
+				json data{ json::object() };
+
+				data["producerPaused"] = consumer->IsProducerPaused();
+
+				request->Accept(data);
 
 				break;
 			}

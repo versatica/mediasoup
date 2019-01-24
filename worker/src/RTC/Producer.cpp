@@ -90,7 +90,7 @@ namespace RTC
 		this->mapRtxSsrcRtpStream.clear();
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
-		this->healthyRtpStreams.clear();
+		this->mapHealthyRtpStreamMappedSsrc.clear();
 
 		// Delete the KeyFrameRequestManager().
 		delete this->keyFrameRequestManager;
@@ -656,7 +656,7 @@ namespace RTC
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
 
 		// Set stream as healthy.
-		SetHealthyStream(rtpStream);
+		SetHealthyRtpStream(rtpStream);
 
 		// Request a key frame for this stream since we may have lost the first packets.
 		this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
@@ -664,37 +664,40 @@ namespace RTC
 		return rtpStream;
 	}
 
-	void Producer::SetHealthyStream(RTC::RtpStreamRecv* rtpStream)
+	void Producer::SetHealthyRtpStream(RTC::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
-		if (this->healthyRtpStreams.find(rtpStream) != this->healthyRtpStreams.end())
+		if (this->mapHealthyRtpStreamMappedSsrc.find(rtpStream) != this->mapHealthyRtpStreamMappedSsrc.end())
+		{
 			return;
-
-		this->healthyRtpStreams.insert(rtpStream);
+		}
 
 		uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+
+		this->mapHealthyRtpStreamMappedSsrc[rtpStream] = mappedSsrc;
 
 		// Notify the listener.
 		this->listener->OnProducerRtpStreamHealthy(this, rtpStream, mappedSsrc);
 	}
 
-	void Producer::SetUnhealthyStream(RTC::RtpStreamRecv* rtpStream)
+	void Producer::SetUnhealthyRtpStream(RTC::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
-		if (this->healthyRtpStreams.find(rtpStream) == this->healthyRtpStreams.end())
+		auto it = this->mapHealthyRtpStreamMappedSsrc.find(rtpStream);
+
+		if (it == this->mapHealthyRtpStreamMappedSsrc.end())
 			return;
 
-		this->healthyRtpStreams.erase(rtpStream);
+		uint32_t mappedSsrc = it->second;
 
-		uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+		this->mapHealthyRtpStreamMappedSsrc.erase(it);
 
 		// Notify the listener.
 		this->listener->OnProducerRtpStreamUnhealthy(this, rtpStream, mappedSsrc);
 	}
 
-	// TODO: Must set mapped ssrc!
 	void Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
@@ -824,7 +827,7 @@ namespace RTC
 
 		auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
-		SetHealthyStream(rtpStreamRecv);
+		SetHealthyRtpStream(rtpStreamRecv);
 	}
 
 	void Producer::OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)
@@ -833,7 +836,7 @@ namespace RTC
 
 		auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
-		SetUnhealthyStream(rtpStreamRecv);
+		SetUnhealthyRtpStream(rtpStreamRecv);
 	}
 
 	void Producer::OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)

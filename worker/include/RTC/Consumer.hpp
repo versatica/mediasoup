@@ -41,7 +41,8 @@ namespace RTC
 		  const std::string& id,
 		  Listener* listener,
 		  RTC::Media::Kind kind,
-		  RTC::RtpParameters& rtpParameters);
+		  RTC::RtpParameters& rtpParameters,
+		  std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings);
 		virtual ~Consumer();
 
 	public:
@@ -50,6 +51,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request);
 		bool IsStarted() const;
 		bool IsPaused() const;
+		bool IsProducerPaused() const;
 		std::vector<uint32_t>& GetMediaSsrcs();
 		void TransportConnected();
 		void ProducerPaused();
@@ -91,6 +93,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
+		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		RtpMonitor* rtpMonitor{ nullptr };
@@ -123,6 +126,11 @@ namespace RTC
 	}
 
 	inline bool Consumer::IsPaused() const
+	{
+		return this->paused || this->producerPaused;
+	}
+
+	inline bool Consumer::IsProducerPaused() const
 	{
 		return this->paused || this->producerPaused;
 	}

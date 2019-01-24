@@ -43,10 +43,8 @@ namespace RTC
 			  uint32_t mappedSsrc) = 0;
 			virtual void OnTransportProducerRtpPacketReceived(
 			  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual RTC::Producer* OnTransportGetProducer(
-			  RTC::Transport* transport, std::string& producerId) = 0;
 			virtual void OnTransportNewConsumer(
-			  RTC::Transport* transport, RTC::Consumer* consumer, RTC::Producer* producer) = 0;
+			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerKeyFrameRequested(
 			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;

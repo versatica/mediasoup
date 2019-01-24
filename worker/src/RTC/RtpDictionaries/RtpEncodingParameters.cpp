@@ -22,7 +22,6 @@ namespace RTC
 		auto jsonRtxIt              = data.find("rtx");
 		auto jsonMaxBitrateIt       = data.find("maxBitrate");
 		auto jsonMaxFramerateIt     = data.find("maxFramerate");
-		auto jsonActiveIt           = data.find("active");
 
 		// ssrc is optional.
 		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
@@ -54,10 +53,6 @@ namespace RTC
 		// maxFramerate is optional.
 		if (jsonMaxFramerateIt != data.end() && jsonMaxFramerateIt->is_number())
 			this->maxFramerate = jsonMaxFramerateIt->get<double>();
-
-		// active is optional.
-		if (jsonActiveIt != data.end() && jsonActiveIt->is_boolean())
-			this->active = jsonActiveIt->get<bool>();
 	}
 
 	void RtpEncodingParameters::FillJson(json& jsonObject) const
@@ -87,8 +82,5 @@ namespace RTC
 		// Add maxFramerate.
 		if (this->maxFramerate > 0)
 			jsonObject["maxFramerate"] = this->maxFramerate;
-
-		// Add active.
-		jsonObject["active"] = this->active;
 	}
 } // namespace RTC
