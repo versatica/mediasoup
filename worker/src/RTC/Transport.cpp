@@ -147,7 +147,7 @@ namespace RTC
 				// This may throw.
 				RTC::RtpParameters rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
-				RTC::Producer::RtpMapping rtpMapping{};
+				RTC::Producer::RtpMapping rtpMapping;
 
 				auto jsonRtpMappingIt = request->data.find("rtpMapping");
 
