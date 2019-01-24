@@ -108,11 +108,11 @@ namespace RTC
 
 			// Must delete everything since the destructor won't be called.
 
-			if (this->dtlsTransport != nullptr)
-				delete this->dtlsTransport;
+			delete this->dtlsTransport;
+			this->dtlsTransport = nullptr;
 
-			if (this->iceServer != nullptr)
-				delete this->iceServer;
+			delete this->iceServer;
+			this->iceServer = nullptr;
 
 			for (auto& kv : this->udpSockets)
 			{
@@ -142,11 +142,9 @@ namespace RTC
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
-		if (this->dtlsTransport != nullptr)
-			delete this->dtlsTransport;
+		delete this->dtlsTransport;
 
-		if (this->iceServer != nullptr)
-			delete this->iceServer;
+		delete this->iceServer;
 
 		for (auto& kv : this->udpSockets)
 		{
@@ -165,11 +163,9 @@ namespace RTC
 
 		this->iceLocalCandidates.clear();
 
-		if (this->srtpRecvSession != nullptr)
-			delete this->srtpRecvSession;
+		delete this->srtpRecvSession;
 
-		if (this->srtpSendSession != nullptr)
-			delete this->srtpSendSession;
+		delete this->srtpSendSession;
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const

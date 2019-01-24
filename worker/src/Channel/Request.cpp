@@ -49,15 +49,14 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto jsonIdIt       = body.find("id");
-		auto jsonMethodIt   = body.find("method");
-		auto jsonInternalIt = body.find("internal");
-		auto jsonDataIt     = body.find("data");
+		auto jsonIdIt = body.find("id");
 
 		if (jsonIdIt == body.end() || !jsonIdIt->is_number_unsigned())
 			MS_THROW_ERROR("missing id");
 
 		this->id = jsonIdIt->get<uint32_t>();
+
+		auto jsonMethodIt = body.find("method");
 
 		if (jsonMethodIt == body.end() || !jsonMethodIt->is_string())
 			MS_THROW_ERROR("missing method");
@@ -75,8 +74,12 @@ namespace Channel
 
 		this->methodId = methodIdIt->second;
 
+		auto jsonInternalIt = body.find("internal");
+
 		if (jsonInternalIt != body.end() && jsonInternalIt->is_object())
 			this->internal = *jsonInternalIt;
+
+		auto jsonDataIt = body.find("data");
 
 		if (jsonDataIt != body.end() && jsonDataIt->is_object())
 			this->data = *jsonDataIt;

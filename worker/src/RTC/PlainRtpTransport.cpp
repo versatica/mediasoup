@@ -34,17 +34,11 @@ namespace RTC
 
 			// Must delete everything since the destructor won't be called.
 
-			if (this->udpSocket)
-			{
-				delete this->udpSocket;
-				this->udpSocket = nullptr;
-			}
+			delete this->udpSocket;
+			this->udpSocket = nullptr;
 
-			if (this->rtcpUdpSocket)
-			{
-				delete this->rtcpUdpSocket;
-				this->rtcpUdpSocket = nullptr;
-			}
+			delete this->rtcpUdpSocket;
+			this->rtcpUdpSocket = nullptr;
 
 			throw;
 		}
@@ -54,17 +48,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->udpSocket != nullptr)
-			delete this->udpSocket;
+		delete this->udpSocket;
 
-		if (this->rtcpUdpSocket != nullptr)
-			delete this->rtcpUdpSocket;
+		delete this->rtcpUdpSocket;
 
-		if (this->tuple != nullptr)
-			delete this->tuple;
+		delete this->tuple;
 
-		if (this->rtcpTuple != nullptr)
-			delete this->rtcpTuple;
+		delete this->rtcpTuple;
 	}
 
 	void PlainRtpTransport::FillJson(json& jsonObject) const

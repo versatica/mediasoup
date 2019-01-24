@@ -328,7 +328,7 @@ namespace RTC
 
 		auto* rtpStream = GetRtpStream(packet);
 
-		if (!rtpStream)
+		if (rtpStream == nullptr)
 		{
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 

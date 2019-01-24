@@ -22,9 +22,9 @@ const workerFiles =
 ];
 const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
 const workerHeaderFilterRegex =
-	'(common.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp' +
-	'|Loop.hpp|MediaSoupError.hpp|Settings.hpp|Utils.hpp' +
-	'|handles/*.hpp|Channel/*.hpp|RTC/**/*.hpp)';
+	'(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp' +
+	'|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp' +
+	'|handles/**/*.hpp|json.hpp)';
 const numCpus = os.cpus().length;
 
 gulp.task('lint:node', () =>

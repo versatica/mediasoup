@@ -53,8 +53,7 @@ namespace RTC
 		this->mapSsrcConsumer.clear();
 
 		// Delete the RTCP timer.
-		if (this->rtcpTimer != nullptr)
-			delete this->rtcpTimer;
+		delete this->rtcpTimer;
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -148,7 +147,7 @@ namespace RTC
 				// This may throw.
 				RTC::RtpParameters rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
-				RTC::Producer::RtpMapping rtpMapping;
+				RTC::Producer::RtpMapping rtpMapping{};
 
 				auto jsonRtpMappingIt = request->data.find("rtpMapping");
 

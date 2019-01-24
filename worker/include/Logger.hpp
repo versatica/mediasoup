@@ -112,7 +112,7 @@ public:
 	static void ClassInit(Channel::UnixStreamSocket* channel);
 
 public:
-	static const long pid;
+	static const int64_t pid;
 	static Channel::UnixStreamSocket* channel;
 	static const size_t bufferSize {10000};
 	static char buffer[];

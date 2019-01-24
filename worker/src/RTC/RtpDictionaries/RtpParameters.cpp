@@ -178,7 +178,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static const std::string aptString = "apt";
+		static const std::string AptString{ "apt" };
 
 		uint8_t payloadType = encoding.codecPayloadType;
 
@@ -186,7 +186,7 @@ namespace RTC
 		{
 			auto& codec = *it;
 
-			if (codec.mimeType.IsFeatureCodec() && codec.parameters.GetInteger(aptString) == payloadType)
+			if (codec.mimeType.IsFeatureCodec() && codec.parameters.GetInteger(AptString) == payloadType)
 			{
 				return std::addressof(codec);
 			}
@@ -199,7 +199,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string aptString{ "apt" };
+		static const std::string AptString{ "apt" };
 
 		std::unordered_set<uint8_t> payloadTypes;
 
@@ -215,8 +215,8 @@ namespace RTC
 				// A RTX codec must have 'apt' parameter pointing to a non RTX codec.
 				case RTC::RtpCodecMimeType::Subtype::RTX:
 				{
-					// NOTE: RtpCodecParameters already asserted that there is 'apt' parameter.
-					int32_t apt = codec.parameters.GetInteger(aptString);
+					// NOTE: RtpCodecParameters already asserted that there is apt parameter.
+					int32_t apt = codec.parameters.GetInteger(AptString);
 					auto it     = this->codecs.begin();
 
 					for (; it != this->codecs.end(); ++it)

@@ -202,13 +202,13 @@ namespace RTC
 				MS_DEBUG_DEV("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
 			}
 		}
-		if (this->audioLevelExtensionId)
+		if (this->audioLevelExtensionId != 0u)
 			MS_DEBUG_DEV("  audioLevel extId  : %" PRIu8, this->audioLevelExtensionId);
-		if (this->absSendTimeExtensionId)
+		if (this->absSendTimeExtensionId != 0u)
 			MS_DEBUG_DEV("  absSendTime extId : %" PRIu8, this->absSendTimeExtensionId);
-		if (this->midExtensionId)
+		if (this->midExtensionId != 0u)
 			MS_DEBUG_DEV("  mid extId         : %" PRIu8, this->midExtensionId);
-		if (this->ridExtensionId)
+		if (this->ridExtensionId != 0u)
 			MS_DEBUG_DEV("  rid extId         : %" PRIu8, this->ridExtensionId);
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
