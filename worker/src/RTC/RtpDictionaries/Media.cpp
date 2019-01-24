@@ -42,6 +42,21 @@ namespace RTC
 		return it->second;
 	}
 
+	Media::Kind Media::GetKind(std::string&& str)
+	{
+		MS_TRACE();
+
+		// Force lowcase kind.
+		Utils::String::ToLowerCase(str);
+
+		auto it = Media::string2Kind.find(str);
+
+		if (it == Media::string2Kind.end())
+			MS_THROW_TYPE_ERROR("invalid media kind [kind:%s]", str.c_str());
+
+		return it->second;
+	}
+
 	std::string& Media::GetString(Media::Kind kind)
 	{
 		MS_TRACE();

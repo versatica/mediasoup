@@ -25,6 +25,7 @@ namespace RTC
 
 	public:
 		static Kind GetKind(std::string& str);
+		static Kind GetKind(std::string&& str);
 		static std::string& GetString(Kind kind);
 
 	private:

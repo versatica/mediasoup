@@ -134,10 +134,8 @@ namespace RTC
 				if (jsonKindIt == request->data.end() || !jsonKindIt->is_string())
 					MS_THROW_TYPE_ERROR("missing kind");
 
-				auto kindString = jsonKindIt->get<std::string>();
-
 				// This may throw.
-				RTC::Media::Kind kind = RTC::Media::GetKind(kindString);
+				RTC::Media::Kind kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
 
 				if (kind == RTC::Media::Kind::ALL)
 					MS_THROW_TYPE_ERROR("invalid empty kind");
@@ -315,10 +313,8 @@ namespace RTC
 				if (jsonKindIt == request->data.end() || !jsonKindIt->is_string())
 					MS_THROW_TYPE_ERROR("missing kind");
 
-				auto kindString = jsonKindIt->get<std::string>();
-
 				// This may throw.
-				RTC::Media::Kind kind = RTC::Media::GetKind(kindString);
+				RTC::Media::Kind kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
 
 				if (kind == RTC::Media::Kind::ALL)
 					MS_THROW_TYPE_ERROR("invalid empty kind");
