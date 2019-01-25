@@ -11,7 +11,6 @@ public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
-		UdpSocket* socket{ nullptr };
 		uv_udp_send_t req;
 		uint8_t store[1];
 	};
