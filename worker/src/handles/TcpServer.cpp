@@ -12,6 +12,9 @@ inline static void onConnection(uv_stream_t* handle, int status)
 {
 	auto* server = static_cast<TcpServer*>(handle->data);
 
+	if (server == nullptr)
+		return;
+
 	server->OnUvConnection(status);
 }
 
