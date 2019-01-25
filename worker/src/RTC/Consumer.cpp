@@ -15,21 +15,54 @@ namespace RTC
 	/* Static. */
 
 	static uint8_t RtxPacketBuffer[RtpBufferSize];
-
 	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
 
 	/* Instance methods. */
 
-	Consumer::Consumer(
-	  const std::string& id,
-	  Listener* listener,
-	  RTC::Media::Kind kind,
-	  RTC::RtpParameters& rtpParameters,
-	  std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings)
-	  : id(id), listener(listener), kind(kind), rtpParameters(rtpParameters),
-	    consumableRtpEncodings(consumableRtpEncodings)
+	Consumer::Consumer(const std::string& id, Listener* listener, json& data)
+	  : id(id), listener(listener)
 	{
 		MS_TRACE();
+
+		auto jsonKindIt = data.find("kind");
+
+		if (jsonKindIt == data.end() || !jsonKindIt->is_string())
+			MS_THROW_TYPE_ERROR("missing kind");
+
+		// This may throw.
+		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
+
+		if (this->kind == RTC::Media::Kind::ALL)
+			MS_THROW_TYPE_ERROR("invalid empty kind");
+
+		auto jsonRtpParametersIt = data.find("rtpParameters");
+
+		if (jsonRtpParametersIt == data.end() || !jsonRtpParametersIt->is_object())
+			MS_THROW_TYPE_ERROR("missing rtpParameters");
+
+		// This may throw.
+		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
+
+		if (this->rtpParameters.encodings.empty())
+			MS_THROW_TYPE_ERROR("invalid empty rtpParameters.encodings");
+		else if (this->rtpParameters.encodings[0].ssrc == 0)
+			MS_THROW_TYPE_ERROR("missing rtpParameters.encodings[0].ssrc");
+
+		auto jsonConsumableRtpEncodingsIt = data.find("consumableRtpEncodings");
+
+		if (jsonConsumableRtpEncodingsIt == data.end() || !jsonConsumableRtpEncodingsIt->is_array())
+			MS_THROW_TYPE_ERROR("missing consumableRtpEncodings");
+
+		if (jsonConsumableRtpEncodingsIt->size() == 0)
+			MS_THROW_TYPE_ERROR("empty consumableRtpEncodings");
+
+		this->consumableRtpEncodings.reserve(jsonConsumableRtpEncodingsIt->size());
+
+		for (auto& entry : *jsonConsumableRtpEncodingsIt)
+		{
+			// This may throw due the constructor of RTC::RtpEncodingParameters.
+			consumableRtpEncodings.emplace_back(entry);
+		}
 
 		// Fill supported codec payload types.
 		for (auto& codec : this->rtpParameters.codecs)
@@ -43,7 +76,7 @@ namespace RTC
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 
-		// Create RtpStreamSend instance.
+		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
 	}
 

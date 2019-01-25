@@ -37,12 +37,7 @@ namespace RTC
 		};
 
 	public:
-		Consumer(
-		  const std::string& id,
-		  Listener* listener,
-		  RTC::Media::Kind kind,
-		  RTC::RtpParameters& rtpParameters,
-		  std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings);
+		Consumer(const std::string& id, Listener* listener, json& data);
 		virtual ~Consumer();
 
 	public:

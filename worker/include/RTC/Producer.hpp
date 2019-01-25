@@ -35,7 +35,7 @@ namespace RTC
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 		};
 
-	public:
+	private:
 		struct RtpEncodingMapping
 		{
 			std::string rid;
@@ -44,7 +44,7 @@ namespace RTC
 			uint32_t mappedSsrc{ 0 };
 		};
 
-	public:
+	private:
 		struct RtpMapping
 		{
 			std::map<uint8_t, uint8_t> codecs;
@@ -53,12 +53,7 @@ namespace RTC
 		};
 
 	public:
-		Producer(
-		  const std::string& id,
-		  Listener* listener,
-		  RTC::Media::Kind kind,
-		  RTC::RtpParameters& rtpParameters,
-		  struct RtpMapping& rtpMapping);
+		Producer(const std::string& id, Listener* listener, json& data);
 		virtual ~Producer();
 
 	public:
@@ -102,13 +97,13 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		RTC::Media::Kind kind;
-		RTC::RtpParameters rtpParameters;
-		struct RtpMapping rtpMapping;
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
 		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
+		RTC::Media::Kind kind;
+		RTC::RtpParameters rtpParameters;
+		struct RtpMapping rtpMapping;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;

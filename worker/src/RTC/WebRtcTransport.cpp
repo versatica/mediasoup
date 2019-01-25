@@ -32,29 +32,117 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcTransport::WebRtcTransport(
-	  const std::string& id, RTC::Transport::Listener* listener, Options& options)
-	  : RTC::Transport::Transport(id, listener), options(options)
+	WebRtcTransport::WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
+	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
+
+		bool enableUdp{ true };
+		bool enableTcp{ false };
+		bool preferUdp{ false };
+		bool preferTcp{ false };
+
+		auto jsonEnableUdpIt = data.find("enableUdp");
+
+		if (jsonEnableUdpIt != data.end())
+		{
+			if (!jsonEnableUdpIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
+
+			enableUdp = jsonEnableUdpIt->get<bool>();
+		}
+
+		auto jsonEnableTcpIt = data.find("enableTcp");
+
+		if (jsonEnableTcpIt != data.end())
+		{
+			if (!jsonEnableTcpIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
+
+			enableTcp = jsonEnableTcpIt->get<bool>();
+		}
+
+		auto jsonPreferUdpIt = data.find("preferUdp");
+
+		if (jsonPreferUdpIt != data.end())
+		{
+			if (!jsonPreferUdpIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
+
+			preferUdp = jsonPreferUdpIt->get<bool>();
+		}
+
+		auto jsonPreferTcpIt = data.find("preferTcp");
+
+		if (jsonPreferTcpIt != data.end())
+		{
+			if (!jsonPreferTcpIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
+
+			preferTcp = jsonPreferTcpIt->get<bool>();
+		}
+
+		auto jsonListenIpsIt = data.find("listenIps");
+
+		if (jsonListenIpsIt == data.end())
+			MS_THROW_TYPE_ERROR("missing listenIps");
+		else if (!jsonListenIpsIt->is_array())
+			MS_THROW_TYPE_ERROR("wrong listenIps (not an array)");
+		else if (jsonListenIpsIt->size() == 0)
+			MS_THROW_TYPE_ERROR("wrong listenIps (empty array)");
+		else if (jsonListenIpsIt->size() > 8)
+			MS_THROW_TYPE_ERROR("wrong listenIps (too many IPs)");
+
+		std::vector<ListenIp> listenIps(jsonListenIpsIt->size());
+
+		for (size_t i = 0; i < jsonListenIpsIt->size(); ++i)
+		{
+			auto& jsonListenIp = (*jsonListenIpsIt)[i];
+			auto& listenIp     = listenIps[i];
+
+			if (!jsonListenIp.is_object())
+				MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
+
+			auto jsonIpIt = jsonListenIp.find("ip");
+
+			if (jsonIpIt == jsonListenIp.end())
+				MS_THROW_TYPE_ERROR("missing listenIp.ip");
+			else if (!jsonIpIt->is_string())
+				MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string");
+
+			listenIp.ip.assign(jsonIpIt->get<std::string>());
+
+			// This may throw.
+			Utils::IP::NormalizeIp(listenIp.ip);
+
+			auto jsonAnnouncedIpIt = jsonListenIp.find("announcedIp");
+
+			if (jsonAnnouncedIpIt != jsonListenIp.end())
+			{
+				if (!jsonAnnouncedIpIt->is_string())
+					MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string)");
+
+				listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
+			}
+		}
 
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement = 0;
 
-			if (this->options.enableUdp && this->options.enableTcp)
-				this->iceLocalCandidates.reserve(2 * this->options.listenIps.size());
+			if (enableUdp && enableTcp)
+				this->iceLocalCandidates.reserve(2 * jsonListenIpsIt->size());
 			else
-				this->iceLocalCandidates.reserve(this->options.listenIps.size());
+				this->iceLocalCandidates.reserve(jsonListenIpsIt->size());
 
-			for (auto& listenIp : this->options.listenIps)
+			for (auto& listenIp : listenIps)
 			{
-				if (this->options.enableUdp)
+				if (enableUdp)
 				{
 					uint16_t iceLocalPreference =
 					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
-					if (this->options.preferUdp)
+					if (preferUdp)
 						iceLocalPreference += 1000;
 
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
@@ -70,12 +158,12 @@ namespace RTC
 						this->iceLocalCandidates.emplace_back(udpSocket, icePriority, listenIp.announcedIp);
 				}
 
-				if (this->options.enableTcp)
+				if (enableTcp)
 				{
 					uint16_t iceLocalPreference =
 					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
-					if (this->options.preferTcp)
+					if (preferTcp)
 						iceLocalPreference += 1000;
 
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);

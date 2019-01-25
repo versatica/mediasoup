@@ -10,7 +10,7 @@ namespace RTC
 {
 	class PlainRtpTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
-	public:
+	private:
 		struct ListenIp
 		{
 			std::string ip;
@@ -18,14 +18,7 @@ namespace RTC
 		};
 
 	public:
-		struct Options
-		{
-			ListenIp listenIp;
-			bool rtcpMux{ true };
-		};
-
-	public:
-		PlainRtpTransport(const std::string& id, RTC::Transport::Listener* listener, Options& options);
+		PlainRtpTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~PlainRtpTransport() override;
 
 	public:
@@ -57,7 +50,8 @@ namespace RTC
 		RTC::TransportTuple* tuple{ nullptr };
 		RTC::TransportTuple* rtcpTuple{ nullptr };
 		// Others.
-		Options options;
+		ListenIp listenIp;
+		bool rtcpMux{ true };
 		struct sockaddr_storage remoteAddrStorage;
 		struct sockaddr_storage rtcpRemoteAddrStorage;
 	};

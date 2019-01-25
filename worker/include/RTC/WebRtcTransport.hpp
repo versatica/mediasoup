@@ -25,7 +25,7 @@ namespace RTC
 	                        public RTC::DtlsTransport::Listener,
 	                        public RTC::REMB::RemoteBitrateEstimator::Listener
 	{
-	public:
+	private:
 		struct ListenIp
 		{
 			std::string ip;
@@ -33,17 +33,7 @@ namespace RTC
 		};
 
 	public:
-		struct Options
-		{
-			std::vector<ListenIp> listenIps;
-			bool enableUdp{ true };
-			bool enableTcp{ false };
-			bool preferUdp{ false };
-			bool preferTcp{ false };
-		};
-
-	public:
-		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, Options& options);
+		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~WebRtcTransport() override;
 
 	public:
@@ -124,7 +114,6 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
-		Options options;
 		std::vector<RTC::IceCandidate> iceLocalCandidates;
 		RTC::TransportTuple* iceSelectedTuple{ nullptr };
 		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };

@@ -12,20 +12,59 @@ namespace RTC
 	/* Instance methods. */
 
 	PlainRtpTransport::PlainRtpTransport(
-	  const std::string& id, RTC::Transport::Listener* listener, Options& options)
-	  : RTC::Transport::Transport(id, listener), options(options)
+	  const std::string& id, RTC::Transport::Listener* listener, json& data)
+	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
+
+		auto jsonListenIpIt = data.find("listenIp");
+
+		if (jsonListenIpIt == data.end())
+			MS_THROW_TYPE_ERROR("missing listenIp");
+		else if (!jsonListenIpIt->is_object())
+			MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
+
+		auto jsonIpIt = jsonListenIpIt->find("ip");
+
+		if (jsonIpIt == jsonListenIpIt->end())
+			MS_THROW_TYPE_ERROR("missing listenIp.ip");
+		else if (!jsonIpIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
+
+		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
+
+		// This may throw.
+		Utils::IP::NormalizeIp(this->listenIp.ip);
+
+		auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
+
+		if (jsonAnnouncedIpIt != jsonListenIpIt->end())
+		{
+			if (!jsonAnnouncedIpIt->is_string())
+				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
+
+			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
+		}
+
+		auto jsonRtcpMuxIt = data.find("rtcpMux");
+
+		if (jsonRtcpMuxIt != data.end())
+		{
+			if (!jsonRtcpMuxIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong rtcpMux (not a boolean)");
+
+			this->rtcpMux = jsonRtcpMuxIt->get<bool>();
+		}
 
 		try
 		{
 			// This may throw.
-			this->udpSocket = new RTC::UdpSocket(this, this->options.listenIp.ip);
+			this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 
-			if (!this->options.rtcpMux)
+			if (!this->rtcpMux)
 			{
 				// This may throw.
-				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->options.listenIp.ip);
+				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 			}
 		}
 		catch (const MediaSoupError& error)
@@ -74,17 +113,17 @@ namespace RTC
 			jsonObject["tuple"] = json::object();
 			auto jsonTupleIt    = jsonObject.find("tuple");
 
-			if (this->options.listenIp.announcedIp.empty())
+			if (this->listenIp.announcedIp.empty())
 				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
 			else
-				(*jsonTupleIt)["localIp"] = this->options.listenIp.announcedIp;
+				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
 
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
 			(*jsonTupleIt)["protocol"]  = "udp";
 		}
 
 		// Add rtcpTuple.
-		if (!this->options.rtcpMux)
+		if (!this->rtcpMux)
 		{
 			if (this->rtcpTuple != nullptr)
 			{
@@ -95,10 +134,10 @@ namespace RTC
 				jsonObject["rtcpTuple"] = json::object();
 				auto jsonRtcpTupleIt    = jsonObject.find("rtcpTuple");
 
-				if (this->options.listenIp.announcedIp.empty())
+				if (this->listenIp.announcedIp.empty())
 					(*jsonRtcpTupleIt)["localIp"] = this->rtcpUdpSocket->GetLocalIp();
 				else
-					(*jsonRtcpTupleIt)["localIp"] = this->options.listenIp.announcedIp;
+					(*jsonRtcpTupleIt)["localIp"] = this->listenIp.announcedIp;
 
 				(*jsonRtcpTupleIt)["localPort"] = this->rtcpUdpSocket->GetLocalPort();
 				(*jsonRtcpTupleIt)["protocol"]  = "udp";
@@ -155,7 +194,7 @@ namespace RTC
 		}
 
 		// Add rtcpTuple.
-		if (!this->options.rtcpMux && this->rtcpTuple != nullptr)
+		if (!this->rtcpMux && this->rtcpTuple != nullptr)
 			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
 	}
 
@@ -220,14 +259,14 @@ namespace RTC
 
 					if (jsonRtcpPortIt != request->data.end() && jsonRtcpPortIt->is_number_unsigned())
 					{
-						if (this->options.rtcpMux)
+						if (this->rtcpMux)
 							MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 
 						rtcpPort = jsonRtcpPortIt->get<uint16_t>();
 					}
 					else if (jsonRtcpPortIt == request->data.end() || !jsonRtcpPortIt->is_number_unsigned())
 					{
-						if (!this->options.rtcpMux)
+						if (!this->rtcpMux)
 							MS_THROW_TYPE_ERROR("missing rtcpPort (required with rtcpMux disabled)");
 					}
 
@@ -271,10 +310,10 @@ namespace RTC
 					this->tuple = new RTC::TransportTuple(
 					  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
 
-					if (!this->options.listenIp.announcedIp.empty())
-						this->tuple->SetLocalAnnouncedIp(this->options.listenIp.announcedIp);
+					if (!this->listenIp.announcedIp.empty())
+						this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
 
-					if (!this->options.rtcpMux)
+					if (!this->rtcpMux)
 					{
 						switch (Utils::IP::GetFamily(ip))
 						{
@@ -314,8 +353,8 @@ namespace RTC
 						this->rtcpTuple = new RTC::TransportTuple(
 						  this->rtcpUdpSocket, reinterpret_cast<struct sockaddr*>(&this->rtcpRemoteAddrStorage));
 
-						if (!this->options.listenIp.announcedIp.empty())
-							this->rtcpTuple->SetLocalAnnouncedIp(this->options.listenIp.announcedIp);
+						if (!this->listenIp.announcedIp.empty())
+							this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
 					}
 				}
 				catch (const MediaSoupError& error)
@@ -343,7 +382,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				if (!this->options.rtcpMux)
+				if (!this->rtcpMux)
 					this->rtcpTuple->FillJson(data["rtcpTuple"]);
 
 				request->Accept(data);
@@ -387,7 +426,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		if (this->options.rtcpMux)
+		if (this->rtcpMux)
 			this->tuple->Send(data, len);
 		else
 			this->rtcpTuple->Send(data, len);
@@ -403,7 +442,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		if (this->options.rtcpMux)
+		if (this->rtcpMux)
 			this->tuple->Send(data, len);
 		else
 			this->rtcpTuple->Send(data, len);

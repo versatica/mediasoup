@@ -6,7 +6,6 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/PlainRtpTransport.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -110,104 +109,18 @@ namespace RTC
 				// This may throw.
 				SetNewTransportIdFromRequest(request, transportId);
 
-				RTC::WebRtcTransport::Options options;
-
-				auto jsonListenIpsIt = request->data.find("listenIps");
-
-				if (jsonListenIpsIt == request->data.end())
-					MS_THROW_TYPE_ERROR("missing listenIps");
-				else if (!jsonListenIpsIt->is_array())
-					MS_THROW_TYPE_ERROR("wrong listenIps (not an array)");
-				else if (jsonListenIpsIt->size() == 0)
-					MS_THROW_TYPE_ERROR("wrong listenIps (empty array)");
-				else if (jsonListenIpsIt->size() > 8)
-					MS_THROW_TYPE_ERROR("wrong listenIps (too many IPs)");
-
-				options.listenIps.reserve(jsonListenIpsIt->size());
-
-				for (auto& jsonListenIp : *jsonListenIpsIt)
-				{
-					options.listenIps.emplace_back();
-
-					auto& listenIp = options.listenIps.back();
-
-					if (!jsonListenIp.is_object())
-						MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
-
-					auto jsonIpIt = jsonListenIp.find("ip");
-
-					if (jsonIpIt == jsonListenIp.end())
-						MS_THROW_TYPE_ERROR("missing listenIp.ip");
-					else if (!jsonIpIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string");
-
-					listenIp.ip = jsonIpIt->get<std::string>();
-
-					// This may throw.
-					Utils::IP::NormalizeIp(listenIp.ip);
-
-					auto jsonAnnouncedIpIt = jsonListenIp.find("announcedIp");
-
-					if (jsonAnnouncedIpIt != jsonListenIp.end())
-					{
-						if (!jsonAnnouncedIpIt->is_string())
-							MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string)");
-
-						listenIp.announcedIp = jsonAnnouncedIpIt->get<std::string>();
-					}
-				}
-
-				auto jsonEnableUdpIt = request->data.find("enableUdp");
-
-				if (jsonEnableUdpIt != request->data.end())
-				{
-					if (!jsonEnableUdpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
-
-					options.enableUdp = jsonEnableUdpIt->get<bool>();
-				}
-
-				auto jsonEnableTcpIt = request->data.find("enableTcp");
-
-				if (jsonEnableTcpIt != request->data.end())
-				{
-					if (!jsonEnableTcpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
-
-					options.enableTcp = jsonEnableTcpIt->get<bool>();
-				}
-
-				auto jsonPreferUdpIt = request->data.find("preferUdp");
-
-				if (jsonPreferUdpIt != request->data.end())
-				{
-					if (!jsonPreferUdpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
-
-					options.preferUdp = jsonPreferUdpIt->get<bool>();
-				}
-
-				auto jsonPreferTcpIt = request->data.find("preferTcp");
-
-				if (jsonPreferTcpIt != request->data.end())
-				{
-					if (!jsonPreferTcpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
-
-					options.preferTcp = jsonPreferTcpIt->get<bool>();
-				}
-
 				// This may throw.
-				RTC::WebRtcTransport* webrtcTransport = new RTC::WebRtcTransport(transportId, this, options);
+				RTC::WebRtcTransport* webRtcTransport =
+				  new RTC::WebRtcTransport(transportId, this, request->data);
 
 				// Insert into the map.
-				this->mapTransports[transportId] = webrtcTransport;
+				this->mapTransports[transportId] = webRtcTransport;
 
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
 				json data{ json::object() };
 
-				webrtcTransport->FillJson(data);
+				webRtcTransport->FillJson(data);
 
 				request->Accept(data);
 
@@ -221,49 +134,8 @@ namespace RTC
 				// This may throw
 				SetNewTransportIdFromRequest(request, transportId);
 
-				RTC::PlainRtpTransport::Options options;
-
-				auto jsonListenIpIt = request->data.find("listenIp");
-
-				if (jsonListenIpIt == request->data.end())
-					MS_THROW_TYPE_ERROR("missing listenIp");
-				else if (!jsonListenIpIt->is_object())
-					MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
-
-				auto jsonIpIt = jsonListenIpIt->find("ip");
-
-				if (jsonIpIt == jsonListenIpIt->end())
-					MS_THROW_TYPE_ERROR("missing listenIp.ip");
-				else if (!jsonIpIt->is_string())
-					MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
-
-				options.listenIp.ip = jsonIpIt->get<std::string>();
-
-				// This may throw.
-				Utils::IP::NormalizeIp(options.listenIp.ip);
-
-				auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
-
-				if (jsonAnnouncedIpIt != jsonListenIpIt->end())
-				{
-					if (!jsonAnnouncedIpIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
-
-					options.listenIp.announcedIp = jsonAnnouncedIpIt->get<std::string>();
-				}
-
-				auto jsonRtcpMuxIt = request->data.find("rtcpMux");
-
-				if (jsonRtcpMuxIt != request->data.end())
-				{
-					if (!jsonRtcpMuxIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong rtcpMux (not a boolean)");
-
-					options.rtcpMux = jsonRtcpMuxIt->get<bool>();
-				}
-
 				RTC::PlainRtpTransport* plainRtpTransport =
-				  new RTC::PlainRtpTransport(transportId, this, options);
+				  new RTC::PlainRtpTransport(transportId, this, request->data);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = plainRtpTransport;
