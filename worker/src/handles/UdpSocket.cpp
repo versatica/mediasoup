@@ -16,22 +16,36 @@ static uint8_t ReadBuffer[ReadBufferSize];
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	static_cast<UdpSocket*>(handle->data)->OnUvRecvAlloc(suggestedSize, buf);
+	auto* socket = static_cast<UdpSocket*>(handle->data);
+
+	if (socket == nullptr)
+		return;
+
+	socket->OnUvRecvAlloc(suggestedSize, buf);
 }
 
 inline static void onRecv(
   uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
-	static_cast<UdpSocket*>(handle->data)->OnUvRecv(nread, buf, addr, flags);
+	auto* socket = static_cast<UdpSocket*>(handle->data);
+
+	if (socket == nullptr)
+		return;
+
+	socket->OnUvRecv(nread, buf, addr, flags);
 }
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
-	auto* sendData    = static_cast<UdpSocket::UvSendData*>(req->data);
-	UdpSocket* socket = sendData->socket;
+	auto* sendData = static_cast<UdpSocket::UvSendData*>(req->data);
+	auto* handle   = req->handle;
+	auto* socket   = static_cast<UdpSocket*>(handle->data);
 
 	// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 	std::free(sendData);
+
+	if (socket == nullptr)
+		return;
 
 	// Just notify the UdpSocket when error.
 	if (status != 0)
@@ -169,6 +183,9 @@ void UdpSocket::Close()
 
 	this->closed = true;
 
+	// Tell the UV handle that the UdpSocket has been closed.
+	this->uvHandle->data = nullptr;
+
 	// Don't read more.
 	err = uv_udp_recv_stop(this->uvHandle);
 	if (err != 0)
@@ -239,7 +256,6 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	// Allocate a special UvSendData struct pointer.
 	auto* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
 
-	sendData->socket = this;
 	std::memcpy(sendData->store, data, len);
 	sendData->req.data = (void*)sendData;
 

@@ -17,21 +17,35 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	static_cast<UnixStreamSocket*>(handle->data)->OnUvReadAlloc(suggestedSize, buf);
+	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
+
+	if (socket == nullptr)
+		return;
+
+	socket->OnUvReadAlloc(suggestedSize, buf);
 }
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
-	static_cast<UnixStreamSocket*>(handle->data)->OnUvRead(nread, buf);
+	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
+
+	if (socket == nullptr)
+		return;
+
+	socket->OnUvRead(nread, buf);
 }
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	auto* writeData          = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
-	UnixStreamSocket* socket = writeData->socket;
+	auto* writeData = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
+	auto* handle    = req->handle;
+	auto* socket    = static_cast<UnixStreamSocket*>(handle->data);
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
 	std::free(writeData);
+
+	if (socket == nullptr)
+		return;
 
 	// Just notify the UnixStreamSocket when error.
 	if (status != 0)
@@ -117,6 +131,9 @@ void UnixStreamSocket::Close()
 
 	this->closed = true;
 
+	// Tell the UV handle that the UnixStreamSocket has been closed.
+	this->uvHandle->data = nullptr;
+
 	// Don't read more.
 	err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
 	if (err != 0)
@@ -164,7 +181,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		return;
 	}
 	// Cannot write any data at first time. Use uv_write().
-	if (written == UV_EAGAIN || written == UV_ENOSYS)
+	else if (written == UV_EAGAIN || written == UV_ENOSYS)
 	{
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
@@ -187,7 +204,6 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	// Allocate a special UvWriteData struct pointer.
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
-	writeData->socket = this;
 	std::memcpy(writeData->store, data + written, pendingLen);
 	writeData->req.data = (void*)writeData;
 

@@ -13,40 +13,35 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	static_cast<TcpConnection*>(handle->data)->OnUvReadAlloc(suggestedSize, buf);
+	auto* connection = static_cast<TcpConnection*>(handle->data);
+
+	if (connection == nullptr)
+		return;
+
+	connection->OnUvReadAlloc(suggestedSize, buf);
 }
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
-	static_cast<TcpConnection*>(handle->data)->OnUvRead(nread, buf);
+	auto* connection = static_cast<TcpConnection*>(handle->data);
+
+	if (connection == nullptr)
+		return;
+
+	connection->OnUvRead(nread, buf);
 }
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	auto* writeData           = static_cast<TcpConnection::UvWriteData*>(req->data);
+	auto* writeData  = static_cast<TcpConnection::UvWriteData*>(req->data);
+	auto* handle     = req->handle;
+	auto* connection = static_cast<TcpConnection*>(handle->data);
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
 	std::free(writeData);
 
-	// Here our TcpConnection instance may already been deleted (and this write
-	// call failed due to it), so check it and don't attampt to use the instance if
-	// deleted.
-	auto* handle = req->handle;
-
-	// So if uv_close() was called don't access the TcpConnetion instance.
-	if (uv_is_closing(reinterpret_cast<uv_handle_t*>(handle)))
+	if (connection == nullptr)
 		return;
-
-	// TODO: This is not enough sine we may have called uv_shutdown() instead, so
-	// uv_is_closing() may have not been called yet (but our TcpConnection was already
-	// deleted anyway).
-	//
-	// POSSIBLE WORKAROUD: Never call uv_shutdown() but just uv_close().
-
-	TcpConnection* connection = writeData->connection;
-
-	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
-	std::free(writeData);
 
 	// Just notify the TcpConnection when error.
 	if (status != 0)
@@ -100,6 +95,9 @@ void TcpConnection::Close()
 	int err;
 
 	this->closed = true;
+
+	// Tell the UV handle that the TcpConnection has been closed.
+	this->uvHandle->data = nullptr;
 
 	// Don't read more.
 	err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
@@ -214,7 +212,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 		return;
 	}
 	// Cannot write any data at first time. Use uv_write().
-	if (written == UV_EAGAIN || written == UV_ENOSYS)
+	else if (written == UV_EAGAIN || written == UV_ENOSYS)
 	{
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
@@ -237,7 +235,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	// Allocate a special UvWriteData struct pointer.
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
-	writeData->connection = this;
 	std::memcpy(writeData->store, data + written, pendingLen);
 	writeData->req.data = (void*)writeData;
 
@@ -281,7 +278,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 		return;
 	}
 	// Cannot write any data at first time. Use uv_write().
-	if (written == UV_EAGAIN || written == UV_ENOSYS)
+	else if (written == UV_EAGAIN || written == UV_ENOSYS)
 	{
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
@@ -305,7 +302,6 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	// Allocate a special UvWriteData struct pointer.
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
-	writeData->connection = this;
 	// If the first buffer was not entirely written then splice it.
 	if (static_cast<size_t>(written) < len1)
 	{

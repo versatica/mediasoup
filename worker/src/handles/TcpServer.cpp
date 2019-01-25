@@ -11,7 +11,9 @@
 
 inline static void onConnection(uv_stream_t* handle, int status)
 {
-	static_cast<TcpServer*>(handle->data)->OnUvConnection(status);
+	auto* server = static_cast<TcpServer*>(handle->data);
+
+	server->OnUvConnection(status);
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -146,6 +148,9 @@ void TcpServer::Close()
 		return;
 
 	this->closed = true;
+
+	// Tell the UV handle that the TcpServer has been closed.
+	this->uvHandle->data = nullptr;
 
 	MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
 

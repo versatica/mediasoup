@@ -11,7 +11,6 @@ public:
 	/* Struct for the data field of uv_req_t when writing data. */
 	struct UvWriteData
 	{
-		UnixStreamSocket* socket{ nullptr };
 		uv_write_t req;
 		uint8_t store[1];
 	};
