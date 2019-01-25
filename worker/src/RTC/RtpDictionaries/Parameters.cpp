@@ -12,6 +12,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Force it to be an object even if no key/values are added below.
+		jsonObject = json::object();
+
 		for (auto& kv : this->mapKeyValues)
 		{
 			auto& key   = kv.first;

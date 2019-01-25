@@ -82,7 +82,7 @@ test('webRtcTransport.produce() succeeds', async () =>
 						parameters  :
 						{
 							useinbandfec : 1,
-							foo          : '222',
+							foo          : 222.222,
 							bar          : '333'
 						}
 					}
@@ -98,11 +98,8 @@ test('webRtcTransport.produce() succeeds', async () =>
 						id  : 12
 					}
 				],
-				encodings :
-				[
-					{ ssrc: 11111111 }
-				],
-				rtcp :
+				encodings : [ { ssrc: 11111111 } ],
+				rtcp      :
 				{
 					cname : 'audio-1'
 				}
@@ -179,7 +176,10 @@ test('plainRtpTransport.produce() succeeds', async () =>
 				],
 				encodings :
 				[
-					{ ssrc: 22222222, rtx: { ssrc: 22222223 } }
+					{ ssrc: 22222222, rtx: { ssrc: 22222223 } },
+					{ ssrc: 22222224, rtx: { ssrc: 22222225 } },
+					{ ssrc: 22222226, rtx: { ssrc: 22222227 } },
+					{ ssrc: 22222228, rtx: { ssrc: 22222229 } }
 				],
 				rtcp :
 				{
@@ -193,25 +193,6 @@ test('plainRtpTransport.produce() succeeds', async () =>
 	expect(videoProducer.closed).toBe(false);
 	expect(videoProducer.kind).toBe('video');
 	expect(videoProducer.rtpParameters).toBeType('object');
-	expect(videoProducer.rtpParameters.codecs).toBeType('array');
-	expect(videoProducer.rtpParameters.codecs.length).toBe(2);
-	expect(videoProducer.rtpParameters.codecs[0].name.toLowerCase()).toBe('h264');
-	expect(videoProducer.rtpParameters.codecs[0].mimeType.toLowerCase()).toBe('video/h264');
-	expect(videoProducer.rtpParameters.codecs[0].rtcpFeedback)
-		.toEqual(
-			[
-				{ type: 'nack' },
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'goog-remb' }
-			]);
-	expect(videoProducer.rtpParameters.codecs[1].name.toLowerCase()).toBe('rtx');
-	expect(videoProducer.rtpParameters.codecs[1].mimeType.toLowerCase()).toBe('video/rtx');
-	expect(videoProducer.rtpParameters.headerExtensions).toBeType('array');
-	expect(videoProducer.rtpParameters.headerExtensions.length).toBe(2);
-	expect(videoProducer.rtpParameters.encodings).toBeType('array');
-	expect(videoProducer.rtpParameters.encodings.length).toBe(1);
-	expect(videoProducer.rtpParameters.encodings[0])
-		.toEqual({ ssrc: 22222222, rtx: { ssrc: 22222223 } });
 	// Private API.
 	expect(videoProducer.consumableRtpParameters).toBeType('object');
 	expect(videoProducer.paused).toBe(false);
@@ -256,7 +237,7 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 				codecs           : [],
 				headerExtensions : [],
 				encodings        : [ { ssrc: '1111' } ],
-				rtcp             : { cname: 'audio' }
+				rtcp             : { cname: 'qwerty'	}
 			}
 		}))
 		.rejects
@@ -265,22 +246,33 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 	// Missing or empty rtpParameters.encodings.
 	await expect(webRtcTransport.produce(
 		{
-			kind          : 'audio',
+			kind          : 'video',
 			rtpParameters :
 			{
 				codecs :
 				[
 					{
-						name        : 'OPUS',
-						mimeType    : 'audio/opus',
-						payloadType : 111,
-						clockRate   : 48000,
-						channels    : 2
+						name        : 'H264',
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
+						}
+					},
+					{
+						name        : 'rtx',
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
 					}
 				],
 				headerExtensions : [],
 				encodings        : [],
-				rtcp             : { cname: 'audio' }
+				rtcp             : { cname: 'qwerty' }
 			}
 		}))
 		.rejects
@@ -295,15 +287,70 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 				codecs :
 				[
 					{
-						name        : 'OPUS',
-						mimeType    : 'audio/opus',
-						payloadType : 111,
-						clockRate   : 48000,
-						channels    : 2
+						name        : 'H264',
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
+						}
+					},
+					{
+						name        : 'rtx',
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
 					}
 				],
 				headerExtensions : [],
-				encodings        : [ { ssrc: 1111 } ]
+				encodings        :
+				[
+					{ ssrc: 6666, rtx: { ssrc: 6667 } }
+				]
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Wrong apt in RTX codec.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				codecs :
+				[
+					{
+						name        : 'H264',
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
+						}
+					},
+					{
+						name        : 'rtx',
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 111 }
+					}
+				],
+				headerExtensions : [],
+				encodings        :
+				[
+					{ ssrc: 6666, rtx: { ssrc: 6667 } }
+				],
+				rtcp :
+				{
+					cname : 'video-1'
+				}
 			}
 		}))
 		.rejects
@@ -336,29 +383,169 @@ test('webRtcTransport.produce() with unsupported codecs rejects with Unsupported
 		.toThrow(UnsupportedError);
 }, 1000);
 
+test('webRtcTransport.produce() with already used MID or SSRC rejects with Error', async () =>
+{
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO',
+				codecs :
+				[
+					{
+						name        : 'OPUS',
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
+					}
+				],
+				headerExtensions : [],
+				encodings        : [ { ssrc: 33333333 } ],
+				rtcp             :
+				{
+					cname : 'audio-2'
+				}
+			}
+		}))
+		.rejects
+		.toThrow(Error);
+
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO-2',
+				codecs :
+				[
+					{
+						name        : 'OPUS',
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
+					}
+				],
+				headerExtensions : [],
+				encodings        : [ { ssrc: 11111111 } ],
+				rtcp             :
+				{
+					cname : 'audio-2'
+				}
+			}
+		}))
+		.rejects
+		.toThrow(Error);
+}, 1000);
+
 test('producer.dump() succeeds', async () =>
 {
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id             : audioProducer.id,
-				kind           : 'audio',
-				rtpStreams     : [],
-				lossPercentage : 0,
-				paused         : false
-			});
+	let data;
 
-	await expect(videoProducer.dump())
-		.resolves
-		.toMatchObject(
+	data = await audioProducer.dump();
+
+	expect(data.id).toBe(audioProducer.id);
+	expect(data.kind).toBe(audioProducer.kind);
+	expect(data.rtpParameters).toBeType('object');
+	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(data.rtpParameters.codecs.length).toBe(1);
+	expect(data.rtpParameters.codecs[0].name).toBe('opus');
+	expect(data.rtpParameters.codecs[0].mimeType).toBe('audio/opus');
+	expect(data.rtpParameters.codecs[0].payloadType).toBe(111);
+	expect(data.rtpParameters.codecs[0].clockRate).toBe(48000);
+	expect(data.rtpParameters.codecs[0].channels).toBe(2);
+	expect(data.rtpParameters.codecs[0].parameters)
+		.toEqual(
 			{
-				id             : videoProducer.id,
-				kind           : 'video',
-				rtpStreams     : [],
-				lossPercentage : 0,
-				paused         : false
+				useinbandfec : 1,
+				foo          : 222.222,
+				bar          : '333'
 			});
+	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
+	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 10,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id         : 12,
+				parameters : {},
+				encrypt    : false
+			}
+		]);
+	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(data.rtpParameters.encodings.length).toBe(1);
+	expect(data.rtpParameters.encodings).toEqual(
+		[
+			{ codecPayloadType: 111, ssrc: 11111111 }
+		]);
+
+	data = await videoProducer.dump();
+
+	expect(data.id).toBe(videoProducer.id);
+	expect(data.kind).toBe(videoProducer.kind);
+	expect(data.rtpParameters).toBeType('object');
+	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(data.rtpParameters.codecs.length).toBe(2);
+	expect(data.rtpParameters.codecs[0].name).toBe('H264');
+	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
+	expect(data.rtpParameters.codecs[0].payloadType).toBe(112);
+	expect(data.rtpParameters.codecs[0].clockRate).toBe(90000);
+	expect(data.rtpParameters.codecs[0].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[0].parameters)
+		.toEqual(
+			{
+				'packetization-mode' : 1,
+				'profile-level-id'   : '4d0032'
+			});
+	expect(data.rtpParameters.codecs[0].rtcpFeedback)
+		.toEqual(
+			[
+				{ type: 'nack' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'goog-remb' }
+			]);
+	expect(data.rtpParameters.codecs[1].name).toBe('rtx');
+	expect(data.rtpParameters.codecs[1].mimeType).toBe('video/rtx');
+	expect(data.rtpParameters.codecs[1].payloadType).toBe(113);
+	expect(data.rtpParameters.codecs[1].clockRate).toBe(90000);
+	expect(data.rtpParameters.codecs[1].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
+	expect(data.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
+	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 10,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 13,
+				parameters : {},
+				encrypt    : false
+			}
+		]);
+	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(data.rtpParameters.encodings.length).toBe(4);
+	expect(data.rtpParameters.encodings).toEqual(
+		[
+			{ codecPayloadType: 112, ssrc: 22222222, rtx: { ssrc: 22222223 } },
+			{ codecPayloadType: 112, ssrc: 22222224, rtx: { ssrc: 22222225 } },
+			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
+			{ codecPayloadType: 112, ssrc: 22222228, rtx: { ssrc: 22222229 } }
+		]);
 }, 1000);
 
 test('producer.getStats() succeeds', async () =>

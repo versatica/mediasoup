@@ -59,6 +59,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Force it to be an object even if no key/values are added below.
+		jsonObject = json::object();
+
 		// Add ssrc.
 		if (this->ssrc != 0u)
 			jsonObject["ssrc"] = this->ssrc;
