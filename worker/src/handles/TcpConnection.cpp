@@ -24,6 +24,25 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 inline static void onWrite(uv_write_t* req, int status)
 {
 	auto* writeData           = static_cast<TcpConnection::UvWriteData*>(req->data);
+
+	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
+	std::free(writeData);
+
+	// Here our TcpConnection instance may already been deleted (and this write
+	// call failed due to it), so check it and don't attampt to use the instance if
+	// deleted.
+	auto* handle = req->handle;
+
+	// So if uv_close() was called don't access the TcpConnetion instance.
+	if (uv_is_closing(reinterpret_cast<uv_handle_t*>(handle)))
+		return;
+
+	// TODO: This is not enough sine we may have called uv_shutdown() instead, so
+	// uv_is_closing() may have not been called yet (but our TcpConnection was already
+	// deleted anyway).
+	//
+	// POSSIBLE WORKAROUD: Never call uv_shutdown() but just uv_close().
+
 	TcpConnection* connection = writeData->connection;
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
