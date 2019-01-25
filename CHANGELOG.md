@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.8
+
+* C++: Verify in libuv static callbacks that the associated C++ instance has not been deallocated (thanks @artushin and @mariat-atg for reporting and providing valuable help in #258).
+
+
 ### 2.6.7
 
 * Fix wrong destruction of Transports in Router.cpp that generates 100% CPU usage in mediasoup-worker processes.
