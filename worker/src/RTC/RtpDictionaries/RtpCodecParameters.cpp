@@ -84,7 +84,7 @@ namespace RTC
 		jsonObject["clockRate"] = this->clockRate;
 
 		// Add channels.
-		if (this->channels > 0)
+		if (this->channels > 1)
 			jsonObject["channels"] = this->channels;
 
 		// Add parameters.

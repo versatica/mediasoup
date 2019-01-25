@@ -150,7 +150,20 @@ test('plainRtpTransport.produce() succeeds', async () =>
 						{
 							'packetization-mode' : 1,
 							'profile-level-id'   : '4d0032'
-						}
+						},
+						rtcpFeedback :
+						[
+							{ type: 'nack' },
+							{ type: 'nack', parameter: 'pli' },
+							{ type: 'goog-remb' }
+						]
+					},
+					{
+						name        : 'rtx',
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
 					}
 				],
 				headerExtensions :
@@ -166,7 +179,7 @@ test('plainRtpTransport.produce() succeeds', async () =>
 				],
 				encodings :
 				[
-					{ ssrc: 22222222, rtxSsrc: 22222223 }
+					{ ssrc: 22222222, rtx: { ssrc: 22222223 } }
 				],
 				rtcp :
 				{
@@ -180,6 +193,25 @@ test('plainRtpTransport.produce() succeeds', async () =>
 	expect(videoProducer.closed).toBe(false);
 	expect(videoProducer.kind).toBe('video');
 	expect(videoProducer.rtpParameters).toBeType('object');
+	expect(videoProducer.rtpParameters.codecs).toBeType('array');
+	expect(videoProducer.rtpParameters.codecs.length).toBe(2);
+	expect(videoProducer.rtpParameters.codecs[0].name.toLowerCase()).toBe('h264');
+	expect(videoProducer.rtpParameters.codecs[0].mimeType.toLowerCase()).toBe('video/h264');
+	expect(videoProducer.rtpParameters.codecs[0].rtcpFeedback)
+		.toEqual(
+			[
+				{ type: 'nack' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'goog-remb' }
+			]);
+	expect(videoProducer.rtpParameters.codecs[1].name.toLowerCase()).toBe('rtx');
+	expect(videoProducer.rtpParameters.codecs[1].mimeType.toLowerCase()).toBe('video/rtx');
+	expect(videoProducer.rtpParameters.headerExtensions).toBeType('array');
+	expect(videoProducer.rtpParameters.headerExtensions.length).toBe(2);
+	expect(videoProducer.rtpParameters.encodings).toBeType('array');
+	expect(videoProducer.rtpParameters.encodings.length).toBe(1);
+	expect(videoProducer.rtpParameters.encodings[0])
+		.toEqual({ ssrc: 22222222, rtx: { ssrc: 22222223 } });
 	// Private API.
 	expect(videoProducer.consumableRtpParameters).toBeType('object');
 	expect(videoProducer.paused).toBe(false);

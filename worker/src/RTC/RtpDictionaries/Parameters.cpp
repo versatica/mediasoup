@@ -63,6 +63,7 @@ namespace RTC
 				}
 
 				case json::value_t::number_integer:
+				case json::value_t::number_unsigned:
 				{
 					this->mapKeyValues[key] = Value(value.get<int32_t>());
 

@@ -99,24 +99,24 @@ namespace RTC
 		{
 			auto it = RtpCodecMimeType::string2Type.find(type);
 
-			if (it != RtpCodecMimeType::string2Type.end())
-				this->type = it->second;
-			else
+			if (it == RtpCodecMimeType::string2Type.end())
 				MS_THROW_TYPE_ERROR("unknown codec MIME type '%s'", type.c_str());
+
+			this->type = it->second;
 		}
 
 		// Set MIME subtype.
 		{
 			auto it = RtpCodecMimeType::string2Subtype.find(subtype);
 
-			if (it != RtpCodecMimeType::string2Subtype.end())
-				this->subtype = it->second;
-			else
+			if (it == RtpCodecMimeType::string2Subtype.end())
 				MS_THROW_TYPE_ERROR("unknown codec MIME subtype '%s'", subtype.c_str());
+
+			this->subtype = it->second;
 		}
 
 		// Set mimeType and name.
 		this->mimeType = type2String[this->type] + "/" + subtype2String[this->subtype];
-		this->name     = subtype;
+		this->name     = subtype2String[this->subtype];
 	}
 } // namespace RTC
