@@ -25,7 +25,6 @@ public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
-		TcpConnection* connection{ nullptr };
 		uv_write_t req;
 		uint8_t store[1];
 	};
