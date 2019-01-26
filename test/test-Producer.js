@@ -126,6 +126,15 @@ test('webRtcTransport.produce() succeeds', async () =>
 				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
 				mapConsumerIdProducerId  : {}
 			});
+
+	await expect(webRtcTransport.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : webRtcTransport.id,
+				producerIds : [ audioProducer.id ],
+				consumerIds : []
+			});
 }, 1000);
 
 test('plainRtpTransport.produce() succeeds', async () =>
@@ -207,6 +216,15 @@ test('plainRtpTransport.produce() succeeds', async () =>
 				id                       : router.id,
 				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
 				mapConsumerIdProducerId  : {}
+			});
+
+	await expect(plainRtpTransport.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : plainRtpTransport.id,
+				producerIds : [ videoProducer.id ],
+				consumerIds : []
 			});
 }, 1000);
 
@@ -589,6 +607,15 @@ test('producer.close() succeeds', async () =>
 				id                       : router.id,
 				mapProducerIdConsumerIds : {},
 				mapConsumerIdProducerId  : {}
+			});
+
+	await expect(webRtcTransport.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : webRtcTransport.id,
+				producerIds : [],
+				consumerIds : []
 			});
 }, 1000);
 

@@ -90,6 +90,36 @@ namespace RTC
 		this->mapSsrcConsumer.clear();
 	}
 
+	void Transport::FillJson(json& jsonObject) const
+	{
+		MS_TRACE();
+
+		// Add id.
+		jsonObject["id"] = this->id;
+
+		// Add producerIds.
+		jsonObject["producerIds"] = json::array();
+		auto jsonProducerIdsIt    = jsonObject.find("producerIds");
+
+		for (auto& kv : this->mapProducers)
+		{
+			auto& producerId = kv.first;
+
+			jsonProducerIdsIt->emplace_back(producerId);
+		}
+
+		// Add consumerIds.
+		jsonObject["consumerIds"] = json::array();
+		auto jsonConsumerIdsIt    = jsonObject.find("consumerIds");
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto& consumerId = kv.first;
+
+			jsonConsumerIdsIt->emplace_back(consumerId);
+		}
+	}
+
 	void Transport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
@@ -749,7 +779,7 @@ namespace RTC
 		}
 
 		// Notify the listener.
-		this->listener->OnTransportConsumerClosed(this, consumer);
+		this->listener->OnTransportConsumerProducerClosed(this, consumer);
 
 		// Delete it.
 		delete consumer;

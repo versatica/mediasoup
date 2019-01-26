@@ -52,6 +52,7 @@ namespace RTC
 		void OnTransportNewConsumer(
 		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
+		void OnTransportConsumerProducerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(
 		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 

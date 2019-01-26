@@ -314,6 +314,15 @@ test('transport.consume() succeeds', async () =>
 				mapConsumerIdProducerId  : { [audioConsumer.id]: audioProducer.id }
 			});
 
+	await expect(transport2.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : transport2.id,
+				producerIds : [],
+				consumerIds : [ audioConsumer.id ]
+			});
+
 	videoConsumer = await transport2.consume(
 		{
 			producerId      : videoProducer.id,
@@ -380,6 +389,15 @@ test('transport.consume() succeeds', async () =>
 					[audioConsumer.id] : audioProducer.id,
 					[videoConsumer.id] : videoProducer.id
 				}
+			});
+
+	await expect(transport2.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : transport2.id,
+				producerIds : [],
+				consumerIds : expect.arrayContaining([ audioConsumer.id, videoConsumer.id ])
 			});
 }, 1000);
 
@@ -455,6 +473,15 @@ test('consumer.close() succeeds', async () =>
 				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
 				mapConsumerIdProducerId  : {}
 			});
+
+	await expect(transport2.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : transport2.id,
+				producerIds : [],
+				consumerIds : [ videoConsumer.id ]
+			});
 }, 1000);
 
 test('Consumer methods reject if closed', async () =>
@@ -518,4 +545,13 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 	});
 
 	expect(videoConsumer.closed).toBe(true);
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id                       : router.id,
+				mapProducerIdConsumerIds : {},
+				mapConsumerIdProducerId  : {}
+			});
 }, 1000);

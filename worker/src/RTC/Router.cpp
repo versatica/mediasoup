@@ -230,8 +230,8 @@ namespace RTC
 		  "Producer already present in mapProducers");
 
 		// Insert the Producer in the maps.
-		this->mapProducerConsumers[producer];
 		this->mapProducers[producer->id] = producer;
+		this->mapProducerConsumers[producer];
 	}
 
 	void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -249,25 +249,21 @@ namespace RTC
 		// Close all Consumers associated to the closed Producer.
 		auto& consumers = mapProducerConsumersIt->second;
 
-		// NOTE: While iterating the set of Consumers, we call ProducerClosed() on each one,
-		// which will end calling Router::OnTransportConsumerClosed(), which will remove
-		// the Consumer from the set. So this is the safe way to iterate it while removing
-		// elements.
-		for (auto it = consumers.begin(), nextIt = it; it != consumers.end(); it = nextIt)
+		// NOTE: While iterating the set of Consumers, we call ProducerClosed() on each
+		// one, which will end calling Router::OnTransportConsumerProducerClosed(),
+		// which will remove the Consumer from mapConsumerProducer but won't remove the
+		// closed Consumer from the set of Consumers in mapProducerConsumers (here will
+		// erase the complete entry in that map).
+		for (auto* consumer : consumers)
 		{
-			++nextIt;
-
-			auto* consumer = *it;
-
 			// Call consumer->ProducerClosed() so the Consumer will notify the Node process,
 			// will notify its Transport, and its Transport will delete the Consumer.
 			consumer->ProducerClosed();
 		}
 
 		// Remove the Producer from the maps.
-		// NOTE: It's important to do this at the end.
-		this->mapProducerConsumers.erase(mapProducerConsumersIt);
 		this->mapProducers.erase(mapProducersIt);
+		this->mapProducerConsumers.erase(mapProducerConsumersIt);
 	}
 
 	void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -377,6 +373,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE:
+		// This callback is called when the Consumer has been closed but its Produer
+		// remains alive, so the entry in mapProducerConsumers still exists exists
+		// and must be removed.
+
 		auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
 
 		MS_ASSERT(
@@ -394,6 +395,25 @@ namespace RTC
 		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		consumers.erase(consumer);
+
+		// Remove the Consumer from the map.
+		this->mapConsumerProducer.erase(mapConsumerProducerIt);
+	}
+
+	void Router::OnTransportConsumerProducerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// NOTE:
+		// This callback is called when the Consumer has been closed because its
+		// Producer was closed, so the entry in mapProducerConsumers has already been
+		// removed.
+
+		auto mapConsumerProducerIt = this->mapConsumerProducer.find(consumer);
+
+		MS_ASSERT(
+		  mapConsumerProducerIt != this->mapConsumerProducer.end(),
+		  "Consumer not present in mapConsumerProducer");
 
 		// Remove the Consumer from the map.
 		this->mapConsumerProducer.erase(mapConsumerProducerIt);

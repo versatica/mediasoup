@@ -46,6 +46,8 @@ namespace RTC
 			virtual void OnTransportNewConsumer(
 			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
+			virtual void OnTransportConsumerProducerClosed(
+			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerKeyFrameRequested(
 			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 		};
@@ -57,7 +59,7 @@ namespace RTC
 	public:
 		void CloseProducersAndConsumers();
 		// Subclasses must also invoke the parent Close().
-		virtual void FillJson(json& jsonObject) const     = 0;
+		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray) const = 0;
 		// Subclasses must implement this method and call the parent's one to
 		// handle common requests.

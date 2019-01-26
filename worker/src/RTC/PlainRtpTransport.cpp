@@ -100,8 +100,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
+		// Call the parent method.
+		Transport::FillJson(jsonObject);
 
 		// Add tuple.
 		if (this->tuple != nullptr)

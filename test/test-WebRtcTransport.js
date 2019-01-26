@@ -141,6 +141,8 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	const data1 = await transport1.dump();
 
 	expect(data1.id).toBe(transport1.id);
+	expect(data1.producerIds).toEqual([]);
+	expect(data1.consumerIds).toEqual([]);
 	expect(data1.iceRole).toBe(transport1.iceRole);
 	expect(data1.iceLocalParameters).toEqual(transport1.iceLocalParameters);
 	expect(data1.iceLocalCandidates).toEqual(transport1.iceLocalCandidates);

@@ -94,6 +94,8 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	const data1 = await transport1.dump();
 
 	expect(data1.id).toBe(transport1.id);
+	expect(data1.producerIds).toEqual([]);
+	expect(data1.consumerIds).toEqual([]);
 	expect(data1.tuple).toEqual(transport1.tuple);
 	expect(data1.rtcpTuple).toEqual(transport1.rtcpTuple);
 	expect(data1.rtpHeaderExtensions).toBeType('object');

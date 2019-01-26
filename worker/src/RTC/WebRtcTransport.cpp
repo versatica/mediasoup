@@ -260,8 +260,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
+		// Call the parent method.
+		Transport::FillJson(jsonObject);
 
 		// Add iceRole (we are always "controlled").
 		jsonObject["iceRole"] = "controlled";
