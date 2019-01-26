@@ -78,11 +78,15 @@ namespace Channel
 
 		if (jsonInternalIt != body.end() && jsonInternalIt->is_object())
 			this->internal = *jsonInternalIt;
+		else
+			this->internal = json::object();
 
 		auto jsonDataIt = body.find("data");
 
 		if (jsonDataIt != body.end() && jsonDataIt->is_object())
 			this->data = *jsonDataIt;
+		else
+			this->data = json::object();
 	}
 
 	Request::~Request()
@@ -107,7 +111,7 @@ namespace Channel
 
 		this->replied = true;
 
-		json body{ json::object() };
+		json body(json::object());
 
 		body["id"]       = this->id;
 		body["accepted"] = true;
@@ -126,7 +130,7 @@ namespace Channel
 
 		this->replied = true;
 
-		json body{ json::object() };
+		json body(json::object());
 
 		body["id"]    = this->id;
 		body["error"] = "Error";
@@ -145,7 +149,7 @@ namespace Channel
 
 		this->replied = true;
 
-		json body{ json::object() };
+		json body(json::object());
 
 		body["id"]    = this->id;
 		body["error"] = "TypeError";

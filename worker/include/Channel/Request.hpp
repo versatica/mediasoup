@@ -67,8 +67,8 @@ namespace Channel
 		uint32_t id{ 0u };
 		std::string method;
 		MethodId methodId;
-		json internal{ json::object() };
-		json data{ json::object() };
+		json internal;
+		json data;
 		// Others.
 		bool replied{ false };
 	};

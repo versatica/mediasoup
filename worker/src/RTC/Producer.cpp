@@ -356,7 +356,7 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::PRODUCER_DUMP:
 			{
-				json data{ json::object() };
+				json data(json::object());
 
 				FillJson(data);
 
@@ -367,7 +367,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::PRODUCER_GET_STATS:
 			{
-				json data{ json::array() };
+				json data(json::array());
 
 				FillJsonStats(data);
 

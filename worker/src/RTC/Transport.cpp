@@ -210,7 +210,7 @@ namespace RTC
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
 				// Create status response.
-				json data{ json::object() };
+				json data(json::object());
 
 				data["producerPaused"] = consumer->IsProducerPaused();
 

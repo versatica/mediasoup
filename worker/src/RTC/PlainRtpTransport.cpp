@@ -206,7 +206,7 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
 			{
-				json data{ json::object() };
+				json data(json::object());
 
 				FillJson(data);
 
@@ -217,7 +217,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
 			{
-				json data{ json::array() };
+				json data(json::array());
 
 				FillJsonStats(data);
 
@@ -378,7 +378,7 @@ namespace RTC
 				Transport::Connected();
 
 				// Tell the caller about the selected local DTLS role.
-				json data{ json::object() };
+				json data(json::object());
 
 				this->tuple->FillJson(data["tuple"]);
 
