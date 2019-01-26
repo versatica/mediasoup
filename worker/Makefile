@@ -7,8 +7,9 @@
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 
 .PHONY:	\
-	default Release Debug test test-Release test-Debug fuzzer \
-	fuzzer-docker-build fuzzer-docker-run xcode clean clean-all
+	default Release Debug test test-Release test-Debug \
+	fuzzer fuzzer-docker-build fuzzer-docker-run xcode \
+	bear tidy clean clean-all
 
 default:
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
@@ -60,6 +61,22 @@ fuzzer-docker-run:
 
 xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
+
+bear:
+	$(MAKE) clean
+	bear -o compile_commands_template.json $(MAKE)
+	sed -i "s|$(PWD)|PATH|g" compile_commands_template.json
+
+tidy:
+	sed "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
+	./scripts/clang-tidy.py \
+		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
+		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
+		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp|json.hpp)' \
+		-p=. \
+		-j=2 \
+		-checks=${MEDIASOUP_TIDY_CHECKS} \
+		-quiet
 
 clean:
 	$(RM) -rf out/Release/mediasoup-worker

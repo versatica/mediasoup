@@ -53,7 +53,6 @@
     "gulp-rename": "^1.4.0",
     "gulp-replace": "^1.0.0",
     "gulp-shell": "^0.6.5",
-    "gulp-touch-cmd": "0.0.1",
     "jest": "^24.0.0",
     "jest-tobetype": "^1.2.0",
     "opn-cli": "^4.0.0"
