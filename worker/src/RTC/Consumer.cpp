@@ -267,7 +267,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: More.
+
+		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
+
+		Channel::Notifier::Emit(this->id, "producerclose");
+
+		this->listener->onConsumerProducerClosed(this);
 	}
 
 	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)

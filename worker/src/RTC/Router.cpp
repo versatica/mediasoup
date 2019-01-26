@@ -249,14 +249,23 @@ namespace RTC
 		// Close all Consumers associated to the closed Producer.
 		auto& consumers = mapProducerConsumersIt->second;
 
-		for (auto* consumer : consumers)
+		// NOTE: While iterating the set of Consumers, we call ProducerClosed() on each one,
+		// which will end calling Router::OnTransportConsumerClosed(), which will remove
+		// the Consumer from the set. So this is the safe way to iterate it while removing
+		// elements.
+		for (auto it = consumers.begin(), nextIt = it; it != consumers.end(); it = nextIt)
 		{
+			++nextIt;
+
+			auto* consumer = *it;
+
 			// Call consumer->ProducerClosed() so the Consumer will notify the Node process,
 			// will notify its Transport, and its Transport will delete the Consumer.
 			consumer->ProducerClosed();
 		}
 
 		// Remove the Producer from the maps.
+		// NOTE: It's important to do this at the end.
 		this->mapProducerConsumers.erase(mapProducerConsumersIt);
 		this->mapProducers.erase(mapProducersIt);
 	}
