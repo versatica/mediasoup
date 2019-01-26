@@ -310,6 +310,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Make GCC happy so it does not print:
+		// "control reaches end of non-void function [-Wreturn-type]"
+		static std::vector<bool> emptyPorts;
+
 		switch (transport)
 		{
 			case Transport::UDP:
@@ -352,6 +356,8 @@ namespace RTC
 				return pair.first->second;
 			}
 		}
+
+		return emptyPorts;
 	}
 
 	void PortManager::FillJson(json& jsonObject)
