@@ -24,6 +24,7 @@ namespace Channel
 	public:
 		void SetListener(Listener* listener);
 		void Send(json& body);
+		void SendLog(char* nsPayload, size_t nsPayloadLen);
 		void SendLog(const char* nsPayload, size_t nsPayloadLen);
 		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
 
