@@ -1,6 +1,7 @@
 const { toBeType } = require('jest-tobetype');
 const mediasoup = require('../');
 const { createWorker } = mediasoup;
+const { UnsupportedError } = require('../lib/errors');
 
 expect.extend({ toBeType });
 
@@ -399,6 +400,49 @@ test('transport.consume() succeeds', async () =>
 				producerIds : [],
 				consumerIds : expect.arrayContaining([ audioConsumer.id, videoConsumer.id ])
 			});
+}, 2000);
+
+test('transport.consume() with incompatible rtpCapabilities rejects with UnsupportedError', async () =>
+{
+	let invalidDeviceCapabilities;
+
+	invalidDeviceCapabilities =
+	{
+		codecs :
+		[
+			{
+				kind                 : 'audio',
+				name                 : 'ISAC',
+				mimeType             : 'audio/ISAC',
+				clockRate            : 32000,
+				preferredPayloadType : 100,
+				channels             : 1
+			}
+		],
+		headerExtensions : []
+	};
+
+	await expect(transport2.consume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : invalidDeviceCapabilities
+		}))
+		.rejects
+		.toThrow(UnsupportedError);
+
+	invalidDeviceCapabilities =
+	{
+		codecs           : [],
+		headerExtensions : []
+	};
+
+	await expect(transport2.consume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : invalidDeviceCapabilities
+		}))
+		.rejects
+		.toThrow(UnsupportedError);
 }, 2000);
 
 // test('consumer.dump() succeeds', async () =>
