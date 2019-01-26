@@ -11,7 +11,7 @@ test('mediasoup.version exposes the package version', () =>
 	expect(version).toBe(pkg.version);
 }, 2000);
 
-test('mediasoup.getSupportedMediaCodecs supported media codecs', () =>
+test('mediasoup.getSupportedMediaCodecs() provides cloned supported media codecs', () =>
 {
 	const mediaCodecs1 = getSupportedMediaCodecs();
 
