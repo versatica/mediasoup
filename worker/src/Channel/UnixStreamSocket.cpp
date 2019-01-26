@@ -74,13 +74,6 @@ namespace Channel
 
 	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
 	{
-		// MS_TRACE_STD();
-
-		SendLog(const_cast<const char*>(nsPayload), nsPayloadLen);
-	}
-
-	void UnixStreamSocket::SendLog(const char* nsPayload, size_t nsPayloadLen)
-	{
 		if (IsClosed())
 			return;
 
