@@ -99,8 +99,8 @@ namespace RTC
 
 		portIdx = initialPortIdx;
 
-		// Iterate all the ports until getting one available. Fail if none found
-		// and also if bind() fails N times in theorically available ports.
+		// Iterate all ports until getting one available. Fail if none found and also
+		// if bind() fails N times in theorically available ports.
 		while (true)
 		{
 			++attempt;
@@ -170,18 +170,24 @@ namespace RTC
 			switch (transport)
 			{
 				case Transport::UDP:
+				{
 					err = uv_udp_bind(
 					  reinterpret_cast<uv_udp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
 					  flags);
+
 					break;
+				}
 
 				case Transport::TCP:
+				{
 					err = uv_tcp_bind(
 					  reinterpret_cast<uv_tcp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
 					  flags);
+
 					break;
+				}
 			}
 
 			// If it succeeded, stop here.
@@ -315,7 +321,6 @@ namespace RTC
 					return it->second;
 
 				// Otherwise add an entry in the map and return it.
-
 				size_t numPorts = Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that
@@ -336,7 +341,6 @@ namespace RTC
 					return it->second;
 
 				// Otherwise add an entry in the map and return it.
-
 				size_t numPorts = Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that
