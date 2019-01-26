@@ -80,7 +80,7 @@ test('worker.createRouter() succeeds', async () =>
 
 	// Private API.
 	expect(worker._routers.size).toBe(0);
-}, 1000);
+}, 2000);
 
 test('worker.createRouter() without mediaCodecs rejects with TypeError', async () =>
 {
@@ -91,7 +91,7 @@ test('worker.createRouter() without mediaCodecs rejects with TypeError', async (
 		.toThrow(TypeError);
 
 	worker.close();
-}, 1000);
+}, 2000);
 
 test('worker.createRouter() rejects with InvalidStateError if Worker is closed', async () =>
 {
@@ -102,7 +102,7 @@ test('worker.createRouter() rejects with InvalidStateError if Worker is closed',
 	await expect(worker.createRouter({ mediaCodecs }))
 		.rejects
 		.toThrow(InvalidStateError);
-}, 1000);
+}, 2000);
 
 test('Router emits "workerclose" if Worker is closed', async () =>
 {
@@ -118,4 +118,4 @@ test('Router emits "workerclose" if Worker is closed', async () =>
 	});
 
 	expect(router.closed).toBe(true);
-}, 1000);
+}, 2000);

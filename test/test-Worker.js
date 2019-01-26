@@ -36,7 +36,7 @@ test('createWorker() succeeds', async () =>
 
 	worker.close();
 	expect(worker.closed).toBe(true);
-}, 1000);
+}, 2000);
 
 test('createWorker() with wrong settings rejects with TypeError', async () =>
 {
@@ -60,7 +60,7 @@ test('createWorker() with wrong settings rejects with TypeError', async () =>
 	await expect(createWorker({ dtlsPrivateKeyFile: '/notfound/priv.pem' }))
 		.rejects
 		.toThrow(TypeError);
-}, 1000);
+}, 2000);
 
 test('worker.updateSettings() succeeds', async () =>
 {
@@ -71,7 +71,7 @@ test('worker.updateSettings() succeeds', async () =>
 		.toBe(undefined);
 
 	worker.close();
-}, 1000);
+}, 2000);
 
 test('worker.updateSettings() with wrong settings rejects TypeError', async () =>
 {
@@ -82,7 +82,7 @@ test('worker.updateSettings() with wrong settings rejects TypeError', async () =
 		.toThrow(TypeError);
 
 	worker.close();
-}, 1000);
+}, 2000);
 
 test('worker.updateSettings() rejects with InvalidStateError if closed', async () =>
 {
@@ -94,7 +94,7 @@ test('worker.updateSettings() rejects with InvalidStateError if closed', async (
 		.toThrow(InvalidStateError);
 
 	worker.close();
-}, 1000);
+}, 2000);
 
 test('worker.dump() succeeds', async () =>
 {
@@ -105,7 +105,7 @@ test('worker.dump() succeeds', async () =>
 		.toEqual({ pid: worker.pid, routerIds: [] });
 
 	worker.close();
-}, 1000);
+}, 2000);
 
 test('worker.dump() rejects with InvalidStateError if closed', async () =>
 {
@@ -117,7 +117,7 @@ test('worker.dump() rejects with InvalidStateError if closed', async () =>
 		.toThrow(InvalidStateError);
 
 	worker.close();
-}, 1000);
+}, 2000);
 
 test('Worker emits "died" if worker process died unexpectedly', async () =>
 {
@@ -147,7 +147,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 		process.kill(worker.pid, 'SIGKILL');
 	});
-}, 2000);
+}, 5000);
 
 test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =>
 {
@@ -169,6 +169,6 @@ test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =
 
 			worker.close();
 			resolve();
-		}, 1000);
+		}, 2000);
 	});
-}, 2000);
+}, 3000);

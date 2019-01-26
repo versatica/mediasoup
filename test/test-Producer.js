@@ -135,7 +135,7 @@ test('webRtcTransport.produce() succeeds', async () =>
 				producerIds : [ audioProducer.id ],
 				consumerIds : []
 			});
-}, 1000);
+}, 2000);
 
 test('plainRtpTransport.produce() succeeds', async () =>
 {
@@ -226,7 +226,7 @@ test('plainRtpTransport.produce() succeeds', async () =>
 				producerIds : [ videoProducer.id ],
 				consumerIds : []
 			});
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.produce() with wrong arguments rejects with TypeError', async () =>
 {
@@ -373,7 +373,7 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 		}))
 		.rejects
 		.toThrow(TypeError);
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.produce() with unsupported codecs rejects with UnsupportedError', async () =>
 {
@@ -399,7 +399,7 @@ test('webRtcTransport.produce() with unsupported codecs rejects with Unsupported
 		}))
 		.rejects
 		.toThrow(UnsupportedError);
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.produce() with already used MID or SSRC rejects with Error', async () =>
 {
@@ -456,7 +456,7 @@ test('webRtcTransport.produce() with already used MID or SSRC rejects with Error
 		}))
 		.rejects
 		.toThrow(Error);
-}, 1000);
+}, 2000);
 
 test('producer.dump() succeeds', async () =>
 {
@@ -564,7 +564,7 @@ test('producer.dump() succeeds', async () =>
 			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
 			{ codecPayloadType: 112, ssrc: 22222228, rtx: { ssrc: 22222229 } }
 		]);
-}, 1000);
+}, 2000);
 
 test('producer.getStats() succeeds', async () =>
 {
@@ -575,7 +575,7 @@ test('producer.getStats() succeeds', async () =>
 	await expect(videoProducer.getStats())
 		.resolves
 		.toEqual([]);
-}, 1000);
+}, 2000);
 
 test('producer.pause() and resume() succeed', async () =>
 {
@@ -592,7 +592,7 @@ test('producer.pause() and resume() succeed', async () =>
 	await expect(audioProducer.dump())
 		.resolves
 		.toMatchObject({ paused: false });
-}, 1000);
+}, 2000);
 
 test('producer.close() succeeds', async () =>
 {
@@ -617,7 +617,7 @@ test('producer.close() succeeds', async () =>
 				producerIds : [],
 				consumerIds : []
 			});
-}, 1000);
+}, 2000);
 
 test('Producer methods reject if closed', async () =>
 {
@@ -636,7 +636,7 @@ test('Producer methods reject if closed', async () =>
 	await expect(audioProducer.resume())
 		.rejects
 		.toThrow(Error);
-}, 1000);
+}, 2000);
 
 test('Producer emits "transportclose" if Transport is closed', async () =>
 {
@@ -648,4 +648,4 @@ test('Producer emits "transportclose" if Transport is closed', async () =>
 	});
 
 	expect(videoProducer.closed).toBe(true);
-}, 1000);
+}, 2000);

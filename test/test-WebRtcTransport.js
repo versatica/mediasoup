@@ -161,7 +161,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	await expect(router.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] }))
 		.resolves
 		.toBeType('object');
-}, 1000);
+}, 2000);
 
 test('router.createWebRtcTransport() with wrong options rejects with TypeError', async () =>
 {
@@ -188,14 +188,14 @@ test('router.createWebRtcTransport() with wrong options rejects with TypeError',
 		}))
 		.rejects
 		.toThrow(TypeError);
-}, 1000);
+}, 2000);
 
 test('router.createWebRtcTransport() with non bindable IP rejects with Error', async () =>
 {
 	await expect(router.createWebRtcTransport({ listenIps: [ '8.8.8.8' ] }))
 		.rejects
 		.toThrow(Error);
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.getStats() succeeds', async () =>
 {
@@ -215,7 +215,7 @@ test('webRtcTransport.getStats() succeeds', async () =>
 	expect(data[0].availableIncomingBitrate).toBe(0);
 	expect(data[0].availableOutgoingBitrate).toBe(0);
 	expect(data[0].maxIncomingBitrate).toBe(undefined);
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.connect() succeeds', async () =>
 {
@@ -241,7 +241,7 @@ test('webRtcTransport.connect() succeeds', async () =>
 		.toThrow(Error);
 
 	expect(transport.dtlsLocalParameters.role).toBe('server');
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
@@ -288,14 +288,14 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 		.toThrow(TypeError);
 
 	expect(transport.dtlsLocalParameters.role).toBe('auto');
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
 {
 	await expect(transport.setMaxIncomingBitrate(100000))
 		.resolves
 		.toBe(undefined);
-}, 1000);
+}, 2000);
 
 test('webRtcTransport.restartIce() succeeds', async () =>
 {
@@ -312,7 +312,7 @@ test('webRtcTransport.restartIce() succeeds', async () =>
 		.not.toBe(previousIceUsernameFragment);
 	expect(transport.iceLocalParameters.password)
 		.not.toBe(previousIcePassword);
-}, 1000);
+}, 2000);
 
 test('WebRtcTransport events succeed', async () =>
 {
@@ -364,7 +364,7 @@ test('WebRtcTransport events succeed', async () =>
 	expect(onDtlsStateChange).toHaveBeenCalledWith('connected');
 	expect(transport.dtlsState).toBe('connected');
 	expect(transport.dtlsRemoteCert).toBe('ABCD');
-}, 1000);
+}, 2000);
 
 test('WebRtcTransport methods reject if closed', async () =>
 {
@@ -391,7 +391,7 @@ test('WebRtcTransport methods reject if closed', async () =>
 	await expect(transport.restartIce())
 		.rejects
 		.toThrow(Error);
-}, 1000);
+}, 2000);
 
 test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
 {
@@ -408,7 +408,7 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
 	});
 
 	expect(transport2.closed).toBe(true);
-}, 1000);
+}, 2000);
 
 test('WebRtcTransport emits "routerclose" if Worker is closed', async () =>
 {
@@ -420,4 +420,4 @@ test('WebRtcTransport emits "routerclose" if Worker is closed', async () =>
 	});
 
 	expect(transport.closed).toBe(true);
-}, 1000);
+}, 2000);

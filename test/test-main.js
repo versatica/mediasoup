@@ -9,7 +9,7 @@ test('mediasoup.version exposes the package version', () =>
 {
 	expect(version).toBeType('string');
 	expect(version).toBe(pkg.version);
-}, 1000);
+}, 2000);
 
 test('mediasoup.getSupportedMediaCodecs supported media codecs', () =>
 {
@@ -24,4 +24,4 @@ test('mediasoup.getSupportedMediaCodecs supported media codecs', () =>
 	const mediaCodecs2 = getSupportedMediaCodecs();
 
 	expect(mediaCodecs2).not.toEqual(mediaCodecs1);
-}, 1000);
+}, 2000);

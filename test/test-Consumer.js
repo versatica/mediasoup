@@ -399,12 +399,12 @@ test('transport.consume() succeeds', async () =>
 				producerIds : [],
 				consumerIds : expect.arrayContaining([ audioConsumer.id, videoConsumer.id ])
 			});
-}, 1000);
+}, 2000);
 
 // test('consumer.dump() succeeds', async () =>
 // {
 
-// }, 1000);
+// }, 2000);
 
 test('consumer.getStats() succeeds', async () =>
 {
@@ -415,7 +415,7 @@ test('consumer.getStats() succeeds', async () =>
 	await expect(videoConsumer.getStats())
 		.resolves
 		.toEqual([]);
-}, 1000);
+}, 2000);
 
 test('consumer.pause() and resume() succeed', async () =>
 {
@@ -434,7 +434,7 @@ test('consumer.pause() and resume() succeed', async () =>
 	// await expect(audioConsumer.dump())
 	// 	.resolves
 	// 	.toMatchObject({ paused: false });
-}, 1000);
+}, 2000);
 
 test('Consumer emits "producerpause" and "producerresume"', async () =>
 {
@@ -457,7 +457,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
-}, 1000);
+}, 2000);
 
 test('consumer.close() succeeds', async () =>
 {
@@ -482,7 +482,7 @@ test('consumer.close() succeeds', async () =>
 				producerIds : [],
 				consumerIds : [ videoConsumer.id ]
 			});
-}, 1000);
+}, 2000);
 
 test('Consumer methods reject if closed', async () =>
 {
@@ -509,7 +509,7 @@ test('Consumer methods reject if closed', async () =>
 	await expect(audioConsumer.requestKeyFrame())
 		.rejects
 		.toThrow(Error);
-}, 1000);
+}, 2000);
 
 test('Consumer emits "producerclose" if Producer is closed', async () =>
 {
@@ -527,7 +527,7 @@ test('Consumer emits "producerclose" if Producer is closed', async () =>
 	});
 
 	expect(audioConsumer.closed).toBe(true);
-}, 1000);
+}, 2000);
 
 test('Consumer emits "transportclose" if Transport is closed', async () =>
 {
@@ -554,4 +554,4 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 				mapProducerIdConsumerIds : {},
 				mapConsumerIdProducerId  : {}
 			});
-}, 1000);
+}, 2000);

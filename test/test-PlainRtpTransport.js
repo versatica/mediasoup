@@ -135,7 +135,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(data2.rtcpTuple).toEqual(transport2.rtcpTuple);
 
 	expect(router.getTransportById(transport2.id)).toBe(transport2);
-}, 1000);
+}, 2000);
 
 test('router.createPlainRtpTransport() with wrong options rejects with TypeError', async () =>
 {
@@ -158,14 +158,14 @@ test('router.createPlainRtpTransport() with wrong options rejects with TypeError
 		}))
 		.rejects
 		.toThrow(TypeError);
-}, 1000);
+}, 2000);
 
 test('router.createPlainRtpTransport() with non bindable IP rejects with Error', async () =>
 {
 	await expect(router.createPlainRtpTransport({ listenIp: '8.8.8.8' }))
 		.rejects
 		.toThrow(Error);
-}, 1000);
+}, 2000);
 
 test('plaintRtpTransport.getStats() succeeds', async () =>
 {
@@ -180,7 +180,7 @@ test('plaintRtpTransport.getStats() succeeds', async () =>
 	expect(data[0].bytesSent).toBe(0);
 	expect(data[0].tuple).toBe(undefined);
 	expect(data[0].rtcpTuple).toBe(undefined);
-}, 1000);
+}, 2000);
 
 test('plaintRtpTransport.connect() succeeds', async () =>
 {
@@ -199,7 +199,7 @@ test('plaintRtpTransport.connect() succeeds', async () =>
 	expect(transport.rtcpTuple.remoteIp).toBe('1.2.3.4');
 	expect(transport.rtcpTuple.remotePort).toBe(1235);
 	expect(transport.rtcpTuple.protocol).toBe('udp');
-}, 1000);
+}, 2000);
 
 test('plaintRtpTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
@@ -218,14 +218,14 @@ test('plaintRtpTransport.connect() with wrong arguments rejects with TypeError',
 	await expect(transport.connect({ ip: '127.0.0.1', __port: 'chicken', rtcpPort: 1235 }))
 		.rejects
 		.toThrow(TypeError);
-}, 1000);
+}, 2000);
 
 test('plaintRtpTransport.setMaxIncomingBitrate() succeeds', async () =>
 {
 	await expect(transport.setMaxIncomingBitrate(100000))
 		.resolves
 		.toBe(undefined);
-}, 1000);
+}, 2000);
 
 test('PlaintRtpTransport methods reject if closed', async () =>
 {
@@ -248,7 +248,7 @@ test('PlaintRtpTransport methods reject if closed', async () =>
 	await expect(transport.setMaxIncomingBitrate())
 		.rejects
 		.toThrow(Error);
-}, 1000);
+}, 2000);
 
 test('PlaintRtpTransport emits "routerclose" if Router is closed', async () =>
 {
@@ -265,7 +265,7 @@ test('PlaintRtpTransport emits "routerclose" if Router is closed', async () =>
 	});
 
 	expect(transport2.closed).toBe(true);
-}, 1000);
+}, 2000);
 
 test('PlaintRtpTransport emits "routerclose" if Worker is closed', async () =>
 {
@@ -277,4 +277,4 @@ test('PlaintRtpTransport emits "routerclose" if Worker is closed', async () =>
 	});
 
 	expect(transport.closed).toBe(true);
-}, 1000);
+}, 2000);
