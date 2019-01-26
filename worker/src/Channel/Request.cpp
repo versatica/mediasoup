@@ -45,20 +45,20 @@ namespace Channel
 
 	/* Instance methods. */
 
-	Request::Request(Channel::UnixStreamSocket* channel, json& body) : channel(channel)
+	Request::Request(Channel::UnixStreamSocket* channel, json& jsonRequest) : channel(channel)
 	{
 		MS_TRACE();
 
-		auto jsonIdIt = body.find("id");
+		auto jsonIdIt = jsonRequest.find("id");
 
-		if (jsonIdIt == body.end() || !jsonIdIt->is_number_unsigned())
+		if (jsonIdIt == jsonRequest.end() || !jsonIdIt->is_number_unsigned())
 			MS_THROW_ERROR("missing id");
 
 		this->id = jsonIdIt->get<uint32_t>();
 
-		auto jsonMethodIt = body.find("method");
+		auto jsonMethodIt = jsonRequest.find("method");
 
-		if (jsonMethodIt == body.end() || !jsonMethodIt->is_string())
+		if (jsonMethodIt == jsonRequest.end() || !jsonMethodIt->is_string())
 			MS_THROW_ERROR("missing method");
 
 		this->method = jsonMethodIt->get<std::string>();
@@ -74,16 +74,16 @@ namespace Channel
 
 		this->methodId = methodIdIt->second;
 
-		auto jsonInternalIt = body.find("internal");
+		auto jsonInternalIt = jsonRequest.find("internal");
 
-		if (jsonInternalIt != body.end() && jsonInternalIt->is_object())
+		if (jsonInternalIt != jsonRequest.end() && jsonInternalIt->is_object())
 			this->internal = *jsonInternalIt;
 		else
 			this->internal = json::object();
 
-		auto jsonDataIt = body.find("data");
+		auto jsonDataIt = jsonRequest.find("data");
 
-		if (jsonDataIt != body.end() && jsonDataIt->is_object())
+		if (jsonDataIt != jsonRequest.end() && jsonDataIt->is_object())
 			this->data = *jsonDataIt;
 		else
 			this->data = json::object();
@@ -98,9 +98,16 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		static json noData(nullptr);
+		MS_ASSERT(!this->replied, "request already replied");
 
-		Accept(noData);
+		this->replied = true;
+
+		json jsonResponse(json::object());
+
+		jsonResponse["id"]       = this->id;
+		jsonResponse["accepted"] = true;
+
+		this->channel->Send(jsonResponse);
 	}
 
 	void Request::Accept(json& data)
@@ -111,15 +118,15 @@ namespace Channel
 
 		this->replied = true;
 
-		json body(json::object());
+		json jsonResponse(json::object());
 
-		body["id"]       = this->id;
-		body["accepted"] = true;
+		jsonResponse["id"]       = this->id;
+		jsonResponse["accepted"] = true;
 
 		if (data.is_structured())
-			body["data"] = data;
+			jsonResponse["data"] = data;
 
-		this->channel->Send(body);
+		this->channel->Send(jsonResponse);
 	}
 
 	void Request::Error(const char* reason)
@@ -130,15 +137,15 @@ namespace Channel
 
 		this->replied = true;
 
-		json body(json::object());
+		json jsonResponse(json::object());
 
-		body["id"]    = this->id;
-		body["error"] = "Error";
+		jsonResponse["id"]    = this->id;
+		jsonResponse["error"] = "Error";
 
 		if (reason != nullptr)
-			body["reason"] = reason;
+			jsonResponse["reason"] = reason;
 
-		this->channel->Send(body);
+		this->channel->Send(jsonResponse);
 	}
 
 	void Request::TypeError(const char* reason)
@@ -149,14 +156,14 @@ namespace Channel
 
 		this->replied = true;
 
-		json body(json::object());
+		json jsonResponse(json::object());
 
-		body["id"]    = this->id;
-		body["error"] = "TypeError";
+		jsonResponse["id"]    = this->id;
+		jsonResponse["error"] = "TypeError";
 
 		if (reason != nullptr)
-			body["reason"] = reason;
+			jsonResponse["reason"] = reason;
 
-		this->channel->Send(body);
+		this->channel->Send(jsonResponse);
 	}
 } // namespace Channel

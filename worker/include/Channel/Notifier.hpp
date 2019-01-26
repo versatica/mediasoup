@@ -12,8 +12,8 @@ namespace Channel
 	{
 	public:
 		static void ClassInit(Channel::UnixStreamSocket* channel);
-		static void Emit(const std::string& targetId, const std::string& event);
-		static void Emit(const std::string& targetId, const std::string& event, json& data);
+		static void Emit(const std::string& targetId, const char* event);
+		static void Emit(const std::string& targetId, const char* event, json& data);
 
 	public:
 		// Passed by argument.

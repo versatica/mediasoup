@@ -72,7 +72,7 @@ namespace Channel
 		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
+	void UnixStreamSocket::SendLog(const char* nsPayload, size_t nsPayloadLen)
 	{
 		if (IsClosed())
 			return;

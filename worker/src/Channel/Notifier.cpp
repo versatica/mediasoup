@@ -19,7 +19,7 @@ namespace Channel
 		Notifier::channel = channel;
 	}
 
-	void Notifier::Emit(const std::string& targetId, const std::string& event)
+	void Notifier::Emit(const std::string& targetId, const char* event)
 	{
 		MS_TRACE();
 
@@ -33,7 +33,7 @@ namespace Channel
 		Notifier::channel->Send(jsonNotification);
 	}
 
-	void Notifier::Emit(const std::string& targetId, const std::string& event, json& data)
+	void Notifier::Emit(const std::string& targetId, const char* event, json& data)
 	{
 		MS_TRACE();
 
