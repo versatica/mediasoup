@@ -58,10 +58,18 @@ namespace RTC
 
 		this->consumableRtpEncodings.reserve(jsonConsumableRtpEncodingsIt->size());
 
-		for (auto& entry : *jsonConsumableRtpEncodingsIt)
+		for (size_t i = 0; i < jsonConsumableRtpEncodingsIt->size(); ++i)
 		{
+			auto& entry = (*jsonConsumableRtpEncodingsIt)[i];
+
 			// This may throw due the constructor of RTC::RtpEncodingParameters.
-			consumableRtpEncodings.emplace_back(entry);
+			this->consumableRtpEncodings.emplace_back(entry);
+
+			// Verify that it has ssrc field.
+			auto& encoding = this->consumableRtpEncodings[i];
+
+			if (encoding.ssrc == 0u)
+				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
 		}
 
 		// Fill supported codec payload types.
@@ -131,6 +139,35 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_START:
+			{
+				if (this->started)
+				{
+					request->Accept();
+
+					return;
+				}
+
+				this->started = false;
+
+				MS_DEBUG_DEV("Consumer started [consumerId:%s]", this->id.c_str());
+
+				if (IsPaused())
+				{
+					request->Accept();
+
+					return;
+				}
+
+				// TODO: More?
+
+				RequestKeyFrame();
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			{
 				if (this->paused)
@@ -144,7 +181,14 @@ namespace RTC
 
 				MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
 
-				if (IsStarted() && !this->producerPaused)
+				if (!IsStarted())
+				{
+					request->Accept();
+
+					return;
+				}
+
+				if (!this->producerPaused)
 				{
 					this->rtpMonitor->Reset();
 					this->rtpStream->ClearRetransmissionBuffer();
@@ -173,7 +217,14 @@ namespace RTC
 
 				MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
 
-				if (IsStarted() && !this->producerPaused)
+				if (!IsStarted())
+				{
+					request->Accept();
+
+					return;
+				}
+
+				if (!this->producerPaused)
 				{
 					// We need to sync and wait for a key frame. Otherwise the receiver will
 					// request lot of NACKs due to unknown RTP packets.
@@ -200,6 +251,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsStarted())
+			return;
+
 		// TODO: Ask key frames and so on.
 	}
 
@@ -216,7 +270,10 @@ namespace RTC
 
 		Channel::Notifier::Emit(this->id, "producerpause");
 
-		if (IsStarted() && !this->paused)
+		if (!IsStarted())
+			return;
+
+		if (!this->paused)
 		{
 			this->rtpMonitor->Reset();
 			this->rtpStream->ClearRetransmissionBuffer();
@@ -241,7 +298,10 @@ namespace RTC
 
 		Channel::Notifier::Emit(this->id, "producerresume");
 
-		if (IsStarted() && !this->paused)
+		if (!IsStarted())
+			return;
+
+		if (!this->paused)
 		{
 			// We need to sync. However we don't need to request a key frame since the
 			// Producer already requested it.
@@ -254,6 +314,9 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO
+
+		if (!IsStarted())
+			return;
 	}
 
 	void Consumer::ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
@@ -261,13 +324,16 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO
+
+		if (!IsStarted())
+			return;
 	}
 
 	void Consumer::ProducerClosed()
 	{
 		MS_TRACE();
 
-		// TODO: More.
+		// TODO: More. And should stop everything.
 
 		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
 
@@ -280,11 +346,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsStarted())
-			return;
-
-		// If paused don't forward RTP.
-		if (IsPaused())
+		if (!IsStarted() || IsPaused())
 			return;
 
 		// Map the payload type.
@@ -337,7 +399,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsStarted())
+		if (!IsStarted() || IsPaused())
 			return;
 
 		this->rtpStream->nackCount++;
@@ -374,8 +436,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// 	if (!IsStarted())
-		// 		return;
+		if (!IsStarted() || IsPaused())
+			return;
 
 		// 	switch (messageType)
 		// 	{
@@ -398,10 +460,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsStarted())
-			return;
-
-		if (IsPaused())
+		if (!IsStarted() || IsPaused())
 			return;
 
 		// Ignore reports that do not refer to the main RTP stream. Ie: RTX stream.
@@ -417,6 +476,10 @@ namespace RTC
 
 	float Consumer::GetLossPercentage() const
 	{
+		// TODO: What?
+		if (!IsStarted() || IsPaused())
+			return 0;
+
 		float lossPercentage = 0;
 
 		// TODO: Buff...
@@ -442,11 +505,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// if (!IsStarted())
-		// 	return;
-
-		// if (this->kind != RTC::Media::Kind::VIDEO || IsPaused())
-		// 	return;
+		if (!IsStarted() || IsPaused() || this->kind != RTC::Media::Kind::VIDEO)
+			return;
 
 		// for (auto* listener : this->listeners)
 		// {
