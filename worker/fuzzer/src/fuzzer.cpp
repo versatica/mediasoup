@@ -5,16 +5,16 @@
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/FuzzerStunMessage.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
+#include "RTC/FuzzerStunMessage.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
-#include <stdint.h>
-#include <stddef.h>
 #include <cstdlib> // std::getenv()
 #include <iostream>
+#include <stddef.h>
+#include <stdint.h>
 
 bool fuzzStun = false;
-bool fuzzRtp = false;
+bool fuzzRtp  = false;
 bool fuzzRtcp = false;
 
 int init()
@@ -56,7 +56,7 @@ int init()
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
 		fuzzStun = true;
-		fuzzRtp = true;
+		fuzzRtp  = true;
 		fuzzRtcp = true;
 	}
 

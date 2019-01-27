@@ -10,7 +10,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTllei::Fuzz(::RTC::RTCP::FeedbackRtpTlleiPack
 	// TODO.
 	// AddItem(Item* item);
 
-	auto it  = packet->Begin();
+	auto it = packet->Begin();
 	for (; it != packet->End(); ++it)
 	{
 		auto& item = (*it);

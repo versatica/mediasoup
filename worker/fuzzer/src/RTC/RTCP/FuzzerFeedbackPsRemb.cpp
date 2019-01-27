@@ -8,7 +8,7 @@ void Fuzzer::RTC::RTCP::FeedbackPsRemb::Fuzz(::RTC::RTCP::FeedbackPsRembPacket* 
 	packet->GetSize();
 	packet->IsCorrect();
 	packet->SetBitrate(1111);
-	packet->SetSsrcs({2222, 3333, 4444});
+	packet->SetSsrcs({ 2222, 3333, 4444 });
 	packet->GetBitrate();
 	packet->GetSsrcs();
 }

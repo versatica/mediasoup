@@ -19,8 +19,8 @@ namespace Fuzzer
 			{
 				void Fuzz(::RTC::RTCP::FeedbackPsTstrPacket* packet);
 			}
-		}
-	}
-}
+		} // namespace RTCP
+	}   // namespace RTC
+} // namespace Fuzzer
 
 #endif

@@ -14,7 +14,7 @@ void Fuzzer::RTC::RTCP::ReceiverReport::Fuzz(::RTC::RTCP::ReceiverReportPacket* 
 	// TODO.
 	// AddReport(ReceiverReport* report);
 
-	auto it  = packet->Begin();
+	auto it = packet->Begin();
 	for (; it != packet->End(); ++it)
 	{
 		auto& report = (*it);

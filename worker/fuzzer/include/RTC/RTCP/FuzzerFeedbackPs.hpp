@@ -14,8 +14,8 @@ namespace Fuzzer
 			{
 				void Fuzz(::RTC::RTCP::Packet* packet);
 			}
-		}
-	}
-}
+		} // namespace RTCP
+	}   // namespace RTC
+} // namespace Fuzzer
 
 #endif

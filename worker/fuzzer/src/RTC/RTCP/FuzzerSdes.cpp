@@ -10,7 +10,7 @@ void Fuzzer::RTC::RTCP::Sdes::Fuzz(::RTC::RTCP::SdesPacket* packet)
 	// TODO.
 	// AddChunk(SdesChunk* chunk);
 
-	auto it  = packet->Begin();
+	auto it = packet->Begin();
 	for (; it != packet->End(); ++it)
 	{
 		auto& chunk = (*it);

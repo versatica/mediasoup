@@ -2,8 +2,8 @@
 #define MS_TEST_HELPERS_HPP
 
 #include "common.hpp"
-#include <string>
 #include <fstream>
+#include <string>
 
 namespace helpers
 {
@@ -22,6 +22,6 @@ namespace helpers
 
 		return true;
 	}
-}
+} // namespace helpers
 
 #endif
