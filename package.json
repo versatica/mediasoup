@@ -2,8 +2,8 @@
   "name": "mediasoup",
   "version": "3.0.0-dev",
   "description": "Cutting Edge WebRTC Video Conferencing",
-  "author": "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
   "contributors": [
+    "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
     "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)"
   ],
   "homepage": "https://mediasoup.org",
