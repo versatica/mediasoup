@@ -1,39 +1,15 @@
 const gulp = require('gulp');
-const eslint = require('gulp-eslint');
-const replace = require('gulp-replace');
-const rename = require('gulp-rename');
-// const touch = require('gulp-touch-cmd');
-const shell = require('gulp-shell');
 const clangFormat = require('gulp-clang-format');
-const os = require('os');
 
-const nodeFiles =
-[
-	'.eslintrc.js',
-	'gulpfile.js',
-	'lib/**/*.js',
-	'test/**/*.js'
-];
 const workerFiles =
 [
 	'worker/src/**/*.cpp',
 	'worker/include/**/*.hpp',
-	'worker/test/**/*.cpp'
+	'worker/test/src/**/*.cpp',
+	'worker/test/include/helpers.hpp',
+	'worker/fuzzer/src/**/*.cpp',
+	'worker/fuzzer/include/**/*.hpp'
 ];
-const workerCompilationDatabaseTemplate = 'worker/compile_commands_template.json';
-const workerHeaderFilterRegex =
-	'(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp' +
-	'|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp' +
-	'|handles/**/*.hpp|json.hpp)';
-const numCpus = os.cpus().length;
-
-gulp.task('lint:node', () =>
-{
-	return gulp.src(nodeFiles)
-		.pipe(eslint())
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
-});
 
 gulp.task('lint:worker', () =>
 {
@@ -61,72 +37,3 @@ gulp.task('format:worker', () =>
 		.pipe(clangFormat.format('file'))
 		.pipe(gulp.dest('.'));
 });
-
-// TODO: If we move this to Makefile, we can remove gulp-touch-cmd dep.
-// gulp.task('tidy:worker:prepare', () =>
-// {
-// 	return gulp.src(workerCompilationDatabaseTemplate)
-// 		.pipe(replace(/PATH/gm, __dirname))
-// 		.pipe(rename('compile_commands.json'))
-// 		.pipe(gulp.dest('worker'))
-// 		.pipe(touch());
-// });
-
-// gulp.task('tidy:worker:run', shell.task(
-// 	[
-// 		'cd worker && ' +
-// 		'./scripts/clang-tidy.py ' +
-// 		'-clang-tidy-binary=../node_modules/.bin/clang-tidy ' +
-// 		'-clang-apply-replacements-binary=' +
-// 		'../node_modules/.bin/clang-apply-replacements ' +
-// 		`-header-filter='${workerHeaderFilterRegex}' ` +
-// 		'-p=. ' +
-// 		`-j=${numCpus} ` +
-// 		`-checks=${process.env.MEDIASOUP_TIDY_CHECKS || ''} ` +
-// 		'-quiet ' +
-// 		`${process.env.MEDIASOUP_TIDY_FIX === '1' ? '-fix -format' : ''}`
-// 	],
-// 	{
-// 		verbose : true
-// 	}
-// ));
-
-// gulp.task('tidy:worker', gulp.series('tidy:worker:prepare', 'tidy:worker:run'));
-
-gulp.task('test:node', shell.task(
-	[ 'jest' ],
-	{
-		verbose : true,
-		env     : { DEBUG: '*ABORT*' }
-	}
-));
-
-gulp.task('test:node:coverage', shell.task(
-	[ 'jest --coverage', 'opn coverage/lcov-report/index.html' ],
-	{
-		verbose : true,
-		env     : { DEBUG: '*ABORT*' }
-	}
-));
-
-gulp.task('test:worker', shell.task(
-	[
-		'./worker/deps/lcov/bin/lcov --directory ./ --zerocounters',
-		`cd worker && ./out/${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ?
-			'Debug' : 'Release'}/mediasoup-worker-test --invisibles --use-colour=yes ` +
-		`${process.env.MEDIASOUP_TEST_TAGS || ''}`
-	],
-	{
-		verbose : true
-	}
-));
-
-gulp.task('lint', gulp.series('lint:node', 'lint:worker'));
-
-gulp.task('format', gulp.series('format:worker'));
-
-// gulp.task('tidy', gulp.series('tidy:worker'));
-
-gulp.task('test', gulp.series('test:node', 'test:worker'));
-
-gulp.task('default', gulp.series('lint', 'test'));

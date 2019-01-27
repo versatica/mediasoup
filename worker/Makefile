@@ -9,7 +9,7 @@ PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 .PHONY:	\
 	default Release Debug test test-Release test-Debug \
 	fuzzer fuzzer-docker-build fuzzer-docker-run xcode \
-	bear tidy clean clean-all
+	lint format bear tidy clean clean-all
 
 default:
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
@@ -29,8 +29,10 @@ Debug:
 test:
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 	make test-Debug
+	./out/Debug/mediasoup-worker-test --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}
 else
 	make test-Release
+	./out/Release/mediasoup-worker-test --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}
 endif
 
 test-Release:
@@ -61,6 +63,12 @@ fuzzer-docker-run:
 
 xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
+
+lint:
+	gulp lint:worker
+
+format:
+	gulp format:worker
 
 bear:
 	$(MAKE) clean

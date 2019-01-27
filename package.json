@@ -26,11 +26,14 @@
     "node": ">=8.0.0"
   },
   "scripts": {
-    "lint_________________": "gulp lint",
-    "lint": "gulp lint:node",
-    "test_________________": "gulp test",
-    "test": "jest",
-    "coverage": "jest --coverage && opn coverage/lcov-report/index.html",
+    "lint": "npm run lint:node && npm run lint:worker",
+    "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test",
+    "lint:worker": "make lint -C worker",
+    "format:worker": "make format -C worker",
+    "test": "npm run test:node && npm run test:worker",
+    "test:node": "jest",
+    "test:worker": "make test -C worker",
+    "coverage:node": "jest --coverage && opn coverage/lcov-report/index.html",
     "postinstall": "make Release -C worker"
   },
   "jest": {
@@ -49,10 +52,6 @@
     "eslint-plugin-jest": "^22.1.3",
     "gulp": "^4.0.0",
     "gulp-clang-format": "^1.0.27",
-    "gulp-eslint": "^5.0.0",
-    "gulp-rename": "^1.4.0",
-    "gulp-replace": "^1.0.0",
-    "gulp-shell": "^0.6.5",
     "jest": "^24.0.0",
     "jest-tobetype": "^1.2.0",
     "opn-cli": "^4.0.0"
