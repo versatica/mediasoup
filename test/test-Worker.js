@@ -73,7 +73,7 @@ test('worker.updateSettings() succeeds', async () =>
 	worker.close();
 }, 2000);
 
-test('worker.updateSettings() with wrong settings rejects TypeError', async () =>
+test('worker.updateSettings() with wrong settings rejects with TypeError', async () =>
 {
 	worker = await createWorker();
 

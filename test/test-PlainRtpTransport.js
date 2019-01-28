@@ -137,7 +137,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(router.getTransportById(transport2.id)).toBe(transport2);
 }, 2000);
 
-test('router.createPlainRtpTransport() with wrong options rejects with TypeError', async () =>
+test('router.createPlainRtpTransport() with wrong arguments rejects with TypeError', async () =>
 {
 	await expect(router.createPlainRtpTransport())
 		.rejects

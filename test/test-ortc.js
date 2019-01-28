@@ -267,7 +267,7 @@ test('assertCapabilities() succeeds', () =>
 		.toBe(undefined);
 });
 
-test('assertCapabilities() witn non compatible codecs throws UnsupportedError', () =>
+test('assertCapabilities() with incompatible codecs throws UnsupportedError', () =>
 {
 	const mediaCodecs =
 	[
@@ -632,7 +632,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 		});
 });
 
-test('getProducerRtpParametersMapping() throws UnsupportedError if non compatible params', () =>
+test('getProducerRtpParametersMapping() with incompatible params throws UnsupportedError', () =>
 {
 	const mediaCodecs =
 	[
