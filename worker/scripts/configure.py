@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(root, 'deps', 'gyp', 'pylib'))
 try:
   import gyp
 except ImportError:
-  print('You need to install gyp in deps/gyp first, run:')
+  print('Error: you need to install gyp in deps/gyp first, run:')
   print('  ./scripts/get_dep.sh gyp')
   sys.exit(42)
 

@@ -125,7 +125,11 @@ Generates the `worker/compile_commands_template.json` file which is a ["Clang co
 
 Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code checks following `worker/.clang-tidy` rules.
 
-**NOTE:** `make bear` must have been called first.
+**Requirements:**
+
+* `make bear` must have been called first.
+* [PyYAML](https://pyyaml.org/) is required.
+  - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 
 
 ### `make clean`
