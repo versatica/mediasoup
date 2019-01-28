@@ -125,7 +125,7 @@ Generates the `worker/compile_commands_template.json` file which is a ["Clang co
 
 Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code checks following `worker/.clang-tidy` rules.
 
-**NOTE:** `make bear` must have been called first to generate the `worker/compile_commands.json` file.
+**NOTE:** `make bear` must have been called first.
 
 
 ### `make clean`
