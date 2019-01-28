@@ -6,46 +6,25 @@
 # environment variable set by the user.
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 
+MEDIASOUP_BUILDTYPE ?= Release
+
 .PHONY:	\
-	default Release Debug test test-Release test-Debug \
-	fuzzer fuzzer-docker-build fuzzer-docker-run xcode \
+	default test fuzzer fuzzer-docker-build fuzzer-docker-run xcode \
 	lint format bear tidy clean clean-all
 
 default:
-ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
-	make Debug
-else
-	make Release
-endif
-
-Release:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) BUILDTYPE=Release -C out
-
-Debug:
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) BUILDTYPE=Debug -C out
+	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
 
 test:
-ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
-	make test-Debug
-	./out/Debug/mediasoup-worker-test --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}
-else
-	make test-Release
-	./out/Release/mediasoup-worker-test --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}
-endif
-
-test-Release:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) BUILDTYPE=Release -C out
-
-test-Debug:
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) BUILDTYPE=Debug -C out
+	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	./deps/lcov/bin/lcov --directory ./ --zerocounters
+	./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 
 fuzzer:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) BUILDTYPE=Release -C out
+	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
 
 fuzzer-docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
@@ -83,7 +62,7 @@ tidy:
 		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp|json.hpp)' \
 		-p=. \
 		-j=2 \
-		-checks=${MEDIASOUP_TIDY_CHECKS} \
+		-checks=$(MEDIASOUP_TIDY_CHECKS) \
 		-quiet
 
 clean:

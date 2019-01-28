@@ -16,7 +16,7 @@ echo ">>> [INFO] clearing counters..."
 $LCOV --directory ./ --zerocounters
 
 echo ">>> [INFO] running tests..."
-gulp test:worker
+make test
 
 echo ">>> [INFO] generating coverage info file..."
 $LCOV --no-external --capture --directory ./ --output-file ${COVERAGE_INFO}
