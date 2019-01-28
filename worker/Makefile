@@ -6,6 +6,8 @@
 # environment variable set by the user.
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 
+GULP = ../node_modules/.bin/gulp
+
 MEDIASOUP_BUILDTYPE ?= Release
 
 .PHONY:	\
@@ -44,10 +46,10 @@ xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
 
 lint:
-	gulp lint:worker
+	$(GULP) lint:worker
 
 format:
-	gulp format:worker
+	$(GULP) format:worker
 
 bear:
 	$(MAKE) clean
