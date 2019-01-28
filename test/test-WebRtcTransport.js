@@ -28,12 +28,11 @@ const mediaCodecs =
 		clockRate : 90000
 	},
 	{
-		kind         : 'video',
-		name         : 'H264',
-		mimeType     : 'video/H264',
-		clockRate    : 90000,
-		rtcpFeedback : [], // Will be ignored.
-		parameters   :
+		kind       : 'video',
+		name       : 'H264',
+		mimeType   : 'video/H264',
+		clockRate  : 90000,
+		parameters :
 		{
 			'level-asymmetry-allowed' : 1,
 			'packetization-mode'      : 1,
@@ -371,6 +370,9 @@ test('WebRtcTransport methods reject if closed', async () =>
 	transport.close();
 
 	expect(transport.closed).toBe(true);
+	expect(transport.iceState).toBe('closed');
+	expect(transport.iceSelectedTuple).toBe(undefined);
+	expect(transport.dtlsState).toBe('closed');
 
 	await expect(transport.dump())
 		.rejects
@@ -408,6 +410,9 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
 	});
 
 	expect(transport2.closed).toBe(true);
+	expect(transport2.iceState).toBe('closed');
+	expect(transport2.iceSelectedTuple).toBe(undefined);
+	expect(transport2.dtlsState).toBe('closed');
 }, 2000);
 
 test('WebRtcTransport emits "routerclose" if Worker is closed', async () =>
@@ -420,4 +425,7 @@ test('WebRtcTransport emits "routerclose" if Worker is closed', async () =>
 	});
 
 	expect(transport.closed).toBe(true);
+	expect(transport.iceState).toBe('closed');
+	expect(transport.iceSelectedTuple).toBe(undefined);
+	expect(transport.dtlsState).toBe('closed');
 }, 2000);
