@@ -45,7 +45,7 @@ Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/
 
 ### `npm run coverage:node`
 
-Same as `npm run test:noe` but it also open a browser window with JavaScript coverage results.
+Same as `npm run test:node` but it also opens a browser window with JavaScript coverage results.
 
 
 ## Makefile
