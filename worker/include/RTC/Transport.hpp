@@ -77,7 +77,7 @@ namespace RTC
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
 		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
 		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
-		RTC::Consumer* GetStartedConsumer(uint32_t ssrc) const;
+		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		void SendRtcp(uint64_t now);
 		virtual bool IsConnected() const                                       = 0;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                     = 0;

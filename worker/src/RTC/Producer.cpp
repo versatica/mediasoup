@@ -413,7 +413,7 @@ namespace RTC
 
 				if (this->kind == RTC::Media::Kind::VIDEO)
 				{
-					MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame after resumed");
+					MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame(s) after resumed");
 
 					// Request a key frame for all streams.
 					for (auto& kv : this->mapSsrcRtpStream)

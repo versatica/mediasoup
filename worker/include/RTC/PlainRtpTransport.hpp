@@ -1,7 +1,6 @@
 #ifndef MS_RTC_PLAIN_RTP_TRANSPORT_HPP
 #define MS_RTC_PLAIN_RTP_TRANSPORT_HPP
 
-#include "common.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"

@@ -12,6 +12,7 @@
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/SimpleConsumer.hpp"
 
 namespace RTC
 {
@@ -213,7 +214,9 @@ namespace RTC
 				// This may throw.
 				SetNewConsumerIdFromRequest(request, consumerId);
 
-				auto* consumer = new RTC::Consumer(consumerId, this, request->data);
+				// TODO: Let's see how to decide which subclass of Consumer to use.
+				// RTC::Consumer* consumer = new RTC::Consumer(consumerId, this, request->data);
+				auto* consumer = new RTC::SimpleConsumer(consumerId, this, request->data);
 
 				// Notify the listener and get the associated Producer.
 				// This may throw if no Producer is found.
@@ -374,7 +377,7 @@ namespace RTC
 				for (; it != rr->End(); ++it)
 				{
 					auto& report   = (*it);
-					auto* consumer = GetStartedConsumer(report->GetSsrc());
+					auto* consumer = GetConsumerByMediaSsrc(report->GetSsrc());
 
 					if (consumer == nullptr)
 					{
@@ -401,7 +404,7 @@ namespace RTC
 					case RTC::RTCP::FeedbackPs::MessageType::PLI:
 					case RTC::RTCP::FeedbackPs::MessageType::FIR:
 					{
-						auto* consumer = GetStartedConsumer(feedback->GetMediaSsrc());
+						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
 						if (consumer == nullptr)
 						{
@@ -475,7 +478,7 @@ namespace RTC
 			case RTC::RTCP::Type::RTPFB:
 			{
 				auto* feedback = dynamic_cast<RTC::RTCP::FeedbackRtpPacket*>(packet);
-				auto* consumer = GetStartedConsumer(feedback->GetMediaSsrc());
+				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
 				if (consumer == nullptr)
 				{
@@ -651,7 +654,7 @@ namespace RTC
 		return consumer;
 	}
 
-	inline RTC::Consumer* Transport::GetStartedConsumer(uint32_t ssrc) const
+	inline RTC::Consumer* Transport::GetConsumerByMediaSsrc(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -662,10 +665,7 @@ namespace RTC
 
 		auto* consumer = mapSsrcConsumerIt->second;
 
-		if (consumer->IsStarted())
-			return consumer;
-		else
-			return nullptr;
+		return consumer;
 	}
 
 	void Transport::SendRtcp(uint64_t now)

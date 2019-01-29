@@ -485,10 +485,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& it : DtlsTransport::string2FingerprintAlgorithm)
+		for (auto& kv : DtlsTransport::string2FingerprintAlgorithm)
 		{
-			std::string algorithmString    = it.first;
-			FingerprintAlgorithm algorithm = it.second;
+			const std::string& algorithmString = kv.first;
+			FingerprintAlgorithm algorithm     = kv.second;
 			uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size{ 0 };
 			char hexFingerprint[(EVP_MAX_MD_SIZE * 3) + 1];

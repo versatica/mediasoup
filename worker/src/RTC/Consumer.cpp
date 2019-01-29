@@ -4,19 +4,10 @@
 #include "RTC/Consumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "Channel/Notifier.hpp"
-#include "RTC/Codecs/Codecs.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
 
 namespace RTC
 {
-	/* Static. */
-
-	static uint8_t RtxPacketBuffer[RtpBufferSize];
-	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
-
 	/* Instance methods. */
 
 	Consumer::Consumer(const std::string& id, Listener* listener, json& data)
@@ -45,8 +36,15 @@ namespace RTC
 
 		if (this->rtpParameters.encodings.empty())
 			MS_THROW_TYPE_ERROR("invalid empty rtpParameters.encodings");
-		else if (this->rtpParameters.encodings[0].ssrc == 0)
-			MS_THROW_TYPE_ERROR("missing rtpParameters.encodings[0].ssrc");
+
+		// All encodings must have SSRCs.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.ssrc == 0)
+				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing ssrc)");
+			else if (encoding.hasRtx && encoding.rtx.ssrc == 0)
+				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing rtx.ssrc)");
+		}
 
 		auto jsonConsumableRtpEncodingsIt = data.find("consumableRtpEncodings");
 
@@ -78,33 +76,19 @@ namespace RTC
 			this->supportedCodecPayloadTypes.insert(codec.payloadType);
 		}
 
-		// Set the RTCP report generation interval.
-		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
-		else
-			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
-
-		// Create RtpStreamSend instance for sending a single stream to the remote.
-		CreateRtpStream();
+		// Fill media SSRCs vector.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			this->mediaSsrcs.push_back(encoding.ssrc);
+		}
 	}
 
 	Consumer::~Consumer()
 	{
 		MS_TRACE();
-
-		delete this->rtpStream;
-
-		delete this->rtpMonitor;
 	}
 
 	void Consumer::FillJson(json& /*jsonObject*/) const
-	{
-		MS_TRACE();
-
-		// TODO
-	}
-
-	void Consumer::FillJsonStats(json& /*jsonArray*/) const
 	{
 		MS_TRACE();
 
@@ -148,21 +132,11 @@ namespace RTC
 					return;
 				}
 
-				this->started = false;
+				this->started = true;
 
 				MS_DEBUG_DEV("Consumer started [consumerId:%s]", this->id.c_str());
 
-				if (IsPaused())
-				{
-					request->Accept();
-
-					return;
-				}
-
-				// TODO: More?
-
-				RequestKeyFrame();
-
+				Started();
 				request->Accept();
 
 				break;
@@ -181,26 +155,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
 
-				if (!IsStarted())
-				{
-					request->Accept();
-
-					return;
-				}
-
-				// TODO: We should call Paused() (pure virtual method).
-
-				if (!this->producerPaused)
-				{
-					this->rtpMonitor->Reset();
-					this->rtpStream->ClearRetransmissionBuffer();
-					this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
-
-					// TODO
-					// if (IsProbing())
-					// 	StopProbation();
-				}
-
+				Paused();
 				request->Accept();
 
 				break;
@@ -219,24 +174,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
 
-				if (!IsStarted())
-				{
-					request->Accept();
-
-					return;
-				}
-
-				// TODO: We should call Resumed() (pure virtual method).
-
-				if (!this->producerPaused)
-				{
-					// We need to sync and wait for a key frame. Otherwise the receiver will
-					// request lot of NACKs due to unknown RTP packets.
-					this->syncRequired = true;
-
-					RequestKeyFrame();
-				}
-
+				Resumed();
 				request->Accept();
 
 				break;
@@ -251,17 +189,6 @@ namespace RTC
 		}
 	}
 
-	// TODO: Should be pure virtual method.
-	void Consumer::TransportConnected()
-	{
-		MS_TRACE();
-
-		if (!IsStarted())
-			return;
-
-		// TODO: Ask key frames and so on.
-	}
-
 	void Consumer::ProducerPaused()
 	{
 		MS_TRACE();
@@ -273,21 +200,8 @@ namespace RTC
 
 		MS_DEBUG_DEV("Producer paused [consumerId:%s]", this->id.c_str());
 
+		Paused();
 		Channel::Notifier::Emit(this->id, "producerpause");
-
-		if (!IsStarted())
-			return;
-
-		if (!this->paused)
-		{
-			this->rtpMonitor->Reset();
-			this->rtpStream->ClearRetransmissionBuffer();
-			this->rtpPacketsBeforeProbation = RtpPacketsBeforeProbation;
-
-			// TODO
-			// if (IsProbing())
-			// StopProbation();
-		}
 	}
 
 	void Consumer::ProducerResumed()
@@ -301,344 +215,22 @@ namespace RTC
 
 		MS_DEBUG_DEV("Producer resumed [consumerId:%s]", this->id.c_str());
 
+		Resumed();
 		Channel::Notifier::Emit(this->id, "producerresume");
-
-		if (!IsStarted())
-			return;
-
-		if (!this->paused)
-		{
-			// We need to sync. However we don't need to request a key frame since the
-			// Producer already requested it.
-			this->syncRequired = true;
-		}
 	}
 
-	void Consumer::ProducerRtpStreamHealthy(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
-	{
-		MS_TRACE();
-
-		// TODO
-
-		if (!IsStarted())
-			return;
-	}
-
-	void Consumer::ProducerRtpStreamUnhealthy(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
-	{
-		MS_TRACE();
-
-		// TODO
-
-		if (!IsStarted())
-			return;
-	}
-
+	// The caller (Router) is supposed to produce the delete of this Consumer
+	// right after calling this method. Otherwise ugly things may happen.
 	void Consumer::ProducerClosed()
 	{
 		MS_TRACE();
 
-		// TODO: More. And should stop everything.
+		this->started = false;
 
 		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
 
 		Channel::Notifier::Emit(this->id, "producerclose");
 
 		this->listener->onConsumerProducerClosed(this);
-	}
-
-	void Consumer::SendRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		if (!IsStarted() || IsPaused())
-			return;
-
-		// Map the payload type.
-		auto payloadType = packet->GetPayloadType();
-
-		// NOTE: This may happen if this Consumer supports just some codecs of those
-		// in the corresponding Producer.
-		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
-		{
-			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
-
-			return;
-		}
-
-		// TODO
-	}
-
-	void Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
-	{
-		MS_TRACE();
-
-		if (!IsStarted() || IsPaused())
-			return;
-
-		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
-
-		auto* report = this->rtpStream->GetRtcpSenderReport(now);
-
-		if (report == nullptr)
-			return;
-
-		uint32_t ssrc     = this->rtpParameters.encodings[0].ssrc;
-		std::string cname = this->rtpParameters.rtcp.cname;
-
-		report->SetSsrc(ssrc);
-		packet->AddSenderReport(report);
-
-		// Build SDES chunk for this sender.
-		auto* sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		auto* sdesItem =
-		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
-
-		sdesChunk->AddItem(sdesItem);
-		packet->AddSdesChunk(sdesChunk);
-		this->lastRtcpSentTime = now;
-	}
-
-	void Consumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
-	{
-		MS_TRACE();
-
-		if (!IsStarted() || IsPaused())
-			return;
-
-		this->rtpStream->nackCount++;
-
-		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
-		{
-			RTC::RTCP::FeedbackRtpNackItem* item = *it;
-
-			this->rtpStream->nackRtpPacketCount += item->CountRequestedPackets();
-
-			this->rtpStream->RequestRtpRetransmission(
-			  item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
-
-			auto it2 = RtpRetransmissionContainer.begin();
-
-			for (; it2 != RtpRetransmissionContainer.end(); ++it2)
-			{
-				RTC::RtpPacket* packet = *it2;
-
-				if (packet == nullptr)
-					break;
-
-				RetransmitRtpPacket(packet);
-
-				this->rtpMonitor->RtpPacketRepaired(packet);
-
-				// Packet repaired after applying RTX.
-				this->rtpStream->packetsRepaired++;
-			}
-		}
-	}
-
-	void Consumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType /*messageType*/)
-	{
-		MS_TRACE();
-
-		if (!IsStarted() || IsPaused())
-			return;
-
-		// 	switch (messageType)
-		// 	{
-		// 		case RTC::RTCP::FeedbackPs::MessageType::PLI:
-		// 			this->rtpStream->pliCount++;
-		// 			break;
-
-		// 		case RTC::RTCP::FeedbackPs::MessageType::FIR:
-		// 			this->rtpStream->firCount++;
-		// 			break;
-
-		// 		default:
-		// 			MS_ASSERT(false, "invalid messageType");
-		// 	}
-
-		// 	RequestKeyFrame();
-	}
-
-	void Consumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
-	{
-		MS_TRACE();
-
-		if (!IsStarted() || IsPaused())
-			return;
-
-		// Ignore reports that do not refer to the main RTP stream. Ie: RTX stream.
-		if (report->GetSsrc() != this->rtpStream->GetSsrc())
-			return;
-
-		this->rtpStream->ReceiveRtcpReceiverReport(report);
-
-		// TODO: Why just for video???
-		if (this->kind == RTC::Media::Kind::VIDEO)
-			this->rtpMonitor->ReceiveRtcpReceiverReport(report);
-	}
-
-	float Consumer::GetLossPercentage() const
-	{
-		// TODO: What?
-		if (!IsStarted() || IsPaused())
-			return 0;
-
-		float lossPercentage = 0;
-
-		// TODO: Buff...
-
-		// if (this->effectiveProfile != RTC::RtpEncodingParameters::Profile::NONE)
-		// {
-		// 	auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
-
-		// 	MS_ASSERT(it != this->mapProfileRtpStream.end(), "no RtpStream associated with current profile");
-
-		// 	auto* rtpStream = it->second;
-
-		// 	if (rtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
-		// 		lossPercentage = 0;
-		// 	else
-		// 		lossPercentage = (this->rtpStream->GetLossPercentage() - rtpStream->GetLossPercentage());
-		// }
-
-		return lossPercentage;
-	}
-
-	void Consumer::RequestKeyFrame()
-	{
-		MS_TRACE();
-
-		if (!IsStarted() || IsPaused() || this->kind != RTC::Media::Kind::VIDEO)
-			return;
-
-		// for (auto* listener : this->listeners)
-		// {
-		// 	listener->OnConsumerKeyFrameRequired(this);
-		// }
-	}
-
-	void Consumer::CreateRtpStream()
-	{
-		MS_TRACE();
-
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
-
-		// Set stream params.
-		RTC::RtpStream::Params params;
-
-		params.ssrc        = encoding.ssrc;
-		params.payloadType = mediaCodec->payloadType;
-		params.mimeType    = mediaCodec->mimeType;
-		params.clockRate   = mediaCodec->clockRate;
-
-		for (auto& fb : mediaCodec->rtcpFeedback)
-		{
-			if (!params.useNack && fb.type == "nack")
-			{
-				MS_DEBUG_2TAGS(rtcp, rtx, "NACK supported");
-
-				params.useNack = true;
-			}
-			if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
-			{
-				MS_DEBUG_TAG(rtcp, "PLI supported");
-
-				params.usePli = true;
-			}
-			if (!params.useFir && fb.type == "ccm" && fb.parameter == "fir")
-			{
-				MS_DEBUG_TAG(rtcp, "FIR supported");
-
-				params.useFir = true;
-			}
-		}
-
-		// Create a RtpStreamSend for sending a single media stream.
-		if (params.useNack)
-			this->rtpStream = new RTC::RtpStreamSend(params, 1500);
-		else
-			this->rtpStream = new RTC::RtpStreamSend(params, 0);
-
-		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-
-		if (rtxCodec && encoding.hasRtx && encoding.rtx.ssrc != 0u)
-			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
-
-		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
-
-		this->rtpMonitor = new RTC::RtpMonitor(this, this->rtpStream);
-	}
-
-	void Consumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		RTC::RtpPacket* rtxPacket{ nullptr };
-
-		if (this->rtpStream->HasRtx())
-		{
-			rtxPacket = packet->Clone(RtxPacketBuffer);
-			this->rtpStream->RtxEncode(rtxPacket);
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "sending RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
-			  ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber(),
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
-		}
-		else
-		{
-			rtxPacket = packet;
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber());
-		}
-
-		// Update retransmitted RTP data counter.
-		this->retransmittedCounter.Update(rtxPacket);
-
-		// Send the packet.
-		this->listener->OnConsumerSendRtpPacket(this, rtxPacket);
-
-		// Delete the RTX RtpPacket if it was created.
-		if (rtxPacket != packet)
-			delete rtxPacket;
-	}
-
-	void Consumer::MayRunProbation()
-	{
-		// // No simulcast or SVC.
-		// if (this->mapProfileRtpStream.empty())
-		// 	return;
-
-		// // There is an ongoing profile upgrade. Do not interfere.
-		// if (this->effectiveProfile != this->targetProfile)
-		// 	return;
-
-		// // Ongoing probation.
-		// if (IsProbing())
-		// 	return;
-
-		// // Current health status is not good.
-		// if (!this->rtpMonitor->IsHealthy())
-		// 	return;
-
-		// RecalculateTargetProfile();
-	}
-
-	void Consumer::OnRtpMonitorScore(uint8_t /*score*/)
-	{
-		MS_TRACE();
-
-		// RecalculateTargetProfile();
 	}
 } // namespace RTC
