@@ -186,7 +186,14 @@ namespace RTC
 			totalScore += weight * score;
 		}
 
-		return static_cast<uint8_t>(std::round(totalScore / samples));
+		if (samples == 0)
+		{
+			return 10;
+		}
+		else
+		{
+			return static_cast<uint8_t>(std::round(totalScore / samples));
+		}
 	}
 
 	/*
