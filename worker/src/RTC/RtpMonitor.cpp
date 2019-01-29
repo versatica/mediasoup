@@ -104,7 +104,7 @@ namespace RTC
 		score += repairedPercentage * RepairedPercentageWeight;
 
 		// Add score to histogram.
-		AddScore(static_cast<uint8_t>(score / 10 + 0.5f));
+		AddScore(static_cast<uint8_t>(std::lround(score / 10)));
 
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
