@@ -268,6 +268,10 @@ afterAll(() => worker.close());
 
 test('transport.consume() succeeds', async () =>
 {
+	expect(router.canConsume(
+		{ producerId: audioProducer.id, rtpCapabilities: deviceCapabilities }))
+		.toBe(true);
+
 	audioConsumer = await transport2.consume(
 		{
 			producerId      : audioProducer.id,
@@ -323,6 +327,10 @@ test('transport.consume() succeeds', async () =>
 				producerIds : [],
 				consumerIds : [ audioConsumer.id ]
 			});
+
+	expect(router.canConsume(
+		{ producerId: videoProducer.id, rtpCapabilities: deviceCapabilities }))
+		.toBe(true);
 
 	videoConsumer = await transport2.consume(
 		{
@@ -422,6 +430,10 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 		headerExtensions : []
 	};
 
+	expect(router.canConsume(
+		{ producerId: audioProducer.id, rtpCapabilities : invalidDeviceCapabilities }))
+		.toBe(false);
+
 	await expect(transport2.consume(
 		{
 			producerId      : audioProducer.id,
@@ -435,6 +447,10 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 		codecs           : [],
 		headerExtensions : []
 	};
+
+	expect(router.canConsume(
+		{ producerId: audioProducer.id, rtpCapabilities : invalidDeviceCapabilities }))
+		.toBe(false);
 
 	await expect(transport2.consume(
 		{
