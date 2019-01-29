@@ -188,6 +188,8 @@ namespace RTC
 					return;
 				}
 
+				// TODO: We should call Paused() (pure virtual method).
+
 				if (!this->producerPaused)
 				{
 					this->rtpMonitor->Reset();
@@ -224,6 +226,8 @@ namespace RTC
 					return;
 				}
 
+				// TODO: We should call Resumed() (pure virtual method).
+
 				if (!this->producerPaused)
 				{
 					// We need to sync and wait for a key frame. Otherwise the receiver will
@@ -247,6 +251,7 @@ namespace RTC
 		}
 	}
 
+	// TODO: Should be pure virtual method.
 	void Consumer::TransportConnected()
 	{
 		MS_TRACE();

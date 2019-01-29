@@ -431,7 +431,7 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 	};
 
 	expect(router.canConsume(
-		{ producerId: audioProducer.id, rtpCapabilities : invalidDeviceCapabilities }))
+		{ producerId: audioProducer.id, rtpCapabilities: invalidDeviceCapabilities }))
 		.toBe(false);
 
 	await expect(transport2.consume(
@@ -449,7 +449,7 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 	};
 
 	expect(router.canConsume(
-		{ producerId: audioProducer.id, rtpCapabilities : invalidDeviceCapabilities }))
+		{ producerId: audioProducer.id, rtpCapabilities: invalidDeviceCapabilities }))
 		.toBe(false);
 
 	await expect(transport2.consume(

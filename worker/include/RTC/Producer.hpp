@@ -75,7 +75,7 @@ namespace RTC
 		  uint32_t ssrc, const RTC::RtpCodecParameters& codec, size_t encodingIdx);
 		void SetHealthyRtpStream(RTC::RtpStreamRecv* rtpStream);
 		void SetUnhealthyRtpStream(RTC::RtpStreamRecv* rtpStream);
-		void MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
+		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:

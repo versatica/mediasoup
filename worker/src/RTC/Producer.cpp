@@ -496,7 +496,8 @@ namespace RTC
 			return;
 
 		// Mangle the packet before providing the listener with it.
-		MangleRtpPacket(packet, rtpStream);
+		if (!MangleRtpPacket(packet, rtpStream))
+			return;
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 	}
@@ -812,7 +813,7 @@ namespace RTC
 		this->listener->OnProducerRtpStreamUnhealthy(this, rtpStream, mappedSsrc);
 	}
 
-	void Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
+	bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
 
@@ -820,12 +821,16 @@ namespace RTC
 		uint8_t payloadType = packet->GetPayloadType();
 		auto it             = this->rtpMapping.codecs.find(payloadType);
 
-		if (it != this->rtpMapping.codecs.end())
+		if (it == this->rtpMapping.codecs.end())
 		{
-			uint8_t mappedPayloadType = it->second;
+			MS_DEBUG_DEV("unknown payload type [payloadType:%" PRIu8 "]", payloadType);
 
-			packet->SetPayloadType(mappedPayloadType);
+			return false;
 		}
+
+		uint8_t mappedPayloadType = it->second;
+
+		packet->SetPayloadType(mappedPayloadType);
 
 		// Mangle RTP header extension ids.
 		if (this->mappedRtpHeaderExtensionIds.ssrcAudioLevel != 0u)
@@ -844,6 +849,8 @@ namespace RTC
 		uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 		packet->SetSsrc(mappedSsrc);
+
+		return true;
 	}
 
 	void Producer::OnRtpStreamRecvNackRequired(
