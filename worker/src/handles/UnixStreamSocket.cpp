@@ -57,7 +57,7 @@ inline static void onClose(uv_handle_t* handle)
 	delete handle;
 }
 
-inline static void onShutdown(uv_shutdown_t* req, int status)
+inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	auto* handle = req->handle;
 

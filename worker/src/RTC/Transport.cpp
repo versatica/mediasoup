@@ -135,7 +135,7 @@ namespace RTC
 				if (jsonBitrateIt == request->data.end() || !jsonBitrateIt->is_number_unsigned())
 					MS_THROW_TYPE_ERROR("missing bitrate");
 
-				uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+				auto bitrate = jsonBitrateIt->get<uint32_t>();
 
 				if (bitrate < MinBitrate)
 					bitrate = MinBitrate;
@@ -157,7 +157,7 @@ namespace RTC
 				SetNewProducerIdFromRequest(request, producerId);
 
 				// This may throw.
-				RTC::Producer* producer = new RTC::Producer(producerId, this, request->data);
+				auto* producer = new RTC::Producer(producerId, this, request->data);
 
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
@@ -213,7 +213,7 @@ namespace RTC
 				// This may throw.
 				SetNewConsumerIdFromRequest(request, consumerId);
 
-				RTC::Consumer* consumer = new RTC::Consumer(consumerId, this, request->data);
+				auto* consumer = new RTC::Consumer(consumerId, this, request->data);
 
 				// Notify the listener and get the associated Producer.
 				// This may throw if no Producer is found.
@@ -789,8 +789,8 @@ namespace RTC
 	{
 		if (timer == this->rtcpTimer)
 		{
-			uint64_t interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			uint64_t now      = DepLibUV::GetTime();
+			auto interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			uint64_t now  = DepLibUV::GetTime();
 
 			SendRtcp(now);
 

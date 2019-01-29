@@ -88,7 +88,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("missing listenIps");
 		else if (!jsonListenIpsIt->is_array())
 			MS_THROW_TYPE_ERROR("wrong listenIps (not an array)");
-		else if (jsonListenIpsIt->size() == 0)
+		else if (jsonListenIpsIt->empty())
 			MS_THROW_TYPE_ERROR("wrong listenIps (empty array)");
 		else if (jsonListenIpsIt->size() > 8)
 			MS_THROW_TYPE_ERROR("wrong listenIps (too many IPs)");

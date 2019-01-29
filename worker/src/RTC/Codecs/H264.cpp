@@ -107,8 +107,7 @@ namespace RTC
 			if (!payloadDescriptor)
 				return;
 
-			PayloadDescriptorHandler* payloadDescriptorHandler =
-			  new PayloadDescriptorHandler(payloadDescriptor);
+			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 		}

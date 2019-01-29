@@ -111,7 +111,7 @@ namespace RTC
 				portIdx = 0;
 
 			// Check whether this port is not available.
-			if (ports[portIdx] == true)
+			if (ports[portIdx])
 			{
 				MS_DEBUG_DEV(
 				  "port in use, trying again [%s:%s, attempt:%zu]", transportStr.c_str(), ip.c_str(), attempt);
@@ -378,10 +378,10 @@ namespace RTC
 
 			for (size_t i = 0; i < ports.size(); ++i)
 			{
-				if (ports[i] == false)
+				if (!ports[i])
 					continue;
 
-				uint16_t port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
+				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
 
 				jsonIpIt->push_back(port);
 			}
@@ -401,10 +401,10 @@ namespace RTC
 
 			for (size_t i = 0; i < ports.size(); ++i)
 			{
-				if (ports[i] == false)
+				if (!ports[i])
 					continue;
 
-				uint16_t port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
+				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
 
 				jsonIpIt->emplace_back(port);
 			}

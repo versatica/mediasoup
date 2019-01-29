@@ -54,7 +54,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from PendingKeyFrameInfo::Listener. */
 	public:
-		void OnKeyFrameRequestTimeout(PendingKeyFrameInfo* keyFrameRequestInfo) override;
+		void OnKeyFrameRequestTimeout(PendingKeyFrameInfo* pendingKeyFrameInfo) override;
 
 	private:
 		Listener* listener{ nullptr };

@@ -182,10 +182,8 @@ namespace RTC
 
 		uint8_t payloadType = encoding.codecPayloadType;
 
-		for (auto it = this->codecs.begin(); it != this->codecs.end(); ++it)
+		for (const auto& codec : this->codecs)
 		{
-			auto& codec = *it;
-
 			if (codec.mimeType.IsFeatureCodec() && codec.parameters.GetInteger(AptString) == payloadType)
 			{
 				return std::addressof(codec);

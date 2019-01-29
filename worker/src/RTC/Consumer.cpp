@@ -53,7 +53,7 @@ namespace RTC
 		if (jsonConsumableRtpEncodingsIt == data.end() || !jsonConsumableRtpEncodingsIt->is_array())
 			MS_THROW_TYPE_ERROR("missing consumableRtpEncodings");
 
-		if (jsonConsumableRtpEncodingsIt->size() == 0)
+		if (jsonConsumableRtpEncodingsIt->empty())
 			MS_THROW_TYPE_ERROR("empty consumableRtpEncodings");
 
 		this->consumableRtpEncodings.reserve(jsonConsumableRtpEncodingsIt->size());
@@ -97,14 +97,14 @@ namespace RTC
 		delete this->rtpMonitor;
 	}
 
-	void Consumer::FillJson(json& jsonObject) const
+	void Consumer::FillJson(json& /*jsonObject*/) const
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	void Consumer::FillJsonStats(json& jsonArray) const
+	void Consumer::FillJsonStats(json& /*jsonArray*/) const
 	{
 		MS_TRACE();
 
@@ -314,7 +314,7 @@ namespace RTC
 		}
 	}
 
-	void Consumer::ProducerRtpStreamHealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void Consumer::ProducerRtpStreamHealthy(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
@@ -324,7 +324,7 @@ namespace RTC
 			return;
 	}
 
-	void Consumer::ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void Consumer::ProducerRtpStreamUnhealthy(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
@@ -437,7 +437,7 @@ namespace RTC
 		}
 	}
 
-	void Consumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
+	void Consumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType /*messageType*/)
 	{
 		MS_TRACE();
 

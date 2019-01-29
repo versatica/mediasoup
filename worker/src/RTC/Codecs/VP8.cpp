@@ -9,7 +9,7 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		VP8::PayloadDescriptor* VP8::Parse(uint8_t* data, size_t len)
+		VP8::PayloadDescriptor* VP8::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
@@ -27,8 +27,9 @@ namespace RTC
 			payloadDescriptor->partitionIndex = byte & 0x07;
 
 			if (!payloadDescriptor->extended)
+			{
 				return nullptr;
-
+			}
 			else
 			{
 				if (len < ++offset + 1)
@@ -179,7 +180,7 @@ namespace RTC
 		bool VP8::PayloadDescriptorHandler::Encode(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
-			EncodingContext* context = dynamic_cast<EncodingContext*>(encodingContext);
+			auto* context = dynamic_cast<EncodingContext*>(encodingContext);
 
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			if (context->syncRequired)
@@ -243,8 +244,7 @@ namespace RTC
 			if (!payloadDescriptor)
 				return;
 
-			PayloadDescriptorHandler* payloadDescriptorHandler =
-			  new PayloadDescriptorHandler(payloadDescriptor);
+			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 

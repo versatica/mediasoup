@@ -39,9 +39,7 @@ namespace RTC
 	}
 
 	template<typename T>
-	SeqManager<T>::SeqManager()
-	{
-	}
+	SeqManager<T>::SeqManager() = default;
 
 	template<typename T>
 	void SeqManager<T>::Sync(T input)

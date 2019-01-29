@@ -110,8 +110,7 @@ namespace RTC
 				SetNewTransportIdFromRequest(request, transportId);
 
 				// This may throw.
-				RTC::WebRtcTransport* webRtcTransport =
-				  new RTC::WebRtcTransport(transportId, this, request->data);
+				auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, request->data);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
@@ -134,8 +133,7 @@ namespace RTC
 				// This may throw
 				SetNewTransportIdFromRequest(request, transportId);
 
-				RTC::PlainRtpTransport* plainRtpTransport =
-				  new RTC::PlainRtpTransport(transportId, this, request->data);
+				auto* plainRtpTransport = new RTC::PlainRtpTransport(transportId, this, request->data);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = plainRtpTransport;

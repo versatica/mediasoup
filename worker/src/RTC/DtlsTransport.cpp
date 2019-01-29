@@ -485,12 +485,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = DtlsTransport::string2FingerprintAlgorithm.begin();
-		     it != DtlsTransport::string2FingerprintAlgorithm.end();
-		     ++it)
+		for (auto& it : DtlsTransport::string2FingerprintAlgorithm)
 		{
-			std::string algorithmString    = it->first;
-			FingerprintAlgorithm algorithm = it->second;
+			std::string algorithmString    = it.first;
+			FingerprintAlgorithm algorithm = it.second;
 			uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size{ 0 };
 			char hexFingerprint[(EVP_MAX_MD_SIZE * 3) + 1];
@@ -1287,9 +1285,9 @@ namespace RTC
 			return negotiatedSrtpProfile;
 
 		// Get the negotiated SRTP profile.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
+		for (auto& srtpProfile : DtlsTransport::srtpProfiles)
 		{
-			SrtpProfileMapEntry* profileEntry = std::addressof(*it);
+			SrtpProfileMapEntry* profileEntry = std::addressof(srtpProfile);
 
 			if (std::strcmp(sslSrtpProfile->name, profileEntry->name) == 0)
 			{

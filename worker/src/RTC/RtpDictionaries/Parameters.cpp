@@ -53,8 +53,8 @@ namespace RTC
 
 		for (json::iterator it = data.begin(); it != data.end(); ++it)
 		{
-			std::string key = it.key();
-			auto& value     = it.value();
+			const std::string& key = it.key();
+			auto& value            = it.value();
 
 			switch (value.type())
 			{

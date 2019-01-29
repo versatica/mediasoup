@@ -73,7 +73,7 @@ namespace RTC
 			};
 
 		public:
-			static VP8::PayloadDescriptor* Parse(uint8_t* data, size_t len);
+			static VP8::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 
 		public:
@@ -100,7 +100,7 @@ namespace RTC
 
 			public:
 				void Dump() const;
-				bool Encode(RTC::Codecs::EncodingContext* context, uint8_t* data);
+				bool Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data);
 				void Restore(uint8_t* data);
 				bool IsKeyFrame() const;
 
