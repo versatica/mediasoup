@@ -4,6 +4,7 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
 
 namespace RTC
@@ -20,9 +21,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Uncoment!
+		//
 		// Ensure there is a single encoding.
-		if (this->consumableRtpEncodings.size() != 1)
-			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
+		// if (this->consumableRtpEncodings.size() != 1)
+		// 	MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -90,11 +93,15 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
+
+		Channel::Notifier::Emit(this->id, "healthy");
 	}
 
 	void SimpleConsumer::ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
+
+		Channel::Notifier::Emit(this->id, "unhealthy");
 	}
 
 	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -116,24 +123,25 @@ namespace RTC
 			return;
 		}
 
-		bool isKeyFrame = packet->IsKeyFrame();
+		bool isKeyFrame = false;
+
+		// Just check if the packet contains a key frame when we need to sync.
+		if (this->syncRequired && packet->IsKeyFrame())
+			isKeyFrame = true;
 
 		// If we are waiting for a key frame and this is not one, ignore the packet.
 		if (this->syncRequired && this->keyFrameSupported && !isKeyFrame)
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = false;
+		bool isSyncPacket = this->syncRequired;
 
-		// Check whether sequence number and timestamp sync is required.
-		if (this->syncRequired)
+		// Sync sequence number and timestamp if required.
+		if (isSyncPacket)
 		{
-			this->syncRequired = false;
-			isSyncPacket       = true;
-
 			if (isKeyFrame)
 			{
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_TAG(rtp, "awaited key frame received");
 
 				// Clear RTP retransmission buffer to avoid congesting the receiver by
 				// sending useless retransmissions (now that we are sending a newer key
@@ -156,6 +164,8 @@ namespace RTC
 
 			if (this->encodingContext)
 				this->encodingContext->SyncRequired();
+
+			this->syncRequired = false;
 		}
 
 		// Rewrite payload if needed. Drop packet if necessary.
@@ -168,11 +178,11 @@ namespace RTC
 		}
 
 		// Update RTP seq number and timestamp.
-		uint16_t rtpSeq;
-		uint32_t rtpTimestamp;
+		uint16_t seq;
+		uint32_t timestamp;
 
-		this->rtpSeqManager.Input(packet->GetSequenceNumber(), rtpSeq);
-		this->rtpTimestampManager.Input(packet->GetTimestamp(), rtpTimestamp);
+		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
+		this->rtpTimestampManager.Input(packet->GetTimestamp(), timestamp);
 
 		// Save original packet fields.
 		auto origSsrc      = packet->GetSsrc();
@@ -181,8 +191,8 @@ namespace RTC
 
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
-		packet->SetSequenceNumber(rtpSeq);
-		packet->SetTimestamp(rtpTimestamp);
+		packet->SetSequenceNumber(seq);
+		packet->SetTimestamp(timestamp);
 
 		if (isSyncPacket)
 		{
@@ -339,28 +349,17 @@ namespace RTC
 
 	float SimpleConsumer::GetLossPercentage() const
 	{
-		if (!IsActive())
+		if (!IsActive() || !this->producerRtpStream)
 			return 0;
 
-		float lossPercentage = 0;
-
-		// TODO
-
-		// if (this->effectiveProfile != RTC::RtpEncodingParameters::Profile::NONE)
-		// {
-		// 	auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
-
-		// 	MS_ASSERT(it != this->mapProfileRtpStream.end(), "no RtpStream associated with current profile");
-
-		// 	auto* rtpStream = it->second;
-
-		// 	if (rtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
-		// 		lossPercentage = 0;
-		// 	else
-		// 		lossPercentage = (this->rtpStream->GetLossPercentage() - rtpStream->GetLossPercentage());
-		// }
-
-		return lossPercentage;
+		if (this->producerRtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
+		{
+			return 0;
+		}
+		else
+		{
+			return this->rtpStream->GetLossPercentage() - this->producerRtpStream->GetLossPercentage();
+		}
 	}
 
 	void SimpleConsumer::Started()
@@ -436,7 +435,7 @@ namespace RTC
 
 		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
-		if (rtxCodec && encoding.hasRtx && encoding.rtx.ssrc != 0u)
+		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
 		this->keyFrameSupported = Codecs::CanBeKeyFrame(mediaCodec->mimeType);
@@ -448,7 +447,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive())
+		if (!IsActive() || !this->producerRtpStream)
 			return;
 
 		if (this->kind != RTC::Media::Kind::VIDEO)
@@ -468,6 +467,7 @@ namespace RTC
 		if (this->rtpStream->HasRtx())
 		{
 			rtxPacket = packet->Clone(RtxPacketBuffer);
+
 			this->rtpStream->RtxEncode(rtxPacket);
 
 			MS_DEBUG_TAG(
@@ -496,7 +496,7 @@ namespace RTC
 		// Send the packet.
 		this->listener->OnConsumerSendRtpPacket(this, rtxPacket);
 
-		// Delete the RTX RtpPacket if it was created.
+		// Delete the RTX RtpPacket if it was cloned.
 		if (rtxPacket != packet)
 			delete rtxPacket;
 	}

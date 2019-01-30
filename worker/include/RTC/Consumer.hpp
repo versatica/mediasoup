@@ -56,7 +56,7 @@ namespace RTC
 		virtual float GetLossPercentage() const                                             = 0;
 
 	protected:
-		virtual void Started() = 0;
+		virtual void Started()                         = 0;
 		virtual void Paused(bool wasProducer = false)  = 0;
 		virtual void Resumed(bool wasProducer = false) = 0;
 
