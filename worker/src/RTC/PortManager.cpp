@@ -325,7 +325,8 @@ namespace RTC
 					return it->second;
 
 				// Otherwise add an entry in the map and return it.
-				auto numPorts = static_cast<size_t>(Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1);
+				auto numPorts = static_cast<size_t>(
+				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1);
 
 				// Emplace a new vector filled with numPorts false values, meaning that
 				// all ports are available.
@@ -345,7 +346,8 @@ namespace RTC
 					return it->second;
 
 				// Otherwise add an entry in the map and return it.
-				auto numPorts = static_cast<size_t>(Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1);
+				auto numPorts = static_cast<size_t>(
+				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1);
 
 				// Emplace a new vector filled with numPorts false values, meaning that
 				// all ports are available.
