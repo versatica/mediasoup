@@ -19,7 +19,7 @@
 
 namespace RTC
 {
-	class Consumer
+	class Consumer : public RTC::RtpStreamSend::Listener
 	{
 	public:
 		class Listener
@@ -29,6 +29,11 @@ namespace RTC
 			virtual void OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                        = 0;
 		};
+
+		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
+	protected:
+		// TODO: implement.
+		void OnRtpStreamSendScore(const RtpStreamSend* /*rtpStream*/, uint8_t /*score*/) override{};
 
 	public:
 		Consumer(const std::string& id, Listener* listener, json& data);

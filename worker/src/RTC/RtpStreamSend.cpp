@@ -17,10 +17,16 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize)
-	  : RtpStream::RtpStream(params), storage(bufferSize)
+	RtpStreamSend::RtpStreamSend(
+	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
+	  : RtpStream::RtpStream(params), listener(listener), storage(bufferSize)
 	{
 		MS_TRACE();
+
+		// Run the timer.
+		this->rtcpReportCheckTimer->Start(2000);
+
+		this->rtpMonitor.reset(new RtpStreamMonitor(this, this));
 	}
 
 	RtpStreamSend::~RtpStreamSend()
@@ -87,6 +93,12 @@ namespace RTC
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
+
+		// Provide the RTP monitor with the received RR.
+		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
+
+		this->rtcpReportCheckTimer->Stop();
+		this->rtcpReportCheckTimer->Start(2000);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -400,8 +412,14 @@ namespace RTC
 		(*newBufferIt).packet = packet->Clone(store);
 	}
 
-	void RtpStreamSend::CheckStatus()
+	void RtpStreamSend::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
+
+		if (timer == this->rtcpReportCheckTimer)
+		{
+			this->rtpMonitor->AddScore(0);
+			this->rtcpReportCheckTimer->Start(5000);
+		}
 	}
 } // namespace RTC

@@ -1,51 +1,50 @@
-#ifndef MS_RTC_RTP_MONITOR_HPP
-#define MS_RTC_RTP_MONITOR_HPP
+#ifndef MS_RTC_RTP_STREAM_MONITOR_HPP
+#define MS_RTC_RTP_STREAM_MONITOR_HPP
 
 #include "common.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStreamSend.hpp"
 #include <vector>
 
 namespace RTC
 {
-	class RtpMonitor
+	class RtpStream;
+
+	class RtpStreamMonitor
 	{
 	public:
 		static constexpr size_t ScoreTriggerCount{ 8 };
-
-	private:
-		static constexpr uint8_t HealthScoreThreshold{ 7 };
 
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnRtpMonitorScore(RTC::RtpMonitor* rtpMonitor, uint8_t score) = 0;
+			virtual void OnRtpStreamMonitorScore(const RtpStreamMonitor* rtpMonitor, uint8_t score) = 0;
 		};
 
 	public:
-		RtpMonitor(Listener* listener, const RTC::RtpStreamSend* rtpStream);
+		RtpStreamMonitor(Listener* listener, RTC::RtpStream* rtpStream);
 
 	public:
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RtpPacketRepaired(RTC::RtpPacket* packet);
-		bool IsHealthy() const;
+		void AddScore(uint8_t score);
 		uint8_t GetScore() const;
 		void Reset();
 		void Dump();
 
 	private:
-		void AddScore(uint8_t score);
 		size_t GetRepairedPacketCount() const;
 		void UpdateReportedLoss(RTC::RTCP::ReceiverReport* report);
 		void UpdateSourceLoss();
 		void UpdateSentPackets();
 
+	protected:
+		RTC::RtpStream* rtpStream{ nullptr };
+
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		const RTC::RtpStream* rtpStream{ nullptr };
 		// Counter for event notification.
 		size_t scoreTriggerCounter{ ScoreTriggerCount };
 		// Scores histogram.
@@ -58,16 +57,7 @@ namespace RTC
 		size_t totalSentPackets{ 0 };
 	};
 
-	inline bool RtpMonitor::IsHealthy() const
-	{
-		// Consider it healthy if no score is present.
-		if (this->scores.empty())
-			return true;
-
-		return GetScore() >= HealthScoreThreshold;
-	}
-
-	inline void RtpMonitor::Reset()
+	inline void RtpStreamMonitor::Reset()
 	{
 		this->scoreTriggerCounter = ScoreTriggerCount;
 		this->totalSourceLoss     = 0;

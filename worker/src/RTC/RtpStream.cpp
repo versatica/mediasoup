@@ -23,7 +23,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Set the status check timer.
-		this->statusCheckTimer = new Timer(this);
+		this->rtcpReportCheckTimer = new Timer(this);
 	}
 
 	RtpStream::~RtpStream()
@@ -31,7 +31,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Close the status check timer.
-		delete this->statusCheckTimer;
+		delete this->rtcpReportCheckTimer;
 	}
 
 	void RtpStream::FillJson(json& jsonObject) const
@@ -41,8 +41,8 @@ namespace RTC
 		// Add params.
 		this->params.FillJson(jsonObject["params"]);
 
-		// Add healthy.
-		jsonObject["healthy"] = this->healthy;
+		// Add score.
+		jsonObject["score"] = this->rtpMonitor->GetScore();
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
@@ -67,8 +67,8 @@ namespace RTC
 		jsonObject["pliCount"]           = this->pliCount;
 		jsonObject["firCount"]           = this->firCount;
 
-		// Add healthy.
-		jsonObject["healthy"] = this->healthy;
+		// Add score.
+		jsonObject["score"] = this->rtpMonitor->GetScore();
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -111,17 +111,6 @@ namespace RTC
 		}
 
 		return true;
-	}
-
-	void RtpStream::RestartStatusCheckTimer()
-	{
-		// Notify about status on next check.
-		this->statusCheckTimer->Restart();
-	}
-
-	void RtpStream::StopStatusCheckTimer()
-	{
-		this->statusCheckTimer->Stop();
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
@@ -223,13 +212,5 @@ namespace RTC
 		jsonObject["useNack"] = this->useNack;
 		jsonObject["usePli"]  = this->usePli;
 		jsonObject["useFir"]  = this->useFir;
-	}
-
-	void RtpStream::OnTimer(Timer* timer)
-	{
-		MS_TRACE();
-
-		if (timer == this->statusCheckTimer)
-			CheckStatus();
 	}
 } // namespace RTC

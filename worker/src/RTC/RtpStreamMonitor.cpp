@@ -1,8 +1,9 @@
-#define MS_CLASS "RTC::RtpMonitor"
+#define MS_CLASS "RTC::RtpStreamMonitor"
 // #define MS_LOG_DEV
 
-#include "RTC/RtpMonitor.hpp"
+#include "RTC/RtpStreamMonitor.hpp"
 #include "Logger.hpp"
+#include "RTC/RtpStream.hpp"
 #include <cmath> // std::round()
 
 namespace RTC
@@ -18,14 +19,14 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpMonitor::RtpMonitor(Listener* listener, const RTC::RtpStreamSend* rtpStream)
-	  : listener(listener), rtpStream(rtpStream)
+	RtpStreamMonitor::RtpStreamMonitor(Listener* listener, RTC::RtpStream* rtpStream)
+	  : rtpStream(rtpStream), listener(listener)
 	{
 		MS_TRACE();
 	}
 
 	// A RTCP receiver report triggers a score calculation.
-	void RtpMonitor::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	void RtpStreamMonitor::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
@@ -70,6 +71,7 @@ namespace RTC
 
 		auto sentPackets = this->totalSentPackets - previousTotalSentPackets;
 
+		// TODO: This may crash if toatSentPackets overflows (is a size_t).
 		MS_ASSERT(this->totalSentPackets >= previousTotalSentPackets, "less packets sent now than before");
 
 		// No packet was sent. Consider lost and repaired packets though.
@@ -122,7 +124,7 @@ namespace RTC
 #endif
 	}
 
-	void RtpMonitor::RtpPacketRepaired(RTC::RtpPacket* packet)
+	void RtpStreamMonitor::RtpPacketRepaired(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -132,19 +134,19 @@ namespace RTC
 		this->repairedPackets[packet->GetSequenceNumber()]++;
 	}
 
-	void RtpMonitor::Dump()
+	void RtpStreamMonitor::Dump()
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<RtpMonitor>");
+		MS_DEBUG_DEV("<RtpStreamMonitor>");
 		MS_DEBUG_DEV("  score                : %" PRIi8, GetScore());
 		MS_DEBUG_DEV("  totalSourceLoss      : %" PRIi32, this->totalSourceLoss);
 		MS_DEBUG_DEV("  totalReportedLoss    : %" PRIi32, this->totalReportedLoss);
 		MS_DEBUG_DEV("  repairedPackets size : %zu", this->repairedPackets.size());
-		MS_DEBUG_DEV("</RtpMonitor>");
+		MS_DEBUG_DEV("</RtpStreamMonitor>");
 	}
 
-	void RtpMonitor::AddScore(uint8_t score)
+	void RtpStreamMonitor::AddScore(uint8_t score)
 	{
 		MS_TRACE();
 
@@ -156,7 +158,7 @@ namespace RTC
 		if (--this->scoreTriggerCounter == 0)
 		{
 			this->scoreTriggerCounter = ScoreTriggerCount;
-			this->listener->OnRtpMonitorScore(this, GetScore());
+			this->listener->OnRtpStreamMonitorScore(this, GetScore());
 		}
 	}
 
@@ -171,7 +173,7 @@ namespace RTC
 	 * - scores: [1,2,3,4]
 	 * - this->scores = ((1) + (2+2) + (3+3+3) + (4+4+4+4)) / 10 = 2.8 => 3
 	 */
-	uint8_t RtpMonitor::GetScore() const
+	uint8_t RtpStreamMonitor::GetScore() const
 	{
 		MS_TRACE();
 
@@ -200,7 +202,7 @@ namespace RTC
 	 * A RTP packet is considered to be repaired if it was resent no more than
 	 * MaxRepairedPacketRetransmission times.
 	 */
-	size_t RtpMonitor::GetRepairedPacketCount() const
+	size_t RtpStreamMonitor::GetRepairedPacketCount() const
 	{
 		MS_TRACE();
 
@@ -215,14 +217,14 @@ namespace RTC
 		return count;
 	}
 
-	void RtpMonitor::UpdateReportedLoss(RTC::RTCP::ReceiverReport* report)
+	void RtpStreamMonitor::UpdateReportedLoss(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
 		this->totalReportedLoss = report->GetTotalLost();
 	}
 
-	void RtpMonitor::UpdateSourceLoss()
+	void RtpStreamMonitor::UpdateSourceLoss()
 	{
 		MS_TRACE();
 
@@ -230,7 +232,7 @@ namespace RTC
 		  this->rtpStream->GetExpectedPackets() - this->rtpStream->transmissionCounter.GetPacketCount());
 	}
 
-	void RtpMonitor::UpdateSentPackets()
+	void RtpStreamMonitor::UpdateSentPackets()
 	{
 		MS_TRACE();
 

@@ -13,6 +13,16 @@ static std::vector<RtpPacket*> rtpRetransmissionContainer(18);
 
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 {
+	class TestRtpStreamListener : public RtpStreamSend::Listener
+	{
+	public:
+		virtual void OnRtpStreamSendScore(const RtpStreamSend* /*rtpMonitor*/, uint8_t /*score*/) override
+		{
+		}
+	};
+
+	TestRtpStreamListener testRtpStreamListener;
+
 	SECTION("receive NACK and get retransmitted packets")
 	{
 		// clang-format off
@@ -79,7 +89,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		params.useNack   = true;
 
 		// Create a RtpStreamSend.
-		RtpStreamSend* stream = new RtpStreamSend(params, 200);
+		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, 200);
 
 		// Receive all the packets in order into the stream.
 		stream->ReceivePacket(packet1);

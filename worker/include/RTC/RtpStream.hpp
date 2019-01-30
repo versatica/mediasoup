@@ -6,6 +6,7 @@
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpStreamMonitor.hpp"
 #include "handles/Timer.hpp"
 #include <string>
 
@@ -48,12 +49,12 @@ namespace RTC
 		uint32_t GetRtxSsrc() const;
 		uint8_t GetRtxPayloadType() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		void RestartStatusCheckTimer();
-		void StopStatusCheckTimer();
 		uint32_t GetRate(uint64_t now);
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
 		size_t GetExpectedPackets() const;
+		uint8_t GetScore() const;
+		virtual void RtpPacketRepaired(RTC::RtpPacket* packet);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -61,13 +62,9 @@ namespace RTC
 	private:
 		void InitSeq(uint16_t seq);
 
-		/* Pure virtual methods that must be implemented by the subclass. */
-	protected:
-		virtual void CheckStatus() = 0;
-
-		/* Pure virtual methods inherited from Timer::Listener. */
+		/* Pure virtual methods inherited from Timer::Listener, implemented by subclass */
 	public:
-		void OnTimer(Timer* timer) override;
+		virtual void OnTimer(Timer* timer) = 0;
 
 	public:
 		uint32_t packetsLost{ 0 };
@@ -94,8 +91,9 @@ namespace RTC
 		uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
 		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
-		bool healthy{ true };
-		Timer* statusCheckTimer{ nullptr };
+		uint8_t lastScore{ 0 };    // Last score retrieved from RTP monitor.
+		Timer* rtcpReportCheckTimer{ nullptr };
+		std::unique_ptr<RTC::RtpStreamMonitor> rtpMonitor;
 	};
 
 	/* Inline instance methods. */
@@ -164,6 +162,16 @@ namespace RTC
 	inline size_t RtpStream::GetExpectedPackets() const
 	{
 		return (this->cycles + this->maxSeq) - this->baseSeq + 1;
+	}
+
+	inline uint8_t RtpStream::GetScore() const
+	{
+		return this->rtpMonitor->GetScore();
+	}
+
+	inline void RtpStream::RtpPacketRepaired(RTC::RtpPacket* /*packet*/)
+	{
+		this->packetsRepaired++;
 	}
 } // namespace RTC
 

@@ -293,7 +293,7 @@ namespace RTC
 				RetransmitRtpPacket(packet);
 
 				// Packet repaired after applying RTX.
-				this->rtpStream->packetsRepaired++;
+				this->rtpStream->RtpPacketRepaired(packet);
 			}
 		}
 	}
@@ -428,9 +428,9 @@ namespace RTC
 
 		// Create a RtpStreamSend for sending a single media stream.
 		if (params.useNack)
-			this->rtpStream = new RTC::RtpStreamSend(params, 1500);
+			this->rtpStream = new RTC::RtpStreamSend(this, params, 1500);
 		else
-			this->rtpStream = new RTC::RtpStreamSend(params, 0);
+			this->rtpStream = new RTC::RtpStreamSend(this, params, 0);
 
 		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 

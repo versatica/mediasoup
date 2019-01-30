@@ -470,7 +470,7 @@ namespace RTC
 				return;
 
 			// Packet repaired after applying RTX.
-			rtpStream->packetsRepaired++;
+			rtpStream->RtpPacketRepaired(packet);
 		}
 		// Should not happen.
 		else
@@ -898,26 +898,6 @@ namespace RTC
 		this->listener->OnProducerSendRtcpPacket(this, &packet);
 
 		rtpStream->pliCount++;
-	}
-
-	// TODO: NO
-	void Producer::OnRtpStreamHealthy(RTC::RtpStream* rtpStream)
-	{
-		MS_TRACE();
-
-		// auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
-
-		// SetHealthyRtpStream(rtpStreamRecv);
-	}
-
-	// TODO: NO
-	void Producer::OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)
-	{
-		MS_TRACE();
-
-		// auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
-
-		// SetUnhealthyRtpStream(rtpStreamRecv);
 	}
 
 	void Producer::OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)

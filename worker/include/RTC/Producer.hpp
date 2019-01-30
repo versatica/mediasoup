@@ -81,9 +81,8 @@ namespace RTC
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream) override;
-		// TODO: NO
-		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
-		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
+		// TODO: implement.
+		void OnRtpStreamRecvScore(const RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/) override{};
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:

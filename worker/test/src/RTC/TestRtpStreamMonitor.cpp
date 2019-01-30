@@ -1,17 +1,18 @@
 #include "common.hpp"
 #include "catch.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RtpMonitor.hpp"
+#include "RTC/RtpStreamMonitor.hpp"
+#include "RTC/RtpStreamSend.hpp"
 #include <cmath>
 
 using namespace RTC;
 
 SCENARIO("RTP Monitor", "[rtp][monitor]")
 {
-	class TestRtpMonitorListener : public RtpMonitor::Listener
+	class TestRtpStreamMonitorListener : public RtpStreamMonitor::Listener
 	{
 	public:
-		virtual void OnRtpMonitorScore(RTC::RtpMonitor* rtpMonitor, uint8_t /*score*/) override
+		virtual void OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t /*score*/) override
 		{
 			this->scoreTriggered = true;
 		}
@@ -25,6 +26,14 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 
 	public:
 		bool scoreTriggered = false;
+	};
+
+	class TestRtpStreamListener : public RtpStreamSend::Listener
+	{
+	public:
+		virtual void OnRtpStreamSendScore(const RtpStreamSend* /*rtpMonitor*/, uint8_t /*score*/) override
+		{
+		}
 	};
 
 	// RTCP Receiver Report Packet.
@@ -48,13 +57,14 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 		FAIL("failed parsing RTCP::ReceiverReport");
 
 	RtpStream::Params params;
+	TestRtpStreamListener testRtpStreamListener;
 
 	params.ssrc      = report->GetSsrc();
 	params.clockRate = 90000;
 	params.useNack   = true;
 
 	// Create a RtpStreamSend.
-	RtpStreamSend* rtpStream = new RtpStreamSend(params, 200);
+	RtpStreamSend* rtpStream = new RtpStreamSend(&testRtpStreamListener, params, 200);
 
 	// clang-format off
 	uint8_t rtpBuffer[] =
@@ -72,12 +82,12 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 
 	SECTION("The eighth report triggers the score")
 	{
-		TestRtpMonitorListener listener;
-		RtpMonitor rtpMonitor(&listener, rtpStream);
+		TestRtpStreamMonitorListener listener;
+		RtpStreamMonitor rtpMonitor(&listener, rtpStream);
 
 		auto sequenceNumber = packet->GetSequenceNumber();
 
-		for (size_t counter = 0; counter < RtpMonitor::ScoreTriggerCount; counter++)
+		for (size_t counter = 0; counter < RtpStreamMonitor::ScoreTriggerCount; counter++)
 		{
 			packet->SetSequenceNumber(sequenceNumber++);
 			rtpStream->ReceivePacket(packet);
@@ -88,7 +98,7 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 
 		SECTION("Next eighth consecutive reports trigger the score")
 		{
-			for (size_t counter = 0; counter < RtpMonitor::ScoreTriggerCount; counter++)
+			for (size_t counter = 0; counter < RtpStreamMonitor::ScoreTriggerCount; counter++)
 			{
 				packet->SetSequenceNumber(sequenceNumber++);
 				rtpStream->ReceivePacket(packet);

@@ -22,8 +22,25 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		// Run the timer.
-		this->statusCheckTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
+		this->rtpMonitor.reset(new RtpStreamMonitor(this, this));
+
+		// Start the RTP monitor with a possitive score.
+		this->rtpMonitor->AddScore(10);
+
+		// Set the incactivity check periodic timer.
+		this->inactivityCheckPeriodicTimer = new Timer(this);
+
+		// Run the timers.
+		this->inactivityCheckPeriodicTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
+		this->rtcpReportCheckTimer->Start(2000);
+	}
+
+	RtpStreamRecv::~RtpStreamRecv()
+	{
+		MS_TRACE();
+
+		// Close the incactivity check periodic timer.
+		delete this->inactivityCheckPeriodicTimer;
 	}
 
 	void RtpStreamRecv::FillJsonStats(json& jsonObject)
@@ -192,6 +209,12 @@ namespace RTC
 		this->lastSrReceived  = DepLibUV::GetTime();
 		this->lastSrTimestamp = report->GetNtpSec() << 16;
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
+
+		// Provide the RTP monitor with the current RR.
+		this->rtpMonitor->ReceiveRtcpReceiverReport(this->GetRtcpReceiverReport());
+
+		this->rtcpReportCheckTimer->Stop();
+		this->rtcpReportCheckTimer->Start(2000);
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
@@ -233,24 +256,27 @@ namespace RTC
 		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
 	}
 
-	void RtpStreamRecv::CheckStatus()
+	void RtpStreamRecv::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTime();
-
-		if (this->transmissionCounter.GetRate(now) == 0)
+		if (timer == this->inactivityCheckPeriodicTimer)
 		{
-			if (this->healthy)
+			auto now = DepLibUV::GetTime();
+
+			// No RTP is being received, reset rtpMonitor and notify the listener.
+			if (this->transmissionCounter.GetRate(now) == 0 && this->lastScore != 0)
 			{
-				this->healthy = false;
-				this->listener->OnRtpStreamUnhealthy(this);
+				this->lastScore = 0;
+				this->rtpMonitor->Reset();
+				this->listener->OnRtpStreamRecvScore(this, 0);
 			}
 		}
-		else if (!this->healthy)
+		else if (timer == this->rtcpReportCheckTimer)
 		{
-			this->healthy = true;
-			this->listener->OnRtpStreamHealthy(this);
+			// TODO: 'figure out' a score based on received RTP or set a fixed value.
+			this->rtpMonitor->AddScore(8);
+			this->rtcpReportCheckTimer->Start(5000);
 		}
 	}
 
