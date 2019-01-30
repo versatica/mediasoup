@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include <map>
+#include <string>
 
 namespace RTC
 {
@@ -111,11 +112,13 @@ namespace RTC
 		void SetAbsSendTimeExtensionId(uint8_t id);
 		void SetMidExtensionId(uint8_t id);
 		void SetRidExtensionId(uint8_t id);
-		bool ReadAudioLevel(uint8_t* volume, bool* voice) const;
-		bool ReadAbsSendTime(uint32_t* time) const;
-		bool ReadMid(const uint8_t** data, size_t* len) const;
-		bool ReadRid(const uint8_t** data, size_t* len) const;
-		uint8_t* GetExtension(uint8_t id, uint8_t* len) const;
+		bool ReadAudioLevel(uint8_t& volume, bool& voice) const;
+		bool ReadAbsSendTime(uint32_t& time) const;
+		// bool ReadMid(const uint8_t** data, size_t& len) const;
+		// bool ReadRid(const uint8_t** data, size_t& len) const;
+		bool ReadMid(std::string& mid) const;
+		bool ReadRid(std::string& rid) const;
+		uint8_t* GetExtension(uint8_t id, uint8_t& len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
 		uint8_t GetPayloadPadding() const;
@@ -309,73 +312,71 @@ namespace RTC
 		this->ridExtensionId = id;
 	}
 
-	inline bool RtpPacket::ReadAudioLevel(uint8_t* volume, bool* voice) const
+	inline bool RtpPacket::ReadAudioLevel(uint8_t& volume, bool& voice) const
 	{
 		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(this->audioLevelExtensionId, &extenLen);
+		uint8_t* extenValue = GetExtension(this->audioLevelExtensionId, extenLen);
 
 		if (!extenValue || extenLen != 1)
 			return false;
 
-		*volume = Utils::Byte::Get1Byte(extenValue, 0);
-		*voice  = (*volume & (1 << 7)) ? true : false;
-		*volume &= ~(1 << 7);
+		volume = Utils::Byte::Get1Byte(extenValue, 0);
+		voice  = (volume & (1 << 7)) ? true : false;
+		volume &= ~(1 << 7);
 
 		return true;
 	}
 
-	inline bool RtpPacket::ReadAbsSendTime(uint32_t* time) const
+	inline bool RtpPacket::ReadAbsSendTime(uint32_t& time) const
 	{
 		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(this->absSendTimeExtensionId, &extenLen);
+		uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
 
 		if (!extenValue || extenLen != 3)
 			return false;
 
-		*time = Utils::Byte::Get3Bytes(extenValue, 0);
+		time = Utils::Byte::Get3Bytes(extenValue, 0);
 
 		return true;
 	}
 
-	inline bool RtpPacket::ReadMid(const uint8_t** data, size_t* len) const
+	inline bool RtpPacket::ReadMid(std::string& mid) const
 	{
 		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(this->midExtensionId, &extenLen);
+		uint8_t* extenValue = GetExtension(this->midExtensionId, extenLen);
 
 		if (!extenValue || extenLen == 0)
-			return false;
+		{
+			mid.clear();
 
-		*data = extenValue;
-		*len  = static_cast<size_t>(extenLen);
+			return false;
+		}
+
+		mid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
 
 		return true;
 	}
 
-	inline bool RtpPacket::ReadRid(const uint8_t** data, size_t* len) const
+	inline bool RtpPacket::ReadRid(std::string& rid) const
 	{
 		uint8_t extenLen;
-		uint8_t* extenValue;
-
-		extenValue = GetExtension(this->ridExtensionId, &extenLen);
+		uint8_t* extenValue = GetExtension(this->ridExtensionId, extenLen);
 
 		if (!extenValue || extenLen == 0)
-			return false;
+		{
+			rid.clear();
 
-		*data = extenValue;
-		*len  = static_cast<size_t>(extenLen);
+			return false;
+		}
+
+		rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
 
 		return true;
 	}
 
-	inline uint8_t* RtpPacket::GetExtension(uint8_t id, uint8_t* len) const
+	inline uint8_t* RtpPacket::GetExtension(uint8_t id, uint8_t& len) const
 	{
-		*len = 0;
+		len = 0;
 
 		if (id == 0u)
 		{
@@ -390,7 +391,7 @@ namespace RTC
 
 			auto* extension = it->second;
 
-			*len = extension->len + 1;
+			len = extension->len + 1;
 
 			return extension->value;
 		}
@@ -403,7 +404,7 @@ namespace RTC
 
 			auto* extension = it->second;
 
-			*len = extension->len;
+			len = extension->len;
 
 			// In Two-Byte extensions value length may be zero. If so, return nullptr.
 			if (extension->len == 0)

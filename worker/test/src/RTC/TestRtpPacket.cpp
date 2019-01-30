@@ -4,6 +4,7 @@
 #include "RTC/RtpPacket.hpp"
 #include <cstring> // std::memcmp()
 #include <map>
+#include <string>
 
 using namespace RTC;
 
@@ -17,8 +18,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		size_t len;
 		uint8_t extenLen;
 		uint8_t* extenValue;
-		const uint8_t* ridPtr;
-		size_t ridLen;
+		std::string rid;
 
 		if (!helpers::readBinaryFile("data/packet1.raw", buffer, &len))
 			FAIL("cannot open file");
@@ -40,11 +40,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
 		packet->SetRidExtensionId(10);
-		extenValue = packet->GetExtension(10, &extenLen);
+		extenValue = packet->GetExtension(10, extenLen);
 
 		REQUIRE(extenLen == 0);
 		REQUIRE(extenValue == nullptr);
-		REQUIRE(packet->ReadRid(&ridPtr, &ridLen) == false);
+		REQUIRE(packet->ReadRid(rid) == false);
+		REQUIRE(rid == "");
 
 		delete packet;
 	}
@@ -104,24 +105,24 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
 		packet->SetAudioLevelExtensionId(1);
-		extenValue = packet->GetExtension(1, &extenLen);
+		extenValue = packet->GetExtension(1, extenLen);
 
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xd0);
-		REQUIRE(packet->ReadAudioLevel(&volume, &voice) == true);
+		REQUIRE(packet->ReadAudioLevel(volume, voice) == true);
 		REQUIRE(volume == 0b1010000);
 		REQUIRE(voice == true);
 
 		packet->SetAbsSendTimeExtensionId(3);
-		extenValue = packet->GetExtension(3, &extenLen);
+		extenValue = packet->GetExtension(3, extenLen);
 
 		REQUIRE(extenLen == 3);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0x65);
 		REQUIRE(extenValue[1] == 0x34);
 		REQUIRE(extenValue[2] == 0x1e);
-		REQUIRE(packet->ReadAbsSendTime(&absSendTime) == true);
+		REQUIRE(packet->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
 		std::map<uint8_t, uint8_t> idMapping;
@@ -148,25 +149,25 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		// Set the new extension id.
 		clonedPacket->SetAudioLevelExtensionId(11);
-		extenValue = clonedPacket->GetExtension(11, &extenLen);
+		extenValue = clonedPacket->GetExtension(11, extenLen);
 
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xd0);
-		REQUIRE(clonedPacket->ReadAudioLevel(&volume, &voice) == true);
+		REQUIRE(clonedPacket->ReadAudioLevel(volume, voice) == true);
 		REQUIRE(volume == 0b1010000);
 		REQUIRE(voice == true);
 
 		// Set the new extension id.
 		clonedPacket->SetAbsSendTimeExtensionId(13);
-		extenValue = clonedPacket->GetExtension(13, &extenLen);
+		extenValue = clonedPacket->GetExtension(13, extenLen);
 
 		REQUIRE(extenLen == 3);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0x65);
 		REQUIRE(extenValue[1] == 0x34);
 		REQUIRE(extenValue[2] == 0x1e);
-		REQUIRE(clonedPacket->ReadAbsSendTime(&absSendTime) == true);
+		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
 		REQUIRE(
@@ -271,26 +272,26 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
-		extenValue = packet->GetExtension(1, &extenLen);
+		extenValue = packet->GetExtension(1, extenLen);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 
-		extenValue = packet->GetExtension(2, &extenLen);
+		extenValue = packet->GetExtension(2, extenLen);
 		REQUIRE(extenValue != nullptr);
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue[0] == 0x42);
 
-		extenValue = packet->GetExtension(3, &extenLen);
+		extenValue = packet->GetExtension(3, extenLen);
 		REQUIRE(extenValue != nullptr);
 		REQUIRE(extenLen == 2);
 		REQUIRE(extenValue[0] == 0x11);
 		REQUIRE(extenValue[1] == 0x22);
 
-		extenValue = packet->GetExtension(4, &extenLen);
+		extenValue = packet->GetExtension(4, extenLen);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 
-		extenValue = packet->GetExtension(5, &extenLen);
+		extenValue = packet->GetExtension(5, extenLen);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 

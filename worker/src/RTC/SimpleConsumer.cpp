@@ -48,7 +48,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// Call the parent method.
+		RTC::Consumer::FillJson(jsonObject);
 	}
 
 	void SimpleConsumer::FillJsonStats(json& jsonArray) const
@@ -79,6 +80,14 @@ namespace RTC
 				RTC::Consumer::HandleRequest(request);
 			}
 		}
+	}
+
+	bool SimpleConsumer::IsHealthy() const
+	{
+		MS_TRACE();
+
+		// We are healthy if we have been provided with the Producer stream.
+		return this->producerRtpStream != nullptr;
 	}
 
 	void SimpleConsumer::TransportConnected()

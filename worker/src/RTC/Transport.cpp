@@ -246,6 +246,7 @@ namespace RTC
 				json data(json::object());
 
 				data["producerPaused"] = consumer->IsProducerPaused();
+				data["healthy"]        = consumer->IsHealthy();
 
 				request->Accept(data);
 

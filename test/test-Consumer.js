@@ -166,7 +166,7 @@ const deviceCapabilities =
 			mimeType             : 'video/H264',
 			kind                 : 'video',
 			clockRate            : 90000,
-			preferredPayloadType : 101,
+			preferredPayloadType : 103,
 			rtcpFeedback         :
 			[
 				{ type: 'nack' },
@@ -463,10 +463,119 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 		.toThrow(UnsupportedError);
 }, 2000);
 
-// test('consumer.dump() succeeds', async () =>
-// {
+test('consumer.dump() succeeds', async () =>
+{
+	let data;
 
-// }, 2000);
+	data = await audioConsumer.dump();
+
+	expect(data.id).toBe(audioConsumer.id);
+	expect(data.kind).toBe(audioConsumer.kind);
+	expect(data.rtpParameters).toBeType('object');
+	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(data.rtpParameters.codecs.length).toBe(1);
+	expect(data.rtpParameters.codecs[0].name).toBe('opus');
+	expect(data.rtpParameters.codecs[0].mimeType).toBe('audio/opus');
+	expect(data.rtpParameters.codecs[0].payloadType).toBe(100);
+	expect(data.rtpParameters.codecs[0].clockRate).toBe(48000);
+	expect(data.rtpParameters.codecs[0].channels).toBe(2);
+	expect(data.rtpParameters.codecs[0].parameters)
+		.toEqual(
+			{
+				useinbandfec : 1,
+				foo          : 222.222,
+				bar          : '333'
+			});
+	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
+	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id         : 1,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id         : 3,
+				parameters : {},
+				encrypt    : false
+			}
+		]);
+	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(data.rtpParameters.encodings.length).toBe(1);
+	expect(data.rtpParameters.encodings).toEqual(
+		[
+			{
+				codecPayloadType : 100,
+				ssrc             : audioConsumer.rtpParameters.encodings[0].ssrc
+			}
+		]);
+
+	data = await videoConsumer.dump();
+
+	expect(data.id).toBe(videoConsumer.id);
+	expect(data.kind).toBe(videoConsumer.kind);
+	expect(data.rtpParameters).toBeType('object');
+	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(data.rtpParameters.codecs.length).toBe(2);
+	expect(data.rtpParameters.codecs[0].name).toBe('H264');
+	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
+	expect(data.rtpParameters.codecs[0].payloadType).toBe(103);
+	expect(data.rtpParameters.codecs[0].clockRate).toBe(90000);
+	expect(data.rtpParameters.codecs[0].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[0].parameters)
+		.toEqual(
+			{
+				'packetization-mode' : 1,
+				'profile-level-id'   : '4d0032'
+			});
+	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual(
+		[
+			{ type: 'nack' },
+			{ type: 'nack', parameter: 'pli' },
+			{ type: 'ccm', parameter: 'fir' },
+			{ type: 'goog-remb' }
+		]);
+	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(data.rtpParameters.headerExtensions.length).toBe(3);
+	expect(data.rtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
+				id         : 2,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id         : 3,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 4,
+				parameters : {},
+				encrypt    : false
+			}
+		]);
+	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(data.rtpParameters.encodings.length).toBe(1);
+	expect(data.rtpParameters.encodings).toEqual(
+		[
+			{
+				codecPayloadType : 103,
+				ssrc             : videoConsumer.rtpParameters.encodings[0].ssrc,
+				rtx              :
+				{
+					ssrc : videoConsumer.rtpParameters.encodings[0].rtx.ssrc
+				}
+			}
+		]);
+}, 2000);
 
 test('consumer.getStats() succeeds', async () =>
 {

@@ -88,11 +88,21 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void Consumer::FillJson(json& /*jsonObject*/) const
+	void Consumer::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		// TODO
+		// Add id.
+		jsonObject["id"] = this->id;
+
+		// Add kind.
+		jsonObject["kind"] = RTC::Media::GetString(this->kind);
+
+		// Add rtpParameters.
+		this->rtpParameters.FillJson(jsonObject["rtpParameters"]);
+
+		// Add supportedCodecPayloadTypes.
+		jsonObject["supportedCodecPayloadTypes"] = this->supportedCodecPayloadTypes;
 	}
 
 	void Consumer::HandleRequest(Channel::Request* request)

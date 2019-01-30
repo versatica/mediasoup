@@ -18,6 +18,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void HandleRequest(Channel::Request* request) override;
+		bool IsHealthy() const override;
 		void TransportConnected() override;
 		void ProducerRtpStreamHealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;

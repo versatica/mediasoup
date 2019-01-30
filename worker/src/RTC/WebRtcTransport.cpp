@@ -261,7 +261,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		Transport::FillJson(jsonObject);
+		RTC::Transport::FillJson(jsonObject);
 
 		// Add iceRole (we are always "controlled").
 		jsonObject["iceRole"] = "controlled";
@@ -350,19 +350,19 @@ namespace RTC
 		// Add dtlsState.
 		switch (this->dtlsTransport->GetState())
 		{
-			case DtlsTransport::DtlsState::NEW:
+			case RTC::DtlsTransport::DtlsState::NEW:
 				jsonObject["dtlsState"] = "new";
 				break;
-			case DtlsTransport::DtlsState::CONNECTING:
+			case RTC::DtlsTransport::DtlsState::CONNECTING:
 				jsonObject["dtlsState"] = "connecting";
 				break;
-			case DtlsTransport::DtlsState::CONNECTED:
+			case RTC::DtlsTransport::DtlsState::CONNECTED:
 				jsonObject["dtlsState"] = "connected";
 				break;
-			case DtlsTransport::DtlsState::FAILED:
+			case RTC::DtlsTransport::DtlsState::FAILED:
 				jsonObject["dtlsState"] = "failed";
 				break;
-			case DtlsTransport::DtlsState::CLOSED:
+			case RTC::DtlsTransport::DtlsState::CLOSED:
 				jsonObject["dtlsState"] = "closed";
 				break;
 		}
@@ -423,19 +423,19 @@ namespace RTC
 		// Add dtlsState.
 		switch (this->dtlsTransport->GetState())
 		{
-			case DtlsTransport::DtlsState::NEW:
+			case RTC::DtlsTransport::DtlsState::NEW:
 				jsonObject["dtlsState"] = "new";
 				break;
-			case DtlsTransport::DtlsState::CONNECTING:
+			case RTC::DtlsTransport::DtlsState::CONNECTING:
 				jsonObject["dtlsState"] = "connecting";
 				break;
-			case DtlsTransport::DtlsState::CONNECTED:
+			case RTC::DtlsTransport::DtlsState::CONNECTED:
 				jsonObject["dtlsState"] = "connected";
 				break;
-			case DtlsTransport::DtlsState::FAILED:
+			case RTC::DtlsTransport::DtlsState::FAILED:
 				jsonObject["dtlsState"] = "failed";
 				break;
-			case DtlsTransport::DtlsState::CLOSED:
+			case RTC::DtlsTransport::DtlsState::CLOSED:
 				jsonObject["dtlsState"] = "closed";
 				break;
 		}
@@ -958,7 +958,7 @@ namespace RTC
 		// Feed the remote bitrate estimator (REMB).
 		uint32_t absSendTime;
 
-		if (packet->ReadAbsSendTime(&absSendTime))
+		if (packet->ReadAbsSendTime(absSendTime))
 		{
 			this->rembRemoteBitrateEstimator->IncomingPacket(
 			  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
@@ -1162,7 +1162,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "icestatechange", data);
 
 		// Tell the parent class.
-		Transport::Disconnected();
+		RTC::Transport::Disconnected();
 	}
 
 	void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1236,7 +1236,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 
 		// Tell the parent class.
-		Transport::Connected();
+		RTC::Transport::Connected();
 	}
 
 	void WebRtcTransport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1267,7 +1267,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 
 		// Tell the parent class.
-		Transport::Disconnected();
+		RTC::Transport::Disconnected();
 	}
 
 	void WebRtcTransport::OnOutgoingDtlsData(

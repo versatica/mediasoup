@@ -184,14 +184,10 @@ namespace RTC
 
 		// Otherwise lookup into the MID table.
 		{
-			const uint8_t* midPtr;
-			size_t midLen;
+			std::string mid;
 
-			if (packet->ReadMid(&midPtr, &midLen))
+			if (packet->ReadMid(mid))
 			{
-				auto* charMidPtr = reinterpret_cast<const char*>(midPtr);
-				std::string mid(charMidPtr, midLen);
-
 				auto it = this->midTable.find(mid);
 
 				if (it != this->midTable.end())
@@ -209,14 +205,10 @@ namespace RTC
 
 		// Otherwise lookup into the RID table.
 		{
-			const uint8_t* ridPtr;
-			size_t ridLen;
+			std::string rid;
 
-			if (packet->ReadRid(&ridPtr, &ridLen))
+			if (packet->ReadRid(rid))
 			{
-				auto* charRidPtr = reinterpret_cast<const char*>(ridPtr);
-				std::string rid(charRidPtr, ridLen);
-
 				auto it = this->ridTable.find(rid);
 
 				if (it != this->ridTable.end())

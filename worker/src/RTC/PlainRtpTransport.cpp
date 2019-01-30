@@ -101,7 +101,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		Transport::FillJson(jsonObject);
+		RTC::Transport::FillJson(jsonObject);
 
 		// Add tuple.
 		if (this->tuple != nullptr)
@@ -375,7 +375,7 @@ namespace RTC
 				}
 
 				// Assume we are connected and tell the parent class.
-				Transport::Connected();
+				RTC::Transport::Connected();
 
 				// Tell the caller about the selected local DTLS role.
 				json data(json::object());

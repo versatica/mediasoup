@@ -2,6 +2,7 @@
 #include "RTC/RtpPacket.hpp"
 #include <cstring> // std::memory()
 #include <map>
+#include <string>
 
 void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 {
@@ -15,10 +16,8 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	bool voice;
 	uint8_t volume;
 	uint32_t absSendTime;
-	const uint8_t* midPtr;
-	size_t midLen;
-	const uint8_t* ridPtr;
-	size_t ridLen;
+	std::string mid;
+	std::string rid;
 	std::map<uint8_t, uint8_t> idMapping;
 
 	std::memcpy(data2, data, len);
@@ -50,20 +49,20 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasTwoBytesExtensions();
 
 	packet->SetAudioLevelExtensionId(1);
-	packet->GetExtension(1, &extenLen);
-	packet->ReadAudioLevel(&volume, &voice);
+	packet->GetExtension(1, extenLen);
+	packet->ReadAudioLevel(volume, voice);
 
 	packet->SetAbsSendTimeExtensionId(3);
-	packet->GetExtension(3, &extenLen);
-	packet->ReadAbsSendTime(&absSendTime);
+	packet->GetExtension(3, extenLen);
+	packet->ReadAbsSendTime(absSendTime);
 
 	packet->SetMidExtensionId(5);
-	packet->GetExtension(5, &extenLen);
-	packet->ReadMid(&midPtr, &midLen);
+	packet->GetExtension(5, extenLen);
+	packet->ReadMid(mid);
 
 	packet->SetRidExtensionId(6);
-	packet->GetExtension(6, &extenLen);
-	packet->ReadRid(&ridPtr, &ridLen);
+	packet->GetExtension(6, extenLen);
+	packet->ReadRid(rid);
 
 	idMapping[1] = 11;
 	idMapping[3] = 13;
@@ -71,12 +70,12 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->MangleExtensionHeaderIds(idMapping);
 
 	packet->SetAudioLevelExtensionId(11);
-	packet->GetExtension(11, &extenLen);
-	packet->ReadAudioLevel(&volume, &voice);
+	packet->GetExtension(11, extenLen);
+	packet->ReadAudioLevel(volume, voice);
 
 	packet->SetAbsSendTimeExtensionId(13);
-	packet->GetExtension(13, &extenLen);
-	packet->ReadAbsSendTime(&absSendTime);
+	packet->GetExtension(13, extenLen);
+	packet->ReadAbsSendTime(absSendTime);
 
 	packet->GetPayload();
 	packet->GetPayloadLength();

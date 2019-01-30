@@ -11,7 +11,7 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 	class TestRtpMonitorListener : public RtpMonitor::Listener
 	{
 	public:
-		virtual void OnRtpMonitorScore(uint8_t /*score*/) override
+		virtual void OnRtpMonitorScore(RTC::RtpMonitor* rtpMonitor, uint8_t /*score*/) override
 		{
 			this->scoreTriggered = true;
 		}

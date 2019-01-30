@@ -637,14 +637,10 @@ namespace RTC
 		}
 
 		// If not found, look for an encoding matching the packet RID value.
-		const uint8_t* ridPtr;
-		size_t ridLen;
+		std::string rid;
 
-		if (packet->ReadRid(&ridPtr, &ridLen))
+		if (packet->ReadRid(rid))
 		{
-			auto* charRidPtr = reinterpret_cast<const char*>(ridPtr);
-			std::string rid(charRidPtr, ridLen);
-
 			for (size_t i = 0; i < this->rtpParameters.encodings.size(); ++i)
 			{
 				auto& encoding = this->rtpParameters.encodings[i];

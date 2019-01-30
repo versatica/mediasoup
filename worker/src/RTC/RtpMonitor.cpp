@@ -156,7 +156,7 @@ namespace RTC
 		if (--this->scoreTriggerCounter == 0)
 		{
 			this->scoreTriggerCounter = ScoreTriggerCount;
-			this->listener->OnRtpMonitorScore(GetScore());
+			this->listener->OnRtpMonitorScore(this, GetScore());
 		}
 	}
 

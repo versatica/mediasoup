@@ -40,6 +40,7 @@ namespace RTC
 		virtual void HandleRequest(Channel::Request* request);
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		bool IsActive() const;
+		virtual bool IsHealthy() const = 0;
 		bool IsProducerPaused() const; // This is needed by the Transport.
 		virtual void TransportConnected() = 0;
 		void ProducerPaused();
