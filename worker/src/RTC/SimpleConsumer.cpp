@@ -20,6 +20,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Ensure there is a single encoding.
+		if (this->consumableRtpEncodings.size() != 1)
+			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
+
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
@@ -57,7 +61,14 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-				// TODO: Add methods such as CONSUMER_REQUEST_KEY_FRAME.
+			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			{
+				RequestKeyFrame();
+
+				request->Accept();
+
+				break;
+			}
 
 			default:
 			{
@@ -71,30 +82,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive())
-			return;
-
-		// TODO: Ask key frame if video and so on.
+		RequestKeyFrame();
 	}
 
 	void SimpleConsumer::ProducerRtpStreamHealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		// TODO
-
-		if (!IsActive())
-			return;
+		this->producerRtpStream = rtpStream;
 	}
 
 	void SimpleConsumer::ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
-
-		// TODO
-
-		if (!IsActive())
-			return;
 	}
 
 	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -116,7 +116,114 @@ namespace RTC
 			return;
 		}
 
-		// TODO
+		bool isKeyFrame = packet->IsKeyFrame();
+
+		// If we are waiting for a key frame and this is not one, ignore the packet.
+		if (this->syncRequired && this->keyFrameSupported && !isKeyFrame)
+			return;
+
+		// Whether this is the first packet after re-sync.
+		bool isSyncPacket = false;
+
+		// Check whether sequence number and timestamp sync is required.
+		if (this->syncRequired)
+		{
+			this->syncRequired = false;
+			isSyncPacket       = true;
+
+			if (isKeyFrame)
+			{
+				MS_DEBUG_TAG(rtp, "sync key frame received");
+
+				// Clear RTP retransmission buffer to avoid congesting the receiver by
+				// sending useless retransmissions (now that we are sending a newer key
+				// frame).
+				this->rtpStream->ClearRetransmissionBuffer();
+			}
+
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
+			this->rtpTimestampManager.Sync(packet->GetTimestamp());
+
+			// Calculate RTP timestamp diff between now and last sent RTP packet.
+			if (this->rtpStream->GetMaxPacketMs() != 0u)
+			{
+				auto now    = DepLibUV::GetTime();
+				auto diffMs = now - this->rtpStream->GetMaxPacketMs();
+				auto diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
+
+				this->rtpTimestampManager.Offset(diffTs);
+			}
+
+			if (this->encodingContext)
+				this->encodingContext->SyncRequired();
+		}
+
+		// Rewrite payload if needed. Drop packet if necessary.
+		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+			this->rtpTimestampManager.Drop(packet->GetTimestamp());
+
+			return;
+		}
+
+		// Update RTP seq number and timestamp.
+		uint16_t rtpSeq;
+		uint32_t rtpTimestamp;
+
+		this->rtpSeqManager.Input(packet->GetSequenceNumber(), rtpSeq);
+		this->rtpTimestampManager.Input(packet->GetTimestamp(), rtpTimestamp);
+
+		// Save original packet fields.
+		auto origSsrc      = packet->GetSsrc();
+		auto origSeq       = packet->GetSequenceNumber();
+		auto origTimestamp = packet->GetTimestamp();
+
+		// Rewrite packet.
+		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
+		packet->SetSequenceNumber(rtpSeq);
+		packet->SetTimestamp(rtpTimestamp);
+
+		if (isSyncPacket)
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  origSeq,
+			  origTimestamp);
+		}
+
+		// Process the packet.
+		if (this->rtpStream->ReceivePacket(packet))
+		{
+			// Send the packet.
+			this->listener->OnConsumerSendRtpPacket(this, packet);
+		}
+		else
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  origSeq,
+			  origTimestamp);
+		}
+
+		// Restore packet fields.
+		packet->SetSsrc(origSsrc);
+		packet->SetSequenceNumber(origSeq);
+		packet->SetTimestamp(origTimestamp);
+
+		// Restore the original payload if needed.
+		if (this->encodingContext)
+			packet->RestorePayload();
 	}
 
 	void SimpleConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
@@ -128,7 +235,7 @@ namespace RTC
 
 		auto* report = this->rtpStream->GetRtcpSenderReport(now);
 
-		if (report == nullptr)
+		if (!report)
 			return;
 
 		uint32_t ssrc     = this->rtpParameters.encodings[0].ssrc;
@@ -189,21 +296,21 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		// 	switch (messageType)
-		// 	{
-		// 		case RTC::RTCP::FeedbackPs::MessageType::PLI:
-		// 			this->rtpStream->pliCount++;
-		// 			break;
+		switch (messageType)
+		{
+			case RTC::RTCP::FeedbackPs::MessageType::PLI:
+				this->rtpStream->pliCount++;
+				break;
 
-		// 		case RTC::RTCP::FeedbackPs::MessageType::FIR:
-		// 			this->rtpStream->firCount++;
-		// 			break;
+			case RTC::RTCP::FeedbackPs::MessageType::FIR:
+				this->rtpStream->firCount++;
+				break;
 
-		// 		default:
-		// 			MS_ASSERT(false, "invalid messageType");
-		// 	}
+			default:
+				MS_ASSERT(false, "invalid messageType");
+		}
 
-		// 	RequestKeyFrame();
+		RequestKeyFrame();
 	}
 
 	void SimpleConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -237,7 +344,7 @@ namespace RTC
 
 		float lossPercentage = 0;
 
-		// TODO: Buff...
+		// TODO
 
 		// if (this->effectiveProfile != RTC::RtpEncodingParameters::Profile::NONE)
 		// {
@@ -260,21 +367,28 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		RequestKeyFrame();
 	}
 
-	void SimpleConsumer::Paused()
+	void SimpleConsumer::Paused(bool /*wasProducer*/)
 	{
 		MS_TRACE();
 
-		// TODO
+		this->rtpStream->ClearRetransmissionBuffer();
 	}
 
-	void SimpleConsumer::Resumed()
+	void SimpleConsumer::Resumed(bool wasProducer)
 	{
 		MS_TRACE();
 
-		// TODO
+		// We need to sync and wait for a key frame (if supported). Otherwise the
+		// receiver will request lot of NACKs due to unknown RTP packets.
+		this->syncRequired = true;
+
+		// If we have been resumed due to the Producer becoming resumed, we don't
+		// need to request a key frame since the Producer already requested it.
+		if (!wasProducer)
+			RequestKeyFrame();
 	}
 
 	void SimpleConsumer::CreateRtpStream()
@@ -325,7 +439,24 @@ namespace RTC
 		if (rtxCodec && encoding.hasRtx && encoding.rtx.ssrc != 0u)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
+		this->keyFrameSupported = Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+
 		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
+	}
+
+	void SimpleConsumer::RequestKeyFrame()
+	{
+		MS_TRACE();
+
+		if (!IsActive())
+			return;
+
+		if (this->kind != RTC::Media::Kind::VIDEO)
+			return;
+
+		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
+
+		this->listener->OnConsumerKeyFrameRequired(this, mappedSsrc);
 	}
 
 	void SimpleConsumer::RetransmitRtpPacket(RTC::RtpPacket* packet)

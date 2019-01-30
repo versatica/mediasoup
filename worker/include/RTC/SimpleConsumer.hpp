@@ -31,26 +31,27 @@ namespace RTC
 
 	protected:
 		void Started() override;
-		void Paused() override;
-		void Resumed() override;
+		void Paused(bool wasProducer = false) override;
+		void Resumed(bool wasProducer = false) override;
 
 	private:
 		void CreateRtpStream();
+		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
-		// Timestamp when last RTCP was sent.
+		// Others.
+		bool keyFrameSupported{ false };
+		bool syncRequired{ true };
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
-		// RTP counters.
-		RTC::RtpDataCounter retransmittedCounter;
-		// RTP sequence number and timestamp.
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
-		// RTP payload descriptor encoding.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		RTC::RtpDataCounter retransmittedCounter;
+		RTC::RtpStream* producerRtpStream{ nullptr };
 	};
 } // namespace RTC
 

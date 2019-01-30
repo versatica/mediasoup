@@ -35,7 +35,7 @@ namespace RTC
 		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
 		if (this->rtpParameters.encodings.empty())
-			MS_THROW_TYPE_ERROR("invalid empty rtpParameters.encodings");
+			MS_THROW_TYPE_ERROR("empty rtpParameters.encodings");
 
 		// All encodings must have SSRCs.
 		for (auto& encoding : this->rtpParameters.encodings)
@@ -137,6 +137,7 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer started [consumerId:%s]", this->id.c_str());
 
 				Started();
+
 				request->Accept();
 
 				break;
@@ -151,11 +152,15 @@ namespace RTC
 					return;
 				}
 
+				bool wasActive = IsActive();
+
 				this->paused = true;
 
 				MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
 
-				Paused();
+				if (wasActive)
+					Paused();
+
 				request->Accept();
 
 				break;
@@ -174,13 +179,15 @@ namespace RTC
 
 				MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
 
-				Resumed();
+				if (IsActive())
+					Resumed();
+
 				request->Accept();
 
 				break;
 			}
 
-				// TODO: Much more.
+			// TODO: Much more.
 
 			default:
 			{
@@ -196,11 +203,15 @@ namespace RTC
 		if (this->producerPaused)
 			return;
 
+		bool wasActive = IsActive();
+
 		this->producerPaused = true;
 
 		MS_DEBUG_DEV("Producer paused [consumerId:%s]", this->id.c_str());
 
-		Paused();
+		if (wasActive)
+			Paused(true);
+
 		Channel::Notifier::Emit(this->id, "producerpause");
 	}
 
@@ -215,7 +226,9 @@ namespace RTC
 
 		MS_DEBUG_DEV("Producer resumed [consumerId:%s]", this->id.c_str());
 
-		Resumed();
+		if (IsActive())
+			Resumed(true);
+
 		Channel::Notifier::Emit(this->id, "producerresume");
 	}
 

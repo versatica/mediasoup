@@ -57,8 +57,8 @@ namespace RTC
 
 	protected:
 		virtual void Started() = 0;
-		virtual void Paused()  = 0;
-		virtual void Resumed() = 0;
+		virtual void Paused(bool wasProducer = false)  = 0;
+		virtual void Resumed(bool wasProducer = false) = 0;
 
 	public:
 		// Passed by argument.
