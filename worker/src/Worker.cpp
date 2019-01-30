@@ -118,7 +118,7 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	return router;
 }
 
-void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
+inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();
 
@@ -192,7 +192,7 @@ void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::R
 	}
 }
 
-void Worker::OnChannelRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
+inline void Worker::OnChannelRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
@@ -203,7 +203,7 @@ void Worker::OnChannelRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
 	Close();
 }
 
-void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
+inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 {
 	MS_TRACE();
 

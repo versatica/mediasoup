@@ -216,7 +216,7 @@ namespace RTC
 		return transport;
 	}
 
-	void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -232,7 +232,7 @@ namespace RTC
 		this->mapProducerConsumers[producer];
 	}
 
-	void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -264,7 +264,7 @@ namespace RTC
 		this->mapProducerConsumers.erase(mapProducerConsumersIt);
 	}
 
-	void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -276,7 +276,7 @@ namespace RTC
 		}
 	}
 
-	void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -288,7 +288,7 @@ namespace RTC
 		}
 	}
 
-	void Router::OnTransportProducerRtpStreamHealthy(
+	inline void Router::OnTransportProducerNewRtpStream(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
@@ -297,12 +297,12 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->ProducerRtpStreamHealthy(rtpStream, mappedSsrc);
+			consumer->ProducerNewRtpStream(rtpStream, mappedSsrc);
 		}
 	}
 
-	void Router::OnTransportProducerRtpStreamUnhealthy(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	inline void Router::OnTransportProducerRtpStreamScore(
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 
@@ -310,11 +310,11 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->ProducerRtpStreamUnhealthy(rtpStream, mappedSsrc);
+			consumer->ProducerRtpStreamScore(rtpStream, score);
 		}
 	}
 
-	void Router::OnTransportProducerRtpPacketReceived(
+	inline void Router::OnTransportProducerRtpPacketReceived(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -327,7 +327,7 @@ namespace RTC
 		}
 	}
 
-	void Router::OnTransportNewConsumer(
+	inline void Router::OnTransportNewConsumer(
 	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, std::string& producerId)
 	{
 		MS_TRACE();
@@ -347,13 +347,13 @@ namespace RTC
 		  this->mapConsumerProducer.find(consumer) == this->mapConsumerProducer.end(),
 		  "Consumer already present in mapConsumerProducer");
 
-		// Get current healthy streams in the Producer and provide the Consumer with them.
-		for (auto& kv : producer->GetHealthyRtpStreams())
+		// Get all  streams in the Producer and provide the Consumer with them.
+		for (auto& kv : producer->GetRtpStreams())
 		{
 			auto* rtpStream     = kv.first;
 			uint32_t mappedSsrc = kv.second;
 
-			consumer->ProducerRtpStreamHealthy(rtpStream, mappedSsrc);
+			consumer->ProducerNewRtpStream(rtpStream, mappedSsrc);
 		}
 
 		// Update the Consumer status based on the Producer status.
@@ -367,7 +367,7 @@ namespace RTC
 		this->mapConsumerProducer[consumer] = producer;
 	}
 
-	void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
+	inline void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -398,7 +398,8 @@ namespace RTC
 		this->mapConsumerProducer.erase(mapConsumerProducerIt);
 	}
 
-	void Router::OnTransportConsumerProducerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
+	inline void Router::OnTransportConsumerProducerClosed(
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -417,7 +418,7 @@ namespace RTC
 		this->mapConsumerProducer.erase(mapConsumerProducerIt);
 	}
 
-	void Router::OnTransportConsumerKeyFrameRequested(
+	inline void Router::OnTransportConsumerKeyFrameRequested(
 	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();

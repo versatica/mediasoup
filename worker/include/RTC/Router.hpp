@@ -37,18 +37,18 @@ namespace RTC
 		void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) override;
-		void OnTransportProducerRtpStreamHealthy(
-		  RTC::Transport* transport,
-		  RTC::Producer* producer,
-		  RTC::RtpStream* rtpStream,
-		  uint32_t mappedSsrc) override;
-		void OnTransportProducerRtpStreamUnhealthy(
+		void OnTransportProducerNewRtpStream(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
 		  RTC::RtpStream* rtpStream,
 		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		void OnTransportProducerRtpStreamScore(
+		  RTC::Transport* transport,
+		  RTC::Producer* producer,
+		  RTC::RtpStream* rtpStream,
+		  uint8_t score) override;
 		void OnTransportNewConsumer(
 		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;

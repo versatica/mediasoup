@@ -204,7 +204,6 @@ namespace RTC
 		this->mapRtxSsrcRtpStream.clear();
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
-		this->mapHealthyRtpStreamMappedSsrc.clear();
 
 		// Delete the KeyFrameRequestManager().
 		delete this->keyFrameRequestManager;
@@ -766,47 +765,10 @@ namespace RTC
 		this->mapRtpStreamMappedSsrc[rtpStream]             = encodingMapping.mappedSsrc;
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
 
-		// Set stream as healthy.
-		SetHealthyRtpStream(rtpStream);
-
 		// Request a key frame for this stream since we may have lost the first packets.
 		this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 
 		return rtpStream;
-	}
-
-	void Producer::SetHealthyRtpStream(RTC::RtpStreamRecv* rtpStream)
-	{
-		MS_TRACE();
-
-		if (this->mapHealthyRtpStreamMappedSsrc.find(rtpStream) != this->mapHealthyRtpStreamMappedSsrc.end())
-		{
-			return;
-		}
-
-		uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
-
-		this->mapHealthyRtpStreamMappedSsrc[rtpStream] = mappedSsrc;
-
-		// Notify the listener.
-		this->listener->OnProducerRtpStreamHealthy(this, rtpStream, mappedSsrc);
-	}
-
-	void Producer::SetUnhealthyRtpStream(RTC::RtpStreamRecv* rtpStream)
-	{
-		MS_TRACE();
-
-		auto it = this->mapHealthyRtpStreamMappedSsrc.find(rtpStream);
-
-		if (it == this->mapHealthyRtpStreamMappedSsrc.end())
-			return;
-
-		uint32_t mappedSsrc = it->second;
-
-		this->mapHealthyRtpStreamMappedSsrc.erase(it);
-
-		// Notify the listener.
-		this->listener->OnProducerRtpStreamUnhealthy(this, rtpStream, mappedSsrc);
 	}
 
 	bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
@@ -938,22 +900,24 @@ namespace RTC
 		rtpStream->pliCount++;
 	}
 
+	// TODO: NO
 	void Producer::OnRtpStreamHealthy(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
-		auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+		// auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
-		SetHealthyRtpStream(rtpStreamRecv);
+		// SetHealthyRtpStream(rtpStreamRecv);
 	}
 
+	// TODO: NO
 	void Producer::OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream)
 	{
 		MS_TRACE();
 
-		auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
+		// auto* rtpStreamRecv = dynamic_cast<RtpStreamRecv*>(rtpStream);
 
-		SetUnhealthyRtpStream(rtpStreamRecv);
+		// SetUnhealthyRtpStream(rtpStreamRecv);
 	}
 
 	void Producer::OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)

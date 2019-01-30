@@ -73,7 +73,8 @@ namespace RTC
 		// Fill supported codec payload types.
 		for (auto& codec : this->rtpParameters.codecs)
 		{
-			this->supportedCodecPayloadTypes.insert(codec.payloadType);
+			if (codec.mimeType.IsMediaCodec())
+				this->supportedCodecPayloadTypes.insert(codec.payloadType);
 		}
 
 		// Fill media SSRCs vector.
@@ -103,6 +104,12 @@ namespace RTC
 
 		// Add supportedCodecPayloadTypes.
 		jsonObject["supportedCodecPayloadTypes"] = this->supportedCodecPayloadTypes;
+
+		// Add paused.
+		jsonObject["paused"] = this->paused;
+
+		// Add producerPaused.
+		jsonObject["producerPaused"] = this->producerPaused;
 	}
 
 	void Consumer::HandleRequest(Channel::Request* request)

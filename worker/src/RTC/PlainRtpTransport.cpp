@@ -541,7 +541,7 @@ namespace RTC
 		}
 	}
 
-	void PlainRtpTransport::OnPacketRecv(
+	inline void PlainRtpTransport::OnPacketRecv(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();

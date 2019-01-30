@@ -246,7 +246,6 @@ namespace RTC
 				json data(json::object());
 
 				data["producerPaused"] = consumer->IsProducerPaused();
-				data["healthy"]        = consumer->IsHealthy();
 
 				request->Accept(data);
 
@@ -729,48 +728,66 @@ namespace RTC
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
 	{
+		MS_TRACE();
+
 		this->listener->OnTransportProducerPaused(this, producer);
 	}
 
 	inline void Transport::OnProducerResumed(RTC::Producer* producer)
 	{
+		MS_TRACE();
+
 		this->listener->OnTransportProducerResumed(this, producer);
 	}
 
-	inline void Transport::OnProducerRtpStreamHealthy(
+	inline void Transport::OnProducerNewRtpStream(
 	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
-		this->listener->OnTransportProducerRtpStreamHealthy(this, producer, rtpStream, mappedSsrc);
+		MS_TRACE();
+
+		this->listener->OnTransportProducerNewRtpStream(this, producer, rtpStream, mappedSsrc);
 	}
 
-	inline void Transport::OnProducerRtpStreamUnhealthy(
-	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	inline void Transport::OnProducerRtpStreamScore(
+	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)
 	{
-		this->listener->OnTransportProducerRtpStreamUnhealthy(this, producer, rtpStream, mappedSsrc);
+		MS_TRACE();
+
+		this->listener->OnTransportProducerRtpStreamScore(this, producer, rtpStream, score);
 	}
 
 	inline void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
+		MS_TRACE();
+
 		this->listener->OnTransportProducerRtpPacketReceived(this, producer, packet);
 	}
 
 	inline void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, RTC::RTCP::Packet* packet)
 	{
+		MS_TRACE();
+
 		SendRtcpPacket(packet);
 	}
 
 	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
 	{
+		MS_TRACE();
+
 		SendRtpPacket(packet);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
+		MS_TRACE();
+
 		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}
 
 	inline void Transport::onConsumerProducerClosed(RTC::Consumer* consumer)
 	{
+		MS_TRACE();
+
 		// Remove it from the maps.
 		this->mapConsumers.erase(consumer->id);
 
@@ -786,8 +803,10 @@ namespace RTC
 		delete consumer;
 	}
 
-	void Transport::OnTimer(Timer* timer)
+	inline void Transport::OnTimer(Timer* timer)
 	{
+		MS_TRACE();
+
 		if (timer == this->rtcpTimer)
 		{
 			auto interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);

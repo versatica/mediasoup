@@ -82,14 +82,6 @@ namespace RTC
 		}
 	}
 
-	bool SimpleConsumer::IsHealthy() const
-	{
-		MS_TRACE();
-
-		// We are healthy if we have been provided with the Producer stream.
-		return this->producerRtpStream != nullptr;
-	}
-
 	void SimpleConsumer::TransportConnected()
 	{
 		MS_TRACE();
@@ -97,20 +89,18 @@ namespace RTC
 		RequestKeyFrame();
 	}
 
-	void SimpleConsumer::ProducerRtpStreamHealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		Channel::Notifier::Emit(this->id, "healthy");
 	}
 
-	void SimpleConsumer::ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimpleConsumer::ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 
-		Channel::Notifier::Emit(this->id, "unhealthy");
+		// Do nothing.
 	}
 
 	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)

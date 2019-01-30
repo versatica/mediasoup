@@ -40,13 +40,12 @@ namespace RTC
 		virtual void HandleRequest(Channel::Request* request);
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		bool IsActive() const;
-		virtual bool IsHealthy() const = 0;
 		bool IsProducerPaused() const; // This is needed by the Transport.
 		virtual void TransportConnected() = 0;
 		void ProducerPaused();
 		void ProducerResumed();
-		virtual void ProducerRtpStreamHealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)   = 0;
-		virtual void ProducerRtpStreamUnhealthy(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+		virtual void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)     = 0;
 		void ProducerClosed();
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                                  = 0;
 		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)               = 0;

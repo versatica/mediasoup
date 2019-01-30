@@ -304,7 +304,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.started).toBe(false);
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
-	expect(audioConsumer.healthy).toBe(false);
+	expect(audioConsumer.score).toEqual({ in: 0, out: 0 });
 	expect(audioConsumer.preferredLayers).toBe(null);
 	expect(audioConsumer.currentLayers).toBe(null);
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
@@ -378,7 +378,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.started).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
 	expect(videoConsumer.producerPaused).toBe(false);
-	expect(videoConsumer.healthy).toBe(false);
+	expect(videoConsumer.score).toEqual({ in: 0, out: 0 });
 	expect(videoConsumer.preferredLayers).toBe(null);
 	expect(videoConsumer.currentLayers).toBe(null);
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
@@ -513,6 +513,9 @@ test('consumer.dump() succeeds', async () =>
 				ssrc             : audioConsumer.rtpParameters.encodings[0].ssrc
 			}
 		]);
+	expect(data.supportedCodecPayloadTypes).toEqual([ 100 ]);
+	expect(data.paused).toBe(false);
+	expect(data.producerPaused).toBe(false);
 
 	data = await videoConsumer.dump();
 
@@ -575,6 +578,9 @@ test('consumer.dump() succeeds', async () =>
 				}
 			}
 		]);
+	expect(data.supportedCodecPayloadTypes).toEqual([ 103 ]);
+	expect(data.paused).toBe(false);
+	expect(data.producerPaused).toBe(false);
 }, 2000);
 
 test('consumer.getStats() succeeds', async () =>
@@ -593,18 +599,16 @@ test('consumer.pause() and resume() succeed', async () =>
 	await audioConsumer.pause();
 	expect(audioConsumer.paused).toBe(true);
 
-	// TODO
-	// await expect(audioConsumer.dump())
-	// 	.resolves
-	// 	.toMatchObject({ paused: true });
+	await expect(audioConsumer.dump())
+		.resolves
+		.toMatchObject({ paused: true });
 
 	await audioConsumer.resume();
 	expect(audioConsumer.paused).toBe(false);
 
-	// TODO
-	// await expect(audioConsumer.dump())
-	// 	.resolves
-	// 	.toMatchObject({ paused: false });
+	await expect(audioConsumer.dump())
+		.resolves
+		.toMatchObject({ paused: false });
 }, 2000);
 
 test('Consumer emits "producerpause" and "producerresume"', async () =>
@@ -630,36 +634,27 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	expect(audioConsumer.producerPaused).toBe(false);
 }, 2000);
 
-test('Consumer emits "healthy" and "unhealthy"', async () =>
+test('Consumer emits "score"', async () =>
 {
 	// Private API.
 	const channel = audioConsumer._channel;
 
-	const onHealthy = jest.fn();
-	const onUnhealthy = jest.fn();
+	const onScore = jest.fn();
 
-	audioConsumer.on('healthy', onHealthy);
-	audioConsumer.on('unhealthy', onUnhealthy);
+	audioConsumer.on('score', onScore);
 
-	channel.emit(audioConsumer.id, 'healthy');
-	channel.emit(audioConsumer.id, 'healthy');
+	channel.emit(audioConsumer.id, 'score', { in: 10, out: 9 });
+	channel.emit(audioConsumer.id, 'score', { in: 9, out: 9 });
+	channel.emit(audioConsumer.id, 'score', { in: 8, out: 8 });
 
-	expect(onHealthy).toHaveBeenCalledTimes(1);
-	expect(audioConsumer.healthy).toBe(true);
-
-	channel.emit(audioConsumer.id, 'unhealthy');
-	channel.emit(audioConsumer.id, 'unhealthy');
-
-	expect(onUnhealthy).toHaveBeenCalledTimes(1);
-	expect(audioConsumer.healthy).toBe(false);
+	expect(onScore).toHaveBeenCalledTimes(3);
+	expect(audioConsumer.score).toEqual({ in: 8, out: 8 });
 }, 2000);
 
 test('consumer.close() succeeds', async () =>
 {
 	audioConsumer.close();
 	expect(audioConsumer.closed).toBe(true);
-	expect(audioConsumer.started).toBe(false);
-	expect(audioConsumer.healthy).toBe(false);
 	expect(transport2.getConsumerById(audioConsumer.id)).toBe(undefined);
 
 	await expect(router.dump())
@@ -724,8 +719,6 @@ test('Consumer emits "producerclose" if Producer is closed', async () =>
 	});
 
 	expect(audioConsumer.closed).toBe(true);
-	expect(audioConsumer.started).toBe(false);
-	expect(audioConsumer.healthy).toBe(false);
 }, 2000);
 
 test('Consumer emits "transportclose" if Transport is closed', async () =>
@@ -744,8 +737,6 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 	});
 
 	expect(videoConsumer.closed).toBe(true);
-	expect(videoConsumer.started).toBe(false);
-	expect(videoConsumer.healthy).toBe(false);
 
 	await expect(router.dump())
 		.resolves

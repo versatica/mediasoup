@@ -1048,7 +1048,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::OnPacketRecv(
+	inline void WebRtcTransport::OnPacketRecv(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
@@ -1058,7 +1058,7 @@ namespace RTC
 		OnPacketRecv(&tuple, data, len);
 	}
 
-	void WebRtcTransport::OnRtcTcpConnectionClosed(
+	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
 	  RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
@@ -1069,7 +1069,8 @@ namespace RTC
 			this->iceServer->RemoveTuple(&tuple);
 	}
 
-	void WebRtcTransport::OnPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len)
+	inline void WebRtcTransport::OnPacketRecv(
+	  RTC::TcpConnection* connection, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1078,7 +1079,7 @@ namespace RTC
 		OnPacketRecv(&tuple, data, len);
 	}
 
-	void WebRtcTransport::OnOutgoingStunMessage(
+	inline void WebRtcTransport::OnOutgoingStunMessage(
 	  const RTC::IceServer* /*iceServer*/, const RTC::StunMessage* msg, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
@@ -1087,7 +1088,8 @@ namespace RTC
 		tuple->Send(msg->GetData(), msg->GetSize());
 	}
 
-	void WebRtcTransport::OnIceSelectedTuple(const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	inline void WebRtcTransport::OnIceSelectedTuple(
+	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -1111,7 +1113,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", data);
 	}
 
-	void WebRtcTransport::OnIceConnected(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceConnected(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1128,7 +1130,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	void WebRtcTransport::OnIceCompleted(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceCompleted(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1145,7 +1147,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	void WebRtcTransport::OnIceDisconnected(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceDisconnected(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1165,7 +1167,7 @@ namespace RTC
 		RTC::Transport::Disconnected();
 	}
 
-	void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1179,7 +1181,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
-	void WebRtcTransport::OnDtlsConnected(
+	inline void WebRtcTransport::OnDtlsConnected(
 	  const RTC::DtlsTransport* /*dtlsTransport*/,
 	  RTC::SrtpSession::Profile srtpProfile,
 	  uint8_t* srtpLocalKey,
@@ -1239,7 +1241,7 @@ namespace RTC
 		RTC::Transport::Connected();
 	}
 
-	void WebRtcTransport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1253,7 +1255,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
-	void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1270,7 +1272,7 @@ namespace RTC
 		RTC::Transport::Disconnected();
 	}
 
-	void WebRtcTransport::OnOutgoingDtlsData(
+	inline void WebRtcTransport::OnOutgoingDtlsData(
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -1285,7 +1287,7 @@ namespace RTC
 		this->iceSelectedTuple->Send(data, len);
 	}
 
-	void WebRtcTransport::OnDtlsApplicationData(
+	inline void WebRtcTransport::OnDtlsApplicationData(
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t len)
 	{
 		MS_TRACE();
@@ -1295,7 +1297,7 @@ namespace RTC
 		// NOTE: No DataChannel support, si just ignore it.
 	}
 
-	void WebRtcTransport::OnRemoteBitrateEstimatorValue(
+	inline void WebRtcTransport::OnRemoteBitrateEstimatorValue(
 	  const RTC::REMB::RemoteBitrateEstimator* /*remoteBitrateEstimator*/,
 	  const std::vector<uint32_t>& ssrcs,
 	  uint32_t availableBitrate)

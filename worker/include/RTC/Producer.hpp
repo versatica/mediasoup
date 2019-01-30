@@ -27,10 +27,10 @@ namespace RTC
 		public:
 			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
-			virtual void OnProducerRtpStreamHealthy(
+			virtual void OnProducerNewRtpStream(
 			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
-			virtual void OnProducerRtpStreamUnhealthy(
-			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)                = 0;
+			virtual void OnProducerRtpStreamScore(
+			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)                      = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 		};
@@ -63,7 +63,7 @@ namespace RTC
 		const RTC::RtpParameters& GetRtpParameters() const;
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		bool IsPaused() const;
-		std::map<RTC::RtpStreamRecv*, uint32_t>& GetHealthyRtpStreams();
+		std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
@@ -73,8 +73,6 @@ namespace RTC
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
 		RTC::RtpStreamRecv* CreateRtpStream(
 		  uint32_t ssrc, const RTC::RtpCodecParameters& codec, size_t encodingIdx);
-		void SetHealthyRtpStream(RTC::RtpStreamRecv* rtpStream);
-		void SetUnhealthyRtpStream(RTC::RtpStreamRecv* rtpStream);
 		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
@@ -83,6 +81,7 @@ namespace RTC
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream) override;
+		// TODO: NO
 		void OnRtpStreamHealthy(RTC::RtpStream* rtpStream) override;
 		void OnRtpStreamUnhealthy(RTC::RtpStream* rtpStream) override;
 
@@ -107,7 +106,6 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		std::map<RTC::RtpStreamRecv*, uint32_t> mapHealthyRtpStreamMappedSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		struct RTC::RtpHeaderExtensionIds mappedRtpHeaderExtensionIds;
 		bool paused{ false };
@@ -133,9 +131,9 @@ namespace RTC
 		return this->paused;
 	}
 
-	inline std::map<RTC::RtpStreamRecv*, uint32_t>& Producer::GetHealthyRtpStreams()
+	inline std::map<RTC::RtpStreamRecv*, uint32_t>& Producer::GetRtpStreams()
 	{
-		return this->mapHealthyRtpStreamMappedSsrc;
+		return this->mapRtpStreamMappedSsrc;
 	}
 } // namespace RTC
 
