@@ -133,6 +133,7 @@
       'include/RTC/RtpDictionaries.hpp',
       'include/RTC/RtpHeaderExtensionIds.hpp',
       'include/RTC/RtpListener.hpp',
+      'include/RTC/RtpObserver.hpp',
       'include/RTC/RtpPacket.hpp',
       'include/RTC/RtpStream.hpp',
       'include/RTC/RtpStreamMonitor.hpp',

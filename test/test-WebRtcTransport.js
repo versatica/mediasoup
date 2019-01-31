@@ -65,13 +65,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 {
 	await expect(router.dump())
 		.resolves
-		.toMatchObject(
-			{
-				id                       : router.id,
-				transportIds             : [ transport.id ],
-				mapProducerIdConsumerIds : {},
-				mapConsumerIdProducerId  : {}
-			});
+		.toMatchObject({ transportIds: [ transport.id ] });
 
 	// Create a separate transport here.
 	const transport1 = await router.createWebRtcTransport(

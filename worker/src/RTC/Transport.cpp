@@ -266,10 +266,10 @@ namespace RTC
 				// Notify the listener.
 				this->listener->OnTransportProducerClosed(this, producer);
 
+				MS_DEBUG_DEV("Producer closed [id:%s]", producer->id.c_str());
+
 				// Delete it.
 				delete producer;
-
-				MS_DEBUG_DEV("Producer closed [id:%s]", producer->id.c_str());
 
 				request->Accept();
 
@@ -292,10 +292,10 @@ namespace RTC
 				// Notify the listener.
 				this->listener->OnTransportConsumerClosed(this, consumer);
 
+				MS_DEBUG_DEV("Consumer closed [id:%s]", consumer->id.c_str());
+
 				// Delete it.
 				delete consumer;
-
-				MS_DEBUG_DEV("Consumer closed [id:%s]", consumer->id.c_str());
 
 				request->Accept();
 

@@ -39,7 +39,10 @@ namespace Channel
 		{ "consumer.pause",                  Request::MethodId::CONSUMER_PAUSE                     },
 		{ "consumer.resume",                 Request::MethodId::CONSUMER_RESUME                    },
 		{ "consumer.setPreferredLayers",     Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS      },
-		{ "consumer.requestKeyFrame",        Request::MethodId::CONSUMER_REQUEST_KEY_FRAME         }
+		{ "consumer.requestKeyFrame",        Request::MethodId::CONSUMER_REQUEST_KEY_FRAME         },
+		{ "rtpObserver.close",               Request::MethodId::RTP_OBSERVER_CLOSE                 },
+		{ "rtpObserver.addProducer",         Request::MethodId::RTP_OBSERVER_ADD_PRODUCER          },
+		{ "rtpObserver.removeProducer",      Request::MethodId::RTP_OBSERVER_REMOVE_PRODUCER       }
 	};
 	// clang-format on
 

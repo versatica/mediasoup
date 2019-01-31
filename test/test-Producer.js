@@ -122,7 +122,6 @@ test('webRtcTransport.produce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
 				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
 				mapConsumerIdProducerId  : {}
 			});
@@ -213,7 +212,6 @@ test('plainRtpTransport.produce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
 				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
 				mapConsumerIdProducerId  : {}
 			});
@@ -604,7 +602,6 @@ test('producer.close() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
 				mapProducerIdConsumerIds : {},
 				mapConsumerIdProducerId  : {}
 			});

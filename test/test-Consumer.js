@@ -315,7 +315,6 @@ test('transport.consume() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
 				mapProducerIdConsumerIds : { [audioProducer.id]: [ audioConsumer.id ] },
 				mapConsumerIdProducerId  : { [audioConsumer.id]: audioProducer.id }
 			});
@@ -389,7 +388,6 @@ test('transport.consume() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
 				mapProducerIdConsumerIds :
 				{
 					[audioProducer.id] : [ audioConsumer.id ],
@@ -661,7 +659,6 @@ test('consumer.close() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
 				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
 				mapConsumerIdProducerId  : {}
 			});
@@ -742,7 +739,6 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
 				mapProducerIdConsumerIds : {},
 				mapConsumerIdProducerId  : {}
 			});

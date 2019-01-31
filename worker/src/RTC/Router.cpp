@@ -30,9 +30,19 @@ namespace RTC
 		}
 		this->mapTransports.clear();
 
+		// Close all RtpObservers.
+		for (auto& kv : this->mapRtpObservers)
+		{
+			auto* rtpObserver = kv.second;
+
+			delete rtpObserver;
+		}
+		this->mapRtpObservers.clear();
+
 		// Clear other maps.
 		this->mapProducerConsumers.clear();
 		this->mapConsumerProducer.clear();
+		this->mapProducerRtpObservers.clear();
 		this->mapProducers.clear();
 	}
 
@@ -52,6 +62,17 @@ namespace RTC
 			auto& transportId = kv.first;
 
 			jsonTransportIdsIt->emplace_back(transportId);
+		}
+
+		// Add rtpObserverIds.
+		jsonObject["rtpObserverIds"] = json::array();
+		auto jsonRtpObserverIdsIt    = jsonObject.find("rtpObserverIds");
+
+		for (auto& kv : this->mapRtpObservers)
+		{
+			auto& rtpObserverId = kv.first;
+
+			jsonRtpObserverIdsIt->emplace_back(rtpObserverId);
 		}
 
 		// Add mapProducerIdConsumerIds.
@@ -82,6 +103,24 @@ namespace RTC
 			auto* producer = kv.second;
 
 			(*jsonMapConsumerProducerIt)[consumer->id] = producer->id;
+		}
+
+		// Add mapProducerIdObserverIds.
+		jsonObject["mapProducerIdObserverIds"] = json::object();
+		auto jsonMapProducerRtpObserversIt     = jsonObject.find("mapProducerIdObserverIds");
+
+		for (auto& kv : this->mapProducerRtpObservers)
+		{
+			auto* producer     = kv.first;
+			auto& rtpObservers = kv.second;
+
+			(*jsonMapProducerRtpObserversIt)[producer->id] = json::array();
+			auto jsonProducerIdIt = jsonMapProducerRtpObserversIt->find(producer->id);
+
+			for (auto* rtpObserver : rtpObservers)
+			{
+				jsonProducerIdIt->emplace_back(rtpObserver->id);
+			}
 		}
 	}
 
@@ -160,9 +199,69 @@ namespace RTC
 
 				// Remove it from the map and delete it.
 				this->mapTransports.erase(transport->id);
-				delete transport;
 
 				MS_DEBUG_DEV("Transport closed [id:%s]", transport->id.c_str());
+
+				// Delete it.
+				delete transport;
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::RTP_OBSERVER_CLOSE:
+			{
+				// This may throw.
+				RTC::RtpObserver* rtpObserver = GetRtpObserverFromRequest(request);
+
+				// Remove it from the map.
+				this->mapRtpObservers.erase(rtpObserver->id);
+
+				// Iterate all entries in mapProducerRtpObservers and remove the closed one.
+				for (auto& kv : this->mapProducerRtpObservers)
+				{
+					auto& rtpObservers = kv.second;
+
+					rtpObservers.erase(rtpObserver);
+				}
+
+				MS_DEBUG_DEV("RtpObserver closed [id:%s]", rtpObserver->id.c_str());
+
+				// Delete it.
+				delete rtpObserver;
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::RTP_OBSERVER_ADD_PRODUCER:
+			{
+				// This may throw.
+				RTC::RtpObserver* rtpObserver = GetRtpObserverFromRequest(request);
+				RTC::Producer* producer       = GetProducerFromRequest(request);
+
+				rtpObserver->AddProducer(producer);
+
+				// Add to the map.
+				this->mapProducerRtpObservers[producer].insert(rtpObserver);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
+			{
+				// This may throw.
+				RTC::RtpObserver* rtpObserver = GetRtpObserverFromRequest(request);
+				RTC::Producer* producer       = GetProducerFromRequest(request);
+
+				rtpObserver->RemoveProducer(producer);
+
+				// Remove from the map.
+				this->mapProducerRtpObservers[producer].erase(rtpObserver);
 
 				request->Accept();
 
@@ -216,6 +315,59 @@ namespace RTC
 		return transport;
 	}
 
+	void Router::SetNewRtpObserverIdFromRequest(Channel::Request* request, std::string& rtpObserverId) const
+	{
+		MS_TRACE();
+
+		auto jsonRtpObserverIdIt = request->internal.find("rtpObserverId");
+
+		if (jsonRtpObserverIdIt == request->internal.end() || !jsonRtpObserverIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.rtpObserverId");
+
+		rtpObserverId.assign(jsonRtpObserverIdIt->get<std::string>());
+
+		if (this->mapRtpObservers.find(rtpObserverId) != this->mapRtpObservers.end())
+			MS_THROW_ERROR("an RtpObserver with same rtpObserverId already exists");
+	}
+
+	RTC::RtpObserver* Router::GetRtpObserverFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonRtpObserverIdIt = request->internal.find("rtpObserverId");
+
+		if (jsonRtpObserverIdIt == request->internal.end() || !jsonRtpObserverIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.rtpObserverId");
+
+		auto it = this->mapRtpObservers.find(jsonRtpObserverIdIt->get<std::string>());
+
+		if (it == this->mapRtpObservers.end())
+			MS_THROW_ERROR("RtpObserver not found");
+
+		RTC::RtpObserver* rtpObserver = it->second;
+
+		return rtpObserver;
+	}
+
+	RTC::Producer* Router::GetProducerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonProducerIdIt = request->internal.find("producerId");
+
+		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.producerId");
+
+		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
+
+		if (it == this->mapProducers.end())
+			MS_THROW_ERROR("Producer not found");
+
+		RTC::Producer* producer = it->second;
+
+		return producer;
+	}
+
 	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
@@ -230,19 +382,24 @@ namespace RTC
 		// Insert the Producer in the maps.
 		this->mapProducers[producer->id] = producer;
 		this->mapProducerConsumers[producer];
+		this->mapProducerRtpObservers[producer];
 	}
 
 	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
-		auto mapProducersIt         = this->mapProducers.find(producer->id);
+		auto mapProducerConsumersIt    = this->mapProducerConsumers.find(producer);
+		auto mapProducersIt            = this->mapProducers.find(producer->id);
+		auto mapProducerRtpObserversIt = this->mapProducerRtpObservers.find(producer);
 
 		MS_ASSERT(
 		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
 		  "Producer not present in mapProducerConsumers");
 		MS_ASSERT(mapProducersIt != this->mapProducers.end(), "Producer not present in mapProducers");
+		MS_ASSERT(
+		  mapProducerRtpObserversIt != this->mapProducerRtpObservers.end(),
+		  "Producer not present in mapProducerRtpObservers");
 
 		// Close all Consumers associated to the closed Producer.
 		auto& consumers = mapProducerConsumersIt->second;
@@ -259,9 +416,18 @@ namespace RTC
 			consumer->ProducerClosed();
 		}
 
+		// Tell all RtpObservers that the Producer has been closed.
+		auto& rtpObservers = mapProducerRtpObserversIt->second;
+
+		for (auto* rtpObserver : rtpObservers)
+		{
+			rtpObserver->RemoveProducer(producer);
+		}
+
 		// Remove the Producer from the maps.
 		this->mapProducers.erase(mapProducersIt);
 		this->mapProducerConsumers.erase(mapProducerConsumersIt);
+		this->mapProducerRtpObservers.erase(mapProducerRtpObserversIt);
 	}
 
 	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -274,6 +440,18 @@ namespace RTC
 		{
 			consumer->ProducerPaused();
 		}
+
+		auto it = this->mapProducerRtpObservers.find(producer);
+
+		if (it != this->mapProducerRtpObservers.end())
+		{
+			auto& rtpObservers = it->second;
+
+			for (auto* rtpObserver : rtpObservers)
+			{
+				rtpObserver->ProducerPaused(producer);
+			}
+		}
 	}
 
 	inline void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -285,6 +463,18 @@ namespace RTC
 		for (auto* consumer : consumers)
 		{
 			consumer->ProducerResumed();
+		}
+
+		auto it = this->mapProducerRtpObservers.find(producer);
+
+		if (it != this->mapProducerRtpObservers.end())
+		{
+			auto& rtpObservers = it->second;
+
+			for (auto* rtpObserver : rtpObservers)
+			{
+				rtpObserver->ProducerResumed(producer);
+			}
 		}
 	}
 
@@ -324,6 +514,18 @@ namespace RTC
 		for (auto* consumer : consumers)
 		{
 			consumer->SendRtpPacket(packet);
+		}
+
+		auto it = this->mapProducerRtpObservers.find(producer);
+
+		if (it != this->mapProducerRtpObservers.end())
+		{
+			auto& rtpObservers = it->second;
+
+			for (auto* rtpObserver : rtpObservers)
+			{
+				rtpObserver->ReceiveRtpPacket(producer, packet);
+			}
 		}
 	}
 

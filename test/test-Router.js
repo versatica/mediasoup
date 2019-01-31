@@ -67,8 +67,10 @@ test('worker.createRouter() succeeds', async () =>
 			{
 				id                       : router.id,
 				transportIds             : [],
+				rtpObserverIds           : [],
 				mapProducerIdConsumerIds : {},
-				mapConsumerIdProducerId  : {}
+				mapConsumerIdProducerId  : {},
+				mapProducerIdObserverIds : {}
 			});
 
 	// Private API.
