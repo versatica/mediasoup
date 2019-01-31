@@ -504,6 +504,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsActive())
+			return;
+
 		json data = json::object();
 
 		if (this->producerRtpStream)
