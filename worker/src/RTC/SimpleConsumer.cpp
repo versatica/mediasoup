@@ -499,4 +499,20 @@ namespace RTC
 		if (rtxPacket != packet)
 			delete rtxPacket;
 	}
+
+	void SimpleConsumer::OnRtpStreamScore(const RtpStream* rtpStream, uint8_t score)
+	{
+		MS_TRACE();
+
+		json data = json::object();
+
+		if (this->producerRtpStream)
+			data["in"] = this->producerRtpStream->GetScore();
+		else
+			data["in"] = 0;
+
+		data["out"] = score;
+
+		Channel::Notifier::Emit(this->id, "score", data);
+	}
 } // namespace RTC

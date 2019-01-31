@@ -39,6 +39,10 @@ namespace RTC
 		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 
+		/* Pure virtual methods inherited from RtpStream::Listener. */
+	public:
+		void OnRtpStreamScore(const RtpStream* rtpStream, uint8_t score) override;
+
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };

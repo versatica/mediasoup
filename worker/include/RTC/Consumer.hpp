@@ -30,11 +30,6 @@ namespace RTC
 			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                        = 0;
 		};
 
-		/* Pure virtual methods inherited from RtpStream::Listener. */
-	protected:
-		// TODO: implement.
-		void OnRtpStreamScore(const RtpStream* /*rtpStream*/, uint8_t /*score*/) override{};
-
 	public:
 		Consumer(const std::string& id, Listener* listener, json& data);
 		virtual ~Consumer();
@@ -64,6 +59,10 @@ namespace RTC
 		virtual void Started()                         = 0;
 		virtual void Paused(bool wasProducer = false)  = 0;
 		virtual void Resumed(bool wasProducer = false) = 0;
+
+		/* Pure virtual methods inherited from RtpStream::Listener. */
+	public:
+		virtual void OnRtpStreamScore(const RtpStream* rtpStream, uint8_t score) = 0;
 
 	public:
 		// Passed by argument.
