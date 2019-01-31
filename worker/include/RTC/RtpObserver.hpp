@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/Producer.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 
 namespace RTC
