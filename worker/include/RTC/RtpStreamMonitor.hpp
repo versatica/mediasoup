@@ -66,6 +66,8 @@ namespace RTC
 
 		this->repairedPackets.clear();
 		this->scores.clear();
+
+		this->listener->OnRtpStreamMonitorScore(this, 0);
 	}
 } // namespace RTC
 

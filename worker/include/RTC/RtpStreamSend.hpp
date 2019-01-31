@@ -10,15 +10,8 @@
 
 namespace RTC
 {
-	class RtpStreamSend : public RtpStream, public RtpStreamMonitor::Listener
+	class RtpStreamSend : public RtpStream
 	{
-	public:
-		class Listener
-		{
-		public:
-			virtual void OnRtpStreamSendScore(const RtpStreamSend* rtpStream, uint8_t score) = 0;
-		};
-
 	private:
 		struct StorageItem
 		{
@@ -55,12 +48,7 @@ namespace RTC
 	protected:
 		void OnTimer(Timer* timer) override;
 
-		/* Pure virtual methods inherited from RtpStreamMonitor */
-	protected:
-		void OnRtpStreamMonitorScore(const RtpStreamMonitor* rtpMonitor, uint8_t score) override;
-
 	private:
-		Listener* listener{ nullptr };
 		std::vector<StorageItem> storage;
 		std::list<BufferItem> buffer;
 		float rtt{ 0 };
@@ -79,14 +67,6 @@ namespace RTC
 		RtpStream::RtpPacketRepaired(packet);
 
 		this->rtpMonitor->RtpPacketRepaired(packet);
-	}
-
-	inline void RtpStreamSend::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
-	{
-		if (score != this->lastScore)
-			this->listener->OnRtpStreamSendScore(this, score);
-
-		this->lastScore = score;
 	}
 } // namespace RTC
 

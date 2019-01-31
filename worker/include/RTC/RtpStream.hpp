@@ -14,8 +14,15 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class RtpStream : public Timer::Listener
+	class RtpStream : public Timer::Listener, public RTC::RtpStreamMonitor::Listener
 	{
+	public:
+		class Listener
+		{
+		public:
+			virtual void OnRtpStreamScore(const RtpStream* rtpStream, uint8_t score) = 0;
+		};
+
 	public:
 		struct Params
 		{
@@ -34,7 +41,7 @@ namespace RTC
 		};
 
 	public:
-		explicit RtpStream(RTC::RtpStream::Params& params);
+		RtpStream(Listener* listener, RTC::RtpStream::Params& params);
 		virtual ~RtpStream();
 
 		void FillJson(json& jsonObject) const;
@@ -62,10 +69,6 @@ namespace RTC
 	private:
 		void InitSeq(uint16_t seq);
 
-		/* Pure virtual methods inherited from Timer::Listener, implemented by subclass */
-	public:
-		virtual void OnTimer(Timer* timer) = 0;
-
 	public:
 		uint32_t packetsLost{ 0 };
 		uint8_t fractionLost{ 0 };
@@ -78,8 +81,13 @@ namespace RTC
 		RTC::RtpDataCounter transmissionCounter;
 		RTC::RtpDataCounter retransmissionCounter;
 
+		/* Pure virtual methods inherited from RtpStreamMonitor */
+	protected:
+		void OnRtpStreamMonitorScore(const RtpStreamMonitor* rtpMonitor, uint8_t score) override;
+
 	protected:
 		// Given as argument.
+		Listener* listener{ nullptr };
 		Params params;
 		// Others.
 		// Whether at least a RTP packet has been received.
@@ -94,7 +102,7 @@ namespace RTC
 		uint8_t lastScore{ 0 };    // Last score retrieved from RTP monitor.
 		Timer* rtcpReportCheckTimer{ nullptr };
 		std::unique_ptr<RTC::RtpStreamMonitor> rtpMonitor;
-	};
+	}; // namespace RTC
 
 	/* Inline instance methods. */
 
@@ -172,6 +180,14 @@ namespace RTC
 	inline void RtpStream::RtpPacketRepaired(RTC::RtpPacket* /*packet*/)
 	{
 		this->packetsRepaired++;
+	}
+
+	inline void RtpStream::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
+	{
+		if (score != this->lastScore)
+			this->listener->OnRtpStreamScore(this, score);
+
+		this->lastScore = score;
 	}
 } // namespace RTC
 

@@ -82,7 +82,7 @@ namespace RTC
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream) override;
 		// TODO: implement.
-		void OnRtpStreamRecvScore(const RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/) override{};
+		void OnRtpStreamScore(const RtpStream* /*rtpStream*/, uint8_t /*score*/) override{};
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:

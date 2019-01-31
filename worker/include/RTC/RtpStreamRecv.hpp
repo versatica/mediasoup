@@ -9,19 +9,16 @@
 
 namespace RTC
 {
-	class RtpStreamRecv : public RtpStream,
-	                      public RTC::NackGenerator::Listener,
-	                      public RTC::RtpStreamMonitor::Listener
+	class RtpStreamRecv : public RtpStream, public RTC::NackGenerator::Listener
 	{
 	public:
-		class Listener
+		class Listener : public RtpStream::Listener
 		{
 		public:
 			virtual void OnRtpStreamRecvNackRequired(
-			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)        = 0;
-			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)           = 0;
-			virtual void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)           = 0;
-			virtual void OnRtpStreamRecvScore(const RtpStreamRecv* rtpStream, uint8_t score) = 0;
+			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) = 0;
+			virtual void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
+			virtual void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)    = 0;
 		};
 
 	public:
@@ -48,10 +45,6 @@ namespace RTC
 	protected:
 		void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) override;
 		void OnNackGeneratorKeyFrameRequired() override;
-
-		/* Pure virtual methods inherited from RtpStreamMonitor */
-	protected:
-		void OnRtpStreamMonitorScore(const RtpStreamMonitor* rtpMonitor, uint8_t score) override;
 
 	private:
 		// Passed by argument.
@@ -83,14 +76,6 @@ namespace RTC
 		RtpStream::RtpPacketRepaired(packet);
 
 		this->rtpMonitor->RtpPacketRepaired(packet);
-	}
-
-	inline void RtpStreamRecv::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
-	{
-		if (score != this->lastScore)
-			this->listener->OnRtpStreamRecvScore(this, score);
-
-		this->lastScore = score;
 	}
 } // namespace RTC
 

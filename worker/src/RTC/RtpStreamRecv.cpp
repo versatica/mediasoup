@@ -15,7 +15,7 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
-	  : RtpStream::RtpStream(params), listener(listener)
+	  : RtpStream::RtpStream(listener, params), listener(listener)
 	{
 		MS_TRACE();
 
@@ -269,7 +269,6 @@ namespace RTC
 			{
 				this->lastScore = 0;
 				this->rtpMonitor->Reset();
-				this->listener->OnRtpStreamRecvScore(this, 0);
 			}
 		}
 		else if (timer == this->rtcpReportCheckTimer)

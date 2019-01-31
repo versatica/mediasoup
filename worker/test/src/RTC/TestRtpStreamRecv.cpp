@@ -12,7 +12,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	class RtpStreamRecvListener : public RtpStreamRecv::Listener
 	{
 	public:
-		virtual void OnRtpStreamRecvScore(const RTC::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/) override
+		virtual void OnRtpStreamScore(const RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/) override
 		{
 		}
 
