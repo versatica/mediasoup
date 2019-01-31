@@ -62,7 +62,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStream::Listener. */
 	public:
-		virtual void OnRtpStreamScore(const RtpStream* rtpStream, uint8_t score) = 0;
+		virtual void OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score) = 0;
 
 	public:
 		// Passed by argument.

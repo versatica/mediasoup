@@ -64,9 +64,9 @@ namespace RTC
 		// Allocated by this.
 		Timer* timer{ nullptr };
 		// Others.
-		std::map<uint16_t, NackInfo, SeqManager<uint16_t>::SeqLowerThan> nackList;
+		std::map<uint16_t, NackInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> nackList;
 		// This set is just supposed to hold zero or one entries.
-		std::set<uint16_t, SeqManager<uint16_t>::SeqLowerThan> keyFrameList;
+		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> keyFrameList;
 		bool started{ false };
 		uint16_t lastSeq{ 0 }; // Seq number of last valid packet.
 		uint32_t rtt{ 0 };     // Round trip time (ms).

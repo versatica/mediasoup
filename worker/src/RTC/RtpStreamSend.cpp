@@ -19,14 +19,14 @@ namespace RTC
 
 	RtpStreamSend::RtpStreamSend(
 	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
-	  : RtpStream::RtpStream(listener, params), storage(bufferSize)
+	  : RTC::RtpStream::RtpStream(listener, params), storage(bufferSize)
 	{
 		MS_TRACE();
 
 		// Run the timer.
 		this->rtcpReportCheckTimer->Start(2000);
 
-		this->rtpMonitor.reset(new RtpStreamMonitor(this, this));
+		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this));
 	}
 
 	RtpStreamSend::~RtpStreamSend()
@@ -41,7 +41,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RtpStream::FillJsonStats(jsonObject);
+		RTC::RtpStream::FillJsonStats(jsonObject);
 
 		jsonObject["type"]          = "outbound-rtp";
 		jsonObject["roundTripTime"] = this->rtt;
@@ -139,8 +139,8 @@ namespace RTC
 
 		// Requested packet range not found.
 		if (
-		  SeqManager<uint16_t>::IsSeqHigherThan(firstSeq, bufferLastSeq) ||
-		  SeqManager<uint16_t>::IsSeqLowerThan(lastSeq, bufferFirstSeq))
+		  RTC::SeqManager<uint16_t>::IsSeqHigherThan(firstSeq, bufferLastSeq) ||
+		  RTC::SeqManager<uint16_t>::IsSeqLowerThan(lastSeq, bufferFirstSeq))
 		{
 			MS_WARN_TAG(
 			  rtx,
@@ -236,7 +236,7 @@ namespace RTC
 					}
 
 					// It can not be after this packet.
-					if (SeqManager<uint16_t>::IsSeqHigherThan(currentSeq, seq))
+					if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(currentSeq, seq))
 						break;
 				}
 			}
@@ -370,7 +370,7 @@ namespace RTC
 		{
 			auto currentSeq = (*bufferItReverse).seq;
 
-			if (SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
+			if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
 			{
 				// Get a forward iterator pointing to the same element.
 				auto it = bufferItReverse.base();

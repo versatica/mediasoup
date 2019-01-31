@@ -10,7 +10,7 @@
 
 namespace RTC
 {
-	class RtpStreamSend : public RtpStream
+	class RtpStreamSend : public RTC::RtpStream
 	{
 	private:
 		struct StorageItem
@@ -39,7 +39,7 @@ namespace RTC
 		  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
 		void ClearRetransmissionBuffer();
-		void RtxEncode(RtpPacket* packet);
+		void RtxEncode(RTC::RtpPacket* packet);
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
@@ -57,14 +57,14 @@ namespace RTC
 
 	inline void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
 	{
-		RtpStream::SetRtx(payloadType, ssrc);
+		RTC::RtpStream::SetRtx(payloadType, ssrc);
 
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
 	inline void RtpStreamSend::RtpPacketRepaired(RTC::RtpPacket* packet)
 	{
-		RtpStream::RtpPacketRepaired(packet);
+		RTC::RtpStream::RtpPacketRepaired(packet);
 
 		this->rtpMonitor->RtpPacketRepaired(packet);
 	}

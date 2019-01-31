@@ -15,14 +15,14 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
-	  : RtpStream::RtpStream(listener, params), listener(listener)
+	  : RTC::RtpStream::RtpStream(listener, params), listener(listener)
 	{
 		MS_TRACE();
 
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		this->rtpMonitor.reset(new RtpStreamMonitor(this, this));
+		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this));
 
 		// Start the RTP monitor with a possitive score.
 		this->rtpMonitor->AddScore(10);
@@ -47,7 +47,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RtpStream::FillJsonStats(jsonObject);
+		RTC::RtpStream::FillJsonStats(jsonObject);
 
 		jsonObject["type"]   = "inbound-rtp";
 		jsonObject["jitter"] = this->jitter;
@@ -58,7 +58,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		if (!RtpStream::ReceivePacket(packet))
+		if (!RTC::RtpStream::ReceivePacket(packet))
 		{
 			MS_WARN_TAG(rtp, "packet discarded");
 
@@ -70,7 +70,7 @@ namespace RTC
 
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
-			Codecs::ProcessRtpPacket(packet, GetMimeType());
+			RTC::Codecs::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -138,7 +138,7 @@ namespace RTC
 
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
-			Codecs::ProcessRtpPacket(packet, GetMimeType());
+			RTC::Codecs::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator and return true just if this was a
 		// NACKed packet.
@@ -251,8 +251,10 @@ namespace RTC
 		int d = transit - this->transit;
 
 		this->transit = transit;
+
 		if (d < 0)
 			d = -d;
+
 		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
 	}
 

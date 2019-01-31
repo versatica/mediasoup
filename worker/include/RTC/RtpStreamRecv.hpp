@@ -9,7 +9,7 @@
 
 namespace RTC
 {
-	class RtpStreamRecv : public RtpStream, public RTC::NackGenerator::Listener
+	class RtpStreamRecv : public RTC::RtpStream, public RTC::NackGenerator::Listener
 	{
 	public:
 		class Listener : public RtpStream::Listener
@@ -73,7 +73,7 @@ namespace RTC
 
 	inline void RtpStreamRecv::RtpPacketRepaired(RTC::RtpPacket* packet)
 	{
-		RtpStream::RtpPacketRepaired(packet);
+		RTC::RtpStream::RtpPacketRepaired(packet);
 
 		this->rtpMonitor->RtpPacketRepaired(packet);
 	}

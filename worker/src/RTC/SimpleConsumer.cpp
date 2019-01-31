@@ -500,7 +500,7 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	void SimpleConsumer::OnRtpStreamScore(const RtpStream* rtpStream, uint8_t score)
+	void SimpleConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 

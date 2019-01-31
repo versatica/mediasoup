@@ -20,7 +20,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpStreamScore(const RtpStream* rtpStream, uint8_t score) = 0;
+			virtual void OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score) = 0;
 		};
 
 	public:
@@ -83,7 +83,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStreamMonitor */
 	protected:
-		void OnRtpStreamMonitorScore(const RtpStreamMonitor* rtpMonitor, uint8_t score) override;
+		void OnRtpStreamMonitorScore(const RTC::RtpStreamMonitor* rtpMonitor, uint8_t score) override;
 
 	protected:
 		// Given as argument.

@@ -87,8 +87,8 @@ namespace RTC
 				void SyncRequired() override;
 
 			public:
-				SeqManager<uint16_t> pictureIdManager;
-				SeqManager<uint8_t> tl0PictureIndexManager;
+				RTC::SeqManager<uint16_t> pictureIdManager;
+				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
 				bool syncRequired{ false };
 			};
 

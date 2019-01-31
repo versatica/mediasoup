@@ -19,7 +19,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpStreamMonitorScore(const RtpStreamMonitor* rtpMonitor, uint8_t score) = 0;
+			virtual void OnRtpStreamMonitorScore(const RTC::RtpStreamMonitor* rtpMonitor, uint8_t score) = 0;
 		};
 
 	public:

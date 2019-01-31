@@ -105,7 +105,7 @@ namespace RTC
 		this->transmissionCounter.Update(packet);
 
 		// Update highest seen RTP timestamp.
-		if (SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
+		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
 			this->maxPacketTs = packet->GetTimestamp();
 			this->maxPacketMs = DepLibUV::GetTime();
