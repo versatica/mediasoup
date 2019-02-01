@@ -605,11 +605,31 @@ test('consumer.getStats() succeeds', async () =>
 {
 	await expect(audioConsumer.getStats())
 		.resolves
-		.toEqual([]);
+		.toEqual(
+			[
+				expect.objectContaining(
+					{
+						type     : 'outbound-rtp',
+						kind     : 'audio',
+						mimeType : 'audio/opus',
+						ssrc     : audioConsumer.rtpParameters.encodings[0].ssrc,
+						score    : 10
+					})
+			]);
 
 	await expect(videoConsumer.getStats())
 		.resolves
-		.toEqual([]);
+		.toEqual(
+			[
+				expect.objectContaining(
+					{
+						type     : 'outbound-rtp',
+						kind     : 'video',
+						mimeType : 'video/H264',
+						ssrc     : videoConsumer.rtpParameters.encodings[0].ssrc,
+						score    : 10
+					})
+			]);
 }, 2000);
 
 test('consumer.start() succeed', async () =>

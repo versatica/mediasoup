@@ -56,7 +56,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// Add stats of our send stream.
+		jsonArray.emplace_back(json::value_t::object);
+		this->rtpStream->FillJsonStats(jsonArray[0]);
+
+		// Add stats of our recv stream.
+		if (this->producerRtpStream)
+		{
+			jsonArray.emplace_back(json::value_t::object);
+			this->producerRtpStream->FillJsonStats(jsonArray[1]);
+		}
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::Request* request)
