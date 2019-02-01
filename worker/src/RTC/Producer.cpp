@@ -490,6 +490,9 @@ namespace RTC
 		// RTX packet.
 		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
 		{
+			// Update retransmitted RTP data counter.
+			rtpStream->RtpPacketRetransmitted(packet);
+
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
 				return;
