@@ -84,26 +84,10 @@ Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.
 Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 
 
-### `make fuzzer-docker-build`
-
-Builds a Linux image with fuzzer capable clang++.
-
-**NOTE:** Before running this command, a specific version of Linux clang must be downloaded. To get it, run:
-
-```bash
-$ cd worker
-$ ./scripts/get-dep.sh clang-fuzzer
-```
-
-
-### `make fuzzer-docker-run`
-
-Runs a container of the Docker image created with `make fuzzer-docker-build`. It automatically executes a `bash` session in the `/mediasoup/worker` directory, which is a Docker volume that points to the real `mediasoup/worker` directory (so we can do `make fuzzer`, etc).
-
-
 ### `make xcode`
 
 Builds a Xcode project for the mediasoup-worker subproject.
+
 
 
 ### `make lint`
@@ -140,3 +124,20 @@ Cleans built objects and binaries.
 ### `make clean-all`
 
 Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
+
+
+### `make docker-build`
+
+Builds a Linux image with fuzzer capable clang++.
+
+**NOTE:** Before running this command, a specific version of Linux clang must be downloaded. To get it, run:
+
+```bash
+$ cd worker
+$ ./scripts/get-dep.sh clang-fuzzer
+```
+
+
+### `make docker-run`
+
+Runs a container of the Docker image created with `make docker-build`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.

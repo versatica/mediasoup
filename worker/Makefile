@@ -11,8 +11,8 @@ GULP = ../node_modules/.bin/gulp
 MEDIASOUP_BUILDTYPE ?= Release
 
 .PHONY:	\
-	default test fuzzer fuzzer-docker-build fuzzer-docker-run xcode \
-	lint format bear tidy clean clean-all
+	default test fuzzer xcode lint format bear tidy clean clean-all \
+	docker-build docker-run
 
 default:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
@@ -27,20 +27,6 @@ test:
 fuzzer:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
 	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
-
-fuzzer-docker-build:
-ifeq ($(DOCKER_NO_CACHE),true)
-	docker build -f Dockerfile.fuzzer --no-cache --tag mediasoup/fuzzer:latest .
-else
-	docker build -f Dockerfile.fuzzer --tag mediasoup/fuzzer:latest .
-endif
-
-fuzzer-docker-run:
-	docker run \
-		--name=mediasoupFuzzer -it --rm \
-		--cap-add SYS_PTRACE \
-		-v $(shell pwd):/mediasoup/worker \
-		mediasoup/fuzzer:latest
 
 xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
@@ -86,3 +72,17 @@ clean-all:
 	$(RM) -rf worker/mediasoup-worker.xcodeproj
 	$(RM) -rf worker/mediasoup-worker-test.xcodeproj
 	$(RM) -rf worker/deps/*/*.xcodeproj
+
+docker-build:
+ifeq ($(DOCKER_NO_CACHE),true)
+	docker build -f Dockerfile --no-cache --tag mediasoup/docker:latest .
+else
+	docker build -f Dockerfile --tag mediasoup/docker:latest .
+endif
+
+docker-run:
+	docker run \
+		--name=mediasoupDocker -it --rm \
+		--cap-add SYS_PTRACE \
+		-v $(shell pwd)/../:/mediasoup \
+		mediasoup/docker:latest
