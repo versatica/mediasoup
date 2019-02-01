@@ -329,10 +329,6 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		// Ignore reports that do not refer to the main RTP stream. Ie: RTX stream.
-		if (report->GetSsrc() != this->rtpStream->GetSsrc())
-			return;
-
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
