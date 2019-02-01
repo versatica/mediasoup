@@ -45,6 +45,8 @@ namespace RTC
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
+		std::unordered_map<uint32_t, int8_t> mapMappedSsrcSpatialLayer;
+		std::vector<RTC::RtpStream*> producerRtpStreams;
 		// Others.
 		bool keyFrameSupported{ false };
 		bool syncRequired{ true };
@@ -53,7 +55,10 @@ namespace RTC
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		RTC::RtpStream* producerRtpStream{ nullptr };
+		RTC::RtpStream* producerRtpStream{ nullptr }; // TODO: REMOVE
+		int8_t currentSpatialLayer{ -1 };
+		int8_t preferredSpatialLayer{ -1 };
+		int8_t targetSpatialLayer{ -1 };
 	};
 } // namespace RTC
 

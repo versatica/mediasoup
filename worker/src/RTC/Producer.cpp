@@ -391,6 +391,15 @@ namespace RTC
 					return;
 				}
 
+				// Pause all streams.
+				for (auto& kv : this->mapSsrcRtpStream)
+				{
+					auto* rtpStream = kv.second;
+
+					// TODO: Uncomment when done.
+					// rtpStream->Pause();
+				}
+
 				this->paused = true;
 
 				MS_DEBUG_DEV("Producer paused [producerId:%s]", this->id.c_str());
@@ -409,6 +418,15 @@ namespace RTC
 					request->Accept();
 
 					return;
+				}
+
+				// Resume all streams.
+				for (auto& kv : this->mapSsrcRtpStream)
+				{
+					auto* rtpStream = kv.second;
+
+					// TODO: Uncomment when done.
+					// rtpStream->Resume();
 				}
 
 				this->paused = false;
