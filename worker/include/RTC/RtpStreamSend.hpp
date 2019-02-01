@@ -33,7 +33,6 @@ namespace RTC
 		void FillJsonStats(json& jsonObject) override;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
-		void RtpPacketRepaired(RTC::RtpPacket* packet) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RequestRtpRetransmission(
 		  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
@@ -60,13 +59,6 @@ namespace RTC
 		RTC::RtpStream::SetRtx(payloadType, ssrc);
 
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
-	}
-
-	inline void RtpStreamSend::RtpPacketRepaired(RTC::RtpPacket* packet)
-	{
-		RTC::RtpStream::RtpPacketRepaired(packet);
-
-		this->rtpMonitor->RtpPacketRepaired(packet);
 	}
 } // namespace RTC
 

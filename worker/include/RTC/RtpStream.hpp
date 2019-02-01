@@ -61,7 +61,7 @@ namespace RTC
 		uint64_t GetMaxPacketMs() const;
 		size_t GetExpectedPackets() const;
 		uint8_t GetScore() const;
-		virtual void RtpPacketRepaired(RTC::RtpPacket* packet);
+		void RtpPacketRepaired(RTC::RtpPacket* packet);
 		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
 
 	protected:
@@ -178,9 +178,11 @@ namespace RTC
 		return this->rtpMonitor->GetScore();
 	}
 
-	inline void RtpStream::RtpPacketRepaired(RTC::RtpPacket* /*packet*/)
+	inline void RtpStream::RtpPacketRepaired(RTC::RtpPacket* packet)
 	{
 		this->packetsRepaired++;
+
+		this->rtpMonitor->RtpPacketRepaired(packet);
 	}
 
 	inline void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)

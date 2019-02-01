@@ -28,7 +28,6 @@ namespace RTC
 		void FillJsonStats(json& jsonObject) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
-		void RtpPacketRepaired(RTC::RtpPacket* packet) override;
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void RequestKeyFrame();
@@ -68,14 +67,7 @@ namespace RTC
 	inline uint8_t RtpStreamRecv::GetFirSeqNumber()
 	{
 		// Increase and return it.
-		return this->firSeqNumber++;
-	}
-
-	inline void RtpStreamRecv::RtpPacketRepaired(RTC::RtpPacket* packet)
-	{
-		RTC::RtpStream::RtpPacketRepaired(packet);
-
-		this->rtpMonitor->RtpPacketRepaired(packet);
+		return ++this->firSeqNumber;
 	}
 } // namespace RTC
 
