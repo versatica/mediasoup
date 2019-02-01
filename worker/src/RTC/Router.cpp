@@ -549,7 +549,11 @@ namespace RTC
 		  this->mapConsumerProducer.find(consumer) == this->mapConsumerProducer.end(),
 		  "Consumer already present in mapConsumerProducer");
 
-		// Get all  streams in the Producer and provide the Consumer with them.
+		// Verify that Producer and Consumer types match.
+		if (consumer->GetType() != producer->GetType())
+			MS_THROW_ERROR("Consumer and Producer types do not match");
+
+		// Get all streams in the Producer and provide the Consumer with them.
 		for (auto& kv : producer->GetRtpStreams())
 		{
 			auto* rtpStream     = kv.first;

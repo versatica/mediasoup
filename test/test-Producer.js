@@ -111,6 +111,7 @@ test('webRtcTransport.produce() succeeds', async () =>
 	expect(audioProducer.closed).toBe(false);
 	expect(audioProducer.kind).toBe('audio');
 	expect(audioProducer.rtpParameters).toBeType('object');
+	expect(audioProducer.type).toBe('simple');
 	// Private API.
 	expect(audioProducer.consumableRtpParameters).toBeType('object');
 	expect(audioProducer.paused).toBe(false);
@@ -201,6 +202,7 @@ test('plainRtpTransport.produce() succeeds', async () =>
 	expect(videoProducer.closed).toBe(false);
 	expect(videoProducer.kind).toBe('video');
 	expect(videoProducer.rtpParameters).toBeType('object');
+	expect(videoProducer.type).toBe('simulcast');
 	// Private API.
 	expect(videoProducer.consumableRtpParameters).toBeType('object');
 	expect(videoProducer.paused).toBe(false);
@@ -503,6 +505,7 @@ test('producer.dump() succeeds', async () =>
 		[
 			{ codecPayloadType: 111, ssrc: 11111111 }
 		]);
+	expect(data.type).toBe('simple');
 
 	data = await videoProducer.dump();
 
@@ -562,6 +565,7 @@ test('producer.dump() succeeds', async () =>
 			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
 			{ codecPayloadType: 112, ssrc: 22222228, rtx: { ssrc: 22222229 } }
 		]);
+	expect(data.type).toBe('simulcast');
 }, 2000);
 
 test('producer.getStats() succeeds', async () =>

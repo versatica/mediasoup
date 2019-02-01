@@ -41,6 +41,9 @@ namespace RTC
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
+		// Evaluate type.
+		this->type = RTC::RtpParameters::GetType(this->rtpParameters);
+
 		auto jsonRtpMappingIt = data.find("rtpMapping");
 
 		if (jsonRtpMappingIt == data.end() || !jsonRtpMappingIt->is_object())
@@ -222,6 +225,9 @@ namespace RTC
 
 		// Add rtpParameters.
 		this->rtpParameters.FillJson(jsonObject["rtpParameters"]);
+
+		// Add type.
+		jsonObject["type"] = RTC::RtpParameters::GetTypeString(this->type);
 
 		// Add rtpMapping.
 		jsonObject["rtpMapping"] = json::object();

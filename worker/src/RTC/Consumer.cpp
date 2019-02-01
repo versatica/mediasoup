@@ -10,8 +10,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Consumer::Consumer(const std::string& id, Listener* listener, json& data)
-	  : id(id), listener(listener)
+	Consumer::Consumer(const std::string& id, Listener* listener, json& data, RTC::RtpParameters::Type type)
+	  : id(id), listener(listener), type(type)
 	{
 		MS_TRACE();
 
@@ -102,8 +102,28 @@ namespace RTC
 		// Add rtpParameters.
 		this->rtpParameters.FillJson(jsonObject["rtpParameters"]);
 
+		// Add type.
+		jsonObject["type"] = RTC::RtpParameters::GetTypeString(this->type);
+
+		// Add consumableRtpEncodings.
+		jsonObject["consumableRtpEncodings"] = json::array();
+		auto jsonConsumableRtpEncodingsIt    = jsonObject.find("consumableRtpEncodings");
+
+		for (size_t i = 0; i < this->consumableRtpEncodings.size(); ++i)
+		{
+			jsonConsumableRtpEncodingsIt->emplace_back(json::value_t::object);
+
+			auto& jsonEntry = (*jsonConsumableRtpEncodingsIt)[i];
+			auto& encoding  = this->consumableRtpEncodings[i];
+
+			encoding.FillJson(jsonEntry);
+		}
+
 		// Add supportedCodecPayloadTypes.
 		jsonObject["supportedCodecPayloadTypes"] = this->supportedCodecPayloadTypes;
+
+		// Add started.
+		jsonObject["started"] = this->started;
 
 		// Add paused.
 		jsonObject["paused"] = this->paused;
@@ -255,7 +275,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->started = false;
+		this->producerClosed = true;
 
 		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
 

@@ -243,6 +243,25 @@ namespace RTC
 	class RtpParameters
 	{
 	public:
+		enum class Type : uint8_t
+		{
+			NONE = 0,
+			SIMPLE,
+			SIMULCAST,
+			SVC
+		};
+
+	public:
+		static Type GetType(const RtpParameters& rtpParameters);
+		static Type GetType(std::string& str);
+		static Type GetType(std::string&& str);
+		static std::string& GetTypeString(Type type);
+
+	private:
+		static std::unordered_map<std::string, Type> string2Type;
+		static std::map<Type, std::string> type2String;
+
+	public:
 		RtpParameters(){};
 		explicit RtpParameters(json& data);
 		explicit RtpParameters(const RtpParameters* rtpParameters);
@@ -254,6 +273,7 @@ namespace RTC
 	private:
 		void ValidateCodecs();
 		void ValidateEncodings();
+		void SetType();
 
 	public:
 		std::string mid;

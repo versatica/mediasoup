@@ -31,13 +31,14 @@ namespace RTC
 		};
 
 	public:
-		Consumer(const std::string& id, Listener* listener, json& data);
+		Consumer(const std::string& id, Listener* listener, json& data, RTC::RtpParameters::Type type);
 		virtual ~Consumer();
 
 	public:
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray) const = 0;
 		virtual void HandleRequest(Channel::Request* request);
+		RTC::RtpParameters::Type GetType() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		bool IsActive() const;
 		bool IsProducerPaused() const; // This is needed by the Transport.
@@ -73,6 +74,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
+		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
@@ -83,9 +85,13 @@ namespace RTC
 		bool started{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
+		bool producerClosed{ false };
 	};
 
-	/* Inline methods. */
+	inline RTC::RtpParameters::Type Consumer::GetType() const
+	{
+		return this->type;
+	}
 
 	inline const std::vector<uint32_t>& Consumer::GetMediaSsrcs() const
 	{
@@ -94,7 +100,7 @@ namespace RTC
 
 	inline bool Consumer::IsActive() const
 	{
-		return this->started && !this->paused && !this->producerPaused;
+		return this->started && !this->paused && !this->producerPaused && !this->producerClosed;
 	}
 
 	inline bool Consumer::IsProducerPaused() const

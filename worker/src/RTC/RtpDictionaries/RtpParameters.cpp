@@ -8,6 +8,72 @@
 
 namespace RTC
 {
+	/* Class variables. */
+
+	// clang-format off
+	std::unordered_map<std::string, RtpParameters::Type> RtpParameters::string2Type =
+	{
+		{ "none",      RtpParameters::Type::NONE      },
+		{ "simple",    RtpParameters::Type::SIMPLE    },
+		{ "simulcast", RtpParameters::Type::SIMULCAST },
+		{ "svc",       RtpParameters::Type::SVC       }
+	};
+	std::map<RtpParameters::Type, std::string> RtpParameters::type2String =
+	{
+		{ RtpParameters::Type::NONE,      "none"      },
+		{ RtpParameters::Type::SIMPLE,    "simple"    },
+		{ RtpParameters::Type::SIMULCAST, "simulcast" },
+		{ RtpParameters::Type::SVC,       "svc"       }
+	};
+	// clang-format on
+
+	/* Class methods. */
+
+	RtpParameters::Type RtpParameters::GetType(const RtpParameters& rtpParameters)
+	{
+		MS_TRACE();
+
+		// TODO: This is very basic and must be updated to detect SVC and so on.
+
+		if (rtpParameters.encodings.size() == 1)
+			return RtpParameters::Type::SIMPLE;
+		else if (rtpParameters.encodings.size() > 1)
+			return RtpParameters::Type::SIMULCAST;
+
+		return RtpParameters::Type::NONE;
+	}
+
+	RtpParameters::Type RtpParameters::GetType(std::string& str)
+	{
+		MS_TRACE();
+
+		auto it = RtpParameters::string2Type.find(str);
+
+		if (it == RtpParameters::string2Type.end())
+			MS_THROW_TYPE_ERROR("invalid RtpParameters type [type:%s]", str.c_str());
+
+		return it->second;
+	}
+
+	RtpParameters::Type RtpParameters::GetType(std::string&& str)
+	{
+		MS_TRACE();
+
+		auto it = RtpParameters::string2Type.find(str);
+
+		if (it == RtpParameters::string2Type.end())
+			MS_THROW_TYPE_ERROR("invalid RtpParameters type [type:%s]", str.c_str());
+
+		return it->second;
+	}
+
+	std::string& RtpParameters::GetTypeString(RtpParameters::Type type)
+	{
+		MS_TRACE();
+
+		return RtpParameters::type2String.at(type);
+	}
+
 	/* Instance methods. */
 
 	RtpParameters::RtpParameters(json& data)

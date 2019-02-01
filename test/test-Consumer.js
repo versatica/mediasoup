@@ -301,6 +301,7 @@ test('transport.consume() succeeds', async () =>
 			},
 			rtcpFeedback : []
 		});
+	expect(audioConsumer.type).toBe('simple');
 	expect(audioConsumer.started).toBe(false);
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
@@ -374,6 +375,7 @@ test('transport.consume() succeeds', async () =>
 			parameters   : { apt: 103 },
 			rtcpFeedback : []
 		});
+	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.started).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
 	expect(videoConsumer.producerPaused).toBe(false);
@@ -511,7 +513,15 @@ test('consumer.dump() succeeds', async () =>
 				ssrc             : audioConsumer.rtpParameters.encodings[0].ssrc
 			}
 		]);
+	expect(data.type).toBe('simple');
+	expect(data.consumableRtpEncodings).toBeType('array');
+	expect(data.consumableRtpEncodings.length).toBe(1);
+	expect(data.consumableRtpEncodings).toEqual(
+		[
+			{ ssrc: audioProducer.consumableRtpParameters.encodings[0].ssrc }
+		]);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 100 ]);
+	expect(data.started).toBe(false);
 	expect(data.paused).toBe(false);
 	expect(data.producerPaused).toBe(false);
 
@@ -576,7 +586,17 @@ test('consumer.dump() succeeds', async () =>
 				}
 			}
 		]);
+	expect(data.consumableRtpEncodings).toBeType('array');
+	expect(data.consumableRtpEncodings.length).toBe(4);
+	expect(data.consumableRtpEncodings).toEqual(
+		[
+			{ ssrc: videoProducer.consumableRtpParameters.encodings[0].ssrc },
+			{ ssrc: videoProducer.consumableRtpParameters.encodings[1].ssrc },
+			{ ssrc: videoProducer.consumableRtpParameters.encodings[2].ssrc },
+			{ ssrc: videoProducer.consumableRtpParameters.encodings[3].ssrc }
+		]);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 103 ]);
+	expect(data.started).toBe(false);
 	expect(data.paused).toBe(false);
 	expect(data.producerPaused).toBe(false);
 }, 2000);
@@ -590,6 +610,20 @@ test('consumer.getStats() succeeds', async () =>
 	await expect(videoConsumer.getStats())
 		.resolves
 		.toEqual([]);
+}, 2000);
+
+test('consumer.start() succeed', async () =>
+{
+	await audioConsumer.start();
+	expect(audioConsumer.started).toBe(true);
+
+	await expect(audioConsumer.dump())
+		.resolves
+		.toMatchObject({ started: true });
+
+	await expect(audioConsumer.start())
+		.resolves
+		.toBe(undefined);
 }, 2000);
 
 test('consumer.pause() and resume() succeed', async () =>

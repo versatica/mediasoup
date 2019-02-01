@@ -1,11 +1,13 @@
-#define MS_CLASS "RTC::SimpleConsumer"
+#define MS_CLASS "RTC::SimulcastConsumer"
 // #define MS_LOG_DEV
 
-#include "RTC/SimpleConsumer.hpp"
+#include "RTC/SimulcastConsumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
+
+// TODO: NOT DONE YET !!!
 
 namespace RTC
 {
@@ -16,14 +18,14 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SimpleConsumer::SimpleConsumer(const std::string& id, Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SIMPLE)
+	SimulcastConsumer::SimulcastConsumer(const std::string& id, Listener* listener, json& data)
+	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SIMULCAST)
 	{
 		MS_TRACE();
 
-		// Ensure there is a single encoding.
-		if (this->consumableRtpEncodings.size() != 1)
-			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
+		// Ensure there are N > 1 encodings.
+		if (this->consumableRtpEncodings.size() <= 1)
+			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
@@ -35,14 +37,14 @@ namespace RTC
 		CreateRtpStream();
 	}
 
-	SimpleConsumer::~SimpleConsumer()
+	SimulcastConsumer::~SimulcastConsumer()
 	{
 		MS_TRACE();
 
 		delete this->rtpStream;
 	}
 
-	void SimpleConsumer::FillJson(json& jsonObject) const
+	void SimulcastConsumer::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
@@ -50,14 +52,14 @@ namespace RTC
 		RTC::Consumer::FillJson(jsonObject);
 	}
 
-	void SimpleConsumer::FillJsonStats(json& jsonArray) const
+	void SimulcastConsumer::FillJsonStats(json& jsonArray) const
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	void SimpleConsumer::HandleRequest(Channel::Request* request)
+	void SimulcastConsumer::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
@@ -80,28 +82,28 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::TransportConnected()
+	void SimulcastConsumer::TransportConnected()
 	{
 		MS_TRACE();
 
 		RequestKeyFrame();
 	}
 
-	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
 	}
 
-	void SimpleConsumer::ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
+	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -233,7 +235,7 @@ namespace RTC
 			packet->RestorePayload();
 	}
 
-	void SimpleConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
+	void SimulcastConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
 		MS_TRACE();
 
@@ -261,7 +263,7 @@ namespace RTC
 		this->lastRtcpSentTime = now;
 	}
 
-	void SimpleConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
+	void SimulcastConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
 	{
 		MS_TRACE();
 
@@ -296,7 +298,7 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
+	void SimulcastConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
 	{
 		MS_TRACE();
 
@@ -320,7 +322,7 @@ namespace RTC
 		RequestKeyFrame();
 	}
 
-	void SimpleConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	void SimulcastConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
@@ -330,7 +332,7 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	uint32_t SimpleConsumer::GetTransmissionRate(uint64_t now)
+	uint32_t SimulcastConsumer::GetTransmissionRate(uint64_t now)
 	{
 		MS_TRACE();
 
@@ -340,7 +342,7 @@ namespace RTC
 		return this->rtpStream->GetRate(now);
 	}
 
-	float SimpleConsumer::GetLossPercentage() const
+	float SimulcastConsumer::GetLossPercentage() const
 	{
 		if (!IsActive() || !this->producerRtpStream)
 			return 0;
@@ -355,21 +357,21 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::Started()
+	void SimulcastConsumer::Started()
 	{
 		MS_TRACE();
 
 		RequestKeyFrame();
 	}
 
-	void SimpleConsumer::Paused(bool /*wasProducer*/)
+	void SimulcastConsumer::Paused(bool /*wasProducer*/)
 	{
 		MS_TRACE();
 
 		this->rtpStream->ClearRetransmissionBuffer();
 	}
 
-	void SimpleConsumer::Resumed(bool wasProducer)
+	void SimulcastConsumer::Resumed(bool wasProducer)
 	{
 		MS_TRACE();
 
@@ -383,7 +385,7 @@ namespace RTC
 			RequestKeyFrame();
 	}
 
-	void SimpleConsumer::CreateRtpStream()
+	void SimulcastConsumer::CreateRtpStream()
 	{
 		MS_TRACE();
 
@@ -436,7 +438,7 @@ namespace RTC
 		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 	}
 
-	void SimpleConsumer::RequestKeyFrame()
+	void SimulcastConsumer::RequestKeyFrame()
 	{
 		MS_TRACE();
 
@@ -448,7 +450,7 @@ namespace RTC
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
-	void SimpleConsumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
+	void SimulcastConsumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -491,7 +493,7 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	inline void SimpleConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)
+	inline void SimulcastConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 

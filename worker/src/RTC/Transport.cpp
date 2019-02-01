@@ -6,13 +6,16 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/Consumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimpleConsumer.hpp"
+#include "RTC/SimulcastConsumer.hpp"
 
 namespace RTC
 {
@@ -196,7 +199,12 @@ namespace RTC
 
 				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
 
-				request->Accept();
+				// Create status response.
+				json data(json::object());
+
+				data["type"] = RTC::RtpParameters::GetTypeString(producer->GetType());
+
+				request->Accept(data);
 
 				break;
 			}
@@ -214,9 +222,49 @@ namespace RTC
 				// This may throw.
 				SetNewConsumerIdFromRequest(request, consumerId);
 
-				// TODO: Let's see how to decide which subclass of Consumer to use.
-				// RTC::Consumer* consumer = new RTC::Consumer(consumerId, this, request->data);
-				auto* consumer = new RTC::SimpleConsumer(consumerId, this, request->data);
+				// Get type.
+				auto jsonTypeIt = request->data.find("type");
+
+				if (jsonTypeIt == request->data.end() || !jsonTypeIt->is_string())
+					MS_THROW_TYPE_ERROR("missing type");
+
+				// This may throw.
+				auto type = RTC::RtpParameters::GetType(jsonTypeIt->get<std::string>());
+
+				RTC::Consumer* consumer{ nullptr };
+
+				switch (type)
+				{
+					case RTC::RtpParameters::Type::NONE:
+					{
+						MS_THROW_TYPE_ERROR("invalid type 'none'");
+
+						break;
+					}
+
+					case RTC::RtpParameters::Type::SIMPLE:
+					{
+						// This may throw.
+						consumer = new RTC::SimpleConsumer(consumerId, this, request->data);
+
+						break;
+					}
+
+					case RTC::RtpParameters::Type::SIMULCAST:
+					{
+						// This may throw.
+						consumer = new RTC::SimulcastConsumer(consumerId, this, request->data);
+
+						break;
+					}
+
+					case RTC::RtpParameters::Type::SVC:
+					{
+						MS_THROW_TYPE_ERROR("not implemented type 'svc'");
+
+						break;
+					}
+				}
 
 				// Notify the listener and get the associated Producer.
 				// This may throw if no Producer is found.
