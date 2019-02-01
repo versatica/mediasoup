@@ -339,7 +339,7 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		return this->rtpStream->GetRate(now) + this->retransmittedCounter.GetRate(now);
+		return this->rtpStream->GetRate(now);
 	}
 
 	float SimpleConsumer::GetLossPercentage() const
@@ -486,7 +486,7 @@ namespace RTC
 		}
 
 		// Update retransmitted RTP data counter.
-		this->retransmittedCounter.Update(rtxPacket);
+		this->rtpStream->RtpPacketRetransmitted(rtxPacket);
 
 		// Send the packet.
 		this->listener->OnConsumerSendRtpPacket(this, rtxPacket);

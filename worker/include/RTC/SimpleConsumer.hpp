@@ -54,7 +54,6 @@ namespace RTC
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		RTC::RtpDataCounter retransmittedCounter;
 		RTC::RtpStream* producerRtpStream{ nullptr };
 	};
 } // namespace RTC

@@ -62,6 +62,7 @@ namespace RTC
 		size_t GetExpectedPackets() const;
 		uint8_t GetScore() const;
 		virtual void RtpPacketRepaired(RTC::RtpPacket* packet);
+		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -154,7 +155,7 @@ namespace RTC
 
 	inline uint32_t RtpStream::GetRate(uint64_t now)
 	{
-		return this->transmissionCounter.GetRate(now);
+		return this->transmissionCounter.GetRate(now) + this->retransmissionCounter.GetRate(now);
 	}
 
 	inline float RtpStream::GetLossPercentage() const
@@ -180,6 +181,11 @@ namespace RTC
 	inline void RtpStream::RtpPacketRepaired(RTC::RtpPacket* /*packet*/)
 	{
 		this->packetsRepaired++;
+	}
+
+	inline void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)
+	{
+		this->retransmissionCounter.Update(packet);
 	}
 
 	inline void RtpStream::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
