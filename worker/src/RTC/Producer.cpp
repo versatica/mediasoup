@@ -185,7 +185,8 @@ namespace RTC
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 
 		// Create a KeyFrameRequestManager.
-		this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this);
+		if (this->kind == RTC::Media::Kind::VIDEO)
+			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this);
 	}
 
 	Producer::~Producer()
@@ -205,7 +206,7 @@ namespace RTC
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
 
-		// Delete the KeyFrameRequestManager().
+		// Delete the KeyFrameRequestManager.
 		delete this->keyFrameRequestManager;
 	}
 
@@ -410,7 +411,7 @@ namespace RTC
 
 				this->listener->OnProducerResumed(this);
 
-				if (this->kind == RTC::Media::Kind::VIDEO)
+				if (this->keyFrameRequestManager)
 				{
 					MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame(s) after resumed");
 
@@ -487,7 +488,8 @@ namespace RTC
 			  packet->GetSequenceNumber());
 
 			// Tell the keyFrameRequestManager.
-			this->keyFrameRequestManager->KeyFrameReceived(packet->GetSsrc());
+			if (this->keyFrameRequestManager)
+				this->keyFrameRequestManager->KeyFrameReceived(packet->GetSsrc());
 		}
 
 		// If paused stop here.
@@ -538,7 +540,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->kind != RTC::Media::Kind::VIDEO || this->paused)
+		if (!this->keyFrameRequestManager || this->paused)
 			return;
 
 		auto it = this->mapMappedSsrcSsrc.find(mappedSsrc);
@@ -766,12 +768,13 @@ namespace RTC
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
 
 		// Request a key frame for this stream since we may have lost the first packets.
-		this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
+		if (this->keyFrameRequestManager && !this->paused)
+			this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 
 		return rtpStream;
 	}
 
-	bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
+	inline bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
 
@@ -811,7 +814,7 @@ namespace RTC
 		return true;
 	}
 
-	void Producer::OnRtpStreamRecvNackRequired(
+	inline void Producer::OnRtpStreamRecvNackRequired(
 	  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
@@ -868,7 +871,7 @@ namespace RTC
 		rtpStream->nackRtpPacketCount += numPacketsRequested;
 	}
 
-	void Producer::OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)
+	inline void Producer::OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
@@ -883,7 +886,7 @@ namespace RTC
 		rtpStream->pliCount++;
 	}
 
-	void Producer::OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)
+	inline void Producer::OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
@@ -900,7 +903,8 @@ namespace RTC
 		rtpStream->pliCount++;
 	}
 
-	void Producer::OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
+	inline void Producer::OnKeyFrameNeeded(
+	  RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
 	{
 		MS_TRACE();
 
