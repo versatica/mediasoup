@@ -3,7 +3,6 @@
 
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
-#include "RTC/RtpDataCounter.hpp"
 #include "RTC/SeqManager.hpp"
 
 namespace RTC
