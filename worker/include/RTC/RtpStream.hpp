@@ -61,8 +61,8 @@ namespace RTC
 		uint64_t GetMaxPacketMs() const;
 		size_t GetExpectedPackets() const;
 		uint8_t GetScore() const;
-		void RtpPacketRepaired(RTC::RtpPacket* packet);
 		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
+		void RtpPacketRepaired(RTC::RtpPacket* packet);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -178,16 +178,16 @@ namespace RTC
 		return this->rtpMonitor->GetScore();
 	}
 
+	inline void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)
+	{
+		this->retransmissionCounter.Update(packet);
+	}
+
 	inline void RtpStream::RtpPacketRepaired(RTC::RtpPacket* packet)
 	{
 		this->packetsRepaired++;
 
 		this->rtpMonitor->RtpPacketRepaired(packet);
-	}
-
-	inline void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)
-	{
-		this->retransmissionCounter.Update(packet);
 	}
 
 	inline void RtpStream::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)

@@ -316,9 +316,6 @@ namespace RTC
 					break;
 
 				RetransmitRtpPacket(packet);
-
-				// Packet repaired after applying RTX.
-				this->rtpStream->RtpPacketRepaired(packet);
 			}
 		}
 	}
@@ -514,6 +511,9 @@ namespace RTC
 
 		// Update retransmitted RTP data counter.
 		this->rtpStream->RtpPacketRetransmitted(rtxPacket);
+
+		// Packet repaired after applying RTX.
+		this->rtpStream->RtpPacketRepaired(packet);
 
 		// Send the packet.
 		this->listener->OnConsumerSendRtpPacket(this, rtxPacket);
