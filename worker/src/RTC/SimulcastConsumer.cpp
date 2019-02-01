@@ -27,6 +27,9 @@ namespace RTC
 		if (this->consumableRtpEncodings.size() <= 1)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
 
+		// Initially set preferreSpatialLayer to the maximum value.
+		this->preferredSpatialLayer = static_cast<int8_t>(this->consumableRtpEncodings.size());
+
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
@@ -50,6 +53,8 @@ namespace RTC
 
 		// Call the parent method.
 		RTC::Consumer::FillJson(jsonObject);
+
+		// TODO: Add layers, etc.
 	}
 
 	void SimulcastConsumer::FillJsonStats(json& jsonArray) const
