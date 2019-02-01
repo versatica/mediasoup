@@ -258,7 +258,7 @@ namespace RTC
 		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
 	}
 
-	void RtpStreamRecv::OnTimer(Timer* timer)
+	inline void RtpStreamRecv::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
 
@@ -281,7 +281,7 @@ namespace RTC
 		}
 	}
 
-	void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)
+	inline void RtpStreamRecv::OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers)
 	{
 		MS_TRACE();
 
@@ -297,7 +297,7 @@ namespace RTC
 		this->listener->OnRtpStreamRecvNackRequired(this, seqNumbers);
 	}
 
-	void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()
+	inline void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()
 	{
 		MS_TRACE();
 

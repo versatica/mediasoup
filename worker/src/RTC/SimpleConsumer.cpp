@@ -442,15 +442,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive() || !this->producerRtpStream)
-			return;
-
-		if (this->kind != RTC::Media::Kind::VIDEO)
+		if (!IsActive() || !this->producerRtpStream || this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
-		this->listener->OnConsumerKeyFrameRequired(this, mappedSsrc);
+		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
 	void SimpleConsumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
@@ -496,7 +493,7 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	void SimpleConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)
+	inline void SimpleConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 

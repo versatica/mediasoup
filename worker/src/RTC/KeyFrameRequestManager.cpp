@@ -25,7 +25,7 @@ RTC::PendingKeyFrameInfo::~PendingKeyFrameInfo()
 	delete this->timer;
 }
 
-void RTC::PendingKeyFrameInfo::OnTimer(Timer* timer)
+inline void RTC::PendingKeyFrameInfo::OnTimer(Timer* timer)
 {
 	MS_TRACE();
 
@@ -115,7 +115,7 @@ void RTC::KeyFrameRequestManager::KeyFrameReceived(uint32_t ssrc)
 	this->mapSsrcPendingKeyFrameInfo.erase(it);
 }
 
-void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* pendingKeyFrameInfo)
+inline void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFrameInfo* pendingKeyFrameInfo)
 {
 	MS_TRACE();
 

@@ -777,7 +777,7 @@ namespace RTC
 		SendRtpPacket(packet);
 	}
 
-	inline void Transport::OnConsumerKeyFrameRequired(RTC::Consumer* consumer, uint32_t mappedSsrc)
+	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
