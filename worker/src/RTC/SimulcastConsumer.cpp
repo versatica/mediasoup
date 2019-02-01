@@ -28,7 +28,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
 
 		// Initially set preferreSpatialLayer to the maximum value.
-		this->preferredSpatialLayer = static_cast<int8_t>(this->consumableRtpEncodings.size());
+		this->preferredSpatialLayer = static_cast<int8_t>(this->consumableRtpEncodings.size()) - 1;
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
