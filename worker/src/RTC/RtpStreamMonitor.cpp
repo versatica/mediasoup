@@ -19,10 +19,22 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStreamMonitor::RtpStreamMonitor(Listener* listener, RTC::RtpStream* rtpStream)
-	  : rtpStream(rtpStream), listener(listener)
+	RtpStreamMonitor::RtpStreamMonitor(Listener* listener, RTC::RtpStream* rtpStream, uint8_t initialScore)
+	  : rtpStream(rtpStream), listener(listener), score(initialScore)
 	{
 		MS_TRACE();
+	}
+
+	void RtpStreamMonitor::Dump()
+	{
+		MS_TRACE();
+
+		MS_DEBUG_DEV("<RtpStreamMonitor>");
+		MS_DEBUG_DEV("  score                : %" PRIi8, this->score);
+		MS_DEBUG_DEV("  totalSourceLoss      : %" PRIi32, this->totalSourceLoss);
+		MS_DEBUG_DEV("  totalReportedLoss    : %" PRIi32, this->totalReportedLoss);
+		MS_DEBUG_DEV("  repairedPackets size : %zu", this->repairedPackets.size());
+		MS_DEBUG_DEV("</RtpStreamMonitor>");
 	}
 
 	// A RTCP receiver report triggers a score calculation.
@@ -134,18 +146,6 @@ namespace RTC
 		this->repairedPackets[packet->GetSequenceNumber()]++;
 	}
 
-	void RtpStreamMonitor::Dump()
-	{
-		MS_TRACE();
-
-		MS_DEBUG_DEV("<RtpStreamMonitor>");
-		MS_DEBUG_DEV("  score                : %" PRIi8, GetScore());
-		MS_DEBUG_DEV("  totalSourceLoss      : %" PRIi32, this->totalSourceLoss);
-		MS_DEBUG_DEV("  totalReportedLoss    : %" PRIi32, this->totalReportedLoss);
-		MS_DEBUG_DEV("  repairedPackets size : %zu", this->repairedPackets.size());
-		MS_DEBUG_DEV("</RtpStreamMonitor>");
-	}
-
 	void RtpStreamMonitor::AddScore(uint8_t score)
 	{
 		MS_TRACE();
@@ -158,7 +158,33 @@ namespace RTC
 		if (--this->scoreTriggerCounter == 0)
 		{
 			this->scoreTriggerCounter = ScoreTriggerCount;
-			this->listener->OnRtpStreamMonitorScore(this, GetScore());
+
+			auto score = ComputeScore();
+
+			if (score != this->score)
+			{
+				this->score = score;
+				this->listener->OnRtpStreamMonitorScore(this, score);
+			}
+		}
+	}
+
+	void RtpStreamMonitor::Reset()
+	{
+		MS_TRACE();
+
+		this->scoreTriggerCounter = ScoreTriggerCount;
+		this->totalSourceLoss     = 0;
+		this->totalReportedLoss   = 0;
+		this->totalSentPackets    = 0;
+
+		this->repairedPackets.clear();
+		this->scores.clear();
+
+		if (this->score != 0)
+		{
+			this->score = 0;
+			this->listener->OnRtpStreamMonitorScore(this, 0);
 		}
 	}
 
@@ -173,7 +199,7 @@ namespace RTC
 	 * - scores: [1,2,3,4]
 	 * - this->scores = ((1) + (2+2) + (3+3+3) + (4+4+4+4)) / 10 = 2.8 => 3
 	 */
-	uint8_t RtpStreamMonitor::GetScore() const
+	uint8_t RtpStreamMonitor::ComputeScore() const
 	{
 		MS_TRACE();
 
@@ -189,13 +215,9 @@ namespace RTC
 		}
 
 		if (samples == 0)
-		{
 			return 10;
-		}
 		else
-		{
 			return static_cast<uint8_t>(std::round(totalScore / samples));
-		}
 	}
 
 	/*

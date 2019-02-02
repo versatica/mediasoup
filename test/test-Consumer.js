@@ -613,7 +613,7 @@ test('consumer.getStats() succeeds', async () =>
 						kind     : 'audio',
 						mimeType : 'audio/opus',
 						ssrc     : audioConsumer.rtpParameters.encodings[0].ssrc,
-						score    : 10
+						score    : 0
 					})
 			]);
 
@@ -627,7 +627,7 @@ test('consumer.getStats() succeeds', async () =>
 						kind     : 'video',
 						mimeType : 'video/H264',
 						ssrc     : videoConsumer.rtpParameters.encodings[0].ssrc,
-						score    : 10
+						score    : 0
 					})
 			]);
 }, 2000);

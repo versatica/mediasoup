@@ -23,17 +23,18 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamMonitor(Listener* listener, RTC::RtpStream* rtpStream);
+		RtpStreamMonitor(Listener* listener, RTC::RtpStream* rtpStream, uint8_t initialScore = 0);
 
 	public:
+		void Dump();
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RtpPacketRepaired(RTC::RtpPacket* packet);
 		void AddScore(uint8_t score);
 		uint8_t GetScore() const;
 		void Reset();
-		void Dump();
 
 	private:
+		uint8_t ComputeScore() const;
 		size_t GetRepairedPacketCount() const;
 		void UpdateReportedLoss(RTC::RTCP::ReceiverReport* report);
 		void UpdateSourceLoss();
@@ -47,8 +48,9 @@ namespace RTC
 		Listener* listener{ nullptr };
 		// Counter for event notification.
 		size_t scoreTriggerCounter{ ScoreTriggerCount };
-		// Scores histogram.
+		// Scores histogram and last computed score.
 		std::vector<uint8_t> scores;
+		uint8_t score{ 0 };
 		// Rapaired RTP packet map.
 		std::map<uint16_t, size_t> repairedPackets;
 		// RTP stream data information for score calculation.
@@ -57,17 +59,9 @@ namespace RTC
 		size_t totalSentPackets{ 0 };
 	};
 
-	inline void RtpStreamMonitor::Reset()
+	inline uint8_t RtpStreamMonitor::GetScore() const
 	{
-		this->scoreTriggerCounter = ScoreTriggerCount;
-		this->totalSourceLoss     = 0;
-		this->totalReportedLoss   = 0;
-		this->totalSentPackets    = 0;
-
-		this->repairedPackets.clear();
-		this->scores.clear();
-
-		this->listener->OnRtpStreamMonitorScore(this, 0);
+		return this->score;
 	}
 } // namespace RTC
 

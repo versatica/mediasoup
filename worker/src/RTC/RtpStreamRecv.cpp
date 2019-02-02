@@ -22,10 +22,8 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this));
-
-		// Start the RTP monitor with a possitive score.
-		this->rtpMonitor->AddScore(10);
+		// Initialize the rtpMonitor with score 10.
+		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this, 10));
 
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
@@ -283,7 +281,7 @@ namespace RTC
 
 			// No RTP is being received, reset rtpMonitor (so it will notify score 0
 			// to the listener).
-			if (this->transmissionCounter.GetRate(now) == 0 && GetLastScore() != 0)
+			if (this->transmissionCounter.GetRate(now) == 0 && this->rtpMonitor->GetScore() != 0)
 				this->rtpMonitor->Reset();
 		}
 		else if (timer == this->rtcpReportCheckTimer)

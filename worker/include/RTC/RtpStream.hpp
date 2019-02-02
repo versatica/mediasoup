@@ -108,8 +108,7 @@ namespace RTC
 
 	private:
 		bool started{ false };
-		uint8_t lastScore{ 0 }; // Last score retrieved from RTP monitor.
-	};                        // namespace RTC
+	}; // namespace RTC
 
 	/* Inline instance methods. */
 
@@ -182,11 +181,6 @@ namespace RTC
 	inline uint8_t RtpStream::GetScore() const
 	{
 		return this->rtpMonitor->GetScore();
-	}
-
-	inline uint8_t RtpStream::GetLastScore() const
-	{
-		return this->lastScore;
 	}
 
 	inline void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)

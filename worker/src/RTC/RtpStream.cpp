@@ -69,9 +69,7 @@ namespace RTC
 		jsonObject["nackRtpPacketCount"] = this->nackRtpPacketCount;
 		jsonObject["pliCount"]           = this->pliCount;
 		jsonObject["firCount"]           = this->firCount;
-
-		// Add score.
-		jsonObject["score"] = this->rtpMonitor->GetScore();
+		jsonObject["score"]              = this->rtpMonitor->GetScore();
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -211,11 +209,6 @@ namespace RTC
 	inline void RtpStream::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
 	{
 		MS_TRACE();
-
-		if (score == this->lastScore)
-			return;
-
-		this->lastScore = score;
 
 		this->listener->OnRtpStreamScore(this, score);
 	}
