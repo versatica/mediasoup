@@ -74,7 +74,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 			[
 				{ ip: '127.0.0.1', announcedIp: '9.9.9.1' },
 				{ ip: '0.0.0.0', announcedIp: '9.9.9.2' },
-				{ ip: '127.0.0.1' }
+				{ ip: '127.0.0.1', announcedIp: null }
 			],
 			enableTcp : true,
 			preferUdp : true,
