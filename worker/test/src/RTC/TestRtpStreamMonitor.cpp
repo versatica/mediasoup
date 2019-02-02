@@ -80,33 +80,52 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 
 	REQUIRE(packet);
 
-	SECTION("The eighth report triggers the score")
+	TestRtpStreamMonitorListener listener;
+	RtpStreamMonitor rtpMonitor(&listener, rtpStream, 5);
+	auto sequenceNumber = packet->GetSequenceNumber();
+
+	SECTION("initial score matches the given one (if any)")
 	{
-		TestRtpStreamMonitorListener listener;
-		RtpStreamMonitor rtpMonitor(&listener, rtpStream);
+		REQUIRE(rtpMonitor.GetScore() == 5);
+	}
 
-		auto sequenceNumber = packet->GetSequenceNumber();
-
+	SECTION("the eighth report triggers the score")
+	{
 		for (size_t counter = 0; counter < RtpStreamMonitor::ScoreTriggerCount; counter++)
 		{
 			packet->SetSequenceNumber(sequenceNumber++);
 			rtpStream->ReceivePacket(packet);
 			rtpMonitor.ReceiveRtcpReceiverReport(report);
+
+			if (counter < RtpStreamMonitor::ScoreTriggerCount - 1)
+				listener.Check(false);
 		}
 
 		listener.Check(true);
+	}
 
-		SECTION("Next eighth consecutive reports trigger the score")
+	SECTION("next eighth consecutive reports trigger the score")
+	{
+		for (size_t counter = 0; counter < RtpStreamMonitor::ScoreTriggerCount; counter++)
 		{
-			for (size_t counter = 0; counter < RtpStreamMonitor::ScoreTriggerCount; counter++)
-			{
-				packet->SetSequenceNumber(sequenceNumber++);
-				rtpStream->ReceivePacket(packet);
-				rtpMonitor.ReceiveRtcpReceiverReport(report);
-			}
+			packet->SetSequenceNumber(sequenceNumber++);
+			rtpStream->ReceivePacket(packet);
+			rtpMonitor.ReceiveRtcpReceiverReport(report);
 
-			listener.Check(true);
+			if (counter < RtpStreamMonitor::ScoreTriggerCount - 1)
+				listener.Check(false);
 		}
+
+		listener.Check(true);
+	}
+
+	SECTION("Reset() triggers score 0 unless it was already 0")
+	{
+		rtpMonitor.Reset();
+		listener.Check(true);
+
+		rtpMonitor.Reset();
+		listener.Check(false);
 	}
 
 	delete report;
