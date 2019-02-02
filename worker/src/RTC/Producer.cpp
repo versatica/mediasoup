@@ -4,6 +4,7 @@
 #include "RTC/Producer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -930,6 +931,23 @@ namespace RTC
 		this->listener->OnProducerSendRtcpPacket(this, &packet);
 
 		rtpStream->pliCount++;
+	}
+
+	inline void Producer::OnRtpStreamScore(const RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	{
+		MS_TRACE();
+
+		json data = json::array();
+
+		// Iterate all streams and notify their scores.
+		for (auto& kv : this->mapSsrcRtpStream)
+		{
+			auto* rtpStream = kv.second;
+
+			data.push_back(rtpStream->GetScore());
+		}
+
+		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
 	inline void Producer::OnKeyFrameNeeded(

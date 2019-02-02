@@ -115,6 +115,7 @@ test('webRtcTransport.produce() succeeds', async () =>
 	// Private API.
 	expect(audioProducer.consumableRtpParameters).toBeType('object');
 	expect(audioProducer.paused).toBe(false);
+	expect(audioProducer.score).toEqual([]);
 	expect(audioProducer.appData).toEqual({ foo: 1, bar: '2' });
 
 	expect(webRtcTransport.getProducerById(audioProducer.id)).toBe(audioProducer);
@@ -206,6 +207,7 @@ test('plainRtpTransport.produce() succeeds', async () =>
 	// Private API.
 	expect(videoProducer.consumableRtpParameters).toBeType('object');
 	expect(videoProducer.paused).toBe(false);
+	expect(videoProducer.score).toEqual([]);
 	expect(videoProducer.appData).toEqual({ foo: 1, bar: '2' });
 
 	expect(plainRtpTransport.getProducerById(videoProducer.id)).toBe(videoProducer);
@@ -594,6 +596,23 @@ test('producer.pause() and resume() succeed', async () =>
 	await expect(audioProducer.dump())
 		.resolves
 		.toMatchObject({ paused: false });
+}, 2000);
+
+test('Producer emits "score"', async () =>
+{
+	// Private API.
+	const channel = videoProducer._channel;
+
+	const onScore = jest.fn();
+
+	videoProducer.on('score', onScore);
+
+	channel.emit(videoProducer.id, 'score', [ 10, 10, 9 ]);
+	channel.emit(videoProducer.id, 'score', [ 10, 9, 8 ]);
+	channel.emit(videoProducer.id, 'score', [ 10, 9, 7 ]);
+
+	expect(onScore).toHaveBeenCalledTimes(3);
+	expect(videoProducer.score).toEqual([ 10, 9, 7 ]);
 }, 2000);
 
 test('producer.close() succeeds', async () =>
