@@ -151,26 +151,22 @@ namespace RTC
 
 	inline void StunMessage::SetUsername(const char* username, size_t len)
 	{
-		if (this->username.empty())
-			this->username = std::string(username, len);
+		this->username.assign(username, len);
 	}
 
 	inline void StunMessage::SetPriority(const uint32_t priority)
 	{
-		if (!this->priority)
-			this->priority = priority;
+		this->priority = priority;
 	}
 
 	inline void StunMessage::SetIceControlling(const uint64_t iceControlling)
 	{
-		if (!this->iceControlling)
-			this->iceControlling = iceControlling;
+		this->iceControlling = iceControlling;
 	}
 
 	inline void StunMessage::SetIceControlled(const uint64_t iceControlled)
 	{
-		if (!this->iceControlled)
-			this->iceControlled = iceControlled;
+		this->iceControlled = iceControlled;
 	}
 
 	inline void StunMessage::SetUseCandidate()
@@ -180,8 +176,7 @@ namespace RTC
 
 	inline void StunMessage::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
 	{
-		if (!this->xorMappedAddress)
-			this->xorMappedAddress = xorMappedAddress;
+		this->xorMappedAddress = xorMappedAddress;
 	}
 
 	inline void StunMessage::SetErrorCode(uint16_t errorCode)
@@ -191,8 +186,7 @@ namespace RTC
 
 	inline void StunMessage::SetMessageIntegrity(const uint8_t* messageIntegrity)
 	{
-		if (!this->messageIntegrity)
-			this->messageIntegrity = messageIntegrity;
+		this->messageIntegrity = messageIntegrity;
 	}
 
 	inline void StunMessage::SetFingerprint()
