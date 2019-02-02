@@ -25,6 +25,8 @@ namespace RTC
 
 		// Set the status check timer.
 		this->rtcpReportCheckTimer = new Timer(this);
+
+		this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	RtpStream::~RtpStream()
@@ -114,6 +116,20 @@ namespace RTC
 		return true;
 	}
 
+	void RtpStream::Pause()
+	{
+		MS_TRACE();
+
+		this->rtcpReportCheckTimer->Stop();
+	}
+
+	void RtpStream::Resume()
+	{
+		MS_TRACE();
+
+		this->rtcpReportCheckTimer->Start(5000);
+	}
+
 	void RtpStream::InitSeq(uint16_t seq)
 	{
 		MS_TRACE();
@@ -190,6 +206,18 @@ namespace RTC
 		}
 
 		return true;
+	}
+
+	inline void RtpStream::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
+	{
+		MS_TRACE();
+
+		if (score == this->lastScore)
+			return;
+
+		this->lastScore = score;
+
+		this->listener->OnRtpStreamScore(this, score);
 	}
 
 	void RtpStream::Params::FillJson(json& jsonObject) const

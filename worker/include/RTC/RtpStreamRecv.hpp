@@ -31,6 +31,8 @@ namespace RTC
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void RequestKeyFrame();
+		void Pause() override;
+		void Resume() override;
 		uint8_t GetFirSeqNumber();
 
 	private:
@@ -59,7 +61,6 @@ namespace RTC
 		uint32_t transit{ 0 };         // Relative transit time for prev packet.
 		uint32_t jitter{ 0 };
 		uint8_t firSeqNumber{ 0 };
-		uint8_t lastScore{ 0 };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
 	};

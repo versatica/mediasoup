@@ -56,11 +56,14 @@ namespace RTC
 		uint32_t GetRtxSsrc() const;
 		uint8_t GetRtxPayloadType() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
+		virtual void Pause();
+		virtual void Resume();
 		uint32_t GetRate(uint64_t now);
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
 		size_t GetExpectedPackets() const;
 		uint8_t GetScore() const;
+		uint8_t GetLastScore() const;
 		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
 		void RtpPacketRepaired(RTC::RtpPacket* packet);
 
@@ -90,20 +93,23 @@ namespace RTC
 		// Given as argument.
 		Listener* listener{ nullptr };
 		Params params;
+		// Allocated by this.
+		Timer* rtcpReportCheckTimer{ nullptr };
+		std::unique_ptr<RTC::RtpStreamMonitor> rtpMonitor;
 		// Others.
 		// Whether at least a RTP packet has been received.
 		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
-		bool started{ false };
 		uint16_t maxSeq{ 0 };      // Highest seq. number seen.
 		uint32_t cycles{ 0 };      // Shifted count of seq. number cycles.
 		uint32_t baseSeq{ 0 };     // Base seq number.
 		uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
 		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
-		uint8_t lastScore{ 0 };    // Last score retrieved from RTP monitor.
-		Timer* rtcpReportCheckTimer{ nullptr };
-		std::unique_ptr<RTC::RtpStreamMonitor> rtpMonitor;
-	}; // namespace RTC
+
+	private:
+		bool started{ false };
+		uint8_t lastScore{ 0 }; // Last score retrieved from RTP monitor.
+	};                        // namespace RTC
 
 	/* Inline instance methods. */
 
@@ -178,6 +184,11 @@ namespace RTC
 		return this->rtpMonitor->GetScore();
 	}
 
+	inline uint8_t RtpStream::GetLastScore() const
+	{
+		return this->lastScore;
+	}
+
 	inline void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)
 	{
 		this->retransmissionCounter.Update(packet);
@@ -188,14 +199,6 @@ namespace RTC
 		this->packetsRepaired++;
 
 		this->rtpMonitor->RtpPacketRepaired(packet);
-	}
-
-	inline void RtpStream::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
-	{
-		if (score != this->lastScore)
-			this->listener->OnRtpStreamScore(this, score);
-
-		this->lastScore = score;
 	}
 } // namespace RTC
 

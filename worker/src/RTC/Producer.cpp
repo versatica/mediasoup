@@ -396,8 +396,7 @@ namespace RTC
 				{
 					auto* rtpStream = kv.second;
 
-					// TODO: Uncomment when done.
-					// rtpStream->Pause();
+					rtpStream->Pause();
 				}
 
 				this->paused = true;
@@ -425,8 +424,7 @@ namespace RTC
 				{
 					auto* rtpStream = kv.second;
 
-					// TODO: Uncomment when done.
-					// rtpStream->Resume();
+					rtpStream->Resume();
 				}
 
 				this->paused = false;
@@ -793,6 +791,10 @@ namespace RTC
 		// Set the mapped SSRC.
 		this->mapRtpStreamMappedSsrc[rtpStream]             = encodingMapping.mappedSsrc;
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
+
+		// If the Producer is paused tell it to the new RtpStreamRecv.
+		if (this->paused)
+			rtpStream->Pause();
 
 		// Request a key frame for this stream since we may have lost the first packets.
 		if (this->keyFrameRequestManager && !this->paused)

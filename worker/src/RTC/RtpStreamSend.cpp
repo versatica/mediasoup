@@ -23,9 +23,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Run the timer.
-		this->rtcpReportCheckTimer->Start(2000);
-
 		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this));
 	}
 
@@ -97,8 +94,7 @@ namespace RTC
 		// Provide the RTP monitor with the received RR.
 		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
 
-		this->rtcpReportCheckTimer->Stop();
-		this->rtcpReportCheckTimer->Start(2000);
+		this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -301,6 +297,22 @@ namespace RTC
 		return report;
 	}
 
+	void RtpStreamSend::Pause()
+	{
+		MS_TRACE();
+
+		RTC::RtpStream::Pause();
+
+		ClearRetransmissionBuffer();
+	}
+
+	void RtpStreamSend::Resume()
+	{
+		MS_TRACE();
+
+		RTC::RtpStream::Resume();
+	}
+
 	void RtpStreamSend::ClearRetransmissionBuffer()
 	{
 		MS_TRACE();
@@ -419,7 +431,10 @@ namespace RTC
 		if (timer == this->rtcpReportCheckTimer)
 		{
 			this->rtpMonitor->AddScore(0);
-			this->rtcpReportCheckTimer->Start(5000);
+
+			// If we are not receiving RR we must decrease the timer interval to
+			// emulate the typical RR internval.
+			this->rtcpReportCheckTimer->Start(2500);
 		}
 	}
 } // namespace RTC

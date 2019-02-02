@@ -37,6 +37,8 @@ namespace RTC
 		void RequestRtpRetransmission(
 		  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
+		void Pause() override;
+		void Resume() override;
 		void ClearRetransmissionBuffer();
 		void RtxEncode(RTC::RtpPacket* packet);
 

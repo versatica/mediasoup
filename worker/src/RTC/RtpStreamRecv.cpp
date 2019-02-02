@@ -30,9 +30,7 @@ namespace RTC
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
 
-		// Run the timers.
 		this->inactivityCheckPeriodicTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
-		this->rtcpReportCheckTimer->Start(2000);
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()
@@ -213,8 +211,7 @@ namespace RTC
 		// Provide the RTP monitor with the current RR.
 		this->rtpMonitor->ReceiveRtcpReceiverReport(this->GetRtcpReceiverReport());
 
-		this->rtcpReportCheckTimer->Stop();
-		this->rtcpReportCheckTimer->Start(2000);
+		this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
@@ -237,6 +234,24 @@ namespace RTC
 
 			this->listener->OnRtpStreamRecvFirRequired(this);
 		}
+	}
+
+	void RtpStreamRecv::Pause()
+	{
+		MS_TRACE();
+
+		RTC::RtpStream::Pause();
+
+		this->inactivityCheckPeriodicTimer->Stop();
+	}
+
+	void RtpStreamRecv::Resume()
+	{
+		MS_TRACE();
+
+		RTC::RtpStream::Resume();
+
+		this->inactivityCheckPeriodicTimer->Restart();
 	}
 
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
@@ -266,18 +281,19 @@ namespace RTC
 		{
 			auto now = DepLibUV::GetTime();
 
-			// No RTP is being received, reset rtpMonitor and notify the listener.
-			if (this->transmissionCounter.GetRate(now) == 0 && this->lastScore != 0)
-			{
-				this->lastScore = 0;
+			// No RTP is being received, reset rtpMonitor (so it will notify score 0
+			// to the listener).
+			if (this->transmissionCounter.GetRate(now) == 0 && GetLastScore() != 0)
 				this->rtpMonitor->Reset();
-			}
 		}
 		else if (timer == this->rtcpReportCheckTimer)
 		{
 			// TODO: 'figure out' a score based on received RTP or set a fixed value.
 			this->rtpMonitor->AddScore(8);
-			this->rtcpReportCheckTimer->Start(5000);
+
+			// If we are not receiving RR we must decrease the timer interval to
+			// emulate the typical RR internval.
+			this->rtcpReportCheckTimer->Start(2500);
 		}
 	}
 

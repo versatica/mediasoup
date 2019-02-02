@@ -107,8 +107,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Should ASSERT that mappedSsrc is well know.
-
 		auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
 
 		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
@@ -116,6 +114,8 @@ namespace RTC
 		int8_t spatialLayer = it->second;
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
+
+		// TODO: Recalculate layers.
 
 		// TODO: Remove.
 		this->producerRtpStream = rtpStream;
@@ -125,7 +125,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// To stuff if this is the rtpStream we are sending to the remote.
+		// TODO: Recalculate layers.
 	}
 
 	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -390,17 +390,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Uncomment when done and remove next call.
-		// this->rtpStream->Pause();
-		this->rtpStream->ClearRetransmissionBuffer();
+		this->rtpStream->Pause();
 	}
 
 	void SimulcastConsumer::Resumed(bool wasProducer)
 	{
 		MS_TRACE();
 
-		// TODO: Uncomment when done and remove next call.
-		// this->rtpStream->Resume();
+		this->rtpStream->Resume();
 
 		// We need to sync and wait for a key frame (if supported). Otherwise the
 		// receiver will request lot of NACKs due to unknown RTP packets.

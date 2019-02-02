@@ -377,17 +377,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Uncomment when done and remove next call.
-		// this->rtpStream->Pause();
-		this->rtpStream->ClearRetransmissionBuffer();
+		this->rtpStream->Pause();
 	}
 
 	void SimpleConsumer::Resumed(bool wasProducer)
 	{
 		MS_TRACE();
 
-		// TODO: Uncomment when done and remove next call.
-		// this->rtpStream->Resume();
+		this->rtpStream->Resume();
 
 		// We need to sync and wait for a key frame (if supported). Otherwise the
 		// receiver will request lot of NACKs due to unknown RTP packets.
