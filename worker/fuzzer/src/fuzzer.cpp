@@ -17,7 +17,26 @@ bool fuzzStun = false;
 bool fuzzRtp  = false;
 bool fuzzRtcp = false;
 
-int init()
+int Init();
+
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
+{
+	// Trick to initialize our stuff just once.
+	static int unused = Init();
+
+	if (fuzzStun)
+		Fuzzer::RTC::StunMessage::Fuzz(data, len);
+
+	if (fuzzRtp)
+		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
+
+	if (fuzzRtcp)
+		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
+
+	return 0;
+}
+
+int Init()
 {
 	LogLevel logLevel{ LogLevel::LOG_NONE };
 
@@ -66,23 +85,6 @@ int init()
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
 	Utils::Crypto::ClassInit();
-
-	return 0;
-}
-
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
-{
-	// Trick to initialize our stuff just once.
-	static int unused = init();
-
-	if (fuzzStun)
-		Fuzzer::RTC::StunMessage::Fuzz(data, len);
-
-	if (fuzzRtp)
-		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
-
-	if (fuzzRtcp)
-		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
 
 	return 0;
 }

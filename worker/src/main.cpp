@@ -24,7 +24,7 @@
 
 static constexpr int ChannelFd{ 3 };
 
-void ignoreSignals();
+void IgnoreSignals();
 
 int main(int argc, char* argv[])
 {
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 		Channel::Notifier::ClassInit(channel);
 
 		// Ignore some signals.
-		ignoreSignals();
+		IgnoreSignals();
 
 		// Run the Worker.
 		Worker worker(channel);
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 	}
 }
 
-void ignoreSignals()
+void IgnoreSignals()
 {
 	MS_TRACE();
 
