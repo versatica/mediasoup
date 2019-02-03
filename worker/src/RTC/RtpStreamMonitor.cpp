@@ -204,6 +204,9 @@ namespace RTC
 		size_t samples    = 0;
 		size_t totalScore = 0;
 
+		if (this->scores.empty())
+			return 0;
+
 		for (auto score : this->scores)
 		{
 			weight++;
@@ -211,10 +214,7 @@ namespace RTC
 			totalScore += weight * score;
 		}
 
-		if (samples == 0)
-			return 10;
-		else
-			return static_cast<uint8_t>(std::round(totalScore / samples));
+		return static_cast<uint8_t>(std::round(totalScore / samples));
 	}
 
 	/*
