@@ -124,7 +124,7 @@ CheckOptions:
   - key:             readability-identifier-naming.GlobalConstantSuffix
     value:           ''
   - key:             readability-identifier-naming.GlobalFunctionCase
-    value:           camelBack
+    value:           CamelCase
   - key:             readability-identifier-naming.GlobalFunctionPrefix
     value:           ''
   - key:             readability-identifier-naming.GlobalFunctionSuffix
