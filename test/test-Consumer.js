@@ -268,6 +268,10 @@ afterAll(() => worker.close());
 
 test('transport.consume() succeeds', async () =>
 {
+	const onObserverNewConsumer1 = jest.fn();
+
+	transport2.once('observer:newconsumer', onObserverNewConsumer1);
+
 	expect(router.canConsume(
 		{ producerId: audioProducer.id, rtpCapabilities: deviceCapabilities }))
 		.toBe(true);
@@ -279,6 +283,8 @@ test('transport.consume() succeeds', async () =>
 			appData         : { baz: 'LOL' }
 		});
 
+	expect(onObserverNewConsumer1).toHaveBeenCalledTimes(1);
+	expect(onObserverNewConsumer1).toHaveBeenCalledWith(audioConsumer);
 	expect(audioConsumer.id).toBeType('string');
 	expect(audioConsumer.producerId).toBe(audioProducer.id);
 	expect(audioConsumer.closed).toBe(false);
@@ -329,6 +335,10 @@ test('transport.consume() succeeds', async () =>
 				consumerIds : [ audioConsumer.id ]
 			});
 
+	const onObserverNewConsumer2 = jest.fn();
+
+	transport2.once('observer:newconsumer', onObserverNewConsumer2);
+
 	expect(router.canConsume(
 		{ producerId: videoProducer.id, rtpCapabilities: deviceCapabilities }))
 		.toBe(true);
@@ -340,6 +350,8 @@ test('transport.consume() succeeds', async () =>
 			appData         : { baz: 'LOL' }
 		});
 
+	expect(onObserverNewConsumer2).toHaveBeenCalledTimes(1);
+	expect(onObserverNewConsumer2).toHaveBeenCalledWith(videoConsumer);
 	expect(videoConsumer.id).toBeType('string');
 	expect(videoConsumer.producerId).toBe(videoProducer.id);
 	expect(videoConsumer.closed).toBe(false);
@@ -668,7 +680,6 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	await new Promise((resolve) =>
 	{
 		audioConsumer.on('producerpause', resolve);
-
 		audioProducer.pause();
 	});
 
@@ -678,7 +689,6 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	await new Promise((resolve) =>
 	{
 		audioConsumer.on('producerresume', resolve);
-
 		audioProducer.resume();
 	});
 
@@ -690,7 +700,6 @@ test('Consumer emits "score"', async () =>
 {
 	// Private API.
 	const channel = audioConsumer._channel;
-
 	const onScore = jest.fn();
 
 	audioConsumer.on('score', onScore);
@@ -705,7 +714,12 @@ test('Consumer emits "score"', async () =>
 
 test('consumer.close() succeeds', async () =>
 {
+	const onObserverClose = jest.fn();
+
+	audioConsumer.once('observer:close', onObserverClose);
 	audioConsumer.close();
+
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
 	expect(transport2.getConsumerById(audioConsumer.id)).toBe(undefined);
 
@@ -762,13 +776,17 @@ test('Consumer emits "producerclose" if Producer is closed', async () =>
 			rtpCapabilities : deviceCapabilities
 		});
 
+	const onObserverClose = jest.fn();
+
+	audioConsumer.once('observer:close', onObserverClose);
+
 	await new Promise((resolve) =>
 	{
 		audioConsumer.on('producerclose', resolve);
-
 		audioProducer.close();
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
 }, 2000);
 
@@ -780,13 +798,17 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 			rtpCapabilities : deviceCapabilities
 		});
 
+	const onObserverClose = jest.fn();
+
+	videoConsumer.once('observer:close', onObserverClose);
+
 	await new Promise((resolve) =>
 	{
 		videoConsumer.on('transportclose', resolve);
-
 		transport2.close();
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoConsumer.closed).toBe(true);
 
 	await expect(router.dump())

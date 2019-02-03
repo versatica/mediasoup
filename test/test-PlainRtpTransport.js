@@ -68,6 +68,10 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 		.resolves
 		.toMatchObject({ transportIds: [ transport.id ] });
 
+	const onObserverNewTransport = jest.fn();
+
+	router.once('observer:newtransport', onObserverNewTransport);
+
 	// Create a separate transport here.
 	const transport1 = await router.createPlainRtpTransport(
 		{
@@ -76,6 +80,8 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 			appData  : { foo: 'bar' }
 		});
 
+	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
+	expect(onObserverNewTransport).toHaveBeenCalledWith(transport1);
 	expect(transport1.id).toBeType('string');
 	expect(transport1.closed).toBe(false);
 	expect(transport1.appData).toEqual({ foo: 'bar' });
@@ -214,17 +220,14 @@ test('plaintRtpTransport.connect() with wrong arguments rejects with TypeError',
 		.toThrow(TypeError);
 }, 2000);
 
-test('plaintRtpTransport.setMaxIncomingBitrate() succeeds', async () =>
-{
-	await expect(transport.setMaxIncomingBitrate(100000))
-		.resolves
-		.toBe(undefined);
-}, 2000);
-
 test('PlaintRtpTransport methods reject if closed', async () =>
 {
+	const onObserverClose = jest.fn();
+
+	transport.once('observer:close', onObserverClose);
 	transport.close();
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(transport.closed).toBe(true);
 
 	await expect(transport.dump())
@@ -250,25 +253,32 @@ test('PlaintRtpTransport emits "routerclose" if Router is closed', async () =>
 	const router2 = await worker.createRouter({ mediaCodecs });
 	const transport2 =
 		await router2.createPlainRtpTransport({ listenIp: '127.0.0.1' });
+	const onObserverClose = jest.fn();
+
+	transport2.once('observer:close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
 		transport2.on('routerclose', resolve);
-
 		router2.close();
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(transport2.closed).toBe(true);
 }, 2000);
 
 test('PlaintRtpTransport emits "routerclose" if Worker is closed', async () =>
 {
+	const onObserverClose = jest.fn();
+
+	transport.once('observer:close', onObserverClose);
+
 	await new Promise((resolve) =>
 	{
 		transport.on('routerclose', resolve);
-
 		worker.close();
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(transport.closed).toBe(true);
 }, 2000);

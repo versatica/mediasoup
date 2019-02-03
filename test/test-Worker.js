@@ -1,7 +1,7 @@
 const process = require('process');
 const { toBeType } = require('jest-tobetype');
 const mediasoup = require('../');
-const { createWorker } = mediasoup;
+const { createWorker, observer } = mediasoup;
 const { InvalidStateError } = require('../lib/errors');
 
 expect.extend({ toBeType });
@@ -13,7 +13,14 @@ afterEach(() => worker && !worker.closed && worker.close());
 
 test('createWorker() succeeds', async () =>
 {
+	const onObserverNewWorker = jest.fn();
+
+	observer.once('observer:newworker', onObserverNewWorker);
+
 	worker = await createWorker();
+
+	expect(onObserverNewWorker).toHaveBeenCalledTimes(1);
+	expect(onObserverNewWorker).toHaveBeenCalledWith(worker);
 	expect(worker).toBeType('object');
 	expect(worker.pid).toBeType('number');
 	expect(worker.closed).toBe(false);
@@ -119,9 +126,27 @@ test('worker.dump() rejects with InvalidStateError if closed', async () =>
 	worker.close();
 }, 2000);
 
-test('Worker emits "died" if worker process died unexpectedly', async () =>
+test('worker.close() succeeds', async () =>
 {
 	worker = await createWorker({ logLevel: 'warn' });
+
+	const onObserverClose = jest.fn();
+
+	worker.once('observer:close', onObserverClose);
+	worker.close();
+
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(worker.closed).toBe(true);
+}, 2000);
+
+test('Worker emits "died" if worker process died unexpectedly', async () =>
+{
+	let onObserverClose;
+
+	worker = await createWorker({ logLevel: 'warn' });
+	onObserverClose = jest.fn();
+
+	worker.once('observer:close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
@@ -130,7 +155,13 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 		process.kill(worker.pid, 'SIGINT');
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(worker.closed).toBe(true);
+
 	worker = await createWorker({ logLevel: 'warn' });
+	onObserverClose = jest.fn();
+
+	worker.once('observer:close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
@@ -139,7 +170,13 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 		process.kill(worker.pid, 'SIGTERM');
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(worker.closed).toBe(true);
+
 	worker = await createWorker({ logLevel: 'warn' });
+	onObserverClose = jest.fn();
+
+	worker.once('observer:close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
@@ -147,6 +184,9 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 		process.kill(worker.pid, 'SIGKILL');
 	});
+
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(worker.closed).toBe(true);
 }, 5000);
 
 test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =>

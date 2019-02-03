@@ -48,8 +48,14 @@ test('worker.createRouter() succeeds', async () =>
 {
 	worker = await createWorker();
 
+	const onObserverNewRouter = jest.fn();
+
+	worker.once('observer:newrouter', onObserverNewRouter);
+
 	const router = await worker.createRouter({ mediaCodecs });
 
+	expect(onObserverNewRouter).toHaveBeenCalledTimes(1);
+	expect(onObserverNewRouter).toHaveBeenCalledWith(router);
 	expect(router.id).toBeType('string');
 	expect(router.closed).toBe(false);
 	expect(router.rtpCapabilities).toBeType('object');
@@ -106,18 +112,35 @@ test('worker.createRouter() rejects with InvalidStateError if Worker is closed',
 		.toThrow(InvalidStateError);
 }, 2000);
 
+test('router.close() succeeds', async () =>
+{
+	worker = await createWorker();
+
+	const router = await worker.createRouter({ mediaCodecs });
+	const onObserverClose = jest.fn();
+
+	router.once('observer:close', onObserverClose);
+	router.close();
+
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(router.closed).toBe(true);
+}, 2000);
+
 test('Router emits "workerclose" if Worker is closed', async () =>
 {
 	worker = await createWorker();
 
 	const router = await worker.createRouter({ mediaCodecs });
+	const onObserverClose = jest.fn();
+
+	router.once('observer:close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
 		router.on('workerclose', resolve);
-
 		worker.close();
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(router.closed).toBe(true);
 }, 2000);

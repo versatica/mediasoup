@@ -65,6 +65,10 @@ afterAll(() => worker.close());
 
 test('webRtcTransport.produce() succeeds', async () =>
 {
+	const onObserverNewProducer = jest.fn();
+
+	webRtcTransport.once('observer:newproducer', onObserverNewProducer);
+
 	audioProducer = await webRtcTransport.produce(
 		{
 			kind          : 'audio',
@@ -107,6 +111,8 @@ test('webRtcTransport.produce() succeeds', async () =>
 			appData : { foo: 1, bar: '2' }
 		});
 
+	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewProducer).toHaveBeenCalledWith(audioProducer);
 	expect(audioProducer.id).toBeType('string');
 	expect(audioProducer.closed).toBe(false);
 	expect(audioProducer.kind).toBe('audio');
@@ -140,6 +146,10 @@ test('webRtcTransport.produce() succeeds', async () =>
 
 test('plainRtpTransport.produce() succeeds', async () =>
 {
+	const onObserverNewProducer = jest.fn();
+
+	plainRtpTransport.once('observer:newproducer', onObserverNewProducer);
+
 	videoProducer = await plainRtpTransport.produce(
 		{
 			kind          : 'video',
@@ -199,6 +209,8 @@ test('plainRtpTransport.produce() succeeds', async () =>
 			appData : { foo: 1, bar: '2' }
 		});
 
+	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewProducer).toHaveBeenCalledWith(videoProducer);
 	expect(videoProducer.id).toBeType('string');
 	expect(videoProducer.closed).toBe(false);
 	expect(videoProducer.kind).toBe('video');
@@ -602,7 +614,6 @@ test('Producer emits "score"', async () =>
 {
 	// Private API.
 	const channel = videoProducer._channel;
-
 	const onScore = jest.fn();
 
 	videoProducer.on('score', onScore);
@@ -617,7 +628,12 @@ test('Producer emits "score"', async () =>
 
 test('producer.close() succeeds', async () =>
 {
+	const onObserverClose = jest.fn();
+
+	audioProducer.once('observer:close', onObserverClose);
 	audioProducer.close();
+
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioProducer.closed).toBe(true);
 	expect(webRtcTransport.getProducerById(audioProducer.id)).toBe(undefined);
 
@@ -660,12 +676,16 @@ test('Producer methods reject if closed', async () =>
 
 test('Producer emits "transportclose" if Transport is closed', async () =>
 {
+	const onObserverClose = jest.fn();
+
+	videoProducer.once('observer:close', onObserverClose);
+
 	await new Promise((resolve) =>
 	{
 		videoProducer.on('transportclose', resolve);
-
 		plainRtpTransport.close();
 	});
 
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoProducer.closed).toBe(true);
 }, 2000);
