@@ -124,8 +124,6 @@ test('webRtcTransport.produce() succeeds', async () =>
 	expect(audioProducer.score).toEqual([]);
 	expect(audioProducer.appData).toEqual({ foo: 1, bar: '2' });
 
-	expect(webRtcTransport.getProducerById(audioProducer.id)).toBe(audioProducer);
-
 	await expect(router.dump())
 		.resolves
 		.toMatchObject(
@@ -221,8 +219,6 @@ test('plainRtpTransport.produce() succeeds', async () =>
 	expect(videoProducer.paused).toBe(false);
 	expect(videoProducer.score).toEqual([]);
 	expect(videoProducer.appData).toEqual({ foo: 1, bar: '2' });
-
-	expect(plainRtpTransport.getProducerById(videoProducer.id)).toBe(videoProducer);
 
 	await expect(router.dump())
 		.resolves
@@ -635,7 +631,6 @@ test('producer.close() succeeds', async () =>
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioProducer.closed).toBe(true);
-	expect(webRtcTransport.getProducerById(audioProducer.id)).toBe(undefined);
 
 	await expect(router.dump())
 		.resolves

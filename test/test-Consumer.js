@@ -316,8 +316,6 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.currentLayers).toBe(null);
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
 
-	expect(transport2.getConsumerById(audioConsumer.id)).toBe(audioConsumer);
-
 	await expect(router.dump())
 		.resolves
 		.toMatchObject(
@@ -395,8 +393,6 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.preferredLayers).toBe(null);
 	expect(videoConsumer.currentLayers).toBe(null);
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
-
-	expect(transport2.getConsumerById(videoConsumer.id)).toBe(videoConsumer);
 
 	await expect(router.dump())
 		.resolves
@@ -721,7 +717,6 @@ test('consumer.close() succeeds', async () =>
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
-	expect(transport2.getConsumerById(audioConsumer.id)).toBe(undefined);
 
 	await expect(router.dump())
 		.resolves

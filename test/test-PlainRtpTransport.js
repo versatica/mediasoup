@@ -101,10 +101,8 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(data1.rtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
 
-	expect(router.getTransportById(transport1.id)).toBe(transport1);
 	transport1.close();
 	expect(transport1.closed).toBe(true);
-	expect(router.getTransportById(transport1.id)).toBe(undefined);
 
 	await expect(router.createPlainRtpTransport({ listenIp: '127.0.0.1' }))
 		.resolves
@@ -133,8 +131,6 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(data2.id).toBe(transport2.id);
 	expect(data2.tuple).toEqual(transport2.tuple);
 	expect(data2.rtcpTuple).toEqual(transport2.rtcpTuple);
-
-	expect(router.getTransportById(transport2.id)).toBe(transport2);
 }, 2000);
 
 test('router.createPlainRtpTransport() with wrong arguments rejects with TypeError', async () =>

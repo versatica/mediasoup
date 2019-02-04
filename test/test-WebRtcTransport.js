@@ -152,10 +152,8 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(data1.rtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
 
-	expect(router.getTransportById(transport1.id)).toBe(transport1);
 	transport1.close();
 	expect(transport1.closed).toBe(true);
-	expect(router.getTransportById(transport1.id)).toBe(undefined);
 
 	await expect(router.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] }))
 		.resolves
