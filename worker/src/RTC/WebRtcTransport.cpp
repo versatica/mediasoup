@@ -131,9 +131,9 @@ namespace RTC
 			uint16_t iceLocalPreferenceDecrement = 0;
 
 			if (enableUdp && enableTcp)
-				this->iceLocalCandidates.reserve(2 * jsonListenIpsIt->size());
+				this->iceCandidates.reserve(2 * jsonListenIpsIt->size());
 			else
-				this->iceLocalCandidates.reserve(jsonListenIpsIt->size());
+				this->iceCandidates.reserve(jsonListenIpsIt->size());
 
 			for (auto& listenIp : listenIps)
 			{
@@ -153,9 +153,9 @@ namespace RTC
 					this->udpSockets[udpSocket] = listenIp.announcedIp;
 
 					if (listenIp.announcedIp.empty())
-						this->iceLocalCandidates.emplace_back(udpSocket, icePriority);
+						this->iceCandidates.emplace_back(udpSocket, icePriority);
 					else
-						this->iceLocalCandidates.emplace_back(udpSocket, icePriority, listenIp.announcedIp);
+						this->iceCandidates.emplace_back(udpSocket, icePriority, listenIp.announcedIp);
 				}
 
 				if (enableTcp)
@@ -174,9 +174,9 @@ namespace RTC
 					this->tcpServers[tcpServer] = listenIp.announcedIp;
 
 					if (listenIp.announcedIp.empty())
-						this->iceLocalCandidates.emplace_back(tcpServer, icePriority);
+						this->iceCandidates.emplace_back(tcpServer, icePriority);
 					else
-						this->iceLocalCandidates.emplace_back(tcpServer, icePriority, listenIp.announcedIp);
+						this->iceCandidates.emplace_back(tcpServer, icePriority, listenIp.announcedIp);
 				}
 
 				// Decrement initial ICE local preference for next IP.
@@ -218,7 +218,7 @@ namespace RTC
 			}
 			this->tcpServers.clear();
 
-			this->iceLocalCandidates.clear();
+			this->iceCandidates.clear();
 
 			throw;
 		}
@@ -249,7 +249,7 @@ namespace RTC
 			delete tcpServer;
 		}
 
-		this->iceLocalCandidates.clear();
+		this->iceCandidates.clear();
 
 		delete this->srtpRecvSession;
 
@@ -266,24 +266,24 @@ namespace RTC
 		// Add iceRole (we are always "controlled").
 		jsonObject["iceRole"] = "controlled";
 
-		// Add iceLocalParameters.
-		jsonObject["iceLocalParameters"] = json::object();
-		auto jsonIceLocalParametersIt    = jsonObject.find("iceLocalParameters");
+		// Add iceParameters.
+		jsonObject["iceParameters"] = json::object();
+		auto jsonIceParametersIt    = jsonObject.find("iceParameters");
 
-		(*jsonIceLocalParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
-		(*jsonIceLocalParametersIt)["password"]         = this->iceServer->GetPassword();
-		(*jsonIceLocalParametersIt)["iceLite"]          = true;
+		(*jsonIceParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
+		(*jsonIceParametersIt)["password"]         = this->iceServer->GetPassword();
+		(*jsonIceParametersIt)["iceLite"]          = true;
 
-		// Add iceLocalCandidates.
-		jsonObject["iceLocalCandidates"] = json::array();
-		auto jsonIceLocalCandidatesIt    = jsonObject.find("iceLocalCandidates");
+		// Add iceCandidates.
+		jsonObject["iceCandidates"] = json::array();
+		auto jsonIceCandidatesIt    = jsonObject.find("iceCandidates");
 
-		for (size_t i = 0; i < this->iceLocalCandidates.size(); ++i)
+		for (size_t i = 0; i < this->iceCandidates.size(); ++i)
 		{
-			jsonIceLocalCandidatesIt->emplace_back(json::value_t::object);
+			jsonIceCandidatesIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry    = (*jsonIceLocalCandidatesIt)[i];
-			auto& iceCandidate = this->iceLocalCandidates[i];
+			auto& jsonEntry    = (*jsonIceCandidatesIt)[i];
+			auto& iceCandidate = this->iceCandidates[i];
 
 			iceCandidate.FillJson(jsonEntry);
 		}
@@ -309,20 +309,20 @@ namespace RTC
 		if (this->iceSelectedTuple != nullptr)
 			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 
-		// Add dtlsLocalParameters.
-		jsonObject["dtlsLocalParameters"] = json::object();
-		auto jsonDtlsLocalParametersIt    = jsonObject.find("dtlsLocalParameters");
+		// Add dtlsParameters.
+		jsonObject["dtlsParameters"] = json::object();
+		auto jsonDtlsParametersIt    = jsonObject.find("dtlsParameters");
 
-		// Add dtlsLocalParameters.fingerprints.
-		(*jsonDtlsLocalParametersIt)["fingerprints"] = json::array();
-		auto jsonDtlsLocalParametersFingerprintsIt   = jsonDtlsLocalParametersIt->find("fingerprints");
-		auto& fingerprints                           = this->dtlsTransport->GetLocalFingerprints();
+		// Add dtlsParameters.fingerprints.
+		(*jsonDtlsParametersIt)["fingerprints"] = json::array();
+		auto jsonDtlsParametersFingerprintsIt   = jsonDtlsParametersIt->find("fingerprints");
+		auto& fingerprints                      = this->dtlsTransport->GetLocalFingerprints();
 
 		for (size_t i = 0; i < fingerprints.size(); ++i)
 		{
-			jsonDtlsLocalParametersFingerprintsIt->emplace_back(json::value_t::object);
+			jsonDtlsParametersFingerprintsIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry   = (*jsonDtlsLocalParametersFingerprintsIt)[i];
+			auto& jsonEntry   = (*jsonDtlsParametersFingerprintsIt)[i];
 			auto& fingerprint = fingerprints[i];
 
 			jsonEntry["algorithm"] =
@@ -330,20 +330,20 @@ namespace RTC
 			jsonEntry["value"] = fingerprint.value;
 		}
 
-		// Add dtlsLocalParameters.role.
-		switch (this->dtlsLocalRole)
+		// Add dtlsParameters.role.
+		switch (this->dtlsRole)
 		{
 			case RTC::DtlsTransport::Role::NONE:
-				(*jsonDtlsLocalParametersIt)["role"] = "none";
+				(*jsonDtlsParametersIt)["role"] = "none";
 				break;
 			case RTC::DtlsTransport::Role::AUTO:
-				(*jsonDtlsLocalParametersIt)["role"] = "auto";
+				(*jsonDtlsParametersIt)["role"] = "auto";
 				break;
 			case RTC::DtlsTransport::Role::CLIENT:
-				(*jsonDtlsLocalParametersIt)["role"] = "client";
+				(*jsonDtlsParametersIt)["role"] = "client";
 				break;
 			case RTC::DtlsTransport::Role::SERVER:
-				(*jsonDtlsLocalParametersIt)["role"] = "server";
+				(*jsonDtlsParametersIt)["role"] = "server";
 				break;
 		}
 
@@ -499,7 +499,7 @@ namespace RTC
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
-				if (this->dtlsLocalRole != RTC::DtlsTransport::Role::AUTO)
+				if (this->dtlsRole != RTC::DtlsTransport::Role::AUTO)
 					MS_THROW_ERROR("connect() already called");
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
@@ -569,20 +569,20 @@ namespace RTC
 				{
 					case RTC::DtlsTransport::Role::CLIENT:
 					{
-						this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
+						this->dtlsRole = RTC::DtlsTransport::Role::SERVER;
 
 						break;
 					}
 					case RTC::DtlsTransport::Role::SERVER:
 					{
-						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
+						this->dtlsRole = RTC::DtlsTransport::Role::CLIENT;
 
 						break;
 					}
 					// If the peer has role "auto" we become "client" since we are ICE controlled.
 					case RTC::DtlsTransport::Role::AUTO:
 					{
-						this->dtlsLocalRole = RTC::DtlsTransport::Role::CLIENT;
+						this->dtlsRole = RTC::DtlsTransport::Role::CLIENT;
 
 						break;
 					}
@@ -605,7 +605,7 @@ namespace RTC
 				// Tell the caller about the selected local DTLS role.
 				json data(json::object());
 
-				switch (this->dtlsLocalRole)
+				switch (this->dtlsRole)
 				{
 					case RTC::DtlsTransport::Role::CLIENT:
 						data["dtlsLocalRole"] = "client";
@@ -635,12 +635,12 @@ namespace RTC
 				// Reply with the updated ICE local parameters.
 				json data(json::object());
 
-				data["iceLocalParameters"]    = json::object();
-				auto jsonIceLocalParametersIt = data.find("iceLocalParameters");
+				data["iceParameters"]    = json::object();
+				auto jsonIceParametersIt = data.find("iceParameters");
 
-				(*jsonIceLocalParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
-				(*jsonIceLocalParametersIt)["password"]         = this->iceServer->GetPassword();
-				(*jsonIceLocalParametersIt)["iceLite"]          = true;
+				(*jsonIceParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
+				(*jsonIceParametersIt)["password"]         = this->iceServer->GetPassword();
+				(*jsonIceParametersIt)["iceLite"]          = true;
 
 				request->Accept(data);
 
@@ -668,11 +668,11 @@ namespace RTC
 
 		// Do nothing if we have the same local DTLS role as the DTLS transport.
 		// NOTE: local role in DTLS transport can be NONE, but not ours.
-		if (this->dtlsTransport->GetLocalRole() == this->dtlsLocalRole)
+		if (this->dtlsTransport->GetLocalRole() == this->dtlsRole)
 			return;
 
 		// Check our local DTLS role.
-		switch (this->dtlsLocalRole)
+		switch (this->dtlsRole)
 		{
 			// If still 'auto' then transition to 'server' if ICE is 'connected' or
 			// 'completed'.
@@ -685,18 +685,19 @@ namespace RTC
 					MS_DEBUG_TAG(
 					  dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
 
-					this->dtlsLocalRole = RTC::DtlsTransport::Role::SERVER;
+					this->dtlsRole = RTC::DtlsTransport::Role::SERVER;
 					this->dtlsTransport->Run(RTC::DtlsTransport::Role::SERVER);
 				}
 
 				break;
 			}
 
-			// 'client' is only set if a 'setRemoteDtlsParameters' request was previously
-			// received with remote DTLS role 'server'.
+			// 'client' is only set if a 'connect' request was previously called with
+			// remote DTLS role 'server'.
+			//
 			// If 'client' then wait for ICE to be 'completed' (got USE-CANDIDATE).
 			//
-			// NOTE: This is the theory, however let's be mor eflexible as told here:
+			// NOTE: This is the theory, however let's be more flexible as told here:
 			//   https://bugs.chromium.org/p/webrtc/issues/detail?id=3661
 			case RTC::DtlsTransport::Role::CLIENT:
 			{

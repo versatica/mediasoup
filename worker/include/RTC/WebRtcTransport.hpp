@@ -113,9 +113,9 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
-		std::vector<RTC::IceCandidate> iceLocalCandidates;
+		std::vector<RTC::IceCandidate> iceCandidates;
 		RTC::TransportTuple* iceSelectedTuple{ nullptr };
-		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
+		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
 		std::unique_ptr<RTC::REMB::RemoteBitrateEstimatorAbsSendTime> rembRemoteBitrateEstimator;
 	};
 } // namespace RTC

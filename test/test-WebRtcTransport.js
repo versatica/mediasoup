@@ -91,14 +91,14 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(transport1.closed).toBe(false);
 	expect(transport1.appData).toEqual({ foo: 'bar' });
 	expect(transport1.iceRole).toBe('controlled');
-	expect(transport1.iceLocalParameters).toBeType('object');
-	expect(transport1.iceLocalParameters.iceLite).toBe(true);
-	expect(transport1.iceLocalParameters.usernameFragment).toBeType('string');
-	expect(transport1.iceLocalParameters.password).toBeType('string');
-	expect(transport1.iceLocalCandidates).toBeType('array');
-	expect(transport1.iceLocalCandidates.length).toBe(6);
+	expect(transport1.iceParameters).toBeType('object');
+	expect(transport1.iceParameters.iceLite).toBe(true);
+	expect(transport1.iceParameters.usernameFragment).toBeType('string');
+	expect(transport1.iceParameters.password).toBeType('string');
+	expect(transport1.iceCandidates).toBeType('array');
+	expect(transport1.iceCandidates.length).toBe(6);
 
-	const iceCandidates = transport1.iceLocalCandidates;
+	const iceCandidates = transport1.iceCandidates;
 
 	expect(iceCandidates[0].ip).toBe('9.9.9.1');
 	expect(iceCandidates[0].protocol).toBe('udp');
@@ -131,9 +131,9 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(iceCandidates[4].priority).toBeGreaterThan(iceCandidates[5].priority);
 	expect(transport1.iceState).toBe('new');
 	expect(transport1.iceSelectedTuple).toBe(undefined);
-	expect(transport1.dtlsLocalParameters).toBeType('object');
-	expect(transport1.dtlsLocalParameters.fingerprints).toBeType('array');
-	expect(transport1.dtlsLocalParameters.role).toBe('auto');
+	expect(transport1.dtlsParameters).toBeType('object');
+	expect(transport1.dtlsParameters.fingerprints).toBeType('array');
+	expect(transport1.dtlsParameters.role).toBe('auto');
 	expect(transport1.dtlsState).toBe('new');
 	expect(transport1.dtlsRemoteCert).toBe(undefined);
 
@@ -143,11 +143,11 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(data1.producerIds).toEqual([]);
 	expect(data1.consumerIds).toEqual([]);
 	expect(data1.iceRole).toBe(transport1.iceRole);
-	expect(data1.iceLocalParameters).toEqual(transport1.iceLocalParameters);
-	expect(data1.iceLocalCandidates).toEqual(transport1.iceLocalCandidates);
+	expect(data1.iceParameters).toEqual(transport1.iceParameters);
+	expect(data1.iceCandidates).toEqual(transport1.iceCandidates);
 	expect(data1.iceState).toBe(transport1.iceState);
 	expect(data1.iceSelectedTuple).toEqual(transport1.iceSelectedTuple);
-	expect(data1.dtlsLocalParameters).toEqual(transport1.dtlsLocalParameters);
+	expect(data1.dtlsParameters).toEqual(transport1.dtlsParameters);
 	expect(data1.dtlsState).toBe(transport1.dtlsState);
 	expect(data1.rtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
@@ -239,7 +239,7 @@ test('webRtcTransport.connect() succeeds', async () =>
 		.rejects
 		.toThrow(Error);
 
-	expect(transport.dtlsLocalParameters.role).toBe('server');
+	expect(transport.dtlsParameters.role).toBe('server');
 }, 2000);
 
 test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () =>
@@ -286,7 +286,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 		.rejects
 		.toThrow(TypeError);
 
-	expect(transport.dtlsLocalParameters.role).toBe('auto');
+	expect(transport.dtlsParameters.role).toBe('auto');
 }, 2000);
 
 test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
@@ -298,19 +298,18 @@ test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
 
 test('webRtcTransport.restartIce() succeeds', async () =>
 {
-	const previousIceUsernameFragment = transport.iceLocalParameters.usernameFragment;
-	const previousIcePassword = transport.iceLocalParameters.password;
+	const previousIceUsernameFragment = transport.iceParameters.usernameFragment;
+	const previousIcePassword = transport.iceParameters.password;
 
 	await expect(transport.restartIce())
 		.resolves
 		.toBeType('object');
 
-	expect(transport.iceLocalParameters.usernameFragment).toBeType('string');
-	expect(transport.iceLocalParameters.password).toBeType('string');
-	expect(transport.iceLocalParameters.usernameFragment)
+	expect(transport.iceParameters.usernameFragment).toBeType('string');
+	expect(transport.iceParameters.password).toBeType('string');
+	expect(transport.iceParameters.usernameFragment)
 		.not.toBe(previousIceUsernameFragment);
-	expect(transport.iceLocalParameters.password)
-		.not.toBe(previousIcePassword);
+	expect(transport.iceParameters.password).not.toBe(previousIcePassword);
 }, 2000);
 
 test('WebRtcTransport events succeed', async () =>
