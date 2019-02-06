@@ -155,11 +155,12 @@ namespace RTC
 
 		MS_DEBUG_DEV("<RtpPacket>");
 		MS_DEBUG_DEV("  padding           : %s", this->header->padding ? "true" : "false");
-		MS_DEBUG_DEV("  extension header  : %s", HasExtensionHeader() ? "true" : "false");
 		if (HasExtensionHeader())
 		{
-			MS_DEBUG_DEV("    id      : %" PRIu16, GetExtensionHeaderId());
-			MS_DEBUG_DEV("    length  : %zu bytes", GetExtensionHeaderLength());
+			MS_DEBUG_DEV(
+			  "  extension header  : id:%" PRIu16 ",length:%zu",
+			  GetExtensionHeaderId(),
+			  GetExtensionHeaderLength());
 		}
 		if (HasOneByteExtensions())
 		{
@@ -203,13 +204,37 @@ namespace RTC
 			}
 		}
 		if (this->audioLevelExtensionId != 0u)
-			MS_DEBUG_DEV("  audioLevel extId  : %" PRIu8, this->audioLevelExtensionId);
+		{
+			uint8_t volume;
+			bool voice;
+
+			if (ReadAudioLevel(volume, voice))
+				MS_DEBUG_DEV(
+				  "  audioLevel        : extId:%" PRIu8 ",volume:%" PRIu8 ",voice:%s",
+				  this->audioLevelExtensionId,
+				  volume,
+				  voice ? "true" : "false");
+		}
 		if (this->absSendTimeExtensionId != 0u)
-			MS_DEBUG_DEV("  absSendTime extId : %" PRIu8, this->absSendTimeExtensionId);
+		{
+			MS_DEBUG_DEV("  absSendTime       : extId:%" PRIu8, this->absSendTimeExtensionId);
+		}
 		if (this->midExtensionId != 0u)
-			MS_DEBUG_DEV("  mid extId         : %" PRIu8, this->midExtensionId);
+		{
+			std::string mid;
+
+			if (ReadMid(mid))
+				MS_DEBUG_DEV(
+				  "  mid               : extId:%" PRIu8 ",value:%s", this->midExtensionId, mid.c_str());
+		}
 		if (this->ridExtensionId != 0u)
-			MS_DEBUG_DEV("  rid extId         : %" PRIu8, this->ridExtensionId);
+		{
+			std::string rid;
+
+			if (ReadRid(rid))
+				MS_DEBUG_DEV(
+				  "  rid               : extId:%" PRIu8 ",value:%s", this->ridExtensionId, rid.c_str());
+		}
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
 		MS_DEBUG_DEV("  payload type      : %" PRIu8, GetPayloadType());
@@ -349,6 +374,12 @@ namespace RTC
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
+
+		// Keep already set extension ids.
+		packet->audioLevelExtensionId  = this->audioLevelExtensionId;
+		packet->absSendTimeExtensionId = this->absSendTimeExtensionId;
+		packet->midExtensionId         = this->midExtensionId;
+		packet->ridExtensionId         = this->ridExtensionId;
 
 		return packet;
 	}

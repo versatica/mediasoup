@@ -125,13 +125,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		std::map<uint8_t, uint8_t> idMapping;
-
-		idMapping[1] = 11;
-		idMapping[3] = 13;
-
-		packet->MangleExtensionHeaderIds(idMapping);
-
 		auto clonedPacket = packet->Clone(buffer2);
 
 		delete packet;
@@ -147,7 +140,32 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->HasOneByteExtensions());
 		REQUIRE(clonedPacket->HasTwoBytesExtensions() == false);
 
-		// Set the new extension id.
+		extenValue = clonedPacket->GetExtension(1, extenLen);
+
+		REQUIRE(extenLen == 1);
+		REQUIRE(extenValue);
+		REQUIRE(extenValue[0] == 0xd0);
+		REQUIRE(clonedPacket->ReadAudioLevel(volume, voice) == true);
+		REQUIRE(volume == 0b1010000);
+		REQUIRE(voice == true);
+
+		extenValue = clonedPacket->GetExtension(3, extenLen);
+
+		REQUIRE(extenLen == 3);
+		REQUIRE(extenValue);
+		REQUIRE(extenValue[0] == 0x65);
+		REQUIRE(extenValue[1] == 0x34);
+		REQUIRE(extenValue[2] == 0x1e);
+		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
+		REQUIRE(absSendTime == 0x65341e);
+
+		std::map<uint8_t, uint8_t> idMapping;
+
+		idMapping[1] = 11;
+		idMapping[3] = 13;
+
+		clonedPacket->MangleExtensionHeaderIds(idMapping);
+
 		clonedPacket->SetAudioLevelExtensionId(11);
 		extenValue = clonedPacket->GetExtension(11, extenLen);
 
@@ -158,7 +176,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(volume == 0b1010000);
 		REQUIRE(voice == true);
 
-		// Set the new extension id.
 		clonedPacket->SetAbsSendTimeExtensionId(13);
 		extenValue = clonedPacket->GetExtension(13, extenLen);
 

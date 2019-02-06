@@ -822,6 +822,9 @@ namespace RTC
 		packet->SetPayloadType(mappedPayloadType);
 
 		// Mangle RTP header extension ids.
+		packet->MangleExtensionHeaderIds(this->rtpMapping.headerExtensions);
+
+		// Assign mapped RTP header extension ids.
 		if (this->mappedRtpHeaderExtensionIds.ssrcAudioLevel != 0u)
 			packet->SetAudioLevelExtensionId(this->mappedRtpHeaderExtensionIds.ssrcAudioLevel);
 
