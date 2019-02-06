@@ -301,7 +301,12 @@ test('webRtcTransport.restartIce() succeeds', async () =>
 
 	await expect(transport.restartIce())
 		.resolves
-		.toBeType('object');
+		.toMatchObject(
+			{
+				usernameFragment : expect.any(String),
+				password         : expect.any(String),
+				iceLite          : true
+			});
 
 	expect(transport.iceParameters.usernameFragment).toBeType('string');
 	expect(transport.iceParameters.password).toBeType('string');
