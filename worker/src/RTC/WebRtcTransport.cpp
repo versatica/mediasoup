@@ -499,7 +499,7 @@ namespace RTC
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
-				if (this->dtlsRole != RTC::DtlsTransport::Role::AUTO)
+				if (this->connected)
 					MS_THROW_ERROR("connect() already called");
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
@@ -591,6 +591,8 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("invalid remote DTLS role");
 					}
 				}
+
+				this->connected = true;
 
 				// Pass the remote fingerprint to the DTLS transport.
 				if (this->dtlsTransport->SetRemoteFingerprint(dtlsRemoteFingerprint))
