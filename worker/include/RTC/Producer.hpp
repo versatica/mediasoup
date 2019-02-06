@@ -40,7 +40,6 @@ namespace RTC
 		{
 			std::string rid;
 			uint32_t ssrc{ 0 };
-			uint32_t rtxSsrc{ 0 };
 			uint32_t mappedSsrc{ 0 };
 		};
 

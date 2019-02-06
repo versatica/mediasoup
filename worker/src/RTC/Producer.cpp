@@ -298,11 +298,6 @@ namespace RTC
 				else
 					jsonEntry["ssrc"] = nullptr;
 
-				if (encodingMapping.rtxSsrc != 0u)
-					jsonEntry["rtxSsrc"] = encodingMapping.rtxSsrc;
-				else
-					jsonEntry["rtxSsrc"] = nullptr;
-
 				jsonEntry["mappedSsrc"] = encodingMapping.mappedSsrc;
 			}
 		}

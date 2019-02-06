@@ -438,15 +438,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters() and getCon
 		]);
 
 	expect(rtpMapping.encodings[0].ssrc).toBe(11111111);
-	expect(rtpMapping.encodings[0].rtxSsrc).toBe(11111112);
 	expect(rtpMapping.encodings[0].rid).toBe(undefined);
 	expect(rtpMapping.encodings[0].mappedSsrc).toBeType('number');
 	expect(rtpMapping.encodings[1].ssrc).toBe(21111111);
-	expect(rtpMapping.encodings[1].rtxSsrc).toBe(21111112);
 	expect(rtpMapping.encodings[1].rid).toBe(undefined);
 	expect(rtpMapping.encodings[1].mappedSsrc).toBeType('number');
 	expect(rtpMapping.encodings[2].ssrc).toBe(undefined);
-	expect(rtpMapping.encodings[2].rtxSsrc).toBe(undefined);
 	expect(rtpMapping.encodings[2].rid).toBe('high');
 	expect(rtpMapping.encodings[2].mappedSsrc).toBeType('number');
 
