@@ -796,6 +796,9 @@ namespace RTC
 		if (this->keyFrameRequestManager && !this->paused)
 			this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 
+		// Notify to the listener.
+		this->listener->OnProducerNewRtpStream(this, rtpStream, encodingMapping.mappedSsrc);
+
 		return rtpStream;
 	}
 
