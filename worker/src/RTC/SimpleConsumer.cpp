@@ -33,6 +33,9 @@ namespace RTC
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
+
+		// May need a key frame.
+		RequestKeyFrame();
 	}
 
 	SimpleConsumer::~SimpleConsumer()
