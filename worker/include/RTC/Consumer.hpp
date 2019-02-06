@@ -41,6 +41,7 @@ namespace RTC
 		RTC::RtpParameters::Type GetType() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		bool IsActive() const;
+		bool IsPaused() const;
 		bool IsProducerPaused() const; // This is needed by the Transport.
 		virtual void TransportConnected() = 0;
 		void ProducerPaused();
@@ -57,7 +58,6 @@ namespace RTC
 		virtual float GetLossPercentage() const                                             = 0;
 
 	protected:
-		virtual void Started()                         = 0;
 		virtual void Paused(bool wasProducer = false)  = 0;
 		virtual void Resumed(bool wasProducer = false) = 0;
 
@@ -82,7 +82,6 @@ namespace RTC
 	private:
 		// Others.
 		std::vector<uint32_t> mediaSsrcs;
-		bool started{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
 		bool producerClosed{ false };
@@ -100,7 +99,12 @@ namespace RTC
 
 	inline bool Consumer::IsActive() const
 	{
-		return this->started && !this->paused && !this->producerPaused && !this->producerClosed;
+		return !this->paused && !this->producerPaused && !this->producerClosed;
+	}
+
+	inline bool Consumer::IsPaused() const
+	{
+		return this->paused;
 	}
 
 	inline bool Consumer::IsProducerPaused() const

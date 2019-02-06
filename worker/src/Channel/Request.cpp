@@ -35,7 +35,6 @@ namespace Channel
 		{ "consumer.close",                  Request::MethodId::CONSUMER_CLOSE                     },
 		{ "consumer.dump",                   Request::MethodId::CONSUMER_DUMP                      },
 		{ "consumer.getStats",               Request::MethodId::CONSUMER_GET_STATS                 },
-		{ "consumer.start",                  Request::MethodId::CONSUMER_START                     },
 		{ "consumer.pause",                  Request::MethodId::CONSUMER_PAUSE                     },
 		{ "consumer.resume",                 Request::MethodId::CONSUMER_RESUME                    },
 		{ "consumer.setPreferredLayers",     Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS      },

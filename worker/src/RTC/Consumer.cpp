@@ -70,6 +70,11 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
 		}
 
+		auto jsonPausedIt = data.find("paused");
+
+		if (jsonPausedIt != data.end() && jsonPausedIt->is_boolean())
+			this->paused = jsonPausedIt->get<bool>();
+
 		// Fill supported codec payload types.
 		for (auto& codec : this->rtpParameters.codecs)
 		{
@@ -122,9 +127,6 @@ namespace RTC
 		// Add supportedCodecPayloadTypes.
 		jsonObject["supportedCodecPayloadTypes"] = this->supportedCodecPayloadTypes;
 
-		// Add started.
-		jsonObject["started"] = this->started;
-
 		// Add paused.
 		jsonObject["paused"] = this->paused;
 
@@ -156,26 +158,6 @@ namespace RTC
 				FillJsonStats(data);
 
 				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::Request::MethodId::CONSUMER_START:
-			{
-				if (this->started)
-				{
-					request->Accept();
-
-					return;
-				}
-
-				this->started = true;
-
-				MS_DEBUG_DEV("Consumer started [consumerId:%s]", this->id.c_str());
-
-				Started();
-
-				request->Accept();
 
 				break;
 			}

@@ -262,6 +262,9 @@ beforeAll(async () =>
 		});
 	audioProducer = await transport1.produce(audioProducerParameters);
 	videoProducer = await transport1.produce(videoProducerParameters);
+
+	// Pause the videoProducer.
+	await videoProducer.pause();
 });
 
 afterAll(() => worker.close());
@@ -308,7 +311,6 @@ test('transport.consume() succeeds', async () =>
 			rtcpFeedback : []
 		});
 	expect(audioConsumer.type).toBe('simple');
-	expect(audioConsumer.started).toBe(false);
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
 	expect(audioConsumer.score).toEqual({ in: 0, out: 0 });
@@ -345,6 +347,7 @@ test('transport.consume() succeeds', async () =>
 		{
 			producerId      : videoProducer.id,
 			rtpCapabilities : deviceCapabilities,
+			paused          : true,
 			appData         : { baz: 'LOL' }
 		});
 
@@ -386,9 +389,8 @@ test('transport.consume() succeeds', async () =>
 			rtcpFeedback : []
 		});
 	expect(videoConsumer.type).toBe('simulcast');
-	expect(videoConsumer.started).toBe(false);
-	expect(videoConsumer.paused).toBe(false);
-	expect(videoConsumer.producerPaused).toBe(false);
+	expect(videoConsumer.paused).toBe(true);
+	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.score).toEqual({ in: 0, out: 0 });
 	expect(videoConsumer.preferredLayers).toBe(null);
 	expect(videoConsumer.currentLayers).toBe(null);
@@ -529,7 +531,6 @@ test('consumer.dump() succeeds', async () =>
 			{ ssrc: audioProducer.consumableRtpParameters.encodings[0].ssrc }
 		]);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 100 ]);
-	expect(data.started).toBe(false);
 	expect(data.paused).toBe(false);
 	expect(data.producerPaused).toBe(false);
 
@@ -604,9 +605,8 @@ test('consumer.dump() succeeds', async () =>
 			{ ssrc: videoProducer.consumableRtpParameters.encodings[3].ssrc }
 		]);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 103 ]);
-	expect(data.started).toBe(false);
-	expect(data.paused).toBe(false);
-	expect(data.producerPaused).toBe(false);
+	expect(data.paused).toBe(true);
+	expect(data.producerPaused).toBe(true);
 }, 2000);
 
 test('consumer.getStats() succeeds', async () =>
@@ -638,20 +638,6 @@ test('consumer.getStats() succeeds', async () =>
 						score    : 0
 					})
 			]);
-}, 2000);
-
-test('consumer.start() succeed', async () =>
-{
-	await audioConsumer.start();
-	expect(audioConsumer.started).toBe(true);
-
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ started: true });
-
-	await expect(audioConsumer.start())
-		.resolves
-		.toBe(undefined);
 }, 2000);
 
 test('consumer.pause() and resume() succeed', async () =>

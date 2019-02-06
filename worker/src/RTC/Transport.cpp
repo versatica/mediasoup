@@ -293,6 +293,7 @@ namespace RTC
 				// Create status response.
 				json data(json::object());
 
+				data["paused"]         = consumer->IsPaused();
 				data["producerPaused"] = consumer->IsProducerPaused();
 
 				request->Accept(data);
@@ -365,7 +366,6 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_DUMP:
 			case Channel::Request::MethodId::CONSUMER_GET_STATS:
-			case Channel::Request::MethodId::CONSUMER_START:
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:

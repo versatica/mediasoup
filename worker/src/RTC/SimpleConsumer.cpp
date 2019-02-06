@@ -366,13 +366,6 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::Started()
-	{
-		MS_TRACE();
-
-		RequestKeyFrame();
-	}
-
 	void SimpleConsumer::Paused(bool /*wasProducer*/)
 	{
 		MS_TRACE();
@@ -438,6 +431,10 @@ namespace RTC
 			this->rtpStream = new RTC::RtpStreamSend(this, params, 1500);
 		else
 			this->rtpStream = new RTC::RtpStreamSend(this, params, 0);
+
+		// If the Consumer is paused, tell the RtpStreamSend.
+		if (IsPaused() || IsProducerPaused())
+			this->rtpStream->Pause();
 
 		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 

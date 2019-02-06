@@ -29,7 +29,6 @@ namespace RTC
 		float GetLossPercentage() const override;
 
 	protected:
-		void Started() override;
 		void Paused(bool wasProducer = false) override;
 		void Resumed(bool wasProducer = false) override;
 
