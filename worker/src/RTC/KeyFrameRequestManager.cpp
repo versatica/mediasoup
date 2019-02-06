@@ -4,7 +4,7 @@
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "Logger.hpp"
 
-static uint16_t KeyFrameWaitTime{ 2000 };
+static uint16_t KeyFrameWaitTime{ 1000 };
 
 /* PendingKeyFrameInfo methods */
 
