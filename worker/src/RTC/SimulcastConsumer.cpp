@@ -7,19 +7,21 @@
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
 
-// TODO: NOT DONE YET !!!
-
 namespace RTC
 {
 	/* Static. */
 
 	static uint8_t RtxPacketBuffer[RtpBufferSize];
 	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
+	static constexpr uint16_t PacketsBeforeProbation{ 2000 };
+	// Must be a power of 2.
+	static constexpr uint16_t ProbationPacketNumber{ 256 };
 
 	/* Instance methods. */
 
 	SimulcastConsumer::SimulcastConsumer(const std::string& id, Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SIMULCAST)
+	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SIMULCAST),
+	    packetsBeforeProbation(PacketsBeforeProbation)
 	{
 		MS_TRACE();
 
@@ -27,14 +29,14 @@ namespace RTC
 		if (this->consumableRtpEncodings.size() <= 1)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
 
-		// Initially set preferreSpatialLayer to the maximum value.
-		this->preferredSpatialLayer = static_cast<int8_t>(this->consumableRtpEncodings.size()) - 1;
-
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
 		else
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
+
+		// Initially set preferreSpatialLayer to the maximum value.
+		this->preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
@@ -91,6 +93,15 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			{
+				// TODO
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				// Pass it to the parent class.
@@ -114,7 +125,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
 
-		int8_t spatialLayer = it->second;
+		int16_t spatialLayer = it->second;
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
@@ -344,6 +355,8 @@ namespace RTC
 				MS_ASSERT(false, "invalid messageType");
 		}
 
+		// TODO: Read specific ssrc and so on.
+
 		RequestKeyFrame();
 	}
 
@@ -387,6 +400,11 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->Pause();
+
+		this->packetsBeforeProbation = PacketsBeforeProbation;
+
+		if (IsProbing())
+			StopProbation();
 	}
 
 	void SimulcastConsumer::Resumed(bool wasProducer)
@@ -518,6 +536,208 @@ namespace RTC
 		// Delete the RTX RtpPacket if it was cloned.
 		if (rtxPacket != packet)
 			delete rtxPacket;
+	}
+
+	void SimulcastConsumer::RecalculateTargetSpatialLayer(bool force)
+	{
+		MS_TRACE();
+
+		// RTC::RtpEncodingParameters::Profile newTargetProfile;
+		// auto probatedProfile = RTC::RtpEncodingParameters::Profile::NONE;
+
+		// // Probation finished.
+		// if (this->probationSpatialLayer != -1 && this->probationPackets == 0)
+		// {
+		// 	probatedProfile      = this->probingProfile;
+		// 	this->probationSpatialLayer = -1;
+		// }
+
+		// // There are no profiles, select none or default, depending on whether this
+		// // is single stream or simulcast/SVC.
+		// if (this->mapProfileRtpStream.empty())
+		// {
+		// 	MS_ASSERT(
+		// 	  this->effectiveProfile == RtpEncodingParameters::Profile::NONE ||
+		// 	    this->effectiveProfile == RtpEncodingParameters::Profile::DEFAULT,
+		// 	  "no profiles, but effective profile is not none nor default");
+
+		// 	if (this->effectiveProfile == RtpEncodingParameters::Profile::NONE)
+		// 		newTargetProfile = RtpEncodingParameters::Profile::NONE;
+		// 	else
+		// 		newTargetProfile = RtpEncodingParameters::Profile::DEFAULT;
+		// }
+		// // RTP state is unhealty.
+		// else if (IsEnabled() && !this->rtpMonitor->IsHealthy())
+		// {
+		// 	// Ongoing probation, abort.
+		// 	if (IsProbing())
+		// 	{
+		// 		StopProbation();
+
+		// 		return;
+		// 	}
+
+		// 	// Probated profile did not succeed.
+		// 	if (probatedProfile != RtpEncodingParameters::Profile::NONE)
+		// 		return;
+
+		// 	auto it = this->mapProfileRtpStream.find(this->effectiveProfile);
+
+		// 	// This is already the lowest profile.
+		// 	if (it == this->mapProfileRtpStream.begin())
+		// 		return;
+
+		// 	// Downgrade the target profile.
+		// 	newTargetProfile = (std::prev(it))->first;
+		// }
+		// // If there is no preferred profile, get the highest one.
+		// else if (GetPreferredProfile() == RTC::RtpEncodingParameters::Profile::DEFAULT)
+		// {
+		// 	auto it = this->mapProfileRtpStream.crbegin();
+
+		// 	newTargetProfile = it->first;
+		// }
+		// // Try with the closest profile to the preferred one.
+		// else
+		// {
+		// 	auto it = this->mapProfileRtpStream.lower_bound(this->preferredProfile);
+
+		// 	// Preferred profile is actually present.
+		// 	if (it->first == this->preferredProfile)
+		// 	{
+		// 		newTargetProfile = it->first;
+		// 	}
+		// 	// The lowest profile is already higher than the preferred, use it.
+		// 	else if (it == this->mapProfileRtpStream.begin())
+		// 	{
+		// 		newTargetProfile = it->first;
+		// 	}
+		// 	// There is a lower profile available, prefer it over any higher one.
+		// 	else
+		// 	{
+		// 		newTargetProfile = (--it)->first;
+		// 	}
+		// }
+
+		// // Not enabled. Make this the target profile.
+		// if (!IsEnabled())
+		// {
+		// 	this->targetProfile = newTargetProfile;
+		// }
+		// // Ongoing probation.
+		// else if (IsProbing())
+		// {
+		// 	// New profile higher or equal than the one being probed. Do not upgrade.
+		// 	if (newTargetProfile >= this->probingProfile)
+		// 		return;
+
+		// 	// New profile lower than the one begin probed. Stop probation.
+		// 	StopProbation();
+		// 	this->targetProfile = newTargetProfile;
+		// }
+		// // The profile has just been successfully probated.
+		// else if (probatedProfile == newTargetProfile)
+		// {
+		// 	this->targetProfile = newTargetProfile;
+		// }
+		// // New profile is higher than current target.
+		// else if (newTargetProfile > this->targetProfile)
+		// {
+		// 	// No specific profile is being sent.
+		// 	if (
+		// 	  this->targetProfile == RTC::RtpEncodingParameters::Profile::NONE ||
+		// 	  this->targetProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
+		// 	{
+		// 		this->targetProfile = newTargetProfile;
+		// 	}
+		// 	else if (force)
+		// 	{
+		// 		this->targetProfile = newTargetProfile;
+		// 	}
+		// 	// Probe it before promotion.
+		// 	// TODO: If we are receiving REMB, consider such value and avoid probation.
+		// 	else
+		// 	{
+		// 		StartProbation(newTargetProfile);
+
+		// 		MS_DEBUG_TAG(
+		// 		  rtp,
+		// 		  "probing profile [%s]",
+		// 		  RTC::RtpEncodingParameters::profile2String[this->probingProfile].c_str());
+
+		// 		return;
+		// 	}
+		// }
+		// // New profile is lower than the target profile.
+		// else
+		// {
+		// 	this->targetProfile = newTargetProfile;
+		// }
+
+		// if (this->targetProfile == this->effectiveProfile)
+		// 	return;
+
+		// if (IsEnabled() && !IsPaused())
+		// 	RequestKeyFrame();
+
+		// MS_DEBUG_TAG(
+		//   rtp,
+		//   "target profile set [profile:%s]",
+		//   RTC::RtpEncodingParameters::profile2String[this->targetProfile].c_str());
+	}
+
+	inline bool SimulcastConsumer::IsProbing() const
+	{
+		return this->probationPackets != 0;
+	}
+
+	void SimulcastConsumer::StartProbation(int16_t spatialLayer)
+	{
+		MS_TRACE();
+
+		this->probationPackets      = ProbationPacketNumber;
+		this->probationSpatialLayer = spatialLayer;
+	}
+
+	void SimulcastConsumer::StopProbation()
+	{
+		MS_TRACE();
+
+		this->probationPackets      = 0;
+		this->probationSpatialLayer = -1;
+	}
+
+	void SimulcastConsumer::SendProbationPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (!IsProbing())
+			return;
+
+		RetransmitRtpPacket(packet);
+
+		switch (this->currentSpatialLayer)
+		{
+			case -1:
+				MS_ABORT("cannot send probation packet without any current spatial layer");
+				break;
+
+			case 0:
+				this->probationPackets -= 4;
+				break;
+
+			case 1:
+				this->probationPackets -= 2;
+				break;
+
+			// 2 and bigger.
+			default:
+				this->probationPackets--;
+				break;
+		}
+
+		if (this->probationPackets == 0)
+			RecalculateTargetSpatialLayer();
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)

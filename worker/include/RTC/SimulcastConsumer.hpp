@@ -36,6 +36,11 @@ namespace RTC
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+		void RecalculateTargetSpatialLayer(bool force = false);
+		bool IsProbing() const;
+		void StartProbation(int16_t spatialLayer);
+		void StopProbation();
+		void SendProbationPacket(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RtpStream::Listener. */
 	public:
@@ -44,7 +49,7 @@ namespace RTC
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
-		std::unordered_map<uint32_t, int8_t> mapMappedSsrcSpatialLayer;
+		std::unordered_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
 		std::vector<RTC::RtpStream*> producerRtpStreams;
 		// Others.
 		bool keyFrameSupported{ false };
@@ -55,9 +60,12 @@ namespace RTC
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		RTC::RtpStream* producerRtpStream{ nullptr }; // TODO: REMOVE
-		int8_t currentSpatialLayer{ -1 };
-		int8_t preferredSpatialLayer{ -1 };
-		int8_t targetSpatialLayer{ -1 };
+		int16_t preferredSpatialLayer{ -1 };
+		int16_t targetSpatialLayer{ -1 };
+		int16_t currentSpatialLayer{ -1 };
+		int16_t probationSpatialLayer{ -1 };
+		uint16_t packetsBeforeProbation{ 0 };
+		uint16_t probationPackets{ 0 };
 	};
 } // namespace RTC
 
