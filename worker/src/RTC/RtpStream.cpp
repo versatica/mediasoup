@@ -118,12 +118,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->paused = true;
+
 		this->rtcpReportCheckTimer->Stop();
 	}
 
 	void RtpStream::Resume()
 	{
 		MS_TRACE();
+
+		this->paused = false;
 
 		this->rtcpReportCheckTimer->Start(5000);
 	}
@@ -206,7 +210,7 @@ namespace RTC
 		return true;
 	}
 
-	inline void RtpStream::OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
+	inline void RtpStream::OnRtpStreamMonitorScore(RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
 	{
 		MS_TRACE();
 

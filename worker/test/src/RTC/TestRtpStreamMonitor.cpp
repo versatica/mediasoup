@@ -7,12 +7,14 @@
 
 using namespace RTC;
 
+static constexpr size_t ScoreTriggerCount{ 8 };
+
 SCENARIO("RTP Monitor", "[rtp][monitor]")
 {
 	class TestRtpStreamMonitorListener : public RtpStreamMonitor::Listener
 	{
 	public:
-		virtual void OnRtpStreamMonitorScore(const RtpStreamMonitor* /*rtpMonitor*/, uint8_t /*score*/) override
+		virtual void OnRtpStreamMonitorScore(RtpStreamMonitor* /*rtpMonitor*/, uint8_t /*score*/) override
 		{
 			this->scoreTriggered = true;
 		}
@@ -31,7 +33,7 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 	class TestRtpStreamListener : public RtpStreamSend::Listener
 	{
 	public:
-		virtual void OnRtpStreamScore(const RtpStream* /*rtpMonitor*/, uint8_t /*score*/) override
+		virtual void OnRtpStreamScore(RtpStream* /*rtpMonitor*/, uint8_t /*score*/) override
 		{
 		}
 	};
@@ -91,13 +93,13 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 
 	SECTION("the eighth report triggers the score")
 	{
-		for (size_t counter = 0; counter < RtpStreamMonitor::ScoreTriggerCount; counter++)
+		for (size_t counter = 0; counter < ScoreTriggerCount; counter++)
 		{
 			packet->SetSequenceNumber(sequenceNumber++);
 			rtpStream->ReceivePacket(packet);
 			rtpMonitor.ReceiveRtcpReceiverReport(report);
 
-			if (counter < RtpStreamMonitor::ScoreTriggerCount - 1)
+			if (counter < ScoreTriggerCount - 1)
 				listener.Check(false);
 		}
 
@@ -106,13 +108,13 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 
 	SECTION("next eighth consecutive reports trigger the score")
 	{
-		for (size_t counter = 0; counter < RtpStreamMonitor::ScoreTriggerCount; counter++)
+		for (size_t counter = 0; counter < ScoreTriggerCount; counter++)
 		{
 			packet->SetSequenceNumber(sequenceNumber++);
 			rtpStream->ReceivePacket(packet);
 			rtpMonitor.ReceiveRtcpReceiverReport(report);
 
-			if (counter < RtpStreamMonitor::ScoreTriggerCount - 1)
+			if (counter < ScoreTriggerCount - 1)
 				listener.Check(false);
 		}
 

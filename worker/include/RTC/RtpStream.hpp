@@ -20,7 +20,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score) = 0;
+			virtual void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) = 0;
 		};
 
 	public:
@@ -58,12 +58,12 @@ namespace RTC
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		virtual void Pause();
 		virtual void Resume();
+		bool IsPaused() const;
 		uint32_t GetRate(uint64_t now);
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
 		size_t GetExpectedPackets() const;
 		uint8_t GetScore() const;
-		uint8_t GetLastScore() const;
 		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
 		void RtpPacketRepaired(RTC::RtpPacket* packet);
 
@@ -84,10 +84,11 @@ namespace RTC
 		size_t firCount{ 0 };
 		RTC::RtpDataCounter transmissionCounter;
 		RTC::RtpDataCounter retransmissionCounter;
+		bool paused{ false };
 
 		/* Pure virtual methods inherited from RtpStreamMonitor */
 	protected:
-		void OnRtpStreamMonitorScore(const RTC::RtpStreamMonitor* rtpMonitor, uint8_t score) override;
+		void OnRtpStreamMonitorScore(RTC::RtpStreamMonitor* rtpMonitor, uint8_t score) override;
 
 	protected:
 		// Given as argument.
@@ -156,6 +157,11 @@ namespace RTC
 	inline uint8_t RtpStream::GetRtxPayloadType() const
 	{
 		return this->params.rtxPayloadType;
+	}
+
+	inline bool RtpStream::IsPaused() const
+	{
+		return this->paused;
 	}
 
 	inline uint32_t RtpStream::GetRate(uint64_t now)

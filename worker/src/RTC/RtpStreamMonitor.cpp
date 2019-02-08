@@ -11,6 +11,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t HistogramLength{ 8 };
+	static constexpr size_t ScoreTriggerCount{ 8 };
 	static constexpr size_t MaxRepairedPacketRetransmission{ 2 };
 	static constexpr size_t MaxRepairedPacketsLength{ 1000 };
 	// Score constraints weight.
@@ -158,11 +159,15 @@ namespace RTC
 
 			auto score = ComputeScore();
 
-			if (score != this->score)
+			if (this->score != score)
 			{
 				this->score = score;
 				this->listener->OnRtpStreamMonitorScore(this, score);
 			}
+		}
+		else
+		{
+			this->score = ComputeScore();
 		}
 	}
 

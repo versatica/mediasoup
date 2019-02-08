@@ -13,13 +13,10 @@ namespace RTC
 	class RtpStreamMonitor
 	{
 	public:
-		static constexpr size_t ScoreTriggerCount{ 8 };
-
-	public:
 		class Listener
 		{
 		public:
-			virtual void OnRtpStreamMonitorScore(const RTC::RtpStreamMonitor* rtpMonitor, uint8_t score) = 0;
+			virtual void OnRtpStreamMonitorScore(RTC::RtpStreamMonitor* rtpMonitor, uint8_t score) = 0;
 		};
 
 	public:
@@ -47,7 +44,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Counter for event notification.
-		size_t scoreTriggerCounter{ ScoreTriggerCount };
+		size_t scoreTriggerCounter{ 1 }; // Report the first score ASAP.
 		// Scores histogram and last computed score.
 		std::vector<uint8_t> scores;
 		uint8_t score{ 0 };

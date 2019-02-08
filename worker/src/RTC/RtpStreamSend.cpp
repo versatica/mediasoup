@@ -14,6 +14,7 @@ namespace RTC
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
+	static constexpr uint8_t InitialScore{ 0 };
 
 	/* Instance methods. */
 
@@ -23,7 +24,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this));
+		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this, InitialScore));
 	}
 
 	RtpStreamSend::~RtpStreamSend()
@@ -94,7 +95,8 @@ namespace RTC
 		// Provide the RTP monitor with the received RR.
 		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
 
-		this->rtcpReportCheckTimer->Start(5000);
+		if (!IsPaused())
+			this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -302,7 +304,6 @@ namespace RTC
 		MS_TRACE();
 
 		RTC::RtpStream::Pause();
-
 		ClearRetransmissionBuffer();
 	}
 

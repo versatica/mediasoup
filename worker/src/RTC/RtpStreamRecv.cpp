@@ -11,6 +11,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint16_t StatusCheckPeriod{ 250 };
+	static constexpr uint8_t InitialScore{ 10 };
 
 	/* Instance methods. */
 
@@ -22,8 +23,7 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		// Initialize the rtpMonitor with score 10.
-		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this, 10));
+		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this, InitialScore));
 
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
@@ -209,7 +209,8 @@ namespace RTC
 		// Provide the RTP monitor with the current RR.
 		this->rtpMonitor->ReceiveRtcpReceiverReport(this->GetRtcpReceiverReport());
 
-		this->rtcpReportCheckTimer->Start(5000);
+		if (!IsPaused())
+			this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
