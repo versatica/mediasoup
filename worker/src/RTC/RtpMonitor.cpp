@@ -83,10 +83,6 @@ namespace RTC
 
 		auto sentPackets = this->totalSentPackets - previousTotalSentPackets;
 
-		// No packet was sent. Consider lost and repaired packets though.
-		if (sentPackets == 0)
-			sentPackets = (currentLoss > repairedPacketCount) ? currentLoss : repairedPacketCount;
-
 		// Nothing to do.
 		if (sentPackets == 0)
 			return;
