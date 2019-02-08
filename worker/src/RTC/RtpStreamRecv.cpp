@@ -11,7 +11,6 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint16_t StatusCheckPeriod{ 250 };
-	static constexpr uint8_t InitialScore{ 10 };
 
 	/* Instance methods. */
 
@@ -23,7 +22,7 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		this->rtpMonitor.reset(new RTC::RtpMonitor(this, this, InitialScore));
+		this->rtpMonitor.reset(new RTC::RtpMonitor(this, this, 10));
 
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
