@@ -210,7 +210,7 @@ namespace RTC
 		return true;
 	}
 
-	inline void RtpStream::OnRtpStreamMonitorScore(RtpStreamMonitor* /*rtpMonitor*/, uint8_t score)
+	inline void RtpStream::OnRtpMonitorScore(RTC::RtpMonitor* /*rtpMonitor*/, uint8_t score)
 	{
 		MS_TRACE();
 

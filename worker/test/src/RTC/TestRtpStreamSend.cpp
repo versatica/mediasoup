@@ -16,7 +16,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 	class TestRtpStreamListener : public RtpStreamSend::Listener
 	{
 	public:
-		virtual void OnRtpStreamScore(RtpStream* /*rtpMonitor*/, uint8_t /*score*/) override
+		virtual void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/) override
 		{
 		}
 	};

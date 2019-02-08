@@ -5,8 +5,8 @@
 #include "json.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpMonitor.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStreamMonitor.hpp"
 #include "handles/Timer.hpp"
 #include <string>
 
@@ -14,7 +14,7 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class RtpStream : public Timer::Listener, public RTC::RtpStreamMonitor::Listener
+	class RtpStream : public Timer::Listener, public RTC::RtpMonitor::Listener
 	{
 	public:
 		class Listener
@@ -86,9 +86,9 @@ namespace RTC
 		RTC::RtpDataCounter retransmissionCounter;
 		bool paused{ false };
 
-		/* Pure virtual methods inherited from RtpStreamMonitor */
+		/* Pure virtual methods inherited from RtpMonitor */
 	protected:
-		void OnRtpStreamMonitorScore(RTC::RtpStreamMonitor* rtpMonitor, uint8_t score) override;
+		void OnRtpMonitorScore(RTC::RtpMonitor* rtpMonitor, uint8_t score) override;
 
 	protected:
 		// Given as argument.
@@ -96,7 +96,7 @@ namespace RTC
 		Params params;
 		// Allocated by this.
 		Timer* rtcpReportCheckTimer{ nullptr };
-		std::unique_ptr<RTC::RtpStreamMonitor> rtpMonitor;
+		std::unique_ptr<RTC::RtpMonitor> rtpMonitor;
 		// Others.
 		// Whether at least a RTP packet has been received.
 		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.

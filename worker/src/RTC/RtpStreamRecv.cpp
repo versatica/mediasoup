@@ -23,7 +23,7 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this, InitialScore));
+		this->rtpMonitor.reset(new RTC::RtpMonitor(this, this, InitialScore));
 
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);

@@ -24,7 +24,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->rtpMonitor.reset(new RTC::RtpStreamMonitor(this, this, InitialScore));
+		this->rtpMonitor.reset(new RTC::RtpMonitor(this, this, InitialScore));
 	}
 
 	RtpStreamSend::~RtpStreamSend()
