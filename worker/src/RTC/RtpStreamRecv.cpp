@@ -206,7 +206,7 @@ namespace RTC
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 
 		// Provide the RTP monitor with the current RR.
-		this->rtpMonitor->ReceiveRtcpReceiverReport(this->GetRtcpReceiverReport());
+		this->rtpMonitor->ReceiveRtcpReceiverReport(GetRtcpReceiverReport());
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
