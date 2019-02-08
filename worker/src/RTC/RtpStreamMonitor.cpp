@@ -11,7 +11,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t HistogramLength{ 8 };
-	static constexpr size_t ScoreTriggerCount{ 8 };
+	static constexpr size_t ScoreTriggerCount{ 2 };
 	static constexpr size_t MaxRepairedPacketRetransmission{ 2 };
 	static constexpr size_t MaxRepairedPacketsLength{ 1000 };
 	// Score constraints weight.
@@ -31,7 +31,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DEBUG_DEV("<RtpStreamMonitor>");
-		MS_DEBUG_DEV("  score                : %" PRIi8, this->score);
+		MS_DEBUG_DEV("  score                : %" PRIu8, this->score);
 		MS_DEBUG_DEV("  totalSourceLoss      : %" PRIi32, this->totalSourceLoss);
 		MS_DEBUG_DEV("  totalReportedLoss    : %" PRIi32, this->totalReportedLoss);
 		MS_DEBUG_DEV("  repairedPackets size : %zu", this->repairedPackets.size());
@@ -42,6 +42,8 @@ namespace RTC
 	void RtpStreamMonitor::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
+
+		MS_ERROR_STD("----------------this->scoreTriggerCounter:%zu", this->scoreTriggerCounter);
 
 		// Calculate packet loss reported since last RR.
 		auto previousTotalReportedLoss = this->totalReportedLoss;
@@ -148,6 +150,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ERROR_STD("----------------this->scoreTriggerCounter:%zu", this->scoreTriggerCounter);
+
+
 		if (this->scores.size() == HistogramLength)
 			this->scores.erase(this->scores.begin());
 
@@ -218,6 +223,8 @@ namespace RTC
 			samples += weight;
 			totalScore += weight * score;
 		}
+
+		MS_ERROR_STD("----------------score: %" PRIu8, static_cast<uint8_t>(std::round(totalScore / samples)));
 
 		return static_cast<uint8_t>(std::round(totalScore / samples));
 	}

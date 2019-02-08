@@ -7,7 +7,8 @@
 
 using namespace RTC;
 
-static constexpr size_t ScoreTriggerCount{ 8 };
+// This value must match the ScoreTriggerCount in RtpStreamMonitor.cpp.
+static constexpr size_t ScoreTriggerCount{ 2 };
 
 SCENARIO("RTP Monitor", "[rtp][monitor]")
 {
@@ -91,7 +92,16 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 		REQUIRE(rtpMonitor.GetScore() == 5);
 	}
 
-	SECTION("the eighth report triggers the score")
+	SECTION("the first report triggers the score")
+	{
+		packet->SetSequenceNumber(sequenceNumber++);
+		rtpStream->ReceivePacket(packet);
+		rtpMonitor.ReceiveRtcpReceiverReport(report);
+
+		listener.Check(true);
+	}
+
+	SECTION("the third report triggers the score")
 	{
 		for (size_t counter = 0; counter < ScoreTriggerCount; counter++)
 		{
@@ -106,7 +116,7 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 		listener.Check(true);
 	}
 
-	SECTION("next eighth consecutive reports trigger the score")
+	SECTION("next fifth consecutive reports trigger the score")
 	{
 		for (size_t counter = 0; counter < ScoreTriggerCount; counter++)
 		{
