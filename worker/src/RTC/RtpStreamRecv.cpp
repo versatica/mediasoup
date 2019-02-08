@@ -208,9 +208,6 @@ namespace RTC
 
 		// Provide the RTP monitor with the current RR.
 		this->rtpMonitor->ReceiveRtcpReceiverReport(this->GetRtcpReceiverReport());
-
-		if (!IsPaused())
-			this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
@@ -239,16 +236,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RtpStream::Pause();
-
 		this->inactivityCheckPeriodicTimer->Stop();
 	}
 
 	void RtpStreamRecv::Resume()
 	{
 		MS_TRACE();
-
-		RTC::RtpStream::Resume();
 
 		this->inactivityCheckPeriodicTimer->Restart();
 	}
@@ -284,15 +277,6 @@ namespace RTC
 			// to the listener).
 			if (this->transmissionCounter.GetRate(now) == 0 && this->rtpMonitor->GetScore() != 0)
 				this->rtpMonitor->Reset();
-		}
-		else if (timer == this->rtcpReportCheckTimer)
-		{
-			// TODO: 'figure out' a score based on received RTP or set a fixed value.
-			this->rtpMonitor->AddScore(8);
-
-			// If we are not receiving RR we must decrease the timer interval to
-			// emulate the typical RR internval.
-			this->rtcpReportCheckTimer->Start(2500);
 		}
 	}
 

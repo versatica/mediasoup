@@ -94,9 +94,6 @@ namespace RTC
 
 		// Provide the RTP monitor with the received RR.
 		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
-
-		if (!IsPaused())
-			this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -303,15 +300,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RtpStream::Pause();
 		ClearRetransmissionBuffer();
 	}
 
 	void RtpStreamSend::Resume()
 	{
 		MS_TRACE();
-
-		RTC::RtpStream::Resume();
 	}
 
 	void RtpStreamSend::ClearRetransmissionBuffer()
@@ -423,21 +417,5 @@ namespace RTC
 
 		// Update the new buffer item so it points to the cloned packed.
 		(*newBufferIt).packet = packet->Clone(store);
-	}
-
-	void RtpStreamSend::OnTimer(Timer* timer)
-	{
-		MS_TRACE();
-
-		if (timer == this->rtcpReportCheckTimer)
-		{
-			MS_ERROR_STD("--- [rtcpReportCheckTimer EXPIRED !!!, calling AddScore(0)");
-
-			this->rtpMonitor->AddScore(0);
-
-			// If we are not receiving RR we must decrease the timer interval to
-			// emulate the typical RR internval.
-			this->rtcpReportCheckTimer->Start(2500);
-		}
 	}
 } // namespace RTC

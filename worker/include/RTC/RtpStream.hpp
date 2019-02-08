@@ -7,14 +7,13 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpMonitor.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "handles/Timer.hpp"
 #include <string>
 
 using json = nlohmann::json;
 
 namespace RTC
 {
-	class RtpStream : public Timer::Listener, public RTC::RtpMonitor::Listener
+	class RtpStream : public RTC::RtpMonitor::Listener
 	{
 	public:
 		class Listener
@@ -56,9 +55,8 @@ namespace RTC
 		uint32_t GetRtxSsrc() const;
 		uint8_t GetRtxPayloadType() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		virtual void Pause();
-		virtual void Resume();
-		bool IsPaused() const;
+		virtual void Pause()  = 0;
+		virtual void Resume() = 0;
 		uint32_t GetRate(uint64_t now);
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
@@ -84,7 +82,6 @@ namespace RTC
 		size_t firCount{ 0 };
 		RTC::RtpDataCounter transmissionCounter;
 		RTC::RtpDataCounter retransmissionCounter;
-		bool paused{ false };
 
 		/* Pure virtual methods inherited from RtpMonitor */
 	protected:
@@ -95,7 +92,6 @@ namespace RTC
 		Listener* listener{ nullptr };
 		Params params;
 		// Allocated by this.
-		Timer* rtcpReportCheckTimer{ nullptr };
 		std::unique_ptr<RTC::RtpMonitor> rtpMonitor;
 		// Others.
 		// Whether at least a RTP packet has been received.
@@ -157,11 +153,6 @@ namespace RTC
 	inline uint8_t RtpStream::GetRtxPayloadType() const
 	{
 		return this->params.rtxPayloadType;
-	}
-
-	inline bool RtpStream::IsPaused() const
-	{
-		return this->paused;
 	}
 
 	inline uint32_t RtpStream::GetRate(uint64_t now)

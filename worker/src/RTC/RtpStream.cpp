@@ -22,19 +22,11 @@ namespace RTC
 	  : listener(listener), params(params)
 	{
 		MS_TRACE();
-
-		// Set the status check timer.
-		this->rtcpReportCheckTimer = new Timer(this);
-
-		this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
-
-		// Close the status check timer.
-		delete this->rtcpReportCheckTimer;
 	}
 
 	void RtpStream::FillJson(json& jsonObject) const
@@ -112,24 +104,6 @@ namespace RTC
 		}
 
 		return true;
-	}
-
-	void RtpStream::Pause()
-	{
-		MS_TRACE();
-
-		this->paused = true;
-
-		this->rtcpReportCheckTimer->Stop();
-	}
-
-	void RtpStream::Resume()
-	{
-		MS_TRACE();
-
-		this->paused = false;
-
-		this->rtcpReportCheckTimer->Start(5000);
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)

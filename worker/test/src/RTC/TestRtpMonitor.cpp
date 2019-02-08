@@ -7,9 +7,6 @@
 
 using namespace RTC;
 
-// This value must match the ScoreTriggerCount in RtpMonitor.cpp.
-static constexpr size_t ScoreTriggerCount{ 2 };
-
 SCENARIO("RTP Monitor", "[rtp][monitor]")
 {
 	class TestRtpMonitorListener : public RtpMonitor::Listener
@@ -92,67 +89,23 @@ SCENARIO("RTP Monitor", "[rtp][monitor]")
 		REQUIRE(rtpMonitor.GetScore() == 5);
 	}
 
-	SECTION("the third report triggers the score")
+	SECTION("first report triggers the score")
 	{
-		for (size_t counter = 0; counter < 10; counter++)
-		{
-			packet->SetSequenceNumber(sequenceNumber++);
-			rtpStream->ReceivePacket(packet);
-			packet->SetSequenceNumber(sequenceNumber++);
-			rtpStream->ReceivePacket(packet);
-			rtpMonitor.ReceiveRtcpReceiverReport(report);
-		}
+		packet->SetSequenceNumber(sequenceNumber++);
+		rtpStream->ReceivePacket(packet);
+		rtpMonitor.ReceiveRtcpReceiverReport(report);
 
-		// listener.Check(true);
+		listener.Check(true);
 	}
 
-	// SECTION("the first report triggers the score")
-	// {
-	// 	packet->SetSequenceNumber(sequenceNumber++);
-	// 	rtpStream->ReceivePacket(packet);
-	// 	rtpMonitor.ReceiveRtcpReceiverReport(report);
+	SECTION("Reset() triggers score 0 unless it was already 0")
+	{
+		rtpMonitor.Reset();
+		listener.Check(true);
 
-	// 	listener.Check(true);
-	// }
-
-	// SECTION("the third report triggers the score")
-	// {
-	// 	for (size_t counter = 0; counter < ScoreTriggerCount; counter++)
-	// 	{
-	// 		packet->SetSequenceNumber(sequenceNumber++);
-	// 		rtpStream->ReceivePacket(packet);
-	// 		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-	// 		if (counter < ScoreTriggerCount - 1)
-	// 			listener.Check(false);
-	// 	}
-
-	// 	listener.Check(true);
-	// }
-
-	// SECTION("next fifth consecutive reports trigger the score")
-	// {
-	// 	for (size_t counter = 0; counter < ScoreTriggerCount; counter++)
-	// 	{
-	// 		packet->SetSequenceNumber(sequenceNumber++);
-	// 		rtpStream->ReceivePacket(packet);
-	// 		rtpMonitor.ReceiveRtcpReceiverReport(report);
-
-	// 		if (counter < ScoreTriggerCount - 1)
-	// 			listener.Check(false);
-	// 	}
-
-	// 	listener.Check(true);
-	// }
-
-	// SECTION("Reset() triggers score 0 unless it was already 0")
-	// {
-	// 	rtpMonitor.Reset();
-	// 	listener.Check(true);
-
-	// 	rtpMonitor.Reset();
-	// 	listener.Check(false);
-	// }
+		rtpMonitor.Reset();
+		listener.Check(false);
+	}
 
 	delete report;
 	delete rtpStream;

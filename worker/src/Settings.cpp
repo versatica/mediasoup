@@ -189,8 +189,8 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("rtx");
 	if (Settings::configuration.logTags.rbe)
 		logTags.emplace_back("rbe");
-	if (Settings::configuration.logTags.tmp)
-		logTags.emplace_back("tmp");
+	if (Settings::configuration.logTags.score)
+		logTags.emplace_back("score");
 
 	if (!logTags.empty())
 	{
@@ -306,8 +306,8 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 			newLogTags.rtx = true;
 		else if (tag == "rbe")
 			newLogTags.rbe = true;
-		else if (tag == "tmp")
-			newLogTags.tmp = true;
+		else if (tag == "score")
+			newLogTags.score = true;
 	}
 
 	Settings::configuration.logTags = newLogTags;

@@ -45,10 +45,6 @@ namespace RTC
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
 
-		/* Pure virtual methods inherited from RtpStream. */
-	protected:
-		void OnTimer(Timer* timer) override;
-
 	private:
 		std::vector<StorageItem> storage;
 		std::list<BufferItem> buffer;

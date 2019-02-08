@@ -5,11 +5,14 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpStream.hpp"
+#include "handles/Timer.hpp"
 #include <vector>
 
 namespace RTC
 {
-	class RtpStreamRecv : public RTC::RtpStream, public RTC::NackGenerator::Listener
+	class RtpStreamRecv : public RTC::RtpStream,
+	                      public RTC::NackGenerator::Listener,
+	                      public Timer::Listener
 	{
 	public:
 		class Listener : public RtpStream::Listener
@@ -38,7 +41,7 @@ namespace RTC
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
 
-		/* Pure virtual methods inherited from RtpStream. */
+		/* Pure virtual methods inherited from Timer. */
 	protected:
 		void OnTimer(Timer* timer) override;
 

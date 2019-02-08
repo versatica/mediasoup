@@ -26,11 +26,11 @@ namespace RTC
 		void Dump();
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
 		void RtpPacketRepaired(RTC::RtpPacket* packet);
-		void AddScore(uint8_t score);
 		uint8_t GetScore() const;
 		void Reset();
 
 	private:
+		void AddScore(uint8_t score);
 		void ComputeScore();
 		size_t GetRepairedPacketCount() const;
 		void UpdateReportedLoss(RTC::RTCP::ReceiverReport* report);
@@ -43,8 +43,6 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		// Counter for event notification.
-		size_t scoreTriggerCounter{ 1 }; // Report the first score ASAP.
 		// Scores histogram and last computed score.
 		std::vector<uint8_t> scores;
 		uint8_t score{ 0 };

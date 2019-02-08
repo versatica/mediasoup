@@ -1,8 +1,8 @@
 #define MS_CLASS "RTC::RtpMonitor"
 // #define MS_LOG_DEV
 
-#include "Logger.hpp"
 #include "RTC/RtpMonitor.hpp"
+#include "Logger.hpp"
 #include "RTC/RtpStream.hpp"
 #include <cmath> // std::round()
 
@@ -11,7 +11,6 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t HistogramLength{ 8 };
-	static constexpr size_t ScoreTriggerCount{ 2 };
 	static constexpr size_t MaxRepairedPacketRetransmission{ 2 };
 	static constexpr size_t MaxRepairedPacketsLength{ 1000 };
 	// Score constraints weight.
@@ -90,15 +89,7 @@ namespace RTC
 
 		// Nothing to do.
 		if (sentPackets == 0)
-		{
-			MS_ERROR_STD(
-				"--- [scoreTriggerCounter:%zu, NO PACKETS!!!! so adding score 0]",
-				this->scoreTriggerCounter);
-
-			AddScore(0);
-
 			return;
-		}
 
 		// There cannot be more loss than sent packets.
 		if (currentLoss > sentPackets)
@@ -152,6 +143,24 @@ namespace RTC
 		this->repairedPackets[packet->GetSequenceNumber()]++;
 	}
 
+	void RtpMonitor::Reset()
+	{
+		MS_TRACE();
+
+		this->totalSourceLoss   = 0;
+		this->totalReportedLoss = 0;
+		this->totalSentPackets  = 0;
+
+		this->repairedPackets.clear();
+		this->scores.clear();
+
+		if (this->score != 0)
+		{
+			this->score = 0;
+			this->listener->OnRtpMonitorScore(this, 0);
+		}
+	}
+
 	void RtpMonitor::AddScore(uint8_t score)
 	{
 		MS_TRACE();
@@ -161,52 +170,26 @@ namespace RTC
 
 		this->scores.push_back(score);
 
-		// Decrement the score trigger counter.
-		this->scoreTriggerCounter--;
+		auto previousScore = this->score;
 
-		MS_ERROR_STD(
-			"--- [scoreTriggerCounter:%zu, added score:%" PRIu8 "]",
-			this->scoreTriggerCounter, score);
+		ComputeScore();
 
-		if (this->scoreTriggerCounter == 0)
+		if (this->score != previousScore)
 		{
-			this->scoreTriggerCounter = ScoreTriggerCount;
+			MS_DEBUG_TAG(
+			  score,
+			  "[added score:%" PRIu8 ", previous computed score:%" PRIu8 ", new computed score:%" PRIu8
+			  "] (calling listener)",
+			  score,
+			  previousScore,
+			  this->score);
 
-			auto previousScore = this->score;
-
-			ComputeScore();
-
-			if (this->score != previousScore)
-			{
-				MS_ERROR_STD(
-				  "--- [previousScore:%" PRIu8 ", newScore:%" PRIu8 "] -> calling listener !!!",
-				  previousScore, this->score);
-
-				this->listener->OnRtpMonitorScore(this, this->score);
-			}
-			else
-			{
-				MS_ERROR_STD("--- [score:%" PRIu8 "] (no changes)", this->score);
-			}
+			this->listener->OnRtpMonitorScore(this, this->score);
 		}
-	}
-
-	void RtpMonitor::Reset()
-	{
-		MS_TRACE();
-
-		this->scoreTriggerCounter = ScoreTriggerCount;
-		this->totalSourceLoss     = 0;
-		this->totalReportedLoss   = 0;
-		this->totalSentPackets    = 0;
-
-		this->repairedPackets.clear();
-		this->scores.clear();
-
-		if (this->score != 0)
+		else
 		{
-			this->score = 0;
-			this->listener->OnRtpMonitorScore(this, 0);
+			MS_DEBUG_TAG(
+			  score, "[added score:%" PRIu8 ", computed score:%" PRIu8 "] (no change)", score, this->score);
 		}
 	}
 
