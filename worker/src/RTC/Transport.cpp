@@ -295,6 +295,7 @@ namespace RTC
 
 				data["paused"]         = consumer->IsPaused();
 				data["producerPaused"] = consumer->IsProducerPaused();
+				data["score"]          = consumer->GetScore();
 
 				request->Accept(data);
 

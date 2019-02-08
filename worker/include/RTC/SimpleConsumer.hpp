@@ -27,6 +27,7 @@ namespace RTC
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
 		uint32_t GetTransmissionRate(uint64_t now) override;
 		float GetLossPercentage() const override;
+		json GetScore() const override;
 
 	protected:
 		void Paused(bool wasProducer = false) override;

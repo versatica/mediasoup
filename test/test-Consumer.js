@@ -313,7 +313,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.type).toBe('simple');
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
-	expect(audioConsumer.score).toEqual({ producer: 0, consumer: 0 });
+	expect(audioConsumer.score).toEqual({ producer: 0, consumer: 10 });
 	expect(audioConsumer.preferredLayers).toBe(null);
 	expect(audioConsumer.currentLayers).toBe(null);
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
@@ -391,7 +391,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
-	expect(videoConsumer.score).toEqual({ producer: 0, consumer: 0 });
+	expect(videoConsumer.score).toEqual({ producer: 0, consumer: 10 });
 	expect(videoConsumer.preferredLayers).toBe(null);
 	expect(videoConsumer.currentLayers).toBe(null);
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
@@ -620,8 +620,7 @@ test('consumer.getStats() succeeds', async () =>
 						type     : 'outbound-rtp',
 						kind     : 'audio',
 						mimeType : 'audio/opus',
-						ssrc     : audioConsumer.rtpParameters.encodings[0].ssrc,
-						score    : 0
+						ssrc     : audioConsumer.rtpParameters.encodings[0].ssrc
 					})
 			]);
 
@@ -634,8 +633,7 @@ test('consumer.getStats() succeeds', async () =>
 						type     : 'outbound-rtp',
 						kind     : 'video',
 						mimeType : 'video/H264',
-						ssrc     : videoConsumer.rtpParameters.encodings[0].ssrc,
-						score    : 0
+						ssrc     : videoConsumer.rtpParameters.encodings[0].ssrc
 					})
 			]);
 }, 2000);

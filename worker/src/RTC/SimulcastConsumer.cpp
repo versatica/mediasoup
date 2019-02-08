@@ -133,6 +133,9 @@ namespace RTC
 
 		// TODO: Remove.
 		this->producerRtpStream = rtpStream;
+
+		// Emit the score event.
+		EmitScore();
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
@@ -396,6 +399,22 @@ namespace RTC
 		{
 			return this->rtpStream->GetLossPercentage() - this->producerRtpStream->GetLossPercentage();
 		}
+	}
+
+	json SimulcastConsumer::GetScore() const
+	{
+		MS_TRACE();
+
+		json data = json::object();
+
+		if (this->producerRtpStream)
+			data["producer"] = this->producerRtpStream->GetScore();
+		else
+			data["producer"] = 0;
+
+		data["consumer"] = this->rtpStream->GetScore();
+
+		return data;
 	}
 
 	void SimulcastConsumer::Paused(bool /*wasProducer*/)

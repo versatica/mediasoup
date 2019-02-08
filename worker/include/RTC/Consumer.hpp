@@ -56,6 +56,7 @@ namespace RTC
 		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)           = 0;
 		virtual uint32_t GetTransmissionRate(uint64_t now)                                  = 0;
 		virtual float GetLossPercentage() const                                             = 0;
+		virtual json GetScore() const                                                       = 0;
 
 	protected:
 		virtual void Paused(bool wasProducer = false)  = 0;

@@ -99,14 +99,17 @@ namespace RTC
 		RequestKeyFrame();
 	}
 
-	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
+
+		// Emit the score event.
+		EmitScore();
 	}
 
-	void SimpleConsumer::ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
+	void SimpleConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
 
@@ -363,6 +366,22 @@ namespace RTC
 		{
 			return this->rtpStream->GetLossPercentage() - this->producerRtpStream->GetLossPercentage();
 		}
+	}
+
+	json SimpleConsumer::GetScore() const
+	{
+		MS_TRACE();
+
+		json data = json::object();
+
+		if (this->producerRtpStream)
+			data["producer"] = this->producerRtpStream->GetScore();
+		else
+			data["producer"] = 0;
+
+		data["consumer"] = this->rtpStream->GetScore();
+
+		return data;
 	}
 
 	void SimpleConsumer::Paused(bool /*wasProducer*/)
