@@ -431,6 +431,8 @@ namespace RTC
 
 		if (timer == this->rtcpReportCheckTimer)
 		{
+			MS_ERROR_STD("--- [rtcpReportCheckTimer EXPIRED !!!, calling AddScore(0)");
+
 			this->rtpMonitor->AddScore(0);
 
 			// If we are not receiving RR we must decrease the timer interval to
