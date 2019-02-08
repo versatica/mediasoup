@@ -110,12 +110,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		json data = json::object();
-
-		data["in"]  = score;
-		data["out"] = this->rtpStream->GetScore();
-
-		Channel::Notifier::Emit(this->id, "score", data);
+		// Emit the score event.
+		EmitScore();
 	}
 
 	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -507,22 +503,27 @@ namespace RTC
 			delete rtxPacket;
 	}
 
-	inline void SimpleConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)
+	inline void SimpleConsumer::EmitScore() const
 	{
 		MS_TRACE();
-
-		if (!IsActive())
-			return;
 
 		json data = json::object();
 
 		if (this->producerRtpStream)
-			data["in"] = this->producerRtpStream->GetScore();
+			data["producer"] = this->producerRtpStream->GetScore();
 		else
-			data["in"] = 0;
+			data["producer"] = 0;
 
-		data["out"] = score;
+		data["consumer"] = this->rtpStream->GetScore();
 
 		Channel::Notifier::Emit(this->id, "score", data);
+	}
+
+	inline void SimpleConsumer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
+	{
+		MS_TRACE();
+
+		// Emit the score event.
+		EmitScore();
 	}
 } // namespace RTC

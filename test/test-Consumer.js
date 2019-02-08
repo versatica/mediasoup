@@ -313,7 +313,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.type).toBe('simple');
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
-	expect(audioConsumer.score).toEqual({ in: 0, out: 0 });
+	expect(audioConsumer.score).toEqual({ producer: 0, consumer: 0 });
 	expect(audioConsumer.preferredLayers).toBe(null);
 	expect(audioConsumer.currentLayers).toBe(null);
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
@@ -391,7 +391,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
-	expect(videoConsumer.score).toEqual({ in: 0, out: 0 });
+	expect(videoConsumer.score).toEqual({ producer: 0, consumer: 0 });
 	expect(videoConsumer.preferredLayers).toBe(null);
 	expect(videoConsumer.currentLayers).toBe(null);
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
@@ -686,12 +686,12 @@ test('Consumer emits "score"', async () =>
 
 	audioConsumer.on('score', onScore);
 
-	channel.emit(audioConsumer.id, 'score', { in: 10, out: 9 });
-	channel.emit(audioConsumer.id, 'score', { in: 9, out: 9 });
-	channel.emit(audioConsumer.id, 'score', { in: 8, out: 8 });
+	channel.emit(audioConsumer.id, 'score', { producer: 10, consumer: 9 });
+	channel.emit(audioConsumer.id, 'score', { producer: 9, consumer: 9 });
+	channel.emit(audioConsumer.id, 'score', { producer: 8, consumer: 8 });
 
 	expect(onScore).toHaveBeenCalledTimes(3);
-	expect(audioConsumer.score).toEqual({ in: 8, out: 8 });
+	expect(audioConsumer.score).toEqual({ producer: 8, consumer: 8 });
 }, 2000);
 
 test('consumer.close() succeeds', async () =>

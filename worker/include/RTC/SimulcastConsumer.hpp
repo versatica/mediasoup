@@ -36,6 +36,7 @@ namespace RTC
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+		void EmitScore() const;
 		void RecalculateTargetSpatialLayer(bool force = false);
 		bool IsProbing() const;
 		void StartProbation(int16_t spatialLayer);
@@ -44,7 +45,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStream::Listener. */
 	public:
-		void OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score) override;
+		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
 
 	private:
 		// Allocated by this.

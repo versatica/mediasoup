@@ -139,6 +139,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Emit the score event.
+		EmitScore();
+
 		// TODO: Recalculate layers.
 	}
 
@@ -538,6 +541,22 @@ namespace RTC
 			delete rtxPacket;
 	}
 
+	inline void SimulcastConsumer::EmitScore() const
+	{
+		MS_TRACE();
+
+		json data = json::object();
+
+		if (this->producerRtpStream)
+			data["producer"] = this->producerRtpStream->GetScore();
+		else
+			data["producer"] = 0;
+
+		data["consumer"] = this->rtpStream->GetScore();
+
+		Channel::Notifier::Emit(this->id, "score", data);
+	}
+
 	void SimulcastConsumer::RecalculateTargetSpatialLayer(bool force)
 	{
 		MS_TRACE();
@@ -740,22 +759,11 @@ namespace RTC
 			RecalculateTargetSpatialLayer();
 	}
 
-	inline void SimulcastConsumer::OnRtpStreamScore(const RTC::RtpStream* rtpStream, uint8_t score)
+	inline void SimulcastConsumer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 
-		if (!IsActive())
-			return;
-
-		json data = json::object();
-
-		if (this->producerRtpStream)
-			data["in"] = this->producerRtpStream->GetScore();
-		else
-			data["in"] = 0;
-
-		data["out"] = score;
-
-		Channel::Notifier::Emit(this->id, "score", data);
+		// Emit the score event.
+		EmitScore();
 	}
 } // namespace RTC

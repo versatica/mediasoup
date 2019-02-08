@@ -74,6 +74,7 @@ namespace RTC
 		RTC::RtpStreamRecv* CreateRtpStream(
 		  uint32_t ssrc, const RTC::RtpCodecParameters& codec, size_t encodingIdx);
 		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
+		void EmitScore() const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -81,7 +82,7 @@ namespace RTC
 		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
 		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream) override;
-		void OnRtpStreamScore(const RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/) override;
+		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:

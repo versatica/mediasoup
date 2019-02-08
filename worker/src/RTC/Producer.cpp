@@ -799,6 +799,9 @@ namespace RTC
 		// Notify to the listener.
 		this->listener->OnProducerNewRtpStream(this, rtpStream, encodingMapping.mappedSsrc);
 
+		// Emit the first score event right now.
+		EmitScore();
+
 		return rtpStream;
 	}
 
@@ -843,6 +846,32 @@ namespace RTC
 		packet->SetSsrc(mappedSsrc);
 
 		return true;
+	}
+
+	inline void Producer::EmitScore() const
+	{
+		MS_TRACE();
+
+		json data = json::array();
+
+		// Iterate all streams and notify their scores.
+		for (auto& kv : this->mapSsrcRtpStream)
+		{
+			auto* rtpStream = kv.second;
+
+			data.emplace_back(json::value_t::object);
+
+			auto& jsonEntry = data[data.size() - 1];
+
+			jsonEntry["ssrc"] = rtpStream->GetSsrc();
+
+			if (!rtpStream->GetRid().empty())
+				jsonEntry["rid"] = rtpStream->GetRid();
+
+			jsonEntry["score"] = rtpStream->GetScore();
+		}
+
+		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
 	inline void Producer::OnRtpStreamRecvNackRequired(
@@ -934,21 +963,15 @@ namespace RTC
 		rtpStream->pliCount++;
 	}
 
-	inline void Producer::OnRtpStreamScore(const RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 
-		json data = json::array();
+		// Notify the listener.
+		this->listener->OnProducerRtpStreamScore(this, rtpStream, score);
 
-		// Iterate all streams and notify their scores.
-		for (auto& kv : this->mapSsrcRtpStream)
-		{
-			auto* rtpStream = kv.second;
-
-			data.push_back(rtpStream->GetScore());
-		}
-
-		Channel::Notifier::Emit(this->id, "score", data);
+		// Emit the score event.
+		EmitScore();
 	}
 
 	inline void Producer::OnKeyFrameNeeded(
