@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <map>
 #include <vector>
 
 namespace RTC
