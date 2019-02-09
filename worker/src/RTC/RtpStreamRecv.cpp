@@ -273,10 +273,9 @@ namespace RTC
 		{
 			auto now = DepLibUV::GetTime();
 
-			// No RTP is being received notify score 0 to the listener.
-			if (this->transmissionCounter.GetRate(now) == 0 && this->score != 0)
+			// If no RTP is being received notify score 0 to the listener.
+			if (this->transmissionCounter.GetRate(now) == 0)
 			{
-				this->score             = 0;
 				this->totalSourceLoss   = 0;
 				this->totalReportedLoss = 0;
 				this->totalSentPackets  = 0;
@@ -284,7 +283,11 @@ namespace RTC
 				this->scores.clear();
 				this->mapRepairedPackets.clear();
 
-				this->listener->OnRtpStreamScore(this, 0);
+				if (this->score != 0)
+				{
+					this->score = 0;
+					this->listener->OnRtpStreamScore(this, 0);
+				}
 			}
 		}
 	}
