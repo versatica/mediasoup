@@ -51,6 +51,9 @@ namespace RTC
 
 		// Call the parent method.
 		RTC::Consumer::FillJson(jsonObject);
+
+		// Add rtpStream.
+		this->rtpStream->FillJson(jsonObject["rtpStream"]);
 	}
 
 	void SimpleConsumer::FillJsonStats(json& jsonArray) const
@@ -336,9 +339,6 @@ namespace RTC
 	void SimpleConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
-
-		if (!IsActive())
-			return;
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
