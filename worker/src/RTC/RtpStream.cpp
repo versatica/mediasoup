@@ -45,9 +45,6 @@ namespace RTC
 
 		// Add totalReportedLoss.
 		jsonObject["totalReportedLoss"] = this->totalReportedLoss;
-
-		// Add mapRepairedPackets.
-		jsonObject["mapRepairedPackets"] = this->mapRepairedPackets;
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
