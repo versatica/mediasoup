@@ -1,5 +1,3 @@
-// DOC: https://tools.ietf.org/html/rfc3550#appendix-A.1
-
 #define MS_CLASS "RTC::RtpStream"
 // #define MS_LOG_DEV
 
@@ -15,6 +13,9 @@ namespace RTC
 	static constexpr uint16_t MaxDropout{ 3000 };
 	static constexpr uint16_t MaxMisorder{ 1500 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+	static constexpr size_t MaxRepairedPacketRetransmission{ 2 };
+	static constexpr size_t MaxRepairedPacketsLength{ 1000 };
+	static constexpr size_t ScoreHistogramLength{ 8 };
 
 	/* Instance methods. */
 
@@ -37,7 +38,13 @@ namespace RTC
 		this->params.FillJson(jsonObject["params"]);
 
 		// Add score.
-		jsonObject["score"] = this->rtpMonitor->GetScore();
+		jsonObject["score"] = this->score;
+
+		// Add totalSourceLoss.
+		jsonObject["totalSourceLoss"] = this->totalSourceLoss;
+
+		// Add totalReportedLoss.
+		jsonObject["totalReportedLoss"] = this->totalReportedLoss;
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
@@ -61,7 +68,7 @@ namespace RTC
 		jsonObject["nackRtpPacketCount"] = this->nackRtpPacketCount;
 		jsonObject["pliCount"]           = this->pliCount;
 		jsonObject["firCount"]           = this->firCount;
-		jsonObject["score"]              = this->rtpMonitor->GetScore();
+		jsonObject["score"]              = this->score;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -104,6 +111,25 @@ namespace RTC
 		}
 
 		return true;
+	}
+
+	void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		this->retransmissionCounter.Update(packet);
+	}
+
+	void RtpStream::RtpPacketRepaired(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		this->packetsRepaired++;
+
+		if (this->mapRepairedPackets.size() == MaxRepairedPacketsLength)
+			this->mapRepairedPackets.erase(this->mapRepairedPackets.begin());
+
+		this->mapRepairedPackets[packet->GetSequenceNumber()]++;
 	}
 
 	void RtpStream::InitSeq(uint16_t seq)
@@ -184,11 +210,166 @@ namespace RTC
 		return true;
 	}
 
-	inline void RtpStream::OnRtpMonitorScore(RTC::RtpMonitor* /*rtpMonitor*/, uint8_t score)
+	void RtpStream::UpdateScore(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
-		this->listener->OnRtpStreamScore(this, score);
+		// Calculate packet loss reported since last RR.
+		auto previousTotalReportedLoss = this->totalReportedLoss;
+
+		this->totalReportedLoss = report->GetTotalLost();
+
+		auto reportedLoss = this->totalReportedLoss - previousTotalReportedLoss;
+
+		if (reportedLoss < 0)
+			reportedLoss = 0;
+
+		// Calculate source packet loss since last RR.
+		auto previousTotalSourceLoss = this->totalSourceLoss;
+		size_t expectedPackets       = this->cycles + this->maxSeq - this->baseSeq + 1;
+
+		this->totalSourceLoss =
+		  static_cast<int32_t>(expectedPackets - this->transmissionCounter.GetPacketCount());
+
+		auto sourceLoss = this->totalSourceLoss - previousTotalSourceLoss;
+
+		if (sourceLoss < 0)
+			sourceLoss = 0;
+
+		// Calculate effective loss since last report.
+		size_t currentLoss;
+
+		if (reportedLoss < sourceLoss)
+			currentLoss = 0;
+		else
+			currentLoss = reportedLoss - sourceLoss;
+
+		// Calculate repaired packets.
+		// TODO: This may have to be different in RtpStreamRecv and RtpStreamSend.
+		size_t repairedPacketCount{ 0 };
+
+		for (auto& kv : this->mapRepairedPackets)
+		{
+			if (kv.second <= MaxRepairedPacketRetransmission)
+				repairedPacketCount++;
+		}
+
+		// Reset repaired packets map.
+		this->mapRepairedPackets.clear();
+
+		// Calculate packets sent since last RR.
+		auto previousTotalSentPackets = this->totalSentPackets;
+
+		this->totalSentPackets = this->transmissionCounter.GetPacketCount();
+
+		auto sentPackets = this->totalSentPackets - previousTotalSentPackets;
+
+		// Nothing to do.
+		if (sentPackets == 0)
+			return;
+
+		// There cannot be more loss than sent packets.
+		if (currentLoss > sentPackets)
+			currentLoss = sentPackets;
+
+		// There cannot be more repaired than sent packets.
+		if (repairedPacketCount > sentPackets)
+			repairedPacketCount = sentPackets;
+
+		float lossPercentage     = currentLoss * 100 / sentPackets;
+		float repairedPercentage = repairedPacketCount * 100 / sentPackets;
+
+		/*
+		 * Calculate score. Starting from a score of 100:
+		 *
+		 * - Each loss porcentual point has a weight of LossPercentageWeight.
+		 * - Each repaired porcentual point has a  weight of RepairedPercentageWeight.
+		 */
+
+		float base100Score{ 100 };
+
+		base100Score -= lossPercentage * 1.0f;
+		base100Score += repairedPercentage * 0.5f;
+
+		// Get base 10 score.
+		auto score = static_cast<uint8_t>(std::lround(base100Score / 10));
+
+#ifdef MS_LOG_DEV
+		MS_DEBUG_TAG(
+		  rtp,
+		  "[sentPackets:%zu, currentLoss:%zu, totalSourceLoss:%" PRIi32 ", totalReportedLoss:%" PRIi32
+		  ", repairedPacketCount:%zu, lossPercentage:%f, repairedPercentage:%f, score:%" PRIu8 "]",
+		  sentPackets,
+		  currentLoss,
+		  this->totalSourceLoss,
+		  this->totalReportedLoss,
+		  repairedPacketCount,
+		  lossPercentage,
+		  repairedPercentage,
+		  score);
+
+		report->Dump();
+#endif
+
+		// Add the score into the histogram.
+		if (this->scores.size() == ScoreHistogramLength)
+			this->scores.erase(this->scores.begin());
+
+		this->scores.push_back(score);
+
+		// Compute new effective score taking into accout entries in the histogram.
+		auto previousScore = this->score;
+
+		if (!this->scores.empty())
+		{
+			/*
+			 * Scoring mechanism is a weighted average.
+			 *
+			 * The more recent the score is, the more weight it has.
+			 * The oldest score has a weight of 1 and subsequent scores weight is
+			 * increased by one sequentially.
+			 *
+			 * Ie:
+			 * - scores: [1,2,3,4]
+			 * - this->scores = ((1) + (2+2) + (3+3+3) + (4+4+4+4)) / 10 = 2.8 => 3
+			 */
+
+			size_t weight{ 0 };
+			size_t samples{ 0 };
+			size_t totalScore{ 0 };
+
+			for (auto score : this->scores)
+			{
+				weight++;
+				samples += weight;
+				totalScore += weight * score;
+			}
+
+			this->score = static_cast<uint8_t>(std::round(totalScore / samples));
+		}
+		else
+		{
+			this->score = 0;
+		}
+
+		// Call the listener if the global score has changed.
+		if (this->score != previousScore)
+		{
+			MS_DEBUG_TAG(
+			  score,
+			  "[added score:%" PRIu8 ", previous computed score:%" PRIu8 ", new computed score:%" PRIu8
+			  "] (calling listener)",
+			  score,
+			  previousScore,
+			  this->score);
+
+			this->listener->OnRtpStreamScore(this, this->score);
+		}
+		else
+		{
+			MS_DEBUG_TAG(
+			  score, "[added score:%" PRIu8 ", computed score:%" PRIu8 "] (no change)", score, this->score);
+		}
 	}
 
 	void RtpStream::Params::FillJson(json& jsonObject) const
