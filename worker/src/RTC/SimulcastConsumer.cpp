@@ -59,6 +59,9 @@ namespace RTC
 		// Call the parent method.
 		RTC::Consumer::FillJson(jsonObject);
 
+		// Add rtpStream.
+		this->rtpStream->FillJson(jsonObject["rtpStream"]);
+
 		// TODO: Add layers, etc.
 	}
 
@@ -369,9 +372,6 @@ namespace RTC
 	void SimulcastConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
-
-		if (!IsActive())
-			return;
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}

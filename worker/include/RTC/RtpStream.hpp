@@ -3,17 +3,19 @@
 
 #include "common.hpp"
 #include "json.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpMonitor.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <map>
 #include <string>
+#include <vector>
 
 using json = nlohmann::json;
 
 namespace RTC
 {
-	class RtpStream : public RTC::RtpMonitor::Listener
+	class RtpStream
 	{
 	public:
 		class Listener
@@ -55,18 +57,18 @@ namespace RTC
 		uint32_t GetRtxSsrc() const;
 		uint8_t GetRtxPayloadType() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
+		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
+		void RtpPacketRepaired(RTC::RtpPacket* packet);
 		virtual void Pause()  = 0;
 		virtual void Resume() = 0;
 		uint32_t GetRate(uint64_t now);
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
-		size_t GetExpectedPackets() const;
 		uint8_t GetScore() const;
-		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
-		void RtpPacketRepaired(RTC::RtpPacket* packet);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
+		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
 	private:
 		void InitSeq(uint16_t seq);
@@ -83,18 +85,11 @@ namespace RTC
 		RTC::RtpDataCounter transmissionCounter;
 		RTC::RtpDataCounter retransmissionCounter;
 
-		/* Pure virtual methods inherited from RtpMonitor */
-	protected:
-		void OnRtpMonitorScore(RTC::RtpMonitor* rtpMonitor, uint8_t score) override;
-
 	protected:
 		// Given as argument.
 		Listener* listener{ nullptr };
 		Params params;
-		// Allocated by this.
-		std::unique_ptr<RTC::RtpMonitor> rtpMonitor;
 		// Others.
-		// Whether at least a RTP packet has been received.
 		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
 		uint16_t maxSeq{ 0 };      // Highest seq. number seen.
 		uint32_t cycles{ 0 };      // Shifted count of seq. number cycles.
@@ -102,8 +97,18 @@ namespace RTC
 		uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
 		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
+		// Score related.
+		uint8_t score{ 0 };
+		std::vector<uint8_t> scores;
+		// Rapaired RTP packet map.
+		std::map<uint16_t, size_t> mapRepairedPackets;
+		// RTP stream data information for score calculation.
+		int32_t totalSourceLoss{ 0 };
+		int32_t totalReportedLoss{ 0 };
+		size_t totalSentPackets{ 0 };
 
 	private:
+		// Whether at least a RTP packet has been received.
 		bool started{ false };
 	}; // namespace RTC
 
@@ -170,26 +175,9 @@ namespace RTC
 		return this->maxPacketMs;
 	}
 
-	inline size_t RtpStream::GetExpectedPackets() const
-	{
-		return (this->cycles + this->maxSeq) - this->baseSeq + 1;
-	}
-
 	inline uint8_t RtpStream::GetScore() const
 	{
-		return this->rtpMonitor->GetScore();
-	}
-
-	inline void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)
-	{
-		this->retransmissionCounter.Update(packet);
-	}
-
-	inline void RtpStream::RtpPacketRepaired(RTC::RtpPacket* packet)
-	{
-		this->packetsRepaired++;
-
-		this->rtpMonitor->RtpPacketRepaired(packet);
+		return this->score;
 	}
 } // namespace RTC
 

@@ -23,7 +23,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->rtpMonitor.reset(new RTC::RtpMonitor(this, this, 10));
+		// Begin with an score of 10.
+		this->score = 10;
 	}
 
 	RtpStreamSend::~RtpStreamSend()
@@ -91,8 +92,8 @@ namespace RTC
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
 
-		// Provide the RTP monitor with the received RR.
-		this->rtpMonitor->ReceiveRtcpReceiverReport(report);
+		// Update the score with the received RR.
+		UpdateScore(report);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -111,7 +112,7 @@ namespace RTC
 		// If NACK is not supported, exit.
 		if (!this->params.useNack)
 		{
-			MS_WARN_TAG(rtx, "NACK not negotiated");
+			MS_WARN_TAG(rtx, "NACK not supported");
 
 			return;
 		}

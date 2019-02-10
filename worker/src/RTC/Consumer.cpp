@@ -132,6 +132,9 @@ namespace RTC
 
 		// Add producerPaused.
 		jsonObject["producerPaused"] = this->producerPaused;
+
+		// Add lossPercentage.
+		jsonObject["lossPercentage"] = GetLossPercentage();
 	}
 
 	void Consumer::HandleRequest(Channel::Request* request)

@@ -22,7 +22,8 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		this->rtpMonitor.reset(new RTC::RtpMonitor(this, this, 10));
+		// Begin with an score of 10.
+		this->score = 10;
 
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
@@ -205,8 +206,8 @@ namespace RTC
 		this->lastSrTimestamp = report->GetNtpSec() << 16;
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 
-		// Provide the RTP monitor with the current RR.
-		this->rtpMonitor->ReceiveRtcpReceiverReport(GetRtcpReceiverReport());
+		// Update the score with the current RR.
+		UpdateScore(GetRtcpReceiverReport());
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
@@ -272,10 +273,22 @@ namespace RTC
 		{
 			auto now = DepLibUV::GetTime();
 
-			// No RTP is being received, reset rtpMonitor (so it will notify score 0
-			// to the listener).
-			if (this->transmissionCounter.GetRate(now) == 0 && this->rtpMonitor->GetScore() != 0)
-				this->rtpMonitor->Reset();
+			// If no RTP is being received notify score 0 to the listener.
+			if (this->transmissionCounter.GetRate(now) == 0)
+			{
+				this->totalSourceLoss   = 0;
+				this->totalReportedLoss = 0;
+				this->totalSentPackets  = 0;
+
+				this->scores.clear();
+				this->mapRepairedPackets.clear();
+
+				if (this->score != 0)
+				{
+					this->score = 0;
+					this->listener->OnRtpStreamScore(this, 0);
+				}
+			}
 		}
 	}
 
