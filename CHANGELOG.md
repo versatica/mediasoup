@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.9
+
+* Remove a potential crash if a single `encoding` is given in the Producer `rtpParameters` and it has a `profile` value.
+
+
 ### 2.6.8
 
 * C++: Verify in libuv static callbacks that the associated C++ instance has not been deallocated (thanks @artushin and @mariat-atg for reporting and providing valuable help in #258).
