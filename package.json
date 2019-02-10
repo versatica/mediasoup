@@ -36,7 +36,7 @@
     "randomatic": "^3.1.1"
   },
   "devDependencies": {
-    "eslint": "^5.12.1",
+    "eslint": "^5.13.0",
     "gulp": "^4.0.0",
     "gulp-clang-format": "^1.0.27",
     "gulp-eslint": "^5.0.0",
@@ -44,7 +44,7 @@
     "gulp-replace": "^1.0.0",
     "gulp-shell": "^0.6.5",
     "gulp-touch-cmd": "0.0.1",
-    "tap": "^12.4.0"
+    "tap": "^12.5.2"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
