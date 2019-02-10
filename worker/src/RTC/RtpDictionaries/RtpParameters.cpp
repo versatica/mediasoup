@@ -310,5 +310,11 @@ namespace RTC
 			if (!pair.second)
 				MS_THROW_ERROR("duplicated encoding.profile");
 		}
+
+		// If there is a single encoding, it MUST NOT have any profile.
+		if (this->encodings.size() == 1 && this->encodings[0].profile != RTC::RtpEncodingParameters::Profile::DEFAULT)
+		{
+			MS_THROW_ERROR("invalid single encoding with non default profile");
+		}
 	}
 } // namespace RTC
