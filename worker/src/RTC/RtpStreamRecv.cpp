@@ -5,6 +5,10 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/Codecs/Codecs.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
+#include "RTC/RTCP/FeedbackPsPli.hpp"
+#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 
 namespace RTC
 {
@@ -14,8 +18,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStreamRecv::RtpStreamRecv(Listener* listener, RTC::RtpStream::Params& params)
-	  : RTC::RtpStream::RtpStream(listener, params), listener(listener)
+	RtpStreamRecv::RtpStreamRecv(RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params)
+	  : RTC::RtpStream::RtpStream(listener, params)
 	{
 		MS_TRACE();
 
@@ -79,6 +83,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!this->params.useNack)
+		{
+			MS_WARN_TAG(rtx, "NACK not supported");
+
+			return false;
+		}
+
 		MS_ASSERT(packet->GetSsrc() == this->params.rtxSsrc, "invalid ssrc on RTX packet");
 
 		// Check that the payload type corresponds to the one negotiated.
@@ -138,8 +149,12 @@ namespace RTC
 
 		// Pass the packet to the NackGenerator and return true just if this was a
 		// NACKed packet.
-		if (this->params.useNack)
-			return this->nackGenerator->ReceivePacket(packet);
+		if (this->nackGenerator->ReceivePacket(packet))
+		{
+			PacketRepaired(packet);
+
+			return true;
+		}
 
 		return false;
 	}
@@ -149,6 +164,8 @@ namespace RTC
 		MS_TRACE();
 
 		auto report = new RTC::RTCP::ReceiverReport();
+
+		report->SetSsrc(GetSsrc());
 
 		// Calculate Packets Expected and Lost.
 		uint32_t expected = (this->cycles + this->maxSeq) - this->baseSeq + 1;
@@ -220,7 +237,16 @@ namespace RTC
 			if (this->params.useNack)
 				this->nackGenerator->Reset();
 
-			this->listener->OnRtpStreamRecvPliRequired(this);
+			MS_DEBUG_2TAGS(rtcp, rtx, "sending PLI [ssrc:%" PRIu32 "]", GetSsrc());
+
+			RTC::RTCP::FeedbackPsPliPacket packet(0, GetSsrc());
+
+			packet.Serialize(RTC::RTCP::Buffer);
+
+			this->pliCount++;
+
+			// Notify the listener.
+			this->listener->OnRtpStreamSendRtcpPacket(this, &packet);
 		}
 		else if (this->params.useFir)
 		{
@@ -228,7 +254,18 @@ namespace RTC
 			if (this->params.useNack)
 				this->nackGenerator->Reset();
 
-			this->listener->OnRtpStreamRecvFirRequired(this);
+			MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", GetSsrc());
+
+			RTC::RTCP::FeedbackPsFirPacket packet(0, GetSsrc());
+			auto* item = new RTC::RTCP::FeedbackPsFirItem(GetSsrc(), ++this->firSeqNumber);
+
+			packet.AddItem(item);
+			packet.Serialize(RTC::RTCP::Buffer);
+
+			this->pliCount++;
+
+			// Notify the listener.
+			this->listener->OnRtpStreamSendRtcpPacket(this, &packet);
 		}
 	}
 
@@ -305,7 +342,53 @@ namespace RTC
 		  seqNumbers[0],
 		  seqNumbers.size());
 
-		this->listener->OnRtpStreamRecvNackRequired(this, seqNumbers);
+		RTC::RTCP::FeedbackRtpNackPacket packet(0, GetSsrc());
+
+		auto it        = seqNumbers.begin();
+		const auto end = seqNumbers.end();
+		size_t numPacketsRequested{ 0 };
+
+		while (it != end)
+		{
+			uint16_t seq;
+			uint16_t bitmask{ 0 };
+
+			seq = *it;
+			++it;
+
+			while (it != end)
+			{
+				uint16_t shift = *it - seq - 1;
+
+				if (shift > 15)
+					break;
+
+				bitmask |= (1 << shift);
+				++it;
+			}
+
+			auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+
+			packet.AddItem(nackItem);
+
+			numPacketsRequested += nackItem->CountRequestedPackets();
+		}
+
+		// Ensure that the RTCP packet fits into the RTCP buffer.
+		if (packet.GetSize() > RTC::RTCP::BufferSize)
+		{
+			MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)", packet.GetSize());
+
+			return;
+		}
+
+		this->nackCount++;
+		this->nackRtpPacketCount += numPacketsRequested;
+
+		packet.Serialize(RTC::RTCP::Buffer);
+
+		// Notify the listener.
+		this->listener->OnRtpStreamSendRtcpPacket(this, &packet);
 	}
 
 	inline void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()

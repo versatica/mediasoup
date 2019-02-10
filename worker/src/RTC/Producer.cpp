@@ -5,10 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
-#include "RTC/RTCP/FeedbackPsFir.hpp"
-#include "RTC/RTCP/FeedbackPsPli.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
 
 namespace RTC
 {
@@ -484,15 +480,9 @@ namespace RTC
 		// RTX packet.
 		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
 		{
-			// Update retransmitted RTP data counter.
-			rtpStream->RtpPacketRetransmitted(packet);
-
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
 				return;
-
-			// Packet repaired after applying RTX.
-			rtpStream->RtpPacketRepaired(packet);
 		}
 		// Should not happen.
 		else
@@ -550,7 +540,6 @@ namespace RTC
 			auto* rtpStream = kv.second;
 			auto* report    = rtpStream->GetRtcpReceiverReport();
 
-			report->SetSsrc(rtpStream->GetSsrc());
 			packet->AddReceiverReport(report);
 		}
 
@@ -792,12 +781,12 @@ namespace RTC
 		if (this->paused)
 			rtpStream->Pause();
 
+		// Notify to the listener.
+		this->listener->OnProducerNewRtpStream(this, rtpStream, encodingMapping.mappedSsrc);
+
 		// Request a key frame for this stream since we may have lost the first packets.
 		if (this->keyFrameRequestManager && !this->paused)
 			this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
-
-		// Notify to the listener.
-		this->listener->OnProducerNewRtpStream(this, rtpStream, encodingMapping.mappedSsrc);
 
 		// Emit the first score event right now.
 		EmitScore();
@@ -874,93 +863,10 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
-	inline void Producer::OnRtpStreamRecvNackRequired(
-	  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers)
+	inline void Producer::OnRtpStreamSendRtcpPacket(RTC::RtpStream* /*rtpStream*/, RTC::RTCP::Packet* packet)
 	{
-		MS_TRACE();
-
-		RTC::RTCP::FeedbackRtpNackPacket packet(0, rtpStream->GetSsrc());
-
-		auto it        = seqNumbers.begin();
-		const auto end = seqNumbers.end();
-		size_t numPacketsRequested{ 0 };
-
-		while (it != end)
-		{
-			uint16_t seq;
-			uint16_t bitmask{ 0 };
-
-			seq = *it;
-			++it;
-
-			while (it != end)
-			{
-				uint16_t shift = *it - seq - 1;
-
-				if (shift <= 15)
-				{
-					bitmask |= (1 << shift);
-					++it;
-				}
-				else
-				{
-					break;
-				}
-			}
-
-			auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
-
-			packet.AddItem(nackItem);
-
-			numPacketsRequested += nackItem->CountRequestedPackets();
-		}
-
-		// Ensure that the RTCP packet fits into the RTCP buffer.
-		if (packet.GetSize() > RTC::RTCP::BufferSize)
-		{
-			MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)", packet.GetSize());
-
-			return;
-		}
-
-		packet.Serialize(RTC::RTCP::Buffer);
-
-		this->listener->OnProducerSendRtcpPacket(this, &packet);
-
-		rtpStream->nackCount++;
-		rtpStream->nackRtpPacketCount += numPacketsRequested;
-	}
-
-	inline void Producer::OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream)
-	{
-		MS_TRACE();
-
-		MS_DEBUG_2TAGS(rtcp, rtx, "sending PLI [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
-
-		RTC::RTCP::FeedbackPsPliPacket packet(0, rtpStream->GetSsrc());
-
-		packet.Serialize(RTC::RTCP::Buffer);
-
-		this->listener->OnProducerSendRtcpPacket(this, &packet);
-
-		rtpStream->pliCount++;
-	}
-
-	inline void Producer::OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream)
-	{
-		MS_TRACE();
-
-		MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
-
-		RTC::RTCP::FeedbackPsFirPacket packet(0, rtpStream->GetSsrc());
-		auto* item = new RTC::RTCP::FeedbackPsFirItem(rtpStream->GetSsrc(), rtpStream->GetFirSeqNumber());
-
-		packet.AddItem(item);
-		packet.Serialize(RTC::RTCP::Buffer);
-
-		this->listener->OnProducerSendRtcpPacket(this, &packet);
-
-		rtpStream->pliCount++;
+		// Notify the listener.
+		this->listener->OnProducerSendRtcpPacket(this, packet);
 	}
 
 	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)

@@ -27,7 +27,7 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamSend(Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
+		RtpStreamSend(RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
 
 		void FillJsonStats(json& jsonObject) override;

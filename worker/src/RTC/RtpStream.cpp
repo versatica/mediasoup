@@ -113,25 +113,6 @@ namespace RTC
 		return true;
 	}
 
-	void RtpStream::RtpPacketRetransmitted(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		this->retransmissionCounter.Update(packet);
-	}
-
-	void RtpStream::RtpPacketRepaired(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		this->packetsRepaired++;
-
-		if (this->mapRepairedPackets.size() == MaxRepairedPacketsLength)
-			this->mapRepairedPackets.erase(this->mapRepairedPackets.begin());
-
-		this->mapRepairedPackets[packet->GetSequenceNumber()]++;
-	}
-
 	void RtpStream::InitSeq(uint16_t seq)
 	{
 		MS_TRACE();
@@ -370,6 +351,19 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  score, "[added score:%" PRIu8 ", computed score:%" PRIu8 "] (no change)", score, this->score);
 		}
+	}
+
+	void RtpStream::PacketRepaired(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		this->retransmissionCounter.Update(packet);
+		this->packetsRepaired++;
+
+		if (this->mapRepairedPackets.size() == MaxRepairedPacketsLength)
+			this->mapRepairedPackets.erase(this->mapRepairedPackets.begin());
+
+		this->mapRepairedPackets[packet->GetSequenceNumber()]++;
 	}
 
 	void RtpStream::Params::FillJson(json& jsonObject) const

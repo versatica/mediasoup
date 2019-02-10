@@ -19,7 +19,7 @@
 
 namespace RTC
 {
-	class Producer : public RTC::RtpStreamRecv::Listener, public RTC::KeyFrameRequestManager::Listener
+	class Producer : public RTC::RtpStream::Listener, public RTC::KeyFrameRequestManager::Listener
 	{
 	public:
 		class Listener
@@ -78,10 +78,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
-		void OnRtpStreamRecvNackRequired(
-		  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t>& seqNumbers) override;
-		void OnRtpStreamRecvPliRequired(RTC::RtpStreamRecv* rtpStream) override;
-		void OnRtpStreamRecvFirRequired(RTC::RtpStreamRecv* rtpStream) override;
+		void OnRtpStreamSendRtcpPacket(RTC::RtpStream* rtpStream, RTC::RTCP::Packet* packet) override;
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */

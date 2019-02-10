@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "json.hpp"
+#include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -21,6 +22,7 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual void OnRtpStreamSendRtcpPacket(RTC::RtpStream* rtpStream, RTC::RTCP::Packet* packet) = 0;
 			virtual void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) = 0;
 		};
 
@@ -57,8 +59,6 @@ namespace RTC
 		uint32_t GetRtxSsrc() const;
 		uint8_t GetRtxPayloadType() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		void RtpPacketRetransmitted(RTC::RtpPacket* packet);
-		void RtpPacketRepaired(RTC::RtpPacket* packet);
 		virtual void Pause()  = 0;
 		virtual void Resume() = 0;
 		uint32_t GetRate(uint64_t now);
@@ -69,6 +69,7 @@ namespace RTC
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
+		void PacketRepaired(RTC::RtpPacket* packet);
 
 	private:
 		void InitSeq(uint16_t seq);
