@@ -8,15 +8,20 @@
 
 using namespace RTC;
 
-// Can retransmit up to 17 RTP packets.
-static std::vector<RtpPacket*> rtpRetransmissionContainer(18);
-
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 {
-	class TestRtpStreamListener : public RtpStreamSend::Listener
+	class TestRtpStreamListener : public RtpStream::Listener
 	{
 	public:
-		virtual void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/) override
+		void OnRtpStreamSendRtcpPacket(RTC::RtpStream* rtpStream, RTC::RTCP::Packet* packet) override
+		{
+		}
+
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStream* rtpStream, RTC::RtpPacket* packet) override
+		{
+		}
+
+		void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/) override
 		{
 		}
 	};
@@ -104,15 +109,14 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(nackItem.GetPacketId() == 21006);
 		REQUIRE(nackItem.GetLostPacketBitmask() == 0b0000000000001111);
 
-		stream->RequestRtpRetransmission(
-		  nackItem.GetPacketId(), nackItem.GetLostPacketBitmask(), rtpRetransmissionContainer);
+		stream->FillRetransmissionContainer(nackItem.GetPacketId(), nackItem.GetLostPacketBitmask());
 
-		auto rtxPacket1 = rtpRetransmissionContainer[0];
-		auto rtxPacket2 = rtpRetransmissionContainer[1];
-		auto rtxPacket3 = rtpRetransmissionContainer[2];
-		auto rtxPacket4 = rtpRetransmissionContainer[3];
-		auto rtxPacket5 = rtpRetransmissionContainer[4];
-		auto rtxPacket6 = rtpRetransmissionContainer[5];
+		auto rtxPacket1 = RtpStreamSend::GetRetransmissionContainer()[0];
+		auto rtxPacket2 = RtpStreamSend::GetRetransmissionContainer()[1];
+		auto rtxPacket3 = RtpStreamSend::GetRetransmissionContainer()[2];
+		auto rtxPacket4 = RtpStreamSend::GetRetransmissionContainer()[3];
+		auto rtxPacket5 = RtpStreamSend::GetRetransmissionContainer()[4];
+		auto rtxPacket6 = RtpStreamSend::GetRetransmissionContainer()[5];
 
 		REQUIRE(rtxPacket1);
 		REQUIRE(rtxPacket1->GetSequenceNumber() == packet1->GetSequenceNumber());

@@ -612,9 +612,11 @@ namespace RTC
 					case RTC::DtlsTransport::Role::CLIENT:
 						data["dtlsLocalRole"] = "client";
 						break;
+
 					case RTC::DtlsTransport::Role::SERVER:
 						data["dtlsLocalRole"] = "server";
 						break;
+
 					default:
 						MS_ABORT("invalid local DTLS role");
 				}

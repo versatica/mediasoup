@@ -744,6 +744,7 @@ namespace RTC
 		params.mimeType    = codec.mimeType;
 		params.clockRate   = codec.clockRate;
 		params.rid         = encoding.rid;
+		params.cname       = this->rtpParameters.rtcp.cname;
 
 		for (auto& fb : codec.rtcpFeedback)
 		{
@@ -867,6 +868,14 @@ namespace RTC
 	{
 		// Notify the listener.
 		this->listener->OnProducerSendRtcpPacket(this, packet);
+	}
+
+	inline void Producer::OnRtpStreamRetransmitRtpPacket(
+	  RTC::RtpStream* /*rtpStream*/, RTC::RtpPacket* /*packet*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
 	}
 
 	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)

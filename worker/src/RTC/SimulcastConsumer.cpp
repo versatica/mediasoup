@@ -11,8 +11,6 @@ namespace RTC
 {
 	/* Static. */
 
-	static uint8_t RtxPacketBuffer[RtpBufferSize];
-	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
 	static constexpr uint16_t PacketsBeforeProbation{ 2000 };
 	// Must be a power of 2.
 	static constexpr uint16_t ProbationPacketNumber{ 256 };
@@ -187,14 +185,7 @@ namespace RTC
 		if (isSyncPacket)
 		{
 			if (isKeyFrame)
-			{
 				MS_DEBUG_TAG(rtp, "awaited key frame received");
-
-				// Clear RTP retransmission buffer to avoid congesting the receiver by
-				// sending useless retransmissions (now that we are sending a newer key
-				// frame).
-				this->rtpStream->ClearRetransmissionBuffer();
-			}
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
 			this->rtpTimestampManager.Sync(packet->GetTimestamp());
@@ -259,6 +250,10 @@ namespace RTC
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
+
+			// Retransmit the RTP packet if probing.
+			if (IsProbing())
+				SendProbationPacket(packet);
 		}
 		else
 		{
@@ -295,19 +290,13 @@ namespace RTC
 		if (!report)
 			return;
 
-		uint32_t ssrc     = this->rtpParameters.encodings[0].ssrc;
-		std::string cname = this->rtpParameters.rtcp.cname;
-
-		report->SetSsrc(ssrc);
 		packet->AddSenderReport(report);
 
 		// Build SDES chunk for this sender.
-		auto* sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		auto* sdesItem =
-		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
-		sdesChunk->AddItem(sdesItem);
 		packet->AddSdesChunk(sdesChunk);
+
 		this->lastRtcpSentTime = now;
 	}
 
@@ -318,29 +307,7 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		this->rtpStream->nackCount++;
-
-		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
-		{
-			RTC::RTCP::FeedbackRtpNackItem* item = *it;
-
-			this->rtpStream->nackRtpPacketCount += item->CountRequestedPackets();
-
-			this->rtpStream->RequestRtpRetransmission(
-			  item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
-
-			auto it2 = RtpRetransmissionContainer.begin();
-
-			for (; it2 != RtpRetransmissionContainer.end(); ++it2)
-			{
-				RTC::RtpPacket* packet = *it2;
-
-				if (packet == nullptr)
-					break;
-
-				RetransmitRtpPacket(packet);
-			}
-		}
+		this->rtpStream->ReceiveNack(nackPacket);
 	}
 
 	void SimulcastConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
@@ -350,21 +317,7 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		switch (messageType)
-		{
-			case RTC::RTCP::FeedbackPs::MessageType::PLI:
-				this->rtpStream->pliCount++;
-				break;
-
-			case RTC::RTCP::FeedbackPs::MessageType::FIR:
-				this->rtpStream->firCount++;
-				break;
-
-			default:
-				MS_ASSERT(false, "invalid messageType");
-		}
-
-		// TODO: Read specific ssrc and so on.
+		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		RequestKeyFrame();
 	}
@@ -459,6 +412,7 @@ namespace RTC
 		params.payloadType = mediaCodec->payloadType;
 		params.mimeType    = mediaCodec->mimeType;
 		params.clockRate   = mediaCodec->clockRate;
+		params.cname       = this->rtpParameters.rtcp.cname;
 
 		for (auto& fb : mediaCodec->rtcpFeedback)
 		{
@@ -512,52 +466,6 @@ namespace RTC
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
-	}
-
-	void SimulcastConsumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		RTC::RtpPacket* rtxPacket{ nullptr };
-
-		if (this->rtpStream->HasRtx())
-		{
-			rtxPacket = packet->Clone(RtxPacketBuffer);
-
-			this->rtpStream->RtxEncode(rtxPacket);
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "sending RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
-			  ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber(),
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
-		}
-		else
-		{
-			rtxPacket = packet;
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber());
-		}
-
-		// Update retransmitted RTP data counter.
-		this->rtpStream->RtpPacketRetransmitted(rtxPacket);
-
-		// Packet repaired after applying RTX.
-		this->rtpStream->RtpPacketRepaired(packet);
-
-		// Send the packet.
-		this->listener->OnConsumerSendRtpPacket(this, rtxPacket);
-
-		// Delete the RTX RtpPacket if it was cloned.
-		if (rtxPacket != packet)
-			delete rtxPacket;
 	}
 
 	inline void SimulcastConsumer::EmitScore() const
@@ -752,7 +660,7 @@ namespace RTC
 		if (!IsProbing())
 			return;
 
-		RetransmitRtpPacket(packet);
+		this->rtpStream->RetransmitPacket(packet);
 
 		switch (this->currentSpatialLayer)
 		{
@@ -778,7 +686,23 @@ namespace RTC
 			RecalculateTargetSpatialLayer();
 	}
 
-	inline void SimulcastConsumer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
+	inline void SimulcastConsumer::OnRtpStreamSendRtcpPacket(
+	  RTC::RtpStream* /*rtpStream*/, RTC::RTCP::Packet* /*packet*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	inline void SimulcastConsumer::OnRtpStreamRetransmitRtpPacket(
+	  RTC::RtpStream* /*rtpStream*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		this->listener->OnConsumerSendRtpPacket(this, packet);
+	}
+
+	inline void SimulcastConsumer::OnRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
 

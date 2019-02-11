@@ -265,7 +265,7 @@
     },
     {
       'target_name': 'mediasoup-worker-test',
-      'defines': [ 'MS_LOG_STD' ],
+      'defines': [ 'MS_LOG_STD', 'MS_TEST' ],
       'sources':
       [
         # C++ source files.
@@ -321,7 +321,7 @@
     },
     {
       'target_name': 'mediasoup-worker-fuzzer',
-      'defines': [ 'DEBUG', 'MS_LOG_STD' ],
+      'defines': [ 'DEBUG', 'MS_LOG_STD', 'MS_TEST' ],
       'sources':
       [
         # C++ source files.

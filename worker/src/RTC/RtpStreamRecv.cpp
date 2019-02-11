@@ -5,16 +5,12 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/Codecs/Codecs.hpp"
-#include "RTC/RTCP/FeedbackPsFir.hpp"
-#include "RTC/RTCP/FeedbackPsPli.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint16_t StatusCheckPeriod{ 250 };
+	static constexpr uint16_t InactivityCheckPeriod{ 250 };
 
 	/* Instance methods. */
 
@@ -32,7 +28,7 @@ namespace RTC
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
 
-		this->inactivityCheckPeriodicTimer->Start(StatusCheckPeriod, StatusCheckPeriod);
+		this->inactivityCheckPeriodicTimer->Start(InactivityCheckPeriod, InactivityCheckPeriod);
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()
@@ -262,7 +258,7 @@ namespace RTC
 			packet.AddItem(item);
 			packet.Serialize(RTC::RTCP::Buffer);
 
-			this->pliCount++;
+			this->firCount++;
 
 			// Notify the listener.
 			this->listener->OnRtpStreamSendRtcpPacket(this, &packet);

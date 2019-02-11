@@ -3,8 +3,14 @@
 
 #include "common.hpp"
 #include "json.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
+#include "RTC/RTCP/FeedbackPsPli.hpp"
+#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -23,6 +29,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnRtpStreamSendRtcpPacket(RTC::RtpStream* rtpStream, RTC::RTCP::Packet* packet) = 0;
+			virtual void OnRtpStreamRetransmitRtpPacket(RTC::RtpStream* rtpStream, RTC::RtpPacket* packet) = 0;
 			virtual void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) = 0;
 		};
 
@@ -36,6 +43,7 @@ namespace RTC
 			RTC::RtpCodecMimeType mimeType;
 			uint32_t clockRate{ 0 };
 			std::string rid;
+			std::string cname;
 			uint32_t rtxSsrc{ 0 };
 			uint8_t rtxPayloadType{ 0 };
 			bool useNack{ false };
@@ -54,6 +62,7 @@ namespace RTC
 		const RTC::RtpCodecMimeType& GetMimeType() const;
 		uint32_t GetClockRate() const;
 		const std::string& GetRid() const;
+		const std::string& GetCname() const;
 		bool HasRtx() const;
 		virtual void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		uint32_t GetRtxSsrc() const;
@@ -74,18 +83,6 @@ namespace RTC
 	private:
 		void InitSeq(uint16_t seq);
 
-	public:
-		uint32_t packetsLost{ 0 };
-		uint8_t fractionLost{ 0 };
-		size_t packetsDiscarded{ 0 };
-		size_t packetsRepaired{ 0 };
-		size_t nackCount{ 0 };
-		size_t nackRtpPacketCount{ 0 };
-		size_t pliCount{ 0 };
-		size_t firCount{ 0 };
-		RTC::RtpDataCounter transmissionCounter;
-		RTC::RtpDataCounter retransmissionCounter;
-
 	protected:
 		// Given as argument.
 		Listener* listener{ nullptr };
@@ -98,6 +95,16 @@ namespace RTC
 		uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
 		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
+		uint32_t packetsLost{ 0 };
+		uint8_t fractionLost{ 0 };
+		size_t packetsDiscarded{ 0 };
+		size_t packetsRepaired{ 0 };
+		size_t nackCount{ 0 };
+		size_t nackRtpPacketCount{ 0 };
+		size_t pliCount{ 0 };
+		size_t firCount{ 0 };
+		RTC::RtpDataCounter transmissionCounter;
+		RTC::RtpDataCounter retransmissionCounter;
 		// Score related.
 		uint8_t score{ 0 };
 		std::vector<uint8_t> scores;
@@ -138,6 +145,11 @@ namespace RTC
 	inline const std::string& RtpStream::GetRid() const
 	{
 		return this->params.rid;
+	}
+
+	inline const std::string& RtpStream::GetCname() const
+	{
+		return this->params.cname;
 	}
 
 	inline bool RtpStream::HasRtx() const

@@ -9,11 +9,6 @@
 
 namespace RTC
 {
-	/* Static. */
-
-	static uint8_t RtxPacketBuffer[RtpBufferSize];
-	static std::vector<RTC::RtpPacket*> RtpRetransmissionContainer(18);
-
 	/* Instance methods. */
 
 	SimpleConsumer::SimpleConsumer(const std::string& id, Listener* listener, json& data)
@@ -156,14 +151,7 @@ namespace RTC
 		if (isSyncPacket)
 		{
 			if (isKeyFrame)
-			{
 				MS_DEBUG_TAG(rtp, "awaited key frame received");
-
-				// Clear RTP retransmission buffer to avoid congesting the receiver by
-				// sending useless retransmissions (now that we are sending a newer key
-				// frame).
-				this->rtpStream->ClearRetransmissionBuffer();
-			}
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
 			this->rtpTimestampManager.Sync(packet->GetTimestamp());
@@ -264,19 +252,13 @@ namespace RTC
 		if (!report)
 			return;
 
-		uint32_t ssrc     = this->rtpParameters.encodings[0].ssrc;
-		std::string cname = this->rtpParameters.rtcp.cname;
-
-		report->SetSsrc(ssrc);
 		packet->AddSenderReport(report);
 
 		// Build SDES chunk for this sender.
-		auto* sdesChunk = new RTC::RTCP::SdesChunk(ssrc);
-		auto* sdesItem =
-		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
-		sdesChunk->AddItem(sdesItem);
 		packet->AddSdesChunk(sdesChunk);
+
 		this->lastRtcpSentTime = now;
 	}
 
@@ -287,29 +269,7 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		this->rtpStream->nackCount++;
-
-		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
-		{
-			RTC::RTCP::FeedbackRtpNackItem* item = *it;
-
-			this->rtpStream->nackRtpPacketCount += item->CountRequestedPackets();
-
-			this->rtpStream->RequestRtpRetransmission(
-			  item->GetPacketId(), item->GetLostPacketBitmask(), RtpRetransmissionContainer);
-
-			auto it2 = RtpRetransmissionContainer.begin();
-
-			for (; it2 != RtpRetransmissionContainer.end(); ++it2)
-			{
-				RTC::RtpPacket* packet = *it2;
-
-				if (packet == nullptr)
-					break;
-
-				RetransmitRtpPacket(packet);
-			}
-		}
+		this->rtpStream->ReceiveNack(nackPacket);
 	}
 
 	void SimpleConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
@@ -319,19 +279,7 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		switch (messageType)
-		{
-			case RTC::RTCP::FeedbackPs::MessageType::PLI:
-				this->rtpStream->pliCount++;
-				break;
-
-			case RTC::RTCP::FeedbackPs::MessageType::FIR:
-				this->rtpStream->firCount++;
-				break;
-
-			default:
-				MS_ASSERT(false, "invalid messageType");
-		}
+		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		RequestKeyFrame();
 	}
@@ -421,6 +369,7 @@ namespace RTC
 		params.payloadType = mediaCodec->payloadType;
 		params.mimeType    = mediaCodec->mimeType;
 		params.clockRate   = mediaCodec->clockRate;
+		params.cname       = this->rtpParameters.rtcp.cname;
 
 		for (auto& fb : mediaCodec->rtcpFeedback)
 		{
@@ -476,52 +425,6 @@ namespace RTC
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
-	void SimpleConsumer::RetransmitRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		RTC::RtpPacket* rtxPacket{ nullptr };
-
-		if (this->rtpStream->HasRtx())
-		{
-			rtxPacket = packet->Clone(RtxPacketBuffer);
-
-			this->rtpStream->RtxEncode(rtxPacket);
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "sending RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
-			  ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber(),
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
-		}
-		else
-		{
-			rtxPacket = packet;
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber());
-		}
-
-		// Update retransmitted RTP data counter.
-		this->rtpStream->RtpPacketRetransmitted(rtxPacket);
-
-		// Packet repaired after applying RTX.
-		this->rtpStream->RtpPacketRepaired(packet);
-
-		// Send the packet.
-		this->listener->OnConsumerSendRtpPacket(this, rtxPacket);
-
-		// Delete the RTX RtpPacket if it was cloned.
-		if (rtxPacket != packet)
-			delete rtxPacket;
-	}
-
 	inline void SimpleConsumer::EmitScore() const
 	{
 		MS_TRACE();
@@ -538,7 +441,23 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
-	inline void SimpleConsumer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
+	inline void SimpleConsumer::OnRtpStreamSendRtcpPacket(
+	  RTC::RtpStream* /*rtpStream*/, RTC::RTCP::Packet* /*packet*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	inline void SimpleConsumer::OnRtpStreamRetransmitRtpPacket(
+	  RTC::RtpStream* /*rtpStream*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		this->listener->OnConsumerSendRtpPacket(this, packet);
+	}
+
+	inline void SimpleConsumer::OnRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
 

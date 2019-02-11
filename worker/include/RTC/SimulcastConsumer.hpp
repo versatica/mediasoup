@@ -46,6 +46,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStream::Listener. */
 	public:
+		void OnRtpStreamSendRtcpPacket(RTC::RtpStream* rtpStream, RTC::RTCP::Packet* packet) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStream* rtpStream, RTC::RtpPacket* packet) override;
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
 
 	private:

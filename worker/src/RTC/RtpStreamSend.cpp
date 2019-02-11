@@ -11,9 +11,22 @@ namespace RTC
 {
 	/* Static. */
 
+	static uint8_t RtxPacketBuffer[RTC::RtpBufferSize];
+	// 17: 16 bit mask + the initial sequence number.
+	static constexpr size_t MaxRequestedPackets{ 17 };
+	static std::vector<RTC::RtpPacket*> RetransmissionContainer(MaxRequestedPackets + 1);
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
+
+	/* Static methods. */
+
+#ifdef MS_TEST
+	std::vector<RTC::RtpPacket*>& RtpStreamSend::GetRetransmissionContainer()
+	{
+		return RetransmissionContainer;
+	}
+#endif
 
 	/* Instance methods. */
 
@@ -53,11 +66,63 @@ namespace RTC
 		if (!RtpStream::ReceivePacket(packet))
 			return false;
 
+		// If it's a key frame clear the RTP retransmission buffer to avoid
+		// congesting the receiver by sending useless retransmissions (now that we
+		// are sending a newer key frame).
+		if (packet->IsKeyFrame())
+			ClearRetransmissionBuffer();
+
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
 			StorePacket(packet);
 
 		return true;
+	}
+
+	void RtpStreamSend::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
+	{
+		MS_TRACE();
+
+		this->nackCount++;
+
+		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
+		{
+			RTC::RTCP::FeedbackRtpNackItem* item = *it;
+
+			this->nackRtpPacketCount += item->CountRequestedPackets();
+
+			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
+
+			auto it2 = RetransmissionContainer.begin();
+
+			for (; it2 != RetransmissionContainer.end(); ++it2)
+			{
+				RTC::RtpPacket* packet = *it2;
+
+				if (packet == nullptr)
+					break;
+
+				RetransmitPacket(packet);
+			}
+		}
+	}
+
+	void RtpStreamSend::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
+	{
+		MS_TRACE();
+
+		switch (messageType)
+		{
+			case RTC::RTCP::FeedbackPs::MessageType::PLI:
+				this->pliCount++;
+				break;
+
+			case RTC::RTCP::FeedbackPs::MessageType::FIR:
+				this->firCount++;
+				break;
+
+			default:;
+		}
 	}
 
 	void RtpStreamSend::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -96,18 +161,204 @@ namespace RTC
 		UpdateScore(report);
 	}
 
-	// This method looks for the requested RTP packets and inserts them into the
-	// given container (and set to null the next container position).
-	void RtpStreamSend::RequestRtpRetransmission(
-	  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
+	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
 	{
 		MS_TRACE();
 
-		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets{ 17 };
+		if (this->transmissionCounter.GetPacketCount() == 0u)
+			return nullptr;
+
+		auto ntp    = Utils::Time::TimeMs2Ntp(now);
+		auto report = new RTC::RTCP::SenderReport();
+
+		report->SetSsrc(GetSsrc());
+		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
+		report->SetOctetCount(this->transmissionCounter.GetBytes());
+		report->SetRtpTs(this->maxPacketTs);
+		report->SetNtpSec(ntp.seconds);
+		report->SetNtpFrac(ntp.fractions);
+
+		return report;
+	}
+
+	RTC::RTCP::SdesChunk* RtpStreamSend::GetRtcpSdesChunk()
+	{
+		MS_TRACE();
+
+		auto& cname     = GetCname();
+		auto* sdesChunk = new RTC::RTCP::SdesChunk(GetSsrc());
+		auto* sdesItem =
+		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+
+		sdesChunk->AddItem(sdesItem);
+
+		return sdesChunk;
+	}
+
+	void RtpStreamSend::Pause()
+	{
+		MS_TRACE();
+
+		ClearRetransmissionBuffer();
+	}
+
+	void RtpStreamSend::Resume()
+	{
+		MS_TRACE();
+	}
+
+	void RtpStreamSend::ClearRetransmissionBuffer()
+	{
+		MS_TRACE();
+
+		// Delete cloned packets.
+		for (auto& bufferItem : this->buffer)
+		{
+			delete bufferItem.packet;
+		}
+
+		// Clear list.
+		this->buffer.clear();
+	}
+
+	void RtpStreamSend::RetransmitPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		RTC::RtpPacket* rtxPacket{ nullptr };
+
+		if (HasRtx())
+		{
+			rtxPacket = packet->Clone(RtxPacketBuffer);
+
+			rtxPacket->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
+
+			MS_DEBUG_TAG(
+			  rtx,
+			  "sending RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
+			  ", seq:%" PRIu16 "]",
+			  rtxPacket->GetSsrc(),
+			  rtxPacket->GetSequenceNumber(),
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
+		}
+		else
+		{
+			rtxPacket = packet;
+
+			MS_DEBUG_TAG(
+			  rtx,
+			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  rtxPacket->GetSsrc(),
+			  rtxPacket->GetSequenceNumber());
+		}
+
+		PacketRepaired(packet);
+
+		// Send the packet.
+		this->listener->OnRtpStreamRetransmitRtpPacket(this, rtxPacket);
+
+		// Delete the RTX RtpPacket if it was cloned.
+		if (rtxPacket != packet)
+			delete rtxPacket;
+	}
+
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (packet->GetSize() > RTC::MtuSize)
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetSize());
+
+			return;
+		}
+
+		// Sum the packet seq number and the number of 16 bits cycles.
+		auto packetSeq = packet->GetSequenceNumber();
+		BufferItem bufferItem;
+
+		bufferItem.seq = packetSeq;
+
+		// If empty do it easy.
+		if (this->buffer.empty())
+		{
+			auto store = this->storage[0].store;
+
+			bufferItem.packet = packet->Clone(store);
+			this->buffer.push_back(bufferItem);
+
+			return;
+		}
+
+		// Otherwise, do the stuff.
+
+		std::list<BufferItem>::iterator newBufferIt;
+		uint8_t* store{ nullptr };
+
+		// Iterate the buffer in reverse order and find the proper place to store the
+		// packet.
+		auto bufferItReverse = this->buffer.rbegin();
+
+		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
+		{
+			auto currentSeq = (*bufferItReverse).seq;
+
+			if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
+			{
+				// Get a forward iterator pointing to the same element.
+				auto it = bufferItReverse.base();
+
+				newBufferIt = this->buffer.insert(it, bufferItem);
+
+				break;
+			}
+
+			// Packet is already stored.
+			if (packetSeq == currentSeq)
+				return;
+		}
+
+		// The packet was older than anything in the buffer, store it at the beginning.
+		if (bufferItReverse == this->buffer.rend())
+			newBufferIt = this->buffer.insert(this->buffer.begin(), bufferItem);
+
+		// If the buffer is not full use the next free storage item.
+		if (this->buffer.size() - 1 < this->storage.size())
+		{
+			store = this->storage[this->buffer.size() - 1].store;
+		}
+		// Otherwise remove the first packet of the buffer and replace its storage area.
+		else
+		{
+			auto& firstBufferItem = *(this->buffer.begin());
+			auto firstPacket      = firstBufferItem.packet;
+
+			// Store points to the store used by the first packet.
+			store = const_cast<uint8_t*>(firstPacket->GetData());
+			// Free the first packet.
+			delete firstPacket;
+			// Remove the first element in the list.
+			this->buffer.pop_front();
+		}
+
+		// Update the new buffer item so it points to the cloned packed.
+		(*newBufferIt).packet = packet->Clone(store);
+	}
+
+	// This method looks for the requested RTP packets and inserts them into the
+	// RetransmissionContainer vector (and set to null the next position).
+	void RtpStreamSend::FillRetransmissionContainer(uint16_t seq, uint16_t bitmask)
+	{
+		MS_TRACE();
 
 		// Ensure the container's first element is 0.
-		container[0] = nullptr;
+		RetransmissionContainer[0] = nullptr;
 
 		// If NACK is not supported, exit.
 		if (!this->params.useNack)
@@ -125,7 +376,8 @@ namespace RTC
 		uint16_t lastSeq  = firstSeq + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
-		MS_ASSERT(container.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
+		MS_ASSERT(
+		  RetransmissionContainer.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
 
 		auto bufferIt           = this->buffer.begin();
 		auto bufferItReverse    = this->buffer.rbegin();
@@ -218,7 +470,7 @@ namespace RTC
 						}
 
 						// Store the packet in the container and then increment its index.
-						container[containerIdx++] = currentPacket;
+						RetransmissionContainer[containerIdx++] = currentPacket;
 
 						// Save when this packet was resent.
 						(*bufferIt).resentAtTime = now;
@@ -274,148 +526,6 @@ namespace RTC
 		}
 
 		// Set the next container element to null.
-		container[containerIdx] = nullptr;
-	}
-
-	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
-	{
-		MS_TRACE();
-
-		if (this->transmissionCounter.GetPacketCount() == 0u)
-			return nullptr;
-
-		auto ntp    = Utils::Time::TimeMs2Ntp(now);
-		auto report = new RTC::RTCP::SenderReport();
-
-		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
-		report->SetOctetCount(this->transmissionCounter.GetBytes());
-		report->SetRtpTs(this->maxPacketTs);
-		report->SetNtpSec(ntp.seconds);
-		report->SetNtpFrac(ntp.fractions);
-
-		return report;
-	}
-
-	void RtpStreamSend::Pause()
-	{
-		MS_TRACE();
-
-		ClearRetransmissionBuffer();
-	}
-
-	void RtpStreamSend::Resume()
-	{
-		MS_TRACE();
-	}
-
-	void RtpStreamSend::ClearRetransmissionBuffer()
-	{
-		MS_TRACE();
-
-		// Delete cloned packets.
-		for (auto& bufferItem : this->buffer)
-		{
-			delete bufferItem.packet;
-		}
-
-		// Clear list.
-		this->buffer.clear();
-	}
-
-	void RtpStreamSend::RtxEncode(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(HasRtx(), "RTX not enabled on this stream");
-
-		packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
-	}
-
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		if (packet->GetSize() > RTC::MtuSize)
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetSize());
-
-			return;
-		}
-
-		// Sum the packet seq number and the number of 16 bits cycles.
-		auto packetSeq = packet->GetSequenceNumber();
-		BufferItem bufferItem;
-
-		bufferItem.seq = packetSeq;
-
-		// If empty do it easy.
-		if (this->buffer.empty())
-		{
-			auto store = this->storage[0].store;
-
-			bufferItem.packet = packet->Clone(store);
-			this->buffer.push_back(bufferItem);
-
-			return;
-		}
-
-		// Otherwise, do the stuff.
-
-		std::list<BufferItem>::iterator newBufferIt;
-		uint8_t* store{ nullptr };
-
-		// Iterate the buffer in reverse order and find the proper place to store the
-		// packet.
-		auto bufferItReverse = this->buffer.rbegin();
-
-		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
-		{
-			auto currentSeq = (*bufferItReverse).seq;
-
-			if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
-			{
-				// Get a forward iterator pointing to the same element.
-				auto it = bufferItReverse.base();
-
-				newBufferIt = this->buffer.insert(it, bufferItem);
-
-				break;
-			}
-
-			// Packet is already stored.
-			if (packetSeq == currentSeq)
-				return;
-		}
-
-		// The packet was older than anything in the buffer, store it at the beginning.
-		if (bufferItReverse == this->buffer.rend())
-			newBufferIt = this->buffer.insert(this->buffer.begin(), bufferItem);
-
-		// If the buffer is not full use the next free storage item.
-		if (this->buffer.size() - 1 < this->storage.size())
-		{
-			store = this->storage[this->buffer.size() - 1].store;
-		}
-		// Otherwise remove the first packet of the buffer and replace its storage area.
-		else
-		{
-			auto& firstBufferItem = *(this->buffer.begin());
-			auto firstPacket      = firstBufferItem.packet;
-
-			// Store points to the store used by the first packet.
-			store = const_cast<uint8_t*>(firstPacket->GetData());
-			// Free the first packet.
-			delete firstPacket;
-			// Remove the first element in the list.
-			this->buffer.pop_front();
-		}
-
-		// Update the new buffer item so it points to the cloned packed.
-		(*newBufferIt).packet = packet->Clone(store);
+		RetransmissionContainer[containerIdx] = nullptr;
 	}
 } // namespace RTC

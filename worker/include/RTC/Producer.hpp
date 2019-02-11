@@ -6,8 +6,8 @@
 #include "Channel/Request.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
-#include "RTC/RTCP/Feedback.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -79,6 +79,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
 		void OnRtpStreamSendRtcpPacket(RTC::RtpStream* rtpStream, RTC::RTCP::Packet* packet) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStream* rtpStream, RTC::RtpPacket* packet) override;
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */

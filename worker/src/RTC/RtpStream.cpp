@@ -378,6 +378,8 @@ namespace RTC
 		if (!this->rid.empty())
 			jsonObject["rid"] = this->rid;
 
+		jsonObject["cname"] = this->cname;
+
 		if (this->rtxSsrc != 0)
 		{
 			jsonObject["rtxSsrc"]        = this->rtxSsrc;

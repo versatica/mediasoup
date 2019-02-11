@@ -2,8 +2,6 @@
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
 #include "Utils.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpStream.hpp"
 #include <list>
 #include <vector>
@@ -26,6 +24,12 @@ namespace RTC
 			RTC::RtpPacket* packet{ nullptr };
 		};
 
+#ifdef MS_TEST
+		// For test units.
+	public:
+		static std::vector<RTC::RtpPacket*>& GetRetransmissionContainer();
+#endif
+
 	public:
 		RtpStreamSend(RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
@@ -33,17 +37,24 @@ namespace RTC
 		void FillJsonStats(json& jsonObject) override;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
+		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
+		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
-		void RequestRtpRetransmission(
-		  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
+		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 		void Pause() override;
 		void Resume() override;
-		void ClearRetransmissionBuffer();
-		void RtxEncode(RTC::RtpPacket* packet);
+		void RetransmitPacket(RTC::RtpPacket* packet);
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
+		void ClearRetransmissionBuffer();
+
+#ifdef MS_TEST
+		// Make it public during test units.
+	public:
+#endif
+		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 
 	private:
 		std::vector<StorageItem> storage;
