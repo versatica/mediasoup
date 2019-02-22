@@ -1,6 +1,7 @@
 ---
 name: 🐍 Bug Report
 about: Report a bug in mediasoup
+labels: bug
 ---
 
 ## Bug Report
