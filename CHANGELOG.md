@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.10
+
+* `PlainRtpTransport.js`: Add missing methods and events.
+
+
 ### 2.6.9
 
 * Remove a potential crash if a single `encoding` is given in the Producer `rtpParameters` and it has a `profile` value.
