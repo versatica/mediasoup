@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuitesloose text artifact
->
-  <testsuite name="<exe-name>" errors="17" failures="109" tests="1325" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
+<testsuites>
+  <properties>
+    <property name="random-seed" value="1"/>
+  </properties>
+loose text artifact
+  <testsuite name="<exe-name>" errors="17" failures="122" tests="1410" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
     <testcase classname="<exe-name>.global" name="# A test name that starts with a #" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1005: Comparing pointer to int and long (NULL can be either on various systems)" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1027" time="{duration}"/>
@@ -10,6 +13,19 @@
     <testcase classname="<exe-name>.global" name="#1238" time="{duration}"/>
     <testcase classname="<exe-name>.(Fixture_1245&lt;int, int>)" name="#1245" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1403" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="#1514: stderr/stdout is not captured in tests aborted by an exception" time="{duration}">
+      <failure type="FAIL">
+1514
+Tricky.tests.cpp:<line number>
+      </failure>
+      <system-out>
+This would not be caught previously
+      </system-out>
+      <system-err>
+Nor would this
+      </system-err>
+    </testcase>
+    <testcase classname="<exe-name>.global" name="#1548" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#748 - captures with unexpected exceptions/outside assertions" time="{duration}">
       <error type="TEST_CASE">
 expected exception
@@ -70,13 +86,37 @@ Condition.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="(unimplemented) static bools can be evaluated/negation" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="(unimplemented) static bools can be evaluated/double negation" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="(unimplemented) static bools can be evaluated/direct" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="10x10 ints" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="3x3x3 ints" time="{duration}"/>
     <testcase classname="<exe-name>.TestClass" name="A METHOD_AS_TEST_CASE based test run that fails" time="{duration}">
       <failure message="&quot;hello&quot; == &quot;world&quot;" type="REQUIRE">
 Class.tests.cpp:<line number>
       </failure>
     </testcase>
     <testcase classname="<exe-name>.TestClass" name="A METHOD_AS_TEST_CASE based test run that succeeds" time="{duration}"/>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - Template_Foo&lt;float>" time="{duration}">
+      <failure message="0 == 1" type="REQUIRE">
+Class.tests.cpp:<line number>
+      </failure>
+    </testcase>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - Template_Foo&lt;int>" time="{duration}">
+      <failure message="0 == 1" type="REQUIRE">
+Class.tests.cpp:<line number>
+      </failure>
+    </testcase>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - std::vector&lt;float>" time="{duration}">
+      <failure message="0 == 1" type="REQUIRE">
+Class.tests.cpp:<line number>
+      </failure>
+    </testcase>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - std::vector&lt;int>" time="{duration}">
+      <failure message="0 == 1" type="REQUIRE">
+Class.tests.cpp:<line number>
+      </failure>
+    </testcase>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - Template_Foo&lt;float>" time="{duration}"/>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - Template_Foo&lt;int>" time="{duration}"/>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - std::vector&lt;float>" time="{duration}"/>
+    <testcase classname="<exe-name>.Template_Fixture_2" name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - std::vector&lt;int>" time="{duration}"/>
     <testcase classname="<exe-name>.Template_Fixture" name="A TEMPLATE_TEST_CASE_METHOD based test run that fails - double" time="{duration}">
       <failure message="1.0 == 2" type="REQUIRE">
 Class.tests.cpp:<line number>
@@ -101,6 +141,10 @@ Class.tests.cpp:<line number>
       </failure>
     </testcase>
     <testcase classname="<exe-name>.Fixture" name="A TEST_CASE_METHOD based test run that succeeds" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="A Template product test case - Foo&lt;float>" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="A Template product test case - Foo&lt;int>" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="A Template product test case - std::vector&lt;float>" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="A Template product test case - std::vector&lt;int>" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="A comparison that uses literals instead of the normal constructor" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="A couple of nested sections followed by a failure" time="{duration}">
       <failure type="FAIL">
@@ -311,14 +355,35 @@ Message.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Floating point matchers: float/ULPs" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: float/Composed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: float/Constructor validation" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators/one" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators/two" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators impl/range" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators impl/fixed values" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators impl/combined" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators impl/values" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators impl/values2" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators impl/type erasure" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Filtering by predicate/Basic usage" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Filtering by predicate/Throws if there are no matching values" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Shortening a range" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Transforming elements/Same type" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Transforming elements/Different type" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Repeating a generator" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Number of elements in source is divisible by chunk size" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Number of elements in source is not divisible by chunk size" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Throws on too small generators" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- simple/one" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- simple/two" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Single value" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Preset values" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Generator combinator" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Explicitly typed generator sequence" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Filter generator" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Take generator/Take less" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Take generator/Take more" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Map" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Repeat/Singular repeat" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Repeat/Actual repeat" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Positive auto step/Integer" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Negative auto step/Integer" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Positive manual step/Integer/Exact" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Positive manual step/Integer/Slightly over end" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Positive manual step/Integer/Slightly under end" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Negative manual step/Integer/Exact" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Negative manual step/Integer/Slightly over end" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Range/Negative manual step/Integer/Slightly under end" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Greater-than inequalities with different epsilons" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="INFO and WARN do not abort tests" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="INFO gets logged on failure" time="{duration}">
@@ -526,6 +591,9 @@ Message.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Process can be configured on command line/use-colour/yes" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Process can be configured on command line/use-colour/no" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Process can be configured on command line/use-colour/error" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Product with differing arities - std::tuple&lt;int, double, float>" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Product with differing arities - std::tuple&lt;int, double>" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Product with differing arities - std::tuple&lt;int>" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Reconstruction should be based on stringification: #914" time="{duration}">
       <failure message="Hey, its truthy!" type="CHECK">
 Decomposition.tests.cpp:<line number>
@@ -660,13 +728,6 @@ Exception.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Tracker/successfully close one section, then find another/Re-enter - skips S1 and enters S2/Successfully close S2" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Tracker/successfully close one section, then find another/Re-enter - skips S1 and enters S2/fail S2" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Tracker/open a nested section" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Tracker/start a generator" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Tracker/start a generator/close outer section" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Tracker/start a generator/close outer section/Re-enter for second generation" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Tracker/start a generator/Start a new inner section" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Tracker/start a generator/Start a new inner section/Re-enter for second generation" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Tracker/start a generator/Fail an inner section" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Tracker/start a generator/Fail an inner section/Re-enter for second generation" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Unexpected exceptions can be translated" time="{duration}">
       <error type="TEST_CASE">
 3.14
@@ -807,6 +868,12 @@ Previous info should not be seen
 Message.tests.cpp:<line number>
       </failure>
     </testcase>
+    <testcase classname="<exe-name>.global" name="just failure after unscoped info" time="{duration}">
+      <failure type="FAIL">
+previous unscoped info SHOULD not be seen
+Message.tests.cpp:<line number>
+      </failure>
+    </testcase>
     <testcase classname="<exe-name>.global" name="long long" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="looped SECTION tests/b is currently: 0" time="{duration}">
       <failure message="0 > 1" type="CHECK">
@@ -852,6 +919,7 @@ Testing if fib[7] (21) is even
 Misc.tests.cpp:<line number>
       </failure>
     </testcase>
+    <testcase classname="<exe-name>.global" name="mix info, unscoped info and warning" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="more nested SECTION tests/equal/doesn't equal" time="{duration}">
       <failure message="1 == 2" type="REQUIRE">
 Misc.tests.cpp:<line number>
@@ -864,10 +932,30 @@ Misc.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="non streamable - with conv. op" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="non-copyable objects" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="not allowed" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="not prints unscoped info from previous failures" time="{duration}">
+      <failure message="false" type="REQUIRE">
+this SHOULD be seen
+Message.tests.cpp:<line number>
+      </failure>
+    </testcase>
     <testcase classname="<exe-name>.global" name="null strings" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="null_ptr" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="pair&lt;pair&lt;int,const char *,pair&lt;std::string,int> > -> toString" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="pointer to class" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="print unscoped info if passing unscoped info is printed" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="prints unscoped info on failure" time="{duration}">
+      <failure message="false" type="REQUIRE">
+this SHOULD be seen
+this SHOULD also be seen
+Message.tests.cpp:<line number>
+      </failure>
+    </testcase>
+    <testcase classname="<exe-name>.global" name="prints unscoped info only for the first assertion" time="{duration}">
+      <failure message="false" type="CHECK">
+this SHOULD be seen only ONCE
+Message.tests.cpp:<line number>
+      </failure>
+    </testcase>
     <testcase classname="<exe-name>.global" name="random SECTION tests/doesn't equal" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="random SECTION tests/not equal" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="replaceInPlace/replace single char" time="{duration}"/>
@@ -887,6 +975,22 @@ Misc.tests.cpp:<line number>
       <failure message="false" type="REQUIRE">
 hi
 i := 7
+Message.tests.cpp:<line number>
+      </failure>
+    </testcase>
+    <testcase classname="<exe-name>.global" name="stacks unscoped info in loops" time="{duration}">
+      <failure message="false" type="CHECK">
+Count 1 to 3...
+1
+2
+3
+Message.tests.cpp:<line number>
+      </failure>
+      <failure message="false" type="CHECK">
+Count 4 to 6...
+4
+5
+6
 Message.tests.cpp:<line number>
       </failure>
     </testcase>
@@ -914,6 +1018,7 @@ Tricky.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="stringify( vectors&lt;has_maker_and_operator> )" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="stringify( vectors&lt;has_operator> )" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="strlen3" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="tables" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="thrown std::strings are translated" time="{duration}">
       <error type="TEST_CASE">
 Why would you throw a std::string?
@@ -948,11 +1053,13 @@ Exception.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="xmlentitycheck/embedded xml: &lt;test>it should be possible to embed xml characters, such as &lt;, &quot; or &amp;, or even whole &lt;xml>documents&lt;/xml> within an attribute&lt;/test>" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="xmlentitycheck/encoded chars: these should all be encoded: &amp;&amp;&amp;&quot;&quot;&quot;&lt;&lt;&lt;&amp;&quot;&lt;&lt;&amp;&quot;" time="{duration}"/>
     <system-out>
+This would not be caught previously
 A string sent directly to stdout
 Message from section one
 Message from section two
     </system-out>
     <system-err>
+Nor would this
 A string sent directly to stderr
 A string sent to stderr via clog
     </system-err>

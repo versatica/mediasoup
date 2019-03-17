@@ -3,44 +3,38 @@
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "LogLevel.hpp"
-#include "Logger.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "catch.hpp"
-#include <string>
-
-static void init();
-static void destroy();
+#include <cstdlib> // std::getenv()
 
 int main(int argc, char* argv[])
 {
-	Settings::configuration.logLevel = LogLevel::LOG_NONE;
+	LogLevel logLevel{ LogLevel::LOG_NONE };
 
-	std::string loggerId = "tests";
+	// Get logLevel from ENV variable.
+	if (std::getenv("MS_TEST_LOG_LEVEL"))
+	{
+		if (std::string(std::getenv("MS_TEST_LOG_LEVEL")) == "debug")
+			logLevel = LogLevel::LOG_DEBUG;
+		else if (std::string(std::getenv("MS_TEST_LOG_LEVEL")) == "warn")
+			logLevel = LogLevel::LOG_WARN;
+		else if (std::string(std::getenv("MS_TEST_LOG_LEVEL")) == "error")
+			logLevel = LogLevel::LOG_ERROR;
+	}
 
-	// Initialize the Logger.
-	Logger::Init(loggerId);
+	Settings::configuration.logLevel = logLevel;
 
-	init();
-
-	int ret = Catch::Session().run(argc, argv);
-
-	destroy();
-
-	return ret;
-}
-
-void init()
-{
 	// Initialize static stuff.
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
 	Utils::Crypto::ClassInit();
-}
 
-void destroy()
-{
+	int status = Catch::Session().run(argc, argv);
+
 	// Free static stuff.
-	Utils::Crypto::ClassDestroy();
 	DepLibUV::ClassDestroy();
+	Utils::Crypto::ClassDestroy();
+
+	return status;
 }

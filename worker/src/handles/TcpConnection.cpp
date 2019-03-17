@@ -4,7 +4,7 @@
 #include "handles/TcpConnection.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memcpy()
@@ -53,7 +53,7 @@ inline static void onClose(uv_handle_t* handle)
 	delete handle;
 }
 
-inline static void onShutdown(uv_shutdown_t* req, int status)
+inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	auto* handle = req->handle;
 
@@ -65,6 +65,7 @@ inline static void onShutdown(uv_shutdown_t* req, int status)
 
 /* Instance methods. */
 
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 {
 	MS_TRACE();
@@ -101,6 +102,7 @@ void TcpConnection::Close()
 
 	// Don't read more.
 	err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
+
 	if (err != 0)
 		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
 
@@ -113,6 +115,7 @@ void TcpConnection::Close()
 		req->data = (void*)this;
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
+
 		if (err != 0)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
@@ -131,31 +134,22 @@ void TcpConnection::Dump() const
 	MS_DEBUG_DEV("<TcpConnection>");
 	MS_DEBUG_DEV(
 	  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
-	  this->localIP.c_str(),
+	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
-	  this->peerIP.c_str(),
+	  this->peerIp.c_str(),
 	  static_cast<uint16_t>(this->peerPort),
 	  (!this->closed) ? "open" : "closed");
 	MS_DEBUG_DEV("</TcpConnection>");
 }
 
 void TcpConnection::Setup(
-  Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIP, uint16_t localPort)
+  Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort)
 {
 	MS_TRACE();
 
-	// Set the listener.
-	this->listener = listener;
-
-	// Set the local address.
-	this->localAddr = localAddr;
-	this->localIP   = localIP;
-	this->localPort = localPort;
-
-	int err;
-
 	// Set the UV handle.
-	err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
+	int err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
+
 	if (err != 0)
 	{
 		delete this->uvHandle;
@@ -163,6 +157,14 @@ void TcpConnection::Setup(
 
 		MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
 	}
+
+	// Set the listener.
+	this->listener = listener;
+
+	// Set the local address.
+	this->localAddr = localAddr;
+	this->localIp   = localIp;
+	this->localPort = localPort;
 }
 
 void TcpConnection::Start()
@@ -172,12 +174,11 @@ void TcpConnection::Start()
 	if (this->closed)
 		return;
 
-	int err;
-
-	err = uv_read_start(
+	int err = uv_read_start(
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  static_cast<uv_alloc_cb>(onAlloc),
 	  static_cast<uv_read_cb>(onRead));
+
 	if (err != 0)
 		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
 
@@ -196,15 +197,11 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 	if (len == 0)
 		return;
 
-	uv_buf_t buffer;
-	int written;
-	int err;
-
 	// First try uv_try_write(). In case it can not directly write all the given
 	// data then build a uv_req_t and use uv_write().
 
-	buffer  = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
-	written = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), &buffer, 1);
+	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
+	int written     = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), &buffer, 1);
 
 	// All the data was written. Done.
 	if (written == static_cast<int>(len))
@@ -240,12 +237,13 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
-	err = uv_write(
+	int err = uv_write(
 	  &writeData->req,
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  &buffer,
 	  1,
 	  static_cast<uv_write_cb>(onWrite));
+
 	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
@@ -293,10 +291,6 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 		return;
 	}
 
-	// MS_DEBUG_DEV(
-	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
-	// 	static_cast<size_t>(written), totalLen);
-
 	size_t pendingLen = totalLen - written;
 
 	// Allocate a special UvWriteData struct pointer.
@@ -317,6 +311,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 		  data2 + (static_cast<size_t>(written) - len1),
 		  len2 - (static_cast<size_t>(written) - len1));
 	}
+
 	writeData->req.data = (void*)writeData;
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
@@ -327,6 +322,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	  &buffer,
 	  1,
 	  static_cast<uv_write_cb>(onWrite));
+
 	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
@@ -339,6 +335,7 @@ bool TcpConnection::SetPeerAddress()
 	int len = sizeof(this->peerAddr);
 
 	err = uv_tcp_getpeername(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->peerAddr), &len);
+
 	if (err != 0)
 	{
 		MS_ERROR("uv_tcp_getpeername() failed: %s", uv_strerror(err));
@@ -347,8 +344,9 @@ bool TcpConnection::SetPeerAddress()
 	}
 
 	int family;
+
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), &family, this->peerIP, &this->peerPort);
+	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), family, this->peerIp, this->peerPort);
 
 	return true;
 }
@@ -366,6 +364,7 @@ inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf
 
 	// Tell UV to write after the last data byte in the buffer.
 	buf->base = reinterpret_cast<char*>(this->buffer + this->bufferDataLen);
+
 	// Give UV all the remaining space in the buffer.
 	if (this->bufferSize > this->bufferDataLen)
 	{

@@ -3,7 +3,7 @@
 
 #include "DepLibSRTP.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 
 /* Static variables. */
 
@@ -45,11 +45,10 @@ void DepLibSRTP::ClassInit()
 {
 	MS_TRACE();
 
-	srtp_err_status_t err;
+	MS_DEBUG_TAG(info, "libsrtp version: \"%s\"", srtp_get_version_string());
 
-	MS_DEBUG_TAG(info, "loaded libsrtp version: \"%s\"", srtp_get_version_string());
+	srtp_err_status_t err = srtp_init();
 
-	err = srtp_init();
 	if (DepLibSRTP::IsError(err))
 		MS_THROW_ERROR("srtp_init() failed: %s", DepLibSRTP::GetErrorString(err));
 }
@@ -58,9 +57,5 @@ void DepLibSRTP::ClassDestroy()
 {
 	MS_TRACE();
 
-	srtp_err_status_t err;
-
-	err = srtp_shutdown();
-	if (DepLibSRTP::IsError(err))
-		MS_ERROR("srtp_shutdown() failed: %s", DepLibSRTP::GetErrorString(err));
+	srtp_shutdown();
 }

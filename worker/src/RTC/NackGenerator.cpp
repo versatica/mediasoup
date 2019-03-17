@@ -87,13 +87,13 @@ namespace RTC
 			return false;
 		}
 
-		// If we are here it means that we may have lost some packets so seq
-		// is newer than the latest seq seen.
+		// If we are here it means that we may have lost some packets so seq is
+		// newer than the latest seq seen.
 
 		CleanOldNackItems(seq);
 
-		// If a key frame remove all the items in the nack list older than our
-		// previous key frame seq.
+		// If a key frame remove all items in the nack list older than our previous
+		// key frame seq.
 		if (isKeyFrame)
 		{
 			RemoveNackItemsUntilKeyFrame();
@@ -111,7 +111,7 @@ namespace RTC
 
 		AddPacketsToNackList(this->lastSeq + 1, seq);
 
-		// NackGenerator instance may have been reseted.
+		// NackGenerator instance may have been reset.
 		if (!this->started)
 			return false;
 
@@ -209,6 +209,7 @@ namespace RTC
 
 		uint64_t now = DepLibUV::GetTime();
 		std::vector<uint16_t> nackBatch;
+
 		auto it = this->nackList.begin();
 
 		while (it != this->nackList.end())

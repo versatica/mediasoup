@@ -23,8 +23,8 @@ namespace TestBye
 	};
 	// clang-format on
 
-	uint32_t ssrc1 = 0x624276e0;
-	uint32_t ssrc2 = 0x2624670e;
+	uint32_t ssrc1{ 0x624276e0 };
+	uint32_t ssrc2{ 0x2624670e };
 	std::string reason("Hasta la vista");
 
 	void verify(ByePacket* packet)

@@ -8,11 +8,12 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value Parameters::ToJson() const
+	void Parameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		Json::Value json(Json::objectValue);
+		// Force it to be an object even if no key/values are added below.
+		jsonObject = json::object();
 
 		for (auto& kv : this->mapKeyValues)
 		{
@@ -22,121 +23,89 @@ namespace RTC
 			switch (value.type)
 			{
 				case Value::Type::BOOLEAN:
-				{
-					json[key] = value.booleanValue;
-
+					jsonObject[key] = value.booleanValue;
 					break;
-				}
 
 				case Value::Type::INTEGER:
-				{
-					json[key] = Json::Int{ value.integerValue };
-
+					jsonObject[key] = value.integerValue;
 					break;
-				}
 
 				case Value::Type::DOUBLE:
-				{
-					json[key] = value.doubleValue;
-
+					jsonObject[key] = value.doubleValue;
 					break;
-				}
 
 				case Value::Type::STRING:
-				{
-					json[key] = value.stringValue;
-
+					jsonObject[key] = value.stringValue;
 					break;
-				}
 
 				case Value::Type::ARRAY_OF_INTEGERS:
-				{
-					Json::Value array(Json::arrayValue);
-
-					for (auto& entry : value.arrayOfIntegers)
-						array.append(Json::Int{ entry });
-
-					json[key] = array;
-
+					jsonObject[key] = value.arrayOfIntegers;
 					break;
-				}
 			}
 		}
-
-		return json;
 	}
 
-	void Parameters::Set(Json::Value& data)
+	void Parameters::Set(json& data)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(data.isObject(), "data is not a JSON object");
+		MS_ASSERT(data.is_object(), "data is not an object");
 
-		for (Json::Value::iterator it = data.begin(); it != data.end(); ++it)
+		for (json::iterator it = data.begin(); it != data.end(); ++it)
 		{
-			std::string key   = it.key().asString();
-			Json::Value value = (*it);
+			const std::string& key = it.key();
+			auto& value            = it.value();
 
 			switch (value.type())
 			{
-				case Json::booleanValue:
+				case json::value_t::boolean:
 				{
-					bool booleanValue = value.asBool();
-
-					this->mapKeyValues[key] = Value(booleanValue);
+					this->mapKeyValues.emplace(key, Value(value.get<bool>()));
 
 					break;
 				}
 
-				case Json::intValue:
+				case json::value_t::number_integer:
+				case json::value_t::number_unsigned:
 				{
-					auto integerValue = int32_t{ value.asInt() };
-
-					this->mapKeyValues[key] = Value(integerValue);
+					this->mapKeyValues.emplace(key, Value(value.get<int32_t>()));
 
 					break;
 				}
 
-				case Json::realValue:
+				case json::value_t::number_float:
 				{
-					double doubleValue = value.asDouble();
-
-					this->mapKeyValues[key] = Value(doubleValue);
+					this->mapKeyValues.emplace(key, Value(value.get<double>()));
 
 					break;
 				}
 
-				case Json::stringValue:
+				case json::value_t::string:
 				{
-					std::string stringValue = value.asString();
-
-					this->mapKeyValues[key] = Value(stringValue);
+					this->mapKeyValues.emplace(key, Value(value.get<std::string>()));
 
 					break;
 				}
 
-				case Json::arrayValue:
+				case json::value_t::array:
 				{
 					std::vector<int32_t> arrayOfIntegers;
 					bool isValid = true;
 
-					for (Json::UInt i = 0; i < value.size() && isValid; ++i)
+					for (auto& entry : value)
 					{
-						auto& entry = value[i];
-
-						if (entry.isInt())
-						{
-							arrayOfIntegers.push_back(static_cast<int32_t>(entry.asInt()));
-						}
-						else
+						if (!entry.is_number_integer())
 						{
 							isValid = false;
+
 							break;
 						}
+
+						arrayOfIntegers.emplace_back(entry.get<int32_t>());
 					}
 
 					if (!arrayOfIntegers.empty() && isValid)
-						this->mapKeyValues[key] = Value(arrayOfIntegers);
+						this->mapKeyValues.emplace(key, Value(arrayOfIntegers));
 
 					break;
 				}
@@ -146,63 +115,153 @@ namespace RTC
 		}
 	}
 
-	bool Parameters::GetBoolean(const std::string& key)
+	bool Parameters::HasBoolean(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].booleanValue;
+		if (it == this->mapKeyValues.end())
+			return false;
+
+		auto& value = it->second;
+
+		return value.type == Value::Type::BOOLEAN;
 	}
 
-	int32_t Parameters::GetInteger(const std::string& key)
+	bool Parameters::HasInteger(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].integerValue;
+		if (it == this->mapKeyValues.end())
+			return false;
+
+		auto& value = it->second;
+
+		return value.type == Value::Type::INTEGER;
 	}
 
-	double Parameters::GetDouble(const std::string& key)
+	bool Parameters::HasDouble(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].doubleValue;
+		if (it == this->mapKeyValues.end())
+			return false;
+
+		auto& value = it->second;
+
+		return value.type == Value::Type::DOUBLE;
 	}
 
-	std::string& Parameters::GetString(const std::string& key)
+	bool Parameters::HasString(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].stringValue;
+		if (it == this->mapKeyValues.end())
+			return false;
+
+		auto& value = it->second;
+
+		return value.type == Value::Type::STRING;
 	}
 
-	std::vector<int32_t>& Parameters::GetArrayOfIntegers(const std::string& key)
+	bool Parameters::HasArrayOfIntegers(const std::string& key) const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapKeyValues.find(key) != this->mapKeyValues.end(),
-		  "key does not exist [key:%s]",
-		  key.c_str());
+		auto it = this->mapKeyValues.find(key);
 
-		return this->mapKeyValues[key].arrayOfIntegers;
+		if (it == this->mapKeyValues.end())
+			return false;
+
+		auto& value = it->second;
+
+		return value.type == Value::Type::ARRAY_OF_INTEGERS;
+	}
+
+	bool Parameters::IncludesInteger(const std::string& key, int32_t integer) const
+	{
+		MS_TRACE();
+
+		auto it = this->mapKeyValues.find(key);
+
+		if (it == this->mapKeyValues.end())
+			return false;
+
+		auto& value = it->second;
+		auto& array = value.arrayOfIntegers;
+
+		return std::find(array.begin(), array.end(), integer) != array.end();
+	}
+
+	bool Parameters::GetBoolean(const std::string& key) const
+	{
+		MS_TRACE();
+
+		auto it = this->mapKeyValues.find(key);
+
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.booleanValue;
+	}
+
+	int32_t Parameters::GetInteger(const std::string& key) const
+	{
+		MS_TRACE();
+
+		auto it = this->mapKeyValues.find(key);
+
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.integerValue;
+	}
+
+	double Parameters::GetDouble(const std::string& key) const
+	{
+		MS_TRACE();
+
+		auto it = this->mapKeyValues.find(key);
+
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.doubleValue;
+	}
+
+	const std::string& Parameters::GetString(const std::string& key) const
+	{
+		MS_TRACE();
+
+		auto it = this->mapKeyValues.find(key);
+
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.stringValue;
+	}
+
+	const std::vector<int32_t>& Parameters::GetArrayOfIntegers(const std::string& key) const
+	{
+		MS_TRACE();
+
+		auto it = this->mapKeyValues.find(key);
+
+		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
+
+		auto& value = it->second;
+
+		return value.arrayOfIntegers;
 	}
 } // namespace RTC

@@ -2,143 +2,136 @@
 #define MS_RTC_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
-#include "RTC/ConsumerListener.hpp"
-#include "RTC/ProducerListener.hpp"
+#include "json.hpp"
+#include "Channel/Request.hpp"
+#include "RTC/Consumer.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/TransportTuple.hpp"
-#include "RTC/UdpSocket.hpp"
 #include "handles/Timer.hpp"
-#include <json/json.h>
-#include <tuple>
-#include <unordered_set>
-#include <vector>
+#include <string>
+#include <unordered_map>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
-	// Avoid cyclic #include problem by declaring classes instead of including
-	// the corresponding header files.
-	class Producer;
-	class Consumer;
-
-	class Transport : public RTC::ProducerListener,
-	                  public RTC::ConsumerListener,
-	                  public Timer::Listener,
-	                  public RTC::UdpSocket::Listener
+	class Transport : public RTC::Producer::Listener,
+	                  public RTC::Consumer::Listener,
+	                  public Timer::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnTransportClosed(RTC::Transport* transport) = 0;
+			virtual void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) = 0;
+			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;
+			virtual void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) = 0;
+			virtual void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) = 0;
+			virtual void OnTransportProducerNewRtpStream(
+			  RTC::Transport* transport,
+			  RTC::Producer* producer,
+			  RTC::RtpStream* rtpStream,
+			  uint32_t mappedSsrc) = 0;
+			virtual void OnTransportProducerRtpStreamScore(
+			  RTC::Transport* transport,
+			  RTC::Producer* producer,
+			  RTC::RtpStream* rtpStream,
+			  uint8_t score) = 0;
+			virtual void OnTransportProducerRtpPacketReceived(
+			  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			virtual void OnTransportNeedWorstRemoteFractionLost(
+			  RTC::Transport* transport,
+			  RTC::Producer* producer,
+			  uint32_t mappedSsrc,
+			  uint8_t& worstRemoteFractionLost) = 0;
+			virtual void OnTransportNewConsumer(
+			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
+			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
+			virtual void OnTransportConsumerProducerClosed(
+			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
+			virtual void OnTransportConsumerKeyFrameRequested(
+			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 		};
 
 	public:
-		// RTP header extension ids that must be shared by all the Producers using
-		// the same Transport.
-		// NOTE: These ids are the original ids in the RTP packet (before the Producer
-		// maps them to the corresponding ids in the room).
-		struct HeaderExtensionIds
-		{
-			uint8_t absSendTime{ 0 }; // 0 means no abs-send-time id.
-			uint8_t mid{ 0 };         // 0 means no MID id.
-			uint8_t rid{ 0 };         // 0 means no RID id.
-		};
-
-	public:
-		// Mirroring options.
-		// Determines which incoming traffic to mirror and where.
-		struct MirroringOptions
-		{
-			std::string remoteIP;
-			uint16_t remotePort;
-			std::string localIP;
-			bool sendRtp{ true };
-			bool sendRtcp{ true };
-			bool recvRtp{ true };
-			bool recvRtcp{ true };
-		};
-
-	public:
-		Transport(Listener* listener, Channel::Notifier* notifier, uint32_t transportId);
+		Transport(const std::string& id, Listener* listener);
 		virtual ~Transport();
 
 	public:
-		virtual Json::Value ToJson() const   = 0;
-		virtual Json::Value GetStats() const = 0;
-		void HandleProducer(RTC::Producer* producer);
-		void HandleConsumer(RTC::Consumer* consumer);
-		virtual void SendRtpPacket(RTC::RtpPacket* packet)     = 0;
-		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet) = 0;
-		void StartMirroring(MirroringOptions& options);
-		void StopMirroring();
+		void CloseProducersAndConsumers();
+		// Subclasses must also invoke the parent Close().
+		virtual void FillJson(json& jsonObject) const;
+		virtual void FillJsonStats(json& jsonArray) const = 0;
+		// Subclasses must implement this method and call the parent's one to
+		// handle common requests.
+		virtual void HandleRequest(Channel::Request* request);
 
 	protected:
-		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
+		// Must be called from the subclass.
+		void Connected();
+		// Must be called from the subclass.
+		void Disconnected();
+		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 
 	private:
-		virtual bool IsConnected() const = 0;
+		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
+		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
+		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
+		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
+		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
+		virtual bool IsConnected() const                   = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet) = 0;
 		void SendRtcp(uint64_t now);
+		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
-		RTC::Consumer* GetConsumer(uint32_t ssrc) const;
 
-		/* Pure virtual methods inherited from RTC::ProducerListener. */
+		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
-		void OnProducerClosed(RTC::Producer* producer) override;
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
-		void OnProducerRtpPacket(
-		  RTC::Producer* producer,
-		  RTC::RtpPacket* packet,
-		  RTC::RtpEncodingParameters::Profile profile) override;
-		void OnProducerProfileEnabled(
-		  RTC::Producer* producer,
-		  RTC::RtpEncodingParameters::Profile profile,
-		  const RTC::RtpStream* rtpStream) override;
-		void OnProducerProfileDisabled(
-		  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) override;
+		void OnProducerNewRtpStream(
+		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
+		void OnProducerRtpStreamScore(
+		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score) override;
+		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
+		void OnProducerNeedWorstRemoteFractionLost(
+		  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 
-		/* Pure virtual methods inherited from RTC::ConsumerListener. */
+		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerClosed(RTC::Consumer* consumer) override;
-		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer) override;
+		void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) override;
+		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
+		void onConsumerProducerClosed(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
 		void OnTimer(Timer* timer) override;
 
-		/* Pure virtual methods inherited from UdpSocket::Listener. Mirroring. */
-	public:
-		void OnPacketRecv(
-		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
-
 	public:
 		// Passed by argument.
-		uint32_t transportId{ 0 };
+		const std::string id;
 
 	protected:
+		// Allocated by this.
+		std::unordered_map<std::string, RTC::Producer*> mapProducers;
+		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
+		// Others.
+		RtpListener rtpListener;
+		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
+		uint32_t availableIncomingBitrate{ 0 };
+		uint32_t availableOutgoingBitrate{ 0 };
+
+	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		Channel::Notifier* notifier{ nullptr };
 		// Allocated by this.
+		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		Timer* rtcpTimer{ nullptr };
-		RTC::UdpSocket* mirrorSocket{ nullptr };
-		RTC::TransportTuple* mirrorTuple{ nullptr };
-		// Others (Producers and Consumers).
-		std::unordered_set<RTC::Producer*> producers;
-		std::unordered_set<RTC::Consumer*> consumers;
-		// Others (RtpListener).
-		RtpListener rtpListener;
-		struct HeaderExtensionIds headerExtensionIds;
-		// Others (Mirroring).
-		MirroringOptions mirroringOptions{};
-		struct sockaddr_storage mirrorAddrStorage;
-		// Others (REMB)
-		std::tuple<uint64_t, std::vector<uint32_t>> recvRemb;
 	};
 } // namespace RTC
 

@@ -1,9 +1,11 @@
 branches:
   only:
   - master
-  - experimental
+
 dist: trusty
+
 language: node_js
+
 matrix:
   include:
   - os: linux
@@ -36,15 +38,17 @@ matrix:
         - clang-5.0
     env:
     - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+
 before_install:
 - eval "${MATRIX_EVAL}"
+
 install:
 - npm install
-before_script:
-- npm install -g gulp-cli
+
 script:
-- gulp lint
-- gulp test
+- npm run lint
+- npm test
+
 notifications:
   email:
     recipients:

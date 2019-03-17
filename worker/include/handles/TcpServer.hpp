@@ -10,7 +10,6 @@
 class TcpServer : public TcpConnection::Listener
 {
 public:
-	TcpServer(const std::string& ip, uint16_t port, int backlog);
 	/**
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */
@@ -22,7 +21,7 @@ public:
 	virtual void Dump() const;
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
-	const std::string& GetLocalIP() const;
+	const std::string& GetLocalIp() const;
 	uint16_t GetLocalPort() const;
 	size_t GetNumConnections() const;
 
@@ -43,17 +42,17 @@ public:
 public:
 	void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) override;
 
+protected:
+	struct sockaddr_storage localAddr;
+	std::string localIp;
+	uint16_t localPort{ 0 };
+
 private:
 	// Allocated by this (may be passed by argument).
 	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
 	std::unordered_set<TcpConnection*> connections;
 	bool closed{ false };
-
-protected:
-	struct sockaddr_storage localAddr;
-	std::string localIP;
-	uint16_t localPort{ 0 };
 };
 
 /* Inline methods. */
@@ -73,9 +72,9 @@ inline int TcpServer::GetLocalFamily() const
 	return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
 }
 
-inline const std::string& TcpServer::GetLocalIP() const
+inline const std::string& TcpServer::GetLocalIp() const
 {
-	return this->localIP;
+	return this->localIp;
 }
 
 inline uint16_t TcpServer::GetLocalPort() const

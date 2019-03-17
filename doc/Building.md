@@ -1,67 +1,146 @@
 # Building
 
-This document is intended for **mediasoup** developers.
+This document is intended for mediasoup developers.
+
+
+## NPM scripts
+
+The `package.json` file in the main folder includes the following scripts:
+
+
+### `npm run lint`
+
+Runs both `npm run lint:node` and `npm run lint:worker`.
+
+
+### `npm run lint:node`
+
+Validates mediasoup JavaScript files using [ESLint](https://eslint.org).
+
+
+### `npm run lint:worker`
+
+Validates mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html). It invokes `make lint` below.
+
+
+### `npm run format:worker`
+
+Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html). It invokes `make format` below.
+
+
+### `npm run test`
+
+Runs both `npm run test:node` and `npm run test:worker`.
+
+
+### `npm run test:node`
+
+Runs [Jest](https://jestjs.io) test units located at `test/` folder.
+
+
+### `npm run test:worker`
+
+Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/test/` folder. It invokes `make test` below.
+
+
+### `npm run coverage:node`
+
+Same as `npm run test:node` but it also opens a browser window with JavaScript coverage results.
 
 
 ## Makefile
 
-The `worker` folder contains a `Makefile` to build the mediasoup worker subproject.
+The `worker` folder contains a `Makefile` for the mediasoup-worker C++ subproject. It includes the following tasks:
 
 
 ### `make`
 
-The default task runs the `Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `Debug` task).
+Builds the `mediasoup-worker` binary at `worker/out/Release/`.
 
+If the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug", the binary is built at `worker/out/Debug/` with some C/C++ flags enabled (such as `-O0`) and some macros defined (such as `DEBUG`, `MS_LOG_TRACE` and `MS_LOG_FILE_LINE`). Check the meaning of these macros in the `worker/include/Logger.hpp` header file.
 
-### `make Release`
-
-Builds the production ready mediasoup worker binary at `worker/out/Release/`. This is the binary used in production when installing the **mediasoup** NPM module with `npm install mediasoup`.
-
-
-### `make Debug`
-
-Builds a more verbose and non optimized mediasoup worker binary at `worker/out/Debug/` with some C flags enabled (such as `-O0`) and some macros defined (such as `DEBUG`, `MS_LOG_TRACE` and `MS_LOG_FILE_LINE`).
-
-Check the meaning of these macros in the [Logger.hpp](worker/include/Logger.hpp) header file.
-
-In order to instruct the **mediasoup** Node.js module to use the `Debug` mediasoup worker binary, an environment variable must be set before running the Node.js application:
+In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-worker binary, an environment variable must be set before running the Node.js application:
 
 ```bash
 $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
 ```
 
+If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use the it as mediasoup-worker binary:
+
+```bash
+$ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
+```
+
 
 ### `make test`
 
-Runs the `test-Release` task unless the environment `MEDIASOUP_BUILDTYPE` is set to `Debug` (if so it runs the `test-Debug` task).
+Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
 
 
-### `make test-Release`
+### `make fuzzer`
 
-Builds the `mediasoup-worker-test` test unit binary at `worker/out/Release/`.
+Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
 
+**Requirements:**
 
-### `make test-Debug`
+* Linux with fuzzer capable clang++.
+* `CC` environment variable must point to "clang".
+* `CXX` environment variable must point to "clang++".
 
-Builds the `mediasoup-worker-test` test unit binary in `Debug` mode at `worker/out/Debug/`.
-
-
-### `fuzzer`
-
-Builds the `mediasoup-worker-fuzzer` target (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) and generates the `worker/out/Release/mediasoup-worker-fuzzer` binary.
-
-* Linux is required with `fuzzer` capable `clang++`.
-* `CC` environment variable must point to `clang`.
-* `CXX` environment variable must point to `clang++`.
-
-Read the [Fuzzer](Fuzzer.md) documentation to run the fuzzer binary.
+Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 
 
-### `fuzzer-docker-build`
+### `make xcode`
 
-Builds a Linux image with `fuzzer` capable `clang++`.
+Builds a Xcode project for the mediasoup-worker subproject.
 
-**NOTE:** Before running this command, a specific version of Linux `clang` must be downloaded. To get it, run:
+
+
+### `make lint`
+
+Validates mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and rules in `worker/.clang-format`.
+
+
+### `make format`
+
+Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
+
+
+### `make bear`
+
+Generates the `worker/compile_commands_template.json` file which is a ["Clang compilation database"](https://clang.llvm.org/docs/JSONCompilationDatabase.html).
+
+It requires [jq](https://stedolan.github.io/jq/) command-line JSON processor. Install it in Debian/Ubuntu via `apt install jq` and in OSX via `brew install jq`.
+
+**NOTE:** Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean && make` before running `make bear`.
+
+
+### `make tidy`
+
+Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code checks following `worker/.clang-tidy` rules.
+
+**Requirements:**
+
+* `make bear` must have been called first.
+* [PyYAML](https://pyyaml.org/) is required.
+  - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
+
+
+### `make clean`
+
+Cleans built objects and binaries.
+
+
+### `make clean-all`
+
+Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
+
+
+### `make docker-build`
+
+Builds a Linux image with fuzzer capable clang++.
+
+**NOTE:** Before running this command, a specific version of Linux clang must be downloaded. To get it, run:
 
 ```bash
 $ cd worker
@@ -69,121 +148,6 @@ $ ./scripts/get-dep.sh clang-fuzzer
 ```
 
 
-### `fuzzer-docker-run`
+### `make docker-run`
 
-Runs a container of the Docker image created with `fuzzer-docker-build`. It automatically executes a `bash` session in the `/mediasoup/worker` directory, which is a Docker volume that points to the real `mediasoup/worker` directory (so we can do `make fuzzer`, etc).
-
-
-### `make xcode`
-
-Builds a Xcode project for the mediasoup worker subproject.
-
-
-### `make clean`
-
-Cleans objects and binaries related to the mediasoup worker.
-
-
-### `make clean-all`
-
-Cleans all the objects and binaries, including those generated for library dependencies (such as libuv, openssl and libsrtp).
-
-
-## gulpfile.js
-
-**mediasoup** comes with a `gulpfile.js` file to enable [gulp](https://www.npmjs.com/package/gulp) tasks.
-
-In order to tun these tasks, `gulp-cli` (version >= 1.2.2) must be globally installed:
-
-```bash
-$ npm install -g gulp-cli
-```
-
-
-### `gulp`
-
-The default task runs the `gulp:lint` and `gulp:test` tasks.
-
-
-### `gulp lint`
-
-Runs both the `lint:node` and `lint:worker` gulp tasks.
-
-
-### `gulp lint:node`
-
-Validates the Node.js JavaScript code/syntax.
-
-
-### `gulp lint:worker`
-
-Validates the worker C++ code/syntax using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) following `worker/.clang-format` rules.
-
-
-### `gulp format`
-
-Runs the `format:worker` gulp task.
-
-
-### `gulp format:worker`
-
-Rewrites worker source and include files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
-
-
-### `gulp tidy`
-
-
-Runs the `tidy:worker` gulp task.
-
-
-### `gulp tidy:worker`
-
-Performs C++ code check using [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) following following `worker/.clang-tidy` rules.
-
-clang-tidy uses a [JSON compilation database](http://clang.llvm.org/docs/JSONCompilationDatabase.html) to get the information on how a single compilation unit is processed.
-
-In order to generate this file we use [Bear](https://github.com/rizsotto/Bear). This works on linux only.
-
-Once installed, compile mediasoup as follows:
-
-```bash
-$ bear make
-```
-An output file `compile_commands.json` is generated which must be copied to the [worker](worker/) directory after making the following changes:
-
-Replace the references of the current directory by the keywork 'PATH':
-
-```bash
-$  sed -i "s|$PWD|PATH|g" compile_commands.json
-```
-
-Edit the file and remove the entry related to `Utils/IP.cpp` compilation unit, which is automatically created and does not follow the clang-tidy rules.
-
-*NOTE:* It just works on Linux and OSX.
-
-
-### `gulp test`
-
-Runs both the `test:node` and `test:worker` gulp tasks.
-
-
-### `gulp test:node`
-
-Runs the Node.js [test units](test/). Before it, it invokes the `make` command.
-
-In order to run the JavaScript test units with the mediasoup worker in `Debug` mode the `MEDIASOUP_BUILDTYPE` environment variable must be set to `Debug`:
-
-```bash
-$ MEDIASOUP_BUILDTYPE=Debug gulp test:node
-```
-
-
-### `gulp test:worker`
-
-Runs the mediasoup worker [test units](worker/test/). Before it, it invokes the `make test` command.
-
-In order to run the worker test units with the mediasoup worker in `Debug` mode the `MEDIASOUP_BUILDTYPE` environment variable must be set to `Debug`:
-
-```bash
-$ MEDIASOUP_BUILDTYPE=Debug gulp test:worker
-```
+Runs a container of the Docker image created with `make docker-build`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.

@@ -15,6 +15,9 @@ linux-armv4 linux-elf linux-x32 linux-x86_64 linux-ppc \
 linux-ppc64 linux-ppc64le linux32-s390x linux64-s390x \
 solaris-x86-gcc solaris64-x86_64-gcc VC-WIN64A VC-WIN32
 
+CC = gcc
+FAKE_GCC = ../config/fake_gcc.pl
+
 CONFIGURE = ./Configure
 # no-comp: against CRIME attack
 # no-shared: openssl-cli needs static link
@@ -24,7 +27,6 @@ COPTS =  no-comp no-shared no-afalgeng
 # disable platform check in Configure
 NO_WARN_ENV = CONFIGURE_CHECKER_WARN=1
 
-GITIGNORE = $(OPSSL_SRC)/.gitignore
 GENERATE = ./generate_gypi.pl
 
 OPSSL_SRC = ../openssl
@@ -42,11 +44,12 @@ all: $(ARCHS) replace
 
 # Configure and generate openssl asm files for each archs
 $(ARCHS):
-# Remove openssl .gitignore to follow nodejs .gitignore
-	if [ -e $(GITIGNORE) ]; then rm $(GITIGNORE); fi
-# Confgure asm and generate asm sources
-	cd $(OPSSL_SRC); $(NO_WARN_ENV) $(PERL) $(CONFIGURE) $(COPTS) $@;
+	cd $(OPSSL_SRC); $(NO_WARN_ENV) CC=$(CC) $(PERL) $(CONFIGURE) $(COPTS) $@;
 	$(PERL) -w -I$(OPSSL_SRC) $(GENERATE) asm $@
+# Confgure asm_avx2 and generate upto avx2 support
+	cd $(OPSSL_SRC); $(NO_WARN_ENV) CC=$(FAKE_GCC) $(PERL) $(CONFIGURE) \
+	$(COPTS) $@;
+	$(PERL) -w -I$(OPSSL_SRC) $(GENERATE) asm_avx2 $@
 # Confgure no-asm and generate no-asm sources
 	cd $(OPSSL_SRC); $(NO_WARN_ENV) $(PERL) $(CONFIGURE) $(COPTS) \
 	no-asm $@;
@@ -61,4 +64,4 @@ replace:
 
 clean:
 	find archs \( -name \*.S -o -name \*.s -o -name \*.asm -o \
-	-name \*.gypi -o -name \*.h -o -name \*.pm \) -exec rm "{}" \;
+	-name \*.gypi -o -name \*.h -o -name \*.pm -o -name \*.rc \) -exec rm "{}" \;

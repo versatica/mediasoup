@@ -4,7 +4,7 @@
 #include "handles/SignalsHandler.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 
 /* Static methods for UV callbacks. */
 
@@ -42,7 +42,7 @@ void SignalsHandler::Close()
 
 	this->closed = true;
 
-	for (auto uvHandle : uvHandles)
+	for (auto* uvHandle : this->uvHandles)
 	{
 		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 	}
@@ -56,11 +56,12 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 		MS_THROW_ERROR("closed");
 
 	int err;
+	auto uvHandle = new uv_signal_t;
 
-	auto uvHandle  = new uv_signal_t;
 	uvHandle->data = (void*)this;
 
 	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
+
 	if (err != 0)
 	{
 		delete uvHandle;
@@ -69,6 +70,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	}
 
 	err = uv_signal_start(uvHandle, static_cast<uv_signal_cb>(onSignal), signum);
+
 	if (err != 0)
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
 

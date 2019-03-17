@@ -15,15 +15,15 @@ namespace TestFeedbackRtpNack
 		0x81, 0xcd, 0x00, 0x03, // Type: 205 (Generic RTP Feedback), Length: 3
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
 		0x03, 0x30, 0xbd, 0xee, // Media source SSRC: 0x0330bdee
-		0x0b, 0x8f, 0x00, 0x03  // NACK PID: 2959, NACK BLP: 0x00000003
+		0x0b, 0x8f, 0x00, 0x03  // NACK PID: 2959, NACK BLP: 0x0003
 	};
 	// clang-format on
 
 	// NACK values.
-	uint32_t senderSsrc        = 0x00000001;
-	uint32_t mediaSsrc         = 0x0330bdee;
-	uint16_t pid               = 2959;
-	uint16_t lostPacketBitmask = 0x00000003;
+	uint32_t senderSsrc{ 0x00000001 };
+	uint32_t mediaSsrc{ 0x0330bdee };
+	uint16_t pid{ 2959 };
+	uint16_t lostPacketBitmask{ 0x0003 };
 
 	void verify(FeedbackRtpNackPacket* packet)
 	{
@@ -35,6 +35,7 @@ namespace TestFeedbackRtpNack
 
 		REQUIRE(item->GetPacketId() == pid);
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
+		REQUIRE(item->CountRequestedPackets() == 3);
 	}
 } // namespace TestFeedbackRtpNack
 

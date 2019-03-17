@@ -1,9 +1,9 @@
 {
   "name": "mediasoup",
-  "version": "2.6.10",
+  "version": "3.0.0-dev",
   "description": "Cutting Edge WebRTC Video Conferencing",
-  "author": "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
   "contributors": [
+    "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
     "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)"
   ],
   "homepage": "https://mediasoup.org",
@@ -12,46 +12,51 @@
     "type": "git",
     "url": "https://github.com/versatica/mediasoup.git"
   },
+  "main": "lib/index.js",
   "keywords": [
     "webrtc",
     "ortc",
     "sfu",
     "nodejs"
   ],
-  "bugs": {
-    "url": "https://github.com/versatica/mediasoup/issues"
-  },
   "os": [
     "!win32"
   ],
   "engines": {
-    "node": ">=6.4"
+    "node": ">=8.0.0"
   },
-  "main": "lib/mediasoup.js",
+  "scripts": {
+    "lint": "npm run lint:node && npm run lint:worker",
+    "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test",
+    "lint:worker": "make lint -C worker",
+    "format:worker": "make format -C worker",
+    "test": "npm run test:node && npm run test:worker",
+    "test:node": "jest",
+    "test:worker": "make test -C worker",
+    "coverage:node": "jest --coverage && opn coverage/lcov-report/index.html",
+    "postinstall": "make -C worker"
+  },
+  "jest": {
+    "verbose": true,
+    "testEnvironment": "node",
+    "testRegex": "test/test.*\\.js"
+  },
   "dependencies": {
-    "check-types": "^7.4.0",
-    "debug": "^4.1.0",
+    "debug": "^4.1.1",
     "netstring": "^0.3.0",
     "random-number": "0.0.9",
-    "randomatic": "^3.1.1"
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "eslint": "^5.13.0",
+    "eslint": "^5.15.2",
+    "eslint-plugin-jest": "^22.4.1",
     "gulp": "^4.0.0",
     "gulp-clang-format": "^1.0.27",
-    "gulp-eslint": "^5.0.0",
-    "gulp-rename": "^1.4.0",
-    "gulp-replace": "^1.0.0",
-    "gulp-shell": "^0.6.5",
-    "gulp-touch-cmd": "0.0.1",
-    "tap": "^12.5.2"
+    "jest": "^24.5.0",
+    "jest-tobetype": "^1.2.2",
+    "opn-cli": "^4.0.0"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
-  },
-  "scripts": {
-    "lint": "gulp lint",
-    "test": "gulp test",
-    "postinstall": "make Release -C worker"
   }
 }

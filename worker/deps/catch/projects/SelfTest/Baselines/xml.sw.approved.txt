@@ -142,6 +142,30 @@
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="#1514: stderr/stdout is not captured in tests aborted by an exception" tags="[.][output-capture][regression]" filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
+      <Failure filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
+        1514
+      </Failure>
+      <OverallResult success="false">
+        <StdOut>
+This would not be caught previously
+        </StdOut>
+        <StdErr>
+Nor would this
+        </StdErr>
+      </OverallResult>
+    </TestCase>
+    <TestCase name="#1548" tags="[compilation]" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          std::is_same&lt;TypeList&lt;int>, TypeList&lt;int>>::value
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="#748 - captures with unexpected exceptions" tags="[!shouldfail][!throws][.][failing]" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
       <Section name="outside assertions" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
         <Info>
@@ -522,181 +546,29 @@
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <TestCase name="10x10 ints" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+    <TestCase name="3x3x3 ints" tags="[generators]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
           x &lt; y
         </Original>
         <Expanded>
-          1 &lt; 101
+          1 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 102
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 103
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 104
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 105
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 106
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 107
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 108
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 109
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          1 &lt; 110
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 101
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 102
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 103
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 104
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 105
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 106
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 107
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 108
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 109
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
-        </Original>
-        <Expanded>
-          2 &lt; 110
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          3 &lt; 101
+          4 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          3 &lt; 102
+          1 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -704,23 +576,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          3 &lt; 103
+          1 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          3 &lt; 104
+          4 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          3 &lt; 105
+          1 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -728,23 +600,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          3 &lt; 106
+          1 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          3 &lt; 107
+          4 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          3 &lt; 108
+          1 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -752,23 +624,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          3 &lt; 109
+          1 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          3 &lt; 110
+          5 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          4 &lt; 101
+          1 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -776,23 +648,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          4 &lt; 102
+          1 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          4 &lt; 103
+          5 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          4 &lt; 104
+          1 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -800,23 +672,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          4 &lt; 105
+          1 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          4 &lt; 106
+          5 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          4 &lt; 107
+          1 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -824,23 +696,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          4 &lt; 108
+          1 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          4 &lt; 109
+          6 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          4 &lt; 110
+          1 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -848,23 +720,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          5 &lt; 101
+          1 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          5 &lt; 102
+          6 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          5 &lt; 103
+          1 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -872,23 +744,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          5 &lt; 104
+          1 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          5 &lt; 105
+          6 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          5 &lt; 106
+          1 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -896,23 +768,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          5 &lt; 107
+          2 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          5 &lt; 108
+          4 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          5 &lt; 109
+          2 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -920,23 +792,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          5 &lt; 110
+          2 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          6 &lt; 101
+          4 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          6 &lt; 102
+          2 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -944,23 +816,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          6 &lt; 103
+          2 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          6 &lt; 104
+          4 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          6 &lt; 105
+          2 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -968,23 +840,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          6 &lt; 106
+          2 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          6 &lt; 107
+          5 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          6 &lt; 108
+          2 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -992,23 +864,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          6 &lt; 109
+          2 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          6 &lt; 110
+          5 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          7 &lt; 101
+          2 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1016,23 +888,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          7 &lt; 102
+          2 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          7 &lt; 103
+          5 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          7 &lt; 104
+          2 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1040,23 +912,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          7 &lt; 105
+          2 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          7 &lt; 106
+          6 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          7 &lt; 107
+          2 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1064,23 +936,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          7 &lt; 108
+          2 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          7 &lt; 109
+          6 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          7 &lt; 110
+          2 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1088,23 +960,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          8 &lt; 101
+          2 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          8 &lt; 102
+          6 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          8 &lt; 103
+          2 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1112,23 +984,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          8 &lt; 104
+          3 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          8 &lt; 105
+          4 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          8 &lt; 106
+          3 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1136,23 +1008,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          8 &lt; 107
+          3 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          8 &lt; 108
+          4 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          8 &lt; 109
+          3 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1160,23 +1032,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          8 &lt; 110
+          3 &lt; 4
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          9 &lt; 101
+          4 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          9 &lt; 102
+          3 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1184,23 +1056,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          9 &lt; 103
+          3 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          9 &lt; 104
+          5 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          9 &lt; 105
+          3 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1208,23 +1080,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          9 &lt; 106
+          3 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          9 &lt; 107
+          5 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          9 &lt; 108
+          3 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1232,23 +1104,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          9 &lt; 109
+          3 &lt; 5
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          9 &lt; 110
+          5 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          10 &lt; 101
+          3 &lt; 9
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1256,23 +1128,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          10 &lt; 102
+          3 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          10 &lt; 103
+          6 &lt; 7
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          10 &lt; 104
+          3 &lt; 7
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1280,23 +1152,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          10 &lt; 105
+          3 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          10 &lt; 106
+          6 &lt; 8
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          10 &lt; 107
+          3 &lt; 8
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -1304,23 +1176,23 @@
           x &lt; y
         </Original>
         <Expanded>
-          10 &lt; 108
+          3 &lt; 6
         </Expanded>
       </Expression>
       <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          y &lt; z
         </Original>
         <Expanded>
-          10 &lt; 109
+          6 &lt; 9
         </Expanded>
       </Expression>
-      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
-          x &lt; y
+          x &lt; z
         </Original>
         <Expanded>
-          10 &lt; 110
+          3 &lt; 9
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
@@ -1343,6 +1215,94 @@
         </Original>
         <Expanded>
           "hello" == "hello"
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - Template_Foo&lt;float>" tags="[.][class][failing][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 1
+        </Original>
+        <Expanded>
+          0 == 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - Template_Foo&lt;int>" tags="[.][class][failing][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 1
+        </Original>
+        <Expanded>
+          0 == 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - std::vector&lt;float>" tags="[.][class][failing][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 1
+        </Original>
+        <Expanded>
+          0 == 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that fails - std::vector&lt;int>" tags="[.][class][failing][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 1
+        </Original>
+        <Expanded>
+          0 == 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - Template_Foo&lt;float>" tags="[class][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - Template_Foo&lt;int>" tags="[class][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - std::vector&lt;float>" tags="[class][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A TEMPLATE_PRODUCT_TEST_CASE_METHOD based test run that succeeds - std::vector&lt;int>" tags="[class][product][template]" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Class.tests.cpp" >
+        <Original>
+          Template_Fixture_2&lt;TestType>::m_a.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
@@ -1431,6 +1391,50 @@
         </Original>
         <Expanded>
           1 == 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A Template product test case - Foo&lt;float>" tags="[product][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          x.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A Template product test case - Foo&lt;int>" tags="[product][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          x.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A Template product test case - std::vector&lt;float>" tags="[product][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          x.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="A Template product test case - std::vector&lt;int>" tags="[product][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          x.size() == 0
+        </Original>
+        <Expanded>
+          0 == 0
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
@@ -3558,343 +3562,712 @@
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <TestCase name="Generators" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "a"
-        </Info>
-        <Info>
-          j := 8
-        </Info>
+    <TestCase name="Generators -- adapters" tags="[generators][generic]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Section name="Filtering by predicate" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Basic usage" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i % 2 == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "a"
-        </Info>
-        <Info>
-          j := 9
-        </Info>
+      <Section name="Filtering by predicate" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Basic usage" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i % 2 == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "a"
-        </Info>
-        <Info>
-          j := 10
-        </Info>
+      <Section name="Filtering by predicate" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Basic usage" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i % 2 == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "a"
-        </Info>
-        <Info>
-          j := 2
-        </Info>
+      <Section name="Filtering by predicate" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Throws if there are no matching values" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE_THROWS_AS" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              filter([] (int) {return false; }, value(1)), Catch::GeneratorException
+            </Original>
+            <Expanded>
+              filter([] (int) {return false; }, value(1)), Catch::GeneratorException
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "a"
-        </Info>
-        <Info>
-          j := 3.141
-        </Info>
+      <Section name="Shortening a range" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            i &lt; 4
+          </Original>
+          <Expanded>
+            1 &lt; 4
+          </Expanded>
+        </Expression>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "a"
-        </Info>
-        <Info>
-          j := 1.379
-        </Info>
+      <Section name="Shortening a range" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            i &lt; 4
+          </Original>
+          <Expanded>
+            2 &lt; 4
+          </Expanded>
+        </Expression>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "b"
-        </Info>
-        <Info>
-          j := 8
-        </Info>
+      <Section name="Shortening a range" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            i &lt; 4
+          </Original>
+          <Expanded>
+            3 &lt; 4
+          </Expanded>
+        </Expression>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "b"
-        </Info>
-        <Info>
-          j := 9
-        </Info>
+      <Section name="Transforming elements" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Same type" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i % 2 == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "b"
-        </Info>
-        <Info>
-          j := 10
-        </Info>
+      <Section name="Transforming elements" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Same type" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i % 2 == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "b"
-        </Info>
-        <Info>
-          j := 2
-        </Info>
+      <Section name="Transforming elements" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Same type" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i % 2 == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "b"
-        </Info>
-        <Info>
-          j := 3.141
-        </Info>
+      <Section name="Transforming elements" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Different type" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i.size() == 1
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "b"
-        </Info>
-        <Info>
-          j := 1.379
-        </Info>
+      <Section name="Transforming elements" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Different type" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i.size() == 1
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "c"
-        </Info>
-        <Info>
-          j := 8
-        </Info>
+      <Section name="Transforming elements" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Different type" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              i.size() == 1
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "c"
-        </Info>
-        <Info>
-          j := 9
-        </Info>
+      <Section name="Repeating a generator" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j > 0
+          </Original>
+          <Expanded>
+            1 > 0
+          </Expanded>
+        </Expression>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "c"
-        </Info>
-        <Info>
-          j := 10
-        </Info>
+      <Section name="Repeating a generator" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j > 0
+          </Original>
+          <Expanded>
+            2 > 0
+          </Expanded>
+        </Expression>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "c"
-        </Info>
-        <Info>
-          j := 2
-        </Info>
+      <Section name="Repeating a generator" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j > 0
+          </Original>
+          <Expanded>
+            3 > 0
+          </Expanded>
+        </Expression>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "c"
-        </Info>
-        <Info>
-          j := 3.141
-        </Info>
+      <Section name="Repeating a generator" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j > 0
+          </Original>
+          <Expanded>
+            1 > 0
+          </Expanded>
+        </Expression>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
-        <Info>
-          i := "c"
-        </Info>
-        <Info>
-          j := 1.379
-        </Info>
+      <Section name="Repeating a generator" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j > 0
+          </Original>
+          <Expanded>
+            2 > 0
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Repeating a generator" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j > 0
+          </Original>
+          <Expanded>
+            3 > 0
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Number of elements in source is divisible by chunk size" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.front() == chunk2.back()
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <OverallResults successes="2" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Number of elements in source is divisible by chunk size" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.front() == chunk2.back()
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <OverallResults successes="2" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Number of elements in source is divisible by chunk size" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.front() == chunk2.back()
+            </Original>
+            <Expanded>
+              3 == 3
+            </Expanded>
+          </Expression>
+          <OverallResults successes="2" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Number of elements in source is not divisible by chunk size" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.front() == chunk2.back()
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.front() &lt; 3
+            </Original>
+            <Expanded>
+              1 &lt; 3
+            </Expanded>
+          </Expression>
+          <OverallResults successes="3" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Number of elements in source is not divisible by chunk size" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.front() == chunk2.back()
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.front() &lt; 3
+            </Original>
+            <Expanded>
+              2 &lt; 3
+            </Expanded>
+          </Expression>
+          <OverallResults successes="3" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Throws on too small generators" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE_THROWS_AS" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk(2, value(1)), Catch::GeneratorException
+            </Original>
+            <Expanded>
+              chunk(2, value(1)), Catch::GeneratorException
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
         <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <TestCase name="Generators impl" tags="[impl]" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-      <Section name="range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+    <TestCase name="Generators -- simple" tags="[generators]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
           <Original>
-            gen.size() == 2
+            j &lt; i
           </Original>
           <Expanded>
-            2 == 2
+            -3 &lt; 1
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
           <Original>
-            gen[0] == 1
+            j &lt; i
+          </Original>
+          <Expanded>
+            -2 &lt; 1
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j &lt; i
+          </Original>
+          <Expanded>
+            -1 &lt; 1
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            4 > 1
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            4 > 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            4 > 3
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j &lt; i
+          </Original>
+          <Expanded>
+            -3 &lt; 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j &lt; i
+          </Original>
+          <Expanded>
+            -2 &lt; 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j &lt; i
+          </Original>
+          <Expanded>
+            -1 &lt; 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            8 > 1
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            8 > 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            8 > 3
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j &lt; i
+          </Original>
+          <Expanded>
+            -3 &lt; 3
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j &lt; i
+          </Original>
+          <Expanded>
+            -2 &lt; 3
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="one" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            j &lt; i
+          </Original>
+          <Expanded>
+            -1 &lt; 3
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            12 > 1
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            12 > 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="two" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Original>
+            4u * i > str.size()
+          </Original>
+          <Expanded>
+            12 > 3
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Generators internals" tags="[generators][internals]" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+      <Section name="Single value" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 123
+          </Original>
+          <Expanded>
+            123 == 123
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            !(gen.next())
+          </Original>
+          <Expanded>
+            !false
+          </Expanded>
+        </Expression>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Preset values" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 1
           </Original>
           <Expanded>
             1 == 1
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen[1] == 2
+            gen.next()
           </Original>
           <Expanded>
-            2 == 2
+            true
           </Expanded>
         </Expression>
-        <OverallResults successes="3" failures="0" expectedFailures="0"/>
-      </Section>
-      <Section name="fixed values" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen.size() == 4
-          </Original>
-          <Expanded>
-            4 == 4
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen[0] == 3
+            gen.get() == 3
           </Original>
           <Expanded>
             3 == 3
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen[1] == 1
+            gen.next()
           </Original>
           <Expanded>
-            1 == 1
+            true
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen[2] == 4
+            gen.get() == 5
           </Original>
           <Expanded>
-            4 == 4
+            5 == 5
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen[3] == 1
+            !(gen.next())
           </Original>
           <Expanded>
-            1 == 1
+            !false
           </Expanded>
         </Expression>
-        <OverallResults successes="5" failures="0" expectedFailures="0"/>
+        <OverallResults successes="6" failures="0" expectedFailures="0"/>
       </Section>
-      <Section name="combined" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+      <Section name="Generator combinator" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen.size() == 4
-          </Original>
-          <Expanded>
-            4 == 4
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen[0] == 1
+            gen.get() == 1
           </Original>
           <Expanded>
             1 == 1
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen[1] == 2
+            gen.next()
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 5
+          </Original>
+          <Expanded>
+            5 == 5
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.next()
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 2
           </Original>
           <Expanded>
             2 == 2
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen[2] == 9
+            gen.next()
           </Original>
           <Expanded>
-            9 == 9
+            true
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            gen[3] == 7
-          </Original>
-          <Expanded>
-            7 == 7
-          </Expanded>
-        </Expression>
-        <OverallResults successes="5" failures="0" expectedFailures="0"/>
-      </Section>
-      <Section name="values" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen.size() == 2
-          </Original>
-          <Expanded>
-            2 == 2
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen[0] == 3
-          </Original>
-          <Expanded>
-            3 == 3
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen[1] == 1
-          </Original>
-          <Expanded>
-            1 == 1
-          </Expanded>
-        </Expression>
-        <OverallResults successes="3" failures="0" expectedFailures="0"/>
-      </Section>
-      <Section name="values2" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen.size() == 2
-          </Original>
-          <Expanded>
-            2 == 2
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen[0] == 3
-          </Original>
-          <Expanded>
-            3 == 3
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            gen[1] == 1
-          </Original>
-          <Expanded>
-            1 == 1
-          </Expanded>
-        </Expression>
-        <OverallResults successes="3" failures="0" expectedFailures="0"/>
-      </Section>
-      <Section name="type erasure" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
-          <Original>
-            base->size() == 4
+            gen.get() == 4
           </Original>
           <Expanded>
             4 == 4
@@ -3902,37 +4275,1000 @@
         </Expression>
         <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            typed
+            gen.next()
           </Original>
           <Expanded>
-            0x<hex digits>
+            true
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            typed->size() == 4
+            gen.get() == 0
           </Original>
           <Expanded>
-            4 == 4
+            0 == 0
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            (*typed)[0] == 7
+            !(gen.next())
           </Original>
           <Expanded>
-            7 == 7
+            !false
           </Expanded>
         </Expression>
-        <Expression success="true" type="CHECK" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <OverallResults successes="10" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Explicitly typed generator sequence" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
           <Original>
-            (*typed)[3] == 11
+            gen.get().size() == 2
           </Original>
           <Expanded>
-            11 == 11
+            2 == 2
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == "aa"
+          </Original>
+          <Expanded>
+            "aa" == "aa"
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.next()
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == "bb"
+          </Original>
+          <Expanded>
+            "bb" == "bb"
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.next()
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == "cc"
+          </Original>
+          <Expanded>
+            "cc" == "cc"
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            !(gen.next())
+          </Original>
+          <Expanded>
+            !false
+          </Expanded>
+        </Expression>
+        <OverallResults successes="7" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Filter generator" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 1
+          </Original>
+          <Expanded>
+            1 == 1
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.next()
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 3
+          </Original>
+          <Expanded>
+            3 == 3
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            !(gen.next())
+          </Original>
+          <Expanded>
+            !false
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE_THROWS_AS" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            filter([] (int) { return false; }, value(1)), Catch::GeneratorException
+          </Original>
+          <Expanded>
+            filter([] (int) { return false; }, value(1)), Catch::GeneratorException
           </Expanded>
         </Expression>
         <OverallResults successes="5" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Take generator" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Take less" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 1
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.next()
+            </Original>
+            <Expanded>
+              true
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              !(gen.next())
+            </Original>
+            <Expanded>
+              !false
+            </Expanded>
+          </Expression>
+          <OverallResults successes="4" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="4" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Take generator" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Take more" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 1
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              !(gen.next())
+            </Original>
+            <Expanded>
+              !false
+            </Expanded>
+          </Expression>
+          <OverallResults successes="2" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Map" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 2.0
+          </Original>
+          <Expanded>
+            2.0 == 2.0
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.next()
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 4.0
+          </Original>
+          <Expanded>
+            4.0 == 4.0
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.next()
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            gen.get() == 6.0
+          </Original>
+          <Expanded>
+            6.0 == 6.0
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Original>
+            !(gen.next())
+          </Original>
+          <Expanded>
+            !false
+          </Expanded>
+        </Expression>
+        <OverallResults successes="6" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Repeat" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Singular repeat" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 3
+            </Original>
+            <Expanded>
+              3 == 3
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              !(gen.next())
+            </Original>
+            <Expanded>
+              !false
+            </Expanded>
+          </Expression>
+          <OverallResults successes="2" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Repeat" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Actual repeat" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 1
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.next()
+            </Original>
+            <Expanded>
+              true
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.next()
+            </Original>
+            <Expanded>
+              true
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 3
+            </Original>
+            <Expanded>
+              3 == 3
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.next()
+            </Original>
+            <Expanded>
+              true
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 1
+            </Original>
+            <Expanded>
+              1 == 1
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.next()
+            </Original>
+            <Expanded>
+              true
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 2
+            </Original>
+            <Expanded>
+              2 == 2
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.next()
+            </Original>
+            <Expanded>
+              true
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              gen.get() == 3
+            </Original>
+            <Expanded>
+              3 == 3
+            </Expanded>
+          </Expression>
+          <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Original>
+              !(gen.next())
+            </Original>
+            <Expanded>
+              !false
+            </Expanded>
+          </Expression>
+          <OverallResults successes="12" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="12" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Positive auto step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == -2
+              </Original>
+              <Expanded>
+                -2 == -2
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.next()
+              </Original>
+              <Expanded>
+                true
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == -1
+              </Original>
+              <Expanded>
+                -1 == -1
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.next()
+              </Original>
+              <Expanded>
+                true
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == 0
+              </Original>
+              <Expanded>
+                0 == 0
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.next()
+              </Original>
+              <Expanded>
+                true
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == 1
+              </Original>
+              <Expanded>
+                1 == 1
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                !(gen.next())
+              </Original>
+              <Expanded>
+                !false
+              </Expanded>
+            </Expression>
+            <OverallResults successes="8" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="8" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Negative auto step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == 2
+              </Original>
+              <Expanded>
+                2 == 2
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.next()
+              </Original>
+              <Expanded>
+                true
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == 1
+              </Original>
+              <Expanded>
+                1 == 1
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.next()
+              </Original>
+              <Expanded>
+                true
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == 0
+              </Original>
+              <Expanded>
+                0 == 0
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.next()
+              </Original>
+              <Expanded>
+                true
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                gen.get() == -1
+              </Original>
+              <Expanded>
+                -1 == -1
+              </Expanded>
+            </Expression>
+            <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Original>
+                !(gen.next())
+              </Original>
+              <Expanded>
+                !false
+              </Expanded>
+            </Expression>
+            <OverallResults successes="8" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="8" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Positive manual step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Section name="Exact" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -7
+                </Original>
+                <Expanded>
+                  -7 == -7
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -4
+                </Original>
+                <Expanded>
+                  -4 == -4
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -1
+                </Original>
+                <Expanded>
+                  -1 == -1
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 2
+                </Original>
+                <Expanded>
+                  2 == 2
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  !(gen.next())
+                </Original>
+                <Expanded>
+                  !false
+                </Expanded>
+              </Expression>
+              <OverallResults successes="8" failures="0" expectedFailures="0"/>
+            </Section>
+            <OverallResults successes="8" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="8" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Positive manual step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Section name="Slightly over end" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -7
+                </Original>
+                <Expanded>
+                  -7 == -7
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -4
+                </Original>
+                <Expanded>
+                  -4 == -4
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -1
+                </Original>
+                <Expanded>
+                  -1 == -1
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 2
+                </Original>
+                <Expanded>
+                  2 == 2
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  !(gen.next())
+                </Original>
+                <Expanded>
+                  !false
+                </Expanded>
+              </Expression>
+              <OverallResults successes="8" failures="0" expectedFailures="0"/>
+            </Section>
+            <OverallResults successes="8" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="8" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Positive manual step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Section name="Slightly under end" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -7
+                </Original>
+                <Expanded>
+                  -7 == -7
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -4
+                </Original>
+                <Expanded>
+                  -4 == -4
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -1
+                </Original>
+                <Expanded>
+                  -1 == -1
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 2
+                </Original>
+                <Expanded>
+                  2 == 2
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 5
+                </Original>
+                <Expanded>
+                  5 == 5
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  !(gen.next())
+                </Original>
+                <Expanded>
+                  !false
+                </Expanded>
+              </Expression>
+              <OverallResults successes="10" failures="0" expectedFailures="0"/>
+            </Section>
+            <OverallResults successes="10" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="10" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="10" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Negative manual step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Section name="Exact" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 5
+                </Original>
+                <Expanded>
+                  5 == 5
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 2
+                </Original>
+                <Expanded>
+                  2 == 2
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -1
+                </Original>
+                <Expanded>
+                  -1 == -1
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -4
+                </Original>
+                <Expanded>
+                  -4 == -4
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  !(gen.next())
+                </Original>
+                <Expanded>
+                  !false
+                </Expanded>
+              </Expression>
+              <OverallResults successes="8" failures="0" expectedFailures="0"/>
+            </Section>
+            <OverallResults successes="8" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="8" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Negative manual step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Section name="Slightly over end" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 5
+                </Original>
+                <Expanded>
+                  5 == 5
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 2
+                </Original>
+                <Expanded>
+                  2 == 2
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -1
+                </Original>
+                <Expanded>
+                  -1 == -1
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -4
+                </Original>
+                <Expanded>
+                  -4 == -4
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  !(gen.next())
+                </Original>
+                <Expanded>
+                  !false
+                </Expanded>
+              </Expression>
+              <OverallResults successes="8" failures="0" expectedFailures="0"/>
+            </Section>
+            <OverallResults successes="8" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="8" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Range" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+        <Section name="Negative manual step" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+          <Section name="Integer" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+            <Section name="Slightly under end" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 5
+                </Original>
+                <Expanded>
+                  5 == 5
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == 2
+                </Original>
+                <Expanded>
+                  2 == 2
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -1
+                </Original>
+                <Expanded>
+                  -1 == -1
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -4
+                </Original>
+                <Expanded>
+                  -4 == -4
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.next()
+                </Original>
+                <Expanded>
+                  true
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  gen.get() == -7
+                </Original>
+                <Expanded>
+                  -7 == -7
+                </Expanded>
+              </Expression>
+              <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp" >
+                <Original>
+                  !(gen.next())
+                </Original>
+                <Expanded>
+                  !false
+                </Expanded>
+              </Expression>
+              <OverallResults successes="10" failures="0" expectedFailures="0"/>
+            </Section>
+            <OverallResults successes="10" failures="0" expectedFailures="0"/>
+          </Section>
+          <OverallResults successes="10" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="10" failures="0" expectedFailures="0"/>
       </Section>
       <OverallResult success="true"/>
     </TestCase>
@@ -6732,6 +8068,39 @@
       </Section>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="Product with differing arities - std::tuple&lt;int, double, float>" tags="[product][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          std::tuple_size&lt;TestType>::value >= 1
+        </Original>
+        <Expanded>
+          3 >= 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Product with differing arities - std::tuple&lt;int, double>" tags="[product][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          std::tuple_size&lt;TestType>::value >= 1
+        </Original>
+        <Expanded>
+          2 >= 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Product with differing arities - std::tuple&lt;int>" tags="[product][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          std::tuple_size&lt;TestType>::value >= 1
+        </Original>
+        <Expanded>
+          1 >= 1
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="Reconstruction should be based on stringification: #914" tags="[.][Decomposition][failing]" filename="projects/<exe-name>/UsageTests/Decomposition.tests.cpp" >
       <Expression success="false" type="CHECK" filename="projects/<exe-name>/UsageTests/Decomposition.tests.cpp" >
         <Original>
@@ -9028,537 +10397,6 @@ Message from section two
         </Expression>
         <OverallResults successes="6" failures="0" expectedFailures="0"/>
       </Section>
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Original>
-          testCase.isOpen()
-        </Original>
-        <Expanded>
-          true
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Original>
-          s1.isOpen()
-        </Original>
-        <Expanded>
-          true
-        </Expanded>
-      </Expression>
-      <Section name="start a generator" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.isOpen()
-          </Original>
-          <Expanded>
-            true
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.index() == 0
-          </Original>
-          <Expanded>
-            0 == 0
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.isComplete() == false
-          </Original>
-          <Expanded>
-            false == false
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            s1.isComplete() == false
-          </Original>
-          <Expanded>
-            false == false
-          </Expanded>
-        </Expression>
-        <Section name="close outer section" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s1.isComplete() == false
-            </Original>
-            <Expanded>
-              false == false
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              testCase.isSuccessfullyCompleted() == false
-            </Original>
-            <Expanded>
-              false == false
-            </Expanded>
-          </Expression>
-          <Section name="Re-enter for second generation" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase2.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1b.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.index() == 1
-              </Original>
-              <Expanded>
-                1 == 1
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1.isComplete() == false
-              </Original>
-              <Expanded>
-                false == false
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1b.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase2.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <OverallResults successes="8" failures="0" expectedFailures="0"/>
-          </Section>
-          <OverallResults successes="10" failures="0" expectedFailures="0"/>
-        </Section>
-        <OverallResults successes="14" failures="0" expectedFailures="0"/>
-      </Section>
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Original>
-          testCase.isOpen()
-        </Original>
-        <Expanded>
-          true
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Original>
-          s1.isOpen()
-        </Original>
-        <Expanded>
-          true
-        </Expanded>
-      </Expression>
-      <Section name="start a generator" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.isOpen()
-          </Original>
-          <Expanded>
-            true
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.index() == 0
-          </Original>
-          <Expanded>
-            0 == 0
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.isComplete() == false
-          </Original>
-          <Expanded>
-            false == false
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            s1.isComplete() == false
-          </Original>
-          <Expanded>
-            false == false
-          </Expanded>
-        </Expression>
-        <Section name="Start a new inner section" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s2.isOpen()
-            </Original>
-            <Expanded>
-              true
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s2.isComplete()
-            </Original>
-            <Expanded>
-              true
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s1.isComplete() == false
-            </Original>
-            <Expanded>
-              false == false
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              testCase.isComplete() == false
-            </Original>
-            <Expanded>
-              false == false
-            </Expanded>
-          </Expression>
-          <Section name="Re-enter for second generation" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase2.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1b.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.index() == 1
-              </Original>
-              <Expanded>
-                1 == 1
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s2b.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s2b.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1b.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase2.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <OverallResults successes="9" failures="0" expectedFailures="0"/>
-          </Section>
-          <OverallResults successes="13" failures="0" expectedFailures="0"/>
-        </Section>
-        <OverallResults successes="17" failures="0" expectedFailures="0"/>
-      </Section>
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Original>
-          testCase.isOpen()
-        </Original>
-        <Expanded>
-          true
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Original>
-          s1.isOpen()
-        </Original>
-        <Expanded>
-          true
-        </Expanded>
-      </Expression>
-      <Section name="start a generator" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.isOpen()
-          </Original>
-          <Expanded>
-            true
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.index() == 0
-          </Original>
-          <Expanded>
-            0 == 0
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            g1.isComplete() == false
-          </Original>
-          <Expanded>
-            false == false
-          </Expanded>
-        </Expression>
-        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Original>
-            s1.isComplete() == false
-          </Original>
-          <Expanded>
-            false == false
-          </Expanded>
-        </Expression>
-        <Section name="Fail an inner section" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s2.isOpen()
-            </Original>
-            <Expanded>
-              true
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s2.isComplete()
-            </Original>
-            <Expanded>
-              true
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s2.isSuccessfullyCompleted() == false
-            </Original>
-            <Expanded>
-              false == false
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              s1.isComplete() == false
-            </Original>
-            <Expanded>
-              false == false
-            </Expanded>
-          </Expression>
-          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Original>
-              testCase.isComplete() == false
-            </Original>
-            <Expanded>
-              false == false
-            </Expanded>
-          </Expression>
-          <Section name="Re-enter for second generation" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase2.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1b.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.index() == 0
-              </Original>
-              <Expanded>
-                0 == 0
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s2b.isOpen() == false
-              </Original>
-              <Expanded>
-                false == false
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1b.isComplete() == false
-              </Original>
-              <Expanded>
-                false == false
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1b.isComplete() == false
-              </Original>
-              <Expanded>
-                false == false
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase2.isComplete() == false
-              </Original>
-              <Expanded>
-                false == false
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase3.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1c.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1c.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1c.index() == 1
-              </Original>
-              <Expanded>
-                1 == 1
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s2c.isOpen()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s2c.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                g1c.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                s1c.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
-              <Original>
-                testCase3.isComplete()
-              </Original>
-              <Expanded>
-                true
-              </Expanded>
-            </Expression>
-            <OverallResults successes="17" failures="0" expectedFailures="0"/>
-          </Section>
-          <OverallResults successes="22" failures="0" expectedFailures="0"/>
-        </Section>
-        <OverallResults successes="26" failures="0" expectedFailures="0"/>
-      </Section>
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="Unexpected exceptions can be translated" tags="[!throws][.][failing]" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
@@ -10703,7 +11541,16 @@ loose text artifact
       </Failure>
       <OverallResult success="false"/>
     </TestCase>
+    <TestCase name="just failure after unscoped info" tags="[.][failing][info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Failure filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        previous unscoped info SHOULD not be seen
+      </Failure>
+      <OverallResult success="false"/>
+    </TestCase>
     <TestCase name="just info" tags="[info][isolated info][messages]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="just unscoped info" tags="[info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
       <OverallResult success="false"/>
     </TestCase>
     <TestCase name="long long" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
@@ -10923,6 +11770,27 @@ loose text artifact
       </Expression>
       <OverallResult success="false"/>
     </TestCase>
+    <TestCase name="mix info, unscoped info and warning" tags="[info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        info
+      </Info>
+      <Info>
+        unscoped info
+      </Info>
+      <Warning>
+        and warn may mix
+      </Warning>
+      <Info>
+        info
+      </Info>
+      <Info>
+        unscoped info
+      </Info>
+      <Warning>
+        they are not cleared after warnings
+      </Warning>
+      <OverallResult success="false"/>
+    </TestCase>
     <TestCase name="more nested SECTION tests" tags="[.][failing][sections]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <Section name="doesn't equal" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
         <Section name="equal" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
@@ -11026,6 +11894,42 @@ loose text artifact
     <TestCase name="not allowed" tags="[!throws]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="not prints unscoped info from previous failures" tags="[.][failing][info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this MAY be seen only for the FIRST assertion IF info is printed for passing assertions
+      </Info>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Info>
+        this MAY be seen only for the SECOND assertion IF info is printed for passing assertions
+      </Info>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Info>
+        this SHOULD be seen
+      </Info>
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
     <TestCase name="null strings" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
         <Original>
@@ -11079,6 +11983,78 @@ loose text artifact
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="print unscoped info if passing unscoped info is printed" tags="[info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this MAY be seen IF info is printed for passing assertions
+      </Info>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="prints unscoped info on failure" tags="[.][failing][info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this SHOULD be seen
+      </Info>
+      <Info>
+        this SHOULD also be seen
+      </Info>
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="prints unscoped info only for the first assertion" tags="[.][failing][info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this SHOULD be seen only ONCE
+      </Info>
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Info>
+        this MAY also be seen only ONCE IF info is printed for passing assertions
+      </Info>
+      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
     </TestCase>
     <TestCase name="random SECTION tests" tags="[.][failing][sections]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <Section name="doesn't equal" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
@@ -11274,6 +12250,49 @@ loose text artifact
         i := 7
       </Info>
       <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="stacks unscoped info in loops" tags="[.][failing][info][unscoped]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        Count 1 to 3...
+      </Info>
+      <Info>
+        1
+      </Info>
+      <Info>
+        2
+      </Info>
+      <Info>
+        3
+      </Info>
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <Info>
+        Count 4 to 6...
+      </Info>
+      <Info>
+        4
+      </Info>
+      <Info>
+        5
+      </Info>
+      <Info>
+        6
+      </Info>
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
         <Original>
           false
         </Original>
@@ -11546,7 +12565,7 @@ loose text artifact
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
-    <TestCase name="strlen3" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+    <TestCase name="strlen3" tags="[generators]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Original>
           data.str.size() == data.len
@@ -11577,6 +12596,41 @@ loose text artifact
         </Original>
         <Expanded>
           4 == 4
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="tables" tags="[generators]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          strlen(std::get&lt;0>(data)) == static_cast&lt;size_t>(std::get&lt;1>(data))
+        </Original>
+        <Expanded>
+          5 == 5
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          strlen(std::get&lt;0>(data)) == static_cast&lt;size_t>(std::get&lt;1>(data))
+        </Original>
+        <Expanded>
+          6 == 6
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          strlen(std::get&lt;0>(data)) == static_cast&lt;size_t>(std::get&lt;1>(data))
+        </Original>
+        <Expanded>
+          5 == 5
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          strlen(std::get&lt;0>(data)) == static_cast&lt;size_t>(std::get&lt;1>(data))
+        </Original>
+        <Expanded>
+          6 == 6
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
@@ -12099,7 +13153,7 @@ loose text artifact
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="1178" failures="126" expectedFailures="21"/>
+    <OverallResults successes="1250" failures="139" expectedFailures="21"/>
   </Group>
-  <OverallResults successes="1178" failures="125" expectedFailures="21"/>
+  <OverallResults successes="1250" failures="138" expectedFailures="21"/>
 </Catch>

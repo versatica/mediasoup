@@ -19,8 +19,8 @@ namespace TestFeedbackRtpSrReq
 	// clang-format on
 
 	// SR-REQ values.
-	uint32_t senderSsrc = 0x00000001;
-	uint32_t mediaSsrc  = 0x0330bdee;
+	uint32_t senderSsrc{ 0x00000001 };
+	uint32_t mediaSsrc{ 0x0330bdee };
 
 	void verify(FeedbackRtpSrReqPacket* packet)
 	{

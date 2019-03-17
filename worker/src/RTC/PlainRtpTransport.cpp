@@ -4,78 +4,107 @@
 #include "RTC/PlainRtpTransport.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
-#include "Settings.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Consumer.hpp"
-#include "RTC/Producer.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PlainRtpTransport::PlainRtpTransport(
-	  RTC::Transport::Listener* listener,
-	  Channel::Notifier* notifier,
-	  uint32_t transportId,
-	  Options& options)
-	  : RTC::Transport::Transport(listener, notifier, transportId)
+	  const std::string& id, RTC::Transport::Listener* listener, json& data)
+	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
 
-		// Remote IP address is provided.
-		if (!options.remoteIP.empty())
+		auto jsonListenIpIt = data.find("listenIp");
+
+		if (jsonListenIpIt == data.end())
+			MS_THROW_TYPE_ERROR("missing listenIp");
+		else if (!jsonListenIpIt->is_object())
+			MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
+
+		auto jsonIpIt = jsonListenIpIt->find("ip");
+
+		if (jsonIpIt == jsonListenIpIt->end())
+			MS_THROW_TYPE_ERROR("missing listenIp.ip");
+		else if (!jsonIpIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
+
+		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
+
+		// This may throw.
+		Utils::IP::NormalizeIp(this->listenIp.ip);
+
+		auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
+
+		if (jsonAnnouncedIpIt != jsonListenIpIt->end())
 		{
-			int addressFamily = Utils::IP::GetFamily(options.remoteIP);
+			if (!jsonAnnouncedIpIt->is_string())
+				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
 
-			if (addressFamily == AF_INET)
-				CreateSocket(AF_INET, options.localIP);
-			else if (addressFamily == AF_INET6)
-				CreateSocket(AF_INET6, options.localIP);
-			else
-				MS_THROW_ERROR("invalid destination IP '%s'", options.remoteIP.c_str());
+			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
+		}
 
+		auto jsonRtcpMuxIt = data.find("rtcpMux");
+
+		if (jsonRtcpMuxIt != data.end())
+		{
+			if (!jsonRtcpMuxIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong rtcpMux (not a boolean)");
+
+			this->rtcpMux = jsonRtcpMuxIt->get<bool>();
+		}
+
+		auto jsonComediaIt = data.find("comedia");
+
+		if (jsonComediaIt != data.end())
+		{
+			if (!jsonComediaIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong comedia (not a boolean)");
+
+			this->comedia = jsonComediaIt->get<bool>();
+		}
+
+		auto jsonMultiSourceIt = data.find("multiSource");
+
+		if (jsonMultiSourceIt != data.end())
+		{
+			if (!jsonMultiSourceIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong multiSource (not a boolean)");
+
+			this->multiSource = jsonMultiSourceIt->get<bool>();
+
+			// If multiSource is set disable comedia mode.
+			if (this->multiSource)
+				this->comedia = false;
+		}
+
+		try
+		{
 			// This may throw.
-			try
-			{
-				SetRemoteParameters(options.remoteIP, options.remotePort);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Close UdpSocket since ~PlainRtpTransport() will not be called.
-				delete this->udpSocket;
+			this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 
-				throw;
+			if (!this->rtcpMux)
+			{
+				// This may throw.
+				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 			}
 		}
-		// No remote IP address is provided.
-		else
+		catch (const MediaSoupError& error)
 		{
-			// IPv4 is preferred.
-			if (options.preferIPv4)
-			{
-				if (!Settings::configuration.hasIPv4)
-					MS_THROW_ERROR("IPv4 disabled");
+			MS_ERROR("constructor failed: %s", error.what());
 
-				CreateSocket(AF_INET, options.localIP);
-			}
-			// IPv6 is preferred.
-			else if (options.preferIPv6)
-			{
-				if (!Settings::configuration.hasIPv6)
-					MS_THROW_ERROR("IPv6 disabled");
+			// Must delete everything since the destructor won't be called.
 
-				CreateSocket(AF_INET6, options.localIP);
-			}
-			// No IP family preference, try with IPv4 and then IPv6.
-			else if (Settings::configuration.hasIPv4)
-			{
-				CreateSocket(AF_INET, options.localIP);
-			}
-			else
-			{
-				CreateSocket(AF_INET6, options.localIP);
-			}
+			delete this->udpSocket;
+			this->udpSocket = nullptr;
+
+			delete this->rtcpUdpSocket;
+			this->rtcpUdpSocket = nullptr;
+
+			throw;
 		}
 	}
 
@@ -83,96 +112,318 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		delete this->tuple;
 		delete this->udpSocket;
+
+		delete this->rtcpUdpSocket;
+
+		delete this->tuple;
+
+		delete this->rtcpTuple;
 	}
 
-	Json::Value PlainRtpTransport::ToJson() const
+	void PlainRtpTransport::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTransportId{ "transportId" };
-		static const Json::StaticString JsonStringTuple{ "tuple" };
-		static const Json::StaticString JsonStringRtpListener{ "rtpListener" };
-		static const Json::StaticString JsonStringLocalIP{ "localIP" };
-		static const Json::StaticString JsonStringLocalPort{ "localPort" };
+		// Call the parent method.
+		RTC::Transport::FillJson(jsonObject);
 
-		Json::Value json(Json::objectValue);
+		// Add rtcpMux.
+		jsonObject["rtcpMux"] = this->rtcpMux;
 
-		// Add transportId.
-		json[JsonStringTransportId] = Json::UInt{ this->transportId };
+		// Add comedia.
+		jsonObject["comedia"] = this->comedia;
+
+		// Add multiSource.
+		jsonObject["multiSource"] = this->multiSource;
 
 		// Add tuple.
 		if (this->tuple != nullptr)
-			json[JsonStringTuple] = this->tuple->ToJson();
+		{
+			this->tuple->FillJson(jsonObject["tuple"]);
+		}
+		else
+		{
+			jsonObject["tuple"] = json::object();
+			auto jsonTupleIt    = jsonObject.find("tuple");
 
-		// Local IP address and port.
-		json[JsonStringLocalIP]   = this->udpSocket->GetLocalIP();
-		json[JsonStringLocalPort] = Json::UInt{ this->udpSocket->GetLocalPort() };
+			if (this->listenIp.announcedIp.empty())
+				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+			else
+				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+
+			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
+			(*jsonTupleIt)["protocol"]  = "udp";
+		}
+
+		// Add rtcpTuple.
+		if (!this->rtcpMux)
+		{
+			if (this->rtcpTuple != nullptr)
+			{
+				this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
+			}
+			else
+			{
+				jsonObject["rtcpTuple"] = json::object();
+				auto jsonRtcpTupleIt    = jsonObject.find("rtcpTuple");
+
+				if (this->listenIp.announcedIp.empty())
+					(*jsonRtcpTupleIt)["localIp"] = this->rtcpUdpSocket->GetLocalIp();
+				else
+					(*jsonRtcpTupleIt)["localIp"] = this->listenIp.announcedIp;
+
+				(*jsonRtcpTupleIt)["localPort"] = this->rtcpUdpSocket->GetLocalPort();
+				(*jsonRtcpTupleIt)["protocol"]  = "udp";
+			}
+		}
+
+		// Add headerExtensionIds.
+		jsonObject["rtpHeaderExtensions"] = json::object();
+		auto jsonRtpHeaderExtensionsIt    = jsonObject.find("rtpHeaderExtensions");
+
+		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
+			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
+
+		if (this->rtpHeaderExtensionIds.mid != 0u)
+			(*jsonRtpHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
+
+		if (this->rtpHeaderExtensionIds.rid != 0u)
+			(*jsonRtpHeaderExtensionsIt)["rid"] = this->rtpHeaderExtensionIds.rid;
+
+		if (this->rtpHeaderExtensionIds.rrid != 0u)
+			(*jsonRtpHeaderExtensionsIt)["rrid"] = this->rtpHeaderExtensionIds.rrid;
 
 		// Add rtpListener.
-		json[JsonStringRtpListener] = this->rtpListener.ToJson();
-
-		return json;
+		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	Json::Value PlainRtpTransport::GetStats() const
+	void PlainRtpTransport::FillJsonStats(json& jsonArray) const
 	{
 		MS_TRACE();
 
-		Json::Value json(Json::objectValue);
+		jsonArray.emplace_back(json::value_t::object);
+		auto& jsonObject = jsonArray[0];
 
-		return json;
+		// Add type.
+		jsonObject["type"] = "transport";
+
+		// Add transportId.
+		jsonObject["transportId"] = this->id;
+
+		// Add timestamp.
+		jsonObject["timestamp"] = DepLibUV::GetTime();
+
+		if (this->tuple != nullptr)
+		{
+			// Add bytesReceived.
+			jsonObject["bytesReceived"] = this->tuple->GetRecvBytes();
+			// Add bytesSent.
+			jsonObject["bytesSent"] = this->tuple->GetSentBytes();
+			// Add tuple.
+			this->tuple->FillJson(jsonObject["tuple"]);
+		}
+		else
+		{
+			// Add bytesReceived.
+			jsonObject["bytesReceived"] = 0;
+			// Add bytesSent.
+			jsonObject["bytesSent"] = 0;
+		}
+
+		// Add rtcpTuple.
+		if (!this->rtcpMux && this->rtcpTuple != nullptr)
+			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
 	}
 
-	void PlainRtpTransport::SetRemoteParameters(const std::string& ip, const uint16_t port)
+	void PlainRtpTransport::HandleRequest(Channel::Request* request)
 	{
-		int err;
+		MS_TRACE();
 
-		switch (Utils::IP::GetFamily(ip))
+		switch (request->methodId)
 		{
-			case AF_INET:
+			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
-				if (!Settings::configuration.hasIPv4)
-					MS_THROW_ERROR("IPv4 disabled");
+				// Reject if comedia mode or multiSource is set.
+				if (this->comedia)
+					MS_THROW_ERROR("cannot call connect() when comedia mode is set");
+				else if (this->multiSource)
+					MS_THROW_ERROR("cannot call connect() when multiSource is set");
 
-				err = uv_ip4_addr(
-				  ip.c_str(),
-				  static_cast<int>(port),
-				  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
-				if (err != 0)
-					MS_ABORT("uv_ipv4_addr() failed: %s", uv_strerror(err));
+				// Ensure this method is not called twice.
+				if (this->tuple != nullptr)
+					MS_THROW_ERROR("connect() already called");
 
-				break;
-			}
+				try
+				{
+					std::string ip;
+					uint16_t port{ 0u };
+					uint16_t rtcpPort{ 0u };
 
-			case AF_INET6:
-			{
-				if (!Settings::configuration.hasIPv6)
-					MS_THROW_ERROR("IPv6 disabled");
+					auto jsonIpIt = request->data.find("ip");
 
-				err = uv_ip6_addr(
-				  ip.c_str(),
-				  static_cast<int>(port),
-				  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
-				if (err != 0)
-					MS_ABORT("uv_ipv6_addr() failed: %s", uv_strerror(err));
+					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
+						MS_THROW_TYPE_ERROR("missing ip");
+
+					ip = jsonIpIt->get<std::string>();
+
+					// This may throw.
+					Utils::IP::NormalizeIp(ip);
+
+					auto jsonPortIt = request->data.find("port");
+
+					if (jsonPortIt == request->data.end() || !jsonPortIt->is_number_unsigned())
+						MS_THROW_TYPE_ERROR("missing port");
+
+					port = jsonPortIt->get<uint16_t>();
+
+					auto jsonRtcpPortIt = request->data.find("rtcpPort");
+
+					if (jsonRtcpPortIt != request->data.end() && jsonRtcpPortIt->is_number_unsigned())
+					{
+						if (this->rtcpMux)
+							MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
+
+						rtcpPort = jsonRtcpPortIt->get<uint16_t>();
+					}
+					else if (jsonRtcpPortIt == request->data.end() || !jsonRtcpPortIt->is_number_unsigned())
+					{
+						if (!this->rtcpMux)
+							MS_THROW_TYPE_ERROR("missing rtcpPort (required with rtcpMux disabled)");
+					}
+
+					int err;
+
+					switch (Utils::IP::GetFamily(ip))
+					{
+						case AF_INET:
+						{
+							err = uv_ip4_addr(
+							  ip.c_str(),
+							  static_cast<int>(port),
+							  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
+
+							if (err != 0)
+								MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+
+							break;
+						}
+
+						case AF_INET6:
+						{
+							err = uv_ip6_addr(
+							  ip.c_str(),
+							  static_cast<int>(port),
+							  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
+
+							if (err != 0)
+								MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+
+							break;
+						}
+
+						default:
+						{
+							MS_THROW_ERROR("invalid IP '%s'", ip.c_str());
+						}
+					}
+
+					// Create the tuple.
+					this->tuple = new RTC::TransportTuple(
+					  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
+
+					if (!this->listenIp.announcedIp.empty())
+						this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+
+					if (!this->rtcpMux)
+					{
+						switch (Utils::IP::GetFamily(ip))
+						{
+							case AF_INET:
+							{
+								err = uv_ip4_addr(
+								  ip.c_str(),
+								  static_cast<int>(rtcpPort),
+								  reinterpret_cast<struct sockaddr_in*>(&this->rtcpRemoteAddrStorage));
+
+								if (err != 0)
+									MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+
+								break;
+							}
+
+							case AF_INET6:
+							{
+								err = uv_ip6_addr(
+								  ip.c_str(),
+								  static_cast<int>(rtcpPort),
+								  reinterpret_cast<struct sockaddr_in6*>(&this->rtcpRemoteAddrStorage));
+
+								if (err != 0)
+									MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+
+								break;
+							}
+
+							default:
+							{
+								MS_THROW_ERROR("invalid IP '%s'", ip.c_str());
+							}
+						}
+
+						// Create the tuple.
+						this->rtcpTuple = new RTC::TransportTuple(
+						  this->rtcpUdpSocket, reinterpret_cast<struct sockaddr*>(&this->rtcpRemoteAddrStorage));
+
+						if (!this->listenIp.announcedIp.empty())
+							this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+					}
+				}
+				catch (const MediaSoupError& error)
+				{
+					if (this->tuple != nullptr)
+					{
+						delete this->tuple;
+						this->tuple = nullptr;
+					}
+
+					if (this->rtcpTuple != nullptr)
+					{
+						delete this->rtcpTuple;
+						this->rtcpTuple = nullptr;
+					}
+
+					throw;
+				}
+
+				// Tell the caller about the selected local DTLS role.
+				json data(json::object());
+
+				this->tuple->FillJson(data["tuple"]);
+
+				if (!this->rtcpMux)
+					this->rtcpTuple->FillJson(data["rtcpTuple"]);
+
+				request->Accept(data);
+
+				// Assume we are connected (there is no much more we can do to know it)
+				// and tell the parent class.
+				RTC::Transport::Connected();
 
 				break;
 			}
 
 			default:
 			{
-				MS_THROW_ERROR("invalid destination IP '%s'", ip.c_str());
+				// Pass it to the parent class.
+				RTC::Transport::HandleRequest(request);
 			}
 		}
+	}
 
-		// Create a single tuple.
-		this->tuple = new RTC::TransportTuple(
-		  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
-
-		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+	inline bool PlainRtpTransport::IsConnected() const
+	{
+		return this->tuple != nullptr;
 	}
 
 	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet)
@@ -184,10 +435,6 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
-
-		// Mirror RTP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtp)
-			this->mirrorTuple->Send(data, len);
 
 		this->tuple->Send(data, len);
 	}
@@ -202,24 +449,10 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
-			this->mirrorTuple->Send(data, len);
-
-		this->tuple->Send(data, len);
-	}
-
-	void PlainRtpTransport::CreateSocket(int addressFamily, const std::string& localIP)
-	{
-		if (localIP.empty())
-			this->udpSocket = new RTC::UdpSocket(this, addressFamily);
-		else
-			this->udpSocket = new RTC::UdpSocket(this, localIP);
-	}
-
-	bool PlainRtpTransport::IsConnected() const
-	{
-		return this->tuple != nullptr;
+		if (this->rtcpMux)
+			this->tuple->Send(data, len);
+		else if (this->rtcpTuple)
+			this->rtcpTuple->Send(data, len);
 	}
 
 	void PlainRtpTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -232,11 +465,10 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.sendRtcp)
-			this->mirrorTuple->Send(data, len);
-
-		this->tuple->Send(data, len);
+		if (this->rtcpMux)
+			this->tuple->Send(data, len);
+		else if (this->rtcpTuple)
+			this->rtcpTuple->Send(data, len);
 	}
 
 	inline void PlainRtpTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
@@ -244,12 +476,12 @@ namespace RTC
 		MS_TRACE();
 
 		// Check if it's RTCP.
-		if (RTCP::Packet::IsRtcp(data, len))
+		if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
 			OnRtcpDataRecv(tuple, data, len);
 		}
 		// Check if it's RTP.
-		else if (RtpPacket::IsRtp(data, len))
+		else if (RTC::RtpPacket::IsRtp(data, len))
 		{
 			OnRtpDataRecv(tuple, data, len);
 		}
@@ -259,14 +491,49 @@ namespace RTC
 		}
 	}
 
-	inline void PlainRtpTransport::OnRtpDataRecv(
-	  RTC::TransportTuple* /*tuple*/, const uint8_t* data, size_t len)
+	inline void PlainRtpTransport::OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		// Mirror RTP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtp)
-			this->mirrorTuple->Send(data, len);
+		// If multiSource is set allow it without any checking.
+		if (this->multiSource)
+		{
+			// Do nothing.
+		}
+		// If multiSource is not set, check whether we have RTP tuple or whether
+		// comedia mode is set.
+		else
+		{
+			// If RTP tuple is unset, set it if we are in comedia mode.
+			if (!this->tuple)
+			{
+				if (!this->comedia)
+				{
+					MS_DEBUG_TAG(rtp, "ignoring RTP packet while not connected");
+
+					return;
+				}
+
+				MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
+
+				this->tuple = new RTC::TransportTuple(tuple);
+
+				if (!this->listenIp.announcedIp.empty())
+					this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+
+				// If not yet connected do it now.
+				if (!IsConnected())
+					RTC::Transport::Connected();
+			}
+
+			// Verify that the packet's tuple matches our RTP tuple.
+			if (!this->tuple->Compare(tuple))
+			{
+				MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
+
+				return;
+			}
+		}
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
@@ -278,20 +545,10 @@ namespace RTC
 		}
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-		if (this->headerExtensionIds.absSendTime != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::ABS_SEND_TIME, this->headerExtensionIds.absSendTime);
-		}
-		if (this->headerExtensionIds.mid != 0u)
-		{
-			packet->AddExtensionMapping(RtpHeaderExtensionUri::Type::MID, this->headerExtensionIds.mid);
-		}
-		if (this->headerExtensionIds.rid != 0u)
-		{
-			packet->AddExtensionMapping(
-			  RtpHeaderExtensionUri::Type::RTP_STREAM_ID, this->headerExtensionIds.rid);
-		}
+		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
+		packet->SetMidExtensionId(this->rtpHeaderExtensionIds.mid);
+		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
+		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
 
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
@@ -305,6 +562,7 @@ namespace RTC
 			  packet->GetPayloadType());
 
 			delete packet;
+
 			return;
 		}
 
@@ -321,13 +579,73 @@ namespace RTC
 	}
 
 	inline void PlainRtpTransport::OnRtcpDataRecv(
-	  RTC::TransportTuple* /*tuple*/, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		// Mirror RTCP if needed.
-		if (this->mirrorTuple != nullptr && this->mirroringOptions.recvRtcp)
-			this->mirrorTuple->Send(data, len);
+		// If multiSource is set allow it without any checking.
+		if (this->multiSource)
+		{
+			// Just allow it.
+		}
+		// If multiSource is not set, check whether we have RTP tuple (if RTCP-mux)
+		// or RTCP tuple or whether comedia mode is set.
+		else
+		{
+			// If RTCP-mux and RTP tuple is unset, set it if we are in comedia mode.
+			if (this->rtcpMux && !this->tuple)
+			{
+				if (!this->comedia)
+				{
+					MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
+
+					return;
+				}
+
+				MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
+
+				this->tuple = new RTC::TransportTuple(tuple);
+
+				if (!this->listenIp.announcedIp.empty())
+					this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+
+				// If not yet connected do it now.
+				if (!IsConnected())
+					RTC::Transport::Connected();
+			}
+			// If no RTCP-mux and RTCP tuple is unset, set it if we are in comedia mode.
+			else if (!this->rtcpMux && !this->rtcpTuple)
+			{
+				if (!this->comedia)
+				{
+					MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
+
+					return;
+				}
+
+				MS_DEBUG_TAG(rtcp, "setting RTCP tuple (comedia mode enabled)");
+
+				this->rtcpTuple = new RTC::TransportTuple(tuple);
+
+				if (!this->listenIp.announcedIp.empty())
+					this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			}
+
+			// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
+			if (this->rtcpMux && !this->tuple->Compare(tuple))
+			{
+				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+
+				return;
+			}
+			// If no RTCP-mux verify that the packet's tuple matches our RTCP tuple.
+			else if (!this->rtcpMux && !this->rtcpTuple->Compare(tuple))
+			{
+				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+
+				return;
+			}
+		}
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 
@@ -341,7 +659,7 @@ namespace RTC
 		// Handle each RTCP packet.
 		while (packet != nullptr)
 		{
-			HandleRtcpPacket(packet);
+			ReceiveRtcpPacket(packet);
 
 			RTC::RTCP::Packet* previousPacket = packet;
 
@@ -350,7 +668,7 @@ namespace RTC
 		}
 	}
 
-	void PlainRtpTransport::OnPacketRecv(
+	inline void PlainRtpTransport::OnPacketRecv(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();

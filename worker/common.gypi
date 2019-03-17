@@ -1,14 +1,14 @@
 {
   'variables':
   {
-    # libuv variables:
+    # libuv variables.
     'uv_library%': 'static_library',
-    # openssl variables:
+    # openssl variables.
     'library%': 'static_library',
     'openssl_fips%': '',
     'openssl_no_asm%': 1, # Must be defined in OpenSSL >= 1.1.0g.
     'libopenssl': '<(PRODUCT_DIR)/libopenssl.a',
-    # Others:
+    # Others.
     'clang%': 0,
     'mediasoup_asan%': 'false'
   },
@@ -67,7 +67,8 @@
         'target_conditions':
         [
           [ '_type == "static_library"', {
-            'standalone_static_library': 1, # Disable thin archive which needs binutils >= 2.19
+            # Disable thin archive which needs binutils >= 2.19.
+            'standalone_static_library': 1
           }]
         ],
         'conditions':

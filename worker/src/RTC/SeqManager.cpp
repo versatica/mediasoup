@@ -39,11 +39,6 @@ namespace RTC
 	}
 
 	template<typename T>
-	SeqManager<T>::SeqManager()
-	{
-	}
-
-	template<typename T>
 	void SeqManager<T>::Sync(T input)
 	{
 		// Update base.

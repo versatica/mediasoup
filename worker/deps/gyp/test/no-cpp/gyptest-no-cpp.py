@@ -16,8 +16,8 @@ import sys
 
 # set |match| to ignore build stderr output.
 test = TestGyp.TestGyp(match = lambda a, b: True)
-if sys.platform != 'win32' and test.format != 'make':
-  # TODO: This doesn't pass with make.
+if (sys.platform != 'win32' and
+    not (sys.platform == 'darwin' and test.format == 'make')):
   # TODO: Does a test like this make sense with Windows?
 
   CHDIR = 'src'
@@ -30,19 +30,21 @@ if sys.platform != 'win32' and test.format != 'make':
       proc = subprocess.Popen(['otool', '-L', path], stdout=subprocess.PIPE)
     else:
       proc = subprocess.Popen(['ldd', path], stdout=subprocess.PIPE)
-    output = proc.communicate()[0]
+    output = proc.communicate()[0].decode('utf-8')
     assert not proc.returncode
     return 'libstdc++' in output or 'libc++' in output
 
   if LinksLibStdCpp('no_cpp'):
     test.fail_test()
 
+  # Make, ninja, and CMake pick the compiler driver based on transitive
+  # checks. Xcode doesn't.
   build_error_code = {
-    'xcode': [1, 65],  # 1 for xcode 3, 65 for xcode 4 (see `man sysexits`)
-    'make': 2,
-    'ninja': 1,
-    'cmake': 0,  # CMake picks the compiler driver based on transitive checks.
-    'xcode-ninja': [1, 65],
+    'xcode': 65,  # EX_DATAERR, see `man sysexits`
+    'make': 0,
+    'ninja': 0,
+    'cmake': 0,
+    'xcode-ninja': 0,
   }[test.format]
 
   test.build('test.gyp', 'no_cpp_dep_on_cc_lib', chdir=CHDIR,

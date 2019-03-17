@@ -126,60 +126,6 @@ namespace RTC
 		return packet;
 	}
 
-	RtpPacket* RtpPacket::CreateProbationPacket(const uint8_t* buffer, uint8_t payloadPadding)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(buffer != nullptr, "no buffer given");
-		MS_ASSERT(payloadPadding > 0, "padding cannot be 0");
-
-		auto* ptr = const_cast<uint8_t*>(buffer);
-
-		// Set the header.
-		auto* header = reinterpret_cast<Header*>(ptr);
-
-		// Fill some header fields.
-		header->csrcCount      = 0;
-		header->extension      = 0;
-		header->padding        = 1;
-		header->version        = 2;
-		header->payloadType    = 0; // To be set by the caller.
-		header->marker         = 0;
-		header->sequenceNumber = 0; // To be set by the caller.
-		header->timestamp      = 0; // To be set by the caller.
-		header->ssrc           = 0; // To be set by the caller.
-
-		ptr += sizeof(Header);
-
-		// Header extension.
-		ExtensionHeader* extensionHeader{ nullptr };
-
-		// Set payload.
-		uint8_t* payload     = ptr;
-		size_t payloadLength = 0;
-
-		// Add padding bytes.
-		for (uint8_t i = 0; i < payloadPadding - 1; ++i)
-		{
-			Utils::Byte::Set1Byte(ptr++, 0, 0);
-		}
-
-		// Add a final byte with the padding count (including itself).
-		Utils::Byte::Set1Byte(ptr++, 0, payloadPadding);
-
-		// Set the packet size.
-		auto size = static_cast<size_t>(ptr - buffer);
-
-		MS_ASSERT(
-		  size == sizeof(Header) + payloadLength + size_t{ payloadPadding },
-		  "packet's computed size does not match received size");
-
-		auto packet =
-		  new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, size);
-
-		return packet;
-	}
-
 	/* Instance methods. */
 
 	RtpPacket::RtpPacket(
@@ -209,11 +155,12 @@ namespace RTC
 
 		MS_DEBUG_DEV("<RtpPacket>");
 		MS_DEBUG_DEV("  padding           : %s", this->header->padding ? "true" : "false");
-		MS_DEBUG_DEV("  extension header  : %s", HasExtensionHeader() ? "true" : "false");
 		if (HasExtensionHeader())
 		{
-			MS_DEBUG_DEV("    id      : %" PRIu16, GetExtensionHeaderId());
-			MS_DEBUG_DEV("    length  : %zu bytes", GetExtensionHeaderLength());
+			MS_DEBUG_DEV(
+			  "  extension header  : id:%" PRIu16 ",length:%zu",
+			  GetExtensionHeaderId(),
+			  GetExtensionHeaderLength());
 		}
 		if (HasOneByteExtensions())
 		{
@@ -230,13 +177,21 @@ namespace RTC
 
 			if (HasOneByteExtensions())
 			{
-				for (const auto& pair : this->oneByteExtensions)
-					extIds.push_back(std::to_string(pair.first));
+				extIds.reserve(this->oneByteExtensions.size());
+
+				for (auto& kv : this->oneByteExtensions)
+				{
+					extIds.push_back(std::to_string(kv.first));
+				}
 			}
 			else
 			{
-				for (const auto& pair : this->twoBytesExtensions)
-					extIds.push_back(std::to_string(pair.first));
+				extIds.reserve(this->twoBytesExtensions.size());
+
+				for (auto& kv : this->twoBytesExtensions)
+				{
+					extIds.push_back(std::to_string(kv.first));
+				}
 			}
 
 			if (!extIds.empty())
@@ -247,6 +202,60 @@ namespace RTC
 
 				MS_DEBUG_DEV("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
 			}
+		}
+		if (this->audioLevelExtensionId != 0u)
+		{
+			uint8_t volume;
+			bool voice;
+
+			if (ReadAudioLevel(volume, voice))
+				MS_DEBUG_DEV(
+				  "  audioLevel        : extId:%" PRIu8 ",volume:%" PRIu8 ",voice:%s",
+				  this->audioLevelExtensionId,
+				  volume,
+				  voice ? "true" : "false");
+		}
+		if (this->videoOrientationExtensionId != 0u)
+		{
+			bool camera;
+			bool flip;
+			uint16_t rotation;
+
+			if (ReadVideoOrientation(camera, flip, rotation))
+				MS_DEBUG_DEV(
+				  "  videoOrientation  : extId:%" PRIu8 ",camera:%s,flip:%s,rotation:%" PRIu16,
+				  this->videoOrientationExtensionId,
+				  camera ? "true" : "false",
+				  flip ? "true" : "false",
+				  rotation);
+		}
+		if (this->absSendTimeExtensionId != 0u)
+		{
+			MS_DEBUG_DEV("  absSendTime       : extId:%" PRIu8, this->absSendTimeExtensionId);
+		}
+		if (this->midExtensionId != 0u)
+		{
+			std::string mid;
+
+			if (ReadMid(mid))
+				MS_DEBUG_DEV(
+				  "  mid               : extId:%" PRIu8 ",value:%s", this->midExtensionId, mid.c_str());
+		}
+		if (this->ridExtensionId != 0u)
+		{
+			std::string rid;
+
+			if (ReadRid(rid))
+				MS_DEBUG_DEV(
+				  "  rid               : extId:%" PRIu8 ",value:%s", this->ridExtensionId, rid.c_str());
+		}
+		if (this->rridExtensionId != 0u)
+		{
+			std::string rid;
+
+			if (ReadRid(rid))
+				MS_DEBUG_DEV(
+				  "  rrid              : extId:%" PRIu8 ",value:%s", this->rridExtensionId, rid.c_str());
 		}
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
@@ -267,35 +276,46 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Reset extension ids.
+		this->audioLevelExtensionId       = 0;
+		this->videoOrientationExtensionId = 0;
+		this->absSendTimeExtensionId      = 0;
+		this->midExtensionId              = 0;
+		this->ridExtensionId              = 0;
+		this->rridExtensionId             = 0;
+
 		if (HasOneByteExtensions())
 		{
-			for (const auto& pair : this->oneByteExtensions)
+			for (auto& kv : this->oneByteExtensions)
 			{
-				auto& id               = pair.first;
-				auto& oneByteExtension = pair.second;
+				auto id                = kv.first;
+				auto* oneByteExtension = kv.second;
+				auto it                = idMapping.find(id);
 
-				if (idMapping.find(id) != idMapping.end())
+				if (it != idMapping.end())
 				{
-					oneByteExtension->id = idMapping.at(id);
+					auto mappedId = it->second;
+
+					oneByteExtension->id = mappedId;
 				}
 			}
 		}
 		else if (HasTwoBytesExtensions())
 		{
-			for (const auto& pair : this->twoBytesExtensions)
+			for (auto& kv : this->twoBytesExtensions)
 			{
-				auto& id                = pair.first;
-				auto& twoBytesExtension = pair.second;
+				auto id                 = kv.first;
+				auto* twoBytesExtension = kv.second;
+				auto it                 = idMapping.find(id);
 
-				if (idMapping.find(id) != idMapping.end())
+				if (it != idMapping.end())
 				{
-					twoBytesExtension->id = idMapping.at(id);
+					auto mappedId = it->second;
+
+					twoBytesExtension->id = mappedId;
 				}
 			}
 		}
-
-		// Clear the URI to id map.
-		this->extensionMap.clear();
 
 		// Parse extensions again.
 		ParseExtensions();
@@ -379,8 +399,13 @@ namespace RTC
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
 
-		// Clone the extension map.
-		packet->extensionMap = this->extensionMap;
+		// Keep already set extension ids.
+		packet->audioLevelExtensionId       = this->audioLevelExtensionId;
+		packet->videoOrientationExtensionId = this->videoOrientationExtensionId;
+		packet->absSendTimeExtensionId      = this->absSendTimeExtensionId;
+		packet->midExtensionId              = this->midExtensionId;
+		packet->ridExtensionId              = this->ridExtensionId;
+		packet->rridExtensionId             = this->rridExtensionId;
 
 		return packet;
 	}
@@ -530,6 +555,7 @@ namespace RTC
 			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
 			uint8_t* ptr            = extensionStart;
 
+			// One-Byte extensions cannot have length 0.
 			while (ptr < extensionEnd)
 			{
 				uint8_t id = (*ptr & 0xF0) >> 4;
@@ -551,7 +577,9 @@ namespace RTC
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))
+				{
 					++ptr;
+				}
 			}
 		}
 		// Parse Two-Bytes extension header.
@@ -589,7 +617,9 @@ namespace RTC
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))
+				{
 					++ptr;
+				}
 			}
 		}
 	}

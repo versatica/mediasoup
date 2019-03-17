@@ -10,6 +10,7 @@
 
 #include "catch_tostring.h"
 #include "catch_stringref.h"
+#include "catch_meta.hpp"
 
 #include <iosfwd>
 
@@ -19,6 +20,7 @@
 #pragma warning(disable:4018) // more "signed/unsigned mismatch"
 #pragma warning(disable:4312) // Converting int to T* using reinterpret_cast (issue on x64 platform)
 #pragma warning(disable:4180) // qualifier applied to function type has no meaning
+#pragma warning(disable:4800) // Forcing result to true or false
 #endif
 
 namespace Catch {
@@ -62,6 +64,62 @@ namespace Catch {
             m_op( op ),
             m_rhs( rhs )
         {}
+
+        template<typename T>
+        auto operator && ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename T>
+        auto operator || ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename T>
+        auto operator == ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename T>
+        auto operator != ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename T>
+        auto operator > ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename T>
+        auto operator < ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename T>
+        auto operator >= ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename T>
+        auto operator <= ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<T>::value,
+            "chained comparisons are not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
     };
 
     template<typename LhsT>
@@ -74,7 +132,7 @@ namespace Catch {
 
     public:
         explicit UnaryExpr( LhsT lhs )
-        :   ITransientExpression{ false, lhs ? true : false },
+        :   ITransientExpression{ false, static_cast<bool>(lhs) },
             m_lhs( lhs )
         {}
     };
@@ -141,6 +199,20 @@ namespace Catch {
         template<typename RhsT>
         auto operator <= ( RhsT const& rhs ) -> BinaryExpr<LhsT, RhsT const&> const {
             return { static_cast<bool>(m_lhs <= rhs), m_lhs, "<=", rhs };
+        }
+
+        template<typename RhsT>
+        auto operator && ( RhsT const& ) -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<RhsT>::value,
+            "operator&& is not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
+        }
+
+        template<typename RhsT>
+        auto operator || ( RhsT const& ) -> BinaryExpr<LhsT, RhsT const&> const {
+            static_assert(always_false<RhsT>::value,
+            "operator|| is not supported inside assertions, "
+            "wrap the expression inside parentheses, or decompose it");
         }
 
         auto makeUnaryExpr() const -> UnaryExpr<LhsT> {

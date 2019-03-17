@@ -20,10 +20,10 @@ namespace TestFeedbackRtpTllei
 	// clang-format on
 
 	// TLLEI values.
-	uint32_t senderSsrc        = 0x00000001;
-	uint32_t mediaSsrc         = 0x0330bdee;
-	uint16_t packetId          = 1;
-	uint16_t lostPacketBitmask = 0b1010101001010101;
+	uint32_t senderSsrc{ 0x00000001 };
+	uint32_t mediaSsrc{ 0x0330bdee };
+	uint16_t packetId{ 1 };
+	uint16_t lostPacketBitmask{ 0b1010101001010101 };
 
 	void verify(FeedbackRtpTlleiPacket* packet)
 	{

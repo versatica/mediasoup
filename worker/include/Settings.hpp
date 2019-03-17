@@ -21,7 +21,7 @@ public:
 		bool rtcp{ false };
 		bool rtx{ false };
 		bool rbe{ false };
-		bool tmp{ false }; // For debugging during development..
+		bool score{ false };
 	};
 
 public:
@@ -30,19 +30,10 @@ public:
 	{
 		LogLevel logLevel{ LogLevel::LOG_ERROR };
 		struct LogTags logTags;
-		std::string rtcIPv4;
-		std::string rtcIPv6;
-		std::string rtcAnnouncedIPv4;
-		std::string rtcAnnouncedIPv6;
 		uint16_t rtcMinPort{ 10000 };
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
-		// Private fields.
-		bool hasIPv4{ false };
-		bool hasIPv6{ false };
-		bool hasAnnouncedIPv4{ false };
-		bool hasAnnouncedIPv6{ false };
 	};
 
 public:
@@ -51,14 +42,9 @@ public:
 	static void HandleRequest(Channel::Request* request);
 
 private:
-	static void SetDefaultRtcIP(int requestedFamily);
 	static void SetLogLevel(std::string& level);
-	static void SetRtcIPv4(const std::string& ip);
-	static void SetRtcIPv6(const std::string& ip);
-	static void SetRtcPorts();
-	static void SetDtlsCertificateAndPrivateKeyFiles();
 	static void SetLogTags(const std::vector<std::string>& tags);
-	static void SetLogTags(Json::Value& json);
+	static void SetDtlsCertificateAndPrivateKeyFiles();
 
 public:
 	static struct Configuration configuration;

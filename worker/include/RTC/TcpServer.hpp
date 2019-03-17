@@ -5,8 +5,7 @@
 #include "RTC/TcpConnection.hpp"
 #include "handles/TcpConnection.hpp"
 #include "handles/TcpServer.hpp"
-#include <uv.h>
-#include <unordered_map>
+#include <string>
 
 namespace RTC
 {
@@ -16,29 +15,12 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual ~Listener() = default;
-
-		public:
 			virtual void OnRtcTcpConnectionClosed(
 			  RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) = 0;
 		};
 
 	public:
-		static void ClassInit();
-
-	private:
-		static uv_tcp_t* GetRandomPort(int addressFamily);
-
-	private:
-		static struct sockaddr_storage sockaddrStorageIPv4;
-		static struct sockaddr_storage sockaddrStorageIPv6;
-		static uint16_t minPort;
-		static uint16_t maxPort;
-		static std::unordered_map<uint16_t, bool> availableIPv4Ports;
-		static std::unordered_map<uint16_t, bool> availableIPv6Ports;
-
-	public:
-		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, int addressFamily);
+		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip);
 		~TcpServer() override;
 
 		/* Pure virtual methods inherited from ::TcpServer. */

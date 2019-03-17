@@ -6,86 +6,45 @@
 
 namespace Channel
 {
-	/* Instance methods. */
+	/* Class variables. */
 
-	Notifier::Notifier(Channel::UnixStreamSocket* channel) : channel(channel)
+	Channel::UnixStreamSocket* Notifier::channel{ nullptr };
+
+	/* Static methods. */
+
+	void Notifier::ClassInit(Channel::UnixStreamSocket* channel)
 	{
 		MS_TRACE();
+
+		Notifier::channel = channel;
 	}
 
-	void Notifier::Emit(uint32_t targetId, const std::string& event)
+	void Notifier::Emit(const std::string& targetId, const char* event)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTargetId{ "targetId" };
-		static const Json::StaticString JsonStringEvent{ "event" };
+		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
 
-		Json::Value json(Json::objectValue);
+		json jsonNotification(json::object());
 
-		json[JsonStringTargetId] = Json::UInt{ targetId };
-		json[JsonStringEvent]    = event;
+		jsonNotification["targetId"] = targetId;
+		jsonNotification["event"]    = event;
 
-		this->channel->Send(json);
+		Notifier::channel->Send(jsonNotification);
 	}
 
-	void Notifier::Emit(uint32_t targetId, const std::string& event, Json::Value& data)
+	void Notifier::Emit(const std::string& targetId, const char* event, json& data)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringTargetId{ "targetId" };
-		static const Json::StaticString JsonStringEvent{ "event" };
-		static const Json::StaticString JsonStringData{ "data" };
+		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
 
-		Json::Value json(Json::objectValue);
+		json jsonNotification(json::object());
 
-		json[JsonStringTargetId] = Json::UInt{ targetId };
-		json[JsonStringEvent]    = event;
-		json[JsonStringData]     = data;
+		jsonNotification["targetId"] = targetId;
+		jsonNotification["event"]    = event;
+		jsonNotification["data"]     = data;
 
-		this->channel->Send(json);
-	}
-
-	void Notifier::EmitWithBinary(
-	  uint32_t targetId, const std::string& event, const uint8_t* binaryData, size_t binaryLen)
-	{
-		MS_TRACE();
-
-		static const Json::StaticString JsonStringTargetId{ "targetId" };
-		static const Json::StaticString JsonStringEvent{ "event" };
-		static const Json::StaticString JsonStringBinary{ "binary" };
-
-		Json::Value json(Json::objectValue);
-
-		json[JsonStringTargetId] = Json::UInt{ targetId };
-		json[JsonStringEvent]    = event;
-		json[JsonStringBinary]   = true;
-
-		this->channel->Send(json);
-		this->channel->SendBinary(binaryData, binaryLen);
-	}
-
-	void Notifier::EmitWithBinary(
-	  uint32_t targetId,
-	  const std::string& event,
-	  const uint8_t* binaryData,
-	  size_t binaryLen,
-	  Json::Value& data)
-	{
-		MS_TRACE();
-
-		static const Json::StaticString JsonStringTargetId{ "targetId" };
-		static const Json::StaticString JsonStringEvent{ "event" };
-		static const Json::StaticString JsonStringData{ "data" };
-		static const Json::StaticString JsonStringBinary{ "binary" };
-
-		Json::Value json(Json::objectValue);
-
-		json[JsonStringTargetId] = Json::UInt{ targetId };
-		json[JsonStringEvent]    = event;
-		json[JsonStringBinary]   = true;
-		json[JsonStringData]     = data;
-
-		this->channel->Send(json);
-		this->channel->SendBinary(binaryData, binaryLen);
+		Notifier::channel->Send(jsonNotification);
 	}
 } // namespace Channel

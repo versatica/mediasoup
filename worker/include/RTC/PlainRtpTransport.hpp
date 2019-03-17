@@ -1,50 +1,35 @@
 #ifndef MS_RTC_PLAIN_RTP_TRANSPORT_HPP
 #define MS_RTC_PLAIN_RTP_TRANSPORT_HPP
 
-#include "common.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/Transport.hpp"
-#include <json/json.h>
-#include <string>
+#include "RTC/TransportTuple.hpp"
+#include "RTC/UdpSocket.hpp"
 
 namespace RTC
 {
-	class PlainRtpTransport : public RTC::Transport
+	class PlainRtpTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
-	public:
-		struct Options
+	private:
+		struct ListenIp
 		{
-			std::string remoteIP;
-			uint16_t remotePort;
-			std::string localIP;
-			bool preferIPv4;
-			bool preferIPv6;
+			std::string ip;
+			std::string announcedIp;
 		};
 
 	public:
-		PlainRtpTransport(
-		  RTC::Transport::Listener* listener,
-		  Channel::Notifier* notifier,
-		  uint32_t transportId,
-		  Options& options);
-
-	private:
-		~PlainRtpTransport();
+		PlainRtpTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		~PlainRtpTransport() override;
 
 	public:
-		Json::Value ToJson() const override;
-		Json::Value GetStats() const override;
-		void SetRemoteParameters(const std::string& ip, uint16_t port);
+		void FillJson(json& jsonObject) const override;
+		void FillJsonStats(json& jsonArray) const override;
+		void HandleRequest(Channel::Request* request) override;
+
+	private:
+		bool IsConnected() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
-
-	private:
-		void CreateSocket(int addressFamily, const std::string& localIP);
-		bool IsConnected() const override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-
-		/* Private methods to unify UDP and TCP behavior. */
-	private:
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
@@ -57,9 +42,16 @@ namespace RTC
 	private:
 		// Allocated by this.
 		RTC::UdpSocket* udpSocket{ nullptr };
+		RTC::UdpSocket* rtcpUdpSocket{ nullptr };
 		RTC::TransportTuple* tuple{ nullptr };
+		RTC::TransportTuple* rtcpTuple{ nullptr };
 		// Others.
+		ListenIp listenIp;
+		bool rtcpMux{ true };
+		bool comedia{ false };
+		bool multiSource{ false };
 		struct sockaddr_storage remoteAddrStorage;
+		struct sockaddr_storage rtcpRemoteAddrStorage;
 	};
 } // namespace RTC
 

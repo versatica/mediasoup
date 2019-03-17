@@ -14,7 +14,6 @@ namespace Catch {
 
     namespace Generators {
         struct GeneratorTracker : TestCaseTracking::TrackerBase, IGeneratorTracker {
-            size_t m_index = static_cast<size_t>( -1 );
             GeneratorBasePtr m_generator;
 
             GeneratorTracker( TestCaseTracking::NameAndLocation const& nameAndLocation, TrackerContext& ctx, ITracker* parent )
@@ -28,7 +27,7 @@ namespace Catch {
                 ITracker& currentTracker = ctx.currentTracker();
                 if( TestCaseTracking::ITrackerPtr childTracker = currentTracker.findChild( nameAndLocation ) ) {
                     assert( childTracker );
-                    assert( childTracker->isIndexTracker() );
+                    assert( childTracker->isGeneratorTracker() );
                     tracker = std::static_pointer_cast<GeneratorTracker>( childTracker );
                 }
                 else {
@@ -37,28 +36,24 @@ namespace Catch {
                 }
 
                 if( !ctx.completedCycle() && !tracker->isComplete() ) {
-                    if( tracker->m_runState != ExecutingChildren && tracker->m_runState != NeedsAnotherRun )
-                        tracker->moveNext();
                     tracker->open();
                 }
 
                 return *tracker;
             }
 
-            void moveNext() {
-                m_index++;
-                m_children.clear();
-            }
-
             // TrackerBase interface
-            bool isIndexTracker() const override { return true; }
+            bool isGeneratorTracker() const override { return true; }
             auto hasGenerator() const -> bool override {
                 return !!m_generator;
             }
             void close() override {
                 TrackerBase::close();
-                if( m_runState == CompletedSuccessfully && m_index < m_generator->size()-1 )
+                // Generator interface only finds out if it has another item on atual move
+                if (m_runState == CompletedSuccessfully && m_generator->next()) {
+                    m_children.clear();
                     m_runState = Executing;
+                }
             }
 
             // IGeneratorTracker interface
@@ -68,13 +63,9 @@ namespace Catch {
             void setGenerator( GeneratorBasePtr&& generator ) override {
                 m_generator = std::move( generator );
             }
-            auto getIndex() const -> size_t override {
-                return m_index;
-            }
         };
         GeneratorTracker::~GeneratorTracker() {}
     }
-
 
     RunContext::RunContext(IConfigPtr const& _config, IStreamingReporterPtr&& reporter)
     :   m_runInfo(_config->name()),
@@ -170,6 +161,9 @@ namespace Catch {
         // and should be let to clear themselves out.
         static_cast<void>(m_reporter->assertionEnded(AssertionStats(result, m_messages, m_totals)));
 
+        if (result.getResultType() != ResultWas::Warning)
+            m_messageScopes.clear();
+
         // Reset working state
         resetAssertionInfo();
         m_lastResult = result;
@@ -224,6 +218,7 @@ namespace Catch {
 
         m_reporter->sectionEnded(SectionStats(endInfo.sectionInfo, assertions, endInfo.durationInSeconds, missingAssertions));
         m_messages.clear();
+        m_messageScopes.clear();
     }
 
     void RunContext::sectionEndedEarly(SectionEndInfo const & endInfo) {
@@ -248,6 +243,10 @@ namespace Catch {
 
     void RunContext::popScopedMessage(MessageInfo const & message) {
         m_messages.erase(std::remove(m_messages.begin(), m_messages.end(), message), m_messages.end());
+    }
+
+    void RunContext::emplaceUnscopedMessage( MessageBuilder const& builder ) {
+        m_messageScopes.emplace_back( builder );
     }
 
     std::string RunContext::getCurrentTestName() const {
@@ -310,6 +309,7 @@ namespace Catch {
         m_lastAssertionPassed = true;
         ++m_totals.assertions.passed;
         resetAssertionInfo();
+        m_messageScopes.clear();
     }
 
     bool RunContext::aborting() const {
@@ -331,13 +331,10 @@ namespace Catch {
         CATCH_TRY {
             if (m_reporter->getPreferences().shouldRedirectStdOut) {
 #if !defined(CATCH_CONFIG_EXPERIMENTAL_REDIRECT)
-                RedirectedStdOut redirectedStdOut;
-                RedirectedStdErr redirectedStdErr;
+                RedirectedStreams redirectedStreams(redirectedCout, redirectedCerr);
 
                 timer.start();
                 invokeActiveTestCase();
-                redirectedCout += redirectedStdOut.str();
-                redirectedCerr += redirectedStdErr.str();
 #else
                 OutputRedirect r(redirectedCout, redirectedCerr);
                 timer.start();
@@ -364,6 +361,7 @@ namespace Catch {
         m_testCaseTracker->close();
         handleUnfinishedSections();
         m_messages.clear();
+        m_messageScopes.clear();
 
         SectionStats testCaseSectionStats(testCaseSection, assertions, duration, missingAssertions);
         m_reporter->sectionEnded(testCaseSectionStats);

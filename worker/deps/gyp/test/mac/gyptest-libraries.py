@@ -21,6 +21,8 @@ if sys.platform == 'darwin':
   if test.format == 'xcode-ninja':
     test.skip_test()
 
+  test.skip_test()  # bug=535
+
   test.run_gyp('subdir/test.gyp', chdir='libraries')
 
   test.build('subdir/test.gyp', test.ALL, chdir='libraries')

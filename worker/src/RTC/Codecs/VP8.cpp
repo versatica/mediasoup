@@ -3,13 +3,12 @@
 
 #include "RTC/Codecs/VP8.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 
 namespace RTC
 {
 	namespace Codecs
 	{
-		VP8::PayloadDescriptor* VP8::Parse(uint8_t* data, size_t len)
+		VP8::PayloadDescriptor* VP8::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
@@ -18,8 +17,8 @@ namespace RTC
 			if (len < 1)
 				return nullptr;
 
-			size_t offset = 0;
-			uint8_t byte  = data[offset];
+			size_t offset{ 0 };
+			uint8_t byte = data[offset];
 
 			payloadDescriptor->extended       = (byte >> 7) & 0x01;
 			payloadDescriptor->nonReference   = (byte >> 5) & 0x01;
@@ -27,8 +26,9 @@ namespace RTC
 			payloadDescriptor->partitionIndex = byte & 0x07;
 
 			if (!payloadDescriptor->extended)
+			{
 				return nullptr;
-
+			}
 			else
 			{
 				if (len < ++offset + 1)
@@ -55,15 +55,13 @@ namespace RTC
 						return nullptr;
 
 					payloadDescriptor->hasTwoBytesPictureId = true;
-
-					payloadDescriptor->pictureId = (byte & 0x7F) << 8;
+					payloadDescriptor->pictureId            = (byte & 0x7F) << 8;
 					payloadDescriptor->pictureId += data[offset];
 				}
 				else
 				{
 					payloadDescriptor->hasOneBytePictureId = true;
-
-					payloadDescriptor->pictureId = byte & 0x7F;
+					payloadDescriptor->pictureId           = byte & 0x7F;
 				}
 
 				payloadDescriptor->hasPictureId = true;
@@ -75,8 +73,7 @@ namespace RTC
 					return nullptr;
 
 				payloadDescriptor->hasTl0PictureIndex = true;
-
-				payloadDescriptor->tl0PictureIndex = data[offset];
+				payloadDescriptor->tl0PictureIndex    = data[offset];
 			}
 
 			if (payloadDescriptor->t || payloadDescriptor->k)
@@ -87,16 +84,17 @@ namespace RTC
 				byte = data[offset];
 
 				payloadDescriptor->hasTlIndex = true;
-
-				payloadDescriptor->tlIndex  = (byte >> 6) & 0x03;
-				payloadDescriptor->y        = (byte >> 5) & 0x01;
-				payloadDescriptor->keyIndex = byte & 0x1F;
+				payloadDescriptor->tlIndex    = (byte >> 6) & 0x03;
+				payloadDescriptor->y          = (byte >> 5) & 0x01;
+				payloadDescriptor->keyIndex   = byte & 0x1F;
 			}
 
 			if (
 			  (len >= ++offset + 1) && payloadDescriptor->start &&
 			  payloadDescriptor->partitionIndex == 0 && (!(data[offset] & 0x01)))
+			{
 				payloadDescriptor->isKeyFrame = true;
+			}
 
 			return payloadDescriptor.release();
 		}
@@ -132,9 +130,7 @@ namespace RTC
 			}
 
 			if (this->l)
-			{
 				*data = tl0PictureIndex;
-			}
 		}
 
 		void VP8::PayloadDescriptor::Restore(uint8_t* data) const
@@ -179,14 +175,13 @@ namespace RTC
 		bool VP8::PayloadDescriptorHandler::Encode(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
-			EncodingContext* context = dynamic_cast<EncodingContext*>(encodingContext);
+			auto* context = static_cast<EncodingContext*>(encodingContext);
 
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			if (context->syncRequired)
 			{
 				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId);
 				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex);
-
 				context->syncRequired = false;
 			}
 
@@ -219,7 +214,9 @@ namespace RTC
 			// Do not send a dropped tl0PicutreIndex.
 			if (!context->tl0PictureIndexManager.Input(
 			      this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex))
+			{
 				return false;
+			}
 
 			this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
 
@@ -243,8 +240,7 @@ namespace RTC
 			if (!payloadDescriptor)
 				return;
 
-			PayloadDescriptorHandler* payloadDescriptorHandler =
-			  new PayloadDescriptorHandler(payloadDescriptor);
+			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 
@@ -253,8 +249,10 @@ namespace RTC
 			{
 				// Shift the RTP payload one byte from the begining of the pictureId field.
 				packet->ShiftPayload(2, 1, true /*expand*/);
+
 				// Set the two byte pictureId marker bit.
 				data[2] = 0x80;
+
 				// Update the payloadDescriptor.
 				payloadDescriptor->hasOneBytePictureId  = false;
 				payloadDescriptor->hasTwoBytesPictureId = true;

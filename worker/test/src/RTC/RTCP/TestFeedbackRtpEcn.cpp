@@ -26,15 +26,15 @@ namespace TestFeedbackRtpEcn
 	// clang-format on
 
 	// ECN values.
-	uint32_t senderSsrc        = 0x00000001;
-	uint32_t mediaSsrc         = 0x0330bdee;
-	uint32_t sequenceNumber    = 1;
-	uint32_t ect0Counter       = 1;
-	uint32_t ect1Counter       = 1;
-	uint16_t ecnCeCounter      = 1;
-	uint16_t notEctCounter     = 1;
-	uint16_t lostPackets       = 1;
-	uint16_t duplicatedPackets = 1;
+	uint32_t senderSsrc{ 0x00000001 };
+	uint32_t mediaSsrc{ 0x0330bdee };
+	uint32_t sequenceNumber{ 1 };
+	uint32_t ect0Counter{ 1 };
+	uint32_t ect1Counter{ 1 };
+	uint16_t ecnCeCounter{ 1 };
+	uint16_t notEctCounter{ 1 };
+	uint16_t lostPackets{ 1 };
+	uint16_t duplicatedPackets{ 1 };
 
 	void verify(FeedbackRtpEcnPacket* packet)
 	{

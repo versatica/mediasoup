@@ -1,66 +1,51 @@
 #ifndef MS_RTC_WEBRTC_TRANSPORT_HPP
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
-#include "common.hpp"
-#include "Channel/Notifier.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
-#include "RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp"
+#include "RTC/REMB/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunMessage.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/Transport.hpp"
-#include <json/json.h>
-#include <string>
+#include "RTC/TransportTuple.hpp"
+#include "RTC/UdpSocket.hpp"
 #include <vector>
 
 namespace RTC
 {
 	class WebRtcTransport : public RTC::Transport,
+	                        public RTC::UdpSocket::Listener,
 	                        public RTC::TcpServer::Listener,
 	                        public RTC::TcpConnection::Listener,
 	                        public RTC::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener,
-	                        public RTC::RemoteBitrateEstimator::Listener
+	                        public RTC::REMB::RemoteBitrateEstimator::Listener
 	{
-	public:
-		struct Options
+	private:
+		struct ListenIp
 		{
-			bool udp{ true };
-			bool tcp{ true };
-			bool preferIPv4{ false };
-			bool preferIPv6{ false };
-			bool preferUdp{ false };
-			bool preferTcp{ false };
+			std::string ip;
+			std::string announcedIp;
 		};
 
 	public:
-		WebRtcTransport(
-		  RTC::Transport::Listener* listener,
-		  Channel::Notifier* notifier,
-		  uint32_t transportId,
-		  Options& options);
+		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~WebRtcTransport() override;
 
 	public:
-		Json::Value ToJson() const override;
-		Json::Value GetStats() const override;
-		RTC::DtlsTransport::Role SetRemoteDtlsParameters(
-		  RTC::DtlsTransport::Fingerprint& fingerprint, RTC::DtlsTransport::Role role);
-		void SetMaxBitrate(uint32_t bitrate);
-		void ChangeUfragPwd(std::string& usernameFragment, std::string& password);
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
+		void FillJson(json& jsonObject) const override;
+		void FillJsonStats(json& jsonArray) const override;
+		void HandleRequest(Channel::Request* request) override;
 
 	private:
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
+		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-
-		/* Private methods to unify UDP and TCP behavior. */
-	private:
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
@@ -108,29 +93,29 @@ namespace RTC
 		void OnDtlsApplicationData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
-		/* Pure virtual methods inherited from RTC::RemoteBitrateEstimator::Listener. */
+		/* Pure virtual methods inherited from RTC::REMB::RemoteBitrateEstimator::Listener. */
 	public:
-		void OnRemoteBitrateEstimatorValue(const std::vector<uint32_t>& ssrcs, uint32_t bitrate) override;
+		void OnRemoteBitrateEstimatorValue(
+		  const RTC::REMB::RemoteBitrateEstimator* remoteBitrateEstimator,
+		  const std::vector<uint32_t>& ssrcs,
+		  uint32_t availableBitrate) override;
 
 	private:
 		// Allocated by this.
 		RTC::IceServer* iceServer{ nullptr };
-		std::vector<RTC::UdpSocket*> udpSockets;
-		std::vector<RTC::TcpServer*> tcpServers;
+		// Map of UdpSocket/TcpServer and local announced IP (if any).
+		std::unordered_map<RTC::UdpSocket*, std::string> udpSockets;
+		std::unordered_map<RTC::TcpServer*, std::string> tcpServers;
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
-		// Others (ICE).
-		std::vector<IceCandidate> iceLocalCandidates;
-		RTC::TransportTuple* selectedTuple{ nullptr };
-		// Others (DTLS).
-		bool hasRemoteDtlsParameters{ false };
-		RTC::DtlsTransport::Role dtlsLocalRole{ RTC::DtlsTransport::Role::AUTO };
-		// Others (REMB and bitrate stuff).
-		std::unique_ptr<RTC::RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
-		uint32_t maxBitrate{ 0 };
-		std::tuple<uint64_t, std::vector<uint32_t>> sentRemb;
-		uint64_t lastEffectiveMaxBitrateAt{ 0 };
+		// Others.
+		bool connected{ false }; // Whether connect() was succesfully called.
+		std::vector<RTC::IceCandidate> iceCandidates;
+		RTC::TransportTuple* iceSelectedTuple{ nullptr };
+		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
+		std::unique_ptr<RTC::REMB::RemoteBitrateEstimatorAbsSendTime> rembRemoteBitrateEstimator;
+		uint32_t maxIncomingBitrate{ 0 };
 	};
 } // namespace RTC
 

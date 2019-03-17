@@ -10,75 +10,43 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Json::Value TransportTuple::ToJson() const
+	void TransportTuple::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringLocalIp{ "localIP" };
-		static const Json::StaticString JsonStringRemoteIp{ "remoteIP" };
-		static const Json::StaticString JsonStringLocalPort{ "localPort" };
-		static const Json::StaticString JsonStringRemotePort{ "remotePort" };
-		static const Json::StaticString JsonStringProtocol{ "protocol" };
-		static const Json::StaticString JsonStringUdp{ "udp" };
-		static const Json::StaticString JsonStringTcp{ "tcp" };
-
-		Json::Value json(Json::objectValue);
-		int ipFamily;
+		int family;
 		std::string ip;
 		uint16_t port;
 
-		Utils::IP::GetAddressInfo(GetLocalAddress(), &ipFamily, ip, &port);
-		json[JsonStringLocalIp]   = ip;
-		json[JsonStringLocalPort] = Json::UInt{ port };
-		if (GetProtocol() == RTC::TransportTuple::Protocol::UDP)
-			json[JsonStringProtocol] = JsonStringUdp;
+		Utils::IP::GetAddressInfo(GetLocalAddress(), family, ip, port);
+
+		// Add localIp.
+		if (this->localAnnouncedIp.empty())
+			jsonObject["localIp"] = ip;
 		else
-			json[JsonStringProtocol] = JsonStringTcp;
+			jsonObject["localIp"] = this->localAnnouncedIp;
 
-		Utils::IP::GetAddressInfo(GetRemoteAddress(), &ipFamily, ip, &port);
-		json[JsonStringRemoteIp]   = ip;
-		json[JsonStringRemotePort] = Json::UInt{ port };
+		// Add localPort.
+		jsonObject["localPort"] = port;
 
-		return json;
-	}
+		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, ip, port);
 
-	void TransportTuple::Dump() const
-	{
-		MS_TRACE();
+		// Add remoteIp.
+		jsonObject["remoteIp"] = ip;
 
-		switch (this->protocol)
+		// Add remotePort.
+		jsonObject["remotePort"] = port;
+
+		// Add protocol.
+		switch (GetProtocol())
 		{
 			case Protocol::UDP:
-			{
-				int remoteFamily;
-				std::string remoteIp;
-				uint16_t remotePort;
-
-				Utils::IP::GetAddressInfo(GetRemoteAddress(), &remoteFamily, remoteIp, &remotePort);
-
-				MS_DEBUG_DEV("<TransportTuple>");
-				MS_DEBUG_DEV(
-				  "  [UDP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-				  this->udpSocket->GetLocalIP().c_str(),
-				  this->udpSocket->GetLocalPort(),
-				  remoteIp.c_str(),
-				  remotePort);
-				MS_DEBUG_DEV("</TransportTuple>");
+				jsonObject["protocol"] = "udp";
 				break;
-			}
 
 			case Protocol::TCP:
-			{
-				MS_DEBUG_DEV("<TransportTuple>");
-				MS_DEBUG_DEV(
-				  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-				  this->tcpConnection->GetLocalIP().c_str(),
-				  this->tcpConnection->GetLocalPort(),
-				  this->tcpConnection->GetPeerIP().c_str(),
-				  this->tcpConnection->GetPeerPort());
-				MS_DEBUG_DEV("</TransportTuple>");
+				jsonObject["protocol"] = "tcp";
 				break;
-			}
 		}
 	}
 } // namespace RTC

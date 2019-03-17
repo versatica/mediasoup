@@ -7,44 +7,111 @@
 
 using namespace RTC;
 
+// 17: 16 bit mask + the initial sequence number.
+static constexpr size_t MaxRequestedPackets{ 17 };
+
 SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 {
 	class RtpStreamRecvListener : public RtpStreamRecv::Listener
 	{
 	public:
-		virtual void OnRtpStreamActive(RTC::RtpStream* /*rtpStream*/) override
+		void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/) override
 		{
 		}
 
-		virtual void OnRtpStreamInactive(RTC::RtpStream* /*rtpStream*/) override
+		void OnRtpStreamSendRtcpPacket(RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
 		{
+			switch (packet->GetType())
+			{
+				case RTCP::Type::PSFB:
+				{
+					switch (dynamic_cast<RTCP::FeedbackPsPacket*>(packet)->GetMessageType())
+					{
+						case RTCP::FeedbackPs::MessageType::PLI:
+						{
+							INFO("PLI required");
+
+							REQUIRE(this->shouldTriggerPLI == true);
+
+							this->shouldTriggerPLI = false;
+							this->nackedSeqNumbers.clear();
+
+							break;
+						}
+
+						case RTCP::FeedbackPs::MessageType::FIR:
+						{
+							INFO("FIR required");
+
+							REQUIRE(this->shouldTriggerFIR == true);
+
+							this->shouldTriggerFIR = false;
+							this->nackedSeqNumbers.clear();
+
+							break;
+						}
+
+						default:;
+					}
+
+					break;
+				}
+
+				case RTCP::Type::RTPFB:
+				{
+					switch (dynamic_cast<RTCP::FeedbackRtpPacket*>(packet)->GetMessageType())
+					{
+						case RTCP::FeedbackRtp::MessageType::NACK:
+						{
+							INFO("NACK required");
+
+							REQUIRE(this->shouldTriggerNack == true);
+
+							this->shouldTriggerNack = false;
+
+							auto* nackPacket = dynamic_cast<RTCP::FeedbackRtpNackPacket*>(packet);
+
+							for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
+							{
+								RTCP::FeedbackRtpNackItem* item = *it;
+
+								uint16_t firstSeq = item->GetPacketId();
+								uint16_t bitmask  = item->GetLostPacketBitmask();
+
+								this->nackedSeqNumbers.push_back(firstSeq);
+
+								for (size_t i{ 1 }; i < MaxRequestedPackets; ++i)
+								{
+									if ((bitmask & 1) != 0)
+										this->nackedSeqNumbers.push_back(firstSeq + i);
+
+									bitmask >>= 1;
+								}
+							}
+
+							break;
+						}
+
+						default:;
+					}
+
+					break;
+				}
+
+				default:;
+			}
 		}
 
-		virtual void OnRtpStreamRecvNackRequired(
-		  RTC::RtpStreamRecv* /*rtpStream*/, const std::vector<uint16_t>& seqNumbers) override
+		void OnRtpStreamNeedWorstRemoteFractionLost(
+		  RTC::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
 		{
-			INFO("NACK required");
-
-			REQUIRE(this->shouldTriggerNack == true);
-
-			this->shouldTriggerNack = false;
-			this->seqNumbers        = seqNumbers;
-		}
-
-		virtual void OnRtpStreamRecvPliRequired(RtpStreamRecv* /*rtpStream*/) override
-		{
-			INFO("PLI required");
-
-			REQUIRE(this->shouldTriggerKeyFrame == true);
-
-			this->shouldTriggerKeyFrame = false;
-			this->seqNumbers.clear();
 		}
 
 	public:
-		bool shouldTriggerNack     = false;
-		bool shouldTriggerKeyFrame = false;
-		std::vector<uint16_t> seqNumbers;
+		bool shouldTriggerNack = false;
+		bool shouldTriggerPLI  = false;
+		bool shouldTriggerFIR  = false;
+		std::vector<uint16_t> nackedSeqNumbers;
 	};
 
 	// clang-format off
@@ -67,6 +134,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	params.clockRate = 90000;
 	params.useNack   = true;
 	params.usePli    = true;
+	params.useFir    = false;
 
 	SECTION("NACK one packet")
 	{
@@ -78,21 +146,23 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 
 		packet->SetSequenceNumber(3);
 		listener.shouldTriggerNack = true;
+		listener.shouldTriggerPLI  = false;
+		listener.shouldTriggerFIR  = false;
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seqNumbers.size() == 1);
-		REQUIRE(listener.seqNumbers[0] == 2);
-		listener.seqNumbers.clear();
+		REQUIRE(listener.nackedSeqNumbers.size() == 1);
+		REQUIRE(listener.nackedSeqNumbers[0] == 2);
+		listener.nackedSeqNumbers.clear();
 
 		packet->SetSequenceNumber(2);
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seqNumbers.size() == 0);
+		REQUIRE(listener.nackedSeqNumbers.size() == 0);
 
 		packet->SetSequenceNumber(4);
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seqNumbers.size() == 0);
+		REQUIRE(listener.nackedSeqNumbers.size() == 0);
 	}
 
 	SECTION("wrapping sequence numbers")
@@ -105,12 +175,14 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 
 		packet->SetSequenceNumber(1);
 		listener.shouldTriggerNack = true;
+		listener.shouldTriggerPLI  = false;
+		listener.shouldTriggerFIR  = false;
 		rtpStream.ReceivePacket(packet);
 
-		REQUIRE(listener.seqNumbers.size() == 2);
-		REQUIRE(listener.seqNumbers[0] == 0xffff);
-		REQUIRE(listener.seqNumbers[1] == 0);
-		listener.seqNumbers.clear();
+		REQUIRE(listener.nackedSeqNumbers.size() == 2);
+		REQUIRE(listener.nackedSeqNumbers[0] == 0xffff);
+		REQUIRE(listener.nackedSeqNumbers[1] == 0);
+		listener.nackedSeqNumbers.clear();
 	}
 
 	SECTION("require key frame")
@@ -121,10 +193,11 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet);
 
-		// Seq different is bigger than MaxNackPackets in RTC::NackGenerator, so it
+		// Seq different is bigger than MaxNackPackets in NackGenerator, so it
 		// triggers a key frame.
 		packet->SetSequenceNumber(1003);
-		listener.shouldTriggerKeyFrame = true;
+		listener.shouldTriggerPLI = true;
+		listener.shouldTriggerFIR = false;
 		rtpStream.ReceivePacket(packet);
 	}
 

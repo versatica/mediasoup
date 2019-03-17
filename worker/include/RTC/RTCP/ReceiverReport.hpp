@@ -202,7 +202,7 @@ namespace RTC
 
 		inline ReceiverReportPacket::~ReceiverReportPacket()
 		{
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				delete report;
 			}
@@ -217,7 +217,7 @@ namespace RTC
 		{
 			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
 
-			for (auto report : reports)
+			for (auto* report : reports)
 			{
 				size += report->GetSize();
 			}

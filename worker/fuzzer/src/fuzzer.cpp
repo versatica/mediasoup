@@ -3,24 +3,41 @@
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
 #include "LogLevel.hpp"
-#include "Logger.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/FuzzerStunMessage.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
+#include "RTC/FuzzerStunMessage.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
-#include <stdint.h>
-#include <stddef.h>
 #include <cstdlib> // std::getenv()
 #include <iostream>
+#include <stddef.h>
+#include <stdint.h>
 
 bool fuzzStun = false;
-bool fuzzRtp = false;
+bool fuzzRtp  = false;
 bool fuzzRtcp = false;
 
-int init()
+int Init();
+
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 {
-	std::string loggerId = "fuzzer";
+	// Trick to initialize our stuff just once.
+	static int unused = Init();
+
+	if (fuzzStun)
+		Fuzzer::RTC::StunMessage::Fuzz(data, len);
+
+	if (fuzzRtp)
+		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
+
+	if (fuzzRtcp)
+		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
+
+	return 0;
+}
+
+int Init()
+{
 	LogLevel logLevel{ LogLevel::LOG_NONE };
 
 	// Get logLevel from ENV variable.
@@ -33,12 +50,6 @@ int init()
 		else if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "error")
 			logLevel = LogLevel::LOG_ERROR;
 	}
-
-	Settings::configuration.logLevel = logLevel;
-	Logger::Init(loggerId);
-	DepLibUV::ClassInit();
-	DepOpenSSL::ClassInit();
-	Utils::Crypto::ClassInit();
 
 	// Select what to fuzz.
 	if (std::getenv("MS_FUZZ_STUN") && std::string(std::getenv("MS_FUZZ_STUN")) == "1")
@@ -64,26 +75,16 @@ int init()
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
 		fuzzStun = true;
-		fuzzRtp = true;
+		fuzzRtp  = true;
 		fuzzRtcp = true;
 	}
 
-	return 0;
-}
+	Settings::configuration.logLevel = logLevel;
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
-{
-	// Trick to initialize our stuff just once.
-	static int unused = init();
-
-	if (fuzzStun)
-		Fuzzer::RTC::StunMessage::Fuzz(data, len);
-
-	if (fuzzRtp)
-		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
-
-	if (fuzzRtcp)
-		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
+	// Initialize static stuff.
+	DepLibUV::ClassInit();
+	DepOpenSSL::ClassInit();
+	Utils::Crypto::ClassInit();
 
 	return 0;
 }

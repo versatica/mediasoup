@@ -22,11 +22,11 @@ namespace TestFeedbackPsTstn
 	// clang-format on
 
 	// TSTN values.
-	uint32_t senderSsrc = 0xfa17fa17;
-	uint32_t mediaSsrc  = 0;
-	uint32_t ssrc       = 0x02d03702;
-	uint8_t seq         = 8;
-	uint8_t index       = 1;
+	uint32_t senderSsrc{ 0xfa17fa17 };
+	uint32_t mediaSsrc{ 0 };
+	uint32_t ssrc{ 0x02d03702 };
+	uint8_t seq{ 8 };
+	uint8_t index{ 1 };
 
 	void verify(FeedbackPsTstnPacket* packet)
 	{

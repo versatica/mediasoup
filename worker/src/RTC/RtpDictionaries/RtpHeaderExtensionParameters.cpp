@@ -2,74 +2,70 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtpHeaderExtensionParameters::RtpHeaderExtensionParameters(Json::Value& data)
+	RtpHeaderExtensionParameters::RtpHeaderExtensionParameters(json& data)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringUri{ "uri" };
-		static const Json::StaticString JsonStringId{ "id" };
-		static const Json::StaticString JsonStringEncrypt{ "encrypt" };
-		static const Json::StaticString JsonStringParameters{ "parameters" };
+		if (!data.is_object())
+			MS_THROW_TYPE_ERROR("data is not an object");
 
-		if (!data.isObject())
-			MS_THROW_ERROR("RtpHeaderExtensionParameters is not an object");
+		auto jsonUriIt        = data.find("uri");
+		auto jsonIdIt         = data.find("id");
+		auto jsonEncryptIt    = data.find("encrypt");
+		auto jsonParametersIt = data.find("parameters");
 
-		// `uri` is mandatory.
-		if (!data[JsonStringUri].isString())
-			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.uri");
+		// uri is mandatory.
+		if (jsonUriIt == data.end() || !jsonUriIt->is_string())
+			MS_THROW_TYPE_ERROR("missing uri");
 
-		this->uri = data[JsonStringUri].asString();
+		this->uri = jsonUriIt->get<std::string>();
+
 		if (this->uri.empty())
-			MS_THROW_ERROR("empty RtpHeaderExtensionParameters.uri");
+			MS_THROW_TYPE_ERROR("empty uri");
 
 		// Get the type.
 		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
 
-		// `id` is mandatory.
-		if (!data[JsonStringId].isUInt())
-			MS_THROW_ERROR("missing RtpHeaderExtensionParameters.id");
+		// id is mandatory.
+		if (jsonIdIt == data.end() || !jsonIdIt->is_number_unsigned())
+			MS_THROW_TYPE_ERROR("missing id");
 
-		this->id = static_cast<uint8_t>(data[JsonStringId].asUInt());
+		this->id = jsonIdIt->get<uint8_t>();
 
-		// `encrypt` is optional.
-		if (data[JsonStringEncrypt].isBool())
-			this->encrypt = data[JsonStringEncrypt].asBool();
+		// Don't allow id 0.
+		if (this->id == 0u)
+			MS_THROW_TYPE_ERROR("invalid id 0");
 
-		// `parameters` is optional.
-		if (data[JsonStringParameters].isObject())
-			this->parameters.Set(data[JsonStringParameters]);
+		// encrypt is optional.
+		if (jsonEncryptIt != data.end() && jsonEncryptIt->is_boolean())
+			this->encrypt = jsonEncryptIt->get<bool>();
+
+		// parameters is optional.
+		if (jsonParametersIt != data.end() && jsonParametersIt->is_object())
+			this->parameters.Set(*jsonParametersIt);
 	}
 
-	Json::Value RtpHeaderExtensionParameters::ToJson() const
+	void RtpHeaderExtensionParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringUri{ "uri" };
-		static const Json::StaticString JsonStringId{ "id" };
-		static const Json::StaticString JsonStringEncrypt{ "encrypt" };
-		static const Json::StaticString JsonStringParameters{ "parameters" };
+		// Add uri.
+		jsonObject["uri"] = this->uri;
 
-		Json::Value json(Json::objectValue);
+		// Add id.
+		jsonObject["id"] = this->id;
 
-		// Add `uri`.
-		json[JsonStringUri] = this->uri;
+		// Add encrypt.
+		jsonObject["encrypt"] = this->encrypt;
 
-		// Add `id`.
-		json[JsonStringId] = Json::UInt{ this->id };
-
-		// Add `encrypt`.
-		json[JsonStringEncrypt] = this->encrypt;
-
-		// Add `parameters`.
-		json[JsonStringParameters] = this->parameters.ToJson();
-
-		return json;
+		// Add parameters.
+		this->parameters.FillJson(jsonObject["parameters"]);
 	}
 } // namespace RTC

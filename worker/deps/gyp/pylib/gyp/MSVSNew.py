@@ -21,6 +21,13 @@ except ImportError:
   _new_md5 = md5.new
 
 
+try:
+  # cmp was removed in python3.
+  cmp
+except NameError:
+  def cmp(a, b):
+    return (a > b) - (a < b)
+
 # Initialize random number generator
 random.seed()
 

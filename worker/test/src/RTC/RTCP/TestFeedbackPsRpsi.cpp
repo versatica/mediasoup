@@ -23,11 +23,11 @@ namespace TestFeedbackPsRpsi
 	// clang-format on
 
 	// RPSI values.
-	uint32_t senderSsrc = 0xfa17fa17;
-	uint32_t mediaSsrc  = 0;
-	uint8_t payloadType = 1;
-	uint8_t payloadMask = 1;
-	size_t length       = 5;
+	uint32_t senderSsrc{ 0xfa17fa17 };
+	uint32_t mediaSsrc{ 0 };
+	uint8_t payloadType{ 1 };
+	uint8_t payloadMask{ 1 };
+	size_t length{ 5 };
 
 	void verify(FeedbackPsRpsiPacket* packet)
 	{

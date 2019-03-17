@@ -1,3 +1,0 @@
-/*
- *  Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
- */

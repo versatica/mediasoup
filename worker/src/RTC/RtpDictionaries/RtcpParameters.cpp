@@ -2,62 +2,50 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtcpParameters::RtcpParameters(Json::Value& data)
+	RtcpParameters::RtcpParameters(json& data)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCname{ "cname" };
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringReducedSize{ "reducedSize" };
+		if (!data.is_object())
+			MS_THROW_TYPE_ERROR("data is not an object");
 
-		if (!data.isObject())
-			MS_THROW_ERROR("RtcpParameters is not an object");
+		auto jsonCnameIt       = data.find("cname");
+		auto jsonSsrcIt        = data.find("ssrc");
+		auto jsonRedicedSizeIt = data.find("reducedSize");
 
-		// `cname` is optional.
-		if (data[JsonStringCname].isString())
-		{
-			this->cname = data[JsonStringCname].asString();
-			if (this->cname.empty())
-				MS_THROW_ERROR("empty RtcpParameters.cname");
-		}
+		// cname is optional.
+		if (jsonCnameIt != data.end() && jsonCnameIt->is_string())
+			this->cname = jsonCnameIt->get<std::string>();
 
-		// `ssrc` is optional.
-		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = uint32_t{ data[JsonStringSsrc].asUInt() };
+		// ssrc is optional.
+		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
+			this->ssrc = jsonSsrcIt->get<uint32_t>();
 
-		// `reducedSize` is optional.
-		if (data[JsonStringReducedSize].isBool())
-			this->reducedSize = data[JsonStringReducedSize].asBool();
+		// reducedSize is optional.
+		if (jsonRedicedSizeIt != data.end() && jsonRedicedSizeIt->is_boolean())
+			this->reducedSize = jsonRedicedSizeIt->get<bool>();
 	}
 
-	Json::Value RtcpParameters::ToJson() const
+	void RtcpParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringCname{ "cname" };
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringReducedSize{ "reducedSize" };
-
-		Json::Value json(Json::objectValue);
-
-		// Add `cname`.
+		// Add cname.
 		if (!this->cname.empty())
-			json[JsonStringCname] = this->cname;
+			jsonObject["cname"] = this->cname;
 
-		// Add `ssrc`.
+		// Add ssrc.
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = Json::UInt{ this->ssrc };
+			jsonObject["ssrc"] = this->ssrc;
 
-		// Add `reducedSize`.
-		json[JsonStringReducedSize] = this->reducedSize;
-
-		return json;
+		// Add reducedSize.
+		jsonObject["reducedSize"] = this->reducedSize;
 	}
 } // namespace RTC

@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(root, 'deps', 'gyp', 'pylib'))
 try:
   import gyp
 except ImportError:
-  print('You need to install gyp in deps/gyp first, run:')
+  print('Error: you need to install gyp in deps/gyp first, run:')
   print('  ./scripts/get_dep.sh gyp')
   sys.exit(42)
 
@@ -40,8 +40,8 @@ def compiler_version():
   version = proc.communicate()[0].split('.')
   mayor_version = int(version[:1][0])
   if is_clang == False and mayor_version >= 7:
-      proc = subprocess.Popen(CC.split() + ['-dumpfullversion'], stdout=subprocess.PIPE)
-      version = proc.communicate()[0].split('.')
+    proc = subprocess.Popen(CC.split() + ['-dumpfullversion'], stdout=subprocess.PIPE)
+    version = proc.communicate()[0].split('.')
   version = map(int, version[:2])
   version = tuple(version)
   return (version, is_clang)

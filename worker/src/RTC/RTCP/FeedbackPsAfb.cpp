@@ -36,7 +36,6 @@ namespace RTC
 			{
 				packet.reset(FeedbackPsRembPacket::Parse(data, len));
 			}
-
 			else
 			{
 				packet.reset(new FeedbackPsAfbPacket(commonHeader));

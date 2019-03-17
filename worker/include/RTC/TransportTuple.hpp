@@ -3,9 +3,12 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
+#include "json.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
-#include <json/json.h>
+#include <string>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
@@ -21,11 +24,12 @@ namespace RTC
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
+		explicit TransportTuple(const TransportTuple* tuple);
 
-		Json::Value ToJson() const;
-		void Dump() const;
+		void FillJson(json& jsonObject) const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
+		void SetLocalAnnouncedIp(std::string& localAnnouncedIp);
 		void Send(const uint8_t* data, size_t len);
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
@@ -38,6 +42,7 @@ namespace RTC
 		RTC::UdpSocket* udpSocket{ nullptr };
 		struct sockaddr* udpRemoteAddr{ nullptr };
 		RTC::TcpConnection* tcpConnection{ nullptr };
+		std::string localAnnouncedIp;
 		// Others.
 		struct sockaddr_storage udpRemoteAddrStorage;
 		Protocol protocol;
@@ -55,11 +60,20 @@ namespace RTC
 	{
 	}
 
+	inline TransportTuple::TransportTuple(const TransportTuple* tuple)
+	  : udpSocket(tuple->udpSocket), udpRemoteAddr(tuple->udpRemoteAddr),
+	    tcpConnection(tuple->tcpConnection), localAnnouncedIp(tuple->localAnnouncedIp),
+	    protocol(tuple->protocol)
+	{
+		if (protocol == TransportTuple::Protocol::UDP)
+			StoreUdpRemoteAddress();
+	}
+
 	inline void TransportTuple::StoreUdpRemoteAddress()
 	{
 		// Clone the given address into our address storage and make the sockaddr
 		// pointer point to it.
-		this->udpRemoteAddrStorage = Utils::IP::CopyAddress(udpRemoteAddr);
+		this->udpRemoteAddrStorage = Utils::IP::CopyAddress(this->udpRemoteAddr);
 		this->udpRemoteAddr        = (struct sockaddr*)&this->udpRemoteAddrStorage;
 	}
 
@@ -84,6 +98,11 @@ namespace RTC
 		{
 			return false;
 		}
+	}
+
+	inline void TransportTuple::SetLocalAnnouncedIp(std::string& localAnnouncedIp)
+	{
+		this->localAnnouncedIp = localAnnouncedIp;
 	}
 
 	inline void TransportTuple::Send(const uint8_t* data, size_t len)

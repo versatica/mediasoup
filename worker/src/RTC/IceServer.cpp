@@ -69,6 +69,7 @@ namespace RTC
 
 				response->Serialize(StunSerializeBuffer);
 				this->listener->OnOutgoingStunMessage(this, response, tuple);
+
 				delete response;
 			}
 			else
@@ -93,6 +94,7 @@ namespace RTC
 
 					response->Serialize(StunSerializeBuffer);
 					this->listener->OnOutgoingStunMessage(this, response, tuple);
+
 					delete response;
 
 					return;
@@ -113,6 +115,7 @@ namespace RTC
 
 						response->Serialize(StunSerializeBuffer);
 						this->listener->OnOutgoingStunMessage(this, response, tuple);
+
 						delete response;
 
 						return;
@@ -127,6 +130,7 @@ namespace RTC
 
 						response->Serialize(StunSerializeBuffer);
 						this->listener->OnOutgoingStunMessage(this, response, tuple);
+
 						delete response;
 
 						return;
@@ -139,14 +143,15 @@ namespace RTC
 				// if (msg->GetIceControlled())
 				// {
 				// 	MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
-
+				//
 				// 	// Reply 487 (Role Conflict).
 				// 	RTC::StunMessage* response = msg->CreateErrorResponse(487);
-
+				//
 				// 	response->Serialize(StunSerializeBuffer);
 				// 	this->listener->OnOutgoingStunMessage(this, response, tuple);
+				//
 				// 	delete response;
-
+				//
 				// 	return;
 				// }
 
@@ -167,6 +172,7 @@ namespace RTC
 				// Send back.
 				response->Serialize(StunSerializeBuffer);
 				this->listener->OnOutgoingStunMessage(this, response, tuple);
+
 				delete response;
 
 				// Handle the tuple.
@@ -211,6 +217,7 @@ namespace RTC
 
 		// Find the removed tuple.
 		auto it = this->tuples.begin();
+
 		for (; it != this->tuples.end(); ++it)
 		{
 			RTC::TransportTuple* storedTuple = std::addressof(*it);
@@ -233,8 +240,8 @@ namespace RTC
 
 			return;
 		}
-		// Otherwise this was the selected tuple.
 
+		// Otherwise this was the selected tuple.
 		this->tuples.erase(it);
 		this->selectedTuple = nullptr;
 

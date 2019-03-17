@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
@@ -17,11 +17,11 @@ namespace RTC
 		{ "audio", Media::Kind::AUDIO },
 		{ "video", Media::Kind::VIDEO }
 	};
-	std::map<Media::Kind, Json::StaticString> Media::kind2Json =
+	std::map<Media::Kind, std::string> Media::kind2String =
 	{
-		{ Media::Kind::ALL,   Json::StaticString("")      },
-		{ Media::Kind::AUDIO, Json::StaticString("audio") },
-		{ Media::Kind::VIDEO, Json::StaticString("video") }
+		{ Media::Kind::ALL,   ""      },
+		{ Media::Kind::AUDIO, "audio" },
+		{ Media::Kind::VIDEO, "video" }
 	};
 	// clang-format on
 
@@ -37,15 +37,30 @@ namespace RTC
 		auto it = Media::string2Kind.find(str);
 
 		if (it == Media::string2Kind.end())
-			MS_THROW_ERROR("invalid media kind [kind:%s]", str.c_str());
+			MS_THROW_TYPE_ERROR("invalid media kind [kind:%s]", str.c_str());
 
 		return it->second;
 	}
 
-	Json::StaticString& Media::GetJsonString(Media::Kind kind)
+	Media::Kind Media::GetKind(std::string&& str)
 	{
 		MS_TRACE();
 
-		return Media::kind2Json.at(kind);
+		// Force lowcase kind.
+		Utils::String::ToLowerCase(str);
+
+		auto it = Media::string2Kind.find(str);
+
+		if (it == Media::string2Kind.end())
+			MS_THROW_TYPE_ERROR("invalid media kind [kind:%s]", str.c_str());
+
+		return it->second;
+	}
+
+	std::string& Media::GetString(Media::Kind kind)
+	{
+		MS_TRACE();
+
+		return Media::kind2String.at(kind);
 	}
 } // namespace RTC

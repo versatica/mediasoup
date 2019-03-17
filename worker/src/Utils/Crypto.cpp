@@ -10,7 +10,7 @@ namespace Utils
 	/* Static variables. */
 
 	uint32_t Crypto::seed;
-	HMAC_CTX* Crypto::hmacSha1Ctx;
+	HMAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
 	uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
 	// clang-format off
 	const uint32_t Crypto::crc32Table[] =
@@ -61,7 +61,6 @@ namespace Utils
 		Crypto::seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed)));
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
-		// HMAC_CTX_init(&Crypto::hmacSha1Ctx);
 		Crypto::hmacSha1Ctx = HMAC_CTX_new();
 	}
 
@@ -69,8 +68,8 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		// HMAC_CTX_cleanup(&Crypto::hmacSha1Ctx);
-		HMAC_CTX_free(Crypto::hmacSha1Ctx);
+		if (Crypto::hmacSha1Ctx != nullptr)
+			HMAC_CTX_free(Crypto::hmacSha1Ctx);
 	}
 
 	const uint8_t* Crypto::GetHmacShA1(const std::string& key, const uint8_t* data, size_t len)

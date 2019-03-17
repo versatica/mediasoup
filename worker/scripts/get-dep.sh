@@ -52,18 +52,16 @@ function get_gyp()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
-function get_jsoncpp()
+function get_json()
 {
-	GIT_REPO="https://github.com/open-source-parsers/jsoncpp.git"
-	GIT_TAG="1.8.4"
-	DEST="deps/jsoncpp/jsoncpp"
+	GIT_REPO="https://github.com/nlohmann/json.git"
+	GIT_TAG="v3.5.0"
+	DEST="deps/json"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 
-	echo ">>> [INFO] running 'python amalgamate.py' ..."
-	cd ${DEST}
-	# IMPORTANT: avoid default 'dist/' directory since, somehow, it fails.
-	python amalgamate.py -s bundled/jsoncpp.cpp
+	echo ">>> [INFO] copying json.hpp to include/ directory ..."
+	cp ${DEST}/single_include/nlohmann/json.hpp include/
 }
 
 function get_netstring()
@@ -78,7 +76,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.24.1"
+	GIT_TAG="v1.27.0"
 	DEST="deps/libuv"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -101,8 +99,8 @@ function get_libsrtp()
 
 function get_catch()
 {
-	GIT_REPO="https://github.com/philsquared/Catch.git"
-	GIT_TAG="v2.5.0"
+	GIT_REPO="https://github.com/catchorg/Catch2.git"
+	GIT_TAG="v2.7.0"
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -142,17 +140,26 @@ function get_clang_fuzzer()
 	rm -rf ${NAME}
 }
 
+function get_fuzzer_corpora()
+{
+	GIT_REPO="https://github.com/RTC-Cartel/webrtc-fuzzer-corpora.git"
+	GIT_TAG="master"
+	DEST="deps/webrtc-fuzzer-corpora"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|jsoncpp|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer]"
+		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer|fuzzer-corpora]"
 		echo
 		;;
 	gyp)
 		get_gyp
 		;;
-	jsoncpp)
-		get_jsoncpp
+	json)
+		get_json
 		;;
 	netstring)
 		get_netstring
@@ -174,6 +181,9 @@ case "${DEP}" in
 		;;
 	clang-fuzzer)
 		get_clang_fuzzer
+		;;
+	fuzzer-corpora)
+		get_fuzzer_corpora
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2

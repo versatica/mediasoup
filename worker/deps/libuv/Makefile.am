@@ -20,7 +20,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
 include_HEADERS=include/uv.h
 
 uvincludedir = $(includedir)/uv
-uvinclude_HEADERS=include/uv/errno.h include/uv/threadpool.h include/uv/version.h
+uvinclude_HEADERS = include/uv/errno.h \
+                    include/uv/threadpool.h \
+                    include/uv/version.h
 
 CLEANFILES =
 
@@ -30,6 +32,7 @@ libuv_la_LDFLAGS = -no-undefined -version-info 1:0:0
 libuv_la_SOURCES = src/fs-poll.c \
                    src/heap-inl.h \
                    src/idna.c \
+                   src/idna.h \
                    src/inet.c \
                    src/queue.h \
                    src/strscpy.c \
@@ -42,9 +45,11 @@ libuv_la_SOURCES = src/fs-poll.c \
                    src/version.c
 
 if SUNOS
+if GCC
 # Can't be turned into a CC_CHECK_CFLAGS in configure.ac, it makes compilers
 # on other platforms complain that the argument is unused during compilation.
 libuv_la_CFLAGS += -pthreads
+endif
 endif
 
 if WINNT
@@ -119,11 +124,13 @@ EXTRA_DIST = test/fixtures/empty_file \
              docs \
              img \
              samples \
-             android-configure \
+             android-configure-arm \
+             android-configure-arm64 \
+             android-configure-x86 \
+             android-configure-x86_64 \
              CONTRIBUTING.md \
              LICENSE \
              README.md \
-             checksparse.sh \
              vcbuild.bat \
              common.gypi \
              gyp_uv.py \
@@ -136,13 +143,19 @@ check_PROGRAMS = test/run-tests
 if OS390
 test_run_tests_CFLAGS =
 else
+if GCC
 test_run_tests_CFLAGS = -Wno-long-long
+else
+test_run_tests_CFLAGS =
+endif
 endif
 
 if SUNOS
+if GCC
 # Can't be turned into a CC_CHECK_CFLAGS in configure.ac, it makes compilers
 # on other platforms complain that the argument is unused during compilation.
 test_run_tests_CFLAGS += -pthreads
+endif
 endif
 
 test_run_tests_LDFLAGS =
@@ -275,9 +288,11 @@ test_run_tests_SOURCES = test/blackhole-server.c \
                          test/test-timer-from-check.c \
                          test/test-timer.c \
                          test/test-tmpdir.c \
+                         test/test-tty-duplicate-key.c \
                          test/test-tty.c \
                          test/test-udp-alloc-cb-fail.c \
                          test/test-udp-bind.c \
+                         test/test-udp-connect.c \
                          test/test-udp-create-socket-early.c \
                          test/test-udp-dgram-too-big.c \
                          test/test-udp-ipv6.c \
@@ -293,6 +308,7 @@ test_run_tests_SOURCES = test/blackhole-server.c \
                          test/test-udp-send-immediate.c \
                          test/test-udp-send-unreachable.c \
                          test/test-udp-try-send.c \
+                         test/test-uname.c \
                          test/test-walk-handles.c \
                          test/test-watcher-cross-stop.c
 test_run_tests_LDADD = libuv.la
@@ -306,7 +322,9 @@ test_run_tests_SOURCES += test/runner-unix.c \
 endif
 
 if AIX
-test_run_tests_CFLAGS += -D_ALL_SOURCE -D_XOPEN_SOURCE=500 -D_LINUX_SOURCE_COMPAT
+test_run_tests_CFLAGS += -D_ALL_SOURCE \
+                         -D_XOPEN_SOURCE=500 \
+                         -D_LINUX_SOURCE_COMPAT
 endif
 
 if LINUX
@@ -314,7 +332,9 @@ test_run_tests_CFLAGS += -D_GNU_SOURCE
 endif
 
 if SUNOS
-test_run_tests_CFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=500
+test_run_tests_CFLAGS += -D__EXTENSIONS__ \
+                         -D_XOPEN_SOURCE=500 \
+                         -D_REENTRANT
 endif
 
 if OS390
@@ -452,7 +472,9 @@ endif
 
 if SUNOS
 uvinclude_HEADERS += include/uv/sunos.h
-libuv_la_CFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=500
+libuv_la_CFLAGS += -D__EXTENSIONS__ \
+                   -D_XOPEN_SOURCE=500 \
+                   -D_REENTRANT
 libuv_la_SOURCES += src/unix/no-proctitle.c \
                     src/unix/sunos.c
 endif

@@ -13,7 +13,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			(void)data;
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
 			if (len < 2)
@@ -36,14 +35,16 @@ namespace RTC
 				// STAP-A.
 				case 24:
 				{
-					size_t offset = 1;
+					size_t offset{ 1 };
+
 					len -= 1;
 
 					// Iterate NAL units.
 					while (len >= 3)
 					{
 						auto naluSize = Utils::Byte::Get2Bytes(data, offset);
-						nal           = *(data + offset + sizeof(naluSize)) & 0x1F;
+
+						nal = *(data + offset + sizeof(naluSize)) & 0x1F;
 
 						if (nal == 7)
 						{
@@ -107,8 +108,7 @@ namespace RTC
 			if (!payloadDescriptor)
 				return;
 
-			PayloadDescriptorHandler* payloadDescriptorHandler =
-			  new PayloadDescriptorHandler(payloadDescriptor);
+			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 		}

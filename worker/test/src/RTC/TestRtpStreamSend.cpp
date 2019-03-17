@@ -8,11 +8,26 @@
 
 using namespace RTC;
 
-// Can retransmit up to 17 RTP packets.
-static std::vector<RtpPacket*> rtpRetransmissionContainer(18);
-
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 {
+	class TestRtpStreamListener : public RtpStreamSend::Listener
+	{
+	public:
+		void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/) override
+		{
+		}
+
+		void OnRtpStreamRetransmitRtpPacket(RtpStreamSend* /*rtpStream*/, RtpPacket* packet) override
+		{
+			this->retransmittedPackets.push_back(packet);
+		}
+
+	public:
+		std::vector<RtpPacket*> retransmittedPackets;
+	};
+
+	TestRtpStreamListener testRtpStreamListener;
+
 	SECTION("receive NACK and get retransmitted packets")
 	{
 		// clang-format off
@@ -79,7 +94,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		params.useNack   = true;
 
 		// Create a RtpStreamSend.
-		RtpStreamSend* stream = new RtpStreamSend(params, 200);
+		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, 200);
 
 		// Receive all the packets in order into the stream.
 		stream->ReceivePacket(packet1);
@@ -89,20 +104,25 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		stream->ReceivePacket(packet5);
 
 		// Create a NACK item that request for all the packets.
-		RTCP::FeedbackRtpNackItem nackItem(21006, 0b0000000000001111);
+		RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);
+		auto* nackItem = new RTCP::FeedbackRtpNackItem(21006, 0b0000000000001111);
 
-		REQUIRE(nackItem.GetPacketId() == 21006);
-		REQUIRE(nackItem.GetLostPacketBitmask() == 0b0000000000001111);
+		nackPacket.AddItem(nackItem);
 
-		stream->RequestRtpRetransmission(
-		  nackItem.GetPacketId(), nackItem.GetLostPacketBitmask(), rtpRetransmissionContainer);
+		REQUIRE(nackItem->GetPacketId() == 21006);
+		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000001111);
 
-		auto rtxPacket1 = rtpRetransmissionContainer[0];
-		auto rtxPacket2 = rtpRetransmissionContainer[1];
-		auto rtxPacket3 = rtpRetransmissionContainer[2];
-		auto rtxPacket4 = rtpRetransmissionContainer[3];
-		auto rtxPacket5 = rtpRetransmissionContainer[4];
-		auto rtxPacket6 = rtpRetransmissionContainer[5];
+		stream->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 5);
+
+		auto rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
+		auto rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
+		auto rtxPacket3 = testRtpStreamListener.retransmittedPackets[2];
+		auto rtxPacket4 = testRtpStreamListener.retransmittedPackets[3];
+		auto rtxPacket5 = testRtpStreamListener.retransmittedPackets[4];
+
+		testRtpStreamListener.retransmittedPackets.clear();
 
 		REQUIRE(rtxPacket1);
 		REQUIRE(rtxPacket1->GetSequenceNumber() == packet1->GetSequenceNumber());
@@ -123,8 +143,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(rtxPacket5);
 		REQUIRE(rtxPacket5->GetSequenceNumber() == packet5->GetSequenceNumber());
 		REQUIRE(rtxPacket5->GetTimestamp() == packet5->GetTimestamp());
-
-		REQUIRE(rtxPacket6 == nullptr);
 
 		// Clean stuff.
 		delete packet1;

@@ -91,10 +91,12 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<ByePacket>");
+#ifdef MS_LOG_DEV
 			for (auto ssrc : this->ssrcs)
 			{
 				MS_DEBUG_DEV("  ssrc   : %" PRIu32, ssrc);
 			}
+#endif
 			if (!this->reason.empty())
 				MS_DEBUG_DEV("  reason : %s", this->reason.c_str());
 			MS_DEBUG_DEV("</ByePacket>");

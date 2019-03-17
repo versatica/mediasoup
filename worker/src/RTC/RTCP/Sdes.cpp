@@ -56,10 +56,12 @@ namespace RTC
 		{
 			static const std::string Unknown("UNKNOWN");
 
-			if (type2String.find(type) == type2String.end())
+			auto it = SdesItem::type2String.find(type);
+
+			if (it == SdesItem::type2String.end())
 				return Unknown;
 
-			return type2String[type];
+			return it->second;
 		}
 
 		/* Instance methods. */
@@ -147,7 +149,7 @@ namespace RTC
 
 			size_t offset = sizeof(this->ssrc);
 
-			for (auto item : this->items)
+			for (auto* item : this->items)
 			{
 				offset += item->Serialize(buffer + offset);
 			}
@@ -169,7 +171,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("<SdesChunk>");
 			MS_DEBUG_DEV("  ssrc : %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
-			for (auto item : this->items)
+			for (auto* item : this->items)
 			{
 				item->Dump();
 			}
@@ -214,7 +216,7 @@ namespace RTC
 
 			size_t offset = Packet::Serialize(buffer);
 
-			for (auto chunk : this->chunks)
+			for (auto* chunk : this->chunks)
 			{
 				offset += chunk->Serialize(buffer + offset);
 			}
@@ -227,7 +229,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<SdesPacket>");
-			for (auto chunk : this->chunks)
+			for (auto* chunk : this->chunks)
 			{
 				chunk->Dump();
 			}

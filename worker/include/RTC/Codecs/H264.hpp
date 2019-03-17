@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 
 namespace RTC
@@ -61,19 +60,13 @@ namespace RTC
 		/* Inline PayloadDescriptorHandler methods */
 
 		inline bool H264::PayloadDescriptorHandler::Encode(
-		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
+		  RTC::Codecs::EncodingContext* /*encodingContext*/, uint8_t* /*data*/)
 		{
-			(void)encodingContext;
-			(void)data;
-
 			return true;
 		};
 
-		inline void H264::PayloadDescriptorHandler::Restore(uint8_t* data)
+		inline void H264::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)
 		{
-			(void)data;
-
-			return;
 		}
 
 		inline bool H264::PayloadDescriptorHandler::IsKeyFrame() const

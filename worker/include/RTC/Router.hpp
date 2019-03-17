@@ -2,103 +2,82 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
+#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/Consumer.hpp"
-#include "RTC/ConsumerListener.hpp"
 #include "RTC/Producer.hpp"
-#include "RTC/ProducerListener.hpp"
+#include "RTC/RtpObserver.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpStream.hpp"
 #include "RTC/Transport.hpp"
-#include "handles/Timer.hpp"
-#include <json/json.h>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 
+using json = nlohmann::json;
+
 namespace RTC
 {
-	class Router : public RTC::Transport::Listener,
-	               public RTC::ProducerListener,
-	               public RTC::ConsumerListener,
-	               public Timer::Listener
+	class Router : public RTC::Transport::Listener
 	{
 	public:
-		class Listener
-		{
-		public:
-			virtual void OnRouterClosed(RTC::Router* router) = 0;
-		};
-
-	private:
-		struct AudioLevelContainer
-		{
-			int16_t numdBovs{ 0 };
-			int16_t sumdBovs{ 0 };
-		};
-
-	public:
-		Router(Listener* listener, Channel::Notifier* notifier, uint32_t routerId);
+		explicit Router(const std::string& id);
 		virtual ~Router();
 
 	public:
-		Json::Value ToJson() const;
+		void FillJson(json& jsonObject) const;
 		void HandleRequest(Channel::Request* request);
 
 	private:
-		uint32_t GetNewTransportIdFromRequest(Channel::Request* request) const;
+		void SetNewTransportIdFromRequest(Channel::Request* request, std::string& transportId) const;
 		RTC::Transport* GetTransportFromRequest(Channel::Request* request) const;
-		uint32_t GetNewProducerIdFromRequest(Channel::Request* request) const;
+		void SetNewRtpObserverIdFromRequest(Channel::Request* request, std::string& rtpObserverId) const;
+		RTC::RtpObserver* GetRtpObserverFromRequest(Channel::Request* request) const;
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
-		uint32_t GetNewConsumerIdFromRequest(Channel::Request* request) const;
-		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		void OnTransportClosed(RTC::Transport* transport) override;
-
-		/* Pure virtual methods inherited from RTC::ProducerListener. */
-	public:
-		void OnProducerClosed(RTC::Producer* producer) override;
-		void OnProducerPaused(RTC::Producer* producer) override;
-		void OnProducerResumed(RTC::Producer* producer) override;
-		void OnProducerRtpPacket(
+		void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) override;
+		void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) override;
+		void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) override;
+		void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) override;
+		void OnTransportProducerNewRtpStream(
+		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpPacket* packet,
-		  RTC::RtpEncodingParameters::Profile profile) override;
-		void OnProducerProfileEnabled(
+		  RTC::RtpStream* rtpStream,
+		  uint32_t mappedSsrc) override;
+		void OnTransportProducerRtpPacketReceived(
+		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		void OnTransportNeedWorstRemoteFractionLost(
+		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpEncodingParameters::Profile profile,
-		  const RTC::RtpStream* rtpStream) override;
-		void OnProducerProfileDisabled(
-		  RTC::Producer* producer, RTC::RtpEncodingParameters::Profile profile) override;
-
-		/* Pure virtual methods inherited from RTC::ConsumerListener. */
-	public:
-		void OnConsumerClosed(RTC::Consumer* consumer) override;
-		void OnConsumerKeyFrameRequired(RTC::Consumer* consumer) override;
-
-		/* Pure virtual methods inherited from Timer::Listener. */
-	public:
-		void OnTimer(Timer* timer) override;
+		  uint32_t mappedSsrc,
+		  uint8_t& worstRemoteFractionLost) override;
+		void OnTransportProducerRtpStreamScore(
+		  RTC::Transport* transport,
+		  RTC::Producer* producer,
+		  RTC::RtpStream* rtpStream,
+		  uint8_t score) override;
+		void OnTransportNewConsumer(
+		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
+		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
+		void OnTransportConsumerProducerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
+		void OnTransportConsumerKeyFrameRequested(
+		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 
 	public:
 		// Passed by argument.
-		uint32_t routerId{ 0 };
+		const std::string id;
 
 	private:
-		// Passed by argument.
-		Listener* listener{ nullptr };
-		Channel::Notifier* notifier{ nullptr };
 		// Allocated by this.
-		Timer* audioLevelsTimer{ nullptr };
+		std::unordered_map<std::string, RTC::Transport*> mapTransports;
+		std::unordered_map<std::string, RTC::RtpObserver*> mapRtpObservers;
 		// Others.
-		std::unordered_map<uint32_t, RTC::Transport*> transports;
-		std::unordered_map<uint32_t, RTC::Producer*> producers;
-		std::unordered_map<uint32_t, RTC::Consumer*> consumers;
-		std::unordered_map<const RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
-		std::unordered_map<const RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
-		std::unordered_map<RTC::Producer*, struct AudioLevelContainer> mapProducerAudioLevelContainer;
-		bool audioLevelsEventEnabled{ false };
+		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
+		std::unordered_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
+		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::RtpObserver*>> mapProducerRtpObservers;
+		std::unordered_map<std::string, RTC::Producer*> mapProducers;
 	};
 } // namespace RTC
 

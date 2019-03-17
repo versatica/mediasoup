@@ -35,7 +35,7 @@ namespace RTC
 
 			while (len > offset)
 			{
-				Item* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
+				auto* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
 
 				if (item)
 				{
@@ -60,7 +60,7 @@ namespace RTC
 
 			size_t offset = FeedbackPacket::Serialize(buffer);
 
-			for (auto item : this->items)
+			for (auto* item : this->items)
 			{
 				offset += item->Serialize(buffer + offset);
 			}
@@ -75,7 +75,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("<%s>", FeedbackRtpPacket::MessageType2String(Item::messageType).c_str());
 			FeedbackRtpPacket::Dump();
-			for (auto item : this->items)
+			for (auto* item : this->items)
 			{
 				item->Dump();
 			}

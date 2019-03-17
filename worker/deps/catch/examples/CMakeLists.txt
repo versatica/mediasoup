@@ -44,6 +44,9 @@ set( SOURCES_IDIOMATIC_TESTS
     110-Fix-ClassFixture.cpp
     120-Bdd-ScenarioGivenWhenThen.cpp
     210-Evt-EventListeners.cpp
+    300-Gen-OwnGenerator.cpp
+    301-Gen-MapTypeConversion.cpp
+    310-Gen-VariablesInGenerators.cpp
 )
 
 # main-s for reporter-specific test sources:

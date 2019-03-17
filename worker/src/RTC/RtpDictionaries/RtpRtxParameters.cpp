@@ -2,39 +2,36 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#include "MediaSoupError.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtpRtxParameters::RtpRtxParameters(Json::Value& data)
+	RtpRtxParameters::RtpRtxParameters(json& data)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		if (!data.is_object())
+			MS_THROW_TYPE_ERROR("data is not an object");
 
-		if (!data.isObject())
-			MS_THROW_ERROR("RtpRtxParameters is not an object");
+		auto jsonSsrcIt = data.find("ssrc");
 
-		// `ssrc` is optional.
-		if (data[JsonStringSsrc].isUInt())
-			this->ssrc = uint32_t{ data[JsonStringSsrc].asUInt() };
+		// ssrc is optional.
+		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
+			this->ssrc = jsonSsrcIt->get<uint32_t>();
 	}
 
-	Json::Value RtpRtxParameters::ToJson() const
+	void RtpRtxParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
+		// Force it to be an object even if no key/values are added below.
+		jsonObject = json::object();
 
-		Json::Value json(Json::objectValue);
-
-		// Add `ssrc`.
+		// Add ssrc (optional).
 		if (this->ssrc != 0u)
-			json[JsonStringSsrc] = Json::UInt{ this->ssrc };
-
-		return json;
+			jsonObject["ssrc"] = this->ssrc;
 	}
 } // namespace RTC

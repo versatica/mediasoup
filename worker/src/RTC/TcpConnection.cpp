@@ -22,9 +22,9 @@ namespace RTC
 
 		MS_DEBUG_DEV(
 		  "data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
-		  GetLocalIP().c_str(),
+		  GetLocalIp().c_str(),
 		  GetLocalPort(),
-		  GetPeerIP().c_str(),
+		  GetPeerIp().c_str(),
 		  GetPeerPort());
 
 		/*

@@ -1,5 +1,3 @@
-// DOC: https://tools.ietf.org/html/rfc3550#appendix-A.1
-
 #define MS_CLASS "RTC::RtpStream"
 // #define MS_LOG_DEV
 
@@ -15,83 +13,67 @@ namespace RTC
 	static constexpr uint16_t MaxDropout{ 3000 };
 	static constexpr uint16_t MaxMisorder{ 1500 };
 	static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+	static constexpr size_t ScoreHistogramLength{ 8 };
 
 	/* Instance methods. */
 
-	RtpStream::RtpStream(RTC::RtpStream::Params& params)
-	  : params(params), rtpStreamId(Utils::Crypto::GetRandomString(16))
+	RtpStream::RtpStream(
+	  RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, uint8_t initialScore)
+	  : listener(listener), params(params), score(initialScore)
 	{
 		MS_TRACE();
-
-		// Set the status check timer.
-		this->statusCheckTimer = new Timer(this);
 	}
 
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
-
-		// Close the status check timer.
-		delete this->statusCheckTimer;
 	}
 
-	Json::Value RtpStream::ToJson()
+	void RtpStream::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringParams{ "params" };
+		// Add params.
+		this->params.FillJson(jsonObject["params"]);
 
-		Json::Value json(Json::objectValue);
+		// Add score.
+		jsonObject["score"] = this->score;
 
-		json[JsonStringParams] = this->params.ToJson();
+		// Add totalSourceLoss.
+		jsonObject["totalSourceLoss"] = this->totalSourceLoss;
 
-		return json;
+		// Add totalReportedLoss.
+		jsonObject["totalReportedLoss"] = this->totalReportedLoss;
 	}
 
-	Json::Value RtpStream::GetStats()
+	void RtpStream::FillJsonStats(json& jsonObject)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringId{ "id" };
-		static const Json::StaticString JsonStringTimestamp{ "timestamp" };
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringMediaType{ "mediaType" };
-		static const Json::StaticString JsonStringKind{ "kind" };
-		static const Json::StaticString JsonStringMimeType{ "mimeType" };
-		static const Json::StaticString JsonStringPacketCount{ "packetCount" };
-		static const Json::StaticString JsonStringByteCount{ "byteCount" };
-		static const Json::StaticString JsonStringBitRate{ "bitrate" };
-		static const Json::StaticString JsonStringPacketsLost{ "packetsLost" };
-		static const Json::StaticString JsonStringFractionLost{ "fractionLost" };
-		static const Json::StaticString JsonStringPacketsDiscarded{ "packetsDiscarded" };
-		static const Json::StaticString JsonStringPacketsRepaired{ "packetsRepaired" };
-		static const Json::StaticString JsonStringFirCount{ "firCount" };
-		static const Json::StaticString JsonStringPliCount{ "pliCount" };
-		static const Json::StaticString JsonStringNackCount{ "nackCount" };
-		static const Json::StaticString JsonStringSliCount{ "sliCount" };
-
-		Json::Value json(Json::objectValue);
 		uint64_t now = DepLibUV::GetTime();
 
-		json[JsonStringId]          = this->rtpStreamId;
-		json[JsonStringTimestamp]   = Json::UInt64{ now };
-		json[JsonStringSsrc]        = Json::UInt{ this->params.ssrc };
-		json[JsonStringMediaType]   = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		json[JsonStringKind]        = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		json[JsonStringMimeType]    = this->params.mimeType.ToString();
-		json[JsonStringPacketCount] = static_cast<Json::UInt>(this->transmissionCounter.GetPacketCount());
-		json[JsonStringByteCount]   = static_cast<Json::UInt>(this->transmissionCounter.GetBytes());
-		json[JsonStringBitRate]     = Json::UInt{ this->transmissionCounter.GetRate(now) };
-		json[JsonStringPacketsLost]      = Json::UInt{ this->packetsLost };
-		json[JsonStringFractionLost]     = Json::UInt{ this->fractionLost };
-		json[JsonStringPacketsDiscarded] = static_cast<Json::UInt>(this->packetsDiscarded);
-		json[JsonStringPacketsRepaired]  = static_cast<Json::UInt>(this->packetsRepaired);
-		json[JsonStringFirCount]         = static_cast<Json::UInt>(this->firCount);
-		json[JsonStringPliCount]         = static_cast<Json::UInt>(this->pliCount);
-		json[JsonStringNackCount]        = static_cast<Json::UInt>(this->nackCount);
-		json[JsonStringSliCount]         = static_cast<Json::UInt>(this->sliCount);
+		jsonObject["timestamp"]          = now;
+		jsonObject["ssrc"]               = this->params.ssrc;
+		jsonObject["kind"]               = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		jsonObject["mimeType"]           = this->params.mimeType.ToString();
+		jsonObject["packetCount"]        = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]          = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]            = this->transmissionCounter.GetRate(now);
+		jsonObject["packetsLost"]        = this->packetsLost;
+		jsonObject["fractionLost"]       = this->fractionLost;
+		jsonObject["packetsDiscarded"]   = this->packetsDiscarded;
+		jsonObject["packetsRepaired"]    = this->packetsRepaired;
+		jsonObject["nackCount"]          = this->nackCount;
+		jsonObject["nackRtpPacketCount"] = this->nackRtpPacketCount;
+		jsonObject["pliCount"]           = this->pliCount;
+		jsonObject["firCount"]           = this->firCount;
+		jsonObject["score"]              = this->score;
 
-		return json;
+		if (!this->params.rid.empty())
+			jsonObject["rid"] = this->params.rid;
+
+		if (this->params.rtxSsrc)
+			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -105,9 +87,8 @@ namespace RTC
 		{
 			InitSeq(seq);
 
-			this->started = true;
-			this->maxSeq  = seq - 1;
-
+			this->started     = true;
+			this->maxSeq      = seq - 1;
 			this->maxPacketTs = packet->GetTimestamp();
 			this->maxPacketMs = DepLibUV::GetTime();
 		}
@@ -128,39 +109,13 @@ namespace RTC
 		this->transmissionCounter.Update(packet);
 
 		// Update highest seen RTP timestamp.
-		if (SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
+		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
 			this->maxPacketTs = packet->GetTimestamp();
 			this->maxPacketMs = DepLibUV::GetTime();
 		}
 
 		return true;
-	}
-
-	uint32_t RtpStream::GetRate(uint64_t now)
-	{
-		return this->transmissionCounter.GetRate(now);
-	}
-
-	void RtpStream::RestartStatusCheckTimer()
-	{
-		// Notify about status on next check.
-		this->statusCheckTimer->Restart();
-	}
-
-	void RtpStream::StopStatusCheckTimer()
-	{
-		this->statusCheckTimer->Stop();
-	}
-
-	void RtpStream::InitSeq(uint16_t seq)
-	{
-		MS_TRACE();
-
-		// Initialize/reset RTP counters.
-		this->baseSeq = seq;
-		this->maxSeq  = seq;
-		this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
 	}
 
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)
@@ -231,34 +186,140 @@ namespace RTC
 		return true;
 	}
 
-	Json::Value RtpStream::Params::ToJson() const
+	void RtpStream::UpdateScore(uint8_t score)
 	{
 		MS_TRACE();
 
-		static const Json::StaticString JsonStringSsrc{ "ssrc" };
-		static const Json::StaticString JsonStringPayloadType{ "payloadType" };
-		static const Json::StaticString JsonStringMimeType{ "mimeType" };
-		static const Json::StaticString JsonStringClockRate{ "clockRate" };
-		static const Json::StaticString JsonStringUseNack{ "useNack" };
-		static const Json::StaticString JsonStringUsePli{ "usePli" };
+		// Add the score into the histogram.
+		if (this->scores.size() == ScoreHistogramLength)
+			this->scores.erase(this->scores.begin());
 
-		Json::Value json(Json::objectValue);
+		auto previousScore = this->score;
 
-		json[JsonStringSsrc]        = Json::UInt{ this->ssrc };
-		json[JsonStringPayloadType] = Json::UInt{ this->payloadType };
-		json[JsonStringMimeType]    = this->mimeType.ToString();
-		json[JsonStringClockRate]   = Json::UInt{ this->clockRate };
-		json[JsonStringUseNack]     = this->useNack;
-		json[JsonStringUsePli]      = this->usePli;
+		// Compute new effective score taking into accout entries in the histogram.
+		this->scores.push_back(score);
 
-		return json;
+		/*
+		 * Scoring mechanism is a weighted average.
+		 *
+		 * The more recent the score is, the more weight it has.
+		 * The oldest score has a weight of 1 and subsequent scores weight is
+		 * increased by one sequentially.
+		 *
+		 * Ie:
+		 * - scores: [1,2,3,4]
+		 * - this->scores = ((1) + (2+2) + (3+3+3) + (4+4+4+4)) / 10 = 2.8 => 3
+		 */
+
+		size_t weight{ 0 };
+		size_t samples{ 0 };
+		size_t totalScore{ 0 };
+
+		for (auto score : this->scores)
+		{
+			weight++;
+			samples += weight;
+			totalScore += weight * score;
+		}
+
+		// clang-tidy "thinks" that this can lead to division by zero but we are
+		// smarter.
+		// NOLINTNEXTLINE(clang-analyzer-core.DivideZero)
+		this->score = static_cast<uint8_t>(std::round(totalScore / samples));
+
+		// Call the listener if the global score has changed.
+		if (this->score != previousScore)
+		{
+			MS_DEBUG_TAG(
+			  score,
+			  "[added score:%" PRIu8 ", previous computed score:%" PRIu8 ", new computed score:%" PRIu8
+			  "] (calling listener)",
+			  score,
+			  previousScore,
+			  this->score);
+
+			this->listener->OnRtpStreamScore(this, this->score);
+		}
+		else
+		{
+#ifdef MS_LOG_DEV
+			MS_DEBUG_TAG(
+			  score,
+			  "[added score:%" PRIu8 ", previous computed score:%" PRIu8 ", new computed score:%" PRIu8
+			  "] (no change)",
+			  score,
+			  previousScore,
+			  this->score);
+#endif
+		}
 	}
 
-	void RtpStream::OnTimer(Timer* timer)
+	void RtpStream::ResetScore()
 	{
 		MS_TRACE();
 
-		if (timer == this->statusCheckTimer)
-			CheckStatus();
+		this->totalSourceLoss   = 0;
+		this->totalReportedLoss = 0;
+		this->totalSentPackets  = 0;
+
+		this->scores.clear();
+
+		if (this->score != 0)
+		{
+			this->score = 0;
+
+			// Notify the listener.
+			this->listener->OnRtpStreamScore(this, 0);
+		}
+	}
+
+	void RtpStream::PacketRetransmitted(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		this->retransmissionCounter.Update(packet);
+	}
+
+	void RtpStream::PacketRepaired(RTC::RtpPacket* /*packet*/)
+	{
+		MS_TRACE();
+
+		this->packetsRepaired++;
+	}
+
+	inline void RtpStream::InitSeq(uint16_t seq)
+	{
+		MS_TRACE();
+
+		// Initialize/reset RTP counters.
+		this->baseSeq = seq;
+		this->maxSeq  = seq;
+		this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
+	}
+
+	void RtpStream::Params::FillJson(json& jsonObject) const
+	{
+		MS_TRACE();
+
+		jsonObject["ssrc"]        = this->ssrc;
+		jsonObject["payloadType"] = this->payloadType;
+		jsonObject["mimeType"]    = this->mimeType.ToString();
+		jsonObject["clockRate"]   = this->clockRate;
+
+		if (!this->rid.empty())
+			jsonObject["rid"] = this->rid;
+
+		jsonObject["cname"] = this->cname;
+
+		if (this->rtxSsrc != 0)
+		{
+			jsonObject["rtxSsrc"]        = this->rtxSsrc;
+			jsonObject["rtxPayloadType"] = this->rtxPayloadType;
+		}
+
+		jsonObject["useNack"]      = this->useNack;
+		jsonObject["usePli"]       = this->usePli;
+		jsonObject["useFir"]       = this->useFir;
+		jsonObject["useInBandFec"] = this->useInBandFec;
 	}
 } // namespace RTC

@@ -3,7 +3,6 @@
     'type': 'executable',
     'dependencies':
     [
-      'deps/jsoncpp/jsoncpp.gyp:jsoncpp',
       'deps/netstring/netstring.gyp:netstring',
       'deps/libuv/uv.gyp:libuv',
       'deps/openssl/openssl.gyp:openssl',
@@ -11,32 +10,48 @@
     ],
     'sources':
     [
-      # C++ source files
+      # C++ source files.
       'src/DepLibSRTP.cpp',
       'src/DepLibUV.cpp',
       'src/DepOpenSSL.cpp',
       'src/Logger.cpp',
       'src/Settings.cpp',
       'src/Worker.cpp',
+      'src/Utils/Crypto.cpp',
+      'src/Utils/File.cpp',
+      'src/Utils/IP.cpp',
+      'src/handles/SignalsHandler.cpp',
+      'src/handles/TcpConnection.cpp',
+      'src/handles/TcpServer.cpp',
+      'src/handles/Timer.cpp',
+      'src/handles/UdpSocket.cpp',
+      'src/handles/UnixStreamSocket.cpp',
       'src/Channel/Notifier.cpp',
       'src/Channel/Request.cpp',
       'src/Channel/UnixStreamSocket.cpp',
+      'src/RTC/AudioLevelObserver.cpp',
       'src/RTC/Consumer.cpp',
       'src/RTC/DtlsTransport.cpp',
       'src/RTC/IceCandidate.cpp',
       'src/RTC/IceServer.cpp',
+      'src/RTC/KeyFrameRequestManager.cpp',
       'src/RTC/NackGenerator.cpp',
+      'src/RTC/PipeConsumer.cpp',
+      'src/RTC/PipeTransport.cpp',
       'src/RTC/PlainRtpTransport.cpp',
+      'src/RTC/PortManager.cpp',
       'src/RTC/Producer.cpp',
       'src/RTC/Router.cpp',
       'src/RTC/RtpListener.cpp',
-      'src/RTC/RtpMonitor.cpp',
+      'src/RTC/RtpObserver.cpp',
       'src/RTC/RtpPacket.cpp',
       'src/RTC/RtpStream.cpp',
       'src/RTC/RtpStreamRecv.cpp',
       'src/RTC/RtpStreamSend.cpp',
       'src/RTC/RtpDataCounter.cpp',
       'src/RTC/SeqManager.cpp',
+      'src/RTC/SimpleConsumer.cpp',
+      'src/RTC/SimulcastConsumer.cpp',
       'src/RTC/SrtpSession.cpp',
       'src/RTC/StunMessage.cpp',
       'src/RTC/TcpConnection.cpp',
@@ -55,7 +70,6 @@
       'src/RTC/RtpDictionaries/RtpCodecMimeType.cpp',
       'src/RTC/RtpDictionaries/RtpCodecParameters.cpp',
       'src/RTC/RtpDictionaries/RtpEncodingParameters.cpp',
-      'src/RTC/RtpDictionaries/RtpFecParameters.cpp',
       'src/RTC/RtpDictionaries/RtpHeaderExtensionParameters.cpp',
       'src/RTC/RtpDictionaries/RtpHeaderExtensionUri.cpp',
       'src/RTC/RtpDictionaries/RtpParameters.cpp',
@@ -83,55 +97,58 @@
       'src/RTC/RTCP/FeedbackPsLei.cpp',
       'src/RTC/RTCP/FeedbackPsAfb.cpp',
       'src/RTC/RTCP/FeedbackPsRemb.cpp',
-      'src/RTC/RemoteBitrateEstimator/AimdRateControl.cpp',
-      'src/RTC/RemoteBitrateEstimator/InterArrival.cpp',
-      'src/RTC/RemoteBitrateEstimator/OveruseDetector.cpp',
-      'src/RTC/RemoteBitrateEstimator/OveruseEstimator.cpp',
-      'src/RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.cpp',
-      'src/RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorSingleStream.cpp',
-      'src/Utils/Crypto.cpp',
-      'src/Utils/File.cpp',
-      'src/Utils/IP.cpp',
-      'src/handles/SignalsHandler.cpp',
-      'src/handles/TcpConnection.cpp',
-      'src/handles/TcpServer.cpp',
-      'src/handles/Timer.cpp',
-      'src/handles/UdpSocket.cpp',
-      'src/handles/UnixStreamSocket.cpp',
-      # C++ include files
+      'src/RTC/REMB/AimdRateControl.cpp',
+      'src/RTC/REMB/InterArrival.cpp',
+      'src/RTC/REMB/OveruseDetector.cpp',
+      'src/RTC/REMB/OveruseEstimator.cpp',
+      'src/RTC/REMB/RemoteBitrateEstimatorAbsSendTime.cpp',
+      'src/RTC/REMB/RemoteBitrateEstimatorSingleStream.cpp',
+      # C++ include files.
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
       'include/DepOpenSSL.hpp',
       'include/LogLevel.hpp',
       'include/Logger.hpp',
-      'include/MediaSoupError.hpp',
+      'include/MediaSoupErrors.hpp',
       'include/Settings.hpp',
       'include/Utils.hpp',
       'include/Worker.hpp',
       'include/common.hpp',
+      'include/handles/SignalsHandler.hpp',
+      'include/handles/TcpConnection.hpp',
+      'include/handles/TcpServer.hpp',
+      'include/handles/Timer.hpp',
+      'include/handles/UdpSocket.hpp',
+      'include/handles/UnixStreamSocket.hpp',
       'include/Channel/Notifier.hpp',
       'include/Channel/Request.hpp',
       'include/Channel/UnixStreamSocket.hpp',
+      'include/RTC/AudioLevelObserver.hpp',
       'include/RTC/Consumer.hpp',
-      'include/RTC/ConsumerListener.hpp',
       'include/RTC/DtlsTransport.hpp',
       'include/RTC/IceCandidate.hpp',
       'include/RTC/IceServer.hpp',
+      'include/RTC/KeyFrameRequestManager.hpp',
       'include/RTC/NackGenerator.hpp',
       'include/RTC/Parameters.hpp',
+      'include/RTC/PipeConsumer.hpp',
+      'include/RTC/PipeTransport.hpp',
       'include/RTC/PlainRtpTransport.hpp',
+      'include/RTC/PortManager.hpp',
       'include/RTC/Producer.hpp',
-      'include/RTC/ProducerListener.hpp',
       'include/RTC/Router.hpp',
       'include/RTC/RtpDictionaries.hpp',
+      'include/RTC/RtpHeaderExtensionIds.hpp',
       'include/RTC/RtpListener.hpp',
-      'include/RTC/RtpMonitor.hpp',
+      'include/RTC/RtpObserver.hpp',
       'include/RTC/RtpPacket.hpp',
       'include/RTC/RtpStream.hpp',
       'include/RTC/RtpStreamRecv.hpp',
       'include/RTC/RtpStreamSend.hpp',
       'include/RTC/RtpDataCounter.hpp',
       'include/RTC/SeqManager.hpp',
+      'include/RTC/SimpleConsumer.hpp',
+      'include/RTC/SimulcastConsumer.hpp',
       'include/RTC/SrtpSession.hpp',
       'include/RTC/StunMessage.hpp',
       'include/RTC/TcpConnection.hpp',
@@ -168,19 +185,13 @@
       'include/RTC/RTCP/FeedbackPsLei.hpp',
       'include/RTC/RTCP/FeedbackPsAfb.hpp',
       'include/RTC/RTCP/FeedbackPsRemb.hpp',
-      'include/RTC/RemoteBitrateEstimator/AimdRateControl.hpp',
-      'include/RTC/RemoteBitrateEstimator/InterArrival.hpp',
-      'include/RTC/RemoteBitrateEstimator/OveruseDetector.hpp',
-      'include/RTC/RemoteBitrateEstimator/OveruseEstimator.hpp',
-      'include/RTC/RemoteBitrateEstimator/RemoteBitrateEstimator.hpp',
-      'include/RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorAbsSendTime.hpp',
-      'include/RTC/RemoteBitrateEstimator/RemoteBitrateEstimatorSingleStream.hpp',
-      'include/handles/SignalsHandler.hpp',
-      'include/handles/TcpConnection.hpp',
-      'include/handles/TcpServer.hpp',
-      'include/handles/Timer.hpp',
-      'include/handles/UdpSocket.hpp',
-      'include/handles/UnixStreamSocket.hpp'
+      'include/RTC/REMB/AimdRateControl.hpp',
+      'include/RTC/REMB/InterArrival.hpp',
+      'include/RTC/REMB/OveruseDetector.hpp',
+      'include/RTC/REMB/OveruseEstimator.hpp',
+      'include/RTC/REMB/RemoteBitrateEstimator.hpp',
+      'include/RTC/REMB/RemoteBitrateEstimatorAbsSendTime.hpp',
+      'include/RTC/REMB/RemoteBitrateEstimatorSingleStream.hpp'
     ],
     'include_dirs':
     [
@@ -188,21 +199,21 @@
     ],
     'conditions':
     [
-      # FIPS
+      # FIPS.
       [ 'openssl_fips != ""', {
         'defines': [ 'BUD_FIPS_ENABLED=1' ]
       }],
 
-      # Endianness
+      # Endianness.
       [ 'node_byteorder=="big"', {
-          # Define Big Endian
+          # Define Big Endian.
           'defines': [ 'MS_BIG_ENDIAN' ]
         }, {
-          # Define Little Endian
+          # Define Little Endian.
           'defines': [ 'MS_LITTLE_ENDIAN' ]
       }],
 
-      # Platform-specifics
+      # Platform-specifics.
 
       [ 'OS == "mac" and mediasoup_asan == "true"', {
         'xcode_settings':
@@ -255,22 +266,22 @@
       'target_name': 'mediasoup-worker',
       'sources':
       [
-        # C++ source files
+        # C++ source files.
         'src/main.cpp'
       ]
     },
     {
       'target_name': 'mediasoup-worker-test',
-      'defines': [ 'MS_LOG_STD' ],
+      'defines': [ 'MS_LOG_STD', 'MS_TEST' ],
       'sources':
       [
-        # C++ source files
+        # C++ source files.
         'test/src/tests.cpp',
-        'test/src/RTC/TestRtpStreamSend.cpp',
+        'test/src/RTC/TestKeyFrameRequestManager.cpp',
         'test/src/RTC/TestNackGenerator.cpp',
         'test/src/RTC/TestRtpPacket.cpp',
         'test/src/RTC/TestRtpDataCounter.cpp',
-        'test/src/RTC/TestRtpMonitor.cpp',
+        'test/src/RTC/TestRtpStreamSend.cpp',
         'test/src/RTC/TestRtpStreamRecv.cpp',
         'test/src/RTC/TestSeqManager.cpp',
         'test/src/RTC/Codecs/TestVP8.cpp',
@@ -293,7 +304,10 @@
         'test/src/RTC/RTCP/TestSdes.cpp',
         'test/src/RTC/RTCP/TestSenderReport.cpp',
         'test/src/RTC/RTCP/TestPacket.cpp',
-        # C++ include files
+        'test/src/Utils/TestBits.cpp',
+        'test/src/Utils/TestIP.cpp',
+        'test/src/Utils/TestString.cpp',
+        # C++ include files.
         'test/include/catch.hpp',
         'test/include/helpers.hpp'
       ],
@@ -314,18 +328,58 @@
     },
     {
       'target_name': 'mediasoup-worker-fuzzer',
-      'defines': [ 'DEBUG', 'MS_LOG_STD' ],
+      'defines': [ 'DEBUG', 'MS_LOG_STD', 'MS_TEST' ],
       'sources':
       [
-        # C++ source files
+        # C++ source files.
         'fuzzer/src/fuzzer.cpp',
         'fuzzer/src/RTC/FuzzerStunMessage.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsFir.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsLei.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsPli.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRemb.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRpsi.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsSli.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsTst.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsVbcm.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtp.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpEcn.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpNack.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpSrReq.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTllei.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTmmb.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
-        # C++ include files
+        'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
+        # C++ include files.
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerPacket.hpp'
+        'fuzzer/include/RTC/RTCP/FuzzerBye.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsAfb.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsFir.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsLei.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsPli.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsRemb.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsRpsi.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsSli.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsTst.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsVbcm.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtp.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpEcn.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpNack.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpSrReq.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTllei.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTmmb.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerPacket.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerSdesReport.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp',
       ],
       'include_dirs':
       [

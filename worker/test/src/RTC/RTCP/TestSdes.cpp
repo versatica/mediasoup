@@ -26,9 +26,9 @@ namespace TestSdes
 	uint8_t* chunkBuffer = buffer + sizeof(Packet::CommonHeader);
 
 	// SDES values.
-	uint32_t ssrc       = 0x9f65e742;
-	SdesItem::Type type = SdesItem::Type::CNAME;
-	std::string value("t7mkYnCm46OcINy/");
+	uint32_t ssrc{ 0x9f65e742 };
+	SdesItem::Type type{ SdesItem::Type::CNAME };
+	std::string value{ "t7mkYnCm46OcINy/" };
 	size_t length = 16;
 
 	void verify(SdesChunk* chunk)

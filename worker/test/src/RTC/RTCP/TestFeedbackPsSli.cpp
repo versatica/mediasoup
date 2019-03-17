@@ -20,11 +20,11 @@ namespace TestFeedbackPsSli
 	// clang-format on
 
 	// SLI values.
-	uint32_t senderSsrc = 0xfa17fa17;
-	uint32_t mediaSsrc  = 0;
-	uint16_t first      = 1;
-	uint16_t number     = 4;
-	uint8_t pictureId   = 1;
+	uint32_t senderSsrc{ 0xfa17fa17 };
+	uint32_t mediaSsrc{ 0 };
+	uint16_t first{ 1 };
+	uint16_t number{ 4 };
+	uint8_t pictureId{ 1 };
 
 	void verify(FeedbackPsSliPacket* packet)
 	{

@@ -1,896 +1,668 @@
-const tap = require('tap');
+const { toBeType } = require('jest-tobetype');
 const mediasoup = require('../');
-const roomOptions = require('./data/options').roomOptions;
-const peerCapabilities = require('./data/options').peerCapabilities;
-const promiseSeries = require('./utils/promiseSeries');
+const { createWorker } = mediasoup;
+const { UnsupportedError } = require('../lib/errors');
 
-function initTest(t)
+expect.extend({ toBeType });
+
+let worker;
+let router;
+let webRtcTransport;
+let plainRtpTransport;
+let audioProducer;
+let videoProducer;
+
+const mediaCodecs =
+[
+	{
+		kind       : 'audio',
+		mimeType   : 'audio/opus',
+		clockRate  : 48000,
+		channels   : 2,
+		parameters :
+		{
+			useinbandfec : 0,
+			foo          : '111'
+		}
+	},
+	{
+		kind      : 'video',
+		mimeType  : 'video/VP8',
+		clockRate : 90000
+	},
+	{
+		kind         : 'video',
+		mimeType     : 'video/H264',
+		clockRate    : 90000,
+		rtcpFeedback : [], // Will be ignored.
+		parameters   :
+		{
+			'level-asymmetry-allowed' : 1,
+			'packetization-mode'      : 1,
+			'profile-level-id'        : '4d0032',
+			foo                       : 'bar'
+		}
+	}
+];
+
+beforeAll(async () =>
 {
-	const server = mediasoup.Server();
-	let peer;
-
-	t.tearDown(() => server.close());
-
-	return server.createRoom(roomOptions)
-		.then((room) =>
+	worker = await createWorker();
+	router = await worker.createRouter({ mediaCodecs });
+	webRtcTransport = await router.createWebRtcTransport(
 		{
-			peer = room.Peer('alice');
-
-			return peer.setCapabilities(peerCapabilities);
-		})
-		.then(() =>
-		{
-			return peer.createTransport({ tcp: false });
-		})
-		.then((transport) =>
-		{
-			return { peer, transport };
+			listenIps : [ '127.0.0.1' ]
 		});
-}
+	plainRtpTransport = await router.createPlainRtpTransport(
+		{
+			listenIp : '127.0.0.1'
+		});
+});
 
-tap.test(
-	'producer.receive() with no encodings must succeed', { timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
+afterAll(() => worker.close());
+
+test('webRtcTransport.produce() succeeds', async () =>
+{
+	const onObserverNewProducer = jest.fn();
+
+	webRtcTransport.once('observer:newproducer', onObserverNewProducer);
+
+	audioProducer = await webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
 			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('audio', transport);
-
-				t.equal(producer.peer, peer, 'associated peer must match');
-
-				return producer.receive(
+				mid    : 'AUDIO',
+				codecs :
+				[
 					{
-						codecs :
-						[
-							{
-								name        : 'audio/opus',
-								payloadType : 100,
-								clockRate   : 48000
-							}
-						]
-					})
-					.then(() =>
-					{
-						t.pass('producer.receive() succeeded');
-
-						const rtpParameters = producer.rtpParameters;
-
-						t.assert(
-							rtpParameters.encodings,
-							'computed rtpParameters has encodings');
-						t.equal(
-							rtpParameters.encodings.length, 1,
-							'encodings has 1 encoding');
-						t.equal(
-							rtpParameters.encodings[0].codecPayloadType, 100,
-							'encoding has codecPayloadType 100');
-					})
-					.catch((error) => t.fail(`producer.receive() failed: ${error}`));
-			});
-	});
-
-tap.test(
-	'producer.receive() with encodings without codecPayloadType must succeed',
-	{ timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
-			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('video', transport);
-
-				return producer.receive(
-					{
-						codecs :
-						[
-							{
-								kind        : 'video',
-								name        : 'video/vp8',
-								payloadType : 110,
-								clockRate   : 90000
-							},
-							{
-								name        : 'video/H264',
-								payloadType : 112,
-								clockRate   : 90000,
-								parameters  :
-								{
-									packetizationMode : 1
-								}
-							}
-						],
-						encodings :
-						[
-							{
-								ssrc : 1111
-							},
-							{
-								codecPayloadType : 112
-							},
-							{
-								ssrc : 3333
-							}
-						]
-					})
-					.then(() =>
-					{
-						t.pass('producer.receive() succeeded');
-
-						const rtpParameters = producer.rtpParameters;
-
-						t.equal(
-							rtpParameters.encodings.length, 3,
-							'computed rtpParameters has 3 encodings');
-						t.equal(
-							rtpParameters.encodings[0].codecPayloadType,
-							110, 'first encoding has codecPayloadType 110');
-						t.equal(
-							rtpParameters.encodings[1].codecPayloadType,
-							112, 'second encoding has codecPayloadType 112');
-						t.equal(
-							rtpParameters.encodings[2].codecPayloadType,
-							110, 'third encoding has codecPayloadType 110');
-					})
-					.catch((error) => t.fail(`producer.receive() failed: ${error}`));
-			});
-	});
-
-tap.test(
-	'producer.receive() with full rtpParameters must succeed',
-	{ timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
-			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('video', transport);
-				const rtpParameters =
-				{
-					muxId  : 'abcd',
-					codecs :
-					[
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2,
+						parameters  :
 						{
-							name         : 'video/VP8',
-							payloadType  : 110,
-							clockRate    : 90000,
-							maxptime     : 80,
-							ptime        : 60,
-							numChannels  : 2,
-							rtcpFeedback :
-							[
-								{ type: 'nack', parameter: null },
-								{ type: 'nack', parameter: 'pli' },
-								{ type: 'nack', parameter: 'sli' },
-								{ type: 'nack', parameter: 'rpsi' },
-								{ type: 'nack', parameter: 'app' },
-								{ type: 'ccm', parameter: 'fir' },
-								{ type: 'ack', parameter: 'rpsi' },
-								{ type: 'ack', parameter: 'app' }
-							],
-							parameters :
-							{
-								profileLevelId    : 2,
-								packetizationMode : 1,
-								aaa               : 1.0,
-								foo               : 'barœæ€',
-								bar               : true,
-								baz               : -123,
-								lol               : -456.789,
-								ids               : [ 123, 2, 3 ]
-							}
+							useinbandfec : 1,
+							foo          : 222.222,
+							bar          : '333'
 						}
-					],
-					encodings :
-					[
-						{
-							ssrc             : 100000,
-							codecPayloadType : 110,
-							fec              :
-							{
-								ssrc      : 200000,
-								mechanism : 'foo'
-							},
-							resolutionScale       : 2,
-							framerateScale        : 1.5,
-							maxFramerate          : 30,
-							active                : false,
-							encodingId            : 'ENC3',
-							dependencyEncodingIds : [ 'ENC1', 'ENC2' ]
-						}
-					],
-					headerExtensions :
-					[
-						{
-							uri        : 'urn:ietf:params:rtp-hdrext:toffset',
-							id         : 2,
-							encrypt    : false,
-							parameters : {}
-						}
-					],
-					rtcp :
-					{
-						cname       : 'a7sdihkj3sdsdflqwkejl98ujk',
-						ssrc        : 88888888,
-						reducedSize : true
-					},
-					userParameters :
-					{
-						foo : -123,
-						bar : 'BAR',
-						baz : true,
-						cas : -123.123,
-						arr : [ 1, '2', 3.3, { qwe: 'QWE', asd: 123, zxc: null } ]
 					}
-				};
-
-				return producer.receive(rtpParameters)
-					.then(() =>
+				],
+				headerExtensions :
+				[
 					{
-						t.pass('producer.receive() succeeded');
+						uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+						id  : 10
+					},
+					{
+						uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+						id  : 12
+					}
+				],
+				encodings : [ { ssrc: 11111111 } ],
+				rtcp      :
+				{
+					cname : 'audio-1'
+				}
+			},
+			appData : { foo: 1, bar: '2' }
+		});
 
-						t.same(
-							producer.rtpParameters, rtpParameters,
-							'computed rtpParameters match given ones');
-					})
-					.catch((error) => t.fail(`producer.receive() failed: ${error}`));
-			});
-	});
+	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewProducer).toHaveBeenCalledWith(audioProducer);
+	expect(audioProducer.id).toBeType('string');
+	expect(audioProducer.closed).toBe(false);
+	expect(audioProducer.kind).toBe('audio');
+	expect(audioProducer.rtpParameters).toBeType('object');
+	expect(audioProducer.type).toBe('simple');
+	// Private API.
+	expect(audioProducer.consumableRtpParameters).toBeType('object');
+	expect(audioProducer.paused).toBe(false);
+	expect(audioProducer.score).toEqual([]);
+	expect(audioProducer.appData).toEqual({ foo: 1, bar: '2' });
 
-tap.test(
-	'two producer.receive() over the same transport sharing PT values must ' +
-	'succeed if ssrc are given',
-	{ timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
 			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer1 = peer.Producer('audio', transport);
-				const producer2 = peer.Producer('audio', transport);
-				const promises = [];
+				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
+				mapConsumerIdProducerId  : {}
+			});
 
-				promises.push(producer1.receive(
+	await expect(webRtcTransport.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : webRtcTransport.id,
+				producerIds : [ audioProducer.id ],
+				consumerIds : []
+			});
+}, 2000);
+
+test('plainRtpTransport.produce() succeeds', async () =>
+{
+	const onObserverNewProducer = jest.fn();
+
+	plainRtpTransport.once('observer:newproducer', onObserverNewProducer);
+
+	videoProducer = await plainRtpTransport.produce(
+		{
+			kind          : 'video',
+			rtpParameters :
+			{
+				mid    : 'VIDEO',
+				codecs :
+				[
 					{
-						codecs :
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
+						},
+						rtcpFeedback :
 						[
-							{
-								name        : 'audio/opus',
-								payloadType : 100,
-								clockRate   : 48000
-							}
-						],
-						encodings :
-						[
-							{
-								ssrc : 1001
-							}
+							{ type: 'nack' },
+							{ type: 'nack', parameter: 'pli' },
+							{ type: 'goog-remb' }
 						]
-					})
-					.then(() =>
+					},
 					{
-						t.pass('producer1.receive() succeeded');
-					}));
-
-				promises.push(producer2.receive(
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
+					}
+				],
+				headerExtensions :
+				[
 					{
-						codecs :
-						[
-							{
-								name        : 'audio/opus',
-								payloadType : 100,
-								clockRate   : 48000
-							}
-						],
-						encodings :
-						[
-							{
-								ssrc : 1002
-							}
-						]
-					})
-					.then(() =>
+						uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+						id  : 10
+					},
 					{
-						t.pass('producer2.receive() succeeded');
-					}));
+						uri : 'urn:3gpp:video-orientation',
+						id  : 13
+					}
+				],
+				encodings :
+				[
+					{ ssrc: 22222222, rtx: { ssrc: 22222223 } },
+					{ ssrc: 22222224, rtx: { ssrc: 22222225 } },
+					{ ssrc: 22222226, rtx: { ssrc: 22222227 } },
+					{ ssrc: 22222228, rtx: { ssrc: 22222229 } }
+				],
+				rtcp :
+				{
+					cname : 'video-1'
+				}
+			},
+			appData : { foo: 1, bar: '2' }
+		});
 
-				return Promise.all(promises);
-			});
-	});
+	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewProducer).toHaveBeenCalledWith(videoProducer);
+	expect(videoProducer.id).toBeType('string');
+	expect(videoProducer.closed).toBe(false);
+	expect(videoProducer.kind).toBe('video');
+	expect(videoProducer.rtpParameters).toBeType('object');
+	expect(videoProducer.type).toBe('simulcast');
+	// Private API.
+	expect(videoProducer.consumableRtpParameters).toBeType('object');
+	expect(videoProducer.paused).toBe(false);
+	expect(videoProducer.score).toEqual([]);
+	expect(videoProducer.appData).toEqual({ foo: 1, bar: '2' });
 
-tap.test(
-	'producer.receive() without rtpParameters must fail', { timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
 			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('audio', transport);
-
-				return producer.receive()
-					.then(() => t.fail('producer.receive() succeeded'))
-					.catch((error) =>
-					{
-						t.pass(`producer.receive() failed: ${error}`);
-					});
+				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
+				mapConsumerIdProducerId  : {}
 			});
-	});
 
-tap.test(
-	'producer.receive() with wrong codecs must fail', { timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
+	await expect(plainRtpTransport.dump())
+		.resolves
+		.toMatchObject(
 			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('audio', transport);
-				const funcs = [];
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'opus',
-									payloadType : 100
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(
-								`producer.receive() with an invalid codec.name failed: ${error}`);
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : '/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(
-								`producer.receive() with an invalid codec.name failed: ${error}`);
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/',
-									payloadType : 100,
-									clockRate   : 48000
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(
-								`producer.receive() with an invalid codec.name failed: ${error}`);
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									payloadType : 102,
-									clockRate   : 90000
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(`producer.receive() without codec.name failed: ${error}`);
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name      : 'audio/opus',
-									clockRate : 48000
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(
-								`producer.receive() without codec.payloadType failed: ${error}`);
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(
-								`producer.receive() without codec.clockRate failed: ${error}`);
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								},
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(
-								'producer.receive() with duplicated codec.payloadType failed: ' +
-								`${error}`);
-						});
-				});
-
-				// TODO: Must fix this.
-				// funcs.push(function()
-				// {
-				// 	return producer.receive(
-				// 		{
-				// 			codecs :
-				// 			[
-				// 				{
-				// 					kind        : 'video',
-				// 					name        : 'video/vp8',
-				// 					payloadType : 110,
-				// 					clockRate   : 90000
-				// 				},
-				// 				{
-				// 					kind        : 'video',
-				// 					name        : 'video/rtx',
-				// 					payloadType : 97,
-				// 					clockRate   : 90000,
-				// 					parameters  :
-				// 					{
-				// 						apt : 111 // Wrong apt!
-				// 					}
-				// 				}
-				// 			]
-				// 		})
-				// 		.then(() => t.fail('producer.receive() succeeded'))
-				// 		.catch((error) =>
-				// 		{
-				// 			t.pass(`producer.receive() wih wrong RTX apt failed: ${error}`);
-				// 		});
-				// });
-
-				return promiseSeries(funcs);
+				id          : plainRtpTransport.id,
+				producerIds : [ videoProducer.id ],
+				consumerIds : []
 			});
-	});
+}, 2000);
 
-tap.test(
-	'producer.receive() with wrong encodings must fail', { timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
+test('webRtcTransport.produce() with wrong arguments rejects with TypeError', async () =>
+{
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'chicken',
+			rtpParameters : {}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters : {}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Missing or empty rtpParameters.codecs.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
 			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('audio', transport);
-				const funcs = [];
+				codecs           : [],
+				headerExtensions : [],
+				encodings        : [ { ssrc: '1111' } ],
+				rtcp             : { cname: 'qwerty'	}
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
 
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								}
-							],
-							encodings :
-							[
-								{
-									codecPayloadType : 102
-								}
-							]
-						})
-						.then(() => t.fail('producer.receive() succeeded'))
-						.catch((error) =>
-						{
-							t.pass(
-								'producer.receive() with unknown encoding.codecPayloadType ' +
-								`failed: ${error}`);
-						});
-				});
-
-				return promiseSeries(funcs);
-			});
-	});
-
-tap.test(
-	'two producer.receive() over the same transport sharing PT values must fail ' +
-	'if ssrc are not given',
-	{ timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
+	// Missing or empty rtpParameters.encodings.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'video',
+			rtpParameters :
 			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer1 = peer.Producer('audio', transport);
-				const producer2 = peer.Producer('audio', transport);
-				const promises = [];
-
-				promises.push(producer1.receive(
+				codecs :
+				[
 					{
-						codecs :
-						[
-							{
-								name        : 'audio/opus',
-								payloadType : 100,
-								clockRate   : 48000
-							}
-						]
-					})
-					.then(() =>
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
+						}
+					},
 					{
-						t.pass('producer1.receive() succeeded');
-					}));
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
+					}
+				],
+				headerExtensions : [],
+				encodings        : [],
+				rtcp             : { cname: 'qwerty' }
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
 
-				promises.push(producer2.receive(
-					{
-						codecs :
-						[
-							{
-								name        : 'audio/opus',
-								payloadType : 100,
-								clockRate   : 48000
-							}
-						]
-					})
-					.then(() => t.fail('producer2.receive() succeeded'))
-					.catch((error) =>
-					{
-						t.pass(`producer2.receive() failed: ${error}`);
-					}));
-
-				return Promise.all(promises);
-			});
-	});
-
-tap.test(
-	'producer.receive() should produce the expected RTP listener routing tables',
-	{ timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
+	// Wrong apt in RTX codec.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
 			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('audio', transport);
-				const funcs = [];
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								}
-							]
-						})
-						.then(() =>
-						{
-							return transport.dump();
-						})
-						.then((data2) =>
-						{
-							const id = producer._internal.producerId;
-
-							t.same(data2.rtpListener,
-								{
-									muxIdTable : {},
-									ptTable    :
-									{
-										100 : id
-									},
-									ssrcTable : {}
-								},
-								'rtpListener tables match expected ones');
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							muxId  : 'qwerty1234',
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								},
-								{
-									name        : 'audio/PCMU',
-									payloadType : 0,
-									clockRate   : 8000
-								}
-							]
-						})
-						.then(() =>
-						{
-							return transport.dump();
-						})
-						.then((data2) =>
-						{
-							const id = producer._internal.producerId;
-
-							t.same(data2.rtpListener,
-								{
-									muxIdTable :
-									{
-										'qwerty1234' : id
-									},
-									ptTable :
-									{
-										100 : id,
-										0   : id
-									},
-									ssrcTable : {}
-								},
-								'rtpListener tables match expected ones');
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								},
-								{
-									name        : 'audio/PCMU',
-									payloadType : 0,
-									clockRate   : 8000
-								}
-							],
-							encodings :
-							[
-								{
-									codecPayloadType : 100,
-									ssrc             : 1111
-								},
-								{
-									codecPayloadType : 0
-								}
-							]
-						})
-						.then(() =>
-						{
-							return transport.dump();
-						})
-						.then((data2) =>
-						{
-							const id = producer._internal.producerId;
-
-							t.same(data2.rtpListener,
-								{
-									muxIdTable : {},
-									ptTable    :
-									{
-										100 : id,
-										0   : id
-									},
-									ssrcTable :
-									{
-										1111 : id
-									}
-								},
-								'rtpListener tables match expected ones');
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								},
-								{
-									name        : 'audio/PCMU',
-									payloadType : 0,
-									clockRate   : 8000
-								}
-							],
-							encodings :
-							[
-								{
-									codecPayloadType : 100,
-									ssrc             : 1111
-								},
-								{
-									codecPayloadType : 0,
-									ssrc             : 2222
-								}
-							]
-						})
-						.then(() =>
-						{
-							return transport.dump();
-						})
-						.then((data2) =>
-						{
-							const id = producer._internal.producerId;
-
-							t.same(data2.rtpListener,
-								{
-									muxIdTable : {},
-									ptTable    : {},
-									ssrcTable  :
-									{
-										1111 : id,
-										2222 : id
-									}
-								},
-								'rtpListener tables match expected ones');
-						});
-				});
-
-				funcs.push(function()
-				{
-					return producer.receive(
-						{
-							codecs :
-							[
-								{
-									name        : 'audio/opus',
-									payloadType : 100,
-									clockRate   : 48000
-								},
-								{
-									name        : 'audio/PCMU',
-									payloadType : 0,
-									clockRate   : 8000
-								}
-							],
-							encodings :
-							[
-								{
-									codecPayloadType : 100,
-									ssrc             : 1111,
-									rtx              : {}
-								},
-								{
-									codecPayloadType : 0,
-									ssrc             : 2222,
-									fec              :
-									{
-										mechanism : 'flexfec',
-										ssrc      : 3333
-									}
-								}
-							]
-						})
-						.then(() =>
-						{
-							return transport.dump();
-						})
-						.then((data2) =>
-						{
-							const id = producer._internal.producerId;
-
-							t.same(data2.rtpListener,
-								{
-									muxIdTable : {},
-									ptTable    :
-									{
-										100 : id,
-										0   : id
-									},
-									ssrcTable :
-									{
-										1111 : id,
-										2222 : id,
-										3333 : id
-									}
-								},
-								'rtpListener tables match expected ones');
-						});
-				});
-
-				return promiseSeries(funcs);
-			});
-	});
-
-tap.test(
-	'producer.close() must succeed', { timeout: 2000 }, (t) =>
-	{
-		return initTest(t)
-			.then((data) =>
-			{
-				const peer = data.peer;
-				const transport = data.transport;
-				const producer = peer.Producer('audio', transport);
-
-				setTimeout(() => producer.close(), 100);
-
-				return new Promise((accept, reject) => // eslint-disable-line no-unused-vars
-				{
-					producer.on('close', (error) =>
+				codecs :
+				[
 					{
-						t.error(error, 'producer must close cleanly');
-						t.equal(peer.producers.length, 0, 'peer must have 0 producers');
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
+						}
+					},
+					{
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 111 }
+					}
+				],
+				headerExtensions : [],
+				encodings        :
+				[
+					{ ssrc: 6666, rtx: { ssrc: 6667 } }
+				],
+				rtcp :
+				{
+					cname : 'video-1'
+				}
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+}, 2000);
 
-						accept();
-					});
-				});
+test('webRtcTransport.produce() with unsupported codecs rejects with UnsupportedError', async () =>
+{
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				codecs :
+				[
+					{
+						mimeType    : 'audio/ISAC',
+						payloadType : 108,
+						clockRate   : 32000
+					}
+				],
+				headerExtensions : [],
+				encodings        : [ { ssrc: 1111 } ],
+				rtcp             : { cname: 'audio' }
+			}
+		}))
+		.rejects
+		.toThrow(UnsupportedError);
+
+	// Invalid H264 profile-level-id.
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'video',
+			rtpParameters :
+			{
+				codecs :
+				[
+					{
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : 'CHICKEN'
+						}
+					},
+					{
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
+					}
+				],
+				headerExtensions : [],
+				encodings        :
+				[
+					{ ssrc: 6666, rtx: { ssrc: 6667 } }
+				]
+			}
+		}))
+		.rejects
+		.toThrow(UnsupportedError);
+}, 2000);
+
+test('webRtcTransport.produce() with already used MID or SSRC rejects with Error', async () =>
+{
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO',
+				codecs :
+				[
+					{
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
+					}
+				],
+				headerExtensions : [],
+				encodings        : [ { ssrc: 33333333 } ],
+				rtcp             :
+				{
+					cname : 'audio-2'
+				}
+			}
+		}))
+		.rejects
+		.toThrow(Error);
+
+	await expect(webRtcTransport.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO-2',
+				codecs :
+				[
+					{
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
+					}
+				],
+				headerExtensions : [],
+				encodings        : [ { ssrc: 11111111 } ],
+				rtcp             :
+				{
+					cname : 'audio-2'
+				}
+			}
+		}))
+		.rejects
+		.toThrow(Error);
+}, 2000);
+
+test('producer.dump() succeeds', async () =>
+{
+	let data;
+
+	data = await audioProducer.dump();
+
+	expect(data.id).toBe(audioProducer.id);
+	expect(data.kind).toBe(audioProducer.kind);
+	expect(data.rtpParameters).toBeType('object');
+	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(data.rtpParameters.codecs.length).toBe(1);
+	expect(data.rtpParameters.codecs[0].mimeType).toBe('audio/opus');
+	expect(data.rtpParameters.codecs[0].payloadType).toBe(111);
+	expect(data.rtpParameters.codecs[0].clockRate).toBe(48000);
+	expect(data.rtpParameters.codecs[0].channels).toBe(2);
+	expect(data.rtpParameters.codecs[0].parameters)
+		.toEqual(
+			{
+				useinbandfec : 1,
+				foo          : 222.222,
+				bar          : '333'
 			});
+	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
+	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 10,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id         : 12,
+				parameters : {},
+				encrypt    : false
+			}
+		]);
+	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(data.rtpParameters.encodings.length).toBe(1);
+	expect(data.rtpParameters.encodings).toEqual(
+		[
+			{ codecPayloadType: 111, ssrc: 11111111 }
+		]);
+	expect(data.type).toBe('simple');
+
+	data = await videoProducer.dump();
+
+	expect(data.id).toBe(videoProducer.id);
+	expect(data.kind).toBe(videoProducer.kind);
+	expect(data.rtpParameters).toBeType('object');
+	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(data.rtpParameters.codecs.length).toBe(2);
+	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
+	expect(data.rtpParameters.codecs[0].payloadType).toBe(112);
+	expect(data.rtpParameters.codecs[0].clockRate).toBe(90000);
+	expect(data.rtpParameters.codecs[0].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[0].parameters)
+		.toEqual(
+			{
+				'packetization-mode' : 1,
+				'profile-level-id'   : '4d0032'
+			});
+	expect(data.rtpParameters.codecs[0].rtcpFeedback)
+		.toEqual(
+			[
+				{ type: 'nack' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'goog-remb' }
+			]);
+	expect(data.rtpParameters.codecs[1].mimeType).toBe('video/rtx');
+	expect(data.rtpParameters.codecs[1].payloadType).toBe(113);
+	expect(data.rtpParameters.codecs[1].clockRate).toBe(90000);
+	expect(data.rtpParameters.codecs[1].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
+	expect(data.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
+	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 10,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 13,
+				parameters : {},
+				encrypt    : false
+			}
+		]);
+	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(data.rtpParameters.encodings.length).toBe(4);
+	expect(data.rtpParameters.encodings).toEqual(
+		[
+			{ codecPayloadType: 112, ssrc: 22222222, rtx: { ssrc: 22222223 } },
+			{ codecPayloadType: 112, ssrc: 22222224, rtx: { ssrc: 22222225 } },
+			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
+			{ codecPayloadType: 112, ssrc: 22222228, rtx: { ssrc: 22222229 } }
+		]);
+	expect(data.type).toBe('simulcast');
+}, 2000);
+
+test('producer.getStats() succeeds', async () =>
+{
+	await expect(audioProducer.getStats())
+		.resolves
+		.toEqual([]);
+
+	await expect(videoProducer.getStats())
+		.resolves
+		.toEqual([]);
+}, 2000);
+
+test('producer.pause() and resume() succeed', async () =>
+{
+	await audioProducer.pause();
+	expect(audioProducer.paused).toBe(true);
+
+	await expect(audioProducer.dump())
+		.resolves
+		.toMatchObject({ paused: true });
+
+	await audioProducer.resume();
+	expect(audioProducer.paused).toBe(false);
+
+	await expect(audioProducer.dump())
+		.resolves
+		.toMatchObject({ paused: false });
+}, 2000);
+
+test('Producer emits "score"', async () =>
+{
+	// Private API.
+	const channel = videoProducer._channel;
+	const onScore = jest.fn();
+
+	videoProducer.on('score', onScore);
+
+	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 10 } ]);
+	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 8 } ]);
+	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+
+	expect(onScore).toHaveBeenCalledTimes(3);
+	expect(videoProducer.score).toEqual([ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+}, 2000);
+
+test('producer.close() succeeds', async () =>
+{
+	const onObserverClose = jest.fn();
+
+	audioProducer.once('observer:close', onObserverClose);
+	audioProducer.close();
+
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(audioProducer.closed).toBe(true);
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
+			{
+				mapProducerIdConsumerIds : {},
+				mapConsumerIdProducerId  : {}
+			});
+
+	await expect(webRtcTransport.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : webRtcTransport.id,
+				producerIds : [],
+				consumerIds : []
+			});
+}, 2000);
+
+test('Producer methods reject if closed', async () =>
+{
+	await expect(audioProducer.dump())
+		.rejects
+		.toThrow(Error);
+
+	await expect(audioProducer.getStats())
+		.rejects
+		.toThrow(Error);
+
+	await expect(audioProducer.pause())
+		.rejects
+		.toThrow(Error);
+
+	await expect(audioProducer.resume())
+		.rejects
+		.toThrow(Error);
+}, 2000);
+
+test('Producer emits "transportclose" if Transport is closed', async () =>
+{
+	const onObserverClose = jest.fn();
+
+	videoProducer.once('observer:close', onObserverClose);
+
+	await new Promise((resolve) =>
+	{
+		videoProducer.on('transportclose', resolve);
+		plainRtpTransport.close();
 	});
+
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(videoProducer.closed).toBe(true);
+}, 2000);

@@ -17,6 +17,7 @@
 #endif
 
 #include "dso_locl.h"
+#include "e_os.h"
 
 #ifdef DSO_DLFCN
 
@@ -99,6 +100,7 @@ static int dlfcn_load(DSO *dso)
     /* See applicable comments in dso_dl.c */
     char *filename = DSO_convert_filename(dso, NULL);
     int flags = DLOPEN_FLAG;
+    int saveerrno = get_last_sys_error();
 
     if (filename == NULL) {
         DSOerr(DSO_F_DLFCN_LOAD, DSO_R_NO_FILENAME);
@@ -108,25 +110,34 @@ static int dlfcn_load(DSO *dso)
     if (dso->flags & DSO_FLAG_GLOBAL_SYMBOLS)
         flags |= RTLD_GLOBAL;
 # endif
+# ifdef _AIX
+    if (filename[strlen(filename) - 1] == ')')
+        flags |= RTLD_MEMBER;
+# endif
     ptr = dlopen(filename, flags);
     if (ptr == NULL) {
         DSOerr(DSO_F_DLFCN_LOAD, DSO_R_LOAD_FAILED);
         ERR_add_error_data(4, "filename(", filename, "): ", dlerror());
         goto err;
     }
+    /*
+     * Some dlopen() implementations (e.g. solaris) do no preserve errno, even
+     * on a successful call.
+     */
+    set_sys_error(saveerrno);
     if (!sk_void_push(dso->meth_data, (char *)ptr)) {
         DSOerr(DSO_F_DLFCN_LOAD, DSO_R_STACK_ERROR);
         goto err;
     }
     /* Success */
     dso->loaded_filename = filename;
-    return (1);
+    return 1;
  err:
     /* Cleanup! */
     OPENSSL_free(filename);
     if (ptr != NULL)
         dlclose(ptr);
-    return (0);
+    return 0;
 }
 
 static int dlfcn_unload(DSO *dso)
@@ -134,10 +145,10 @@ static int dlfcn_unload(DSO *dso)
     void *ptr;
     if (dso == NULL) {
         DSOerr(DSO_F_DLFCN_UNLOAD, ERR_R_PASSED_NULL_PARAMETER);
-        return (0);
+        return 0;
     }
     if (sk_void_num(dso->meth_data) < 1)
-        return (1);
+        return 1;
     ptr = sk_void_pop(dso->meth_data);
     if (ptr == NULL) {
         DSOerr(DSO_F_DLFCN_UNLOAD, DSO_R_NULL_HANDLE);
@@ -145,11 +156,11 @@ static int dlfcn_unload(DSO *dso)
          * Should push the value back onto the stack in case of a retry.
          */
         sk_void_push(dso->meth_data, ptr);
-        return (0);
+        return 0;
     }
     /* For now I'm not aware of any errors associated with dlclose() */
     dlclose(ptr);
-    return (1);
+    return 1;
 }
 
 static DSO_FUNC_TYPE dlfcn_bind_func(DSO *dso, const char *symname)
@@ -162,22 +173,22 @@ static DSO_FUNC_TYPE dlfcn_bind_func(DSO *dso, const char *symname)
 
     if ((dso == NULL) || (symname == NULL)) {
         DSOerr(DSO_F_DLFCN_BIND_FUNC, ERR_R_PASSED_NULL_PARAMETER);
-        return (NULL);
+        return NULL;
     }
     if (sk_void_num(dso->meth_data) < 1) {
         DSOerr(DSO_F_DLFCN_BIND_FUNC, DSO_R_STACK_ERROR);
-        return (NULL);
+        return NULL;
     }
     ptr = sk_void_value(dso->meth_data, sk_void_num(dso->meth_data) - 1);
     if (ptr == NULL) {
         DSOerr(DSO_F_DLFCN_BIND_FUNC, DSO_R_NULL_HANDLE);
-        return (NULL);
+        return NULL;
     }
     u.dlret = dlsym(ptr, symname);
     if (u.dlret == NULL) {
         DSOerr(DSO_F_DLFCN_BIND_FUNC, DSO_R_SYM_FAILURE);
         ERR_add_error_data(4, "symname(", symname, "): ", dlerror());
-        return (NULL);
+        return NULL;
     }
     return u.sym;
 }
@@ -189,7 +200,7 @@ static char *dlfcn_merger(DSO *dso, const char *filespec1,
 
     if (!filespec1 && !filespec2) {
         DSOerr(DSO_F_DLFCN_MERGER, ERR_R_PASSED_NULL_PARAMETER);
-        return (NULL);
+        return NULL;
     }
     /*
      * If the first file specification is a rooted path, it rules. same goes
@@ -199,7 +210,7 @@ static char *dlfcn_merger(DSO *dso, const char *filespec1,
         merged = OPENSSL_strdup(filespec1);
         if (merged == NULL) {
             DSOerr(DSO_F_DLFCN_MERGER, ERR_R_MALLOC_FAILURE);
-            return (NULL);
+            return NULL;
         }
     }
     /*
@@ -209,7 +220,7 @@ static char *dlfcn_merger(DSO *dso, const char *filespec1,
         merged = OPENSSL_strdup(filespec2);
         if (merged == NULL) {
             DSOerr(DSO_F_DLFCN_MERGER, ERR_R_MALLOC_FAILURE);
-            return (NULL);
+            return NULL;
         }
     } else {
         /*
@@ -231,13 +242,13 @@ static char *dlfcn_merger(DSO *dso, const char *filespec1,
         merged = OPENSSL_malloc(len + 2);
         if (merged == NULL) {
             DSOerr(DSO_F_DLFCN_MERGER, ERR_R_MALLOC_FAILURE);
-            return (NULL);
+            return NULL;
         }
         strcpy(merged, filespec2);
         merged[spec2len] = '/';
         strcpy(&merged[spec2len + 1], filespec1);
     }
-    return (merged);
+    return merged;
 }
 
 static char *dlfcn_name_converter(DSO *dso, const char *filename)
@@ -257,7 +268,7 @@ static char *dlfcn_name_converter(DSO *dso, const char *filename)
     translated = OPENSSL_malloc(rsize);
     if (translated == NULL) {
         DSOerr(DSO_F_DLFCN_NAME_CONVERTER, DSO_R_NAME_TRANSLATION_FAILED);
-        return (NULL);
+        return NULL;
     }
     if (transform) {
         if ((DSO_flags(dso) & DSO_FLAG_NAME_TRANSLATION_EXT_ONLY) == 0)
@@ -266,7 +277,7 @@ static char *dlfcn_name_converter(DSO *dso, const char *filename)
             sprintf(translated, "%s" DSO_EXTENSION, filename);
     } else
         sprintf(translated, "%s", filename);
-    return (translated);
+    return translated;
 }
 
 # ifdef __sgi
@@ -332,7 +343,7 @@ static int dladdr(void *ptr, Dl_info *dl)
     unsigned int found = 0;
     struct ld_info *ldinfos, *next_ldi, *this_ldi;
 
-    if ((ldinfos = (struct ld_info *)OPENSSL_malloc(DLFCN_LDINFO_SIZE)) == NULL) {
+    if ((ldinfos = OPENSSL_malloc(DLFCN_LDINFO_SIZE)) == NULL) {
         errno = ENOMEM;
         dl->dli_fname = NULL;
         return 0;
@@ -359,18 +370,33 @@ static int dladdr(void *ptr, Dl_info *dl)
             || ((addr >= (uintptr_t)this_ldi->ldinfo_dataorg)
                 && (addr < ((uintptr_t)this_ldi->ldinfo_dataorg +
                             this_ldi->ldinfo_datasize)))) {
+            char *buffer, *member;
+            size_t buffer_sz, member_len;
+
+            buffer_sz = strlen(this_ldi->ldinfo_filename) + 1;
+            member = this_ldi->ldinfo_filename + buffer_sz;
+            if ((member_len = strlen(member)) > 0)
+                buffer_sz += 1 + member_len + 1;
             found = 1;
-            /*
-             * Ignoring the possibility of a member name and just returning
-             * the path name. See docs: sys/ldr.h, loadquery() and
-             * dlopen()/RTLD_MEMBER.
-             */
-            if ((dl->dli_fname =
-                 OPENSSL_strdup(this_ldi->ldinfo_filename)) == NULL)
+            if ((buffer = OPENSSL_malloc(buffer_sz)) != NULL) {
+                OPENSSL_strlcpy(buffer, this_ldi->ldinfo_filename, buffer_sz);
+                if (member_len > 0) {
+                    /*
+                     * Need to respect a possible member name and not just
+                     * returning the path name in this case. See docs:
+                     * sys/ldr.h, loadquery() and dlopen()/RTLD_MEMBER.
+                     */
+                    OPENSSL_strlcat(buffer, "(", buffer_sz);
+                    OPENSSL_strlcat(buffer, member, buffer_sz);
+                    OPENSSL_strlcat(buffer, ")", buffer_sz);
+                }
+                dl->dli_fname = buffer;
+            } else {
                 errno = ENOMEM;
+            }
         } else {
-            next_ldi =
-                (struct ld_info *)((uintptr_t)this_ldi + this_ldi->ldinfo_next);
+            next_ldi = (struct ld_info *)((uintptr_t)this_ldi +
+                                          this_ldi->ldinfo_next);
         }
     } while (this_ldi->ldinfo_next && !found);
     OPENSSL_free((void *)ldinfos);

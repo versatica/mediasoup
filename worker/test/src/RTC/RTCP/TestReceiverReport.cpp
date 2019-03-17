@@ -27,13 +27,13 @@ namespace TestReceiverReport
 	// Receiver Report buffer start point.
 	uint8_t* rrBuffer = buffer + sizeof(Packet::CommonHeader) + sizeof(uint32_t) /*Sender SSRC*/;
 
-	uint32_t ssrc                       = 0x01932db4;
-	uint8_t fractionLost                = 0;
-	uint8_t totalLost                   = 1;
-	uint32_t lastSeq                    = 0;
-	uint32_t jitter                     = 0;
-	uint32_t lastSenderReport           = 0;
-	uint32_t delaySinceLastSenderReport = 5;
+	uint32_t ssrc{ 0x01932db4 };
+	uint8_t fractionLost{ 0 };
+	uint8_t totalLost{ 1 };
+	uint32_t lastSeq{ 0 };
+	uint32_t jitter{ 0 };
+	uint32_t lastSenderReport{ 0 };
+	uint32_t delaySinceLastSenderReport{ 5 };
 
 	void verify(ReceiverReport* report)
 	{

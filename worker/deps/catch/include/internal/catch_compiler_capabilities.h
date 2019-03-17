@@ -184,6 +184,14 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+// Check if optional is available and usable
+#if defined(__has_include)
+#  if __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
+#    define CATCH_INTERNAL_CONFIG_CPP17_OPTIONAL
+#  endif // __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
+#endif // __has_include
+
+////////////////////////////////////////////////////////////////////////////////
 // Check if variant is available and usable
 #if defined(__has_include)
 #  if __has_include(<variant>) && defined(CATCH_CPP17_OR_GREATER)
@@ -193,9 +201,11 @@
 #      include <ciso646>
 #      if defined(__GLIBCXX__) && defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE < 9)
 #        define CATCH_CONFIG_NO_CPP17_VARIANT
-#     else
+#      else
 #        define CATCH_INTERNAL_CONFIG_CPP17_VARIANT
 #      endif // defined(__GLIBCXX__) && defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE < 9)
+#    else
+#      define CATCH_INTERNAL_CONFIG_CPP17_VARIANT
 #    endif // defined(__clang__) && (__clang_major__ < 8)
 #  endif // __has_include(<variant>) && defined(CATCH_CPP17_OR_GREATER)
 #endif // __has_include
@@ -218,6 +228,10 @@
 
 #if !defined(CATCH_INTERNAL_CONFIG_NO_CPP11_TO_STRING) && !defined(CATCH_CONFIG_NO_CPP11_TO_STRING) && !defined(CATCH_CONFIG_CPP11_TO_STRING)
 #    define CATCH_CONFIG_CPP11_TO_STRING
+#endif
+
+#if defined(CATCH_INTERNAL_CONFIG_CPP17_OPTIONAL) && !defined(CATCH_CONFIG_NO_CPP17_OPTIONAL) && !defined(CATCH_CONFIG_CPP17_OPTIONAL)
+#  define CATCH_CONFIG_CPP17_OPTIONAL
 #endif
 
 #if defined(CATCH_INTERNAL_CONFIG_CPP17_UNCAUGHT_EXCEPTIONS) && !defined(CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS) && !defined(CATCH_CONFIG_CPP17_UNCAUGHT_EXCEPTIONS)

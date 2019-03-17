@@ -23,9 +23,9 @@ namespace TestFeedbackPsRemb
 	// clang-format on
 
 	// REMB values.
-	uint32_t senderSsrc = 0xfa17fa17;
-	uint32_t mediaSsrc  = 0;
-	uint64_t bitrate    = 122754;
+	uint32_t senderSsrc{ 0xfa17fa17 };
+	uint32_t mediaSsrc{ 0 };
+	uint64_t bitrate{ 122754 };
 	std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
 	void verify(FeedbackPsRembPacket* packet)

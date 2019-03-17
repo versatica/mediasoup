@@ -36,6 +36,7 @@ set(TEST_SOURCES
         ${SELF_TEST_DIR}/UsageTests/Misc.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringChrono.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringGeneral.tests.cpp
+        ${SELF_TEST_DIR}/UsageTests/ToStringOptional.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringPair.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringTuple.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringVariant.tests.cpp
@@ -101,6 +102,8 @@ set(INTERNAL_HEADERS
         ${HEADER_DIR}/internal/catch_external_interfaces.h
         ${HEADER_DIR}/internal/catch_fatal_condition.h
         ${HEADER_DIR}/internal/catch_generators.hpp
+        ${HEADER_DIR}/internal/catch_generators_generic.hpp
+        ${HEADER_DIR}/internal/catch_generators_specific.hpp
         ${HEADER_DIR}/internal/catch_impl.hpp
         ${HEADER_DIR}/internal/catch_interfaces_capture.h
         ${HEADER_DIR}/internal/catch_interfaces_config.h
@@ -118,6 +121,7 @@ set(INTERNAL_HEADERS
         ${HEADER_DIR}/internal/catch_matchers_string.h
         ${HEADER_DIR}/internal/catch_matchers_vector.h
         ${HEADER_DIR}/internal/catch_message.h
+        ${HEADER_DIR}/internal/catch_meta.hpp
         ${HEADER_DIR}/internal/catch_objc.hpp
         ${HEADER_DIR}/internal/catch_objc_arc.hpp
         ${HEADER_DIR}/internal/catch_option.hpp
@@ -344,9 +348,15 @@ set_tests_properties(NoAssertions PROPERTIES PASS_REGULAR_EXPRESSION "No asserti
 add_test(NAME NoTest COMMAND $<TARGET_FILE:SelfTest> -w NoTests "___nonexistent_test___")
 set_tests_properties(NoTest PROPERTIES PASS_REGULAR_EXPRESSION "No test cases matched")
 
+add_test(NAME FilteredSection-1 COMMAND $<TARGET_FILE:SelfTest> \#1394 -c RunSection)
+set_tests_properties(FilteredSection-1 PROPERTIES FAIL_REGULAR_EXPRESSION "No tests ran")
+add_test(NAME FilteredSection-2 COMMAND $<TARGET_FILE:SelfTest> \#1394\ nested -c NestedRunSection -c s1)
+set_tests_properties(FilteredSection-2 PROPERTIES FAIL_REGULAR_EXPRESSION "No tests ran")
+
 # AppVeyor has a Python 2.7 in path, but doesn't have .py files as autorunnable
 add_test(NAME ApprovalTests COMMAND ${PYTHON_EXECUTABLE} ${CATCH_DIR}/scripts/approvalTests.py $<TARGET_FILE:SelfTest>)
 set_tests_properties(ApprovalTests PROPERTIES FAIL_REGULAR_EXPRESSION "Results differed")
+
 
 if (CATCH_USE_VALGRIND)
     add_test(NAME ValgrindRunTests COMMAND valgrind --leak-check=full --error-exitcode=1 $<TARGET_FILE:SelfTest>)

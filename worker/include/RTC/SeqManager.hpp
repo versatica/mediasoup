@@ -33,7 +33,7 @@ namespace RTC
 		static bool IsSeqHigherThan(const T lhs, const T rhs);
 
 	public:
-		SeqManager();
+		SeqManager() = default;
 
 	public:
 		void Sync(T input);

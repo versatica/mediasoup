@@ -40,9 +40,9 @@
 #include <sys/uio.h> /* writev */
 #include <sys/resource.h> /* getrusage */
 #include <pwd.h>
+#include <sys/utsname.h>
 
 #ifdef __sun
-# include <netdb.h> /* MAXHOSTNAMELEN on Solaris */
 # include <sys/filio.h>
 # include <sys/types.h>
 # include <sys/wait.h>
@@ -85,15 +85,6 @@
 
 #if defined(__MVS__)
 #include <sys/ioctl.h>
-#endif
-
-#if !defined(__MVS__)
-#include <sys/param.h> /* MAXHOSTNAMELEN on Linux and the BSDs */
-#endif
-
-/* Fallback for the maximum hostname length */
-#ifndef MAXHOSTNAMELEN
-# define MAXHOSTNAMELEN 256
 #endif
 
 static int uv__run_pending(uv_loop_t* loop);
@@ -170,7 +161,9 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
 
   case UV_FS_POLL:
     uv__fs_poll_close((uv_fs_poll_t*)handle);
-    break;
+    /* Poll handles use file system requests, and one of them may still be
+     * running. The poll code will call uv__make_close_pending() for us. */
+    return;
 
   case UV_SIGNAL:
     uv__signal_close((uv_signal_t*) handle);
@@ -891,7 +884,8 @@ void uv__io_close(uv_loop_t* loop, uv__io_t* w) {
   QUEUE_REMOVE(&w->pending_queue);
 
   /* Remove stale events for this file descriptor */
-  uv__platform_invalidate_fd(loop, w->fd);
+  if (w->fd != -1)
+    uv__platform_invalidate_fd(loop, w->fd);
 }
 
 
@@ -1290,7 +1284,7 @@ int uv_os_gethostname(char* buffer, size_t* size) {
     instead by creating a large enough buffer and comparing the hostname length
     to the size input.
   */
-  char buf[MAXHOSTNAMELEN + 1];
+  char buf[UV_MAXHOSTNAMESIZE];
   size_t len;
 
   if (buffer == NULL || size == NULL || *size == 0)
@@ -1355,5 +1349,83 @@ int uv_os_setpriority(uv_pid_t pid, int priority) {
   if (setpriority(PRIO_PROCESS, (int) pid, priority) != 0)
     return UV__ERR(errno);
 
+  return 0;
+}
+
+
+int uv_os_uname(uv_utsname_t* buffer) {
+  struct utsname buf;
+  int r;
+
+  if (buffer == NULL)
+    return UV_EINVAL;
+
+  if (uname(&buf) == -1) {
+    r = UV__ERR(errno);
+    goto error;
+  }
+
+  r = uv__strscpy(buffer->sysname, buf.sysname, sizeof(buffer->sysname));
+  if (r == UV_E2BIG)
+    goto error;
+
+#ifdef _AIX
+  r = snprintf(buffer->release,
+               sizeof(buffer->release),
+               "%s.%s",
+               buf.version,
+               buf.release);
+  if (r >= sizeof(buffer->release)) {
+    r = UV_E2BIG;
+    goto error;
+  }
+#else
+  r = uv__strscpy(buffer->release, buf.release, sizeof(buffer->release));
+  if (r == UV_E2BIG)
+    goto error;
+#endif
+
+  r = uv__strscpy(buffer->version, buf.version, sizeof(buffer->version));
+  if (r == UV_E2BIG)
+    goto error;
+
+#if defined(_AIX) || defined(__PASE__)
+  r = uv__strscpy(buffer->machine, "ppc64", sizeof(buffer->machine));
+#else
+  r = uv__strscpy(buffer->machine, buf.machine, sizeof(buffer->machine));
+#endif
+
+  if (r == UV_E2BIG)
+    goto error;
+
+  return 0;
+
+error:
+  buffer->sysname[0] = '\0';
+  buffer->release[0] = '\0';
+  buffer->version[0] = '\0';
+  buffer->machine[0] = '\0';
+  return r;
+}
+
+int uv__getsockpeername(const uv_handle_t* handle,
+                        uv__peersockfunc func,
+                        struct sockaddr* name,
+                        int* namelen) {
+  socklen_t socklen;
+  uv_os_fd_t fd;
+  int r;
+
+  r = uv_fileno(handle, &fd);
+  if (r < 0)
+    return r;
+
+  /* sizeof(socklen_t) != sizeof(int) on some systems. */
+  socklen = (socklen_t) *namelen;
+
+  if (func(fd, name, &socklen))
+    return UV__ERR(errno);
+
+  *namelen = (int) socklen;
   return 0;
 }

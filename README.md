@@ -6,7 +6,6 @@
 [![][opencollective-shield-mediasoup]][opencollective-mediasoup]
 
 
-
 ## Website and documentation
 
 * [mediasoup.org][mediasoup-website]
@@ -59,3 +58,4 @@ You can support **mediasoup** by making a donation in [open collective][opencoll
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
 [opencollective-mediasoup]: https://opencollective.com/mediasoup/donate
+

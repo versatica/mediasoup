@@ -10,6 +10,7 @@
 #include "catch_console_colour.h"
 #include "catch_enforce.h"
 #include "catch_list.h"
+#include "catch_context.h"
 #include "catch_run_context.h"
 #include "catch_stream.h"
 #include "catch_test_spec.h"
@@ -42,14 +43,19 @@ namespace Catch {
                 return createReporter(config->getReporterName(), config);
             }
 
-            auto multi = std::unique_ptr<ListeningReporter>(new ListeningReporter);
-
+            // On older platforms, returning std::unique_ptr<ListeningReporter>
+            // when the return type is std::unique_ptr<IStreamingReporter>
+            // doesn't compile without a std::move call. However, this causes
+            // a warning on newer platforms. Thus, we have to work around
+            // it a bit and downcast the pointer manually.
+            auto ret = std::unique_ptr<IStreamingReporter>(new ListeningReporter);
+            auto& multi = static_cast<ListeningReporter&>(*ret);
             auto const& listeners = Catch::getRegistryHub().getReporterRegistry().getListeners();
             for (auto const& listener : listeners) {
-                multi->addListener(listener->create(Catch::ReporterConfig(config)));
+                multi.addListener(listener->create(Catch::ReporterConfig(config)));
             }
-            multi->addReporter(createReporter(config->getReporterName(), config));
-            return std::move(multi);
+            multi.addReporter(createReporter(config->getReporterName(), config));
+            return ret;
         }
 
 
@@ -166,6 +172,8 @@ namespace Catch {
 
         auto result = m_cli.parse( clara::Args( argc, argv ) );
         if( !result ) {
+            config();
+            getCurrentMutableContext().setConfig(m_config);
             Catch::cerr()
                 << Colour( Colour::Red )
                 << "\nError(s) in input:\n"
@@ -257,7 +265,7 @@ namespace Catch {
                 applyFilenamesAsTags( *m_config );
 
             // Handle list request
-            if( Option<std::size_t> listed = list( config() ) )
+            if( Option<std::size_t> listed = list( m_config ) )
                 return static_cast<int>( *listed );
 
             auto totals = runTests( m_config );

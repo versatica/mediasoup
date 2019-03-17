@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "handles/Timer.hpp"
-#include <json/json.h>
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
@@ -95,9 +94,9 @@ namespace RTC
 	public:
 		static void ClassInit();
 		static void ClassDestroy();
-		static Json::Value& GetLocalFingerprints();
 		static Role StringToRole(const std::string& role);
 		static FingerprintAlgorithm GetFingerprintAlgorithm(const std::string& fingerprint);
+		static std::string& GetFingerprintAlgorithmString(FingerprintAlgorithm fingerprint);
 		static bool IsDtls(const uint8_t* data, size_t len);
 
 	private:
@@ -113,7 +112,8 @@ namespace RTC
 		static uint8_t sslReadBuffer[];
 		static std::map<std::string, Role> string2Role;
 		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
-		static Json::Value localFingerprints;
+		static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
+		static std::vector<Fingerprint> localFingerprints;
 		static std::vector<SrtpProfileMapEntry> srtpProfiles;
 
 	public:
@@ -123,6 +123,7 @@ namespace RTC
 	public:
 		void Dump() const;
 		void Run(Role localRole);
+		std::vector<Fingerprint>& GetLocalFingerprints() const;
 		bool SetRemoteFingerprint(Fingerprint fingerprint);
 		void ProcessDtlsData(const uint8_t* data, size_t len);
 		DtlsState GetState() const;
@@ -167,11 +168,6 @@ namespace RTC
 
 	/* Inline static methods. */
 
-	inline Json::Value& DtlsTransport::GetLocalFingerprints()
-	{
-		return DtlsTransport::localFingerprints;
-	}
-
 	inline DtlsTransport::Role DtlsTransport::StringToRole(const std::string& role)
 	{
 		auto it = DtlsTransport::string2Role.find(role);
@@ -193,6 +189,14 @@ namespace RTC
 			return DtlsTransport::FingerprintAlgorithm::NONE;
 	}
 
+	inline std::string& DtlsTransport::GetFingerprintAlgorithmString(
+	  DtlsTransport::FingerprintAlgorithm fingerprint)
+	{
+		auto it = DtlsTransport::fingerprintAlgorithm2String.find(fingerprint);
+
+		return it->second;
+	}
+
 	inline bool DtlsTransport::IsDtls(const uint8_t* data, size_t len)
 	{
 		return (
@@ -203,6 +207,11 @@ namespace RTC
 	}
 
 	/* Inline instance methods. */
+
+	inline std::vector<DtlsTransport::Fingerprint>& DtlsTransport::GetLocalFingerprints() const
+	{
+		return DtlsTransport::localFingerprints;
+	}
 
 	inline DtlsTransport::DtlsState DtlsTransport::GetState() const
 	{

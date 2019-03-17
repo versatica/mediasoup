@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/SeqManager.hpp"
 
@@ -73,7 +72,7 @@ namespace RTC
 			};
 
 		public:
-			static VP8::PayloadDescriptor* Parse(uint8_t* data, size_t len);
+			static VP8::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 
 		public:
@@ -87,8 +86,8 @@ namespace RTC
 				void SyncRequired() override;
 
 			public:
-				SeqManager<uint16_t> pictureIdManager;
-				SeqManager<uint8_t> tl0PictureIndexManager;
+				RTC::SeqManager<uint16_t> pictureIdManager;
+				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
 				bool syncRequired{ false };
 			};
 
@@ -100,7 +99,7 @@ namespace RTC
 
 			public:
 				void Dump() const;
-				bool Encode(RTC::Codecs::EncodingContext* context, uint8_t* data);
+				bool Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data);
 				void Restore(uint8_t* data);
 				bool IsKeyFrame() const;
 

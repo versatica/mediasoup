@@ -380,7 +380,7 @@ namespace RTC
 			uint16_t port;
 			std::string ip;
 
-			Utils::IP::GetAddressInfo(this->xorMappedAddress, &family, ip, &port);
+			Utils::IP::GetAddressInfo(this->xorMappedAddress, family, ip, port);
 
 			MS_DEBUG_DEV("  xorMappedAddress: %s : %" PRIu16, ip.c_str(), port);
 		}
@@ -421,7 +421,9 @@ namespace RTC
 				if (
 				  this->username.length() <= localUsernameLen || this->username.at(localUsernameLen) != ':' ||
 				  (this->username.compare(0, localUsernameLen, localUsername) != 0))
+				{
 					return Authentication::UNAUTHORIZED;
+				}
 
 				break;
 			}
@@ -587,19 +589,14 @@ namespace RTC
 
 		// Set type field.
 		Utils::Byte::Set2Bytes(buffer, 0, typeField);
-
 		// Set length field.
 		Utils::Byte::Set2Bytes(buffer, 2, static_cast<uint16_t>(this->size) - 20);
-
 		// Set magic cookie.
 		std::memcpy(buffer + 4, StunMessage::magicCookie, 4);
-
 		// Set TransactionId field.
 		std::memcpy(buffer + 8, this->transactionId, 12);
-
 		// Update the transaction ID pointer.
 		this->transactionId = buffer + 8;
-
 		// Add atributes.
 		size_t pos{ 20 };
 
@@ -782,6 +779,7 @@ namespace RTC
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
 			Utils::Byte::Set4Bytes(buffer, pos + 4, computedFingerprint);
 			pos += 4 + 4;
+
 			// Set flag.
 			this->hasFingerprint = true;
 		}

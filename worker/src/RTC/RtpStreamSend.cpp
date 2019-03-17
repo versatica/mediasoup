@@ -11,14 +11,19 @@ namespace RTC
 {
 	/* Static. */
 
+	static uint8_t RtxPacketBuffer[RTC::RtpBufferSize];
+	// 17: 16 bit mask + the initial sequence number.
+	static constexpr size_t MaxRequestedPackets{ 17 };
+	static std::vector<RTC::RtpPacket*> RetransmissionContainer(MaxRequestedPackets + 1);
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 
 	/* Instance methods. */
 
-	RtpStreamSend::RtpStreamSend(RTC::RtpStream::Params& params, size_t bufferSize)
-	  : RtpStream::RtpStream(params), storage(bufferSize)
+	RtpStreamSend::RtpStreamSend(
+	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), storage(bufferSize)
 	{
 		MS_TRACE();
 	}
@@ -31,18 +36,14 @@ namespace RTC
 		ClearRetransmissionBuffer();
 	}
 
-	Json::Value RtpStreamSend::GetStats()
+	void RtpStreamSend::FillJsonStats(json& jsonObject)
 	{
-		static const std::string Type = "outbound-rtp";
-		static const Json::StaticString JsonStringType{ "type" };
-		static const Json::StaticString JsonStringRtt{ "roundTripTime" };
+		MS_TRACE();
 
-		Json::Value json = RtpStream::GetStats();
+		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		json[JsonStringType] = Type;
-		json[JsonStringRtt]  = Json::UInt{ static_cast<uint32_t>(this->rtt) };
-
-		return json;
+		jsonObject["type"]          = "outbound-rtp";
+		jsonObject["roundTripTime"] = this->rtt;
 	}
 
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
@@ -53,11 +54,67 @@ namespace RTC
 		if (!RtpStream::ReceivePacket(packet))
 			return false;
 
+		// If it's a key frame clear the RTP retransmission buffer to avoid
+		// congesting the receiver by sending useless retransmissions (now that we
+		// are sending a newer key frame).
+		if (packet->IsKeyFrame())
+			ClearRetransmissionBuffer();
+
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
 			StorePacket(packet);
 
 		return true;
+	}
+
+	void RtpStreamSend::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
+	{
+		MS_TRACE();
+
+		this->nackCount++;
+
+		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
+		{
+			RTC::RTCP::FeedbackRtpNackItem* item = *it;
+
+			this->nackRtpPacketCount += item->CountRequestedPackets();
+
+			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
+
+			auto it2 = RetransmissionContainer.begin();
+
+			for (; it2 != RetransmissionContainer.end(); ++it2)
+			{
+				RTC::RtpPacket* packet = *it2;
+
+				if (packet == nullptr)
+					break;
+
+				// Retransmit the packet.
+				RetransmitPacket(packet);
+
+				// Mark the packet as repaired.
+				PacketRepaired(packet);
+			}
+		}
+	}
+
+	void RtpStreamSend::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
+	{
+		MS_TRACE();
+
+		switch (messageType)
+		{
+			case RTC::RTCP::FeedbackPs::MessageType::PLI:
+				this->pliCount++;
+				break;
+
+			case RTC::RTCP::FeedbackPs::MessageType::FIR:
+				this->firCount++;
+				break;
+
+			default:;
+		}
 	}
 
 	void RtpStreamSend::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -72,13 +129,14 @@ namespace RTC
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
+
 		compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
 
 		uint32_t lastSr = report->GetLastSenderReport();
 		uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
 
 		// RTT in 1/2^16 second fractions.
-		uint32_t rtt = 0;
+		uint32_t rtt{ 0 };
 
 		if (compactNtp > dlsr + lastSr)
 			rtt = compactNtp - dlsr - lastSr;
@@ -91,25 +149,216 @@ namespace RTC
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
+
+		// Update the score with the received RR.
+		UpdateScore(report);
 	}
 
-	// This method looks for the requested RTP packets and inserts them into the
-	// given container (and set to null the next container position).
-	void RtpStreamSend::RequestRtpRetransmission(
-	  uint16_t seq, uint16_t bitmask, std::vector<RTC::RtpPacket*>& container)
+	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
 	{
 		MS_TRACE();
 
-		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets{ 17 };
+		if (this->transmissionCounter.GetPacketCount() == 0u)
+			return nullptr;
+
+		auto ntp    = Utils::Time::TimeMs2Ntp(now);
+		auto report = new RTC::RTCP::SenderReport();
+
+		report->SetSsrc(GetSsrc());
+		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
+		report->SetOctetCount(this->transmissionCounter.GetBytes());
+		report->SetRtpTs(this->maxPacketTs);
+		report->SetNtpSec(ntp.seconds);
+		report->SetNtpFrac(ntp.fractions);
+
+		return report;
+	}
+
+	RTC::RTCP::SdesChunk* RtpStreamSend::GetRtcpSdesChunk()
+	{
+		MS_TRACE();
+
+		auto& cname     = GetCname();
+		auto* sdesChunk = new RTC::RTCP::SdesChunk(GetSsrc());
+		auto* sdesItem =
+		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
+
+		sdesChunk->AddItem(sdesItem);
+
+		return sdesChunk;
+	}
+
+	void RtpStreamSend::Pause()
+	{
+		MS_TRACE();
+
+		ClearRetransmissionBuffer();
+	}
+
+	void RtpStreamSend::Resume()
+	{
+		MS_TRACE();
+	}
+
+	void RtpStreamSend::ClearRetransmissionBuffer()
+	{
+		MS_TRACE();
+
+		// Delete cloned packets.
+		for (auto& bufferItem : this->buffer)
+		{
+			delete bufferItem.packet;
+		}
+
+		// Clear list.
+		this->buffer.clear();
+	}
+
+	void RtpStreamSend::RetransmitPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		RTC::RtpPacket* rtxPacket{ nullptr };
+
+		if (HasRtx())
+		{
+			rtxPacket = packet->Clone(RtxPacketBuffer);
+
+			rtxPacket->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
+
+			MS_DEBUG_TAG(
+			  rtx,
+			  "sending RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
+			  ", seq:%" PRIu16 "]",
+			  rtxPacket->GetSsrc(),
+			  rtxPacket->GetSequenceNumber(),
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
+		}
+		else
+		{
+			rtxPacket = packet;
+
+			MS_DEBUG_TAG(
+			  rtx,
+			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  rtxPacket->GetSsrc(),
+			  rtxPacket->GetSequenceNumber());
+		}
+
+		// Send the packet.
+		static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
+		  ->OnRtpStreamRetransmitRtpPacket(this, rtxPacket);
+
+		// Delete the RTX RtpPacket if it was cloned.
+		if (rtxPacket != packet)
+			delete rtxPacket;
+
+		// Mark the packet as retransmitted.
+		PacketRetransmitted(packet);
+	}
+
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (packet->GetSize() > RTC::MtuSize)
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetSize());
+
+			return;
+		}
+
+		// Sum the packet seq number and the number of 16 bits cycles.
+		auto packetSeq = packet->GetSequenceNumber();
+		BufferItem bufferItem;
+
+		bufferItem.seq = packetSeq;
+
+		// If empty do it easy.
+		if (this->buffer.empty())
+		{
+			auto store = this->storage[0].store;
+
+			bufferItem.packet = packet->Clone(store);
+			this->buffer.push_back(bufferItem);
+
+			return;
+		}
+
+		// Otherwise, do the stuff.
+
+		std::list<BufferItem>::iterator newBufferIt;
+		uint8_t* store{ nullptr };
+
+		// Iterate the buffer in reverse order and find the proper place to store the
+		// packet.
+		auto bufferItReverse = this->buffer.rbegin();
+
+		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
+		{
+			auto currentSeq = (*bufferItReverse).seq;
+
+			if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
+			{
+				// Get a forward iterator pointing to the same element.
+				auto it = bufferItReverse.base();
+
+				newBufferIt = this->buffer.insert(it, bufferItem);
+
+				break;
+			}
+
+			// Packet is already stored.
+			if (packetSeq == currentSeq)
+				return;
+		}
+
+		// The packet was older than anything in the buffer, store it at the beginning.
+		if (bufferItReverse == this->buffer.rend())
+			newBufferIt = this->buffer.insert(this->buffer.begin(), bufferItem);
+
+		// If the buffer is not full use the next free storage item.
+		if (this->buffer.size() - 1 < this->storage.size())
+		{
+			store = this->storage[this->buffer.size() - 1].store;
+		}
+		// Otherwise remove the first packet of the buffer and replace its storage area.
+		else
+		{
+			auto& firstBufferItem = *(this->buffer.begin());
+			auto firstPacket      = firstBufferItem.packet;
+
+			// Store points to the store used by the first packet.
+			store = const_cast<uint8_t*>(firstPacket->GetData());
+			// Free the first packet.
+			delete firstPacket;
+			// Remove the first element in the list.
+			this->buffer.pop_front();
+		}
+
+		// Update the new buffer item so it points to the cloned packed.
+		(*newBufferIt).packet = packet->Clone(store);
+	}
+
+	// This method looks for the requested RTP packets and inserts them into the
+	// RetransmissionContainer vector (and set to null the next position).
+	void RtpStreamSend::FillRetransmissionContainer(uint16_t seq, uint16_t bitmask)
+	{
+		MS_TRACE();
 
 		// Ensure the container's first element is 0.
-		container[0] = nullptr;
+		RetransmissionContainer[0] = nullptr;
 
 		// If NACK is not supported, exit.
 		if (!this->params.useNack)
 		{
-			MS_WARN_TAG(rtx, "NACK not negotiated");
+			MS_WARN_TAG(rtx, "NACK not supported");
 
 			return;
 		}
@@ -122,7 +371,8 @@ namespace RTC
 		uint16_t lastSeq  = firstSeq + MaxRequestedPackets - 1;
 
 		// Number of requested packets cannot be greater than the container size - 1.
-		MS_ASSERT(container.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
+		MS_ASSERT(
+		  RetransmissionContainer.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
 
 		auto bufferIt           = this->buffer.begin();
 		auto bufferItReverse    = this->buffer.rbegin();
@@ -131,8 +381,8 @@ namespace RTC
 
 		// Requested packet range not found.
 		if (
-		  SeqManager<uint16_t>::IsSeqHigherThan(firstSeq, bufferLastSeq) ||
-		  SeqManager<uint16_t>::IsSeqLowerThan(lastSeq, bufferFirstSeq))
+		  RTC::SeqManager<uint16_t>::IsSeqHigherThan(firstSeq, bufferLastSeq) ||
+		  RTC::SeqManager<uint16_t>::IsSeqLowerThan(lastSeq, bufferFirstSeq))
 		{
 			MS_WARN_TAG(
 			  rtx,
@@ -215,12 +465,13 @@ namespace RTC
 						}
 
 						// Store the packet in the container and then increment its index.
-						container[containerIdx++] = currentPacket;
+						RetransmissionContainer[containerIdx++] = currentPacket;
 
 						// Save when this packet was resent.
 						(*bufferIt).resentAtTime = now;
 
 						sent = true;
+
 						if (isFirstPacket)
 							firstPacketSent = true;
 
@@ -228,7 +479,7 @@ namespace RTC
 					}
 
 					// It can not be after this packet.
-					if (SeqManager<uint16_t>::IsSeqHigherThan(currentSeq, seq))
+					if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(currentSeq, seq))
 						break;
 				}
 			}
@@ -271,146 +522,134 @@ namespace RTC
 		}
 
 		// Set the next container element to null.
-		container[containerIdx] = nullptr;
+		RetransmissionContainer[containerIdx] = nullptr;
 	}
 
-	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
+	void RtpStreamSend::UpdateScore(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
 
-		if (this->transmissionCounter.GetPacketCount() == 0u)
-			return nullptr;
+		// Calculate number of packets lost in the source in this interval.
+		auto totalExpected = GetExpectedPackets();
+		auto expected      = totalExpected - this->expectedPrior;
 
-		auto ntp    = Utils::Time::TimeMs2Ntp(now);
-		auto report = new RTC::RTCP::SenderReport();
-
-		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
-		report->SetOctetCount(this->transmissionCounter.GetBytes());
-		report->SetRtpTs(this->maxPacketTs);
-		report->SetNtpSec(ntp.seconds);
-		report->SetNtpFrac(ntp.fractions);
-
-		return report;
-	}
-
-	void RtpStreamSend::ClearRetransmissionBuffer()
-	{
-		MS_TRACE();
-
-		// Delete cloned packets.
-		for (auto& bufferItem : this->buffer)
-		{
-			delete bufferItem.packet;
-		}
-
-		// Clear list.
-		this->buffer.clear();
-	}
-
-	inline void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		if (packet->GetSize() > RTC::MtuSize)
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetSize());
-
+		// We didn't send new packets.
+		if (expected == 0)
 			return;
-		}
 
-		// Sum the packet seq number and the number of 16 bits cycles.
-		auto packetSeq = packet->GetSequenceNumber();
-		BufferItem bufferItem;
+		this->expectedPrior = totalExpected;
 
-		bufferItem.seq = packetSeq;
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 1: totalExpected:" << totalExpected << ",
+		// expected:" << expected << "\n";
 
-		// If empty do it easy.
-		if (this->buffer.empty())
-		{
-			auto store = this->storage[0].store;
+		auto totalSent       = this->transmissionCounter.GetPacketCount();
+		auto totalSourceLost = totalExpected - totalSent;
 
-			bufferItem.packet = packet->Clone(store);
-			this->buffer.push_back(bufferItem);
+		// TODO: This should not happen (but it happens, see #274), so add a guard.
+		if (totalSourceLost < this->sourceLostPrior)
+			totalSourceLost = this->sourceLostPrior;
 
-			return;
-		}
+		auto sourceLost = totalSourceLost - this->sourceLostPrior;
 
-		// Otherwise, do the stuff.
+		this->sourceLostPrior = totalSourceLost;
 
-		Buffer::iterator newBufferIt;
-		uint8_t* store{ nullptr };
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 2: totalSent:" << totalSent << ",
+		// totalSourceLost:" << totalSourceLost << ", sourceLost:" << sourceLost << "\n";
 
-		// Iterate the buffer in reverse order and find the proper place to store the
-		// packet.
-		auto bufferItReverse = this->buffer.rbegin();
-		for (; bufferItReverse != this->buffer.rend(); ++bufferItReverse)
-		{
-			auto currentSeq = (*bufferItReverse).seq;
+		// Calculate number of packets lost in the edge in this interval.
+		uint32_t totalLost = report->GetTotalLost();
 
-			if (SeqManager<uint16_t>::IsSeqHigherThan(packetSeq, currentSeq))
-			{
-				// Get a forward iterator pointing to the same element.
-				auto it = bufferItReverse.base();
+		// Just in case (we must not trust whatever the received RR says).
+		// TODO: Yes?
+		if (totalLost < this->lostPrior)
+			totalLost = this->lostPrior;
 
-				newBufferIt = this->buffer.insert(it, bufferItem);
+		auto lost = totalLost - this->lostPrior;
 
-				break;
-			}
+		this->lostPrior = totalLost;
 
-			// Packet is already stored.
-			if (packetSeq == currentSeq)
-				return;
-		}
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 3: totalLost:" << totalLost << ", lost:" << lost << "\n";
 
-		// The packet was older than anything in the buffer, store it at the beginning.
-		if (bufferItReverse == this->buffer.rend())
-			newBufferIt = this->buffer.insert(this->buffer.begin(), bufferItem);
+		// Substract number of packets lost at the source.
+		//
+		// TODO: This may need this guard. Without it (or maybe even with it) score
+		// becomes > 10 sometimes:
+		//  if (lost > sourceLost)
+		lost -= sourceLost;
 
-		// If the buffer is not full use the next free storage item.
-		if (this->buffer.size() - 1 < this->storage.size())
-		{
-			store = this->storage[this->buffer.size() - 1].store;
-		}
-		// Otherwise remove the first packet of the buffer and replace its storage area.
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 4: lost -= sourceLost:" << lost << "\n";
+
+		// Calculate number of packets repaired in this interval.
+		auto totalRepaired = this->packetsRepaired;
+		uint32_t repaired  = totalRepaired - this->repairedPrior;
+
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 5: totalRepaired:" << totalRepaired << ",
+		// repaired:" << repaired << "\n";
+
+		this->repairedPrior = totalRepaired;
+
+		if (repaired >= lost)
+			lost = 0;
 		else
-		{
-			auto& firstBufferItem = *(this->buffer.begin());
-			auto firstPacket      = firstBufferItem.packet;
+			lost -= repaired;
 
-			// Store points to the store used by the first packet.
-			store = const_cast<uint8_t*>(firstPacket->GetData());
-			// Free the first packet.
-			delete firstPacket;
-			// Remove the first element in the list.
-			this->buffer.pop_front();
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 6: lost:" << lost << "\n";
+
+		if (repaired > lost)
+		{
+			MS_DEBUG_TAG(
+			  score, "repaired greater than lost [repaired:%" PRIu32 ", lost:%" PRIu32 "]", repaired, lost);
 		}
 
-		// Update the new buffer item so it points to the cloned packed.
-		(*newBufferIt).packet = packet->Clone(store);
+		// Calculate packet loss percentage in this interva.
+		float lossPercentage = lost * 100 / expected;
+
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 7: lossPercentage:" << lossPercentage << "\n";
+
+		/*
+		 * Calculate score. Starting from a score of 100:
+		 *
+		 * - Each loss porcentual point has a weight of 1.0f.
+		 */
+		float base100Score{ 100 };
+
+		base100Score -= (lossPercentage * 1.0f);
+
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 8: base100Score:" << base100Score << "\n";
+
+		// Get base 10 score.
+		auto score = static_cast<uint8_t>(std::lround(base100Score / 10));
+
+		// TODO: REMOVE
+		// std::cout << "RtpStreamSend::UpdateScore() 9: score:" << int{ score } << "\n";
+
+#ifdef MS_LOG_DEV
+		MS_DEBUG_TAG(
+		  score,
+		  "[totalExpected:%" PRIu32 ", totalSent:%zu, totalSourceLost:%zu, totalLost:%" PRIi32
+		  ", totalRepaired:%zu, expected:%" PRIu32 ", repaired:%" PRIu32
+		  ", lossPercentage:%f, score:%" PRIu8 "]",
+		  totalExpected,
+		  totalSent,
+		  totalSourceLost,
+		  totalLost,
+		  totalRepaired,
+		  expected,
+		  repaired,
+		  lossPercentage,
+		  score);
+
+		report->Dump();
+#endif
+
+		RtpStream::UpdateScore(score);
 	}
-
-	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
-	{
-		MS_TRACE();
-
-		this->hasRtx         = true;
-		this->rtxPayloadType = payloadType;
-		this->rtxSsrc        = ssrc;
-		this->rtxSeq         = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
-	}
-
-	void RtpStreamSend::RtxEncode(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->hasRtx, "RTX not enabled on this stream");
-
-		packet->RtxEncode(this->rtxPayloadType, this->rtxSsrc, ++this->rtxSeq);
-	}
-
 } // namespace RTC

@@ -26,12 +26,12 @@ namespace TestSenderReport
 	uint8_t* srBuffer = buffer + sizeof(Packet::CommonHeader);
 
 	// SR values.
-	uint32_t ssrc        = 0x5d931534;
-	uint32_t ntpSec      = 3711615412;
-	uint32_t ntpFrac     = 1985245553;
-	uint32_t rtpTs       = 577280;
-	uint32_t packetCount = 3608;
-	uint32_t octetCount  = 577280;
+	uint32_t ssrc{ 0x5d931534 };
+	uint32_t ntpSec{ 3711615412 };
+	uint32_t ntpFrac{ 1985245553 };
+	uint32_t rtpTs{ 577280 };
+	uint32_t packetCount{ 3608 };
+	uint32_t octetCount{ 577280 };
 
 	void verify(SenderReport* report)
 	{

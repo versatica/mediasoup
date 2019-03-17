@@ -20,10 +20,10 @@ namespace TestFeedbackPsAfb
 	// clang-format on
 
 	// AFB values.
-	uint32_t senderSsrc = 0xfa17fa17;
-	uint32_t mediaSsrc  = 0;
-	size_t dataSize     = 4;
-	uint8_t dataBitmask = 1;
+	uint32_t senderSsrc{ 0xfa17fa17 };
+	uint32_t mediaSsrc{ 0 };
+	size_t dataSize{ 4 };
+	uint8_t dataBitmask{ 1 };
 
 	void verify(FeedbackPsAfbPacket* packet)
 	{

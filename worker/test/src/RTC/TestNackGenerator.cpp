@@ -30,7 +30,7 @@ struct TestNackGeneratorInput
 	size_t nackListSize{ 0 };
 };
 
-class TestPayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
+class TestPayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler
 {
 public:
 	explicit TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame){};
@@ -39,7 +39,7 @@ public:
 	{
 		return;
 	};
-	bool Encode(RTC::Codecs::EncodingContext* /*context*/, uint8_t* /*data*/)
+	bool Encode(Codecs::EncodingContext* /*context*/, uint8_t* /*data*/)
 	{
 		return true;
 	};

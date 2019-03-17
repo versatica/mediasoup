@@ -170,7 +170,7 @@ namespace RTC
 
 		inline SenderReportPacket::~SenderReportPacket()
 		{
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				delete report;
 			}
@@ -185,7 +185,7 @@ namespace RTC
 		{
 			size_t size = sizeof(Packet::CommonHeader);
 
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				size += report->GetSize();
 			}

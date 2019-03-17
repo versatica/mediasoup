@@ -32,10 +32,12 @@ namespace RTC
 		{
 			static const std::string Unknown("UNKNOWN");
 
-			if (FeedbackPacket<T>::type2String.find(type) == FeedbackPacket<T>::type2String.end())
+			auto it = FeedbackPacket<T>::type2String.find(type);
+
+			if (it == FeedbackPacket<T>::type2String.end())
 				return Unknown;
 
-			return FeedbackPacket<T>::type2String[type];
+			return it->second;
 		}
 
 		/* Instance methods. */

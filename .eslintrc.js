@@ -3,8 +3,13 @@ module.exports =
 	env:
 	{
 		es6: true,
-		node: true
+		node: true,
+		'jest/globals': true
 	},
+	plugins:
+	[
+		'jest'
+	],
 	extends:
 	[
 		'eslint:recommended'
@@ -112,7 +117,7 @@ module.exports =
 		'no-mixed-spaces-and-tabs': 2,
 		'no-multi-spaces': 2,
 		'no-multi-str': 2,
-		'no-multiple-empty-lines': [ 2, { max: 1, maxEOF: 0, maxBOF: 0 } ],
+		'no-multiple-empty-lines': [ 1, { max: 1, maxEOF: 0, maxBOF: 0 } ],
 		'no-native-reassign': 2,
 		'no-negated-in-lhs': 2,
 		'no-new': 2,
@@ -157,7 +162,12 @@ module.exports =
 		'semi': [ 2, 'always' ],
 		'semi-spacing': 2,
 		'space-before-blocks': 2,
-		'space-before-function-paren': [ 2, 'never' ],
+		'space-before-function-paren': [ 2,
+		{
+			anonymous  : 'never',
+			named      : 'never',
+			asyncArrow : 'always'
+		}],
 		'space-in-parens': [ 2, 'never' ],
 		'spaced-comment': [ 2, 'always' ],
 		'strict': 2,

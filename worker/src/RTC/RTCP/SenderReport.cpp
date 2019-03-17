@@ -36,12 +36,12 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<SenderReport>");
-			MS_DEBUG_DEV("  ssrc         : %" PRIu32, this->GetSsrc());
-			MS_DEBUG_DEV("  ntp sec      : %" PRIu32, this->GetNtpSec());
-			MS_DEBUG_DEV("  ntp frac     : %" PRIu32, this->GetNtpFrac());
-			MS_DEBUG_DEV("  rtp ts       : %" PRIu32, this->GetRtpTs());
-			MS_DEBUG_DEV("  packet count : %" PRIu32, this->GetPacketCount());
-			MS_DEBUG_DEV("  octet count  : %" PRIu32, this->GetOctetCount());
+			MS_DEBUG_DEV("  ssrc         : %" PRIu32, GetSsrc());
+			MS_DEBUG_DEV("  ntp sec      : %" PRIu32, GetNtpSec());
+			MS_DEBUG_DEV("  ntp frac     : %" PRIu32, GetNtpFrac());
+			MS_DEBUG_DEV("  rtp ts       : %" PRIu32, GetRtpTs());
+			MS_DEBUG_DEV("  packet count : %" PRIu32, GetPacketCount());
+			MS_DEBUG_DEV("  octet count  : %" PRIu32, GetOctetCount());
 			MS_DEBUG_DEV("</SenderReport>");
 		}
 
@@ -85,7 +85,7 @@ namespace RTC
 			size_t offset = Packet::Serialize(buffer);
 
 			// Serialize reports.
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				offset += report->Serialize(buffer + offset);
 			}
@@ -98,7 +98,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<SenderReportPacket>");
-			for (auto report : this->reports)
+			for (auto* report : this->reports)
 			{
 				report->Dump();
 			}

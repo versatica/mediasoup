@@ -2,197 +2,124 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
-#include "Channel/Notifier.hpp"
-#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/ConsumerListener.hpp"
+#include "json.hpp"
+#include "Channel/Request.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/Sdes.hpp"
-#include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpMonitor.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStreamSend.hpp"
-#include "RTC/SeqManager.hpp"
-#include "RTC/Transport.hpp"
-#include <json/json.h>
-#include <set>
+#include "RTC/RtpStream.hpp"
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace RTC
 {
-	class Consumer : public RTC::RtpMonitor::Listener
+	class Consumer
 	{
-		static constexpr uint16_t RtpPacketsBeforeProbation{ 2000 };
-		// Must be a power of 2.
-		static constexpr uint16_t ProbationPacketNumber{ 256 };
+	public:
+		class Listener
+		{
+		public:
+			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)  = 0;
+			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
+			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
+		};
 
 	public:
 		Consumer(
-		  Channel::Notifier* notifier,
-		  uint32_t consumerId,
-		  RTC::Media::Kind kind,
-		  uint32_t sourceProducerId);
+		  const std::string& id,
+		  RTC::Consumer::Listener* listener,
+		  json& data,
+		  RTC::RtpParameters::Type type);
 		virtual ~Consumer();
 
 	public:
-		Json::Value ToJson() const;
-		Json::Value GetStats() const;
-		void AddListener(RTC::ConsumerListener* listener);
-		void RemoveListener(RTC::ConsumerListener* listener);
-		void Enable(RTC::Transport* transport, RTC::RtpParameters& rtpParameters);
-		void Pause();
-		void Resume();
-		void SourcePause();
-		void SourceResume();
-		void AddProfile(const RTC::RtpEncodingParameters::Profile profile, const RTC::RtpStream* rtpStream);
-		void RemoveProfile(const RTC::RtpEncodingParameters::Profile profile);
-		void SetPreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
-		void SetSourcePreferredProfile(const RTC::RtpEncodingParameters::Profile profile);
-		void SetEncodingPreferences(const RTC::Codecs::EncodingContext::Preferences preferences);
-		void Disable();
-		bool IsEnabled() const;
-		const RTC::RtpParameters& GetParameters() const;
+		virtual void FillJson(json& jsonObject) const;
+		virtual void FillJsonStats(json& jsonArray) const  = 0;
+		virtual void FillJsonScore(json& jsonObject) const = 0;
+		virtual void HandleRequest(Channel::Request* request);
+		RTC::Media::Kind GetKind() const;
+		RTC::RtpParameters::Type GetType() const;
+		const std::vector<uint32_t>& GetMediaSsrcs() const;
+		bool IsActive() const;
 		bool IsPaused() const;
-		RTC::RtpEncodingParameters::Profile GetPreferredProfile() const;
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpEncodingParameters::Profile profile);
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
-		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
-		void ReceiveKeyFrameRequest(RTCP::FeedbackPs::MessageType messageType);
-		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
-		uint32_t GetTransmissionRate(uint64_t now);
-		float GetLossPercentage() const;
-		void RequestKeyFrame();
+		bool IsProducerPaused() const; // This is needed by the Transport.
+		virtual void TransportConnected() = 0;
+		void ProducerPaused();
+		void ProducerResumed();
+		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+		virtual void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)     = 0;
+		void ProducerClosed();
+		virtual void SendRtpPacket(RTC::RtpPacket* packet)                    = 0;
+		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) = 0;
+		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
+		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)              = 0;
+		virtual void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) = 0;
+		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)           = 0;
+		virtual uint32_t GetTransmissionRate(uint64_t now)                                  = 0;
+		virtual float GetLossPercentage() const                                             = 0;
 
-	private:
-		void FillSupportedCodecPayloadTypes();
-		void CreateRtpStream(RTC::RtpEncodingParameters& encoding);
-		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void RecalculateTargetProfile(bool force = false);
-		void SetEffectiveProfile(RTC::RtpEncodingParameters::Profile profile);
-		void MayRunProbation();
-		bool IsProbing() const;
-		void StartProbation(RTC::RtpEncodingParameters::Profile profile);
-		void StopProbation();
-		void SendProbation(RTC::RtpPacket* packet);
-
-		/* Pure virtual methods inherited from RTC::RtpMonitor::Listener. */
-	public:
-		void OnRtpMonitorScore(uint8_t score) override;
+	protected:
+		virtual void Paused(bool wasProducer)  = 0;
+		virtual void Resumed(bool wasProducer) = 0;
 
 	public:
 		// Passed by argument.
-		uint32_t consumerId{ 0 };
+		const std::string id;
+
+	protected:
+		// Passed by argument.
+		RTC::Consumer::Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
-		uint32_t sourceProducerId{ 0 };
-
-	private:
-		// Passed by argument.
-		Channel::Notifier* notifier{ nullptr };
-		RTC::Transport* transport{ nullptr };
 		RTC::RtpParameters rtpParameters;
-		std::unordered_set<RTC::ConsumerListener*> listeners;
-		// Allocated by this.
-		RTC::RtpStreamSend* rtpStream{ nullptr };
-		RtpMonitor* rtpMonitor{ nullptr };
+		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
+		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
-		bool paused{ false };
-		bool sourcePaused{ false };
-		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
-		// RTP counters.
-		RTC::RtpDataCounter retransmittedCounter;
-		// RTP sequence number and timestamp.
-		RTC::SeqManager<uint16_t> rtpSeqManager;
-		RTC::SeqManager<uint32_t> rtpTimestampManager;
-		bool syncRequired{ true };
-		// RTP payload descriptor encoding.
-		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		// RTP profiles.
-		std::map<RTC::RtpEncodingParameters::Profile, const RTC::RtpStream*> mapProfileRtpStream;
-		RTC::RtpEncodingParameters::Profile preferredProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		RTC::RtpEncodingParameters::Profile sourcePreferredProfile{
-			RTC::RtpEncodingParameters::Profile::DEFAULT
-		};
-		RTC::RtpEncodingParameters::Profile targetProfile{ RTC::RtpEncodingParameters::Profile::DEFAULT };
-		RTC::RtpEncodingParameters::Profile effectiveProfile{ RTC::RtpEncodingParameters::Profile::NONE };
-		RTC::RtpEncodingParameters::Profile probingProfile{ RTC::RtpEncodingParameters::Profile::NONE };
-		// RTP probation.
-		uint16_t rtpPacketsBeforeProbation{ RtpPacketsBeforeProbation };
-		uint16_t probationPackets{ 0 };
+
+	private:
+		// Others.
+		std::vector<uint32_t> mediaSsrcs;
+		bool paused{ false };
+		bool producerPaused{ false };
+		bool producerClosed{ false };
 	};
 
 	/* Inline methods. */
 
-	inline void Consumer::AddListener(RTC::ConsumerListener* listener)
+	inline RTC::Media::Kind Consumer::GetKind() const
 	{
-		this->listeners.insert(listener);
+		return this->kind;
 	}
 
-	inline void Consumer::RemoveListener(RTC::ConsumerListener* listener)
+	inline RTC::RtpParameters::Type Consumer::GetType() const
 	{
-		this->listeners.erase(listener);
+		return this->type;
 	}
 
-	inline bool Consumer::IsEnabled() const
+	inline const std::vector<uint32_t>& Consumer::GetMediaSsrcs() const
 	{
-		return this->transport != nullptr;
+		return this->mediaSsrcs;
 	}
 
-	inline const RTC::RtpParameters& Consumer::GetParameters() const
+	inline bool Consumer::IsActive() const
 	{
-		return this->rtpParameters;
+		return !this->paused && !this->producerPaused && !this->producerClosed;
 	}
 
 	inline bool Consumer::IsPaused() const
 	{
-		return this->paused || this->sourcePaused;
+		return this->paused;
 	}
 
-	inline RTC::RtpEncodingParameters::Profile Consumer::GetPreferredProfile() const
+	inline bool Consumer::IsProducerPaused() const
 	{
-		// If Consumer preferred profile and source (Producer) preferred profile
-		// are the same, that's.
-		if (this->preferredProfile == this->sourcePreferredProfile)
-			return this->preferredProfile;
-
-		// If Consumer preferred profile is 'default', use whichever the source
-		// preferred profile is.
-		if (this->preferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-			return this->sourcePreferredProfile;
-
-		// If source preferred profile is 'default', use whichever the Consumer
-		// preferred profile is.
-		if (this->sourcePreferredProfile == RTC::RtpEncodingParameters::Profile::DEFAULT)
-			return this->preferredProfile;
-
-		// Otherwise the Consumer preferred profile is chosen.
-		return this->preferredProfile;
-	}
-
-	inline uint32_t Consumer::GetTransmissionRate(uint64_t now)
-	{
-		return this->rtpStream->GetRate(now) + this->retransmittedCounter.GetRate(now);
-	}
-
-	inline bool Consumer::IsProbing() const
-	{
-		return this->probationPackets != 0;
-	}
-
-	inline void Consumer::StartProbation(RTC::RtpEncodingParameters::Profile profile)
-	{
-		this->probationPackets = ProbationPacketNumber;
-		this->probingProfile   = profile;
-	}
-
-	inline void Consumer::StopProbation()
-	{
-		this->probationPackets = 0;
-		this->probingProfile   = RTC::RtpEncodingParameters::Profile::NONE;
+		return this->producerPaused;
 	}
 } // namespace RTC
 

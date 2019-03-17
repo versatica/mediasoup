@@ -16,7 +16,6 @@ public:
 	};
 
 public:
-	UdpSocket(const std::string& ip, uint16_t port);
 	/**
 	 * uvHandle must be an already initialized and binded uv_udp_t pointer.
 	 */
@@ -34,7 +33,7 @@ public:
 	void Send(const std::string& data, const std::string& ip, uint16_t port);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
-	const std::string& GetLocalIP() const;
+	const std::string& GetLocalIp() const;
 	uint16_t GetLocalPort() const;
 	size_t GetRecvBytes() const;
 	size_t GetSentBytes() const;
@@ -52,6 +51,11 @@ public:
 protected:
 	virtual void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
 
+protected:
+	struct sockaddr_storage localAddr;
+	std::string localIp;
+	uint16_t localPort{ 0 };
+
 private:
 	// Allocated by this (may be passed by argument).
 	uv_udp_t* uvHandle{ nullptr };
@@ -59,11 +63,6 @@ private:
 	bool closed{ false };
 	size_t recvBytes{ 0 };
 	size_t sentBytes{ 0 };
-
-protected:
-	struct sockaddr_storage localAddr;
-	std::string localIP;
-	uint16_t localPort{ 0 };
 };
 
 /* Inline methods. */
@@ -88,9 +87,9 @@ inline int UdpSocket::GetLocalFamily() const
 	return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
 }
 
-inline const std::string& UdpSocket::GetLocalIP() const
+inline const std::string& UdpSocket::GetLocalIp() const
 {
-	return this->localIP;
+	return this->localIp;
 }
 
 inline uint16_t UdpSocket::GetLocalPort() const

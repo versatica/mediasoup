@@ -45,7 +45,8 @@ namespace RTC
 				offset = this->senderReportPacket.GetSize();
 
 				// Fix header count field.
-				auto* header  = reinterpret_cast<Packet::CommonHeader*>(this->header);
+				auto* header = reinterpret_cast<Packet::CommonHeader*>(this->header);
+
 				header->count = 0;
 
 				if (this->receiverReportPacket.GetCount() != 0u)
@@ -62,6 +63,7 @@ namespace RTC
 					header->count = this->receiverReportPacket.GetCount();
 
 					auto it = this->receiverReportPacket.Begin();
+
 					for (; it != this->receiverReportPacket.End(); ++it)
 					{
 						ReceiverReport* report = (*it);
@@ -95,7 +97,9 @@ namespace RTC
 					this->receiverReportPacket.Dump();
 			}
 			else
+			{
 				this->receiverReportPacket.Dump();
+			}
 
 			if (this->sdesPacket.GetCount() != 0u)
 				this->sdesPacket.Dump();
@@ -105,7 +109,7 @@ namespace RTC
 
 		void CompoundPacket::AddSenderReport(SenderReport* report)
 		{
-			MS_ASSERT(!HasSenderReport(), "a sender report is already present");
+			MS_ASSERT(!HasSenderReport(), "a Sender Report is already present");
 
 			this->senderReportPacket.AddReport(report);
 		}

@@ -5,6 +5,7 @@
 
 #include "Utils.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include <uv.h>
 
 namespace Utils
@@ -19,7 +20,7 @@ namespace Utils
 		 * Ragel: machine definition.
 		 */
 		
-#line 38 "src/Utils/IP.rl"
+#line 39 "src/Utils/IP.rl"
 
 
 		/**
@@ -27,7 +28,7 @@ namespace Utils
 		 * This generates Ragel's static variables.
 		 */
 		
-#line 31 "src/Utils/IP.cpp"
+#line 32 "src/Utils/IP.cpp"
 static const int IPParser_start = 1;
 
 
@@ -35,7 +36,7 @@ static const int IPParser_start = 1;
 
 
 
-#line 45 "src/Utils/IP.rl"
+#line 46 "src/Utils/IP.rl"
 
 		// Used by Ragel.
 		size_t cs;
@@ -49,19 +50,19 @@ static const int IPParser_start = 1;
 		 * Ragel: %%write init
 		 */
 		
-#line 53 "src/Utils/IP.cpp"
+#line 54 "src/Utils/IP.cpp"
 	{
 	cs = IPParser_start;
 	}
 
-#line 58 "src/Utils/IP.rl"
+#line 59 "src/Utils/IP.rl"
 
 		/**
 		 * Ragel: %%write exec
 		 * This updates cs variable needed by Ragel.
 		 */
 		
-#line 65 "src/Utils/IP.cpp"
+#line 66 "src/Utils/IP.cpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -154,13 +155,13 @@ case 7:
 		goto tr23;
 	goto st0;
 tr20:
-#line 25 "src/Utils/IP.rl"
+#line 26 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET;
 			}
 	goto st87;
 tr141:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -169,10 +170,10 @@ st87:
 	if ( ++p == pe )
 		goto _test_eof87;
 case 87:
-#line 173 "src/Utils/IP.cpp"
+#line 174 "src/Utils/IP.cpp"
 	goto st0;
 tr21:
-#line 25 "src/Utils/IP.rl"
+#line 26 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET;
 			}
@@ -181,12 +182,12 @@ st88:
 	if ( ++p == pe )
 		goto _test_eof88;
 case 88:
-#line 185 "src/Utils/IP.cpp"
+#line 186 "src/Utils/IP.cpp"
 	if ( 48u <= (*p) && (*p) <= 57u )
 		goto tr23;
 	goto st0;
 tr23:
-#line 25 "src/Utils/IP.rl"
+#line 26 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET;
 			}
@@ -195,12 +196,12 @@ st89:
 	if ( ++p == pe )
 		goto _test_eof89;
 case 89:
-#line 199 "src/Utils/IP.cpp"
+#line 200 "src/Utils/IP.cpp"
 	if ( 48u <= (*p) && (*p) <= 57u )
 		goto tr20;
 	goto st0;
 tr22:
-#line 25 "src/Utils/IP.rl"
+#line 26 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET;
 			}
@@ -209,7 +210,7 @@ st90:
 	if ( ++p == pe )
 		goto _test_eof90;
 case 90:
-#line 213 "src/Utils/IP.cpp"
+#line 214 "src/Utils/IP.cpp"
 	if ( (*p) == 53u )
 		goto tr121;
 	if ( (*p) > 52u ) {
@@ -219,7 +220,7 @@ case 90:
 		goto tr23;
 	goto st0;
 tr121:
-#line 25 "src/Utils/IP.rl"
+#line 26 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET;
 			}
@@ -228,7 +229,7 @@ st91:
 	if ( ++p == pe )
 		goto _test_eof91;
 case 91:
-#line 232 "src/Utils/IP.cpp"
+#line 233 "src/Utils/IP.cpp"
 	if ( 48u <= (*p) && (*p) <= 53u )
 		goto tr20;
 	goto st0;
@@ -773,7 +774,7 @@ case 50:
 		goto tr80;
 	goto st0;
 tr77:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -782,7 +783,7 @@ st92:
 	if ( ++p == pe )
 		goto _test_eof92;
 case 92:
-#line 786 "src/Utils/IP.cpp"
+#line 787 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	goto st0;
@@ -800,7 +801,7 @@ case 51:
 		goto tr81;
 	goto st0;
 tr81:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -809,7 +810,7 @@ st93:
 	if ( ++p == pe )
 		goto _test_eof93;
 case 93:
-#line 813 "src/Utils/IP.cpp"
+#line 814 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr123;
@@ -820,7 +821,7 @@ case 93:
 		goto tr123;
 	goto st0;
 tr123:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -829,7 +830,7 @@ st94:
 	if ( ++p == pe )
 		goto _test_eof94;
 case 94:
-#line 833 "src/Utils/IP.cpp"
+#line 834 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr124;
@@ -840,7 +841,7 @@ case 94:
 		goto tr124;
 	goto st0;
 tr124:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -849,7 +850,7 @@ st95:
 	if ( ++p == pe )
 		goto _test_eof95;
 case 95:
-#line 853 "src/Utils/IP.cpp"
+#line 854 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr125;
@@ -860,7 +861,7 @@ case 95:
 		goto tr125;
 	goto st0;
 tr125:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -869,7 +870,7 @@ st96:
 	if ( ++p == pe )
 		goto _test_eof96;
 case 96:
-#line 873 "src/Utils/IP.cpp"
+#line 874 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr126;
@@ -880,7 +881,7 @@ case 96:
 		goto tr126;
 	goto st0;
 tr126:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -889,7 +890,7 @@ st97:
 	if ( ++p == pe )
 		goto _test_eof97;
 case 97:
-#line 893 "src/Utils/IP.cpp"
+#line 894 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr127;
@@ -900,7 +901,7 @@ case 97:
 		goto tr127;
 	goto st0;
 tr127:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -909,7 +910,7 @@ st98:
 	if ( ++p == pe )
 		goto _test_eof98;
 case 98:
-#line 913 "src/Utils/IP.cpp"
+#line 914 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr128;
@@ -920,7 +921,7 @@ case 98:
 		goto tr128;
 	goto st0;
 tr128:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -929,7 +930,7 @@ st99:
 	if ( ++p == pe )
 		goto _test_eof99;
 case 99:
-#line 933 "src/Utils/IP.cpp"
+#line 934 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr129;
@@ -940,7 +941,7 @@ case 99:
 		goto tr129;
 	goto st0;
 tr129:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -949,7 +950,7 @@ st100:
 	if ( ++p == pe )
 		goto _test_eof100;
 case 100:
-#line 953 "src/Utils/IP.cpp"
+#line 954 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr130;
@@ -960,7 +961,7 @@ case 100:
 		goto tr130;
 	goto st0;
 tr130:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -969,7 +970,7 @@ st101:
 	if ( ++p == pe )
 		goto _test_eof101;
 case 101:
-#line 973 "src/Utils/IP.cpp"
+#line 974 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr131;
@@ -980,7 +981,7 @@ case 101:
 		goto tr131;
 	goto st0;
 tr131:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -989,7 +990,7 @@ st102:
 	if ( ++p == pe )
 		goto _test_eof102;
 case 102:
-#line 993 "src/Utils/IP.cpp"
+#line 994 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr132;
@@ -1000,7 +1001,7 @@ case 102:
 		goto tr132;
 	goto st0;
 tr132:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1009,7 +1010,7 @@ st103:
 	if ( ++p == pe )
 		goto _test_eof103;
 case 103:
-#line 1013 "src/Utils/IP.cpp"
+#line 1014 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr133;
@@ -1020,7 +1021,7 @@ case 103:
 		goto tr133;
 	goto st0;
 tr133:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1029,7 +1030,7 @@ st104:
 	if ( ++p == pe )
 		goto _test_eof104;
 case 104:
-#line 1033 "src/Utils/IP.cpp"
+#line 1034 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr134;
@@ -1040,7 +1041,7 @@ case 104:
 		goto tr134;
 	goto st0;
 tr134:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1049,7 +1050,7 @@ st105:
 	if ( ++p == pe )
 		goto _test_eof105;
 case 105:
-#line 1053 "src/Utils/IP.cpp"
+#line 1054 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr135;
@@ -1060,7 +1061,7 @@ case 105:
 		goto tr135;
 	goto st0;
 tr135:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1069,7 +1070,7 @@ st106:
 	if ( ++p == pe )
 		goto _test_eof106;
 case 106:
-#line 1073 "src/Utils/IP.cpp"
+#line 1074 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr136;
@@ -1080,7 +1081,7 @@ case 106:
 		goto tr136;
 	goto st0;
 tr136:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1089,7 +1090,7 @@ st107:
 	if ( ++p == pe )
 		goto _test_eof107;
 case 107:
-#line 1093 "src/Utils/IP.cpp"
+#line 1094 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr137;
@@ -1100,7 +1101,7 @@ case 107:
 		goto tr137;
 	goto st0;
 tr137:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1109,7 +1110,7 @@ st108:
 	if ( ++p == pe )
 		goto _test_eof108;
 case 108:
-#line 1113 "src/Utils/IP.cpp"
+#line 1114 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr138;
@@ -1120,7 +1121,7 @@ case 108:
 		goto tr138;
 	goto st0;
 tr138:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1129,7 +1130,7 @@ st109:
 	if ( ++p == pe )
 		goto _test_eof109;
 case 109:
-#line 1133 "src/Utils/IP.cpp"
+#line 1134 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr139;
@@ -1140,7 +1141,7 @@ case 109:
 		goto tr139;
 	goto st0;
 tr139:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1149,7 +1150,7 @@ st110:
 	if ( ++p == pe )
 		goto _test_eof110;
 case 110:
-#line 1153 "src/Utils/IP.cpp"
+#line 1154 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr140;
@@ -1160,7 +1161,7 @@ case 110:
 		goto tr140;
 	goto st0;
 tr140:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1169,7 +1170,7 @@ st111:
 	if ( ++p == pe )
 		goto _test_eof111;
 case 111:
-#line 1173 "src/Utils/IP.cpp"
+#line 1174 "src/Utils/IP.cpp"
 	if ( (*p) < 65u ) {
 		if ( 48u <= (*p) && (*p) <= 57u )
 			goto tr141;
@@ -1180,7 +1181,7 @@ case 111:
 		goto tr141;
 	goto st0;
 tr78:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1189,14 +1190,14 @@ st112:
 	if ( ++p == pe )
 		goto _test_eof112;
 case 112:
-#line 1193 "src/Utils/IP.cpp"
+#line 1194 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	if ( 48u <= (*p) && (*p) <= 57u )
 		goto tr80;
 	goto st0;
 tr80:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1205,14 +1206,14 @@ st113:
 	if ( ++p == pe )
 		goto _test_eof113;
 case 113:
-#line 1209 "src/Utils/IP.cpp"
+#line 1210 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	if ( 48u <= (*p) && (*p) <= 57u )
 		goto tr77;
 	goto st0;
 tr79:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1221,7 +1222,7 @@ st114:
 	if ( ++p == pe )
 		goto _test_eof114;
 case 114:
-#line 1225 "src/Utils/IP.cpp"
+#line 1226 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 53u: goto tr142;
@@ -1233,7 +1234,7 @@ case 114:
 		goto tr80;
 	goto st0;
 tr142:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1242,7 +1243,7 @@ st115:
 	if ( ++p == pe )
 		goto _test_eof115;
 case 115:
-#line 1246 "src/Utils/IP.cpp"
+#line 1247 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	if ( 48u <= (*p) && (*p) <= 53u )
@@ -1383,7 +1384,7 @@ case 63:
 		goto tr86;
 	goto st0;
 tr86:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1392,7 +1393,7 @@ st116:
 	if ( ++p == pe )
 		goto _test_eof116;
 case 116:
-#line 1396 "src/Utils/IP.cpp"
+#line 1397 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	if ( (*p) < 65u ) {
@@ -1405,7 +1406,7 @@ case 116:
 		goto tr143;
 	goto st0;
 tr143:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1414,7 +1415,7 @@ st117:
 	if ( ++p == pe )
 		goto _test_eof117;
 case 117:
-#line 1418 "src/Utils/IP.cpp"
+#line 1419 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	if ( (*p) < 65u ) {
@@ -1427,7 +1428,7 @@ case 117:
 		goto tr144;
 	goto st0;
 tr144:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1436,7 +1437,7 @@ st118:
 	if ( ++p == pe )
 		goto _test_eof118;
 case 118:
-#line 1440 "src/Utils/IP.cpp"
+#line 1441 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	if ( (*p) < 65u ) {
@@ -1575,7 +1576,7 @@ case 70:
 		goto st60;
 	goto st0;
 tr62:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1584,7 +1585,7 @@ st119:
 	if ( ++p == pe )
 		goto _test_eof119;
 case 119:
-#line 1588 "src/Utils/IP.cpp"
+#line 1589 "src/Utils/IP.cpp"
 	if ( (*p) == 37u )
 		goto st51;
 	if ( (*p) < 65u ) {
@@ -1612,7 +1613,7 @@ case 71:
 		goto st60;
 	goto st0;
 tr53:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1621,7 +1622,7 @@ st120:
 	if ( ++p == pe )
 		goto _test_eof120;
 case 120:
-#line 1625 "src/Utils/IP.cpp"
+#line 1626 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 48u: goto tr91;
@@ -1638,7 +1639,7 @@ case 120:
 		goto tr95;
 	goto st0;
 tr91:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1647,7 +1648,7 @@ st121:
 	if ( ++p == pe )
 		goto _test_eof121;
 case 121:
-#line 1651 "src/Utils/IP.cpp"
+#line 1652 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1663,7 +1664,7 @@ case 121:
 		goto tr145;
 	goto st0;
 tr145:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1672,7 +1673,7 @@ st122:
 	if ( ++p == pe )
 		goto _test_eof122;
 case 122:
-#line 1676 "src/Utils/IP.cpp"
+#line 1677 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st72;
@@ -1687,7 +1688,7 @@ case 122:
 		goto tr147;
 	goto st0;
 tr147:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1696,7 +1697,7 @@ st123:
 	if ( ++p == pe )
 		goto _test_eof123;
 case 123:
-#line 1700 "src/Utils/IP.cpp"
+#line 1701 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st72;
@@ -1711,7 +1712,7 @@ case 123:
 		goto tr148;
 	goto st0;
 tr148:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1720,7 +1721,7 @@ st124:
 	if ( ++p == pe )
 		goto _test_eof124;
 case 124:
-#line 1724 "src/Utils/IP.cpp"
+#line 1725 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st72;
@@ -1740,7 +1741,7 @@ case 72:
 		goto tr86;
 	goto st0;
 tr92:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1749,7 +1750,7 @@ st125:
 	if ( ++p == pe )
 		goto _test_eof125;
 case 125:
-#line 1753 "src/Utils/IP.cpp"
+#line 1754 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1765,7 +1766,7 @@ case 125:
 		goto tr145;
 	goto st0;
 tr149:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1774,7 +1775,7 @@ st126:
 	if ( ++p == pe )
 		goto _test_eof126;
 case 126:
-#line 1778 "src/Utils/IP.cpp"
+#line 1779 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1790,7 +1791,7 @@ case 126:
 		goto tr147;
 	goto st0;
 tr150:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1799,7 +1800,7 @@ st127:
 	if ( ++p == pe )
 		goto _test_eof127;
 case 127:
-#line 1803 "src/Utils/IP.cpp"
+#line 1804 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1815,7 +1816,7 @@ case 127:
 		goto tr148;
 	goto st0;
 tr93:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1824,7 +1825,7 @@ st128:
 	if ( ++p == pe )
 		goto _test_eof128;
 case 128:
-#line 1828 "src/Utils/IP.cpp"
+#line 1829 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1844,7 +1845,7 @@ case 128:
 		goto tr152;
 	goto st0;
 tr151:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1853,7 +1854,7 @@ st129:
 	if ( ++p == pe )
 		goto _test_eof129;
 case 129:
-#line 1857 "src/Utils/IP.cpp"
+#line 1858 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1872,7 +1873,7 @@ case 129:
 		goto tr147;
 	goto st0;
 tr152:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1881,7 +1882,7 @@ st130:
 	if ( ++p == pe )
 		goto _test_eof130;
 case 130:
-#line 1885 "src/Utils/IP.cpp"
+#line 1886 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1897,7 +1898,7 @@ case 130:
 		goto tr147;
 	goto st0;
 tr94:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1906,7 +1907,7 @@ st131:
 	if ( ++p == pe )
 		goto _test_eof131;
 case 131:
-#line 1910 "src/Utils/IP.cpp"
+#line 1911 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1922,7 +1923,7 @@ case 131:
 		goto tr145;
 	goto st0;
 tr95:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1931,7 +1932,7 @@ st132:
 	if ( ++p == pe )
 		goto _test_eof132;
 case 132:
-#line 1935 "src/Utils/IP.cpp"
+#line 1936 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st72;
@@ -1946,7 +1947,7 @@ case 132:
 		goto tr145;
 	goto st0;
 tr47:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1955,7 +1956,7 @@ st133:
 	if ( ++p == pe )
 		goto _test_eof133;
 case 133:
-#line 1959 "src/Utils/IP.cpp"
+#line 1960 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 48u: goto tr96;
@@ -1972,7 +1973,7 @@ case 133:
 		goto tr100;
 	goto st0;
 tr96:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -1981,7 +1982,7 @@ st134:
 	if ( ++p == pe )
 		goto _test_eof134;
 case 134:
-#line 1985 "src/Utils/IP.cpp"
+#line 1986 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -1997,7 +1998,7 @@ case 134:
 		goto tr153;
 	goto st0;
 tr153:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2006,7 +2007,7 @@ st135:
 	if ( ++p == pe )
 		goto _test_eof135;
 case 135:
-#line 2010 "src/Utils/IP.cpp"
+#line 2011 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st73;
@@ -2021,7 +2022,7 @@ case 135:
 		goto tr155;
 	goto st0;
 tr155:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2030,7 +2031,7 @@ st136:
 	if ( ++p == pe )
 		goto _test_eof136;
 case 136:
-#line 2034 "src/Utils/IP.cpp"
+#line 2035 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st73;
@@ -2045,7 +2046,7 @@ case 136:
 		goto tr156;
 	goto st0;
 tr156:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2054,7 +2055,7 @@ st137:
 	if ( ++p == pe )
 		goto _test_eof137;
 case 137:
-#line 2058 "src/Utils/IP.cpp"
+#line 2059 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st73;
@@ -2079,7 +2080,7 @@ case 73:
 		goto tr95;
 	goto st0;
 tr97:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2088,7 +2089,7 @@ st138:
 	if ( ++p == pe )
 		goto _test_eof138;
 case 138:
-#line 2092 "src/Utils/IP.cpp"
+#line 2093 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2104,7 +2105,7 @@ case 138:
 		goto tr153;
 	goto st0;
 tr157:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2113,7 +2114,7 @@ st139:
 	if ( ++p == pe )
 		goto _test_eof139;
 case 139:
-#line 2117 "src/Utils/IP.cpp"
+#line 2118 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2129,7 +2130,7 @@ case 139:
 		goto tr155;
 	goto st0;
 tr158:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2138,7 +2139,7 @@ st140:
 	if ( ++p == pe )
 		goto _test_eof140;
 case 140:
-#line 2142 "src/Utils/IP.cpp"
+#line 2143 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2154,7 +2155,7 @@ case 140:
 		goto tr156;
 	goto st0;
 tr98:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2163,7 +2164,7 @@ st141:
 	if ( ++p == pe )
 		goto _test_eof141;
 case 141:
-#line 2167 "src/Utils/IP.cpp"
+#line 2168 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2183,7 +2184,7 @@ case 141:
 		goto tr160;
 	goto st0;
 tr159:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2192,7 +2193,7 @@ st142:
 	if ( ++p == pe )
 		goto _test_eof142;
 case 142:
-#line 2196 "src/Utils/IP.cpp"
+#line 2197 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2211,7 +2212,7 @@ case 142:
 		goto tr155;
 	goto st0;
 tr160:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2220,7 +2221,7 @@ st143:
 	if ( ++p == pe )
 		goto _test_eof143;
 case 143:
-#line 2224 "src/Utils/IP.cpp"
+#line 2225 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2236,7 +2237,7 @@ case 143:
 		goto tr155;
 	goto st0;
 tr99:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2245,7 +2246,7 @@ st144:
 	if ( ++p == pe )
 		goto _test_eof144;
 case 144:
-#line 2249 "src/Utils/IP.cpp"
+#line 2250 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2261,7 +2262,7 @@ case 144:
 		goto tr153;
 	goto st0;
 tr100:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2270,7 +2271,7 @@ st145:
 	if ( ++p == pe )
 		goto _test_eof145;
 case 145:
-#line 2274 "src/Utils/IP.cpp"
+#line 2275 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st73;
@@ -2285,7 +2286,7 @@ case 145:
 		goto tr153;
 	goto st0;
 tr41:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2294,7 +2295,7 @@ st146:
 	if ( ++p == pe )
 		goto _test_eof146;
 case 146:
-#line 2298 "src/Utils/IP.cpp"
+#line 2299 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 48u: goto tr101;
@@ -2311,7 +2312,7 @@ case 146:
 		goto tr105;
 	goto st0;
 tr101:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2320,7 +2321,7 @@ st147:
 	if ( ++p == pe )
 		goto _test_eof147;
 case 147:
-#line 2324 "src/Utils/IP.cpp"
+#line 2325 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2336,7 +2337,7 @@ case 147:
 		goto tr161;
 	goto st0;
 tr161:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2345,7 +2346,7 @@ st148:
 	if ( ++p == pe )
 		goto _test_eof148;
 case 148:
-#line 2349 "src/Utils/IP.cpp"
+#line 2350 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st74;
@@ -2360,7 +2361,7 @@ case 148:
 		goto tr163;
 	goto st0;
 tr163:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2369,7 +2370,7 @@ st149:
 	if ( ++p == pe )
 		goto _test_eof149;
 case 149:
-#line 2373 "src/Utils/IP.cpp"
+#line 2374 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st74;
@@ -2384,7 +2385,7 @@ case 149:
 		goto tr164;
 	goto st0;
 tr164:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2393,7 +2394,7 @@ st150:
 	if ( ++p == pe )
 		goto _test_eof150;
 case 150:
-#line 2397 "src/Utils/IP.cpp"
+#line 2398 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st74;
@@ -2418,7 +2419,7 @@ case 74:
 		goto tr100;
 	goto st0;
 tr102:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2427,7 +2428,7 @@ st151:
 	if ( ++p == pe )
 		goto _test_eof151;
 case 151:
-#line 2431 "src/Utils/IP.cpp"
+#line 2432 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2443,7 +2444,7 @@ case 151:
 		goto tr161;
 	goto st0;
 tr165:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2452,7 +2453,7 @@ st152:
 	if ( ++p == pe )
 		goto _test_eof152;
 case 152:
-#line 2456 "src/Utils/IP.cpp"
+#line 2457 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2468,7 +2469,7 @@ case 152:
 		goto tr163;
 	goto st0;
 tr166:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2477,7 +2478,7 @@ st153:
 	if ( ++p == pe )
 		goto _test_eof153;
 case 153:
-#line 2481 "src/Utils/IP.cpp"
+#line 2482 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2493,7 +2494,7 @@ case 153:
 		goto tr164;
 	goto st0;
 tr103:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2502,7 +2503,7 @@ st154:
 	if ( ++p == pe )
 		goto _test_eof154;
 case 154:
-#line 2506 "src/Utils/IP.cpp"
+#line 2507 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2522,7 +2523,7 @@ case 154:
 		goto tr168;
 	goto st0;
 tr167:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2531,7 +2532,7 @@ st155:
 	if ( ++p == pe )
 		goto _test_eof155;
 case 155:
-#line 2535 "src/Utils/IP.cpp"
+#line 2536 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2550,7 +2551,7 @@ case 155:
 		goto tr163;
 	goto st0;
 tr168:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2559,7 +2560,7 @@ st156:
 	if ( ++p == pe )
 		goto _test_eof156;
 case 156:
-#line 2563 "src/Utils/IP.cpp"
+#line 2564 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2575,7 +2576,7 @@ case 156:
 		goto tr163;
 	goto st0;
 tr104:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2584,7 +2585,7 @@ st157:
 	if ( ++p == pe )
 		goto _test_eof157;
 case 157:
-#line 2588 "src/Utils/IP.cpp"
+#line 2589 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2600,7 +2601,7 @@ case 157:
 		goto tr161;
 	goto st0;
 tr105:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2609,7 +2610,7 @@ st158:
 	if ( ++p == pe )
 		goto _test_eof158;
 case 158:
-#line 2613 "src/Utils/IP.cpp"
+#line 2614 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st74;
@@ -2624,7 +2625,7 @@ case 158:
 		goto tr161;
 	goto st0;
 tr35:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2633,7 +2634,7 @@ st159:
 	if ( ++p == pe )
 		goto _test_eof159;
 case 159:
-#line 2637 "src/Utils/IP.cpp"
+#line 2638 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 48u: goto tr106;
@@ -2650,7 +2651,7 @@ case 159:
 		goto tr110;
 	goto st0;
 tr106:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2659,7 +2660,7 @@ st160:
 	if ( ++p == pe )
 		goto _test_eof160;
 case 160:
-#line 2663 "src/Utils/IP.cpp"
+#line 2664 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2675,7 +2676,7 @@ case 160:
 		goto tr169;
 	goto st0;
 tr169:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2684,7 +2685,7 @@ st161:
 	if ( ++p == pe )
 		goto _test_eof161;
 case 161:
-#line 2688 "src/Utils/IP.cpp"
+#line 2689 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st75;
@@ -2699,7 +2700,7 @@ case 161:
 		goto tr171;
 	goto st0;
 tr171:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2708,7 +2709,7 @@ st162:
 	if ( ++p == pe )
 		goto _test_eof162;
 case 162:
-#line 2712 "src/Utils/IP.cpp"
+#line 2713 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st75;
@@ -2723,7 +2724,7 @@ case 162:
 		goto tr172;
 	goto st0;
 tr172:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2732,7 +2733,7 @@ st163:
 	if ( ++p == pe )
 		goto _test_eof163;
 case 163:
-#line 2736 "src/Utils/IP.cpp"
+#line 2737 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st75;
@@ -2757,7 +2758,7 @@ case 75:
 		goto tr105;
 	goto st0;
 tr107:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2766,7 +2767,7 @@ st164:
 	if ( ++p == pe )
 		goto _test_eof164;
 case 164:
-#line 2770 "src/Utils/IP.cpp"
+#line 2771 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2782,7 +2783,7 @@ case 164:
 		goto tr169;
 	goto st0;
 tr173:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2791,7 +2792,7 @@ st165:
 	if ( ++p == pe )
 		goto _test_eof165;
 case 165:
-#line 2795 "src/Utils/IP.cpp"
+#line 2796 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2807,7 +2808,7 @@ case 165:
 		goto tr171;
 	goto st0;
 tr174:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2816,7 +2817,7 @@ st166:
 	if ( ++p == pe )
 		goto _test_eof166;
 case 166:
-#line 2820 "src/Utils/IP.cpp"
+#line 2821 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2832,7 +2833,7 @@ case 166:
 		goto tr172;
 	goto st0;
 tr108:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2841,7 +2842,7 @@ st167:
 	if ( ++p == pe )
 		goto _test_eof167;
 case 167:
-#line 2845 "src/Utils/IP.cpp"
+#line 2846 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2861,7 +2862,7 @@ case 167:
 		goto tr176;
 	goto st0;
 tr175:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2870,7 +2871,7 @@ st168:
 	if ( ++p == pe )
 		goto _test_eof168;
 case 168:
-#line 2874 "src/Utils/IP.cpp"
+#line 2875 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2889,7 +2890,7 @@ case 168:
 		goto tr171;
 	goto st0;
 tr176:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2898,7 +2899,7 @@ st169:
 	if ( ++p == pe )
 		goto _test_eof169;
 case 169:
-#line 2902 "src/Utils/IP.cpp"
+#line 2903 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2914,7 +2915,7 @@ case 169:
 		goto tr171;
 	goto st0;
 tr109:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2923,7 +2924,7 @@ st170:
 	if ( ++p == pe )
 		goto _test_eof170;
 case 170:
-#line 2927 "src/Utils/IP.cpp"
+#line 2928 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -2939,7 +2940,7 @@ case 170:
 		goto tr169;
 	goto st0;
 tr110:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2948,7 +2949,7 @@ st171:
 	if ( ++p == pe )
 		goto _test_eof171;
 case 171:
-#line 2952 "src/Utils/IP.cpp"
+#line 2953 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st75;
@@ -2963,7 +2964,7 @@ case 171:
 		goto tr169;
 	goto st0;
 tr29:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2972,7 +2973,7 @@ st172:
 	if ( ++p == pe )
 		goto _test_eof172;
 case 172:
-#line 2976 "src/Utils/IP.cpp"
+#line 2977 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 48u: goto tr116;
@@ -2989,7 +2990,7 @@ case 172:
 		goto tr120;
 	goto st0;
 tr116:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -2998,7 +2999,7 @@ st173:
 	if ( ++p == pe )
 		goto _test_eof173;
 case 173:
-#line 3002 "src/Utils/IP.cpp"
+#line 3003 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3014,7 +3015,7 @@ case 173:
 		goto tr177;
 	goto st0;
 tr177:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3023,7 +3024,7 @@ st174:
 	if ( ++p == pe )
 		goto _test_eof174;
 case 174:
-#line 3027 "src/Utils/IP.cpp"
+#line 3028 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st76;
@@ -3038,7 +3039,7 @@ case 174:
 		goto tr179;
 	goto st0;
 tr179:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3047,7 +3048,7 @@ st175:
 	if ( ++p == pe )
 		goto _test_eof175;
 case 175:
-#line 3051 "src/Utils/IP.cpp"
+#line 3052 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st76;
@@ -3062,7 +3063,7 @@ case 175:
 		goto tr180;
 	goto st0;
 tr180:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3071,7 +3072,7 @@ st176:
 	if ( ++p == pe )
 		goto _test_eof176;
 case 176:
-#line 3075 "src/Utils/IP.cpp"
+#line 3076 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st76;
@@ -3096,7 +3097,7 @@ case 76:
 		goto tr110;
 	goto st0;
 tr117:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3105,7 +3106,7 @@ st177:
 	if ( ++p == pe )
 		goto _test_eof177;
 case 177:
-#line 3109 "src/Utils/IP.cpp"
+#line 3110 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3121,7 +3122,7 @@ case 177:
 		goto tr177;
 	goto st0;
 tr181:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3130,7 +3131,7 @@ st178:
 	if ( ++p == pe )
 		goto _test_eof178;
 case 178:
-#line 3134 "src/Utils/IP.cpp"
+#line 3135 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3146,7 +3147,7 @@ case 178:
 		goto tr179;
 	goto st0;
 tr182:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3155,7 +3156,7 @@ st179:
 	if ( ++p == pe )
 		goto _test_eof179;
 case 179:
-#line 3159 "src/Utils/IP.cpp"
+#line 3160 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3171,7 +3172,7 @@ case 179:
 		goto tr180;
 	goto st0;
 tr118:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3180,7 +3181,7 @@ st180:
 	if ( ++p == pe )
 		goto _test_eof180;
 case 180:
-#line 3184 "src/Utils/IP.cpp"
+#line 3185 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3200,7 +3201,7 @@ case 180:
 		goto tr184;
 	goto st0;
 tr183:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3209,7 +3210,7 @@ st181:
 	if ( ++p == pe )
 		goto _test_eof181;
 case 181:
-#line 3213 "src/Utils/IP.cpp"
+#line 3214 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3228,7 +3229,7 @@ case 181:
 		goto tr179;
 	goto st0;
 tr184:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3237,7 +3238,7 @@ st182:
 	if ( ++p == pe )
 		goto _test_eof182;
 case 182:
-#line 3241 "src/Utils/IP.cpp"
+#line 3242 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3253,7 +3254,7 @@ case 182:
 		goto tr179;
 	goto st0;
 tr119:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3262,7 +3263,7 @@ st183:
 	if ( ++p == pe )
 		goto _test_eof183;
 case 183:
-#line 3266 "src/Utils/IP.cpp"
+#line 3267 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3278,7 +3279,7 @@ case 183:
 		goto tr177;
 	goto st0;
 tr120:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3287,7 +3288,7 @@ st184:
 	if ( ++p == pe )
 		goto _test_eof184;
 case 184:
-#line 3291 "src/Utils/IP.cpp"
+#line 3292 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st76;
@@ -3435,7 +3436,7 @@ case 84:
 		goto tr115;
 	goto st0;
 tr115:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3444,7 +3445,7 @@ st185:
 	if ( ++p == pe )
 		goto _test_eof185;
 case 185:
-#line 3448 "src/Utils/IP.cpp"
+#line 3449 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 48u: goto tr185;
@@ -3461,7 +3462,7 @@ case 185:
 		goto tr189;
 	goto st0;
 tr185:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3470,7 +3471,7 @@ st186:
 	if ( ++p == pe )
 		goto _test_eof186;
 case 186:
-#line 3474 "src/Utils/IP.cpp"
+#line 3475 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3486,7 +3487,7 @@ case 186:
 		goto tr190;
 	goto st0;
 tr190:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3495,7 +3496,7 @@ st187:
 	if ( ++p == pe )
 		goto _test_eof187;
 case 187:
-#line 3499 "src/Utils/IP.cpp"
+#line 3500 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st85;
@@ -3510,7 +3511,7 @@ case 187:
 		goto tr192;
 	goto st0;
 tr192:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3519,7 +3520,7 @@ st188:
 	if ( ++p == pe )
 		goto _test_eof188;
 case 188:
-#line 3523 "src/Utils/IP.cpp"
+#line 3524 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st85;
@@ -3534,7 +3535,7 @@ case 188:
 		goto tr193;
 	goto st0;
 tr193:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3543,7 +3544,7 @@ st189:
 	if ( ++p == pe )
 		goto _test_eof189;
 case 189:
-#line 3547 "src/Utils/IP.cpp"
+#line 3548 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st85;
@@ -3568,7 +3569,7 @@ case 85:
 		goto tr120;
 	goto st0;
 tr186:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3577,7 +3578,7 @@ st190:
 	if ( ++p == pe )
 		goto _test_eof190;
 case 190:
-#line 3581 "src/Utils/IP.cpp"
+#line 3582 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3593,7 +3594,7 @@ case 190:
 		goto tr190;
 	goto st0;
 tr194:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3602,7 +3603,7 @@ st191:
 	if ( ++p == pe )
 		goto _test_eof191;
 case 191:
-#line 3606 "src/Utils/IP.cpp"
+#line 3607 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3618,7 +3619,7 @@ case 191:
 		goto tr192;
 	goto st0;
 tr195:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3627,7 +3628,7 @@ st192:
 	if ( ++p == pe )
 		goto _test_eof192;
 case 192:
-#line 3631 "src/Utils/IP.cpp"
+#line 3632 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3643,7 +3644,7 @@ case 192:
 		goto tr193;
 	goto st0;
 tr187:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3652,7 +3653,7 @@ st193:
 	if ( ++p == pe )
 		goto _test_eof193;
 case 193:
-#line 3656 "src/Utils/IP.cpp"
+#line 3657 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3672,7 +3673,7 @@ case 193:
 		goto tr197;
 	goto st0;
 tr196:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3681,7 +3682,7 @@ st194:
 	if ( ++p == pe )
 		goto _test_eof194;
 case 194:
-#line 3685 "src/Utils/IP.cpp"
+#line 3686 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3700,7 +3701,7 @@ case 194:
 		goto tr192;
 	goto st0;
 tr197:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3709,7 +3710,7 @@ st195:
 	if ( ++p == pe )
 		goto _test_eof195;
 case 195:
-#line 3713 "src/Utils/IP.cpp"
+#line 3714 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3725,7 +3726,7 @@ case 195:
 		goto tr192;
 	goto st0;
 tr188:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3734,7 +3735,7 @@ st196:
 	if ( ++p == pe )
 		goto _test_eof196;
 case 196:
-#line 3738 "src/Utils/IP.cpp"
+#line 3739 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 46u: goto st46;
@@ -3750,7 +3751,7 @@ case 196:
 		goto tr190;
 	goto st0;
 tr189:
-#line 30 "src/Utils/IP.rl"
+#line 31 "src/Utils/IP.rl"
 	{
 				ipFamily = AF_INET6;
 			}
@@ -3759,7 +3760,7 @@ st197:
 	if ( ++p == pe )
 		goto _test_eof197;
 case 197:
-#line 3763 "src/Utils/IP.cpp"
+#line 3764 "src/Utils/IP.cpp"
 	switch( (*p) ) {
 		case 37u: goto st51;
 		case 58u: goto st85;
@@ -3990,7 +3991,7 @@ case 86:
 	_out: {}
 	}
 
-#line 64 "src/Utils/IP.rl"
+#line 65 "src/Utils/IP.rl"
 
 		// Ensure that the parsing has consumed all the given length.
 		if (ipLen == static_cast<size_t>(p - (const unsigned char*)ip))
@@ -3999,7 +4000,7 @@ case 86:
 			return AF_UNSPEC;
 	}
 
-	void IP::GetAddressInfo(const struct sockaddr* addr, int* family, std::string& ip, uint16_t* port)
+	void IP::GetAddressInfo(const struct sockaddr* addr, int& family, std::string& ip, uint16_t& port)
 	{
 		MS_TRACE();
 
@@ -4011,12 +4012,12 @@ case 86:
 			case AF_INET:
 			{
 				err = uv_inet_ntop(
-					AF_INET, &((struct sockaddr_in*)addr)->sin_addr, ipBuffer, INET_ADDRSTRLEN);
+					AF_INET, std::addressof(reinterpret_cast<const struct sockaddr_in*>(addr)->sin_addr), ipBuffer, INET_ADDRSTRLEN);
 
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
-				*port = static_cast<uint16_t>(ntohs(((struct sockaddr_in*)addr)->sin_port));
+				port = static_cast<uint16_t>(ntohs(reinterpret_cast<const struct sockaddr_in*>(addr)->sin_port));
 
 				break;
 			}
@@ -4024,23 +4025,86 @@ case 86:
 			case AF_INET6:
 			{
 				err = uv_inet_ntop(
-					AF_INET6, &((struct sockaddr_in6*)addr)->sin6_addr, ipBuffer, INET6_ADDRSTRLEN);
+					AF_INET, std::addressof(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_addr), ipBuffer, INET_ADDRSTRLEN);
 
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 
-				*port = static_cast<uint16_t>(ntohs(((struct sockaddr_in6*)addr)->sin6_port));
+				port = static_cast<uint16_t>(ntohs(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_port));
 
 				break;
 			}
 
 			default:
 			{
-				MS_ABORT("unknown network family: %d", (int)addr->sa_family);
+				MS_ABORT("unknown network family: %d", static_cast<int>(addr->sa_family));
 			}
 		}
 
-		*family = addr->sa_family;
+		family = addr->sa_family;
 		ip.assign(ipBuffer);
 	}
-}
+
+	void IP::NormalizeIp(std::string& ip)
+	{
+		MS_TRACE();
+
+		static sockaddr_storage addrStorage;
+		char ipBuffer[INET6_ADDRSTRLEN+1];
+		int err;
+
+		switch (IP::GetFamily(ip))
+		{
+			case AF_INET:
+			{
+				err = uv_ip4_addr(
+				  ip.c_str(),
+				  0,
+				  reinterpret_cast<struct sockaddr_in*>(&addrStorage));
+
+				if (err != 0)
+					MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+
+				err = uv_ip4_name(
+					reinterpret_cast<const struct sockaddr_in*>(std::addressof(addrStorage)),
+					ipBuffer,
+					INET6_ADDRSTRLEN+1);
+
+				if (err != 0)
+					MS_ABORT("uv_ipv4_name() failed: %s", uv_strerror(err));
+
+				ip.assign(ipBuffer);
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				err = uv_ip6_addr(
+					ip.c_str(),
+					0,
+				  reinterpret_cast<struct sockaddr_in6*>(&addrStorage));
+
+				if (err != 0)
+					MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+
+				err = uv_ip6_name(
+					reinterpret_cast<const struct sockaddr_in6*>(std::addressof(addrStorage)),
+					ipBuffer,
+					INET6_ADDRSTRLEN+1);
+
+				if (err != 0)
+					MS_ABORT("uv_ip6_name() failed: %s", uv_strerror(err));
+
+				ip.assign(ipBuffer);
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_TYPE_ERROR("invalid ip '%s'", ip.c_str());
+			}
+		}
+	}
+} // namespace Utils

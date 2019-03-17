@@ -6,6 +6,7 @@
 Verifies that make_global_settings can be used to override the
 compiler settings.
 """
+from __future__ import print_function
 
 import TestGyp
 import os
@@ -18,6 +19,9 @@ if sys.platform == 'win32':
   # cross compiling not support by ninja on windows
   # and make not supported on windows at all.
   sys.exit(0)
+
+print("This test is currently disabled: https://crbug.com/483696.")
+sys.exit(0)
 
 test = TestGyp.TestGyp(formats=['ninja', 'make'])
 

@@ -2,9 +2,11 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include <json/json.h>
+#include "json.hpp"
 #include <string>
 #include <unordered_map>
+
+using json = nlohmann::json;
 
 namespace Channel
 {
@@ -24,55 +26,55 @@ namespace Channel
 			ROUTER_DUMP,
 			ROUTER_CREATE_WEBRTC_TRANSPORT,
 			ROUTER_CREATE_PLAIN_RTP_TRANSPORT,
-			ROUTER_CREATE_PRODUCER,
-			ROUTER_CREATE_CONSUMER,
-			ROUTER_SET_AUDIO_LEVELS_EVENT,
+			ROUTER_CREATE_PIPE_TRANSPORT,
+			ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
 			TRANSPORT_CLOSE,
 			TRANSPORT_DUMP,
 			TRANSPORT_GET_STATS,
-			TRANSPORT_SET_REMOTE_DTLS_PARAMETERS,
-			TRANSPORT_SET_REMOTE_PARAMETERS,
-			TRANSPORT_SET_MAX_BITRATE,
-			TRANSPORT_CHANGE_UFRAG_PWD,
-			TRANSPORT_START_MIRRORING,
-			TRANSPORT_STOP_MIRRORING,
+			TRANSPORT_CONNECT,
+			TRANSPORT_SET_MAX_INCOMING_BITRATE,
+			TRANSPORT_RESTART_ICE,
+			TRANSPORT_PRODUCE,
+			TRANSPORT_CONSUME,
 			PRODUCER_CLOSE,
 			PRODUCER_DUMP,
 			PRODUCER_GET_STATS,
 			PRODUCER_PAUSE,
 			PRODUCER_RESUME,
-			PRODUCER_SET_PREFERRED_PROFILE,
 			CONSUMER_CLOSE,
 			CONSUMER_DUMP,
 			CONSUMER_GET_STATS,
-			CONSUMER_ENABLE,
 			CONSUMER_PAUSE,
 			CONSUMER_RESUME,
-			CONSUMER_SET_PREFERRED_PROFILE,
-			CONSUMER_SET_ENCODING_PREFERENCES,
-			CONSUMER_REQUEST_KEY_FRAME
+			CONSUMER_SET_PREFERRED_LAYERS,
+			CONSUMER_REQUEST_KEY_FRAME,
+			RTP_OBSERVER_CLOSE,
+			RTP_OBSERVER_PAUSE,
+			RTP_OBSERVER_RESUME,
+			RTP_OBSERVER_ADD_PRODUCER,
+			RTP_OBSERVER_REMOVE_PRODUCER
 		};
 
 	private:
 		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
-		Request(Channel::UnixStreamSocket* channel, Json::Value& json);
+		Request(Channel::UnixStreamSocket* channel, json& jsonRequest);
 		virtual ~Request();
 
 		void Accept();
-		void Accept(Json::Value& data);
-		void Reject(std::string& reason);
-		void Reject(const char* reason = nullptr);
+		void Accept(json& data);
+		void Error(const char* reason = nullptr);
+		void TypeError(const char* reason = nullptr);
 
 	public:
 		// Passed by argument.
 		Channel::UnixStreamSocket* channel{ nullptr };
-		uint32_t id{ 0 };
+		uint32_t id{ 0u };
 		std::string method;
 		MethodId methodId;
-		Json::Value internal;
-		Json::Value data;
+		json internal;
+		json data;
 		// Others.
 		bool replied{ false };
 	};

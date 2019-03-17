@@ -13,8 +13,8 @@ namespace Fuzzer
 			{
 				void Fuzz(const uint8_t* data, size_t len);
 			}
-		}
-	}
-}
+		} // namespace RTCP
+	}   // namespace RTC
+} // namespace Fuzzer
 
 #endif

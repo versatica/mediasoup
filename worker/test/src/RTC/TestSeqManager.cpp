@@ -20,7 +20,7 @@ struct TestSeqManagerInput
 	uint16_t offset{ 0 };
 };
 
-void validate(RTC::SeqManager<uint16_t>& seqManager, std::vector<TestSeqManagerInput>& inputs)
+void validate(SeqManager<uint16_t>& seqManager, std::vector<TestSeqManagerInput>& inputs)
 {
 	for (auto& element : inputs)
 	{
@@ -44,11 +44,11 @@ void validate(RTC::SeqManager<uint16_t>& seqManager, std::vector<TestSeqManagerI
 	}
 }
 
-SCENARIO("RTC::SeqManager", "[rtc]")
+SCENARIO("SeqManager", "[rtc]")
 {
 	SECTION("0 is greater than 65000")
 	{
-		REQUIRE(RTC::SeqManager<uint16_t>::IsSeqHigherThan(0, 65000) == true);
+		REQUIRE(SeqManager<uint16_t>::IsSeqHigherThan(0, 65000) == true);
 	}
 
 	SECTION("receive ordered numbers, no sync, no drop")
@@ -71,7 +71,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -91,7 +91,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -116,7 +116,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -133,7 +133,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -149,7 +149,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -167,7 +167,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -184,7 +184,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -201,7 +201,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -259,7 +259,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -279,7 +279,7 @@ SCENARIO("RTC::SeqManager", "[rtc]")
 		};
 		// clang-format on
 
-		RTC::SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
 }
