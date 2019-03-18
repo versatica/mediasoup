@@ -367,8 +367,8 @@ namespace RTC
 		else
 			lost -= repaired;
 
-		// Calculate packet loss percentage in this interva.
-		float lossPercentage = lost * 100 / expected;
+		// Calculate packet loss percentage in this interval.
+		float lossPercentage = lost * 100 / (expected > lost ? expected : lost);
 
 		/*
 		 * Calculate score. Starting from a score of 100:
