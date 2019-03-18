@@ -354,7 +354,12 @@ namespace RTC
 		this->receivedPrior = totalReceived;
 
 		// Calculate number of packets lost in this interval.
-		uint32_t lost = expected - received;
+		uint32_t lost;
+
+		if (expected < received)
+			lost = 0;
+		else
+			lost = expected - received;
 
 		// Calculate number of packets repaired in this interval.
 		auto totalRepaired = this->packetsRepaired;
