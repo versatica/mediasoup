@@ -56,8 +56,8 @@ namespace RTC
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
 	private:
-		uint32_t sourceLostPrior{ 0 }; // Packets lost in source at last interval.
-		uint32_t lostPrior{ 0 };       // Packets lost at last interval.
+		uint32_t lostPrior{ 0 }; // Packets lost at last interval.
+		uint32_t sentPrior{ 0 }; // Packets sent at last interval.
 		std::vector<StorageItem> storage;
 		std::list<BufferItem> buffer;
 		float rtt{ 0 };

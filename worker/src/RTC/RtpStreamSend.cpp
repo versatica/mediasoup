@@ -529,63 +529,30 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Calculate number of packets lost in the source in this interval.
-		auto totalExpected = GetExpectedPackets();
-		auto expected      = totalExpected - this->expectedPrior;
+		// Calculate number of packets sent in this interval.
+		auto totalSent = this->transmissionCounter.GetPacketCount();
+		auto sent      = totalSent - this->sentPrior;
 
-		// We didn't send new packets.
-		if (expected == 0)
+		// We didn't send any packet.
+		if (sent == 0)
 			return;
 
-		this->expectedPrior = totalExpected;
+		this->sentPrior = totalSent;
 
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 1: totalExpected:" << totalExpected << ",
-		// expected:" << expected << "\n";
+		// Calculate number of packets lost in this interval.
+		uint32_t totalLost = report->GetTotalLost() > 0 ? report->GetTotalLost() : 0;
+		uint32_t lost;
 
-		auto totalSent       = this->transmissionCounter.GetPacketCount();
-		auto totalSourceLost = totalExpected > totalSent ? totalExpected - totalSent : 0;
-
-		// Current lost may be less now than before.
-		if (totalSourceLost < this->sourceLostPrior)
-			totalSourceLost = this->sourceLostPrior;
-
-		auto sourceLost = totalSourceLost - this->sourceLostPrior;
-
-		this->sourceLostPrior = totalSourceLost;
-
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 2: totalSent:" << totalSent << ",
-		// totalSourceLost:" << totalSourceLost << ", sourceLost:" << sourceLost << "\n";
-
-		// Calculate number of packets lost in the edge in this interval.
-		uint32_t totalLost = report->GetTotalLost();
-
-		// Do not trust whatever the received RR says.
 		if (totalLost < this->lostPrior)
-			totalLost = this->lostPrior;
-
-		auto lost = totalLost - this->lostPrior;
+			lost = 0;
+		else
+			lost = totalLost - this->lostPrior;
 
 		this->lostPrior = totalLost;
-
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 3: totalLost:" << totalLost << ", lost:" << lost << "\n";
-
-		// Substract number of packets lost at the source.
-		if (lost > sourceLost)
-			lost = sourceLost;
-
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 4: lost -= sourceLost:" << lost << "\n";
 
 		// Calculate number of packets repaired in this interval.
 		auto totalRepaired = this->packetsRepaired;
 		uint32_t repaired  = totalRepaired - this->repairedPrior;
-
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 5: totalRepaired:" << totalRepaired << ",
-		// repaired:" << repaired << "\n";
 
 		this->repairedPrior = totalRepaired;
 
@@ -594,20 +561,8 @@ namespace RTC
 		else
 			lost -= repaired;
 
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 6: lost:" << lost << "\n";
-
-		if (repaired > lost)
-		{
-			MS_DEBUG_TAG(
-			  score, "repaired greater than lost [repaired:%" PRIu32 ", lost:%" PRIu32 "]", repaired, lost);
-		}
-
-		// Calculate packet loss percentage in this interva.
-		float lossPercentage = lost * 100 / expected;
-
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 7: lossPercentage:" << lossPercentage << "\n";
+		// Calculate packet loss percentage in this interval.
+		float lossPercentage = lost * 100 / (sent > lost ? sent : lost);
 
 		/*
 		 * Calculate score. Starting from a score of 100:
@@ -618,14 +573,8 @@ namespace RTC
 
 		base100Score -= (lossPercentage * 1.0f);
 
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 8: base100Score:" << base100Score << "\n";
-
 		// Get base 10 score.
 		auto score = static_cast<uint8_t>(std::lround(base100Score / 10));
-
-		// TODO: REMOVE
-		// std::cout << "RtpStreamSend::UpdateScore() 9: score:" << int{ score } << "\n";
 
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
