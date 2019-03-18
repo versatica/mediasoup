@@ -76,9 +76,12 @@ namespace RTC
 
 			this->multiSource = jsonMultiSourceIt->get<bool>();
 
-			// If multiSource is set disable comedia mode.
+			// If multiSource is set disable RTCP-mux and comedia mode.
 			if (this->multiSource)
+			{
+				this->rtcpMux = false;
 				this->comedia = false;
+			}
 		}
 
 		try
