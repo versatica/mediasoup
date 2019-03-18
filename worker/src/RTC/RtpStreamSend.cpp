@@ -544,9 +544,9 @@ namespace RTC
 		// expected:" << expected << "\n";
 
 		auto totalSent       = this->transmissionCounter.GetPacketCount();
-		auto totalSourceLost = totalExpected - totalSent;
+		auto totalSourceLost = totalExpected > totalSent ? totalExpected - totalSent : 0;
 
-		// TODO: This should not happen (but it happens, see #274), so add a guard.
+		// Current lost may be less now than before.
 		if (totalSourceLost < this->sourceLostPrior)
 			totalSourceLost = this->sourceLostPrior;
 
@@ -561,8 +561,7 @@ namespace RTC
 		// Calculate number of packets lost in the edge in this interval.
 		uint32_t totalLost = report->GetTotalLost();
 
-		// Just in case (we must not trust whatever the received RR says).
-		// TODO: Yes?
+		// Do not trust whatever the received RR says.
 		if (totalLost < this->lostPrior)
 			totalLost = this->lostPrior;
 
@@ -574,11 +573,8 @@ namespace RTC
 		// std::cout << "RtpStreamSend::UpdateScore() 3: totalLost:" << totalLost << ", lost:" << lost << "\n";
 
 		// Substract number of packets lost at the source.
-		//
-		// TODO: This may need this guard. Without it (or maybe even with it) score
-		// becomes > 10 sometimes:
-		//  if (lost > sourceLost)
-		lost -= sourceLost;
+		if (lost > sourceLost)
+			lost = sourceLost;
 
 		// TODO: REMOVE
 		// std::cout << "RtpStreamSend::UpdateScore() 4: lost -= sourceLost:" << lost << "\n";
