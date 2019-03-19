@@ -639,7 +639,8 @@ namespace RTC
 
 			uint8_t maxScore = 0;
 
-			for (int idx = this->producerRtpStreams.size() - 1; idx >= 0; --idx)
+			// Ignore spatial layers higher than the preferred one.
+			for (int idx = this->preferredSpatialLayer; idx >= 0; --idx)
 			{
 				auto spatialLayer       = static_cast<int16_t>(idx);
 				auto* producerRtpStream = this->producerRtpStreams[idx];
@@ -648,10 +649,6 @@ namespace RTC
 				if (!producerRtpStream)
 					continue;
 
-				// Ignore spatial layers higher than the preferred one.
-				if (idx > this->preferredSpatialLayer)
-					return;
-
 				if (producerRtpStream->GetScore() >= maxScore)
 				{
 					std::cout << "RecalculateTargetSpatialLayer. we have something: " << spatialLayer
@@ -659,11 +656,11 @@ namespace RTC
 					maxScore              = producerRtpStream->GetScore();
 					newTargetSpatialLayer = spatialLayer;
 
-					if (producerRtpStream->GetScore() > 7)
+					if (maxScore > 7)
 					{
 						std::cout << "RecalculateTargetSpatialLayer. score > 7, keep it : " << spatialLayer
 						          << std::endl;
-						newTargetSpatialLayer = spatialLayer;
+
 						break;
 					}
 				}
@@ -694,11 +691,11 @@ namespace RTC
 					maxScore              = producerRtpStream->GetScore();
 					newTargetSpatialLayer = spatialLayer;
 
-					if (producerRtpStream->GetScore() > 7)
+					if (maxScore > 7)
 					{
 						std::cout << "RecalculateTargetSpatialLayer. score > 7, keep it : " << spatialLayer
 						          << std::endl;
-						newTargetSpatialLayer = spatialLayer;
+
 						break;
 					}
 				}
@@ -709,15 +706,13 @@ namespace RTC
 		{
 			std::cout << "RecalculateTargetSpatialLayer. trying to upgrade..." << std::endl;
 
-			size_t idx = this->currentSpatialLayer == -1 ? 0 : this->currentSpatialLayer + 1;
-			for (; idx <= this->producerRtpStreams.size() - 1; ++idx)
-			{
-				auto spatialLayer       = static_cast<int16_t>(idx);
-				auto* producerRtpStream = this->producerRtpStreams[idx];
+			int16_t idx = this->currentSpatialLayer == -1 ? 0 : this->currentSpatialLayer + 1;
 
-				// Ignore spatial layers above the preferred one.
-				if (spatialLayer > this->preferredSpatialLayer)
-					break;
+			// Ignore spatial layers above the preferred one.
+			for (; idx <= this->preferredSpatialLayer; ++idx)
+			{
+				auto spatialLayer       = idx;
+				auto* producerRtpStream = this->producerRtpStreams[idx];
 
 				// Ignore spatial layers for non existing Producer streams.
 				if (!producerRtpStream)
@@ -729,6 +724,7 @@ namespace RTC
 					std::cout << "RecalculateTargetSpatialLayer. good enough spatial layer found: "
 					          << spatialLayer << std::endl;
 					newTargetSpatialLayer = spatialLayer;
+
 					break;
 				}
 			}
