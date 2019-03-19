@@ -535,7 +535,11 @@ namespace RTC
 
 		// We didn't send any packet.
 		if (sent == 0)
+		{
+			ResetScore();
+
 			return;
+		}
 
 		this->sentPrior = totalSent;
 

@@ -343,7 +343,11 @@ namespace RTC
 
 		// We didn't expect more packets to come.
 		if (expected == 0)
+		{
+			ResetScore();
+
 			return;
+		}
 
 		this->expectedPrior = totalExpected;
 
