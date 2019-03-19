@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
+#include <iostream>
 
 namespace RTC
 {
@@ -193,8 +194,6 @@ namespace RTC
 		// Recalculate layers.
 		RecalculateTargetSpatialLayer();
 
-		// TODO: Probably just if this stream is the current spatial layer.
-		//
 		// Emit the score event.
 		EmitScore();
 	}
@@ -609,36 +608,136 @@ namespace RTC
 
 		int16_t newTargetSpatialLayer{ -1 };
 
-		// No Producer streams.
-		if (this->producerRtpStreams.empty())
+		if (this->GetProducerCurrentRtpStream())
 		{
-			newTargetSpatialLayer = -1;
+			std::cout << "RecalculateTargetSpatialLayer."
+			          << ", consumer score: " << static_cast<unsigned int>(this->rtpStream->GetScore())
+			          << ", producer score: "
+			          << static_cast<unsigned int>(this->GetProducerCurrentRtpStream()->GetScore())
+			          << ", currentSpatialLayer: " << static_cast<int>(this->currentSpatialLayer)
+			          << ", targetSpatialLayer: " << static_cast<int>(this->targetSpatialLayer)
+			          << ", preferredSpatialLayer: " << static_cast<int>(this->preferredSpatialLayer)
+			          << std::endl;
 		}
-		// Try with the closest spatial layer to the preferred one.
 		else
 		{
+			std::cout << "RecalculateTargetSpatialLayer."
+			          << ", consumer score: " << static_cast<unsigned int>(this->rtpStream->GetScore())
+			          << ", producer score: "
+			          << "nullptr"
+			          << ", currentSpatialLayer: " << static_cast<int>(this->currentSpatialLayer)
+			          << ", targetSpatialLayer: " << static_cast<int>(this->targetSpatialLayer)
+			          << ", preferredSpatialLayer: " << static_cast<int>(this->preferredSpatialLayer)
+			          << std::endl;
+		}
+
+		// No current or preferred spatial layer, select the highest possible.
+		if (this->currentSpatialLayer == -1 || this->preferredSpatialLayer == -1)
+		{
+			std::cout << "RecalculateTargetSpatialLayer. no current or preferred spatial layer, selecting the highest possible..."
+			          << std::endl;
+
+			uint8_t maxScore = 0;
+
 			for (int idx = this->producerRtpStreams.size() - 1; idx >= 0; --idx)
 			{
 				auto spatialLayer       = static_cast<int16_t>(idx);
 				auto* producerRtpStream = this->producerRtpStreams[idx];
 
-				// Ignore spatial layers higher than the preferred one.
-				if (spatialLayer > this->preferredSpatialLayer)
+				// Ignore spatial layers for non existing Producer streams.
+				if (!producerRtpStream)
 					continue;
 
-				// Ignore spatial layers for non existing or unhealthy Producer streams.
-				if (!producerRtpStream || producerRtpStream->GetScore() < 5)
-					continue;
+				// Ignore spatial layers higher than the preferred one, if defined.
+				if (this->preferredSpatialLayer != -1 && idx > this->preferredSpatialLayer)
+					return;
 
-				newTargetSpatialLayer = spatialLayer;
+				if (producerRtpStream->GetScore() >= maxScore)
+				{
+					std::cout << "RecalculateTargetSpatialLayer. we have something: " << spatialLayer
+					          << std::endl;
+					maxScore              = producerRtpStream->GetScore();
+					newTargetSpatialLayer = spatialLayer;
 
-				break;
+					if (producerRtpStream->GetScore() > 7)
+					{
+						std::cout << "RecalculateTargetSpatialLayer. score > 7, keep it : " << spatialLayer
+						          << std::endl;
+						newTargetSpatialLayer = spatialLayer;
+						break;
+					}
+				}
 			}
+		}
+		// Downgrade is needed.
+		else if (
+		  !this->GetProducerCurrentRtpStream() || this->GetProducerCurrentRtpStream()->GetScore() < 7 ||
+		  this->rtpStream->GetScore() < 5 || this->preferredSpatialLayer < this->currentSpatialLayer)
+		{
+			std::cout << "RecalculateTargetSpatialLayer. downgrading..." << std::endl;
 
-			// TODO: It may happen that spatial layer 1 exists and it's healthy while 0
-			// does not exist or is unhealthy. If preferred spatial layer was 0 then we
-			// end here without newTargetSpatialLayer. In that scenario we should take
-			// whichever available.
+			uint8_t maxScore = 0;
+
+			for (int idx = this->currentSpatialLayer - 1; idx >= 0; --idx)
+			{
+				auto spatialLayer       = static_cast<int16_t>(idx);
+				auto* producerRtpStream = this->producerRtpStreams[idx];
+
+				// Ignore spatial layers for non existing Producer streams.
+				if (!producerRtpStream)
+					continue;
+
+				if (producerRtpStream->GetScore() >= maxScore)
+				{
+					std::cout << "RecalculateTargetSpatialLayer. we have something: " << spatialLayer
+					          << std::endl;
+					maxScore              = producerRtpStream->GetScore();
+					newTargetSpatialLayer = spatialLayer;
+
+					if (producerRtpStream->GetScore() > 7)
+					{
+						std::cout << "RecalculateTargetSpatialLayer. score > 7, keep it : " << spatialLayer
+						          << std::endl;
+						newTargetSpatialLayer = spatialLayer;
+						break;
+					}
+				}
+			}
+		}
+		// Update to the highest possible spatial layer.
+		else
+		{
+			std::cout << "RecalculateTargetSpatialLayer. trying to upgrade..." << std::endl;
+
+			size_t idx = this->currentSpatialLayer == -1 ? 0 : this->currentSpatialLayer + 1;
+			for (; idx <= this->producerRtpStreams.size() - 1; ++idx)
+			{
+				auto spatialLayer       = static_cast<int16_t>(idx);
+				auto* producerRtpStream = this->producerRtpStreams[idx];
+
+				// Ignore spatial layers above the preferred one.
+				if (spatialLayer > this->preferredSpatialLayer)
+					break;
+
+				// Ignore spatial layers for non existing Producer streams.
+				if (!producerRtpStream)
+					continue;
+
+				// Take this as the new target if it is good enough.
+				if (producerRtpStream->GetScore() >= 7)
+				{
+					std::cout << "RecalculateTargetSpatialLayer. good enough spatial layer found: "
+					          << spatialLayer << std::endl;
+					newTargetSpatialLayer = spatialLayer;
+					break;
+				}
+			}
+		}
+
+		if (newTargetSpatialLayer == -1)
+		{
+			std::cout << "RecalculateTargetSpatialLayer, target layer not updated" << std::endl;
+			return;
 		}
 
 		// Nothing changed.
@@ -686,8 +785,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Should recalculate target spatial layer based on our own score
-		// and so on.
+		this->RecalculateTargetSpatialLayer();
 
 		// Emit the score event.
 		EmitScore();
