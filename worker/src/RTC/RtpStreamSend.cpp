@@ -579,15 +579,11 @@ namespace RTC
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
 		  score,
-		  "[totalExpected:%" PRIu32 ", totalSent:%zu, totalSourceLost:%zu, totalLost:%" PRIi32
-		  ", totalRepaired:%zu, expected:%" PRIu32 ", repaired:%" PRIu32
+		  "[totalSent:%zu, totalLost:%" PRIi32 ", totalRepaired:%zu, repaired:%" PRIu32
 		  ", lossPercentage:%f, score:%" PRIu8 "]",
-		  totalExpected,
 		  totalSent,
-		  totalSourceLost,
 		  totalLost,
 		  totalRepaired,
-		  expected,
 		  repaired,
 		  lossPercentage,
 		  score);
