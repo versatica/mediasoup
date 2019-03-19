@@ -22,10 +22,10 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		// Set the incactivity check periodic timer.
+		// Set the RTP inactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
 
-		// Run the RTP inactivity timer (unless DTX is enabled).
+		// Run the RTP inactivity periodic timer (unless DTX is enabled).
 		if (!this->params.useDtx)
 		{
 			this->inactive = false;
@@ -37,7 +37,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Close the incactivity check periodic timer.
+		// Close the RTP inactivity check periodic timer.
 		delete this->inactivityCheckPeriodicTimer;
 	}
 
@@ -320,7 +320,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Restart the RTP inactivity timer (unless DTX is enabled).
+		// Restart the RTP inactivity periodic timer (unless DTX is enabled).
 		if (!this->params.useDtx)
 		{
 			this->inactive = false;
