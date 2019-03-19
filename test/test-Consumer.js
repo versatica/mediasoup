@@ -23,8 +23,7 @@ const mediaCodecs =
 		channels   : 2,
 		parameters :
 		{
-			useinbandfec : 0,
-			foo          : 'bar'
+			foo : 'bar'
 		}
 	},
 	{
@@ -62,6 +61,7 @@ const audioProducerParameters =
 				parameters  :
 				{
 					useinbandfec : 1,
+					usedtx       : 1,
 					foo          : 222.222,
 					bar          : '333'
 				}
@@ -299,6 +299,7 @@ test('transport.consume() succeeds', async () =>
 			parameters  :
 			{
 				useinbandfec : 1,
+				usedtx       : 1,
 				foo          : 222.222,
 				bar          : '333'
 			},
@@ -484,6 +485,7 @@ test('consumer.dump() succeeds', async () =>
 		.toEqual(
 			{
 				useinbandfec : 1,
+				usedtx       : 1,
 				foo          : 222.222,
 				bar          : '333'
 			});

@@ -321,5 +321,6 @@ namespace RTC
 		jsonObject["usePli"]       = this->usePli;
 		jsonObject["useFir"]       = this->useFir;
 		jsonObject["useInBandFec"] = this->useInBandFec;
+		jsonObject["useDtx"]       = this->useDtx;
 	}
 } // namespace RTC

@@ -379,11 +379,28 @@ namespace RTC
 		params.clockRate   = mediaCodec->clockRate;
 		params.cname       = this->rtpParameters.rtcp.cname;
 
+		// Check in band FEC in codec parameters.
 		if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
 		{
-			MS_DEBUG_TAG(rtcp, "in band FEC supported");
+			MS_DEBUG_TAG(rtcp, "in band FEC enabled");
 
 			params.useInBandFec = true;
+		}
+
+		// Check DTX in codec parameters.
+		if (mediaCodec->parameters.HasInteger("usedtx") && mediaCodec->parameters.GetInteger("usedtx") == 1)
+		{
+			MS_DEBUG_TAG(rtcp, "DTX enabled");
+
+			params.useDtx = true;
+		}
+
+		// Check DTX in the encoding.
+		if (encoding.dtx)
+		{
+			MS_DEBUG_TAG(rtcp, "DTX enabled");
+
+			params.useDtx = true;
 		}
 
 		for (auto& fb : mediaCodec->rtcpFeedback)

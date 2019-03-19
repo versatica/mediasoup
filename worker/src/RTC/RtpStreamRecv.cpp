@@ -25,7 +25,12 @@ namespace RTC
 		// Set the incactivity check periodic timer.
 		this->inactivityCheckPeriodicTimer = new Timer(this);
 
-		this->inactivityCheckPeriodicTimer->Start(InactivityCheckPeriod, InactivityCheckPeriod);
+		// Run the RTP inactivity timer (unless DTX is enabled).
+		if (!this->params.useDtx)
+		{
+			this->inactive = false;
+			this->inactivityCheckPeriodicTimer->Start(InactivityCheckPeriod, InactivityCheckPeriod);
+		}
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()
@@ -69,8 +74,8 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator->ReceivePacket(packet);
 
-		// Ensure the inactivityCheckPeriodicTimer runs.
-		if (!this->inactivityCheckPeriodicTimer->IsActive())
+		// Ensure the inactivityCheckPeriodicTimer runs (unless DTX is enabled).
+		if (!this->params.useDtx && !this->inactivityCheckPeriodicTimer->IsActive())
 		{
 			this->inactive = false;
 			this->inactivityCheckPeriodicTimer->Restart();
@@ -315,8 +320,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->inactive = false;
-		this->inactivityCheckPeriodicTimer->Restart();
+		// Restart the RTP inactivity timer (unless DTX is enabled).
+		if (!this->params.useDtx)
+		{
+			this->inactive = false;
+			this->inactivityCheckPeriodicTimer->Restart();
+		}
 	}
 
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)

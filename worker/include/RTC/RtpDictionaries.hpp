@@ -204,6 +204,7 @@ namespace RTC
 		bool hasRtx{ false };
 		uint32_t maxBitrate{ 0 };
 		double maxFramerate{ 0 };
+		bool dtx{ false };
 	};
 
 	class RtpHeaderExtensionParameters

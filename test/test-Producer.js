@@ -21,8 +21,7 @@ const mediaCodecs =
 		channels   : 2,
 		parameters :
 		{
-			useinbandfec : 0,
-			foo          : '111'
+			foo : '111'
 		}
 	},
 	{
@@ -83,6 +82,7 @@ test('webRtcTransport.produce() succeeds', async () =>
 						parameters  :
 						{
 							useinbandfec : 1,
+							usedtx       : 1,
 							foo          : 222.222,
 							bar          : '333'
 						}
@@ -99,7 +99,7 @@ test('webRtcTransport.produce() succeeds', async () =>
 						id  : 12
 					}
 				],
-				encodings : [ { ssrc: 11111111 } ],
+				encodings : [ { ssrc: 11111111, dtx: true } ],
 				rtcp      :
 				{
 					cname : 'audio-1'
@@ -472,6 +472,7 @@ test('producer.dump() succeeds', async () =>
 		.toEqual(
 			{
 				useinbandfec : 1,
+				usedtx       : 1,
 				foo          : 222.222,
 				bar          : '333'
 			});
@@ -497,7 +498,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings.length).toBe(1);
 	expect(data.rtpParameters.encodings).toEqual(
 		[
-			{ codecPayloadType: 111, ssrc: 11111111 }
+			{ codecPayloadType: 111, ssrc: 11111111, dtx: true }
 		]);
 	expect(data.type).toBe('simple');
 
