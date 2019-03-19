@@ -631,8 +631,8 @@ namespace RTC
 			          << std::endl;
 		}
 
-		// No current or preferred spatial layer, select the highest possible.
-		if (this->currentSpatialLayer == -1 || this->preferredSpatialLayer == -1)
+		// No current spatial layer, select the highest possible.
+		if (this->currentSpatialLayer == -1)
 		{
 			std::cout << "RecalculateTargetSpatialLayer. no current or preferred spatial layer, selecting the highest possible..."
 			          << std::endl;
