@@ -648,8 +648,8 @@ namespace RTC
 				if (!producerRtpStream)
 					continue;
 
-				// Ignore spatial layers higher than the preferred one, if defined.
-				if (this->preferredSpatialLayer != -1 && idx > this->preferredSpatialLayer)
+				// Ignore spatial layers higher than the preferred one.
+				if (idx > this->preferredSpatialLayer)
 					return;
 
 				if (producerRtpStream->GetScore() >= maxScore)
