@@ -71,7 +71,10 @@ namespace RTC
 
 		// Ensure the inactivityCheckPeriodicTimer runs.
 		if (!this->inactivityCheckPeriodicTimer->IsActive())
+		{
+			this->inactive = false;
 			this->inactivityCheckPeriodicTimer->Restart();
+		}
 
 		return true;
 	}
@@ -304,6 +307,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->inactive = true;
 		this->inactivityCheckPeriodicTimer->Stop();
 	}
 
@@ -311,6 +315,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->inactive = false;
 		this->inactivityCheckPeriodicTimer->Restart();
 	}
 
@@ -341,14 +346,6 @@ namespace RTC
 		auto totalExpected = GetExpectedPackets();
 		uint32_t expected  = totalExpected - this->expectedPrior;
 
-		// We didn't expect more packets to come.
-		if (expected == 0)
-		{
-			ResetScore();
-
-			return;
-		}
-
 		this->expectedPrior = totalExpected;
 
 		// Calculate number of packets received in this interval.
@@ -370,6 +367,17 @@ namespace RTC
 		uint32_t repaired  = totalRepaired - this->repairedPrior;
 
 		this->repairedPrior = totalRepaired;
+
+		if (this->inactive)
+			return;
+
+		// We didn't expect more packets to come.
+		if (expected == 0)
+		{
+			RtpStream::UpdateScore(10);
+
+			return;
+		}
 
 		if (repaired >= lost)
 			lost = 0;
@@ -420,6 +428,7 @@ namespace RTC
 			// If no RTP is being received reset the score.
 			if (this->transmissionCounter.GetRate(now) == 0)
 			{
+				this->inactive = true;
 				this->inactivityCheckPeriodicTimer->Stop();
 
 				if (GetScore() != 0)

@@ -533,14 +533,6 @@ namespace RTC
 		auto totalSent = this->transmissionCounter.GetPacketCount();
 		auto sent      = totalSent - this->sentPrior;
 
-		// We didn't send any packet.
-		if (sent == 0)
-		{
-			ResetScore();
-
-			return;
-		}
-
 		this->sentPrior = totalSent;
 
 		// Calculate number of packets lost in this interval.
@@ -559,6 +551,14 @@ namespace RTC
 		uint32_t repaired  = totalRepaired - this->repairedPrior;
 
 		this->repairedPrior = totalRepaired;
+
+		// We didn't send any packet.
+		if (sent == 0)
+		{
+			RtpStream::UpdateScore(10);
+
+			return;
+		}
 
 		if (repaired >= lost)
 			lost = 0;
