@@ -644,7 +644,7 @@ namespace RTC
 		// Downgrade is needed.
 		else if (
 		  !this->GetProducerCurrentRtpStream() || this->GetProducerCurrentRtpStream()->GetScore() < 7 ||
-		  this->rtpStream->GetScore() < 5 || this->preferredSpatialLayer < this->currentSpatialLayer)
+		  this->rtpStream->GetScore() <= 6 || this->preferredSpatialLayer < this->currentSpatialLayer)
 		{
 			MS_DEBUG_TAG(simulcast, "trying to downgrade current spatial layer");
 
