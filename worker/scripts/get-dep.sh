@@ -55,7 +55,7 @@ function get_gyp()
 function get_json()
 {
 	GIT_REPO="https://github.com/nlohmann/json.git"
-	GIT_TAG="v3.5.0"
+	GIT_TAG="v3.6.0"
 	DEST="deps/json"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"

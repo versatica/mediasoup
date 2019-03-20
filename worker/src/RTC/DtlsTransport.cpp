@@ -46,14 +46,14 @@ inline static void onSslInfo(const SSL* ssl, int where, int ret)
 	static_cast<RTC::DtlsTransport*>(SSL_get_ex_data(ssl, 0))->OnSslInfo(where, ret);
 }
 
-inline unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timer_us)
+inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 {
-	if (timer_us == 0)
+	if (timerUs == 0)
 		return 100000;
-	else if (timer_us >= 4000000)
+	else if (timerUs >= 4000000)
 		return 4000000;
 	else
-		return 2 * timer_us;
+		return 2 * timerUs;
 }
 
 namespace RTC
