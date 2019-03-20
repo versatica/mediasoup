@@ -191,6 +191,10 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("rbe");
 	if (Settings::configuration.logTags.score)
 		logTags.emplace_back("score");
+	if (Settings::configuration.logTags.simulcast)
+		logTags.emplace_back("simulcast");
+	if (Settings::configuration.logTags.svc)
+		logTags.emplace_back("svc");
 
 	if (!logTags.empty())
 	{
@@ -308,6 +312,10 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 			newLogTags.rbe = true;
 		else if (tag == "score")
 			newLogTags.score = true;
+		else if (tag == "simulcast")
+			newLogTags.simulcast = true;
+		else if (tag == "svc")
+			newLogTags.svc = true;
 	}
 
 	Settings::configuration.logTags = newLogTags;

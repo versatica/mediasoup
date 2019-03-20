@@ -22,6 +22,8 @@ public:
 		bool rtx{ false };
 		bool rbe{ false };
 		bool score{ false };
+		bool simulcast{ false };
+		bool svc{ false };
 	};
 
 public:
