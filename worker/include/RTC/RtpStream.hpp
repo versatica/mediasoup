@@ -67,9 +67,9 @@ namespace RTC
 		uint32_t GetRtxSsrc() const;
 		uint8_t GetRtxPayloadType() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		void PostProcessPacket(RTC::RtpPacket* packet);
 		virtual void Pause()  = 0;
 		virtual void Resume() = 0;
+		void ResetScore(uint8_t score, bool notify);
 		uint32_t GetRate(uint64_t now);
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
@@ -79,7 +79,6 @@ namespace RTC
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
 		void UpdateScore(uint8_t score);
-		void ResetScore();
 		void PacketRetransmitted(RTC::RtpPacket* packet);
 		void PacketRepaired(RTC::RtpPacket* packet);
 		uint32_t GetExpectedPackets();

@@ -6,7 +6,6 @@
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
-#include <iostream>
 
 namespace RTC
 {
@@ -587,6 +586,9 @@ namespace RTC
 
 		this->currentSpatialLayer = spatialLayer;
 
+		// Reset the score of our RtpStream to 10.
+		this->rtpStream->ResetScore(10, false);
+
 		MS_DEBUG_DEV(
 		  "current spatial layer changed to %" PRIi16 " [consumerId:%s]",
 		  this->currentSpatialLayer,
@@ -608,34 +610,10 @@ namespace RTC
 
 		int16_t newTargetSpatialLayer{ -1 };
 
-		if (this->GetProducerCurrentRtpStream())
-		{
-			std::cout << "RecalculateTargetSpatialLayer."
-			          << ", consumer score: " << static_cast<unsigned int>(this->rtpStream->GetScore())
-			          << ", producer score: "
-			          << static_cast<unsigned int>(this->GetProducerCurrentRtpStream()->GetScore())
-			          << ", currentSpatialLayer: " << static_cast<int>(this->currentSpatialLayer)
-			          << ", targetSpatialLayer: " << static_cast<int>(this->targetSpatialLayer)
-			          << ", preferredSpatialLayer: " << static_cast<int>(this->preferredSpatialLayer)
-			          << std::endl;
-		}
-		else
-		{
-			std::cout << "RecalculateTargetSpatialLayer."
-			          << ", consumer score: " << static_cast<unsigned int>(this->rtpStream->GetScore())
-			          << ", producer score: "
-			          << "nullptr"
-			          << ", currentSpatialLayer: " << static_cast<int>(this->currentSpatialLayer)
-			          << ", targetSpatialLayer: " << static_cast<int>(this->targetSpatialLayer)
-			          << ", preferredSpatialLayer: " << static_cast<int>(this->preferredSpatialLayer)
-			          << std::endl;
-		}
-
 		// No current spatial layer, select the highest possible.
 		if (this->currentSpatialLayer == -1)
 		{
-			std::cout << "RecalculateTargetSpatialLayer. no current spatial layer, selecting the highest possible..."
-			          << std::endl;
+			MS_DEBUG_TAG(simulcast, "no current spatial layer, selecting the highest possible");
 
 			uint8_t maxScore = 0;
 
@@ -651,15 +629,12 @@ namespace RTC
 
 				if (producerRtpStream->GetScore() >= maxScore)
 				{
-					std::cout << "RecalculateTargetSpatialLayer. we have something: " << spatialLayer
-					          << std::endl;
 					maxScore              = producerRtpStream->GetScore();
 					newTargetSpatialLayer = spatialLayer;
 
 					if (maxScore > 7)
 					{
-						std::cout << "RecalculateTargetSpatialLayer. score > 7, keep it : " << spatialLayer
-						          << std::endl;
+						MS_DEBUG_TAG(simulcast, "found Producer RtpStream with score > 7, keep it");
 
 						break;
 					}
@@ -671,7 +646,7 @@ namespace RTC
 		  !this->GetProducerCurrentRtpStream() || this->GetProducerCurrentRtpStream()->GetScore() < 7 ||
 		  this->rtpStream->GetScore() < 5 || this->preferredSpatialLayer < this->currentSpatialLayer)
 		{
-			std::cout << "RecalculateTargetSpatialLayer. downgrading..." << std::endl;
+			MS_DEBUG_TAG(simulcast, "trying to downgrade current spatial layer");
 
 			uint8_t maxScore = 0;
 
@@ -686,15 +661,12 @@ namespace RTC
 
 				if (producerRtpStream->GetScore() >= maxScore)
 				{
-					std::cout << "RecalculateTargetSpatialLayer. we have something: " << spatialLayer
-					          << std::endl;
 					maxScore              = producerRtpStream->GetScore();
 					newTargetSpatialLayer = spatialLayer;
 
 					if (maxScore > 7)
 					{
-						std::cout << "RecalculateTargetSpatialLayer. score > 7, keep it : " << spatialLayer
-						          << std::endl;
+						MS_DEBUG_TAG(simulcast, "found Producer RtpStream with score > 7, keep it");
 
 						break;
 					}
@@ -704,7 +676,7 @@ namespace RTC
 		// Update to the highest possible spatial layer.
 		else
 		{
-			std::cout << "RecalculateTargetSpatialLayer. trying to upgrade..." << std::endl;
+			MS_DEBUG_TAG(simulcast, "trying to upgrade current spatial layer");
 
 			int16_t idx = this->currentSpatialLayer == -1 ? 0 : this->currentSpatialLayer + 1;
 
@@ -721,8 +693,8 @@ namespace RTC
 				// Take this as the new target if it is good enough.
 				if (producerRtpStream->GetScore() >= 7)
 				{
-					std::cout << "RecalculateTargetSpatialLayer. good enough spatial layer found: "
-					          << spatialLayer << std::endl;
+					MS_DEBUG_TAG(simulcast, "good enough spatial layer found: %" PRIi16, spatialLayer);
+
 					newTargetSpatialLayer = spatialLayer;
 
 					break;
@@ -732,7 +704,8 @@ namespace RTC
 
 		if (newTargetSpatialLayer == -1)
 		{
-			std::cout << "RecalculateTargetSpatialLayer, target layer not updated" << std::endl;
+			MS_DEBUG_TAG(simulcast, "newTargetSpatialLayer remains unset");
+
 			return;
 		}
 
@@ -749,7 +722,7 @@ namespace RTC
 		RequestKeyFrame();
 
 		MS_DEBUG_TAG(
-		  rtp,
+		  simulcast,
 		  "target spatial layer changed to %" PRIi16 " [consumerId:%s]",
 		  this->targetSpatialLayer,
 		  this->id.c_str());

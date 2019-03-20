@@ -443,7 +443,7 @@ namespace RTC
 				if (GetScore() != 0)
 					MS_WARN_2TAGS(rtp, score, "RTP inactivity detected, resetting score to 0");
 
-				ResetScore();
+				ResetScore(0, true);
 			}
 		}
 	}

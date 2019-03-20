@@ -118,6 +118,26 @@ namespace RTC
 		return true;
 	}
 
+	void RtpStream::ResetScore(uint8_t score, bool notify)
+	{
+		MS_TRACE();
+
+		this->totalSourceLoss   = 0;
+		this->totalReportedLoss = 0;
+		this->totalSentPackets  = 0;
+
+		this->scores.clear();
+
+		if (this->score != score)
+		{
+			this->score = score;
+
+			// Notify the listener.
+			if (notify)
+				this->listener->OnRtpStreamScore(this, score);
+		}
+	}
+
 	bool RtpStream::UpdateSeq(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -251,25 +271,6 @@ namespace RTC
 			  previousScore,
 			  this->score);
 #endif
-		}
-	}
-
-	void RtpStream::ResetScore()
-	{
-		MS_TRACE();
-
-		this->totalSourceLoss   = 0;
-		this->totalReportedLoss = 0;
-		this->totalSentPackets  = 0;
-
-		this->scores.clear();
-
-		if (this->score != 0)
-		{
-			this->score = 0;
-
-			// Notify the listener.
-			this->listener->OnRtpStreamScore(this, 0);
 		}
 	}
 
