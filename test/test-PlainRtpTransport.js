@@ -68,7 +68,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 
 	const onObserverNewTransport = jest.fn();
 
-	router.once('observer:newtransport', onObserverNewTransport);
+	router.observer.once('newtransport', onObserverNewTransport);
 
 	// Create a separate transport here.
 	const transport1 = await router.createPlainRtpTransport(
@@ -218,7 +218,7 @@ test('PlaintRtpTransport methods reject if closed', async () =>
 {
 	const onObserverClose = jest.fn();
 
-	transport.once('observer:close', onObserverClose);
+	transport.observer.once('close', onObserverClose);
 	transport.close();
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
@@ -245,7 +245,7 @@ test('PlaintRtpTransport emits "routerclose" if Router is closed', async () =>
 		await router2.createPlainRtpTransport({ listenIp: '127.0.0.1' });
 	const onObserverClose = jest.fn();
 
-	transport2.once('observer:close', onObserverClose);
+	transport2.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
@@ -261,7 +261,7 @@ test('PlaintRtpTransport emits "routerclose" if Worker is closed', async () =>
 {
 	const onObserverClose = jest.fn();
 
-	transport.once('observer:close', onObserverClose);
+	transport.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{

@@ -265,7 +265,7 @@ test('transport.consume() succeeds', async () =>
 {
 	const onObserverNewConsumer1 = jest.fn();
 
-	transport2.once('observer:newconsumer', onObserverNewConsumer1);
+	transport2.observer.once('newconsumer', onObserverNewConsumer1);
 
 	expect(router.canConsume(
 		{
@@ -331,7 +331,7 @@ test('transport.consume() succeeds', async () =>
 
 	const onObserverNewConsumer2 = jest.fn();
 
-	transport2.once('observer:newconsumer', onObserverNewConsumer2);
+	transport2.observer.once('newconsumer', onObserverNewConsumer2);
 
 	expect(router.canConsume(
 		{
@@ -688,7 +688,7 @@ test('consumer.close() succeeds', async () =>
 {
 	const onObserverClose = jest.fn();
 
-	audioConsumer.once('observer:close', onObserverClose);
+	audioConsumer.observer.once('close', onObserverClose);
 	audioConsumer.close();
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
@@ -749,7 +749,7 @@ test('Consumer emits "producerclose" if Producer is closed', async () =>
 
 	const onObserverClose = jest.fn();
 
-	audioConsumer.once('observer:close', onObserverClose);
+	audioConsumer.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
@@ -771,7 +771,7 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 
 	const onObserverClose = jest.fn();
 
-	videoConsumer.once('observer:close', onObserverClose);
+	videoConsumer.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{

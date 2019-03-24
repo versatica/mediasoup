@@ -64,7 +64,7 @@ test('webRtcTransport.produce() succeeds', async () =>
 {
 	const onObserverNewProducer = jest.fn();
 
-	webRtcTransport.once('observer:newproducer', onObserverNewProducer);
+	webRtcTransport.observer.once('newproducer', onObserverNewProducer);
 
 	audioProducer = await webRtcTransport.produce(
 		{
@@ -143,7 +143,7 @@ test('plainRtpTransport.produce() succeeds', async () =>
 {
 	const onObserverNewProducer = jest.fn();
 
-	plainRtpTransport.once('observer:newproducer', onObserverNewProducer);
+	plainRtpTransport.observer.once('newproducer', onObserverNewProducer);
 
 	videoProducer = await plainRtpTransport.produce(
 		{
@@ -609,7 +609,7 @@ test('producer.close() succeeds', async () =>
 {
 	const onObserverClose = jest.fn();
 
-	audioProducer.once('observer:close', onObserverClose);
+	audioProducer.observer.once('close', onObserverClose);
 	audioProducer.close();
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
@@ -656,7 +656,7 @@ test('Producer emits "transportclose" if Transport is closed', async () =>
 {
 	const onObserverClose = jest.fn();
 
-	videoProducer.once('observer:close', onObserverClose);
+	videoProducer.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{

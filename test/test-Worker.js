@@ -15,7 +15,7 @@ test('createWorker() succeeds', async () =>
 {
 	const onObserverNewWorker = jest.fn();
 
-	observer.once('observer:newworker', onObserverNewWorker);
+	observer.once('newworker', onObserverNewWorker);
 
 	worker = await createWorker();
 
@@ -132,7 +132,7 @@ test('worker.close() succeeds', async () =>
 
 	const onObserverClose = jest.fn();
 
-	worker.once('observer:close', onObserverClose);
+	worker.observer.once('close', onObserverClose);
 	worker.close();
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
@@ -146,7 +146,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	worker = await createWorker({ logLevel: 'warn' });
 	onObserverClose = jest.fn();
 
-	worker.once('observer:close', onObserverClose);
+	worker.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
@@ -161,7 +161,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	worker = await createWorker({ logLevel: 'warn' });
 	onObserverClose = jest.fn();
 
-	worker.once('observer:close', onObserverClose);
+	worker.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
@@ -176,7 +176,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	worker = await createWorker({ logLevel: 'warn' });
 	onObserverClose = jest.fn();
 
-	worker.once('observer:close', onObserverClose);
+	worker.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{

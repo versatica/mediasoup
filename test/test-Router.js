@@ -48,7 +48,7 @@ test('worker.createRouter() succeeds', async () =>
 
 	const onObserverNewRouter = jest.fn();
 
-	worker.once('observer:newrouter', onObserverNewRouter);
+	worker.observer.once('newrouter', onObserverNewRouter);
 
 	const router = await worker.createRouter({ mediaCodecs });
 
@@ -117,7 +117,7 @@ test('router.close() succeeds', async () =>
 	const router = await worker.createRouter({ mediaCodecs });
 	const onObserverClose = jest.fn();
 
-	router.once('observer:close', onObserverClose);
+	router.observer.once('close', onObserverClose);
 	router.close();
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
@@ -131,7 +131,7 @@ test('Router emits "workerclose" if Worker is closed', async () =>
 	const router = await worker.createRouter({ mediaCodecs });
 	const onObserverClose = jest.fn();
 
-	router.once('observer:close', onObserverClose);
+	router.observer.once('close', onObserverClose);
 
 	await new Promise((resolve) =>
 	{
