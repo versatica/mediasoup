@@ -44,10 +44,10 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->SetTimestamp(8888);
 	packet->GetSsrc();
 	packet->SetSsrc(666);
-	packet->HasExtensionHeader();
-	packet->GetExtensionHeaderId();
-	packet->GetExtensionHeaderLength();
-	packet->GetExtensionHeaderValue();
+	packet->HasHeaderExtension();
+	packet->GetHeaderExtensionId();
+	packet->GetHeaderExtensionLength();
+	packet->GetHeaderExtensionValue();
 	packet->HasOneByteExtensions();
 	packet->HasTwoBytesExtensions();
 
@@ -75,7 +75,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	idMapping[2] = 12;
 	idMapping[3] = 13;
 
-	packet->MangleExtensionHeaderIds(idMapping);
+	packet->MangleHeaderExtensionIds(idMapping);
 
 	packet->SetAudioLevelExtensionId(11);
 	packet->GetExtension(11, extenLen);

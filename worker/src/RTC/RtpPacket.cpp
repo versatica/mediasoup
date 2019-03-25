@@ -45,24 +45,24 @@ namespace RTC
 		}
 
 		// Check header extension.
-		ExtensionHeader* extensionHeader{ nullptr };
+		HeaderExtension* headerExtension{ nullptr };
 		size_t extensionValueSize{ 0 };
 
 		if (header->extension == 1u)
 		{
-			// The extension header is at least 4 bytes.
+			// The header extension is at least 4 bytes.
 			if (len < static_cast<size_t>(ptr - data) + 4)
 			{
-				MS_WARN_TAG(rtp, "not enough space for the announced extension header, packet discarded");
+				MS_WARN_TAG(rtp, "not enough space for the announced header extension, packet discarded");
 
 				return nullptr;
 			}
 
-			extensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
+			headerExtension = reinterpret_cast<HeaderExtension*>(ptr);
 
 			// The header extension contains a 16-bit length field that counts the number of
-			// 32-bit words in the extension, excluding the four-octet extension header.
-			extensionValueSize = static_cast<size_t>(ntohs(extensionHeader->length) * 4);
+			// 32-bit words in the extension, excluding the four-octet header extension.
+			extensionValueSize = static_cast<size_t>(ntohs(headerExtension->length) * 4);
 
 			// Packet size must be >= header size + CSRC list + header extension size.
 			if (len < (ptr - data) + 4 + extensionValueSize)
@@ -114,14 +114,14 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		  len == sizeof(Header) + csrcListSize + (extensionHeader ? 4 + extensionValueSize : 0) +
+		  len == sizeof(Header) + csrcListSize + (headerExtension ? 4 + extensionValueSize : 0) +
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
 		auto* packet =
-		  new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
+		  new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 
-		// Parse RFC 5285 extension header.
+		// Parse RFC 5285 header extension.
 		packet->ParseExtensions();
 
 		return packet;
@@ -131,12 +131,12 @@ namespace RTC
 
 	RtpPacket::RtpPacket(
 	  Header* header,
-	  ExtensionHeader* extensionHeader,
+	  HeaderExtension* headerExtension,
 	  const uint8_t* payload,
 	  size_t payloadLength,
 	  uint8_t payloadPadding,
 	  size_t size)
-	  : header(header), extensionHeader(extensionHeader), payload(const_cast<uint8_t*>(payload)),
+	  : header(header), headerExtension(headerExtension), payload(const_cast<uint8_t*>(payload)),
 	    payloadLength(payloadLength), payloadPadding(payloadPadding), size(size)
 	{
 		MS_TRACE();
@@ -156,12 +156,12 @@ namespace RTC
 
 		MS_DEBUG_DEV("<RtpPacket>");
 		MS_DEBUG_DEV("  padding           : %s", this->header->padding ? "true" : "false");
-		if (HasExtensionHeader())
+		if (HasHeaderExtension())
 		{
 			MS_DEBUG_DEV(
-			  "  extension header  : id:%" PRIu16 ",length:%zu",
-			  GetExtensionHeaderId(),
-			  GetExtensionHeaderLength());
+			  "  header extension  : id:%" PRIu16 ",length:%zu",
+			  GetHeaderExtensionId(),
+			  GetHeaderExtensionLength());
 		}
 		if (HasOneByteExtensions())
 		{
@@ -273,7 +273,7 @@ namespace RTC
 		MS_DEBUG_DEV("</RtpPacket>");
 	}
 
-	void RtpPacket::MangleExtensionHeaderIds(const std::map<uint8_t, uint8_t>& idMapping)
+	void RtpPacket::MangleHeaderExtensionIds(const std::map<uint8_t, uint8_t>& idMapping)
 	{
 		MS_TRACE();
 
@@ -351,17 +351,17 @@ namespace RTC
 			ptr += numBytes;
 		}
 
-		// Copy extension header.
+		// Copy header extension.
 
-		ExtensionHeader* newExtensionHeader{ nullptr };
+		HeaderExtension* newHeaderExtension{ nullptr };
 
-		if (this->extensionHeader != nullptr)
+		if (this->headerExtension != nullptr)
 		{
-			numBytes = 4 + GetExtensionHeaderLength();
-			std::memcpy(ptr, this->extensionHeader, numBytes);
+			numBytes = 4 + GetHeaderExtensionLength();
+			std::memcpy(ptr, this->headerExtension, numBytes);
 
 			// Set the header extension pointer.
-			newExtensionHeader = reinterpret_cast<ExtensionHeader*>(ptr);
+			newHeaderExtension = reinterpret_cast<HeaderExtension*>(ptr);
 
 			// Update pointer.
 			ptr += numBytes;
@@ -395,9 +395,9 @@ namespace RTC
 
 		// Create the new RtpPacket instance and return it.
 		auto* packet = new RtpPacket(
-		  newHeader, newExtensionHeader, newPayload, this->payloadLength, this->payloadPadding, this->size);
+		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
-		// Parse RFC 5285 extension header.
+		// Parse RFC 5285 header extension.
 		packet->ParseExtensions();
 
 		// Keep already set extension ids.
@@ -544,14 +544,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Parse One-Byte extension header.
+		// Parse One-Byte header extension.
 		if (HasOneByteExtensions())
 		{
 			// Clear the One-Byte extension elements map.
 			this->oneByteExtensions.clear();
 
-			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
-			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
+			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
+			uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
 			uint8_t* ptr            = extensionStart;
 
 			// One-Byte extensions cannot have length 0.
@@ -593,14 +593,14 @@ namespace RTC
 				}
 			}
 		}
-		// Parse Two-Bytes extension header.
+		// Parse Two-Bytes header extension.
 		else if (HasTwoBytesExtensions())
 		{
 			// Clear the Two-Bytes extension elements map.
 			this->twoBytesExtensions.clear();
 
-			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->extensionHeader) + 4;
-			uint8_t* extensionEnd   = extensionStart + GetExtensionHeaderLength();
+			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
+			uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
 			uint8_t* ptr            = extensionStart;
 
 			// ptr points to the ID field (1 byte).
