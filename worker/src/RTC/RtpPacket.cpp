@@ -570,7 +570,11 @@ namespace RTC
 					break;
 				}
 
-				// Store the One-Byte extension element in a map. Ignore if 0.
+				// id=15 in One-Byte extensions means "stop parsing here".
+				if (id == 15u)
+					break;
+
+				// Store the One-Byte extension element in a map. Ignore if 0 (padding).
 				if (id != 0u)
 					this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
 
