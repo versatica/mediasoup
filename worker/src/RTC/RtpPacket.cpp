@@ -48,7 +48,7 @@ namespace RTC
 		ExtensionHeader* extensionHeader{ nullptr };
 		size_t extensionValueSize{ 0 };
 
-		if (header->extension != 0u)
+		if (header->extension == 1u)
 		{
 			// The extension header is at least 4 bytes.
 			if (len < static_cast<size_t>(ptr - data) + 4)
