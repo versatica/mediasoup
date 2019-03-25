@@ -118,7 +118,8 @@ namespace RTC
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
-		auto packet = new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
+		auto* packet =
+		  new RtpPacket(header, extensionHeader, payload, payloadLength, payloadPadding, len);
 
 		// Parse RFC 5285 extension header.
 		packet->ParseExtensions();
@@ -393,7 +394,7 @@ namespace RTC
 		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
 
 		// Create the new RtpPacket instance and return it.
-		auto packet = new RtpPacket(
+		auto* packet = new RtpPacket(
 		  newHeader, newExtensionHeader, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Parse RFC 5285 extension header.
