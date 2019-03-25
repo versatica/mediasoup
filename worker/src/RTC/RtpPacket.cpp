@@ -562,23 +562,31 @@ namespace RTC
 				uint8_t id = (*ptr & 0xF0) >> 4;
 				size_t len = static_cast<size_t>(*ptr & 0x0F) + 1;
 
-				if (ptr + 1 + len > extensionEnd)
-				{
-					MS_WARN_TAG(
-					  rtp, "not enough space for the announced One-Byte header extension element value");
-
-					break;
-				}
-
 				// id=15 in One-Byte extensions means "stop parsing here".
 				if (id == 15u)
 					break;
 
-				// Store the One-Byte extension element in a map. Ignore if 0 (padding).
+				// Valid extension id.
 				if (id != 0u)
+				{
+					if (ptr + 1 + len > extensionEnd)
+					{
+						MS_WARN_TAG(
+						  rtp, "not enough space for the announced One-Byte header extension element value");
+
+						break;
+					}
+
+					// Store the One-Byte extension element in a map.
 					this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
 
-				ptr += (1 + len);
+					ptr += (1 + len);
+				}
+				// id=0 means alignment.
+				else
+				{
+					++ptr;
+				}
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))
@@ -606,19 +614,27 @@ namespace RTC
 				uint8_t id  = *ptr;
 				uint8_t len = *(ptr + 1);
 
-				if (ptr + 2 + len > extensionEnd)
-				{
-					MS_WARN_TAG(
-					  rtp, "not enough space for the announced Two-Bytes header extension element value");
-
-					break;
-				}
-
-				// Store the Two-Bytes extension element in a map. Ignore if 0.
+				// Valid extension id.
 				if (id != 0u)
+				{
+					if (ptr + 2 + len > extensionEnd)
+					{
+						MS_WARN_TAG(
+						  rtp, "not enough space for the announced Two-Bytes header extension element value");
+
+						break;
+					}
+
+					// Store the Two-Bytes extension element in a map.
 					this->twoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
 
-				ptr += (2 + len);
+					ptr += (2 + len);
+				}
+				// id=0 means alignment.
+				else
+				{
+					++ptr;
+				}
 
 				// Counting padding bytes.
 				while ((ptr < extensionEnd) && (*ptr == 0))
