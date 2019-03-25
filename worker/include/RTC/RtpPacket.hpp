@@ -76,7 +76,7 @@ namespace RTC
 		static bool IsRtp(const uint8_t* data, size_t len);
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
-	public:
+	private:
 		RtpPacket(
 		  Header* header,
 		  ExtensionHeader* extensionHeader,
@@ -84,6 +84,8 @@ namespace RTC
 		  size_t payloadLength,
 		  uint8_t payloadPadding,
 		  size_t size);
+
+	public:
 		~RtpPacket();
 
 		void Dump() const;
