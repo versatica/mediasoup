@@ -444,6 +444,8 @@ namespace RTC
 
 		if (this->payloadLength != 0)
 		{
+			MS_ERROR("----- OH!! this->payloadLength != 0");
+
 			numBytes = this->payloadLength;
 			std::memcpy(ptr, this->payload, numBytes);
 
@@ -452,7 +454,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_ERROR("----- OH!! hay this->payload");
+			MS_ERROR("----- OH!! this->payloadLength == 0");
 		}
 
 		// Copy payload padding.
