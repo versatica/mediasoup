@@ -103,6 +103,8 @@ namespace RTC
 		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
 		bool HasHeaderExtension() const;
+		bool SetOneByteHeaderExtension();
+		bool SetTwoBytesHeaderExtension();
 		uint16_t GetHeaderExtensionId() const;
 		size_t GetHeaderExtensionLength() const;
 		uint8_t* GetHeaderExtensionValue() const;

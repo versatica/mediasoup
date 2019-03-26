@@ -273,6 +273,72 @@ namespace RTC
 		MS_DEBUG_DEV("</RtpPacket>");
 	}
 
+	bool RtpPacket::SetOneByteHeaderExtension()
+	{
+		// If already set, return true.
+		if (HasOneByteExtensions())
+		{
+			return true;
+		}
+		// If it has Two-Bytes extensions, return false.
+		else if (HasTwoBytesExtensions())
+		{
+			return false;
+		}
+
+		// Set the header extension bit.
+		this->header->extension = 1u;
+
+		// Set the header extension pointing to the current payload.
+		this->headerExtension = reinterpret_cast<HeaderExtension*>(this->payload);
+
+		// Shift the payload 4 bytes (the length of the header extension).
+		std::memmove(this->payload + 4, this->payload, this->payloadLength + this->payloadPadding);
+		this->payload += 4;
+
+		// Increase size.
+		this->size += 4;
+
+		// Set the header extension id and length.
+		this->headerExtension->id     = uint16_t{ htons(0xBEDE) };
+		this->headerExtension->length = 0u;
+
+		return true;
+	}
+
+	bool RtpPacket::SetTwoBytesHeaderExtension()
+	{
+		// If already set, return true.
+		if (HasTwoBytesExtensions())
+		{
+			return true;
+		}
+		// If it has One-Byte extensions, return false.
+		else if (HasOneByteExtensions())
+		{
+			return false;
+		}
+
+		// Set the header extension bit.
+		this->header->extension = 1u;
+
+		// Set the header extension pointing to the current payload.
+		this->headerExtension = reinterpret_cast<HeaderExtension*>(this->payload);
+
+		// Shift the payload 4 bytes (the length of the header extension).
+		std::memmove(this->payload + 4, this->payload, this->payloadLength + this->payloadPadding);
+		this->payload += 4;
+
+		// Increase size.
+		this->size += 4;
+
+		// Set the header extension id and length.
+		this->headerExtension->id     = uint16_t{ htons(0b0001000000000000) };
+		this->headerExtension->length = 0u;
+
+		return true;
+	}
+
 	void RtpPacket::MangleHeaderExtensionIds(const std::map<uint8_t, uint8_t>& idMapping)
 	{
 		MS_TRACE();
