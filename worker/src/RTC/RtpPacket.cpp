@@ -277,16 +277,13 @@ namespace RTC
 	{
 		// If already set, return true.
 		if (HasOneByteExtensions())
-		{
 			return true;
-		}
 		// If it has Two-Bytes extensions, return false.
 		else if (HasTwoBytesExtensions())
-		{
 			return false;
-		}
-
-		MS_ERROR("---------- YES 1 !!!");
+		// If it has a different header extension, return false.
+		else if (this->headerExtension)
+			return false;
 
 		// Set the header extension bit.
 		this->header->extension = 1u;
@@ -312,16 +309,13 @@ namespace RTC
 	{
 		// If already set, return true.
 		if (HasTwoBytesExtensions())
-		{
 			return true;
-		}
 		// If it has One-Byte extensions, return false.
 		else if (HasOneByteExtensions())
-		{
 			return false;
-		}
-
-		MS_ERROR("---------- YES 2 !!!");
+		// If it has a different header extension, return false.
+		else if (this->headerExtension)
+			return false;
 
 		// Set the header extension bit.
 		this->header->extension = 1u;
@@ -444,38 +438,19 @@ namespace RTC
 
 		if (this->payloadLength != 0)
 		{
-			MS_ERROR("----- OH!! this->payloadLength != 0");
-
 			numBytes = this->payloadLength;
 			std::memcpy(ptr, this->payload, numBytes);
 
 			// Update pointer.
 			ptr += numBytes;
 		}
-		else
-		{
-			MS_ERROR("----- OH!! this->payloadLength == 0");
-		}
 
 		// Copy payload padding.
 
 		if (this->payloadPadding != 0u)
 		{
-			MS_ERROR("----- OH!! this->payloadPadding:%" PRIu8, this->payloadPadding);
-
 			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
 			ptr += size_t{ this->payloadPadding };
-		}
-		else
-		{
-			MS_ERROR("----- OH!! this->payloadPadding == 0");
-		}
-
-		if (static_cast<size_t>(ptr - buffer) != this->size)
-		{
-			MS_ERROR(
-				"----- OH!! (ptr - buffer):%zu, this->size:%zu, this->headerExtension->length:%" PRIu16 ", GetHeaderExtensionLength():%zu",
-				static_cast<size_t>(ptr - buffer), this->size, this->headerExtension->length, GetHeaderExtensionLength());
 		}
 
 		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
