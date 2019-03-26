@@ -774,14 +774,6 @@ namespace RTC
 			// Send the RTCP compound packet if there is a sender report.
 			if (packet->HasSenderReport())
 			{
-				// Ensure that the RTCP packet fits into the RTCP buffer.
-				if (packet->GetSize() > RTC::RTCP::BufferSize)
-				{
-					MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
-
-					return;
-				}
-
 				packet->Serialize(RTC::RTCP::Buffer);
 				SendRtcpCompoundPacket(packet.get());
 
@@ -795,19 +787,20 @@ namespace RTC
 			auto* producer = kv.second;
 
 			producer->GetRtcp(packet.get(), now);
+
+			// One more RR would exceed the MTU, send the compound packet now.
+			if (packet->GetSize() + sizeof(RTCP::ReceiverReport::Header) > RTC::MtuSize)
+			{
+				packet->Serialize(RTC::RTCP::Buffer);
+				SendRtcpCompoundPacket(packet.get());
+
+				// Reset the Compound packet.
+				packet.reset(new RTC::RTCP::CompoundPacket());
+			}
 		}
 
-		// Send the RTCP compound with all receiver reports.
 		if (packet->GetReceiverReportCount() != 0u)
 		{
-			// Ensure that the RTCP packet fits into the RTCP buffer.
-			if (packet->GetSize() > RTC::RTCP::BufferSize)
-			{
-				MS_WARN_TAG(rtcp, "cannot send RTCP packet, size too big (%zu bytes)", packet->GetSize());
-
-				return;
-			}
-
 			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}

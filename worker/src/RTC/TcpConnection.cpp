@@ -4,10 +4,15 @@
 #include "RTC/TcpConnection.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include <cstring> // std::memmove()
+#include <cstring> // std::memmove(), std::memcpy()
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr size_t ReadBufferSize{ 65536 };
+	static uint8_t ReadBuffer[ReadBufferSize];
+
 	/* Instance methods. */
 
 	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
@@ -67,7 +72,12 @@ namespace RTC
 				if (packetLen != 0)
 				{
 					this->recvBytes += packetLen;
-					this->listener->OnPacketRecv(this, packet, packetLen);
+
+					// Copy the received packet into the static buffer so it can be expanded
+					// later.
+					std::memcpy(ReadBuffer, packet, packetLen);
+
+					this->listener->OnPacketRecv(this, ReadBuffer, packetLen);
 				}
 
 				// If there is no more space available in the buffer and that is because

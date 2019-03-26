@@ -6,6 +6,7 @@
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include <map>
 #include <string>
+#include <vector>
 
 namespace RTC
 {
@@ -41,8 +42,8 @@ namespace RTC
 		};
 
 	private:
-		/* Struct for RTP extension header. */
-		struct ExtensionHeader
+		/* Struct for RTP header extension. */
+		struct HeaderExtension
 		{
 			uint16_t id;
 			uint16_t length; // Size of value in multiples of 4 bytes.
@@ -73,17 +74,30 @@ namespace RTC
 		};
 
 	public:
+		/* Struct for replacing and setting header extensions. */
+		struct GenericExtension
+		{
+			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value){};
+
+			uint8_t id : 8;
+			uint8_t len : 8;
+			uint8_t* value;
+		};
+
+	public:
 		static bool IsRtp(const uint8_t* data, size_t len);
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
-	public:
+	private:
 		RtpPacket(
 		  Header* header,
-		  ExtensionHeader* extensionHeader,
+		  HeaderExtension* headerExtension,
 		  const uint8_t* payload,
 		  size_t payloadLength,
 		  uint8_t payloadPadding,
 		  size_t size);
+
+	public:
 		~RtpPacket();
 
 		void Dump() const;
@@ -100,12 +114,12 @@ namespace RTC
 		void SetTimestamp(uint32_t timestamp);
 		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
-		bool HasExtensionHeader() const;
-		uint16_t GetExtensionHeaderId() const;
-		size_t GetExtensionHeaderLength() const;
-		uint8_t* GetExtensionHeaderValue() const;
-		// After calling this method, all the extIDs are reset to 0.
-		void MangleExtensionHeaderIds(const std::map<uint8_t, uint8_t>& idMapping);
+		bool HasHeaderExtension() const;
+		// After calling this method, all the extension ids are reset to 0.
+		void SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions);
+		uint16_t GetHeaderExtensionId() const;
+		size_t GetHeaderExtensionLength() const;
+		uint8_t* GetHeaderExtensionValue() const;
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
 		void SetAudioLevelExtensionId(uint8_t id);
@@ -139,7 +153,7 @@ namespace RTC
 		// Passed by argument.
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
-		ExtensionHeader* extensionHeader{ nullptr };
+		HeaderExtension* headerExtension{ nullptr };
 		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
 		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
 		uint8_t audioLevelExtensionId{ 0 };
@@ -239,43 +253,43 @@ namespace RTC
 		this->header->ssrc = uint32_t{ htonl(ssrc) };
 	}
 
-	inline bool RtpPacket::HasExtensionHeader() const
+	inline bool RtpPacket::HasHeaderExtension() const
 	{
-		return (this->extensionHeader ? true : false);
+		return (this->headerExtension ? true : false);
 	}
 
-	inline uint16_t RtpPacket::GetExtensionHeaderId() const
+	inline uint16_t RtpPacket::GetHeaderExtensionId() const
 	{
-		if (!this->extensionHeader)
+		if (!this->headerExtension)
 			return 0;
 
-		return uint16_t{ ntohs(this->extensionHeader->id) };
+		return uint16_t{ ntohs(this->headerExtension->id) };
 	}
 
-	inline size_t RtpPacket::GetExtensionHeaderLength() const
+	inline size_t RtpPacket::GetHeaderExtensionLength() const
 	{
-		if (!this->extensionHeader)
+		if (!this->headerExtension)
 			return 0;
 
-		return static_cast<size_t>(ntohs(this->extensionHeader->length) * 4);
+		return static_cast<size_t>(ntohs(this->headerExtension->length) * 4);
 	}
 
-	inline uint8_t* RtpPacket::GetExtensionHeaderValue() const
+	inline uint8_t* RtpPacket::GetHeaderExtensionValue() const
 	{
-		if (!this->extensionHeader)
+		if (!this->headerExtension)
 			return nullptr;
 
-		return this->extensionHeader->value;
+		return this->headerExtension->value;
 	}
 
 	inline bool RtpPacket::HasOneByteExtensions() const
 	{
-		return GetExtensionHeaderId() == 0xBEDE;
+		return GetHeaderExtensionId() == 0xBEDE;
 	}
 
 	inline bool RtpPacket::HasTwoBytesExtensions() const
 	{
-		return (GetExtensionHeaderId() & 0b1111111111110000) == 0b0001000000000000;
+		return (GetHeaderExtensionId() & 0b1111111111110000) == 0b0001000000000000;
 	}
 
 	inline void RtpPacket::SetAudioLevelExtensionId(uint8_t id)
@@ -473,7 +487,7 @@ namespace RTC
 
 	inline uint8_t* RtpPacket::GetPayload() const
 	{
-		return this->payload;
+		return this->payloadLength != 0 ? this->payload : nullptr;
 	}
 
 	inline size_t RtpPacket::GetPayloadLength() const
