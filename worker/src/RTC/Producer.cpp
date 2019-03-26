@@ -867,8 +867,9 @@ namespace RTC
 
 		packet->SetSsrc(mappedSsrc);
 
+		// TODO: Redo.
 		// Mangle RTP header extension ids.
-		packet->MangleHeaderExtensionIds(this->rtpMapping.headerExtensions);
+		// packet->MangleHeaderExtensionIds(this->rtpMapping.headerExtensions);
 
 		// Assign mapped RTP header extension ids.
 		if (this->mappedRtpHeaderExtensionIds.ssrcAudioLevel != 0u)

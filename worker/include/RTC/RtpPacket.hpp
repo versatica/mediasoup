@@ -6,6 +6,7 @@
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include <map>
 #include <string>
+#include <vector>
 
 namespace RTC
 {
@@ -73,6 +74,15 @@ namespace RTC
 		};
 
 	public:
+		/* Struct for replacing and setting header extensions. */
+		struct GenericExtension
+		{
+			uint8_t id : 8;
+			uint8_t len : 8;
+			uint8_t* value;
+		};
+
+	public:
 		static bool IsRtp(const uint8_t* data, size_t len);
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
@@ -103,13 +113,11 @@ namespace RTC
 		uint32_t GetSsrc() const;
 		void SetSsrc(uint32_t ssrc);
 		bool HasHeaderExtension() const;
-		bool SetOneByteHeaderExtension();
-		bool SetTwoBytesHeaderExtension();
+		// After calling this method, all the extension ids are reset to 0.
+		void SetHeaderExtensions(uint8_t type, const std::vector<GenericExtension>& extensions);
 		uint16_t GetHeaderExtensionId() const;
 		size_t GetHeaderExtensionLength() const;
 		uint8_t* GetHeaderExtensionValue() const;
-		// After calling this method, all the extension ids are reset to 0.
-		void MangleHeaderExtensionIds(const std::map<uint8_t, uint8_t>& idMapping);
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
 		void SetAudioLevelExtensionId(uint8_t id);
