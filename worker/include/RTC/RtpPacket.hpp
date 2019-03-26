@@ -77,6 +77,8 @@ namespace RTC
 		/* Struct for replacing and setting header extensions. */
 		struct GenericExtension
 		{
+			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value){};
+
 			uint8_t id : 8;
 			uint8_t len : 8;
 			uint8_t* value;
@@ -114,7 +116,7 @@ namespace RTC
 		void SetSsrc(uint32_t ssrc);
 		bool HasHeaderExtension() const;
 		// After calling this method, all the extension ids are reset to 0.
-		void SetHeaderExtensions(uint8_t type, const std::vector<GenericExtension>& extensions);
+		void SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions);
 		uint16_t GetHeaderExtensionId() const;
 		size_t GetHeaderExtensionLength() const;
 		uint8_t* GetHeaderExtensionValue() const;

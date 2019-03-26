@@ -272,7 +272,7 @@ namespace RTC
 		MS_DEBUG_DEV("</RtpPacket>");
 	}
 
-	void RtpPacket::SetHeaderExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)
+	void RtpPacket::SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)
 	{
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");
 
@@ -312,15 +312,15 @@ namespace RTC
 		{
 			if (type == 1u)
 			{
-				MS_ASSERT(
-				  extension.id >= 1 && extension.id <= 14 && extension.len >= 1 && extension.len <= 16,
-				  "invalid One-Byte extension");
+				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
+					continue;
 
 				extensionsTotalSize += (1 + extension.len);
 			}
 			else if (type == 2u)
 			{
-				MS_ASSERT(extension.id >= 1, "invalid Two-Bytes extension");
+				if (extension.id == 0)
+					continue;
 
 				extensionsTotalSize += (2 + extension.len);
 			}
@@ -389,6 +389,9 @@ namespace RTC
 		{
 			if (type == 1u)
 			{
+				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
+					continue;
+
 				*ptr = (extension.id & 0x0F) | ((extension.len - 1) << 4);
 				++ptr;
 				std::memmove(ptr, extension.value, extension.len);
@@ -396,6 +399,9 @@ namespace RTC
 			}
 			else if (type == 2u)
 			{
+				if (extension.id == 0)
+					continue;
+
 				*ptr = extension.id;
 				++ptr;
 				*ptr = extension.len;

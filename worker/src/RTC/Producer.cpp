@@ -5,13 +5,10 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
-	/* Static. */
-
-	static uint8_t ClonedPacketBuffer[RTC::RtpBufferSize];
-
 	/* Instance methods. */
 
 	Producer::Producer(const std::string& id, RTC::Producer::Listener* listener, json& data)
@@ -150,6 +147,9 @@ namespace RTC
 		// This may throw.
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
+			if (exten.id == 0u)
+				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
+
 			auto it = this->rtpMapping.headerExtensions.find(exten.id);
 
 			// This should not happen since rtpMapping has been made reading the rtpParameters.
@@ -157,6 +157,9 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("RTP extension id not present in the RTP mapping");
 
 			auto mappedId = it->second;
+
+			if (mappedId == 0u)
+				MS_THROW_TYPE_ERROR("Mapped RTP extension id cannot be 0");
 
 			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
@@ -480,13 +483,6 @@ namespace RTC
 			return;
 		}
 
-		// Let's clone the RTP packet so we can mangle the payload (if needed) and other
-		// stuff that would change its size.
-		std::unique_ptr<RTC::RtpPacket> clonedPacket;
-
-		clonedPacket.reset(packet->Clone(ClonedPacketBuffer));
-		packet = clonedPacket.get();
-
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
 		{
@@ -528,7 +524,7 @@ namespace RTC
 		if (!MangleRtpPacket(packet, rtpStream))
 			return;
 
-		// Post-process th packet.
+		// Post-process the packet.
 		PostProcessRtpPacket(packet);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
@@ -848,47 +844,91 @@ namespace RTC
 		MS_TRACE();
 
 		// Mangle the payload type.
-		uint8_t payloadType = packet->GetPayloadType();
-		auto it             = this->rtpMapping.codecs.find(payloadType);
-
-		if (it == this->rtpMapping.codecs.end())
 		{
-			MS_WARN_TAG(rtp, "unknown payload type [payloadType:%" PRIu8 "]", payloadType);
+			uint8_t payloadType = packet->GetPayloadType();
+			auto it             = this->rtpMapping.codecs.find(payloadType);
 
-			return false;
+			if (it == this->rtpMapping.codecs.end())
+			{
+				MS_WARN_TAG(rtp, "unknown payload type [payloadType:%" PRIu8 "]", payloadType);
+
+				return false;
+			}
+
+			uint8_t mappedPayloadType = it->second;
+
+			packet->SetPayloadType(mappedPayloadType);
 		}
 
-		uint8_t mappedPayloadType = it->second;
-
-		packet->SetPayloadType(mappedPayloadType);
-
 		// Mangle the SSRC.
-		uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+		{
+			uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
-		packet->SetSsrc(mappedSsrc);
+			packet->SetSsrc(mappedSsrc);
+		}
 
-		// TODO: Redo.
-		// Mangle RTP header extension ids.
-		// packet->MangleHeaderExtensionIds(this->rtpMapping.headerExtensions);
+		// Mangle RTP header extensions.
+		{
+			static uint8_t buffer[4096];
+			uint8_t* bufferPtr{ buffer };
+			std::vector<uint8_t> extenIds;
+			std::vector<RTC::RtpPacket::GenericExtension> extensions;
 
-		// Assign mapped RTP header extension ids.
-		if (this->mappedRtpHeaderExtensionIds.ssrcAudioLevel != 0u)
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				if (this->rtpHeaderExtensionIds.ssrcAudioLevel != 0u)
+					extenIds.push_back(rtpHeaderExtensionIds.ssrcAudioLevel);
+			}
+			else if (this->kind == RTC::Media::Kind::VIDEO)
+			{
+				if (this->rtpHeaderExtensionIds.videoOrientation != 0u)
+					extenIds.push_back(rtpHeaderExtensionIds.videoOrientation);
+			}
+
+			if (this->rtpHeaderExtensionIds.absSendTime != 0u)
+				extenIds.push_back(rtpHeaderExtensionIds.absSendTime);
+
+			if (this->rtpHeaderExtensionIds.mid != 0u)
+				extenIds.push_back(rtpHeaderExtensionIds.mid);
+
+			if (this->rtpHeaderExtensionIds.rid != 0u)
+				extenIds.push_back(rtpHeaderExtensionIds.rid);
+
+			if (this->rtpHeaderExtensionIds.rrid != 0u)
+				extenIds.push_back(rtpHeaderExtensionIds.rrid);
+
+			for (auto extenId : extenIds)
+			{
+				uint8_t extenLen;
+				uint8_t* extenValue = packet->GetExtension(extenId, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  // id (let's set the mapped id here)
+					  this->rtpMapping.headerExtensions.at(extenId),
+					  // len
+					  extenLen,
+					  // value
+					  bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+			}
+
+			// Set the new extensions into the packet using One-Byte format.
+			packet->SetExtensions(1, extensions);
+
+			// Assign mapped RTP header extension ids.
 			packet->SetAudioLevelExtensionId(this->mappedRtpHeaderExtensionIds.ssrcAudioLevel);
-
-		if (this->mappedRtpHeaderExtensionIds.videoOrientation != 0u)
 			packet->SetVideoOrientationExtensionId(this->mappedRtpHeaderExtensionIds.videoOrientation);
-
-		if (this->mappedRtpHeaderExtensionIds.absSendTime != 0u)
 			packet->SetAbsSendTimeExtensionId(this->mappedRtpHeaderExtensionIds.absSendTime);
-
-		if (this->mappedRtpHeaderExtensionIds.mid != 0u)
 			packet->SetMidExtensionId(this->mappedRtpHeaderExtensionIds.mid);
-
-		if (this->mappedRtpHeaderExtensionIds.rid != 0u)
 			packet->SetRidExtensionId(this->mappedRtpHeaderExtensionIds.rid);
-
-		if (this->mappedRtpHeaderExtensionIds.rrid != 0u)
 			packet->SetRepairedRidExtensionId(this->mappedRtpHeaderExtensionIds.rrid);
+		}
 
 		return true;
 	}
