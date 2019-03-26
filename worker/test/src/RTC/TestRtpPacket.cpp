@@ -643,6 +643,29 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 
+		extensions.clear();
+
+		uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04 };
+
+		extensions.emplace_back(
+		  2,     // id
+		  4,     // len
+		  value3 // value
+		);
+
+		packet->SetExtensions(2, extensions);
+
+		REQUIRE(packet->GetSize() == 40);
+		REQUIRE(packet->HasHeaderExtension() == true);
+		REQUIRE(packet->GetHeaderExtensionId() == 0b0001000000000000);
+		REQUIRE(packet->GetHeaderExtensionLength() == 8);
+		REQUIRE(packet->HasOneByteExtensions() == false);
+		REQUIRE(packet->HasTwoBytesExtensions() == true);
+		REQUIRE(packet->GetPayloadLength() == 12);
+		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[0] == 0x11);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
+
 		delete packet;
 	}
 }

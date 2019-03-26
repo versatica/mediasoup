@@ -1,8 +1,8 @@
 #include "RTC/FuzzerRtpPacket.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <cstring> // std::memory()
-#include <map>
 #include <string>
+#include <vector>
 
 void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 {
@@ -13,7 +13,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// below will try to write into packet memory.
 	//
 	// NOTE: Let's make the buffer bigger to test API that increases packet size.
-	uint8_t data2[len + 16];
+	uint8_t data2[len + 64];
 	uint8_t extenLen;
 	bool voice;
 	uint8_t volume;
@@ -23,7 +23,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	uint32_t absSendTime;
 	std::string mid;
 	std::string rid;
-	std::map<uint8_t, uint8_t> idMapping;
+	std::vector<RTC::RtpPacket::GenericExtension> extensions;
 
 	std::memcpy(data2, data, len);
 
@@ -73,11 +73,29 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetExtension(6, extenLen);
 	packet->ReadRid(rid);
 
-	idMapping[1] = 11;
-	idMapping[2] = 12;
-	idMapping[3] = 13;
+	uint8_t value1[] = { 0x01, 0x02, 0x03, 0x04 };
 
-	packet->MangleHeaderExtensionIds(idMapping);
+	extensions.emplace_back(
+	  1,     // id
+	  4,     // len
+	  value1 // value
+	);
+
+	uint8_t value2[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
+
+	extensions.emplace_back(
+	  2,     // id
+	  11,    // len
+	  value2 // value
+	);
+
+	packet->SetExtensions(1, extensions);
+	packet->SetExtensions(2, extensions);
+
+	extensions.clear();
+
+	packet->SetExtensions(2, extensions);
+	packet->SetExtensions(1, extensions);
 
 	packet->SetAudioLevelExtensionId(11);
 	packet->GetExtension(11, extenLen);
@@ -95,9 +113,6 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetPayloadLength();
 	packet->GetPayloadPadding();
 	packet->IsKeyFrame();
-
-	packet->SetOneByteHeaderExtension();
-	packet->SetTwoBytesHeaderExtension();
 
 	uint8_t buffer[len + 16];
 	auto* clonedPacket = packet->Clone(buffer);
