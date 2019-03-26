@@ -382,10 +382,9 @@ namespace RTC
 			this->headerExtension->length = htons(extensionsTotalSize / 4);
 		}
 
-		// ptr starts in the header extension value position.
+		// Write the new extensions into the header extension value.
 		uint8_t* ptr = this->headerExtension->value;
 
-		// Write the new extensions into the header extension value.
 		for (auto& extension : extensions)
 		{
 			if (type == 1u)
