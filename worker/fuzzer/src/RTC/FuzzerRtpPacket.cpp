@@ -23,7 +23,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	uint32_t absSendTime;
 	std::string mid;
 	std::string rid;
-	std::vector<RTC::RtpPacket::GenericExtension> extensions;
+	std::vector<::RTC::RtpPacket::GenericExtension> extensions;
 
 	std::memcpy(data2, data, len);
 
@@ -93,6 +93,35 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->SetExtensions(2, extensions);
 
 	extensions.clear();
+
+	packet->SetExtensions(2, extensions);
+	packet->SetExtensions(1, extensions);
+
+	uint8_t value3[] = { 0x01, 0x02, 0x03 };
+
+	extensions.emplace_back(
+	  14,    // id
+	  3,     // len
+	  value3 // value
+	);
+
+	extensions.emplace_back(
+	  15,    // id
+	  3,     // len
+	  value3 // value
+	);
+
+	extensions.emplace_back(
+	  22,    // id
+	  3,     // len
+	  value3 // value
+	);
+
+	extensions.emplace_back(
+	  0,     // id
+	  3,     // len
+	  value3 // value
+	);
 
 	packet->SetExtensions(2, extensions);
 	packet->SetExtensions(1, extensions);

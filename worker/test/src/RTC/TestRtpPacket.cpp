@@ -507,6 +507,20 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		uint8_t value1[] = { 0x01, 0x02, 0x03, 0x04 };
 
+		// This must be ignored due to id=0.
+		extensions.emplace_back(
+		  0,     // id
+		  4,     // len
+		  value1 // value
+		);
+
+		// This must be ignored due to id>14.
+		extensions.emplace_back(
+		  15,    // id
+		  4,     // len
+		  value1 // value
+		);
+
 		extensions.emplace_back(
 		  1,     // id
 		  4,     // len
@@ -539,7 +553,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04 };
 
 		extensions.emplace_back(
-		  2,     // id
+		  14,    // id
 		  4,     // len
 		  value3 // value
 		);
@@ -616,6 +630,13 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		uint8_t value1[] = { 0x01, 0x02, 0x03, 0x04 };
 
+		// This must be ignored due to id=0.
+		extensions.emplace_back(
+		  0,     // id
+		  4,     // len
+		  value1 // value
+		);
+
 		extensions.emplace_back(
 		  1,     // id
 		  4,     // len
@@ -625,7 +646,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t value2[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
 
 		extensions.emplace_back(
-		  2,     // id
+		  22,    // id
 		  11,    // len
 		  value2 // value
 		);
@@ -648,7 +669,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04 };
 
 		extensions.emplace_back(
-		  2,     // id
+		  24,    // id
 		  4,     // len
 		  value3 // value
 		);
