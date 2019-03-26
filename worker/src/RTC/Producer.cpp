@@ -159,7 +159,7 @@ namespace RTC
 			auto mappedId = it->second;
 
 			if (mappedId == 0u)
-				MS_THROW_TYPE_ERROR("Mapped RTP extension id cannot be 0");
+				MS_THROW_TYPE_ERROR("mapped RTP extension id cannot be 0");
 
 			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
@@ -870,9 +870,20 @@ namespace RTC
 		// Mangle RTP header extensions.
 		{
 			static uint8_t buffer[4096];
+			static std::vector<uint8_t> extenIds;
+			static std::vector<RTC::RtpPacket::GenericExtension> extensions;
+
 			uint8_t* bufferPtr{ buffer };
-			std::vector<uint8_t> extenIds;
-			std::vector<RTC::RtpPacket::GenericExtension> extensions;
+
+			if (extenIds.capacity() != 24)
+				extenIds.reserve(24);
+
+			extenIds.clear();
+
+			if (extensions.capacity() != 24)
+				extensions.reserve(24);
+
+			extensions.clear();
 
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
@@ -907,12 +918,10 @@ namespace RTC
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
 					extensions.emplace_back(
-					  // id (let's set the mapped id here)
-					  this->rtpMapping.headerExtensions.at(extenId),
-					  // len
-					  extenLen,
-					  // value
-					  bufferPtr);
+					  this->rtpMapping.headerExtensions.at(extenId), // Use the mapped id
+					  extenLen,                                      // len
+					  bufferPtr                                      // value
+					);
 
 					bufferPtr += extenLen;
 				}
