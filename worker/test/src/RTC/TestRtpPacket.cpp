@@ -10,6 +10,7 @@ using namespace RTC;
 
 static uint8_t buffer[65536];
 static uint8_t buffer2[65536];
+static uint8_t buffer3[65536];
 
 SCENARIO("parse RTP packets", "[parser][rtp]")
 {
@@ -540,7 +541,10 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->GetPayload()[0] == 0x11);
 		REQUIRE(clonedPacket->GetPayload()[clonedPacket->GetPayloadLength() - 1] == 0xCC);
 
+		auto* clonedPacket2 = packet->Clone(buffer3);
+
 		delete clonedPacket;
+		delete clonedPacket2;
 	}
 
 	SECTION("add Two-Bytes header extensions")
@@ -600,6 +604,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->GetPayload()[0] == 0x11);
 		REQUIRE(clonedPacket->GetPayload()[clonedPacket->GetPayloadLength() - 1] == 0xCC);
 
+		auto* clonedPacket2 = packet->Clone(buffer3);
+
 		delete clonedPacket;
+		delete clonedPacket2;
 	}
 }

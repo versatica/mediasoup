@@ -11,7 +11,9 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 
 	// We need to clone the given data into a separate buffer because setters
 	// below will try to write into packet memory.
-	uint8_t data2[len];
+	//
+	// NOTE: Let's make the buffer bigger to test API that increases packet size.
+	uint8_t data2[len + 16];
 	uint8_t extenLen;
 	bool voice;
 	uint8_t volume;
@@ -94,7 +96,10 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetPayloadPadding();
 	packet->IsKeyFrame();
 
-	uint8_t buffer[len];
+	packet->SetOneByteHeaderExtension();
+	packet->SetTwoBytesHeaderExtension();
+
+	uint8_t buffer[len + 16];
 	auto* clonedPacket = packet->Clone(buffer);
 
 	delete clonedPacket;

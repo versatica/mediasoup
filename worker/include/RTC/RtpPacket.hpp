@@ -477,7 +477,7 @@ namespace RTC
 
 	inline uint8_t* RtpPacket::GetPayload() const
 	{
-		return this->payload;
+		return this->payloadLength != 0 ? this->payload : nullptr;
 	}
 
 	inline size_t RtpPacket::GetPayloadLength() const

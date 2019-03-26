@@ -286,6 +286,8 @@ namespace RTC
 			return false;
 		}
 
+		MS_ERROR("---------- YES 1 !!!");
+
 		// Set the header extension bit.
 		this->header->extension = 1u;
 
@@ -296,10 +298,10 @@ namespace RTC
 		std::memmove(this->payload + 4, this->payload, this->payloadLength + this->payloadPadding);
 		this->payload += 4;
 
-		// Increase size.
+		// Increase packet total size.
 		this->size += 4;
 
-		// Set the header extension id and length.
+		// Set the header extension id with length 0.
 		this->headerExtension->id     = uint16_t{ htons(0xBEDE) };
 		this->headerExtension->length = 0u;
 
@@ -319,6 +321,8 @@ namespace RTC
 			return false;
 		}
 
+		MS_ERROR("---------- YES 2 !!!");
+
 		// Set the header extension bit.
 		this->header->extension = 1u;
 
@@ -332,7 +336,7 @@ namespace RTC
 		// Increase size.
 		this->size += 4;
 
-		// Set the header extension id and length.
+		// Set the header extension id with length 0.
 		this->headerExtension->id     = uint16_t{ htons(0b0001000000000000) };
 		this->headerExtension->length = 0u;
 
@@ -435,26 +439,41 @@ namespace RTC
 
 		// Copy payload.
 
-		uint8_t* newPayload{ nullptr };
+		// Set the payload pointer.
+		uint8_t* newPayload{ ptr };
 
-		if (this->payload != nullptr)
+		if (this->payloadLength != 0)
 		{
-			numBytes = GetPayloadLength();
+			numBytes = this->payloadLength;
 			std::memcpy(ptr, this->payload, numBytes);
-
-			// Set the payload pointer.
-			newPayload = ptr;
 
 			// Update pointer.
 			ptr += numBytes;
+		}
+		else
+		{
+			MS_ERROR("----- OH!! hay this->payload");
 		}
 
 		// Copy payload padding.
 
 		if (this->payloadPadding != 0u)
 		{
+			MS_ERROR("----- OH!! this->payloadPadding:%" PRIu8, this->payloadPadding);
+
 			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
 			ptr += size_t{ this->payloadPadding };
+		}
+		else
+		{
+			MS_ERROR("----- OH!! this->payloadPadding == 0");
+		}
+
+		if (static_cast<size_t>(ptr - buffer) != this->size)
+		{
+			MS_ERROR(
+				"----- OH!! (ptr - buffer):%zu, this->size:%zu, this->headerExtension->length:%" PRIu16 ", GetHeaderExtensionLength():%zu",
+				static_cast<size_t>(ptr - buffer), this->size, this->headerExtension->length, GetHeaderExtensionLength());
 		}
 
 		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
