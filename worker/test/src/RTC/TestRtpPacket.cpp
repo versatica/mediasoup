@@ -473,6 +473,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, 28);
 		std::vector<RTC::RtpPacket::GenericExtension> extensions;
+		uint8_t extenLen;
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -521,6 +522,13 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		  value1 // value
 		);
 
+		// This must be ignored due to id>14.
+		extensions.emplace_back(
+		  22,    // id
+		  4,     // len
+		  value1 // value
+		);
+
 		extensions.emplace_back(
 		  1,     // id
 		  4,     // len
@@ -547,6 +555,13 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadPadding() == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
+		REQUIRE(packet->GetExtension(0, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(15, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(22, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(1, extenLen));
+		REQUIRE(extenLen == 4);
+		REQUIRE(packet->GetExtension(2, extenLen));
+		REQUIRE(extenLen == 11);
 
 		extensions.clear();
 
@@ -570,6 +585,10 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadPadding() == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
+		REQUIRE(packet->GetExtension(1, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(2, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(14, extenLen));
+		REQUIRE(extenLen == 4);
 
 		delete packet;
 	}
@@ -596,6 +615,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, 28);
 		std::vector<RTC::RtpPacket::GenericExtension> extensions;
+		uint8_t extenLen;
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -663,6 +683,11 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadPadding() == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
+		REQUIRE(packet->GetExtension(0, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(1, extenLen));
+		REQUIRE(extenLen == 4);
+		REQUIRE(packet->GetExtension(22, extenLen));
+		REQUIRE(extenLen == 11);
 
 		extensions.clear();
 
@@ -686,6 +711,10 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadPadding() == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
+		REQUIRE(packet->GetExtension(1, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(22, extenLen) == nullptr);
+		REQUIRE(packet->GetExtension(24, extenLen));
+		REQUIRE(extenLen == 4);
 
 		delete packet;
 	}
