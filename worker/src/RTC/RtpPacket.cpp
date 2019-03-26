@@ -296,7 +296,7 @@ namespace RTC
 		{
 			// Nothing to do.
 		}
-		// Otherwise, if there is header extension of unknown type, modify its id.
+		// Otherwise, if there is header extension of non matching type, modify its id.
 		else if (this->headerExtension)
 		{
 			if (type == 1u)
@@ -392,7 +392,7 @@ namespace RTC
 				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
 					continue;
 
-				*ptr = (extension.id & 0x0F) | ((extension.len - 1) << 4);
+				*ptr = (extension.id << 4) | ((extension.len - 1) & 0x0F);
 				++ptr;
 				std::memmove(ptr, extension.value, extension.len);
 				ptr += extension.len;
