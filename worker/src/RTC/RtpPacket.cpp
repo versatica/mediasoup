@@ -177,18 +177,18 @@ namespace RTC
 
 			if (HasOneByteExtensions())
 			{
-				extIds.reserve(this->oneByteExtensions.size());
+				extIds.reserve(this->mapOneByteExtensions.size());
 
-				for (auto& kv : this->oneByteExtensions)
+				for (auto& kv : this->mapOneByteExtensions)
 				{
 					extIds.push_back(std::to_string(kv.first));
 				}
 			}
 			else
 			{
-				extIds.reserve(this->twoBytesExtensions.size());
+				extIds.reserve(this->mapTwoBytesExtensions.size());
 
-				for (auto& kv : this->twoBytesExtensions)
+				for (auto& kv : this->mapTwoBytesExtensions)
 				{
 					extIds.push_back(std::to_string(kv.first));
 				}
@@ -283,6 +283,10 @@ namespace RTC
 		this->midExtensionId              = 0;
 		this->ridExtensionId              = 0;
 		this->rridExtensionId             = 0;
+
+		// Clear the One-Byte and Two-Bytes extension elements maps.
+		this->mapOneByteExtensions.clear();
+		this->mapTwoBytesExtensions.clear();
 
 		// If One-Byte is requested and the packet already has One-Byte extensions,
 		// keep the header extension id.
@@ -392,6 +396,9 @@ namespace RTC
 				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
 					continue;
 
+				// Store the One-Byte extension element in the map.
+				this->mapOneByteExtensions[extension.id] = reinterpret_cast<OneByteExtension*>(ptr);
+
 				*ptr = (extension.id << 4) | ((extension.len - 1) & 0x0F);
 				++ptr;
 				std::memmove(ptr, extension.value, extension.len);
@@ -401,6 +408,9 @@ namespace RTC
 			{
 				if (extension.id == 0)
 					continue;
+
+				// Store the Two-Bytes extension element in the map.
+				this->mapTwoBytesExtensions[extension.id] = reinterpret_cast<TwoBytesExtension*>(ptr);
 
 				*ptr = extension.id;
 				++ptr;
@@ -418,9 +428,6 @@ namespace RTC
 		}
 
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
-
-		// Parse extensions again.
-		ParseExtensions();
 	}
 
 	RtpPacket* RtpPacket::Clone(const uint8_t* buffer) const
@@ -647,7 +654,7 @@ namespace RTC
 		if (HasOneByteExtensions())
 		{
 			// Clear the One-Byte extension elements map.
-			this->oneByteExtensions.clear();
+			this->mapOneByteExtensions.clear();
 
 			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
@@ -674,8 +681,8 @@ namespace RTC
 						break;
 					}
 
-					// Store the One-Byte extension element in a map.
-					this->oneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
+					// Store the One-Byte extension element in the map.
+					this->mapOneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
 
 					ptr += (1 + len);
 				}
@@ -696,7 +703,7 @@ namespace RTC
 		else if (HasTwoBytesExtensions())
 		{
 			// Clear the Two-Bytes extension elements map.
-			this->twoBytesExtensions.clear();
+			this->mapTwoBytesExtensions.clear();
 
 			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
@@ -722,8 +729,8 @@ namespace RTC
 						break;
 					}
 
-					// Store the Two-Bytes extension element in a map.
-					this->twoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
+					// Store the Two-Bytes extension element in the map.
+					this->mapTwoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
 
 					ptr += (2 + len);
 				}

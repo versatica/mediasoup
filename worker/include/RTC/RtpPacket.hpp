@@ -154,8 +154,8 @@ namespace RTC
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
-		std::map<uint8_t, OneByteExtension*> oneByteExtensions;
-		std::map<uint8_t, TwoBytesExtension*> twoBytesExtensions;
+		std::map<uint8_t, OneByteExtension*> mapOneByteExtensions;
+		std::map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
 		uint8_t audioLevelExtensionId{ 0 };
 		uint8_t videoOrientationExtensionId{ 0 };
 		uint8_t absSendTimeExtensionId{ 0 };
@@ -451,9 +451,9 @@ namespace RTC
 		}
 		else if (HasOneByteExtensions())
 		{
-			auto it = this->oneByteExtensions.find(id);
+			auto it = this->mapOneByteExtensions.find(id);
 
-			if (it == this->oneByteExtensions.end())
+			if (it == this->mapOneByteExtensions.end())
 				return nullptr;
 
 			auto* extension = it->second;
@@ -464,9 +464,9 @@ namespace RTC
 		}
 		else if (HasTwoBytesExtensions())
 		{
-			auto it = this->twoBytesExtensions.find(id);
+			auto it = this->mapTwoBytesExtensions.find(id);
 
-			if (it == this->twoBytesExtensions.end())
+			if (it == this->mapTwoBytesExtensions.end())
 				return nullptr;
 
 			auto* extension = it->second;
