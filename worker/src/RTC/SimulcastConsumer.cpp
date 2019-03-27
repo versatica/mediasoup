@@ -63,7 +63,14 @@ namespace RTC
 		// Add rtpStream.
 		this->rtpStream->FillJson(jsonObject["rtpStream"]);
 
-		// TODO: Add layers, etc.
+		// Add preferredSpatialLayer.
+		jsonObject["preferredSpatialLayer"] = this->preferredSpatialLayer;
+
+		// Add targetSpatialLayer.
+		jsonObject["targetSpatialLayer"] = this->targetSpatialLayer;
+
+		// Add currentSpatialLayer.
+		jsonObject["currentSpatialLayer"] = this->currentSpatialLayer;
 	}
 
 	void SimulcastConsumer::FillJsonStats(json& jsonArray) const

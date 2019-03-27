@@ -322,7 +322,6 @@ namespace RTC
 		jsonObject["rtpStreams"] = json::array();
 		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
 		size_t rtpStreamIdx{ 0 };
-		float lossPercentage{ 0 };
 
 		for (auto& kv : this->mapSsrcRtpStream)
 		{
@@ -333,15 +332,8 @@ namespace RTC
 
 			rtpStream->FillJson(jsonEntry);
 
-			lossPercentage += rtpStream->GetLossPercentage();
 			++rtpStreamIdx;
 		}
-
-		if (!this->mapSsrcRtpStream.empty())
-			lossPercentage = lossPercentage / this->mapSsrcRtpStream.size();
-
-		// Add lossPercentage.
-		jsonObject["lossPercentage"] = lossPercentage;
 
 		// Add paused.
 		jsonObject["paused"] = this->paused;
