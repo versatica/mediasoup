@@ -137,7 +137,7 @@ namespace RTC
 		  packet->GetSequenceNumber());
 
 		// If not a valid packet ignore it.
-		if (!UpdateSeq(packet))
+		if (!RTC::RtpStream::UpdateSeq(packet))
 		{
 			MS_WARN_TAG(
 			  rtx,
@@ -157,8 +157,8 @@ namespace RTC
 		if (this->nackGenerator->ReceivePacket(packet))
 		{
 			// Mark the packet as retransmitted and repaired.
-			PacketRetransmitted(packet);
-			PacketRepaired(packet);
+			RTC::RtpStream::PacketRetransmitted(packet);
+			RTC::RtpStream::PacketRepaired(packet);
 
 			return true;
 		}
@@ -383,7 +383,7 @@ namespace RTC
 		// We didn't expect more packets to come.
 		if (expected == 0)
 		{
-			RtpStream::UpdateScore(10);
+			RTC::RtpStream::UpdateScore(10);
 
 			return;
 		}

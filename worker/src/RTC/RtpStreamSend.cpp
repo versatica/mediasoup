@@ -11,7 +11,6 @@ namespace RTC
 {
 	/* Static. */
 
-	static uint8_t RtxPacketBuffer[RTC::RtpBufferSize];
 	// 17: 16 bit mask + the initial sequence number.
 	static constexpr size_t MaxRequestedPackets{ 17 };
 	static std::vector<RTC::RtpPacket*> RetransmissionContainer(MaxRequestedPackets + 1);
@@ -85,16 +84,22 @@ namespace RTC
 
 			for (; it2 != RetransmissionContainer.end(); ++it2)
 			{
+				// Note that this is an already RTX encoded packet if RTX is used
+				// (FillRetransmissionContainer() did it).
 				RTC::RtpPacket* packet = *it2;
 
 				if (packet == nullptr)
 					break;
 
 				// Retransmit the packet.
-				RetransmitPacket(packet);
+				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
+				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
+
+				// Mark the packet as retransmitted.
+				RTC::RtpStream::PacketRetransmitted(packet);
 
 				// Mark the packet as repaired.
-				PacketRepaired(packet);
+				RTC::RtpStream::PacketRepaired(packet);
 			}
 		}
 	}
@@ -214,50 +219,6 @@ namespace RTC
 		this->buffer.clear();
 	}
 
-	void RtpStreamSend::RetransmitPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		RTC::RtpPacket* rtxPacket{ nullptr };
-
-		if (HasRtx())
-		{
-			rtxPacket = packet->Clone(RtxPacketBuffer);
-
-			rtxPacket->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "sending RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
-			  ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber(),
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
-		}
-		else
-		{
-			rtxPacket = packet;
-
-			MS_DEBUG_TAG(
-			  rtx,
-			  "retransmitting packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			  rtxPacket->GetSsrc(),
-			  rtxPacket->GetSequenceNumber());
-		}
-
-		// Send the packet.
-		static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
-		  ->OnRtpStreamRetransmitRtpPacket(this, rtxPacket);
-
-		// Delete the RTX RtpPacket if it was cloned.
-		if (rtxPacket != packet)
-			delete rtxPacket;
-
-		// Mark the packet as retransmitted.
-		PacketRetransmitted(packet);
-	}
-
 	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -292,7 +253,6 @@ namespace RTC
 		}
 
 		// Otherwise, do the stuff.
-
 		std::list<BufferItem>::iterator newBufferIt;
 		uint8_t* store{ nullptr };
 
@@ -332,7 +292,7 @@ namespace RTC
 		else
 		{
 			auto& firstBufferItem = *(this->buffer.begin());
-			auto firstPacket      = firstBufferItem.packet;
+			auto* firstPacket     = firstBufferItem.packet;
 
 			// Store points to the store used by the first packet.
 			store = const_cast<uint8_t*>(firstPacket->GetData());
@@ -347,7 +307,10 @@ namespace RTC
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
-	// RetransmissionContainer vector (and set to null the next position).
+	// RetransmissionContainer vector (and sets to null the next position).
+	//
+	// If RTX is used the stored packet will be RTX encoded now (if not already
+	// encoded in a previous resend).
 	void RtpStreamSend::FillRetransmissionContainer(uint16_t seq, uint16_t bitmask)
 	{
 		MS_TRACE();
@@ -422,7 +385,7 @@ namespace RTC
 					// Found.
 					if (currentSeq == seq)
 					{
-						auto currentPacket = (*bufferIt).packet;
+						auto* currentPacket = (*bufferIt).packet;
 						// Calculate how the elapsed time between the max timestampt seen and
 						// the requested packet's timestampt (in ms).
 						uint32_t diffTs = this->maxPacketTs - currentPacket->GetTimestamp();
@@ -462,6 +425,16 @@ namespace RTC
 							  rtt);
 
 							break;
+						}
+
+						// If we use RTX and the packet has not yet been resent, encode it
+						// now.
+						if (HasRtx() && !(*bufferIt).rtxEncoded)
+						{
+							currentPacket->RtxEncode(
+							  this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
+
+							(*bufferIt).rtxEncoded = true;
 						}
 
 						// Store the packet in the container and then increment its index.
@@ -555,7 +528,7 @@ namespace RTC
 		// We didn't send any packet.
 		if (sent == 0)
 		{
-			RtpStream::UpdateScore(10);
+			RTC::RtpStream::UpdateScore(10);
 
 			return;
 		}

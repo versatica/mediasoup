@@ -21,7 +21,8 @@ namespace RTC
 	private:
 		struct StorageItem
 		{
-			uint8_t store[RTC::MtuSize];
+			// Allow some more space for RTX encoding.
+			uint8_t store[RTC::MtuSize + 200];
 		};
 
 	private:
@@ -30,6 +31,7 @@ namespace RTC
 			uint16_t seq{ 0 }; // RTP seq.
 			uint64_t resentAtTime{ 0 };
 			RTC::RtpPacket* packet{ nullptr };
+			bool rtxEncoded{ false }; // Whether the packet has already been RTX encoded.
 		};
 
 	public:
@@ -47,7 +49,6 @@ namespace RTC
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 		void Pause() override;
 		void Resume() override;
-		void RetransmitPacket(RTC::RtpPacket* packet);
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
