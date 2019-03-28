@@ -2,6 +2,7 @@
 #include "catch.hpp"
 #include "helpers.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <cstring> // std::memset()
 #include <string>
 #include <vector>
 
@@ -127,6 +128,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		auto* clonedPacket = packet->Clone(buffer2);
 
 		delete packet;
+
+		std::memset(buffer, '0', sizeof(buffer));
 
 		REQUIRE(clonedPacket->HasMarker() == false);
 		REQUIRE(clonedPacket->HasHeaderExtension() == true);
@@ -323,6 +326,10 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		auto rtxPacket = packet->Clone(RtxBuffer);
 
+		delete packet;
+
+		std::memset(buffer, '0', sizeof(buffer));
+
 		rtxPacket->RtxEncode(rtxPayloadType, rtxSsrc, rtxSeq);
 
 		REQUIRE(rtxPacket->HasMarker() == false);
@@ -349,7 +356,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->HasOneByteExtensions() == false);
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
 
-		delete packet;
 		delete rtxPacket;
 	}
 

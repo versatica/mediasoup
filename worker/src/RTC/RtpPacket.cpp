@@ -120,9 +120,6 @@ namespace RTC
 		auto* packet =
 		  new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 
-		// Parse RFC 5285 header extension.
-		packet->ParseExtensions();
-
 		return packet;
 	}
 
@@ -142,6 +139,9 @@ namespace RTC
 
 		if (this->header->csrcCount != 0u)
 			this->csrcList = reinterpret_cast<uint8_t*>(header) + sizeof(Header);
+
+		// Parse RFC 5285 header extension.
+		ParseExtensions();
 	}
 
 	RtpPacket::~RtpPacket()
@@ -438,29 +438,24 @@ namespace RTC
 		size_t numBytes{ 0 };
 
 		// Copy the minimum header.
-
 		numBytes = sizeof(Header);
 		std::memcpy(ptr, GetData(), numBytes);
 
 		// Set header pointer.
 		auto* newHeader = reinterpret_cast<Header*>(ptr);
 
-		// Update pointer.
 		ptr += numBytes;
 
 		// Copy CSRC list.
-
 		if (this->csrcList != nullptr)
 		{
 			numBytes = this->header->csrcCount * sizeof(this->header->ssrc);
 			std::memcpy(ptr, this->csrcList, numBytes);
 
-			// Update pointer.
 			ptr += numBytes;
 		}
 
 		// Copy header extension.
-
 		HeaderExtension* newHeaderExtension{ nullptr };
 
 		if (this->headerExtension != nullptr)
@@ -471,13 +466,10 @@ namespace RTC
 			// Set the header extension pointer.
 			newHeaderExtension = reinterpret_cast<HeaderExtension*>(ptr);
 
-			// Update pointer.
 			ptr += numBytes;
 		}
 
 		// Copy payload.
-
-		// Set the payload pointer.
 		uint8_t* newPayload{ ptr };
 
 		if (this->payloadLength != 0)
@@ -485,12 +477,10 @@ namespace RTC
 			numBytes = this->payloadLength;
 			std::memcpy(ptr, this->payload, numBytes);
 
-			// Update pointer.
 			ptr += numBytes;
 		}
 
 		// Copy payload padding.
-
 		if (this->payloadPadding != 0u)
 		{
 			*(ptr + static_cast<size_t>(this->payloadPadding) - 1) = this->payloadPadding;
@@ -502,9 +492,6 @@ namespace RTC
 		// Create the new RtpPacket instance and return it.
 		auto* packet = new RtpPacket(
 		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
-
-		// Parse RFC 5285 header extension.
-		packet->ParseExtensions();
 
 		// Keep already set extension ids.
 		packet->audioLevelExtensionId       = this->audioLevelExtensionId;
