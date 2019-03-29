@@ -111,7 +111,7 @@ namespace RTC
 		auto& jsonObject = jsonArray[0];
 
 		// Add type.
-		jsonObject["type"] = "transport";
+		jsonObject["type"] = "pipetransport";
 
 		// Add transportId.
 		jsonObject["transportId"] = this->id;
