@@ -200,6 +200,27 @@ namespace RTC
 
 						return false;
 					}
+					else if (context->currentTemporalLayer != context->preferences.temporalLayer)
+					{
+						// Payload descriptor contains the target temporal layer.
+						if (this->payloadDescriptor->tlIndex == context->preferences.temporalLayer)
+						{
+							// Upgrade required.
+							if (context->currentTemporalLayer < this->payloadDescriptor->tlIndex)
+							{
+								// Drop current packet if sync flag is not set.
+								if (this->payloadDescriptor->y != 1u)
+								{
+									context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+									context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+
+									return false;
+								}
+							}
+
+							context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
+						}
+					}
 				}
 			}
 

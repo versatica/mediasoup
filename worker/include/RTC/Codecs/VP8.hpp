@@ -89,6 +89,7 @@ namespace RTC
 				RTC::SeqManager<uint16_t> pictureIdManager;
 				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
 				bool syncRequired{ false };
+				uint8_t currentTemporalLayer{ std::numeric_limits<uint8_t>::max() };
 			};
 
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
