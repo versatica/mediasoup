@@ -870,6 +870,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsConnected())
+			return;
+
 		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}
 
