@@ -189,7 +189,7 @@ test('plainRtpTransport.produce() succeeds', async () =>
 				],
 				encodings :
 				[
-					{ ssrc: 22222222, rtx: { ssrc: 22222223 } },
+					{ ssrc: 22222222, rtx: { ssrc: 22222223 }, scalabilityMode: 'L1T3' },
 					{ ssrc: 22222224, rtx: { ssrc: 22222225 } },
 					{ ssrc: 22222226, rtx: { ssrc: 22222227 } },
 					{ ssrc: 22222228, rtx: { ssrc: 22222229 } }
@@ -553,7 +553,14 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings.length).toBe(4);
 	expect(data.rtpParameters.encodings).toEqual(
 		[
-			{ codecPayloadType: 112, ssrc: 22222222, rtx: { ssrc: 22222223 } },
+			{
+				codecPayloadType : 112,
+				ssrc             : 22222222,
+				rtx              : { ssrc: 22222223 },
+				scalabilityMode  : 'L1T3',
+				spatialLayers    : 1,
+				temporalLayers   : 3
+			},
 			{ codecPayloadType: 112, ssrc: 22222224, rtx: { ssrc: 22222225 } },
 			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
 			{ codecPayloadType: 112, ssrc: 22222228, rtx: { ssrc: 22222229 } }
