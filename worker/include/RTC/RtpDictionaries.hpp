@@ -26,7 +26,7 @@ namespace RTC
 	public:
 		static Kind GetKind(std::string& str);
 		static Kind GetKind(std::string&& str);
-		static std::string& GetString(Kind kind);
+		static const std::string& GetString(Kind kind);
 
 	private:
 		static std::unordered_map<std::string, Kind> string2Kind;
@@ -205,6 +205,9 @@ namespace RTC
 		uint32_t maxBitrate{ 0 };
 		double maxFramerate{ 0 };
 		bool dtx{ false };
+		std::string scalabilityMode;
+		uint8_t spatialLayers{ 1 };
+		uint8_t temporalLayers{ 1 };
 	};
 
 	class RtpHeaderExtensionParameters
@@ -261,7 +264,6 @@ namespace RTC
 	public:
 		RtpParameters(){};
 		explicit RtpParameters(json& data);
-		explicit RtpParameters(const RtpParameters* rtpParameters);
 
 		void FillJson(json& jsonObject) const;
 		const RTC::RtpCodecParameters* GetCodecForEncoding(RtpEncodingParameters& encoding) const;

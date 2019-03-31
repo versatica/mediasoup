@@ -155,14 +155,6 @@ namespace RTC
 		ValidateEncodings();
 	}
 
-	RtpParameters::RtpParameters(const RtpParameters* rtpParameters)
-	  : mid(rtpParameters->mid), codecs(rtpParameters->codecs), encodings(rtpParameters->encodings),
-	    headerExtensions(rtpParameters->headerExtensions), rtcp(rtpParameters->rtcp),
-	    hasRtcp(rtpParameters->hasRtcp)
-	{
-		MS_TRACE();
-	}
-
 	void RtpParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
@@ -339,8 +331,17 @@ namespace RTC
 
 		// Iterate all the encodings, set the first payloadType in all of them with
 		// codecPayloadType unset, and check that others point to a media codec.
+		//
+		// Also, don't allow multiple SVC spatial layers into an encoding if there
+		// are more than one encoding (simulcast).
 		for (auto& encoding : this->encodings)
 		{
+			if (encoding.spatialLayers > 1 && this->encodings.size() > 1)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "cannot use both simulcast and encodings with multiple SVC spatial layers");
+			}
+
 			if (!encoding.hasCodecPayloadType)
 			{
 				encoding.codecPayloadType    = firstMediaPayloadType;

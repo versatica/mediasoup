@@ -23,6 +23,7 @@ namespace RTC
 		auto jsonMaxBitrateIt       = data.find("maxBitrate");
 		auto jsonMaxFramerateIt     = data.find("maxFramerate");
 		auto jsonDtxIt              = data.find("dtx");
+		auto jsonScalabilityModeIt  = data.find("scalabilityMode");
 
 		// ssrc is optional.
 		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
@@ -58,6 +59,108 @@ namespace RTC
 		// dtx is optional.
 		if (jsonDtxIt != data.end() && jsonDtxIt->is_boolean())
 			this->dtx = jsonDtxIt->get<bool>();
+
+		// scalabilityMode is optional.
+		if (jsonScalabilityModeIt != data.end() && jsonScalabilityModeIt->is_string())
+		{
+			this->scalabilityMode = jsonScalabilityModeIt->get<std::string>();
+
+			if (this->scalabilityMode == "L1T2")
+			{
+				this->spatialLayers  = 1;
+				this->temporalLayers = 2;
+			}
+			else if (this->scalabilityMode == "L1T3")
+			{
+				this->spatialLayers  = 1;
+				this->temporalLayers = 3;
+			}
+			else if (this->scalabilityMode == "L2T1")
+			{
+				this->spatialLayers  = 2;
+				this->temporalLayers = 1;
+			}
+			else if (this->scalabilityMode == "L2T2")
+			{
+				this->spatialLayers  = 2;
+				this->temporalLayers = 2;
+			}
+			else if (this->scalabilityMode == "L2T3")
+			{
+				this->spatialLayers  = 2;
+				this->temporalLayers = 3;
+			}
+			else if (this->scalabilityMode == "L3T1")
+			{
+				this->spatialLayers  = 3;
+				this->temporalLayers = 1;
+			}
+			else if (this->scalabilityMode == "L3T2")
+			{
+				this->spatialLayers  = 3;
+				this->temporalLayers = 2;
+			}
+			else if (this->scalabilityMode == "L3T3")
+			{
+				this->spatialLayers  = 3;
+				this->temporalLayers = 3;
+			}
+			else if (this->scalabilityMode == "L2T1h")
+			{
+				this->spatialLayers  = 2;
+				this->temporalLayers = 1;
+			}
+			else if (this->scalabilityMode == "L2T2h")
+			{
+				this->spatialLayers  = 2;
+				this->temporalLayers = 2;
+			}
+			else if (this->scalabilityMode == "L2T3h")
+			{
+				this->spatialLayers  = 2;
+				this->temporalLayers = 3;
+			}
+			else if (this->scalabilityMode == "L3T2_KEY")
+			{
+				this->spatialLayers  = 3;
+				this->temporalLayers = 2;
+			}
+			else if (this->scalabilityMode == "L3T3_KEY")
+			{
+				this->spatialLayers  = 3;
+				this->temporalLayers = 3;
+			}
+			else if (this->scalabilityMode == "L4T5_KEY")
+			{
+				this->spatialLayers  = 4;
+				this->temporalLayers = 5;
+			}
+			else if (this->scalabilityMode == "L4T7_KEY")
+			{
+				this->spatialLayers  = 4;
+				this->temporalLayers = 7;
+			}
+			else if (this->scalabilityMode == "L3T2_KEY_SHIFT")
+			{
+				this->spatialLayers  = 3;
+				this->temporalLayers = 2;
+			}
+			else if (this->scalabilityMode == "L3T3_KEY_SHIFT")
+			{
+				this->spatialLayers  = 3;
+				this->temporalLayers = 3;
+			}
+			else if (this->scalabilityMode == "L4T5_KEY_SHIFT")
+			{
+				this->spatialLayers  = 4;
+				this->temporalLayers = 5;
+			}
+			else if (this->scalabilityMode == "L4T7_KEY_SHIFT")
+			{
+				this->spatialLayers  = 4;
+				this->temporalLayers = 7;
+			}
+		}
 	}
 
 	void RtpEncodingParameters::FillJson(json& jsonObject) const
@@ -94,5 +197,13 @@ namespace RTC
 		// Add dtx.
 		if (this->dtx)
 			jsonObject["dtx"] = this->dtx;
+
+		// Add scalabilityMode.
+		if (!this->scalabilityMode.empty())
+		{
+			jsonObject["scalabilityMode"] = this->scalabilityMode;
+			jsonObject["spatialLayers"]   = this->spatialLayers;
+			jsonObject["temporalLayers"]  = this->temporalLayers;
+		}
 	}
 } // namespace RTC

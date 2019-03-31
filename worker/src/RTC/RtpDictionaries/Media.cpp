@@ -57,7 +57,7 @@ namespace RTC
 		return it->second;
 	}
 
-	std::string& Media::GetString(Media::Kind kind)
+	const std::string& Media::GetString(Media::Kind kind)
 	{
 		MS_TRACE();
 
