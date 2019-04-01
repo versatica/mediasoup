@@ -770,11 +770,7 @@ namespace RTC
 
 		this->iceSelectedTuple->Send(data, len);
 
-		// If we have a REMB client pass the packet to it (just if video).
-		if (this->rembClient && consumer->GetKind() == RTC::Media::Kind::VIDEO)
-			this->rembClient->ReceiveRtpPacket(packet);
-
-		// Feed the REMB server.
+		// Feed the REMB client.
 		if (this->rembClient)
 		{
 			static uint32_t absSendTime;
