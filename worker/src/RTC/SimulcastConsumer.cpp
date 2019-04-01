@@ -648,10 +648,41 @@ namespace RTC
 				}
 			}
 		}
+		// Downgrade is desired.
+		else if (this->preferredSpatialLayer < this->currentSpatialLayer)
+		{
+			MS_DEBUG_TAG(simulcast, "trying to downgrade current spatial layer to preferred one");
+
+			int16_t idx      = this->preferredSpatialLayer;
+			uint8_t maxScore = 0;
+
+			for (; idx < this->currentSpatialLayer; ++idx)
+			{
+				auto spatialLayer       = static_cast<int16_t>(idx);
+				auto* producerRtpStream = this->producerRtpStreams[idx];
+
+				// Ignore spatial layers for non existing Producer streams.
+				if (!producerRtpStream)
+					continue;
+
+				if (producerRtpStream->GetScore() >= maxScore)
+				{
+					maxScore              = producerRtpStream->GetScore();
+					newTargetSpatialLayer = spatialLayer;
+
+					if (maxScore > 7)
+					{
+						MS_DEBUG_TAG(simulcast, "found Producer RtpStream with score > 7, keep it");
+
+						break;
+					}
+				}
+			}
+		}
 		// Downgrade is needed.
 		else if (
 		  !this->GetProducerCurrentRtpStream() || this->GetProducerCurrentRtpStream()->GetScore() < 7 ||
-		  this->rtpStream->GetScore() <= 6 || this->preferredSpatialLayer < this->currentSpatialLayer)
+		  this->rtpStream->GetScore() <= 6)
 		{
 			MS_DEBUG_TAG(simulcast, "trying to downgrade current spatial layer");
 
