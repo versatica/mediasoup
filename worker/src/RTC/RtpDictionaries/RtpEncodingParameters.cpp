@@ -160,6 +160,10 @@ namespace RTC
 				this->spatialLayers  = 4;
 				this->temporalLayers = 7;
 			}
+			else
+			{
+				MS_THROW_TYPE_ERROR("invalid scalabilityMode");
+			}
 		}
 	}
 

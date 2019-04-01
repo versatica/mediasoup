@@ -31,9 +31,9 @@
     "lint:worker": "make lint -C worker",
     "format:worker": "make format -C worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "jest",
+    "test:node": "make -C worker && jest",
     "test:worker": "make test -C worker",
-    "coverage:node": "jest --coverage && opn coverage/lcov-report/index.html",
+    "coverage:node": "make -C worker && jest --coverage && opn coverage/lcov-report/index.html",
     "postinstall": "make -C worker"
   },
   "jest": {
@@ -49,7 +49,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "eslint": "^5.15.3",
+    "eslint": "^5.16.0",
     "eslint-plugin-jest": "^22.4.1",
     "gulp": "^4.0.0",
     "gulp-clang-format": "^1.0.27",
