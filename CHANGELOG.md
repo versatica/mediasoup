@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.6.11
+
+* Update deps.
+* Simulcast: Increase profiles one by one unless explicitly forced (fixes #188).
+
+
 ### 2.6.10
 
 * `PlainRtpTransport.js`: Add missing methods and events.
