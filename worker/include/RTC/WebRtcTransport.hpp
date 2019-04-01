@@ -52,6 +52,11 @@ namespace RTC
 		void OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
+		/* Pure virtual methods inherited from RTC::Transport. */
+	private:
+		void UserOnNewProducer(RTC::Producer* producer) override;
+		void UserOnNewConsumer(RTC::Consumer* consumer) override;
+
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnPacketRecv(
@@ -109,12 +114,12 @@ namespace RTC
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
+		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.
 		bool connected{ false }; // Whether connect() was succesfully called.
 		std::vector<RTC::IceCandidate> iceCandidates;
 		RTC::TransportTuple* iceSelectedTuple{ nullptr };
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
-		std::unique_ptr<RTC::RembServer::RemoteBitrateEstimatorAbsSendTime> rembServerBitrateEstimator;
 		uint32_t maxIncomingBitrate{ 0 };
 	};
 } // namespace RTC

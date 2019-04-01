@@ -231,6 +231,9 @@ namespace RTC
 
 				request->Accept(data);
 
+				// Tell the subclass.
+				UserOnNewProducer(producer);
+
 				break;
 			}
 
@@ -332,6 +335,9 @@ namespace RTC
 				consumer->FillJsonScore(data["score"]);
 
 				request->Accept(data);
+
+				// Tell the subclass.
+				UserOnNewConsumer(consumer);
 
 				// If the Transport is already connected tell it to the new Consumer.
 				if (IsConnected())
@@ -531,6 +537,31 @@ namespace RTC
 
 							// TOO: NO. Must pass the packet to the subclass.
 							// this->availableOutgoingBitrate = remb->GetBitrate();
+
+							// TODO: TMP
+							{
+								uint32_t bitrate{ 0 };
+								uint64_t now = DepLibUV::GetTime();
+
+								// Get the RTP sending rate.
+								for (auto& kv : this->mapConsumers)
+								{
+									auto* consumer = kv.second;
+
+									bitrate += consumer->GetTransmissionRate(now);
+								}
+
+								auto* remb                = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
+								uint32_t availableBitrate = static_cast<uint32_t>(remb->GetBitrate());
+								int32_t diff              = availableBitrate - bitrate;
+
+								MS_ERROR(
+								  "REMB received [sending bitrate:%" PRIu32 ", REMB available bitrate:%" PRIu32
+								  ", diff:%" PRIi32 "]",
+								  bitrate / 1000,
+								  availableBitrate / 1000,
+								  diff / 1000);
+							}
 
 							break;
 						}

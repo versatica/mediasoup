@@ -77,6 +77,11 @@ namespace RTC
 		void Disconnected();
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 
+		/* Pure virtual methods that must be implemented by the subclass. */
+	protected:
+		virtual void UserOnNewProducer(RTC::Producer* producer) = 0;
+		virtual void UserOnNewConsumer(RTC::Consumer* consumer) = 0;
+
 	private:
 		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
 		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;

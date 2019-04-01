@@ -34,6 +34,11 @@ namespace RTC
 		void OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
+		/* Pure virtual methods inherited from RTC::Transport. */
+	private:
+		void UserOnNewProducer(RTC::Producer* producer) override;
+		void UserOnNewConsumer(RTC::Consumer* consumer) override;
+
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnPacketRecv(

@@ -254,6 +254,8 @@ namespace RTC
 		delete this->srtpRecvSession;
 
 		delete this->srtpSendSession;
+
+		delete this->rembServer;
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const
@@ -461,11 +463,8 @@ namespace RTC
 		}
 
 		// Add availableIncomingBitrate.
-		if (this->rembServerBitrateEstimator)
-		{
-			jsonObject["availableIncomingBitrate"] =
-			  this->rembServerBitrateEstimator->GetAvailableBitrate();
-		}
+		if (this->rembServer)
+			jsonObject["availableIncomingBitrate"] = this->rembServer->GetAvailableBitrate();
 
 		// TODO: We do not have this yet.
 		// Add availableOutgoingBitrate.
@@ -586,10 +585,6 @@ namespace RTC
 					// If everything is fine, we may run the DTLS transport if ready.
 					MayRunDtlsTransport();
 				}
-
-				// Set REMB server bitrate estimator.
-				this->rembServerBitrateEstimator.reset(
-				  new RTC::RembServer::RemoteBitrateEstimatorAbsSendTime(this));
 
 				// Tell the caller about the selected local DTLS role.
 				json data(json::object());
@@ -972,12 +967,15 @@ namespace RTC
 		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
 
 		// Feed the remote bitrate estimator (REMB).
-		uint32_t absSendTime;
-
-		if (packet->ReadAbsSendTime(absSendTime))
+		if (this->rembServer)
 		{
-			this->rembServerBitrateEstimator->IncomingPacket(
-			  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
+			uint32_t absSendTime;
+
+			if (packet->ReadAbsSendTime(absSendTime))
+			{
+				this->rembServer->IncomingPacket(
+				  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
+			}
 		}
 
 		// Get the associated Producer.
@@ -1062,6 +1060,47 @@ namespace RTC
 			packet = packet->GetNext();
 			delete previousPacket;
 		}
+	}
+
+	void WebRtcTransport::UserOnNewProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+		auto& codecs                = producer->GetRtpParameters().codecs;
+
+		// Set REMB server bitrate estimator:
+		// - if not already set, and
+		// - there is abs-send-time RTP header extension, and
+		// - there is "remb" in codecs RTCP feedback.
+		//
+		// clang-format off
+		if (
+			!this->rembServer &&
+			rtpHeaderExtensionIds.absSendTime != 0u &&
+			std::any_of(
+				codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+				{
+					return std::any_of(
+						codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
+						{
+							return fb.type == "goog-remb";
+						});
+				})
+		)
+		// clang-format on
+		{
+			MS_DEBUG_TAG(rbe, "enabling REMB server");
+
+			this->rembServer = new RTC::RembServer::RemoteBitrateEstimatorAbsSendTime(this);
+		}
+	}
+
+	void WebRtcTransport::UserOnNewConsumer(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// TODO
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(
@@ -1314,7 +1353,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnRemoteBitrateEstimatorValue(
-	  const RTC::RembServer::RemoteBitrateEstimator* /*remoteBitrateEstimator*/,
+	  const RTC::RembServer::RemoteBitrateEstimator* /*rembServer*/,
 	  const std::vector<uint32_t>& ssrcs,
 	  uint32_t availableBitrate)
 	{

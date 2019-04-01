@@ -399,6 +399,20 @@ namespace RTC
 		}
 	}
 
+	void PipeTransport::UserOnNewProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	void PipeTransport::UserOnNewConsumer(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
 	inline void PipeTransport::OnPacketRecv(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{

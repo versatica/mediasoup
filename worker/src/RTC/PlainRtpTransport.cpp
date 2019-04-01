@@ -671,6 +671,20 @@ namespace RTC
 		}
 	}
 
+	void PlainRtpTransport::UserOnNewProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	void PlainRtpTransport::UserOnNewConsumer(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
 	inline void PlainRtpTransport::OnPacketRecv(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
