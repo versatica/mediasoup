@@ -4,6 +4,7 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
+#include "RTC/RembClient.hpp"
 #include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunMessage.hpp"
@@ -22,6 +23,7 @@ namespace RTC
 	                        public RTC::TcpConnection::Listener,
 	                        public RTC::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener,
+	                        public RTC::RembClient::Listener,
 	                        public RTC::RembServer::RemoteBitrateEstimator::Listener
 	{
 	private:
@@ -43,7 +45,7 @@ namespace RTC
 	private:
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
@@ -56,6 +58,7 @@ namespace RTC
 	private:
 		void UserOnNewProducer(RTC::Producer* producer) override;
 		void UserOnNewConsumer(RTC::Consumer* consumer) override;
+		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
@@ -98,9 +101,13 @@ namespace RTC
 		void OnDtlsApplicationData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
+		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
+	public:
+		void OnRembClientBitrateEstimation(RTC::RembClient* rembClient, int32_t availableBitrate) override;
+
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:
-		void OnRemoteBitrateEstimatorValue(
+		void OnRembServerBitrateEstimation(
 		  const RTC::RembServer::RemoteBitrateEstimator* remoteBitrateEstimator,
 		  const std::vector<uint32_t>& ssrcs,
 		  uint32_t availableBitrate) override;
@@ -114,6 +121,7 @@ namespace RTC
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
+		RTC::RembClient* rembClient{ nullptr };
 		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.
 		bool connected{ false }; // Whether connect() was succesfully called.

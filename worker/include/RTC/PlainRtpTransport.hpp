@@ -27,7 +27,7 @@ namespace RTC
 
 	private:
 		bool IsConnected() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
@@ -38,6 +38,7 @@ namespace RTC
 	private:
 		void UserOnNewProducer(RTC::Producer* producer) override;
 		void UserOnNewConsumer(RTC::Consumer* consumer) override;
+		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:

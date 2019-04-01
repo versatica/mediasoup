@@ -10,7 +10,6 @@
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
-#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -533,35 +532,10 @@ namespace RTC
 						// Store REMB info.
 						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
 						{
-							// auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
+							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
-							// TOO: NO. Must pass the packet to the subclass.
-							// this->availableOutgoingBitrate = remb->GetBitrate();
-
-							// TODO: TMP
-							{
-								uint32_t bitrate{ 0 };
-								uint64_t now = DepLibUV::GetTime();
-
-								// Get the RTP sending rate.
-								for (auto& kv : this->mapConsumers)
-								{
-									auto* consumer = kv.second;
-
-									bitrate += consumer->GetTransmissionRate(now);
-								}
-
-								auto* remb                = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
-								uint32_t availableBitrate = static_cast<uint32_t>(remb->GetBitrate());
-								int32_t diff              = availableBitrate - bitrate;
-
-								MS_ERROR(
-								  "REMB received [sending bitrate:%" PRIu32 ", REMB available bitrate:%" PRIu32
-								  ", diff:%" PRIi32 "]",
-								  bitrate / 1000,
-								  availableBitrate / 1000,
-								  diff / 1000);
-							}
+							// Pass it to the subclass.
+							UserOnRembFeedback(remb);
 
 							break;
 						}
@@ -891,11 +865,11 @@ namespace RTC
 		  this, producer, mappedSsrc, worstRemoteFractionLost);
 	}
 
-	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
+	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		SendRtpPacket(packet);
+		SendRtpPacket(packet, consumer);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)

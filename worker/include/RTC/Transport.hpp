@@ -7,6 +7,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
@@ -79,8 +80,9 @@ namespace RTC
 
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
-		virtual void UserOnNewProducer(RTC::Producer* producer) = 0;
-		virtual void UserOnNewConsumer(RTC::Consumer* consumer) = 0;
+		virtual void UserOnNewProducer(RTC::Producer* producer)                = 0;
+		virtual void UserOnNewConsumer(RTC::Consumer* consumer)                = 0;
+		virtual void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) = 0;
 
 	private:
 		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
@@ -88,8 +90,8 @@ namespace RTC
 		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
 		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
-		virtual bool IsConnected() const                   = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet) = 0;
+		virtual bool IsConnected() const                                            = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer) = 0;
 		void SendRtcp(uint64_t now);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;

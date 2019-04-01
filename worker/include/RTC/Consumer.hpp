@@ -9,6 +9,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include <string>
@@ -42,6 +43,8 @@ namespace RTC
 		virtual void FillJsonScore(json& jsonObject) const = 0;
 		virtual void HandleRequest(Channel::Request* request);
 		RTC::Media::Kind GetKind() const;
+		const RTC::RtpParameters& GetRtpParameters() const;
+		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		RTC::RtpParameters::Type GetType() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		bool IsActive() const;
@@ -77,6 +80,7 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
+		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0 };
@@ -95,6 +99,16 @@ namespace RTC
 	inline RTC::Media::Kind Consumer::GetKind() const
 	{
 		return this->kind;
+	}
+
+	inline const RTC::RtpParameters& Consumer::GetRtpParameters() const
+	{
+		return this->rtpParameters;
+	}
+
+	inline const struct RTC::RtpHeaderExtensionIds& Consumer::GetRtpHeaderExtensionIds() const
+	{
+		return this->rtpHeaderExtensionIds;
 	}
 
 	inline RTC::RtpParameters::Type Consumer::GetType() const

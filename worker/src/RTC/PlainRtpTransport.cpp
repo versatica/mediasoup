@@ -429,7 +429,7 @@ namespace RTC
 		return this->tuple != nullptr;
 	}
 
-	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet)
+	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
@@ -671,18 +671,25 @@ namespace RTC
 		}
 	}
 
-	void PlainRtpTransport::UserOnNewProducer(RTC::Producer* producer)
+	void PlainRtpTransport::UserOnNewProducer(RTC::Producer* /*producer*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void PlainRtpTransport::UserOnNewConsumer(RTC::Consumer* consumer)
+	void PlainRtpTransport::UserOnNewConsumer(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
+	}
+
+	void PlainRtpTransport::UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* /*remb*/)
+	{
+		MS_TRACE();
+
+		// TODO
 	}
 
 	inline void PlainRtpTransport::OnPacketRecv(

@@ -255,6 +255,8 @@ namespace RTC
 
 		delete this->srtpSendSession;
 
+		delete this->rembClient;
+
 		delete this->rembServer;
 	}
 
@@ -462,13 +464,13 @@ namespace RTC
 			jsonObject["bytesSent"] = 0;
 		}
 
+		// Add availableOutgoingBitrate.
+		if (this->rembClient)
+			jsonObject["availableOutgoingBitrate"] = this->rembClient->GetAvailableBitrate();
+
 		// Add availableIncomingBitrate.
 		if (this->rembServer)
 			jsonObject["availableIncomingBitrate"] = this->rembServer->GetAvailableBitrate();
-
-		// TODO: We do not have this yet.
-		// Add availableOutgoingBitrate.
-		// jsonObject["availableOutgoingBitrate"] = this->availableOutgoingBitrate;
 
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
@@ -745,7 +747,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -767,6 +769,19 @@ namespace RTC
 			return;
 
 		this->iceSelectedTuple->Send(data, len);
+
+		// If we have a REMB client pass the packet to it (just if video).
+		if (this->rembClient && consumer->GetKind() == RTC::Media::Kind::VIDEO)
+			this->rembClient->ReceiveRtpPacket(packet);
+
+		// Feed the REMB server.
+		if (this->rembClient)
+		{
+			static uint32_t absSendTime;
+
+			if (packet->ReadAbsSendTime(absSendTime))
+				this->rembClient->ReceiveRtpPacket(packet);
+		}
 	}
 
 	void WebRtcTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
@@ -966,7 +981,7 @@ namespace RTC
 		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
 		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
 
-		// Feed the remote bitrate estimator (REMB).
+		// Feed the REMB server.
 		if (this->rembServer)
 		{
 			uint32_t absSendTime;
@@ -1100,7 +1115,44 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
+		auto& codecs                = consumer->GetRtpParameters().codecs;
+
+		// Set REMB client bitrate estimator:
+		// - if not already set, and
+		// - there is abs-send-time RTP header extension, and
+		// - there is "remb" in codecs RTCP feedback.
+		//
+		// clang-format off
+		if (
+			!this->rembClient &&
+			rtpHeaderExtensionIds.absSendTime != 0u &&
+			std::any_of(
+				codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+				{
+					return std::any_of(
+						codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
+						{
+							return fb.type == "goog-remb";
+						});
+				})
+		)
+		// clang-format on
+		{
+			MS_DEBUG_TAG(rbe, "enabling REMB client");
+
+			this->rembClient = new RTC::RembClient(this);
+		}
+	}
+
+	void WebRtcTransport::UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
+	{
+		MS_TRACE();
+
+		if (!this->rembClient)
+			return;
+
+		this->rembClient->ReceiveRembFeedback(remb);
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(
@@ -1352,7 +1404,15 @@ namespace RTC
 		// NOTE: No DataChannel support, si just ignore it.
 	}
 
-	inline void WebRtcTransport::OnRemoteBitrateEstimatorValue(
+	inline void WebRtcTransport::OnRembClientBitrateEstimation(
+	  RTC::RembClient* rembClient, int32_t availableBitrate)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	inline void WebRtcTransport::OnRembServerBitrateEstimation(
 	  const RTC::RembServer::RemoteBitrateEstimator* /*rembServer*/,
 	  const std::vector<uint32_t>& ssrcs,
 	  uint32_t availableBitrate)

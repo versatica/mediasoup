@@ -69,10 +69,10 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
-		const RTC::RtpParameters& GetRtpParameters() const;
 		RTC::Media::Kind GetKind() const;
-		RTC::RtpParameters::Type GetType() const;
+		const RTC::RtpParameters& GetRtpParameters() const;
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
+		RTC::RtpParameters::Type GetType() const;
 		bool IsPaused() const;
 		std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams();
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
@@ -130,24 +130,24 @@ namespace RTC
 
 	/* Inline methods. */
 
-	inline const RTC::RtpParameters& Producer::GetRtpParameters() const
-	{
-		return this->rtpParameters;
-	}
-
 	inline RTC::Media::Kind Producer::GetKind() const
 	{
 		return this->kind;
 	}
 
-	inline RTC::RtpParameters::Type Producer::GetType() const
+	inline const RTC::RtpParameters& Producer::GetRtpParameters() const
 	{
-		return this->type;
+		return this->rtpParameters;
 	}
 
 	inline const struct RTC::RtpHeaderExtensionIds& Producer::GetRtpHeaderExtensionIds() const
 	{
 		return this->rtpHeaderExtensionIds;
+	}
+
+	inline RTC::RtpParameters::Type Producer::GetType() const
+	{
+		return this->type;
 	}
 
 	inline bool Producer::IsPaused() const
