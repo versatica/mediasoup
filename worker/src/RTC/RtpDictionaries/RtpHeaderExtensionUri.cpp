@@ -12,13 +12,13 @@ namespace RTC
 	// clang-format off
 	std::unordered_map<std::string, RtpHeaderExtensionUri::Type> RtpHeaderExtensionUri::string2Type =
 	{
-		{ "urn:ietf:params:rtp-hdrext:ssrc-audio-level",                RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL       },
-		{ "urn:ietf:params:rtp-hdrext:toffset",                         RtpHeaderExtensionUri::Type::TO_OFFSET              },
-		{ "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time", RtpHeaderExtensionUri::Type::ABS_SEND_TIME          },
-		{ "urn:3gpp:video-orientation",                                 RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION      },
 		{ "urn:ietf:params:rtp-hdrext:sdes:mid",                        RtpHeaderExtensionUri::Type::MID                    },
 		{ "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",              RtpHeaderExtensionUri::Type::RTP_STREAM_ID          },
-		{ "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id",     RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID }
+		{ "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id",     RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID },
+		{ "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time", RtpHeaderExtensionUri::Type::ABS_SEND_TIME          },
+		{ "urn:ietf:params:rtp-hdrext:ssrc-audio-level",                RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL       },
+		{ "urn:3gpp:video-orientation",                                 RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION      },
+		{ "urn:ietf:params:rtp-hdrext:toffset",                         RtpHeaderExtensionUri::Type::TOFFSET                }
 	};
 	// clang-format on
 

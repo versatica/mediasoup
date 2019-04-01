@@ -203,36 +203,6 @@ namespace RTC
 				MS_DEBUG_DEV("  RFC5285 ext ids   : %s", extIdsStream.str().c_str());
 			}
 		}
-		if (this->audioLevelExtensionId != 0u)
-		{
-			uint8_t volume;
-			bool voice;
-
-			if (ReadAudioLevel(volume, voice))
-				MS_DEBUG_DEV(
-				  "  audioLevel        : extId:%" PRIu8 ",volume:%" PRIu8 ",voice:%s",
-				  this->audioLevelExtensionId,
-				  volume,
-				  voice ? "true" : "false");
-		}
-		if (this->videoOrientationExtensionId != 0u)
-		{
-			bool camera;
-			bool flip;
-			uint16_t rotation;
-
-			if (ReadVideoOrientation(camera, flip, rotation))
-				MS_DEBUG_DEV(
-				  "  videoOrientation  : extId:%" PRIu8 ",camera:%s,flip:%s,rotation:%" PRIu16,
-				  this->videoOrientationExtensionId,
-				  camera ? "true" : "false",
-				  flip ? "true" : "false",
-				  rotation);
-		}
-		if (this->absSendTimeExtensionId != 0u)
-		{
-			MS_DEBUG_DEV("  absSendTime       : extId:%" PRIu8, this->absSendTimeExtensionId);
-		}
 		if (this->midExtensionId != 0u)
 		{
 			std::string mid;
@@ -257,6 +227,36 @@ namespace RTC
 				MS_DEBUG_DEV(
 				  "  rrid              : extId:%" PRIu8 ",value:%s", this->rridExtensionId, rid.c_str());
 		}
+		if (this->absSendTimeExtensionId != 0u)
+		{
+			MS_DEBUG_DEV("  absSendTime       : extId:%" PRIu8, this->absSendTimeExtensionId);
+		}
+		if (this->ssrcAudioLevelExtensionId != 0u)
+		{
+			uint8_t volume;
+			bool voice;
+
+			if (ReadSsrcAudioLevel(volume, voice))
+				MS_DEBUG_DEV(
+				  "  ssrcAudioLevel    : extId:%" PRIu8 ",volume:%" PRIu8 ",voice:%s",
+				  this->ssrcAudioLevelExtensionId,
+				  volume,
+				  voice ? "true" : "false");
+		}
+		if (this->videoOrientationExtensionId != 0u)
+		{
+			bool camera;
+			bool flip;
+			uint16_t rotation;
+
+			if (ReadVideoOrientation(camera, flip, rotation))
+				MS_DEBUG_DEV(
+				  "  videoOrientation  : extId:%" PRIu8 ",camera:%s,flip:%s,rotation:%" PRIu16,
+				  this->videoOrientationExtensionId,
+				  camera ? "true" : "false",
+				  flip ? "true" : "false",
+				  rotation);
+		}
 		MS_DEBUG_DEV("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DEBUG_DEV("  marker            : %s", HasMarker() ? "true" : "false");
 		MS_DEBUG_DEV("  payload type      : %" PRIu8, GetPayloadType());
@@ -277,12 +277,12 @@ namespace RTC
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");
 
 		// Reset extension ids.
-		this->audioLevelExtensionId       = 0;
-		this->videoOrientationExtensionId = 0;
-		this->absSendTimeExtensionId      = 0;
 		this->midExtensionId              = 0;
 		this->ridExtensionId              = 0;
 		this->rridExtensionId             = 0;
+		this->absSendTimeExtensionId      = 0;
+		this->ssrcAudioLevelExtensionId   = 0;
+		this->videoOrientationExtensionId = 0;
 
 		// Clear the One-Byte and Two-Bytes extension elements maps.
 		this->mapOneByteExtensions.clear();
@@ -494,12 +494,12 @@ namespace RTC
 		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Keep already set extension ids.
-		packet->audioLevelExtensionId       = this->audioLevelExtensionId;
-		packet->videoOrientationExtensionId = this->videoOrientationExtensionId;
-		packet->absSendTimeExtensionId      = this->absSendTimeExtensionId;
 		packet->midExtensionId              = this->midExtensionId;
 		packet->ridExtensionId              = this->ridExtensionId;
 		packet->rridExtensionId             = this->rridExtensionId;
+		packet->absSendTimeExtensionId      = this->absSendTimeExtensionId;
+		packet->ssrcAudioLevelExtensionId   = this->ssrcAudioLevelExtensionId;
+		packet->videoOrientationExtensionId = this->videoOrientationExtensionId;
 
 		return packet;
 	}

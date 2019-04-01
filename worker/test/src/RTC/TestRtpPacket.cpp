@@ -104,13 +104,13 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		packet->SetAudioLevelExtensionId(1);
+		packet->SetSsrcAudioLevelExtensionId(1);
 		extenValue = packet->GetExtension(1, extenLen);
 
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xd0);
-		REQUIRE(packet->ReadAudioLevel(volume, voice) == true);
+		REQUIRE(packet->ReadSsrcAudioLevel(volume, voice) == true);
 		REQUIRE(volume == 0b1010000);
 		REQUIRE(voice == true);
 
@@ -147,7 +147,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xd0);
-		REQUIRE(clonedPacket->ReadAudioLevel(volume, voice) == true);
+		REQUIRE(clonedPacket->ReadSsrcAudioLevel(volume, voice) == true);
 		REQUIRE(volume == 0b1010000);
 		REQUIRE(voice == true);
 

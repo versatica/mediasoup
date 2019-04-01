@@ -185,9 +185,6 @@ namespace RTC
 		jsonObject["rtpHeaderExtensions"] = json::object();
 		auto jsonRtpHeaderExtensionsIt    = jsonObject.find("rtpHeaderExtensions");
 
-		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
-
 		if (this->rtpHeaderExtensionIds.mid != 0u)
 			(*jsonRtpHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
 
@@ -196,6 +193,9 @@ namespace RTC
 
 		if (this->rtpHeaderExtensionIds.rrid != 0u)
 			(*jsonRtpHeaderExtensionsIt)["rrid"] = this->rtpHeaderExtensionIds.rrid;
+
+		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
+			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
@@ -548,10 +548,10 @@ namespace RTC
 		}
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
 		packet->SetMidExtensionId(this->rtpHeaderExtensionIds.mid);
 		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
 		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
+		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
 
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);

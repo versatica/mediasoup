@@ -231,7 +231,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		[
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 1
+				id  : 5
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -268,7 +268,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		[
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 1
+				id  : 5
 			}
 		]);
 	expect(pipeProducer.rtpParameters.encodings).toEqual(
@@ -319,12 +319,12 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 2
+				uri : 'urn:3gpp:video-orientation',
+				id  : 6
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 4
+				uri : 'urn:ietf:params:rtp-hdrext:toffset',
+				id  : 7
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -361,12 +361,12 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 2
+				uri : 'urn:3gpp:video-orientation',
+				id  : 6
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 4
+				uri : 'urn:ietf:params:rtp-hdrext:toffset',
+				id  : 7
 			}
 		]);
 	expect(pipeProducer.paused).toBe(true);

@@ -283,12 +283,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			{ payloadType: 112, mappedPayloadType: 102 }
 		]);
 
-	expect(rtpMapping.headerExtensions).toEqual(
-		[
-			{ id: 1, mappedId: 5 },
-			{ id: 2, mappedId: 4 }
-		]);
-
 	expect(rtpMapping.encodings[0].ssrc).toBe(11111111);
 	expect(rtpMapping.encodings[0].rid).toBe(undefined);
 	expect(rtpMapping.encodings[0].mappedSsrc).toBeType('number');
@@ -384,38 +378,38 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		[
 			{
 				kind             : 'audio',
-				uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
 				preferredId      : 1,
 				preferredEncrypt : false
 			},
 			{
 				kind             : 'video',
-				uri              : 'urn:ietf:params:rtp-hdrext:toffset',
-				preferredId      : 2,
-				preferredEncrypt : false
-			},
-			{
-				kind             : 'video',
-				uri              : 'urn:3gpp:video-orientation',
-				preferredId      : 4,
-				preferredEncrypt : false
-			},
-			{
-				kind             : 'audio',
 				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId      : 5,
-				preferredEncrypt : false
-			},
-			{
-				kind             : 'video',
-				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId      : 5,
+				preferredId      : 1,
 				preferredEncrypt : false
 			},
 			{
 				kind             : 'video',
 				uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+				preferredId      : 2,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'audio',
+				uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				preferredId      : 5,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:3gpp:video-orientation',
 				preferredId      : 6,
+				preferredEncrypt : false
+			},
+			{
+				kind             : 'video',
+				uri              : 'urn:ietf:params:rtp-hdrext:toffset',
+				preferredId      : 7,
 				preferredEncrypt : false
 			}
 		]
@@ -463,12 +457,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumerRtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 2
+				uri : 'urn:3gpp:video-orientation',
+				id  : 6
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 4
+				uri : 'urn:ietf:params:rtp-hdrext:toffset',
+				id  : 7
 			}
 		]);
 

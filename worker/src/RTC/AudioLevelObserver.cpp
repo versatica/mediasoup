@@ -90,7 +90,7 @@ namespace RTC
 		uint8_t volume;
 		bool voice;
 
-		if (!packet->ReadAudioLevel(volume, voice))
+		if (!packet->ReadSsrcAudioLevel(volume, voice))
 			return;
 
 		auto& dBovs = this->mapProducerDBovs.at(producer);

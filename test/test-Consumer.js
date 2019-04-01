@@ -190,50 +190,50 @@ const consumerDeviceCapabilities =
 	[
 		{
 			kind             : 'audio',
-			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
 			preferredId      : 1,
 			preferredEncrypt : false
 		},
 		{
 			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:toffset',
+			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			preferredId      : 1,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'video',
+			uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
 			preferredId      : 2,
 			preferredEncrypt : false
 		},
 		{
 			kind             : 'audio',
 			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-			preferredId      : 3,
+			preferredId      : 4,
 			preferredEncrypt : false
 		},
 		{
 			kind             : 'video',
 			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-			preferredId      : 3,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'video',
-			uri              : 'urn:3gpp:video-orientation',
 			preferredId      : 4,
 			preferredEncrypt : false
 		},
 		{
 			kind             : 'audio',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
 			preferredId      : 5,
 			preferredEncrypt : false
 		},
 		{
 			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-			preferredId      : 5,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+			uri              : 'urn:3gpp:video-orientation',
 			preferredId      : 6,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'video',
+			uri              : 'urn:ietf:params:rtp-hdrext:toffset',
+			preferredId      : 7,
 			preferredEncrypt : false
 		}
 	],
@@ -495,14 +495,14 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id         : 1,
+				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id         : 4,
 				parameters : {},
 				encrypt    : false
 			},
 			{
-				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				id         : 3,
+				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id         : 5,
 				parameters : {},
 				encrypt    : false
 			}
@@ -556,20 +556,20 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
-				id         : 2,
-				parameters : {},
-				encrypt    : false
-			},
-			{
 				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				id         : 3,
+				id         : 4,
 				parameters : {},
 				encrypt    : false
 			},
 			{
 				uri        : 'urn:3gpp:video-orientation',
-				id         : 4,
+				id         : 6,
+				parameters : {},
+				encrypt    : false
+			},
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
+				id         : 7,
 				parameters : {},
 				encrypt    : false
 			}

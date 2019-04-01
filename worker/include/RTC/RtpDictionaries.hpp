@@ -127,13 +127,13 @@ namespace RTC
 		enum class Type : uint8_t
 		{
 			UNKNOWN                = 0,
-			SSRC_AUDIO_LEVEL       = 1,
-			TO_OFFSET              = 2,
-			ABS_SEND_TIME          = 3,
-			VIDEO_ORIENTATION      = 4,
-			MID                    = 5,
-			RTP_STREAM_ID          = 6,
-			REPAIRED_RTP_STREAM_ID = 7
+			MID                    = 1,
+			RTP_STREAM_ID          = 2,
+			REPAIRED_RTP_STREAM_ID = 3,
+			ABS_SEND_TIME          = 4,
+			SSRC_AUDIO_LEVEL       = 5,
+			VIDEO_ORIENTATION      = 6,
+			TOFFSET                = 7
 		};
 
 	private:

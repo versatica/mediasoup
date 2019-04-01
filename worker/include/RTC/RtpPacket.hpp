@@ -122,17 +122,17 @@ namespace RTC
 		uint8_t* GetHeaderExtensionValue() const;
 		bool HasOneByteExtensions() const;
 		bool HasTwoBytesExtensions() const;
-		void SetAudioLevelExtensionId(uint8_t id);
-		void SetVideoOrientationExtensionId(uint8_t id);
-		void SetAbsSendTimeExtensionId(uint8_t id);
 		void SetMidExtensionId(uint8_t id);
 		void SetRidExtensionId(uint8_t id);
 		void SetRepairedRidExtensionId(uint8_t id);
-		bool ReadAudioLevel(uint8_t& volume, bool& voice) const;
-		bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
-		bool ReadAbsSendTime(uint32_t& time) const;
+		void SetAbsSendTimeExtensionId(uint8_t id);
+		void SetSsrcAudioLevelExtensionId(uint8_t id);
+		void SetVideoOrientationExtensionId(uint8_t id);
 		bool ReadMid(std::string& mid) const;
 		bool ReadRid(std::string& rid) const;
+		bool ReadAbsSendTime(uint32_t& time) const;
+		bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
+		bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
 		uint8_t* GetExtension(uint8_t id, uint8_t& len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
@@ -156,12 +156,12 @@ namespace RTC
 		HeaderExtension* headerExtension{ nullptr };
 		std::map<uint8_t, OneByteExtension*> mapOneByteExtensions;
 		std::map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
-		uint8_t audioLevelExtensionId{ 0 };
-		uint8_t videoOrientationExtensionId{ 0 };
-		uint8_t absSendTimeExtensionId{ 0 };
 		uint8_t midExtensionId{ 0 };
 		uint8_t ridExtensionId{ 0 };
 		uint8_t rridExtensionId{ 0 };
+		uint8_t absSendTimeExtensionId{ 0 };
+		uint8_t ssrcAudioLevelExtensionId{ 0 };
+		uint8_t videoOrientationExtensionId{ 0 };
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0 };
 		uint8_t payloadPadding{ 0 };
@@ -292,30 +292,6 @@ namespace RTC
 		return (GetHeaderExtensionId() & 0b1111111111110000) == 0b0001000000000000;
 	}
 
-	inline void RtpPacket::SetAudioLevelExtensionId(uint8_t id)
-	{
-		if (id == 0u)
-			return;
-
-		this->audioLevelExtensionId = id;
-	}
-
-	inline void RtpPacket::SetVideoOrientationExtensionId(uint8_t id)
-	{
-		if (id == 0u)
-			return;
-
-		this->videoOrientationExtensionId = id;
-	}
-
-	inline void RtpPacket::SetAbsSendTimeExtensionId(uint8_t id)
-	{
-		if (id == 0u)
-			return;
-
-		this->absSendTimeExtensionId = id;
-	}
-
 	inline void RtpPacket::SetMidExtensionId(uint8_t id)
 	{
 		if (id == 0u)
@@ -340,10 +316,85 @@ namespace RTC
 		this->rridExtensionId = id;
 	}
 
-	inline bool RtpPacket::ReadAudioLevel(uint8_t& volume, bool& voice) const
+	inline void RtpPacket::SetAbsSendTimeExtensionId(uint8_t id)
+	{
+		if (id == 0u)
+			return;
+
+		this->absSendTimeExtensionId = id;
+	}
+
+	inline void RtpPacket::SetSsrcAudioLevelExtensionId(uint8_t id)
+	{
+		if (id == 0u)
+			return;
+
+		this->ssrcAudioLevelExtensionId = id;
+	}
+
+	inline void RtpPacket::SetVideoOrientationExtensionId(uint8_t id)
+	{
+		if (id == 0u)
+			return;
+
+		this->videoOrientationExtensionId = id;
+	}
+
+	inline bool RtpPacket::ReadMid(std::string& mid) const
 	{
 		uint8_t extenLen;
-		uint8_t* extenValue = GetExtension(this->audioLevelExtensionId, extenLen);
+		uint8_t* extenValue = GetExtension(this->midExtensionId, extenLen);
+
+		if (!extenValue || extenLen == 0)
+			return false;
+
+		mid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadRid(std::string& rid) const
+	{
+		// First try with the RID id then with the Repaired RID id.
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->ridExtensionId, extenLen);
+
+		if (extenValue && extenLen > 0)
+		{
+			rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
+
+			return true;
+		}
+
+		extenValue = GetExtension(this->rridExtensionId, extenLen);
+
+		if (extenValue && extenLen > 0)
+		{
+			rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
+
+			return true;
+		}
+
+		return false;
+	}
+
+	inline bool RtpPacket::ReadAbsSendTime(uint32_t& time) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
+
+		if (!extenValue || extenLen != 3)
+			return false;
+
+		time = Utils::Byte::Get3Bytes(extenValue, 0);
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->ssrcAudioLevelExtensionId, extenLen);
 
 		if (!extenValue || extenLen != 1)
 			return false;
@@ -388,57 +439,6 @@ namespace RTC
 		}
 
 		return true;
-	}
-
-	inline bool RtpPacket::ReadAbsSendTime(uint32_t& time) const
-	{
-		uint8_t extenLen;
-		uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
-
-		if (!extenValue || extenLen != 3)
-			return false;
-
-		time = Utils::Byte::Get3Bytes(extenValue, 0);
-
-		return true;
-	}
-
-	inline bool RtpPacket::ReadMid(std::string& mid) const
-	{
-		uint8_t extenLen;
-		uint8_t* extenValue = GetExtension(this->midExtensionId, extenLen);
-
-		if (!extenValue || extenLen == 0)
-			return false;
-
-		mid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
-
-		return true;
-	}
-
-	inline bool RtpPacket::ReadRid(std::string& rid) const
-	{
-		// First try with the RID id then with the Repaired RID id.
-		uint8_t extenLen;
-		uint8_t* extenValue = GetExtension(this->ridExtensionId, extenLen);
-
-		if (extenValue && extenLen > 0)
-		{
-			rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
-
-			return true;
-		}
-
-		extenValue = GetExtension(this->rridExtensionId, extenLen);
-
-		if (extenValue && extenLen > 0)
-		{
-			rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
-
-			return true;
-		}
-
-		return false;
 	}
 
 	inline uint8_t* RtpPacket::GetExtension(uint8_t id, uint8_t& len) const

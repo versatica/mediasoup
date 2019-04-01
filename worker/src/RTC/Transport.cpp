@@ -211,9 +211,6 @@ namespace RTC
 				// header extension ids of the Producer (and not their mapped values).
 				auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 
-				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
-					this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
-
 				if (producerRtpHeaderExtensionIds.mid != 0u)
 					this->rtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
 
@@ -222,6 +219,9 @@ namespace RTC
 
 				if (producerRtpHeaderExtensionIds.rrid != 0u)
 					this->rtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
+
+				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+					this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
 
 				// Create status response.
 				json data(json::object());

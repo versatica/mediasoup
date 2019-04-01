@@ -49,7 +49,6 @@ namespace RTC
 		struct RtpMapping
 		{
 			std::map<uint8_t, uint8_t> codecs;
-			std::map<uint8_t, uint8_t> headerExtensions;
 			std::vector<RtpEncodingMapping> encodings;
 		};
 
@@ -118,7 +117,6 @@ namespace RTC
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
-		struct RTC::RtpHeaderExtensionIds mappedRtpHeaderExtensionIds;
 		bool paused{ false };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0 };
