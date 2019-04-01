@@ -4,7 +4,7 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
-#include "RTC/REMB/RemoteBitrateEstimatorAbsSendTime.hpp"
+#include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunMessage.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -22,7 +22,7 @@ namespace RTC
 	                        public RTC::TcpConnection::Listener,
 	                        public RTC::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener,
-	                        public RTC::REMB::RemoteBitrateEstimator::Listener
+	                        public RTC::RembServer::RemoteBitrateEstimator::Listener
 	{
 	private:
 		struct ListenIp
@@ -93,10 +93,10 @@ namespace RTC
 		void OnDtlsApplicationData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
-		/* Pure virtual methods inherited from RTC::REMB::RemoteBitrateEstimator::Listener. */
+		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:
 		void OnRemoteBitrateEstimatorValue(
-		  const RTC::REMB::RemoteBitrateEstimator* remoteBitrateEstimator,
+		  const RTC::RembServer::RemoteBitrateEstimator* remoteBitrateEstimator,
 		  const std::vector<uint32_t>& ssrcs,
 		  uint32_t availableBitrate) override;
 
@@ -114,7 +114,7 @@ namespace RTC
 		std::vector<RTC::IceCandidate> iceCandidates;
 		RTC::TransportTuple* iceSelectedTuple{ nullptr };
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
-		std::unique_ptr<RTC::REMB::RemoteBitrateEstimatorAbsSendTime> rembRemoteBitrateEstimator;
+		std::unique_ptr<RTC::RembServer::RemoteBitrateEstimatorAbsSendTime> rembServerBitrateEstimator;
 		uint32_t maxIncomingBitrate{ 0 };
 	};
 } // namespace RTC

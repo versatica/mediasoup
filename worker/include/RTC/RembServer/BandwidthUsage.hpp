@@ -1,11 +1,11 @@
-#ifndef MS_RTC_REMB_BANDWIDTH_USAGE_HPP
-#define MS_RTC_REMB_BANDWIDTH_USAGE_HPP
+#ifndef MS_RTC_REMB_SERVER_BANDWIDTH_USAGE_HPP
+#define MS_RTC_REMB_SERVER_BANDWIDTH_USAGE_HPP
 
 // webrtc/modules/remote_bitrate_estimator/include/bwe_defines.h
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		enum BandwidthUsage
 		{
@@ -13,7 +13,7 @@ namespace RTC
 			BW_UNDERUSING,
 			BW_OVERUSING
 		};
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC
 
 #endif

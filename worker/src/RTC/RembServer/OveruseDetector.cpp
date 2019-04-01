@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::REMB::OveruseDetector"
+#define MS_CLASS "RTC::RembServer::OveruseDetector"
 // #define MS_LOG_DEV
 
-#include "RTC/REMB/OveruseDetector.hpp"
+#include "RTC/RembServer/OveruseDetector.hpp"
 #include "Logger.hpp"
 #include <algorithm>
 #include <cmath>
@@ -21,7 +21,7 @@
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		constexpr double MaxAdaptOffsetMs{ 15.0 };
 		constexpr int MinNumDeltas{ 60 };
@@ -111,5 +111,5 @@ namespace RTC
 			this->threshold    = std::min(std::max(this->threshold, minThreshold), maxThreshold);
 			this->lastUpdateMs = nowMs;
 		}
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC

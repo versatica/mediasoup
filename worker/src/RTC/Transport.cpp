@@ -527,9 +527,10 @@ namespace RTC
 						// Store REMB info.
 						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
 						{
-							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
+							// auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
-							this->availableOutgoingBitrate = remb->GetBitrate();
+							// TOO: NO. Must pass the packet to the subclass.
+							// this->availableOutgoingBitrate = remb->GetBitrate();
 
 							break;
 						}

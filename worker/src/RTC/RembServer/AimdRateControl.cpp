@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::REMB::AimdRateControl"
+#define MS_CLASS "RTC::RembServer::AimdRateControl"
 // #define MS_LOG_DEV
 
-#include "RTC/REMB/AimdRateControl.hpp"
+#include "RTC/RembServer/AimdRateControl.hpp"
 #include "Logger.hpp"
-#include "RTC/REMB/RemoteBitrateEstimator.hpp"
+#include "RTC/RembServer/RemoteBitrateEstimator.hpp"
 #include <algorithm>
 #include <cmath> // std::lround()
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		static constexpr int64_t MaxFeedbackIntervalMs{ 1000 };
 
@@ -324,5 +324,5 @@ namespace RTC
 				}
 			}
 		}
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC

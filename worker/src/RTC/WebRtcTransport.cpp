@@ -461,10 +461,15 @@ namespace RTC
 		}
 
 		// Add availableIncomingBitrate.
-		jsonObject["availableIncomingBitrate"] = this->availableIncomingBitrate;
+		if (this->rembServerBitrateEstimator)
+		{
+			jsonObject["availableIncomingBitrate"] =
+			  this->rembServerBitrateEstimator->GetAvailableBitrate();
+		}
 
+		// TODO: We do not have this yet.
 		// Add availableOutgoingBitrate.
-		jsonObject["availableOutgoingBitrate"] = this->availableOutgoingBitrate;
+		// jsonObject["availableOutgoingBitrate"] = this->availableOutgoingBitrate;
 
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
@@ -582,8 +587,9 @@ namespace RTC
 					MayRunDtlsTransport();
 				}
 
-				// Set remote bitrate estimator.
-				this->rembRemoteBitrateEstimator.reset(new RTC::REMB::RemoteBitrateEstimatorAbsSendTime(this));
+				// Set REMB server bitrate estimator.
+				this->rembServerBitrateEstimator.reset(
+				  new RTC::RembServer::RemoteBitrateEstimatorAbsSendTime(this));
 
 				// Tell the caller about the selected local DTLS role.
 				json data(json::object());
@@ -970,7 +976,7 @@ namespace RTC
 
 		if (packet->ReadAbsSendTime(absSendTime))
 		{
-			this->rembRemoteBitrateEstimator->IncomingPacket(
+			this->rembServerBitrateEstimator->IncomingPacket(
 			  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
 		}
 
@@ -1308,13 +1314,11 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnRemoteBitrateEstimatorValue(
-	  const RTC::REMB::RemoteBitrateEstimator* /*remoteBitrateEstimator*/,
+	  const RTC::RembServer::RemoteBitrateEstimator* /*remoteBitrateEstimator*/,
 	  const std::vector<uint32_t>& ssrcs,
 	  uint32_t availableBitrate)
 	{
 		MS_TRACE();
-
-		this->availableIncomingBitrate = availableBitrate;
 
 		uint32_t effectiveMaxBitrate{ 0u };
 

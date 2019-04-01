@@ -207,8 +207,6 @@ test('webRtcTransport.getStats() succeeds', async () =>
 	expect(data[0].bytesReceived).toBe(0);
 	expect(data[0].bytesSent).toBe(0);
 	expect(data[0].iceSelectedTuple).toBe(undefined);
-	expect(data[0].availableIncomingBitrate).toBe(0);
-	expect(data[0].availableOutgoingBitrate).toBe(0);
 	expect(data[0].maxIncomingBitrate).toBe(undefined);
 }, 2000);
 

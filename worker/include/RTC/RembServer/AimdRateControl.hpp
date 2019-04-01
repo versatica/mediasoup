@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MS_RTC_REMB_AIMD_RATE_CONTROL_HPP
-#define MS_RTC_REMB_AIMD_RATE_CONTROL_HPP
+#ifndef MS_RTC_REMB_SERVER_AIMD_RATE_CONTROL_HPP
+#define MS_RTC_REMB_SERVER_AIMD_RATE_CONTROL_HPP
 
 #include "common.hpp"
-#include "RTC/REMB/OveruseDetector.hpp"
-#include "RTC/REMB/RateControlInput.hpp"
-#include "RTC/REMB/RateControlRegion.hpp"
+#include "RTC/RembServer/OveruseDetector.hpp"
+#include "RTC/RembServer/RateControlInput.hpp"
+#include "RTC/RembServer/RateControlRegion.hpp"
 
 // A rate control implementation based on additive increases of
 // bitrate when no over-use is detected and multiplicative decreases when
@@ -24,7 +24,7 @@
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		class AimdRateControl
 		{
@@ -175,7 +175,7 @@ namespace RTC
 		{
 			this->rateControlState = newState;
 		}
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC
 
 #endif

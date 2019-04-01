@@ -8,21 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::REMB::RemoteBitrateEstimatorSingleStream"
+#define MS_CLASS "RTC::RembServer::RemoteBitrateEstimatorSingleStream"
 // #define MS_LOG_DEV
 
-#include "RTC/REMB/RemoteBitrateEstimatorSingleStream.hpp"
+#include "RTC/RembServer/RemoteBitrateEstimatorSingleStream.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/REMB/AimdRateControl.hpp"
-#include "RTC/REMB/InterArrival.hpp"
-#include "RTC/REMB/OveruseDetector.hpp"
-#include "RTC/REMB/OveruseEstimator.hpp"
+#include "RTC/RembServer/AimdRateControl.hpp"
+#include "RTC/RembServer/InterArrival.hpp"
+#include "RTC/RembServer/OveruseDetector.hpp"
+#include "RTC/RembServer/OveruseEstimator.hpp"
 #include <utility> // std::make_pair()
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		void RemoteBitrateEstimatorSingleStream::IncomingPacket(
 		  int64_t arrivalTimeMs,
@@ -160,6 +160,8 @@ namespace RTC
 
 				// MS_ASSERT(this->processIntervalMs > 0);
 
+				this->availableBitrate = targetBitrate;
+
 				std::vector<uint32_t> ssrcs;
 
 				GetSsrcs(&ssrcs);
@@ -203,5 +205,5 @@ namespace RTC
 				(*ssrcs)[i] = it->first;
 			}
 		}
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC

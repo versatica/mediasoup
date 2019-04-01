@@ -10,8 +10,8 @@
 
 // This class estimates the incoming available bandwidth.
 
-#ifndef MS_RTC_REMB_REMOTE_BITRATE_ESTIMATOR_HPP
-#define MS_RTC_REMB_REMOTE_BITRATE_ESTIMATOR_HPP
+#ifndef MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_HPP
+#define MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_HPP
 
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -20,7 +20,7 @@
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		// (jmillan) borrowed from webrtc/modules/include/module_common_types.h
 		//
@@ -76,8 +76,20 @@ namespace RTC
 			// Process any pending tasks such as timeouts.
 			// Called on a worker thread.
 			virtual void Process() = 0;
+
+			uint32_t GetAvailableBitrate() const;
+
+		protected:
+			uint32_t availableBitrate{ 0 };
 		};
-	} // namespace REMB
+
+		/* Inline methods. */
+
+		inline uint32_t RemoteBitrateEstimator::GetAvailableBitrate() const
+		{
+			return this->availableBitrate;
+		}
+	} // namespace RembServer
 } // namespace RTC
 
 #endif

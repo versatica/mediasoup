@@ -123,8 +123,6 @@ namespace RTC
 		// Others.
 		RtpListener rtpListener;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
-		uint32_t availableIncomingBitrate{ 0 };
-		uint32_t availableOutgoingBitrate{ 0 };
 
 	private:
 		// Passed by argument.

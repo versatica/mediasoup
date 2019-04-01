@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::REMB::RemoteBitrateEstimatorAbsSendTime"
+#define MS_CLASS "RTC::RembServer::RemoteBitrateEstimatorAbsSendTime"
 // #define MS_LOG_DEV
 
-#include "RTC/REMB/RemoteBitrateEstimatorAbsSendTime.hpp"
+#include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/REMB/RemoteBitrateEstimator.hpp"
+#include "RTC/RembServer/RemoteBitrateEstimator.hpp"
 #include <algorithm>
 #include <cmath>
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		static constexpr int TimestampGroupLengthMs{ 5 };
 		static constexpr uint32_t AbsSendTimeFraction{ 18 };
@@ -374,7 +374,9 @@ namespace RTC
 
 			if (updateEstimate)
 			{
-				this->lastUpdateMs = nowMs;
+				this->lastUpdateMs     = nowMs;
+				this->availableBitrate = targetBitrateBps;
+
 				this->observer->OnRemoteBitrateEstimatorValue(this, ssrcs, targetBitrateBps);
 			}
 		}
@@ -422,5 +424,5 @@ namespace RTC
 
 			return true;
 		}
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC

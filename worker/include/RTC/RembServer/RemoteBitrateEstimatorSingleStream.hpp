@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MS_RTC_REMB_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
-#define MS_RTC_REMB_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
+#ifndef MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
+#define MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
 
 #include "common.hpp"
-#include "RTC/REMB/AimdRateControl.hpp"
-#include "RTC/REMB/InterArrival.hpp"
-#include "RTC/REMB/OveruseEstimator.hpp"
-#include "RTC/REMB/RemoteBitrateEstimator.hpp"
+#include "RTC/RembServer/AimdRateControl.hpp"
+#include "RTC/RembServer/InterArrival.hpp"
+#include "RTC/RembServer/OveruseEstimator.hpp"
+#include "RTC/RembServer/RemoteBitrateEstimator.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include <cassert>
 #include <map>
@@ -24,7 +24,7 @@
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator
 		{
@@ -145,7 +145,7 @@ namespace RTC
 		{
 			this->remoteRate->SetMinBitrate(minBitrateBps);
 		}
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC
 
 #endif

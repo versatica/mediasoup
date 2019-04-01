@@ -1,11 +1,11 @@
-#ifndef MS_RTC_REMB_RATE_CONTROL_REGION_HPP
-#define MS_RTC_REMB_RATE_CONTROL_REGION_HPP
+#ifndef MS_RTC_REMB_SERVER_RATE_CONTROL_REGION_HPP
+#define MS_RTC_REMB_SERVER_RATE_CONTROL_REGION_HPP
 
 // webrtc/modules/remote_bitrate_estimator/include/bwe_defines.h
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		enum RateControlRegion
 		{
@@ -13,7 +13,7 @@ namespace RTC
 			RC_ABOVE_MAX,
 			RC_MAX_UNKNOWN
 		};
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC
 
 #endif

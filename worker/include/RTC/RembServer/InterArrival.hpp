@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MS_RTC_REMB_INTER_ARRIVAL_HPP
-#define MS_RTC_REMB_INTER_ARRIVAL_HPP
+#ifndef MS_RTC_REMB_SERVER_INTER_ARRIVAL_HPP
+#define MS_RTC_REMB_SERVER_INTER_ARRIVAL_HPP
 
 #include "common.hpp"
 
 namespace RTC
 {
-	namespace REMB
+	namespace RembServer
 	{
 		// Helper class to compute the inter-arrival time delta and the size delta
 		// between two timestamp groups. A timestamp is a 32 bit unsigned number with
@@ -99,7 +99,7 @@ namespace RTC
 		    burstGrouping(enableBurstGrouping), numConsecutiveReorderedPackets(0)
 		{
 		}
-	} // namespace REMB
+	} // namespace RembServer
 } // namespace RTC
 
 #endif
