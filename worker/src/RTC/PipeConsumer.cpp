@@ -370,6 +370,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->listener->OnConsumerSendRtpPacket(this, packet);
+		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
 	}
 } // namespace RTC

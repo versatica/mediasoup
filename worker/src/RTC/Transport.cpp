@@ -874,6 +874,28 @@ namespace RTC
 		SendRtpPacket(packet, consumer);
 	}
 
+	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = packet->GetExtension(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
+
+			if (extenValue && extenLen == 3)
+			{
+				auto now         = DepLibUV::GetTime();
+				auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
+
+				Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
+			}
+		}
+
+		SendRtpPacket(packet, consumer);
+	}
+
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
