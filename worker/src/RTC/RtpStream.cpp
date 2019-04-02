@@ -318,10 +318,11 @@ namespace RTC
 			jsonObject["rtxPayloadType"] = this->rtxPayloadType;
 		}
 
-		jsonObject["useNack"]      = this->useNack;
-		jsonObject["usePli"]       = this->usePli;
-		jsonObject["useFir"]       = this->useFir;
-		jsonObject["useInBandFec"] = this->useInBandFec;
-		jsonObject["useDtx"]       = this->useDtx;
+		jsonObject["useNack"]        = this->useNack;
+		jsonObject["usePli"]         = this->usePli;
+		jsonObject["useFir"]         = this->useFir;
+		jsonObject["useInBandFec"]   = this->useInBandFec;
+		jsonObject["useDtx"]         = this->useDtx;
+		jsonObject["temporalLayers"] = this->temporalLayers;
 	}
 } // namespace RTC

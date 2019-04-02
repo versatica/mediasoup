@@ -522,11 +522,12 @@ namespace RTC
 		// Set stream params.
 		RTC::RtpStream::Params params;
 
-		params.ssrc        = encoding.ssrc;
-		params.payloadType = mediaCodec->payloadType;
-		params.mimeType    = mediaCodec->mimeType;
-		params.clockRate   = mediaCodec->clockRate;
-		params.cname       = this->rtpParameters.rtcp.cname;
+		params.ssrc           = encoding.ssrc;
+		params.payloadType    = mediaCodec->payloadType;
+		params.mimeType       = mediaCodec->mimeType;
+		params.clockRate      = mediaCodec->clockRate;
+		params.cname          = this->rtpParameters.rtcp.cname;
+		params.temporalLayers = encoding.temporalLayers;
 
 		// Check in band FEC in codec parameters.
 		if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
