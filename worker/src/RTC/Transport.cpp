@@ -338,9 +338,11 @@ namespace RTC
 				// Tell the subclass.
 				UserOnNewConsumer(consumer);
 
-				// If the Transport is already connected tell it to the new Consumer.
+				// TODO: Update with new BWE API.
+				//
+				// If the Transport is already connected tell the new Consumer to ask for bandwidth.
 				if (IsConnected())
-					consumer->TransportConnected();
+					consumer->UseBandwidth(0);
 
 				break;
 			}
@@ -437,13 +439,13 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
-		// Iterate all Consumers and tell them that the Transport is connected, so they
-		// will request key frames.
+		// Iterate all Consumers and tell them to use bandwidth.
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
 
-			consumer->TransportConnected();
+			// TODO: Update with new BWE API.
+			consumer->UseBandwidth(0);
 		}
 	}
 

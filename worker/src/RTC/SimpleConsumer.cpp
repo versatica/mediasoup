@@ -99,11 +99,21 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::TransportConnected()
+	void SimpleConsumer::UseBandwidth(uint32_t availableBandwidth)
 	{
 		MS_TRACE();
 
 		RequestKeyFrame();
+	}
+
+	void SimpleConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
+	{
+		MS_TRACE();
+
+		this->producerRtpStream = rtpStream;
+
+		// Emit the score event.
+		EmitScore();
 	}
 
 	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
@@ -297,9 +307,6 @@ namespace RTC
 	void SimpleConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
 	{
 		MS_TRACE();
-
-		if (!IsActive())
-			return;
 
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 

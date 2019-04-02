@@ -49,10 +49,11 @@ namespace RTC
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		bool IsActive() const;
 		bool IsPaused() const;
-		bool IsProducerPaused() const; // This is needed by the Transport.
-		virtual void TransportConnected() = 0;
+		bool IsProducerPaused() const;
+		virtual void UseBandwidth(uint32_t availableBandwidth) = 0;
 		void ProducerPaused();
 		void ProducerResumed();
+		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
 		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 		virtual void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)     = 0;
 		void ProducerClosed();

@@ -35,16 +35,16 @@ namespace RTC
 
 		// TODO: Testing.
 
-		uint32_t rembBitrate = static_cast<uint32_t>(remb->GetBitrate());
-		uint64_t now         = DepLibUV::GetTime();
-		uint32_t bitrate     = this->transmissionCounter.GetRate(now);
-		int32_t diff         = rembBitrate - bitrate;
+		// uint32_t rembBitrate = static_cast<uint32_t>(remb->GetBitrate());
+		// uint64_t now         = DepLibUV::GetTime();
+		// uint32_t bitrate     = this->transmissionCounter.GetRate(now);
+		// int32_t diff         = rembBitrate - bitrate;
 
-		MS_ERROR(
-		  "REMB received [sending bitrate:%" PRIu32 ", REMB available bitrate:%" PRIu32
-		  ", diff:%" PRIi32 "]",
-		  bitrate,
-		  rembBitrate,
-		  diff);
+		// MS_ERROR(
+		//   "REMB received [sending bitrate:%" PRIu32 ", REMB available bitrate:%" PRIu32
+		//   ", diff:%" PRIi32 "]",
+		//   bitrate,
+		//   rembBitrate,
+		//   diff);
 	}
 } // namespace RTC

@@ -21,11 +21,7 @@ namespace RTC
 		if (this->consumableRtpEncodings.size() <= 1)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
 
-		// Set the RTCP report generation interval.
-		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
-		else
-			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
+		auto jsonPreferredLayersIt = data.find("preferredLayers");
 
 		// Fill mapMappedSsrcSpatialLayer.
 		for (size_t idx{ 0 }; idx < this->consumableRtpEncodings.size(); ++idx)
@@ -35,12 +31,42 @@ namespace RTC
 			this->mapMappedSsrcSpatialLayer[encoding.ssrc] = static_cast<int16_t>(idx);
 		}
 
+		// Set preferredLayers (if given).
+		if (jsonPreferredLayersIt != data.end() && jsonPreferredLayersIt->is_object())
+		{
+			// TODO: Handle temporalLayer.
+
+			auto jsonSpatialLayerIt = jsonPreferredLayersIt->find("spatialLayer");
+
+			if (jsonSpatialLayerIt == jsonPreferredLayersIt->end() || !jsonSpatialLayerIt->is_number_unsigned())
+			{
+				MS_THROW_TYPE_ERROR("missing preferredLayers.spatialLayer");
+			}
+
+			this->preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
+
+			if (this->preferredSpatialLayer >= static_cast<int16_t>(this->consumableRtpEncodings.size()))
+			{
+				this->preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
+			}
+		}
+		else
+		{
+			// Initially set preferreSpatialLayer to the maximum value.
+			this->preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
+
+			// TODO: Set initial temporal layer.
+		}
+
 		// Reserve space for the Producer RTP streams.
 		this->producerRtpStreams.insert(
 		  this->producerRtpStreams.begin(), this->consumableRtpEncodings.size(), nullptr);
 
-		// Initially set preferreSpatialLayer to the maximum value.
-		this->preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
+		// Set the RTCP report generation interval.
+		if (this->kind == RTC::Media::Kind::AUDIO)
+			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+		else
+			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
@@ -122,6 +148,8 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
 			{
+				// TODO: Handle temporalLayer.
+
 				auto jsonSpatialLayerIt = request->data.find("spatialLayer");
 
 				if (jsonSpatialLayerIt == request->data.end() || !jsonSpatialLayerIt->is_number_unsigned())
@@ -131,9 +159,9 @@ namespace RTC
 
 				auto preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
 
-				if (preferredSpatialLayer >= static_cast<int16_t>(this->mapMappedSsrcSpatialLayer.size()))
+				if (preferredSpatialLayer >= static_cast<int16_t>(this->consumableRtpEncodings.size()))
 				{
-					preferredSpatialLayer = static_cast<int16_t>(this->mapMappedSsrcSpatialLayer.size()) - 1;
+					preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
 				}
 
 				if (preferredSpatialLayer == this->preferredSpatialLayer)
@@ -150,7 +178,8 @@ namespace RTC
 				  this->preferredSpatialLayer,
 				  this->id.c_str());
 
-				RecalculateTargetSpatialLayer(true /*force*/);
+				if (IsActive())
+					RecalculateTargetSpatialLayer();
 
 				request->Accept();
 
@@ -165,11 +194,28 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::TransportConnected()
+	void SimulcastConsumer::UseBandwidth(uint32_t availableBandwidth)
 	{
 		MS_TRACE();
 
-		RequestKeyFrame();
+		if (IsActive())
+			RecalculateTargetSpatialLayer();
+	}
+
+	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	{
+		MS_TRACE();
+
+		auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
+
+		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
+
+		int16_t spatialLayer = it->second;
+
+		this->producerRtpStreams[spatialLayer] = rtpStream;
+
+		// Emit the score event.
+		EmitScore();
 	}
 
 	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
@@ -185,10 +231,9 @@ namespace RTC
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
 		// Recalculate layers.
-		RecalculateTargetSpatialLayer();
+		if (IsActive())
+			RecalculateTargetSpatialLayer();
 
-		// TODO: Probably just if this stream is the current spatial layer.
-		//
 		// Emit the score event.
 		EmitScore();
 	}
@@ -198,7 +243,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Recalculate layers.
-		RecalculateTargetSpatialLayer();
+		if (IsActive())
+			RecalculateTargetSpatialLayer();
 
 		// Emit the score event.
 		EmitScore();
@@ -400,9 +446,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive())
-			return;
-
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		RequestKeyFrame();
@@ -449,6 +492,10 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->Pause();
+
+		// Unset current and target layers.
+		this->targetSpatialLayer  = -1;
+		this->currentSpatialLayer = -1;
 	}
 
 	void SimulcastConsumer::Resumed(bool wasProducer)
@@ -461,10 +508,8 @@ namespace RTC
 		// receiver will request lot of NACKs due to unknown RTP packets.
 		this->syncRequired = true;
 
-		// If we have been resumed due to the Producer becoming resumed, we don't
-		// need to request a key frame since the Producer already requested it.
-		if (!wasProducer)
-			RequestKeyFrame();
+		if (IsActive())
+			RecalculateTargetSpatialLayer();
 	}
 
 	void SimulcastConsumer::CreateRtpStream()
@@ -552,11 +597,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* producerTargetRtpStream  = GetProducerTargetRtpStream();
-		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
-
 		if (!IsActive() || this->kind != RTC::Media::Kind::VIDEO)
 			return;
+
+		auto* producerTargetRtpStream  = GetProducerTargetRtpStream();
+		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
 		if (producerTargetRtpStream)
 		{
@@ -611,7 +656,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimulcastConsumer::RecalculateTargetSpatialLayer(bool /*force*/)
+	void SimulcastConsumer::RecalculateTargetSpatialLayer()
 	{
 		MS_TRACE();
 
@@ -792,7 +837,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->RecalculateTargetSpatialLayer();
+		if (IsActive())
+			RecalculateTargetSpatialLayer();
 
 		// Emit the score event.
 		EmitScore();

@@ -80,11 +80,18 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::TransportConnected()
+	void PipeConsumer::UseBandwidth(uint32_t availableBandwidth)
 	{
 		MS_TRACE();
 
 		RequestKeyFrame();
+	}
+
+	void PipeConsumer::ProducerRtpStream(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
 	}
 
 	void PipeConsumer::ProducerNewRtpStream(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
@@ -181,8 +188,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive())
-			return;
+		// TODO: Must call the corresponding rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		RequestKeyFrame();
 	}

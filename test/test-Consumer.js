@@ -345,6 +345,7 @@ test('transport.consume() succeeds', async () =>
 			producerId      : videoProducer.id,
 			rtpCapabilities : consumerDeviceCapabilities,
 			paused          : true,
+			preferredLayers : { spatialLayer: 12 },
 			appData         : { baz: 'LOL' }
 		});
 

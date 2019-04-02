@@ -19,7 +19,8 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
-		void TransportConnected() override;
+		void UseBandwidth(uint32_t availableBandwidth) override;
+		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
