@@ -30,6 +30,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Update available bitrate.
+		this->availableBitrate = static_cast<uint32_t>(remb->GetBitrate());
+
+		// TODO: Testing.
+
 		uint32_t rembBitrate = static_cast<uint32_t>(remb->GetBitrate());
 		uint64_t now         = DepLibUV::GetTime();
 		uint32_t bitrate     = this->transmissionCounter.GetRate(now);
