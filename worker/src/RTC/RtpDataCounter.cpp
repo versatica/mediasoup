@@ -52,6 +52,7 @@ namespace RTC
 			  "current time [%" PRIu64 "] is older than a previous [%" PRIu64 "]",
 			  newOldestTime,
 			  this->oldestTime);
+
 			return;
 		}
 
