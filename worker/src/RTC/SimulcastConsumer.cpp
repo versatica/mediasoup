@@ -179,7 +179,7 @@ namespace RTC
 				  this->id.c_str());
 
 				if (IsActive())
-					RecalculateTargetSpatialLayer();
+					this->listener->OnConsumerNeedBandwidth(this);
 
 				request->Accept();
 
@@ -194,12 +194,19 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::UseBandwidth(uint32_t availableBandwidth)
+	uint32_t SimulcastConsumer::UseBandwidth(uint32_t availableBandwidth)
 	{
 		MS_TRACE();
 
 		if (IsActive())
+		{
+			// TODO: Here we should be able to use the best layer we can.
+
 			RecalculateTargetSpatialLayer();
+		}
+
+		// TODO.
+		return 0;
 	}
 
 	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
@@ -230,9 +237,27 @@ namespace RTC
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
-		// Recalculate layers.
-		if (IsActive())
+		// If the Consumer is active and this is the first Producer RtpStream, we
+		// need to ask for bandwidth.
+		//
+		// clang-format off
+		if (
+			IsActive() &&
+			std::none_of(
+				this->producerRtpStreams.begin(), this->producerRtpStreams.end(), [](const RTC::RtpStream* rtpStream)
+				{
+					return rtpStream != nullptr;
+				})
+		)
+		// clang-format on
+		{
+			this->listener->OnConsumerNeedBandwidth(this);
+		}
+		// TODO: We should never upgrade layers by ourselves.
+		else if (IsActive())
+		{
 			RecalculateTargetSpatialLayer();
+		}
 
 		// Emit the score event.
 		EmitScore();
@@ -242,7 +267,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Recalculate layers.
+		// TODO: NO, we just can downgrade layers.
 		if (IsActive())
 			RecalculateTargetSpatialLayer();
 
@@ -487,7 +512,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::Paused(bool /*wasProducer*/)
+	void SimulcastConsumer::Paused()
 	{
 		MS_TRACE();
 
@@ -498,7 +523,7 @@ namespace RTC
 		this->currentSpatialLayer = -1;
 	}
 
-	void SimulcastConsumer::Resumed(bool wasProducer)
+	void SimulcastConsumer::Resumed()
 	{
 		MS_TRACE();
 
@@ -508,8 +533,9 @@ namespace RTC
 		// receiver will request lot of NACKs due to unknown RTP packets.
 		this->syncRequired = true;
 
+		// We need to ask the Transport for bandwidth.
 		if (IsActive())
-			RecalculateTargetSpatialLayer();
+			this->listener->OnConsumerNeedBandwidth(this);
 	}
 
 	void SimulcastConsumer::CreateRtpStream()
@@ -786,6 +812,12 @@ namespace RTC
 			}
 		}
 
+		MS_DEBUG_TAG(
+		  simulcast,
+		  "newTargetSpatialLayer is %" PRIi16 " [consumerId:%s]",
+		  newTargetSpatialLayer,
+		  this->id.c_str());
+
 		if (newTargetSpatialLayer == -1)
 		{
 			MS_DEBUG_TAG(simulcast, "newTargetSpatialLayer remains unset");
@@ -838,6 +870,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: NO, we just can downgrade layers.
 		if (IsActive())
 			RecalculateTargetSpatialLayer();
 

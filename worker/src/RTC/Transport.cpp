@@ -901,7 +901,11 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
+			MS_WARN_TAG(rtcp, "ignoring key rame request (transport not connected)");
+
 			return;
+		}
 
 		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}

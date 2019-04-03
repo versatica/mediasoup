@@ -1,7 +1,6 @@
 #ifndef MS_RTC_SIMPLE_CONSUMER_HPP
 #define MS_RTC_SIMPLE_CONSUMER_HPP
 
-#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
@@ -19,7 +18,7 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
-		void UseBandwidth(uint32_t availableBandwidth) override;
+		uint32_t UseBandwidth(uint32_t availableBandwidth) override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
@@ -33,8 +32,8 @@ namespace RTC
 		float GetLossPercentage() const override;
 
 	private:
-		void Paused(bool wasProducer) override;
-		void Resumed(bool wasProducer) override;
+		void Paused() override;
+		void Resumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void EmitScore() const;
@@ -52,7 +51,6 @@ namespace RTC
 		bool syncRequired{ true };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
-		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		RTC::RtpStream* producerRtpStream{ nullptr };
 	};
 } // namespace RTC

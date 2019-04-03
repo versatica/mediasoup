@@ -219,7 +219,7 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
 
 				if (wasActive)
-					Paused(false);
+					Paused();
 
 				request->Accept();
 
@@ -240,7 +240,7 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
 
 				if (IsActive())
-					Resumed(false);
+					Resumed();
 
 				request->Accept();
 
@@ -268,7 +268,7 @@ namespace RTC
 		MS_DEBUG_DEV("Producer paused [consumerId:%s]", this->id.c_str());
 
 		if (wasActive)
-			Paused(true);
+			Paused();
 
 		Channel::Notifier::Emit(this->id, "producerpause");
 	}
@@ -285,7 +285,7 @@ namespace RTC
 		MS_DEBUG_DEV("Producer resumed [consumerId:%s]", this->id.c_str());
 
 		if (IsActive())
-			Resumed(true);
+			Resumed();
 
 		Channel::Notifier::Emit(this->id, "producerresume");
 	}

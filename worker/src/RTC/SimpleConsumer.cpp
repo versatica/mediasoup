@@ -99,11 +99,14 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::UseBandwidth(uint32_t availableBandwidth)
+	uint32_t SimpleConsumer::UseBandwidth(uint32_t availableBandwidth)
 	{
 		MS_TRACE();
 
 		RequestKeyFrame();
+
+		// TODO.
+		return 0;
 	}
 
 	void SimpleConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
@@ -121,6 +124,13 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
+
+		if (IsActive())
+		{
+			// Since the Producer RtpStream has been created right now, we need to ask
+			// the Transport for bandwidth.
+			this->listener->OnConsumerNeedBandwidth(this);
+		}
 
 		// Emit the score event.
 		EmitScore();
@@ -180,22 +190,7 @@ namespace RTC
 				this->rtpTimestampManager.Offset(diffTs);
 			}
 
-			if (this->encodingContext)
-				this->encodingContext->SyncRequired();
-
 			this->syncRequired = false;
-		}
-
-		// TODO: Not sure how to deal with it, but if this happens (and we drop the packet)
-		// we shouldn't have unset the syncRequired flag, etc.
-		//
-		// Rewrite payload if needed. Drop packet if necessary.
-		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
-		{
-			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
-			this->rtpTimestampManager.Drop(packet->GetTimestamp());
-
-			return;
 		}
 
 		// Update RTP seq number and timestamp.
@@ -251,10 +246,6 @@ namespace RTC
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
 		packet->SetTimestamp(origTimestamp);
-
-		// Restore the original payload if needed.
-		if (this->encodingContext)
-			packet->RestorePayload();
 	}
 
 	void SimpleConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
@@ -347,14 +338,14 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::Paused(bool /*wasProducer*/)
+	void SimpleConsumer::Paused()
 	{
 		MS_TRACE();
 
 		this->rtpStream->Pause();
 	}
 
-	void SimpleConsumer::Resumed(bool wasProducer)
+	void SimpleConsumer::Resumed()
 	{
 		MS_TRACE();
 
@@ -364,10 +355,9 @@ namespace RTC
 		// receiver will request lot of NACKs due to unknown RTP packets.
 		this->syncRequired = true;
 
-		// If we have been resumed due to the Producer becoming resumed, we don't
-		// need to request a key frame since the Producer already requested it.
-		if (!wasProducer)
-			RequestKeyFrame();
+		// We need to ask the Transport for bandwidth.
+		if (IsActive() && this->producerRtpStream)
+			this->listener->OnConsumerNeedBandwidth(this);
 	}
 
 	void SimpleConsumer::CreateRtpStream()
@@ -447,8 +437,6 @@ namespace RTC
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
 		this->keyFrameSupported = Codecs::CanBeKeyFrame(mediaCodec->mimeType);
-
-		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 	}
 
 	void SimpleConsumer::RequestKeyFrame()

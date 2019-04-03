@@ -24,6 +24,7 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual void OnConsumerNeedBandwidth(RTC::Consumer* consumer)                         = 0;
 			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
@@ -51,7 +52,7 @@ namespace RTC
 		bool IsActive() const;
 		bool IsPaused() const;
 		bool IsProducerPaused() const;
-		virtual void UseBandwidth(uint32_t availableBandwidth) = 0;
+		virtual uint32_t UseBandwidth(uint32_t availableBandwidth) = 0;
 		void ProducerPaused();
 		void ProducerResumed();
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
@@ -68,8 +69,8 @@ namespace RTC
 		virtual float GetLossPercentage() const                                             = 0;
 
 	protected:
-		virtual void Paused(bool wasProducer)  = 0;
-		virtual void Resumed(bool wasProducer) = 0;
+		virtual void Paused()  = 0;
+		virtual void Resumed() = 0;
 
 	public:
 		// Passed by argument.

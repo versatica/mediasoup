@@ -80,11 +80,14 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::UseBandwidth(uint32_t availableBandwidth)
+	uint32_t PipeConsumer::UseBandwidth(uint32_t availableBandwidth)
 	{
 		MS_TRACE();
 
 		RequestKeyFrame();
+
+		// TODO.
+		return 0;
 	}
 
 	void PipeConsumer::ProducerRtpStream(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
@@ -188,8 +191,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Must call the corresponding rtpStream->ReceiveKeyFrameRequest(messageType);
-
 		RequestKeyFrame();
 	}
 
@@ -235,7 +236,7 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::Paused(bool /*wasProducer*/)
+	void PipeConsumer::Paused()
 	{
 		MS_TRACE();
 
@@ -247,7 +248,7 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::Resumed(bool wasProducer)
+	void PipeConsumer::Resumed()
 	{
 		MS_TRACE();
 
@@ -258,10 +259,9 @@ namespace RTC
 			rtpStream->Resume();
 		}
 
-		// If we have been resumed due to the Producer becoming resumed, we don't
-		// need to request a key frame since the Producer already requested it.
-		if (!wasProducer)
-			RequestKeyFrame();
+		// We need to ask the Transport for bandwidth.
+		if (IsActive())
+			this->listener->OnConsumerNeedBandwidth(this);
 	}
 
 	void PipeConsumer::CreateRtpStreams()

@@ -420,6 +420,19 @@ namespace RTC
 		// TODO
 	}
 
+	inline void PipeTransport::OnConsumerNeedBandwidth(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Ignore if not connected.
+		if (!IsConnected())
+			return;
+
+		// TODO: Here we must check the available sending BWE and so on.
+
+		consumer->UseBandwidth(0);
+	}
+
 	inline void PipeTransport::OnPacketRecv(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
