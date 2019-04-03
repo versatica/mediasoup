@@ -165,7 +165,7 @@ namespace RTC
 				std::vector<uint32_t> ssrcs;
 
 				GetSsrcs(&ssrcs);
-				this->observer->OnRembServerBitrateEstimation(this, ssrcs, targetBitrate);
+				this->observer->OnRembServerBandwidth(this, ssrcs, targetBitrate);
 			}
 		}
 

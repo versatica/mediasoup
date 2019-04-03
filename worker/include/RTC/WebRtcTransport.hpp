@@ -106,14 +106,14 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
 	public:
-		void OnRembClientBitrateEstimation(RTC::RembClient* rembClient, int32_t availableBitrate) override;
+		void OnRembClientAvailableBandwidth(RTC::RembClient* rembClient, int32_t availableBandwidth) override;
 
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:
-		void OnRembServerBitrateEstimation(
+		void OnRembServerBandwidth(
 		  const RTC::RembServer::RemoteBitrateEstimator* remoteBitrateEstimator,
 		  const std::vector<uint32_t>& ssrcs,
-		  uint32_t availableBitrate) override;
+		  uint32_t bandwidth) override;
 
 	private:
 		// Allocated by this.

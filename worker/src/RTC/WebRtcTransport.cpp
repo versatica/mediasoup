@@ -1413,28 +1413,28 @@ namespace RTC
 		// NOTE: No DataChannel support, si just ignore it.
 	}
 
-	inline void WebRtcTransport::OnRembClientBitrateEstimation(
-	  RTC::RembClient* rembClient, int32_t availableBitrate)
+	inline void WebRtcTransport::OnRembClientAvailableBandwidth(
+	  RTC::RembClient* rembClient, int32_t availableBandwidth)
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	inline void WebRtcTransport::OnRembServerBitrateEstimation(
+	inline void WebRtcTransport::OnRembServerBandwidth(
 	  const RTC::RembServer::RemoteBitrateEstimator* /*rembServer*/,
 	  const std::vector<uint32_t>& ssrcs,
-	  uint32_t availableBitrate)
+	  uint32_t bandwidth)
 	{
 		MS_TRACE();
 
-		uint32_t effectiveMaxBitrate{ 0u };
+		uint32_t effectiveBandwidth{ 0u };
 
-		// Limit announced available bitrate if requested via API.
+		// Limit announced bandwidth if requested via API.
 		if (this->maxIncomingBitrate != 0u)
-			effectiveMaxBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
+			effectiveBandwidth = std::min(bandwidth, this->maxIncomingBitrate);
 		else
-			effectiveMaxBitrate = availableBitrate;
+			effectiveBandwidth = bandwidth;
 
 		if (MS_HAS_DEBUG_TAG(rbe))
 		{
@@ -1448,15 +1448,15 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  rbe,
-			  "sending RTCP REMB packet [available:%" PRIu32 "bps, effective:%" PRIu32 "bps, ssrcs:%s]",
-			  availableBitrate,
-			  effectiveMaxBitrate,
+			  "sending RTCP REMB packet [bandwidth:%" PRIu32 "bps, effective:%" PRIu32 "bps, ssrcs:%s]",
+			  bandwidth,
+			  effectiveBandwidth,
 			  ssrcsStream.str().c_str());
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
 
-		packet.SetBitrate(effectiveMaxBitrate);
+		packet.SetBitrate(effectiveBandwidth);
 		packet.SetSsrcs(ssrcs);
 		packet.Serialize(RTC::RTCP::Buffer);
 		SendRtcpPacket(&packet);

@@ -14,8 +14,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRembClientBitrateEstimation(
-			  RTC::RembClient* rembClient, int32_t availableBitrate) = 0;
+			virtual void OnRembClientAvailableBandwidth(
+			  RTC::RembClient* rembClient, int32_t availableBandwidth) = 0;
 		};
 
 	public:

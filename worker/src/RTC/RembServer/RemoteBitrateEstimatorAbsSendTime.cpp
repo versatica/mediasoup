@@ -323,7 +323,7 @@ namespace RTC
 					++this->totalProbesReceived;
 
 					// Make sure that a probe which updated the bitrate immediately has an
-					// effect by calling the OnRembServerBitrateEstimation callback.
+					// effect by calling the OnRembServerBandwidth callback.
 					if (ProcessClusters(nowMs) == ProbeResult::BITRATE_UPDATED)
 						updateEstimate = true;
 				}
@@ -377,7 +377,7 @@ namespace RTC
 				this->lastUpdateMs     = nowMs;
 				this->availableBitrate = targetBitrateBps;
 
-				this->observer->OnRembServerBitrateEstimation(this, ssrcs, targetBitrateBps);
+				this->observer->OnRembServerBandwidth(this, ssrcs, targetBitrateBps);
 			}
 		}
 

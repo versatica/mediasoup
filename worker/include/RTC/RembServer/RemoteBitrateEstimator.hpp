@@ -42,11 +42,11 @@ namespace RTC
 			class Listener
 			{
 			public:
-				// Called when a receive channel group has a new bitrate estimate for the incoming streams.
-				virtual void OnRembServerBitrateEstimation(
+				// Called when a receive channel group has a new bandwidth estimate for the incoming streams.
+				virtual void OnRembServerBandwidth(
 				  const RemoteBitrateEstimator* remoteBitrateEstimator,
 				  const std::vector<uint32_t>& ssrcs,
-				  uint32_t availableBitrate) = 0;
+				  uint32_t bandwidth) = 0;
 			};
 
 		protected:
