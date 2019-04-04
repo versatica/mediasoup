@@ -18,14 +18,7 @@ namespace RTC
 			  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) = 0;
 		};
 
-	private:
-		struct StorageItem
-		{
-			// Allow some more space for RTX encoding.
-			uint8_t store[RTC::MtuSize + 200];
-		};
-
-	private:
+	public:
 		struct BufferItem
 		{
 			uint16_t seq{ 0 }; // RTP seq.
@@ -33,6 +26,13 @@ namespace RTC
 			uint64_t resentAtTime{ 0 }; // Last time this packet was resent.
 			uint8_t sentTimes{ 0 };     // Number of times this packet was resent.
 			bool rtxEncoded{ false };   // Whether the packet has already been RTX encoded.
+		};
+
+	private:
+		struct StorageItem
+		{
+			// Allow some more space for RTX encoding.
+			uint8_t store[RTC::MtuSize + 200];
 		};
 
 	public:

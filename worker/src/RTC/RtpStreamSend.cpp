@@ -13,7 +13,7 @@ namespace RTC
 
 	// 17: 16 bit mask + the initial sequence number.
 	static constexpr size_t MaxRequestedPackets{ 17 };
-	static std::vector<RTC::RtpPacket*> RetransmissionContainer(MaxRequestedPackets + 1);
+	static std::vector<RTC::RtpStreamSend::BufferItem*> RetransmissionContainer(MaxRequestedPackets + 1);
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
@@ -80,16 +80,16 @@ namespace RTC
 
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
 
-			auto it2 = RetransmissionContainer.begin();
-
-			for (; it2 != RetransmissionContainer.end(); ++it2)
+			for (auto it2 = RetransmissionContainer.begin(); it2 != RetransmissionContainer.end(); ++it2)
 			{
+				auto* bufferItem = *it2;
+
+				if (bufferItem == nullptr)
+					break;
+
 				// Note that this is an already RTX encoded packet if RTX is used
 				// (FillRetransmissionContainer() did it).
-				RTC::RtpPacket* packet = *it2;
-
-				if (packet == nullptr)
-					break;
+				auto* packet = bufferItem->packet;
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
@@ -98,9 +98,9 @@ namespace RTC
 				// Mark the packet as retransmitted.
 				RTC::RtpStream::PacketRetransmitted(packet);
 
-				// Mark the packet as repaired.
-				// TODO: Only if this is the first retransmission.
-				RTC::RtpStream::PacketRepaired(packet);
+				// Mark the packet as repaired (only if this is the first retransmission).
+				if (bufferItem->sentTimes == 1)
+					RTC::RtpStream::PacketRepaired(packet);
 			}
 		}
 	}
@@ -331,13 +331,8 @@ namespace RTC
 		if (this->buffer.empty())
 			return;
 
-		uint16_t firstSeq = seq;
-		uint16_t lastSeq  = firstSeq + MaxRequestedPackets - 1;
-
-		// Number of requested packets cannot be greater than the container size - 1.
-		MS_ASSERT(
-		  RetransmissionContainer.size() - 1 >= MaxRequestedPackets, "RtpPacket container is too small");
-
+		uint16_t firstSeq       = seq;
+		uint16_t lastSeq        = firstSeq + MaxRequestedPackets - 1;
 		auto bufferIt           = this->buffer.begin();
 		auto bufferItReverse    = this->buffer.rbegin();
 		uint16_t bufferFirstSeq = (*bufferIt).seq;
@@ -438,11 +433,13 @@ namespace RTC
 							(*bufferIt).rtxEncoded = true;
 						}
 
-						// Store the packet in the container and then increment its index.
-						RetransmissionContainer[containerIdx++] = currentPacket;
+						// Store the buffer item in the container and then increment its index.
+						RetransmissionContainer[containerIdx++] = std::addressof(*bufferIt);
 
 						// Save when this packet was resent.
 						(*bufferIt).resentAtTime = now;
+
+						// Increase the number of times this packet was sent.
 						(*bufferIt).sentTimes++;
 
 						sent = true;
