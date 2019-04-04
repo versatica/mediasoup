@@ -53,8 +53,6 @@ namespace RTC
 		public:
 			static bool IsRtcp(const uint8_t* data, size_t len);
 			static Packet* Parse(const uint8_t* data, size_t len);
-
-		private:
 			static const std::string& Type2String(Type type);
 
 		private:

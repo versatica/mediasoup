@@ -466,9 +466,8 @@ namespace RTC
 			case RTC::RTCP::Type::RR:
 			{
 				auto* rr = static_cast<RTC::RTCP::ReceiverReportPacket*>(packet);
-				auto it  = rr->Begin();
 
-				for (; it != rr->End(); ++it)
+				for (auto it = rr->Begin(); it != rr->End(); ++it)
 				{
 					auto& report   = (*it);
 					auto* consumer = GetConsumerByMediaSsrc(report->GetSsrc());
@@ -480,7 +479,7 @@ namespace RTC
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
 						  report->GetSsrc());
 
-						break;
+						continue;
 					}
 
 					consumer->ReceiveRtcpReceiverReport(report);
@@ -616,10 +615,9 @@ namespace RTC
 			case RTC::RTCP::Type::SR:
 			{
 				auto* sr = static_cast<RTC::RTCP::SenderReportPacket*>(packet);
-				auto it  = sr->Begin();
 
 				// Even if Sender Report packet can only contains one report...
-				for (; it != sr->End(); ++it)
+				for (auto it = sr->Begin(); it != sr->End(); ++it)
 				{
 					auto& report = (*it);
 					// Get the producer associated to the SSRC indicated in the report.
@@ -644,9 +642,8 @@ namespace RTC
 			case RTC::RTCP::Type::SDES:
 			{
 				auto* sdes = static_cast<RTC::RTCP::SdesPacket*>(packet);
-				auto it    = sdes->Begin();
 
-				for (; it != sdes->End(); ++it)
+				for (auto it = sdes->Begin(); it != sdes->End(); ++it)
 				{
 					auto& chunk = (*it);
 					// Get the producer associated to the SSRC indicated in the report.
