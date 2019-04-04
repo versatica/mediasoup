@@ -215,7 +215,7 @@ namespace RTC
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
 						  report->GetSsrc());
 
-						break;
+						continue;
 					}
 
 					consumer->ReceiveRtcpReceiverReport(report);

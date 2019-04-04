@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.12
+
+* Fix RTCP Receiver Report handling.
+
+
 ### 2.6.11
 
 * Update deps.
