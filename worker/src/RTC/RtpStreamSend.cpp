@@ -395,8 +395,6 @@ namespace RTC
 						{
 							if (!tooOldPacketFound)
 							{
-								// TODO: May we ask for a key frame in this case?
-
 								MS_WARN_TAG(
 								  rtx,
 								  "ignoring retransmission for too old packet "
