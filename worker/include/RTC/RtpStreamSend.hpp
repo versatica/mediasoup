@@ -29,10 +29,10 @@ namespace RTC
 		struct BufferItem
 		{
 			uint16_t seq{ 0 }; // RTP seq.
-			uint64_t resentAtTime{ 0 };
 			RTC::RtpPacket* packet{ nullptr };
-			bool rtxEncoded{ false }; // Whether the packet has already been RTX encoded.
-			size_t sentTimes{ 0 };
+			uint64_t resentAtTime{ 0 }; // Last time this packet was resent.
+			uint8_t sentTimes{ 0 };     // Number of times this packet was resent.
+			bool rtxEncoded{ false };   // Whether the packet has already been RTX encoded.
 		};
 
 	public:
