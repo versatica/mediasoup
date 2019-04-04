@@ -71,8 +71,12 @@ namespace RTC
 			RTC::Codecs::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator.
-		if (this->params.useNack)
-			this->nackGenerator->ReceivePacket(packet);
+		if (this->params.useNack && this->nackGenerator->ReceivePacket(packet))
+		{
+			// Mark the packet as retransmitted and repaired.
+			RTC::RtpStream::PacketRepaired(packet);
+			RTC::RtpStream::PacketRetransmitted(packet);
+		}
 
 		// Ensure the inactivityCheckPeriodicTimer runs (unless DTX is enabled).
 		if (!this->params.useDtx && !this->inactivityCheckPeriodicTimer->IsActive())
@@ -80,6 +84,8 @@ namespace RTC
 			this->inactive = false;
 			this->inactivityCheckPeriodicTimer->Restart();
 		}
+
+		this->transmissionCounter.Update(packet);
 
 		return true;
 	}
@@ -152,13 +158,18 @@ namespace RTC
 		if (packet->GetPayloadType() == GetPayloadType())
 			RTC::Codecs::ProcessRtpPacket(packet, GetMimeType());
 
+		// Mark the packet as retransmitted.
+		RTC::RtpStream::PacketRetransmitted(packet);
+
 		// Pass the packet to the NackGenerator and return true just if this was a
 		// NACKed packet.
 		if (this->nackGenerator->ReceivePacket(packet))
 		{
-			// Mark the packet as retransmitted and repaired.
-			RTC::RtpStream::PacketRetransmitted(packet);
+			// Mark the packet as repaired.
 			RTC::RtpStream::PacketRepaired(packet);
+
+			// Increase transmission counter.
+			this->transmissionCounter.Update(packet);
 
 			return true;
 		}

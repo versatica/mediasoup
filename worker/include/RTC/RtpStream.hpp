@@ -104,6 +104,7 @@ namespace RTC
 		uint8_t fractionLost{ 0 };
 		size_t packetsDiscarded{ 0 };
 		size_t packetsRepaired{ 0 };
+		size_t packetsRetransmitted{ 0 };
 		size_t nackCount{ 0 };
 		size_t nackRtpPacketCount{ 0 };
 		size_t pliCount{ 0 };
@@ -111,7 +112,6 @@ namespace RTC
 		size_t repairedPrior{ 0 };   // Packets repaired at last interval.
 		uint32_t expectedPrior{ 0 }; // Packets expected at last interval.
 		RTC::RtpDataCounter transmissionCounter;
-		RTC::RtpDataCounter retransmissionCounter;
 
 	private:
 		// Score related.
@@ -185,7 +185,7 @@ namespace RTC
 
 	inline uint32_t RtpStream::GetRate(uint64_t now)
 	{
-		return this->transmissionCounter.GetRate(now) + this->retransmissionCounter.GetRate(now);
+		return this->transmissionCounter.GetRate(now);
 	}
 
 	inline uint8_t RtpStream::GetFractionLost() const

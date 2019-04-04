@@ -99,6 +99,7 @@ namespace RTC
 				RTC::RtpStream::PacketRetransmitted(packet);
 
 				// Mark the packet as repaired.
+				// TODO: Only if this is the first retransmission.
 				RTC::RtpStream::PacketRepaired(packet);
 			}
 		}
@@ -442,6 +443,7 @@ namespace RTC
 
 						// Save when this packet was resent.
 						(*bufferIt).resentAtTime = now;
+						(*bufferIt).sentTimes++;
 
 						sent = true;
 

@@ -55,6 +55,7 @@ namespace RTC
 		virtual uint32_t UseBandwidth(uint32_t availableBandwidth) = 0;
 		void ProducerPaused();
 		void ProducerResumed();
+		// TODO: Update signature to RTC::RtpStreamRecv.
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
 		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 		virtual void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)     = 0;

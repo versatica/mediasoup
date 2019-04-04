@@ -105,9 +105,6 @@ namespace RTC
 			return false;
 		}
 
-		// Increase counters.
-		this->transmissionCounter.Update(packet);
-
 		// Update highest seen RTP timestamp.
 		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
@@ -274,11 +271,11 @@ namespace RTC
 		}
 	}
 
-	void RtpStream::PacketRetransmitted(RTC::RtpPacket* packet)
+	void RtpStream::PacketRetransmitted(RTC::RtpPacket* /*packet*/)
 	{
 		MS_TRACE();
 
-		this->retransmissionCounter.Update(packet);
+		this->packetsRetransmitted++;
 	}
 
 	void RtpStream::PacketRepaired(RTC::RtpPacket* /*packet*/)
