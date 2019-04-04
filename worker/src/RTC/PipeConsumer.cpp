@@ -90,21 +90,21 @@ namespace RTC
 		return 0;
 	}
 
-	void PipeConsumer::ProducerRtpStream(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
+	void PipeConsumer::ProducerRtpStream(RTC::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void PipeConsumer::ProducerNewRtpStream(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
+	void PipeConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void PipeConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	void PipeConsumer::ProducerRtpStreamScore(RTC::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
 

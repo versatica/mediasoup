@@ -109,7 +109,7 @@ namespace RTC
 		return 0;
 	}
 
-	void SimpleConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
+	void SimpleConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
@@ -119,7 +119,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
+	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
@@ -136,7 +136,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimpleConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	void SimpleConsumer::ProducerRtpStreamScore(RTC::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
 

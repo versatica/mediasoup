@@ -209,7 +209,7 @@ namespace RTC
 		return 0;
 	}
 
-	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -225,7 +225,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -263,7 +263,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
 

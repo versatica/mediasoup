@@ -18,9 +18,9 @@ namespace RTC
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
 		uint32_t UseBandwidth(uint32_t availableBandwidth) override;
-		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
-		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
-		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
+		void ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerRtpStreamScore(RTC::RtpStreamRecv* rtpStream, uint8_t score) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;

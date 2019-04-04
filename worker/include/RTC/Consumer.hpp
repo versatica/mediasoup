@@ -11,7 +11,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStream.hpp"
+#include "RTC/RtpStreamRecv.hpp"
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -55,10 +55,9 @@ namespace RTC
 		virtual uint32_t UseBandwidth(uint32_t availableBandwidth) = 0;
 		void ProducerPaused();
 		void ProducerResumed();
-		// TODO: Update signature to RTC::RtpStreamRecv.
-		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
-		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
-		virtual void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)     = 0;
+		virtual void ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)    = 0;
+		virtual void ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
+		virtual void ProducerRtpStreamScore(RTC::RtpStreamRecv* rtpStream, uint8_t score)     = 0;
 		void ProducerClosed();
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                    = 0;
 		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) = 0;

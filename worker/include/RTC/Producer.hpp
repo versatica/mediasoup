@@ -11,7 +11,6 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include <map>
 #include <string>
@@ -28,9 +27,9 @@ namespace RTC
 			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
 			virtual void OnProducerNewRtpStream(
-			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+			  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamScore(
-			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)                      = 0;
+			  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint8_t score)                  = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 			virtual void OnProducerNeedWorstRemoteFractionLost(

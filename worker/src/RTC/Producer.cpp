@@ -972,7 +972,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Notify the listener.
-		this->listener->OnProducerRtpStreamScore(this, rtpStream, score);
+		this->listener->OnProducerRtpStreamScore(this, static_cast<RTC::RtpStreamRecv*>(rtpStream), score);
 
 		// Emit the score event.
 		EmitScore();
