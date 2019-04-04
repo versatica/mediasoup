@@ -63,6 +63,9 @@ namespace RTC
 		if (!this->storage.empty())
 			StorePacket(packet);
 
+		// Increase transmission counter.
+		this->transmissionCounter.Update(packet);
+
 		return true;
 	}
 
@@ -76,7 +79,7 @@ namespace RTC
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
-			this->nackRtpPacketCount += item->CountRequestedPackets();
+			this->nackPacketCount += item->CountRequestedPackets();
 
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
 

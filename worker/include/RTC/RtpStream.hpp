@@ -72,7 +72,7 @@ namespace RTC
 		virtual void Pause()  = 0;
 		virtual void Resume() = 0;
 		void ResetScore(uint8_t score, bool notify);
-		uint32_t GetRate(uint64_t now);
+		uint32_t GetBitrate(uint64_t now);
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
@@ -103,10 +103,10 @@ namespace RTC
 		uint32_t packetsLost{ 0 };
 		uint8_t fractionLost{ 0 };
 		size_t packetsDiscarded{ 0 };
-		size_t packetsRepaired{ 0 };
 		size_t packetsRetransmitted{ 0 };
+		size_t packetsRepaired{ 0 };
 		size_t nackCount{ 0 };
-		size_t nackRtpPacketCount{ 0 };
+		size_t nackPacketCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t firCount{ 0 };
 		size_t repairedPrior{ 0 };   // Packets repaired at last interval.
@@ -183,7 +183,7 @@ namespace RTC
 		return this->params.temporalLayers;
 	}
 
-	inline uint32_t RtpStream::GetRate(uint64_t now)
+	inline uint32_t RtpStream::GetBitrate(uint64_t now)
 	{
 		return this->transmissionCounter.GetRate(now);
 	}

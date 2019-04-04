@@ -52,22 +52,23 @@ namespace RTC
 
 		uint64_t now = DepLibUV::GetTime();
 
-		jsonObject["timestamp"]          = now;
-		jsonObject["ssrc"]               = this->params.ssrc;
-		jsonObject["kind"]               = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		jsonObject["mimeType"]           = this->params.mimeType.ToString();
-		jsonObject["packetCount"]        = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]          = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]            = this->transmissionCounter.GetRate(now);
-		jsonObject["packetsLost"]        = this->packetsLost;
-		jsonObject["fractionLost"]       = this->fractionLost;
-		jsonObject["packetsDiscarded"]   = this->packetsDiscarded;
-		jsonObject["packetsRepaired"]    = this->packetsRepaired;
-		jsonObject["nackCount"]          = this->nackCount;
-		jsonObject["nackRtpPacketCount"] = this->nackRtpPacketCount;
-		jsonObject["pliCount"]           = this->pliCount;
-		jsonObject["firCount"]           = this->firCount;
-		jsonObject["score"]              = this->score;
+		jsonObject["timestamp"]            = now;
+		jsonObject["ssrc"]                 = this->params.ssrc;
+		jsonObject["kind"]                 = RtpCodecMimeType::type2String[this->params.mimeType.type];
+		jsonObject["mimeType"]             = this->params.mimeType.ToString();
+		jsonObject["packetCount"]          = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]            = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]              = this->transmissionCounter.GetRate(now);
+		jsonObject["packetsLost"]          = this->packetsLost;
+		jsonObject["fractionLost"]         = this->fractionLost;
+		jsonObject["packetsDiscarded"]     = this->packetsDiscarded;
+		jsonObject["packetsRetransmitted"] = this->packetsRetransmitted;
+		jsonObject["packetsRepaired"]      = this->packetsRepaired;
+		jsonObject["nackCount"]            = this->nackCount;
+		jsonObject["nackPacketCount"]      = this->nackPacketCount;
+		jsonObject["pliCount"]             = this->pliCount;
+		jsonObject["firCount"]             = this->firCount;
+		jsonObject["score"]                = this->score;
 
 		if (!this->params.rid.empty())
 			jsonObject["rid"] = this->params.rid;

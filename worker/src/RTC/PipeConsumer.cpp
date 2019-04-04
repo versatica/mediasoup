@@ -222,7 +222,7 @@ namespace RTC
 		{
 			auto& rtpStream = kv.second;
 
-			rate += rtpStream->GetRate(now);
+			rate += rtpStream->GetBitrate(now);
 		}
 
 		return rate;

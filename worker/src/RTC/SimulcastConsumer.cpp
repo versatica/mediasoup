@@ -490,7 +490,7 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		return this->rtpStream->GetRate(now);
+		return this->rtpStream->GetBitrate(now);
 	}
 
 	float SimulcastConsumer::GetLossPercentage() const
