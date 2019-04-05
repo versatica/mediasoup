@@ -63,20 +63,26 @@ namespace RTC
 			return false;
 		}
 
-		// Calculate Jitter.
-		CalculateJitter(packet->GetTimestamp());
-
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 			RTC::Codecs::ProcessRtpPacket(packet, GetMimeType());
 
-		// Pass the packet to the NackGenerator if there is no RTX, so if the
-		// NackGenerator returns true it means that it was a NACKed packet.
-		if (this->params.useNack && !HasRtx() && this->nackGenerator->ReceivePacket(packet))
+		// Pass the packet to the NackGenerator.
+		if (this->params.useNack)
 		{
-			// Mark the packet as retransmitted and repaired.
-			RTC::RtpStream::PacketRetransmitted(packet);
-			RTC::RtpStream::PacketRepaired(packet);
+			// If there is RTX just provide the NackGenerator with the packet.
+			if (HasRtx())
+			{
+				this->nackGenerator->ReceivePacket(packet);
+			}
+			// If there is no RTX and NackGenerator returns true it means that it
+			// was a NACKed packet.
+			else if (this->nackGenerator->ReceivePacket(packet))
+			{
+				// Mark the packet as retransmitted and repaired.
+				RTC::RtpStream::PacketRetransmitted(packet);
+				RTC::RtpStream::PacketRepaired(packet);
+			}
 		}
 
 		// Ensure the inactivityCheckPeriodicTimer runs (unless DTX is enabled).
@@ -85,6 +91,9 @@ namespace RTC
 			this->inactive = false;
 			this->inactivityCheckPeriodicTimer->Restart();
 		}
+
+		// Calculate Jitter.
+		CalculateJitter(packet->GetTimestamp());
 
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
@@ -423,14 +432,14 @@ namespace RTC
 			}
 		}
 
-		MS_ERROR(
-		  "fixed values [expected:%" PRIu32 ",received:%" PRIu32 ", lost:%" PRIu32 ", repaired:%" PRIu32
-		  ", retransmitted:%" PRIu32,
-		  expected,
-		  received,
-		  lost,
-		  repaired,
-		  retransmitted);
+		// MS_ERROR(
+		//   "fixed values [expected:%" PRIu32 ",received:%" PRIu32 ", lost:%" PRIu32 ", repaired:%" PRIu32
+		//   ", retransmitted:%" PRIu32,
+		//   expected,
+		//   received,
+		//   lost,
+		//   repaired,
+		//   retransmitted);
 
 		float repairedRatio = static_cast<float>(repaired) / static_cast<float>(received);
 		auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
@@ -442,19 +451,19 @@ namespace RTC
 
 		lost -= repaired * repairedWeight;
 
-		MS_ERROR(
-		  "[repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 "]",
-		  repairedRatio,
-		  repairedWeight,
-		  lost);
+		// MS_ERROR(
+		//   "[repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 "]",
+		//   repairedRatio,
+		//   repairedWeight,
+		//   lost);
 
 		float deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
 
 		auto score = std::round(std::pow(deliveredRatio, 4) * 10);
 
-		MS_ERROR("RESULT [deliveredRatio:%f, score:%f]", deliveredRatio, score);
+		// MS_ERROR("RESULT [deliveredRatio:%f, score:%f]", deliveredRatio, score);
 
-		MS_ERROR("==========\n");
+		// MS_ERROR("==========\n");
 
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
