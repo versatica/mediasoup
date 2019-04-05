@@ -4,6 +4,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <exception>
+#include <regex>
 
 namespace RTC
 {
@@ -63,106 +65,27 @@ namespace RTC
 		// scalabilityMode is optional.
 		if (jsonScalabilityModeIt != data.end() && jsonScalabilityModeIt->is_string())
 		{
-			this->scalabilityMode = jsonScalabilityModeIt->get<std::string>();
+			std::string scalabilityMode = jsonScalabilityModeIt->get<std::string>();
 
-			if (this->scalabilityMode == "L1T2")
+			static const std::regex ScalabilityModeRegex("^L(\\d+)T(\\d+)");
+
+			std::smatch match;
+
+			std::regex_match(scalabilityMode, match, ScalabilityModeRegex);
+
+			if (match.size() > 0)
 			{
-				this->spatialLayers  = 1;
-				this->temporalLayers = 2;
-			}
-			else if (this->scalabilityMode == "L1T3")
-			{
-				this->spatialLayers  = 1;
-				this->temporalLayers = 3;
-			}
-			else if (this->scalabilityMode == "L2T1")
-			{
-				this->spatialLayers  = 2;
-				this->temporalLayers = 1;
-			}
-			else if (this->scalabilityMode == "L2T2")
-			{
-				this->spatialLayers  = 2;
-				this->temporalLayers = 2;
-			}
-			else if (this->scalabilityMode == "L2T3")
-			{
-				this->spatialLayers  = 2;
-				this->temporalLayers = 3;
-			}
-			else if (this->scalabilityMode == "L3T1")
-			{
-				this->spatialLayers  = 3;
-				this->temporalLayers = 1;
-			}
-			else if (this->scalabilityMode == "L3T2")
-			{
-				this->spatialLayers  = 3;
-				this->temporalLayers = 2;
-			}
-			else if (this->scalabilityMode == "L3T3")
-			{
-				this->spatialLayers  = 3;
-				this->temporalLayers = 3;
-			}
-			else if (this->scalabilityMode == "L2T1h")
-			{
-				this->spatialLayers  = 2;
-				this->temporalLayers = 1;
-			}
-			else if (this->scalabilityMode == "L2T2h")
-			{
-				this->spatialLayers  = 2;
-				this->temporalLayers = 2;
-			}
-			else if (this->scalabilityMode == "L2T3h")
-			{
-				this->spatialLayers  = 2;
-				this->temporalLayers = 3;
-			}
-			else if (this->scalabilityMode == "L3T2_KEY")
-			{
-				this->spatialLayers  = 3;
-				this->temporalLayers = 2;
-			}
-			else if (this->scalabilityMode == "L3T3_KEY")
-			{
-				this->spatialLayers  = 3;
-				this->temporalLayers = 3;
-			}
-			else if (this->scalabilityMode == "L4T5_KEY")
-			{
-				this->spatialLayers  = 4;
-				this->temporalLayers = 5;
-			}
-			else if (this->scalabilityMode == "L4T7_KEY")
-			{
-				this->spatialLayers  = 4;
-				this->temporalLayers = 7;
-			}
-			else if (this->scalabilityMode == "L3T2_KEY_SHIFT")
-			{
-				this->spatialLayers  = 3;
-				this->temporalLayers = 2;
-			}
-			else if (this->scalabilityMode == "L3T3_KEY_SHIFT")
-			{
-				this->spatialLayers  = 3;
-				this->temporalLayers = 3;
-			}
-			else if (this->scalabilityMode == "L4T5_KEY_SHIFT")
-			{
-				this->spatialLayers  = 4;
-				this->temporalLayers = 5;
-			}
-			else if (this->scalabilityMode == "L4T7_KEY_SHIFT")
-			{
-				this->spatialLayers  = 4;
-				this->temporalLayers = 7;
-			}
-			else
-			{
-				MS_THROW_TYPE_ERROR("invalid scalabilityMode");
+				this->scalabilityMode = scalabilityMode;
+
+				try
+				{
+					this->spatialLayers  = std::stoul(match[1].str());
+					this->temporalLayers = std::stoul(match[2].str());
+				}
+				catch (std::exception& e)
+				{
+					MS_THROW_TYPE_ERROR("invalid scalabilityMode: %s", e.what());
+				}
 			}
 		}
 	}
