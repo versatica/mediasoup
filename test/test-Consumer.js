@@ -585,7 +585,10 @@ test('consumer.dump() succeeds', async () =>
 				rtx              :
 				{
 					ssrc : videoConsumer.rtpParameters.encodings[0].rtx.ssrc
-				}
+				},
+				scalabilityMode : 'L4T1',
+				spatialLayers   : 4,
+				temporalLayers  : 1
 			}
 		]);
 	expect(data.consumableRtpEncodings).toBeType('array');
