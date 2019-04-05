@@ -432,14 +432,24 @@ namespace RTC
 			}
 		}
 
-		// MS_ERROR(
-		//   "fixed values [expected:%" PRIu32 ",received:%" PRIu32 ", lost:%" PRIu32 ", repaired:%" PRIu32
-		//   ", retransmitted:%" PRIu32,
-		//   expected,
-		//   received,
-		//   lost,
-		//   repaired,
-		//   retransmitted);
+#ifdef MS_LOG_DEV
+		MS_DEBUG_TAG(
+		  score,
+		  "[totalExpected:%" PRIu32 ", totalReceived:%zu, totalRepaired:%zu",
+		  totalExpected,
+		  totalReceived,
+		  totalRepaired);
+
+		MS_DEBUG_TAG(
+		  score,
+		  "fixed values [expected:%" PRIu32 ", received:%" PRIu32 ", lost:%" PRIu32
+		  ", repaired:%" PRIu32 ", retransmitted:%" PRIu32,
+		  expected,
+		  received,
+		  lost,
+		  repaired,
+		  retransmitted);
+#endif
 
 		float repairedRatio = static_cast<float>(repaired) / static_cast<float>(received);
 		auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
@@ -451,32 +461,18 @@ namespace RTC
 
 		lost -= repaired * repairedWeight;
 
-		// MS_ERROR(
-		//   "[repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 "]",
-		//   repairedRatio,
-		//   repairedWeight,
-		//   lost);
-
 		float deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
 
 		auto score = std::round(std::pow(deliveredRatio, 4) * 10);
 
-		// MS_ERROR("RESULT [deliveredRatio:%f, score:%f]", deliveredRatio, score);
-
-		// MS_ERROR("==========\n");
-
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
 		  score,
-		  "[totalExpected:%" PRIu32 ", totalReceived:%zu, totalRepaired:%zu, expected:%" PRIu32
-		  ", received:%" PRIu32 ", repaired:%" PRIu32 ", lossPercentage:%f, score:%" PRIu8 "]",
-		  totalExpected,
-		  totalReceived,
-		  totalRepaired,
-		  expected,
-		  received,
-		  repaired,
-		  lossPercentage,
+		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score: %lf]",
+		  deliveredRatio,
+		  repairedRatio,
+		  repairedWeight,
+		  lost,
 		  score);
 #endif
 
