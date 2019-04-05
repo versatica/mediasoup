@@ -408,7 +408,17 @@ namespace RTC
 		}
 
 		if (repaired > lost)
-			repaired = lost;
+		{
+			if (this->HasRtx())
+			{
+				repaired = lost;
+				retransmitted -= repaired - lost;
+			}
+			else
+			{
+				lost = repaired;
+			}
+		}
 
 		MS_ERROR(
 		  "fixed values [expected:%" PRIu32 ",received:%" PRIu32 ", lost:%" PRIu32 ", repaired:%" PRIu32
@@ -419,7 +429,7 @@ namespace RTC
 		  repaired,
 		  retransmitted);
 
-		float repairedRatio = repaired / received;
+		float repairedRatio = static_cast<float>(repaired) /static_cast<float>(received);
 		auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
 
 		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
