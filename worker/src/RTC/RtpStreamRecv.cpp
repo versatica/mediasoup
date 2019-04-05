@@ -432,7 +432,7 @@ namespace RTC
 		  repaired,
 		  retransmitted);
 
-		float repairedRatio = static_cast<float>(repaired) /static_cast<float>(received);
+		float repairedRatio = static_cast<float>(repaired) / static_cast<float>(received);
 		auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
 
 		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");

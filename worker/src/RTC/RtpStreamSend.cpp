@@ -556,14 +556,13 @@ namespace RTC
 		}
 
 		MS_ERROR(
-		  "fixed values [sent:%zu, lost:%" PRIu32 ", repaired:%" PRIu32
-		  ", retransmitted:%" PRIu32,
+		  "fixed values [sent:%zu, lost:%" PRIu32 ", repaired:%" PRIu32 ", retransmitted:%" PRIu32,
 		  sent,
 		  lost,
 		  repaired,
 		  retransmitted);
 
-		float repairedRatio = static_cast<float>(repaired) /static_cast<float>(sent);
+		float repairedRatio = static_cast<float>(repaired) / static_cast<float>(sent);
 		auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
 
 		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
