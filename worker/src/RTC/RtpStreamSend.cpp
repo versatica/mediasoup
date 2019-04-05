@@ -539,6 +539,9 @@ namespace RTC
 			return;
 		}
 
+		if (lost > sent)
+			lost = sent;
+
 		if (repaired > lost)
 		{
 			if (HasRtx())
