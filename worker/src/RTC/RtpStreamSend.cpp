@@ -541,7 +541,7 @@ namespace RTC
 
 		if (repaired > lost)
 		{
-			if (this->HasRtx())
+			if (HasRtx())
 			{
 				repaired = lost;
 				retransmitted -= repaired - lost;
