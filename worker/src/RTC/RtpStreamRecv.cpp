@@ -384,9 +384,6 @@ namespace RTC
 		else
 			lost = expected - received;
 
-		if (lost > received)
-			lost = received;
-
 		// Calculate number of packets repaired in this interval.
 		auto totalRepaired = this->packetsRepaired;
 		uint32_t repaired  = totalRepaired - this->repairedPrior;
@@ -409,6 +406,9 @@ namespace RTC
 
 			return;
 		}
+
+		if (lost > received)
+			lost = received;
 
 		if (repaired > lost)
 		{
