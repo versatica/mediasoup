@@ -390,6 +390,12 @@ namespace RTC
 
 		this->repairedPrior = totalRepaired;
 
+		// Calculate number of packets retransmitted in this interval.
+		auto totatRetransmitted = this->packetsRetransmitted;
+		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPrior;
+
+		this->retransmittedPrior = totatRetransmitted;
+
 		if (this->inactive)
 			return;
 
@@ -401,25 +407,41 @@ namespace RTC
 			return;
 		}
 
-		if (repaired >= lost)
-			lost = 0;
-		else
-			lost -= repaired;
+		if (repaired > lost)
+			repaired = lost;
 
-		// Calculate packet loss percentage in this interval.
-		float lossPercentage = lost * 100 / (expected > lost ? expected : lost);
+		MS_ERROR(
+		  "fixed values [expected:%" PRIu32 ",received:%" PRIu32 ", lost:%" PRIu32 ", repaired:%" PRIu32
+		  ", retransmitted:%" PRIu32,
+		  expected,
+		  received,
+		  lost,
+		  repaired,
+		  retransmitted);
 
-		/*
-		 * Calculate score. Starting from a score of 100:
-		 *
-		 * - Each loss porcentual point has a weight of 1.0f.
-		 */
-		float base100Score{ 100 };
+		float repairedRatio = repaired / received;
+		auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
 
-		base100Score -= (lossPercentage * 1.0f);
+		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
 
-		// Get base 10 score.
-		auto score = static_cast<uint8_t>(std::lround(base100Score / 10));
+		if (retransmitted > 0)
+			repairedWeight *= repaired / retransmitted;
+
+		lost -= repaired * repairedWeight;
+
+		MS_ERROR(
+		  "[repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 "]",
+		  repairedRatio,
+		  repairedWeight,
+		  lost);
+
+		float deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
+
+		auto score = std::round(std::pow(deliveredRatio, 4) * 10);
+
+		MS_ERROR("RESULT [deliveredRatio:%f, score:%f]", deliveredRatio, score);
+
+		MS_ERROR("==========\n");
 
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(

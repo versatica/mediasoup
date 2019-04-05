@@ -109,8 +109,9 @@ namespace RTC
 		size_t nackPacketCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t firCount{ 0 };
-		size_t repairedPrior{ 0 };   // Packets repaired at last interval.
-		uint32_t expectedPrior{ 0 }; // Packets expected at last interval.
+		size_t repairedPrior{ 0 };      // Packets repaired at last interval.
+		size_t retransmittedPrior{ 0 }; // Packets retransmitted at last interval.
+		uint32_t expectedPrior{ 0 };    // Packets expected at last interval.
 		RTC::RtpDataCounter transmissionCounter;
 
 	private:
