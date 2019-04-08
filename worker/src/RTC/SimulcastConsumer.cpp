@@ -669,7 +669,8 @@ namespace RTC
 		// Reset the score of our RtpStream to 10.
 		this->rtpStream->ResetScore(10, false);
 
-		MS_DEBUG_DEV(
+		MS_DEBUG_TAG(
+		  simulcast,
 		  "current spatial layer changed to %" PRIi16 " [consumerId:%s]",
 		  this->currentSpatialLayer,
 		  this->id.c_str());
