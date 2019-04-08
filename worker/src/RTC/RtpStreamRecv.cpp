@@ -462,8 +462,7 @@ namespace RTC
 		lost -= repaired * repairedWeight;
 
 		float deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
-
-		auto score = std::round(std::pow(deliveredRatio, 4) * 10);
+		auto score           = std::round(std::pow(deliveredRatio, 4) * 10);
 
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
