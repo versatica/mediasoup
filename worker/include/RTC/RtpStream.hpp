@@ -48,6 +48,7 @@ namespace RTC
 			bool useFir{ false };
 			bool useInBandFec{ false };
 			bool useDtx{ false };
+			uint8_t spatialLayers{ 0 };
 			uint8_t temporalLayers{ 0 };
 		};
 
@@ -67,6 +68,7 @@ namespace RTC
 		virtual void SetRtx(uint8_t payloadType, uint32_t ssrc);
 		uint32_t GetRtxSsrc() const;
 		uint8_t GetRtxPayloadType() const;
+		uint8_t GetSpatialLayers() const;
 		uint8_t GetTemporalLayers() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		virtual void Pause()  = 0;
@@ -177,6 +179,11 @@ namespace RTC
 	inline uint8_t RtpStream::GetRtxPayloadType() const
 	{
 		return this->params.rtxPayloadType;
+	}
+
+	inline uint8_t RtpStream::GetSpatialLayers() const
+	{
+		return this->params.spatialLayers;
 	}
 
 	inline uint8_t RtpStream::GetTemporalLayers() const

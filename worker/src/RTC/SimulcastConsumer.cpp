@@ -553,6 +553,7 @@ namespace RTC
 		params.mimeType       = mediaCodec->mimeType;
 		params.clockRate      = mediaCodec->clockRate;
 		params.cname          = this->rtpParameters.rtcp.cname;
+		params.spatialLayers  = encoding.spatialLayers;
 		params.temporalLayers = encoding.temporalLayers;
 
 		// Check in band FEC in codec parameters.
