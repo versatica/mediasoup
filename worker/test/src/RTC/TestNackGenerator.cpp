@@ -51,6 +51,10 @@ public:
 	{
 		return this->isKeyFrame;
 	};
+	uint8_t GetTemporalLayer() const
+	{
+		return 0;
+	};
 
 private:
 	bool isKeyFrame{ false };

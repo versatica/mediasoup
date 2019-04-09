@@ -44,7 +44,7 @@ namespace RTC
 		void OnTransportProducerNewRtpStream(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpStreamRecv* rtpStream,
+		  RTC::RtpStream* rtpStream,
 		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
@@ -56,7 +56,7 @@ namespace RTC
 		void OnTransportProducerRtpStreamScore(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpStreamRecv* rtpStream,
+		  RTC::RtpStream* rtpStream,
 		  uint8_t score) override;
 		void OnTransportNewConsumer(
 		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;

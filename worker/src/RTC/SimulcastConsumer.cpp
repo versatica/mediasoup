@@ -62,6 +62,10 @@ namespace RTC
 				if (this->preferredTemporalLayer > encoding.temporalLayers - 1)
 					this->preferredTemporalLayer = encoding.temporalLayers - 1;
 			}
+			else
+			{
+				this->preferredTemporalLayer = encoding.temporalLayers - 1;
+			}
 		}
 		else
 		{
@@ -179,31 +183,31 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("missing spatialLayer");
 				}
 
-				auto preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
+				this->preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
 
-				if (preferredSpatialLayer > this->rtpStream->GetSpatialLayers() - 1)
-					preferredSpatialLayer = this->rtpStream->GetSpatialLayers() - 1;
+				if (this->preferredSpatialLayer > this->rtpStream->GetSpatialLayers() - 1)
+					this->preferredSpatialLayer = this->rtpStream->GetSpatialLayers() - 1;
 
-				// Temporal layer.
-				uint16_t preferredTemporalLayer;
-
-				// perferredTemporaLayer is optional.
+				// preferredTemporaLayer is optional.
 				if (jsonTemporalLayerIt != request->data.end() && jsonTemporalLayerIt->is_number_unsigned())
 				{
-					preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
+					this->preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
+
+					if (this->preferredTemporalLayer > this->rtpStream->GetTemporalLayers() - 1)
+						this->preferredTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
 				}
 				else
 				{
-					preferredTemporalLayer = this->preferredTemporalLayer;
+					this->preferredTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
 				}
 
-				this->preferredSpatialLayer  = preferredSpatialLayer;
-				this->preferredTemporalLayer = preferredTemporalLayer;
+				if (this->currentSpatialLayer == this->preferredSpatialLayer)
+				{
+					this->targetTemporalLayer = this->preferredTemporalLayer;
 
-				this->targetTemporalLayer = preferredTemporalLayer;
-
-				if (this->currentSpatialLayer == this->targetSpatialLayer && this->encodingContext)
-					this->encodingContext->preferences.temporalLayer = this->targetTemporalLayer;
+					if (this->encodingContext)
+						this->encodingContext->preferences.temporalLayer = this->targetTemporalLayer;
+				}
 
 				MS_DEBUG_DEV(
 				  "preferred layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
@@ -242,7 +246,7 @@ namespace RTC
 		return 0;
 	}
 
-	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -258,7 +262,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -296,7 +300,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/)
+	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
 
@@ -338,7 +342,7 @@ namespace RTC
 				return;
 
 			// Change current spatial layer.
-			UpdateLayers();
+			UpdateCurrentLayers();
 
 			// Need to resync the stream.
 			this->syncRequired = true;
@@ -382,9 +386,6 @@ namespace RTC
 			this->syncRequired = false;
 		}
 
-		// TODO: Not sure how to deal with it, but if this happens (and we drop the packet)
-		// we shouldn't have unset the syncRequired flag, etc.
-		//
 		// Rewrite payload if needed. Drop packet if necessary.
 		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
 		{
@@ -394,13 +395,12 @@ namespace RTC
 			return;
 		}
 
-		// Update temporal layer only if we are using the target spatial layer.
+		// Update temporal layer only if we are sending the target spatial layer.
 		if (
-		  this->currentSpatialLayer == this->targetSpatialLayer &&
 		  this->currentTemporalLayer != this->targetTemporalLayer &&
 		  packet->GetTemporalLayer() == this->targetTemporalLayer)
 		{
-			UpdateLayers();
+			UpdateCurrentLayers();
 		}
 
 		// Update RTP seq number and timestamp.
@@ -561,8 +561,17 @@ namespace RTC
 		this->rtpStream->Pause();
 
 		// Unset current and target layers.
-		this->targetSpatialLayer  = -1;
-		this->currentSpatialLayer = -1;
+		this->targetSpatialLayer   = -1;
+		this->currentSpatialLayer  = -1;
+		this->targetTemporalLayer  = -1;
+		this->currentTemporalLayer = -1;
+
+		if (this->encodingContext)
+		{
+			this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+		}
+
+		// TODO: Emit JS event?
 	}
 
 	void SimulcastConsumer::Resumed()
@@ -702,15 +711,30 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
-	void SimulcastConsumer::UpdateLayers()
+	void SimulcastConsumer::UpdateCurrentLayers()
 	{
 		MS_TRACE();
-		if (this->targetSpatialLayer == this->currentSpatialLayer && this->targetTemporalLayer == this->currentTemporalLayer)
+
+		if (this->currentSpatialLayer == this->targetSpatialLayer && this->currentTemporalLayer == this->targetTemporalLayer)
+		{
 			return;
+		}
 
 		// Reset the score of our RtpStream to 10 if spatial layer changed.
 		if (this->targetSpatialLayer != this->currentSpatialLayer)
 			this->rtpStream->ResetScore(10, false);
+
+		// If the new current spatial layer is the preferred one honor the preferred
+		// temporal layer.
+		if (this->targetSpatialLayer == this->preferredSpatialLayer)
+		{
+			this->targetTemporalLayer = this->preferredTemporalLayer;
+		}
+		// Otherwise, choose the highest temporal layer.
+		else
+		{
+			this->targetTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+		}
 
 		this->currentSpatialLayer  = this->targetSpatialLayer;
 		this->currentTemporalLayer = this->targetTemporalLayer;
@@ -739,128 +763,29 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		uint8_t maxProducerScore{ 0 };
 		int16_t newTargetSpatialLayer{ -1 };
 
-		// No current spatial layer, select the highest possible.
-		if (this->currentSpatialLayer == -1)
+		for (size_t idx = 0; idx < this->producerRtpStreams.size(); ++idx)
 		{
-			MS_DEBUG_TAG(simulcast, "no current spatial layer, selecting the highest possible");
+			auto spatialLayer       = static_cast<int16_t>(idx);
+			auto* producerRtpStream = this->producerRtpStreams[idx];
+			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
 
-			uint8_t maxScore = 0;
+			// Ignore spatial layers for non existing Producer streams or for those
+			// with score 0.
+			if (producerScore == 0)
+				continue;
 
-			// Ignore spatial layers higher than the preferred one.
-			for (int idx = this->preferredSpatialLayer; idx >= 0; --idx)
+			if (producerScore >= maxProducerScore)
 			{
-				auto spatialLayer       = static_cast<int16_t>(idx);
-				auto* producerRtpStream = this->producerRtpStreams[idx];
+				maxProducerScore      = producerScore;
+				newTargetSpatialLayer = spatialLayer;
 
-				// Ignore spatial layers for non existing Producer streams.
-				if (!producerRtpStream)
-					continue;
-
-				if (producerRtpStream->GetScore() >= maxScore)
-				{
-					maxScore              = producerRtpStream->GetScore();
-					newTargetSpatialLayer = spatialLayer;
-
-					if (maxScore > 7)
-					{
-						MS_DEBUG_TAG(simulcast, "found Producer RtpStream with score > 7, keep it");
-
-						break;
-					}
-				}
-			}
-		}
-		// Downgrade is desired.
-		else if (this->preferredSpatialLayer < this->currentSpatialLayer)
-		{
-			MS_DEBUG_TAG(simulcast, "trying to downgrade current spatial layer to preferred one");
-
-			int16_t idx      = this->preferredSpatialLayer;
-			uint8_t maxScore = 0;
-
-			for (; idx < this->currentSpatialLayer; ++idx)
-			{
-				auto spatialLayer       = static_cast<int16_t>(idx);
-				auto* producerRtpStream = this->producerRtpStreams[idx];
-
-				// Ignore spatial layers for non existing Producer streams.
-				if (!producerRtpStream)
-					continue;
-
-				if (producerRtpStream->GetScore() >= maxScore)
-				{
-					maxScore              = producerRtpStream->GetScore();
-					newTargetSpatialLayer = spatialLayer;
-
-					if (maxScore > 7)
-					{
-						MS_DEBUG_TAG(simulcast, "found Producer RtpStream with score > 7, keep it");
-
-						break;
-					}
-				}
-			}
-		}
-		// Downgrade is needed.
-		else if (
-		  !this->GetProducerCurrentRtpStream() || this->GetProducerCurrentRtpStream()->GetScore() < 7 ||
-		  this->rtpStream->GetScore() <= 6)
-		{
-			MS_DEBUG_TAG(simulcast, "trying to downgrade current spatial layer");
-
-			uint8_t maxScore = 0;
-
-			for (int idx = this->currentSpatialLayer - 1; idx >= 0; --idx)
-			{
-				auto spatialLayer       = static_cast<int16_t>(idx);
-				auto* producerRtpStream = this->producerRtpStreams[idx];
-
-				// Ignore spatial layers for non existing Producer streams.
-				if (!producerRtpStream)
-					continue;
-
-				if (producerRtpStream->GetScore() >= maxScore)
-				{
-					maxScore              = producerRtpStream->GetScore();
-					newTargetSpatialLayer = spatialLayer;
-
-					if (maxScore > 7)
-					{
-						MS_DEBUG_TAG(simulcast, "found Producer RtpStream with score > 7, keep it");
-
-						break;
-					}
-				}
-			}
-		}
-		// Update to the highest possible spatial layer.
-		else
-		{
-			MS_DEBUG_TAG(simulcast, "trying to upgrade current spatial layer");
-
-			int16_t idx = this->currentSpatialLayer == -1 ? 0 : this->currentSpatialLayer + 1;
-
-			// Ignore spatial layers above the preferred one.
-			for (; idx <= this->preferredSpatialLayer; ++idx)
-			{
-				auto spatialLayer       = idx;
-				auto* producerRtpStream = this->producerRtpStreams[idx];
-
-				// Ignore spatial layers for non existing Producer streams.
-				if (!producerRtpStream)
-					continue;
-
-				// Take this as the new target if it is good enough.
-				if (producerRtpStream->GetScore() >= 7)
-				{
-					MS_DEBUG_TAG(simulcast, "good enough spatial layer found: %" PRIi16, spatialLayer);
-
-					newTargetSpatialLayer = spatialLayer;
-
+				// If this is the preferred or higher spatial layer and has good score,
+				// take it and exit.
+				if (spatialLayer >= this->preferredSpatialLayer && maxProducerScore >= 7)
 					break;
-				}
 			}
 		}
 
@@ -872,7 +797,20 @@ namespace RTC
 
 		if (newTargetSpatialLayer == -1)
 		{
-			MS_DEBUG_TAG(simulcast, "newTargetSpatialLayer remains unset");
+			MS_DEBUG_TAG(simulcast, "no valid spatial layer found");
+
+			// Unset current and target layers.
+			this->targetSpatialLayer   = -1;
+			this->currentSpatialLayer  = -1;
+			this->targetTemporalLayer  = -1;
+			this->currentTemporalLayer = -1;
+
+			if (this->encodingContext)
+			{
+				this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+			}
+
+			// TODO: Emit JS event?
 
 			return;
 		}
@@ -883,17 +821,17 @@ namespace RTC
 
 		this->targetSpatialLayer = newTargetSpatialLayer;
 
-		// Already using the target layer. Do nothing.
-		if (this->targetSpatialLayer == this->currentSpatialLayer)
-			return;
-
-		RequestKeyFrame();
-
 		MS_DEBUG_TAG(
 		  simulcast,
 		  "target spatial layer changed to %" PRIi16 " [consumerId:%s]",
 		  this->targetSpatialLayer,
 		  this->id.c_str());
+
+		// Already using the target layer. Do nothing.
+		if (this->targetSpatialLayer == this->currentSpatialLayer)
+			return;
+
+		RequestKeyFrame();
 	}
 
 	inline RTC::RtpStream* SimulcastConsumer::GetProducerCurrentRtpStream() const

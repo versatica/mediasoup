@@ -826,7 +826,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnProducerNewRtpStream(
-	  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
+	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -834,7 +834,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnProducerRtpStreamScore(
-	  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint8_t score)
+	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 

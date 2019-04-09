@@ -776,7 +776,8 @@ namespace RTC
 			rtpStream->Pause();
 
 		// Notify to the listener.
-		this->listener->OnProducerNewRtpStream(this, rtpStream, encodingMapping.mappedSsrc);
+		this->listener->OnProducerNewRtpStream(
+		  this, static_cast<RTC::RtpStream*>(rtpStream), encodingMapping.mappedSsrc);
 
 		// Request a key frame for this stream since we may have lost the first packets
 		// (do not do it if this is a key frame).
@@ -983,7 +984,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Notify the listener.
-		this->listener->OnProducerRtpStreamScore(this, static_cast<RTC::RtpStreamRecv*>(rtpStream), score);
+		this->listener->OnProducerRtpStreamScore(this, rtpStream, score);
 
 		// Emit the score event.
 		EmitScore();

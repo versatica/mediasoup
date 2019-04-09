@@ -549,10 +549,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerNewRtpStream(
-	  RTC::Transport* /*transport*/,
-	  RTC::Producer* producer,
-	  RTC::RtpStreamRecv* rtpStream,
-	  uint32_t mappedSsrc)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -565,7 +562,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtpStreamScore(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint8_t score)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)
 	{
 		MS_TRACE();
 
