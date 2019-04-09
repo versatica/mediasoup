@@ -1,3 +1,4 @@
+Filters: ~[!nonportable]~[!benchmark]~[approvals]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <exe-name> is a <version> host application.
@@ -3047,6 +3048,45 @@ with expansion:
 
 -------------------------------------------------------------------------------
 Generators -- adapters
+  Transforming elements
+  Different deduced type
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( i.size() == 1 )
+with expansion:
+  1 == 1
+
+-------------------------------------------------------------------------------
+Generators -- adapters
+  Transforming elements
+  Different deduced type
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( i.size() == 1 )
+with expansion:
+  1 == 1
+
+-------------------------------------------------------------------------------
+Generators -- adapters
+  Transforming elements
+  Different deduced type
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( i.size() == 1 )
+with expansion:
+  1 == 1
+
+-------------------------------------------------------------------------------
+Generators -- adapters
   Repeating a generator
 -------------------------------------------------------------------------------
 Generators.tests.cpp:<line number>
@@ -3675,7 +3715,44 @@ with expansion:
 
 -------------------------------------------------------------------------------
 Generators internals
-  Map
+  Map with explicit return type
+-------------------------------------------------------------------------------
+GeneratorsImpl.tests.cpp:<line number>
+...............................................................................
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == 2.0 )
+with expansion:
+  2.0 == 2.0
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == 4.0 )
+with expansion:
+  4.0 == 4.0
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == 6.0 )
+with expansion:
+  6.0 == 6.0
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE_FALSE( gen.next() )
+with expansion:
+  !false
+
+-------------------------------------------------------------------------------
+Generators internals
+  Map with deduced return type
 -------------------------------------------------------------------------------
 GeneratorsImpl.tests.cpp:<line number>
 ...............................................................................
@@ -4620,6 +4697,182 @@ Exception.tests.cpp:<line number>: FAILED:
   REQUIRE_THROWS_WITH( thisThrows(), "should fail" )
 with expansion:
   "expected exception" equals: "should fail"
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  3 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  4 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  5 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  6 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  -5 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  -4 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  90 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  91 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  92 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  93 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  94 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  95 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  96 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  97 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  98 > -6
+
+-------------------------------------------------------------------------------
+Nested generators and captured variables
+-------------------------------------------------------------------------------
+Generators.tests.cpp:<line number>
+...............................................................................
+
+Generators.tests.cpp:<line number>: PASSED:
+  REQUIRE( values > -6 )
+with expansion:
+  99 > -6
 
 -------------------------------------------------------------------------------
 Nice descriptive name
@@ -7239,31 +7492,31 @@ with expansion:
 Tag alias can be registered against tag patterns
   The same tag alias can only be registered once
 -------------------------------------------------------------------------------
-TagAlias.tests.cpp:<line number>
+Tag.tests.cpp:<line number>
 ...............................................................................
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THAT( what, Contains( "[@zzz]" ) )
 with expansion:
   "error: tag alias, '[@zzz]' already registered.
   	First seen at: file:2
   	Redefined at: file:10" contains: "[@zzz]"
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THAT( what, Contains( "file" ) )
 with expansion:
   "error: tag alias, '[@zzz]' already registered.
   	First seen at: file:2
   	Redefined at: file:10" contains: "file"
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THAT( what, Contains( "2" ) )
 with expansion:
   "error: tag alias, '[@zzz]' already registered.
   	First seen at: file:2
   	Redefined at: file:10" contains: "2"
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THAT( what, Contains( "10" ) )
 with expansion:
   "error: tag alias, '[@zzz]' already registered.
@@ -7274,19 +7527,19 @@ with expansion:
 Tag alias can be registered against tag patterns
   Tag aliases must be of the form [@name]
 -------------------------------------------------------------------------------
-TagAlias.tests.cpp:<line number>
+Tag.tests.cpp:<line number>
 ...............................................................................
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THROWS( registry.add( "[no ampersat]", "", Catch::SourceLineInfo( "file", 3 ) ) )
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THROWS( registry.add( "[the @ is not at the start]", "", Catch::SourceLineInfo( "file", 3 ) ) )
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THROWS( registry.add( "@no square bracket at start]", "", Catch::SourceLineInfo( "file", 3 ) ) )
 
-TagAlias.tests.cpp:<line number>: PASSED:
+Tag.tests.cpp:<line number>: PASSED:
   CHECK_THROWS( registry.add( "[@no square bracket at end", "", Catch::SourceLineInfo( "file", 3 ) ) )
 
 -------------------------------------------------------------------------------
@@ -10009,6 +10262,17 @@ with messages:
   i := 7
 
 -------------------------------------------------------------------------------
+shortened hide tags are split apart
+-------------------------------------------------------------------------------
+Tag.tests.cpp:<line number>
+...............................................................................
+
+Tag.tests.cpp:<line number>: PASSED:
+  REQUIRE_THAT( testcase.tags, Catch::VectorContains(std::string("magic-tag")) && Catch::VectorContains(std::string(".")) )
+with expansion:
+  { ".", "magic-tag" } ( Contains: "magic-tag" and Contains: "." )
+
+-------------------------------------------------------------------------------
 stacks unscoped info in loops
 -------------------------------------------------------------------------------
 Message.tests.cpp:<line number>
@@ -10849,6 +11113,6 @@ Misc.tests.cpp:<line number>
 Misc.tests.cpp:<line number>: PASSED:
 
 ===============================================================================
-test cases:  255 |  174 passed |  77 failed |  4 failed as expected
-assertions: 1409 | 1250 passed | 138 failed | 21 failed as expected
+test cases:  257 |  176 passed |  77 failed |  4 failed as expected
+assertions: 1435 | 1276 passed | 138 failed | 21 failed as expected
 

@@ -144,6 +144,11 @@ TEST_CASE("Generators -- adapters", "[generators][generic]") {
             auto i = GENERATE(map<std::string>([] (int val) { return std::to_string(val); }, values({ 1, 2, 3 })));
             REQUIRE(i.size() == 1);
         }
+        SECTION("Different deduced type") {
+            // This takes a generator that returns ints and maps them into strings
+            auto i = GENERATE(map([] (int val) { return std::to_string(val); }, values({ 1, 2, 3 })));
+            REQUIRE(i.size() == 1);
+        }
     }
     SECTION("Repeating a generator") {
         // This will return values [1, 2, 3, 1, 2, 3]
@@ -182,4 +187,22 @@ TEST_CASE("Random generator", "[generators][.][approvals]") {
         STATIC_REQUIRE(std::is_same<decltype(val), double>::value);
         static_cast<void>(val); // Silence VS 2015 unused variable warning
     }
+}
+
+
+TEST_CASE("Nested generators and captured variables", "[generators]") {
+    // Workaround for old libstdc++
+    using record = std::tuple<int, int>;
+    // Set up 3 ranges to generate numbers from
+    auto extent = GENERATE(table<int, int>({
+        record{3, 7},
+        record{-5, -3},
+        record{90, 100}
+    }));
+
+    auto from = std::get<0>(extent);
+    auto to = std::get<1>(extent);
+
+    auto values = GENERATE_COPY(range(from, to));
+    REQUIRE(values > -6);
 }

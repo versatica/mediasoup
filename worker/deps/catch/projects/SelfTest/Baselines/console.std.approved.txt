@@ -1,3 +1,4 @@
+Filters: ~[!nonportable]~[!benchmark]~[approvals]
 This would not be caught previously
 Nor would this
 
@@ -1264,6 +1265,6 @@ due to unexpected exception with message:
   Why would you throw a std::string?
 
 ===============================================================================
-test cases:  255 |  189 passed |  62 failed |  4 failed as expected
-assertions: 1393 | 1250 passed | 122 failed | 21 failed as expected
+test cases:  257 |  191 passed |  62 failed |  4 failed as expected
+assertions: 1419 | 1276 passed | 122 failed | 21 failed as expected
 

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
   <properties>
+    <property name="filters" value="~[!nonportable]~[!benchmark]~[approvals]"/>
     <property name="random-seed" value="1"/>
   </properties>
 loose text artifact
-  <testsuite name="<exe-name>" errors="17" failures="122" tests="1410" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
+  <testsuite name="<exe-name>" errors="17" failures="122" tests="1436" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
     <testcase classname="<exe-name>.global" name="# A test name that starts with a #" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1005: Comparing pointer to int and long (NULL can be either on various systems)" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1027" time="{duration}"/>
@@ -360,6 +361,7 @@ Message.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Shortening a range" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Transforming elements/Same type" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Transforming elements/Different type" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Transforming elements/Different deduced type" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Repeating a generator" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Number of elements in source is divisible by chunk size" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Number of elements in source is not divisible by chunk size" time="{duration}"/>
@@ -373,7 +375,8 @@ Message.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Generators internals/Filter generator" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators internals/Take generator/Take less" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators internals/Take generator/Take more" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Generators internals/Map" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Map with explicit return type" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators internals/Map with deduced return type" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators internals/Repeat/Singular repeat" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators internals/Repeat/Actual repeat" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators internals/Range/Positive auto step/Integer" time="{duration}"/>
@@ -452,6 +455,7 @@ Matchers.tests.cpp:<line number>
 Exception.tests.cpp:<line number>
       </failure>
     </testcase>
+    <testcase classname="<exe-name>.global" name="Nested generators and captured variables" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Nice descriptive name" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Non-std exceptions can be translated" time="{duration}">
       <error type="TEST_CASE">
@@ -978,6 +982,7 @@ i := 7
 Message.tests.cpp:<line number>
       </failure>
     </testcase>
+    <testcase classname="<exe-name>.global" name="shortened hide tags are split apart" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="stacks unscoped info in loops" time="{duration}">
       <failure message="false" type="CHECK">
 Count 1 to 3...
