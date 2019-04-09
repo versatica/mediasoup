@@ -569,7 +569,7 @@ namespace RTC
 
 			if (isMediaPacket && encoding.ssrc == ssrc)
 			{
-				auto* rtpStream = CreateRtpStream(ssrc, *mediaCodec, i);
+				auto* rtpStream = CreateRtpStream(packet, *mediaCodec, i);
 
 				return rtpStream;
 			}
@@ -638,7 +638,7 @@ namespace RTC
 						}
 					}
 
-					auto* rtpStream = CreateRtpStream(ssrc, *mediaCodec, i);
+					auto* rtpStream = CreateRtpStream(packet, *mediaCodec, i);
 
 					return rtpStream;
 				}
@@ -684,9 +684,11 @@ namespace RTC
 	}
 
 	RTC::RtpStreamRecv* Producer::CreateRtpStream(
-	  uint32_t ssrc, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
+	  RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
 	{
 		MS_TRACE();
+
+		uint32_t ssrc = packet->GetSsrc();
 
 		MS_ASSERT(
 		  this->mapSsrcRtpStream.find(ssrc) == this->mapSsrcRtpStream.end(), "RtpStream already exists");
@@ -769,8 +771,9 @@ namespace RTC
 		// Notify to the listener.
 		this->listener->OnProducerNewRtpStream(this, rtpStream, encodingMapping.mappedSsrc);
 
-		// Request a key frame for this stream since we may have lost the first packets.
-		if (this->keyFrameRequestManager && !this->paused)
+		// Request a key frame for this stream since we may have lost the first packets
+		// (do not do it if this is a key frame).
+		if (this->keyFrameRequestManager && !this->paused && !packet->IsKeyFrame())
 			this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
 
 		// Emit the first score event right now.

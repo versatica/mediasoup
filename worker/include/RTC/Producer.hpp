@@ -81,7 +81,7 @@ namespace RTC
 	private:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
 		RTC::RtpStreamRecv* CreateRtpStream(
-		  uint32_t ssrc, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
+		  RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 		void PostProcessRtpPacket(RTC::RtpPacket* packet);
 		void EmitScore() const;
