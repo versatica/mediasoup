@@ -137,6 +137,7 @@ namespace RTC
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
 		uint8_t GetPayloadPadding() const;
+		uint8_t GetTemporalLayer() const;
 		bool IsKeyFrame() const;
 		RtpPacket* Clone(const uint8_t* buffer) const;
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
@@ -498,6 +499,14 @@ namespace RTC
 	inline uint8_t RtpPacket::GetPayloadPadding() const
 	{
 		return this->payloadPadding;
+	}
+
+	inline uint8_t RtpPacket::GetTemporalLayer() const
+	{
+		if (!this->payloadDescriptorHandler)
+			return 0u;
+
+		return this->payloadDescriptorHandler->GetTemporalLayer();
 	}
 
 	inline bool RtpPacket::IsKeyFrame() const

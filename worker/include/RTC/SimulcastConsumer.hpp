@@ -39,7 +39,7 @@ namespace RTC
 		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		void EmitScore() const;
-		void SetCurrentSpatialLayer(int16_t spatialLayer);
+		void UpdateLayers();
 		void RecalculateTargetSpatialLayer();
 		RTC::RtpStream* GetProducerCurrentRtpStream() const;
 		RTC::RtpStream* GetProducerTargetRtpStream() const;
@@ -63,6 +63,9 @@ namespace RTC
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t targetSpatialLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
+		int16_t preferredTemporalLayer{ -1 };
+		int16_t targetTemporalLayer{ -1 };
+		int16_t currentTemporalLayer{ -1 };
 	};
 } // namespace RTC
 
