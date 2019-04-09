@@ -61,8 +61,11 @@ namespace RTC
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		int16_t preferredSpatialLayer{ -1 };
+		int16_t preferredTemporalLayer{ -1 };
 		int16_t targetSpatialLayer{ -1 };
+		int16_t targetTemporalLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
+		int16_t currentTemporalLayer{ -1 };
 	};
 } // namespace RTC
 

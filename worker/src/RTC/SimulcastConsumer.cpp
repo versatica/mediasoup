@@ -21,6 +21,14 @@ namespace RTC
 		if (this->consumableRtpEncodings.size() <= 1)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
 
+		auto& encoding = this->rtpParameters.encodings[0];
+
+		// Ensure there are as many spatial layers as encodings.
+		if (encoding.spatialLayers != this->consumableRtpEncodings.size())
+		{
+			MS_THROW_TYPE_ERROR("encoding.spatialLayers does not match number of consumableRtpEncodings");
+		}
+
 		auto jsonPreferredLayersIt = data.find("preferredLayers");
 
 		// Fill mapMappedSsrcSpatialLayer.
@@ -34,9 +42,8 @@ namespace RTC
 		// Set preferredLayers (if given).
 		if (jsonPreferredLayersIt != data.end() && jsonPreferredLayersIt->is_object())
 		{
-			// TODO: Handle temporalLayer.
-
-			auto jsonSpatialLayerIt = jsonPreferredLayersIt->find("spatialLayer");
+			auto jsonSpatialLayerIt  = jsonPreferredLayersIt->find("spatialLayer");
+			auto jsonTemporalLayerIt = jsonPreferredLayersIt->find("temporalLayer");
 
 			if (jsonSpatialLayerIt == jsonPreferredLayersIt->end() || !jsonSpatialLayerIt->is_number_unsigned())
 			{
@@ -45,17 +52,23 @@ namespace RTC
 
 			this->preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
 
-			if (this->preferredSpatialLayer >= static_cast<int16_t>(this->consumableRtpEncodings.size()))
+			if (this->preferredSpatialLayer > encoding.spatialLayers - 1)
+				this->preferredSpatialLayer = encoding.spatialLayers - 1;
+
+			if (jsonTemporalLayerIt != jsonPreferredLayersIt->end() && jsonTemporalLayerIt->is_number_unsigned())
 			{
-				this->preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
+				this->preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
+
+				if (this->preferredTemporalLayer > encoding.temporalLayers - 1)
+					this->preferredTemporalLayer = encoding.temporalLayers - 1;
 			}
 		}
 		else
 		{
-			// Initially set preferreSpatialLayer to the maximum value.
-			this->preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
-
-			// TODO: Set initial temporal layer.
+			// Initially set preferreSpatialLayer and preferredTemporalLayer to the
+			// maximum value.
+			this->preferredSpatialLayer  = encoding.spatialLayers - 1;
+			this->preferredTemporalLayer = encoding.temporalLayers - 1;
 		}
 
 		// Reserve space for the Producer RTP streams.
@@ -97,6 +110,15 @@ namespace RTC
 
 		// Add currentSpatialLayer.
 		jsonObject["currentSpatialLayer"] = this->currentSpatialLayer;
+
+		// Add preferredTemporalLayer.
+		jsonObject["preferredTemporalLayer"] = this->preferredTemporalLayer;
+
+		// Add targetTemporalLayer.
+		jsonObject["targetTemporalLayer"] = this->targetTemporalLayer;
+
+		// Add currentTemporalLayer.
+		jsonObject["currentTemporalLayer"] = this->currentTemporalLayer;
 	}
 
 	void SimulcastConsumer::FillJsonStats(json& jsonArray) const
@@ -159,10 +181,8 @@ namespace RTC
 
 				auto preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
 
-				if (preferredSpatialLayer >= static_cast<int16_t>(this->consumableRtpEncodings.size()))
-				{
-					preferredSpatialLayer = static_cast<int16_t>(this->consumableRtpEncodings.size()) - 1;
-				}
+				if (preferredSpatialLayer > this->rtpStream->GetSpatialLayers() - 1)
+					preferredSpatialLayer = this->rtpStream->GetSpatialLayers() - 1;
 
 				if (preferredSpatialLayer == this->preferredSpatialLayer)
 				{
@@ -545,6 +565,9 @@ namespace RTC
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
+		MS_DEBUG_TAG(
+		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
+
 		// Set stream params.
 		RTC::RtpStream::Params params;
 
@@ -559,7 +582,7 @@ namespace RTC
 		// Check in band FEC in codec parameters.
 		if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
 		{
-			MS_DEBUG_TAG(rtcp, "in band FEC enabled");
+			MS_DEBUG_TAG(rtp, "in band FEC enabled");
 
 			params.useInBandFec = true;
 		}
@@ -567,7 +590,7 @@ namespace RTC
 		// Check DTX in codec parameters.
 		if (mediaCodec->parameters.HasInteger("usedtx") && mediaCodec->parameters.GetInteger("usedtx") == 1)
 		{
-			MS_DEBUG_TAG(rtcp, "DTX enabled");
+			MS_DEBUG_TAG(rtp, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -575,7 +598,7 @@ namespace RTC
 		// Check DTX in the encoding.
 		if (encoding.dtx)
 		{
-			MS_DEBUG_TAG(rtcp, "DTX enabled");
+			MS_DEBUG_TAG(rtp, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -584,19 +607,19 @@ namespace RTC
 		{
 			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
 			{
-				MS_DEBUG_2TAGS(rtcp, rtx, "NACK supported");
+				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
 				params.useNack = true;
 			}
 			else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
-				MS_DEBUG_TAG(rtcp, "PLI supported");
+				MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
 
 				params.usePli = true;
 			}
 			else if (!params.useFir && fb.type == "ccm" && fb.parameter == "fir")
 			{
-				MS_DEBUG_TAG(rtcp, "FIR supported");
+				MS_DEBUG_2TAGS(rtp, rtcp, "FIR supported");
 
 				params.useFir = true;
 			}

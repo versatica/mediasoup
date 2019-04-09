@@ -696,6 +696,13 @@ namespace RTC
 		auto& encoding        = this->rtpParameters.encodings[encodingIdx];
 		auto& encodingMapping = this->rtpMapping.encodings[encodingIdx];
 
+		MS_DEBUG_TAG(
+		  rtp,
+		  "[ssrc:%" PRIu32 ", rid:%s, payloadType:%" PRIu8 "]",
+		  ssrc,
+		  encoding.rid.c_str(),
+		  mediaCodec.payloadType);
+
 		// Set stream params.
 		RTC::RtpStream::Params params;
 
@@ -719,7 +726,7 @@ namespace RTC
 		// Check DTX in codec parameters.
 		if (mediaCodec.parameters.HasInteger("usedtx") && mediaCodec.parameters.GetInteger("usedtx") == 1)
 		{
-			MS_DEBUG_TAG(rtcp, "DTX enabled");
+			MS_DEBUG_TAG(rtp, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -727,7 +734,7 @@ namespace RTC
 		// Check DTX in the encoding.
 		if (encoding.dtx)
 		{
-			MS_DEBUG_TAG(rtcp, "DTX enabled");
+			MS_DEBUG_TAG(rtp, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -736,19 +743,19 @@ namespace RTC
 		{
 			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
 			{
-				MS_DEBUG_2TAGS(rtcp, rtx, "NACK supported");
+				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
 				params.useNack = true;
 			}
 			else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
-				MS_DEBUG_TAG(rtcp, "PLI supported");
+				MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
 
 				params.usePli = true;
 			}
 			else if (!params.useFir && fb.type == "ccm" && fb.parameter == "fir")
 			{
-				MS_DEBUG_TAG(rtcp, "FIR supported");
+				MS_DEBUG_2TAGS(rtp, rtcp, "FIR supported");
 
 				params.useFir = true;
 			}
