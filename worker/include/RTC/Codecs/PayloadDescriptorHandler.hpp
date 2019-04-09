@@ -45,6 +45,7 @@ namespace RTC
 			virtual void Dump() const                                                 = 0;
 			virtual bool Encode(RTC::Codecs::EncodingContext* context, uint8_t* data) = 0;
 			virtual void Restore(uint8_t* data)                                       = 0;
+			virtual uint8_t GetTemporalLayer() const                                  = 0;
 			virtual bool IsKeyFrame() const                                           = 0;
 
 		public:

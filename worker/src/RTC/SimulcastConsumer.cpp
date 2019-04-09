@@ -170,10 +170,10 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
 			{
-				// TODO: Handle temporalLayer.
+				auto jsonSpatialLayerIt  = request->data.find("spatialLayer");
+				auto jsonTemporalLayerIt = request->data.find("temporalLayer");
 
-				auto jsonSpatialLayerIt = request->data.find("spatialLayer");
-
+				// Spatial layer.
 				if (jsonSpatialLayerIt == request->data.end() || !jsonSpatialLayerIt->is_number_unsigned())
 				{
 					MS_THROW_TYPE_ERROR("missing spatialLayer");
@@ -184,18 +184,31 @@ namespace RTC
 				if (preferredSpatialLayer > this->rtpStream->GetSpatialLayers() - 1)
 					preferredSpatialLayer = this->rtpStream->GetSpatialLayers() - 1;
 
-				if (preferredSpatialLayer == this->preferredSpatialLayer)
-				{
-					request->Accept();
+				// Temporal layer.
+				uint16_t preferredTemporalLayer;
 
-					return;
+				// perferredTemporaLayer is optional.
+				if (jsonTemporalLayerIt != request->data.end() && jsonTemporalLayerIt->is_number_unsigned())
+				{
+					preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
+				}
+				else
+				{
+					preferredTemporalLayer = this->preferredTemporalLayer;
 				}
 
-				this->preferredSpatialLayer = preferredSpatialLayer;
+				this->preferredSpatialLayer  = preferredSpatialLayer;
+				this->preferredTemporalLayer = preferredTemporalLayer;
+
+				this->targetTemporalLayer = preferredTemporalLayer;
+
+				if (this->currentSpatialLayer == this->targetSpatialLayer && this->encodingContext)
+					this->encodingContext->preferences.temporalLayer = this->targetTemporalLayer;
 
 				MS_DEBUG_DEV(
-				  "preferredSpatialLayer changed to %" PRIi16 " [consumerId:%s]",
+				  "preferred layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 				  this->preferredSpatialLayer,
+				  this->preferredTemporalLayer,
 				  this->id.c_str());
 
 				if (IsActive())
@@ -325,7 +338,7 @@ namespace RTC
 				return;
 
 			// Change current spatial layer.
-			SetCurrentSpatialLayer(this->targetSpatialLayer);
+			UpdateLayers();
 
 			// Need to resync the stream.
 			this->syncRequired = true;
@@ -379,6 +392,15 @@ namespace RTC
 			this->rtpTimestampManager.Drop(packet->GetTimestamp());
 
 			return;
+		}
+
+		// Update temporal layer only if we are using the target spatial layer.
+		if (
+		  this->currentSpatialLayer == this->targetSpatialLayer &&
+		  this->currentTemporalLayer != this->targetTemporalLayer &&
+		  packet->GetTemporalLayer() == this->targetTemporalLayer)
+		{
+			UpdateLayers();
 		}
 
 		// Update RTP seq number and timestamp.
@@ -680,27 +702,32 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
-	void SimulcastConsumer::SetCurrentSpatialLayer(int16_t spatialLayer)
+	void SimulcastConsumer::UpdateLayers()
 	{
 		MS_TRACE();
-
-		if (spatialLayer == this->currentSpatialLayer)
+		if (this->targetSpatialLayer == this->currentSpatialLayer && this->targetTemporalLayer == this->currentTemporalLayer)
 			return;
 
-		this->currentSpatialLayer = spatialLayer;
+		// Reset the score of our RtpStream to 10 if spatial layer changed.
+		if (this->targetSpatialLayer != this->currentSpatialLayer)
+			this->rtpStream->ResetScore(10, false);
 
-		// Reset the score of our RtpStream to 10.
-		this->rtpStream->ResetScore(10, false);
+		this->currentSpatialLayer  = this->targetSpatialLayer;
+		this->currentTemporalLayer = this->targetTemporalLayer;
 
-		MS_DEBUG_TAG(
-		  simulcast,
-		  "current spatial layer changed to %" PRIi16 " [consumerId:%s]",
+		if (this->encodingContext)
+			this->encodingContext->preferences.temporalLayer = this->targetTemporalLayer;
+
+		MS_DEBUG_DEV(
+		  "current layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 		  this->currentSpatialLayer,
+		  this->currentTemporalLayer,
 		  this->id.c_str());
 
 		json data(json::object());
 
-		data["spatialLayer"] = this->currentSpatialLayer;
+		data["spatialLayer"]  = this->currentSpatialLayer;
+		data["temporalLayer"] = this->currentTemporalLayer;
 
 		Channel::Notifier::Emit(this->id, "layerschange", data);
 

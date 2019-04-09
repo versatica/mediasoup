@@ -39,7 +39,7 @@ namespace RTC
 		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
 		void EmitScore() const;
-		void SetCurrentSpatialLayer(int16_t spatialLayer);
+		void UpdateLayers();
 		void RecalculateTargetSpatialLayer();
 		RTC::RtpStream* GetProducerCurrentRtpStream() const;
 		RTC::RtpStream* GetProducerTargetRtpStream() const;
